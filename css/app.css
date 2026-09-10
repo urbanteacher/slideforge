@@ -1658,3 +1658,50 @@ body.live-on .hud button[data-act="focus"] { display: inline-block; }
    variable and the same right-edge anchoring the player viewport has */
 #previewBox.railed { --rail-w: 384px; }
 #previewBox .scorerail { transform-origin: 100% 0; }
+
+/* ==========================================================================
+   16. A question from the room, on the wall
+   ========================================================================== */
+
+.layout-question .pad { justify-content: center; padding: 70px 96px; }
+.layout-question .qc-label {
+  flex: none; font-size: 19px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--s-dim); margin-bottom: 26px;
+}
+.layout-question .qc-text {
+  flex: none; font-size: 54px; line-height: 1.24; font-weight: 600;
+  letter-spacing: -.02em;
+}
+.layout-question .qc-foot {
+  flex: none; display: flex; align-items: baseline; gap: 22px;
+  margin-top: 34px; padding-top: 22px;
+  border-top: 1px solid var(--s-rule);
+  font-size: 24px; color: var(--s-dim);
+}
+.layout-question .qc-votes { color: var(--s-accent); }
+
+/* long questions step down rather than overflowing */
+.layout-question .qc-text[data-len="lg"] { font-size: 44px; }
+.layout-question .qc-text[data-len="xl"] { font-size: 36px; }
+
+/* the standing cue: how many are waiting, unobtrusive but always there */
+.qacue {
+  position: absolute; left: 0; bottom: 0;
+  transform-origin: 0 100%;
+  z-index: 3;
+  margin: 0 0 28px 32px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 17px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.42);
+  border: 2px solid var(--s-rule);
+  color: var(--s-fg);
+  font-family: var(--s-font);
+  font-size: 18px;
+}
+.qacue .qa-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--s-accent);
+}
+.qacue.waiting .qa-dot { background: var(--s-accent-2); }
+.qacue .qa-n { font-weight: 700; font-variant-numeric: tabular-nums; }

@@ -20,6 +20,10 @@
     _liveTally: null,
     _rail: null,
     _solo: null,
+    /* The moderation queue, held so presenter view can be re-synced on demand
+       and so the cue on the wall knows how many are waiting. */
+    qa: null,
+
     /* Race games ask for the current field when a question is rendered.
        live.js installs the real one; without it every lane sits at the gate,
        which is what a solo run or the editor preview should show. */
@@ -586,7 +590,44 @@
     if (!scale) return;
     if (Player._rail) Player._rail.style.transform = 'scale(' + scale + ')';
     if (Player._solo) Player._solo.style.transform = 'scale(' + scale + ')';
+    if (Player._qacue) Player._qacue.style.transform = 'scale(' + scale + ')';
   }
+
+  /**
+   * The standing Q&A cue: how many questions are waiting for the host.
+   *
+   * Only a count — never the text. The count is safe to project; a pending
+   * question is not, which is why moderation lives in presenter view.
+   */
+  Player.setQACue = function (counts) {
+    if (!root) return;
+    var pending = counts && counts.pending || 0;
+    var open = counts && counts.open || 0;
+
+    if (!pending && !open) {
+      if (this._qacue) { this._qacue.remove(); this._qacue = null; }
+      return;
+    }
+    if (!this._qacue) {
+      this._qacue = el('div', 'qacue');
+      this._qacue.appendChild(el('span', 'qa-dot'));
+      this._qacue.appendChild(el('span', 'qa-text'));
+      viewport.appendChild(this._qacue);
+    }
+    this._qacue.classList.toggle('waiting', pending > 0);
+    var txt = this._qacue.querySelector('.qa-text');
+    txt.textContent = '';
+    if (pending) {
+      txt.appendChild(el('span', 'qa-n', String(pending)));
+      txt.appendChild(document.createTextNode(
+        pending === 1 ? ' question waiting' : ' questions waiting'));
+    } else {
+      txt.appendChild(el('span', 'qa-n', String(open)));
+      txt.appendChild(document.createTextNode(
+        open === 1 ? ' question open' : ' questions open'));
+    }
+    scaleOverlays();
+  };
 
   /* ------------------------------------------------------------ live extras */
 
@@ -682,6 +723,13 @@
     if (prev) prev.remove();
   };
 
+  /** A question, put on the wall for the room to see. */
+  Player.showQuestionCard = function (item) {
+    if (!this.open) return;
+    if (!item) { this.closeFocus(); return; }
+    this.focusOverlay(SF.questionCard(this.deck, item));
+  };
+
   /** The audience responses, focused. */
   Player.showFeedbackFocus = function (digest, opts) {
     this.focusOverlay(SF.feedbackFocus(this.deck, digest, opts || {}));
@@ -762,6 +810,7 @@
     this._rail = null;
     this._railMode = null;
     this._solo = null;
+    this._qacue = null;
     this._focus = false;
     if (!opts.keepAnswers) this.answers = {};
     viewport.innerHTML = '';
@@ -787,6 +836,7 @@
     viewport.classList.remove('fb-focus');
     this._current = null;
     this._focus = false;
+    this._qacue = null;
     this._rail = null;
     this._solo = null;
     if (document.fullscreenElement || document.webkitFullscreenElement) this.toggleFullscreen();
@@ -822,7 +872,10 @@
         deck: deck,
         index: Player.idx,
         answers: Player.answers,
-        startedAt: Player.started
+        startedAt: Player.started,
+        /* Pending questions travel to presenter view and nowhere else: the
+           host's own screen is usually the projected one. */
+        qa: Player.qa || null
       }, '*');
     } catch (e) { /* window closing */ }
   }
@@ -836,6 +889,7 @@
     else if (d.cmd === 'blank') Player.toggleBlank();
     else if (d.cmd === 'exit') Player.close();
     else if (d.cmd === 'hello') syncPresenter();
+    else if (d.cmd === 'qa') Player.emit('qaCommand', d);
   });
 
   /* ------------------------------------------------------------ keyboard */

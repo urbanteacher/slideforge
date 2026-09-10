@@ -4,7 +4,7 @@
    same port, so phones on the same Wi-Fi can join with a PIN.
    No dependencies: `node server/server.js` and you're running.
 
-   Rooms live in memory only and vanish when the process stops. */
+   Live rooms are in memory; attendance and responses are journaled to private local files. */
 'use strict';
 
 const http = require('http');
@@ -12,6 +12,8 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const ws = require('./ws');
+const crypto = require('node:crypto');
+const Sessions = require('./sessions');
 
 const PORT = Number(process.env.PORT) || 8787;
 const HOST = process.env.HOST || '0.0.0.0';
@@ -118,7 +120,18 @@ function saveData(req, res) {
 }
 
 function serve(req, res) {
-  let rel = decodeURIComponent(req.url.split('?')[0]);
+  let rel;
+  try { rel = decodeURIComponent(req.url.split('?')[0]); } catch (_) { return jsonReply(res, 400, {error:'Invalid URL'}); }
+  if (req.method === 'GET' && rel.startsWith('/api/sessions/')) {
+    const id = rel.slice('/api/sessions/'.length);
+    const token = String(req.headers.authorization || '').replace(/^Bearer /, '');
+    try {
+      const active = [...rooms.values()].find(r => r.audit && r.audit.meta.id === id);
+      const session = active ? (Sessions.authorized(active.audit.meta, token) ? active.audit : null) : Sessions.load(id, token);
+      if (!session) return jsonReply(res, 404, {error:'Session unavailable. Open it from the host browser that created it.'});
+      return jsonReply(res, 200, Sessions.project(session, !!active));
+    } catch (_) { return jsonReply(res, 500, {error:'Could not read the session journal.'}); }
+  }
 
   if (rel === '/api/data' && req.method === 'GET') return listData(res);
   if (rel === '/api/data' && req.method === 'POST') return saveData(req, res);
@@ -130,6 +143,10 @@ function serve(req, res) {
   if (!full.startsWith(ROOT + path.sep) && full !== ROOT) {
     res.writeHead(403).end('Forbidden');
     return;
+  }
+
+  if (full === Sessions.DIR || full.startsWith(Sessions.DIR + path.sep) || path.relative(ROOT, full).split(path.sep).some(part => part.startsWith('.'))) {
+    res.writeHead(403).end('Forbidden'); return;
   }
 
   fs.stat(full, (err, st) => {
@@ -187,6 +204,7 @@ function playerList(room) {
       id: p.id,
       name: p.name,
       score: p.score,
+      connected: !!(p.sock && p.sock.open),
       team: p.team,
       correct: p.correctCount || 0     // an individual race's position
     }))
@@ -251,6 +269,7 @@ function pushTally(room) {
   for (const p of room.players.values()) {
     // latecomers are spectators for the question already on screen
     if (eligible && !eligible.has(p.id)) continue;
+    if ((!p.sock || !p.sock.open) && p.answer == null) continue;
     total++;
     if (p.answer != null && p.answer >= 0 && p.answer < counts.length) {
       counts[p.answer]++;
@@ -326,6 +345,50 @@ function pushFeedback(room) {
   }, feedbackDigest(room)));
 }
 
+/**
+ * Q&A as each side is allowed to see it.
+ *
+ * The host's copy includes pending items; the players' copy never does. That
+ * split is the whole point of moderation — and it matters here specifically
+ * because the host's screen is usually the projected one, so anything the
+ * host is sent could end up on the wall. Pending items are therefore only
+ * ever rendered in presenter view.
+ */
+function qaForHost(room) {
+  const items = [...room.qa.values()].map((q) => ({
+    id: q.id, text: q.text, name: q.name, at: q.at, state: q.state, votes: q.votes.size
+  }));
+  /* Approved first and most-voted first inside that, so the host's queue is
+     ordered by what the room actually wants answered. */
+  const rank = { approved: 0, pending: 1, answered: 2, dismissed: 3 };
+  items.sort((a, b) => (rank[a.state] - rank[b.state]) || (b.votes - a.votes) || (a.at - b.at));
+  return {
+    t: 'qa',
+    items,
+    pinned: room.qaPinned,
+    pending: items.filter((q) => q.state === 'pending').length,
+    open: items.filter((q) => q.state === 'approved').length
+  };
+}
+
+function qaForPlayer(room, playerId) {
+  const items = [...room.qa.values()]
+    .filter((q) => q.state === 'approved' || q.state === 'answered')
+    .map((q) => ({
+      id: q.id, text: q.text, name: q.name, state: q.state,
+      votes: q.votes.size, mine: q.votes.has(playerId), asked: q.playerId === playerId
+    }));
+  items.sort((a, b) => (b.votes - a.votes) || a.id - b.id);
+  return { t: 'qaList', items, pinned: room.qaPinned };
+}
+
+function pushQA(room) {
+  if (room.host && room.host.open) room.host.json(qaForHost(room));
+  for (const p of room.players.values()) {
+    if (p.sock && p.sock.open) p.sock.json(qaForPlayer(room, p.id));
+  }
+}
+
 function rank(room, playerId) {
   const list = playerList(room);
   const i = list.findIndex((p) => p.id === playerId);
@@ -359,6 +422,8 @@ function admitWaiting(room) {
   for (const p of room.waiting.values()) {
     if (!p.sock || !p.sock.open) continue;
     room.players.set(p.id, p);
+    room.waiting.delete(p.id);
+    record(room, 'admit', {id:p.id});
     p.sock.json({
       t: 'joined',
       name: p.name,
@@ -376,10 +441,19 @@ function admitWaiting(room) {
         (p.team != null ? ' [' + room.teams[p.team] + ']' : '') +
         ' (' + room.players.size + ')');
   }
-  room.waiting.clear();
+  // Disconnected waiting participants keep their identity for a later resume.
+}
+
+function record(room, type, data) {
+  if (!room.audit) return;
+  const ok = Sessions.append(room.audit, type, data);
+  if (room.host && room.host.open) room.host.json({t:'recording', id:room.audit.meta.id, persisted:ok, updatedAt:Date.now()});
 }
 
 function closeRoom(room, reason) {
+  if (!rooms.has(room.pin)) return;
+  record(room, 'end', {reason:reason || 'The host ended the session.'});
+  if (room.host && room.host.open) room.host.json({t:'sessionClosed', report:Sessions.project(room.audit)});
   const bye = { t: 'over', reason: reason || 'The host ended the quiz.' };
   for (const p of room.players.values()) {
     if (p.sock && p.sock.open) p.sock.json(bye);
@@ -443,13 +517,24 @@ ws.attach(server, (sock, req) => {
            collect from the room without any game in it. */
         prompt: null,
         replies: new Map(),      // playerId -> [strings] or [choiceIndex]
+        /* Moderated Q&A. Ambient: open for the whole session rather than tied
+           to a slide, because a question occurs to someone when it occurs to
+           them. Nothing reaches the room until the host approves it. */
+        qa: new Map(),           // id -> { id, text, name, playerId, at, state, votes:Set }
+        qaNextId: 1,
+        qaPinned: null,
         phase: 'lobby',
         nextId: 1,
         asked: 0
       };
+      let created;
+      try { created = Sessions.create(room.title, room.mode, room.teams); }
+      catch (_) { role = null; room = null; sock.json({t:'error',message:'Could not create a session record. Check free disk space and folder permissions before hosting.'}); return; }
+      room.audit = created.session;
       rooms.set(pin, room);
       sock.json({
         t: 'hosted',
+        session: {id:room.audit.meta.id, token:created.token, title:room.title, createdAt:room.audit.meta.createdAt},
         pin,
         joinUrl: JOIN_URL,
         mode: room.mode,
@@ -463,7 +548,9 @@ ws.attach(server, (sock, req) => {
     if (role === 'host') {
       if (!room) return;
 
-      if (m.t === 'round') {
+      if (m.t === 'report') {
+        sock.json({t:'sessionReport',report:Sessions.project(room.audit,true)});
+      } else if (m.t === 'round') {
         /* A new game in the deck is a new round: the window reopens and
            anyone held back is pulled in before the first question goes out. */
         room.roundGame = String(m.gameId || '');
@@ -476,15 +563,23 @@ ws.attach(server, (sock, req) => {
             (room.waiting.size ? '' : '') + ' (' + room.players.size + ' playing)');
 
       } else if (m.t === 'begin') {
+        if (room.phase !== 'lobby') return;
+        record(room, 'begin', {});
         room.phase = 'running';
         broadcast(room, { t: 'begun' });
         log('room ' + room.pin + ' started with ' + room.players.size + ' player(s)');
 
       } else if (m.t === 'question') {
+        if (!Array.isArray(m.options) || m.options.length < 2 || m.options.length > 6) return;
+        if (room.question && room.question.id === String(m.id || '') && room.phase === 'question') return;
         room.asked++;
         room.question = {
-          id: String(m.id || ''),
-          options: Array.isArray(m.options) ? m.options.map(String) : [],
+          id: String(m.id || '').slice(0,160),
+          attempt: crypto.randomUUID(),
+          question: String(m.question || '').slice(0,2000),
+          bloom: ['Remember','Understand','Apply','Analyze','Evaluate','Create'].includes(m.bloom) ? m.bloom : '',
+          sourceSlideId: String(m.sourceSlideId || '').slice(0,160),
+          options: Array.isArray(m.options) ? m.options.map(o => String(o).slice(0,2000)) : [],
           timeLimit: Math.max(0, Number(m.timeLimit) || 0),
           points: Math.max(0, Number(m.points) || 1000),
           // the host knows where this question sits in the deck; fall back to
@@ -503,7 +598,8 @@ ws.attach(server, (sock, req) => {
         /* Snapshot who is eligible. Someone joining mid-question never sees it
            and so can never answer it — counting them would mean "everyone has
            answered" is never true and the auto-reveal stalls forever. */
-        room.question.eligible = new Set(room.players.keys());
+        room.question.eligible = new Set([...room.players.values()].filter(p => p.sock && p.sock.open).map(p => p.id));
+        record(room, 'question', {...room.question, eligible:[...room.question.eligible]});
         for (const p of room.players.values()) {
           p.answer = null;
           p.answeredAt = 0;
@@ -518,8 +614,9 @@ ws.attach(server, (sock, req) => {
         pushTally(room);
 
       } else if (m.t === 'reveal') {
-        if (!room.question) return;
+        if (!room.question || room.phase !== 'question' || (m.id && m.id !== room.question.id)) return;
         const correct = Number(m.correct);
+        if (!Number.isInteger(correct) || correct < 0 || correct >= room.question.options.length) return;
         const why = String(m.explanation || '').slice(0, 1200);
         const answerText = String(m.answer || '').slice(0, 200);
         room.phase = 'revealed';
@@ -591,20 +688,25 @@ ws.attach(server, (sock, req) => {
           });
         }
 
+        record(room, 'reveal', {attempt:room.question.attempt,correct,explanation:why,scores:[...room.players.values()].map(p => ({id:p.id,score:p.score}))});
         pushPlayers(room);
         pushTally(room);
 
       } else if (m.t === 'prompt') {
         /* Opening a prompt clears the previous one's replies: they belong to
            the slide that asked, not to the session. */
+        if (!['poll','wordcloud','brainstorm'].includes(m.kind)) return;
         room.prompt = {
+          attempt: crypto.randomUUID(),
+          bloom: ['Remember','Understand','Apply','Analyze','Evaluate','Create'].includes(m.bloom) ? m.bloom : '',
           id: String(m.id || ''),
           kind: String(m.kind || 'poll'),
           prompt: String(m.prompt || '').slice(0, 240),
-          options: (Array.isArray(m.options) ? m.options : []).map(String).slice(0, 6),
+          options: (Array.isArray(m.options) ? m.options : []).map(o => String(o).slice(0,500)).slice(0, 6),
           max: Math.max(1, Math.min(5, Number(m.max) || 1))
         };
         room.replies = new Map();
+        record(room, 'prompt', {...room.prompt});
         broadcast(room, promptMessage(room));
         pushFeedback(room);
         log('room ' + room.pin + ' prompt open (' + room.prompt.kind + ')');
@@ -613,6 +715,28 @@ ws.attach(server, (sock, req) => {
         room.prompt = null;
         room.replies = new Map();
         broadcast(room, { t: 'promptEnd' });
+
+      } else if (m.t === 'qaModerate') {
+        const item = room.qa.get(Number(m.id));
+        const action = String(m.action || '');
+        if (!item || ['approve', 'dismiss', 'answered', 'pending'].indexOf(action) === -1) return;
+        item.state = action === 'approve' ? 'approved' : action;
+        /* A dismissed or answered question cannot stay on the wall. */
+        if (room.qaPinned && room.qaPinned.id === item.id && item.state !== 'approved') {
+          room.qaPinned = null;
+        }
+        record(room, 'qaModerate', { id: item.id, state: item.state });
+        pushQA(room);
+
+      } else if (m.t === 'qaPin') {
+        const item = m.id == null ? null : room.qa.get(Number(m.id));
+        /* Only an approved question can be shown — pinning is a display
+           action, not a second route past moderation. */
+        room.qaPinned = item && item.state === 'approved'
+          ? { id: item.id, text: item.text, name: item.name, votes: item.votes.size }
+          : null;
+        record(room, 'qaPin', { id: room.qaPinned ? room.qaPinned.id : null });
+        pushQA(room);
 
       } else if (m.t === 'idle') {
         room.phase = 'idle';
@@ -640,6 +764,31 @@ ws.attach(server, (sock, req) => {
       if (m.probe) {
         sock.json({ t: 'room', mode: target.mode, teams: target.teams, title: target.title });
         return;
+      }
+      if (typeof m.resumeToken === 'string' && m.resumeToken.length === 64) {
+        const returning = [...target.players.values(), ...target.waiting.values()].find(p => p.resumeToken === m.resumeToken);
+        if (returning) {
+          if (returning.sock && returning.sock.open) { sock.json({t:'error',message:'You are already connected in another tab.'}); return; }
+          role = 'player'; room = target; me = returning; me.sock = sock;
+          record(room, 'resume', {id:me.id});
+          if (room.waiting.has(me.id) && room.joinOpen) admitWaiting(room);
+          const held = room.waiting.has(me.id);
+          sock.json({t:held?'waiting':'joined',name:me.name,title:room.title,phase:room.phase,mode:room.mode,team:me.team,teamName:me.team != null ? room.teams[me.team] : null,score:me.score,resumeToken:me.resumeToken});
+          if (!held) {
+            if (room.phase === 'question' && room.question && room.question.eligible.has(me.id)) {
+              const remaining = room.question.timeLimit ? Math.max(0, room.question.timeLimit - (Date.now() - room.askedAt) / 1000) : 0;
+              if (!room.question.timeLimit || remaining > 0) {
+                sock.json({t:'question',n:room.question.index,count:room.question.options.length,timeLimit:remaining});
+                if (me.answer != null) sock.json({t:'locked',choice:me.answer});
+              }
+            } else if (room.prompt) {
+              sock.json(promptMessage(room));
+              const values = room.replies.get(me.id) || [];
+              if (values.length) sock.json(room.prompt.kind === 'poll' ? {t:'replied',choice:values[0]} : {t:'replied',used:values.length,max:room.prompt.max});
+            }
+          }
+          pushPlayers(room); pushTally(room); return;
+        }
       }
       let name = String(m.name || '').trim().slice(0, 18);
       if (!name) {
@@ -676,6 +825,7 @@ ws.attach(server, (sock, req) => {
       room = target;
       me = {
         id: room.nextId++,
+        resumeToken: crypto.randomBytes(32).toString('hex'),
         name,
         team,
         score: 0,
@@ -685,6 +835,7 @@ ws.attach(server, (sock, req) => {
         lastGain: 0,
         sock
       };
+      record(room, 'join', {id:me.id,name:me.name,team:me.team,admitted:room.joinOpen});
       if (!room.joinOpen) {
         /* The window has shut for this round. Hold them rather than refusing:
            they keep their name and team and come in when the next round opens,
@@ -692,6 +843,7 @@ ws.attach(server, (sock, req) => {
         room.waiting.set(me.id, me);
         sock.json({
           t: 'waiting',
+          resumeToken: me.resumeToken,
           name,
           title: room.title,
           mode: room.mode,
@@ -707,6 +859,7 @@ ws.attach(server, (sock, req) => {
       room.players.set(me.id, me);
       sock.json({
         t: 'joined',
+        resumeToken: me.resumeToken,
         name,
         title: room.title,
         phase: room.phase,
@@ -719,6 +872,7 @@ ws.attach(server, (sock, req) => {
          quiz question, there is no fairness reason to hold them out. */
       const open = promptMessage(room);
       if (open) sock.json(open);
+      sock.json(qaForPlayer(room, me.id));
 
       pushPlayers(room);
       log('room ' + room.pin + ' + ' + name +
@@ -727,14 +881,49 @@ ws.attach(server, (sock, req) => {
       return;
     }
 
+    if (role === 'player' && m.t === 'ask') {
+      if (!room) return;
+      const text = String(m.text || '').trim().slice(0, 240);
+      if (!text) return;
+      /* A cap per person, so one enthusiast cannot flood the queue. Dismissed
+         ones are not counted against them — the host judged those, not them. */
+      const mine = [...room.qa.values()].filter(
+        (q) => q.playerId === me.id && q.state !== 'dismissed'
+      ).length;
+      if (mine >= 5) {
+        sock.json({ t: 'askRejected', reason: 'You have five questions in already. Wait for one to be answered.' });
+        return;
+      }
+      const id = room.qaNextId++;
+      room.qa.set(id, {
+        id, text, name: me.name, playerId: me.id,
+        at: Date.now(), state: 'pending', votes: new Set()
+      });
+      record(room, 'qaAsk', { id, playerId: me.id, text });
+      sock.json({ t: 'asked', id });
+      pushQA(room);
+      log('room ' + room.pin + ' ? ' + me.name + ': ' + text.slice(0, 60));
+      return;
+    }
+
+    if (role === 'player' && m.t === 'qaVote') {
+      if (!room) return;
+      const item = room.qa.get(Number(m.id));
+      if (!item || item.state !== 'approved') return;
+      if (item.votes.has(me.id)) item.votes.delete(me.id);
+      else item.votes.add(me.id);
+      pushQA(room);
+      return;
+    }
+
     if (role === 'player' && m.t === 'reply') {
-      if (!room || !room.prompt) return;
+      if (!room || !rooms.has(room.pin) || !room.players.has(me.id) || !room.prompt) return;
       const p = room.prompt;
       const mine = room.replies.get(me.id) || [];
 
       if (p.kind === 'poll') {
         const pick = Number(m.choice);
-        if (!(pick >= 0 && pick < p.options.length)) return;
+        if (!Number.isInteger(pick) || !(pick >= 0 && pick < p.options.length)) return;
         room.replies.set(me.id, [pick]);      // last vote wins, one each
         sock.json({ t: 'replied', choice: pick });
       } else {
@@ -746,17 +935,20 @@ ws.attach(server, (sock, req) => {
         room.replies.set(me.id, mine);
         sock.json({ t: 'replied', text: text, used: mine.length, max: p.max });
       }
+      record(room, 'reply', {attempt:p.attempt,playerId:me.id,values:room.replies.get(me.id).slice()});
       pushFeedback(room);
       return;
     }
 
     if (role === 'player' && m.t === 'answer') {
-      if (!room || room.phase !== 'question' || !room.question) return;
+      if (!room || !rooms.has(room.pin) || room.phase !== 'question' || !room.question || !room.question.eligible.has(me.id)) return;
+      if (room.question.timeLimit && Date.now() - room.askedAt > room.question.timeLimit * 1000) return;
       if (me.answer != null) return;                       // one answer per question
       const choice = Number(m.choice);
-      if (!(choice >= 0 && choice < room.question.options.length)) return;
+      if (!Number.isInteger(choice) || !(choice >= 0 && choice < room.question.options.length)) return;
       me.answer = choice;
       me.answeredAt = Date.now();
+      record(room, 'answer', {attempt:room.question.attempt,playerId:me.id,choice,elapsedMs:me.answeredAt-room.askedAt});
       sock.json({ t: 'locked', choice });
       pushTally(room);
       return;
@@ -767,9 +959,9 @@ ws.attach(server, (sock, req) => {
     if (role === 'host' && room) {
       closeRoom(room, 'The host disconnected.');
     } else if (role === 'player' && room && me) {
-      room.players.delete(me.id);
-      room.waiting.delete(me.id);
-      if (room.replies) room.replies.delete(me.id);
+      if (me.sock !== sock) return;
+      me.sock = null;
+      if (rooms.has(room.pin)) record(room, 'leave', {id:me.id});
       if (rooms.has(room.pin)) {
         pushPlayers(room);
         pushTally(room);
@@ -809,8 +1001,10 @@ server.on('error', (err) => {
   process.exit(1);
 });
 
-process.on('SIGINT', () => {
+function shutdown() {
   console.log('\nShutting down.');
   for (const room of [...rooms.values()]) closeRoom(room, 'The server stopped.');
   process.exit(0);
-});
+}
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);

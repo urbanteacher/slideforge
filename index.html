@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SlideForge — presentations &amp; games</title>
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/studio.css">
 </head>
 <body>
 
@@ -12,12 +13,12 @@
 
   <!-- ---------------------------------------------------------- top bar -->
   <div class="topbar">
-    <div class="brand"><span class="mark">S</span> SlideForge</div>
+    <div class="brand"><span class="mark">S</span> SlideForge<span class="brand-tag">STUDIO</span></div>
 
     <!-- the two engines -->
     <div class="wsswitch" id="wsSwitch">
-      <button data-go="deck" class="on">▤ Presentation</button>
-      <button data-go="game">◈ Game</button>
+      <button data-go="deck" class="on">▤ Lesson studio</button>
+      <button data-go="game">◈ Quiz studio</button>
     </div>
 
     <input id="docTitle" type="text" placeholder="Title" spellcheck="false">
@@ -30,20 +31,25 @@
 
     <span class="vsep"></span>
 
-    <button class="btn" id="btnNew">New</button>
-    <button class="btn" id="btnOpen">Open</button>
-    <button class="btn" id="btnSave" title="Save to this browser (⌘S)">Save</button>
-    <button class="btn" id="btnExport" title="Download as a file">Export</button>
-    <button class="btn" id="btnImport" title="Load a file">Import</button>
+    <details class="file-menu"><summary class="btn">File ▾</summary><div class="file-actions">
+      <button class="btn" id="btnNew">New blank document</button>
+      <button class="btn" id="btnOpen">Open saved document</button>
+      <button class="btn" id="btnSave">Save to browser</button>
+      <button class="btn" id="btnExport">Export file</button>
+      <button class="btn" id="btnImport">Import file</button>
+    </div></details>
 
     <span class="spacer"></span>
 
+    <div class="header-actions">
+    <button class="btn" id="btnReports">Reports</button>
     <button class="btn" data-ws="game" id="btnGameSettings" title="Teams, scoring and timing">⚙ Settings</button>
     <button class="btn" id="btnHelp" title="Keyboard shortcuts">?</button>
     <button class="btn" data-ws="deck" id="btnPresenter" title="Presenter view with notes (D)">Presenter</button>
     <button class="btn live" id="btnLive" title="Run live with phones in the room">◉ Host live</button>
     <button class="btn primary" data-ws="deck" id="btnPresent" title="Start the slideshow (⌘↵)">▶ Present</button>
     <button class="btn primary" data-ws="game" id="btnPlay" title="Play this game (⌘↵)">▶ Play game</button>
+    </div>
   </div>
 
   <!-- ---------------------------------------------------------- rail -->
@@ -58,9 +64,11 @@
 
   <!-- ---------------------------------------------------------- stage -->
   <div class="stage-area">
+    <div class="studio-toolbar" data-ws="deck"><div><span class="eyebrow">YOUR TEACHING CANVAS</span><strong id="canvasLabel">Make space for a little curiosity.</strong></div><button class="btn" id="btnTemplate">✧ Example lesson</button><button class="btn primary" id="btnActivities">＋ Add activity</button></div>
     <div class="stage-wrap">
       <div id="previewBox"></div>
     </div>
+    <div class="lesson-path" data-ws="deck"><span class="eyebrow">LEARNING LOOP</span><span>01 <b>Teach</b></span><i>→</i><span>02 <b>Check</b></span><i>→</i><span>03 <b>Discuss</b></span><i>→</i><span>04 <b>Adapt</b></span><button id="btnReflect" class="btn ghost">＋ Exit ticket</button></div>
     <div class="notes-strip">
       <label for="notes" id="notesLabel">Speaker notes — visible in presenter view only</label>
       <textarea id="notes" placeholder="Notes…" spellcheck="true"></textarea>
@@ -120,6 +128,7 @@
     <div class="teams" id="lobbyTeams"></div>
     <div class="who-list" id="lobbyPlayers"></div>
     <div class="count" id="lobbyCount">Waiting for players…</div>
+    <div class="recording-status" id="recordingStatus" role="status"></div>
     <div class="warn" id="lobbyWarn" style="display:none"></div>
     <div class="actions">
       <button class="btn" id="lobbyCancel">Cancel</button>
@@ -169,6 +178,8 @@
 <script src="js/shell.js"></script>
 <script src="js/editor.js"></script>
 <script src="js/games.js"></script>
-<script>SF.Shell.init();</script>
+<script src="js/studio.js"></script>
+<script src="js/reports.js"></script>
+<script>SF.Shell.init(); SF.Studio.init(); SF.Reports.init();</script>
 </body>
 </html>

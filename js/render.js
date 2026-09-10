@@ -352,6 +352,7 @@
     title: layoutTitle,
     section: layoutSection,
     content: layoutContent,
+    cards: layoutContent,
     quote: layoutQuote,
     image: layoutImage,
     quiz: layoutQuiz,
@@ -372,6 +373,12 @@
     opts = opts || {};
     var root = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-' + slide.type);
     root.dataset.slideId = slide.id;
+    if (deck.theme === 'studio' && (slide.type === 'title' || slide.type === 'section')) {
+      var art = el('div', 'studio-art');
+      art.setAttribute('aria-hidden', 'true');
+      art.innerHTML = '<div class="art-orbit"></div><div class="art-tile">✳</div><div class="art-dot"></div><div class="art-caption">STAY CURIOUS.</div>';
+      root.appendChild(art);
+    }
 
     var pad = el('div', 'pad');
     root.appendChild(pad);
@@ -443,6 +450,25 @@
     return scale;
   }
 
+
+  /* ----------------------------------------------------- a question, shown */
+
+  /* One approved question, on the wall. Deliberately plain: it is somebody's
+     question being taken seriously, not a data visualisation. */
+  function questionCard(deck, item) {
+    var node = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-question');
+    var pad = el('div', 'pad');
+    pad.appendChild(el('div', 'qc-label', 'From the room'));
+    pad.appendChild(el('div', 'qc-text', item.text || ''));
+    var foot = el('div', 'qc-foot');
+    if (item.name) foot.appendChild(el('span', 'qc-who', item.name));
+    if (item.votes > 1) {
+      foot.appendChild(el('span', 'qc-votes', '▲ ' + item.votes + ' also asked this'));
+    }
+    pad.appendChild(foot);
+    node.appendChild(pad);
+    return node;
+  }
 
   /* ------------------------------------------------- feedback, full screen */
 
@@ -929,6 +955,7 @@
     raceTrack: raceTrack,
     feedbackRail: feedbackRail,
     feedbackFocus: feedbackFocus,
+    questionCard: questionCard,
     sampleFeedbackDigest: sampleFeedbackDigest,
     paintFeedbackRail: paintFeedbackRail,
     paintScoreRail: paintScoreRail,

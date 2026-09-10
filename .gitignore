@@ -8,3 +8,6 @@ node_modules/
 # they are plain JSON and diff cleanly. Ignored by default because embedded
 # images make them large and they are a snapshot, not source.
 data/
+
+# Private attendance and live-session journals
+.slideforge/

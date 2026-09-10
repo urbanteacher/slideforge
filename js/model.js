@@ -8,6 +8,7 @@
   var SLIDE_H = 720;
 
   var THEMES = {
+    studio: { name: 'Studio · Sage & ink', swatch: '#dce8cc' },
     midnight: { name: 'Midnight', swatch: '#1b2a4a' },
     paper:    { name: 'Paper',    swatch: '#f4f1ea' },
     ocean:    { name: 'Ocean',    swatch: '#0d5c63' },
@@ -64,6 +65,7 @@
   var SLIDE_TYPES = {
     title:   { label: 'Title',        icon: 'T' },
     section: { label: 'Section',      icon: 'S' },
+    cards:   { label: 'Cards', icon: '▦' },
     content: { label: 'Bullets',      icon: '•' },
     image:   { label: 'Image',        icon: '▣' },
     quote:   { label: 'Quote',        icon: '“' },
@@ -74,7 +76,7 @@
   };
 
   /* The layouts offered in the presentation editor's Layout grid. */
-  var DECK_TYPES = ['title', 'section', 'content', 'image', 'quote'];
+  var DECK_TYPES = ['title', 'section', 'content', 'cards', 'image', 'quote'];
 
   function uid() {
     return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
@@ -113,6 +115,7 @@
       case 'section':
         s.title = 'Section heading';
         break;
+      case 'cards':
       case 'content':
         s.title = 'Slide title';
         s.bullets = ['First point', 'Second point', 'Third point'];
@@ -599,6 +602,8 @@
       }
       run.games.push(game);
       compileGame(game, { theme: deck.theme }).forEach(function (cs) {
+        cs.sourceSlideId = s.id;
+        cs.bloom = cs.bloom || s.bloom || '';
         run.slides.push(cs);
       });
     });

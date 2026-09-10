@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Presenter view — SlideForge</title>
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/studio.css">
 <style>
   body { overflow: hidden; }
   .pv {
@@ -73,6 +74,35 @@
   }
   .waiting { display: grid; place-items: center; height: 100vh; color: var(--ui-dim); font-size: 14px; }
 
+  /* Moderation lives here and only here. The host's main window is normally
+     the projected one, so a pending question must never be rendered there. */
+  .qa { max-height: 34vh; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; }
+  .qa .qitem {
+    background: var(--ui-panel); border: 1px solid var(--ui-line);
+    border-left: 4px solid var(--ui-warn);
+    border-radius: 8px; padding: 9px 11px;
+  }
+  .qa .qitem.approved { border-left-color: var(--ui-good); }
+  .qa .qitem.answered { border-left-color: var(--ui-line); opacity: .6; }
+  .qa .qitem.pinned { box-shadow: 0 0 0 2px var(--ui-accent); }
+  .qa .qtext { font-size: 14px; line-height: 1.45; }
+  .qa .qmeta {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 11px; color: var(--ui-dim); margin-top: 5px;
+  }
+  .qa .qvotes { color: var(--ui-accent); }
+  .qa .qacts { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+  .qa .qacts button {
+    font: inherit; font-size: 11px;
+    background: var(--ui-panel-2); border: 1px solid var(--ui-line);
+    color: var(--ui-text); border-radius: 5px; padding: 4px 9px; cursor: pointer;
+  }
+  .qa .qacts button:hover { border-color: var(--ui-accent); }
+  .qa .qacts button.go { background: var(--ui-good); border-color: var(--ui-good); color: #06281a; }
+  .qa .qacts button.no { color: var(--ui-bad); }
+  .qa .qempty { font-size: 12px; color: var(--ui-dim); font-style: italic; padding: 4px 2px; }
+  #qaCount { color: var(--ui-warn); font-weight: 700; }
+
   /* a presenter window dragged narrow (or a portrait second screen) gets a
      single column rather than two cramped ones */
   @media (max-width: 900px) {
@@ -109,6 +139,11 @@
     <div class="cap">Notes</div>
     <div class="notes" id="notes"></div>
     <div id="quizinfo"></div>
+
+    <div class="cap" id="qaCap" style="display:none">
+      Questions from the room <span id="qaCount"></span>
+    </div>
+    <div class="qa" id="qa" style="display:none"></div>
   </div>
 
   <div class="pv-foot">
@@ -143,9 +178,92 @@
   });
   $('resetTimer').onclick = function () { timerBase = Date.now(); };
 
+  /* ---------------------------------------------------------------- Q & A */
+
+  var qaState = null;
+
+  function qaCmd(id, action) {
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage({ type: 'sf-presenter-cmd', cmd: 'qa', id: id, action: action }, '*');
+    }
+  }
+
+  function drawQA() {
+    var cap = $('qaCap'), box = $('qa');
+    if (!qaState || !qaState.items) { cap.style.display = 'none'; box.style.display = 'none'; return; }
+
+    cap.style.display = ''; box.style.display = '';
+    $('qaCount').textContent = qaState.pending
+      ? '· ' + qaState.pending + ' waiting'
+      : '';
+
+    var live = qaState.items.filter(function (q) { return q.state !== 'dismissed'; });
+    box.textContent = '';
+    if (!live.length) {
+      var none = document.createElement('div');
+      none.className = 'qempty';
+      none.textContent = 'Nothing asked yet.';
+      box.appendChild(none);
+      return;
+    }
+
+    var pinnedId = qaState.pinned ? qaState.pinned.id : null;
+    live.forEach(function (q) {
+      var row = document.createElement('div');
+      row.className = 'qitem ' + q.state + (q.id === pinnedId ? ' pinned' : '');
+
+      var t = document.createElement('div');
+      t.className = 'qtext';
+      t.textContent = q.text;
+      row.appendChild(t);
+
+      var meta = document.createElement('div');
+      meta.className = 'qmeta';
+      var who = document.createElement('span');
+      who.textContent = q.name || 'anonymous';
+      meta.appendChild(who);
+      if (q.votes) {
+        var v = document.createElement('span');
+        v.className = 'qvotes';
+        v.textContent = '▲ ' + q.votes;
+        meta.appendChild(v);
+      }
+      var st = document.createElement('span');
+      st.textContent = q.state === 'pending' ? 'waiting for you'
+        : q.state === 'approved' ? 'visible to the room' : 'answered';
+      meta.appendChild(st);
+      row.appendChild(meta);
+
+      var acts = document.createElement('div');
+      acts.className = 'qacts';
+      var add = function (label, action, cls) {
+        var b = document.createElement('button');
+        b.textContent = label;
+        if (cls) b.className = cls;
+        b.onclick = function () { qaCmd(q.id, action); };
+        acts.appendChild(b);
+      };
+      if (q.state === 'pending') {
+        add('Approve', 'approve', 'go');
+        add('Dismiss', 'dismiss', 'no');
+      } else if (q.state === 'approved') {
+        add(q.id === pinnedId ? 'Take off screen' : 'Show on screen',
+            q.id === pinnedId ? 'unpin' : 'pin');
+        add('Mark answered', 'answered');
+        add('Dismiss', 'dismiss', 'no');
+      } else if (q.state === 'answered') {
+        add('Reopen', 'approve');
+      }
+      row.appendChild(acts);
+      box.appendChild(row);
+    });
+  }
+
   window.addEventListener('message', function (ev) {
     var d = ev.data;
     if (!d || d.type !== 'sf-presenter-state') return;
+    qaState = d.qa || null;
+    drawQA();
     state = { deck: SF.normalizeDeck(d.deck), index: d.index, answers: d.answers || {} };
     if (timerBase == null) timerBase = d.startedAt || Date.now();
     $('waiting').style.display = 'none';

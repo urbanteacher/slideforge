@@ -63,6 +63,11 @@
     deck.slides.forEach(function (s, i) {
       var row = el('div', 'thumb' + (i === sel ? ' sel' : ''));
       row.draggable = true;
+      row.tabIndex = 0;
+      row.setAttribute('role', 'button');
+      row.setAttribute('aria-label', 'Slide ' + (i + 1) + ': ' + (s.title || SF.SLIDE_TYPES[s.type].label));
+      row.setAttribute('aria-current', i === sel ? 'true' : 'false');
+      row.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); select(i); } };
       row.dataset.i = String(i);
       row.appendChild(el('div', 'num', String(i + 1)));
 
@@ -133,6 +138,7 @@
   /* Preview mode for a feedback slide: 'rail' shows it beside the slide as the
      room will see it, 'focus' shows the full-screen version. Sample responses
      stand in, because you cannot judge a layout against no data. */
+  var inspectorTab = 'content';
   var fbPreview = 'rail';
 
   function drawPreview() {
@@ -152,7 +158,7 @@
         title: kind.label,
         subtitle: f.prompt,
         options: f.options,
-        footnote: '14 of 18 responded',
+        footnote: digest.answered + ' of ' + digest.players + ' responded',
         sample: true
       });
       box.appendChild(focus);
@@ -173,7 +179,7 @@
         title: kind.label,
         subtitle: f.prompt,
         options: f.options,
-        footnote: 'Sample — 14 of 18 responded'
+        footnote: 'Sample — ' + digest.answered + ' of ' + digest.players + ' responded'
       });
       requestAnimationFrame(function () {
         var scale = box.clientWidth / SF.SLIDE_W;
@@ -193,8 +199,22 @@
     var s = current();
     if (!s) return;
 
+    var tabs = el('div', 'inspector-tabs');
+    ['content', 'engage'].forEach(function (key) {
+      var b = UI.button(key === 'content' ? '✎  Design & content' : '✳  Engagement', inspectorTab === key ? 'active' : '', function () { inspectorTab = key; drawInspector(); });
+      tabs.appendChild(b);
+    });
+    insp.appendChild(tabs);
+    insp.appendChild(el('h4','eyebrow', inspectorTab === 'content' ? 'MAKE IT YOURS' : 'INVITE EVERY VOICE'));
     insp.appendChild(el('h4', 'insp-title',
       'Slide ' + (sel + 1) + ' — ' + SF.SLIDE_TYPES[s.type].label));
+
+    if (inspectorTab === 'engage') {
+      drawLearning(insp, s);
+      if (s.type !== 'game') drawFeedback(insp, s);
+      else drawGameEmbed(insp, s);
+      return;
+    }
 
     if (s.type === 'game') {
       drawGameEmbed(insp, s);
@@ -203,7 +223,7 @@
       drawContentFields(insp, s);
     }
 
-    if (s.type !== 'game') drawFeedback(insp, s);
+    insp.appendChild(UI.button(s.type === 'game' ? '✳ Plan the learning moment →' : s.feedback ? '✳ Edit audience activity →' : '✳ Add audience activity →', 'engage-link', function () { inspectorTab = 'engage'; drawInspector(); }));
 
     insp.appendChild(UI.field('Transition in', UI.select(
       SF.TRANSITIONS.map(function (t) {
@@ -219,6 +239,25 @@
     insp.appendChild(row);
   }
 
+  function drawLearning(insp, s) {
+    var prompts = {
+      Remember: 'Recall: What do you already know about this idea?',
+      Understand: 'Explain this idea in your own words.',
+      Apply: 'Where could you use this in a real situation?',
+      Analyze: 'Compare two approaches. What patterns do you notice?',
+      Evaluate: 'Which approach would you choose, and why?',
+      Create: 'Design a new solution using what you have learned.'
+    };
+    var level = s.bloom || 'Understand';
+    insp.appendChild(UI.field('Thinking level · Bloom’s taxonomy', UI.select(Object.keys(prompts).map(function (k) { return {value:k,label:k}; }), level, function (v) { s.bloom = v; touched(); drawInspector(); })));
+    var coach = el('div', 'learning-coach');
+    coach.appendChild(el('span','eyebrow','A PROMPT TO TRY'));
+    coach.appendChild(el('p',null,prompts[level] || prompts.Understand));
+    coach.appendChild(UI.button('Use as a brainstorm →', 'ghost', function () { s.feedback = SF.makeFeedback('brainstorm'); s.feedback.prompt = prompts[level] || prompts.Understand; touched(); draw(); }));
+    insp.appendChild(coach);
+    insp.appendChild(UI.field('After the responses, I will…', UI.area(s.nextStep || '', function (v) { s.nextStep = v; touched(); }, 2), 'Plan a re-explanation, peer discussion or stretch question. This note is for you.'));
+  }
+
   function drawLayoutPicker(insp, s) {
     var grid = el('div', 'type-grid');
     SF.DECK_TYPES.forEach(function (t) {
@@ -227,7 +266,7 @@
       b.appendChild(el('span', null, SF.SLIDE_TYPES[t].label));
       b.onclick = function () {
         s.type = t;
-        if (t === 'content' && !s.bullets.length) s.bullets = ['New point'];
+        if ((t === 'content' || t === 'cards') && !s.bullets.length) s.bullets = ['New point'];
         touched();
         draw();
       };
@@ -247,7 +286,7 @@
 
     if (s.type === 'image') {
       insp.appendChild(UI.field('Caption',
-        UI.text(s.title, function (v) { s.title = v; touched(); repaint(); })));
+        UI.area(s.title, function (v) { s.title = v; touched(); repaint(); }, 2)));
       insp.appendChild(UI.field('Image URL or data',
         UI.text(s.image, function (v) { s.image = v.trim(); touched(); repaint(); }),
         'Paste a URL, or embed a local file below.'));
@@ -275,15 +314,15 @@
     }
 
     insp.appendChild(UI.field(s.type === 'content' ? 'Title' : 'Heading',
-      UI.text(s.title, function (v) { s.title = v; touched(); repaint(); })));
+      UI.area(s.title, function (v) { s.title = v; touched(); repaint(); }, 2)));
 
     if (s.type === 'title' || s.type === 'section') {
       insp.appendChild(UI.field('Subtitle',
         UI.text(s.subtitle, function (v) { s.subtitle = v; touched(); repaint(); })));
     }
 
-    if (s.type === 'content') {
-      insp.appendChild(UI.field('Bullets — one per line',
+    if (s.type === 'content' || s.type === 'cards') {
+      insp.appendChild(UI.field(s.type === 'cards' ? 'Cards — one idea per line (up to 6)' : 'Bullets — one per line',
         UI.area(s.bullets.join('\n'), function (v) {
           s.bullets = v.split('\n');
           touched(); repaint();
@@ -361,7 +400,7 @@
         }
         touched();
         drawInspector();
-        drawRail();
+        repaint();
       };
       picker.appendChild(b);
     });
@@ -384,7 +423,7 @@
     }
 
     insp.appendChild(UI.field('Prompt for the room',
-      UI.area(f.prompt, function (v) { f.prompt = v; touched(); drawRail(); }, 2),
+      UI.area(f.prompt, function (v) { f.prompt = v; touched(); repaint(); }, 2),
       'Shown on the phones. Keep it short — the slide carries the detail.'));
 
     if (SF.FEEDBACK_KINDS[current].needsOptions) {
@@ -406,14 +445,14 @@
       var row = el('div', 'opt-row');
       row.appendChild(el('span', 'poll-i', String(i + 1)));
       row.appendChild(UI.text(text, function (v) {
-        f.options[i] = v; touched(); drawRail();
+        f.options[i] = v; touched(); repaint();
       }, 'Option ' + (i + 1)));
       var kill = el('button', 'kill', '×');
       kill.title = 'Remove';
       kill.onclick = function () {
         if (f.options.length <= 2) { SF.toast('A poll needs at least two options'); return; }
         f.options.splice(i, 1);
-        touched(); drawPollOptions(wrap, f);
+        touched(); drawPollOptions(wrap, f); repaint();
       };
       row.appendChild(kill);
       wrap.appendChild(row);
@@ -421,7 +460,7 @@
     if (f.options.length < 6) {
       var add = UI.button('+ Add option', 'ghost', function () {
         f.options.push('');
-        touched(); drawPollOptions(wrap, f);
+        touched(); drawPollOptions(wrap, f); repaint();
       });
       add.style.fontSize = '12px';
       wrap.appendChild(add);
@@ -572,19 +611,7 @@
     var loaded = (last && SF.Store.get(last)) || SF.Store.list()[0] || null;
 
     if (!loaded) {
-      /* First run: a sample presentation with a sample game embedded, so the
-         relationship between the two engines is visible immediately. */
-      var game = SF.starterGame();
-      SF.GameStore.save(game);
-      loaded = SF.makeDeck('Sample presentation');
-      loaded.slides = SF.starterDeck().slides.filter(function (s) {
-        return s.type !== 'quiz' && s.type !== 'results';
-      });
-      var embed = SF.makeSlide('game');
-      embed.gameId = game.id;
-      embed.gameTitle = game.title;
-      embed.title = game.title;
-      loaded.slides.push(embed);
+      loaded = SF.Studio.makeLesson();
       SF.Store.save(loaded);
     } else if (loaded.slides.some(function (s) { return s.type === 'quiz' || s.type === 'results'; })) {
       /* Decks authored before questions moved into games still hold quiz
@@ -617,6 +644,26 @@
 
   SF.Editor = {
     install: install,
+    addSlide: addSlide,
+    attachFeedback: function (kind) {
+      if (current().type === 'game') addSlide('content');
+      current().feedback = SF.makeFeedback(kind);
+      current().feedback.prompt = kind === 'wordcloud' ? 'What comes to mind in one word?' : kind === 'poll' ? 'How confident do you feel about this topic?' : 'What would you add?';
+      if (kind === 'poll') current().feedback.options = ['Getting started', 'Almost there', 'Ready to apply it'];
+      inspectorTab = 'engage'; fbPreview = 'rail'; touched(); draw();
+    },
+    insertNewGame: function (style) {
+      var g = SF.makeGame('Quick knowledge check', style);
+      g.theme = deck.theme; g.settings.defaultTime = 0; g.settings.scoreboard = false;
+      g.settings.scoreSlide = false;
+      SF.GameStore.save(g);
+      addSlide('game'); current().gameId = g.id; current().gameTitle = g.title; current().title = g.title;
+      inspectorTab = 'content'; touched(); draw();
+    },
+    useLesson: function () {
+      flush(); SF.Store.save(deck); deck = SF.Studio.makeLesson(); sel = 0;
+      SF.Store.save(deck); SF.Shell.syncChrome(); draw();
+    },
     deck: function () { return deck; },
     selected: function () { return sel; },
     openDeck: function (id) {

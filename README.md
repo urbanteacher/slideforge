@@ -1,5 +1,12 @@
 # SlideForge
 
+The lesson studio now includes a light editor, a sage-and-lilac **Studio** theme, a **Cards** layout, and an **Add activity** library. Open **Example lesson** to explore a six-slide teach → check → discuss → adapt sequence; your existing document stays available through **File → Open**.
+
+The **Engagement** tab adds Bloom’s thinking levels, reusable discussion prompts and a private next-step planning note. Feedback can be previewed beside the slide or full screen using clearly labelled sample responses, without connecting students or a server. Knowledge checks created from the library default to no countdown or leaderboard.
+
+Available library activities: multiple choice, true/false, poll, word cloud and brainstorm. Type answer, slider, puzzle, audio quiz, open-ended, scale, NPS and drop pin are visibly marked as planned and disabled; their interaction engines are not implemented. The existing horse-race style remains available in Quiz studio.
+
+
 Two engines in one browser app:
 
 - **Presentation** — slides and content, run as a full-screen 16:9 slideshow.
@@ -18,6 +25,51 @@ Then open **http://localhost:8787/**.
 You can also double-click `index.html` — both editors and the slideshow work
 straight off the filesystem. The only feature that needs the server is live
 audience play, because the phones have to reach something.
+
+---
+
+## Live session reports (local / LAN)
+
+Hosting now creates an append-only, synchronously flushed journal in
+`.slideforge/sessions/` on the relay computer. It records joins, admission,
+disconnect/rejoin intervals, quiz attempts, accepted answers, reveals and
+feedback. This private folder is ignored by Git and blocked from static HTTP
+access. `SLIDEFORGE_SESSION_DIR` can override its location.
+
+Use **Reports** in the host toolbar to view session history and download:
+
+- **Attendance CSV** — names, teams, admission, connection time and participation.
+- **Answers CSV** — eligible learners, responses, outcomes, timings and Bloom levels.
+- **Full session JSON** — the complete structured report, including feedback and connection intervals.
+
+Reports use a per-session access key kept in the originating host browser; there
+are no internet accounts. Keep that browser's site data to reopen reports, and
+export JSON for a portable copy. CSV cells are quoted and potential spreadsheet
+formulas are neutralized. Names are self-reported, and connection duration is
+not evidence of engagement or verified attendance.
+
+Reports survive relay restarts. After an unexpected stop, a session is marked
+**interrupted**, with durations bounded by the last journaled event. Live room
+play itself does not resume after a relay restart; start a new session. A
+student whose connection drops can use **Rejoin this lesson** in the same tab
+without losing their identity or score while the room remains open. Their
+resume key survives page reloads in that tab. Late arrivals cannot submit an
+answer to a question they were not admitted to.
+
+No record is marked correct until its question is revealed. Duplicate reveal
+messages cannot score twice, and revisiting feedback does not erase earlier
+attempts. A recording failure is surfaced to the host; the in-memory snapshot
+can still be exported while available. The journal retries unsaved events on
+the next write.
+
+Run `node --test tests/sessions.test.js` for relay integration, crash recovery,
+reconnection, persistence-failure and export checks. These use isolated temporary
+data and an ephemeral loopback port.
+
+Next in the product sequence: moderated Q&A, then type-answer and scale/slider,
+confusion/pace plus answer confidence, and finally an evidence-based Adapt report.
+Reactions and QR rendering are also still pending; join PINs and focus modes
+continue to use the existing live interface.
 
 ---
 
@@ -205,6 +257,36 @@ responses**, because you can't judge a layout against no data. The inspector's
 *Preview as* toggle shows it either beside the slide (as the room sees it) or
 full screen. Sample data is tagged `SAMPLE` wherever it appears, so it can't be
 mistaken for what the room actually said.
+
+### Moderated Q&A
+
+Open for the whole live session, not tied to a slide — a question occurs to
+someone when it occurs to them. The **?** button in the phone's header is
+reachable from any screen.
+
+**Nothing reaches the room until you approve it.** That constraint decides where
+moderation lives: the host's main window is normally the projected one, so the
+queue is rendered **in presenter view only**, on your laptop. The projected
+screen gets a count and nothing else.
+
+| Where | Sees |
+| --- | --- |
+| Phone | approved questions, with upvotes; your own marked |
+| Presenter view | everything, including pending, with Approve / Dismiss / Show on screen / Mark answered |
+| Projected screen | a count — *"1 question waiting"* — and any question you explicitly put up |
+
+Approving makes a question visible to the class and votable. **Showing it on
+screen is a separate action**, so approval isn't a second route past your
+judgement. Only approved questions can be shown; dismissing or answering one
+takes it off the wall automatically.
+
+The queue sorts approved-first and most-voted-first, so it's ordered by what the
+room actually wants answered. Five open questions per person, so one enthusiast
+can't flood it — dismissed ones don't count against them, since you judged those
+rather than they did. You can't upvote your own.
+
+Everything is recorded to the session journal (`qaAsk`, `qaModerate`, `qaPin`),
+so the questions asked are part of the session report.
 
 ### Expanding the rail — `E`
 

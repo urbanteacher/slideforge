@@ -36,7 +36,8 @@
     /* The feedback prompt open on the current slide, and the room's replies. */
     prompt: null,
     digest: null,
-    focus: false
+    focus: false,
+    qa: null
   };
 
   function relayUrl() {
@@ -78,7 +79,7 @@
   function drawPlayers() {
     listEl.innerHTML = '';
     Live.players.forEach(function (p) {
-      var chip = el('div', 'chip', p.name);
+      var chip = el('div', 'chip', p.name + (p.connected === false ? ' · disconnected' : ''));
       if (Live.mode === 'teams' && p.team != null) {
         chip.style.borderColor = SF.teamColor(p.team);
       }
@@ -111,6 +112,8 @@
     if (this.ws) this.stop();          // never leave a previous room dangling
     this.deck = deck;
     this.players = [];
+    this.session = null;
+    this.recordingFailed = false;
     this.revealed = {};
     this.pin = null;
     drawPlayers();
@@ -126,6 +129,8 @@
     this.winners = [];
     this.prompt = null;
     this.digest = null;
+    this.qa = null;
+    SF.Player.qa = null;
     this.teams = deck.quiz.teams.slice();
     this.rows = [];
     this.counts = null;
@@ -135,7 +140,7 @@
     this.joinOpen = true;
 
     var quizzes = deck.slides.filter(function (s) { return s.type === 'quiz'; }).length;
-    if (!quizzes) warn('This deck has no quiz slides yet — add one with "+ Quiz" so the room has something to answer.');
+    if (!quizzes && !deck.slides.some(SF.slideFeedback)) warn('This deck has no quiz slides yet — add one with "+ Quiz" so the room has something to answer.');
 
     connect();
   };
@@ -178,6 +183,7 @@
     };
 
     ws.onclose = function () {
+      if (Live.ws !== ws) return;
       if (!settled) { settled = true; clearTimeout(giveUp); offline(url); return; }
       if (Live.active) SF.toast('Lost the connection to the live relay');
       Live.active = false;
@@ -195,7 +201,19 @@
 
   function handle(m) {
     switch (m.t) {
+      case 'recording':
+        if (SF.Reports) SF.Reports.recording(m.persisted);
+        if (!m.persisted && !Live.recordingFailed) SF.toast('Session recording failed. Keep this host open and export the report.');
+        Live.recordingFailed = !m.persisted;
+        break;
+      case 'sessionReport':
+      case 'sessionClosed':
+        if (SF.Reports) SF.Reports.receive(m.report);
+        break;
       case 'hosted':
+        Live.session = m.session || null;
+        if (m.session && SF.Reports) SF.Reports.track(m.session);
+        else if (SF.Reports) { SF.Reports.recording(false); warn('This relay does not support session reports. Restart it with the updated server.'); }
         Live.pin = m.pin;
         Live.joinUrl = m.joinUrl || joinAddress();
         pinEl.textContent = m.pin;
@@ -231,6 +249,14 @@
 
       case 'teamAnswers':
         if (Live.mechanic === 'race') advanceRace(m);
+        break;
+
+      case 'qa':
+        Live.qa = m;
+        SF.Player.qa = m;
+        SF.Player.setQACue({ pending: m.pending, open: m.open });
+        syncPinned(m.pinned);
+        SF.Player.syncPresenter();
         break;
 
       case 'responses':
@@ -389,6 +415,34 @@
     }
   }
 
+  /* --------------------------------------------------------------- Q & A */
+
+  /* The wall shows a question only while the host has it pinned. Tracked so
+     unpinning takes it down again, and so re-pushes of the same item do not
+     re-animate the card. */
+  var pinnedId = null;
+
+  function syncPinned(pinned) {
+    var id = pinned ? pinned.id : null;
+    if (id === pinnedId) return;
+    pinnedId = id;
+    if (!pinned) {
+      /* Only collapse if the card is what is showing — the host may have moved
+         on to a focused poll in the meantime. */
+      if (SF.Player._focus) SF.Player.closeFocus();
+      return;
+    }
+    Live.focus = false;                 // the card owns the focus slot now
+    SF.Player.showQuestionCard(pinned);
+  }
+
+  function moderate(cmd) {
+    if (!Live.active) return;
+    if (cmd.action === 'pin') send({ t: 'qaPin', id: cmd.id });
+    else if (cmd.action === 'unpin') send({ t: 'qaPin', id: null });
+    else send({ t: 'qaModerate', id: cmd.id, action: cmd.action });
+  }
+
   /* ------------------------------------------------------------- the race */
 
   /**
@@ -513,6 +567,7 @@
     SF.Player.on('close', function () { if (Live.active) Live.stop(); });
     SF.Player.on('joinToggle', toggleJoinCard);
     SF.Player.on('focusToggle', toggleFocus);
+    SF.Player.on('qaCommand', moderate);
   }
 
   Live.begin = function () {
@@ -620,7 +675,8 @@
       kind: f.kind,
       prompt: f.prompt,
       options: f.options.filter(function (o) { return String(o).trim(); }),
-      max: f.max
+      max: f.max,
+      bloom: slide.bloom || ''
     };
     Live.digest = null;
     Live.focus = false;         // a new prompt starts collapsed
@@ -658,6 +714,8 @@
         id: s.id,
         n: quizNumber(s),
         question: s.question,
+        bloom: s.bloom || '',
+        sourceSlideId: s.sourceSlideId || s.id,
         options: s.options.filter(function (o) { return String(o).trim(); }),
         timeLimit: s.timeLimit,
         points: s.points
@@ -736,11 +794,7 @@
        For a points game, with the rail on screen the standings are already
        visible at all times, so a full-slide leaderboard between questions
        would just hide the answer everyone is reading. */
-    if (Live.mechanic !== 'race' && !Live.deck.quiz.scoreboard) {
-      setTimeout(function () {
-        if (Live.active) SF.Player.showLeaderboard(Live.players, 'Leaderboard');
-      }, 2600);
-    }
+
   }
 
   Live.stop = function () {
@@ -754,8 +808,15 @@
     if (card) card.classList.remove('on');
     if (lobby) lobby.classList.remove('on');
     send({ t: 'end' });
+    if (this.session && SF.Reports) {
+      var id = this.session.id;
+      if (!this.recordingFailed) setTimeout(function () { SF.Reports.refresh(id); }, 250);
+      SF.toast('Session ended. Attendance and responses are available in Reports.');
+    }
     if (this.ws) {
-      try { this.ws.close(); } catch (e) {}
+      var closingSocket = this.ws;
+      // Let the relay deliver its final report before closing the transport.
+      setTimeout(function () { try { closingSocket.close(); } catch (e) {} }, 1500);
       this.ws = null;
     }
     this.pin = null;

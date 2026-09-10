@@ -150,11 +150,51 @@
     color: #fff; margin-left: 8px; vertical-align: middle;
   }
   header .who { display: flex; align-items: center; }
+
+  /* Q&A is ambient — a question occurs to you when it occurs to you, not when
+     a particular slide is up. So the way in sits in the header, reachable from
+     whatever screen you happen to be on. */
+  .askbtn {
+    font: inherit; font-weight: 800; font-size: 15px;
+    background: #262b34; color: #cfd5e0;
+    border: 1px solid #343b47; border-radius: 999px;
+    padding: 5px 13px; cursor: pointer; margin-right: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .askbtn:active { transform: scale(.96); }
+  .askbtn.on { background: #4c8dff; border-color: #4c8dff; color: #fff; }
+  .askn {
+    font-size: 11px; font-weight: 700;
+    background: rgba(255,255,255,.22); border-radius: 999px; padding: 1px 6px;
+  }
+
+  .qalist { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 9px; }
+  .qarow {
+    display: flex; align-items: flex-start; gap: 11px;
+    background: #1a1e26; border: 1px solid #2b3140; border-radius: 12px;
+    padding: 12px 13px; text-align: left;
+  }
+  .qarow.answered { opacity: .55; }
+  .qarow .qtxt { flex: 1; font-size: 15px; line-height: 1.4; }
+  .qarow .qwho { font-size: 12px; color: #6c7482; margin-top: 4px; }
+  .qavote {
+    flex: none; font: inherit; font-size: 13px; font-weight: 700;
+    background: #232935; color: #cfd5e0;
+    border: 1px solid #343b47; border-radius: 10px;
+    padding: 7px 10px; cursor: pointer; min-width: 46px;
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+  }
+  .qavote.mine { background: #4c8dff; border-color: #4c8dff; color: #fff; }
+  .qavote .qup { font-size: 11px; line-height: 1; }
+  .qamine { font-size: 12px; color: #45d69b; margin-top: 4px; }
 </style>
 </head>
 <body>
 
 <header id="hdr" style="display:none">
+  <button class="askbtn" id="askBtn" type="button" title="Ask a question">
+    ? <span class="askn" id="askN" style="display:none"></span>
+  </button>
   <div class="who"><span id="hdrName">—</span><span class="team" id="hdrTeam" style="display:none"></span></div>
   <div class="score" id="hdrScore">0</div>
 </header>
@@ -195,6 +235,21 @@
     <h1 id="waitTitle">You're in!</h1>
     <div class="lead" id="waitLead">Look up at the screen — the quiz will start in a moment.</div>
     <div class="dots"><i></i><i></i><i></i></div>
+  </section>
+
+  <!-- 1d. ask a question (reachable at any time) -->
+  <section class="screen center" id="scAsk">
+    <h1>Ask a question</h1>
+    <div class="lead">Your teacher sees it before anyone else does.</div>
+    <div style="width:100%;max-width:340px">
+      <input id="askText" type="text" maxlength="240" placeholder="What would you like to ask?" autocomplete="off">
+      <button class="go" id="askSend" style="margin-top:12px">Send</button>
+    </div>
+    <div class="err" id="askErr"></div>
+    <div class="pill" id="askDone" style="display:none"></div>
+    <div class="lead" id="qaHeading" style="display:none;margin-top:10px">Questions from the class</div>
+    <div class="qalist" id="qaList"></div>
+    <button class="go sub" id="askBack" style="max-width:340px">Back</button>
   </section>
 
   <!-- 2b. feedback prompt -->
@@ -239,6 +294,7 @@
     <div class="big" id="oScore">0</div>
     <div class="pill" id="oRank"></div>
     <div class="lead" id="oNote"></div>
+    <button class="go" id="reconnectBtn" style="display:none">Rejoin this lesson</button>
     <button class="go sub" id="againBtn">Join another quiz</button>
   </section>
 
@@ -262,13 +318,14 @@
   var tick = null;
 
   function show(id) {
-    ['scJoin', 'scTeam', 'scHold', 'scWait', 'scPrompt', 'scQuestion', 'scResult', 'scOver'].forEach(function (s) {
+    ['scJoin', 'scTeam', 'scHold', 'scWait', 'scAsk', 'scPrompt', 'scQuestion', 'scResult', 'scOver'].forEach(function (s) {
       $(s).classList.toggle('on', s === id);
     });
   }
 
   function header(on) {
     $('hdr').style.display = on ? 'flex' : 'none';
+    $('askBtn').style.display = on ? '' : 'none';
     $('hdrName').textContent = me.name;
     $('hdrScore').textContent = me.score;
     var badge = $('hdrTeam');
@@ -292,12 +349,20 @@
     return proto + '//' + location.host;
   }
 
+  var ended = false;
+  function rememberIdentity(m) {
+    if (!m.resumeToken || !pending) return;
+    try { sessionStorage.setItem('slideforge.resume.' + pending.pin, JSON.stringify({token:m.resumeToken,name:m.name})); } catch (_) {}
+  }
+
   function join() {
     var pin = $('pin').value.replace(/\D/g, '');
     var name = $('name').value.trim();
     if (pin.length < 4) { err('Enter the PIN from the screen.'); return; }
     if (!name) { err('Pick a name so the host can see you.'); return; }
 
+    ended = false;
+    $('reconnectBtn').style.display = 'none';
     err('');
     $('joinBtn').disabled = true;
     $('joinBtn').textContent = 'Joining…';
@@ -306,7 +371,9 @@
     try { ws = new WebSocket(wsUrl()); } catch (e) { fail('Could not connect.'); return; }
 
     ws.onopen = function () {
-      ws.send(JSON.stringify({ t: 'join', pin: pin, name: name }));
+      var saved = null;
+      try { saved = JSON.parse(sessionStorage.getItem('slideforge.resume.' + pin)); } catch (_) {}
+      ws.send(JSON.stringify({ t: 'join', pin: pin, name: name, resumeToken:saved && saved.name === name ? saved.token : null }));
     };
     ws.onmessage = function (ev) {
       var m;
@@ -315,6 +382,9 @@
     };
     ws.onerror = function () { fail('Could not reach the quiz. Check the Wi-Fi and try again.'); };
     ws.onclose = function () {
+      if (ended) return;
+      $('reconnectBtn').disabled = false;
+      $('reconnectBtn').style.display = '';
       if ($('scJoin').classList.contains('on')) return;
       stopTick();
       $('oTitle').textContent = 'Disconnected';
@@ -329,6 +399,7 @@
     err(msg);
     $('joinBtn').disabled = false;
     $('joinBtn').textContent = 'Join';
+    if ($('scOver').classList.contains('on')) { show('scJoin'); err(msg); }
   }
   function err(msg) { $('joinErr').textContent = msg || ''; }
 
@@ -339,8 +410,9 @@
       /* Held back: the round already started. Name and team are kept, so
          admission later needs no further input. */
       case 'waiting':
+        rememberIdentity(m);
         me.name = m.name;
-        me.score = 0;
+        me.score = m.score || 0;
         me.team = m.team != null ? m.team : null;
         me.teamName = m.teamName || null;
         header(true);
@@ -356,8 +428,9 @@
         break;
 
       case 'joined':
+        rememberIdentity(m);
         me.name = m.name;
-        me.score = 0;
+        me.score = m.score || 0;
         me.team = m.team != null ? m.team : null;
         me.teamName = m.teamName || null;
         header(true);
@@ -390,6 +463,23 @@
       case 'begun':
         $('waitTitle').textContent = 'Here we go';
         $('waitLead').textContent = 'Watch the screen for the first question.';
+        break;
+
+      case 'qaList':
+        qaItems = m.items || [];
+        var open = qaItems.filter(function (q) { return q.state === 'approved'; }).length;
+        $('askN').textContent = String(open);
+        $('askN').style.display = open ? '' : 'none';
+        if ($('scAsk').classList.contains('on')) drawQA();
+        break;
+
+      case 'asked':
+        $('askDone').textContent = 'Sent — your teacher will see it first';
+        $('askDone').style.display = '';
+        break;
+
+      case 'askRejected':
+        $('askErr').textContent = m.reason || 'Could not send that.';
         break;
 
       case 'prompt':
@@ -436,6 +526,7 @@
       case 'idle':
         stopTick();
         if ($('scHold').classList.contains('on')) break;
+        if ($('scAsk').classList.contains('on')) break;
         if ($('scPrompt').classList.contains('on')) break;
         if ($('scQuestion').classList.contains('on')) {
           $('waitIcon').textContent = '⏸';
@@ -446,6 +537,9 @@
         break;
 
       case 'over':
+        ended = true;
+        $('reconnectBtn').style.display = 'none';
+        if (pending) { try { sessionStorage.removeItem('slideforge.resume.' + pending.pin); } catch (_) {} }
         stopTick();
         $('oTitle').textContent = "That's the quiz";
         $('oScore').textContent = me.score;
@@ -526,6 +620,92 @@
         Array.prototype.forEach.call($('teamGrid').children, function (b) { b.disabled = false; });
       }
     }, 1200);
+  }
+
+  /* ------------------------------------------------------------- Q & A */
+
+  /* Leaving the Ask screen has to come back to wherever you were, so the
+     screen you were on when you opened it is remembered rather than assumed. */
+  var askReturn = null;
+  var qaItems = [];
+
+  function openAsk() {
+    if (!ws || ws.readyState !== 1) { return; }
+    if ($('scAsk').classList.contains('on')) { closeAsk(); return; }
+    askReturn = [...document.querySelectorAll('.screen')]
+      .find(function (x) { return x.classList.contains('on'); });
+    $('askErr').textContent = '';
+    $('askDone').style.display = 'none';
+    $('askText').value = '';
+    drawQA();
+    show('scAsk');
+    $('askBtn').classList.add('on');
+    setTimeout(function () { $('askText').focus(); }, 60);
+  }
+
+  function closeAsk() {
+    $('askBtn').classList.remove('on');
+    if (askReturn) { show(askReturn.id); askReturn = null; }
+    else show('scWait');
+  }
+
+  function sendAsk() {
+    if (!ws || ws.readyState !== 1) return;
+    var v = $('askText').value.trim();
+    if (!v) { $('askErr').textContent = 'Type your question first.'; return; }
+    $('askErr').textContent = '';
+    ws.send(JSON.stringify({ t: 'ask', text: v }));
+    $('askText').value = '';
+  }
+
+  function drawQA() {
+    var box = $('qaList');
+    box.textContent = '';
+    var visible = qaItems.filter(function (q) { return q.state !== 'dismissed'; });
+    $('qaHeading').style.display = visible.length ? '' : 'none';
+
+    visible.forEach(function (q) {
+      var row = document.createElement('div');
+      row.className = 'qarow' + (q.state === 'answered' ? ' answered' : '');
+
+      var mid = document.createElement('div');
+      mid.style.flex = '1';
+      var t = document.createElement('div');
+      t.className = 'qtxt';
+      t.textContent = q.text;
+      mid.appendChild(t);
+      var who = document.createElement('div');
+      who.className = 'qwho';
+      who.textContent = (q.name || 'anonymous') +
+        (q.state === 'answered' ? ' · answered' : '');
+      mid.appendChild(who);
+      if (q.asked) {
+        var mine = document.createElement('div');
+        mine.className = 'qamine';
+        mine.textContent = 'You asked this';
+        mid.appendChild(mine);
+      }
+      row.appendChild(mid);
+
+      /* You cannot upvote your own, and there is nothing to vote on once it
+         has been answered. */
+      if (q.state === 'approved' && !q.asked) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'qavote' + (q.mine ? ' mine' : '');
+        var up = document.createElement('span');
+        up.className = 'qup';
+        up.textContent = '▲';
+        b.appendChild(up);
+        b.appendChild(document.createTextNode(String(q.votes)));
+        b.onclick = function () {
+          ws.send(JSON.stringify({ t: 'qaVote', id: q.id }));
+          if (navigator.vibrate) { try { navigator.vibrate(10); } catch (e) {} }
+        };
+        row.appendChild(b);
+      }
+      box.appendChild(row);
+    });
   }
 
   /* ---------------------------------------------------------- feedback */
@@ -713,6 +893,12 @@
   /* ---------------------------------------------------------- wiring */
 
   $('joinBtn').onclick = join;
+  $('reconnectBtn').onclick = function () { show('scJoin'); join(); };
+  var urlPin = new URLSearchParams(location.search).get('pin');
+  if (urlPin && /^\d{6}$/.test(urlPin)) {
+    $('pin').value = urlPin;
+    try { var savedIdentity = JSON.parse(sessionStorage.getItem('slideforge.resume.' + urlPin)); if (savedIdentity) $('name').value = savedIdentity.name; } catch (_) {}
+  }
   $('name').addEventListener('keydown', function (e) { if (e.key === 'Enter') join(); });
   $('pin').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('name').focus(); });
   $('pin').addEventListener('input', function () {
@@ -720,6 +906,10 @@
   });
   $('againBtn').onclick = function () { location.href = location.pathname; };
   $('fbSend').onclick = sendText;
+  $('askBtn').onclick = openAsk;
+  $('askSend').onclick = sendAsk;
+  $('askBack').onclick = closeAsk;
+  $('askText').addEventListener('keydown', function (e) { if (e.key === 'Enter') sendAsk(); });
   $('fbText').addEventListener('keydown', function (e) { if (e.key === 'Enter') sendText(); });
 
   // keep the phone awake during the quiz where the browser allows it

@@ -38,7 +38,14 @@
   var UI = {
     field: function (label, node, hint) {
       var f = el('div', 'field');
-      if (label) f.appendChild(el('label', null, label));
+      if (label) {
+        var caption = el('label', null, label);
+        if (node && /^(INPUT|TEXTAREA|SELECT)$/.test(node.tagName)) {
+          if (!node.id) node.id = 'field-' + SF.uid();
+          caption.htmlFor = node.id;
+        }
+        f.appendChild(caption);
+      }
       if (node) f.appendChild(node);
       if (hint) f.appendChild(el('div', 'hint', hint));
       return f;
@@ -610,7 +617,7 @@
     });
 
     document.addEventListener('keydown', function (e) {
-      if (SF.Player.open) return;
+      if (SF.Player.open || document.querySelector('dialog[open]')) return;
       var t = e.target.tagName;
       var typing = t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT';
       var mod = e.metaKey || e.ctrlKey;
