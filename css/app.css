@@ -385,6 +385,88 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   text-align: center; padding: 30px;
 }
 
+/* dual coding — half copy, half image */
+.layout-split .pad.split-pad {
+  padding: 0;
+  flex-direction: row;
+  align-items: stretch;
+}
+.layout-split .split-copy {
+  flex: 1 1 50%;
+  min-width: 0;
+  padding: 64px 56px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.layout-split .split-copy h2 {
+  font-size: 42px;
+  margin: 0 0 28px;
+  line-height: 1.15;
+}
+.layout-split .split-copy ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.layout-split .split-copy li {
+  font-size: 26px;
+  line-height: 1.35;
+  padding-left: 34px;
+  position: relative;
+}
+.layout-split .split-copy li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: .55em;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  background: var(--s-accent);
+}
+.layout-split .split-copy li.tier-2 {
+  font-size: 22px;
+  margin-left: 28px;
+  color: var(--s-dim);
+}
+.layout-split .split-copy li.dim {
+  color: var(--s-dim);
+  font-style: italic;
+}
+.layout-split .split-copy li.dim::before { background: var(--s-dim); opacity: .45; }
+.layout-split .split-media {
+  flex: 1 1 50%;
+  min-width: 0;
+  position: relative;
+  background: var(--s-rule);
+}
+.layout-split .split-media .img {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.layout-split .split-media .img.cover { background-size: cover; }
+.layout-split .split-media .img.contain { background-size: contain; }
+.layout-split .split-empty {
+  position: absolute;
+  inset: 28px;
+  border: 2px dashed var(--s-rule);
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  color: var(--s-dim);
+  font-size: 22px;
+  text-align: center;
+  background: color-mix(in srgb, var(--s-bg) 70%, transparent);
+}
+
 /* slide number + progress */
 .slide .pagenum {
   position: absolute; right: 40px; bottom: 26px;
@@ -887,6 +969,16 @@ body.live-on .hud button[data-act="join"] { display: inline-block; }
 .deck-viewport.railed .layout-image .pad { padding-right: 0; }
 .deck-viewport.railed .layout-image .img { right: var(--rail-w); }
 .deck-viewport.railed .layout-image .cap { right: var(--rail-w); padding-right: 46px; }
+.deck-viewport.railed .layout-split .pad.split-pad,
+#previewBox.railed .layout-split .pad.split-pad {
+  padding-right: 0;
+  width: calc(100% - var(--rail-w));
+  box-sizing: border-box;
+}
+.deck-viewport.railed .layout-split .split-copy h2,
+#previewBox.railed .layout-split .split-copy h2 { font-size: 34px; }
+.deck-viewport.railed .layout-split .split-copy li,
+#previewBox.railed .layout-split .split-copy li { font-size: 22px; }
 .deck-viewport.railed .slide .pagenum { right: calc(var(--rail-w) + 34px); }
 .deck-viewport.railed .layout-quiz .clock { right: calc(var(--rail-w) + 38px); }
 .deck-viewport.railed .leaderboard { padding-right: calc(var(--rail-w) + 54px); }
@@ -1706,8 +1798,12 @@ body.live-on .hud button[data-act="focus"] { display: inline-block; }
 .qacue.waiting .qa-dot { background: var(--s-accent-2); }
 .qacue .qa-n { font-weight: 700; font-variant-numeric: tabular-nums; }
 
-/* clear the answer tally, which occupies the foot of a question slide */
-.deck-viewport.quiz-slide .qacue { margin-bottom: 108px; }
+/* Clear whatever occupies the foot of a question slide. The clearances are
+   written in slide pixels and multiplied by the letterbox scale, because what
+   is being cleared is inside the scaled slide while the cue is not — a fixed
+   pixel gap only ever looks right at one window size. */
+.deck-viewport.quiz-slide .qacue { margin-bottom: calc(28px + var(--sf-scale, 1) * 150px); }
+.deck-viewport.quiz-line .qacue { margin-bottom: calc(28px + var(--sf-scale, 1) * 225px); }
 
 /* ----------------------------------------------------------------------
    Typed answers
@@ -1758,3 +1854,101 @@ body.live-on .hud button[data-act="focus"] { display: inline-block; }
   flex: none; width: 74px; font-size: 10px; font-weight: 700;
   letter-spacing: .08em; color: var(--ui-dim);
 }
+
+/* ----------------------------------------------------------------------
+   The estimate line
+
+   A slider question's answers are positions, not words, so they are shown
+   as positions. Nothing that says where the answer is — the band or the
+   target — is placed until the reveal; see Player.showPlacedValues().
+   ---------------------------------------------------------------------- */
+/* Room above the line for the stacks of placings to grow into. */
+.layout-quiz .numberline { margin-top: 14px; padding-top: 84px; }
+.layout-quiz .nl-line {
+  position: relative; height: 30px;
+  border-radius: 999px;
+  background: var(--s-card);
+  border: 2px solid var(--s-rule);
+}
+.layout-quiz .nl-band {
+  position: absolute; top: -2px; bottom: -2px; left: 0; width: 0;
+  border-radius: 999px;
+  background: rgba(52, 201, 138, .22);
+  border: 2px solid #34c98a;
+  opacity: 0; transition: opacity .4s;
+}
+.layout-quiz .nl-target {
+  position: absolute; top: -7px; bottom: -7px; left: 0; width: 3px;
+  margin-left: -1px; background: #34c98a;
+  opacity: 0; transition: opacity .4s;
+}
+.layout-quiz .nl-line.on .nl-band, .layout-quiz .nl-line.on .nl-target { opacity: 1; }
+/* Overflow is visible on purpose: a stack of dots for a popular value grows
+   up out of the line rather than being clipped by it. */
+.layout-quiz .nl-marks { position: absolute; inset: 0; overflow: visible; }
+/* Above the line, not on it: the band inside the line is the answer, and a
+   cluster of placings drawn over it hides the very thing they are being
+   compared against. */
+.layout-quiz .nl-dot {
+  /* --stack is how many placings already sit on this value; the geometry of
+     the pile lives here rather than being computed in two places. */
+  position: absolute; bottom: calc(36px + var(--stack, 0) * 15px);
+  width: 14px; height: 14px;
+  margin-left: -7px; border-radius: 50%;
+  background: var(--s-dim);
+  border: 2px solid var(--s-bg);
+}
+.layout-quiz .nl-dot.right { background: #34c98a; }
+.layout-quiz .nl-ends {
+  display: flex; justify-content: space-between;
+  margin-top: 7px; font-size: 16px; color: var(--s-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ----------------------------------------------------------------------
+   Scale results
+
+   Columns, not rows. A scale runs from one end to the other, and drawing
+   it as independent bars throws away the only thing that makes it a
+   scale. `sc-` is the rail; `fksc-` is the same chart full screen.
+   ---------------------------------------------------------------------- */
+.sc, .fksc { display: flex; flex-direction: column; gap: 8px; }
+.sc-cols, .fksc-cols { display: flex; align-items: flex-end; gap: 6px; }
+.sc-col, .fksc-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.sc-bar, .fksc-bar {
+  width: 100%; display: flex; align-items: flex-end;
+  background: rgba(255,255,255,.05); border-radius: 5px 5px 0 0;
+}
+.sc-bar { height: 74px; }
+/* Sized so the whole chart — counts above, points and ends below, average
+   underneath — fits the fixed 720px slide without the read-out falling off
+   the bottom. */
+.fksc-bar { height: 200px; }
+.sc-bar i, .fksc-bar i {
+  width: 100%; background: var(--s-accent);
+  border-radius: 5px 5px 0 0; min-height: 3px;
+  transition: height .45s cubic-bezier(.3,0,.2,1);
+}
+.sc-n, .fksc-n { font-variant-numeric: tabular-nums; color: var(--s-fg); }
+.sc-n { font-size: 13px; min-height: 15px; }
+.fksc-n { font-size: 26px; font-weight: 700; min-height: 32px; }
+.sc-p, .fksc-p { color: var(--s-dim); font-variant-numeric: tabular-nums; }
+.sc-p { font-size: 12px; }
+.fksc-p { font-size: 22px; }
+.sc-ends, .fksc-ends { display: flex; justify-content: space-between; gap: 10px; color: var(--s-dim); }
+.sc-ends { font-size: 12px; }
+.fksc-ends { font-size: 22px; margin-top: 4px; }
+.sc-ends span:last-child, .fksc-ends span:last-child { text-align: right; }
+.sc-read, .fksc-read { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.sc-read { font-size: 13px; color: var(--s-dim); }
+.sc-read strong { font-size: 21px; color: var(--s-fg); }
+.fksc-read { font-size: 24px; color: var(--s-dim); margin-top: 14px; }
+.fksc-read strong { font-size: 46px; color: var(--s-fg); }
+/* Named, not left for the reader to infer from the bars: a mean of 3 from a
+   room at 1 and 5 is the opposite situation to a room all sitting at 3. */
+.sc-split, .fksc-split {
+  background: var(--s-accent-2); color: #0c1020;
+  border-radius: 999px; font-weight: 700; letter-spacing: .06em;
+}
+.sc-split { font-size: 10px; padding: 2px 8px; }
+.fksc-split { font-size: 18px; padding: 4px 14px; }

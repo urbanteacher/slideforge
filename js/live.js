@@ -259,6 +259,7 @@
           /* The wall was drawn from the snapshot that turned out to be short
              one answer, so redraw it from the set that was handed back. */
           if (pending.input === 'text') SF.Player.showTypedAnswers(typedGroups(pending));
+          if (pending.input === 'number') SF.Player.showPlacedValues(placedValues(pending));
         }
         break;
 
@@ -636,6 +637,7 @@
       title: kind ? kind.label : 'Feedback',
       subtitle: Live.prompt.prompt,
       options: Live.prompt.options,
+      ends: Live.prompt.ends,
       footnote: players
         ? answered + ' of ' + players + ' responded'
         : 'Nobody has joined yet',
@@ -661,6 +663,7 @@
       title: kind ? kind.label : 'Feedback',
       subtitle: Live.prompt.prompt,
       options: Live.prompt.options,
+      ends: Live.prompt.ends,
       footnote: players
         ? answered + ' of ' + players + ' responded'
         : 'Nobody has joined yet',
@@ -689,11 +692,15 @@
     var id = slide.id + ':fb';
     if (Live.prompt && Live.prompt.id === id) { paintFeedbackPanel(); return true; }
 
+    /* The labels come from the one builder the editor's previews also use, so
+       what you rehearsed is what the room gets. */
+    var view = SF.feedbackViewOpts(f);
     Live.prompt = {
       id: id,
       kind: f.kind,
       prompt: f.prompt,
-      options: f.options.filter(function (o) { return String(o).trim(); }),
+      options: view.options.filter(function (o) { return String(o).trim(); }),
+      ends: view.ends,
       max: f.max,
       bloom: slide.bloom || ''
     };
@@ -736,9 +743,13 @@
         question: s.question,
         bloom: s.bloom || '',
         sourceSlideId: s.sourceSlideId || s.id,
-        /* A typed question sends no options — there are none. The phones
-           switch to a text field on this alone. */
-        input: s.input === 'text' ? 'text' : 'choice',
+        /* Neither a typed nor a slider question sends options — there are
+           none. The phones switch control on `input` alone, and a slider
+           needs the line it slides along. The target never leaves the host. */
+        input: s.input || 'choice',
+        range: s.input === 'number'
+          ? { min: s.min, max: s.max, step: s.step, unit: s.unit || '' }
+          : null,
         options: (s.options || []).filter(function (o) { return String(o).trim(); }),
         timeLimit: s.timeLimit,
         points: s.points
@@ -806,17 +817,29 @@
       .sort(function (a, b) { return b.n - a.n || (b.right ? 1 : 0) - (a.right ? 1 : 0); });
   }
 
+  /* The values the room placed on the line, each with whether it counted.
+     Ordered along the line rather than by popularity: an estimate's story is
+     where the guesses sit relative to the answer. */
+  function placedValues(slide) {
+    return (Live.snapshot.answers || [])
+      .filter(function (a) { return typeof a.response === 'number'; })
+      .map(function (a) {
+        return { value: a.response, right: SF.markResponse(slide, a.response) };
+      })
+      .sort(function (a, b) { return a.value - b.value; });
+  }
+
   /** Send the verdicts. Separate from revealNow so a stale mark can be
       re-sent without repainting the slide. */
   function sendReveal(s) {
-    var typed = s.input === 'text';
+    var open = s.input === 'text' || s.input === 'number';
     send({
       t: 'reveal',
       id: s.id,
       rev: Live.snapshot.rev,
       marks: marksFor(s),
-      correct: typed ? -1 : s.correct,
-      answer: typed ? (s.answer || '') : (s.options[s.correct] || ''),
+      correct: open ? -1 : s.correct,
+      answer: open ? (s.answer || '') : (s.options[s.correct] || ''),
       explanation: s.explanation || ''
     });
   }
@@ -829,12 +852,13 @@
        they were right, which is when they are most likely to read it. */
     sendReveal(s);
     if (s.input === 'text') SF.Player.showTypedAnswers(typedGroups(s));
+    if (s.input === 'number') SF.Player.showPlacedValues(placedValues(s));
     // paint the right answer on the projected slide even though the host
     // never clicked anything
     if (SF.Player.answers[s.id] == null) SF.Player.answers[s.id] = -1;
     if (SF.Player._current) {
       var node = SF.Player._current;
-      var typed = s.input === 'text';
+      var typed = s.input === 'text' || s.input === 'number';
       Array.prototype.forEach.call(node.querySelectorAll('.opt'), function (b) {
         var i = Number(b.dataset.choice);
         b.classList.add('locked');

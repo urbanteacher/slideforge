@@ -6,6 +6,8 @@ The **Engagement** tab adds Bloom’s thinking levels, reusable discussion promp
 
 Available library activities: multiple choice, true/false, poll, word cloud and brainstorm. The Add activity library also lists all 27 fullscreen catalogue games (True/False Showdown through Concept Chain) as planned placeholders; their interaction engines are not implemented yet. The existing horse-race style remains available in Quiz studio.
 
+**Slide starters** (toolbar) drop normal presentation shapes — opening title, title + content, dual coding (half text / half image), section break, full-bleed image, three cards, quote, and steps — with empty click-to-fill pits in the inspector. **File → Export → Practice notes (.md)** downloads a one-way Markdown handout for Canvas or Colab; live polls and games stay in the `.sfdeck.json` room.
+
 
 Two engines in one browser app:
 
@@ -63,7 +65,8 @@ can still be exported while available. The journal retries unsaved events on
 the next write.
 
 Run `node --test tests/*.test.js` for relay integration, crash recovery,
-reconnection, persistence-failure, export, Q&A moderation and marking checks. Each test
+reconnection, persistence-failure, export, Q&A moderation, marking, slider and
+scale checks. Each test
 spawns a real relay with real WebSocket clients, on isolated temporary data and
 an ephemeral loopback port. Pass a directory rather than the glob and Node tries
 to load `tests` as a module instead of discovering the files.
@@ -115,6 +118,7 @@ that game is that style. Press **New** in the game workspace and you pick:
 | **Multiple choice** | Two to six answers, one of them correct |
 | **True or false** | A statement the room marks true or false |
 | **Type answer** | No options at all — the room types the answer from memory |
+| **Slider** | An estimate placed on a line. Near enough counts. |
 | **Horse race** | Multiple choice where every right answer moves your team a step along a track. First past the post wins. |
 
 **Type answer** is recall rather than recognition, which is the whole reason to
@@ -143,6 +147,26 @@ six students typing `paris`, `PARIS` and `the Paris` read as one **Paris ×6**.
 
 Marking happens on the host — see [Who decides an answer is
 right](#who-decides-an-answer-is-right).
+
+**Slider** asks for an estimate rather than a fact. The author sets what the
+line covers, where the answer sits on it, and how close counts — *near enough*
+is a number they choose, not something inferred, because being close is the
+skill being tested. Nonsense is corrected as it is typed: an inverted range is
+opened out, an answer dragged past the end is pulled back, and a tolerance
+wider than the line is flagged, since it would mark every possible answer
+right.
+
+An inverted or absurd tolerance aside, the interesting design constraint is the
+same as type answer's: **the target never leaves the host.** The phones are
+sent the line — its ends, its step and its unit — and nothing else, so there is
+nothing on a phone to read the answer off. On the wall the answer box is held
+back, and so is the band, because a shaded band gives the answer away as surely
+as the number would.
+
+At the reveal the room's estimates appear as a **dot plot above the line**, with
+the band and the target inside it. Two students who guessed the same number
+stack rather than overlap — one dot drawn over another says four people
+answered when twelve did. Green inside the band, grey outside.
 
 **Horse race** asks exactly what multiple choice asks — it reuses that question
 shape and inspector wholesale — but the answer does something different, and it
@@ -277,12 +301,31 @@ responses gather in the side rail beside it — the same slot the scoreboard use
 | Kind | Room does | Rail shows |
 | --- | --- | --- |
 | **Poll** | taps one of your options | bars with counts and percentages |
+| **Scale** | picks a point between your two ends | the spread, the average, and whether the room is split |
 | **Word cloud** | types a word or short phrase | words sized by how often they came up |
 | **Brainstorm** | types a longer contribution | cards, newest first, with names |
 
 It's unscored — a game is for scoring, this is for hearing the room. Word cloud
-and brainstorm let you allow up to five responses each; a poll is always one
-vote, changeable.
+and brainstorm let you allow up to five responses each; a poll and a scale are
+always one response, changeable.
+
+**Scale** is for confidence and agreement. You name the two ends and choose how
+many points sit between them (3–7, five by default: an odd count leaves a real
+middle to sit in, and more than seven is a distinction nobody makes honestly on
+a phone). Both ends are required — without them the room cannot tell which way
+the scale runs, and a bare 1-to-5 means nothing on the wall either, so the slide
+collects nothing until you name them.
+
+The results are drawn as **columns from one end to the other**, not as a row of
+independent bars: the order is the meaning. Underneath is the average, and a
+**ROOM IS SPLIT** flag when the two ends together outweigh the middle. That flag
+is the point of showing a distribution at all — 1,1,5,5 and 3,3,3,3 both average
+3, and for whoever is teaching they are the opposite situation. The phones show
+the points in a single column, highest at the top, so the buttons run the way
+the labels read.
+
+On the wire a scale *is* a poll — one pick among ordered options — so the relay
+counts it with the same code and knows nothing about scales.
 
 The prompt opens when its slide appears and closes when you leave, so responses
 belong to the slide that asked rather than to the session. Returning to a slide
@@ -429,6 +472,12 @@ the player measures the real layout and works outwards from the question:
    answers, one column gives long wording more line width. Both are tried and
    the better fit wins.
 
+An open-response question — typed or slider — is the exception to step 2. It has
+one box and that box holds the answer itself rather than a candidate for it, so
+it is allowed to *lead* the question at **1.15×** instead of sitting below it,
+and it always takes the full width. Ranking a single short answer below the
+question leaves it adrift in an empty slide.
+
 Answer text is **centred while every answer fits on one line** and switches to
 left-aligned the moment any of them wraps — centred multi-line text gives every
 line a different left edge and is slower to read from a distance. The letter
@@ -525,7 +574,10 @@ non-default relay, `--quiet` silences the per-student log. For a type-answer
 question add `--typed Paris`: the relay never tells a phone what the answer is,
 so a simulated student cannot know it either — given it, most of the room types
 it with the case and spelling variation a real room produces, which is the only
-way to see whether the marking rules are usable. Students spread
+way to see whether the marking rules are usable. `--near 206` does the same for
+a slider question: it is where the class's estimates gather, and without it they
+gather on the middle of the line. On a scale the class leans towards the
+confident end with a couple of holdouts, which is the shape a real room makes. Students spread
 round-robin across the teams, answer with a fixed ability (most get it right,
 roughly one in five does not, so the tally has something to show), reply to
 polls, clouds and brainstorms, ask questions on a slow trickle, and upvote each

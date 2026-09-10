@@ -197,6 +197,47 @@
       insp.appendChild(el('p', 'hint',
         'One wrong letter in a word of five or more, two in a word of eight ' +
         'or more. Never applied to a number: 1500 is not 1600.'));
+    },
+
+    slider: function (insp, question) {
+      /* Written in the order the author thinks in: what the line covers,
+         where the answer sits on it, and how close counts. */
+      /* Re-normalized in place after every edit, so an inverted range or an
+         answer dragged off the end is corrected as it is typed rather than
+         failing at showtime. normalizeQuestion() returns a copy; the style's
+         own normalize() is the one that mutates. */
+      var set = function (key) {
+        return function (v) {
+          question[key] = v == null ? 0 : v;
+          SF.gameStyle('slider').normalize(question);
+          touched(); repaint();
+        };
+      };
+
+      var span = el('div', 'setrow');
+      span.appendChild(UI.field('Line starts at', UI.num(question.min, set('min'))));
+      span.appendChild(UI.field('and ends at', UI.num(question.max, set('max'))));
+      insp.appendChild(UI.field('The line', span,
+        'The range the room can choose from. The slider starts in the middle.'));
+
+      var band = el('div', 'setrow');
+      band.appendChild(UI.field('Answer', UI.num(question.target, set('target'))));
+      band.appendChild(UI.field('Near enough is ±', UI.num(question.tolerance, set('tolerance'), 0)));
+      insp.appendChild(UI.field('The answer', band,
+        'Anything inside the band counts. ± 0 means the exact value only.'));
+
+      var fine = el('div', 'setrow');
+      fine.appendChild(UI.field('Unit', UI.text(question.unit, function (v) {
+        question.unit = v.slice(0, 12); touched(); repaint();
+      }, 'kg, %, years')));
+      fine.appendChild(UI.field('Step', UI.num(question.step, set('step'), 0)));
+      insp.appendChild(UI.field('Reading it', fine,
+        'A symbol sits against the number (37.5%), a word sits apart from it ' +
+        '(206 bones). Step is how far one nudge of the slider moves.'));
+
+      insp.appendChild(el('p', 'hint',
+        'The room never sees the answer or the band until you reveal — a ' +
+        'shaded band would give it away as surely as the number would.'));
     }
   };
 

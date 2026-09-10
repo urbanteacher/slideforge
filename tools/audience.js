@@ -14,12 +14,16 @@
  *   node tools/audience.js 123456 --port 8788  # a relay on another port
  *   node tools/audience.js 123456 --quiet      # no per-event log
  *   node tools/audience.js 123456 --typed Paris
+ *   node tools/audience.js 123456 --near 206
  *
  * --typed is for type-answer questions. The relay never tells a phone what
  * the answer is, so a simulated student cannot know it either — give it here
  * and most of the room will type it, with the case, punctuation and spelling
  * variation a real room produces. Leave it out and they all type something
  * wrong, which still exercises the path but makes a dull screen.
+ *
+ * --near does the same job for a slider question: it is where the class's
+ * estimates gather. Without it they gather on the middle of the line.
  */
 
 const NAMES = [
@@ -57,11 +61,12 @@ const flag = (name, fallback) => {
 };
 const count = Math.max(1, Math.min(NAMES.length, Number(flag('n', 6))));
 const typedAnswer = flag('typed', '');
+const nearValue = args.indexOf('--near') >= 0 ? Number(flag('near', '')) : null;
 const port = Number(flag('port', 8787));
 const quiet = args.includes('--quiet');
 
 if (!pin) {
-  console.error('Usage: node tools/audience.js <pin> [--n 6] [--port 8787] [--typed ANSWER] [--quiet]');
+  console.error('Usage: node tools/audience.js <pin> [--n 6] [--port 8787] [--typed ANSWER] [--near VALUE] [--quiet]');
   console.error('The PIN is on the host screen after you press "Host live".');
   process.exit(1);
 }
@@ -132,6 +137,7 @@ class Student {
   async answer(m) {
     await wait(jitter(700));
     if (m.input === 'text') { this.answerTyped(); return; }
+    if (m.input === 'number') { this.answerPlaced(m); return; }
     const n = m.count || 4;
     /* The relay tells the phone how many options there are, not which is
        right — so a simulated student has to guess like a real one. It knows
@@ -165,12 +171,37 @@ class Student {
     say('  ✎ ' + this.name + ' typed "' + text + '"');
   }
 
+  /* Estimates cluster around a guess and spread out from it. The relay does
+     not send the target, so like a real student this only knows the line —
+     --near, if given, is where the class's guesses gather. */
+  answerPlaced(m) {
+    const r = m.range || {};
+    const min = Number(r.min) || 0;
+    const max = Number(r.max) || 100;
+    const step = Math.abs(Number(r.step)) || 1;
+    const centre = nearValue == null ? (min + max) / 2 : nearValue;
+    /* The ones who know it land close; the rest are somewhere on the line. */
+    const spread = (max - min) * (Math.random() < this.ability ? 0.04 : 0.3);
+    const raw = centre + (Math.random() * 2 - 1) * spread;
+    const value = Math.min(max, Math.max(min, Math.round(raw / step) * step));
+    this.send({ t: 'answer', value });
+    say('  ✎ ' + this.name + ' placed ' + value);
+  }
+
   async reply(m) {
     await wait(jitter(900));
-    if (m.kind === 'poll') {
-      const choice = Math.floor(Math.random() * (m.options || []).length);
+    if (m.kind === 'poll' || m.kind === 'scale') {
+      const n = (m.options || []).length;
+      /* A scale leans towards the confident end with a couple of holdouts,
+         which is the shape a real class produces — a uniform pick over the
+         points would make every distribution look flat. */
+      const choice = m.kind === 'scale'
+        ? Math.min(n - 1, Math.max(0, Math.round(n * 0.65 + (Math.random() * 2 - 1) * n * 0.35)))
+        : Math.floor(Math.random() * n);
       this.send({ t: 'reply', choice });
-      say('  ▤ ' + this.name + ' voted "' + m.options[choice] + '"');
+      say('  ▤ ' + this.name + (m.kind === 'scale'
+        ? ' sits at ' + (choice + 1) + ' of ' + n
+        : ' voted "' + m.options[choice] + '"'));
     } else if (m.kind === 'wordcloud') {
       const word = pick(WORDS);
       this.send({ t: 'reply', text: word });

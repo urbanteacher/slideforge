@@ -65,8 +65,9 @@
   var SLIDE_TYPES = {
     title:   { label: 'Title',        icon: 'T' },
     section: { label: 'Section',      icon: 'S' },
-    cards:   { label: 'Cards', icon: '▦' },
     content: { label: 'Bullets',      icon: '•' },
+    split:   { label: 'Dual',         icon: '◫' },
+    cards:   { label: 'Cards',        icon: '▦' },
     image:   { label: 'Image',        icon: '▣' },
     quote:   { label: 'Quote',        icon: '“' },
     game:    { label: 'Game',         icon: '◈' },
@@ -76,7 +77,7 @@
   };
 
   /* The layouts offered in the presentation editor's Layout grid. */
-  var DECK_TYPES = ['title', 'section', 'content', 'cards', 'image', 'quote'];
+  var DECK_TYPES = ['title', 'section', 'content', 'split', 'cards', 'image', 'quote'];
 
   function uid() {
     return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
@@ -93,6 +94,7 @@
       notes: '',
       image: '',
       imageFit: 'cover',
+      imageSide: 'right',
       transition: 'fade',
       // quiz fields
       question: '',
@@ -119,6 +121,11 @@
       case 'content':
         s.title = 'Slide title';
         s.bullets = ['First point', 'Second point', 'Third point'];
+        break;
+      case 'split':
+        s.title = 'Say it. Show it.';
+        s.bullets = ['First point', 'Second point', 'Third point'];
+        s.imageSide = 'right';
         break;
       case 'image':
         s.title = 'Image slide';
@@ -223,6 +230,8 @@
     if (TRANSITIONS.indexOf(s.transition) === -1) s.transition = 'fade';
     s.gameId = String(s.gameId || '');
     s.gameTitle = String(s.gameTitle || '');
+    s.imageSide = s.imageSide === 'left' ? 'left' : 'right';
+    if (s.imageFit !== 'contain') s.imageFit = 'cover';
     s.feedback = normalizeFeedback(s.feedback);
     return s;
   }
@@ -390,6 +399,92 @@
     summary: function (q) { return GAME_STYLES.choice.summary(q); }
   };
 
+  /* Slider. An estimate rather than a choice: the room places a value on a
+     line, and it counts if it lands inside the band the author allows. Being
+     close is the skill being tested, so "close" is a number the author sets
+     rather than something inferred. */
+  GAME_STYLES.slider = {
+    key: 'slider',
+    label: 'Slider',
+    icon: '↔',
+    blurb: 'Estimate a value on a line. Near enough counts.',
+    mechanic: 'points',
+    input: 'number',
+    minOptions: 0,
+    maxOptions: 0,
+    fixedOptions: null,
+
+    make: function () {
+      return {
+        question: 'Estimate the value.',
+        min: 0,
+        max: 100,
+        step: 1,
+        target: 50,
+        tolerance: 5,
+        unit: ''
+      };
+    },
+
+    normalize: function (q) {
+      var num = function (v, fallback) {
+        var n = Number(v);
+        return Number.isFinite(n) ? n : fallback;
+      };
+      q.min = num(q.min, 0);
+      q.max = num(q.max, 100);
+      /* A line that does not go anywhere cannot be answered, so an inverted or
+         collapsed range is opened out rather than left to fail at showtime. */
+      if (q.max <= q.min) q.max = q.min + 100;
+      q.step = Math.max(0, num(q.step, 1));
+      if (!q.step) q.step = 1;
+      q.target = Math.min(q.max, Math.max(q.min, num(q.target, (q.min + q.max) / 2)));
+      /* Tolerance is capped at the whole span: wider than the line would mark
+         every possible answer right, which is not a question. */
+      q.tolerance = Math.min(q.max - q.min, Math.max(0, num(q.tolerance, 0)));
+      q.unit = String(q.unit == null ? '' : q.unit).slice(0, 12);
+      delete q.options;
+      delete q.correct;
+      return q;
+    },
+
+    problems: function (q, n) {
+      if (!String(q.question).trim()) return 'Q' + n + ' has no question text';
+      if (q.tolerance >= q.max - q.min) {
+        return 'Q' + n + ' accepts the whole line — narrow the tolerance';
+      }
+      return null;
+    },
+
+    compile: function (q, settings, s) {
+      s.question = q.question;
+      s.min = q.min;
+      s.max = q.max;
+      s.step = q.step;
+      s.target = q.target;
+      s.tolerance = q.tolerance;
+      s.unit = q.unit;
+      s.answer = formatValue(q.target, q.unit);
+      s.options = [];
+      s.correct = -1;
+    },
+
+    mark: function (s, response) {
+      if (typeof response !== 'number' || !Number.isFinite(response)) return false;
+      return Math.abs(response - s.target) <= s.tolerance;
+    },
+
+    summary: function (q) {
+      /* The unit once, at the end: "206 ± 8 bones", not "206 bones ± 8 bones". */
+      var band = q.tolerance
+        ? formatValue(q.target) + ' ± ' + formatValue(q.tolerance)
+        : formatValue(q.target) + ' exactly';
+      return withUnit(band, q.unit);
+    },
+
+    describe: function (s, response) { return formatValue(response, s.unit); }
+  };
+
   /* Type answer. No options at all, which is the point: recall without the
      clues. The author lists every spelling they will accept and the marking
      rules above do the rest. */
@@ -500,6 +595,22 @@
     if (!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(t)) return null;
     var n = Number(t);
     return Number.isFinite(n) ? n : null;
+  }
+
+  /* A symbol sits against the number, a word sits apart from it: "37.5%" but
+     "206 bones". */
+  function withUnit(text, unit) {
+    unit = String(unit == null ? '' : unit).trim();
+    if (!unit) return text;
+    return /^[%°]/.test(unit) ? text + unit : text + ' ' + unit;
+  }
+
+  /* Numbers as a teacher would write them, without the trailing digits
+     floating-point arithmetic leaves behind. */
+  function formatValue(value, unit) {
+    var n = Number(value);
+    if (!Number.isFinite(n)) return '';
+    return withUnit(String(Math.round(n * 1000) / 1000), unit);
   }
 
   function editDistance(a, b) {
@@ -751,7 +862,7 @@
     s.style = styleKey;
     /* How the room answers. Read off the style rather than written by each
        compile(), so a style declares it once. */
-    s.input = style.input === 'text' ? 'text' : 'choice';
+    s.input = INPUTS.indexOf(style.input) > -1 ? style.input : 'choice';
     s.timeLimit = q.timeLimit == null ? settings.defaultTime : q.timeLimit;
     s.points = q.points == null ? settings.defaultPoints : q.points;
     QUESTION_SLIDE_FIELDS.forEach(function (k) {
@@ -760,6 +871,11 @@
     s.explainStyle = settings.explainStyle;
     return s;
   }
+
+  /* Every way a room can answer. The phone switches control on this, the
+     relay validates the response against it, and it is the one thing a new
+     style has to pick from an existing set rather than invent. */
+  var INPUTS = ['choice', 'text', 'number'];
 
   var QUESTION_SLIDE_FIELDS = [
     'image', 'imageAlt', 'imageLayout', 'explanation', 'source', 'notes'
@@ -986,16 +1102,46 @@
       icon: '✎',
       blurb: 'Longer contributions, listed newest first with names.',
       needsOptions: false
+    },
+    /* A scale is a poll over a fixed run of points, so on the wire it is one:
+       the room picks an index and the relay counts indices, unchanged. What
+       makes it a scale is that the points are ordered, which is why it gets a
+       mean and a distribution rather than a set of independent bars. */
+    scale: {
+      key: 'scale',
+      label: 'Scale',
+      icon: '≋',
+      blurb: 'One end to the other. Shows the spread and the average.',
+      needsOptions: false,
+      graded: true
     }
   };
 
+  /* The two ends and the number of steps between them. Five is the default
+     because an odd count leaves a real middle to sit in, and more than seven
+     points is a distinction nobody makes honestly on a phone. */
+  var SCALE_POINTS = [3, 4, 5, 6, 7];
+
+  function scaleLabels(f) {
+    var n = Math.max(3, Math.min(7, Number(f.points) || 5));
+    var out = [];
+    for (var i = 0; i < n; i++) out.push(String(i + 1));
+    return out;
+  }
+
   function makeFeedback(kind) {
-    return {
+    var f = {
       kind: FEEDBACK_KINDS[kind] ? kind : 'poll',
       prompt: '',
       options: kind === 'poll' || !kind ? ['Yes', 'No', 'Not sure'] : [],
       max: 1                 // submissions allowed per person
     };
+    if (f.kind === 'scale') {
+      f.points = 5;
+      f.lowLabel = 'Not at all';
+      f.highLabel = 'Completely';
+    }
+    return f;
   }
 
   function normalizeFeedback(raw) {
@@ -1013,6 +1159,12 @@
       while (f.options.length < 2) f.options.push('');
       f.max = 1;             // one vote each, always
     }
+    if (f.kind === 'scale') {
+      f.points = SCALE_POINTS.indexOf(Number(raw.points)) > -1 ? Number(raw.points) : 5;
+      f.lowLabel = String(raw.lowLabel == null ? 'Not at all' : raw.lowLabel).slice(0, 40);
+      f.highLabel = String(raw.highLabel == null ? 'Completely' : raw.highLabel).slice(0, 40);
+      f.max = 1;             // one position each — a scale is where you stand
+    }
     return f;
   }
 
@@ -1023,6 +1175,12 @@
     if (!String(f.prompt || '').trim()) return null;
     if (FEEDBACK_KINDS[f.kind].needsOptions &&
         f.options.filter(function (o) { return String(o).trim(); }).length < 2) {
+      return null;
+    }
+    /* A scale needs both ends named or the room cannot tell which way it
+       runs, and an unlabelled 1-to-5 means nothing on the wall either. */
+    if (f.kind === 'scale' &&
+        !(String(f.lowLabel || '').trim() && String(f.highLabel || '').trim())) {
       return null;
     }
     return f;
@@ -1126,6 +1284,143 @@
     }
   };
 
+  /** One-way practice pack for Canvas / Colab. Live interaction is omitted on purpose. */
+  function deckToMarkdown(deck) {
+    deck = normalizeDeck(deck || {});
+    var letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+    var out = [];
+    function line(s) { out.push(s == null ? '' : String(s)); }
+    function blank() { if (out.length && out[out.length - 1] !== '') line(''); }
+
+    line('# ' + (deck.title || 'Untitled lesson'));
+    line('');
+    line('_Practice notes from SlideForge. Live polls, games and scoring stay in the classroom room._');
+    line('');
+
+    (deck.slides || []).forEach(function (s, idx) {
+      var n = idx + 1;
+      blank();
+
+      if (s.type === 'game') {
+        var g = s.gameId ? GameStore.get(s.gameId) : null;
+        line('## ' + n + '. Knowledge check' + (g || s.gameTitle ? ': ' + (g ? g.title : s.gameTitle) : ''));
+        line('');
+        if (!g) {
+          line('*Game not found in this browser — open the lesson in SlideForge to review the questions.*');
+          return;
+        }
+        line('*' + (GAME_STYLES[g.style] ? GAME_STYLES[g.style].label : g.style) + '*');
+        line('');
+        (g.questions || []).forEach(function (q, qi) {
+          line('### Q' + (qi + 1) + '. ' + (q.question || 'Question'));
+          line('');
+          if (g.style === 'truefalse') {
+            line('- True');
+            line('- False');
+          } else if (Array.isArray(q.options) && q.options.length) {
+            q.options.forEach(function (opt, oi) {
+              var mark = (q.correct === oi) ? ' *(answer)*' : '';
+              line('- ' + (letters[oi] || String(oi + 1)) + '. ' + opt + mark);
+            });
+          } else if (q.answer) {
+            line('Answer key: `' + q.answer + '`');
+          }
+          if (q.explanation) {
+            line('');
+            line('> ' + String(q.explanation).replace(/\n+/g, ' '));
+          }
+          line('');
+        });
+        return;
+      }
+
+      if (s.type === 'title') {
+        line('## ' + n + '. ' + (s.title || 'Title').replace(/\n/g, ' '));
+        if (s.subtitle) { line(''); line(s.subtitle); }
+      } else if (s.type === 'section') {
+        line('## ' + n + '. ' + (s.title || 'Section').replace(/\n/g, ' '));
+        if (s.subtitle) { line(''); line(s.subtitle); }
+      } else if (s.type === 'quote') {
+        line('## ' + n + '. Quote');
+        line('');
+        line('> ' + String(s.body || '').replace(/\n/g, ' '));
+        if (s.subtitle) { line(''); line('— ' + s.subtitle); }
+      } else if (s.type === 'image') {
+        line('## ' + n + '. ' + (s.title || 'Image').replace(/\n/g, ' '));
+        line('');
+        line(s.image && String(s.image).indexOf('data:') === 0
+          ? '*Embedded image (open in SlideForge to view).*'
+          : (s.image ? '![](' + s.image + ')' : '*No image set.*'));
+      } else if (s.type === 'cards') {
+        line('## ' + n + '. ' + (s.title || 'Cards').replace(/\n/g, ' '));
+        line('');
+        (s.bullets || []).filter(function (b) { return String(b).trim(); }).forEach(function (b, i) {
+          line((i + 1) + '. ' + String(b).replace(/^(\s{2,}|\t|- )+/, '').trim());
+        });
+      } else if (s.type === 'split') {
+        line('## ' + n + '. ' + (s.title || 'Dual coding').replace(/\n/g, ' '));
+        line('');
+        (s.bullets || []).filter(function (b) { return String(b).trim(); }).forEach(function (b) {
+          var tier = /^(\s{2,}|\t|- )/.test(b);
+          var text = String(b).replace(/^(\s{2,}|\t|- )+/, '').trim();
+          line((tier ? '  - ' : '- ') + text);
+        });
+        line('');
+        line(s.image && String(s.image).indexOf('data:') === 0
+          ? '*Accompanying image (open in SlideForge to view).*'
+          : (s.image ? '![](' + s.image + ')' : '*Add an accompanying image for dual coding.*'));
+      } else {
+        line('## ' + n + '. ' + (s.title || 'Slide').replace(/\n/g, ' '));
+        line('');
+        (s.bullets || []).filter(function (b) { return String(b).trim(); }).forEach(function (b) {
+          var tier = /^(\s{2,}|\t|- )/.test(b);
+          var text = String(b).replace(/^(\s{2,}|\t|- )+/, '').trim();
+          line((tier ? '  - ' : '- ') + text);
+        });
+      }
+
+      if (s.bloom) {
+        blank();
+        line('*Thinking level: ' + s.bloom + '*');
+      }
+
+      var fb = slideFeedback(s);
+      if (fb) {
+        blank();
+        line('### In-class activity · ' + (FEEDBACK_KINDS[fb.kind] ? FEEDBACK_KINDS[fb.kind].label : fb.kind));
+        line('');
+        line('**Prompt:** ' + (fb.prompt || ''));
+        if (fb.kind === 'poll' && fb.options && fb.options.length) {
+          line('');
+          fb.options.forEach(function (o) { line('- [ ] ' + o); });
+        } else {
+          line('');
+          line('*Respond in the live room (or jot a note here for practice).*');
+        }
+      }
+
+      if (s.nextStep) {
+        blank();
+        line('**Teacher next step:** ' + s.nextStep);
+      }
+
+      if (s.notes) {
+        blank();
+        line('<details><summary>Speaker notes</summary>');
+        line('');
+        line(s.notes);
+        line('');
+        line('</details>');
+      }
+    });
+
+    blank();
+    line('---');
+    line('');
+    line('_Exported for Canvas / Colab practice. Re-open the `.sfdeck.json` in SlideForge to host live._');
+    return out.join('\n');
+  }
+
   global.SF = global.SF || {};
   Object.assign(global.SF, {
     SLIDE_W: SLIDE_W,
@@ -1144,8 +1439,11 @@
     starterDeck: starterDeck,
     normalizeDeck: normalizeDeck,
     normalizeSlide: normalizeSlide,
+    deckToMarkdown: deckToMarkdown,
     DECK_TYPES: DECK_TYPES,
     FEEDBACK_KINDS: FEEDBACK_KINDS,
+    SCALE_POINTS: SCALE_POINTS,
+    scaleLabels: scaleLabels,
     makeFeedback: makeFeedback,
     normalizeFeedback: normalizeFeedback,
     slideFeedback: slideFeedback,
@@ -1158,10 +1456,12 @@
     answerLabel: answerLabel,
     markTyped: markTyped,
     normalizeAnswer: normalizeAnswer,
+    formatValue: formatValue,
     starterGame: starterGame,
     normalizeGame: normalizeGame,
     normalizeQuestion: normalizeQuestion,
     compileGame: compileGame,
+    INPUTS: INPUTS,
     QUESTION_SLIDE_FIELDS: QUESTION_SLIDE_FIELDS,
     fillQuestionSlide: fillQuestionSlide,
     buildRunDeck: buildRunDeck,

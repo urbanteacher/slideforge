@@ -308,7 +308,10 @@ function feedbackDigest(room) {
   if (!p) return null;
   const all = [...room.replies.entries()];
 
-  if (p.kind === 'poll') {
+  /* A scale is a poll over ordered points, so the counting is identical and
+     shared. Only the label on the way out differs, because the host draws a
+     distribution and an average from it rather than independent bars. */
+  if (p.kind === 'poll' || p.kind === 'scale') {
     const counts = new Array(p.options.length).fill(0);
     let voted = 0;
     for (const [, list] of all) {
@@ -318,7 +321,7 @@ function feedbackDigest(room) {
         voted++;
       }
     }
-    return { kind: 'poll', counts, total: voted };
+    return { kind: p.kind, counts, total: voted };
   }
 
   if (p.kind === 'wordcloud') {
@@ -428,6 +431,7 @@ function promptMessage(room) {
     kind: room.prompt.kind,
     prompt: room.prompt.prompt,
     options: room.prompt.options,
+    ends: room.prompt.ends,
     max: room.prompt.max
   };
 }
@@ -594,11 +598,11 @@ ws.attach(server, (sock, req) => {
         log('room ' + room.pin + ' started with ' + room.players.size + ' player(s)');
 
       } else if (m.t === 'question') {
-        /* Two ways to answer: pick one of the options, or type it. A typed
-           question has no options at all — that is what makes it recall
-           rather than recognition — so the option count is only checked for
-           the kind that has options. */
-        const input = m.input === 'text' ? 'text' : 'choice';
+        /* Three ways to answer: pick one of the options, type it, or place a
+           value on a line. Only the first has options at all — that is what
+           makes the others recall rather than recognition — so the option
+           count is checked for that kind alone. */
+        const input = ['text', 'number'].includes(m.input) ? m.input : 'choice';
         if (input === 'choice' && (!Array.isArray(m.options) || m.options.length < 2 || m.options.length > 6)) return;
         if (room.question && room.question.id === String(m.id || '') && room.phase === 'question') return;
         room.asked++;
@@ -612,6 +616,16 @@ ws.attach(server, (sock, req) => {
           bloom: ['Remember','Understand','Apply','Analyze','Evaluate','Create'].includes(m.bloom) ? m.bloom : '',
           sourceSlideId: String(m.sourceSlideId || '').slice(0,160),
           options: input === 'choice' && Array.isArray(m.options) ? m.options.map(o => String(o).slice(0,2000)) : [],
+          /* Forwarded to the phones so the slider has a line to slide along,
+             and nothing else. The relay does not judge a value against it —
+             it is the shape of the control, the way `options` is the shape of
+             the answer pads. */
+          range: input === 'number' ? {
+            min: Number(m.range && m.range.min) || 0,
+            max: Number(m.range && m.range.max) || 100,
+            step: Math.abs(Number(m.range && m.range.step)) || 1,
+            unit: String((m.range && m.range.unit) || '').slice(0, 12)
+          } : null,
           timeLimit: Math.max(0, Number(m.timeLimit) || 0),
           points: Math.max(0, Number(m.points) || 1000),
           // the host knows where this question sits in the deck; fall back to
@@ -641,6 +655,7 @@ ws.attach(server, (sock, req) => {
           t: 'question',
           n: room.question.index,
           input: room.question.input,
+          range: room.question.range,
           count: room.question.options.length,
           timeLimit: room.question.timeLimit
         });
@@ -773,7 +788,7 @@ ws.attach(server, (sock, req) => {
       } else if (m.t === 'prompt') {
         /* Opening a prompt clears the previous one's replies: they belong to
            the slide that asked, not to the session. */
-        if (!['poll','wordcloud','brainstorm'].includes(m.kind)) return;
+        if (!['poll','wordcloud','brainstorm','scale'].includes(m.kind)) return;
         room.prompt = {
           attempt: crypto.randomUUID(),
           bloom: ['Remember','Understand','Apply','Analyze','Evaluate','Create'].includes(m.bloom) ? m.bloom : '',
@@ -781,6 +796,13 @@ ws.attach(server, (sock, req) => {
           kind: String(m.kind || 'poll'),
           prompt: String(m.prompt || '').slice(0, 240),
           options: (Array.isArray(m.options) ? m.options : []).map(o => String(o).slice(0,500)).slice(0, 6),
+          /* A scale is answered like a poll — an index among the points — so
+             the two ends are forwarded for the phone to label its buttons and
+             nothing more. The relay counts indices either way. */
+          ends: m.kind === 'scale' ? {
+            low: String((m.ends && m.ends.low) || '').slice(0, 40),
+            high: String((m.ends && m.ends.high) || '').slice(0, 40)
+          } : null,
           max: Math.max(1, Math.min(5, Number(m.max) || 1))
         };
         room.replies = new Map();
@@ -861,16 +883,17 @@ ws.attach(server, (sock, req) => {
             if (room.phase === 'question' && room.question && room.question.eligible.has(me.id)) {
               const remaining = room.question.timeLimit ? Math.max(0, room.question.timeLimit - (Date.now() - room.askedAt) / 1000) : 0;
               if (!room.question.timeLimit || remaining > 0) {
-                sock.json({t:'question',n:room.question.index,input:room.question.input,count:room.question.options.length,timeLimit:remaining});
+                sock.json({t:'question',n:room.question.index,input:room.question.input,range:room.question.range,count:room.question.options.length,timeLimit:remaining});
                 if (me.answer != null) {
-                  sock.json(room.question.input === 'text'
-                    ? {t:'locked',text:me.answer} : {t:'locked',choice:me.answer});
+                  sock.json(room.question.input === 'text' ? {t:'locked',text:me.answer}
+                    : room.question.input === 'number' ? {t:'locked',value:me.answer}
+                    : {t:'locked',choice:me.answer});
                 }
               }
             } else if (room.prompt) {
               sock.json(promptMessage(room));
               const values = room.replies.get(me.id) || [];
-              if (values.length) sock.json(room.prompt.kind === 'poll' ? {t:'replied',choice:values[0]} : {t:'replied',used:values.length,max:room.prompt.max});
+              if (values.length) sock.json(room.prompt.kind === 'poll' || room.prompt.kind === 'scale' ? {t:'replied',choice:values[0]} : {t:'replied',used:values.length,max:room.prompt.max});
             }
           }
           pushPlayers(room); pushTally(room); return;
@@ -1011,7 +1034,9 @@ ws.attach(server, (sock, req) => {
       const p = room.prompt;
       const mine = room.replies.get(me.id) || [];
 
-      if (p.kind === 'poll') {
+      /* Answered the same way as a poll: an index among the points. Changing
+         your mind is allowed on both — where you stand is not a submission. */
+      if (p.kind === 'poll' || p.kind === 'scale') {
         const pick = Number(m.choice);
         if (!Number.isInteger(pick) || !(pick >= 0 && pick < p.options.length)) return;
         room.replies.set(me.id, [pick]);      // last vote wins, one each
@@ -1042,6 +1067,17 @@ ws.attach(server, (sock, req) => {
       if (room.question.input === 'text') {
         response = String(m.text == null ? '' : m.text).trim().slice(0, 120);
         if (!response) return;
+      } else if (room.question.input === 'number') {
+        /* Kept as a number and nothing more. Whether it is near enough is the
+           host's judgement; all that matters here is that it is a real value.
+
+           Typed rather than coerced: JSON has no Infinity, so an overflowing
+           value arrives as null — and Number(null) is 0, which on a line
+           starting at zero is an answer at the low end rather than no answer
+           at all. Nothing missing may become a placement. */
+        if (typeof m.value !== 'number' || !Number.isFinite(m.value) ||
+            Math.abs(m.value) > 1e12) return;
+        response = m.value;
       } else {
         const choice = Number(m.choice);
         if (!Number.isInteger(choice) || !(choice >= 0 && choice < room.question.options.length)) return;
@@ -1054,9 +1090,10 @@ ws.attach(server, (sock, req) => {
         input: room.question.input,
         choice: room.question.input === 'choice' ? response : null,
         text: room.question.input === 'text' ? response : null,
+        value: room.question.input === 'number' ? response : null,
         elapsedMs:me.answeredAt-room.askedAt});
-      sock.json(room.question.input === 'text'
-        ? { t: 'locked', text: response }
+      sock.json(room.question.input === 'text' ? { t: 'locked', text: response }
+        : room.question.input === 'number' ? { t: 'locked', value: response }
         : { t: 'locked', choice: response });
       pushTally(room);
       return;

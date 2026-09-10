@@ -150,17 +150,14 @@
 
     var f = SF.slideFeedback(s);
     var digest = f ? SF.sampleFeedbackDigest(f) : null;
-    var kind = f ? SF.FEEDBACK_KINDS[f.kind] : null;
 
     if (f && fbPreview === 'focus') {
       /* The focus view replaces the slide, so preview it the same way. */
-      var focus = SF.feedbackFocus(deck, digest, {
-        title: kind.label,
-        subtitle: f.prompt,
-        options: f.options,
-        footnote: digest.answered + ' of ' + digest.players + ' responded',
-        sample: true
-      });
+      var focus = SF.feedbackFocus(deck, digest,
+        Object.assign(SF.feedbackViewOpts(f), {
+          footnote: digest.answered + ' of ' + digest.players + ' responded',
+          sample: true
+        }));
       box.appendChild(focus);
       requestAnimationFrame(function () { SF.fit(box, focus); });
       $('notes').value = s.notes || '';
@@ -175,12 +172,10 @@
       box.classList.add('railed');
       var rail = SF.feedbackRail(deck);
       box.appendChild(rail);
-      SF.paintFeedbackRail(rail, digest, {
-        title: kind.label,
-        subtitle: f.prompt,
-        options: f.options,
-        footnote: 'Sample — ' + digest.answered + ' of ' + digest.players + ' responded'
-      });
+      SF.paintFeedbackRail(rail, digest,
+        Object.assign(SF.feedbackViewOpts(f), {
+          footnote: 'Sample — ' + digest.answered + ' of ' + digest.players + ' responded'
+        }));
       requestAnimationFrame(function () {
         var scale = box.clientWidth / SF.SLIDE_W;
         rail.style.transform = 'scale(' + scale + ')';
@@ -266,13 +261,109 @@
       b.appendChild(el('span', null, SF.SLIDE_TYPES[t].label));
       b.onclick = function () {
         s.type = t;
-        if ((t === 'content' || t === 'cards') && !s.bullets.length) s.bullets = ['New point'];
+        if ((t === 'content' || t === 'cards' || t === 'split') && !s.bullets.length) {
+          s.bullets = ['', '', ''];
+        }
+        if (t === 'split' && s.imageSide !== 'left') s.imageSide = 'right';
         touched();
         draw();
       };
       grid.appendChild(b);
     });
     insp.appendChild(UI.field('Layout', grid));
+  }
+
+  /* Click-to-fill slots for bullets and cards — plain text, no formatting ribbon. */
+  var PIT_MAX = { content: 8, cards: 6, split: 5 };
+
+  function ensurePits(s) {
+    if (!Array.isArray(s.bullets)) s.bullets = [];
+    var min = 3;
+    while (s.bullets.length < min) s.bullets.push('');
+  }
+
+  function drawPits(wrap, s) {
+    wrap.innerHTML = '';
+    wrap.className = 'pit-list';
+    ensurePits(s);
+    var max = PIT_MAX[s.type] || 8;
+    s.bullets.forEach(function (text, i) {
+      var row = el('div', 'pit-row' + (String(text).trim() ? '' : ' empty'));
+      row.appendChild(el('span', 'pit-i', s.type === 'cards' ? String(i + 1).padStart(2, '0') : '•'));
+      var input = UI.text(text, function (v) {
+        s.bullets[i] = v;
+        touched();
+        repaint();
+        row.classList.toggle('empty', !String(v).trim());
+      }, s.type === 'cards' ? 'Card ' + (i + 1) : 'Point ' + (i + 1));
+      row.appendChild(input);
+      var kill = el('button', 'kill', '×');
+      kill.type = 'button';
+      kill.title = 'Remove';
+      kill.setAttribute('aria-label', 'Remove point ' + (i + 1));
+      kill.onclick = function () {
+        if (s.bullets.length <= 1) {
+          s.bullets[0] = '';
+        } else {
+          s.bullets.splice(i, 1);
+        }
+        ensurePits(s);
+        touched();
+        drawPits(wrap, s);
+        repaint();
+      };
+      row.appendChild(kill);
+      wrap.appendChild(row);
+    });
+    if (s.bullets.length < max) {
+      var add = UI.button('+ Add ' + (s.type === 'cards' ? 'card' : 'point'), 'ghost pit-add', function () {
+        s.bullets.push('');
+        touched();
+        drawPits(wrap, s);
+        repaint();
+        var inputs = wrap.querySelectorAll('input');
+        if (inputs.length) inputs[inputs.length - 1].focus();
+      });
+      wrap.appendChild(add);
+    }
+  }
+
+  function drawImageFields(insp, s, opts) {
+    opts = opts || {};
+    if (opts.caption !== false) {
+      insp.appendChild(UI.field(opts.captionLabel || 'Caption',
+        UI.area(s.title, function (v) { s.title = v; touched(); repaint(); }, 2)));
+    }
+    insp.appendChild(UI.field('Image URL or data',
+      UI.text(s.image, function (v) { s.image = v.trim(); touched(); repaint(); }),
+      'Paste a URL, or embed a local file below.'));
+
+    var pick = el('input');
+    pick.type = 'file';
+    pick.accept = 'image/*';
+    pick.style.fontSize = '12px';
+    pick.addEventListener('change', function () {
+      var f = pick.files && pick.files[0];
+      if (!f) return;
+      if (f.size > 3.5 * 1024 * 1024) {
+        SF.toast('That image is over 3.5 MB — it may exceed the browser storage limit.');
+      }
+      var fr = new FileReader();
+      fr.onload = function () { s.image = fr.result; touched(); draw(); };
+      fr.readAsDataURL(f);
+    });
+    insp.appendChild(UI.field('Embed a local file', pick));
+    insp.appendChild(UI.field('Fit', UI.select(
+      [{ value: 'cover', label: 'Fill the panel (crop)' },
+       { value: 'contain', label: 'Fit inside (letterbox)' }],
+      s.imageFit, function (v) { s.imageFit = v; touched(); repaint(); })));
+    if (opts.side) {
+      insp.appendChild(UI.field('Image side', UI.select(
+        [{ value: 'right', label: 'Right — text on the left' },
+         { value: 'left', label: 'Left — text on the right' }],
+        s.imageSide === 'left' ? 'left' : 'right',
+        function (v) { s.imageSide = v; touched(); draw(); })));
+    }
   }
 
   function drawContentFields(insp, s) {
@@ -285,31 +376,18 @@
     }
 
     if (s.type === 'image') {
-      insp.appendChild(UI.field('Caption',
-        UI.area(s.title, function (v) { s.title = v; touched(); repaint(); }, 2)));
-      insp.appendChild(UI.field('Image URL or data',
-        UI.text(s.image, function (v) { s.image = v.trim(); touched(); repaint(); }),
-        'Paste a URL, or embed a local file below.'));
+      drawImageFields(insp, s);
+      return;
+    }
 
-      var pick = el('input');
-      pick.type = 'file';
-      pick.accept = 'image/*';
-      pick.style.fontSize = '12px';
-      pick.addEventListener('change', function () {
-        var f = pick.files && pick.files[0];
-        if (!f) return;
-        if (f.size > 3.5 * 1024 * 1024) {
-          SF.toast('That image is over 3.5 MB — it may exceed the browser storage limit.');
-        }
-        var fr = new FileReader();
-        fr.onload = function () { s.image = fr.result; touched(); draw(); };
-        fr.readAsDataURL(f);
-      });
-      insp.appendChild(UI.field('Embed a local file', pick));
-      insp.appendChild(UI.field('Fit', UI.select(
-        [{ value: 'cover', label: 'Fill the slide (crop)' },
-         { value: 'contain', label: 'Fit inside (letterbox)' }],
-        s.imageFit, function (v) { s.imageFit = v; touched(); repaint(); })));
+    if (s.type === 'split') {
+      insp.appendChild(UI.field('Title',
+        UI.area(s.title, function (v) { s.title = v; touched(); repaint(); }, 2)));
+      var pits = el('div');
+      drawPits(pits, s);
+      insp.appendChild(UI.field('Points — click a pit to fill (up to 5)', pits,
+        'Keep it short — the image carries half the meaning.'));
+      drawImageFields(insp, s, { caption: false, side: true });
       return;
     }
 
@@ -322,12 +400,13 @@
     }
 
     if (s.type === 'content' || s.type === 'cards') {
-      insp.appendChild(UI.field(s.type === 'cards' ? 'Cards — one idea per line (up to 6)' : 'Bullets — one per line',
-        UI.area(s.bullets.join('\n'), function (v) {
-          s.bullets = v.split('\n');
-          touched(); repaint();
-        }, 7),
-        'Start a line with "- " or indent it to make a sub-bullet.'));
+      var bulletPits = el('div');
+      drawPits(bulletPits, s);
+      insp.appendChild(UI.field(
+        s.type === 'cards' ? 'Cards — click a pit to fill (up to 6)' : 'Bullets — click a pit to fill',
+        bulletPits,
+        'Empty pits stay off the slide until you type. Prefix with "- " for a sub-bullet.'
+      ));
     }
   }
 
@@ -394,9 +473,11 @@
         if (s.feedback && !s.feedback.prompt) {
           s.feedback.prompt = c.value === 'poll'
             ? 'What do you think?'
-            : c.value === 'wordcloud'
-              ? 'One word for how this feels'
-              : 'What would you add?';
+            : c.value === 'scale'
+              ? 'How confident do you feel about this?'
+              : c.value === 'wordcloud'
+                ? 'One word for how this feels'
+                : 'What would you add?';
         }
         touched();
         drawInspector();
@@ -408,7 +489,7 @@
     insp.appendChild(UI.field('Audience feedback', picker,
       current
         ? SF.FEEDBACK_KINDS[current].blurb + ' Collected while this slide is up.'
-        : 'Attach a poll, word cloud or brainstorm. Responses appear in the rail beside the slide, and need a live session.'));
+        : 'Attach a poll, scale, word cloud or brainstorm. Responses appear in the rail beside the slide, and need a live session.'));
 
     if (!current) return;
     var f = s.feedback;
@@ -430,6 +511,34 @@
       var wrap = el('div');
       drawPollOptions(wrap, f);
       insp.appendChild(UI.field('Options', wrap, 'Two to six. No correct answer — this is not scored.'));
+    } else if (current === 'scale') {
+      /* The author names the two ends and picks how many steps between them.
+         The points themselves are numbered, not written: naming all five is
+         where a scale turns into a poll nobody can read at a glance. */
+      var endRow = el('div', 'setrow');
+      endRow.appendChild(UI.field('Low end', UI.text(f.lowLabel, function (v) {
+        f.lowLabel = v.slice(0, 40); touched(); repaint();
+      }, 'Not at all')));
+      endRow.appendChild(UI.field('High end', UI.text(f.highLabel, function (v) {
+        f.highLabel = v.slice(0, 40); touched(); repaint();
+      }, 'Completely')));
+      insp.appendChild(UI.field('The two ends', endRow,
+        'Both are required — without them the room cannot tell which way the ' +
+        'scale runs, and a bare 1-to-5 means nothing on the wall either.'));
+
+      insp.appendChild(UI.field('Points', UI.segmented(
+        SF.SCALE_POINTS.map(function (n) {
+          return { value: String(n), icon: String(n), label: n === 5 ? 'Usual' : '' };
+        }), String(f.points), function (v) {
+          f.points = Number(v); touched(); drawInspector(); repaint();
+        }),
+        'An odd count leaves a real middle to sit in. More than seven is a ' +
+        'distinction nobody makes honestly on a phone.'));
+
+      insp.appendChild(el('div', 'hint',
+        'Results show the spread, the average, and a flag when the two ends ' +
+        'together outweigh the middle — a mean of 3 from a room at 1 and 5 is ' +
+        'the opposite of a room all sitting at 3.'));
     } else {
       insp.appendChild(UI.field('Responses allowed each',
         UI.num(f.max, function (v) { f.max = Math.max(1, Math.min(5, v || 1)); touched(); }, 1, 5),
@@ -471,9 +580,22 @@
 
   function addSlide(type) {
     var s = SF.makeSlide(type);
+    if (type === 'content' || type === 'cards' || type === 'split') s.bullets = ['', '', ''];
     if (current()) s.transition = current().transition;
     deck.slides.splice(sel + 1, 0, s);
     sel += 1;
+    touched();
+    draw();
+  }
+
+  /** Insert a ready-made slide (from the starter library) after the selection. */
+  function insertStarter(slide) {
+    if (!slide) return;
+    slide = SF.normalizeSlide(slide);
+    if (current()) slide.transition = current().transition || slide.transition;
+    deck.slides.splice(sel + 1, 0, slide);
+    sel += 1;
+    inspectorTab = slide.feedback ? 'engage' : 'content';
     touched();
     draw();
   }
@@ -645,6 +767,7 @@
   SF.Editor = {
     install: install,
     addSlide: addSlide,
+    insertStarter: insertStarter,
     attachFeedback: function (kind) {
       if (current().type === 'game') addSlide('content');
       current().feedback = SF.makeFeedback(kind);

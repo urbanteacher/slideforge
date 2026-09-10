@@ -92,6 +92,45 @@
     }
   }
 
+  /* Half text / half image — dual coding without leaving the teaching canvas. */
+  function layoutSplit(slide, pad) {
+    var side = slide.imageSide === 'left' ? 'left' : 'right';
+    pad.classList.add('split-pad', 'image-' + side);
+
+    var copy = el('div', 'split-copy');
+    if (slide.title) copy.appendChild(el('h2', null, slide.title));
+    var ul = el('ul');
+    var lines = (slide.bullets || []).filter(function (b) { return String(b).trim(); });
+    if (!lines.length) {
+      ul.appendChild(el('li', 'dim', 'Add points in the inspector'));
+    } else {
+      lines.forEach(function (line) {
+        ul.appendChild(el('li', bulletTier(line) === 2 ? 'tier-2' : null, bulletText(line)));
+      });
+    }
+    copy.appendChild(ul);
+
+    var media = el('div', 'split-media');
+    if (slide.image) {
+      var img = el('div', 'img ' + (slide.imageFit === 'contain' ? 'contain' : 'cover'));
+      img.style.backgroundImage = 'url("' + String(slide.image).replace(/"/g, '&quot;') + '")';
+      media.appendChild(img);
+    } else {
+      var empty = el('div', 'split-empty');
+      empty.appendChild(el('div', null, '▣'));
+      empty.appendChild(el('div', null, 'Add an image'));
+      media.appendChild(empty);
+    }
+
+    if (side === 'left') {
+      pad.appendChild(media);
+      pad.appendChild(copy);
+    } else {
+      pad.appendChild(copy);
+      pad.appendChild(media);
+    }
+  }
+
   /* A game embed is a marker, not a real slide: at showtime it is replaced by
      the game's compiled questions. It only ever renders in the editor. */
   function layoutGame(slide, pad, opts) {
@@ -146,8 +185,11 @@
     pad.appendChild(head);
 
     var answer = el('div', 'ex-answer');
-    var typed = slide.input === 'text';
-    answer.appendChild(el('span', 'key', typed ? '✎' : (LETTERS[slide.correct] || '?')));
+    /* An open-response question has no option to point at, so the answer
+       travels as text and the badge says how it was answered. */
+    var typed = slide.input === 'text' || slide.input === 'number';
+    answer.appendChild(el('span', 'key',
+      slide.input === 'number' ? '↔' : typed ? '✎' : (LETTERS[slide.correct] || '?')));
     answer.appendChild(el('span', 'txt', typed
       ? (slide.answer || '')
       : ((slide.options || [])[slide.correct] || '')));
@@ -166,6 +208,22 @@
     pad.appendChild(body);
 
     if (slide.subtitle) pad.appendChild(el('div', 'ex-source', slide.subtitle));
+  }
+
+  /* An empty line with its ends labelled. The room's placings and the band
+     that counts are added at reveal by Player.showPlacedValues(). */
+  function numberLine(slide) {
+    var wrap = el('div', 'numberline');
+    var line = el('div', 'nl-line');
+    line.appendChild(el('div', 'nl-band'));
+    line.appendChild(el('div', 'nl-marks'));
+    line.appendChild(el('div', 'nl-target'));
+    wrap.appendChild(line);
+    var ends = el('div', 'nl-ends');
+    ends.appendChild(el('span', null, SF.formatValue(slide.min, slide.unit)));
+    ends.appendChild(el('span', null, SF.formatValue(slide.max, slide.unit)));
+    wrap.appendChild(ends);
+    return wrap;
   }
 
   /* The field, shown above the question on a race slide. Compact on purpose:
@@ -283,11 +341,13 @@
       return box;
     }
 
-    /* A typed question has no options to lay out. It gets one answer box, so
-       every measure-and-fit rule, the inline explanation and the reveal
-       styling all apply unchanged — and, in a live room, that box holds back
-       the answer until the reveal, or the room reads it off the wall. */
-    if (slide.input === 'text') {
+    /* Neither a typed nor a slider question has options to lay out. Each gets
+       one answer box, so every measure-and-fit rule, the inline explanation
+       and the reveal styling all apply unchanged — and, in a live room, that
+       box holds back the answer until the reveal, or the room reads it off
+       the wall. */
+    if (slide.input === 'text' || slide.input === 'number') {
+      var placing = slide.input === 'number';
       pad.parentNode.classList.add('is-typed');
       var hold = opts.live && !opts.revealed;
       var tw = el('div', 'opts stack typed');
@@ -297,8 +357,10 @@
       if (!opts.interactive) ab.classList.add('locked');
       if (hold) ab.classList.add('held');
       var aline = el('span', 'opt-line');
-      aline.appendChild(el('span', 'key', '✎'));
-      aline.appendChild(el('span', 'txt', hold ? 'Typing on your phones…' : (slide.answer || ' ')));
+      aline.appendChild(el('span', 'key', placing ? '↔' : '✎'));
+      aline.appendChild(el('span', 'txt', hold
+        ? (placing ? 'Placing their answers…' : 'Typing on your phones…')
+        : (slide.answer || ' ')));
       aline.appendChild(el('span', 'tick', '✓'));
       ab.appendChild(aline);
       if (inlineWhy) ab.appendChild(whyBox());
@@ -306,10 +368,17 @@
       pad.appendChild(tw);
 
       /* Where a choice question puts its bars. Before the reveal it is a
-         count; after it, what the room actually typed. */
+         count; after it, what the room actually answered. */
       var tl = el('div', 'typedlist');
       tl.appendChild(el('div', 'typedcount', ''));
-      tl.appendChild(el('div', 'typedgroups'));
+      if (placing) {
+        /* The line is drawn now, but the band the answer sits in is not:
+           where the answer is has to stay off the wall until the reveal, and
+           a shaded band would give it away as surely as the number would. */
+        tl.appendChild(numberLine(slide));
+      } else {
+        tl.appendChild(el('div', 'typedgroups'));
+      }
       pad.appendChild(tl);
       return;
     }
@@ -391,6 +460,7 @@
     section: layoutSection,
     content: layoutContent,
     cards: layoutContent,
+    split: layoutSplit,
     quote: layoutQuote,
     image: layoutImage,
     quiz: layoutQuiz,
@@ -451,6 +521,10 @@
     }
     var scale = Math.min(bw / SF.SLIDE_W, bh / SF.SLIDE_H);
     slideEl.style.setProperty('--sf-scale', String(scale));
+    /* Also on the box, because the live overlays that sit beside the slide
+       rather than inside it — the Q&A cue — have to keep clear of things
+       measured in slide space, and cannot read a variable set on a sibling. */
+    box.style.setProperty('--sf-scale', String(scale));
     slideEl.style.transform = 'scale(' + scale + ')';
     slideEl.style.left = ((bw - SF.SLIDE_W * scale) / 2) + 'px';
     slideEl.style.top = ((bh - SF.SLIDE_H * scale) / 2) + 'px';
@@ -532,6 +606,8 @@
       body.appendChild(el('div', 'fk-empty', 'Waiting for the room'));
     } else if (digest.kind === 'poll') {
       focusPoll(body, digest, opts);
+    } else if (digest.kind === 'scale') {
+      focusScale(body, digest, opts);
     } else if (digest.kind === 'wordcloud') {
       focusCloud(body, digest);
     } else {
@@ -608,6 +684,30 @@
     }
   }
 
+  /**
+   * Everything both feedback views need to label themselves, from the slide's
+   * own feedback settings.
+   *
+   * One builder, because the rail, the focus view, the editor's preview of
+   * each and the live host all have to agree. Building the labels separately
+   * per call site is how the editor preview came to render a scale with no
+   * ends on it — the same drift that hit question slides twice.
+   *
+   * @param {object} f slide.feedback
+   * @returns {object} { title, subtitle, options, ends }
+   */
+  function feedbackViewOpts(f) {
+    var kind = f && f.kind ? SF.FEEDBACK_KINDS[f.kind] : null;
+    return {
+      title: kind ? kind.label : 'Feedback',
+      subtitle: f.prompt,
+      /* A scale's points are generated from how many the author chose; what
+         they name is the two ends. */
+      options: f.kind === 'scale' ? SF.scaleLabels(f) : (f.options || []),
+      ends: f.kind === 'scale' ? { low: f.lowLabel, high: f.highLabel } : null
+    };
+  }
+
   /* Plausible stand-in results, so the layout can be judged while authoring.
      Marked as a sample everywhere it is shown — it must never be mistaken for
      what the room actually said. */
@@ -620,6 +720,17 @@
       var counts = live.map(function (_, i) { return weights[i % weights.length]; });
       var total = counts.reduce(function (a, b) { return a + b; }, 0);
       return { kind: 'poll', counts: counts, total: total, answered: total, players: total, sample: true };
+    }
+
+    if (f.kind === 'scale') {
+      /* Bunched towards the confident end with a couple of holdouts — the
+         shape a real class produces, rather than a flat row of equal bars. */
+      var shape = { 3: [2, 5, 9], 4: [2, 3, 7, 5], 5: [1, 2, 4, 7, 3],
+        6: [1, 2, 3, 6, 4, 2], 7: [1, 1, 2, 4, 6, 3, 1] };
+      var bars = shape[f.points] || shape[5];
+      var seen = bars.reduce(function (a, b) { return a + b; }, 0);
+      return { kind: 'scale', counts: bars, total: seen,
+        answered: seen, players: seen + 3, sample: true };
     }
 
     if (f.kind === 'wordcloud') {
@@ -679,6 +790,7 @@
     }
 
     if (digest.kind === 'poll') return paintPoll(body, digest, opts);
+    if (digest.kind === 'scale') return paintScale(body, digest, opts);
     if (digest.kind === 'wordcloud') return paintCloud(body, digest);
     return paintBrainstorm(body, digest);
   }
@@ -707,6 +819,71 @@
       row.appendChild(el('div', 'ppct', total ? Math.round((n / total) * 100) + '%' : '0%'));
       body.appendChild(row);
     });
+  }
+
+  /* The average of the room's positions, and how spread out they are.
+     A mean alone hides a split room: 1,1,5,5 and 3,3,3,3 both average 3, and
+     they are the opposite situation for whoever is teaching. */
+  function scaleStats(counts) {
+    var total = 0, sum = 0;
+    counts.forEach(function (n, i) { total += n; sum += n * (i + 1); });
+    if (!total) return { total: 0, mean: 0, split: false };
+    var mean = sum / total;
+    /* Split when the two ends together outweigh the middle — the shape a
+       teacher needs to notice, stated as a fact rather than a variance. */
+    var edges = (counts[0] || 0) + (counts[counts.length - 1] || 0);
+    var middle = total - edges;
+    return { total: total, mean: mean, split: counts.length > 2 && edges > middle };
+  }
+
+  /* Columns rather than rows: a scale runs from one end to the other, and
+     showing it as a row of independent bars loses the only thing that makes
+     it a scale. */
+  function scaleChart(counts, opts, cls) {
+    var stats = scaleStats(counts);
+    var max = Math.max(1, Math.max.apply(null, counts.concat([1])));
+    var wrap = el('div', cls);
+
+    var cols = el('div', cls + '-cols');
+    counts.forEach(function (n, i) {
+      var col = el('div', cls + '-col');
+      var bar = el('div', cls + '-bar');
+      var fill = el('i');
+      fill.style.height = ((n / max) * 100) + '%';
+      bar.appendChild(fill);
+      col.appendChild(el('div', cls + '-n', n ? String(n) : ''));
+      col.appendChild(bar);
+      col.appendChild(el('div', cls + '-p', String(i + 1)));
+      cols.appendChild(col);
+    });
+    wrap.appendChild(cols);
+
+    var ends = opts.ends || {};
+    var foot = el('div', cls + '-ends');
+    foot.appendChild(el('span', null, ends.low || ''));
+    foot.appendChild(el('span', null, ends.high || ''));
+    wrap.appendChild(foot);
+
+    var read = el('div', cls + '-read');
+    if (stats.total) {
+      read.appendChild(el('strong', null, stats.mean.toFixed(1)));
+      read.appendChild(el('span', null, ' average of ' + stats.total));
+      if (stats.split) read.appendChild(el('span', cls + '-split', 'ROOM IS SPLIT'));
+    }
+    wrap.appendChild(read);
+    return wrap;
+  }
+
+  function paintScale(body, digest, opts) {
+    if (!digest.total) {
+      body.appendChild(el('div', 'empty-rail', 'Nobody has placed themselves yet'));
+      return;
+    }
+    body.appendChild(scaleChart(digest.counts || [], opts, 'sc'));
+  }
+
+  function focusScale(body, digest, opts) {
+    body.appendChild(scaleChart(digest.counts || [], opts, 'fksc'));
   }
 
   function paintCloud(body, digest) {
@@ -995,6 +1172,7 @@
     feedbackFocus: feedbackFocus,
     questionCard: questionCard,
     sampleFeedbackDigest: sampleFeedbackDigest,
+    feedbackViewOpts: feedbackViewOpts,
     paintFeedbackRail: paintFeedbackRail,
     paintScoreRail: paintScoreRail,
     soloScore: soloScore,

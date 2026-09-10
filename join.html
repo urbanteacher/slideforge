@@ -113,12 +113,37 @@
   @keyframes p { 0%,100% { opacity: .3; transform: scale(.85) } 50% { opacity: 1; transform: scale(1) } }
 
   /* Typed answers: one field, centred, with room for the on-screen keyboard. */
+  /* A slider needs no keyboard, so it sits in the middle of the screen where
+     a thumb can reach it. */
+  #qNumWrap { flex: 1; display: flex; flex-direction: column; justify-content: center;
+    width: 100%; max-width: 340px; margin: 0 auto; }
+  #qNumWrap.locked { opacity: .55; pointer-events: none; }
+  .numreadout {
+    font-size: 56px; font-weight: 800; text-align: center;
+    font-variant-numeric: tabular-nums; letter-spacing: -.02em; margin-bottom: 6px;
+  }
+  #qRange { width: 100%; height: 44px; accent-color: #5b8cff; background: none; }
+  .numends {
+    display: flex; justify-content: space-between; margin-top: 2px;
+    font-size: 13px; color: #6c7482; font-variant-numeric: tabular-nums;
+  }
+  #qNumMine { margin-top: 16px; }
+
   /* Near the top, not centred: the keyboard comes up over the bottom half of
      the screen the moment the field takes focus. */
   #qTypeWrap { flex: 1; display: flex; flex-direction: column; justify-content: flex-start;
     padding-top: 6vh; width: 100%; max-width: 340px; margin: 0 auto; }
   #qTypeWrap.locked #qText, #qTypeWrap.locked #qSend { opacity: .45; pointer-events: none; }
   #qMine { margin-top: 14px; }
+  /* A scale's pads run in one column with its ends named at top and bottom.
+     Widened explicitly: the prompt screen centres its children, so a column
+     of one-character labels would otherwise shrink to the width of a digit. */
+  .pad.scale { gap: 8px; align-content: center; width: 100%; max-width: 300px; }
+  .pad.scale .pick { min-height: 0; padding: 14px; }
+  .endlabel {
+    text-align: center; font-size: 13px; color: #9aa1ad;
+    letter-spacing: .04em; padding: 2px 0;
+  }
   footer { padding: 10px 18px 22px; text-align: center; font-size: 12px; color: #6c7482; flex: none; }
 
   /* the explanation, on the player's own screen */
@@ -281,6 +306,14 @@
     </div>
     <div class="bar"><i id="qBar"></i></div>
     <div class="pad" id="qPad"></div>
+    <div id="qNumWrap" style="display:none">
+      <div class="lead" id="qNumLead">Slide to your answer</div>
+      <div class="numreadout" id="qNumValue">0</div>
+      <input id="qRange" type="range" min="0" max="100" step="1" value="50">
+      <div class="numends"><span id="qNumLo">0</span><span id="qNumHi">100</span></div>
+      <button class="go" id="qNumSend" style="margin-top:16px">Send</button>
+      <div class="pill" id="qNumMine" style="display:none"></div>
+    </div>
     <div id="qTypeWrap" style="display:none">
       <div class="lead" id="qTypeLead">Type your answer</div>
       <input id="qText" type="text" maxlength="120" placeholder="Your answer"
@@ -519,6 +552,7 @@
 
       case 'locked':
         if (typeof m.text === 'string') lockTyped(m.text);
+        else if (typeof m.value === 'number') lockPlaced(m.value);
         else lockPad(m.choice);
         break;
 
@@ -730,6 +764,7 @@
   function openPrompt(m) {
     prompt = { kind: m.kind, options: m.options || [], max: m.max || 1, used: 0 };
     $('fbKind').textContent = m.kind === 'poll' ? 'Poll'
+      : m.kind === 'scale' ? 'Where do you sit?'
       : m.kind === 'wordcloud' ? 'One word' : 'Your idea';
     $('fbPrompt').textContent = m.prompt || '';
     $('fbErr').textContent = '';
@@ -738,25 +773,39 @@
     var pad = $('fbPad');
     var textWrap = $('fbTextWrap');
 
-    if (m.kind === 'poll') {
+    if (m.kind === 'poll' || m.kind === 'scale') {
+      /* A scale is answered like a poll — one pick among ordered points — so
+         it reuses the same pads. It stacks into a single column with the two
+         ends named above and below, because the order is the meaning: a grid
+         would say these are alternatives rather than a run from one end to
+         the other. */
+      var scale = m.kind === 'scale';
       textWrap.style.display = 'none';
       pad.style.display = '';
       pad.innerHTML = '';
-      pad.className = 'pad' + (prompt.options.length > 4 ? '' : (prompt.options.length <= 2 ? ' one' : ''));
+      pad.className = 'pad' + (scale ? ' one scale'
+        : (prompt.options.length > 4 ? '' : (prompt.options.length <= 2 ? ' one' : '')));
       delete pad.dataset.locked;
-      prompt.options.forEach(function (label, i) {
+      var ends = m.ends || {};
+      /* Highest point at the top, so the buttons run the way the two labels
+         read down the screen. The index sent is the real one either way. */
+      var order = prompt.options.map(function (_, i) { return i; });
+      if (scale) order.reverse();
+      if (scale && ends.high) pad.appendChild(endLabel(ends.high));
+      order.forEach(function (i) {
         var b = document.createElement('button');
         b.className = 'pick';
         b.dataset.i = String(i);
         b.type = 'button';
         var l = document.createElement('span');
         l.className = 'l';
-        l.textContent = label;
+        l.textContent = prompt.options[i];
         l.style.fontSize = '17px';
         b.appendChild(l);
         b.addEventListener('click', function () { sendPoll(i); });
         pad.appendChild(b);
       });
+      if (scale && ends.low) pad.appendChild(endLabel(ends.low));
     } else {
       pad.style.display = 'none';
       textWrap.style.display = '';
@@ -770,8 +819,15 @@
     if (navigator.vibrate) { try { navigator.vibrate(25); } catch (e) {} }
   }
 
+  function endLabel(text) {
+    var d = document.createElement('div');
+    d.className = 'endlabel';
+    d.textContent = text;
+    return d;
+  }
+
   function updateQuota() {
-    if (!prompt || prompt.kind === 'poll') { $('fbQuota').textContent = ''; return; }
+    if (!prompt || prompt.kind === 'poll' || prompt.kind === 'scale') { $('fbQuota').textContent = ''; return; }
     var left = prompt.max - prompt.used;
     $('fbQuota').textContent = prompt.max > 1
       ? (left > 0 ? left + ' of ' + prompt.max + ' left' : 'All ' + prompt.max + ' sent')
@@ -781,9 +837,13 @@
   function sendPoll(i) {
     if (!ws || ws.readyState !== 1 || !prompt) return;
     var pad = $('fbPad');
-    Array.prototype.forEach.call(pad.children, function (b, idx) {
-      b.classList.toggle('mine', idx === i);
-      b.classList.toggle('dim', idx !== i);
+    /* Matched on the option each button carries, not on where it sits: a
+       scale's pads are built highest-first and have its two end labels among
+       them, so position stopped meaning index. */
+    Array.prototype.forEach.call(pad.querySelectorAll('.pick'), function (b) {
+      var mine = Number(b.dataset.i) === i;
+      b.classList.toggle('mine', mine);
+      b.classList.toggle('dim', !mine);
     });
     ws.send(JSON.stringify({ t: 'reply', choice: i }));
     if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
@@ -801,7 +861,7 @@
 
   function confirmReply(m) {
     if (!prompt) return;
-    if (prompt.kind === 'poll') {
+    if (prompt.kind === 'poll' || prompt.kind === 'scale') {
       $('fbDone').textContent = 'Vote counted — change it any time';
       $('fbDone').style.display = '';
       return;
@@ -828,11 +888,41 @@
     delete pad.dataset.locked;
     pad.className = 'pad' + (count > 4 ? '' : (count <= 2 ? ' one' : ''));
 
-    /* A typed question has no pads at all — the point is recall, so there is
-       nothing on the phone to recognize the answer from. */
+    /* A typed or slider question has no pads at all — the point is recall, so
+       there is nothing on the phone to recognize the answer from. */
     var typed = m.input === 'text';
+    var placing = m.input === 'number';
     $('qTypeWrap').style.display = typed ? 'flex' : 'none';
-    pad.style.display = typed ? 'none' : '';
+    $('qNumWrap').style.display = placing ? 'flex' : 'none';
+    pad.style.display = typed || placing ? 'none' : '';
+
+    if (placing) {
+      var r = m.range || {};
+      numUnit = String(r.unit || '');
+      var range = $('qRange');
+      range.min = Number(r.min) || 0;
+      range.max = Number(r.max) || 100;
+      range.step = Math.abs(Number(r.step)) || 1;
+      /* Starts in the middle rather than at one end: an untouched slider at
+         zero looks like an answer, and the low end would collect the votes of
+         everyone who never moved it. */
+      range.value = (Number(range.min) + Number(range.max)) / 2;
+      var wrapN = $('qNumWrap');
+      wrapN.classList.remove('locked');
+      delete wrapN.dataset.locked;
+      $('qNumMine').style.display = 'none';
+      $('qNumLead').textContent = 'Slide to your answer';
+      $('qNumLo').textContent = withUnit(range.min);
+      $('qNumHi').textContent = withUnit(range.max);
+      drawNumValue();
+      $('qNum').textContent = 'Question ' + (m.n || 1);
+      show('scQuestion');
+      if (m.timeLimit > 0) startTick(m.timeLimit);
+      else { $('qTime').textContent = ''; $('qBar').style.width = '100%'; }
+      if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
+      return;
+    }
+
     if (typed) {
       var wrap = $('qTypeWrap');
       wrap.classList.remove('locked');
@@ -886,6 +976,45 @@
     };
   }
 
+  /* Matches SF.withUnit on the host: a symbol sits against the number, a word
+     sits apart from it. Duplicated rather than imported because this page
+     loads no application scripts — it is the one file a phone fetches. */
+  var numUnit = '';
+  function withUnit(value) {
+    var text = String(value);
+    if (!numUnit) return text;
+    return /^[%°]/.test(numUnit) ? text + numUnit : text + ' ' + numUnit;
+  }
+
+  function drawNumValue() {
+    $('qNumValue').textContent = withUnit($('qRange').value);
+  }
+
+  function sendPlaced() {
+    if (!ws || ws.readyState !== 1) return;
+    var wrap = $('qNumWrap');
+    if (wrap.dataset.locked) return;
+    var value = Number($('qRange').value);
+    if (!isFinite(value)) return;
+    wrap.dataset.locked = '1';
+    ws.send(JSON.stringify({ t: 'answer', value: value }));
+    lockPlaced(value);
+    if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
+  }
+
+  function lockPlaced(value) {
+    var wrap = $('qNumWrap');
+    wrap.dataset.locked = '1';
+    wrap.classList.add('locked');
+    $('qRange').value = value;
+    drawNumValue();
+    $('qNumMine').textContent = 'Sent: ' + withUnit(value);
+    $('qNumMine').style.display = '';
+    $('qNumLead').textContent = 'Answer sent';
+    $('qTime').textContent = 'Locked in';
+    $('qTime').classList.remove('hurry');
+  }
+
   function sendTyped() {
     if (!ws || ws.readyState !== 1) return;
     var wrap = $('qTypeWrap');
@@ -934,7 +1063,8 @@
     tick = setInterval(function () {
       var left = Math.max(0, end - Date.now()) / 1000;
       var pad = $('qPad');
-      var held = pad.dataset.locked || $('qTypeWrap').dataset.locked;
+      var held = pad.dataset.locked || $('qTypeWrap').dataset.locked ||
+        $('qNumWrap').dataset.locked;
       if (!held) t.textContent = String(Math.ceil(left));
       t.classList.toggle('hurry', left <= 5 && !held);
       bar.style.width = ((left / total) * 100).toFixed(1) + '%';
@@ -942,7 +1072,15 @@
         stopTick();
         pad.dataset.locked = '1';
         var typing = $('qTypeWrap');
-        if (typing.style.display !== 'none') {
+        var sliding = $('qNumWrap');
+        if (sliding.style.display !== 'none') {
+          if (!sliding.dataset.locked) {
+            sliding.dataset.locked = '1';
+            sliding.classList.add('locked');
+            $('qNumLead').textContent = 'Time\u2019s up';
+            t.textContent = "Time's up";
+          }
+        } else if (typing.style.display !== 'none') {
           if (!typing.dataset.locked) {
             typing.dataset.locked = '1';
             typing.classList.add('locked');
@@ -964,6 +1102,8 @@
   /* ---------------------------------------------------------- wiring */
 
   $('qSend').onclick = sendTyped;
+  $('qNumSend').onclick = sendPlaced;
+  $('qRange').addEventListener('input', drawNumValue);
   $('qText').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') { e.preventDefault(); sendTyped(); }
   });

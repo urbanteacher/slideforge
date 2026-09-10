@@ -32,14 +32,120 @@
     modal.showModal();
     drawLibrary('all');
   }
+
+  /* One-click presentation shapes — fill the pits after they land. */
+  var starters = [
+    {
+      icon: 'T', title: 'Opening title', blurb: 'Big title at the top. Subtitle underneath.',
+      build: function () {
+        var s = SF.makeSlide('title');
+        s.title = 'Lesson title';
+        s.subtitle = 'Your name · ' + new Date().toLocaleDateString();
+        return s;
+      }
+    },
+    {
+      icon: '•', title: 'Title + content', blurb: 'Classic teaching slide — heading, then bullet pits.',
+      build: function () {
+        var s = SF.makeSlide('content');
+        s.title = 'Slide title';
+        s.bullets = ['', '', ''];
+        return s;
+      }
+    },
+    {
+      icon: '◫', title: 'Dual coding', blurb: 'Half text, half image — say it and show it.',
+      build: function () {
+        var s = SF.makeSlide('split');
+        s.title = 'Say it. Show it.';
+        s.bullets = ['', '', ''];
+        s.image = '';
+        s.imageSide = 'right';
+        return s;
+      }
+    },
+    {
+      icon: 'S', title: 'Section break', blurb: 'A clean pause between parts of the lesson.',
+      build: function () {
+        var s = SF.makeSlide('section');
+        s.title = 'Next idea';
+        s.subtitle = 'A short bridge into what follows.';
+        return s;
+      }
+    },
+    {
+      icon: '▣', title: 'Full-bleed image', blurb: 'One dominant image with a caption.',
+      build: function () {
+        var s = SF.makeSlide('image');
+        s.title = 'Caption';
+        s.image = '';
+        return s;
+      }
+    },
+    {
+      icon: '▦', title: 'Three cards', blurb: 'Three idea pits side by side.',
+      build: function () {
+        var s = SF.makeSlide('cards');
+        s.title = 'Three ideas to hold onto.';
+        s.bullets = ['', '', ''];
+        return s;
+      }
+    },
+    {
+      icon: '“', title: 'Quote', blurb: 'A line the room can sit with.',
+      build: function () {
+        var s = SF.makeSlide('quote');
+        s.body = 'Replace this with the line you want the room to sit with.';
+        s.subtitle = 'Attribution';
+        return s;
+      }
+    },
+    {
+      icon: '1', title: 'Steps', blurb: 'Title plus four numbered teaching steps.',
+      build: function () {
+        var s = SF.makeSlide('content');
+        s.title = 'How it works';
+        s.bullets = ['Step one', 'Step two', 'Step three', 'Step four'];
+        return s;
+      }
+    }
+  ];
+
+  function openStarters() {
+    returnFocus = document.activeElement;
+    var modal = document.getElementById('starterModal');
+    var body = document.getElementById('starterBody');
+    body.replaceChildren();
+    body.appendChild(el('p', 'library-note', 'Normal presentation shapes. Dual coding is half text, half image. Fill pits and drop an image in the right panel.'));
+    var grid = el('div', 'activity-grid starters-grid');
+    starters.forEach(function (st) {
+      var b = el('button', 'activity-card check');
+      b.type = 'button';
+      b.appendChild(el('span', 'activity-icon', st.icon));
+      b.appendChild(el('strong', null, st.title));
+      b.appendChild(el('span', 'activity-description', st.blurb));
+      b.appendChild(el('span', 'activity-tag', 'INSERT SLIDE  ↗'));
+      b.onclick = function () {
+        modal.close();
+        SF.Editor.insertStarter(st.build());
+        SF.toast(st.title + ' added. Fill the pits in the right panel.');
+      };
+      grid.appendChild(b);
+    });
+    body.appendChild(grid);
+    modal.showModal();
+  }
+
   /* [id, icon, title, blurb, kind, enabled] — fullscreen catalogue games stay placeholders until engines ship. */
   var activities = [
     ['choice','?','Multiple choice','Check an idea. Discuss the why.','check',true],
     ['truefalse','½','True / False','Uncover a common misconception.','check',true],
     ['type','Aa','Type answer','Recall it without the clues — no options to pick from.','check',true],
+    ['slider','↔','Slider','Estimate a value on a line — near enough counts.','check',true],
     ['poll','▤','Poll','Take the pulse of the room.','feedback',true],
     ['wordcloud','✳','Word cloud','Turn individual thoughts into patterns.','feedback',true],
     ['brainstorm','✎','Brainstorm','Make space for everyone’s ideas.','feedback',true],
+    ['scale','≋','Scale','Explore confidence and agreement.','feedback',true],
     ['true-false','⚡','True/False Showdown','Fast retrieval under time pressure.','check',false],
     ['low-stakes-quiz','◎','Low-Stakes Quiz','Retrieval practice without a leaderboard.','check',false],
     ['quiz-bowl','▦','Quiz Bowl','Strategic recall across categories.','check',false],
@@ -100,10 +206,25 @@
     modal.querySelector('header button').onclick = function () {modal.close();};
     modal.addEventListener('click', function (e) {if (e.target === modal) {var r = modal.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) modal.close();}});
     modal.addEventListener('close',function () {if (returnFocus) returnFocus.focus();});
+
+    var startersModal = el('dialog', 'activity-modal'); startersModal.id = 'starterModal';
+    startersModal.setAttribute('aria-labelledby', 'starterTitle');
+    startersModal.innerHTML = '<header><div><span class="eyebrow">START FROM A SHAPE.</span><h2 id="starterTitle">Slide starters</h2></div><button class="btn ghost" aria-label="Close slide starters">✕</button></header><div id="starterBody"></div><footer><span class="local-dot"></span> Boilerplates only — customise after they land</footer>';
+    document.body.appendChild(startersModal);
+    startersModal.querySelector('header button').onclick = function () { startersModal.close(); };
+    startersModal.addEventListener('click', function (e) {
+      if (e.target === startersModal) {
+        var r = startersModal.getBoundingClientRect();
+        if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) startersModal.close();
+      }
+    });
+    startersModal.addEventListener('close', function () { if (returnFocus) returnFocus.focus(); });
+
     document.getElementById('btnActivities').onclick = openLibrary;
+    document.getElementById('btnStarters').onclick = openStarters;
     document.getElementById('btnTemplate').onclick = function () {SF.Editor.useLesson(); SF.toast('Example lesson opened. Your previous lesson is saved in File → Open.');};
     document.getElementById('btnReflect').onclick = function () {SF.Editor.addSlide('section'); SF.Editor.attachFeedback('poll');};
     document.querySelectorAll('.file-actions button').forEach(function (b) {b.addEventListener('click',function () {document.querySelector('.file-menu').open = false;});});
   }
-  SF.Studio = {init:init,makeLesson:makeLesson,openLibrary:openLibrary};
+  SF.Studio = {init:init,makeLesson:makeLesson,openLibrary:openLibrary,openStarters:openStarters};
 })();

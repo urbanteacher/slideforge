@@ -161,10 +161,12 @@
     }, { once: true });
 
     hudPos.textContent = (Player.idx + 1) + ' / ' + deck.slides.length;
-    /* The live answer tally sits along the bottom of a question slide, which
-       is where the Q&A cue would otherwise be. Marked so the cue can move up
-       and clear it. */
+    /* The live results sit along the bottom of a question slide, which is
+       where the Q&A cue would otherwise be. Marked so the cue can move up and
+       clear them — and by how much, because a tally of bars and a number line
+       with stacked placings are not the same height. */
     viewport.classList.toggle('quiz-slide', slide.type === 'quiz');
+    viewport.classList.toggle('quiz-line', slide.type === 'quiz' && slide.input === 'number');
 
     if (slide.type === 'quiz') {
       wireQuiz(node, slide);
@@ -256,7 +258,7 @@
     /* A typed question's single box is always the right answer — there is no
        index to compare, so comparing one would mute the answer instead of
        revealing it. */
-    var typed = slide.input === 'text';
+    var typed = slide.input === 'text' || slide.input === 'number';
     Array.prototype.forEach.call(buttons, function (b) {
       var i = Number(b.dataset.choice);
       b.classList.add('locked');
@@ -710,6 +712,58 @@
     }
   };
 
+  /**
+   * Where the room placed its estimates, once the answer is out.
+   *
+   * The band that counts and the target are positioned now rather than at
+   * render time: both of them say where the answer is, so neither can be on
+   * the wall while the room is still deciding.
+   *
+   * @param {Array} placed [{ value, right }] sorted along the line
+   */
+  Player.showPlacedValues = function (placed) {
+    var node = this._current;
+    if (!node) return;
+    var slide = this.deck && this.deck.slides[this.idx];
+    revealTypedAnswer(node);
+    var line = node.querySelector('.numberline');
+    if (!line || !slide) return;
+
+    var span = slide.max - slide.min;
+    var at = function (v) {
+      if (!span) return 0;
+      return Math.max(0, Math.min(100, ((v - slide.min) / span) * 100));
+    };
+
+    var band = line.querySelector('.nl-band');
+    var lo = at(slide.target - slide.tolerance);
+    var hi = at(slide.target + slide.tolerance);
+    band.style.left = lo + '%';
+    /* A zero tolerance still needs to be visible as a line, or an exact
+       question shows an invisible band and looks broken. */
+    band.style.width = Math.max(0.6, hi - lo) + '%';
+    line.querySelector('.nl-target').style.left = at(slide.target) + '%';
+
+    /* A dot plot, not a scatter: two students who guessed the same number
+       land on the same point, and one dot drawn over another says four
+       people answered when ten did. Duplicates stack upwards. */
+    var stacks = {};
+    var marks = line.querySelector('.nl-marks');
+    marks.replaceChildren();
+    (placed || []).forEach(function (p) {
+      var key = String(p.value);
+      stacks[key] = (stacks[key] || 0) + 1;
+      var dot = SF.el('div', 'nl-dot' + (p.right ? ' right' : ''));
+      dot.style.left = at(p.value) + '%';
+      dot.style.setProperty('--stack', String(stacks[key] - 1));
+      dot.title = SF.formatValue(p.value, slide.unit);
+      marks.appendChild(dot);
+    });
+    line.querySelector('.nl-line').classList.add('on');
+    node.classList.add('typed-out');
+    this.scheduleFit(node);
+  };
+
   function applyTally(node, counts, progress) {
     /* A typed question has no per-option bars — the only live number that
        means anything before the reveal is how many have answered. */
@@ -936,6 +990,10 @@
     presenterWin = null;
   }
 
+  /* Exported because the live layer pushes Q&A state as it arrives, and the
+     presenter window is the only place pending questions are shown. It was
+     called as Player.syncPresenter from the start; it was never actually on
+     Player, so every Q&A push threw instead of refreshing that window. */
   function syncPresenter() {
     if (!presenterWin || presenterWin.closed) return;
     var deck = Player.deck;
@@ -953,6 +1011,8 @@
       }, '*');
     } catch (e) { /* window closing */ }
   }
+
+  Player.syncPresenter = syncPresenter;
 
   window.addEventListener('message', function (ev) {
     var d = ev.data;

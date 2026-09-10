@@ -89,7 +89,7 @@
     } else {
       r.feedback.forEach(function (f) {
         var card=el('section','report-check');card.appendChild(el('span','eyebrow',f.kind.toUpperCase()));card.appendChild(el('h3',null,f.prompt));
-        card.appendChild(table(['Name','Contribution'],f.responses.map(function (a) {return [person(a.playerId).name,a.values.map(function (v) {return f.kind==='poll'?f.options[v]:v;}).join(' · ')];})));body.appendChild(card);
+        card.appendChild(table(['Name','Contribution'],f.responses.map(function (a) {return [person(a.playerId).name,a.values.map(function (v) {return contribution(f,v);}).join(' · ')];})));body.appendChild(card);
       });
       if (!r.feedback.length) body.appendChild(el('p','report-empty','No audience feedback was opened.'));
     }
@@ -98,12 +98,22 @@
     body.appendChild(exports);
   }
   // Prefix potentially executable spreadsheet cells, then quote every CSV value.
+  /* A poll reply is an option, a scale reply is a position on a run of them —
+     "4 of 5" rather than the bare index the journal stores. */
+  function contribution(f, v) {
+    if (f.kind === 'poll') return f.options[v];
+    if (f.kind === 'scale') return (Number(v) + 1) + ' of ' + (f.options || []).length;
+    return v;
+  }
+
   /* What a person actually answered. A typed answer is the text they sent; a
      choice is the option it points at. Reaching for the option list either
      way left every typed answer blank in the table and in the export. */
   function responseText(q, a) {
     if (!a) return '';
-    return q.input === 'text' ? String(a.text == null ? '' : a.text) : (q.options || [])[a.choice] || '';
+    if (q.input === 'text') return String(a.text == null ? '' : a.text);
+    if (q.input === 'number') return a.value == null ? '' : String(a.value);
+    return (q.options || [])[a.choice] || '';
   }
 
   function csvCell(v) {var s=String(v == null?'':v);if (typeof v!=='number' && /^[\s]*[=+@-]|^[\t\r\n]/.test(s)) s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}

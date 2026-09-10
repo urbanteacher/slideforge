@@ -387,6 +387,20 @@
     SF.toast('Downloaded');
   }
 
+  /** One-way practice notes for Canvas / Colab — decks only. */
+  function exportMarkdown() {
+    var doc = active.doc();
+    var md = SF.deckToMarkdown(doc);
+    var blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (doc.title || 'untitled').replace(/[^\w\-]+/g, '_').slice(0, 60) + '.md';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    SF.toast('Practice notes downloaded');
+  }
+
   /** Every document in one file, for a backup you can carry around. */
   function exportBundle() {
     var decks = SF.Store.list();
@@ -507,12 +521,21 @@
       var served = servedByRelay();
       var items = [
         { id: 'one', title: 'This ' + (active.key === 'deck' ? 'presentation' : 'game'),
-          blurb: 'Downloads "' + doc.title + '" as a single file.' },
-        { id: 'bundle', title: 'Everything, as one file',
-          blurb: 'Downloads every presentation and game together as a backup.' }
+          blurb: 'Downloads "' + doc.title + '" as a single file.' }
       ];
+      if (active.key === 'deck') {
+        items.push({
+          id: 'md',
+          title: 'Practice notes (.md)',
+          blurb: 'Markdown for Canvas or Colab — prompts and content only, not the live room.'
+        });
+      }
+      items.push({
+        id: 'bundle', title: 'Everything, as one file',
+        blurb: 'Downloads every presentation and game together as a backup.'
+      });
       if (served) {
-        items.splice(1, 0, {
+        items.splice(active.key === 'deck' ? 2 : 1, 0, {
           id: 'folder', title: 'Everything, into the app folder',
           blurb: 'Writes each one to data/ next to the app, so the folder is self-contained and can be committed.'
         });
@@ -523,6 +546,7 @@
         describe: function (it) { return it.blurb; },
         onPick: function (it) {
           if (it.id === 'one') return exportDoc();
+          if (it.id === 'md') return exportMarkdown();
           if (it.id === 'folder') return exportAllToFolder();
           exportBundle();
         }
