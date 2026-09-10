@@ -1,5 +1,5 @@
 'use strict';
-/* Relay harness for qa.test.js.
+/* Relay harness for qa.test.js and marking.test.js.
 
    sessions.test.js has its own inline copy of the same helpers. That is
    duplication, and worth collapsing — but its style is extremely dense and I
@@ -104,4 +104,28 @@ async function report(host) {
   return (await host.next('sessionReport')).report;
 }
 
-module.exports = { ROOT, freePort, start, connect, stop, report };
+/**
+ * Stand in for the marking half of a real host.
+ *
+ * The relay does not decide who was right — it is sent a verdict per player,
+ * quoting the answer revision those verdicts were taken from. See the reveal
+ * handler in server/server.js and markResponse in js/model.js.
+ *
+ * @param host        harness socket acting as the host
+ * @param msg         the rest of the reveal ({ id, correct, answer, ... })
+ * @param mark        (answer) => boolean, defaults to matching msg.correct
+ * @param wantAnswers wait until the tally holds this many answers, so the
+ *                    test marks a settled set rather than racing the relay
+ */
+async function reveal(host, msg, mark, wantAnswers) {
+  let t = null;
+  for (;;) {
+    t = await host.latest('tally');
+    if (wantAnswers == null || (t.answers || []).length >= wantAnswers) break;
+  }
+  const marks = (t.answers || []).map(a => [a.id, mark ? !!mark(a) : a.response === msg.correct]);
+  host.send(Object.assign({ t: 'reveal', rev: t.rev, marks }, msg));
+  return t;
+}
+
+module.exports = { ROOT, freePort, start, connect, stop, report, reveal };

@@ -82,7 +82,7 @@
         card.appendChild(el('h3',null,q.question || 'Question '+q.index));
         card.appendChild(el('p','report-note',q.responses.length+' / '+q.eligible.length+' answered · '+(q.revealedAt?'Revealed':'Not revealed — unscored')));
         if (q.revealedAt) card.appendChild(el('p',null,'Correct answer: '+q.options[q.correct]));
-        card.appendChild(table(['Name','Response','Outcome'],q.eligible.map(function (id) {var a=q.responses.find(function (a) {return a.playerId===id;});return [person(id).name,a?q.options[a.choice]:'No response',!a?'Unanswered':a.right===null?'Unscored':a.right?'Correct':'Incorrect'];})));
+        card.appendChild(table(['Name','Response','Outcome'],q.eligible.map(function (id) {var a=q.responses.find(function (a) {return a.playerId===id;});return [person(id).name,a?responseText(q,a):'No response',!a?'Unanswered':a.right===null?'Unscored':a.right?'Correct':'Incorrect'];})));
         body.appendChild(card);
       });
       if (!r.checks.length) body.appendChild(el('p','report-empty','No knowledge checks were opened.'));
@@ -98,10 +98,18 @@
     body.appendChild(exports);
   }
   // Prefix potentially executable spreadsheet cells, then quote every CSV value.
+  /* What a person actually answered. A typed answer is the text they sent; a
+     choice is the option it points at. Reaching for the option list either
+     way left every typed answer blank in the table and in the export. */
+  function responseText(q, a) {
+    if (!a) return '';
+    return q.input === 'text' ? String(a.text == null ? '' : a.text) : (q.options || [])[a.choice] || '';
+  }
+
   function csvCell(v) {var s=String(v == null?'':v);if (typeof v!=='number' && /^[\s]*[=+@-]|^[\t\r\n]/.test(s)) s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
   function csv(rows) {return '\uFEFF'+rows.map(function(row){return row.map(csvCell).join(',');}).join('\r\n');}
   function attendanceCsv(r) {return csv([['Session ID','Name','Participant ID','Team','First joined','Admitted','Last seen','Connected seconds','Session status','Eligible checks','Answers','Correct','Unanswered','Feedback contributions']].concat(r.attendance.map(function(p){return [r.id,p.name,p.id,p.team!=null?r.teams[p.team]:'',new Date(p.firstJoinedAt).toISOString(),p.admittedAt?new Date(p.admittedAt).toISOString():'',new Date(p.lastSeenAt).toISOString(),p.connectedSeconds,r.status,p.questionsEligible,p.questionsAnswered,p.questionsCorrect,p.questionsUnanswered,p.feedbackContributions];})));}
-  function answersCsv(r) {var rows=[['Session ID','Attempt ID','Question','Bloom level','Name','Participant ID','Answer','Outcome','Elapsed ms']];r.checks.forEach(function(q){q.eligible.forEach(function(id){var a=q.responses.find(function(a){return a.playerId===id;}),p=r.attendance.find(function(p){return p.id===id;});rows.push([r.id,q.attempt,q.question,q.bloom,p?p.name:'',id,a?q.options[a.choice]:'',!a?'unanswered':a.right===null?'unscored':a.right?'correct':'incorrect',a?a.elapsedMs:'']);});});return csv(rows);}
+  function answersCsv(r) {var rows=[['Session ID','Attempt ID','Question','Bloom level','Name','Participant ID','Answer','Outcome','Elapsed ms']];r.checks.forEach(function(q){q.eligible.forEach(function(id){var a=q.responses.find(function(a){return a.playerId===id;}),p=r.attendance.find(function(p){return p.id===id;});rows.push([r.id,q.attempt,q.question,q.bloom,p?p.name:'',id,responseText(q,a),!a?'unanswered':a.right===null?'unscored':a.right?'correct':'incorrect',a?a.elapsedMs:'']);});});return csv(rows);}
   function download(suffix,text,type) {
     var filename='slideforge-'+current.id.slice(0,8)+'-'+suffix;
     var url=URL.createObjectURL(new Blob([text],{type:type+';charset=utf-8'})),a=el('a');

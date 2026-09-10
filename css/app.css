@@ -1708,3 +1708,53 @@ body.live-on .hud button[data-act="focus"] { display: inline-block; }
 
 /* clear the answer tally, which occupies the foot of a question slide */
 .deck-viewport.quiz-slide .qacue { margin-bottom: 108px; }
+
+/* ----------------------------------------------------------------------
+   Typed answers
+
+   A typed question has one answer box rather than a grid of them, so it
+   reuses .opt and every measure-and-fit rule that comes with it. What is
+   different is that the box holds its content back: in a live room the
+   answer must not be on the wall while the room is still typing it.
+   ---------------------------------------------------------------------- */
+/* One box holding the answer itself, so it leads rather than sitting a step
+   below the question the way a list of candidates does. fitQuizSlide() sizes
+   it in the show; this is the standing value the editor preview uses. */
+.layout-quiz .opts.typed { --opt-f: 60px; align-content: center; grid-template-columns: 1fr; }
+/* Held and revealed are the same height, so the answer arriving does not make
+   the slide jump under the room's eyes. */
+.layout-quiz .opts.typed .opt { cursor: default; min-height: calc(var(--opt-f) * 2.1); }
+.layout-quiz .opts.typed .opt .opt-line { flex: 1; }
+.layout-quiz .opts.typed .opt .opt-line .txt { text-align: center; }
+.layout-quiz .opts.typed .opt.held {
+  border-style: dashed;
+  background: transparent;
+}
+/* Quieter than the answer it stands in for: this is a state, not a result. */
+.opts.typed .opt.held .txt {
+  color: var(--s-dim); font-style: italic;
+  font-size: calc(var(--opt-f) * .46);
+}
+.opts.typed .opt.held .key { background: transparent; border: 2px dashed var(--s-rule); color: var(--s-dim); }
+.opts.typed .opt.held .tick { opacity: 0; }
+
+/* Where a choice question puts its bars: the live count while they type,
+   then what the room actually typed once the answer is out. */
+.layout-quiz .typedlist { margin-top: 16px; min-height: 30px; }
+.layout-quiz .typedcount { font-size: 17px; color: var(--s-dim); letter-spacing: .04em; }
+.layout-quiz .typedgroups { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 10px; }
+.layout-quiz .tchip {
+  display: inline-flex; align-items: baseline; gap: 7px;
+  padding: 5px 13px; border-radius: 999px;
+  background: var(--s-card); border: 2px solid var(--s-rule);
+  font-size: 19px; color: var(--s-dim);
+}
+.layout-quiz .tchip.right { border-color: #34c98a; color: var(--s-fg); }
+.layout-quiz .tchip .n { font-size: 15px; opacity: .7; font-variant-numeric: tabular-nums; }
+
+/* The accepted-answer rows in the game editor. No radio button, because
+   there is no single correct one to mark — every row is accepted. */
+.accept-n {
+  flex: none; width: 74px; font-size: 10px; font-weight: 700;
+  letter-spacing: .08em; color: var(--ui-dim);
+}

@@ -17,10 +17,22 @@ async function connect(port) {
   const socket=new WebSocket('ws://127.0.0.1:'+port);const queue=[],waiters=[];
   socket.addEventListener('message',ev=>{const m=JSON.parse(ev.data),i=waiters.findIndex(w=>w.type===m.t);if(i>=0){const w=waiters.splice(i,1)[0];clearTimeout(w.timer);w.resolve(m);}else queue.push(m);});
   await new Promise((r,j)=>{socket.addEventListener('open',r,{once:true});socket.addEventListener('error',j,{once:true});});
-  return {socket,send:m=>socket.send(JSON.stringify(m)),next(type){const i=queue.findIndex(m=>m.t===type);if(i>=0)return Promise.resolve(queue.splice(i,1)[0]);return new Promise((resolve,reject)=>{const w={type,resolve};w.timer=setTimeout(()=>reject(new Error('No '+type)),3000);waiters.push(w);});},async close(){if(socket.readyState===3)return;await new Promise(r=>{socket.addEventListener('close',r,{once:true});socket.close();});}};
+  return {socket,send:m=>socket.send(JSON.stringify(m)),latest(type){let hit=null;for(let i=queue.length-1;i>=0;i--)if(queue[i].t===type){if(!hit)hit=queue[i];queue.splice(i,1);}return hit;},next(type){const i=queue.findIndex(m=>m.t===type);if(i>=0)return Promise.resolve(queue.splice(i,1)[0]);return new Promise((resolve,reject)=>{const w={type,resolve};w.timer=setTimeout(()=>reject(new Error('No '+type)),3000);waiters.push(w);});},async close(){if(socket.readyState===3)return;await new Promise(r=>{socket.addEventListener('close',r,{once:true});socket.close();});}};
 }
 async function stop(child, signal='SIGTERM') {if(child.exitCode!==null||child.signalCode)return;await new Promise(r=>{child.once('exit',r);child.kill(signal);});}
 async function report(host) {host.send({t:'report'});return (await host.next('sessionReport')).report;}
+/* The relay no longer decides who was right — the host marks each answer and
+   sends the verdicts with the revision it marked at. See markResponse in
+   js/model.js. This stands in for that half of the real host.
+   `answers` is how many answers to wait for before marking, so the test does
+   not have to race the relay's pushes; a host that marks a stale set is
+   covered separately in marking.test.js. */
+async function reveal(host, msg, want) {
+  let t = host.latest('tally');
+  while (!t || (want != null && (t.answers || []).length < want)) t = await host.next('tally');
+  const marks = (t.answers || []).map(a => [a.id, a.response === msg.correct]);
+  host.send(Object.assign({t:'reveal', rev:t.rev, marks}, msg));
+}
 test('durable LAN attendance, scoring, feedback, resume, private exports and crash recovery',async t=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'slideforge-session-test-'));const port=await freePort();let relay=await start(port,dir);const sockets=[];
   t.after(async()=>{await stop(relay);for(const c of sockets)c.socket.close();fs.rmSync(dir,{recursive:true,force:true});});
@@ -32,7 +44,7 @@ test('durable LAN attendance, scoring, feedback, resume, private exports and cra
   host.send({t:'question',id:'q1',question:'Which one?',options:['A','B'],points:1000,timeLimit:0,bloom:'Apply'});await ada.next('question');
   ada.send({t:'answer',choice:0.5});ada.send({t:'answer',choice:0});await ada.next('locked');ada.send({t:'answer',choice:1});
   const late=await connect(port);sockets.push(late);late.send({t:'join',pin:hosted.pin,name:'Late'});await late.next('waiting');late.send({t:'answer',choice:0});
-  host.send({t:'reveal',id:'q1',correct:0,answer:'A',explanation:'Because A'});await ada.next('result');host.send({t:'reveal',id:'q1',correct:0});
+  await reveal(host,{id:'q1',correct:0,answer:'A',explanation:'Because A'},1);await ada.next('result');await reveal(host,{id:'q1',correct:0});
   let r=await report(host);assert.equal(r.checks[0].responses.length,1);assert.equal(r.checks[0].eligible.length,2);assert.equal(r.attendance[0].score,1000);assert.equal(r.attendance[1].questionsUnanswered,1);assert.equal(r.checks[0].bloom,'Apply');
   await ada.close();
   // Barrier: wait until the host sees the disconnect rather than relying on a sleep.

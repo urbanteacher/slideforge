@@ -37,7 +37,11 @@
     prompt: null,
     digest: null,
     focus: false,
-    qa: null
+    qa: null,
+    /* The room's answers to the question on screen, as the relay last pushed
+       them, with the revision they were taken at. The host marks from this —
+       see marksFor() and the note on SF.markResponse. */
+    snapshot: { rev: 0, answers: [] }
   };
 
   function relayUrl() {
@@ -239,8 +243,23 @@
         break;
 
       case 'tally':
-        SF.Player.setTally(m.counts || []);
+        Live.snapshot = { rev: m.rev || 0, answers: m.answers || [] };
+        SF.Player.setTally(m.counts || [], { answered: m.answered, total: m.total });
         if (m.allIn && m.answered > 0) revealNow();
+        break;
+
+      /* The host marked a set of answers that the relay has since added to.
+         Re-mark and send again — answering is already closed on the relay by
+         this point, so this set is final and the retry cannot bounce twice. */
+      case 'markStale':
+        Live.snapshot = { rev: m.rev || 0, answers: m.answers || [] };
+        var pending = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
+        if (pending && pending.id === m.id && Live.revealed[pending.id]) {
+          sendReveal(pending);
+          /* The wall was drawn from the snapshot that turned out to be short
+             one answer, so redraw it from the set that was handed back. */
+          if (pending.input === 'text') SF.Player.showTypedAnswers(typedGroups(pending));
+        }
         break;
 
       case 'scores':
@@ -709,6 +728,7 @@
       }
       Live._sentSlide = s.id;
       Live._askedAt = Date.now();
+      Live.snapshot = { rev: 0, answers: [] };
       send({
         t: 'question',
         id: s.id,
@@ -716,7 +736,10 @@
         question: s.question,
         bloom: s.bloom || '',
         sourceSlideId: s.sourceSlideId || s.id,
-        options: s.options.filter(function (o) { return String(o).trim(); }),
+        /* A typed question sends no options — there are none. The phones
+           switch to a text field on this alone. */
+        input: s.input === 'text' ? 'text' : 'choice',
+        options: (s.options || []).filter(function (o) { return String(o).trim(); }),
         timeLimit: s.timeLimit,
         points: s.points
       });
@@ -755,28 +778,68 @@
     });
   }
 
+  /** Mark every answer in the current snapshot. This is the host's job now. */
+  function marksFor(slide) {
+    return (Live.snapshot.answers || []).map(function (a) {
+      return [a.id, SF.markResponse(slide, a.response)];
+    });
+  }
+
+  /* Grouped for the screen: what the room typed, how many typed it, and
+     whether it counted. Ordered by how many said it, so the room sees the
+     common answer — right or wrong — first. */
+  function typedGroups(slide) {
+    var byKey = {};
+    (Live.snapshot.answers || []).forEach(function (a) {
+      if (typeof a.response !== 'string') return;
+      var key = SF.normalizeAnswer(a.response);
+      if (!byKey[key]) {
+        byKey[key] = {
+          text: SF.answerLabel(slide, a.response),
+          n: 0,
+          right: SF.markResponse(slide, a.response)
+        };
+      }
+      byKey[key].n++;
+    });
+    return Object.keys(byKey).map(function (k) { return byKey[k]; })
+      .sort(function (a, b) { return b.n - a.n || (b.right ? 1 : 0) - (a.right ? 1 : 0); });
+  }
+
+  /** Send the verdicts. Separate from revealNow so a stale mark can be
+      re-sent without repainting the slide. */
+  function sendReveal(s) {
+    var typed = s.input === 'text';
+    send({
+      t: 'reveal',
+      id: s.id,
+      rev: Live.snapshot.rev,
+      marks: marksFor(s),
+      correct: typed ? -1 : s.correct,
+      answer: typed ? (s.answer || '') : (s.options[s.correct] || ''),
+      explanation: s.explanation || ''
+    });
+  }
+
   function revealNow() {
     var s = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
     if (!s || s.type !== 'quiz' || Live.revealed[s.id]) return;
     Live.revealed[s.id] = true;
     /* The reasoning reaches the phones at the same moment they learn whether
        they were right, which is when they are most likely to read it. */
-    send({
-      t: 'reveal',
-      id: s.id,
-      correct: s.correct,
-      answer: s.options[s.correct] || '',
-      explanation: s.explanation || ''
-    });
+    sendReveal(s);
+    if (s.input === 'text') SF.Player.showTypedAnswers(typedGroups(s));
     // paint the right answer on the projected slide even though the host
     // never clicked anything
     if (SF.Player.answers[s.id] == null) SF.Player.answers[s.id] = -1;
     if (SF.Player._current) {
       var node = SF.Player._current;
+      var typed = s.input === 'text';
       Array.prototype.forEach.call(node.querySelectorAll('.opt'), function (b) {
         var i = Number(b.dataset.choice);
         b.classList.add('locked');
-        b.classList.add(i === s.correct ? 'correct' : 'muted');
+        /* A typed question's one box is the answer, not a candidate for it. */
+        b.classList.add(typed || i === s.correct ? 'correct' : 'muted');
       });
       if (node.classList.contains('has-why')) {
         SF.Player.flattenOverlay(node);

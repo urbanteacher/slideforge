@@ -260,8 +260,20 @@ function pushPlayers(room) {
   });
 }
 
+function answersFor(room) {
+  const eligible = room.question.eligible;
+  const out = [];
+  for (const p of room.players.values()) {
+    if (eligible && !eligible.has(p.id)) continue;
+    if (p.answer == null) continue;
+    out.push({ id: p.id, name: p.name, team: p.team, response: p.answer });
+  }
+  return out;
+}
+
 function pushTally(room) {
   if (!room.host || !room.question) return;
+  const choosing = room.question.input === 'choice';
   const eligible = room.question.eligible;
   const counts = new Array(room.question.options.length).fill(0);
   let answered = 0;
@@ -271,10 +283,9 @@ function pushTally(room) {
     if (eligible && !eligible.has(p.id)) continue;
     if ((!p.sock || !p.sock.open) && p.answer == null) continue;
     total++;
-    if (p.answer != null && p.answer >= 0 && p.answer < counts.length) {
-      counts[p.answer]++;
-      answered++;
-    }
+    if (p.answer == null) continue;
+    answered++;
+    if (choosing && p.answer >= 0 && p.answer < counts.length) counts[p.answer]++;
   }
   room.host.json({
     t: 'tally',
@@ -282,7 +293,12 @@ function pushTally(room) {
     answered,
     total,
     waiting: room.players.size - total,
-    allIn: total > 0 && answered === total
+    allIn: total > 0 && answered === total,
+    /* The host marks, so it needs the answers themselves, not just the shape
+       of them. It holds them in memory — a typed answer must not reach the
+       projected screen before the reveal, or the room reads it off the wall. */
+    rev: room.answerRev,
+    answers: answersFor(room)
   });
 }
 
@@ -513,6 +529,14 @@ ws.attach(server, (sock, req) => {
         teamGain: teams.map(function () { return false; }),
         question: null,
         askedAt: 0,
+        /* Bumped by every answer accepted. The host marks from the answers it
+           has been pushed, so it quotes this back when it reveals; if it has
+           moved on the host marked a stale set. See the reveal handler. */
+        answerRev: 0,
+        /* Set the moment the host tries to reveal. A re-mark after a stale
+           snapshot then works on a set that cannot grow again, so the retry
+           always succeeds and nobody's answer is dropped by a race. */
+        answersClosed: false,
         /* An open feedback prompt, independent of the quiz flow: a deck can
            collect from the room without any game in it. */
         prompt: null,
@@ -570,16 +594,24 @@ ws.attach(server, (sock, req) => {
         log('room ' + room.pin + ' started with ' + room.players.size + ' player(s)');
 
       } else if (m.t === 'question') {
-        if (!Array.isArray(m.options) || m.options.length < 2 || m.options.length > 6) return;
+        /* Two ways to answer: pick one of the options, or type it. A typed
+           question has no options at all — that is what makes it recall
+           rather than recognition — so the option count is only checked for
+           the kind that has options. */
+        const input = m.input === 'text' ? 'text' : 'choice';
+        if (input === 'choice' && (!Array.isArray(m.options) || m.options.length < 2 || m.options.length > 6)) return;
         if (room.question && room.question.id === String(m.id || '') && room.phase === 'question') return;
         room.asked++;
+        room.answerRev = 0;
+        room.answersClosed = false;
         room.question = {
           id: String(m.id || '').slice(0,160),
           attempt: crypto.randomUUID(),
+          input,
           question: String(m.question || '').slice(0,2000),
           bloom: ['Remember','Understand','Apply','Analyze','Evaluate','Create'].includes(m.bloom) ? m.bloom : '',
           sourceSlideId: String(m.sourceSlideId || '').slice(0,160),
-          options: Array.isArray(m.options) ? m.options.map(o => String(o).slice(0,2000)) : [],
+          options: input === 'choice' && Array.isArray(m.options) ? m.options.map(o => String(o).slice(0,2000)) : [],
           timeLimit: Math.max(0, Number(m.timeLimit) || 0),
           points: Math.max(0, Number(m.points) || 1000),
           // the host knows where this question sits in the deck; fall back to
@@ -608,6 +640,7 @@ ws.attach(server, (sock, req) => {
         broadcast(room, {
           t: 'question',
           n: room.question.index,
+          input: room.question.input,
           count: room.question.options.length,
           timeLimit: room.question.timeLimit
         });
@@ -615,14 +648,53 @@ ws.attach(server, (sock, req) => {
 
       } else if (m.t === 'reveal') {
         if (!room.question || room.phase !== 'question' || (m.id && m.id !== room.question.id)) return;
+        /* Whether an answer is right is decided by the host and arrives here
+           as a verdict per player. The relay does not know what any answer
+           means — see markResponse in js/model.js. `correct` is still carried
+           for a choice question, but only to label the tally and the race
+           breakdown; it no longer decides anything. */
+        room.answersClosed = true;
+        /* Keyed by the id as a string on both sides: player ids are numbers
+           here, and a host that echoes one back as a string would otherwise
+           mark nobody and look like a stale snapshot. */
+        const marks = new Map();
+        if (Array.isArray(m.marks)) {
+          for (const row of m.marks) {
+            if (Array.isArray(row) && row[0] != null) marks.set(String(row[0]), !!row[1]);
+          }
+        }
+        /* The host marked from a snapshot of the answers. If one landed after
+           that snapshot the host has not seen it, and scoring it wrong would
+           punish a student for a coincidence of timing. Hand the answers back
+           and let the host re-mark: reveal has not happened yet. */
+        if (Number(m.rev) !== room.answerRev) {
+          if (room.host) {
+            room.host.json({ t: 'markStale', id: room.question.id,
+              rev: room.answerRev, answers: answersFor(room) });
+          }
+          return;
+        }
+        const unmarked = [...room.players.values()].filter(
+          (p) => p.answer != null && !marks.has(String(p.id)) &&
+                 (!room.question.eligible || room.question.eligible.has(p.id)));
+        if (unmarked.length) {
+          if (room.host) {
+            room.host.json({ t: 'markStale', id: room.question.id,
+              rev: room.answerRev, answers: answersFor(room) });
+          }
+          return;
+        }
+        const choosing = room.question.input === 'choice';
         const correct = Number(m.correct);
-        if (!Number.isInteger(correct) || correct < 0 || correct >= room.question.options.length) return;
+        const correctIndex = choosing && Number.isInteger(correct) &&
+          correct >= 0 && correct < room.question.options.length ? correct : -1;
+        if (choosing && correctIndex < 0) return;
         const why = String(m.explanation || '').slice(0, 1200);
         const answerText = String(m.answer || '').slice(0, 200);
         room.phase = 'revealed';
         for (const p of room.players.values()) {
           let gained = 0;
-          if (p.answer === correct) {
+          if (marks.get(String(p.id)) === true) {
             if (room.question.timeLimit > 0) {
               const elapsed = (p.answeredAt - room.askedAt) / 1000;
               const speed = Math.max(0, 1 - elapsed / room.question.timeLimit);
@@ -634,6 +706,7 @@ ws.attach(server, (sock, req) => {
           }
           p.score += gained;
           p.lastGain = gained;
+          p.lastRight = marks.get(String(p.id)) === true;
         }
 
         /* Each question contributes its own per-team average. Summing those
@@ -656,7 +729,7 @@ ws.attach(server, (sock, req) => {
           const r = rank(room, p.id);
           p.sock.json({
             t: 'result',
-            right: p.answer === correct,
+            right: p.lastRight,
             answered: p.answer != null,
             gained: p.lastGain,
             score: p.score,
@@ -670,12 +743,12 @@ ws.attach(server, (sock, req) => {
         /* A race advances a team on the answer most of its members picked, so
            the host needs the per-team breakdown, not just the room total.
            Sent as its own message because it belongs to this question. */
-        if (room.host) {
+        if (room.host && choosing) {
           const elig = room.question.eligible;
           const width = room.question.options.length;
           room.host.json({
             t: 'teamAnswers',
-            correct: correct,
+            correct: correctIndex,
             counts: room.teams.map(function (_, ti) {
               const row = new Array(width).fill(0);
               for (const p of room.players.values()) {
@@ -688,7 +761,12 @@ ws.attach(server, (sock, req) => {
           });
         }
 
-        record(room, 'reveal', {attempt:room.question.attempt,correct,explanation:why,scores:[...room.players.values()].map(p => ({id:p.id,score:p.score}))});
+        record(room, 'reveal', {attempt:room.question.attempt, correct: correctIndex,
+          answer: answerText, explanation: why,
+          /* The verdicts, not the correct index: for a typed question the
+             index means nothing, and the report has to say who was right. */
+          marks: [...room.players.values()].filter(p => marks.has(String(p.id))).map(p => [p.id, marks.get(String(p.id)) === true]),
+          scores:[...room.players.values()].map(p => ({id:p.id,score:p.score}))});
         pushPlayers(room);
         pushTally(room);
 
@@ -783,8 +861,11 @@ ws.attach(server, (sock, req) => {
             if (room.phase === 'question' && room.question && room.question.eligible.has(me.id)) {
               const remaining = room.question.timeLimit ? Math.max(0, room.question.timeLimit - (Date.now() - room.askedAt) / 1000) : 0;
               if (!room.question.timeLimit || remaining > 0) {
-                sock.json({t:'question',n:room.question.index,count:room.question.options.length,timeLimit:remaining});
-                if (me.answer != null) sock.json({t:'locked',choice:me.answer});
+                sock.json({t:'question',n:room.question.index,input:room.question.input,count:room.question.options.length,timeLimit:remaining});
+                if (me.answer != null) {
+                  sock.json(room.question.input === 'text'
+                    ? {t:'locked',text:me.answer} : {t:'locked',choice:me.answer});
+                }
               }
             } else if (room.prompt) {
               sock.json(promptMessage(room));
@@ -952,13 +1033,31 @@ ws.attach(server, (sock, req) => {
     if (role === 'player' && m.t === 'answer') {
       if (!room || !rooms.has(room.pin) || room.phase !== 'question' || !room.question || !room.question.eligible.has(me.id)) return;
       if (room.question.timeLimit && Date.now() - room.askedAt > room.question.timeLimit * 1000) return;
+      if (room.answersClosed) return;                      // the host is revealing
       if (me.answer != null) return;                       // one answer per question
-      const choice = Number(m.choice);
-      if (!Number.isInteger(choice) || !(choice >= 0 && choice < room.question.options.length)) return;
-      me.answer = choice;
+      /* Held as the raw response: an option index, or the text they typed.
+         The relay stores it without interpreting it — every read of it is
+         gated on room.question.input, never on the value's own shape. */
+      let response;
+      if (room.question.input === 'text') {
+        response = String(m.text == null ? '' : m.text).trim().slice(0, 120);
+        if (!response) return;
+      } else {
+        const choice = Number(m.choice);
+        if (!Number.isInteger(choice) || !(choice >= 0 && choice < room.question.options.length)) return;
+        response = choice;
+      }
+      me.answer = response;
       me.answeredAt = Date.now();
-      record(room, 'answer', {attempt:room.question.attempt,playerId:me.id,choice,elapsedMs:me.answeredAt-room.askedAt});
-      sock.json({ t: 'locked', choice });
+      room.answerRev++;
+      record(room, 'answer', {attempt:room.question.attempt, playerId:me.id,
+        input: room.question.input,
+        choice: room.question.input === 'choice' ? response : null,
+        text: room.question.input === 'text' ? response : null,
+        elapsedMs:me.answeredAt-room.askedAt});
+      sock.json(room.question.input === 'text'
+        ? { t: 'locked', text: response }
+        : { t: 'locked', choice: response });
       pushTally(room);
       return;
     }

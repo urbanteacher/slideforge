@@ -146,8 +146,11 @@
     pad.appendChild(head);
 
     var answer = el('div', 'ex-answer');
-    answer.appendChild(el('span', 'key', LETTERS[slide.correct] || '?'));
-    answer.appendChild(el('span', 'txt', slide.options[slide.correct] || ''));
+    var typed = slide.input === 'text';
+    answer.appendChild(el('span', 'key', typed ? '✎' : (LETTERS[slide.correct] || '?')));
+    answer.appendChild(el('span', 'txt', typed
+      ? (slide.answer || '')
+      : ((slide.options || [])[slide.correct] || '')));
     answer.appendChild(el('span', 'tick', '✓'));
     pad.appendChild(answer);
 
@@ -266,6 +269,51 @@
     var inlineWhy = why && slide.explainStyle !== 'slide';
     if (inlineWhy) pad.parentNode.classList.add('has-why');
 
+    /* The reasoning box, expanded inside whichever answer box is the right
+       one. Shared by both input kinds — a typed question has exactly one. */
+    function whyBox() {
+      var box = el('span', 'why');
+      why.split(/\n{2,}/).forEach(function (para) {
+        if (!para.trim()) return;
+        box.appendChild(el('span', 'p', para.trim()));
+      });
+      if (slide.source) box.appendChild(el('span', 'src', slide.source));
+      /* Long text steps down rather than pushing the other answers off. */
+      box.dataset.len = why.length > 320 ? 'xl' : why.length > 170 ? 'lg' : 'md';
+      return box;
+    }
+
+    /* A typed question has no options to lay out. It gets one answer box, so
+       every measure-and-fit rule, the inline explanation and the reveal
+       styling all apply unchanged — and, in a live room, that box holds back
+       the answer until the reveal, or the room reads it off the wall. */
+    if (slide.input === 'text') {
+      pad.parentNode.classList.add('is-typed');
+      var hold = opts.live && !opts.revealed;
+      var tw = el('div', 'opts stack typed');
+      var ab = el('button', 'opt answer');
+      ab.type = 'button';
+      ab.dataset.choice = '0';
+      if (!opts.interactive) ab.classList.add('locked');
+      if (hold) ab.classList.add('held');
+      var aline = el('span', 'opt-line');
+      aline.appendChild(el('span', 'key', '✎'));
+      aline.appendChild(el('span', 'txt', hold ? 'Typing on your phones…' : (slide.answer || ' ')));
+      aline.appendChild(el('span', 'tick', '✓'));
+      ab.appendChild(aline);
+      if (inlineWhy) ab.appendChild(whyBox());
+      tw.appendChild(ab);
+      pad.appendChild(tw);
+
+      /* Where a choice question puts its bars. Before the reveal it is a
+         count; after it, what the room actually typed. */
+      var tl = el('div', 'typedlist');
+      tl.appendChild(el('div', 'typedcount', ''));
+      tl.appendChild(el('div', 'typedgroups'));
+      pad.appendChild(tl);
+      return;
+    }
+
     var wrap = el('div', 'opts' + (opts_.length > 4 || opts_.some(longOption) ? ' stack' : ''));
     opts_.forEach(function (text, i) {
       var b = el('button', 'opt');
@@ -281,17 +329,7 @@
       line.appendChild(el('span', 'tick', i === slide.correct ? '✓' : '✗'));
       b.appendChild(line);
 
-      if (inlineWhy && i === slide.correct) {
-        var box = el('span', 'why');
-        why.split(/\n{2,}/).forEach(function (para) {
-          if (!para.trim()) return;
-          box.appendChild(el('span', 'p', para.trim()));
-        });
-        if (slide.source) box.appendChild(el('span', 'src', slide.source));
-        /* Long text steps down rather than pushing the other answers off. */
-        box.dataset.len = why.length > 320 ? 'xl' : why.length > 170 ? 'lg' : 'md';
-        b.appendChild(box);
-      }
+      if (inlineWhy && i === slide.correct) b.appendChild(whyBox());
       wrap.appendChild(b);
     });
     pad.appendChild(wrap);

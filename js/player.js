@@ -120,7 +120,12 @@
       quizNumber: slide.type === 'quiz' ? quizNumberOf(deck, slide) : 0,
       marks: slide.type === 'results' ? marksFor(deck, Player.answers) : null,
       lanes: slide.type === 'quiz' ? raceField(deck) : null,
-      trackLength: deck.trackLength || 5
+      trackLength: deck.trackLength || 5,
+      /* A typed answer is held back on the projected screen while the room is
+         still typing, so the slide has to know whether this is a live room and
+         whether this question has been revealed yet. */
+      live: !!(SF.Live && SF.Live.active),
+      revealed: !!(SF.Live && SF.Live.revealed && SF.Live.revealed[slide.id])
     });
 
     var old = Player._current;
@@ -217,7 +222,17 @@
       startTimer(node, slide);
     }
 
-    if (Player._liveTally) applyTally(node, Player._liveTally);
+    if (Player._liveTally) applyTally(node, Player._liveTally, Player._liveProgress);
+  }
+
+  /* Reveal the held-back answer text on a typed question. */
+  function revealTypedAnswer(node) {
+    var box = node.querySelector('.opt.answer');
+    if (!box || !box.classList.contains('held')) return;
+    box.classList.remove('held');
+    var slide = Player.deck && Player.deck.slides[Player.idx];
+    var txt = box.querySelector('.txt');
+    if (txt && slide) txt.textContent = slide.answer || '';
   }
 
   /* An overlaid question lives inside the image element. On reveal the image
@@ -238,13 +253,20 @@
 
   function paintAnswer(node, slide, choice) {
     var buttons = node.querySelectorAll('.opt');
+    /* A typed question's single box is always the right answer — there is no
+       index to compare, so comparing one would mute the answer instead of
+       revealing it. */
+    var typed = slide.input === 'text';
     Array.prototype.forEach.call(buttons, function (b) {
       var i = Number(b.dataset.choice);
       b.classList.add('locked');
-      if (i === slide.correct) b.classList.add('correct');
+      if (typed || i === slide.correct) b.classList.add('correct');
       else if (i === choice) b.classList.add('wrong');
       else b.classList.add('muted');
     });
+    if (typed) {
+      revealTypedAnswer(node);
+    }
     /* Expands the reasoning inside the correct answer's box, if the question
        carries one and the game shows it inline. */
     if (node.classList.contains('has-why')) {
@@ -388,8 +410,16 @@
       /* Answers sit a step below the question so the hierarchy reads properly:
          the question is what is being asked, the answers are the options.
          Deriving the ceiling from the fitted question size keeps that ratio
-         whatever the wording does. */
-      var ceiling = Math.max(22, Math.round(qSize * 0.82));
+         whatever the wording does.
+
+         A typed question is the exception: there is one box and it holds the
+         answer itself, not a candidate for it. Ranking it below the question
+         would leave a single short word adrift in an empty slide, so it is
+         allowed to lead instead. */
+      var typedOne = opts.classList.contains('typed');
+      var ceiling = typedOne
+        ? Math.max(28, Math.round(qSize * 1.15))
+        : Math.max(22, Math.round(qSize * 0.82));
       var floor = 18;
 
       var bestFor = function (stack) {
@@ -405,8 +435,11 @@
 
       /* Two columns suit short answers, one column suits long wording. Which
          fits larger depends on the text and on whether the scoreboard rail is
-         taking a third of the slide, so try both and keep the better one. */
-      var twoCol = boxes.length > 4 ? 0 : bestFor(false);
+         taking a third of the slide, so try both and keep the better one.
+
+         A single typed answer always takes the full width: half a slide of
+         empty grid beside one word is not a column, it is a gap. */
+      var twoCol = typedOne || boxes.length > 4 ? 0 : bestFor(false);
       var oneCol = bestFor(true);
       if (twoCol >= oneCol) {
         opts.classList.remove('stack');
@@ -416,7 +449,7 @@
       /* Centre the wording only while every answer still sits on one line.
          Checked after the size is settled, because whether a line wraps
          depends on the size that was chosen. */
-      opts.classList.toggle('centred', !boxes.some(wraps));
+      opts.classList.toggle('centred', typedOne || !boxes.some(wraps));
     }
   }
 
@@ -636,9 +669,38 @@
   /* ------------------------------------------------------------ live extras */
 
   /** counts: array of per-option answer counts (live audience mode). */
-  Player.setTally = function (counts) {
+  Player.setTally = function (counts, progress) {
     this._liveTally = counts;
-    if (this._current) applyTally(this._current, counts);
+    this._liveProgress = progress || null;
+    if (this._current) applyTally(this._current, counts, this._liveProgress);
+  };
+
+  /**
+   * What the room typed, once the answer is out. Grouped and counted by the
+   * host, which is where the marking happens.
+   * @param {Array} groups [{ text, n, right }]
+   */
+  Player.showTypedAnswers = function (groups) {
+    var node = this._current;
+    if (!node) return;
+    var box = node.querySelector('.typedgroups');
+    var answer = node.querySelector('.opt.answer');
+    if (answer) {
+      answer.classList.remove('held');
+      var txt = answer.querySelector('.txt');
+      var slide = this.deck && this.deck.slides[this.idx];
+      if (txt && slide) txt.textContent = slide.answer || '';
+    }
+    if (!box) return;
+    box.replaceChildren();
+    (groups || []).slice(0, 8).forEach(function (g) {
+      var chip = SF.el('div', 'tchip' + (g.right ? ' right' : ''));
+      chip.appendChild(SF.el('span', 'w', g.text));
+      if (g.n > 1) chip.appendChild(SF.el('span', 'n', '×' + g.n));
+      box.appendChild(chip);
+    });
+    node.classList.add('typed-out');
+    this.scheduleFit(node);
   };
   Player.clearTally = function () {
     this._liveTally = null;
@@ -648,7 +710,15 @@
     }
   };
 
-  function applyTally(node, counts) {
+  function applyTally(node, counts, progress) {
+    /* A typed question has no per-option bars — the only live number that
+       means anything before the reveal is how many have answered. */
+    var typedCount = node.querySelector('.typedcount');
+    if (typedCount && progress) {
+      typedCount.textContent = progress.total
+        ? progress.answered + ' of ' + progress.total + ' answered'
+        : '';
+    }
     var tally = node.querySelector('.tally');
     if (!tally) return;
     tally.classList.add('on');

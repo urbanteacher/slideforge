@@ -270,6 +270,7 @@
       icon: '?',
       blurb: 'Two to six answers, one of them correct.',
       mechanic: 'points',
+      input: 'choice',
       minOptions: 2,
       maxOptions: 6,
       fixedOptions: null,
@@ -307,6 +308,16 @@
         s.question = q.question;
         s.options = q.options.filter(function (o) { return String(o).trim(); });
         s.correct = Math.max(0, Math.min(s.options.length - 1, q.correct));
+      },
+
+      mark: function (s, response) {
+        return Number.isInteger(response) && response === s.correct;
+      },
+
+      /* One line about the question, for the editor's list of them. */
+      summary: function (q) {
+        var live = (q.options || []).filter(function (o) { return String(o).trim(); });
+        return live.length + ' answers';
       }
     },
 
@@ -316,6 +327,7 @@
       icon: '½',
       blurb: 'A statement the room marks true or false.',
       mechanic: 'points',
+      input: 'choice',
       minOptions: 2,
       maxOptions: 2,
       fixedOptions: ['True', 'False'],
@@ -346,7 +358,13 @@
         s.options = ['True', 'False'];
         s.correct = q.correct === 1 ? 1 : 0;
         s.question = q.question;
-      }
+      },
+
+      mark: function (s, response) {
+        return Number.isInteger(response) && response === s.correct;
+      },
+
+      summary: function (q) { return q.correct === 1 ? 'False' : 'True'; }
     }
   };
 
@@ -360,14 +378,227 @@
     icon: '🏇',
     blurb: 'Multiple choice, but every right answer moves your team a step along the track. First past the post wins.',
     mechanic: 'race',
+    input: 'choice',
     minOptions: 2,
     maxOptions: 6,
     fixedOptions: null,
     make: function () { return GAME_STYLES.choice.make(); },
     normalize: function (q) { return GAME_STYLES.choice.normalize(q); },
     problems: function (q, n) { return GAME_STYLES.choice.problems(q, n); },
-    compile: function (q, st, s) { GAME_STYLES.choice.compile(q, st, s); }
+    compile: function (q, st, s) { GAME_STYLES.choice.compile(q, st, s); },
+    mark: function (s, response) { return GAME_STYLES.choice.mark(s, response); },
+    summary: function (q) { return GAME_STYLES.choice.summary(q); }
   };
+
+  /* Type answer. No options at all, which is the point: recall without the
+     clues. The author lists every spelling they will accept and the marking
+     rules above do the rest. */
+  GAME_STYLES.type = {
+    key: 'type',
+    label: 'Type answer',
+    icon: 'Aa',
+    blurb: 'No options to choose from — the room types the answer from memory.',
+    mechanic: 'points',
+    input: 'text',
+    minOptions: 0,
+    maxOptions: 0,
+    fixedOptions: null,
+
+    make: function () {
+      /* Blank, not a sample. A placeholder answer here would be an answer the
+         question silently accepts, and the author would never see it. */
+      return {
+        question: 'What is the answer?',
+        accept: [''],
+        allowTypos: true
+      };
+    },
+
+    normalize: function (q) {
+      if (!Array.isArray(q.accept)) q.accept = [];
+      q.accept = q.accept.map(function (a) { return String(a == null ? '' : a).slice(0, 200); }).slice(0, 8);
+      /* Converted from a game with options: the answer that was marked
+         correct is the obvious thing to accept, rather than dropping the
+         author's work and leaving the question unmarkable. */
+      if (!q.accept.some(function (a) { return a.trim(); }) && Array.isArray(q.options)) {
+        var carried = q.options[Number(q.correct) || 0];
+        if (carried && String(carried).trim()) q.accept = [String(carried)];
+      }
+      if (!q.accept.length) q.accept = [''];
+      q.allowTypos = q.allowTypos !== false;
+      delete q.options;
+      delete q.correct;
+      return q;
+    },
+
+    problems: function (q, n) {
+      if (!String(q.question).trim()) return 'Q' + n + ' has no question text';
+      if (!q.accept.some(function (a) { return String(a).trim(); })) {
+        return 'Q' + n + ' has no accepted answer';
+      }
+      return null;
+    },
+
+    compile: function (q, settings, s) {
+      s.question = q.question;
+      s.accept = q.accept.filter(function (a) { return String(a).trim(); });
+      s.allowTypos = q.allowTypos !== false;
+      /* The first accepted spelling is the one put on the screen, so the room
+         reads a single answer rather than a list of tolerances. */
+      s.answer = s.accept[0] || '';
+      s.options = [];
+      s.correct = -1;
+    },
+
+    mark: function (s, response) {
+      if (typeof response !== 'string') return false;
+      return markTyped(s.accept, response, s.allowTypos).right;
+    },
+
+    summary: function (q) {
+      var live = (q.accept || []).filter(function (a) { return String(a).trim(); });
+      if (!live.length) return 'no answer set';
+      return live.length > 1 ? live[0] + ' +' + (live.length - 1) : live[0];
+    },
+
+    describe: function (s, response) {
+      var hit = markTyped(s.accept, response, s.allowTypos);
+      return hit.right ? hit.matched : String(response == null ? '' : response);
+    }
+  };
+
+  /* ======================================================================
+     Marking a typed answer
+
+     Recall questions are marked by the host, not the relay — see the comment
+     on markResponse. The rules below are the whole of it, and the authoring
+     panel states them to the teacher, because a rule a teacher cannot predict
+     is worse than no rule.
+     ====================================================================== */
+
+  /* Case, accents, punctuation and surrounding space never carry the meaning
+     of a recalled answer, so none of them decide it. A leading article goes
+     too: "photosynthesis" and "the photosynthesis" are the same knowledge. */
+  function normalizeAnswer(text) {
+    var t = String(text == null ? '' : text);
+    if (t.normalize) t = t.normalize('NFD').replace(/[̀-ͯ]/g, '');
+    t = t.toLowerCase()
+      .replace(/[‘’‛]/g, "'")     // smart quotes typed by phones
+      .replace(/[^a-z0-9'\s]+/g, ' ')
+      .replace(/'/g, '')                          // don't/dont, o'clock/oclock
+      .replace(/\s+/g, ' ')
+      .trim();
+    return t.replace(/^(?:the|a|an)\s+/, '');
+  }
+
+  /* A figure recalled as "1,000" and one typed "1000" are the same answer, and
+     so are "0.5", ".5" and "0.50". Read from the raw text, not the normalized
+     form: normalizing turns the decimal point into a space, which would make
+     "0.5" and "0.50" two different strings of digits. */
+  function numeric(text) {
+    var t = String(text == null ? '' : text).trim().replace(/[,\s]/g, '');
+    if (!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(t)) return null;
+    var n = Number(t);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function editDistance(a, b) {
+    if (a === b) return 0;
+    if (!a.length || !b.length) return Math.max(a.length, b.length);
+    /* Bail before doing the work when the lengths alone rule out a match —
+       every threshold this is asked about is 2 or less. */
+    if (Math.abs(a.length - b.length) > 2) return 3;
+    var prev = [], row = [], i, j;
+    for (j = 0; j <= b.length; j++) prev[j] = j;
+    for (i = 1; i <= a.length; i++) {
+      row[0] = i;
+      for (j = 1; j <= b.length; j++) {
+        row[j] = Math.min(
+          prev[j] + 1,
+          row[j - 1] + 1,
+          prev[j - 1] + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1)
+        );
+      }
+      prev = row.slice();
+    }
+    return prev[b.length];
+  }
+
+  /* How far off a spelling can be and still count. Scaled by length, because
+     one wrong letter in "cell" changes the word and one in "mitochondria"
+     is a slip of the thumb. Never applied to a number: 1500 is not 1600, and
+     no amount of length makes a digit a typo you can forgive. */
+  function typoAllowance(normalized, raw) {
+    if (numeric(raw) != null || /\d/.test(normalized)) return 0;
+    if (normalized.length >= 8) return 2;
+    if (normalized.length >= 5) return 1;
+    return 0;
+  }
+
+  /**
+   * Mark one typed response against a question's accepted answers.
+   * @returns {object} { right, matched, distance } — matched is the accepted
+   *   answer it hit, so the host can say which spelling it took.
+   */
+  function markTyped(accept, response, allowTypos) {
+    var given = normalizeAnswer(response);
+    var givenNum = numeric(response);
+    var miss = { right: false, matched: null, distance: null };
+    if (!given) return miss;
+    var list = (Array.isArray(accept) ? accept : [accept])
+      .filter(function (a) { return String(a == null ? '' : a).trim(); });
+    var best = miss;
+    for (var i = 0; i < list.length; i++) {
+      var raw = String(list[i]);
+      var want = normalizeAnswer(raw);
+      if (!want) continue;
+      if (given === want) return { right: true, matched: raw, distance: 0 };
+      var wantNum = numeric(raw);
+      if (givenNum != null && wantNum != null && givenNum === wantNum) {
+        return { right: true, matched: raw, distance: 0 };
+      }
+      if (allowTypos === false) continue;
+      var allowed = typoAllowance(want, raw);
+      if (!allowed) continue;
+      var d = editDistance(given, want);
+      if (d <= allowed && (best.distance == null || d < best.distance)) {
+        best = { right: true, matched: raw, distance: d };
+      }
+    }
+    return best;
+  }
+
+  /**
+   * Mark a response against a compiled question slide.
+   *
+   * Marking lives here, on the host, and not in the relay. The relay holds the
+   * clock, the roster and the running scores; what it must not hold is what a
+   * given answer *means*, because that is the authoring side's knowledge and
+   * it differs per style. While the relay compared option indices, no question
+   * type without option indices could exist. It now receives a verdict per
+   * player and does the arithmetic, so a new style is a change here only.
+   *
+   * @param {object} slide compiled quiz slide
+   * @param {number|string} response option index, or typed text
+   */
+  function markResponse(slide, response) {
+    var style = gameStyle(slide.style);
+    if (typeof style.mark === 'function') return !!style.mark(slide, response);
+    return false;
+  }
+
+  /**
+   * How a response should be written on the screen.
+   *
+   * A right typed answer is shown in the spelling the question accepts, not
+   * in whichever variant happened to arrive first: a group of six holding
+   * "paris", "PARIS" and "the Paris" reads as Paris.
+   */
+  function answerLabel(slide, response) {
+    var style = gameStyle(slide.style);
+    if (typeof style.describe === 'function') return style.describe(slide, response);
+    return String(response == null ? '' : response);
+  }
 
   function gameStyle(key) {
     return GAME_STYLES[key] || GAME_STYLES.choice;
@@ -501,6 +732,35 @@
   /** Fields a question contributes to its compiled slide. Kept in one place
       because the game editor's preview builds the same slide and the two lists
       have already drifted twice. */
+  /**
+   * Everything a question contributes to its slide, in one place.
+   *
+   * The game editor's preview and the compiler both go through this. They
+   * used to build the slide separately and drifted twice — the preview
+   * silently lost explanations, then images — so there is now one function
+   * and no second copy to forget.
+   *
+   * @param {object} q question
+   * @param {string} styleKey game style
+   * @param {object} settings game settings
+   * @param {object} s slide to fill
+   */
+  function fillQuestionSlide(q, styleKey, settings, s) {
+    var style = gameStyle(styleKey);
+    style.compile(q, settings, s);
+    s.style = styleKey;
+    /* How the room answers. Read off the style rather than written by each
+       compile(), so a style declares it once. */
+    s.input = style.input === 'text' ? 'text' : 'choice';
+    s.timeLimit = q.timeLimit == null ? settings.defaultTime : q.timeLimit;
+    s.points = q.points == null ? settings.defaultPoints : q.points;
+    QUESTION_SLIDE_FIELDS.forEach(function (k) {
+      if (q[k] != null && q[k] !== '') s[k] = q[k];
+    });
+    s.explainStyle = settings.explainStyle;
+    return s;
+  }
+
   var QUESTION_SLIDE_FIELDS = [
     'image', 'imageAlt', 'imageLayout', 'explanation', 'source', 'notes'
   ];
@@ -531,19 +791,12 @@
     game.questions.forEach(function (q, i) {
       var s = makeSlide('quiz');
       s.id = game.id + ':' + q.id;      // stable across runs, unique per game
-      gameStyle(game.style).compile(q, st, s);
-      s.style = game.style;
-      s.timeLimit = q.timeLimit == null ? st.defaultTime : q.timeLimit;
-      s.points = q.points == null ? st.defaultPoints : q.points;
+      fillQuestionSlide(q, game.style, st, s);
       s.notes = q.notes || '';
       s.transition = 'fade';
       s.gameId = game.id;
       s.gameTitle = game.title;
       s.questionNumber = i + 1;
-      QUESTION_SLIDE_FIELDS.forEach(function (k) {
-        if (q[k] != null && q[k] !== '') s[k] = q[k];
-      });
-      s.explainStyle = st.explainStyle;
       out.push(s);
 
       /* A dedicated slide only when asked for. On 'inline' the reasoning
@@ -558,6 +811,10 @@
         why.subtitle = q.source || '';
         why.options = s.options;
         why.correct = s.correct;
+        /* A typed question has no option to point at, so the answer travels
+           as text — otherwise this slide showed an empty box and a "?". */
+        why.input = s.input;
+        why.answer = s.answer || '';
         why.questionNumber = i + 1;
         why.gameId = game.id;
         why.gameTitle = game.title;
@@ -897,11 +1154,16 @@
     makeQuestion: makeQuestion,
     GAME_STYLES: GAME_STYLES,
     gameStyle: gameStyle,
+    markResponse: markResponse,
+    answerLabel: answerLabel,
+    markTyped: markTyped,
+    normalizeAnswer: normalizeAnswer,
     starterGame: starterGame,
     normalizeGame: normalizeGame,
     normalizeQuestion: normalizeQuestion,
     compileGame: compileGame,
     QUESTION_SLIDE_FIELDS: QUESTION_SLIDE_FIELDS,
+    fillQuestionSlide: fillQuestionSlide,
     buildRunDeck: buildRunDeck,
     gameToRunDeck: gameToRunDeck,
     migrateDeckQuizzes: migrateDeckQuizzes,

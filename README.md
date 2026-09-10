@@ -4,7 +4,7 @@ The lesson studio now includes a light editor, a sage-and-lilac **Studio** theme
 
 The **Engagement** tab adds Bloom’s thinking levels, reusable discussion prompts and a private next-step planning note. Feedback can be previewed beside the slide or full screen using clearly labelled sample responses, without connecting students or a server. Knowledge checks created from the library default to no countdown or leaderboard.
 
-Available library activities: multiple choice, true/false, poll, word cloud and brainstorm. Type answer, slider, puzzle, audio quiz, open-ended, scale, NPS and drop pin are visibly marked as planned and disabled; their interaction engines are not implemented. The existing horse-race style remains available in Quiz studio.
+Available library activities: multiple choice, true/false, poll, word cloud and brainstorm. The Add activity library also lists all 27 fullscreen catalogue games (True/False Showdown through Concept Chain) as planned placeholders; their interaction engines are not implemented yet. The existing horse-race style remains available in Quiz studio.
 
 
 Two engines in one browser app:
@@ -63,7 +63,7 @@ can still be exported while available. The journal retries unsaved events on
 the next write.
 
 Run `node --test tests/*.test.js` for relay integration, crash recovery,
-reconnection, persistence-failure, export and Q&A moderation checks. Each test
+reconnection, persistence-failure, export, Q&A moderation and marking checks. Each test
 spawns a real relay with real WebSocket clients, on isolated temporary data and
 an ephemeral loopback port. Pass a directory rather than the glob and Node tries
 to load `tests` as a module instead of discovering the files.
@@ -72,8 +72,9 @@ to load `tests` as a module instead of discovering the files.
 the live path can be exercised — and demonstrated — without a room full of
 phones. See "Rehearsing without a room" below.
 
-Next in the product sequence: type-answer and scale/slider, confusion/pace plus
-answer confidence, and finally an evidence-based Adapt report. Reactions and QR
+Next in the product sequence: ship fullscreen catalogue game engines (starting
+with Horse Race / Beat the Clock / Memory Flip), confusion/pace plus answer
+confidence, and finally an evidence-based Adapt report. Reactions and QR
 rendering are also still pending; join PINs and focus modes continue to use the
 existing live interface.
 
@@ -113,7 +114,35 @@ that game is that style. Press **New** in the game workspace and you pick:
 | --- | --- |
 | **Multiple choice** | Two to six answers, one of them correct |
 | **True or false** | A statement the room marks true or false |
+| **Type answer** | No options at all — the room types the answer from memory |
 | **Horse race** | Multiple choice where every right answer moves your team a step along a track. First past the post wins. |
+
+**Type answer** is recall rather than recognition, which is the whole reason to
+use it: with four options on the phone, a student who half-remembers can often
+recognize their way to the right one.
+
+The author lists **every spelling they will accept**. The first one is the
+answer put on the screen, so the room reads one answer rather than a list of
+tolerances. Before the wording is even considered, case, accents, punctuation,
+surrounding space and a leading *the* are ignored, and figures are compared as
+figures — `1,000` matches `1000`, `.5` matches `0.50`.
+
+**Allow small spelling slips** (on by default) forgives one wrong letter in a
+word of five or more and two in a word of eight or more. It is never applied to
+a number, because 1500 is not a typo for 1600. The inspector states these rules
+next to the toggle: a marking rule the teacher cannot predict is worse than no
+rule at all.
+
+On screen the answer is **held back while the room is typing** — a dashed
+placeholder and a live *"6 of 8 answered"* count, the same height as the
+revealed box so nothing jumps. On reveal the answer fills the box, the
+explanation expands inside it as usual, and the room's answers appear beneath
+grouped and counted, right ones outlined. A group is labelled with the spelling
+the question accepts, not with whichever variant happened to arrive first, so
+six students typing `paris`, `PARIS` and `the Paris` read as one **Paris ×6**.
+
+Marking happens on the host — see [Who decides an answer is
+right](#who-decides-an-answer-is-right).
 
 **Horse race** asks exactly what multiple choice asks — it reuses that question
 shape and inspector wholesale — but the answer does something different, and it
@@ -148,9 +177,13 @@ You can switch an existing game's style in **⚙ Settings**. Your question wordi
 survives; the answers are rebuilt by the new style, so anything you typed into
 them is replaced. It asks first.
 
-A game is settings plus a flat list of questions. Each question has 2–6 answers,
-one marked correct, and optionally its own countdown and points — leave those
-blank to inherit the game's defaults.
+A game is settings plus a flat list of questions. A question carries whatever
+its style needs — 2–6 answers with one marked correct, or a list of accepted
+spellings — and optionally its own countdown and points; leave those blank to
+inherit the game's defaults.
+
+Switching a multiple-choice game to **Type answer** keeps the answer you had
+marked correct as the answer you accept, rather than dropping the work.
 
 **⚙ Settings** covers:
 
@@ -162,8 +195,10 @@ blank to inherit the game's defaults.
   both generated, never edited as slides.
 
 The rail flags questions that aren't ready (no text, fewer than two answers, no
-correct answer marked) so you don't find out mid-quiz, and marks the ones that
-carry an explanation with 💡.
+correct answer marked, no accepted answer typed) so you don't find out
+mid-quiz, and marks the ones that carry an explanation with 💡. What it says
+about a question comes from the style, so a typed one summarises as its answer
+rather than as a count of options it does not have.
 
 ### Images
 
@@ -348,6 +383,35 @@ Live answers are speed-weighted: a correct answer is worth the question's full
 points if it lands immediately, falling to half as the countdown runs out. With
 no countdown, correct answers are worth full points.
 
+### Who decides an answer is right
+
+**The host marks; the relay does the arithmetic.** The split matters, so it is
+worth stating plainly.
+
+The relay used to compare option indices — an answer was right if its number
+equalled the question's `correct` number. That made every question type without
+option numbers impossible: a typed answer has no index to compare, and neither
+would a slider, an ordering or a dropped pin. So marking moved to the host,
+which is the side that already knows what the question means.
+
+| | Holds |
+| --- | --- |
+| Host | the accepted answers, the marking rules, the verdict per player |
+| Relay | the clock, the roster, the points arithmetic, the running totals |
+
+On reveal the host sends a verdict per player rather than an answer key. The
+relay applies the speed weighting, the team averaging and the totals to those
+verdicts. Adding a question type is now a change to `js/model.js` and nothing
+else — the relay never needs to learn what the new answers mean.
+
+One consequence needs handling rather than hoping. The host marks the answers
+it has been sent, and an answer can land in the gap between that snapshot and
+the reveal. So each answer bumps a revision counter, the host quotes the
+revision it marked at, and a mismatch is refused: the relay hands the final
+answers back and the host re-marks. The first reveal attempt also closes
+answering, so the re-mark works on a set that cannot grow again and the retry
+always succeeds. Nobody is scored wrong for a coincidence of timing.
+
 ### Type sizing on question slides
 
 Nothing on a question slide has a fixed type size. When a question is shown,
@@ -457,7 +521,11 @@ node tools/audience.js 623815 --n 8
 ```
 
 The PIN is the one on your screen; `--n` is the class size, `--port` matches a
-non-default relay, `--quiet` silences the per-student log. Students spread
+non-default relay, `--quiet` silences the per-student log. For a type-answer
+question add `--typed Paris`: the relay never tells a phone what the answer is,
+so a simulated student cannot know it either — given it, most of the room types
+it with the case and spelling variation a real room produces, which is the only
+way to see whether the marking rules are usable. Students spread
 round-robin across the teams, answer with a fixed ability (most get it right,
 roughly one in five does not, so the tally has something to show), reply to
 polls, clouds and brainstorms, ask questions on a slow trickle, and upvote each

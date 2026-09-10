@@ -13,6 +13,13 @@
  *   node tools/audience.js 123456 --n 20       # twenty
  *   node tools/audience.js 123456 --port 8788  # a relay on another port
  *   node tools/audience.js 123456 --quiet      # no per-event log
+ *   node tools/audience.js 123456 --typed Paris
+ *
+ * --typed is for type-answer questions. The relay never tells a phone what
+ * the answer is, so a simulated student cannot know it either — give it here
+ * and most of the room will type it, with the case, punctuation and spelling
+ * variation a real room produces. Leave it out and they all type something
+ * wrong, which still exercises the path but makes a dull screen.
  */
 
 const NAMES = [
@@ -31,6 +38,9 @@ const QUESTIONS = [
 
 const WORDS = ['useful', 'tricky', 'clear', 'fast', 'dense', 'daunting', 'fair', 'interesting'];
 
+/* Plausible-looking wrong answers, for the students who do not know it. */
+const GUESSES = ['not sure', 'the other one', 'osmosis', 'Lyon', 'about half', '1945', 'gravity'];
+
 const IDEAS = [
   'More worked examples in the seminars',
   'A past paper walkthrough before the deadline',
@@ -46,11 +56,12 @@ const flag = (name, fallback) => {
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
 };
 const count = Math.max(1, Math.min(NAMES.length, Number(flag('n', 6))));
+const typedAnswer = flag('typed', '');
 const port = Number(flag('port', 8787));
 const quiet = args.includes('--quiet');
 
 if (!pin) {
-  console.error('Usage: node tools/audience.js <pin> [--n 6] [--port 8787] [--quiet]');
+  console.error('Usage: node tools/audience.js <pin> [--n 6] [--port 8787] [--typed ANSWER] [--quiet]');
   console.error('The PIN is on the host screen after you press "Host live".');
   process.exit(1);
 }
@@ -120,6 +131,7 @@ class Student {
 
   async answer(m) {
     await wait(jitter(700));
+    if (m.input === 'text') { this.answerTyped(); return; }
     const n = m.count || 4;
     /* The relay tells the phone how many options there are, not which is
        right — so a simulated student has to guess like a real one. It knows
@@ -127,6 +139,30 @@ class Student {
     const choice = Math.random() < this.ability ? 0 : Math.floor(Math.random() * n);
     this.send({ t: 'answer', choice });
     say('  ✎ ' + this.name + ' answered ' + 'ABCDEF'[choice]);
+  }
+
+  /* Typed answers with the variation a real room produces: a lowercase one, a
+     leading "the", one wrong letter. All of them should be marked right — if
+     any of them is not, the marking rules are too strict for a classroom. */
+  answerTyped() {
+    let text;
+    if (typedAnswer && Math.random() < this.ability) {
+      const forms = [
+        typedAnswer,
+        typedAnswer.toLowerCase(),
+        'the ' + typedAnswer.toLowerCase(),
+        typedAnswer.toUpperCase(),
+        typedAnswer + '.',
+        typedAnswer.length > 5
+          ? typedAnswer.slice(0, -2) + typedAnswer.slice(-1)   // a dropped letter
+          : typedAnswer
+      ];
+      text = pick(forms);
+    } else {
+      text = pick(GUESSES);
+    }
+    this.send({ t: 'answer', text });
+    say('  ✎ ' + this.name + ' typed "' + text + '"');
   }
 
   async reply(m) {

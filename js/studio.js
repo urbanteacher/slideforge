@@ -32,20 +32,41 @@
     modal.showModal();
     drawLibrary('all');
   }
+  /* [id, icon, title, blurb, kind, enabled] — fullscreen catalogue games stay placeholders until engines ship. */
   var activities = [
     ['choice','?','Multiple choice','Check an idea. Discuss the why.','check',true],
     ['truefalse','½','True / False','Uncover a common misconception.','check',true],
-    ['type','Aa','Type answer','Recall it without the clues.','check',false],
-    ['slider','↔','Slider','Estimate a value or a range.','check',false],
-    ['puzzle','▦','Puzzle','Put ideas in the right order.','check',false],
-    ['audio','♫','Quiz + audio','Listen closely, then respond.','check',false],
+    ['type','Aa','Type answer','Recall it without the clues — no options to pick from.','check',true],
     ['poll','▤','Poll','Take the pulse of the room.','feedback',true],
     ['wordcloud','✳','Word cloud','Turn individual thoughts into patterns.','feedback',true],
     ['brainstorm','✎','Brainstorm','Make space for everyone’s ideas.','feedback',true],
-    ['open','↗','Open-ended','Go deeper with a written reflection.','feedback',false],
-    ['scale','≋','Scale','Explore confidence and agreement.','feedback',false],
-    ['nps','◴','NPS','Gather a recommendation score.','feedback',false],
-    ['pin','⌖','Drop pin','Place a response on an image.','feedback',false]
+    ['true-false','⚡','True/False Showdown','Fast retrieval under time pressure.','check',false],
+    ['low-stakes-quiz','◎','Low-Stakes Quiz','Retrieval practice without a leaderboard.','check',false],
+    ['quiz-bowl','▦','Quiz Bowl','Strategic recall across categories.','check',false],
+    ['beat-the-clock','◷','Beat the Clock','Speeded multiple-choice fluency.','check',false],
+    ['boss-battle','▲','Boss Battle','Shared goal: bring the boss HP down.','check',false],
+    ['horse-race','♘','Horse Race','Team race across quick competitive rounds.','check',false],
+    ['memory-flip','🂠','Memory Flip','Study, then claim term↔definition pairs.','check',false],
+    ['memory-match','⧉','Memory Match','Memorise pairs; turn-based recall.','check',false],
+    ['memory-maze','⎇','Memory Maze','Hold a sequence, then navigate it.','check',false],
+    ['bingo','▣','Bingo','Mark terms from spoken definitions.','check',false],
+    ['knowledge-flip','↺','Knowledge Flip','Explain visible keywords; claim understanding.','check',false],
+    ['definition-challenge','¶','Definition Challenge','Read a passage, then answer from memory.','check',false],
+    ['emoji-guess','☺','Emoji Guess','Decode concepts from symbolic clues.','check',false],
+    ['word-reveal','…','Word Reveal','Guess from letters as they drip in.','check',false],
+    ['fill-in-the-blanks','_','Fill in the Blanks','Cloze comprehension in context.','check',false],
+    ['heads-up','↑','Heads Up','Describe a term; peers retrieve it.','check',false],
+    ['spin-explain','◉','Spin & Explain','Spin a concept; explain it aloud.','check',false],
+    ['spot-the-error','✗','Spot the Error','Find the mistake; explain the fix.','check',false],
+    ['ranking','↕','Ranking Challenge','Order items by criteria and justify.','check',false],
+    ['odd-one-out','◇','Odd One Out','Spot the outlier; name the rule.','check',false],
+    ['compare-contrast','⇄','Compare & Contrast','Map similarities and differences.','check',false],
+    ['predict-outcome','→','Predict the Outcome','Choose what happens next, and why.','check',false],
+    ['time-traveler','☽','Time Traveler','Recall events from year or clue.','check',false],
+    ['connection-maker','⚭','Connection Maker','Link two ideas; explain the bridge.','check',false],
+    ['question-cube','⚀','Question Cube','Roll a prompt; open class discussion.','check',false],
+    ['random-challenge','✦','Random Challenge','Draw varied open challenges.','check',false],
+    ['concept-chain','⛓','Concept Chain','Grow a justified chain of ideas.','check',false]
   ];
   function drawLibrary(filter) {
     var body = document.getElementById('activityBody'); body.replaceChildren();
@@ -54,14 +75,15 @@
       var b = SF.Shell.UI.button(t[1], filter === t[0] ? 'active' : '', function () {drawLibrary(t[0]);}); tabs.appendChild(b);
     });
     body.appendChild(tabs);
-    body.appendChild(el('p','library-note','Knowledge checks play between slides. Feedback stays beside your slide, with an option to explore responses full screen.'));
+    body.appendChild(el('p','library-note','Live checks and feedback are ready now. Fullscreen games appear as planned formats under Knowledge checks until their engines ship; feedback stays beside your slide.'));
     var grid = el('div','activity-grid');
     activities.filter(function (a) {return filter === 'all' || a[4] === filter;}).forEach(function (a) {
       var b = el('button','activity-card ' + a[4]); b.disabled = !a[5];
       b.appendChild(el('span','activity-icon',a[1]));
       b.appendChild(el('strong',null,a[2])); b.appendChild(el('span','activity-description',a[3]));
       b.appendChild(el('span','activity-tag',a[5] ? (a[4] === 'check' ? 'BETWEEN SLIDES  ↗' : 'BESIDE YOUR SLIDE  ↗') : 'PLANNED FORMAT'));
-      b.onclick = function () {
+      /* Planned cards stay disabled — never call insert with an unimplemented style id. */
+      if (a[5]) b.onclick = function () {
         document.getElementById('activityModal').close();
         if (a[4] === 'check') SF.Editor.insertNewGame(a[0]); else SF.Editor.attachFeedback(a[0]);
         SF.toast(a[2] + ' added. Customize it in the right panel.');

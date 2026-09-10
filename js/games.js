@@ -48,22 +48,11 @@
     return question.points == null ? game.settings.defaultPoints : question.points;
   }
 
-  /** A question rendered as the slide it will become.
-      Mirrors SF.compileGame so the preview matches the show — anything the
-      compiler puts on the slide has to be copied here too. */
+  /** A question rendered as the slide it will become. Built by the same
+      function the compiler uses, so the preview cannot drift from the show. */
   function asSlide(i) {
-    var question = game.questions[i];
-    var s = SF.makeSlide('quiz');
-    s.question = question.question;
-    s.options = question.options.filter(function (o) { return String(o).trim(); });
-    s.correct = Math.max(0, Math.min(s.options.length - 1, question.correct));
-    s.timeLimit = effTime(question);
-    s.points = effPoints(question);
-    SF.QUESTION_SLIDE_FIELDS.forEach(function (k) {
-      if (question[k] != null && question[k] !== '') s[k] = question[k];
-    });
-    s.explainStyle = game.settings.explainStyle;
-    return s;
+    return SF.fillQuestionSlide(game.questions[i], game.style, game.settings,
+      SF.makeSlide('quiz'));
   }
 
   /* ------------------------------------------------------------ rail */
@@ -85,12 +74,9 @@
 
       var meta = el('div', 'qmeta');
       var style = SF.gameStyle(game.style);
-      if (game.style === 'truefalse') {
-        meta.appendChild(el('span', null, question.correct === 1 ? 'False' : 'True'));
-      } else {
-        var live = question.options.filter(function (o) { return String(o).trim(); });
-        meta.appendChild(el('span', null, live.length + ' answers'));
-      }
+      /* What to say about a question is the style's business — a typed one has
+         no options to count, and this used to reach for them regardless. */
+      meta.appendChild(el('span', null, style.summary(question)));
       meta.appendChild(el('span', null,
         effTime(question) ? effTime(question) + 's' : 'no timer'));
       var bad = style.problems(question, i + 1);
@@ -194,6 +180,23 @@
         touched(); repaint();
       }),
         'Players get two answer pads. Press A or 1 for True, B or 2 for False.'));
+    },
+
+    type: function (insp, question) {
+      var wrap = el('div');
+      drawAcceptedAnswers(wrap, question);
+      insp.appendChild(UI.field('Accepted answers', wrap,
+        'The first one is shown on screen as the answer. Add every spelling ' +
+        'you will take — case, accents, punctuation and a leading "the" are ' +
+        'already ignored, and "1,000" matches "1000".'));
+
+      insp.appendChild(UI.check('Allow small spelling slips',
+        question.allowTypos !== false, function (v) {
+          question.allowTypos = v; touched(); repaint();
+        }));
+      insp.appendChild(el('p', 'hint',
+        'One wrong letter in a word of five or more, two in a word of eight ' +
+        'or more. Never applied to a number: 1500 is not 1600.'));
     }
   };
 
@@ -362,6 +365,38 @@
       var add = UI.button('+ Add answer', 'ghost', function () {
         question.options.push('');
         touched(); drawChoiceAnswers(wrap, question); drawPreview();
+      });
+      add.style.fontSize = '12px';
+      wrap.appendChild(add);
+    }
+  }
+
+  /* The typed equivalent of drawChoiceAnswers. No radio button: there is no
+     "which one is correct" to mark, because they all are. */
+  function drawAcceptedAnswers(wrap, question) {
+    wrap.innerHTML = '';
+    question.accept.forEach(function (text, i) {
+      var row = el('div', 'opt-row');
+      row.appendChild(el('span', 'accept-n', i === 0 ? 'ON SCREEN' : 'ALSO'));
+      row.appendChild(UI.text(text, function (v) {
+        question.accept[i] = v.slice(0, 200); touched(); repaint();
+      }, i === 0 ? 'The answer' : 'Another spelling you will accept'));
+
+      var kill = el('button', 'kill', '×');
+      kill.title = 'Remove this spelling';
+      kill.onclick = function () {
+        if (question.accept.length <= 1) { SF.toast('A question needs one accepted answer'); return; }
+        question.accept.splice(i, 1);
+        touched(); drawAcceptedAnswers(wrap, question); repaint();
+      };
+      row.appendChild(kill);
+      wrap.appendChild(row);
+    });
+
+    if (question.accept.length < 8) {
+      var add = UI.button('+ Add another spelling', 'ghost', function () {
+        question.accept.push('');
+        touched(); drawAcceptedAnswers(wrap, question); drawPreview();
       });
       add.style.fontSize = '12px';
       wrap.appendChild(add);

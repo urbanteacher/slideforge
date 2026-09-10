@@ -75,7 +75,15 @@ function project(session, active = false) {
       const q = checks.find(q => q.attempt === d.attempt);
       if (q && !q.revealedAt) {
         q.revealedAt = e.at; q.correct = d.correct; q.explanation = d.explanation;
-        q.responses.forEach(r => { r.right = r.choice === d.correct; });
+        if (d.answer != null) q.answer = d.answer;
+        /* Right and wrong come from the host's verdicts. A typed answer has no
+           correct index to compare against, so re-deriving it here would both
+           duplicate the marking rules and get typed questions wrong. Older
+           journals carry no marks, so those fall back to the index. */
+        const marks = new Map(Array.isArray(d.marks) ? d.marks : []);
+        q.responses.forEach(r => {
+          r.right = marks.size || d.marks ? marks.get(r.playerId) === true : r.choice === d.correct;
+        });
         (d.scores || []).forEach(s => { if (person(s.id)) person(s.id).score = s.score; });
       }
     } else if (e.type === 'prompt') feedback.push({ ...d, openedAt: e.at, responses: [] });
