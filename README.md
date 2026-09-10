@@ -534,10 +534,30 @@ or a new layout cannot drift out of step — there is nothing to keep in sync. A
 business being tiled into a panel beside it, so the rail falls back to the flat
 colour.
 
+### How much room the room gets — `S`
+
+**S** (or the ◧ button) cycles the room panel through its three sizes:
+
+```
+hidden  →  beside the slide  →  over the slide  →  hidden
+```
+
+It cycles rather than toggles because the question mid-lesson is not "sidebar
+or no sidebar" but how much of the screen the room should have right now — and
+one key with three stops is less to remember than a key per state. The button
+shows which stop it is on and its tooltip says what the next press does, since
+the current state is already visible on screen.
+
+A stop with nothing in it is skipped rather than landed on. With nobody joined
+and no prompt open there is nothing to put on the whole screen, so the cycle
+goes straight back to hidden instead of stopping on a "nothing to expand"
+message.
+
 ### Expanding the rail — `E`
 
-Press **E** (or the ⛶◧ button) to put whatever the rail is showing on the whole
-screen, and **E** or **Esc** to collapse it. One key, three feeds:
+Press **E** (or the ⛶ button) to jump straight to the whole screen, and **E**,
+**S** or **Esc** to collapse it — for when full screen is the only thing
+wanted rather than a stop on the way. One key, three feeds:
 
 | Rail is showing | E gives you |
 | --- | --- |

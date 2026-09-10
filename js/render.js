@@ -710,7 +710,9 @@
     var foot = el('div', 'fk-foot');
     foot.appendChild(el('span', null, opts.footnote || ''));
     if (opts.sample) foot.appendChild(el('span', 'fk-tag', 'SAMPLE'));
-    else foot.appendChild(el('span', 'fk-hint', 'E to close'));
+    /* Both keys get here and both leave, and a host who arrived with S should
+       not be told the way out is a key they did not press. */
+    else foot.appendChild(el('span', 'fk-hint', 'E or S to close'));
     pad.appendChild(foot);
 
     node.appendChild(pad);

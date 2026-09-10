@@ -601,6 +601,7 @@
     }
     scaleOverlays();
     relayout();
+    syncHudRoomButtons();
     if (opts) SF.paintScoreRail(this._rail, opts.rows || [], opts);
   };
 
@@ -663,31 +664,71 @@
     relayout();
   };
 
-  /** Show or hide the side panel: join code, who’s in, scores / responses. */
+  /**
+   * How much of the screen the room gets: nothing, a third, or all of it.
+   *
+   * S cycles rather than toggles. The question a host has mid-lesson is not
+   * "sidebar or no sidebar" but "how much room should the room get right
+   * now" — and one key with three stops is less to remember than a key per
+   * state. E still jumps straight to full screen for when that is the only
+   * thing wanted.
+   *
+   *   hidden  →  beside the slide  →  over the slide  →  hidden
+   *
+   * A stop with nothing in it is skipped rather than landed on: with nobody
+   * joined and no prompt open there is nothing to put on the whole screen, so
+   * the cycle goes straight back to hidden instead of stopping on a "nothing
+   * to expand" toast.
+   */
+  Player.roomSidebarState = function () {
+    if (this._focus) return 'full';
+    if (this._rail) return 'beside';
+    return 'hidden';
+  };
+
   Player.toggleRoomSidebar = function (opts) {
-    var forceOff = opts && opts.close;
-    var live = SF.Live && SF.Live.active;
+    var live = !!(SF.Live && SF.Live.active);
     var slide = this.deck && this.deck.slides[this.idx];
     var hasFeedback = !!(SF.slideFeedback && SF.slideFeedback(slide));
+    var state = this.roomSidebarState();
 
-    if (forceOff || (this._rail && !forceOff && !(opts && opts.open))) {
-      if (this._rail) {
-        this._railWanted = false;
-        this.disableRail();
-        if (this._focus) this.closeFocus();
-        SF.toast('Room sidebar hidden — S to bring it back');
+    /* An explicit close, from somewhere that wants it gone rather than
+       cycled — leaving a slide with a prompt on it, mostly. */
+    if (opts && opts.close) state = 'full';
+
+    if (state === 'full') {
+      if (this._focus) {
+        if (live) Player.emit('focusToggle', { close: true });
+        else toggleSoloFeedback({ close: true });
       }
+      this._railWanted = false;
+      this.disableRail();
+      SF.toast('Room hidden — S to bring it back');
       syncHudRoomButtons();
       return;
     }
 
+    if (state === 'beside') {
+      var canExpand = live
+        ? !!(SF.Live.canExpand && SF.Live.canExpand())
+        : !!this._sampleFb;
+      if (canExpand) {
+        if (live) Player.emit('focusToggle', {});
+        else toggleSoloFeedback({});
+        syncHudRoomButtons();
+        return;
+      }
+      /* Nothing to fill a screen with, so this stop does not exist today. */
+      this._railWanted = false;
+      this.disableRail();
+      syncHudRoomButtons();
+      return;
+    }
+
+    // hidden → beside
     this._railWanted = true;
     if (live) {
       Player.emit('sidebarShow', {});
-      /* Join QR full-card when the rail has nothing better to show yet. */
-      if (!hasFeedback && !(this._rail && this._railMode === 'scores')) {
-        Player.emit('joinToggle', {});
-      }
       syncHudRoomButtons();
       return;
     }
@@ -707,7 +748,19 @@
     var joinBtn = hud.querySelector('[data-act=join]');
     var focusBtn = hud.querySelector('[data-act=focus]');
     var card = document.getElementById('joincard');
-    if (railBtn) railBtn.classList.toggle('on', !!(Player._rail || (viewport && viewport.classList.contains('railed'))));
+    if (railBtn) {
+      var state = Player.roomSidebarState();
+      railBtn.classList.toggle('on', state !== 'hidden');
+      railBtn.dataset.state = state;
+      /* The title says what the next press does, not what the state is — the
+         state is already visible on screen, and what a host wants from a
+         tooltip mid-lesson is where the button will take them. */
+      railBtn.title = state === 'hidden'
+        ? 'Show the room beside the slide (S)'
+        : state === 'beside'
+          ? 'Put the room on the whole screen (S)'
+          : 'Hide the room (S)';
+    }
     if (joinBtn) joinBtn.classList.toggle('on', !!(card && card.classList.contains('on')));
     if (focusBtn) focusBtn.classList.toggle('on', !!Player._focus);
   }
@@ -1114,6 +1167,7 @@
     /* The focused view is the same data the rail shows, so leaving the rail up
        would duplicate it and paint over the top of it. */
     viewport.classList.add('fb-focus');
+    syncHudRoomButtons();
   };
 
   Player.closeFocus = function () {
@@ -1122,6 +1176,7 @@
     viewport.classList.remove('fb-focus');
     var prev = viewport.querySelector('[data-overlay]');
     if (prev) prev.remove();
+    syncHudRoomButtons();
   };
 
   /** A question, put on the wall for the room to see. */
@@ -1214,6 +1269,7 @@
     this._qacue = null;
     this._focus = false;
     this._sampleFb = null;
+    this._railWanted = true;
     if (!opts.keepAnswers) this.answers = {};
     viewport.innerHTML = '';
     viewport.classList.remove('railed');
@@ -1362,7 +1418,15 @@
         if (SF.Live && SF.Live.active) Player.emit('focusToggle', {});
         else toggleSoloFeedback({});
         break;
-      case 'j': case 'J': e.preventDefault(); Player.emit('joinToggle', {}); break;
+      case 's': case 'S':
+        e.preventDefault();
+        Player.toggleRoomSidebar();
+        break;
+      case 'j': case 'J':
+        e.preventDefault();
+        if (SF.Live && SF.Live.active) Player.emit('joinToggle', {});
+        else SF.toast('Host live to show the join QR and PIN');
+        break;
       /* T for thumbs. A live control rather than a setting, because switching
          reactions off matters in the moment they are being abused. */
       case 't': case 'T': e.preventDefault(); Player.emit('reactionsToggle', {}); break;

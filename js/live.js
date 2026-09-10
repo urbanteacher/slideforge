@@ -367,6 +367,7 @@
   /** Push the current standings into the always-on rail. */
   function paintRail() {
     if (!Live.active || !Live.deck.quiz.scoreboard) return;
+    if (SF.Player._railWanted === false) return;
 
     var racing = Live.mechanic === 'race';
 
@@ -517,12 +518,14 @@
     if ((opts && opts.close) || Live.focus) {
       Live.focus = false;
       SF.Player.closeFocus();
+      if (SF.Player.syncHudRoomButtons) SF.Player.syncHudRoomButtons();
       return;
     }
 
     if (Live.prompt) {
       Live.focus = true;
       SF.Player.showFeedbackFocus(Live.digest, feedbackOpts());
+      if (SF.Player.syncHudRoomButtons) SF.Player.syncHudRoomButtons();
       return;
     }
 
@@ -537,6 +540,7 @@
         winners: Live.winners,
         focus: true
       });
+      if (SF.Player.syncHudRoomButtons) SF.Player.syncHudRoomButtons();
       return;
     }
 
@@ -546,18 +550,20 @@
     }
     Live.focus = true;
     SF.Player.showLeaderboard(finalBoard(), 'Standings', true);
+    if (SF.Player.syncHudRoomButtons) SF.Player.syncHudRoomButtons();
   }
 
   function toggleJoinCard(opts) {
     var card = document.getElementById('joincard');
     if (!Live.active) { card.classList.remove('on'); return; }
-    if (opts && opts.close) { card.classList.remove('on'); return; }
-    if (card.classList.contains('on')) {
+    if (opts && opts.close) { card.classList.remove('on'); }
+    else if (card.classList.contains('on')) {
       card.classList.remove('on');
     } else {
       paintJoinCard();
       card.classList.add('on');
     }
+    if (SF.Player.syncHudRoomButtons) SF.Player.syncHudRoomButtons();
   }
 
   /* --------------------------------------------------------------- Q & A */
@@ -712,8 +718,39 @@
     SF.Player.on('close', function () { if (Live.active) Live.stop(); });
     SF.Player.on('joinToggle', toggleJoinCard);
     SF.Player.on('focusToggle', toggleFocus);
+    SF.Player.on('sidebarShow', showSidebar);
     SF.Player.on('qaCommand', moderate);
     SF.Player.on('reactionsToggle', toggleReactions);
+  }
+
+  /**
+   * Is there anything worth putting on the whole screen?
+   *
+   * Asked before offering the state rather than after trying it, so the S
+   * cycle can skip a size that has nothing in it instead of stopping on a
+   * "nothing to expand" toast — the same reasoning as the join panel hiding
+   * itself when there is no PIN.
+   */
+  Live.canExpand = function () {
+    if (!Live.active) return false;
+    if (Live.prompt) return true;
+    if (Live.mechanic === 'race') return raceLanes().length > 0;
+    return Live.rows.length > 0;
+  };
+
+  /** Put the room rail back after the host hid it with S. */
+  function showSidebar() {
+    if (!Live.active) return;
+    SF.Player._railWanted = true;
+    if (Live.prompt) {
+      paintFeedbackPanel();
+    } else if (Live.deck && Live.deck.quiz && Live.deck.quiz.scoreboard) {
+      paintRail();
+    } else if (Live.pin) {
+      /* No scoreboard and no prompt — the join card is the room. */
+      toggleJoinCard({});
+    }
+    if (SF.Player.syncHudRoomButtons) SF.Player.syncHudRoomButtons();
   }
 
   Live.begin = function () {
@@ -789,11 +826,13 @@
   /** Paint the rail from the last digest we were sent. */
   function paintFeedbackPanel() {
     if (!Live.active || !Live.prompt) return;
+    if (SF.Player._railWanted === false) return;
     var opts = feedbackOpts();
     /* Keep the focus view live while it is open — the whole point of putting
        it up is to watch answers land. */
     if (Live.focus) SF.Player.showFeedbackFocus(Live.digest, opts);
     SF.Player.setFeedback(Live.digest, opts);
+    if (SF.Player.syncHudRoomButtons) SF.Player.syncHudRoomButtons();
   }
 
   /** Open the prompt attached to this slide, or close whatever was open. */

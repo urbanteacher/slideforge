@@ -684,6 +684,11 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   width: 34px; height: 30px; border-radius: 999px; font-size: 14px;
 }
 .hud button:hover { background: rgba(255,255,255,.14); }
+.hud button.on { background: rgba(255,255,255,.2); }
+/* Three stops on one button, so the button has to show which one it is on:
+   an outline for beside the slide, filled for the whole screen. */
+.hud button[data-state="beside"] { box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.55); }
+.hud button[data-state="full"] { background: #fff; color: #14171d; }
 .hud .pos { font-size: 13px; padding: 0 10px; color: #cfd4de; font-variant-numeric: tabular-nums; }
 .hud .sep { width: 1px; height: 18px; background: rgba(255,255,255,.16); margin: 0 4px; }
 
@@ -1983,6 +1988,10 @@ body.ws-game [data-ws="deck"] { display: none !important; }
    written in slide pixels and multiplied by the letterbox scale, because what
    is being cleared is inside the scaled slide while the strip is not — a fixed
    pixel gap only ever looks right at one window size. */
+/* Out of the way while the room is on the whole screen: the focus view has
+   its own footer in that corner, and two things in one corner is one thing
+   nobody can read. The cues come back when it closes. */
+.deck-viewport.fb-focus .cuebar { display: none; }
 .deck-viewport.quiz-slide .cuebar { margin-bottom: calc(28px + var(--sf-scale, 1) * 150px); }
 .deck-viewport.quiz-line .cuebar { margin-bottom: calc(28px + var(--sf-scale, 1) * 225px); }
 
