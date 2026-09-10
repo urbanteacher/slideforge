@@ -513,6 +513,37 @@ held on the player rather than written into the rail, because the rail element
 is replaced whenever the feed switches — a note appended a moment before that
 would land in a detached node and never be seen.
 
+### Colour rules for anything the room sees
+
+Every theme defines the same small set of tokens, and slide-space components
+read only those — never a literal colour. Two rules keep it working on a theme
+nobody has written yet:
+
+**Text is `--s-fg` or `--s-dim`. Accents are for borders, fills and dots.**
+Only the fg/bg pair is guaranteed to contrast, because that is what the pair is
+for. An accent used as text has to be checked against every background, and the
+check gets forgotten: the *room is split* flag read at 1.97:1 on studio because
+its second accent is a pale lilac on a sage slide, and the same flag filled with
+that accent and given dark text read as dark-on-dark on paper, whose second
+accent is a deep green.
+
+**Anything floating over a slide takes its wash from `--s-scrim`**, with
+`--s-card` as the fallback since that token's polarity is already per-theme — a
+light wash on dark themes, a dark one on light. A hardcoded `rgba(0,0,0,.42)`
+pill read at 17:1 on midnight and **1.16:1 on paper**: the same control, present
+and invisible.
+
+Contrast of every text element over its own background, measured per theme:
+
+| | midnight | paper | ocean | ember | mono | studio |
+| --- | --- | --- | --- | --- | --- | --- |
+| Q&A / pace cue | 17.4 | 15.5 | 17.2 | 16.9 | 18.1 | 11.3 |
+| arrival notice | 14.0 | 13.1 | 11.4 | 12.6 | 15.4 | 11.3 |
+| room-is-split flag | 16.3 | 14.4 | 14.4 | 15.2 | 17.5 | 10.4 |
+
+Worst case 10.4:1, against 4.5 for AA and 7 for AAA. Before this pass the worst
+case was 1.16.
+
 ### One surface, across themes
 
 The rail takes its background from the slide on screen rather than from the

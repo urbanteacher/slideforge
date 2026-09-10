@@ -300,6 +300,7 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   --s-accent-2: #a98bff;
   --s-rule: rgba(255,255,255,.14);
   --s-card: rgba(255,255,255,.06);
+  --s-scrim: rgba(0,0,0,.42);
   --s-font: 'Segoe UI', -apple-system, BlinkMacSystemFont, Inter, sans-serif;
 }
 .theme-paper {
@@ -310,6 +311,7 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   --s-accent-2: #1f6f5c;
   --s-rule: rgba(0,0,0,.14);
   --s-card: rgba(0,0,0,.045);
+  --s-scrim: rgba(255,255,255,.62);
   --s-font: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
 }
 .theme-ocean {
@@ -320,6 +322,7 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   --s-accent-2: #ffd479;
   --s-rule: rgba(255,255,255,.16);
   --s-card: rgba(255,255,255,.08);
+  --s-scrim: rgba(0,0,0,.42);
   --s-font: 'Segoe UI', -apple-system, BlinkMacSystemFont, Inter, sans-serif;
 }
 .theme-ember {
@@ -330,6 +333,7 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   --s-accent-2: #ffd166;
   --s-rule: rgba(255,255,255,.15);
   --s-card: rgba(255,255,255,.07);
+  --s-scrim: rgba(0,0,0,.42);
   --s-font: 'Segoe UI', -apple-system, BlinkMacSystemFont, Inter, sans-serif;
 }
 .theme-mono {
@@ -340,6 +344,7 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   --s-accent-2: #ffcc00;
   --s-rule: rgba(255,255,255,.2);
   --s-card: rgba(255,255,255,.06);
+  --s-scrim: rgba(0,0,0,.5);
   --s-font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
@@ -1071,7 +1076,9 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 .scorerail .joinline .jl-lbl {
   font-size: 12px; letter-spacing: .14em; color: var(--s-dim);
 }
-.scorerail .joinline.shut .jl-lbl { color: var(--s-accent-2); }
+/* Same reasoning as .rj-lbl.shut: an accent as text is not guaranteed to
+   contrast with the slide it sits on. */
+.scorerail .joinline.shut .jl-lbl { color: var(--s-fg); }
 .scorerail .joinline .jl-url {
   font-size: 15px; color: var(--s-dim);
   font-family: ui-monospace, monospace;
@@ -1965,15 +1972,23 @@ body.ws-game [data-ws="deck"] { display: none !important; }
 /* Pace first: being asked to slow down is the more urgent of the two. */
 .cuebar .pacecue { order: 0; }
 .cuebar .qacue { order: 1; }
+/* Anything floating over a slide takes its wash from the theme rather than
+   assuming the slide is dark. A hardcoded rgba(0,0,0,.42) read at 17:1 on
+   midnight and 1.16:1 on paper — the same pill, invisible. --s-card is the
+   fallback because its polarity is already per-theme: a light wash on dark
+   themes, a dark one on light. */
+.qacue, .pacecue {
+  background: var(--s-scrim, var(--s-card));
+  border: 2px solid var(--s-rule);
+  color: var(--s-fg);
+  backdrop-filter: blur(8px);
+}
 
 /* the standing cue: how many are waiting, unobtrusive but always there */
 .qacue {
   display: flex; align-items: center; gap: 10px;
   padding: 9px 17px;
   border-radius: 999px;
-  background: rgba(0,0,0,.42);
-  border: 2px solid var(--s-rule);
-  color: var(--s-fg);
   font-family: var(--s-font);
   font-size: 18px;
 }
@@ -2105,9 +2120,15 @@ body.ws-game [data-ws="deck"] { display: none !important; }
 .sc, .fksc { display: flex; flex-direction: column; gap: 8px; }
 .sc-cols, .fksc-cols { display: flex; align-items: flex-end; gap: 6px; }
 .sc-col, .fksc-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+/* --s-rule, not a 5%-white wash: that measured 1.01:1 against the slide on
+   studio and 1.14:1 on midnight, so the unfilled part of a bar was invisible
+   on every theme rather than only the light ones. */
 .sc-bar, .fksc-bar {
   width: 100%; display: flex; align-items: flex-end;
-  background: rgba(255,255,255,.05); border-radius: 5px 5px 0 0;
+  background: var(--s-rule); border-radius: 5px 5px 0 0;
+  /* An outline as well as a fill: --s-rule is deliberately faint, and the
+     extent of the track is what says how big the bar could have been. */
+  box-shadow: inset 0 0 0 1px var(--s-rule);
 }
 .sc-bar { height: 74px; }
 /* Sized so the whole chart — counts above, points and ends below, average
@@ -2136,8 +2157,20 @@ body.ws-game [data-ws="deck"] { display: none !important; }
 .fksc-read strong { font-size: 46px; color: var(--s-fg); }
 /* Named, not left for the reader to infer from the bars: a mean of 3 from a
    room at 1 and 5 is the opposite situation to a room all sitting at 3. */
+/* Outlined rather than filled. Filling it with --s-accent-2 and writing dark
+   text on top assumes every theme's second accent is light — paper's is a
+   dark green, which put dark on dark. An outline needs no such assumption. */
+/* Text is --s-fg or --s-dim; accents are for borders, fills and dots.
+   
+   That rule is the whole lesson from this pass. Filling this with
+   --s-accent-2 and writing dark text on it assumed the second accent is
+   light, which put dark on dark on paper. Writing the text *in* accent-2
+   assumed it contrasts with the slide, which put pale lilac on sage at 1.97:1
+   on studio. Only --s-fg is guaranteed to read against --s-bg, because that
+   is what the pair is for. */
 .sc-split, .fksc-split {
-  background: var(--s-accent-2); color: #0c1020;
+  background: transparent; color: var(--s-fg);
+  border: 2px solid var(--s-accent-2);
   border-radius: 999px; font-weight: 700; letter-spacing: .06em;
 }
 .sc-split { font-size: 10px; padding: 2px 8px; }
@@ -2155,12 +2188,11 @@ body.ws-game [data-ws="deck"] { display: none !important; }
   display: flex; align-items: center; gap: 10px;
   padding: 9px 17px;
   border-radius: 999px;
-  background: rgba(0,0,0,.42);
-  border: 2px solid var(--s-accent-2);
-  color: var(--s-fg);
   font-family: var(--s-font);
   font-size: 18px;
 }
+/* The pace cue keeps the accent border that marks it apart from the Q&A one. */
+.pacecue { border-color: var(--s-accent-2); }
 .pacecue .pace-dot {
   width: 9px; height: 9px; border-radius: 50%;
   background: var(--s-accent-2);
@@ -2342,8 +2374,11 @@ body.ws-game [data-ws="deck"] { display: none !important; }
   color: var(--s-dim);
 }
 .scorerail .rail-join.big .rj-lbl { font-size: 17px; }
-/* Shut, not broken: the code still works, it lands you in the next round. */
-.scorerail .rj-lbl.shut { color: var(--s-accent-2); }
+/* Shut, not broken: the code still works, it lands you in the next round.
+   Said with weight rather than hue — the open label is --s-dim, so full
+   --s-fg reads as the more important state on any theme, where an accent
+   would have to be checked against every background. */
+.scorerail .rj-lbl.shut { color: var(--s-fg); }
 .scorerail .rj-wait { font-size: 15px; color: var(--s-dim); margin-top: 6px; }
 .scorerail .rail-join.big .rj-wait { font-size: 18px; margin-top: 10px; }
 .scorerail .rj-pin {
@@ -2367,7 +2402,7 @@ body.ws-game [data-ws="deck"] { display: none !important; }
    reaction and a bad one for a line telling you who arrived. */
 .scorerail .rnote {
   font-size: 17px; color: var(--s-fg);
-  background: rgba(255,255,255,.09);
+  background: var(--s-card);
   border-left: 3px solid var(--s-accent);
   border-radius: 8px; padding: 7px 11px;
   animation: sf-rnote .28s ease;
