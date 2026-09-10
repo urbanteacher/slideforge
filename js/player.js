@@ -156,6 +156,10 @@
     }, { once: true });
 
     hudPos.textContent = (Player.idx + 1) + ' / ' + deck.slides.length;
+    /* The live answer tally sits along the bottom of a question slide, which
+       is where the Q&A cue would otherwise be. Marked so the cue can move up
+       and clear it. */
+    viewport.classList.toggle('quiz-slide', slide.type === 'quiz');
 
     if (slide.type === 'quiz') {
       wireQuiz(node, slide);

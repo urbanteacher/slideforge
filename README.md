@@ -62,14 +62,20 @@ attempts. A recording failure is surfaced to the host; the in-memory snapshot
 can still be exported while available. The journal retries unsaved events on
 the next write.
 
-Run `node --test tests/sessions.test.js` for relay integration, crash recovery,
-reconnection, persistence-failure and export checks. These use isolated temporary
-data and an ephemeral loopback port.
+Run `node --test tests/*.test.js` for relay integration, crash recovery,
+reconnection, persistence-failure, export and Q&A moderation checks. Each test
+spawns a real relay with real WebSocket clients, on isolated temporary data and
+an ephemeral loopback port. Pass a directory rather than the glob and Node tries
+to load `tests` as a module instead of discovering the files.
 
-Next in the product sequence: moderated Q&A, then type-answer and scale/slider,
-confusion/pace plus answer confidence, and finally an evidence-based Adapt report.
-Reactions and QR rendering are also still pending; join PINs and focus modes
-continue to use the existing live interface.
+`node tools/audience.js <pin>` joins a simulated class to a running session, so
+the live path can be exercised — and demonstrated — without a room full of
+phones. See "Rehearsing without a room" below.
+
+Next in the product sequence: type-answer and scale/slider, confusion/pace plus
+answer confidence, and finally an evidence-based Adapt report. Reactions and QR
+rendering are also still pending; join PINs and focus modes continue to use the
+existing live interface.
 
 ---
 
@@ -285,8 +291,12 @@ room actually wants answered. Five open questions per person, so one enthusiast
 can't flood it — dismissed ones don't count against them, since you judged those
 rather than they did. You can't upvote your own.
 
-Everything is recorded to the session journal (`qaAsk`, `qaModerate`, `qaPin`),
-so the questions asked are part of the session report.
+Everything is recorded to the session journal (`qaAsk`, `qaModerate`, `qaVote`,
+`qaPin`) and projected into the report: each question with its author, votes,
+final state and whether it was put on screen, a per-person `questionsAsked`
+count, and totals for asked / shown / still unanswered. The report JSON export
+carries all of it; the Reports screen does not yet render a Q&A view, so for now
+it is read from the export.
 
 ### Expanding the rail — `E`
 
@@ -431,9 +441,31 @@ Everyone needs to be on the same Wi-Fi. If phones can't load the page it's
 usually the laptop firewall blocking port 8787, or client isolation ("guest
 mode") on the network.
 
-Use another port with `PORT=8080 node server/server.js`. Rooms are in-memory
-only — stopping the server ends the game, and nothing about the audience is
-written to disk.
+Use another port with `PORT=8080 node server/server.js`. The live room is held
+in memory, but the session is journalled to `.slideforge/sessions/` as it runs,
+so stopping the server ends the game without losing the record — see
+[Live session reports](#live-session-reports-local--lan).
+
+### Rehearsing without a room
+
+You cannot judge a live feature alone. `tools/audience.js` joins a simulated
+class over the same WebSocket protocol a phone uses, so the projected screen
+behaves as it will on the day:
+
+```
+node tools/audience.js 623815 --n 8
+```
+
+The PIN is the one on your screen; `--n` is the class size, `--port` matches a
+non-default relay, `--quiet` silences the per-student log. Students spread
+round-robin across the teams, answer with a fixed ability (most get it right,
+roughly one in five does not, so the tally has something to show), reply to
+polls, clouds and brainstorms, ask questions on a slow trickle, and upvote each
+other.
+
+It is a rehearsal tool, not a load test — it exercises the same paths as real
+phones, so anything it breaks was genuinely broken. It found the Q&A cue
+overlapping the answer tally on a question slide.
 
 ---
 
@@ -548,3 +580,8 @@ they were.
   a PIN can join. It's built for a room on a trusted network, not the internet.
 - Deleting a game that a presentation embeds leaves that slide marked MISSING —
   the show skips it with a warning rather than failing.
+- The Q&A queue does not deduplicate. If two people ask the same thing you see
+  both — deliberate for now, because near-duplicates are a judgement call, but
+  it does mean a common question can appear twice.
+- Q&A reaches the session report as data but has no view on the Reports screen
+  yet; read it from the JSON export.

@@ -718,9 +718,14 @@ ws.attach(server, (sock, req) => {
 
       } else if (m.t === 'qaModerate') {
         const item = room.qa.get(Number(m.id));
-        const action = String(m.action || '');
-        if (!item || ['approve', 'dismiss', 'answered', 'pending'].indexOf(action) === -1) return;
-        item.state = action === 'approve' ? 'approved' : action;
+        /* Actions and states are named separately on purpose — mapping them
+           explicitly rather than reusing the verb as the noun. Deriving one
+           from the other turned "dismiss" into a state called 'dismiss',
+           which silently broke every filter looking for 'dismissed'. */
+        const STATE = { approve: 'approved', dismiss: 'dismissed', answered: 'answered', pending: 'pending' };
+        const next = STATE[String(m.action || '')];
+        if (!item || !next) return;
+        item.state = next;
         /* A dismissed or answered question cannot stay on the wall. */
         if (room.qaPinned && room.qaPinned.id === item.id && item.state !== 'approved') {
           room.qaPinned = null;
@@ -910,8 +915,12 @@ ws.attach(server, (sock, req) => {
       if (!room) return;
       const item = room.qa.get(Number(m.id));
       if (!item || item.state !== 'approved') return;
+      /* The phone hides the button on your own question, but the rule has to
+         hold here too — a hidden button is not a constraint. */
+      if (item.playerId === me.id) return;
       if (item.votes.has(me.id)) item.votes.delete(me.id);
       else item.votes.add(me.id);
+      record(room, 'qaVote', { id: item.id, votes: item.votes.size });
       pushQA(room);
       return;
     }

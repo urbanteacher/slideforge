@@ -51,7 +51,7 @@ function load(id, token) {
 }
 function project(session, active = false) {
   const { meta, events } = session;
-  const people = new Map(), checks = [], feedback = [];
+  const people = new Map(), checks = [], feedback = [], questions = [];
   let end = null, startedAt = null;
   const person = id => people.get(id);
   for (const e of events) {
@@ -86,6 +86,24 @@ function project(session, active = false) {
         f.responses.push({ playerId: d.playerId, values: d.values, at: e.at });
       }
       if (person(d.playerId)) person(d.playerId).lastSeenAt = e.at;
+    } else if (e.type === 'qaAsk') {
+      questions.push({ id: d.id, playerId: d.playerId, text: d.text, askedAt: e.at,
+        state: 'pending', votes: 0, shown: false, shownAt: null });
+      if (person(d.playerId)) person(d.playerId).lastSeenAt = e.at;
+    } else if (e.type === 'qaModerate') {
+      const q = questions.find(q => q.id === d.id);
+      if (q) q.state = d.state;
+    } else if (e.type === 'qaVote') {
+      const q = questions.find(q => q.id === d.id);
+      if (q) q.votes = d.votes;
+    } else if (e.type === 'qaPin') {
+      /* Only records that it was shown, not that it stopped being shown: what
+         a teacher wants afterwards is whether the room's question was taken
+         to the front, not how long it stayed there. */
+      if (d.id != null) {
+        const q = questions.find(q => q.id === d.id);
+        if (q && !q.shown) { q.shown = true; q.shownAt = e.at; }
+      }
     } else if (e.type === 'end') end = { at: e.at, reason: d.reason };
   }
   const updatedAt = events.length ? events[events.length - 1].at : meta.createdAt;
@@ -101,16 +119,24 @@ function project(session, active = false) {
       questionsEligible: eligible.length, questionsAnswered: answers.length,
       questionsCorrect: answers.filter(r => r.right === true).length,
       questionsUnanswered: eligible.length - answers.length,
-      feedbackContributions: feedback.reduce((n, f) => n + f.responses.filter(r => r.playerId === p.id).reduce((sum, r) => sum + r.values.length, 0), 0)
+      feedbackContributions: feedback.reduce((n, f) => n + f.responses.filter(r => r.playerId === p.id).reduce((sum, r) => sum + r.values.length, 0), 0),
+      questionsAsked: questions.filter(q => q.playerId === p.id && q.state !== 'dismissed').length
     };
   });
   return { schemaVersion: 1, id: meta.id, title: meta.title, mode: meta.mode, teams: meta.teams,
     createdAt: meta.createdAt, startedAt, endedAt: end && end.at, updatedAt,
     status, reason: end ? end.reason : status === 'interrupted' ? 'Relay stopped before the session ended.' : null,
     persisted: session.persisted, attendance: roster, checks, feedback,
+    questions: questions.map(q => {
+      const who = people.get(q.playerId);
+      return { ...q, name: who ? who.name : null };
+    }),
     summary: { joined: roster.length, admitted: roster.filter(p => p.admittedAt != null).length,
       checks: checks.length, revealed: checks.filter(q => q.revealedAt).length,
-      answers: checks.reduce((n, q) => n + q.responses.length, 0), feedbackActivities: feedback.length }
+      answers: checks.reduce((n, q) => n + q.responses.length, 0), feedbackActivities: feedback.length,
+      questionsAsked: questions.filter(q => q.state !== 'dismissed').length,
+      questionsShown: questions.filter(q => q.shown).length,
+      questionsUnanswered: questions.filter(q => q.state === 'approved' || q.state === 'pending').length }
   };
 }
 module.exports = { DIR, create, append, authorized, load, project };

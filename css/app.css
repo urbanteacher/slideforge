@@ -1705,3 +1705,6 @@ body.live-on .hud button[data-act="focus"] { display: inline-block; }
 }
 .qacue.waiting .qa-dot { background: var(--s-accent-2); }
 .qacue .qa-n { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* clear the answer tally, which occupies the foot of a question slide */
+.deck-viewport.quiz-slide .qacue { margin-bottom: 108px; }

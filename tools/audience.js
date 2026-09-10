@@ -1,0 +1,201 @@
+#!/usr/bin/env node
+'use strict';
+/* A simulated class, for when you have a relay and a projector but not
+   twenty phones.
+ *
+ * Joins N students to a live PIN and has them behave like a room: they answer
+ * questions (most of them correctly), reply to polls and word clouds, ask
+ * questions, and upvote each other. Everything goes through the same
+ * WebSocket protocol a real phone uses, so what you see on the wall is what
+ * you would see on the day.
+ *
+ *   node tools/audience.js 123456              # six students
+ *   node tools/audience.js 123456 --n 20       # twenty
+ *   node tools/audience.js 123456 --port 8788  # a relay on another port
+ *   node tools/audience.js 123456 --quiet      # no per-event log
+ */
+
+const NAMES = [
+  'Ada', 'Bo', 'Cy', 'Dara', 'Eli', 'Fen', 'Gio', 'Hana', 'Ivo', 'Jae',
+  'Kit', 'Lena', 'Moe', 'Nia', 'Omar', 'Pia', 'Quinn', 'Rae', 'Sol', 'Tam'
+];
+
+const QUESTIONS = [
+  'Could we go over that last example again?',
+  'Will this be on the exam?',
+  'Is there a reading that covers this in more depth?',
+  'How does this connect to what we did last week?',
+  'What happens if the assumption does not hold?',
+  'Can we see a worked answer for the tricky one?'
+];
+
+const WORDS = ['useful', 'tricky', 'clear', 'fast', 'dense', 'daunting', 'fair', 'interesting'];
+
+const IDEAS = [
+  'More worked examples in the seminars',
+  'A past paper walkthrough before the deadline',
+  'Share the slides the night before',
+  'Shorter reading list, more depth on each',
+  'Recap the previous week at the start'
+];
+
+const args = process.argv.slice(2);
+const pin = (args.find((a) => /^\d{4,6}$/.test(a)) || '').trim();
+const flag = (name, fallback) => {
+  const i = args.indexOf('--' + name);
+  return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
+};
+const count = Math.max(1, Math.min(NAMES.length, Number(flag('n', 6))));
+const port = Number(flag('port', 8787));
+const quiet = args.includes('--quiet');
+
+if (!pin) {
+  console.error('Usage: node tools/audience.js <pin> [--n 6] [--port 8787] [--quiet]');
+  console.error('The PIN is on the host screen after you press "Host live".');
+  process.exit(1);
+}
+
+const say = (...a) => { if (!quiet) console.log(...a); };
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+/* Humans do not all tap at once. */
+const jitter = (base) => base + Math.random() * base;
+const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
+class Student {
+  constructor(name, i) {
+    this.name = name;
+    this.i = i;
+    this.asked = 0;
+    this.seen = new Set();
+    /* Most of the room knows the answer; a few reliably do not. */
+    this.ability = i % 5 === 0 ? 0.35 : 0.85;
+  }
+
+  connect() {
+    return new Promise((resolve, reject) => {
+      this.ws = new WebSocket('ws://127.0.0.1:' + port);
+      this.ws.addEventListener('open', () => {
+        this.send({ t: 'join', pin, name: this.name });
+        resolve();
+      });
+      this.ws.addEventListener('error', reject);
+      this.ws.addEventListener('message', (ev) => {
+        let m;
+        try { m = JSON.parse(ev.data); } catch (e) { return; }
+        this.handle(m);
+      });
+      this.ws.addEventListener('close', () => { this.closed = true; });
+    });
+  }
+
+  send(m) {
+    if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(m));
+  }
+
+  handle(m) {
+    if (m.t === 'error') {
+      /* In team mode the relay refuses a join with no team and hands the team
+         list back with the refusal — that is the cue to pick one, not a
+         failure. Students are spread round-robin so the teams end up even. */
+      if (m.mode === 'teams' && Array.isArray(m.teams) && m.teams.length) {
+        const team = this.i % m.teams.length;
+        this.send({ t: 'join', pin, name: this.name, team });
+        return;
+      }
+      say('  ✗ ' + this.name + ': ' + m.message);
+      return;
+    }
+    if (m.t === 'joined') {
+      this.team = m.teamName || null;
+      say('  → ' + this.name + ' joined' + (this.team ? ' [' + this.team + ']' : ''));
+      return;
+    }
+    if (m.t === 'waiting') { say('  … ' + this.name + ' waiting for the next round'); return; }
+    if (m.t === 'room' && m.mode === 'teams') return;
+    if (m.t === 'question') this.answer(m);
+    if (m.t === 'prompt') this.reply(m);
+    if (m.t === 'qaList') this.vote(m);
+    if (m.t === 'asked') say('  ? ' + this.name + ' asked a question');
+  }
+
+  async answer(m) {
+    await wait(jitter(700));
+    const n = m.count || 4;
+    /* The relay tells the phone how many options there are, not which is
+       right — so a simulated student has to guess like a real one. It knows
+       the answer with probability `ability`, otherwise picks at random. */
+    const choice = Math.random() < this.ability ? 0 : Math.floor(Math.random() * n);
+    this.send({ t: 'answer', choice });
+    say('  ✎ ' + this.name + ' answered ' + 'ABCDEF'[choice]);
+  }
+
+  async reply(m) {
+    await wait(jitter(900));
+    if (m.kind === 'poll') {
+      const choice = Math.floor(Math.random() * (m.options || []).length);
+      this.send({ t: 'reply', choice });
+      say('  ▤ ' + this.name + ' voted "' + m.options[choice] + '"');
+    } else if (m.kind === 'wordcloud') {
+      const word = pick(WORDS);
+      this.send({ t: 'reply', text: word });
+      say('  ❋ ' + this.name + ' said "' + word + '"');
+    } else {
+      const idea = pick(IDEAS);
+      this.send({ t: 'reply', text: idea });
+      say('  ✎ ' + this.name + ' suggested "' + idea + '"');
+    }
+  }
+
+  async vote(m) {
+    for (const q of m.items || []) {
+      if (q.state !== 'approved' || q.asked || q.mine || this.seen.has(q.id)) continue;
+      this.seen.add(q.id);
+      /* Not everybody upvotes everything. */
+      if (Math.random() > 0.55) continue;
+      await wait(jitter(600));
+      this.send({ t: 'qaVote', id: q.id });
+      say('  ▲ ' + this.name + ' upvoted a question');
+    }
+  }
+
+  async maybeAsk() {
+    if (this.asked >= 2) return;
+    this.asked++;
+    this.send({ t: 'ask', text: pick(QUESTIONS) });
+  }
+}
+
+(async () => {
+  console.log('Joining ' + count + ' students to PIN ' + pin + ' on port ' + port + '…');
+  const students = [];
+  for (let i = 0; i < count; i++) {
+    const s = new Student(NAMES[i], i);
+    try { await s.connect(); } catch (e) {
+      console.error('Could not reach the relay on port ' + port + '. Is it running?');
+      process.exit(1);
+    }
+    students.push(s);
+    await wait(180 + Math.random() * 320);   // a room does not arrive in unison
+  }
+
+  console.log('\nAll in. They will now answer whatever you put up.');
+  console.log('A few will ask questions — approve them in presenter view.');
+  console.log('Ctrl-C to send them home.\n');
+
+  /* A trickle of questions rather than a burst, so the queue fills the way a
+     real one does while you are mid-explanation. */
+  const asker = setInterval(() => {
+    const who = pick(students.filter((s) => !s.closed && s.asked < 2));
+    if (who) who.maybeAsk();
+  }, 9000);
+  setTimeout(() => pick(students).maybeAsk(), 2500);
+
+  const bye = () => {
+    clearInterval(asker);
+    console.log('\nSending them home.');
+    students.forEach((s) => { try { s.ws.close(); } catch (e) {} });
+    setTimeout(() => process.exit(0), 200);
+  };
+  process.on('SIGINT', bye);
+  process.on('SIGTERM', bye);
+})();
