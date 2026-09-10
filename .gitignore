@@ -3,3 +3,8 @@
 .DS_Store
 *.log
 node_modules/
+
+# Exported decks and games. Remove this line if you want them committed —
+# they are plain JSON and diff cleanly. Ignored by default because embedded
+# images make them large and they are a snapshot, not source.
+data/

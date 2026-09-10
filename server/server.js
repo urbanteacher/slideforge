@@ -34,8 +34,95 @@ const MIME = {
   '.woff2': 'font/woff2'
 };
 
+
+/* ------------------------------------------------------------ data files
+
+   The browser keeps decks and games in localStorage, which is invisible,
+   per-origin and easy to lose. These two endpoints let the app write them out
+   as real files inside the project folder so it can be backed up, diffed and
+   committed like anything else.
+
+   Deliberately narrow: fixed directories, a validated slug, a size cap, and
+   only ever .json. Note the files are then served like any other static asset,
+   so anything on the network that can reach the port can read them — the same
+   trust assumption the rest of the relay makes.
+   ------------------------------------------------------------------------- */
+
+const DATA_DIRS = { deck: path.join(ROOT, 'data', 'decks'), game: path.join(ROOT, 'data', 'games') };
+const SLUG = /^[a-z0-9][a-z0-9_-]{0,63}$/;
+const MAX_DOC = 8 * 1024 * 1024;          // embedded images make decks large
+
+function jsonReply(res, code, obj) {
+  const body = JSON.stringify(obj);
+  res.writeHead(code, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Length': Buffer.byteLength(body),
+    'Cache-Control': 'no-store'
+  });
+  res.end(body);
+}
+
+function listData(res) {
+  const out = { decks: [], games: [] };
+  for (const kind of ['deck', 'game']) {
+    let names = [];
+    try { names = fs.readdirSync(DATA_DIRS[kind]); } catch (e) { names = []; }
+    for (const name of names) {
+      if (!name.endsWith('.json')) continue;
+      try {
+        const raw = fs.readFileSync(path.join(DATA_DIRS[kind], name), 'utf8');
+        const doc = JSON.parse(raw);
+        out[kind === 'deck' ? 'decks' : 'games'].push({
+          file: name,
+          id: doc.id || '',
+          title: doc.title || name,
+          modified: doc.modified || 0
+        });
+      } catch (e) { /* skip anything unreadable rather than failing the list */ }
+    }
+  }
+  jsonReply(res, 200, out);
+}
+
+function saveData(req, res) {
+  let body = '';
+  let tooBig = false;
+  req.on('data', (chunk) => {
+    body += chunk;
+    if (body.length > MAX_DOC) { tooBig = true; req.destroy(); }
+  });
+  req.on('end', () => {
+    if (tooBig) return jsonReply(res, 413, { error: 'Document too large' });
+    let msg;
+    try { msg = JSON.parse(body); } catch (e) {
+      return jsonReply(res, 400, { error: 'Bad JSON' });
+    }
+    const kind = msg && msg.kind;
+    const slug = msg && msg.slug;
+    if (!DATA_DIRS[kind]) return jsonReply(res, 400, { error: 'Unknown kind' });
+    if (!SLUG.test(String(slug || ''))) return jsonReply(res, 400, { error: 'Bad name' });
+    if (!msg.doc || typeof msg.doc !== 'object') {
+      return jsonReply(res, 400, { error: 'No document' });
+    }
+    try {
+      fs.mkdirSync(DATA_DIRS[kind], { recursive: true });
+      const file = path.join(DATA_DIRS[kind], slug + '.json');
+      fs.writeFileSync(file, JSON.stringify(msg.doc, null, 2), 'utf8');
+      log('saved ' + kind + ' "' + (msg.doc.title || slug) + '" to data/' +
+          (kind === 'deck' ? 'decks' : 'games') + '/' + slug + '.json');
+      jsonReply(res, 200, { ok: true, file: slug + '.json' });
+    } catch (e) {
+      jsonReply(res, 500, { error: e.message });
+    }
+  });
+}
+
 function serve(req, res) {
   let rel = decodeURIComponent(req.url.split('?')[0]);
+
+  if (rel === '/api/data' && req.method === 'GET') return listData(res);
+  if (rel === '/api/data' && req.method === 'POST') return saveData(req, res);
+
   if (rel === '/') rel = '/index.html';
 
   const full = path.resolve(ROOT, '.' + rel);

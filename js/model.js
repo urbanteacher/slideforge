@@ -827,6 +827,7 @@
     remove: function (id) {
       writeGames(readGames().filter(function (g) { return g.id !== id; }));
     },
+    clear: function () { writeGames([]); },
     get: function (id) {
       return readGames().find(function (g) { return g.id === id; }) || null;
     },
@@ -854,6 +855,7 @@
     remove: function (id) {
       writeAll(readAll().filter(function (d) { return d.id !== id; }));
     },
+    clear: function () { writeAll([]); },
     get: function (id) {
       return readAll().find(function (d) { return d.id === id; }) || null;
     },

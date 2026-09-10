@@ -412,9 +412,43 @@ laptop. Allow pop-ups if nothing opens.
 `SF.compileGame` turns a game into ordinary slides, which is why a standalone
 game and an embedded one play through exactly the same runtime.
 
-Decks and games autosave to browser local storage, separately. **Export** writes
-a file; **Import** sniffs the contents and switches engine if you hand it a game
-while editing a presentation.
+### Where your work lives
+
+Decks and games autosave to **browser local storage** — invisible, per-origin,
+and easy to lose. Storage keyed to `http://localhost:8787` is *not* the same
+storage as a page opened directly from the filesystem, so a document saved one
+way will not appear the other.
+
+So don't leave anything you care about only in the browser. **Export** offers:
+
+| Choice | What it does |
+| --- | --- |
+| **This presentation / game** | downloads the active document as one file |
+| **Everything, into the app folder** | writes each document to `data/decks/` and `data/games/` next to the app |
+| **Everything, as one file** | downloads a dated `.sfbundle.json` backup |
+
+The middle one is the useful one: it makes the folder self-contained, and the
+files are plain formatted JSON, so they diff and commit like source. Re-exporting
+overwrites in place rather than piling up copies — filenames are the title plus
+a slice of the document id, which is stable across saves.
+
+**Import** offers *From a file* (a single document, or a bundle) or *From the app
+folder*.
+
+> **Restoring from the folder replaces everything in the browser.** That's
+> deliberate rather than friendlier merging: you restore *because* storage was
+> lost, and by then the app has already re-seeded its samples — merging would
+> leave you with duplicates of everything. The folder is the source of truth and
+> this makes the browser match it. Use single-file Import to merge one document.
+
+Both need the relay running, since a browser page can't write to disk on its
+own. Two things worth knowing about the endpoints: the files under `data/` are
+served like any other static asset, so anything that can reach the port can read
+them; and there's no authentication, the same trust assumption the live relay
+makes. Fine on a classroom network, not something to expose.
+
+Old decks that had quiz slides authored directly in them are migrated on first
+load.
 
 Old decks that had quiz slides authored directly in them are migrated on first
 load: the questions are lifted into a new game and a game embed is left where
