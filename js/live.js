@@ -126,6 +126,7 @@
     drawPlayers();
     pinEl.textContent = '····';
     urlEl.textContent = joinAddress().replace(/^https?:\/\//, '');
+    paintQr('lobbyQr', null);
     warn('');
     lobby.classList.add('on');
 
@@ -227,6 +228,7 @@
         Live.mode = m.mode || 'individual';
         Live.teams = (m.teams || []).map(function (n) { return { name: n }; });
         if (m.joinUrl) urlEl.textContent = String(m.joinUrl).replace(/^https?:\/\//, '');
+        paintQr('lobbyQr', m.pin);
         drawPlayers();
         break;
 
@@ -381,10 +383,49 @@
 
   /* ------------------------------------------------- join card (mid-game) */
 
+  /**
+   * The join URL as a QR code, with the PIN already in it.
+   *
+   * Pointing a camera at a square is fewer steps than typing an IP address
+   * and then a six-digit PIN, and it removes the two places a room reliably
+   * goes wrong: mistyping the address, and joining with the wrong PIN.
+   *
+   * The typed address and the PIN stay on screen beside it. A camera is not
+   * always the fastest route — an older phone, a locked-down device, someone
+   * already on the page — and a QR code that is the only way in excludes
+   * them.
+   */
+  function paintQr(id, pin) {
+    var box = document.getElementById(id);
+    if (!box) return;
+    var url = joinLink(pin);
+    /* Rebuilt only when the payload changes: encoding is cheap but this is
+       called on every roster push. */
+    if (box.dataset.for === url) return;
+    box.dataset.for = url;
+    if (!pin || !SF.qrSvg) { box.innerHTML = ''; box.classList.remove('on'); return; }
+    try {
+      box.innerHTML = SF.qrSvg(url, { title: 'Join the lesson at ' + url, quiet: 3 });
+      box.classList.add('on');
+    } catch (e) {
+      /* A code that will not encode is not worth a broken box on the wall —
+         the address and PIN beside it are still a complete way in. */
+      box.innerHTML = '';
+      box.classList.remove('on');
+    }
+  }
+
+  /** The address a phone should open, PIN included so it lands pre-filled. */
+  function joinLink(pin) {
+    var base = Live.joinUrl || joinAddress();
+    return pin ? base + (base.indexOf('?') > -1 ? '&' : '?') + 'pin=' + pin : base;
+  }
+
   function paintJoinCard() {
     document.getElementById('jcUrl').textContent =
       String(Live.joinUrl || joinAddress()).replace(/^https?:\/\//, '');
     document.getElementById('jcPin').textContent = Live.pin || '----';
+    paintQr('jcQr', Live.pin);
 
     var teams = document.getElementById('jcTeams');
     teams.innerHTML = '';

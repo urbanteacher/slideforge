@@ -2163,3 +2163,35 @@ body.live-on .hud button[data-act="focus"] { display: inline-block; }
   color: #9376aa; margin-bottom: 6px;
 }
 .adapt-where { font-size: 11px; color: var(--ui-dim); margin: 10px 0 0; }
+
+/* ----------------------------------------------------------------------
+   The join QR
+
+   Sits above the address and the PIN, not instead of them. A camera is
+   fewer steps for most of the room, and no use at all to an older phone,
+   a locked-down device, or someone already looking at the page — so both
+   routes stay on screen.
+   ---------------------------------------------------------------------- */
+.joinqr {
+  display: none;
+  width: 260px; margin: 0 auto 26px;
+  padding: 14px; border-radius: 18px;
+  /* White behind it whatever the theme is doing: the quiet zone only works
+     against a light background, and a dark one stops it scanning. */
+  background: #fff;
+  box-shadow: 0 12px 40px rgba(0,0,0,.45);
+  line-height: 0;
+}
+.joinqr.on { display: block; }
+.joinqr svg { width: 100%; height: auto; display: block; }
+#joincard .joinqr { width: 210px; margin-bottom: 20px; }
+
+/* On a short window the code is the first thing that can afford to shrink —
+   the PIN and the address have to stay legible from the back of a room. */
+@media (max-height: 760px) {
+  .joinqr { width: 190px; padding: 11px; margin-bottom: 18px; }
+  #joincard .joinqr { width: 160px; }
+}
+@media (max-height: 620px) {
+  .joinqr { display: none !important; }
+}

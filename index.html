@@ -121,6 +121,7 @@
 <!-- ------------------------------------------------------------ live lobby -->
 <div id="lobby">
   <div>
+    <div class="joinqr" id="lobbyQr"></div>
     <div class="lead">Join at</div>
     <div class="url" id="lobbyUrl">—</div>
     <div class="lead" style="margin-top:26px">Game PIN</div>
@@ -140,6 +141,7 @@
 <!-- ------------------------------------------------- join card (live, mid-game) -->
 <div id="joincard">
   <div>
+    <div class="joinqr" id="jcQr"></div>
     <div class="lead">Join at</div>
     <div class="url" id="jcUrl">—</div>
     <div class="lead" style="margin-top:26px">Game PIN</div>
@@ -171,6 +173,7 @@
 <!-- .sfdeck.json / .sfgame.json / .sfbundle.json all end in .json, so one
      accept filter covers every export this app produces. -->
 
+<script src="js/qr.js"></script>
 <script src="js/model.js"></script>
 <script src="js/render.js"></script>
 <script src="js/player.js"></script>

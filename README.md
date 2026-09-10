@@ -68,7 +68,7 @@ the next write.
 
 Run `node --test tests/*.test.js` for relay integration, crash recovery,
 reconnection, persistence-failure, export, Q&A moderation, marking, slider,
-scale, pace-signal, confidence and Adapt-report checks. Each test
+scale, pace-signal, confidence, Adapt-report and QR checks. Each test
 spawns a real relay with real WebSocket clients, on isolated temporary data and
 an ephemeral loopback port. Pass a directory rather than the glob and Node tries
 to load `tests` as a module instead of discovering the files.
@@ -78,9 +78,8 @@ the live path can be exercised — and demonstrated — without a room full of
 phones. See "Rehearsing without a room" below.
 
 Next in the product sequence: ship fullscreen catalogue game engines (starting
-with Horse Race / Beat the Clock / Memory Flip). Reactions and QR rendering are
-also still pending; join PINs and focus modes continue to use the existing live
-interface.
+with Horse Race / Beat the Clock / Memory Flip). A reactions strip is still
+pending; focus modes continue to use the existing live interface.
 
 ---
 
@@ -580,6 +579,46 @@ score slides instead of the rail — there is no room to tally.
 5. Press **Start**, then advance with `→`. On a question the first `→` reveals
    the answer; the second moves on. Timed questions reveal themselves when the
    clock runs out, or as soon as everyone has answered.
+
+### The join QR
+
+The lobby shows the join address as a QR code with the PIN already in it, so a
+phone camera skips both places a room reliably goes wrong: mistyping an IP
+address, and joining with the wrong PIN. Press **J** mid-show and the join card
+carries the same code. The typed address and the PIN stay on screen beside it —
+a camera is no use to an older phone, a locked-down device or someone already
+looking at the page, and a QR code that is the only way in excludes them.
+
+The encoder is [js/qr.js](js/qr.js), written from the spec because SlideForge
+has no dependencies and this has to work from `file://`. It is deliberately
+narrow: byte mode only (a URL has lowercase letters and `?`, which the other
+modes cannot hold), versions 1–6, levels L and M. Version 7 introduces a second
+information block, and stopping below it removes a mechanism rather than
+shipping an untested one. Anything longer than 136 bytes throws instead of
+producing a code scanners quietly reject.
+
+**On testing something a test runner cannot see.** `tests/qr.test.js` proves a
+lot without a camera: a code round-trips through an independently written
+decoder, the error-correction bytes are verified as genuine Reed-Solomon
+codewords by polynomial division rather than by comparison, the capacity table
+is cross-checked against module counts derived from the geometry, and the
+generator polynomials match the published tables.
+
+All of that passed on a version of the encoder **no scanner on earth could
+read.** The format information was bit-reversed, and the test's decoder was
+reversed in exactly the same way, so the round trip was two mirrors agreeing.
+It was caught by rendering a code to a PNG and handing it to Apple's Vision
+framework — a decoder with no interest in what this repo believes — which is
+now [tools/qr-verify.sh](tools/qr-verify.sh):
+
+```bash
+tools/qr-verify.sh
+```
+
+The tests gained two things from that: the format bit positions written out
+from the spec as explicit coordinates rather than as a loop, and a full
+module-for-module matrix that Vision has read, kept as a regression vector so
+any change anywhere in the pipeline has to reproduce it exactly.
 
 ### The join window
 
