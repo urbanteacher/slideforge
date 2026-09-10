@@ -1167,6 +1167,32 @@
   }
 
   /**
+   * Give the rail the same surface as the slide beside it.
+   *
+   * The rail paints var(--s-bg), the same token the slide uses, which agrees
+   * for every theme that only sets the token. The studio theme also paints
+   * some layouts directly — its section slides are lilac while its token is
+   * sage — so on those the panel and the slide it is butted against came out
+   * different colours.
+   *
+   * Read off the slide rather than told separately, so a new theme or a new
+   * layout cannot drift out of step: whatever the slide resolves to is what
+   * the rail gets.
+   *
+   * @param {HTMLElement} rail
+   * @param {HTMLElement} slideEl the .slide currently on screen
+   */
+  function railSurface(rail, slideEl) {
+    if (!rail || !slideEl) return;
+    var cs = getComputedStyle(slideEl);
+    var img = cs.backgroundImage;
+    rail.style.backgroundColor = cs.backgroundColor;
+    /* A url() background is the slide's own artwork and has no business
+       being tiled into a panel beside it — fall back to the flat colour. */
+    rail.style.backgroundImage = img.indexOf('url(') === -1 ? img : 'none';
+  }
+
+  /**
    * The join panel in the rail: the code as a square, and the PIN under it.
    *
    * Big while the board is empty, because an empty rail saying "waiting for
@@ -1382,6 +1408,7 @@
     ring: ring,
     scoreRail: scoreRail,
     paintRailJoin: paintRailJoin,
+    railSurface: railSurface,
     raceTrack: raceTrack,
     feedbackRail: feedbackRail,
     feedbackFocus: feedbackFocus,

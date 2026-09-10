@@ -56,8 +56,15 @@
 
     hud.querySelector('[data-act=prev]').onclick = function () { Player.prev(); };
     hud.querySelector('[data-act=next]').onclick = function () { Player.next(); };
-    hud.querySelector('[data-act=focus]').onclick = function () { Player.emit('focusToggle', {}); };
-    hud.querySelector('[data-act=join]').onclick = function () { Player.emit('joinToggle', {}); };
+    hud.querySelector('[data-act=rail]').onclick = function () { Player.toggleRoomSidebar(); };
+    hud.querySelector('[data-act=focus]').onclick = function () {
+      if (SF.Live && SF.Live.active) Player.emit('focusToggle', {});
+      else toggleSoloFeedback({});
+    };
+    hud.querySelector('[data-act=join]').onclick = function () {
+      if (SF.Live && SF.Live.active) Player.emit('joinToggle', {});
+      else SF.toast('Host live to show the join QR and PIN');
+    };
     hud.querySelector('[data-act=blank]').onclick = function () { Player.toggleBlank(); };
     hud.querySelector('[data-act=full]').onclick = function () { Player.toggleFullscreen(); };
     hud.querySelector('[data-act=help]').onclick = function () { cheats.classList.toggle('on'); };
@@ -173,6 +180,9 @@
       scheduleQuizFit(node);
     }
 
+    /* The rail persists across slides, so its surface has to follow the one
+       that just arrived. */
+    SF.railSurface(Player._rail, node);
     Player.emit('slide', { slide: slide, index: Player.idx, node: node });
     /* Host live owns the rail/focus; solo Present still honours the authored
        Beside / Full screen choice with sample responses for rehearsal. */
@@ -577,6 +587,7 @@
       viewport.appendChild(this._rail);
     }
     viewport.classList.add('railed');
+    SF.railSurface(this._rail, this._current);
     /* A fresh shell has an empty news box; anything still within its few
        seconds goes back into it. */
     paintNotes();
@@ -648,13 +659,65 @@
     if (this._rail) { this._rail.remove(); this._rail = null; this._railMode = null; }
     if (!root) return;
     viewport.classList.remove('railed');
+    syncHudRoomButtons();
     relayout();
   };
+
+  /** Show or hide the side panel: join code, who’s in, scores / responses. */
+  Player.toggleRoomSidebar = function (opts) {
+    var forceOff = opts && opts.close;
+    var live = SF.Live && SF.Live.active;
+    var slide = this.deck && this.deck.slides[this.idx];
+    var hasFeedback = !!(SF.slideFeedback && SF.slideFeedback(slide));
+
+    if (forceOff || (this._rail && !forceOff && !(opts && opts.open))) {
+      if (this._rail) {
+        this._railWanted = false;
+        this.disableRail();
+        if (this._focus) this.closeFocus();
+        SF.toast('Room sidebar hidden — S to bring it back');
+      }
+      syncHudRoomButtons();
+      return;
+    }
+
+    this._railWanted = true;
+    if (live) {
+      Player.emit('sidebarShow', {});
+      /* Join QR full-card when the rail has nothing better to show yet. */
+      if (!hasFeedback && !(this._rail && this._railMode === 'scores')) {
+        Player.emit('joinToggle', {});
+      }
+      syncHudRoomButtons();
+      return;
+    }
+
+    if (hasFeedback) {
+      syncAuthoredFeedback(slide);
+      SF.toast('Host live for the real join code and live responses');
+    } else {
+      SF.toast('Host live to show the join QR, PIN, and who’s in the room');
+    }
+    syncHudRoomButtons();
+  };
+
+  function syncHudRoomButtons() {
+    if (!hud) return;
+    var railBtn = hud.querySelector('[data-act=rail]');
+    var joinBtn = hud.querySelector('[data-act=join]');
+    var focusBtn = hud.querySelector('[data-act=focus]');
+    var card = document.getElementById('joincard');
+    if (railBtn) railBtn.classList.toggle('on', !!(Player._rail || (viewport && viewport.classList.contains('railed'))));
+    if (joinBtn) joinBtn.classList.toggle('on', !!(card && card.classList.contains('on')));
+    if (focusBtn) focusBtn.classList.toggle('on', !!Player._focus);
+  }
+  Player.syncHudRoomButtons = syncHudRoomButtons;
 
   /* Solo Present: honour Beside / Full screen with an empty live-shaped
      panel. Sample responses stay in the editor preview; the join code and
      real replies only exist once Host live is running. */
   Player._sampleFb = null;
+  Player._railWanted = true;
 
   function syncAuthoredFeedback(slide) {
     if (SF.Live && SF.Live.active) return;
@@ -663,6 +726,10 @@
       Player._sampleFb = null;
       Player.disableRail();
       if (Player._focus) Player.closeFocus();
+      return;
+    }
+    if (Player._railWanted === false) {
+      Player._sampleFb = { digest: null, view: null, slide: slide };
       return;
     }
     var view = Object.assign(SF.feedbackViewOpts(f), {
@@ -676,6 +743,7 @@
     } else {
       Player.closeFocus();
     }
+    syncHudRoomButtons();
   }
 
   function toggleSoloFeedback(opts) {

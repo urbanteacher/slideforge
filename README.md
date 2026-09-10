@@ -506,6 +506,27 @@ held on the player rather than written into the rail, because the rail element
 is replaced whenever the feed switches — a note appended a moment before that
 would land in a detached node and never be seen.
 
+### One surface, across themes
+
+The rail takes its background from the slide on screen rather than from the
+theme's `--s-bg` token, and that distinction is the whole point.
+
+Every theme in `css/app.css` sets `--s-bg` once, so the slide and the rail
+agree automatically — that is why the rail looks continuous on midnight. The
+studio theme also paints some *layouts* directly: its section slides are
+lilac, its content and keyword slides cream, while its token stays sage. The
+rail is a sibling of the slide and cannot see a layout class, so on those
+slides the panel and the slide it is butted against came out different
+colours.
+
+So `SF.railSurface(rail, slideEl)` copies the slide's resolved background onto
+the rail on every slide change, in the live show and in the editor's preview
+alike. Read off the slide rather than told separately, which means a new theme
+or a new layout cannot drift out of step — there is nothing to keep in sync. A
+`url()` background is the exception: that is the slide's own artwork and has no
+business being tiled into a panel beside it, so the rail falls back to the flat
+colour.
+
 ### Expanding the rail — `E`
 
 Press **E** (or the ⛶◧ button) to put whatever the rail is showing on the whole

@@ -71,6 +71,7 @@
       row.dataset.i = String(i);
       row.appendChild(el('div', 'num', String(i + 1)));
 
+      var body = el('div', 'thumb-body');
       var frame = el('div', 'frame');
       if (s.type === 'game') {
         var g = gameFor(s);
@@ -81,10 +82,19 @@
           SF.FEEDBACK_KINDS[s.feedback.kind].icon +
           (live ? '' : ' !')));
       }
-      row.appendChild(frame);
+      body.appendChild(frame);
 
       var node = SF.renderSlide(deck, s, Object.assign(slideOpts(i), { chrome: false }));
       frame.appendChild(node);
+      row.appendChild(body);
+
+      var tx = s.transition || 'fade';
+      var txIcon = { none: '—', fade: '◌', push: '→', zoom: '⊕', wipe: '▭' }[tx] || '◌';
+      var txLabel = tx === 'none' ? 'None' : tx.charAt(0).toUpperCase() + tx.slice(1);
+      var mark = el('span', 'thumb-tx', txIcon);
+      mark.title = 'Transition: ' + txLabel;
+      mark.setAttribute('aria-label', 'Transition ' + txLabel);
+      row.appendChild(mark);
 
       row.onclick = function () { select(i); };
       wireDrag(row);
@@ -127,19 +137,53 @@
   function drawFoot() {
     var foot = $('railFoot');
     foot.innerHTML = '';
-    foot.appendChild(UI.button('+ Slide', null, function () { addSlide('content'); }));
+    var s = current();
+    if (s) {
+      var txWrap = el('div', 'rail-tx');
+      var lab = el('label', null, 'Transition in');
+      var txSel = UI.select(
+        SF.TRANSITIONS.map(function (t) {
+          return { value: t, label: t[0].toUpperCase() + t.slice(1) };
+        }),
+        s.transition,
+        function (v) {
+          s.transition = v;
+          touched();
+          drawRail();
+          drawInspector();
+        }
+      );
+      if (!txSel.id) txSel.id = 'rail-tx-' + SF.uid();
+      lab.htmlFor = txSel.id;
+      txWrap.appendChild(lab);
+      txWrap.appendChild(txSel);
+      txWrap.addEventListener('click', function (e) { e.stopPropagation(); });
+      foot.appendChild(txWrap);
+    }
+    var actions = el('div', 'rail-actions');
+    var addSlideBtn = UI.button('+ Slide', 'primary', function () {
+      if (SF.Studio && SF.Studio.openStarters) SF.Studio.openStarters();
+      else addSlide('content');
+    });
+    addSlideBtn.title = 'Insert a slide starter, then pick a layout';
+    actions.appendChild(addSlideBtn);
     var ins = UI.button('+ Game', null, insertGame);
     ins.title = 'Drop a game into the presentation at this point';
-    foot.appendChild(ins);
+    actions.appendChild(ins);
+    foot.appendChild(actions);
   }
 
   /* ------------------------------------------------------------ preview */
 
   /* Preview mode for a feedback slide: 'rail' shows it beside the slide as the
-     room will see it, 'focus' shows the full-screen version. Sample responses
-     stand in, because you cannot judge a layout against no data. */
+     room will see it, 'focus' shows the full-screen version. Stored on the
+     feedback so Present / Host live open the same way. */
   var inspectorTab = 'content';
-  var fbPreview = 'rail';
+
+  function feedbackPresentAs(slide) {
+    var f = slide && slide.feedback;
+    return (f && f.presentAs === 'focus') ? 'focus' : 'rail';
+  }
 
   function drawPreview() {
     var box = $('previewBox');
@@ -150,6 +194,7 @@
 
     var f = SF.slideFeedback(s);
     var digest = f ? SF.sampleFeedbackDigest(f) : null;
+    var fbPreview = feedbackPresentAs(s);
 
     if (f && fbPreview === 'focus') {
       /* The focus view replaces the slide, so preview it the same way. */
@@ -176,6 +221,9 @@
         Object.assign(SF.feedbackViewOpts(f), {
           footnote: 'Sample — ' + digest.answered + ' of ' + digest.players + ' responded'
         }));
+      /* Same surface as the slide it is previewed against — the rehearsal has
+         to show the colours the room will get. */
+      SF.railSurface(rail, node);
       requestAnimationFrame(function () {
         var scale = box.clientWidth / SF.SLIDE_W;
         rail.style.transform = 'scale(' + scale + ')';
@@ -218,13 +266,15 @@
       drawContentFields(insp, s);
     }
 
+    drawLogoFields(insp);
+
     insp.appendChild(UI.button(s.type === 'game' ? '✳ Plan the learning moment →' : s.feedback ? '✳ Edit audience activity →' : '✳ Add audience activity →', 'engage-link', function () { inspectorTab = 'engage'; drawInspector(); }));
 
     insp.appendChild(UI.field('Transition in', UI.select(
       SF.TRANSITIONS.map(function (t) {
         return { value: t, label: t[0].toUpperCase() + t.slice(1) };
       }),
-      s.transition, function (v) { s.transition = v; touched(); })));
+      s.transition, function (v) { s.transition = v; touched(); drawRail(); })));
 
     var row = el('div', 'field');
     row.appendChild(UI.button('Duplicate', null, duplicate));
@@ -232,6 +282,56 @@
     del.style.marginLeft = '6px';
     row.appendChild(del);
     insp.appendChild(row);
+  }
+
+  function drawLogoFields(insp) {
+    var wrap = el('div', 'logo-fields');
+    if (deck.logo) {
+      var preview = el('div', 'logo-preview');
+      var img = document.createElement('img');
+      img.src = deck.logo;
+      img.alt = 'Lesson logo';
+      preview.appendChild(img);
+      var clear = UI.button('Remove logo', 'ghost', function () {
+        deck.logo = '';
+        deck.logoOn = 'none';
+        touched();
+        draw();
+      });
+      preview.appendChild(clear);
+      wrap.appendChild(preview);
+    }
+    var pick = el('input');
+    pick.type = 'file';
+    pick.accept = 'image/png,image/jpeg,image/svg+xml,image/webp,image/gif';
+    pick.style.fontSize = '12px';
+    pick.addEventListener('change', function () {
+      var f = pick.files && pick.files[0];
+      if (!f) return;
+      if (f.size > 1.5 * 1024 * 1024) {
+        SF.toast('Keep the logo under 1.5 MB so the lesson stays portable.');
+        return;
+      }
+      var fr = new FileReader();
+      fr.onload = function () {
+        deck.logo = fr.result;
+        if (deck.logoOn === 'none') deck.logoOn = 'all';
+        touched();
+        draw();
+      };
+      fr.readAsDataURL(f);
+    });
+    wrap.appendChild(pick);
+    insp.appendChild(UI.field('Lesson logo', wrap,
+      'Corner mark on slides. PNG or SVG works best.'));
+    if (deck.logo) {
+      insp.appendChild(UI.field('Show logo on', UI.select([
+        { value: 'all', label: 'Every slide' },
+        { value: 'title', label: 'Title slide only' },
+        { value: 'none', label: 'Hidden' }
+      ], deck.logoOn === 'title' || deck.logoOn === 'none' ? deck.logoOn : 'all',
+        function (v) { deck.logoOn = v; touched(); draw(); })));
+    }
   }
 
   function drawLearning(insp, s) {
@@ -261,8 +361,10 @@
       b.appendChild(el('span', null, SF.SLIDE_TYPES[t].label));
       b.onclick = function () {
         s.type = t;
-        if ((t === 'content' || t === 'cards' || t === 'split') && !s.bullets.length) {
-          s.bullets = ['', '', ''];
+        if ((t === 'content' || t === 'cards' || t === 'split' || t === 'keywords' || t === 'italics' || t === 'links') && !s.bullets.length) {
+          s.bullets = (t === 'keywords' || t === 'italics' || t === 'links')
+            ? [SF.formatKeywordLine('', ''), SF.formatKeywordLine('', ''), SF.formatKeywordLine('', '')]
+            : ['', '', ''];
         }
         if (t === 'split' && s.imageSide !== 'left') s.imageSide = 'right';
         touched();
@@ -274,12 +376,81 @@
   }
 
   /* Click-to-fill slots for bullets and cards — plain text, no formatting ribbon. */
-  var PIT_MAX = { content: 8, cards: 6, split: 5 };
+  var PIT_MAX = { content: 8, cards: 6, split: 5, keywords: 8, italics: 8, links: 8 };
 
   function ensurePits(s) {
     if (!Array.isArray(s.bullets)) s.bullets = [];
     var min = 3;
-    while (s.bullets.length < min) s.bullets.push('');
+    var empty = (s.type === 'keywords' || s.type === 'italics' || s.type === 'links')
+      ? SF.formatKeywordLine('', '') : '';
+    while (s.bullets.length < min) s.bullets.push(empty);
+  }
+
+  function drawPairPits(wrap, s, kind) {
+    var italic = kind === 'italics';
+    var links = kind === 'links';
+    wrap.innerHTML = '';
+    wrap.className = 'pit-list keyword-pits' + (italic ? ' italics-pits' : '') + (links ? ' links-pits' : '');
+    ensurePits(s);
+    var max = PIT_MAX[kind] || 8;
+    var leadPh = links ? 'Link label' : italic ? 'Phrase in italics' : 'Keyword';
+    var trailPh = links ? 'https://…' : italic ? 'plain explanation' : 'definition in plain language';
+    var leadCls = links ? 'ln-label-input' : italic ? 'it-phrase-input' : 'kw-term-input';
+    var trailCls = links ? 'ln-url-input' : italic ? 'it-note-input' : 'kw-def-input';
+    var addLabel = links ? 'link' : italic ? 'phrase' : 'keyword';
+    s.bullets.forEach(function (line, i) {
+      var parsed = SF.parseKeywordLine(line);
+      var row = el('div', 'pit-row keyword' + ((parsed.term || parsed.def) ? '' : ' empty'));
+      row.appendChild(el('span', 'pit-i', String(i + 1).padStart(2, '0')));
+      var term = UI.text(parsed.term, function (v) {
+        s.bullets[i] = SF.formatKeywordLine(v, SF.parseKeywordLine(s.bullets[i]).def);
+        touched();
+        repaint();
+        row.classList.toggle('empty', !SF.parseKeywordLine(s.bullets[i]).term && !SF.parseKeywordLine(s.bullets[i]).def);
+      }, leadPh);
+      term.className = (term.className ? term.className + ' ' : '') + leadCls;
+      var def = UI.text(parsed.def, function (v) {
+        s.bullets[i] = SF.formatKeywordLine(SF.parseKeywordLine(s.bullets[i]).term, v);
+        touched();
+        repaint();
+        row.classList.toggle('empty', !SF.parseKeywordLine(s.bullets[i]).term && !SF.parseKeywordLine(s.bullets[i]).def);
+      }, trailPh);
+      def.className = (def.className ? def.className + ' ' : '') + trailCls;
+      if (links) def.inputMode = 'url';
+      var fields = el('div', 'kw-pit-fields');
+      fields.appendChild(term);
+      fields.appendChild(def);
+      row.appendChild(fields);
+      var kill = el('button', 'kill', '×');
+      kill.type = 'button';
+      kill.title = 'Remove';
+      kill.setAttribute('aria-label', 'Remove row ' + (i + 1));
+      kill.onclick = function () {
+        if (s.bullets.length <= 1) s.bullets[0] = SF.formatKeywordLine('', '');
+        else s.bullets.splice(i, 1);
+        ensurePits(s);
+        touched();
+        drawPairPits(wrap, s, kind);
+        repaint();
+      };
+      row.appendChild(kill);
+      wrap.appendChild(row);
+    });
+    if (s.bullets.length < max) {
+      var add = UI.button('+ Add ' + addLabel, 'ghost pit-add', function () {
+        s.bullets.push(SF.formatKeywordLine('', ''));
+        touched();
+        drawPairPits(wrap, s, kind);
+        repaint();
+        var sel = wrap.querySelectorAll('.' + leadCls);
+        if (sel.length) sel[sel.length - 1].focus();
+      });
+      wrap.appendChild(add);
+    }
+  }
+
+  function drawKeywordPits(wrap, s) {
+    drawPairPits(wrap, s, 'keywords');
   }
 
   function drawPits(wrap, s) {
@@ -391,6 +562,36 @@
       return;
     }
 
+    if (s.type === 'keywords') {
+      insp.appendChild(UI.field('Title',
+        UI.area(s.title, function (v) { s.title = v; touched(); repaint(); }, 2)));
+      var kw = el('div');
+      drawPairPits(kw, s, 'keywords');
+      insp.appendChild(UI.field('Keywords — bold term, lowercase definition', kw,
+        'The slide shows the term in bold and the definition in lowercase.'));
+      return;
+    }
+
+    if (s.type === 'italics') {
+      insp.appendChild(UI.field('Title',
+        UI.area(s.title, function (v) { s.title = v; touched(); repaint(); }, 2)));
+      var it = el('div');
+      drawPairPits(it, s, 'italics');
+      insp.appendChild(UI.field('Italics — emphasised phrase, plain note', it,
+        'The slide shows the phrase in italics and the explanation in regular type.'));
+      return;
+    }
+
+    if (s.type === 'links') {
+      insp.appendChild(UI.field('Title',
+        UI.area(s.title, function (v) { s.title = v; touched(); repaint(); }, 2)));
+      var ln = el('div');
+      drawPairPits(ln, s, 'links');
+      insp.appendChild(UI.field('Links — label + http(s) URL', ln,
+        'Only http and https links become clickable. Opens in a new tab.'));
+      return;
+    }
+
     insp.appendChild(UI.field(s.type === 'content' ? 'Title' : 'Heading',
       UI.area(s.title, function (v) { s.title = v; touched(); repaint(); }, 2)));
 
@@ -498,9 +699,15 @@
       insp.appendChild(UI.field('Preview as', UI.segmented([
         { value: 'rail', icon: '◨', label: 'Beside the slide' },
         { value: 'focus', icon: '⛶', label: 'Full screen' }
-      ], fbPreview, function (v) { fbPreview = v; drawInspector(); drawPreview(); }),
-        'Sample responses, so you can judge the layout before anyone has answered. ' +
-        'Press E during the show to switch to full screen.'));
+      ], feedbackPresentAs(s), function (v) {
+        if (!s.feedback) return;
+        s.feedback.presentAs = v === 'focus' ? 'focus' : 'rail';
+        touched();
+        drawInspector();
+        drawPreview();
+      }),
+        'Saved on this slide — Present and Host live open the same way. ' +
+        'Host live shows the join QR, PIN, and who arrives. Press E to toggle.'));
     }
 
     insp.appendChild(UI.field('Prompt for the room',
@@ -581,6 +788,13 @@
   function addSlide(type) {
     var s = SF.makeSlide(type);
     if (type === 'content' || type === 'cards' || type === 'split') s.bullets = ['', '', ''];
+    if (type === 'keywords' || type === 'italics' || type === 'links') {
+      s.bullets = [
+        SF.formatKeywordLine('', ''),
+        SF.formatKeywordLine('', ''),
+        SF.formatKeywordLine('', '')
+      ];
+    }
     if (current()) s.transition = current().transition;
     deck.slides.splice(sel + 1, 0, s);
     sel += 1;
@@ -595,9 +809,12 @@
     if (current()) slide.transition = current().transition || slide.transition;
     deck.slides.splice(sel + 1, 0, slide);
     sel += 1;
-    inspectorTab = slide.feedback ? 'engage' : 'content';
+    /* Always land on Design & content so Layout is visible after insert. */
+    inspectorTab = 'content';
     touched();
     draw();
+    var insp = $('inspector');
+    if (insp) insp.scrollTop = 0;
   }
 
   function insertGame() {
@@ -773,7 +990,7 @@
       current().feedback = SF.makeFeedback(kind);
       current().feedback.prompt = kind === 'wordcloud' ? 'What comes to mind in one word?' : kind === 'poll' ? 'How confident do you feel about this topic?' : 'What would you add?';
       if (kind === 'poll') current().feedback.options = ['Getting started', 'Almost there', 'Ready to apply it'];
-      inspectorTab = 'engage'; fbPreview = 'rail'; touched(); draw();
+      inspectorTab = 'engage'; touched(); draw();
     },
     insertNewGame: function (style) {
       var g = SF.makeGame('Quick knowledge check', style);
