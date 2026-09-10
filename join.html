@@ -161,6 +161,22 @@
     text-align: center; font-size: 13px; color: #9aa1ad;
     letter-spacing: .04em; padding: 2px 0;
   }
+  /* Reactions live in the footer, reachable from every screen and never in
+     the way of one. Four fixed glyphs and no text field: the moment there is
+     somewhere to type, this stops being a gesture and starts being a chat. */
+  .reactbar {
+    flex: none; display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px; padding: 10px 18px 0;
+  }
+  .reactbar button {
+    font: inherit; font-size: 26px; line-height: 1;
+    background: #1b1f26; border: 1px solid #2a303a; border-radius: 14px;
+    padding: 11px 0; cursor: pointer; transition: transform .1s, background .2s;
+  }
+  .reactbar button:active { transform: scale(.9); }
+  .reactbar button.sent { background: #4c8dff; }
+  /* Spent, not broken: the wait is short and saying so beats a dead button. */
+  .reactbar.waiting button { opacity: .4; pointer-events: none; }
   footer { padding: 10px 18px 22px; text-align: center; font-size: 12px; color: #6c7482; flex: none; }
 
   /* the explanation, on the player's own screen */
@@ -388,6 +404,12 @@
 
 </main>
 
+<div class="reactbar" id="reactBar" style="display:none">
+  <button type="button" data-react="clap" aria-label="Applause">👏</button>
+  <button type="button" data-react="yes" aria-label="Got it">👍</button>
+  <button type="button" data-react="wow" aria-label="Didn't know that">😮</button>
+  <button type="button" data-react="idea" aria-label="That clicked">💡</button>
+</div>
 <footer id="foot">SlideForge live quiz</footer>
 
 <script>
@@ -522,6 +544,7 @@
         me.score = m.score || 0;
         me.team = m.team != null ? m.team : null;
         me.teamName = m.teamName || null;
+        showReactBar(m.reactions !== false);
         header(true);
         $('waitIcon').textContent = '✓';
         $('waitTitle').textContent = m.admitted
@@ -604,6 +627,14 @@
 
       case 'signalled':
         signalled(m.kind);
+        break;
+
+      case 'reactions':
+        showReactBar(m.on !== false);
+        break;
+
+      case 'reacted':
+        confirmReaction(m.kind);
         break;
 
       case 'result':
@@ -746,6 +777,33 @@
     $('askBtn').classList.remove('on');
     if (askReturn) { show(askReturn.id); askReturn = null; }
     else show('scWait');
+  }
+
+  /* --------------------------------------------------------- reactions */
+
+  /* The relay rate-limits these, so the bar goes quiet for the same interval
+     rather than letting taps disappear silently. */
+  var REACT_QUIET_MS = 2500;
+
+  function showReactBar(on) {
+    $('reactBar').style.display = on ? 'grid' : 'none';
+  }
+
+  function react(kind) {
+    if (!ws || ws.readyState !== 1) return;
+    var bar = $('reactBar');
+    if (bar.classList.contains('waiting')) return;
+    bar.classList.add('waiting');
+    ws.send(JSON.stringify({ t: 'react', kind: kind }));
+    setTimeout(function () { bar.classList.remove('waiting'); }, REACT_QUIET_MS);
+  }
+
+  function confirmReaction(kind) {
+    var b = $('reactBar').querySelector('[data-react="' + kind + '"]');
+    if (!b) return;
+    b.classList.add('sent');
+    setTimeout(function () { b.classList.remove('sent'); }, 600);
+    if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
   }
 
   /* ------------------------------------------------------- pace signal */
@@ -1267,6 +1325,9 @@
   $('againBtn').onclick = function () { location.href = location.pathname; };
   $('fbSend').onclick = sendText;
   $('askBtn').onclick = openAsk;
+  Array.prototype.forEach.call($('reactBar').children, function (b) {
+    b.onclick = function () { react(b.dataset.react); };
+  });
   $('paceBtn').onclick = openPace;
   $('paceBack').onclick = closePace;
   Array.prototype.forEach.call($('pacePad').children, function (b) {

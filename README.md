@@ -6,7 +6,7 @@ The **Engagement** tab adds Bloom’s thinking levels, reusable discussion promp
 
 Available library activities: multiple choice, true/false, poll, word cloud and brainstorm. The Add activity library also lists all 27 fullscreen catalogue games (True/False Showdown through Concept Chain) as planned placeholders; their interaction engines are not implemented yet. The existing horse-race style remains available in Quiz studio.
 
-**+ Slide** (left rail) opens slide starters — opening title, title + content, keywords, italics, hyperlinks, dual coding, section break, full-bleed image, three cards, quote, and steps. After insert, the **Layout** picker stays in the right panel so you can change the shape. **File → Export → Practice notes (.md)** downloads a one-way Markdown handout for Canvas or Colab; live polls and games stay in the `.sfdeck.json` room.
+**+ Slide** (left rail) opens slide starters — opening title, title + content, keywords, italics, hyperlinks, dual coding, section break, full-bleed image, three cards, quote, and steps. After insert, the **Layout** picker stays in the right panel so you can change the shape. **Lesson logo** (Design & content) adds a corner mark on every slide or the title slide only. **File → Export → Practice notes (.md)** downloads a one-way Markdown handout for Canvas or Colab; live polls and games stay in the `.sfdeck.json` room.
 
 
 Two engines in one browser app:
@@ -68,7 +68,7 @@ the next write.
 
 Run `node --test tests/*.test.js` for relay integration, crash recovery,
 reconnection, persistence-failure, export, Q&A moderation, marking, slider,
-scale, pace-signal, confidence, Adapt-report and QR checks. Each test
+scale, pace-signal, confidence, Adapt-report, QR and reaction checks. Each test
 spawns a real relay with real WebSocket clients, on isolated temporary data and
 an ephemeral loopback port. Pass a directory rather than the glob and Node tries
 to load `tests` as a module instead of discovering the files.
@@ -78,8 +78,11 @@ the live path can be exercised — and demonstrated — without a room full of
 phones. See "Rehearsing without a room" below.
 
 Next in the product sequence: ship fullscreen catalogue game engines (starting
-with Horse Race / Beat the Clock / Memory Flip). A reactions strip is still
-pending; focus modes continue to use the existing live interface.
+with Horse Race / Beat the Clock / Memory Flip). Those need a decision first:
+every game here plays in lockstep — one question on the wall, the room answering
+it together — and a self-paced mechanic like Beat the Clock means each phone
+working through its own queue, which the relay's single `room.question` cannot
+express.
 
 ---
 
@@ -420,6 +423,38 @@ Auto-reveal waits for the confidence step — everyone having answered is not th
 end of the question while the phones are still asking — and stops waiting after
 five seconds, so one person ignoring it cannot hold the room. Anyone who never
 answers it is counted as *did not say* rather than assumed either way.
+
+### Reactions
+
+Four glyphs in the phone's footer — 👏 👍 😮 💡 — that rise once across the foot
+of the slide and are gone. They reach the projected screen and nowhere else.
+
+**Nothing accumulates.** No list, no counter, no history, and nothing in the
+session journal. That is the design rather than an omission: the moment a
+gesture is collected into something it becomes a feed, and a feed is the thing
+this app is deliberately not. It is the one channel here with no purpose beyond
+the room feeling present, and metering it would change what it is.
+
+Four refusals keep it from becoming a chat, and they are what
+`tests/reactions.test.js` is mostly about:
+
+| Refusal | Why |
+| --- | --- |
+| A fixed set of four, and no text field, ever | The moment there is somewhere to type, this is a chat |
+| One reaction each per 2.5 seconds | What makes a gesture a gesture is that it cannot be sustained |
+| Twelve per two seconds for the whole room | Thirty phones at once is a moment; thirty phones for a minute is a screen nobody can read a slide through |
+| Nothing while a question is up | Reactions belong to the explaining, not the answering — and the foot of a question slide is carrying the answer tally |
+
+**None of them is negative.** Dissent has two better homes already — the pace
+signal and a feedback prompt — and an anonymous channel for piling disapproval
+onto a projected screen, in front of a class, is a different product and a
+worse one.
+
+Press **T** to turn them off. It is a live control rather than an authored
+setting, because what host-togglable has to mean for something social is that
+it can be switched off in the moment it is being abused, not before the lesson
+in a settings panel. Anything still in the air goes with it, and the phones are
+told so the control disappears rather than sending into a void.
 
 ### Presenter cues
 

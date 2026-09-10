@@ -679,6 +679,67 @@
     scaleOverlays();
   };
 
+  var REACTION_GLYPH = { clap: '👏', yes: '👍', wow: '😮', idea: '💡' };
+
+  /**
+   * One reaction, rising and gone.
+   *
+   * Nothing accumulates: no list, no counter, no history. That is the whole
+   * design — a reaction is a gesture, and the moment it is collected into
+   * something it becomes a feed, which is the thing this app is deliberately
+   * not. It leaves no trace on the wall and none in the journal either.
+   *
+   * Only ever on a slide that is not asking a question. The foot of a
+   * question slide is carrying the answer tally, and a room reacting to a
+   * question it is halfway through answering is a distraction rather than a
+   * signal.
+   */
+  Player.showReaction = function (kind) {
+    if (!root || !REACTION_GLYPH[kind]) return;
+    var slide = this.deck && this.deck.slides[this.idx];
+    if (slide && slide.type === 'quiz') return;
+
+    /* Inside the slide, not beside it. The rail and the cue bar live in the
+       viewport and are scaled by hand, but they belong to the room rather
+       than to the slide; a reaction is reacting to what is on screen and has
+       to be measured in the same coordinates. Anchored to the viewport it
+       rose through the letterbox bar and was mostly never on the slide at
+       all. It also means a slide change takes any glyph still in the air
+       with it, which is what should happen to something ephemeral. */
+    var node = this._current;
+    if (!node) return;
+    var bay = node.querySelector('.reactbay');
+    if (!bay) {
+      bay = el('div', 'reactbay');
+      node.appendChild(bay);
+    }
+    /* A hard ceiling on live nodes as well as the relay's rate limit: the
+       relay bounds how many arrive, this bounds how many are ever animating. */
+    if (bay.childElementCount > 24) return;
+
+    var glyph = el('div', 'reaction', REACTION_GLYPH[kind]);
+    /* Scattered across the middle of the strip: clear of the cue bar in one
+       corner and the slide number in the other, both of which a room needs to
+       be able to read while this is happening. */
+    glyph.style.left = (22 + Math.random() * 38) + '%';
+    glyph.style.setProperty('--drift', (Math.random() * 40 - 20).toFixed(1) + 'px');
+    glyph.style.setProperty('--spin', (Math.random() * 24 - 12).toFixed(1) + 'deg');
+    glyph.style.animationDelay = (Math.random() * 120).toFixed(0) + 'ms';
+    glyph.addEventListener('animationend', function () { glyph.remove(); });
+    /* A timer as well as the event, because a hidden tab does not composite
+       frames: animations do not advance and animationend never fires, so a
+       host who switches away mid-lesson comes back to every reaction sent
+       since still sitting there. The node cap bounds that, this clears it. */
+    setTimeout(function () { glyph.remove(); }, 4000);
+    bay.appendChild(glyph);
+  };
+
+  /** Clear anything still in the air — when reactions are switched off. */
+  Player.clearReactions = function () {
+    var bay = this._current && this._current.querySelector('.reactbay');
+    if (bay) bay.remove();
+  };
+
   var PACE_SAY = {
     lost: ' saying they are lost',
     fast: ' saying it is too fast',
@@ -1132,6 +1193,9 @@
       case 'd': case 'D': e.preventDefault(); Player.openPresenter(); break;
       case 'e': case 'E': e.preventDefault(); Player.emit('focusToggle', {}); break;
       case 'j': case 'J': e.preventDefault(); Player.emit('joinToggle', {}); break;
+      /* T for thumbs. A live control rather than a setting, because switching
+         reactions off matters in the moment they are being abused. */
+      case 't': case 'T': e.preventDefault(); Player.emit('reactionsToggle', {}); break;
       case '?': case '/': e.preventDefault(); cheats.classList.toggle('on'); break;
       default:
         if (/^[1-6]$/.test(k)) { e.preventDefault(); Player.answer(Number(k) - 1); }

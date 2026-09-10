@@ -407,6 +407,22 @@ function qaForPlayer(room, playerId) {
   return { t: 'qaList', items, pinned: room.qaPinned };
 }
 
+/* The four reactions a phone can send. Fixed, small, and none of them
+   negative — dissent already has two better homes in this app, the pace
+   signal and a feedback prompt, and an anonymous channel for piling
+   disapproval onto a projected screen in front of a class is a different
+   product and a worse one. */
+const REACTIONS = ['clap', 'yes', 'wow', 'idea'];
+
+/* One reaction each per this long. Not a punishment — it is what keeps a
+   gesture a gesture rather than something that can be held down. */
+const REACT_EVERY_MS = 2500;
+
+/* And a ceiling for the room, so thirty phones at once is a moment rather
+   than a screen nobody can read a slide through. */
+const REACT_BURST = 12;
+const REACT_BURST_MS = 2000;
+
 /* A signal is live for this long and then it is gone. Long enough to survive
    a slow explanation, short enough that it always means "right now". */
 const SIGNAL_TTL_MS = 90 * 1000;
@@ -502,7 +518,8 @@ function admitWaiting(room) {
       team: p.team,
       teamName: p.team != null ? room.teams[p.team] : null,
       admitted: true,
-      round: room.roundNo
+      round: room.roundNo,
+      reactions: room.reactions
     });
     const open = promptMessage(room);
     if (open) p.sock.json(open);
@@ -609,6 +626,13 @@ ws.attach(server, (sock, req) => {
            a signal nobody will admit to sending is a signal nobody sends. */
         signals: new Map(),      // playerId -> { kind, at }
         sweeper: null,
+        /* Reactions are a live control rather than an authored setting: what
+           "host-togglable" has to mean for something social is that it can be
+           switched off in the moment it is being abused, not before the
+           lesson in a settings panel. Session-scoped, on by default. */
+        reactions: true,
+        reactAt: new Map(),      // playerId -> when they last reacted
+        reactBurst: [],          // recent reaction times, for the room ceiling
         /* Where the host is. Sent with each slide so a signal can be filed
            against the thing the room was actually looking at. */
         at: { slideId: '', title: '', n: 0 },
@@ -912,6 +936,13 @@ ws.attach(server, (sock, req) => {
         record(room, 'qaPin', { id: room.qaPinned ? room.qaPinned.id : null });
         pushQA(room);
 
+      } else if (m.t === 'reactions') {
+        room.reactions = m.on !== false;
+        /* The phones are told, so the control disappears from them rather
+           than sending into a void. */
+        broadcast(room, { t: 'reactions', on: room.reactions });
+        log('room ' + room.pin + ' reactions ' + (room.reactions ? 'on' : 'off'));
+
       } else if (m.t === 'at') {
         /* Just where the host is. A pace signal is filed against the slide the
            room was looking at when they sent it, which is the only form of it
@@ -957,7 +988,7 @@ ws.attach(server, (sock, req) => {
           record(room, 'resume', {id:me.id});
           if (room.waiting.has(me.id) && room.joinOpen) admitWaiting(room);
           const held = room.waiting.has(me.id);
-          sock.json({t:held?'waiting':'joined',name:me.name,title:room.title,phase:room.phase,mode:room.mode,team:me.team,teamName:me.team != null ? room.teams[me.team] : null,score:me.score,resumeToken:me.resumeToken});
+          sock.json({t:held?'waiting':'joined',name:me.name,title:room.title,phase:room.phase,mode:room.mode,team:me.team,teamName:me.team != null ? room.teams[me.team] : null,score:me.score,resumeToken:me.resumeToken,reactions:room.reactions});
           if (!held) {
             if (room.phase === 'question' && room.question && room.question.eligible.has(me.id)) {
               const remaining = room.question.timeLimit ? Math.max(0, room.question.timeLimit - (Date.now() - room.askedAt) / 1000) : 0;
@@ -1054,7 +1085,12 @@ ws.attach(server, (sock, req) => {
         phase: room.phase,
         mode: room.mode,
         team: team,
-        teamName: team != null ? room.teams[team] : null
+        teamName: team != null ? room.teams[team] : null,
+        /* Whether the control appears at all. Sent on every one of the three
+           ways a phone can become a player — joining, being admitted from the
+           waiting room, and resuming — because a phone that missed the toggle
+           shows a button that does nothing. */
+        reactions: room.reactions
       });
       /* A prompt is broadcast when the host opens it, so somebody arriving
          afterwards would never see it. Hand it over on join instead — unlike a
@@ -1107,6 +1143,31 @@ ws.attach(server, (sock, req) => {
       /* Not a new answer, so the revision does not move: the host's marking
          is about what was answered, and this changes none of it. */
       pushTally(room);
+      return;
+    }
+
+    if (role === 'player' && m.t === 'react') {
+      if (!room || !rooms.has(room.pin) || !room.players.has(me.id)) return;
+      if (!room.reactions) return;
+      /* Not while a question is up. Reactions belong to the explaining, not
+         the answering — and the foot of a question slide is already carrying
+         the answer tally. */
+      if (room.phase === 'question') return;
+      if (!REACTIONS.includes(m.kind)) return;
+
+      const now = Date.now();
+      if (now - (room.reactAt.get(me.id) || 0) < REACT_EVERY_MS) return;
+      room.reactBurst = room.reactBurst.filter((t) => now - t < REACT_BURST_MS);
+      if (room.reactBurst.length >= REACT_BURST) return;
+
+      room.reactAt.set(me.id, now);
+      room.reactBurst.push(now);
+      /* To the host only: the wall shows it, and there is nothing for another
+         phone to do with it. Deliberately not journalled — see the note in
+         the README. It is the one channel here with no purpose beyond the
+         room feeling present, and metering it would change what it is. */
+      if (room.host && room.host.open) room.host.json({ t: 'reaction', kind: m.kind });
+      sock.json({ t: 'reacted', kind: m.kind });
       return;
     }
 

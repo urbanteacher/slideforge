@@ -73,6 +73,12 @@ async function connect(port) {
         m = queue.splice(i, 1)[0];
       }
     },
+    /* Is one already queued? Synchronous and side-effect free, which is the
+       point: proving nothing arrived with next() leaves a waiter registered,
+       and that waiter then swallows the next real message of that type. */
+    has(type) {
+      return queue.some((m) => m.t === type);
+    },
     /* Wait for a message of this type that actually satisfies `pred`.
        A barrier rather than a sleep: the relay pushes the whole list on every
        change, so "the newest push right now" may still predate the change the

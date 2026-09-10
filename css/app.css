@@ -594,6 +594,36 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 .slide .track { position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: var(--s-rule); }
 .slide .track > i { display: block; height: 100%; background: linear-gradient(90deg, var(--s-accent), var(--s-accent-2)); }
 
+.slide-logo {
+  position: absolute;
+  top: 28px;
+  left: 36px;
+  z-index: 4;
+  height: 52px;
+  max-width: 180px;
+  pointer-events: none;
+}
+.slide-logo img {
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+}
+.layout-title .slide-logo,
+.layout-section .slide-logo {
+  top: 36px;
+  left: 48px;
+  height: 60px;
+  max-width: 200px;
+}
+.layout-image .slide-logo {
+  top: 24px;
+  left: 28px;
+  height: 44px;
+  filter: drop-shadow(0 1px 8px rgba(0,0,0,.35));
+}
+
 /* --------------------------------------------------- 4. player */
 
 #player {
@@ -2195,3 +2225,42 @@ body.live-on .hud button[data-act="focus"] { display: inline-block; }
 @media (max-height: 620px) {
   .joinqr { display: none !important; }
 }
+
+/* ----------------------------------------------------------------------
+   Reactions
+
+   They rise once and are gone. Nothing accumulates — no list, no count,
+   no history, and nothing in the session journal. That is the design
+   rather than an omission: the moment a gesture is collected into
+   something it becomes a feed, which is what this app is deliberately
+   not. See Player.showReaction().
+   ---------------------------------------------------------------------- */
+/* A strip along the foot of the slide itself, in slide coordinates, so it is
+   scaled by the same transform as everything it is reacting to. */
+.reactbay {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 300px;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+/* Starts inside the bay, not below it. The bay clips its overflow so nothing
+   escapes into the rail or off the slide, which also means a glyph placed
+   below the bottom edge is clipped for the whole first half of its rise —
+   it renders as nothing at all. */
+.reaction {
+  position: absolute; bottom: 0;
+  font-size: 52px; line-height: 1;
+  opacity: 0;
+  animation: sf-react 2.6s cubic-bezier(.25,.6,.3,1) forwards;
+}
+@keyframes sf-react {
+  0%   { opacity: 0;   transform: translate(0, 0) scale(.6) rotate(0deg); }
+  14%  { opacity: .95; transform: translate(0, -46px) scale(1) rotate(0deg); }
+  70%  { opacity: .8; }
+  100% { opacity: 0;   transform: translate(var(--drift, 0px), -250px) scale(.9) rotate(var(--spin, 0deg)); }
+}
+/* Nothing floats over a question — the foot of the slide is carrying the
+   answer tally, and the relay drops reactions during one anyway. This is the
+   belt to that braces. */
+.deck-viewport.quiz-slide .reactbay { display: none; }

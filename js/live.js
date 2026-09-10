@@ -44,7 +44,10 @@
     snapshot: { rev: 0, answers: [] },
     /* How the room says the lesson is going. Counts only, never names — see
        the note on room.signals in the relay. */
-    signals: null
+    signals: null,
+    /* Whether the room may react. Session-scoped and live-togglable with T,
+       because that is what host-togglable has to mean for something social. */
+    reactions: true
   };
 
   function relayUrl() {
@@ -281,6 +284,10 @@
 
       case 'teamAnswers':
         if (Live.mechanic === 'race') advanceRace(m);
+        break;
+
+      case 'reaction':
+        SF.Player.showReaction(m.kind);
         break;
 
       case 'signals':
@@ -661,6 +668,7 @@
     SF.Player.on('joinToggle', toggleJoinCard);
     SF.Player.on('focusToggle', toggleFocus);
     SF.Player.on('qaCommand', moderate);
+    SF.Player.on('reactionsToggle', toggleReactions);
   }
 
   Live.begin = function () {
@@ -678,6 +686,18 @@
     SF.Player.start(this.deck, 0);
     if (!Live.prompt && this.deck.quiz.scoreboard && Live.rows.length) paintRail();
   };
+
+  function toggleReactions() {
+    if (!Live.active) return;
+    Live.reactions = !Live.reactions;
+    send({ t: 'reactions', on: Live.reactions });
+    /* Anything still in the air goes with it — switching it off has to take
+       effect on the screen, not just on the next reaction. */
+    if (!Live.reactions) SF.Player.clearReactions();
+    SF.toast(Live.reactions
+      ? 'Reactions on — the room can respond to what is on screen'
+      : 'Reactions off');
+  }
 
   /* First "next" on a live question that hasn't been revealed reveals it
      rather than skipping past it. A short grace period after the question
