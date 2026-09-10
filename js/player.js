@@ -173,8 +173,11 @@
       scheduleQuizFit(node);
     }
 
-    updateSolo();
     Player.emit('slide', { slide: slide, index: Player.idx, node: node });
+    /* Host live owns the rail/focus; solo Present still honours the authored
+       Beside / Full screen choice with sample responses for rehearsal. */
+    syncAuthoredFeedback(slide);
+    updateSolo();
     syncPresenter();
   }
 
@@ -556,12 +559,27 @@
       this._rail.remove();
       this._rail = null;
     }
+    /* Feedback rail must carry the join panel above the body. Rebuild if an
+       older shell is missing it or still has it under an empty stretch. */
+    if (this._rail && mode === 'feedback') {
+      var join = this._rail.querySelector('.rail-join');
+      var body = this._rail.querySelector('.fb-body');
+      var joinFirst = join && body &&
+        !!(join.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING);
+      if (!joinFirst) {
+        this._rail.remove();
+        this._rail = null;
+      }
+    }
     if (!this._rail) {
       this._rail = mode === 'feedback' ? SF.feedbackRail(this.deck) : SF.scoreRail(this.deck);
       this._railMode = mode;
       viewport.appendChild(this._rail);
     }
     viewport.classList.add('railed');
+    /* A fresh shell has an empty news box; anything still within its few
+       seconds goes back into it. */
+    paintNotes();
     if (this._current && this._current.classList.contains('layout-quiz')) {
       scheduleQuizFit(this._current);
     }
@@ -574,6 +592,46 @@
     relayout();
     if (opts) SF.paintScoreRail(this._rail, opts.rows || [], opts);
   };
+
+  /**
+   * A line in the rail that says what just happened, then goes.
+   *
+   * Arrivals mostly — someone joining mid-lesson is worth a glance and not
+   * worth a permanent row, and the roster underneath already carries who is
+   * in. Kept to a few at a time so a class arriving at once is one movement
+   * rather than a column of announcements.
+   */
+  Player.railNote = function (text) {
+    if (!text) return;
+    /* Held on Player rather than written straight into the rail, because the
+       rail is replaced whenever the feed switches or its shell changes — and
+       a note appended a moment before that lands in a detached node and is
+       never seen. State that outlives the element it is drawn in has to live
+       outside it. */
+    this._notes = (this._notes || []).concat({
+      text: text,
+      /* A deadline rather than a timer per note: on a projector that may be
+         on a hidden tab, animations never end and timers are the only clock
+         that keeps running. */
+      until: Date.now() + 4200
+    }).slice(-3);
+    paintNotes();
+    setTimeout(paintNotes, 4300);
+  };
+
+  function paintNotes() {
+    var box = Player._rail && Player._rail.querySelector('.rail-news');
+    var now = Date.now();
+    Player._notes = (Player._notes || []).filter(function (n) { return n.until > now; });
+    if (!box) return;
+    var live = Player._notes;
+    /* Rebuilt only when the set has changed, so a repaint does not restart
+       every note's slide-in animation. */
+    if (box.dataset.showing === live.map(function (n) { return n.text; }).join('\u0000')) return;
+    box.dataset.showing = live.map(function (n) { return n.text; }).join('\u0000');
+    box.textContent = '';
+    live.forEach(function (n) { box.appendChild(el('div', 'rnote', n.text)); });
+  }
 
   Player.setScoreboard = function (rows, opts) {
     this.enableRail(null, 'scores');
@@ -592,6 +650,43 @@
     viewport.classList.remove('railed');
     relayout();
   };
+
+  /* Solo Present: honour Beside / Full screen with an empty live-shaped
+     panel. Sample responses stay in the editor preview; the join code and
+     real replies only exist once Host live is running. */
+  Player._sampleFb = null;
+
+  function syncAuthoredFeedback(slide) {
+    if (SF.Live && SF.Live.active) return;
+    var f = SF.slideFeedback(slide);
+    if (!f) {
+      Player._sampleFb = null;
+      Player.disableRail();
+      if (Player._focus) Player.closeFocus();
+      return;
+    }
+    var view = Object.assign(SF.feedbackViewOpts(f), {
+      footnote: 'Host live for the join code and live responses',
+      emptyText: 'Host live to open joining'
+    });
+    Player._sampleFb = { digest: null, view: view };
+    Player.setFeedback(null, view);
+    if (f.presentAs === 'focus') {
+      Player.showFeedbackFocus(null, view);
+    } else {
+      Player.closeFocus();
+    }
+  }
+
+  function toggleSoloFeedback(opts) {
+    if (SF.Live && SF.Live.active) return;
+    if (!Player._sampleFb) return;
+    if ((opts && opts.close) || Player._focus) {
+      Player.closeFocus();
+      return;
+    }
+    Player.showFeedbackFocus(Player._sampleFb.digest, Player._sampleFb.view);
+  }
 
   /* Solo shows get a small running tally instead of a full rail. */
   function updateSolo() {
@@ -1050,6 +1145,7 @@
     this._solo = null;
     this._qacue = null;
     this._focus = false;
+    this._sampleFb = null;
     if (!opts.keepAnswers) this.answers = {};
     viewport.innerHTML = '';
     viewport.classList.remove('railed');
@@ -1077,6 +1173,7 @@
     this._qacue = null;
     this._rail = null;
     this._solo = null;
+    this._sampleFb = null;
     if (document.fullscreenElement || document.webkitFullscreenElement) this.toggleFullscreen();
     closePresenter();
     this.emit('close', {});
@@ -1182,7 +1279,8 @@
         if (document.getElementById('joincard').classList.contains('on')) {
           Player.emit('joinToggle', { close: true });
         } else if (Player._focus) {
-          Player.emit('focusToggle', { close: true });
+          if (SF.Live && SF.Live.active) Player.emit('focusToggle', { close: true });
+          else toggleSoloFeedback({ close: true });
         } else {
           Player.close();
         }
@@ -1191,7 +1289,11 @@
       case 'f': case 'F': e.preventDefault(); Player.toggleFullscreen(); break;
       case 'r': case 'R': e.preventDefault(); Player.resetScores(); break;
       case 'd': case 'D': e.preventDefault(); Player.openPresenter(); break;
-      case 'e': case 'E': e.preventDefault(); Player.emit('focusToggle', {}); break;
+      case 'e': case 'E':
+        e.preventDefault();
+        if (SF.Live && SF.Live.active) Player.emit('focusToggle', {});
+        else toggleSoloFeedback({});
+        break;
       case 'j': case 'J': e.preventDefault(); Player.emit('joinToggle', {}); break;
       /* T for thumbs. A live control rather than a setting, because switching
          reactions off matters in the moment they are being abused. */

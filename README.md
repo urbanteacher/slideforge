@@ -474,6 +474,38 @@ The loaded ones are coloured; the rest are quiet. **Reports → Pace &
 confidence** is the same information after the fact, with the signals grouped
 by the slide they came from.
 
+### What the rail shows, and when
+
+The rail is the one thing on screen for the whole lesson, so it carries
+whatever is most useful at the time rather than one fixed panel:
+
+| While | The rail shows |
+| --- | --- |
+| Nobody has arrived | the join code as a QR, large, with the PIN and address under it |
+| People are arriving | a line each — *"Dara joined"* — for a few seconds |
+| The room is in | names and scores, with the code shrunk to a corner strip |
+| Joining has shut | the code goes; the footer says it reopens next round |
+
+An empty rail saying *"waiting for players"* is the one moment the screen has
+nothing better to do than show people how to arrive, so that space becomes the
+QR code. Once anyone is in, the standings take it back and the code drops to a
+96px strip labelled *still joining?* — still scannable, no longer the point.
+When the join window shuts at the first question of a round, the code goes
+entirely: a PIN that will not admit anyone is worse than no PIN.
+
+The panel appears in both rails — the scoreboard and the feedback feed — since
+which of them is on screen has nothing to do with whether somebody still needs
+to get in. It sits below the rows on the scoreboard and above the body on the
+feedback feed, which is not an oversight: a scoreboard pushed down by a code
+strip is a worse trade than a results panel is.
+
+Arrivals are announced, briefly. Two or fewer get a name each; more than that
+gets *"4 more joined"*, because a class arriving at once should be one movement
+in the corner of the eye rather than a column of announcements. The notices are
+held on the player rather than written into the rail, because the rail element
+is replaced whenever the feed switches — a note appended a moment before that
+would land in a detached node and never be seen.
+
 ### Expanding the rail — `E`
 
 Press **E** (or the ⛶◧ button) to put whatever the rail is showing on the whole

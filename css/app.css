@@ -949,7 +949,10 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   display: flex; flex-direction: column;
   padding: 28px 20px 22px;
   color: var(--s-fg);
-  background: linear-gradient(200deg, rgba(0,0,0,.36), rgba(0,0,0,.54));
+  /* Same token as the slide — a hardcoded dark wash used to win on midnight
+     and get overridden by light themes (studio/paper), so the two looked like
+     different products. */
+  background: var(--s-bg);
   border-left: 3px solid var(--s-rule);
   font-family: var(--s-font);
   pointer-events: none;
@@ -1028,7 +1031,11 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   letter-spacing: -.02em;
 }
 
-.scorerail .srow.lead { background: rgba(255,255,255,.17); }
+.scorerail .srow.lead { background: var(--s-card); box-shadow: inset 0 0 0 1px var(--s-accent); }
+.theme-midnight .scorerail .srow.lead,
+.theme-ocean .scorerail .srow.lead,
+.theme-ember .scorerail .srow.lead,
+.theme-mono .scorerail .srow.lead { background: rgba(255,255,255,.17); box-shadow: none; }
 .scorerail .srow.gain { animation: sf-score-pop .85s ease; }
 @keyframes sf-score-pop {
   0%   { transform: scale(1); }
@@ -1716,6 +1723,15 @@ body.ws-game [data-ws="deck"] { display: none !important; }
   overflow: hidden;
   padding-top: 4px;
 }
+.fbrail .fb-roster-lbl {
+  font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--s-dim); margin-bottom: 2px;
+}
+.fbrail .fb-who-in {
+  font-size: 22px; font-weight: 600; line-height: 1.25;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.fbrail .fb-who-more { font-size: 15px; color: var(--s-dim); }
 
 /* ---- poll ---- */
 .fbrail .pollrow { display: flex; flex-direction: column; gap: 6px; }
@@ -2264,3 +2280,81 @@ body.live-on .hud button[data-act="focus"] { display: inline-block; }
    answer tally, and the relay drops reactions during one anyway. This is the
    belt to that braces. */
 .deck-viewport.quiz-slide .reactbay { display: none; }
+
+/* ----------------------------------------------------------------------
+   The rail's join panel and arrival notices
+
+   The rail is the one thing on screen the whole lesson, so it carries the
+   way in for as long as the way in is open: a code to scan and the PIN to
+   type. Big while the board is empty — an empty rail saying "waiting for
+   players" is the one moment the screen has nothing better to do than
+   show people how to arrive — and compact once anyone is in, so the
+   standings keep the space. See paintRailJoin().
+   ---------------------------------------------------------------------- */
+.scorerail .rail-join { display: none; flex: none; }
+.scorerail .rail-join.on {
+  display: flex; align-items: center; gap: 14px;
+  margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid var(--s-rule);
+}
+/* flex: none, not flex: 1 — the panel sizes to its content. Sharing the
+   column with a body that is also flex: 1 gave it half the rail and it
+   overflowed into the footer. */
+.scorerail .rail-join.big {
+  flex-direction: column; gap: 12px;
+  margin: auto 0; padding-top: 0; border-top: 0;
+  justify-content: center;
+  /* Grow into the free middle so an empty poll is the QR, not a hollow gap. */
+  flex: 1 1 auto; min-height: 0;
+}
+/* The panel is already saying it, larger. */
+.scorerail.joining-big .joinline { display: none; }
+.scorerail.joining-big .rows,
+.scorerail.joining-big .fb-body { flex: none; }
+/* White behind it whatever the theme: the quiet zone only works against a
+   light background, and a dark one stops it scanning. */
+/* The SVG carries its own quiet zone, so this padding is only there to round
+   the corner off against the rail. */
+.scorerail .rj-qr {
+  flex: none; background: #fff; border-radius: 10px; padding: 3px;
+  line-height: 0; width: 104px;
+}
+.scorerail .rail-join.big .rj-qr { width: 208px; border-radius: 16px; padding: 4px; }
+.scorerail .rj-qr svg { width: 100%; height: auto; display: block; }
+.scorerail .rj-side { min-width: 0; }
+.scorerail .rail-join.big .rj-side { text-align: center; }
+.scorerail .rj-lbl {
+  font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--s-dim);
+}
+.scorerail .rail-join.big .rj-lbl { font-size: 17px; }
+.scorerail .rj-pin {
+  font-size: 30px; font-weight: 800; letter-spacing: .1em;
+  font-variant-numeric: tabular-nums; line-height: 1.15;
+}
+.scorerail .rail-join.big .rj-pin { font-size: 46px; letter-spacing: .12em; }
+.scorerail .rj-url {
+  font-size: 16px; color: var(--s-dim); margin-top: 4px;
+  font-family: ui-monospace, monospace; overflow-wrap: anywhere;
+}
+
+/* Arrivals. One line each, briefly — the roster underneath already carries
+   who is in, so this only has to catch the eye once. */
+.scorerail .rail-news { flex: none; display: flex; flex-direction: column; gap: 6px; }
+.scorerail .rail-news:not(:empty) { margin: 8px 0 2px; }
+/* The resting state is the visible one and the animation only slides it in.
+   With `both` and a transparent first frame, a note is invisible for as long
+   as animations do not run — a hidden tab composites no frames, and reduced
+   motion may cancel them outright — which is a fine failure for a floating
+   reaction and a bad one for a line telling you who arrived. */
+.scorerail .rnote {
+  font-size: 17px; color: var(--s-fg);
+  background: rgba(255,255,255,.09);
+  border-left: 3px solid var(--s-accent);
+  border-radius: 8px; padding: 7px 11px;
+  animation: sf-rnote .28s ease;
+}
+@keyframes sf-rnote {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}

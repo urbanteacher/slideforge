@@ -236,6 +236,7 @@
         break;
 
       case 'players':
+        announceArrivals(m.list || []);
         if (m.pin) Live.pin = m.pin;
         if (m.joinUrl) Live.joinUrl = m.joinUrl;
         Live.joinOpen = m.joinOpen !== false;
@@ -248,6 +249,9 @@
         if (m.mode) Live.mode = m.mode;
         drawPlayers();
         paintRail();
+        /* Join state and roster ride on the feedback rail too — refresh it
+           when someone arrives while a prompt is up. */
+        if (Live.prompt) paintFeedbackPanel();
         if (document.getElementById('joincard').classList.contains('on')) paintJoinCard();
         break;
 
@@ -334,6 +338,32 @@
 
   /* ---------------------------------------------------------- scoreboard */
 
+  /* Who the rail has already announced. Ids rather than names, so two people
+     called Sam are two arrivals and a rename is not a third. */
+  var announced = null;
+
+  /**
+   * Say who just arrived.
+   *
+   * The roster is pushed whole on every change, so this diffs it. The first
+   * push after hosting is not "everyone arrived" — it is the room as it
+   * already stood, and announcing all of it would bury the one person who
+   * turned up late, which is the only case worth a line.
+   */
+  function announceArrivals(list) {
+    var ids = {};
+    list.forEach(function (p) { ids[p.id] = p.name; });
+    if (!announced) { announced = ids; return; }
+    var fresh = list.filter(function (p) { return !(p.id in announced); });
+    announced = ids;
+    if (!fresh.length) return;
+    if (fresh.length > 2) {
+      SF.Player.railNote(fresh.length + ' more joined');
+      return;
+    }
+    fresh.forEach(function (p) { SF.Player.railNote(p.name + ' joined'); });
+  }
+
   /** Push the current standings into the always-on rail. */
   function paintRail() {
     if (!Live.active || !Live.deck.quiz.scoreboard) return;
@@ -369,12 +399,7 @@
       footnote: racing
         ? 'A team moves when most of it picks right'
         : (Live.mode === 'teams' ? 'Average per player' : ''),
-      join: Live.pin ? {
-        pin: Live.pin,
-        url: shortHost(),
-        open: Live.joinOpen,
-        waiting: Live.waiting
-      } : null,
+      join: joinInfo(),
       emptyText: Live.mode === 'teams'
         ? 'Waiting for teams'
         : 'Waiting for players'
@@ -420,6 +445,26 @@
       box.innerHTML = '';
       box.classList.remove('on');
     }
+  }
+
+  /**
+   * Everything a rail, a card or a code needs to say how to get in.
+   *
+   * One builder because there are four surfaces showing it — both rails, the
+   * lobby and the join card — and three separately-written copies of this
+   * object is how the QR payload came to be missing from two of them.
+   */
+  function joinInfo() {
+    if (!Live.pin) return null;
+    return {
+      pin: Live.pin,
+      /* The short host is what somebody typing it has to read; the link is
+         the full address with the PIN in it, for the code to encode. */
+      url: shortHost(),
+      link: joinLink(Live.pin),
+      open: Live.joinOpen,
+      waiting: Live.waiting
+    };
   }
 
   /** The address a phone should open, PIN included so it lands pre-filled. */
@@ -734,36 +779,21 @@
       footnote: players
         ? answered + ' of ' + players + ' responded'
         : 'Nobody has joined yet',
-      join: Live.pin ? {
-        pin: Live.pin, url: shortHost(), open: Live.joinOpen, waiting: Live.waiting
-      } : null
+      join: joinInfo(),
+      roster: (Live.players || []).map(function (p) {
+        return { name: p.name || 'Player' };
+      })
     };
   }
 
   /** Paint the rail from the last digest we were sent. */
   function paintFeedbackPanel() {
     if (!Live.active || !Live.prompt) return;
-    var kind = SF.FEEDBACK_KINDS[Live.prompt.kind];
-    var d = Live.digest;
-    var answered = d ? d.answered : 0;
-    var players = d ? d.players : Live.players.length;
-
+    var opts = feedbackOpts();
     /* Keep the focus view live while it is open — the whole point of putting
        it up is to watch answers land. */
-    if (Live.focus) SF.Player.showFeedbackFocus(d, feedbackOpts());
-
-    SF.Player.setFeedback(d, {
-      title: kind ? kind.label : 'Feedback',
-      subtitle: Live.prompt.prompt,
-      options: Live.prompt.options,
-      ends: Live.prompt.ends,
-      footnote: players
-        ? answered + ' of ' + players + ' responded'
-        : 'Nobody has joined yet',
-      join: Live.pin ? {
-        pin: Live.pin, url: shortHost(), open: Live.joinOpen, waiting: Live.waiting
-      } : null
-    });
+    if (Live.focus) SF.Player.showFeedbackFocus(Live.digest, opts);
+    SF.Player.setFeedback(Live.digest, opts);
   }
 
   /** Open the prompt attached to this slide, or close whatever was open. */
@@ -775,6 +805,7 @@
         Live.digest = null;
         Live.focus = false;
         document.body.classList.remove('fb-open');
+        SF.Player.closeFocus();
         send({ t: 'promptEnd' });
       }
       return false;
@@ -783,7 +814,12 @@
     /* Keyed on the slide, so returning to a slide re-opens its prompt and
        starts its replies fresh rather than inheriting the last one's. */
     var id = slide.id + ':fb';
-    if (Live.prompt && Live.prompt.id === id) { paintFeedbackPanel(); return true; }
+    var presentAs = f.presentAs === 'focus' ? 'focus' : 'rail';
+    if (Live.prompt && Live.prompt.id === id) {
+      paintFeedbackPanel();
+      applyFeedbackPresentAs(presentAs);
+      return true;
+    }
 
     /* The labels come from the one builder the editor's previews also use, so
        what you rehearsed is what the room gets. */
@@ -796,16 +832,28 @@
       ends: view.ends,
       max: f.max,
       bloom: slide.bloom || '',
+      presentAs: presentAs,
       /* The plan the author already wrote for this prompt. Sent so it lands in
          the journal beside the responses — the Adapt report can then quote the
          teacher's own words back at them instead of inventing advice. */
       nextStep: String(slide.nextStep || '').slice(0, 600)
     };
     Live.digest = null;
-    Live.focus = false;         // a new prompt starts collapsed
     send(Object.assign({ t: 'prompt' }, Live.prompt));
     paintFeedbackPanel();
+    applyFeedbackPresentAs(presentAs);
     return true;
+  }
+
+  /** Honour the authored Beside / Full screen choice when this prompt opens. */
+  function applyFeedbackPresentAs(presentAs) {
+    if (presentAs === 'focus') {
+      Live.focus = true;
+      SF.Player.showFeedbackFocus(Live.digest, feedbackOpts());
+    } else {
+      Live.focus = false;
+      SF.Player.closeFocus();
+    }
   }
 
   function onSlide(e) {
@@ -1057,6 +1105,7 @@
     var card = document.getElementById('joincard');
     if (card) card.classList.remove('on');
     if (lobby) lobby.classList.remove('on');
+    announced = null;
     send({ t: 'end' });
     if (this.session && SF.Reports) {
       var id = this.session.id;

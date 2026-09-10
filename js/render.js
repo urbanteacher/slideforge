@@ -73,6 +73,86 @@
     pad.appendChild(ul);
   }
 
+  /* Bold keyword + lowercase definition — glossary / dual-coding of terms. */
+  function layoutKeywords(slide, pad) {
+    if (slide.title) pad.appendChild(el('h2', null, slide.title));
+    var list = el('div', 'kw-list');
+    var rows = (slide.bullets || []).map(SF.parseKeywordLine)
+      .filter(function (p) { return p.term || p.def; });
+    if (!rows.length) {
+      var empty = el('div', 'kw-row dim');
+      empty.appendChild(el('strong', 'kw-term', 'Keyword'));
+      empty.appendChild(el('span', 'kw-def', 'add a plain-language definition'));
+      list.appendChild(empty);
+    } else {
+      rows.forEach(function (p) {
+        var row = el('div', 'kw-row');
+        row.appendChild(el('strong', 'kw-term', p.term || ' '));
+        row.appendChild(el('span', 'kw-def', p.def || ' '));
+        list.appendChild(row);
+      });
+    }
+    pad.appendChild(list);
+  }
+
+  /* Italic phrase + plain gloss — emphasis without a formatting ribbon. */
+  function layoutItalics(slide, pad) {
+    if (slide.title) pad.appendChild(el('h2', null, slide.title));
+    var list = el('div', 'it-list');
+    var rows = (slide.bullets || []).map(SF.parseKeywordLine)
+      .filter(function (p) { return p.term || p.def; });
+    if (!rows.length) {
+      var empty = el('div', 'it-row dim');
+      empty.appendChild(el('em', 'it-phrase', 'key phrase'));
+      empty.appendChild(el('span', 'it-note', 'why this wording matters'));
+      list.appendChild(empty);
+    } else {
+      rows.forEach(function (p) {
+        var row = el('div', 'it-row');
+        row.appendChild(el('em', 'it-phrase', p.term || ' '));
+        row.appendChild(el('span', 'it-note', p.def || ' '));
+        list.appendChild(row);
+      });
+    }
+    pad.appendChild(list);
+  }
+
+  /* Label on top, clickable URL below — further reading. */
+  function layoutLinks(slide, pad) {
+    if (slide.title) pad.appendChild(el('h2', null, slide.title));
+    var list = el('div', 'ln-list');
+    var rows = (slide.bullets || []).map(SF.parseKeywordLine)
+      .filter(function (p) { return p.term || p.def; });
+    if (!rows.length) {
+      var empty = el('div', 'ln-row dim');
+      empty.appendChild(el('div', 'ln-label', 'Resource title'));
+      empty.appendChild(el('div', 'ln-url', 'https://…'));
+      list.appendChild(empty);
+    } else {
+      rows.forEach(function (p) {
+        var row = el('div', 'ln-row');
+        var href = SF.safeHref(p.def);
+        var label = p.term || (href ? href.replace(/^https?:\/\//i, '') : 'Link');
+        row.appendChild(el('div', 'ln-label', label));
+        if (href) {
+          var a = el('a', 'ln-link');
+          a.href = href;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = href;
+          a.addEventListener('click', function (e) { e.stopPropagation(); });
+          row.appendChild(a);
+        } else if (p.def) {
+          row.appendChild(el('div', 'ln-url bad', p.def + ' — needs http(s)'));
+        } else {
+          row.appendChild(el('div', 'ln-url', 'Add a URL'));
+        }
+        list.appendChild(row);
+      });
+    }
+    pad.appendChild(list);
+  }
+
   function layoutQuote(slide, pad) {
     pad.appendChild(el('div', 'q', slide.body || ' '));
     if (slide.subtitle) pad.appendChild(el('div', 'attrib', slide.subtitle));
@@ -460,6 +540,9 @@
     section: layoutSection,
     content: layoutContent,
     cards: layoutContent,
+    keywords: layoutKeywords,
+    italics: layoutItalics,
+    links: layoutLinks,
     split: layoutSplit,
     quote: layoutQuote,
     image: layoutImage,
@@ -494,6 +577,15 @@
 
     if (opts.chrome !== false && deck.showSlideNumbers && opts.index != null && slide.type !== 'title') {
       root.appendChild(el('div', 'pagenum', (opts.index + 1) + ' / ' + opts.total));
+    }
+    if (opts.chrome !== false && SF.deckShowsLogo(deck, slide)) {
+      var logo = el('div', 'slide-logo');
+      var img = document.createElement('img');
+      img.src = deck.logo;
+      img.alt = '';
+      img.draggable = false;
+      logo.appendChild(img);
+      root.appendChild(logo);
     }
     if (opts.chrome !== false && opts.total > 1 && opts.index != null) {
       var track = el('div', 'track');
@@ -765,6 +857,10 @@
     var root = el('div', 'scorerail fbrail theme-' + (deck.theme || 'midnight'));
     root.appendChild(el('div', 'rail-title', 'Feedback'));
     root.appendChild(el('div', 'rail-sub', ''));
+    root.appendChild(el('div', 'rail-news'));
+    /* Join sits above the body so an empty poll leaves the QR in the middle
+       of the rail rather than a hollow stretch above the footer PIN. */
+    root.appendChild(el('div', 'rail-join'));
     root.appendChild(el('div', 'fb-body'));
     var foot = el('div', 'foot');
     foot.appendChild(el('div', 'joinline'));
@@ -780,19 +876,67 @@
     rail.querySelector('.foot .notes').textContent = opts.footnote || '';
     paintJoinLine(rail.querySelector('.joinline'), opts.join);
 
+    var busy = feedbackDigestBusy(digest);
+    var joining = opts.join && opts.join.pin && opts.join.open !== false;
+    var slot = ensureRailJoin(rail);
+    /* Roomy while nothing has come back — same idea as the empty scoreboard. */
+    paintRailJoin(slot, opts.join, !busy);
+
     var body = rail.querySelector('.fb-body');
     body.textContent = '';
     rail.dataset.kind = (digest && digest.kind) || '';
 
-    if (!digest || !digest.kind) {
-      body.appendChild(el('div', 'empty-rail', 'Waiting for the room'));
+    if (!busy) {
+      if (opts.roster && opts.roster.length) paintFbRoster(body, opts.roster);
+      else if (!joining) {
+        body.appendChild(el('div', 'empty-rail', opts.emptyText || 'Waiting for the room'));
+      }
       return;
     }
 
     if (digest.kind === 'poll') return paintPoll(body, digest, opts);
     if (digest.kind === 'scale') return paintScale(body, digest, opts);
-    if (digest.kind === 'wordcloud') return paintCloud(body, digest);
+    if (digest.kind === 'wordcloud') return paintCloud(body, digest, opts);
     return paintBrainstorm(body, digest);
+  }
+
+  /** Make sure the join panel exists and sits above the body. */
+  function ensureRailJoin(rail) {
+    var body = rail.querySelector('.fb-body');
+    var join = rail.querySelector('.rail-join');
+    if (!join) {
+      join = el('div', 'rail-join');
+      if (body) rail.insertBefore(join, body);
+      else rail.appendChild(join);
+      return join;
+    }
+    /* Older shells put the join under the body — move it up so it owns the
+       empty middle instead of leaving a hollow stretch above the footer PIN. */
+    if (body && (join.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_PRECEDING)) {
+      rail.insertBefore(join, body);
+    }
+    return join;
+  }
+
+  function feedbackDigestBusy(digest) {
+    if (!digest || !digest.kind) return false;
+    if (Number(digest.total) > 0 || Number(digest.answered) > 0) return true;
+    if (digest.words && digest.words.length) return true;
+    if (digest.items && digest.items.length) return true;
+    if (digest.counts && digest.counts.some(function (n) { return Number(n) > 0; })) return true;
+    return false;
+  }
+
+  /** Names of people who joined — shown until responses start landing. */
+  function paintFbRoster(body, roster) {
+    body.appendChild(el('div', 'fb-roster-lbl',
+      roster.length === 1 ? '1 person in' : roster.length + ' people in'));
+    roster.slice(0, 12).forEach(function (p) {
+      body.appendChild(el('div', 'fb-who-in', p.name || 'Player'));
+    });
+    if (roster.length > 12) {
+      body.appendChild(el('div', 'fb-who-more', '+' + (roster.length - 12) + ' more'));
+    }
   }
 
   function paintPoll(body, digest, opts) {
@@ -802,7 +946,10 @@
     var total = digest.total || 0;
 
     if (!total) {
-      body.appendChild(el('div', 'empty-rail', 'No votes yet'));
+      /* The join QR owns this space while the room is still arriving — a second
+         "no votes" line just pushes it down. */
+      var joining = opts.join && opts.join.pin && opts.join.open !== false;
+      if (!joining) body.appendChild(el('div', 'empty-rail', 'No votes yet'));
       return;
     }
     counts.forEach(function (n, i) {
@@ -876,7 +1023,8 @@
 
   function paintScale(body, digest, opts) {
     if (!digest.total) {
-      body.appendChild(el('div', 'empty-rail', 'Nobody has placed themselves yet'));
+      var joining = opts && opts.join && opts.join.pin && opts.join.open !== false;
+      if (!joining) body.appendChild(el('div', 'empty-rail', 'Nobody has placed themselves yet'));
       return;
     }
     body.appendChild(scaleChart(digest.counts || [], opts, 'sc'));
@@ -886,10 +1034,11 @@
     body.appendChild(scaleChart(digest.counts || [], opts, 'fksc'));
   }
 
-  function paintCloud(body, digest) {
+  function paintCloud(body, digest, opts) {
     var words = digest.words || [];
     if (!words.length) {
-      body.appendChild(el('div', 'empty-rail', 'No words yet'));
+      var joining = opts && opts.join && opts.join.pin && opts.join.open !== false;
+      if (!joining) body.appendChild(el('div', 'empty-rail', 'No words yet'));
       return;
     }
     var cloud = el('div', 'cloud');
@@ -1003,12 +1152,70 @@
     var root = el('div', 'scorerail theme-' + (deck.theme || 'midnight'));
     root.appendChild(el('div', 'rail-title', 'Scores'));
     root.appendChild(el('div', 'rail-sub', ''));
+    /* Arrivals, briefly. Above the board because that is where the eye is
+       when the board is what changed. */
+    root.appendChild(el('div', 'rail-news'));
     root.appendChild(el('div', 'rows'));
+    /* The way in, on screen for as long as it is usable. Below the board so
+       the standings keep the top of the rail. */
+    root.appendChild(el('div', 'rail-join'));
     var foot = el('div', 'foot');
     foot.appendChild(el('div', 'joinline'));
     foot.appendChild(el('div', 'notes', ''));
     root.appendChild(foot);
     return root;
+  }
+
+  /**
+   * The join panel in the rail: the code as a square, and the PIN under it.
+   *
+   * Big while the board is empty, because an empty rail saying "waiting for
+   * players" is the one moment the screen has nothing better to do than show
+   * people how to arrive. Compact once anyone is in, so the standings keep
+   * the space — and gone entirely once joining shuts, since a PIN that will
+   * not admit anyone is worse than no PIN.
+   *
+   * @param {HTMLElement} node .rail-join
+   * @param {object} join { pin, url, link, open, waiting }
+   * @param {boolean} roomy nobody on the board yet
+   */
+  function paintRailJoin(node, join, roomy) {
+    if (!node) return;
+    var live = join && join.pin && join.open !== false;
+    node.classList.toggle('on', !!live);
+    node.classList.toggle('big', !!live && roomy);
+    /* The footer line and a big panel say the same thing, and the panel says
+       it better. Marked on the rail so the line can stand down rather than
+       printing the PIN twice, once over the other. */
+    var rail = node.closest ? node.closest('.scorerail') : null;
+    if (rail) rail.classList.toggle('joining-big', !!live && roomy);
+    if (!live) { node.textContent = ''; node.dataset.for = ''; return; }
+
+    var link = join.link || join.url || '';
+    var key = link + '|' + (roomy ? 'big' : 'small');
+    /* Rebuilt only when the payload changes: this runs on every roster push
+       and encoding a QR per push would be work for nothing. If the node was
+       emptied underneath us, rebuild anyway. */
+    if (node.dataset.for === key && node.childElementCount) return;
+    node.dataset.for = key;
+    node.textContent = '';
+
+    if (link && SF.qrSvg) {
+      var code = el('div', 'rj-qr');
+      try {
+        /* The full four-module quiet zone inside the SVG rather than borrowed
+           from the CSS padding around it. Padding is styling and can be
+           changed; a code that stops scanning when someone tightens a box is
+           a bad thing to leave lying around. */
+        code.innerHTML = SF.qrSvg(link, { quiet: 4, title: 'Join at ' + link });
+        node.appendChild(code);
+      } catch (e) { /* nothing worth showing beats a broken box on a wall */ }
+    }
+    var side = el('div', 'rj-side');
+    side.appendChild(el('div', 'rj-lbl', roomy ? 'Point a camera here' : 'Still joining?'));
+    side.appendChild(el('div', 'rj-pin', join.pin));
+    if (roomy) side.appendChild(el('div', 'rj-url', join.url || ''));
+    node.appendChild(side);
   }
 
   /* How many entries the rail can show before it has to summarise. Beyond
@@ -1050,13 +1257,20 @@
     rail.querySelector('.rail-sub').textContent = opts.subtitle || '';
     rail.querySelector('.foot .notes').textContent = opts.footnote || '';
     paintJoinLine(rail.querySelector('.joinline'), opts.join);
+    paintRailJoin(rail.querySelector('.rail-join'), opts.join, !rows.length);
 
     var box = rail.querySelector('.rows');
 
     if (!rows.length) {
       rail.dataset.density = 'lg';
       box.innerHTML = '';
-      box.appendChild(el('div', 'empty-rail', opts.emptyText || 'Nobody has joined yet.'));
+      /* No "waiting for players" when the join panel is showing them how to
+         stop it being true — two ways of saying the same thing, one of them
+         actionable. */
+      var joining = opts.join && opts.join.pin && opts.join.open !== false;
+      if (!joining) {
+        box.appendChild(el('div', 'empty-rail', opts.emptyText || 'Nobody has joined yet.'));
+      }
       return;
     }
 
@@ -1167,6 +1381,7 @@
     letterbox: letterbox,
     ring: ring,
     scoreRail: scoreRail,
+    paintRailJoin: paintRailJoin,
     raceTrack: raceTrack,
     feedbackRail: feedbackRail,
     feedbackFocus: feedbackFocus,
