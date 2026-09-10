@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SlideForge — presentations &amp; games</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ---------------------------------------------------------- top bar -->
+  <div class="topbar">
+    <div class="brand"><span class="mark">S</span> SlideForge</div>
+
+    <!-- the two engines -->
+    <div class="wsswitch" id="wsSwitch">
+      <button data-go="deck" class="on">▤ Presentation</button>
+      <button data-go="game">◈ Game</button>
+    </div>
+
+    <input id="docTitle" type="text" placeholder="Title" spellcheck="false">
+
+    <select id="themeSel" class="btn" title="Theme"></select>
+
+    <label class="switch" data-ws="deck" title="Show slide numbers during the presentation">
+      <input type="checkbox" id="numToggle"> <span style="font-size:12px;color:var(--ui-dim)">Numbers</span>
+    </label>
+
+    <span class="vsep"></span>
+
+    <button class="btn" id="btnNew">New</button>
+    <button class="btn" id="btnOpen">Open</button>
+    <button class="btn" id="btnSave" title="Save to this browser (⌘S)">Save</button>
+    <button class="btn" id="btnExport" title="Download as a file">Export</button>
+    <button class="btn" id="btnImport" title="Load a file">Import</button>
+
+    <span class="spacer"></span>
+
+    <button class="btn" data-ws="game" id="btnGameSettings" title="Teams, scoring and timing">⚙ Settings</button>
+    <button class="btn" id="btnHelp" title="Keyboard shortcuts">?</button>
+    <button class="btn" data-ws="deck" id="btnPresenter" title="Presenter view with notes (D)">Presenter</button>
+    <button class="btn live" id="btnLive" title="Run live with phones in the room">◉ Host live</button>
+    <button class="btn primary" data-ws="deck" id="btnPresent" title="Start the slideshow (⌘↵)">▶ Present</button>
+    <button class="btn primary" data-ws="game" id="btnPlay" title="Play this game (⌘↵)">▶ Play game</button>
+  </div>
+
+  <!-- ---------------------------------------------------------- rail -->
+  <div class="rail">
+    <div class="rail-head">
+      <span id="railLabel">Slides</span>
+      <span id="railCount" class="rail-count"></span>
+    </div>
+    <div class="rail-list" id="railList"></div>
+    <div class="rail-foot" id="railFoot"></div>
+  </div>
+
+  <!-- ---------------------------------------------------------- stage -->
+  <div class="stage-area">
+    <div class="stage-wrap">
+      <div id="previewBox"></div>
+    </div>
+    <div class="notes-strip">
+      <label for="notes" id="notesLabel">Speaker notes — visible in presenter view only</label>
+      <textarea id="notes" placeholder="Notes…" spellcheck="true"></textarea>
+    </div>
+  </div>
+
+  <!-- ---------------------------------------------------------- inspector -->
+  <div class="inspector" id="inspector"></div>
+</div>
+
+<!-- ------------------------------------------------------------ player -->
+<div id="player">
+  <div class="deck-viewport"></div>
+</div>
+
+<div class="hud" id="hud">
+  <button data-act="prev" title="Previous (←)">‹</button>
+  <span class="pos">1 / 1</span>
+  <button data-act="next" title="Next (→ or space)">›</button>
+  <span class="sep"></span>
+  <button data-act="focus" title="Show the responses full screen (E)">⛶◧</button>
+  <button data-act="join" title="Show the join code (J)">◉</button>
+  <button data-act="blank" title="Blank the screen (B)">◼</button>
+  <button data-act="full" title="Full screen (F)">⛶</button>
+  <button data-act="help" title="Shortcuts (?)">?</button>
+  <button data-act="exit" title="Exit (Esc)">✕</button>
+</div>
+
+<!-- ------------------------------------------------------------ shortcuts -->
+<div id="cheats">
+  <div class="card">
+    <h3>Slideshow keys</h3>
+    <table>
+      <tr><td><kbd>→</kbd> <kbd>space</kbd> <kbd>PgDn</kbd></td><td>Next slide</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>PgUp</kbd></td><td>Previous slide</td></tr>
+      <tr><td><kbd>Home</kbd> <kbd>End</kbd></td><td>First / last slide</td></tr>
+      <tr><td><kbd>A</kbd>–<kbd>F</kbd> or <kbd>1</kbd>–<kbd>6</kbd></td><td>Answer the question on screen</td></tr>
+      <tr><td><kbd>R</kbd></td><td>Clear answers and score again</td></tr>
+      <tr><td><kbd>B</kbd></td><td>Blank the screen</td></tr>
+      <tr><td><kbd>F</kbd></td><td>Toggle full screen</td></tr>
+      <tr><td><kbd>E</kbd></td><td>Expand the audience responses to full screen</td></tr>
+      <tr><td><kbd>J</kbd></td><td>Show the join code full screen (live games)</td></tr>
+      <tr><td><kbd>D</kbd></td><td>Presenter view (notes + next slide)</td></tr>
+      <tr><td><kbd>?</kbd></td><td>Show this list</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>Exit the show</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------ live lobby -->
+<div id="lobby">
+  <div>
+    <div class="lead">Join at</div>
+    <div class="url" id="lobbyUrl">—</div>
+    <div class="lead" style="margin-top:26px">Game PIN</div>
+    <div class="pin" id="lobbyPin">----</div>
+    <div class="teams" id="lobbyTeams"></div>
+    <div class="who-list" id="lobbyPlayers"></div>
+    <div class="count" id="lobbyCount">Waiting for players…</div>
+    <div class="warn" id="lobbyWarn" style="display:none"></div>
+    <div class="actions">
+      <button class="btn" id="lobbyCancel">Cancel</button>
+      <button class="btn primary" id="lobbyStart">Start</button>
+    </div>
+  </div>
+</div>
+
+<!-- ------------------------------------------------- join card (live, mid-game) -->
+<div id="joincard">
+  <div>
+    <div class="lead">Join at</div>
+    <div class="url" id="jcUrl">—</div>
+    <div class="lead" style="margin-top:26px">Game PIN</div>
+    <div class="pin" id="jcPin">----</div>
+    <div class="teams" id="jcTeams"></div>
+    <div class="state" id="jcState"></div>
+    <div class="count" id="jcCount"></div>
+    <div class="dismiss">Press J or Esc to carry on</div>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------ modals -->
+<div class="modal" id="settingsModal">
+  <div class="sheet">
+    <header><h3>Game settings</h3><button class="btn ghost" data-close>✕</button></header>
+    <div class="body" id="settingsBody"></div>
+  </div>
+</div>
+
+<div class="modal" id="pickerModal">
+  <div class="sheet">
+    <header><h3 id="pickerTitle">Open</h3><button class="btn ghost" data-close>✕</button></header>
+    <div class="body" id="pickerBody"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<input type="file" id="fileInput" accept=".json,application/json" hidden>
+
+<script src="js/model.js"></script>
+<script src="js/render.js"></script>
+<script src="js/player.js"></script>
+<script src="js/live.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/games.js"></script>
+<script>SF.Shell.init();</script>
+</body>
+</html>

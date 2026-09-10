@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#12141a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Join the quiz — SlideForge</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: #12141a;
+    color: #eef1f6;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  header {
+    padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #262b34;
+    flex: none;
+  }
+  header .who { font-weight: 650; font-size: 15px; }
+  header .score { font-variant-numeric: tabular-nums; color: #7fb4ff; font-weight: 700; font-size: 15px; }
+
+  main { flex: 1; display: flex; flex-direction: column; padding: 18px; min-height: 0; }
+  .screen { display: none; flex: 1; flex-direction: column; }
+  .screen.on { display: flex; }
+
+  .center { justify-content: center; align-items: center; text-align: center; gap: 16px; }
+  #scResult.on { overflow-y: auto; justify-content: flex-start; padding-top: 8vh; }
+  #scResult.no-why.on { justify-content: center; padding-top: 0; }
+
+  h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: -.02em; }
+  .lead { color: #9aa2b0; font-size: 15px; line-height: 1.5; max-width: 34ch; }
+
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 17px; }
+  .brand .mark {
+    width: 26px; height: 26px; border-radius: 6px;
+    background: linear-gradient(135deg, #4c8dff, #9b6dff);
+    display: grid; place-items: center; font-size: 15px; color: #fff;
+  }
+
+  input[type=text], input[type=tel] {
+    width: 100%; max-width: 340px;
+    font: inherit; font-size: 22px; text-align: center;
+    background: #1c2028; color: inherit;
+    border: 2px solid #2f353f; border-radius: 12px;
+    padding: 15px 14px;
+  }
+  input:focus { outline: none; border-color: #4c8dff; }
+  #pin { letter-spacing: .3em; font-variant-numeric: tabular-nums; font-weight: 700; }
+
+  .go {
+    width: 100%; max-width: 340px;
+    font: inherit; font-size: 18px; font-weight: 700;
+    background: #4c8dff; color: #fff; border: 0; border-radius: 12px;
+    padding: 16px; cursor: pointer;
+  }
+  .go:disabled { opacity: .45; }
+  .go.sub { background: #262b34; color: #cfd5e0; font-weight: 550; font-size: 15px; padding: 12px; }
+
+  .err { color: #ff7b86; font-size: 14px; min-height: 20px; text-align: center; }
+
+  /* question screen */
+  .qbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex: none; }
+  .qbar .n { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #8d95a4; }
+  .qbar .t { font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .qbar .t.hurry { color: #ff5f6d; }
+  .bar { height: 6px; background: #262b34; border-radius: 99px; overflow: hidden; margin: 12px 0 16px; flex: none; }
+  .bar > i { display: block; height: 100%; background: linear-gradient(90deg, #4c8dff, #9b6dff); width: 100%; transition: width .95s linear; }
+
+  .pad { flex: 1; display: grid; gap: 12px; grid-template-columns: 1fr 1fr; min-height: 0; }
+  .pad.one { grid-template-columns: 1fr; }
+  .pick {
+    border: 0; border-radius: 16px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    font: inherit; color: #fff; font-weight: 800;
+    transition: transform .1s, opacity .2s;
+    min-height: 84px;
+  }
+  .pick .g { font-size: 30px; line-height: 1; }
+  .pick .l { font-size: 20px; }
+  .pick:active { transform: scale(.97); }
+  .pick[data-i="0"] { background: #e8474f; }
+  .pick[data-i="1"] { background: #2b7ce9; }
+  .pick[data-i="2"] { background: #e8a020; color: #1d1204; }
+  .pick[data-i="3"] { background: #29a86b; }
+  .pick[data-i="4"] { background: #8b5cf0; }
+  .pick[data-i="5"] { background: #d4477f; }
+  .pick.dim { opacity: .22; }
+  .pick.mine { outline: 4px solid #fff; outline-offset: -4px; }
+
+  /* result screen */
+  .verdict { font-size: 46px; font-weight: 850; letter-spacing: -.02em; }
+  .verdict.right { color: #45d69b; }
+  .verdict.wrong { color: #ff6b76; }
+  .gain { font-size: 20px; color: #9aa2b0; }
+  .big { font-size: 60px; font-weight: 850; font-variant-numeric: tabular-nums; }
+  .pill {
+    background: #1c2028; border: 1px solid #2f353f; border-radius: 99px;
+    padding: 9px 18px; font-size: 15px; color: #cfd5e0;
+  }
+  .dots { display: flex; gap: 7px; }
+  .dots i { width: 9px; height: 9px; border-radius: 50%; background: #333a45; animation: p 1.2s infinite; }
+  .dots i:nth-child(2) { animation-delay: .18s; }
+  .dots i:nth-child(3) { animation-delay: .36s; }
+  @keyframes p { 0%,100% { opacity: .3; transform: scale(.85) } 50% { opacity: 1; transform: scale(1) } }
+
+  footer { padding: 10px 18px 22px; text-align: center; font-size: 12px; color: #6c7482; flex: none; }
+
+  /* the explanation, on the player's own screen */
+  .why {
+    width: 100%; max-width: 420px; margin-top: 6px;
+    background: #1a1e26; border: 1px solid #2b3140; border-radius: 14px;
+    padding: 16px 18px; text-align: left;
+    max-height: 42vh; overflow-y: auto;
+  }
+  .why-answer {
+    font-size: 15px; font-weight: 700; color: #45d69b;
+    margin-bottom: 8px; line-height: 1.35;
+  }
+  .why-body { font-size: 15px; line-height: 1.6; color: #cfd5e0; }
+  .why-body p { margin: 0 0 10px; }
+  .why-body p:last-child { margin-bottom: 0; }
+
+  /* team picker */
+  .teamgrid { display: grid; gap: 12px; width: 100%; max-width: 400px; }
+  .teambtn {
+    border: 0; border-radius: 16px; cursor: pointer;
+    font: inherit; font-weight: 800; font-size: 21px; color: #fff;
+    padding: 20px 18px; text-align: left;
+    display: flex; align-items: center; gap: 14px;
+    transition: transform .1s;
+  }
+  .teambtn:active { transform: scale(.97); }
+  .teambtn .dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: rgba(255,255,255,.85); flex: none;
+  }
+  .teambtn .cnt { margin-left: auto; font-size: 14px; font-weight: 600; opacity: .8; }
+
+  header .team {
+    font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+    color: #fff; margin-left: 8px; vertical-align: middle;
+  }
+  header .who { display: flex; align-items: center; }
+</style>
+</head>
+<body>
+
+<header id="hdr" style="display:none">
+  <div class="who"><span id="hdrName">—</span><span class="team" id="hdrTeam" style="display:none"></span></div>
+  <div class="score" id="hdrScore">0</div>
+</header>
+
+<main>
+
+  <!-- 1. join -->
+  <section class="screen center on" id="scJoin">
+    <div class="brand"><span class="mark">S</span> SlideForge</div>
+    <h1>Join the quiz</h1>
+    <div class="lead">Enter the PIN shown on the big screen.</div>
+    <input id="pin" type="tel" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off">
+    <input id="name" type="text" maxlength="18" placeholder="Your name" autocomplete="off">
+    <div class="err" id="joinErr"></div>
+    <button class="go" id="joinBtn">Join</button>
+  </section>
+
+  <!-- 1b. team picker -->
+  <section class="screen center" id="scTeam">
+    <h1>Pick your team</h1>
+    <div class="lead" id="teamLead">Tap the team you're sitting with.</div>
+    <div class="teamgrid" id="teamGrid"></div>
+    <div class="err" id="teamErr"></div>
+  </section>
+
+  <!-- 1c. held for the next round -->
+  <section class="screen center" id="scHold">
+    <div class="verdict" id="holdIcon" style="font-size:38px;color:#ffc75a">⏳</div>
+    <h1>You're in the queue</h1>
+    <div class="lead" id="holdLead">This round has already started. You'll be brought in automatically when the next one begins — keep this page open.</div>
+    <div class="pill" id="holdWho"></div>
+    <div class="dots"><i></i><i></i><i></i></div>
+  </section>
+
+  <!-- 2. lobby / between questions -->
+  <section class="screen center" id="scWait">
+    <div class="verdict" id="waitIcon" style="font-size:38px">✓</div>
+    <h1 id="waitTitle">You're in!</h1>
+    <div class="lead" id="waitLead">Look up at the screen — the quiz will start in a moment.</div>
+    <div class="dots"><i></i><i></i><i></i></div>
+  </section>
+
+  <!-- 2b. feedback prompt -->
+  <section class="screen center" id="scPrompt">
+    <div class="lead" id="fbKind">Poll</div>
+    <h1 id="fbPrompt">…</h1>
+    <div class="pad" id="fbPad" style="display:none"></div>
+    <div id="fbTextWrap" style="width:100%;max-width:340px;display:none">
+      <input id="fbText" type="text" maxlength="160" placeholder="Type your answer" autocomplete="off">
+      <button class="go" id="fbSend" style="margin-top:12px">Send</button>
+      <div class="lead" id="fbQuota" style="margin-top:10px;font-size:13px"></div>
+    </div>
+    <div class="err" id="fbErr"></div>
+    <div class="pill" id="fbDone" style="display:none">Thanks — that's in</div>
+  </section>
+
+  <!-- 3. question -->
+  <section class="screen" id="scQuestion">
+    <div class="qbar">
+      <div class="n" id="qNum">Question 1</div>
+      <div class="t" id="qTime"></div>
+    </div>
+    <div class="bar"><i id="qBar"></i></div>
+    <div class="pad" id="qPad"></div>
+  </section>
+
+  <!-- 4. result -->
+  <section class="screen center" id="scResult">
+    <div class="verdict" id="rVerdict">Correct!</div>
+    <div class="gain" id="rGain"></div>
+    <div class="big" id="rScore">0</div>
+    <div class="pill" id="rRank"></div>
+    <div class="why" id="rWhy" style="display:none">
+      <div class="why-answer" id="rWhyAnswer"></div>
+      <div class="why-body" id="rWhyBody"></div>
+    </div>
+  </section>
+
+  <!-- 5. over -->
+  <section class="screen center" id="scOver">
+    <h1 id="oTitle">That's the quiz</h1>
+    <div class="big" id="oScore">0</div>
+    <div class="pill" id="oRank"></div>
+    <div class="lead" id="oNote"></div>
+    <button class="go sub" id="againBtn">Join another quiz</button>
+  </section>
+
+</main>
+
+<footer id="foot">SlideForge live quiz</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var SHAPES = ['▲', '◆', '●', '■', '★', '✚'];
+  var LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
+  // same order as the host's team colours and the answer pads
+  var TEAM_COLORS = ['#e8474f', '#2b7ce9', '#e8a020', '#29a86b', '#8b5cf0', '#d4477f'];
+
+  var ws = null;
+  var me = { name: '', score: 0, team: null, teamName: null };
+  var pending = null;          // the join we are retrying with a team attached
+  var tick = null;
+
+  function show(id) {
+    ['scJoin', 'scTeam', 'scHold', 'scWait', 'scPrompt', 'scQuestion', 'scResult', 'scOver'].forEach(function (s) {
+      $(s).classList.toggle('on', s === id);
+    });
+  }
+
+  function header(on) {
+    $('hdr').style.display = on ? 'flex' : 'none';
+    $('hdrName').textContent = me.name;
+    $('hdrScore').textContent = me.score;
+    var badge = $('hdrTeam');
+    if (me.teamName) {
+      badge.textContent = me.teamName;
+      badge.style.background = TEAM_COLORS[(me.team || 0) % TEAM_COLORS.length];
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  /* prefill the PIN from ?pin=123456 so a QR code or link can carry it */
+  var qp = new URLSearchParams(location.search);
+  if (/^\d{4,6}$/.test(qp.get('pin') || '')) $('pin').value = qp.get('pin');
+
+  /* ---------------------------------------------------------- connect */
+
+  function wsUrl() {
+    var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return proto + '//' + location.host;
+  }
+
+  function join() {
+    var pin = $('pin').value.replace(/\D/g, '');
+    var name = $('name').value.trim();
+    if (pin.length < 4) { err('Enter the PIN from the screen.'); return; }
+    if (!name) { err('Pick a name so the host can see you.'); return; }
+
+    err('');
+    $('joinBtn').disabled = true;
+    $('joinBtn').textContent = 'Joining…';
+    pending = { pin: pin, name: name };
+
+    try { ws = new WebSocket(wsUrl()); } catch (e) { fail('Could not connect.'); return; }
+
+    ws.onopen = function () {
+      ws.send(JSON.stringify({ t: 'join', pin: pin, name: name }));
+    };
+    ws.onmessage = function (ev) {
+      var m;
+      try { m = JSON.parse(ev.data); } catch (e) { return; }
+      handle(m);
+    };
+    ws.onerror = function () { fail('Could not reach the quiz. Check the Wi-Fi and try again.'); };
+    ws.onclose = function () {
+      if ($('scJoin').classList.contains('on')) return;
+      stopTick();
+      $('oTitle').textContent = 'Disconnected';
+      $('oNote').textContent = 'The connection to the quiz dropped.';
+      $('oScore').textContent = me.score;
+      $('oRank').textContent = '';
+      show('scOver');
+    };
+  }
+
+  function fail(msg) {
+    err(msg);
+    $('joinBtn').disabled = false;
+    $('joinBtn').textContent = 'Join';
+  }
+  function err(msg) { $('joinErr').textContent = msg || ''; }
+
+  /* ---------------------------------------------------------- messages */
+
+  function handle(m) {
+    switch (m.t) {
+      /* Held back: the round already started. Name and team are kept, so
+         admission later needs no further input. */
+      case 'waiting':
+        me.name = m.name;
+        me.score = 0;
+        me.team = m.team != null ? m.team : null;
+        me.teamName = m.teamName || null;
+        header(true);
+        $('foot').textContent = m.title || 'SlideForge live quiz';
+        $('holdWho').textContent = me.teamName
+          ? me.name + ' \u00b7 ' + me.teamName
+          : me.name;
+        show('scHold');
+        break;
+
+      case 'roundOpen':
+        // only reaches players already in play; the held are sent 'joined'
+        break;
+
+      case 'joined':
+        me.name = m.name;
+        me.score = 0;
+        me.team = m.team != null ? m.team : null;
+        me.teamName = m.teamName || null;
+        header(true);
+        $('waitIcon').textContent = '✓';
+        $('waitTitle').textContent = m.admitted
+          ? "You're in for this round!"
+          : "You're in, " + m.name + '!';
+        $('waitLead').textContent = m.admitted
+          ? 'Watch the screen — the next question is coming.'
+          : (m.phase === 'lobby'
+            ? 'Look up at the screen — the quiz will start in a moment.'
+            : 'Waiting for the next question.');
+        if (m.admitted && navigator.vibrate) { try { navigator.vibrate([30, 60, 30]); } catch (e) {} }
+        $('foot').textContent = m.title || 'SlideForge live quiz';
+        show('scWait');
+        break;
+
+      case 'error':
+        if (m.mode === 'teams' && Array.isArray(m.teams) && m.teams.length) {
+          showTeamPicker(m.teams);
+        } else if ($('scTeam').classList.contains('on')) {
+          $('teamErr').textContent = m.message || 'That did not work.';
+        } else if ($('scHold').classList.contains('on')) {
+          $('holdLead').textContent = m.message || 'Something went wrong — try rejoining.';
+        } else {
+          fail(m.message || 'That did not work.');
+        }
+        break;
+
+      case 'begun':
+        $('waitTitle').textContent = 'Here we go';
+        $('waitLead').textContent = 'Watch the screen for the first question.';
+        break;
+
+      case 'prompt':
+        openPrompt(m);
+        break;
+
+      case 'promptEnd':
+        if ($('scPrompt').classList.contains('on')) {
+          $('waitIcon').textContent = '✓';
+          $('waitTitle').textContent = 'Thanks';
+          $('waitLead').textContent = 'Look up at the screen.';
+          show('scWait');
+        }
+        break;
+
+      case 'replied':
+        confirmReply(m);
+        break;
+
+      case 'question':
+        askQuestion(m);
+        break;
+
+      case 'locked':
+        lockPad(m.choice);
+        break;
+
+      case 'result':
+        me.score = m.score;
+        header(true);
+        stopTick();
+        $('rVerdict').textContent = !m.answered ? 'Too slow!' : (m.right ? 'Correct!' : 'Not this time');
+        $('rVerdict').className = 'verdict ' + (m.right ? 'right' : 'wrong');
+        $('rGain').textContent = m.gained ? '+' + m.gained + ' points' : (m.answered ? 'No points' : 'No answer registered');
+        $('rScore').textContent = m.score;
+        $('rRank').textContent = m.team
+          ? m.team.team + ' · ' + m.team.score + ' pts · ' +
+            (m.team.of > 1 ? 'place ' + m.team.rank + ' of ' + m.team.of : 'only team')
+          : (m.of > 1 ? 'Place ' + m.rank + ' of ' + m.of : 'Keep going');
+        paintWhy(m);
+        show('scResult');
+        break;
+
+      case 'idle':
+        stopTick();
+        if ($('scHold').classList.contains('on')) break;
+        if ($('scPrompt').classList.contains('on')) break;
+        if ($('scQuestion').classList.contains('on')) {
+          $('waitIcon').textContent = '⏸';
+          $('waitTitle').textContent = 'Hold on';
+          $('waitLead').textContent = 'Waiting for the next question.';
+          show('scWait');
+        }
+        break;
+
+      case 'over':
+        stopTick();
+        $('oTitle').textContent = "That's the quiz";
+        $('oScore').textContent = me.score;
+        $('oRank').textContent = '';
+        $('oNote').textContent = m.reason || '';
+        show('scOver');
+        break;
+    }
+  }
+
+  /* The correct answer plus the reasoning, on the player's own screen. They
+     read this while the host is talking over the projected version. */
+  function paintWhy(m) {
+    var box = $('rWhy');
+    var text = String(m.why || '').trim();
+    var answer = String(m.answer || '').trim();
+
+    if (!text && !answer) {
+      box.style.display = 'none';
+      $('scResult').classList.add('no-why');
+      return;
+    }
+    box.style.display = '';
+    $('scResult').classList.remove('no-why');
+
+    $('rWhyAnswer').textContent = answer ? 'Answer: ' + answer : '';
+    $('rWhyAnswer').style.display = answer ? '' : 'none';
+
+    var body = $('rWhyBody');
+    body.textContent = '';
+    text.split(/\n{2,}/).forEach(function (para) {
+      if (!para.trim()) return;
+      var p = document.createElement('p');
+      p.textContent = para.trim();
+      body.appendChild(p);
+    });
+    body.style.display = text ? '' : 'none';
+  }
+
+  /* ---------------------------------------------------------- team picker */
+
+  /* The relay refuses a join with no team and hands back the team list, so the
+     picker is shown at that point rather than guessed at up front. */
+  function showTeamPicker(teams) {
+    var grid = $('teamGrid');
+    grid.innerHTML = '';
+    $('teamErr').textContent = '';
+    $('teamLead').textContent = 'Tap the team you\'re sitting with, ' + (pending ? pending.name : 'player') + '.';
+
+    teams.forEach(function (name, i) {
+      var b = document.createElement('button');
+      b.className = 'teambtn';
+      b.type = 'button';
+      b.style.background = TEAM_COLORS[i % TEAM_COLORS.length];
+      if (i === 2) b.style.color = '#1d1204';           // amber needs dark text
+      var dot = document.createElement('span');
+      dot.className = 'dot';
+      b.appendChild(dot);
+      b.appendChild(document.createTextNode(name));
+      b.onclick = function () { pickTeam(i, b); };
+      grid.appendChild(b);
+    });
+
+    show('scTeam');
+  }
+
+  function pickTeam(i, btn) {
+    if (!ws || ws.readyState !== 1 || !pending) {
+      $('teamErr').textContent = 'Lost the connection — start again.';
+      return;
+    }
+    Array.prototype.forEach.call($('teamGrid').children, function (b) { b.disabled = true; });
+    if (btn) btn.style.outline = '4px solid #fff', btn.style.outlineOffset = '-4px';
+    ws.send(JSON.stringify({ t: 'join', pin: pending.pin, name: pending.name, team: i }));
+    setTimeout(function () {
+      // if the relay rejected it (name clash, room full) let them try again
+      if ($('scTeam').classList.contains('on')) {
+        Array.prototype.forEach.call($('teamGrid').children, function (b) { b.disabled = false; });
+      }
+    }, 1200);
+  }
+
+  /* ---------------------------------------------------------- feedback */
+
+  var prompt = null;
+
+  function openPrompt(m) {
+    prompt = { kind: m.kind, options: m.options || [], max: m.max || 1, used: 0 };
+    $('fbKind').textContent = m.kind === 'poll' ? 'Poll'
+      : m.kind === 'wordcloud' ? 'One word' : 'Your idea';
+    $('fbPrompt').textContent = m.prompt || '';
+    $('fbErr').textContent = '';
+    $('fbDone').style.display = 'none';
+
+    var pad = $('fbPad');
+    var textWrap = $('fbTextWrap');
+
+    if (m.kind === 'poll') {
+      textWrap.style.display = 'none';
+      pad.style.display = '';
+      pad.innerHTML = '';
+      pad.className = 'pad' + (prompt.options.length > 4 ? '' : (prompt.options.length <= 2 ? ' one' : ''));
+      delete pad.dataset.locked;
+      prompt.options.forEach(function (label, i) {
+        var b = document.createElement('button');
+        b.className = 'pick';
+        b.dataset.i = String(i);
+        b.type = 'button';
+        var l = document.createElement('span');
+        l.className = 'l';
+        l.textContent = label;
+        l.style.fontSize = '17px';
+        b.appendChild(l);
+        b.addEventListener('click', function () { sendPoll(i); });
+        pad.appendChild(b);
+      });
+    } else {
+      pad.style.display = 'none';
+      textWrap.style.display = '';
+      $('fbText').value = '';
+      $('fbText').maxLength = m.kind === 'wordcloud' ? 40 : 160;
+      $('fbText').placeholder = m.kind === 'wordcloud' ? 'One word' : 'Type your idea';
+      $('fbSend').disabled = false;
+      updateQuota();
+    }
+    show('scPrompt');
+    if (navigator.vibrate) { try { navigator.vibrate(25); } catch (e) {} }
+  }
+
+  function updateQuota() {
+    if (!prompt || prompt.kind === 'poll') { $('fbQuota').textContent = ''; return; }
+    var left = prompt.max - prompt.used;
+    $('fbQuota').textContent = prompt.max > 1
+      ? (left > 0 ? left + ' of ' + prompt.max + ' left' : 'All ' + prompt.max + ' sent')
+      : '';
+  }
+
+  function sendPoll(i) {
+    if (!ws || ws.readyState !== 1 || !prompt) return;
+    var pad = $('fbPad');
+    Array.prototype.forEach.call(pad.children, function (b, idx) {
+      b.classList.toggle('mine', idx === i);
+      b.classList.toggle('dim', idx !== i);
+    });
+    ws.send(JSON.stringify({ t: 'reply', choice: i }));
+    if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
+  }
+
+  function sendText() {
+    if (!ws || ws.readyState !== 1 || !prompt) return;
+    var v = $('fbText').value.trim();
+    if (!v) { $('fbErr').textContent = 'Type something first.'; return; }
+    if (prompt.used >= prompt.max) return;
+    $('fbErr').textContent = '';
+    ws.send(JSON.stringify({ t: 'reply', text: v }));
+    $('fbText').value = '';
+  }
+
+  function confirmReply(m) {
+    if (!prompt) return;
+    if (prompt.kind === 'poll') {
+      $('fbDone').textContent = 'Vote counted — change it any time';
+      $('fbDone').style.display = '';
+      return;
+    }
+    prompt.used = m.used || prompt.used + 1;
+    updateQuota();
+    $('fbDone').textContent = 'Sent';
+    $('fbDone').style.display = '';
+    if (prompt.used >= prompt.max) {
+      $('fbSend').disabled = true;
+      $('fbText').placeholder = 'Nothing more to send';
+    }
+  }
+
+  /* ---------------------------------------------------------- question */
+
+  function askQuestion(m) {
+    var count = Math.max(2, Math.min(6, m.count || 4));
+    var pad = $('qPad');
+    pad.innerHTML = '';
+    /* Clear the one-answer-per-question lock. Without this a player who
+       answered any question could never answer another: the buttons get
+       rebuilt but the flag lives on the pad itself. */
+    delete pad.dataset.locked;
+    pad.className = 'pad' + (count > 4 ? '' : (count <= 2 ? ' one' : ''));
+
+    for (var i = 0; i < count; i++) {
+      var b = document.createElement('button');
+      b.className = 'pick';
+      b.dataset.i = String(i);
+      b.type = 'button';
+      var g = document.createElement('span'); g.className = 'g'; g.textContent = SHAPES[i];
+      var l = document.createElement('span'); l.className = 'l'; l.textContent = LETTERS[i];
+      b.appendChild(g); b.appendChild(l);
+      b.addEventListener('click', pickHandler(i));
+      pad.appendChild(b);
+    }
+
+    $('qNum').textContent = 'Question ' + (m.n || 1);
+    show('scQuestion');
+
+    if (m.timeLimit > 0) startTick(m.timeLimit);
+    else {
+      $('qTime').textContent = '';
+      $('qBar').style.width = '100%';
+    }
+
+    if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
+  }
+
+  function pickHandler(i) {
+    return function () {
+      if (!ws || ws.readyState !== 1) return;
+      var pad = $('qPad');
+      if (pad.dataset.locked) return;
+      pad.dataset.locked = '1';
+      ws.send(JSON.stringify({ t: 'answer', choice: i }));
+      lockPad(i);
+      if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
+    };
+  }
+
+  function lockPad(choice) {
+    var pad = $('qPad');
+    pad.dataset.locked = '1';
+    Array.prototype.forEach.call(pad.children, function (b, i) {
+      if (i === choice) b.classList.add('mine');
+      else b.classList.add('dim');
+    });
+    $('qTime').textContent = 'Locked in';
+    $('qTime').classList.remove('hurry');
+  }
+
+  function startTick(total) {
+    stopTick();
+    var end = Date.now() + total * 1000;
+    var bar = $('qBar');
+    var t = $('qTime');
+    bar.style.transition = 'none';
+    bar.style.width = '100%';
+    requestAnimationFrame(function () { bar.style.transition = 'width .95s linear'; });
+
+    tick = setInterval(function () {
+      var left = Math.max(0, end - Date.now()) / 1000;
+      var pad = $('qPad');
+      if (!pad.dataset.locked) t.textContent = String(Math.ceil(left));
+      t.classList.toggle('hurry', left <= 5 && !pad.dataset.locked);
+      bar.style.width = ((left / total) * 100).toFixed(1) + '%';
+      if (left <= 0) {
+        stopTick();
+        pad.dataset.locked = '1';
+        if (!pad.querySelector('.mine')) {
+          Array.prototype.forEach.call(pad.children, function (b) { b.classList.add('dim'); });
+          t.textContent = "Time's up";
+        }
+      }
+    }, 100);
+  }
+
+  function stopTick() {
+    if (tick) { clearInterval(tick); tick = null; }
+  }
+
+  /* ---------------------------------------------------------- wiring */
+
+  $('joinBtn').onclick = join;
+  $('name').addEventListener('keydown', function (e) { if (e.key === 'Enter') join(); });
+  $('pin').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('name').focus(); });
+  $('pin').addEventListener('input', function () {
+    $('pin').value = $('pin').value.replace(/\D/g, '');
+  });
+  $('againBtn').onclick = function () { location.href = location.pathname; };
+  $('fbSend').onclick = sendText;
+  $('fbText').addEventListener('keydown', function (e) { if (e.key === 'Enter') sendText(); });
+
+  // keep the phone awake during the quiz where the browser allows it
+  if ('wakeLock' in navigator) {
+    document.addEventListener('click', function once() {
+      document.removeEventListener('click', once);
+      navigator.wakeLock.request('screen').catch(function () {});
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# nothing to build and nothing to install — SlideForge has no dependencies.
+# Listed so an editor or OS artefact does not end up in a commit.
+.DS_Store
+*.log
+node_modules/

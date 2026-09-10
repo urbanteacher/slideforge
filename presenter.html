@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Presenter view — SlideForge</title>
+<link rel="stylesheet" href="css/app.css">
+<style>
+  body { overflow: hidden; }
+  .pv {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas: 'bar bar' 'now side' 'foot foot';
+    height: 100vh; gap: 14px; padding: 14px;
+  }
+  .pv-bar {
+    grid-area: bar; display: flex; align-items: center; gap: 14px;
+  }
+  .pv-bar .clock { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .pv-bar .wall { color: var(--ui-dim); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .pv-bar .pos { color: var(--ui-dim); font-size: 14px; font-variant-numeric: tabular-nums; }
+
+  .now { grid-area: now; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  .side { grid-area: side; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  .cap { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ui-dim); }
+
+  .box {
+    position: relative; aspect-ratio: 16/9; background: #000;
+    border-radius: 8px; overflow: hidden; border: 1px solid var(--ui-line);
+  }
+  .box .slide { transform-origin: 0 0; }
+  .box.empty::after {
+    content: 'End of deck'; position: absolute; inset: 0;
+    display: grid; place-items: center; color: var(--ui-dim); font-size: 13px;
+  }
+
+  .notes {
+    flex: 1; min-height: 0; overflow-y: auto;
+    background: var(--ui-panel); border: 1px solid var(--ui-line);
+    border-radius: 8px; padding: 14px 16px;
+    font-size: 17px; line-height: 1.62; white-space: pre-wrap;
+  }
+  .notes.blankish { color: var(--ui-dim); font-style: italic; font-size: 14px; }
+
+  .quizinfo {
+    background: var(--ui-panel); border: 1px solid var(--ui-line);
+    border-radius: 8px; padding: 12px 14px; font-size: 14px; line-height: 1.6;
+  }
+  .quizinfo .ans { color: var(--ui-good); font-weight: 650; }
+  .quizinfo .row { display: flex; justify-content: space-between; gap: 10px; }
+  .quizinfo .row + .row { margin-top: 4px; }
+  .quizinfo .why {
+    margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--ui-line);
+    font-size: 13px; line-height: 1.55; color: var(--ui-text);
+    white-space: pre-wrap; max-height: 26vh; overflow-y: auto;
+  }
+
+  .pv-foot { grid-area: foot; display: flex; align-items: center; gap: 8px; }
+  .pv-foot .spacer { flex: 1; }
+
+  .strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+  .strip .mini {
+    flex: none; width: 108px; aspect-ratio: 16/9; position: relative;
+    border-radius: 4px; overflow: hidden; background: #000; cursor: pointer;
+    border: 2px solid transparent;
+  }
+  .strip .mini.on { border-color: var(--ui-accent); }
+  .strip .mini .slide { transform-origin: 0 0; }
+  .strip .mini .n {
+    position: absolute; left: 3px; bottom: 2px; z-index: 2;
+    font-size: 9px; background: rgba(0,0,0,.65); padding: 0 4px; border-radius: 3px;
+  }
+  .waiting { display: grid; place-items: center; height: 100vh; color: var(--ui-dim); font-size: 14px; }
+
+  /* a presenter window dragged narrow (or a portrait second screen) gets a
+     single column rather than two cramped ones */
+  @media (max-width: 900px) {
+    .pv {
+      grid-template-columns: 1fr;
+      grid-template-areas: 'bar' 'now' 'side' 'foot';
+      grid-template-rows: auto auto 1fr auto;
+      overflow-y: auto;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="waiting" id="waiting">Waiting for the slideshow…</div>
+
+<div class="pv" id="pv" style="display:none">
+  <div class="pv-bar">
+    <div class="clock" id="elapsed">0:00</div>
+    <div class="wall" id="wall">—</div>
+    <div class="spacer" style="flex:1"></div>
+    <div class="pos" id="pos">—</div>
+  </div>
+
+  <div class="now">
+    <div class="cap">On screen now</div>
+    <div class="box" id="boxNow"></div>
+    <div class="strip" id="strip"></div>
+  </div>
+
+  <div class="side">
+    <div class="cap">Coming up next</div>
+    <div class="box" id="boxNext"></div>
+    <div class="cap">Notes</div>
+    <div class="notes" id="notes"></div>
+    <div id="quizinfo"></div>
+  </div>
+
+  <div class="pv-foot">
+    <button class="btn" data-cmd="prev">‹ Previous</button>
+    <button class="btn primary" data-cmd="next">Next ›</button>
+    <button class="btn" data-cmd="blank">Blank</button>
+    <div class="spacer"></div>
+    <button class="btn" id="resetTimer">Reset timer</button>
+    <button class="btn" data-cmd="exit">End show</button>
+  </div>
+</div>
+
+<script src="js/model.js"></script>
+<script src="js/render.js"></script>
+<script>
+(function () {
+  'use strict';
+  var SF = window.SF;
+  var $ = function (id) { return document.getElementById(id); };
+
+  var state = null;
+  var startedAt = Date.now();
+  var timerBase = null;
+
+  function cmd(c, extra) {
+    var msg = Object.assign({ type: 'sf-presenter-cmd', cmd: c }, extra || {});
+    if (window.opener && !window.opener.closed) window.opener.postMessage(msg, '*');
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-cmd]'), function (b) {
+    b.onclick = function () { cmd(b.dataset.cmd); };
+  });
+  $('resetTimer').onclick = function () { timerBase = Date.now(); };
+
+  window.addEventListener('message', function (ev) {
+    var d = ev.data;
+    if (!d || d.type !== 'sf-presenter-state') return;
+    state = { deck: SF.normalizeDeck(d.deck), index: d.index, answers: d.answers || {} };
+    if (timerBase == null) timerBase = d.startedAt || Date.now();
+    $('waiting').style.display = 'none';
+    $('pv').style.display = 'grid';
+    draw();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); cmd('next'); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); cmd('prev'); }
+    else if (e.key === 'b' || e.key === 'B') { e.preventDefault(); cmd('blank'); }
+    else if (e.key === 'Escape') { e.preventDefault(); cmd('exit'); }
+  });
+
+  function into(box, slide, index) {
+    box.innerHTML = '';
+    box.classList.toggle('empty', !slide);
+    if (!slide) return;
+    var node = SF.renderSlide(state.deck, slide, {
+      index: index, total: state.deck.slides.length, interactive: false,
+      quizNumber: quizNum(index),
+      marks: slide.type === 'results' ? marks() : null
+    });
+    box.appendChild(node);
+    requestAnimationFrame(function () { SF.fit(box, node); });
+  }
+
+  function quizNum(index) {
+    var n = 0;
+    for (var i = 0; i <= index; i++) if (state.deck.slides[i].type === 'quiz') n++;
+    return n;
+  }
+
+  function marks() {
+    return state.deck.slides
+      .filter(function (s) { return s.type === 'quiz'; })
+      .map(function (s) {
+        var a = state.answers[s.id];
+        return { question: s.question, answered: a != null, correct: a === s.correct };
+      })
+      .filter(function (m) { return m.answered; });
+  }
+
+  function draw() {
+    var deck = state.deck, i = state.index;
+    var s = deck.slides[i];
+
+    into($('boxNow'), s, i);
+    into($('boxNext'), deck.slides[i + 1], i + 1);
+    $('pos').textContent = 'Slide ' + (i + 1) + ' of ' + deck.slides.length;
+
+    var n = (s && s.notes || '').trim();
+    $('notes').textContent = n || 'No notes on this slide.';
+    $('notes').classList.toggle('blankish', !n);
+
+    var qi = $('quizinfo');
+    qi.innerHTML = '';
+    if (s && s.type === 'quiz') {
+      var box = document.createElement('div');
+      box.className = 'quizinfo';
+      var correct = (s.options[s.correct] || '').trim();
+      box.innerHTML =
+        '<div class="row"><span>Correct answer</span>' +
+        '<span class="ans">' + escapeHtml((SF.LETTERS[s.correct] || '?') + ' — ' + correct) + '</span></div>' +
+        '<div class="row"><span>Countdown</span><span>' +
+        (s.timeLimit ? s.timeLimit + 's' : 'none') + '</span></div>';
+      if (String(s.explanation || '').trim()) {
+        box.innerHTML += '<div class="why">' + escapeHtml(s.explanation) + '</div>';
+      }
+      qi.appendChild(box);
+    } else if (s && s.type === 'explain') {
+      var b3 = document.createElement('div');
+      b3.className = 'quizinfo';
+      b3.innerHTML = '<div class="row"><span>Explanation on screen</span>' +
+        '<span class="ans">' + escapeHtml(SF.LETTERS[s.correct] || '?') + '</span></div>' +
+        '<div class="why">' + escapeHtml(s.body || '') + '</div>';
+      qi.appendChild(b3);
+    } else if (s && s.type === 'results') {
+      var m = marks();
+      var right = m.filter(function (x) { return x.correct; }).length;
+      var b2 = document.createElement('div');
+      b2.className = 'quizinfo';
+      b2.innerHTML = '<div class="row"><span>Score so far</span><span class="ans">' +
+        right + ' / ' + m.length + '</span></div>';
+      qi.appendChild(b2);
+    }
+
+    drawStrip();
+  }
+
+  function drawStrip() {
+    var strip = $('strip');
+    strip.innerHTML = '';
+    state.deck.slides.forEach(function (s, i) {
+      var m = document.createElement('div');
+      m.className = 'mini' + (i === state.index ? ' on' : '');
+      var num = document.createElement('div');
+      num.className = 'n';
+      num.textContent = String(i + 1);
+      m.appendChild(num);
+      var node = SF.renderSlide(state.deck, s, {
+        index: i, total: state.deck.slides.length, interactive: false,
+        quizNumber: quizNum(i), chrome: false
+      });
+      m.appendChild(node);
+      m.onclick = function () { cmd('goto', { index: i }); };
+      strip.appendChild(m);
+      requestAnimationFrame(function () { SF.fit(m, node); });
+    });
+    var on = strip.querySelector('.mini.on');
+    if (on) on.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+
+  function escapeHtml(t) {
+    return String(t).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  setInterval(function () {
+    if (timerBase != null) {
+      var secs = Math.floor((Date.now() - timerBase) / 1000);
+      var mm = Math.floor(secs / 60), ss = secs % 60;
+      $('elapsed').textContent = mm + ':' + String(ss).padStart(2, '0');
+    }
+    $('wall').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }, 500);
+
+  window.addEventListener('resize', function () { if (state) draw(); });
+
+  // ask the opener to send state (covers a reload of this window)
+  cmd('hello');
+  setTimeout(function () { cmd('hello'); }, 800);
+})();
+</script>
+</body>
+</html>
