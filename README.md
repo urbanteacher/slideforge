@@ -6,7 +6,7 @@ The **Engagement** tab adds Bloom’s thinking levels, reusable discussion promp
 
 Available library activities: multiple choice, true/false, poll, word cloud and brainstorm. The Add activity library also lists all 27 fullscreen catalogue games (True/False Showdown through Concept Chain) as planned placeholders; their interaction engines are not implemented yet. The existing horse-race style remains available in Quiz studio.
 
-**Slide starters** (toolbar) drop normal presentation shapes — opening title, title + content, keywords (bold term + lowercase definition), italics (emphasised phrase + plain note), hyperlinks (label + http(s) URL), dual coding (half text / half image), section break, full-bleed image, three cards, quote, and steps — with empty click-to-fill pits in the inspector. **File → Export → Practice notes (.md)** downloads a one-way Markdown handout for Canvas or Colab; live polls and games stay in the `.sfdeck.json` room.
+**+ Slide** (left rail) opens slide starters — opening title, title + content, keywords, italics, hyperlinks, dual coding, section break, full-bleed image, three cards, quote, and steps. After insert, the **Layout** picker stays in the right panel so you can change the shape. **File → Export → Practice notes (.md)** downloads a one-way Markdown handout for Canvas or Colab; live polls and games stay in the `.sfdeck.json` room.
 
 
 Two engines in one browser app:
@@ -40,8 +40,10 @@ access. `SLIDEFORGE_SESSION_DIR` can override its location.
 
 Use **Reports** in the host toolbar to view session history and download:
 
+- **Adapt notes (.md)** — the Adapt report as markdown, for pasting into next
+  week's plan. See [The Adapt report](#the-adapt-report).
 - **Attendance CSV** — names, teams, admission, connection time and participation.
-- **Answers CSV** — eligible learners, responses, outcomes, timings and Bloom levels.
+- **Answers CSV** — eligible learners, responses, confidence, outcomes, timings and Bloom levels.
 - **Full session JSON** — the complete structured report, including feedback and connection intervals.
 
 Reports use a per-session access key kept in the originating host browser; there
@@ -66,7 +68,7 @@ the next write.
 
 Run `node --test tests/*.test.js` for relay integration, crash recovery,
 reconnection, persistence-failure, export, Q&A moderation, marking, slider,
-scale, pace-signal and confidence checks. Each test
+scale, pace-signal, confidence and Adapt-report checks. Each test
 spawns a real relay with real WebSocket clients, on isolated temporary data and
 an ephemeral loopback port. Pass a directory rather than the glob and Node tries
 to load `tests` as a module instead of discovering the files.
@@ -76,10 +78,9 @@ the live path can be exercised — and demonstrated — without a room full of
 phones. See "Rehearsing without a room" below.
 
 Next in the product sequence: ship fullscreen catalogue game engines (starting
-with Horse Race / Beat the Clock / Memory Flip), confusion/pace plus answer
-confidence, and finally an evidence-based Adapt report. Reactions and QR
-rendering are also still pending; join PINs and focus modes continue to use the
-existing live interface.
+with Horse Race / Beat the Clock / Memory Flip). Reactions and QR rendering are
+also still pending; join PINs and focus modes continue to use the existing live
+interface.
 
 ---
 
@@ -621,6 +622,64 @@ Use another port with `PORT=8080 node server/server.js`. The live room is held
 in memory, but the session is journalled to `.slideforge/sessions/` as it runs,
 so stopping the server ends the game without losing the record — see
 [Live session reports](#live-session-reports-local--lan).
+
+### The Adapt report
+
+Reports opens on **Adapt**, which is a short list of things to do next lesson
+rather than a table of what happened. It is derived entirely from what was
+already recorded — no extra data is collected to produce it — so a session from
+last term reads the same way as the one that just ended.
+
+Findings land under one of three headings: **change this before next lesson**,
+**keep an eye on**, **notes on the lesson itself**. Each states its own numbers
+and pairs them with something to do.
+
+Two rules run through the whole thing, and they are what make it worth reading:
+
+**It never claims more than the evidence carries.** The report opens by saying
+what it is standing on — *"Based on 20 marked answers from 14 people across 2
+revealed checks"* — and below five marked answers it says so in as many words
+and marks every finding `THIN EVIDENCE`. A check that was opened but never
+revealed is reported as an unfinished loop and contributes nothing to any
+conclusion: six wrong-looking answers with no answer key are not six wrong
+answers. A single pace signal is one person, and one person is not a finding.
+
+**It says what to do, not what happened.** "62% correct" is the report you
+already have. This one distinguishes cases that look identical in a tally and
+need different lessons:
+
+| It spots | Because | So it says |
+| --- | --- | --- |
+| The wrong answers agree on one option | That is a misconception with a name | Teach against *that*, don't cover the topic again |
+| Wrong answers scattered across options | The question didn't land | Re-teach from a different angle |
+| Wrong **and confident** | They have a working model that gives the wrong answer | Practice confirms it; the explanation has to change |
+| Right but **guessing** | The score flatters them | Ask again in a form guessing can't carry |
+| Strong at a low Bloom level, weak at a higher one | They can recall it but can't use it | Plan practice at the higher level, not another pass over content |
+| A scale answered at both ends | The average describes nobody | Two groups, two next lessons |
+| A prompt you wrote a plan for | You already decided what to do | Shows *your* note, not its advice |
+
+That last row is the one to notice. **After the responses, I will…** in the
+Engagement inspector is quoted back verbatim once the responses are in, under
+*your note from the slide*. Nothing the engine could generate beats the thing
+the teacher already decided.
+
+**Bloom's is used for exactly one thing**: the gap. Succeeding at a low level
+and failing at a higher one is a different problem from failing everywhere, and
+it is the only claim a taxonomy can support from a set of check results. The
+comparison only runs upwards — strong at Apply and weak at Remember is not a
+gap — and weak at both is just weak, which the per-check findings already say.
+Set the level per question in the game editor; leave it unset and the report
+tells you what setting it would buy rather than guessing.
+
+Everything about a person is handled as a question rather than a conclusion.
+*"Four people answered nothing"* comes with *"could be a flat battery, could be
+someone who has stopped following — the names are in Attendance, worth a quiet
+word rather than a conclusion from this report"*, and pace signals stay
+anonymous here as everywhere else.
+
+`SF.adapt(report)` in [js/adapt.js](js/adapt.js) holds all of it and touches no
+DOM, so the judgement is testable without a browser — which is where most of
+`tests/adapt.test.js` goes.
 
 ### Rehearsing without a room
 

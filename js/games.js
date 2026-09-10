@@ -79,6 +79,7 @@
       meta.appendChild(el('span', null, style.summary(question)));
       meta.appendChild(el('span', null,
         effTime(question) ? effTime(question) + 's' : 'no timer'));
+      if (question.bloom) meta.appendChild(el('span', 'bloom', question.bloom));
       var bad = style.problems(question, i + 1);
       if (bad) meta.appendChild(el('span', 'warn', 'incomplete'));
       if (String(question.image || '').trim()) {
@@ -266,6 +267,20 @@
       }, 3)));
 
     styleEditor(game.style)(insp, question);
+
+    /* Per question, because a quiz that checks recall and then application is
+       what lets the Adapt report say "they can recall it but cannot use it".
+       Blank is allowed and means "not saying" — a level guessed at is worse
+       than none, since the report would then compare across a fiction. */
+    insp.appendChild(UI.field('Thinking level · Bloom\u2019s taxonomy',
+      UI.select([{ value: '', label: 'Not set' }].concat(SF.BLOOM_LEVELS.map(function (k) {
+        return { value: k, label: k };
+      })), question.bloom || '', function (v) {
+        question.bloom = v; touched(); drawRail();
+      }),
+      'Set this on two questions at different levels and the session report ' +
+      'can tell you whether a wrong answer means they cannot recall it or ' +
+      'cannot use it. Left unset, a wrong answer is just a wrong answer.'));
 
     var timeRow = el('div', 'setrow');
     timeRow.appendChild(UI.field('Countdown',

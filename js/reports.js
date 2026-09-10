@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var SF = window.SF, el = SF.el, key = 'slideforge.session-library.v1';
-  var refs = [], selected = null, current = null, view = 'overview', modal, body, list, status, request = 0;
+  var refs = [], selected = null, current = null, view = 'adapt', modal, body, list, status, request = 0;
   var memory = {};
   try { refs = JSON.parse(localStorage.getItem(key) || '[]'); if (!Array.isArray(refs)) refs = []; } catch (_) { refs = []; }
   function remember(ref) {
@@ -46,7 +46,7 @@
     refs.forEach(function (r) {
       var b = el('button','session-item' + (selected === r.id ? ' selected' : ''));
       b.appendChild(el('strong',null,r.title)); b.appendChild(el('span',null,when(r.createdAt)));
-      b.onclick = function () { view = 'overview'; fetchReport(r.id); }; list.appendChild(b);
+      b.onclick = function () { view = 'adapt'; fetchReport(r.id); }; list.appendChild(b);
     });
     if (!refs.length) list.appendChild(el('p','report-empty','Your hosted lessons will appear here.'));
   }
@@ -64,8 +64,10 @@
     body.appendChild(el('h2',null,r.title));
     body.appendChild(el('p','report-note',when(r.startedAt || r.createdAt) + (r.reason ? ' · ' + r.reason : '')));
     var tabs = el('div','library-tabs');
-    [['overview','Overview'],['attendance','Attendance'],['checks','Knowledge checks'],['feedback','Feedback'],['pace','Pace & confidence']].forEach(function (v) {tabs.appendChild(SF.Shell.UI.button(v[1],view === v[0]?'active':'',function () {view=v[0];draw();}));});body.appendChild(tabs);
-    if (view === 'overview') {
+    [['adapt','Adapt'],['overview','Overview'],['attendance','Attendance'],['checks','Knowledge checks'],['feedback','Feedback'],['pace','Pace & confidence']].forEach(function (v) {tabs.appendChild(SF.Shell.UI.button(v[1],view === v[0]?'active':'',function () {view=v[0];draw();}));});body.appendChild(tabs);
+    if (view === 'adapt') {
+      drawAdapt(body, r);
+    } else if (view === 'overview') {
       var stats = el('div','report-stats');
       [[r.summary.joined,'names joined'],[r.summary.admitted,'admitted to lesson'],[r.summary.answers,'answers submitted'],[r.summary.feedbackActivities,'feedback activities'],[r.summary.signalsRaised||0,'pace signals raised'],[r.summary.confidentlyWrong||0,'sure and wrong']].forEach(function (s) {var tile=el('div');tile.appendChild(el('strong',null,s[0]));tile.appendChild(el('span',null,s[1]));stats.appendChild(tile);});body.appendChild(stats);
       body.appendChild(el('h3',null,'A record you can teach from'));
@@ -113,10 +115,70 @@
       if (!r.feedback.length) body.appendChild(el('p','report-empty','No audience feedback was opened.'));
     }
     var exports=el('div','report-exports');
-    [['Attendance CSV',function(){download('attendance.csv',attendanceCsv(r),'text/csv');}],['Answers CSV',function(){download('answers.csv',answersCsv(r),'text/csv');}],['Full session JSON',function(){download('session.json',JSON.stringify(r,null,2),'application/json');}]].forEach(function (e) {exports.appendChild(SF.Shell.UI.button('↓ '+e[0],null,e[1]));});
+    [['Adapt notes (.md)',function(){download('adapt.md',SF.adaptToMarkdown(r),'text/markdown;charset=utf-8');}],['Attendance CSV',function(){download('attendance.csv',attendanceCsv(r),'text/csv');}],['Answers CSV',function(){download('answers.csv',answersCsv(r),'text/csv');}],['Full session JSON',function(){download('session.json',JSON.stringify(r,null,2),'application/json');}]].forEach(function (e) {exports.appendChild(SF.Shell.UI.button('↓ '+e[0],null,e[1]));});
     body.appendChild(exports);
   }
   // Prefix potentially executable spreadsheet cells, then quote every CSV value.
+  var SEVERITY = {
+    act: ['Change this before next lesson', 'adapt-act'],
+    watch: ['Keep an eye on', 'adapt-watch'],
+    note: ['Notes on the lesson itself', 'adapt-note']
+  };
+
+  /* The Adapt view. The engine is in js/adapt.js and holds all the judgement;
+     this only lays it out — and leads with what the report is standing on,
+     because a confident-looking page built on nine answers is the failure
+     mode worth designing against. */
+  function drawAdapt(body, r) {
+    var a = SF.adapt(r);
+    if (!a) return;
+
+    body.appendChild(el('h3','adapt-headline',a.headline));
+    body.appendChild(el('p',a.basis.thin ? 'report-warning' : 'report-note',a.basis.sentence));
+
+    if (!a.findings.length) {
+      body.appendChild(el('p','report-empty',a.basis.answers
+        ? 'Every check the room answered came back strong, nobody signalled, and no question was left hanging. Nothing to change.'
+        : 'Reveal a check or open a feedback prompt and this page will have something to work from.'));
+    }
+
+    ['act','watch','note'].forEach(function (sev) {
+      var rows = a.findings.filter(function (f) { return f.severity === sev; });
+      if (!rows.length) return;
+      body.appendChild(el('div','adapt-band ' + SEVERITY[sev][1], SEVERITY[sev][0]));
+      rows.forEach(function (f) {
+        var card = el('section','adapt-finding');
+        var head = el('h4',null,f.title);
+        if (f.strength === 'tentative') head.appendChild(el('span','adapt-thin','THIN EVIDENCE'));
+        card.appendChild(head);
+        card.appendChild(el('p','adapt-evidence',f.evidence));
+        card.appendChild(el('p','adapt-action',f.action));
+        /* The teacher's own plan, written while authoring and shown now the
+           responses are in. It outranks anything the engine would suggest. */
+        if (f.nextStep) {
+          var plan = el('p','adapt-plan');
+          plan.appendChild(el('span','adapt-plan-label','YOUR NOTE FROM THE SLIDE'));
+          plan.appendChild(document.createTextNode(f.nextStep));
+          card.appendChild(plan);
+        }
+        /* Only when it adds something. A check's finding is already titled
+           with the question, so repeating it underneath is noise. */
+        if (f.where && f.where.n) {
+          card.appendChild(el('p','adapt-where','Slide ' + f.where.n + ' · ' + (f.where.title || '')));
+        }
+        body.appendChild(card);
+      });
+    });
+
+    if (a.bloom.length) {
+      body.appendChild(el('h3',null,'By thinking level'));
+      body.appendChild(el('p','report-note','Success per Bloom level, which is the one thing a taxonomy can tell you here: succeeding low and failing high is a different problem from failing everywhere, and it needs a different lesson.'));
+      body.appendChild(table(['Level','Checks','Correct'],a.bloom.map(function (row) {
+        return [row.level,row.checks,row.right + ' / ' + row.answers + ' (' + Math.round((row.right/row.answers)*100) + '%)'];
+      })));
+    }
+  }
+
   /* Signals sent from the lobby have no slide to belong to. Saying so beats a
      dash, because "before you started" is itself worth knowing. */
   function signalWhere(g) {
@@ -168,7 +230,7 @@
       navigator.clipboard.writeText(text).then(function(){SF.toast('Export copied');}).catch(function(){textBox.focus();textBox.select();});
     }));body.appendChild(preview);preview.scrollIntoView({block:'nearest'});
   }
-  function open(id) {if(!modal)init();modal.showModal();view='overview';if(id||selected||refs.length)fetchReport(id||selected||refs[0].id);else draw();}
+  function open(id) {if(!modal)init();modal.showModal();view='adapt';if(id||selected||refs.length)fetchReport(id||selected||refs[0].id);else draw();}
   function init() {
     if(modal)return;modal=el('dialog','reports-modal');modal.setAttribute('aria-labelledby','reportsTitle');
     modal.innerHTML='<header><div><span class="eyebrow">THE LESSON DOESN’T END WITH THE LAST SLIDE</span><h2 id="reportsTitle">Session reports</h2></div><button class="btn ghost" aria-label="Close reports">✕</button></header><div class="reports-layout"><aside id="sessionList"></aside><main id="reportBody"></main></div><footer><span id="reportStatus">Stored locally on the host computer.</span><button class="btn" id="refreshReport">Refresh</button></footer>';

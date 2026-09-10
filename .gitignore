@@ -3,6 +3,7 @@
 .DS_Store
 *.log
 node_modules/
+.history/
 
 # Exported decks and games. Remove this line if you want them committed —
 # they are plain JSON and diff cleanly. Ignored by default because embedded

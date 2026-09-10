@@ -734,7 +734,11 @@
       options: view.options.filter(function (o) { return String(o).trim(); }),
       ends: view.ends,
       max: f.max,
-      bloom: slide.bloom || ''
+      bloom: slide.bloom || '',
+      /* The plan the author already wrote for this prompt. Sent so it lands in
+         the journal beside the responses — the Adapt report can then quote the
+         teacher's own words back at them instead of inventing advice. */
+      nextStep: String(slide.nextStep || '').slice(0, 600)
     };
     Live.digest = null;
     Live.focus = false;         // a new prompt starts collapsed

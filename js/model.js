@@ -18,6 +18,12 @@
 
   var TRANSITIONS = ['none', 'fade', 'push', 'zoom', 'wipe'];
 
+  /* Bloom's, low to high. The order is what the Adapt report uses: succeeding
+     at a low level and failing at a higher one is a different problem from
+     failing everywhere, and it is the one thing a taxonomy can tell you from
+     a set of check results. */
+  var BLOOM_LEVELS = ['Remember', 'Understand', 'Apply', 'Analyze', 'Evaluate', 'Create'];
+
   /* Team colours line up with the coloured answer pads on the phones. */
   var TEAM_COLORS = ['#e8474f', '#2b7ce9', '#e8a020', '#29a86b', '#8b5cf0', '#d4477f'];
   var MAX_TEAMS = 6;
@@ -780,6 +786,11 @@
          'overlay' image leads, question sits on it behind a gradient */
       imageLayout: 'band',
       notes: '',
+      /* What kind of thinking this question asks for. Per question, not per
+         game: a quiz that checks recall and then application is exactly the
+         shape the Adapt report can say something useful about, and it cannot
+         if every question in the game shares one level. */
+      bloom: '',
       /* Shown after the answer is revealed. A multiple-choice answer is often
          one or two words, which teaches very little on its own. */
       explanation: '',
@@ -854,6 +865,7 @@
     gameStyle(style).normalize(q);
     q.timeLimit = q.timeLimit == null || q.timeLimit === '' ? null : Math.max(0, Number(q.timeLimit) || 0);
     q.points = q.points == null || q.points === '' ? null : Math.max(0, Number(q.points) || 0);
+    q.bloom = BLOOM_LEVELS.indexOf(q.bloom) > -1 ? q.bloom : '';
     q.explanation = String(q.explanation || '');
     q.source = String(q.source || '');
     q.image = String(q.image || '');
@@ -936,7 +948,7 @@
   var INPUTS = ['choice', 'text', 'number'];
 
   var QUESTION_SLIDE_FIELDS = [
-    'image', 'imageAlt', 'imageLayout', 'explanation', 'source', 'notes'
+    'image', 'imageAlt', 'imageLayout', 'explanation', 'source', 'notes', 'bloom'
   ];
 
   /**
@@ -1508,6 +1520,7 @@
     SLIDE_H: SLIDE_H,
     THEMES: THEMES,
     TRANSITIONS: TRANSITIONS,
+    BLOOM_LEVELS: BLOOM_LEVELS,
     TEAM_COLORS: TEAM_COLORS,
     MAX_TEAMS: MAX_TEAMS,
     teamColor: teamColor,

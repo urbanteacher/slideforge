@@ -2108,3 +2108,58 @@ body.live-on .hud button[data-act="focus"] { display: inline-block; }
 }
 @keyframes sf-pace-pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
 .pacecue .pace-n { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ----------------------------------------------------------------------
+   The Adapt report
+
+   Lives in the reports modal, which is the light studio skin, so it uses
+   the --ui-* tokens rather than the slide theme's. Deliberately sparse:
+   the value is in the sentences, and a page of chrome around them reads
+   as a dashboard, which is the thing this is not.
+   ---------------------------------------------------------------------- */
+.adapt-headline {
+  font-size: 20px; font-weight: 500; letter-spacing: -.3px;
+  margin: 18px 0 10px;
+}
+/* The band, not a badge per card: the heading carries the urgency once and
+   the findings under it stay quiet. */
+.adapt-band {
+  margin: 28px 0 4px; padding: 8px 12px; border-radius: 8px;
+  font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+}
+.adapt-act { background: #fbe6e6; color: #8d3535; }
+.adapt-watch { background: #fff0d8; color: #875e24; }
+.adapt-note { background: #edf2e6; color: #5a6b4c; }
+
+.adapt-finding {
+  padding: 18px 0 16px;
+  border-bottom: 1px solid var(--ui-line);
+}
+.adapt-finding h4 {
+  font-size: 15px; font-weight: 600; margin: 0 0 8px;
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+}
+/* Said on the finding itself, not only in the summary at the top: a reader
+   who scrolls straight to a heading should still see what it rests on. */
+.adapt-thin {
+  font-size: 9px; font-weight: 700; letter-spacing: .09em;
+  background: #eceff3; color: #6b7280;
+  border-radius: 999px; padding: 3px 8px;
+}
+.adapt-evidence {
+  font-size: 12px; color: var(--ui-dim); margin: 0 0 8px;
+  font-variant-numeric: tabular-nums;
+}
+.adapt-action { font-size: 13px; line-height: 1.75; margin: 0; }
+/* The teacher's own words, so they look like a quotation rather than more
+   advice from the app. */
+.adapt-plan {
+  margin: 12px 0 0; padding: 13px 15px;
+  background: #f0ecf6; border-radius: 9px;
+  font-size: 13px; line-height: 1.7; color: #594270;
+}
+.adapt-plan-label {
+  display: block; font-size: 9px; font-weight: 700; letter-spacing: .1em;
+  color: #9376aa; margin-bottom: 6px;
+}
+.adapt-where { font-size: 11px; color: var(--ui-dim); margin: 10px 0 0; }

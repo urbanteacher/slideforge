@@ -862,6 +862,9 @@ ws.attach(server, (sock, req) => {
           kind: String(m.kind || 'poll'),
           prompt: String(m.prompt || '').slice(0, 240),
           options: (Array.isArray(m.options) ? m.options : []).map(o => String(o).slice(0,500)).slice(0, 6),
+          /* Carried into the journal and never sent to a phone: it is the
+             host's own note about what to do with the responses. */
+          nextStep: String(m.nextStep || '').slice(0, 600),
           /* A scale is answered like a poll — an index among the points — so
              the two ends are forwarded for the phone to label its buttons and
              nothing more. The relay counts indices either way. */
