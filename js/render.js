@@ -877,7 +877,7 @@
     paintJoinLine(rail.querySelector('.joinline'), opts.join);
 
     var busy = feedbackDigestBusy(digest);
-    var joining = opts.join && opts.join.pin && opts.join.open !== false;
+    var joining = !!(opts.join && opts.join.pin);
     var slot = ensureRailJoin(rail);
     /* Roomy while nothing has come back — same idea as the empty scoreboard. */
     paintRailJoin(slot, opts.join, !busy);
@@ -948,7 +948,7 @@
     if (!total) {
       /* The join QR owns this space while the room is still arriving — a second
          "no votes" line just pushes it down. */
-      var joining = opts.join && opts.join.pin && opts.join.open !== false;
+      var joining = !!(opts.join && opts.join.pin);
       if (!joining) body.appendChild(el('div', 'empty-rail', 'No votes yet'));
       return;
     }
@@ -1023,7 +1023,7 @@
 
   function paintScale(body, digest, opts) {
     if (!digest.total) {
-      var joining = opts && opts.join && opts.join.pin && opts.join.open !== false;
+      var joining = !!(opts && opts.join && opts.join.pin);
       if (!joining) body.appendChild(el('div', 'empty-rail', 'Nobody has placed themselves yet'));
       return;
     }
@@ -1037,7 +1037,7 @@
   function paintCloud(body, digest, opts) {
     var words = digest.words || [];
     if (!words.length) {
-      var joining = opts && opts.join && opts.join.pin && opts.join.open !== false;
+      var joining = !!(opts && opts.join && opts.join.pin);
       if (!joining) body.appendChild(el('div', 'empty-rail', 'No words yet'));
       return;
     }
@@ -1207,7 +1207,14 @@
    */
   function paintRailJoin(node, join, roomy) {
     if (!node) return;
-    var live = join && join.pin && join.open !== false;
+    /* Shown whenever there is a PIN at all, open window or not.
+
+       Hiding it while the window is shut was wrong: joining a closed room is
+       not refused, it puts you in the waiting room and admits you at the next
+       round. So the code still works — and a rail reading "waiting for
+       players" with no code on it is a room nobody can become a player in.
+       What changes when the window shuts is the label, not the presence. */
+    var live = !!(join && join.pin);
     node.classList.toggle('on', !!live);
     node.classList.toggle('big', !!live && roomy);
     /* The footer line and a big panel say the same thing, and the panel says
@@ -1217,8 +1224,13 @@
     if (rail) rail.classList.toggle('joining-big', !!live && roomy);
     if (!live) { node.textContent = ''; node.dataset.for = ''; return; }
 
+    var open = join.open !== false;
     var link = join.link || join.url || '';
-    var key = link + '|' + (roomy ? 'big' : 'small');
+    /* The window state is in the key: the label changes with it, so a repaint
+       has to happen when it flips. */
+    var waiting = open ? 0 : Math.max(0, Number(join.waiting) || 0);
+    var key = link + '|' + (roomy ? 'big' : 'small') + '|' +
+      (open ? 'open' : 'shut') + '|' + waiting;
     /* Rebuilt only when the payload changes: this runs on every roster push
        and encoding a QR per push would be work for nothing. If the node was
        emptied underneath us, rebuild anyway. */
@@ -1238,9 +1250,23 @@
       } catch (e) { /* nothing worth showing beats a broken box on a wall */ }
     }
     var side = el('div', 'rj-side');
-    side.appendChild(el('div', 'rj-lbl', roomy ? 'Point a camera here' : 'Still joining?'));
+    /* Says what will actually happen. "Scan to join the next round" is a
+       different promise from "point a camera here", and a room that scans on
+       the strength of the wrong one and lands in a waiting screen learns not
+       to trust the panel. */
+    side.appendChild(el('div', 'rj-lbl' + (open ? '' : ' shut'),
+      open ? (roomy ? 'Point a camera here' : 'Still joining?')
+           : (roomy ? 'Scan to join the next round' : 'Joining next round')));
     side.appendChild(el('div', 'rj-pin', join.pin));
     if (roomy) side.appendChild(el('div', 'rj-url', join.url || ''));
+    /* Someone who has already scanned is looking at a waiting screen and
+       wants to know it worked. The footer line says this too, but the big
+       panel hides that line, so it would go unsaid exactly when the panel is
+       the only thing on the rail. */
+    if (waiting) {
+      side.appendChild(el('div', 'rj-wait',
+        waiting + (waiting === 1 ? ' person is' : ' people are') + ' in the queue'));
+    }
     node.appendChild(side);
   }
 
@@ -1293,7 +1319,7 @@
       /* No "waiting for players" when the join panel is showing them how to
          stop it being true — two ways of saying the same thing, one of them
          actionable. */
-      var joining = opts.join && opts.join.pin && opts.join.open !== false;
+      var joining = !!(opts.join && opts.join.pin);
       if (!joining) {
         box.appendChild(el('div', 'empty-rail', opts.emptyText || 'Nobody has joined yet.'));
       }

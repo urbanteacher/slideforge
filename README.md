@@ -484,14 +484,21 @@ whatever is most useful at the time rather than one fixed panel:
 | Nobody has arrived | the join code as a QR, large, with the PIN and address under it |
 | People are arriving | a line each — *"Dara joined"* — for a few seconds |
 | The room is in | names and scores, with the code shrunk to a corner strip |
-| Joining has shut | the code goes; the footer says it reopens next round |
+| Joining has shut | the code stays, relabelled *scan to join the next round*, with the size of the queue |
 
 An empty rail saying *"waiting for players"* is the one moment the screen has
 nothing better to do than show people how to arrive, so that space becomes the
 QR code. Once anyone is in, the standings take it back and the code drops to a
 96px strip labelled *still joining?* — still scannable, no longer the point.
-When the join window shuts at the first question of a round, the code goes
-entirely: a PIN that will not admit anyone is worse than no PIN.
+
+**The code does not disappear when the join window shuts**, and the first
+version of this got that wrong. Joining a closed room is not refused: it puts
+you in the waiting room and admits you at the next round. So the PIN still
+works, and a rail reading *"waiting for players"* with no code on it is a room
+nobody can become a player in. What changes when the window shuts is the
+label — *scan to join the next round* — plus a line saying how many are already
+in the queue, because somebody who has scanned is looking at a waiting screen
+and wants to know it worked.
 
 The panel appears in both rails — the scoreboard and the feedback feed — since
 which of them is on screen has nothing to do with whether somebody still needs

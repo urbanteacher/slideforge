@@ -1114,9 +1114,14 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 #joincard .count { margin-top: 18px; font-size: 20px; color: #b9c0cd; }
 #joincard .dismiss { margin-top: 30px; font-size: 15px; color: #6c7482; }
 
-/* the HUD join button only makes sense while a room is open */
-.hud button[data-act="join"] { display: none; }
-body.live-on .hud button[data-act="join"] { display: inline-block; }
+/* Room sidebar (◧), join QR (◉), and expand (⛶) stay on the HUD for every
+   show. Host live fills them; Present alone still offers the controls. */
+.hud button[data-act="join"],
+.hud button[data-act="focus"],
+.hud button[data-act="rail"] { display: inline-block; }
+.hud button[data-act="rail"].on,
+.hud button[data-act="join"].on,
+.hud button[data-act="focus"].on { background: rgba(255,255,255,.22); }
 
 
 /* ---- make room for the rail; all offsets derive from --rail-w ---- */
@@ -1908,8 +1913,8 @@ body.ws-game [data-ws="deck"] { display: none !important; }
 
 /* the expand button belongs to any live session — the rail always has
    something in it worth putting on the whole screen */
-.hud button[data-act="focus"] { display: none; }
-body.live-on .hud button[data-act="focus"] { display: inline-block; }
+/* Focus / join / rail stay on the HUD for every show — Host live fills them
+   with a live room; Present alone still offers the control and explains. */
 
 /* the editor preview can host the feedback rail, so it needs the same width
    variable and the same right-edge anchoring the player viewport has */
@@ -2328,6 +2333,10 @@ body.live-on .hud button[data-act="focus"] { display: inline-block; }
   color: var(--s-dim);
 }
 .scorerail .rail-join.big .rj-lbl { font-size: 17px; }
+/* Shut, not broken: the code still works, it lands you in the next round. */
+.scorerail .rj-lbl.shut { color: var(--s-accent-2); }
+.scorerail .rj-wait { font-size: 15px; color: var(--s-dim); margin-top: 6px; }
+.scorerail .rail-join.big .rj-wait { font-size: 18px; margin-top: 10px; }
 .scorerail .rj-pin {
   font-size: 30px; font-weight: 800; letter-spacing: .1em;
   font-variant-numeric: tabular-nums; line-height: 1.15;
