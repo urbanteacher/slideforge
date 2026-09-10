@@ -629,7 +629,18 @@
     if (!scale) return;
     if (Player._rail) Player._rail.style.transform = 'scale(' + scale + ')';
     if (Player._solo) Player._solo.style.transform = 'scale(' + scale + ')';
-    if (Player._qacue) Player._qacue.style.transform = 'scale(' + scale + ')';
+    if (Player._cuebar) Player._cuebar.style.transform = 'scale(' + scale + ')';
+  }
+
+  /* One strip in the corner for the standing cues, so two of them stack
+     instead of landing on top of each other — and on top of the slide
+     number, which owns the opposite corner. */
+  function cuebar() {
+    if (!Player._cuebar) {
+      Player._cuebar = el('div', 'cuebar');
+      viewport.appendChild(Player._cuebar);
+    }
+    return Player._cuebar;
   }
 
   /**
@@ -651,7 +662,7 @@
       this._qacue = el('div', 'qacue');
       this._qacue.appendChild(el('span', 'qa-dot'));
       this._qacue.appendChild(el('span', 'qa-text'));
-      viewport.appendChild(this._qacue);
+      cuebar().appendChild(this._qacue);
     }
     this._qacue.classList.toggle('waiting', pending > 0);
     var txt = this._qacue.querySelector('.qa-text');
@@ -665,6 +676,44 @@
       txt.appendChild(document.createTextNode(
         open === 1 ? ' question open' : ' questions open'));
     }
+    scaleOverlays();
+  };
+
+  var PACE_SAY = {
+    lost: ' saying they are lost',
+    fast: ' saying it is too fast',
+    slow: ' saying it is too slow'
+  };
+
+  /**
+   * The pace cue: how many of the room are asking you to change something.
+   *
+   * Shown only on a spike, and only as a count. One person who is lost is a
+   * conversation to have with them, not something to put on the wall — and
+   * naming anyone would end the feature, since a signal you can be identified
+   * by is a signal nobody sends.
+   *
+   * It appears because the room asked for it to. Showing them it landed is
+   * the point: a signal that visibly changes nothing gets sent once.
+   */
+  Player.setPaceCue = function (digest) {
+    if (!root) return;
+    var show = digest && digest.spike && digest.kind && digest.live > 0;
+
+    if (!show) {
+      if (this._pacecue) { this._pacecue.remove(); this._pacecue = null; }
+      return;
+    }
+    if (!this._pacecue) {
+      this._pacecue = el('div', 'pacecue');
+      this._pacecue.appendChild(el('span', 'pace-dot'));
+      this._pacecue.appendChild(el('span', 'pace-text'));
+      cuebar().appendChild(this._pacecue);
+    }
+    var txt = this._pacecue.querySelector('.pace-text');
+    txt.textContent = '';
+    txt.appendChild(el('span', 'pace-n', String(digest.counts[digest.kind])));
+    txt.appendChild(document.createTextNode(PACE_SAY[digest.kind] || ''));
     scaleOverlays();
   };
 
@@ -1007,7 +1056,15 @@
         startedAt: Player.started,
         /* Pending questions travel to presenter view and nowhere else: the
            host's own screen is usually the projected one. */
-        qa: Player.qa || null
+        qa: Player.qa || null,
+        /* Pace and confidence go the same way. The wall gets a count on a
+           spike; the detail is for whoever is teaching. */
+        pace: Player.pace || null,
+        confidence: Player.confidence || null,
+        /* "3 unanswered", "12 waiting" — the cues that tell the host whether
+           to wait or move on. Only meaningful live, null otherwise. */
+        progress: Player._liveProgress || null,
+        waiting: Player.waiting || 0
       }, '*');
     } catch (e) { /* window closing */ }
   }

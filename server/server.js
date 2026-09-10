@@ -266,7 +266,7 @@ function answersFor(room) {
   for (const p of room.players.values()) {
     if (eligible && !eligible.has(p.id)) continue;
     if (p.answer == null) continue;
-    out.push({ id: p.id, name: p.name, team: p.team, response: p.answer });
+    out.push({ id: p.id, name: p.name, team: p.team, response: p.answer, sure: p.sure });
   }
   return out;
 }
@@ -277,6 +277,7 @@ function pushTally(room) {
   const eligible = room.question.eligible;
   const counts = new Array(room.question.options.length).fill(0);
   let answered = 0;
+  let sured = 0;
   let total = 0;
   for (const p of room.players.values()) {
     // latecomers are spectators for the question already on screen
@@ -285,12 +286,17 @@ function pushTally(room) {
     total++;
     if (p.answer == null) continue;
     answered++;
+    if (typeof p.sure === 'boolean') sured++;
     if (choosing && p.answer >= 0 && p.answer < counts.length) counts[p.answer]++;
   }
   room.host.json({
     t: 'tally',
     counts,
     answered,
+    /* How many have also said how sure they were. The host holds the reveal a
+       beat for the rest — revealing the moment the last answer lands would
+       collect the answer and throw away whether they meant it. */
+    sured,
     total,
     waiting: room.players.size - total,
     allIn: total > 0 && answered === total,
@@ -401,6 +407,49 @@ function qaForPlayer(room, playerId) {
   return { t: 'qaList', items, pinned: room.qaPinned };
 }
 
+/* A signal is live for this long and then it is gone. Long enough to survive
+   a slow explanation, short enough that it always means "right now". */
+const SIGNAL_TTL_MS = 90 * 1000;
+const SIGNAL_KINDS = ['lost', 'fast', 'slow'];
+
+function signalDigest(room) {
+  const now = Date.now();
+  const counts = { lost: 0, fast: 0, slow: 0 };
+  let live = 0;
+  for (const [id, sig] of room.signals) {
+    if (now - sig.at > SIGNAL_TTL_MS) { room.signals.delete(id); continue; }
+    counts[sig.kind]++;
+    live++;
+  }
+  const connected = [...room.players.values()].filter((p) => p.sock && p.sock.open).length;
+  /* A quarter of the room, and never fewer than two people: one person who is
+     lost is a conversation, not a signal about the lesson. */
+  const threshold = Math.max(2, Math.ceil(connected * 0.25));
+  const loudest = SIGNAL_KINDS.reduce((a, k) => (counts[k] > counts[a] ? k : a), 'lost');
+  return {
+    t: 'signals',
+    counts,
+    live,
+    of: connected,
+    kind: counts[loudest] ? loudest : null,
+    spike: live >= threshold && connected > 0
+  };
+}
+
+function pushSignals(room) {
+  if (room.host && room.host.open) room.host.json(signalDigest(room));
+  /* Sweep only while something is live: an expiring signal has to lower the
+     count on its own, with nobody having pressed anything. */
+  if (room.signals.size && !room.sweeper) {
+    room.sweeper = setInterval(() => {
+      const before = room.signals.size;
+      const digest = signalDigest(room);
+      if (room.signals.size !== before && room.host && room.host.open) room.host.json(digest);
+      if (!room.signals.size) { clearInterval(room.sweeper); room.sweeper = null; }
+    }, 5000);
+  }
+}
+
 function pushQA(room) {
   if (room.host && room.host.open) room.host.json(qaForHost(room));
   for (const p of room.players.values()) {
@@ -472,6 +521,7 @@ function record(room, type, data) {
 
 function closeRoom(room, reason) {
   if (!rooms.has(room.pin)) return;
+  if (room.sweeper) { clearInterval(room.sweeper); room.sweeper = null; }
   record(room, 'end', {reason:reason || 'The host ended the session.'});
   if (room.host && room.host.open) room.host.json({t:'sessionClosed', report:Sessions.project(room.audit)});
   const bye = { t: 'over', reason: reason || 'The host ended the quiz.' };
@@ -551,6 +601,17 @@ ws.attach(server, (sock, req) => {
         qa: new Map(),           // id -> { id, text, name, playerId, at, state, votes:Set }
         qaNextId: 1,
         qaPinned: null,
+        /* How the room says the lesson is going: lost, too fast, too slow.
+           Ambient like Q&A, but unlike Q&A it decays — "I am lost" is about
+           now, and a hand raised on slide 3 must not still be up on slide 20.
+           playerId is the key so one person counts once and can change their
+           mind; it is deliberately never sent anywhere or journalled, because
+           a signal nobody will admit to sending is a signal nobody sends. */
+        signals: new Map(),      // playerId -> { kind, at }
+        sweeper: null,
+        /* Where the host is. Sent with each slide so a signal can be filed
+           against the thing the room was actually looking at. */
+        at: { slideId: '', title: '', n: 0 },
         phase: 'lobby',
         nextId: 1,
         asked: 0
@@ -628,6 +689,9 @@ ws.attach(server, (sock, req) => {
           } : null,
           timeLimit: Math.max(0, Number(m.timeLimit) || 0),
           points: Math.max(0, Number(m.points) || 1000),
+          /* Whether the phones ask how sure they were. Passed through, not
+             decided here — it is an authoring choice. */
+          confidence: m.confidence === true,
           // the host knows where this question sits in the deck; fall back to
           // a running count if an older client doesn't send it
           index: Number(m.n) > 0 ? Number(m.n) : room.asked
@@ -648,6 +712,7 @@ ws.attach(server, (sock, req) => {
         record(room, 'question', {...room.question, eligible:[...room.question.eligible]});
         for (const p of room.players.values()) {
           p.answer = null;
+          p.sure = null;
           p.answeredAt = 0;
           p.lastGain = 0;
         }
@@ -656,6 +721,7 @@ ws.attach(server, (sock, req) => {
           n: room.question.index,
           input: room.question.input,
           range: room.question.range,
+          confidence: room.question.confidence,
           count: room.question.options.length,
           timeLimit: room.question.timeLimit
         });
@@ -843,6 +909,16 @@ ws.attach(server, (sock, req) => {
         record(room, 'qaPin', { id: room.qaPinned ? room.qaPinned.id : null });
         pushQA(room);
 
+      } else if (m.t === 'at') {
+        /* Just where the host is. A pace signal is filed against the slide the
+           room was looking at when they sent it, which is the only form of it
+           that is any use afterwards. */
+        room.at = {
+          slideId: String(m.slideId || '').slice(0, 160),
+          title: String(m.title || '').slice(0, 200),
+          n: Math.max(0, Number(m.n) || 0)
+        };
+
       } else if (m.t === 'idle') {
         room.phase = 'idle';
         room.question = null;
@@ -883,7 +959,7 @@ ws.attach(server, (sock, req) => {
             if (room.phase === 'question' && room.question && room.question.eligible.has(me.id)) {
               const remaining = room.question.timeLimit ? Math.max(0, room.question.timeLimit - (Date.now() - room.askedAt) / 1000) : 0;
               if (!room.question.timeLimit || remaining > 0) {
-                sock.json({t:'question',n:room.question.index,input:room.question.input,range:room.question.range,count:room.question.options.length,timeLimit:remaining});
+                sock.json({t:'question',n:room.question.index,input:room.question.input,range:room.question.range,confidence:room.question.confidence,count:room.question.options.length,timeLimit:remaining});
                 if (me.answer != null) {
                   sock.json(room.question.input === 'text' ? {t:'locked',text:me.answer}
                     : room.question.input === 'number' ? {t:'locked',value:me.answer}
@@ -940,6 +1016,7 @@ ws.attach(server, (sock, req) => {
         score: 0,
         correctCount: 0,
         answer: null,
+        sure: null,
         answeredAt: 0,
         lastGain: 0,
         sock
@@ -1015,6 +1092,43 @@ ws.attach(server, (sock, req) => {
       return;
     }
 
+    /* Confidence arrives after the answer, not with it. Answering has to lock
+       the instant they tap — the speed bonus is real points — so asking "how
+       sure?" first would cost them for being asked. */
+    if (role === 'player' && m.t === 'sure') {
+      if (!room || !rooms.has(room.pin) || room.phase !== 'question' || !room.question) return;
+      if (room.answersClosed || me.answer == null) return;
+      if (typeof m.sure !== 'boolean') return;
+      me.sure = m.sure;
+      record(room, 'sure', {attempt: room.question.attempt, playerId: me.id, sure: m.sure});
+      /* Not a new answer, so the revision does not move: the host's marking
+         is about what was answered, and this changes none of it. */
+      pushTally(room);
+      return;
+    }
+
+    if (role === 'player' && m.t === 'signal') {
+      if (!room || !rooms.has(room.pin) || !room.players.has(me.id)) return;
+      const kind = SIGNAL_KINDS.includes(m.kind) ? m.kind : null;
+      const mine = room.signals.get(me.id);
+      /* Pressing the same thing again takes it back. Nobody should have to
+         hunt for a way to say "actually, I follow now". */
+      if (!kind || (mine && mine.kind === kind)) {
+        room.signals.delete(me.id);
+        sock.json({ t: 'signalled', kind: null });
+      } else {
+        room.signals.set(me.id, { kind, at: Date.now() });
+        sock.json({ t: 'signalled', kind });
+        /* Journalled without the player: the report should be able to say the
+           room lost the thread on slide 7 without naming who said so. */
+        record(room, 'signal', {
+          kind, slideId: room.at.slideId, title: room.at.title, n: room.at.n
+        });
+      }
+      pushSignals(room);
+      return;
+    }
+
     if (role === 'player' && m.t === 'qaVote') {
       if (!room) return;
       const item = room.qa.get(Number(m.id));
@@ -1085,12 +1199,18 @@ ws.attach(server, (sock, req) => {
       }
       me.answer = response;
       me.answeredAt = Date.now();
+      /* How sure they were, if their phone asked. Never scored — it changes
+         what the teacher sees, not what the answer is worth. Confidently
+         wrong is the interesting case, and scoring it would just teach the
+         room to claim they were guessing. */
+      me.sure = typeof m.sure === 'boolean' ? m.sure : null;
       room.answerRev++;
       record(room, 'answer', {attempt:room.question.attempt, playerId:me.id,
         input: room.question.input,
         choice: room.question.input === 'choice' ? response : null,
         text: room.question.input === 'text' ? response : null,
         value: room.question.input === 'number' ? response : null,
+        sure: me.sure,
         elapsedMs:me.answeredAt-room.askedAt});
       sock.json(room.question.input === 'text' ? { t: 'locked', text: response }
         : room.question.input === 'number' ? { t: 'locked', value: response }
@@ -1108,6 +1228,9 @@ ws.attach(server, (sock, req) => {
       me.sock = null;
       if (rooms.has(room.pin)) record(room, 'leave', {id:me.id});
       if (rooms.has(room.pin)) {
+        /* Someone who has left the room is not still lost in it, and leaving
+           shrinks the room the spike threshold is measured against. */
+        if (room.signals.delete(me.id) || room.signals.size) pushSignals(room);
         pushPlayers(room);
         pushTally(room);
         log('room ' + room.pin + ' - ' + me.name + ' (' + room.players.size + ')');

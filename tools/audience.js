@@ -4,8 +4,9 @@
    twenty phones.
  *
  * Joins N students to a live PIN and has them behave like a room: they answer
- * questions (most of them correctly), reply to polls and word clouds, ask
- * questions, and upvote each other. Everything goes through the same
+ * questions (most of them correctly), say how sure they were, reply to polls
+ * and word clouds, ask questions, upvote each other, and tell you when they
+ * are lost or you are going too fast. Everything goes through the same
  * WebSocket protocol a real phone uses, so what you see on the wall is what
  * you would see on the day.
  *
@@ -82,6 +83,7 @@ class Student {
     this.name = name;
     this.i = i;
     this.asked = 0;
+    this.askedSure = false;
     this.seen = new Set();
     /* Most of the room knows the answer; a few reliably do not. */
     this.ability = i % 5 === 0 ? 0.35 : 0.85;
@@ -129,12 +131,36 @@ class Student {
     if (m.t === 'waiting') { say('  … ' + this.name + ' waiting for the next round'); return; }
     if (m.t === 'room' && m.mode === 'teams') return;
     if (m.t === 'question') this.answer(m);
+    if (m.t === 'locked' && this.askedSure) this.saySure();
     if (m.t === 'prompt') this.reply(m);
     if (m.t === 'qaList') this.vote(m);
     if (m.t === 'asked') say('  ? ' + this.name + ' asked a question');
   }
 
+  /* Says how sure it was, a beat after answering — the same order a phone
+     does it in, and honestly: the ones who know it say they are sure. */
+  async saySure() {
+    this.askedSure = false;
+    await wait(jitter(500));
+    /* Some of the room is confidently wrong, which is the whole reason the
+       number is worth collecting. */
+    const sure = Math.random() < (this.ability > 0.5 ? 0.8 : 0.45);
+    this.send({ t: 'sure', sure });
+    say('  ' + (sure ? '!' : '?') + ' ' + this.name + (sure ? ' was sure' : ' was guessing'));
+  }
+
+  /* A slow trickle of pace signals from the students who are struggling. A
+     real room does not all raise a hand at once, and the ones who are lost
+     are the ones who say so. */
+  async maybeSignal() {
+    if (Math.random() > (this.ability > 0.5 ? 0.12 : 0.5)) return;
+    const kind = pick(this.ability > 0.5 ? ['fast', 'slow'] : ['lost', 'lost', 'fast']);
+    this.send({ t: 'signal', kind });
+    say('  ✋ ' + this.name + ' signalled "' + kind + '"');
+  }
+
   async answer(m) {
+    this.askedSure = m.confidence === true;
     await wait(jitter(700));
     if (m.input === 'text') { this.answerTyped(); return; }
     if (m.input === 'number') { this.answerPlaced(m); return; }
@@ -257,8 +283,18 @@ class Student {
   }, 9000);
   setTimeout(() => pick(students).maybeAsk(), 2500);
 
+  /* Pace signals on their own rhythm, mostly from the students who are
+     struggling. They expire on the relay's clock, so a long session sees
+     them come and go rather than pile up. */
+  const signaller = setInterval(() => {
+    const who = pick(students.filter((s) => !s.closed));
+    if (who) who.maybeSignal();
+  }, 11000);
+  setTimeout(() => pick(students).maybeSignal(), 6000);
+
   const bye = () => {
     clearInterval(asker);
+    clearInterval(signaller);
     console.log('\nSending them home.');
     students.forEach((s) => { try { s.ws.close(); } catch (e) {} });
     setTimeout(() => process.exit(0), 200);

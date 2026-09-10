@@ -146,6 +146,7 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 .thumb.sel { border-color: var(--ui-accent); background: var(--ui-accent-soft); }
 .thumb.drag-over { border-top-color: var(--ui-accent); }
 .thumb .num { width: 16px; text-align: right; font-size: 11px; color: var(--ui-dim); padding-top: 4px; flex: none; }
+.thumb-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .thumb .frame {
   flex: 1; aspect-ratio: 16/9; border-radius: 4px; overflow: hidden;
   background: #000; position: relative; pointer-events: none;
@@ -157,9 +158,31 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   background: rgba(0,0,0,.6); color: #fff; letter-spacing: .04em;
 }
 .thumb .badge.quiz { background: var(--ui-warn); color: #21160a; }
+.thumb-tx {
+  flex: none;
+  align-self: center;
+  width: 16px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--ui-dim);
+  opacity: .9;
+}
+.thumb.sel .thumb-tx { color: var(--ui-accent); opacity: 1; }
 
-.rail-foot { padding: 8px; border-top: 1px solid var(--ui-line); display: flex; flex-wrap: wrap; gap: 6px; }
-.rail-foot .btn { flex: 1 1 60px; text-align: center; font-size: 12px; padding: 6px 4px; }
+.rail-foot { padding: 8px; border-top: 1px solid var(--ui-line); display: flex; flex-direction: column; gap: 8px; }
+.rail-foot .rail-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.rail-foot .rail-actions .btn { flex: 1 1 60px; text-align: center; font-size: 12px; padding: 6px 4px; }
+.rail-tx { display: grid; gap: 4px; }
+.rail-tx label {
+  font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ui-dim); font-weight: 600;
+}
+.rail-tx select {
+  width: 100%; font-size: 11px; padding: 7px 8px;
+  border-radius: 7px; border: 1px solid var(--ui-line);
+  background: var(--ui-panel); color: var(--ui-text);
+}
 
 /* stage ------------------------------------------------------------------ */
 
@@ -356,6 +379,102 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 }
 .layout-content li.tier-2 { font-size: 26px; margin-left: 46px; color: var(--s-dim); }
 .layout-content li.tier-2::before { width: 8px; height: 8px; border-radius: 50%; background: var(--s-dim); top: .55em; }
+
+/* keywords — bold term, lowercase definition */
+.layout-keywords .kw-list {
+  display: flex; flex-direction: column; gap: 22px; margin: 0; min-height: 0;
+}
+.layout-keywords .kw-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.38fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: baseline;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--s-rule);
+}
+.layout-keywords .kw-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.layout-keywords .kw-term {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1.2;
+}
+.layout-keywords .kw-def {
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--s-dim);
+  text-transform: lowercase;
+}
+.layout-keywords .kw-row.dim .kw-term,
+.layout-keywords .kw-row.dim .kw-def { opacity: .55; font-style: italic; font-weight: 500; }
+
+/* italics — emphasised phrase + plain note */
+.layout-italics .it-list {
+  display: flex; flex-direction: column; gap: 22px; margin: 0; min-height: 0;
+}
+.layout-italics .it-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.42fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: baseline;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--s-rule);
+}
+.layout-italics .it-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.layout-italics .it-phrase {
+  font-size: 34px;
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: -.015em;
+  line-height: 1.25;
+}
+.layout-italics .it-note {
+  font-size: 26px;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1.4;
+  color: var(--s-dim);
+}
+.layout-italics .it-row.dim .it-phrase,
+.layout-italics .it-row.dim .it-note { opacity: .55; }
+
+/* links — text on top, clickable URL below */
+.layout-links .ln-list {
+  display: flex; flex-direction: column; gap: 28px; margin: 0; min-height: 0;
+}
+.layout-links .ln-row {
+  display: flex; flex-direction: column; gap: 10px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--s-rule);
+}
+.layout-links .ln-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.layout-links .ln-label {
+  font-size: 34px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -.015em;
+  color: var(--s-fg);
+}
+.layout-links .ln-link {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--s-accent);
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  word-break: break-all;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.layout-links .ln-link:hover { color: var(--s-accent-2, var(--s-accent)); }
+.layout-links .ln-url {
+  font-size: 22px;
+  color: var(--s-dim);
+  word-break: break-all;
+}
+.layout-links .ln-url.bad { color: var(--s-accent); opacity: .85; }
+.layout-links .ln-row.dim { opacity: .55; font-style: italic; }
 
 /* quote */
 .layout-quote .pad { justify-content: center; }
@@ -1776,12 +1895,23 @@ body.live-on .hud button[data-act="focus"] { display: inline-block; }
 .layout-question .qc-text[data-len="lg"] { font-size: 44px; }
 .layout-question .qc-text[data-len="xl"] { font-size: 36px; }
 
-/* the standing cue: how many are waiting, unobtrusive but always there */
-.qacue {
+/* One strip for the standing cues, bottom-left because the slide number owns
+   bottom-right. Side by side rather than stacked: a question slide has one
+   band of space under the answers, and a second row of pills climbs straight
+   into them. */
+.cuebar {
   position: absolute; left: 0; bottom: 0;
   transform-origin: 0 100%;
   z-index: 3;
   margin: 0 0 28px 32px;
+  display: flex; align-items: center; gap: 10px;
+}
+/* Pace first: being asked to slow down is the more urgent of the two. */
+.cuebar .pacecue { order: 0; }
+.cuebar .qacue { order: 1; }
+
+/* the standing cue: how many are waiting, unobtrusive but always there */
+.qacue {
   display: flex; align-items: center; gap: 10px;
   padding: 9px 17px;
   border-radius: 999px;
@@ -1800,10 +1930,10 @@ body.live-on .hud button[data-act="focus"] { display: inline-block; }
 
 /* Clear whatever occupies the foot of a question slide. The clearances are
    written in slide pixels and multiplied by the letterbox scale, because what
-   is being cleared is inside the scaled slide while the cue is not — a fixed
+   is being cleared is inside the scaled slide while the strip is not — a fixed
    pixel gap only ever looks right at one window size. */
-.deck-viewport.quiz-slide .qacue { margin-bottom: calc(28px + var(--sf-scale, 1) * 150px); }
-.deck-viewport.quiz-line .qacue { margin-bottom: calc(28px + var(--sf-scale, 1) * 225px); }
+.deck-viewport.quiz-slide .cuebar { margin-bottom: calc(28px + var(--sf-scale, 1) * 150px); }
+.deck-viewport.quiz-line .cuebar { margin-bottom: calc(28px + var(--sf-scale, 1) * 225px); }
 
 /* ----------------------------------------------------------------------
    Typed answers
@@ -1952,3 +2082,29 @@ body.live-on .hud button[data-act="focus"] { display: inline-block; }
 }
 .sc-split { font-size: 10px; padding: 2px 8px; }
 .fksc-split { font-size: 18px; padding: 4px 14px; }
+
+/* ----------------------------------------------------------------------
+   The pace cue
+
+   Sits opposite the Q&A cue. It appears only when enough of the room is
+   asking for something — showing them the signal landed is the point,
+   since one that visibly changes nothing gets sent once and never again.
+   Counts only, never names: see Player.setPaceCue().
+   ---------------------------------------------------------------------- */
+.pacecue {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 17px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.42);
+  border: 2px solid var(--s-accent-2);
+  color: var(--s-fg);
+  font-family: var(--s-font);
+  font-size: 18px;
+}
+.pacecue .pace-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--s-accent-2);
+  animation: sf-pace-pulse 1.8s ease-in-out infinite;
+}
+@keyframes sf-pace-pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+.pacecue .pace-n { font-weight: 700; font-variant-numeric: tabular-nums; }

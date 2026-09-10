@@ -565,6 +565,19 @@
             ? 'A full-screen slide follows each question that has an explanation \u2014 more room for long text.'
             : 'The box expands on reveal, then the next slide gives the full version.'));
 
+      body.appendChild(UI.field('After each answer', (function () {
+        var box = el('div');
+        box.appendChild(UI.check('Ask how sure they were', st.confidence !== false, function (v) {
+          st.confidence = v; touched(); draw2();
+        }));
+        box.appendChild(el('div', 'hint',
+          'One extra tap on the phone, after their answer is already locked in ' +
+          'so it costs them no time. It never changes the score — what it ' +
+          'gives you is the count of answers that were wrong and confident, ' +
+          'which is a misconception to re-teach rather than a gap to practise.'));
+        return box;
+      })()));
+
       body.appendChild(UI.field('Slides the game adds', (function () {
         var box = el('div');
         box.appendChild(UI.check('Opening title slide', st.intro, function (v) {

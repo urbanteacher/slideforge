@@ -135,6 +135,23 @@
     padding-top: 6vh; width: 100%; max-width: 340px; margin: 0 auto; }
   #qTypeWrap.locked #qText, #qTypeWrap.locked #qSend { opacity: .45; pointer-events: none; }
   #qMine { margin-top: 14px; }
+  .pick.pace .l, .pick.sure .l { font-size: 17px; }
+  /* Widened explicitly, like the scale pads: this screen centres its children,
+     so a column of short labels shrinks to the width of the words. */
+  #pacePad { width: 100%; gap: 10px; }
+  .pad.one .pick.pace { min-height: 0; padding: 16px; }
+  /* Coloured by how loud the signal is, not by position in a list. */
+  .pick.pace[data-kind="lost"] { background: #e8a020; color: #1d1204; }
+  .pick.pace[data-kind="fast"] { background: #2b7ce9; }
+  .pick.pace[data-kind="slow"] { background: #3a414d; }
+  /* Asked after the answer is already in, so it is a footnote to the screen
+     rather than another thing to get through before the clock runs out. */
+  #sureWrap { flex: none; width: 100%; max-width: 340px; margin: 14px auto 0; }
+  #sureWrap.answered .surerow { opacity: .45; pointer-events: none; }
+  .surerow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .surerow .pick { min-height: 0; padding: 13px 10px; background: #262b34; }
+  .surerow .pick.mine { background: #4c8dff; }
+
   /* A scale's pads run in one column with its ends named at top and bottom.
      Widened explicitly: the prompt screen centres its children, so a column
      of one-character labels would otherwise shrink to the width of a digit. */
@@ -227,6 +244,9 @@
   <button class="askbtn" id="askBtn" type="button" title="Ask a question">
     ? <span class="askn" id="askN" style="display:none"></span>
   </button>
+  <button class="askbtn" id="paceBtn" type="button" title="Tell your teacher how the pace is">
+    ✋ <span class="askn" id="paceN" style="display:none"></span>
+  </button>
   <div class="who"><span id="hdrName">—</span><span class="team" id="hdrTeam" style="display:none"></span></div>
   <div class="score" id="hdrScore">0</div>
 </header>
@@ -284,6 +304,20 @@
     <button class="go sub" id="askBack" style="max-width:340px">Back</button>
   </section>
 
+  <!-- 1e. how's the pace (reachable at any time) -->
+  <section class="screen center" id="scPace">
+    <h1>How's it going?</h1>
+    <div class="lead">Nobody sees who sent this — your teacher sees how many.</div>
+    <div class="pad one" id="pacePad" style="max-width:320px;flex:none;display:grid">
+      <button class="pick pace" type="button" data-kind="lost"><span class="l">I'm lost</span></button>
+      <button class="pick pace" type="button" data-kind="fast"><span class="l">Too fast</span></button>
+      <button class="pick pace" type="button" data-kind="slow"><span class="l">Too slow</span></button>
+    </div>
+    <div class="pill" id="paceDone" style="display:none"></div>
+    <div class="lead" style="font-size:13px;margin-top:10px">It clears itself after a minute or two, so it always means right now.</div>
+    <button class="go sub" id="paceBack" style="max-width:340px;margin-top:14px">Back</button>
+  </section>
+
   <!-- 2b. feedback prompt -->
   <section class="screen center" id="scPrompt">
     <div class="lead" id="fbKind">Poll</div>
@@ -320,6 +354,13 @@
              autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="send">
       <button class="go" id="qSend" style="margin-top:12px">Send</button>
       <div class="pill" id="qMine" style="display:none"></div>
+    </div>
+    <div id="sureWrap" style="display:none">
+      <div class="lead" id="sureLead">How sure are you?</div>
+      <div class="surerow">
+        <button class="pick sure" type="button" data-sure="1"><span class="l">I'm sure</span></button>
+        <button class="pick sure" type="button" data-sure="0"><span class="l">Just a guess</span></button>
+      </div>
     </div>
   </section>
 
@@ -365,7 +406,7 @@
   var tick = null;
 
   function show(id) {
-    ['scJoin', 'scTeam', 'scHold', 'scWait', 'scAsk', 'scPrompt', 'scQuestion', 'scResult', 'scOver'].forEach(function (s) {
+    ['scJoin', 'scTeam', 'scHold', 'scWait', 'scAsk', 'scPace', 'scPrompt', 'scQuestion', 'scResult', 'scOver'].forEach(function (s) {
       $(s).classList.toggle('on', s === id);
     });
   }
@@ -373,6 +414,7 @@
   function header(on) {
     $('hdr').style.display = on ? 'flex' : 'none';
     $('askBtn').style.display = on ? '' : 'none';
+    $('paceBtn').style.display = on ? '' : 'none';
     $('hdrName').textContent = me.name;
     $('hdrScore').textContent = me.score;
     var badge = $('hdrTeam');
@@ -554,6 +596,14 @@
         if (typeof m.text === 'string') lockTyped(m.text);
         else if (typeof m.value === 'number') lockPlaced(m.value);
         else lockPad(m.choice);
+        /* Asked only once the answer is safely in, and only if the game wants
+           it — a question they can no longer change is the right moment to
+           ask how sure they were. */
+        if (askConfidence) askSure();
+        break;
+
+      case 'signalled':
+        signalled(m.kind);
         break;
 
       case 'result':
@@ -696,6 +746,99 @@
     $('askBtn').classList.remove('on');
     if (askReturn) { show(askReturn.id); askReturn = null; }
     else show('scWait');
+  }
+
+  /* ------------------------------------------------------- pace signal */
+
+  /* What this phone is currently telling the room, or null. Kept here rather
+     than read off the DOM so it survives the screen being redrawn. */
+  var paceKind = null;
+  var paceReturn = null;
+  /* Whether this game asks how sure they were. Off unless the question says
+     so, so an older host never produces a stray extra tap. */
+  var askConfidence = false;
+
+  function openPace() {
+    if (!ws || ws.readyState !== 1) return;
+    if ($('scPace').classList.contains('on')) { closePace(); return; }
+    /* Both panels share the header, so opening one closes the other rather
+       than leaving two "on" buttons and no way back. */
+    if ($('scAsk').classList.contains('on')) closeAsk();
+    paceReturn = [...document.querySelectorAll('.screen')]
+      .find(function (x) { return x.classList.contains('on'); });
+    drawPace();
+    show('scPace');
+    $('paceBtn').classList.add('on');
+  }
+
+  function closePace() {
+    $('paceBtn').classList.remove('on');
+    if (paceReturn) { show(paceReturn.id); paceReturn = null; }
+    else show('scWait');
+  }
+
+  var PACE_WORDS = { lost: "you're lost", fast: "it's too fast", slow: "it's too slow" };
+
+  function drawPace() {
+    Array.prototype.forEach.call($('pacePad').children, function (b) {
+      b.classList.toggle('mine', b.dataset.kind === paceKind);
+      b.classList.toggle('dim', paceKind != null && b.dataset.kind !== paceKind);
+    });
+    var done = $('paceDone');
+    if (paceKind) {
+      done.textContent = 'Your teacher can see ' + PACE_WORDS[paceKind] + ' — tap again to take it back';
+      done.style.display = '';
+    } else {
+      done.style.display = 'none';
+    }
+  }
+
+  function sendSignal(kind) {
+    if (!ws || ws.readyState !== 1) return;
+    ws.send(JSON.stringify({ t: 'signal', kind: kind }));
+    if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
+  }
+
+  /* The relay is the authority on whether a signal is live — it expires them
+     on its own clock, so the phone follows rather than guesses. */
+  function signalled(kind) {
+    paceKind = kind || null;
+    $('paceBtn').classList.toggle('lit', !!paceKind);
+    var n = $('paceN');
+    if (paceKind) { n.textContent = '1'; n.style.display = ''; }
+    else n.style.display = 'none';
+    if ($('scPace').classList.contains('on')) drawPace();
+  }
+
+  /* ------------------------------------------------------- confidence */
+
+  function askSure() {
+    var wrap = $('sureWrap');
+    wrap.style.display = '';
+    wrap.classList.remove('answered');
+    $('sureLead').textContent = 'How sure are you?';
+    Array.prototype.forEach.call(wrap.querySelectorAll('.pick'), function (b) {
+      b.classList.remove('mine', 'dim');
+    });
+  }
+
+  function hideSure() {
+    $('sureWrap').style.display = 'none';
+  }
+
+  function sendSure(sure) {
+    if (!ws || ws.readyState !== 1) return;
+    var wrap = $('sureWrap');
+    if (wrap.classList.contains('answered')) return;
+    wrap.classList.add('answered');
+    Array.prototype.forEach.call(wrap.querySelectorAll('.pick'), function (b) {
+      var mine = (b.dataset.sure === '1') === sure;
+      b.classList.toggle('mine', mine);
+      b.classList.toggle('dim', !mine);
+    });
+    $('sureLead').textContent = sure ? 'Noted — you were sure' : 'Noted — a guess';
+    ws.send(JSON.stringify({ t: 'sure', sure: sure }));
+    if (navigator.vibrate) { try { navigator.vibrate(10); } catch (e) {} }
   }
 
   function sendAsk() {
@@ -879,6 +1022,8 @@
   /* ---------------------------------------------------------- question */
 
   function askQuestion(m) {
+    askConfidence = m.confidence === true;
+    hideSure();
     var count = Math.max(2, Math.min(6, m.count || 4));
     var pad = $('qPad');
     pad.innerHTML = '';
@@ -1122,6 +1267,14 @@
   $('againBtn').onclick = function () { location.href = location.pathname; };
   $('fbSend').onclick = sendText;
   $('askBtn').onclick = openAsk;
+  $('paceBtn').onclick = openPace;
+  $('paceBack').onclick = closePace;
+  Array.prototype.forEach.call($('pacePad').children, function (b) {
+    b.onclick = function () { sendSignal(b.dataset.kind); };
+  });
+  Array.prototype.forEach.call($('sureWrap').querySelectorAll('.pick'), function (b) {
+    b.onclick = function () { sendSure(b.dataset.sure === '1'); };
+  });
   $('askSend').onclick = sendAsk;
   $('askBack').onclick = closeAsk;
   $('askText').addEventListener('keydown', function (e) { if (e.key === 'Enter') sendAsk(); });

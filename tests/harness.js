@@ -116,12 +116,14 @@ async function report(host) {
  * @param mark        (answer) => boolean, defaults to matching msg.correct
  * @param wantAnswers wait until the tally holds this many answers, so the
  *                    test marks a settled set rather than racing the relay
+ * @param have        a tally the test already took. Pass it when the test has
+ *                    consumed the queue itself, or this waits for a fresh push
+ *                    that is never coming and fails with "No tally".
  */
-async function reveal(host, msg, mark, wantAnswers) {
-  let t = null;
-  for (;;) {
+async function reveal(host, msg, mark, wantAnswers, have) {
+  let t = have || null;
+  while (!t || (wantAnswers != null && (t.answers || []).length < wantAnswers)) {
     t = await host.latest('tally');
-    if (wantAnswers == null || (t.answers || []).length >= wantAnswers) break;
   }
   const marks = (t.answers || []).map(a => [a.id, mark ? !!mark(a) : a.response === msg.correct]);
   host.send(Object.assign({ t: 'reveal', rev: t.rev, marks }, msg));

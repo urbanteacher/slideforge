@@ -6,7 +6,7 @@ The **Engagement** tab adds Bloom’s thinking levels, reusable discussion promp
 
 Available library activities: multiple choice, true/false, poll, word cloud and brainstorm. The Add activity library also lists all 27 fullscreen catalogue games (True/False Showdown through Concept Chain) as planned placeholders; their interaction engines are not implemented yet. The existing horse-race style remains available in Quiz studio.
 
-**Slide starters** (toolbar) drop normal presentation shapes — opening title, title + content, dual coding (half text / half image), section break, full-bleed image, three cards, quote, and steps — with empty click-to-fill pits in the inspector. **File → Export → Practice notes (.md)** downloads a one-way Markdown handout for Canvas or Colab; live polls and games stay in the `.sfdeck.json` room.
+**Slide starters** (toolbar) drop normal presentation shapes — opening title, title + content, keywords (bold term + lowercase definition), italics (emphasised phrase + plain note), hyperlinks (label + http(s) URL), dual coding (half text / half image), section break, full-bleed image, three cards, quote, and steps — with empty click-to-fill pits in the inspector. **File → Export → Practice notes (.md)** downloads a one-way Markdown handout for Canvas or Colab; live polls and games stay in the `.sfdeck.json` room.
 
 
 Two engines in one browser app:
@@ -65,8 +65,8 @@ can still be exported while available. The journal retries unsaved events on
 the next write.
 
 Run `node --test tests/*.test.js` for relay integration, crash recovery,
-reconnection, persistence-failure, export, Q&A moderation, marking, slider and
-scale checks. Each test
+reconnection, persistence-failure, export, Q&A moderation, marking, slider,
+scale, pace-signal and confidence checks. Each test
 spawns a real relay with real WebSocket clients, on isolated temporary data and
 an ephemeral loopback port. Pass a directory rather than the glob and Node tries
 to load `tests` as a module instead of discovering the files.
@@ -376,6 +376,69 @@ count, and totals for asked / shown / still unanswered. The report JSON export
 carries all of it; the Reports screen does not yet render a Q&A view, so for now
 it is read from the export.
 
+### How the room is doing
+
+Two ambient signals, both open for the whole session rather than tied to a
+slide, and both existing to tell you something a tally cannot.
+
+**The pace signal.** The **✋** button in the phone's header sends one of three
+things: *I'm lost*, *too fast*, *too slow*. Pressing the same one again takes it
+back, and pressing a different one replaces it, so one person always counts
+once and can always say "actually, I follow now".
+
+Two properties make it work, and both are constraints rather than features:
+
+- **It is anonymous, everywhere.** The projected screen gets a count, presenter
+  view gets a count, and the session journal records the signal *without a
+  player id at all*. A signal you can be identified by is a signal nobody
+  sends, and then it is worse than not having it. What the report keeps instead
+  is the slide it came from, which answers *where did I lose them* — the
+  question actually worth asking afterwards.
+- **It decays.** A signal is live for 90 seconds and then it is gone. "I'm
+  lost" is a statement about now, and a hand raised on slide 3 must not still
+  be up on slide 20. The relay expires them on its own clock and the phones
+  follow, so nobody has to remember to take theirs down.
+
+On the wall the cue appears **only on a spike** — a quarter of the room, and
+never fewer than two people. One person who is lost is a conversation to have
+with them, not a fact about the lesson. It appears at all because the room
+asked for it to: a signal that visibly changes nothing gets sent once.
+
+**Confidence on answers.** With *Ask how sure they were* on (⚙ Settings, on by
+default), the phone asks **I'm sure / Just a guess** after an answer is locked
+in — after, so it costs no time against the speed bonus, and so it cannot be
+revised once they see whether they were right.
+
+It is **never scored**. Scoring it would teach the room to claim they were
+guessing, and the number that matters would stop being true. That number is
+**sure and wrong**: a wrong answer given with conviction is a misconception and
+needs re-teaching, while a wrong guess is a gap and needs practice. They are
+identical in a tally and they need different lessons. *Right but guessing* is
+the same fact from the other side.
+
+Auto-reveal waits for the confidence step — everyone having answered is not the
+end of the question while the phones are still asking — and stops waiting after
+five seconds, so one person ignoring it cannot hold the room. Anyone who never
+answers it is counted as *did not say* rather than assumed either way.
+
+### Presenter cues
+
+Presenter view carries a **How the room is doing** strip, because it is the only
+private surface the host has:
+
+| Cue | Means |
+| --- | --- |
+| *n* still answering | whether to wait or move on |
+| *n* waiting to join | someone arrived after the window shut |
+| *n* lost / say too fast | the pace signal, broken out by kind |
+| *n* sure and wrong | re-teach this, do not just re-practise it |
+| *n* right but guessing | they got there without knowing why |
+| *n* did not say | nobody was assumed either way |
+
+The loaded ones are coloured; the rest are quiet. **Reports → Pace &
+confidence** is the same information after the fact, with the signals grouped
+by the slide they came from.
+
 ### Expanding the rail — `E`
 
 Press **E** (or the ⛶◧ button) to put whatever the rail is showing on the whole
@@ -577,7 +640,14 @@ it with the case and spelling variation a real room produces, which is the only
 way to see whether the marking rules are usable. `--near 206` does the same for
 a slider question: it is where the class's estimates gather, and without it they
 gather on the middle of the line. On a scale the class leans towards the
-confident end with a couple of holdouts, which is the shape a real room makes. Students spread
+confident end with a couple of holdouts, which is the shape a real room makes.
+
+The class also says how sure it was — mostly honestly, with a few confidently
+wrong — and the students who are struggling raise pace signals on a slow
+trickle. Both are the only way to see the presenter cues do anything without a
+room full of people, and the confidence timing in particular is not something
+you can judge from a test: the first version revealed the answer while every
+phone was still asking, and collected nothing. Students spread
 round-robin across the teams, answer with a fixed ability (most get it right,
 roughly one in five does not, so the tally has something to show), reply to
 polls, clouds and brainstorms, ask questions on a slow trickle, and upvote each
@@ -705,3 +775,7 @@ they were.
   it does mean a common question can appear twice.
 - Q&A reaches the session report as data but has no view on the Reports screen
   yet; read it from the JSON export.
+- A pace signal from someone still in the waiting room is ignored. They are not
+  in the roster the spike threshold is measured against, and their phone has no
+  header yet, so the control is not offered — but if they are watching the
+  screen and lost, nothing they can do says so.

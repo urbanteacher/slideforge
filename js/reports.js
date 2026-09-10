@@ -64,28 +64,47 @@
     body.appendChild(el('h2',null,r.title));
     body.appendChild(el('p','report-note',when(r.startedAt || r.createdAt) + (r.reason ? ' · ' + r.reason : '')));
     var tabs = el('div','library-tabs');
-    [['overview','Overview'],['attendance','Attendance'],['checks','Knowledge checks'],['feedback','Feedback']].forEach(function (v) {tabs.appendChild(SF.Shell.UI.button(v[1],view === v[0]?'active':'',function () {view=v[0];draw();}));});body.appendChild(tabs);
+    [['overview','Overview'],['attendance','Attendance'],['checks','Knowledge checks'],['feedback','Feedback'],['pace','Pace & confidence']].forEach(function (v) {tabs.appendChild(SF.Shell.UI.button(v[1],view === v[0]?'active':'',function () {view=v[0];draw();}));});body.appendChild(tabs);
     if (view === 'overview') {
       var stats = el('div','report-stats');
-      [[r.summary.joined,'names joined'],[r.summary.admitted,'admitted to lesson'],[r.summary.answers,'answers submitted'],[r.summary.feedbackActivities,'feedback activities']].forEach(function (s) {var tile=el('div');tile.appendChild(el('strong',null,s[0]));tile.appendChild(el('span',null,s[1]));stats.appendChild(tile);});body.appendChild(stats);
+      [[r.summary.joined,'names joined'],[r.summary.admitted,'admitted to lesson'],[r.summary.answers,'answers submitted'],[r.summary.feedbackActivities,'feedback activities'],[r.summary.signalsRaised||0,'pace signals raised'],[r.summary.confidentlyWrong||0,'sure and wrong']].forEach(function (s) {var tile=el('div');tile.appendChild(el('strong',null,s[0]));tile.appendChild(el('span',null,s[1]));stats.appendChild(tile);});body.appendChild(stats);
       body.appendChild(el('h3',null,'A record you can teach from'));
       body.appendChild(el('p','report-note','Attendance records include first join, admission, disconnects and time connected. Names are self-reported. Connection time is not evidence of attention or verified attendance.'));
       body.appendChild(el('p','report-note','Answers are marked correct only after a reveal. Unrevealed checks remain unscored. Each time a question or feedback prompt opens, it is recorded as a separate attempt.'));
       if (r.status === 'interrupted') body.appendChild(el('p','report-warning','The relay stopped unexpectedly. This report contains the journaled events up to the last successful write; connection durations are lower-bound estimates.'));
       if (!r.persisted) body.appendChild(el('p','report-warning','Recording was interrupted. This snapshot may contain responses that are not on disk. Export JSON now.'));
     } else if (view === 'attendance') {
-      body.appendChild(table(['Name','Team','Admission','Connected time','Answered / eligible','Correct','Feedback'],r.attendance.map(function (p) {return [p.name,p.team != null?r.teams[p.team]:'—',p.admittedAt?'Admitted':'Waiting only',Math.floor(p.connectedSeconds/60)+'m '+p.connectedSeconds%60+'s',p.questionsAnswered+' / '+p.questionsEligible,p.questionsCorrect,p.feedbackContributions];})));
+      body.appendChild(table(['Name','Team','Admission','Connected time','Answered / eligible','Correct','Sure & wrong','Feedback'],r.attendance.map(function (p) {return [p.name,p.team != null?r.teams[p.team]:'—',p.admittedAt?'Admitted':'Waiting only',Math.floor(p.connectedSeconds/60)+'m '+p.connectedSeconds%60+'s',p.questionsAnswered+' / '+p.questionsEligible,p.questionsCorrect,p.confidentlyWrong||0,p.feedbackContributions];})));
       if (!r.attendance.length) body.appendChild(el('p','report-empty','No one joined this session.'));
     } else if (view === 'checks') {
       r.checks.forEach(function (q,i) {
         var card=el('section','report-check');card.appendChild(el('span','eyebrow','CHECK '+(i+1)+(q.bloom?' · '+q.bloom.toUpperCase():'')));
         card.appendChild(el('h3',null,q.question || 'Question '+q.index));
         card.appendChild(el('p','report-note',q.responses.length+' / '+q.eligible.length+' answered · '+(q.revealedAt?'Revealed':'Not revealed — unscored')));
-        if (q.revealedAt) card.appendChild(el('p',null,'Correct answer: '+q.options[q.correct]));
-        card.appendChild(table(['Name','Response','Outcome'],q.eligible.map(function (id) {var a=q.responses.find(function (a) {return a.playerId===id;});return [person(id).name,a?responseText(q,a):'No response',!a?'Unanswered':a.right===null?'Unscored':a.right?'Correct':'Incorrect'];})));
+        if (q.revealedAt) card.appendChild(el('p',null,'Correct answer: '+(q.input==='text'||q.input==='number'?(q.answer||''):(q.options||[])[q.correct]||'')));
+        card.appendChild(table(['Name','Response','How sure','Outcome'],q.eligible.map(function (id) {var a=q.responses.find(function (a) {return a.playerId===id;});return [person(id).name,a?responseText(q,a):'No response',sureText(a),!a?'Unanswered':a.right===null?'Unscored':a.right?'Correct':'Incorrect'];})));
         body.appendChild(card);
       });
       if (!r.checks.length) body.appendChild(el('p','report-empty','No knowledge checks were opened.'));
+    } else if (view === 'pace') {
+      body.appendChild(el('h3',null,'Where the room asked you to change something'));
+      body.appendChild(el('p','report-note','Pace signals are anonymous by design and are recorded without a name — a signal you can be identified by is a signal nobody sends. What is kept is the slide it was sent from, so this answers "where did I lose them" rather than "who was lost". Signals expire after 90 seconds, so each one counts a moment, not a person.'));
+      if (r.signals && r.signals.length) {
+        body.appendChild(table(['Slide','Lost','Too fast','Too slow','Total'],r.signals.map(function (g) {return [signalWhere(g),g.lost,g.fast,g.slow,g.total];})));
+      } else {
+        body.appendChild(el('p','report-empty','Nobody raised a pace signal.'));
+      }
+      body.appendChild(el('h3',null,'Answers they meant'));
+      body.appendChild(el('p','report-note','Confidence is never scored. A wrong answer given confidently is a misconception and needs re-teaching; a wrong guess is a gap and needs practice. They are identical in a tally and different in what you do on Monday.'));
+      var withSure = r.checks.filter(function (q) {return q.responses.some(function (a) {return typeof a.sure === 'boolean';});});
+      if (withSure.length) {
+        body.appendChild(table(['Check','Sure & right','Sure & wrong','Guessed right','Guessed wrong','Did not say'],withSure.map(function (q,i) {
+          var n = function (sure,right) {return q.responses.filter(function (a) {return a.sure===sure && a.right===right;}).length;};
+          return [q.question || 'Question '+(i+1),n(true,true),n(true,false),n(false,true),n(false,false),q.responses.filter(function (a) {return typeof a.sure!=='boolean';}).length];
+        })));
+      } else {
+        body.appendChild(el('p','report-empty','No check asked how sure the room was. Turn it on in the game\u2019s settings.'));
+      }
     } else {
       r.feedback.forEach(function (f) {
         var card=el('section','report-check');card.appendChild(el('span','eyebrow',f.kind.toUpperCase()));card.appendChild(el('h3',null,f.prompt));
@@ -98,6 +117,20 @@
     body.appendChild(exports);
   }
   // Prefix potentially executable spreadsheet cells, then quote every CSV value.
+  /* Signals sent from the lobby have no slide to belong to. Saying so beats a
+     dash, because "before you started" is itself worth knowing. */
+  function signalWhere(g) {
+    if (!g.slideId) return 'Before the first slide';
+    return (g.n ? g.n + '. ' : '') + (g.title || g.slideId);
+  }
+
+  /* Blank rather than "unknown" when nobody was asked: the column is only
+     meaningful for a game that had confidence turned on. */
+  function sureText(a) {
+    if (!a || typeof a.sure !== 'boolean') return '';
+    return a.sure ? 'Sure' : 'Guess';
+  }
+
   /* A poll reply is an option, a scale reply is a position on a run of them —
      "4 of 5" rather than the bare index the journal stores. */
   function contribution(f, v) {
@@ -119,7 +152,7 @@
   function csvCell(v) {var s=String(v == null?'':v);if (typeof v!=='number' && /^[\s]*[=+@-]|^[\t\r\n]/.test(s)) s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
   function csv(rows) {return '\uFEFF'+rows.map(function(row){return row.map(csvCell).join(',');}).join('\r\n');}
   function attendanceCsv(r) {return csv([['Session ID','Name','Participant ID','Team','First joined','Admitted','Last seen','Connected seconds','Session status','Eligible checks','Answers','Correct','Unanswered','Feedback contributions']].concat(r.attendance.map(function(p){return [r.id,p.name,p.id,p.team!=null?r.teams[p.team]:'',new Date(p.firstJoinedAt).toISOString(),p.admittedAt?new Date(p.admittedAt).toISOString():'',new Date(p.lastSeenAt).toISOString(),p.connectedSeconds,r.status,p.questionsEligible,p.questionsAnswered,p.questionsCorrect,p.questionsUnanswered,p.feedbackContributions];})));}
-  function answersCsv(r) {var rows=[['Session ID','Attempt ID','Question','Bloom level','Name','Participant ID','Answer','Outcome','Elapsed ms']];r.checks.forEach(function(q){q.eligible.forEach(function(id){var a=q.responses.find(function(a){return a.playerId===id;}),p=r.attendance.find(function(p){return p.id===id;});rows.push([r.id,q.attempt,q.question,q.bloom,p?p.name:'',id,responseText(q,a),!a?'unanswered':a.right===null?'unscored':a.right?'correct':'incorrect',a?a.elapsedMs:'']);});});return csv(rows);}
+  function answersCsv(r) {var rows=[['Session ID','Attempt ID','Question','Bloom level','Name','Participant ID','Answer','How sure','Outcome','Elapsed ms']];r.checks.forEach(function(q){q.eligible.forEach(function(id){var a=q.responses.find(function(a){return a.playerId===id;}),p=r.attendance.find(function(p){return p.id===id;});rows.push([r.id,q.attempt,q.question,q.bloom,p?p.name:'',id,responseText(q,a),sureText(a),!a?'unanswered':a.right===null?'unscored':a.right?'correct':'incorrect',a?a.elapsedMs:'']);});});return csv(rows);}
   function download(suffix,text,type) {
     var filename='slideforge-'+current.id.slice(0,8)+'-'+suffix;
     var url=URL.createObjectURL(new Blob([text],{type:type+';charset=utf-8'})),a=el('a');

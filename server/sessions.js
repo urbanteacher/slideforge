@@ -51,7 +51,7 @@ function load(id, token) {
 }
 function project(session, active = false) {
   const { meta, events } = session;
-  const people = new Map(), checks = [], feedback = [], questions = [];
+  const people = new Map(), checks = [], feedback = [], questions = [], signals = [];
   let end = null, startedAt = null;
   const person = id => people.get(id);
   for (const e of events) {
@@ -70,6 +70,15 @@ function project(session, active = false) {
     else if (e.type === 'answer') {
       const q = checks.find(q => q.attempt === d.attempt);
       if (q && !q.responses.some(r => r.playerId === d.playerId)) q.responses.push({ ...d, at: e.at, right: null });
+      if (person(d.playerId)) person(d.playerId).lastSeenAt = e.at;
+    } else if (e.type === 'signal') {
+      /* No playerId, by design — see the note on room.signals in the relay.
+         What the report is for is which slide lost the room, not who said so. */
+      signals.push({ kind: d.kind, slideId: d.slideId, title: d.title, n: d.n, at: e.at });
+    } else if (e.type === 'sure') {
+      const q = checks.find(q => q.attempt === d.attempt);
+      const r = q && q.responses.find(r => r.playerId === d.playerId);
+      if (r) r.sure = d.sure;
       if (person(d.playerId)) person(d.playerId).lastSeenAt = e.at;
     } else if (e.type === 'reveal') {
       const q = checks.find(q => q.attempt === d.attempt);
@@ -127,6 +136,11 @@ function project(session, active = false) {
       questionsEligible: eligible.length, questionsAnswered: answers.length,
       questionsCorrect: answers.filter(r => r.right === true).length,
       questionsUnanswered: eligible.length - answers.length,
+      /* Sure and wrong. The one worth a teacher's attention: a wrong answer
+         given confidently is a misconception, and a wrong answer given as a
+         guess is a gap. They need different lessons. */
+      confidentlyWrong: answers.filter(r => r.sure === true && r.right === false).length,
+      unsureButRight: answers.filter(r => r.sure === false && r.right === true).length,
       feedbackContributions: feedback.reduce((n, f) => n + f.responses.filter(r => r.playerId === p.id).reduce((sum, r) => sum + r.values.length, 0), 0),
       questionsAsked: questions.filter(q => q.playerId === p.id && q.state !== 'dismissed').length
     };
@@ -135,6 +149,19 @@ function project(session, active = false) {
     createdAt: meta.createdAt, startedAt, endedAt: end && end.at, updatedAt,
     status, reason: end ? end.reason : status === 'interrupted' ? 'Relay stopped before the session ended.' : null,
     persisted: session.persisted, attendance: roster, checks, feedback,
+    /* Grouped by the slide they were sent from, so the report answers "where
+       did I lose them" rather than handing over a list of timestamps. */
+    signals: Object.values(signals.reduce((acc, s) => {
+      const key = s.slideId || 'unknown';
+      const row = acc[key] || (acc[key] = {
+        slideId: s.slideId, title: s.title, n: s.n,
+        lost: 0, fast: 0, slow: 0, total: 0, firstAt: s.at, lastAt: s.at
+      });
+      if (row[s.kind] != null) row[s.kind]++;
+      row.total++;
+      row.lastAt = s.at;
+      return acc;
+    }, {})).sort((a, b) => b.total - a.total || a.firstAt - b.firstAt),
     questions: questions.map(q => {
       const who = people.get(q.playerId);
       return { ...q, name: who ? who.name : null };
@@ -144,7 +171,9 @@ function project(session, active = false) {
       answers: checks.reduce((n, q) => n + q.responses.length, 0), feedbackActivities: feedback.length,
       questionsAsked: questions.filter(q => q.state !== 'dismissed').length,
       questionsShown: questions.filter(q => q.shown).length,
-      questionsUnanswered: questions.filter(q => q.state === 'approved' || q.state === 'pending').length }
+      questionsUnanswered: questions.filter(q => q.state === 'approved' || q.state === 'pending').length,
+      signalsRaised: signals.length,
+      confidentlyWrong: roster.reduce((n, p) => n + p.confidentlyWrong, 0) }
   };
 }
 module.exports = { DIR, create, append, authorized, load, project };

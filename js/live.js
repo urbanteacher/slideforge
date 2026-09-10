@@ -41,7 +41,10 @@
     /* The room's answers to the question on screen, as the relay last pushed
        them, with the revision they were taken at. The host marks from this —
        see marksFor() and the note on SF.markResponse. */
-    snapshot: { rev: 0, answers: [] }
+    snapshot: { rev: 0, answers: [] },
+    /* How the room says the lesson is going. Counts only, never names — see
+       the note on room.signals in the relay. */
+    signals: null
   };
 
   function relayUrl() {
@@ -232,6 +235,7 @@
         if (m.joinUrl) Live.joinUrl = m.joinUrl;
         Live.joinOpen = m.joinOpen !== false;
         Live.waiting = m.waiting || 0;
+        SF.Player.waiting = Live.waiting;
         Live.roundNo = m.round || 0;
         Live.players = m.list || [];
         Live.rows = m.rows || [];
@@ -245,7 +249,13 @@
       case 'tally':
         Live.snapshot = { rev: m.rev || 0, answers: m.answers || [] };
         SF.Player.setTally(m.counts || [], { answered: m.answered, total: m.total });
-        if (m.allIn && m.answered > 0) revealNow();
+        /* Marked here and kept here: the split between confident and hesitant
+           answers is for presenter view, not the wall. Marking before the
+           reveal is safe because the verdicts never leave this window until
+           the host chooses to reveal. */
+        SF.Player.confidence = confidenceSplit();
+        SF.Player.syncPresenter();
+        if (m.allIn && m.answered > 0) considerReveal(m);
         break;
 
       /* The host marked a set of answers that the relay has since added to.
@@ -271,10 +281,17 @@
         if (Live.mechanic === 'race') advanceRace(m);
         break;
 
+      case 'signals':
+        Live.signals = m;
+        SF.Player.pace = m;
+        paintCues();
+        SF.Player.syncPresenter();
+        break;
+
       case 'qa':
         Live.qa = m;
         SF.Player.qa = m;
-        SF.Player.setQACue({ pending: m.pending, open: m.open });
+        paintCues();
         syncPinned(m.pinned);
         SF.Player.syncPresenter();
         break;
@@ -289,6 +306,21 @@
         warn(m.message || 'The relay refused that request.');
         break;
     }
+  }
+
+  /**
+   * Put the standing cues back on the slide.
+   *
+   * Both of them are pushed by the relay whenever they change, which includes
+   * while the lobby is still up and there is no slide to draw on. So the last
+   * state is kept and re-applied per slide rather than only painted on the
+   * message that carried it — a question asked in the lobby used to produce a
+   * cue that never appeared.
+   */
+  function paintCues() {
+    var qa = Live.qa;
+    SF.Player.setQACue(qa ? { pending: qa.pending, open: qa.open } : null);
+    SF.Player.setPaceCue(Live.signals);
   }
 
   /* ---------------------------------------------------------- scoreboard */
@@ -727,6 +759,16 @@
       send({ t: 'round', gameId: s.gameId });
     }
 
+    /* Tell the relay where we are, so a pace signal can be filed against the
+       slide the room was actually looking at. Sent for every slide, not just
+       questions — confusion happens on the explaining ones. */
+    send({
+      t: 'at',
+      slideId: s.id,
+      title: s.title || s.question || s.gameTitle || '',
+      n: SF.Player.idx + 1
+    });
+
     if (s.type === 'quiz') {
       if (Live.revealed[s.id]) {
         // revisiting an already-scored question: just show the room's numbers
@@ -736,6 +778,7 @@
       Live._sentSlide = s.id;
       Live._askedAt = Date.now();
       Live.snapshot = { rev: 0, answers: [] };
+      if (Live._sureTimer) { clearTimeout(Live._sureTimer); Live._sureTimer = null; }
       send({
         t: 'question',
         id: s.id,
@@ -747,6 +790,7 @@
            none. The phones switch control on `input` alone, and a slider
            needs the line it slides along. The target never leaves the host. */
         input: s.input || 'choice',
+        confidence: s.confidence !== false,
         range: s.input === 'number'
           ? { min: s.min, max: s.max, step: s.step, unit: s.unit || '' }
           : null,
@@ -776,6 +820,7 @@
     }
 
     if (!collecting && Live.deck.quiz.scoreboard && Live.rows.length) paintRail();
+    paintCues();
   }
 
   /** Whoever is being scored — teams or individuals — ready for the big board. */
@@ -787,6 +832,27 @@
         score: r.score
       };
     });
+  }
+
+  /**
+   * How the room's answers divide by whether they meant them.
+   *
+   * Confidently wrong is the number worth acting on: a wrong answer given
+   * with conviction is a misconception and needs re-teaching, while a wrong
+   * guess is a gap and needs practice. They look identical in a tally.
+   */
+  function confidenceSplit() {
+    var s = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
+    if (!s || s.type !== 'quiz') return null;
+    var out = { sureRight: 0, sureWrong: 0, unsureRight: 0, unsureWrong: 0, unstated: 0, asked: 0 };
+    (Live.snapshot.answers || []).forEach(function (a) {
+      out.asked++;
+      if (typeof a.sure !== 'boolean') { out.unstated++; return; }
+      var right = SF.markResponse(s, a.response);
+      if (a.sure) out[right ? 'sureRight' : 'sureWrong']++;
+      else out[right ? 'unsureRight' : 'unsureWrong']++;
+    });
+    return out;
   }
 
   /** Mark every answer in the current snapshot. This is the host's job now. */
@@ -842,6 +908,38 @@
       answer: open ? (s.answer || '') : (s.options[s.correct] || ''),
       explanation: s.explanation || ''
     });
+  }
+
+  /* Everyone has answered. How long to hold the reveal for the ones still
+     tapping "how sure" — the person who answered last has only just been
+     asked, so this has to cover reading the question and a deliberate tap,
+     not just the tap. Short enough that the room does not notice a pause. */
+  var CONFIDENCE_GRACE_MS = 5000;
+
+  /**
+   * Auto-reveal, but not before the phones have finished asking.
+   *
+   * Revealing the instant the last answer lands is what a room that answers
+   * fast actually produces, and it collected the answers while throwing away
+   * every confidence — the phones were still asking. So the reveal waits for
+   * them, and stops waiting after a beat so one person who ignores the
+   * question cannot hold the room.
+   */
+  function considerReveal(m) {
+    var s = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
+    if (!s || s.type !== 'quiz' || Live.revealed[s.id]) return;
+    var pending = s.confidence !== false ? (m.answered || 0) - (m.sured || 0) : 0;
+    if (pending <= 0) {
+      if (Live._sureTimer) { clearTimeout(Live._sureTimer); Live._sureTimer = null; }
+      revealNow();
+      return;
+    }
+    if (!Live._sureTimer) {
+      Live._sureTimer = setTimeout(function () {
+        Live._sureTimer = null;
+        revealNow();
+      }, CONFIDENCE_GRACE_MS);
+    }
   }
 
   function revealNow() {

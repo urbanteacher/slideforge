@@ -26,6 +26,23 @@
   .side { grid-area: side; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
   .cap { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ui-dim); }
 
+  /* The cues the roadmap asked for: how many are waiting, how many have not
+     answered, whether the room is asking you to slow down. This window is the
+     only private surface the host has, so the loaded numbers live here. */
+  .cues { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cue {
+    display: flex; align-items: baseline; gap: 7px;
+    padding: 7px 12px; border-radius: 8px;
+    background: #171b22; border: 1px solid var(--ui-line);
+    font-size: 13px; color: var(--ui-dim);
+  }
+  .cue b { font-size: 19px; color: #e8ecf2; font-variant-numeric: tabular-nums; }
+  /* Loud only when it is worth interrupting yourself for. */
+  .cue.hot { border-color: #e8a020; background: #241c0e; color: #f0d9ae; }
+  .cue.hot b { color: #ffc866; }
+  .cue.bad { border-color: #e8474f; background: #241012; color: #f3bfc2; }
+  .cue.bad b { color: #ff8a90; }
+
   .box {
     position: relative; aspect-ratio: 16/9; background: #000;
     border-radius: 8px; overflow: hidden; border: 1px solid var(--ui-line);
@@ -140,6 +157,9 @@
     <div class="notes" id="notes"></div>
     <div id="quizinfo"></div>
 
+    <div class="cap" id="cueCap" style="display:none">How the room is doing</div>
+    <div class="cues" id="cues" style="display:none"></div>
+
     <div class="cap" id="qaCap" style="display:none">
       Questions from the room <span id="qaCount"></span>
     </div>
@@ -186,6 +206,54 @@
     if (window.opener && !window.opener.closed) {
       window.opener.postMessage({ type: 'sf-presenter-cmd', cmd: 'qa', id: id, action: action }, '*');
     }
+  }
+
+  var paceState = null, confidenceState = null, progressState = null, waitingState = 0;
+
+  var PACE_LABEL = { lost: 'lost', fast: 'say too fast', slow: 'say too slow' };
+
+  function drawCues() {
+    var box = $('cues'), cap = $('cueCap');
+    var rows = [];
+
+    /* Whether to wait. An unanswered count is the difference between giving
+       the room another ten seconds and moving on over the top of them. */
+    if (progressState && progressState.total) {
+      var left = progressState.total - progressState.answered;
+      if (left > 0) rows.push({ n: left, label: 'still answering', cls: '' });
+    }
+    if (waitingState > 0) rows.push({ n: waitingState, label: 'waiting to join', cls: 'hot' });
+
+    if (paceState) {
+      ['lost', 'fast', 'slow'].forEach(function (k) {
+        var n = paceState.counts[k] || 0;
+        if (!n) return;
+        /* Hot when the room as a whole is asking, not when one person is. */
+        rows.push({ n: n, label: PACE_LABEL[k], cls: paceState.spike ? 'hot' : '' });
+      });
+    }
+
+    var c = confidenceState;
+    if (c && c.asked) {
+      /* The one number that changes what you do next. A wrong answer given
+         with conviction is a misconception; a wrong guess is a gap. */
+      if (c.sureWrong) rows.push({ n: c.sureWrong, label: 'sure and wrong', cls: 'bad' });
+      if (c.unsureRight) rows.push({ n: c.unsureRight, label: 'right but guessing', cls: '' });
+      if (c.unstated) rows.push({ n: c.unstated, label: 'did not say', cls: '' });
+    }
+
+    if (!rows.length) { cap.style.display = 'none'; box.style.display = 'none'; return; }
+    cap.style.display = ''; box.style.display = '';
+    box.innerHTML = '';
+    rows.forEach(function (r) {
+      var d = document.createElement('div');
+      d.className = 'cue' + (r.cls ? ' ' + r.cls : '');
+      var b = document.createElement('b');
+      b.textContent = String(r.n);
+      d.appendChild(b);
+      d.appendChild(document.createTextNode(r.label));
+      box.appendChild(d);
+    });
   }
 
   function drawQA() {
@@ -263,7 +331,12 @@
     var d = ev.data;
     if (!d || d.type !== 'sf-presenter-state') return;
     qaState = d.qa || null;
+    paceState = d.pace || null;
+    confidenceState = d.confidence || null;
+    progressState = d.progress || null;
+    waitingState = d.waiting || 0;
     drawQA();
+    drawCues();
     state = { deck: SF.normalizeDeck(d.deck), index: d.index, answers: d.answers || {} };
     if (timerBase == null) timerBase = d.startedAt || Date.now();
     $('waiting').style.display = 'none';

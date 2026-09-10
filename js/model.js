@@ -63,24 +63,53 @@
      compiling a game — but the player and renderer still handle them, which is
      what lets an embedded game expand into ordinary slides at showtime. */
   var SLIDE_TYPES = {
-    title:   { label: 'Title',        icon: 'T' },
-    section: { label: 'Section',      icon: 'S' },
-    content: { label: 'Bullets',      icon: '•' },
-    split:   { label: 'Dual',         icon: '◫' },
-    cards:   { label: 'Cards',        icon: '▦' },
-    image:   { label: 'Image',        icon: '▣' },
-    quote:   { label: 'Quote',        icon: '“' },
-    game:    { label: 'Game',         icon: '◈' },
-    quiz:    { label: 'Quiz',         icon: '?' },
-    explain: { label: 'Explanation',  icon: '💡' },
-    results: { label: 'Score',        icon: '⚑' }
+    title:    { label: 'Title',        icon: 'T' },
+    section:  { label: 'Section',      icon: 'S' },
+    content:  { label: 'Bullets',      icon: '•' },
+    keywords: { label: 'Keywords',     icon: 'K' },
+    italics:  { label: 'Italics',      icon: 'I' },
+    links:    { label: 'Links',        icon: '↗' },
+    split:    { label: 'Dual',         icon: '◫' },
+    cards:    { label: 'Cards',        icon: '▦' },
+    image:    { label: 'Image',        icon: '▣' },
+    quote:    { label: 'Quote',        icon: '“' },
+    game:     { label: 'Game',         icon: '◈' },
+    quiz:     { label: 'Quiz',         icon: '?' },
+    explain:  { label: 'Explanation',  icon: '💡' },
+    results:  { label: 'Score',        icon: '⚑' }
   };
 
   /* The layouts offered in the presentation editor's Layout grid. */
-  var DECK_TYPES = ['title', 'section', 'content', 'split', 'cards', 'image', 'quote'];
+  var DECK_TYPES = ['title', 'section', 'content', 'keywords', 'italics', 'links', 'split', 'cards', 'image', 'quote'];
 
   function uid() {
     return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+  }
+
+  /** Pair pits (keywords / italics / links) store "Lead\\tdefinition". Also accepts "Lead: def" when pasted. */
+  function parseKeywordLine(line) {
+    var s = String(line == null ? '' : line);
+    var tab = s.indexOf('\t');
+    if (tab !== -1) {
+      return { term: s.slice(0, tab).trim(), def: s.slice(tab + 1).trim() };
+    }
+    var m = s.match(/^(.+?)\s*[—–:\-|]\s+(.+)$/);
+    if (m) return { term: m[1].trim(), def: m[2].trim() };
+    return { term: s.trim(), def: '' };
+  }
+
+  function formatKeywordLine(term, def) {
+    return String(term || '').trim() + '\t' + String(def || '').trim();
+  }
+
+  /** Only http(s) links — blocks javascript: and other schemes. */
+  function safeHref(url) {
+    var u = String(url || '').trim();
+    if (!u) return '';
+    if (/^https?:\/\//i.test(u)) return u;
+    if (/^\/\//.test(u)) return 'https:' + u;
+    if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}([\/?#][^\s]*)?$/i.test(u)) return 'https://' + u;
+    return '';
   }
 
   function makeSlide(type) {
@@ -121,6 +150,30 @@
       case 'content':
         s.title = 'Slide title';
         s.bullets = ['First point', 'Second point', 'Third point'];
+        break;
+      case 'keywords':
+        s.title = 'Key vocabulary';
+        s.bullets = [
+          formatKeywordLine('Keyword', 'a short plain-language definition'),
+          formatKeywordLine('', ''),
+          formatKeywordLine('', '')
+        ];
+        break;
+      case 'italics':
+        s.title = 'Phrases to notice';
+        s.bullets = [
+          formatKeywordLine('key phrase', 'why this wording matters'),
+          formatKeywordLine('', ''),
+          formatKeywordLine('', '')
+        ];
+        break;
+      case 'links':
+        s.title = 'Further reading';
+        s.bullets = [
+          formatKeywordLine('Resource title', 'https://'),
+          formatKeywordLine('', ''),
+          formatKeywordLine('', '')
+        ];
         break;
       case 'split':
         s.title = 'Say it. Show it.';
@@ -758,7 +811,10 @@
            'both'    inline first, then the slide for the detail */
         explainStyle: 'inline',
         /* Horse race only: steps to the finish line. */
-        trackLength: 5
+        trackLength: 5,
+        /* Ask each player how sure they were, after their answer is in. Never
+           scored — it tells the teacher which wrong answers were confident. */
+        confidence: true
       },
       questions: [makeQuestion(style)]
     };
@@ -819,6 +875,7 @@
     g.scoreSlide = g.scoreSlide !== false;
     if (['inline', 'slide', 'both'].indexOf(g.explainStyle) === -1) g.explainStyle = 'inline';
     g.trackLength = Math.max(3, Math.min(12, Number(g.trackLength) || 5));
+    g.confidence = g.confidence !== false;
     return g;
   }
 
@@ -869,6 +926,7 @@
       if (q[k] != null && q[k] !== '') s[k] = q[k];
     });
     s.explainStyle = settings.explainStyle;
+    s.confidence = settings.confidence !== false;
     return s;
   }
 
@@ -1357,6 +1415,29 @@
         (s.bullets || []).filter(function (b) { return String(b).trim(); }).forEach(function (b, i) {
           line((i + 1) + '. ' + String(b).replace(/^(\s{2,}|\t|- )+/, '').trim());
         });
+      } else if (s.type === 'keywords') {
+        line('## ' + n + '. ' + (s.title || 'Keywords').replace(/\n/g, ' '));
+        line('');
+        (s.bullets || []).map(parseKeywordLine).filter(function (p) { return p.term || p.def; })
+          .forEach(function (p) {
+            line('- **' + p.term + '** — ' + (p.def || ''));
+          });
+      } else if (s.type === 'italics') {
+        line('## ' + n + '. ' + (s.title || 'Italics').replace(/\n/g, ' '));
+        line('');
+        (s.bullets || []).map(parseKeywordLine).filter(function (p) { return p.term || p.def; })
+          .forEach(function (p) {
+            line('- *' + p.term + '* — ' + (p.def || ''));
+          });
+      } else if (s.type === 'links') {
+        line('## ' + n + '. ' + (s.title || 'Links').replace(/\n/g, ' '));
+        line('');
+        (s.bullets || []).map(parseKeywordLine).filter(function (p) { return p.term || p.def; })
+          .forEach(function (p) {
+            var href = safeHref(p.def);
+            if (href) line('- [' + (p.term || href) + '](' + href + ')');
+            else line('- ' + (p.term || 'Link') + (p.def ? ' — ' + p.def : ''));
+          });
       } else if (s.type === 'split') {
         line('## ' + n + '. ' + (s.title || 'Dual coding').replace(/\n/g, ' '));
         line('');
@@ -1439,6 +1520,9 @@
     starterDeck: starterDeck,
     normalizeDeck: normalizeDeck,
     normalizeSlide: normalizeSlide,
+    parseKeywordLine: parseKeywordLine,
+    formatKeywordLine: formatKeywordLine,
+    safeHref: safeHref,
     deckToMarkdown: deckToMarkdown,
     DECK_TYPES: DECK_TYPES,
     FEEDBACK_KINDS: FEEDBACK_KINDS,

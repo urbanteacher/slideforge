@@ -274,7 +274,7 @@ test('a typed answer reaches the export as the text they typed', () => {
     checks: [
       { attempt: 'a1', input: 'text', question: 'Capital of France?', bloom: 'Remember',
         options: [], correct: -1, answer: 'Paris', eligible: [1, 2],
-        responses: [{ playerId: 1, text: 'the PARISS', right: true, elapsedMs: 900 }] },
+        responses: [{ playerId: 1, text: 'the PARISS', right: true, sure: true, elapsedMs: 900 }] },
       { attempt: 'a2', input: 'choice', question: 'Which one?', bloom: '',
         options: ['A', 'B'], correct: 1, eligible: [1],
         responses: [{ playerId: 1, choice: 1, right: true, elapsedMs: 400 }] }
@@ -282,7 +282,10 @@ test('a typed answer reaches the export as the text they typed', () => {
   };
   const csv = Reports.answersCsv(r);
   assert.match(csv, /"the PARISS"/, 'the typed answer, not a blank cell');
-  assert.match(csv, /"Ada","1","the PARISS","correct"/);
-  assert.match(csv, /"Ada","1","B","correct"/, 'a chosen option still reads as the option');
-  assert.match(csv, /"Bo","2","","unanswered"/);
+  assert.match(csv, /"Ada","1","the PARISS","Sure","correct"/);
+  assert.match(csv, /"Ada","1","B","","correct"/, 'a chosen option still reads as the option');
+  assert.match(csv, /"Bo","2","","","unanswered"/);
+  /* Blank rather than "unknown" where nobody was asked: the column only
+     means something for a game that had confidence turned on. */
+  assert.equal((csv.match(/"Sure"/g) || []).length, 1);
 });
