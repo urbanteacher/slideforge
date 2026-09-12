@@ -10,6 +10,7 @@
 (function (global) {
   'use strict';
 
+  /** @type {import("../src/types.js").SlideForgeGlobal} */
   var SF = global.SF;
   var el = SF.el;
   var $ = function (id) { return document.getElementById(id); };
@@ -24,7 +25,7 @@
   var demoHost = null;
 
   function q() { return game.questions[sel]; }
-  function setupUX() { return SF.Playbook.setupForGame(game); }
+  function setupUX() { return SF.Playbook ? SF.Playbook.setupForGame(game) : { item: 'Question', prompt: 'Question', guidance: '', participation: '', timing: 'question' }; }
   function fixedPoints() { return ['speed', 'boss', 'race', 'order', 'wordreveal', 'headsup', 'spinexplain', 'connection', 'randomchallenge'].indexOf(game.style) !== -1; }
 
   function ensureDemoHost() {
@@ -38,7 +39,7 @@
   }
 
   function unmountDemoBoards() {
-    SF.Boards.unmountAll();
+    if (SF.Boards) SF.Boards.unmountAll();
   }
 
   function clearDemoState() {
@@ -205,8 +206,11 @@
 
   function drawRail() {
     var rail = $('railList');
-    rail.innerHTML = '';
-    $('railCount').textContent = String(game.questions.length);
+    if (!rail) return;
+    var railEl = rail;
+    railEl.innerHTML = '';
+    var count = $('railCount');
+    if (count) count.textContent = String(game.questions.length);
 
     game.questions.forEach(function (question, i) {
       var row = el('div', 'qthumb' + (i === sel ? ' sel' : ''));
@@ -243,7 +247,7 @@
 
       row.onclick = function () { select(i); };
       wireDrag(row);
-      rail.appendChild(row);
+      railEl.appendChild(row);
     });
   }
 
@@ -293,6 +297,7 @@
 
   function drawFoot() {
     var foot = $('railFoot');
+    if (!foot) return;
     foot.innerHTML = '';
     foot.appendChild(UI.button('+ ' + setupUX().item, null, addQuestion));
     foot.appendChild(UI.button('Duplicate', null, duplicateQuestion));
@@ -302,8 +307,10 @@
 
   function drawPreview() {
     var box = $('previewBox');
+    if (!box) return;
+    var boxEl = box;
     unmountDemoBoards();
-    box.innerHTML = '';
+    boxEl.innerHTML = '';
     if (!q()) return;
     var racing = SF.gameStyle(game.style).mechanic === 'race';
     var slide = asSlide(sel);
@@ -330,15 +337,16 @@
         : null,
       /* When demo is off, boards render without commands (authoring preview).
          Demo mounts the real engine below so buttons and clocks work. */
-      ...SF.Boards.renderOptions(demoActive ? ensureDemoHost() : null, slide)
+      ...(SF.Boards && SF.Boards.renderOptions ? SF.Boards.renderOptions(demoActive ? ensureDemoHost() : null, slide) : {})
     });
-    box.appendChild(node);
-    requestAnimationFrame(function () { SF.fit(box, node); });
-    if (demoActive && isBoard()) {
+    boxEl.appendChild(node);
+    requestAnimationFrame(function () { SF.fit(boxEl, node); });
+    if (demoActive && isBoard() && SF.Boards) {
       var host = ensureDemoHost();
       SF.Boards.mount(host, slide, node);
     }
-    $('notes').value = q().notes || '';
+    var notes = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
+    if (notes) notes.value = q().notes || '';
   }
 
   /* ------------------------------------------------- per-style inspectors */
@@ -456,7 +464,8 @@
         question.options[i] = v; touched(); repaint();
       }, 'Item ' + (i + 1)));
 
-      [['\u2191', -1], ['\u2193', 1]].forEach(function (spec) {
+      /** @type {[string, number][]} */
+      ([['\u2191', -1], ['\u2193', 1]]).forEach(function (spec) {
         var b = el('button', 'kill', spec[0]);
         b.title = spec[1] < 0 ? 'Move up' : 'Move down';
         b.disabled = (spec[1] < 0 && i === 0) || (spec[1] > 0 && i === question.options.length - 1);
@@ -739,6 +748,7 @@
 
   function drawInspector() {
     var insp = $('inspector');
+    if (!insp) return;
     insp.innerHTML = '';
     var question = q();
     if (!question) return;
@@ -849,7 +859,7 @@
       question.image = v.trim(); touched(); repaint();
     }, 'Paste an image URL'));
 
-    var pick = el('input');
+    var pick = /** @type {HTMLInputElement} */ (el('input'));
     pick.type = 'file';
     pick.accept = 'image/*';
     pick.style.cssText = 'font-size:12px;margin-top:7px';
@@ -860,7 +870,7 @@
         SF.toast('That image is over 2.5 MB \u2014 embedding several this size may exceed the browser storage limit.');
       }
       var fr = new FileReader();
-      fr.onload = function () { question.image = fr.result; touched(); draw(); };
+      fr.onload = function () { question.image = typeof fr.result === 'string' ? fr.result : ''; touched(); draw(); };
       fr.readAsDataURL(f);
     });
     imgWrap.appendChild(pick);
@@ -1091,14 +1101,17 @@
 
   function openSettings() {
     var body = $('settingsBody');
+    if (!body) return;
+    var bodyEl = body;
     var st = game.settings;
     /* One sheet serves both engines now, so whoever opens it says so. */
-    $('settingsTitle').textContent = 'Game settings';
+    var title = $('settingsTitle');
+    if (title) title.textContent = 'Game settings';
 
     function draw2() {
-      body.innerHTML = '';
+      bodyEl.innerHTML = '';
 
-      body.appendChild(UI.field('Theme', SF.Shell.themePicker(game.theme, function (v) {
+      bodyEl.appendChild(UI.field('Theme', SF.Shell.themePicker(game.theme, function (v) {
         ws.onTheme(v);
         draw2();
       }), 'Sets the colours for every question slide this game produces.'));
@@ -1136,7 +1149,7 @@
       var toLib = el('p', 'hint');
       var libLink = UI.button('Browse all formats \u2192', 'ghost', function () {
         var sheet = document.getElementById('settingsModal');
-        var close = sheet && sheet.querySelector('[data-close]');
+        var close = sheet && /** @type {HTMLElement|null} */ (sheet.querySelector('[data-close]'));
         if (close) close.click();
         if (SF.Studio && SF.Studio.openLibrary) SF.Studio.openLibrary('check');
       });
@@ -1151,10 +1164,10 @@
         locked.appendChild(el('p', 'hint',
           SF.gameStyle(lockStyle).blurb +
           ' Locked to this activity \u2014 pick another format from the library to change how it plays.'));
-        body.appendChild(UI.field('Format', locked));
+        bodyEl.appendChild(UI.field('Format', locked));
         toLib.appendChild(document.createTextNode('Want a different activity? '));
         toLib.appendChild(libLink);
-        body.appendChild(toLib);
+        bodyEl.appendChild(toLib);
       } else {
         var styleKeys = (SF.CORE_STYLES || []).filter(function (k) {
           return !!SF.GAME_STYLES[k];
@@ -1162,7 +1175,7 @@
         if (styleKeys.indexOf(game.style) < 0) styleKeys = styleKeys.concat([game.style]);
         toLib.appendChild(document.createTextNode('Core engines for a blank quiz. '));
         toLib.appendChild(libLink);
-        body.appendChild(UI.field('Game style', UI.segmented(
+        bodyEl.appendChild(UI.field('Game style', UI.segmented(
           styleKeys.map(function (k) {
             return { value: k, icon: SF.GAME_STYLES[k].icon, label: SF.GAME_STYLES[k].label };
           }), game.style, function (v) {
@@ -1183,17 +1196,17 @@
             switchStyle(v, draw2);
           }),
           SF.gameStyle(game.style).blurb + ' Every question in a game shares its style.'));
-        body.appendChild(toLib);
+        bodyEl.appendChild(toLib);
       }
 
-      appendGeneratedSlides(body, draw2);
+      appendGeneratedSlides(bodyEl, draw2);
 
       var boardHooks = SF.gameStyle(game.style).boardEngine;
-      if (boardHooks) { boardHooks.authorSettings(body, Object.assign(authorContext(), { st: st, draw2: draw2 })); return; }
+      if (boardHooks) { boardHooks.authorSettings(bodyEl, Object.assign(authorContext(), { st: st, draw2: draw2 })); return; }
 
       if (game.style === 'definition') {
         if ([20, 30, 45, 60].indexOf(Number(st.defaultTime)) < 0) st.defaultTime = 30;
-        body.appendChild(UI.field('Read & answer time', UI.segmented([
+        bodyEl.appendChild(UI.field('Read & answer time', UI.segmented([
           { value: '20', label: '20s' },
           { value: '30', label: '30s' },
           { value: '45', label: '45s' },
@@ -1202,21 +1215,21 @@
           st.defaultTime = Number(v);
           touched(); draw2(); drawPreview(); drawRail();
         }), 'Same length for reading and for answering — the clock resets when the passage clears.'));
-        body.appendChild(el('p', 'hint',
+        bodyEl.appendChild(el('p', 'hint',
           'Phones stay closed while the passage is up. Ask now (or let the clock end) ' +
           'hides it and opens typing. Use 3–20 challenges.'));
         return;
       }
 
       if (game.style === 'oddone') {
-        body.appendChild(el('p', 'hint',
+        bodyEl.appendChild(el('p', 'hint',
           'No timer and no scoreboard. Use 3–10 sets. Reveal the prepared odd one ' +
           'after discussion — accept other rules the class can defend.'));
         return;
       }
 
       if (game.style === 'compare') {
-        body.appendChild(el('p', 'hint',
+        bodyEl.appendChild(el('p', 'hint',
           'No timer and no scoreboard. Use 3–10 comparisons. Reveal prepared ' +
           'similarities and differences after discussion.'));
         return;
@@ -1224,7 +1237,7 @@
 
       if (game.style === 'conceptchain') {
         if ([30, 45, 60, 90].indexOf(Number(st.defaultTime)) < 0) st.defaultTime = 45;
-        body.appendChild(UI.field('Connection time limit', UI.segmented([
+        bodyEl.appendChild(UI.field('Connection time limit', UI.segmented([
           { value: '30', label: '30s' },
           { value: '45', label: '45s' },
           { value: '60', label: '1m' },
@@ -1233,27 +1246,27 @@
           st.defaultTime = Number(v);
           touched(); draw2(); drawPreview(); drawRail();
         }), 'Per link. Timeout skips without scoring or growing the chain.'));
-        body.appendChild(el('p', 'hint',
+        bodyEl.appendChild(el('p', 'hint',
           'Use 3–10 starting concepts. Type the spoken link, Accept (+1) to grow ' +
           'the chain on the wall. Phones stay idle.'));
         return;
       }
 
       if (['headsup', 'spinexplain', 'connection', 'randomchallenge'].indexOf(game.style) !== -1) {
-        body.appendChild(el('p', 'game-setup-cue', setupUX().guidance));
-        body.appendChild(UI.field(game.style === 'headsup' ? 'Time per term' : game.style === 'spinexplain' ? 'Time per explanation' : 'Time per challenge',
+        bodyEl.appendChild(el('p', 'game-setup-cue', setupUX().guidance));
+        bodyEl.appendChild(UI.field(game.style === 'headsup' ? 'Time per term' : game.style === 'spinexplain' ? 'Time per explanation' : 'Time per challenge',
           UI.num(st.defaultTime, function (v) {
             st.defaultTime = Math.max(0, Math.min(300, v || 0));
             touched(); drawRail(); drawPreview();
           }, 0, 300), '0 leaves the activity untimed. A question override takes precedence.'));
-        var oralBook = SF.Playbook.forGame(game);
-        body.appendChild(el('p', 'hint', oralBook.scoring));
-        body.appendChild(el('p', 'hint', 'This is a teacher-led spoken activity. The current verdict applies to the class; there is no individual or team recipient selector.'));
-        if (oralBook.note) body.appendChild(el('p', 'hint', oralBook.note));
+        var oralBook = SF.Playbook ? SF.Playbook.forGame(game) : null;
+        if (oralBook && oralBook.scoring) bodyEl.appendChild(el('p', 'hint', oralBook.scoring));
+        bodyEl.appendChild(el('p', 'hint', 'This is a teacher-led spoken activity. The current verdict applies to the class; there is no individual or team recipient selector.'));
+        if (oralBook && oralBook.note) bodyEl.appendChild(el('p', 'hint', oralBook.note));
         return;
       }
 
-      body.appendChild(UI.field('Score the room as', UI.segmented([
+      bodyEl.appendChild(UI.field('Score the room as', UI.segmented([
         { value: 'individual', icon: '\u{1F464}', label: 'Individual players' },
         { value: 'teams', icon: '\u{1F465}', label: 'Teams' }
       ], st.mode, function (v) {
@@ -1293,12 +1306,12 @@
           add.style.fontSize = '12px';
           list.appendChild(add);
         }
-        body.appendChild(UI.field('Teams — up to ' + SF.MAX_TEAMS, list,
+        bodyEl.appendChild(UI.field('Teams — up to ' + SF.MAX_TEAMS, list,
           'The colours match the answer pads on the phones.'));
       }
 
       if (SF.gameStyle(game.style).mechanic === 'race') {
-        body.appendChild(UI.field('Steps to the finish line',
+        bodyEl.appendChild(UI.field('Steps to the finish line',
           UI.num(st.trackLength, function (v) {
             st.trackLength = Math.max(3, Math.min(12, v || 5));
             touched();
@@ -1312,7 +1325,7 @@
         if ([30, 60, 90, 120].indexOf(Number(st.defaultTime)) < 0) st.defaultTime = 60;
         st.defaultPoints = 0;
         st.confidence = false;
-        body.appendChild(UI.field('Question countdown', UI.segmented([
+        bodyEl.appendChild(UI.field('Question countdown', UI.segmented([
           { value: '30', icon: '30', label: '30s' },
           { value: '60', icon: '60', label: '60s' },
           { value: '90', icon: '90', label: '90s' },
@@ -1328,7 +1341,7 @@
         if (tfTimes.indexOf(Number(st.defaultTime)) < 0) {
           st.defaultTime = game.format === 'true-false' ? 15 : 0;
         }
-        body.appendChild(UI.field('Countdown', UI.segmented([
+        bodyEl.appendChild(UI.field('Countdown', UI.segmented([
           { value: '0', icon: '\u2014', label: 'Off' },
           { value: '10', icon: '10', label: '10s' },
           { value: '15', icon: '15', label: '15s' },
@@ -1339,14 +1352,14 @@
           touched(); draw2(); drawRail(); drawPreview();
         }),
           'Time allowed for each statement. Choose Off when you want to discuss before revealing.'));
-        body.appendChild(UI.field('Default points',
+        bodyEl.appendChild(UI.field('Default points',
           UI.num(st.defaultPoints, function (v) {
             st.defaultPoints = Math.max(0, v || 0); touched();
           }, 0, 5000),
           'Used by any statement that does not set its own points.'));
       } else if (SF.gameStyle(game.style).mechanic === 'boss') {
         var hp = SF.bossMaxHp(game.questions);
-        body.appendChild(el('p', 'hint',
+        bodyEl.appendChild(el('p', 'hint',
           'Boss starts at ' + hp + ' HP (sum of each question\u2019s difficulty damage). ' +
           'A hit lands when most of the room is right. Win by bringing HP to 0.'));
         var defsBoss = el('div', 'setrow');
@@ -1354,7 +1367,7 @@
           UI.num(st.defaultTime, function (v) {
             st.defaultTime = Math.max(0, v || 0); touched(); drawRail(); drawPreview();
           }, 0, 300)));
-        body.appendChild(defsBoss);
+        bodyEl.appendChild(defsBoss);
       } else {
         var defs = el('div', 'setrow');
         if (setupUX().timing === 'question') defs.appendChild(UI.field('Default countdown',
@@ -1365,12 +1378,12 @@
           UI.num(st.defaultPoints, function (v) {
             st.defaultPoints = Math.max(0, v || 0); touched();
           }, 0, 5000)));
-        body.appendChild(defs);
-        body.appendChild(el('div', 'hint',
+        bodyEl.appendChild(defs);
+        bodyEl.appendChild(el('div', 'hint',
           fixedPoints() ? 'Scoring follows this game’s rules; there is no separate points value to set.' : 'Defaults apply unless a question overrides them. Timed correct answers receive a speed bonus.'));
       }
 
-      body.appendChild(UI.field('Scoreboard',
+      bodyEl.appendChild(UI.field('Scoreboard',
         UI.check('Keep the score on screen throughout', st.scoreboard, function (v) {
           st.scoreboard = v; touched(); draw2();
         }),
@@ -1378,7 +1391,7 @@
           ? 'A rail down the right of every slide shows the standings, updating as answers come in.'
           : 'Standings appear only on a full-screen leaderboard between questions.'));
 
-      body.appendChild(UI.field('Show explanations', UI.segmented([
+      bodyEl.appendChild(UI.field('Show explanations', UI.segmented([
         { value: 'inline', icon: '▸', label: 'In the answer box' },
         { value: 'slide', icon: '▤', label: 'Own slide' },
         { value: 'both', icon: '⧉', label: 'Both' }
@@ -1390,7 +1403,7 @@
             : 'The box expands on reveal, then the next slide gives the full version.'));
 
       if (['speed', 'headsup', 'spinexplain', 'connection', 'randomchallenge'].indexOf(game.style) === -1) {
-        body.appendChild(UI.field('After each answer', (function () {
+        bodyEl.appendChild(UI.field('After each answer', (function () {
           var box = el('div');
           box.appendChild(UI.check('Ask how sure they were', st.confidence !== false, function (v) {
             st.confidence = v; touched(); draw2();
@@ -1404,7 +1417,7 @@
         })()));
       }
 
-      body.appendChild(UI.field('Music under the thinking time', (function () {
+      bodyEl.appendChild(UI.field('Music under the thinking time', (function () {
         var box = el('div');
         box.appendChild(UI.text(st.music || '', function (v) {
           st.music = SF.safeMedia(v); touched(); draw2();
@@ -1434,7 +1447,7 @@
       note.style.cssText = 'padding:10px 12px;background:var(--ui-bg);border-radius:6px;line-height:1.5';
       note.textContent = 'When this game is embedded in a presentation, these settings run the room. ' +
         'A presentation holding several games uses the first one’s teams for the whole session.';
-      body.appendChild(note);
+      bodyEl.appendChild(note);
     }
 
     draw2();
@@ -1669,15 +1682,23 @@
     }
     sel = 0;
 
-    $('notes').addEventListener('input', function () {
-      if (SF.Shell.current() !== ws) return;
-      q().notes = $('notes').value;
-      touched();
-    });
+    var notesEl = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
+    if (notesEl) {
+      notesEl.addEventListener('input', function () {
+        if (SF.Shell.current() !== ws) return;
+        if (notesEl && q()) {
+          q().notes = notesEl.value;
+          touched();
+        }
+      });
+    }
 
-    $('btnPlay').onclick = play;
-    if ($('btnDemoGame')) $('btnDemoGame').onclick = toggleDemo;
-    if ($('btnDemoReset')) $('btnDemoReset').onclick = resetDemo;
+    var btnPlay = $('btnPlay');
+    if (btnPlay) btnPlay.onclick = play;
+    var btnDemoGame = $('btnDemoGame');
+    if (btnDemoGame) btnDemoGame.onclick = toggleDemo;
+    var btnDemoReset = $('btnDemoReset');
+    if (btnDemoReset) btnDemoReset.onclick = resetDemo;
     setDemoActive(false);
   }
 

@@ -567,7 +567,7 @@ export interface BoardRuntime {
   mount(host: any, slide: Slide, node: HTMLElement): void;
   render(pad: Element | null, slide: Slide, options: Record<string, any>, root: HTMLElement): boolean;
   snapshot(host: any): Record<string, any>;
-  renderOptions(host: any, slide: Slide, sendCommand: ((key: string, payload: any) => void) | null): Record<string, any>;
+  renderOptions(host: any, slide: Slide, sendCommand?: ((key: string, payload: any) => void) | null): Record<string, any>;
   command(key: string, action: string, card?: unknown): boolean;
   /** A value that changes only when the board needs repainting. */
   stamp(host: any, slide: Slide, theme: string): string | null;
@@ -653,7 +653,19 @@ export interface SlideForgeGlobal {
   Boards?: BoardRuntime;
   /** Rules copy for the "how to play" slide. Added by `js/playbook.js`. */
   Playbook?: {
-    forGame(game: Game): { title?: string; aim?: string; howToPlay?: string[] } | null;
+    forGame(game: Game): {
+      title?: string;
+      aim?: string;
+      howToPlay?: string[];
+      phases?: string;
+      timer?: string;
+      players?: string;
+      scoring?: string;
+      judgement?: string;
+      note?: string;
+      demo?: string;
+      [key: string]: any;
+    } | null;
     engineSummary(book: any): string;
     /* The two above are what src/ reads. js/playbook.js exports a good deal
        more — the book itself, per-style setup, demo kinds — and typing only
