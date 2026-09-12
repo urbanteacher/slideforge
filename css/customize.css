@@ -34,28 +34,27 @@
   .slide tbody tr{transition:none}
   .slide .step-hidden{transform:none;transition:none}
 }
-/* The ink bar docks above the HUD instead of floating in the corner, so it
-   shares the HUD's habit of getting out of the way. Same visual family. */
-.ink-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;z-index:150;display:flex;gap:4px;background:rgba(18,20,26,.94);padding:5px;border-radius:10px;border:1px solid #2f343d;box-shadow:0 10px 30px #0007}
-.ink-bar[hidden]{display:none}
-.ink-bar button{border:1px solid transparent;border-radius:7px;width:34px;height:34px;display:grid;place-items:center;font-size:15px;background:none;color:#c9cfda;cursor:pointer}
-.ink-bar button:hover{background:#22262e;color:#fff}
-.ink-bar button[aria-pressed=true]{background:#ec346d;border-color:#ec346d;color:#fff}
+/* The ink tools are integrated directly into the HUD pill for a single unified control bar. */
+.hud-group{display:inline-flex;align-items:center;gap:6px}
+.hud-group[hidden]{display:none!important}
+.hud-ink-tools button[aria-pressed=true]{background:#ec346d!important;border-color:#ec346d!important;color:#fff!important}
+.hud-ink-done{width:auto!important;height:38px!important;padding:0 14px!important;font-size:13px!important;font-weight:600;border-radius:999px!important;background:rgba(52,201,138,.2)!important;color:#72f0b7!important;border:1px solid rgba(52,201,138,.4)!important}
+.hud-ink-done:hover{background:rgba(52,201,138,.35)!important;color:#fff!important}
+#hud.hud-inking{border-color:rgba(236,52,109,.55);box-shadow:0 10px 35px #0008,0 0 14px rgba(236,52,109,.3)}
 .teaching-ink{position:absolute;inset:0;width:100%;height:100%;z-index:40;pointer-events:none;touch-action:none}
 .teaching-ink.drawing{pointer-events:auto;cursor:crosshair}
 .manual-panel{position:fixed;inset:5vh max(16px,calc((100vw - 700px)/2));z-index:180;background:#fff;color:#243422;padding:22px;border-radius:16px;overflow:auto;box-shadow:0 15px 90px #0008}
 .manual-panel header{display:flex;align-items:center;justify-content:space-between;gap:12px}.manual-panel button,.manual-panel input,.manual-panel select{font:inherit;padding:9px;border:1px solid #a6b79d;border-radius:7px}.manual-panel textarea{width:100%;min-height:80px}.manual-entry{display:flex;flex-wrap:wrap;gap:7px;border-top:1px solid #d8dfd4;padding:12px 0;align-items:center}.manual-entry strong{min-width:140px}.manual-entry button[aria-pressed=true]{background:#334b2a;color:white}
 @media(max-width:700px){.manual-panel{margin:8px!important;padding:14px!important}.manual-entry strong{width:100%}}
-.hud{border-radius:18px;gap:6px;padding:7px;max-width:calc(100vw - 20px)}
-.hud>button{width:42px;height:42px;font-size:18px;flex-shrink:0}
+.hud{border-radius:18px;gap:6px;padding:7px;max-width:calc(100vw - 20px);transition:border-color .25s,box-shadow .25s,opacity .25s}
+.hud>button,.hud-group button{width:42px;height:42px;font-size:18px;flex-shrink:0}
 .hud .pos{padding:0 4px;white-space:nowrap}
 .hud-more{position:absolute;bottom:calc(100% + 10px);right:0;width:300px;max-width:calc(100vw - 24px);padding:8px;border:1px solid #4a5059;border-radius:14px;background:#191d24;box-shadow:0 10px 35px #0008;display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .hud-more[hidden]{display:none!important}
 .hud .hud-more button{width:auto;height:auto;min-height:44px;border-radius:9px;padding:9px;font-size:13px;text-align:left}
 .hud button:disabled{opacity:.38;cursor:default}
-.hud button:focus-visible,.ink-bar button:focus-visible{outline:2px solid #e4f0ab;outline-offset:2px}
-.ink-bar{bottom:90px}.ink-bar button{width:42px;height:42px}
-@media(max-width:380px){.hud{gap:2px}.hud>button{width:36px}.hud .sep{margin:0}.hud .pos{font-size:12px}}
+.hud button:focus-visible{outline:2px solid #e4f0ab;outline-offset:2px}
+@media(max-width:380px){.hud{gap:2px}.hud>button,.hud-group button{width:36px;height:36px}.hud .sep{margin:0}.hud .pos{font-size:12px}}
 
 /* Teacher window: a row you answer for, and a row that answers itself. */
 .manual-entry.on-phone{opacity:.9;background:#f3f6ef}

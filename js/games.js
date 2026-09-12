@@ -413,7 +413,70 @@
     });
     browseBtn.title = 'Browse quiz styles and formats (Boss Battle, Horse Race, Memory, etc.)';
     quizActions.appendChild(browseBtn);
+
+    /* Writing questions is the slow part of building a check, and it is the
+       one place the model has a real brief: it is told the format, how many
+       answers that engine takes, and what is already written. */
+    var genBtn = UI.button('✨ Write questions', 'ghost', openGenerator);
+    genBtn.title = 'Draft questions for this format from a topic. You review every one before it lands.';
+    quizActions.appendChild(genBtn);
     foot.appendChild(quizActions);
+  }
+
+  /* ------------------------------------------------------ AI question draft */
+
+  function openGenerator() {
+    if (!SF.AI || !SF.AI.generateQuestionsForGame) { SF.toast('AI engine not loaded.'); return; }
+    var body = $('quizGenBody');
+    if (!body || !SF.Shell.openModal) return;
+    body.replaceChildren();
+    var close = SF.Shell.openModal('quizGenModal');
+
+    var style = SF.gameStyle(game.style);
+    var topic = UI.text(game.title && game.title !== 'Untitled quiz' ? game.title : '', function () {},
+      'Photosynthesis in plants');
+    var notes = UI.area('', function () {}, 2);
+    notes.placeholder = 'Year 9, just covered the light-dependent stage…';
+    var count = UI.select([2, 3, 4, 5, 6, 8].map(function (n) {
+      return { value: String(n), label: n + ' questions' };
+    }), '4', function () {});
+
+    body.appendChild(el('p', 'hint',
+      'Writing for ' + (style.label || game.style) + '. Drafts are added to the end of this quiz — ' +
+      'nothing already written is touched, and you can undo.'));
+    body.appendChild(UI.field('Topic', topic));
+    body.appendChild(UI.field('Anything else it should know', notes, 'Optional.'));
+    body.appendChild(UI.field('How many', count));
+
+    var guard = el('p', 'hint', '');
+    guard.setAttribute('role', 'status');
+    var go = UI.button('✨ Write them', 'primary', function () {
+      var t = String(topic.value || '').trim();
+      if (!t) { guard.textContent = 'Give it a topic to write about.'; return; }
+      go.disabled = true;
+      guard.textContent = 'Writing…';
+      Promise.resolve(SF.AI.generateQuestionsForGame(game, {
+        topic: t, notes: notes.value, count: Number(count.value)
+      })).then(function (res) {
+        go.disabled = false;
+        if (!res || res.error) { guard.textContent = res && res.error ? res.error : 'Nothing came back.'; return; }
+        res.questions.forEach(function (q) { game.questions.push(q); });
+        sel = game.questions.length - res.questions.length;
+        touched();
+        draw();
+        close();
+        /* Say what was dropped. A quieter "added 3" after asking for 4 is the
+           kind of silence that gets noticed in front of a class. */
+        SF.toast(res.rejected
+          ? ('Added ' + res.questions.length + ' · ' + res.rejected + ' rejected by the format')
+          : ('Added ' + res.questions.length + ' — check them before you teach'));
+      }).catch(function () {
+        go.disabled = false;
+        guard.textContent = 'Could not write questions just now.';
+      });
+    });
+    body.appendChild(go);
+    body.appendChild(guard);
   }
 
   /* ------------------------------------------------------------ preview */

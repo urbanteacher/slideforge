@@ -150,13 +150,15 @@
     hudTimer = setTimeout(function () {
       if (!hud) return;
       var moreEl = document.getElementById('hudMore');
-      if (hud.matches(':hover') || hud.querySelector(':focus-visible') || (moreEl && !moreEl.hidden)) {
+      var inking = !!(SF.Teaching && SF.Teaching.isOpen && SF.Teaching.isOpen());
+      if (hud.matches(':hover') || hud.querySelector(':focus-visible') || (moreEl && !moreEl.hidden) || inking) {
         showHud();
         return;
       }
       hud.classList.remove('show');
     }, 2400);
   }
+  Player.showHud = showHud;
 
   /* ------------------------------------------------------------ quiz maths */
 
@@ -1216,6 +1218,14 @@
       nextBtn.classList.toggle('will-reveal', act === 'reveal');
       nextBtn.classList.toggle('will-hold', act === 'hold');
     }
+
+    var pollBtn = hud.querySelector('[data-act=poll]');
+    if (pollBtn) {
+      var pollActive = !!(SF.Live && SF.Live.customPromptOpen && SF.Live.customPromptOpen());
+      pollBtn.classList.toggle('on', pollActive);
+      pollBtn.textContent = pollActive ? 'End quick poll' : 'Quick poll';
+      pollBtn.title = pollActive ? 'End the active impromptu poll (V)' : 'Ask the room a quick question (V)';
+    }
   }
   Player.syncHudRoomButtons = syncHudRoomButtons;
 
@@ -2085,6 +2095,8 @@
         } else if (Player._focus) {
           if (SF.Live && SF.Live.active) Player.emit('focusToggle', { close: true });
           else toggleSoloFeedback({ close: true });
+        } else if (SF.Teaching && SF.Teaching.isOpen && SF.Teaching.isOpen()) {
+          SF.Teaching.toggleBar(false);
         } else {
           Player.close();
         }
@@ -2115,6 +2127,12 @@
       case 'i': case 'I':
         e.preventDefault();
         Player.control('ink');
+        break;
+      case 'z': case 'Z':
+        if (SF.Teaching && SF.Teaching.isOpen && SF.Teaching.isOpen()) {
+          e.preventDefault();
+          SF.Teaching.undo();
+        }
         break;
       case 'x': case 'X':
         e.preventDefault();

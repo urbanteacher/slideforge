@@ -57,29 +57,42 @@
     if (!slide) return [];
     var terms = [];
 
-    // 1. Explicit slide keywords
-    if (Array.isArray(slide.keywords)) {
-      slide.keywords.forEach(function (k) {
-        var w = typeof k === 'string' ? k : (k.word || k.term || '');
-        if (w && String(w).trim()) terms.push(String(w).trim());
+    /* `bullets` is where a SlideForge slide keeps its content, and on a
+       keywords slide each entry is "term<TAB>definition" — the term half is
+       exactly the concept worth asking about.
+
+       This used to read `keywords`, `points` and `italics`. A slide has no
+       keywords or italics field at all, and `points` is a question's score, a
+       number. So the extractor returned [] for every real slide and every
+       generated poll fell back to "How confident do you feel with: <title>?".
+       It passed its tests because those fed it hand-made objects with a
+       `keywords` array, which nothing in the app produces. */
+    if (Array.isArray(slide.bullets)) {
+      slide.bullets.forEach(function (b) {
+        var line = String(b == null ? '' : b);
+        if (!line.trim()) return;
+        var term = line;
+        if (SF.parseKeywordLine) {
+          var parsed = SF.parseKeywordLine(line);
+          term = parsed && parsed.term ? parsed.term : line;
+        } else if (line.indexOf('\t') > -1) {
+          term = line.slice(0, line.indexOf('\t'));
+        }
+        term = term.trim().replace(/^[-*•]\s*/, '');
+        if (term && term.length <= 60) terms.push(term);
       });
     }
 
-    // 2. Structured points or cards
-    if (Array.isArray(slide.points)) {
-      slide.points.forEach(function (p) {
-        var txt = typeof p === 'string' ? p : (p.title || p.text || '');
-        txt = String(txt).trim().replace(/^[-*•]\s*/, '');
-        if (txt && txt.length <= 40) terms.push(txt);
+    /* A quiz slide's own options are candidate concepts too. */
+    if (Array.isArray(slide.options)) {
+      slide.options.forEach(function (o) {
+        var t = String(o == null ? '' : o).trim();
+        if (t && t.length <= 60) terms.push(t);
       });
     }
 
-    // 3. Italics / definitions
-    if (Array.isArray(slide.italics)) {
-      slide.italics.forEach(function (it) {
-        var w = typeof it === 'string' ? it : (it.term || it.phrase || '');
-        if (w && String(w).trim()) terms.push(String(w).trim());
-      });
+    if (slide.subtitle && String(slide.subtitle).trim().length <= 60) {
+      terms.push(String(slide.subtitle).trim());
     }
 
     // 4. Body lines if short
@@ -217,59 +230,53 @@
 
   /* ------------------------------------------------ Live Generative AI (Gemini REST) */
 
-  async function callServer(systemPrompt, userPrompt) {
-    var endpoint = aiUrl('/api/ai/generate');
-    var body = { system: systemPrompt, user: userPrompt };
-
+  /* The transport: prompt out, parsed JSON back. Shaping what comes back is
+     each caller's job, because a poll and a set of quiz questions want very
+     different things from the same endpoint. */
+  async function callServerRaw(systemPrompt, userPrompt) {
     var fetchFn = global.fetch;
     if (typeof fetchFn !== 'function') {
       throw new Error('fetch is not available in this environment');
     }
-
     var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = controller ? setTimeout(function () { controller.abort(); }, 7500) : null;
-
+    var timer = controller ? setTimeout(function () { controller.abort(); }, 15000) : null;
     try {
-      var res = await fetchFn(endpoint, {
+      var res = await fetchFn(aiUrl('/api/ai/generate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ system: systemPrompt, user: userPrompt }),
         signal: controller ? controller.signal : undefined
       });
       if (timer) clearTimeout(timer);
-
       if (!res.ok) {
-        /* 503 means this deployment has no key, which is not a failure — the
-           heuristics below are the designed answer to it. */
+        /* 503 means this deployment has no key, which is not a failure for a
+           poll — the heuristics are the designed answer to it. */
         throw new Error('AI endpoint returned status ' + res.status);
       }
-
       var data = await res.json();
-      if (!data || !data.text) {
-        throw new Error('No content returned by the AI endpoint');
-      }
-
-      var parsed = JSON.parse(data.text);
-      var kind = parsed.kind === 'scale' ? 'scale' : parsed.kind === 'wordcloud' ? 'wordcloud' : 'poll';
-      var options = Array.isArray(parsed.options)
-        ? parsed.options.map(function (o) { return String(o).trim(); }).filter(Boolean)
-        : [];
-      if (kind === 'poll' && options.length < 2) {
-        options = ['Yes', 'No'];
-      }
-
-      return {
-        kind: kind,
-        prompt: String(parsed.prompt || '').trim() || 'Class poll',
-        options: options,
-        points: parsed.points || 5,
-        lowLabel: parsed.lowLabel || 'Low',
-        highLabel: parsed.highLabel || 'High',
-        heuristic: false
-      };
+      if (!data || !data.text) throw new Error('No content returned by the AI endpoint');
+      return JSON.parse(data.text);
     } finally {
       if (timer) clearTimeout(timer);
     }
+  }
+
+  async function callServer(systemPrompt, userPrompt) {
+    var parsed = await callServerRaw(systemPrompt, userPrompt);
+    var kind = parsed.kind === 'scale' ? 'scale' : parsed.kind === 'wordcloud' ? 'wordcloud' : 'poll';
+    var options = Array.isArray(parsed.options)
+      ? parsed.options.map(function (o) { return String(o).trim(); }).filter(Boolean)
+      : [];
+    if (kind === 'poll' && options.length < 2) options = ['Yes', 'No'];
+    return {
+      kind: kind,
+      prompt: String(parsed.prompt || '').trim() || 'Class poll',
+      options: options,
+      points: parsed.points || 5,
+      lowLabel: parsed.lowLabel || 'Low',
+      highLabel: parsed.highLabel || 'High',
+      heuristic: false
+    };
   }
 
   async function generatePollForSlide(slide, opts) {
@@ -319,12 +326,118 @@
     }
   }
 
+  /* ------------------------------------------------ questions for a game */
+
+  /**
+   * Write questions for the game being edited.
+   *
+   * The brief is built from the engine's own contract rather than from a
+   * general idea of "a quiz": the style, how many answers it takes, and the
+   * questions already written so the model does not repeat them. That is the
+   * background knowledge the poll generator never had — it was handed a slide
+   * and nothing about the game around it.
+   *
+   * Everything that comes back is normalized and then put through the
+   * engine's own `problems()`. Anything it rejects is dropped rather than
+   * repaired, because a question that fails validation is exactly the thing
+   * a teacher would not notice until the room was looking at it.
+   *
+   * @returns {Promise<{questions: any[], rejected: number, heuristic: boolean} | {error: string}>}
+   */
+  async function generateQuestionsForGame(game, opts) {
+    opts = opts || {};
+    if (!game || !SF.gameStyle || !SF.makeQuestion || !SF.normalizeQuestion) {
+      return { error: 'The game engines are not loaded.' };
+    }
+    var engine = SF.gameStyle(game.style);
+    if (!engine) return { error: 'Unknown game style.' };
+
+    /* Only the pick-an-answer engines for now. A format answered by typing, by
+       ordering, by placing a value on a line or by a teacher's verdict needs
+       fields this brief does not ask for, and half-filled questions would fail
+       validation and be silently dropped — which reads as "the AI did
+       nothing" rather than "this format is not supported yet". */
+    if (engine.input !== 'choice') {
+      return { error: (engine.label || 'This format') + ' is not written by AI yet — it needs answers this brief cannot supply. Try Browse quizzes for a starter bank.' };
+    }
+
+    /* Subject knowledge is the whole job here, and heuristics do not have
+       any. Inventing "Which organelle contains chlorophyll?" is not something
+       word-frequency can do, so with no server key this says so and points at
+       the curated starter banks, which are real content. */
+    var live = await checkLiveAI();
+    if (!live) {
+      return { error: 'Writing questions needs the AI server key. Without it, Browse quizzes has starter banks for every format.' };
+    }
+
+    var topic = String(opts.topic || game.title || '').trim();
+    if (!topic) return { error: 'Give it a topic to write about.' };
+    var want = Math.max(1, Math.min(10, Number(opts.count) || 4));
+
+    var fixed = Array.isArray(engine.fixedOptions) && engine.fixedOptions.length
+      ? engine.fixedOptions : null;
+    var min = fixed ? fixed.length : (engine.minOptions || 2);
+    var max = fixed ? fixed.length : (engine.maxOptions || 4);
+
+    var existing = (game.questions || [])
+      .map(function (q) { return String(q.question || '').trim(); })
+      .filter(Boolean).slice(0, 20);
+
+    var system = 'You write classroom quiz questions for a teacher. Output ONLY a JSON object: ' +
+      '{"questions":[{"question":"...","options":["..."],"correct":0,"explanation":"..."}]}. ' +
+      'Rules: exactly ' + want + ' questions. ' +
+      (fixed
+        ? 'Every question must use exactly these options, in this order: ' + JSON.stringify(fixed) + '. '
+        : 'Between ' + min + ' and ' + max + ' options each, all plausible. ') +
+      '"correct" is the 0-based index of the right option. ' +
+      'Every wrong option must be a mistake a learner could actually make, not filler. ' +
+      'The explanation is one sentence a teacher can read aloud after the reveal.';
+
+    var user = 'Format: ' + (engine.label || game.style) + '. Topic: ' + topic + '.' +
+      (opts.notes ? '\nTeacher notes: ' + String(opts.notes).slice(0, 500) : '') +
+      (existing.length
+        ? '\nDo not repeat these questions already in the quiz:\n- ' + existing.join('\n- ')
+        : '');
+
+    var raw;
+    try {
+      raw = await callServerRaw(system, user);
+    } catch (err) {
+      return { error: 'The AI server could not be reached. Your questions are untouched.' };
+    }
+
+    var list = raw && Array.isArray(raw.questions) ? raw.questions : [];
+    var out = [];
+    var rejected = 0;
+    list.slice(0, want).forEach(function (row) {
+      var q = Object.assign(SF.makeQuestion(game.style), {
+        question: String((row && row.question) || '').trim(),
+        options: fixed
+          ? fixed.slice()
+          : (Array.isArray(row && row.options) ? row.options.map(function (o) { return String(o).trim(); }) : []),
+        correct: Number(row && row.correct) || 0,
+        explanation: String((row && row.explanation) || '').trim()
+      });
+      q = SF.normalizeQuestion(q, game.style);
+      /* The engine has the final say, exactly as it does for a question a
+         teacher typed. */
+      if (engine.problems && engine.problems(q, out.length + 1)) { rejected++; return; }
+      out.push(q);
+    });
+
+    if (!out.length) {
+      return { error: 'Nothing came back that this format accepts. Try a narrower topic.' };
+    }
+    return { questions: out, rejected: rejected, heuristic: false };
+  }
+
   var AI = {
     /* Availability, not credentials. Nothing here can read or set a key,
        because the browser never has one. */
     checkLiveAI: checkLiveAI,
     liveAIKnown: liveAIKnown,
     generatePollForSlide: generatePollForSlide,
+    generateQuestionsForGame: generateQuestionsForGame,
     generatePollFromPrompt: generatePollFromPrompt,
     extractSlideTerms: extractSlideTerms
   };

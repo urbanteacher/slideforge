@@ -155,11 +155,11 @@ html:not([data-ready]) body { background: #f0f1ed; }
   <div class="hud-group hud-ink-tools" id="hudInkTools" hidden>
     <button data-mode="draw" title="Draw on the slide" aria-label="Draw on the slide">✎</button>
     <button data-mode="spot" title="Spotlight part of the slide" aria-label="Spotlight part of the slide">◎</button>
-    <button data-ink-act="undo" title="Undo the last mark" aria-label="Undo the last mark">↶</button>
+    <button data-ink-act="undo" title="Undo the last mark (Z)" aria-label="Undo the last mark (Z)">↶</button>
     <button data-ink-act="clear" title="Clear all marks (X)" aria-label="Clear all marks (X)">🗑</button>
     <button data-ink-act="steps" title="Show every step on this slide" aria-label="Show every step on this slide">⋯</button>
     <span class="sep"></span>
-    <button data-ink-act="close" class="hud-ink-done" title="Done drawing (I or Esc)" aria-label="Done drawing">✓</button>
+    <button data-ink-act="close" class="hud-ink-done" title="Done drawing (I or Esc)" aria-label="Done drawing">✓ Done</button>
   </div>
   <div id="hudMore" class="hud-more" hidden>
     <button data-act="rail" title="Cycle room view (S)">Room view</button>
@@ -184,7 +184,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
       <tr><td><kbd>Home</kbd> <kbd>End</kbd></td><td>First / last slide</td></tr>
       <tr><td><kbd>A</kbd>–<kbd>F</kbd> or <kbd>1</kbd>–<kbd>6</kbd></td><td>Answer in solo presentation mode; live learners answer on their devices or through teacher entry</td></tr>
       <tr><td><kbd>R</kbd></td><td>Clear answers and score again</td></tr>
-      <tr><td><kbd>I</kbd></td><td>Draw on the slide · <kbd>X</kbd> clears it</td></tr>
+      <tr><td><kbd>I</kbd></td><td>Draw on the slide · <kbd>Z</kbd> undoes · <kbd>X</kbd> clears it</td></tr>
       <tr><td><kbd>W</kbd></td><td>Who answered what</td></tr>
       <tr><td><kbd>B</kbd></td><td>Blank the screen</td></tr>
       <tr><td><kbd>F</kbd></td><td>Toggle full screen</td></tr>
@@ -245,6 +245,13 @@ html:not([data-ready]) body { background: #f0f1ed; }
 
 <!-- Asked from the presentation itself, for a teacher with one screen. The
      presenter desk has the same controls; this is the other door to them. -->
+<div class="modal" id="quizGenModal">
+  <div class="sheet">
+    <header><h3>Write questions</h3><button class="btn ghost" data-close>✕</button></header>
+    <div class="body" id="quizGenBody"></div>
+  </div>
+</div>
+
 <div class="modal" id="quickPollModal">
   <div class="sheet">
     <header><h3>Ask the room</h3><button class="btn ghost" data-close>✕</button></header>
@@ -313,7 +320,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/shell.js?v=9"></script>
 <script src="js/content-tools.js?v=2"></script>
 <script src="js/editor.js?v=6"></script>
-<script src="js/games.js?v=5"></script>
+<script src="js/games.js?v=6"></script>
 <script src="js/studio.js?v=3"></script>
 <script src="js/activities.js?v=2"></script>
 <script src="js/adapt.js?v=2"></script>

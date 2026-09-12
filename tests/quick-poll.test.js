@@ -59,19 +59,31 @@ test('SF.AI asks the server whether live generation is available', async () => {
   assert.equal(online.calls.filter((c) => /status$/.test(c.url)).length, 1);
 });
 
-test('SF.AI generates diagnostic concept poll from slide keywords offline', async () => {
+test('the offline poll reads the slide this app actually builds', async () => {
   const { AI } = createAiModule();
+
+  /* A keywords slide, in the shape makeSlide produces: content lives in
+     `bullets`, each "term<TAB>definition". This test used to hand the
+     extractor a `keywords` array of objects, which nothing in SlideForge
+     creates — so it passed while the extractor returned [] for every real
+     slide and every poll fell back to a title-only confidence scale. */
   const slide = {
     id: 's1',
-    type: 'content',
+    type: 'keywords',
     title: 'Cellular Respiration Stages',
     body: 'Understanding the biochemical pathway.',
-    keywords: [
-      { word: 'Glycolysis', def: 'Splitting glucose into pyruvate' },
-      { word: 'Krebs Cycle', def: 'Generating electron carriers' },
-      { word: 'Electron Transport', def: 'ATP synthesis via proton gradient' }
+    bullets: [
+      'Glycolysis\tSplitting glucose into pyruvate',
+      'Krebs Cycle\tGenerating electron carriers',
+      'Electron Transport\tATP synthesis via proton gradient'
     ]
   };
+
+  /* Spread first: ai.js runs in a vm realm, so its Array fails a strict deep
+     compare against one built here. */
+  assert.deepEqual([...AI.extractSlideTerms(slide)],
+    ['Glycolysis', 'Krebs Cycle', 'Electron Transport'],
+    'the term half of each bullet is the concept worth asking about');
 
   const poll = await AI.generatePollForSlide(slide);
   assert.ok(poll, 'poll should be generated');
@@ -275,4 +287,86 @@ test('Live.startCustomPrompt and Live.endCustomPrompt manage impromptu poll life
   assert.equal(Live.prompt, null);
   assert.equal(globalObj.document.body.classList.contains('fb-open'), false);
   assert.equal(closedFocus, true);
+});
+
+/* The generator's brief is the engine's own contract, and the engine has the
+   final say on what it produced. A question that fails validation is exactly
+   the kind a teacher would not notice until the room was looking at it. */
+/* js/model.js publishes onto `window`, so it is loaded into a sandbox the
+   same way the other suites do it. */
+function loadEngines() {
+  const sandbox = {};
+  global.window = sandbox;
+  delete require.cache[require.resolve('../js/model.js')];
+  require('../js/model.js');
+  delete global.window;
+  return sandbox.SF;
+}
+
+function withEngines(mod) {
+  const SF = loadEngines();
+  Object.assign(mod.globalObj.SF, {
+    gameStyle: SF.gameStyle, makeQuestion: SF.makeQuestion, normalizeQuestion: SF.normalizeQuestion
+  });
+  return mod;
+}
+
+function gameAiModule({ reply }) {
+  const gen = 'http://test.local/api/ai/generate';
+  return withEngines(createAiModule({
+    live: true,
+    routes: { [gen]: async () => ({ ok: true, json: async () => ({ text: JSON.stringify(reply) }) }) }
+  }));
+}
+
+test('generated questions are judged by the engine, and the bad ones dropped', async () => {
+  const good = {
+    question: 'Which organelle contains chlorophyll?',
+    options: ['Nucleus', 'Chloroplast', 'Ribosome'], correct: 1,
+    explanation: 'Chloroplasts hold the chlorophyll used in photosynthesis.'
+  };
+  const { AI, calls } = gameAiModule({
+    reply: { questions: [
+      good,
+      /* One answer: the choice engine needs at least two, so this must not
+         reach the teacher's rail. */
+      { question: 'Half a question', options: ['Only one'], correct: 0 },
+      /* No question text at all. */
+      { question: '   ', options: ['A', 'B'], correct: 0 }
+    ] }
+  });
+
+  const game = { id: 'g1', style: 'choice', title: 'Cells', questions: [] };
+  const res = await AI.generateQuestionsForGame(game, { topic: 'Plant cells', count: 3 });
+
+  assert.ok(!res.error, res.error);
+  assert.equal(res.questions.length, 1, 'only the valid one survives');
+  assert.equal(res.rejected, 2);
+  assert.equal(res.questions[0].question, good.question);
+
+  /* And the brief really carried the engine's limits and what was already
+     written, which is the context the poll generator never had. */
+  const sent = calls.find((c) => /generate$/.test(c.url)).body;
+  assert.match(sent.system, /Between 2 and 6 options/);
+  assert.match(sent.user, /Multiple choice/);
+  assert.match(sent.user, /Plant cells/);
+});
+
+test('it refuses formats it cannot write for, rather than half-filling them', async () => {
+  const { AI } = gameAiModule({ reply: { questions: [] } });
+  /* Short answer is typed, not picked: the brief asks for options and a
+     correct index, which that engine has no use for. */
+  const typed = await AI.generateQuestionsForGame(
+    { id: 'g2', style: 'type', title: 'Recall', questions: [] }, { topic: 'Gold' });
+  assert.match(typed.error, /not written by AI yet/);
+});
+
+test('with no server key it says so instead of inventing subject knowledge', async () => {
+  const mod = withEngines(createAiModule({ live: false }));
+  const res = await mod.AI.generateQuestionsForGame(
+    { id: 'g3', style: 'choice', title: 'Cells', questions: [] }, { topic: 'Mitosis' });
+  /* Heuristics can pick a concept off a slide; they cannot know which
+     organelle holds chlorophyll. Saying so beats fabricating. */
+  assert.match(res.error, /needs the AI server key/);
+  assert.match(res.error, /Browse quizzes/);
 });
