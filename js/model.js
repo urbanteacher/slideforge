@@ -259,6 +259,39 @@
         "Students write 1 thing they wonder (1 min)",
         "Share out observations and questions (3 mins)",
         "Link to today's learning objective (1 min)"
+      ],
+      /* The two questions are the activity — the blurb states them verbatim —
+         so they arrive written rather than as empty pits. The stimulus is the
+         teacher's, because only they know what the lesson is about. */
+      fields: [
+        {
+          label: "The stimulus",
+          type: "text",
+          slide: "title",
+          value: "What is going on here?",
+          hint: "The line above the image. Keep it short — the picture is doing the work."
+        },
+        {
+          label: "Question 1",
+          type: "text",
+          slide: "bullets.0",
+          value: "What do you notice?",
+          hint: "Observation. Answerable by anyone looking at it."
+        },
+        {
+          label: "Question 2",
+          type: "text",
+          slide: "bullets.1",
+          value: "What do you wonder?",
+          hint: "Curiosity. This is the one that opens the lesson."
+        },
+        {
+          label: "Timer",
+          type: "minutes",
+          slide: "timeLimit",
+          value: 7,
+          hint: "Shown on the wall while they look. The five steps add up to this."
+        }
       ]
     },
     {

@@ -654,6 +654,30 @@ export interface Phase {
 }
 
 /**
+ * One authoring field an activity asks for.
+ *
+ * The catalogue says what a teacher has to fill in, and the activities
+ * inspector draws it. Without this an activity lands as an empty slide in the
+ * right layout and leaves them guessing which pit is the hook and which is
+ * the question — the shape is there but not what goes in it.
+ *
+ * `slide` is where the value lives on the slide it made, so the field edits
+ * the real slide rather than a copy: a dotted path like `bullets.0`, or a
+ * plain property like `title`.
+ */
+export interface ActivityField {
+  label: string;
+  /** `text` a line · `area` a paragraph · `minutes` a duration in minutes. */
+  type: 'text' | 'area' | 'minutes';
+  /** Dotted path into the slide, e.g. `title`, `bullets.0`, `timeLimit`. */
+  slide: string;
+  /** What it starts as. A worked example to overwrite beats a blank. */
+  value?: string | number;
+  /** Shown under the field. */
+  hint?: string;
+}
+
+/**
  * One row of the catalogue. Data only — nothing here runs; `js/studio.js`
  * reads `target` and calls the matching builder.
  */
@@ -676,6 +700,8 @@ export interface Activity {
   /** The protocol, in order, as the source recorded it. Every activity has
    *  one; for a moment it is the whole activity. */
   steps: string[];
+  /** What the teacher fills in. Absent means the slide is enough on its own. */
+  fields?: ActivityField[];
   /** Absent means true. An activity that cannot run is not offered. */
   enabled?: boolean;
 }

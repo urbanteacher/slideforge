@@ -77,7 +77,46 @@
     if (SF.prepareLayout) SF.prepareLayout(s, a.layout || 'content');
     s.title = a.title;
     s.notes = steps(a);
+    applyFields(a, s);
     return s;
+  }
+
+  /* ------------------------------------------------------- activity fields */
+
+  /** Read a dotted path off a slide: `title`, `bullets.0`, `timeLimit`. */
+  function read(slide, path) {
+    return path.split('.').reduce(function (at, key) {
+      return at == null ? undefined : at[key];
+    }, slide);
+  }
+
+  /** Write one, growing the array if the path points past its end — a layout
+   *  with two pits has to accept a third question without losing it. */
+  function write(slide, path, value) {
+    var parts = path.split('.');
+    var last = parts.pop();
+    var at = parts.reduce(function (node, key) { return node[key]; }, slide);
+    if (Array.isArray(at)) {
+      var i = Number(last);
+      while (at.length <= i) at.push('');
+      at[i] = value;
+    } else {
+      at[last] = value;
+    }
+  }
+
+  /** The field defaults, written onto a slide as it is created. A worked
+   *  example to overwrite beats an empty pit and a guess about what goes in
+   *  it — the same argument the game presets already make. */
+  function applyFields(a, slide) {
+    var fields = a.fields || [];
+    /* An activity that names its bullets owns all of them. The layout's own
+       placeholders are dropped first, or Hook & Predict's two questions
+       arrive followed by a stray "Third point" that nobody asked for. */
+    if (fields.some(function (f) { return /^bullets\./.test(f.slide); })) slide.bullets = [];
+    fields.forEach(function (f) {
+      if (f.value !== undefined) write(slide, f.slide, f.value);
+    });
   }
 
   function steps(a) {
@@ -285,6 +324,32 @@
       insp.appendChild(SF.Shell.UI.button('Edit this slide', '', function () {
         SF.Shell.activate('deck');
       }));
+
+      /* What this activity asks the teacher for, edited against the real
+         slide. Without it the slide lands in the right layout and leaves
+         them guessing which pit is the hook and which is the question. */
+      if (picked.fields && picked.fields.length) {
+        var slide = row.slide;
+        var changed = function () {
+          SF.Shell.touch();
+          SF.Editor.workspace.draw();
+        };
+        picked.fields.forEach(function (f) {
+          var now = read(slide, f.slide);
+          var input = f.type === 'minutes'
+            ? SF.Shell.UI.num(Number(now) || 0, function (v) {
+                write(slide, f.slide, Math.max(0, Number(v) || 0)); changed();
+              }, 0, 120)
+            : f.type === 'area'
+              ? SF.Shell.UI.area(String(now == null ? '' : now), function (v) {
+                  write(slide, f.slide, v); changed();
+                }, 3)
+              : SF.Shell.UI.text(String(now == null ? '' : now), function (v) {
+                  write(slide, f.slide, v); changed();
+                });
+          insp.appendChild(SF.Shell.UI.field(f.label, input, f.hint));
+        });
+      }
 
       /* Most of these activities are asking the room something — Muddiest
          Point, Four-Corner, Brain Dump, the reflection ladder. Attaching a
