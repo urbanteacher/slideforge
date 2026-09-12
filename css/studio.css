@@ -133,52 +133,38 @@
 .game-setup-cue{font-size:13px;line-height:1.55;padding:12px 14px;margin:8px 0;border-left:3px solid var(--ui-accent);background:var(--ui-accent-soft);border-radius:0 8px 8px 0;color:var(--ui-text)}
 
 /* ---------------------------------------------------------- Activities --
-   The plan rail groups by phase and carries a running time total, because
-   the question a plan answers is whether the lesson fits the hour. */
-.plan-phase{display:flex;align-items:center;gap:8px;padding:14px 8px 6px;
-  font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#7b846f}
-.plan-phase strong{font-weight:700;letter-spacing:1.4px}
-.plan-phase-icon{font-size:13px}
-.plan-phase-mins{margin-left:auto;background:#f0f1ec;border-radius:5px;padding:2px 7px;
-  letter-spacing:.4px;font-variant-numeric:tabular-nums}
-.plan-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;
-  font:inherit;font-size:13px;color:var(--ui-text);background:#fff;cursor:pointer;
-  border:1px solid #e3e7dd;border-radius:9px;padding:10px 11px;margin-bottom:6px}
-.plan-item:hover{border-color:#bbc7b1;background:#fafbf8}
-.plan-item.sel{border-color:#526943;box-shadow:0 0 0 2px #52694322}
-.plan-item strong{font-weight:500;flex:1;min-width:0}
-.plan-item-icon{font-size:15px;flex:none}
-.plan-item-mins{font-size:10px;color:var(--ui-dim);flex:none;font-variant-numeric:tabular-nums}
-/* The catalogue fills the stage rather than sitting in a modal — this studio
-   is the browsing surface, so there is nothing to sit on top of. */
-.plan-catalogue{padding:22px 26px;overflow:auto;height:100%}
-.plan-catalogue .library-tabs{flex-wrap:wrap}
-.plan-steps{margin:6px 0 14px;padding-left:20px;font-size:12px;color:var(--ui-dim);line-height:1.6}
-.plan-steps li{margin-bottom:5px}
+   The activities studio writes into the deck, so it wears the deck's chrome:
+   the same .studio-toolbar, the same .thumb rail with real slide previews,
+   and the same .activity-card grid the library already used. The only rules
+   here are the ones that let the catalogue fill the stage, plus a tint per
+   kind of activity. Nothing invents a third look. */
 
-/* The Activities studio browses rather than previews, so the stage box drops
-   the 16:9 slide frame it wears in the other two. Without this the catalogue
-   renders inside a black, fixed-ratio canvas and most of it is unreachable. */
+/* The stage browses rather than previews, so it drops the 16:9 slide frame it
+   wears in the other two. Without this the catalogue renders inside a black,
+   fixed-ratio canvas and most of it is unreachable. */
 html[data-ws="plan"] #previewBox{
   aspect-ratio:auto;max-width:none;height:100%;
   background:transparent;box-shadow:none;border-radius:0;overflow:auto}
 html[data-ws="plan"] .stage-wrap{padding:0;background-image:none;overflow:hidden}
+html[data-ws="plan"] .plan-catalogue{padding:22px 26px;overflow:auto;height:100%}
+html[data-ws="plan"] .plan-catalogue .library-tabs{flex-wrap:wrap}
 html[data-ws="plan"] .plan-catalogue .activity-grid{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:12px;margin-top:14px}
 html[data-ws="plan"] .plan-catalogue .library-note{margin:10px 0 0;font-size:12px;color:#7b846f}
+/* The rail is a way back to Lesson studio, not a second editor, so its rows
+   do not carry the selected state that would imply editing happens here. */
+html[data-ws="plan"] .rail-list .thumb{cursor:pointer}
 
 /* Colour says where the activity happens, not which phase it is in — eleven
    phase tints would be eleven near-identical pastels, and the phase is
-   already the tab you arrived through and the heading in the rail.
-
-   Amber is the one that matters: a timed protocol happens in the room with
-   no screen component at all, which is the biggest difference on the card. */
+   already the tab you arrived through. Amber is the one that matters: a
+   timed protocol happens in the room with no screen component at all. */
 html[data-ws="plan"] .act-moment .activity-icon{background:#fbeedd;color:#a2661f}
 html[data-ws="plan"] .act-feedback .activity-icon{background:#e8efdc;color:#6d8754}
 html[data-ws="plan"] .act-slide .activity-icon,
 html[data-ws="plan"] .act-slide-arc .activity-icon{background:#e4edf4;color:#41647f}
 html[data-ws="plan"] .act-game .activity-icon{background:#eee6f6;color:#8d68ab}
 html[data-ws="plan"] .act-moment{border-color:#f0e2cd}
-/* The colour legend in the activities inspector reuses the card tints. */
 html[data-ws="plan"] .act-legend{display:flex;align-items:center;gap:9px;margin:6px 0}
-html[data-ws="plan"] .act-legend .activity-icon{width:20px;height:20px;font-size:9px;border-radius:6px;margin:0;flex:none}
+html[data-ws="plan"] .act-legend .activity-icon{
+  width:20px;height:20px;font-size:9px;border-radius:6px;margin:0;flex:none}

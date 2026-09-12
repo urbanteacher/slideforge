@@ -80,9 +80,11 @@
 
   /* ---------------------------------------------------------------- rail */
 
-  /* The deck, so the lesson can be watched being built. Drawn here rather
-     than delegated because Lesson studio's rail carries editing affordances
-     this studio has no business offering. */
+  /* The same rail as Lesson studio — same `.thumb` rows, same numbering, same
+     rendered previews, same GAME and feedback badges. It is the same lesson,
+     so it should not look like a different one because of which tab you are
+     standing in. Drag-to-reorder and selection stay in Lesson studio; here a
+     row is a way back to it. */
   function drawRail() {
     var list = document.getElementById('railList');
     var count = document.getElementById('railCount');
@@ -91,14 +93,35 @@
     if (!list) return;
     list.replaceChildren();
     d.slides.forEach(function (slide, i) {
-      var row = el('button', 'plan-item');
-      row.appendChild(el('span', 'plan-item-icon',
-        (SF.SLIDE_TYPES[slide.type] || {}).icon || '▢'));
-      row.appendChild(el('strong', null,
-        slide.title || slide.question || slide.gameTitle || 'Untitled slide'));
-      row.title = 'Open slide ' + (i + 1) + ' in Lesson studio';
-      row.onclick = function () { SF.Shell.activate('deck'); };
+      var row = el('div', 'thumb');
+      row.tabIndex = 0;
+      row.setAttribute('role', 'button');
+      row.setAttribute('aria-label',
+        'Slide ' + (i + 1) + ': ' + (slide.title || SF.SLIDE_TYPES[slide.type].label) +
+        ' — open in Lesson studio');
+      row.appendChild(el('div', 'num', String(i + 1)));
+
+      var body = el('div', 'thumb-body');
+      var frame = el('div', 'frame');
+      if (slide.type === 'game') {
+        frame.appendChild(el('div', 'badge quiz', 'GAME'));
+      } else if (slide.feedback && slide.feedback.kind) {
+        var live = SF.slideFeedback(slide);
+        frame.appendChild(el('div', 'badge fb' + (live ? '' : ' warn'),
+          SF.FEEDBACK_KINDS[slide.feedback.kind].icon + (live ? '' : ' !')));
+      }
+      var node = SF.renderSlide(d, slide, { index: i, total: d.slides.length, chrome: false });
+      frame.appendChild(node);
+      body.appendChild(frame);
+      row.appendChild(body);
+
+      var open = function () { SF.Shell.activate('deck'); };
+      row.onclick = open;
+      row.onkeydown = function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+      };
       list.appendChild(row);
+      requestAnimationFrame(function () { SF.fit(frame, node); });
     });
   }
 
@@ -108,10 +131,7 @@
     foot.replaceChildren();
     var n = deck().slides.length;
     foot.appendChild(el('p', 'hint',
-      n + (n === 1 ? ' slide' : ' slides') + ' in this lesson.'));
-    foot.appendChild(SF.Shell.UI.button('Open in Lesson studio', '', function () {
-      SF.Shell.activate('deck');
-    }));
+      n + (n === 1 ? ' slide' : ' slides') + ' in this lesson. Click one to edit it.'));
   }
 
   /* --------------------------------------------------------------- stage */
@@ -221,6 +241,9 @@
     onTheme: function (v) { SF.Editor.workspace.onTheme(v); },
     describe: function (d) { return SF.Editor.workspace.describe(d); }
   };
+
+  var toDeck = document.getElementById('btnPlanToDeck');
+  if (toDeck) toDeck.onclick = function () { SF.Shell.activate('deck'); };
 
   SF.Activities.workspace = ws;
   if (SF.Shell && SF.Shell.register) SF.Shell.register(ws);

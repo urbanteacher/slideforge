@@ -117,6 +117,9 @@ html:not([data-ready]) body { background: #f0f1ed; }
          here was the six engine styles, and the twenty-two ready formats were
          unreachable from the studio whose whole job is building them. -->
     <div class="studio-toolbar" data-ws="game"><div><span class="eyebrow">BUILD A CHECK</span><strong id="quizCanvasLabel">Pick a format, or write your own questions.</strong></div><button class="btn" id="btnDemoGame" title="Rehearse with a SAMPLE class of fake players (boards stay interactive in the preview)">▷ Try demo</button><button class="btn primary" id="btnActivitiesGame">＋ Browse formats</button></div>
+    <!-- The activities studio writes into the same deck, so it wears the same
+         toolbar as the other two rather than a shape of its own. -->
+    <div class="studio-toolbar" data-ws="plan"><div><span class="eyebrow">BUILD A LESSON</span><strong id="planCanvasLabel">Pick an activity. It lands in your lesson.</strong></div><button class="btn" id="btnPlanToDeck">▤ Open in Lesson studio</button></div>
     <div class="stage-wrap">
       <div id="demoBanner" class="demo-banner" hidden>Demo uses this format’s engine and How to play. Boards rehearse in the preview; quizzes open a SAMPLE class. <button type="button" id="btnDemoReset" class="btn ghost">Reset demo</button></div>
       <div id="previewBox"></div>
