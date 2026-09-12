@@ -1403,6 +1403,34 @@
     SF.Player.start(runDeck(), runIndexFor(sel));
   }
 
+  /* The same run deck Present builds, with a sample room attached. Quiz
+     studio could already rehearse one game and Activities one activity;
+     nothing could rehearse the lesson those sit inside, which is the thing
+     a teacher is actually about to stand up and do.
+
+     Not fullscreen, because a dry run is something you watch while still
+     holding the editor in your head — and it leaves Esc meaning "stop
+     rehearsing" rather than "leave fullscreen". */
+  function rehearse() {
+    SF.Store.save(deck);
+    var run = runDeck();
+    if (!run.slides.length) {
+      SF.toast('Add a slide before rehearsing.');
+      return;
+    }
+    if (!SF.Demo) {
+      SF.Player.start(run, runIndexFor(sel), { fullscreen: false });
+      return;
+    }
+    SF.Demo.start(run, {
+      fullscreen: false,
+      startIndex: runIndexFor(sel),
+      /* Let the room follow the lesson: scored questions get answers, spoken
+         formats get a speaker, discussion formats get neither. */
+      auto: true
+    });
+  }
+
   function hostLive() {
     SF.Store.save(deck);
     SF.Live.host(runDeck());
@@ -1487,6 +1515,8 @@
 
     var btnPresent = $('btnPresent');
     if (btnPresent) btnPresent.onclick = present;
+    var btnRehearse = $('btnRehearse');
+    if (btnRehearse) btnRehearse.onclick = rehearse;
     var btnPresenter = $('btnPresenter');
     if (btnPresenter) {
       btnPresenter.onclick = function () {

@@ -1861,7 +1861,7 @@
       pill.appendChild(exitBtn);
       root.appendChild(pill);
     }
-    if (opts.demo && SF.Demo) SF.Demo.attach(Player, { mode: opts.demoMode || 'class' });
+    if (opts.demo && SF.Demo) SF.Demo.attach(Player, { mode: opts.demoMode || 'class', auto: !!opts.demoAuto });
   };
 
   Player.close = function () {

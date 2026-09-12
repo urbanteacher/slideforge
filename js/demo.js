@@ -27,6 +27,27 @@
   }
 
   var mode = 'class'; /* class | judge | discuss | board */
+  /* A whole-lesson rehearsal crosses formats — a scored quiz, then a spoken
+     spin-and-explain, then an exit poll. One mode fixed at attach would
+     invent phone votes for the formats whose answers are spoken aloud, so a
+     lesson run follows the slide instead. Quiz studio still pins its mode:
+     it is rehearsing one game and already knows which. */
+  var autoMode = false;
+
+  function kindForSlide(slide) {
+    return (SF.Playbook && SF.Playbook.demoKind)
+      ? SF.Playbook.demoKind({ style: slide.style, format: slide.format })
+      : 'class';
+  }
+
+  /* Changes how the room behaves without re-rolling it — the class, and the
+     scores it has built up across the lesson so far, stay put. */
+  function setMode(next) {
+    if (next !== 'judge' && next !== 'discuss' && next !== 'board' && next !== 'class') return;
+    if (next === mode) return;
+    mode = next;
+    paintRail();
+  }
 
   function paintRail() {
     if (!host || !host.open) return;
@@ -323,6 +344,7 @@
     clearTimers();
     var slide = host.deck && host.deck.slides[host.idx];
     if (!slide) return;
+    if (autoMode && slide.type === 'quiz') setMode(kindForSlide(slide));
     if (slide.type === 'quiz') runQuiz(slide);
     else {
       var fb = SF.slideFeedback && SF.slideFeedback(slide);
@@ -365,6 +387,7 @@
     detach();
     opts = opts || {};
     mode = opts.mode === 'judge' || opts.mode === 'discuss' || opts.mode === 'board' ? opts.mode : 'class';
+    autoMode = !!opts.auto;
     host = player;
     active = true;
     var teams = (host.deck && host.deck.quiz && host.deck.quiz.teams) || [];
@@ -408,6 +431,7 @@
     offSlide = null;
     offClose = null;
     mode = 'class';
+    autoMode = false;
   }
 
   function start(deck, opts) {
@@ -418,6 +442,7 @@
       fullscreen: opts.fullscreen === true,
       demo: true,
       demoMode: demoMode,
+      demoAuto: !!opts.auto,
       keepAnswers: false
     });
   }
@@ -426,6 +451,7 @@
     start: start,
     attach: attach,
     detach: detach,
+    setMode: setMode,
     get active() { return active; },
     players: function () { return players.slice(); }
   };
