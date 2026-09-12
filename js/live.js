@@ -7,9 +7,11 @@
 (function (global) {
   'use strict';
 
+  /** @type {import("../src/types.js").SlideForgeGlobal} */
   var SF = global.SF;
   var el = SF.el;
 
+  /** @type {Record<string, any>} */
   var Live = {
     ws: null,
     pin: null,
@@ -120,7 +122,7 @@
   }
 
   Live.openManual = function() {
-    var modal=document.getElementById('teachModal');
+    var modal = /** @type {HTMLDialogElement|null} */ (document.getElementById('teachModal'));
     if(!modal) return Live.popManual();
     // During a show the main window is projected. Open classroom controls
     // inside the private presenter workspace instead of over the slide.
@@ -138,13 +140,17 @@
   Live.popManual = function() {
     if(SF.Player && SF.Player.open) return SF.Player.openPresenter('roster');
     var url=manualUrl();
-    var link=document.getElementById('manualFallback');
-    if(!link){link=document.createElement('a');link.id='manualFallback';link.textContent='Open private teacher controls in a tab';link.target='_blank';document.getElementById('lobbyStart').parentNode.appendChild(link);}
-    link.href=url;
+    var link = /** @type {HTMLAnchorElement|null} */ (document.getElementById('manualFallback'));
+    if(!link){
+      link=document.createElement('a');link.id='manualFallback';link.textContent='Open private teacher controls in a tab';link.target='_blank';
+      var lobbyStart = document.getElementById('lobbyStart');
+      if (lobbyStart && lobbyStart.parentNode) lobbyStart.parentNode.appendChild(link);
+    }
+    if (link) link.href=url;
     /* Blanked, or the embedded copy and the detached one both answer the same
        channel and the teacher sees their clicks land twice. */
     unloadEntryFrame();
-    var modal=document.getElementById('teachModal');
+    var modal = /** @type {HTMLDialogElement|null} */ (document.getElementById('teachModal'));
     if(modal && modal.open) modal.close();
     manualWindow=window.open(url,'slideforge-teacher','width=760,height=780');
     if(!manualWindow){
@@ -160,15 +166,17 @@
   /** Which half of the panel is showing. */
   function teachTab(which){
     var panes={entry:'teachFrame',mark:'teachFrame',questions:'teachQuestions',overview:'teachOverview',tools:'teachFrame'};
-    if(!document.getElementById('teachFrame')) return;
+    var tf = document.getElementById('teachFrame');
+    if(!tf) return;
     var onFrame=which==='entry'||which==='mark'||which==='tools';
-    document.getElementById('teachFrame').classList.toggle('teach-away', !onFrame);
+    tf.classList.toggle('teach-away', !onFrame);
     ['teachQuestions','teachOverview'].forEach(function(id){
       var n=document.getElementById(id);
       if(n) n.hidden = panes[which]!==id;
     });
     document.querySelectorAll('[data-teach]').forEach(function(b){
-      b.setAttribute('aria-selected',String(b.dataset.teach===which));
+      var btn = /** @type {HTMLElement} */ (b);
+      btn.setAttribute('aria-selected',String(btn.dataset.teach===which));
     });
     if(which==='entry'||which==='mark'||which==='tools'){
       manualView=which==='entry'?'roster':which;
@@ -190,8 +198,8 @@
   var overviewTimer = null;
   var classView = { names: true, responses: true, results: true };
   Live.refreshOverview = function(){
-    var open=[document.getElementById('teachQuestions'),document.getElementById('teachOverview')]
-      .filter(function(n){return n && !n.hidden;});
+    var open = /** @type {HTMLElement[]} */ ([document.getElementById('teachQuestions'),document.getElementById('teachOverview')]
+      .filter(function(n){return n && !n.hidden;}));
     if(!Live.pin){
       open.forEach(function(n){
         var which=n.id==='teachQuestions'
@@ -284,9 +292,9 @@
   };
 
   document.addEventListener('click',function(e){
-    var t=e.target;
+    var t=/** @type {HTMLElement|null} */ (e.target);
     if(t && t.id==='teachPop'){Live.popManual();return;}
-    if(t && t.id==='teachClose'){var m=document.getElementById('teachModal');if(m&&m.open)m.close();return;}
+    if(t && t.id==='teachClose'){var m=/** @type {HTMLDialogElement|null} */ (document.getElementById('teachModal'));if(m&&m.open)m.close();return;}
     if(t && t.dataset && t.dataset.teach){teachTab(t.dataset.teach);}
   });
   function manualCommand(data) {
@@ -367,19 +375,21 @@
     countEl = document.getElementById('lobbyCount');
     warnEl = document.getElementById('lobbyWarn');
     teamsEl = document.getElementById('lobbyTeams');
-    var actions = document.getElementById('lobbyStart').parentNode;
-    if (!document.getElementById('lobbyManual')) {
+    var lobbyStart = document.getElementById('lobbyStart');
+    var actions = lobbyStart ? lobbyStart.parentNode : null;
+    if (actions && !document.getElementById('lobbyManual')) {
       var manual = SF.el('button', 'btn', 'Teacher entry · no phones');
       manual.id = 'lobbyManual';
       manual.onclick = Live.openManual;
       actions.prepend(manual);
     }
-    document.getElementById('lobbyCancel').onclick = function () { Live.stop(); };
-    document.getElementById('lobbyStart').onclick = function () { Live.begin(); };
+    var lobbyCancel = document.getElementById('lobbyCancel');
+    if (lobbyCancel) lobbyCancel.onclick = function () { Live.stop(); };
+    if (lobbyStart) lobbyStart.onclick = function () { Live.begin(); };
   }
 
   function closeOverlays() {
-    var teach = document.getElementById('teachModal');
+    var teach = /** @type {HTMLDialogElement|null} */ (document.getElementById('teachModal'));
     if (teach && teach.open) teach.close();
     var cheats = document.getElementById('cheats');
     if (cheats) cheats.classList.remove('on');
@@ -462,13 +472,13 @@
   Live.host = function (deck) {
     if (!lobby) refs();
     closeOverlays();
-    if (this.ws) this.stop();          // never leave a previous room dangling
-    this.deck = deck;
-    this.players = [];
-    this.session = null;
-    this.recordingFailed = false;
-    this.revealed = {};
-    this.pin = null;
+    if (Live.ws) Live.stop();          // never leave a previous room dangling
+    Live.deck = deck;
+    Live.players = [];
+    Live.session = null;
+    Live.recordingFailed = false;
+    Live.revealed = {};
+    Live.pin = null;
     drawPlayers();
     pinEl.textContent = '····';
     urlEl.textContent = joinAddress().replace(/^https?:\/\//, '');
@@ -476,7 +486,7 @@
     warn('');
     lobby.classList.add('on');
 
-    this.mode = deck.quiz.mode;
+    Live.mode = deck.quiz.mode;
     this.mechanic = deck.mechanic || 'points';
     this.trackLength = deck.trackLength || 5;
     this.pos = {};
@@ -619,7 +629,8 @@
         /* Join state and roster ride on the feedback rail too — refresh it
            when someone arrives while a prompt is up. */
         if (Live.prompt) paintFeedbackPanel();
-        if (document.getElementById('joincard').classList.contains('on')) paintJoinCard();
+        var jc = document.getElementById('joincard');
+        if (jc && jc.classList.contains('on')) paintJoinCard();
         Live.refreshOverview();
         Live.paintEntryRoster();
         break;
@@ -869,20 +880,24 @@
   }
 
   function paintJoinCard() {
-    document.getElementById('jcUrl').textContent =
-      String(Live.joinUrl || joinAddress()).replace(/^https?:\/\//, '');
-    document.getElementById('jcPin').textContent = Live.pin || '----';
+    var jcUrl = document.getElementById('jcUrl');
+    if (jcUrl) jcUrl.textContent = String(Live.joinUrl || joinAddress()).replace(/^https?:\/\//, '');
+    var jcPin = document.getElementById('jcPin');
+    if (jcPin) jcPin.textContent = Live.pin || '----';
     paintQr('jcQr', Live.pin);
 
     var teams = document.getElementById('jcTeams');
-    teams.innerHTML = '';
-    if (Live.mode === 'teams') {
-      Live.teams.forEach(function (t, i) {
-        var chip = el('div', 'tchip', t.name || t);
-        chip.style.background = SF.teamColor(i);
-        if (i === 2) chip.style.color = '#1d1204';
-        teams.appendChild(chip);
-      });
+    if (teams) {
+      var teamsEl = teams;
+      teamsEl.innerHTML = '';
+      if (Live.mode === 'teams') {
+        Live.teams.forEach(function (t, i) {
+          var chip = el('div', 'tchip', t.name || t);
+          chip.style.background = SF.teamColor(i);
+          if (i === 2) chip.style.color = '#1d1204';
+          teamsEl.appendChild(chip);
+        });
+      }
     }
 
     var n = Live.players.length;
@@ -891,15 +906,18 @@
       parts.push(Live.waiting + (Live.waiting === 1 ? ' waiting for' : ' waiting for') +
                  ' the next round');
     }
-    document.getElementById('jcCount').textContent = parts.join(' · ');
+    var jcCount = document.getElementById('jcCount');
+    if (jcCount) jcCount.textContent = parts.join(' · ');
 
     var state = document.getElementById('jcState');
-    if (Live.joinOpen) {
-      state.textContent = 'Joining is open';
-      state.className = 'state open';
-    } else {
-      state.textContent = 'Joining closed until the next round';
-      state.className = 'state shut';
+    if (state) {
+      if (Live.joinOpen) {
+        state.textContent = 'Joining is open';
+        state.className = 'state open';
+      } else {
+        state.textContent = 'Joining closed until the next round';
+        state.className = 'state shut';
+      }
     }
   }
 
@@ -949,6 +967,7 @@
 
   function toggleJoinCard(opts) {
     var card = document.getElementById('joincard');
+    if (!card) return;
     if (!Live.active) { card.classList.remove('on'); return; }
     if (opts && opts.close) { card.classList.remove('on'); }
     else if (card.classList.contains('on')) {
@@ -1357,9 +1376,9 @@
   }
 
   Live.begin = function () {
-    if (!this.pin) { warn('Not connected to the relay yet.'); return; }
+    if (!Live.pin) { warn('Not connected to the relay yet.'); return; }
     lobby.classList.remove('on');
-    this.active = true;
+    Live.active = true;
     send({ t: 'begin' });
 
     wire();
@@ -1368,8 +1387,8 @@
     };
     document.body.classList.add('live-on');
     SF.Player.gate = gate;
-    SF.Player.start(this.deck, 0);
-    if (!Live.prompt && this.deck.quiz.scoreboard && Live.rows.length) paintRail();
+    SF.Player.start(Live.deck, 0);
+    if (!Live.prompt && Live.deck.quiz.scoreboard && Live.rows.length) paintRail();
   };
 
   function toggleReactions() {
@@ -1726,7 +1745,7 @@
     syncManual();
     collecting = syncPrompt(s);
 
-    if (SF.Boards.forSlide(s)) {
+    if (SF.Boards && SF.Boards.forSlide(s)) {
       stopDrip();
       sendIdle(s);
       SF.Player.disableRail();
@@ -1995,29 +2014,29 @@
   }
 
   Live.stop = function () {
-    this.active = false;
+    Live.active = false;
     SF.Player.gate = null;
     SF.Player.lanesProvider = null;
     document.body.classList.remove('live-on');
     document.body.classList.remove('fb-open');
-    this.focus = false;
+    Live.focus = false;
     var card = document.getElementById('joincard');
     if (card) card.classList.remove('on');
     if (lobby) lobby.classList.remove('on');
     announced = null;
     send({ t: 'end' });
-    if (this.session && SF.Reports) {
-      var id = this.session.id;
-      if (!this.recordingFailed) setTimeout(function () { SF.Reports.refresh(id); }, 250);
+    if (Live.session && SF.Reports) {
+      var id = Live.session.id;
+      if (!Live.recordingFailed) setTimeout(function () { SF.Reports.refresh(id); }, 250);
       SF.toast('Session ended. Attendance and responses are available in Reports.');
     }
-    if (this.ws) {
-      var closingSocket = this.ws;
+    if (Live.ws) {
+      var closingSocket = Live.ws;
       // Let the relay deliver its final report before closing the transport.
       setTimeout(function () { try { closingSocket.close(); } catch (e) {} }, 1500);
-      this.ws = null;
+      Live.ws = null;
     }
-    this.pin = null;
+    Live.pin = null;
     syncManual();
   };
 
@@ -2030,7 +2049,7 @@
       set: v.set, card: v.card, term: v.term, participant: v.participant,
       right: v.right, value: v.value || 0 });
   }
-  SF.Boards.onVerdict(reportVerdict);
+  if (SF.Boards && SF.Boards.onVerdict) SF.Boards.onVerdict(reportVerdict);
   if (SF.Boss) SF.Boss.onVerdict = reportVerdict;
 
   Live.joinInfo = joinInfo;
