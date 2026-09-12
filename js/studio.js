@@ -1,6 +1,7 @@
 /* Local lesson-design tools. Reuses the existing game and feedback engines. */
 (function () {
   'use strict';
+  /** @type {import("../src/types.js").SlideForgeGlobal} */
   var SF = window.SF;
   var el = SF.el;
   var returnFocus;
@@ -13,8 +14,9 @@
   /** Pick a ready-made lesson. */
   function openLessons() {
     returnFocus = document.activeElement;
-    var modal = document.getElementById('lessonModal');
+    var modal = /** @type {HTMLDialogElement|null} */ (document.getElementById('lessonModal'));
     var body = document.getElementById('lessonBody');
+    if (!modal || !body) return;
     body.replaceChildren();
     var all = SF.LESSONS || [];
     body.appendChild(el('p', 'library-note', all.length +
@@ -31,7 +33,7 @@
         (lesson.slides || []).length + ' SLIDES' +
         (lesson.minutes ? ' · ' + lesson.minutes + ' MIN' : '') + '  ↗'));
       b.onclick = function () {
-        modal.close();
+        if (modal) modal.close();
         SF.Editor.useLesson(lesson.key);
         SF.toast('"' + lesson.title + '" opened. Your previous lesson is saved in File → Open.');
       };
@@ -43,8 +45,8 @@
 
   function openLibrary(filter) {
     returnFocus = document.activeElement;
-    var modal = document.getElementById('activityModal');
-    modal.showModal();
+    var modal = /** @type {HTMLDialogElement|null} */ (document.getElementById('activityModal'));
+    if (modal) modal.showModal();
     /* Quiz studio opens on the checks, because feedback prompts attach to a
        slide and there is no slide here to attach them to. */
     drawLibrary(filter || 'all');
@@ -169,8 +171,9 @@
 
   function openStarters() {
     returnFocus = document.activeElement;
-    var modal = document.getElementById('starterModal');
+    var modal = /** @type {HTMLDialogElement|null} */ (document.getElementById('starterModal'));
     var body = document.getElementById('starterBody');
+    if (!modal || !body) return;
     body.replaceChildren();
     body.appendChild(el('p', 'library-note', 'Pick a shape to insert after the selected slide. You can change Layout any time in the right panel.'));
     var grid = el('div', 'activity-grid starters-grid');
@@ -182,7 +185,7 @@
       b.appendChild(el('span', 'activity-description', st.blurb));
       b.appendChild(el('span', 'activity-tag', 'INSERT SLIDE  ↗'));
       b.onclick = function () {
-        modal.close();
+        if (modal) modal.close();
         SF.Editor.insertStarter(st.build());
         SF.toast(st.title + ' added. Layout is in the right panel.');
       };
@@ -499,7 +502,9 @@
     ['concept-chain','⛓','Concept Chain','Grow a justified chain. Type the link, Accept — it appears on the wall.','check',true]
   ];
   function drawLibrary(filter) {
-    var body = document.getElementById('activityBody'); body.replaceChildren();
+    var body = document.getElementById('activityBody');
+    if (!body) return;
+    body.replaceChildren();
     var tabs = el('div','library-tabs');
     [['all','All activities'],['check','Knowledge checks'],['feedback','Gather feedback']].forEach(function (t) {
       var b = SF.Shell.UI.button(t[1], filter === t[0] ? 'active' : '', function () {drawLibrary(t[0]);}); tabs.appendChild(b);
@@ -529,7 +534,8 @@
       b.appendChild(el('span','activity-tag',a[5] ? (a[4] === 'check' ? 'BETWEEN SLIDES  ↗' : 'BESIDE YOUR SLIDE  ↗') : 'PLANNED FORMAT'));
       /* Planned cards stay disabled — never call insert with an unimplemented style id. */
       if (a[5]) b.onclick = function () {
-        document.getElementById('activityModal').close();
+        var actModal = /** @type {HTMLDialogElement|null} */ (document.getElementById('activityModal'));
+        if (actModal) actModal.close();
         if (a[4] === 'check') {
           var raw = presets[a[0]];
           var pre = raw ? {
@@ -592,14 +598,22 @@
     });
     lessonModal.addEventListener('close', function () { if (returnFocus) returnFocus.focus(); });
 
-    document.getElementById('btnActivities').onclick = openLibrary;
+    var btnActivities = document.getElementById('btnActivities');
+    if (btnActivities) btnActivities.onclick = openLibrary;
     /* The same library from Quiz studio. One list, so a format cannot exist
        in one studio and not the other. */
     var gameLib = document.getElementById('btnActivitiesGame');
     if (gameLib) gameLib.onclick = function () { openLibrary('check'); };
-    document.getElementById('btnTemplate').onclick = openLessons;
-    document.getElementById('btnReflect').onclick = function () {SF.Editor.addSlide('section'); SF.Editor.attachFeedback('poll');};
-    document.querySelectorAll('.file-actions button').forEach(function (b) {b.addEventListener('click',function () {document.querySelector('.file-menu').open = false;});});
+    var btnTemplate = document.getElementById('btnTemplate');
+    if (btnTemplate) btnTemplate.onclick = openLessons;
+    var btnReflect = document.getElementById('btnReflect');
+    if (btnReflect) btnReflect.onclick = function () {SF.Editor.addSlide('section'); SF.Editor.attachFeedback('poll');};
+    document.querySelectorAll('.file-actions button').forEach(function (b) {
+      b.addEventListener('click',function () {
+        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
+        if (menu) menu.open = false;
+      });
+    });
   }
   SF.Studio = {init:init,makeLesson:makeLesson,openLibrary:openLibrary,openStarters:openStarters,openLessons:openLessons};
 })();

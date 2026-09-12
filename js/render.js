@@ -5,6 +5,7 @@
 (function (global) {
   'use strict';
 
+  /** @type {import("../src/types.js").SlideForgeGlobal} */
   var SF = global.SF;
   var LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
@@ -40,21 +41,21 @@
     var r = (size - stroke) / 2;
     var c = 2 * Math.PI * r;
     var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('width', size);
-    svg.setAttribute('height', size);
+    svg.setAttribute('width', String(size));
+    svg.setAttribute('height', String(size));
     svg.setAttribute('viewBox', '0 0 ' + size + ' ' + size);
     ['ring-bg', 'ring'].forEach(function (name) {
       var ci = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       ci.setAttribute('class', name + (extraClass ? ' ' + extraClass : ''));
-      ci.setAttribute('cx', size / 2);
-      ci.setAttribute('cy', size / 2);
-      ci.setAttribute('r', r);
+      ci.setAttribute('cx', String(size / 2));
+      ci.setAttribute('cy', String(size / 2));
+      ci.setAttribute('r', String(r));
       ci.setAttribute('fill', 'none');
-      ci.setAttribute('stroke-width', stroke);
+      ci.setAttribute('stroke-width', String(stroke));
       ci.setAttribute('stroke-linecap', 'round');
       if (name === 'ring') {
-        ci.setAttribute('stroke-dasharray', c);
-        ci.setAttribute('stroke-dashoffset', c * (1 - Math.max(0, Math.min(1, frac))));
+        ci.setAttribute('stroke-dasharray', String(c));
+        ci.setAttribute('stroke-dashoffset', String(c * (1 - Math.max(0, Math.min(1, frac)))));
       }
       svg.appendChild(ci);
     });
@@ -1358,12 +1359,6 @@
 
   /* ------------------------------------------------------------ entry */
 
-  /**
-   * @param {object} deck
-   * @param {object} slide
-   * @param {object} opts  { index, total, interactive, quizNumber, marks, chrome }
-   * @returns {HTMLElement} .slide element sized 1280x720
-   */
   /* A shuffle that is the same every time for the same slide.
      Math.random would reshuffle on every repaint — the items would jump
      around while the room was reading them — and a rejoining phone would see
@@ -1382,11 +1377,17 @@
     return out;
   }
 
+  /**
+   * @param {object} deck
+   * @param {object} slide
+   * @param {object} [opts]  { index, total, interactive, quizNumber, marks, chrome }
+   * @returns {HTMLElement} .slide element sized 1280x720
+   */
   function renderSlide(deck, slide, opts) {
     opts = opts || {};
     var root = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-' + slide.type);
     root.dataset.slideId = slide.id;
-    if (slide.type === 'quiz' || SF.Boards.forSlide(slide)) {
+    if (slide.type === 'quiz' || (SF.Boards && SF.Boards.forSlide(slide))) {
       root.classList.add('game-stage');
     }
     if (slide.feedback && slide.feedback.kind) root.classList.add('has-feedback');
@@ -1399,7 +1400,7 @@
 
     var pad = el('div', 'pad');
     root.appendChild(pad);
-    if (!SF.Boards.render(pad, slide, opts, root)) (LAYOUTS[slide.type] || layoutContent)(slide, pad, opts, root);
+    if (!SF.Boards || !SF.Boards.render(pad, slide, opts, root)) (LAYOUTS[slide.type] || layoutContent)(slide, pad, opts, root);
     if (SF.Custom) SF.Custom.layout(root, slide);
 
     if (opts.chrome !== false && deck.showSlideNumbers && opts.index != null && slide.type !== 'title') {
@@ -2187,23 +2188,37 @@
    */
   function paintScoreRail(rail, rows, opts) {
     opts = opts || {};
-    rail.querySelector('.rail-sub').textContent = opts.subtitle || '';
+    var sub = rail.querySelector('.rail-sub');
+    if (sub) sub.textContent = opts.subtitle || '';
     /* The rail says which of the two columns is which, once, at the top. */
+    /** @type {HTMLElement|null} */
     var legend = rail.querySelector('.rail-legend');
     if (!legend) {
-      legend = el('div', 'rail-legend');
+      var newLegend = el('div', 'rail-legend');
       var rowsBox = rail.querySelector('.rows');
-      rowsBox.parentNode.insertBefore(legend, rowsBox);
+      if (rowsBox && rowsBox.parentNode) {
+        rowsBox.parentNode.insertBefore(newLegend, rowsBox);
+      }
+      legend = newLegend;
     }
-    legend.replaceChildren();
-    legend.appendChild(el('span', 'lg-learn', 'ACCURACY · ANSWERED'));
-    legend.appendChild(el('span', 'lg-score', String(opts.scoreLabel || 'Game points').toUpperCase()));
-    legend.hidden = !rows.length;
-    rail.querySelector('.foot .notes').textContent = opts.footnote || '';
-    paintJoinLine(rail.querySelector('.joinline'), opts.join);
-    paintRailJoin(rail.querySelector('.rail-join'), opts.join, !rows.length);
+    if (legend) {
+      legend.replaceChildren();
+      legend.appendChild(el('span', 'lg-learn', 'ACCURACY · ANSWERED'));
+      legend.appendChild(el('span', 'lg-score', String(opts.scoreLabel || 'Game points').toUpperCase()));
+      legend.hidden = !rows.length;
+    }
+    var footNotes = rail.querySelector('.foot .notes');
+    if (footNotes) footNotes.textContent = opts.footnote || '';
+    /** @type {HTMLElement|null} */
+    var joinLine = rail.querySelector('.joinline');
+    if (joinLine) paintJoinLine(joinLine, opts.join);
+    /** @type {HTMLElement|null} */
+    var railJoin = rail.querySelector('.rail-join');
+    if (railJoin) paintRailJoin(railJoin, opts.join, !rows.length);
 
+    /** @type {HTMLElement|null} */
     var box = rail.querySelector('.rows');
+    if (!box) return;
 
     if (!rows.length) {
       rail.dataset.density = 'lg';
@@ -2310,16 +2325,18 @@
     // drop anyone who left
     Object.keys(existing).forEach(function (k) { existing[k].remove(); });
 
-    var more = box.querySelector('.more');
+    var moreEl = box.querySelector('.more');
     if (hidden > 0) {
-      if (!more) { more = el('div', 'more', ''); }
+      var more = moreEl || el('div', 'more', '');
       more.textContent = '+ ' + hidden + ' more';
       order.push(more);
-    } else if (more) {
-      more.remove();
+    } else if (moreEl) {
+      moreEl.remove();
     }
 
-    order.forEach(function (n) { box.appendChild(n); });
+    for (var oi = 0; oi < order.length; oi++) {
+      if (order[oi]) box.appendChild(order[oi]);
+    }
   }
 
   /* The PIN stays on screen for the whole game so anyone arriving late can
