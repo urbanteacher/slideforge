@@ -395,3 +395,45 @@ test('a spoken board is not "nothing was marked"', () => {
   assert.match(empty.basis.sentence, /Nothing was marked in this session/);
   assert.equal(empty.headline, 'Not enough happened to say anything.');
 });
+
+/* An author can say what a wrong answer means. The rule is that the label
+   names a mistake the answers already show, and never asserts one on its own:
+   the detection stays with the evidence, so a label on an option nobody chose
+   changes nothing, and a wrong guess costs one sentence of wording. */
+test('an author label names the misconception the room agreed on, and nothing else', () => {
+  const SF = loadAdapt();
+  const labels = ['', 'Confused radius with diameter', 'Forgot to square', ''];
+
+  /* Agreed on B, and B is labelled: the report says the name. */
+  const named = SF.adapt(report({
+    attendance: [1,2,3,4,5,6].map((i) => person('P' + i, 1)),
+    checks: [check({ misconceptions: labels, answers: [[1],[1],[1],[1],[0],[0]] })],
+    summary: { checks: 1, revealed: 1 }
+  }));
+  const f = byId(named, 'check:0');
+  assert.match(f.evidence, /chose "B" — Confused radius with diameter/);
+  assert.match(f.action, /this one has a name: Confused radius with diameter/);
+
+  /* Agreed on D, which carries no label: falls back to today's wording rather
+     than reaching for a neighbouring label. */
+  const unlabelled = SF.adapt(report({
+    attendance: [1,2,3,4,5,6].map((i) => person('P' + i, 1)),
+    checks: [check({ misconceptions: labels, answers: [[3],[3],[3],[3],[0],[0]] })],
+    summary: { checks: 1, revealed: 1 }
+  }));
+  assert.match(byId(unlabelled, 'check:0').action, /Teach against "D" directly/);
+
+  /* Wrong answers spread across the options: labelled or not, adapt still
+     refuses to call any of them "the" misconception. This is the guarantee
+     the labels must not weaken — the author guessed before the lesson, the
+     answers happened during it. */
+  const scattered = SF.adapt(report({
+    attendance: [1,2,3,4,5,6].map((i) => person('P' + i, 1)),
+    checks: [check({ misconceptions: labels, answers: [[1],[2],[3],[1],[0],[0]] })],
+    summary: { checks: 1, revealed: 1 }
+  }));
+  const sf = byId(scattered, 'check:0');
+  assert.match(sf.action, /spread across the options/);
+  assert.doesNotMatch(sf.action, /Confused radius with diameter/);
+  assert.doesNotMatch(sf.evidence, /Confused radius with diameter/);
+});

@@ -1201,8 +1201,20 @@
     }
   }
 
+  /* The labels are indexed by option, so they have to move whenever the
+     options do. Splicing one list and not the other slides every label up by
+     one and quietly reattaches it to a different answer — and the report
+     states a misconception as fact, so a stale label is worse than none. */
+  function misconceptionsOf(question) {
+    if (!Array.isArray(question.misconceptions)) question.misconceptions = [];
+    while (question.misconceptions.length < question.options.length) question.misconceptions.push('');
+    question.misconceptions.length = question.options.length;
+    return question.misconceptions;
+  }
+
   function drawChoiceAnswers(wrap, question) {
     wrap.innerHTML = '';
+    misconceptionsOf(question);
     question.options.forEach(function (text, i) {
       var row = el('div', 'opt-row');
 
@@ -1211,7 +1223,12 @@
       r.name = 'correct-' + question.id;
       r.checked = i === question.correct;
       r.title = 'Mark as the correct answer';
-      r.onchange = function () { question.correct = i; touched(); drawPreview(); drawRail(); };
+      /* Redrawn, not just repainted: which rows are distractors changes with
+         the answer, and so does which rows offer a misconception to name. */
+      r.onchange = function () {
+        question.correct = i;
+        touched(); drawChoiceAnswers(wrap, question); drawPreview(); drawRail();
+      };
       row.appendChild(r);
 
       row.appendChild(UI.text(text, function (v) {
@@ -1222,6 +1239,11 @@
       kill.title = 'Remove this answer';
       kill.onclick = function () {
         if (question.options.length <= 2) { SF.toast('A question needs at least two answers'); return; }
+        /* Labels first, and only then the options. misconceptionsOf() trims
+           the list to the current option count, so calling it after the
+           splice measures against a list already one shorter and drops the
+           last label before it can move — deleting B cost D its label. */
+        misconceptionsOf(question).splice(i, 1);
         question.options.splice(i, 1);
         if (question.correct >= question.options.length) {
           question.correct = question.options.length - 1;
@@ -1230,11 +1252,24 @@
       };
       row.appendChild(kill);
       wrap.appendChild(row);
+
+      /* Only on the wrong answers: the right one is not a mistake to name. */
+      if (i !== question.correct) {
+        var why = el('div', 'opt-why');
+        why.style.margin = '2px 0 8px 26px';
+        var input = UI.text(misconceptionsOf(question)[i] || '', function (v) {
+          misconceptionsOf(question)[i] = v; touched();
+        }, 'What picking ' + SF.LETTERS[i] + ' would mean (optional)');
+        input.title = 'Named in the Adapt report if the room actually agrees on this answer';
+        why.appendChild(input);
+        wrap.appendChild(why);
+      }
     });
 
     if (question.options.length < 6) {
       var add = UI.button('+ Add answer', 'ghost', function () {
         question.options.push('');
+        misconceptionsOf(question);
         touched(); drawChoiceAnswers(wrap, question); drawPreview();
       });
       add.style.fontSize = '12px';

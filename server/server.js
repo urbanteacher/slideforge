@@ -1031,6 +1031,14 @@ ws.attach(server, (sock, req) => {
           bloom: ['Remember','Understand','Apply','Analyze','Evaluate','Create'].includes(m.bloom) ? m.bloom : '',
           sourceSlideId: String(m.sourceSlideId || '').slice(0,160),
           options: (input === 'choice' || input === 'order') && Array.isArray(m.options) ? m.options.map(o => String(o).slice(0,2000)) : [],
+          /* What a wrong option means, by the same index as `options`.
+             Carried into the journal so the report can name a misconception
+             the room actually walked into, and never sent to a phone — see
+             questionMessage, which lists what players get. Naming the
+             misconception behind option C would give away that C is wrong. */
+          misconceptions: input === 'choice' && Array.isArray(m.misconceptions)
+            ? m.misconceptions.slice(0, 6).map(x => String(x == null ? '' : x).slice(0, 120))
+            : [],
           /* Forwarded to the phones so the slider has a line to slide along,
              and nothing else. The relay does not judge a value against it —
              it is the shape of the control, the way `options` is the shape of

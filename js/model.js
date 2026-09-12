@@ -2817,6 +2817,14 @@
         }).slice(0, 6);
         while (q.options.length < 2) q.options.push("");
         q.correct = Math.max(0, Math.min(q.options.length - 1, Number(q.correct) || 0));
+        if (Array.isArray(q.misconceptions)) {
+          q.misconceptions = q.options.map(function(_, i) {
+            return String(q.misconceptions[i] == null ? "" : q.misconceptions[i]).slice(0, 120).trim();
+          });
+          if (!q.misconceptions.some(Boolean)) delete q.misconceptions;
+        } else {
+          delete q.misconceptions;
+        }
         return q;
       },
       problems: function(q, n) {
@@ -2834,10 +2842,18 @@
       /* Everything a question of this style contributes to its slide. */
       compile: function(q, settings, s) {
         s.question = q.question;
-        s.options = q.options.filter(function(o) {
-          return String(o).trim();
+        var kept = [];
+        s.options = q.options.filter(function(o, i) {
+          var live = !!String(o).trim();
+          if (live) kept.push(i);
+          return live;
         });
         s.correct = Math.max(0, Math.min(s.options.length - 1, q.correct));
+        if (Array.isArray(q.misconceptions) && q.misconceptions.some(Boolean)) {
+          var labels = [];
+          for (var k = 0; k < kept.length; k++) labels.push(q.misconceptions[kept[k]] || "");
+          s.misconceptions = labels;
+        }
       },
       mark: function(s, response) {
         return Number.isInteger(response) && response === s.correct;

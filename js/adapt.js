@@ -72,7 +72,9 @@
        anything — and naming it as "the" misconception would send the next
        lesson after a mistake most of them did not make. */
     if (counts[top] * 2 <= wrong.length) return null;
-    return { option: check.options[Number(top)], n: counts[top], of: wrong.length };
+    var named = Array.isArray(check.misconceptions)
+      ? String(check.misconceptions[Number(top)] || '').trim() : '';
+    return { option: check.options[Number(top)], n: counts[top], of: wrong.length, named: named };
   }
 
   function countSure(check, sure, right) {
@@ -141,10 +143,20 @@
         heading = 'Re-teach: ' + title;
         if (mistake) {
           evidence.push(mistake.n + ' of the ' + mistake.of +
-            ' wrong answers chose "' + mistake.option + '"');
-          action.push('The wrong answers agree, so this is one misconception ' +
-            'with a name rather than general confusion. Teach against "' +
-            mistake.option + '" directly — covering the topic again leaves it intact.');
+            ' wrong answers chose "' + mistake.option + '"' +
+            (mistake.named ? ' — ' + mistake.named : ''));
+          /* An author's label names the mistake the room actually made; it
+             never decides that one was made. That judgement stays with the
+             answers, so a label on an option nobody picked says nothing, and
+             a wrong guess about what would tempt them costs no more than the
+             wording of one sentence. */
+          action.push(mistake.named
+            ? ('The wrong answers agree, and this one has a name: ' +
+              mistake.named + '. Teach against that directly rather than ' +
+              'covering the topic again, which leaves it intact.')
+            : ('The wrong answers agree, so this is one misconception ' +
+              'with a name rather than general confusion. Teach against "' +
+              mistake.option + '" directly — covering the topic again leaves it intact.'));
         } else {
           action.push('The wrong answers are spread across the options, which ' +
             'reads more like the question not landing than one shared mistake. ' +

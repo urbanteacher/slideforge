@@ -1697,6 +1697,16 @@
         ? { min: s.min, max: s.max, step: s.step, unit: s.unit || '' }
         : null,
       options: (s.options || []).filter(function (o) { return String(o).trim(); }),
+      /* The host's own note about what a wrong answer means. Journalled for
+         the report and never forwarded to a phone — see questionMessage in
+         server/server.js, which names the fields players receive. Telling the
+         room a misconception for option C would tell them C is wrong. */
+      misconceptions: Array.isArray(s.misconceptions)
+        ? (s.options || []).reduce(function (out, o, i) {
+            if (String(o).trim()) out.push(s.misconceptions[i] || '');
+            return out;
+          }, [])
+        : undefined,
       timeLimit: SF.questionTimeLimit(s, Live.players.some(function(p){return p.manual;})),
       points: s.points,
       /* Game identity for the phone companion UI — not a miniature slide. */

@@ -267,6 +267,21 @@ async function run() {
     const countText = await page.locator('#lobbyCount').innerText();
     logStep(`Host lobby verified count: "${countText.trim()}"`);
 
+    /* Label a distractor before the session starts, so the leak check below
+       has something real to look for. A misconception names why a wrong
+       answer is tempting; telling the room that about option B would tell
+       them B is wrong. */
+    const SECRET_LABEL = 'ZZ_MISCONCEPTION_CANARY_ZZ';
+    await page.evaluate((label) => {
+      const deck = SF.Player && SF.Player.deck ? SF.Player.deck : null;
+      const target = (SF.Live && SF.Live.deck) || deck;
+      (target ? target.slides : []).forEach((sl) => {
+        if (sl.type === 'quiz' && Array.isArray(sl.options) && sl.options.length > 1) {
+          sl.misconceptions = sl.options.map((_, i) => (i === (sl.correct === 0 ? 1 : 0) ? label : ''));
+        }
+      });
+    }, SECRET_LABEL);
+
     // 6. Start the live session
     const btnStart = page.locator('#lobbyStart');
     await btnStart.click();
@@ -292,6 +307,17 @@ async function run() {
       throw new Error('Received malformed question on player socket: ' + JSON.stringify(q1));
     }
     logStep(`Players received Q1: "${q1.question}" (${q1.options.length} options)`);
+
+    /* The label must not be on a phone, in any field, under any name. */
+    for (const received of questionsQ1) {
+      if (JSON.stringify(received).includes(SECRET_LABEL)) {
+        throw new Error('Misconception label leaked to a player socket: ' + JSON.stringify(received));
+      }
+      if ('misconceptions' in received) {
+        throw new Error('Player payload carries a misconceptions field: ' + JSON.stringify(received));
+      }
+    }
+    logStep('Misconception labels stayed host-side (not in any player payload)');
 
     // 9. Simulated players submit answers for Q1 (Option 1 is correct: "16:9")
     players[0].send({ t: 'answer', choice: 1 }); // Ada (correct)

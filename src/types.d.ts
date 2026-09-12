@@ -175,6 +175,8 @@ export interface Slide {
   imageAlt?: string;
   imageLayout?: ImageLayout;
   explanation?: string;
+  /** Carried from the question, filtered in step with `options`. */
+  misconceptions?: string[];
   source?: string;
   bloom?: string;
   /** Collect the vote and never reveal — for peer instruction. */
@@ -334,6 +336,12 @@ export interface Question {
   /* --- engine-specific, written by `make` and kept by `normalize` --- */
   style?: GameStyleKey;
   options?: string[];
+  /**
+   * What a wrong option means, by the same index as `options`. Blank where
+   * the author has not said. Never sent to a phone: naming a distractor's
+   * misconception would tell the room it is the wrong one.
+   */
+  misconceptions?: string[];
   correct?: number;
   answer?: string;
   accept?: string[];

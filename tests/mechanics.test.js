@@ -353,3 +353,37 @@ test('validators report a missing field rather than passing it or throwing', () 
   assert.equal(SF.GAME_STYLES.order.problems(
     { question: 'Earliest first', options: ['Rome', 'Normans', 'Civil War'] }, 1), null);
 });
+
+/* Alignment is the whole risk with a parallel array. A label that slides onto
+   a different answer does not read as a bug in the report — it reads as a
+   confident statement about a mistake the room never made. */
+test('misconception labels stay tied to the option they were written for', () => {
+  const SF = loadModel();
+  const choice = SF.GAME_STYLES.choice;
+
+  var q = { question: 'Area of a circle?', options: ['πr²', '', '2πr', 'πd'], correct: 0,
+    misconceptions: ['', '', 'Used circumference', 'Confused radius with diameter'] };
+  choice.normalize(q);
+  var s = {};
+  choice.compile(q, {}, s);
+  /* The blank option is dropped from the slide, so its label goes with it and
+     the rest shuffle down together. */
+  assert.deepEqual(s.options, ['πr²', '2πr', 'πd']);
+  assert.deepEqual(s.misconceptions, ['', 'Used circumference', 'Confused radius with diameter']);
+  assert.equal(s.misconceptions[s.options.indexOf('2πr')], 'Used circumference');
+
+  /* Normalizing pads and truncates to the options it indexes, so a label
+     array that outlived its options cannot reattach itself. */
+  var short = { question: 'Q', options: ['A', 'B'], correct: 0,
+    misconceptions: ['', 'x', 'stale', 'stale'] };
+  choice.normalize(short);
+  assert.deepEqual(short.misconceptions, ['', 'x']);
+
+  /* A question nobody labelled carries no empty array around. */
+  var plain = { question: 'Q', options: ['A', 'B'], correct: 0 };
+  choice.normalize(plain);
+  assert.equal(plain.misconceptions, undefined);
+  var ps = {};
+  choice.compile(plain, {}, ps);
+  assert.equal(ps.misconceptions, undefined);
+});
