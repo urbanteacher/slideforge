@@ -27,25 +27,38 @@ try {
   });
   await page.waitForSelector('#inspector .opt-row');
 
-  /* Offered on the wrong answers only — the right one is not a mistake. */
-  const placeholders = await page.locator('#inspector .opt-why input').evaluateAll(
-    (els) => els.map((e) => e.placeholder));
-  assert.equal(placeholders.length, 3, 'three distractors, three labels to name');
-  assert.ok(/picking B/.test(placeholders[0]), 'labels are offered per distractor');
+  /* Offered on the wrong answers only — the right one is not a mistake — and
+     folded away until asked for, so an optional field does not cost more room
+     than the answer it annotates. */
+  assert.equal(await page.locator('#inspector .opt-why-toggle').count(), 3,
+    'three distractors, three notes on offer');
+  assert.equal(await page.locator('#inspector .opt-why input').count(), 0,
+    'and none of them open until asked for');
   assert.equal(await page.locator('#inspector .opt-row').count(), 4);
 
-  const label = async (i, text) => {
-    const field = page.locator('#inspector .opt-why input').nth(i);
+  /* Addressed by the answer it belongs to, not by position: opening one note
+     removes its toggle from the list, so indices shift underneath. */
+  const label = async (letter, text) => {
+    const toggle = page.locator(`#inspector .opt-why-toggle[title*="picking ${letter}"]`);
+    await toggle.click();
+    const field = page.locator('#inspector .opt-why input').last();
     await field.fill(text);
     await field.blur();
   };
-  await label(0, 'LABEL-B');
-  await label(1, 'LABEL-C');
-  await label(2, 'LABEL-D');
+  await label('B', 'LABEL-B');
+  await label('C', 'LABEL-C');
+  await label('D', 'LABEL-D');
   await page.waitForFunction((id) => {
     const q = SF.GameStore.get(id).questions[0];
     return Array.isArray(q.misconceptions) && q.misconceptions[3] === 'LABEL-D';
   }, gameId, { timeout: 8000 });
+
+  /* A note already written stays legible on the collapsed control, or it
+     would look like nothing had been saved. */
+  await page.locator('#inspector .opt-row input[type=text]').first().click();
+  assert.equal(
+    await page.locator('#inspector .opt-why-toggle[title*="picking D"]').count(), 0,
+    'a filled note stays open rather than hiding what was typed');
 
   /* Delete B. C and D must keep their own labels, not inherit a neighbour's.
      Trimming the label list against an already-shortened option list dropped

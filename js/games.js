@@ -1316,15 +1316,47 @@
       row.appendChild(kill);
       wrap.appendChild(row);
 
-      /* Only on the wrong answers: the right one is not a mistake to name. */
+      /* Only on the wrong answers: the right one is not a mistake to name.
+
+         Folded away until asked for. An always-open box under every distractor
+         put six inputs under three answers, in the same size and style as the
+         answers themselves — so the panel read as though it had twice as many
+         answer fields as it did. Tagging is the exception, not the routine, and
+         an optional field should not cost more room than the thing it annotates. */
       if (i !== question.correct) {
+        var note = misconceptionsOf(question)[i] || '';
         var why = el('div', 'opt-why');
-        why.style.margin = '2px 0 8px 26px';
-        var input = UI.text(misconceptionsOf(question)[i] || '', function (v) {
-          misconceptionsOf(question)[i] = v; touched();
-        }, 'What picking ' + SF.LETTERS[i] + ' would mean (optional)');
-        input.title = 'Named in the Adapt report if the room actually agrees on this answer';
-        why.appendChild(input);
+
+        var open = function () {
+          why.replaceChildren();
+          var input = UI.text(misconceptionsOf(question)[i] || '', function (v) {
+            misconceptionsOf(question)[i] = v; touched();
+          }, 'e.g. confused radius with diameter');
+          input.title = 'Named in the Adapt report if the room agrees on this answer';
+          input.className = 'opt-why-input';
+          /* Collapses again only when left empty, so a note never vanishes
+             behind a link the moment focus moves. */
+          input.onblur = function () {
+            if (!String(input.value || '').trim()) shut();
+          };
+          why.appendChild(input);
+          input.focus();
+        };
+
+        var shut = function () {
+          why.replaceChildren();
+          var tag = misconceptionsOf(question)[i] || '';
+          var link = el('button', 'opt-why-toggle', tag
+            ? '✎ ' + (tag.length > 34 ? tag.slice(0, 33) + '…' : tag)
+            : '+ why this is tempting');
+          link.type = 'button';
+          link.title = 'Say what picking ' + SF.LETTERS[i] + ' means. Named in the Adapt report ' +
+            'if the room agrees on it.';
+          link.onclick = open;
+          why.appendChild(link);
+        };
+
+        shut();
         wrap.appendChild(why);
       }
     });

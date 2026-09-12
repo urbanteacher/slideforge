@@ -219,3 +219,15 @@ html[data-ws="plan"] .act-steps li{margin-bottom:5px}
 /* Rail actions match Quiz studio's rail foot layout */
 html[data-ws="plan"] .rail-foot .rail-actions{display:flex;gap:6px}
 html[data-ws="plan"] .rail-foot .rail-actions .btn{flex:1}
+
+/* Misconception note, folded under its distractor. A quiet link until asked
+   for: the box is optional, and an always-open input doubled the apparent
+   number of answer fields in the most-used panel in the studio. */
+.opt-why { margin: 0 0 6px 26px; }
+.opt-why-toggle {
+  border: 0; background: none; padding: 2px 0; cursor: pointer;
+  font-size: 11px; color: var(--ui-dim, #77836f); text-align: left;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.opt-why-toggle:hover { color: var(--ui-fg, #252b26); text-decoration: underline; }
+.opt-why-input { font-size: 12px; }
