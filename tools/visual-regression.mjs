@@ -180,6 +180,20 @@ async function run() {
 
     // 1. Render deterministic slide in browser
     await page.evaluate(({ st, th, injectTestDiff }) => {
+      /* Bingo deals each card with Math.random (js/bingo.js), which is right
+         for the game — every participant should get a different card — and
+         fatal for a baseline, because the render differs every run. Before
+         this, bingo failed by ~0.5% immediately after being updated, against
+         a baseline written seconds earlier.
+         Seed it here rather than in the product: the randomness is wanted,
+         it is only this harness that needs the same card twice. */
+      const realRandom = Math.random;
+      let seed = 0x2f6e2b1;
+      Math.random = function () {
+        seed = (seed * 1664525 + 1013904223) >>> 0;
+        return seed / 0x100000000;
+      };
+      try {
       const g = window.SF.makeGame('Sample ' + st, st);
       g.id = 'baseline-' + st;
       g.questions.forEach((q, i) => { q.id = 'q-' + i; });
@@ -222,6 +236,9 @@ async function run() {
         bug.style.height = '60px';
         bug.style.background = '#ff0000';
         stage.appendChild(bug);
+      }
+      } finally {
+        Math.random = realRandom;
       }
     }, { st: style, th: theme, injectTestDiff: testDiff });
 
