@@ -337,6 +337,12 @@ test('validators report a missing field rather than passing it or throwing', () 
   assert.match(SF.GAME_STYLES.type.problems({ question: 'Q?' }, 1), /no accepted answer/);
   assert.match(SF.GAME_STYLES.type.problems({ question: 'Q?', accept: ['', '  '] }, 1), /no accepted answer/);
 
+  /* Order looked safe when probed with an empty question, but only because
+     its three-items check answers first. The hole was real: give it items
+     and no `question` field and it passed. Probe it where it actually
+     bites, or the next reader concludes it never needed fixing. */
+  assert.match(SF.GAME_STYLES.order.problems({ options: ['A', 'B', 'C'] }, 1), /no question text/);
+
   /* And they still pass what is genuinely complete. */
   assert.equal(SF.GAME_STYLES.slider.problems(
     { question: 'How far?', min: 0, max: 10, tolerance: 1 }, 1), null);
@@ -344,4 +350,6 @@ test('validators report a missing field rather than passing it or throwing', () 
     { question: 'Name it', answer: 'Mitochondrion' }, 1), null);
   assert.equal(SF.GAME_STYLES.type.problems(
     { question: 'Symbol for gold?', accept: ['Au'] }, 1), null);
+  assert.equal(SF.GAME_STYLES.order.problems(
+    { question: 'Earliest first', options: ['Rome', 'Normans', 'Civil War'] }, 1), null);
 });

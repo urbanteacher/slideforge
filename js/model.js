@@ -3328,7 +3328,7 @@
       var live = (q.options || []).filter(function(o) {
         return String(o).trim();
       });
-      if (!String(q.question).trim()) return "Q" + n + " has no question text";
+      if (!String(q.question || "").trim()) return "Q" + n + " has no question text";
       if (live.length < 3) return "Q" + n + " needs at least three items to order";
       var seen = {};
       for (var i = 0; i < live.length; i++) {

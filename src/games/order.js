@@ -42,7 +42,11 @@ const order = {
 
   problems: function (q, n) {
     var live = (q.options || []).filter(function (o) { return String(o).trim(); });
-    if (!String(q.question).trim()) return 'Q' + n + ' has no question text';
+    /* `|| ''` because String(undefined) is "undefined" — truthy. This one
+       looked safe when probed with an empty question, but only because the
+       items check below answers first. Give it three items and no `question`
+       field and it returned null: ready to teach with, nothing to read. */
+    if (!String(q.question || '').trim()) return 'Q' + n + ' has no question text';
     if (live.length < 3) return 'Q' + n + ' needs at least three items to order';
     var seen = {};
     for (var i = 0; i < live.length; i++) {
