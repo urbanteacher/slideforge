@@ -222,7 +222,21 @@
    *  by index, so editing the lesson elsewhere cannot shift the selection
    *  onto a different activity. */
   function current() {
-    return chosen().find(function (row) { return row.slide.id === selected; }) || null;
+    if (selected) {
+      var match = chosen().find(function (row) { return row.slide.id === selected; });
+      if (match) return match;
+    }
+    if (SF.Editor && SF.Editor.currentSlideId) {
+      var curId = SF.Editor.currentSlideId();
+      var fromEditor = chosen().find(function (row) {
+        return row.slide.id === curId || row.slides.some(function (s) { return s.id === curId; });
+      });
+      if (fromEditor) {
+        selected = fromEditor.slide.id;
+        return fromEditor;
+      }
+    }
+    return null;
   }
 
   function duplicateCurrent() {
@@ -395,6 +409,73 @@
 
   /* ----------------------------------------------------------- inspector */
 
+  function appendHowTo(parent, picked, row) {
+    if (!parent || !picked) return;
+    var isGame = picked.target === 'game' || (row && row.slide && row.slide.type === 'game');
+    var book = SF.Playbook ? (
+      (row && row.slide && row.slide.type === 'game' && SF.GameStore)
+        ? SF.Playbook.forGame(SF.GameStore.get(row.slide.gameId) || { style: picked.style, format: picked.key })
+        : SF.Playbook.forKey(picked.key)
+    ) : null;
+
+    var title = (book && book.title) || picked.title;
+    var stepsList = (book && book.howToPlay && book.howToPlay.length) ? book.howToPlay : (picked.steps || []);
+    if (!stepsList.length) return;
+
+    var box = el('details', 'howto');
+    var open = false;
+    try { open = localStorage.getItem('slideforge.howtoOpen') === '1'; } catch (e) {}
+    box.open = open;
+
+    var summary = el('summary', 'howto-summary');
+    var prefix = isGame ? 'How to play — ' : 'How to run — ';
+    summary.appendChild(el('span', null, prefix + title));
+    summary.appendChild(el('span', 'howto-toggle', open ? 'Hide' : 'Reveal'));
+    box.appendChild(summary);
+
+    var body = el('div', 'howto-body');
+    var aim = (book && book.aim) || picked.blurb;
+    if (aim) body.appendChild(el('p', 'howto-aim', aim));
+
+    var ol = el('ol', 'howto-steps act-steps');
+    stepsList.forEach(function (step) {
+      ol.appendChild(el('li', null, step));
+    });
+    body.appendChild(ol);
+
+    var meta = [];
+    if (book) {
+      if (book.phases) meta.push(['Phases', book.phases]);
+      if (book.timer) meta.push(['Timer', book.timer]);
+      if (book.players) meta.push(['Players', book.players]);
+      if (book.scoring) meta.push(['Scoring', book.scoring]);
+      if (book.judgement) meta.push(['Judgement', book.judgement]);
+    } else {
+      if (picked.minutes) meta.push(['Duration', picked.minutes + ' min']);
+      if (picked.materials && picked.materials.length) meta.push(['Materials', picked.materials.join(' · ')]);
+    }
+    if (meta.length || (book && book.note) || picked.teacherNotes || picked.mappingReason) {
+      var eng = el('div', 'howto-engine');
+      meta.forEach(function (pair) {
+        eng.appendChild(el('div', null, pair[0] + ' · ' + pair[1]));
+      });
+      if (book && book.note) eng.appendChild(el('div', 'howto-note', book.note));
+      else if (picked.teacherNotes) eng.appendChild(el('div', 'howto-note', picked.teacherNotes));
+      if (picked.mappingReason) eng.appendChild(el('div', null, picked.mappingReason));
+      body.appendChild(eng);
+    }
+
+    box.appendChild(body);
+
+    box.addEventListener('toggle', function () {
+      var label = box.querySelector('.howto-toggle');
+      if (label) label.textContent = box.open ? 'Hide' : 'Reveal';
+      try { localStorage.setItem('slideforge.howtoOpen', box.open ? '1' : '0'); } catch (e) {}
+    });
+
+    parent.appendChild(box);
+  }
+
   function drawInspector() {
     var insp = document.getElementById('inspector');
     if (!insp) return;
@@ -430,6 +511,15 @@
       actions.appendChild(editBtn);
       actions.appendChild(showcaseBtn);
       insp.appendChild(actions);
+
+      /* The catalogue already names every box this activity needs, so the
+         brief can be exact where a general "write me a starter" cannot. */
+      if (SF.AI && SF.AI.generateActivityContent && (picked.fields || []).length) {
+        insp.appendChild(writeActivityBox(picked, row));
+      }
+
+      appendHowTo(insp, picked, row);
+
       if (picked.materials) insp.appendChild(el('p', 'hint', 'Materials: ' + picked.materials.join(' · ')));
       insp.appendChild(el('p', 'hint', 'Starter copy is an editable draft. Replace examples to match your lesson.'));
       if (picked.teacherNotes) insp.appendChild(el('p', 'hint', picked.teacherNotes));
@@ -487,11 +577,6 @@
           draw();
         });
       }
-
-      insp.appendChild(el('span', 'eyebrow', 'HOW IT RUNS'));
-      var ol = el('ol', 'act-steps');
-      picked.steps.forEach(function (step) { ol.appendChild(el('li', null, step)); });
-      insp.appendChild(ol);
       return;
     }
 
@@ -511,6 +596,40 @@
       row.appendChild(el('span', null, pair[1]));
       insp.appendChild(row);
     });
+  }
+
+  /* Fill this activity's boxes from a topic. Everything lands through the same
+     write() the teacher's own typing goes through, so an AI draft is a draft
+     like any other — editable, undoable, and saved the same way. */
+  function writeActivityBox(picked, row) {
+    var box = el('div', 'ai-write');
+    var topic = SF.Shell.UI.text('', function () {}, 'Osmosis in plant cells');
+    box.appendChild(SF.Shell.UI.field('✨ Write this activity', topic,
+      'A topic. It fills the boxes below; you can edit or undo anything it writes.'));
+    var guard = el('p', 'hint', '');
+    guard.setAttribute('role', 'status');
+    var go = SF.Shell.UI.button('✨ Write it', 'ghost', function () {
+      var t = String(topic.value || '').trim();
+      if (!t) { guard.textContent = 'Give it a topic to write about.'; return; }
+      go.disabled = true;
+      guard.textContent = 'Writing…';
+      Promise.resolve(SF.AI.generateActivityContent(picked, { topic: t })).then(function (res) {
+        go.disabled = false;
+        if (!res || res.error) { guard.textContent = res && res.error ? res.error : 'Nothing came back.'; return; }
+        var slide = row.slide;
+        Object.keys(res.values).forEach(function (path) { write(slide, path, res.values[path]); });
+        SF.Editor.commitActivityChange();
+        guard.textContent = '';
+        draw();
+        SF.toast('Written — read it before you teach it.');
+      }).catch(function () {
+        go.disabled = false;
+        guard.textContent = 'Could not write this just now.';
+      });
+    });
+    box.appendChild(go);
+    box.appendChild(guard);
+    return box;
   }
 
   function draw() { drawRail(); drawRailFoot(); drawStage(); drawInspector(); }
@@ -678,6 +797,8 @@
   SF.Activities.showcase = showcaseActivity;
   SF.Activities.showcaseRow = showcaseRow;
   SF.Activities.showcaseDef = showcaseActivityDef;
+  SF.Activities.draw = draw;
+  SF.Activities.select = function (slideId) { selected = slideId; draw(); };
   SF.Activities.workspace = ws;
   if (SF.Shell && SF.Shell.register) SF.Shell.register(ws);
 })(typeof window === 'undefined' ? {} : window);

@@ -378,6 +378,133 @@
     }
   }
 
+  /* ------------------------------------------ guardrails for an activity */
+
+  /* Ported from the lesson planner's lib/ai-service/prompts/activity-guidance.ts
+     and its activity-classifier. One rule runs through all of them, and it is
+     the one a model breaks by default:
+
+       YOU CANNOT ASK STUDENTS TO ANALYSE SOMETHING YOU HAVE NOT PROVIDED.
+
+     Asked to write an error-analysis activity, a model writes "Find the three
+     mistakes in the work below" and then stops — the work below is not there.
+     The lesson runs into a blank box in front of a class.
+
+     SlideForge can enforce this where the old app could only ask, because the
+     catalogue already names the slot the material goes in: Error Analysis
+     declares a field labelled "Sample work · 3 errors", Worked Example
+     Analysis one called "Completed example". So the rule becomes a check on a
+     specific field rather than a paragraph of shouting. */
+  var ACTIVITY_GUARDRAILS = [
+    {
+      kind: 'worked-example',
+      match: ['worked example', 'example analysis', 'case study', 'deconstruct'],
+      /* Their field 0 is the example itself. */
+      material: /example|work|solution/i,
+      rules: 'This activity asks students to analyse an example, so the example ' +
+        'must be written out in full in the first box — the actual completed ' +
+        'work, with its steps and its numbers, not a description of one. The ' +
+        'later boxes then ask about what is in that first box.'
+    },
+    {
+      kind: 'error-analysis',
+      match: ['error analysis', 'find and fix', 'spot the error', 'spot the mistake', 'identify mistakes'],
+      material: /sample|work|error|mistake/i,
+      rules: 'This activity asks students to find mistakes, so the first box ' +
+        'must contain the actual flawed work with the mistakes already in it. ' +
+        'Make them realistic — the errors a learner genuinely makes, not typos ' +
+        '— and mix conceptual with procedural. A later box gives the correct ' +
+        'version and says why each one was wrong.'
+    },
+    {
+      kind: 'sorting',
+      match: ['card sort', 'categoris', 'categoriz', 'classify', 'sort into', 'organise information'],
+      material: /categor|items|sort|group/i,
+      rules: 'Sorting needs both halves written out: the categories by name, ' +
+        'and the items to sort into them. Twelve to twenty items, mixed ' +
+        'difficulty, with two or three genuinely debatable ones — those are ' +
+        'what the discussion is for.'
+    },
+    {
+      kind: 'hook-predict',
+      match: ['hook', 'predict', 'notice', 'wonder', 'stimulus'],
+      material: /stimulus|image|scenario|claim|hook/i,
+      rules: 'The stimulus itself goes in the first box — the actual image, ' +
+        'number, claim or scenario the room is reacting to. Then ask what they ' +
+        'notice and what they wonder, in those words: they invite an answer ' +
+        'from a learner who does not yet know the topic, which is the point of ' +
+        'a hook.'
+    },
+    {
+      kind: 'discussion',
+      match: ['think-pair-share', 'think pair', 'socratic', 'fishbowl', 'jigsaw',
+        'turn and talk', 'discussion', 'dialogue', 'debate', 'peer teaching'],
+      material: null,
+      rules: 'Discussion needs something to disagree about. Write a prompt with ' +
+        'more than one defensible answer, not a question with a right answer — ' +
+        'those close a conversation rather than open one.'
+    },
+    {
+      kind: 'retrieval',
+      match: ['retrieval', 'recall', 'review', 'recap', 'exit ticket', 'do now', 'bell ringer'],
+      material: null,
+      rules: 'Recall of what was taught before, in plain language a learner can ' +
+        'answer in a sentence. No new material here and no trick questions: ' +
+        'this is for confidence and for finding gaps.'
+    },
+    {
+      kind: 'comparison',
+      match: ['compare', 'contrast', 'venn', 'benefits vs', 'similarit'],
+      material: /item|concept|side|option|thing/i,
+      rules: 'Name both things being compared and say what each one is before ' +
+        'asking for similarities or differences. A comparison of two things the ' +
+        'class cannot yet define is a guessing game.'
+    }
+  ];
+
+
+  /* Matched on the key and title alone. The old app searched the description
+     and the steps too, which is why a Think-Pair-Share whose steps happen to
+     say "compare your answers" classified as a comparison activity and got
+     told to define two concepts it does not have. SlideForge's titles are
+     descriptive enough — "Error Analysis", "Concept Card Sort" — that the
+     looser haystack only ever cost accuracy. The list is ordered most
+     specific first for the same reason. */
+  function classifyActivity(activity) {
+    if (!activity) return null;
+    var hay = [activity.key, activity.title].join(' ').toLowerCase();
+    for (var i = 0; i < ACTIVITY_GUARDRAILS.length; i++) {
+      var g = ACTIVITY_GUARDRAILS[i];
+      for (var j = 0; j < g.match.length; j++) {
+        if (hay.indexOf(g.match[j]) > -1) return g;
+      }
+    }
+    return null;
+  }
+
+  /* "Fill this in", "describe the example here" — an instruction where the
+     material should be. This is the failure the guardrails exist to stop, and
+     it is worth catching after the fact as well as asking for it up front. */
+  var PLACEHOLDER = /^(\s*)(\[|<|tbd\b|to be |insert |add |write |describe |provide |your |teacher |e\.g\.?$|example here|placeholder)/i;
+
+  /* The box the material goes in, found by what it is called rather than
+     where it sits: Hook & Predict keeps its stimulus in the title field, while
+     Error Analysis keeps its flawed work in the first bullet. A fixed index
+     pointed at the "Heading" of nearly every activity. */
+  function materialFieldOf(guard, fields) {
+    if (!guard || !guard.material) return null;
+    for (var i = 0; i < fields.length; i++) {
+      if (guard.material.test(String(fields[i].label || ''))) return fields[i];
+    }
+    return null;
+  }
+
+  function looksLikeAnInstruction(text) {
+    var t = String(text == null ? '' : text).trim();
+    if (t.length < 25) return true;
+    return PLACEHOLDER.test(t);
+  }
+
   /* ------------------------------------------- what each format asks for */
 
   /* The lesson planner had one generator per game — generateKeywords,
@@ -605,6 +732,92 @@
     return { questions: out, rejected: rejected, heuristic: false };
   }
 
+  /* -------------------------------------------------- writing an activity */
+
+  /**
+   * Fill in an activity's boxes for a topic.
+   *
+   * The catalogue already says what the boxes are — label, type and where the
+   * value lands on the slide — so the brief is precise in a way a general
+   * "write me a starter" never is. On top of that sits whichever guardrail the
+   * activity classifies into, carried over from the lesson planner.
+   *
+   * @returns {Promise<{values: Record<string,string>, kind: string|null, repaired: number} | {error: string}>}
+   */
+  async function generateActivityContent(activity, opts) {
+    opts = opts || {};
+    if (!activity) return { error: 'No activity chosen.' };
+    var fields = (activity.fields || []).filter(function (f) { return f.type !== 'minutes'; });
+    if (!fields.length) {
+      return { error: (activity.title || 'This activity') + ' has nothing to write — it is run in the room, not on the slide.' };
+    }
+
+    var live = await checkLiveAI();
+    if (!live) {
+      return { error: 'Writing an activity needs the AI server key. Without it, every activity already arrives with editable starter content.' };
+    }
+
+    var topic = String(opts.topic || '').trim();
+    if (!topic) return { error: 'Give it a topic to write about.' };
+
+    var guard = classifyActivity(activity);
+    var shape = {};
+    fields.forEach(function (f, i) { shape['f' + i] = f.label; });
+
+    var system = 'You write classroom activity content for a teacher. ' +
+      'Return ONLY a JSON object, no markdown and no code fence, with exactly ' +
+      'these keys: ' + JSON.stringify(Object.keys(shape)) + '. ' +
+      'Each value is the finished text that goes in that box, ready to project. ' +
+      'Never write an instruction to the teacher, a placeholder, or square ' +
+      'brackets — write the content itself. ' +
+      (guard ? guard.rules : 'Keep each box to what fits on a slide and can be read from the back of a room.');
+
+    var user = 'Activity: ' + activity.title + '.' +
+      (activity.blurb ? ' ' + activity.blurb : '') +
+      '\nTopic: ' + topic + '.' +
+      (opts.notes ? '\nTeacher notes: ' + String(opts.notes).slice(0, 500) : '') +
+      '\nThe boxes, in order:\n' +
+      fields.map(function (f, i) { return 'f' + i + ' = ' + f.label; }).join('\n') +
+      (activity.steps && activity.steps.length
+        ? '\nHow it runs:\n- ' + activity.steps.slice(0, 6).join('\n- ') : '');
+
+    var parsed;
+    try {
+      parsed = await callServerRaw(system, user);
+    } catch (err) {
+      return { error: 'The AI server could not be reached. The activity is untouched.' };
+    }
+
+    var values = {};
+    var missing = 0;
+    fields.forEach(function (f, i) {
+      var v = String((parsed && parsed['f' + i]) || '').trim();
+      if (!v) { missing++; return; }
+      values[f.slide] = v;
+    });
+    if (!Object.keys(values).length) {
+      return { error: 'Nothing usable came back. Try a narrower topic.' };
+    }
+
+    /* The guardrail, enforced rather than merely asked for. If the activity
+       declares a slot for the material students work on, and what came back
+       for that slot is an instruction rather than the material, the whole
+       thing is refused: a lesson that says "find the three mistakes below"
+       above an empty box fails in front of a class, and quietly. */
+    var mf = materialFieldOf(guard, fields);
+    if (mf) {
+      if (looksLikeAnInstruction(values[mf.slide])) {
+        return {
+          error: 'It described "' + mf.label + '" instead of writing it. ' +
+            'That box has to hold the material students work on. Try again, ' +
+            'or give it a narrower topic.'
+        };
+      }
+    }
+
+    return { values: values, kind: guard ? guard.kind : null, missing: missing };
+  }
+
   var AI = {
     /* Availability, not credentials. Nothing here can read or set a key,
        because the browser never has one. */
@@ -612,6 +825,8 @@
     liveAIKnown: liveAIKnown,
     generatePollForSlide: generatePollForSlide,
     generateQuestionsForGame: generateQuestionsForGame,
+    generateActivityContent: generateActivityContent,
+    classifyActivity: classifyActivity,
     generatePollFromPrompt: generatePollFromPrompt,
     extractSlideTerms: extractSlideTerms
   };

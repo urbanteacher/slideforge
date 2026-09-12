@@ -476,3 +476,83 @@ test('the toast count includes rows dropped before the engine saw them', async (
   assert.equal(res.questions.length, 1);
   assert.equal(res.rejected, 2, 'both kinds of rejection counted, not just the engine ones');
 });
+
+/* Ported from the lesson planner's activity-guidance + activity-classifier.
+   One rule runs through all of them, and it is the one a model breaks by
+   default: you cannot ask students to analyse something you have not
+   provided. Asked for an error-analysis activity it writes "find the three
+   mistakes below" and then stops — and the lesson meets a blank box in front
+   of a class. */
+function activityAi(reply, live = true) {
+  const gen = 'http://test.local/api/ai/generate';
+  return withEngines(createAiModule({
+    live,
+    routes: { [gen]: async () => ({ ok: true, json: async () => ({ text: JSON.stringify(reply) }) }) }
+  }));
+}
+
+function activity(key) {
+  const SF = loadEngines();
+  return SF.Activities.activity(key);
+}
+
+test('an activity is classified by what it is, not by a word in its steps', () => {
+  const { AI } = activityAi({});
+  const kind = (k) => { const c = AI.classifyActivity(activity(k)); return c ? c.kind : null; };
+
+  assert.equal(kind('error-analysis'), 'error-analysis');
+  assert.equal(kind('worked-example-analysis'), 'worked-example');
+  assert.equal(kind('concept-card-sort'), 'sorting');
+  assert.equal(kind('hook-and-predict'), 'hook-predict');
+
+  /* The old app searched the description and the steps too, so a
+     Think-Pair-Share whose steps say "compare your answers" classified as a
+     comparison activity and got told to define two concepts it has not got. */
+  assert.equal(kind('think-pair-share'), 'discussion');
+});
+
+test('the material box must hold the material, not a note about it', async () => {
+  const ea = activity('error-analysis');
+  const boxes = (ea.fields || []).filter((f) => f.type !== 'minutes');
+  assert.match(boxes[1].label, /Sample work/, 'the catalogue names the slot the flawed work goes in');
+
+  /* An instruction where the flawed work belongs is refused outright. */
+  const described = await activityAi({
+    f0: 'Error Analysis: Osmosis',
+    f1: 'Insert three incorrect statements here',
+    f2: 'Spot them', f3: 'Correct them', f4: 'Reflect'
+  }).AI.generateActivityContent(ea, { topic: 'Osmosis' });
+  assert.match(described.error, /instead of writing it/);
+  assert.match(described.error, /Sample work/);
+
+  /* The actual flawed work is accepted, and lands keyed by slide path so it
+     goes in through the same write() a teacher's typing does. */
+  const written = await activityAi({
+    f0: 'Error Analysis: Osmosis',
+    f1: '1. Water moves from low to high water potential. 2. Osmosis needs energy from respiration. 3. A cell in pure water shrinks.',
+    f2: 'Find all three mistakes',
+    f3: 'Write the corrected statement for each',
+    f4: 'Which was hardest to spot, and why?'
+  }).AI.generateActivityContent(ea, { topic: 'Osmosis' });
+  assert.ok(!written.error, written.error);
+  assert.equal(written.kind, 'error-analysis');
+  assert.ok(Object.keys(written.values).includes('bullets.0.def'));
+});
+
+test('the guardrail for the activity is the one sent to the model', async () => {
+  const mod = activityAi({ f0: 'x', f1: 'y' });
+  await mod.AI.generateActivityContent(activity('concept-card-sort'), { topic: 'States of matter' });
+  const sent = mod.calls.find((c) => /generate$/.test(c.url)).body;
+  assert.match(sent.system, /categories by name/);
+  assert.match(sent.system, /debatable/);
+  /* And the boxes are named in the brief, because the catalogue knows them. */
+  assert.match(sent.user, /Concept Card Sort/);
+  assert.match(sent.user, /f0 = /);
+});
+
+test('with no key it says the activity already has starter content', async () => {
+  const res = await activityAi({}, false).AI
+    .generateActivityContent(activity('error-analysis'), { topic: 'Osmosis' });
+  assert.match(res.error, /needs the AI server key/);
+  assert.match(res.error, /starter content/);
+});
