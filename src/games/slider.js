@@ -52,7 +52,9 @@ const slider = {
   },
 
   problems: function (q, n) {
-    if (!String(q.question).trim()) return 'Q' + n + ' has no question text';
+    /* `|| ''` because String(undefined) is "undefined" — truthy — so the
+       bare check called a question with no text valid. */
+    if (!String(q.question || '').trim()) return 'Q' + n + ' has no question text';
     if (q.tolerance >= q.max - q.min) {
       return 'Q' + n + ' accepts the whole line — narrow the tolerance';
     }

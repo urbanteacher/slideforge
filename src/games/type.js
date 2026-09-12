@@ -44,8 +44,14 @@ const type = {
   },
 
   problems: function (q, n) {
-    if (!String(q.question).trim()) return 'Q' + n + ' has no question text';
-    if (!q.accept.some(function (a) { return String(a).trim(); })) {
+    /* `accept` can be absent on a question carried over from another engine's
+       shape, and the bare `.some` threw there — a validator that throws
+       reports nothing at all, so the author was told "Validation error"
+       instead of which field was missing. `|| ''` for the question text is
+       the same fix: String(undefined) is "undefined", which is truthy. */
+    var accept = Array.isArray(q.accept) ? q.accept : [];
+    if (!String(q.question || '').trim()) return 'Q' + n + ' has no question text';
+    if (!accept.some(function (a) { return String(a).trim(); })) {
       return 'Q' + n + ' has no accepted answer';
     }
     return null;

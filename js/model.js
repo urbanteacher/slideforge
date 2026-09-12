@@ -3191,7 +3191,7 @@
       return q;
     },
     problems: function(q, n) {
-      if (!String(q.question).trim()) return "Q" + n + " has no question text";
+      if (!String(q.question || "").trim()) return "Q" + n + " has no question text";
       if (q.tolerance >= q.max - q.min) {
         return "Q" + n + " accepts the whole line — narrow the tolerance";
       }
@@ -3259,8 +3259,9 @@
       return q;
     },
     problems: function(q, n) {
-      if (!String(q.question).trim()) return "Q" + n + " has no question text";
-      if (!q.accept.some(function(a) {
+      var accept = Array.isArray(q.accept) ? q.accept : [];
+      if (!String(q.question || "").trim()) return "Q" + n + " has no question text";
+      if (!accept.some(function(a) {
         return String(a).trim();
       })) {
         return "Q" + n + " has no accepted answer";
@@ -5367,8 +5368,8 @@
       return q;
     },
     problems: function(q, n) {
-      if (!String(q.question).trim()) return "Q" + n + " has no question text";
-      if (!String(q.answer).trim()) return "Q" + n + " needs an answer for the reveal";
+      if (!String(q.question || "").trim()) return "Q" + n + " has no question text";
+      if (!String(q.answer || "").trim()) return "Q" + n + " needs an answer for the reveal";
       return null;
     },
     /* Audit: 3–10 questions. Incomplete slots stay on the board as named gaps

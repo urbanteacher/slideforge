@@ -58,8 +58,10 @@ const lowstakes = {
     return q;
   },
   problems: function (q, n) {
-    if (!String(q.question).trim()) return 'Q' + n + ' has no question text';
-    if (!String(q.answer).trim()) return 'Q' + n + ' needs an answer for the reveal';
+    /* `|| ''` because String(undefined) is "undefined" — truthy — so the
+       bare checks called a blank question and a missing answer valid. */
+    if (!String(q.question || '').trim()) return 'Q' + n + ' has no question text';
+    if (!String(q.answer || '').trim()) return 'Q' + n + ' needs an answer for the reveal';
     return null;
   },
   /* Audit: 3–10 questions. Incomplete slots stay on the board as named gaps

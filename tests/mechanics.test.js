@@ -316,3 +316,32 @@ test('a choice question is judged on the fields the rest of the app reads', () =
   assert.equal(SF.GAME_STYLES.truefalse.problems({ question: 'It is so.', correct: 0 }, 1), null);
   assert.match(SF.GAME_STYLES.truefalse.problems({}, 1), /no statement/);
 });
+
+/* Same class of hole as the choice validator, in the engines that shared the
+   pattern. A validator that returns null on a question the app cannot present
+   is worse than no validator: it is the thing the author trusts when deciding
+   the game is ready. */
+test('validators report a missing field rather than passing it or throwing', () => {
+  const SF = loadModel();
+
+  /* `String(undefined)` is "undefined" — truthy — so these presence checks
+     used to call a question with no text valid. */
+  assert.match(SF.GAME_STYLES.slider.problems({}, 1), /no question text/);
+  assert.match(SF.GAME_STYLES.lowstakes.problems({}, 1), /no question text/);
+  assert.match(SF.GAME_STYLES.lowstakes.problems({ question: 'Q?' }, 1), /answer for the reveal/);
+
+  /* `accept` is absent on a question carried over from another engine, and the
+     bare `.some` threw there — so getShowcaseGame caught a generic
+     "Validation error" and the author never learned which field was missing. */
+  assert.match(SF.GAME_STYLES.type.problems({}, 1), /no question text/);
+  assert.match(SF.GAME_STYLES.type.problems({ question: 'Q?' }, 1), /no accepted answer/);
+  assert.match(SF.GAME_STYLES.type.problems({ question: 'Q?', accept: ['', '  '] }, 1), /no accepted answer/);
+
+  /* And they still pass what is genuinely complete. */
+  assert.equal(SF.GAME_STYLES.slider.problems(
+    { question: 'How far?', min: 0, max: 10, tolerance: 1 }, 1), null);
+  assert.equal(SF.GAME_STYLES.lowstakes.problems(
+    { question: 'Name it', answer: 'Mitochondrion' }, 1), null);
+  assert.equal(SF.GAME_STYLES.type.problems(
+    { question: 'Symbol for gold?', accept: ['Au'] }, 1), null);
+});
