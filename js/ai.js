@@ -230,6 +230,58 @@
 
   /* ------------------------------------------------ Live Generative AI (Gemini REST) */
 
+  /* --------------------------------------------------- reading model JSON */
+
+  /* Ported from the lesson planner's lib/ai-service/core/json-parser.ts, which
+     earned these repairs the hard way. A model told to return only JSON still
+     wraps it in a ```json fence, trails a comma before the closing brace, or
+     slips a control character into a string — and a bare JSON.parse throws on
+     all three, which reads to a teacher as "the AI did nothing".
+
+     Deliberately conservative: it finds the JSON span, removes the three
+     things models actually get wrong, and otherwise leaves the text alone.
+     The old app went further and rewrote quoting and whitespace, which can
+     turn a recoverable response into a differently broken one. Anything that
+     survives this is still validated field by field afterwards, and then by
+     the engine itself. */
+  function parseModelJson(text) {
+    var raw = String(text == null ? '' : text).trim();
+
+    /* ```json … ``` — by far the most common wrapper. */
+    var fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fenced) raw = fenced[1].trim();
+
+    /* Prose either side of the JSON: take the outermost object or array. */
+    var span = raw.match(/[{[][\s\S]*[}\]]/);
+    if (!span) throw new Error('No JSON in the response');
+    var body = span[0];
+
+    try { return JSON.parse(body); } catch (e) { /* fall through and repair */ }
+
+    var repaired = body
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')   // control characters
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')           // zero-width junk
+      .replace(/,(\s*[}\]])/g, '$1');                   // trailing commas
+    return JSON.parse(repaired);
+  }
+
+  /* Rows that are missing the fields the caller needs are dropped here rather
+     than carried forward half-built — the same job parseJSONArray did in the
+     old app, kept because it fails early and says which field was missing. */
+  function modelRows(parsed, key) {
+    return parsed && Array.isArray(parsed[key]) ? parsed[key]
+      : Array.isArray(parsed) ? parsed : [];
+  }
+
+  function usableRows(list, required) {
+    return list.filter(function (row) {
+      if (!row || typeof row !== 'object') return false;
+      return required.every(function (f) {
+        return row[f] !== undefined && row[f] !== null && String(row[f]).trim() !== '';
+      });
+    });
+  }
+
   /* The transport: prompt out, parsed JSON back. Shaping what comes back is
      each caller's job, because a poll and a set of quiz questions want very
      different things from the same endpoint. */
@@ -255,7 +307,7 @@
       }
       var data = await res.json();
       if (!data || !data.text) throw new Error('No content returned by the AI endpoint');
-      return JSON.parse(data.text);
+      return parseModelJson(data.text);
     } finally {
       if (timer) clearTimeout(timer);
     }
@@ -326,6 +378,137 @@
     }
   }
 
+  /* ------------------------------------------- what each format asks for */
+
+  /* The lesson planner had one generator per game — generateKeywords,
+     generateOddOneOut, generateQuizBowl and a dozen more — rather than one
+     prompt asked to cover everything. That is the part worth copying: a model
+     told "write a quiz" writes multiple choice whatever you asked for, and a
+     format whose whole point is a term and its definition gets four options
+     it has no use for.
+
+     So each style says what a row looks like, which fields must be present
+     before the row is worth keeping, the rules that format actually needs,
+     and how a row becomes a SlideForge question. The engine still has the
+     final say afterwards — this decides what to ask for, not what is valid. */
+  var AI_SPECS = {
+    choice: {
+      family: 'Multiple choice',
+      row: '{"question":"...","options":["...","..."],"correct":0,"explanation":"..."}',
+      required: ['question', 'options'],
+      rules: 'Two to four options. Every wrong option must be a mistake a learner ' +
+        'could actually make, not filler. "correct" is the 0-based index.',
+      toQuestion: function (row) {
+        return {
+          question: String(row.question || '').trim(),
+          options: (row.options || []).map(function (o) { return String(o).trim(); }),
+          correct: Number(row.correct) || 0,
+          explanation: String(row.explanation || '').trim()
+        };
+      }
+    },
+
+    truefalse: {
+      family: 'True or false',
+      row: '{"question":"a statement","isTrue":true,"explanation":"..."}',
+      required: ['question'],
+      /* Ported rule: without it the model writes ten true statements. */
+      rules: 'Each is a single statement that is clearly true or clearly false. ' +
+        'Mix them roughly half and half. Do not write a question — write a claim.',
+      toQuestion: function (row) {
+        return {
+          question: String(row.question || '').trim(),
+          options: ['True', 'False'],
+          correct: row.isTrue === true || String(row.isTrue) === 'true' ? 0 : 1,
+          explanation: String(row.explanation || '').trim()
+        };
+      }
+    },
+
+    lowstakes: {
+      family: 'Low-stakes retrieval',
+      row: '{"question":"...","answer":"short answer","explanation":"..."}',
+      required: ['question', 'answer'],
+      /* Ported almost verbatim — this one changed the output most. */
+      rules: 'Keep questions straightforward and direct: basic recall, simple ' +
+        'language, answers of one to three words. No trick questions and no ' +
+        'multi-step problems. These build confidence rather than sort the class. ' +
+        'Good: "What does CPU stand for?" -> "Central Processing Unit". ' +
+        'Avoid: anything needing analysis.',
+      toQuestion: function (row) {
+        return {
+          question: String(row.question || '').trim(),
+          answer: String(row.answer || '').trim(),
+          explanation: String(row.explanation || '').trim()
+        };
+      }
+    },
+
+    type: {
+      family: 'Short answer',
+      row: '{"question":"...","accept":["main spelling","variant"],"explanation":"..."}',
+      required: ['question', 'accept'],
+      rules: 'The answer is typed, so "accept" lists every spelling you would ' +
+        'take — the full form and the abbreviation, singular and plural. ' +
+        'First entry is the one shown on screen. Keep answers to a few words.',
+      toQuestion: function (row) {
+        return {
+          question: String(row.question || '').trim(),
+          accept: (Array.isArray(row.accept) ? row.accept : [row.accept])
+            .map(function (a) { return String(a).trim(); }).filter(Boolean),
+          explanation: String(row.explanation || '').trim()
+        };
+      }
+    },
+
+    oddone: {
+      family: 'Odd one out',
+      row: '{"options":["a","b","c","d"],"correct":2,"explanation":"why it is the odd one"}',
+      required: ['options'],
+      rules: 'Exactly four items. Three share a property and one does not, and ' +
+        'the shared property must be the obvious one — if two different rules ' +
+        'both work, the set has two answers and is unusable. "correct" is the ' +
+        'index of the odd one. The explanation names the rule.',
+      toQuestion: function (row) {
+        return {
+          question: String(row.question || 'Which is the odd one out?').trim(),
+          options: (row.options || []).map(function (o) { return String(o).trim(); }),
+          correct: Number(row.correct) || 0,
+          explanation: String(row.explanation || '').trim()
+        };
+      }
+    },
+
+    bingo: {
+      family: 'Bingo (terms and definitions)',
+      row: '{"term":"CPU","definition":"Brain of the computer"}',
+      required: ['term', 'definition'],
+      /* Ported: the old app fought long definitions hardest, because they do
+         not fit on a bingo square. */
+      rules: 'Definitions must be at most eight words and fit on one line. ' +
+        'Good: "Brain of computer - processes instructions". ' +
+        'Bad: "The Central Processing Unit is the electronic circuitry that...". ' +
+        'Terms are single words or short phrases.',
+      toQuestion: function (row) {
+        return {
+          term: String(row.term || '').trim(),
+          definition: String(row.definition || '').trim(),
+          question: String(row.term || '').trim(),
+          explanation: String(row.explanation || '').trim()
+        };
+      }
+    }
+  };
+
+  /* The term/definition formats want exactly what bingo wants. */
+  ['memoryflip', 'memorymatch', 'knowledgeflip'].forEach(function (k) {
+    AI_SPECS[k] = Object.assign({}, AI_SPECS.bingo, {
+      family: 'Matching pairs (terms and definitions)'
+    });
+  });
+  /* And the scored multiple-choice engines share the choice brief. */
+  ['race', 'speed'].forEach(function (k) { AI_SPECS[k] = AI_SPECS.choice; });
+
   /* ------------------------------------------------ questions for a game */
 
   /**
@@ -352,17 +535,13 @@
     var engine = SF.gameStyle(game.style);
     if (!engine) return { error: 'Unknown game style.' };
 
-    /* Only the pick-an-answer engines for now. A format answered by typing, by
-       ordering, by placing a value on a line or by a teacher's verdict needs
-       fields this brief does not ask for, and half-filled questions would fail
-       validation and be silently dropped — which reads as "the AI did
-       nothing" rather than "this format is not supported yet". */
-    if (engine.input !== 'choice') {
-      return { error: (engine.label || 'This format') + ' is not written by AI yet — it needs answers this brief cannot supply. Try Browse quizzes for a starter bank.' };
+    var spec = AI_SPECS[game.style];
+    if (!spec) {
+      return { error: (engine.label || 'This format') + ' is not written by AI yet. Browse quizzes has a starter bank for it.' };
     }
 
-    /* Subject knowledge is the whole job here, and heuristics do not have
-       any. Inventing "Which organelle contains chlorophyll?" is not something
+    /* Subject knowledge is the whole job here, and heuristics do not have any.
+       Inventing "Which organelle contains chlorophyll?" is not something
        word-frequency can do, so with no server key this says so and points at
        the curated starter banks, which are real content. */
     var live = await checkLiveAI();
@@ -376,51 +555,46 @@
 
     var fixed = Array.isArray(engine.fixedOptions) && engine.fixedOptions.length
       ? engine.fixedOptions : null;
-    var min = fixed ? fixed.length : (engine.minOptions || 2);
-    var max = fixed ? fixed.length : (engine.maxOptions || 4);
-
     var existing = (game.questions || [])
-      .map(function (q) { return String(q.question || '').trim(); })
+      .map(function (q) { return String(q.question || q.term || '').trim(); })
       .filter(Boolean).slice(0, 20);
 
-    var system = 'You write classroom quiz questions for a teacher. Output ONLY a JSON object: ' +
-      '{"questions":[{"question":"...","options":["..."],"correct":0,"explanation":"..."}]}. ' +
-      'Rules: exactly ' + want + ' questions. ' +
-      (fixed
-        ? 'Every question must use exactly these options, in this order: ' + JSON.stringify(fixed) + '. '
-        : 'Between ' + min + ' and ' + max + ' options each, all plausible. ') +
-      '"correct" is the 0-based index of the right option. ' +
-      'Every wrong option must be a mistake a learner could actually make, not filler. ' +
-      'The explanation is one sentence a teacher can read aloud after the reveal.';
+    var system = 'You write classroom material for a teacher. ' +
+      'Return ONLY a JSON object, no markdown and no code fence: ' +
+      '{"questions":[' + spec.row + ']}. ' +
+      'Exactly ' + want + ' entries. ' + spec.rules +
+      (fixed ? ' The options are fixed: ' + JSON.stringify(fixed) + ', in that order.' : '') +
+      ' Every explanation is one sentence a teacher can read aloud after the reveal.';
 
-    var user = 'Format: ' + (engine.label || game.style) + '. Topic: ' + topic + '.' +
+    var user = 'Format: ' + spec.family + '. Topic: ' + topic + '.' +
       (opts.notes ? '\nTeacher notes: ' + String(opts.notes).slice(0, 500) : '') +
-      (existing.length
-        ? '\nDo not repeat these questions already in the quiz:\n- ' + existing.join('\n- ')
-        : '');
+      (existing.length ? '\nAlready in this quiz, do not repeat:\n- ' + existing.join('\n- ') : '');
 
-    var raw;
+    var parsed;
     try {
-      raw = await callServerRaw(system, user);
+      parsed = await callServerRaw(system, user);
     } catch (err) {
       return { error: 'The AI server could not be reached. Your questions are untouched.' };
     }
 
-    var list = raw && Array.isArray(raw.questions) ? raw.questions : [];
+    /* Three gates, narrowing: the row has the fields this format needs, the
+       normalizer makes it a question of this style, and the engine says
+       whether it is usable. Only the last one is authoritative — the first
+       two just avoid asking it about obvious rubbish. */
+    var all = modelRows(parsed, 'questions').slice(0, want);
+    var rows = usableRows(all, spec.required);
     var out = [];
-    var rejected = 0;
-    list.slice(0, want).forEach(function (row) {
-      var q = Object.assign(SF.makeQuestion(game.style), {
-        question: String((row && row.question) || '').trim(),
-        options: fixed
-          ? fixed.slice()
-          : (Array.isArray(row && row.options) ? row.options.map(function (o) { return String(o).trim(); }) : []),
-        correct: Number(row && row.correct) || 0,
-        explanation: String((row && row.explanation) || '').trim()
-      });
+    /* Rows thrown out here are rejections too. Counting only the ones the
+       engine saw would under-report, and the toast is the teacher's only
+       sign that they got fewer than they asked for. */
+    var rejected = all.length - rows.length;
+    rows.forEach(function (row) {
+      var q;
+      try {
+        q = Object.assign(SF.makeQuestion(game.style), spec.toQuestion(row));
+      } catch (e) { rejected++; return; }
+      if (fixed) q.options = fixed.slice();
       q = SF.normalizeQuestion(q, game.style);
-      /* The engine has the final say, exactly as it does for a question a
-         teacher typed. */
       if (engine.problems && engine.problems(q, out.length + 1)) { rejected++; return; }
       out.push(q);
     });

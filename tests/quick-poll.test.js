@@ -347,18 +347,69 @@ test('generated questions are judged by the engine, and the bad ones dropped', a
   /* And the brief really carried the engine's limits and what was already
      written, which is the context the poll generator never had. */
   const sent = calls.find((c) => /generate$/.test(c.url)).body;
-  assert.match(sent.system, /Between 2 and 6 options/);
+  assert.match(sent.system, /Two to four options/);
+  assert.match(sent.system, /mistake a learner could actually make/);
   assert.match(sent.user, /Multiple choice/);
   assert.match(sent.user, /Plant cells/);
 });
 
-test('it refuses formats it cannot write for, rather than half-filling them', async () => {
+test('each format is asked for the shape it actually uses', async () => {
+  /* One prompt asked to cover every game writes multiple choice whatever you
+     asked for. The lesson planner had a generator per format for this reason,
+     and these are the two that differ most from a plain quiz. */
+  const typed = gameAiModule({
+    reply: { questions: [
+      { question: 'Chemical symbol for gold?', accept: ['Au', 'aurum'], explanation: 'From the Latin aurum.' }
+    ] }
+  });
+  const t = await typed.AI.generateQuestionsForGame(
+    { id: 'g2', style: 'type', title: 'Recall', questions: [] }, { topic: 'Elements' });
+  assert.ok(!t.error, t.error);
+  assert.equal(t.questions.length, 1);
+  assert.deepEqual([...t.questions[0].accept], ['Au', 'aurum'], 'typed answers, not options');
+  assert.match(typed.calls.find((c) => /generate$/.test(c.url)).body.system,
+    /every spelling you would take/);
+
+  /* Bingo wants a term and a short definition, and the eight-word rule is the
+     one the old app fought hardest for: a long definition does not fit on a
+     square. */
+  const bingo = gameAiModule({
+    reply: { questions: [
+      { term: 'CPU', definition: 'Brain of computer - processes instructions' },
+      { term: 'RAM', definition: 'Temporary memory for running programs' }
+    ] }
+  });
+  const b = await bingo.AI.generateQuestionsForGame(
+    { id: 'g4', style: 'bingo', title: 'Hardware', questions: [] }, { topic: 'Computer parts', count: 2 });
+  assert.ok(!b.error, b.error);
+  assert.equal(b.questions[0].term, 'CPU');
+  assert.equal(b.questions[0].definition, 'Brain of computer - processes instructions');
+  assert.match(bingo.calls.find((c) => /generate$/.test(c.url)).body.system, /at most eight words/);
+
+  /* True/false is a claim, not a question, and isTrue maps onto the engine's
+     fixed option pair rather than a free list. */
+  const tf = gameAiModule({
+    reply: { questions: [
+      { question: 'Light travels faster than sound.', isTrue: true, explanation: 'It does.' },
+      { question: 'The heart has five chambers.', isTrue: false, explanation: 'Four.' }
+    ] }
+  });
+  const r = await tf.AI.generateQuestionsForGame(
+    { id: 'g5', style: 'truefalse', title: 'TF', questions: [] }, { topic: 'Science', count: 2 });
+  assert.ok(!r.error, r.error);
+  assert.deepEqual([...r.questions[0].options], ['True', 'False']);
+  assert.equal(r.questions[0].correct, 0);
+  assert.equal(r.questions[1].correct, 1);
+});
+
+test('a format with no brief says so rather than writing the wrong thing', async () => {
   const { AI } = gameAiModule({ reply: { questions: [] } });
-  /* Short answer is typed, not picked: the brief asks for options and a
-     correct index, which that engine has no use for. */
-  const typed = await AI.generateQuestionsForGame(
-    { id: 'g2', style: 'type', title: 'Recall', questions: [] }, { topic: 'Gold' });
-  assert.match(typed.error, /not written by AI yet/);
+  /* Slider answers are a value on a line with a tolerance — nothing in the
+     question/options shape describes one. */
+  const res = await AI.generateQuestionsForGame(
+    { id: 'g6', style: 'slider', title: 'Estimate', questions: [] }, { topic: 'Distances' });
+  assert.match(res.error, /not written by AI yet/);
+  assert.match(res.error, /Browse quizzes/);
 });
 
 test('with no server key it says so instead of inventing subject knowledge', async () => {
@@ -369,4 +420,59 @@ test('with no server key it says so instead of inventing subject knowledge', asy
      organelle holds chlorophyll. Saying so beats fabricating. */
   assert.match(res.error, /needs the AI server key/);
   assert.match(res.error, /Browse quizzes/);
+});
+
+/* Ported from the lesson planner's json-parser, which earned these the hard
+   way: a model told to return only JSON still fences it, trails a comma, or
+   slips a control character into a string. A bare JSON.parse throws on all
+   three, and to a teacher that reads as "the AI did nothing". */
+test('model JSON survives the three things models actually get wrong', async () => {
+  const gen = 'http://test.local/api/ai/generate';
+  const good = { question: 'Which gas?', options: ['Oxygen', 'Carbon dioxide'], correct: 1, explanation: 'CO2.' };
+  const body = JSON.stringify({ questions: [good] });
+
+  const shapes = {
+    'a json code fence': '```json\n' + body + '\n```',
+    'a bare code fence': '```\n' + body + '\n```',
+    'prose either side': 'Here you go:\n' + body + '\nHope that helps!',
+    'a trailing comma': '{"questions":[' + JSON.stringify(good) + ',]}',
+    'a control character in a string':
+      '{"questions":[{"question":"Which gas?\u0007","options":["Oxygen","Carbon dioxide"],"correct":1,"explanation":"CO2."}]}'
+  };
+
+  for (const [label, text] of Object.entries(shapes)) {
+    const mod = withEngines(createAiModule({
+      live: true,
+      routes: { [gen]: async () => ({ ok: true, json: async () => ({ text }) }) }
+    }));
+    const res = await mod.AI.generateQuestionsForGame(
+      { id: 'g', style: 'choice', title: 'Gases', questions: [] }, { topic: 'Air', count: 1 });
+    assert.ok(!res.error, label + ' should still parse, got: ' + res.error);
+    assert.equal(res.questions.length, 1, label);
+  }
+
+  /* And genuinely unusable output is an error, not a silently empty quiz. */
+  const broken = withEngines(createAiModule({
+    live: true,
+    routes: { [gen]: async () => ({ ok: true, json: async () => ({ text: 'I cannot help with that.' }) }) }
+  }));
+  const res = await broken.AI.generateQuestionsForGame(
+    { id: 'g', style: 'choice', title: 'Gases', questions: [] }, { topic: 'Air' });
+  assert.match(res.error, /could not be reached|Nothing came back/);
+});
+
+test('the toast count includes rows dropped before the engine saw them', async () => {
+  const gen = 'http://test.local/api/ai/generate';
+  const mod = withEngines(createAiModule({
+    live: true,
+    routes: { [gen]: async () => ({ ok: true, json: async () => ({ text: JSON.stringify({ questions: [
+      { question: 'Which gas?', options: ['Oxygen', 'Carbon dioxide'], correct: 1, explanation: 'CO2.' },
+      { question: 'No options at all' },
+      { question: 'Only one', options: ['a'], correct: 0 }
+    ] }) }) }) }
+  }));
+  const res = await mod.AI.generateQuestionsForGame(
+    { id: 'g', style: 'choice', title: 'Gases', questions: [] }, { topic: 'Air', count: 3 });
+  assert.equal(res.questions.length, 1);
+  assert.equal(res.rejected, 2, 'both kinds of rejection counted, not just the engine ones');
 });
