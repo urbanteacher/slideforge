@@ -8,6 +8,8 @@
     "typecheck": "tsc --noEmit",
     "dev:build": "node tools/build.mjs --watch",
     "test": "npm run build:check && npm run typecheck && node --test tests/*.test.js",
+    "test:all": "node tools/test-all.mjs",
+    "test:all:visual": "node tools/test-all.mjs --visual",
     "smoke": "npm run smoke:activities && npm run smoke:demo && npm run smoke:fake-demo && npm run smoke:knowledge-flip && npm run smoke:lowstakes && npm run smoke:live",
     "smoke:activities": "node tools/smoke-activities.mjs",
     "smoke:demo": "node tools/smoke-demo.mjs",
