@@ -1,7 +1,11 @@
 (function(){
 'use strict';
+/** @type {import("../src/types.js").SlideForgeGlobal} */
+var SF = window.SF || /** @type {any} */ ({});
 var key=location.hash.slice(1),channel=/^[a-f0-9]{32}$/.test(key)?new BroadcastChannel('sf-manual-'+key):null;
-var state={},lastKey='',lastQ=null, $=function(id){return document.getElementById(id);};
+/** @type {(id: string) => any} */
+var $=function(id){return document.getElementById(id);};
+var state={},lastKey='',lastQ=null;
 var draftKey='sf-entry-draft-'+(key||'none');
 function send(action,extra){var m=Object.assign({type:'sf-manual-command',action:action},extra||{});if(channel)channel.postMessage(m);else if(window.opener)window.opener.postMessage(m,location.origin);}
 function button(text,fn){var b=document.createElement('button');b.textContent=text;b.onclick=fn;return b;}
@@ -142,7 +146,7 @@ function drawRevealRow(q){
 var cursor=0;
 
 function enteredRows(){
- return Array.from(document.querySelectorAll('.manual-entry:not(.on-phone)'));
+ return /** @type {HTMLElement[]} */ (Array.from(document.querySelectorAll('.manual-entry:not(.on-phone)')));
 }
 
 function markCurrent(){
@@ -174,7 +178,7 @@ function recordCurrent(choice){
 
 document.addEventListener('keydown',function(e){
  /* Never while they are typing a name or a written answer. */
- var t=e.target;
+ var t=/** @type {HTMLElement|null} */ (e.target);
  if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'))return;
  if(e.metaKey||e.ctrlKey||e.altKey||currentView()!=='mark'||!state.active)return;
  if(t&&t.tagName==='BUTTON'&&(e.key===' '||e.key==='Enter'))return;
@@ -343,7 +347,7 @@ function render(){
     mid-question, and that must not move the teacher's place. */
  var questionChanged=lastQ!==key;
  if(questionChanged){lastQ=key;cursor=0;}
- var sig=key+'|'+people.map(function(p){return p.id;}).join(',');
+ sig=key+'|'+people.map(function(p){return p.id;}).join(',');
  if(lastKey!==sig){
   var typed={};
   Array.from($('entries').children).forEach(function(row){
