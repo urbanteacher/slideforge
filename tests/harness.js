@@ -128,12 +128,9 @@ async function report(host) {
  */
 async function reveal(host, msg, mark, wantAnswers, have) {
   let t = have || null;
-  while (!t || (wantAnswers != null && (t.answers || []).length < wantAnswers)) {
+  while (!t || (msg && msg.id && t.id && t.id !== msg.id) || (wantAnswers != null && (t.answers || []).length < wantAnswers)) {
     t = await host.latest('tally');
   }
-  // #region agent log
-  fetch('http://127.0.0.1:7245/ingest/d54b620c-7a42-42a5-a287-490ed972a19b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0a26aa'},body:JSON.stringify({sessionId:'0a26aa',runId:'run1',hypothesisId:'A',location:'harness.js:134',message:'reveal() sending reveal',data:{tRev:t.rev,answersCount:(t.answers||[]).length,wantAnswers,msgId:msg.id},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   const marks = (t.answers || []).map(a => [a.id, mark ? !!mark(a) : a.response === msg.correct]);
   host.send(Object.assign({ t: 'reveal', rev: t.rev, marks }, msg));
   return t;

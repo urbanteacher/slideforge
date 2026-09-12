@@ -438,6 +438,7 @@ function pushTally(room) {
   }
   room.host.json({
     t: 'tally',
+    id: room.question.id,
     counts,
     answered,
     /* How many have also said how sure they were. The host holds the reveal a
@@ -1081,9 +1082,6 @@ ws.attach(server, (sock, req) => {
         pushTally(room);
 
       } else if (m.t === 'reveal') {
-        // #region agent log
-        fetch('http://127.0.0.1:7245/ingest/d54b620c-7a42-42a5-a287-490ed972a19b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0a26aa'},body:JSON.stringify({sessionId:'0a26aa',runId:'run1',hypothesisId:'A',location:'server.js:1085',message:'Reveal received',data:{mRev:m.rev,roomRev:room.answerRev,mId:m.id,qId:room.question&&room.question.id,phase:room.phase},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         if (!room.question || room.phase !== 'question' || (m.id && m.id !== room.question.id)) return;
         /* Whether an answer is right is decided by the host and arrives here
            as a verdict per player. The relay does not know what any answer
@@ -1105,9 +1103,6 @@ ws.attach(server, (sock, req) => {
            punish a student for a coincidence of timing. Hand the answers back
            and let the host re-mark: reveal has not happened yet. */
         if (Number(m.rev) !== room.answerRev) {
-          // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/d54b620c-7a42-42a5-a287-490ed972a19b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0a26aa'},body:JSON.stringify({sessionId:'0a26aa',runId:'run1',hypothesisId:'A',location:'server.js:1108',message:'Reveal rejected: rev mismatch',data:{mRev:m.rev,roomRev:room.answerRev},timestamp:Date.now()})}).catch(()=>{});
-          // #endregion
           if (room.host) {
             room.host.json({ t: 'markStale', id: room.question.id,
               rev: room.answerRev, answers: answersFor(room) });
@@ -1118,9 +1113,6 @@ ws.attach(server, (sock, req) => {
           (p) => p.answer != null && !marks.has(String(p.id)) &&
                  (!room.question.eligible || room.question.eligible.has(p.id)));
         if (unmarked.length) {
-          // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/d54b620c-7a42-42a5-a287-490ed972a19b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0a26aa'},body:JSON.stringify({sessionId:'0a26aa',runId:'run1',hypothesisId:'C',location:'server.js:1120',message:'Reveal rejected: unmarked players',data:{unmarkedCount:unmarked.length},timestamp:Date.now()})}).catch(()=>{});
-          // #endregion
           if (room.host) {
             room.host.json({ t: 'markStale', id: room.question.id,
               rev: room.answerRev, answers: answersFor(room) });
@@ -1235,9 +1227,6 @@ ws.attach(server, (sock, req) => {
           marks: [...room.players.values()].filter(p => marks.has(String(p.id))).map(p => [p.id, marks.get(String(p.id)) === true]),
           scores:[...room.players.values()].map(p => ({id:p.id,score:p.score}))});
         pushPlayers(room);
-        // #region agent log
-        fetch('http://127.0.0.1:7245/ingest/d54b620c-7a42-42a5-a287-490ed972a19b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0a26aa'},body:JSON.stringify({sessionId:'0a26aa',runId:'run1',hypothesisId:'B',location:'server.js:1238',message:'Reveal successful: pushPlayers called',data:{qId:room.question&&room.question.id},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         pushTally(room);
 
       } else if (m.t === 'prompt') {

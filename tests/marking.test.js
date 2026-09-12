@@ -427,23 +427,18 @@ test('the room rail carries accuracy and answered, not only points', async (t) =
   ];
   let rows = [];
   for (let i = 0; i < plan.length; i++) {
-    // #region agent log
-    fetch('http://127.0.0.1:7245/ingest/d54b620c-7a42-42a5-a287-490ed972a19b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0a26aa'},body:JSON.stringify({sessionId:'0a26aa',runId:'run1',hypothesisId:'D',location:'marking.test.js:430',message:'Loop iteration start',data:{i,plan:plan[i]},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     host.send({ t: 'question', id: 'q' + i, n: i + 1, total: 3, question: 'Q' + (i + 1),
       options: ['A', 'B'], correct: 0, input: 'choice', points: 100, timeLimit: 0 });
     await ada.next('question');
+    if (i === 0) await ben.next('question');
     let answers = 0;
-    if (plan[i].ada != null) { ada.send({ t: 'answer', choice: plan[i].ada }); answers++; }
-    if (plan[i].ben != null) { ben.send({ t: 'answer', choice: plan[i].ben }); answers++; }
+    if (plan[i].ada != null) { ada.send({ t: 'answer', choice: plan[i].ada }); await ada.next('locked'); answers++; }
+    if (plan[i].ben != null) { ben.send({ t: 'answer', choice: plan[i].ben }); await ben.next('locked'); answers++; }
     /* Through the harness, so the reveal quotes the answer revision it was
        taken from — a stale rev is refused and nothing is scored at all. */
-    await reveal(host, { correct: 0 }, null, answers);
-    // #region agent log
-    fetch('http://127.0.0.1:7245/ingest/d54b620c-7a42-42a5-a287-490ed972a19b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0a26aa'},body:JSON.stringify({sessionId:'0a26aa',runId:'run1',hypothesisId:'B',location:'marking.test.js:443',message:'Reveal done, waiting before latest(players)',data:{i},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-    await new Promise((r) => setTimeout(r, 80));
-    rows = (await host.latest('players')).rows;
+    await reveal(host, { id: 'q' + i, correct: 0 }, null, answers);
+    const playersMsg = await host.until('players', (m) => m.rows && m.rows.some((r) => r.asked === i + 1));
+    rows = playersMsg.rows;
   }
 
   const ada_ = rows.find((r) => r.name === 'Ada');
