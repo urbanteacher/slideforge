@@ -118,6 +118,13 @@
     rail: function () { Player.toggleRoomSidebar(); },
     focus: function () { if (SF.Live && SF.Live.active) Player.emit('focusToggle', {}); else toggleSoloFeedback({}); },
     join: function () { Player.emit('joinToggle', {}); },
+    /* One question, asked now. Ends an open one rather than stacking a
+       second on top of it — the button is the same button either way. */
+    poll: function () {
+      if (!SF.Live) return;
+      if (SF.Live.customPromptOpen && SF.Live.customPromptOpen()) { SF.Live.endCustomPrompt(); return; }
+      Player.emit('quickPollOpen', {});
+    },
     /* Named answers live on the private screen. Opening presenter view if it
        is shut is the whole action: there is nowhere else this can go without
        putting the room's names on the wall. */
@@ -1220,6 +1227,9 @@
 
   function syncAuthoredFeedback(slide) {
     if (SF.Live && SF.Live.active) return;
+    /* Same reason as goTo: a slide with no feedback of its own must not take
+       down a poll that was never the slide's to begin with. */
+    if (SF.Live && SF.Live.customPromptOpen && SF.Live.customPromptOpen()) return;
     var f = SF.slideFeedback(slide);
     if (!f) {
       Player._sampleFb = null;
@@ -1730,9 +1740,16 @@
     dir = dir != null ? dir : (i > Player.idx ? 1 : -1);
     Player.idx = i;
     Player.hideLeaderboard();
-    Player.closeFocus();
+    /* A slide's own focus view belongs to that slide and leaves with it. An
+       impromptu poll does not: the teacher is often still moving through the
+       deck behind it while the room answers, so only ending it takes it down.
+       It is re-appended after the render because renderCurrent adds the new
+       slide on top of whatever is already in the viewport. */
+    var keepPoll = !!(SF.Live && SF.Live.customPromptOpen && SF.Live.customPromptOpen() && Player._focus);
+    if (!keepPoll) Player.closeFocus();
     Player.clearTally();
     renderCurrent(dir);
+    if (keepPoll && SF.Live.repaintPrompt) SF.Live.repaintPrompt();
   };
   /* Live mode installs a gate so the first "next" on an unanswered question
      reveals the answer instead of skipping past it. Return true to swallow. */
@@ -1933,6 +1950,19 @@
         teacherUrl: SF.Live && SF.Live.teacherWorkspaceUrl ? SF.Live.teacherWorkspaceUrl() : null,
         requestedPanel: requestedPresenterPanel,
         moment: Player.lessonMoment ? Player.lessonMoment() : null,
+        /* The desk shows how many have answered and offers to end it, so it
+           needs the poll's own state rather than inferring one from the
+           room pulse — which is silent when nobody has replied yet. */
+        quickPoll: (SF.Live && SF.Live.customPromptOpen && SF.Live.customPromptOpen())
+          ? {
+              prompt: SF.Live.prompt.prompt,
+              kind: SF.Live.prompt.kind,
+              presentAs: SF.Live.prompt.presentAs,
+              answered: SF.Live.digest ? (SF.Live.digest.answered || 0) : 0,
+              players: SF.Live.digest ? (SF.Live.digest.players || 0) : (SF.Live.players || []).length,
+              live: !!SF.Live.active
+            }
+          : null,
         roomPulse: SF.Live && SF.Live.presenterPulse ? SF.Live.presenterPulse() : null,
         deck: deck,
         index: Player.idx,
@@ -1975,8 +2005,30 @@
     else if (d.cmd === 'hello') syncPresenter();
     else if (SF.Boards && SF.Boards.command && SF.Boards.command(d.cmd, d.action, d.card)) {}
     else if (d.cmd === 'moment' && Player.momentCommand) Player.momentCommand(d);
+    else if (d.cmd === 'quickPoll') Player.quickPoll(d);
     else if (d.cmd === 'qa') Player.emit('qaCommand', d);
   });
+
+  /**
+   * An impromptu poll, asked from the presenter desk or from this screen.
+   * The work is all SF.Live's — this is the one door both routes come
+   * through, so the desk and the `V` key cannot drift apart.
+   */
+  Player.quickPoll = function (d) {
+    d = d || {};
+    if (!SF.Live) return false;
+    if (d.action === 'end') return SF.Live.endCustomPrompt();
+    if (d.action === 'where') {
+      /* Moving a live poll between full screen and the rail must not restart
+         it — the room has already answered. */
+      if (!SF.Live.customPromptOpen || !SF.Live.customPromptOpen()) return false;
+      SF.Live.setPromptPresentAs(d.presentAs === 'rail' ? 'rail' : 'focus');
+      syncPresenter();
+      return true;
+    }
+    if (d.action === 'join') { Player.emit('joinToggle', {}); return true; }
+    return SF.Live.startCustomPrompt(d);
+  };
 
   /* ------------------------------------------------------------ keyboard */
 
@@ -2023,6 +2075,8 @@
         e.preventDefault(); Player.prev(); break;
       case 'Home': e.preventDefault(); Player.goTo(0, -1); break;
       case 'End': e.preventDefault(); if (Player.deck) Player.goTo(Player.deck.slides.length - 1, 1); break;
+      case 'v': case 'V':
+        e.preventDefault(); Player.control('poll'); break;
       case 'Escape':
         e.preventDefault();
         var jc = document.getElementById('joincard');

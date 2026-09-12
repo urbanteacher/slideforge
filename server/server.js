@@ -101,6 +101,93 @@ function listData(res) {
   jsonReply(res, 200, out);
 }
 
+/* ---------------------------------------------------------------- AI proxy */
+
+/* The Gemini key lives here, in the server's environment, and never reaches a
+   browser. Holding it client-side would put a live credential in localStorage,
+   where any script on the page can read it, and in a URL query string, where
+   it lands in logs, history and referrer headers. The studio asks this
+   endpoint instead and never sees the key.
+
+   Absent key is not an error: SF.AI falls back to its offline heuristics, so a
+   deployment with no key still generates polls. */
+const AI_KEY = process.env.GEMINI_API_KEY || '';
+const AI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const AI_MAX_BODY = 8 * 1024;
+/* A LAN-facing proxy onto someone's paid quota needs a ceiling, or one tab in
+   a loop spends the teacher's month. Deliberately coarse: this is a guard
+   against accidents and impatience, not an auth system. */
+const AI_WINDOW_MS = 60 * 1000;
+const AI_MAX_PER_WINDOW = 20;
+const aiHits = new Map();
+
+function aiRateLimited(ip) {
+  const now = Date.now();
+  const hits = (aiHits.get(ip) || []).filter((t) => now - t < AI_WINDOW_MS);
+  hits.push(now);
+  aiHits.set(ip, hits);
+  if (aiHits.size > 500) aiHits.clear();
+  return hits.length > AI_MAX_PER_WINDOW;
+}
+
+function aiGenerate(req, res) {
+  if (!AI_KEY) return jsonReply(res, 503, { error: 'No AI key configured on this server.' });
+  const ip = (req.socket && req.socket.remoteAddress) || 'unknown';
+  if (aiRateLimited(ip)) return jsonReply(res, 429, { error: 'Too many AI requests. Try again shortly.' });
+
+  let body = '';
+  let tooBig = false;
+  req.on('data', (chunk) => {
+    body += chunk;
+    if (body.length > AI_MAX_BODY) { tooBig = true; req.destroy(); }
+  });
+  req.on('end', async () => {
+    if (tooBig) return jsonReply(res, 413, { error: 'Prompt too large' });
+    let msg;
+    try { msg = JSON.parse(body); } catch (e) { return jsonReply(res, 400, { error: 'Bad JSON' }); }
+    const system = String((msg && msg.system) || '').slice(0, 4000);
+    const user = String((msg && msg.user) || '').slice(0, 4000);
+    if (!user.trim()) return jsonReply(res, 400, { error: 'Nothing to generate from' });
+
+    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' +
+      encodeURIComponent(AI_MODEL) + ':generateContent';
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    try {
+      const upstream = await fetch(endpoint, {
+        method: 'POST',
+        /* Header rather than ?key=, so the credential stays out of request
+           lines, proxy logs and anything that records URLs. */
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': AI_KEY },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: system + '\n\n' + user }] }],
+          generationConfig: {
+            temperature: 0.6,
+            maxOutputTokens: 500,
+            responseMimeType: 'application/json'
+          }
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timer);
+      if (!upstream.ok) {
+        /* The upstream body can quote the key back in an error. Only the
+           status travels onward. */
+        return jsonReply(res, 502, { error: 'AI provider returned ' + upstream.status });
+      }
+      const data = await upstream.json();
+      const part = data && data.candidates && data.candidates[0] &&
+        data.candidates[0].content && data.candidates[0].content.parts &&
+        data.candidates[0].content.parts[0];
+      if (!part || !part.text) return jsonReply(res, 502, { error: 'AI provider returned no content' });
+      return jsonReply(res, 200, { text: String(part.text).slice(0, 20000) });
+    } catch (err) {
+      clearTimeout(timer);
+      return jsonReply(res, 502, { error: 'Could not reach the AI provider.' });
+    }
+  });
+}
+
 function saveData(req, res) {
   let body = '';
   let tooBig = false;
@@ -165,6 +252,12 @@ function serve(req, res) {
       return jsonReply(res, 200, {deleted:id});
     } catch (_) { return jsonReply(res, 500, {error:'Could not delete the session journal.'}); }
   }
+
+  /* Says only whether live generation is available, never the key itself. */
+  if (rel === '/api/ai/status' && req.method === 'GET') {
+    return jsonReply(res, 200, { available: !!AI_KEY, model: AI_KEY ? AI_MODEL : null });
+  }
+  if (rel === '/api/ai/generate' && req.method === 'POST') return aiGenerate(req, res);
 
   if (rel === '/api/data' && req.method === 'GET') return listData(res);
   if (rel === '/api/data' && req.method === 'POST') return saveData(req, res);

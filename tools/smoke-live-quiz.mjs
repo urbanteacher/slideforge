@@ -319,6 +319,45 @@ async function run() {
     }
     logStep('Misconception labels stayed host-side (not in any player payload)');
 
+    /* An impromptu poll, asked mid-lesson, over a live room. The room the poll
+       is for is the room still arriving, so the full-screen overlay has to
+       carry the PIN — the rail has for a while, full screen said nothing. */
+    for (const p of players) p.messageQueue.length = 0;
+    await page.evaluate(() => SF.Player.quickPoll({
+      action: 'start', kind: 'poll', prompt: 'Shall we do another example?',
+      options: ['Another example', 'Move on'], presentAs: 'focus'
+    }));
+    const quickPrompts = await Promise.all(players.map((p) => p.waitFor('prompt', 6000)));
+    for (const got of quickPrompts) {
+      if (got.prompt !== 'Shall we do another example?') {
+        throw new Error('Player did not receive the impromptu poll: ' + JSON.stringify(got));
+      }
+      if (!Array.isArray(got.options) || got.options[0] !== 'Another example') {
+        throw new Error('Impromptu poll reached the phones without its answers: ' + JSON.stringify(got));
+      }
+    }
+    logStep(`All ${players.length} phones received the impromptu poll`);
+
+    const joinBar = await page.evaluate(() => {
+      const el = document.querySelector('#player [data-overlay] .fk-join');
+      return el ? el.textContent : null;
+    });
+    /* Present and telling the truth, which past the first question of a live
+       lesson means CLOSED rather than a PIN: joining shuts once a question has
+       been asked, because eligibility is snapshotted per question. A bar that
+       advertised a PIN nobody could use would be worse than no bar. */
+    if (!joinBar || !joinBar.trim()) {
+      throw new Error('Full-screen poll showed no join line at all');
+    }
+    if (!/\d/.test(joinBar) && !/CLOSED/.test(joinBar)) {
+      throw new Error('Join line said neither a PIN nor that joining is closed: ' + joinBar);
+    }
+    logStep(`Full-screen poll carried the join line: "${joinBar.replace(/\s+/g, ' ').trim()}"`);
+
+    await page.evaluate(() => SF.Player.quickPoll({ action: 'end' }));
+    await Promise.all(players.map((p) => p.waitFor('promptEnd', 6000)));
+    logStep('Ending the poll told every phone to put its pads away');
+
     // 9. Simulated players submit answers for Q1 (Option 1 is correct: "16:9")
     players[0].send({ t: 'answer', choice: 1 }); // Ada (correct)
     players[1].send({ t: 'answer', choice: 1 }); // Bo (correct)

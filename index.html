@@ -146,13 +146,25 @@ html:not([data-ready]) body { background: #f0f1ed; }
   <span class="pos" aria-live="polite">1 / 1</span>
   <button data-act="next" title="Next point or slide (→ or space)" aria-label="Next point or slide">›</button>
   <span class="sep"></span>
-  <button data-act="ink" title="Draw and spotlight (I)" aria-label="Draw and spotlight">✎</button>
-  <button data-act="blank" title="Blank the screen (B)" aria-label="Blank the screen">◼</button>
-  <button data-act="more" title="More presentation controls" aria-label="More presentation controls" aria-expanded="false" aria-controls="hudMore">•••</button>
-  <button data-act="exit" title="Exit presentation (Esc)" aria-label="Exit presentation">✕</button>
+  <div class="hud-group hud-main-tools" id="hudDefaultTools">
+    <button data-act="ink" title="Draw and spotlight (I)" aria-label="Draw and spotlight">✎</button>
+    <button data-act="blank" title="Blank the screen (B)" aria-label="Blank the screen">◼</button>
+    <button data-act="more" title="More presentation controls" aria-label="More presentation controls" aria-expanded="false" aria-controls="hudMore">•••</button>
+    <button data-act="exit" title="Exit presentation (Esc)" aria-label="Exit presentation">✕</button>
+  </div>
+  <div class="hud-group hud-ink-tools" id="hudInkTools" hidden>
+    <button data-mode="draw" title="Draw on the slide" aria-label="Draw on the slide">✎</button>
+    <button data-mode="spot" title="Spotlight part of the slide" aria-label="Spotlight part of the slide">◎</button>
+    <button data-ink-act="undo" title="Undo the last mark" aria-label="Undo the last mark">↶</button>
+    <button data-ink-act="clear" title="Clear all marks (X)" aria-label="Clear all marks (X)">🗑</button>
+    <button data-ink-act="steps" title="Show every step on this slide" aria-label="Show every step on this slide">⋯</button>
+    <span class="sep"></span>
+    <button data-ink-act="close" class="hud-ink-done" title="Done drawing (I or Esc)" aria-label="Done drawing">✓</button>
+  </div>
   <div id="hudMore" class="hud-more" hidden>
     <button data-act="rail" title="Cycle room view (S)">Room view</button>
     <button data-act="join" title="Show join QR and PIN (J)">Join QR</button>
+    <button data-act="poll" title="Ask the room a quick question (V)">Quick poll</button>
     <button data-act="focus" title="Show leaderboard (E)">Show leaderboard</button>
     <button data-act="who" title="Who answered what, in presenter view only (W)">Named answers ↗</button>
     <button data-act="teacher" title="Open private teacher entry in another window">Teaching desk ↗</button>
@@ -180,6 +192,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
       <tr><td><kbd>E</kbd></td><td>Show leaderboard (or expand responses / race) to full screen</td></tr>
       <tr><td><kbd>J</kbd></td><td>Show the join QR and PIN full screen (Host live)</td></tr>
       <tr><td><kbd>T</kbd></td><td>Turn the room&rsquo;s reactions on or off (live games)</td></tr>
+      <tr><td><kbd>V</kbd></td><td>Ask the room a quick poll / vote</td></tr>
       <tr><td><kbd>D</kbd></td><td>Presenter view (notes + next slide)</td></tr>
       <tr><td><kbd>?</kbd></td><td>Show this list</td></tr>
       <tr><td><kbd>Esc</kbd></td><td>Exit the show</td></tr>
@@ -227,6 +240,15 @@ html:not([data-ready]) body { background: #f0f1ed; }
   <div class="sheet">
     <header><h3 id="settingsTitle">Settings</h3><button class="btn ghost" data-close>✕</button></header>
     <div class="body" id="settingsBody"></div>
+  </div>
+</div>
+
+<!-- Asked from the presentation itself, for a teacher with one screen. The
+     presenter desk has the same controls; this is the other door to them. -->
+<div class="modal" id="quickPollModal">
+  <div class="sheet">
+    <header><h3>Ask the room</h3><button class="btn ghost" data-close>✕</button></header>
+    <div class="body" id="quickPollBody"></div>
   </div>
 </div>
 
@@ -282,8 +304,10 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/bowl.js?v=2"></script>
 <script src="js/lowstakes.js?v=2"></script>
 <script src="js/demo.js?v=2"></script>
-<script src="js/player.js?v=5"></script>
-<script src="js/live.js?v=5"></script>
+<script src="js/player.js?v=6"></script>
+<script src="js/live.js?v=7"></script>
+<script src="js/ai.js?v=1"></script>
+<script src="js/quick-poll.js?v=1"></script>
 <script src="js/teaching.js?v=2"></script>
 <script src="js/lesson-moments.js?v=2"></script>
 <script src="js/shell.js?v=9"></script>

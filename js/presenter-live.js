@@ -6,6 +6,7 @@ var SF=window.SF;
 var M=SF.LessonMoments;
 var $=function(id){return document.getElementById(id);};
 var moment=null,musicUrl=null;
+var lastState=null;
 function command(data){if(window.opener&&!window.opener.closed)window.opener.postMessage(Object.assign({type:'sf-presenter-cmd',cmd:'moment'},data),location.origin);}
 function start(kind){
  var durEl = /** @type {HTMLSelectElement|null} */ ($('quickDuration'));
@@ -57,7 +58,150 @@ function room(pulse){
  if(d.words)d.words.forEach(function(w){text(fbEl,w.text+' · '+w.n);});
  if(d.items)d.items.forEach(function(item){text(fbEl,typeof item==='string'?item:((item.name?item.name+': ':'')+(item.text||'')));});
 }
-SF.PresenterLive={update:function(d){moment=d.moment||null;room(d.roomPulse);var blocked=!!(d.roomPulse&&d.roomPulse.active&&['reveal','hold'].includes(d.nextAction));['showTask','showCountdown','showBreak'].forEach(function(id){var btn=/** @type {HTMLButtonElement|null} */ ($(id));if(btn)btn.disabled=blocked;});var guard=$('momentGuard');if(guard)guard.textContent=blocked?'Finish or reveal the live question before starting another activity.':'Tasks and countdowns appear on the audience screen.';clock();}};
+/* ---------------------------------------------------------- quick poll */
+
+/* The presets are the questions a teacher actually asks on the turn of a
+   lesson. Each one fills the same two boxes the Custom route uses, so what
+   is launched is always what is on screen — no hidden preset state that the
+   prompt box then disagrees with. */
+var POLL_PRESETS = {
+  yesno: { kind: 'poll', options: ['Yes', 'No'], prompt: '' },
+  truefalse: { kind: 'poll', options: ['True', 'False'], prompt: '' },
+  abcd: { kind: 'poll', options: ['A', 'B', 'C', 'D'], prompt: '' },
+  scale: { kind: 'scale', options: [], prompt: 'How confident do you feel?' },
+  wordcloud: { kind: 'wordcloud', options: [], prompt: 'One word: how was that?' }
+};
+var pollKind = 'poll';
+
+function pollCommand(data) {
+  if (window.opener && !window.opener.closed) {
+    window.opener.postMessage(Object.assign({ type: 'sf-presenter-cmd', cmd: 'quickPoll' }, data), location.origin);
+  }
+}
+
+function pollLines() {
+  var box = /** @type {HTMLTextAreaElement|null} */ ($('pollOptions'));
+  return (box ? box.value : '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+}
+
+Array.prototype.forEach.call(document.querySelectorAll('[data-poll]'), function (btn) {
+  btn.onclick = function () {
+    var preset = POLL_PRESETS[btn.getAttribute('data-poll')];
+    if (!preset) return;
+    pollKind = preset.kind;
+    var opts = /** @type {HTMLTextAreaElement|null} */ ($('pollOptions'));
+    if (opts) {
+      opts.value = preset.options.join('\n');
+      opts.disabled = preset.kind !== 'poll';
+    }
+    var prompt = /** @type {HTMLTextAreaElement|null} */ ($('pollPrompt'));
+    if (prompt && preset.prompt && !prompt.value.trim()) prompt.value = preset.prompt;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-poll]'), function (b) {
+      b.classList.toggle('on', b === btn);
+    });
+    var guard = $('pollGuard');
+    if (guard) guard.textContent = preset.kind === 'poll'
+      ? 'Edit the answers if you want different ones.'
+      : preset.kind === 'scale' ? 'Five points, from low to high.' : 'One word each.';
+  };
+});
+
+var pollLaunch = $('pollLaunch');
+if (pollLaunch) pollLaunch.onclick = function () {
+  var prompt = /** @type {HTMLTextAreaElement|null} */ ($('pollPrompt'));
+  var text = prompt ? prompt.value.trim() : '';
+  var guard = $('pollGuard');
+  if (!text) { if (guard) guard.textContent = 'Write the question the room is answering.'; return; }
+  var options = pollLines();
+  if (pollKind === 'poll' && options.length < 2) {
+    if (guard) guard.textContent = 'A poll needs at least two answers, one per line.';
+    return;
+  }
+  var where = /** @type {HTMLSelectElement|null} */ ($('pollWhere'));
+  pollCommand({
+    action: 'start', kind: pollKind, prompt: text, options: options,
+    presentAs: where ? where.value : 'focus'
+  });
+  if (guard) guard.textContent = '';
+};
+
+var pollEnd = $('pollEnd');
+if (pollEnd) pollEnd.onclick = function () { pollCommand({ action: 'end' }); };
+var pollQr = $('pollQr');
+if (pollQr) pollQr.onclick = function () { pollCommand({ action: 'join' }); };
+var pollWhereToggle = /** @type {HTMLButtonElement|null} */ ($('pollWhereToggle'));
+if (pollWhereToggle) {
+  var toggleEl = pollWhereToggle;
+  toggleEl.onclick = function () {
+    pollCommand({ action: 'where', presentAs: toggleEl.dataset.next || 'rail' });
+  };
+}
+
+var btnAi = /** @type {HTMLButtonElement|null} */ ($('pollAiSuggest'));
+if (btnAi) {
+  var aiButton = btnAi;
+  aiButton.onclick = function () {
+    var guard = $('pollGuard');
+    if (!SF.AI || !SF.AI.generatePollForSlide) {
+      if (guard) guard.textContent = 'AI engine not loaded.';
+      return;
+    }
+    var slide = lastState && lastState.deck && lastState.deck.slides ? lastState.deck.slides[lastState.index] : null;
+    if (guard) guard.textContent = '✨ Thinking...';
+    aiButton.disabled = true;
+    Promise.resolve(SF.AI.generatePollForSlide(slide)).then(function (generated) {
+      if (!generated) {
+        if (guard) guard.textContent = 'Could not generate a poll for this slide.';
+        return;
+      }
+      pollKind = generated.kind;
+      var promptEl = /** @type {HTMLTextAreaElement|null} */ ($('pollPrompt'));
+      if (promptEl) promptEl.value = generated.prompt || '';
+      var optsEl = /** @type {HTMLTextAreaElement|null} */ ($('pollOptions'));
+      if (optsEl) {
+        optsEl.value = (generated.options || []).join('\n');
+        optsEl.disabled = generated.kind !== 'poll';
+      }
+      Array.prototype.forEach.call(document.querySelectorAll('[data-poll]'), function (b) {
+        b.classList.toggle('on', b.getAttribute('data-poll') === generated.kind);
+      });
+      if (guard) {
+        guard.textContent = generated.heuristic
+          ? (generated.fallback ? '✨ Generated from slide (offline fallback)' : '✨ Generated diagnostic check from slide')
+          : '✨ Generated with AI (Gemini)';
+      }
+    }).catch(function () {
+      if (guard) guard.textContent = 'Failed to generate poll.';
+    }).finally(function () {
+      aiButton.disabled = false;
+    });
+  };
+}
+
+function paintPoll(p) {
+  var state = $('pollState');
+  var count = $('pollCount');
+  var end = /** @type {HTMLButtonElement|null} */ ($('pollEnd'));
+  var qr = /** @type {HTMLButtonElement|null} */ ($('pollQr'));
+  var toggle = /** @type {HTMLButtonElement|null} */ ($('pollWhereToggle'));
+  if (state) state.textContent = p ? p.prompt : 'No poll is showing.';
+  if (count) {
+    count.textContent = !p ? '—'
+      : !p.live ? 'Not live — host the lesson to collect answers'
+      : p.players ? p.answered + ' of ' + p.players + ' answered'
+      : 'Nobody has joined yet';
+  }
+  if (end) end.disabled = !p;
+  if (qr) qr.disabled = !p;
+  if (toggle) {
+    toggle.disabled = !p;
+    var next = p && p.presentAs === 'focus' ? 'rail' : 'focus';
+    toggle.dataset.next = next;
+    toggle.textContent = next === 'rail' ? 'Beside the slide' : 'Full screen';
+  }
+}
+
+SF.PresenterLive={update:function(d){lastState=d;paintPoll(d.quickPoll);moment=d.moment||null;room(d.roomPulse);var blocked=!!(d.roomPulse&&d.roomPulse.active&&['reveal','hold'].includes(d.nextAction));['showTask','showCountdown','showBreak'].forEach(function(id){var btn=/** @type {HTMLButtonElement|null} */ ($(id));if(btn)btn.disabled=blocked;});var guard=$('momentGuard');if(guard)guard.textContent=blocked?'Finish or reveal the live question before starting another activity.':'Tasks and countdowns appear on the audience screen.';clock();}};
 setInterval(clock,250);
 var audio = /** @type {HTMLAudioElement|null} */ ($('activityAudio'));
 if(audio) audio.volume=0.3;

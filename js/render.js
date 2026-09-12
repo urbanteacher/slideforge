@@ -1526,6 +1526,17 @@
     var node = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-feedback');
     var pad = el('div', 'pad');
 
+    /* The room the poll is for is the room still arriving. The rail has said
+       how to join for a while; full screen swallowed the whole wall and said
+       nothing, so a phone that was not already in had no way back in without
+       the teacher narrating the PIN. feedbackOpts already passes join — this
+       only stopped throwing it away. */
+    if (opts.join && opts.join.pin) {
+      var jl = el('div', 'joinline fk-join');
+      pad.appendChild(jl);
+      paintJoinLine(jl, opts.join);
+    }
+
     var head = el('div', 'fk-head');
     head.appendChild(el('div', 'fk-kind', opts.title || 'Feedback'));
     if (opts.subtitle) head.appendChild(el('div', 'fk-prompt', opts.subtitle));
@@ -2368,6 +2379,17 @@
     node.appendChild(el('span', 'jl-lbl', 'JOIN'));
     node.appendChild(el('span', 'jl-url', join.url || ''));
     node.appendChild(el('span', 'jl-pin', join.pin));
+    if (node.classList.contains('fk-join')) {
+      node.title = 'Click or press J for full-screen QR code';
+      node.style.cursor = 'pointer';
+      var qrHint = el('span', 'jl-qr-hint', '\u26F6 QR (J)');
+      node.appendChild(qrHint);
+      node.onclick = function () {
+        if (global.SF && global.SF.Player && global.SF.Player.control) {
+          global.SF.Player.control('join');
+        }
+      };
+    }
   }
 
   /** Compact "3 / 5 correct" pill for a show with no audience attached. */

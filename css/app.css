@@ -3988,3 +3988,37 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
 .slide.activity-slide.layout-keywords.activity-brief .kw-row:first-child { grid-column: 1 / -1; padding: 24px; background: var(--s-card); border: 1px solid var(--s-rule); border-left: 6px solid var(--s-fg); border-radius: 0 14px 14px 0; }
 .slide.activity-slide.layout-keywords.activity-brief .kw-row:first-child .kw-def { font-size: 28px; }
 .slide.activity-slide.layout-keywords.activity-brief .kw-row:last-child:nth-child(even) { grid-column: 1 / -1; }
+
+/* Join line on the full-screen feedback overlay. The rail has carried one for
+   a while; full screen covers the wall, so without it a phone arriving mid-poll
+   has nothing to read. Sits above the question rather than beside it. */
+.slide.layout-feedback .pad .fk-join {
+  display: flex; align-items: center; gap: 14px;
+  margin: 0 0 18px; padding: 10px 22px;
+  border: 1px solid var(--s-rule); border-radius: 999px;
+  background: var(--s-card); align-self: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.slide.layout-feedback .pad .fk-join:hover {
+  transform: translateY(-1px);
+  border-color: var(--s-fg);
+}
+.slide.layout-feedback .pad .fk-join .jl-lbl {
+  font-size: 13px; font-weight: 800; letter-spacing: .12em;
+  color: var(--s-accent, #4f7df9); text-transform: uppercase;
+}
+.slide.layout-feedback .pad .fk-join .jl-url {
+  font-size: 17px; font-weight: 600; color: var(--s-dim);
+  font-family: ui-monospace, monospace;
+}
+.slide.layout-feedback .pad .fk-join .jl-pin {
+  font-size: 22px; font-weight: 800; letter-spacing: .08em;
+  color: var(--s-fg); font-variant-numeric: tabular-nums;
+}
+.slide.layout-feedback .pad .fk-join .jl-qr-hint {
+  font-size: 12px; font-weight: 700; letter-spacing: .05em;
+  padding: 3px 8px; border-radius: 6px;
+  background: rgba(125, 125, 125, 0.15); color: var(--s-dim);
+  margin-left: 6px;
+}

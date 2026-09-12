@@ -1499,8 +1499,8 @@
       ends: Live.prompt.ends,
       footnote: players
         ? answered + ' of ' + players + ' responded'
-        : 'Nobody has joined yet',
-      join: joinInfo(),
+        : (Live.active ? 'Nobody has joined yet' : 'Rehearsal mode · Demo responses'),
+      join: joinInfo() || (!Live.active && SF.sampleJoinInfo ? SF.sampleJoinInfo() : null),
       roster: (Live.players || []).map(function (p) {
         return { name: p.name || 'Player' };
       })
@@ -1521,6 +1521,10 @@
 
   /** Open the prompt attached to this slide, or close whatever was open. */
   function syncPrompt(slide) {
+    /* An impromptu poll belongs to the moment, not to a slide, and the
+       teacher is often still moving through the deck behind it while the
+       room votes. Slide changes leave it alone; only ending it closes it. */
+    if (Live.prompt && Live.prompt.custom) return true;
     var f = SF.slideFeedback(slide);
     if (!f) {
       if (Live.prompt) {
@@ -1560,6 +1564,74 @@
     send(Object.assign({ t: 'prompt' }, Live.prompt));
     paintFeedbackPanel();
     applyFeedbackPresentAs(presentAs);
+    return true;
+  }
+
+  /**
+   * Ask the room something that was never authored — the pulse a teacher
+   * takes when the lesson turns.
+   *
+   * Deliberately the same path as a slide's own prompt: the payload, the
+   * relay message, the phone pads, the digest coming back and the overlay are
+   * all the ones authored feedback already uses. The only real difference is
+   * that this one has no slide to belong to.
+   */
+  function startCustomPrompt(def) {
+    def = def || {};
+    var kind = SF.FEEDBACK_KINDS[def.kind] ? def.kind : 'poll';
+    var prompt = String(def.prompt || '').trim();
+    if (!prompt) return false;
+    var f = Object.assign(SF.makeFeedback(kind), {
+      prompt: prompt,
+      options: Array.isArray(def.options) ? def.options : [],
+      points: def.points,
+      lowLabel: def.lowLabel,
+      highLabel: def.highLabel,
+      max: def.max
+    });
+    f = SF.normalizeFeedback(f);
+    var view = SF.feedbackViewOpts(f);
+    var presentAs = def.presentAs === 'rail' ? 'rail' : 'focus';
+    document.body.classList.add('fb-open');
+    Live.prompt = {
+      /* Namespaced so it cannot collide with a slide's `<id>:fb`, and unique
+         per launch so asking the same question twice collects twice rather
+         than adding to the first round. */
+      id: 'quick:' + Date.now(),
+      kind: f.kind,
+      prompt: f.prompt,
+      options: view.options.filter(function (o) { return String(o).trim(); }),
+      ends: view.ends,
+      max: f.max,
+      presentAs: presentAs,
+      custom: true
+    };
+    Live.digest = null;
+    if (Live.active) {
+      send(Object.assign({ t: 'prompt' }, Live.prompt));
+    } else if (SF.sampleFeedbackDigest) {
+      Live.digest = SF.sampleFeedbackDigest(Live.prompt);
+    }
+    paintFeedbackPanel();
+    applyFeedbackPresentAs(presentAs);
+    if (SF.Player.syncPresenter) SF.Player.syncPresenter();
+    return true;
+  }
+
+  /** Take it down and give the teacher their slide back. */
+  function endCustomPrompt() {
+    if (!Live.prompt || !Live.prompt.custom) return false;
+    Live.prompt = null;
+    Live.digest = null;
+    Live.focus = false;
+    document.body.classList.remove('fb-open');
+    SF.Player.closeFocus();
+    if (Live.active) send({ t: 'promptEnd' });
+    /* The deck moved on underneath, so re-read the slide now showing rather
+       than assuming it is the one the poll opened over. */
+    var now = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
+    if (now) syncPrompt(now);
+    if (SF.Player.syncPresenter) SF.Player.syncPresenter();
     return true;
   }
 
@@ -2063,6 +2135,39 @@
   if (SF.Boss) SF.Boss.onVerdict = reportVerdict;
 
   Live.joinInfo = joinInfo;
+
+  /* Move an open prompt between full screen and the rail without restarting
+     it: the room has already answered, and re-sending would collect again. */
+  Live.setPromptPresentAs = function (presentAs) {
+    if (!Live.prompt) return false;
+    Live.prompt.presentAs = presentAs === 'rail' ? 'rail' : 'focus';
+    applyFeedbackPresentAs(Live.prompt.presentAs);
+    paintFeedbackPanel();
+    return true;
+  };
+
+  /* Re-draw an open prompt over the slide now showing. renderCurrent appends
+     the new slide after the overlay, and simply re-parenting the old node
+     restarts its entrance animation and strands it at opacity 0 — so it is
+     rebuilt through the call that made it rather than moved. */
+  Live.repaintPrompt = function () {
+    if (!Live.prompt || Live.prompt.presentAs !== 'focus') return false;
+    Live.focus = true;
+    SF.Player.showFeedbackFocus(Live.digest, feedbackOpts());
+    /* A redraw over the new slide is not an entrance. Without this the poll
+       fades itself back in on every slide change, which reads as a flicker to
+       a room part-way through answering — and the fade leaves it at opacity 0
+       if anything interrupts it. */
+    var overlay = document.querySelector('#player [data-overlay]');
+    if (overlay) overlay.classList.remove('entering', 'tr-fade');
+    return true;
+  };
+
+  Live.startCustomPrompt = startCustomPrompt;
+  Live.endCustomPrompt = endCustomPrompt;
+  /* True while an impromptu poll is up, so the player and the presenter desk
+     can show "end poll" rather than guessing from the focus overlay. */
+  Live.customPromptOpen = function () { return !!(Live.prompt && Live.prompt.custom); };
 
   SF.Live = Live;
 })(window);
