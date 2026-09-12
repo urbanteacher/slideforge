@@ -299,8 +299,18 @@
     var foot = $('railFoot');
     if (!foot) return;
     foot.innerHTML = '';
-    foot.appendChild(UI.button('+ ' + setupUX().item, null, addQuestion));
-    foot.appendChild(UI.button('Duplicate', null, duplicateQuestion));
+    var actions = el('div', 'rail-actions');
+    actions.appendChild(UI.button('+ ' + setupUX().item, null, addQuestion));
+    actions.appendChild(UI.button('Duplicate', null, duplicateQuestion));
+    foot.appendChild(actions);
+
+    var quizActions = el('div', 'rail-actions');
+    var browseBtn = UI.button('Browse quizzes', 'primary', function () {
+      if (SF.Studio && SF.Studio.openLibrary) SF.Studio.openLibrary('check');
+    });
+    browseBtn.title = 'Browse quiz styles and formats (Boss Battle, Horse Race, Memory, etc.)';
+    quizActions.appendChild(browseBtn);
+    foot.appendChild(quizActions);
   }
 
   /* ------------------------------------------------------------ preview */

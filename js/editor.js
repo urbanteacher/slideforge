@@ -1119,7 +1119,20 @@
 
   /* Attached to the slide rather than replacing it: the slide still says what
      it says, and the room's responses gather in the rail beside it. */
-  function drawFeedback(insp, s) {
+  /**
+   * The audience-feedback editor: picker, prompt, and the per-kind settings.
+   *
+   * `after` is how the caller repaints once something changes. It defaults to
+   * the deck editor's own redraw, and the activities studio passes its own —
+   * otherwise choosing a poll there would repaint an inspector that is not on
+   * screen and leave the one that is showing stale.
+   *
+   * @param {HTMLElement} insp
+   * @param {any} s slide to attach to
+   * @param {() => void} [after]
+   */
+  function drawFeedback(insp, s, after) {
+    var refresh = after || function () { refresh(); };
     var kinds = Object.keys(SF.FEEDBACK_KINDS);
     var current = s.feedback && s.feedback.kind ? s.feedback.kind : '';
 
@@ -1146,9 +1159,7 @@
                 ? 'One word for how this feels'
                 : 'What would you add?';
         }
-        touched();
-        drawInspector();
-        repaint();
+        refresh();
       };
       picker.appendChild(b);
     });
@@ -1195,8 +1206,7 @@
       ], feedbackPresentAs(s), function (v) {
         if (!s.feedback) return;
         s.feedback.presentAs = v === 'focus' ? 'focus' : 'rail';
-        touched();
-        drawInspector();
+        refresh();
         drawPreview();
       }),
         'Saved on this slide — Present and Host live open the same way. ' +
@@ -1204,7 +1214,7 @@
     }
 
     insp.appendChild(UI.field('Prompt for the room',
-      UI.area(f.prompt, function (v) { f.prompt = v; touched(); repaint(); }, 2),
+      UI.area(f.prompt, function (v) { f.prompt = v; refresh(); }, 2),
       'Shown on the phones. Keep it short — the slide carries the detail.'));
 
     if (SF.FEEDBACK_KINDS[current].needsOptions) {
@@ -1217,10 +1227,10 @@
          where a scale turns into a poll nobody can read at a glance. */
       var endRow = el('div', 'setrow');
       endRow.appendChild(UI.field('Low end', UI.text(f.lowLabel, function (v) {
-        f.lowLabel = v.slice(0, 40); touched(); repaint();
+        f.lowLabel = v.slice(0, 40); refresh();
       }, 'Not at all')));
       endRow.appendChild(UI.field('High end', UI.text(f.highLabel, function (v) {
-        f.highLabel = v.slice(0, 40); touched(); repaint();
+        f.highLabel = v.slice(0, 40); refresh();
       }, 'Completely')));
       insp.appendChild(UI.field('The two ends', endRow,
         'Both are required — without them the room cannot tell which way the ' +
@@ -1230,7 +1240,7 @@
         SF.SCALE_POINTS.map(function (n) {
           return { value: String(n), icon: String(n), label: n === 5 ? 'Usual' : '' };
         }), String(f.points), function (v) {
-          f.points = Number(v); touched(); drawInspector(); repaint();
+          f.points = Number(v); refresh();
         }),
         'An odd count leaves a real middle to sit in. More than seven is a ' +
         'distinction nobody makes honestly on a phone.'));
@@ -1241,7 +1251,7 @@
         'the opposite of a room all sitting at 3.'));
     } else {
       insp.appendChild(UI.field('Responses allowed each',
-        UI.num(f.max, function (v) { f.max = Math.max(1, Math.min(5, v || 1)); touched(); }, 1, 5),
+        UI.num(f.max, function (v) { f.max = Math.max(1, Math.min(5, v || 1)); refresh(); }, 1, 5),
         current === 'wordcloud'
           ? 'A word or short phrase per response.'
           : 'Longer contributions, shown newest first with names.'));
@@ -1487,6 +1497,32 @@
     }
   }
 
+  /* Helper for creating a fully configured game from activity presets */
+  SF.createPresetGame = function (style, preset, theme) {
+    preset = preset || {};
+    var g = SF.makeGame(preset.title || 'Quick knowledge check', style);
+    g.theme = theme || 'midnight';
+    g.settings.defaultTime = 0;
+    g.settings.scoreboard = false;
+    g.settings.scoreSlide = false;
+    if (preset.settings) Object.assign(g.settings, preset.settings);
+    if (preset.format) g.format = preset.format;
+    else if (SF.isSpecialStyle && SF.isSpecialStyle(style)) g.format = style;
+    if (preset.seeds && preset.seeds.length) {
+      g.questions = preset.seeds.map(function (fields) {
+        var seeded = SF.makeQuestion(style);
+        Object.keys(fields).forEach(function (k) { seeded[k] = fields[k]; });
+        return SF.normalizeQuestion(seeded, style);
+      });
+    } else if (preset.seed && ['memorymatch', 'memoryflip', 'knowledgeflip', 'lowstakes'].indexOf(style) === -1) {
+      var q = SF.makeQuestion(style);
+      Object.keys(preset.seed).forEach(function (k) { q[k] = preset.seed[k]; });
+      g.questions = [SF.normalizeQuestion(q, style)];
+    }
+    SF.GameStore.save(g);
+    return g;
+  };
+
   SF.Editor = {
     install: install,
     addSlide: addSlide,
@@ -1511,35 +1547,7 @@
      *   is this engine set up a particular way rather than a new engine
      */
     insertNewGame: function (style, preset) {
-      preset = preset || {};
-      var g = SF.makeGame(preset.title || 'Quick knowledge check', style);
-      g.theme = deck.theme; g.settings.defaultTime = 0; g.settings.scoreboard = false;
-      g.settings.scoreSlide = false;
-      if (preset.settings) Object.assign(g.settings, preset.settings);
-      /* The format travels with the game, so authoring and the slide can both
-         say what it is rather than naming the engine underneath. */
-      if (preset.format) g.format = preset.format;
-      else if (SF.isSpecialStyle && SF.isSpecialStyle(style)) g.format = style;
-      /* A worked first question, not an empty one.
-         A format is its shape — a passage then a typed recall, three futures
-         to choose between, a sentence with one wrong phrase in it — and a
-         blank question teaches none of that. The seed is example content to
-         overwrite, which is faster than reading a description and guessing. */
-      if (preset.seeds && preset.seeds.length) {
-        /* Some formats cannot be shown by one question: a bingo card is dealt
-           from a pool, so a game seeded with a single pair is a game that
-           refuses to run. */
-        g.questions = preset.seeds.map(function (fields) {
-          var seeded = SF.makeQuestion(style);
-          Object.keys(fields).forEach(function (k) { seeded[k] = fields[k]; });
-          return SF.normalizeQuestion(seeded, style);
-        });
-      } else if (preset.seed && ['memorymatch', 'memoryflip', 'knowledgeflip', 'lowstakes'].indexOf(style) === -1) {
-        var q = SF.makeQuestion(style);
-        Object.keys(preset.seed).forEach(function (k) { q[k] = preset.seed[k]; });
-        g.questions = [SF.normalizeQuestion(q, style)];
-      }
-      SF.GameStore.save(g);
+      var g = SF.createPresetGame(style, preset, deck.theme);
       addSlide('game'); current().gameId = g.id; current().gameTitle = g.title; current().title = g.title;
       inspectorTab = 'content'; touched(); draw();
     },
@@ -1549,6 +1557,10 @@
     },
     deck: function () { return deck; },
     selected: function () { return sel; },
+    /* The activities studio attaches feedback with this editor rather than a
+       second one of its own — same picker, same prompts, same per-kind
+       settings. It passes its own redraw. */
+    drawFeedback: drawFeedback,
     openDeck: function (id) {
       var d = SF.Store.get(id);
       if (!d) return;

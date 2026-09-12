@@ -564,7 +564,15 @@
              engine — so Game settings lock to the right activity instead of
              offering Beat the Clock beside True/False. */
           pre.format = a[0];
-          SF.Editor.insertNewGame(pre.style || a[0], pre);
+          if (SF.Shell && SF.Shell.current && SF.Shell.current() === 'game') {
+            var curG = SF.Games && SF.Games.game && SF.Games.game();
+            var g = SF.createPresetGame(pre.style || a[0], pre, curG ? curG.theme : 'midnight');
+            if (SF.Games && SF.Games.openGame) SF.Games.openGame(g.id);
+            SF.toast('Switched to ' + a[2] + '. Customize it in the right panel.');
+          } else {
+            SF.Editor.insertNewGame(pre.style || a[0], pre);
+            SF.toast(a[2] + ' added. Customize it in the right panel.');
+          }
         } else {
           var fp = feedbackPresets[a[0]];
           SF.Editor.attachFeedback(fp ? fp.kind : a[0], fp);

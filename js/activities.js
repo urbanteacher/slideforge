@@ -18,6 +18,8 @@
   var A = SF.Activities;
 
   var phaseFilter = 'all';
+  /** Slide id of the chosen activity the rail foot acts on, or null. */
+  var selected = null;
 
   function deck() { return SF.Editor.deck(); }
 
@@ -53,7 +55,7 @@
        chosen in this studio, and a slide cannot be recognised as an activity
        after the fact from its layout alone. */
     var slide = deck().slides[SF.Editor.selected()];
-    if (slide) slide.activity = a.key;
+    if (slide) { slide.activity = a.key; selected = slide.id; }
     SF.toast(a.title + ' added to the lesson.');
     draw();
   }
@@ -135,29 +137,69 @@
       body.appendChild(meta);
       thumb.appendChild(body);
 
-      var open = function () { SF.Shell.activate('deck'); };
-      thumb.onclick = open;
+      if (row.slide.id === selected) thumb.classList.add('sel');
+      var pick = function () { selected = row.slide.id; draw(); };
+      thumb.onclick = pick;
       thumb.onkeydown = function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); }
       };
       list.appendChild(thumb);
     });
   }
 
+  /** The chosen row that is selected, or null. Held by slide id rather than
+   *  by index, so editing the lesson elsewhere cannot shift the selection
+   *  onto a different activity. */
+  function current() {
+    return chosen().find(function (row) { return row.slide.id === selected; }) || null;
+  }
+
+  /* The same two actions Quiz studio offers on its rail — duplicate what is
+     selected, and take it out again — plus the running count. Quiz studio's
+     "+ Question" has no equivalent here because the catalogue filling the
+     stage is the way to add one. */
   function drawRailFoot() {
     var foot = document.getElementById('railFoot');
     if (!foot) return;
     foot.replaceChildren();
-    var n = chosen().length;
-    var mins = chosen().reduce(function (t, row) {
+    var rows = chosen();
+    var slides = deck().slides.length;
+    var mins = rows.reduce(function (t, row) {
       var a = A.activity(row.slide.activity);
       return t + ((a && a.minutes) || 0);
     }, 0);
-    foot.appendChild(el('p', 'hint', n
-      ? n + (n === 1 ? ' activity' : ' activities') +
+    foot.appendChild(el('p', 'hint', rows.length
+      ? rows.length + (rows.length === 1 ? ' activity' : ' activities') +
         (mins ? ' · about ' + mins + ' minutes' : '') +
-        ' · ' + deck().slides.length + ' slides in the lesson'
-      : deck().slides.length + ' slides in the lesson.'));
+        ' · ' + slides + (slides === 1 ? ' slide' : ' slides') + ' in the lesson'
+      : slides + (slides === 1 ? ' slide' : ' slides') + ' in the lesson.'));
+
+    var row = current();
+    var actions = el('div', 'rail-actions');
+    var dup = SF.Shell.UI.button('Duplicate', '', function () {
+      var a = row && A.activity(row.slide.activity);
+      if (a) insert(a);
+    });
+    var cut = SF.Shell.UI.button('Remove', '', function () {
+      if (!row) return;
+      var d = deck();
+      d.slides.splice(d.slides.indexOf(row.slide), 1);
+      if (!d.slides.length) d.slides.push(SF.makeSlide('title'));
+      selected = null;
+      SF.Editor.workspace.draw();
+      SF.Shell.touch();
+      draw();
+    });
+    /* Disabled rather than hidden, so the rail does not change height as you
+       select and deselect. */
+    dup.disabled = !row;
+    cut.disabled = !row;
+    if (!row) {
+      dup.title = cut.title = 'Pick an activity in the list first.';
+    }
+    actions.appendChild(dup);
+    actions.appendChild(cut);
+    foot.appendChild(actions);
   }
 
   /* --------------------------------------------------------------- stage */
@@ -226,6 +268,47 @@
     var insp = document.getElementById('inspector');
     if (!insp) return;
     insp.replaceChildren();
+
+    /* Selecting in the rail shows that activity, the way selecting a question
+       in Quiz studio shows that question. Its steps are the useful thing —
+       for the ten protocols they are the whole activity. */
+    var row = current();
+    var picked = row && A.activity(row.slide.activity);
+    if (picked) {
+      insp.appendChild(el('span', 'eyebrow', 'IN THE LESSON'));
+      insp.appendChild(el('h3', null, picked.icon + '  ' + picked.title));
+      insp.appendChild(el('p', 'hint', picked.blurb));
+      var ph = A.PHASES.find(function (p) { return p.key === picked.phase; });
+      insp.appendChild(el('p', 'hint',
+        (ph ? ph.icon + ' ' + ph.label + ' · ' : '') +
+        'about ' + picked.minutes + ' min · slide ' + (row.at + 1)));
+      insp.appendChild(SF.Shell.UI.button('Edit this slide', '', function () {
+        SF.Shell.activate('deck');
+      }));
+
+      /* Most of these activities are asking the room something — Muddiest
+         Point, Four-Corner, Brain Dump, the reflection ladder. Attaching a
+         poll or a word cloud is what turns "discuss in pairs" into something
+         the teacher can see, on phones or read off the wall, and none of it
+         is new: it is slide.feedback, which already reaches the presenter
+         rail and the learner's phone. A game slide is left out because it
+         collects answers already. */
+      if (row.slide.type !== 'game' && SF.Editor.drawFeedback) {
+        insp.appendChild(el('span', 'eyebrow', 'SEE WHAT THE ROOM THINKS'));
+        SF.Editor.drawFeedback(insp, row.slide, function () {
+          SF.Shell.touch();
+          SF.Editor.workspace.draw();
+          draw();
+        });
+      }
+
+      insp.appendChild(el('span', 'eyebrow', 'HOW IT RUNS'));
+      var ol = el('ol', 'act-steps');
+      picked.steps.forEach(function (step) { ol.appendChild(el('li', null, step)); });
+      insp.appendChild(ol);
+      return;
+    }
+
     insp.appendChild(el('span', 'eyebrow', 'THE LESSON CATALOGUE'));
     insp.appendChild(el('h3', null, A.ACTIVITIES.length + ' activities'));
     insp.appendChild(el('p', 'hint',
