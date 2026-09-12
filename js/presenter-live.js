@@ -2,22 +2,9 @@
 (function(){
 'use strict';
 /** @type {import("../src/types.js").SlideForgeGlobal} */
-/* presenter.html owns every id below, and this file is its controller — it
-   is loaded by no other page. A missing element means the page is broken,
-   not a state to recover from, which is what the code already assumed by
-   dereferencing these directly. The helpers say so rather than branch. */
-/** @type {import("../src/types.js").SlideForgeGlobal} */
 var SF=window.SF;
 var M=SF.LessonMoments;
-/** @param {string} id @returns {HTMLElement} */
-var $=function(id){return /** @type {HTMLElement} */(document.getElementById(id));};
-/** @param {string} id @returns {HTMLButtonElement} */
-var $btn=function(id){return /** @type {HTMLButtonElement} */(document.getElementById(id));};
-/** The duration select and the task textarea — both carry .value. */
-/** @param {string} id @returns {HTMLSelectElement|HTMLTextAreaElement} */
-var $field=function(id){return /** @type {HTMLSelectElement|HTMLTextAreaElement} */(document.getElementById(id));};
-/** @returns {HTMLAudioElement} */
-var $audio=function(){return /** @type {HTMLAudioElement} */(document.getElementById('activityAudio'));};
+var $=function(id){return document.getElementById(id);};
 var moment=null,musicUrl=null;
 function command(data){if(window.opener&&!window.opener.closed)window.opener.postMessage(Object.assign({type:'sf-presenter-cmd',cmd:'moment'},data),location.origin);}
 function start(kind){

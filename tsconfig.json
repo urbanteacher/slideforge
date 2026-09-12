@@ -47,6 +47,7 @@
     "js/render.js",
     "js/studio.js",
     "js/editor.js",
-    "js/presenter-live.js"
+    "js/presenter-live.js",
+    "js/shell.js"
   ]
 }
