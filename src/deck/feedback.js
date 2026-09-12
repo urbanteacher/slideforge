@@ -141,4 +141,60 @@ function slideFeedback(slide) {
 }
 
 
-export { FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback };
+/**
+ * Plausible stand-in results, so feedback layouts can be judged while authoring
+ * and rehearsed in demo mode without live devices.
+ * Marked sample: true so it is never mistaken for real responses.
+ *
+ * @param {Feedback | null | undefined} f
+ * @returns {any}
+ */
+function sampleFeedbackDigest(f) {
+  if (!f || !f.kind) return null;
+
+  if (f.kind === 'poll') {
+    var live = (f.options || []).filter(function (o) { return String(o).trim(); });
+    var weights = [7, 11, 4, 2, 5, 1];
+    var counts = live.map(function (_, i) { return weights[i % weights.length]; });
+    var total = counts.reduce(function (a, b) { return a + b; }, 0);
+    return { kind: 'poll', counts: counts, total: total, answered: total, players: total, sample: true };
+  }
+
+  if (f.kind === 'scale') {
+    var shape = {
+      3: [2, 5, 9], 4: [2, 3, 7, 5], 5: [1, 2, 4, 7, 3],
+      6: [1, 2, 3, 6, 4, 2], 7: [1, 1, 2, 4, 6, 3, 1]
+    };
+    var bars = shape[f.points || 5] || shape[5];
+    var seen = bars.reduce(function (a, b) { return a + b; }, 0);
+    return {
+      kind: 'scale', counts: bars, total: seen,
+      answered: seen, players: seen + 3, sample: true
+    };
+  }
+
+  if (f.kind === 'wordcloud') {
+    return {
+      kind: 'wordcloud',
+      words: [
+        { text: 'useful', n: 6 }, { text: 'tricky', n: 4 }, { text: 'clear', n: 3 },
+        { text: 'fast', n: 2 }, { text: 'dense', n: 2 }, { text: 'new', n: 1 },
+        { text: 'daunting', n: 1 }, { text: 'fair', n: 1 }
+      ],
+      total: 20, unique: 8, answered: 14, players: 18, sample: true
+    };
+  }
+
+  return {
+    kind: 'brainstorm',
+    items: [
+      { name: 'Ana', text: 'More worked examples in the seminars' },
+      { name: 'Ben', text: 'A past paper walkthrough before the deadline' },
+      { name: 'Priya', text: 'Share the slides the night before' },
+      { name: 'Tom', text: 'Shorter reading list, more depth on each' }
+    ],
+    total: 4, answered: 4, players: 18, sample: true
+  };
+}
+
+export { FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest };

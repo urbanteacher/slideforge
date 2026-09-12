@@ -26,28 +26,30 @@
     return out;
   }
 
-  var mode = 'class'; /* class | judge | discuss */
+  var mode = 'class'; /* class | judge | discuss | board */
 
   function paintRail() {
     if (!host || !host.open) return;
     var rows = players.map(function (p, i) {
       return {
         key: 'demo-' + i,
-        name: p.name,
-        score: mode === 'discuss' ? '—' : p.score,
+        name: p.teamName ? (p.name + ' (' + p.teamName + ')') : p.name,
+        score: (mode === 'discuss' || mode === 'board') ? '—' : p.score,
         members: 0,
-        color: '',
+        color: p.teamColor || '',
         gained: !!p.gained
       };
     }).sort(function (a, b) {
-      if (mode === 'discuss') return a.name.localeCompare(b.name);
+      if (mode === 'discuss' || mode === 'board') return a.name.localeCompare(b.name);
       return b.score - a.score;
     });
     var foot = mode === 'discuss'
       ? 'Discussion demo — no competitive scores'
       : mode === 'judge'
         ? 'Teacher-judged — SAMPLE class ready to speak'
-        : 'Fake class — nothing is saved or reported';
+        : mode === 'board'
+          ? 'Board demo — teacher operates the board'
+          : 'Fake class — nothing is saved or reported';
     host.setScoreboard(rows, {
       subtitle: players.length + ' sample players · DEMO · ' + mode.toUpperCase(),
       footnote: foot,
@@ -65,7 +67,7 @@
     var opts = (slide.options || []).filter(function (o) { return String(o).trim(); });
     if (slide.input === 'choice' && opts.length) {
       /* Mostly right, with a few wrong — the shape of a real rehearsal. */
-      if (Math.random() < 0.62) return rightChoice(slide);
+      if (Math.random() < 0.65) return rightChoice(slide);
       var wrong = [];
       for (var i = 0; i < opts.length; i++) if (i !== slide.correct) wrong.push(i);
       return wrong.length ? wrong[Math.floor(Math.random() * wrong.length)] : rightChoice(slide);
@@ -74,17 +76,17 @@
       var t = Number(slide.target);
       var tol = Number(slide.tolerance) || 0;
       var span = Math.max(1, (Number(slide.max) - Number(slide.min)) || 10);
-      var jitter = (Math.random() - 0.5) * Math.max(tol * 2, span * 0.15);
+      var jitter = (Math.random() - 0.5) * Math.max(tol * 1.5, span * 0.1);
       return Math.round((Number.isFinite(t) ? t : 0) + jitter);
     }
     if (slide.input === 'text') {
       var accept = slide.accept || [];
-      if (Math.random() < 0.55 && accept[0]) return String(accept[0]);
+      if (Math.random() < 0.65 && accept[0]) return String(accept[0]);
       return ['not sure', '…', 'pass', '???'][Math.floor(Math.random() * 4)];
     }
     if (slide.input === 'order' && Array.isArray(slide.options)) {
       var order = slide.options.map(function (_, i) { return i; });
-      if (Math.random() < 0.45) return order.slice();
+      if (Math.random() < 0.55) return order.slice();
       /* Swap two items for a near miss. */
       var a = Math.floor(Math.random() * order.length);
       var b = (a + 1) % order.length;
@@ -166,6 +168,45 @@
         p.gained = true;
       }
     });
+
+    /* Boss battle mechanic: class hits damage the shared boss HP bar */
+    if (host.deck && host.deck.mechanic === 'boss') {
+      var dmg = Number(slide.bossDamage) || (SF.bossDamage && SF.bossDamage(slide.difficulty)) || 2;
+      var rights = players.filter(function (p) { return p.slideId === slide.id && p.choice != null && isRight(slide, p.choice); }).length;
+      var hit = rights >= Math.max(1, Math.floor(players.length * 0.4));
+      if (hit) {
+        if (typeof host.bossCommand === 'function') host.bossCommand('hit');
+        host.railNote('HIT! Room dealt −' + dmg + ' damage to the boss!');
+      } else {
+        if (typeof host.bossCommand === 'function') host.bossCommand('miss');
+        host.railNote('MISS! Boss resisted the attack.');
+      }
+    }
+
+    /* Horse race mechanic: team correct answers advance team lanes */
+    if (host.deck && host.deck.mechanic === 'race') {
+      var advanced = {};
+      players.forEach(function (p) {
+        if (p.slideId === slide.id && p.choice != null && isRight(slide, p.choice)) {
+          var tKey = 't' + (p.teamIndex != null ? p.teamIndex : 0);
+          if (!advanced[tKey]) {
+            advanced[tKey] = true;
+            if (typeof host.raceStep === 'function') {
+              host.raceStep(tKey, 'advance');
+            }
+          }
+        }
+      });
+      /* Only lanes that answered correctly move, so the note counts them.
+         It used to announce movement on every reveal, which told the room
+         the field had advanced on a question nobody got right. */
+      var moved = Object.keys(advanced).length;
+      host.railNote(moved
+        ? (moved === 1 ? '1 lane advanced along the track.'
+          : moved + ' lanes advanced along the track.')
+        : 'No lane advanced — nobody answered correctly.');
+    }
+
     paintRail();
     if (host.stopMusic) host.stopMusic();
     if (host.syncPresenter) host.syncPresenter();
@@ -183,16 +224,76 @@
     if (host.clearTally) host.clearTally();
     paintRail();
 
-    /* Discussion / teacher-judged formats: show the room, do not invent phone votes. */
-    if (mode === 'discuss' || mode === 'judge') {
-      host.railNote(mode === 'judge'
-        ? 'Demo: listen for spoken answers, then mark as you would live'
-        : 'Demo: discuss with the room — no SAMPLE scoring');
-      paintRail();
+    /* Notice boss / race on entry */
+    if (host.deck && host.deck.mechanic === 'boss') {
+      var bDmg = Number(slide.bossDamage) || (SF.bossDamage && SF.bossDamage(slide.difficulty)) || 2;
+      host.railNote('Boss Battle: ' + (slide.difficulty || 'medium').toUpperCase() + ' · Deals ' + bDmg + ' damage to boss HP');
+    } else if (host.deck && host.deck.mechanic === 'race') {
+      host.railNote('Horse Race: Correct team answers advance lanes to the finish');
+    }
+
+    /* Discussion / teacher-judged formats: simulate spoken participation and host marks */
+    if (mode === 'judge') {
+      var speaker = players[Math.floor(Math.random() * players.length)];
+      var speech = '';
+      if (slide.style === 'spinexplain') {
+        speech = slide.explanation || (slide.term ? (slide.term + ' — ' + (slide.hint || 'cellular process')) : 'I can explain this idea');
+      } else if (slide.style === 'headsup') {
+        speech = 'Guessed it! "' + (slide.term || slide.question || 'Concept') + '"';
+      } else if (slide.style === 'connection') {
+        speech = slide.explanation || ((slide.itemA || 'A') + ' connects with ' + (slide.itemB || 'B'));
+      } else if (slide.style === 'randomchallenge') {
+        speech = slide.explanation || 'Completed the challenge task!';
+      } else {
+        speech = slide.explanation || slide.answer || slide.question || 'Here is my explanation';
+      }
+      host.railNote(speaker.name + ' speaks: "' + speech.slice(0, 65) + (speech.length > 65 ? '…' : '') + '"');
+
+      timers.push(setTimeout(function () {
+        if (!active || !host.open) return;
+        host.railNote('Demo: Host marks on the verdict bar below');
+      }, 1400));
+
+      timers.push(setTimeout(function () {
+        if (!active || !host.open || !host._current) return;
+        var cur = host.deck && host.deck.slides[host.idx];
+        if (!cur || cur.id !== slide.id || host.answers[slide.id] != null) return;
+        var yesBtn = host._current.querySelector('.opt.judge.yes, .opt.judge');
+        if (yesBtn && !yesBtn.classList.contains('locked')) {
+          speaker.score += pointsFor(slide);
+          speaker.gained = true;
+          paintRail();
+          var clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
+          yesBtn.dispatchEvent(clickEvent);
+          host.railNote('✓ Awarded points to ' + speaker.name);
+        }
+      }, 4800));
       return;
     }
 
-      players.forEach(function (p, i) {
+    if (mode === 'discuss') {
+      var p1 = players[0];
+      var disc1 = '';
+      if (slide.style === 'oddone') {
+        var opt = (slide.options && slide.options[slide.correct]) || 'Item';
+        disc1 = p1.name + ': "' + opt + ' is odd — ' + (slide.explanation || 'fits a different rule') + '"';
+      } else if (slide.style === 'compare') {
+        disc1 = p1.name + ': "Compare ' + (slide.itemA || 'A') + ' & ' + (slide.itemB || 'B') + ' — ' + (slide.similarities || 'share core properties') + '"';
+      } else if (slide.style === 'conceptchain') {
+        disc1 = p1.name + ' proposes link for "' + (slide.term || 'concept') + '"';
+      } else {
+        disc1 = p1.name + ' shares reasoning with the room';
+      }
+      host.railNote(disc1.slice(0, 75));
+      timers.push(setTimeout(function () {
+        if (!active || !host.open) return;
+        host.railNote('Demo: Discuss candidate rules, then reveal answers');
+      }, 1600));
+      return;
+    }
+
+    /* Standard auto-scored quiz: fake learners respond */
+    players.forEach(function (p, i) {
       var delay = 600 + i * (450 + Math.floor(Math.random() * 500)) + Math.floor(Math.random() * 400);
       timers.push(setTimeout(function () {
         if (!active || !host.open) return;
@@ -224,19 +325,61 @@
     if (!slide) return;
     if (slide.type === 'quiz') runQuiz(slide);
     else {
+      var fb = SF.slideFeedback && SF.slideFeedback(slide);
+      if (fb) {
+        if (host.clearTally) host.clearTally();
+        var fDigest = SF.sampleFeedbackDigest ? SF.sampleFeedbackDigest(fb) : null;
+        var fView = Object.assign(SF.feedbackViewOpts ? SF.feedbackViewOpts(fb) : {}, {
+          title: fb.prompt || (fb.kind === 'poll' ? 'Class Poll' : 'Feedback'),
+          subtitle: (fb.kind || 'poll').toUpperCase() + ' · SAMPLE RESPONSES',
+          footnote: 'Demo rehearsal — ' + (fDigest ? fDigest.answered : 'sample') + ' responses',
+          sample: true
+        });
+        if (host.setFeedback) host.setFeedback(fDigest, fView);
+        if (fb.presentAs === 'focus' && host.showFeedbackFocus) {
+          host.showFeedbackFocus(fDigest, fView);
+        }
+        var kindLabel = fb.kind === 'poll' ? 'Class Poll' : fb.kind === 'scale' ? 'Confidence Scale' : fb.kind === 'wordcloud' ? 'Word Cloud' : 'Brainstorm';
+        host.railNote(kindLabel + ': Sample responses shown');
+        return;
+      }
       if (host.clearTally) host.clearTally();
       paintRail();
+      if (slide.memoryBoard || slide.bingoBoard || slide.bowlBoard || slide.lowstakesBoard) {
+        if (slide.bingoBoard) {
+          host.railNote('Bingo Rehearsal: Call terms aloud. Click "Call next term" to test caller mechanics.');
+        } else if (slide.bowlBoard) {
+          host.railNote('Quiz Bowl Rehearsal: Click category cells to reveal questions; award points to teams.');
+        } else if (slide.memoryBoard) {
+          host.railNote('Memory Rehearsal: Study period active → reveal cards to check paired recall.');
+        } else if (slide.lowstakesBoard) {
+          host.railNote('Low-Stakes Rehearsal: Paper retrieval on clock → click Reveal answers.');
+        }
+      } else if (slide.id && slide.id.indexOf(':howto') !== -1) {
+        host.railNote('How to play: classroom rules for this format before play begins.');
+      }
     }
   }
 
   function attach(player, opts) {
     detach();
     opts = opts || {};
-    mode = opts.mode === 'judge' || opts.mode === 'discuss' ? opts.mode : 'class';
+    mode = opts.mode === 'judge' || opts.mode === 'discuss' || opts.mode === 'board' ? opts.mode : 'class';
     host = player;
     active = true;
-    players = pickNames(6 + Math.floor(Math.random() * 3)).map(function (name) {
-      return { name: name, score: 0, choice: null, slideId: null, gained: false };
+    var teams = (host.deck && host.deck.quiz && host.deck.quiz.teams) || [];
+    players = pickNames(6 + Math.floor(Math.random() * 3)).map(function (name, i) {
+      var tIdx = teams.length ? (i % teams.length) : null;
+      return {
+        name: name,
+        score: 0,
+        choice: null,
+        slideId: null,
+        gained: false,
+        teamIndex: tIdx,
+        teamName: tIdx != null ? (teams[tIdx].name || teams[tIdx]) : '',
+        teamColor: tIdx != null ? SF.teamColor(tIdx) : ''
+      };
     });
     offSlide = function () { onSlide(); };
     offClose = function () { detach(); };
@@ -247,7 +390,9 @@
       ? 'Discussion demo — SAMPLE roster only'
       : mode === 'judge'
         ? 'Teacher-judged demo — you mark as live'
-        : 'Demo class joined — SAMPLE players only');
+        : mode === 'board'
+          ? 'Board demo — teacher operates the board'
+          : 'Demo class joined — SAMPLE players only');
   }
 
   function detach() {
@@ -268,7 +413,7 @@
   function start(deck, opts) {
     opts = opts || {};
     if (!SF.Player) return;
-    var demoMode = opts.mode === 'judge' || opts.mode === 'discuss' ? opts.mode : 'class';
+    var demoMode = opts.mode === 'judge' || opts.mode === 'discuss' || opts.mode === 'board' ? opts.mode : 'class';
     SF.Player.start(deck, opts.startIndex || 0, {
       fullscreen: opts.fullscreen === true,
       demo: true,

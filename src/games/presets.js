@@ -4,7 +4,7 @@
    even before a teacher has written their own questions. */
 
 import { GAME_STYLES } from "./registry.js";
-import { formatStyle } from "./catalogue.js";
+import { formatStyle, FORMAT_STYLE } from "./catalogue.js";
 import { makeGame, makeQuestion } from "./factories.js";
 
 /**
@@ -51,7 +51,8 @@ const GAME_FORMAT_PRESETS = {
     settings: { scoreboard: true, scoreSlide: true, defaultTime: 15 },
     seeds: [
       { question: 'Mitochondria are found only in animal cells.', options: ['True', 'False'], correct: 1, explanation: 'Plant cells have them too — they respire as well as photosynthesise.' },
-      { question: 'Water expands when it freezes into ice.', options: ['True', 'False'], correct: 0, explanation: 'True! Water molecules form an open crystalline lattice.' }
+      { question: 'Water expands when it freezes into ice.', options: ['True', 'False'], correct: 0, explanation: 'True! Water molecules form an open crystalline lattice.' },
+      { question: 'Light travels faster than sound in air.', options: ['True', 'False'], correct: 0, explanation: 'True! Light travels ~300,000 km/s while sound is ~343 m/s.' }
     ]
   },
   'horse-race': {
@@ -306,6 +307,25 @@ const GAME_FORMAT_PRESETS = {
       { question: 'Which particle carries a positive electrical charge?', options: ['Proton', 'Neutron', 'Electron', 'Photon'], correct: 0, explanation: 'Protons are positively charged and located in the atomic nucleus.' },
       { question: 'What is the freezing point of water on the Celsius scale?', options: ['0°C', '32°C', '100°C', '-10°C'], correct: 0, explanation: 'Pure water freezes at 0°C (32°F) at standard atmospheric pressure.' }
     ]
+  },
+  'type': {
+    style: 'type',
+    title: 'Short answer retrieval',
+    settings: { scoreboard: true, scoreSlide: true, defaultTime: 30 },
+    seeds: [
+      { question: 'What organelle is known as the powerhouse of the cell?', accept: ['mitochondria', 'mitochondrion'], explanation: 'Mitochondria generate most of the chemical energy needed to power the cell.' },
+      { question: 'What is the chemical symbol for gold?', accept: ['Au'], explanation: 'From the Latin aurum, meaning shining dawn.' },
+      { question: 'What gas do plants absorb during photosynthesis?', accept: ['carbon dioxide', 'CO2'], explanation: 'Plants use carbon dioxide and water to produce glucose and oxygen.' }
+    ]
+  },
+  'order': {
+    style: 'order',
+    title: 'Ranking challenge',
+    settings: { scoreboard: true, scoreSlide: true, defaultTime: 0 },
+    seeds: [
+      { question: 'Put these British history events in order, earliest first.', options: ['Roman invasion of Britain', 'Norman conquest', 'English Civil War', 'First World War'], explanation: 'AD 43, 1066, 1642, 1914. Part marks for items placed correctly.' },
+      { question: 'Order these memory speeds from fastest to slowest.', options: ['CPU Registers', 'Cache Memory', 'RAM', 'Hard Drive'], explanation: 'Registers on the CPU die are fastest, followed by cache, main RAM, and secondary storage.' }
+    ]
   }
 };
 
@@ -338,12 +358,20 @@ function getShowcaseGame(gameOrStyle, opts) {
     var probs = [];
     if (engine && typeof engine.problems === 'function') {
       probs = gameObj.questions.map(function (q, i) {
-        return engine.problems(q, i + 1);
+        try {
+          return engine.problems(q, i + 1, gameObj);
+        } catch (_err) {
+          return 'Validation error in Q' + (i + 1);
+        }
       }).filter(Boolean);
     }
     if (engine && typeof engine.board === 'function') {
-      var bp = engine.board(gameObj);
-      if (bp) probs.push(bp);
+      try {
+        var bp = engine.board(gameObj);
+        if (bp) probs.push(bp);
+      } catch (_err) {
+        probs.push('Board validation error');
+      }
     }
     if (probs.length === 0) {
       return gameObj;
@@ -352,6 +380,14 @@ function getShowcaseGame(gameOrStyle, opts) {
 
   // Lookup preset by format or style
   var pre = GAME_FORMAT_PRESETS[format] || GAME_FORMAT_PRESETS[style] || null;
+  if (!pre) {
+    for (var k in FORMAT_STYLE) {
+      if (FORMAT_STYLE[k] === style && GAME_FORMAT_PRESETS[k]) {
+        pre = GAME_FORMAT_PRESETS[k];
+        break;
+      }
+    }
+  }
   /** @type {import('../types.js').GameStyleKey} */
   var targetStyle = /** @type {import('../types.js').GameStyleKey} */ ((pre && pre.style && GAME_STYLES[pre.style]) ? pre.style : (GAME_STYLES[style] ? style : 'choice'));
 

@@ -2720,6 +2720,76 @@
     }
     return f;
   }
+  function sampleFeedbackDigest(f) {
+    if (!f || !f.kind) return null;
+    if (f.kind === "poll") {
+      var live = (f.options || []).filter(function(o) {
+        return String(o).trim();
+      });
+      var weights = [7, 11, 4, 2, 5, 1];
+      var counts = live.map(function(_, i) {
+        return weights[i % weights.length];
+      });
+      var total = counts.reduce(function(a, b) {
+        return a + b;
+      }, 0);
+      return { kind: "poll", counts, total, answered: total, players: total, sample: true };
+    }
+    if (f.kind === "scale") {
+      var shape = {
+        3: [2, 5, 9],
+        4: [2, 3, 7, 5],
+        5: [1, 2, 4, 7, 3],
+        6: [1, 2, 3, 6, 4, 2],
+        7: [1, 1, 2, 4, 6, 3, 1]
+      };
+      var bars = shape[f.points || 5] || shape[5];
+      var seen = bars.reduce(function(a, b) {
+        return a + b;
+      }, 0);
+      return {
+        kind: "scale",
+        counts: bars,
+        total: seen,
+        answered: seen,
+        players: seen + 3,
+        sample: true
+      };
+    }
+    if (f.kind === "wordcloud") {
+      return {
+        kind: "wordcloud",
+        words: [
+          { text: "useful", n: 6 },
+          { text: "tricky", n: 4 },
+          { text: "clear", n: 3 },
+          { text: "fast", n: 2 },
+          { text: "dense", n: 2 },
+          { text: "new", n: 1 },
+          { text: "daunting", n: 1 },
+          { text: "fair", n: 1 }
+        ],
+        total: 20,
+        unique: 8,
+        answered: 14,
+        players: 18,
+        sample: true
+      };
+    }
+    return {
+      kind: "brainstorm",
+      items: [
+        { name: "Ana", text: "More worked examples in the seminars" },
+        { name: "Ben", text: "A past paper walkthrough before the deadline" },
+        { name: "Priya", text: "Share the slides the night before" },
+        { name: "Tom", text: "Shorter reading list, more depth on each" }
+      ],
+      total: 4,
+      answered: 4,
+      players: 18,
+      sample: true
+    };
+  }
 
   // src/games/choice.js
   var coreStyles = {
@@ -2750,12 +2820,17 @@
         return q;
       },
       problems: function(q, n) {
-        var live = q.options.filter(function(o) {
+        var anyQ = (
+          /** @type {any} */
+          q
+        );
+        var opts = Array.isArray(q.options) ? q.options : Array.isArray(anyQ.answers) ? anyQ.answers : [];
+        var live = opts.filter(function(o) {
           return String(o).trim();
         });
-        if (!String(q.question).trim()) return "Q" + n + " has no question text";
+        if (!String(q.question || anyQ.prompt || "").trim()) return "Q" + n + " has no question text";
         if (live.length < 2) return "Q" + n + " needs at least two answers";
-        if (!String(q.options[q.correct] || "").trim()) {
+        if (!String(opts[q.correct] || "").trim()) {
           return "Q" + n + " has no correct answer marked";
         }
         return null;
@@ -6387,7 +6462,8 @@
       settings: { scoreboard: true, scoreSlide: true, defaultTime: 15 },
       seeds: [
         { question: "Mitochondria are found only in animal cells.", options: ["True", "False"], correct: 1, explanation: "Plant cells have them too — they respire as well as photosynthesise." },
-        { question: "Water expands when it freezes into ice.", options: ["True", "False"], correct: 0, explanation: "True! Water molecules form an open crystalline lattice." }
+        { question: "Water expands when it freezes into ice.", options: ["True", "False"], correct: 0, explanation: "True! Water molecules form an open crystalline lattice." },
+        { question: "Light travels faster than sound in air.", options: ["True", "False"], correct: 0, explanation: "True! Light travels ~300,000 km/s while sound is ~343 m/s." }
       ]
     },
     "horse-race": {
@@ -6642,6 +6718,25 @@
         { question: "Which particle carries a positive electrical charge?", options: ["Proton", "Neutron", "Electron", "Photon"], correct: 0, explanation: "Protons are positively charged and located in the atomic nucleus." },
         { question: "What is the freezing point of water on the Celsius scale?", options: ["0°C", "32°C", "100°C", "-10°C"], correct: 0, explanation: "Pure water freezes at 0°C (32°F) at standard atmospheric pressure." }
       ]
+    },
+    "type": {
+      style: "type",
+      title: "Short answer retrieval",
+      settings: { scoreboard: true, scoreSlide: true, defaultTime: 30 },
+      seeds: [
+        { question: "What organelle is known as the powerhouse of the cell?", accept: ["mitochondria", "mitochondrion"], explanation: "Mitochondria generate most of the chemical energy needed to power the cell." },
+        { question: "What is the chemical symbol for gold?", accept: ["Au"], explanation: "From the Latin aurum, meaning shining dawn." },
+        { question: "What gas do plants absorb during photosynthesis?", accept: ["carbon dioxide", "CO2"], explanation: "Plants use carbon dioxide and water to produce glucose and oxygen." }
+      ]
+    },
+    "order": {
+      style: "order",
+      title: "Ranking challenge",
+      settings: { scoreboard: true, scoreSlide: true, defaultTime: 0 },
+      seeds: [
+        { question: "Put these British history events in order, earliest first.", options: ["Roman invasion of Britain", "Norman conquest", "English Civil War", "First World War"], explanation: "AD 43, 1066, 1642, 1914. Part marks for items placed correctly." },
+        { question: "Order these memory speeds from fastest to slowest.", options: ["CPU Registers", "Cache Memory", "RAM", "Hard Drive"], explanation: "Registers on the CPU die are fastest, followed by cache, main RAM, and secondary storage." }
+      ]
     }
   };
   function getShowcaseGame(gameOrStyle, opts) {
@@ -6666,18 +6761,34 @@
       var probs = [];
       if (engine && typeof engine.problems === "function") {
         probs = gameObj.questions.map(function(q, i) {
-          return engine.problems(q, i + 1);
+          try {
+            return engine.problems(q, i + 1, gameObj);
+          } catch (_err) {
+            return "Validation error in Q" + (i + 1);
+          }
         }).filter(Boolean);
       }
       if (engine && typeof engine.board === "function") {
-        var bp = engine.board(gameObj);
-        if (bp) probs.push(bp);
+        try {
+          var bp = engine.board(gameObj);
+          if (bp) probs.push(bp);
+        } catch (_err) {
+          probs.push("Board validation error");
+        }
       }
       if (probs.length === 0) {
         return gameObj;
       }
     }
     var pre = GAME_FORMAT_PRESETS[format] || GAME_FORMAT_PRESETS[style] || null;
+    if (!pre) {
+      for (var k in FORMAT_STYLE) {
+        if (FORMAT_STYLE[k] === style && GAME_FORMAT_PRESETS[k]) {
+          pre = GAME_FORMAT_PRESETS[k];
+          break;
+        }
+      }
+    }
     var targetStyle = (
       /** @type {import('../types.js').GameStyleKey} */
       pre && pre.style && GAME_STYLES[pre.style] ? pre.style : GAME_STYLES[style] ? style : "choice"
@@ -7506,6 +7617,7 @@
     makeFeedback,
     normalizeFeedback,
     slideFeedback,
+    sampleFeedbackDigest,
     // games
     makeGame,
     makeQuestion,

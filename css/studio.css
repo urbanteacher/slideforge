@@ -23,6 +23,51 @@
 #btnDemoGame.on{
   background:#729458;color:#fff;border-color:#729458;
 }
+.player-demo-pill {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  background: rgba(18, 24, 20, 0.9);
+  border: 1px solid rgba(132, 164, 116, 0.45);
+  border-radius: 999px;
+  color: #f0f4ea;
+  font-size: 12px;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+}
+.player-demo-pill .pdp-tag {
+  background: #526943;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.player-demo-pill .pdp-title {
+  font-weight: 600;
+  color: #dce8cc;
+}
+.player-demo-pill .pdp-exit {
+  padding: 2px 8px;
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+}
+.player-demo-pill .pdp-exit:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
 .howto{
   margin:0 0 16px;padding:0;
   border:1px solid var(--ui-line,#e2e5db);border-radius:10px;

@@ -543,7 +543,12 @@
       if (SF.toast) SF.toast('No slides found to showcase.');
       return;
     }
-    SF.Player.start(run, 0, { fullscreen: false });
+    var hasFb = run.slides.some(function (s) { return SF.slideFeedback && SF.slideFeedback(s); });
+    SF.Player.start(run, 0, {
+      fullscreen: false,
+      demo: true,
+      demoMode: hasFb ? 'discuss' : 'class'
+    });
     if (SF.toast) SF.toast('Showcasing ' + (title || 'activity') + ' — press Esc or ✕ to exit');
   }
 

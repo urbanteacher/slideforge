@@ -34,10 +34,12 @@ const coreStyles = {
     },
 
     problems: function (q, n) {
-      var live = q.options.filter(function (o) { return String(o).trim(); });
-      if (!String(q.question).trim()) return 'Q' + n + ' has no question text';
+      var anyQ = /** @type {any} */ (q);
+      var opts = Array.isArray(q.options) ? q.options : (Array.isArray(anyQ.answers) ? anyQ.answers : []);
+      var live = opts.filter(function (o) { return String(o).trim(); });
+      if (!String(q.question || anyQ.prompt || '').trim()) return 'Q' + n + ' has no question text';
       if (live.length < 2) return 'Q' + n + ' needs at least two answers';
-      if (!String(q.options[q.correct] || '').trim()) {
+      if (!String(opts[q.correct] || '').trim()) {
         return 'Q' + n + ' has no correct answer marked';
       }
       return null;

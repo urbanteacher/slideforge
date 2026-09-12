@@ -219,4 +219,14 @@ test('activity showcase isolates only that activity into the player without full
   assert.ok(startedDeck);
   assert.equal(startedDeck.slides.length, 1, 'isolated to only the activity slide');
   assert.equal(startedDeck.slides[0].bullets[0], 'Notice\tOur edited custom observation', 'edited content preserved in showcase');
+
+  // 6. Showcase an activity with a poll (e.g. Exit Ticket or Four-Corner)
+  const pollAct = SF.Activities.activity('structured-reflection-protocol');
+  assert.equal(pollAct.feedbackKind, 'poll');
+  SF.Activities.showcaseDef(pollAct);
+  assert.ok(startedDeck);
+  assert.equal(startedDeck.slides.length, 1);
+  assert.equal(startedDeck.slides[0].feedback.kind, 'poll');
+  assert.equal(startedOpts.demo, true);
+  assert.equal(startedOpts.demoMode, 'discuss');
 });

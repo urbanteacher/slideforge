@@ -1231,14 +1231,19 @@
       Player._sampleFb = { digest: null, view: null, slide: slide };
       return;
     }
+    var isDemo = !!(Player.deck && Player.deck.isDemo) || !!(root && root.classList.contains('is-demo')) || !!(SF.Demo && SF.Demo.active);
+    var digest = isDemo && SF.sampleFeedbackDigest ? SF.sampleFeedbackDigest(f) : null;
     var view = Object.assign(SF.feedbackViewOpts(f), {
-      footnote: 'Host live for the join code and live responses',
-      emptyText: 'Host live to open joining'
+      footnote: isDemo && digest
+        ? 'DEMO REHEARSAL · ' + digest.answered + ' sample responses'
+        : 'Host live for the join code and live responses',
+      emptyText: isDemo ? 'Demo feedback' : 'Host live to open joining',
+      sample: isDemo
     });
-    Player._sampleFb = { digest: null, view: view };
-    Player.setFeedback(null, view);
+    Player._sampleFb = { digest: digest, view: view };
+    Player.setFeedback(digest, view);
     if (f.presentAs === 'focus') {
-      Player.showFeedbackFocus(null, view);
+      Player.showFeedbackFocus(digest, view);
     } else {
       Player.closeFocus();
     }
@@ -1840,6 +1845,22 @@
     showHud();
     if (opts.fullscreen !== false) Player.toggleFullscreen();
     Player.emit('open', { deck: deck });
+    var oldPill = document.getElementById('playerDemoPill');
+    if (oldPill) oldPill.remove();
+    if (opts.demo && root) {
+      root.classList.add('is-demo');
+      var pill = el('div', 'player-demo-pill');
+      pill.id = 'playerDemoPill';
+      pill.appendChild(el('span', 'pdp-tag', 'DEMO REHEARSAL'));
+      var gameTitle = (deck && (deck.title || deck.mechanic)) || 'Game';
+      pill.appendChild(el('span', 'pdp-title', gameTitle + ' · SAMPLE CLASS'));
+      var exitBtn = el('button', 'btn ghost pdp-exit', '✕ Exit demo');
+      exitBtn.type = 'button';
+      exitBtn.setAttribute('aria-label', 'Exit demo (Esc)');
+      exitBtn.onclick = function () { Player.close(); };
+      pill.appendChild(exitBtn);
+      root.appendChild(pill);
+    }
     if (opts.demo && SF.Demo) SF.Demo.attach(Player, { mode: opts.demoMode || 'class' });
   };
 
@@ -1847,6 +1868,8 @@
     if (!Player.open) return;
     if (SF.Demo) SF.Demo.detach();
     if (SF.Boards) SF.Boards.unmountAll();
+    var pill = document.getElementById('playerDemoPill');
+    if (pill) pill.remove();
     stopTimer();
     stopVideo(Player._current);
     stopMusic();
