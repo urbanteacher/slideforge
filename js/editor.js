@@ -7,6 +7,7 @@
 (function (global) {
   'use strict';
 
+  /** @type {import("../src/types.js").SlideForgeGlobal} */
   var SF = global.SF;
   var el = SF.el;
   var $ = function (id) { return document.getElementById(id); };
@@ -39,8 +40,10 @@
   function touched() {
     remember();
     SF.Shell.touch();
-    var ub=document.querySelector('[data-history=undo]'), rb=document.querySelector('[data-history=redo]');
-    if(ub)ub.disabled=!past.length;if(rb)rb.disabled=!future.length;
+    var ub = /** @type {HTMLButtonElement|null} */ (document.querySelector('[data-history=undo]'));
+    var rb = /** @type {HTMLButtonElement|null} */ (document.querySelector('[data-history=redo]'));
+    if (ub) ub.disabled = !past.length;
+    if (rb) rb.disabled = !future.length;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       saveTimer = null;
@@ -87,8 +90,10 @@
 
   function drawRail() {
     var rail = $('railList');
+    if (!rail) return;
     rail.innerHTML = '';
-    $('railCount').textContent = String(deck.slides.length);
+    var count = $('railCount');
+    if (count) count.textContent = String(deck.slides.length);
 
     deck.slides.forEach(function (s, i) {
       var row = el('div', 'thumb' + (i === sel ? ' sel' : ''));
@@ -128,7 +133,7 @@
 
       row.onclick = function () { select(i); };
       wireDrag(row);
-      rail.appendChild(row);
+      if (rail) rail.appendChild(row);
       requestAnimationFrame(function () { SF.fit(frame, node); });
     });
   }
@@ -166,6 +171,7 @@
 
   function drawFoot() {
     var foot = $('railFoot');
+    if (!foot) return;
     foot.innerHTML = '';
     var s = current();
     if (s) {
@@ -237,6 +243,7 @@
   }
   function drawPreview() {
     var box = $('previewBox');
+    if (!box) return;
     box.innerHTML = '';
     box.classList.remove('railed');
     var s = current();
@@ -255,7 +262,8 @@
         }));
       box.appendChild(focus);
       requestAnimationFrame(function () { SF.fit(box, focus); });
-      $('notes').value = s.notes || '';
+      var notesArea = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
+      if (notesArea) notesArea.value = s.notes || '';
       return;
     }
 
@@ -292,20 +300,25 @@
       /* Same surface as the slide it is previewed against — the rehearsal has
          to show the colours the room will get. */
       SF.railSurface(rail, node);
+      var boxEl = box;
       requestAnimationFrame(function () {
-        var scale = box.clientWidth / SF.SLIDE_W;
+        if (!boxEl) return;
+        var scale = boxEl.clientWidth / SF.SLIDE_W;
         rail.style.transform = 'scale(' + scale + ')';
       });
     }
 
-    requestAnimationFrame(function () { SF.fit(box, node); });
-    $('notes').value = s.notes || '';
+    var boxEl2 = box;
+    requestAnimationFrame(function () { if (boxEl2) SF.fit(boxEl2, node); });
+    var notesArea2 = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
+    if (notesArea2) notesArea2.value = s.notes || '';
   }
 
   /* ------------------------------------------------------------ inspector */
 
   function drawInspector() {
     var insp = $('inspector');
+    if (!insp) return;
     insp.innerHTML = '';
     var s = current();
     if (!s) return;
@@ -399,18 +412,21 @@
    */
   function openDeckSettings() {
     var body = $('settingsBody');
-    $('settingsTitle').textContent = 'Presentation settings';
+    var title = $('settingsTitle');
+    if (title) title.textContent = 'Presentation settings';
+    if (!body) return;
+    var bodyEl = body;
 
     function draw2() {
-      body.innerHTML = '';
+      bodyEl.innerHTML = '';
       /* The only way to set a theme now that the top bar has no dropdown. */
-      body.appendChild(UI.field('Theme', SF.Shell.themePicker(deck.theme, function (v) {
+      bodyEl.appendChild(UI.field('Theme', SF.Shell.themePicker(deck.theme, function (v) {
         ws.onTheme(v);
         draw2();
       }), 'Sets the default colours for the presentation. Customise this slide can override text and background colours.'));
-      drawLogoFields(body, draw2);
-      drawEnding(body, draw2);
-      drawReadiness(body);
+      drawLogoFields(bodyEl, draw2);
+      drawEnding(bodyEl, draw2);
+      drawReadiness(bodyEl);
     }
     draw2();
     SF.Shell.openModal('settingsModal', function () {
@@ -477,7 +493,7 @@
         row.title = 'Go to slide ' + (f.slide + 1);
         row.onclick = function () {
           select(f.slide);
-          var close = document.querySelector('#settingsModal [data-close]');
+          var close = /** @type {HTMLElement|null} */ (document.querySelector('#settingsModal [data-close]'));
           if (close) close.click();
         };
       } else {
@@ -532,9 +548,11 @@
            browser cannot actually draw stores fine and renders as nothing,
            which is the one failure that looks exactly like the feature being
            broken \u2014 an empty corner and no message anywhere. */
+        if (typeof fr.result !== 'string') return;
+        var dataUrl = fr.result;
         var test = new Image();
         test.onload = function () {
-          deck.logo = fr.result;
+          deck.logo = dataUrl;
           /* A logo nobody can see is indistinguishable from no logo, so
              uploading one turns it on. */
           if (deck.logoOn === 'none') deck.logoOn = 'all';
@@ -546,7 +564,7 @@
             'draw it, so it would leave an empty corner. Try a PNG or SVG.');
           pick.value = '';
         };
-        test.src = fr.result;
+        test.src = dataUrl;
       };
       fr.readAsDataURL(f);
     });
@@ -603,18 +621,36 @@
   }
 
   function drawLayoutPicker(insp, s) {
-    var box=el('details','layout-library'),summary=el('summary',null,'Layout · '+SF.SLIDE_TYPES[s.type].label);
+    var box = el('details', 'layout-library'), summary = el('summary', null, 'Layout · ' + SF.SLIDE_TYPES[s.type].label);
     box.appendChild(summary);
-    [['Introduce',['title','section','quote']],['Explain & organise',['content','keywords','italics','cards','table']],['Show & explore',['split','image','video','links']]].forEach(function(group){
-      box.appendChild(el('h4',null,group[0]));var grid=el('div','layout-library-grid');
-      group[1].forEach(function(type){
-        var b=el('button','layout-choice'+(s.type===type?' on':''));b.type='button';b.setAttribute('aria-pressed',String(s.type===type));
-        var frame=el('div','variant-frame'),trial=SF.prepareLayout(SF.normalizeSlide(JSON.parse(JSON.stringify(s))),type);
-        var node=SF.renderSlide(deck,trial,{index:sel,total:deck.slides.length,chrome:false});frame.appendChild(node);b.appendChild(frame);
-        b.appendChild(el('span',null,SF.SLIDE_TYPES[type].label));b.onclick=function(){SF.prepareLayout(s,type);touched();draw();};grid.appendChild(b);
-        box.addEventListener('toggle',function(){if(box.open)requestAnimationFrame(function(){SF.fit(frame,node);});});
-      });box.appendChild(grid);
-    });insp.appendChild(box);
+    /** @type {[string, string[]][]} */
+    var layoutGroups = [
+      ['Introduce', ['title', 'section', 'quote']],
+      ['Explain & organise', ['content', 'keywords', 'italics', 'cards', 'table']],
+      ['Show & explore', ['split', 'image', 'video', 'links']]
+    ];
+    layoutGroups.forEach(function (group) {
+      box.appendChild(el('h4', null, group[0]));
+      var grid = el('div', 'layout-library-grid');
+      group[1].forEach(function (type) {
+        var b = el('button', 'layout-choice' + (s.type === type ? ' on' : ''));
+        b.type = 'button';
+        b.setAttribute('aria-pressed', String(s.type === type));
+        var frame = el('div', 'variant-frame');
+        var trial = SF.prepareLayout(SF.normalizeSlide(JSON.parse(JSON.stringify(s))), type);
+        var node = SF.renderSlide(deck, trial, { index: sel, total: deck.slides.length, chrome: false });
+        frame.appendChild(node);
+        b.appendChild(frame);
+        b.appendChild(el('span', null, SF.SLIDE_TYPES[type].label));
+        b.onclick = function () { SF.prepareLayout(s, type); touched(); draw(); };
+        grid.appendChild(b);
+        box.addEventListener('toggle', function () {
+          if (box.open) requestAnimationFrame(function () { SF.fit(frame, node); });
+        });
+      });
+      box.appendChild(grid);
+    });
+    insp.appendChild(box);
     drawVariants(insp,s);
     var hidden=SF.ContentTools.hidden(s);
     if(hidden.length){var saved=el('details','saved-content');saved.appendChild(el('summary',null,'Saved content outside this layout · '+hidden.length));
@@ -708,7 +744,16 @@
     row.ondragleave=function(){row.classList.remove('content-drop');};
     row.ondrop=function(e){row.classList.remove('content-drop');if(!contentDrag||contentDrag.slide!==s.id)return;e.preventDefault();var from=contentDrag.index;contentDrag=null;if(SF.ContentTools.move(s,from,i)){touched();redraw();repaint();}};
     controls.appendChild(grip);
-    [['↑',-1],['↓',1]].forEach(function(pair){var b=UI.button(pair[0],'move-point',function(){move(i+pair[1]);});b.setAttribute('aria-label','Move item '+(i+1)+(pair[1]<0?' up':' down'));b.disabled=i+pair[1]<0||i+pair[1]>=s.bullets.length;controls.appendChild(b);});row.appendChild(controls);
+    /** @type {[string, number][]} */
+    var moveButtons = [['↑', -1], ['↓', 1]];
+    moveButtons.forEach(function (pair) {
+      var delta = pair[1];
+      var b = UI.button(pair[0], 'move-point', function () { move(i + delta); });
+      b.setAttribute('aria-label', 'Move item ' + (i + 1) + (delta < 0 ? ' up' : ' down'));
+      b.disabled = i + delta < 0 || i + delta >= s.bullets.length;
+      controls.appendChild(b);
+    });
+    row.appendChild(controls);
   }
   function bulkContent(wrap,s,redraw){
     var box=el('details','bulk-content');box.appendChild(el('summary',null,'Paste several points at once'));
@@ -1402,18 +1447,26 @@
     deck = loaded;
     sel = 0;
 
-    $('notes').addEventListener('input', function () {
-      if (SF.Shell.current() !== ws) return;
-      current().notes = $('notes').value;
-      touched();
-    });
+    var notesInput = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
+    if (notesInput) {
+      var nInput = notesInput;
+      nInput.addEventListener('input', function () {
+        if (SF.Shell.current() !== ws) return;
+        current().notes = nInput.value;
+        touched();
+      });
+    }
 
-    $('btnPresent').onclick = present;
-    $('btnPresenter').onclick = function () {
-      SF.Store.save(deck);
-      if (!SF.Player.open) SF.Player.start(runDeck(), runIndexFor(sel), { fullscreen: false });
-      SF.Player.openPresenter();
-    };
+    var btnPresent = $('btnPresent');
+    if (btnPresent) btnPresent.onclick = present;
+    var btnPresenter = $('btnPresenter');
+    if (btnPresenter) {
+      btnPresenter.onclick = function () {
+        SF.Store.save(deck);
+        if (!SF.Player.open) SF.Player.start(runDeck(), runIndexFor(sel), { fullscreen: false });
+        SF.Player.openPresenter();
+      };
+    }
   }
 
   SF.Editor = {
