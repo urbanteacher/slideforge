@@ -29,6 +29,8 @@
 (function (global) {
   'use strict';
 
+  /** @type {import("../src/types.js").SlideForgeGlobal} */
+
   var SF = global.SF = global.SF || {};
 
   var MIN_VERSION = 1;

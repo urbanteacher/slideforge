@@ -10,6 +10,7 @@
    difficulty; a miss and a timeout both take none. */
 (function (global) {
   'use strict';
+  /** @type {import("../src/types.js").SlideForgeGlobal} */
   var SF = global.SF = global.SF || {};
 
   /**

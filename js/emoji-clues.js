@@ -3,6 +3,7 @@
    alone so phones do not pull the whole model. */
 (function (global) {
   'use strict';
+  /** @type {import("../src/types.js").SlideForgeGlobal} */
   var SF = global.SF = global.SF || {};
 
   function emojiCluePieces(text) {

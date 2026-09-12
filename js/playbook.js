@@ -3,6 +3,7 @@
    teaching copy SlideForge shows; engines still live in GAME_STYLES / boards. */
 (function (global) {
   'use strict';
+  /** @type {import("../src/types.js").SlideForgeGlobal} */
   var SF = global.SF = global.SF || {};
 
   /* demo:

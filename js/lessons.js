@@ -7,6 +7,7 @@
    fetch() of a local file is blocked. */
 (function (global) {
   'use strict';
+  /** @type {import("../src/types.js").SlideForgeGlobal} */
   var SF = global.SF = global.SF || {};
 
   var LESSONS = [

@@ -23,6 +23,8 @@
 (function (global) {
   'use strict';
 
+  /** @type {import("../src/types.js").SlideForgeGlobal} */
+
   var SF = global.SF = global.SF || {};
 
   /* Below this many responses a check is a straw poll, not a measurement.

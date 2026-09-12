@@ -641,7 +641,16 @@ export interface ReadinessReport {
  * `src/` itself reads back off the namespace.
  */
 export interface SlideForgeGlobal {
-  Boards: BoardRuntime;
+  /**
+   * Optional because the namespace is assembled across script tags, not
+   * created complete. `js/ask.js` and its siblings run before the model
+   * bundle has attached anything, and every one of them opens with
+   * `global.SF = global.SF || {}` for exactly that reason. Declaring this
+   * required would describe an object that does not exist yet at the moment
+   * most of the app first touches it — so consumers guard, as they already
+   * do.
+   */
+  Boards?: BoardRuntime;
   /** Rules copy for the "how to play" slide. Added by `js/playbook.js`. */
   Playbook?: {
     forGame(game: Game): { title?: string; aim?: string; howToPlay?: string[] } | null;

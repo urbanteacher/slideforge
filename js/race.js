@@ -6,6 +6,7 @@
    Live still owns the phone-scored race; this owns the one the teacher runs. */
 (function (global) {
   'use strict';
+  /** @type {import("../src/types.js").SlideForgeGlobal} */
   var SF = global.SF = global.SF || {};
 
   function clampLength(n) {

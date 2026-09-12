@@ -7,6 +7,7 @@
    Loaded by index.html and manual.html, so both sides have it. */
 (function (global) {
   'use strict';
+  /** @type {import("../src/types.js").SlideForgeGlobal} */
   var SF = global.SF = global.SF || {};
   var box = null, onYes = null, lastFocus = null;
 
