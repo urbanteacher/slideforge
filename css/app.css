@@ -1768,15 +1768,20 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 
 /* Prefer html[data-ws] (set in <head> before CSS) so a refresh never shows
    both studios. body.ws-* stays for anything that still keys off the body. */
-html[data-ws="deck"] [data-ws="game"],
-html[data-ws="game"] [data-ws="deck"],
+/* Hide every control that belongs to a studio other than the active one.
+
+   Written as "anything not mine" rather than as a list of pairs. The pair
+   list needed an entry per direction per studio, and a third studio turned
+   six entries into twelve — one of which was missed, so BUILD A LESSON hung
+   under BUILD A CHECK in Quiz studio. This form needs one line per studio
+   and cannot be half-added. */
+html[data-ws="deck"] [data-ws]:not([data-ws="deck"]),
+html[data-ws="game"] [data-ws]:not([data-ws="game"]),
+html[data-ws="plan"] [data-ws]:not([data-ws="plan"]),
 html:not([data-ws]) [data-ws],
-body.ws-deck [data-ws="game"],
-body.ws-game [data-ws="deck"],
-html[data-ws="plan"] [data-ws="deck"],
-html[data-ws="plan"] [data-ws="game"],
-body.ws-plan [data-ws="deck"],
-body.ws-plan [data-ws="game"] { display: none !important; }
+body.ws-deck [data-ws]:not([data-ws="deck"]),
+body.ws-game [data-ws]:not([data-ws="game"]),
+body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
 
 .rail-count {
   font-size: 10px; color: var(--ui-dim); flex: none;
