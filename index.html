@@ -119,9 +119,9 @@ html:not([data-ready]) body { background: #f0f1ed; }
     <div class="studio-toolbar" data-ws="game"><div><span class="eyebrow">BUILD A CHECK</span><strong id="quizCanvasLabel">Pick a format, or write your own questions.</strong></div><button class="btn" id="btnDemoGame" title="Rehearse with a SAMPLE class of fake players (boards stay interactive in the preview)">▷ Try demo</button><button class="btn primary" id="btnActivitiesGame">＋ Browse quizzes</button></div>
     <!-- The activities studio writes into the same deck, so it wears the same
          toolbar as the other two rather than a shape of its own. -->
-    <div class="studio-toolbar" data-ws="plan"><div><span class="eyebrow">BUILD A LESSON</span><strong id="planCanvasLabel">Pick an activity. It lands in your lesson.</strong></div><button class="btn" id="btnPlanToDeck">▤ Open in Lesson studio</button></div>
+    <div class="studio-toolbar" data-ws="plan"><div><span class="eyebrow">BUILD A LESSON</span><strong id="planCanvasLabel">Pick an activity. It lands in your lesson.</strong></div><button class="btn" id="btnDemoActivity" title="Showcase this activity in the player without playing the whole lesson">▷ Showcase activity</button><button class="btn" id="btnPlanToDeck">▤ Open in Lesson studio</button></div>
     <div class="stage-wrap">
-      <div id="demoBanner" class="demo-banner" hidden>Demo uses this format’s engine and How to play. Boards rehearse in the preview; quizzes open a SAMPLE class. <button type="button" id="btnDemoReset" class="btn ghost">Reset demo</button></div>
+      <div id="demoBanner" class="demo-banner" hidden><span id="demoBannerText">Demo uses this format’s engine and How to play. Boards rehearse in the preview; quizzes open a SAMPLE class.</span> <button type="button" id="btnDemoPlayer" class="btn ghost" title="Present this demo in the presentation player">▷ Full presentation demo</button> <button type="button" id="btnDemoReset" class="btn ghost">Reset demo</button></div>
       <div id="previewBox"></div>
     </div>
     <div class="lesson-path" data-ws="deck"><span class="eyebrow">LEARNING LOOP</span><span>01 <b>Teach</b></span><i>→</i><span>02 <b>Check</b></span><i>→</i><span>03 <b>Discuss</b></span><i>→</i><span>04 <b>Adapt</b></span><button id="btnReflect" class="btn ghost">＋ Exit ticket</button></div>

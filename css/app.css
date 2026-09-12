@@ -3971,3 +3971,20 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
 .slide.activity-slide.layout-cards .activity-card-copy { display: block; font-size: 26px; line-height: 1.4; }
 .slide.activity-slide.layout-table .tbl { table-layout: fixed; border-collapse: separate; border-spacing: 10px; }
 .slide.activity-slide.layout-table .tbl td { width: 25%; height: 92px; padding: 16px; border: 1px solid var(--s-rule); border-radius: 12px; background: var(--s-card); font-size: 23px; font-weight: 500; vertical-align: middle; }
+
+/* Distinct activity structures preserve the label/value editing contract. */
+.slide.activity-slide.layout-keywords.activity-steps .kw-list { counter-reset: activity-step; }
+.slide.activity-slide.layout-keywords.activity-steps .kw-row { counter-increment: activity-step; position: relative; margin-left: 16px; padding-left: 52px; border-left: 2px solid var(--s-rule); border-bottom: 0; }
+.slide.activity-slide.layout-keywords.activity-steps .kw-row::before { content: counter(activity-step, decimal-leading-zero); position: absolute; left: -18px; top: 0; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--s-fg); color: var(--s-bg); font-size: 16px; font-weight: 700; }
+.slide.activity-slide.layout-keywords.activity-panels .kw-list { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.slide.activity-slide.layout-keywords.activity-panels .kw-row { display: flex; flex-direction: column; gap: 14px; align-items: stretch; padding: 24px; border: 1px solid var(--s-rule); border-radius: 16px; background: var(--s-card); }
+.slide.activity-slide.layout-keywords.activity-panels .kw-row:last-child { padding-bottom: 24px; border-bottom: 1px solid var(--s-rule); }
+.slide.activity-slide.layout-keywords.activity-panels.theme-studio .kw-row:nth-child(1) { background: #eee9db; }
+.slide.activity-slide.layout-keywords.activity-panels.theme-studio .kw-row:nth-child(2) { background: #dac9ea; }
+.slide.activity-slide.layout-keywords.activity-panels.theme-studio .kw-row:nth-child(3) { background: #cddcbf; }
+.slide.activity-slide.layout-keywords.activity-panels.theme-studio .kw-row:nth-child(4) { background: #e2e7ed; }
+.slide.activity-slide.layout-keywords.activity-brief .kw-list { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 28px; }
+.slide.activity-slide.layout-keywords.activity-brief .kw-row { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding-bottom: 14px; }
+.slide.activity-slide.layout-keywords.activity-brief .kw-row:first-child { grid-column: 1 / -1; padding: 24px; background: var(--s-card); border: 1px solid var(--s-rule); border-left: 6px solid var(--s-fg); border-radius: 0 14px 14px 0; }
+.slide.activity-slide.layout-keywords.activity-brief .kw-row:first-child .kw-def { font-size: 28px; }
+.slide.activity-slide.layout-keywords.activity-brief .kw-row:last-child:nth-child(even) { grid-column: 1 / -1; }

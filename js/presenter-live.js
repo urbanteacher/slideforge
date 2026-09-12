@@ -26,7 +26,7 @@ var btnExtend = $('extendMoment'); if(btnExtend) btnExtend.onclick=function(){co
 var btnClear = $('clearMoment'); if(btnClear) btnClear.onclick=function(){command({action:'clear'});};
 function clock(){
  var titleEl = $('momentTitle');
- if(titleEl) titleEl.textContent=moment?moment.title:'No spontaneous activity is showing.';
+ if(titleEl) titleEl.textContent=moment?moment.title:'No activity or countdown is showing.';
  var left=M.remaining(moment,Date.now());
  var timeEl = $('momentTime');
  if(timeEl) timeEl.textContent=moment&&moment.timed?(left?M.format(left)+(moment.paused?' · paused':''):'Time is up'):moment?'No countdown':'—';

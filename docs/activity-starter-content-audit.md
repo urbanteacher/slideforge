@@ -11,9 +11,13 @@ Completed 52 additional activities; the existing Hook & Predict and Connection S
 - Flipped Instruction inserts three slides; Guided Inquiry inserts four. Each sequence occupies one activity row and duplicates/removes as a group.
 - Feedback activities insert their own prepared slide, preserving other activities and existing feedback.
 - Classroom materials and answer guidance are in the inspector and speaker notes.
-- Timers display minutes in the activity inspector and store seconds for the player. Source duration discrepancies are explained in teacher guidance rather than silently rewriting the source.
+- Timers display minutes in the activity inspector and store seconds for the player. Moment activities automatically start the presenter countdown on entry; 0 disables it. Redraws preserve the deadline, manual removal stays removed on the current slide, and leaving clears the authored countdown. Re-entering starts fresh. Pause, resume and extension use the existing presenter controls; expiry never advances the lesson. Source duration discrepancies are explained in teacher guidance rather than silently rewriting the source.
 - Three activities use classroom materials because the mapped engine cannot perform the source task: Error Analysis, Concept Card Sort and Connect Four. The latter supplies the 16-cell matching grid for physical play.
 - Where engines implement only part of a protocol (Venn diagrams, Heads Up voting, Unsure responses), the required paper/room steps are explicit in teacher guidance.
+
+## Visual structures
+
+The label/value storage remains compatible with `keywords`, but activities no longer all render as glossary rows. Twelve protocols use numbered steps, four four-part tasks use equal panels, and eight activities use an opening brief followed by supporting prompts (including both slide sequences). Three-card activities and the matching grid retain their existing structures. The activity inspector offers a Visual structure selector; Four panels is offered only for four boxes. A saved four-panel slide also falls back to rows if its box count changes. Existing slides without a visual treatment keep their appearance.
 
 ## Layout and tool decisions
 
@@ -98,4 +102,4 @@ Completed 52 additional activities; the existing Hook & Predict and Connection S
 
 ## Verification
 
-`npm test` checks the build, TypeScript, source fidelity, default completeness, field persistence, timer units, feedback validity and game compilation. `SF_URL=http://localhost:8799 node tools/smoke-activities.mjs` checks all 54 insertions, sequence edits/duplication/removal, timer editing and 294 slide renders across all six themes in an isolated browser. Run a local server first.
+`npm test` checks the build, TypeScript, source fidelity, default completeness, field persistence, timer units, feedback validity and game compilation. `SF_URL=http://localhost:8799 node tools/smoke-activities.mjs` checks all 54 insertions, sequence edits/duplication/removal, timer editing, ten automatic countdowns in the real player, and 294 slide renders across all six themes in an isolated browser. Run a local server first.

@@ -225,21 +225,33 @@
       ] },
     'beat-the-clock': { style: 'speed', title: 'Beat the clock',
       settings: { scoreboard: true, scoreSlide: true, defaultTime: 60, confidence: false },
-      seed: { question: 'Which process releases energy from glucose in cells?',
-        options: ['Photosynthesis', 'Respiration', 'Diffusion', 'Osmosis'], correct: 1,
-        explanation: 'Respiration. Fast correct answers score more.' } },
+      seeds: [
+        { question: 'Which process releases energy from glucose in cells?', options: ['Photosynthesis', 'Respiration', 'Diffusion', 'Osmosis'], correct: 1, explanation: 'Respiration. Fast correct answers score more.' },
+        { question: 'What is the speed of light in a vacuum?', options: ['300,000 km/s', '150,000 km/s', '3,000 km/s', '30,000 km/s'], correct: 0, explanation: 'Approximately 300,000 km/s. Quick thinking scores high!' },
+        { question: 'Which organ filters waste from the blood to make urine?', options: ['Liver', 'Kidneys', 'Heart', 'Stomach'], correct: 1, explanation: 'Kidneys filter blood and regulate water balance.' }
+      ] },
     'true-false': { style: 'truefalse', title: 'True / false showdown',
       settings: { scoreboard: true, scoreSlide: true, defaultTime: 15, confidence: false },
-      seed: { question: 'Mitochondria are found only in animal cells.',
-        options: ['True', 'False'], correct: 1,
-        explanation: 'Plant cells have them too — they respire as well as photosynthesise.' } },
+      seeds: [
+        { question: 'Mitochondria are found only in animal cells.', options: ['True', 'False'], correct: 1, explanation: 'Plant cells have them too — they respire as well as photosynthesise.' },
+        { question: 'Light travels faster than sound in air.', options: ['True', 'False'], correct: 0, explanation: 'True! Light travels ~300,000 km/s while sound is ~343 m/s.' },
+        { question: 'The human heart has five chambers.', options: ['True', 'False'], correct: 1, explanation: 'False — the human heart has four chambers: two atria and two ventricles.' }
+      ] },
     'truefalse': { style: 'truefalse', title: 'True or false',
       settings: { scoreboard: true, scoreSlide: true, defaultTime: 0 },
-      seed: { question: 'Mitochondria are found only in animal cells.',
-        options: ['True', 'False'], correct: 1,
-        explanation: 'Plant cells have them too — they respire as well as photosynthesise.' } },
+      seeds: [
+        { question: 'Mitochondria are found only in animal cells.', options: ['True', 'False'], correct: 1, explanation: 'Plant cells have them too — they respire as well as photosynthesise.' },
+        { question: 'Water expands when it freezes into ice.', options: ['True', 'False'], correct: 0, explanation: 'True! Water molecules form an open crystalline lattice.' }
+      ] },
     'horse-race': { style: 'race', title: 'Horse race',
-      settings: { scoreboard: true, scoreSlide: true, defaultTime: 20, mode: 'teams', trackLength: 5 } },
+      settings: { scoreboard: true, scoreSlide: true, defaultTime: 20, mode: 'teams', trackLength: 5 },
+      seeds: [
+        { question: 'Which organelle is known as the powerhouse of the cell?', options: ['Nucleus', 'Mitochondria', 'Ribosome', 'Vacuole'], correct: 1, explanation: 'Mitochondria release cellular energy through respiration.' },
+        { question: 'Which blood vessel carries oxygenated blood away from the heart?', options: ['Vein', 'Artery', 'Capillary', 'Vena cava'], correct: 1, explanation: 'Arteries carry blood away from the heart at higher pressure.' },
+        { question: 'What gas do plants absorb from the air during photosynthesis?', options: ['Oxygen', 'Carbon dioxide', 'Nitrogen', 'Hydrogen'], correct: 1, explanation: 'Carbon dioxide enters leaves via stomata to build glucose.' },
+        { question: 'What is the chemical formula for water?', options: ['CO2', 'NaCl', 'H2O', 'O2'], correct: 2, explanation: 'H2O: two hydrogen atoms bonded to one oxygen atom.' },
+        { question: 'Which body system produces hormones to regulate functions?', options: ['Endocrine', 'Nervous', 'Digestive', 'Respiratory'], correct: 0, explanation: 'The endocrine system secretes hormones directly into the bloodstream.' }
+      ] },
     'boss-battle': { style: 'boss', title: 'Boss battle',
       settings: { scoreboard: true, scoreSlide: true, defaultTime: 30, confidence: false,
         mode: 'teams' },
@@ -395,16 +407,26 @@
 
     'heads-up': { style: 'headsup', title: 'Heads up',
       settings: { scoreboard: true, scoreSlide: true, defaultTime: 60, confidence: false, defaultPoints: 1 },
-      seed: { term: 'Photosynthesis', question: 'Photosynthesis', category: 'Biology' } },
+      seeds: [
+        { term: 'Photosynthesis', question: 'Photosynthesis', category: 'Biology', explanation: 'Plants using sunlight, water and CO2 to create glucose and oxygen.' },
+        { term: 'Mitochondrion', question: 'Mitochondrion', category: 'Biology', explanation: 'The organelle responsible for aerobic cellular respiration.' },
+        { term: 'Gravity', question: 'Gravity', category: 'Physics', explanation: 'The attractive force between masses in the universe.' }
+      ] },
 
     'spin-explain': { style: 'spinexplain', title: 'Spin & explain',
       settings: { scoreboard: true, scoreSlide: true, defaultTime: 20, confidence: false, defaultPoints: 2 },
-      seed: { term: 'Respiration', question: 'Respiration', hint: 'Energy from glucose' } },
+      seeds: [
+        { term: 'Respiration', question: 'Respiration', hint: 'Energy from glucose', explanation: 'Cellular reaction releasing energy in the form of ATP.' },
+        { term: 'Diffusion', question: 'Diffusion', hint: 'Particle spread', explanation: 'Movement of particles from high to low concentration.' },
+        { term: 'Osmosis', question: 'Osmosis', hint: 'Water movement', explanation: 'Movement of water molecules across a partially permeable membrane.' }
+      ] },
 
     'connection-maker': { style: 'connection', title: 'Connection maker',
       settings: { scoreboard: true, scoreSlide: true, defaultTime: 0, confidence: false, defaultPoints: 1 },
-      seed: { itemA: 'Photosynthesis', itemB: 'Respiration',
-        question: 'How do photosynthesis and respiration connect?' } },
+      seeds: [
+        { itemA: 'Photosynthesis', itemB: 'Respiration', question: 'How do photosynthesis and respiration connect?', explanation: 'Photosynthesis produces glucose and oxygen, which respiration consumes to release energy.' },
+        { itemA: 'CPU', itemB: 'RAM', question: 'How do the CPU and RAM connect?', explanation: 'The CPU reads and executes instructions and data held in RAM.' }
+      ] },
 
     'concept-chain': { style: 'conceptchain', title: 'Concept chain',
       settings: { scoreboard: true, scoreSlide: true, defaultTime: 45, confidence: false, defaultPoints: 1 },
@@ -417,8 +439,25 @@
 
     'random-challenge': { style: 'randomchallenge', title: 'Random challenge',
       settings: { scoreboard: false, scoreSlide: false, defaultTime: 0, confidence: false },
-      seed: { challenge: 'Explain this idea to someone who missed the last lesson.',
-        question: 'Explain this idea to someone who missed the last lesson.' } },
+      seeds: [
+        { challenge: 'Explain this idea to someone who missed the last lesson.', question: 'Explain this idea to someone who missed the last lesson.', explanation: 'Summarize the core concept clearly without jargon.' },
+        { challenge: 'Draw a diagram of the process on the board in 30 seconds.', question: 'Draw a diagram of the process on the board in 30 seconds.', explanation: 'Sketch the key stages with accurate labels.' }
+      ] },
+
+    'slider': { style: 'slider', title: 'Numerical estimate',
+      settings: { scoreboard: true, scoreSlide: true, defaultTime: 20 },
+      seeds: [
+        { question: 'In what year was the World Wide Web invented at CERN?', min: 1970, max: 2010, target: 1989, tolerance: 3, unit: 'year', explanation: 'Tim Berners-Lee invented the World Wide Web in 1989.' },
+        { question: 'What percentage of the Earth’s surface is covered by water?', min: 0, max: 100, target: 71, tolerance: 5, unit: '%', explanation: 'Oceans and seas cover approximately 71% of Earth.' }
+      ] },
+
+    'choice': { style: 'choice', title: 'Multiple choice quiz',
+      settings: { scoreboard: true, scoreSlide: true, defaultTime: 20 },
+      seeds: [
+        { question: 'What is the main gas found in Earth’s atmosphere?', options: ['Nitrogen', 'Oxygen', 'Carbon dioxide', 'Argon'], correct: 0, explanation: 'Nitrogen makes up approximately 78% of the atmosphere.' },
+        { question: 'Which particle carries a positive electrical charge?', options: ['Proton', 'Neutron', 'Electron', 'Photon'], correct: 0, explanation: 'Protons are positively charged and located in the atomic nucleus.' },
+        { question: 'What is the freezing point of water on the Celsius scale?', options: ['0°C', '32°C', '100°C', '-10°C'], correct: 0, explanation: 'Pure water freezes at 0°C (32°F) at standard atmospheric pressure.' }
+      ] },
 
     'bingo': { style: 'bingo', title: 'Bingo',
       settings: { scoreboard: false, scoreSlide: false, defaultTime: 0, confidence: false,
@@ -466,6 +505,8 @@
           question: 'What is the molecule an enzyme acts on called?', answer: 'The substrate' }
       ] }
   };
+  /* Expose presets on SF so other modules and Try demo can access all starter banks. */
+  SF.GAME_FORMAT_PRESETS = presets;
 
   /* Discussion formats — no competitive score. Copy says so on the card. */
   var feedbackPresets = {

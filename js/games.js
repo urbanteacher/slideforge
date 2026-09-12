@@ -19,10 +19,47 @@
   var game = null;
   var sel = 0;
   var saveTimer = null;
+  var historyId = null, past = [], future = [], checkpoint = null, restoring = false;
+
+  function remember() {
+    if (!game) return;
+    if (historyId !== game.id) {
+      historyId = game.id;
+      past = [];
+      future = [];
+      checkpoint = JSON.stringify(game);
+      return;
+    }
+    var now = JSON.stringify(game);
+    if (!restoring && checkpoint && now !== checkpoint) {
+      past.push(checkpoint);
+      if (past.length > 60) past.shift();
+      future = [];
+    }
+    checkpoint = now;
+  }
+
+  function restoreHistory(redo) {
+    var from = redo ? future : past, to = redo ? past : future;
+    if (!from.length) return;
+    clearTimeout(saveTimer);
+    saveTimer = null;
+    to.push(JSON.stringify(game));
+    game = JSON.parse(from.pop());
+    checkpoint = JSON.stringify(game);
+    sel = Math.min(sel, game.questions.length - 1);
+    restoring = true;
+    touched();
+    restoring = false;
+    SF.Shell.syncChrome();
+    draw();
+  }
+
   /* Disposable rehearsal state for board games in the editor preview.
      Cleared when leaving demo or switching games — never written to saves. */
   var demoActive = false;
   var demoHost = null;
+  var activeDemoGame = null;
 
   function q() { return game.questions[sel]; }
   function setupUX() { return SF.Playbook ? SF.Playbook.setupForGame(game) : { item: 'Question', prompt: 'Question', guidance: '', participation: '', timing: 'question' }; }
@@ -45,10 +82,12 @@
   function clearDemoState() {
     unmountDemoBoards();
     demoHost = null;
+    activeDemoGame = null;
   }
 
   function setDemoActive(on) {
     demoActive = !!on;
+    if (!demoActive) clearDemoState();
     var btn = $('btnDemoGame');
     var banner = $('demoBanner');
     var wrap = document.querySelector('.stage-wrap');
@@ -57,9 +96,19 @@
       btn.textContent = demoActive ? '✕ Exit demo' : '▷ Try demo';
       btn.setAttribute('aria-pressed', demoActive ? 'true' : 'false');
     }
-    if (banner) banner.hidden = !demoActive;
+    if (banner) {
+      banner.hidden = !demoActive;
+      var bannerText = $('demoBannerText');
+      if (bannerText) {
+        var g = activeDemoGame || game;
+        var entry = SF.Playbook ? SF.Playbook.forGame(g) : null;
+        var title = (entry && entry.title) || (g && SF.gameStyle(g.style).label) || 'Game';
+        bannerText.textContent = activeDemoGame
+          ? ('Showcasing sample ' + title + ' — test how it works below, or customize your questions.')
+          : ('Demo active for ' + title + ' — interactive preview mounted.');
+      }
+    }
     if (wrap) wrap.classList.toggle('demo-on', demoActive);
-    if (!demoActive) clearDemoState();
   }
 
   function resetDemo() {
@@ -82,33 +131,42 @@
       return;
     }
     var bad = problems();
-    if (bad.length) {
-      SF.toast(bad[0] + (bad.length > 1 ? ' (+' + (bad.length - 1) + ' more)' : ''));
-      return;
+    var demoGame = game;
+    var usingShowcase = false;
+    if (bad.length || !demoGame.questions || !demoGame.questions.length) {
+      if (SF.getShowcaseGame) {
+        demoGame = SF.getShowcaseGame(game, { forceSample: true });
+        usingShowcase = true;
+      } else {
+        SF.toast(bad[0] + (bad.length > 1 ? ' (+' + (bad.length - 1) + ' more)' : ''));
+        return;
+      }
     }
-    var kind = SF.Playbook ? SF.Playbook.demoKind(game) : (isBoard() ? 'board' : 'class');
-    var entry = SF.Playbook ? SF.Playbook.forGame(game) : null;
+    var kind = SF.Playbook ? SF.Playbook.demoKind(demoGame) : (isBoard() ? 'board' : 'class');
+    var entry = SF.Playbook ? SF.Playbook.forGame(demoGame) : null;
+    var formatTitle = (entry && entry.title) || (demoGame && SF.gameStyle(demoGame.style).label) || 'Game';
+
     /* Board / paper worksheets rehearse in the canvas with the real engine. */
     if (kind === 'board' || kind === 'paper' || isBoard()) {
+      activeDemoGame = demoGame;
       setDemoActive(true);
       drawPreview();
-      SF.toast(entry
-        ? ('Demo — ' + entry.title + ': use the board in the preview')
-        : 'Demo on — use the board in the preview');
+      SF.toast(usingShowcase
+        ? ('Showcasing sample ' + formatTitle + ' board — try it in the preview!')
+        : ('Demo — ' + formatTitle + ': use the board in the preview'));
       return;
     }
-    SF.GameStore.save(game);
-    if (SF.Demo) {
-      SF.Demo.start(SF.gameToRunDeck(game), { fullscreen: false, mode: kind });
-    } else {
-      SF.Player.start(SF.gameToRunDeck(game), 0, { fullscreen: false });
+    if (!usingShowcase) {
+      SF.GameStore.save(game);
     }
-    /* The rules used to be pushed into the score rail as notes, which put
-       four lines of instructions above the scores and shoved the class down
-       the column. They have their own slide in the presentation now — see
-       settings.howTo — so the rail is left for what it is for: who joined,
-       who answered, what just changed. */
-    SF.toast('Demo uses this format’s engine — the rules are on the How to play slide');
+    if (SF.Demo) {
+      SF.Demo.start(SF.gameToRunDeck(demoGame), { fullscreen: false, mode: kind, showcase: usingShowcase });
+    } else {
+      SF.Player.start(SF.gameToRunDeck(demoGame), 0, { fullscreen: false });
+    }
+    SF.toast(usingShowcase
+      ? ('Showcasing sample ' + formatTitle + ' — sample class joined!')
+      : 'Demo uses this format’s engine — the rules are on the How to play slide');
   }
 
   function appendHowToPlay(parent) {
@@ -148,7 +206,12 @@
   }
 
   function touched() {
+    remember();
     SF.Shell.touch();
+    var ub = /** @type {HTMLButtonElement|null} */ (document.querySelector('[data-history=undo]'));
+    var rb = /** @type {HTMLButtonElement|null} */ (document.querySelector('[data-history=redo]'));
+    if (ub) ub.disabled = !past.length;
+    if (rb) rb.disabled = !future.length;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       saveTimer = null;
@@ -191,14 +254,19 @@
     return !isBoard() || SF.gameStyle(game.style).boardEngine.showsQuestion;
   }
 
-  function asSlide(i) {
-    var board = SF.gameStyle(game.style).boardEngine;
-    if (board) return SF.compileGame(game, { intro: false }).filter(function (slide) {
-      return !!slide[board.field];
-    })[Math.floor(i / board.setSize)];
-    var s = SF.fillQuestionSlide(game.questions[i], game.style, game.settings,
+  function asSlide(i, overrideGame) {
+    var g = overrideGame || ((demoActive && activeDemoGame) ? activeDemoGame : game);
+    var board = SF.gameStyle(g.style).boardEngine;
+    if (board) {
+      var compiled = SF.compileGame(g, { intro: false }).filter(function (slide) {
+        return !!slide[board.field];
+      });
+      return compiled[Math.floor(i / board.setSize)] || compiled[0];
+    }
+    var qObj = (g.questions && (g.questions[i] || g.questions[0])) || q();
+    var s = SF.fillQuestionSlide(qObj, g.style, g.settings,
       SF.makeSlide('quiz'));
-    s.format = game.format || '';
+    s.format = g.format || '';
     return s;
   }
 
@@ -295,17 +363,52 @@
     return ops;
   }
 
+  function countIncomplete() {
+    var style = SF.gameStyle(game.style);
+    return game.questions.reduce(function (total, question, i) {
+      return total + (style.problems(question, i + 1) ? 1 : 0);
+    }, 0);
+  }
+
   function drawFoot() {
     var foot = $('railFoot');
     if (!foot) return;
     foot.innerHTML = '';
-    var actions = el('div', 'rail-actions');
-    actions.appendChild(UI.button('+ ' + setupUX().item, null, addQuestion));
-    actions.appendChild(UI.button('Duplicate', null, duplicateQuestion));
-    foot.appendChild(actions);
+
+    var n = game.questions.length;
+    var totalSec = game.questions.reduce(function (sum, question) {
+      return sum + (effTime(question) || 0);
+    }, 0);
+    var mins = Math.round(totalSec / 60);
+    var timeStr = totalSec ? (totalSec >= 60 ? 'about ' + mins + ' ' + (mins === 1 ? 'minute' : 'minutes') : totalSec + 's') : '';
+    var bad = countIncomplete();
+    var statusParts = [
+      n + (n === 1 ? ' question' : ' questions'),
+      timeStr,
+      bad ? bad + ' incomplete' : 'all complete'
+    ].filter(Boolean);
+
+    foot.appendChild(el('p', 'hint', statusParts.join(' · ')));
+
+    var qActions = el('div', 'rail-actions');
+    var addBtn = UI.button('+ ' + setupUX().item, 'primary', addQuestion);
+    addBtn.title = 'Add a question (max 2 incomplete allowed)';
+    qActions.appendChild(addBtn);
+    foot.appendChild(qActions);
+
+    var itemActions = el('div', 'rail-actions');
+    var dupBtn = UI.button('Duplicate', null, duplicateQuestion);
+    dupBtn.title = 'Duplicate selected question';
+    itemActions.appendChild(dupBtn);
+
+    var delBtn = UI.button('Remove', null, removeQuestion);
+    delBtn.title = 'Remove selected question (Backspace / Delete)';
+    delBtn.disabled = game.questions.length <= 1;
+    itemActions.appendChild(delBtn);
+    foot.appendChild(itemActions);
 
     var quizActions = el('div', 'rail-actions');
-    var browseBtn = UI.button('Browse quizzes', 'primary', function () {
+    var browseBtn = UI.button('Browse quizzes', null, function () {
       if (SF.Studio && SF.Studio.openLibrary) SF.Studio.openLibrary('check');
     });
     browseBtn.title = 'Browse quiz styles and formats (Boss Battle, Horse Race, Memory, etc.)';
@@ -321,27 +424,31 @@
     var boxEl = box;
     unmountDemoBoards();
     boxEl.innerHTML = '';
-    if (!q()) return;
-    var racing = SF.gameStyle(game.style).mechanic === 'race';
-    var slide = asSlide(sel);
-    var node = SF.renderSlide(game, slide, {
-      index: sel,
-      total: game.questions.length,
+    var g = (demoActive && activeDemoGame) ? activeDemoGame : game;
+    if (!g || !g.questions || !g.questions.length) return;
+    var curQ = g.questions[sel] || g.questions[0];
+    if (!curQ) return;
+    var effectiveSel = Math.min(sel, g.questions.length - 1);
+    var racing = SF.gameStyle(g.style).mechanic === 'race';
+    var slide = asSlide(effectiveSel, g);
+    var node = SF.renderSlide(g, slide, {
+      index: effectiveSel,
+      total: g.questions.length,
       interactive: false,
-      quizNumber: sel + 1,
+      quizNumber: effectiveSel + 1,
       chrome: false,
       /* Shown at the starting gate, so the editor previews what the room sees
          rather than a plain multiple-choice slide. */
-      lanes: racing ? game.settings.teams.map(function (t, i) {
+      lanes: racing ? g.settings.teams.map(function (t, i) {
         return { key: 't' + i, name: t.name || t, color: SF.teamColor(i), pos: 0 };
       }) : null,
-      trackLength: game.settings.trackLength,
+      trackLength: g.settings.trackLength,
       /* Memory Match board: every pair in the set as face-down tiles. */
-      pairBank: (game.style === 'memorymatch' || game.style === 'memoryflip')
-        ? game.questions.map(function (qq, qi) {
+      pairBank: (g.style === 'memorymatch' || g.style === 'memoryflip')
+        ? g.questions.map(function (qq, qi) {
             return {
               term: qq.term || qq.question || '',
-              active: qi === sel
+              active: qi === effectiveSel
             };
           })
         : null,
@@ -356,7 +463,7 @@
       SF.Boards.mount(host, slide, node);
     }
     var notes = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
-    if (notes) notes.value = q().notes || '';
+    if (notes) notes.value = q() ? (q().notes || '') : '';
   }
 
   /* ------------------------------------------------- per-style inspectors */
@@ -754,6 +861,136 @@
     return STYLE_EDITORS[key] || STYLE_EDITORS.choice;
   }
 
+  function openSavedQuizzesPicker() {
+    flush();
+    if (SF.Shell && SF.Shell.openSaved) {
+      SF.Shell.openSaved();
+      return;
+    }
+    SF.Shell.picker({
+      title: 'Saved quizzes & games',
+      items: function () { return SF.GameStore.list(); },
+      empty: 'No saved quizzes yet. Create one or browse formats.',
+      describe: describe,
+      onPick: function (it) {
+        setDemoActive(false);
+        game = SF.GameStore.get(it.id);
+        sel = 0;
+        historyId = game.id;
+        past = [];
+        future = [];
+        checkpoint = JSON.stringify(game);
+        SF.GameStore.save(game);
+        SF.Shell.syncChrome();
+        draw();
+        SF.toast('Loaded "' + game.title + '"');
+      },
+      onDelete: function (it, done) {
+        SF.ask({ title: 'Delete “' + it.title + '”?',
+          detail: 'This cannot be undone.',
+          confirm: 'Delete', danger: true }, function () {
+            SF.GameStore.remove(it.id);
+            done();
+          });
+      }
+    });
+  }
+
+  function openQuestionBankPicker() {
+    var banks = [
+      {
+        id: 'gk',
+        title: 'General Knowledge Bank (4 questions)',
+        blurb: 'Solar system, chemistry, geography, photosynthesis (Multiple Choice)',
+        getQuestions: function () {
+          var sg = SF.starterGame();
+          return sg ? sg.questions : [];
+        }
+      },
+      {
+        id: 'bio',
+        title: 'Cell Biology & Science Bank (4 questions)',
+        blurb: 'Chloroplasts, respiration, enzymes, osmosis (Graduated difficulty)',
+        getQuestions: function () {
+          return [
+            { question: 'Which organelle contains chlorophyll?', options: ['Nucleus', 'Mitochondrion', 'Chloroplast', 'Ribosome'], correct: 2, explanation: 'Chloroplasts contain chlorophyll for photosynthesis.' },
+            { question: 'Which process releases energy from glucose in living cells?', options: ['Photosynthesis', 'Respiration', 'Diffusion', 'Osmosis'], correct: 1, explanation: 'Cellular respiration releases energy from glucose.' },
+            { question: 'Why does an enzyme stop working above its optimum temperature?', options: ['It dissolves', 'Its active site changes shape (denatures)', 'It runs out of energy', 'It freezes'], correct: 1, explanation: 'High temperatures denature enzymes by altering their active site shape.' },
+            { question: 'Explain how water moves into a plant cell placed in pure water.', options: ['Active transport', 'Osmosis down a water potential gradient', 'Diffusion of mineral salts', 'It does not move'], correct: 1, explanation: 'Water moves into plant cells by osmosis down a water potential gradient.' }
+          ].map(function (row) { return SF.normalizeQuestion(Object.assign(SF.makeQuestion('choice'), row), 'choice'); });
+        }
+      },
+      {
+        id: 'oddone',
+        title: 'Odd One Out Concept Bank (4 sets)',
+        blurb: 'Science, ICT, and literature reasoning sets',
+        getQuestions: function () {
+          var st = SF.gameStyle('oddone').starters;
+          return st ? JSON.parse(JSON.stringify(st)).map(function (row) {
+            return SF.normalizeQuestion(Object.assign(SF.makeQuestion('oddone'), row), 'oddone');
+          }) : [];
+        }
+      },
+      {
+        id: 'compare',
+        title: 'Compare & Contrast Pairs (4 comparisons)',
+        blurb: 'Photosynthesis/Respiration, RAM/SSD, Democracy/Dictatorship, Metaphor/Simile',
+        getQuestions: function () {
+          var st = SF.gameStyle('compare').starters;
+          return st ? JSON.parse(JSON.stringify(st)).map(function (row) {
+            return SF.normalizeQuestion(Object.assign(SF.makeQuestion('compare'), row), 'compare');
+          }) : [];
+        }
+      },
+      {
+        id: 'chain',
+        title: 'Concept Chain Links (4 starting concepts)',
+        blurb: 'Biological hierarchy: Cell → Tissue → Organ → System',
+        getQuestions: function () {
+          var st = SF.gameStyle('conceptchain').starters;
+          return st ? JSON.parse(JSON.stringify(st)).map(function (row) {
+            return SF.normalizeQuestion(Object.assign(SF.makeQuestion('conceptchain'), row), 'conceptchain');
+          }) : [];
+        }
+      }
+    ];
+
+    SF.Shell.picker({
+      title: 'Curriculum Question Databanks',
+      items: function () { return banks; },
+      describe: function (b) { return b.blurb; },
+      onPick: function (bank) {
+        var qs = bank.getQuestions();
+        if (!qs || !qs.length) {
+          SF.toast('No questions available in this bank');
+          return;
+        }
+        SF.ask({
+          title: 'Add questions from "' + bank.title + '"?',
+          detail: 'This will add ' + qs.length + ' prepared questions to your quiz.',
+          confirm: 'Add to quiz',
+          danger: false
+        }, function () {
+          var onlyOneBlank = game.questions.length === 1 &&
+            !String(game.questions[0].question || '').trim() &&
+            countIncomplete() === 1;
+          if (onlyOneBlank) {
+            game.questions = [];
+          }
+          qs.forEach(function (q) {
+            var cloned = JSON.parse(JSON.stringify(q));
+            cloned.id = SF.uid();
+            game.questions.push(SF.normalizeQuestion(cloned, game.style));
+          });
+          sel = 0;
+          touched();
+          draw();
+          SF.toast('Added ' + qs.length + ' questions from databank');
+        });
+      }
+    });
+  }
+
   /* ------------------------------------------------------------ inspector */
 
   function drawInspector() {
@@ -762,6 +999,26 @@
     insp.innerHTML = '';
     var question = q();
     if (!question) return;
+
+    var historyTools = el('div', 'format-tools');
+    var undo = UI.button('↶ Undo', 'ghost', function () { restoreHistory(false); });
+    undo.disabled = !past.length;
+    undo.dataset.history = 'undo';
+    var redo = UI.button('↷ Redo', 'ghost', function () { restoreHistory(true); });
+    redo.disabled = !future.length;
+    redo.dataset.history = 'redo';
+    historyTools.appendChild(undo);
+    historyTools.appendChild(redo);
+
+    var savedBtn = UI.button('📁 Saved', 'ghost', openSavedQuizzesPicker);
+    savedBtn.title = 'Open a saved quiz or switch games';
+    historyTools.appendChild(savedBtn);
+
+    var bankBtn = UI.button('📚 Databank', 'ghost', openQuestionBankPicker);
+    bankBtn.title = 'Insert questions from curriculum question databanks';
+    historyTools.appendChild(bankBtn);
+
+    insp.appendChild(historyTools);
 
     /* The format first, the engine second. "Question 1 — Spot the error"
        tells a teacher what they are writing; "Multiple choice" tells them
@@ -1470,6 +1727,10 @@
   /* ------------------------------------------------------------ question ops */
 
   function addQuestion() {
+    if (countIncomplete() >= 2) {
+      SF.toast('Complete your existing questions before adding more (maximum 2 incomplete allowed)');
+      return;
+    }
     if (game.style === 'lowstakes' && game.questions.length >= 10) {
       SF.toast('Low-stakes quiz can have at most 10 questions');
       return;
@@ -1520,6 +1781,11 @@
   }
 
   function duplicateQuestion() {
+    var style = SF.gameStyle(game.style);
+    if (style.problems(q(), sel + 1) && countIncomplete() >= 2) {
+      SF.toast('Complete your existing questions before adding more (maximum 2 incomplete allowed)');
+      return;
+    }
     if (game.style === 'lowstakes' && game.questions.length >= 10) {
       SF.toast('Low-stakes quiz can have at most 10 questions');
       return;
@@ -1588,7 +1854,13 @@
   /* ------------------------------------------------------------ workspace */
 
   function repaint() { drawPreview(); drawRail(); }
-  function draw() { drawRail(); drawFoot(); drawPreview(); drawInspector(); }
+  function draw() {
+    if (game && historyId !== game.id) remember();
+    drawRail();
+    drawFoot();
+    drawPreview();
+    drawInspector();
+  }
 
   function describe(g) {
     var n = g.questions.length;
@@ -1621,6 +1893,10 @@
         SF.GameStore.save(g);
         game = g;
         sel = 0;
+        historyId = game.id;
+        past = [];
+        future = [];
+        checkpoint = JSON.stringify(game);
         SF.Shell.syncChrome();
         draw();
         SF.toast('New ' + SF.GAME_STYLES[it.id].label.toLowerCase() + ' game');
@@ -1646,6 +1922,10 @@
       setDemoActive(false);
       game = g;
       sel = 0;
+      historyId = game ? game.id : null;
+      past = [];
+      future = [];
+      checkpoint = game ? JSON.stringify(game) : null;
     },
     blank: function () {
       var g = SF.makeGame('Untitled game', game ? game.style : 'choice');
@@ -1668,6 +1948,11 @@
         e.preventDefault();
         setDemoActive(false);
         drawPreview();
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        restoreHistory(e.shiftKey);
         return;
       }
       if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); select(sel + 1); }
@@ -1709,6 +1994,24 @@
     if (btnDemoGame) btnDemoGame.onclick = toggleDemo;
     var btnDemoReset = $('btnDemoReset');
     if (btnDemoReset) btnDemoReset.onclick = resetDemo;
+    var btnDemoPlayer = $('btnDemoPlayer');
+    if (btnDemoPlayer) {
+      btnDemoPlayer.onclick = function () {
+        var g = activeDemoGame || (problems().length ? (SF.getShowcaseGame ? SF.getShowcaseGame(game, { forceSample: true }) : game) : game);
+        if (SF.Demo) SF.Demo.start(SF.gameToRunDeck(g), { fullscreen: false, mode: 'board', showcase: !!activeDemoGame });
+        else if (SF.Player) SF.Player.start(SF.gameToRunDeck(g), 0, { fullscreen: false });
+      };
+    }
+    if (SF.Player && SF.Player.on) {
+      SF.Player.on('close', function () {
+        var btn = $('btnDemoGame');
+        if (btn && !demoActive) {
+          btn.classList.remove('on');
+          btn.textContent = '▷ Try demo';
+          btn.setAttribute('aria-pressed', 'false');
+        }
+      });
+    }
     setDemoActive(false);
   }
 
@@ -1723,6 +2026,10 @@
       setDemoActive(false);
       game = g;
       sel = 0;
+      historyId = game.id;
+      past = [];
+      future = [];
+      checkpoint = JSON.stringify(game);
       /* Opening is remembered, not just editing: pick a game from the library,
          refresh without touching it, and it should still be the one on screen. */
       SF.GameStore.save(g);

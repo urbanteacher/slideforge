@@ -252,4 +252,20 @@ const PRESETS = {
   ], { feedback: { prompt: 'Where are you on the learning ladder?', points: 5, lowLabel: 'Need help', highLabel: 'Can teach others' } })
 };
 
+/* These visual treatments reuse the same label/value data. They change the
+ * reading order and emphasis, not the task or its required number of boxes. */
+const PRESENTATIONS = {
+  steps: ['think-pair-share', 'do-now-bell-ringer', 'jigsaw-expert-groups',
+    'think-pair-square-share', 'jigsaw-collaboration', 'peer-teaching-carousel',
+    'socratic-seminar', 'strategic-wait-time-questioning', 'whiteboards-on-walls',
+    'teach-someone', 'daily-review-routine', 'dialogue-chain-discussion'],
+  panels: ['i-do-we-do-you-do', 'differentiated-practice-menu',
+    'structured-reflection-protocol', 'reflection-ladder'],
+  brief: ['hook-objectives', 'worked-example-analysis', 'error-analysis',
+    'problem-based-learning', 'design-and-create-task', 'benefits-vs-limitations-battle',
+    'flipped-instruction', 'guided-inquiry-investigation']
+};
+for (const [view, keys] of Object.entries(PRESENTATIONS)) {
+  for (const key of keys) PRESETS[key].presentation = view;
+}
 export { PRESETS, rows, text };

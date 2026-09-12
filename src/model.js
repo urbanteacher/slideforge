@@ -23,6 +23,7 @@ import { spinExplainPoints } from "./games/spinexplain.js";
 import { claimPoints } from "./games/scoring.js";
 import { bingoHasLine } from "./games/bingo.js";
 import { speedPoints } from "./games/speed.js";
+import { GAME_FORMAT_PRESETS, getShowcaseGame } from "./games/presets.js";
 
 /**
  * Shapes these functions promise. Declared in `src/types.d.ts`; nothing is
@@ -1118,6 +1119,8 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   WR_LEVELS: WR_LEVELS,
   BOWL_VALUES: BOWL_VALUES,
   compileGame: compileGame,
+  GAME_FORMAT_PRESETS: GAME_FORMAT_PRESETS,
+  getShowcaseGame: getShowcaseGame,
   INPUTS: INPUTS,
   QUESTION_SLIDE_FIELDS: QUESTION_SLIDE_FIELDS,
   fillQuestionSlide: fillQuestionSlide,
@@ -1128,4 +1131,4 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   GameStore: GameStore
 });
 
-export { SLIDE_W, SLIDE_H, THEMES, TRANSITIONS, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, deckToMarkdown, Store, GameStore };
+export { SLIDE_W, SLIDE_H, THEMES, TRANSITIONS, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, deckToMarkdown, Store, GameStore, GAME_FORMAT_PRESETS, getShowcaseGame };

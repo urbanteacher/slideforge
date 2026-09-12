@@ -763,6 +763,7 @@ for (const a of ACTIVITIES) {
   a.feedbackPreset = p.feedback;
   a.gamePreset = p.game;
   a.pages = p.pages;
+  a.presentation = p.presentation;
   if (p.pages) {
     a.pages = p.pages.map((part) => ({ ...part, fields: [
       text('Heading', part.title), ...part.fields,
@@ -771,7 +772,7 @@ for (const a of ACTIVITIES) {
   } else if (p.fields) {
     a.fields = [text('Heading', p.fieldsTitle || a.title), ...p.fields,
       { label: 'Timer', type: 'minutes', slide: 'timeLimit', value: p.timer || a.minutes,
-        hint: 'Minutes for this activity. Adjust to suit your class.' }];
+        hint: a.target === 'moment' ? 'Starts automatically when presented. Set 0 to leave it untimed.' : 'Minutes for this activity. Adjust to suit your class.' }];
   }
 }
 

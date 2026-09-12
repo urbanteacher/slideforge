@@ -1391,7 +1391,12 @@
     opts = opts || {};
     var root = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-' + slide.type);
     root.dataset.slideId = slide.id;
-    if (slide.activity) root.classList.add('activity-slide');
+    if (slide.activity) {
+      root.classList.add('activity-slide');
+      var view = slide.activityPresentation;
+      if (slide.type === 'keywords' && ['steps', 'panels', 'brief'].indexOf(view) >= 0 &&
+          (view !== 'panels' || slide.bullets.length === 4)) root.classList.add('activity-' + view);
+    }
     if (slide.type === 'quiz' || (SF.Boards && SF.Boards.forSlide(slide))) {
       root.classList.add('game-stage');
     }

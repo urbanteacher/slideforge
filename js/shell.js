@@ -326,6 +326,34 @@
     if (active) active._dirty = true;
   }
 
+  function openSaved() {
+    if (!active) return;
+    if (active.flush) active.flush();
+    var ws = active;
+    picker({
+      title: ws.key === 'deck' ? 'Open a presentation' : 'Saved quizzes & games',
+      items: function () { return ws.store.list(); },
+      empty: ws.key === 'deck' ? 'Nothing saved yet — press New to start one.' : 'No saved quizzes yet.',
+      describe: ws.describe,
+      onPick: function (it) {
+        ws.setDoc(ws.store.get(it.id));
+        ws._dirty = false;
+        syncChrome();
+        ws.draw();
+      },
+      /* Asked here rather than by the picker, because the answer arrives
+         later now — the picker redraws when the delete actually happens. */
+      onDelete: function (it, done) {
+        SF.ask({ title: 'Delete “' + it.title + '”?',
+          detail: 'This cannot be undone.',
+          confirm: 'Delete', danger: true }, function () {
+            ws.store.remove(it.id);
+            done();
+          });
+      }
+    });
+  }
+
   /* ------------------------------------------------------------ file I/O */
 
   /** Filename-safe, stable across saves so re-exporting overwrites in place. */
@@ -837,32 +865,7 @@
 
     var btnOpen = $('btnOpen');
     if (btnOpen) {
-      btnOpen.onclick = function () {
-        if (active.flush) active.flush();
-        var ws = active;
-        picker({
-          title: ws.key === 'deck' ? 'Open a presentation' : 'Open a game',
-          items: function () { return ws.store.list(); },
-          empty: 'Nothing saved yet — press New to start one.',
-          describe: ws.describe,
-          onPick: function (it) {
-            ws.setDoc(ws.store.get(it.id));
-            ws._dirty = false;
-            syncChrome();
-            ws.draw();
-          },
-          /* Asked here rather than by the picker, because the answer arrives
-             later now — the picker redraws when the delete actually happens. */
-          onDelete: function (it, done) {
-            SF.ask({ title: 'Delete “' + it.title + '”?',
-              detail: 'This cannot be undone.',
-              confirm: 'Delete', danger: true }, function () {
-                ws.store.remove(it.id);
-                done();
-              });
-          }
-        });
-      };
+      btnOpen.onclick = openSaved;
     }
 
     var btnLive = $('btnLive');
@@ -952,6 +955,7 @@
     register: register,
     activate: activate,
     save: save,
+    openSaved: openSaved,
     touch: touch,
     syncChrome: syncChrome,
     picker: picker,

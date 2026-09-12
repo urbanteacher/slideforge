@@ -27,6 +27,18 @@ try {
     return slides.every((s, i) => !s.activityPage || slides[i - 1]?.activityInstance === s.activityInstance);
   }), true, 'Adding the next activity must not split a slide sequence');
 
+  await page.locator('#railList .qthumb').filter({ hasText: 'Structured Reflection Protocol' }).click();
+  const originalFields = await page.evaluate(() => JSON.stringify(SF.Editor.deck().slides.find(s => s.activity === 'structured-reflection-protocol').bullets));
+  const visualSelect = page.locator('#inspector select').filter({ has: page.locator('option[value="panels"]') });
+  await visualSelect.selectOption('rows');
+  assert.equal(await page.evaluate(() => SF.Editor.deck().slides.find(s => s.activity === 'structured-reflection-protocol').activityPresentation), 'rows');
+  await visualSelect.selectOption('panels');
+  assert.equal(await page.evaluate(() => JSON.stringify(SF.Editor.deck().slides.find(s => s.activity === 'structured-reflection-protocol').bullets)), originalFields);
+  assert.equal(await page.evaluate(() => {
+    const s = SF.Activities.makeSlides(SF.Activities.activity('structured-reflection-protocol'))[0];
+    s.bullets.push('A fifth box\tNew content');
+    return SF.renderSlide(SF.Editor.deck(), s, {}).classList.contains('activity-panels');
+  }), false, 'Four-panel layout must fall back when a fifth box is added');
   await page.locator('#railList .qthumb').filter({ hasText: 'Guided Inquiry Investigation' }).click();
   const area = page.locator('#inspector textarea').first();
   await area.fill('Our edited investigation prompt.'); await area.blur();
@@ -49,6 +61,47 @@ try {
   await page.waitForFunction(() => SF.Store.get(SF.Editor.deck().id)?.slides.find(s => s.activity === 'hook-and-predict')?.timeLimit === 540);
   await page.getByRole('button', { name: 'Edit this slide', exact: true }).click();
   assert.equal(await page.evaluate(() => SF.Editor.deck().slides[SF.Editor.selected()].activity), 'hook-and-predict');
+  await page.evaluate(() => SF.Shell.activate('plan'));
+  await page.locator('#railList .qthumb').filter({ hasText: 'Hook & Predict' }).click();
+  await page.locator('#btnDemoActivity').click();
+  assert.equal(await page.evaluate(() => SF.Player && SF.Player.open), true);
+  assert.equal(await page.evaluate(() => SF.Player.deck.slides.length), 1);
+  assert.equal(await page.evaluate(() => SF.Player.deck.slides[0].activity), 'hook-and-predict');
+  /* The player covers the toolbar, so the showcase button is out of reach
+     while one is running — it goes disabled rather than offering an exit no
+     pointer can click. Leaving is Esc or the HUD's ✕, as the toast says. */
+  assert.equal(await page.locator('#btnDemoActivity').isDisabled(), true);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => SF.Player && SF.Player.open === false);
+  assert.equal(await page.locator('#btnDemoActivity').isDisabled(), false);
+  const timerChecks = await page.evaluate(() => {
+    const results = [];
+    for (const a of SF.Activities.ACTIVITIES.filter(a => a.target === 'moment')) {
+      const slide = SF.Activities.makeSlides(a)[0];
+      slide.transition = 'none';
+      const next = SF.makeSlide('content'); next.transition = 'none';
+      const run = SF.buildRunDeck({ ...SF.makeDeck('Timer check'), slides: [slide, next] });
+      SF.Player.start(run, 0, { fullscreen: false });
+      const initial = SF.Player.lessonMoment();
+      const started = initial && initial.seconds === slide.timeLimit && initial.activitySlideId === slide.id;
+      const visible = !!document.querySelector('#player .lesson-live-overlay');
+      SF.Player.momentCommand({ action: 'pause' });
+      const paused = SF.Player.lessonMoment().seconds;
+      SF.Player.goTo(0);
+      const preserved = SF.Player.lessonMoment().paused && SF.Player.lessonMoment().seconds === paused;
+      SF.Player.momentCommand({ action: 'extend' });
+      const extended = SF.Player.lessonMoment().seconds === paused + 60;
+      SF.Player.momentCommand({ action: 'resume' });
+      const resumed = !SF.Player.lessonMoment().paused;
+      SF.Player.goTo(1);
+      const cleared = SF.Player.lessonMoment() === null;
+      SF.Player.close();
+      results.push({ key: a.key, started, visible, preserved, extended, resumed, cleared });
+    }
+    return results;
+  });
+  assert.equal(timerChecks.length, 10);
+  for (const check of timerChecks) assert.ok(Object.entries(check).every(([key, value]) => key === 'key' || value === true), JSON.stringify(check));
   const results = await page.evaluate(() => {
     const host = document.createElement('div');
     host.style.cssText = 'position:fixed;inset:0;background:white;z-index:99999;width:1280px;height:720px';
@@ -78,7 +131,7 @@ try {
   await page.evaluate(() => {
     document.body.replaceChildren();
     document.body.style.cssText = 'display:grid;grid-template-columns:repeat(2,640px);gap:16px;padding:16px;background:#e5e7e1;overflow:auto;height:auto';
-    const keys = ['hook-objectives', 'concept-development', 'problem-based-learning', 'question-cube-six-question-types', 'structured-reflection-protocol', 'connect-four-concept-edition'];
+    const keys = ['think-pair-share', 'concept-development', 'problem-based-learning', 'quick-practice-stations', 'structured-reflection-protocol', 'connect-four-concept-edition'];
     for (const key of keys) {
       const s = SF.Activities.makeSlides(SF.Activities.activity(key))[0];
       const box = document.createElement('div'); box.style.cssText = 'width:640px;height:360px;position:relative;overflow:hidden';
@@ -88,5 +141,5 @@ try {
     }
   });
   await page.screenshot({ path: '/tmp/slideforge-activity-review.png', fullPage: true });
-  console.log('54 inserts, sequence editing/duplication/removal, timer conversion and ' + results.renders + ' slide renders passed.');
+  console.log('54 inserts, sequence editing/duplication/removal, 10 player countdowns and ' + results.renders + ' slide renders passed.');
 } finally { await browser.close(); }

@@ -84,9 +84,20 @@ test('minutes add up across a planned run', async () => {
 
 function activityRuntime() {
   const vm = require('node:vm'), fs = require('node:fs');
-  const c = { document: { getElementById: () => null } }; c.window = c;
+  const store = new Map();
+  const storage = {
+    getItem: k => store.get(k) || null,
+    setItem: (k, v) => store.set(k, String(v)),
+    removeItem: k => store.delete(k),
+    clear: () => store.clear()
+  };
+  const c = {
+    document: { getElementById: () => null },
+    localStorage: storage
+  };
+  c.window = c;
   vm.createContext(c);
-  for (const file of ['model', 'activities']) {
+  for (const file of ['model', 'editor', 'activities']) {
     vm.runInContext(fs.readFileSync(require.resolve('../js/' + file + '.js'), 'utf8'), c);
   }
   return c.SF;
@@ -117,6 +128,7 @@ test('slide builders retain labels, teacher notes, timers and feedback through s
     for (const [i, raw] of slides.entries()) {
       const s = SF.normalizeSlide(JSON.parse(JSON.stringify(raw)));
       assert.equal(s.activity, a.key);
+      assert.equal(s.activityPresentation, a.presentation);
       assert.equal(s.activityInstance, slides[0].id);
       assert.ok(s.notes.includes(a.steps[0]), a.key);
       assert.ok(s.notes.includes('Materials (source)'), a.key);
@@ -151,4 +163,60 @@ test('activity games have valid, independent question banks and compile successf
     g.questions[0].question = 'Edited';
     assert.equal(JSON.stringify(a.gamePreset.seeds), before, a.key);
   }
+});
+
+test('activity showcase isolates only that activity into the player without full presentation deck', () => {
+  const SF = activityRuntime();
+  let startedDeck = null;
+  let startedOpts = null;
+  SF.Player = {
+    open: false,
+    start: (deck, idx, opts) => {
+      startedDeck = deck;
+      startedOpts = opts;
+      SF.Player.open = true;
+    },
+    close: () => { SF.Player.open = false; },
+    on: () => {}
+  };
+
+  // 1. Single slide moment activity
+  const hookAct = SF.Activities.activity('hook-and-predict');
+  SF.Activities.showcaseDef(hookAct);
+  assert.ok(startedDeck, 'player was started');
+  assert.equal(startedDeck.slides.length, 1);
+  assert.equal(startedDeck.slides[0].activity, 'hook-and-predict');
+  assert.equal(startedOpts.fullscreen, false);
+
+  // 2. Multi-slide arc (Flipped Instruction = 3 slides)
+  const flippedAct = SF.Activities.activity('flipped-instruction');
+  SF.Activities.showcaseDef(flippedAct);
+  assert.equal(startedDeck.slides.length, 3);
+  assert.ok(startedDeck.slides.every(s => s.activity === 'flipped-instruction'));
+
+  // 3. Game activity (Interleaving Mixed Practice = choice engine with 10 questions compiled)
+  const quizAct = SF.Activities.activity('interleaving-mixed-practice');
+  SF.Activities.showcaseDef(quizAct);
+  assert.ok(startedDeck.slides.length >= 10, 'game slides were compiled');
+  assert.ok(startedDeck.slides.some(s => s.type === 'quiz'));
+
+  // 4. Board game activity (Quick Retrieval Quiz = lowstakes board slide compiled)
+  const lowstakesAct = SF.Activities.activity('quick-retrieval-quiz');
+  SF.Activities.showcaseDef(lowstakesAct);
+  assert.ok(startedDeck.slides.length >= 1, 'board slide was compiled');
+  assert.ok(startedDeck.slides.some(s => s.lowstakesBoard), 'lowstakes board payload attached');
+
+  // 5. Showcase an inserted activity with custom user edits from the deck
+  const customDeck = SF.makeDeck('Test Presentation');
+  customDeck.slides = [
+    SF.makeSlide('title'),
+    ...SF.Activities.makeSlides(hookAct),
+    SF.makeSlide('content')
+  ];
+  SF.Editor.deck = () => customDeck;
+  customDeck.slides[1].bullets[0] = 'Notice\tOur edited custom observation';
+  SF.Activities.showcaseRow({ key: customDeck.slides[1].activityInstance, slide: customDeck.slides[1], slides: [customDeck.slides[1]], at: 1 });
+  assert.ok(startedDeck);
+  assert.equal(startedDeck.slides.length, 1, 'isolated to only the activity slide');
+  assert.equal(startedDeck.slides[0].bullets[0], 'Notice\tOur edited custom observation', 'edited content preserved in showcase');
 });

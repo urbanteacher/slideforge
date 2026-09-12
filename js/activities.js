@@ -21,7 +21,9 @@
   /** Slide id of the chosen activity the rail foot acts on, or null. */
   var selected = null;
 
-  function deck() { return SF.Editor.deck(); }
+  function deck() {
+    return (SF.Editor && SF.Editor.deck && SF.Editor.deck()) || { slides: [], theme: 'studio' };
+  }
 
   /* ------------------------------------------------------------ inserting */
 
@@ -67,6 +69,7 @@
       s.notes = steps(a);
       s.activity = a.key;
       s.activityPage = i;
+      if (a.presentation) s.activityPresentation = a.presentation;
       instance = instance || s.id;
       s.activityInstance = instance;
       if (a.target === 'feedback') {
@@ -410,12 +413,23 @@
       insp.appendChild(el('p', 'hint',
         (ph ? ph.icon + ' ' + ph.label + ' · ' : '') +
         'about ' + picked.minutes + ' min · slide ' + (row.at + 1)));
-      insp.appendChild(SF.Shell.UI.button(row.slide.type === 'game' ? 'Edit questions and answers' : 'Edit this slide', '', function () {
+      var actions = el('div', 'act-actions');
+      actions.style.display = 'flex';
+      actions.style.gap = '8px';
+      actions.style.margin = '8px 0';
+      var editBtn = SF.Shell.UI.button(row.slide.type === 'game' ? 'Edit questions and answers' : 'Edit this slide', '', function () {
         SF.Editor.selectSlide(row.slide.id);
         if (row.slide.type === 'game') {
           SF.Games.openGame(row.slide.gameId); SF.Shell.activate('game');
         } else SF.Shell.activate('deck');
-      }));
+      });
+      var showcaseBtn = SF.Shell.UI.button('▷ Showcase activity', 'ghost', function () {
+        showcaseRow(row);
+      });
+      showcaseBtn.title = 'Rehearse or showcase this activity in isolation';
+      actions.appendChild(editBtn);
+      actions.appendChild(showcaseBtn);
+      insp.appendChild(actions);
       if (picked.materials) insp.appendChild(el('p', 'hint', 'Materials: ' + picked.materials.join(' · ')));
       insp.appendChild(el('p', 'hint', 'Starter copy is an editable draft. Replace examples to match your lesson.'));
       if (picked.teacherNotes) insp.appendChild(el('p', 'hint', picked.teacherNotes));
@@ -434,6 +448,12 @@
            shows the activity's name, not the slide's, so nothing here needs
            redrawing; Lesson studio draws fresh when you switch to it. */
         var changed = function () { SF.Editor.commitActivityChange(); };
+        if (slide.type === 'keywords') {
+          var views = [{ value: 'rows', label: 'Labelled rows' }, { value: 'steps', label: 'Numbered steps' }, { value: 'brief', label: 'Opening brief' }];
+          if (slide.bullets.length === 4) views.push({ value: 'panels', label: 'Four panels' });
+          insp.appendChild(SF.Shell.UI.field('Visual structure', SF.Shell.UI.select(views,
+            slide.activityPresentation || 'rows', function (value) { slide.activityPresentation = value; changed(); })));
+        }
         fields.forEach(function (f) {
           var now = read(slide, f.slide);
           var input = f.type === 'minutes'
@@ -495,6 +515,109 @@
 
   function draw() { drawRail(); drawRailFoot(); drawStage(); drawInspector(); }
 
+  /* ---------------------------------------------------------- showcasing */
+
+  /* The player is a full-viewport overlay, so while a showcase is running
+     this button sits underneath it. It used to relabel itself to "✕ Exit
+     showcase" and close the player — an exit no pointer could ever take,
+     because the slide is drawn on top of it. The only way to reach it was
+     to tab to a control nobody can see.
+
+     Leaving a showcase is Esc or the HUD's ✕, which is what the opening
+     toast tells the teacher. So the button starts showcases and gets out of
+     the way while one is up, rather than advertising a second way out. */
+  function syncShowcaseButton() {
+    var btn = /** @type {HTMLButtonElement|null} */ (
+      document.getElementById('btnDemoActivity')
+    );
+    if (btn) btn.disabled = !!(SF.Player && SF.Player.open);
+  }
+
+  function showcaseDeck(isolatedDeck, title, fallbackGame) {
+    if (!SF.Player) return;
+    var run = SF.buildRunDeck(isolatedDeck, function (id) {
+      if (fallbackGame && (fallbackGame.id === id || id === 'showcase-game')) return fallbackGame;
+      return SF.GameStore ? SF.GameStore.get(id) : null;
+    });
+    if (!run.slides.length) {
+      if (SF.toast) SF.toast('No slides found to showcase.');
+      return;
+    }
+    SF.Player.start(run, 0, { fullscreen: false });
+    if (SF.toast) SF.toast('Showcasing ' + (title || 'activity') + ' — press Esc or ✕ to exit');
+  }
+
+  function showcaseRow(row) {
+    if (!row) return;
+    var a = A.activity(row.slide.activity);
+    var title = a ? a.title : (row.slide.title || 'Activity');
+    var isolatedDeck = {
+      id: 'showcase-' + row.key,
+      title: title,
+      theme: deck().theme || 'studio',
+      slides: row.slides.map(function (s) { return JSON.parse(JSON.stringify(s)); }),
+      quiz: { mode: 'individual', teams: [], scoreboard: false }
+    };
+    showcaseDeck(isolatedDeck, title);
+  }
+
+  function showcaseActivityDef(a) {
+    if (!a) return;
+    var slides;
+    var transientGame = null;
+    if (a.target === 'game' && a.style) {
+      transientGame = SF.createPresetGame ? SF.createPresetGame(a.style, Object.assign({ title: a.title }, a.gamePreset || {}), deck().theme) : null;
+      var gameSlide = SF.makeSlide('game');
+      gameSlide.gameId = transientGame ? transientGame.id : 'showcase-game';
+      gameSlide.title = gameSlide.gameTitle = (transientGame && transientGame.title) || a.title;
+      gameSlide.activity = a.key;
+      gameSlide.activityInstance = gameSlide.id;
+      gameSlide.notes = steps(a);
+      slides = [gameSlide];
+    } else {
+      slides = activitySlides(a);
+    }
+    var isolatedDeck = {
+      id: 'showcase-' + a.key,
+      title: a.title,
+      theme: deck().theme || 'studio',
+      slides: slides,
+      quiz: { mode: 'individual', teams: [], scoreboard: false }
+    };
+    showcaseDeck(isolatedDeck, a.title, transientGame);
+  }
+
+  function showcaseActivity() {
+    var row = current();
+    if (row) {
+      showcaseRow(row);
+      return;
+    }
+    var all = chosen();
+    if (all.length > 0) {
+      selected = all[0].slide.id;
+      SF.Editor.selectSlide(selected);
+      draw();
+      showcaseRow(all[0]);
+      return;
+    }
+    SF.Shell.picker({
+      title: 'Choose an activity to showcase',
+      wide: true,
+      items: function () {
+        return A.ACTIVITIES.filter(function (a) { return a.enabled !== false; });
+      },
+      describe: function (a) {
+        var phase = A.PHASES.find(function (p) { return p.key === a.phase; });
+        var phaseLabel = phase ? phase.label + ' · ' : '';
+        return (a.icon ? a.icon + ' ' : '') + phaseLabel + a.minutes + ' min · ' + a.blurb;
+      },
+      onPick: function (a) {
+        showcaseActivityDef(a);
+      }
+    });
+  }
+
   /* -------------------------------------------------------- registration */
 
   /* doc, setDoc and store all point at the deck: this studio edits the
@@ -510,7 +633,10 @@
     setDoc: function (d) { SF.Editor.workspace.setDoc(d); },
     blank: function () { return SF.makeDeck('Untitled presentation'); },
     draw: draw,
-    play: function () { SF.Editor.workspace.play(); },
+    play: function () {
+      if (current() || chosen().length) showcaseActivity();
+      else SF.Editor.workspace.play();
+    },
     settings: function () { SF.Editor.workspace.settings(); },
     onTitle: function (v) { SF.Editor.workspace.onTitle(v); },
     onTheme: function (v) { SF.Editor.workspace.onTheme(v); },
@@ -533,7 +659,20 @@
   var toDeck = document.getElementById('btnPlanToDeck');
   if (toDeck) toDeck.onclick = function () { SF.Shell.activate('deck'); };
 
+  var btnDemo = document.getElementById('btnDemoActivity');
+  if (btnDemo) btnDemo.onclick = showcaseActivity;
+
+  /* Any open player covers the toolbar, not just a showcase, so both events
+     drive the button rather than a flag this file keeps for itself. */
+  if (SF.Player && SF.Player.on) {
+    SF.Player.on('open', syncShowcaseButton);
+    SF.Player.on('close', syncShowcaseButton);
+  }
+
   SF.Activities.makeSlides = activitySlides;
+  SF.Activities.showcase = showcaseActivity;
+  SF.Activities.showcaseRow = showcaseRow;
+  SF.Activities.showcaseDef = showcaseActivityDef;
   SF.Activities.workspace = ws;
   if (SF.Shell && SF.Shell.register) SF.Shell.register(ws);
 })(typeof window === 'undefined' ? {} : window);
