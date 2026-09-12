@@ -7,7 +7,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto(process.env.SF_URL || 'http://localhost:8799');
+  await page.goto(process.env.SF_URL || 'http://127.0.0.1:8787/');
   await page.waitForFunction(() => window.SF?.Activities?.workspace);
   await page.evaluate(() => SF.Shell.activate('plan'));
   assert.equal(await page.locator('.activity-card').count(), 54);
