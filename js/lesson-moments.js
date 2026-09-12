@@ -44,4 +44,5 @@ P.momentCommand=function(a){
 P.on('slide',function(e){var live=global.SF.Live;if(moment&&live&&live.active&&e.slide&&e.slide.type==='quiz'&&!live.revealed[e.slide.id])P.momentCommand({action:'clear'});});
 P.on('close',function(){moment=null;if(tick)clearInterval(tick);tick=null;render();});
 P.on('open',function(){moment=null;render();});
-})(typeof window==='undefined'?{}:window);
+/* The {} is a sentinel for 'not a browser'; the guards above return on it. */
+})(typeof window==='undefined'?/** @type {any} */({}):window);

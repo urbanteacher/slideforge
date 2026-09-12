@@ -39,6 +39,13 @@
     "js/lessons.js",
     "js/lowstakes.js",
     "js/memory.js",
-    "js/race.js"
+    "js/race.js",
+    "js/adapt.js",
+    "js/ask.js",
+    "js/customize.js",
+    "js/lesson-moments.js",
+    "js/playbook.js",
+    "js/reports.js",
+    "js/teaching.js"
   ]
 }

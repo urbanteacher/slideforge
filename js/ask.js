@@ -22,10 +22,13 @@
       '<button class="btn primary" value="yes" id="askYes">Confirm</button>' +
       '</div>';
     document.body.appendChild(box);
-    box.querySelector('#askNo').onclick = function () { box.close('no'); };
-    box.querySelector('#askYes').onclick = function () { box.close('yes'); };
+    /* Built by the innerHTML above, so these are present by construction. */
+    const no = /** @type {HTMLButtonElement} */ (box.querySelector('#askNo'));
+    const yes = /** @type {HTMLButtonElement} */ (box.querySelector('#askYes'));
+    const field = /** @type {HTMLInputElement} */ (box.querySelector('#askInput'));
+    no.onclick = function () { box.close('no'); };
+    yes.onclick = function () { box.close('yes'); };
     box.addEventListener('close', function () {
-      var field = box.querySelector('#askInput');
       var value = field.hidden ? undefined : field.value;
       var go = box.returnValue === 'yes' && onYes;
       var fn = onYes;
@@ -34,7 +37,7 @@
       if (go) fn(value);
     });
     /* Enter confirms from the field, the way it would in a browser prompt. */
-    box.querySelector('#askInput').addEventListener('keydown', function (e) {
+    field.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); box.close('yes'); }
     });
     /* Escape and the backdrop both mean no, which is the safe answer for

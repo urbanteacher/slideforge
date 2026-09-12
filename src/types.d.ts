@@ -655,6 +655,11 @@ export interface SlideForgeGlobal {
   Playbook?: {
     forGame(game: Game): { title?: string; aim?: string; howToPlay?: string[] } | null;
     engineSummary(book: any): string;
+    /* The two above are what src/ reads. js/playbook.js exports a good deal
+       more — the book itself, per-style setup, demo kinds — and typing only
+       the pair src/ happens to use would make assigning the real module an
+       excess-property error. */
+    [member: string]: any;
   };
   [module: string]: any;
 }

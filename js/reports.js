@@ -516,6 +516,7 @@
       var stem = String(q.question || ('Check ' + (i + 1))).replace(/\s+/g, ' ').trim();
       col.appendChild(el('h4', 'grid-name-col-h',
         (i + 1) + (stem ? ' · ' + (stem.length > 42 ? stem.slice(0, 41) + '…' : stem) : '')));
+      /** @type {{right: string[], wrong: string[], in: string[], none: string[]}} */
       var buckets = { right: [], wrong: [], in: [], none: [] };
       people.forEach(function (p, n) {
         if ((q.eligible || []).indexOf(p.id) < 0) return;
@@ -526,12 +527,16 @@
         else if (showResults && a.right === false) buckets.wrong.push(label);
         else buckets.in.push(label);
       });
-      [
+      /* class, heading, names — a tuple, not a ragged array, or `row[2]` is
+         read as string|string[] and has no .join. */
+      /** @type {Array<[string, string, string[]]>} */
+      var whoRows = [
         ['right', 'Right', buckets.right],
         ['wrong', 'Missed', buckets.wrong],
         ['in', 'Answered', buckets.in],
         ['none', 'No answer', buckets.none]
-      ].forEach(function (row) {
+      ];
+      whoRows.forEach(function (row) {
         if (!row[2].length) return;
         var line = el('p', 'grid-who-line grid-who-' + row[0]);
         line.appendChild(el('span', 'grid-who-k', row[1]));
@@ -738,8 +743,8 @@
   function init() {
     if(modal)return;modal=el('dialog','reports-modal');modal.setAttribute('aria-labelledby','reportsTitle');
     modal.innerHTML='<header><div><span class="eyebrow">THE LESSON DOESN’T END WITH THE LAST SLIDE</span><h2 id="reportsTitle">Session reports</h2></div><button class="btn ghost" aria-label="Close reports">✕</button></header><div class="reports-layout"><aside id="sessionList"></aside><main id="reportBody"></main></div><footer><span id="reportStatus">Stored locally on the host computer.</span><button class="btn" id="refreshReport">Refresh</button></footer>';
-    document.body.appendChild(modal);list=document.getElementById('sessionList');body=document.getElementById('reportBody');status=document.getElementById('reportStatus');modal.querySelector('header button').onclick=function(){modal.close();};document.getElementById('refreshReport').onclick=function(){if(selected)fetchReport(selected);};drawList();draw();
-    document.getElementById('btnReports').onclick=function(){open();};
+    document.body.appendChild(modal);list=/** @type {HTMLElement} */(document.getElementById('sessionList'));body=document.getElementById('reportBody');status=document.getElementById('reportStatus');modal.querySelector('header button').onclick=function(){modal.close();};/** @type {HTMLElement} */(document.getElementById('refreshReport')).onclick=function(){if(selected)fetchReport(selected);};drawList();draw();
+    /** @type {HTMLElement} */(document.getElementById('btnReports')).onclick=function(){open();};
   }
   SF.Reports={init:init,track:track,recording:recording,receive:receive,open:open,refresh:fetchReport,csv:csv,attendanceCsv:attendanceCsv,answersCsv:answersCsv,grid:answerGrid};
   /* Shared, because presenter view draws the same table live. */

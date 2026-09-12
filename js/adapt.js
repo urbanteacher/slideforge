@@ -319,7 +319,9 @@
    */
   function adapt(report) {
     if (!report) return null;
-    var findings = []
+    /** @type {any[]} */
+    var findings = [];
+    findings = findings
       .concat(checkFindings(report))
       .concat(paceFindings(report))
       .concat(feedbackFindings(report))

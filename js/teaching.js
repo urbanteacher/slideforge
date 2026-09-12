@@ -25,6 +25,8 @@ function build(){
  b('\u22ef','Show every step on this slide',function(){
   if(!steps.length){SF.toast('This slide reveals all at once. Turn on Build on Next under Design & content.');return;}
   shown=steps.length;update();});
+ /* No hud on this page means nowhere to hang the bar. Used to throw. */
+ if(!hud||!hud.parentNode)return;
  hud.parentNode.insertBefore(tools,hud);
 }
 function toggleBar(){

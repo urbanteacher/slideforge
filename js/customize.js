@@ -71,7 +71,11 @@
       if (styles.underline) span.style.textDecoration = 'underline';
       if (color(styles.color)) span.style.color = styles.color;
       if (styles.highlight) { span.style.backgroundColor = '#fff0a6'; span.style.color = '#20251b'; }
-      if (href) { span.href = href; span.target = '_blank'; span.rel = 'noopener noreferrer'; span.onclick = function(e){e.stopPropagation();}; }
+      if (href) {
+        var link = /** @type {HTMLAnchorElement} */ (span);
+        link.href = href; link.target = '_blank'; link.rel = 'noopener noreferrer';
+        link.onclick = function(e){e.stopPropagation();};
+      }
       node.appendChild(span);
     });
   }
@@ -160,7 +164,7 @@
       choose('Image share','imageShare',[[35,'35% image'],[50,'50% image'],[65,'65% image']],50);
     }
     if(s.type==='split'||s.type==='image') ['X','Y'].forEach(function(axis){
-      var r=document.createElement('input');r.type='range';r.min=0;r.max=100;r.value=d['focal'+axis]==null?50:d['focal'+axis];r.onchange=function(){d['focal'+axis]=Number(r.value);change();};box.appendChild(UI.field('Image focus '+(axis==='X'?'horizontal':'vertical'),r));
+      var r=document.createElement('input');r.type='range';r.min='0';r.max='100';r.value=d['focal'+axis]==null?50:d['focal'+axis];r.onchange=function(){d['focal'+axis]=Number(r.value);change();};box.appendChild(UI.field('Image focus '+(axis==='X'?'horizontal':'vertical'),r));
     });
     if(['content','cards','split','keywords','italics','table','quote','explain'].includes(s.type)){
       var buildLabel=s.type==='table'?'Reveal one row at a time (animated)'
