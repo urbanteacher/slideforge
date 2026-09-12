@@ -2894,7 +2894,49 @@
     return -5;
   }
 
+  // src/samples/boss.json
+  var boss_default = [
+    {
+      question: "Which organelle contains chlorophyll?",
+      options: ["Nucleus", "Mitochondrion", "Chloroplast", "Ribosome"],
+      correct: 2,
+      difficulty: "easy",
+      explanation: "Chloroplasts. An easy hit — 1 damage."
+    },
+    {
+      question: "Which process releases energy from glucose?",
+      options: ["Photosynthesis", "Respiration", "Diffusion", "Osmosis"],
+      correct: 1,
+      difficulty: "medium",
+      explanation: "Respiration. A medium hit — 2 damage."
+    },
+    {
+      question: "Why does an enzyme stop working above its optimum temperature?",
+      options: ["It dissolves", "Its active site changes shape", "It runs out", "It freezes"],
+      correct: 1,
+      difficulty: "hard",
+      explanation: "It denatures — the active site changes shape. A hard hit — 3 damage."
+    },
+    {
+      question: "Explain why water moves into a cell placed in pure water.",
+      options: [
+        "Active transport",
+        "Osmosis down a water potential gradient",
+        "Diffusion of solutes",
+        "It does not move"
+      ],
+      correct: 1,
+      difficulty: "boss",
+      explanation: "Osmosis, down a water potential gradient. The boss blow — 5 damage."
+    }
+  ];
+
   // src/games/boss.js
+  var starters = (
+    /** @type {Array<Partial<import("../types.js").Question>>} */
+    /** @type {unknown} */
+    boss_default
+  );
   var BOSS_DAMAGE = { easy: 1, medium: 2, hard: 3, boss: 5 };
   var BOSS_LEVELS = ["easy", "medium", "hard", "boss"];
   function bossDamage(difficulty) {
@@ -2906,6 +2948,14 @@
     }, 0);
   }
   var boss = {
+    /* One of each rung, so the boss starts on 11 HP and the damage ladder is
+         visible before a word is rewritten.
+    
+         A single medium question gave the boss 2 HP and a right answer deals 2,
+         so the boss died to the first answer — the format demonstrating the
+         opposite of what it is for. Nothing flagged it: a one-question boss game
+         is perfectly valid, it just is not a battle. */
+    starters,
     defaults: {
       "defaultTime": 30,
       "confidence": false

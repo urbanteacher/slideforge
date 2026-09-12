@@ -52,8 +52,16 @@ export type ExplainStyle = 'inline' | 'slide' | 'both';
 /** How a question image sits relative to its text. */
 export type ImageLayout = 'band' | 'first' | 'overlay';
 
-/** Boss difficulty bands (`BOSS_LEVELS`). */
-export type Difficulty = 'easy' | 'medium' | 'hard';
+/**
+ * Boss difficulty bands (`BOSS_LEVELS`), and the damage each deals:
+ * easy 1, medium 2, hard 3, boss 5.
+ *
+ * `boss` was missing here until a starter bank tried to use it. Nothing had
+ * caught it because no code assigned a literal to a typed `difficulty` field
+ * — the engine reads the string back out of `BOSS_DAMAGE`, which is an
+ * untyped object literal.
+ */
+export type Difficulty = 'easy' | 'medium' | 'hard' | 'boss';
 
 /** Audience-feedback kinds in `FEEDBACK_KINDS`. */
 export type FeedbackKindKey = 'poll' | 'wordcloud' | 'brainstorm' | 'scale';

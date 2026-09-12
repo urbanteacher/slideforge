@@ -30,6 +30,31 @@ test('boss damage and starting HP follow the audit table', () => {
   assert.equal(SF.bossMaxHp([]), 0);
 });
 
+test('a new boss battle is a fight rather than one punch', () => {
+  const SF = loadModel();
+  const game = SF.makeGame('Fresh', 'boss');
+
+  /* It used to open on one medium question: 2 HP against a hit that deals 2,
+     so the boss died to the first answer — the format demonstrating the
+     opposite of what it is for. Nothing flagged it, because a one-question
+     boss game is perfectly valid. */
+  const hp = SF.bossMaxHp(game.questions);
+  const firstHit = SF.bossDamage(game.questions[0].difficulty);
+  assert.ok(firstHit < hp, 'the first right answer should not finish it');
+
+  /* The bank is one of each rung, so the ladder is visible before a word is
+     rewritten and answering everything correctly lands the last blow. */
+  assert.deepEqual(game.questions.map((q) => q.difficulty), SF.BOSS_LEVELS);
+  assert.equal(game.questions.reduce((n, q) => n + SF.bossDamage(q.difficulty), 0), hp);
+
+  /* The cast on the JSON import in src/games/boss.js says these are bands.
+     JSON widens them to plain strings, so this is where that is made true. */
+  for (const q of game.questions) {
+    assert.ok(SF.BOSS_LEVELS.includes(q.difficulty), 'unknown band ' + q.difficulty);
+    assert.equal(SF.GAME_STYLES.boss.problems(q, 1), null);
+  }
+});
+
 test('beat-the-clock points: 10 + remaining/10 correct, −5 wrong', () => {
   const SF = loadModel();
   assert.equal(SF.speedPoints(true, 60), 16);
@@ -51,13 +76,19 @@ test('speed and boss are first-class styles with their own mechanics', () => {
   assert.equal(speed.settings.defaultTime, 60);
   assert.equal(SF.gameToRunDeck(speed).mechanic, 'speed');
 
+  /* A blank question is still medium; it is the starter bank that opens on
+     easy. Asserted against makeQuestion so this says what it means rather
+     than reading the first row of whatever bank ships. */
+  assert.equal(SF.makeQuestion('boss').difficulty, 'medium');
+
   const boss = SF.makeGame('Boss', 'boss');
-  assert.equal(boss.questions[0].difficulty, 'medium');
   const run = SF.gameToRunDeck(boss);
   assert.equal(run.mechanic, 'boss');
   const quiz = run.slides.find((s) => s.type === 'quiz');
-  assert.equal(quiz.difficulty, 'medium');
-  assert.equal(quiz.bossDamage, 2);
+  /* The compiled slide carries its band and the damage that band deals —
+     which pair, rather than which band, is the thing worth pinning. */
+  assert.ok(SF.BOSS_LEVELS.includes(quiz.difficulty));
+  assert.equal(quiz.bossDamage, SF.bossDamage(quiz.difficulty));
 
   const hard = SF.normalizeQuestion(Object.assign(SF.makeQuestion('boss'), {
     question: 'Hard hit?',

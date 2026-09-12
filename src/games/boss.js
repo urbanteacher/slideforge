@@ -1,5 +1,15 @@
 /* SlideForge — games/boss. Edit source here; npm run build updates js/model.js. */
 import { choice } from "./choice.js";
+import rawStarters from "../samples/boss.json" with { type: "json" };
+
+/* A JSON import widens every string, so `difficulty` arrives as `string`
+   rather than one of the four bands. The checker cannot narrow it and the
+   file cannot say so, hence the assertion — and tests/mechanics.test.js
+   checks each value really is a band, which is the guarantee the type was
+   standing in for. */
+const starters = /** @type {Array<Partial<import("../types.js").Question>>} */ (
+  /** @type {unknown} */ (rawStarters)
+);
 
 /* Boss Battle — shared HP. A hit deals damage from the question difficulty.
    Audit: easy 1, medium 2, hard 3, boss 5; HP starts as the sum of damages. */
@@ -19,6 +29,14 @@ function bossMaxHp(questions) {
 
 /** @type {import("../types.js").GameEngine<import("../types.js").QuestionWith<'difficulty'|'options'|'correct'>>} */
 const boss = {
+  /* One of each rung, so the boss starts on 11 HP and the damage ladder is
+     visible before a word is rewritten.
+
+     A single medium question gave the boss 2 HP and a right answer deals 2,
+     so the boss died to the first answer — the format demonstrating the
+     opposite of what it is for. Nothing flagged it: a one-question boss game
+     is perfectly valid, it just is not a battle. */
+  starters,
   defaults: {
     "defaultTime": 30,
     "confidence": false
