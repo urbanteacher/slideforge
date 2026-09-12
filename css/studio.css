@@ -131,3 +131,38 @@
 
 /* A concise authoring cue precedes content; full rules are collapsible. */
 .game-setup-cue{font-size:13px;line-height:1.55;padding:12px 14px;margin:8px 0;border-left:3px solid var(--ui-accent);background:var(--ui-accent-soft);border-radius:0 8px 8px 0;color:var(--ui-text)}
+
+/* ---------------------------------------------------------- Activities --
+   The plan rail groups by phase and carries a running time total, because
+   the question a plan answers is whether the lesson fits the hour. */
+.plan-phase{display:flex;align-items:center;gap:8px;padding:14px 8px 6px;
+  font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#7b846f}
+.plan-phase strong{font-weight:700;letter-spacing:1.4px}
+.plan-phase-icon{font-size:13px}
+.plan-phase-mins{margin-left:auto;background:#f0f1ec;border-radius:5px;padding:2px 7px;
+  letter-spacing:.4px;font-variant-numeric:tabular-nums}
+.plan-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  font:inherit;font-size:13px;color:var(--ui-text);background:#fff;cursor:pointer;
+  border:1px solid #e3e7dd;border-radius:9px;padding:10px 11px;margin-bottom:6px}
+.plan-item:hover{border-color:#bbc7b1;background:#fafbf8}
+.plan-item.sel{border-color:#526943;box-shadow:0 0 0 2px #52694322}
+.plan-item strong{font-weight:500;flex:1;min-width:0}
+.plan-item-icon{font-size:15px;flex:none}
+.plan-item-mins{font-size:10px;color:var(--ui-dim);flex:none;font-variant-numeric:tabular-nums}
+/* The catalogue fills the stage rather than sitting in a modal — this studio
+   is the browsing surface, so there is nothing to sit on top of. */
+.plan-catalogue{padding:22px 26px;overflow:auto;height:100%}
+.plan-catalogue .library-tabs{flex-wrap:wrap}
+.plan-steps{margin:6px 0 14px;padding-left:20px;font-size:12px;color:var(--ui-dim);line-height:1.6}
+.plan-steps li{margin-bottom:5px}
+
+/* The Activities studio browses rather than previews, so the stage box drops
+   the 16:9 slide frame it wears in the other two. Without this the catalogue
+   renders inside a black, fixed-ratio canvas and most of it is unreachable. */
+html[data-ws="plan"] #previewBox{
+  aspect-ratio:auto;max-width:none;height:100%;
+  background:transparent;box-shadow:none;border-radius:0;overflow:auto}
+html[data-ws="plan"] .stage-wrap{padding:0;background-image:none;overflow:hidden}
+html[data-ws="plan"] .plan-catalogue .activity-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:12px;margin-top:14px}
+html[data-ws="plan"] .plan-catalogue .library-note{margin:10px 0 0;font-size:12px;color:#7b846f}

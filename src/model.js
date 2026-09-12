@@ -1,5 +1,6 @@
 import { createBoardRuntime } from "./boards/runtime.js";
 import { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes } from "./activities/catalogue.js";
+import { makePlan, normalizePlan, planMinutes, planByPhase, describePlan } from "./activities/plan.js";
 import { DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
 import { FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback } from "./deck/feedback.js";
 import { renderMarkdown } from "./deck/markdown.js";
@@ -1021,7 +1022,7 @@ function deckToMarkdown(deck) {
   return renderMarkdown(normalizeDeck(deck || {}), id => GameStore.get(id));
 }
 
-const { Store, GameStore } = createStores({ normalizeDeck, normalizeGame, storage: () => localStorage });
+const { Store, GameStore, PlanStore } = createStores({ normalizeDeck, normalizeGame, normalizePlan, storage: () => localStorage });
 
 /* One statement rather than "create, then fill": the namespace is not a
    valid SF until Boards is on it, and splitting the two left a gap where it
@@ -1029,7 +1030,9 @@ const { Store, GameStore } = createStores({ normalizeDeck, normalizeGame, storag
 runtime.SF = Object.assign(runtime.SF || {}, {
   Boards: createBoardRuntime(() => runtime.SF, GAME_STYLES),
   /* The activity catalogue. Data only — studio.js reads target and builds. */
-  Activities: { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes },
+  Activities: { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes,
+    makePlan, normalizePlan, planMinutes, planByPhase, describePlan },
+  PlanStore: PlanStore,
   SLIDE_W: SLIDE_W,
   SLIDE_H: SLIDE_H,
   THEMES: THEMES,

@@ -1,6 +1,6 @@
 /* Persistence for both document kinds. Access is lazy so loading the model
    works without browser storage (Node tests and restricted browser contexts). */
-export function createStores({ normalizeDeck, normalizeGame, storage, warn = console.warn }) {
+export function createStores({ normalizeDeck, normalizeGame, normalizePlan, storage, warn = console.warn }) {
   function documents(kind, key, lastKey, normalize) {
     function read() {
       try {
@@ -45,6 +45,7 @@ export function createStores({ normalizeDeck, normalizeGame, storage, warn = con
   }
 
   const decks = documents('decks', 'slideforge.decks.v1', 'slideforge.lastDeckId', normalizeDeck);
+  const plans = documents('plans', 'slideforge.plans.v1', 'slideforge.lastPlanId', normalizePlan);
   const games = documents('games', 'slideforge.games.v1', 'slideforge.lastGameId', normalizeGame);
   const { read: readDecks, ...Store } = decks;
   const { read: readGames, ...GameStoreBase } = games;
@@ -53,5 +54,6 @@ export function createStores({ normalizeDeck, normalizeGame, storage, warn = con
       deck.slides.some(slide => slide.type === 'game' && slide.gameId === id)
     ).map(deck => deck.title)
   });
-  return { Store, GameStore };
+  const { read: readPlans, ...PlanStore } = plans;
+  return { Store, GameStore, PlanStore };
 }

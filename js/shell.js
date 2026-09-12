@@ -262,7 +262,10 @@
 
     document.body.classList.toggle('ws-deck', key === 'deck');
     document.body.classList.toggle('ws-game', key === 'game');
-    document.documentElement.setAttribute('data-ws', key === 'game' ? 'game' : 'deck');
+    document.body.classList.toggle('ws-plan', key === 'plan');
+    /* The key itself, not a deck/game coin flip: a third studio forced to
+       'deck' shows the lesson toolbar over the top of its own. */
+    document.documentElement.setAttribute('data-ws', key);
     var wsSwitch = $('wsSwitch');
     if (wsSwitch) {
       Array.prototype.forEach.call(wsSwitch.children, function (b) {
@@ -279,7 +282,7 @@
     syncChrome();
     ws.draw();
     if (!opts || opts.toast !== false) {
-      SF.toast(key === 'deck' ? 'Presentation' : 'Game');
+      SF.toast(key === 'deck' ? 'Presentation' : key === 'plan' ? 'Lesson plan' : 'Game');
     }
   }
 

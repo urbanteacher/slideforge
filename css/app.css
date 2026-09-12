@@ -1772,7 +1772,11 @@ html[data-ws="deck"] [data-ws="game"],
 html[data-ws="game"] [data-ws="deck"],
 html:not([data-ws]) [data-ws],
 body.ws-deck [data-ws="game"],
-body.ws-game [data-ws="deck"] { display: none !important; }
+body.ws-game [data-ws="deck"],
+html[data-ws="plan"] [data-ws="deck"],
+html[data-ws="plan"] [data-ws="game"],
+body.ws-plan [data-ws="deck"],
+body.ws-plan [data-ws="game"] { display: none !important; }
 
 .rail-count {
   font-size: 10px; color: var(--ui-dim); flex: none;

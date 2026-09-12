@@ -10,7 +10,10 @@
    ghosting through on refresh. Same key the shell writes on every switch. */
 (function () {
   var ws = 'deck';
-  try { if (localStorage.getItem('slideforge.workspace') === 'game') ws = 'game'; } catch (e) {}
+  try {
+    var saved = localStorage.getItem('slideforge.workspace');
+    if (saved === 'game' || saved === 'plan') ws = saved;
+  } catch (e) {}
   document.documentElement.setAttribute('data-ws', ws);
 })();
 </script>
@@ -37,7 +40,8 @@ html:not([data-ready]) body { background: #f0f1ed; }
 /* Mirror onto body for the existing ws-* rules, and fix the switch/rail
    labels that are hard-coded for Lesson studio in the HTML. */
 (function () {
-  var ws = document.documentElement.getAttribute('data-ws') === 'game' ? 'game' : 'deck';
+  var attr = document.documentElement.getAttribute('data-ws');
+  var ws = attr === 'game' || attr === 'plan' ? attr : 'deck';
   document.body.className = 'ws-' + ws;
   function ready() {
     var sw = document.getElementById('wsSwitch');
@@ -45,7 +49,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
       b.classList.toggle('on', b.getAttribute('data-go') === ws);
     });
     var rail = document.getElementById('railLabel');
-    if (rail) rail.textContent = ws === 'game' ? 'Questions' : 'Slides';
+    if (rail) rail.textContent = ws === 'game' ? 'Questions' : ws === 'plan' ? 'Plan' : 'Slides';
   }
   if (document.getElementById('wsSwitch')) ready();
   else document.addEventListener('DOMContentLoaded', ready);
@@ -62,6 +66,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
     <div class="wsswitch" id="wsSwitch">
       <button data-go="deck">▤ Lesson studio</button>
       <button data-go="game">◈ Quiz studio</button>
+      <button data-go="plan">◇ Activities</button>
     </div>
 
     <input id="docTitle" type="text" placeholder="Title" spellcheck="false">
@@ -282,6 +287,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/editor.js?v=5"></script>
 <script src="js/games.js?v=2"></script>
 <script src="js/studio.js?v=2"></script>
+<script src="js/activities.js?v=1"></script>
 <script src="js/adapt.js?v=2"></script>
 <script src="js/reports.js?v=2"></script>
 <script>

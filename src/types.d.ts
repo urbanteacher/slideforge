@@ -671,6 +671,25 @@ export interface Activity {
   enabled?: boolean;
 }
 
+/** One chosen activity in a plan. Carries no content — the content belongs to
+ *  whatever the activity builds. */
+export interface PlanItem {
+  id: string;
+  /** An {@link Activity} key. An item naming an unknown one is dropped. */
+  key: string;
+}
+
+/** A lesson plan: the third document kind, beside a deck and a game. */
+export interface Plan {
+  id: string;
+  kind: 'plan';
+  title: string;
+  theme: ThemeKey;
+  created: number;
+  modified: number;
+  items: PlanItem[];
+}
+
 /* ------------------------------------------------------------- globals --*/
 
 /**
