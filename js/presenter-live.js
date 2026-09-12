@@ -178,6 +178,48 @@ if (btnAi) {
   };
 }
 
+/* ------------------------------------------------------- quiz on a theme */
+
+var quizGenerate = $('quizGenerate');
+if (quizGenerate) quizGenerate.onclick = function () {
+  var theme = /** @type {HTMLInputElement|null} */ ($('quizTheme'));
+  var words = /** @type {HTMLInputElement|null} */ ($('quizWords'));
+  var style = /** @type {HTMLSelectElement|null} */ ($('quizStyle'));
+  var count = /** @type {HTMLSelectElement|null} */ ($('quizCount'));
+  var guard = $('quizGenGuard');
+  var t = theme ? theme.value.trim() : '';
+  if (!t) { if (guard) guard.textContent = 'Give it a theme to write about.'; return; }
+  if (guard) guard.textContent = 'Writing…';
+  if (window.opener && !window.opener.closed) {
+    window.opener.postMessage({
+      type: 'sf-presenter-cmd', cmd: 'quizGen',
+      topic: t,
+      keywords: words ? words.value.trim() : '',
+      style: style ? style.value : 'choice',
+      count: count ? Number(count.value) : 3
+    }, location.origin);
+  }
+};
+
+/* The result comes back through the state the player already pushes, rather
+   than a reply channel of its own: the questions land in the lesson, so the
+   deck arriving here is the evidence it worked. */
+var lastQuizLen = null;
+function paintQuizGen(d) {
+  var guard = $('quizGenGuard');
+  var btn = /** @type {HTMLButtonElement|null} */ ($('quizGenerate'));
+  if (btn) btn.disabled = !!d.quizGenBusy;
+  if (!guard) return;
+  var len = d.deck && d.deck.slides ? d.deck.slides.length : null;
+  if (d.quizGenBusy) { guard.textContent = 'Writing…'; lastQuizLen = len; return; }
+  if (lastQuizLen != null && len != null && len > lastQuizLen) {
+    guard.textContent = 'Added ' + (len - lastQuizLen) + ' — showing the first one now.';
+  } else if (lastQuizLen != null && len != null && len === lastQuizLen) {
+    guard.textContent = 'Nothing was added. Check the AI key on the server, or try a narrower theme.';
+  }
+  lastQuizLen = len;
+}
+
 function paintPoll(p) {
   var state = $('pollState');
   var count = $('pollCount');

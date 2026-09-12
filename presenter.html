@@ -201,6 +201,13 @@
       <label for="pollWhere">Show it</label><select id="pollWhere"><option value="focus" selected>Full screen</option><option value="rail">Beside the slide</option></select>
       <div class="quick-actions"><button class="btn primary" id="pollLaunch">▶ Ask the room</button></div>
       <p id="pollGuard" role="status"></p></div>
+      <div class="quick-card"><span class="cap">ASK THE ROOM</span><h2>Quiz on a theme</h2><p>Write a quiz about whatever the lesson has arrived at. It goes into the running lesson straight after the slide on screen — your place and your live room are kept.</p>
+      <label for="quizTheme">Theme</label><input id="quizTheme" type="text" maxlength="120" placeholder="Osmosis in plant cells">
+      <label for="quizWords">Key words <span class="hint-inline">optional, one line</span></label><input id="quizWords" type="text" maxlength="200" placeholder="water potential, turgid, partially permeable">
+      <label for="quizStyle">Format</label><select id="quizStyle"><option value="choice" selected>Multiple choice</option><option value="truefalse">True / false</option><option value="type">Short answer</option><option value="lowstakes">Low-stakes retrieval</option></select>
+      <label for="quizCount">How many</label><select id="quizCount"><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+      <div class="quick-actions"><button class="btn primary" id="quizGenerate">✨ Write and show it</button></div>
+      <p id="quizGenGuard" role="status"></p></div>
       <div class="quick-card"><h3>Poll on screen now</h3><p id="pollState">No poll is showing.</p><output id="pollCount">—</output><div class="quick-actions"><button class="btn" id="pollQr" disabled>Show join code</button><button class="btn" id="pollWhereToggle" disabled>Beside the slide</button><button class="btn" id="pollEnd" disabled>✕ End poll</button></div><p>Ending the poll puts the slide back exactly where you left it. Changing slides while it is up does not close it.</p></div>
       <div class="quick-card"><h3>On the audience screen</h3><p id="momentTitle">No activity or countdown is showing.</p><output id="momentTime">—</output><div class="quick-actions"><button class="btn" id="pauseMoment" disabled>Pause</button><button class="btn" id="extendMoment" disabled>+1 minute</button><button class="btn" id="clearMoment" disabled>Remove from screen</button></div><p>Activity countdowns clear when you leave their slide. Quick tasks stay until removed or a new live quiz starts. Time ending does not advance the lesson.</p></div>
       <div class="quick-card"><h3>Music for an activity</h3><p>Choose an audio file from your computer. Playback comes from this device; check its volume before starting.</p><label for="activityMusic">Choose music</label><input id="activityMusic" type="file" accept="audio/*"><audio id="activityAudio" controls loop hidden></audio><p id="musicStatus" role="status">No music selected.</p></div>
@@ -234,6 +241,7 @@
     <button class="btn" data-cmd="prev">‹ Previous</button>
     <button class="btn primary" data-cmd="next">Next ›</button>
     <button class="btn" data-cmd="blank">Blank</button>
+    <button class="btn" data-cmd="freeze" id="btnFreeze" title="Freeze audience screen for digression (Alt+F)">❄️ Freeze</button>
     <button class="btn" data-cmd="who" aria-pressed="false" aria-controls="teacherWorkspace"
             title="Open live responses and teacher entry here (W)">Live answers</button>
     <div class="spacer"></div>
@@ -462,6 +470,12 @@
     state = { deck: SF.normalizeDeck(d.deck), index: d.index, answers: d.answers || {}, ...SF.Boards.snapshot(d), revealStep:d.revealStep || 0, effectiveTimeLimit:d.effectiveTimeLimit };
 
     drawNextLabel(d.nextAction);
+    var freezeBtn = $('btnFreeze');
+    if (freezeBtn) {
+      freezeBtn.classList.toggle('on', !!d.frozen);
+      freezeBtn.textContent = d.frozen ? '❄️ Unfreeze' : '❄️ Freeze';
+      freezeBtn.title = d.frozen ? 'Audience screen is frozen — click to unfreeze' : 'Freeze audience screen for digression (Alt+F)';
+    }
     if (timerBase == null) timerBase = d.startedAt || Date.now();
     $('waiting').style.display = 'none';
     $('pv').style.display = 'grid';
@@ -477,6 +491,7 @@
     if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); cmd('next'); }
     else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); cmd('prev'); }
     else if (e.key === 'b' || e.key === 'B') { e.preventDefault(); cmd('blank'); }
+    else if (e.key === 'z' || e.key === 'Z' || ((e.key === 'f' || e.key === 'F') && e.altKey)) { e.preventDefault(); cmd('freeze'); }
     else if (e.key === 'Escape') { e.preventDefault(); cmd('exit'); }
   });
 

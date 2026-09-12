@@ -95,8 +95,10 @@
       });
     }
     Object.keys(controls).forEach(function (action) {
-      var button = hud ? hud.querySelector('[data-act=' + action + ']') : null;
-      if (button) button.onclick = function () { Player.control(action); };
+      var buttons = hud ? hud.querySelectorAll('[data-act=' + action + ']') : [];
+      buttons.forEach(function (button) {
+        button.onclick = function () { Player.control(action); };
+      });
     });
     if (cheats) {
       cheats.onclick = function () { cheats.classList.remove('on'); };
@@ -109,7 +111,7 @@
   function controlEnabled(action) {
     var live = !!(SF.Live && SF.Live.active);
     var slide = Player.deck && Player.deck.slides[Player.idx];
-    if (action === 'teacher' || action === 'join') return live;
+    if (action === 'teacher' || action === 'join' || action === 'reactions') return live;
     if (action === 'who') return live && !!slide && slide.type === 'quiz';
     return true;
   }
@@ -125,6 +127,9 @@
       if (SF.Live.customPromptOpen && SF.Live.customPromptOpen()) { SF.Live.endCustomPrompt(); return; }
       Player.emit('quickPollOpen', {});
     },
+    freeze: function () { Player.toggleFreeze(); },
+    reactions: function () { Player.emit('reactionsToggle', {}); },
+    reset: function () { Player.resetScores(); },
     /* Named answers live on the private screen. Opening presenter view if it
        is shut is the whole action: there is nowhere else this can go without
        putting the room's names on the wall. */
@@ -1152,59 +1157,74 @@
   };
 
   function syncHudRoomButtons() {
-    if(!hud)return;
-    Object.keys(controls).forEach(function(action){var button=hud.querySelector('[data-act='+action+']');if(button)button.disabled=!controlEnabled(action);});
-    var blankButton=hud.querySelector('[data-act=blank]');
-    if (blankButton) {
-      blankButton.setAttribute('aria-pressed',String(Player.blank));
-      blankButton.setAttribute('aria-label',Player.blank?'Unblank the screen':'Blank the screen');
-    }
-    var fullButton=hud.querySelector('[data-act=full]');
+    if (!hud) return;
+    Object.keys(controls).forEach(function (action) {
+      var buttons = hud.querySelectorAll('[data-act=' + action + ']');
+      buttons.forEach(function (button) {
+        button.disabled = !controlEnabled(action);
+      });
+    });
+
+    var blankButtons = hud.querySelectorAll('[data-act=blank]');
+    blankButtons.forEach(function (blankButton) {
+      blankButton.setAttribute('aria-pressed', String(Player.blank));
+      blankButton.setAttribute('aria-label', Player.blank ? 'Unblank the screen (B)' : 'Blank the screen (B)');
+      blankButton.title = Player.blank ? 'Unblank the screen (B)' : 'Blank the screen (B)';
+      blankButton.classList.toggle('on', !!Player.blank);
+    });
+
+    var fullButton = hud.querySelector('[data-act=full]');
     if (fullButton) {
       var isFull = document.fullscreenElement || /** @type {any} */ (document).webkitFullscreenElement;
       fullButton.textContent = isFull ? 'Leave full screen' : 'Full screen';
     }
 
-    if (!hud) return;
-    var railBtn = hud.querySelector('[data-act=rail]');
-    var joinBtn = hud.querySelector('[data-act=join]');
-    var focusBtn = hud.querySelector('[data-act=focus]');
-    var card = document.getElementById('joincard');
-    if (railBtn) {
-      var state = Player.roomSidebarState();
+    var railBtns = hud.querySelectorAll('[data-act=rail]');
+    var state = Player.roomSidebarState();
+    railBtns.forEach(function (railBtn) {
       railBtn.classList.toggle('on', state !== 'hidden');
       railBtn.dataset.state = state;
       /* The title says what the next press does, not what the state is — the
          state is already visible on screen, and what a host wants from a
          tooltip mid-lesson is where the button will take them. */
-      railBtn.title = state === 'hidden'
+      var nextTip = state === 'hidden'
         ? 'Show the room beside the slide (S)'
         : state === 'beside'
           ? 'Put the room on the whole screen (S)'
           : 'Hide the room (S)';
+      railBtn.title = nextTip;
+      railBtn.setAttribute('aria-label', nextTip);
+    });
+
+    var joinBtns = hud.querySelectorAll('[data-act=join]');
+    var card = document.getElementById('joincard');
+    var isCardOn = !!(card && card.classList.contains('on'));
+    joinBtns.forEach(function (joinBtn) {
+      joinBtn.classList.toggle('on', isCardOn);
+    });
+
+    var focusBtns = hud.querySelectorAll('[data-act=focus]');
+    var kind = (SF.Live && SF.Live.active && SF.Live.expandKind)
+      ? SF.Live.expandKind() : null;
+    var focusLabel;
+    if (Player._focus) {
+      focusLabel = kind === 'responses' ? 'Hide responses'
+        : kind === 'race' ? 'Hide race'
+          : 'Hide leaderboard';
+    } else if (kind === 'responses') {
+      focusLabel = 'Expand responses';
+    } else if (kind === 'race') {
+      focusLabel = 'Show race';
+    } else {
+      /* Default name even before scores exist — hosts look for this. */
+      focusLabel = 'Show leaderboard';
     }
-    if (joinBtn) joinBtn.classList.toggle('on', !!(card && card.classList.contains('on')));
-    if (focusBtn) {
+    focusBtns.forEach(function (focusBtn) {
       focusBtn.classList.toggle('on', !!Player._focus);
-      var kind = (SF.Live && SF.Live.active && SF.Live.expandKind)
-        ? SF.Live.expandKind() : null;
-      var focusLabel;
-      if (Player._focus) {
-        focusLabel = kind === 'responses' ? 'Hide responses'
-          : kind === 'race' ? 'Hide race'
-            : 'Hide leaderboard';
-      } else if (kind === 'responses') {
-        focusLabel = 'Expand responses';
-      } else if (kind === 'race') {
-        focusLabel = 'Show race';
-      } else {
-        /* Default name even before scores exist — hosts look for this. */
-        focusLabel = 'Show leaderboard';
-      }
       focusBtn.textContent = focusLabel;
       focusBtn.title = focusLabel + ' (E)';
       focusBtn.setAttribute('aria-label', focusLabel);
-    }
+    });
 
     /* The next button says which of its jobs it is about to do. Four outcomes
        shared one label, which is most of the confusion around running a live
@@ -1219,13 +1239,39 @@
       nextBtn.classList.toggle('will-hold', act === 'hold');
     }
 
-    var pollBtn = hud.querySelector('[data-act=poll]');
-    if (pollBtn) {
-      var pollActive = !!(SF.Live && SF.Live.customPromptOpen && SF.Live.customPromptOpen());
+    var pollBtns = hud.querySelectorAll('[data-act=poll]');
+    var pollActive = !!(SF.Live && SF.Live.customPromptOpen && SF.Live.customPromptOpen());
+    pollBtns.forEach(function (pollBtn) {
       pollBtn.classList.toggle('on', pollActive);
-      pollBtn.textContent = pollActive ? 'End quick poll' : 'Quick poll';
-      pollBtn.title = pollActive ? 'End the active impromptu poll (V)' : 'Ask the room a quick question (V)';
-    }
+      pollBtn.setAttribute('aria-pressed', String(pollActive));
+      var tip = pollActive ? 'End the active impromptu poll (V)' : 'Ask the room a quick question (V)';
+      pollBtn.title = tip;
+      pollBtn.setAttribute('aria-label', tip);
+      if (pollBtn.closest('#hudMore')) {
+        pollBtn.textContent = pollActive ? 'End quick poll' : 'Quick poll';
+      }
+    });
+
+    var freezeBtns = hud.querySelectorAll('[data-act=freeze]');
+    var isFrozen = !!Player.frozen;
+    freezeBtns.forEach(function (freezeBtn) {
+      freezeBtn.classList.toggle('on', isFrozen);
+      freezeBtn.setAttribute('aria-pressed', String(isFrozen));
+      var fTip = isFrozen ? 'Unfreeze screen (Z or Alt+F)' : 'Freeze screen for digression (Z or Alt+F)';
+      freezeBtn.title = fTip;
+      freezeBtn.setAttribute('aria-label', fTip);
+      if (freezeBtn.closest('#hudMore')) {
+        freezeBtn.textContent = isFrozen ? 'Unfreeze screen' : 'Freeze screen';
+      }
+    });
+
+    var rxBtns = hud.querySelectorAll('[data-act=reactions]');
+    var rxOn = !(SF.Live && SF.Live.reactions === false);
+    rxBtns.forEach(function (rxBtn) {
+      rxBtn.classList.toggle('on', rxOn);
+      rxBtn.textContent = rxOn ? 'Reactions: On' : 'Reactions: Off';
+      rxBtn.title = rxOn ? 'Turn audience reactions off (T)' : 'Turn audience reactions on (T)';
+    });
   }
   Player.syncHudRoomButtons = syncHudRoomButtons;
 
@@ -1742,13 +1788,22 @@
 
   /* ------------------------------------------------------------ navigation */
 
-  Player.goTo = function (i, dir) {
+  Player.goTo = function (i, dir, force) {
     if (!Player.deck) return;
     var n = Player.deck.slides.length;
     i = Math.max(0, Math.min(n - 1, i));
-    if (i === Player.idx && Player._current) return;
+    if (i === Player.idx && Player._current && !force) return;
     dir = dir != null ? dir : (i > Player.idx ? 1 : -1);
     Player.idx = i;
+
+    if (Player.frozen && !force) {
+      if (hudPos) {
+        hudPos.textContent = ((Player._frozenSlideIdx != null ? Player._frozenSlideIdx : i) + 1) + ' / ' + n + ' ❄️';
+      }
+      syncPresenter();
+      return;
+    }
+
     Player.hideLeaderboard();
     /* A slide's own focus view belongs to that slide and leaves with it. An
        impromptu poll does not: the teacher is often still moving through the
@@ -1768,6 +1823,11 @@
   Player.next = function () {
     if (SF.Teaching && SF.Teaching.next()) return;
     if (!Player.deck) return;
+    if (Player.frozen) {
+      if (Player.idx >= Player.deck.slides.length - 1) { flashEnd(); return; }
+      Player.goTo(Player.idx + 1, 1);
+      return;
+    }
     var cur = Player.deck.slides[Player.idx];
     /* Solo Present: Next asks the recall question. Host live uses the gate
        so the reading grace still applies. */
@@ -1790,7 +1850,14 @@
     if (Player.idx >= Player.deck.slides.length - 1) { flashEnd(); return; }
     Player.goTo(Player.idx + 1, 1);
   };
-  Player.prev = function () { if (SF.Teaching && SF.Teaching.prev()) return; Player.goTo(Player.idx - 1, -1); };
+  Player.prev = function () {
+    if (SF.Teaching && SF.Teaching.prev()) return;
+    if (Player.frozen) {
+      Player.goTo(Player.idx - 1, -1);
+      return;
+    }
+    Player.goTo(Player.idx - 1, -1);
+  };
 
   function flashEnd() {
     toast('End of deck — Esc to exit');
@@ -1799,6 +1866,44 @@
   /* For the live reveal, which paints the projected slide itself rather than
      going through paintAnswer \u2014 see revealNow in js/live.js. */
   Player.stopMusic = stopMusic;
+
+  Player.frozen = false;
+  Player._frozenSlideIdx = null;
+
+  Player.toggleFreeze = function (force) {
+    var wasFrozen = !!Player.frozen;
+    var next = typeof force === 'boolean' ? force : !wasFrozen;
+    Player.frozen = next;
+    if (root) root.classList.toggle('frozen', Player.frozen);
+    if (hud) hud.classList.toggle('hud-frozen', Player.frozen);
+
+    var pill = document.getElementById('playerFreezePill');
+    if (Player.frozen) {
+      Player._frozenSlideIdx = Player.idx;
+      if (!pill && root) {
+        var createdPill = el('div', 'player-freeze-pill');
+        createdPill.id = 'playerFreezePill';
+        createdPill.setAttribute('role', 'status');
+        createdPill.appendChild(el('span', 'pfp-tag', 'SCREEN FROZEN'));
+        createdPill.appendChild(el('span', 'pfp-text', 'Audience display locked on slide ' + (Player.idx + 1)));
+        var unfreezeBtn = el('button', 'pfp-unfreeze', 'Unfreeze (Z)');
+        unfreezeBtn.type = 'button';
+        unfreezeBtn.onclick = function () { Player.toggleFreeze(false); };
+        createdPill.appendChild(unfreezeBtn);
+        root.appendChild(createdPill);
+      }
+      toast('Screen frozen — students still see this slide');
+    } else {
+      if (pill) pill.remove();
+      if (wasFrozen && Player._frozenSlideIdx != null && Player._frozenSlideIdx !== Player.idx) {
+        Player.goTo(Player.idx, Player.idx > Player._frozenSlideIdx ? 1 : -1, true);
+      }
+      Player._frozenSlideIdx = null;
+      toast('Screen unfrozen — synced to slide ' + (Player.idx + 1));
+    }
+    syncHudRoomButtons();
+    syncPresenter();
+  };
 
   Player.toggleBlank = function () {
     Player.blank = !Player.blank;
@@ -1848,6 +1953,10 @@
     Player.idx = Math.max(0, Math.min(deck.slides.length - 1, startIndex || 0));
     Player.open = true;
     Player.blank = false;
+    Player.frozen = false;
+    Player._frozenSlideIdx = null;
+    var oldFreezePill = document.getElementById('playerFreezePill');
+    if (oldFreezePill) oldFreezePill.remove();
     Player.started = Date.now();
     Player._current = null;
     Player._liveTally = null;
@@ -1893,6 +2002,7 @@
 
   Player.close = function () {
     if (!Player.open) return;
+    if (Player.frozen) Player.toggleFreeze(false);
     if (SF.Demo) SF.Demo.detach();
     if (SF.Boards) SF.Boards.unmountAll();
     var pill = document.getElementById('playerDemoPill');
@@ -1963,6 +2073,7 @@
         /* The desk shows how many have answered and offers to end it, so it
            needs the poll's own state rather than inferring one from the
            room pulse — which is silent when nobody has replied yet. */
+        quizGenBusy: !!Player.quizGenBusy,
         quickPoll: (SF.Live && SF.Live.customPromptOpen && SF.Live.customPromptOpen())
           ? {
               prompt: SF.Live.prompt.prompt,
@@ -1996,7 +2107,8 @@
         progress: Player._liveProgress || null,
         revealStep: Player.revealStep || 0,
         effectiveTimeLimit: SF.questionTimeLimit(deck.slides[Player.idx], SF.Live && SF.Live.active && SF.Live.players.some(function(p){return p.manual;})),
-        waiting: Player.waiting || 0
+        waiting: Player.waiting || 0,
+        frozen: !!Player.frozen
       }, location.origin);
       requestedPresenterPanel=null;
     } catch (e) { /* window closing */ }
@@ -2011,11 +2123,13 @@
     else if (d.cmd === 'prev') Player.prev();
     else if (d.cmd === 'goto') Player.goTo(d.index);
     else if (d.cmd === 'blank') Player.toggleBlank();
+    else if (d.cmd === 'freeze') Player.toggleFreeze();
     else if (d.cmd === 'exit') Player.close();
     else if (d.cmd === 'hello') syncPresenter();
     else if (SF.Boards && SF.Boards.command && SF.Boards.command(d.cmd, d.action, d.card)) {}
     else if (d.cmd === 'moment' && Player.momentCommand) Player.momentCommand(d);
     else if (d.cmd === 'quickPoll') Player.quickPoll(d);
+    else if (d.cmd === 'quizGen') Player.quizGen(d);
     else if (d.cmd === 'qa') Player.emit('qaCommand', d);
   });
 
@@ -2040,14 +2154,81 @@
     return SF.Live.startCustomPrompt(d);
   };
 
+  /**
+   * Build a quiz on a theme and drop it into the lesson already running.
+   *
+   * The questions are spliced in directly after the slide on the wall and the
+   * show advances onto the first one, so the lesson keeps its place and its
+   * live session: the relay sends a question when the host lands on a quiz
+   * slide, and these are quiz slides like any other. The alternative — start
+   * the quiz as its own show — would end the lesson the teacher is in the
+   * middle of, and a live room would have to rejoin.
+   *
+   * Nothing is inserted unless questions came back, so a failed generation
+   * leaves the deck exactly as it was.
+   */
+  Player.quizGen = function (d) {
+    d = d || {};
+    if (!Player.open || !Player.deck) return Promise.resolve({ error: 'Nothing is being presented.' });
+    if (!SF.AI || !SF.AI.generateQuestionsForGame || !SF.createPresetGame) {
+      return Promise.resolve({ error: 'The AI engine is not loaded.' });
+    }
+    var topic = String(d.topic || '').trim();
+    if (!topic) return Promise.resolve({ error: 'Give it a theme to write about.' });
+
+    var style = d.style || 'choice';
+    var game = SF.createPresetGame(style, { title: topic }, Player.deck.theme);
+    /* Written from scratch for this moment: the preset's own seed questions
+       are about someone else's topic. */
+    game.questions = [];
+    Player.quizGenBusy = true;
+    syncPresenter();
+
+    return Promise.resolve(SF.AI.generateQuestionsForGame(game, {
+      topic: topic, notes: d.keywords, count: d.count
+    })).then(function (res) {
+      Player.quizGenBusy = false;
+      if (!res || res.error) { syncPresenter(); return res || { error: 'Nothing came back.' }; }
+
+      game.questions = res.questions;
+      if (SF.GameStore) SF.GameStore.save(game);
+
+      /* Questions only. An intro card, a How to play and a scoreboard belong
+         to a game a teacher sat down and built; one asked for between two
+         slides interrupts a lesson already in flight, and the room has just
+         been answering on the same phones. */
+      game.settings.howTo = false;
+      var slides = SF.compileGame(game, { intro: false, scoreSlide: false });
+      if (!slides.length) { syncPresenter(); return { error: 'Nothing to show.' }; }
+
+      var at = Player.idx + 1;
+      slides.forEach(function (sl, i) { Player.deck.slides.splice(at + i, 0, sl); });
+      Player.goTo(at, 1);
+      syncPresenter();
+      return { added: slides.length, rejected: res.rejected, gameId: game.id };
+    }).catch(function () {
+      Player.quizGenBusy = false;
+      syncPresenter();
+      return { error: 'Could not write a quiz just now.' };
+    });
+  };
+
   /* ------------------------------------------------------------ keyboard */
 
   document.addEventListener('keydown', function (e) {
     if (!Player.open) return;
     var target = /** @type {Element | null} */ (e.target);
     var k = e.key;
-    if((target && target.closest('input,textarea,select,[contenteditable=true]')) || e.metaKey || e.ctrlKey || e.altKey) return;
-    if((target && target.closest('button,a')) && (k==='Enter'||k===' ')) return;
+    if ((target && target.closest('input,textarea,select,[contenteditable=true]')) || e.metaKey || e.ctrlKey || (e.altKey && k !== 'f' && k !== 'F')) return;
+    if ((target && target.closest('button,a')) && (k==='Enter'||k===' ')) return;
+
+    if ((k === 'f' || k === 'F') && e.altKey) {
+      e.preventDefault();
+      Player.control('freeze');
+      showHud();
+      return;
+    }
+
     var hudMore = document.getElementById('hudMore');
     if(k==='Escape' && hudMore && !hudMore.hidden){
       e.preventDefault();
@@ -2129,9 +2310,11 @@
         Player.control('ink');
         break;
       case 'z': case 'Z':
+        e.preventDefault();
         if (SF.Teaching && SF.Teaching.isOpen && SF.Teaching.isOpen()) {
-          e.preventDefault();
           SF.Teaching.undo();
+        } else {
+          Player.control('freeze');
         }
         break;
       case 'x': case 'X':

@@ -93,6 +93,43 @@ try {
   assert.equal(await page.evaluate(() => SF.Player.idx), 2, 'and the deck is where the teacher left it');
   assert.equal(await page.evaluate(() => SF.Player.open), true, 'ending the poll does not end the show');
 
+  /* A quiz written on a theme, mid-lesson, goes into the lesson already
+     running rather than starting a show of its own — which would end the
+     lesson the teacher is in the middle of and make a live room rejoin. */
+  await page.evaluate(() => {
+    const realFetch = window.fetch;
+    window.fetch = async (url, opts) => {
+      if (/\/api\/ai\/status/.test(url)) return { ok: true, json: async () => ({ available: true }) };
+      if (/\/api\/ai\/generate/.test(url)) {
+        return { ok: true, json: async () => ({ text: '```json\n' + JSON.stringify({ questions: [
+          { question: 'Which process moves water into a cell?', options: ['Osmosis', 'Active transport'], correct: 0, explanation: 'Osmosis.' },
+          { question: 'BROKEN', options: ['one'], correct: 0 }
+        ] }) + '\n```' }) };
+      }
+      return realFetch(url, opts);
+    };
+  });
+  /* Back into the middle of the lesson: inserting after the last slide would
+     make the new question the tail and prove nothing about keeping the rest. */
+  await page.evaluate(() => SF.Player.goTo(0));
+  await page.waitForFunction(() => SF.Player.idx === 0);
+  const beforeGen = await page.evaluate(() => ({ n: SF.Player.deck.slides.length, at: SF.Player.idx }));
+  const gen = await page.evaluate(() => SF.Player.quizGen({ topic: 'Osmosis', style: 'choice', count: 2 }));
+  assert.ok(!gen.error, gen.error);
+  assert.equal(gen.added, 1, 'only the question the engine accepted is inserted');
+  assert.equal(gen.rejected, 1, 'and the broken draft is reported, not silently dropped');
+
+  const afterGen = await page.evaluate(() => ({
+    n: SF.Player.deck.slides.length,
+    at: SF.Player.idx,
+    lands: SF.Player.deck.slides[SF.Player.idx].question,
+    tail: SF.Player.deck.slides[SF.Player.deck.slides.length - 1].title
+  }));
+  assert.equal(afterGen.n, beforeGen.n + 1, 'the lesson grew rather than being replaced');
+  assert.equal(afterGen.at, beforeGen.at + 1, 'and it advanced onto the new question');
+  assert.match(afterGen.lands, /Which process moves water/, 'straight to the question, no How to play card');
+  assert.equal(afterGen.tail, 'Three', 'the rest of the lesson is still after it');
+
   assert.deepEqual(errors, [], 'no page errors while polling');
   console.log('Quick poll smoke passed: sheet, validation, survives slide changes, ends clean.');
 } finally {
