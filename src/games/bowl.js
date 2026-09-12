@@ -1,4 +1,5 @@
 import { createBowlBoard } from "../boards/bowl.js";
+import starters from "../samples/bowl.json" with { type: "json" };
 /* SlideForge — games/bowl. Edit source here; npm run build updates js/model.js. */
 
 /* Quiz Bowl — Jeopardy-style cell value. Correct = cell value. */
@@ -63,6 +64,14 @@ const bowl = {
   minOptions: 0,
   maxOptions: 0,
   fixedOptions: null,
+  /* Three categories by three values. A board with one cell is not a board —
+     the whole move in Quiz Bowl is choosing which cell to take, and until
+     there was a bank a new game offered exactly one. Nine is the smallest
+     grid where that choice exists.
+
+     board() never caught this: one category is still a category, so the game
+     was valid and useless at the same time. */
+  starters,
   make: function () {
     return {
       question: 'What molecule carries genetic information?',

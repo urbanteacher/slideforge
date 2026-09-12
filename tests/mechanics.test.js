@@ -238,10 +238,16 @@ test('memory, oracy, board styles compile with the right mechanics', () => {
     question: 'Norman conquest year?'
   }), 'bowl');
   assert.equal(bowl.pointValue, 500);
+  /* A new game now opens on its starter bank, so this checks the board's
+     shape rather than the one cell it used to have: several categories
+     across, several values down, and a question behind every cell. */
   const bowlRun = SF.gameToRunDeck(SF.makeGame('Bowl', 'bowl'));
   const board = bowlRun.slides.find((s) => s.bowlBoard).bowlBoard;
-  assert.deepEqual(board.categories, ['Cells']);
-  assert.deepEqual(board.values, [200]);
-  assert.equal(board.cells[0].value, 200);
-  assert.equal(board.cells[0].questions.length, 1);
+  assert.ok(board.categories.length > 1, 'one column is not a board to choose from');
+  assert.ok(board.values.length > 1, 'one row is not a board to choose from');
+  assert.equal(board.cells.length, board.categories.length * board.values.length);
+  for (const cell of board.cells) {
+    assert.ok(board.values.includes(cell.value), 'a cell sits under a value on the board');
+    assert.ok(cell.questions.length, 'an empty cell cannot be claimed');
+  }
 });

@@ -5477,6 +5477,73 @@
     };
   }
 
+  // src/samples/bowl.json
+  var bowl_default = [
+    {
+      category: "Cells",
+      pointValue: 100,
+      targetScore: 1e3,
+      question: "What is the jelly inside a cell called?",
+      answer: "Cytoplasm"
+    },
+    {
+      category: "Cells",
+      pointValue: 200,
+      targetScore: 1e3,
+      question: "What molecule carries genetic information?",
+      answer: "DNA"
+    },
+    {
+      category: "Cells",
+      pointValue: 300,
+      targetScore: 1e3,
+      question: "Which organelle releases energy in respiration?",
+      answer: "The mitochondrion"
+    },
+    {
+      category: "Transport",
+      pointValue: 100,
+      targetScore: 1e3,
+      question: "Which way do particles move in diffusion?",
+      answer: "From high to low concentration"
+    },
+    {
+      category: "Transport",
+      pointValue: 200,
+      targetScore: 1e3,
+      question: "What is the movement of water across a partially permeable membrane?",
+      answer: "Osmosis"
+    },
+    {
+      category: "Transport",
+      pointValue: 300,
+      targetScore: 1e3,
+      question: "Which kind of transport needs energy from respiration?",
+      answer: "Active transport"
+    },
+    {
+      category: "Enzymes",
+      pointValue: 100,
+      targetScore: 1e3,
+      question: "What kind of molecule is an enzyme?",
+      answer: "A protein"
+    },
+    {
+      category: "Enzymes",
+      pointValue: 200,
+      targetScore: 1e3,
+      question: "What happens to an enzyme above its optimum temperature?",
+      answer: "It denatures"
+    },
+    {
+      category: "Enzymes",
+      pointValue: 300,
+      targetScore: 1e3,
+      question: "What is the molecule an enzyme acts on called?",
+      answer: "The substrate"
+    }
+  ];
+
   // src/games/bowl.js
   var BOWL_VALUES = [100, 200, 300, 400, 500];
   var BOWL_TARGETS = [500, 1e3, 1500, 2e3];
@@ -5529,6 +5596,14 @@
     minOptions: 0,
     maxOptions: 0,
     fixedOptions: null,
+    /* Three categories by three values. A board with one cell is not a board —
+         the whole move in Quiz Bowl is choosing which cell to take, and until
+         there was a bank a new game offered exactly one. Nine is the smallest
+         grid where that choice exists.
+    
+         board() never caught this: one category is still a category, so the game
+         was valid and useless at the same time. */
+    starters: bowl_default,
     make: function() {
       return {
         question: "What molecule carries genetic information?",
