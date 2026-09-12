@@ -43,13 +43,24 @@
     modal.showModal();
   }
 
+  /** The tabs the library can open on. Anything else means "everything". */
+  var LIBRARY_TABS = ['all', 'check', 'feedback'];
+
+  /**
+   * @param {string} [filter] one of LIBRARY_TABS
+   *
+   * The filter is checked rather than trusted because this is wired straight
+   * to a button's onclick, which hands the handler a PointerEvent. An event
+   * is truthy, so `filter || 'all'` kept it, matched no category, and opened
+   * the library on an empty grid reading "0 formats here".
+   */
   function openLibrary(filter) {
     returnFocus = document.activeElement;
     var modal = /** @type {HTMLDialogElement|null} */ (document.getElementById('activityModal'));
     if (modal) modal.showModal();
     /* Quiz studio opens on the checks, because feedback prompts attach to a
        slide and there is no slide here to attach them to. */
-    drawLibrary(filter || 'all');
+    drawLibrary(LIBRARY_TABS.indexOf(String(filter)) > -1 ? String(filter) : 'all');
   }
 
   /* One-click presentation shapes — fill the pits after they land. */
@@ -599,7 +610,9 @@
     lessonModal.addEventListener('close', function () { if (returnFocus) returnFocus.focus(); });
 
     var btnActivities = document.getElementById('btnActivities');
-    if (btnActivities) btnActivities.onclick = openLibrary;
+    /* Wrapped, not passed: onclick hands its handler the event, and this one
+       takes a tab name. */
+    if (btnActivities) btnActivities.onclick = function () { openLibrary('all'); };
     /* The same library from Quiz studio. One list, so a format cannot exist
        in one studio and not the other. */
     var gameLib = document.getElementById('btnActivitiesGame');
