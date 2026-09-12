@@ -48,6 +48,12 @@
     } else {
       SF.Editor.insertStarter(activitySlide(a));
     }
+    /* Stamp the slide the insert landed on. The slide belongs to the deck
+       like any other — it is the rail here that wants to show only what was
+       chosen in this studio, and a slide cannot be recognised as an activity
+       after the fact from its layout alone. */
+    var slide = deck().slides[SF.Editor.selected()];
+    if (slide) slide.activity = a.key;
     SF.toast(a.title + ' added to the lesson.');
     draw();
   }
@@ -80,48 +86,61 @@
 
   /* ---------------------------------------------------------------- rail */
 
-  /* The same rail as Lesson studio — same `.thumb` rows, same numbering, same
-     rendered previews, same GAME and feedback badges. It is the same lesson,
-     so it should not look like a different one because of which tab you are
-     standing in. Drag-to-reorder and selection stay in Lesson studio; here a
-     row is a way back to it. */
+  /** The deck slides that were chosen here, with the position each holds in
+   *  the lesson so a row can say where it landed. */
+  function chosen() {
+    return deck().slides
+      .map(function (slide, i) { return { slide: slide, at: i }; })
+      .filter(function (row) { return row.slide.activity; });
+  }
+
+  /* Only what was chosen in this studio, not the whole deck. Quiz studio's
+     rail lists the questions of the game being built rather than every slide
+     in the lesson, and this is the same idea: a lesson of twenty slides is
+     not what you came to this tab to look at.
+
+     Built as Quiz studio's `.qthumb` rather than Lesson studio's `.thumb` —
+     number, title, a line of meta — because these are list entries, not
+     slides to preview. */
   function drawRail() {
     var list = document.getElementById('railList');
     var count = document.getElementById('railCount');
-    var d = deck();
-    if (count) count.textContent = String(d.slides.length);
+    var rows = chosen();
+    if (count) count.textContent = String(rows.length);
     if (!list) return;
     list.replaceChildren();
-    d.slides.forEach(function (slide, i) {
-      var row = el('div', 'thumb');
-      row.tabIndex = 0;
-      row.setAttribute('role', 'button');
-      row.setAttribute('aria-label',
-        'Slide ' + (i + 1) + ': ' + (slide.title || SF.SLIDE_TYPES[slide.type].label) +
-        ' — open in Lesson studio');
-      row.appendChild(el('div', 'num', String(i + 1)));
 
-      var body = el('div', 'thumb-body');
-      var frame = el('div', 'frame');
-      if (slide.type === 'game') {
-        frame.appendChild(el('div', 'badge quiz', 'GAME'));
-      } else if (slide.feedback && slide.feedback.kind) {
-        var live = SF.slideFeedback(slide);
-        frame.appendChild(el('div', 'badge fb' + (live ? '' : ' warn'),
-          SF.FEEDBACK_KINDS[slide.feedback.kind].icon + (live ? '' : ' !')));
-      }
-      var node = SF.renderSlide(d, slide, { index: i, total: d.slides.length, chrome: false });
-      frame.appendChild(node);
-      body.appendChild(frame);
-      row.appendChild(body);
+    if (!rows.length) {
+      list.appendChild(el('p', 'hint',
+        'Nothing chosen yet. Pick an activity and it lands in the lesson.'));
+      return;
+    }
+
+    rows.forEach(function (row, n) {
+      var a = A.activity(row.slide.activity);
+      var thumb = el('div', 'qthumb');
+      thumb.tabIndex = 0;
+      thumb.setAttribute('role', 'button');
+      thumb.setAttribute('aria-label',
+        (a ? a.title : row.slide.title) + ' — slide ' + (row.at + 1) + ', open in Lesson studio');
+      thumb.appendChild(el('div', 'qn', String(n + 1)));
+
+      var body = el('div', 'qbody');
+      body.appendChild(el('div', 'qtext', a ? a.title : (row.slide.title || 'Activity')));
+      var meta = el('div', 'qmeta');
+      if (a) meta.appendChild(el('span', null, a.minutes + ' min'));
+      meta.appendChild(el('span', null, 'slide ' + (row.at + 1)));
+      if (row.slide.type === 'game') meta.appendChild(el('span', 'why', 'game'));
+      else if (row.slide.feedback) meta.appendChild(el('span', 'why', 'feedback'));
+      body.appendChild(meta);
+      thumb.appendChild(body);
 
       var open = function () { SF.Shell.activate('deck'); };
-      row.onclick = open;
-      row.onkeydown = function (e) {
+      thumb.onclick = open;
+      thumb.onkeydown = function (e) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
       };
-      list.appendChild(row);
-      requestAnimationFrame(function () { SF.fit(frame, node); });
+      list.appendChild(thumb);
     });
   }
 
@@ -129,9 +148,16 @@
     var foot = document.getElementById('railFoot');
     if (!foot) return;
     foot.replaceChildren();
-    var n = deck().slides.length;
-    foot.appendChild(el('p', 'hint',
-      n + (n === 1 ? ' slide' : ' slides') + ' in this lesson. Click one to edit it.'));
+    var n = chosen().length;
+    var mins = chosen().reduce(function (t, row) {
+      var a = A.activity(row.slide.activity);
+      return t + ((a && a.minutes) || 0);
+    }, 0);
+    foot.appendChild(el('p', 'hint', n
+      ? n + (n === 1 ? ' activity' : ' activities') +
+        (mins ? ' · about ' + mins + ' minutes' : '') +
+        ' · ' + deck().slides.length + ' slides in the lesson'
+      : deck().slides.length + ' slides in the lesson.'));
   }
 
   /* --------------------------------------------------------------- stage */
@@ -226,7 +252,7 @@
      lesson, it does not own a document of its own. */
   var ws = {
     key: 'plan',
-    railLabel: 'Lesson',
+    railLabel: 'Activities',
     settingsLabel: 'Presentation settings — theme, logo, colours',
     notesLabel: 'Speaker notes — visible in presenter view only',
     fileSuffix: '.sfdeck.json',

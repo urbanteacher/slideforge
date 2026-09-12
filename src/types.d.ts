@@ -167,6 +167,10 @@ export interface Slide {
   hideAnswerUntilReveal?: boolean;
   /** Which deck slide this was expanded from, set by `buildRunDeck`. */
   sourceSlideId?: string;
+  /** The {@link Activity} key this slide was built from, when it was chosen
+   *  in the activities studio. Only that studio reads it — to everything
+   *  else the slide is an ordinary one. */
+  activity?: string;
 
   /** Typed answer key, and the spellings that count. */
   answer?: string;
