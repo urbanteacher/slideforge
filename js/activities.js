@@ -1,16 +1,15 @@
 /* SlideForge — the activities workspace.
 
-   The third studio. Lesson studio edits a deck, Quiz studio edits a game,
-   and this one edits a plan: which activities a lesson runs, in what order,
-   and roughly how long that takes.
+   The third studio, and a third view of the same deck rather than a third
+   document. Picking an activity puts it in the lesson, exactly as picking a
+   game does: the rail is the deck's slides, and it grows as you choose.
 
-   It authors no content. Choosing "Think-Pair-Square-Share" records that the
-   lesson has one, not what the prompt says — the prompt belongs to the slide
-   the activity builds. Keeping the plan thin is what stops it becoming a
-   second place for questions to live and drift.
+   An earlier version kept its own list of chosen activities in the rail.
+   That made a second place for a lesson to live, and left the teacher to
+   assemble the real thing afterwards from a column of names. There is one
+   lesson, and this studio writes into it.
 
-   The catalogue it browses is SF.Activities, built in src/ and checked. */
-/** @type {import("../src/types.js").SlideForgeGlobal} */
+   The catalogue is SF.Activities — the 54, built in src/ and checked. */
 (function (global) {
   'use strict';
   /** @type {import("../src/types.js").SlideForgeGlobal} */
@@ -18,50 +17,88 @@
   var el = SF.el;
   var A = SF.Activities;
 
-  /** @type {import("../src/types.js").Plan} */
-  var plan = A.makePlan('Untitled lesson plan');
   var phaseFilter = 'all';
-  var selected = -1;
 
-  function touched() { plan.modified = Date.now(); SF.Shell.touch(); }
+  function deck() { return SF.Editor.deck(); }
 
-  /* ------------------------------------------------------------ the rail */
+  /* ------------------------------------------------------------ inserting */
 
+  /**
+   * Put an activity into the deck.
+   *
+   * Every branch ends in the deck editor's own insert, so an activity chosen
+   * here is indistinguishable from one chosen in Lesson studio — same slide,
+   * same undo, same place in the running order.
+   */
+  function insert(a) {
+    if (a.target === 'game' && a.style) {
+      SF.Editor.insertNewGame(a.style, { title: a.title });
+    } else if (a.target === 'feedback' && a.feedbackKind) {
+      SF.Editor.attachFeedback(a.feedbackKind, { prompt: a.blurb });
+      /* attachFeedback lands on the slide you were on, and makes a blank one
+         when that was a game. A blank one arrives called 'Slide title', so
+         name it after the activity that asked for it. */
+      var landed = deck().slides[SF.Editor.selected()];
+      if (landed && (!landed.title || landed.title === 'Slide title')) {
+        landed.title = a.title;
+        landed.notes = steps(a);
+      }
+    } else if (a.target === 'moment') {
+      SF.Editor.insertStarter(momentSlide(a));
+    } else {
+      SF.Editor.insertStarter(activitySlide(a));
+    }
+    SF.toast(a.title + ' added to the lesson.');
+    draw();
+  }
+
+  /** How the protocol runs, in the notes of the slide that announces it. A
+   *  moment has no screen component, so the notes are the activity. */
+  function momentSlide(a) {
+    var s = SF.makeSlide('section');
+    s.title = a.title;
+    s.subtitle = a.minutes + ' minutes';
+    s.notes = steps(a);
+    return s;
+  }
+
+  /** A slide activity lands in its named layout, so there is a shape to write
+   *  into rather than a blank page. */
+  function activitySlide(a) {
+    var s = SF.makeSlide(a.layout || 'content');
+    if (SF.prepareLayout) SF.prepareLayout(s, a.layout || 'content');
+    s.title = a.title;
+    s.notes = steps(a);
+    return s;
+  }
+
+  function steps(a) {
+    return a.blurb + '\n\n' + a.steps.map(function (step, i) {
+      return (i + 1) + '. ' + step;
+    }).join('\n');
+  }
+
+  /* ---------------------------------------------------------------- rail */
+
+  /* The deck, so the lesson can be watched being built. Drawn here rather
+     than delegated because Lesson studio's rail carries editing affordances
+     this studio has no business offering. */
   function drawRail() {
     var list = document.getElementById('railList');
     var count = document.getElementById('railCount');
-    if (count) count.textContent = String(plan.items.length);
+    var d = deck();
+    if (count) count.textContent = String(d.slides.length);
     if (!list) return;
     list.replaceChildren();
-
-    if (!plan.items.length) {
-      list.appendChild(el('p', 'hint', 'No activities yet. Pick one from the catalogue to start building the lesson.'));
-      return;
-    }
-
-    /* Grouped by phase and labelled with a running total, because the
-       question a plan answers is "does this fit in the hour", and a flat
-       list of names cannot answer it. */
-    A.planByPhase(plan, A.PHASES).forEach(function (group) {
-      var head = el('div', 'plan-phase');
-      head.appendChild(el('span', 'plan-phase-icon', group.phase.icon));
-      head.appendChild(el('strong', null, group.phase.label));
-      var mins = group.items.reduce(function (n, item) {
-        return n + ((A.activity(item.key) || {}).minutes || 0);
-      }, 0);
-      if (mins) head.appendChild(el('span', 'plan-phase-mins', mins + 'm'));
-      list.appendChild(head);
-
-      group.items.forEach(function (item) {
-        var a = A.activity(item.key);
-        var at = plan.items.indexOf(item);
-        var row = el('button', 'plan-item' + (at === selected ? ' sel' : ''));
-        row.appendChild(el('span', 'plan-item-icon', a.icon));
-        row.appendChild(el('strong', null, a.title));
-        if (a.minutes) row.appendChild(el('span', 'plan-item-mins', a.minutes + 'm'));
-        row.onclick = function () { selected = at; draw(); };
-        list.appendChild(row);
-      });
+    d.slides.forEach(function (slide, i) {
+      var row = el('button', 'plan-item');
+      row.appendChild(el('span', 'plan-item-icon',
+        (SF.SLIDE_TYPES[slide.type] || {}).icon || '▢'));
+      row.appendChild(el('strong', null,
+        slide.title || slide.question || slide.gameTitle || 'Untitled slide'));
+      row.title = 'Open slide ' + (i + 1) + ' in Lesson studio';
+      row.onclick = function () { SF.Shell.activate('deck'); };
+      list.appendChild(row);
     });
   }
 
@@ -69,32 +106,15 @@
     var foot = document.getElementById('railFoot');
     if (!foot) return;
     foot.replaceChildren();
-    var mins = A.planMinutes(plan);
+    var n = deck().slides.length;
     foot.appendChild(el('p', 'hint',
-      plan.items.length
-        ? plan.items.length + (plan.items.length === 1 ? ' activity' : ' activities') +
-          (mins ? ' · about ' + mins + ' minutes' : '')
-        : 'An empty plan.'));
-    if (selected > -1) {
-      var remove = SF.Shell.UI.button('Remove', '', function () {
-        plan.items.splice(selected, 1);
-        selected = -1;
-        touched();
-        draw();
-      });
-      foot.appendChild(remove);
-    }
+      n + (n === 1 ? ' slide' : ' slides') + ' in this lesson.'));
+    foot.appendChild(SF.Shell.UI.button('Open in Lesson studio', '', function () {
+      SF.Shell.activate('deck');
+    }));
   }
 
-  /* ------------------------------------------------- the catalogue stage */
-
-  function add(key) {
-    plan.items.push({ id: SF.uid(), key: key });
-    selected = plan.items.length - 1;
-    touched();
-    draw();
-    SF.toast((A.activity(key) || {}).title + ' added to the plan.');
-  }
+  /* --------------------------------------------------------------- stage */
 
   function drawStage() {
     var box = document.getElementById('previewBox');
@@ -104,9 +124,8 @@
 
     var tabs = el('div', 'library-tabs');
     var counts = A.phaseCounts();
-    tabs.appendChild(SF.Shell.UI.button('All phases', phaseFilter === 'all' ? 'active' : '', function () {
-      phaseFilter = 'all'; draw();
-    }));
+    tabs.appendChild(SF.Shell.UI.button('All phases', phaseFilter === 'all' ? 'active' : '',
+      function () { phaseFilter = 'all'; draw(); }));
     A.PHASES.forEach(function (p) {
       if (!counts[p.key]) return;
       tabs.appendChild(SF.Shell.UI.button(
@@ -120,97 +139,87 @@
     var shown = A.ACTIVITIES.filter(function (a) {
       return a.enabled !== false && (phaseFilter === 'all' || a.phase === phaseFilter);
     });
+    var phase = A.PHASES.find(function (p) { return p.key === phaseFilter; });
     wrap.appendChild(el('p', 'library-note',
+      (phase ? phase.blurb + ' ' : '') +
       shown.length + (shown.length === 1 ? ' activity' : ' activities') +
-      (phaseFilter === 'all' ? ' across every phase.' : ' in this phase.') +
-      ' Choosing one adds it to the plan; its content is written where it lands.'));
+      '. Choosing one adds it to the lesson, where you write its content.'));
 
     var grid = el('div', 'activity-grid');
-    shown.forEach(function (a) {
-      var card = el('button', 'activity-card act-' + a.target);
-      card.appendChild(el('span', 'activity-icon', a.icon));
-      card.appendChild(el('strong', null, a.title));
-      card.appendChild(el('span', 'activity-description', a.blurb));
-      var tag = a.target === 'moment' ? 'IN THE ROOM · ON A CLOCK'
-        : a.target === 'feedback' ? 'BESIDE YOUR SLIDE'
-        : a.target === 'slide' ? 'A SLIDE IN YOUR DECK'
-        : a.target === 'slide-arc' ? 'A RUN OF SLIDES'
-        : 'A GAME IN QUIZ STUDIO';
-      card.appendChild(el('span', 'activity-tag',
-        (a.minutes ? a.minutes + ' MIN · ' : '') + tag + '  ↗'));
-      card.onclick = function () { add(a.key); };
-      grid.appendChild(card);
-    });
+    shown.forEach(function (a) { grid.appendChild(card(a)); });
     wrap.appendChild(grid);
     box.appendChild(wrap);
   }
 
-  /* ------------------------------------------------------- the inspector */
+  function card(a) {
+    var b = el('button', 'activity-card act-' + a.target);
+    b.appendChild(el('span', 'activity-icon', a.icon));
+    b.appendChild(el('strong', null, a.title));
+    b.appendChild(el('span', 'activity-description', a.blurb));
+    var tag = a.target === 'moment' ? 'IN THE ROOM · ON A CLOCK'
+      : a.target === 'feedback' ? 'BESIDE YOUR SLIDE'
+      : a.target === 'game' ? 'A GAME IN THIS LESSON'
+      : a.target === 'slide-arc' ? 'A RUN OF SLIDES'
+      : 'A SLIDE IN THIS LESSON';
+    b.appendChild(el('span', 'activity-tag', a.minutes + ' MIN · ' + tag + '  ↗'));
+    /* A slide arc is several slides with an order between them, and nothing
+       builds one yet, so it says so rather than dropping a single slide and
+       calling it done. */
+    if (a.target === 'slide-arc') {
+      b.disabled = true;
+      b.title = 'A run of slides — not buildable in one step yet.';
+    } else {
+      b.onclick = function () { insert(a); };
+    }
+    return b;
+  }
+
+  /* ----------------------------------------------------------- inspector */
 
   function drawInspector() {
     var insp = document.getElementById('inspector');
     if (!insp) return;
     insp.replaceChildren();
-    var item = plan.items[selected];
-    var a = item && A.activity(item.key);
-    if (!a) {
-      insp.appendChild(el('p', 'hint', 'Pick an activity in the rail to see how it runs.'));
-      return;
-    }
-    insp.appendChild(el('span', 'eyebrow', 'IN THE LESSON'));
-    insp.appendChild(el('h3', null, a.icon + '  ' + a.title));
-    insp.appendChild(el('p', 'hint', a.blurb));
-
-    var phase = A.PHASES.find(function (p) { return p.key === a.phase; });
-    if (phase) insp.appendChild(el('p', 'hint', phase.icon + ' ' + phase.label + ' · ' + phase.blurb));
-    if (a.minutes) insp.appendChild(el('p', 'hint', 'About ' + a.minutes + ' minutes.'));
-
-    /* A timed protocol is the whole activity — there is no game to open and
-       nothing to author, so the steps are the thing to show. */
-    if (a.steps && a.steps.length) {
-      insp.appendChild(el('span', 'eyebrow', 'HOW IT RUNS'));
-      var ol = el('ol', 'plan-steps');
-      a.steps.forEach(function (step) { ol.appendChild(el('li', null, step)); });
-      insp.appendChild(ol);
-    }
+    insp.appendChild(el('span', 'eyebrow', 'THE LESSON CATALOGUE'));
+    insp.appendChild(el('h3', null, A.ACTIVITIES.length + ' activities'));
+    insp.appendChild(el('p', 'hint',
+      'Choosing one writes it into the lesson you are building — the same ' +
+      'slide, the same running order and the same undo as Lesson studio.'));
+    insp.appendChild(el('span', 'eyebrow', 'WHAT THE COLOURS MEAN'));
+    [['act-slide', 'A slide in your deck, in a shape worth teaching from.'],
+     ['act-game', 'A game, built by the same engines as Quiz studio.'],
+     ['act-feedback', 'A prompt beside the slide, collecting in the rail.'],
+     ['act-moment', 'A timed protocol. Happens in the room, not on screen.']
+    ].forEach(function (pair) {
+      var row = el('p', 'hint act-legend ' + pair[0]);
+      row.appendChild(el('span', 'activity-icon', '●'));
+      row.appendChild(el('span', null, pair[1]));
+      insp.appendChild(row);
+    });
   }
 
   function draw() { drawRail(); drawRailFoot(); drawStage(); drawInspector(); }
 
   /* -------------------------------------------------------- registration */
 
+  /* doc, setDoc and store all point at the deck: this studio edits the
+     lesson, it does not own a document of its own. */
   var ws = {
     key: 'plan',
-    railLabel: 'Plan',
-    settingsLabel: 'Lesson plan settings',
-    notesLabel: 'The plan is a running order. Content is written where each activity lands.',
-    fileSuffix: '.sfplan.json',
-    store: SF.PlanStore,
-    doc: function () { return plan; },
-    setDoc: function (d) { plan = d; selected = -1; },
-    blank: function () { return A.makePlan('Untitled lesson plan'); },
+    railLabel: 'Lesson',
+    settingsLabel: 'Presentation settings — theme, logo, colours',
+    notesLabel: 'Speaker notes — visible in presenter view only',
+    fileSuffix: '.sfdeck.json',
+    store: SF.Store,
+    doc: function () { return deck(); },
+    setDoc: function (d) { SF.Editor.workspace.setDoc(d); },
+    blank: function () { return SF.makeDeck('Untitled presentation'); },
     draw: draw,
-    play: function () {
-      /* Compiling a plan into slides and games is the next boundary. Saying
-         so is better than a button that looks broken. */
-      SF.toast('A plan cannot be run yet — build its activities in Lesson studio.');
-    },
-    settings: function () {
-      SF.toast('A plan has no settings yet.');
-    },
-    onTitle: function (v) { plan.title = v || 'Untitled lesson plan'; touched(); },
-    onTheme: function (v) { plan.theme = v; touched(); },
-    describe: A.describePlan,
-    keydown: function (e) {
-      if (e.key === 'ArrowDown' || e.key === 'j') {
-        e.preventDefault(); selected = Math.min(plan.items.length - 1, selected + 1); draw();
-      } else if (e.key === 'ArrowUp' || e.key === 'k') {
-        e.preventDefault(); selected = Math.max(0, selected - 1); draw();
-      } else if ((e.key === 'Backspace' || e.key === 'Delete') && selected > -1) {
-        e.preventDefault();
-        plan.items.splice(selected, 1); selected = -1; touched(); draw();
-      }
-    }
+    play: function () { SF.Editor.workspace.play(); },
+    settings: function () { SF.Editor.workspace.settings(); },
+    onTitle: function (v) { SF.Editor.workspace.onTitle(v); },
+    onTheme: function (v) { SF.Editor.workspace.onTheme(v); },
+    describe: function (d) { return SF.Editor.workspace.describe(d); }
   };
 
   SF.Activities.workspace = ws;

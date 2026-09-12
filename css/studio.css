@@ -179,3 +179,6 @@ html[data-ws="plan"] .act-slide .activity-icon,
 html[data-ws="plan"] .act-slide-arc .activity-icon{background:#e4edf4;color:#41647f}
 html[data-ws="plan"] .act-game .activity-icon{background:#eee6f6;color:#8d68ab}
 html[data-ws="plan"] .act-moment{border-color:#f0e2cd}
+/* The colour legend in the activities inspector reuses the card tints. */
+html[data-ws="plan"] .act-legend{display:flex;align-items:center;gap:9px;margin:6px 0}
+html[data-ws="plan"] .act-legend .activity-icon{width:20px;height:20px;font-size:9px;border-radius:6px;margin:0;flex:none}

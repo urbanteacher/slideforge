@@ -1087,59 +1087,6 @@
     return keys.reduce((sum, key) => sum + ((activity(key) || {}).minutes || 0), 0);
   }
 
-  // src/core/identity.js
-  function uid() {
-    return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
-  }
-
-  // src/activities/plan.js
-  function makePlan(title) {
-    var plan = {
-      id: uid(),
-      kind: "plan",
-      title: title || "Untitled lesson plan",
-      theme: "studio",
-      created: Date.now(),
-      modified: Date.now(),
-      items: []
-    };
-    return plan;
-  }
-  function normalizePlan(raw) {
-    if (!raw || typeof raw !== "object") return null;
-    var plan = Object.assign(makePlan(), raw);
-    plan.id = plan.id || uid();
-    plan.kind = "plan";
-    plan.title = String(plan.title || "Untitled lesson plan");
-    plan.items = (Array.isArray(raw.items) ? raw.items : []).map(function(item) {
-      var key = String(item && item.key || "");
-      return activity(key) ? { id: item && item.id || uid(), key } : null;
-    }).filter(Boolean);
-    return plan;
-  }
-  function planMinutes(plan) {
-    return (plan.items || []).reduce(function(sum, item) {
-      var a = activity(item.key);
-      return sum + (a && a.minutes || 0);
-    }, 0);
-  }
-  function planByPhase(plan, phases) {
-    return phases.map(function(phase) {
-      var items = (plan.items || []).filter(function(item) {
-        var a = activity(item.key);
-        return a && a.phase === phase.key;
-      });
-      return { phase, items };
-    }).filter(function(group) {
-      return group.items.length;
-    });
-  }
-  function describePlan(plan) {
-    var n = (plan.items || []).length;
-    var mins = planMinutes(plan);
-    return n + (n === 1 ? " activity" : " activities") + (mins ? " · about " + mins + " min" : "") + " · " + new Date(plan.modified).toLocaleString();
-  }
-
   // src/deck/content.js
   var TABLE_MAX_COLS = 6;
   var TABLE_MAX_ROWS = 12;
@@ -4408,6 +4355,11 @@
     ]
   };
 
+  // src/core/identity.js
+  function uid() {
+    return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+  }
+
   // src/samples/quiz.json
   var quiz_default = [
     {
@@ -4729,7 +4681,7 @@
   var INPUTS = ["choice", "text", "number", "order"];
 
   // src/storage.js
-  function createStores({ normalizeDeck: normalizeDeck2, normalizeGame: normalizeGame2, normalizePlan: normalizePlan2, storage, warn = console.warn }) {
+  function createStores({ normalizeDeck: normalizeDeck2, normalizeGame: normalizeGame2, storage, warn = console.warn }) {
     function documents(kind, key, lastKey, normalize) {
       function read() {
         try {
@@ -4786,7 +4738,6 @@
       };
     }
     const decks = documents("decks", "slideforge.decks.v1", "slideforge.lastDeckId", normalizeDeck2);
-    const plans = documents("plans", "slideforge.plans.v1", "slideforge.lastPlanId", normalizePlan2);
     const games = documents("games", "slideforge.games.v1", "slideforge.lastGameId", normalizeGame2);
     const { read: readDecks, ...Store2 } = decks;
     const { read: readGames, ...GameStoreBase } = games;
@@ -4795,8 +4746,7 @@
         (deck) => deck.slides.some((slide) => slide.type === "game" && slide.gameId === id)
       ).map((deck) => deck.title)
     });
-    const { read: readPlans, ...PlanStore2 } = plans;
-    return { Store: Store2, GameStore: GameStore2, PlanStore: PlanStore2 };
+    return { Store: Store2, GameStore: GameStore2 };
   }
 
   // src/games/scoring.js
@@ -5552,24 +5502,11 @@
   function deckToMarkdown(deck) {
     return renderMarkdown(normalizeDeck(deck || {}), (id) => GameStore.get(id));
   }
-  var { Store, GameStore, PlanStore } = createStores({ normalizeDeck, normalizeGame, normalizePlan, storage: () => localStorage });
+  var { Store, GameStore } = createStores({ normalizeDeck, normalizeGame, storage: () => localStorage });
   runtime.SF = Object.assign(runtime.SF || {}, {
     Boards: createBoardRuntime(() => runtime.SF, GAME_STYLES),
     /* The activity catalogue. Data only — studio.js reads target and builds. */
-    Activities: {
-      PHASES,
-      ACTIVITIES,
-      activity,
-      activitiesInPhase,
-      phaseCounts,
-      totalMinutes,
-      makePlan,
-      normalizePlan,
-      planMinutes,
-      planByPhase,
-      describePlan
-    },
-    PlanStore,
+    Activities: { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes },
     SLIDE_W,
     SLIDE_H,
     THEMES,

@@ -1425,6 +1425,10 @@
   function install() {
     UI = SF.Shell.UI;
     SF.Shell.register(ws);
+    /* The activities studio is a third view of this same deck, so it
+       delegates title, theme, play and settings back here rather than
+       keeping a second copy of any of them. */
+    SF.Editor.workspace = ws;
 
     var last = SF.Store.lastId();
     var loaded = (last && SF.Store.get(last)) || SF.Store.list()[0] || null;

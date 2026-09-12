@@ -54,7 +54,7 @@ test('every primitive the catalogue names exists in this build', async () => {
   }
 });
 
-test('every activity carries what the plan rail and inspector need', async () => {
+test('every activity carries what the rail and the insert need', async () => {
   const { ACTIVITIES, PHASES } = await import('../src/activities/catalogue.js');
   const keys = new Set();
   for (const a of ACTIVITIES) {
@@ -78,19 +78,4 @@ test('minutes add up across a planned run', async () => {
   /* An unknown key contributes nothing rather than NaN-ing the whole budget. */
   assert.equal(totalMinutes([keys[0], 'no-such-activity']), activity(keys[0]).minutes);
   assert.equal(totalMinutes([]), 0);
-});
-
-test('a plan keeps only activities this build still offers', async () => {
-  const { normalizePlan, planMinutes } = await import('../src/activities/plan.js');
-  const { ACTIVITIES } = await import('../src/activities/catalogue.js');
-  const real = ACTIVITIES[0].key;
-  const plan = normalizePlan({
-    title: 'From an older build',
-    items: [{ key: real }, { key: 'retired-activity' }, { nonsense: true }]
-  });
-  assert.equal(plan.items.length, 1, 'items naming an unknown activity should be dropped');
-  assert.equal(plan.items[0].key, real);
-  assert.ok(plan.items[0].id, 'a surviving item still needs an id');
-  assert.equal(planMinutes(plan), ACTIVITIES[0].minutes);
-  assert.equal(normalizePlan(null), null);
 });
