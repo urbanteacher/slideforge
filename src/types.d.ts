@@ -113,9 +113,16 @@ export interface QuizConfig {
  * property.
  */
 export interface Slide {
+  /** The {@link Activity} key this slide was built from, when it was chosen
+   *  in the activities studio. Only that studio reads these four — to
+   *  everything else the slide is an ordinary one. */
   activity?: string;
+  /** Groups the slides of a multi-slide activity so the rail shows them as
+   *  one row that duplicates and removes together. */
   activityInstance?: string;
+  /** Position within that group, 0-based. */
   activityPage?: number;
+  activityPresentation?: 'rows' | 'steps' | 'panels' | 'brief';
   id: string;
   type: SlideType;
   title: string;
@@ -170,11 +177,6 @@ export interface Slide {
   hideAnswerUntilReveal?: boolean;
   /** Which deck slide this was expanded from, set by `buildRunDeck`. */
   sourceSlideId?: string;
-  /** The {@link Activity} key this slide was built from, when it was chosen
-   *  in the activities studio. Only that studio reads it — to everything
-   *  else the slide is an ordinary one. */
-  activity?: string;
-
   /** Typed answer key, and the spellings that count. */
   answer?: string;
   accept?: string[];
@@ -711,6 +713,7 @@ export interface Activity {
   sourceFile?: string;
   teacherNotes?: string;
   mappingReason?: string;
+  presentation?: 'rows' | 'steps' | 'panels' | 'brief';
   originalMapping?: { target: ActivityTarget; layout?: string; style?: string; feedbackKind?: string };
   feedbackPreset?: Partial<Feedback>;
   gamePreset?: { seeds: any[]; settings: Record<string, any> };

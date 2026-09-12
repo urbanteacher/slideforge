@@ -415,6 +415,41 @@
       ["Share", "Tell a partner one specific action you will take next."]
     ], { feedback: { prompt: "Where are you on the learning ladder?", points: 5, lowLabel: "Need help", highLabel: "Can teach others" } })
   };
+  var PRESENTATIONS = {
+    steps: [
+      "think-pair-share",
+      "do-now-bell-ringer",
+      "jigsaw-expert-groups",
+      "think-pair-square-share",
+      "jigsaw-collaboration",
+      "peer-teaching-carousel",
+      "socratic-seminar",
+      "strategic-wait-time-questioning",
+      "whiteboards-on-walls",
+      "teach-someone",
+      "daily-review-routine",
+      "dialogue-chain-discussion"
+    ],
+    panels: [
+      "i-do-we-do-you-do",
+      "differentiated-practice-menu",
+      "structured-reflection-protocol",
+      "reflection-ladder"
+    ],
+    brief: [
+      "hook-objectives",
+      "worked-example-analysis",
+      "error-analysis",
+      "problem-based-learning",
+      "design-and-create-task",
+      "benefits-vs-limitations-battle",
+      "flipped-instruction",
+      "guided-inquiry-investigation"
+    ]
+  };
+  for (const [view, keys] of Object.entries(PRESENTATIONS)) {
+    for (const key of keys) PRESETS[key].presentation = view;
+  }
 
   // src/activities/game-presets.js
   var mc = (question, options, correct, explanation) => ({ question, options, correct, explanation });
@@ -2401,6 +2436,7 @@
     a.feedbackPreset = p.feedback;
     a.gamePreset = p.game;
     a.pages = p.pages;
+    a.presentation = p.presentation;
     if (p.pages) {
       a.pages = p.pages.map((part) => ({ ...part, fields: [
         text("Heading", part.title),
@@ -2416,7 +2452,7 @@
           type: "minutes",
           slide: "timeLimit",
           value: p.timer || a.minutes,
-          hint: "Minutes for this activity. Adjust to suit your class."
+          hint: a.target === "moment" ? "Starts automatically when presented. Set 0 to leave it untimed." : "Minutes for this activity. Adjust to suit your class."
         }
       ];
     }

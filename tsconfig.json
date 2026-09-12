@@ -9,7 +9,11 @@
     "noEmit": true,
     "strict": true,
     "noImplicitAny": false,
-    "skipLibCheck": true,
+    /* Off, not on. It is meant to skip node_modules' declarations, but it
+       skipped src/types.d.ts too — the whole type vocabulary went unchecked,
+       and a duplicate `activity` member sat in Slide passing cleanly. With it
+       off the only errors are real ones. */
+    "skipLibCheck": false,
     "resolveJsonModule": true
   },
   "include": [
