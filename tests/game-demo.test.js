@@ -106,12 +106,23 @@ test('invalid or empty user games fall back cleanly to showcase game', () => {
     title: 'Custom TF',
     style: 'truefalse',
     questions: [
-      { prompt: 'Water freezes at 0°C.', correct: 'true', explanation: 'At standard atmospheric pressure.' }
+      { question: 'Water freezes at 0°C.', correct: 0, explanation: 'At standard atmospheric pressure.' }
     ]
   };
   const result = SF.getShowcaseGame(validTrueFalse);
   assert.equal(result.id, 'g_valid_tf', 'valid game should be preserved');
-  assert.equal(result.questions[0].prompt, 'Water freezes at 0°C.');
+  assert.equal(result.questions[0].question, 'Water freezes at 0°C.');
+
+  /* `question` and `options` are the fields compile, mark and summary read.
+     A game naming them something else is not a valid game wearing a
+     different hat — it would present with nothing on it — so it has to fall
+     back to the sample rather than be preserved. */
+  const foreignShape = {
+    id: 'g_foreign', title: 'Foreign', style: 'truefalse',
+    questions: [{ prompt: 'Water freezes at 0°C.', correct: 'true' }]
+  };
+  assert.notEqual(SF.getShowcaseGame(foreignShape).id, 'g_foreign',
+    'a question whose text is not in `question` cannot be presented, so it is replaced');
 
   // Test 4: Force sample overrides even a valid game
   const forcedResult = SF.getShowcaseGame(validTrueFalse, { forceSample: true });

@@ -2820,15 +2820,11 @@
         return q;
       },
       problems: function(q, n) {
-        var anyQ = (
-          /** @type {any} */
-          q
-        );
-        var opts = Array.isArray(q.options) ? q.options : Array.isArray(anyQ.answers) ? anyQ.answers : [];
+        var opts = Array.isArray(q.options) ? q.options : [];
         var live = opts.filter(function(o) {
           return String(o).trim();
         });
-        if (!String(q.question || anyQ.prompt || "").trim()) return "Q" + n + " has no question text";
+        if (!String(q.question || "").trim()) return "Q" + n + " has no question text";
         if (live.length < 2) return "Q" + n + " needs at least two answers";
         if (!String(opts[q.correct] || "").trim()) {
           return "Q" + n + " has no correct answer marked";
@@ -2877,7 +2873,7 @@
         return q;
       },
       problems: function(q, n) {
-        if (!String(q.question).trim()) return "Q" + n + " has no statement";
+        if (!String(q.question || "").trim()) return "Q" + n + " has no statement";
         return null;
       },
       compile: function(q, settings, s) {

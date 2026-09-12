@@ -34,10 +34,20 @@ const coreStyles = {
     },
 
     problems: function (q, n) {
-      var anyQ = /** @type {any} */ (q);
-      var opts = Array.isArray(q.options) ? q.options : (Array.isArray(anyQ.answers) ? anyQ.answers : []);
+      /* Both guards below look defensive but fix real holes. `options` can be
+         absent on a question carried over from another engine's shape, and a
+         validator that throws reports nothing at all. And `String(undefined)`
+         is "undefined" — truthy — so the old check let a question with no
+         text through as valid.
+
+         What this deliberately does not do is accept other field names for
+         these two. Reading `answers` or `prompt` here would pass a question
+         that compile, mark and summary all read as empty, because they go to
+         `options` and `question`. A shape that needs translating is the
+         normalizer's job, so that everything downstream sees one shape. */
+      var opts = Array.isArray(q.options) ? q.options : [];
       var live = opts.filter(function (o) { return String(o).trim(); });
-      if (!String(q.question || anyQ.prompt || '').trim()) return 'Q' + n + ' has no question text';
+      if (!String(q.question || '').trim()) return 'Q' + n + ' has no question text';
       if (live.length < 2) return 'Q' + n + ' needs at least two answers';
       if (!String(opts[q.correct] || '').trim()) {
         return 'Q' + n + ' has no correct answer marked';
@@ -92,7 +102,9 @@ const coreStyles = {
     },
 
     problems: function (q, n) {
-      if (!String(q.question).trim()) return 'Q' + n + ' has no statement';
+      /* `|| ''` for the same reason as choice above: String(undefined) is
+         "undefined", so the bare check called a blank statement valid. */
+      if (!String(q.question || '').trim()) return 'Q' + n + ' has no statement';
       return null;
     },
 

@@ -282,3 +282,37 @@ test('memory, oracy, board styles compile with the right mechanics', () => {
     assert.ok(cell.questions.length, 'an empty cell cannot be claimed');
   }
 });
+
+/* The validator is not a place to be generous about field names. Whatever it
+   calls valid, compile/mark/summary have to be able to read — and those go to
+   `options` and `question`. Translating a foreign shape is the normalizer's
+   job, so everything downstream sees one shape. */
+test('a choice question is judged on the fields the rest of the app reads', () => {
+  const SF = loadModel();
+  const choice = SF.GAME_STYLES.choice;
+
+  const ok = { question: 'Pick one', options: ['Alpha', 'Beta'], correct: 0 };
+  assert.equal(choice.problems(ok, 1), null);
+
+  /* Nothing produces these, and nothing else reads them: `answers` appears
+     nowhere as a question field, and `prompt` belongs to concept chain and
+     feedback. Accepting either here would pass a question that presents with
+     nothing on it. */
+  assert.match(
+    choice.problems({ question: 'Pick one', answers: ['Alpha', 'Beta'], correct: 0 }, 1),
+    /at least two answers/);
+  assert.match(
+    choice.problems({ prompt: 'Only a prompt', options: ['A', 'B'], correct: 0 }, 1),
+    /no question text/);
+
+  /* Both of these used to get through. `q.options.filter` threw on a question
+     carried over from another engine's shape, so the validator reported
+     nothing at all; and `String(undefined)` is "undefined", which is truthy,
+     so empty question text read as present. */
+  assert.match(choice.problems({ question: 'No options at all' }, 3), /at least two answers/);
+  assert.match(choice.problems({ options: ['A', 'B'], correct: 0 }, 4), /no question text/);
+
+  /* Same hole, one engine along in the same file. */
+  assert.equal(SF.GAME_STYLES.truefalse.problems({ question: 'It is so.', correct: 0 }, 1), null);
+  assert.match(SF.GAME_STYLES.truefalse.problems({}, 1), /no statement/);
+});
