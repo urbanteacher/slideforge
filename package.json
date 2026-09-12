@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit",
     "dev:build": "node tools/build.mjs --watch",
     "test": "npm run build:check && npm run typecheck && node --test tests/*.test.js",
+    "smoke:live": "node tools/smoke-live-quiz.mjs",
     "typecheck:probe": "node tools/type-probe.mjs"
   },
   "devDependencies": {
