@@ -21,3 +21,4 @@ data/
 # Smoke-test screenshots. The tools in tools/ rewrite these on every run and
 # nothing compares them to a baseline, so they are output, not fixtures.
 tools/*.png
+tools/baselines/diffs/

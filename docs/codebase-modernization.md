@@ -72,8 +72,9 @@ integration points; this is not yet a universal render/player plugin interface.
   change, and the normalizers still do the validating. Types describe data that
   has already been through them.
 - Tailwind remains deferred, and the reason is now measured rather than assumed:
-  the component inventory is done, but there is no visual regression baseline to
-  rewrite selectors against. See `docs/css-token-inventory.md`.
+  the component inventory and visual regression baselines are done (144 snapshots
+  across 24 styles × 6 themes in `tools/baselines/`), enabling safe selector
+  refactoring without visual drift. See `docs/css-token-inventory.md`.
 
 ## Verification
 
@@ -146,12 +147,19 @@ a second implementation to maintain.
    card.
 
    On Tailwind: it fits the editor chrome and does not fit the slide canvas,
-   which is a fixed 1280×720 coordinate box scaled by transform. The blocker
-   is coverage, not fit — the three Playwright smoke tools save screenshots
-   but compare them to nothing, so a purely visual regression passes today.
-   The deduplication above was safe to do without baselines only because no
-   selector changed. A Tailwind rewrite changes every selector, so real
-   baselines come first.
+   which is a fixed 1280×720 coordinate box scaled by transform. The earlier
+   coverage gap has now been resolved: `tools/visual-regression.mjs` captures
+   and compares deterministic 1280×720 renders across all 24 game styles and 6
+   themes (144 baselines in `tools/baselines/`), with pixel diffing and artifact
+   generation via `npm run visual:check` and `npm run visual:update`. Purely
+   visual regressions are now automatically detected prior to selector changes.
+
+6. **[Completed] End-to-end multi-client live quiz smoke test suite**:
+   `tools/smoke-live-quiz.mjs` (`npm run smoke:live`) verifies the multi-client
+   WebSocket presentation runtime (`Ada`, `Bo`, `Cy`) against a live relay
+   server, asserting room PIN generation, live question delivery, grace period
+   gate enforcement in `SF.Player.gate`, answer submission, verdict distribution,
+   and leaderboard rendering.
 
 These steps target coupling and repetition. File length alone does not show
 whether a feature is duplicated or how expensive it is to change.

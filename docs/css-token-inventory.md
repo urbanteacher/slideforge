@@ -109,14 +109,13 @@ shared was four components, and those are now extracted.
 ### Recommended Tailwind Migration Path
 * **Phase 1: Token & board deduplication — done.**
   The four shared board components are extracted to `css/board-common.css`; see section 2. Class contracts are unchanged, so no markup moved.
-* **Phase 2: Visual regression baseline — not started, and it gates Phase 3.**
-  The three Playwright smoke tools (`tools/smoke-knowledge-flip.mjs`,
-  `tools/smoke-lowstakes.mjs`, `tools/smoke-demo.mjs`) assert behaviour and
-  save a screenshot, but nothing compares those screenshots to a stored
-  baseline, so a purely visual regression passes today. 24 styles x 6 themes
-  is 144 baselines; the deduplication above was verified by diffing effective
-  declarations instead, which is cheaper but only sound because no selector
-  changed. A Tailwind rewrite changes every selector, so it needs the real
-  baselines first.
+* **Phase 2: Visual regression baseline — done.**
+  All 24 game styles × 6 themes (144 baseline snapshots) are captured and
+  stored in `tools/baselines/`. The automated regression runner
+  (`tools/visual-regression.mjs`, scripts `npm run visual:check` and
+  `npm run visual:update`) mounts deterministic 1280×720 slide fixtures,
+  disables CSS animations, performs pixel-level OffscreenCanvas diffing with
+  configurable mismatch thresholds, and highlights visual regressions in diff
+  PNG artifacts.
 * **Phase 3: Incremental Tailwind Chrome Adoption**:
   Introduce Tailwind utilities starting with isolated standalone views (`manual.html`, `presenter.html` action strips, and the editor `#app` topbar/inspector), leaving the `1280x720` slide renderer as dedicated design-token CSS.

@@ -9,6 +9,8 @@
     "dev:build": "node tools/build.mjs --watch",
     "test": "npm run build:check && npm run typecheck && node --test tests/*.test.js",
     "smoke:live": "node tools/smoke-live-quiz.mjs",
+    "visual:check": "node tools/visual-regression.mjs --check",
+    "visual:update": "node tools/visual-regression.mjs --update",
     "typecheck:probe": "node tools/type-probe.mjs"
   },
   "devDependencies": {
