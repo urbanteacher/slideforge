@@ -24,6 +24,7 @@
 (function (global) {
   'use strict';
 
+  /** @type {import("../src/types.js").SlideForgeGlobal} */
   var SF = global.SF;
   var el = SF.el;
   var $ = function (id) { return document.getElementById(id); };
@@ -185,30 +186,36 @@
 
   function openModal(id, onClose) {
     var m = $(id);
-    m.classList.add('on');
+    if (!m) return function () {};
+    var modalEl = m;
+    modalEl.classList.add('on');
     var close = function () {
-      m.classList.remove('on');
+      modalEl.classList.remove('on');
       if (onClose) onClose();
     };
-    m.querySelector('[data-close]').onclick = close;
-    m.onclick = function (e) { if (e.target === m) close(); };
+    var closeBtn = /** @type {HTMLElement|null} */ (modalEl.querySelector('[data-close]'));
+    if (closeBtn) closeBtn.onclick = close;
+    modalEl.onclick = function (e) { if (e.target === modalEl) close(); };
     return close;
   }
 
   /**
    * Generic document picker, used by Open in both engines and by
    * "Insert game" in the presentation editor.
-   * @param {object} o { title, items, empty, onPick, onDelete, describe }
+   * @param {object} o { title, items, empty, onPick, onDelete, describe, wide? }
    */
   function picker(o) {
-    $('pickerTitle').textContent = o.title;
+    var titleEl = $('pickerTitle');
+    if (titleEl) titleEl.textContent = o.title;
     var body = $('pickerBody');
+    if (!body) return;
+    var bodyEl = body;
 
     function draw() {
-      body.innerHTML = '';
+      bodyEl.innerHTML = '';
       var items = o.items();
       if (!items.length) {
-        body.appendChild(el('div', 'empty-note', o.empty || 'Nothing saved yet.'));
+        bodyEl.appendChild(el('div', 'empty-note', o.empty || 'Nothing saved yet.'));
         return;
       }
       items.forEach(function (it) {
@@ -232,7 +239,7 @@
           row.appendChild(kill);
         }
         row.onclick = function () { close(); o.onPick(it); };
-        body.appendChild(row);
+        bodyEl.appendChild(row);
       });
     }
 
@@ -256,12 +263,17 @@
     document.body.classList.toggle('ws-deck', key === 'deck');
     document.body.classList.toggle('ws-game', key === 'game');
     document.documentElement.setAttribute('data-ws', key === 'game' ? 'game' : 'deck');
-    Array.prototype.forEach.call($('wsSwitch').children, function (b) {
-      b.classList.toggle('on', b.dataset.go === key);
-    });
+    var wsSwitch = $('wsSwitch');
+    if (wsSwitch) {
+      Array.prototype.forEach.call(wsSwitch.children, function (b) {
+        b.classList.toggle('on', b.dataset.go === key);
+      });
+    }
 
-    $('railLabel').textContent = ws.railLabel;
-    $('notesLabel').textContent = ws.notesLabel;
+    var railLabel = $('railLabel');
+    if (railLabel) railLabel.textContent = ws.railLabel;
+    var notesLabel = $('notesLabel');
+    if (notesLabel) notesLabel.textContent = ws.notesLabel;
     try { localStorage.setItem(LAST_WS, key); } catch (e) {}
 
     syncChrome();
@@ -274,9 +286,13 @@
   /** Push the active document's title/theme into the shared chrome. */
   function syncChrome() {
     var doc = active.doc();
-    $('docTitle').value = doc.title;
-    $('docTitle').placeholder = active.key === 'deck' ? 'Presentation title' : 'Game title';
-    if (active.key === 'deck') $('numToggle').checked = doc.showSlideNumbers !== false;
+    var docTitle = /** @type {HTMLInputElement|null} */ ($('docTitle'));
+    if (docTitle) {
+      docTitle.value = doc.title;
+      docTitle.placeholder = active.key === 'deck' ? 'Presentation title' : 'Game title';
+    }
+    var numToggle = /** @type {HTMLInputElement|null} */ ($('numToggle'));
+    if (active.key === 'deck' && numToggle) numToggle.checked = doc.showSlideNumbers !== false;
     /* A live lobby is chrome too, and its warning depends on which document
        is open — see deckMismatch in js/live.js. */
     if (SF.Live && SF.Live.syncLobby) SF.Live.syncLobby();
@@ -564,7 +580,7 @@
       SF.toast('Start the app with the relay (node server/server.js) to open the demo.');
       return;
     }
-    var menu = document.querySelector('.file-menu');
+    var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
     if (menu) menu.open = false;
     SF.toast('Opening demo lesson\u2026');
     fetch('/api/demo-lesson', { cache: 'no-store' })
@@ -590,7 +606,7 @@
     var fr = new FileReader();
     fr.onload = function () {
       var raw;
-      try { raw = JSON.parse(fr.result); } catch (err) {
+      try { raw = JSON.parse(/** @type {string} */ (fr.result)); } catch (err) {
         SF.toast('That file is not valid JSON');
         return;
       }
@@ -627,197 +643,240 @@
     /* No theme control in the top bar: the picker in the settings sheet shows
        the colours instead of naming them, and two ways to set one thing is
        one way too many. onTheme is still the only path in. */
-    Array.prototype.forEach.call($('wsSwitch').children, function (b) {
-      b.onclick = function () { activate(b.dataset.go); };
-    });
+    var wsSwitch = $('wsSwitch');
+    if (wsSwitch) {
+      Array.prototype.forEach.call(wsSwitch.children, function (b) {
+        b.onclick = function () { activate(b.dataset.go); };
+      });
+    }
 
-    $('docTitle').addEventListener('input', function () {
-      active.onTitle($('docTitle').value);
-    });
-    $('numToggle').addEventListener('change', function () {
-      var d = workspaces.deck.doc();
-      d.showSlideNumbers = $('numToggle').checked;
-      workspaces.deck.store.save(d);
-      workspaces.deck.draw();
-    });
+    var docTitle = /** @type {HTMLInputElement|null} */ ($('docTitle'));
+    if (docTitle) {
+      docTitle.addEventListener('input', function () {
+        if (docTitle) active.onTitle(docTitle.value);
+      });
+    }
+    var numToggle = /** @type {HTMLInputElement|null} */ ($('numToggle'));
+    if (numToggle) {
+      numToggle.addEventListener('change', function () {
+        var d = workspaces.deck.doc();
+        if (numToggle) {
+          d.showSlideNumbers = numToggle.checked;
+          workspaces.deck.store.save(d);
+          workspaces.deck.draw();
+        }
+      });
+    }
 
-    $('btnSave').onclick = function () { save(false, true); };
-    if ($('btnDemoLesson')) $('btnDemoLesson').onclick = openDemoLesson;
-    $('btnExport').onclick = function () {
-      var doc = active.doc();
-      var served = servedByRelay();
-      var items = [
-        { id: 'one', title: 'This ' + (active.key === 'deck' ? 'presentation' : 'game'),
-          blurb: 'Downloads "' + doc.title + '" as a single file.' }
-      ];
-      if (active.key === 'deck') {
+    var btnSave = $('btnSave');
+    if (btnSave) btnSave.onclick = function () { save(false, true); };
+    var btnDemo = $('btnDemoLesson');
+    if (btnDemo) btnDemo.onclick = openDemoLesson;
+    var btnExport = $('btnExport');
+    if (btnExport) {
+      btnExport.onclick = function () {
+        var doc = active.doc();
+        var served = servedByRelay();
+        var items = [
+          { id: 'one', title: 'This ' + (active.key === 'deck' ? 'presentation' : 'game'),
+            blurb: 'Downloads "' + doc.title + '" as a single file.' }
+        ];
+        if (active.key === 'deck') {
+          items.push({
+            id: 'md',
+            title: 'Practice notes (.md)',
+            blurb: 'Markdown for Canvas or Colab — prompts and content only, not the live room.'
+          });
+        }
         items.push({
-          id: 'md',
-          title: 'Practice notes (.md)',
-          blurb: 'Markdown for Canvas or Colab — prompts and content only, not the live room.'
+          id: 'bundle', title: 'Everything, as one file',
+          blurb: 'Downloads every presentation and game together as a backup.'
         });
-      }
-      items.push({
-        id: 'bundle', title: 'Everything, as one file',
-        blurb: 'Downloads every presentation and game together as a backup.'
-      });
-      if (served) {
-        items.splice(active.key === 'deck' ? 2 : 1, 0, {
-          id: 'folder', title: 'Everything, into the app folder',
-          blurb: 'Writes each one to data/ next to the app, so the folder is self-contained and can be committed.'
+        if (served) {
+          items.splice(active.key === 'deck' ? 2 : 1, 0, {
+            id: 'folder', title: 'Everything, into the app folder',
+            blurb: 'Writes each one to data/ next to the app, so the folder is self-contained and can be committed.'
+          });
+        }
+        picker({
+          title: 'Export',
+          items: function () { return items; },
+          describe: function (it) { return it.blurb; },
+          onPick: function (it) {
+            if (it.id === 'one') return exportDoc();
+            if (it.id === 'md') return exportMarkdown();
+            if (it.id === 'folder') return exportAllToFolder();
+            exportBundle();
+          }
         });
-      }
-      picker({
-        title: 'Export',
-        items: function () { return items; },
-        describe: function (it) { return it.blurb; },
-        onPick: function (it) {
-          if (it.id === 'one') return exportDoc();
-          if (it.id === 'md') return exportMarkdown();
-          if (it.id === 'folder') return exportAllToFolder();
-          exportBundle();
+      };
+    }
+    var btnImport = $('btnImport');
+    if (btnImport) {
+      btnImport.onclick = function () {
+        if (!servedByRelay()) {
+          var fi = $('fileInput');
+          if (fi) fi.click();
+          return;
         }
-      });
-    };
-    $('btnImport').onclick = function () {
-      if (!servedByRelay()) { $('fileInput').click(); return; }
-      picker({
-        title: 'Import',
-        items: function () {
-          return [
-            { id: 'file', title: 'From a file',
-              blurb: 'Pick a .sfdeck.json, .sfgame.json or backup file.' },
-            { id: 'folder', title: 'From the app folder',
-              blurb: 'Restore everything previously written to data/.' }
-          ];
-        },
-        describe: function (it) { return it.blurb; },
-        onPick: function (it) {
-          if (it.id === 'folder') return restoreFromFolder();
-          $('fileInput').click();
-        }
-      });
-    };
-    $('fileInput').addEventListener('change', importDoc);
-    $('btnHelp').onclick = function () { $('cheats').classList.add('on'); };
+        picker({
+          title: 'Import',
+          items: function () {
+            return [
+              { id: 'file', title: 'From a file',
+                blurb: 'Pick a .sfdeck.json, .sfgame.json or backup file.' },
+              { id: 'folder', title: 'From the app folder',
+                blurb: 'Restore everything previously written to data/.' }
+            ];
+          },
+          describe: function (it) { return it.blurb; },
+          onPick: function (it) {
+            if (it.id === 'folder') return restoreFromFolder();
+            var fi = $('fileInput');
+            if (fi) fi.click();
+          }
+        });
+      };
+    }
+    var fileInput = $('fileInput');
+    if (fileInput) fileInput.addEventListener('change', importDoc);
+    var btnHelp = $('btnHelp');
+    if (btnHelp) {
+      btnHelp.onclick = function () {
+        var cheats = $('cheats');
+        if (cheats) cheats.classList.add('on');
+      };
+    }
 
     /* One Settings button beside File, forwarded to whichever engine is
        active. It used to be two \u2014 a game-only button over in the actions
        group, and nothing at all for a presentation, so a lesson looked as
        though it had no document-wide settings to change. */
-    $('btnSettings').onclick = function () {
-      if (active.flush) active.flush();
-      if (active.settings) active.settings();
-    };
+    var btnSettings = $('btnSettings');
+    if (btnSettings) {
+      btnSettings.onclick = function () {
+        if (active.flush) active.flush();
+        if (active.settings) active.settings();
+      };
+    }
 
-    $('btnNew').onclick = function () {
-      if (active.flush) active.flush();
-      var menu = document.querySelector('.file-menu');
-      if (menu) menu.open = false;
-      /* Blank docs plus the ready-made lessons — Example lesson used to be the
-         only door into those, and it is easy to miss. */
-      picker({
-        title: 'Start something new',
-        items: function () {
-          var items = [
-            { id: 'deck', title: 'Blank presentation',
-              blurb: 'An empty lesson. Add slides and activities as you go.' },
-            { id: 'game', title: 'Blank game',
-              blurb: 'A quiz or classroom game on its own. Pick the format next.' }
-          ];
-          (SF.LESSONS || []).slice(0, 1).forEach(function (lesson) {
-            items.push({
-              id: 'lesson:' + lesson.key,
-              title: lesson.title,
-              blurb: (lesson.blurb || 'Ready-made lesson') +
-                (lesson.minutes ? ' · about ' + lesson.minutes + ' min' : '')
+    var btnNew = $('btnNew');
+    if (btnNew) {
+      btnNew.onclick = function () {
+        if (active.flush) active.flush();
+        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
+        if (menu) menu.open = false;
+        /* Blank docs plus the ready-made lessons — Example lesson used to be the
+           only door into those, and it is easy to miss. */
+        picker({
+          title: 'Start something new',
+          items: function () {
+            var items = [
+              { id: 'deck', title: 'Blank presentation',
+                blurb: 'An empty lesson. Add slides and activities as you go.' },
+              { id: 'game', title: 'Blank game',
+                blurb: 'A quiz or classroom game on its own. Pick the format next.' }
+            ];
+            (SF.LESSONS || []).slice(0, 1).forEach(function (lesson) {
+              items.push({
+                id: 'lesson:' + lesson.key,
+                title: lesson.title,
+                blurb: (lesson.blurb || 'Ready-made lesson') +
+                  (lesson.minutes ? ' · about ' + lesson.minutes + ' min' : '')
+              });
             });
-          });
-          return items;
-        },
-        describe: function (it) { return it.blurb; },
-        onPick: function (it) {
-          if (it.id === 'game') {
-            activate('game', { toast: false });
-            if (workspaces.game.newDoc) workspaces.game.newDoc();
-            else {
-              var g = workspaces.game.blank();
-              workspaces.game.setDoc(g);
-              workspaces.game.store.save(g);
-              workspaces.game._dirty = false;
-              syncChrome();
-              workspaces.game.draw();
-              SF.toast('New game');
+            return items;
+          },
+          describe: function (it) { return it.blurb; },
+          onPick: function (it) {
+            if (it.id === 'game') {
+              activate('game', { toast: false });
+              if (workspaces.game.newDoc) workspaces.game.newDoc();
+              else {
+                var g = workspaces.game.blank();
+                workspaces.game.setDoc(g);
+                workspaces.game.store.save(g);
+                workspaces.game._dirty = false;
+                syncChrome();
+                workspaces.game.draw();
+                SF.toast('New game');
+              }
+              return;
             }
-            return;
-          }
-          if (String(it.id).indexOf('lesson:') === 0) {
-            var key = String(it.id).slice(7);
+            if (String(it.id).indexOf('lesson:') === 0) {
+              var key = String(it.id).slice(7);
+              activate('deck', { toast: false });
+              if (SF.Editor && SF.Editor.useLesson) {
+                SF.Editor.useLesson(key);
+              } else {
+                var lesson = SF.Studio.makeLesson(key);
+                workspaces.deck.setDoc(lesson);
+                workspaces.deck.store.save(lesson);
+                workspaces.deck._dirty = false;
+                syncChrome();
+                workspaces.deck.draw();
+              }
+              SF.toast('"' + it.title + '" opened. Your previous lesson stays in File → Open.');
+              return;
+            }
             activate('deck', { toast: false });
-            if (SF.Editor && SF.Editor.useLesson) {
-              SF.Editor.useLesson(key);
-            } else {
-              var lesson = SF.Studio.makeLesson(key);
-              workspaces.deck.setDoc(lesson);
-              workspaces.deck.store.save(lesson);
-              workspaces.deck._dirty = false;
-              syncChrome();
-              workspaces.deck.draw();
-            }
-            SF.toast('"' + it.title + '" opened. Your previous lesson stays in File → Open.');
-            return;
+            var d = workspaces.deck.blank();
+            workspaces.deck.setDoc(d);
+            workspaces.deck.store.save(d);
+            workspaces.deck._dirty = false;
+            syncChrome();
+            workspaces.deck.draw();
+            SF.toast('New presentation');
           }
-          activate('deck', { toast: false });
-          var d = workspaces.deck.blank();
-          workspaces.deck.setDoc(d);
-          workspaces.deck.store.save(d);
-          workspaces.deck._dirty = false;
-          syncChrome();
-          workspaces.deck.draw();
-          SF.toast('New presentation');
-        }
-      });
-    };
+        });
+      };
+    }
 
-    $('btnOpen').onclick = function () {
-      if (active.flush) active.flush();
-      var ws = active;
-      picker({
-        title: ws.key === 'deck' ? 'Open a presentation' : 'Open a game',
-        items: function () { return ws.store.list(); },
-        empty: 'Nothing saved yet — press New to start one.',
-        describe: ws.describe,
-        onPick: function (it) {
-          ws.setDoc(ws.store.get(it.id));
-          ws._dirty = false;
-          syncChrome();
-          ws.draw();
-        },
-        /* Asked here rather than by the picker, because the answer arrives
-           later now — the picker redraws when the delete actually happens. */
-        onDelete: function (it, done) {
-          SF.ask({ title: 'Delete “' + it.title + '”?',
-            detail: 'This cannot be undone.',
-            confirm: 'Delete', danger: true }, function () {
-              ws.store.remove(it.id);
-              done();
-            });
-        }
-      });
-    };
+    var btnOpen = $('btnOpen');
+    if (btnOpen) {
+      btnOpen.onclick = function () {
+        if (active.flush) active.flush();
+        var ws = active;
+        picker({
+          title: ws.key === 'deck' ? 'Open a presentation' : 'Open a game',
+          items: function () { return ws.store.list(); },
+          empty: 'Nothing saved yet — press New to start one.',
+          describe: ws.describe,
+          onPick: function (it) {
+            ws.setDoc(ws.store.get(it.id));
+            ws._dirty = false;
+            syncChrome();
+            ws.draw();
+          },
+          /* Asked here rather than by the picker, because the answer arrives
+             later now — the picker redraws when the delete actually happens. */
+          onDelete: function (it, done) {
+            SF.ask({ title: 'Delete “' + it.title + '”?',
+              detail: 'This cannot be undone.',
+              confirm: 'Delete', danger: true }, function () {
+                ws.store.remove(it.id);
+                done();
+              });
+          }
+        });
+      };
+    }
 
-    $('btnLive').onclick = function () {
-      if (active.flush) active.flush();
-      if (!active.hostLive) {
-        SF.toast('Host live is not available in this workspace');
-        return;
-      }
-      try { active.hostLive(); }
-      catch (e) {
-        console.error(e);
-        SF.toast('Host live failed — check the relay is running (node server/server.js)');
-      }
-    };
+    var btnLive = $('btnLive');
+    if (btnLive) {
+      btnLive.onclick = function () {
+        if (active.flush) active.flush();
+        if (!active.hostLive) {
+          SF.toast('Host live is not available in this workspace');
+          return;
+        }
+        try { active.hostLive(); }
+        catch (e) {
+          console.error(e);
+          SF.toast('Host live failed — check the relay is running (node server/server.js)');
+        }
+      };
+    }
 
     // engines register themselves when their script runs
     SF.Editor.install();
@@ -832,17 +891,24 @@
     document.body.classList.toggle('ws-game', active.key === 'game');
     document.body.classList.toggle('ws-deck', active.key !== 'game');
     document.documentElement.setAttribute('data-ws', active.key === 'game' ? 'game' : 'deck');
-    Array.prototype.forEach.call($('wsSwitch').children, function (b) {
-      b.classList.toggle('on', b.dataset.go === active.key);
-    });
-    $('railLabel').textContent = active.railLabel;
+    var wsSwitchEl = $('wsSwitch');
+    if (wsSwitchEl) {
+      Array.prototype.forEach.call(wsSwitchEl.children, function (b) {
+        b.classList.toggle('on', b.dataset.go === active.key);
+      });
+    }
+    var railLbl = $('railLabel');
+    if (railLbl) railLbl.textContent = active.railLabel;
     /* Name what the cog opens. "Settings for this document" is true and tells
        nobody where the board's card size went, which is how it got asked
        about. */
     var cog = $('btnSettings'), what = active.settingsLabel || 'Settings';
-    cog.title = what;
-    cog.setAttribute('aria-label', what);
-    $('notesLabel').textContent = active.notesLabel;
+    if (cog) {
+      cog.title = what;
+      cog.setAttribute('aria-label', what);
+    }
+    var notesLbl = $('notesLabel');
+    if (notesLbl) notesLbl.textContent = active.notesLabel;
     syncChrome();
     active.draw();
     /* Reveal only after the active studio has painted — kills the empty
@@ -861,7 +927,8 @@
 
     document.addEventListener('keydown', function (e) {
       if (SF.Player.open || document.querySelector('dialog[open]')) return;
-      var t = e.target.tagName;
+      var target = /** @type {HTMLElement|null} */ (e.target);
+      var t = target ? target.tagName : '';
       var typing = t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT';
       var mod = e.metaKey || e.ctrlKey;
 
