@@ -634,14 +634,13 @@ export interface ReadinessReport {
 /** Where an activity sits in a lesson. Distinct from {@link ActivityCategory},
  *  which is what it does to the room. */
 export type PhaseKey =
-  | 'starter' | 'activate' | 'construct' | 'collaborate' | 'check' | 'reflect';
+  | 'starter-slide' | 'starter-activity' | 'activation' | 'construction'
+  | 'mini-activity' | 'main-activity' | 'collaboration' | 'mini-quiz'
+  | 'reflection' | 'plenary' | 'activity-plenary';
 
-/** What the existing activity library filters on. `moment` is new: a timed
- *  classroom protocol with no screen component beyond a prompt and a clock. */
-export type ActivityCategory = 'check' | 'feedback' | 'moment';
-
-/** Which of the four things picking an activity builds. */
-export type ActivityTarget = 'game' | 'feedback' | 'slide' | 'moment';
+/** Which of the five things picking an activity builds. `slide-arc` is a run
+ *  of slides and cannot be built in one step yet. */
+export type ActivityTarget = 'slide' | 'game' | 'feedback' | 'moment' | 'slide-arc';
 
 export interface Phase {
   key: PhaseKey;
@@ -655,18 +654,24 @@ export interface Phase {
  * reads `target` and calls the matching builder.
  */
 export interface Activity {
-  /** Catalogue format key, not an engine key. `FORMAT_STYLE` maps it. */
+  /** Slug of the activity's name. Unique across the catalogue. */
   key: string;
   icon: string;
   title: string;
   blurb: string;
-  category: ActivityCategory;
   phase: PhaseKey;
   /** Planning estimate for the phase rail. Never read at runtime. */
   minutes?: number;
   target: ActivityTarget;
-  /** `target: 'moment'` — the protocol, in order, as the source recorded it. */
-  steps?: string[];
+  /** `target: 'game'` — a registered engine key. */
+  style?: string;
+  /** `target: 'slide'` — a DECK_TYPES layout. */
+  layout?: string;
+  /** `target: 'feedback'` — a FEEDBACK_KINDS key. */
+  feedbackKind?: string;
+  /** The protocol, in order, as the source recorded it. Every activity has
+   *  one; for a moment it is the whole activity. */
+  steps: string[];
   /** Absent means true. An activity that cannot run is not offered. */
   enabled?: boolean;
 }

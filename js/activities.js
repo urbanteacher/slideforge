@@ -127,13 +127,15 @@
 
     var grid = el('div', 'activity-grid');
     shown.forEach(function (a) {
-      var card = el('button', 'activity-card ' + a.category);
+      var card = el('button', 'activity-card act-' + a.target);
       card.appendChild(el('span', 'activity-icon', a.icon));
       card.appendChild(el('strong', null, a.title));
       card.appendChild(el('span', 'activity-description', a.blurb));
-      var tag = a.target === 'moment' ? 'TIMED PROTOCOL'
+      var tag = a.target === 'moment' ? 'IN THE ROOM · ON A CLOCK'
         : a.target === 'feedback' ? 'BESIDE YOUR SLIDE'
-        : 'BETWEEN SLIDES';
+        : a.target === 'slide' ? 'A SLIDE IN YOUR DECK'
+        : a.target === 'slide-arc' ? 'A RUN OF SLIDES'
+        : 'A GAME IN QUIZ STUDIO';
       card.appendChild(el('span', 'activity-tag',
         (a.minutes ? a.minutes + ' MIN · ' : '') + tag + '  ↗'));
       card.onclick = function () { add(a.key); };

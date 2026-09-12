@@ -166,3 +166,16 @@ html[data-ws="plan"] .stage-wrap{padding:0;background-image:none;overflow:hidden
 html[data-ws="plan"] .plan-catalogue .activity-grid{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:12px;margin-top:14px}
 html[data-ws="plan"] .plan-catalogue .library-note{margin:10px 0 0;font-size:12px;color:#7b846f}
+
+/* Colour says where the activity happens, not which phase it is in — eleven
+   phase tints would be eleven near-identical pastels, and the phase is
+   already the tab you arrived through and the heading in the rail.
+
+   Amber is the one that matters: a timed protocol happens in the room with
+   no screen component at all, which is the biggest difference on the card. */
+html[data-ws="plan"] .act-moment .activity-icon{background:#fbeedd;color:#a2661f}
+html[data-ws="plan"] .act-feedback .activity-icon{background:#e8efdc;color:#6d8754}
+html[data-ws="plan"] .act-slide .activity-icon,
+html[data-ws="plan"] .act-slide-arc .activity-icon{background:#e4edf4;color:#41647f}
+html[data-ws="plan"] .act-game .activity-icon{background:#eee6f6;color:#8d68ab}
+html[data-ws="plan"] .act-moment{border-color:#f0e2cd}

@@ -1,111 +1,96 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 
-const root = path.join(__dirname, '..');
+/* The catalogue is the 54 from activity-catalog-app, carried over rather than
+   reinvented. These tests hold it to that: the right number, in the right
+   phases, naming only primitives SlideForge actually has.
 
-/* The rows js/studio.js offers today. The catalogue has to keep matching
-   these, because the modal still reads studio.js and the two describing the
-   same activity differently is the drift this test exists to catch. */
-function studioRows() {
-  const src = fs.readFileSync(path.join(root, 'js/studio.js'), 'utf8');
-  const block = src.slice(src.indexOf('var activities = ['));
-  const rows = [...block.slice(0, block.indexOf('\n  ];')).matchAll(
-    /\['([^']*)','([^']*)','((?:[^']|\\')*)','((?:[^']|\\')*)','([^']*)',(true|false)\]/g
-  )];
-  return rows.map((r) => ({
-    key: r[1], icon: r[2], title: r[3].replace(/\\'/g, "'"),
-    blurb: r[4].replace(/\\'/g, "'"), category: r[5], enabled: r[6] === 'true'
-  }));
-}
+   Note what is NOT tested here: any relationship to the `activities` array in
+   js/studio.js. That list is Quiz studio's game formats and this one is the
+   lesson catalogue. They are different lists answering different questions,
+   and tying them together was the mistake this replaced. */
 
-test('the catalogue keeps every activity the studio already offers, unchanged', async () => {
-  const { ACTIVITIES } = await import('../src/activities/catalogue.js');
-  const rows = studioRows();
-  assert.ok(rows.length >= 35, 'expected to parse the studio registry, got ' + rows.length);
+test('the catalogue is the 54, split across the eleven phases as the source has them', async () => {
+  const { ACTIVITIES, PHASES, phaseCounts } = await import('../src/activities/catalogue.js');
+  assert.equal(ACTIVITIES.length, 54);
+  assert.equal(PHASES.length, 11);
 
-  for (const row of rows) {
-    const found = ACTIVITIES.find((a) => a.key === row.key);
-    assert.ok(found, 'catalogue is missing ' + row.key);
-    /* Title and blurb are what a teacher reads. If studio.js rewords one, the
-       catalogue must be reworded with it rather than quietly disagreeing. */
-    assert.equal(found.title, row.title, row.key + ' title');
-    assert.equal(found.blurb, row.blurb, row.key + ' blurb');
-    assert.equal(found.icon, row.icon, row.key + ' icon');
-    assert.equal(found.category, row.category, row.key + ' category');
-    assert.equal(found.enabled !== false, row.enabled, row.key + ' enabled');
-  }
+  /* Straight from the source's phase files. If a count moves, either the
+     catalogue drifted or the source did, and either is worth knowing. */
+  assert.deepEqual(phaseCounts(), {
+    'starter-slide': 3, 'starter-activity': 6, 'activation': 3, 'construction': 4,
+    'mini-activity': 6, 'main-activity': 5, 'collaboration': 12, 'mini-quiz': 4,
+    'reflection': 4, 'plenary': 2, 'activity-plenary': 5
+  });
 });
 
-test('every activity that builds a game names a format the engines know', async () => {
+test('most of a lesson is not a quiz', async () => {
   const { ACTIVITIES } = await import('../src/activities/catalogue.js');
-  const { FORMAT_STYLE, FORMATS } = await import('../src/games/catalogue.js');
+  const by = ACTIVITIES.reduce((n, a) => ((n[a.target] = (n[a.target] || 0) + 1), n), {});
+  assert.deepEqual(by, { slide: 20, game: 13, moment: 10, feedback: 9, 'slide-arc': 2 });
+  /* The shape is the point. A catalogue that drifted towards games would be
+     describing a different product, so this fails if games ever lead. */
+  assert.ok(by.game < by.slide, 'games should not outnumber slides');
+});
+
+test('every primitive the catalogue names exists in this build', async () => {
+  const { ACTIVITIES } = await import('../src/activities/catalogue.js');
   const { GAME_STYLES } = await import('../src/games/registry.js');
+  const { DECK_TYPES } = await import('../src/deck/content.js');
+  const { FEEDBACK_KINDS } = await import('../src/deck/feedback.js');
 
   for (const a of ACTIVITIES) {
-    if (a.target !== 'game' || a.enabled === false) continue;
-    const style = FORMAT_STYLE[a.key] || (GAME_STYLES[a.key] ? a.key : null);
-    assert.ok(
-      style || FORMATS[a.key],
-      a.key + ' builds a game but maps to no engine — it would insert nothing'
-    );
-    if (style) assert.ok(GAME_STYLES[style], a.key + ' maps to unregistered engine ' + style);
+    if (a.style) assert.ok(GAME_STYLES[a.style], a.key + ' names unregistered engine ' + a.style);
+    if (a.layout) assert.ok(DECK_TYPES.includes(a.layout), a.key + ' names unknown layout ' + a.layout);
+    if (a.feedbackKind) {
+      assert.ok(FEEDBACK_KINDS[a.feedbackKind], a.key + ' names unknown feedback ' + a.feedbackKind);
+    }
+    /* A game with no engine would insert nothing; a slide with no layout
+       would land as a blank content slide with no shape to teach from. */
+    if (a.target === 'game') assert.ok(a.style, a.key + ' builds a game but names no engine');
+    if (a.target === 'slide') assert.ok(a.layout, a.key + ' builds a slide but names no layout');
+    if (a.target === 'feedback') assert.ok(a.feedbackKind, a.key + ' collects feedback but names no kind');
   }
 });
 
-test('keys are unique, and every phase offers something', async () => {
-  const { ACTIVITIES, PHASES, activitiesInPhase, phaseCounts } =
-    await import('../src/activities/catalogue.js');
-
-  const seen = new Set();
+test('every activity carries what the plan rail and inspector need', async () => {
+  const { ACTIVITIES, PHASES } = await import('../src/activities/catalogue.js');
+  const keys = new Set();
   for (const a of ACTIVITIES) {
-    assert.ok(!seen.has(a.key), 'duplicate key ' + a.key);
-    seen.add(a.key);
+    assert.ok(!keys.has(a.key), 'duplicate key ' + a.key);
+    keys.add(a.key);
+    assert.ok(a.title && a.blurb, a.key + ' is missing title or blurb');
     assert.ok(PHASES.some((p) => p.key === a.phase), a.key + ' has unknown phase ' + a.phase);
-  }
-
-  /* A phase tab that opens on nothing is worse than no tab. */
-  const counts = phaseCounts();
-  for (const p of PHASES) {
-    assert.ok(counts[p.key] > 0, 'phase ' + p.key + ' offers no activity');
-    assert.equal(counts[p.key], activitiesInPhase(p.key).length);
-  }
-});
-
-test('a disabled activity is never offered', async () => {
-  const { ACTIVITIES, activitiesInPhase } = await import('../src/activities/catalogue.js');
-  const off = ACTIVITIES.filter((a) => a.enabled === false);
-  assert.ok(off.length, 'expected at least one disabled activity to prove the rule');
-  for (const a of off) {
-    assert.ok(
-      !activitiesInPhase(a.phase).some((x) => x.key === a.key),
-      a.key + ' is disabled but still offered'
-    );
-  }
-});
-
-test('a timed protocol carries its steps, and nothing else claims to', async () => {
-  const { ACTIVITIES } = await import('../src/activities/catalogue.js');
-  const moments = ACTIVITIES.filter((a) => a.target === 'moment');
-  assert.ok(moments.length >= 12, 'expected the timed protocols, got ' + moments.length);
-  for (const a of moments) {
-    assert.equal(a.category, 'moment', a.key + ' targets a moment but is not categorised as one');
-    assert.ok(a.steps && a.steps.length >= 2, a.key + ' has no protocol to run');
-    assert.ok(a.minutes > 0, a.key + ' has no duration');
-  }
-  for (const a of ACTIVITIES) {
-    if (a.target !== 'moment') assert.equal(a.steps, undefined, a.key + ' should not carry steps');
+    assert.ok(a.minutes > 0, a.key + ' has no duration, so it cannot be budgeted');
+    /* The steps are how it runs. For the ten moments they are the entire
+       activity — there is no game to open and nothing to author. */
+    assert.ok(a.steps.length >= 2, a.key + ' has no steps');
+    for (const step of a.steps) assert.ok(/[a-zA-Z]/.test(step), a.key + ' has an empty step');
   }
 });
 
 test('minutes add up across a planned run', async () => {
-  const { totalMinutes, activity } = await import('../src/activities/catalogue.js');
-  const keys = ['low-stakes-quiz', 'think-pair-square', 'whiteboards-on-walls'];
+  const { totalMinutes, activity, ACTIVITIES } = await import('../src/activities/catalogue.js');
+  const keys = ACTIVITIES.slice(0, 4).map((a) => a.key);
   const expected = keys.reduce((n, k) => n + activity(k).minutes, 0);
   assert.equal(totalMinutes(keys), expected);
   /* An unknown key contributes nothing rather than NaN-ing the whole budget. */
-  assert.equal(totalMinutes(['low-stakes-quiz', 'no-such-activity']), activity('low-stakes-quiz').minutes);
+  assert.equal(totalMinutes([keys[0], 'no-such-activity']), activity(keys[0]).minutes);
   assert.equal(totalMinutes([]), 0);
+});
+
+test('a plan keeps only activities this build still offers', async () => {
+  const { normalizePlan, planMinutes } = await import('../src/activities/plan.js');
+  const { ACTIVITIES } = await import('../src/activities/catalogue.js');
+  const real = ACTIVITIES[0].key;
+  const plan = normalizePlan({
+    title: 'From an older build',
+    items: [{ key: real }, { key: 'retired-activity' }, { nonsense: true }]
+  });
+  assert.equal(plan.items.length, 1, 'items naming an unknown activity should be dropped');
+  assert.equal(plan.items[0].key, real);
+  assert.ok(plan.items[0].id, 'a surviving item still needs an id');
+  assert.equal(planMinutes(plan), ACTIVITIES[0].minutes);
+  assert.equal(normalizePlan(null), null);
 });
