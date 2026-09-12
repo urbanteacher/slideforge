@@ -285,11 +285,29 @@ test('one participant is the room, and needs no name on the verdict', (t) => {
   assert.equal(sent[0].participant, null);
 });
 
+test('a new game opens on a pool that can already fill a card', () => {
+  const { SF } = load();
+  const style = SF.GAME_STYLES.bingo;
+  const game = SF.makeGame('Fresh', 'bingo');
+  /* It used to open on one pair and fail its own board check before the
+     teacher had typed anything. The other pair-based boards have always
+     shipped a bank; this one now does too. */
+  assert.ok(game.questions.length >= 9, 'a 3×3 card needs nine terms, got ' + game.questions.length);
+  assert.equal(style.board(game), null);
+  for (const [i, q] of game.questions.entries()) {
+    assert.equal(style.problems(q, i + 1), null, 'starter ' + (i + 1));
+  }
+  const terms = game.questions.map((q) => q.term.toLowerCase());
+  assert.equal(new Set(terms).size, terms.length, 'a duplicate term shrinks the pool');
+});
+
 test('a game is refused when the pool cannot fill a card', () => {
   const { SF } = load();
   const style = SF.GAME_STYLES.bingo;
   const game = SF.makeGame('Too few', 'bingo');
-  assert.equal(game.questions.length, 1);
+  /* Trimmed on purpose. This used to rely on the factory handing back a
+     single pair, which is the fault the bank fixed. */
+  game.questions = game.questions.slice(0, 1);
   assert.match(style.board(game), /3×3 card needs 9 different terms and this has 1/);
 
   /* Nine distinct terms clears it; nine of the same term does not. */

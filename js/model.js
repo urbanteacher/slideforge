@@ -4820,6 +4820,82 @@
     };
   }
 
+  // src/samples/bingo.json
+  var bingo_default = [
+    {
+      term: "Nucleus",
+      question: "Nucleus",
+      definition: "Holds the cell’s DNA and controls what it makes",
+      gridSize: 3
+    },
+    {
+      term: "Cytoplasm",
+      question: "Cytoplasm",
+      definition: "The jelly where most of the cell’s reactions happen",
+      gridSize: 3
+    },
+    {
+      term: "Cell membrane",
+      question: "Cell membrane",
+      definition: "Controls what gets into and out of the cell",
+      gridSize: 3
+    },
+    {
+      term: "Mitochondrion",
+      question: "Mitochondrion",
+      definition: "Releases energy from glucose in respiration",
+      gridSize: 3
+    },
+    {
+      term: "Ribosome",
+      question: "Ribosome",
+      definition: "Builds proteins from amino acids",
+      gridSize: 3
+    },
+    {
+      term: "Vacuole",
+      question: "Vacuole",
+      definition: "Stores sap and keeps a plant cell firm",
+      gridSize: 3
+    },
+    {
+      term: "Chloroplast",
+      question: "Chloroplast",
+      definition: "Traps light so the plant can photosynthesise",
+      gridSize: 3
+    },
+    {
+      term: "Cell wall",
+      question: "Cell wall",
+      definition: "Stops a plant cell bursting when it fills with water",
+      gridSize: 3
+    },
+    {
+      term: "Chromosome",
+      question: "Chromosome",
+      definition: "A long coiled molecule of DNA carrying many genes",
+      gridSize: 3
+    },
+    {
+      term: "Enzyme",
+      question: "Enzyme",
+      definition: "A protein that speeds up one reaction and is not used up",
+      gridSize: 3
+    },
+    {
+      term: "Diffusion",
+      question: "Diffusion",
+      definition: "Particles spreading from where there are many to where there are few",
+      gridSize: 3
+    },
+    {
+      term: "Osmosis",
+      question: "Osmosis",
+      definition: "Water moving across a partially permeable membrane",
+      gridSize: 3
+    }
+  ];
+
   // src/games/bingo.js
   function bingoHasLine(marked, size) {
     size = Math.max(2, Math.min(4, Number(size) || 3));
@@ -4859,6 +4935,15 @@
   var board2 = createBingoBoard();
   var bingo = {
     boardEngine: board2,
+    /* Twelve pairs, because a 3×3 card needs nine different terms and a pool
+         the same size as the card deals every team an identical one.
+    
+         Without a bank, makeGame('bingo') produced a single pair and the game was
+         invalid the moment it existed: board() answered "a 3×3 card needs 9
+         different terms and this has 1" before the teacher had typed anything.
+         The other pair-based boards have shipped a bank since they were written;
+         this one was the exception. */
+    starters: bingo_default,
     defaults: {
       "scoreboard": false,
       "defaultTime": 0,

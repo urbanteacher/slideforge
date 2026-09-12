@@ -1,6 +1,7 @@
 import { createBingoBoard } from "../boards/bingo.js";
 /* SlideForge — games/bingo. Edit source here; npm run build updates js/model.js. */
 import { normalizePairQuestion, pairProblems } from "./memory.js";
+import starters from "../samples/bingo.json" with { type: "json" };
 
 /* Bingo — term bank; line wins; no points. */
 function bingoHasLine(marked, size) {
@@ -32,6 +33,15 @@ const board = createBingoBoard();
 /** @type {import("../types.js").GameEngine<import("../types.js").QuestionWith<'term'|'definition'|'gridSize'>>} */
 const bingo = {
   boardEngine: board,
+  /* Twelve pairs, because a 3×3 card needs nine different terms and a pool
+     the same size as the card deals every team an identical one.
+
+     Without a bank, makeGame('bingo') produced a single pair and the game was
+     invalid the moment it existed: board() answered "a 3×3 card needs 9
+     different terms and this has 1" before the teacher had typed anything.
+     The other pair-based boards have shipped a bank since they were written;
+     this one was the exception. */
+  starters,
   defaults: {
     "scoreboard": false,
     "defaultTime": 0,
