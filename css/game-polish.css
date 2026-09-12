@@ -1,0 +1,363 @@
+/* Presentation game finishes. Keep the shared 1280 × 720 geometry and theme.
+   Motion belongs to entrances / reveals, never the scaled slide itself. */
+.game-stage {
+  --game-edge: color-mix(in srgb, var(--s-accent) 38%, var(--s-rule));
+  --game-shadow: 0 6px 0 color-mix(in srgb, var(--s-fg) 9%, transparent),
+    0 14px 28px color-mix(in srgb, var(--s-fg) 6%, transparent);
+}
+.game-stage :is(.mem-clock, .bingo-count, .lsq-clock) {
+  border-color: var(--game-edge);
+  background: color-mix(in srgb, var(--s-accent) 7%, var(--s-card));
+  font-variant-numeric: tabular-nums;
+}
+.game-stage :is(.mem-button, .bingo-button, .bowl-button, .boss-button) {
+  transition: background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+/* Theme foreground remains readable even when a theme background is a gradient. */
+.game-stage :is(.mem-button, .bingo-button, .bowl-button, .boss-button).primary {
+  background: color-mix(in srgb, var(--s-accent) 20%, var(--s-card));
+  color: var(--s-fg);
+  border-color: var(--s-accent);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--s-accent) 35%, transparent);
+}
+.game-stage button:focus-visible {
+  outline: 4px solid var(--s-accent);
+  outline-offset: 4px;
+}
+
+/* Memory: a tactile deck, quiet study face, unmistakable selection. */
+.game-stage .mem-card {
+  border-radius: 20px;
+  box-shadow: var(--game-shadow);
+}
+.game-stage .mem-card:disabled { opacity: 1; }
+.game-stage .mem-card.face-up {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--s-accent) 8%, transparent), transparent 65%), var(--s-card);
+}
+.game-stage .mem-card.face-down {
+  background: repeating-linear-gradient(45deg, transparent 0 14px,
+    color-mix(in srgb, var(--s-accent) 8%, transparent) 14px 16px), var(--s-card);
+  border-color: var(--game-edge);
+  outline: 1px solid color-mix(in srgb, var(--s-accent) 22%, transparent);
+  outline-offset: -10px;
+}
+.game-stage .mem-card.selected {
+  border-color: var(--s-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--s-accent) 18%, transparent), var(--game-shadow);
+}
+.game-stage .mem-card.collected { border-style: solid; box-shadow: none; }
+.game-stage .mem-symbol { text-shadow: 0 3px 0 color-mix(in srgb, var(--s-accent) 18%, transparent); }
+.game-stage .mem-check { box-shadow: 0 18px 60px #0003; animation: game-reveal .24s ease-out both; }
+.game-stage .mem-progress span.on { border-radius: 3px; }
+
+/* Bingo: compact playing cards and clearly stamped claims. */
+.game-stage .bingo-call {
+  border-left-width: 8px;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--s-accent) 9%, transparent), transparent), var(--s-card);
+}
+.game-stage .bingo-card { background: var(--s-card); border-top-color: var(--game-edge); }
+.game-stage .bingo-card-head { border-bottom: 1px solid var(--s-rule); padding-bottom: 3px; }
+.game-stage .bingo-square.is-claimed {
+  border-style: double;
+  border-width: 4px;
+  padding: 2px 4px; /* Keep content space equal to unclaimed cells. */
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--s-accent) 12%, transparent);
+}
+.game-stage .bingo-card.won {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--s-accent) 18%, transparent);
+}
+
+/* Quiz Bowl: category marquee, prize tiles, then a focused question card. */
+.game-stage .bowl-category {
+  border-radius: 9px 9px 0 0;
+  background: color-mix(in srgb, var(--s-accent) 12%, var(--s-card));
+}
+.game-stage .bowl-cell {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--s-accent) 13%, transparent), transparent), var(--s-card);
+  border-color: var(--game-edge);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--s-fg) 12%, transparent);
+  font-variant-numeric: tabular-nums;
+  transition: background .16s ease, border-color .16s ease, transform .16s ease;
+}
+.game-stage .bowl-cell.is-spent { box-shadow: none; background: transparent; border-style: dashed; }
+.game-stage .bowl-ask { border-color: var(--game-edge); box-shadow: var(--game-shadow); }
+.game-stage .bowl-answer { animation: game-reveal .24s ease-out both; }
+
+/* Puzzle pieces retain equal visual weight so styling cannot hint at an answer. */
+.game-stage :is(.conn-tile, .compare-tile, .knowledge-chip) {
+  border-radius: 20px;
+  box-shadow: var(--game-shadow);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--s-accent) 6%, transparent), transparent), var(--s-card);
+}
+.game-stage .opts.odd-grid .opt { border-radius: 20px; box-shadow: var(--game-shadow); }
+.game-stage .opts.odd-grid .opt.odd-marked { box-shadow: 0 0 0 4px color-mix(in srgb, var(--s-accent) 18%, transparent); }
+.game-stage .wr-tile {
+  border-radius: 12px;
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--s-fg) 16%, transparent);
+}
+.game-stage .wr-tile.blank { box-shadow: none; }
+.game-stage .wr-tile.lit {
+  background: color-mix(in srgb, var(--s-accent) 16%, var(--s-card));
+  border-color: var(--s-accent);
+}
+.game-stage .blank-pill {
+  border-radius: 10px;
+  border-bottom: 4px solid var(--s-accent);
+  background: color-mix(in srgb, var(--s-accent) 10%, var(--s-card));
+}
+.game-stage .chain-node { box-shadow: 0 4px 0 color-mix(in srgb, var(--s-fg) 10%, transparent); }
+.game-stage .chain-node.ghost { box-shadow: none; }
+.game-stage .compare-panels.on { animation: game-reveal .24s ease-out both; }
+
+/* Performance rounds get a stage; backgrounds never compete with the words. */
+.game-stage.present-headsup .heads-stage {
+  border-radius: 32px;
+  border: 2px solid var(--game-edge);
+  background: radial-gradient(ellipse at 50% 0, color-mix(in srgb, var(--s-accent) 15%, transparent), transparent 70%);
+}
+.game-stage.present-headsup .oracy-term { text-shadow: 0 5px 0 color-mix(in srgb, var(--s-fg) 8%, transparent); }
+.game-stage.present-spin .spin-stage {
+  border-width: 6px;
+  box-shadow: inset 0 0 0 8px var(--s-card), 0 0 0 3px var(--game-edge), var(--game-shadow);
+}
+/* The current runtime advances authored prompts; don't suggest a live random spin. */
+.game-stage.present-spin .spin-wheel { animation: none; opacity: .6; }
+.game-stage.present-emoji .emoji-stage {
+  border-radius: 28px;
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--s-accent-2) 12%, transparent), transparent 72%);
+}
+.game-stage.present-boss .boss-crest {
+  filter: drop-shadow(0 8px 0 color-mix(in srgb, var(--s-accent) 16%, transparent));
+}
+.game-stage.present-boss .boss-hp-rail { height: 22px; background: var(--s-card); }
+.game-stage.present-boss .boss-hp-fill {
+  background: repeating-linear-gradient(90deg, transparent 0 44px, #ffffff25 44px 47px), var(--s-accent);
+}
+.game-stage.present-boss .is-defeated .boss-crest { filter: none; opacity: .6; }
+.game-stage .race-strip .rlane.won { box-shadow: inset 0 0 0 2px var(--s-accent); }
+
+/* Retrieval practice stays calm, with a restrained worksheet finish. */
+.game-stage.lowstakes-board-slide .lsq-list {
+  border-left: 3px solid color-mix(in srgb, var(--s-accent) 35%, transparent);
+  padding-left: 18px;
+}
+
+/* Answer rounds: generous existing geometry, stronger grouping and key badges. */
+.game-stage:is(.present-choice, .present-truefalse, .present-speed, .present-ranking) .opt {
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--s-fg) 10%, transparent);
+}
+.game-stage.present-choice .opt { border-radius: 18px; }
+.game-stage.present-truefalse .opts.tf-duo .opt {
+  border-radius: 24px;
+  border-width: 3px;
+}
+.game-stage.present-speed .opts.speed-opts .opt {
+  border-radius: 8px 22px 22px 8px;
+  border-left-width: 6px;
+}
+.game-stage.present-ranking .opts.ordered .opt {
+  border-radius: 12px;
+  border-left: 5px solid var(--game-edge);
+}
+.game-stage.present-ranking .opts.ordered .opt .key {
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--s-accent) 14%, var(--s-card));
+}
+.game-stage.present-definition .definition-stage {
+  border-left: 5px solid var(--game-edge);
+  border-radius: 0 20px 20px 0;
+  background: color-mix(in srgb, var(--s-accent) 4%, var(--s-card));
+}
+.game-stage.present-definition .phase-asking { border-left-style: dashed; }
+.game-stage:is(.present-spoterror, .present-predict, .present-timetravel) .qhead {
+  border-left: 5px solid var(--game-edge);
+  padding-left: 20px;
+}
+
+@media (hover: hover) {
+  .game-stage .mem-card:not(:disabled):hover,
+  .game-stage .bowl-cell:not(:disabled):not(.is-spent):hover {
+    transform: translateY(-3px);
+    border-color: var(--s-accent);
+  }
+  .game-stage :is(.mem-button, .bingo-button, .bowl-button, .boss-button):not(:disabled):hover {
+    border-color: var(--s-accent);
+  }
+}
+/* Short introductions, with no ambient loops or flashing. */
+.game-stage.entering :is(.mem-header, .bingo-head, .bowl-head, .lsq-header) {
+  animation: game-arrive .3s ease-out both;
+}
+.game-stage.entering :is(.mem-grid, .bingo-cards, .bowl-grid, .conn-pair, .compare-pair, .opts.odd-grid) {
+  animation: game-arrive .32s ease-out both;
+}
+@keyframes game-arrive {
+  from { opacity: 0; translate: 0 10px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes game-reveal {
+  from { opacity: 0; scale: .98; }
+  to { opacity: 1; scale: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game-stage, .game-stage *, .game-stage *::before, .game-stage *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Emoji Guess: a compact rebus stage and a distinct answer payoff.
+   Reveals follow the existing held/correct answer state in both player modes. */
+.game-stage.present-emoji .emoji-stage {
+  width: min(960px, 100%);
+  min-height: 260px;
+  margin-top: 16px;
+  gap: 12px;
+  background: radial-gradient(ellipse at 50% 45%, color-mix(in srgb, var(--s-accent-2) 15%, transparent), transparent 72%);
+}
+.game-stage.present-emoji .emoji-mission {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  color: var(--s-accent);
+}
+.game-stage.present-emoji .emoji-hero {
+  background: transparent;
+  border: none;
+  padding: 16px 12px;
+  font-size: 80px;
+  overflow-wrap: anywhere;
+  animation: none;
+}
+.game-stage.present-emoji .emoji-hero.emoji-tiled {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  font-size: clamp(40px, calc(440px / var(--clue-count)), 80px);
+  letter-spacing: 0;
+}
+.game-stage.present-emoji .emoji-clue {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 1.38em;
+  min-height: 1.5em;
+  padding: .08em;
+  border: 2px solid var(--game-edge);
+  border-radius: 22px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--s-accent) 9%, transparent), transparent), var(--s-card);
+  box-shadow: var(--game-shadow);
+}
+.game-stage.present-emoji .emoji-operator { font-size: .6em; color: var(--s-dim); }
+.game-stage.present-emoji .emoji-nudge {
+  margin: 0;
+  text-align: center;
+  font-size: 18px;
+  line-height: 1.35;
+  color: var(--s-dim);
+}
+.game-stage.present-emoji .emoji-help-blanks {
+  margin: 0 auto;
+  padding: 10px 20px;
+  border-radius: 12px;
+  max-width: 100%;
+}
+.game-stage.present-emoji .emoji-solved { display: none; }
+.game-stage.present-emoji:has(.opt.answer.correct:not(.held)) .emoji-thinking { display: none; }
+.game-stage.present-emoji:has(.opt.answer.correct:not(.held)) .emoji-solved { display: inline; }
+.game-stage.present-emoji:has(.opt.answer.correct:not(.held)) .emoji-clue {
+  border-color: var(--s-accent);
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--s-accent) 25%, transparent);
+}
+.game-stage.present-emoji .opt.answer.correct:not(.held) {
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--s-accent) 13%, var(--s-card));
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--s-accent) 12%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .game-stage.present-emoji.entering .emoji-clue {
+    animation: emoji-deal .3s cubic-bezier(.2,.8,.2,1) both;
+    animation-delay: calc(var(--clue-index) * 20ms);
+  }
+  .game-stage.present-emoji .opt.answer.correct:not(.held) {
+    animation: emoji-payoff .45s ease-out both;
+  }
+}
+@keyframes emoji-deal {
+  from { opacity: 0; translate: 0 12px; rotate: -4deg; }
+  to { opacity: 1; translate: 0 0; rotate: 0deg; }
+}
+@keyframes emoji-payoff {
+  0% { scale: .97; }
+  55% { scale: 1.015; }
+  100% { scale: 1; }
+}
+
+/* Spin & Explain: wheel theatre beside a readable speaking card. */
+.game-stage.present-spin .spin-room {
+  display: grid; grid-template-columns: 330px minmax(0, 1fr);
+  gap: 38px; align-items: center; width: 100%; margin: 12px auto;
+}
+.game-stage.present-spin .spin-dial { position: relative; width: 330px; height: 365px; }
+.game-stage.present-spin .spin-disc {
+  width: 310px; height: 310px; margin: 10px; border-radius: 50%;
+  border: 8px solid var(--s-accent);
+  background: repeating-conic-gradient(from -22.5deg,
+    color-mix(in srgb, var(--s-accent) 22%, var(--s-card)) 0deg 45deg,
+    var(--s-card) 45deg 90deg);
+  box-shadow: 0 0 0 5px var(--s-rule), 0 12px 0 color-mix(in srgb, var(--s-fg) 12%, transparent);
+  position: relative;
+}
+.game-stage.present-spin .spin-segment {
+  position: absolute; top: 50%; left: 50%; font-size: 28px; line-height: 1;
+  width: 32px; text-align: center; margin: -16px;
+  transform: rotate(calc(var(--sector) * 45deg)) translateY(-112px);
+  color: var(--s-fg);
+}
+.game-stage.present-spin .spin-pointer {
+  position: absolute; top: -4px; left: 140px; width: 50px;
+  font-size: 44px; color: var(--s-fg); text-align: center;
+}
+.game-stage.present-spin .spin-hub {
+  position: absolute; left: 115px; top: 115px; width: 100px; height: 100px;
+  border-radius: 50%; display: grid; place-items: center;
+  background: var(--s-card); border: 5px solid var(--s-accent);
+  color: var(--s-fg); font-size: 20px; font-weight: 850; letter-spacing: .12em;
+}
+.game-stage.present-spin .spin-counter {
+  position: absolute; bottom: 0; width: 100%; text-align: center;
+  font-size: 15px; font-weight: 800; letter-spacing: .14em; color: var(--s-accent);
+}
+.game-stage.present-spin .spin-challenge {
+  min-width: 0; padding: 24px 28px; border-radius: 24px;
+  border: 2px solid var(--game-edge); background: var(--s-card); box-shadow: var(--game-shadow);
+}
+.game-stage.present-spin .spin-eyebrow { font-size: 13px; font-weight: 800; letter-spacing: .15em; color: var(--s-accent); }
+.game-stage.present-spin .spin-concept {
+  font-size: 44px; line-height: 1.1; letter-spacing: -.025em;
+  margin: 12px 0 22px; overflow-wrap: anywhere; text-wrap: balance;
+}
+.game-stage.present-spin .spin-scaffold { display: grid; gap: 10px; }
+.game-stage.present-spin .spin-prompt { display: flex; gap: 12px; align-items: center; font-size: 18px; }
+.game-stage.present-spin .spin-prompt span {
+  display: grid; place-items: center; width: 28px; height: 28px; flex: none;
+  border-radius: 50%; background: color-mix(in srgb, var(--s-accent) 14%, transparent); color: var(--s-accent);
+}
+.game-stage.present-spin .spin-prompt strong { font-weight: 550; }
+.game-stage.present-spin .spin-hint { font-size: 17px; margin-top: 18px; border-top: 1px solid var(--s-rule); padding-top: 12px; }
+.game-stage.present-spin .spin-hint summary { cursor: pointer; color: var(--s-accent); font-weight: 700; }
+.game-stage.present-spin .spin-hint summary:focus-visible { outline: 3px solid var(--s-accent); outline-offset: 4px; }
+.game-stage.present-spin .spin-hint p { font-size: 18px; margin: 8px 0 0; overflow-wrap: anywhere; }
+.game-stage.present-spin .spin-deck-note { margin-top: 16px; font-size: 13px; color: var(--s-dim); }
+.game-stage.present-spin .judge-strip { margin-top: 10px; }
+.game-stage.present-spin .judge { border-radius: 14px; }
+.game-stage.present-spin:has(.judge.locked.correct) .spin-challenge { border-color: var(--s-accent); }
+@media (prefers-reduced-motion: no-preference) {
+  .game-stage.present-spin .spin-disc { animation: spin-draw .95s cubic-bezier(.12,.7,.15,1) both; }
+  .game-stage.present-spin .spin-concept { animation: game-reveal .25s .6s ease-out both; }
+}
+@keyframes spin-draw { from { rotate: -675deg; } to { rotate: 0deg; } }

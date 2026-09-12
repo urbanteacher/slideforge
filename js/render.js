@@ -15,12 +15,25 @@
     return n;
   }
 
+  function rich(tag, cls, slide, key, text) {
+    var n = el(tag, cls, text);
+    n.dataset.contentKey=key;
+    if (SF.Custom) SF.Custom.paint(n, slide, key, text);
+    return n;
+  }
+
   /* A bullet line starting with "- " or a tab/two spaces is a sub-bullet. */
   function bulletTier(line) {
     return /^(\s{2,}|\t|- )/.test(line) ? 2 : 1;
   }
   function bulletText(line) {
     return line.replace(/^(\s{2,}|\t|- )+/, '').trim();
+  }
+
+  /* Progressive builds: mark each revealable unit so Teaching.next can step them. */
+  function asStep(node, slide) {
+    if (slide && slide.progressive) node.classList.add('step');
+    return node;
   }
 
   function ring(size, stroke, frac, extraClass) {
@@ -52,22 +65,23 @@
 
   function layoutTitle(slide, pad) {
     pad.appendChild(el('div', 'accent-bar'));
-    pad.appendChild(el('h1', null, slide.title || ' '));
-    if (slide.subtitle) pad.appendChild(el('div', 'sub', slide.subtitle));
+    pad.appendChild(rich('h1', null, slide, 'title', slide.title || ' '));
+    if (slide.subtitle) pad.appendChild(rich('div', 'sub', slide, 'subtitle', slide.subtitle));
   }
 
   function layoutSection(slide, pad) {
-    pad.appendChild(el('h1', null, slide.title || ' '));
-    if (slide.subtitle) pad.appendChild(el('div', 'sub', slide.subtitle));
+    pad.appendChild(rich('h1', null, slide, 'title', slide.title || ' '));
+    if (slide.subtitle) pad.appendChild(rich('div', 'sub', slide, 'subtitle', slide.subtitle));
     pad.appendChild(el('div', 'accent-bar'));
   }
 
   function layoutContent(slide, pad) {
-    if (slide.title) pad.appendChild(el('h2', null, slide.title));
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
     var ul = el('ul');
-    var lines = (slide.bullets || []).filter(function (b) { return String(b).trim(); });
-    lines.forEach(function (line) {
-      var li = el('li', bulletTier(line) === 2 ? 'tier-2' : null, bulletText(line));
+    var lines = (slide.bullets || []).map(function(text,index){return {text:text,index:index};}).filter(function (b) { return String(b.text).trim(); });
+    lines.forEach(function (item) {
+      var line=item.text;
+      var li = asStep(rich('li', bulletTier(line) === 2 ? 'tier-2' : null, slide, 'bullets.' + item.index, bulletText(line)), slide);
       ul.appendChild(li);
     });
     pad.appendChild(ul);
@@ -75,7 +89,7 @@
 
   /* Bold keyword + lowercase definition — glossary / dual-coding of terms. */
   function layoutKeywords(slide, pad) {
-    if (slide.title) pad.appendChild(el('h2', null, slide.title));
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
     var list = el('div', 'kw-list');
     var rows = (slide.bullets || []).map(SF.parseKeywordLine)
       .filter(function (p) { return p.term || p.def; });
@@ -86,7 +100,7 @@
       list.appendChild(empty);
     } else {
       rows.forEach(function (p) {
-        var row = el('div', 'kw-row');
+        var row = asStep(el('div', 'kw-row'), slide);
         row.appendChild(el('strong', 'kw-term', p.term || ' '));
         row.appendChild(el('span', 'kw-def', p.def || ' '));
         list.appendChild(row);
@@ -97,7 +111,7 @@
 
   /* Italic phrase + plain gloss — emphasis without a formatting ribbon. */
   function layoutItalics(slide, pad) {
-    if (slide.title) pad.appendChild(el('h2', null, slide.title));
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
     var list = el('div', 'it-list');
     var rows = (slide.bullets || []).map(SF.parseKeywordLine)
       .filter(function (p) { return p.term || p.def; });
@@ -108,7 +122,7 @@
       list.appendChild(empty);
     } else {
       rows.forEach(function (p) {
-        var row = el('div', 'it-row');
+        var row = asStep(el('div', 'it-row'), slide);
         row.appendChild(el('em', 'it-phrase', p.term || ' '));
         row.appendChild(el('span', 'it-note', p.def || ' '));
         list.appendChild(row);
@@ -119,7 +133,7 @@
 
   /* Label on top, clickable URL below — further reading. */
   function layoutLinks(slide, pad) {
-    if (slide.title) pad.appendChild(el('h2', null, slide.title));
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
     var list = el('div', 'ln-list');
     var rows = (slide.bullets || []).map(SF.parseKeywordLine)
       .filter(function (p) { return p.term || p.def; });
@@ -154,8 +168,22 @@
   }
 
   function layoutQuote(slide, pad) {
-    pad.appendChild(el('div', 'q', slide.body || ' '));
-    if (slide.subtitle) pad.appendChild(el('div', 'attrib', slide.subtitle));
+    var text = slide.body || ' ';
+    if (slide.progressive) {
+      var lines = String(text).split(/\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+      if (lines.length > 1) {
+        var wrap = el('div', 'q q-build');
+        lines.forEach(function (line) {
+          wrap.appendChild(asStep(el('div', 'q-line', line), slide));
+        });
+        pad.appendChild(wrap);
+      } else {
+        pad.appendChild(asStep(rich('div', 'q', slide, 'body', text), slide));
+      }
+    } else {
+      pad.appendChild(rich('div', 'q', slide, 'body', text));
+    }
+    if (slide.subtitle) pad.appendChild(rich('div', 'attrib', slide, 'subtitle', slide.subtitle));
   }
 
   function layoutImage(slide, pad) {
@@ -163,7 +191,7 @@
       var img = el('div', 'img ' + (slide.imageFit === 'contain' ? 'contain' : 'cover'));
       img.style.backgroundImage = 'url("' + String(slide.image).replace(/"/g, '&quot;') + '")';
       pad.appendChild(img);
-      if (slide.title) pad.appendChild(el('div', 'cap', slide.title));
+      if (slide.title) pad.appendChild(rich('div', 'cap', slide, 'title', slide.title));
     } else {
       var e = el('div', 'empty');
       e.appendChild(el('div', null, '▣'));
@@ -172,20 +200,118 @@
     }
   }
 
+  /* A table, from tab- or pipe-separated text. */
+  function layoutTable(slide, pad) {
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
+    var rows = SF.parseTable(slide.body);
+    if (!rows.length) {
+      var e = el('div', 'empty');
+      e.appendChild(el('div', null, '\u229e'));
+      e.appendChild(el('div', null, 'Paste rows from a spreadsheet, or type them separated by |'));
+      pad.appendChild(e);
+      return;
+    }
+
+    /* Type size steps down with the row count instead of being fitted by
+       measurement. The canvas is a fixed 1280x720 and the row cap is 12, so
+       the worst case is known in advance — there is nothing here to measure
+       that the numbers do not already say. */
+    var head = slide.tableHeader && rows.length > 1 ? rows[0] : null;
+    var body = head ? rows.slice(1) : rows;
+    var t = el('table', 'tbl rows-' + Math.min(12, rows.length) +
+      ' cols-' + Math.min(6, rows[0].length));
+
+    if (head) {
+      var thead = el('thead'), hr = el('tr');
+      head.forEach(function (c) { hr.appendChild(el('th', null, c)); });
+      thead.appendChild(hr);
+      t.appendChild(thead);
+    }
+    var tbody = el('tbody');
+    body.forEach(function (r) {
+      var tr = asStep(el('tr'), slide);
+      r.forEach(function (c, i) {
+        /* The first column is the thing being described and the rest are what
+           is said about it, so it carries the weight. */
+        tr.appendChild(el('td', i === 0 ? 'lead' : null, c));
+      });
+      tbody.appendChild(tr);
+    });
+    t.appendChild(tbody);
+    pad.appendChild(t);
+  }
+
+  /* Video, referenced rather than embedded — see safeMedia in model.js.
+     Rendered three ways on purpose: a rail thumbnail gets a still, because a
+     dozen <video> elements in a sidebar is a dozen decoders; the editor's
+     preview gets real controls so a clip can be checked while authoring; and
+     only the projector is allowed to start on its own. */
+  function layoutVideo(slide, pad, opts) {
+    opts = opts || {};
+    var fit = slide.imageFit === 'contain' ? 'contain' : 'cover';
+
+    if (!slide.video) {
+      var e = el('div', 'empty');
+      e.appendChild(el('div', null, '\u25b6'));
+      e.appendChild(el('div', null, 'Paste a video URL or a path in the inspector'));
+      pad.appendChild(e);
+      return;
+    }
+
+    if (opts.chrome === false) {                 // rail thumbnail
+      var still = el('div', 'img ' + fit);
+      if (slide.videoPoster) {
+        still.style.backgroundImage = 'url("' + slide.videoPoster.replace(/"/g, '&quot;') + '")';
+      } else {
+        still.classList.add('vid-blank');
+      }
+      still.appendChild(el('div', 'vid-badge', '\u25b6'));
+      pad.appendChild(still);
+      if (slide.title) pad.appendChild(rich('div', 'cap', slide, 'title', slide.title));
+      return;
+    }
+
+    var v = el('video', 'vid ' + fit);
+    v.src = slide.video;
+    v.controls = true;
+    v.preload = 'metadata';
+    v.playsInline = true;
+    v.loop = slide.videoLoop === true;
+    v.muted = slide.videoMuted === true;
+    if (slide.videoPoster) v.poster = slide.videoPoster;
+    /* Intent, not action: Player starts and stops playback because it is the
+       only thing that knows when a slide arrives and leaves. Marking it here
+       and playing it there is also what keeps the editor's preview silent. */
+    if (slide.videoAutoplay && opts.interactive) v.dataset.autoplay = '1';
+    if (slide.videoStart > 0) {
+      v.dataset.start = String(slide.videoStart);
+      v.addEventListener('loadedmetadata', function () {
+        /* Guarded: a start past the end of the file would otherwise leave the
+           clip parked on a black frame with no way to tell why. */
+        if (isFinite(v.duration) && slide.videoStart < v.duration) {
+          v.currentTime = slide.videoStart;
+        }
+      }, { once: true });
+    }
+    pad.appendChild(v);
+    if (slide.title) pad.appendChild(rich('div', 'cap', slide, 'title', slide.title));
+  }
+
   /* Half text / half image — dual coding without leaving the teaching canvas. */
   function layoutSplit(slide, pad) {
     var side = slide.imageSide === 'left' ? 'left' : 'right';
     pad.classList.add('split-pad', 'image-' + side);
 
     var copy = el('div', 'split-copy');
-    if (slide.title) copy.appendChild(el('h2', null, slide.title));
+    if (slide.title) copy.appendChild(rich('h2', null, slide, 'title', slide.title));
     var ul = el('ul');
-    var lines = (slide.bullets || []).filter(function (b) { return String(b).trim(); });
+    var lines = (slide.bullets || []).map(function(text,index){return {text:text,index:index};}).filter(function (b) { return String(b.text).trim(); });
     if (!lines.length) {
       ul.appendChild(el('li', 'dim', 'Add points in the inspector'));
     } else {
-      lines.forEach(function (line) {
-        ul.appendChild(el('li', bulletTier(line) === 2 ? 'tier-2' : null, bulletText(line)));
+      lines.forEach(function (item) {
+        var line=item.text;
+        ul.appendChild(asStep(rich('li', bulletTier(line) === 2 ? 'tier-2' : null, slide, 'bullets.' + item.index, bulletText(line)), slide));
       });
     }
     copy.appendChild(ul);
@@ -209,6 +335,60 @@
       pad.appendChild(copy);
       pad.appendChild(media);
     }
+  }
+
+  /** Sample join payload for the editor / solo preview — real PIN arrives with Host live. */
+  function sampleJoinInfo() {
+    var origin = '';
+    try { origin = String(location.origin || ''); } catch (e) { origin = ''; }
+    if (!/^https?:/i.test(origin)) origin = 'http://localhost:8787';
+    var pin = '4821';
+    return {
+      pin: pin,
+      url: origin.replace(/^https?:\/\//i, ''),
+      link: origin.replace(/\/$/, '') + '/join.html?pin=' + pin,
+      open: true,
+      sample: true
+    };
+  }
+
+  /** Full-screen join: QR, PIN and address — the wall while phones arrive. */
+  function layoutJoin(slide, pad, opts) {
+    var join = (opts && opts.join) || sampleJoinInfo();
+    var stage = el('div', 'join-stage');
+    if (slide.title) stage.appendChild(rich('h2', 'join-title', slide, 'title', slide.title));
+    if (slide.subtitle) stage.appendChild(rich('div', 'join-sub', slide, 'subtitle', slide.subtitle));
+
+    var lines = (slide.bullets || []).map(function (t) { return String(t).trim(); }).filter(Boolean);
+    if (lines.length) {
+      var list = el('ul', 'join-bullets');
+      lines.forEach(function (line, i) {
+        list.appendChild(rich('li', null, slide, 'bullets.' + i, line));
+      });
+      stage.appendChild(list);
+    }
+
+    var board = el('div', 'join-board');
+    var code = el('div', 'join-qr');
+    if (join.link && SF.qrSvg) {
+      try {
+        code.innerHTML = SF.qrSvg(join.link, {
+          quiet: 4,
+          title: 'Join at ' + (join.url || join.link)
+        });
+      } catch (e) { /* address + PIN still work without a code */ }
+    }
+    board.appendChild(code);
+
+    var side = el('div', 'join-side');
+    side.appendChild(el('div', 'join-lead',
+      join.sample ? 'Sample — Host live for the real code' : 'Join at'));
+    side.appendChild(el('div', 'join-url', join.url || '—'));
+    side.appendChild(el('div', 'join-lead pin-lead', 'Game PIN'));
+    side.appendChild(el('div', 'join-pin', join.pin || '----'));
+    board.appendChild(side);
+    stage.appendChild(board);
+    pad.appendChild(stage);
   }
 
   /* A game embed is a marker, not a real slide: at showtime it is replaced by
@@ -277,10 +457,11 @@
     pad.appendChild(answer);
 
     var body = el('div', 'ex-body');
-    /* Blank lines make paragraphs; a single newline stays a line break. */
+    /* Blank lines make paragraphs; a single newline stays a line break.
+       With progressive builds, each paragraph is one Next press. */
     String(slide.body || '').split(/\n{2,}/).forEach(function (para) {
       if (!para.trim()) return;
-      body.appendChild(el('p', null, para.trim()));
+      body.appendChild(asStep(el('p', null, para.trim()), slide));
     });
     /* Long explanations step the type down rather than overflowing the slide. */
     var len = String(slide.body || '').length;
@@ -310,10 +491,24 @@
      the question and answers still have to dominate, but a race that only
      looks like a race after the reveal just looks like a quiz. Positions only
      change at reveal, so this is rendered once per slide and never updated. */
-  function raceStrip(lanes, len) {
+  function raceStrip(lanes, len, command) {
     var strip = el('div', 'race-strip');
+    if (command) strip.classList.add('runnable');
     lanes.forEach(function (lane) {
-      var row = el('div', 'rlane');
+      /* A button when the teacher is running the race, so a lane moves by
+         being pressed. With phones in the room the field moves itself and
+         these stay plain rows — two things moving one race is one too many. */
+      var row = el(command ? 'button' : 'div', 'rlane' +
+        (lane.moved ? ' moved' : '') + (lane.won ? ' won' : ''));
+      if (command) {
+        row.type = 'button';
+        row.setAttribute('aria-label', 'Move ' + lane.name + ' forward a step');
+        row.title = lane.pos >= len ? lane.name + ' is home' : 'Move ' + lane.name + ' on';
+        row.disabled = lane.pos >= len;
+        row.onclick = function (e) {
+          command(lane.key, e.shiftKey ? 'back' : 'advance');
+        };
+      }
       row.style.setProperty('--lane-color', lane.color || 'var(--s-accent)');
       row.style.setProperty('--lane-tint', tint(lane.color, 0.32));
 
@@ -336,19 +531,526 @@
     return strip;
   }
 
+  /* What the wall should look like for a compiled quiz slide.
+     Catalogue formats share the quiz runtime; presentation is what stops
+     every game reading as the same A–D card. */
+  function quizPresent(slide) {
+    /* Catalogue format first — Odd One Out and Predict share the choice engine
+       but must not look the same on the wall. */
+    var f = slide.format || '';
+    if (f === 'emoji-guess') return 'emoji';
+    if (f === 'fill-in-the-blanks') return 'blanks';
+    if (f === 'odd-one-out') return 'oddone';
+    if (f === 'compare-contrast') return 'compare';
+    if (f === 'spot-the-error') return 'spoterror';
+    if (f === 'predict-outcome') return 'predict';
+    if (f === 'low-stakes-quiz') return 'lowstakes';
+    if (f === 'definition-challenge') return 'definition';
+    if (f === 'time-traveler') return 'timetravel';
+    if (f === 'true-false' || f === 'truefalse') return 'truefalse';
+    if (f === 'beat-the-clock') return 'speed';
+    if (f === 'boss-battle') return 'boss';
+    if (f === 'horse-race') return 'race';
+    if (f === 'word-reveal') return 'wordreveal';
+    if (f === 'memory-flip') return 'claim';
+    if (f === 'memory-match') return 'memorymatch';
+    if (f === 'knowledge-flip') return 'knowledge';
+    if (f === 'heads-up') return 'headsup';
+    if (f === 'spin-explain') return 'spin';
+    if (f === 'connection-maker') return 'connection';
+    if (f === 'concept-chain') return 'chain';
+    if (f === 'random-challenge') return 'challenge';
+    if (f === 'quiz-bowl') return 'bowl';
+    if (f === 'ranking') return 'ranking';
+
+    var s = slide.style || '';
+    if (s === 'truefalse') return 'truefalse';
+    if (s === 'speed') return 'speed';
+    if (s === 'boss') return 'boss';
+    if (s === 'race') return 'race';
+    if (s === 'wordreveal') return 'wordreveal';
+    if (s === 'memoryflip') return 'claim';
+    if (s === 'memorymatch') return 'memorymatch';
+    if (s === 'knowledgeflip') return 'knowledge';
+    if (s === 'headsup') return 'headsup';
+    if (s === 'spinexplain') return 'spin';
+    if (s === 'connection') return 'connection';
+    if (s === 'conceptchain') return 'chain';
+    if (s === 'randomchallenge') return 'challenge';
+    if (s === 'bowl') return 'bowl';
+    if (s === 'emoji') return 'emoji';
+    if (s === 'definition') return 'definition';
+    if (s === 'oddone') return 'oddone';
+    if (s === 'compare') return 'compare';
+    if (s === 'order') return 'ranking';
+    if (slide.input === 'order') return 'ranking';
+    if (slide.input === 'number') return 'slider';
+    if (slide.input === 'text') return 'typed';
+    return 'choice';
+  }
+
+  function appendJudgeStrip(pad, slide, opts, inlineWhy, whyBox) {
+    var opts_ = (slide.options || []).filter(function (o) { return String(o).trim(); });
+    var wrap = el('div', 'opts judge-strip');
+    wrap.appendChild(el('div', 'judge-caption', slide.style === 'spinexplain'
+      ? 'Clear · 2 points / With hint · 1 / Try again · 0' : 'Host marks the claim'));
+    opts_.forEach(function (text, i) {
+      var yes = i === slide.correct;
+      var b = el('button', 'opt judge ' + (yes ? 'yes' : 'skip'));
+      b.type = 'button';
+      b.dataset.choice = String(i);
+      if (!opts.interactive) b.classList.add('locked');
+      var line = el('span', 'opt-line');
+      /* No A/B keys — this is a host verdict bar, not a learner quiz. */
+      line.appendChild(el('span', 'judge-mark', yes ? '✓' : '○'));
+      line.appendChild(el('span', 'txt', text));
+      b.appendChild(line);
+      if (inlineWhy && yes) b.appendChild(whyBox());
+      wrap.appendChild(b);
+    });
+    pad.appendChild(wrap);
+  }
+
+  /** Face-down card backs for Memory Match atmosphere (other pairs in the set). */
+  function matchBoardTiles(slide, opts) {
+    var bank = (opts && opts.pairBank) || [];
+    var tiles;
+    if (bank.length) {
+      tiles = bank.slice(0, 8);
+    } else {
+      tiles = [{ term: slide.term || slide.question || '·', active: true }];
+    }
+    while (tiles.length < 6) tiles.push({ term: '', ghost: true });
+    return tiles;
+  }
+
   function layoutQuiz(slide, pad, opts) {
+    var present = quizPresent(slide);
+    pad.parentNode.classList.add('present-' + present);
+
     /* Race questions lead with the field. */
     if (opts.lanes && opts.lanes.length) {
       pad.parentNode.classList.add('is-race');
-      pad.appendChild(raceStrip(opts.lanes, opts.trackLength || 5));
+      pad.appendChild(raceStrip(opts.lanes, opts.trackLength || 5, opts.laneCommand));
+    }
+
+    /* Style-specific stage heroes — these own the glance, not A–D. */
+    if (present === 'wordreveal') {
+      var wrHero = el('div', 'stage-hero wr-stage');
+      wrHero.appendChild(el('div', 'stage-atmosphere', ''));
+      if (slide.hint) wrHero.appendChild(el('div', 'stage-kicker', slide.hint));
+      var letters = String(slide.word || slide.answer || '');
+      var pre = slide.preReveal != null ? slide.preReveal : 0.4;
+      var showN = Math.round(SF.wordRevealLetterCount(letters) * pre);
+      var mask = SF.wordRevealMask ? SF.wordRevealMask(letters, showN) : letters.replace(/\S/g, '_');
+      var board = el('div', 'wr-board');
+      String(mask).split('').forEach(function (ch, i) {
+        if (ch === ' ') { board.appendChild(el('span', 'wr-gap', '')); return; }
+        var tile = el('span', 'wr-tile' + (ch === '_' ? ' blank' : ' lit'), ch === '_' ? '' : ch);
+        tile.style.animationDelay = (i * 0.04) + 's';
+        board.appendChild(tile);
+      });
+      wrHero.appendChild(board);
+      wrHero.appendChild(el('div', 'stage-note', 'Letters drip in · type your guess'));
+      pad.appendChild(wrHero);
+    } else if (present === 'memorymatch') {
+      /* Real match table — face-down set + the active term↔definition pair.
+         Claimed / Not yet is host scoring only; it must not look like A/B quiz. */
+      var match = el('div', 'stage-hero match-stage');
+      match.appendChild(el('div', 'stage-atmosphere', ''));
+      var board = el('div', 'match-board');
+      matchBoardTiles(slide, opts).forEach(function (tile, ti) {
+        var cell = el('button', 'match-tile' +
+          (tile.active ? ' active' : '') +
+          (tile.ghost ? ' ghost' : ' back'));
+        cell.type = 'button';
+        cell.tabIndex = -1;
+        cell.setAttribute('aria-hidden', 'true');
+        cell.appendChild(el('span', 'match-tile-back', tile.ghost ? '' : '◈'));
+        if (tile.active && tile.term) {
+          cell.appendChild(el('span', 'match-tile-front', String(tile.term).slice(0, 18)));
+        }
+        cell.style.animationDelay = (ti * 0.05) + 's';
+        board.appendChild(cell);
+      });
+      match.appendChild(board);
+      var duo = el('div', 'match-duo');
+      var termCard = el('div', 'match-card term open');
+      termCard.appendChild(el('div', 'match-face-label', 'Term'));
+      termCard.appendChild(el('div', 'match-face-text', slide.term || slide.question || ''));
+      var defOpen = !!(opts.revealed || slide.hideAfterStudy === false);
+      var defCard = el('div', 'match-card def' + (defOpen ? ' open' : ' shut'));
+      defCard.appendChild(el('div', 'match-face-label', 'Definition'));
+      if (defOpen && slide.definition) {
+        defCard.appendChild(el('div', 'match-face-text', slide.definition));
+      } else {
+        defCard.appendChild(el('div', 'match-face-hidden', '?'));
+        defCard.appendChild(el('div', 'match-face-hint', 'Study · then recall'));
+      }
+      duo.appendChild(termCard);
+      duo.appendChild(el('div', 'match-link', '⟷'));
+      duo.appendChild(defCard);
+      match.appendChild(duo);
+      match.appendChild(el('div', 'stage-note',
+        'Memorise the pair. Host marks Claimed when a learner has it (+1).'));
+      pad.appendChild(match);
+    } else if (present === 'claim') {
+      /* Memory Flip — one card that turns term → definition. */
+      var claim = el('div', 'stage-hero claim-stage');
+      claim.appendChild(el('div', 'stage-atmosphere', ''));
+      var flip = el('div', 'flip-card' +
+        (opts.revealed || slide.hideAfterStudy === false ? ' open' : ''));
+      var faceA = el('div', 'flip-face front');
+      faceA.appendChild(el('div', 'match-face-label', 'Term'));
+      faceA.appendChild(el('div', 'claim-term', slide.term || slide.question || ''));
+      var faceB = el('div', 'flip-face back');
+      faceB.appendChild(el('div', 'match-face-label', 'Definition'));
+      faceB.appendChild(el('div', 'claim-def',
+        slide.definition || 'Flip after study'));
+      flip.appendChild(faceA);
+      flip.appendChild(faceB);
+      claim.appendChild(flip);
+      if (!opts.revealed && slide.hideAfterStudy !== false) {
+        claim.appendChild(el('div', 'stage-note',
+          'Study while the clock runs · then the definition hides'));
+      }
+      pad.appendChild(claim);
+    } else if (present === 'knowledge') {
+      var know = el('div', 'stage-hero knowledge-stage');
+      know.appendChild(el('div', 'stage-atmosphere', ''));
+      var chip = el('div', 'knowledge-chip');
+      chip.appendChild(el('div', 'claim-term', slide.term || slide.question || ''));
+      know.appendChild(chip);
+      if (slide.definition) {
+        know.appendChild(el('div', 'claim-def soft', slide.definition));
+      }
+      know.appendChild(el('div', 'stage-note', 'Keywords stay visible. Host marks Claimed for +1.'));
+      pad.appendChild(know);
+    } else if (present === 'spin') {
+      var spin = el('div', 'spin-room');
+      var dial = el('div', 'spin-dial');
+      dial.setAttribute('aria-hidden', 'true');
+      var wheel = el('div', 'spin-disc');
+      for (var segment = 0; segment < 8; segment++) {
+        var mark = el('span', 'spin-segment', ['✦', '◎', '✳', '◇'][segment % 4]);
+        mark.style.setProperty('--sector', segment);
+        wheel.appendChild(mark);
+      }
+      dial.appendChild(wheel);
+      dial.appendChild(el('div', 'spin-pointer', '▼'));
+      dial.appendChild(el('div', 'spin-hub', 'SPIN'));
+      var counter = el('div', 'spin-counter', slide.spinTotal
+        ? 'DRAW ' + slide.spinDraw + ' / ' + slide.spinTotal : 'CONCEPT DRAW');
+      dial.appendChild(counter);
+      spin.appendChild(dial);
+      var challenge = el('div', 'spin-challenge');
+      challenge.appendChild(el('div', 'spin-eyebrow', slide.category || 'YOUR CONCEPT'));
+      challenge.appendChild(el('h2', 'spin-concept', slide.term || slide.question || ''));
+      var steps = el('div', 'spin-scaffold');
+      ['Explain the meaning', 'Give a real example', 'Connect it to what you know'].forEach(function (text, i) {
+        var step = el('div', 'spin-prompt');
+        step.appendChild(el('span', null, String(i + 1)));
+        step.appendChild(el('strong', null, text));
+        steps.appendChild(step);
+      });
+      challenge.appendChild(steps);
+      if (slide.hint) {
+        var hint = el('details', 'spin-hint');
+        hint.appendChild(el('summary', null, 'Need a hint?'));
+        hint.appendChild(el('p', null, slide.hint));
+        challenge.appendChild(hint);
+      }
+      challenge.appendChild(el('div', 'spin-deck-note', slide.spinTotal
+        ? (slide.spinTotal - slide.spinDraw) + ' concepts left · no repeat draws'
+        : 'Explain aloud · the teacher marks your response'));
+      spin.appendChild(challenge);
+      pad.appendChild(spin);
+    } else if (present === 'headsup') {
+      var oracy = el('div', 'stage-hero oracy-stage heads-stage');
+      oracy.appendChild(el('div', 'stage-atmosphere', ''));
+      if (slide.category) oracy.appendChild(el('div', 'stage-kicker', slide.category));
+      oracy.appendChild(el('div', 'oracy-term', slide.term || slide.question || ''));
+      if (slide.hint) oracy.appendChild(el('div', 'stage-note', slide.hint));
+      pad.appendChild(oracy);
+    } else if (present === 'connection') {
+      var pair = el('div', 'stage-hero connection-stage');
+      pair.appendChild(el('div', 'stage-atmosphere', ''));
+      var row = el('div', 'conn-pair');
+      var ca = el('div', 'conn-tile a');
+      ca.appendChild(el('div', 'conn-label', 'A'));
+      ca.appendChild(el('div', 'conn-text', slide.itemA || 'A'));
+      var cb = el('div', 'conn-tile b');
+      cb.appendChild(el('div', 'conn-label', 'B'));
+      cb.appendChild(el('div', 'conn-text', slide.itemB || 'B'));
+      row.appendChild(ca);
+      row.appendChild(el('div', 'conn-bridge', '↔'));
+      row.appendChild(cb);
+      pair.appendChild(row);
+      pair.appendChild(el('div', 'stage-note', 'Explain the bridge aloud'));
+      pad.appendChild(pair);
+    } else if (present === 'compare') {
+      var cmp = el('div', 'stage-hero compare-stage');
+      cmp.appendChild(el('div', 'stage-atmosphere', ''));
+      if (slide.category) {
+        cmp.appendChild(el('div', 'stage-kicker', slide.category));
+      }
+      var crow = el('div', 'compare-pair');
+      var cta = el('div', 'compare-tile');
+      cta.appendChild(el('div', 'compare-label', 'Item A'));
+      cta.appendChild(el('div', 'compare-text', slide.itemA || 'A'));
+      var ctb = el('div', 'compare-tile');
+      ctb.appendChild(el('div', 'compare-label', 'Item B'));
+      ctb.appendChild(el('div', 'compare-text', slide.itemB || 'B'));
+      crow.appendChild(cta);
+      crow.appendChild(ctb);
+      cmp.appendChild(crow);
+      if (!opts.revealed) {
+        cmp.appendChild(el('p', 'compare-discuss',
+          'Discuss: what are the similarities and differences?'));
+      }
+      var panels = el('div', 'compare-panels' + (opts.revealed ? ' on' : ''));
+      var alike = el('div', 'compare-panel alike');
+      alike.appendChild(el('div', 'compare-panel-label', 'Similarities'));
+      alike.appendChild(el('div', 'compare-panel-body',
+        slide.similarities || 'Needs similarities'));
+      var differ = el('div', 'compare-panel differ');
+      differ.appendChild(el('div', 'compare-panel-label', 'Differences'));
+      differ.appendChild(el('div', 'compare-panel-body',
+        slide.differences || 'Needs differences'));
+      panels.appendChild(alike);
+      panels.appendChild(differ);
+      cmp.appendChild(panels);
+      pad.appendChild(cmp);
+    } else if (present === 'chain') {
+      var links = (opts.chainLinks || []).slice();
+      var chain = el('div', 'stage-hero chain-stage');
+      chain.appendChild(el('div', 'stage-atmosphere', ''));
+      var steps = el('div', 'chain-steps');
+      links.forEach(function (step) {
+        steps.appendChild(el('div', 'chain-node done', step.term || ''));
+        steps.appendChild(el('div', 'chain-arrow', ''));
+        steps.appendChild(el('div', 'chain-node link', step.link || ''));
+        steps.appendChild(el('div', 'chain-arrow', ''));
+      });
+      steps.appendChild(el('div', 'chain-node seed', slide.term || slide.question || ''));
+      if (!opts.revealed) {
+        steps.appendChild(el('div', 'chain-arrow', ''));
+        var pendingLabel = String(opts.chainPending || '').trim();
+        steps.appendChild(el('div', 'chain-node ghost',
+          pendingLabel || 'next link'));
+      }
+      chain.appendChild(steps);
+      if (slide.prompt) {
+        chain.appendChild(el('div', 'stage-note chain-prompt', slide.prompt));
+      }
+      if (!opts.revealed && opts.chainCommand) {
+        var wrap = el('div', 'chain-capture');
+        var inp = el('input', 'chain-link-input');
+        inp.type = 'text';
+        inp.maxLength = 160;
+        inp.placeholder = 'Type the proposed link and justification';
+        inp.value = opts.chainPending || '';
+        inp.setAttribute('aria-label', 'Proposed chain link');
+        inp.addEventListener('input', function () {
+          opts.chainCommand('pending', inp.value);
+          var ghost = steps.querySelector('.chain-node.ghost');
+          if (ghost) ghost.textContent = String(inp.value || '').trim() || 'next link';
+        });
+        inp.addEventListener('click', function (e) { e.stopPropagation(); });
+        wrap.appendChild(inp);
+        wrap.appendChild(el('p', 'chain-capture-hint',
+          'Accept grows the chain (+1). Reject or timeout skips.'));
+        chain.appendChild(wrap);
+      }
+      pad.appendChild(chain);
+    } else if (present === 'challenge') {
+      var ch = el('div', 'stage-hero challenge-stage');
+      ch.appendChild(el('div', 'stage-atmosphere', ''));
+      var poster = el('div', 'challenge-poster');
+      poster.appendChild(el('div', 'challenge-body', slide.challenge || slide.question || ''));
+      ch.appendChild(poster);
+      pad.appendChild(ch);
+    } else if (present === 'bowl') {
+      var bowl = el('div', 'stage-hero bowl-stage');
+      bowl.appendChild(el('div', 'stage-atmosphere', ''));
+      var bcell = el('div', 'bowl-cell');
+      bcell.appendChild(el('div', 'bowl-cat', slide.category || 'Category'));
+      bcell.appendChild(el('div', 'bowl-val', String(slide.pointValue || slide.points || 200)));
+      bowl.appendChild(bcell);
+      pad.appendChild(bowl);
+    } else if (present === 'boss') {
+      var fight = opts.boss || null;
+      var boss = el('div', 'stage-hero boss-stage' + (fight ? ' is-' + fight.stage : ''));
+      boss.appendChild(el('div', 'stage-atmosphere', ''));
+      var crest = el('div', 'boss-crest');
+      crest.appendChild(el('div', 'boss-glyph',
+        fight && fight.stage === 'defeated' ? '☠' : '▲'));
+      var dmg = slide.bossDamage || 2;
+      crest.appendChild(el('div', 'boss-hit-badge',
+        (slide.difficulty || 'medium') + ' · ' + dmg + ' dmg'));
+      boss.appendChild(crest);
+      /* The health of the thing they are hitting. Without it the crest and the
+         damage badge were decoration: nothing on the slide said what the boss
+         had left, because nothing outside a live room was keeping count. */
+      if (fight) {
+        var hp = el('div', 'boss-hp');
+        var bar = el('div', 'boss-hp-rail');
+        var fill = el('div', 'boss-hp-fill');
+        fill.style.width = Math.round((fight.hp / Math.max(1, fight.max)) * 100) + '%';
+        bar.appendChild(fill);
+        hp.appendChild(bar);
+        hp.appendChild(el('div', 'boss-hp-n', fight.hp + ' / ' + fight.max + ' HP'));
+        boss.appendChild(hp);
+        if (fight.gap) {
+          boss.appendChild(el('div', 'boss-turn boss-gap', fight.gap +
+            ' — the boss cannot be hit with a blank question.'));
+        } else if (fight.marked) {
+          boss.appendChild(el('div', 'boss-turn', 'Already marked — move on.'));
+        } else if (fight.turnName) {
+          boss.appendChild(el('div', 'boss-turn',
+            fight.stage === 'defeated' ? fight.verdict
+              : fight.turnName + ' — ' + (fight.revealed
+                ? (fight.expired ? 'out of time' : 'did they earn the hit?')
+                : 'answer before the clock')));
+        }
+      }
+      pad.appendChild(boss);
+      if (opts.bossCommand && fight && !fight.marked && fight.phase !== 'complete') {
+        var acts = el('div', 'boss-actions');
+        function bossBtn(text, action, cls) {
+          var b = el('button', 'boss-button ' + (cls || ''), text);
+          b.type = 'button';
+          b.onclick = function () { opts.bossCommand(action); };
+          return b;
+        }
+        if (!fight.revealed) acts.appendChild(bossBtn('Reveal the answer', 'reveal', 'primary'));
+        else {
+          /* A question the clock beat cannot be marked a hit — the original
+             counted a timeout as wrong and so does this. */
+          if (!fight.expired) acts.appendChild(bossBtn('✓ Hit · −' + dmg, 'hit', 'primary'));
+          acts.appendChild(bossBtn(fight.expired ? 'Out of time — move on' : '✗ Miss', 'miss'));
+        }
+        pad.appendChild(acts);
+      }
+    } else if (present === 'truefalse') {
+      var tf = el('div', 'stage-atmosphere tf-atmosphere', '');
+      pad.appendChild(tf);
+    } else if (present === 'emoji') {
+      var em = el('div', 'stage-hero emoji-stage');
+      em.appendChild(el('div', 'stage-atmosphere', ''));
+      var clueText = String(slide.clues || slide.question || '');
+      var hero = el('div', 'emoji-hero');
+      /* Grapheme segmentation keeps flags, skin tones and joined families intact.
+         Long or mixed-text clues retain the original readable text layout. */
+      var layout = SF.emojiClueLayout
+        ? SF.emojiClueLayout(clueText)
+        : { tiled: false, pieces: [], text: clueText };
+      var pieces = layout.pieces;
+      var tiled = layout.tiled;
+      hero.classList.toggle('emoji-tiled', tiled);
+      if (tiled) {
+        hero.setAttribute('role', 'img');
+        hero.setAttribute('aria-label', clueText);
+        hero.style.setProperty('--clue-count', pieces.length);
+        pieces.forEach(function (piece, i) {
+          var operator = /^[+＝=→➜➡↔&]$/.test(piece);
+          var tile = el('span', operator ? 'emoji-operator' : 'emoji-clue', piece);
+          tile.setAttribute('aria-hidden', 'true');
+          tile.style.setProperty('--clue-index', i);
+          hero.appendChild(tile);
+        });
+      } else hero.textContent = clueText;
+      var prompt = el('div', 'emoji-mission');
+      prompt.appendChild(el('span', 'emoji-thinking', 'DECODE THE CLUES'));
+      prompt.appendChild(el('span', 'emoji-solved', 'THE CONNECTION REVEALED'));
+      em.appendChild(prompt);
+      em.appendChild(hero);
+      var nudge = el('p', 'emoji-nudge');
+      nudge.appendChild(el('span', 'emoji-thinking', 'Name the clues. Find the connection. Make your guess.'));
+      nudge.appendChild(el('span', 'emoji-solved', 'Can you explain how each clue fits?'));
+      em.appendChild(nudge);
+      /* Help, one press at a time, on the step-reveal the teacher already
+         drives with the arrow keys. Only the letter pattern belongs under the
+         clues — it is about the answer's shape, so it reads as part of the
+         puzzle. The hint is framing and goes up in the title row instead, so
+         the stage stays two things rather than a column of three panels. */
+      var pattern = SF.emojiHelp ? SF.emojiHelp(slide).pattern : 'step';
+      if (pattern !== 'none') {
+        var blanks = el('div', 'emoji-help emoji-help-blanks' +
+          (pattern === 'step' ? ' step' : ''));
+        blanks.dataset.step = '1';
+        blanks.appendChild(el('span', 'emoji-help-label', 'LETTERS'));
+        blanks.appendChild(el('strong', 'emoji-blanks',
+          SF.wordRevealMask(slide.answer || '', 0)));
+        em.appendChild(blanks);
+      }
+      pad.appendChild(em);
+    } else if (present === 'definition') {
+      var defPhase = opts.definitionPhase || 'reading';
+      var def = el('div', 'stage-hero definition-stage phase-' + defPhase);
+      def.appendChild(el('div', 'stage-atmosphere', ''));
+      if (defPhase === 'reading') {
+        def.appendChild(el('div', 'definition-eyebrow', 'READING · NO NOTES'));
+        def.appendChild(el('p', 'definition-passage',
+          slide.passage || 'Needs a passage'));
+        if (!String(slide.passage || '').trim()) {
+          def.appendChild(el('p', 'definition-gap',
+            'Add a passage in Quiz studio before you play'));
+        }
+        if (opts.definitionCommand) {
+          var askBtn = el('button', 'definition-ask', 'Ask now — hide the passage');
+          askBtn.type = 'button';
+          askBtn.onclick = function () { opts.definitionCommand('ask'); };
+          def.appendChild(askBtn);
+        } else {
+          def.appendChild(el('p', 'definition-caption',
+            'When time is up the passage clears and the recall question appears.'));
+        }
+      } else {
+        def.appendChild(el('div', 'definition-eyebrow', 'RECALL · FROM MEMORY'));
+        def.appendChild(el('p', 'definition-caption',
+          'The passage is gone. Answer from what you just read.'));
+      }
+      pad.appendChild(def);
+    } else if (present === 'blanks') {
+      var bl = el('div', 'stage-hero blanks-stage');
+      bl.appendChild(el('div', 'stage-atmosphere', ''));
+      var line = el('div', 'blanks-line');
+      String(slide.question || '').split(/(_{2,}|……+|…+)/).forEach(function (part) {
+        if (/^(_+|……+|…+)$/.test(part)) line.appendChild(el('span', 'blank-pill', '_____'));
+        else if (part) line.appendChild(document.createTextNode(part));
+      });
+      bl.appendChild(line);
+      pad.appendChild(bl);
     }
 
     var head = el('div', 'qhead');
+    /* Same Q# + question heading on every quiz — stage heroes dress the
+       play area underneath, they do not replace the title row. */
     if (opts.quizNumber) {
       head.appendChild(el('div', 'qnum',
         (opts.lanes ? 'LEG ' : 'Q') + opts.quizNumber));
     }
-    head.appendChild(el('div', 'q', slide.question || ' '));
+    /* A format whose question text is data rather than a line to read out
+       says what to print instead, and an empty string means print nothing.
+       Emoji guess is the one: its question is the emoji, already on the stage
+       at twice the size. */
+    var title = typeof slide.headPrompt === 'string'
+      ? slide.headPrompt : (slide.question || ' ');
+    var emojiHint = present === 'emoji' && SF.emojiHelp ? SF.emojiHelp(slide).hint : '';
+    var defReading = present === 'definition' &&
+      (opts.definitionPhase || 'reading') === 'reading';
+    if (emojiHint) {
+      var hintRow = el('div', 'q qhint');
+      hintRow.appendChild(el('span', 'qhint-label', 'HINT'));
+      hintRow.appendChild(el('strong', null, emojiHint));
+      head.appendChild(hintRow);
+    } else if (defReading) {
+      head.appendChild(el('div', 'q q-ask',
+        'Read carefully. The passage will clear for the recall question.'));
+    } else if (title) {
+      head.appendChild(el('div', 'q q-ask', title));
+    }
 
     /* Where the question goes depends on the image layout, so the header is
        built first and placed below rather than appended straight away. */
@@ -382,14 +1084,16 @@
       pad.parentNode.classList.add('has-media', 'media-' + picLayout);
     }
 
-    if (picLayout === 'overlay') {
-      media.appendChild(head);                  // question sits on the image
+    if (picLayout === 'overlay' && media) {
+      media.appendChild(head);
       pad.appendChild(media);
-    } else if (picLayout === 'first') {
-      pad.appendChild(media);                   // image leads, question under it
-      pad.appendChild(head);
+    } else if (picLayout === 'first' && media) {
+      pad.insertBefore(head, pad.firstChild);
+      if (head.nextSibling) pad.insertBefore(media, head.nextSibling);
+      else pad.appendChild(media);
     } else {
-      pad.appendChild(head);
+      /* Heading first — above any stage hero — so every game shares one title row. */
+      pad.insertBefore(head, pad.firstChild);
       if (media) pad.appendChild(media);
     }
 
@@ -421,15 +1125,78 @@
       return box;
     }
 
+    /* Host-judged / oracy / boards: verdict strip, not an A–D quiz grid. */
+    var judgePresents = {
+      claim: 1, memorymatch: 1, knowledge: 1, headsup: 1, spin: 1, connection: 1, chain: 1,
+      challenge: 1, bowl: 1
+    };
+    if (judgePresents[present] && slide.input === 'choice') {
+      appendJudgeStrip(pad, slide, opts, inlineWhy, whyBox);
+      return;
+    }
+
+    /* Compare & Contrast: wall-led discuss — no A–D options or vote tally. */
+    if (present === 'compare') return;
+
     /* Neither a typed nor a slider question has options to lay out. Each gets
        one answer box, so every measure-and-fit rule, the inline explanation
        and the reveal styling all apply unchanged — and, in a live room, that
        box holds back the answer until the reveal, or the room reads it off
        the wall. */
+    /* An ordering. The wall shows the items so the room can argue about them,
+       but never in the authored sequence before the reveal — that would put
+       the answer on the screen while everyone is still deciding. The display
+       shuffle is derived from the slide id, so it is the same on every repaint
+       and the same on a rejoin, without being the answer. */
+    if (slide.input === 'order') {
+      pad.parentNode.classList.add('is-order');
+      var showing = (slide.options || []).map(function (text, i) { return { i: i, text: text }; });
+      if (!opts.revealed) showing = stableShuffle(showing, slide.id);
+      else showing.sort(function (a, b) { return a.i - b.i; });
+      var ow = el('div', 'opts stack ordered');
+      showing.forEach(function (item, pos) {
+        var row = el('button', 'opt' + (opts.revealed ? ' correct' : ''));
+        row.type = 'button';
+        row.dataset.choice = String(item.i);
+        row.classList.add('locked');          // the wall is never the input
+        var line = el('span', 'opt-line');
+        /* Numbered only once the order is settled: a number against an item
+           before the reveal reads as a position the room has been given. */
+        line.appendChild(el('span', 'key', opts.revealed ? String(pos + 1) : '\u2195'));
+        line.appendChild(el('span', 'txt', item.text));
+        row.appendChild(line);
+        ow.appendChild(row);
+      });
+      pad.appendChild(ow);
+      var ol = el('div', 'typedlist');
+      ol.appendChild(el('div', 'typedcount', ''));
+      pad.appendChild(ol);
+      if (inlineWhy) pad.appendChild(whyBox());
+      return;
+    }
+
     if (slide.input === 'text' || slide.input === 'number') {
       var placing = slide.input === 'number';
+      var defPhaseNow = present === 'definition'
+        ? (opts.definitionPhase || 'reading') : null;
+      /* During reading the answer box stays off — phones are idle and the
+         room is studying the passage, not typing yet. */
+      if (defPhaseNow === 'reading') {
+        var wait = el('div', 'definition-wait');
+        wait.appendChild(el('strong', null,
+          opts.live
+            ? 'Phones stay closed until the passage clears.'
+            : 'Answers open when the passage clears.'));
+        pad.appendChild(wait);
+        return;
+      }
       pad.parentNode.classList.add('is-typed');
-      var hold = opts.live && !opts.revealed;
+      /* On a question whose answer *is* the puzzle, the box stays shut until
+         it is revealed whether or not phones are in the room. It used to hold
+         only while hosting, so a teacher running emoji guess straight from
+         Present — no phones, the room shouting — had the answer on the wall
+         from the moment the slide arrived. */
+      var hold = !opts.revealed && (opts.live || slide.hideAnswerUntilReveal === true);
       var tw = el('div', 'opts stack typed');
       var ab = el('button', 'opt answer');
       ab.type = 'button';
@@ -439,7 +1206,9 @@
       var aline = el('span', 'opt-line');
       aline.appendChild(el('span', 'key', placing ? '↔' : '✎'));
       aline.appendChild(el('span', 'txt', hold
-        ? (placing ? 'Placing their answers…' : 'Typing on your phones…')
+        ? (opts.live
+          ? (placing ? 'Placing their answers…' : 'Typing on your phones…')
+          : 'Hidden until you reveal it')
         : (slide.answer || ' ')));
       aline.appendChild(el('span', 'tick', '✓'));
       ab.appendChild(aline);
@@ -463,25 +1232,50 @@
       return;
     }
 
-    var wrap = el('div', 'opts' + (opts_.length > 4 || opts_.some(longOption) ? ' stack' : ''));
+    var wrap = el('div', 'opts' +
+      (present === 'truefalse' ? ' tf-duo' :
+        present === 'oddone' ? ' odd-grid' :
+        (opts_.length > 4 || opts_.some(longOption) ? ' stack' : '')) +
+      (present === 'speed' ? ' speed-opts' : '') +
+      (present === 'spoterror' ? ' spot-opts' : '') +
+      (present === 'predict' ? ' predict-opts' : ''));
     opts_.forEach(function (text, i) {
       var b = el('button', 'opt');
       b.type = 'button';
       b.dataset.choice = String(i);
-      if (!opts.interactive) b.classList.add('locked');
+      /* Odd One Out: tiles are for looking at, not scoring. Always locked
+         on the wall — discussion is oral; Reveal paints the prepared odd one. */
+      if (!opts.interactive || present === 'oddone') b.classList.add('locked');
+      if (present === 'oddone' && opts.revealed && i === slide.correct) {
+        b.classList.add('odd-marked');
+      }
 
-      /* key/text/tick live in their own row so the explanation can expand
-         underneath them inside the same box. */
       var line = el('span', 'opt-line');
-      line.appendChild(el('span', 'key', LETTERS[i] || String(i + 1)));
-      line.appendChild(el('span', 'txt', text));
-      line.appendChild(el('span', 'tick', i === slide.correct ? '✓' : '✗'));
+      if (present === 'oddone') {
+        /* No A–D keys — four equals until reveal. */
+        line.appendChild(el('span', 'txt', text));
+        if (opts.revealed) {
+          line.appendChild(el('span', 'tick', i === slide.correct ? 'odd one' : ''));
+        }
+      } else {
+        line.appendChild(el('span', 'key', LETTERS[i] || String(i + 1)));
+        line.appendChild(el('span', 'txt', text));
+        line.appendChild(el('span', 'tick', i === slide.correct ? '✓' : '✗'));
+      }
       b.appendChild(line);
 
       if (inlineWhy && i === slide.correct) b.appendChild(whyBox());
       wrap.appendChild(b);
     });
     pad.appendChild(wrap);
+
+    if (present === 'oddone' && !opts.revealed) {
+      pad.appendChild(el('p', 'oddone-discuss',
+        'Discuss: which does not belong, and what is the rule? Reveal when you are ready.'));
+    }
+
+    /* No vote tally for discuss-only Odd One Out. */
+    if (present === 'oddone') return;
 
     var tally = el('div', 'tally');
     opts_.forEach(function (_, i) {
@@ -493,12 +1287,19 @@
       tally.appendChild(col);
     });
     pad.appendChild(tally);
+    /* How many are in, on the wall. The bars say what the room chose but not
+       whether anyone is still thinking, and that was only ever announced as
+       "Maya answered" notes in the score rail — a stream of names that pushed
+       the scores down the column a row at a time. One number instead, in the
+       place everyone is already looking. A typed question has had this all
+       along; there was no reason a choice question should not. */
+    pad.appendChild(el('div', 'answered-count', ''));
   }
 
   function longOption(t) { return String(t).length > 42; }
 
   function layoutResults(slide, pad, opts) {
-    if (slide.title) pad.appendChild(el('h2', null, slide.title));
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
 
     var marks = opts.marks || [];
     if (!marks.length) {
@@ -545,11 +1346,14 @@
     links: layoutLinks,
     split: layoutSplit,
     quote: layoutQuote,
+    table: layoutTable,
     image: layoutImage,
+    video: layoutVideo,
     quiz: layoutQuiz,
     explain: layoutExplain,
     results: layoutResults,
-    game: layoutGame
+    game: layoutGame,
+    join: layoutJoin
   };
 
   /* ------------------------------------------------------------ entry */
@@ -560,10 +1364,32 @@
    * @param {object} opts  { index, total, interactive, quizNumber, marks, chrome }
    * @returns {HTMLElement} .slide element sized 1280x720
    */
+  /* A shuffle that is the same every time for the same slide.
+     Math.random would reshuffle on every repaint — the items would jump
+     around while the room was reading them — and a rejoining phone would see
+     a different arrangement from the wall. */
+  function stableShuffle(list, seed) {
+    var out = list.slice();
+    var h = 2166136261;
+    var key = String(seed || '');
+    for (var c = 0; c < key.length; c++) { h ^= key.charCodeAt(c); h = Math.imul(h, 16777619); }
+    for (var i = out.length - 1; i > 0; i--) {
+      h = Math.imul(h ^ (h >>> 15), 2246822507);
+      h = Math.imul(h ^ (h >>> 13), 3266489909);
+      var j = ((h >>> 0) % (i + 1));
+      var t = out[i]; out[i] = out[j]; out[j] = t;
+    }
+    return out;
+  }
+
   function renderSlide(deck, slide, opts) {
     opts = opts || {};
     var root = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-' + slide.type);
     root.dataset.slideId = slide.id;
+    if (slide.type === 'quiz' || SF.Boards.forSlide(slide)) {
+      root.classList.add('game-stage');
+    }
+    if (slide.feedback && slide.feedback.kind) root.classList.add('has-feedback');
     if (deck.theme === 'studio' && (slide.type === 'title' || slide.type === 'section')) {
       var art = el('div', 'studio-art');
       art.setAttribute('aria-hidden', 'true');
@@ -573,13 +1399,16 @@
 
     var pad = el('div', 'pad');
     root.appendChild(pad);
-    (LAYOUTS[slide.type] || layoutContent)(slide, pad, opts);
+    if (!SF.Boards.render(pad, slide, opts, root)) (LAYOUTS[slide.type] || layoutContent)(slide, pad, opts, root);
+    if (SF.Custom) SF.Custom.layout(root, slide);
 
     if (opts.chrome !== false && deck.showSlideNumbers && opts.index != null && slide.type !== 'title') {
       root.appendChild(el('div', 'pagenum', (opts.index + 1) + ' / ' + opts.total));
     }
-    if (opts.chrome !== false && SF.deckShowsLogo(deck, slide)) {
+    if (opts.chrome !== false && SF.deckShowsLogo(deck, slide, opts.index)) {
       var logo = el('div', 'slide-logo');
+      var logoScale={small:36,medium:52,large:72}[deck.logoSize || 'medium'] || 52;
+      logo.style.height=logoScale+'px';
       var img = document.createElement('img');
       img.src = deck.logo;
       img.alt = '';
@@ -1147,12 +1976,62 @@
     return node;
   }
 
+  /** Shared boss HP overlay — same slot as the race track. */
+  function bossBar(deck, opts) {
+    opts = opts || {};
+    var max = Math.max(1, Number(opts.max) || 1);
+    var hp = Math.max(0, Math.min(max, Number(opts.hp) || 0));
+    var pct = Math.round((hp / max) * 100);
+    var node = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-boss' +
+      (opts.hit ? ' boss-hit' : '') + (hp <= 0 ? ' boss-down' : ''));
+    var pad = el('div', 'pad');
+    pad.appendChild(el('div', 'boss-title', opts.title || 'Boss battle'));
+    if (opts.note) pad.appendChild(el('div', 'boss-note', opts.note));
+    var meter = el('div', 'boss-meter');
+    var fill = el('div', 'boss-fill');
+    fill.style.width = pct + '%';
+    meter.appendChild(fill);
+    pad.appendChild(meter);
+    pad.appendChild(el('div', 'boss-hp', hp + ' / ' + max + ' HP'));
+    node.appendChild(pad);
+    return node;
+  }
+
+  /** Word Reveal drip wall — letter mask over the deck. */
+  function wordRevealWall(deck, opts) {
+    opts = opts || {};
+    var node = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-wordreveal');
+    var pad = el('div', 'pad');
+    pad.appendChild(el('div', 'wr-title', 'Word reveal'));
+    if (opts.hint) pad.appendChild(el('div', 'wr-hint', opts.hint));
+    pad.appendChild(el('div', 'wr-mask', opts.mask || ''));
+    pad.appendChild(el('div', 'wr-meta',
+      (opts.shown || 0) + ' / ' + (opts.total || 0) + ' letters'));
+    node.appendChild(pad);
+    return node;
+  }
+
+  /** Memory / knowledge study card on the wall. */
+  function studyCards(deck, opts) {
+    opts = opts || {};
+    var node = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-study');
+    var pad = el('div', 'pad');
+    pad.appendChild(el('div', 'study-term', opts.term || ''));
+    if (opts.definition) pad.appendChild(el('div', 'study-def', opts.definition));
+    if (opts.seconds > 0) {
+      pad.appendChild(el('div', 'study-note',
+        opts.hideAfter ? ('Study · ' + opts.seconds + 's then hide') : 'Keywords stay visible'));
+    }
+    node.appendChild(pad);
+    return node;
+  }
+
   /* ------------------------------------------------------- score rail */
 
   /** Empty rail shell. Built once per show; rows are painted into it. */
   function scoreRail(deck) {
     var root = el('div', 'scorerail theme-' + (deck.theme || 'midnight'));
-    root.appendChild(el('div', 'rail-title', 'Scores'));
+    root.appendChild(el('div', 'rail-title', 'The room'));
     root.appendChild(el('div', 'rail-sub', ''));
     /* Arrivals, briefly. Above the board because that is where the eye is
        when the board is what changed. */
@@ -1309,6 +2188,17 @@
   function paintScoreRail(rail, rows, opts) {
     opts = opts || {};
     rail.querySelector('.rail-sub').textContent = opts.subtitle || '';
+    /* The rail says which of the two columns is which, once, at the top. */
+    var legend = rail.querySelector('.rail-legend');
+    if (!legend) {
+      legend = el('div', 'rail-legend');
+      var rowsBox = rail.querySelector('.rows');
+      rowsBox.parentNode.insertBefore(legend, rowsBox);
+    }
+    legend.replaceChildren();
+    legend.appendChild(el('span', 'lg-learn', 'ACCURACY · ANSWERED'));
+    legend.appendChild(el('span', 'lg-score', String(opts.scoreLabel || 'Game points').toUpperCase()));
+    legend.hidden = !rows.length;
     rail.querySelector('.foot .notes').textContent = opts.footnote || '';
     paintJoinLine(rail.querySelector('.joinline'), opts.join);
     paintRailJoin(rail.querySelector('.rail-join'), opts.join, !rows.length);
@@ -1351,6 +2241,12 @@
         var who = el('div', 'who');
         who.appendChild(el('div', 'nm', ''));
         node.appendChild(who);
+        /* Learning first, then winning. The rail used to carry one number per
+           row and call it the score — points in one game, an average in
+           another, steps along a track in a third — so the thing a teacher
+           most needs mid-lesson (who is struggling) was the one thing it
+           could not say. */
+        who.appendChild(el('div', 'learn', ''));
         node.appendChild(el('div', 'sc', ''));
       }
       delete existing[r.key];
@@ -1371,7 +2267,33 @@
         mem.remove();
       }
 
-      node.querySelector('.sc').textContent = String(r.score);
+      /* Accuracy · answered, and a flag when they need a hand. Absent until
+         something has been revealed — a row of 0% before the first reveal
+         reads as failure rather than as "not asked yet". */
+      var learn = node.querySelector('.learn');
+      if (learn) {
+        var asked = r.asked || 0;
+        if (!asked) {
+          learn.textContent = '';
+          learn.className = 'learn';
+        } else {
+          var acc = typeof r.accuracy === 'number' ? r.accuracy : null;
+          learn.textContent = (acc == null ? '—' : acc + '%') +
+            ' · ' + (r.answered || 0) + '/' + asked;
+          /* Needs support is a judgement about a person, so it waits until
+             there is enough to judge on: under half right across at least
+             three, or silent through most of them. */
+          var struggling = asked >= 3 &&
+            ((acc != null && acc < 50) || (r.answered || 0) * 2 < asked);
+          learn.className = 'learn' + (struggling ? ' needs' : '');
+          if (struggling) learn.textContent += ' · needs support';
+        }
+      }
+      var sc = node.querySelector('.sc');
+      sc.textContent = String(r.score);
+      /* Labelled, so nobody reads distance or an average as a mark. */
+      sc.title = opts.scoreLabel || 'Game points';
+      sc.setAttribute('aria-label', (opts.scoreLabel || 'Game points') + ': ' + r.score);
       node.style.borderLeftColor = r.color || '';
       node.classList.toggle('lead', i === 0 && r.score > 0);
 
@@ -1438,6 +2360,10 @@
     paintRailJoin: paintRailJoin,
     railSurface: railSurface,
     raceTrack: raceTrack,
+    bossBar: bossBar,
+    wordRevealWall: wordRevealWall,
+    studyCards: studyCards,
+    quizPresent: quizPresent,
     feedbackRail: feedbackRail,
     feedbackFocus: feedbackFocus,
     questionCard: questionCard,
@@ -1446,6 +2372,7 @@
     paintFeedbackRail: paintFeedbackRail,
     paintScoreRail: paintScoreRail,
     soloScore: soloScore,
+    sampleJoinInfo: sampleJoinInfo,
     LETTERS: LETTERS,
     el: el
   });

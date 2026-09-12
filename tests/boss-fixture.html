@@ -1,0 +1,60 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Boss battle regression fixture</title>
+<style>body{margin:0;font:14px system-ui}header{height:46px;display:flex;gap:8px;align-items:center;padding:0 12px;flex-wrap:wrap}iframe{border:0;width:100%;height:calc(100vh - 46px)}button.on{outline:2px solid #2a6}</style>
+<header>Boss fixture ·
+<button id="play">Start</button>
+<button id="reveal">Early reveal</button>
+<button id="hit">Hit</button>
+<button id="miss">Miss</button>
+<button id="expire">Let the clock expire</button>
+<button id="replay">Replay</button>
+<button data-teams="1">class</button><button data-teams="2">2 teams</button>
+<button id="gap">Blank a question</button>
+<button id="theme">Switch theme</button>
+<span id="state"></span></header>
+<iframe src="../index.html" title="SlideForge under test"></iframe>
+<script>
+/* The four things a battle has to survive: starting, the clock beating the
+   room, the teacher revealing early, and playing the whole thing again. */
+var frame=document.querySelector('iframe'),theme='studio',teams=2,blank=false;
+var QS=[
+ ['Which organelle contains chlorophyll?',['Nucleus','Mitochondrion','Chloroplast','Ribosome'],2,'easy'],
+ ['Which process releases energy from glucose?',['Photosynthesis','Respiration','Diffusion','Osmosis'],1,'medium'],
+ ['Why does an enzyme stop working when it is too hot?',['It dissolves','Its active site changes shape','It runs out','It freezes'],1,'hard'],
+ ['Explain why water moves into a cell in pure water.',['Active transport','Osmosis down a gradient','Solute diffusion','It does not'],1,'boss']
+];
+function W(){return frame.contentWindow;}
+function play(){
+ var SF=W().SF,g=SF.makeGame('Boss fixture','boss');
+ g.theme=theme;g.settings.intro=false;g.settings.scoreSlide=false;g.settings.defaultTime=6;
+ g.settings.mode=teams>1?'teams':'individual';
+ g.settings.teams=[{name:'Red'},{name:'Blue'}].slice(0,teams);
+ g.questions=QS.map(function(q,i){
+  return SF.normalizeQuestion(Object.assign(SF.makeQuestion('boss'),{
+   question:(blank&&i===1)?'':q[0],options:q[1],correct:q[2],difficulty:q[3],timeLimit:6}),'boss');
+ });
+ var deck=SF.gameToRunDeck(g);
+ SF.Player.start(deck,0,{fullscreen:false});
+ setTimeout(function(){
+  var P=SF.Player;P.goTo(P.deck.slides.findIndex(function(s){return s.type==='quiz';}));
+  setTimeout(report,400);
+ },300);
+}
+function fight(){var SF=W().SF;return SF.Boss&&SF.Boss.forDeck(W().SF.Player.deck);}
+function report(){
+ var f=fight();
+ document.getElementById('state').textContent=f
+  ? ('phase '+f.phase+' · HP '+f.hp+'/'+f.max+' · Q'+(f.index+1)+' · hits '+f.hits+' misses '+f.misses+' timeouts '+f.timeouts)
+  : 'no fight';
+}
+function cmd(a){W().SF.Player.bossCommand(a);setTimeout(report,250);}
+document.getElementById('play').onclick=play;
+document.getElementById('reveal').onclick=function(){cmd('reveal');};
+document.getElementById('hit').onclick=function(){cmd('hit');};
+document.getElementById('miss').onclick=function(){cmd('miss');};
+document.getElementById('expire').onclick=function(){cmd('expire');};
+document.getElementById('replay').onclick=function(){cmd('restart');};
+document.getElementById('gap').onclick=function(){blank=!blank;this.classList.toggle('on',blank);play();};
+document.querySelectorAll('[data-teams]').forEach(function(b){b.onclick=function(){teams=Number(b.dataset.teams);play();};});
+document.getElementById('theme').onclick=function(){theme=theme==='studio'?'midnight':'studio';play();};
+setTimeout(play,1200);
+</script></html>

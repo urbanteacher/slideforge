@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Presenter integration fixture</title><style>body{margin:0;font:14px system-ui}header{padding:8px;background:#eee}iframe{width:100%;height:calc(100vh - 40px);border:0}</style></head><body>
+<header>Test fixture · synthetic classroom · <output id="event">No command yet</output></header>
+<iframe id="presenter" title="Presenter under test" src="../presenter.html"></iframe>
+<script src="../js/model.js"></script><script src="../js/lesson-moments.js"></script>
+<script>
+// Browser regression fixture: real presenter and teacher frame, synthetic host.
+// No relay, stored lesson, or real learner records are changed.
+const key='00000000000000000000000000000009';
+const channel=new BroadcastChannel('sf-manual-'+key);
+const question={id:'fixture-q1',type:'quiz',question:'Which strategy helps focus?',input:'choice',options:['Remove distractions','Multitask'],correct:0,notes:'Give everyone time to think.',timeLimit:0};
+const deck={id:'presenter-fixture',title:'Presenter integration check',slides:[question,{id:'fixture-end',type:'title',title:'Discuss your reasoning'}]};
+const room={type:'sf-manual-state',active:true,showing:true,mode:'individual',view:'roster',players:[{id:1,name:'Test Alex',manual:true,score:0},{id:2,name:'Test Sam',manual:true,score:0}],teams:[],question:{...question,revealed:false},answers:[]};
+let index=0,moment=null;
+function state(){const win=document.getElementById('presenter').contentWindow;win.postMessage({type:'sf-presenter-state',deck,index,moment,roomPulse:{active:true,reactions:{yes:2,idea:1},bookmarks:1},teacherUrl:'../manual.html#'+key,progress:{total:2,answered:room.answers.length},nextAction:room.question&&!room.question.revealed?'reveal':'advance'},location.origin);channel.postMessage(room);}
+channel.onmessage=({data:m})=>{if(m.type!=='sf-manual-command')return;document.getElementById('event').textContent=m.action;
+ if(m.action==='answer'){room.answers=room.answers.filter(a=>a.id!==m.answer.playerId);if(!m.answer.clear)room.answers.push({id:m.answer.playerId,response:m.answer.choice,right:null});}
+ if(m.action==='reveal'||m.action==='revealWith'){room.question.revealed=true;room.answers.forEach(a=>a.right=a.response===(m.choice??0));}
+ if(m.action!=='report')state();
+};
+window.addEventListener('message',e=>{if(e.source!==document.getElementById('presenter').contentWindow||e.data.type!=='sf-presenter-cmd')return;const c=e.data.cmd;if(c==='moment')moment=SF.LessonMoments.transition(moment,e.data,Date.now());document.getElementById('event').textContent=c;if(c==='next'){if(room.question&&!room.question.revealed){room.question.revealed=true;room.answers.forEach(a=>a.right=a.response===0);}else {index=1;room.question=null;}}if(c==='prev'){index=0;room.question={...question,revealed:false};room.answers=[];}state();});
+document.getElementById('presenter').onload=function(){this.contentWindow.opener=window;state();};
+</script></body></html>

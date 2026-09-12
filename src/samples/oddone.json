@@ -1,0 +1,42 @@
+[
+  {
+    "options": [
+      "Iron",
+      "Copper",
+      "Oxygen",
+      "Zinc"
+    ],
+    "correct": 2,
+    "explanation": "Oxygen is a non-metal. Accept any defensible rule a learner can argue for — the reasoning is the point."
+  },
+  {
+    "options": [
+      "Mitochondrion",
+      "Chloroplast",
+      "Nucleus",
+      "Ribosome"
+    ],
+    "correct": 1,
+    "explanation": "Chloroplasts are for photosynthesis; the others appear in typical animal cells too. Other rules may also work."
+  },
+  {
+    "options": [
+      "Photosynthesis",
+      "Respiration",
+      "Diffusion",
+      "Osmosis"
+    ],
+    "correct": 0,
+    "explanation": "Photosynthesis builds glucose; the others move substances or release energy. Defend another grouping if you can."
+  },
+  {
+    "options": [
+      "CPU",
+      "RAM",
+      "SSD",
+      "HDMI"
+    ],
+    "correct": 3,
+    "explanation": "HDMI is a display connection; the others are core computer components. Other rules welcome."
+  }
+]

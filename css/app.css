@@ -94,6 +94,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .btn {
   background: var(--ui-panel-2);
+  /* Its own colour, not the container's. A button carries its background with
+     it, so it has to carry its text colour too: inheriting put white-on-white
+     text on the lobby's buttons, because #lobby sets color:#fff for the PIN
+     and the panel colour is near-white under the studio chrome. .primary and
+     .live were the only readable ones there, and only because they set a
+     colour of their own. */
+  color: var(--ui-text);
   border: 1px solid var(--ui-line);
   border-radius: 6px;
   padding: 7px 11px;
@@ -208,6 +215,21 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 }
 #previewBox .slide { transform-origin: 0 0; }
 
+/* Controls that sit on the canvas rather than in the inspector. Quiet until
+   the pointer is over the preview, so they do not compete with the slide. */
+.canvas-btn {
+  position: absolute; z-index: 5;
+  width: 34px; height: 34px; border-radius: 8px;
+  display: grid; place-items: center;
+  font-size: 16px; line-height: 1; cursor: pointer;
+  color: #fff; background: rgba(12,14,18,.62);
+  border: 1px solid rgba(255,255,255,.22);
+  opacity: 0; transition: opacity .15s, background .15s;
+}
+#previewBox:hover .canvas-btn, .canvas-btn:focus-visible { opacity: 1; }
+.canvas-btn:hover { background: rgba(12,14,18,.85); }
+.canvas-btn.swap-sides { top: 12px; right: 12px; }
+
 .notes-strip {
   border-top: 1px solid var(--ui-line);
   background: var(--ui-panel);
@@ -255,6 +277,49 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
    straight into the panel and they were rendering at body size */
 .hint { font-size: 11px; color: var(--ui-dim); margin-top: 5px; line-height: 1.45; }
 
+/* Field help as a rollover — keeps the inspector short. */
+.field-tip {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  margin-left: 6px;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  color: #6a7360;
+  background: #e8ecdf;
+  cursor: help;
+  vertical-align: -1px;
+  flex: none;
+}
+.field-tip:focus-visible {
+  outline: 2px solid #8a69ae;
+  outline-offset: 2px;
+}
+.field-tip[data-tip]:hover::after,
+.field-tip[data-tip]:focus-visible::after {
+  content: attr(data-tip);
+  position: absolute;
+  z-index: 40;
+  left: 0;
+  top: calc(100% + 6px);
+  width: min(240px, 70vw);
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #2c3a28;
+  color: #f4f6f0;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.45;
+  white-space: normal;
+  text-align: left;
+  box-shadow: 0 8px 24px #15260b30;
+  pointer-events: none;
+}
+
 .opt-row { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; }
 .opt-row input[type=radio] { flex: none; accent-color: var(--ui-good); width: 16px; height: 16px; }
 .opt-row input[type=text] { flex: 1; }
@@ -266,6 +331,9 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 .opt-row .kill:hover { color: var(--ui-bad); border-color: var(--ui-bad); }
 
 .type-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.type-grid-wrap {
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+}
 .type-grid button {
   background: var(--ui-bg); border: 1px solid var(--ui-line);
   border-radius: 6px; padding: 8px 2px; cursor: pointer;
@@ -385,6 +453,27 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 .layout-content li.tier-2 { font-size: 26px; margin-left: 46px; color: var(--s-dim); }
 .layout-content li.tier-2::before { width: 8px; height: 8px; border-radius: 50%; background: var(--s-dim); top: .55em; }
 
+/* Sparse teaching + live feedback: sit the copy in the middle, not marooned at the top. */
+.layout-content.has-feedback .pad,
+.layout-cards.has-feedback .pad {
+  justify-content: center;
+  gap: 28px;
+}
+.layout-content.has-feedback h2,
+.layout-cards.has-feedback h2 {
+  text-align: center;
+  max-width: 920px;
+  margin: 0 auto;
+}
+.layout-content.has-feedback ul {
+  align-items: center;
+  gap: 18px;
+}
+.layout-content.has-feedback li {
+  font-size: 36px;
+  width: min(720px, 100%);
+}
+
 /* keywords — bold term, lowercase definition */
 .layout-keywords .kw-list {
   display: flex; flex-direction: column; gap: 22px; margin: 0; min-height: 0;
@@ -488,26 +577,399 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   position: relative; padding-left: 46px;
   border-left: 6px solid var(--s-accent);
 }
+.layout-quote .q-build .q-line + .q-line { margin-top: .35em; }
 .layout-quote .attrib { margin-top: 32px; padding-left: 52px; font-size: 24px; color: var(--s-dim); }
 .layout-quote .attrib::before { content: '— '; }
+
+/* Join QR & PIN — full-bleed arrival screen for phones. */
+.layout-join .pad { justify-content: center; align-items: center; }
+.layout-join .join-stage {
+  width: min(1080px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  text-align: center;
+}
+.layout-join .join-title {
+  font-size: 48px;
+  line-height: 1.15;
+  letter-spacing: -1px;
+  margin: 0;
+  max-width: 920px;
+  white-space: pre-line;
+}
+.layout-join .join-sub {
+  font-size: 22px;
+  color: var(--s-dim);
+  max-width: 820px;
+  line-height: 1.45;
+}
+.layout-join .join-bullets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  justify-content: center;
+  max-width: 900px;
+}
+.layout-join .join-bullets li {
+  font-size: 20px;
+  color: var(--s-fg);
+  background: color-mix(in srgb, var(--s-fg) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--s-fg) 14%, transparent);
+  border-radius: 999px;
+  padding: 8px 16px;
+}
+.layout-join .join-board {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  margin-top: 8px;
+}
+.layout-join .join-qr {
+  width: 280px;
+  height: 280px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 14px;
+  box-sizing: border-box;
+  box-shadow: 0 18px 50px #00000033;
+}
+.layout-join .join-qr svg { width: 100%; height: 100%; display: block; }
+.layout-join .join-side { text-align: left; min-width: 280px; }
+.layout-join .join-lead {
+  font-size: 14px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--s-dim);
+}
+.layout-join .join-lead.pin-lead { margin-top: 22px; }
+.layout-join .join-url {
+  font-size: 28px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  margin-top: 6px;
+  color: var(--s-fg);
+}
+.layout-join .join-pin {
+  font-size: 72px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  line-height: 1;
+  margin-top: 4px;
+  color: var(--s-fg);
+}
+.deck-viewport.railed .layout-join .join-title { font-size: 36px; }
+.deck-viewport.railed .layout-join .join-qr { width: 210px; height: 210px; }
+.deck-viewport.railed .layout-join .join-pin { font-size: 56px; }
+#previewBox.railed .layout-join .join-title { font-size: 36px; }
+#previewBox.railed .layout-join .join-qr { width: 210px; height: 210px; }
+#previewBox.railed .layout-join .join-pin { font-size: 56px; }
 
 /* image */
 .layout-image .pad { padding: 0; position: relative; }
 .layout-image .img { position: absolute; inset: 0; background-position: center; background-repeat: no-repeat; }
 .layout-image .img.cover { background-size: cover; }
 .layout-image .img.contain { background-size: contain; }
+/* video — the image layout's frame, with a real player in it.
+   The caption rules are shared with .layout-image rather than copied: they
+   are the same overlay doing the same job, and the last time a caption was
+   styled twice in this file the two drifted apart. */
+.layout-video .pad { padding: 0; position: relative; }
+.layout-video .vid {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  background: #000; border: 0; display: block;
+}
+.layout-video .vid.cover { object-fit: cover; }
+.layout-video .vid.contain { object-fit: contain; }
+/* Controls are the one thing on a slide a presenter is meant to click. */
+.layout-video .vid { pointer-events: auto; }
+.layout-video .img { position: absolute; inset: 0; background-position: center; background-repeat: no-repeat; }
+.layout-video .img.cover { background-size: cover; }
+.layout-video .img.contain { background-size: contain; }
+.layout-video .img.vid-blank { background: var(--s-card, rgba(255,255,255,.06)); }
+.layout-video .vid-badge {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 84px; height: 84px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 30px; line-height: 1; padding-left: 6px;
+  color: var(--s-fg);
+  background: var(--s-scrim, var(--s-card, rgba(0,0,0,.5)));
+  border: 3px solid var(--s-rule);
+}
+.layout-video .cap,
 .layout-image .cap {
   position: absolute; left: 0; right: 0; bottom: 0;
   padding: 100px 92px 56px; font-size: 44px; font-weight: 650;
   background: linear-gradient(transparent, rgba(0,0,0,.82));
   color: #fff;
+  /* Click-through. The caption covers the bottom 208px of the slide, which on
+     a video is exactly where the play button and the scrubber are: measured
+     with elementFromPoint, the caption was the topmost element at both, so a
+     presenter could not start or seek the clip at all. Nothing in a caption
+     is ever clicked, so it should never be the thing that catches a click. */
+  pointer-events: none;
 }
+/* And it has to clear the control bar as well as let clicks past it, or the
+   text sits on top of the scrubber and neither is readable. */
+.layout-video .cap { padding-bottom: 118px; }
+.layout-video .empty,
 .layout-image .empty {
-  position: absolute; inset: 0; display: grid; place-items: center;
+  position: absolute; inset: 0; display: grid; place-items: center; align-content: center;
   color: var(--s-dim); font-size: 24px; gap: 10px;
   border: 3px dashed var(--s-rule); margin: 60px; border-radius: 16px;
   text-align: center; padding: 30px;
 }
+
+/* table */
+.layout-table .tbl {
+  width: 100%; border-collapse: collapse; table-layout: fixed;
+  font-size: 27px; line-height: 1.3;
+}
+.layout-table .tbl th {
+  text-align: left; padding: 0 20px 14px 0;
+  font-size: .68em; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--s-dim);
+  border-bottom: 3px solid var(--s-accent);
+  vertical-align: bottom;
+}
+.layout-table .tbl td {
+  padding: 16px 20px 16px 0;
+  color: var(--s-fg);
+  border-bottom: 1px solid var(--s-rule);
+  vertical-align: top;
+}
+.layout-table .tbl tbody tr:last-child td { border-bottom: 0; }
+.layout-table .tbl td.lead { font-weight: 650; }
+.layout-table .tbl th:last-child, .layout-table .tbl td:last-child { padding-right: 0; }
+/* Type size steps with the row count. The canvas is fixed and the row cap is
+   12, so these are the only cases there are. */
+.layout-table .tbl.rows-7, .layout-table .tbl.rows-8 { font-size: 24px; }
+.layout-table .tbl.rows-7 td, .layout-table .tbl.rows-8 td { padding-top: 13px; padding-bottom: 13px; }
+.layout-table .tbl.rows-9, .layout-table .tbl.rows-10 { font-size: 21px; }
+.layout-table .tbl.rows-9 td, .layout-table .tbl.rows-10 td { padding-top: 10px; padding-bottom: 10px; }
+.layout-table .tbl.rows-11, .layout-table .tbl.rows-12 { font-size: 19px; }
+.layout-table .tbl.rows-11 td, .layout-table .tbl.rows-12 td { padding-top: 8px; padding-bottom: 8px; }
+/* Columns cost width, not height, so they step separately. */
+.layout-table .tbl.cols-5 { font-size: .88em; }
+.layout-table .tbl.cols-6 { font-size: .8em; }
+.layout-table .empty {
+  flex: 1; display: grid; place-items: center; align-content: center;
+  color: var(--s-dim); font-size: 24px; gap: 10px;
+  border: 3px dashed var(--s-rule); border-radius: 16px; text-align: center; padding: 30px;
+}
+
+/* readiness — what will go wrong in the room */
+.ready-box { display: flex; flex-direction: column; gap: 4px; }
+.ready-ok { font-size: 12px; color: var(--ui-good); line-height: 1.5; padding: 8px 10px;
+  background: var(--ui-bg); border-radius: 6px; }
+.ready-row {
+  display: flex; gap: 8px; align-items: flex-start; text-align: left;
+  padding: 7px 9px; border-radius: 6px; cursor: pointer;
+  background: var(--ui-bg); border: 1px solid transparent;
+  font: inherit; font-size: 12px; color: var(--ui-text); line-height: 1.45;
+}
+.ready-row:hover:not(:disabled) { border-color: var(--ui-accent); }
+.ready-row:disabled { cursor: default; }
+.ready-dot {
+  flex: none; width: 16px; height: 16px; border-radius: 50%;
+  display: grid; place-items: center; margin-top: 1px;
+  font-size: 10px; font-weight: 800; color: #0b0f16;
+}
+/* A shape as well as a colour: ! and ? read the same to everyone. */
+.ready-stop .ready-dot { background: var(--ui-bad); }
+.ready-check .ready-dot { background: var(--ui-warn); }
+.ready-text strong { color: var(--ui-text); }
+.ready-text span { color: var(--ui-dim); }
+
+/* the teacher's panel — in the app, poppable out */
+.teach-modal {
+  border: 0; padding: 0; border-radius: 12px;
+  width: min(920px, 94vw); max-height: 88vh;
+  background: var(--ui-panel); color: var(--ui-text);
+  box-shadow: 0 30px 80px rgba(0,0,0,.45);
+}
+.teach-modal::backdrop { background: rgba(6,8,12,.6); }
+.teach-modal header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; border-bottom: 1px solid var(--ui-line);
+}
+.teach-modal header h2 { flex: 1; margin: 0; font-size: 17px; }
+.teach-tabs { display: flex; gap: 6px; padding: 10px 16px 0; }
+.teach-tabs .btn[aria-selected=true] { background: var(--ui-accent-soft); border-color: var(--ui-accent); }
+.teach-body { padding: 12px 16px 16px; overflow: auto; max-height: calc(88vh - 120px); }
+/* The frame carries manual.html's own stylesheet, so it needs height rather
+   than styling. */
+.teach-roster { margin: 0 0 12px; padding: 12px; border: 1px solid var(--ui-line); border-radius: 8px; background: var(--ui-panel-2); }
+.teach-roster[hidden] { display: none; }
+.teach-roster .roster-row { padding: 8px 0; }
+#teachFrame { width: 100%; height: 52vh; border: 1px solid var(--ui-line); border-radius: 8px; background: #fff; }
+/* Hidden with size, not display:none — some browsers reload an iframe that
+   is taken out of layout, which wiped the class list and the draft names. */
+#teachFrame.teach-away {
+  position: absolute; width: 1px; height: 1px; padding: 0; border: 0;
+  overflow: hidden; clip: rect(0,0,0,0);
+}
+
+/* session list: a row you can open, and a way to be rid of it */
+.session-row { display: flex; align-items: stretch; gap: 4px; margin-bottom: 4px; border-radius: 7px; }
+.session-row.selected { background: var(--ui-accent-soft); }
+.session-row .session-item { flex: 1; min-width: 0; }
+.session-del {
+  flex: none; width: 30px; border: 1px solid transparent; border-radius: 6px;
+  background: none; color: var(--ui-dim); cursor: pointer; font-size: 15px; line-height: 1;
+}
+/* Quiet until wanted — a delete control that advertises itself on a list of
+   attendance records is an invitation to a mistake. */
+.session-row:hover .session-del { color: var(--ui-text); }
+.session-del:hover { background: rgba(196,70,80,.14); border-color: var(--ui-bad); color: var(--ui-bad); }
+.session-del:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 1px; }
+
+/* questions overview — the shape of each check */
+.qo-wrap { display: flex; flex-direction: column; gap: 10px; }
+.qo-card { background: var(--ui-bg); border: 1px solid var(--ui-line); border-radius: 9px; padding: 11px 13px; }
+.qo-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 9px; }
+.qo-n { flex: none; width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center;
+  background: var(--ui-panel-2); color: var(--ui-dim); font-size: 11px; font-weight: 700; }
+.qo-title { flex: 1; min-width: 0; font-size: 13px; line-height: 1.35; }
+.qo-meta { display: block; margin-top: 3px; font-size: 11px; color: var(--ui-dim); }
+.qo-bloom, .qo-open {
+  margin-left: 7px; font-size: 9px; letter-spacing: .06em; text-transform: uppercase;
+  border: 1px solid var(--ui-line); border-radius: 999px; padding: 1px 6px;
+}
+.qo-open { color: var(--ui-warn); border-color: var(--ui-warn); }
+.qo-pct { flex: none; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ui-dim); }
+.qo-weak { color: var(--ui-bad); }
+.qo-bars { display: flex; flex-direction: column; gap: 4px; }
+.qo-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; font-size: 12px; }
+.qo-names { flex: 1 1 100%; margin: -2px 0 4px; font-size: 12px; font-weight: 550; color: var(--ui-text); }
+.qo-label { flex: 0 0 44%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ui-text); }
+.qo-track { flex: 1; height: 9px; background: var(--ui-panel-2); border-radius: 999px; overflow: hidden; }
+.qo-fill { display: block; height: 100%; background: var(--ui-dim); border-radius: 999px; }
+.qo-count { flex: none; width: 22px; text-align: right; color: var(--ui-dim); font-variant-numeric: tabular-nums; }
+/* Green only once it has been revealed — questionOverview never sets this
+   class before then, so the colour cannot arrive early. */
+.qo-right .qo-fill { background: var(--ui-good); }
+.qo-right .qo-label { color: var(--ui-good); font-weight: 650; }
+.qo-right .qo-label::before { content: '\2713 '; }
+.qo-note { margin: 9px 0 0; font-size: 11px; line-height: 1.5; color: var(--ui-warn); }
+
+.grid-readout { margin: 0 0 12px; }
+.grid-headline { margin: 0 0 10px; font-size: 15px; font-weight: 650; line-height: 1.35; color: var(--ui-text); }
+.grid-tiles { display: flex; flex-wrap: wrap; gap: 8px; }
+.grid-tile { min-width: 88px; padding: 8px 10px; border-radius: 8px; background: var(--ui-panel-2); }
+.grid-tile strong { display: block; font-size: 18px; }
+.grid-tile span { font-size: 11px; color: var(--ui-dim); }
+.grid-toggles { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 10px; font-size: 13px; color: var(--ui-dim); }
+.grid-toggle { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.g-stem { display: block; font-size: 10px; font-weight: 500; max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ui-text); }
+
+/* every answer — people down, checks across */
+.grid-wrap { overflow: auto; max-width: 100%; }
+.grid-names { display: flex; align-items: center; gap: 7px; font-size: 12px;
+  color: var(--ui-dim); margin: 0 0 10px; cursor: pointer; }
+.answer-grid { border-collapse: separate; border-spacing: 2px; font-size: 12px; }
+.answer-grid th, .answer-grid td { padding: 5px 8px; border-radius: 5px; text-align: center; }
+.answer-grid th { font-weight: 600; color: var(--ui-dim); font-size: 11px; }
+.answer-grid .g-name { text-align: left; white-space: nowrap; color: var(--ui-text);
+  position: sticky; left: 0; background: var(--ui-panel); }
+.g-qn { display: block; font-variant-numeric: tabular-nums; }
+.g-unrevealed { display: block; font-size: 9px; letter-spacing: .04em; text-transform: uppercase; opacity: .7; }
+.g-src { margin-left: 6px; font-size: 9px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ui-dim); border: 1px solid var(--ui-line); border-radius: 999px; padding: 1px 5px; }
+.g-cell { background: var(--ui-bg); min-width: 42px; max-width: 120px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A mark as well as a colour, so the fill is never the only signal. */
+.g-right { background: var(--ui-accent-soft); color: var(--ui-good); font-weight: 650; }
+.g-right::before { content: '\2713 '; }
+.g-wrong { background: rgba(196,70,80,.12); color: var(--ui-bad); font-weight: 650; }
+.g-wrong::before { content: '\2717 '; }
+.g-unscored { color: var(--ui-dim); }
+.g-none { background: var(--ui-bg); }
+.g-na { background: transparent; opacity: .35; }
+.answer-grid tfoot td, .g-tot { font-variant-numeric: tabular-nums; color: var(--ui-dim); font-weight: 600; }
+.answer-grid tfoot .g-name { color: var(--ui-dim); font-weight: 500; }
+.grid-roster { margin: 14px 0 0; padding: 12px 0 0; border-top: 1px solid var(--ui-line); }
+.grid-roster-lbl { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ui-dim); margin: 0 0 8px; }
+.grid-roster-list { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0 0 14px; padding: 0; }
+.grid-roster-name { padding: 6px 10px; border-radius: 999px; background: var(--ui-panel-2); font-size: 13px; font-weight: 600; }
+.grid-name-col { margin: 0 0 12px; padding: 10px 12px; border-radius: 8px; background: var(--ui-panel-2); }
+.grid-name-col-h { margin: 0 0 6px; font-size: 13px; font-weight: 650; }
+.grid-who-line { margin: 4px 0 0; font-size: 13px; line-height: 1.45; }
+.grid-who-k { display: inline-block; min-width: 5.5em; margin-right: 8px; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--ui-dim); font-weight: 650; }
+.grid-who-right .grid-who-k { color: var(--ui-good); }
+.grid-who-wrong .grid-who-k { color: var(--ui-bad); }
+.roster-manage { margin: 16px 0 0; padding: 12px 0 0; border-top: 1px solid var(--ui-line); }
+.roster-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--ui-line); }
+.roster-row strong { min-width: 8em; }
+.roster-act { font-size: 12px; padding: 5px 10px; }
+.roster-act.danger { color: var(--ui-bad); }
+/* The number worth stopping for. */
+.g-weak { color: var(--ui-bad); background: rgba(196,70,80,.12); }
+
+/* layout variations — the same content, rendered three other ways */
+.variant-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.variant-card {
+  display: flex; flex-direction: column; gap: 5px;
+  padding: 5px; border-radius: 7px; cursor: pointer;
+  background: var(--ui-panel-2); border: 1px solid transparent;
+  font: inherit; text-align: center;
+}
+.variant-card:hover { border-color: var(--ui-accent); }
+.variant-frame {
+  position: relative; width: 100%; aspect-ratio: 16/9;
+  border-radius: 4px; overflow: hidden; background: #000;
+}
+/* SF.fit writes left/top with a top-left origin — same rule as everywhere
+   else that scales a slide down. */
+.variant-frame .slide { transform-origin: 0 0; }
+.variant-name { font-size: 10px; color: var(--ui-dim); line-height: 1.2; }
+.variant-card:hover .variant-name { color: var(--ui-text); }
+
+/* theme picker — real slides, scaled down, so a theme is chosen by looking */
+.theme-grid {
+  /* minmax(0,...) rather than 1fr: a bare 1fr floors at min-content, so
+     "Studio · Sage & ink" made its column wider than the other two and the
+     previews came out three different sizes. */
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
+}
+.theme-card {
+  display: flex; flex-direction: column; gap: 7px;
+  padding: 7px; border-radius: 8px; cursor: pointer;
+  background: var(--ui-panel-2); border: 2px solid transparent;
+  font: inherit; text-align: center;
+}
+.theme-card:hover { border-color: var(--ui-line); }
+.theme-card.on { border-color: var(--ui-accent); }
+.theme-frame {
+  position: relative; width: 100%; aspect-ratio: 16/9;
+  border-radius: 5px; overflow: hidden;
+  /* The card is the control; the slide inside it is a picture of one. */
+  pointer-events: none;
+}
+/* SF.fit writes a transform and a left/top that assume the box shrinks
+   towards its top-left corner. Without this the default 50% 50% origin
+   shrinks the 1280px slide towards its own centre, which puts the visible
+   155px some 562px to the right of the frame — clipped away entirely, so the
+   card shows nothing but its placeholder. The rail thumbnails set the same
+   rule for the same reason. */
+.theme-frame .slide { transform-origin: 0 0; }
+/* The logo-in-place shot in the settings sheet. Same fitter, so the same
+   origin rule applies. */
+.logo-shot {
+  position: relative; width: 100%; aspect-ratio: 16/9;
+  border-radius: 6px; overflow: hidden; background: #000;
+  border: 1px solid var(--ui-line);
+}
+.logo-shot .slide { transform-origin: 0 0; }
+.theme-name { font-size: 11px; color: var(--ui-dim); line-height: 1.2; }
+.theme-card.on .theme-name { color: var(--ui-text); font-weight: 600; }
+/* The preview is a section slide at 1/9 scale, where the real type sizes are
+   unreadable, so they are overridden for the preview only. */
+.theme-frame .slide h1 { font-size: 190px; }
+.theme-frame .slide .accent-bar { height: 26px; width: 300px; margin-top: 40px; }
 
 /* dual coding — half copy, half image */
 .layout-split .pad.split-pad {
@@ -602,7 +1064,7 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 .slide-logo {
   position: absolute;
   top: 28px;
-  left: 36px;
+  right: 36px;
   z-index: 4;
   height: 52px;
   max-width: 180px;
@@ -618,13 +1080,13 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 .layout-title .slide-logo,
 .layout-section .slide-logo {
   top: 36px;
-  left: 48px;
+  right: 48px;
   height: 60px;
   max-width: 200px;
 }
 .layout-image .slide-logo {
   top: 24px;
-  left: 28px;
+  right: 28px;
   height: 44px;
   filter: drop-shadow(0 1px 8px rgba(0,0,0,.35));
 }
@@ -689,6 +1151,11 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   width: 34px; height: 30px; border-radius: 999px; font-size: 14px;
 }
 .hud button:hover { background: rgba(255,255,255,.14); }
+/* Next is about to do something other than move on. A ring rather than a
+   colour swap, so it reads as "this one is different" without competing with
+   the slide behind it. */
+.hud button.will-reveal { box-shadow: inset 0 0 0 2px #34c98a; }
+.hud button.will-hold { box-shadow: inset 0 0 0 2px #ffc75a; }
 .hud button.on { background: rgba(255,255,255,.2); }
 /* Three stops on one button, so the button has to show which one it is on:
    an outline for beside the slide, filled for the whole screen. */
@@ -776,6 +1243,12 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   background: var(--s-accent); color: #08101f;
   font-weight: 800; font-size: calc(var(--opt-f) * .74);
 }
+/* A question slide already owns its top-right corner: the countdown ring is
+   at right:46px and is 84px across, so a mark anchored to the same corner
+   lands on top of it. Pushed clear of the ring rather than moved back to the
+   left, so the logo sits in the same place on every slide in the deck. */
+.layout-quiz.has-clock .slide-logo { right: 148px; }
+
 .theme-mono .opt .key { color: #0c0c0c; }
 .opt .opt-line .txt { flex: 1; }
 
@@ -814,7 +1287,14 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 .layout-quiz .tally.on { height: 74px; }
 .layout-quiz .tally .col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
 .layout-quiz .tally .bar { width: 100%; background: var(--s-accent); border-radius: 5px 5px 0 0; min-height: 3px; transition: height .5s cubic-bezier(.3,0,.2,1); }
-.layout-quiz .tally .col.right .bar { background: #34c98a; }
+/* Green only once the answer is out.
+
+   The correct column used to be green from the moment the tally appeared,
+   which meant a live vote announced its own answer before anybody discussed
+   anything — fatal to peer instruction, where the whole method is to show the
+   split and withhold the answer. Keyed off .opt.correct, which both reveal
+   paths add to the slide, so the colour cannot arrive early again. */
+.layout-quiz:has(.opt.correct) .tally .col.right .bar { background: #34c98a; }
 .layout-quiz .tally .cnt { font-size: 15px; color: var(--s-dim); }
 
 /* results slide */
@@ -858,7 +1338,7 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 
 /* live lobby panel (host side, shown over the deck) */
 #lobby {
-  position: fixed; inset: 0; z-index: 115;
+  position: fixed; inset: 0; z-index: 1200;
   background: rgba(6,8,12,.94); backdrop-filter: blur(10px);
   display: none; place-items: center; color: #fff; text-align: center;
 }
@@ -881,7 +1361,11 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   animation: sf-fade-in .3s ease both;
 }
 #lobby .count { font-size: 15px; color: #8f97a6; margin-top: 22px; }
-#lobby .actions { margin-top: 30px; display: flex; gap: 10px; justify-content: center; }
+#lobby .actions { margin-top: 30px; display: flex; gap: 12px; justify-content: center; }
+/* The lobby is a projected screen with 96px digits on it, so the controls
+   under them cannot be the 13px buttons from the editor toolbar. Same styles,
+   sized for the back of a room. */
+#lobby .actions .btn { font-size: 17px; padding: 13px 22px; border-radius: 9px; }
 #lobby .warn { color: var(--ui-warn); font-size: 14px; margin-top: 20px; max-width: 520px; line-height: 1.55; }
 
 /* toast */
@@ -1139,9 +1623,14 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 /* ---- make room for the rail; all offsets derive from --rail-w ---- */
 
 .deck-viewport.railed .slide .pad { padding-right: calc(var(--rail-w) + 54px); }
-.deck-viewport.railed .layout-image .pad { padding-right: 0; }
-.deck-viewport.railed .layout-image .img { right: var(--rail-w); }
-.deck-viewport.railed .layout-image .cap { right: var(--rail-w); padding-right: 46px; }
+.deck-viewport.railed .layout-image .pad,
+.deck-viewport.railed .layout-video .pad { padding-right: 0; }
+.deck-viewport.railed .layout-image .img,
+.deck-viewport.railed .layout-video .img { right: var(--rail-w); }
+.deck-viewport.railed .layout-video .vid { right: var(--rail-w); width: auto; }
+.deck-viewport.railed .layout-image .cap,
+.deck-viewport.railed .layout-video .cap { right: var(--rail-w); padding-right: 46px; }
+.deck-viewport.railed .layout-table .tbl { font-size: .84em; }
 .deck-viewport.railed .layout-split .pad.split-pad,
 #previewBox.railed .layout-split .pad.split-pad {
   padding-right: 0;
@@ -1153,6 +1642,11 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 .deck-viewport.railed .layout-split .split-copy li,
 #previewBox.railed .layout-split .split-copy li { font-size: 22px; }
 .deck-viewport.railed .slide .pagenum { right: calc(var(--rail-w) + 34px); }
+.deck-viewport.railed .slide-logo { right: calc(var(--rail-w) + 34px); }
+.deck-viewport.railed .layout-title .slide-logo,
+.deck-viewport.railed .layout-section .slide-logo { right: calc(var(--rail-w) + 44px); }
+.deck-viewport.railed .layout-image .slide-logo { right: calc(var(--rail-w) + 26px); }
+.deck-viewport.railed .layout-quiz.has-clock .slide-logo { right: calc(var(--rail-w) + 140px); }
 .deck-viewport.railed .layout-quiz .clock { right: calc(var(--rail-w) + 38px); }
 .deck-viewport.railed .leaderboard { padding-right: calc(var(--rail-w) + 54px); }
 
@@ -1272,7 +1766,12 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 
 .vsep { width: 1px; height: 22px; background: var(--ui-line); margin: 0 2px; flex: none; }
 
-body.ws-deck [data-ws="game"] { display: none !important; }
+/* Prefer html[data-ws] (set in <head> before CSS) so a refresh never shows
+   both studios. body.ws-* stays for anything that still keys off the body. */
+html[data-ws="deck"] [data-ws="game"],
+html[data-ws="game"] [data-ws="deck"],
+html:not([data-ws]) [data-ws],
+body.ws-deck [data-ws="game"],
 body.ws-game [data-ws="deck"] { display: none !important; }
 
 .rail-count {
@@ -1280,6 +1779,18 @@ body.ws-game [data-ws="deck"] { display: none !important; }
   background: var(--ui-bg); border-radius: 999px; padding: 1px 7px;
   font-variant-numeric: tabular-nums;
 }
+/* The label takes the slack so the count and the cog stay together on the
+   right, rather than space-between spreading all three across the head. */
+.rail-head #railLabel { flex: 1 1 auto; min-width: 0; }
+.rail-cog {
+  flex: none; width: 22px; height: 22px; padding: 0;
+  display: grid; place-items: center;
+  font-size: 13px; line-height: 1; cursor: pointer;
+  color: var(--ui-dim); background: none;
+  border: 1px solid transparent; border-radius: 5px;
+}
+.rail-cog:hover { color: var(--ui-text); background: var(--ui-bg); border-color: var(--ui-line); }
+.rail-cog:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 1px; }
 
 /* question rows in the game workspace rail */
 .qthumb {
@@ -1640,6 +2151,826 @@ body.ws-game [data-ws="deck"] { display: none !important; }
 .layout-race .lane.won .lane-text { color: var(--s-accent-2); }
 .layout-race .lane.won .lane-pos { color: var(--s-accent-2); }
 
+.layout-boss .pad { justify-content: center; padding: 72px 80px; gap: 22px; }
+.layout-boss .boss-title { font-size: 48px; font-weight: 750; letter-spacing: -.02em; }
+.layout-boss .boss-note { font-size: 22px; color: var(--s-muted, #9aa3b5); }
+.layout-boss .boss-meter {
+  width: min(720px, 100%); height: 28px; border-radius: 999px;
+  background: rgba(255,255,255,.12); overflow: hidden; border: 1px solid rgba(255,255,255,.18);
+}
+.layout-boss .boss-fill {
+  height: 100%; width: 0; border-radius: inherit;
+  background: linear-gradient(90deg, #c43c3c, #e08a3a);
+  transition: width .45s ease;
+}
+.layout-boss.boss-down .boss-fill { background: linear-gradient(90deg, #3d8b5a, #6bc48a); }
+.layout-boss.boss-hit .boss-meter { animation: sf-boss-hit .35s ease; }
+.layout-boss .boss-hp { font-size: 28px; font-variant-numeric: tabular-nums; font-weight: 650; }
+
+.layout-wordreveal .pad { justify-content: center; padding: 64px 72px; gap: 20px; text-align: center; }
+.layout-wordreveal .wr-title { font-size: 28px; font-weight: 650; letter-spacing: -.01em; color: var(--s-muted, #9aa3b5); }
+.layout-wordreveal .wr-hint { font-size: 24px; color: var(--s-muted, #9aa3b5); }
+.layout-wordreveal .wr-mask {
+  font-size: 56px; font-weight: 750; letter-spacing: .18em;
+  font-variant-numeric: tabular-nums; word-break: break-word;
+}
+.layout-wordreveal .wr-meta { font-size: 20px; color: var(--s-muted, #9aa3b5); }
+
+.layout-study .pad { justify-content: center; padding: 72px 80px; gap: 18px; text-align: center; }
+.layout-study .study-term { font-size: 52px; font-weight: 750; letter-spacing: -.02em; }
+.layout-study .study-def { font-size: 28px; color: var(--s-muted, #9aa3b5); max-width: 36em; margin: 0 auto; }
+.layout-study .study-note { font-size: 18px; color: var(--s-muted, #9aa3b5); }
+
+/* ---- catalogue presentations: stage shape on the house theme ------------ */
+
+/* Keep the deck theme. Stages differ by layout, not by painting a new room. */
+.layout-quiz[class*="present-"]::before {
+  content: none;
+}
+.layout-quiz[class*="present-"] > .pad,
+.layout-quiz[class*="present-"] > .pagenum,
+.layout-quiz[class*="present-"] > .track,
+.layout-quiz[class*="present-"] > .slide-logo {
+  position: relative; z-index: 1;
+}
+/* Clock stays absolute — the house top-right countdown, never in the flow. */
+.layout-quiz[class*="present-"] > .clock {
+  z-index: 2;
+}
+
+.layout-quiz.present-truefalse .pad,
+.layout-quiz.present-headsup .pad,
+.layout-quiz.present-spin .pad,
+.layout-quiz.present-wordreveal .pad,
+.layout-quiz.present-claim .pad,
+.layout-quiz.present-memorymatch .pad,
+.layout-quiz.present-knowledge .pad,
+.layout-quiz.present-connection .pad,
+.layout-quiz.present-challenge .pad,
+.layout-quiz.present-emoji .pad,
+.layout-quiz.present-blanks .pad {
+  justify-content: center;
+}
+
+.layout-quiz .stage-hero {
+  position: relative;
+  flex: none;
+  z-index: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  text-align: center; margin-bottom: 12px; width: 100%;
+}
+.layout-quiz .stage-atmosphere {
+  pointer-events: none;
+  position: absolute; inset: -80px -100px auto;
+  height: 280px; z-index: 0;
+  opacity: .4;
+  background:
+    radial-gradient(ellipse 70% 80% at 50% 0%,
+      color-mix(in srgb, var(--s-accent) 22%, transparent), transparent 70%);
+}
+.layout-quiz .stage-kicker {
+  position: relative; z-index: 1;
+  font-size: 15px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--s-accent); font-weight: 700;
+}
+.layout-quiz .stage-note {
+  position: relative; z-index: 1;
+  font-size: 18px; color: var(--s-dim); max-width: 28em;
+}
+
+/* True / False — statement owns the room; two tall doors (theme boxes) */
+.layout-quiz.present-truefalse .q {
+  --q-f: 52px; text-align: center; max-width: 18em; margin: 0 auto;
+}
+.layout-quiz.present-truefalse .qhead { justify-content: center; margin-bottom: 8px; }
+.layout-quiz.present-truefalse .opts.tf-duo {
+  grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 36px;
+  max-width: 920px; margin-left: auto; margin-right: auto;
+}
+.layout-quiz.present-truefalse .opts.tf-duo .opt {
+  min-height: 168px; justify-content: center; --opt-f: 44px;
+  border-radius: 14px; border-width: 3px;
+  background: var(--s-card);
+  border-color: var(--s-rule);
+}
+.layout-quiz.present-truefalse .opts.tf-duo .opt:nth-child(1) {
+  border-color: color-mix(in srgb, var(--s-good, #34c98a) 55%, var(--s-rule));
+}
+.layout-quiz.present-truefalse .opts.tf-duo .opt:nth-child(2) {
+  border-color: color-mix(in srgb, #ff5f6d 55%, var(--s-rule));
+}
+.layout-quiz.present-truefalse .opts.tf-duo .opt .key {
+  width: calc(var(--opt-f) * 1.4); height: calc(var(--opt-f) * 1.4);
+  font-size: calc(var(--opt-f) * .9); border-radius: 50%;
+}
+.layout-quiz.present-truefalse .tf-atmosphere {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    linear-gradient(105deg,
+      color-mix(in srgb, var(--s-good, #34c98a) 8%, transparent) 0%,
+      transparent 42%,
+      transparent 58%,
+      color-mix(in srgb, #ff5f6d 8%, transparent) 100%);
+}
+
+/* Beat the Clock — taut options; clock stays in the house position */
+.layout-quiz.present-speed .q { --q-f: 42px; }
+.layout-quiz.present-speed .opts.speed-opts {
+  gap: 14px; margin-top: 22px;
+}
+.layout-quiz.present-speed .opts.speed-opts .opt {
+  border-width: 3px; border-radius: 14px;
+  background: var(--s-card);
+}
+
+/* Boss — crest above the strike */
+.layout-quiz.present-boss .boss-stage { margin-bottom: 6px; }
+.layout-quiz.present-boss .boss-crest {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.layout-quiz.present-boss .boss-glyph {
+  font-size: 48px; line-height: 1; color: var(--s-accent);
+  animation: sf-boss-bob 2.4s ease-in-out infinite;
+}
+.layout-quiz.present-boss .boss-hit-badge {
+  font-size: 18px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase;
+  padding: 10px 18px; border-radius: 14px;
+  background: var(--s-card);
+  border: 3px solid var(--s-accent);
+  color: var(--s-fg);
+}
+@keyframes sf-boss-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Word Reveal — physical letter tiles on theme surfaces */
+.layout-quiz.present-wordreveal .wr-stage { margin-top: 8px; min-height: 280px; justify-content: center; }
+.layout-quiz.present-wordreveal .wr-board {
+  position: relative; z-index: 1;
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  max-width: 1000px;
+}
+.layout-quiz.present-wordreveal .wr-gap { width: 28px; }
+.layout-quiz.present-wordreveal .wr-tile {
+  width: 64px; height: 78px;
+  display: grid; place-items: center;
+  font-size: 36px; font-weight: 800; letter-spacing: 0;
+  border-radius: 12px;
+  border: 3px solid var(--s-rule);
+  background: var(--s-card);
+  color: var(--s-fg);
+  animation: sf-tile-in .45s cubic-bezier(.2,.8,.2,1) both;
+}
+.layout-quiz.present-wordreveal .wr-tile.lit {
+  border-color: var(--s-accent);
+  background: color-mix(in srgb, var(--s-accent) 18%, var(--s-card));
+}
+.layout-quiz.present-wordreveal .wr-tile.blank {
+  background: transparent;
+  border-style: dashed;
+  color: var(--s-dim);
+}
+@keyframes sf-tile-in {
+  from { opacity: 0; transform: translateY(12px) scale(.92); }
+  to { opacity: 1; transform: none; }
+}
+.layout-quiz.present-wordreveal .opts.typed { margin-top: 28px; max-width: 720px; width: 100%; }
+
+/* Memory / Knowledge — same theme boxes as answer pads (--s-card / --s-accent) */
+.layout-quiz.present-claim .claim-stage,
+.layout-quiz.present-memorymatch .match-stage,
+.layout-quiz.present-knowledge .knowledge-stage {
+  min-height: 340px; justify-content: center; gap: 18px;
+}
+.layout-quiz.present-claim .claim-term,
+.layout-quiz.present-knowledge .claim-term {
+  font-size: 52px; font-weight: 780; letter-spacing: -.03em; line-height: 1.08;
+  color: var(--s-fg);
+}
+.layout-quiz.present-claim .claim-def,
+.layout-quiz.present-knowledge .claim-def {
+  margin-top: 10px; font-size: 22px; line-height: 1.4;
+  color: var(--s-dim); max-width: 22em; margin-left: auto; margin-right: auto;
+}
+.layout-quiz.present-knowledge .claim-def.soft { opacity: .85; font-style: italic; }
+.layout-quiz.present-knowledge .knowledge-chip {
+  position: relative; z-index: 1;
+  padding: 36px 48px; border-radius: 14px;
+  background: var(--s-card);
+  border: 3px solid var(--s-rule);
+  box-shadow: none;
+}
+.layout-quiz.present-knowledge .knowledge-chip:hover {
+  border-color: var(--s-accent);
+}
+
+/* Memory Flip — single turning card, theme surfaces */
+.layout-quiz.present-claim .flip-card {
+  position: relative; z-index: 1;
+  width: min(520px, 86%);
+  min-height: 280px;
+  transform-style: preserve-3d;
+  transition: transform .55s cubic-bezier(.2,.8,.2,1);
+}
+.layout-quiz.present-claim .flip-card.open { transform: rotateY(180deg); }
+.layout-quiz.present-claim .flip-face {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; padding: 40px 36px; border-radius: 14px;
+  backface-visibility: hidden;
+  background: var(--s-card);
+  border: 3px solid var(--s-rule);
+  color: var(--s-fg);
+  box-shadow: none;
+}
+.layout-quiz.present-claim .flip-face.back {
+  transform: rotateY(180deg);
+  border-color: var(--s-accent);
+}
+
+/* Memory Match — board + active pair on theme tokens */
+.layout-quiz.present-memorymatch .match-board {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(52px, 72px));
+  gap: 10px; justify-content: center;
+  margin-bottom: 6px;
+}
+.layout-quiz.present-memorymatch .match-tile {
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
+  border: 3px solid var(--s-rule);
+  background: var(--s-card);
+  box-shadow: none;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--s-accent);
+  font-size: 18px; padding: 0; cursor: default;
+  animation: sf-tile-in .4s cubic-bezier(.2,.8,.2,1) both;
+}
+.layout-quiz.present-memorymatch .match-tile.ghost {
+  opacity: .4;
+  background: transparent;
+  border-style: dashed;
+  color: var(--s-dim);
+}
+.layout-quiz.present-memorymatch .match-tile.active {
+  border-color: var(--s-accent);
+  background: color-mix(in srgb, var(--s-accent) 14%, var(--s-card));
+  transform: translateY(-4px);
+}
+.layout-quiz.present-memorymatch .match-tile-front {
+  display: none;
+}
+.layout-quiz.present-memorymatch .match-duo {
+  position: relative; z-index: 1;
+  display: flex; align-items: stretch; justify-content: center;
+  gap: 18px; width: min(920px, 100%);
+}
+.layout-quiz.present-memorymatch .match-card {
+  flex: 1 1 0; min-width: 0; max-width: 380px;
+  min-height: 220px; padding: 28px 26px;
+  border-radius: 14px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; text-align: center;
+  background: var(--s-card);
+  border: 3px solid var(--s-rule);
+  color: var(--s-fg);
+  box-shadow: none;
+  animation: sf-term-rise .5s cubic-bezier(.2,.8,.2,1) both;
+}
+.layout-quiz.present-memorymatch .match-card.term {
+  border-color: var(--s-accent);
+}
+.layout-quiz.present-memorymatch .match-card.def.shut {
+  background: var(--s-card);
+  border-style: dashed;
+  border-color: var(--s-rule);
+}
+.layout-quiz.present-memorymatch .match-card.def.open {
+  border-color: var(--s-accent-2, var(--s-accent));
+}
+.layout-quiz.present-memorymatch .match-face-label,
+.layout-quiz.present-claim .match-face-label {
+  font-size: 13px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--s-accent); font-weight: 700;
+}
+.layout-quiz.present-memorymatch .match-face-text {
+  font-size: 36px; font-weight: 760; letter-spacing: -.02em; line-height: 1.15;
+  text-wrap: balance;
+  color: var(--s-fg);
+}
+.layout-quiz.present-memorymatch .match-face-hidden {
+  font-size: 72px; font-weight: 700; line-height: 1;
+  color: var(--s-dim); opacity: .7;
+}
+.layout-quiz.present-memorymatch .match-face-hint {
+  font-size: 15px; color: var(--s-dim); max-width: 14em;
+}
+.layout-quiz.present-memorymatch .match-link {
+  flex: none; align-self: center;
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: var(--s-accent);
+  background: var(--s-card);
+  border: 2px solid var(--s-rule);
+}
+
+.layout-quiz.present-headsup .heads-stage {
+  min-height: 380px; justify-content: center; padding: 24px 12px;
+}
+.layout-quiz.present-headsup .stage-atmosphere {
+  inset: -40px -80px; height: 520px;
+  background:
+    radial-gradient(circle at 50% 45%,
+      color-mix(in srgb, var(--s-accent) 22%, transparent), transparent 62%);
+}
+.layout-quiz.present-headsup .oracy-term {
+  position: relative; z-index: 1;
+  font-size: 88px; font-weight: 800; letter-spacing: -.04em; line-height: 1.05;
+  max-width: 11em;
+  text-wrap: balance;
+  animation: sf-term-rise .55s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes sf-term-rise {
+  from { opacity: 0; transform: scale(.94); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+
+/* Spin — wheel under the term */
+.layout-quiz.present-spin .spin-stage {
+  position: relative;
+  width: min(460px, 78%); aspect-ratio: 1;
+  justify-content: center; margin: 4px auto 16px;
+  border-radius: 50%;
+  border: 3px solid color-mix(in srgb, var(--s-accent) 50%, transparent);
+  background: color-mix(in srgb, var(--s-card) 40%, transparent);
+  overflow: hidden;
+}
+.layout-quiz.present-spin .spin-wheel {
+  position: absolute; inset: 8%;
+  animation: sf-spin-slow 18s linear infinite;
+}
+.layout-quiz.present-spin .spin-ray {
+  position: absolute; left: 50%; top: 50%;
+  width: 2px; height: 48%;
+  margin-left: -1px; transform-origin: bottom center;
+  background: linear-gradient(to top,
+    transparent, color-mix(in srgb, var(--s-accent) 55%, transparent));
+  opacity: .55;
+}
+.layout-quiz.present-spin .oracy-term {
+  position: relative; z-index: 2;
+  font-size: 48px; font-weight: 780; letter-spacing: -.03em;
+  max-width: 8em; padding: 0 24px;
+}
+@keyframes sf-spin-slow { to { transform: rotate(360deg); } }
+
+/* Connection — skewed pair */
+.layout-quiz.present-connection .connection-stage { padding-top: 8px; }
+.layout-quiz.present-connection .conn-pair {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px;
+  align-items: stretch; width: 100%; max-width: 1040px;
+}
+.layout-quiz.present-connection .conn-tile {
+  position: relative;
+  border-radius: 14px; padding: 32px 28px 36px;
+  min-height: 180px;
+  display: flex; flex-direction: column; justify-content: center; gap: 12px;
+  border: 3px solid var(--s-rule);
+  background: var(--s-card);
+}
+.layout-quiz.present-connection .conn-tile.a {
+  border-color: var(--s-accent);
+}
+.layout-quiz.present-connection .conn-tile.b {
+  border-color: var(--s-accent-2, var(--s-accent));
+}
+.layout-quiz.present-connection .conn-label {
+  font-size: 14px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--s-accent); font-weight: 750;
+}
+.layout-quiz.present-connection .conn-text {
+  font-size: 34px; font-weight: 720; line-height: 1.2;
+}
+.layout-quiz.present-connection .conn-bridge {
+  font-size: 40px; align-self: center; color: var(--s-accent);
+  animation: sf-bridge-pulse 2s ease-in-out infinite;
+}
+@keyframes sf-bridge-pulse {
+  0%, 100% { transform: scale(1); opacity: .85; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+
+/* Concept chain — stepping stones */
+.layout-quiz.present-chain .chain-steps {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  flex-wrap: wrap; width: 100%; max-width: 1100px; margin-top: 12px;
+}
+.layout-quiz.present-chain .chain-node {
+  padding: 22px 28px; border-radius: 14px;
+  font-size: 28px; font-weight: 720;
+  border: 3px solid var(--s-rule);
+  background: var(--s-card);
+  color: var(--s-fg);
+}
+.layout-quiz.present-chain .chain-node.seed {
+  font-size: 36px; border-color: var(--s-accent);
+  background: color-mix(in srgb, var(--s-accent) 18%, var(--s-card));
+}
+.layout-quiz.present-chain .chain-node.done {
+  font-size: 22px; font-weight: 700;
+  border-color: color-mix(in srgb, var(--s-accent) 45%, var(--s-rule));
+}
+.layout-quiz.present-chain .chain-node.link {
+  font-size: 18px; font-weight: 600; max-width: 220px;
+  text-align: center; line-height: 1.3;
+}
+.layout-quiz.present-chain .chain-node.ghost {
+  opacity: .45; border-style: dashed; font-weight: 550; font-size: 22px;
+}
+.layout-quiz.present-chain .chain-arrow {
+  width: 36px; height: 3px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--s-accent), transparent);
+}
+.layout-quiz.present-chain .chain-prompt {
+  margin-top: 14px; max-width: 720px; text-align: center;
+}
+.layout-quiz.present-chain .chain-capture {
+  position: relative; z-index: 1;
+  margin-top: 16px; width: min(640px, 92%);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.layout-quiz.present-chain .chain-link-input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--s-rule);
+  background: var(--s-card);
+  color: var(--s-fg);
+  font: inherit;
+  font-size: 18px;
+}
+.layout-quiz.present-chain .chain-capture-hint {
+  margin: 0;
+  font-size: 14px;
+  color: var(--s-dim);
+  text-align: center;
+}
+
+/* Challenge — poster card */
+.layout-quiz.present-challenge .challenge-poster {
+  position: relative; z-index: 1;
+  width: min(820px, 94%);
+  padding: 56px 52px;
+  border-radius: 14px;
+  text-align: left;
+  background: var(--s-card);
+  border: 3px solid var(--s-rule);
+  color: var(--s-fg);
+  box-shadow: none;
+}
+.layout-quiz.present-challenge .challenge-body {
+  margin-top: 18px;
+  font-size: 42px; font-weight: 680; line-height: 1.28;
+  text-wrap: balance;
+}
+
+/* Bingo — board game grid */
+/* Quiz Bowl — Jeopardy cell */
+.layout-quiz.present-bowl .bowl-stage { margin-bottom: 10px; }
+.layout-quiz.present-bowl .bowl-cell {
+  position: relative; z-index: 1;
+  min-width: 280px; padding: 28px 40px;
+  border-radius: 14px;
+  background: var(--s-card);
+  border: 3px solid var(--s-accent);
+  box-shadow: none;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  color: var(--s-fg);
+}
+.layout-quiz.present-bowl .bowl-cat {
+  font-size: 16px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--s-dim); font-weight: 700;
+}
+.layout-quiz.present-bowl .bowl-val {
+  font-size: 56px; font-weight: 850; letter-spacing: -.02em;
+  color: var(--s-accent);
+  font-variant-numeric: tabular-nums;
+}
+.layout-quiz.present-bowl .q { --q-f: 40px; }
+
+/* Ranking — spine list */
+.layout-quiz.present-ranking .ranking-stage {
+  align-items: flex-start; margin-bottom: 4px;
+}
+.layout-quiz.present-ranking .opts.ordered {
+  gap: 12px; max-width: 900px;
+}
+.layout-quiz.present-ranking .opts.ordered .opt {
+  border-radius: 12px;
+  border-left-width: 6px;
+  border-left-color: var(--s-accent);
+}
+.layout-quiz.present-ranking .opts.ordered .opt .key {
+  background: color-mix(in srgb, var(--s-accent) 30%, transparent);
+  border-radius: 50%;
+}
+
+/* Host verdict strip — action bar, not quiz grid */
+.layout-quiz .opts.judge-strip {
+  display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
+  align-items: center;
+  margin-top: auto; padding-top: 14px;
+  grid-template-columns: none;
+}
+.layout-quiz .opts.judge-strip .judge-caption {
+  flex: 1 0 100%;
+  text-align: center;
+  font-size: 13px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--s-dim); font-weight: 650; margin-bottom: 2px;
+}
+.layout-quiz .opts.judge-strip .opt.judge {
+  flex: 0 1 200px; max-width: 240px; min-height: 64px;
+  --opt-f: 22px; justify-content: center;
+  border-radius: 14px;
+  background: var(--s-card);
+  border: 3px solid var(--s-rule);
+}
+.layout-quiz .opts.judge-strip .opt.judge .key { display: none; }
+.layout-quiz .opts.judge-strip .opt.judge .judge-mark {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; flex: none;
+  background: var(--s-accent); color: #08101f;
+}
+.theme-mono .layout-quiz .opts.judge-strip .opt.judge .judge-mark { color: #0c0c0c; }
+.layout-quiz .opts.judge-strip .opt.judge.yes {
+  border-color: var(--s-accent);
+  background: color-mix(in srgb, var(--s-accent) 14%, var(--s-card));
+}
+.layout-quiz .opts.judge-strip .opt.judge.yes .judge-mark {
+  background: var(--s-accent);
+}
+.layout-quiz .opts.judge-strip .opt.judge.skip {
+  border-color: var(--s-rule);
+  opacity: .95;
+}
+.layout-quiz .opts.judge-strip .opt.judge.skip .judge-mark {
+  background: transparent;
+  border: 2px solid var(--s-rule);
+  color: var(--s-dim);
+}
+
+
+/* Emoji Guess — giant rebus on theme card */
+/* The clues and the help under them are one stack of the same width. Sized to
+   their own content they came out three different widths — and a ragged column
+   reads as three unrelated boxes rather than a prompt and the help for it. */
+.layout-quiz.present-emoji .emoji-stage {
+  min-height: 300px; justify-content: center;
+  align-items: stretch; width: min(860px, 100%);
+  /* Clear of the title row. The clue panel sat hard under the heading, which
+     read as one block of chrome rather than a question and its evidence. */
+  margin: 26px auto 0;
+}
+.layout-quiz.present-emoji .emoji-hero {
+  position: relative; z-index: 1;
+  text-align: center;
+  font-size: 96px; line-height: 1.15; letter-spacing: .06em;
+  padding: 36px 44px; border-radius: 14px;
+  background: var(--s-card);
+  border: 3px solid var(--s-accent);
+  color: var(--s-fg);
+  animation: sf-term-rise .5s cubic-bezier(.2,.8,.2,1) both;
+}
+/* The answer box is the last row of the same stack as the clues and the
+   letters, not a form field parked under them: same width, same panel, and the
+   value centred in it rather than pushed left behind a pencil. */
+.layout-quiz.present-emoji .opts.typed {
+  width: min(860px, 100%); max-width: none; margin: 14px auto 0;
+}
+.layout-quiz.present-emoji .opt.answer {
+  padding: 18px 24px; border-radius: 12px; border-width: 3px;
+  border-color: var(--s-accent); background: var(--s-card);
+}
+.layout-quiz.present-emoji .opt.answer.held {
+  border-style: dashed; border-color: var(--s-rule); background: transparent;
+}
+.layout-quiz.present-emoji .opt.answer .opt-line {
+  display: flex; align-items: baseline; gap: 16px;
+}
+.layout-quiz.present-emoji .opt.answer .key { flex: none; align-self: center; }
+.layout-quiz.present-emoji .opt.answer .txt { flex: 1; text-align: center; }
+
+/* Fill in the Blanks — accent underscore pills */
+.layout-quiz.present-blanks .blanks-line {
+  position: relative; z-index: 1;
+  font-size: 36px; font-weight: 650; line-height: 1.55;
+  max-width: 28em; text-wrap: balance;
+  color: var(--s-fg);
+}
+.layout-quiz.present-blanks .blank-pill {
+  display: inline-block; margin: 0 6px; padding: 4px 18px;
+  border-radius: 10px; font-weight: 800; letter-spacing: .12em;
+  background: color-mix(in srgb, var(--s-accent) 18%, var(--s-card));
+  color: var(--s-fg);
+  border: 2px solid var(--s-accent);
+  vertical-align: baseline;
+}
+
+/* Odd One Out — four equal theme tiles; discuss then reveal */
+.layout-quiz.present-oddone .opts.odd-grid {
+  grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 28px;
+  max-width: 960px; margin-left: auto; margin-right: auto;
+  display: grid;
+}
+.layout-quiz.present-oddone .opts.odd-grid .opt {
+  min-height: 120px; --opt-f: 32px; justify-content: center;
+  border-radius: 14px;
+  background: var(--s-card);
+  border: 3px solid var(--s-rule);
+  cursor: default;
+}
+.layout-quiz.present-oddone .opts.odd-grid .opt .opt-line {
+  justify-content: center;
+  text-align: center;
+}
+.layout-quiz.present-oddone .opts.odd-grid .opt .key { display: none; }
+.layout-quiz.present-oddone .opts.odd-grid .opt .tick:empty { display: none; }
+.layout-quiz.present-oddone .opts.odd-grid .opt.odd-marked {
+  border-color: var(--s-accent);
+  background: color-mix(in srgb, var(--s-accent) 14%, var(--s-card));
+}
+.layout-quiz.present-oddone .opts.odd-grid .opt.odd-marked .tick {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--s-accent);
+  margin-top: 8px;
+}
+.layout-quiz.present-oddone .oddone-discuss {
+  margin: 22px auto 0;
+  max-width: 720px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--s-dim);
+}
+.layout-quiz.present-oddone .q { text-align: center; --q-f: 36px; }
+.layout-quiz.present-oddone .tally,
+.layout-quiz.present-oddone .answered-count { display: none; }
+
+/* Compare & Contrast — two equal tiles; discuss then reveal alike / differ */
+.layout-quiz.present-compare .compare-stage {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 18px; width: 100%; max-width: 1040px; margin-top: 8px;
+}
+.layout-quiz.present-compare .compare-pair {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+  width: 100%;
+}
+.layout-quiz.present-compare .compare-tile {
+  border-radius: 14px; padding: 28px 24px 32px;
+  min-height: 140px;
+  display: flex; flex-direction: column; justify-content: center; gap: 10px;
+  border: 3px solid var(--s-rule);
+  background: var(--s-card);
+  text-align: center;
+}
+.layout-quiz.present-compare .compare-label {
+  font-size: 13px; font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--s-dim);
+}
+.layout-quiz.present-compare .compare-text {
+  font-size: 34px; font-weight: 760; letter-spacing: -.02em;
+  color: var(--s-fg); line-height: 1.2;
+}
+.layout-quiz.present-compare .compare-discuss {
+  margin: 4px 0 0;
+  max-width: 720px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--s-dim);
+}
+.layout-quiz.present-compare .compare-panels {
+  display: none;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+}
+.layout-quiz.present-compare .compare-panels.on {
+  display: grid;
+}
+.layout-quiz.present-compare .compare-panel {
+  border-radius: 14px;
+  padding: 20px 22px;
+  border: 3px solid var(--s-rule);
+  background: var(--s-card);
+  text-align: left;
+}
+.layout-quiz.present-compare .compare-panel.alike {
+  border-color: color-mix(in srgb, var(--s-accent) 55%, var(--s-rule));
+  background: color-mix(in srgb, var(--s-accent) 10%, var(--s-card));
+}
+.layout-quiz.present-compare .compare-panel.differ {
+  border-color: color-mix(in srgb, var(--s-accent-2, var(--s-accent)) 45%, var(--s-rule));
+}
+.layout-quiz.present-compare .compare-panel-label {
+  font-size: 13px; font-weight: 800; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--s-accent);
+  margin-bottom: 10px;
+}
+.layout-quiz.present-compare .compare-panel-body {
+  font-size: 18px; line-height: 1.45; font-weight: 550; color: var(--s-fg);
+}
+.layout-quiz.present-compare .q { text-align: center; --q-f: 28px; }
+.layout-quiz.present-compare .tally,
+.layout-quiz.present-compare .answered-count { display: none; }
+
+/* Spot / Predict / Low-stakes / Definition / Time — layout only, house theme */
+.layout-quiz.present-spoterror .qhead {
+  border-left: 6px solid color-mix(in srgb, #ff5f6d 70%, var(--s-accent));
+  padding-left: 18px;
+}
+.layout-quiz.present-definition .qhead .q { white-space: pre-wrap; }
+.layout-quiz.present-definition .definition-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 8px;
+  min-height: 0;
+}
+.layout-quiz.present-definition .definition-eyebrow {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  color: var(--s-accent);
+}
+.layout-quiz.present-definition .definition-passage {
+  margin: 0;
+  padding: 22px 26px;
+  border: 3px solid var(--s-rule);
+  border-radius: 14px;
+  background: var(--s-card);
+  font-size: 26px;
+  line-height: 1.4;
+  font-weight: 550;
+  color: var(--s-fg);
+}
+.layout-quiz.present-definition .phase-asking .definition-caption {
+  font-size: 16px;
+  color: var(--s-dim);
+  margin: 0;
+}
+.layout-quiz.present-definition .definition-caption,
+.layout-quiz.present-definition .definition-gap {
+  margin: 0;
+  font-size: 15px;
+  color: var(--s-dim);
+}
+.layout-quiz.present-definition .definition-gap {
+  color: var(--s-accent);
+  font-weight: 650;
+}
+.layout-quiz.present-definition .definition-ask {
+  align-self: flex-start;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 750;
+  border: 3px solid var(--s-accent);
+  border-radius: 14px;
+  padding: 12px 18px;
+  background: var(--s-accent);
+  color: #08101f;
+  cursor: pointer;
+}
+.theme-mono .layout-quiz.present-definition .definition-ask { color: #0c0c0c; }
+.layout-quiz.present-definition .definition-ask:focus-visible {
+  outline: 4px solid var(--s-accent);
+  outline-offset: 4px;
+}
+.layout-quiz.present-definition .definition-wait {
+  margin-top: 8px;
+  font-size: 15px;
+  color: var(--s-dim);
+}
+.layout-quiz.present-timetravel .qhead {
+  border-left: 6px solid var(--s-accent);
+  padding-left: 18px;
+}
+
+@keyframes sf-boss-hit {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
 /* five or more lanes: tighten so they all fit the slide */
 .layout-race .racetrack:has(.lane:nth-child(5)) { gap: 11px; }
 .layout-race .racetrack:has(.lane:nth-child(5)) .lane-rail { height: 44px; }
@@ -1818,19 +3149,26 @@ body.ws-game [data-ws="deck"] { display: none !important; }
    ========================================================================== */
 
 .layout-feedback { --fk-cloud: 96px; }
-.layout-feedback .pad { padding: 54px 78px 44px; }
+.layout-feedback .pad {
+  padding: 54px 78px 44px;
+  justify-content: center;
+  position: relative;
+}
 
-.layout-feedback .fk-head { flex: none; margin-bottom: 30px; }
+.layout-feedback .fk-head { flex: none; margin-bottom: 30px; text-align: center; }
 .layout-feedback .fk-kind {
   font-size: 19px; letter-spacing: .16em; text-transform: uppercase;
   color: var(--s-dim); margin-bottom: 8px;
 }
 .layout-feedback .fk-prompt {
   font-size: 46px; font-weight: 650; line-height: 1.15; letter-spacing: -.02em;
+  max-width: 980px; margin: 0 auto;
 }
 
 .layout-feedback .fk-body {
-  flex: 1; min-height: 0; overflow: hidden;
+  flex: none;
+  width: min(980px, 100%);
+  margin: 0 auto;
   display: flex; flex-direction: column; justify-content: center; gap: 20px;
 }
 .layout-feedback .fk-empty {
@@ -1900,9 +3238,14 @@ body.ws-game [data-ws="deck"] { display: none !important; }
 
 /* ---- footer ---- */
 .layout-feedback .fk-foot {
-  flex: none; display: flex; align-items: center; justify-content: space-between;
-  gap: 16px; padding-top: 18px; margin-top: 18px;
-  border-top: 1px solid var(--s-rule);
+  flex: none;
+  position: absolute;
+  left: 78px;
+  right: 78px;
+  bottom: 36px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding-top: 0; margin-top: 0;
+  border-top: 0;
   font-size: 19px; color: var(--s-dim);
 }
 .layout-feedback .fk-hint { font-size: 15px; opacity: .7; }
@@ -2118,8 +3461,11 @@ body.ws-game [data-ws="deck"] { display: none !important; }
    scale. `sc-` is the rail; `fksc-` is the same chart full screen.
    ---------------------------------------------------------------------- */
 .sc, .fksc { display: flex; flex-direction: column; gap: 8px; }
+.fksc { gap: 18px; width: 100%; }
 .sc-cols, .fksc-cols { display: flex; align-items: flex-end; gap: 6px; }
+.fksc-cols { gap: 14px; min-height: 300px; }
 .sc-col, .fksc-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.fksc-col { gap: 10px; }
 /* --s-rule, not a 5%-white wash: that measured 1.01:1 against the slide on
    studio and 1.14:1 on midnight, so the unfilled part of a bar was invisible
    on every theme rather than only the light ones. */
@@ -2131,10 +3477,8 @@ body.ws-game [data-ws="deck"] { display: none !important; }
   box-shadow: inset 0 0 0 1px var(--s-rule);
 }
 .sc-bar { height: 74px; }
-/* Sized so the whole chart — counts above, points and ends below, average
-   underneath — fits the fixed 720px slide without the read-out falling off
-   the bottom. */
-.fksc-bar { height: 200px; }
+/* Full-screen scale: tall enough to own the middle of the wall. */
+.fksc-bar { height: 280px; border-radius: 8px 8px 0 0; }
 .sc-bar i, .fksc-bar i {
   width: 100%; background: var(--s-accent);
   border-radius: 5px 5px 0 0; min-height: 3px;
@@ -2411,3 +3755,184 @@ body.ws-game [data-ws="deck"] { display: none !important; }
   from { opacity: 0; transform: translateX(14px); }
   to   { opacity: 1; transform: translateX(0); }
 }
+
+/* Teacher workspace: room to manage a full class, including on small screens. */
+.teach-tabs{flex-wrap:wrap}
+#teachFrame{height:62vh}
+@media(max-width:640px){.teach-modal header{flex-wrap:wrap}.teach-tabs .btn{font-size:12px;padding:7px 9px}.teach-body{padding:8px;max-height:calc(88vh - 160px)}}
+/* Content-first layout selection and accessible structured reordering. */
+.layout-library,.saved-content,.bulk-content{border:1px solid var(--ui-line);border-radius:9px;padding:12px;margin:12px 0}.layout-library summary,.saved-content summary,.bulk-content summary{cursor:pointer;font-size:13px;font-weight:650}.layout-library-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.layout-choice{min-width:0;padding:6px;background:var(--ui-panel);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:8px;cursor:pointer}.layout-choice.on{border-color:var(--ui-accent);background:var(--ui-accent-soft)}.layout-choice>span{display:block;font-size:11px;padding:5px}.layout-choice .variant-frame{width:100%;aspect-ratio:16/9;overflow:hidden}.content-order{display:flex;flex-direction:column;gap:3px;flex:none}.content-order button{padding:2px 5px;font-size:12px;background:var(--ui-panel);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:4px}.content-order .content-grip{cursor:grab;touch-action:pan-y}.content-order button:disabled{opacity:.3}.pit-row.content-drop{outline:2px solid var(--ui-accent);background:var(--ui-accent-soft)}.bulk-content textarea{box-sizing:border-box;width:100%;margin-top:10px;padding:8px;font:inherit;border:1px solid var(--ui-line);border-radius:6px;background:var(--ui-panel);color:var(--ui-text)}.saved-content .btn{display:block;margin-top:6px}button:focus-visible{outline:2px solid var(--ui-accent);outline-offset:2px}
+#inspector .pit-row{display:grid;grid-template-columns:26px 20px minmax(0,1fr) 24px;align-items:center;gap:5px;padding:8px 0;border-bottom:1px solid var(--ui-line)}#inspector .pit-row>.content-order{grid-column:1;grid-row:1 / span 2}#inspector .pit-row>.pit-i{grid-column:2;grid-row:1;font-size:11px}#inspector .pit-row>input,#inspector .pit-row>.kw-pit-fields{grid-column:3;grid-row:1;min-width:0;width:100%;box-sizing:border-box}#inspector .pit-row>.kill{grid-column:4;grid-row:1;padding:4px}#inspector .pit-row>.format-tools{grid-column:2 / -1;grid-row:2;flex-wrap:wrap}#inspector .kw-pit-fields{grid-template-columns:1fr}#previewBox{position:relative}.canvas-editable:hover{outline:2px dashed #729458;outline-offset:4px;cursor:text}.canvas-edit-form{position:absolute;z-index:15;left:5%;right:5%;bottom:12px;background:var(--ui-panel);color:var(--ui-text);padding:16px;border:1px solid var(--ui-accent);border-radius:10px;box-shadow:0 10px 40px #0003;font-size:14px}.canvas-edit-form textarea{display:block;box-sizing:border-box;width:100%;margin:8px 0;font:inherit;padding:10px}.canvas-edit-form button{margin-right:8px}
+
+/* Emoji guess: help released a step at a time under the clues. */
+.layout-quiz.present-emoji .emoji-help {
+  position: relative; z-index: 1;
+  display: flex; align-items: baseline; gap: 16px;
+  padding: 12px 24px; border-radius: 12px;
+  /* Released help is something the room is meant to read from the back. It
+     carried the faint rule border, which at a projector's contrast left a row
+     of thin dashes floating on a pale panel. */
+  border: 3px solid var(--s-accent);
+  background: var(--s-card);
+}
+.layout-quiz.present-emoji .emoji-help-label {
+  font-size: 12px; letter-spacing: .14em; color: var(--s-dim); flex: none;
+}
+.layout-quiz.present-emoji .emoji-help strong {
+  font-size: 30px; line-height: 1.2; overflow-wrap: anywhere;
+}
+.layout-quiz.present-emoji .emoji-help-blanks { padding: 18px 24px; }
+/* strong.emoji-blanks, not .emoji-blanks: the rule above it is one element
+   deeper, so it outranked a plain class selector and the size set here never
+   applied. Same trap as the bingo card's border. */
+.layout-quiz.present-emoji .emoji-help strong.emoji-blanks {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Fills the row it is in, at the heading's scale. A run of underscores has
+     almost no ink, so at the hint's size and hugging the left edge it read as
+     an empty box. */
+  flex: 1; text-align: center;
+  font-size: 56px; font-weight: 700; line-height: 1;
+  letter-spacing: .28em; color: var(--s-accent);
+}
+
+/* The hint IS the title row — one heading per puzzle, never two competing on
+   the same line and never an empty one. It carries .q, so its size, weight and
+   line height come from the heading rule, and fitQuizSlide shrinks a long one
+   exactly as it would any other question. */
+.layout-quiz.present-emoji .qhint {
+  display: flex; align-items: baseline; gap: 14px;
+}
+.layout-quiz.present-emoji .qhint-label {
+  font-size: 12px; letter-spacing: .14em; color: var(--s-dim); flex: none;
+  align-self: center;
+}
+.layout-quiz.present-emoji .qhint strong {
+  font: inherit; color: var(--s-accent); overflow-wrap: anywhere;
+}
+
+/* How many of the room are in, on the wall rather than as notes in the rail. */
+.layout-quiz .answered-count {
+  margin-top: 10px; text-align: center;
+  font-size: 17px; color: var(--s-dim);
+  font-variant-numeric: tabular-nums;
+  min-height: 22px;
+}
+
+/* Are-you-sure, in the app rather than the browser's own dialog. */
+.ask-modal {
+  border: none; border-radius: 14px; padding: 22px 24px 18px;
+  max-width: 430px; width: calc(100% - 40px);
+  background: var(--ui-panel); color: var(--ui-text);
+  box-shadow: 0 24px 60px rgba(0,0,0,.28);
+}
+.ask-modal::backdrop { background: rgba(12,16,14,.45); }
+.ask-modal h3 { margin: 0 0 8px; font-size: 18px; line-height: 1.3; }
+.ask-modal p {
+  margin: 0 0 18px; font-size: 13px; line-height: 1.55; color: var(--ui-dim);
+  white-space: pre-line;
+}
+.ask-modal p[hidden] { display: none; }
+.ask-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.ask-modal .btn.danger { background: var(--ui-bad); border-color: var(--ui-bad); color: #fff; }
+.ask-modal #askInput {
+  width: 100%; margin: 0 0 18px; padding: 9px 11px;
+  font: inherit; font-size: 14px;
+  border: 1px solid var(--ui-line); border-radius: 8px;
+  background: var(--ui-bg); color: var(--ui-text);
+}
+.ask-modal #askInput[hidden] { display: none; }
+
+/* A race the teacher runs: the lanes are the control. */
+.race-strip.runnable .rlane {
+  appearance: none; width: 100%; text-align: left;
+  font: inherit; color: inherit;
+  border: 2px solid transparent; border-radius: 10px;
+  background: transparent; cursor: pointer;
+}
+.race-strip.runnable .rlane:not(:disabled):hover {
+  border-color: var(--lane-color, var(--s-accent));
+  background: color-mix(in srgb, var(--s-fg) 5%, transparent);
+}
+.race-strip.runnable .rlane:focus-visible {
+  outline: 3px solid var(--s-accent); outline-offset: 2px;
+}
+.race-strip.runnable .rlane:disabled { cursor: default; opacity: .85; }
+.race-strip .rlane.won .rpos { color: var(--s-accent); font-weight: 750; }
+
+/* Boss battle: the health of the thing they are hitting, in stage tokens. */
+.layout-quiz.present-boss .boss-hp {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 14px;
+  width: min(620px, 100%); margin: 12px auto 0;
+}
+.layout-quiz.present-boss .boss-hp-rail {
+  flex: 1; height: 18px; border-radius: 999px;
+  border: 3px solid var(--s-rule);
+  background: color-mix(in srgb, var(--s-fg) 8%, transparent);
+  overflow: hidden;
+}
+.layout-quiz.present-boss .boss-hp-fill {
+  height: 100%; background: var(--s-accent);
+  transition: width .45s cubic-bezier(.2,.8,.2,1);
+}
+.layout-quiz.present-boss .boss-hp-n {
+  font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--s-fg); min-width: 108px; text-align: right;
+}
+.layout-quiz.present-boss .boss-turn {
+  position: relative; z-index: 1;
+  margin-top: 8px; font-size: 16px; color: var(--s-dim); text-align: center;
+}
+/* Three looks, from the theme rather than from a palette of its own. */
+.layout-quiz.present-boss.is-hurt .boss-hp-fill { background: var(--s-accent-2, var(--s-accent)); }
+.layout-quiz.present-boss.is-weak .boss-hp-fill { background: var(--s-accent); opacity: .7; }
+.layout-quiz.present-boss.is-defeated .boss-hp-fill { background: var(--s-dim); }
+.layout-quiz.present-boss .boss-actions {
+  position: relative; z-index: 1;
+  display: flex; justify-content: center; gap: 10px; margin-top: 14px;
+}
+.layout-quiz.present-boss .boss-button {
+  font: inherit; font-size: 16px; font-weight: 600;
+  border: 3px solid var(--s-rule); border-radius: 10px;
+  background: transparent; color: var(--s-fg);
+  padding: 10px 18px; cursor: pointer;
+}
+.layout-quiz.present-boss .boss-button.primary {
+  background: var(--s-accent); border-color: var(--s-accent); color: var(--s-bg);
+}
+.layout-quiz.present-boss .boss-button:focus-visible {
+  outline: 4px solid var(--s-accent); outline-offset: 3px;
+}
+.layout-quiz.present-boss .boss-gap { color: var(--s-accent); font-weight: 600; }
+
+/* The rail says two things and labels both: how they are doing, and where
+   they are in the game. They are not the same number and never were. */
+.scorerail .rail-legend {
+  display: flex; justify-content: space-between; gap: 8px;
+  padding: 0 10px 4px; font-size: 9px; letter-spacing: .1em;
+  color: var(--s-dim); opacity: .8;
+}
+.scorerail .rail-legend[hidden] { display: none; }
+.scorerail .srow .learn {
+  font-size: 11px; color: var(--s-dim);
+  font-variant-numeric: tabular-nums; line-height: 1.3;
+}
+.scorerail .srow .learn.needs { color: var(--s-accent); font-weight: 650; }
+.scorerail[data-density="sm"] .srow .learn,
+.scorerail[data-density="xs"] .srow .learn { display: none; }
+
+/* The rail says two things and labels both: how they are doing, and where
+   they are in the game. They are not the same number and never were. */
+.scorerail .rail-legend {
+  display: flex; justify-content: space-between; gap: 8px;
+  padding: 0 10px 4px; font-size: 9px; letter-spacing: .1em;
+  color: var(--s-dim); opacity: .8;
+}
+.scorerail .rail-legend[hidden] { display: none; }
+.scorerail .srow .learn {
+  font-size: 11px; color: var(--s-dim);
+  font-variant-numeric: tabular-nums; line-height: 1.3;
+}
+.scorerail .srow .learn.needs { color: var(--s-accent); font-weight: 650; }
+.scorerail[data-density="sm"] .srow .learn,
+.scorerail[data-density="xs"] .srow .learn { display: none; }

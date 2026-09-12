@@ -18,6 +18,7 @@
      onTitle(v)     title changed
      onTheme(v)     theme changed
      play()         run it
+     settings()     open the document-wide settings sheet
      fileSuffix     extension used by Export
 */
 (function (global) {
@@ -38,16 +39,27 @@
   var UI = {
     field: function (label, node, hint) {
       var f = el('div', 'field');
+      function tipMark(text) {
+        var tip = el('span', 'field-tip', '?');
+        tip.setAttribute('data-tip', text);
+        tip.title = text;
+        tip.setAttribute('role', 'img');
+        tip.setAttribute('aria-label', text);
+        tip.tabIndex = 0;
+        return tip;
+      }
       if (label) {
         var caption = el('label', null, label);
         if (node && /^(INPUT|TEXTAREA|SELECT)$/.test(node.tagName)) {
           if (!node.id) node.id = 'field-' + SF.uid();
           caption.htmlFor = node.id;
         }
+        if (hint) caption.appendChild(tipMark(hint));
         f.appendChild(caption);
+      } else if (hint) {
+        f.appendChild(tipMark(hint));
       }
       if (node) f.appendChild(node);
-      if (hint) f.appendChild(el('div', 'hint', hint));
       return f;
     },
     text: function (value, oninput, placeholder) {
@@ -103,10 +115,14 @@
       b.onclick = onclick;
       return b;
     },
-    /** Two-choice segmented control, used for mode pickers. */
+    /** Segmented control. Short lists stay one row; long lists wrap. */
     segmented: function (choices, value, onchange) {
       var grid = el('div', 'type-grid');
-      grid.style.gridTemplateColumns = 'repeat(' + choices.length + ', 1fr)';
+      if (choices.length <= 4) {
+        grid.style.gridTemplateColumns = 'repeat(' + choices.length + ', 1fr)';
+      } else {
+        grid.classList.add('type-grid-wrap');
+      }
       choices.forEach(function (c) {
         var b = el('button', value === c.value ? 'on' : null);
         b.appendChild(el('span', 'g', c.icon));
@@ -117,6 +133,53 @@
       return grid;
     }
   };
+
+  /**
+   * The theme picker, as cards showing what each theme actually looks like.
+   *
+   * Shared, because both engines put it in their settings sheet and a theme
+   * is a theme. THEMES carries one `swatch` colour each, which is enough for
+   * a dropdown and not enough to choose by: the thing that distinguishes
+   * Ocean from Ember on a wall is the accent against the background, not the
+   * background alone. So each card is a real .slide element at 1280x720
+   * scaled down \u2014 the same renderer, the same stylesheet, the same gradient
+   * \u2014 rather than swatches kept in step with the CSS by hand.
+   *
+   * @param {string} current  theme key
+   * @param {function} onPick called with the chosen key
+   */
+  function themePicker(current, onPick) {
+    var grid = el('div', 'theme-grid');
+    Object.keys(SF.THEMES).forEach(function (key) {
+      var card = el('button', 'theme-card' + (key === current ? ' on' : ''));
+      card.type = 'button';
+      card.title = SF.THEMES[key].name;
+
+      var frame = el('div', 'theme-frame');
+      /* THEMES.swatch as a placeholder, which is what it is actually good
+         for. SF.fit cannot size the slide until the sheet is on screen, and
+         it waits on a ResizeObserver to do it — so without this the grid
+         paints once as six black rectangles before the previews appear. */
+      frame.style.background = SF.THEMES[key].swatch;
+      var slide = el('div', 'slide theme-' + key + ' layout-section');
+      var pad = el('div', 'pad');
+      pad.appendChild(el('h1', null, 'Aa'));
+      pad.appendChild(el('div', 'accent-bar'));
+      slide.appendChild(pad);
+      frame.appendChild(slide);
+      card.appendChild(frame);
+      /* The renderer's own scaler, not a CSS transform of my own: it sets
+         --sf-scale as well as the transform, and it already knows to wait for
+         a ResizeObserver when the box has no size yet \u2014 which is exactly the
+         case here, because the sheet is still hidden when this is built. */
+      SF.fit(frame, slide);
+
+      card.appendChild(el('span', 'theme-name', SF.THEMES[key].name));
+      card.onclick = function () { onPick(key); };
+      grid.appendChild(card);
+    });
+    return grid;
+  }
 
   /* ------------------------------------------------------------ modals */
 
@@ -161,7 +224,10 @@
           kill.title = 'Delete';
           kill.onclick = function (e) {
             e.stopPropagation();
-            if (o.onDelete(it) !== false) draw();
+            /* The list redraws when the deletion happens, not when the button
+               is pressed: confirming is a dialog now, and the answer arrives
+               after this handler has returned. */
+            o.onDelete(it, draw);
           };
           row.appendChild(kill);
         }
@@ -189,6 +255,7 @@
 
     document.body.classList.toggle('ws-deck', key === 'deck');
     document.body.classList.toggle('ws-game', key === 'game');
+    document.documentElement.setAttribute('data-ws', key === 'game' ? 'game' : 'deck');
     Array.prototype.forEach.call($('wsSwitch').children, function (b) {
       b.classList.toggle('on', b.dataset.go === key);
     });
@@ -209,8 +276,10 @@
     var doc = active.doc();
     $('docTitle').value = doc.title;
     $('docTitle').placeholder = active.key === 'deck' ? 'Presentation title' : 'Game title';
-    $('themeSel').value = doc.theme;
     if (active.key === 'deck') $('numToggle').checked = doc.showSlideNumbers !== false;
+    /* A live lobby is chrome too, and its warning depends on which document
+       is open — see deckMismatch in js/live.js. */
+    if (SF.Live && SF.Live.syncLobby) SF.Live.syncLobby();
   }
 
   /**
@@ -334,7 +403,8 @@
           ? 'The ' + here + ' currently here will be discarded, including any edits ' +
             'not yet exported.'
           : 'Nothing is currently stored here.');
-      if (!confirm(msg)) return;
+      SF.ask({ title: 'Replace everything here?', detail: msg,
+        confirm: 'Replace', danger: true }, function () {
 
       SF.Store.clear();
       SF.GameStore.clear();
@@ -368,6 +438,8 @@
             active.draw();
           });
       });
+
+      });   // SF.ask
     }).catch(function () {
       SF.toast('Could not reach the relay — is node server/server.js running?');
     });
@@ -429,13 +501,13 @@
     SF.GameStore.list().forEach(function (g) { existing[g.id] = 1; });
     var replacing = decks.concat(games).filter(function (x) { return existing[x.id]; }).length;
 
-    if (!confirm('Restore ' + decks.length + ' presentation(s) and ' + games.length +
-                 ' game(s)?\n\n' +
-                 (replacing
-                   ? replacing + ' already here will be replaced by the backup version.'
-                   : 'Nothing here will be overwritten.'))) {
-      return;
-    }
+    SF.ask({
+      title: 'Restore ' + decks.length + ' presentation(s) and ' + games.length + ' game(s)?',
+      detail: replacing
+        ? replacing + ' already here will be replaced by the backup version.'
+        : 'Nothing here will be overwritten.',
+      confirm: 'Restore', danger: replacing > 0
+    }, function () {
 
     games.forEach(function (g) { SF.GameStore.save(g); });
     decks.forEach(function (d) { SF.Store.save(d); });
@@ -448,6 +520,66 @@
     syncChrome();
     active.draw();
     SF.toast('Restored ' + (decks.length + games.length) + ' documents');
+
+    });   // SF.ask
+  }
+
+  /** Open a demo bundle as a fresh lesson — new ids, current work left in Open. */
+  function openDemoBundle(raw) {
+    var games = (Array.isArray(raw.games) ? raw.games : []).map(SF.normalizeGame).filter(Boolean);
+    var decks = (Array.isArray(raw.decks) ? raw.decks : []).map(SF.normalizeDeck).filter(Boolean);
+    if (!decks.length) { SF.toast('That demo has no presentation'); return; }
+
+    var idMap = {};
+    games.forEach(function (g) {
+      var old = g.id;
+      g.id = SF.uid();
+      idMap[old] = g.id;
+      SF.GameStore.save(g);
+    });
+    decks.forEach(function (d) {
+      d.id = SF.uid();
+      (d.slides || []).forEach(function (s) {
+        if (s.gameId && idMap[s.gameId]) {
+          s.gameId = idMap[s.gameId];
+          var g = SF.GameStore.get(s.gameId);
+          if (g) s.gameTitle = g.title;
+        }
+      });
+      SF.Store.save(d);
+    });
+
+    var deck = decks[0];
+    if (active.flush) active.flush();
+    activate('deck', { toast: false });
+    workspaces.deck.setDoc(deck);
+    workspaces.deck._dirty = false;
+    syncChrome();
+    workspaces.deck.draw();
+    SF.toast('"' + deck.title + '" opened. Your previous lesson stays in File → Open.');
+  }
+
+  function openDemoLesson() {
+    if (!servedByRelay()) {
+      SF.toast('Start the app with the relay (node server/server.js) to open the demo.');
+      return;
+    }
+    var menu = document.querySelector('.file-menu');
+    if (menu) menu.open = false;
+    SF.toast('Opening demo lesson\u2026');
+    fetch('/api/demo-lesson', { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (raw) {
+        if (raw && raw.error) throw new Error(raw.detail || raw.error);
+        openDemoBundle(raw);
+      })
+      .catch(function (err) {
+        SF.toast('Could not open the demo lesson' +
+          (err && err.message ? ' \u2014 ' + err.message : ''));
+      });
   }
 
   /* Import sniffs the file rather than trusting the extension, and switches
@@ -492,21 +624,15 @@
   /* ------------------------------------------------------------ boot */
 
   function init() {
-    Object.keys(SF.THEMES).forEach(function (k) {
-      var o = el('option', null, SF.THEMES[k].name);
-      o.value = k;
-      $('themeSel').appendChild(o);
-    });
-
+    /* No theme control in the top bar: the picker in the settings sheet shows
+       the colours instead of naming them, and two ways to set one thing is
+       one way too many. onTheme is still the only path in. */
     Array.prototype.forEach.call($('wsSwitch').children, function (b) {
       b.onclick = function () { activate(b.dataset.go); };
     });
 
     $('docTitle').addEventListener('input', function () {
       active.onTitle($('docTitle').value);
-    });
-    $('themeSel').addEventListener('change', function () {
-      active.onTheme($('themeSel').value);
     });
     $('numToggle').addEventListener('change', function () {
       var d = workspaces.deck.doc();
@@ -516,6 +642,7 @@
     });
 
     $('btnSave').onclick = function () { save(false, true); };
+    if ($('btnDemoLesson')) $('btnDemoLesson').onclick = openDemoLesson;
     $('btnExport').onclick = function () {
       var doc = active.doc();
       var served = servedByRelay();
@@ -574,18 +701,82 @@
     $('fileInput').addEventListener('change', importDoc);
     $('btnHelp').onclick = function () { $('cheats').classList.add('on'); };
 
+    /* One Settings button beside File, forwarded to whichever engine is
+       active. It used to be two \u2014 a game-only button over in the actions
+       group, and nothing at all for a presentation, so a lesson looked as
+       though it had no document-wide settings to change. */
+    $('btnSettings').onclick = function () {
+      if (active.flush) active.flush();
+      if (active.settings) active.settings();
+    };
+
     $('btnNew').onclick = function () {
       if (active.flush) active.flush();
-      /* An engine can intercept New when creating a document needs a decision
-         first — a game has to know its style before it has any content. */
-      if (active.newDoc) { active.newDoc(); return; }
-      var d = active.blank();
-      active.setDoc(d);
-      active.store.save(d);
-      active._dirty = false;
-      syncChrome();
-      active.draw();
-      SF.toast('New ' + (active.key === 'deck' ? 'presentation' : 'game'));
+      var menu = document.querySelector('.file-menu');
+      if (menu) menu.open = false;
+      /* Blank docs plus the ready-made lessons — Example lesson used to be the
+         only door into those, and it is easy to miss. */
+      picker({
+        title: 'Start something new',
+        items: function () {
+          var items = [
+            { id: 'deck', title: 'Blank presentation',
+              blurb: 'An empty lesson. Add slides and activities as you go.' },
+            { id: 'game', title: 'Blank game',
+              blurb: 'A quiz or classroom game on its own. Pick the format next.' }
+          ];
+          (SF.LESSONS || []).slice(0, 1).forEach(function (lesson) {
+            items.push({
+              id: 'lesson:' + lesson.key,
+              title: lesson.title,
+              blurb: (lesson.blurb || 'Ready-made lesson') +
+                (lesson.minutes ? ' · about ' + lesson.minutes + ' min' : '')
+            });
+          });
+          return items;
+        },
+        describe: function (it) { return it.blurb; },
+        onPick: function (it) {
+          if (it.id === 'game') {
+            activate('game', { toast: false });
+            if (workspaces.game.newDoc) workspaces.game.newDoc();
+            else {
+              var g = workspaces.game.blank();
+              workspaces.game.setDoc(g);
+              workspaces.game.store.save(g);
+              workspaces.game._dirty = false;
+              syncChrome();
+              workspaces.game.draw();
+              SF.toast('New game');
+            }
+            return;
+          }
+          if (String(it.id).indexOf('lesson:') === 0) {
+            var key = String(it.id).slice(7);
+            activate('deck', { toast: false });
+            if (SF.Editor && SF.Editor.useLesson) {
+              SF.Editor.useLesson(key);
+            } else {
+              var lesson = SF.Studio.makeLesson(key);
+              workspaces.deck.setDoc(lesson);
+              workspaces.deck.store.save(lesson);
+              workspaces.deck._dirty = false;
+              syncChrome();
+              workspaces.deck.draw();
+            }
+            SF.toast('"' + it.title + '" opened. Your previous lesson stays in File → Open.');
+            return;
+          }
+          activate('deck', { toast: false });
+          var d = workspaces.deck.blank();
+          workspaces.deck.setDoc(d);
+          workspaces.deck.store.save(d);
+          workspaces.deck._dirty = false;
+          syncChrome();
+          workspaces.deck.draw();
+          SF.toast('New presentation');
+        }
+      });
     };
 
     $('btnOpen').onclick = function () {
@@ -602,16 +793,30 @@
           syncChrome();
           ws.draw();
         },
-        onDelete: function (it) {
-          if (!confirm('Delete "' + it.title + '"? This cannot be undone.')) return false;
-          ws.store.remove(it.id);
+        /* Asked here rather than by the picker, because the answer arrives
+           later now — the picker redraws when the delete actually happens. */
+        onDelete: function (it, done) {
+          SF.ask({ title: 'Delete “' + it.title + '”?',
+            detail: 'This cannot be undone.',
+            confirm: 'Delete', danger: true }, function () {
+              ws.store.remove(it.id);
+              done();
+            });
         }
       });
     };
 
     $('btnLive').onclick = function () {
       if (active.flush) active.flush();
-      active.hostLive();
+      if (!active.hostLive) {
+        SF.toast('Host live is not available in this workspace');
+        return;
+      }
+      try { active.hostLive(); }
+      catch (e) {
+        console.error(e);
+        SF.toast('Host live failed — check the relay is running (node server/server.js)');
+      }
     };
 
     // engines register themselves when their script runs
@@ -621,14 +826,28 @@
     var want = null;
     try { want = localStorage.getItem(LAST_WS); } catch (e) {}
     active = workspaces[want === 'game' ? 'game' : 'deck'];
-    document.body.classList.add(active.key === 'game' ? 'ws-game' : 'ws-deck');
+    /* Toggled, not added: the inline script has already guessed from the same
+       key, and add() alone would leave both classes on the body if the shell
+       landed somewhere else. Keep html[data-ws] in lockstep — CSS prefers it. */
+    document.body.classList.toggle('ws-game', active.key === 'game');
+    document.body.classList.toggle('ws-deck', active.key !== 'game');
+    document.documentElement.setAttribute('data-ws', active.key === 'game' ? 'game' : 'deck');
     Array.prototype.forEach.call($('wsSwitch').children, function (b) {
       b.classList.toggle('on', b.dataset.go === active.key);
     });
     $('railLabel').textContent = active.railLabel;
+    /* Name what the cog opens. "Settings for this document" is true and tells
+       nobody where the board's card size went, which is how it got asked
+       about. */
+    var cog = $('btnSettings'), what = active.settingsLabel || 'Settings';
+    cog.title = what;
+    cog.setAttribute('aria-label', what);
     $('notesLabel').textContent = active.notesLabel;
     syncChrome();
     active.draw();
+    /* Reveal only after the active studio has painted — kills the empty
+       lesson-shell flash on Quiz studio refresh. */
+    document.documentElement.setAttribute('data-ready', '1');
 
     window.addEventListener('resize', function () { active.draw(); });
     /* Deliberately a flush, not a save: every edit is already persisted by the
@@ -666,6 +885,7 @@
     touch: touch,
     syncChrome: syncChrome,
     picker: picker,
+    themePicker: themePicker,
     openModal: openModal,
     current: function () { return active; },
     UI: UI

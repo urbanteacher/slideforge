@@ -1,0 +1,16 @@
+[hidden]{display:none!important}
+/* Teaching desk under the slides — right-column desk was covering live results. */
+.pv{
+  grid-template-columns:1fr;
+  grid-template-rows:auto auto minmax(280px,1fr) auto;
+  grid-template-areas:'bar' 'now' 'side' 'foot';
+  gap:12px;padding:16px;background:var(--ui-bg);overflow:hidden;
+}
+.pv-identity{display:flex;flex-direction:column;gap:3px;margin-right:auto}.pv-identity strong{font-size:18px;letter-spacing:-.4px}.pv-identity span{font-size:11px;color:var(--ui-dim)}
+.pv-bar{flex-wrap:wrap;gap:16px}.pv-bar .clock{font-size:23px}.pv-bar .wall{font-size:12px}
+.now,.side{min-width:0}.side{overflow:hidden}.now .box{flex:none;width:min(100%,920px);max-height:46vh;margin:0 auto}.strip{flex:none}
+.desk-tabs{display:flex;flex-wrap:wrap;gap:6px;flex:none}.desk-tabs .btn{font-size:12px;padding:8px 10px}.desk-tabs .btn[aria-pressed=true]{background:var(--ui-accent-soft);border-color:var(--ui-accent)}
+.desk-pane{display:flex;flex-direction:column;gap:10px;overflow:auto;min-height:0;flex:1}.desk-pane>.box{flex:none;max-height:22vh;width:min(100%,420px);margin:0}.desk-pane .notes{flex:none;min-height:80px;max-height:22vh;font-size:15px}.desk-hint{font-size:12px;line-height:1.5;color:var(--ui-dim)}
+#teacherWorkspace{display:block;width:100%;min-height:280px;flex:1;border:1px solid var(--ui-line);border-radius:12px;background:#f5f6f2}.qa{max-height:none}.pv-foot{flex-wrap:wrap}.pv-foot .btn{font-size:12px}.cue{font-size:11px;padding:6px 9px}.cue b{font-size:16px}#qaBadge{color:var(--ui-warn)}
+@media(max-width:900px){.pv{overflow:auto}.now .box{max-height:38vh;width:100%}.pv-foot{position:sticky;bottom:-16px;background:var(--ui-bg);padding:10px 0}.pv-bar .wall{display:none}}
+.quick-card{border:1px solid var(--ui-line);border-radius:12px;padding:16px;background:var(--ui-panel)}.quick-card h2{font-size:21px;margin:6px 0 12px}.quick-card h3{font-size:16px;margin:0 0 10px}.quick-card p{font-size:12px;line-height:1.55;color:var(--ui-dim)}.quick-card label{display:block;font-size:12px;margin:12px 0 5px}.quick-card textarea,.quick-card select{box-sizing:border-box;width:100%;padding:10px;border:1px solid var(--ui-line);border-radius:7px;background:var(--ui-bg);color:var(--ui-text);font:inherit}.quick-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.quick-actions .btn{font-size:12px}#momentTime{display:block;font-size:32px;font-variant-numeric:tabular-nums;font-weight:700}#activityAudio{display:block;width:100%;margin-top:14px}#activityMusic{max-width:100%}.pulse-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--ui-line)}

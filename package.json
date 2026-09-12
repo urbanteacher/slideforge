@@ -1,0 +1,21 @@
+{
+  "name": "slideforge",
+  "private": true,
+  "scripts": {
+    "start": "node server/server.js",
+    "build": "node tools/build.mjs",
+    "build:check": "node tools/build.mjs --check",
+    "typecheck": "tsc --noEmit",
+    "dev:build": "node tools/build.mjs --watch",
+    "test": "npm run build:check && npm run typecheck && node --test tests/*.test.js",
+    "typecheck:probe": "node tools/type-probe.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "playwright": "1.63.0",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

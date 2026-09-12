@@ -4,10 +4,53 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SlideForge — presentations &amp; games</title>
-<link rel="stylesheet" href="css/app.css">
-<link rel="stylesheet" href="css/studio.css">
+<script>
+/* Pin the studio before CSS and chrome paint. Waiting for Shell.init left a
+   frame where both lesson and quiz controls were visible — the other studio
+   ghosting through on refresh. Same key the shell writes on every switch. */
+(function () {
+  var ws = 'deck';
+  try { if (localStorage.getItem('slideforge.workspace') === 'game') ws = 'game'; } catch (e) {}
+  document.documentElement.setAttribute('data-ws', ws);
+})();
+</script>
+<style>
+/* Hold the shell until Shell.init has drawn the active studio. Without this,
+   refresh shows an empty cream lesson frame (and hard-coded Lesson switch)
+   for as long as the script bundle takes to load — the “ghost screen”. */
+html:not([data-ready]) #app { visibility: hidden; }
+/* Same cream the studio chrome uses once CSS loads — avoids a dark→light blink. */
+html:not([data-ready]) body { background: #f0f1ed; }
+</style>
+<link rel="stylesheet" href="css/app.css?v=6">
+<link rel="stylesheet" href="css/board-common.css?v=1">
+<link rel="stylesheet" href="css/memory.css?v=2">
+<link rel="stylesheet" href="css/bingo.css?v=2">
+<link rel="stylesheet" href="css/bowl.css?v=2">
+<link rel="stylesheet" href="css/lowstakes.css?v=2">
+<link rel="stylesheet" href="css/studio.css?v=2">
+<link rel="stylesheet" href="css/customize.css?v=2">
+<link rel="stylesheet" href="css/lesson-moments.css?v=2"><link rel="stylesheet" href="css/game-polish.css?v=1">
 </head>
 <body>
+<script>
+/* Mirror onto body for the existing ws-* rules, and fix the switch/rail
+   labels that are hard-coded for Lesson studio in the HTML. */
+(function () {
+  var ws = document.documentElement.getAttribute('data-ws') === 'game' ? 'game' : 'deck';
+  document.body.className = 'ws-' + ws;
+  function ready() {
+    var sw = document.getElementById('wsSwitch');
+    if (sw) Array.prototype.forEach.call(sw.children, function (b) {
+      b.classList.toggle('on', b.getAttribute('data-go') === ws);
+    });
+    var rail = document.getElementById('railLabel');
+    if (rail) rail.textContent = ws === 'game' ? 'Questions' : 'Slides';
+  }
+  if (document.getElementById('wsSwitch')) ready();
+  else document.addEventListener('DOMContentLoaded', ready);
+})();
+</script>
 
 <div id="app">
 
@@ -17,13 +60,11 @@
 
     <!-- the two engines -->
     <div class="wsswitch" id="wsSwitch">
-      <button data-go="deck" class="on">▤ Lesson studio</button>
+      <button data-go="deck">▤ Lesson studio</button>
       <button data-go="game">◈ Quiz studio</button>
     </div>
 
     <input id="docTitle" type="text" placeholder="Title" spellcheck="false">
-
-    <select id="themeSel" class="btn" title="Theme"></select>
 
     <label class="switch" data-ws="deck" title="Show slide numbers during the presentation">
       <input type="checkbox" id="numToggle"> <span style="font-size:12px;color:var(--ui-dim)">Numbers</span>
@@ -32,8 +73,9 @@
     <span class="vsep"></span>
 
     <details class="file-menu"><summary class="btn">File ▾</summary><div class="file-actions">
-      <button class="btn" id="btnNew">New blank document</button>
+      <button class="btn" id="btnNew">New…</button>
       <button class="btn" id="btnOpen">Open saved document</button>
+      <button class="btn" id="btnDemoLesson">Open demo lesson</button>
       <button class="btn" id="btnSave">Save to browser</button>
       <button class="btn" id="btnExport">Export file</button>
       <button class="btn" id="btnImport">Import file</button>
@@ -43,9 +85,8 @@
 
     <div class="header-actions">
     <button class="btn" id="btnReports">Reports</button>
-    <button class="btn" data-ws="game" id="btnGameSettings" title="Teams, scoring and timing">⚙ Settings</button>
     <button class="btn" id="btnHelp" title="Keyboard shortcuts">?</button>
-    <button class="btn" data-ws="deck" id="btnPresenter" title="Presenter view with notes (D)">Presenter</button>
+    <button class="btn" data-ws="deck" id="btnPresenter" title="Private presenter workspace: slides, live answers and teaching tools (D)">Presenter</button>
     <button class="btn live" id="btnLive" title="Run live with phones in the room">◉ Host live</button>
     <button class="btn primary" data-ws="deck" id="btnPresent" title="Start the slideshow (⌘↵)">▶ Present</button>
     <button class="btn primary" data-ws="game" id="btnPlay" title="Play this game (⌘↵)">▶ Play game</button>
@@ -57,6 +98,8 @@
     <div class="rail-head">
       <span id="railLabel">Slides</span>
       <span id="railCount" class="rail-count"></span>
+      <button class="rail-cog" id="btnSettings" title="Settings for this document"
+              aria-label="Settings for this document">⚙</button>
     </div>
     <div class="rail-list" id="railList"></div>
     <div class="rail-foot" id="railFoot"></div>
@@ -65,7 +108,12 @@
   <!-- ---------------------------------------------------------- stage -->
   <div class="stage-area">
     <div class="studio-toolbar" data-ws="deck"><div><span class="eyebrow">YOUR TEACHING CANVAS</span><strong id="canvasLabel">Make space for a little curiosity.</strong></div><button class="btn" id="btnTemplate">✧ Example lesson</button><button class="btn primary" id="btnActivities">＋ Add activity</button></div>
+    <!-- Quiz studio needs the library too. Without it the only thing on offer
+         here was the six engine styles, and the twenty-two ready formats were
+         unreachable from the studio whose whole job is building them. -->
+    <div class="studio-toolbar" data-ws="game"><div><span class="eyebrow">BUILD A CHECK</span><strong id="quizCanvasLabel">Pick a format, or write your own questions.</strong></div><button class="btn" id="btnDemoGame" title="Rehearse with a SAMPLE class of fake players (boards stay interactive in the preview)">▷ Try demo</button><button class="btn primary" id="btnActivitiesGame">＋ Browse formats</button></div>
     <div class="stage-wrap">
+      <div id="demoBanner" class="demo-banner" hidden>Demo uses this format’s engine and How to play. Boards rehearse in the preview; quizzes open a SAMPLE class. <button type="button" id="btnDemoReset" class="btn ghost">Reset demo</button></div>
       <div id="previewBox"></div>
     </div>
     <div class="lesson-path" data-ws="deck"><span class="eyebrow">LEARNING LOOP</span><span>01 <b>Teach</b></span><i>→</i><span>02 <b>Check</b></span><i>→</i><span>03 <b>Discuss</b></span><i>→</i><span>04 <b>Adapt</b></span><button id="btnReflect" class="btn ghost">＋ Exit ticket</button></div>
@@ -84,18 +132,25 @@
   <div class="deck-viewport"></div>
 </div>
 
-<div class="hud" id="hud">
-  <button data-act="prev" title="Previous (←)">‹</button>
-  <span class="pos">1 / 1</span>
-  <button data-act="next" title="Next (→ or space)">›</button>
+<div class="hud" id="hud" role="toolbar" aria-label="Presentation controls">
+  <button data-act="prev" title="Previous point or slide (←)" aria-label="Previous point or slide">‹</button>
+  <span class="pos" aria-live="polite">1 / 1</span>
+  <button data-act="next" title="Next point or slide (→ or space)" aria-label="Next point or slide">›</button>
   <span class="sep"></span>
-  <button data-act="rail" title="Show the room beside the slide (S)">◧</button>
-  <button data-act="join" title="Join QR and PIN full screen (J)">◉</button>
-  <button data-act="focus" title="Expand responses full screen (E)">⛶</button>
-  <button data-act="blank" title="Blank the screen (B)">◼</button>
-  <button data-act="full" title="Full screen (F)">⛶</button>
-  <button data-act="help" title="Shortcuts (?)">?</button>
-  <button data-act="exit" title="Exit (Esc)">✕</button>
+  <button data-act="ink" title="Draw and spotlight (I)" aria-label="Draw and spotlight">✎</button>
+  <button data-act="blank" title="Blank the screen (B)" aria-label="Blank the screen">◼</button>
+  <button data-act="more" title="More presentation controls" aria-label="More presentation controls" aria-expanded="false" aria-controls="hudMore">•••</button>
+  <button data-act="exit" title="Exit presentation (Esc)" aria-label="Exit presentation">✕</button>
+  <div id="hudMore" class="hud-more" hidden>
+    <button data-act="rail" title="Cycle room view (S)">Room view</button>
+    <button data-act="join" title="Show join QR and PIN (J)">Join QR</button>
+    <button data-act="focus" title="Show leaderboard (E)">Show leaderboard</button>
+    <button data-act="who" title="Who answered what, in presenter view only (W)">Named answers ↗</button>
+    <button data-act="teacher" title="Open private teacher entry in another window">Teaching desk ↗</button>
+    <button data-act="presenter" title="Open private notes and next slide (D)">Presenter view ↗</button>
+    <button data-act="full" title="Toggle full screen (F)">Full screen</button>
+    <button data-act="help" title="Keyboard shortcuts (?)">Keyboard shortcuts</button>
+  </div>
 </div>
 
 <!-- ------------------------------------------------------------ shortcuts -->
@@ -106,12 +161,14 @@
       <tr><td><kbd>→</kbd> <kbd>space</kbd> <kbd>PgDn</kbd></td><td>Next slide</td></tr>
       <tr><td><kbd>←</kbd> <kbd>PgUp</kbd></td><td>Previous slide</td></tr>
       <tr><td><kbd>Home</kbd> <kbd>End</kbd></td><td>First / last slide</td></tr>
-      <tr><td><kbd>A</kbd>–<kbd>F</kbd> or <kbd>1</kbd>–<kbd>6</kbd></td><td>Answer the question on screen</td></tr>
+      <tr><td><kbd>A</kbd>–<kbd>F</kbd> or <kbd>1</kbd>–<kbd>6</kbd></td><td>Answer in solo presentation mode; live learners answer on their devices or through teacher entry</td></tr>
       <tr><td><kbd>R</kbd></td><td>Clear answers and score again</td></tr>
+      <tr><td><kbd>I</kbd></td><td>Draw on the slide · <kbd>X</kbd> clears it</td></tr>
+      <tr><td><kbd>W</kbd></td><td>Who answered what</td></tr>
       <tr><td><kbd>B</kbd></td><td>Blank the screen</td></tr>
       <tr><td><kbd>F</kbd></td><td>Toggle full screen</td></tr>
       <tr><td><kbd>S</kbd></td><td>How much room the room gets: hidden &rarr; beside the slide &rarr; whole screen</td></tr>
-      <tr><td><kbd>E</kbd></td><td>Expand the audience responses to full screen</td></tr>
+      <tr><td><kbd>E</kbd></td><td>Show leaderboard (or expand responses / race) to full screen</td></tr>
       <tr><td><kbd>J</kbd></td><td>Show the join QR and PIN full screen (Host live)</td></tr>
       <tr><td><kbd>T</kbd></td><td>Turn the room&rsquo;s reactions on or off (live games)</td></tr>
       <tr><td><kbd>D</kbd></td><td>Presenter view (notes + next slide)</td></tr>
@@ -159,7 +216,7 @@
 <!-- ------------------------------------------------------------ modals -->
 <div class="modal" id="settingsModal">
   <div class="sheet">
-    <header><h3>Game settings</h3><button class="btn ghost" data-close>✕</button></header>
+    <header><h3 id="settingsTitle">Settings</h3><button class="btn ghost" data-close>✕</button></header>
     <div class="body" id="settingsBody"></div>
   </div>
 </div>
@@ -171,22 +228,71 @@
   </div>
 </div>
 
+<!-- The teacher's panel. One place, in the app, rather than a second pop-up
+     window competing with presenter view. It hosts manual.html in a frame —
+     that page is driven entirely by a BroadcastChannel, so the same file
+     works embedded here and detached in its own window, and "Open in its own
+     window" is a presentation choice rather than a second implementation. -->
+<dialog class="teach-modal" id="teachModal" aria-labelledby="teachTitle">
+  <header>
+    <h2 id="teachTitle">Teaching tools</h2>
+    <button class="btn" id="teachPop" title="Move this to its own window, for a second screen">Its own window ↗</button>
+    <button class="btn ghost" id="teachClose" aria-label="Close teaching tools">✕</button>
+  </header>
+  <div class="teach-tabs" role="tablist">
+    <button class="btn" role="tab" data-teach="entry" aria-selected="true">Classroom</button>
+    <button class="btn" role="tab" data-teach="mark" aria-selected="false">Live answers</button>
+    <button class="btn" role="tab" data-teach="questions" aria-selected="false">Question insights</button>
+    <button class="btn" role="tab" data-teach="overview" aria-selected="false">Class overview</button>
+    <button class="btn" role="tab" data-teach="tools" aria-selected="false">Toolkit</button>
+  </div>
+  <div class="teach-body">
+    <div id="teachRoster" class="teach-roster" hidden></div>
+    <iframe id="teachFrame" title="Private teaching workspace" src="about:blank"></iframe>
+    <div id="teachQuestions" hidden></div>
+    <div id="teachOverview" hidden></div>
+  </div>
+</dialog>
+
 <div id="toast"></div>
 <input type="file" id="fileInput" accept=".json,application/json" hidden>
 <!-- .sfdeck.json / .sfgame.json / .sfbundle.json all end in .json, so one
      accept filter covers every export this app produces. -->
 
-<script src="js/qr.js"></script>
-<script src="js/model.js"></script>
-<script src="js/render.js"></script>
-<script src="js/player.js"></script>
-<script src="js/live.js"></script>
-<script src="js/shell.js"></script>
-<script src="js/editor.js"></script>
-<script src="js/games.js"></script>
-<script src="js/studio.js"></script>
-<script src="js/adapt.js"></script>
-<script src="js/reports.js"></script>
-<script>SF.Shell.init(); SF.Studio.init(); SF.Reports.init();</script>
+<script src="js/qr.js?v=2"></script>
+<script src="js/model.js?v=5"></script>
+<script src="js/playbook.js?v=2"></script>
+<script src="js/ask.js?v=2"></script>
+<script src="js/race.js?v=2"></script>
+<script src="js/boss.js?v=2"></script>
+<script src="js/lessons.js?v=2"></script>
+<script src="js/customize.js?v=2"></script>
+<script src="js/render.js?v=6"></script>
+<script src="js/memory.js?v=2"></script>
+<script src="js/bingo.js?v=2"></script>
+<script src="js/bowl.js?v=2"></script>
+<script src="js/lowstakes.js?v=2"></script>
+<script src="js/demo.js?v=2"></script>
+<script src="js/player.js?v=5"></script>
+<script src="js/live.js?v=5"></script>
+<script src="js/teaching.js?v=2"></script>
+<script src="js/lesson-moments.js?v=2"></script>
+<script src="js/shell.js?v=8"></script>
+<script src="js/content-tools.js?v=2"></script>
+<script src="js/editor.js?v=5"></script>
+<script src="js/games.js?v=2"></script>
+<script src="js/studio.js?v=2"></script>
+<script src="js/adapt.js?v=2"></script>
+<script src="js/reports.js?v=2"></script>
+<script>
+try {
+  SF.Shell.init();
+  SF.Studio.init();
+  SF.Reports.init();
+} finally {
+  /* Always reveal — even if init throws — so a boot error is not an blank page. */
+  document.documentElement.setAttribute('data-ready', '1');
+}
+</script>
 </body>
 </html>

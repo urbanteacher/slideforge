@@ -1,0 +1,31 @@
+[
+  {
+    "passage": "A catalyst speeds up a reaction by lowering the activation energy. It is not consumed, so the same catalyst can work again and again.",
+    "question": "What is not used up in the reaction?",
+    "accept": [
+      "the catalyst",
+      "catalyst"
+    ],
+    "explanation": "Not being consumed is the defining property — it is why a small amount goes a long way."
+  },
+  {
+    "passage": "Osmosis is the diffusion of water across a partially permeable membrane, from a dilute solution to a more concentrated one.",
+    "question": "What substance moves in osmosis?",
+    "accept": [
+      "water"
+    ],
+    "explanation": "Only water moves through the membrane in osmosis."
+  },
+  {
+    "passage": "RAM is volatile memory: it stores data the CPU is using right now, and that data is lost when power is removed.",
+    "question": "What happens to data in RAM when the computer is switched off?",
+    "accept": [
+      "it is lost",
+      "lost",
+      "it disappears",
+      "cleared",
+      "it is cleared"
+    ],
+    "explanation": "Volatile means the contents vanish without power."
+  }
+]

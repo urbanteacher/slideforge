@@ -1,0 +1,112 @@
+.bingo-board-slide .pad {
+  padding: 20px 40px 18px;
+  gap: 10px;
+}
+.bingo-eyebrow {
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--s-dim);
+}
+.bingo-name { font-size: 25px; line-height: 1.05; margin: 1px 0 0; font-weight: 750; }.bingo-count {
+  gap: 10px;
+  border-radius: 12px;
+  padding: 5px 14px;
+}.bingo-count strong {
+  font-size: 22px;
+}
+
+/* The call. The definition is the question, so it gets the room's attention;
+   the term appears under it only once the teacher reveals it. */
+.bingo-call {
+  border: 3px solid var(--s-rule); border-radius: 16px;
+  background: color-mix(in srgb, var(--s-card) 100%, var(--s-bg));
+  padding: 10px 22px; flex: none;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.bingo-call.on { border-color: var(--s-accent); }
+.bingo-def { margin: 0; font-size: 22px; line-height: 1.2; overflow-wrap: anywhere; }
+.bingo-term {
+  font-size: 27px; color: var(--s-accent); letter-spacing: .01em;
+}
+
+.bingo-cards {
+  flex: 1; min-height: 0;
+  display: grid; gap: 14px; align-items: stretch;
+  /* Rows share the height the slide has left rather than each taking what it
+     wants — two rows of cards used to run off the bottom edge. */
+  grid-auto-rows: minmax(0, 1fr);
+}
+.bingo-cards.across-1 { grid-template-columns: minmax(0, 520px); justify-content: center; }
+.bingo-cards.across-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.bingo-cards.across-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bingo-card {
+  min-width: 0; display: flex; flex-direction: column; gap: 6px;
+  border: 3px solid var(--s-rule); border-radius: 14px;
+  background: color-mix(in srgb, var(--s-card) 100%, var(--s-bg));
+  padding: 8px 12px;
+}
+.bingo-card.won { border-color: var(--s-accent); }
+.bingo-card-head { display: flex; align-items: center; gap: 10px; min-height: 30px; }
+.bingo-card-head strong { font-size: 17px; }
+.bingo-tick { margin-left: auto; font-size: 11px; letter-spacing: .1em; color: var(--s-dim); }
+.bingo-grid { flex: 1; min-height: 0; display: grid; grid-auto-rows: minmax(0, 1fr); gap: 6px; }
+.bingo-square {
+  min-width: 0; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  padding: 4px 6px; border-radius: 8px;
+  border: 2px solid var(--s-rule);
+  font-size: 15px; line-height: 1.15;
+  overflow-wrap: break-word; hyphens: auto;
+  color: var(--s-fg);
+}
+.bingo-square.long { font-size: .8em; }
+/* Three states a square can be in, and they must be told apart across a
+   classroom: open, claimed, and gone because nobody could explain it. */
+.bingo-square.is-claimed {
+  background: color-mix(in srgb, var(--s-accent) 22%, var(--s-card));
+  border-color: var(--s-accent); font-weight: 700;
+}
+.bingo-square.is-missed {
+  color: var(--s-dim); text-decoration: line-through;
+  border-style: dashed; opacity: .7;
+}
+.bingo-square.calling {
+  border-color: var(--s-accent);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--s-accent) 40%, transparent);
+}
+.bingo-verdicts { display: flex; gap: 6px; align-items: center; }
+.bingo-why { font-size: 11px; color: var(--s-dim); white-space: nowrap; }
+
+.bingo-button {
+  font: inherit; font-size: 14px; font-weight: 600;
+  border: 3px solid var(--s-rule); border-radius: 10px;
+  background: transparent; color: var(--s-fg);
+  padding: 6px 12px; cursor: pointer;
+}
+.bingo-button.primary {
+  background: var(--s-accent); border-color: var(--s-accent);
+  color: var(--s-bg);
+}
+.bingo-button:focus-visible { outline: 4px solid var(--s-accent); outline-offset: 3px; }
+.bingo-button:disabled { cursor: default; opacity: .5; }
+
+.bingo-foot { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; min-height: 46px; }
+.bingo-status { flex: 1; min-width: 420px; display: flex; flex-direction: column; gap: 4px; }
+.bingo-status strong { font-size: 18px; }
+.bingo-status > span { font-size: 12px; color: var(--s-dim); }
+.bingo-actions { display: flex; gap: 10px; }
+.bingo-actions .bingo-button { font-size: 16px; padding: 10px 18px; }
+.bingo-tally { display: flex; gap: 20px; font-size: 13px; width: 100%; color: var(--s-dim); }
+.bingo-tally .won { color: var(--s-accent); font-weight: 700; }
+
+/* Six 4×4 cards is the tightest this gets. */
+.bingo-cards.across-3 .bingo-square { font-size: 12px; }
+.bingo-cards.across-3 .bingo-card-head strong { font-size: 15px; }
+.bingo-cards.across-3 .bingo-button { font-size: 12px; padding: 4px 8px; }
+
+/* A square the pool could not fill. The board still draws — an author needs to
+   see the cards — but a gap must not pass for a term. */
+.bingo-square.is-gap {
+  border-style: dashed; opacity: .5;
+  font-size: .72em; font-style: italic; color: var(--s-dim);
+}
+.bingo-status > span.bingo-short { color: var(--s-accent); font-weight: 600; }

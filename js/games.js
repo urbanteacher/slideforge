@@ -18,8 +18,133 @@
   var game = null;
   var sel = 0;
   var saveTimer = null;
+  /* Disposable rehearsal state for board games in the editor preview.
+     Cleared when leaving demo or switching games — never written to saves. */
+  var demoActive = false;
+  var demoHost = null;
 
   function q() { return game.questions[sel]; }
+  function setupUX() { return SF.Playbook.setupForGame(game); }
+  function fixedPoints() { return ['speed', 'boss', 'race', 'order', 'wordreveal', 'headsup', 'spinexplain', 'connection', 'randomchallenge'].indexOf(game.style) !== -1; }
+
+  function ensureDemoHost() {
+    if (!demoHost) {
+      demoHost = {
+        blank: false,
+        syncPresenter: function () {}
+      };
+    }
+    return demoHost;
+  }
+
+  function unmountDemoBoards() {
+    SF.Boards.unmountAll();
+  }
+
+  function clearDemoState() {
+    unmountDemoBoards();
+    demoHost = null;
+  }
+
+  function setDemoActive(on) {
+    demoActive = !!on;
+    var btn = $('btnDemoGame');
+    var banner = $('demoBanner');
+    var wrap = document.querySelector('.stage-wrap');
+    if (btn) {
+      btn.classList.toggle('on', demoActive);
+      btn.textContent = demoActive ? '✕ Exit demo' : '▷ Try demo';
+      btn.setAttribute('aria-pressed', demoActive ? 'true' : 'false');
+    }
+    if (banner) banner.hidden = !demoActive;
+    if (wrap) wrap.classList.toggle('demo-on', demoActive);
+    if (!demoActive) clearDemoState();
+  }
+
+  function resetDemo() {
+    clearDemoState();
+    if (demoActive) drawPreview();
+    SF.toast('Demo reset');
+  }
+
+  function toggleDemo() {
+    if (!game) return;
+    if (SF.Demo && SF.Demo.active && SF.Player && SF.Player.open) {
+      SF.Player.close();
+      SF.toast('Demo closed');
+      return;
+    }
+    if (demoActive) {
+      setDemoActive(false);
+      drawPreview();
+      SF.toast('Demo closed');
+      return;
+    }
+    var bad = problems();
+    if (bad.length) {
+      SF.toast(bad[0] + (bad.length > 1 ? ' (+' + (bad.length - 1) + ' more)' : ''));
+      return;
+    }
+    var kind = SF.Playbook ? SF.Playbook.demoKind(game) : (isBoard() ? 'board' : 'class');
+    var entry = SF.Playbook ? SF.Playbook.forGame(game) : null;
+    /* Board / paper worksheets rehearse in the canvas with the real engine. */
+    if (kind === 'board' || kind === 'paper' || isBoard()) {
+      setDemoActive(true);
+      drawPreview();
+      SF.toast(entry
+        ? ('Demo — ' + entry.title + ': use the board in the preview')
+        : 'Demo on — use the board in the preview');
+      return;
+    }
+    SF.GameStore.save(game);
+    if (SF.Demo) {
+      SF.Demo.start(SF.gameToRunDeck(game), { fullscreen: false, mode: kind });
+    } else {
+      SF.Player.start(SF.gameToRunDeck(game), 0, { fullscreen: false });
+    }
+    /* The rules used to be pushed into the score rail as notes, which put
+       four lines of instructions above the scores and shoved the class down
+       the column. They have their own slide in the presentation now — see
+       settings.howTo — so the rail is left for what it is for: who joined,
+       who answered, what just changed. */
+    SF.toast('Demo uses this format’s engine — the rules are on the How to play slide');
+  }
+
+  function appendHowToPlay(parent) {
+    if (!SF.Playbook || !parent) return;
+    var entry = SF.Playbook.forGame(game);
+    if (!entry) return;
+    var box = el('details', 'howto');
+    var open = false;
+    try { open = localStorage.getItem('slideforge.howtoOpen') === '1'; } catch (e) {}
+    box.open = open;
+    var summary = el('summary', 'howto-summary');
+    summary.appendChild(el('span', null, 'How to play — ' + entry.title));
+    summary.appendChild(el('span', 'howto-toggle', open ? 'Hide' : 'Reveal'));
+    box.appendChild(summary);
+    var body = el('div', 'howto-body');
+    if (entry.aim) body.appendChild(el('p', 'howto-aim', entry.aim));
+    var ol = el('ol', 'howto-steps');
+    (entry.howToPlay || []).forEach(function (step) {
+      ol.appendChild(el('li', null, step));
+    });
+    body.appendChild(ol);
+    var eng = el('div', 'howto-engine');
+    if (entry.phases) eng.appendChild(el('div', null, 'Phases · ' + entry.phases));
+    if (entry.timer) eng.appendChild(el('div', null, 'Timer · ' + entry.timer));
+    if (entry.players) eng.appendChild(el('div', null, 'Players · ' + entry.players));
+    if (entry.scoring) eng.appendChild(el('div', null, 'Scoring · ' + entry.scoring));
+    if (entry.judgement) eng.appendChild(el('div', null, 'Judgement · ' + entry.judgement));
+    if (entry.note) eng.appendChild(el('div', 'howto-note', entry.note));
+    body.appendChild(eng);
+    box.appendChild(body);
+    box.addEventListener('toggle', function () {
+      var label = box.querySelector('.howto-toggle');
+      if (label) label.textContent = box.open ? 'Hide' : 'Reveal';
+      try { localStorage.setItem('slideforge.howtoOpen', box.open ? '1' : '0'); } catch (e) {}
+    });
+    parent.appendChild(box);
+  }
 
   function touched() {
     SF.Shell.touch();
@@ -50,9 +175,30 @@
 
   /** A question rendered as the slide it will become. Built by the same
       function the compiler uses, so the preview cannot drift from the show. */
+  /* Board engines are not quiz slides: no phone options, no per-question
+     timer/points UI. Low-stakes is a whole-worksheet board like bingo. */
+  function isBoard() {
+    return !!SF.gameStyle(game.style).boardEngine;
+  }
+  /* Being a board and having per-item question text are different things. A
+     bowl cell asks a real question, so it keeps the generic Question field
+     that the pair and term boards have no use for. */
+  function showsQuestionField() {
+    if (['headsup', 'spinexplain', 'connection', 'randomchallenge'].indexOf(game.style) !== -1) return false;
+    if (game.style === 'definition' || game.style === 'emoji' || game.style === 'oddone' ||
+        game.style === 'compare' || game.style === 'conceptchain') return false;
+    return !isBoard() || SF.gameStyle(game.style).boardEngine.showsQuestion;
+  }
+
   function asSlide(i) {
-    return SF.fillQuestionSlide(game.questions[i], game.style, game.settings,
+    var board = SF.gameStyle(game.style).boardEngine;
+    if (board) return SF.compileGame(game, { intro: false }).filter(function (slide) {
+      return !!slide[board.field];
+    })[Math.floor(i / board.setSize)];
+    var s = SF.fillQuestionSlide(game.questions[i], game.style, game.settings,
       SF.makeSlide('quiz'));
+    s.format = game.format || '';
+    return s;
   }
 
   /* ------------------------------------------------------------ rail */
@@ -77,9 +223,13 @@
       /* What to say about a question is the style's business — a typed one has
          no options to count, and this used to reach for them regardless. */
       meta.appendChild(el('span', null, style.summary(question)));
-      meta.appendChild(el('span', null,
-        effTime(question) ? effTime(question) + 's' : 'no timer'));
-      if (question.bloom) meta.appendChild(el('span', 'bloom', question.bloom));
+      if (game.style === 'lowstakes') {
+        meta.appendChild(el('span', null, (game.settings.defaultTime || 180) + 's quiz'));
+      } else {
+        meta.appendChild(el('span', null,
+          effTime(question) ? effTime(question) + 's' : 'no timer'));
+      }
+      if (question.voteOnly) meta.appendChild(el('span', 'why', '\u25cb vote only'));
       var bad = style.problems(question, i + 1);
       if (bad) meta.appendChild(el('span', 'warn', 'incomplete'));
       if (String(question.image || '').trim()) {
@@ -128,10 +278,23 @@
     });
   }
 
+  /* Duplicate and delete this one. The boards used to reach the inspector's
+     early return before these were added, which left Backspace as the only
+     way to drop a pair — findable if you knew, invisible if you did not. */
+  function questionOps() {
+    var ops = el('div', 'field');
+    ops.style.marginTop = '14px';
+    ops.appendChild(UI.button('Duplicate', null, duplicateQuestion));
+    var del = UI.button('Delete', null, removeQuestion);
+    del.style.marginLeft = '6px';
+    ops.appendChild(del);
+    return ops;
+  }
+
   function drawFoot() {
     var foot = $('railFoot');
     foot.innerHTML = '';
-    foot.appendChild(UI.button('+ Question', null, addQuestion));
+    foot.appendChild(UI.button('+ ' + setupUX().item, null, addQuestion));
     foot.appendChild(UI.button('Duplicate', null, duplicateQuestion));
   }
 
@@ -139,10 +302,12 @@
 
   function drawPreview() {
     var box = $('previewBox');
+    unmountDemoBoards();
     box.innerHTML = '';
     if (!q()) return;
     var racing = SF.gameStyle(game.style).mechanic === 'race';
-    var node = SF.renderSlide(game, asSlide(sel), {
+    var slide = asSlide(sel);
+    var node = SF.renderSlide(game, slide, {
       index: sel,
       total: game.questions.length,
       interactive: false,
@@ -153,10 +318,26 @@
       lanes: racing ? game.settings.teams.map(function (t, i) {
         return { key: 't' + i, name: t.name || t, color: SF.teamColor(i), pos: 0 };
       }) : null,
-      trackLength: game.settings.trackLength
+      trackLength: game.settings.trackLength,
+      /* Memory Match board: every pair in the set as face-down tiles. */
+      pairBank: (game.style === 'memorymatch' || game.style === 'memoryflip')
+        ? game.questions.map(function (qq, qi) {
+            return {
+              term: qq.term || qq.question || '',
+              active: qi === sel
+            };
+          })
+        : null,
+      /* When demo is off, boards render without commands (authoring preview).
+         Demo mounts the real engine below so buttons and clocks work. */
+      ...SF.Boards.renderOptions(demoActive ? ensureDemoHost() : null, slide)
     });
     box.appendChild(node);
     requestAnimationFrame(function () { SF.fit(box, node); });
+    if (demoActive && isBoard()) {
+      var host = ensureDemoHost();
+      SF.Boards.mount(host, slide, node);
+    }
     $('notes').value = q().notes || '';
   }
 
@@ -168,7 +349,12 @@
     choice: function (insp, question) {
       var wrap = el('div');
       drawChoiceAnswers(wrap, question);
-      insp.appendChild(UI.field('Answers — pick the correct one', wrap,
+      /* A format may reword the field. Only the label and the hint: the
+         control is the engine's, so there is one place answers are edited
+         however many formats share it. */
+      var fmt = SF.gameFormat(game.format) || {};
+      insp.appendChild(UI.field(fmt.answersLabel || 'Answers — pick the correct one', wrap,
+        (fmt.answersHint ? fmt.answersHint + ' ' : '') +
         'Two to six answers. Press A–F or 1–6 during the show to answer from the keyboard.'));
     },
 
@@ -186,6 +372,8 @@
     type: function (insp, question) {
       var wrap = el('div');
       drawAcceptedAnswers(wrap, question);
+      var tfmt = SF.gameFormat(game.format) || {};
+      if (tfmt.answersHint) insp.appendChild(el('p', 'hint', tfmt.answersHint));
       insp.appendChild(UI.field('Accepted answers', wrap,
         'The first one is shown on screen as the answer. Add every spelling ' +
         'you will take — case, accents, punctuation and a leading "the" are ' +
@@ -244,9 +432,306 @@
 
   /* Horse race authors identically to multiple choice — the difference is
      all in the mechanic, so it reuses that inspector rather than copying it. */
+  /* Ordering. Authored top to bottom in the correct sequence, with up/down
+     rather than drag — the same reasoning as on the phone, and it keeps the
+     keyboard path working for anyone who cannot drag. */
+  STYLE_EDITORS.order = function (insp, question) {
+    var wrap = el('div');
+    drawOrderItems(wrap, question);
+    insp.appendChild(UI.field('Items \u2014 in the correct order', wrap,
+      'Three to eight items, top first. The room is shown a shuffle, so the ' +
+      'order you type here is the answer and never appears on the wall until ' +
+      'you reveal it.'));
+    insp.appendChild(el('p', 'hint',
+      'Marked on how many items land in exactly the right place. ' +
+      'Live scoring is round(10 \u00d7 that fraction) — a near miss still earns points.'));
+  };
+
+  function drawOrderItems(wrap, question) {
+    wrap.innerHTML = '';
+    question.options.forEach(function (text, i) {
+      var row = el('div', 'opt-row');
+      row.appendChild(el('span', 'ord-pos', String(i + 1)));
+      row.appendChild(UI.text(text, function (v) {
+        question.options[i] = v; touched(); repaint();
+      }, 'Item ' + (i + 1)));
+
+      [['\u2191', -1], ['\u2193', 1]].forEach(function (spec) {
+        var b = el('button', 'kill', spec[0]);
+        b.title = spec[1] < 0 ? 'Move up' : 'Move down';
+        b.disabled = (spec[1] < 0 && i === 0) || (spec[1] > 0 && i === question.options.length - 1);
+        b.onclick = function () {
+          var to = i + spec[1];
+          var t = question.options[i];
+          question.options[i] = question.options[to];
+          question.options[to] = t;
+          touched(); drawOrderItems(wrap, question); repaint();
+        };
+        row.appendChild(b);
+      });
+
+      var kill = el('button', 'kill', '\u00d7');
+      kill.title = 'Remove this item';
+      kill.onclick = function () {
+        if (question.options.length <= 3) { SF.toast('An ordering needs at least three items'); return; }
+        question.options.splice(i, 1);
+        touched(); drawOrderItems(wrap, question); repaint();
+      };
+      row.appendChild(kill);
+      wrap.appendChild(row);
+    });
+    if (question.options.length < 8) {
+      wrap.appendChild(UI.button('+ Add item', null, function () {
+        question.options.push('');
+        touched(); drawOrderItems(wrap, question); repaint();
+      }));
+    }
+  }
+
+  /* Horse race, Beat the Clock and Boss Battle author like multiple choice —
+     the difference is the room mechanic. Boss also has a difficulty per hit. */
   STYLE_EDITORS.race = STYLE_EDITORS.choice;
+  STYLE_EDITORS.speed = STYLE_EDITORS.choice;
+  STYLE_EDITORS.boss = function (insp, question) {
+    STYLE_EDITORS.choice(insp, question);
+    insp.appendChild(UI.field('Hit difficulty',
+      UI.select([
+        { value: 'easy', label: 'Easy · 1 damage' },
+        { value: 'medium', label: 'Medium · 2 damage' },
+        { value: 'hard', label: 'Hard · 3 damage' },
+        { value: 'boss', label: 'Boss · 5 damage' }
+      ], question.difficulty || 'medium', function (v) {
+        question.difficulty = v; touched(); drawRail();
+      }),
+      'Damage dealt to the shared boss when the room hits this question. ' +
+      'Starting HP is the sum of every question\u2019s damage.'));
+  };
+
+  STYLE_EDITORS.wordreveal = function (insp, question) {
+    insp.appendChild(UI.field('Word to reveal', UI.text(question.word || '', function (v) {
+      var previousWord = question.word;
+      question.word = v.slice(0, 40);
+      if (question.accept && SF.normalizeAnswer(question.accept[0]) === SF.normalizeAnswer(previousWord)) question.accept[0] = question.word;
+      if (!question.accept || !question.accept.some(function (a) { return String(a).trim(); })) {
+        question.accept = [question.word];
+      }
+      touched(); repaint();
+    }, 'PHOTOSYNTHESIS')));
+    insp.appendChild(UI.field('Hint (optional)', UI.text(question.hint || '', function (v) {
+      question.hint = v.slice(0, 120); touched(); repaint();
+    }, 'Shown on the wall')));
+    var wrap = el('div');
+    drawAcceptedAnswers(wrap, question);
+    insp.appendChild(UI.field('Accepted spellings', wrap,
+      'First spelling is the reveal answer. Case is ignored.'));
+    insp.appendChild(UI.field('Starting letters',
+      UI.select([
+        { value: 'easy', label: 'Easy · 60% already shown' },
+        { value: 'medium', label: 'Medium · 40% shown' },
+        { value: 'hard', label: 'Hard · none shown' }
+      ], question.difficulty || 'medium', function (v) {
+        question.difficulty = v; touched();
+      })));
+    insp.appendChild(UI.field('Letter drip every',
+      UI.select([
+        { value: '3', label: '3 seconds' },
+        { value: '5', label: '5 seconds' },
+        { value: '10', label: '10 seconds' },
+        { value: '15', label: '15 seconds' }
+      ], String(question.dripInterval || 5), function (v) {
+        question.dripInterval = Number(v); touched();
+      }),
+      'Fewer letters shown when they guess means a higher score (100 / 75 / 50).'));
+  };
+
+  STYLE_EDITORS.headsup = function (insp, question) {
+    insp.appendChild(UI.field('Term', UI.text(question.term || '', function (v) {
+      question.term = v.slice(0, 80);
+      question.question = question.term;
+      touched(); repaint();
+    })));
+    insp.appendChild(UI.field('Category (optional)', UI.text(question.category || '', function (v) {
+      question.category = v.slice(0, 40); touched();
+    })));
+    insp.appendChild(UI.field('Hint (optional)', UI.text(question.hint || '', function (v) {
+      question.hint = v.slice(0, 120); touched();
+    }),
+      'Host marks Correct (+1) or Pass in Teaching tools / on reveal.'));
+  };
+
+  STYLE_EDITORS.spinexplain = function (insp, question) {
+    insp.appendChild(UI.field('Concept', UI.text(question.term || '', function (v) {
+      question.term = v.slice(0, 80);
+      question.question = question.term;
+      touched(); repaint();
+    })));
+    insp.appendChild(UI.field('Hint (optional)', UI.text(question.hint || '', function (v) {
+      question.hint = v.slice(0, 120); touched();
+    }),
+      'Clear +2 · with hint +1 · reject 0. Press the verdict to score.'));
+  };
+
+  STYLE_EDITORS.connection = function (insp, question) {
+    insp.appendChild(UI.field('First idea', UI.text(question.itemA || '', function (v) {
+      question.itemA = v.slice(0, 80); question.question = 'Connect ' + question.itemA + ' and ' + (question.itemB || ''); touched(); repaint();
+    })));
+    insp.appendChild(UI.field('Second idea', UI.text(question.itemB || '', function (v) {
+      question.itemB = v.slice(0, 80); question.question = 'Connect ' + (question.itemA || '') + ' and ' + question.itemB; touched(); repaint();
+    })));
+    insp.appendChild(el('p', 'hint', 'Host Accepts a spoken bridge for +1.'));
+  };
+
+  STYLE_EDITORS.conceptchain = function (insp, question) {
+    insp.appendChild(UI.field('Starting concept', UI.text(question.term || '', function (v) {
+      question.term = v.slice(0, 80);
+      question.question = 'Chain from: ' + question.term;
+      touched(); repaint(); drawRail();
+    })));
+    insp.appendChild(UI.field('Definition / prompt', UI.area(question.prompt || '', function (v) {
+      question.prompt = v.slice(0, 280); touched(); repaint();
+    }, 3),
+      'Shown under the seed on the wall while the class proposes a link.'));
+    insp.appendChild(el('p', 'hint',
+      'Use 3–10 starting concepts. Type the spoken link on the wall, then Accept ' +
+      'to grow the chain (+1). Reject or timeout skips.'));
+  };
+
+  STYLE_EDITORS.randomchallenge = function (insp, question) {
+    insp.appendChild(UI.field('Challenge', UI.area(question.challenge || '', function (v) {
+      question.challenge = v.slice(0, 280);
+      question.question = question.challenge;
+      touched(); repaint();
+    }, 4),
+      'No competitive score — host marks Complete to count it.'));
+  };
+
+  /**
+   * Board-wide values (study time, card size, target) live in Game settings
+   * — the rail ⚙. Show the current value beside the pair so it is not
+   * invisible, without a second Settings button next to that cog.
+   *
+   * @param {string} label  what the setting is called in Game settings
+   * @param {string} value  what it is set to now
+   */
+  function boardSettingLink(label, value) {
+    var row = el('div', 'field board-setting');
+    var line = el('p', 'board-setting-readout');
+    line.appendChild(el('span', null, label + ': '));
+    line.appendChild(el('strong', null, value));
+    row.appendChild(line);
+    row.appendChild(el('p', 'hint',
+      'Board-wide — change it under Game settings (⚙ at the top of the question list).'));
+    return row;
+  }
+
+  /* A board setting belongs to the board, not to whichever item happens to be
+     open. These three used to sit in the per-item panel and be copied across
+     every question on change — which is the tell that they were in the wrong
+     place. They live in Game settings now, beside the mode and the teams. */
+
+  /** Whether the pool can fill a card. */
+
+  STYLE_EDITORS.emoji = function (insp, question) {
+    insp.appendChild(UI.field('Emoji clues', UI.text(question.clues || '', function (v) {
+      question.clues = v.slice(0, 80);
+      question.question = question.clues;
+      touched(); repaint(); drawRail();
+    }, '\ud83c\udf31 \u2600\ufe0f \ud83d\udca7 \u2192 \ud83c\udf3f'),
+      'The whole prompt. Paste emoji from your keyboard picker \u2014 these go up large and nothing else does.'));
+    var wrap = el('div');
+    drawAcceptedAnswers(wrap, question);
+    insp.appendChild(UI.field('Answers to accept', wrap,
+      'The first is the one put on the wall. Add the other spellings a learner will actually type.'));
+    insp.appendChild(UI.field('Hint', UI.text(question.hint || '', function (v) {
+      question.hint = v.slice(0, 160); touched(); repaint();
+    }), 'Offered on easy only, and only after the letter pattern.'));
+    insp.appendChild(UI.field('How much help exists',
+      UI.segmented([
+        { value: 'easy', label: 'Pattern + hint' },
+        { value: 'medium', label: 'Pattern only' },
+        { value: 'hard', label: 'No help' }
+      ], question.difficulty || 'medium', function (v) {
+        question.difficulty = v; touched(); repaint(); drawRail(); drawInspector();
+      }),
+      'Help is released a press at a time while you present, not given away at the start. ' +
+      'Points are the same either way \u2014 a hint is how the room gets there, not what it is worth.'));
+  };
+
+  STYLE_EDITORS.definition = function (insp, question) {
+    insp.appendChild(UI.field('Passage to read', UI.area(question.passage || '', function (v) {
+      question.passage = v.slice(0, 1200); touched(); repaint(); drawRail();
+    }, 5),
+      'Shown first. Cleared before the recall question — so the room answers from memory.'));
+    insp.appendChild(UI.field('Recall question', UI.area(question.question || '', function (v) {
+      question.question = v.slice(0, 400); touched(); repaint(); drawRail();
+    }, 2),
+      'Appears only after the passage clears.'));
+    var wrap = el('div');
+    drawAcceptedAnswers(wrap, question);
+    insp.appendChild(UI.field('Answers to accept', wrap,
+      'Typed match, case-insensitive. First spelling is shown on reveal.'));
+    insp.appendChild(UI.check('Allow small spelling slips',
+      question.allowTypos !== false, function (v) {
+        question.allowTypos = v; touched(); repaint();
+      }));
+    insp.appendChild(el('p', 'hint',
+      'Use 3–20 challenges. Reading time and answer time share one length under Game settings.'));
+  };
+
+  STYLE_EDITORS.oddone = function (insp, question) {
+    while ((question.options || []).length < 4) question.options.push('');
+    question.options = question.options.slice(0, 4);
+    ['A', 'B', 'C', 'D'].forEach(function (letter, i) {
+      insp.appendChild(UI.field('Item ' + letter, UI.text(question.options[i] || '', function (v) {
+        question.options[i] = v.slice(0, 120); touched(); repaint(); drawRail();
+      }), i === 0 ? 'Four equal tiles on the wall. Discussion happens before anything is marked.' : null));
+    });
+    insp.appendChild(UI.field('Prepared odd one',
+      UI.segmented([
+        { value: '0', label: 'A' },
+        { value: '1', label: 'B' },
+        { value: '2', label: 'C' },
+        { value: '3', label: 'D' }
+      ], String(question.correct || 0), function (v) {
+        question.correct = Number(v); touched(); repaint(); drawRail();
+      }),
+      'For the reveal only. Accept other defensible rules the class can argue.'));
+    insp.appendChild(el('p', 'hint',
+      'Use 3–10 sets. No scoreboard and no phone answers — discuss, then reveal.'));
+  };
+
+  STYLE_EDITORS.compare = function (insp, question) {
+    insp.appendChild(UI.field('Item A', UI.text(question.itemA || '', function (v) {
+      question.itemA = v.slice(0, 80); touched(); repaint(); drawRail();
+    }), 'Left tile on the wall.'));
+    insp.appendChild(UI.field('Item B', UI.text(question.itemB || '', function (v) {
+      question.itemB = v.slice(0, 80); touched(); repaint(); drawRail();
+    }), 'Right tile on the wall.'));
+    insp.appendChild(UI.field('Similarities — shown on reveal',
+      UI.area(question.similarities || '', function (v) {
+        question.similarities = v.slice(0, 600); touched(); drawRail();
+      }, 3)));
+    insp.appendChild(UI.field('Differences — shown on reveal',
+      UI.area(question.differences || '', function (v) {
+        question.differences = v.slice(0, 600); touched(); drawRail();
+      }, 3)));
+    insp.appendChild(UI.field('Category (optional)', UI.text(question.category || '', function (v) {
+      question.category = v.slice(0, 40); touched(); repaint();
+    }), 'Small caption above the pair when set.'));
+    insp.appendChild(el('p', 'hint',
+      'Use 3–10 comparisons. No scoreboard and no phone answers — discuss, then reveal.'));
+  };
+
+  /** What the authored cells add up to, said while they are being written. */
+
+  function authorContext() {
+    return { SF: SF, UI: UI, el: el, game: game, touched: touched, repaint: repaint,
+      drawRail: drawRail, drawPreview: drawPreview, boardSettingLink: boardSettingLink, questionOps: questionOps };
+  }
 
   function styleEditor(key) {
+    var board = SF.gameStyle(key).boardEngine;
+    if (board) return function (insp, question) { board.authorQuestion(insp, question, authorContext()); };
     return STYLE_EDITORS[key] || STYLE_EDITORS.choice;
   }
 
@@ -258,44 +743,104 @@
     var question = q();
     if (!question) return;
 
+    /* The format first, the engine second. "Question 1 — Spot the error"
+       tells a teacher what they are writing; "Multiple choice" tells them
+       only how it will be marked. */
+    var fmt = SF.gameFormat(game.format);
     insp.appendChild(el('h4', 'insp-title',
-      'Question ' + (sel + 1) + ' — ' + SF.gameStyle(game.style).label));
+      setupUX().item + ' ' +
+      (sel + 1) + ' — ' + (fmt ? fmt.label : SF.gameStyle(game.style).label)));
+    insp.appendChild(el('p', 'game-setup-cue', setupUX().guidance));
+    insp.appendChild(el('p', 'hint', setupUX().participation));
+    appendHowToPlay(insp);
 
-    insp.appendChild(UI.field('Question',
+    if (showsQuestionField()) insp.appendChild(UI.field(setupUX().prompt,
       UI.area(question.question, function (v) {
         question.question = v; touched(); repaint();
       }, 3)));
 
     styleEditor(game.style)(insp, question);
 
-    /* Per question, because a quiz that checks recall and then application is
-       what lets the Adapt report say "they can recall it but cannot use it".
-       Blank is allowed and means "not saying" — a level guessed at is worse
-       than none, since the report would then compare across a fiction. */
-    insp.appendChild(UI.field('Thinking level · Bloom\u2019s taxonomy',
-      UI.select([{ value: '', label: 'Not set' }].concat(SF.BLOOM_LEVELS.map(function (k) {
-        return { value: k, label: k };
-      })), question.bloom || '', function (v) {
-        question.bloom = v; touched(); drawRail();
-      }),
-      'Set this on two questions at different levels and the session report ' +
-      'can tell you whether a wrong answer means they cannot recall it or ' +
-      'cannot use it. Left unset, a wrong answer is just a wrong answer.'));
+    /* Keep explanation with the answers — not buried under image / timing. */
+    if ((!isBoard() || game.style === 'bowl') &&
+        game.style !== 'compare' && game.style !== 'conceptchain') {
+      insp.appendChild(UI.field('Explanation — shown after the answer is revealed',
+        UI.area(question.explanation, function (v) {
+          question.explanation = v; touched(); drawRail();
+        }, 5),
+        'Explain why the answer is right. Its placement follows Game settings. Use a blank line between paragraphs.'));
+      insp.appendChild(UI.field('Source or further reading',
+        UI.text(question.source, function (v) {
+          question.source = v; touched();
+        }, 'Optional'),
+        'Printed small at the foot of the explanation slide.'));
+    }
+
+    var boardHooks = SF.gameStyle(game.style).boardEngine;
+    if (boardHooks) { boardHooks.authorInspector(insp, question, authorContext()); return; }
+
+    if (game.style === 'definition') {
+      insp.appendChild(el('p', 'hint',
+        'Passage first, phones closed. Ask now (or the clock) clears it and opens ' +
+        'typing. Read and answer share one length under Game settings.'));
+      insp.appendChild(questionOps());
+      return;
+    }
+    if (game.style === 'oddone') {
+      insp.appendChild(el('p', 'hint',
+        'Four equal tiles. The class discusses which does not belong; you reveal ' +
+        'the prepared odd one and explanation. No phones scoring this round.'));
+      insp.appendChild(questionOps());
+      return;
+    }
+    if (game.style === 'compare') {
+      insp.appendChild(el('p', 'hint',
+        'Two equal items. The class discusses alike and differ; you reveal the ' +
+        'prepared similarities and differences. No phones scoring this round.'));
+      insp.appendChild(questionOps());
+      return;
+    }
+    if (game.style === 'conceptchain') {
+      insp.appendChild(el('p', 'hint',
+        'Propose a link aloud, type it on the wall, then Accept to grow the chain. ' +
+        'Connection time is under Game settings. Phones stay idle.'));
+      insp.appendChild(questionOps());
+      return;
+    }
+
+    /* Per-question countdown and points. */
 
     var timeRow = el('div', 'setrow');
-    timeRow.appendChild(UI.field('Countdown',
-      UI.num(question.timeLimit, function (v) {
-        question.timeLimit = v; touched(); drawPreview(); drawRail();
-      }, 0, 300, String(game.settings.defaultTime))));
-    timeRow.appendChild(UI.field('Points',
-      UI.num(question.points, function (v) {
-        question.points = v; touched();
-      }, 0, 5000, String(game.settings.defaultPoints))));
-    insp.appendChild(timeRow);
-    insp.appendChild(el('div', 'hint',
-      'Leave either blank to use the game default (' +
-      (game.settings.defaultTime || 'no timer') + ', ' +
-      game.settings.defaultPoints + ' points). 0 seconds means no countdown.'));
+    var claimStudy = game.style === 'memoryflip' || game.style === 'memorymatch';
+    var timeHint = claimStudy
+      ? 'Study time above is the countdown on the slide. Points default to +1 per claim.'
+      : SF.gameStyle(game.style).mechanic === 'speed'
+      ? 'Leave blank to use the game default countdown (' +
+        (game.settings.defaultTime || 'no timer') + 's). Points come from speed, not a fixed value.'
+      : SF.gameStyle(game.style).mechanic === 'boss'
+        ? 'Leave blank to use the game default countdown (' +
+          (game.settings.defaultTime || 'no timer') + 's). A hit scores +1 for the player and damages the boss.'
+        : ('Leave either blank to use the game default (' +
+          (game.settings.defaultTime || 'no timer') + ', ' +
+          game.settings.defaultPoints + ' points). 0 seconds means no countdown.');
+    if (!claimStudy && setupUX().timing === 'question') {
+      timeRow.appendChild(UI.field('Countdown',
+        UI.num(question.timeLimit, function (v) {
+          question.timeLimit = v; touched(); drawPreview(); drawRail();
+        }, 0, 300, String(game.settings.defaultTime)),
+        timeHint));
+    }
+    if (!fixedPoints()) {
+      timeRow.appendChild(UI.field('Points',
+        UI.num(question.points, function (v) {
+          question.points = v; touched();
+        }, 0, 5000, String(game.settings.defaultPoints)),
+        timeHint));
+    }
+    if (timeRow.childNodes.length) insp.appendChild(timeRow);
+    else if (claimStudy) {
+      insp.appendChild(UI.field(null, null, timeHint));
+    }
 
     /* Images live on the question, not on a separate slide, so the picture and
        the options are on screen together. */
@@ -354,27 +899,20 @@
         'Used as the alt text. Worth filling in if anyone reads the quiz with a screen reader.'));
     }
 
-    insp.appendChild(UI.field('Explanation — shown after the answer is revealed',
-      UI.area(question.explanation, function (v) {
-        question.explanation = v; touched(); drawRail();
-      }, 5),
-      'Optional. Adds a full-screen slide after this question with the reasoning, ' +
-      'and sends it to the players\u2019 phones with their result. Leave a blank line ' +
-      'between paragraphs.'));
+    /* Peer instruction is uncommon — keep it out of the main flow. */
+    var peer = el('details', 'advanced-opts');
+    if (question.voteOnly) peer.open = true;
+    peer.appendChild(el('summary', null, 'Peer instruction'));
+    peer.appendChild(UI.check('Vote only — never show the answer',
+      question.voteOnly === true, function (v) {
+        question.voteOnly = v; touched(); drawRail(); repaint();
+      }));
+    peer.appendChild(el('p', 'hint',
+      'First vote: the tally goes up, the answer does not. Duplicate this ' +
+      'question for the second vote after discussion, with Vote only off.'));
+    insp.appendChild(peer);
 
-    insp.appendChild(UI.field('Source or further reading',
-      UI.text(question.source, function (v) {
-        question.source = v; touched();
-      }, 'Optional'),
-      'Printed small at the foot of the explanation slide.'));
-
-    var ops = el('div', 'field');
-    ops.style.marginTop = '14px';
-    ops.appendChild(UI.button('Duplicate', null, duplicateQuestion));
-    var del = UI.button('Delete', null, removeQuestion);
-    del.style.marginLeft = '6px';
-    ops.appendChild(del);
-    insp.appendChild(ops);
+    insp.appendChild(questionOps());
 
     var used = SF.GameStore.usedBy(game.id);
     if (used.length) {
@@ -461,38 +999,259 @@
 
   /* ------------------------------------------------------------ settings */
 
+  /** Has anyone typed an answer that a style switch would throw away? */
+  function styleAnswersWritten(g) {
+    var made = SF.makeQuestion(g.style);
+    return (g.questions || []).some(function (q) {
+      /* Compared against a fresh question of the same style, so the seeded
+         placeholders a format ships with do not count as the teacher's work.
+         Only the answer side matters: the wording survives a switch. */
+      var fields = ['options', 'accept', 'target', 'tolerance', 'unit'];
+      return fields.some(function (k) {
+        if (q[k] == null && made[k] == null) return false;
+        return JSON.stringify(q[k]) !== JSON.stringify(made[k]);
+      });
+    });
+  }
+
+  /**
+   * The look a new game should start with.
+   *
+   * makeGame defaults to midnight, which is right for the model and wrong
+   * for the studio: a game created while the rest of the app and the deck
+   * are Studio sage previewed as a dark navy panel in a light window, which
+   * reads as something overriding the theme rather than as the game's own
+   * setting. A new game inherits what you are already working in, and only
+   * changes when you change it.
+   */
+  function inheritTheme() {
+    var deck = SF.Editor && SF.Editor.deck && SF.Editor.deck();
+    if (deck && deck.theme) return deck.theme;
+    if (game && game.theme) return game.theme;
+    return 'midnight';
+  }
+
+  /**
+   * The slides a game generates around its content.
+   *
+   * Shared by every format, and rendered before the per-format settings —
+   * board engines return early from those, which is how the How to play
+   * toggle ended up unreachable on exactly the formats whose rules most need
+   * explaining.
+   *
+   * @param {HTMLElement} body  settings panel
+   * @param {function} draw2    redraw the panel
+   */
+  /** Rebuild every question on a new engine. Shared by the confirmed and
+      unconfirmed paths, so they cannot drift apart. */
+  function switchStyle(v, redraw) {
+    game.style = v;
+    game.format = '';
+    game.questions = game.questions.map(function (q) {
+      return SF.normalizeQuestion(q, v);
+    });
+    touched();
+    sel = Math.min(sel, game.questions.length - 1);
+    if (redraw) redraw();
+    draw();
+  }
+
+  function appendGeneratedSlides(body, draw2) {
+    var st = game.settings;
+    body.appendChild(UI.field('Slides the game adds', (function () {
+      var box = el('div');
+      function gap() {
+        var sp = el('div');
+        sp.style.height = '7px';
+        box.appendChild(sp);
+      }
+      box.appendChild(UI.check('Opening title slide', st.intro, function (v) {
+        st.intro = v; touched(); draw2();
+      }));
+      gap();
+      /* The rules the room sees, rather than the copy in this panel. */
+      var howTo = UI.check('How to play slide', st.howTo !== false, function (v) {
+        st.howTo = v; touched(); draw2();
+      });
+      box.appendChild(howTo);
+      /* Every engine resolves to playbook copy (or _default) — never disable. */
+      /* A board keeps its own tally on the board. A closing score slide would
+         be a second, emptier account of the same round. */
+      if (!isBoard() && ['oddone', 'compare', 'conceptchain', 'randomchallenge'].indexOf(game.style) === -1) {
+        gap();
+        box.appendChild(UI.check('Closing score slide', st.scoreSlide, function (v) {
+          st.scoreSlide = v; touched(); draw2();
+        }));
+      }
+      return box;
+    })(), 'Generated when the game plays — you never edit them as slides. ' +
+      'How to play puts this format\u2019s rules on the wall instead of leaving ' +
+      'them in this panel, where only you can read them.'));
+  }
+
   function openSettings() {
     var body = $('settingsBody');
     var st = game.settings;
+    /* One sheet serves both engines now, so whoever opens it says so. */
+    $('settingsTitle').textContent = 'Game settings';
 
     function draw2() {
       body.innerHTML = '';
 
-      /* Switching style is offered but confirmed: the question text survives,
-         the answers are rebuilt by the new style's normalizer. */
-      var styleKeys = Object.keys(SF.GAME_STYLES);
-      body.appendChild(UI.field('Game style', UI.segmented(
-        styleKeys.map(function (k) {
-          return { value: k, icon: SF.GAME_STYLES[k].icon, label: SF.GAME_STYLES[k].label };
-        }), game.style, function (v) {
-          if (v === game.style) return;
-          var target = SF.GAME_STYLES[v];
-          if (!confirm('Switch this game to "' + target.label + '"?\n\n' +
-                       'Your question wording is kept. The answers are rebuilt to suit ' +
-                       'the new style, so any you have typed will be replaced.')) {
-            draw2();
-            return;
-          }
-          game.style = v;
-          game.questions = game.questions.map(function (q) {
-            return SF.normalizeQuestion(q, v);
+      body.appendChild(UI.field('Theme', SF.Shell.themePicker(game.theme, function (v) {
+        ws.onTheme(v);
+        draw2();
+      }), 'Sets the colours for every question slide this game produces.'));
+
+      /* Catalogue format → engine, like the old apps' slug map. Locking stops
+         Beat the Clock being switched to Memory Flip while the title stays. */
+      var fmt = SF.gameFormat(game.format);
+      var mapped = SF.formatStyle(game.format);
+      if (mapped && game.style !== mapped) {
+        var prev = game.style;
+        game.style = mapped;
+        game.questions = game.questions.map(function (q) {
+          var fresh = SF.makeQuestion(mapped);
+          ['question', 'explanation', 'image', 'imageAlt', 'imageLayout',
+            'notes', 'bloom', 'source', 'timeLimit', 'points', 'voteOnly'].forEach(function (k) {
+            if (q[k] != null && q[k] !== '') fresh[k] = q[k];
           });
-          touched();
-          sel = Math.min(sel, game.questions.length - 1);
-          draw2();
-          draw();
-        }),
-        SF.gameStyle(game.style).blurb + ' Every question in a game shares its style.'));
+          if (q.id) fresh.id = q.id;
+          return SF.normalizeQuestion(fresh, mapped);
+        });
+        touched();
+        if (prev !== mapped) SF.toast('Restored ' + fmt.label + ' to its ' + SF.GAME_STYLES[mapped].label + ' engine');
+      }
+
+      /* Special engines (True/False, Boss…) are activities, not blank-quiz
+         engines — lock them even when an older save lacks a format stamp. */
+      var special = SF.isSpecialStyle && SF.isSpecialStyle(game.style);
+      if (special && !game.format && SF.gameFormat(game.style)) {
+        game.format = game.style;
+        fmt = SF.gameFormat(game.format);
+        mapped = SF.formatStyle(game.format);
+        touched();
+      }
+
+      var toLib = el('p', 'hint');
+      var libLink = UI.button('Browse all formats \u2192', 'ghost', function () {
+        var sheet = document.getElementById('settingsModal');
+        var close = sheet && sheet.querySelector('[data-close]');
+        if (close) close.click();
+        if (SF.Studio && SF.Studio.openLibrary) SF.Studio.openLibrary('check');
+      });
+      libLink.style.fontSize = '12px';
+
+      if ((fmt && mapped) || special) {
+        var lockStyle = mapped || game.style;
+        var lockLabel = (fmt && fmt.label) || SF.GAME_STYLES[lockStyle].label;
+        var locked = el('div');
+        locked.appendChild(el('strong', null,
+          SF.GAME_STYLES[lockStyle].icon + '  ' + lockLabel));
+        locked.appendChild(el('p', 'hint',
+          SF.gameStyle(lockStyle).blurb +
+          ' Locked to this activity \u2014 pick another format from the library to change how it plays.'));
+        body.appendChild(UI.field('Format', locked));
+        toLib.appendChild(document.createTextNode('Want a different activity? '));
+        toLib.appendChild(libLink);
+        body.appendChild(toLib);
+      } else {
+        var styleKeys = (SF.CORE_STYLES || []).filter(function (k) {
+          return !!SF.GAME_STYLES[k];
+        });
+        if (styleKeys.indexOf(game.style) < 0) styleKeys = styleKeys.concat([game.style]);
+        toLib.appendChild(document.createTextNode('Core engines for a blank quiz. '));
+        toLib.appendChild(libLink);
+        body.appendChild(UI.field('Game style', UI.segmented(
+          styleKeys.map(function (k) {
+            return { value: k, icon: SF.GAME_STYLES[k].icon, label: SF.GAME_STYLES[k].label };
+          }), game.style, function (v) {
+            if (v === game.style) return;
+            var target = SF.GAME_STYLES[v];
+            if (styleAnswersWritten(game)) {
+              /* The select has already moved, so put it back unless they say
+                 yes — the answer arrives after this handler returns. */
+              draw2();
+              SF.ask({ title: 'Switch this game to “' + target.label + '”?',
+                detail: 'Your question wording is kept. The answers are rebuilt to suit ' +
+                  'the new style, so any you have typed will be replaced.',
+                confirm: 'Switch style', danger: true }, function () {
+                  switchStyle(v, draw2);
+                });
+              return;
+            }
+            switchStyle(v, draw2);
+          }),
+          SF.gameStyle(game.style).blurb + ' Every question in a game shares its style.'));
+        body.appendChild(toLib);
+      }
+
+      appendGeneratedSlides(body, draw2);
+
+      var boardHooks = SF.gameStyle(game.style).boardEngine;
+      if (boardHooks) { boardHooks.authorSettings(body, Object.assign(authorContext(), { st: st, draw2: draw2 })); return; }
+
+      if (game.style === 'definition') {
+        if ([20, 30, 45, 60].indexOf(Number(st.defaultTime)) < 0) st.defaultTime = 30;
+        body.appendChild(UI.field('Read & answer time', UI.segmented([
+          { value: '20', label: '20s' },
+          { value: '30', label: '30s' },
+          { value: '45', label: '45s' },
+          { value: '60', label: '60s' }
+        ], String(st.defaultTime), function (v) {
+          st.defaultTime = Number(v);
+          touched(); draw2(); drawPreview(); drawRail();
+        }), 'Same length for reading and for answering — the clock resets when the passage clears.'));
+        body.appendChild(el('p', 'hint',
+          'Phones stay closed while the passage is up. Ask now (or let the clock end) ' +
+          'hides it and opens typing. Use 3–20 challenges.'));
+        return;
+      }
+
+      if (game.style === 'oddone') {
+        body.appendChild(el('p', 'hint',
+          'No timer and no scoreboard. Use 3–10 sets. Reveal the prepared odd one ' +
+          'after discussion — accept other rules the class can defend.'));
+        return;
+      }
+
+      if (game.style === 'compare') {
+        body.appendChild(el('p', 'hint',
+          'No timer and no scoreboard. Use 3–10 comparisons. Reveal prepared ' +
+          'similarities and differences after discussion.'));
+        return;
+      }
+
+      if (game.style === 'conceptchain') {
+        if ([30, 45, 60, 90].indexOf(Number(st.defaultTime)) < 0) st.defaultTime = 45;
+        body.appendChild(UI.field('Connection time limit', UI.segmented([
+          { value: '30', label: '30s' },
+          { value: '45', label: '45s' },
+          { value: '60', label: '1m' },
+          { value: '90', label: '1m 30s' }
+        ], String(st.defaultTime), function (v) {
+          st.defaultTime = Number(v);
+          touched(); draw2(); drawPreview(); drawRail();
+        }), 'Per link. Timeout skips without scoring or growing the chain.'));
+        body.appendChild(el('p', 'hint',
+          'Use 3–10 starting concepts. Type the spoken link, Accept (+1) to grow ' +
+          'the chain on the wall. Phones stay idle.'));
+        return;
+      }
+
+      if (['headsup', 'spinexplain', 'connection', 'randomchallenge'].indexOf(game.style) !== -1) {
+        body.appendChild(el('p', 'game-setup-cue', setupUX().guidance));
+        body.appendChild(UI.field(game.style === 'headsup' ? 'Time per term' : game.style === 'spinexplain' ? 'Time per explanation' : 'Time per challenge',
+          UI.num(st.defaultTime, function (v) {
+            st.defaultTime = Math.max(0, Math.min(300, v || 0));
+            touched(); drawRail(); drawPreview();
+          }, 0, 300), '0 leaves the activity untimed. A question override takes precedence.'));
+        var oralBook = SF.Playbook.forGame(game);
+        body.appendChild(el('p', 'hint', oralBook.scoring));
+        body.appendChild(el('p', 'hint', 'This is a teacher-led spoken activity. The current verdict applies to the class; there is no individual or team recipient selector.'));
+        if (oralBook.note) body.appendChild(el('p', 'hint', oralBook.note));
+        return;
+      }
 
       body.appendChild(UI.field('Score the room as', UI.segmented([
         { value: 'individual', icon: '\u{1F464}', label: 'Individual players' },
@@ -548,18 +1307,68 @@
           'with fewer than about eight questions, a shorter track keeps it live to the end.'));
       }
 
-      var defs = el('div', 'setrow');
-      defs.appendChild(UI.field('Default countdown',
-        UI.num(st.defaultTime, function (v) {
-          st.defaultTime = Math.max(0, v || 0); touched(); drawRail(); drawPreview();
-        }, 0, 300)));
-      defs.appendChild(UI.field('Default points',
-        UI.num(st.defaultPoints, function (v) {
-          st.defaultPoints = Math.max(0, v || 0); touched();
-        }, 0, 5000)));
-      body.appendChild(defs);
-      body.appendChild(el('div', 'hint',
-        'Used by any question that does not set its own. Faster correct answers score closer to the full value.'));
+      if (SF.gameStyle(game.style).mechanic === 'speed') {
+        /* Old Beat the Clock: 30 / 60 / 90 / 120 presets. */
+        if ([30, 60, 90, 120].indexOf(Number(st.defaultTime)) < 0) st.defaultTime = 60;
+        st.defaultPoints = 0;
+        st.confidence = false;
+        body.appendChild(UI.field('Question countdown', UI.segmented([
+          { value: '30', icon: '30', label: '30s' },
+          { value: '60', icon: '60', label: '60s' },
+          { value: '90', icon: '90', label: '90s' },
+          { value: '120', icon: '120', label: '120s' }
+        ], String(st.defaultTime), function (v) {
+          st.defaultTime = Number(v);
+          touched(); draw2(); drawRail(); drawPreview();
+        }),
+          'Correct answers earn 10 + floor(remaining seconds ÷ 10). Wrong answers cost 5, with a score floor of zero.'));
+      } else if (game.style === 'truefalse') {
+        /* Short retrieval clocks — never the Beat the Clock 30/60/90/120 set. */
+        var tfTimes = [0, 10, 15, 20, 30];
+        if (tfTimes.indexOf(Number(st.defaultTime)) < 0) {
+          st.defaultTime = game.format === 'true-false' ? 15 : 0;
+        }
+        body.appendChild(UI.field('Countdown', UI.segmented([
+          { value: '0', icon: '\u2014', label: 'Off' },
+          { value: '10', icon: '10', label: '10s' },
+          { value: '15', icon: '15', label: '15s' },
+          { value: '20', icon: '20', label: '20s' },
+          { value: '30', icon: '30', label: '30s' }
+        ], String(st.defaultTime), function (v) {
+          st.defaultTime = Number(v);
+          touched(); draw2(); drawRail(); drawPreview();
+        }),
+          'Time allowed for each statement. Choose Off when you want to discuss before revealing.'));
+        body.appendChild(UI.field('Default points',
+          UI.num(st.defaultPoints, function (v) {
+            st.defaultPoints = Math.max(0, v || 0); touched();
+          }, 0, 5000),
+          'Used by any statement that does not set its own points.'));
+      } else if (SF.gameStyle(game.style).mechanic === 'boss') {
+        var hp = SF.bossMaxHp(game.questions);
+        body.appendChild(el('p', 'hint',
+          'Boss starts at ' + hp + ' HP (sum of each question\u2019s difficulty damage). ' +
+          'A hit lands when most of the room is right. Win by bringing HP to 0.'));
+        var defsBoss = el('div', 'setrow');
+        defsBoss.appendChild(UI.field('Default countdown',
+          UI.num(st.defaultTime, function (v) {
+            st.defaultTime = Math.max(0, v || 0); touched(); drawRail(); drawPreview();
+          }, 0, 300)));
+        body.appendChild(defsBoss);
+      } else {
+        var defs = el('div', 'setrow');
+        if (setupUX().timing === 'question') defs.appendChild(UI.field('Default countdown',
+          UI.num(st.defaultTime, function (v) {
+            st.defaultTime = Math.max(0, v || 0); touched(); drawRail(); drawPreview();
+          }, 0, 300)));
+        if (!fixedPoints()) defs.appendChild(UI.field('Default points',
+          UI.num(st.defaultPoints, function (v) {
+            st.defaultPoints = Math.max(0, v || 0); touched();
+          }, 0, 5000)));
+        body.appendChild(defs);
+        body.appendChild(el('div', 'hint',
+          fixedPoints() ? 'Scoring follows this game’s rules; there is no separate points value to set.' : 'Defaults apply unless a question overrides them. Timed correct answers receive a speed bonus.'));
+      }
 
       body.appendChild(UI.field('Scoreboard',
         UI.check('Keep the score on screen throughout', st.scoreboard, function (v) {
@@ -580,32 +1389,46 @@
             ? 'A full-screen slide follows each question that has an explanation \u2014 more room for long text.'
             : 'The box expands on reveal, then the next slide gives the full version.'));
 
-      body.appendChild(UI.field('After each answer', (function () {
+      if (['speed', 'headsup', 'spinexplain', 'connection', 'randomchallenge'].indexOf(game.style) === -1) {
+        body.appendChild(UI.field('After each answer', (function () {
+          var box = el('div');
+          box.appendChild(UI.check('Ask how sure they were', st.confidence !== false, function (v) {
+            st.confidence = v; touched(); draw2();
+          }));
+          box.appendChild(el('div', 'hint',
+            'One extra tap on the phone, after their answer is already locked in ' +
+            'so it costs them no time. It never changes the score — what it ' +
+            'gives you is the count of answers that were wrong and confident, ' +
+            'which is a misconception to re-teach rather than a gap to practise.'));
+          return box;
+        })()));
+      }
+
+      body.appendChild(UI.field('Music under the thinking time', (function () {
         var box = el('div');
-        box.appendChild(UI.check('Ask how sure they were', st.confidence !== false, function (v) {
-          st.confidence = v; touched(); draw2();
-        }));
+        box.appendChild(UI.text(st.music || '', function (v) {
+          st.music = SF.safeMedia(v); touched(); draw2();
+        }, 'audio/think.mp3'));
+        if (st.music) {
+          var vol = el('div');
+          vol.style.marginTop = '9px';
+          vol.appendChild(UI.field('Volume', UI.num(
+            st.musicVolume == null ? 55 : st.musicVolume,
+            function (v) {
+              st.musicVolume = Math.max(0, Math.min(100, Number(v) || 0));
+              touched(); draw2();
+            }, 0, 100)));
+          box.appendChild(vol);
+        }
         box.appendChild(el('div', 'hint',
-          'One extra tap on the phone, after their answer is already locked in ' +
-          'so it costs them no time. It never changes the score — what it ' +
-          'gives you is the count of answers that were wrong and confident, ' +
-          'which is a misconception to re-teach rather than a gap to practise.'));
+          'A URL or a path beside index.html. The file is not copied into the ' +
+          'game \u2014 a deck that travels without it simply plays nothing.'));
+        box.appendChild(el('div', 'hint',
+          'It starts when a question opens and stops the moment the answer is ' +
+          'revealed, so it doubles as the sound of time running out. It plays ' +
+          'on the projector only; twenty phones a beat apart is not music.'));
         return box;
       })()));
-
-      body.appendChild(UI.field('Slides the game adds', (function () {
-        var box = el('div');
-        box.appendChild(UI.check('Opening title slide', st.intro, function (v) {
-          st.intro = v; touched(); draw2();
-        }));
-        var sp = el('div');
-        sp.style.height = '7px';
-        box.appendChild(sp);
-        box.appendChild(UI.check('Closing score slide', st.scoreSlide, function (v) {
-          st.scoreSlide = v; touched(); draw2();
-        }));
-        return box;
-      })(), 'Both are generated when the game plays — you never edit them as slides.'));
 
       var note = el('div', 'hint');
       note.style.cssText = 'padding:10px 12px;background:var(--ui-bg);border-radius:6px;line-height:1.5';
@@ -624,8 +1447,48 @@
   /* ------------------------------------------------------------ question ops */
 
   function addQuestion() {
+    if (game.style === 'lowstakes' && game.questions.length >= 10) {
+      SF.toast('Low-stakes quiz can have at most 10 questions');
+      return;
+    }
+    if (game.style === 'definition' && game.questions.length >= 20) {
+      SF.toast('Definition Challenge can have at most 20 challenges');
+      return;
+    }
+    if (game.style === 'oddone' && game.questions.length >= 10) {
+      SF.toast('Odd One Out can have at most 10 sets');
+      return;
+    }
+    if (game.style === 'compare' && game.questions.length >= 10) {
+      SF.toast('Compare & Contrast can have at most 10 comparisons');
+      return;
+    }
+    if (game.style === 'conceptchain' && game.questions.length >= 10) {
+      SF.toast('Concept Chain can have at most 10 starting concepts');
+      return;
+    }
     var fresh = SF.makeQuestion(game.style);
     fresh.question = '';
+    if (game.style === 'definition') fresh.passage = '';
+    if (game.style === 'oddone') {
+      fresh.question = 'Which is the odd one out — and what is the rule?';
+      fresh.options = ['', '', '', ''];
+      fresh.correct = 0;
+      fresh.explanation = '';
+    }
+    if (game.style === 'compare') {
+      fresh.question = 'Compare these two — how are they alike, and how do they differ?';
+      fresh.itemA = '';
+      fresh.itemB = '';
+      fresh.similarities = '';
+      fresh.differences = '';
+      fresh.category = '';
+    }
+    if (game.style === 'conceptchain') {
+      fresh.term = '';
+      fresh.prompt = '';
+      fresh.question = 'Chain from: …';
+    }
     if (game.style === 'choice') fresh.options = ['', '', '', ''];
     game.questions.splice(sel + 1, 0, fresh);
     sel += 1;
@@ -634,6 +1497,26 @@
   }
 
   function duplicateQuestion() {
+    if (game.style === 'lowstakes' && game.questions.length >= 10) {
+      SF.toast('Low-stakes quiz can have at most 10 questions');
+      return;
+    }
+    if (game.style === 'definition' && game.questions.length >= 20) {
+      SF.toast('Definition Challenge can have at most 20 challenges');
+      return;
+    }
+    if (game.style === 'oddone' && game.questions.length >= 10) {
+      SF.toast('Odd One Out can have at most 10 sets');
+      return;
+    }
+    if (game.style === 'compare' && game.questions.length >= 10) {
+      SF.toast('Compare & Contrast can have at most 10 comparisons');
+      return;
+    }
+    if (game.style === 'conceptchain' && game.questions.length >= 10) {
+      SF.toast('Concept Chain can have at most 10 starting concepts');
+      return;
+    }
     var copy = SF.normalizeQuestion(JSON.parse(JSON.stringify(q())), game.style);
     copy.id = SF.uid();
     game.questions.splice(sel + 1, 0, copy);
@@ -654,12 +1537,17 @@
 
   function problems() {
     var style = SF.gameStyle(game.style);
-    return game.questions
+    var found = game.questions
       .map(function (q, i) { return style.problems(q, i + 1); })
       .filter(Boolean);
+    /* And whatever is only wrong about the game as a whole. */
+    var board = style.board ? style.board(game) : null;
+    if (board) found.push('This game ' + board);
+    return found;
   }
 
   function play() {
+    setDemoActive(false);
     SF.GameStore.save(game);
     var bad = problems();
     if (bad.length) SF.toast(bad[0] + (bad.length > 1 ? ' (+' + (bad.length - 1) + ' more)' : ''));
@@ -667,6 +1555,7 @@
   }
 
   function hostLive() {
+    setDemoActive(false);
     SF.GameStore.save(game);
     var bad = problems();
     if (bad.length) SF.toast(bad[0] + (bad.length > 1 ? ' (+' + (bad.length - 1) + ' more)' : ''));
@@ -694,14 +1583,18 @@
     SF.Shell.picker({
       title: 'What kind of game?',
       items: function () {
-        return Object.keys(SF.GAME_STYLES).map(function (k) {
+        return (SF.CORE_STYLES || Object.keys(SF.GAME_STYLES)).filter(function (k) {
+          return !!SF.GAME_STYLES[k];
+        }).map(function (k) {
           var st = SF.GAME_STYLES[k];
           return { id: k, title: st.icon + '   ' + st.label, blurb: st.blurb };
         });
       },
       describe: function (it) { return it.blurb; },
       onPick: function (it) {
+        setDemoActive(false);
         var g = SF.makeGame('Untitled ' + SF.GAME_STYLES[it.id].label.toLowerCase(), it.id);
+        g.theme = inheritTheme();
         SF.GameStore.save(g);
         game = g;
         sel = 0;
@@ -716,16 +1609,31 @@
     key: 'game',
     newDoc: newGameFlow,
     railLabel: 'Questions',
+    /** Named after the things people go looking for in there. */
+    get settingsLabel() {
+      var extra = { bingo: 'card size', bowl: 'target score', memorymatch: 'study time',
+        memoryflip: 'study time', lowstakes: 'quiz length' }[game && game.style];
+      return 'Game settings — teams' + (extra ? ', ' + extra : '') + ', theme';
+    },
     notesLabel: 'Question notes — visible in presenter view only',
     fileSuffix: '.sfgame.json',
     store: SF.GameStore,
     doc: function () { return game; },
-    setDoc: function (g) { game = g; sel = 0; },
-    blank: function () { return SF.makeGame('Untitled game', game ? game.style : 'choice'); },
+    setDoc: function (g) {
+      setDemoActive(false);
+      game = g;
+      sel = 0;
+    },
+    blank: function () {
+      var g = SF.makeGame('Untitled game', game ? game.style : 'choice');
+      g.theme = inheritTheme();
+      return g;
+    },
     draw: draw,
     flush: flush,
     play: play,
     hostLive: hostLive,
+    settings: openSettings,
     describe: describe,
     onTitle: function (v) { game.title = v || 'Untitled game'; touched(); },
     onTheme: function (v) { game.theme = v; touched(); draw(); },
@@ -733,6 +1641,12 @@
       /* No bare-letter shortcut adds or removes content: a stray keypress with
          the rail focused should never silently rewrite the question list.
          Backspace deletes, as it does in every slide editor. */
+      if (e.key === 'Escape' && demoActive) {
+        e.preventDefault();
+        setDemoActive(false);
+        drawPreview();
+        return;
+      }
       if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); select(sel + 1); }
       else if (e.key === 'ArrowUp' || e.key === 'k') { e.preventDefault(); select(sel - 1); }
       else if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); removeQuestion(); }
@@ -749,7 +1663,9 @@
       game = SF.starterGame();
       SF.GameStore.save(game);
     } else {
-      game = all[0];
+      /* The one you had open, the way the deck engine does it. list()[0] is
+         the most recently *saved* game, which is a different thing. */
+      game = (SF.GameStore.lastId() && SF.GameStore.get(SF.GameStore.lastId())) || all[0];
     }
     sel = 0;
 
@@ -760,7 +1676,9 @@
     });
 
     $('btnPlay').onclick = play;
-    $('btnGameSettings').onclick = openSettings;
+    if ($('btnDemoGame')) $('btnDemoGame').onclick = toggleDemo;
+    if ($('btnDemoReset')) $('btnDemoReset').onclick = resetDemo;
+    setDemoActive(false);
   }
 
   SF.Games = {
@@ -771,8 +1689,12 @@
     openGame: function (id) {
       var g = SF.GameStore.get(id);
       if (!g) return;
+      setDemoActive(false);
       game = g;
       sel = 0;
+      /* Opening is remembered, not just editing: pick a game from the library,
+         refresh without touching it, and it should still be the one on screen. */
+      SF.GameStore.save(g);
       SF.Shell.syncChrome();
       draw();
     }

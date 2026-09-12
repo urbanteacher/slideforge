@@ -36,6 +36,12 @@
     (this._handlers[name] = this._handlers[name] || []).push(fn);
     return this;
   };
+  Player.off = function (name, fn) {
+    var list = this._handlers[name];
+    if (!list) return this;
+    this._handlers[name] = list.filter(function (f) { return f !== fn; });
+    return this;
+  };
   Player.emit = function (name, payload) {
     (this._handlers[name] || []).forEach(function (fn) {
       try { fn(payload); } catch (e) { console.error('player handler ' + name, e); }
@@ -54,21 +60,16 @@
     hudPos = hud.querySelector('.pos');
     cheats = document.getElementById('cheats');
 
-    hud.querySelector('[data-act=prev]').onclick = function () { Player.prev(); };
-    hud.querySelector('[data-act=next]').onclick = function () { Player.next(); };
-    hud.querySelector('[data-act=rail]').onclick = function () { Player.toggleRoomSidebar(); };
-    hud.querySelector('[data-act=focus]').onclick = function () {
-      if (SF.Live && SF.Live.active) Player.emit('focusToggle', {});
-      else toggleSoloFeedback({});
-    };
-    hud.querySelector('[data-act=join]').onclick = function () {
-      if (SF.Live && SF.Live.active) Player.emit('joinToggle', {});
-      else SF.toast('Host live to show the join QR and PIN');
-    };
-    hud.querySelector('[data-act=blank]').onclick = function () { Player.toggleBlank(); };
-    hud.querySelector('[data-act=full]').onclick = function () { Player.toggleFullscreen(); };
-    hud.querySelector('[data-act=help]').onclick = function () { cheats.classList.toggle('on'); };
-    hud.querySelector('[data-act=exit]').onclick = function () { Player.close(); };
+    var more=hud.querySelector('#hudMore'), moreButton=hud.querySelector('[data-act=more]');
+    function closeMore(){more.hidden=true;moreButton.setAttribute('aria-expanded','false');}
+    moreButton.onclick=function(){more.hidden=!more.hidden;moreButton.setAttribute('aria-expanded',String(!more.hidden));showHud();};
+    more.addEventListener('click',function(e){if(e.target.closest('button'))closeMore();});
+    hud.addEventListener('mouseenter',showHud);hud.addEventListener('focusin',showHud);
+    root.addEventListener('pointerdown',closeMore);
+    Object.keys(controls).forEach(function(action){
+      var button=hud.querySelector('[data-act='+action+']');
+      if(button)button.onclick=function(){Player.control(action);};
+    });
     cheats.onclick = function () { cheats.classList.remove('on'); };
 
     root.addEventListener('mousemove', showHud);
@@ -77,12 +78,45 @@
       if (e.target === viewport || e.target === root) Player.next();
     });
     window.addEventListener('resize', relayout);
+    document.addEventListener('fullscreenchange',syncHudRoomButtons);
   }
+
+  function controlEnabled(action) {
+    var live=!!(SF.Live && SF.Live.active), slide=Player.deck && Player.deck.slides[Player.idx];
+    if(action==='teacher'||action==='join') return live;
+    if(action==='who') return live && !!slide && slide.type==='quiz';
+    return true;
+  }
+  var controls={
+    prev:function(){Player.prev();},next:function(){Player.next();},
+    rail:function(){Player.toggleRoomSidebar();},
+    focus:function(){if(SF.Live && SF.Live.active)Player.emit('focusToggle',{});else toggleSoloFeedback({});},
+    join:function(){Player.emit('joinToggle',{});},
+    /* Named answers live on the private screen. Opening presenter view if it
+       is shut is the whole action: there is nowhere else this can go without
+       putting the room's names on the wall. */
+    who:function(){
+      if(!presenterWin || presenterWin.closed){Player.openPresenter();toast('Named answers are in presenter view');}
+      else presenterWin.focus();
+      setTimeout(function(){ if(presenterWin && !presenterWin.closed){ try{presenterWin.postMessage({type:'sf-presenter-cmd',cmd:'who'},'*');}catch(e){} } }, 400);
+    },
+    ink:function(){if(SF.Teaching)SF.Teaching.toggleBar();},
+    blank:function(){Player.toggleBlank();},full:function(){Player.toggleFullscreen();},
+    help:function(){cheats.classList.toggle('on');},exit:function(){Player.close();},
+    presenter:function(){Player.openPresenter();},teacher:function(){SF.Live.openManual();}
+  };
+  Player.control=function(action){
+    if(!controls[action] || !controlEnabled(action)) return;
+    controls[action]();syncHudRoomButtons();
+  };
 
   function showHud() {
     hud.classList.add('show');
     clearTimeout(hudTimer);
-    hudTimer = setTimeout(function () { hud.classList.remove('show'); }, 2400);
+    hudTimer = setTimeout(function () {
+      if(hud.matches(':hover') || hud.querySelector(':focus-visible') || !document.getElementById('hudMore').hidden){showHud();return;}
+      hud.classList.remove('show');
+    }, 2400);
   }
 
   /* ------------------------------------------------------------ quiz maths */
@@ -119,20 +153,56 @@
     if (!slide) return;
 
     stopTimer();
+    SF.Boards.unmountAll();
 
     var node = SF.renderSlide(deck, slide, {
       index: Player.idx,
       total: deck.slides.length,
       interactive: true,
+      ...SF.Boards.renderOptions(Player, slide),
       quizNumber: slide.type === 'quiz' ? quizNumberOf(deck, slide) : 0,
       marks: slide.type === 'results' ? marksFor(deck, Player.answers) : null,
       lanes: slide.type === 'quiz' ? raceField(deck) : null,
+      /* Offered only when nobody is scoring it for us. In a live room the
+         phones move the field and a tap on the wall would be a second,
+         disagreeing truth. */
+      laneCommand: slide.type === 'quiz' && raceIsOurs(deck)
+        ? function (key, action) { Player.raceStep(key, action); } : null,
+      boss: slide.type === 'quiz' ? bossView(deck) : null,
+      bossCommand: slide.type === 'quiz' && bossFight(deck)
+        ? function (action) { Player.bossCommand(action); } : null,
+      definitionPhase: slide.style === 'definition'
+        ? definitionState(slide).phase : null,
+      definitionCommand: slide.style === 'definition'
+        ? function (action) { Player.definitionCommand(action); } : null,
+      chainLinks: (slide.style === 'conceptchain' || slide.conceptChain)
+        ? (Player.chainLinks || []) : null,
+      chainPending: (slide.style === 'conceptchain' || slide.conceptChain)
+        ? (Player.chainPending || '') : '',
+      chainCommand: (slide.style === 'conceptchain' || slide.conceptChain)
+        ? function (action, value) { Player.chainCommand(action, value); } : null,
       trackLength: deck.trackLength || 5,
       /* A typed answer is held back on the projected screen while the room is
          still typing, so the slide has to know whether this is a live room and
          whether this question has been revealed yet. */
       live: !!(SF.Live && SF.Live.active),
-      revealed: !!(SF.Live && SF.Live.revealed && SF.Live.revealed[slide.id])
+      revealed: !!(SF.Live && SF.Live.revealed && SF.Live.revealed[slide.id]) ||
+        ((slide.style === 'conceptchain' || slide.conceptChain) &&
+          Player.answers[slide.id] != null),
+      join: slide.type === 'join'
+        ? ((SF.Live && SF.Live.active && SF.Live.joinInfo && SF.Live.joinInfo()) ||
+           SF.sampleJoinInfo())
+        : null,
+      pairBank: (slide.style === 'memorymatch' || slide.style === 'memoryflip')
+        ? deck.slides.filter(function (s) {
+            return s.type === 'quiz' && s.style === slide.style;
+          }).map(function (s) {
+            return {
+              term: s.term || s.question || '',
+              active: s.id === slide.id
+            };
+          })
+        : null
     });
 
     var old = Player._current;
@@ -145,6 +215,10 @@
     SF.fit(viewport, node);
 
     if (old) {
+      /* Before the transition, not after: the outgoing slide lingers for up to
+         700ms and a soundtrack playing over the next slide is worse than a
+         hard cut. */
+      stopVideo(old);
       old.classList.remove('entering');
       old.classList.add('leaving');
       if (tr !== 'none') old.classList.add('tr-' + tr);
@@ -183,7 +257,10 @@
     /* The rail persists across slides, so its surface has to follow the one
        that just arrived. */
     SF.railSurface(Player._rail, node);
+    syncMedia(slide, node);
+    syncHudRoomButtons();
     Player.emit('slide', { slide: slide, index: Player.idx, node: node });
+    SF.Boards.mount(Player, slide, node);
     /* Host live owns the rail/focus; solo Present still honours the authored
        Beside / Full screen choice with sample responses for rehearsal. */
     syncAuthoredFeedback(slide);
@@ -198,13 +275,87 @@
       var live = Player.lanesProvider();
       if (live && live.length) return live;
     }
-    /* No live field yet: show the declared teams at the starting gate. */
     var teams = (deck.quiz && deck.quiz.teams) || [];
     if (!teams.length) return null;
+    /* Not hosting: the teacher runs the race, so the track is ours to keep.
+       This used to return the teams at position 0 every time it was asked,
+       which drew the starting gate on every question and never moved anyone —
+       a race that could not be run without phones in the room. */
+    if (SF.Race) {
+      var track = SF.Race.forDeck(deck, teams.map(function (t, i) {
+        return { key: 't' + i, name: t.name || t, color: SF.teamColor(i) };
+      }));
+      if (track) return SF.Race.standings(track);
+    }
     return teams.map(function (t, i) {
       return { key: 't' + i, name: t.name || t, color: SF.teamColor(i), pos: 0 };
     });
   }
+
+  /** The fight, when nobody is hosting it for us. */
+  function bossFight(deck) {
+    if (!deck || deck.mechanic !== 'boss' || !SF.Boss) return null;
+    if (Player.lanesProvider) return null;       // a live room owns its own HP
+    var qs = deck.slides.filter(function (s) { return s.type === 'quiz'; });
+    if (!qs.length) return null;
+    var teams = (deck.quiz && deck.quiz.teams) || [];
+    var who = (deck.quiz && deck.quiz.mode === 'teams' && teams.length)
+      ? teams.map(function (t) { return t.name || t; })
+      : ['The class'];
+    var fight = SF.Boss.forDeck(deck, qs, who, qs[0].timeLimit || 0);
+    /* Point it at the question on screen. The slide is the truth; a fight
+       keeping its own count drifts away from it the first time it is used. */
+    var here = deck.slides[Player.idx];
+    if (fight && here && here.type === 'quiz') {
+      SF.Boss.focus(deck, qs.indexOf(here));
+      fight = SF.Boss.forDeck(deck);
+    }
+    return fight;
+  }
+
+  /** What the renderer needs to draw the fight. */
+  function bossView(deck) {
+    var f = bossFight(deck);
+    if (!f) return null;
+    var q = SF.Boss.current(f);
+    return { hp: f.hp, max: f.max, stage: SF.Boss.stage(f),
+      revealed: f.revealed, expired: f.expired, phase: f.phase,
+      marked: SF.Boss.isMarked ? SF.Boss.isMarked(f) : false,
+      turnName: f.participants[SF.Boss.turn(f)] || '',
+      /* Named rather than drawn as an empty question. */
+      gap: q && !q.ready ? 'Q' + (f.index + 1) + ' has no question written yet' : '',
+      verdict: SF.Boss.verdict(f) };
+  }
+
+  Player.bossCommand = function (action) {
+    var deck = this.deck;
+    if (!bossFight(deck)) return;
+    /* Nothing has started until the first question is on screen, so the first
+       press starts the fight as well as doing what it says. */
+    var f = SF.Boss.forDeck(deck);
+    if (f && f.phase === 'ready') SF.Boss.command(deck, 'start');
+    SF.Boss.command(deck, action);
+    renderCurrent(0);
+    /* Marked means done with this one, so the room moves on with the fight —
+       otherwise the teacher marks a question the wall is still showing. */
+    if (action === 'hit' || action === 'miss') {
+      var fight = SF.Boss.forDeck(deck);
+      if (fight && fight.phase !== 'complete') setTimeout(function () { Player.next(); }, 650);
+    }
+  };
+
+  /** Whether the teacher is the one moving the field. */
+  function raceIsOurs(deck) {
+    return !!(deck && deck.mechanic === 'race' && !Player.lanesProvider && SF.Race);
+  }
+
+  /** Move a lane and repaint the question it was moved from. */
+  Player.raceStep = function (key, action) {
+    var deck = this.deck;
+    if (!raceIsOurs(deck)) return;
+    SF.Race.command(deck, action || 'advance', key);
+    renderCurrent(0);
+  };
 
   function relayout() {
     if (!Player.open) return;
@@ -272,15 +423,27 @@
        index to compare, so comparing one would mute the answer instead of
        revealing it. */
     var typed = slide.input === 'text' || slide.input === 'number';
+    var odd = slide.style === 'oddone' || slide.oddoneDiscuss;
     Array.prototype.forEach.call(buttons, function (b) {
       var i = Number(b.dataset.choice);
       b.classList.add('locked');
-      if (typed || i === slide.correct) b.classList.add('correct');
+      if (odd) {
+        if (i === slide.correct) b.classList.add('odd-marked', 'correct');
+        else b.classList.add('muted');
+        var tick = b.querySelector('.tick');
+        if (tick) tick.textContent = i === slide.correct ? 'odd one' : '';
+      } else if (typed || i === slide.correct) b.classList.add('correct');
       else if (i === choice) b.classList.add('wrong');
       else b.classList.add('muted');
     });
     if (typed) {
       revealTypedAnswer(node);
+    }
+    var discuss = node.querySelector('.oddone-discuss, .compare-discuss');
+    if (discuss) discuss.remove();
+    if (slide.style === 'compare' || slide.compareDiscuss) {
+      var panels = node.querySelector('.compare-panels');
+      if (panels) panels.classList.add('on');
     }
     /* Expands the reasoning inside the correct answer's box, if the question
        carries one and the game shows it inline. */
@@ -291,6 +454,9 @@
     }
     var tally = node.querySelector('.tally');
     if (tally && Player._liveTally) tally.classList.add('on');
+    /* The answer is out, so the thinking time is over. Both reveal paths \u2014
+       an answer and the clock running out \u2014 come through here. */
+    stopMusic();
   }
 
   /**
@@ -393,7 +559,11 @@
     /* The question is sized first, because it sets the scale everything else
        is judged against. It is capped by the header's height rather than by a
        line count, so a wordy question shrinks instead of eating the slide. */
-    var q = node.querySelector('.qhead .q');
+    /* Whichever heading is actually on screen. Emoji guess has two in the
+       title row — the instruction, and the hint that replaces it — so sizing
+       the first one blindly fitted a heading nobody could see. */
+    var heads = Array.prototype.slice.call(node.querySelectorAll('.qhead .q'));
+    var q = heads.filter(function (n) { return n.offsetParent !== null; })[0] || heads[0];
     var head = node.querySelector('.qhead');
     var hasMedia = node.classList.contains('has-media');
     var qSize = railed ? 46 : 56;
@@ -492,11 +662,111 @@
     setTimeout(run, 140);
   }
 
+  /* ------------------------------------------------------------ media */
+  /* Playback is here and not in render.js because the only thing that knows a
+     slide has arrived, been blanked, or left is the player. render.js marks
+     intent with data-autoplay and this decides when to honour it \u2014 which is
+     also what keeps the editor's preview silent. */
+
+  var music = null;
+
+  function hush(p) {
+    /* play() rejects when the browser has not seen a gesture yet, and an
+       unhandled rejection in a presentation is a console full of red at the
+       worst moment. Silence is the correct fallback: the controls are there. */
+    if (p && typeof p.catch === 'function') p.catch(function () {});
+  }
+
+  /** The music bed a game asked for, or '' \u2014 see compileGame in model.js. */
+  function musicTrack() {
+    return (Player.deck && Player.deck.music) || '';
+  }
+
+  function playMusic() {
+    var src = musicTrack();
+    if (!src || Player.blank) return;
+    if (!music) {
+      music = document.createElement('audio');
+      music.loop = true;
+      /* In the document rather than detached. A detached element does play,
+         but it is invisible to anything inspecting the page and browsers do
+         not treat it identically under the autoplay policy. */
+      music.hidden = true;
+      music.dataset.role = 'quiz-music';
+      root.appendChild(music);
+      /* A question is 20 seconds and a track is three minutes, so every
+         question would open on the same four bars. Carrying on from where it
+         stopped means the bed moves through the game. */
+      music.preload = 'auto';
+    }
+    if (music.src !== src && music.getAttribute('src') !== src) music.src = src;
+    var vol = Player.deck && Player.deck.musicVolume;
+    music.volume = Math.max(0, Math.min(100, vol == null ? 55 : vol)) / 100;
+    hush(music.play());
+  }
+
+  function stopMusic() {
+    if (music) music.pause();
+  }
+
+  /** Pause any video inside a node, so a slide on its way out goes quiet. */
+  function stopVideo(node) {
+    if (!node) return;
+    Array.prototype.forEach.call(node.querySelectorAll('video'), function (v) {
+      v.pause();
+    });
+  }
+
+  /**
+   * Called once a slide is on screen.
+   *
+   * The music plays under an open question and stops on reveal, so a room
+   * hears the bed exactly while it is thinking. Anything else \u2014 a title, an
+   * explanation, the scoreboard \u2014 is silence.
+   */
+  function syncMedia(slide, node) {
+    if (musicTrack()) {
+      var thinking = slide.type === 'quiz' && Player.answers[slide.id] == null &&
+        !(SF.Live && SF.Live.revealed && SF.Live.revealed[slide.id]);
+      if (thinking) playMusic(); else stopMusic();
+    }
+    var v = node && node.querySelector('video[data-autoplay]');
+    if (!v || Player.blank) return;
+
+    /* Seek first, play second.
+       Calling play() while the file is still at readyState 0 and letting the
+       start offset seek land underneath it does not work: the browser pauses
+       the pending playback, resolves the seek to zero, and the clip opens on
+       the wrong frame. The trace was play(t=0) -> loadedmetadata(t=3) ->
+       seeking(t=3) -> pause -> seeked(t=0). So wait for the seek that
+       layoutVideo asked for, then start. */
+    var start = Number(v.dataset.start) || 0;
+    if (start > 0 && v.currentTime < start - 0.01) {
+      v.addEventListener('seeked', function () {
+        if (!Player.blank) hush(v.play());
+      }, { once: true });
+      /* A file with no seekable range never fires 'seeked', and a slide that
+         silently never starts is worse than one that starts in the wrong
+         place. Play anyway if nothing has happened. */
+      setTimeout(function () {
+        if (v.parentNode && v.paused && !Player.blank) hush(v.play());
+      }, 1400);
+    } else {
+      hush(v.play());
+    }
+  }
+
   function answer(slide, choice) {
     if (Player.answers[slide.id] != null) return;   // one shot
+    if ((slide.style === 'conceptchain' || slide.conceptChain) &&
+        !tryAcceptChain(slide, choice)) return;
     Player.answers[slide.id] = choice;
     stopTimer();
     if (Player._current) paintAnswer(Player._current, slide, choice);
+    /* After Accept, re-render so the grown chain is on the wall. */
+    if ((slide.style === 'conceptchain' || slide.conceptChain) && choice === 0) {
+      renderCurrent(0);
+    }
     updateSolo();
     Player.emit('answer', {
       slide: slide,
@@ -506,14 +776,107 @@
     syncPresenter();
   }
 
+  /** Accept only with a typed link; Reject / skip leave the chain unchanged. */
+  function tryAcceptChain(slide, choice) {
+    if (choice !== 0) {
+      Player.chainPending = '';
+      return true;
+    }
+    var link = String(Player.chainPending || '').trim();
+    if (!link) {
+      SF.toast('Type the proposed link before Accept');
+      return false;
+    }
+    Player.chainLinks = Player.chainLinks || [];
+    Player.chainLinks.push({
+      term: String(slide.term || slide.question || '').trim(),
+      link: link.slice(0, 160)
+    });
+    Player.chainPending = '';
+    return true;
+  }
+
+  Player.chainCommand = function (action, value) {
+    if (action === 'pending') {
+      Player.chainPending = String(value == null ? '' : value).slice(0, 160);
+      syncPresenter();
+      return;
+    }
+    if (action === 'clear') {
+      Player.chainLinks = [];
+      Player.chainPending = '';
+    }
+  };
+
+  Player.tryAcceptChain = tryAcceptChain;
+
   /** Reveal without attributing an answer — used when the clock runs out. */
   function timeUp(slide) {
+    /* A boss question the clock beat is a miss the fight has to record, and
+       it has to happen before the early return below — a revealed answer is
+       exactly the state a timeout leaves behind. */
+    if (bossFight(Player.deck)) {
+      var f = SF.Boss.forDeck(Player.deck);
+      if (f && f.phase === 'asking') {
+        SF.Boss.command(Player.deck, 'expire');
+        renderCurrent(0);
+      }
+    }
+    /* Definition Challenge: the first clock is reading time. Expiry hides the
+       passage and opens the recall question with a fresh clock — it does not
+       reveal the answer. */
+    if (slide && slide.style === 'definition') {
+      var st = definitionState(slide);
+      if (st.phase === 'reading') {
+        Player.definitionStates[slide.id] = SF.definitionTransition(st, 'expire');
+        stopTimer();
+        renderCurrent(0);
+        Player.emit('definitionAsk', { slide: slide });
+        return;
+      }
+    }
+    /* Concept Chain timeout skips — clear the draft, do not grow the chain. */
+    if (slide && (slide.style === 'conceptchain' || slide.conceptChain)) {
+      Player.chainPending = '';
+    }
     if (Player.answers[slide.id] != null) return;
     Player.answers[slide.id] = -1;
     if (Player._current) paintAnswer(Player._current, slide, -1);
     updateSolo();
     Player.emit('timeup', { slide: slide });
   }
+
+  function definitionState(slide) {
+    Player.definitionStates = Player.definitionStates || {};
+    if (!Player.definitionStates[slide.id]) {
+      Player.definitionStates[slide.id] = SF.definitionCreate(slide.timeLimit || 30);
+    }
+    return Player.definitionStates[slide.id];
+  }
+
+  Player.definitionCommand = function (action) {
+    var slide = this.deck && this.deck.slides[this.idx];
+    if (!slide || slide.style !== 'definition') return;
+    var before = definitionState(slide);
+    if (action !== 'ask' && action !== 'expire' && action !== 'restart') return;
+    if (action === 'restart') {
+      this.definitionStates[slide.id] = SF.definitionTransition(before, 'restart');
+      if (this.answers[slide.id] != null) delete this.answers[slide.id];
+      stopTimer();
+      renderCurrent(0);
+      return;
+    }
+    if (before.phase !== 'reading') return;
+    this.definitionStates[slide.id] = SF.definitionTransition(before, action);
+    stopTimer();
+    renderCurrent(0);
+    Player.emit('definitionAsk', { slide: slide });
+  };
+
+  Player.definitionPhase = function (slide) {
+    if (!slide || slide.style !== 'definition') return null;
+    return definitionState(slide).phase;
+  };
 
   Player.answer = function (choice) {
     var s = this.deck.slides[this.idx];
@@ -531,6 +894,7 @@
   function startTimer(node, slide) {
     var clock = node.querySelector('.clock');
     if (!clock) return;
+    if (!SF.questionTimeLimit(slide, SF.Live && SF.Live.active && SF.Live.players.some(function(p){return p.manual;}))) { clock.hidden=true; clock.style.display='none'; return; }
     var ringEl = clock.querySelector('.ring');
     var numEl = clock.querySelector('.n');
     var total = slide.timeLimit;
@@ -743,6 +1107,14 @@
   };
 
   function syncHudRoomButtons() {
+    if(!hud)return;
+    Object.keys(controls).forEach(function(action){var button=hud.querySelector('[data-act='+action+']');if(button)button.disabled=!controlEnabled(action);});
+    var blankButton=hud.querySelector('[data-act=blank]');
+    blankButton.setAttribute('aria-pressed',String(Player.blank));
+    blankButton.setAttribute('aria-label',Player.blank?'Unblank the screen':'Blank the screen');
+    var fullButton=hud.querySelector('[data-act=full]');
+    fullButton.textContent=document.fullscreenElement||document.webkitFullscreenElement?'Leave full screen':'Full screen';
+
     if (!hud) return;
     var railBtn = hud.querySelector('[data-act=rail]');
     var joinBtn = hud.querySelector('[data-act=join]');
@@ -762,7 +1134,40 @@
           : 'Hide the room (S)';
     }
     if (joinBtn) joinBtn.classList.toggle('on', !!(card && card.classList.contains('on')));
-    if (focusBtn) focusBtn.classList.toggle('on', !!Player._focus);
+    if (focusBtn) {
+      focusBtn.classList.toggle('on', !!Player._focus);
+      var kind = (SF.Live && SF.Live.active && SF.Live.expandKind)
+        ? SF.Live.expandKind() : null;
+      var focusLabel;
+      if (Player._focus) {
+        focusLabel = kind === 'responses' ? 'Hide responses'
+          : kind === 'race' ? 'Hide race'
+            : 'Hide leaderboard';
+      } else if (kind === 'responses') {
+        focusLabel = 'Expand responses';
+      } else if (kind === 'race') {
+        focusLabel = 'Show race';
+      } else {
+        /* Default name even before scores exist — hosts look for this. */
+        focusLabel = 'Show leaderboard';
+      }
+      focusBtn.textContent = focusLabel;
+      focusBtn.title = focusLabel + ' (E)';
+      focusBtn.setAttribute('aria-label', focusLabel);
+    }
+
+    /* The next button says which of its jobs it is about to do. Four outcomes
+       shared one label, which is most of the confusion around running a live
+       question. */
+    var nextBtn = hud.querySelector('[data-act=next]');
+    if (nextBtn) {
+      var act = (SF.Live && SF.Live.nextAction) ? SF.Live.nextAction() : 'advance';
+      var label = (SF.Live && SF.Live.NEXT_LABEL && SF.Live.NEXT_LABEL[act]) || 'Next slide';
+      nextBtn.title = label + ' (\u2192 or space)';
+      nextBtn.setAttribute('aria-label', label);
+      nextBtn.classList.toggle('will-reveal', act === 'reveal');
+      nextBtn.classList.toggle('will-hold', act === 'hold');
+    }
   }
   Player.syncHudRoomButtons = syncHudRoomButtons;
 
@@ -998,6 +1403,7 @@
 
   /** counts: array of per-option answer counts (live audience mode). */
   Player.setTally = function (counts, progress) {
+    syncHudRoomButtons();
     this._liveTally = counts;
     this._liveProgress = progress || null;
     if (this._current) applyTally(this._current, counts, this._liveProgress);
@@ -1093,12 +1499,12 @@
   function applyTally(node, counts, progress) {
     /* A typed question has no per-option bars — the only live number that
        means anything before the reveal is how many have answered. */
+    var said = progress && progress.total
+      ? progress.answered + ' of ' + progress.total + ' answered' : '';
     var typedCount = node.querySelector('.typedcount');
-    if (typedCount && progress) {
-      typedCount.textContent = progress.total
-        ? progress.answered + ' of ' + progress.total + ' answered'
-        : '';
-    }
+    if (typedCount && progress) typedCount.textContent = said;
+    var answered = node.querySelector('.answered-count');
+    if (answered) answered.textContent = said;
     var tally = node.querySelector('.tally');
     if (!tally) return;
     tally.classList.add('on');
@@ -1119,10 +1525,19 @@
     pad.appendChild(el('h2', null, title || 'Leaderboard'));
     var top = players.slice().sort(function (a, b) { return b.score - a.score; }).slice(0, 6);
     if (!top.length) pad.appendChild(el('div', 'none', 'No players yet'));
+    /* Shared places for equal scores — 1, 1, 3 — so a tie is visible. */
+    var places = [];
     top.forEach(function (p, i) {
-      var row = el('div', 'lb-row' + (i === 0 ? ' top1' : ''));
-      row.appendChild(el('div', 'rank', String(i + 1)));
-      row.appendChild(el('div', 'who', p.name));
+      if (i === 0) places.push(1);
+      else if (p.score === top[i - 1].score) places.push(places[i - 1]);
+      else places.push(i + 1);
+    });
+    top.forEach(function (p, i) {
+      var tied = (i > 0 && p.score === top[i - 1].score) ||
+        (i < top.length - 1 && p.score === top[i + 1].score);
+      var row = el('div', 'lb-row' + (places[i] === 1 ? ' top1' : '') + (tied ? ' tied' : ''));
+      row.appendChild(el('div', 'rank', String(places[i])));
+      row.appendChild(el('div', 'who', p.name + (tied ? ' · tied' : '')));
       row.appendChild(el('div', 'pts', String(p.score)));
       pad.appendChild(row);
     });
@@ -1207,6 +1622,56 @@
     SF.fit(viewport, node);
   };
 
+  Player.showBossBar = function (opts) {
+    if (!this.open || !SF.bossBar) return;
+    var node = SF.bossBar(this.deck, opts || {});
+    node.classList.add('entering', 'tr-fade');
+    node.dataset.overlay = '1';
+    var prev = viewport.querySelector('[data-overlay]');
+    if (prev) prev.remove();
+    viewport.appendChild(node);
+    SF.fit(viewport, node);
+  };
+
+  Player.showWordReveal = function (opts) {
+    if (!this.open || !SF.wordRevealWall) return;
+    var node = SF.wordRevealWall(this.deck, opts || {});
+    node.classList.add('entering', 'tr-fade');
+    node.dataset.overlay = '1';
+    var prev = viewport.querySelector('[data-overlay]');
+    if (prev) prev.remove();
+    viewport.appendChild(node);
+    SF.fit(viewport, node);
+  };
+
+  Player.showStudyCards = function (opts) {
+    if (!this.open || !SF.studyCards) return;
+    var self = this;
+    var o = opts || {};
+    var showDef = !o.hideAfter;
+    var paint = function (def) {
+      var node = SF.studyCards(self.deck, {
+        term: o.term,
+        definition: def,
+        seconds: o.seconds,
+        hideAfter: o.hideAfter
+      });
+      node.classList.add('entering', 'tr-fade');
+      node.dataset.overlay = '1';
+      var prev = viewport.querySelector('[data-overlay]');
+      if (prev) prev.remove();
+      viewport.appendChild(node);
+      SF.fit(viewport, node);
+    };
+    paint(showDef ? o.definition : o.definition);
+    if (o.hideAfter && o.seconds > 0) {
+      setTimeout(function () {
+        if (!self.open) return;
+        paint('');
+      }, o.seconds * 1000);
+    }
+  };
+
   /* ------------------------------------------------------------ navigation */
 
   Player.goTo = function (i, dir) {
@@ -1226,19 +1691,56 @@
   Player.gate = null;
 
   Player.next = function () {
+    if (SF.Teaching && SF.Teaching.next()) return;
+    var cur = this.deck && this.deck.slides[this.idx];
+    /* Solo Present: Next asks the recall question. Host live uses the gate
+       so the reading grace still applies. */
+    if (cur && cur.style === 'definition' && this.definitionPhase &&
+        this.definitionPhase(cur) === 'reading' && this.answers[cur.id] == null &&
+        !(SF.Live && SF.Live.active)) {
+      this.definitionCommand('ask');
+      return;
+    }
+    /* Solo Present: Odd One Out / Compare reveal prepared points before advancing. */
+    if (cur && (cur.style === 'oddone' || cur.oddoneDiscuss ||
+        cur.style === 'compare' || cur.compareDiscuss) &&
+        this.answers[cur.id] == null && !(SF.Live && SF.Live.active)) {
+      this.answers[cur.id] = -1;
+      if (this._current) paintAnswer(this._current, cur, -1);
+      this.syncPresenter && this.syncPresenter();
+      return;
+    }
     if (this.gate && this.gate(this.deck.slides[this.idx], this.idx)) return;
     if (this.idx >= this.deck.slides.length - 1) { flashEnd(); return; }
     this.goTo(this.idx + 1, 1);
   };
-  Player.prev = function () { this.goTo(this.idx - 1, -1); };
+  Player.prev = function () { if (SF.Teaching && SF.Teaching.prev()) return; this.goTo(this.idx - 1, -1); };
 
   function flashEnd() {
     toast('End of deck — Esc to exit');
   }
 
+  /* For the live reveal, which paints the projected slide itself rather than
+     going through paintAnswer \u2014 see revealNow in js/live.js. */
+  Player.stopMusic = stopMusic;
+
   Player.toggleBlank = function () {
     this.blank = !this.blank;
     root.classList.toggle('blank', this.blank);
+    syncHudRoomButtons();
+    /* B is how a teacher takes the room's attention off the screen, and a
+       soundtrack playing to a black projector defeats that.
+       Coming back splits by who started it: the bed and a clip marked "play
+       when the slide appears" resume, because the author asked for them and
+       the slide is appearing again; a clip the presenter started by hand
+       stays paused, because nothing asked for it to restart. */
+    if (this.blank) {
+      stopVideo(this._current);
+      stopMusic();
+    } else {
+      var s = this.deck && this.deck.slides[this.idx];
+      if (s) syncMedia(s, this._current);
+    }
   };
 
   Player.toggleFullscreen = function () {
@@ -1256,6 +1758,15 @@
   Player.start = function (deck, startIndex, opts) {
     opts = opts || {};
     if (!root) build();
+    if (SF.Demo) SF.Demo.detach();
+    SF.Boards.reset(this);
+    /* A new presentation is a new race. Without this the field came back from
+       the last run of the same deck already halfway home. */
+    if (SF.Race) SF.Race.clear();
+    if (SF.Boss) SF.Boss.clear();
+    this.definitionStates = {};
+    this.chainLinks = [];
+    this.chainPending = '';
     this.deck = deck;
     this.idx = Math.max(0, Math.min(deck.slides.length - 1, startIndex || 0));
     this.open = true;
@@ -1280,12 +1791,18 @@
     showHud();
     if (opts.fullscreen !== false) this.toggleFullscreen();
     this.emit('open', { deck: deck });
+    if (opts.demo && SF.Demo) SF.Demo.attach(this, { mode: opts.demoMode || 'class' });
   };
 
   Player.close = function () {
     if (!this.open) return;
+    if (SF.Demo) SF.Demo.detach();
+    SF.Boards.unmountAll();
     stopTimer();
+    stopVideo(this._current);
+    stopMusic();
     this.open = false;
+    clearTimeout(hudTimer);hud.classList.remove('show');document.getElementById('hudMore').hidden=true;hud.querySelector('[data-act=more]').setAttribute('aria-expanded','false');
     root.classList.remove('on');
     cheats.classList.remove('on');
     viewport.innerHTML = '';
@@ -1306,10 +1823,12 @@
   /* ------------------------------------------------------------ presenter view */
 
   var presenterWin = null;
-  var CHAN = 'slideforge.presenter';
+  var requestedPresenterPanel = null;
+  Player.hasPresenter = function(){return !!(presenterWin && !presenterWin.closed);};
 
-  Player.openPresenter = function () {
-    if (presenterWin && !presenterWin.closed) { presenterWin.focus(); return; }
+  Player.openPresenter = function (panel) {
+    if(typeof panel==='string') requestedPresenterPanel=panel;
+    if (presenterWin && !presenterWin.closed) { presenterWin.focus(); syncPresenter(); return; }
     presenterWin = window.open('presenter.html', 'sf_presenter',
       'width=1100,height=680,menubar=no,toolbar=no');
     if (!presenterWin) { toast('Presenter view was blocked — allow pop-ups for this page'); return; }
@@ -1332,9 +1851,16 @@
     try {
       presenterWin.postMessage({
         type: 'sf-presenter-state',
+        teacherUrl: SF.Live && SF.Live.teacherWorkspaceUrl ? SF.Live.teacherWorkspaceUrl() : null,
+        requestedPanel: requestedPresenterPanel,
+        moment: Player.lessonMoment ? Player.lessonMoment() : null,
+        roomPulse: SF.Live && SF.Live.presenterPulse ? SF.Live.presenterPulse() : null,
         deck: deck,
         index: Player.idx,
         answers: Player.answers,
+        ...SF.Boards.snapshot(Player),
+        chainLinks: Player.chainLinks || [],
+        chainPending: Player.chainPending || '',
         startedAt: Player.started,
         /* Pending questions travel to presenter view and nowhere else: the
            host's own screen is usually the projected one. */
@@ -1343,11 +1869,17 @@
            spike; the detail is for whoever is teaching. */
         pace: Player.pace || null,
         confidence: Player.confidence || null,
+        /* What the next press will do, so the private screen can say it in
+           words rather than a tooltip nobody hovers mid-lesson. */
+        nextAction: (SF.Live && SF.Live.nextAction) ? SF.Live.nextAction() : 'advance',
         /* "3 unanswered", "12 waiting" — the cues that tell the host whether
            to wait or move on. Only meaningful live, null otherwise. */
         progress: Player._liveProgress || null,
+        revealStep: Player.revealStep || 0,
+        effectiveTimeLimit: SF.questionTimeLimit(deck.slides[Player.idx], SF.Live && SF.Live.active && SF.Live.players.some(function(p){return p.manual;})),
         waiting: Player.waiting || 0
-      }, '*');
+      }, location.origin);
+      requestedPresenterPanel=null;
     } catch (e) { /* window closing */ }
   }
 
@@ -1355,13 +1887,15 @@
 
   window.addEventListener('message', function (ev) {
     var d = ev.data;
-    if (!d || d.type !== 'sf-presenter-cmd') return;
+    if (ev.source!==presenterWin || ev.origin!==location.origin || !d || d.type !== 'sf-presenter-cmd') return;
     if (d.cmd === 'next') Player.next();
     else if (d.cmd === 'prev') Player.prev();
     else if (d.cmd === 'goto') Player.goTo(d.index);
     else if (d.cmd === 'blank') Player.toggleBlank();
     else if (d.cmd === 'exit') Player.close();
     else if (d.cmd === 'hello') syncPresenter();
+    else if (SF.Boards.command(d.cmd, d.action, d.card)) {}
+    else if (d.cmd === 'moment' && Player.momentCommand) Player.momentCommand(d);
     else if (d.cmd === 'qa') Player.emit('qaCommand', d);
   });
 
@@ -1370,6 +1904,9 @@
   document.addEventListener('keydown', function (e) {
     if (!Player.open) return;
     var k = e.key;
+    if(e.target.closest('input,textarea,select,[contenteditable=true]') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if(e.target.closest('button,a') && (k==='Enter'||k===' ')) return;
+    if(k==='Escape' && !document.getElementById('hudMore').hidden){e.preventDefault();document.getElementById('hudMore').hidden=true;hud.querySelector('[data-act=more]').setAttribute('aria-expanded','false');return;}
 
     if (cheats.classList.contains('on') && k !== '?' && k !== '/') {
       cheats.classList.remove('on');
@@ -1381,7 +1918,7 @@
        answering is what you actually want mid-question. Once the answer is in,
        those keys go back to their normal jobs. */
     var live = Player.deck.slides[Player.idx];
-    if (live && live.type === 'quiz' && Player.answers[live.id] == null && /^[a-f]$/i.test(k)) {
+    if (!(SF.Live && SF.Live.active) && live && live.type === 'quiz' && Player.answers[live.id] == null && /^[a-f]$/i.test(k)) {
       var pick = SF.LETTERS.indexOf(k.toUpperCase());
       if (pick > -1 && pick < live.options.length) {
         e.preventDefault();
@@ -1409,30 +1946,40 @@
           Player.close();
         }
         break;
-      case 'b': case 'B': case '.': e.preventDefault(); Player.toggleBlank(); break;
-      case 'f': case 'F': e.preventDefault(); Player.toggleFullscreen(); break;
+      case 'b': case 'B': case '.': e.preventDefault(); Player.control('blank'); break;
+      case 'f': case 'F': e.preventDefault(); Player.control('full'); break;
       case 'r': case 'R': e.preventDefault(); Player.resetScores(); break;
-      case 'd': case 'D': e.preventDefault(); Player.openPresenter(); break;
+      case 'd': case 'D': e.preventDefault(); Player.control('presenter'); break;
       case 'e': case 'E':
         e.preventDefault();
-        if (SF.Live && SF.Live.active) Player.emit('focusToggle', {});
-        else toggleSoloFeedback({});
+        Player.control('focus');
         break;
       case 's': case 'S':
         e.preventDefault();
-        Player.toggleRoomSidebar();
+        Player.control('rail');
         break;
       case 'j': case 'J':
         e.preventDefault();
-        if (SF.Live && SF.Live.active) Player.emit('joinToggle', {});
-        else SF.toast('Host live to show the join QR and PIN');
+        Player.control('join');
         break;
       /* T for thumbs. A live control rather than a setting, because switching
          reactions off matters in the moment they are being abused. */
       case 't': case 'T': e.preventDefault(); Player.emit('reactionsToggle', {}); break;
+      case 'w': case 'W': e.preventDefault(); Player.control('who'); break;
+      /* I opens the pen, not P — P is already Previous, and a pen that also
+         went back a slide would be found the hard way. X clears the ink,
+         which is the one thing that has to work without looking. */
+      case 'i': case 'I':
+        e.preventDefault();
+        Player.control('ink');
+        break;
+      case 'x': case 'X':
+        e.preventDefault();
+        if (SF.Teaching) SF.Teaching.clear();
+        break;
       case '?': case '/': e.preventDefault(); cheats.classList.toggle('on'); break;
       default:
-        if (/^[1-6]$/.test(k)) { e.preventDefault(); Player.answer(Number(k) - 1); }
+        if (!(SF.Live && SF.Live.active) && /^[1-6]$/.test(k)) { e.preventDefault(); Player.answer(Number(k) - 1); }
     }
     showHud();
   });

@@ -1,0 +1,22 @@
+[
+  {
+    "term": "Mitochondrion",
+    "question": "Mitochondrion",
+    "definition": "Where respiration releases energy"
+  },
+  {
+    "term": "Nucleus",
+    "question": "Nucleus",
+    "definition": "Contains the genetic instructions for the cell"
+  },
+  {
+    "term": "Cell membrane",
+    "question": "Cell membrane",
+    "definition": "Controls what enters and leaves the cell"
+  },
+  {
+    "term": "Chloroplast",
+    "question": "Chloroplast",
+    "definition": "Contains chlorophyll and absorbs light for photosynthesis"
+  }
+]

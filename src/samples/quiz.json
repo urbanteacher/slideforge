@@ -1,0 +1,44 @@
+[
+  {
+    "question": "What aspect ratio is a modern widescreen slide?",
+    "options": [
+      "4:3",
+      "16:9",
+      "1:1",
+      "21:9"
+    ],
+    "correct": 1,
+    "timeLimit": 20,
+    "points": null,
+    "image": "",
+    "notes": ""
+  },
+  {
+    "question": "Which key blanks the screen mid-presentation?",
+    "options": [
+      "B",
+      "Q",
+      "X",
+      "M"
+    ],
+    "correct": 0,
+    "timeLimit": 15,
+    "points": null,
+    "image": "",
+    "notes": ""
+  },
+  {
+    "question": "How many teams can a SlideForge game have?",
+    "options": [
+      "Two",
+      "Four",
+      "Six",
+      "Unlimited"
+    ],
+    "correct": 2,
+    "timeLimit": 15,
+    "points": null,
+    "image": "",
+    "notes": ""
+  }
+]

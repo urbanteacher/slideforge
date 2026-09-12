@@ -5,15 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Presenter view — SlideForge</title>
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/board-common.css">
+<link rel="stylesheet" href="css/memory.css">
+<link rel="stylesheet" href="css/bingo.css">
+<link rel="stylesheet" href="css/bowl.css">
+<link rel="stylesheet" href="css/lowstakes.css">
 <link rel="stylesheet" href="css/studio.css">
 <style>
   body { overflow: hidden; }
   .pv {
     display: grid;
-    grid-template-columns: 1.55fr 1fr;
-    grid-template-rows: auto 1fr auto;
-    grid-template-areas: 'bar bar' 'now side' 'foot foot';
-    height: 100vh; gap: 14px; padding: 14px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto minmax(280px, 1fr) auto;
+    grid-template-areas: 'bar' 'now' 'side' 'foot';
+    height: 100vh; gap: 12px; padding: 14px;
+    overflow: hidden;
   }
   .pv-bar {
     grid-area: bar; display: flex; align-items: center; gap: 14px;
@@ -22,8 +28,10 @@
   .pv-bar .wall { color: var(--ui-dim); font-size: 14px; font-variant-numeric: tabular-nums; }
   .pv-bar .pos { color: var(--ui-dim); font-size: 14px; font-variant-numeric: tabular-nums; }
 
+  /* Slides on top; teaching desk underneath so Live answers / results are not
+     squeezed into a right column over the preview. */
   .now { grid-area: now; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
-  .side { grid-area: side; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  .side { grid-area: side; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: hidden; }
   .cap { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ui-dim); }
 
   /* The cues the roadmap asked for: how many are waiting, how many have not
@@ -46,6 +54,7 @@
   .box {
     position: relative; aspect-ratio: 16/9; background: #000;
     border-radius: 8px; overflow: hidden; border: 1px solid var(--ui-line);
+    width: min(100%, 920px); max-height: 46vh; margin: 0 auto;
   }
   .box .slide { transform-origin: 0 0; }
   .box.empty::after {
@@ -120,24 +129,34 @@
   .qa .qempty { font-size: 12px; color: var(--ui-dim); font-style: italic; padding: 4px 2px; }
   #qaCount { color: var(--ui-warn); font-weight: 700; }
 
-  /* a presenter window dragged narrow (or a portrait second screen) gets a
-     single column rather than two cramped ones */
+  /* a narrow second screen keeps the same stack; foot stays reachable */
   @media (max-width: 900px) {
     .pv {
-      grid-template-columns: 1fr;
-      grid-template-areas: 'bar' 'now' 'side' 'foot';
-      grid-template-rows: auto auto 1fr auto;
+      grid-template-rows: auto auto minmax(240px, 1fr) auto;
       overflow-y: auto;
     }
+    .box { max-height: 38vh; width: 100%; }
   }
+
+  /* Marked when Next is about to do something other than move on. */
+  .pv-foot .btn.will-reveal { background:#1d6b45; border-color:#1d6b45; color:#fff; }
+  .pv-foot .btn.will-hold { background:#7a5a12; border-color:#7a5a12; color:#fff; }
 </style>
+<link rel="stylesheet" href="css/customize.css">
+<link rel="stylesheet" href="css/presenter.css">
+<link rel="stylesheet" href="css/lesson-moments.css">
+<link rel="stylesheet" href="css/game-polish.css?v=1">
 </head>
 <body>
 
-<div class="waiting" id="waiting">Waiting for the slideshow…</div>
+<div class="waiting" id="waiting">
+  <div id="waitTitle">Waiting for the slideshow…</div>
+  <div id="waitHint" style="margin-top:14px;font-size:14px;opacity:.75;max-width:28em;line-height:1.45"></div>
+</div>
 
 <div class="pv" id="pv" style="display:none">
   <div class="pv-bar">
+    <div class="pv-identity"><strong>Teaching desk</strong><span>Private presenter workspace</span></div>
     <div class="clock" id="elapsed">0:00</div>
     <div class="wall" id="wall">—</div>
     <div class="spacer" style="flex:1"></div>
@@ -151,33 +170,72 @@
   </div>
 
   <div class="side">
-    <div class="cap">Coming up next</div>
-    <div class="box" id="boxNext"></div>
-    <div class="cap">Notes</div>
-    <div class="notes" id="notes"></div>
-    <div id="quizinfo"></div>
-
+    <nav class="desk-tabs" aria-label="Presenter workspace">
+      <button class="btn" data-panel="quick" aria-pressed="false">Quick actions</button>
+      <button class="btn" data-panel="pulse" aria-pressed="false">Room activity</button>
+      <button class="btn" data-panel="slides" aria-pressed="true">Slide notes</button>
+      <button class="btn" data-panel="mark" aria-pressed="false">Live answers</button>
+      <button class="btn" data-panel="roster" aria-pressed="false">Classroom</button>
+      <button class="btn" data-panel="questions" aria-pressed="false">Insights</button>
+      <button class="btn" data-panel="tools" aria-pressed="false">Toolkit &amp; notes</button>
+      <button class="btn" data-panel="qa" aria-pressed="false">Q&amp;A <span id="qaBadge"></span></button>
+    </nav>
     <div class="cap" id="cueCap" style="display:none">How the room is doing</div>
     <div class="cues" id="cues" style="display:none"></div>
-
-    <div class="cap" id="qaCap" style="display:none">
-      Questions from the room <span id="qaCount"></span>
+    <section id="quickPane" class="desk-pane" hidden>
+      <div class="quick-card"><span class="cap">IN THE MOMENT</span><h2>Set the room a task</h2><p>Show instructions above the current slide. The saved deck stays as it is.</p>
+      <label for="quickTask">Task or activity</label><textarea id="quickTask" maxlength="400" rows="3" placeholder="With a partner, find an example and explain why it works…"></textarea>
+      <label for="quickDuration">Thinking time</label><select id="quickDuration"><option value="0">No countdown</option><option value="30">30 seconds</option><option value="60">1 minute</option><option value="120" selected>2 minutes</option><option value="300">5 minutes</option><option value="600">10 minutes</option></select>
+      <div class="quick-actions"><button class="btn primary" id="showTask">Show task on screen</button><button class="btn" id="showCountdown">Countdown above slide</button><button class="btn" id="showBreak">5-minute break screen</button></div><p id="momentGuard" role="status"></p></div>
+      <div class="quick-card"><h3>On the audience screen</h3><p id="momentTitle">No spontaneous activity is showing.</p><output id="momentTime">—</output><div class="quick-actions"><button class="btn" id="pauseMoment" disabled>Pause</button><button class="btn" id="extendMoment" disabled>+1 minute</button><button class="btn" id="clearMoment" disabled>Remove from screen</button></div><p>Activities stay visible until removed or a new live quiz starts. Time ending does not advance the lesson.</p></div>
+      <div class="quick-card"><h3>Music for an activity</h3><p>Choose an audio file from your computer. Playback comes from this device; check its volume before starting.</p><label for="activityMusic">Choose music</label><input id="activityMusic" type="file" accept="audio/*"><audio id="activityAudio" controls loop hidden></audio><p id="musicStatus" role="status">No music selected.</p></div>
+      <div class="quick-card"><h3>Need a different teaching move?</h3><div class="quick-actions"><button class="btn" data-panel="tools">Pick a name or jot a note</button><button class="btn" data-panel="qa">Take a question from the room</button></div><p>Try a silent think, a partner explanation, a stretch break, or a quick “what is still unclear?” discussion.</p></div>
+    </section>
+    <section id="pulsePane" class="desk-pane" hidden>
+      <div class="quick-card"><span class="cap">THIS SLIDE · LIVE</span><h2>Hear from the room</h2><div id="roomActivity"></div><p>Reactions are live taps, not a measure of understanding. Bookmark counts are anonymous and reflect this room.</p></div>
+      <div class="quick-card"><h3>Responses to the slide activity</h3><div id="slideFeedback"></div></div>
+    </section>
+    <section id="slidePane" class="desk-pane">
+      <div class="cap">Coming up next</div>
+      <div class="box" id="boxNext"></div>
+      <div class="cap">Speaker notes · this slide</div>
+      <div class="notes" id="notes"></div>
+      <div id="quizinfo"></div>
+    </section>
+    <div id="insightViews" class="desk-tabs" hidden>
+      <button class="btn" data-insight="questions" aria-pressed="true">By question</button>
+      <button class="btn" data-insight="overview" aria-pressed="false">By learner</button>
     </div>
-    <div class="qa" id="qa" style="display:none"></div>
+    <iframe id="teacherWorkspace" title="Private classroom controls and teaching toolkit" src="about:blank" hidden></iframe>
+    <section id="qaPane" class="desk-pane" hidden>
+      <div class="cap" id="qaCap" style="display:none">Questions from the room <span id="qaCount"></span></div>
+      <p class="desk-hint">Approve questions for the room or choose Show on screen to project one.</p>
+      <div class="qa" id="qa" style="display:none"></div>
+      <p id="qaUnavailable" class="desk-hint">Host a live lesson to receive questions from learners.</p>
+    </section>
   </div>
 
   <div class="pv-foot">
     <button class="btn" data-cmd="prev">‹ Previous</button>
     <button class="btn primary" data-cmd="next">Next ›</button>
     <button class="btn" data-cmd="blank">Blank</button>
+    <button class="btn" data-cmd="who" aria-pressed="false" aria-controls="teacherWorkspace"
+            title="Open live responses and teacher entry here (W)">Live answers</button>
     <div class="spacer"></div>
-    <button class="btn" id="resetTimer">Reset timer</button>
+    <button class="btn" id="resetTimer">Reset elapsed time</button>
     <button class="btn" data-cmd="exit">End show</button>
   </div>
 </div>
 
 <script src="js/model.js"></script>
+<script src="js/customize.js"></script>
 <script src="js/render.js"></script>
+<script src="js/memory.js"></script>
+<script src="js/bingo.js"></script>
+<script src="js/bowl.js"></script>
+<script src="js/lowstakes.js"></script>
+<script src="js/lesson-moments.js"></script>
+<script src="js/presenter-live.js"></script>
 <script>
 (function () {
   'use strict';
@@ -190,11 +248,15 @@
 
   function cmd(c, extra) {
     var msg = Object.assign({ type: 'sf-presenter-cmd', cmd: c }, extra || {});
-    if (window.opener && !window.opener.closed) window.opener.postMessage(msg, '*');
+    if (window.opener && !window.opener.closed) window.opener.postMessage(msg, location.origin);
   }
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-cmd]'), function (b) {
-    b.onclick = function () { cmd(b.dataset.cmd); };
+    /* Named answers is the one control that acts on this window rather than
+       on the show — sending it to the opener would put it on the wall. */
+    b.onclick = b.dataset.cmd === 'who'
+      ? function () { toggleNamed(); }
+      : function () { cmd(b.dataset.cmd); };
   });
   $('resetTimer').onclick = function () { timerBase = Date.now(); };
 
@@ -204,11 +266,50 @@
 
   function qaCmd(id, action) {
     if (window.opener && !window.opener.closed) {
-      window.opener.postMessage({ type: 'sf-presenter-cmd', cmd: 'qa', id: id, action: action }, '*');
+      window.opener.postMessage({ type: 'sf-presenter-cmd', cmd: 'qa', id: id, action: action }, location.origin);
     }
   }
 
   var paceState = null, confidenceState = null, progressState = null, waitingState = 0;
+  var activePanel='slides', insightView='questions';
+  var namedOpen=false;
+  function syncTeacherView(){
+    if(!['mark','roster','questions','tools'].includes(activePanel))return;
+    $('teacherWorkspace').contentWindow.postMessage({type:'sf-teacher-view',view:activePanel==='questions'?insightView:activePanel},location.origin);
+  }
+  function selectPanel(panel){
+    if(!['slides','mark','roster','questions','tools','qa','quick','pulse'].includes(panel))return;
+    activePanel=panel;namedOpen=panel==='mark';
+    document.querySelectorAll('[data-panel]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.panel===panel));});
+    $('quickPane').hidden=panel!=='quick';$('pulsePane').hidden=panel!=='pulse';
+    $('slidePane').hidden=panel!=='slides';$('qaPane').hidden=panel!=='qa';
+    $('teacherWorkspace').hidden=!['mark','roster','questions','tools'].includes(panel);
+    $('insightViews').hidden=panel!=='questions';
+    document.querySelector('[data-cmd=who]').setAttribute('aria-pressed',String(namedOpen));
+    syncTeacherView();
+    if(state&&panel==='slides')requestAnimationFrame(function(){var n=$('boxNext').querySelector('.slide');if(n)SF.fit($('boxNext'),n);});
+  }
+  document.querySelectorAll('[data-panel]').forEach(function(b){b.onclick=function(){selectPanel(b.dataset.panel);};});
+  document.querySelectorAll('[data-insight]').forEach(function(b){b.onclick=function(){insightView=b.dataset.insight;document.querySelectorAll('[data-insight]').forEach(function(n){n.setAttribute('aria-pressed',String(n===b));});syncTeacherView();};});
+  $('teacherWorkspace').onload=syncTeacherView;
+
+  function toggleNamed(){selectPanel(namedOpen?'slides':'mark');}
+
+  /* Next does four things on a live question. Here there is room to say which,
+     so it says it rather than hiding it in a tooltip. */
+  var NEXT_LABEL = { reveal: 'Show the answer \u203a', hold: 'Move on, no answer \u203a', advance: 'Next \u203a' };
+  function drawNextLabel(action) {
+    var b = document.querySelector('[data-cmd=next]');
+    if (!b) return;
+    b.textContent = NEXT_LABEL[action] || NEXT_LABEL.advance;
+    b.classList.toggle('will-reveal', action === 'reveal');
+    b.classList.toggle('will-hold', action === 'hold');
+  }
+  window.addEventListener('message', function (ev) {
+    var d = ev.data;
+    if (ev.source!==window.opener || ev.origin!==location.origin) return;
+    if (d && d.type === 'sf-presenter-cmd' && d.cmd === 'who') toggleNamed();
+  });
 
   var PACE_LABEL = { lost: 'lost', fast: 'say too fast', slow: 'say too slow' };
 
@@ -220,7 +321,8 @@
        the room another ten seconds and moving on over the top of them. */
     if (progressState && progressState.total) {
       var left = progressState.total - progressState.answered;
-      if (left > 0) rows.push({ n: left, label: 'still answering', cls: '' });
+      rows.push({n:progressState.answered+' / '+progressState.total,label:'answered',cls:''});
+      if (left > 0) rows.push({ n: left, label: 'not yet answered', cls: '' });
     }
     if (waitingState > 0) rows.push({ n: waitingState, label: 'waiting to join', cls: 'hot' });
 
@@ -329,22 +431,33 @@
 
   window.addEventListener('message', function (ev) {
     var d = ev.data;
-    if (!d || d.type !== 'sf-presenter-state') return;
+    if (ev.source!==window.opener || ev.origin!==location.origin || !d || d.type !== 'sf-presenter-state') return;
+    if(d.teacherUrl && $('teacherWorkspace').getAttribute('src')!==d.teacherUrl) $('teacherWorkspace').src=d.teacherUrl;
+    if(d.requestedPanel)selectPanel(d.requestedPanel);
     qaState = d.qa || null;
+    $('qaBadge').textContent=qaState&&qaState.pending?'('+qaState.pending+')':'';
+    $('qaUnavailable').hidden=!!qaState;
     paceState = d.pace || null;
     confidenceState = d.confidence || null;
     progressState = d.progress || null;
     waitingState = d.waiting || 0;
     drawQA();
     drawCues();
-    state = { deck: SF.normalizeDeck(d.deck), index: d.index, answers: d.answers || {} };
+    state = { deck: SF.normalizeDeck(d.deck), index: d.index, answers: d.answers || {}, ...SF.Boards.snapshot(d), revealStep:d.revealStep || 0, effectiveTimeLimit:d.effectiveTimeLimit };
+
+    drawNextLabel(d.nextAction);
     if (timerBase == null) timerBase = d.startedAt || Date.now();
     $('waiting').style.display = 'none';
     $('pv').style.display = 'grid';
     draw();
+    if(SF.PresenterLive)SF.PresenterLive.update(d);
   });
 
   document.addEventListener('keydown', function (e) {
+    if(e.metaKey||e.ctrlKey||e.altKey)return;
+    if(e.target.closest('input,textarea,select,[contenteditable=true]')) return;
+    if(e.target.closest('button,a') && (e.key===' '||e.key==='Enter')) return;
+    if (e.key === 'w' || e.key === 'W') { e.preventDefault(); toggleNamed(); return; }
     if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); cmd('next'); }
     else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); cmd('prev'); }
     else if (e.key === 'b' || e.key === 'B') { e.preventDefault(); cmd('blank'); }
@@ -352,15 +465,26 @@
   });
 
   function into(box, slide, index) {
+    var board = SF.Boards.current(state, slide);
+    var stamp = SF.Boards.stamp(state, slide, state.deck.theme);
+    if (stamp && box._boardStamp === stamp && SF.Boards.refreshClock(box, state, slide)) {
+      return; // Clock ticks must not replace a focused teacher control.
+    }
+    var restoreMemoryFocus = !!(board && box.contains(document.activeElement));
+    box._boardStamp = stamp;
     box.innerHTML = '';
     box.classList.toggle('empty', !slide);
     if (!slide) return;
     var node = SF.renderSlide(state.deck, slide, {
       index: index, total: state.deck.slides.length, interactive: false,
       quizNumber: quizNum(index),
+      ...SF.Boards.renderOptions(state, slide, index === state.index ? cmd : null),
       marks: slide.type === 'results' ? marks() : null
     });
     box.appendChild(node);
+    if (restoreMemoryFocus) {
+      SF.Boards.restoreFocus(node, slide);
+    }
     requestAnimationFrame(function () { SF.fit(box, node); });
   }
 
@@ -386,7 +510,7 @@
 
     into($('boxNow'), s, i);
     into($('boxNext'), deck.slides[i + 1], i + 1);
-    $('pos').textContent = 'Slide ' + (i + 1) + ' of ' + deck.slides.length;
+    $('pos').textContent = 'Slide ' + (i + 1) + ' of ' + deck.slides.length + (s.progressive ? ' · ' + state.revealStep + ' points revealed' : '');
 
     var n = (s && s.notes || '').trim();
     $('notes').textContent = n || 'No notes on this slide.';
@@ -397,12 +521,12 @@
     if (s && s.type === 'quiz') {
       var box = document.createElement('div');
       box.className = 'quizinfo';
-      var correct = (s.options[s.correct] || '').trim();
+      var correct = SF.correctAnswerLabel(s);
       box.innerHTML =
         '<div class="row"><span>Correct answer</span>' +
-        '<span class="ans">' + escapeHtml((SF.LETTERS[s.correct] || '?') + ' — ' + correct) + '</span></div>' +
+        '<span class="ans">' + escapeHtml(correct) + '</span></div>' +
         '<div class="row"><span>Countdown</span><span>' +
-        (s.timeLimit ? s.timeLimit + 's' : 'none') + '</span></div>';
+        ((state.effectiveTimeLimit == null ? s.timeLimit : state.effectiveTimeLimit) ? (state.effectiveTimeLimit == null ? s.timeLimit : state.effectiveTimeLimit) + 's' : 'none') + '</span></div>';
       if (String(s.explanation || '').trim()) {
         box.innerHTML += '<div class="why">' + escapeHtml(s.explanation) + '</div>';
       }
@@ -437,9 +561,13 @@
       num.className = 'n';
       num.textContent = String(i + 1);
       m.appendChild(num);
+      /* Boards carry their run state here too. Without it a thumbnail deals
+         itself a fresh bingo card, so the strip showed a card that does not
+         exist in the room — a second truth on the private screen. */
       var node = SF.renderSlide(state.deck, s, {
         index: i, total: state.deck.slides.length, interactive: false,
-        quizNumber: quizNum(i), chrome: false
+        quizNumber: quizNum(i), chrome: false,
+        ...SF.Boards.renderOptions(state, s)
       });
       m.appendChild(node);
       m.onclick = function () { cmd('goto', { index: i }); };
@@ -468,8 +596,16 @@
   window.addEventListener('resize', function () { if (state) draw(); });
 
   // ask the opener to send state (covers a reload of this window)
-  cmd('hello');
-  setTimeout(function () { cmd('hello'); }, 800);
+  if (!window.opener || window.opener.closed) {
+    $('waitTitle').textContent = 'Open this from the show';
+    $('waitHint').textContent =
+      'Presenter is your private teaching desk — slide notes, live answers, classroom management, insights, toolkit and Q&A. ' +
+      'Start Present or Host live, then press D (or open Presenter view). ' +
+      'Opening this URL alone has nothing to talk to.';
+  } else {
+    cmd('hello');
+    setTimeout(function () { cmd('hello'); }, 800);
+  }
 })();
 </script>
 </body>

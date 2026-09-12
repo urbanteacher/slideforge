@@ -1,0 +1,68 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const {freePort,start,connect,stop,report,reveal}=require('./harness');
+test('teacher-entered and device answers share scoring, corrections, eligibility and durable reports',async t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sf-manual-')),port=await freePort(),child=await start(port,dir),sockets=[];
+ t.after(async()=>{await stop(child);sockets.forEach(s=>s.socket.close());fs.rmSync(dir,{recursive:true,force:true});});
+ const host=await connect(port);sockets.push(host);host.send({t:'host',title:'Mixed classroom',mode:'individual'});const room=await host.next('hosted');
+ host.send({t:'manualAdd',names:['Alex','Sam']});let roster=await host.until('players',m=>m.list.length===2);const alex=roster.list.find(p=>p.name==='Alex').id,sam=roster.list.find(p=>p.name==='Sam').id;
+ assert.ok(roster.list.every(p=>p.manual));
+ const phone=await connect(port);sockets.push(phone);phone.send({t:'join',pin:room.pin,name:'Phone'});await phone.next('joined');
+ host.send({t:'begin'});host.send({t:'question',id:'q1',question:'Pick A',options:['A','B'],timeLimit:30,points:1000});await phone.next('question');
+ let tally=await host.until('tally',m=>m.total===3);assert.equal(tally.manual,true);
+ host.send({t:'manualAdd',names:['Too late']});assert.match((await host.next('manualError')).message,/between/);
+ host.send({t:'manualAnswer',id:'q1',playerId:alex,choice:1});await host.until('tally',m=>m.answers.some(a=>a.id===alex&&a.response===1));
+ host.send({t:'manualAnswer',id:'q1',playerId:alex,choice:0});await host.until('tally',m=>m.answers.some(a=>a.id===alex&&a.response===0));
+ host.send({t:'manualAnswer',id:'q1',playerId:sam,choice:0});await host.until('tally',m=>m.answered===2);
+ host.send({t:'manualAnswer',id:'q1',playerId:sam,clear:true});await host.until('tally',m=>m.answered===1);
+ phone.send({t:'answer',choice:0});await phone.next('locked');tally=await host.until('tally',m=>m.answered===2);
+ await reveal(host,{id:'q1',correct:0,answer:'A'},null,null,tally);assert.equal((await phone.next('result')).gained,1000);
+ host.send({t:'manualAnswer',id:'q1',playerId:sam,choice:0});
+ const r=await report(host);assert.equal(r.checks[0].responses.length,2);assert.equal(r.attendance.find(p=>p.id===alex).score,1000);assert.equal(r.attendance.find(p=>p.id===alex).source,'teacher');assert.equal(r.attendance.find(p=>p.id===alex).connectedSeconds,0);assert.equal(r.attendance.find(p=>p.id===sam).questionsUnanswered,1);
+ assert.equal(r.checks[0].responses.find(a=>a.playerId===alex).source,'teacher');
+ // Typed and numerical entry use the same bounded validation as device input.
+ host.send({t:'question',id:'q2',input:'text',question:'Name it',options:[],timeLimit:0});await phone.next('question');
+ host.send({t:'manualAnswer',id:'q2',playerId:alex,text:'  Paris  '});
+ tally=await host.until('tally',m=>m.answers.some(a=>a.response==='Paris'));assert.equal(tally.answered,1);
+ await reveal(host,{id:'q2',correct:-1,answer:'Paris'},a=>a.response==='Paris',null,tally);await phone.next('result');
+ host.send({t:'question',id:'q3',input:'number',question:'Estimate',range:{min:0,max:100,step:1},options:[],timeLimit:0});await phone.next('question');
+ host.send({t:'manualAnswer',id:'q2',playerId:alex,text:'stale'});
+ host.send({t:'manualAnswer',id:'q3',playerId:alex,value:null});
+ host.send({t:'manualAnswer',id:'q3',playerId:sam,value:42});
+ tally=await host.until('tally',m=>m.answers.some(a=>a.response===42));assert.equal(tally.answered,1);
+ // A participant cannot add a roster or edit someone else's answer.
+ phone.send({t:'manualAdd',names:['Intruder']});assert.equal((await report(host)).attendance.length,3);
+});
+
+test('the host can rename, kick and delete people in the room', async t => {
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sf-roster-')),port=await freePort(),child=await start(port,dir),sockets=[];
+ t.after(async()=>{await stop(child);sockets.forEach(s=>s.socket.close());fs.rmSync(dir,{recursive:true,force:true});});
+ const host=await connect(port);sockets.push(host);host.send({t:'host',title:'Roster CRUD',mode:'individual'});const room=await host.next('hosted');
+ host.send({t:'manualAdd',names:['Alex','Sam']});
+ let roster=await host.until('players',m=>m.list.length===2);
+ const alex=roster.list.find(p=>p.name==='Alex').id, sam=roster.list.find(p=>p.name==='Sam').id;
+ host.send({t:'manualRename',playerId:alex,name:'Alexandra'});
+ roster=await host.until('players',m=>m.list.some(p=>p.name==='Alexandra'));
+ assert.equal(roster.list.find(p=>p.id===alex).name,'Alexandra');
+ host.send({t:'manualRename',playerId:alex,name:'Sam'});
+ assert.match((await host.next('manualError')).message,/unique/i);
+ const phone=await connect(port);sockets.push(phone);
+ phone.send({t:'join',pin:room.pin,name:'Phone'});await phone.next('joined');
+ roster=await host.until('players',m=>m.list.length===3);
+ const phoneId=roster.list.find(p=>p.name==='Phone').id;
+ phone.send({t:'manualRemove',playerId:alex,mode:'delete'});
+ assert.equal((await report(host)).attendance.filter(p=>!p.removedAt).length,3);
+ host.send({t:'manualRemove',playerId:sam,mode:'delete'});
+ roster=await host.until('players',m=>!m.list.some(p=>p.id===sam));
+ assert.equal(roster.list.length,2);
+ host.send({t:'manualRemove',playerId:phoneId,mode:'kick'});
+ const kicked=await phone.next('kicked');
+ assert.match(kicked.reason,/removed you/i);
+ roster=await host.until('players',m=>!m.list.some(p=>p.id===phoneId));
+ assert.equal(roster.list.length,1);
+ const r=await report(host);
+ assert.equal(r.attendance.find(p=>p.id===alex).name,'Alexandra');
+ assert.ok(r.attendance.find(p=>p.id===sam).removedAt);
+ assert.equal(r.attendance.find(p=>p.id===sam).leftReason,'removed');
+ assert.equal(r.attendance.find(p=>p.id===phoneId).leftReason,'kicked');
+});

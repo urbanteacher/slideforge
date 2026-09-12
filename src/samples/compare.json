@@ -1,0 +1,30 @@
+[
+  {
+    "itemA": "Photosynthesis",
+    "itemB": "Respiration",
+    "similarities": "Both involve energy and gases moving in living cells.",
+    "differences": "Photosynthesis stores energy in glucose; respiration releases it.",
+    "category": "Science"
+  },
+  {
+    "itemA": "RAM",
+    "itemB": "SSD",
+    "similarities": "Both store data the computer uses.",
+    "differences": "RAM is volatile and fast for working memory; an SSD keeps files when power is off.",
+    "category": "ICT"
+  },
+  {
+    "itemA": "Democracy",
+    "itemB": "Dictatorship",
+    "similarities": "Both are ways a state can be governed.",
+    "differences": "In a democracy power is shared through voting; in a dictatorship one person or clique holds it.",
+    "category": "History"
+  },
+  {
+    "itemA": "Metaphor",
+    "itemB": "Simile",
+    "similarities": "Both compare one thing to another in writing.",
+    "differences": "A simile uses like or as; a metaphor says something is something else.",
+    "category": "Literature"
+  }
+]

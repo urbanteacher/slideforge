@@ -34,6 +34,29 @@ function authorized(meta, token) {
   if (!token || typeof token !== 'string' || token.length > 128) return false;
   return crypto.timingSafeEqual(Buffer.from(meta.tokenHash, 'hex'), digest(token));
 }
+/**
+ * Delete a session's journal and its metadata.
+ *
+ * Behind the same token as reading it. These are attendance records — who
+ * was in a room and what they answered — so the ability to destroy one has
+ * to be at least as hard to come by as the ability to read it.
+ *
+ * @returns {'gone'|'missing'|'denied'}
+ */
+function remove(id, token) {
+  if (!ID.test(id)) return 'missing';
+  let meta;
+  try { meta = JSON.parse(fs.readFileSync(path.join(DIR, id + '.json'), 'utf8')); }
+  catch (_) { return 'missing'; }
+  if (!authorized(meta, token)) return 'denied';
+  /* The journal first: a meta file without one is unreadable anyway, whereas
+     a journal without its meta is an orphan nothing can authorise, read or
+     clean up. */
+  try { fs.unlinkSync(path.join(DIR, id + '.jsonl')); } catch (_) {}
+  try { fs.unlinkSync(path.join(DIR, id + '.json')); } catch (_) {}
+  return 'gone';
+}
+
 function load(id, token) {
   if (!ID.test(id)) return null;
   let meta;
@@ -52,12 +75,13 @@ function load(id, token) {
 function project(session, active = false) {
   const { meta, events } = session;
   const people = new Map(), checks = [], feedback = [], questions = [], signals = [];
+  const oral = new Map();
   let end = null, startedAt = null;
   const person = id => people.get(id);
   for (const e of events) {
     const d = e.data;
     if (e.type === 'join') {
-      people.set(d.id, { id: d.id, name: d.name, team: d.team, firstJoinedAt: e.at, admittedAt: d.admitted ? e.at : null, lastSeenAt: e.at, connected: true, connections: [{ joinedAt: e.at, leftAt: null }], score: 0 });
+      people.set(d.id, { id: d.id, name: d.name, team: d.team, source:d.source || 'device', firstJoinedAt: e.at, admittedAt: d.admitted ? e.at : null, lastSeenAt: e.at, connected: true, connections: [{ joinedAt: e.at, leftAt: null }], score: 0 });
     } else if (e.type === 'admit' && person(d.id)) person(d.id).admittedAt = e.at;
     else if (e.type === 'leave' && person(d.id)) {
       const p = person(d.id); p.connected = false; p.lastSeenAt = e.at;
@@ -65,12 +89,30 @@ function project(session, active = false) {
     } else if (e.type === 'resume' && person(d.id)) {
       const p = person(d.id); p.connected = true; p.lastSeenAt = e.at;
       p.connections.push({ joinedAt: e.at, leftAt: null });
-    } else if (e.type === 'begin') startedAt = startedAt || e.at;
+    } else if (e.type === 'rename' && person(d.id)) person(d.id).name = d.name;
+    else if (e.type === 'team' && person(d.id) && d.team != null) person(d.id).team = d.team;
+    else if ((e.type === 'kick' || e.type === 'remove') && person(d.id)) {
+      const p = person(d.id);
+      p.connected = false;
+      p.removedAt = e.at;
+      p.leftReason = e.type === 'kick' ? 'kicked' : 'removed';
+      if (p.connections && p.connections.length) p.connections[p.connections.length - 1].leftAt = e.at;
+    }
+    else if (e.type === 'begin') startedAt = startedAt || e.at;
     else if (e.type === 'question') checks.push({ ...d, openedAt: e.at, revealedAt: null, correct: null, responses: [] });
+    /* voteOnly rides along in ...d, so the report can tell a withheld answer
+       from a forgotten one. */
     else if (e.type === 'answer') {
       const q = checks.find(q => q.attempt === d.attempt);
       if (q && !q.responses.some(r => r.playerId === d.playerId)) q.responses.push({ ...d, at: e.at, right: null });
       if (person(d.playerId)) person(d.playerId).lastSeenAt = e.at;
+    } else if (e.type === 'manualAnswer') {
+      const q=checks.find(q => q.attempt === d.attempt);
+      if(q && !q.revealedAt) {
+        q.responses=q.responses.filter(r => r.playerId !== d.playerId);
+        if(!d.clear) q.responses.push({...d,at:e.at,right:null});
+      }
+      if(person(d.playerId)) person(d.playerId).lastSeenAt=e.at;
     } else if (e.type === 'signal') {
       /* No playerId, by design — see the note on room.signals in the relay.
          What the report is for is which slide lost the room, not who said so. */
@@ -121,6 +163,18 @@ function project(session, active = false) {
         const q = questions.find(q => q.id === d.id);
         if (q && !q.shown) { q.shown = true; q.shownAt = e.at; }
       }
+    } else if (e.type === 'oral') {
+      /* A board round, keyed by the slide and the set it was played on, so
+         replaying the same board twice reads as two rounds. The verdicts are
+         the record; the tally is derived from them, never sent. */
+      const key = (d.slideId || 'unknown') + '#' + (d.set || 1);
+      const round = oral.get(key) || (oral.set(key, {
+        slideId: d.slideId, title: d.title, kind: d.kind, set: d.set || 1,
+        verdicts: [], firstAt: e.at, lastAt: e.at
+      }).get(key));
+      round.verdicts.push({ card: d.card, term: d.term, participant: d.participant,
+        right: d.right === true, value: Number(d.value) || 0, at: e.at });
+      round.lastAt = e.at;
     } else if (e.type === 'end') end = { at: e.at, reason: d.reason };
   }
   const updatedAt = events.length ? events[events.length - 1].at : meta.createdAt;
@@ -129,10 +183,10 @@ function project(session, active = false) {
     const eligible = checks.filter(q => q.eligible.includes(p.id));
     const answers = eligible.flatMap(q => q.responses.filter(r => r.playerId === p.id));
     const cutoff = end ? end.at : active ? Date.now() : updatedAt;
-    return { ...p, connected: active && p.connected,
+    return { ...p, connected: p.source !== 'teacher' && active && p.connected,
       lastSeenAt: p.connected ? cutoff : p.lastSeenAt,
-      connections: p.connections.map(c => ({...c, leftAt:c.leftAt || (active ? null : cutoff)})),
-      connectedSeconds: Math.round(p.connections.reduce((n, c) => n + Math.max(0, (c.leftAt || cutoff) - c.joinedAt), 0) / 1000),
+      connections: p.source === 'teacher' ? [] : p.connections.map(c => ({...c, leftAt:c.leftAt || (active ? null : cutoff)})),
+      connectedSeconds: p.source === 'teacher' ? 0 : Math.round(p.connections.reduce((n, c) => n + Math.max(0, (c.leftAt || cutoff) - c.joinedAt), 0) / 1000),
       questionsEligible: eligible.length, questionsAnswered: answers.length,
       questionsCorrect: answers.filter(r => r.right === true).length,
       questionsUnanswered: eligible.length - answers.length,
@@ -149,6 +203,35 @@ function project(session, active = false) {
     createdAt: meta.createdAt, startedAt, endedAt: end && end.at, updatedAt,
     status, reason: end ? end.reason : status === 'interrupted' ? 'Relay stopped before the session ended.' : null,
     persisted: session.persisted, attendance: roster, checks, feedback,
+    /* Oral rounds sit beside the checks rather than inside them: they are
+       credited to a team or to the class, so they have no place in a grid
+       whose rows are people. */
+    oral: [...oral.values()].map(r => {
+      const tally = new Map();
+      /* A verdict with no name on it is either a board the whole class played
+         together, or a quiz bowl cell nobody could answer. Only the first is a
+         participant: crediting the second to "The class" put a phantom team on
+         a four-team board, sitting at zero. */
+      const anonymous = r.verdicts.every(v => !v.participant);
+      r.verdicts.forEach(v => {
+        if (!v.participant && !anonymous) return;
+        const name = v.participant || 'The class';
+        const row = tally.get(name) || (tally.set(name, { name, score: 0, attempts: 0, points: 0 }).get(name));
+        row.attempts++;
+        if (v.right) { row.score++; row.points += Number(v.value) || 0; }
+      });
+      /* Keyed by who as well as which square. On a shared memory board only
+         one participant can ever claim a given card, so this is the same
+         count as before — but a bingo card belongs to one team, and counting
+         square numbers alone folded Red's first square into Blue's. */
+      const cards = new Set(r.verdicts.filter(v => v.right)
+        .map(v => (v.participant || '') + '#' + v.card));
+      /* Points only where a board has them: a bingo line is not worth a
+         number and printing a zero beside it would imply it should be. */
+      const points = r.verdicts.reduce((n, v) => n + (Number(v.value) || 0), 0);
+      return { ...r, attempts: r.verdicts.length, collected: cards.size,
+        points, tally: [...tally.values()] };
+    }).sort((a, b) => a.firstAt - b.firstAt),
     /* Grouped by the slide they were sent from, so the report answers "where
        did I lose them" rather than handing over a list of timestamps. */
     signals: Object.values(signals.reduce((acc, s) => {
@@ -173,7 +256,9 @@ function project(session, active = false) {
       questionsShown: questions.filter(q => q.shown).length,
       questionsUnanswered: questions.filter(q => q.state === 'approved' || q.state === 'pending').length,
       signalsRaised: signals.length,
+      oralRounds: oral.size,
+      oralVerdicts: [...oral.values()].reduce((n, r) => n + r.verdicts.length, 0),
       confidentlyWrong: roster.reduce((n, p) => n + p.confidentlyWrong, 0) }
   };
 }
-module.exports = { DIR, create, append, authorized, load, project };
+module.exports = { DIR, create, append, authorized, load, remove, project };

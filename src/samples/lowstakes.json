@@ -1,0 +1,22 @@
+[
+  {
+    "question": "What does RAM stand for?",
+    "answer": "Random Access Memory"
+  },
+  {
+    "question": "What is the function of the CPU?",
+    "answer": "To process instructions and perform calculations"
+  },
+  {
+    "question": "What type of storage is an SSD?",
+    "answer": "Solid State Drive / Flash storage"
+  },
+  {
+    "question": "What does ROM contain?",
+    "answer": "Read Only Memory / Boot instructions / BIOS"
+  },
+  {
+    "question": "What is cache memory used for?",
+    "answer": "Storing frequently accessed data for quick retrieval"
+  }
+]

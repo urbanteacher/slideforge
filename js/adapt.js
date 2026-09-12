@@ -30,13 +30,6 @@
      tentative and phrased as something to look at rather than a fact. */
   var EVIDENCE_FLOOR = 5;
 
-  /* One list, defined in js/model.js, which always loads first. The order is
-     the only thing this file uses it for: succeeding low and failing high is a
-     different problem from failing everywhere, and it is the one a taxonomy
-     can actually tell you about. */
-  var BLOOM_ORDER = SF.BLOOM_LEVELS ||
-    ['Remember', 'Understand', 'Apply', 'Analyze', 'Evaluate', 'Create'];
-
   /* How much of the room has to be wrong before it is the lesson's problem
      rather than a handful of people's. */
   var WEAK = 0.6;          // below this, worth raising
@@ -112,6 +105,12 @@
       var title = checkTitle(check, i);
       var where = { slideId: check.sourceSlideId || check.id, title: title };
 
+      /* A vote-only check is unrevealed on purpose — the first half of a peer
+         instruction pair, whose answer belongs to the second. Reporting it as
+         a loop somebody forgot to close would train the reader to skip this
+         section. */
+      if (!check.revealedAt && check.voteOnly) return;
+
       if (!check.revealedAt) {
         out.push(finding('note', 'unrevealed:' + i,
           'Never revealed: ' + title,
@@ -180,83 +179,6 @@
     return out;
   }
 
-  /* ------------------------------------------------------- Bloom's profile */
-
-  /**
-   * Success per Bloom level, and what the shape of it means.
-   *
-   * The finding worth having is the gap: secure at a lower level and weak at a
-   * higher one is "they can recall it but cannot use it", which is a specific
-   * thing to plan for. Everything else a taxonomy is used for here would be
-   * decoration.
-   */
-  function bloomProfile(report) {
-    var levels = {};
-    (report.checks || []).forEach(function (check) {
-      if (!check.revealedAt || !check.bloom) return;
-      var marked = scored(check);
-      if (!marked.length) return;
-      var row = levels[check.bloom] || (levels[check.bloom] = {
-        level: check.bloom, checks: 0, answers: 0, right: 0
-      });
-      row.checks++;
-      row.answers += marked.length;
-      row.right += rightCount(check);
-    });
-    var rows = BLOOM_ORDER.filter(function (l) { return levels[l]; }).map(function (l) {
-      var row = levels[l];
-      row.rate = row.answers ? row.right / row.answers : 0;
-      return row;
-    });
-    return rows;
-  }
-
-  function bloomFindings(report, rows) {
-    var out = [];
-    var revealed = (report.checks || []).filter(function (c) { return c.revealedAt; });
-    var tagged = revealed.filter(function (c) { return c.bloom; });
-
-    if (revealed.length >= 2 && !tagged.length) {
-      out.push(finding('note', 'bloom:untagged',
-        'None of the checks say what they were testing',
-        plural(revealed.length, 'check', 'checks') + ', no thinking level set on any of them.',
-        'Set a Bloom level per check and this report can tell you whether the ' +
-          'room is failing to recall or failing to apply. Without it, a wrong ' +
-          'answer is just a wrong answer.',
-        { strength: 'strong' }));
-      return out;
-    }
-
-    if (rows.length === 1 && tagged.length >= 2) {
-      out.push(finding('note', 'bloom:flat',
-        'Every check was at one level: ' + rows[0].level,
-        plural(rows[0].checks, 'check', 'checks') + ', all ' + rows[0].level + '.',
-        'The lesson only found out one kind of thing. One check a level up ' +
-          'would say whether they can use what they recalled.',
-        { strength: 'strong' }));
-    }
-
-    /* The gap. Compared across levels rather than within one, so it needs a
-       secure lower level and a weak higher one — the ordering is the point. */
-    for (var i = 0; i < rows.length; i++) {
-      for (var j = i + 1; j < rows.length; j++) {
-        var low = rows[i], high = rows[j];
-        if (low.rate < STRONG || high.rate >= WEAK) continue;
-        out.push(finding('act', 'bloom:gap',
-          'They can ' + low.level.toLowerCase() + ' it but not ' + high.level.toLowerCase() + ' it',
-          low.level + ' ' + pct(low.right, low.answers) + '% · ' +
-            high.level + ' ' + pct(high.right, high.answers) + '%',
-          'The facts are there and the use of them is not, so covering the ' +
-            'content again will not move it. Plan practice at ' +
-            high.level.toLowerCase() + ' — worked examples then a similar ' +
-            'problem — rather than another pass over the material.',
-          { strength: strengthOf(Math.min(low.answers, high.answers)) }));
-        return out;
-      }
-    }
-    return out;
-  }
-
   /* ------------------------------------------------------------ the rest */
 
   function paceFindings(report) {
@@ -316,7 +238,7 @@
             'They told you this before you asked them to do anything with it. ' +
               'Worth taking at face value and building in the support rather ' +
               'than finding out later.',
-            { strength: strengthOf(replies), nextStep: f.nextStep }));
+            { strength: strengthOf(replies) }));
         } else if (split) {
           out.push(finding('watch', 'scale-split:' + i,
             'The room is split on "' + f.prompt + '"',
@@ -325,20 +247,8 @@
             'An average of ' + mean.toFixed(1) + ' describes nobody here. Two ' +
               'groups need two different next lessons, so plan for both rather ' +
               'than for the middle.',
-            { strength: strengthOf(replies), nextStep: f.nextStep }));
+            { strength: strengthOf(replies) }));
         }
-      }
-
-      /* The teacher's own plan, written while authoring, surfaced now that the
-         responses are in. Better than anything this file could suggest. */
-      if (f.nextStep && !out.some(function (x) { return x.nextStep === f.nextStep; })) {
-        /* The plan is the action here, so it is not also attached as a note
-           to quote — the renderer would show the same sentence twice. */
-        out.push(finding('note', 'plan:' + i,
-          'Your plan for "' + f.prompt + '"',
-          plural(replies, 'reply', 'replies') + ' came in.',
-          f.nextStep, { strength: strengthOf(replies), authored: true }));
-        return;
       }
     });
     return out;
@@ -403,13 +313,12 @@
 
   /**
    * @param {object} report a projected session report (server/sessions.js)
-   * @returns {object} { headline, basis, findings, bloom, thin }
+   * @returns {object} { headline, basis, findings, thin }
    */
   function adapt(report) {
     if (!report) return null;
     var findings = []
       .concat(checkFindings(report))
-      .concat(bloomFindings(report, bloomProfile(report)))
       .concat(paceFindings(report))
       .concat(feedbackFindings(report))
       .concat(loopFindings(report));
@@ -426,6 +335,7 @@
     /* Stated up front rather than buried, because it is the first thing that
        should temper everything under it. A report built on nine answers from
        four people cannot carry a conclusion about a class. */
+    var oral = (report.oral || []).reduce(function (n, r) { return n + r.verdicts.length; }, 0);
     var thin = marked < EVIDENCE_FLOOR || people < 3;
     var basis = {
       people: people,
@@ -439,13 +349,23 @@
           plural(people, 'person', 'people') + ' across ' +
           plural(revealed, 'revealed check', 'revealed checks') + '.' +
           (thin ? ' That is not much to stand on — read everything below as a question rather than a conclusion.' : '')
-        : 'Nothing was marked in this session, so there are no outcomes to read.'
+        : oral
+          /* A spoken board was marked, so "nothing was marked" would be a lie.
+             It just cannot be read per learner: the credit went to a team or
+             to the class, which is all a spoken answer can honestly carry. */
+          ? oral + (oral === 1 ? ' card was' : ' cards were') + ' marked on a board judged out loud. ' +
+            'Those are credited to a team or to the class, not to a learner, so ' +
+            'there is nothing here to read per person — the round itself is under ' +
+            'Knowledge checks.'
+          : 'Nothing was marked in this session, so there are no outcomes to read.'
     };
 
     var act = findings.filter(function (f) { return f.severity === 'act'; }).length;
     var watch = findings.filter(function (f) { return f.severity === 'watch'; }).length;
     var headline = !findings.length
-      ? (basis.answers ? 'Nothing here needs changing.' : 'Not enough happened to say anything.')
+      ? (basis.answers ? 'Nothing here needs changing.'
+        : oral ? 'The marking here was spoken, not per learner.'
+        : 'Not enough happened to say anything.')
       : act
         ? plural(act, 'thing', 'things') + ' to change before next lesson' +
           (watch ? ', and ' + watch + ' to keep an eye on' : '')
@@ -457,7 +377,6 @@
       headline: headline,
       basis: basis,
       findings: findings,
-      bloom: bloomProfile(report),
       thin: thin
     };
   }
@@ -491,22 +410,10 @@
         line('### ' + f.title + (f.strength === 'tentative' ? ' *(thin evidence)*' : ''));
         line('');
         line('- **Evidence:** ' + f.evidence);
-        line('- **' + (f.authored ? 'Your note' : 'Suggested') + ':** ' + f.action);
+        line('- **Suggested:** ' + f.action);
         line('');
       });
     });
-
-    if (a.bloom.length) {
-      line('## By thinking level');
-      line('');
-      line('| Level | Checks | Correct |');
-      line('| --- | --- | --- |');
-      a.bloom.forEach(function (r) {
-        line('| ' + r.level + ' | ' + r.checks + ' | ' +
-          r.right + ' / ' + r.answers + ' (' + pct(r.right, r.answers) + '%) |');
-      });
-      line('');
-    }
 
     line('---');
     line('');

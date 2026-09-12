@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#12141a">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Join the quiz — SlideForge</title>
+<title>Your lesson — SlideForge</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
@@ -77,24 +77,55 @@
 
   .pad { flex: 1; display: grid; gap: 12px; grid-template-columns: 1fr 1fr; min-height: 0; }
   .pad.one { grid-template-columns: 1fr; }
+  /* The answer pad is the same object as the option on the wall: a card, a
+     square letter badge, the text beside it. It used to be a coloured pad
+     with a shape on it, which is a different visual language from the slide
+     it belongs to — the room had to translate "the blue triangle" into "A"
+     to know what it had voted for.
+
+     The letter is what both ends now have in common, and it is also what
+     survives on a phone held by somebody who cannot tell the red pad from
+     the green one.
+
+     The colours are --p-* rather than literals so a skin loaded over this
+     page can restyle the pad by setting five properties instead of
+     re-declaring the rule. css/learner.css does exactly that; these values
+     are what join.html looks like on its own. */
+  :root {
+    --p-card: #1c2028;
+    --p-rule: #333a45;
+    --p-fg: #eef1f6;
+    --p-dim: #9aa2b0;
+    --p-accent: #4c8dff;
+    --p-key-fg: #08101f;
+  }
   .pick {
-    border: 0; border-radius: 16px; cursor: pointer;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-    font: inherit; color: #fff; font-weight: 800;
-    transition: transform .1s, opacity .2s;
+    border: 2px solid var(--p-rule);
+    background: var(--p-card);
+    border-radius: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    padding: 14px 15px;
+    font: inherit; color: var(--p-fg); font-weight: 650;
+    text-align: center;
+    transition: transform .1s, opacity .2s, border-color .16s;
     min-height: 84px;
   }
-  .pick .g { font-size: 30px; line-height: 1; }
-  .pick .l { font-size: 20px; }
+  /* Only the answer pad gets the badge and the left-aligned card. A poll, a
+     scale or a pace pad has no letter to show and reads better centred, which
+     is how they already were — restyling those was not the ask. */
+  .pick.keyed { justify-content: flex-start; text-align: left; }
+  .pick .key {
+    flex: none; width: 34px; height: 34px; border-radius: 9px;
+    display: grid; place-items: center;
+    background: var(--p-accent); color: var(--p-key-fg);
+    font-size: 18px; font-weight: 800;
+  }
+  .pick .l { font-size: 17px; line-height: 1.25; flex: 1; min-width: 0; }
   .pick:active { transform: scale(.97); }
-  .pick[data-i="0"] { background: #e8474f; }
-  .pick[data-i="1"] { background: #2b7ce9; }
-  .pick[data-i="2"] { background: #e8a020; color: #1d1204; }
-  .pick[data-i="3"] { background: #29a86b; }
-  .pick[data-i="4"] { background: #8b5cf0; }
-  .pick[data-i="5"] { background: #d4477f; }
-  .pick.dim { opacity: .22; }
-  .pick.mine { outline: 4px solid #fff; outline-offset: -4px; }
+  .pick.dim { opacity: .3; }
+  /* The one you chose, marked by the accent rather than by a white ring so it
+     reads the same way the slide marks a selection. */
+  .pick.mine { border-color: var(--p-accent); background: var(--p-accent-soft, rgba(76,141,255,.16)); }
 
   /* result screen */
   .verdict { font-size: 46px; font-weight: 850; letter-spacing: -.02em; }
@@ -134,6 +165,24 @@
   #qTypeWrap { flex: 1; display: flex; flex-direction: column; justify-content: flex-start;
     padding-top: 6vh; width: 100%; max-width: 340px; margin: 0 auto; }
   #qTypeWrap.locked #qText, #qTypeWrap.locked #qSend { opacity: .45; pointer-events: none; }
+
+  /* Ordering. Buttons rather than drag: a thumb dragging a list on a phone
+     fights the page scroll, and a learner who cannot complete the gesture
+     cannot answer at all. Two taps move an item; every tap is undoable. */
+  #qOrderWrap { flex: 1; display: flex; flex-direction: column; justify-content: flex-start;
+    padding-top: 4vh; width: 100%; max-width: 360px; margin: 0 auto; }
+  #qOrderWrap.locked { opacity: .55; pointer-events: none; }
+  .ord-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px;
+    padding: 11px 12px; border: 2px solid var(--p-rule); border-radius: 12px;
+    background: var(--p-card); color: var(--p-fg); }
+  .ord-n { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid;
+    place-items: center; background: var(--p-accent); color: var(--p-key-fg);
+    font-size: 13px; font-weight: 800; }
+  .ord-label { flex: 1; min-width: 0; font-size: 15px; line-height: 1.3; }
+  .ord-move { flex: none; display: flex; gap: 4px; }
+  .ord-move button { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--p-rule);
+    background: none; color: var(--p-fg); font-size: 15px; line-height: 1; }
+  .ord-move button:disabled { opacity: .3; }
   #qMine { margin-top: 14px; }
   .pick.pace .l, .pick.sure .l { font-size: 17px; }
   /* Widened explicitly, like the scale pads: this screen centres its children,
@@ -253,6 +302,7 @@
   .qavote .qup { font-size: 11px; line-height: 1; }
   .qamine { font-size: 12px; color: #45d69b; margin-top: 4px; }
 </style>
+<link rel="stylesheet" href="css/learner.css">
 </head>
 <body>
 
@@ -264,20 +314,25 @@
     ✋ <span class="askn" id="paceN" style="display:none"></span>
   </button>
   <div class="who"><span id="hdrName">—</span><span class="team" id="hdrTeam" style="display:none"></span></div>
+  <button class="askbtn" id="savedBtn" type="button" aria-label="Saved slides">♡ <span id="savedN">0</span></button>
   <div class="score" id="hdrScore">0</div>
 </header>
 
+<div id="lessonPosition" hidden><span id="lessonMode">IN THE LESSON</span><span id="lessonPage"></span><button id="bookmarkCurrent" type="button" aria-label="Save current slide for later; counted anonymously for your teacher" title="Bookmarks stay on this device. Your teacher sees an anonymous count." aria-pressed="false">♡</button></div>
+<button id="activityNotice" hidden type="button">The lesson moved on · Return to the activity →</button>
 <main>
 
   <!-- 1. join -->
   <section class="screen center on" id="scJoin">
     <div class="brand"><span class="mark">S</span> SlideForge</div>
-    <h1>Join the quiz</h1>
-    <div class="lead">Enter the PIN shown on the big screen.</div>
-    <input id="pin" type="tel" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off">
-    <input id="name" type="text" maxlength="18" placeholder="Your name" autocomplete="off">
+    <span class="learner-eyebrow">YOUR PLACE IN THE LESSON</span>
+    <h1>Let’s learn together.</h1>
+    <div class="lead">Scan the classroom QR or enter your lesson PIN.</div>
+    <input id="pin" aria-label="Lesson PIN" type="tel" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off">
+    <input id="name" aria-label="Your name" type="text" maxlength="18" placeholder="Your name" autocomplete="off">
     <div class="err" id="joinErr"></div>
-    <button class="go" id="joinBtn">Join</button>
+    <button class="go" id="joinBtn">Join lesson</button>
+    <button class="go sub" id="landingSavedBtn" type="button">My saved slides</button>
   </section>
 
   <!-- 1b. team picker -->
@@ -301,8 +356,25 @@
   <section class="screen center" id="scWait">
     <div class="verdict" id="waitIcon" style="font-size:38px">✓</div>
     <h1 id="waitTitle">You're in!</h1>
-    <div class="lead" id="waitLead">Look up at the screen — the quiz will start in a moment.</div>
-    <div class="dots"><i></i><i></i><i></i></div>
+    <div class="lead" id="waitLead">Look up at the screen — the lesson will start in a moment.</div>
+    <article class="lesson-card" id="lessonCard" hidden>
+      <div class="lesson-card-top"><span class="learner-eyebrow">ON THE SCREEN</span><span aria-hidden="true">✳</span></div>
+      <h2 id="contentTitle"></h2><p id="contentText"></p>
+    </article>
+    <div id="contentActions" hidden>
+      <div class="understanding-row">
+        <button id="gotItBtn" type="button">👍 <span>Got it</span></button>
+        <button id="helpHereBtn" type="button" aria-pressed="false">✋ <span>Need help</span></button>
+      </div>
+      <button id="saveHereBtn" class="save-slide" type="button" aria-pressed="false">♡ Save for later</button>
+      <p id="understandingNote" class="quiet-note" role="status">Only tap if it helps. Listening is participation too.</p>
+    </div>
+  </section>
+
+  <section class="screen center" id="scSaved">
+    <span class="learner-eyebrow">YOUR PERSONAL REVIEW LIST</span><h1>A little later.</h1>
+    <p class="lead">Saved on this device. Your teacher doesn’t see these bookmarks.</p>
+    <div id="savedList"></div><button id="savedBack" class="go sub" type="button">Back to the lesson</button>
   </section>
 
   <!-- 1d. ask a question (reachable at any time) -->
@@ -354,6 +426,10 @@
       <div class="n" id="qNum">Question 1</div>
       <div class="t" id="qTime"></div>
     </div>
+    <div class="learner-eyebrow" id="qStyle" hidden></div>
+    <div id="qClues" class="phone-clues" hidden></div>
+    <p class="q-mission" id="qMission" hidden></p>
+    <h1 id="questionText"></h1>
     <div class="bar"><i id="qBar"></i></div>
     <div class="pad" id="qPad"></div>
     <div id="qNumWrap" style="display:none">
@@ -370,6 +446,12 @@
              autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="send">
       <button class="go" id="qSend" style="margin-top:12px">Send</button>
       <div class="pill" id="qMine" style="display:none"></div>
+    </div>
+    <div id="qOrderWrap" style="display:none">
+      <div class="lead" id="qOrderLead">Put these in order</div>
+      <div id="qOrderList" role="list"></div>
+      <button class="go" id="qOrderSend" style="margin-top:12px">Send my order</button>
+      <div class="pill" id="qOrderMine" style="display:none"></div>
     </div>
     <div id="sureWrap" style="display:none">
       <div class="lead" id="sureLead">How sure are you?</div>
@@ -399,7 +481,8 @@
     <div class="pill" id="oRank"></div>
     <div class="lead" id="oNote"></div>
     <button class="go" id="reconnectBtn" style="display:none">Rejoin this lesson</button>
-    <button class="go sub" id="againBtn">Join another quiz</button>
+    <button class="go sub" id="reviewSavedBtn">Review my saved slides</button>
+    <button class="go sub" id="againBtn">Join another lesson</button>
   </section>
 
 </main>
@@ -410,27 +493,279 @@
   <button type="button" data-react="wow" aria-label="Didn't know that">😮</button>
   <button type="button" data-react="idea" aria-label="That clicked">💡</button>
 </div>
-<footer id="foot">SlideForge live quiz</footer>
+<footer id="foot">SlideForge · Your lesson companion</footer>
 
+<script src="js/emoji-clues.js"></script>
+<script src="js/learner-state.js"></script>
 <script>
 (function () {
   'use strict';
 
   var $ = function (id) { return document.getElementById(id); };
-  var SHAPES = ['▲', '◆', '●', '■', '★', '✚'];
+  /* The learner's current ordering, as { i, text } in their chosen sequence.
+     `i` is the index the host authored, which is what gets sent — the phone
+     never sends text, so a rename between authoring and asking cannot turn a
+     correct answer into an unrecognised one. */
+  var orderItems = [];
+
+  function paintOrder() {
+    var list = document.getElementById('qOrderList');
+    list.textContent = '';
+    orderItems.forEach(function (item, pos) {
+      var row = document.createElement('div');
+      row.className = 'ord-row';
+      row.setAttribute('role', 'listitem');
+      var n = document.createElement('span');
+      n.className = 'ord-n'; n.textContent = String(pos + 1);
+      row.appendChild(n);
+      var label = document.createElement('span');
+      label.className = 'ord-label'; label.textContent = item.text;
+      row.appendChild(label);
+      var moves = document.createElement('span');
+      moves.className = 'ord-move';
+      [['\u2191', -1, 'Move ' + item.text + ' up'], ['\u2193', 1, 'Move ' + item.text + ' down']]
+        .forEach(function (spec) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = spec[0];
+          b.setAttribute('aria-label', spec[2]);
+          b.disabled = (spec[1] < 0 && pos === 0) || (spec[1] > 0 && pos === orderItems.length - 1);
+          b.onclick = function () {
+            var to = pos + spec[1];
+            var tmp = orderItems[pos]; orderItems[pos] = orderItems[to]; orderItems[to] = tmp;
+            paintOrder();
+          };
+          moves.appendChild(b);
+        });
+      row.appendChild(moves);
+      list.appendChild(row);
+    });
+  }
+
   var LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
   // same order as the host's team colours and the answer pads
   var TEAM_COLORS = ['#e8474f', '#2b7ce9', '#e8a020', '#29a86b', '#8b5cf0', '#d4477f'];
+
+  /* Companion identity — eyebrow + accent by style, not by input alone. */
+  var STYLE_LABELS = {
+    emoji: 'EMOJI GUESS',
+    definition: 'DEFINITION CHALLENGE',
+    oddone: 'ODD ONE OUT',
+    compare: 'COMPARE & CONTRAST',
+    conceptchain: 'CONCEPT CHAIN',
+    bingo: 'BINGO',
+    bowl: 'QUIZ BOWL',
+    lowstakes: 'LOW-STAKES QUIZ',
+    memorymatch: 'MEMORY MATCH',
+    memoryflip: 'MEMORY FLIP',
+    knowledgeflip: 'KNOWLEDGE FLIP',
+    truefalse: 'TRUE OR FALSE',
+    wordreveal: 'WORD REVEAL',
+    blanks: 'FILL THE BLANKS',
+    headsup: 'HEADS UP',
+    spinexplain: 'SPIN & EXPLAIN',
+    connection: 'CONNECTION MAKER',
+    order: 'ORDER IT',
+    race: 'RACE',
+    boss: 'BOSS BATTLE',
+    speed: 'BEAT THE CLOCK',
+    quiz: 'QUIZ'
+  };
+
+  function styleLabel(style) {
+    if (!style) return '';
+    return STYLE_LABELS[style] || String(style).replace(/[-_]/g, ' ').toUpperCase();
+  }
+
+  function setGameSkin(style, role) {
+    if (style) document.body.dataset.gameStyle = style;
+    else delete document.body.dataset.gameStyle;
+    if (role) document.body.dataset.gameRole = role;
+    else delete document.body.dataset.gameRole;
+  }
+
+  function clearQuestionChrome() {
+    var styleEl = $('qStyle');
+    var clues = $('qClues');
+    var mission = $('qMission');
+    styleEl.hidden = true;
+    styleEl.textContent = '';
+    clues.hidden = true;
+    clues.innerHTML = '';
+    clues.className = 'phone-clues';
+    mission.hidden = true;
+    mission.textContent = '';
+    $('questionText').hidden = false;
+    $('questionText').classList.remove('is-mission');
+  }
+
+  function paintQuestionChrome(m) {
+    clearQuestionChrome();
+    var style = m.style || '';
+    setGameSkin(style, '');
+    var label = styleLabel(style);
+    if (label) {
+      $('qStyle').hidden = false;
+      $('qStyle').textContent = label;
+    }
+    var emoji = style === 'emoji' || m.clueMode === 'emoji';
+    if (emoji) {
+      var clueSrc = m.clues || m.question || '';
+      var layout = (window.SF && SF.emojiClueLayout)
+        ? SF.emojiClueLayout(clueSrc)
+        : { tiled: false, pieces: [], text: clueSrc };
+      var box = $('qClues');
+      box.hidden = false;
+      if (layout.tiled) {
+        box.className = 'phone-clues tiled';
+        box.style.setProperty('--clue-count', layout.pieces.length);
+        box.setAttribute('role', 'img');
+        box.setAttribute('aria-label', layout.text);
+        layout.pieces.forEach(function (piece, i) {
+          var operator = /^[+＝=→➜➡↔&]$/.test(piece);
+          var tile = document.createElement('span');
+          tile.className = operator ? 'emoji-operator' : 'emoji-clue';
+          tile.textContent = piece;
+          tile.setAttribute('aria-hidden', 'true');
+          tile.style.setProperty('--clue-index', i);
+          box.appendChild(tile);
+        });
+      } else {
+        box.className = 'phone-clues flat';
+        box.removeAttribute('role');
+        box.removeAttribute('aria-label');
+        box.textContent = layout.text || clueSrc;
+      }
+      $('qMission').hidden = false;
+      $('qMission').textContent = 'DECODE THE CLUES';
+      var mission = m.headPrompt || 'What do these clues point to?';
+      $('questionText').textContent = mission;
+      $('questionText').classList.add('is-mission');
+      $('qTypeLead').textContent = 'Type your guess';
+    } else if (m.headPrompt) {
+      $('qMission').hidden = false;
+      $('qMission').textContent = m.headPrompt;
+    }
+  }
+
+  function applyParticipation(src) {
+    if (!src) return false;
+    var participation = String(src.participation || '').trim();
+    if (!participation) return false;
+    var role = src.role || 'watch';
+    var style = src.style || '';
+    setGameSkin(style, role);
+    var title = src.headPrompt || styleLabel(style) || 'Look up';
+    var icon = role === 'discuss' ? '💬' : role === 'paper' ? '✎' : role === 'watch' ? '👁' : '⏸';
+    $('waitIcon').textContent = icon;
+    $('waitTitle').textContent = title;
+    $('waitLead').textContent = participation;
+    return true;
+  }
 
   var ws = null;
   var me = { name: '', score: 0, team: null, teamName: null };
   var pending = null;          // the join we are retrying with a team attached
   var tick = null;
 
+  var flow = createLearnerFlow();
+  var panelActivity = null;
+  var context = null, reactionsOn = true, acknowledged = {}, saves = [], saveStorageKey = null;
   function show(id) {
-    ['scJoin', 'scTeam', 'scHold', 'scWait', 'scAsk', 'scPace', 'scPrompt', 'scQuestion', 'scResult', 'scOver'].forEach(function (s) {
-      $(s).classList.toggle('on', s === id);
+    if (['scAsk','scPace','scSaved'].includes(id) && !flow.panel) panelActivity = (context && context.slideId) + ':' + flow.main;
+    var visible = flow.show(id);
+    ['scJoin','scTeam','scHold','scWait','scAsk','scPace','scSaved','scPrompt','scQuestion','scResult','scOver'].forEach(function (s) {
+      $(s).classList.toggle('on', s === visible);
     });
+    $('askBtn').classList.toggle('on', visible === 'scAsk');
+    $('paceBtn').classList.toggle('on', visible === 'scPace');
+    $('activityNotice').hidden = !flow.panel || flow.main === 'scOver' || panelActivity === (context && context.slideId) + ':' + flow.main;
+    $('reactBar').style.display = 'none';
+    $('lessonPosition').hidden = !context || ['scJoin','scTeam','scHold','scOver'].includes(visible);
+    document.body.dataset.screen = visible;
+    updateContentActions();
+  }
+  function backToActivity() { show(flow.back()); }
+  function updateContext(m) {
+    if (context && context.slideId !== m.slideId) signalled(null);
+    context = m;
+    if (m.reacted) acknowledged[m.slideId] = true;
+    var key = 'slideforge.saved.' + m.sessionId;
+    if (key !== saveStorageKey) {
+      saveStorageKey = key;
+      try { saves = JSON.parse(localStorage.getItem(key) || '[]'); if (!Array.isArray(saves)) saves = []; } catch (_) { saves = []; }
+    }
+    syncBookmark();
+    $('savedN').textContent = saves.length;
+    $('lessonPage').textContent = 'Slide ' + m.n + (m.total ? ' of ' + m.total : '');
+    $('lessonMode').textContent = ({content:'LISTEN & REFLECT',question:'KNOWLEDGE CHECK',feedback:'YOUR VOICE',moment:'LOOK UP & ENJOY'})[m.activity] || 'IN THE LESSON';
+    $('lessonCard').hidden = false;
+    $('contentTitle').textContent = m.title || 'Follow along with your teacher';
+    $('contentText').textContent = m.text || '';
+    $('waitIcon').textContent = '';
+    $('waitTitle').textContent = 'Right here, with the room.';
+    $('waitLead').textContent = 'Follow the conversation. Your next activity will appear here.';
+    if (applyParticipation(m)) {
+      /* Style-specific watch/discuss/paper copy wins over the generic wait. */
+    }
+    if (m.activity === 'content' || m.activity === 'moment') show('scWait');
+    else show(flow.main);
+  }
+  function updateContentActions() {
+    var available = context && context.activity === 'content' && flow.main === 'scWait';
+    $('contentActions').hidden = !available;
+    $('gotItBtn').hidden = !reactionsOn;
+    $('gotItBtn').disabled = !!(context && acknowledged[context.slideId]);
+    $('gotItBtn').querySelector('span').textContent = context && acknowledged[context.slideId] ? 'Got it ✓' : 'Got it';
+    $('helpHereBtn').setAttribute('aria-pressed', paceKind === 'lost' ? 'true' : 'false');
+    var saved = !!(context && saves.some(function (s) { return s.slideId === context.slideId; }));
+    $('saveHereBtn').textContent = saved ? '♥ Saved for later' : '♡ Save for later · counted anonymously';
+    $('saveHereBtn').setAttribute('aria-pressed', String(saved));
+    $('bookmarkCurrent').textContent = saved ? '♥' : '♡';
+    $('bookmarkCurrent').setAttribute('aria-pressed', String(saved));
+  }
+  function syncBookmark(){if(context&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'bookmark',slideId:context.slideId,saved:saves.some(function(s){return s.slideId===context.slideId;})}));}
+  function toggleSave() {
+    if (!context) return;
+    var at = saves.findIndex(function (s) { return s.slideId === context.slideId; });
+    if (at >= 0) saves.splice(at,1);
+    else saves.push({slideId:context.slideId,n:context.n,title:context.title,text:context.text,lesson:context.lesson});
+    try { localStorage.setItem(saveStorageKey,JSON.stringify(saves)); $('understandingNote').textContent = at >= 0 ? 'Removed from your saved list.' : 'Saved in your review list. Your teacher sees only an anonymous count.'; }
+    catch (_) { $('understandingNote').textContent = 'Saved for this visit only; device storage is unavailable.'; }
+    syncBookmark();
+    $('savedN').textContent = saves.length; updateContentActions();
+  }
+  function openSaved() {
+    var list = $('savedList'); list.replaceChildren();
+    var all = [];
+    try {
+      Object.keys(localStorage).filter(function (key) { return key.indexOf('slideforge.saved.') === 0; }).forEach(function (key) {
+        var items = JSON.parse(localStorage.getItem(key) || '[]');
+        if (Array.isArray(items)) items.forEach(function (item) { all.push({key:key,item:item}); });
+      });
+    } catch (_) {}
+    // The current visit's bookmarks still work when device storage is unavailable.
+    all = all.filter(function (entry) { return entry.key !== saveStorageKey; });
+    saves.forEach(function (item) { all.push({key:saveStorageKey,item:item}); });
+    if (!all.length) { var empty = document.createElement('p'); empty.className='quiet-note'; empty.textContent='No saved slides yet. Save a useful idea during the lesson to revisit it here.'; list.appendChild(empty); }
+    all.forEach(function (entry) {
+      var item=entry.item,card=document.createElement('article');card.className='saved-card';
+      var label=document.createElement('span');label.className='learner-eyebrow';label.textContent=(item.lesson ? item.lesson + ' · ' : '') + 'SLIDE '+item.n;card.appendChild(label);
+      var title=document.createElement('h2');title.textContent=item.title;card.appendChild(title);
+      var text=document.createElement('p');text.textContent=item.text;card.appendChild(text);
+      var remove=document.createElement('button');remove.className='save-slide';remove.textContent='Remove bookmark';
+      remove.onclick=function () {
+        if (entry.key === saveStorageKey) saves=saves.filter(function(s){return s.slideId!==item.slideId;});
+        try {
+          var remaining=JSON.parse(localStorage.getItem(entry.key)||'[]').filter(function(s){return s.slideId!==item.slideId;});
+          localStorage.setItem(entry.key,JSON.stringify(remaining));
+        } catch (_) {}
+        syncBookmark();$('savedN').textContent=saves.length;updateContentActions();openSaved();
+      };
+      card.appendChild(remove);list.appendChild(card);
+    });
+    $('savedBack').textContent=flow.main==='scJoin'?'Back to join':flow.main==='scOver'?'Back to lesson summary':'Back to the lesson';
+    show('scSaved');
   }
 
   function header(on) {
@@ -520,6 +855,9 @@
     switch (m.t) {
       /* Held back: the round already started. Name and team are kept, so
          admission later needs no further input. */
+      case 'context':
+        updateContext(m);
+        break;
       case 'waiting':
         rememberIdentity(m);
         me.name = m.name;
@@ -527,7 +865,7 @@
         me.team = m.team != null ? m.team : null;
         me.teamName = m.teamName || null;
         header(true);
-        $('foot').textContent = m.title || 'SlideForge live quiz';
+        $('foot').textContent = m.title || 'SlideForge · Your lesson companion';
         $('holdWho').textContent = me.teamName
           ? me.name + ' \u00b7 ' + me.teamName
           : me.name;
@@ -553,10 +891,10 @@
         $('waitLead').textContent = m.admitted
           ? 'Watch the screen — the next question is coming.'
           : (m.phase === 'lobby'
-            ? 'Look up at the screen — the quiz will start in a moment.'
+            ? 'Look up at the screen — the lesson will start in a moment.'
             : 'Waiting for the next question.');
         if (m.admitted && navigator.vibrate) { try { navigator.vibrate([30, 60, 30]); } catch (e) {} }
-        $('foot').textContent = m.title || 'SlideForge live quiz';
+        $('foot').textContent = m.title || 'SlideForge · Your lesson companion';
         show('scWait');
         break;
 
@@ -616,7 +954,8 @@
         break;
 
       case 'locked':
-        if (typeof m.text === 'string') lockTyped(m.text);
+        if (Array.isArray(m.order)) lockOrder(m.order);
+        else if (typeof m.text === 'string') lockTyped(m.text);
         else if (typeof m.value === 'number') lockPlaced(m.value);
         else lockPad(m.choice);
         /* Asked only once the answer is safely in, and only if the game wants
@@ -634,6 +973,9 @@
         break;
 
       case 'reacted':
+        acknowledged[m.slideId || (context && context.slideId)] = true;
+        $('understandingNote').textContent = 'Noted. Back to the conversation.';
+        updateContentActions();
         confirmReaction(m.kind);
         break;
 
@@ -645,16 +987,28 @@
         $('rVerdict').className = 'verdict ' + (m.right ? 'right' : 'wrong');
         $('rGain').textContent = m.gained ? '+' + m.gained + ' points' : (m.answered ? 'No points' : 'No answer registered');
         $('rScore').textContent = m.score;
-        $('rRank').textContent = m.team
-          ? m.team.team + ' · ' + m.team.score + ' pts · ' +
-            (m.team.of > 1 ? 'place ' + m.team.rank + ' of ' + m.team.of : 'only team')
-          : (m.of > 1 ? 'Place ' + m.rank + ' of ' + m.of : 'Keep going');
+        $('rRank').textContent = formatStanding(m);
         paintWhy(m);
         show('scResult');
         break;
 
+      case 'finish':
+        paintFinish(m);
+        break;
+
       case 'idle':
         stopTick();
+        if (context && (m.style || m.participation)) {
+          if (m.style) context.style = m.style;
+          if (m.role) context.role = m.role;
+          if (m.participation) context.participation = m.participation;
+          if (m.headPrompt) context.headPrompt = m.headPrompt;
+        }
+        if (applyParticipation(m) || applyParticipation(context)) {
+          show('scWait');
+          break;
+        }
+        if (context && (context.activity === 'content' || context.activity === 'moment')) { show('scWait'); break; }
         if ($('scHold').classList.contains('on')) break;
         if ($('scAsk').classList.contains('on')) break;
         if ($('scPrompt').classList.contains('on')) break;
@@ -662,8 +1016,21 @@
           $('waitIcon').textContent = '⏸';
           $('waitTitle').textContent = 'Hold on';
           $('waitLead').textContent = 'Waiting for the next question.';
+          setGameSkin(context && context.style, 'wait');
           show('scWait');
         }
+        break;
+
+      case 'kicked':
+        ended = true;
+        $('reconnectBtn').style.display = '';
+        if (pending) { try { sessionStorage.removeItem('slideforge.resume.' + pending.pin); } catch (_) {} }
+        stopTick();
+        $('oTitle').textContent = 'You left the room';
+        $('oScore').textContent = me && me.score != null ? me.score : '';
+        $('oRank').textContent = '';
+        $('oNote').textContent = m.reason || 'The teacher removed you from this room.';
+        show('scOver');
         break;
 
       case 'over':
@@ -671,13 +1038,48 @@
         $('reconnectBtn').style.display = 'none';
         if (pending) { try { sessionStorage.removeItem('slideforge.resume.' + pending.pin); } catch (_) {} }
         stopTick();
-        $('oTitle').textContent = "That's the quiz";
-        $('oScore').textContent = me.score;
-        $('oRank').textContent = '';
-        $('oNote').textContent = m.reason || '';
-        show('scOver');
+        paintFinish(Object.assign({ title: "That’s today’s lesson", reason: m.reason || '' }, m));
         break;
     }
+  }
+
+  function formatStanding(m) {
+    if (m.team) {
+      var teamBit = m.team.team + ' · ' + m.team.score + ' pts';
+      var place = m.team.label || (m.team.of > 1
+        ? (m.team.tied ? 'joint ' + m.team.rank : 'place ' + m.team.rank) + ' of ' + m.team.of
+        : 'only team');
+      return teamBit + ' · ' + place;
+    }
+    if (m.label) return m.label;
+    if (m.of > 1) {
+      if (m.tied && m.rank === 1) return 'Joint 1st of ' + m.of;
+      if (m.tied) return 'Joint place ' + m.rank + ' of ' + m.of;
+      return 'Place ' + m.rank + ' of ' + m.of;
+    }
+    return 'Keep going';
+  }
+
+  function paintFinish(m) {
+    if (m.score != null) me.score = m.score;
+    header(true);
+    var won = m.won === true || (m.team && m.team.won === true);
+    var tied = m.tied === true || (m.team && m.team.tied === true);
+    if (won && tied) $('oTitle').textContent = 'You won — a shared first!';
+    else if (won) $('oTitle').textContent = 'You won!';
+    else $('oTitle').textContent = m.title || "That’s today’s lesson";
+    $('oScore').textContent = me && me.score != null ? me.score : '';
+    var sharedOutcome = m.kind === 'race' || m.kind === 'boss';
+    $('oRank').textContent = sharedOutcome ? '' : formatStanding(m);
+    if (sharedOutcome) {
+      $('oTitle').textContent = m.kind === 'race' ? 'Race result' : 'Boss battle result';
+      $('oScore').textContent = '';
+    }
+    var note = [];
+    if (m.note) note.push(m.note);
+    if (m.reason) note.push(m.reason);
+    $('oNote').textContent = note.join(' · ');
+    show('scOver');
   }
 
   /* The correct answer plus the reasoning, on the player's own screen. They
@@ -766,7 +1168,6 @@
       .find(function (x) { return x.classList.contains('on'); });
     $('askErr').textContent = '';
     $('askDone').style.display = 'none';
-    $('askText').value = '';
     drawQA();
     show('scAsk');
     $('askBtn').classList.add('on');
@@ -775,8 +1176,7 @@
 
   function closeAsk() {
     $('askBtn').classList.remove('on');
-    if (askReturn) { show(askReturn.id); askReturn = null; }
-    else show('scWait');
+    askReturn = null; backToActivity();
   }
 
   /* --------------------------------------------------------- reactions */
@@ -786,15 +1186,17 @@
   var REACT_QUIET_MS = 2500;
 
   function showReactBar(on) {
-    $('reactBar').style.display = on ? 'grid' : 'none';
+    reactionsOn = on;
+    updateContentActions();
+    $('reactBar').style.display = 'none';
   }
 
   function react(kind) {
-    if (!ws || ws.readyState !== 1) return;
+    if (!ws || ws.readyState !== 1 || !context || context.activity !== 'content' || !reactionsOn || acknowledged[context.slideId]) return;
     var bar = $('reactBar');
     if (bar.classList.contains('waiting')) return;
     bar.classList.add('waiting');
-    ws.send(JSON.stringify({ t: 'react', kind: kind }));
+    ws.send(JSON.stringify({ t: 'react', kind: kind, slideId:context && context.slideId }));
     setTimeout(function () { bar.classList.remove('waiting'); }, REACT_QUIET_MS);
   }
 
@@ -831,8 +1233,7 @@
 
   function closePace() {
     $('paceBtn').classList.remove('on');
-    if (paceReturn) { show(paceReturn.id); paceReturn = null; }
-    else show('scWait');
+    paceReturn = null; backToActivity();
   }
 
   var PACE_WORDS = { lost: "you're lost", fast: "it's too fast", slow: "it's too slow" };
@@ -853,7 +1254,7 @@
 
   function sendSignal(kind) {
     if (!ws || ws.readyState !== 1) return;
-    ws.send(JSON.stringify({ t: 'signal', kind: kind }));
+    ws.send(JSON.stringify({ t: 'signal', kind: kind, slideId:context && context.slideId }));
     if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
   }
 
@@ -866,6 +1267,8 @@
     if (paceKind) { n.textContent = '1'; n.style.display = ''; }
     else n.style.display = 'none';
     if ($('scPace').classList.contains('on')) drawPace();
+    updateContentActions();
+    if (context) $('understandingNote').textContent = paceKind === 'lost' ? 'Your teacher sees a help count, not your name. Tap again to clear.' : 'Only tap if it helps. Listening is participation too.';
   }
 
   /* ------------------------------------------------------- confidence */
@@ -1080,6 +1483,10 @@
   /* ---------------------------------------------------------- question */
 
   function askQuestion(m) {
+    paintQuestionChrome(m);
+    if (!(m.style === 'emoji' || m.clueMode === 'emoji')) {
+      $('questionText').textContent = m.question || (context && context.title) || 'Look at the question on the screen';
+    }
     askConfidence = m.confidence === true;
     hideSure();
     var count = Math.max(2, Math.min(6, m.count || 4));
@@ -1095,9 +1502,31 @@
        there is nothing on the phone to recognize the answer from. */
     var typed = m.input === 'text';
     var placing = m.input === 'number';
+    var ordering = m.input === 'order';
     $('qTypeWrap').style.display = typed ? 'flex' : 'none';
     $('qNumWrap').style.display = placing ? 'flex' : 'none';
-    pad.style.display = typed || placing ? 'none' : '';
+    $('qOrderWrap').style.display = ordering ? 'flex' : 'none';
+    pad.style.display = typed || placing || ordering ? 'none' : '';
+
+    if (ordering) {
+      /* Shuffled, or the answer is "leave it alone". Seeded from nothing in
+         particular: every phone gets its own shuffle, so neighbours cannot
+         copy a position, only a reasoning. */
+      orderItems = (m.options || []).map(function (text, i) { return { i: i, text: text }; });
+      for (var k = orderItems.length - 1; k > 0; k--) {
+        var j = Math.floor(Math.random() * (k + 1));
+        var tmp = orderItems[k]; orderItems[k] = orderItems[j]; orderItems[j] = tmp;
+      }
+      var ow = $('qOrderWrap');
+      /* The flag, not just the class. Leaving dataset.locked set made the
+         control look live and refuse to send — a second ordering in a lesson
+         was unanswerable, and silently so. */
+      delete ow.dataset.locked;
+      ow.classList.remove('locked');
+      $('qOrderMine').style.display = 'none';
+      $('qOrderSend').disabled = false;
+      paintOrder();
+    }
 
     if (placing) {
       var r = m.range || {};
@@ -1132,24 +1561,30 @@
       delete wrap.dataset.locked;
       $('qText').value = '';
       $('qMine').style.display = 'none';
-      $('qTypeLead').textContent = 'Type your answer';
+      if (!(m.style === 'emoji' || m.clueMode === 'emoji')) {
+        $('qTypeLead').textContent = 'Type your answer';
+      }
       $('qNum').textContent = 'Question ' + (m.n || 1);
       show('scQuestion');
       if (m.timeLimit > 0) startTick(m.timeLimit);
       else { $('qTime').textContent = ''; $('qBar').style.width = '100%'; }
       /* Focused so the keyboard is already up: the clock is running. */
-      setTimeout(function () { try { $('qText').focus(); } catch (e) {} }, 60);
+      setTimeout(function () { if (flow.panel) return; try { $('qText').focus(); } catch (e) {} }, 60);
       if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
       return;
     }
 
     for (var i = 0; i < count; i++) {
       var b = document.createElement('button');
-      b.className = 'pick';
+      b.className = 'pick keyed';
       b.dataset.i = String(i);
       b.type = 'button';
-      var g = document.createElement('span'); g.className = 'g'; g.textContent = SHAPES[i];
-      var l = document.createElement('span'); l.className = 'l'; l.textContent = LETTERS[i];
+      var g = document.createElement('span'); g.className = 'key'; g.textContent = LETTERS[i];
+      var l = document.createElement('span'); l.className = 'l';
+      /* The badge carries the letter, so the label is the answer itself. When
+         the relay sends no options — a question the host is holding back — the
+         letter is all there is, and the badge already says it. */
+      l.textContent = (m.options && m.options[i]) || '';
       b.appendChild(g); b.appendChild(l);
       b.addEventListener('click', pickHandler(i));
       pad.appendChild(b);
@@ -1230,6 +1665,38 @@
     if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
   }
 
+  function sendOrder() {
+    var wrap = $('qOrderWrap');
+    if (wrap.dataset.locked || !orderItems.length) return;
+    wrap.dataset.locked = '1';
+    /* Authored indices in the learner's sequence. The relay checks it is a
+       real permutation before it keeps it. */
+    var order = orderItems.map(function (item) { return item.i; });
+    ws.send(JSON.stringify({ t: 'answer', order: order }));
+    lockOrder(order);
+    if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
+  }
+
+  function lockOrder(order) {
+    var wrap = $('qOrderWrap');
+    wrap.dataset.locked = '1';
+    wrap.classList.add('locked');
+    /* Resumed on another device, or replayed after a reconnect: the sequence
+       comes back from the relay, so rebuild the list from it rather than
+       trusting whatever this phone happened to be showing. */
+    if (Array.isArray(order) && order.length) {
+      var byIndex = {};
+      orderItems.forEach(function (item) { byIndex[item.i] = item; });
+      var rebuilt = order.map(function (i) { return byIndex[i]; }).filter(Boolean);
+      if (rebuilt.length === order.length) { orderItems = rebuilt; paintOrder(); }
+    }
+    $('qOrderSend').disabled = true;
+    $('qOrderMine').textContent = 'Order sent';
+    $('qOrderMine').style.display = '';
+    $('qOrderLead').textContent = 'Order sent';
+    $('qTime').textContent = 'Locked in';
+  }
+
   function lockTyped(text) {
     var wrap = $('qTypeWrap');
     wrap.dataset.locked = '1';
@@ -1238,7 +1705,9 @@
     try { $('qText').blur(); } catch (e) {}
     $('qMine').textContent = 'Sent: ' + text;
     $('qMine').style.display = '';
-    $('qTypeLead').textContent = 'Answer sent';
+    $('qTypeLead').textContent = document.body.dataset.gameStyle === 'emoji'
+      ? 'Guess sent — watch the reveal'
+      : 'Answer sent';
     $('qTime').textContent = 'Locked in';
     $('qTime').classList.remove('hurry');
   }
@@ -1267,7 +1736,7 @@
       var left = Math.max(0, end - Date.now()) / 1000;
       var pad = $('qPad');
       var held = pad.dataset.locked || $('qTypeWrap').dataset.locked ||
-        $('qNumWrap').dataset.locked;
+        $('qNumWrap').dataset.locked || $('qOrderWrap').dataset.locked;
       if (!held) t.textContent = String(Math.ceil(left));
       t.classList.toggle('hurry', left <= 5 && !held);
       bar.style.width = ((left / total) * 100).toFixed(1) + '%';
@@ -1276,7 +1745,16 @@
         pad.dataset.locked = '1';
         var typing = $('qTypeWrap');
         var sliding = $('qNumWrap');
-        if (sliding.style.display !== 'none') {
+        var ordering = $('qOrderWrap');
+        if (ordering.style.display !== 'none') {
+          if (!ordering.dataset.locked) {
+            ordering.dataset.locked = '1';
+            ordering.classList.add('locked');
+            $('qOrderSend').disabled = true;
+            $('qOrderLead').textContent = 'Time\u2019s up';
+            t.textContent = "Time's up";
+          }
+        } else if (sliding.style.display !== 'none') {
           if (!sliding.dataset.locked) {
             sliding.dataset.locked = '1';
             sliding.classList.add('locked');
@@ -1305,11 +1783,21 @@
   /* ---------------------------------------------------------- wiring */
 
   $('qSend').onclick = sendTyped;
+  $('qOrderSend').onclick = function () { sendOrder(); };
   $('qNumSend').onclick = sendPlaced;
   $('qRange').addEventListener('input', drawNumValue);
   $('qText').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') { e.preventDefault(); sendTyped(); }
   });
+  $('gotItBtn').onclick = function () { react('yes'); };
+  $('helpHereBtn').onclick = function () { sendSignal('lost'); };
+  $('saveHereBtn').onclick = toggleSave;
+  $('bookmarkCurrent').onclick = toggleSave;
+  $('savedBtn').onclick = openSaved;
+  $('landingSavedBtn').onclick = openSaved;
+  $('reviewSavedBtn').onclick = openSaved;
+  $('savedBack').onclick = backToActivity;
+  $('activityNotice').onclick = backToActivity;
   $('joinBtn').onclick = join;
   $('reconnectBtn').onclick = function () { show('scJoin'); join(); };
   var urlPin = new URLSearchParams(location.search).get('pin');

@@ -13,8 +13,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-/* Loaded the way the browser loads it: model.js first, because that is where
-   the canonical Bloom order lives and adapt.js reads it from SF. */
+/* Loaded the way the browser loads it: model.js first, then adapt.js. */
 function loadAdapt() {
   const sandbox = {};
   global.window = sandbox;
@@ -97,7 +96,46 @@ test('a check nobody marked is never diagnosed', () => {
   assert.ok(byId(a, 'unrevealed:0'));
   assert.equal(byId(a, 'unrevealed:0').severity, 'note');
   assert.ok(byId(a, 'nothing-revealed'));
-  assert.equal(a.bloom.length, 0, 'and it contributes nothing to the profile');
+  assert.ok(a.findings, 'and it contributes nothing to a bloom profile');
+});
+
+test('a vote-only check is not the same thing as a loop left open', () => {
+  const SF = loadAdapt();
+
+  /* Peer instruction is one question asked twice, and the first vote is
+     unrevealed on purpose: the split goes up, the answer does not, and the
+     argument happens in between. Reported as an unfinished loop it would be
+     advice to undo the method — so the flag is the difference between "you
+     forgot to resolve this" and "resolving it here was the mistake to
+     avoid". */
+  const pair = SF.adapt(report({
+    attendance: [1,2,3,4,5,6].map((i) => person('P' + i, 1)),
+    checks: [
+      check({ question: 'The quotation, first vote', revealedAt: null, voteOnly: true,
+        answers: [[1],[1],[1],[1],[0],[0]] }),
+      check({ question: 'The quotation, re-vote',
+        answers: [[0],[0],[1],[1],[1],[1]] })
+    ],
+    summary: { checks: 2, revealed: 1 }
+  }));
+  assert.equal(byId(pair, 'unrevealed:0'), undefined);
+  assert.equal(byId(pair, 'nothing-revealed'), undefined);
+
+  /* And the check that carries the evidence is the second one — the vote
+     after the argument is the measurement, so it is the only one that can be
+     diagnosed at all. */
+  assert.deepEqual(ids(pair).filter((id) => id.startsWith('check:')), ['check:1']);
+  assert.match(byId(pair, 'check:1').evidence, /re-vote|4 of the 4 wrong answers/);
+
+  /* The flag excuses only a check that was left unrevealed. An unresolved
+     check without it is still reported. */
+  const forgotten = SF.adapt(report({
+    attendance: [1,2,3,4,5,6].map((i) => person('P' + i, 1)),
+    checks: [check({ question: 'Asked, never resolved', revealedAt: null,
+      answers: [[1],[1],[1],[1],[0],[0]] })],
+    summary: { checks: 1, revealed: 0 }
+  }));
+  assert.ok(byId(forgotten, 'unrevealed:0'));
 });
 
 test('wrong answers that agree are a named misconception; scattered ones are not', () => {
@@ -173,98 +211,27 @@ test('a check they got right by guessing is not treated as known', () => {
   assert.match(solid.headline, /Nothing here needs changing/);
 });
 
-test("Bloom's is only used for the one thing it can tell you", () => {
-  const SF = loadAdapt();
-  const people = [1,2,3,4,5,6].map((i) => person('P' + i, 2));
-
-  /* Secure low, weak high: they can recall it and cannot use it. This is the
-     finding the taxonomy exists for here. */
-  const gap = SF.adapt(report({
-    attendance: people,
-    checks: [
-      check({ bloom: 'Remember', question: 'What is it?', answers: [[0],[0],[0],[0],[0],[1]] }),
-      check({ bloom: 'Apply', question: 'Use it', answers: [[1],[1],[1],[1],[0],[0]] })
-    ],
-    summary: { checks: 2, revealed: 2 }
-  }));
-  const g = byId(gap, 'bloom:gap');
-  assert.ok(g);
-  assert.equal(g.severity, 'act');
-  assert.match(g.title, /can remember it but not apply it/);
-  assert.match(g.action, /covering the content again will not move it/);
-
-  /* Weak at both levels is not a gap — it is just weak, and the per-check
-     findings already say so. Claiming a gap would misdirect the lesson. */
-  const bothWeak = SF.adapt(report({
-    attendance: people,
-    checks: [
-      check({ bloom: 'Remember', answers: [[1],[1],[1],[1],[0],[0]] }),
-      check({ bloom: 'Apply', answers: [[1],[1],[1],[1],[0],[0]] })
-    ],
-    summary: { checks: 2, revealed: 2 }
-  }));
-  assert.equal(byId(bothWeak, 'bloom:gap'), undefined);
-
-  /* Strong at a high level and weak at a low one is not a gap either: the
-     comparison only runs upwards. */
-  const inverted = SF.adapt(report({
-    attendance: people,
-    checks: [
-      check({ bloom: 'Remember', answers: [[1],[1],[1],[1],[0],[0]] }),
-      check({ bloom: 'Apply', answers: [[0],[0],[0],[0],[0],[1]] })
-    ],
-    summary: { checks: 2, revealed: 2 }
-  }));
-  assert.equal(byId(inverted, 'bloom:gap'), undefined);
-
-  // Untagged checks get told what tagging them would buy, and nothing else.
-  const untagged = SF.adapt(report({
-    attendance: people,
-    checks: [check({ answers: [[0],[0],[0],[0],[0],[0]] }),
-             check({ answers: [[0],[0],[0],[0],[0],[0]] })],
-    summary: { checks: 2, revealed: 2 }
-  }));
-  assert.ok(byId(untagged, 'bloom:untagged'));
-  assert.equal(byId(untagged, 'bloom:flat'), undefined);
-
-  // Every check at one level is a note about the lesson, not about the room.
-  const flat = SF.adapt(report({
-    attendance: people,
-    checks: [check({ bloom: 'Remember', answers: [[0],[0],[0],[0],[0],[0]] }),
-             check({ bloom: 'Remember', answers: [[0],[0],[0],[0],[0],[0]] })],
-    summary: { checks: 2, revealed: 2 }
-  }));
-  assert.equal(byId(flat, 'bloom:flat').severity, 'note');
-  assert.match(byId(flat, 'bloom:flat').action, /One check a level up/);
-});
-
-test("the teacher's own plan outranks the engine's advice", () => {
+test('scale feedback findings do not depend on a teacher next-step note', () => {
   const SF = loadAdapt();
   const a = SF.adapt(report({
     attendance: [1,2,3,4,5].map((i) => person('P' + i, 0)),
     feedback: [{ kind: 'scale', prompt: 'How confident are you?', options: ['1','2','3','4','5'],
-      nextStep: 'Model one worked example before independent practice.',
       responses: [{ values: [0] }, { values: [0] }, { values: [1] }, { values: [1] }, { values: [2] }] }],
     summary: { checks: 0, revealed: 0 }
   }));
   const f = byId(a, 'scale-low:0');
   assert.ok(f);
   assert.match(f.evidence, /1\.8 of 5/);
-  assert.equal(f.nextStep, 'Model one worked example before independent practice.');
-  /* Carried on the finding rather than repeated as a note of its own. */
   assert.equal(byId(a, 'plan:0'), undefined);
 
-  /* A prompt with a plan and nothing alarming in the responses still surfaces
-     the plan — the author wrote it to be read after the answers came in. */
   const calm = SF.adapt(report({
     attendance: [1,2,3,4,5].map((i) => person('P' + i, 0)),
     feedback: [{ kind: 'scale', prompt: 'How confident are you?', options: ['1','2','3','4','5'],
-      nextStep: 'Move on to independent practice.',
       responses: [{ values: [4] }, { values: [4] }, { values: [3] }, { values: [4] }, { values: [3] }] }],
     summary: { checks: 0, revealed: 0 }
   }));
-  assert.equal(byId(calm, 'plan:0').authored, true);
-  assert.equal(byId(calm, 'plan:0').action, 'Move on to independent practice.');
+  assert.equal(byId(calm, 'plan:0'), undefined);
+  assert.equal(byId(calm, 'scale-low:0'), undefined);
 });
 
 test('a split room is not described by its average', () => {
@@ -362,7 +329,7 @@ test('urgent first, and thin evidence last within that', () => {
   const order = a.findings.map((f) => [f.severity, f.strength]);
   assert.deepEqual(order[0], ['act', 'strong']);
   assert.deepEqual(order[1], ['act', 'tentative']);
-  assert.equal(order[order.length - 1][0], 'note');
+  assert.equal(order[order.length - 1][0], 'watch');
   assert.match(a.headline, /2 things to change before next lesson, and 1 to keep an eye on/);
 });
 
@@ -380,7 +347,7 @@ test('the markdown export carries the findings and its own caveat', () => {
   const md = SF.adaptToMarkdown(report({
     title: 'Attention and focus',
     attendance: [1,2,3,4,5,6].map((i) => person('P' + i, 1)),
-    checks: [check({ bloom: 'Apply', question: 'Use it', answers: [[1],[1],[1],[1],[0],[0]] })],
+    checks: [check({ question: 'Use it', answers: [[1],[1],[1],[1],[0],[0]] })],
     summary: { checks: 1, revealed: 1 }
   }));
   assert.match(md, /^# Adapt — Attention and focus/);
@@ -388,7 +355,6 @@ test('the markdown export carries the findings and its own caveat', () => {
   assert.match(md, /### Re-teach: Use it/);
   assert.match(md, /\*\*Evidence:\*\* 2 of 6 correct/);
   assert.match(md, /\*\*Suggested:\*\*/);
-  assert.match(md, /\| Apply \| 1 \| 2 \/ 6 \(33%\) \|/);
   assert.match(md, /Nothing here is a measurement of a person/);
 
   // A thin finding says so in the export too, not only on screen.
@@ -399,4 +365,33 @@ test('the markdown export carries the findings and its own caveat', () => {
   }));
   assert.match(thin, /\*\(thin evidence\)\*/);
   assert.match(thin, /read everything below as a question/);
+});
+
+test('a spoken board is not "nothing was marked"', () => {
+  const SF = loadAdapt();
+
+  /* Knowledge Flip marks cards, not people: the credit goes to a team. So
+     Adapt has nothing to say per learner — but it must not claim the lesson
+     went unmarked, because the teacher marked five answers by hand. */
+  const spoken = SF.adapt(report({
+    oral: [{ slideId: 'b1', title: 'Cell transport', kind: 'knowledgeflip', set: 1,
+      collected: 4, attempts: 5,
+      verdicts: [
+        { card: 0, term: 'Osmosis', participant: 'Red', right: true },
+        { card: 1, term: 'Diffusion', participant: 'Blue', right: false },
+        { card: 1, term: 'Diffusion', participant: 'Red', right: true },
+        { card: 2, term: 'Active transport', participant: 'Blue', right: true },
+        { card: 3, term: 'Turgor', participant: 'Red', right: true }
+      ],
+      tally: [{ name: 'Red', score: 3, attempts: 3 }, { name: 'Blue', score: 1, attempts: 2 }] }]
+  }));
+  assert.match(spoken.basis.sentence, /5 cards were marked on a board judged out loud/);
+  assert.doesNotMatch(spoken.basis.sentence, /Nothing was marked/);
+  assert.equal(spoken.headline, 'The marking here was spoken, not per learner.');
+  assert.deepEqual(spoken.findings, [], 'a spoken round carries no per-learner finding');
+
+  /* And a session where genuinely nothing happened still says so. */
+  const empty = SF.adapt(report({}));
+  assert.match(empty.basis.sentence, /Nothing was marked in this session/);
+  assert.equal(empty.headline, 'Not enough happened to say anything.');
 });

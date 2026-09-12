@@ -33,7 +33,22 @@ const MIME = {
   '.gif': 'image/gif',
   '.webp': 'image/webp',
   '.ico': 'image/x-icon',
-  '.woff2': 'font/woff2'
+  '.woff2': 'font/woff2',
+  /* Video and audio for the media slides. A clip served as
+     application/octet-stream plays in Chrome by sniffing and is refused
+     outright by Safari, so the type matters more here than for a picture. */
+  '.mp4': 'video/mp4',
+  '.m4v': 'video/mp4',
+  '.webm': 'video/webm',
+  '.ogv': 'video/ogg',
+  '.mov': 'video/quicktime',
+  '.mp3': 'audio/mpeg',
+  '.m4a': 'audio/mp4',
+  '.aac': 'audio/aac',
+  '.wav': 'audio/wav',
+  '.oga': 'audio/ogg',
+  '.ogg': 'audio/ogg',
+  '.flac': 'audio/flac'
 };
 
 
@@ -133,8 +148,37 @@ function serve(req, res) {
     } catch (_) { return jsonReply(res, 500, {error:'Could not read the session journal.'}); }
   }
 
+  if (req.method === 'DELETE' && rel.startsWith('/api/sessions/')) {
+    const id = rel.slice('/api/sessions/'.length);
+    const token = String(req.headers.authorization || '').replace(/^Bearer /, '');
+    /* Never while it is being written to. Deleting the journal of a room that
+       is still recording would leave the host appending to a file that no
+       longer exists, and the lesson would look fine until the report came
+       back empty. */
+    const live = [...rooms.values()].find(r => r.audit && r.audit.meta.id === id);
+    if (live) return jsonReply(res, 409, {error:'That lesson is still running. End it first, then delete it.'});
+    try {
+      const outcome = Sessions.remove(id, token);
+      if (outcome === 'denied') return jsonReply(res, 403, {error:'That access key does not open this session.'});
+      if (outcome === 'missing') return jsonReply(res, 404, {error:'No session with that id. It may already be deleted.'});
+      log('session ' + id + ' deleted');
+      return jsonReply(res, 200, {deleted:id});
+    } catch (_) { return jsonReply(res, 500, {error:'Could not delete the session journal.'}); }
+  }
+
   if (rel === '/api/data' && req.method === 'GET') return listData(res);
   if (rel === '/api/data' && req.method === 'POST') return saveData(req, res);
+
+  /* One-click demo lesson for File → Open demo lesson. Built on demand so
+     the app folder does not need a committed .sfbundle.json snapshot. */
+  if (rel === '/api/demo-lesson' && req.method === 'GET') {
+    try {
+      const demo = require(path.join(ROOT, 'tools', 'demo-lesson.js'));
+      return jsonReply(res, 200, demo.buildBundle());
+    } catch (err) {
+      return jsonReply(res, 500, { error: 'Could not build the demo lesson.', detail: String(err && err.message || err) });
+    }
+  }
 
   if (rel === '/') rel = '/index.html';
 
@@ -154,9 +198,45 @@ function serve(req, res) {
       res.writeHead(404, { 'Content-Type': 'text/plain' }).end('Not found: ' + rel);
       return;
     }
+    const type = MIME[path.extname(full).toLowerCase()] || 'application/octet-stream';
+
+    /* Byte ranges, which video needs and nothing else here does.
+       Without a 206 the browser reports an empty seekable range: the scrubber
+       does nothing, and a slide asking to start 90 seconds in starts at zero
+       instead. Measured before this existed — video.seekable was [[0,0]] on a
+       file whose duration read correctly, which is the shape this bug takes.
+       Advertised on every reply so the browser knows not to give up. */
+    const range = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range || '').trim());
+    if (range && st.size > 0) {
+      let start = range[1] === '' ? null : Number(range[1]);
+      let end = range[2] === '' ? null : Number(range[2]);
+      if (start === null) {
+        /* "bytes=-500" means the last 500 bytes, not from zero to 500. */
+        start = end === null ? 0 : Math.max(0, st.size - end);
+        end = st.size - 1;
+      } else if (end === null || end >= st.size) {
+        end = st.size - 1;
+      }
+      if (start > end || start >= st.size) {
+        /* 416 has to carry the real length or the player cannot recover. */
+        res.writeHead(416, { 'Content-Range': 'bytes */' + st.size }).end();
+        return;
+      }
+      res.writeHead(206, {
+        'Content-Type': type,
+        'Content-Length': end - start + 1,
+        'Content-Range': 'bytes ' + start + '-' + end + '/' + st.size,
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': 'no-cache'
+      });
+      fs.createReadStream(full, { start: start, end: end }).pipe(res);
+      return;
+    }
+
     res.writeHead(200, {
-      'Content-Type': MIME[path.extname(full).toLowerCase()] || 'application/octet-stream',
+      'Content-Type': type,
       'Content-Length': st.size,
+      'Accept-Ranges': 'bytes',
       'Cache-Control': 'no-cache'
     });
     fs.createReadStream(full).pipe(res);
@@ -205,10 +285,53 @@ function playerList(room) {
       name: p.name,
       score: p.score,
       connected: !!(p.sock && p.sock.open),
+      manual: p.manual === true,
       team: p.team,
       correct: p.correctCount || 0     // an individual race's position
     }))
     .sort((a, b) => b.score - a.score);
+}
+
+/**
+ * Competition places: equal scores share a place, next place skips
+ * (1, 1, 3). Distinct ordinals for ties made "2nd" look like a loss when
+ * both were first.
+ */
+function competitionPlaces(sortedDesc) {
+  const places = [];
+  for (let i = 0; i < sortedDesc.length; i++) {
+    if (i === 0) places.push(1);
+    else if (sortedDesc[i].score === sortedDesc[i - 1].score) places.push(places[i - 1]);
+    else places.push(i + 1);
+  }
+  return places;
+}
+
+function placeMeta(sortedDesc, index) {
+  const places = competitionPlaces(sortedDesc);
+  const place = places[index] || (index + 1);
+  const tied = sortedDesc.filter((row) => row.score === sortedDesc[index].score).length > 1;
+  return { rank: place, of: sortedDesc.length, tied: tied, won: place === 1 };
+}
+
+function ordinal(n) {
+  const v = Number(n) || 0;
+  const mod = v % 100;
+  if (mod >= 11 && mod <= 13) return v + 'th';
+  switch (v % 10) {
+    case 1: return v + 'st';
+    case 2: return v + 'nd';
+    case 3: return v + 'rd';
+    default: return v + 'th';
+  }
+}
+
+function placePhrase(meta) {
+  if (!meta || meta.of <= 1) return '';
+  if (meta.rank === 1 && meta.tied) return 'Joint 1st of ' + meta.of;
+  if (meta.rank === 1) return '1st of ' + meta.of;
+  if (meta.tied) return 'Joint ' + ordinal(meta.rank) + ' of ' + meta.of;
+  return 'Place ' + meta.rank + ' of ' + meta.of;
 }
 
 /**
@@ -218,30 +341,53 @@ function playerList(room) {
  * reveal handler), so a team of six never out-scores a team of three on
  * headcount, and the roster changing between rounds does not rewrite history.
  */
+/** How much of what they were asked this learner got right, or null when
+    they have not been asked anything yet. */
+function accuracyOf(p) {
+  if (!p.askedCount) return null;
+  return Math.round(((p.correctCount || 0) / p.askedCount) * 100);
+}
+
 function scoreRows(room) {
   if (room.mode !== 'teams') {
-    return playerList(room).map((p) => ({
-      key: 'p' + p.id,
-      name: p.name,
-      score: p.score,
-      gained: (room.players.get(p.id) || {}).lastGain > 0
-    }));
+    return playerList(room).map((p) => {
+      const rec = room.players.get(p.id) || {};
+      return {
+        key: 'p' + p.id,
+        name: p.name,
+        score: p.score,
+        /* Learning and winning, side by side and never the same number. */
+        accuracy: accuracyOf(rec),
+        answered: rec.answeredCount || 0,
+        asked: rec.askedCount || 0,
+        gained: rec.lastGain > 0
+      };
+    });
   }
 
   return room.teams
-    .map((name, i) => ({
-      key: 't' + i,
-      name,
-      ci: i,
-      members: [...room.players.values()].filter((p) => p.team === i).length,
-      score: Math.round(room.teamScores[i]),
-      gained: !!room.teamGain[i]
-    }))
+    .map((name, i) => {
+      const members = [...room.players.values()].filter((p) => p.team === i);
+      const asked = members.reduce((n, p) => n + (p.askedCount || 0), 0);
+      const right = members.reduce((n, p) => n + (p.correctCount || 0), 0);
+      return {
+        key: 't' + i,
+        name,
+        ci: i,
+        members: members.length,
+        score: Math.round(room.teamScores[i]),
+        accuracy: asked ? Math.round((right / asked) * 100) : null,
+        answered: members.reduce((n, p) => n + (p.answeredCount || 0), 0),
+        asked,
+        gained: !!room.teamGain[i]
+      };
+    })
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
 }
 
 function pushPlayers(room) {
   if (!room.host) return;
+  pushBookmarks(room);
   // the digest reports "n of m responded", so m changes when someone joins
   if (room.prompt) setTimeout(() => pushFeedback(room), 0);
   room.host.json({
@@ -266,7 +412,8 @@ function answersFor(room) {
   for (const p of room.players.values()) {
     if (eligible && !eligible.has(p.id)) continue;
     if (p.answer == null) continue;
-    out.push({ id: p.id, name: p.name, team: p.team, response: p.answer, sure: p.sure });
+    out.push({ id: p.id, name: p.name, team: p.team, response: p.answer, sure: p.sure,
+      elapsedMs: p.answeredAt ? Math.max(0, p.answeredAt - room.askedAt) : null });
   }
   return out;
 }
@@ -282,7 +429,7 @@ function pushTally(room) {
   for (const p of room.players.values()) {
     // latecomers are spectators for the question already on screen
     if (eligible && !eligible.has(p.id)) continue;
-    if ((!p.sock || !p.sock.open) && p.answer == null) continue;
+    if (!p.manual && (!p.sock || !p.sock.open) && p.answer == null) continue;
     total++;
     if (p.answer == null) continue;
     answered++;
@@ -300,6 +447,7 @@ function pushTally(room) {
     total,
     waiting: room.players.size - total,
     allIn: total > 0 && answered === total,
+    manual: [...room.players.values()].some(p => p.manual),
     /* The host marks, so it needs the answers themselves, not just the shape
        of them. It holds them in memory — a typed answer must not reach the
        projected screen before the reveal, or the room reads it off the wall. */
@@ -309,6 +457,11 @@ function pushTally(room) {
 }
 
 /** Fold the replies into whatever shape this prompt's rail needs. */
+function pushBookmarks(room) {
+  const count=[...room.players.values()].filter(p=>p.bookmarkedSlides&&p.bookmarkedSlides.has(room.at.slideId)).length;
+  if(room.host&&room.host.open)room.host.json({t:'bookmarks',slideId:room.at.slideId,count});
+}
+
 function feedbackDigest(room) {
   const p = room.prompt;
   if (!p) return null;
@@ -476,7 +629,10 @@ function pushQA(room) {
 function rank(room, playerId) {
   const list = playerList(room);
   const i = list.findIndex((p) => p.id === playerId);
-  return { rank: i + 1, of: list.length };
+  if (i < 0) return { rank: 0, of: list.length, tied: false, won: false, label: '' };
+  const meta = placeMeta(list, i);
+  meta.label = placePhrase(meta);
+  return meta;
 }
 
 /** Where a player's team sits on the board, for their phone to show. */
@@ -485,10 +641,73 @@ function teamStanding(room, player) {
   const rows = scoreRows(room);
   const i = rows.findIndex((r) => r.key === 't' + player.team);
   if (i === -1) return null;
-  return { team: rows[i].name, score: rows[i].score, rank: i + 1, of: rows.length };
+  const meta = placeMeta(rows, i);
+  return {
+    team: rows[i].name,
+    score: rows[i].score,
+    rank: meta.rank,
+    of: meta.of,
+    tied: meta.tied,
+    won: meta.won,
+    label: placePhrase(meta)
+  };
+}
+
+/** Per-learner finish summary for Results / session end. */
+function finishPayload(room, player) {
+  /* Race distance and shared boss health are not points competitions. */
+  if (room.finishKind === 'race' || room.finishKind === 'boss') {
+    return { score: player.score, kind: room.finishKind, won: false, tied: false,
+      rank: null, of: 0, team: null, label: '', note: room.finishNote || '' };
+  }
+  const r = rank(room, player.id);
+  const team = teamStanding(room, player);
+  const won = team ? team.won : r.won;
+  const tied = team ? team.tied : r.tied;
+  return {
+    score: player.score,
+    rank: team ? team.rank : r.rank,
+    of: team ? team.of : r.of,
+    tied: !!tied,
+    won: !!won,
+    label: team ? team.label : r.label,
+    team: team
+  };
 }
 
 /** The currently open prompt, as a player needs to receive it. */
+function learnerContext(room) {
+  return { t:'context', sessionId:room.audit.meta.id, lesson:room.title, ...room.at };
+}
+
+/** Fan-out shape for an open question, including companion skin fields. */
+function questionMessage(room, timeLimit) {
+  const q = room.question;
+  const msg = {
+    t: 'question',
+    n: q.index,
+    question: q.question,
+    options: q.options,
+    input: q.input,
+    range: q.range,
+    confidence: q.confidence,
+    count: q.options.length,
+    timeLimit: timeLimit != null ? timeLimit : q.timeLimit
+  };
+  if (q.style) msg.style = q.style;
+  if (q.headPrompt) msg.headPrompt = q.headPrompt;
+  if (q.clueMode) msg.clueMode = q.clueMode;
+  if (q.clues) msg.clues = q.clues;
+  return msg;
+}
+
+function sendContext(room, sock) {
+  if (room.at.slideId) {
+    const player = [...room.players.values()].find(p => p.sock === sock);
+    sock.json({...learnerContext(room), reacted:!!(player && player.reactedSlides && player.reactedSlides.has(room.at.slideId))});
+  }
+}
+
 function promptMessage(room) {
   if (!room.prompt) return null;
   return {
@@ -521,6 +740,7 @@ function admitWaiting(room) {
       round: room.roundNo,
       reactions: room.reactions
     });
+    sendContext(room, p.sock);
     const open = promptMessage(room);
     if (open) p.sock.json(open);
     log('room ' + room.pin + ' admitted ' + p.name +
@@ -541,12 +761,14 @@ function closeRoom(room, reason) {
   if (room.sweeper) { clearInterval(room.sweeper); room.sweeper = null; }
   record(room, 'end', {reason:reason || 'The host ended the session.'});
   if (room.host && room.host.open) room.host.json({t:'sessionClosed', report:Sessions.project(room.audit)});
-  const bye = { t: 'over', reason: reason || 'The host ended the quiz.' };
+  const why = reason || 'The host ended the quiz.';
   for (const p of room.players.values()) {
-    if (p.sock && p.sock.open) p.sock.json(bye);
+    if (p.sock && p.sock.open) {
+      p.sock.json(Object.assign({ t: 'over', reason: why }, finishPayload(room, p)));
+    }
   }
   for (const p of room.waiting.values()) {
-    if (p.sock && p.sock.open) p.sock.json(bye);
+    if (p.sock && p.sock.open) p.sock.json({ t: 'over', reason: why });
   }
   rooms.delete(room.pin);
   log('room ' + room.pin + ' closed (' + (reason || 'host left') + ')');
@@ -661,6 +883,112 @@ ws.attach(server, (sock, req) => {
     if (role === 'host') {
       if (!room) return;
 
+      if (m.t === 'manualAdd') {
+        if (room.phase === 'question') { sock.json({t:'manualError',message:'Add participants between questions.'}); return; }
+        const names = (Array.isArray(m.names) ? m.names : []).slice(0,200).map(n => String(n).trim().slice(0,24)).filter(Boolean);
+        const team = room.mode === 'teams' ? Number(m.team) : null;
+        /* Said, not swallowed. A bare return here meant pressing "Add names"
+           in a teams room did nothing whatsoever — no names, no message, no
+           reason — which is indistinguishable from the feature being broken. */
+        if (room.mode === 'teams' && (!Number.isInteger(team) || team < 0 || team >= room.teams.length)) {
+          sock.json({t:'manualError',message:'Choose which team these learners are on first.'});
+          return;
+        }
+        const taken = new Set([...room.players.values(),...room.waiting.values()].map(p => p.name.toLowerCase()));
+        if (!names.length || names.some(n => { const key=n.toLowerCase(); if(taken.has(key)) return true; taken.add(key); return false; }) || room.players.size+room.waiting.size+names.length > 200) {
+          sock.json({t:'manualError',message:'Use unique names, up to 200 participants in total.'}); return;
+        }
+        for (const name of names) {
+          const p={id:room.nextId++,name,team,manual:true,score:0,correctCount:0,askedCount:0,answeredCount:0,answer:null,sure:null,answeredAt:0,lastGain:0,sock:null};
+          room.players.set(p.id,p);
+          record(room,'join',{id:p.id,name,team,admitted:true,source:'teacher'});
+        }
+        pushPlayers(room); return;
+      }
+      if (m.t === 'manualRename') {
+        const p = room.players.get(Number(m.playerId)) || room.waiting.get(Number(m.playerId));
+        const name = String(m.name || '').trim().slice(0, 24);
+        if (!p) { sock.json({t:'manualError',message:'That name is not in the room.'}); return; }
+        if (!name) { sock.json({t:'manualError',message:'Type a name first.'}); return; }
+        const taken = [...room.players.values(), ...room.waiting.values()]
+          .some(x => x.id !== p.id && x.name.toLowerCase() === name.toLowerCase());
+        if (taken) { sock.json({t:'manualError',message:'Use unique names.'}); return; }
+        if (p.name !== name) {
+          p.name = name;
+          record(room, 'rename', {id: p.id, name});
+          pushPlayers(room);
+          pushTally(room);
+        }
+        return;
+      }
+      if (m.t === 'manualTeam') {
+        const p = room.players.get(Number(m.playerId)) || room.waiting.get(Number(m.playerId));
+        const team = Number(m.team);
+        if (!p) { sock.json({t:'manualError',message:'That name is not in the room.'}); return; }
+        if (room.mode !== 'teams' || !Number.isInteger(team) || team < 0 || team >= room.teams.length) {
+          sock.json({t:'manualError',message:'Pick a team that exists in this room.'}); return;
+        }
+        if (p.team !== team) {
+          p.team = team;
+          record(room, 'team', {id: p.id, team});
+          pushPlayers(room);
+        }
+        return;
+      }
+      if (m.t === 'manualRemove') {
+        const id = Number(m.playerId);
+        const fromPlayers = room.players.get(id);
+        const fromWaiting = room.waiting.get(id);
+        const p = fromPlayers || fromWaiting;
+        if (!p) { sock.json({t:'manualError',message:'That name is not in the room.'}); return; }
+        const kind = m.mode === 'kick' ? 'kick' : 'remove';
+        if (fromPlayers) room.players.delete(id);
+        else room.waiting.delete(id);
+        if (room.question && room.question.eligible) room.question.eligible.delete(id);
+        if (room.signals) room.signals.delete(id);
+        record(room, kind, {id: p.id, name: p.name, source: p.manual ? 'teacher' : 'device'});
+        const phone = p.sock;
+        p.sock = null;
+        if (phone && phone.open) {
+          phone.json({t:'kicked', reason: kind === 'kick'
+            ? 'The teacher removed you from this room.'
+            : 'The teacher deleted this name from the room.'});
+          phone.close();
+        }
+        pushPlayers(room);
+        pushTally(room);
+        if (room.signals) pushSignals(room);
+        return;
+      }
+      if (m.t === 'manualAnswer') {
+        const p=room.players.get(Number(m.playerId)), q=room.question;
+        if (!p || !p.manual) {
+          sock.json({t:'manualError',message:'That name is not a teacher-entered row. Phone answers stay on the phone.'});
+          return;
+        }
+        if (!q || room.phase !== 'question' || m.id !== q.id) {
+          sock.json({t:'manualError',message:'No open question to record against. Wait until the quiz slide is up.'});
+          return;
+        }
+        if (room.answersClosed) {
+          sock.json({t:'manualError',message:'This question is already revealed. Move on, then record the next one.'});
+          return;
+        }
+        if (!q.eligible.has(p.id)) {
+          sock.json({t:'manualError',message:'That learner was not in the room when this question opened.'});
+          return;
+        }
+        let response=null;
+        if (!m.clear) {
+          if(q.input==='text') { response=String(m.text || '').trim().slice(0,120); if(!response) return; }
+          else if(q.input==='number') { if(typeof m.value!=='number' || !Number.isFinite(m.value) || Math.abs(m.value)>1e12) return; response=m.value; }
+          else { if(!Number.isInteger(m.choice) || m.choice<0 || m.choice>=q.options.length) return; response=m.choice; }
+        }
+        p.answer=response; p.sure=null; p.answeredAt=Date.now(); room.answerRev++;
+        record(room,'manualAnswer',{attempt:q.attempt,playerId:p.id,input:q.input,choice:q.input==='choice'?response:null,text:q.input==='text'?response:null,value:q.input==='number'?response:null,clear:!!m.clear,sure:null,source:'teacher',elapsedMs:null});
+        pushTally(room); return;
+      }
+
       if (m.t === 'report') {
         sock.json({t:'sessionReport',report:Sessions.project(room.audit,true)});
       } else if (m.t === 'round') {
@@ -687,8 +1015,9 @@ ws.attach(server, (sock, req) => {
            value on a line. Only the first has options at all — that is what
            makes the others recall rather than recognition — so the option
            count is checked for that kind alone. */
-        const input = ['text', 'number'].includes(m.input) ? m.input : 'choice';
+        const input = ['text', 'number', 'order'].includes(m.input) ? m.input : 'choice';
         if (input === 'choice' && (!Array.isArray(m.options) || m.options.length < 2 || m.options.length > 6)) return;
+        if (input === 'order' && (!Array.isArray(m.options) || m.options.length < 3 || m.options.length > 8)) return;
         if (room.question && room.question.id === String(m.id || '') && room.phase === 'question') return;
         room.asked++;
         room.answerRev = 0;
@@ -700,7 +1029,7 @@ ws.attach(server, (sock, req) => {
           question: String(m.question || '').slice(0,2000),
           bloom: ['Remember','Understand','Apply','Analyze','Evaluate','Create'].includes(m.bloom) ? m.bloom : '',
           sourceSlideId: String(m.sourceSlideId || '').slice(0,160),
-          options: input === 'choice' && Array.isArray(m.options) ? m.options.map(o => String(o).slice(0,2000)) : [],
+          options: (input === 'choice' || input === 'order') && Array.isArray(m.options) ? m.options.map(o => String(o).slice(0,2000)) : [],
           /* Forwarded to the phones so the slider has a line to slide along,
              and nothing else. The relay does not judge a value against it —
              it is the shape of the control, the way `options` is the shape of
@@ -716,9 +1045,17 @@ ws.attach(server, (sock, req) => {
           /* Whether the phones ask how sure they were. Passed through, not
              decided here — it is an authoring choice. */
           confidence: m.confidence === true,
+          /* Peer instruction: collected, never resolved. Carried only so the
+             journal can say the reveal was withheld on purpose. */
+          voteOnly: m.voteOnly === true,
           // the host knows where this question sits in the deck; fall back to
           // a running count if an older client doesn't send it
-          index: Number(m.n) > 0 ? Number(m.n) : room.asked
+          index: Number(m.n) > 0 ? Number(m.n) : room.asked,
+          /* Companion skin — identity for the phone UI, never the answer. */
+          style: String(m.style || '').slice(0, 40),
+          headPrompt: String(m.headPrompt || '').slice(0, 200),
+          clueMode: m.clueMode === 'emoji' ? 'emoji' : '',
+          clues: String(m.clues || '').slice(0, 80)
         };
         room.askedAt = Date.now();
         room.phase = 'question';
@@ -732,7 +1069,7 @@ ws.attach(server, (sock, req) => {
         /* Snapshot who is eligible. Someone joining mid-question never sees it
            and so can never answer it — counting them would mean "everyone has
            answered" is never true and the auto-reveal stalls forever. */
-        room.question.eligible = new Set([...room.players.values()].filter(p => p.sock && p.sock.open).map(p => p.id));
+        room.question.eligible = new Set([...room.players.values()].filter(p => p.manual || (p.sock && p.sock.open)).map(p => p.id));
         record(room, 'question', {...room.question, eligible:[...room.question.eligible]});
         for (const p of room.players.values()) {
           p.answer = null;
@@ -740,18 +1077,13 @@ ws.attach(server, (sock, req) => {
           p.answeredAt = 0;
           p.lastGain = 0;
         }
-        broadcast(room, {
-          t: 'question',
-          n: room.question.index,
-          input: room.question.input,
-          range: room.question.range,
-          confidence: room.question.confidence,
-          count: room.question.options.length,
-          timeLimit: room.question.timeLimit
-        });
+        broadcast(room, questionMessage(room));
         pushTally(room);
 
       } else if (m.t === 'reveal') {
+        // #region agent log
+        fetch('http://127.0.0.1:7245/ingest/d54b620c-7a42-42a5-a287-490ed972a19b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0a26aa'},body:JSON.stringify({sessionId:'0a26aa',runId:'run1',hypothesisId:'A',location:'server.js:1085',message:'Reveal received',data:{mRev:m.rev,roomRev:room.answerRev,mId:m.id,qId:room.question&&room.question.id,phase:room.phase},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         if (!room.question || room.phase !== 'question' || (m.id && m.id !== room.question.id)) return;
         /* Whether an answer is right is decided by the host and arrives here
            as a verdict per player. The relay does not know what any answer
@@ -773,6 +1105,9 @@ ws.attach(server, (sock, req) => {
            punish a student for a coincidence of timing. Hand the answers back
            and let the host re-mark: reveal has not happened yet. */
         if (Number(m.rev) !== room.answerRev) {
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/d54b620c-7a42-42a5-a287-490ed972a19b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0a26aa'},body:JSON.stringify({sessionId:'0a26aa',runId:'run1',hypothesisId:'A',location:'server.js:1108',message:'Reveal rejected: rev mismatch',data:{mRev:m.rev,roomRev:room.answerRev},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
           if (room.host) {
             room.host.json({ t: 'markStale', id: room.question.id,
               rev: room.answerRev, answers: answersFor(room) });
@@ -783,6 +1118,9 @@ ws.attach(server, (sock, req) => {
           (p) => p.answer != null && !marks.has(String(p.id)) &&
                  (!room.question.eligible || room.question.eligible.has(p.id)));
         if (unmarked.length) {
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/d54b620c-7a42-42a5-a287-490ed972a19b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0a26aa'},body:JSON.stringify({sessionId:'0a26aa',runId:'run1',hypothesisId:'C',location:'server.js:1120',message:'Reveal rejected: unmarked players',data:{unmarkedCount:unmarked.length},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
           if (room.host) {
             room.host.json({ t: 'markStale', id: room.question.id,
               rev: room.answerRev, answers: answersFor(room) });
@@ -796,11 +1134,32 @@ ws.attach(server, (sock, req) => {
         if (choosing && correctIndex < 0) return;
         const why = String(m.explanation || '').slice(0, 1200);
         const answerText = String(m.answer || '').slice(0, 200);
+        const gainMap = new Map();
+        if (Array.isArray(m.gains)) {
+          for (const row of m.gains) {
+            if (Array.isArray(row) && row[0] != null && typeof row[1] === 'number' && Number.isFinite(row[1])) {
+              gainMap.set(String(row[0]), Math.round(row[1]));
+            }
+          }
+        }
         room.phase = 'revealed';
         for (const p of room.players.values()) {
+          /* How much of the lesson this learner was actually asked, and how
+             much of it they answered. Without these the only per-person number
+             the room ever had was game points, which is a measure of winning
+             rather than of understanding — and which says nothing at all about
+             the learner who answered three of nine. */
+          const wasAsked = !room.question.eligible || room.question.eligible.has(p.id);
+          if (wasAsked) {
+            p.askedCount = (p.askedCount || 0) + 1;
+            if (p.answer != null) p.answeredCount = (p.answeredCount || 0) + 1;
+          }
           let gained = 0;
-          if (marks.get(String(p.id)) === true) {
-            if (room.question.timeLimit > 0) {
+          if (gainMap.has(String(p.id))) {
+            gained = gainMap.get(String(p.id));
+            if (marks.get(String(p.id)) === true) p.correctCount++;
+          } else if (marks.get(String(p.id)) === true) {
+            if (room.question.timeLimit > 0 && ![...room.players.values()].some(p => p.manual)) {
               const elapsed = (p.answeredAt - room.askedAt) / 1000;
               const speed = Math.max(0, 1 - elapsed / room.question.timeLimit);
               gained = Math.round(room.question.points * (0.5 + 0.5 * speed));
@@ -809,7 +1168,7 @@ ws.attach(server, (sock, req) => {
             }
             p.correctCount++;
           }
-          p.score += gained;
+          p.score = Math.max(0, p.score + gained);
           p.lastGain = gained;
           p.lastRight = marks.get(String(p.id)) === true;
         }
@@ -840,6 +1199,9 @@ ws.attach(server, (sock, req) => {
             score: p.score,
             rank: r.rank,
             of: r.of,
+            tied: r.tied,
+            won: r.won,
+            label: r.label,
             team: teamStanding(room, p),
             answer: answerText,
             why: why
@@ -873,6 +1235,9 @@ ws.attach(server, (sock, req) => {
           marks: [...room.players.values()].filter(p => marks.has(String(p.id))).map(p => [p.id, marks.get(String(p.id)) === true]),
           scores:[...room.players.values()].map(p => ({id:p.id,score:p.score}))});
         pushPlayers(room);
+        // #region agent log
+        fetch('http://127.0.0.1:7245/ingest/d54b620c-7a42-42a5-a287-490ed972a19b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'0a26aa'},body:JSON.stringify({sessionId:'0a26aa',runId:'run1',hypothesisId:'B',location:'server.js:1238',message:'Reveal successful: pushPlayers called',data:{qId:room.question&&room.question.id},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         pushTally(room);
 
       } else if (m.t === 'prompt') {
@@ -947,16 +1312,94 @@ ws.attach(server, (sock, req) => {
         /* Just where the host is. A pace signal is filed against the slide the
            room was looking at when they sent it, which is the only form of it
            that is any use afterwards. */
+        const moved = room.at.slideId !== String(m.slideId || '').slice(0,160);
         room.at = {
           slideId: String(m.slideId || '').slice(0, 160),
           title: String(m.title || '').slice(0, 200),
-          n: Math.max(0, Number(m.n) || 0)
+          n: Math.max(0, Number(m.n) || 0),
+          total: Math.max(0, Number(m.total) || 0),
+          activity: ['content','question','feedback','moment'].includes(m.activity) ? m.activity : 'content',
+          text: String(m.text || '').slice(0,2400),
+          bloom: String(m.bloom || '').slice(0,24),
+          style: String(m.style || '').slice(0, 40),
+          role: ['watch','discuss','paper','wait'].includes(m.role) ? m.role : '',
+          participation: String(m.participation || '').slice(0, 240),
+          headPrompt: String(m.headPrompt || '').slice(0, 200)
         };
+        if (moved && room.prompt) {
+          room.prompt = null;
+          room.replies = new Map();
+          broadcast(room, {t:'promptEnd'});
+        }
+        if (room.at.activity !== 'question' && room.phase !== 'lobby') {
+          room.phase = 'idle';
+          room.question = null;
+          room.joinOpen = true;
+          admitWaiting(room);
+          pushPlayers(room);
+        }
+        broadcast(room, learnerContext(room));
+        pushBookmarks(room);
+        if (moved && room.signals.size) {
+          room.signals.clear();
+          broadcast(room, {t:'signalled',kind:null});
+          pushSignals(room);
+        }
+
+      } else if (m.t === 'oral') {
+        /* A teacher's verdict on something a learner said out loud, on a board
+           the phones never touch. The board's own state stays disposable, but
+           the verdict is evidence, so it is journalled like any other check.
+           Credited to a team or to the class by name — there is no playerId to
+           attribute it to, and inventing one would put a fiction in the grid. */
+        const term = String(m.term || '').slice(0, 200);
+        if (!term) return;
+        record(room, 'oral', {
+          slideId: String(m.slideId || '').slice(0, 160),
+          title: String(m.title || '').slice(0, 200),
+          kind: String(m.kind || '').slice(0, 40),
+          set: Math.max(1, Number(m.set) || 1),
+          card: Math.max(0, Number(m.card) || 0),
+          term,
+          participant: m.participant == null ? null : String(m.participant).slice(0, 80),
+          right: m.right === true,
+          /* A quiz bowl cell is worth what it says, so the verdict carries it.
+             The boards that have no points send nothing and get nothing. */
+          value: Math.max(0, Math.min(10000, Number(m.value) || 0))
+        });
 
       } else if (m.t === 'idle') {
         room.phase = 'idle';
         room.question = null;
-        broadcast(room, { t: 'idle' });
+        const idle = {
+          t: 'idle',
+          style: String(m.style || (room.at && room.at.style) || '').slice(0, 40),
+          role: ['watch','discuss','paper','wait'].includes(m.role) ? m.role
+            : ((room.at && room.at.role) || 'wait'),
+          participation: String(m.participation || (room.at && room.at.participation) || '').slice(0, 240),
+          headPrompt: String(m.headPrompt || (room.at && room.at.headPrompt) || '').slice(0, 200)
+        };
+        if (room.at) {
+          if (idle.style) room.at.style = idle.style;
+          if (idle.role) room.at.role = idle.role;
+          if (idle.participation) room.at.participation = idle.participation;
+          if (idle.headPrompt) room.at.headPrompt = idle.headPrompt;
+        }
+        broadcast(room, idle);
+
+      } else if (m.t === 'finish') {
+        /* Results slide or an explicit host “show how everyone finished”.
+           Each phone gets its own place — including shared firsts. */
+        const title = String(m.title || 'Final scores').slice(0, 80);
+        const note = String(m.note || '').slice(0, 240);
+        room.finishKind = ['race', 'boss'].includes(m.kind) ? m.kind : 'points';
+        room.finishNote = note;
+        room.phase = 'idle';
+        room.question = null;
+        for (const p of room.players.values()) {
+          if (!p.sock || !p.sock.open) continue;
+          p.sock.json(Object.assign({ t: 'finish', title: title, note: note }, finishPayload(room, p)));
+        }
 
       } else if (m.t === 'end') {
         closeRoom(room, 'The host ended the quiz.');
@@ -990,10 +1433,11 @@ ws.attach(server, (sock, req) => {
           const held = room.waiting.has(me.id);
           sock.json({t:held?'waiting':'joined',name:me.name,title:room.title,phase:room.phase,mode:room.mode,team:me.team,teamName:me.team != null ? room.teams[me.team] : null,score:me.score,resumeToken:me.resumeToken,reactions:room.reactions});
           if (!held) {
+            sendContext(room, sock);
             if (room.phase === 'question' && room.question && room.question.eligible.has(me.id)) {
               const remaining = room.question.timeLimit ? Math.max(0, room.question.timeLimit - (Date.now() - room.askedAt) / 1000) : 0;
               if (!room.question.timeLimit || remaining > 0) {
-                sock.json({t:'question',n:room.question.index,input:room.question.input,range:room.question.range,confidence:room.question.confidence,count:room.question.options.length,timeLimit:remaining});
+                sock.json(questionMessage(room, remaining));
                 if (me.answer != null) {
                   sock.json(room.question.input === 'text' ? {t:'locked',text:me.answer}
                     : room.question.input === 'number' ? {t:'locked',value:me.answer}
@@ -1095,6 +1539,7 @@ ws.attach(server, (sock, req) => {
       /* A prompt is broadcast when the host opens it, so somebody arriving
          afterwards would never see it. Hand it over on join instead — unlike a
          quiz question, there is no fairness reason to hold them out. */
+      sendContext(room, sock);
       const open = promptMessage(room);
       if (open) sock.json(open);
       sock.json(qaForPlayer(room, me.id));
@@ -1146,13 +1591,23 @@ ws.attach(server, (sock, req) => {
       return;
     }
 
+    if(role==='player' && m.t==='bookmark'){
+      if(!room||!rooms.has(room.pin)||!room.players.has(me.id)||m.slideId!==room.at.slideId||typeof m.saved!=='boolean')return;
+      if(!me.bookmarkedSlides)me.bookmarkedSlides=new Set();
+      const had=me.bookmarkedSlides.has(m.slideId);
+      if(m.saved&&me.bookmarkedSlides.size<500)me.bookmarkedSlides.add(m.slideId);else if(!m.saved)me.bookmarkedSlides.delete(m.slideId);
+      if(had!==me.bookmarkedSlides.has(m.slideId))pushBookmarks(room);
+      return;
+    }
+
     if (role === 'player' && m.t === 'react') {
       if (!room || !rooms.has(room.pin) || !room.players.has(me.id)) return;
-      if (!room.reactions) return;
+      if (!room.reactions || (m.slideId && m.slideId !== room.at.slideId)) return;
       /* Not while a question is up. Reactions belong to the explaining, not
          the answering — and the foot of a question slide is already carrying
          the answer tally. */
-      if (room.phase === 'question') return;
+      if (room.phase === 'question' || room.prompt || (room.at.slideId && room.at.activity !== 'content')) return;
+      if (room.at.slideId && me.reactedSlides && me.reactedSlides.has(room.at.slideId)) return;
       if (!REACTIONS.includes(m.kind)) return;
 
       const now = Date.now();
@@ -1160,6 +1615,10 @@ ws.attach(server, (sock, req) => {
       room.reactBurst = room.reactBurst.filter((t) => now - t < REACT_BURST_MS);
       if (room.reactBurst.length >= REACT_BURST) return;
 
+      if (room.at.slideId) {
+        if (!me.reactedSlides) me.reactedSlides = new Set();
+        me.reactedSlides.add(room.at.slideId);
+      }
       room.reactAt.set(me.id, now);
       room.reactBurst.push(now);
       /* To the host only: the wall shows it, and there is nothing for another
@@ -1167,12 +1626,13 @@ ws.attach(server, (sock, req) => {
          the README. It is the one channel here with no purpose beyond the
          room feeling present, and metering it would change what it is. */
       if (room.host && room.host.open) room.host.json({ t: 'reaction', kind: m.kind });
-      sock.json({ t: 'reacted', kind: m.kind });
+      sock.json({ t: 'reacted', kind: m.kind, slideId:room.at.slideId });
       return;
     }
 
     if (role === 'player' && m.t === 'signal') {
       if (!room || !rooms.has(room.pin) || !room.players.has(me.id)) return;
+      if (m.slideId && m.slideId !== room.at.slideId) return;
       const kind = SIGNAL_KINDS.includes(m.kind) ? m.kind : null;
       const mine = room.signals.get(me.id);
       /* Pressing the same thing again takes it back. Nobody should have to
@@ -1185,9 +1645,12 @@ ws.attach(server, (sock, req) => {
         sock.json({ t: 'signalled', kind });
         /* Journalled without the player: the report should be able to say the
            room lost the thread on slide 7 without naming who said so. */
-        record(room, 'signal', {
-          kind, slideId: room.at.slideId, title: room.at.title, n: room.at.n
-        });
+        if (!me.signalLogged) me.signalLogged = new Set();
+        const signalKey = room.at.slideId + ':' + kind;
+        if (!me.signalLogged.has(signalKey)) {
+          me.signalLogged.add(signalKey);
+          record(room, 'signal', {kind, slideId:room.at.slideId,title:room.at.title,n:room.at.n});
+        }
       }
       pushSignals(room);
       return;
@@ -1256,6 +1719,21 @@ ws.attach(server, (sock, req) => {
         if (typeof m.value !== 'number' || !Number.isFinite(m.value) ||
             Math.abs(m.value) > 1e12) return;
         response = m.value;
+      } else if (room.question.input === 'order') {
+        /* A permutation of the options and nothing else. Checked here rather
+           than trusted, because every later reader — marking, the tally, the
+           report, the CSV — indexes into options with these numbers, and a
+           repeat or a stray index would corrupt all of them at once. It is
+           the first response in this protocol that is not a scalar, so it is
+           also the first that can be malformed in interesting ways. */
+        const n = room.question.options.length;
+        if (!Array.isArray(m.order) || m.order.length !== n) return;
+        const seen = new Set();
+        for (const v of m.order) {
+          if (!Number.isInteger(v) || v < 0 || v >= n || seen.has(v)) return;
+          seen.add(v);
+        }
+        response = m.order.slice();
       } else {
         const choice = Number(m.choice);
         if (!Number.isInteger(choice) || !(choice >= 0 && choice < room.question.options.length)) return;
@@ -1274,10 +1752,15 @@ ws.attach(server, (sock, req) => {
         choice: room.question.input === 'choice' ? response : null,
         text: room.question.input === 'text' ? response : null,
         value: room.question.input === 'number' ? response : null,
+        /* Its own field, not squeezed into `choice`. The report reads these
+           by input kind, and an array in a field every other reader treats
+           as an index would be a silent corruption rather than an error. */
+        order: room.question.input === 'order' ? response : null,
         sure: me.sure,
         elapsedMs:me.answeredAt-room.askedAt});
       sock.json(room.question.input === 'text' ? { t: 'locked', text: response }
         : room.question.input === 'number' ? { t: 'locked', value: response }
+        : room.question.input === 'order' ? { t: 'locked', order: response }
         : { t: 'locked', choice: response });
       pushTally(room);
       return;
@@ -1290,6 +1773,7 @@ ws.attach(server, (sock, req) => {
     } else if (role === 'player' && room && me) {
       if (me.sock !== sock) return;
       me.sock = null;
+      if (!rooms.has(room.pin) || (!room.players.has(me.id) && !room.waiting.has(me.id))) return;
       if (rooms.has(room.pin)) record(room, 'leave', {id:me.id});
       if (rooms.has(room.pin)) {
         /* Someone who has left the room is not still lost in it, and leaving

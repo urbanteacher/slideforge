@@ -1,0 +1,18 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Memory board regression fixture</title>
+<style>body{margin:0;font:14px system-ui}header{height:42px;display:flex;gap:12px;align-items:center;padding:0 12px}iframe{border:0;width:100%;height:calc(100vh - 42px)}</style>
+<header>Test fixture · sample pairs only <button data-game="memorymatch">Memory Match</button><button data-game="memoryflip">Memory Flip</button><button data-game="knowledgeflip">Knowledge Flip</button><button id="theme">Switch theme</button><button id="presenter-test">Private presenter</button></header>
+<iframe src="../index.html" title="SlideForge under test"></iframe>
+<script>
+var frame=document.querySelector('iframe'),theme='studio';
+function play(kind){var SF=frame.contentWindow.SF,g=SF.makeGame('Inside a living cell',kind);g.theme=theme;g.settings.intro=false;g.settings.teams=[{name:'Cedar'},{name:'Willow'}];var deck=SF.gameToRunDeck(g);deck.slides.push(Object.assign(SF.makeSlide('title'),{title:'Continue your lesson'}));SF.Player.start(deck,0,{fullscreen:false});}
+document.querySelectorAll('[data-game]').forEach(function(b){b.onclick=function(){play(b.dataset.game);};});
+document.querySelector('#theme').onclick=function(){theme=theme==='studio'?'midnight':'studio';play('memorymatch');};
+document.querySelector('#presenter-test').onclick=function(){
+ /* Replace, never stack: a second click used to leave the first frame
+    behind, and reading "the presenter" then found a render from minutes ago. */
+ var stale=document.querySelector('iframe[title="Private presenter"]');if(stale)stale.remove();
+ var privateFrame=document.createElement('iframe');privateFrame.title='Private presenter';privateFrame.src='../presenter.html';
+ privateFrame.style.cssText='position:fixed;inset:42px 0 0;width:100%;height:calc(100vh - 42px);background:white;z-index:10';document.body.appendChild(privateFrame);
+ privateFrame.onload=function(){var host=frame.contentWindow,original=host.open;privateFrame.contentWindow.opener=host;host.open=function(){return privateFrame.contentWindow;};host.SF.Player.openPresenter();host.open=original;host.SF.Player.syncPresenter();};
+};
+</script></html>

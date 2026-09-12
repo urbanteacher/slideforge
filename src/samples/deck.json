@@ -1,0 +1,54 @@
+{
+  "title": "Sample deck & quiz",
+  "slides": [
+    {
+      "type": "title",
+      "title": "SlideForge",
+      "subtitle": "Presentations and quizzes, straight from the browser",
+      "notes": "Press the right arrow or space to advance. Press ? during the show for all shortcuts."
+    },
+    {
+      "type": "content",
+      "title": "What this does",
+      "bullets": [
+        "Build slides in the editor on the left",
+        "Present full screen in 16:9, like a PowerPoint show",
+        "Drop quiz slides anywhere in the deck",
+        "Score the room live, or click through answers yourself"
+      ]
+    },
+    {
+      "type": "section",
+      "title": "Quiz time",
+      "subtitle": "Three questions"
+    },
+    {
+      "type": "quiz",
+      "question": "What aspect ratio is a modern widescreen slide?",
+      "options": [
+        "4:3",
+        "16:9",
+        "1:1",
+        "21:9"
+      ],
+      "correct": 1,
+      "timeLimit": 20
+    },
+    {
+      "type": "quiz",
+      "question": "Which key blanks the screen mid-presentation?",
+      "options": [
+        "B",
+        "Q",
+        "X",
+        "M"
+      ],
+      "correct": 0,
+      "timeLimit": 15
+    },
+    {
+      "type": "results",
+      "title": "How did you do?"
+    }
+  ]
+}

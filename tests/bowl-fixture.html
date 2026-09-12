@@ -1,0 +1,50 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Quiz bowl board regression fixture</title>
+<style>body{margin:0;font:14px system-ui}header{height:42px;display:flex;gap:10px;align-items:center;padding:0 12px;flex-wrap:wrap}iframe{border:0;width:100%;height:calc(100vh - 42px)}</style>
+<header>Test fixture · sample cells only
+<button data-teams="1">1 class score</button><button data-teams="2">2 teams</button><button data-teams="4">4 teams</button><button data-teams="6">6 teams</button>
+<button data-shape="wide">6 categories</button><button data-shape="tall">5 values</button><button data-shape="stack">stacked cell</button>
+<button id="theme">Switch theme</button><button id="presenter-test">Private presenter</button></header>
+<iframe src="../index.html" title="SlideForge under test"></iframe>
+<script>
+/* The shapes worth watching: the widest grid a projector holds, the tallest,
+   and two questions sharing one category/value cell — which the audit allows
+   and which a teacher will write without meaning to. */
+var frame=document.querySelector('iframe'),theme='studio',teams=4,shape='tall';
+var CATS=['Cells','Transport','Enzymes','Genetics','Disease','Ecology'];
+function cells(){
+  var out=[],values=shape==='tall'?[100,200,300,400,500]:[100,200,300];
+  var cats=shape==='wide'?CATS:CATS.slice(0,3);
+  cats.forEach(function(c){values.forEach(function(v){
+    out.push({category:c,pointValue:v,question:c+' for '+v+': name the idea.',answer:c+' answer '+v});
+  });});
+  if(shape==='stack'){
+    out=[];
+    [100,200].forEach(function(v){['Cells','Transport'].forEach(function(c){
+      out.push({category:c,pointValue:v,question:c+' '+v+' — first question.',answer:'First '+c+' '+v});
+      out.push({category:c,pointValue:v,question:c+' '+v+' — second question.',answer:'Second '+c+' '+v});
+    });});
+  }
+  return out;
+}
+function play(){
+  var SF=frame.contentWindow.SF,g=SF.makeGame('Revision bowl','bowl');
+  g.theme=theme;g.settings.intro=false;
+  g.settings.mode=teams>1?'teams':'individual';
+  g.settings.teams='Cedar Willow Rowan Aspen Birch Hazel'.split(' ').slice(0,teams).map(function(n){return {name:n};});
+  g.questions=cells().map(function(c){
+    return SF.normalizeQuestion(Object.assign(SF.makeQuestion('bowl'),c,{targetScore:1000}),'bowl');
+  });
+  var deck=SF.gameToRunDeck(g);
+  deck.slides.push(Object.assign(SF.makeSlide('title'),{title:'Continue your lesson'}));
+  SF.Player.start(deck,0,{fullscreen:false});
+}
+document.querySelectorAll('[data-teams]').forEach(function(b){b.onclick=function(){teams=Number(b.dataset.teams);play();};});
+document.querySelectorAll('[data-shape]').forEach(function(b){b.onclick=function(){shape=b.dataset.shape;play();};});
+document.querySelector('#theme').onclick=function(){theme=theme==='studio'?'midnight':'studio';play();};
+document.querySelector('#presenter-test').onclick=function(){
+ var stale=document.querySelector('iframe[title="Private presenter"]');if(stale)stale.remove();
+ var privateFrame=document.createElement('iframe');privateFrame.title='Private presenter';privateFrame.src='../presenter.html';
+ privateFrame.style.cssText='position:fixed;inset:42px 0 0;width:100%;height:calc(100vh - 42px);background:white;z-index:10';document.body.appendChild(privateFrame);
+ privateFrame.onload=function(){var host=frame.contentWindow,original=host.open;privateFrame.contentWindow.opener=host;host.open=function(){return privateFrame.contentWindow;};host.SF.Player.openPresenter();host.open=original;host.SF.Player.syncPresenter();};
+};
+</script></html>

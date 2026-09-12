@@ -1,0 +1,22 @@
+[
+  {
+    "term": "Cell",
+    "prompt": "The basic unit of living things — what connects next?",
+    "question": "Chain from: Cell"
+  },
+  {
+    "term": "Tissue",
+    "prompt": "Groups of similar cells — how does this link onward?",
+    "question": "Chain from: Tissue"
+  },
+  {
+    "term": "Organ",
+    "prompt": "Tissues working together — what comes after?",
+    "question": "Chain from: Organ"
+  },
+  {
+    "term": "System",
+    "prompt": "Organs cooperating — how does this reach the organism?",
+    "question": "Chain from: System"
+  }
+]

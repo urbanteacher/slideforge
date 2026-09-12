@@ -1,10 +1,114 @@
 # SlideForge
 
+## Developing the model
+
+The model source lives in `src/`: game definitions and scoring in `src/games/`,
+starter content in `src/samples/`, and persistence in `src/storage.js`.
+`js/model.js` is the generated compatibility bundle used by existing pages.
+Edit the source, then run `npm run build`; include both source and bundle changes.
+
+Use Node 22.12 or newer and `npm ci` to install development tools. `npm test`
+checks that the bundle matches its source and runs the full test suite.
+`npm run dev:build` rebuilds when source files change. `npm start` runs the relay.
+The committed bundle still runs without installing tools or building first.
+For browser smoke checks, run `npx playwright install chromium`, start the relay,
+then run a `tools/smoke-*.mjs` script (set `SF_URL` to use a different port).
+
+See [the modernization notes](docs/codebase-modernization.md) for the engine
+contract, compatibility constraints, and remaining migration work.
+
+## Customise and teach
+
+**Logo & theme** at the top of the slide inspector opens presentation settings.
+Upload a logo or load an http(s) image URL, choose Small/Medium/Large, and show it
+on every slide, the first slide, or hide it. **Customise this slide → Text colour**
+sets the default for that slide; selected-word colours remain available below.
+
+The presentation HUD keeps Previous/Next, Draw, Blank, More and Exit on the main
+bar. **More** contains labelled room, QR, response, teacher-entry, presenter,
+fullscreen and keyboard actions. Unavailable live-only actions are disabled.
+The HUD stays visible while hovered, keyboard-focused, or while More is open;
+Escape closes More before exiting the show. Named answers are a projected view;
+Teacher entry and Presenter view open separate instructor windows.
+
+Select words in a slide title, subtitle, quotation or bullet field to reveal the
+formatting toolbar: bold, italic, underline, highlight, colour and an http(s)
+link. Cmd/Ctrl+B, I and U also work in those fields. Clear removes formatting
+from the selection. Lesson text stays plain in learner views and exports;
+formatting is saved separately in the deck. Table cells and paired glossary
+fields retain their structured styling.
+
+**Customise this slide** adds alignment, three text sizes, a background colour,
+and previews of Bullets, Cards and Dual layouts using the current content.
+Dual slides support **Swap sides**, image above/below text, 35/50/65 percent
+image proportions, and horizontal/vertical crop focus. **Reset to theme** clears
+custom colours, sizing and inline emphasis. Lesson studio **Undo / Redo** keeps
+up to 60 edits for the open deck during this visit; it is not a disk version
+history. Switching documents resets this history.
+
+Enable **Reveal one point or row at a time** on supported layouts. During the
+show, Next reveals a point before moving on; Previous hides the most recent
+point. Learner excerpts follow the visible points. Presenter view keeps the
+full slide available and reports how many points have been revealed.
+**Draw and spotlight** in the HUD adds temporary drawing, a spotlight marker, ink undo/clear
+and Show all points. Ink is cleared when the slide changes and is not exported.
+
+### A classroom without phones
+
+Start **Host live**, then **Teacher entry · no phones**. The private teacher
+window accepts names, one per line, and a team assignment when the game uses
+teams. A fallback link opens the controls in a separate tab. Keep this window
+on the instructor display. The local relay is required, but learner devices and
+internet accounts are not. Phone learners can participate in the same room.
+
+Add participants between questions. For each choice, typed or slider question,
+record their answer in the private window; change it or Clear answer before
+**Reveal and score**. A room with teacher-entered participants has no automatic
+countdown/reveal and awards equal points for correct answers, so typing speed
+does not influence marks. After reveal, entries are locked. For shared team
+responses use one representative entry per team; do not treat that response as
+an individual assessment of every member.
+
+Reports and CSV exports distinguish teacher entry from device participation;
+teacher-entered rows have no device connection duration. Anonymous aggregate
+entry, partial-credit marking and editing answers after reveal are not included.
+Restart an already-running relay to load the teacher-entry protocol changes.
+
+
+## Learner lesson companion
+
+The QR opens `join.html?pin=…` with the PIN filled in. After joining, the
+phone follows the instructor’s current slide automatically:
+
+- **Content:** a readable title and excerpt, one optional **Got it** acknowledgment,
+  **Need help**, and **Save for later**. Listening requires no tapping.
+- **Knowledge check:** the question and answer labels, or the existing typed-answer
+  / slider control, followed by confidence and the revealed explanation.
+- **Audience feedback:** the poll, scale, word-cloud or brainstorm control takes
+  over. The content reaction controls are hidden.
+- **Q&A, pace and saved items:** utility panels preserve a draft while the lesson
+  advances. Returning opens the latest activity, with a notice when it changes.
+- **After the lesson:** **My saved slides** on the join page opens the learner’s
+  private review list, even without an active room. These are title/excerpt
+  snapshots stored in this browser, not full slide files or instructor reports.
+
+The relay sends bounded, plain-text context to newly joined and reconnecting
+learners without speaker notes or correct answers. Late arrivals held during a
+quiz are admitted when the instructor returns to content or feedback. Reactions
+are limited to one per person per content slide and respect the host toggle;
+repeating a help toggle does not inflate a slide’s report count. Help indicators
+reset when the slide changes. Existing moderation, confidence, session reporting
+and Adapt analysis remain in place.
+
+Run `node --test tests/*.test.js` for the full suite, including learner activity
+transitions, context delivery, reconnection, admission and spam limits.
+
+
 The lesson studio now includes a light editor, a sage-and-lilac **Studio** theme, a **Cards** layout, and an **Add activity** library. Open **Example lesson** to explore a six-slide teach → check → discuss → adapt sequence; your existing document stays available through **File → Open**.
 
 The **Engagement** tab adds Bloom’s thinking levels, reusable discussion prompts and a private next-step planning note. Feedback can be previewed beside the slide or full screen using clearly labelled sample responses, without connecting students or a server. Knowledge checks created from the library default to no countdown or leaderboard.
 
-Available library activities: multiple choice, true/false, poll, word cloud and brainstorm. The Add activity library also lists all 27 fullscreen catalogue games (True/False Showdown through Concept Chain) as planned placeholders; their interaction engines are not implemented yet. The existing horse-race style remains available in Quiz studio.
+Available activities include multiple choice, true/false, type answer, slider, poll, word cloud, brainstorm and scale. Low-stakes quiz, Beat the Clock, True/False Showdown and Horse Race are playable presets of existing engines. Other catalogue formats are explicitly labelled Planned. Feedback can appear beside the slide or full screen.
 
 **+ Slide** (left rail) opens slide starters — opening title, title + content, keywords, italics, hyperlinks, dual coding, section break, full-bleed image, three cards, quote, and steps. After insert, the **Layout** picker stays in the right panel so you can change the shape. **Lesson logo** (Design & content) adds a corner mark on every slide or the title slide only. **File → Export → Practice notes (.md)** downloads a one-way Markdown handout for Canvas or Colab; live polls and games stay in the `.sfdeck.json` room.
 
@@ -77,12 +181,10 @@ to load `tests` as a module instead of discovering the files.
 the live path can be exercised — and demonstrated — without a room full of
 phones. See "Rehearsing without a room" below.
 
-Next in the product sequence: ship fullscreen catalogue game engines (starting
-with Horse Race / Beat the Clock / Memory Flip). Those need a decision first:
-every game here plays in lockstep — one question on the wall, the room answering
-it together — and a self-paced mechanic like Beat the Clock means each phone
-working through its own queue, which the relay's single `room.question` cannot
-express.
+Catalogue entries marked Planned require additional interaction mechanics.
+Beat the Clock currently uses synchronised timed questions. A future self-paced
+version would require per-learner question queues instead of the relay's current
+shared question.
 
 ---
 
@@ -103,9 +205,7 @@ two jobs from tangling.
 
 ### Presentation
 
-Layouts: **Title**, **Section**, **Bullets**, **Image**, **Quote**, and the
-**Game** embed. Drag slides in the rail to reorder. Five themes apply to the
-whole deck.
+Layouts: Title, Section, Bullets, Keywords, Italics, Links, Dual, Cards, Table, Image, Video and the Game embed. Drag slides in the rail to reorder. Six themes provide deck defaults, with optional per-slide customisation.
 
 Bullets are one per line; start a line with `- ` or indent it for a sub-bullet.
 Images take a URL or embed a local file (keep those under a few MB — browser
@@ -921,8 +1021,7 @@ overlapping the answer tally on a question slide.
 | `?` | Shortcut list |
 | `Esc` | Exit |
 
-While a question is unanswered the answer letters win over the controls that
-share them, so `B` answers B rather than blanking the screen.
+In solo mode, unanswered multiple-choice questions use A–F as answers. During a live lesson B, D and F retain their presenter controls; learner answers arrive through devices or teacher entry.
 
 **In the editors**
 
@@ -1023,3 +1122,22 @@ they were.
   in the roster the spike threshold is measured against, and their phone has no
   header yet, so the control is not offered — but if they are watching the
   screen and lost, nothing they can do says so.
+
+### Memory boards
+
+Memory Match, Memory Flip and Knowledge Flip use shared interactive boards in
+the ordinary presentation player. New games include four editable pairs; use
+**+ Pair** to add more. Boards show up to eight pairs per set. The first pair's
+study duration applies to its set; changing study time in the editor updates
+all pairs.
+
+Memory Match rotates teams after a claim or pass. Memory Flip builds one class
+collection. Knowledge Flip keeps keywords visible and skips study. Explain a
+chosen term aloud, reveal its definition, then let the teacher claim it or
+leave it available for another attempt. Pause, replay, ties and returning to a
+board are supported. The private presenter preview also operates the board.
+
+Collection scores are local to that set and presentation run; they do not alter
+live quiz scores or session reports. Learners follow the shared screen and
+answer aloud. See [the adaptation design](docs/game-adaptation.md) for the
+remaining catalogue's intended mechanics and implementation boundaries.

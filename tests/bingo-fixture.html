@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Bingo board regression fixture</title>
+<style>body{margin:0;font:14px system-ui}header{height:42px;display:flex;gap:10px;align-items:center;padding:0 12px;flex-wrap:wrap}iframe{border:0;width:100%;height:calc(100vh - 42px)}</style>
+<header>Test fixture · sample terms only
+<button data-teams="1">1 class card</button><button data-teams="2">2 teams</button><button data-teams="4">4 teams</button><button data-teams="6">6 teams</button>
+<button data-size="2">2×2</button><button data-size="4">4×4</button>
+<button id="theme">Switch theme</button><button id="presenter-test">Private presenter</button></header>
+<iframe src="../index.html" title="SlideForge under test"></iframe>
+<script>
+/* The layouts worth watching are the crowded ones: six 4×4 cards is the most
+   a 1280×720 stage ever has to hold, and four cards used to wrap into a row
+   that pushed the footer off the bottom edge. */
+var frame=document.querySelector('iframe'),theme='studio',teams=4,size=3;
+var PAIRS=[['Nucleus','Holds the cell’s DNA'],['Cytoplasm','Jelly where reactions happen'],['Cell membrane','Controls what gets in and out'],['Mitochondrion','Releases energy in respiration'],['Ribosome','Builds proteins'],['Vacuole','Stores sap and keeps a cell firm'],['Chloroplast','Traps light for photosynthesis'],['Cell wall','Stops a plant cell bursting'],['Chromosome','Coiled DNA carrying genes'],['Enzyme','Speeds one reaction, is not used up'],['Diffusion','Particles spread from many to few'],['Osmosis','Water across a partial membrane'],['Active transport','Moves against the gradient'],['Turgor','Firm with water'],['Plasmolysis','Membrane pulls away from the wall'],['Concentration','How much is dissolved in a volume'],['Gradient','A difference across a distance'],['Permeable','Lets some things through']];
+function play(){
+  var SF=frame.contentWindow.SF,g=SF.makeGame('Inside a living cell','bingo');
+  g.theme=theme;g.settings.intro=false;
+  g.settings.mode=teams>1?'teams':'individual';
+  g.settings.teams='Cedar Willow Rowan Aspen Birch Hazel'.split(' ').slice(0,teams).map(function(n){return {name:n};});
+  g.questions=PAIRS.map(function(p){
+    return SF.normalizeQuestion(Object.assign(SF.makeQuestion('bingo'),
+      {term:p[0],question:p[0],definition:p[1],gridSize:size}),'bingo');
+  });
+  var deck=SF.gameToRunDeck(g);
+  deck.slides.push(Object.assign(SF.makeSlide('title'),{title:'Continue your lesson'}));
+  SF.Player.start(deck,0,{fullscreen:false});
+}
+document.querySelectorAll('[data-teams]').forEach(function(b){b.onclick=function(){teams=Number(b.dataset.teams);play();};});
+document.querySelectorAll('[data-size]').forEach(function(b){b.onclick=function(){size=Number(b.dataset.size);play();};});
+document.querySelector('#theme').onclick=function(){theme=theme==='studio'?'midnight':'studio';play();};
+document.querySelector('#presenter-test').onclick=function(){
+ /* Replace, never stack: a second click used to leave the first frame
+    behind, and reading "the presenter" then found a render from minutes ago. */
+ var stale=document.querySelector('iframe[title="Private presenter"]');if(stale)stale.remove();
+ var privateFrame=document.createElement('iframe');privateFrame.title='Private presenter';privateFrame.src='../presenter.html';
+ privateFrame.style.cssText='position:fixed;inset:42px 0 0;width:100%;height:calc(100vh - 42px);background:white;z-index:10';document.body.appendChild(privateFrame);
+ privateFrame.onload=function(){var host=frame.contentWindow,original=host.open;privateFrame.contentWindow.opener=host;host.open=function(){return privateFrame.contentWindow;};host.SF.Player.openPresenter();host.open=original;host.SF.Player.syncPresenter();};
+};
+</script></html>

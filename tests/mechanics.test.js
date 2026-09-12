@@ -1,0 +1,247 @@
+'use strict';
+/* Game mechanics scoring — audit formulas on SlideForge's style path. */
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+
+function loadModel() {
+  const sandbox = {};
+  global.window = sandbox;
+  delete require.cache[require.resolve('../js/model.js')];
+  require('../js/model.js');
+  delete global.window;
+  return sandbox.SF;
+}
+
+test('boss damage and starting HP follow the audit table', () => {
+  const SF = loadModel();
+  assert.equal(SF.bossDamage('easy'), 1);
+  assert.equal(SF.bossDamage('medium'), 2);
+  assert.equal(SF.bossDamage('hard'), 3);
+  assert.equal(SF.bossDamage('boss'), 5);
+  assert.equal(SF.bossDamage('unknown'), 2, 'unknown difficulty is medium');
+
+  const qs = [
+    { difficulty: 'easy' },
+    { difficulty: 'medium' },
+    { difficulty: 'hard' },
+    { difficulty: 'boss' }
+  ];
+  assert.equal(SF.bossMaxHp(qs), 1 + 2 + 3 + 5);
+  assert.equal(SF.bossMaxHp([]), 0);
+});
+
+test('beat-the-clock points: 10 + remaining/10 correct, −5 wrong', () => {
+  const SF = loadModel();
+  assert.equal(SF.speedPoints(true, 60), 16);
+  assert.equal(SF.speedPoints(true, 9), 10);
+  assert.equal(SF.speedPoints(true, 0), 10);
+  assert.equal(SF.speedPoints(true, -3), 10, 'negative remaining clamps');
+  assert.equal(SF.speedPoints(false, 60), -5);
+  assert.equal(SF.speedPoints(false, 0), -5);
+});
+
+test('speed and boss are first-class styles with their own mechanics', () => {
+  const SF = loadModel();
+  assert.equal(SF.GAME_STYLES.speed.mechanic, 'speed');
+  assert.equal(SF.GAME_STYLES.boss.mechanic, 'boss');
+  assert.equal(SF.gameStyle('speed').mechanic, 'speed');
+  assert.equal(SF.gameStyle('boss').mechanic, 'boss');
+
+  const speed = SF.makeGame('Clock', 'speed');
+  assert.equal(speed.settings.defaultTime, 60);
+  assert.equal(SF.gameToRunDeck(speed).mechanic, 'speed');
+
+  const boss = SF.makeGame('Boss', 'boss');
+  assert.equal(boss.questions[0].difficulty, 'medium');
+  const run = SF.gameToRunDeck(boss);
+  assert.equal(run.mechanic, 'boss');
+  const quiz = run.slides.find((s) => s.type === 'quiz');
+  assert.equal(quiz.difficulty, 'medium');
+  assert.equal(quiz.bossDamage, 2);
+
+  const hard = SF.normalizeQuestion(Object.assign(SF.makeQuestion('boss'), {
+    question: 'Hard hit?',
+    options: ['A', 'B'],
+    correct: 0,
+    difficulty: 'boss'
+  }), 'boss');
+  assert.equal(hard.difficulty, 'boss');
+  assert.match(SF.GAME_STYLES.boss.summary(hard), /boss \(5 dmg\)/);
+});
+
+test('catalogue formats map centrally onto engines', () => {
+  const SF = loadModel();
+  assert.equal(SF.formatStyle('beat-the-clock'), 'speed');
+  assert.equal(SF.formatStyle('boss-battle'), 'boss');
+  assert.equal(SF.formatStyle('memory-flip'), 'memoryflip');
+  assert.equal(SF.formatStyle('ranking'), 'order');
+  assert.equal(SF.formatStyle('quiz-bowl'), 'bowl');
+  assert.equal(SF.formatStyle('truefalse'), 'truefalse');
+  assert.equal(SF.formatStyle('true-false'), 'truefalse');
+
+  const broken = SF.normalizeGame({
+    style: 'memoryflip',
+    format: 'beat-the-clock',
+    title: 'Clock',
+    settings: {},
+    questions: [{
+      id: 'q1',
+      question: 'Which process releases energy from glucose in cells?',
+      term: 'x',
+      definition: 'y',
+      options: ['Claimed', 'Not yet'],
+      correct: 0
+    }]
+  });
+  assert.equal(broken.style, 'speed');
+  assert.ok(Array.isArray(broken.questions[0].options));
+  assert.notEqual(broken.questions[0].options[0], 'Claimed');
+});
+
+test('True/False stays a special activity, not a blank-quiz engine picker', () => {
+  const SF = loadModel();
+  assert.ok(SF.isSpecialStyle('truefalse'));
+  assert.ok(SF.isSpecialStyle('speed'));
+  assert.equal(SF.CORE_STYLES.indexOf('truefalse'), -1);
+  assert.equal(SF.CORE_STYLES.indexOf('speed'), -1);
+  assert.equal(SF.CORE_STYLES.indexOf('boss'), -1);
+
+  const healed = SF.normalizeGame({
+    style: 'truefalse',
+    title: 'Old TF',
+    settings: {},
+    questions: [{ question: 'Mitochondria are only in animals.', correct: 1 }]
+  });
+  assert.equal(healed.style, 'truefalse');
+  assert.equal(healed.format, 'truefalse');
+  assert.deepEqual(healed.questions[0].options, ['True', 'False']);
+});
+
+test('word reveal scores 100 / 75 / 50 by fraction revealed', () => {
+  const SF = loadModel();
+  assert.equal(SF.wordRevealPoints(0), 100);
+  assert.equal(SF.wordRevealPoints(0.49), 100);
+  assert.equal(SF.wordRevealPoints(0.5), 75);
+  assert.equal(SF.wordRevealPoints(0.74), 75);
+  assert.equal(SF.wordRevealPoints(0.75), 50);
+  assert.equal(SF.wordRevealPoints(1), 50);
+  assert.equal(SF.wordRevealPreFraction('easy'), 0.6);
+  assert.equal(SF.wordRevealPreFraction('medium'), 0.4);
+  assert.equal(SF.wordRevealPreFraction('hard'), 0);
+  assert.equal(SF.wordRevealLetterCount('A B'), 2);
+  assert.equal(SF.wordRevealMask('CAT', 1), 'C__');
+  assert.equal(SF.wordRevealMask('CAT', 3), 'CAT');
+
+  const g = SF.makeGame('Reveal', 'wordreveal');
+  assert.equal(g.style, 'wordreveal');
+  assert.equal(SF.GAME_STYLES.wordreveal.mechanic, 'wordreveal');
+  const run = SF.gameToRunDeck(g);
+  assert.equal(run.mechanic, 'wordreveal');
+  const quiz = run.slides.find((s) => s.type === 'quiz');
+  assert.equal(quiz.input, 'text');
+  assert.ok(quiz.word);
+  assert.ok(SF.markResponse(quiz, quiz.accept[0]));
+});
+
+test('ranking / order points are round(10 × orderScore)', () => {
+  const SF = loadModel();
+  assert.equal(SF.orderPoints(1), 10);
+  assert.equal(SF.orderPoints(0.5), 5);
+  assert.equal(SF.orderPoints(0.75), 8);
+  assert.equal(SF.orderPoints(0), 0);
+  const slide = { options: ['A', 'B', 'C', 'D'] };
+  assert.equal(SF.orderScore(slide, [0, 1, 2, 3]), 1);
+  assert.equal(SF.orderPoints(slide, [0, 1, 3, 2]), 5);
+  assert.equal(SF.GAME_STYLES.order.mark(slide, [0, 1, 2, 3]), true);
+  assert.equal(SF.GAME_STYLES.order.mark(slide, [0, 1, 3, 2]), false);
+});
+
+test('claim, spin explain, and bingo helpers match the audit', () => {
+  const SF = loadModel();
+  assert.equal(SF.claimPoints(true), 1);
+  assert.equal(SF.claimPoints(false), 0);
+  assert.equal(SF.spinExplainPoints('clear'), 2);
+  assert.equal(SF.spinExplainPoints(0), 2);
+  assert.equal(SF.spinExplainPoints('hint'), 1);
+  assert.equal(SF.spinExplainPoints(1), 1);
+  assert.equal(SF.spinExplainPoints('reject'), 0);
+  assert.equal(SF.spinExplainPoints(2), 0);
+
+  const marked = [1, 1, 1, 0, 0, 0, 0, 0, 0];
+  assert.equal(SF.bingoHasLine(marked, 3), true, 'top row');
+  assert.equal(SF.bingoHasLine([1, 0, 0, 1, 0, 0, 1, 0, 0], 3), true, 'left column');
+  assert.equal(SF.bingoHasLine([1, 0, 0, 0, 1, 0, 0, 0, 1], 3), true, 'diagonal');
+  assert.equal(SF.bingoHasLine([1, 1, 0, 1, 0, 0, 0, 0, 0], 3), false);
+});
+
+test('memory match / flip compile as claim pairs (host marks, not learner MCQ content)', () => {
+  const SF = loadModel();
+  const g = SF.makeGame('Match', 'memorymatch');
+  g.format = 'memory-match';
+  const slide = SF.fillQuestionSlide(g.questions[0], g.style, g.settings, SF.makeSlide('quiz'));
+  slide.format = g.format;
+  assert.equal(slide.style, 'memorymatch');
+  assert.equal(slide.term, 'Mitochondrion');
+  assert.ok(slide.definition);
+  assert.deepEqual(slide.options, ['Claimed', 'Not yet']);
+  assert.equal(SF.formatStyle('memory-match'), 'memorymatch');
+  assert.equal(SF.formatStyle('memory-flip'), 'memoryflip');
+});
+
+test('memory, oracy, board styles compile with the right mechanics', () => {
+  const SF = loadModel();
+  const cases = [
+    ['memoryflip', 'claim'],
+    ['memorymatch', 'claim'],
+    ['knowledgeflip', 'claim'],
+    ['headsup', 'judge'],
+    ['spinexplain', 'judge'],
+    ['connection', 'judge'],
+    ['conceptchain', 'judge'],
+    ['randomchallenge', 'count'],
+    ['bingo', 'bingo'],
+    ['bowl', 'bowl'],
+    ['lowstakes', 'count']
+  ];
+  for (const [style, mechanic] of cases) {
+    assert.equal(SF.GAME_STYLES[style].mechanic, mechanic, style);
+    const g = SF.makeGame(style, style);
+    const run = SF.gameToRunDeck(g);
+    assert.equal(run.mechanic, mechanic, style + ' run deck');
+    const quiz = run.slides.find((s) => s.type === 'quiz');
+    if (['memoryflip', 'memorymatch', 'knowledgeflip'].includes(style)) {
+      assert.ok(run.slides.some(s => s.memoryBoard), style + ' has a shared board');
+      assert.equal(quiz, undefined, 'no learner self-claim question');
+    } else if (style === 'bingo') {
+      /* Bingo is a board too: one card per team, dealt from the pool of
+         authored pairs. It used to compile to quiz slides whose only options
+         were "Line!" and "Keep playing", which is not a thing to ask a room. */
+      assert.ok(run.slides.some(s => s.bingoBoard), 'bingo has a card board');
+      assert.equal(quiz, undefined, 'no learner vote on a called definition');
+    } else if (style === 'lowstakes') {
+      assert.ok(run.slides.some(s => s.lowstakesBoard), 'lowstakes has a worksheet board');
+      assert.equal(quiz, undefined, 'no phone MCQ for paper retrieval');
+    } else if (style === 'bowl') {
+      /* A category and value grid, which only means anything while it still
+         has unused cells on it. It used to be a run of quiz slides in the
+         order they were authored, which is a quiz with categories written on
+         it rather than a bowl. */
+      assert.ok(run.slides.some(s => s.bowlBoard), 'bowl has a category board');
+      assert.equal(quiz, undefined, 'no phone Correct/Wrong vote');
+    } else assert.ok(quiz, style + ' has a quiz slide');
+  }
+
+  const bowl = SF.normalizeQuestion(Object.assign(SF.makeQuestion('bowl'), {
+    category: 'History',
+    pointValue: 500,
+    answer: '1066',
+    question: 'Norman conquest year?'
+  }), 'bowl');
+  assert.equal(bowl.pointValue, 500);
+  const bowlRun = SF.gameToRunDeck(SF.makeGame('Bowl', 'bowl'));
+  const board = bowlRun.slides.find((s) => s.bowlBoard).bowlBoard;
+  assert.deepEqual(board.categories, ['Cells']);
+  assert.deepEqual(board.values, [200]);
+  assert.equal(board.cells[0].value, 200);
+  assert.equal(board.cells[0].questions.length, 1);
+});

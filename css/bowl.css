@@ -1,0 +1,103 @@
+.bowl-board-slide .pad {
+  padding: 20px 40px 18px;
+  gap: 12px;
+}
+.bowl-eyebrow {
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--s-dim);
+}
+.bowl-name { font-size: 25px; line-height: 1.05; margin: 1px 0 0; font-weight: 750; }.bowl-count {
+  gap: 10px;
+  border-radius: 12px;
+  padding: 5px 14px;
+}.bowl-count strong {
+  font-size: 20px;
+}
+
+/* The grid. One column per category, one row per value in use. */
+.bowl-grid {
+  flex: 1; min-height: 0;
+  display: grid; gap: 8px;
+  grid-auto-rows: minmax(0, 1fr);
+}
+.bowl-category {
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  font-size: 15px; font-weight: 700; letter-spacing: .02em;
+  padding: 4px 8px; overflow: hidden;
+  overflow-wrap: break-word; hyphens: auto;
+  color: var(--s-fg);
+  border-bottom: 3px solid var(--s-accent);
+}
+.bowl-cell {
+  position: relative; min-width: 0;
+  display: flex; align-items: center; justify-content: center;
+  font: inherit; font-size: 30px; font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  border: 3px solid var(--s-rule); border-radius: 12px;
+  background: color-mix(in srgb, var(--s-card) 100%, var(--s-bg));
+  color: var(--s-fg); cursor: pointer;
+}
+.bowl-cell:not(:disabled):hover {
+  border-color: var(--s-accent);
+  background: color-mix(in srgb, var(--s-accent) 14%, var(--s-card));
+}
+.bowl-cell:focus-visible { outline: 4px solid var(--s-accent); outline-offset: 3px; }
+.bowl-cell:disabled { cursor: default; }
+/* Spent, and it has to read as spent from the back of the room — a cell that
+   looks available but cannot be chosen is the board lying about itself. */
+.bowl-cell.is-spent {
+  border-style: dashed; color: var(--s-dim); opacity: .45;
+  font-size: 20px; cursor: default;
+  display: flex; align-items: center; justify-content: center;
+}
+.bowl-stack {
+  position: absolute; top: 6px; right: 10px;
+  font-size: 12px; font-weight: 600; color: var(--s-dim);
+}
+
+/* A question replaces the grid rather than sitting beside it. */
+.bowl-ask {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; justify-content: center; gap: 12px;
+  border: 3px solid var(--s-accent); border-radius: 16px;
+  background: color-mix(in srgb, var(--s-card) 100%, var(--s-bg));
+  padding: 22px 34px;
+}
+.bowl-question { margin: 0; font-size: 44px; line-height: 1.16; font-weight: 650; overflow-wrap: anywhere; }
+.bowl-question[data-len="lg"] { font-size: 36px; }
+.bowl-question[data-len="xl"] { font-size: 29px; line-height: 1.22; }
+.bowl-hint { margin: 0; font-size: 15px; color: var(--s-dim); }
+.bowl-answer { display: flex; flex-direction: column; gap: 2px; }
+.bowl-answer strong { font-size: 31px; color: var(--s-accent); overflow-wrap: anywhere; }
+
+.bowl-tally { display: grid; grid-auto-flow: column; gap: 10px; flex: none; }
+.bowl-team {
+  display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  border: 3px solid var(--s-rule); border-radius: 12px; padding: 8px 12px;
+  background: color-mix(in srgb, var(--s-card) 100%, var(--s-bg));
+}
+.bowl-team.won { border-color: var(--s-accent); }
+.bowl-team-head { display: flex; align-items: baseline; gap: 10px; }
+.bowl-team-head strong { font-size: 16px; overflow: hidden; }
+.bowl-score { margin-left: auto; font-size: 22px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.bowl-tally.many .bowl-team-head strong { font-size: 14px; }
+.bowl-tally.many .bowl-score { font-size: 18px; }
+
+.bowl-button {
+  font: inherit; font-size: 14px; font-weight: 600;
+  border: 3px solid var(--s-rule); border-radius: 10px;
+  background: transparent; color: var(--s-fg);
+  padding: 6px 12px; cursor: pointer;
+}
+.bowl-button.primary {
+  background: var(--s-accent); border-color: var(--s-accent); color: var(--s-bg);
+}
+.bowl-button:focus-visible { outline: 4px solid var(--s-accent); outline-offset: 3px; }
+.bowl-button:disabled { cursor: default; opacity: .5; }
+
+.bowl-foot { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; min-height: 46px; }
+.bowl-status { flex: 1; min-width: 420px; display: flex; flex-direction: column; gap: 4px; }
+.bowl-status strong { font-size: 18px; }
+.bowl-status > span { font-size: 12px; color: var(--s-dim); }
+.bowl-actions { display: flex; gap: 10px; }
+.bowl-actions .bowl-button { font-size: 16px; padding: 10px 18px; }

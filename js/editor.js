@@ -15,13 +15,32 @@
   var deck = null;
   var sel = 0;
   var saveTimer = null;
+  var historyId=null, past=[], future=[], checkpoint=null, restoring=false;
+  function remember() {
+    if (!deck) return;
+    if(historyId!==deck.id){historyId=deck.id;past=[];future=[];checkpoint=JSON.stringify(deck);return;}
+    var now=JSON.stringify(deck);
+    if(!restoring && checkpoint && now!==checkpoint){past.push(checkpoint);if(past.length>60)past.shift();future=[];}
+    checkpoint=now;
+  }
+  function restoreHistory(redo) {
+    var from=redo?future:past,to=redo?past:future;
+    if(!from.length)return;
+    clearTimeout(saveTimer);saveTimer=null;
+    to.push(JSON.stringify(deck));deck=JSON.parse(from.pop());checkpoint=JSON.stringify(deck);
+    sel=Math.min(sel,deck.slides.length-1);restoring=true;touched();restoring=false;
+    SF.Shell.syncChrome();draw();
+  }
 
   /* ------------------------------------------------------------ helpers */
 
   function current() { return deck.slides[sel]; }
 
   function touched() {
+    remember();
     SF.Shell.touch();
+    var ub=document.querySelector('[data-history=undo]'), rb=document.querySelector('[data-history=redo]');
+    if(ub)ub.disabled=!past.length;if(rb)rb.disabled=!future.length;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       saveTimer = null;
@@ -49,8 +68,19 @@
       index: i,
       total: deck.slides.length,
       interactive: false,
-      game: s.type === 'game' ? gameFor(s) : null
+      game: s.type === 'game' ? gameFor(s) : null,
+      join: s.type === 'join' ? SF.sampleJoinInfo() : null
     };
+  }
+
+  function richField(s, key, kind, change, extra) {
+    var value = key.indexOf('bullets.') === 0 ? s.bullets[Number(key.split('.')[1])] : s[key];
+    var input = UI[kind](value, function (v) {
+      SF.Custom.rebase(s, key, String(value || ''), v);
+      value = v; change(v);
+    }, extra);
+    SF.Custom.bind(input, s, key, function () { touched(); repaint(); });
+    return input;
   }
 
   /* ------------------------------------------------------------ rail */
@@ -185,6 +215,26 @@
     return (f && f.presentAs === 'focus') ? 'focus' : 'rail';
   }
 
+  function bindCanvasContent(box,node,s){
+    if(['game','quiz','explain','results'].includes(s.type))return;
+    node.querySelectorAll('[data-content-key]').forEach(function(target){
+      var key=target.dataset.contentKey;target.classList.add('canvas-editable');target.title='Double-click to edit this content';
+      target.ondblclick=function(e){
+        e.preventDefault();e.stopPropagation();var existing=box.querySelector('.canvas-edit-form');if(existing)existing.remove();
+        var old=key.startsWith('bullets.')?s.bullets[Number(key.slice(8))]:s[key];
+        var form=el('div','canvas-edit-form'),label=el('label',null,'Edit slide content'),area=el('textarea');area.value=old||'';area.rows=3;area.setAttribute('aria-label','Edit slide content');label.appendChild(area);form.appendChild(label);
+        form.appendChild(UI.button('Save content','primary',function(){SF.Custom.rebase(s,key,String(old||''),area.value);if(key.startsWith('bullets.'))s.bullets[Number(key.slice(8))]=area.value;else s[key]=area.value;touched();draw();}));
+        form.appendChild(UI.button('Cancel','ghost',function(){form.remove();}));box.appendChild(form);area.focus();
+      };
+      if(/^bullets\.\d+$/.test(key)){
+        target.draggable=true;var i=Number(key.slice(8));target.title+=' · drag to reorder';
+        target.ondragstart=function(e){contentDrag={slide:s.id,index:i};e.dataTransfer.setData('text/plain',String(i));};
+        target.ondragover=function(e){if(contentDrag&&contentDrag.slide===s.id)e.preventDefault();};
+        target.ondragend=function(){contentDrag=null;};
+        target.ondrop=function(e){if(!contentDrag||contentDrag.slide!==s.id)return;e.preventDefault();var from=contentDrag.index;contentDrag=null;if(SF.ContentTools.move(s,from,i)){touched();draw();}};
+      }
+    });
+  }
   function drawPreview() {
     var box = $('previewBox');
     box.innerHTML = '';
@@ -211,6 +261,24 @@
 
     var node = SF.renderSlide(deck, s, slideOpts(sel));
     box.appendChild(node);
+    bindCanvasContent(box,node,s);
+
+    /* Swap sides, on the canvas rather than buried in the inspector.
+       imageSide already existed as a dropdown three fields down; putting it
+       where the thing it moves actually is turns a setting into a gesture. */
+    if (s.type === 'split') {
+      var swap = el('button', 'canvas-btn swap-sides', '\u21c4');
+      swap.type = 'button';
+      swap.title = 'Swap the text and the image (\u21c4)';
+      swap.setAttribute('aria-label', 'Swap the text and the image');
+      swap.onclick = function (ev) {
+        ev.stopPropagation();
+        SF.swapImagePlacement(s);
+        touched();
+        draw();
+      };
+      box.appendChild(swap);
+    }
 
     if (f) {
       /* Railed, so the slide narrows exactly as it will in the show. */
@@ -242,33 +310,39 @@
     var s = current();
     if (!s) return;
 
+    /* A game slide is a pointer into Quiz studio — not a place to redesign
+       content or attach engagement. One panel: what is linked, edit there,
+       slide-only chrome (transition / duplicate). Avoids Design vs Engagement
+       tabs, Logo & theme, and “Plan the learning moment” all repeating the
+       same doorway. */
+    if (s.type === 'game') {
+      drawGameSlideInspector(insp, s);
+      return;
+    }
+
     var tabs = el('div', 'inspector-tabs');
     ['content', 'engage'].forEach(function (key) {
       var b = UI.button(key === 'content' ? '✎  Design & content' : '✳  Engagement', inspectorTab === key ? 'active' : '', function () { inspectorTab = key; drawInspector(); });
       tabs.appendChild(b);
     });
     insp.appendChild(tabs);
+    var history=el('div','format-tools');
+    var undo=UI.button('↶ Undo','ghost',function(){restoreHistory(false);});undo.disabled=!past.length;undo.dataset.history='undo';
+    var redo=UI.button('↷ Redo','ghost',function(){restoreHistory(true);});redo.disabled=!future.length;redo.dataset.history='redo';
+    history.appendChild(undo);history.appendChild(redo);
+    history.appendChild(UI.button('Theme','ghost',openDeckSettings));insp.appendChild(history);
     insp.appendChild(el('h4','eyebrow', inspectorTab === 'content' ? 'MAKE IT YOURS' : 'INVITE EVERY VOICE'));
     insp.appendChild(el('h4', 'insp-title',
       'Slide ' + (sel + 1) + ' — ' + SF.SLIDE_TYPES[s.type].label));
 
     if (inspectorTab === 'engage') {
-      drawLearning(insp, s);
-      if (s.type !== 'game') drawFeedback(insp, s);
-      else drawGameEmbed(insp, s);
+      drawFeedback(insp, s);
       return;
     }
 
-    if (s.type === 'game') {
-      drawGameEmbed(insp, s);
-    } else {
-      drawLayoutPicker(insp, s);
-      drawContentFields(insp, s);
-    }
-
-    drawLogoFields(insp);
-
-    insp.appendChild(UI.button(s.type === 'game' ? '✳ Plan the learning moment →' : s.feedback ? '✳ Edit audience activity →' : '✳ Add audience activity →', 'engage-link', function () { inspectorTab = 'engage'; drawInspector(); }));
+    drawLayoutPicker(insp, s);
+    drawContentFields(insp, s);
+    SF.Custom.inspector(insp, s, function () { touched(); draw(); });
 
     insp.appendChild(UI.field('Transition in', UI.select(
       SF.TRANSITIONS.map(function (t) {
@@ -284,7 +358,141 @@
     insp.appendChild(row);
   }
 
-  function drawLogoFields(insp) {
+  /** Thin inspector for an embedded game: edit the game in Quiz studio. */
+  function drawGameSlideInspector(insp, s) {
+    var history = el('div', 'format-tools');
+    var undo = UI.button('↶ Undo', 'ghost', function () { restoreHistory(false); });
+    undo.disabled = !past.length;
+    var redo = UI.button('↷ Redo', 'ghost', function () { restoreHistory(true); });
+    redo.disabled = !future.length;
+    history.appendChild(undo);
+    history.appendChild(redo);
+    insp.appendChild(history);
+
+    insp.appendChild(el('h4', 'eyebrow', 'CHECK IN THE LESSON'));
+    insp.appendChild(el('h4', 'insp-title', 'Slide ' + (sel + 1) + ' — Game'));
+
+    drawGameEmbed(insp, s);
+
+    insp.appendChild(UI.field('Transition in', UI.select(
+      SF.TRANSITIONS.map(function (t) {
+        return { value: t, label: t[0].toUpperCase() + t.slice(1) };
+      }),
+      s.transition, function (v) { s.transition = v; touched(); drawRail(); })));
+
+    var row = el('div', 'field');
+    row.appendChild(UI.button('Duplicate', null, duplicate));
+    var del = UI.button('Delete', null, removeSlide);
+    del.style.marginLeft = '6px';
+    row.appendChild(del);
+    insp.appendChild(row);
+  }
+
+  /**
+   * Settings that belong to the whole presentation rather than to one slide.
+   *
+   * The logo lived in the slide inspector, which was the wrong place twice
+   * over: it is one mark for the whole deck, so it read as a per-slide
+   * property it is not, and it sat below the layout and content fields where
+   * a teacher had to scroll past everything they were actually editing to
+   * reach it.
+   */
+  function openDeckSettings() {
+    var body = $('settingsBody');
+    $('settingsTitle').textContent = 'Presentation settings';
+
+    function draw2() {
+      body.innerHTML = '';
+      /* The only way to set a theme now that the top bar has no dropdown. */
+      body.appendChild(UI.field('Theme', SF.Shell.themePicker(deck.theme, function (v) {
+        ws.onTheme(v);
+        draw2();
+      }), 'Sets the default colours for the presentation. Customise this slide can override text and background colours.'));
+      drawLogoFields(body, draw2);
+      drawEnding(body, draw2);
+      drawReadiness(body);
+    }
+    draw2();
+    SF.Shell.openModal('settingsModal', function () {
+      SF.Store.save(deck);
+      draw();
+    });
+  }
+
+  /**
+   * How the lesson finishes, when it has a game in it.
+   *
+   * An embedded game already puts its board up the moment that game ends —
+   * which is mid-lesson. Ten slides later it is gone, and with two games there
+   * are two boards and never a combined one. Offered only when the deck
+   * actually embeds a game: an option that does nothing is worse than no
+   * option, because it reads as broken rather than as not applicable.
+   *
+   * @param {HTMLElement} body   settings panel
+   * @param {function} draw2     redraw the panel
+   */
+  function drawEnding(body, draw2) {
+    var games = deck.slides.filter(function (s) { return s.type === 'game'; });
+    if (!games.length) return;
+    var box = el('div');
+    box.appendChild(UI.check('Finish on the final scores', deck.finalScores === true, function (v) {
+      deck.finalScores = v; touched(); draw2(); draw();
+    }));
+    box.appendChild(el('div', 'hint', games.length === 1
+      ? 'Adds one scoreboard after your last slide, covering the whole lesson.'
+      : 'Adds one scoreboard after your last slide, adding up all ' +
+        games.length + ' games rather than showing each in turn.'));
+    body.appendChild(UI.field('How the lesson ends', box,
+      deck.finalScores
+        ? 'Your own last slide still plays; the scores come after it.'
+        : 'Off, so the lesson ends on the slide you wrote.'));
+  }
+
+  /* What will go wrong in the room, listed before the room.
+     In the settings sheet rather than behind its own button: it is the last
+     thing you look at before presenting, and it belongs next to the other
+     whole-deck settings rather than being one more control on the bar. */
+  function drawReadiness(insp) {
+    var r = SF.readiness(deck, function (id) { return SF.GameStore.get(id); });
+    var box = el('div', 'ready-box');
+
+    if (!r.items.length) {
+      box.appendChild(el('div', 'ready-ok', '\u2713 Nothing to fix. Every slide has ' +
+        'something on it and no media is missing.'));
+      insp.appendChild(UI.field('Ready to teach', box));
+      return;
+    }
+
+    r.items.forEach(function (f) {
+      var row = el('button', 'ready-row ready-' + f.level);
+      row.type = 'button';
+      row.appendChild(el('span', 'ready-dot', f.level === 'stop' ? '!' : '?'));
+      var t = el('span', 'ready-text');
+      t.appendChild(el('strong', null, f.title));
+      t.appendChild(el('span', null, ' ' + f.detail));
+      row.appendChild(t);
+      /* Clicking takes you to the slide, because a list of problems you then
+         have to go and find is a list of problems. */
+      if (f.slide != null) {
+        row.title = 'Go to slide ' + (f.slide + 1);
+        row.onclick = function () {
+          select(f.slide);
+          var close = document.querySelector('#settingsModal [data-close]');
+          if (close) close.click();
+        };
+      } else {
+        row.disabled = true;
+      }
+      box.appendChild(row);
+    });
+
+    insp.appendChild(UI.field('Ready to teach', box,
+      r.stop
+        ? r.stop + (r.stop === 1 ? ' thing will' : ' things will') + ' visibly fail in front of a class.'
+        : 'Nothing will break. The rest depends on the room you are in.'));
+  }
+
+  function drawLogoFields(insp, redraw) {
     var wrap = el('div', 'logo-fields');
     if (deck.logo) {
       var preview = el('div', 'logo-preview');
@@ -296,7 +504,7 @@
         deck.logo = '';
         deck.logoOn = 'none';
         touched();
-        draw();
+        if (redraw) redraw(); else draw();
       });
       preview.appendChild(clear);
       wrap.appendChild(preview);
@@ -309,73 +517,175 @@
       var f = pick.files && pick.files[0];
       if (!f) return;
       if (f.size > 1.5 * 1024 * 1024) {
-        SF.toast('Keep the logo under 1.5 MB so the lesson stays portable.');
+        /* Say the size. "Keep it under 1.5 MB" leaves someone staring at a
+           file picker wondering whether anything happened at all. */
+        SF.toast('That file is ' + (f.size / 1024 / 1024).toFixed(1) + ' MB. ' +
+          'Logos have to stay under 1.5 MB, or the lesson outgrows the ' +
+          'browser storage it is saved in.');
+        pick.value = '';
         return;
       }
       var fr = new FileReader();
+      fr.onerror = function () { SF.toast('That file could not be read.'); };
       fr.onload = function () {
-        deck.logo = fr.result;
-        if (deck.logoOn === 'none') deck.logoOn = 'all';
-        touched();
-        draw();
+        /* Decode it before keeping it. A file with an image extension the
+           browser cannot actually draw stores fine and renders as nothing,
+           which is the one failure that looks exactly like the feature being
+           broken \u2014 an empty corner and no message anywhere. */
+        var test = new Image();
+        test.onload = function () {
+          deck.logo = fr.result;
+          /* A logo nobody can see is indistinguishable from no logo, so
+             uploading one turns it on. */
+          if (deck.logoOn === 'none') deck.logoOn = 'all';
+          touched();
+          if (redraw) redraw(); else draw();
+        };
+        test.onerror = function () {
+          SF.toast('That file is named like an image but the browser cannot ' +
+            'draw it, so it would leave an empty corner. Try a PNG or SVG.');
+          pick.value = '';
+        };
+        test.src = fr.result;
       };
       fr.readAsDataURL(f);
     });
     wrap.appendChild(pick);
     insp.appendChild(UI.field('Lesson logo', wrap,
       'Corner mark on slides. PNG or SVG works best.'));
-    if (deck.logo) {
-      insp.appendChild(UI.field('Show logo on', UI.select([
-        { value: 'all', label: 'Every slide' },
-        { value: 'title', label: 'Title slide only' },
-        { value: 'none', label: 'Hidden' }
-      ], deck.logoOn === 'title' || deck.logoOn === 'none' ? deck.logoOn : 'all',
-        function (v) { deck.logoOn = v; touched(); draw(); })));
+    var url=UI.text('',function(){},'https://…');
+    insp.appendChild(UI.field('Or use a logo image URL',url));
+    insp.appendChild(UI.button('Use logo URL','ghost',function(){
+      var src=SF.safeHref(url.value);if(!src){SF.toast('Enter an http or https image URL');return;}
+      var image=new Image();image.onload=function(){deck.logo=src;if(deck.logoOn==='none')deck.logoOn='all';touched();if(redraw)redraw();else draw();};
+      image.onerror=function(){SF.toast('Could not load that image. Check the URL or upload a file.');};image.src=src;
+    }));
+    if (!deck.logo) return;
+    insp.appendChild(UI.field('Logo size',UI.select([{value:'small',label:'Small'},{value:'medium',label:'Medium'},{value:'large',label:'Large'}],deck.logoSize||'medium',function(v){deck.logoSize=v;touched();if(redraw)redraw();else draw();})));
+
+    insp.appendChild(UI.field('Show logo on', UI.select([
+      { value: 'all', label: 'Every slide' },
+      /* Was "Title slide only", which named a layout rather than a position
+         and so did nothing at all on a deck that opens on a Section. */
+      { value: 'title', label: 'First slide only' },
+      { value: 'none', label: 'Hidden' }
+    ], deck.logoOn === 'title' || deck.logoOn === 'none' ? deck.logoOn : 'all',
+      function (v) { deck.logoOn = v; touched(); if (redraw) redraw(); else draw(); })));
+
+    /* Where it actually lands, on a real slide.
+       "I added a logo and cannot see it" has three causes and this answers
+       all of them: it is set to Hidden, it is on the first slide only and you
+       are looking at another one, or you are looking at the slide list, which
+       leaves the logo off along with the slide numbers. */
+    var shown = deck.slides.filter(function (sl, i) {
+      return SF.deckShowsLogo(deck, sl, i);
+    }).length;
+    var sample = 0;
+    for (var i = 0; i < deck.slides.length; i++) {
+      if (SF.deckShowsLogo(deck, deck.slides[i], i)) { sample = i; break; }
+    }
+
+    if (shown) {
+      var frame = el('div', 'logo-shot');
+      var slide = SF.renderSlide(deck, deck.slides[sample], {
+        index: sample, total: deck.slides.length
+      });
+      frame.appendChild(slide);
+      SF.fit(frame, slide);
+      insp.appendChild(UI.field('On the slide', frame,
+        'Slide ' + (sample + 1) + ' of ' + deck.slides.length + ' \u00b7 on ' + shown +
+        (shown === 1 ? ' slide' : ' slides') +
+        '. The slide list on the left leaves it off, along with the numbers.'));
+    } else {
+      insp.appendChild(UI.field(null, null,
+        'Set to Hidden, so it appears on no slides.'));
     }
   }
 
-  function drawLearning(insp, s) {
-    var prompts = {
-      Remember: 'Recall: What do you already know about this idea?',
-      Understand: 'Explain this idea in your own words.',
-      Apply: 'Where could you use this in a real situation?',
-      Analyze: 'Compare two approaches. What patterns do you notice?',
-      Evaluate: 'Which approach would you choose, and why?',
-      Create: 'Design a new solution using what you have learned.'
-    };
-    var level = s.bloom || 'Understand';
-    insp.appendChild(UI.field('Thinking level · Bloom’s taxonomy', UI.select(Object.keys(prompts).map(function (k) { return {value:k,label:k}; }), level, function (v) { s.bloom = v; touched(); drawInspector(); })));
-    var coach = el('div', 'learning-coach');
-    coach.appendChild(el('span','eyebrow','A PROMPT TO TRY'));
-    coach.appendChild(el('p',null,prompts[level] || prompts.Understand));
-    coach.appendChild(UI.button('Use as a brainstorm →', 'ghost', function () { s.feedback = SF.makeFeedback('brainstorm'); s.feedback.prompt = prompts[level] || prompts.Understand; touched(); draw(); }));
-    insp.appendChild(coach);
-    insp.appendChild(UI.field('After the responses, I will…', UI.area(s.nextStep || '', function (v) { s.nextStep = v; touched(); }, 2), 'Plan a re-explanation, peer discussion or stretch question. This note is for you.'));
+  function drawLayoutPicker(insp, s) {
+    var box=el('details','layout-library'),summary=el('summary',null,'Layout · '+SF.SLIDE_TYPES[s.type].label);
+    box.appendChild(summary);
+    [['Introduce',['title','section','quote']],['Explain & organise',['content','keywords','italics','cards','table']],['Show & explore',['split','image','video','links']]].forEach(function(group){
+      box.appendChild(el('h4',null,group[0]));var grid=el('div','layout-library-grid');
+      group[1].forEach(function(type){
+        var b=el('button','layout-choice'+(s.type===type?' on':''));b.type='button';b.setAttribute('aria-pressed',String(s.type===type));
+        var frame=el('div','variant-frame'),trial=SF.prepareLayout(SF.normalizeSlide(JSON.parse(JSON.stringify(s))),type);
+        var node=SF.renderSlide(deck,trial,{index:sel,total:deck.slides.length,chrome:false});frame.appendChild(node);b.appendChild(frame);
+        b.appendChild(el('span',null,SF.SLIDE_TYPES[type].label));b.onclick=function(){SF.prepareLayout(s,type);touched();draw();};grid.appendChild(b);
+        box.addEventListener('toggle',function(){if(box.open)requestAnimationFrame(function(){SF.fit(frame,node);});});
+      });box.appendChild(grid);
+    });insp.appendChild(box);
+    drawVariants(insp,s);
+    var hidden=SF.ContentTools.hidden(s);
+    if(hidden.length){var saved=el('details','saved-content');saved.appendChild(el('summary',null,'Saved content outside this layout · '+hidden.length));
+      saved.appendChild(el('p','hint','These items are still saved. Choose one to show it in a suitable layout.'));
+      hidden.forEach(function(item){saved.appendChild(UI.button('Show '+item.label,'ghost',function(){SF.prepareLayout(s,item.layout);touched();draw();}));});insp.appendChild(saved);
+    }
   }
 
-  function drawLayoutPicker(insp, s) {
-    var grid = el('div', 'type-grid');
-    SF.DECK_TYPES.forEach(function (t) {
-      var b = el('button', s.type === t ? 'on' : null);
-      b.appendChild(el('span', 'g', SF.SLIDE_TYPES[t].icon));
-      b.appendChild(el('span', null, SF.SLIDE_TYPES[t].label));
-      b.onclick = function () {
-        s.type = t;
-        if ((t === 'content' || t === 'cards' || t === 'split' || t === 'keywords' || t === 'italics' || t === 'links') && !s.bullets.length) {
-          s.bullets = (t === 'keywords' || t === 'italics' || t === 'links')
-            ? [SF.formatKeywordLine('', ''), SF.formatKeywordLine('', ''), SF.formatKeywordLine('', '')]
-            : ['', '', ''];
-        }
-        if (t === 'split' && s.imageSide !== 'left') s.imageSide = 'right';
+  /**
+   * Three alternative layouts for the words and picture already on this slide.
+   *
+   * The Layout grid above says what a layout is called; this says what this
+   * slide would look like as one, using the real content. Nothing is
+   * converted or discarded on the way: normalizeSlide keeps every field
+   * whatever the type, so title, bullets, body and image all survive a switch
+   * and switching back returns exactly what was there.
+   */
+  function variantsFor(slide) {
+    var hasImage = !!String(slide.image || '').trim();
+    var lines = (slide.bullets || []).filter(function (b) { return String(b).trim(); }).length;
+    var hasBody = !!String(slide.body || '').trim();
+
+    /* Ordered by how well each one suits what the slide actually holds, then
+       cut to three — a row of eight previews is the grid again, not a
+       suggestion. */
+    var ranked = [];
+    /* Four or more candidates each, because the current layout is struck out
+       below and a list of exactly three would come back as two. */
+    if (hasImage && lines) ranked.push('split', 'image', 'content', 'cards');
+    else if (hasImage) ranked.push('image', 'split', 'quote', 'section');
+    else if (lines >= 3) ranked.push('cards', 'content', 'keywords', 'table');
+    else if (lines) ranked.push('content', 'cards', 'section', 'split');
+    else if (hasBody) ranked.push('quote', 'section', 'title', 'content');
+    else ranked.push('section', 'title', 'content', 'quote');
+
+    return ranked.filter(function (t, i) {
+      return t !== slide.type && ranked.indexOf(t) === i && SF.SLIDE_TYPES[t];
+    }).slice(0, 3);
+  }
+
+  function drawVariants(insp, s) {
+    var picks = variantsFor(s);
+    if (!picks.length) return;
+
+    var row = el('div', 'variant-row');
+    picks.forEach(function (type) {
+      var card = el('button', 'variant-card');
+      card.type = 'button';
+      card.title = 'Use the ' + SF.SLIDE_TYPES[type].label + ' layout';
+
+      /* A real render of a real copy, so the preview cannot promise something
+         the switch will not deliver. The copy is thrown away either way. */
+      var trial = SF.prepareLayout(SF.normalizeSlide(JSON.parse(JSON.stringify(s))), type);
+      var frame = el('div', 'variant-frame');
+      var node = SF.renderSlide(deck, trial, { index: sel, total: deck.slides.length, chrome: false });
+      frame.appendChild(node);
+      SF.fit(frame, node);
+      card.appendChild(frame);
+      card.appendChild(el('span', 'variant-name', SF.SLIDE_TYPES[type].label));
+      card.onclick = function () {
+        SF.prepareLayout(s, type);
         touched();
         draw();
       };
-      grid.appendChild(b);
+      row.appendChild(card);
     });
-    insp.appendChild(UI.field('Layout', grid));
+    insp.appendChild(UI.field('Try another layout', row,
+      'Preview your content in another structure. Unused content stays saved and can be restored.'));
   }
 
-  /* Click-to-fill slots for bullets and cards — plain text, no formatting ribbon. */
+  /* Text fields preserve formatting separately from lesson content. */
   var PIT_MAX = { content: 8, cards: 6, split: 5, keywords: 8, italics: 8, links: 8 };
 
   function ensurePits(s) {
@@ -386,6 +696,31 @@
     while (s.bullets.length < min) s.bullets.push(empty);
   }
 
+  var contentDrag=null;
+  function contentOrder(row,s,i,wrap,redraw){
+    var controls=el('div','content-order');
+    function move(to){if(!SF.ContentTools.move(s,i,to))return;touched();redraw();repaint();var next=wrap.querySelectorAll('.content-grip')[to];if(next)next.focus();}
+    var grip=UI.button('⠿','content-grip',function(){});grip.title='Drag to reorder; Alt + ↑ or ↓ to move';grip.setAttribute('aria-label','Reorder item '+(i+1));grip.draggable=true;
+    grip.ondragstart=function(e){contentDrag={slide:s.id,index:i};e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',String(i));};
+    grip.ondragend=function(){contentDrag=null;wrap.querySelectorAll('.content-drop').forEach(function(n){n.classList.remove('content-drop');});};
+    grip.onkeydown=function(e){if(e.altKey&&['ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();move(i+(e.key==='ArrowUp'?-1:1));}};
+    row.ondragover=function(e){if(contentDrag&&contentDrag.slide===s.id){e.preventDefault();e.dataTransfer.dropEffect='move';row.classList.add('content-drop');}};
+    row.ondragleave=function(){row.classList.remove('content-drop');};
+    row.ondrop=function(e){row.classList.remove('content-drop');if(!contentDrag||contentDrag.slide!==s.id)return;e.preventDefault();var from=contentDrag.index;contentDrag=null;if(SF.ContentTools.move(s,from,i)){touched();redraw();repaint();}};
+    controls.appendChild(grip);
+    [['↑',-1],['↓',1]].forEach(function(pair){var b=UI.button(pair[0],'move-point',function(){move(i+pair[1]);});b.setAttribute('aria-label','Move item '+(i+1)+(pair[1]<0?' up':' down'));b.disabled=i+pair[1]<0||i+pair[1]>=s.bullets.length;controls.appendChild(b);});row.appendChild(controls);
+  }
+  function bulkContent(wrap,s,redraw){
+    var box=el('details','bulk-content');box.appendChild(el('summary',null,'Paste several points at once'));
+    var area=el('textarea');area.rows=5;area.placeholder='Paste one point per line…';area.setAttribute('aria-label','Points to insert');box.appendChild(area);
+    var status=el('p','hint');status.setAttribute('role','status');box.appendChild(status);
+    area.oninput=function(){status.textContent=SF.ContentTools.lines(area.value).length+' points to add. Existing content will be kept.';};
+    box.appendChild(UI.button('Insert points','primary',function(){var n=SF.ContentTools.append(s,area.value);if(!n){status.textContent='Paste at least one point first.';return;}touched();redraw();repaint();SF.toast(n+' points inserted');}));wrap.appendChild(box);
+    if(s.bullets.filter(function(v){return v.trim();}).length>(PIT_MAX[s.type]||8)){
+      wrap.appendChild(el('p','hint','More content than this layout comfortably holds. Spread it over matching slides to keep it readable.'));
+      wrap.appendChild(UI.button('Spread across slides','ghost',function(){var slides=SF.ContentTools.split(s,PIT_MAX[s.type]||8);deck.slides.splice.apply(deck.slides,[sel,1].concat(slides));touched();draw();}));
+    }
+  }
   function drawPairPits(wrap, s, kind) {
     var italic = kind === 'italics';
     var links = kind === 'links';
@@ -401,6 +736,7 @@
     s.bullets.forEach(function (line, i) {
       var parsed = SF.parseKeywordLine(line);
       var row = el('div', 'pit-row keyword' + ((parsed.term || parsed.def) ? '' : ' empty'));
+      contentOrder(row,s,i,wrap,function(){drawPairPits(wrap,s,kind);});
       row.appendChild(el('span', 'pit-i', String(i + 1).padStart(2, '0')));
       var term = UI.text(parsed.term, function (v) {
         s.bullets[i] = SF.formatKeywordLine(v, SF.parseKeywordLine(s.bullets[i]).def);
@@ -436,6 +772,7 @@
       row.appendChild(kill);
       wrap.appendChild(row);
     });
+    bulkContent(wrap,s,function(){drawPairPits(wrap,s,kind);});
     if (s.bullets.length < max) {
       var add = UI.button('+ Add ' + addLabel, 'ghost pit-add', function () {
         s.bullets.push(SF.formatKeywordLine('', ''));
@@ -460,8 +797,9 @@
     var max = PIT_MAX[s.type] || 8;
     s.bullets.forEach(function (text, i) {
       var row = el('div', 'pit-row' + (String(text).trim() ? '' : ' empty'));
+      contentOrder(row,s,i,wrap,function(){drawPits(wrap,s);});
       row.appendChild(el('span', 'pit-i', s.type === 'cards' ? String(i + 1).padStart(2, '0') : '•'));
-      var input = UI.text(text, function (v) {
+      var input = richField(s, "bullets." + i, "text", function (v) {
         s.bullets[i] = v;
         touched();
         repaint();
@@ -473,11 +811,7 @@
       kill.title = 'Remove';
       kill.setAttribute('aria-label', 'Remove point ' + (i + 1));
       kill.onclick = function () {
-        if (s.bullets.length <= 1) {
-          s.bullets[0] = '';
-        } else {
-          s.bullets.splice(i, 1);
-        }
+        SF.Custom.removeBullet(s,i);
         ensurePits(s);
         touched();
         drawPits(wrap, s);
@@ -486,6 +820,7 @@
       row.appendChild(kill);
       wrap.appendChild(row);
     });
+    bulkContent(wrap,s,function(){drawPits(wrap,s);});
     if (s.bullets.length < max) {
       var add = UI.button('+ Add ' + (s.type === 'cards' ? 'card' : 'point'), 'ghost pit-add', function () {
         s.bullets.push('');
@@ -503,7 +838,7 @@
     opts = opts || {};
     if (opts.caption !== false) {
       insp.appendChild(UI.field(opts.captionLabel || 'Caption',
-        UI.area(s.title, function (v) { s.title = v; touched(); repaint(); }, 2)));
+        richField(s, "title", "area", function (v) { s.title = v; touched(); repaint(); }, 2)));
     }
     insp.appendChild(UI.field('Image URL or data',
       UI.text(s.image, function (v) { s.image = v.trim(); touched(); repaint(); }),
@@ -528,21 +863,78 @@
       [{ value: 'cover', label: 'Fill the panel (crop)' },
        { value: 'contain', label: 'Fit inside (letterbox)' }],
       s.imageFit, function (v) { s.imageFit = v; touched(); repaint(); })));
-    if (opts.side) {
-      insp.appendChild(UI.field('Image side', UI.select(
-        [{ value: 'right', label: 'Right — text on the left' },
-         { value: 'left', label: 'Left — text on the right' }],
-        s.imageSide === 'left' ? 'left' : 'right',
-        function (v) { s.imageSide = v; touched(); draw(); })));
-    }
+
+  }
+
+  /* Video and music are references, so this is a text field first and a file
+     picker never — see safeMedia in model.js for why. The picker below writes
+     a path, it does not read the file. */
+  function drawVideoFields(insp, s) {
+    insp.appendChild(UI.field('Caption',
+      richField(s, "title", "area", function (v) { s.title = v; touched(); repaint(); }, 2)));
+    insp.appendChild(UI.field('Video URL or path',
+      UI.text(s.video, function (v) { s.video = SF.safeMedia(v); touched(); repaint(); },
+        'clips/mitosis.mp4'),
+      'An http(s) URL, or a path relative to the app folder. The file is not ' +
+      'copied into the deck \u2014 keep it beside index.html and it works offline.'));
+
+    insp.appendChild(UI.field('Poster image URL (optional)',
+      UI.text(s.videoPoster, function (v) { s.videoPoster = SF.safeMedia(v); touched(); repaint(); }),
+      'The still shown before it plays, and in the slide rail.'));
+
+    insp.appendChild(UI.field('Start at (seconds)',
+      UI.num(s.videoStart || null, function (v) {
+        s.videoStart = Math.max(0, Number(v) || 0); touched(); repaint();
+      }, 0, null, '0'),
+      'For a clip inside a longer file.'));
+
+    insp.appendChild(UI.field('Fit', UI.select(
+      [{ value: 'cover', label: 'Fill the slide (crop)' },
+       { value: 'contain', label: 'Fit inside (letterbox)' }],
+      s.imageFit, function (v) { s.imageFit = v; touched(); repaint(); })));
+
+    insp.appendChild(UI.check('Play when the slide appears', s.videoAutoplay,
+      function (v) { s.videoAutoplay = v; touched(); repaint(); }));
+    insp.appendChild(UI.check('Loop', s.videoLoop,
+      function (v) { s.videoLoop = v; touched(); repaint(); }));
+    insp.appendChild(UI.check('Start muted', s.videoMuted,
+      function (v) { s.videoMuted = v; touched(); repaint(); }));
+    insp.appendChild(el('p', 'hint',
+      'Browsers refuse to autoplay sound until you have clicked something on ' +
+      'the page. Presenting counts as that click, so this normally works \u2014 ' +
+      'but tick "start muted" if a clip has to play the instant a slide lands.'));
   }
 
   function drawContentFields(insp, s) {
+    if (s.type === 'video') {
+      drawVideoFields(insp, s);
+      return;
+    }
+
+    if (s.type === 'table') {
+      insp.appendChild(UI.field('Table title',
+        richField(s, "title", "area", function (v) { s.title = v; touched(); repaint(); }, 2)));
+      insp.appendChild(UI.field('Rows \u2014 one per line',
+        richField(s, "body", "area", function (v) { s.body = v; touched(); repaint(); }, 9),
+        'Separate cells with | \u2014 or paste a range straight from a ' +
+        'spreadsheet, which arrives tab-separated and needs no editing. ' +
+        'Up to 12 rows and 6 columns.'));
+      insp.appendChild(UI.check('First row is a header', s.tableHeader,
+        function (v) { s.tableHeader = v; touched(); repaint(); }));
+      var rows = SF.parseTable(s.body);
+      insp.appendChild(el('p', 'hint', rows.length
+        ? rows.length + (rows.length === 1 ? ' row' : ' rows') + ' \u00d7 ' +
+          rows[0].length + (rows[0].length === 1 ? ' column' : ' columns') +
+          (s.tableHeader && rows.length > 1 ? ', the first a header' : '')
+        : 'Nothing parsed yet.'));
+      return;
+    }
+
     if (s.type === 'quote') {
       insp.appendChild(UI.field('Quotation',
-        UI.area(s.body, function (v) { s.body = v; touched(); repaint(); }, 4)));
+        richField(s, "body", "area", function (v) { s.body = v; touched(); repaint(); }, 4)));
       insp.appendChild(UI.field('Attribution',
-        UI.text(s.subtitle, function (v) { s.subtitle = v; touched(); repaint(); })));
+        richField(s, "subtitle", "text", function (v) { s.subtitle = v; touched(); repaint(); })));
       return;
     }
 
@@ -553,10 +945,10 @@
 
     if (s.type === 'split') {
       insp.appendChild(UI.field('Title',
-        UI.area(s.title, function (v) { s.title = v; touched(); repaint(); }, 2)));
+        richField(s, "title", "area", function (v) { s.title = v; touched(); repaint(); }, 2)));
       var pits = el('div');
       drawPits(pits, s);
-      insp.appendChild(UI.field('Points — click a pit to fill (up to 5)', pits,
+      insp.appendChild(UI.field('Points · drag to reorder', pits,
         'Keep it short — the image carries half the meaning.'));
       drawImageFields(insp, s, { caption: false, side: true });
       return;
@@ -564,7 +956,7 @@
 
     if (s.type === 'keywords') {
       insp.appendChild(UI.field('Title',
-        UI.area(s.title, function (v) { s.title = v; touched(); repaint(); }, 2)));
+        richField(s, "title", "area", function (v) { s.title = v; touched(); repaint(); }, 2)));
       var kw = el('div');
       drawPairPits(kw, s, 'keywords');
       insp.appendChild(UI.field('Keywords — bold term, lowercase definition', kw,
@@ -574,7 +966,7 @@
 
     if (s.type === 'italics') {
       insp.appendChild(UI.field('Title',
-        UI.area(s.title, function (v) { s.title = v; touched(); repaint(); }, 2)));
+        richField(s, "title", "area", function (v) { s.title = v; touched(); repaint(); }, 2)));
       var it = el('div');
       drawPairPits(it, s, 'italics');
       insp.appendChild(UI.field('Italics — emphasised phrase, plain note', it,
@@ -584,7 +976,7 @@
 
     if (s.type === 'links') {
       insp.appendChild(UI.field('Title',
-        UI.area(s.title, function (v) { s.title = v; touched(); repaint(); }, 2)));
+        richField(s, "title", "area", function (v) { s.title = v; touched(); repaint(); }, 2)));
       var ln = el('div');
       drawPairPits(ln, s, 'links');
       insp.appendChild(UI.field('Links — label + http(s) URL', ln,
@@ -593,18 +985,26 @@
     }
 
     insp.appendChild(UI.field(s.type === 'content' ? 'Title' : 'Heading',
-      UI.area(s.title, function (v) { s.title = v; touched(); repaint(); }, 2)));
+      richField(s, "title", "area", function (v) { s.title = v; touched(); repaint(); }, 2)));
 
-    if (s.type === 'title' || s.type === 'section') {
+    if (s.type === 'title' || s.type === 'section' || s.type === 'join') {
       insp.appendChild(UI.field('Subtitle',
-        UI.text(s.subtitle, function (v) { s.subtitle = v; touched(); repaint(); })));
+        richField(s, "subtitle", "text", function (v) { s.subtitle = v; touched(); repaint(); })));
+    }
+
+    if (s.type === 'join') {
+      var joinPits = el('div');
+      drawPits(joinPits, s);
+      insp.appendChild(UI.field('Lines under the heading (optional)', joinPits,
+        'Keep short — the QR and PIN own the slide. Host live replaces the sample code.'));
+      return;
     }
 
     if (s.type === 'content' || s.type === 'cards') {
       var bulletPits = el('div');
       drawPits(bulletPits, s);
       insp.appendChild(UI.field(
-        s.type === 'cards' ? 'Cards — click a pit to fill (up to 6)' : 'Bullets — click a pit to fill',
+        s.type === 'cards' ? 'Cards · drag to reorder' : 'Bullets — click a pit to fill',
         bulletPits,
         'Empty pits stay off the slide until you type. Prefix with "- " for a sub-bullet.'
       ));
@@ -612,41 +1012,48 @@
   }
 
   /* The embed inspector is deliberately thin: everything about how the game
-     plays is edited in the game engine, not here. */
+     plays is edited in Quiz studio, not here. One primary action, one summary. */
   function drawGameEmbed(insp, s) {
     var game = gameFor(s);
 
-    var swap = UI.button(game ? 'Choose a different game' : 'Choose a game', 'primary', insertGame);
-    swap.style.width = '100%';
-    insp.appendChild(UI.field('Game', swap));
-
     if (!game) {
-      insp.appendChild(UI.field(null, null,
+      var pick = UI.button('Choose a game →', 'primary', insertGame);
+      pick.style.width = '100%';
+      insp.appendChild(UI.field('Linked check', pick,
         s.gameId
           ? 'The game this slide pointed at has been deleted. Pick another, or delete this slide.'
           : 'No game chosen yet — this slide is skipped when you present.'));
       return;
     }
 
-    var facts = el('div', 'hint');
-    facts.style.cssText =
-      'padding:10px 12px;background:var(--ui-bg);border-radius:6px;line-height:1.7;white-space:pre-line';
-    facts.textContent =
+    var gfmt = SF.gameFormat(game.format);
+    var title = game.title || (gfmt ? gfmt.label : SF.gameStyle(game.style).label);
+    var facts = el('div', 'game-embed-card');
+    facts.appendChild(el('strong', 'game-embed-title', title));
+    facts.appendChild(el('div', 'hint',
+      (gfmt ? gfmt.label + ' · ' : '') +
       SF.gameStyle(game.style).label + '\n' +
-      game.questions.length + (game.questions.length === 1 ? ' question' : ' questions') + '\n' +
+      game.questions.length + (game.questions.length === 1 ? ' question' : ' questions') + ' · ' +
       (game.settings.mode === 'teams'
-        ? 'Teams: ' + game.settings.teams.map(function (t) { return t.name; }).join(', ')
-        : 'Scored individually') + '\n' +
-      (game.settings.defaultTime ? game.settings.defaultTime + 's default countdown' : 'No countdown');
-    insp.appendChild(UI.field('What plays here', facts));
+        ? game.settings.teams.length + ' teams'
+        : 'individual') +
+      (game.settings.defaultTime ? ' · ' + game.settings.defaultTime + 's countdown' : '')));
+    insp.appendChild(facts);
 
-    var edit = UI.button('Edit this game', null, function () {
+    var edit = UI.button('Edit in Quiz studio →', 'primary', function () {
       SF.Shell.activate('game', { toast: false });
       SF.Games.openGame(game.id);
     });
     edit.style.width = '100%';
     insp.appendChild(UI.field(null, edit,
-      'Questions, teams and timing are all edited in the game engine.'));
+      'Questions, How to play, teams and timing are edited there — not on this slide.'));
+
+    var swap = UI.button('Replace with a different game…', 'ghost', insertGame);
+    swap.style.width = '100%';
+    insp.appendChild(swap);
+
+    insp.appendChild(el('p', 'hint',
+      'Presentation theme and logo stay under the rail ⚙ — this slide only links the check.'));
   }
 
   /* ---------------------------------------------------- audience feedback */
@@ -694,6 +1101,33 @@
 
     if (!current) return;
     var f = s.feedback;
+
+    /* Same How to play strip as Quiz studio — every activity gets one. */
+    if (SF.Playbook) {
+      var book = SF.Playbook.forKey(f.kind);
+      if (book && book.howToPlay && book.howToPlay.length) {
+        var how = el('details', 'howto');
+        var open = true;
+        try { if (localStorage.getItem('slideforge.howtoOpen') === '0') open = false; } catch (e) {}
+        how.open = open;
+        var sum = el('summary', 'howto-summary');
+        sum.appendChild(el('span', null, 'How to play — ' + book.title));
+        sum.appendChild(el('span', 'howto-toggle', open ? 'Hide' : 'Reveal'));
+        how.appendChild(sum);
+        var body = el('div', 'howto-body');
+        if (book.aim) body.appendChild(el('p', 'howto-aim', book.aim));
+        var ol = el('ol', 'howto-steps');
+        book.howToPlay.forEach(function (step) { ol.appendChild(el('li', null, step)); });
+        body.appendChild(ol);
+        how.appendChild(body);
+        how.addEventListener('toggle', function () {
+          var label = how.querySelector('.howto-toggle');
+          if (label) label.textContent = how.open ? 'Hide' : 'Reveal';
+          try { localStorage.setItem('slideforge.howtoOpen', how.open ? '1' : '0'); } catch (e) {}
+        });
+        insp.appendChild(how);
+      }
+    }
 
     if (SF.slideFeedback(s)) {
       insp.appendChild(UI.field('Preview as', UI.segmented([
@@ -823,9 +1257,12 @@
     var replacing = s && s.type === 'game';
 
     if (!games.length) {
-      if (!confirm('You have no games yet. Create one now?')) return;
-      SF.Shell.activate('game', { toast: false });
-      SF.Games.newGame();
+      SF.ask({ title: 'You have no games yet.',
+        detail: 'Create one now? This opens Quiz studio.',
+        confirm: 'Create a game', danger: false }, function () {
+          SF.Shell.activate('game', { toast: false });
+          SF.Games.newGame();
+        });
       return;
     }
 
@@ -898,23 +1335,19 @@
   }
 
   function hostLive() {
-    var run = runDeck();
-    /* A deck can be hosted for feedback alone — it does not need a game. */
-    if (!run.games.length && !run.feedbackSlides) {
-      SF.toast('Nothing to host yet — add a game, or attach feedback to a slide');
-      return;
-    }
-    SF.Live.host(run);
+    SF.Store.save(deck);
+    SF.Live.host(runDeck());
   }
 
   /* ------------------------------------------------------------ workspace */
 
   function repaint() { drawPreview(); drawRail(); }
-  function draw() { drawRail(); drawFoot(); drawPreview(); drawInspector(); }
+  function draw() { if(historyId!==deck.id) remember(); drawRail(); drawFoot(); drawPreview(); drawInspector(); }
 
   var ws = {
     key: 'deck',
     railLabel: 'Slides',
+    settingsLabel: 'Presentation settings — theme, logo, colours',
     notesLabel: 'Speaker notes — visible in presenter view only',
     fileSuffix: '.sfdeck.json',
     store: SF.Store,
@@ -925,6 +1358,7 @@
     flush: flush,
     play: present,
     hostLive: hostLive,
+    settings: openDeckSettings,
     onTitle: function (v) { deck.title = v || 'Untitled presentation'; touched(); },
     onTheme: function (v) { deck.theme = v; touched(); draw(); },
     describe: function (d) {
@@ -934,7 +1368,8 @@
         ' · ' + new Date(d.modified).toLocaleString();
     },
     keydown: function (e) {
-      if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); select(sel + 1); }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); restoreHistory(e.shiftKey); }
+      else if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); select(sel + 1); }
       else if (e.key === 'ArrowUp' || e.key === 'k') { e.preventDefault(); select(sel - 1); }
       else if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); removeSlide(); }
       else if (e.key === 'F5') { e.preventDefault(); present(); }
@@ -985,23 +1420,60 @@
     install: install,
     addSlide: addSlide,
     insertStarter: insertStarter,
-    attachFeedback: function (kind) {
+    /**
+     * @param {string} kind  a FEEDBACK_KINDS key
+     * @param {object} [preset] { prompt, options } for a catalogue format
+     *   that is this kind of prompt worded a particular way
+     */
+    attachFeedback: function (kind, preset) {
+      preset = preset || {};
       if (current().type === 'game') addSlide('content');
       current().feedback = SF.makeFeedback(kind);
-      current().feedback.prompt = kind === 'wordcloud' ? 'What comes to mind in one word?' : kind === 'poll' ? 'How confident do you feel about this topic?' : 'What would you add?';
-      if (kind === 'poll') current().feedback.options = ['Getting started', 'Almost there', 'Ready to apply it'];
+      current().feedback.prompt = preset.prompt || (kind === 'wordcloud' ? 'What comes to mind in one word?' : kind === 'poll' ? 'How confident do you feel about this topic?' : 'What would you add?');
+      if (preset.options) current().feedback.options = preset.options.slice();
+      else if (kind === 'poll') current().feedback.options = ['Getting started', 'Almost there', 'Ready to apply it'];
       inspectorTab = 'engage'; touched(); draw();
     },
-    insertNewGame: function (style) {
-      var g = SF.makeGame('Quick knowledge check', style);
+    /**
+     * @param {string} style   a GAME_STYLES key
+     * @param {object} [preset] { title, settings } for a catalogue format that
+     *   is this engine set up a particular way rather than a new engine
+     */
+    insertNewGame: function (style, preset) {
+      preset = preset || {};
+      var g = SF.makeGame(preset.title || 'Quick knowledge check', style);
       g.theme = deck.theme; g.settings.defaultTime = 0; g.settings.scoreboard = false;
       g.settings.scoreSlide = false;
+      if (preset.settings) Object.assign(g.settings, preset.settings);
+      /* The format travels with the game, so authoring and the slide can both
+         say what it is rather than naming the engine underneath. */
+      if (preset.format) g.format = preset.format;
+      else if (SF.isSpecialStyle && SF.isSpecialStyle(style)) g.format = style;
+      /* A worked first question, not an empty one.
+         A format is its shape — a passage then a typed recall, three futures
+         to choose between, a sentence with one wrong phrase in it — and a
+         blank question teaches none of that. The seed is example content to
+         overwrite, which is faster than reading a description and guessing. */
+      if (preset.seeds && preset.seeds.length) {
+        /* Some formats cannot be shown by one question: a bingo card is dealt
+           from a pool, so a game seeded with a single pair is a game that
+           refuses to run. */
+        g.questions = preset.seeds.map(function (fields) {
+          var seeded = SF.makeQuestion(style);
+          Object.keys(fields).forEach(function (k) { seeded[k] = fields[k]; });
+          return SF.normalizeQuestion(seeded, style);
+        });
+      } else if (preset.seed && ['memorymatch', 'memoryflip', 'knowledgeflip', 'lowstakes'].indexOf(style) === -1) {
+        var q = SF.makeQuestion(style);
+        Object.keys(preset.seed).forEach(function (k) { q[k] = preset.seed[k]; });
+        g.questions = [SF.normalizeQuestion(q, style)];
+      }
       SF.GameStore.save(g);
       addSlide('game'); current().gameId = g.id; current().gameTitle = g.title; current().title = g.title;
       inspectorTab = 'content'; touched(); draw();
     },
-    useLesson: function () {
-      flush(); SF.Store.save(deck); deck = SF.Studio.makeLesson(); sel = 0;
+    useLesson: function (key) {
+      flush(); SF.Store.save(deck); deck = SF.Studio.makeLesson(key); sel = 0;
       SF.Store.save(deck); SF.Shell.syncChrome(); draw();
     },
     deck: function () { return deck; },
