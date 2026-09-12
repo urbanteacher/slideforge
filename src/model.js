@@ -1,4 +1,5 @@
 import { createBoardRuntime } from "./boards/runtime.js";
+import { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes } from "./activities/catalogue.js";
 import { DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
 import { FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback } from "./deck/feedback.js";
 import { renderMarkdown } from "./deck/markdown.js";
@@ -1027,6 +1028,8 @@ const { Store, GameStore } = createStores({ normalizeDeck, normalizeGame, storag
    was neither. */
 runtime.SF = Object.assign(runtime.SF || {}, {
   Boards: createBoardRuntime(() => runtime.SF, GAME_STYLES),
+  /* The activity catalogue. Data only — studio.js reads target and builds. */
+  Activities: { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes },
   SLIDE_W: SLIDE_W,
   SLIDE_H: SLIDE_H,
   THEMES: THEMES,

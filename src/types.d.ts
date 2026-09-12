@@ -629,6 +629,48 @@ export interface ReadinessReport {
   items: ReadinessItem[];
 }
 
+/* ---------------------------------------------------------- activities --*/
+
+/** Where an activity sits in a lesson. Distinct from {@link ActivityCategory},
+ *  which is what it does to the room. */
+export type PhaseKey =
+  | 'starter' | 'activate' | 'construct' | 'collaborate' | 'check' | 'reflect';
+
+/** What the existing activity library filters on. `moment` is new: a timed
+ *  classroom protocol with no screen component beyond a prompt and a clock. */
+export type ActivityCategory = 'check' | 'feedback' | 'moment';
+
+/** Which of the four things picking an activity builds. */
+export type ActivityTarget = 'game' | 'feedback' | 'slide' | 'moment';
+
+export interface Phase {
+  key: PhaseKey;
+  label: string;
+  icon: string;
+  blurb: string;
+}
+
+/**
+ * One row of the catalogue. Data only — nothing here runs; `js/studio.js`
+ * reads `target` and calls the matching builder.
+ */
+export interface Activity {
+  /** Catalogue format key, not an engine key. `FORMAT_STYLE` maps it. */
+  key: string;
+  icon: string;
+  title: string;
+  blurb: string;
+  category: ActivityCategory;
+  phase: PhaseKey;
+  /** Planning estimate for the phase rail. Never read at runtime. */
+  minutes?: number;
+  target: ActivityTarget;
+  /** `target: 'moment'` — the protocol, in order, as the source recorded it. */
+  steps?: string[];
+  /** Absent means true. An activity that cannot run is not offered. */
+  enabled?: boolean;
+}
+
 /* ------------------------------------------------------------- globals --*/
 
 /**
