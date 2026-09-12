@@ -74,13 +74,37 @@ const ACTIVITIES = [
   {
     key: 'connection-slide', icon: '▤', title: 'Connection Slide',
     blurb: 'Last lesson → Today → Next lesson + Why it matters',
-    phase: 'starter-slide', minutes: 2, target: 'slide', layout: 'cards',
+    phase: 'starter-slide', minutes: 2, target: 'slide',
+    /* keywords, not the doc's cards. Each of the five steps names a box and
+       what goes in it, and keywords is the layout that draws a label beside
+       its text; cards draws five unlabelled tiles three-wide, so two wrap and
+       none says which is which. The doc's own note reads "Yesterday → Today →
+       Tomorrow" — three boxes — the shape it was written for before the
+       source grew to five. */
+    layout: 'keywords',
     steps: [
       'Show: Last Lesson (brief recap)',
       'Show: Today (what we\'re learning)',
       'Show: Next Lesson (where we\'re going)',
       'Show: Why This Matters (real-world connection)',
       'Show: What You\'ll Do (3 activities)'
+    ],
+    /* One box per step. The labels are the steps' own, so all a teacher fills
+       in is the content. */
+    fields: [
+      { label: 'Last lesson', type: 'text', slide: 'bullets.0.def',
+        value: 'A one-line recap of where we got to.',
+        hint: 'Brief. They were there — a hook back, not a re-teach.' },
+      { label: 'Today', type: 'text', slide: 'bullets.1.def',
+        value: 'What we are learning today.' },
+      { label: 'Next lesson', type: 'text', slide: 'bullets.2.def',
+        value: 'Where this is going.' },
+      { label: 'Why this matters', type: 'text', slide: 'bullets.3.def',
+        value: 'Where this shows up outside the room.',
+        hint: 'The real-world connection — the part they actually remember.' },
+      { label: 'What you will do', type: 'area', slide: 'bullets.4.def',
+        value: 'Measure · Draw to scale · Check a partner',
+        hint: 'The three activities on one line. Separate them how you like.' }
     ]
   },
   {

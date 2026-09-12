@@ -83,8 +83,18 @@
 
   /* ------------------------------------------------------- activity fields */
 
-  /** Read a dotted path off a slide: `title`, `bullets.0`, `timeLimit`. */
+  /* A keywords bullet is one string holding a label and its text either side
+     of a tab, so `bullets.0` alone would make a teacher type the tab. These
+     two paths address the halves: `bullets.0.term` and `bullets.0.def`. */
+  var KEYWORD_HALF = /^(bullets\.\d+)\.(term|def)$/;
+
+  /** Read a dotted path off a slide: `title`, `bullets.0`, `bullets.0.def`. */
   function read(slide, path) {
+    var half = path.match(KEYWORD_HALF);
+    if (half) {
+      var line = SF.parseKeywordLine(read(slide, half[1]) || '');
+      return half[2] === 'term' ? line.term : line.def;
+    }
     return path.split('.').reduce(function (at, key) {
       return at == null ? undefined : at[key];
     }, slide);
@@ -93,6 +103,14 @@
   /** Write one, growing the array if the path points past its end — a layout
    *  with two pits has to accept a third question without losing it. */
   function write(slide, path, value) {
+    var half = path.match(KEYWORD_HALF);
+    if (half) {
+      var line = SF.parseKeywordLine(read(slide, half[1]) || '');
+      write(slide, half[1], half[2] === 'term'
+        ? SF.formatKeywordLine(value, line.def)
+        : SF.formatKeywordLine(line.term, value));
+      return;
+    }
     var parts = path.split('.');
     var last = parts.pop();
     var at = parts.reduce(function (node, key) { return node[key]; }, slide);
@@ -115,6 +133,11 @@
        arrive followed by a stray "Third point" that nobody asked for. */
     if (fields.some(function (f) { return /^bullets\./.test(f.slide); })) slide.bullets = [];
     fields.forEach(function (f) {
+      /* On a keywords box the field's own label is the box's label, so the
+         catalogue says it once. The teacher edits the content; the label is
+         what the activity calls that box. */
+      var half = f.slide.match(KEYWORD_HALF);
+      if (half && half[2] === 'def') write(slide, half[1] + '.term', f.label);
       if (f.value !== undefined) write(slide, f.slide, f.value);
     });
   }
@@ -330,10 +353,12 @@
          them guessing which pit is the hook and which is the question. */
       if (picked.fields && picked.fields.length) {
         var slide = row.slide;
-        var changed = function () {
-          SF.Shell.touch();
-          SF.Editor.workspace.draw();
-        };
+        /* Mark dirty and stop. Repainting the deck editor draws its
+           inspector over this one, and repainting this one mid-keystroke
+           takes the focus out of the field being typed into. The rail row
+           shows the activity's name, not the slide's, so nothing here needs
+           redrawing; Lesson studio draws fresh when you switch to it. */
+        var changed = function () { SF.Shell.touch(); };
         picked.fields.forEach(function (f) {
           var now = read(slide, f.slide);
           var input = f.type === 'minutes'
@@ -361,8 +386,9 @@
       if (row.slide.type !== 'game' && SF.Editor.drawFeedback) {
         insp.appendChild(el('span', 'eyebrow', 'SEE WHAT THE ROOM THINKS'));
         SF.Editor.drawFeedback(insp, row.slide, function () {
+          /* This one does repaint: choosing a kind reveals its own settings,
+             and the rail row picks up its feedback mark. */
           SF.Shell.touch();
-          SF.Editor.workspace.draw();
           draw();
         });
       }
