@@ -165,6 +165,15 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   background: rgba(0,0,0,.6); color: #fff; letter-spacing: .04em;
 }
 .thumb .badge.quiz { background: var(--ui-warn); color: #21160a; }
+/* An activity names its phase. It sits below the GAME or feedback badge when
+   a slide carries both, so neither hides the other, and it takes the tint the
+   activities studio uses for that kind — amber for the ones that run in the
+   room on a clock, blue for the ones that are a slide. */
+.thumb .badge.act {
+  top: auto; bottom: 4px; right: 4px;
+  background: #e4edf4; color: #2f4d63; font-weight: 800;
+}
+.thumb .badge.act.timed { background: #fbeedd; color: #8a5416; }
 .thumb-tx {
   flex: none;
   align-self: center;

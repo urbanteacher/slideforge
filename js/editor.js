@@ -117,6 +117,20 @@
           SF.FEEDBACK_KINDS[s.feedback.kind].icon +
           (live ? '' : ' !')));
       }
+      /* Slides chosen in the activities studio say so, the way a game does.
+         Named after the phase rather than a flat "ACTIVITY", because where
+         it belongs in the lesson is the thing worth reading off a rail —
+         and it is the one fact the slide itself cannot show. Drawn after the
+         two above so a game or a feedback slide keeps its own badge; this
+         one sits under it. */
+      var act = s.activity && SF.Activities && SF.Activities.activity(s.activity);
+      if (act) {
+        var ph = SF.Activities.PHASES.find(function (p) { return p.key === act.phase; });
+        var mark = el('div', 'badge act' + (act.target === 'moment' ? ' timed' : ''),
+          (ph ? ph.label : 'Activity').toUpperCase());
+        mark.title = act.title + (act.minutes ? ' · about ' + act.minutes + ' min' : '');
+        frame.appendChild(mark);
+      }
       body.appendChild(frame);
 
       var node = SF.renderSlide(deck, s, Object.assign(slideOpts(i), { chrome: false }));
