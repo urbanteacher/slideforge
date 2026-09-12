@@ -1527,6 +1527,19 @@
     install: install,
     addSlide: addSlide,
     insertStarter: insertStarter,
+    commitActivityChange: touched,
+    /** Insert an activity sequence as one edit, preserving page order. */
+    insertStarters: function (slides) {
+      if (!slides || !slides.length) return;
+      var ready = slides.map(function (s) { return SF.normalizeSlide(s); });
+      deck.slides.splice.apply(deck.slides, [sel + 1, 0].concat(ready));
+      sel += 1;
+      inspectorTab = 'content'; touched(); draw();
+    },
+    selectSlide: function (id) {
+      var at = deck.slides.findIndex(function (s) { return s.id === id; });
+      if (at >= 0) sel = at;
+    },
     /**
      * @param {string} kind  a FEEDBACK_KINDS key
      * @param {object} [preset] { prompt, options } for a catalogue format

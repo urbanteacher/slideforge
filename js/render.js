@@ -83,6 +83,10 @@
     lines.forEach(function (item) {
       var line=item.text;
       var li = asStep(rich('li', bulletTier(line) === 2 ? 'tier-2' : null, slide, 'bullets.' + item.index, bulletText(line)), slide);
+      if (slide.activity && slide.type === 'cards' && line.indexOf('\t') >= 0) {
+        var pair = SF.parseKeywordLine(line);
+        li.replaceChildren(el('strong', 'activity-card-label', pair.term), el('span', 'activity-card-copy', pair.def));
+      }
       ul.appendChild(li);
     });
     pad.appendChild(ul);
@@ -1387,6 +1391,7 @@
     opts = opts || {};
     var root = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-' + slide.type);
     root.dataset.slideId = slide.id;
+    if (slide.activity) root.classList.add('activity-slide');
     if (slide.type === 'quiz' || (SF.Boards && SF.Boards.forSlide(slide))) {
       root.classList.add('game-stage');
     }

@@ -7,7 +7,7 @@
 #docTitle{font-size:13px;min-width:120px;width:180px;background:transparent!important;color:var(--ui-text)}
 .wsswitch{border:0;background:#f1f2ee;padding:4px;border-radius:9px}.wsswitch button{color:#747c70;padding:8px 10px;font-size:11px}.wsswitch button.on{background:white;color:#354c2e;box-shadow:0 1px 4px #25352310;border-radius:6px}
 .file-menu{position:relative}.file-menu summary{list-style:none}.file-actions{position:absolute;top:42px;left:0;z-index:25;background:white;border:1px solid var(--ui-line);box-shadow:0 12px 40px #20301820;padding:8px;border-radius:12px;display:grid;gap:4px;min-width:205px}.file-actions .btn{text-align:left;background:transparent;border:0}
-.rail-head{height:59px;padding:18px;font-size:10px;font-weight:600}.rail-count{background:#f0f1ec;border-radius:5px;padding:3px 6px}.rail-list{padding:16px 10px;gap:13px}.thumb{padding:5px;border-radius:8px;flex-shrink:0}.thumb .num{font-size:10px;padding-top:8px}.thumb .frame{border-radius:5px;border:1px solid #23321a10}.rail-foot{padding:12px;gap:8px;flex-direction:column}.rail-foot .rail-actions{display:flex;gap:6px}.rail-foot .rail-actions .btn{flex:1;padding:10px 7px}.rail-tx label{font-size:8px;letter-spacing:1px}.rail-tx select{font-size:11px;border-radius:8px;padding:8px;background:#fafbf8;border-color:#e3e7dd}.thumb-tx{font-size:11px;width:16px}.thumb.sel .thumb-tx{color:#526943}
+.rail-head{height:59px;padding:18px;font-size:10px;font-weight:600}.rail-count{background:#f0f1ec;border-radius:5px;padding:3px 6px}.rail-list{padding:16px 10px;gap:13px}.thumb{padding:5px;border-radius:8px;flex-shrink:0}.qthumb{flex-shrink:0}.thumb .num{font-size:10px;padding-top:8px}.thumb .frame{border-radius:5px;border:1px solid #23321a10}.rail-foot{padding:12px;gap:8px;flex-direction:column;flex-shrink:0}.rail-foot .rail-actions{display:flex;gap:6px}.rail-foot .rail-actions .btn{flex:1;padding:10px 7px}.rail-tx label{font-size:8px;letter-spacing:1px}.rail-tx select{font-size:11px;border-radius:8px;padding:8px;background:#fafbf8;border-color:#e3e7dd}.thumb-tx{font-size:11px;width:16px}.thumb.sel .thumb-tx{color:#526943}
 .stage-area{background:#f0f1ed}.studio-toolbar{padding:22px 27px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #e2e5db}.studio-toolbar>div{flex:1}.eyebrow{display:block;font-size:9px;letter-spacing:1.8px;font-weight:700;color:#7b846f}.studio-toolbar strong{display:block;font-size:15px;letter-spacing:-.3px;font-weight:500;margin-top:7px}.studio-toolbar .btn{font-size:11px}.stage-wrap{padding:36px; background-image:radial-gradient(#84947424 .7px,transparent .7px);background-size:14px 14px;position:relative}
 .demo-banner{
   display:flex;align-items:center;gap:12px;flex-wrap:wrap;
@@ -171,6 +171,6 @@ html[data-ws="plan"] .act-legend .activity-icon{
 html[data-ws="plan"] .act-steps{margin:6px 0 14px;padding-left:20px;font-size:12px;
   color:var(--ui-dim);line-height:1.6}
 html[data-ws="plan"] .act-steps li{margin-bottom:5px}
-/* Two actions side by side, the way Lesson studio's rail foot lays out. */
-html[data-ws="plan"] .rail-foot .rail-actions{display:flex;gap:6px;margin-top:8px}
+/* Rail actions match Quiz studio's rail foot layout */
+html[data-ws="plan"] .rail-foot .rail-actions{display:flex;gap:6px}
 html[data-ws="plan"] .rail-foot .rail-actions .btn{flex:1}

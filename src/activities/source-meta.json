@@ -1,0 +1,897 @@
+{
+  "Do Now / Bell Ringer": {
+    "sourceFile": "lib/templates/activation.ts",
+    "materials": [
+      "Pre-written board questions",
+      "Answer key"
+    ],
+    "sourceSteps": [
+      "On board: 3 questions (recall from last lesson, connection, preview)",
+      "Silent individual work (5 mins)",
+      "Quick pair check (2 mins)",
+      "Whole class review (3 mins)",
+      "Link to today's objective"
+    ],
+    "sourceMinutes": 8,
+    "sourceBlurb": "Silent individual work on board when students enter"
+  },
+  "Knowledge Activation Web": {
+    "sourceFile": "lib/templates/activation.ts",
+    "materials": [
+      "Whiteboard",
+      "Markers"
+    ],
+    "sourceSteps": [
+      "Write topic in center of board (1 min)",
+      "Students call out anything they know (3 mins)",
+      "Teacher writes and draws connecting lines",
+      "Look for patterns and gaps (2 mins)",
+      "Set today's learning goal (1 min)"
+    ],
+    "sourceMinutes": 7,
+    "sourceBlurb": "Build a web of connected ideas on the board"
+  },
+  "Pre-Assessment Quickfire": {
+    "sourceFile": "lib/templates/activation.ts",
+    "materials": [
+      "Statement list (mix of known, preview, misconceptions)"
+    ],
+    "sourceSteps": [
+      "Teacher reads 8-10 statements",
+      "Students show: 👍 True / 👎 False / 👉 Unsure",
+      "Teacher notes misconceptions",
+      "Clarify key terms",
+      "Set learning goals based on gaps"
+    ],
+    "sourceMinutes": 8,
+    "sourceBlurb": "Thumbs up/down/sideways for 8-10 true/false statements"
+  },
+  "Exit Ticket": {
+    "sourceFile": "lib/templates/activity-plenary.ts",
+    "materials": [
+      "Exit ticket template",
+      "Collection box/system"
+    ],
+    "sourceSteps": [
+      "Choose format: 3-2-1 / Traffic Light / What-So What-Now What",
+      "Students write individual responses (3 mins)",
+      "Submit on way out",
+      "Teacher reviews for next lesson planning"
+    ],
+    "sourceMinutes": 5,
+    "sourceBlurb": "Quick written reflection: 3-2-1 or Traffic Light or What-So What-Now What"
+  },
+  "Recap Quiz Game": {
+    "sourceFile": "lib/templates/activity-plenary.ts",
+    "materials": [
+      "Quiz questions",
+      "Mini whiteboards (for Quick-Fire)",
+      "Question cards (for Quiz-Quiz-Trade)"
+    ],
+    "sourceSteps": [
+      "Choose format (Quiz-Quiz-Trade / Stand Up If / Quick-Fire)",
+      "Play game with review questions (4 mins)",
+      "Celebrate correct answers",
+      "Address common errors (2 mins)"
+    ],
+    "sourceMinutes": 6,
+    "sourceBlurb": "Fun, competitive review (Quiz-Quiz-Trade / Stand Up If / Quick-Fire)"
+  },
+  "Teach Someone": {
+    "sourceFile": "lib/templates/activity-plenary.ts",
+    "materials": [
+      "Teaching prompts",
+      "Question stems"
+    ],
+    "sourceSteps": [
+      "Partner A teaches (2 mins): Today I learned...",
+      "Partner B asks 2 questions (1 min)",
+      "Switch roles (3 mins)",
+      "Together: What would we tell someone who missed today? (2 mins)"
+    ],
+    "sourceMinutes": 8,
+    "sourceBlurb": "Explain today's learning to a partner"
+  },
+  "Visual Summary": {
+    "sourceFile": "lib/templates/activity-plenary.ts",
+    "materials": [
+      "Blank paper",
+      "Colored pens/pencils",
+      "Visual examples"
+    ],
+    "sourceSteps": [
+      "Choose visual format (Mind Map / Comic Strip / Sketch Note / One-Pager)",
+      "Create visual summary (6 mins)",
+      "Optional: Share with partner (2 mins)"
+    ],
+    "sourceMinutes": 8,
+    "sourceBlurb": "Create visual showing learning (Mind Map / Comic Strip / Sketch Note / One-Pager)"
+  },
+  "Reflection Ladder": {
+    "sourceFile": "lib/templates/activity-plenary.ts",
+    "materials": [
+      "Reflection ladder template",
+      "Writing materials"
+    ],
+    "sourceSteps": [
+      "Show ladder: Bottom (need help) → Top (can teach others)",
+      "Students draw themselves on their level (1 min)",
+      "Write: 'I'm here because...' (2 mins)",
+      "Write: 'To move up I need to...' (2 mins)",
+      "Share with partner (2 mins)",
+      "Teacher notes who needs support (2 mins)"
+    ],
+    "sourceMinutes": 9,
+    "sourceBlurb": "Self-assess learning journey from 'need help' to 'can teach others'"
+  },
+  "Think-Pair-Square-Share": {
+    "sourceFile": "lib/templates/collaboration.ts",
+    "materials": [
+      "Discussion question",
+      "Sharing protocol"
+    ],
+    "sourceSteps": [
+      "THINK (2 mins): Individual reflection",
+      "PAIR (3 mins): Share with partner",
+      "SQUARE (4 mins): Join another pair, synthesize",
+      "SHARE (4 mins): Groups present to class"
+    ],
+    "sourceMinutes": 13,
+    "sourceBlurb": "Progressive sharing: Individual → Pair → Group of 4 → Class"
+  },
+  "Jigsaw Collaboration": {
+    "sourceFile": "lib/templates/collaboration.ts",
+    "materials": [
+      "Expert group resources",
+      "Teaching guides"
+    ],
+    "sourceSteps": [
+      "Home groups split (2 mins)",
+      "Expert groups learn one piece (10 mins)",
+      "Return to home groups to teach (8 mins)"
+    ],
+    "sourceMinutes": 20,
+    "sourceBlurb": "Home groups → Expert groups → Return to teach (see Main Activity for full version)"
+  },
+  "Peer Teaching Carousel": {
+    "sourceFile": "lib/templates/collaboration.ts",
+    "materials": [
+      "Station task cards",
+      "Large paper/posters",
+      "Timer"
+    ],
+    "sourceSteps": [
+      "Setup: 4-5 stations with different tasks",
+      "Groups rotate every 4 minutes",
+      "At each station: Read previous work, add thinking, correct errors",
+      "Final Round (5 mins): Return to starting station, review, synthesize",
+      "Present to class"
+    ],
+    "sourceMinutes": 20,
+    "sourceBlurb": "Rotate through stations, adding to and building on previous groups' work"
+  },
+  "Socratic Seminar (Simple)": {
+    "sourceFile": "lib/templates/collaboration.ts",
+    "materials": [
+      "Discussion text/prompt",
+      "Evidence markers",
+      "Observation sheet"
+    ],
+    "sourceSteps": [
+      "Round 1 (8 mins): Inner circle discusses prompt with evidence",
+      "Round 2 (8 mins): Switch circles, new discussion",
+      "Debrief (4 mins): What strong arguments? What was convincing?"
+    ],
+    "sourceMinutes": 20,
+    "sourceBlurb": "Student-led discussion: Inner circle discusses, outer circle observes"
+  },
+  "Dialogue Chain Discussion": {
+    "sourceFile": "lib/templates/collaboration.ts",
+    "materials": [
+      "Discussion prompt",
+      "Academic language stems poster",
+      "Listening tracker"
+    ],
+    "sourceSteps": [
+      "Present discussion question to class (1 min)",
+      "Student 1: Gives initial answer (30 seconds)",
+      "Student 2: 'I agree/disagree because...' OR 'Building on that idea...' (30 seconds)",
+      "Student 3: Continues chain using academic language (30 seconds)",
+      "Continue for 8-10 students (10 mins)",
+      "Teacher synthesizes key insights (2 mins)"
+    ],
+    "sourceMinutes": 15,
+    "sourceBlurb": "Structured student-led discussion where each student builds on previous responses using academic connectors"
+  },
+  "Real-World Connection Hunt": {
+    "sourceFile": "lib/templates/collaboration.ts",
+    "materials": [
+      "Concept cards",
+      "Recording sheet",
+      "Example categories poster"
+    ],
+    "sourceSteps": [
+      "Present concept (e.g., 'Friction' or 'Democracy') (2 mins)",
+      "Challenge 1 (3 mins): Find examples in THIS ROOM",
+      "Challenge 2 (3 mins): Think of examples AT HOME",
+      "Challenge 3 (3 mins): Identify examples IN YOUR COMMUNITY",
+      "Share out (3 mins): Students explain their connections",
+      "Reflect (1 min): 'Why does this concept matter in real life?'"
+    ],
+    "sourceMinutes": 15,
+    "sourceBlurb": "Students identify real-world examples of concepts in their classroom, school, home, and community"
+  },
+  "Explanation Champion Challenge": {
+    "sourceFile": "lib/templates/collaboration.ts",
+    "materials": [
+      "Concept cards",
+      "Banned words list",
+      "Timer",
+      "Voting system"
+    ],
+    "sourceSteps": [
+      "Display concept word (e.g., 'Photosynthesis') (1 min)",
+      "Show 4-5 BANNED WORDS students can't use (e.g., 'sunlight', 'oxygen', 'plants') (1 min)",
+      "Think time (2 mins): Students plan their explanation",
+      "Volunteer explains to class (60 seconds)",
+      "Class votes: Clear (2 pts), Okay (1 pt), Unclear (0 pts)",
+      "Repeat with 3-4 more students and concepts (8 mins)",
+      "Debrief (2 mins): What made explanations clear?"
+    ],
+    "sourceMinutes": 15,
+    "sourceBlurb": "Students explain concepts without using banned words, forcing deeper articulation of understanding"
+  },
+  "Compare & Contrast Venn Activity": {
+    "sourceFile": "lib/templates/collaboration.ts",
+    "materials": [
+      "Venn diagram template",
+      "Concept cards",
+      "Markers"
+    ],
+    "sourceSteps": [
+      "Present two concepts (e.g., 'Photosynthesis' vs 'Respiration') (1 min)",
+      "Individual thinking (3 mins): List characteristics of each",
+      "Pair work (5 mins): Create Venn diagram together",
+      "Gallery walk (4 mins): View other pairs' work",
+      "Class synthesis (2 mins): What patterns? What connections?"
+    ],
+    "sourceMinutes": 15,
+    "sourceBlurb": "Visual comparison of two concepts using Venn diagram, focusing on similarities and differences"
+  },
+  "Benefits vs Limitations Battle": {
+    "sourceFile": "lib/templates/collaboration.ts",
+    "materials": [
+      "Topic cards",
+      "Score board",
+      "Timer",
+      "Validity criteria"
+    ],
+    "sourceSteps": [
+      "Present topic (e.g., 'Renewable Energy' or 'Social Media') (1 min)",
+      "Team setup: Benefits Team vs Limitations Team (1 min)",
+      "30-second think time before each round",
+      "Teams alternate stating points (10 mins)",
+      "Scoring: Valid point = 1 point, Repeat = no points",
+      "Switch sides and continue (optional)",
+      "Debrief (2 mins): Balanced view discussion"
+    ],
+    "sourceMinutes": 15,
+    "sourceBlurb": "Two teams take turns stating benefits and limitations of a concept, practicing balanced analysis"
+  },
+  "Scenario Analysis Discussion": {
+    "sourceFile": "lib/templates/collaboration.ts",
+    "materials": [
+      "Concept cards",
+      "Scenario cards",
+      "Analysis questions",
+      "Recording sheet"
+    ],
+    "sourceSteps": [
+      "Present concept (e.g., 'Supply and Demand') (2 mins)",
+      "Show 3 scenarios (e.g., concert tickets, crop harvest, iPhone release) (3 mins)",
+      "Question 1 (4 mins): Which scenarios show the concept? (All/Some/One)",
+      "Question 2 (4 mins): Pick one and explain HOW",
+      "Question 3 (3 mins): Predict what happens next",
+      "Question 4 (2 mins): Compare - which is most extreme?"
+    ],
+    "sourceMinutes": 18,
+    "sourceBlurb": "Analyze real-world scenarios to identify concepts, explain applications, and predict outcomes"
+  },
+  "Whiteboards on Walls": {
+    "sourceFile": "lib/templates/collaboration.ts",
+    "materials": [
+      "Wall-mounted whiteboards",
+      "Whiteboard markers (multiple colors)",
+      "Erasers",
+      "Problem/question prompt"
+    ],
+    "sourceSteps": [
+      "Students move to wall whiteboards in pairs/groups (30 secs)",
+      "Teacher poses problem/question (30 secs)",
+      "Groups discuss and write their thinking on whiteboards (5 mins)",
+      "Gallery walk - observe and learn from other groups' work (3 mins)",
+      "Return to own board and refine thinking based on what you saw (2 mins)",
+      "Whole class debrief of key ideas and strongest arguments (1 min)",
+      "Note: Arrive early to start, revisit at lesson end for consolidation"
+    ],
+    "sourceMinutes": 12,
+    "sourceBlurb": "Students discuss and write thinking on wall whiteboards - visible thinking and peer learning (Franklin Sixth Form approach)"
+  },
+  "Connect Four - Concept Edition": {
+    "sourceFile": "lib/templates/collaboration.ts",
+    "materials": [
+      "Concept cards (16 cards: 8 pairs)",
+      "Grid template (4x4)",
+      "Scoring sheet",
+      "Timer"
+    ],
+    "sourceSteps": [
+      "MODE A - Match Pairs (20 mins):",
+      "Setup (2 mins): Create 4x4 grid with paired cards (definitions/terms, causes/effects, questions/answers, benefits/limitations)",
+      "Teams take turns (15 mins): Claim two cards that match and explain the connection",
+      "If correct: Cards disappear, team scores a connection",
+      "If incorrect: Cards stay, next team's turn",
+      "Win condition: First team to make 4 valid connections wins",
+      "Debrief (3 mins): Discuss strongest connections and misconceptions",
+      "MODE B - Category Conquest (Alternative):",
+      "Setup: 4 columns, 4 rows of questions (Define, Compare, Example, Why)",
+      "Students answer questions to 'claim' spaces",
+      "First to get 4 in a row (vertical, horizontal, diagonal) wins"
+    ],
+    "sourceMinutes": 20,
+    "sourceBlurb": "Competitive matching game where students connect related concepts (definitions/terms, causes/effects, questions/answers)"
+  },
+  "I Do, We Do, You Do": {
+    "sourceFile": "lib/templates/construction.ts",
+    "materials": [
+      "Example problem",
+      "Practice problems",
+      "Success criteria"
+    ],
+    "sourceSteps": [
+      "I DO (5 mins): Teacher models with think-aloud",
+      "WE DO (8 mins): Class solves together, teacher guides",
+      "YOU DO Together (5 mins): Partner practice with support",
+      "YOU DO Alone (7 mins): Independent practice, quick check"
+    ],
+    "sourceMinutes": 20,
+    "sourceBlurb": "Gradual release: Teacher models → Guided practice → Independent practice"
+  },
+  "Concept Development": {
+    "sourceFile": "lib/templates/construction.ts",
+    "materials": [
+      "Concept examples",
+      "Non-examples",
+      "Practice tasks"
+    ],
+    "sourceSteps": [
+      "SHOW: Present concept with clear example (3 mins)",
+      "EXPLAIN: Break down - what, why, how (5 mins)",
+      "EXAMPLES & NON-EXAMPLES: Identify features (5 mins)",
+      "GUIDED APPLICATION: Apply concept (7 mins)",
+      "INDEPENDENT PRACTICE: Create own examples (5 mins)"
+    ],
+    "sourceMinutes": 20,
+    "sourceBlurb": "Build understanding: Show → Explain → Examples/Non-Examples → Apply"
+  },
+  "Flipped Instruction": {
+    "sourceFile": "lib/templates/construction.ts",
+    "materials": [
+      "Home learning review",
+      "Complex examples",
+      "Application problems"
+    ],
+    "sourceSteps": [
+      "Home Learning Review (3 mins): Poll understanding, address questions",
+      "Deep Dive (10 mins): Focus on hardest parts, work complex examples",
+      "Application Practice (12 mins): Apply to challenging problems, differentiated support"
+    ],
+    "sourceMinutes": 25,
+    "sourceBlurb": "Deepen understanding after home learning (Review → Deep Dive → Application)"
+  },
+  "Question Cube - Six Question Types": {
+    "sourceFile": "lib/templates/construction.ts",
+    "materials": [
+      "Question cube visual/poster",
+      "Topic cards",
+      "Timer",
+      "Question type guide"
+    ],
+    "sourceSteps": [
+      "Present topic/concept (e.g., 'Photosynthesis') (1 min)",
+      "Explain the 6 question types (2 mins):",
+      "🔵 DEFINE: What is [concept]?",
+      "🟢 COMPARE: How is it different from [related concept]?",
+      "🟡 WHY: Why is [concept] important/how does it work?",
+      "🟣 EXAMPLE: Give a real-world example",
+      "🔴 WHAT IF: What would happen if...?",
+      "🟠 BENEFITS/LIMITS: What conditions are needed? What are the limitations?",
+      "Round 1 (12 mins): Teacher or student picks question type, student answers (30s thinking, 30s response), rotate through all 6 types with 2-3 students per type",
+      "Round 2 (optional): Students generate their own questions for each type",
+      "Debrief (5 mins): Which questions were hardest? Which helped you understand most?"
+    ],
+    "sourceMinutes": 20,
+    "sourceBlurb": "Deep questioning using Rosenshine's six question templates: Define, Compare, Why, Example, What If, Benefits/Limits"
+  },
+  "Guided Inquiry Investigation": {
+    "sourceFile": "lib/templates/main-activity.ts",
+    "materials": [
+      "Investigation materials",
+      "Observation sheet",
+      "Analysis questions"
+    ],
+    "sourceSteps": [
+      "EXPLORE (10 mins): Investigate stimulus - What patterns? What happens when you change X?",
+      "EXPLAIN (8 mins): Develop explanation - Why? What's the rule?",
+      "ELABORATE (7 mins): Apply to new situation - Use understanding to solve problems",
+      "SHARE & REFINE (5 mins): Present findings and build shared understanding"
+    ],
+    "sourceMinutes": 30,
+    "sourceBlurb": "Students discover concepts through structured exploration (Explore → Explain → Elaborate → Share)"
+  },
+  "Jigsaw Expert Groups": {
+    "sourceFile": "lib/templates/main-activity.ts",
+    "materials": [
+      "4 different resource sets",
+      "Expert group guides",
+      "Summary sheet"
+    ],
+    "sourceSteps": [
+      "Home Groups (5 mins): Groups of 4, assign each person a sub-topic",
+      "Expert Groups (12 mins): All 1s together, become experts, create teaching plan",
+      "Home Groups Return (12 mins): Each expert teaches their part (3 mins each), create complete picture"
+    ],
+    "sourceMinutes": 29,
+    "sourceBlurb": "Students become experts and teach peers (Home → Expert → Home)"
+  },
+  "Problem-Based Learning": {
+    "sourceFile": "lib/templates/main-activity.ts",
+    "materials": [
+      "Problem scenario",
+      "Research resources",
+      "Solution template"
+    ],
+    "sourceSteps": [
+      "Present Problem: Real-world scenario (3 mins)",
+      "What do we KNOW? List given information (5 mins)",
+      "What do we NEED to know? Identify gaps (5 mins)",
+      "Research & Plan: Find information, develop strategy (10 mins)",
+      "Solve: Implement solution, show working (10 mins)",
+      "Present & Justify: Share solution and reasoning (7 mins)"
+    ],
+    "sourceMinutes": 35,
+    "sourceBlurb": "Solve authentic, complex problem through structured inquiry"
+  },
+  "Differentiated Practice Menu": {
+    "sourceFile": "lib/templates/main-activity.ts",
+    "materials": [
+      "Must-do task",
+      "3 differentiated challenge options",
+      "Success criteria"
+    ],
+    "sourceSteps": [
+      "Must Do: Core practice task - everyone (10 mins)",
+      "Choose Your Challenge (15 mins):",
+      "🟢 Consolidate: Easier version with scaffolding",
+      "🟡 Apply: Standard problem-solving",
+      "🔴 Extend: Complex multi-step challenge"
+    ],
+    "sourceMinutes": 25,
+    "sourceBlurb": "Must-do task plus choice board (Consolidate/Apply/Extend)"
+  },
+  "Design & Create Task": {
+    "sourceFile": "lib/templates/main-activity.ts",
+    "materials": [
+      "Creation materials",
+      "Success criteria checklist",
+      "Examples"
+    ],
+    "sourceSteps": [
+      "Brief: Design/create [product] that shows understanding (2 mins)",
+      "Planning: Sketch ideas, gather resources (5 mins)",
+      "Creating: Make your product (20 mins)",
+      "Self-assessment: Check against criteria (3 mins)",
+      "Gallery walk: View and learn from others (5 mins)"
+    ],
+    "sourceMinutes": 35,
+    "sourceBlurb": "Create something that demonstrates understanding (poster/model/presentation/video)"
+  },
+  "Worked Example Analysis": {
+    "sourceFile": "lib/templates/mini-activity.ts",
+    "materials": [
+      "Worked example",
+      "Blank problem for practice"
+    ],
+    "sourceSteps": [
+      "Display completed example (1 min)",
+      "Students identify each step (3 mins) - What happened? Why?",
+      "Pairs create a 'recipe' for solving similar problems (3 mins)",
+      "Test recipe on new problem (3 mins)",
+      "Compare approaches (2 mins)"
+    ],
+    "sourceMinutes": 10,
+    "sourceBlurb": "Analyze a completed example together to understand the process"
+  },
+  "Error Analysis": {
+    "sourceFile": "lib/templates/mini-activity.ts",
+    "materials": [
+      "Sample work with errors",
+      "Error types guide"
+    ],
+    "sourceSteps": [
+      "Show work with 3-4 deliberate errors (1 min)",
+      "Individual: Spot the errors (3 mins)",
+      "Pairs: Discuss and correct errors (3 mins)",
+      "Share: What were the errors? (2 mins)",
+      "Reflect: Why might someone make these mistakes? (1 min)"
+    ],
+    "sourceMinutes": 10,
+    "sourceBlurb": "Find and fix mistakes in sample work to identify misconceptions"
+  },
+  "Quick Practice Stations": {
+    "sourceFile": "lib/templates/mini-activity.ts",
+    "materials": [
+      "3 station task cards",
+      "Timer",
+      "Recording sheets"
+    ],
+    "sourceSteps": [
+      "Station 1: Recall task (3 mins)",
+      "Station 2: Apply task (3 mins)",
+      "Station 3: Create task (3 mins)",
+      "Brief share out (1 min)"
+    ],
+    "sourceMinutes": 10,
+    "sourceBlurb": "Rotate through 3 quick tasks: Recall, Apply, Create"
+  },
+  "Concept Card Sort": {
+    "sourceFile": "lib/templates/mini-activity.ts",
+    "materials": [
+      "Card set (12-15 cards)",
+      "Category labels (optional)"
+    ],
+    "sourceSteps": [
+      "Give each group 12-15 cards with terms/images/examples (1 min)",
+      "Sort into categories (4 mins) - choose or create categories",
+      "Groups walk around to see others' sorts (2 mins)",
+      "Discuss: Different ways to organize (2 mins)",
+      "Reflect: Which organization is most useful? Why? (1 min)"
+    ],
+    "sourceMinutes": 10,
+    "sourceBlurb": "Organize information into categories to understand relationships"
+  },
+  "Interleaving Mixed Practice": {
+    "sourceFile": "lib/templates/mini-activity.ts",
+    "materials": [
+      "Mixed practice problem set",
+      "Answer key",
+      "Previous topics reference sheet"
+    ],
+    "sourceSteps": [
+      "Present 10 problems: 6 from today's topic, 4 from previous weeks (1 min)",
+      "Students solve independently (8 mins) - mix of old and new",
+      "Pair-check answers (3 mins) - discuss strategies used",
+      "Whole class: 'How did previous learning help today?' (3 mins)",
+      "Reflect: Which problems were harder - new or old? Why?"
+    ],
+    "sourceMinutes": 15,
+    "sourceBlurb": "Mix problems from today AND previous weeks for long-term retention (spaced learning)"
+  },
+  "Strategic Wait Time Questioning": {
+    "sourceFile": "lib/templates/mini-activity.ts",
+    "materials": [
+      "Question list (5-7 questions)",
+      "Random name selector",
+      "Timer (optional)"
+    ],
+    "sourceSteps": [
+      "Pose question to whole class clearly",
+      "⏱️ WAIT 3-5 seconds (no hands up yet) - give thinking time",
+      "Call on student randomly (use name sticks/cards)",
+      "⏱️ WAIT 3 seconds for student to formulate answer",
+      "Student responds",
+      "⏱️ WAIT 2 seconds before responding or asking follow-up",
+      "Repeat 5-7 times with different students (10 mins total)",
+      "Note: Increased wait time = better answers + more participation"
+    ],
+    "sourceMinutes": 10,
+    "sourceBlurb": "Questioning with explicit 3-5 second wait time for deeper thinking and participation"
+  },
+  "Multiple Choice Quiz": {
+    "sourceFile": "lib/templates/mini-quiz.ts",
+    "materials": [
+      "Quiz questions (MC format)",
+      "Answer key",
+      "Response method"
+    ],
+    "sourceSteps": [
+      "Present 5-8 multiple choice questions",
+      "Students respond (paper/whiteboard/digital/fingers)",
+      "Show correct answer after each (30-45 secs per question)",
+      "Quick explanation if needed",
+      "Move on - don't dwell"
+    ],
+    "sourceMinutes": 6,
+    "sourceBlurb": "5-8 multiple choice questions with immediate feedback"
+  },
+  "True/False Rapid Fire": {
+    "sourceFile": "lib/templates/mini-quiz.ts",
+    "materials": [
+      "True/false statement list"
+    ],
+    "sourceSteps": [
+      "Teacher reads 10-12 true/false statements",
+      "Students show: 👍 True / 👎 False / 👉 Unsure",
+      "Statements mix easy, challenging, and misconceptions",
+      "Tally scores, address misconceptions"
+    ],
+    "sourceMinutes": 5,
+    "sourceBlurb": "10-12 true/false statements with thumbs up/down/sideways"
+  },
+  "Short Answer Check": {
+    "sourceFile": "lib/templates/mini-quiz.ts",
+    "materials": [
+      "Short answer questions",
+      "Answer key"
+    ],
+    "sourceSteps": [
+      "Students write answers to 3-5 questions (4 mins)",
+      "Swap with partner (1 min)",
+      "Mark using answer key (2 mins)",
+      "Discuss any disagreements (1 min)",
+      "Self-assess: ___ / 5"
+    ],
+    "sourceMinutes": 8,
+    "sourceBlurb": "3-5 short answer questions, pair mark with answer key"
+  },
+  "Diagnostic Question": {
+    "sourceFile": "lib/templates/mini-quiz.ts",
+    "materials": [
+      "Diagnostic question(s)",
+      "Common misconception guide"
+    ],
+    "sourceSteps": [
+      "Present 1-2 diagnostic questions (3 mins)",
+      "Students answer with explanation",
+      "Teacher analyzes common answers (2 mins)",
+      "Address misconception immediately (2 mins)",
+      "Group students by need if necessary"
+    ],
+    "sourceMinutes": 7,
+    "sourceBlurb": "1-2 carefully designed questions that reveal thinking and misconceptions"
+  },
+  "Exit Ticket (Plenary)": {
+    "sourceFile": "lib/templates/plenary.ts",
+    "materials": [
+      "Exit ticket template"
+    ],
+    "sourceSteps": [
+      "Choose format: 3-2-1 / Traffic Light / What-So What-Now What",
+      "Students write responses (3 mins)",
+      "Submit on way out",
+      "Teacher reviews for planning"
+    ],
+    "sourceMinutes": 5,
+    "sourceBlurb": "Quick written reflection before leaving (same as Activity Plenary #4)"
+  },
+  "Preview Next Lesson": {
+    "sourceFile": "lib/templates/plenary.ts",
+    "materials": [
+      "Recap notes",
+      "Preview slide",
+      "Preparation task"
+    ],
+    "sourceSteps": [
+      "Today We Learned (2 mins): Quick recap",
+      "Next Lesson We Will (2 mins): Preview and connect",
+      "Preparation Task (1 min): Quick homework/prep",
+      "Closing Question (2 mins): Leave them thinking"
+    ],
+    "sourceMinutes": 7,
+    "sourceBlurb": "Recap today, preview tomorrow, set preparation task"
+  },
+  "Structured Reflection Protocol (Four-Corner)": {
+    "sourceFile": "lib/templates/reflection.ts",
+    "materials": [
+      "Corner signs",
+      "Task cards for each corner"
+    ],
+    "sourceSteps": [
+      "Explain corners: Got it / Mostly understand / Getting there / Need help",
+      "Students move to their corner (2 mins)",
+      "Each corner completes specific task (6 mins)",
+      "Teacher visits each corner, addresses needs (4 mins)"
+    ],
+    "sourceMinutes": 12,
+    "sourceBlurb": "Students move to corners based on confidence level"
+  },
+  "Learning Log Entry": {
+    "sourceFile": "lib/templates/reflection.ts",
+    "materials": [
+      "Learning log template",
+      "Writing materials"
+    ],
+    "sourceSteps": [
+      "Students complete structured reflection (8 mins):",
+      "1. NEW LEARNING: What's one new thing?",
+      "2. CONNECTIONS: How does this connect?",
+      "3. CHALLENGES: What was difficult?",
+      "4. STRATEGIES: What helped me learn?",
+      "5. NEXT STEPS: What do I want to work on?",
+      "Optional: Share one insight with partner (2 mins)"
+    ],
+    "sourceMinutes": 10,
+    "sourceBlurb": "Structured journal: New Learning / Connections / Challenges / Strategies / Next Steps"
+  },
+  "Muddiest Point": {
+    "sourceFile": "lib/templates/reflection.ts",
+    "materials": [
+      "Sticky notes",
+      "Markers"
+    ],
+    "sourceSteps": [
+      "Individual (3 mins): Write 'The muddiest point for me is...' on sticky note",
+      "Teacher collects & groups (2 mins): Sort by common themes",
+      "Address Top 3 (8 mins): Clear up biggest confusions with student explanations"
+    ],
+    "sourceMinutes": 13,
+    "sourceBlurb": "Identify what's unclear, teacher addresses top confusions"
+  },
+  "Plus-Minus-Interesting (PMI)": {
+    "sourceFile": "lib/templates/reflection.ts",
+    "materials": [
+      "PMI template",
+      "Writing materials"
+    ],
+    "sourceSteps": [
+      "Individual Reflection (5 mins):",
+      "PLUS: What worked well?",
+      "MINUS: What was challenging?",
+      "INTERESTING: What surprised me?",
+      "Share (5 mins): Pairs compare, class discusses themes"
+    ],
+    "sourceMinutes": 10,
+    "sourceBlurb": "Edward de Bono thinking: What worked (+) / What was challenging (−) / What surprised (?)"
+  },
+  "Quick Retrieval Quiz": {
+    "sourceFile": "lib/templates/starter-activity.ts",
+    "materials": [
+      "Quiz questions sheet",
+      "Answer key"
+    ],
+    "sourceSteps": [
+      "Students answer 3-5 recall questions individually",
+      "Pair check answers (2 mins)",
+      "Whole class review and discussion (3 mins)",
+      "Link to today's objective"
+    ],
+    "sourceMinutes": 7,
+    "sourceBlurb": "Answer 3-5 questions from memory to recall prior learning"
+  },
+  "Think-Pair-Share": {
+    "sourceFile": "lib/templates/starter-activity.ts",
+    "materials": [
+      "Thinking prompt",
+      "Discussion questions"
+    ],
+    "sourceSteps": [
+      "Think alone (1 min) - jot down ideas about [topic]",
+      "Share with partner (2 mins) - compare notes",
+      "Pairs share best ideas (3 mins) - class discussion",
+      "Teacher synthesizes (1 min) - connect to today's goal"
+    ],
+    "sourceMinutes": 7,
+    "sourceBlurb": "Individual thinking → Partner discussion → Share out"
+  },
+  "Hook & Predict": {
+    "sourceFile": "lib/templates/starter-activity.ts",
+    "materials": [
+      "Stimulus (image/video/scenario)",
+      "Notice/Wonder template"
+    ],
+    "sourceSteps": [
+      "Show attention-grabbing stimulus (30 secs)",
+      "Students write 2 things they notice (1 min)",
+      "Students write 1 thing they wonder (1 min)",
+      "Share out observations and questions (3 mins)",
+      "Link to today's learning objective (1 min)"
+    ],
+    "sourceMinutes": 7,
+    "sourceBlurb": "Present intriguing stimulus and ask 'What do you notice? What do you wonder?'"
+  },
+  "Word Splash": {
+    "sourceFile": "lib/templates/starter-activity.ts",
+    "materials": [
+      "Word splash handout",
+      "Key vocabulary list"
+    ],
+    "sourceSteps": [
+      "Display 5-8 key terms for today's lesson",
+      "Students circle terms they know well",
+      "Underline terms they've heard but unsure",
+      "Leave blank terms they don't know",
+      "Partner discussion (2 mins): Explain circled terms",
+      "Class creates working definitions (3 mins)",
+      "Self-assess confidence: 🟢🟡🔴"
+    ],
+    "sourceMinutes": 7,
+    "sourceBlurb": "Connect key vocabulary to prior knowledge through self-assessment"
+  },
+  "Daily Review Routine": {
+    "sourceFile": "lib/templates/starter-activity.ts",
+    "materials": [
+      "Homework answer key",
+      "Common error examples",
+      "Quick practice problem"
+    ],
+    "sourceSteps": [
+      "Quick homework check (2 mins) - scan for completion, spot common issues",
+      "Address common errors (3 mins) - whole class discussion of 2-3 frequent mistakes",
+      "Guided practice (3 mins) - reteach tricky concept with worked example",
+      "Link to today's lesson (30 secs) - 'Today we'll build on this by...'"
+    ],
+    "sourceMinutes": 8,
+    "sourceBlurb": "Check homework, address common errors, reteach concepts - daily routine for retention"
+  },
+  "Establish Talk Ground Rules": {
+    "sourceFile": "lib/templates/starter-activity.ts",
+    "materials": [
+      "Chart paper",
+      "Markers",
+      "Optional: Ground rules template"
+    ],
+    "sourceSteps": [
+      "Ask: 'What makes group discussions go well?' (2 mins) - brainstorm ideas",
+      "Ask: 'What makes them go badly?' (2 mins) - identify problems",
+      "Students pair-discuss and share ideas (3 mins) - synthesize thinking",
+      "Co-create list of 5-7 ground rules together (2 mins) - write on chart paper",
+      "Display rules prominently in classroom (1 min)",
+      "Note: Revisit these before each oracy activity throughout year"
+    ],
+    "sourceMinutes": 10,
+    "sourceBlurb": "Co-create class ground rules for quality dialogue and oracy (use at start of year/unit)"
+  },
+  "Clear Objectives Slide": {
+    "sourceFile": "lib/templates/starter-slide.ts",
+    "materials": [
+      "Prepared slide with objectives, criteria, keywords"
+    ],
+    "sourceSteps": [
+      "Display slide with: Title, Learning Objectives (3), Success Criteria (I can...), Key Words",
+      "Teacher reads objectives aloud",
+      "Get started with active learning"
+    ],
+    "sourceMinutes": 2,
+    "sourceBlurb": "Display learning objectives, success criteria, and key words"
+  },
+  "Hook + Objectives": {
+    "sourceFile": "lib/templates/starter-slide.ts",
+    "materials": [
+      "Hook stimulus",
+      "Objectives slide"
+    ],
+    "sourceSteps": [
+      "Show engaging image/video/question",
+      "Present Big Question that will be answered",
+      "Show: Today we will... (3 activities)",
+      "Show: By the end you'll be able to..."
+    ],
+    "sourceMinutes": 2,
+    "sourceBlurb": "Engaging stimulus + big question + today's activities"
+  },
+  "Connection Slide": {
+    "sourceFile": "lib/templates/starter-slide.ts",
+    "materials": [
+      "Connection slide with learning sequence"
+    ],
+    "sourceSteps": [
+      "Show: Last Lesson (brief recap)",
+      "Show: Today (what we're learning)",
+      "Show: Next Lesson (where we're going)",
+      "Show: Why This Matters (real-world connection)",
+      "Show: What You'll Do (3 activities)"
+    ],
+    "sourceMinutes": 2,
+    "sourceBlurb": "Last lesson → Today → Next lesson + Why it matters"
+  }
+}

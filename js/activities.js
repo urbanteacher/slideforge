@@ -33,52 +33,50 @@
    * same undo, same place in the running order.
    */
   function insert(a) {
+    var previous = current();
+    if (previous) SF.Editor.selectSlide(previous.slides[previous.slides.length - 1].id);
     if (a.target === 'game' && a.style) {
-      SF.Editor.insertNewGame(a.style, { title: a.title });
-    } else if (a.target === 'feedback' && a.feedbackKind) {
-      SF.Editor.attachFeedback(a.feedbackKind, { prompt: a.blurb });
-      /* attachFeedback lands on the slide you were on, and makes a blank one
-         when that was a game. A blank one arrives called 'Slide title', so
-         name it after the activity that asked for it. */
-      var landed = deck().slides[SF.Editor.selected()];
-      if (landed && (!landed.title || landed.title === 'Slide title')) {
-        landed.title = a.title;
-        landed.notes = steps(a);
-      }
-    } else if (a.target === 'moment') {
-      SF.Editor.insertStarter(momentSlide(a));
+      var game = SF.createPresetGame(a.style, Object.assign({ title: a.title }, a.gamePreset || {}), deck().theme);
+      var gameSlide = SF.makeSlide('game');
+      gameSlide.gameId = game.id;
+      gameSlide.title = gameSlide.gameTitle = game.title;
+      gameSlide.activity = a.key;
+      gameSlide.activityInstance = gameSlide.id;
+      gameSlide.notes = steps(a);
+      SF.Editor.insertStarters([gameSlide]);
+      selected = gameSlide.id;
     } else {
-      SF.Editor.insertStarter(activitySlide(a));
+      var slides = activitySlides(a);
+      SF.Editor.insertStarters(slides);
+      selected = slides[0].id;
     }
-    /* Stamp the slide the insert landed on. The slide belongs to the deck
-       like any other — it is the rail here that wants to show only what was
-       chosen in this studio, and a slide cannot be recognised as an activity
-       after the fact from its layout alone. */
-    var slide = deck().slides[SF.Editor.selected()];
-    if (slide) { slide.activity = a.key; selected = slide.id; }
+    SF.Shell.touch();
     SF.toast(a.title + ' added to the lesson.');
     draw();
   }
 
-  /** How the protocol runs, in the notes of the slide that announces it. A
-   *  moment has no screen component, so the notes are the activity. */
-  function momentSlide(a) {
-    var s = SF.makeSlide('section');
-    s.title = a.title;
-    s.subtitle = a.minutes + ' minutes';
-    s.notes = steps(a);
-    return s;
-  }
-
-  /** A slide activity lands in its named layout, so there is a shape to write
-   *  into rather than a blank page. */
-  function activitySlide(a) {
-    var s = SF.makeSlide(a.layout || 'content');
-    if (SF.prepareLayout) SF.prepareLayout(s, a.layout || 'content');
-    s.title = a.title;
-    s.notes = steps(a);
-    applyFields(a, s);
-    return s;
+  /** Feedback activities own a fresh slide so their prompts and materials
+   * cannot replace an existing activity's response collection. */
+  function activitySlides(a) {
+    var parts = a.pages || [{ layout: a.layout || 'keywords', fields: a.fields }];
+    var instance;
+    return parts.map(function (part, i) {
+      var s = SF.makeSlide(part.layout);
+      if (SF.prepareLayout) SF.prepareLayout(s, part.layout);
+      s.title = a.title;
+      s.notes = steps(a);
+      s.activity = a.key;
+      s.activityPage = i;
+      instance = instance || s.id;
+      s.activityInstance = instance;
+      if (a.target === 'feedback') {
+        s.feedback = Object.assign(SF.makeFeedback(a.feedbackKind),
+          JSON.parse(JSON.stringify(a.feedbackPreset || {})));
+      }
+      if (part.layout === 'table') s.tableHeader = false;
+      applyFields(part, s);
+      return s;
+    });
   }
 
   /* ------------------------------------------------------- activity fields */
@@ -138,14 +136,16 @@
          what the activity calls that box. */
       var half = f.slide.match(KEYWORD_HALF);
       if (half && half[2] === 'def') write(slide, half[1] + '.term', f.label);
-      if (f.value !== undefined) write(slide, f.slide, f.value);
+      if (f.value !== undefined) write(slide, f.slide, f.type === 'minutes' ? Number(f.value) * 60 : f.value);
     });
   }
 
   function steps(a) {
     return a.blurb + '\n\n' + a.steps.map(function (step, i) {
       return (i + 1) + '. ' + step;
-    }).join('\n');
+    }).join('\n') + (a.materials ? '\n\nMaterials (source):\n' + a.materials.join(' · ') : '') +
+      (a.teacherNotes ? '\n\nTeacher guidance / example answers (draft):\n' + a.teacherNotes : '') +
+      (a.mappingReason ? '\n\nImplementation note:\n' + a.mappingReason : '');
   }
 
   /* ---------------------------------------------------------------- rail */
@@ -153,9 +153,15 @@
   /** The deck slides that were chosen here, with the position each holds in
    *  the lesson so a row can say where it landed. */
   function chosen() {
-    return deck().slides
-      .map(function (slide, i) { return { slide: slide, at: i }; })
-      .filter(function (row) { return row.slide.activity; });
+    var groups = [];
+    deck().slides.forEach(function (slide, i) {
+      if (!slide.activity) return;
+      var key = slide.activityInstance || slide.id;
+      var group = groups.find(function (row) { return row.key === key; });
+      if (group) group.slides.push(slide);
+      else groups.push({ key: key, slide: slide, slides: [slide], at: i });
+    });
+    return groups;
   }
 
   /* Only what was chosen in this studio, not the whole deck. Quiz studio's
@@ -186,21 +192,21 @@
       thumb.tabIndex = 0;
       thumb.setAttribute('role', 'button');
       thumb.setAttribute('aria-label',
-        (a ? a.title : row.slide.title) + ' — slide ' + (row.at + 1) + ', open in Lesson studio');
+        (a ? a.title : row.slide.title) + ' — slide ' + (row.at + 1) + ', edit activity');
       thumb.appendChild(el('div', 'qn', String(n + 1)));
 
       var body = el('div', 'qbody');
       body.appendChild(el('div', 'qtext', a ? a.title : (row.slide.title || 'Activity')));
       var meta = el('div', 'qmeta');
       if (a) meta.appendChild(el('span', null, a.minutes + ' min'));
-      meta.appendChild(el('span', null, 'slide ' + (row.at + 1)));
+      meta.appendChild(el('span', null, 'slide ' + (row.at + 1) + (row.slides.length > 1 ? ' · ' + row.slides.length + ' slides' : '')));
       if (row.slide.type === 'game') meta.appendChild(el('span', 'why', 'game'));
       else if (row.slide.feedback) meta.appendChild(el('span', 'why', 'feedback'));
       body.appendChild(meta);
       thumb.appendChild(body);
 
       if (row.slide.id === selected) thumb.classList.add('sel');
-      var pick = function () { selected = row.slide.id; draw(); };
+      var pick = function () { selected = row.slide.id; SF.Editor.selectSlide(selected); draw(); };
       thumb.onclick = pick;
       thumb.onkeydown = function (e) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); }
@@ -216,10 +222,75 @@
     return chosen().find(function (row) { return row.slide.id === selected; }) || null;
   }
 
-  /* The same two actions Quiz studio offers on its rail — duplicate what is
-     selected, and take it out again — plus the running count. Quiz studio's
-     "+ Question" has no equivalent here because the catalogue filling the
-     stage is the way to add one. */
+  function duplicateCurrent() {
+    var row = current();
+    if (!row) return;
+    SF.Editor.selectSlide(row.slides[row.slides.length - 1].id);
+    var copies = row.slides.map(function (slide) {
+      var copy = JSON.parse(JSON.stringify(slide));
+      copy.id = SF.makeSlide(copy.type).id;
+      if (copy.type === 'game') {
+        var original = SF.GameStore.get(copy.gameId);
+        if (original) {
+          var game = JSON.parse(JSON.stringify(original));
+          game.id = SF.makeGame(game.title, game.style).id;
+          SF.GameStore.save(game); copy.gameId = game.id;
+        }
+      }
+      return copy;
+    });
+    copies.forEach(function (copy) { copy.activityInstance = copies[0].id; });
+    SF.Editor.insertStarters(copies);
+    selected = copies[0].id;
+    SF.Shell.touch(); draw();
+  }
+
+  function removeCurrent() {
+    var row = current();
+    if (!row) return;
+    var d = deck();
+    row.slides.forEach(function (slide) { d.slides.splice(d.slides.indexOf(slide), 1); });
+    if (!d.slides.length) d.slides.push(SF.makeSlide('title'));
+    selected = null;
+    SF.Editor.selectSlide(d.slides[Math.min(row.at, d.slides.length - 1)].id);
+    if (SF.Editor.commitActivityChange) SF.Editor.commitActivityChange();
+    SF.Editor.workspace.draw();
+    SF.Shell.touch();
+    draw();
+  }
+
+  function openActivityPicker() {
+    SF.Shell.picker({
+      title: 'Choose an activity to add',
+      wide: true,
+      items: function () {
+        return A.ACTIVITIES.filter(function (a) { return a.enabled !== false; });
+      },
+      empty: 'No activities found.',
+      describe: function (a) {
+        var phase = A.PHASES.find(function (p) { return p.key === a.phase; });
+        var phaseLabel = phase ? phase.label + ' · ' : '';
+        return (a.icon ? a.icon + ' ' : '') + phaseLabel + a.minutes + ' min · ' + a.blurb;
+      },
+      onPick: function (a) {
+        insert(a);
+      }
+    });
+  }
+
+  function browseActivities() {
+    selected = null;
+    phaseFilter = 'all';
+    var box = document.getElementById('previewBox');
+    if (box) box.scrollTop = 0;
+    draw();
+  }
+
+  /* Matching Quiz studio's rail foot layout:
+     - summary status line (count, minutes, deck slides)
+     - primary action: + Activity
+     - secondary actions: Duplicate and Remove
+     - tertiary action: Browse activities */
   function drawRailFoot() {
     var foot = document.getElementById('railFoot');
     if (!foot) return;
@@ -230,38 +301,41 @@
       var a = A.activity(row.slide.activity);
       return t + ((a && a.minutes) || 0);
     }, 0);
-    foot.appendChild(el('p', 'hint', rows.length
-      ? rows.length + (rows.length === 1 ? ' activity' : ' activities') +
-        (mins ? ' · about ' + mins + ' minutes' : '') +
-        ' · ' + slides + (slides === 1 ? ' slide' : ' slides') + ' in the lesson'
-      : slides + (slides === 1 ? ' slide' : ' slides') + ' in the lesson.'));
+    var statusParts = [
+      rows.length ? rows.length + (rows.length === 1 ? ' activity' : ' activities') : '0 activities',
+      mins ? 'about ' + mins + (mins === 1 ? ' minute' : ' minutes') : '',
+      slides + (slides === 1 ? ' slide' : ' slides') + ' in the lesson'
+    ].filter(Boolean);
+    foot.appendChild(el('p', 'hint', statusParts.join(' · ')));
 
     var row = current();
-    var actions = el('div', 'rail-actions');
-    var dup = SF.Shell.UI.button('Duplicate', '', function () {
-      var a = row && A.activity(row.slide.activity);
-      if (a) insert(a);
-    });
-    var cut = SF.Shell.UI.button('Remove', '', function () {
-      if (!row) return;
-      var d = deck();
-      d.slides.splice(d.slides.indexOf(row.slide), 1);
-      if (!d.slides.length) d.slides.push(SF.makeSlide('title'));
-      selected = null;
-      SF.Editor.workspace.draw();
-      SF.Shell.touch();
-      draw();
-    });
-    /* Disabled rather than hidden, so the rail does not change height as you
-       select and deselect. */
+
+    var addActions = el('div', 'rail-actions');
+    var addBtn = SF.Shell.UI.button('+ Activity', 'primary', openActivityPicker);
+    addBtn.title = 'Add an activity from the 54 pedagogical activities catalogue';
+    addActions.appendChild(addBtn);
+    foot.appendChild(addActions);
+
+    var itemActions = el('div', 'rail-actions');
+    var dup = SF.Shell.UI.button('Duplicate', '', duplicateCurrent);
+    var cut = SF.Shell.UI.button('Remove', '', removeCurrent);
     dup.disabled = !row;
     cut.disabled = !row;
     if (!row) {
       dup.title = cut.title = 'Pick an activity in the list first.';
+    } else {
+      dup.title = 'Duplicate selected activity (⌘D)';
+      cut.title = 'Remove selected activity (Backspace / Delete)';
     }
-    actions.appendChild(dup);
-    actions.appendChild(cut);
-    foot.appendChild(actions);
+    itemActions.appendChild(dup);
+    itemActions.appendChild(cut);
+    foot.appendChild(itemActions);
+
+    var browseActions = el('div', 'rail-actions');
+    var browseBtn = SF.Shell.UI.button('Browse activities', '', browseActivities);
+    browseBtn.title = 'Browse the 54 pedagogical activities catalogue';
+    browseActions.appendChild(browseBtn);
+    foot.appendChild(browseActions);
   }
 
   /* --------------------------------------------------------------- stage */
@@ -293,7 +367,7 @@
     wrap.appendChild(el('p', 'library-note',
       (phase ? phase.blurb + ' ' : '') +
       shown.length + (shown.length === 1 ? ' activity' : ' activities') +
-      '. Choosing one adds it to the lesson, where you write its content.'));
+      '. Each includes editable starter copy and teacher instructions.'));
 
     var grid = el('div', 'activity-grid');
     shown.forEach(function (a) { grid.appendChild(card(a)); });
@@ -312,15 +386,7 @@
       : a.target === 'slide-arc' ? 'A RUN OF SLIDES'
       : 'A SLIDE IN THIS LESSON';
     b.appendChild(el('span', 'activity-tag', a.minutes + ' MIN · ' + tag + '  ↗'));
-    /* A slide arc is several slides with an order between them, and nothing
-       builds one yet, so it says so rather than dropping a single slide and
-       calling it done. */
-    if (a.target === 'slide-arc') {
-      b.disabled = true;
-      b.title = 'A run of slides — not buildable in one step yet.';
-    } else {
-      b.onclick = function () { insert(a); };
-    }
+    b.onclick = function () { insert(a); };
     return b;
   }
 
@@ -344,26 +410,35 @@
       insp.appendChild(el('p', 'hint',
         (ph ? ph.icon + ' ' + ph.label + ' · ' : '') +
         'about ' + picked.minutes + ' min · slide ' + (row.at + 1)));
-      insp.appendChild(SF.Shell.UI.button('Edit this slide', '', function () {
-        SF.Shell.activate('deck');
+      insp.appendChild(SF.Shell.UI.button(row.slide.type === 'game' ? 'Edit questions and answers' : 'Edit this slide', '', function () {
+        SF.Editor.selectSlide(row.slide.id);
+        if (row.slide.type === 'game') {
+          SF.Games.openGame(row.slide.gameId); SF.Shell.activate('game');
+        } else SF.Shell.activate('deck');
       }));
+      if (picked.materials) insp.appendChild(el('p', 'hint', 'Materials: ' + picked.materials.join(' · ')));
+      insp.appendChild(el('p', 'hint', 'Starter copy is an editable draft. Replace examples to match your lesson.'));
+      if (picked.teacherNotes) insp.appendChild(el('p', 'hint', picked.teacherNotes));
+      if (picked.mappingReason) insp.appendChild(el('p', 'hint', picked.mappingReason));
 
       /* What this activity asks the teacher for, edited against the real
          slide. Without it the slide lands in the right layout and leaves
          them guessing which pit is the hook and which is the question. */
-      if (picked.fields && picked.fields.length) {
-        var slide = row.slide;
+      row.slides.forEach(function (slide) {
+        var fields = picked.pages ? picked.pages[slide.activityPage || 0].fields : picked.fields;
+        if (!fields || !fields.length) return;
+        if (picked.pages) insp.appendChild(el('h4', null, 'Slide ' + ((slide.activityPage || 0) + 1)));
         /* Mark dirty and stop. Repainting the deck editor draws its
            inspector over this one, and repainting this one mid-keystroke
            takes the focus out of the field being typed into. The rail row
            shows the activity's name, not the slide's, so nothing here needs
            redrawing; Lesson studio draws fresh when you switch to it. */
-        var changed = function () { SF.Shell.touch(); };
-        picked.fields.forEach(function (f) {
+        var changed = function () { SF.Editor.commitActivityChange(); };
+        fields.forEach(function (f) {
           var now = read(slide, f.slide);
           var input = f.type === 'minutes'
-            ? SF.Shell.UI.num(Number(now) || 0, function (v) {
-                write(slide, f.slide, Math.max(0, Number(v) || 0)); changed();
+            ? SF.Shell.UI.num((Number(now) || 0) / 60, function (v) {
+                write(slide, f.slide, Math.max(0, Number(v) || 0) * 60); changed();
               }, 0, 120)
             : f.type === 'area'
               ? SF.Shell.UI.area(String(now == null ? '' : now), function (v) {
@@ -374,7 +449,7 @@
                 });
           insp.appendChild(SF.Shell.UI.field(f.label, input, f.hint));
         });
-      }
+      });
 
       /* Most of these activities are asking the room something — Muddiest
          Point, Four-Corner, Brain Dump, the reflection ladder. Attaching a
@@ -388,7 +463,7 @@
         SF.Editor.drawFeedback(insp, row.slide, function () {
           /* This one does repaint: choosing a kind reveals its own settings,
              and the rail row picks up its feedback mark. */
-          SF.Shell.touch();
+          SF.Editor.commitActivityChange();
           draw();
         });
       }
@@ -439,12 +514,26 @@
     settings: function () { SF.Editor.workspace.settings(); },
     onTitle: function (v) { SF.Editor.workspace.onTitle(v); },
     onTheme: function (v) { SF.Editor.workspace.onTheme(v); },
-    describe: function (d) { return SF.Editor.workspace.describe(d); }
+    describe: function (d) { return SF.Editor.workspace.describe(d); },
+    keydown: function (e) {
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+        if (current()) {
+          e.preventDefault();
+          removeCurrent();
+        }
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 'd') {
+        if (current()) {
+          e.preventDefault();
+          duplicateCurrent();
+        }
+      }
+    }
   };
 
   var toDeck = document.getElementById('btnPlanToDeck');
   if (toDeck) toDeck.onclick = function () { SF.Shell.activate('deck'); };
 
+  SF.Activities.makeSlides = activitySlides;
   SF.Activities.workspace = ws;
   if (SF.Shell && SF.Shell.register) SF.Shell.register(ws);
 })(typeof window === 'undefined' ? {} : window);

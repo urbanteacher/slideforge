@@ -186,7 +186,7 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 }
 .thumb.sel .thumb-tx { color: var(--ui-accent); opacity: 1; }
 
-.rail-foot { padding: 8px; border-top: 1px solid var(--ui-line); display: flex; flex-direction: column; gap: 8px; }
+.rail-foot { padding: 8px; border-top: 1px solid var(--ui-line); display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
 .rail-foot .rail-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .rail-foot .rail-actions .btn { flex: 1 1 60px; text-align: center; font-size: 12px; padding: 6px 4px; }
 .rail-tx { display: grid; gap: 4px; }
@@ -1816,6 +1816,7 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
   cursor: pointer; border-radius: 7px; padding: 8px 9px;
   border: 2px solid transparent;
   background: var(--ui-bg);
+  flex-shrink: 0;
 }
 .qthumb:hover { background: var(--ui-panel-2); }
 .qthumb.sel { border-color: var(--ui-accent); background: var(--ui-accent-soft); }
@@ -3954,3 +3955,19 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
 .scorerail .srow .learn.needs { color: var(--s-accent); font-weight: 650; }
 .scorerail[data-density="sm"] .srow .learn,
 .scorerail[data-density="xs"] .srow .learn { display: none; }
+
+/* Activity briefs have named stages, not vocabulary definitions. Preserve
+   sentence case and give six short rows room within the 1280 × 720 canvas. */
+.slide.activity-slide.layout-keywords .pad { justify-content: center; }
+.slide.activity-slide.layout-keywords h2 { font-size: 42px; line-height: 1.12; margin-bottom: 24px; }
+.slide.activity-slide.layout-keywords .kw-list { gap: 12px; }
+.slide.activity-slide.layout-keywords .kw-row { gap: 24px; padding-bottom: 12px; grid-template-columns: minmax(170px, .38fr) minmax(0, 1fr); }
+.slide.activity-slide.layout-keywords .kw-term { font-size: 25px; line-height: 1.2; }
+.slide.activity-slide.layout-keywords .kw-def { font-size: 24px; line-height: 1.3; text-transform: none; color: var(--s-fg); }
+.slide.activity-slide.layout-table h2 { font-size: 42px; }
+
+.slide.activity-slide.layout-cards h2 { font-size: 44px; margin-bottom: 32px; }
+.slide.activity-slide.layout-cards .activity-card-label { display: block; font-size: 29px; line-height: 1.2; margin-bottom: 20px; }
+.slide.activity-slide.layout-cards .activity-card-copy { display: block; font-size: 26px; line-height: 1.4; }
+.slide.activity-slide.layout-table .tbl { table-layout: fixed; border-collapse: separate; border-spacing: 10px; }
+.slide.activity-slide.layout-table .tbl td { width: 25%; height: 92px; padding: 16px; border: 1px solid var(--s-rule); border-radius: 12px; background: var(--s-card); font-size: 23px; font-weight: 500; vertical-align: middle; }

@@ -68,10 +68,10 @@
       const state = current(host, slide);
       return state ? JSON.stringify([slide.id, theme, { ...state, elapsed: 0, remaining: 0 }]) : null;
     }
-    function refreshClock(box, host, slide) {
+    function refreshClock(box2, host, slide) {
       const board5 = forSlide(slide);
       const state = current(host, slide);
-      const clock2 = board5?.clock && box.querySelector(board5.clock.selector);
+      const clock2 = board5?.clock && box2.querySelector(board5.clock.selector);
       if (!clock2 || !state) return false;
       clock2.textContent = board5.clock.text(state, namespace()[board5.runtime]);
       return true;
@@ -149,6 +149,1238 @@
       createSession
     };
   }
+
+  // src/activities/presets.js
+  var box = (label, value, i) => ({ label, value, type: "area", slide: `bullets.${i}.def` });
+  var text = (label, value, slide = "title") => ({ label, value, type: "text", slide });
+  var rows = (items) => items.map(([label, value], i) => box(label, value, i));
+  var page = (title, items, minutes) => ({ title, layout: "keywords", fields: rows(items), minutes });
+  var preset = (items, extra = {}) => ({ layout: "keywords", fields: rows(items), ...extra });
+  var PRESETS = {
+    "clear-objectives-slide": preset([
+      ["Learning objectives", "Measure length · Calculate perimeter · Explain your method."],
+      ["Success criteria", "I can label lengths, add every side and give the correct unit."],
+      ["Key words", "Length: distance along a line. Perimeter: distance around a shape."]
+    ], { fieldsTitle: "Measuring the world around us" }),
+    "hook-objectives": preset([
+      ["Stimulus", "Two gardens have the same area. Do they need the same amount of fencing?"],
+      ["Big question", "How can we work out the distance around any shape?"],
+      ["Today we will…", "Measure a shape · Find its perimeter · Design a garden."],
+      ["By the end you’ll be able to…", "Calculate a perimeter and explain how you checked it."]
+    ], { reason: "Four explicitly presented boxes need labels; split reserves half the slide for an image." }),
+    "daily-review-routine": preset([
+      ["Homework check", "Compare your method with a partner. Mark one step you want to discuss."],
+      ["Common errors", "Did you miss a side, mix units or calculate area instead of perimeter?"],
+      ["Guided practice", "A 6 cm × 4 cm rectangle: 6 + 4 + 6 + 4 = 20 cm. Try 7 cm × 3 cm."],
+      ["Today’s link", "Today we’ll build on this by finding missing side lengths."]
+    ], { reason: "Four stages overflow the three-card row; labelled rows preserve the sequence.", answer: "Practice answer: 20 cm. Bring the actual homework answer key and replace the example errors with those observed." }),
+    "establish-talk-ground-rules": preset([
+      ["What makes group discussions go well?", "Think of a time you felt heard. What did the group do?"],
+      ["What makes them go badly?", "Describe a behaviour that stops people contributing."],
+      ["Pair discussion", "Turn each problem into a positive rule. Choose your two most useful."],
+      ["Our ground rules", "Draft to negotiate: listen fully; invite voices; give reasons; question ideas; build on answers."],
+      ["Display and revisit", "Agree 5–7 rules together. Which rule will we practise first?"]
+    ]),
+    "think-pair-share": preset([
+      ["Think · 1 min", "Can two shapes have the same perimeter but different areas? Sketch an idea."],
+      ["Pair · 2 min", "Compare sketches. Find an example you both think works."],
+      ["Share · 3 min", "Show your strongest example and explain how you checked it."],
+      ["Connect · 1 min", "What does this tell us about area and perimeter?"]
+    ], { answer: "Example: 1 × 5 and 2 × 4 rectangles both have perimeter 12 units; areas are 5 and 8 square units." }),
+    "do-now-bell-ringer": preset([
+      ["Recall", "Find the perimeter of a rectangle measuring 6 cm by 4 cm."],
+      ["Connection", "Draw a different rectangle with the same perimeter."],
+      ["Preview", "Do your two rectangles also have the same area? Explain."]
+    ], { timer: 10, answer: "20 cm. For example, 7 × 3 cm has perimeter 20 cm. Areas: 24 cm² and 21 cm². Source estimate is 8 minutes; its timed steps require 10." }),
+    "word-splash": preset([
+      ["Key terms", "Length · Width · Perimeter · Area · Unit · Scale"],
+      ["Mark your confidence", "On paper: circle what you know; underline what is familiar; leave new terms unmarked."],
+      ["Explain to a partner", "Choose a circled term. Explain it using a drawing or example."],
+      ["Working definitions", "Agree definitions as a class. Then check your confidence again."]
+    ], { feedback: { prompt: "Which term would you most like us to explain?", max: 1 }, answer: "The cloud collects vocabulary needs; it cannot circle or underline words. Use the handout for the source’s marking task." }),
+    "knowledge-activation-web": preset([
+      ["Topic", "What do we already know about measurement?"],
+      ["Contribute", "Offer a word, example or idea. Explain how it connects."],
+      ["Find patterns", "Which ideas belong together? Which connection is missing?"],
+      ["Learning goal", "Use our gaps to choose what we need to investigate today."]
+    ], { feedback: { prompt: "Name one idea connected to measurement.", max: 3 }, answer: "Draw the connecting lines on the classroom board. A word cloud collects contributions but does not draw a concept web." }),
+    "i-do-we-do-you-do": preset([
+      ["I do · 5 min", "Watch: a 6 × 4 rectangle has perimeter 6 + 4 + 6 + 4 = 20 units."],
+      ["We do · 8 min", "Find the perimeter of an 8 × 3 rectangle. Explain each step together."],
+      ["You do together · 5 min", "Draw two different rectangles with perimeter 24 units. Check a partner."],
+      ["You do alone · 7 min", "A rectangle has perimeter 30 cm and width 5 cm. Find its length."]
+    ], { reason: "The source has four phases, including both You Do stages; three cards obscure that distinction.", timer: 25, answer: "We do: 22 units. Together: e.g. 8 × 4 and 7 × 5. Alone: 10 cm. Source estimate 20 min; timed steps total 25." }),
+    "concept-development": preset([
+      ["Show", "Perimeter is the distance around a shape. Trace the outside edge of a book."],
+      ["Explain", "Measure every outside side in the same unit, then add the lengths."],
+      ["Examples / non-examples", "Fencing a garden measures perimeter. Covering its ground measures area."],
+      ["Guided application", "A triangle has sides 3 cm, 4 cm and 5 cm. What is its perimeter?"],
+      ["Independent practice", "Draw a shape with perimeter 16 cm. Label every side."]
+    ], { timer: 25, answer: "Triangle: 12 cm. Example independent response: a 4 cm square. Source estimate 20 min; timed steps total 25." }),
+    "flipped-instruction": { pages: [
+      page("Review the home learning", [["Recall", "What is perimeter? Explain without looking at your notes."], ["Check", "A 5 × 3 rectangle: is its perimeter 15 or 16 units? Why?"], ["Questions", "Which part of the home learning needs another explanation?"]], 3),
+      page("Find the missing length", [["Deep dive", "A rectangle has perimeter 34 cm and width 6 cm. Find its length."], ["Think aloud", "Two widths use 12 cm. The two lengths share the remaining 22 cm."], ["Explain", "Why do we divide the remaining length by two?"]], 10),
+      page("Apply and check", [["Core", "Find the length when perimeter is 42 cm and width is 8 cm."], ["Support", "Draw and label all four sides before calculating."], ["Challenge", "Find three rectangles with perimeter 42 cm. Which has the largest area?"]], 12)
+    ], answer: "Review: 16 units. Deep dive: 11 cm. Core: 13 cm. With whole-number sides, 10 × 11 has the greatest area for perimeter 42 cm." },
+    "question-cube-six-question-types": preset([
+      ["Define", "What is perimeter?"],
+      ["Compare", "How is it different from area?"],
+      ["Why", "Why must all side lengths use the same unit?"],
+      ["Example", "Give a real-world example of using perimeter."],
+      ["What if", "What would happen if every side length doubled?"],
+      ["Benefits / limits", "What can perimeter tell us about a garden? What can it not tell us?"]
+    ], { fieldsTitle: "Six ways to question perimeter", feedback: { prompt: "Name your question type, then give your answer and reasoning.", max: 5 } }),
+    "worked-example-analysis": preset([
+      ["Completed example", "Rectangle 7 cm × 3 cm → 7 + 3 + 7 + 3 → 20 cm."],
+      ["Identify the steps", "What happened? Why? Explain the unit and each number in the sum."],
+      ["Create a recipe", "With a partner, write a method someone else could follow."],
+      ["Test it", "Try your recipe on a rectangle measuring 9 cm by 2 cm."]
+    ], { reason: "A text worked example plus analysis, recipe and transfer task needs four labelled rows; an empty image slot adds no teaching material.", timer: 12, answer: "New perimeter: 22 cm. Source estimate 10 min; timed steps total 12." }),
+    "error-analysis": preset([
+      ["Sample work · 3 errors", "A 6 cm × 4 cm rectangle: “Perimeter = 6 × 4 = 24 cm².”"],
+      ["Spot", "Find the wrong operation, the wrong result and the wrong unit."],
+      ["Correct", "Rewrite the solution. Explain why each change is needed."],
+      ["Reflect", "Why might someone confuse area and perimeter? Sketch the difference."]
+    ], { target: "slide", reason: "Odd One Out reveals one odd item; the source requires sample work with several errors and a correction. Use a labelled analysis slide with the answer in teacher notes.", answer: "Perimeter = 6 + 4 + 6 + 4 = 20 cm. Multiplication calculated area; 24 is therefore not the perimeter; cm² is an area unit. Distinguish boundary length from surface coverage." }),
+    "quick-practice-stations": preset([
+      ["Station 1 · Recall", "List the facts you need to calculate the perimeter of a rectangle."],
+      ["Station 2 · Apply", "A noticeboard is 90 cm by 60 cm. How much edging does it need?"],
+      ["Station 3 · Create", "Design a rectangle with perimeter 40 cm. Find a second possible design."]
+    ], { layout: "cards", answer: "Apply: 300 cm. Create: e.g. 12 × 8 cm and 11 × 9 cm. Allow 3 minutes per station and 1 minute to share." }),
+    "concept-card-sort": preset([
+      ["Cards 1–4", "Fence length · Floor covering · Picture-frame edging · Carpet needed"],
+      ["Cards 5–8", "Garden boundary · Paint for a wall · Ribbon around a box · Lawn turf"],
+      ["Cards 9–12", "Track boundary · Tabletop covering · Window trim · Tile coverage"],
+      ["Sort and justify", "Cut these into 12 cards. Group them by what is measured. Name your categories."],
+      ["Compare", "Visit another group. Which organisation is most useful? Why?"]
+    ], { target: "slide", reason: "Ranking enforces one linear order and at most eight items. The source requires 12–15 cards in student-chosen categories; use physical cards with the full bank on screen.", answer: "One defensible sort is boundary length versus surface area: cards 1,3,5,7,9,11 versus 2,4,6,8,10,12. Accept other justified organisations." }),
+    "strategic-wait-time-questioning": preset([
+      ["Question", "Can a shape have a larger perimeter but a smaller area than another shape?"],
+      ["Think", "Wait 3–5 seconds. Prepare a reason before anyone is called on."],
+      ["Respond", "Take 3 seconds to form your answer. Use a sketch if it helps."],
+      ["Follow up", "Pause 2 seconds. Ask: “What example supports that?”"]
+    ], { answer: "Use name sticks/cards. Seven questions: (1) Can a larger perimeter enclose less area? (2) Why does perimeter use linear units? (3) Can equal areas have different perimeters? (4) How would you find a missing side? (5) What happens when all lengths double? (6) Why must units match before adding? (7) How can a drawing check your answer? Example for Q1: 1 × 10 (P22, A10) versus 4 × 4 (P16, A16). Allow the source’s pauses for each response." }),
+    "guided-inquiry-investigation": { pages: [
+      page("Explore · same boundary, different space", [["Investigate", "Use 24 unit lengths to make different rectangles on squared paper."], ["Record", "List length, width, perimeter and area for each rectangle."], ["Look for patterns", "What happens to area when the sides become more equal?"]], 10),
+      page("Explain the pattern", [["Claim", "Which rectangle encloses the greatest area in your results?"], ["Evidence", "Use at least two measurements to support your explanation."], ["Test", "Does your rule explain all the rectangles you tried?"]], 8),
+      page("Apply to a new boundary", [["New situation", "You now have 32 unit lengths. Predict the best rectangle before drawing."], ["Check", "Calculate and compare at least three possible designs."], ["Refine", "Does the same pattern still hold?"]], 7),
+      page("Share and refine", [["Present", "Show your claim, evidence and a labelled diagram."], ["Question", "Ask another group how they tested their prediction."], ["Conclude", "Agree a rule and state what shapes you tested it on."]], 5)
+    ], answer: "For rectangles: perimeter 24 gives greatest area at 6 × 6 (36); perimeter 32 at 8 × 8 (64). Restrict the claim to rectangles; this investigation does not prove a rule for all shapes." },
+    "jigsaw-expert-groups": preset([
+      ["Home groups · 5 min", "Assign four experts: length, perimeter, area and units."],
+      ["Expert groups · 12 min", "Use the reference notes. Prepare a definition, a worked example and a check question."],
+      ["Return home · 12 min", "Each expert teaches for 3 minutes. Build one shared measurement guide."]
+    ], { answer: "Reference notes: length measures a line (cm); perimeter sums boundary lengths (cm); rectangle area = length × width (cm²); 1 m = 100 cm. Supply rulers, squared paper and these four notes as expert cards." }),
+    "problem-based-learning": preset([
+      ["Problem", "A school has 40 m of fencing for a rectangular garden. Choose a design with room to grow."],
+      ["What do we know?", "All four sides need fencing. The total boundary is 40 m."],
+      ["What do we need to know?", "What are possible dimensions? What makes one design better?"],
+      ["Research and plan", "Sketch three designs. Calculate their areas and note your assumptions."],
+      ["Solve", "Choose a design and show the calculations that support it."],
+      ["Present and justify", "Explain your choice. How would an entrance change your plan?"]
+    ], { reason: "Six named stages cannot be expressed by one column plus an image; labelled rows retain every stage.", timer: 40, answer: "With four fully fenced sides, a 10 × 10 m square maximises rectangular area (100 m²). Other choices need a stated constraint. Source estimate 35 min; steps total 40." }),
+    "differentiated-practice-menu": preset([
+      ["Must do · 10 min", "Find the perimeter of 6 × 4, 8 × 3 and 5 × 5 cm rectangles. Show your method."],
+      ["Consolidate", "Draw each shape and label all four sides before adding."],
+      ["Apply", "A rectangle has perimeter 28 cm and width 5 cm. Find its length."],
+      ["Extend", "Find all whole-number rectangles with perimeter 28 cm. Compare their areas."]
+    ], { reason: "The compulsory task plus three choices needs four named boxes, beyond the three-card row.", answer: "Must do: 20, 22, 20 cm. Apply: 9 cm. Extend: 1×13 through 7×7; largest area 49 cm². Choose a route for the remaining 15 minutes; routes are not fixed ability labels." }),
+    "design-and-create-task": preset([
+      ["Brief", "Create a garden plan using 40 m of fencing. Show its dimensions and area."],
+      ["Planning · 5 min", "Sketch two ideas. Choose a scale and gather a ruler and squared paper."],
+      ["Creating · 20 min", "Draw your final design and explain why you chose it."],
+      ["Self-assessment · 3 min", "Check: labelled sides, stated scale, correct perimeter and area, clear reasoning."],
+      ["Gallery walk · 5 min", "Find a design unlike yours. Leave one question about its choices."]
+    ], { reason: "Five source stages need five labels; cards wraps and hides the distinction between brief and success criteria.", answer: "Assume all four sides are fenced; no gate allowance. Example: 10 × 10 m, perimeter 40 m, area 100 m²; scale 1 cm to 1 m." }),
+    "think-pair-square-share": preset([
+      ["Think · 2 min", "What makes a mathematical explanation convincing? Write two features."],
+      ["Pair · 3 min", "Compare your features. Add an example of each."],
+      ["Square · 4 min", "Join another pair. Agree the three most useful features."],
+      ["Share · 4 min", "Present one feature and an example. Explain your choice."]
+    ]),
+    "jigsaw-collaboration": preset([
+      ["Home · 2 min", "Assign each person one part: length, perimeter, area or units."],
+      ["Expert · 10 min", "Study your reference card. Prepare an example and one question to check understanding."],
+      ["Return · 8 min", "Take turns teaching. Combine all four parts into a shared guide."]
+    ], { answer: "Reference cards: length is distance along a line (cm); perimeter is boundary length (cm); rectangle area = length × width (cm²); 1 m = 100 cm. Ask experts to illustrate each with a 6 × 4 cm rectangle." }),
+    "peer-teaching-carousel": preset([
+      ["Setup", "Four stations: define perimeter; correct 6×4=24; design P=20; compare area and perimeter."],
+      ["Rotate · every 4 min", "Read the previous work. Add a reason, a correction or a new example."],
+      ["Final round · 5 min", "Return to your first station. Summarise what improved and what remains unclear."],
+      ["Present", "Share the strongest contribution and explain why it helped."]
+    ], { timer: 21, answer: "Four rotations take 16 minutes plus 5 to synthesise, before presentations. Source estimate is 20 minutes; allow additional sharing time. Station 2: perimeter is 20, not area 24." }),
+    "socratic-seminar": preset([
+      ["Discussion prompt", "“The best garden design is always the one with the greatest area.” Do you agree?"],
+      ["Inner circle · 8 min", "Use a diagram, calculation or stated constraint as evidence. Build on another speaker."],
+      ["Switch · 8 min", "Observers become speakers. Test an assumption from the first round."],
+      ["Debrief · 4 min", "Which argument was convincing? What evidence changed your thinking?"]
+    ], { answer: "Outer-circle observation: record one claim, its evidence and one unanswered question. Consider access, cost and purpose; there is no single predetermined stance." }),
+    "dialogue-chain-discussion": preset([
+      ["Discussion question", "Can two rectangles have equal area but different perimeters?"],
+      ["Initial answer", "My answer is… My example is…"],
+      ["Agree / disagree", "I agree/disagree because…"],
+      ["Build on an idea", "Building on that idea…"],
+      ["Synthesis", "Which example gives us the clearest answer?"]
+    ], { reason: "A question and distinct sentence stems need labels; the source includes more than three contributions.", answer: "Example: 2 × 6 and 3 × 4 both have area 12; perimeters are 16 and 14. Invite 8–10 speakers; allow each 30 seconds." }),
+    "real-world-connection-hunt": preset([
+      ["Concept", "Perimeter: the distance around a shape."],
+      ["In this room · 3 min", "Find an object where its boundary length matters."],
+      ["At home · 3 min", "Think of something that needs edging, trim or a border."],
+      ["In our community · 3 min", "Find a use for fencing or boundary measurement."],
+      ["Reflect", "Why does this concept matter in real life?"]
+    ], { feedback: { prompt: "Name the place, your example and why perimeter matters there.", max: 3 } }),
+    "benefits-vs-limitations-battle": preset([
+      ["Topic", "Should every school replace part of its playground with a garden?"],
+      ["Benefits team", "Give a benefit and explain who would gain from it."],
+      ["Limitations team", "Give a limitation and explain when it would matter."],
+      ["Scoring", "Valid new point: 1. Repeated point: 0. Take 30 seconds to think before each round."],
+      ["Balanced view", "What conditions would make the proposal work well?"]
+    ], { reason: "Split is a text/image layout, not two equal text teams; labelled rows make both roles and scoring visible." }),
+    "scenario-analysis-discussion": preset([
+      ["Scenario 1", "A concert sells out quickly. More people want tickets than there are seats."],
+      ["Scenario 2", "A large harvest puts many more apples on sale while demand stays steady."],
+      ["Scenario 3", "A new phone attracts many buyers, but the first delivery is small."],
+      ["Identify and explain", "Which scenarios show supply and demand? Pick one and explain how."],
+      ["Predict and compare", "What might happen next? Which effect could be strongest? State your assumptions."]
+    ], { fieldsTitle: "Supply and demand: three scenarios", reason: "The source explicitly asks for three scenarios and four guiding questions; a split image slot cannot hold them.", answer: "All three illustrate supply and demand. Other things equal, scarce concert tickets or phones create upward price pressure; an apple surplus creates downward pressure. No strongest case can be established without quantities and market rules." }),
+    "whiteboards-on-walls": preset([
+      ["Problem", "Find three rectangles with perimeter 24 units. Which has the greatest area?"],
+      ["Discuss and draw · 5 min", "Show dimensions, calculations and your reasoning on the board."],
+      ["Gallery walk · 3 min", "Find a useful method or a claim you want to question."],
+      ["Refine · 2 min", "Improve your work. Mark the change and explain why you made it."],
+      ["Debrief · 1 min", "Which representation made the reasoning easiest to follow?"]
+    ], { answer: "Examples: 2×10 (area20), 4×8 (32), 6×6 (36). Maximum rectangular area is 36. Allow the source’s first minute for moving and posing the problem." }),
+    "connect-four-concept-edition": {
+      target: "slide",
+      layout: "table",
+      fieldsTitle: "Match two. Explain the connection.",
+      reason: "Concept Chain grows spoken links and has no 4×4 matching grid. This activity supplies the source’s Mode A grid for classroom play; cover claimed pairs physically and score on the board.",
+      fields: [{ label: "4 × 4 matching grid", type: "area", slide: "body", value: "1. Perimeter | 2. 100 cm | 3. Width | 4. 1 cm²\n5. Square | 6. Distance around | 7. Area | 8. 1 m\n9. Space covered | 10. Four equal sides | 11. Length | 12. Across a rectangle\n13. Along a rectangle | 14. Unit of area | 15. 1 m² | 16. 10,000 cm²" }],
+      answer: "Mode A: number cells 1–16 left to right. Pairs: 1–6, 2–8, 3–12, 4–14, 5–10, 7–9, 11–13, 15–16. Teams claim and explain two cells; cover valid pairs with sticky notes or cross them off on a copied grid. First to four valid pairs wins. Mode B is the source’s optional alternative, not an automated mode."
+    },
+    "structured-reflection-protocol": preset([
+      ["Got it", "Create a new example and explain why it works."],
+      ["Mostly understand", "Solve one example, then check the step you are least sure about."],
+      ["Getting there", "Use the worked example with a partner. Explain each step."],
+      ["Need help", "Bring your first uncertain step to the teacher. Start with a labelled sketch."]
+    ], { feedback: { prompt: "Which corner best describes your understanding?", options: ["Got it", "Mostly understand", "Getting there", "Need help"] }, answer: "Choose a corner or indicate a choice from your seat. Use 2 min to choose, 6 min for the task and 4 min for teacher support." }),
+    "learning-log-entry": preset([
+      ["New learning", "What’s one new thing?"],
+      ["Connections", "How does this connect?"],
+      ["Challenges", "What was difficult?"],
+      ["Strategies", "What helped me learn?"],
+      ["Next steps", "What do I want to work on?"]
+    ], { reason: "Five named reflection prompts need visible labels; a generic content list loses those response categories." }),
+    "muddiest-point": preset([
+      ["Write · 3 min", "The muddiest point for me is…"],
+      ["Be specific", "Name the step or idea. Explain where your understanding breaks down."],
+      ["Listen and revisit", "After the class explanations, write what is clearer and what still needs work."]
+    ], { feedback: { prompt: "The muddiest point for me is…", max: 1 } }),
+    "plus-minus-interesting": preset([
+      ["Plus", "What worked well?"],
+      ["Minus", "What was challenging?"],
+      ["Interesting", "What surprised me?"]
+    ], { layout: "cards" }),
+    "exit-ticket": preset([
+      ["What?", "What did you learn today? Include one example."],
+      ["So what?", "Why does this learning matter?"],
+      ["Now what?", "What will you practise or ask about next?"]
+    ], { feedbackKind: "brainstorm", reason: "Choose the source’s What–So What–Now What format. Written reflections need free text; a poll cannot collect them.", feedback: { prompt: "What did you learn? Why does it matter? What is your next step?", max: 1 } }),
+    "preview-next-lesson": preset([
+      ["Today we learned", "Perimeter measures the boundary. Area measures the space inside."],
+      ["Next lesson we will", "Investigate how changing a shape affects its area."],
+      ["Preparation task", "Sketch a rectangular object at home. Estimate its length and width."],
+      ["Closing question", "If every side length doubles, does the area double too?"]
+    ], { reason: "Section only renders a title and subtitle. Four explicit source boxes require labelled rows.", answer: "For similar shapes, doubling lengths multiplies area by four. Invite predictions; use them to open the next lesson." }),
+    "exit-ticket-2": preset([
+      ["3 ideas", "Write three things you learned from the activity."],
+      ["2 connections", "Explain two links to something you already knew."],
+      ["1 question", "Ask one question you still want answered."]
+    ], { feedbackKind: "brainstorm", reason: "Choose the source’s 3–2–1 format; one written submission preserves all three responses, unlike a fixed poll.", feedback: { prompt: "Share 3 things learned, 2 connections and 1 remaining question.", max: 1 } }),
+    "teach-someone": preset([
+      ["Partner A · 2 min", "Today I learned… Explain one idea with an example."],
+      ["Partner B · 1 min", "Ask: “Why does that work?” and “Can you show another example?”"],
+      ["Switch · 3 min", "Partner B teaches; Partner A asks two questions."],
+      ["Together · 2 min", "What would we tell someone who missed today?"]
+    ]),
+    "visual-summary": preset([
+      ["Choose a format", "Mind Map · Comic Strip · Sketch Note · One-Pager"],
+      ["Create · 6 min", "Show the key ideas using words, images and connections. Include an example."],
+      ["Share · 2 min", "Ask a partner to explain your visual. What could you make clearer?"]
+    ], { layout: "cards" }),
+    "reflection-ladder": preset([
+      ["Choose your level", "1: Need help → 3: Can practise with support → 5: Can teach others."],
+      ["Explain", "I’m here because…"],
+      ["Plan", "To move up I need to…"],
+      ["Share", "Tell a partner one specific action you will take next."]
+    ], { feedback: { prompt: "Where are you on the learning ladder?", points: 5, lowLabel: "Need help", highLabel: "Can teach others" } })
+  };
+
+  // src/activities/game-presets.js
+  var mc = (question, options, correct, explanation) => ({ question, options, correct, explanation });
+  var recall = [
+    ["What is the distance around a shape called?", "Perimeter"],
+    ["How many centimetres are in one metre?", "100"],
+    ["What is the perimeter of a square with side 4 cm?", "16 cm"],
+    ["What is the area of a 6 cm × 3 cm rectangle?", "18 cm²"],
+    ["What unit would you use for the area of a classroom floor?", "Square metres"]
+  ];
+  var choice = [
+    mc("What does perimeter measure?", ["Space inside", "Distance around", "Number of corners", "Mass"], 1, "Perimeter measures the outside boundary."),
+    mc("A rectangle is 6 cm by 4 cm. What is its perimeter?", ["10 cm", "24 cm", "20 cm", "20 cm²"], 2, "6 + 4 + 6 + 4 = 20 cm. 24 is its area; cm² is an area unit."),
+    mc("A square has side 5 m. What is its area?", ["25 m²", "20 m", "10 m²", "5 m²"], 0, "Area = 5 × 5 = 25 m²."),
+    mc("Which equals 2.5 m?", ["25 cm", "2,500 cm", "250 cm", "0.25 cm"], 2, "There are 100 cm in each metre: 2.5 × 100 = 250."),
+    mc("A rectangle has perimeter 30 cm and width 5 cm. Its length is…", ["25 cm", "20 cm", "15 cm", "10 cm"], 3, "Two widths use 10 cm, leaving 20 cm shared by two lengths."),
+    mc("Double both sides of a rectangle. Its area becomes…", ["Twice as large", "Four times as large", "Unchanged", "Eight times as large"], 1, "Both factors double: (2L) × (2W) = 4LW.")
+  ];
+  var statements = [
+    ["Perimeter is the distance around a shape.", true, "Trace the boundary to measure perimeter."],
+    ["Area is measured in centimetres rather than square centimetres.", false, "Area needs square units such as cm²."],
+    ["One metre equals 100 centimetres.", true, "The prefix centi means one hundredth."],
+    ["A 6 cm by 4 cm rectangle has perimeter 24 cm.", false, "Its perimeter is 20 cm; 24 cm² is its area."],
+    ["A square has four equal sides.", true, "All four sides have equal length."],
+    ["Rectangles with the same area always have the same perimeter.", false, "2×6 and 3×4 both have area 12, but perimeters 16 and 14."],
+    ["Doubling every side length doubles the perimeter.", true, "Every term in the boundary sum doubles."],
+    ["Doubling both sides of a rectangle doubles its area.", false, "The area becomes four times as large."],
+    ["A rectangle with perimeter 20 cm can have sides 6 cm and 4 cm.", true, "6 + 4 + 6 + 4 = 20."],
+    ["One square metre equals 100 square centimetres.", false, "100 cm × 100 cm = 10,000 cm²."]
+  ];
+  var tf = statements.map(([question, yes, explanation]) => ({ question, options: ["True", "False"], correct: yes ? 0 : 1, explanation }));
+  var bank = (seeds, defaultTime, settings = {}) => ({ seeds, settings: { defaultTime, scoreboard: false, scoreSlide: false, ...settings } });
+  var GAME_PRESETS = {
+    "quick-retrieval-quiz": { game: bank(recall.map(([question, answer]) => ({ question, answer })), 120), answer: "Paper recall for 2 minutes, pair check for 2, whole-class review for 3. The answer key is revealed by the retrieval board." },
+    "pre-assessment-quickfire": { game: bank(tf.slice(0, 8), 30, { confidence: true }), answer: "Use thumbs sideways for Unsure; the digital true/false engine has two answer buttons. Ask for an explanation before revealing. Note confident misconceptions and use them to set learning goals." },
+    "interleaving-mixed-practice": { game: bank([
+      choice[0],
+      mc("Earlier learning: what is 7 × 8?", ["54", "56", "64", "48"], 1, "7 groups of 8 = 56."),
+      choice[1],
+      choice[2],
+      mc("Earlier learning: half of 34 is…", ["16", "17", "18", "68"], 1, "34 ÷ 2 = 17."),
+      choice[3],
+      mc("Earlier learning: 0.5 is equivalent to…", ["1/5", "5/100", "1/2", "2/1"], 2, "0.5 = 5/10 = 1/2."),
+      choice[4],
+      choice[5],
+      mc("Earlier learning: 36 ÷ 4 equals…", ["6", "8", "9", "12"], 2, "4 × 9 = 36.")
+    ], 0), answer: "Ten questions: six measurement questions interleaved with four earlier arithmetic questions. For the source protocol, work on paper for 8 minutes before revealing; pair-check for 3 and discuss transfer for 3. Replace earlier topics with your class’s actual learning history." },
+    "explanation-champion-challenge": { game: bank([
+      { term: "Perimeter", category: "Measurement", hint: "Banned: around, outside, edge, boundary", explanation: "The total length of all sides of a shape." },
+      { term: "Area", category: "Measurement", hint: "Banned: space, inside, square, surface", explanation: "How much flat covering a shape needs." },
+      { term: "Rectangle", category: "Shapes", hint: "Banned: four, sides, right, angles", explanation: "A quadrilateral with each corner measuring 90 degrees." },
+      { term: "Metre", category: "Units", hint: "Banned: length, hundred, centimetres, ruler", explanation: "A standard distance unit, equal to 1,000 millimetres." }
+    ], 60), answer: "Allow 2 minutes to plan before the first explanation. Banned words appear as the hint. Run the source’s Clear=2 / Okay=1 / Unclear=0 class vote on paper; Heads Up’s Correct/Pass control does not implement that rubric." },
+    "compare-and-contrast-venn-activity": { game: bank([
+      { question: "Compare area and perimeter. Draw a Venn diagram before the reveal.", itemA: "Area", itemB: "Perimeter", similarities: "Both measure an aspect of a shape; both need stated units.", differences: "Area measures surface coverage in square units. Perimeter measures boundary length in linear units." },
+      { question: "Compare these two rectangles. What belongs in the overlap?", itemA: "2 cm × 6 cm rectangle", itemB: "3 cm × 4 cm rectangle", similarities: "Both have four right angles and area 12 cm².", differences: "Perimeters are 16 cm and 14 cm respectively." },
+      { question: "Compare these equal-perimeter rectangles.", itemA: "1 cm × 5 cm rectangle", itemB: "2 cm × 4 cm rectangle", similarities: "Both are rectangles with perimeter 12 cm.", differences: "Their areas are 5 cm² and 8 cm² respectively." }
+    ], 0), answer: "Use the first comparison for the 15-minute source protocol; the board requires three comparisons, so two transfer examples are supplied for optional follow-up. Students draw Venn diagrams on paper; the engine displays two concepts and reveals similarities/differences." },
+    "multiple-choice-quiz": { game: bank(choice, 40) },
+    "true-false-rapid-fire": { game: bank(tf, 20, { confidence: true }), answer: "Ten statements mix recall and misconceptions. Accept sideways thumbs for Unsure; digital answers remain True/False. Discuss errors after the rapid round." },
+    "short-answer-check": { game: bank(recall.map(([question, answer], i) => ({ question, accept: [answer, ...[[], ["one hundred"], ["16", "16 centimetres"], ["18", "18 square centimetres"], ["m²", "m2", "square meters"]][i]], explanation: answer })), 48), answer: "For the source’s peer-marking method, write answers on paper for 4 minutes, swap for 1, mark with the reveal for 2 and discuss for 1. Digital typing is also available; inspect accepted spellings in Quiz studio." },
+    "diagnostic-question": { game: bank([
+      mc("A 6 cm × 4 cm rectangle has perimeter… Explain your choice before the reveal.", ["10 cm", "24 cm", "20 cm", "20 cm²"], 2, "A adds two sides only. B calculates area. C correctly adds all four sides. D has the right number with an area unit. Ask each group to explain before reteaching."),
+      mc("A 7 cm × 3 cm rectangle has perimeter… What changed in your method?", ["21 cm", "20 cm²", "10 cm", "20 cm"], 3, "21 calculates area; 20 cm² uses the wrong unit; 10 omits two sides; 20 cm is correct. Use this second question to check the correction.")
+    ], 0, { confidence: true }), answer: "Take explanations before revealing. Use Q1 to diagnose, spend 2 minutes addressing the observed misconception, then use Q2 as the check." },
+    "recap-quiz-game": { game: bank(choice, 40, { scoreboard: true, scoreSlide: true, defaultPoints: 1e3 }), answer: "Quick-Fire is the selected source option: six 40-second questions fill 4 minutes, followed by 2 minutes discussing common errors." }
+  };
+
+  // src/activities/source-meta.json
+  var source_meta_default = {
+    "Do Now / Bell Ringer": {
+      sourceFile: "lib/templates/activation.ts",
+      materials: [
+        "Pre-written board questions",
+        "Answer key"
+      ],
+      sourceSteps: [
+        "On board: 3 questions (recall from last lesson, connection, preview)",
+        "Silent individual work (5 mins)",
+        "Quick pair check (2 mins)",
+        "Whole class review (3 mins)",
+        "Link to today's objective"
+      ],
+      sourceMinutes: 8,
+      sourceBlurb: "Silent individual work on board when students enter"
+    },
+    "Knowledge Activation Web": {
+      sourceFile: "lib/templates/activation.ts",
+      materials: [
+        "Whiteboard",
+        "Markers"
+      ],
+      sourceSteps: [
+        "Write topic in center of board (1 min)",
+        "Students call out anything they know (3 mins)",
+        "Teacher writes and draws connecting lines",
+        "Look for patterns and gaps (2 mins)",
+        "Set today's learning goal (1 min)"
+      ],
+      sourceMinutes: 7,
+      sourceBlurb: "Build a web of connected ideas on the board"
+    },
+    "Pre-Assessment Quickfire": {
+      sourceFile: "lib/templates/activation.ts",
+      materials: [
+        "Statement list (mix of known, preview, misconceptions)"
+      ],
+      sourceSteps: [
+        "Teacher reads 8-10 statements",
+        "Students show: 👍 True / 👎 False / 👉 Unsure",
+        "Teacher notes misconceptions",
+        "Clarify key terms",
+        "Set learning goals based on gaps"
+      ],
+      sourceMinutes: 8,
+      sourceBlurb: "Thumbs up/down/sideways for 8-10 true/false statements"
+    },
+    "Exit Ticket": {
+      sourceFile: "lib/templates/activity-plenary.ts",
+      materials: [
+        "Exit ticket template",
+        "Collection box/system"
+      ],
+      sourceSteps: [
+        "Choose format: 3-2-1 / Traffic Light / What-So What-Now What",
+        "Students write individual responses (3 mins)",
+        "Submit on way out",
+        "Teacher reviews for next lesson planning"
+      ],
+      sourceMinutes: 5,
+      sourceBlurb: "Quick written reflection: 3-2-1 or Traffic Light or What-So What-Now What"
+    },
+    "Recap Quiz Game": {
+      sourceFile: "lib/templates/activity-plenary.ts",
+      materials: [
+        "Quiz questions",
+        "Mini whiteboards (for Quick-Fire)",
+        "Question cards (for Quiz-Quiz-Trade)"
+      ],
+      sourceSteps: [
+        "Choose format (Quiz-Quiz-Trade / Stand Up If / Quick-Fire)",
+        "Play game with review questions (4 mins)",
+        "Celebrate correct answers",
+        "Address common errors (2 mins)"
+      ],
+      sourceMinutes: 6,
+      sourceBlurb: "Fun, competitive review (Quiz-Quiz-Trade / Stand Up If / Quick-Fire)"
+    },
+    "Teach Someone": {
+      sourceFile: "lib/templates/activity-plenary.ts",
+      materials: [
+        "Teaching prompts",
+        "Question stems"
+      ],
+      sourceSteps: [
+        "Partner A teaches (2 mins): Today I learned...",
+        "Partner B asks 2 questions (1 min)",
+        "Switch roles (3 mins)",
+        "Together: What would we tell someone who missed today? (2 mins)"
+      ],
+      sourceMinutes: 8,
+      sourceBlurb: "Explain today's learning to a partner"
+    },
+    "Visual Summary": {
+      sourceFile: "lib/templates/activity-plenary.ts",
+      materials: [
+        "Blank paper",
+        "Colored pens/pencils",
+        "Visual examples"
+      ],
+      sourceSteps: [
+        "Choose visual format (Mind Map / Comic Strip / Sketch Note / One-Pager)",
+        "Create visual summary (6 mins)",
+        "Optional: Share with partner (2 mins)"
+      ],
+      sourceMinutes: 8,
+      sourceBlurb: "Create visual showing learning (Mind Map / Comic Strip / Sketch Note / One-Pager)"
+    },
+    "Reflection Ladder": {
+      sourceFile: "lib/templates/activity-plenary.ts",
+      materials: [
+        "Reflection ladder template",
+        "Writing materials"
+      ],
+      sourceSteps: [
+        "Show ladder: Bottom (need help) → Top (can teach others)",
+        "Students draw themselves on their level (1 min)",
+        "Write: 'I'm here because...' (2 mins)",
+        "Write: 'To move up I need to...' (2 mins)",
+        "Share with partner (2 mins)",
+        "Teacher notes who needs support (2 mins)"
+      ],
+      sourceMinutes: 9,
+      sourceBlurb: "Self-assess learning journey from 'need help' to 'can teach others'"
+    },
+    "Think-Pair-Square-Share": {
+      sourceFile: "lib/templates/collaboration.ts",
+      materials: [
+        "Discussion question",
+        "Sharing protocol"
+      ],
+      sourceSteps: [
+        "THINK (2 mins): Individual reflection",
+        "PAIR (3 mins): Share with partner",
+        "SQUARE (4 mins): Join another pair, synthesize",
+        "SHARE (4 mins): Groups present to class"
+      ],
+      sourceMinutes: 13,
+      sourceBlurb: "Progressive sharing: Individual → Pair → Group of 4 → Class"
+    },
+    "Jigsaw Collaboration": {
+      sourceFile: "lib/templates/collaboration.ts",
+      materials: [
+        "Expert group resources",
+        "Teaching guides"
+      ],
+      sourceSteps: [
+        "Home groups split (2 mins)",
+        "Expert groups learn one piece (10 mins)",
+        "Return to home groups to teach (8 mins)"
+      ],
+      sourceMinutes: 20,
+      sourceBlurb: "Home groups → Expert groups → Return to teach (see Main Activity for full version)"
+    },
+    "Peer Teaching Carousel": {
+      sourceFile: "lib/templates/collaboration.ts",
+      materials: [
+        "Station task cards",
+        "Large paper/posters",
+        "Timer"
+      ],
+      sourceSteps: [
+        "Setup: 4-5 stations with different tasks",
+        "Groups rotate every 4 minutes",
+        "At each station: Read previous work, add thinking, correct errors",
+        "Final Round (5 mins): Return to starting station, review, synthesize",
+        "Present to class"
+      ],
+      sourceMinutes: 20,
+      sourceBlurb: "Rotate through stations, adding to and building on previous groups' work"
+    },
+    "Socratic Seminar (Simple)": {
+      sourceFile: "lib/templates/collaboration.ts",
+      materials: [
+        "Discussion text/prompt",
+        "Evidence markers",
+        "Observation sheet"
+      ],
+      sourceSteps: [
+        "Round 1 (8 mins): Inner circle discusses prompt with evidence",
+        "Round 2 (8 mins): Switch circles, new discussion",
+        "Debrief (4 mins): What strong arguments? What was convincing?"
+      ],
+      sourceMinutes: 20,
+      sourceBlurb: "Student-led discussion: Inner circle discusses, outer circle observes"
+    },
+    "Dialogue Chain Discussion": {
+      sourceFile: "lib/templates/collaboration.ts",
+      materials: [
+        "Discussion prompt",
+        "Academic language stems poster",
+        "Listening tracker"
+      ],
+      sourceSteps: [
+        "Present discussion question to class (1 min)",
+        "Student 1: Gives initial answer (30 seconds)",
+        "Student 2: 'I agree/disagree because...' OR 'Building on that idea...' (30 seconds)",
+        "Student 3: Continues chain using academic language (30 seconds)",
+        "Continue for 8-10 students (10 mins)",
+        "Teacher synthesizes key insights (2 mins)"
+      ],
+      sourceMinutes: 15,
+      sourceBlurb: "Structured student-led discussion where each student builds on previous responses using academic connectors"
+    },
+    "Real-World Connection Hunt": {
+      sourceFile: "lib/templates/collaboration.ts",
+      materials: [
+        "Concept cards",
+        "Recording sheet",
+        "Example categories poster"
+      ],
+      sourceSteps: [
+        "Present concept (e.g., 'Friction' or 'Democracy') (2 mins)",
+        "Challenge 1 (3 mins): Find examples in THIS ROOM",
+        "Challenge 2 (3 mins): Think of examples AT HOME",
+        "Challenge 3 (3 mins): Identify examples IN YOUR COMMUNITY",
+        "Share out (3 mins): Students explain their connections",
+        "Reflect (1 min): 'Why does this concept matter in real life?'"
+      ],
+      sourceMinutes: 15,
+      sourceBlurb: "Students identify real-world examples of concepts in their classroom, school, home, and community"
+    },
+    "Explanation Champion Challenge": {
+      sourceFile: "lib/templates/collaboration.ts",
+      materials: [
+        "Concept cards",
+        "Banned words list",
+        "Timer",
+        "Voting system"
+      ],
+      sourceSteps: [
+        "Display concept word (e.g., 'Photosynthesis') (1 min)",
+        "Show 4-5 BANNED WORDS students can't use (e.g., 'sunlight', 'oxygen', 'plants') (1 min)",
+        "Think time (2 mins): Students plan their explanation",
+        "Volunteer explains to class (60 seconds)",
+        "Class votes: Clear (2 pts), Okay (1 pt), Unclear (0 pts)",
+        "Repeat with 3-4 more students and concepts (8 mins)",
+        "Debrief (2 mins): What made explanations clear?"
+      ],
+      sourceMinutes: 15,
+      sourceBlurb: "Students explain concepts without using banned words, forcing deeper articulation of understanding"
+    },
+    "Compare & Contrast Venn Activity": {
+      sourceFile: "lib/templates/collaboration.ts",
+      materials: [
+        "Venn diagram template",
+        "Concept cards",
+        "Markers"
+      ],
+      sourceSteps: [
+        "Present two concepts (e.g., 'Photosynthesis' vs 'Respiration') (1 min)",
+        "Individual thinking (3 mins): List characteristics of each",
+        "Pair work (5 mins): Create Venn diagram together",
+        "Gallery walk (4 mins): View other pairs' work",
+        "Class synthesis (2 mins): What patterns? What connections?"
+      ],
+      sourceMinutes: 15,
+      sourceBlurb: "Visual comparison of two concepts using Venn diagram, focusing on similarities and differences"
+    },
+    "Benefits vs Limitations Battle": {
+      sourceFile: "lib/templates/collaboration.ts",
+      materials: [
+        "Topic cards",
+        "Score board",
+        "Timer",
+        "Validity criteria"
+      ],
+      sourceSteps: [
+        "Present topic (e.g., 'Renewable Energy' or 'Social Media') (1 min)",
+        "Team setup: Benefits Team vs Limitations Team (1 min)",
+        "30-second think time before each round",
+        "Teams alternate stating points (10 mins)",
+        "Scoring: Valid point = 1 point, Repeat = no points",
+        "Switch sides and continue (optional)",
+        "Debrief (2 mins): Balanced view discussion"
+      ],
+      sourceMinutes: 15,
+      sourceBlurb: "Two teams take turns stating benefits and limitations of a concept, practicing balanced analysis"
+    },
+    "Scenario Analysis Discussion": {
+      sourceFile: "lib/templates/collaboration.ts",
+      materials: [
+        "Concept cards",
+        "Scenario cards",
+        "Analysis questions",
+        "Recording sheet"
+      ],
+      sourceSteps: [
+        "Present concept (e.g., 'Supply and Demand') (2 mins)",
+        "Show 3 scenarios (e.g., concert tickets, crop harvest, iPhone release) (3 mins)",
+        "Question 1 (4 mins): Which scenarios show the concept? (All/Some/One)",
+        "Question 2 (4 mins): Pick one and explain HOW",
+        "Question 3 (3 mins): Predict what happens next",
+        "Question 4 (2 mins): Compare - which is most extreme?"
+      ],
+      sourceMinutes: 18,
+      sourceBlurb: "Analyze real-world scenarios to identify concepts, explain applications, and predict outcomes"
+    },
+    "Whiteboards on Walls": {
+      sourceFile: "lib/templates/collaboration.ts",
+      materials: [
+        "Wall-mounted whiteboards",
+        "Whiteboard markers (multiple colors)",
+        "Erasers",
+        "Problem/question prompt"
+      ],
+      sourceSteps: [
+        "Students move to wall whiteboards in pairs/groups (30 secs)",
+        "Teacher poses problem/question (30 secs)",
+        "Groups discuss and write their thinking on whiteboards (5 mins)",
+        "Gallery walk - observe and learn from other groups' work (3 mins)",
+        "Return to own board and refine thinking based on what you saw (2 mins)",
+        "Whole class debrief of key ideas and strongest arguments (1 min)",
+        "Note: Arrive early to start, revisit at lesson end for consolidation"
+      ],
+      sourceMinutes: 12,
+      sourceBlurb: "Students discuss and write thinking on wall whiteboards - visible thinking and peer learning (Franklin Sixth Form approach)"
+    },
+    "Connect Four - Concept Edition": {
+      sourceFile: "lib/templates/collaboration.ts",
+      materials: [
+        "Concept cards (16 cards: 8 pairs)",
+        "Grid template (4x4)",
+        "Scoring sheet",
+        "Timer"
+      ],
+      sourceSteps: [
+        "MODE A - Match Pairs (20 mins):",
+        "Setup (2 mins): Create 4x4 grid with paired cards (definitions/terms, causes/effects, questions/answers, benefits/limitations)",
+        "Teams take turns (15 mins): Claim two cards that match and explain the connection",
+        "If correct: Cards disappear, team scores a connection",
+        "If incorrect: Cards stay, next team's turn",
+        "Win condition: First team to make 4 valid connections wins",
+        "Debrief (3 mins): Discuss strongest connections and misconceptions",
+        "MODE B - Category Conquest (Alternative):",
+        "Setup: 4 columns, 4 rows of questions (Define, Compare, Example, Why)",
+        "Students answer questions to 'claim' spaces",
+        "First to get 4 in a row (vertical, horizontal, diagonal) wins"
+      ],
+      sourceMinutes: 20,
+      sourceBlurb: "Competitive matching game where students connect related concepts (definitions/terms, causes/effects, questions/answers)"
+    },
+    "I Do, We Do, You Do": {
+      sourceFile: "lib/templates/construction.ts",
+      materials: [
+        "Example problem",
+        "Practice problems",
+        "Success criteria"
+      ],
+      sourceSteps: [
+        "I DO (5 mins): Teacher models with think-aloud",
+        "WE DO (8 mins): Class solves together, teacher guides",
+        "YOU DO Together (5 mins): Partner practice with support",
+        "YOU DO Alone (7 mins): Independent practice, quick check"
+      ],
+      sourceMinutes: 20,
+      sourceBlurb: "Gradual release: Teacher models → Guided practice → Independent practice"
+    },
+    "Concept Development": {
+      sourceFile: "lib/templates/construction.ts",
+      materials: [
+        "Concept examples",
+        "Non-examples",
+        "Practice tasks"
+      ],
+      sourceSteps: [
+        "SHOW: Present concept with clear example (3 mins)",
+        "EXPLAIN: Break down - what, why, how (5 mins)",
+        "EXAMPLES & NON-EXAMPLES: Identify features (5 mins)",
+        "GUIDED APPLICATION: Apply concept (7 mins)",
+        "INDEPENDENT PRACTICE: Create own examples (5 mins)"
+      ],
+      sourceMinutes: 20,
+      sourceBlurb: "Build understanding: Show → Explain → Examples/Non-Examples → Apply"
+    },
+    "Flipped Instruction": {
+      sourceFile: "lib/templates/construction.ts",
+      materials: [
+        "Home learning review",
+        "Complex examples",
+        "Application problems"
+      ],
+      sourceSteps: [
+        "Home Learning Review (3 mins): Poll understanding, address questions",
+        "Deep Dive (10 mins): Focus on hardest parts, work complex examples",
+        "Application Practice (12 mins): Apply to challenging problems, differentiated support"
+      ],
+      sourceMinutes: 25,
+      sourceBlurb: "Deepen understanding after home learning (Review → Deep Dive → Application)"
+    },
+    "Question Cube - Six Question Types": {
+      sourceFile: "lib/templates/construction.ts",
+      materials: [
+        "Question cube visual/poster",
+        "Topic cards",
+        "Timer",
+        "Question type guide"
+      ],
+      sourceSteps: [
+        "Present topic/concept (e.g., 'Photosynthesis') (1 min)",
+        "Explain the 6 question types (2 mins):",
+        "🔵 DEFINE: What is [concept]?",
+        "🟢 COMPARE: How is it different from [related concept]?",
+        "🟡 WHY: Why is [concept] important/how does it work?",
+        "🟣 EXAMPLE: Give a real-world example",
+        "🔴 WHAT IF: What would happen if...?",
+        "🟠 BENEFITS/LIMITS: What conditions are needed? What are the limitations?",
+        "Round 1 (12 mins): Teacher or student picks question type, student answers (30s thinking, 30s response), rotate through all 6 types with 2-3 students per type",
+        "Round 2 (optional): Students generate their own questions for each type",
+        "Debrief (5 mins): Which questions were hardest? Which helped you understand most?"
+      ],
+      sourceMinutes: 20,
+      sourceBlurb: "Deep questioning using Rosenshine's six question templates: Define, Compare, Why, Example, What If, Benefits/Limits"
+    },
+    "Guided Inquiry Investigation": {
+      sourceFile: "lib/templates/main-activity.ts",
+      materials: [
+        "Investigation materials",
+        "Observation sheet",
+        "Analysis questions"
+      ],
+      sourceSteps: [
+        "EXPLORE (10 mins): Investigate stimulus - What patterns? What happens when you change X?",
+        "EXPLAIN (8 mins): Develop explanation - Why? What's the rule?",
+        "ELABORATE (7 mins): Apply to new situation - Use understanding to solve problems",
+        "SHARE & REFINE (5 mins): Present findings and build shared understanding"
+      ],
+      sourceMinutes: 30,
+      sourceBlurb: "Students discover concepts through structured exploration (Explore → Explain → Elaborate → Share)"
+    },
+    "Jigsaw Expert Groups": {
+      sourceFile: "lib/templates/main-activity.ts",
+      materials: [
+        "4 different resource sets",
+        "Expert group guides",
+        "Summary sheet"
+      ],
+      sourceSteps: [
+        "Home Groups (5 mins): Groups of 4, assign each person a sub-topic",
+        "Expert Groups (12 mins): All 1s together, become experts, create teaching plan",
+        "Home Groups Return (12 mins): Each expert teaches their part (3 mins each), create complete picture"
+      ],
+      sourceMinutes: 29,
+      sourceBlurb: "Students become experts and teach peers (Home → Expert → Home)"
+    },
+    "Problem-Based Learning": {
+      sourceFile: "lib/templates/main-activity.ts",
+      materials: [
+        "Problem scenario",
+        "Research resources",
+        "Solution template"
+      ],
+      sourceSteps: [
+        "Present Problem: Real-world scenario (3 mins)",
+        "What do we KNOW? List given information (5 mins)",
+        "What do we NEED to know? Identify gaps (5 mins)",
+        "Research & Plan: Find information, develop strategy (10 mins)",
+        "Solve: Implement solution, show working (10 mins)",
+        "Present & Justify: Share solution and reasoning (7 mins)"
+      ],
+      sourceMinutes: 35,
+      sourceBlurb: "Solve authentic, complex problem through structured inquiry"
+    },
+    "Differentiated Practice Menu": {
+      sourceFile: "lib/templates/main-activity.ts",
+      materials: [
+        "Must-do task",
+        "3 differentiated challenge options",
+        "Success criteria"
+      ],
+      sourceSteps: [
+        "Must Do: Core practice task - everyone (10 mins)",
+        "Choose Your Challenge (15 mins):",
+        "🟢 Consolidate: Easier version with scaffolding",
+        "🟡 Apply: Standard problem-solving",
+        "🔴 Extend: Complex multi-step challenge"
+      ],
+      sourceMinutes: 25,
+      sourceBlurb: "Must-do task plus choice board (Consolidate/Apply/Extend)"
+    },
+    "Design & Create Task": {
+      sourceFile: "lib/templates/main-activity.ts",
+      materials: [
+        "Creation materials",
+        "Success criteria checklist",
+        "Examples"
+      ],
+      sourceSteps: [
+        "Brief: Design/create [product] that shows understanding (2 mins)",
+        "Planning: Sketch ideas, gather resources (5 mins)",
+        "Creating: Make your product (20 mins)",
+        "Self-assessment: Check against criteria (3 mins)",
+        "Gallery walk: View and learn from others (5 mins)"
+      ],
+      sourceMinutes: 35,
+      sourceBlurb: "Create something that demonstrates understanding (poster/model/presentation/video)"
+    },
+    "Worked Example Analysis": {
+      sourceFile: "lib/templates/mini-activity.ts",
+      materials: [
+        "Worked example",
+        "Blank problem for practice"
+      ],
+      sourceSteps: [
+        "Display completed example (1 min)",
+        "Students identify each step (3 mins) - What happened? Why?",
+        "Pairs create a 'recipe' for solving similar problems (3 mins)",
+        "Test recipe on new problem (3 mins)",
+        "Compare approaches (2 mins)"
+      ],
+      sourceMinutes: 10,
+      sourceBlurb: "Analyze a completed example together to understand the process"
+    },
+    "Error Analysis": {
+      sourceFile: "lib/templates/mini-activity.ts",
+      materials: [
+        "Sample work with errors",
+        "Error types guide"
+      ],
+      sourceSteps: [
+        "Show work with 3-4 deliberate errors (1 min)",
+        "Individual: Spot the errors (3 mins)",
+        "Pairs: Discuss and correct errors (3 mins)",
+        "Share: What were the errors? (2 mins)",
+        "Reflect: Why might someone make these mistakes? (1 min)"
+      ],
+      sourceMinutes: 10,
+      sourceBlurb: "Find and fix mistakes in sample work to identify misconceptions"
+    },
+    "Quick Practice Stations": {
+      sourceFile: "lib/templates/mini-activity.ts",
+      materials: [
+        "3 station task cards",
+        "Timer",
+        "Recording sheets"
+      ],
+      sourceSteps: [
+        "Station 1: Recall task (3 mins)",
+        "Station 2: Apply task (3 mins)",
+        "Station 3: Create task (3 mins)",
+        "Brief share out (1 min)"
+      ],
+      sourceMinutes: 10,
+      sourceBlurb: "Rotate through 3 quick tasks: Recall, Apply, Create"
+    },
+    "Concept Card Sort": {
+      sourceFile: "lib/templates/mini-activity.ts",
+      materials: [
+        "Card set (12-15 cards)",
+        "Category labels (optional)"
+      ],
+      sourceSteps: [
+        "Give each group 12-15 cards with terms/images/examples (1 min)",
+        "Sort into categories (4 mins) - choose or create categories",
+        "Groups walk around to see others' sorts (2 mins)",
+        "Discuss: Different ways to organize (2 mins)",
+        "Reflect: Which organization is most useful? Why? (1 min)"
+      ],
+      sourceMinutes: 10,
+      sourceBlurb: "Organize information into categories to understand relationships"
+    },
+    "Interleaving Mixed Practice": {
+      sourceFile: "lib/templates/mini-activity.ts",
+      materials: [
+        "Mixed practice problem set",
+        "Answer key",
+        "Previous topics reference sheet"
+      ],
+      sourceSteps: [
+        "Present 10 problems: 6 from today's topic, 4 from previous weeks (1 min)",
+        "Students solve independently (8 mins) - mix of old and new",
+        "Pair-check answers (3 mins) - discuss strategies used",
+        "Whole class: 'How did previous learning help today?' (3 mins)",
+        "Reflect: Which problems were harder - new or old? Why?"
+      ],
+      sourceMinutes: 15,
+      sourceBlurb: "Mix problems from today AND previous weeks for long-term retention (spaced learning)"
+    },
+    "Strategic Wait Time Questioning": {
+      sourceFile: "lib/templates/mini-activity.ts",
+      materials: [
+        "Question list (5-7 questions)",
+        "Random name selector",
+        "Timer (optional)"
+      ],
+      sourceSteps: [
+        "Pose question to whole class clearly",
+        "⏱️ WAIT 3-5 seconds (no hands up yet) - give thinking time",
+        "Call on student randomly (use name sticks/cards)",
+        "⏱️ WAIT 3 seconds for student to formulate answer",
+        "Student responds",
+        "⏱️ WAIT 2 seconds before responding or asking follow-up",
+        "Repeat 5-7 times with different students (10 mins total)",
+        "Note: Increased wait time = better answers + more participation"
+      ],
+      sourceMinutes: 10,
+      sourceBlurb: "Questioning with explicit 3-5 second wait time for deeper thinking and participation"
+    },
+    "Multiple Choice Quiz": {
+      sourceFile: "lib/templates/mini-quiz.ts",
+      materials: [
+        "Quiz questions (MC format)",
+        "Answer key",
+        "Response method"
+      ],
+      sourceSteps: [
+        "Present 5-8 multiple choice questions",
+        "Students respond (paper/whiteboard/digital/fingers)",
+        "Show correct answer after each (30-45 secs per question)",
+        "Quick explanation if needed",
+        "Move on - don't dwell"
+      ],
+      sourceMinutes: 6,
+      sourceBlurb: "5-8 multiple choice questions with immediate feedback"
+    },
+    "True/False Rapid Fire": {
+      sourceFile: "lib/templates/mini-quiz.ts",
+      materials: [
+        "True/false statement list"
+      ],
+      sourceSteps: [
+        "Teacher reads 10-12 true/false statements",
+        "Students show: 👍 True / 👎 False / 👉 Unsure",
+        "Statements mix easy, challenging, and misconceptions",
+        "Tally scores, address misconceptions"
+      ],
+      sourceMinutes: 5,
+      sourceBlurb: "10-12 true/false statements with thumbs up/down/sideways"
+    },
+    "Short Answer Check": {
+      sourceFile: "lib/templates/mini-quiz.ts",
+      materials: [
+        "Short answer questions",
+        "Answer key"
+      ],
+      sourceSteps: [
+        "Students write answers to 3-5 questions (4 mins)",
+        "Swap with partner (1 min)",
+        "Mark using answer key (2 mins)",
+        "Discuss any disagreements (1 min)",
+        "Self-assess: ___ / 5"
+      ],
+      sourceMinutes: 8,
+      sourceBlurb: "3-5 short answer questions, pair mark with answer key"
+    },
+    "Diagnostic Question": {
+      sourceFile: "lib/templates/mini-quiz.ts",
+      materials: [
+        "Diagnostic question(s)",
+        "Common misconception guide"
+      ],
+      sourceSteps: [
+        "Present 1-2 diagnostic questions (3 mins)",
+        "Students answer with explanation",
+        "Teacher analyzes common answers (2 mins)",
+        "Address misconception immediately (2 mins)",
+        "Group students by need if necessary"
+      ],
+      sourceMinutes: 7,
+      sourceBlurb: "1-2 carefully designed questions that reveal thinking and misconceptions"
+    },
+    "Exit Ticket (Plenary)": {
+      sourceFile: "lib/templates/plenary.ts",
+      materials: [
+        "Exit ticket template"
+      ],
+      sourceSteps: [
+        "Choose format: 3-2-1 / Traffic Light / What-So What-Now What",
+        "Students write responses (3 mins)",
+        "Submit on way out",
+        "Teacher reviews for planning"
+      ],
+      sourceMinutes: 5,
+      sourceBlurb: "Quick written reflection before leaving (same as Activity Plenary #4)"
+    },
+    "Preview Next Lesson": {
+      sourceFile: "lib/templates/plenary.ts",
+      materials: [
+        "Recap notes",
+        "Preview slide",
+        "Preparation task"
+      ],
+      sourceSteps: [
+        "Today We Learned (2 mins): Quick recap",
+        "Next Lesson We Will (2 mins): Preview and connect",
+        "Preparation Task (1 min): Quick homework/prep",
+        "Closing Question (2 mins): Leave them thinking"
+      ],
+      sourceMinutes: 7,
+      sourceBlurb: "Recap today, preview tomorrow, set preparation task"
+    },
+    "Structured Reflection Protocol (Four-Corner)": {
+      sourceFile: "lib/templates/reflection.ts",
+      materials: [
+        "Corner signs",
+        "Task cards for each corner"
+      ],
+      sourceSteps: [
+        "Explain corners: Got it / Mostly understand / Getting there / Need help",
+        "Students move to their corner (2 mins)",
+        "Each corner completes specific task (6 mins)",
+        "Teacher visits each corner, addresses needs (4 mins)"
+      ],
+      sourceMinutes: 12,
+      sourceBlurb: "Students move to corners based on confidence level"
+    },
+    "Learning Log Entry": {
+      sourceFile: "lib/templates/reflection.ts",
+      materials: [
+        "Learning log template",
+        "Writing materials"
+      ],
+      sourceSteps: [
+        "Students complete structured reflection (8 mins):",
+        "1. NEW LEARNING: What's one new thing?",
+        "2. CONNECTIONS: How does this connect?",
+        "3. CHALLENGES: What was difficult?",
+        "4. STRATEGIES: What helped me learn?",
+        "5. NEXT STEPS: What do I want to work on?",
+        "Optional: Share one insight with partner (2 mins)"
+      ],
+      sourceMinutes: 10,
+      sourceBlurb: "Structured journal: New Learning / Connections / Challenges / Strategies / Next Steps"
+    },
+    "Muddiest Point": {
+      sourceFile: "lib/templates/reflection.ts",
+      materials: [
+        "Sticky notes",
+        "Markers"
+      ],
+      sourceSteps: [
+        "Individual (3 mins): Write 'The muddiest point for me is...' on sticky note",
+        "Teacher collects & groups (2 mins): Sort by common themes",
+        "Address Top 3 (8 mins): Clear up biggest confusions with student explanations"
+      ],
+      sourceMinutes: 13,
+      sourceBlurb: "Identify what's unclear, teacher addresses top confusions"
+    },
+    "Plus-Minus-Interesting (PMI)": {
+      sourceFile: "lib/templates/reflection.ts",
+      materials: [
+        "PMI template",
+        "Writing materials"
+      ],
+      sourceSteps: [
+        "Individual Reflection (5 mins):",
+        "PLUS: What worked well?",
+        "MINUS: What was challenging?",
+        "INTERESTING: What surprised me?",
+        "Share (5 mins): Pairs compare, class discusses themes"
+      ],
+      sourceMinutes: 10,
+      sourceBlurb: "Edward de Bono thinking: What worked (+) / What was challenging (−) / What surprised (?)"
+    },
+    "Quick Retrieval Quiz": {
+      sourceFile: "lib/templates/starter-activity.ts",
+      materials: [
+        "Quiz questions sheet",
+        "Answer key"
+      ],
+      sourceSteps: [
+        "Students answer 3-5 recall questions individually",
+        "Pair check answers (2 mins)",
+        "Whole class review and discussion (3 mins)",
+        "Link to today's objective"
+      ],
+      sourceMinutes: 7,
+      sourceBlurb: "Answer 3-5 questions from memory to recall prior learning"
+    },
+    "Think-Pair-Share": {
+      sourceFile: "lib/templates/starter-activity.ts",
+      materials: [
+        "Thinking prompt",
+        "Discussion questions"
+      ],
+      sourceSteps: [
+        "Think alone (1 min) - jot down ideas about [topic]",
+        "Share with partner (2 mins) - compare notes",
+        "Pairs share best ideas (3 mins) - class discussion",
+        "Teacher synthesizes (1 min) - connect to today's goal"
+      ],
+      sourceMinutes: 7,
+      sourceBlurb: "Individual thinking → Partner discussion → Share out"
+    },
+    "Hook & Predict": {
+      sourceFile: "lib/templates/starter-activity.ts",
+      materials: [
+        "Stimulus (image/video/scenario)",
+        "Notice/Wonder template"
+      ],
+      sourceSteps: [
+        "Show attention-grabbing stimulus (30 secs)",
+        "Students write 2 things they notice (1 min)",
+        "Students write 1 thing they wonder (1 min)",
+        "Share out observations and questions (3 mins)",
+        "Link to today's learning objective (1 min)"
+      ],
+      sourceMinutes: 7,
+      sourceBlurb: "Present intriguing stimulus and ask 'What do you notice? What do you wonder?'"
+    },
+    "Word Splash": {
+      sourceFile: "lib/templates/starter-activity.ts",
+      materials: [
+        "Word splash handout",
+        "Key vocabulary list"
+      ],
+      sourceSteps: [
+        "Display 5-8 key terms for today's lesson",
+        "Students circle terms they know well",
+        "Underline terms they've heard but unsure",
+        "Leave blank terms they don't know",
+        "Partner discussion (2 mins): Explain circled terms",
+        "Class creates working definitions (3 mins)",
+        "Self-assess confidence: 🟢🟡🔴"
+      ],
+      sourceMinutes: 7,
+      sourceBlurb: "Connect key vocabulary to prior knowledge through self-assessment"
+    },
+    "Daily Review Routine": {
+      sourceFile: "lib/templates/starter-activity.ts",
+      materials: [
+        "Homework answer key",
+        "Common error examples",
+        "Quick practice problem"
+      ],
+      sourceSteps: [
+        "Quick homework check (2 mins) - scan for completion, spot common issues",
+        "Address common errors (3 mins) - whole class discussion of 2-3 frequent mistakes",
+        "Guided practice (3 mins) - reteach tricky concept with worked example",
+        "Link to today's lesson (30 secs) - 'Today we'll build on this by...'"
+      ],
+      sourceMinutes: 8,
+      sourceBlurb: "Check homework, address common errors, reteach concepts - daily routine for retention"
+    },
+    "Establish Talk Ground Rules": {
+      sourceFile: "lib/templates/starter-activity.ts",
+      materials: [
+        "Chart paper",
+        "Markers",
+        "Optional: Ground rules template"
+      ],
+      sourceSteps: [
+        "Ask: 'What makes group discussions go well?' (2 mins) - brainstorm ideas",
+        "Ask: 'What makes them go badly?' (2 mins) - identify problems",
+        "Students pair-discuss and share ideas (3 mins) - synthesize thinking",
+        "Co-create list of 5-7 ground rules together (2 mins) - write on chart paper",
+        "Display rules prominently in classroom (1 min)",
+        "Note: Revisit these before each oracy activity throughout year"
+      ],
+      sourceMinutes: 10,
+      sourceBlurb: "Co-create class ground rules for quality dialogue and oracy (use at start of year/unit)"
+    },
+    "Clear Objectives Slide": {
+      sourceFile: "lib/templates/starter-slide.ts",
+      materials: [
+        "Prepared slide with objectives, criteria, keywords"
+      ],
+      sourceSteps: [
+        "Display slide with: Title, Learning Objectives (3), Success Criteria (I can...), Key Words",
+        "Teacher reads objectives aloud",
+        "Get started with active learning"
+      ],
+      sourceMinutes: 2,
+      sourceBlurb: "Display learning objectives, success criteria, and key words"
+    },
+    "Hook + Objectives": {
+      sourceFile: "lib/templates/starter-slide.ts",
+      materials: [
+        "Hook stimulus",
+        "Objectives slide"
+      ],
+      sourceSteps: [
+        "Show engaging image/video/question",
+        "Present Big Question that will be answered",
+        "Show: Today we will... (3 activities)",
+        "Show: By the end you'll be able to..."
+      ],
+      sourceMinutes: 2,
+      sourceBlurb: "Engaging stimulus + big question + today's activities"
+    },
+    "Connection Slide": {
+      sourceFile: "lib/templates/starter-slide.ts",
+      materials: [
+        "Connection slide with learning sequence"
+      ],
+      sourceSteps: [
+        "Show: Last Lesson (brief recap)",
+        "Show: Today (what we're learning)",
+        "Show: Next Lesson (where we're going)",
+        "Show: Why This Matters (real-world connection)",
+        "Show: What You'll Do (3 activities)"
+      ],
+      sourceMinutes: 2,
+      sourceBlurb: "Last lesson → Today → Next lesson + Why it matters"
+    }
+  };
 
   // src/activities/catalogue.js
   var PHASES = [
@@ -1150,6 +2382,45 @@
       ]
     }
   ];
+  for (const a of ACTIVITIES) {
+    const source = source_meta_default[a.title];
+    if (!source) throw new Error("Missing source record: " + a.title);
+    a.materials = source.materials.slice();
+    a.sourceFile = source.sourceFile;
+    const p = PRESETS[a.key] || GAME_PRESETS[a.key];
+    if (!p) continue;
+    a.originalMapping = { target: a.target, layout: a.layout, style: a.style, feedbackKind: a.feedbackKind };
+    a.mappingReason = p.reason;
+    a.teacherNotes = p.answer || "";
+    if (p.target) {
+      a.target = p.target;
+      delete a.style;
+    }
+    if (p.layout) a.layout = p.layout;
+    if (p.feedbackKind) a.feedbackKind = p.feedbackKind;
+    a.feedbackPreset = p.feedback;
+    a.gamePreset = p.game;
+    a.pages = p.pages;
+    if (p.pages) {
+      a.pages = p.pages.map((part) => ({ ...part, fields: [
+        text("Heading", part.title),
+        ...part.fields,
+        { label: "Timer", type: "minutes", slide: "timeLimit", value: part.minutes }
+      ] }));
+    } else if (p.fields) {
+      a.fields = [
+        text("Heading", p.fieldsTitle || a.title),
+        ...p.fields,
+        {
+          label: "Timer",
+          type: "minutes",
+          slide: "timeLimit",
+          value: p.timer || a.minutes,
+          hint: "Minutes for this activity. Adjust to suit your class."
+        }
+      ];
+    }
+  }
   function activity(key) {
     return ACTIVITIES.find((a) => a.key === key) || null;
   }
@@ -1166,23 +2437,23 @@
   // src/deck/content.js
   var TABLE_MAX_COLS = 6;
   var TABLE_MAX_ROWS = 12;
-  function parseTable(text) {
-    var lines = String(text == null ? "" : text).split(/\r?\n/).filter(function(l) {
+  function parseTable(text2) {
+    var lines = String(text2 == null ? "" : text2).split(/\r?\n/).filter(function(l) {
       return l.trim();
     }).slice(0, TABLE_MAX_ROWS);
-    var rows = lines.map(function(line) {
+    var rows2 = lines.map(function(line) {
       var cells = line.indexOf("	") !== -1 ? line.split("	") : line.split("|");
       return cells.map(function(c) {
         return c.trim();
       }).slice(0, TABLE_MAX_COLS);
     });
-    var cols = rows.reduce(function(n, r) {
+    var cols = rows2.reduce(function(n, r) {
       return Math.max(n, r.length);
     }, 0);
-    rows.forEach(function(r) {
+    rows2.forEach(function(r) {
       while (r.length < cols) r.push("");
     });
-    return rows;
+    return rows2;
   }
   function parseKeywordLine(line) {
     var s = String(line == null ? "" : line);
@@ -1256,8 +2527,8 @@
   }
   function slideSteps(slide) {
     if (slide.type === "table") {
-      var rows = parseTable(slide.body), start = slide.tableHeader !== false && rows.length > 1 ? 1 : 0;
-      return rows.slice(start).map(function(r) {
+      var rows2 = parseTable(slide.body), start = slide.tableHeader !== false && rows2.length > 1 ? 1 : 0;
+      return rows2.slice(start).map(function(r) {
         return r.join(" · ");
       });
     }
@@ -1289,8 +2560,8 @@
       var n = slide.progressive === true && Number.isFinite(revealed) ? Math.max(0, revealed) : steps.length;
       var visible = steps.slice(0, n);
       if (slide.type === "table") {
-        var rows = parseTable(slide.body);
-        if (slide.tableHeader !== false && rows.length > 1) visible.unshift(rows[0].join(" · "));
+        var rows2 = parseTable(slide.body);
+        if (slide.tableHeader !== false && rows2.length > 1) visible.unshift(rows2[0].join(" · "));
       }
       return visible.join("\n");
     }
@@ -1511,7 +2782,7 @@
       }
     }
   };
-  var choice = coreStyles.choice;
+  var choice2 = coreStyles.choice;
   var truefalse = coreStyles.truefalse;
 
   // src/games/race.js
@@ -1526,22 +2797,22 @@
     maxOptions: 6,
     fixedOptions: null,
     make: function() {
-      return choice.make();
+      return choice2.make();
     },
     normalize: function(q) {
-      return choice.normalize(q);
+      return choice2.normalize(q);
     },
     problems: function(q, n) {
-      return choice.problems(q, n);
+      return choice2.problems(q, n);
     },
     compile: function(q, st, s) {
-      choice.compile(q, st, s);
+      choice2.compile(q, st, s);
     },
     mark: function(s, response) {
-      return choice.mark(s, response);
+      return choice2.mark(s, response);
     },
     summary: function(q) {
-      return choice.summary(q);
+      return choice2.summary(q);
     }
   };
 
@@ -1562,24 +2833,24 @@
     maxOptions: 6,
     fixedOptions: null,
     make: function() {
-      var q = choice.make();
+      var q = choice2.make();
       q.question = "Which answer is right — and fast?";
       return q;
     },
     normalize: function(q) {
-      return choice.normalize(q);
+      return choice2.normalize(q);
     },
     problems: function(q, n) {
-      return choice.problems(q, n);
+      return choice2.problems(q, n);
     },
     compile: function(q, st, s) {
-      choice.compile(q, st, s);
+      choice2.compile(q, st, s);
     },
     mark: function(s, response) {
-      return choice.mark(s, response);
+      return choice2.mark(s, response);
     },
     summary: function(q) {
-      return choice.summary(q);
+      return choice2.summary(q);
     }
   };
   function speedPoints(right, remainingSec) {
@@ -1613,49 +2884,49 @@
     maxOptions: 6,
     fixedOptions: null,
     make: function() {
-      var q = choice.make();
+      var q = choice2.make();
       q.question = "Strike the boss — which answer is right?";
       q.difficulty = "medium";
       return q;
     },
     normalize: function(q) {
-      choice.normalize(q);
+      choice2.normalize(q);
       q.difficulty = BOSS_LEVELS.indexOf(q.difficulty) > -1 ? q.difficulty : "medium";
       return q;
     },
     problems: function(q, n) {
-      return choice.problems(q, n);
+      return choice2.problems(q, n);
     },
     compile: function(q, st, s) {
-      choice.compile(q, st, s);
+      choice2.compile(q, st, s);
       s.difficulty = q.difficulty;
       s.bossDamage = bossDamage(q.difficulty);
     },
     mark: function(s, response) {
-      return choice.mark(s, response);
+      return choice2.mark(s, response);
     },
     summary: function(q) {
-      return choice.summary(q) + " · " + (q.difficulty || "medium") + " (" + bossDamage(q.difficulty) + " dmg)";
+      return choice2.summary(q) + " · " + (q.difficulty || "medium") + " (" + bossDamage(q.difficulty) + " dmg)";
     }
   };
 
   // src/games/marking.js
-  function normalizeAnswer(text) {
-    var t = String(text == null ? "" : text);
+  function normalizeAnswer(text2) {
+    var t = String(text2 == null ? "" : text2);
     if (t.normalize) t = t.normalize("NFD").replace(/[̀-ͯ]/g, "");
     t = t.toLowerCase().replace(/[‘’‛]/g, "'").replace(/[^a-z0-9'\s]+/g, " ").replace(/'/g, "").replace(/\s+/g, " ").trim();
     return t.replace(/^(?:the|a|an)\s+/, "");
   }
-  function numeric(text) {
-    var t = String(text == null ? "" : text).trim().replace(/[,\s]/g, "");
+  function numeric(text2) {
+    var t = String(text2 == null ? "" : text2).trim().replace(/[,\s]/g, "");
     if (!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(t)) return null;
     var n = Number(t);
     return Number.isFinite(n) ? n : null;
   }
-  function withUnit(text, unit) {
+  function withUnit(text2, unit) {
     unit = String(unit == null ? "" : unit).trim();
-    if (!unit) return text;
-    return /^[%°]/.test(unit) ? text + unit : text + " " + unit;
+    if (!unit) return text2;
+    return /^[%°]/.test(unit) ? text2 + unit : text2 + " " + unit;
   }
   function formatValue(value, unit) {
     var n = Number(value);
@@ -1952,8 +3223,8 @@
   }
 
   // src/games/emoji.js
-  function emojiCluePieces(text) {
-    var clueText = String(text || "");
+  function emojiCluePieces(text2) {
+    var clueText = String(text2 || "");
     if (typeof Intl !== "undefined" && Intl.Segmenter) {
       return Array.from(
         new Intl.Segmenter(void 0, { granularity: "grapheme" }).segment(clueText),
@@ -1968,8 +3239,8 @@
       return part.trim();
     });
   }
-  function emojiClueLayout(text) {
-    var clueText = String(text || "");
+  function emojiClueLayout(text2) {
+    var clueText = String(text2 || "");
     var pieces = emojiCluePieces(clueText);
     var tiled = pieces.length > 0 && pieces.length <= 10 && !/[a-zA-Z0-9]/.test(clueText);
     return { tiled, pieces, text: clueText };
@@ -2093,8 +3364,8 @@
     n = Number(n);
     return DEFINITION_TIMES.indexOf(n) > -1 ? n : 30;
   }
-  function splitDefinitionPassage(text) {
-    var t = String(text || "").trim();
+  function splitDefinitionPassage(text2) {
+    var t = String(text2 || "").trim();
     if (!t) return { passage: "", question: "" };
     var quoted = t.match(/"([^"]+)"/);
     if (quoted) {
@@ -4208,7 +5479,7 @@
   function gameStyle(key) {
     return GAME_STYLES[key] || GAME_STYLES.choice;
   }
-  var GAME_STYLES = { choice, truefalse, race, speed, boss, slider, type, order, emoji, definition, compare, oddone, wordreveal, memoryflip, memorymatch, knowledgeflip, headsup, spinexplain, connection, conceptchain, randomchallenge, bingo, lowstakes, bowl };
+  var GAME_STYLES = { choice: choice2, truefalse, race, speed, boss, slider, type, order, emoji, definition, compare, oddone, wordreveal, memoryflip, memorymatch, knowledgeflip, headsup, spinexplain, connection, conceptchain, randomchallenge, bingo, lowstakes, bowl };
 
   // src/deck/markdown.js
   function renderMarkdown(deck, lookupGame = (
@@ -4327,8 +5598,8 @@
           return String(b).trim();
         }).forEach(function(b) {
           var tier = /^(\s{2,}|\t|- )/.test(b);
-          var text = String(b).replace(/^(\s{2,}|\t|- )+/, "").trim();
-          line((tier ? "  - " : "- ") + text);
+          var text2 = String(b).replace(/^(\s{2,}|\t|- )+/, "").trim();
+          line((tier ? "  - " : "- ") + text2);
         });
         line("");
         line(s.image && String(s.image).indexOf("data:") === 0 ? "*Accompanying image (open in SlideForge to view).*" : s.image ? "![](" + s.image + ")" : "*Add an accompanying image for dual coding.*");
@@ -4339,8 +5610,8 @@
           return String(b).trim();
         }).forEach(function(b) {
           var tier = /^(\s{2,}|\t|- )/.test(b);
-          var text = String(b).replace(/^(\s{2,}|\t|- )+/, "").trim();
-          line((tier ? "  - " : "- ") + text);
+          var text2 = String(b).replace(/^(\s{2,}|\t|- )+/, "").trim();
+          line((tier ? "  - " : "- ") + text2);
         });
       }
       var fb = slideFeedback(s);

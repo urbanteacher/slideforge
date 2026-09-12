@@ -1,10 +1,15 @@
+import { PRESETS, text } from "./presets.js";
+import { GAME_PRESETS } from "./game-presets.js";
+import sourceMeta from "./source-meta.json" with { type: "json" };
+
 /*
  * The activity catalogue: the 54 activities, as the source records them.
  *
  * Carried over from activity-catalog-app rather than reinvented. Names,
  * durations and steps are that source's, unchanged. The target and primitive
- * on each row are the mapping in docs/pedagogy-architecture-and-catalogue.md,
- * and every style, layout and feedback kind it names has been checked to
+ * start from docs/pedagogy-architecture-and-catalogue.md; justified remaps
+ * and authored starter copy are applied from presets.js below.
+ * Every style, layout and feedback kind it names has been checked to
  * exist here — tests/activities.test.js fails if one stops existing.
  *
  * Data, not behaviour. Choosing an entry says which of five things to make:
@@ -12,10 +17,10 @@
  *   slide      a deck slide in a named layout
  *   game       a quiz game, built by Quiz studio's engines
  *   feedback   an audience prompt attached to the slide on screen
- *   moment     a timed protocol run in the room, with no screen component
- *   slide-arc  a run of slides; not buildable in one step yet
+ *   moment     a timed classroom protocol with a visible task brief
+ *   slide-arc  an ordered run of slides, inserted as one activity
  *
- * Note the shape: 20 slides and 10 moments against 13 games. Most of a lesson
+ * The original mapping had 20 slides, 10 moments and 13 games. Most of a lesson
  * is not a quiz, and a catalogue that led with games would be describing a
  * different product.
  *
@@ -740,6 +745,35 @@ const ACTIVITIES = [
       'Teacher notes who needs support (2 mins)'
     ]
   }];
+
+/* Keep source identity intact; authored copy and justified remaps live separately. */
+for (const a of ACTIVITIES) {
+  const source = sourceMeta[a.title];
+  if (!source) throw new Error('Missing source record: ' + a.title);
+  a.materials = source.materials.slice();
+  a.sourceFile = source.sourceFile;
+  const p = PRESETS[a.key] || GAME_PRESETS[a.key];
+  if (!p) continue; // The two previously completed activities retain their copy.
+  a.originalMapping = { target: a.target, layout: a.layout, style: a.style, feedbackKind: a.feedbackKind };
+  a.mappingReason = p.reason;
+  a.teacherNotes = p.answer || '';
+  if (p.target) { a.target = p.target; delete a.style; }
+  if (p.layout) a.layout = p.layout;
+  if (p.feedbackKind) a.feedbackKind = p.feedbackKind;
+  a.feedbackPreset = p.feedback;
+  a.gamePreset = p.game;
+  a.pages = p.pages;
+  if (p.pages) {
+    a.pages = p.pages.map((part) => ({ ...part, fields: [
+      text('Heading', part.title), ...part.fields,
+      { label: 'Timer', type: 'minutes', slide: 'timeLimit', value: part.minutes }
+    ] }));
+  } else if (p.fields) {
+    a.fields = [text('Heading', p.fieldsTitle || a.title), ...p.fields,
+      { label: 'Timer', type: 'minutes', slide: 'timeLimit', value: p.timer || a.minutes,
+        hint: 'Minutes for this activity. Adjust to suit your class.' }];
+  }
+}
 
 /** @param {string} key @returns {Activity | null} */
 function activity(key) {

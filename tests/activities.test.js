@@ -28,7 +28,8 @@ test('the catalogue is the 54, split across the eleven phases as the source has 
 test('most of a lesson is not a quiz', async () => {
   const { ACTIVITIES } = await import('../src/activities/catalogue.js');
   const by = ACTIVITIES.reduce((n, a) => ((n[a.target] = (n[a.target] || 0) + 1), n), {});
-  assert.deepEqual(by, { slide: 20, game: 13, moment: 10, feedback: 9, 'slide-arc': 2 });
+  /* Three incompatible game mappings now provide classroom materials. */
+  assert.deepEqual(by, { slide: 23, game: 10, moment: 10, feedback: 9, 'slide-arc': 2 });
   /* The shape is the point. A catalogue that drifted towards games would be
      describing a different product, so this fails if games ever lead. */
   assert.ok(by.game < by.slide, 'games should not outnumber slides');
@@ -78,4 +79,76 @@ test('minutes add up across a planned run', async () => {
   /* An unknown key contributes nothing rather than NaN-ing the whole budget. */
   assert.equal(totalMinutes([keys[0], 'no-such-activity']), activity(keys[0]).minutes);
   assert.equal(totalMinutes([]), 0);
+});
+
+
+function activityRuntime() {
+  const vm = require('node:vm'), fs = require('node:fs');
+  const c = { document: { getElementById: () => null } }; c.window = c;
+  vm.createContext(c);
+  for (const file of ['model', 'activities']) {
+    vm.runInContext(fs.readFileSync(require.resolve('../js/' + file + '.js'), 'utf8'), c);
+  }
+  return c.SF;
+}
+
+test('all 54 preserve source identity and all 52 remaining entries have authored content', async () => {
+  const { ACTIVITIES } = await import('../src/activities/catalogue.js');
+  const meta = require('../src/activities/source-meta.json');
+  for (const a of ACTIVITIES) {
+    const source = meta[a.title];
+    assert.ok(source, a.key);
+    assert.equal(a.blurb, source.sourceBlurb, a.key);
+    assert.equal(a.minutes, source.sourceMinutes, a.key);
+    assert.deepEqual(a.steps, source.sourceSteps, a.key);
+    assert.ok(a.materials.length > 0, a.key);
+    assert.ok(a.fields?.length || a.pages?.length || a.gamePreset?.seeds.length, a.key);
+    if (a.originalMapping && (a.target !== a.originalMapping.target ||
+        (a.originalMapping.layout && a.layout !== a.originalMapping.layout) ||
+        a.feedbackKind !== a.originalMapping.feedbackKind)) assert.ok(a.mappingReason, a.key);
+  }
+});
+
+test('slide builders retain labels, teacher notes, timers and feedback through save normalization', () => {
+  const SF = activityRuntime();
+  for (const a of SF.Activities.ACTIVITIES.filter(a => a.target !== 'game')) {
+    const slides = SF.Activities.makeSlides(a);
+    assert.equal(slides.length, a.pages?.length || 1, a.key);
+    for (const [i, raw] of slides.entries()) {
+      const s = SF.normalizeSlide(JSON.parse(JSON.stringify(raw)));
+      assert.equal(s.activity, a.key);
+      assert.equal(s.activityInstance, slides[0].id);
+      assert.ok(s.notes.includes(a.steps[0]), a.key);
+      assert.ok(s.notes.includes('Materials (source)'), a.key);
+      const fields = a.pages ? a.pages[i].fields : a.fields;
+      const timer = fields.find(f => f.type === 'minutes');
+      if (timer) assert.equal(s.timeLimit, timer.value * 60, a.key);
+      for (const f of fields.filter(f => f.slide.endsWith('.def'))) {
+        const line = SF.parseKeywordLine(s.bullets[Number(f.slide.split('.')[1])]);
+        assert.equal(line.term, f.label, a.key);
+        assert.equal(line.def, f.value, a.key);
+      }
+      assert.ok(!s.bullets.some(b => /^(First point|Second point|Third point|Keyword\t)/.test(b)), a.key);
+      if (a.target === 'feedback') assert.ok(SF.slideFeedback(s), a.key);
+    }
+  }
+  const hook = SF.Activities.makeSlides(SF.Activities.activity('hook-and-predict'))[0];
+  assert.equal(hook.timeLimit, 420);
+  assert.equal(hook.bullets.length, 2);
+});
+
+test('activity games have valid, independent question banks and compile successfully', () => {
+  const SF = activityRuntime();
+  for (const a of SF.Activities.ACTIVITIES.filter(a => a.target === 'game')) {
+    const g = SF.makeGame(a.title, a.style);
+    Object.assign(g.settings, a.gamePreset.settings);
+    g.questions = a.gamePreset.seeds.map(seed => SF.normalizeQuestion(Object.assign(SF.makeQuestion(a.style), JSON.parse(JSON.stringify(seed))), a.style));
+    const engine = SF.gameStyle(a.style);
+    if (engine.board) assert.equal(engine.board(g), null, a.key);
+    g.questions.forEach((q, i) => assert.equal(engine.problems(q, i + 1), null, a.key));
+    assert.ok(SF.compileGame(g).length > 0, a.key);
+    const before = JSON.stringify(a.gamePreset.seeds);
+    g.questions[0].question = 'Edited';
+    assert.equal(JSON.stringify(a.gamePreset.seeds), before, a.key);
+  }
 });

@@ -113,6 +113,9 @@ export interface QuizConfig {
  * property.
  */
 export interface Slide {
+  activity?: string;
+  activityInstance?: string;
+  activityPage?: number;
   id: string;
   type: SlideType;
   title: string;
@@ -704,6 +707,14 @@ export interface Activity {
   fields?: ActivityField[];
   /** Absent means true. An activity that cannot run is not offered. */
   enabled?: boolean;
+  materials?: string[];
+  sourceFile?: string;
+  teacherNotes?: string;
+  mappingReason?: string;
+  originalMapping?: { target: ActivityTarget; layout?: string; style?: string; feedbackKind?: string };
+  feedbackPreset?: Partial<Feedback>;
+  gamePreset?: { seeds: any[]; settings: Record<string, any> };
+  pages?: { title: string; layout: string; minutes: number; fields: ActivityField[] }[];
 }
 
 /* ------------------------------------------------------------- globals --*/
