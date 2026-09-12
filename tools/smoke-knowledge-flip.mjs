@@ -21,8 +21,11 @@ try {
   await kf.click();
   note('Knowledge Flip added from library');
 
-  await page.getByRole('button', { name: /Edit in Quiz studio/ }).waitFor({ timeout: 8000 });
-  await page.getByRole('button', { name: /Edit in Quiz studio/ }).click();
+  /* Picking a format inside Quiz studio now opens that game here, so there is
+     no hop through the deck. Tolerate both: older decks may still have the
+     game filed as a slide. */
+  const edit = page.getByRole('button', { name: /Edit in Quiz studio/ });
+  if (await edit.count()) await edit.click();
   note('Opened game editor');
 
   await page.waitForSelector('#previewBox .memory-board-slide, #previewBox .mem-grid', { timeout: 10000 });

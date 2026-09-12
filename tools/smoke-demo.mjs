@@ -12,7 +12,11 @@ try {
   await page.waitForTimeout(300);
   await page.click('#btnActivitiesGame');
   await page.locator('.activity-card', { hasText: 'Low-Stakes Quiz' }).click();
-  await page.getByRole('button', { name: /Edit in Quiz studio/ }).click();
+  /* Picking a format inside Quiz studio now opens that game here, so there is
+     no hop through the deck. Tolerate both: older decks may still have the
+     game filed as a slide. */
+  const edit = page.getByRole('button', { name: /Edit in Quiz studio/ });
+  if (await edit.count()) await edit.click();
   await page.waitForSelector('#previewBox .lsq-list', { timeout: 10000 });
 
   await page.click('#btnDemoGame');

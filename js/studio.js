@@ -564,7 +564,14 @@
              engine — so Game settings lock to the right activity instead of
              offering Beat the Clock beside True/False. */
           pre.format = a[0];
-          if (SF.Shell && SF.Shell.current && SF.Shell.current() === 'game') {
+          /* `.key`, not the workspace itself. Shell.current() hands back the
+             workspace object, so `=== 'game'` was never true and this branch
+             never ran: picking a format in Quiz studio built the game, filed
+             it in the deck, left you editing the one you already had, and
+             said "customize it in the right panel" about something the right
+             panel was not showing. */
+          var ws = SF.Shell && SF.Shell.current && SF.Shell.current();
+          if (ws && ws.key === 'game') {
             var curG = SF.Games && SF.Games.game && SF.Games.game();
             var g = SF.createPresetGame(pre.style || a[0], pre, curG ? curG.theme : 'midnight');
             if (SF.Games && SF.Games.openGame) SF.Games.openGame(g.id);
@@ -576,8 +583,11 @@
         } else {
           var fp = feedbackPresets[a[0]];
           SF.Editor.attachFeedback(fp ? fp.kind : a[0], fp);
+          /* The feedback branch's own toast. It used to share an
+             unconditional one below, which also fired after the two above and
+             overwrote whichever had just run. */
+          SF.toast(a[2] + ' added. Customize it in the right panel.');
         }
-        SF.toast(a[2] + ' added. Customize it in the right panel.');
       };
       grid.appendChild(b);
     });
