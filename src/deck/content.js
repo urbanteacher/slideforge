@@ -118,7 +118,7 @@ function safeMedia(url) {
 }
 
 // Shared presentation semantics used by authoring, rendering and live context.
-var DECK_TYPES = ['journey','mindmap', 'introduction', 'title', 'section', 'content', 'keywords', 'italics', 'links',
+var DECK_TYPES = ['journey', 'mindmap', 'introduction', 'title', 'section', 'content', 'keywords', 'italics', 'links',
   'split', 'cards', 'table', 'image', 'video', 'quote', 'join', 'chart', 'gallery', 'beforeafter', 'explore', 'simulation'];
 
 var BULLET_LAYOUTS = ['journey','mindmap','content','cards','split','keywords','italics','links'];

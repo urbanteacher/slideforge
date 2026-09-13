@@ -97,18 +97,24 @@
 
   function layoutJourney(slide, pad) {
     pad.appendChild(rich('h2', null, slide, 'title', slide.title));
-    if(slide.subtitle) pad.appendChild(rich('div','journey-context',slide,'subtitle',slide.subtitle));
-    var stops=(slide.bullets||[]).map(SF.parseKeywordLine).filter(function(p){return p.term||p.def;});
-    var route=el('ol','journey-route'+(slide.journeyMode==='handover'?' journey-handover':''));
-    stops.forEach(function(p,i){
-      var stop=asStep(el('li','journey-stop'),slide);
-      var marker=el('span','journey-marker',String(i+1).padStart(2,'0')); marker.setAttribute('aria-hidden','true');
+    if (slide.subtitle) pad.appendChild(rich('div', 'journey-context', slide, 'subtitle', slide.subtitle));
+    var stops = (slide.bullets || []).map(SF.parseKeywordLine).filter(function (p) { return p.term || p.def; });
+    var route = el('ol', 'journey-route' + (slide.journeyMode === 'handover' ? ' journey-handover' : ''));
+    stops.forEach(function (p, i) {
+      var stop = asStep(el('li', 'journey-stop'), slide);
+      /* The number is decoration over an ordered list: the list already says
+         these are steps, so a screen reader counting them twice is noise. */
+      var marker = el('span', 'journey-marker', String(i + 1).padStart(2, '0'));
+      marker.setAttribute('aria-hidden', 'true');
       stop.appendChild(marker);
-      var copy=el('div','journey-copy');copy.appendChild(el('h3',null,p.term));
-      if(p.def)copy.appendChild(el('p',null,p.def));stop.appendChild(copy);route.appendChild(stop);
+      var copy = el('div', 'journey-copy');
+      copy.appendChild(el('h3', null, p.term));
+      if (p.def) copy.appendChild(el('p', null, p.def));
+      stop.appendChild(copy);
+      route.appendChild(stop);
     });
     pad.appendChild(route);
-    if(slide.body)pad.appendChild(rich('div','journey-takeaway',slide,'body',slide.body));
+    if (slide.body) pad.appendChild(rich('div', 'journey-takeaway', slide, 'body', slide.body));
   }
 
   function layoutMindmap(slide, pad) {

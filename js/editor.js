@@ -1111,12 +1111,20 @@
       }));
     }
     if (s.type === 'journey') {
-      insp.appendChild(UI.field('Journey title', richField(s, 'title', 'text', function(v){s.title=v;touched();repaint();})));
-      insp.appendChild(UI.field('Context', richField(s, 'subtitle', 'text', function(v){s.subtitle=v;touched();repaint();})));
-      insp.appendChild(UI.field('Show as', UI.select([{value:'path',label:'Route with milestones'},{value:'handover',label:'Connected stages'}],s.journeyMode||'path',function(v){s.journeyMode=v;touched();repaint();})));
-      var stops=el('div'); drawPairPits(stops,s,'journey');
-      insp.appendChild(UI.field('Milestones · heading and detail',stops,'Use up to six short stops for a route, or two to three connected stages. Next reveals each one.'));
-      insp.appendChild(UI.field('Takeaway / reading',richField(s,'body','area',function(v){s.body=v;touched();repaint();},2)));
+      insp.appendChild(UI.field('Journey title',
+        richField(s, 'title', 'text', function (v) { s.title = v; touched(); repaint(); })));
+      insp.appendChild(UI.field('Context',
+        richField(s, 'subtitle', 'text', function (v) { s.subtitle = v; touched(); repaint(); })));
+      insp.appendChild(UI.field('Show as', UI.select(
+        [{ value: 'path', label: 'Route with milestones' },
+         { value: 'handover', label: 'Connected stages' }],
+        s.journeyMode || 'path', function (v) { s.journeyMode = v; touched(); repaint(); })));
+      var stops = el('div');
+      drawPairPits(stops, s, 'journey');
+      insp.appendChild(UI.field('Milestones · heading and detail', stops,
+        'Use up to six short stops for a route, or two to three connected stages. Next reveals each one.'));
+      insp.appendChild(UI.field('Takeaway / reading',
+        richField(s, 'body', 'area', function (v) { s.body = v; touched(); repaint(); }, 2)));
       return;
     }
     if (s.type === 'mindmap') {

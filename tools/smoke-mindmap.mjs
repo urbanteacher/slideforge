@@ -19,7 +19,7 @@ try {
  await page.getByLabel('Slide date',{exact:true}).press('Tab');
  assert.equal(await page.locator('#previewBox .slide-date').textContent(),'15 September 2026');
  await page.evaluate(()=>{const d=SF.Editor.deck();SF.Editor.selectSlide(d.slides[1].id);SF.Editor.workspace.draw();});
- assert.equal(await page.locator('#previewBox .lecturer-copy h1').textContent(),'Mr Martin');
+ assert.equal(await page.locator('#previewBox .lecturer-copy h1').textContent(),'Mark Martin');
  await page.locator('#inspector input[type=file]').setInputFiles('assets/brand/nu-london-logo.png');
  await page.waitForFunction(()=>SF.Editor.deck().slides[1].image.startsWith('data:'));
  assert.equal(await page.locator('#previewBox .lecturer-portrait img').count(),1);
