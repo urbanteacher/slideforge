@@ -205,7 +205,7 @@ two jobs from tangling.
 
 ### Presentation
 
-Layouts: Title, Section, Bullets, Keywords, Italics, Links, Dual, Cards, Table, Image, Video and the Game embed. Drag slides in the rail to reorder. Six themes provide deck defaults, with optional per-slide customisation.
+Layouts: Title, Section, Bullets, Keywords, Italics, Links, Dual, Cards, Table, Image, Video and the Game embed. Drag slides in the rail to reorder — the caret sits in the gap the slide will land in, and the rail scrolls itself when you drag towards an edge. Dragging is for a slide that has drifted a place or two; for anything further, pick the slide up with the ⠿ grip or `⌘X` and carry it while you scroll. `Home`, `End` and the arrows aim it, `Enter` drops it, `Esc` puts it back. `⌥↑`/`⌥↓` shuffle a slide along one place at a time, `⌥Home`/`⌥End` send it to the front or the end. Six themes provide deck defaults, with optional per-slide customisation.
 
 Bullets are one per line; start a line with `- ` or indent it for a sub-bullet.
 Images take a URL or embed a local file (keep those under a few MB — browser
@@ -1027,6 +1027,10 @@ In solo mode, unanswered multiple-choice questions use A–F as answers. During 
 
 `⌘S` save · `⌘↵` run · `⌘E` switch engine · `⌘D` duplicate · `↑`/`↓` move
 selection · `Backspace` delete
+
+Reordering slides: `⌥↑`/`⌥↓` move the selected slide one place ·
+`⌥Home`/`⌥End` send it to the front or the end · `⌘X` pick it up to carry,
+then `Home`, `End` or `↑`/`↓` to aim and `Enter` to drop it (`Esc` puts it back)
 
 ---
 

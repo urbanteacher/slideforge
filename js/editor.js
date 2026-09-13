@@ -96,25 +96,279 @@
     return input;
   }
 
-  /* ------------------------------------------------------------ rail */
+  /* ------------------------------------------------------------ rail
+
+     Two ways to reorder, because they answer different questions.
+
+     Dragging is right for a slide that has drifted a place or two. It is
+     hopeless for "this belongs at the front", which on a fifty-slide deck is a
+     four-thousand-pixel drag through a six-hundred-pixel window. So a slide can
+     also be picked up (⌘X), carried while you scroll, read and think, and put
+     down somewhere else. The mouse button is never held, so nothing is racing
+     you and the rail still scrolls normally.
+
+     Both paths speak the same two words. A *slot* is the gap between two
+     slides, numbered 0..length — reordering moves a slide into a slot, never
+     onto another slide, which is what makes "above or below this one?"
+     answerable. The caret is drawn in the slot, so what you see is exactly
+     where it lands. */
+
+  var dragFrom = null;   /* index being dragged, or null */
+  var placing = null;    /* index being carried by ⌘X, or null */
+  var placeAt = null;    /* slot the carried slide would land in */
+  var caretAt = null;    /* slot the caret is currently drawn in */
+
+  /** Move the slide at `from` into `at`, a slot in the array as it stands now.
+      Taking the slide out first shifts every later slot down one, which is the
+      step the old drop handler skipped: it is why dragging downwards used to
+      land a slide one place further on than the indicator promised. */
+  function moveSlide(from, at) {
+    if (from == null || at == null || !deck.slides[from]) return false;
+    at = Math.max(0, Math.min(deck.slides.length, at));
+    if (at > from) at -= 1;
+    if (at === from) return false;
+    deck.slides.splice(at, 0, deck.slides.splice(from, 1)[0]);
+    sel = at;
+    return true;
+  }
+
+  /** Which slot a pointer resting on this row means: above it or below it. */
+  function slotFor(row, clientY) {
+    var i = Number(row.dataset.i);
+    var box = row.getBoundingClientRect();
+    return clientY < box.top + box.height / 2 ? i : i + 1;
+  }
+
+  /** @returns {HTMLElement|null} the slot the caret now sits in */
+  function showCaret(at) {
+    var rail = $('railList');
+    if (!rail) return null;
+    /* dragover fires on every pointer move, mostly over the same half of the
+       same row, so only touch the DOM when the answer has actually changed. */
+    if (at === caretAt) return at == null ? null : /** @type {HTMLElement|null} */ (
+      rail.querySelector('.rail-slot.at'));
+    caretAt = at;
+    var was = rail.querySelectorAll('.rail-slot.at');
+    for (var i = 0; i < was.length; i++) was[i].classList.remove('at');
+    var slot = /** @type {HTMLElement|null} */ (
+      at == null ? null : rail.querySelector('.rail-slot[data-at="' + at + '"]'));
+    if (slot) slot.classList.add('at');
+    return slot;
+  }
+
+  function focusThumb(i) {
+    var rail = $('railList');
+    var row = /** @type {HTMLElement|null} */ (
+      rail && rail.querySelector('.thumb[data-i="' + i + '"]'));
+    if (!row) return;
+    row.focus();
+    row.scrollIntoView({ block: 'nearest' });
+  }
+
+  /* ------------------------------------------------- carrying a slide */
+
+  function beginPlacing(i) {
+    if (!deck.slides[i] || placing != null) return;
+    sel = i;
+    placing = i;
+    placeAt = i;
+    draw();
+    var slot = showCaret(placeAt);
+    if (slot) slot.focus();
+  }
+
+  function movePlaceTo(at) {
+    if (placing == null) return;
+    placeAt = Math.max(0, Math.min(deck.slides.length, at));
+    var slot = showCaret(placeAt);
+    if (slot) { slot.focus(); slot.scrollIntoView({ block: 'nearest' }); }
+    drawPlacingBar();
+  }
+
+  function commitPlacing(at) {
+    if (placing == null) return;
+    var from = placing;
+    var to = at == null ? placeAt : at;
+    placing = null; placeAt = null; caretAt = null;
+    if (moveSlide(from, to)) touched();
+    draw();
+    focusThumb(sel);
+  }
+
+  function cancelPlacing() {
+    if (placing == null) return;
+    placing = null; placeAt = null; caretAt = null;
+    draw();
+    focusThumb(sel);
+  }
+
+  /* The band above the rail while a slide is in hand. It says which slide is
+     being carried and which position it would land in — the position, not the
+     slot, because "lands at 1" is the thing being asked for and "slot 0" is
+     bookkeeping. */
+  function drawPlacingBar() {
+    var rail = $('railList');
+    var host = rail && rail.parentNode;
+    if (!rail || !host) return;
+    var found = host.querySelector('.rail-placing');
+    if (placing == null) { if (found) host.removeChild(found); return; }
+    var bar = /** @type {HTMLElement} */ (found || el('div', 'rail-placing'));
+    if (!found) host.insertBefore(bar, rail);
+    bar.innerHTML = '';
+    var s = deck.slides[placing];
+    var lands = placeAt > placing ? placeAt : placeAt + 1;
+    bar.appendChild(el('strong', null, 'Carrying slide ' + (placing + 1) + ' → lands at ' + lands));
+    bar.appendChild(el('span', 'rail-placing-what', s.title || SF.SLIDE_TYPES[s.type].label));
+    bar.appendChild(el('span', 'rail-placing-hint',
+      '↑ ↓ Home End to choose a place · Enter to drop it · Esc to cancel'));
+    bar.appendChild(UI.button('Cancel', 'ghost', cancelPlacing));
+  }
+
+  /* --------------------------------------------------------- dragging */
+
+  /* Native drag fires no events while the pointer sits still, so a drag that
+     has to cross more of the deck than the rail can show needs the rail to come
+     to it. Ramped by how far into the margin the pointer is, so easing towards
+     the edge reads as "faster", not as a switch being thrown. */
+  /** @type {{ y: number|null, raf: number }} */
+  var scroller = { y: null, raf: 0 };
+  function autoScroll() {
+    scroller.raf = 0;
+    var rail = $('railList');
+    if (!rail || scroller.y == null) return;
+    var box = rail.getBoundingClientRect();
+    var margin = 56, top = 0;
+    if (scroller.y < box.top + margin) top = (scroller.y - box.top - margin) / margin;
+    else if (scroller.y > box.bottom - margin) top = (scroller.y - box.bottom + margin) / margin;
+    if (top) rail.scrollTop += Math.max(-1, Math.min(1, top)) * 18;
+    scroller.raf = requestAnimationFrame(autoScroll);
+  }
+
+  function endDrag() {
+    dragFrom = null;
+    scroller.y = null;
+    if (scroller.raf) cancelAnimationFrame(scroller.raf);
+    scroller.raf = 0;
+    showCaret(placing == null ? null : placeAt);
+    var rail = $('railList');
+    if (rail) rail.classList.remove('dragging');
+  }
+
+  function dropAt(at) {
+    var from = dragFrom;
+    endDrag();
+    if (!moveSlide(from, at)) return;
+    touched();
+    draw();
+    focusThumb(sel);
+  }
+
+  function wireDrag(row) {
+    row.addEventListener('dragstart', function (e) {
+      dragFrom = Number(row.dataset.i);
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', String(dragFrom)); } catch (err) {}
+      var rail = $('railList');
+      if (rail) rail.classList.add('dragging');
+    });
+    /* Abandoning a drag has to clear the held index too. It used to be cleared
+       only by a successful drop, so a drag released over the stage left the rail
+       believing a slide was still in the air. */
+    row.addEventListener('dragend', endDrag);
+    row.addEventListener('dragover', function (e) {
+      if (dragFrom == null) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      showCaret(slotFor(row, e.clientY));
+    });
+    row.addEventListener('drop', function (e) {
+      if (dragFrom == null) return;
+      e.preventDefault();
+      dropAt(slotFor(row, e.clientY));
+    });
+  }
+
+  /* ------------------------------------------------------------ drawing */
+
+  function railSlot(at) {
+    var slot = el('div', 'rail-slot');
+    slot.dataset.at = String(at);
+    if (placing != null) {
+      slot.tabIndex = 0;
+      slot.setAttribute('role', 'button');
+      slot.setAttribute('aria-label', at >= deck.slides.length
+        ? 'Drop after the last slide'
+        : 'Drop before slide ' + (at + 1));
+      slot.onclick = function (e) { e.stopPropagation(); commitPlacing(at); };
+      slot.onfocus = function () { placeAt = at; showCaret(at); drawPlacingBar(); };
+    }
+    slot.addEventListener('dragover', function (e) {
+      if (dragFrom == null) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      showCaret(at);
+    });
+    slot.addEventListener('drop', function (e) {
+      if (dragFrom == null) return;
+      e.preventDefault();
+      dropAt(at);
+    });
+    return slot;
+  }
 
   function drawRail() {
     var rail = $('railList');
     if (!rail) return;
+    if (placing != null && !deck.slides[placing]) { placing = null; placeAt = null; }
     rail.innerHTML = '';
+    rail.classList.toggle('placing', placing != null);
+    caretAt = null;
     var count = $('railCount');
     if (count) count.textContent = String(deck.slides.length);
 
+    /* The rail scrolls itself towards the pointer during a drag; it listens on
+       the list rather than on each row so the margins still work when the
+       pointer is between two slides. Assigned, not added, because the rail is
+       redrawn on every keystroke and listeners would stack. */
+    rail.ondragover = function (e) {
+      if (dragFrom == null) return;
+      e.preventDefault();
+      scroller.y = e.clientY;
+      if (!scroller.raf) scroller.raf = requestAnimationFrame(autoScroll);
+    };
+
+    var list = /** @type {HTMLElement} */ (rail);
+    list.appendChild(railSlot(0));
+
     deck.slides.forEach(function (s, i) {
-      var row = el('div', 'thumb' + (i === sel ? ' sel' : ''));
+      var row = el('div', 'thumb' + (i === sel ? ' sel' : '') + (i === placing ? ' carried' : ''));
       row.draggable = true;
       row.tabIndex = 0;
       row.setAttribute('role', 'button');
       row.setAttribute('aria-label', 'Slide ' + (i + 1) + ': ' + (s.title || SF.SLIDE_TYPES[s.type].label));
       row.setAttribute('aria-current', i === sel ? 'true' : 'false');
-      row.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); select(i); } };
+      /* Only when the row itself has focus: the grip inside it is a button, and
+         swallowing its Enter here would redraw the rail out from under the
+         click it was about to fire. */
+      row.onkeydown = function (e) {
+        if (e.target !== row) return;
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault(); e.stopPropagation();
+        if (placing != null) commitPlacing(slotFor(row, row.getBoundingClientRect().top));
+        else select(i);
+      };
       row.dataset.i = String(i);
-      row.appendChild(el('div', 'num', String(i + 1)));
+
+      var gutter = el('div', 'thumb-gutter');
+      gutter.appendChild(el('div', 'num', String(i + 1)));
+      var grip = UI.button('⠿', 'thumb-grip', function (e) {
+        e.stopPropagation();
+        beginPlacing(i);
+      });
+      grip.title = 'Pick this slide up to move it (⌘X). Drag to nudge it a place or two.';
+      grip.setAttribute('aria-label', 'Move slide ' + (i + 1));
+      gutter.appendChild(grip);
+      row.appendChild(gutter);
 
       var body = el('div', 'thumb-body');
       var frame = el('div', 'frame');
@@ -150,16 +404,26 @@
       var tx = s.transition || 'fade';
       var txIcon = { none: '—', fade: '◌', push: '→', zoom: '⊕', wipe: '▭' }[tx] || '◌';
       var txLabel = tx === 'none' ? 'None' : tx.charAt(0).toUpperCase() + tx.slice(1);
-      var mark = el('span', 'thumb-tx', txIcon);
-      mark.title = 'Transition: ' + txLabel;
-      mark.setAttribute('aria-label', 'Transition ' + txLabel);
-      row.appendChild(mark);
+      var txMark = el('span', 'thumb-tx', txIcon);
+      txMark.title = 'Transition: ' + txLabel;
+      txMark.setAttribute('aria-label', 'Transition ' + txLabel);
+      row.appendChild(txMark);
 
-      row.onclick = function () { select(i); };
+      /* Clicking a slide while another is in hand puts it down, above or below
+         depending on which half was clicked — the same rule the drag caret
+         follows, so the two never disagree. */
+      row.onclick = function (e) {
+        if (placing != null) commitPlacing(slotFor(row, e.clientY));
+        else select(i);
+      };
       wireDrag(row);
-      if (rail) rail.appendChild(row);
+      list.appendChild(row);
+      list.appendChild(railSlot(i + 1));
       requestAnimationFrame(function () { SF.fit(frame, node); });
     });
+
+    drawPlacingBar();
+    if (placing != null) showCaret(placeAt);
   }
 
   function select(i) {
@@ -167,30 +431,20 @@
     draw();
   }
 
-  var dragFrom = null;
-  function wireDrag(row) {
-    row.addEventListener('dragstart', function (e) {
-      dragFrom = Number(row.dataset.i);
-      e.dataTransfer.effectAllowed = 'move';
-      try { e.dataTransfer.setData('text/plain', String(dragFrom)); } catch (err) {}
-    });
-    row.addEventListener('dragover', function (e) {
-      e.preventDefault();
-      row.classList.add('drag-over');
-    });
-    row.addEventListener('dragleave', function () { row.classList.remove('drag-over'); });
-    row.addEventListener('drop', function (e) {
-      e.preventDefault();
-      row.classList.remove('drag-over');
-      var to = Number(row.dataset.i);
-      if (dragFrom == null || dragFrom === to) return;
-      var moved = deck.slides.splice(dragFrom, 1)[0];
-      deck.slides.splice(to, 0, moved);
-      sel = to;
-      dragFrom = null;
-      touched();
-      draw();
-    });
+  /** Move the selected slide by `delta` places. */
+  function nudge(delta) {
+    if (!moveSlide(sel, sel + (delta > 0 ? delta + 1 : delta))) return;
+    touched();
+    draw();
+    focusThumb(sel);
+  }
+
+  /** Send the selected slide to a slot outright — the front, or the end. */
+  function sendTo(at) {
+    if (!moveSlide(sel, at)) return;
+    touched();
+    draw();
+    focusThumb(sel);
   }
 
   function drawFoot() {
@@ -1675,7 +1929,7 @@
     fileSuffix: '.sfdeck.json',
     store: SF.Store,
     doc: function () { return deck; },
-    setDoc: function (d) { deck = d; sel = savedSelection(); },
+    setDoc: function (d) { deck = d; sel = savedSelection(); placing = null; placeAt = null; },
     blank: function () { return SF.makeDeck('Untitled presentation'); },
     draw: draw,
     flush: flush,
@@ -1691,12 +1945,34 @@
         ' · ' + new Date(d.modified).toLocaleString();
     },
     keydown: function (e) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); restoreHistory(e.shiftKey); }
+      var mod = e.metaKey || e.ctrlKey;
+      /* A slide in hand owns the keyboard: the arrows aim it instead of
+         changing the selection, and nothing that edits the deck can fire until
+         it has been put down or dropped. */
+      if (placing != null) {
+        if (e.key === 'Escape') { e.preventDefault(); cancelPlacing(); }
+        else if (e.key === 'Enter' || (mod && e.key.toLowerCase() === 'v')) { e.preventDefault(); commitPlacing(); }
+        else if (e.key === 'Home') { e.preventDefault(); movePlaceTo(0); }
+        else if (e.key === 'End') { e.preventDefault(); movePlaceTo(deck.slides.length); }
+        else if (e.key === 'ArrowUp' || e.key === 'k') { e.preventDefault(); movePlaceTo(placeAt - 1); }
+        else if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); movePlaceTo(placeAt + 1); }
+        return;
+      }
+      if (mod && e.key.toLowerCase() === 'x') { e.preventDefault(); beginPlacing(sel); return; }
+      /* Alt + arrows to shuffle a slide along, the same grip the bullet list
+         inside a slide already uses. */
+      if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+        e.preventDefault(); nudge(e.key === 'ArrowUp' ? -1 : 1); return;
+      }
+      if (e.altKey && (e.key === 'Home' || e.key === 'End')) {
+        e.preventDefault(); sendTo(e.key === 'Home' ? 0 : deck.slides.length); return;
+      }
+      if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); restoreHistory(e.shiftKey); }
       else if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); select(sel + 1); }
       else if (e.key === 'ArrowUp' || e.key === 'k') { e.preventDefault(); select(sel - 1); }
       else if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); removeSlide(); }
       else if (e.key === 'F5') { e.preventDefault(); present(); }
-      else if ((e.metaKey || e.ctrlKey) && e.key === 'd') { e.preventDefault(); duplicate(); }
+      else if (mod && e.key === 'd') { e.preventDefault(); duplicate(); }
     }
   };
 

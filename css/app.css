@@ -139,7 +139,42 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   color: var(--ui-dim);
   border-bottom: 1px solid var(--ui-line);
 }
-.rail-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+/* No `gap` here: the space between two slides is a real element now, because
+   that space is what a reorder targets. It is 8px at rest — the gap it
+   replaces — and opens up into a click target while a slide is in hand. */
+.rail-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; }
+
+.rail-slot { flex: none; height: 8px; position: relative; border-radius: 2px; }
+.rail-slot.at::after {
+  content: ''; position: absolute; left: 2px; right: 2px; top: 50%;
+  height: 2px; margin-top: -1px; border-radius: 2px;
+  background: var(--ui-accent); box-shadow: 0 0 0 3px var(--ui-accent-soft);
+}
+.rail-list.placing .rail-slot { height: 20px; cursor: copy; }
+.rail-list.placing .rail-slot::before {
+  content: ''; position: absolute; left: 2px; right: 2px; top: 50%;
+  height: 2px; margin-top: -1px; border-radius: 2px;
+  background: repeating-linear-gradient(90deg, var(--ui-line) 0 6px, transparent 6px 12px);
+}
+.rail-list.placing .rail-slot:hover::before,
+.rail-list.placing .rail-slot.at::before {
+  background: var(--ui-accent); box-shadow: 0 0 0 3px var(--ui-accent-soft);
+}
+.rail-list.placing .rail-slot:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: -2px; }
+.rail-list.placing .thumb.carried { opacity: .4; }
+
+/* The band that appears above the rail while a slide is being carried. */
+.rail-placing {
+  flex: none; display: grid; gap: 3px; padding: 8px 10px;
+  border-bottom: 1px solid var(--ui-line);
+  background: var(--ui-accent-soft); font-size: 12px;
+}
+.rail-placing strong { font-size: 12px; }
+.rail-placing .rail-placing-what {
+  color: var(--ui-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rail-placing .rail-placing-hint { font-size: 11px; color: var(--ui-dim); line-height: 1.5; }
+.rail-placing .btn { justify-self: start; margin-top: 2px; padding: 3px 8px; font-size: 11px; }
 
 .thumb {
   position: relative;
@@ -151,8 +186,17 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 }
 .thumb:hover { background: var(--ui-panel-2); }
 .thumb.sel { border-color: var(--ui-accent); background: var(--ui-accent-soft); }
-.thumb.drag-over { border-top-color: var(--ui-accent); }
-.thumb .num { width: 16px; text-align: right; font-size: 11px; color: var(--ui-dim); padding-top: 4px; flex: none; }
+.thumb-gutter { flex: none; width: 16px; display: flex; flex-direction: column; align-items: center; gap: 3px; padding-top: 4px; }
+.thumb .num { font-size: 11px; color: var(--ui-dim); line-height: 1; }
+/* Kept out of the way until the row is under the cursor or in play: the rail is
+   mostly for reading, and a grip on all forty-nine rows is just noise. */
+.thumb-grip {
+  width: 16px; height: 16px; padding: 0; border: 0; border-radius: 3px;
+  background: none; color: var(--ui-dim);
+  font-size: 11px; line-height: 1; cursor: grab; opacity: 0;
+}
+.thumb:hover .thumb-grip, .thumb.sel .thumb-grip, .thumb-grip:focus-visible { opacity: 1; }
+.thumb-grip:hover { color: var(--ui-accent); background: var(--ui-panel-2); }
 .thumb-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .thumb .frame {
   flex: 1; aspect-ratio: 16/9; border-radius: 4px; overflow: hidden;
