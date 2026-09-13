@@ -74,6 +74,12 @@
 .hud .hud-more button{width:auto;height:auto;min-height:44px;border-radius:9px;padding:9px;font-size:13px;text-align:left}
 .hud button:disabled{opacity:.38;cursor:default}
 .hud button:focus-visible{outline:2px solid #e4f0ab;outline-offset:2px}
+/* 42px is two short of the 44px touch floor, and this is the bar a teacher
+   thumbs mid-lecture, so on a touchscreen it goes the last two pixels.
+   Only above 380px: nine buttons at 44px need 444px of pill and a 375px phone
+   has nowhere to put it, which is what the rule below is already solving. A
+   cursor does not need 44px, so a laptop keeps the tighter bar. */
+@media(pointer:coarse) and (min-width:381px){.hud>button,.hud-group button{width:44px;height:44px}}
 @media(max-width:380px){.hud{gap:2px}.hud>button,.hud-group button{width:36px;height:36px}.hud .sep{margin:0}.hud .pos{font-size:12px}}
 
 /* Teacher window: a row you answer for, and a row that answers itself. */

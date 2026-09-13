@@ -1519,6 +1519,7 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   width: 34px; height: 30px; border-radius: 999px; font-size: 14px;
 }
 .hud button:hover { background: rgba(255,255,255,.14); }
+
 /* Next is about to do something other than move on. A ring rather than a
    colour swap, so it reads as "this one is different" without competing with
    the slide behind it. */

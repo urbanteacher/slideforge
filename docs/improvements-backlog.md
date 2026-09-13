@@ -20,7 +20,7 @@ coordinating rather than starting cold.
 | # | Item | Effort | Status |
 |---|------|--------|--------|
 | 1 | Present button clipped 17px at 375px | S | **Done** — `18899f7` |
-| 2 | 27 HUD buttons at 36×36, under the 44px touch floor | S | To do |
+| 2 | HUD tap targets | S | **Done** — but the finding was mostly wrong |
 | 3 | Before/after drag posts full presenter state per pointermove | S | **Done** — 60 commands → 1 sync |
 | 4 | Inspector mutates the slide mid-render without marking dirty | M | To do |
 | 5 | `explorationValue` re-normalises per call, 101× per graph | S | **Done** — 1.8× on the curve |
@@ -60,10 +60,23 @@ Costs 375px a taller topbar — five rows, 218px, Present alone on the last. Not
 clipped, but tall. Tightening it means shrinking buttons, which trades against
 item 2, so it waits on that decision.
 
-### 2. HUD tap targets
+### 2. HUD tap targets — **the finding was mostly wrong**
 
-27 buttons at 36×36 against a 44px floor. This is the bar you thumb mid-lecture.
-Interacts with item 1: making these bigger makes the narrow topbar taller still.
+Reported as "27 buttons at 36×36 against a 44px floor". Two errors in that.
+
+`customize.css` already sizes them **42×42**; the `.hud button` rule in
+`app.css` is overridden. The 36×36 I measured only applies below 380px, where
+`@media(max-width:380px)` shrinks them on purpose — and it has to, because nine
+buttons at 44px need 444px of pill and a 375px phone has nowhere to put it.
+Someone had already worked that out. I measured at 375px and read a deliberate
+trade-off as neglect.
+
+It also does not interact with item 1: the HUD is the presentation pill, not the
+studio topbar. Two different elements.
+
+What was actually left: 42px is two short of the floor on a touchscreen. Fixed
+for coarse pointers above 380px only. A cursor keeps the tighter bar, and the
+narrow-screen shrink is untouched.
 
 ### 3–5. Exploration code, from the review of `84d7527`
 
@@ -237,3 +250,14 @@ The runner's header comment said 144 while it ran 168; corrected.
   Verified live across all three modes: auto on content (ask and Got it gone,
   hand stays), auto at a junction (all three), host-forced open on content, and
   host-forced shut at a junction.
+
+- **13 Sep** — Item 2 done, and mostly retracted. The buttons were 42×42, not
+  36×36; the 36px only happens below 380px and is load-bearing — 9 × 44px + gaps
+  is 444px against a 375px screen. The real gap was two pixels on touch, now
+  closed with `@media(pointer:coarse) and (min-width:381px)`. Verified 44×44 at
+  500px coarse with the pill still fitting (480 of 500), 42×42 unchanged on a
+  fine pointer, 36×36 unchanged below 380px.
+
+  My first attempt put the rule in `app.css`, where it never applied at all:
+  `customize.css` loads later and sets the same selector. It looked right in the
+  file and did nothing in the browser.
