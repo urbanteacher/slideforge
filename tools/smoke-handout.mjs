@@ -95,6 +95,38 @@ try {
   });
   assert.deepEqual(spill, [], 'no page overflows the paper');
 
+  /* Every response moment has to be answerable on paper. The lecture's two
+     open ones — a word cloud and a confidence scale — carry no options, and
+     printed as bare questions they gave a student nothing to record. */
+  const unanswerable = await pdf.evaluate(() => {
+    const bad = [];
+    document.querySelectorAll('.pdf-page').forEach((p, i) => {
+      const t = (p.innerText || '').replace(/\s+/g, ' ').trim();
+      if (/\?/.test(t) && p.querySelectorAll('li').length === 0 && !p.querySelector('.img, img')) {
+        bad.push((i + 1) + ': ' + t.slice(0, 50));
+      }
+    });
+    return bad;
+  });
+  assert.deepEqual(unanswerable, [], 'no question is printed with nothing to answer on');
+
+  /* The confidence scale prints its points rather than a bare question. */
+  const scale = await pdf.evaluate(() => {
+    const p = [...document.querySelectorAll('.pdf-page')]
+      .find((n) => /How confident do you feel/.test(n.innerText));
+    return p ? [...p.querySelectorAll('li')].map((li) => li.innerText.trim()) : null;
+  });
+  assert.ok(scale && scale.length === 5, 'the scale printed all five points');
+  assert.match(scale[0], /Need guidance/, 'the low end says what it means');
+  assert.match(scale[4], /Ready to critique/, 'and so does the high end');
+
+  /* Mind maps arrive whole — every branch, not just the centre. */
+  const maps = await pdf.evaluate(() => [...document.querySelectorAll('.pdf-page')]
+    .map((p, i) => ({ page: i + 1, branches: p.querySelectorAll('.mindmap-branch').length }))
+    .filter((x) => x.branches > 0));
+  assert.equal(maps.length, 2, 'both mind maps are in the handout');
+  maps.forEach((m) => assert.equal(m.branches, 6, `page ${m.page} kept all six branches`));
+
   assert.deepEqual(errors, [], 'no page errors');
   console.log(`PASS: ${pages}-page handout from the 40-slide lecture — questions without answers, no notes, every image loaded, nothing over the edge`);
 } finally {

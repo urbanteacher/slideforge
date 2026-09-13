@@ -10,6 +10,32 @@
     out.transition = 'none';
     return out;
   }
+  /* Something to answer on.
+   *
+   * A poll carries its options, but a scale and a word cloud carry none — on
+   * screen the room answers on a phone, so the slide needs nothing. Printed,
+   * that left the page as a bare question with white space under it and no
+   * way for a student to record anything. A scale gets its points with both
+   * ends named, because 1 to 5 says nothing without them; an open kind gets
+   * a line to write on. */
+  function answerLines(f) {
+    var given = (f.options || []).filter(function (o) { return String(o).trim(); });
+    if (given.length) return given;
+    if (f.kind === 'scale') {
+      var points = SF.scaleLabels(f);
+      return points.map(function (n, i) {
+        if (i === 0 && f.lowLabel) return n + ' — ' + f.lowLabel;
+        if (i === points.length - 1 && f.highLabel) return n + ' — ' + f.highLabel;
+        return n;
+      });
+    }
+    /* wordcloud and brainstorm: one word or a short phrase each. */
+    var many = Math.max(1, Math.min(6, Number(f.max) || 1));
+    var lines = [];
+    for (var i = 0; i < many; i++) lines.push('\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026');
+    return lines;
+  }
+
   function textPage(title, bullets, subtitle) {
     return copy(SF.makeSlide('content'), { title: title, bullets: bullets || [], subtitle: subtitle || '' });
   }
@@ -57,7 +83,7 @@
            the list it read as one of the answers: a four-option poll printed
            as five identical bullets with nothing to say which was the
            question being asked. */
-        pages.push(textPage(s.feedback.prompt, s.feedback.options || []));
+        pages.push(textPage(s.feedback.prompt, answerLines(s.feedback)));
       }
     });
     return pages;

@@ -155,6 +155,54 @@ test('a response moment asks its question as the heading, not as a bullet', () =
     'the answers are the bullets, all of them');
 });
 
+test('a scale prints its points, with both ends named', () => {
+  const SF = load();
+  const deck = SF.normalizeDeck({
+    title: 'T',
+    slides: [{
+      type: 'section', title: 'Reflect',
+      feedback: { kind: 'scale', prompt: 'How confident are you?', points: 5,
+        lowLabel: 'Need guidance', highLabel: 'Ready to critique' }
+    }]
+  });
+  const page = SF.Print.pagesFor(deck).find((p) => /How confident/.test(p.title));
+  /* On screen the room answers on a phone and the slide needs no scale. On
+     paper a bare question has nothing to circle. */
+  assert.deepEqual(plain(page.bullets),
+    ['1 — Need guidance', '2', '3', '4', '5 — Ready to critique'],
+    'every point is there and the two ends say what they mean');
+});
+
+test('an open question gets a line to write on', () => {
+  const SF = load();
+  const deck = SF.normalizeDeck({
+    title: 'T',
+    slides: [{
+      type: 'section', title: 'Warm up',
+      feedback: { kind: 'wordcloud', prompt: 'In one word: how was that?', max: 2 }
+    }]
+  });
+  const page = SF.Print.pagesFor(deck).find((p) => /In one word/.test(p.title));
+  assert.equal(page.bullets.length, 2, 'one line per answer the room may give');
+  assert.ok(page.bullets.every((b) => /\u2026/.test(b)), 'and each is a rule to write on');
+});
+
+test('a response moment never prints as a question with nothing under it', () => {
+  const SF = load();
+  const kinds = [
+    { kind: 'poll', prompt: 'Which?', options: ['A', 'B'] },
+    { kind: 'wordcloud', prompt: 'One word?' },
+    { kind: 'brainstorm', prompt: 'Ideas?' },
+    { kind: 'scale', prompt: 'How far?' }
+  ];
+  kinds.forEach((f) => {
+    const deck = SF.normalizeDeck({ title: 'T', slides: [{ type: 'section', title: 'S', feedback: f }] });
+    const page = SF.Print.pagesFor(deck).find((p) => p.title === f.prompt);
+    assert.ok(page, `${f.kind} produced a page`);
+    assert.ok(page.bullets.length > 0, `${f.kind} gives the student something to answer on`);
+  });
+});
+
 test('building the handout leaves the deck it was built from alone', () => {
   const SF = load();
   const deck = SF.normalizeDeck({
