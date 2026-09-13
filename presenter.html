@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="css/bowl.css">
 <link rel="stylesheet" href="css/lowstakes.css">
 <link rel="stylesheet" href="css/studio.css">
+<link rel="stylesheet" href="css/northeastern.css">
 <style>
   body { overflow: hidden; }
   .pv {
@@ -172,6 +173,7 @@
   <div class="side">
     <nav class="desk-tabs" aria-label="Presenter workspace">
       <button class="btn" data-panel="quick" aria-pressed="false">Quick actions</button>
+      <button class="btn" data-panel="activities" aria-pressed="false">Activities &amp; mini games</button>
       <button class="btn" data-panel="pulse" aria-pressed="false">Room activity</button>
       <button class="btn" data-panel="slides" aria-pressed="true">Slide notes</button>
       <button class="btn" data-panel="mark" aria-pressed="false">Live answers</button>
@@ -201,17 +203,40 @@
       <label for="pollWhere">Show it</label><select id="pollWhere"><option value="focus" selected>Full screen</option><option value="rail">Beside the slide</option></select>
       <div class="quick-actions"><button class="btn primary" id="pollLaunch">▶ Ask the room</button></div>
       <p id="pollGuard" role="status"></p></div>
-      <div class="quick-card"><span class="cap">ASK THE ROOM</span><h2>Quiz on a theme</h2><p>Write a quiz about whatever the lesson has arrived at. It goes into the running lesson straight after the slide on screen — your place and your live room are kept.</p>
+      <div class="quick-card"><span class="cap">ASK THE ROOM</span><h2>Quiz on a theme</h2><p>Write a quiz about whatever the lesson has arrived at. Review and edit the draft privately in Activities &amp; mini games, then launch it when ready.</p>
       <label for="quizTheme">Theme</label><input id="quizTheme" type="text" maxlength="120" placeholder="Osmosis in plant cells">
       <label for="quizWords">Key words <span class="hint-inline">optional, one line</span></label><input id="quizWords" type="text" maxlength="200" placeholder="water potential, turgid, partially permeable">
       <label for="quizStyle">Format</label><select id="quizStyle"><option value="choice" selected>Multiple choice</option><option value="truefalse">True / false</option><option value="type">Short answer</option><option value="lowstakes">Low-stakes retrieval</option></select>
       <label for="quizCount">How many</label><select id="quizCount"><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
-      <div class="quick-actions"><button class="btn primary" id="quizGenerate">✨ Write and show it</button></div>
+      <div class="quick-actions"><button class="btn primary" id="quizGenerate">✨ Draft &amp; review</button></div>
       <p id="quizGenGuard" role="status"></p></div>
       <div class="quick-card"><h3>Poll on screen now</h3><p id="pollState">No poll is showing.</p><output id="pollCount">—</output><div class="quick-actions"><button class="btn" id="pollQr" disabled>Show join code</button><button class="btn" id="pollWhereToggle" disabled>Beside the slide</button><button class="btn" id="pollEnd" disabled>✕ End poll</button></div><p>Ending the poll puts the slide back exactly where you left it. Changing slides while it is up does not close it.</p></div>
       <div class="quick-card"><h3>On the audience screen</h3><p id="momentTitle">No activity or countdown is showing.</p><output id="momentTime">—</output><div class="quick-actions"><button class="btn" id="pauseMoment" disabled>Pause</button><button class="btn" id="extendMoment" disabled>+1 minute</button><button class="btn" id="clearMoment" disabled>Remove from screen</button></div><p>Activity countdowns clear when you leave their slide. Quick tasks stay until removed or a new live quiz starts. Time ending does not advance the lesson.</p></div>
       <div class="quick-card"><h3>Music for an activity</h3><p>Choose an audio file from your computer. Playback comes from this device; check its volume before starting.</p><label for="activityMusic">Choose music</label><input id="activityMusic" type="file" accept="audio/*"><audio id="activityAudio" controls loop hidden></audio><p id="musicStatus" role="status">No music selected.</p></div>
       <div class="quick-card"><h3>Need a different teaching move?</h3><div class="quick-actions"><button class="btn" data-panel="tools">Pick a name or jot a note</button><button class="btn" data-panel="qa">Take a question from the room</button></div><p>Try a silent think, a partner explanation, a stretch break, or a quick “what is still unclear?” discussion.</p></div>
+    </section>
+    <section id="activitiesPane" class="desk-pane" hidden>
+      <div class="quick-card"><span class="cap">RESPOND TO THE ROOM</span><h2>Activities &amp; mini games</h2>
+        <p>Choose a format, adapt its content, then review it privately before showing the room.</p>
+        <label for="activityKind">Choose from</label><select id="activityKind"><option value="activity">Activity catalogue</option><option value="game">Mini games</option><option value="saved">Saved quizzes</option></select>
+        <label for="activitySearch">Find a format</label><input id="activitySearch" type="search" placeholder="Try memory, think, reflection…">
+        <label for="activityChoice">Activity or game</label><select id="activityChoice"></select>
+        <p id="activityDescription"></p>
+        <label for="activityTopic">Topic or brief for AI</label><textarea id="activityTopic" rows="2" maxlength="1000" placeholder="What should learners practise?"></textarea>
+        <div class="quick-actions"><button class="btn" id="activityUseSlide">Use current slide</button><button class="btn" id="activityUseLesson">Use lesson topic</button></div>
+        <label for="activityCount">AI question / item count</label><input id="activityCount" type="number" min="1" max="24" value="3">
+        <p>Board games may need more items: a 3 × 3 Bingo card needs at least nine distinct terms. The preview checks each format’s requirements.</p>
+        <div class="quick-actions"><button class="btn" id="activityManual">Create editable draft</button><button class="btn primary" id="activityAI">✨ Draft with AI</button></div>
+      </div>
+      <p id="activityStatus" role="status" aria-live="polite"></p>
+      <div id="activityDraft" hidden>
+        <div class="quick-card"><h3>Private draft</h3><label for="activityTitle">Title</label><input id="activityTitle" type="text" maxlength="120"><p id="activityGuidance" style="white-space:pre-line"></p><div id="activityFields"></div></div>
+        <div class="quick-actions"><button class="btn" id="activityPreview">Check &amp; preview</button><button class="btn" id="activitySave">Save for reuse</button><button class="btn" id="activityDiscard">Discard draft</button></div>
+        <div id="activityPreviewArea" hidden><p>Private audience preview · use the editable fields above to check answers.</p><div class="box" id="activityPreviewBox"></div><div class="quick-actions"><button class="btn" id="activityPreviewPrev">‹ Preview page</button><span id="activityPreviewPosition"></span><button class="btn" id="activityPreviewNext">Preview page ›</button></div></div>
+        <div class="quick-actions"><button class="btn primary" id="activityLaunch" disabled>Launch now</button><button class="btn" id="activityQueue" disabled>Queue next</button></div>
+        <p>The activity joins this running lesson. Save for reuse keeps a separate library copy.</p>
+      </div>
+      <div class="quick-actions"><button class="btn" id="activityReturn">Return to lesson</button></div>
     </section>
     <section id="pulsePane" class="desk-pane" hidden>
       <div class="quick-card"><span class="cap">THIS SLIDE · LIVE</span><h2>Hear from the room</h2><div id="roomActivity"></div><p>Reactions are live taps, not a measure of understanding. Bookmark counts are anonymous and reflect this room.</p></div>
@@ -260,6 +285,8 @@
 <script src="js/lesson-moments.js"></script>
 <script src="js/ai.js"></script>
 <script src="js/presenter-live.js"></script>
+<script src="js/live-activities.js"></script>
+<script src="js/presenter-activities.js"></script>
 <script>
 (function () {
   'use strict';
@@ -302,7 +329,10 @@
     $('teacherWorkspace').contentWindow.postMessage({type:'sf-teacher-view',view:activePanel==='questions'?insightView:activePanel},location.origin);
   }
   function selectPanel(panel){
-    if(!['slides','mark','roster','questions','tools','qa','quick','pulse'].includes(panel))return;
+    if(!['slides','mark','roster','questions','tools','qa','quick','pulse','activities'].includes(panel))return;
+    $('activitiesPane').hidden=panel!=='activities';
+    $('pv').classList.toggle('activity-authoring',panel==='activities');
+    if(panel==='activities')window.dispatchEvent(new Event('sf-activities-open'));
     activePanel=panel;namedOpen=panel==='mark';
     document.querySelectorAll('[data-panel]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.panel===panel));});
     $('quickPane').hidden=panel!=='quick';$('pulsePane').hidden=panel!=='pulse';

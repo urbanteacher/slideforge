@@ -127,6 +127,10 @@ function slideSteps(slide) {
   if(slide.type==='explain') {
     return String(slide.body||'').split(/\n{2,}/).map(function(l){return l.trim();}).filter(Boolean);
   }
+  if(slide.type==='gallery') {
+    return (slide.layers||[]).filter(function(l){return l && l.image;})
+      .map(function(l,i){return String(l.caption||'').trim() || ('Image '+(i+1));});
+  }
   if(['content','cards','split','keywords','italics'].indexOf(slide.type)<0) return [];
   return (slide.bullets||[]).filter(function(b){return String(b).trim();}).map(function(b){
     if(slide.type==='keywords'||slide.type==='italics'){var p=parseKeywordLine(b);return [p.term,p.def].filter(Boolean).join(' — ');}

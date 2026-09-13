@@ -164,7 +164,7 @@
 
   function forDeck(deck, questions, participants, seconds) {
     if (!deck) return null;
-    var key = deck.id || 'deck';
+    var key = deck.presenterGameId || deck.id || 'deck';
     /* Asked without questions, this is "the fight already under way" — which
        is how everything that is not the renderer asks for it. Returning null
        there made reading the fight a different call from creating it, and the
@@ -178,7 +178,7 @@
   }
 
   function command(deck, action, arg) {
-    var key = deck && (deck.id || 'deck');
+    var key = deck && (deck.presenterGameId || deck.id || 'deck');
     if (!key || !fights[key]) return null;
     var before = fights[key];
     var after = transition(before, action, arg);
@@ -189,7 +189,7 @@
         SF.Boss.onVerdict) {
       var entry = after.log[after.log.length - 1];
       SF.Boss.onVerdict({
-        slideId: (deck.id || 'deck') + ':boss',
+        slideId: (deck.presenterGameId || deck.id || 'deck') + ':boss',
         title: deck.title || 'Boss battle',
         kind: 'boss', set: 1, card: entry.index,
         term: 'Q' + (entry.index + 1) + ' · ' + before.questions[entry.index].difficulty +
@@ -214,7 +214,7 @@
    * @param {number} index  which quiz slide is showing, from zero
    */
   function focus(deck, index) {
-    var key = deck && (deck.id || 'deck');
+    var key = deck && (deck.presenterGameId || deck.id || 'deck');
     var f = key && fights[key];
     if (!f || !Number.isInteger(index) || index === f.index) return f || null;
     if (index < 0 || index >= f.questions.length) return f;

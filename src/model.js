@@ -51,6 +51,7 @@ var SLIDE_H = 720;
 
 var THEMES = {
   studio: { name: 'Studio · Sage & ink', swatch: '#dce8cc' },
+  northeastern: { name: 'Northeastern London', swatch: '#c8102e' },
   midnight: { name: 'Midnight', swatch: '#1b2a4a' },
   paper:    { name: 'Paper',    swatch: '#f4f1ea' },
   ocean:    { name: 'Ocean',    swatch: '#0d5c63' },
@@ -59,6 +60,10 @@ var THEMES = {
 };
 
 var TRANSITIONS = ['none', 'fade', 'push', 'zoom', 'wipe'];
+
+/* A stack is narrated layer by layer; past about eight the slide has stopped
+   being a stack and become a folder. */
+var GALLERY_MAX = 8;
 
 /* Team colours line up with the coloured answer pads on the phones. */
 var TEAM_COLORS = ['#e8474f', '#2b7ce9', '#e8a020', '#29a86b', '#8b5cf0', '#d4477f'];
@@ -123,6 +128,7 @@ var SLIDE_TYPES = {
   cards:    { label: 'Cards',        icon: '▦' },
   table:    { label: 'Table',        icon: '⊞' },
   image:    { label: 'Image',        icon: '▣' },
+  gallery:  { label: 'Image stack',   icon: '▤' },
   video:    { label: 'Video',        icon: '▶' },
   quote:    { label: 'Quote',        icon: '“' },
   game:     { label: 'Game',         icon: '◈' },
@@ -173,7 +179,11 @@ function makeSlide(type) {
     videoMuted: false,
     videoAutoplay: false,   // honoured on the projector, never in a preview
     tableHeader: true,
+    /* Image stack: each layer is one picture with its own caption and source,
+       shown one in front of the last. Empty on every other kind of slide. */
+    layers: /** @type {import('./types.js').GalleryLayer[]} */ ([]),
     transition: 'fade',
+    buildMode: /** @type {'hide'|'dim'} */ ('hide'),
     // quiz fields
     question: '',
     options: /** @type {string[]} */ ([]),
@@ -340,6 +350,22 @@ function normalizeSlide(raw) {
   s.videoMuted = s.videoMuted === true;
   s.videoAutoplay = s.videoAutoplay === true;
   s.tableHeader = s.tableHeader !== false;
+  /* Layers come off `raw` for the same reason options do: whatever was on disk
+     may be strings, may be half-built, may be nothing. Capped because a stack
+     is read one layer at a time and nobody narrates twelve. */
+  var rawLayers = raw && Array.isArray(raw.layers) ? raw.layers : [];
+  s.layers = rawLayers.slice(0, GALLERY_MAX).map(function (layer) {
+    var l = layer && typeof layer === 'object' ? layer : {};
+    return {
+      image: safeMedia(l.image),
+      caption: String(l.caption || ''),
+      source: String(l.source || '')
+    };
+  });
+  /* How a build treats the points it has already been through. Kept separate
+     from `progressive` so the gate stays a boolean: every existing deck says
+     progressive:true and means 'hide', which is still the default here. */
+  s.buildMode = s.buildMode === 'dim' ? 'dim' : 'hide';
   if (s.imageFit !== 'contain') s.imageFit = 'cover';
   s.feedback = normalizeFeedback(s.feedback);
   return s;
@@ -1041,6 +1067,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   makeQuizConfig: makeQuizConfig,
   normalizeQuizConfig: normalizeQuizConfig,
   SLIDE_TYPES: SLIDE_TYPES,
+  GALLERY_MAX: GALLERY_MAX,
   uid: uid,
   makeSlide: makeSlide,
   makeDeck: makeDeck,
@@ -1132,4 +1159,4 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   GameStore: GameStore
 });
 
-export { SLIDE_W, SLIDE_H, THEMES, TRANSITIONS, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, GAME_FORMAT_PRESETS, getShowcaseGame };
+export { SLIDE_W, SLIDE_H, THEMES, TRANSITIONS, GALLERY_MAX, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, GAME_FORMAT_PRESETS, getShowcaseGame };

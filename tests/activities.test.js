@@ -230,3 +230,119 @@ test('activity showcase isolates only that activity into the player without full
   assert.equal(startedOpts.demo, true);
   assert.equal(startedOpts.demoMode, 'discuss');
 });
+
+test('activity inspector renders steps in howto drawer at top matching quiz studio style', () => {
+  const vm = require('node:vm'), fs = require('node:fs');
+  const store = new Map();
+  const storage = {
+    getItem: k => store.get(k) || null,
+    setItem: (k, v) => store.set(k, String(v)),
+    removeItem: k => store.delete(k),
+    clear: () => store.clear()
+  };
+  function makeMockNode(tag, cls, text) {
+    const children = [];
+    return {
+      tagName: (tag || 'div').toUpperCase(),
+      className: cls || '',
+      textContent: text || '',
+      children,
+      childNodes: children,
+      style: {},
+      appendChild(child) { children.push(child); return child; },
+      replaceChildren(...args) { children.length = 0; if (args) children.push(...args); },
+      querySelector(sel) {
+        if (sel === '.howto-toggle') {
+          function find(node) {
+            if (node.className && node.className.includes('howto-toggle')) return node;
+            for (const c of node.children) {
+              const f = find(c);
+              if (f) return f;
+            }
+            return null;
+          }
+          return find(this);
+        }
+        return null;
+      },
+      querySelectorAll() { return []; },
+      addEventListener() {}
+    };
+  }
+  const inspector = makeMockNode('div', 'inspector');
+  const c = {
+    document: {
+      getElementById: (id) => id === 'inspector' ? inspector : null,
+      createElement: (tag) => makeMockNode(tag)
+    },
+    localStorage: storage,
+    console
+  };
+  c.window = c;
+  c.SF = {
+    Shell: {
+      UI: {
+        button: (text, cls, fn) => makeMockNode('button', cls, text),
+        field: (label, input, hint) => makeMockNode('div', 'field'),
+        num: () => makeMockNode('input'),
+        text: () => makeMockNode('input'),
+        area: () => makeMockNode('textarea'),
+        select: () => makeMockNode('select'),
+        segmented: () => makeMockNode('div')
+      }
+    }
+  };
+  vm.createContext(c);
+  for (const file of ['model', 'render', 'editor', 'activities']) {
+    vm.runInContext(fs.readFileSync(require.resolve('../js/' + file + '.js'), 'utf8'), c);
+  }
+  const SF = c.SF;
+  SF.Editor.drawFeedback = () => {};
+  const hookAct = SF.Activities.activity('hook-objectives');
+  const slides = SF.Activities.makeSlides(hookAct);
+  const deck = SF.makeDeck('Test');
+  deck.slides = slides;
+  SF.Editor.deck = () => deck;
+  SF.Editor.currentSlideId = () => slides[0].id;
+
+  SF.Activities.draw();
+
+  // Verify inspector children
+  assert.ok(inspector.children.length > 0, 'inspector populated');
+  // Find howto element
+  const howto = inspector.children.find(c => c.className === 'howto');
+  assert.ok(howto, 'details.howto drawer exists');
+  const summary = howto.children.find(c => c.className === 'howto-summary');
+  assert.ok(summary, 'summary.howto-summary exists');
+  assert.ok(summary.children[0].textContent.includes('How to run — Hook + Objectives'));
+  const toggle = summary.children.find(c => c.className === 'howto-toggle');
+  assert.ok(toggle, 'howto-toggle exists');
+  assert.equal(toggle.textContent, 'Reveal');
+
+  // Find steps
+  const body = howto.children.find(c => c.className === 'howto-body');
+  assert.ok(body, 'howto-body exists');
+  const stepsList = body.children.find(c => c.className && c.className.includes('howto-steps'));
+  assert.ok(stepsList, 'howto-steps list exists');
+  assert.equal(stepsList.children.length, hookAct.steps.length);
+  assert.equal(stepsList.children[0].textContent, hookAct.steps[0]);
+
+  // Verify the old bottom "HOW IT RUNS" eyebrow is gone
+  const oldEyebrow = inspector.children.find(c => c.textContent === 'HOW IT RUNS');
+  assert.equal(oldEyebrow, undefined, 'old bottom HOW IT RUNS is removed');
+
+  // Also test game activity: should say "How to play — ..."
+  const gameAct = SF.Activities.activity('interleaving-mixed-practice');
+  const gameSlide = SF.makeSlide('game');
+  gameSlide.activity = gameAct.key;
+  gameSlide.activityInstance = gameSlide.id;
+  deck.slides = [gameSlide];
+  SF.Editor.currentSlideId = () => gameSlide.id;
+  SF.Activities.draw();
+
+  const gameHowto = inspector.children.find(c => c.className === 'howto');
+  assert.ok(gameHowto, 'game details.howto exists');
+  const gameSummary = gameHowto.children.find(c => c.className === 'howto-summary');
+  assert.ok(gameSummary.children[0].textContent.includes('How to play — ' + gameAct.title));
+});
+

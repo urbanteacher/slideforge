@@ -48,6 +48,8 @@
     "js/studio.js",
     "js/editor.js",
     "js/presenter-live.js",
+    "js/live-activities.js",
+    "js/presenter-activities.js",
     "js/shell.js",
     "js/games.js",
     "js/manual.js",

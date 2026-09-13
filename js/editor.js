@@ -680,7 +680,7 @@
     var layoutGroups = [
       ['Introduce', ['title', 'section', 'quote']],
       ['Explain & organise', ['content', 'keywords', 'italics', 'cards', 'table']],
-      ['Show & explore', ['split', 'image', 'video', 'links']]
+      ['Show & explore', ['split', 'image', 'gallery', 'video', 'links']]
     ];
     layoutGroups.forEach(function (group) {
       box.appendChild(el('h4', null, group[0]));
@@ -932,6 +932,57 @@
     }
   }
 
+  /* One block per layer: the picture, what it shows, and whose it is. Kept in
+     a plain list rather than the pit editor the bullet layouts use, because a
+     layer is three fields and a file picker, not a line of text. */
+  function drawLayers(host, s) {
+    host.textContent = '';
+    if (!Array.isArray(s.layers)) s.layers = [];
+    s.layers.forEach(function (layer, i) {
+      var row = el('div', 'layer-row');
+      var head = el('div', 'layer-head');
+      head.appendChild(el('span', 'layer-num', String(i + 1)));
+      var del = UI.button('Remove', 'ghost', function () {
+        s.layers.splice(i, 1); touched(); drawLayers(host, s); repaint();
+      });
+      head.appendChild(del);
+      row.appendChild(head);
+
+      row.appendChild(UI.field('Image URL or data',
+        UI.text(layer.image, function (v) { layer.image = v.trim(); touched(); repaint(); })));
+
+      var pick = el('input');
+      pick.type = 'file';
+      pick.accept = 'image/*';
+      pick.style.fontSize = '12px';
+      pick.addEventListener('change', function () {
+        var f = pick.files && pick.files[0];
+        if (!f) return;
+        if (f.size > 3.5 * 1024 * 1024) {
+          SF.toast('That image is over 3.5 MB — it may exceed the browser storage limit.');
+        }
+        var fr = new FileReader();
+        fr.onload = function () { layer.image = String(fr.result); touched(); draw(); };
+        fr.readAsDataURL(f);
+      });
+      row.appendChild(UI.field('Embed a local file', pick));
+      row.appendChild(UI.field('Caption',
+        UI.text(layer.caption, function (v) { layer.caption = v; touched(); repaint(); })));
+      row.appendChild(UI.field('Source / credit',
+        UI.text(layer.source, function (v) { layer.source = v; touched(); repaint(); })));
+      host.appendChild(row);
+    });
+
+    if (s.layers.length >= SF.GALLERY_MAX) {
+      host.appendChild(el('div', 'hint', 'Eight is the most a stack can hold — past that it stops being a stack.'));
+      return;
+    }
+    host.appendChild(UI.button('+ Add a picture', 'ghost', function () {
+      s.layers.push({ image: '', caption: '', source: '' });
+      touched(); drawLayers(host, s); repaint();
+    }));
+  }
+
   function drawImageFields(insp, s, opts) {
     opts = opts || {};
     if (opts.caption !== false) {
@@ -962,6 +1013,12 @@
        { value: 'contain', label: 'Fit inside (letterbox)' }],
       s.imageFit, function (v) { s.imageFit = v; touched(); repaint(); })));
 
+    /* Where a borrowed chart says whose it is. Offered on split as well as
+       image slides: the attribution belongs beside the picture, not buried in
+       a bullet that scrolls past. */
+    insp.appendChild(UI.field('Source / credit',
+      richField(s, "subtitle", "text", function (v) { s.subtitle = v; touched(); repaint(); }),
+      'Shown small under the caption — e.g. Financial Times, 2016.'));
   }
 
   /* Video and music are references, so this is a text field first and a file
@@ -1038,6 +1095,20 @@
 
     if (s.type === 'image') {
       drawImageFields(insp, s);
+      return;
+    }
+
+    if (s.type === 'gallery') {
+      insp.appendChild(UI.field('Title',
+        richField(s, "title", "area", function (v) { s.title = v; touched(); repaint(); }, 2)));
+      var stackBox = el('div');
+      drawLayers(stackBox, s);
+      insp.appendChild(UI.field('Pictures · one moment each', stackBox,
+        'Shown one in front of the last. Turn on Build on Next to step through them.'));
+      insp.appendChild(UI.field('Fit', UI.select(
+        [{ value: 'cover', label: 'Fill the frame (crop)' },
+         { value: 'contain', label: 'Fit inside (letterbox)' }],
+        s.imageFit, function (v) { s.imageFit = v; touched(); repaint(); })));
       return;
     }
 
@@ -1521,21 +1592,41 @@
        keeping a second copy of any of them. */
     SF.Editor.workspace = ws;
 
-    var last = SF.Store.lastId();
-    var loaded = (last && SF.Store.get(last)) || SF.Store.list()[0] || null;
+    var requestedLesson = null;
+    try {
+      if (typeof window !== 'undefined' && window.location && window.location.search) {
+        var params = new URLSearchParams(window.location.search);
+        requestedLesson = params.get('lesson');
+      }
+    } catch (e) {}
 
-    if (!loaded) {
-      loaded = SF.Studio.makeLesson();
+    var last = SF.Store.lastId();
+    var loaded = null;
+
+    if (requestedLesson && SF.Studio && SF.Studio.makeLesson) {
+      loaded = SF.Studio.makeLesson(requestedLesson);
       SF.Store.save(loaded);
-    } else if (loaded.slides.some(function (s) { return s.type === 'quiz' || s.type === 'results'; })) {
-      /* Decks authored before questions moved into games still hold quiz
-         slides; lift them out into a game once, on load. */
-      var made = SF.migrateDeckQuizzes(loaded, function (g) { SF.GameStore.save(g); });
-      SF.Store.save(loaded);
-      if (made) {
-        setTimeout(function () {
-          SF.toast('Questions moved into a game: "' + made.title + '"');
-        }, 700);
+      try {
+        if (window.history && window.history.replaceState) {
+          var cleanUrl = window.location.pathname + (window.location.hash || '');
+          window.history.replaceState(null, '', cleanUrl);
+        }
+      } catch (e) {}
+    } else {
+      loaded = (last && SF.Store.get(last)) || SF.Store.list()[0] || null;
+      if (!loaded) {
+        loaded = SF.Studio.makeLesson();
+        SF.Store.save(loaded);
+      } else if (loaded.slides.some(function (s) { return s.type === 'quiz' || s.type === 'results'; })) {
+        /* Decks authored before questions moved into games still hold quiz
+           slides; lift them out into a game once, on load. */
+        var made = SF.migrateDeckQuizzes(loaded, function (g) { SF.GameStore.save(g); });
+        SF.Store.save(loaded);
+        if (made) {
+          setTimeout(function () {
+            SF.toast('Questions moved into a game: "' + made.title + '"');
+          }, 700);
+        }
       }
     }
 
@@ -1567,7 +1658,7 @@
   }
 
   /* Helper for creating a fully configured game from activity presets */
-  SF.createPresetGame = function (style, preset, theme) {
+  SF.createPresetGame = function (style, preset, theme, options) {
     preset = preset || {};
     var g = SF.makeGame(preset.title || 'Quick knowledge check', style);
     g.theme = theme || 'midnight';
@@ -1588,7 +1679,7 @@
       Object.keys(preset.seed).forEach(function (k) { q[k] = preset.seed[k]; });
       g.questions = [SF.normalizeQuestion(q, style)];
     }
-    SF.GameStore.save(g);
+    if (!options || options.save !== false) SF.GameStore.save(g);
     return g;
   };
 

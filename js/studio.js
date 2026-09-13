@@ -678,6 +678,8 @@
     if (gameLib) gameLib.onclick = function () { openLibrary('check'); };
     var btnTemplate = document.getElementById('btnTemplate');
     if (btnTemplate) btnTemplate.onclick = openLessons;
+    var btnReadyMade = document.getElementById('btnReadyMade');
+    if (btnReadyMade) btnReadyMade.onclick = openLessons;
     var btnReflect = document.getElementById('btnReflect');
     if (btnReflect) btnReflect.onclick = function () {SF.Editor.addSlide('section'); SF.Editor.attachFeedback('poll');};
     document.querySelectorAll('.file-actions button').forEach(function (b) {

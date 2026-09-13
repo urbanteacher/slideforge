@@ -32,6 +32,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <link rel="stylesheet" href="css/bowl.css?v=2">
 <link rel="stylesheet" href="css/lowstakes.css?v=2">
 <link rel="stylesheet" href="css/studio.css?v=2">
+<link rel="stylesheet" href="css/northeastern.css?v=1">
 <link rel="stylesheet" href="css/customize.css?v=2">
 <link rel="stylesheet" href="css/lesson-moments.css?v=2"><link rel="stylesheet" href="css/game-polish.css?v=1">
 </head>
@@ -80,6 +81,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
     <details class="file-menu"><summary class="btn">File ▾</summary><div class="file-actions">
       <button class="btn" id="btnNew">New…</button>
       <button class="btn" id="btnOpen">Open saved document</button>
+      <button class="btn" id="btnReadyMade">Ready-made lessons…</button>
       <button class="btn" id="btnDemoLesson">Open demo lesson</button>
       <button class="btn" id="btnSave">Save to browser</button>
       <button class="btn" id="btnExport">Export file</button>
@@ -147,10 +149,13 @@ html:not([data-ready]) body { background: #f0f1ed; }
   <button data-act="next" title="Next point or slide (→ or space)" aria-label="Next point or slide">›</button>
   <span class="sep"></span>
   <div class="hud-group hud-main-tools" id="hudDefaultTools">
-    <button data-act="ink" title="Draw and spotlight (I)" aria-label="Draw and spotlight">✎</button>
-    <button data-act="blank" title="Blank the screen (B)" aria-label="Blank the screen">◼</button>
+    <button data-act="rail" title="Room view: hidden → beside slide → whole screen (S)" aria-label="Room view (S)">◧</button>
+    <button data-act="poll" title="Ask the room a quick question (V)" aria-label="Ask the room a quick question (V)">📊</button>
+    <button data-act="freeze" title="Freeze screen for digression (Z or Alt+F)" aria-label="Freeze screen (Z or Alt+F)">❄️</button>
+    <button data-act="ink" title="Draw and spotlight (I)" aria-label="Draw and spotlight (I)">✎</button>
+    <button data-act="blank" title="Blank the screen (B)" aria-label="Blank the screen (B)">◼</button>
     <button data-act="more" title="More presentation controls" aria-label="More presentation controls" aria-expanded="false" aria-controls="hudMore">•••</button>
-    <button data-act="exit" title="Exit presentation (Esc)" aria-label="Exit presentation">✕</button>
+    <button data-act="exit" title="Exit presentation (Esc)" aria-label="Exit presentation (Esc)">✕</button>
   </div>
   <div class="hud-group hud-ink-tools" id="hudInkTools" hidden>
     <button data-mode="draw" title="Draw on the slide" aria-label="Draw on the slide">✎</button>
@@ -166,6 +171,9 @@ html:not([data-ready]) body { background: #f0f1ed; }
     <button data-act="join" title="Show join QR and PIN (J)">Join QR</button>
     <button data-act="poll" title="Ask the room a quick question (V)">Quick poll</button>
     <button data-act="focus" title="Show leaderboard (E)">Show leaderboard</button>
+    <button data-act="freeze" title="Freeze screen for digression (Z or Alt+F)">Freeze screen</button>
+    <button data-act="reactions" title="Turn audience reactions on or off (T)">Reactions: On</button>
+    <button data-act="reset" title="Clear answers and score again (R)">Reset scores</button>
     <button data-act="who" title="Who answered what, in presenter view only (W)">Named answers ↗</button>
     <button data-act="teacher" title="Open private teacher entry in another window">Teaching desk ↗</button>
     <button data-act="presenter" title="Open private notes and next slide (D)">Presenter view ↗</button>
@@ -185,10 +193,11 @@ html:not([data-ready]) body { background: #f0f1ed; }
       <tr><td><kbd>A</kbd>–<kbd>F</kbd> or <kbd>1</kbd>–<kbd>6</kbd></td><td>Answer in solo presentation mode; live learners answer on their devices or through teacher entry</td></tr>
       <tr><td><kbd>R</kbd></td><td>Clear answers and score again</td></tr>
       <tr><td><kbd>I</kbd></td><td>Draw on the slide · <kbd>Z</kbd> undoes · <kbd>X</kbd> clears it</td></tr>
+      <tr><td><kbd>Z</kbd> or <kbd>Alt</kbd>+<kbd>F</kbd></td><td>Freeze audience screen for digression (undoes mark when drawing)</td></tr>
       <tr><td><kbd>W</kbd></td><td>Who answered what</td></tr>
       <tr><td><kbd>B</kbd></td><td>Blank the screen</td></tr>
       <tr><td><kbd>F</kbd></td><td>Toggle full screen</td></tr>
-      <tr><td><kbd>S</kbd></td><td>How much room the room gets: hidden &rarr; beside the slide &rarr; whole screen</td></tr>
+      <tr><td><kbd>S</kbd></td><td>Room view: hidden &rarr; beside slide (split screen) &rarr; whole screen</td></tr>
       <tr><td><kbd>E</kbd></td><td>Show leaderboard (or expand responses / race) to full screen</td></tr>
       <tr><td><kbd>J</kbd></td><td>Show the join QR and PIN full screen (Host live)</td></tr>
       <tr><td><kbd>T</kbd></td><td>Turn the room&rsquo;s reactions on or off (live games)</td></tr>
@@ -323,6 +332,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/games.js?v=6"></script>
 <script src="js/studio.js?v=3"></script>
 <script src="js/activities.js?v=2"></script>
+<script src="js/live-activities.js?v=1"></script>
 <script src="js/adapt.js?v=2"></script>
 <script src="js/reports.js?v=2"></script>
 <script>

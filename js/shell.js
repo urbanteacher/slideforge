@@ -808,7 +808,7 @@
               { id: 'game', title: 'Blank game',
                 blurb: 'A quiz or classroom game on its own. Pick the format next.' }
             ];
-            (SF.LESSONS || []).slice(0, 1).forEach(function (lesson) {
+            (SF.LESSONS || []).forEach(function (lesson) {
               items.push({
                 id: 'lesson:' + lesson.key,
                 title: lesson.title,

@@ -1,0 +1,325 @@
+/* Northeastern University London.
+   The palette is the university's own — lifted from the Office theme inside the
+   LDSCI6253 lecture decks, so a slide made here and a slide made in PowerPoint
+   are the same red. Brand assets live in assets/brand/.
+
+     #C8102E  Northeastern red        #0C3354  navy
+     #609F80  sage                    #FF854F  orange
+     #61B6D0  sky                     #FFC34B  gold
+
+   The theme has three grounds rather than one: navy for the title, red for the
+   section breaks, warm white for the teaching slides. The monogram is cropped
+   hard off the edge on the two dark grounds, which is what the university's own
+   templates do with it — it reads as a graphic, not as a logo stuck in a
+   corner. Everything else stays quiet so the data has the room. */
+
+.theme-northeastern {
+  --nu-red: #c8102e;
+  --nu-red-deep: #9b0c24;
+  --nu-navy: #0c3354;
+  --nu-navy-deep: #071f35;
+  --nu-sage: #609f80;
+  --nu-orange: #ff854f;
+  --nu-sky: #61b6d0;
+  --nu-gold: #ffc34b;
+
+  --s-bg: #fbfaf8;
+  --s-fg: #14181f;
+  --s-dim: #5a6572;
+  --s-accent: #c8102e;
+  --s-accent-2: #0c3354;
+  --s-rule: rgba(12, 51, 84, .15);
+  --s-card: #ffffff;
+  --s-scrim: rgba(251, 250, 248, .72);
+  --s-font: 'Avenir Next', Avenir, 'Segoe UI', -apple-system, BlinkMacSystemFont, Inter, sans-serif;
+
+  /* The wordmark pairs a transitional serif with a geometric sans. Headings
+     borrow the serif so a deck reads as university material at a glance. */
+  --nu-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+
+  background: var(--s-bg);
+}
+
+.theme-northeastern h1,
+.theme-northeastern h2 {
+  font-family: var(--nu-display);
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+
+.theme-northeastern .accent-bar {
+  height: 5px;
+  width: 92px;
+  border-radius: 0;
+  background: var(--nu-red);
+}
+
+/* ---------------------------------------------------------------- the mark */
+
+/* Rendered by renderSlide() on title and section slides. The monogram is sized
+   far larger than the slide and pushed off two edges: you get the shoulder and
+   the diagonal, not a shrunk-down badge. */
+.nu-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.nu-art .nu-n {
+  position: absolute;
+  right: -150px;
+  bottom: -170px;
+  width: 900px;
+  height: 694px;
+  color: var(--nu-red);
+  -webkit-mask: url('../assets/brand/nu-monogram.svg') no-repeat center / contain;
+  mask: url('../assets/brand/nu-monogram.svg') no-repeat center / contain;
+  background: currentColor;
+}
+
+.nu-art .nu-skyline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 190px;
+  background: url('../assets/brand/nu-london-skyline.png') no-repeat left bottom / auto 100%;
+  opacity: .5;
+}
+
+.nu-art .nu-eyebrow {
+  position: absolute;
+  top: 54px;
+  left: 92px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+}
+
+/* On a title slide this line carries the whole course name, which is four
+   times the length of an institution name. Tracking that wide would run it
+   under the lockup, so it tightens and takes a second line if it has to —
+   it sits above the monogram either way, which starts 196px down. */
+.theme-northeastern.layout-title .nu-eyebrow {
+  right: 300px;
+  letter-spacing: .16em;
+  line-height: 1.6;
+}
+
+/* ------------------------------------------------------------- title slide */
+
+.theme-northeastern.layout-title {
+  --s-bg: linear-gradient(135deg, #123f68 0%, #0c3354 52%, #071f35 100%);
+  --s-fg: #ffffff;
+  --s-dim: #a9c0d6;
+  --s-rule: rgba(255, 255, 255, .18);
+  --s-card: rgba(255, 255, 255, .08);
+  --s-scrim: rgba(7, 31, 53, .6);
+  background: var(--s-bg);
+}
+
+.theme-northeastern.layout-title .pad {
+  padding: 96px 92px;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.theme-northeastern.layout-title h1 {
+  font-size: 84px;
+  line-height: 1.04;
+  max-width: 760px;
+  white-space: pre-line;
+}
+
+.theme-northeastern.layout-title .sub {
+  font-size: 25px;
+  line-height: 1.55;
+  max-width: 620px;
+  margin-top: 30px;
+  color: #bcd2e4;
+}
+
+.theme-northeastern.layout-title .accent-bar {
+  width: 92px;
+  background: var(--nu-red);
+  margin-bottom: 36px;
+}
+
+.theme-northeastern.layout-title .nu-eyebrow { color: #7fa6c6; }
+.theme-northeastern.layout-title .nu-n { color: var(--nu-red); opacity: .92; }
+.theme-northeastern.layout-title .nu-skyline { opacity: .34; }
+
+/* ---------------------------------------------------------- section breaks */
+
+/* Full red. These are the moments the room looks up, so they get the loudest
+   surface in the theme and nothing else on them. */
+.theme-northeastern.layout-section {
+  --s-bg: linear-gradient(150deg, #d41733 0%, #c8102e 55%, #9b0c24 100%);
+  --s-fg: #ffffff;
+  --s-dim: rgba(255, 255, 255, .82);
+  --s-rule: rgba(255, 255, 255, .22);
+  --s-card: rgba(255, 255, 255, .12);
+  --s-accent: #ffffff;
+  --s-accent-2: var(--nu-gold);
+  --s-scrim: rgba(155, 12, 36, .55);
+  background: var(--s-bg);
+  text-align: left;
+}
+
+.theme-northeastern.layout-section .pad {
+  align-items: flex-start;
+  justify-content: center;
+  padding: 88px 92px;
+  position: relative;
+  z-index: 1;
+}
+
+.theme-northeastern.layout-section h1 {
+  font-size: 82px;
+  line-height: 1.1;
+  max-width: 860px;
+  white-space: pre-line;
+}
+
+.theme-northeastern.layout-section .sub {
+  max-width: 720px;
+  font-size: 26px;
+  margin-top: 24px;
+}
+
+.theme-northeastern.layout-section .accent-bar {
+  margin: 34px 0 0;
+  background: #ffffff;
+}
+
+.theme-northeastern.layout-section .nu-n {
+  color: #ffffff;
+  opacity: .13;
+  right: -220px;
+  bottom: -120px;
+}
+
+.theme-northeastern.layout-section .nu-skyline { display: none; }
+.theme-northeastern.layout-section .nu-eyebrow { color: rgba(255, 255, 255, .7); }
+
+/* A section slide that is also asking the room something needs its question
+   centred, not pinned to the left margin with a poll hanging off it. */
+.theme-northeastern.layout-section.has-feedback { text-align: center; }
+.theme-northeastern.layout-section.has-feedback .pad { align-items: center; }
+.theme-northeastern.layout-section.has-feedback h1 { font-size: 66px; }
+.theme-northeastern.layout-section.has-feedback .accent-bar { margin: 28px auto 0; }
+
+/* ------------------------------------------------------------ quote slides */
+
+.theme-northeastern.layout-quote {
+  --s-bg: #0c3354;
+  --s-fg: #ffffff;
+  --s-dim: #9fbad2;
+  --s-rule: rgba(255, 255, 255, .18);
+  --s-card: rgba(255, 255, 255, .08);
+  --s-accent: var(--nu-gold);
+  background: var(--s-bg);
+}
+
+/* --------------------------------------------------------- teaching slides */
+
+.theme-northeastern h2 {
+  font-size: 52px;
+  line-height: 1.14;
+  margin-bottom: 38px;
+}
+
+.theme-northeastern.layout-content li { font-size: 30px; line-height: 1.42; }
+.theme-northeastern.layout-content li::before {
+  border-radius: 0;
+  width: 11px;
+  height: 11px;
+  background: var(--nu-red);
+}
+.theme-northeastern.layout-content li.tier-2::before { background: var(--nu-navy); }
+
+/* Cards take the four secondary colours in turn. It is the one place the
+   skyline palette gets to show up at full strength, and it gives a twelve-card
+   run of slides some variety without changing the grammar.
+
+   The card is a coloured edge, a number, and the words — all on one line's
+   worth of height rather than stacked in three bands. It started as a top rule
+   over a number on its own row over the text, which spent about 70px of every
+   card on furniture. On the four-card history slide that was the difference
+   between fitting and the fourth card being clipped off the bottom, since
+   .slide hides its overflow. Colour down the side and the number beside the
+   text it labels buys that height back. */
+.theme-northeastern.layout-cards li {
+  display: flex;
+  align-items: baseline;
+  gap: 13px;
+  border: 0;
+  border-left: 7px solid var(--nu-navy);
+  border-radius: 0 5px 5px 0;
+  padding: 22px 24px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(12, 51, 84, .1), 0 10px 26px rgba(12, 51, 84, .07);
+}
+.theme-northeastern.layout-cards li::before {
+  flex: none;
+  margin: 0;
+  font-family: var(--nu-display);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--nu-navy);
+  opacity: .5;
+}
+.theme-northeastern.layout-cards li:nth-child(4n+1) { border-left-color: var(--nu-red); }
+.theme-northeastern.layout-cards li:nth-child(4n+2) { border-left-color: var(--nu-sky); }
+.theme-northeastern.layout-cards li:nth-child(4n+3) { border-left-color: var(--nu-sage); }
+.theme-northeastern.layout-cards li:nth-child(4n+4) { border-left-color: var(--nu-orange); }
+.theme-northeastern.layout-cards li:nth-child(4n+1)::before { color: var(--nu-red); }
+.theme-northeastern.layout-cards li:nth-child(4n+2)::before { color: var(--nu-sky); }
+.theme-northeastern.layout-cards li:nth-child(4n+3)::before { color: var(--nu-sage); }
+.theme-northeastern.layout-cards li:nth-child(4n+4)::before { color: var(--nu-orange); }
+
+/* Shorter cards leave slack under the row. Let the grid take the slack and
+   centre in it, so one row sits in the middle of the slide instead of hanging
+   off the heading, and two rows still space evenly. */
+.theme-northeastern.layout-cards ul {
+  flex: 1;
+  align-content: center;
+}
+
+/* The column count itself is not a theme decision — it lives in app.css, where
+   every theme gets it. All this theme adds is that its cards are short enough
+   for the three-card case to want centring too, not just the four-card one. */
+
+/* ------------------------------------------------------------- the footers */
+
+/* The progress rail carries the skyline palette and the lecture paints over it
+   in red as it goes, so the room can see how far through the hour it is
+   without a number on screen. */
+.theme-northeastern .track {
+  height: 6px;
+  background: linear-gradient(90deg,
+    var(--nu-red) 0%, var(--nu-orange) 25%, var(--nu-gold) 45%,
+    var(--nu-sage) 68%, var(--nu-sky) 88%, var(--nu-navy) 100%);
+  opacity: .34;
+}
+.theme-northeastern .track > i { background: var(--nu-red); }
+.theme-northeastern.layout-section .track,
+.theme-northeastern.layout-title .track { opacity: .5; }
+.theme-northeastern.layout-section .track > i { background: #ffffff; }
+
+.theme-northeastern .pagenum {
+  font-family: var(--nu-display);
+  font-size: 16px;
+  letter-spacing: .06em;
+}
+
+/* The lockup is dark type on transparent, so it needs a light ground. On navy
+   and red it gets knocked out to white instead of sitting in a paper box. */
+.theme-northeastern.layout-title .slide-logo img,
+.theme-northeastern.layout-section .slide-logo img,
+.theme-northeastern.layout-quote .slide-logo img {
+  filter: brightness(0) invert(1);
+}

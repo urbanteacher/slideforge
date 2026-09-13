@@ -200,6 +200,8 @@
     var slide = deck.slides[Player.idx];
     if (!slide) return;
 
+    if (SF.LiveActivities) SF.LiveActivities.beforeSlide(deck, slide);
+
     stopTimer();
     if (SF.Boards) SF.Boards.unmountAll();
 
@@ -344,7 +346,7 @@
   function bossFight(deck) {
     if (!deck || deck.mechanic !== 'boss' || !SF.Boss) return null;
     if (Player.lanesProvider) return null;       // a live room owns its own HP
-    var qs = deck.slides.filter(function (s) { return s.type === 'quiz'; });
+    var qs = deck.slides.filter(function (s) { return s.type === 'quiz' && (!deck.presenterGameId || s.gameId === deck.presenterGameId); });
     if (!qs.length) return null;
     var teams = (deck.quiz && deck.quiz.teams) || [];
     var who = (deck.quiz && deck.quiz.mode === 'teams' && teams.length)
@@ -2130,6 +2132,14 @@
     else if (d.cmd === 'moment' && Player.momentCommand) Player.momentCommand(d);
     else if (d.cmd === 'quickPoll') Player.quickPoll(d);
     else if (d.cmd === 'quizGen') Player.quizGen(d);
+    else if (d.cmd === 'activity' && SF.LiveActivities) {
+      var sender = ev.source;
+      Promise.resolve().then(function () { return SF.LiveActivities.handle(d); }).then(function (result) {
+        if (sender && sender === presenterWin) sender.postMessage({ type: 'sf-activity-result', requestId: d.requestId, result: result }, { targetOrigin: location.origin });
+      }).catch(function (error) {
+        if (sender && sender === presenterWin) sender.postMessage({ type: 'sf-activity-result', requestId: d.requestId, error: error.message || 'Could not complete this activity action.' }, { targetOrigin: location.origin });
+      });
+    }
     else if (d.cmd === 'qa') Player.emit('qaCommand', d);
   });
 

@@ -8,9 +8,23 @@
  */
 (function(){
 'use strict';
-var SF=window.SF, P=SF.Player, steps=[],shown=0,svg=null,mode='',strokes=[],active=null;
+var SF=window.SF, P=SF.Player, steps=[],shown=0,svg=null,mode='',strokes=[],active=null,dim=false;
 function ns(tag){return document.createElementNS('http://www.w3.org/2000/svg',tag);}
-function update(){steps.forEach(function(n,i){n.classList.toggle('step-hidden',i>=shown);});P.revealStep=shown;P.syncPresenter();P.emit('step',{shown:shown});}
+/* Three states, not two. A point ahead of the build is hidden; the one just
+   reached is at full strength; the ones behind it stay on screen but fall
+   back, so the room keeps the thread of the argument while the eye is told
+   where it is now. In hide mode only the first of those applies. */
+function update(){
+  steps.forEach(function(n,i){
+    n.classList.toggle('step-hidden',i>=shown);
+    n.classList.toggle('step-past',dim&&i<shown-1);
+    /* How many steps back this one now is. Only the stacked-card layout reads
+       it, to push each card further behind the current one, but it costs
+       nothing to publish for every build. */
+    n.style.setProperty('--depth',String(Math.max(0,shown-1-i)));
+  });
+  P.revealStep=shown;P.syncPresenter();P.emit('step',{shown:shown});
+}
 function point(e){var r=svg.getBoundingClientRect();return [(e.clientX-r.left)*1280/r.width,(e.clientY-r.top)*720/r.height];}
 function stroke(e){var p=point(e);if(mode==='spot'){active.setAttribute('cx',p[0]);active.setAttribute('cy',p[1]);}else {active._points.push(p.join(','));if(active._points.length===1)active._points.push(p.join(','));active.setAttribute('points',active._points.join(' '));}}
 function setMode(v){
@@ -65,7 +79,7 @@ function ensureInkElements(){
       var createdDef=document.createElement('div');
       createdDef.className='hud-group hud-main-tools';
       createdDef.id='hudDefaultTools';
-      var btns=Array.from(hud.querySelectorAll('[data-act="ink"],[data-act="blank"],[data-act="more"],[data-act="exit"]'));
+      var btns=Array.from(hud.querySelectorAll('#hudDefaultTools > button, [data-act="rail"],[data-act="poll"],[data-act="freeze"],[data-act="ink"],[data-act="blank"],[data-act="more"],[data-act="exit"]'));
       btns.forEach(function(b){createdDef.appendChild(b);});
       hud.appendChild(createdDef);
       defTools=createdDef;
@@ -129,6 +143,12 @@ P.on('slide',function(e){
   steps=Array.from(e.node.querySelectorAll('.pad .step'));
   steps.sort(function(a,b){return (Number(a.dataset.step)||0)-(Number(b.dataset.step)||0);});
   if(!steps.length&&e.slide.progressive)steps=Array.from(e.node.querySelectorAll('.pad li,.kw-row,.it-row,.q-line,.ex-body > p,tbody tr'));
+  /* A stack is defined by what shows behind the front of it, so those layouts
+     keep their past steps on screen whatever the build mode says. Everywhere
+     else it is the author's choice. */
+  var stacked=e.slide.type==='gallery'||
+    (e.slide.type==='cards'&&(e.slide.design||{}).cardsMode==='stack');
+  dim=stacked||e.slide.buildMode==='dim';
   shown=0;update();
   svg=ns('svg');svg.setAttribute('viewBox','0 0 1280 720');svg.classList.add('teaching-ink');svg.setAttribute('aria-label','Temporary slide annotations');
   if(mode)svg.classList.add('drawing');
@@ -144,7 +164,7 @@ P.on('close',function(){
   toggleBar(false);
   var btn=document.querySelector('#hud [data-act=ink]');
   if(btn){btn.classList.remove('on');btn.setAttribute('aria-pressed','false');}
-  steps=[];clear();setMode('');
+  steps=[];dim=false;clear();setMode('');
 });
 
 SF.Teaching={

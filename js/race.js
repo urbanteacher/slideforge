@@ -94,7 +94,7 @@
 
   function forDeck(deck, field) {
     if (!deck || !field || !field.length) return null;
-    var key = deck.id || 'deck';
+    var key = deck.presenterGameId || deck.id || 'deck';
     var track = tracks[key];
     var sameField = track && track.field.length === field.length &&
       track.field.every(function (l, i) { return l.key === field[i].key; });
@@ -105,12 +105,12 @@
   }
 
   function command(deck, action, key) {
-    var track = deck && tracks[deck.id || 'deck'];
+    var track = deck && tracks[deck.presenterGameId || deck.id || 'deck'];
     if (!track) return null;
     if (action === 'advance') track = advance(track, key);
     else if (action === 'back') track = back(track, key);
     else if (action === 'reset') track = reset(track);
-    tracks[deck.id || 'deck'] = track;
+    tracks[deck.presenterGameId || deck.id || 'deck'] = track;
     return track;
   }
 

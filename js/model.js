@@ -2578,6 +2578,13 @@
         return l.trim();
       }).filter(Boolean);
     }
+    if (slide.type === "gallery") {
+      return (slide.layers || []).filter(function(l) {
+        return l && l.image;
+      }).map(function(l, i) {
+        return String(l.caption || "").trim() || "Image " + (i + 1);
+      });
+    }
     if (["content", "cards", "split", "keywords", "italics"].indexOf(slide.type) < 0) return [];
     return (slide.bullets || []).filter(function(b) {
       return String(b).trim();
@@ -6844,6 +6851,7 @@
   var SLIDE_H = 720;
   var THEMES = {
     studio: { name: "Studio · Sage & ink", swatch: "#dce8cc" },
+    northeastern: { name: "Northeastern London", swatch: "#c8102e" },
     midnight: { name: "Midnight", swatch: "#1b2a4a" },
     paper: { name: "Paper", swatch: "#f4f1ea" },
     ocean: { name: "Ocean", swatch: "#0d5c63" },
@@ -6851,6 +6859,7 @@
     mono: { name: "Mono", swatch: "#111111" }
   };
   var TRANSITIONS = ["none", "fade", "push", "zoom", "wipe"];
+  var GALLERY_MAX = 8;
   var TEAM_COLORS = ["#e8474f", "#2b7ce9", "#e8a020", "#29a86b", "#8b5cf0", "#d4477f"];
   var MAX_TEAMS = 6;
   function teamColor(i) {
@@ -6898,6 +6907,7 @@
     cards: { label: "Cards", icon: "▦" },
     table: { label: "Table", icon: "⊞" },
     image: { label: "Image", icon: "▣" },
+    gallery: { label: "Image stack", icon: "▤" },
     video: { label: "Video", icon: "▶" },
     quote: { label: "Quote", icon: "“" },
     game: { label: "Game", icon: "◈" },
@@ -6933,7 +6943,17 @@
       videoAutoplay: false,
       // honoured on the projector, never in a preview
       tableHeader: true,
+      /* Image stack: each layer is one picture with its own caption and source,
+         shown one in front of the last. Empty on every other kind of slide. */
+      layers: (
+        /** @type {import('./types.js').GalleryLayer[]} */
+        []
+      ),
       transition: "fade",
+      buildMode: (
+        /** @type {'hide'|'dim'} */
+        "hide"
+      ),
       // quiz fields
       question: "",
       options: (
@@ -7083,6 +7103,16 @@
     s.videoMuted = s.videoMuted === true;
     s.videoAutoplay = s.videoAutoplay === true;
     s.tableHeader = s.tableHeader !== false;
+    var rawLayers = raw && Array.isArray(raw.layers) ? raw.layers : [];
+    s.layers = rawLayers.slice(0, GALLERY_MAX).map(function(layer) {
+      var l = layer && typeof layer === "object" ? layer : {};
+      return {
+        image: safeMedia(l.image),
+        caption: String(l.caption || ""),
+        source: String(l.source || "")
+      };
+    });
+    s.buildMode = s.buildMode === "dim" ? "dim" : "hide";
     if (s.imageFit !== "contain") s.imageFit = "cover";
     s.feedback = normalizeFeedback(s.feedback);
     return s;
@@ -7601,6 +7631,7 @@
     makeQuizConfig,
     normalizeQuizConfig,
     SLIDE_TYPES,
+    GALLERY_MAX,
     uid,
     makeSlide,
     makeDeck,

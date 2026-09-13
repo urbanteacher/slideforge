@@ -120,6 +120,13 @@ export interface QuizConfig {
  * signature so a misspelt one is an error rather than a silently dead
  * property.
  */
+/** One layer of an image-stack slide: a picture, what it shows, and whose it is. */
+export interface GalleryLayer {
+  image: string;
+  caption: string;
+  source: string;
+}
+
 export interface Slide {
   /** The {@link Activity} key this slide was built from, when it was chosen
    *  in the activities studio. Only that studio reads these four — to
@@ -150,9 +157,18 @@ export interface Slide {
   videoMuted: boolean;
   /** Honoured on the projector, never in a preview. */
   videoAutoplay: boolean;
+  /** Image-stack layout: the pictures, shown one in front of the last. */
+  layers: GalleryLayer[];
   /** Table layout: `body` is tab- or pipe-separated rows, one per line. */
   tableHeader: boolean;
   transition: TransitionKey;
+  /** Build on Next: release this slide's points one press at a time
+   *  instead of landing the whole slide at once. */
+  progressive?: boolean;
+  /** What a build does with a point it has already been through: leave
+   *  only the unreached ones hidden ('hide'), or keep the reached ones on
+   *  screen dimmed back so the argument so far stays readable ('dim'). */
+  buildMode: 'hide' | 'dim';
   question: string;
   options: string[];
   correct: number;

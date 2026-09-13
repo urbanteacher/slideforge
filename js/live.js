@@ -490,6 +490,7 @@
     this.mechanic = deck.mechanic || 'points';
     this.trackLength = deck.trackLength || 5;
     this.pos = {};
+    this.raceBaseline = null;
     this.winners = [];
     this.bossHp = 0;
     this.bossMax = 0;
@@ -624,6 +625,11 @@
         Live.rows = m.rows || [];
         Live.counts = m.counts || null;
         if (m.mode) Live.mode = m.mode;
+        // The relay sends teamAnswers before its updated player list. Individual
+        // lanes use correct counts, so apply those when the fresh list arrives.
+        if (Live.mechanic === 'race' && Live.mode !== 'teams' && Live.players.some(function (p) {
+          return racePosition(p) !== (Live.pos['p' + p.id] || 0);
+        })) advanceRace({});
         drawPlayers();
         paintRail();
         /* Join state and roster ride on the feedback rail too — refresh it
@@ -1018,6 +1024,10 @@
    * whole table. A tie inside a team does not advance — the team has to
    * actually agree.
    */
+  function racePosition(player) {
+    return Math.min(Live.trackLength, Math.max(0, (player.correct || 0) - ((Live.raceBaseline && Live.raceBaseline[player.id]) || 0)));
+  }
+
   function advanceRace(m) {
     var counts = m.counts || [];
     var correct = Number(m.correct);
@@ -1050,7 +1060,7 @@
       Live.players.forEach(function (p) {
         var key = 'p' + p.id;
         var was = Live.pos[key] || 0;
-        var now = Math.min(Live.trackLength, p.correct || 0);
+        var now = racePosition(p);
         if (now > was) movedKeys.push(key);
         Live.pos[key] = now;
         if (now >= Live.trackLength && Live.winners.indexOf(key) === -1) {

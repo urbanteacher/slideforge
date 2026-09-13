@@ -213,9 +213,13 @@ html[data-ws="plan"] .act-moment{border-color:#f0e2cd}
 html[data-ws="plan"] .act-legend{display:flex;align-items:center;gap:9px;margin:6px 0}
 html[data-ws="plan"] .act-legend .activity-icon{
   width:20px;height:20px;font-size:9px;border-radius:6px;margin:0;flex:none}
-html[data-ws="plan"] .act-steps{margin:6px 0 14px;padding-left:20px;font-size:12px;
+html[data-ws="plan"] .howto .act-steps,
+html[data-ws="plan"] .howto .howto-steps{margin:0 0 10px;padding-left:18px;font-size:12px;line-height:1.45;color:inherit}
+html[data-ws="plan"] .howto .act-steps li,
+html[data-ws="plan"] .howto .howto-steps li{margin-bottom:4px}
+html[data-ws="plan"] .act-steps:not(.howto-steps){margin:6px 0 14px;padding-left:20px;font-size:12px;
   color:var(--ui-dim);line-height:1.6}
-html[data-ws="plan"] .act-steps li{margin-bottom:5px}
+html[data-ws="plan"] .act-steps:not(.howto-steps) li{margin-bottom:5px}
 /* Rail actions match Quiz studio's rail foot layout */
 html[data-ws="plan"] .rail-foot .rail-actions{display:flex;gap:6px}
 html[data-ws="plan"] .rail-foot .rail-actions .btn{flex:1}

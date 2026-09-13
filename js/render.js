@@ -79,6 +79,15 @@
   function layoutContent(slide, pad) {
     if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
     var ul = el('ul');
+    /* Stacked cards: every card in the same spot, the one being talked about
+       in front, the ones already made peeking out behind it. Five things get
+       five moments instead of competing for the same glance, and the pile
+       behind shows how far through the set the room is. DOM order does the
+       layering for free — a later card paints over an earlier one — so
+       nothing here needs a z-index. */
+    if (slide.type === 'cards' && (slide.design || {}).cardsMode === 'stack') {
+      ul.classList.add('cards-stack');
+    }
     var lines = (slide.bullets || []).map(function(text,index){return {text:text,index:index};}).filter(function (b) { return String(b.text).trim(); });
     lines.forEach(function (item) {
       var line=item.text;
@@ -191,18 +200,91 @@
     if (slide.subtitle) pad.appendChild(rich('div', 'attrib', slide, 'subtitle', slide.subtitle));
   }
 
+  /* How a caption sits on the picture. Scrim is the default and the safest —
+     a gradient reads over any image. Bar and plain assume the author has
+     looked at theirs. */
+  function capClass(slide) {
+    var d = slide.design || {};
+    var style = ['scrim', 'bar', 'plain', 'none'].indexOf(d.capStyle) >= 0 ? d.capStyle : 'scrim';
+    return 'cap-' + style + (d.capPos === 'top' ? ' cap-top' : '');
+  }
+
+  /* A picture either fills the slide and lets the caption sit on top of it, or
+     it takes a shape of its own and the caption sits clear below. Full bleed
+     is right for a photograph; a chart wants a frame, because a caption bar
+     across the bottom of a chart covers the axis labels. */
+  var IMAGE_FRAMES = { '16:9': '16 / 9', '4:3': '4 / 3', '3:2': '3 / 2', '1:1': '1 / 1', '4:5': '4 / 5' };
+
+  function imageFrame(slide) {
+    var want = (slide.design || {}).imageFrame;
+    return Object.prototype.hasOwnProperty.call(IMAGE_FRAMES, want) ? want : '';
+  }
+
   function layoutImage(slide, pad) {
+    var frame = imageFrame(slide);
+    if (frame) {
+      pad.classList.add('img-framed');
+      pad.style.setProperty('--img-ar', IMAGE_FRAMES[frame]);
+    }
     if (slide.image) {
       var img = el('div', 'img ' + (slide.imageFit === 'contain' ? 'contain' : 'cover'));
       img.style.backgroundImage = 'url("' + String(slide.image).replace(/"/g, '&quot;') + '")';
+      /* An image slide has nothing to build but the image, so Build on Next
+         here means one thing: the room gets asked before it gets shown. */
+      asStep(img, slide);
       pad.appendChild(img);
-      if (slide.title) pad.appendChild(rich('div', 'cap', slide, 'title', slide.title));
+      /* Caption and credit travel together as one step: the credit answers
+         "says who?" about the caption, so revealing them apart would leave a
+         claim on screen with its source still hidden. */
+      if (slide.title || slide.subtitle) {
+        var box = asStep(el('div', 'cap ' + capClass(slide)), slide);
+        if (slide.title) box.appendChild(rich('div', 'cap-line', slide, 'title', slide.title));
+        if (slide.subtitle) box.appendChild(rich('div', 'cap-credit', slide, 'subtitle', slide.subtitle));
+        pad.appendChild(box);
+      }
     } else {
       var e = el('div', 'empty');
       e.appendChild(el('div', null, '▣'));
       e.appendChild(el('div', null, 'Paste an image URL or drop a file in the inspector'));
       pad.appendChild(e);
     }
+  }
+
+  /* An image stack: several pictures in one place, each in front of the last.
+     Five charts get five moments instead of five thumbnails competing for the
+     same glance, and the pile behind shows how far through the set the room
+     is. Same --depth mechanic as the stacked cards. */
+  function layoutGallery(slide, pad) {
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
+    var layers = (slide.layers || []).filter(function (l) { return l && l.image; });
+    if (!layers.length) {
+      var e = el('div', 'empty');
+      e.appendChild(el('div', null, '\u25a4'));
+      e.appendChild(el('div', null, 'Add pictures in the inspector — each one gets its own moment'));
+      pad.appendChild(e);
+      return;
+    }
+    var stack = el('div', 'fig-stack');
+    if (frameRatio(slide)) stack.style.setProperty('--img-ar', frameRatio(slide));
+    layers.forEach(function (layer) {
+      var fig = asStep(el('figure', 'fig'), slide);
+      var img = el('div', 'img ' + (slide.imageFit === 'contain' ? 'contain' : 'cover'));
+      img.style.backgroundImage = 'url("' + String(layer.image).replace(/"/g, '&quot;') + '")';
+      fig.appendChild(img);
+      if (layer.caption || layer.source) {
+        var cap = el('figcaption', 'fig-cap ' + capClass(slide));
+        if (layer.caption) cap.appendChild(el('div', 'cap-line', layer.caption));
+        if (layer.source) cap.appendChild(el('div', 'cap-credit', layer.source));
+        fig.appendChild(cap);
+      }
+      stack.appendChild(fig);
+    });
+    pad.appendChild(stack);
+  }
+
+  function frameRatio(slide) {
+    var want = imageFrame(slide);
+    return want ? IMAGE_FRAMES[want] : '';
   }
 
   /* A table, from tab- or pipe-separated text. */
@@ -316,7 +398,9 @@
     } else {
       lines.forEach(function (item) {
         var line=item.text;
-        ul.appendChild(asStep(rich('li', bulletTier(line) === 2 ? 'tier-2' : null, slide, 'bullets.' + item.index, bulletText(line)), slide));
+        var li = asStep(rich('li', bulletTier(line) === 2 ? 'tier-2' : null, slide, 'bullets.' + item.index, bulletText(line)), slide);
+        li.dataset.step = '1';
+        ul.appendChild(li);
       });
     }
     copy.appendChild(ul);
@@ -326,6 +410,20 @@
       var img = el('div', 'img ' + (slide.imageFit === 'contain' ? 'contain' : 'cover'));
       img.style.backgroundImage = 'url("' + String(slide.image).replace(/"/g, '&quot;') + '")';
       media.appendChild(img);
+      /* The picture can take a press of its own: show it first and let the
+         points annotate it, or hold it back and let the room predict before
+         it lands. Only ever a step when there is actually an image — pacing
+         the "add an image" placeholder would help nobody. */
+      var arrival = (slide.design || {}).imageStep;
+      if (slide.progressive && (arrival === 'before' || arrival === 'after')) {
+        media.classList.add('step');
+        media.dataset.step = arrival === 'before' ? '0' : '2';
+      }
+      if (slide.subtitle) {
+        var credit = el('div', 'cap ' + capClass(slide));
+        credit.appendChild(rich('div', 'cap-credit', slide, 'subtitle', slide.subtitle));
+        media.appendChild(credit);
+      }
     } else {
       var empty = el('div', 'split-empty');
       empty.appendChild(el('div', null, '▣'));
@@ -1353,6 +1451,7 @@
     quote: layoutQuote,
     table: layoutTable,
     image: layoutImage,
+    gallery: layoutGallery,
     video: layoutVideo,
     quiz: layoutQuiz,
     explain: layoutExplain,
@@ -1401,11 +1500,31 @@
       root.classList.add('game-stage');
     }
     if (slide.feedback && slide.feedback.kind) root.classList.add('has-feedback');
-    if (deck.theme === 'studio' && (slide.type === 'title' || slide.type === 'section')) {
-      var art = el('div', 'studio-art');
-      art.setAttribute('aria-hidden', 'true');
-      art.innerHTML = '<div class="art-orbit"></div><div class="art-tile">✳</div><div class="art-dot"></div><div class="art-caption">STAY CURIOUS.</div>';
-      root.appendChild(art);
+    if (slide.type === 'title' || slide.type === 'section') {
+      /* A theme can hang decoration behind the pad on its two full-bleed
+         layouts. Everything here is CSS-positioned and aria-hidden: the markup
+         only exists to give the stylesheet something to paint on. */
+      var art = null;
+      if (deck.theme === 'studio') {
+        art = el('div', 'studio-art');
+        art.innerHTML = '<div class="art-orbit"></div><div class="art-tile">✳</div><div class="art-dot"></div><div class="art-caption">STAY CURIOUS.</div>';
+      } else if (deck.theme === 'northeastern') {
+        art = el('div', 'nu-art');
+        art.innerHTML = '<div class="nu-skyline"></div><div class="nu-n"></div>';
+        /* The title slide names the course, so the heading is free to name the
+           lecture — which is what the room actually needs to read. The lockup
+           in the corner already says which university this is, so repeating it
+           here would only spend the line twice. Section slides have no course
+           line of their own, so there it stays the institution. */
+        var eyebrow = el('div', 'nu-eyebrow',
+          slide.type === 'title' ? (deck.title || 'Northeastern University London')
+                                 : 'Northeastern University London');
+        art.appendChild(eyebrow);
+      }
+      if (art) {
+        art.setAttribute('aria-hidden', 'true');
+        root.appendChild(art);
+      }
     }
 
     var pad = el('div', 'pad');
@@ -2082,9 +2201,16 @@
    * layout cannot drift out of step: whatever the slide resolves to is what
    * the rail gets.
    *
+   * The ink travels with the surface. A theme is allowed to flip its whole
+   * token set per layout — northeastern's section slides are white type on
+   * red where the theme's own token is ink on white — and taking the red
+   * without the white left the rail printing red text on red.
+   *
    * @param {HTMLElement} rail
    * @param {HTMLElement} slideEl the .slide currently on screen
    */
+  var RAIL_INK = ['--s-fg', '--s-dim', '--s-rule', '--s-card', '--s-accent', '--s-accent-2', '--s-scrim'];
+
   function railSurface(rail, slideEl) {
     if (!rail || !slideEl) return;
     var cs = getComputedStyle(slideEl);
@@ -2093,6 +2219,11 @@
     /* A url() background is the slide's own artwork and has no business
        being tiled into a panel beside it — fall back to the flat colour. */
     rail.style.backgroundImage = img.indexOf('url(') === -1 ? img : 'none';
+    RAIL_INK.forEach(function (token) {
+      var value = cs.getPropertyValue(token).trim();
+      if (value) rail.style.setProperty(token, value);
+      else rail.style.removeProperty(token);
+    });
   }
 
   /**

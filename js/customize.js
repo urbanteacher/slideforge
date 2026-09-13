@@ -162,19 +162,64 @@
         {value:'top',label:'Above text'},{value:'bottom',label:'Below text'}
       ],SF.imagePlacement(s),function(v){SF.setImagePlacement(s,v);change();})));
       choose('Image share','imageShare',[[35,'35% image'],[50,'50% image'],[65,'65% image']],50);
+      choose('Image arrives','imageStep',[
+        ['none','With the slide'],
+        ['before','On a press, before the points'],
+        ['after','On a press, after the points']
+      ],'none');
+    }
+    if(s.type==='cards'){
+      box.appendChild(UI.field('Cards layout',UI.select([
+        {value:'grid',label:'Side by side'},
+        {value:'stack',label:'Stacked — one in front, the rest behind'}
+      ],d.cardsMode==='stack'?'stack':'grid',function(v){
+        d.cardsMode=v;
+        /* A stack with everything already on screen is just a pile. Choosing
+           it turns the build on; going back to a row leaves it alone, since
+           a side-by-side build is a perfectly ordinary thing to want. */
+        if(v==='stack'){s.progressive=true;s.buildMode='dim';}
+        change();
+      }),'Each card gets its own moment, with the ones already covered showing behind.'));
+    }
+    if(s.type==='image'||s.type==='gallery'){
+      choose('Image frame','imageFrame',[
+        ['','Full bleed — caption sits over the image'],
+        ['16:9','16:9 landscape — caption below'],
+        ['4:3','4:3 — caption below'],
+        ['3:2','3:2 — caption below'],
+        ['1:1','Square — caption below'],
+        ['4:5','4:5 portrait — caption below']
+      ],'');
+    }
+    if(s.type==='image'||s.type==='gallery'||(s.type==='split'&&s.subtitle)){
+      choose('Caption style','capStyle',[
+        ['scrim','Gradient over the image'],
+        ['bar','Solid accent bar'],
+        ['plain','Text only, no ground'],
+        ['none','Hide the caption']
+      ],'scrim');
+      if(s.type==='image'||s.type==='gallery') choose('Caption position','capPos',[['bottom','Bottom'],['top','Top']],'bottom');
     }
     if(s.type==='split'||s.type==='image') ['X','Y'].forEach(function(axis){
       var r=document.createElement('input');r.type='range';r.min='0';r.max='100';r.value=d['focal'+axis]==null?50:d['focal'+axis];r.onchange=function(){d['focal'+axis]=Number(r.value);change();};box.appendChild(UI.field('Image focus '+(axis==='X'?'horizontal':'vertical'),r));
     });
-    if(['content','cards','split','keywords','italics','table','quote','explain'].includes(s.type)){
-      var buildLabel=s.type==='table'?'Reveal one row at a time (animated)'
+    if(['content','cards','split','keywords','italics','table','quote','explain','image','gallery'].includes(s.type)){
+      var buildLabel=s.type==='gallery'?'Reveal one picture at a time (animated)'
+        :s.type==='image'?'Hold the image back until the next press'
+        :s.type==='table'?'Reveal one row at a time (animated)'
         :s.type==='quote'?'Reveal one line at a time (animated)'
         :s.type==='explain'?'Reveal one paragraph at a time (animated)'
         :'Reveal one bullet / point at a time (animated)';
+      var buildValue=s.progressive!==true?'off':(s.buildMode==='dim'?'dim':'on');
       box.appendChild(UI.field('Build on Next',UI.select([
         {value:'off',label:'Show everything at once'},
-        {value:'on',label:buildLabel}
-      ],s.progressive===true?'on':'off',function(v){s.progressive=v==='on';change();})));
+        {value:'on',label:buildLabel},
+        {value:'dim',label:buildLabel.replace(' (animated)',', dimming the ones before')}
+      ].filter(function(o){return !(o.value==='dim'&&s.type==='image');}),buildValue,function(v){
+        s.progressive=v!=='off';
+        s.buildMode=v==='dim'?'dim':'hide';
+        change();
+      }),'Dimming keeps earlier points readable instead of hiding them \u2014 useful when the room needs the whole argument in view.'));
     }
     box.appendChild(UI.button('Reset to theme','ghost',function(){s.design={};s.formatting={};change();}));
     parent.appendChild(box);

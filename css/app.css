@@ -483,6 +483,171 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   width: min(720px, 100%);
 }
 
+/* Cards: let the column count follow the card count.
+
+   Three columns were hard-coded, so a fourth card started a second row the
+   slide has no height for and .slide's overflow:hidden ate it. Silently —
+   which is the worst way to lose a card, since the slide still looks finished.
+   Four across in one row instead, with the type stepping down to pay for the
+   narrower column, and the row centred in the space the shorter block leaves.
+
+   Same shape as the race track's lane-count rules further down: the layout
+   reads how much it has been given rather than assuming.
+
+   Five or more cannot be one row at any readable size, so those go back to
+   three across and take the second row — affordable because the number tucks
+   in beside the text instead of sitting on a line of its own. */
+.layout-cards ul:not(.cards-stack):has(> li:nth-child(4)) {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  flex: 1;
+  align-content: center;
+}
+.layout-cards ul:not(.cards-stack):has(> li:nth-child(4)) li {
+  font-size: 23px;
+  line-height: 1.4;
+  padding: 20px;
+}
+.layout-cards ul:not(.cards-stack):has(> li:nth-child(5)) {
+  grid-template-columns: repeat(3, 1fr);
+}
+.layout-cards ul:not(.cards-stack):has(> li:nth-child(5)) li::before {
+  display: inline-block;
+  margin: 0 9px 0 0;
+}
+
+/* Seven and eight go four wide over two rows. Past eight a card slide has a
+   content problem that no grid can fix, and shrinking the type far enough to
+   fit would only make it unreadable rather than unread — so the ladder stops
+   here deliberately. */
+.layout-cards ul:not(.cards-stack):has(> li:nth-child(7)) {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.layout-cards ul:not(.cards-stack):has(> li:nth-child(7)) li {
+  font-size: 19px;
+  line-height: 1.32;
+  padding: 15px;
+  gap: 9px;
+}
+
+/* ---- stacked cards ------------------------------------------------------ */
+
+/* One card at a time, in one place, with the pile of ones already made
+   showing behind it. The grid puts every card in the same cell; the transform
+   fans the finished ones up and back. Needs a build to mean anything, so
+   choosing it turns Build on Next on. */
+.layout-cards ul.cards-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 640px);
+  place-content: center;
+  justify-content: center;
+  flex: 1;
+  gap: 0;
+  perspective: 1400px;
+}
+.layout-cards ul.cards-stack > li {
+  grid-area: 1 / 1;
+  width: 640px;
+  max-width: 100%;
+  font-size: 27px;
+  transition: transform .5s cubic-bezier(.2,.75,.2,1), opacity .3s ease;
+}
+/* Each finished card sits one notch further up, back and over. --depth is
+   published by the reveal driver and counts steps behind the current one. */
+.layout-cards ul.cards-stack > li.step-past {
+  transform:
+    translate(calc(var(--depth, 0) * -24px), calc(var(--depth, 0) * -18px))
+    scale(calc(1 - var(--depth, 0) * 0.045))
+    rotate(calc(var(--depth, 0) * -1.4deg));
+}
+/* Arrives from below the pile rather than sliding down into it. */
+.layout-cards ul.cards-stack > li.step-hidden { transform: translateY(34px) scale(.95); }
+
+/* A stack is read one card at a time, so the type can be bigger than it is in
+   a row of four — and the fourth card no longer has to fit beside three
+   others, which is what forced 23px in the first place. */
+.layout-cards ul.cards-stack > li {
+  line-height: 1.45;
+  padding: 30px;
+}
+
+/* ---- image stack -------------------------------------------------------- */
+
+/* Same idea as the stacked cards, with a picture instead of a paragraph: one
+   figure in front, the ones already shown fanned up and back behind it. */
+.layout-gallery .pad { padding: 56px 92px 44px; }
+.layout-gallery .fig-stack {
+  flex: 1;
+  display: grid;
+  /* Both tracks bounded, so a figure is sized by the space left after the
+     heading rather than by its own content. Left to size itself, the picture
+     took the full height and shoved its caption off the bottom of the slide. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  justify-items: center;
+  align-items: center;
+  min-height: 0;
+  perspective: 1600px;
+}
+.layout-gallery .fig {
+  grid-area: 1 / 1;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 100%;
+  max-height: 100%;
+  min-height: 0;
+  transition: transform .5s cubic-bezier(.2,.75,.2,1), opacity .3s ease;
+}
+.layout-gallery .fig .img {
+  /* Shrinks to leave the caption its room; the ratio then sets the width. */
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  width: auto;
+  max-width: 100%;
+  aspect-ratio: var(--img-ar, 16 / 9);
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 3px;
+  /* The pile only reads as a pile if each sheet has an edge. */
+  box-shadow: 0 2px 6px rgba(0,0,0,.16), 0 18px 44px rgba(0,0,0,.18);
+}
+.layout-gallery .fig .img.cover { background-size: cover; }
+.layout-gallery .fig .img.contain { background-size: contain; background-color: var(--s-card); }
+
+.layout-gallery .fig-cap {
+  flex: none;
+  text-align: center;
+  color: var(--s-fg);
+  max-width: 100%;
+}
+.layout-gallery .fig-cap .cap-line { font-size: 30px; font-weight: 650; line-height: 1.2; }
+.layout-gallery .fig-cap .cap-credit {
+  margin-top: 8px; font-size: 16px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--s-dim);
+}
+.layout-gallery .fig-cap.cap-bar {
+  background: var(--s-accent); color: #fff; padding: 14px 26px; border-radius: 2px;
+}
+.layout-gallery .fig-cap.cap-bar .cap-credit { color: #fff; opacity: .85; }
+.layout-gallery .fig-cap.cap-none { display: none; }
+.layout-gallery .fig-cap.cap-top { order: -1; }
+
+/* Behind: each finished figure one notch further up, back and over. Its
+   caption goes with it — a caption from three pictures ago floating over the
+   current one would be worse than no caption at all. */
+.layout-gallery .fig.step-past {
+  transform:
+    translate(calc(var(--depth, 0) * -26px), calc(var(--depth, 0) * -20px))
+    scale(calc(1 - var(--depth, 0) * 0.05))
+    rotate(calc(var(--depth, 0) * -1.3deg));
+}
+.layout-gallery .fig.step-past .fig-cap { opacity: 0; }
+.layout-gallery .fig.step-hidden { transform: translateY(36px) scale(.95); }
+
 /* keywords — bold term, lowercase definition */
 .layout-keywords .kw-list {
   display: flex; flex-direction: column; gap: 22px; margin: 0; min-height: 0;
@@ -724,6 +889,128 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 /* And it has to clear the control bar as well as let clicks past it, or the
    text sits on top of the scrubber and neither is readable. */
 .layout-video .cap { padding-bottom: 118px; }
+
+/* ---- caption treatments ------------------------------------------------- */
+
+/* The caption is a box now rather than a line of text, because a credit sits
+   under the caption proper: "says who?" belongs with the claim. */
+.layout-image .cap-line { font-size: 44px; font-weight: 650; line-height: 1.14; }
+.layout-image .cap-credit,
+.split-media .cap-credit {
+  margin-top: 12px;
+  font-size: 19px; font-weight: 500; letter-spacing: .06em;
+  text-transform: uppercase;
+  opacity: .82;
+}
+.layout-image .cap-line:only-child { margin: 0; }
+
+/* Scrim: the default. A gradient reads over any photograph, which is why it
+   is what an author gets without choosing. */
+.layout-image .cap-scrim { background: linear-gradient(transparent, rgba(0,0,0,.82)); }
+
+/* Bar: a solid band in the deck's own accent. Crisper than a gradient where
+   the image runs to a hard edge — charts, screenshots, diagrams. */
+.layout-image .cap-bar {
+  padding: 34px 92px 38px;
+  background: var(--s-accent);
+  color: #fff;
+}
+.layout-image .cap-bar .cap-line { font-size: 38px; }
+
+/* Plain: no ground at all, for an image with room already in it. The shadow
+   is the only thing keeping it legible, so it is heavier than it looks. */
+.layout-image .cap-plain {
+  background: none;
+  padding: 56px 92px;
+  text-shadow: 0 2px 18px rgba(0,0,0,.85), 0 1px 4px rgba(0,0,0,.7);
+}
+
+.layout-image .cap-none { display: none; }
+
+/* ---- framed images ------------------------------------------------------ */
+
+/* Out of the absolute full-bleed layout and into ordinary flow: the picture
+   takes the shape it was given, the caption sits under it on the slide's own
+   ground, and nothing of the image is covered. Everything above still applies
+   to a full-bleed image, which is the default. */
+.layout-image .pad.img-framed {
+  padding: 56px 92px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+}
+.layout-image .pad.img-framed .img {
+  position: static;
+  inset: auto;
+  flex: 0 1 auto;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  aspect-ratio: var(--img-ar, 16 / 9);
+  border-radius: 3px;
+}
+/* A framed caption is type on the slide, not an overlay on a photograph, so
+   it takes the theme's own ink and drops the scrim the overlay needed. */
+.layout-image .pad.img-framed .cap {
+  position: static;
+  flex: none;
+  padding: 0;
+  max-width: 100%;
+  text-align: center;
+  color: var(--s-fg);
+  background: none;
+  text-shadow: none;
+}
+.layout-image .pad.img-framed .cap-line { font-size: 34px; font-weight: 650; }
+.layout-image .pad.img-framed .cap-credit { color: var(--s-dim); opacity: 1; font-size: 17px; }
+/* The accent bar survives framing — it just becomes a band under the picture
+   the width of the picture, rather than a strip across the slide. */
+.layout-image .pad.img-framed .cap-bar {
+  padding: 18px 30px;
+  background: var(--s-accent);
+  color: #fff;
+}
+.layout-image .pad.img-framed .cap-bar .cap-credit { color: #fff; opacity: .85; }
+.layout-image .pad.img-framed .cap-top { order: -1; }
+
+/* A top bar lands exactly where the deck logo sits. Move the logo to the
+   opposite corner rather than recolouring it — a deck's logo may be light or
+   dark, and inverting it would fix one and ruin the other. */
+.layout-image:has(.cap-bar.cap-top) .slide-logo,
+.layout-image:has(.cap-plain.cap-top) .slide-logo {
+  top: auto;
+  bottom: 26px;
+  /* Bottom-left, not bottom-right: the slide number already owns that corner
+     and the two sat on top of each other on the first attempt. */
+  right: auto;
+  left: 36px;
+}
+
+/* Top: for an image whose subject sits low. Flips the gradient with it. */
+.layout-image .cap-top {
+  top: 0; bottom: auto;
+  padding: 56px 92px 100px;
+}
+.layout-image .cap-scrim.cap-top { background: linear-gradient(rgba(0,0,0,.82), transparent); }
+.layout-image .cap-bar.cap-top,
+.layout-image .cap-plain.cap-top { padding: 38px 92px 34px; }
+
+/* A split image credits its source in the corner of the picture, small. The
+   heading is already doing the talking on that slide. */
+.split-media { position: relative; }
+.split-media .cap {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 44px 28px 16px;
+  color: #fff;
+  pointer-events: none;
+}
+.split-media .cap-scrim { background: linear-gradient(transparent, rgba(0,0,0,.78)); }
+.split-media .cap-bar { background: var(--s-accent); padding: 12px 28px; }
+.split-media .cap-plain { background: none; text-shadow: 0 2px 14px rgba(0,0,0,.85); }
+.split-media .cap-none { display: none; }
+.split-media .cap-credit { margin: 0; font-size: 15px; }
 .layout-video .empty,
 .layout-image .empty {
   position: absolute; inset: 0; display: grid; place-items: center; align-content: center;
@@ -4021,4 +4308,13 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
   padding: 3px 8px; border-radius: 6px;
   background: rgba(125, 125, 125, 0.15); color: var(--s-dim);
   margin-left: 6px;
+}
+
+/* Image-stack inspector: one bordered block per layer, numbered to match the
+   order they are shown in. */
+.layer-row { border: 1px solid var(--ui-line); border-radius: 9px; padding: 12px; margin-bottom: 10px; }
+.layer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.layer-num {
+  font-size: 11px; font-weight: 700; color: var(--ui-dim);
+  background: var(--ui-panel-2); border-radius: 4px; padding: 3px 8px;
 }

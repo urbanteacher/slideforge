@@ -4,7 +4,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 function bridge(){
  const messages=[],listeners={},timers=[];
  const presenter={closed:false,focus(){this.focused=true;},postMessage(m,origin){messages.push({m,origin});},close(){this.closed=true;}};
- const Player={deck:{slides:[{id:'q',type:'quiz'}]},idx:0,answers:{},started:1,next(){this.advanced=true;},prev(){},goTo(){},toggleBlank(){},close(){},emit(){}};
+ const Player={deck:{slides:[{id:'q',type:'quiz'}]},idx:0,answers:{},started:1,next(){this.advanced=true;},prev(){},goTo(){},toggleBlank(){},toggleFreeze(){this.freezeToggled=true;},close(){},emit(){}};
  const SF={Live:{teacherWorkspaceUrl:()=> 'manual.html#'+'a'.repeat(32),nextAction:()=> 'reveal'},questionTimeLimit:()=>0};
  vm.runInNewContext(fs.readFileSync(require.resolve('../js/model.js'),'utf8'),{window:{SF},console});
  const scope={Player,SF,window:{open:()=>presenter,addEventListener:(name,fn)=>listeners[name]=fn},location:{origin:'http://localhost:8787'},toast(){},setTimeout:fn=>timers.push(fn)};
@@ -38,4 +38,15 @@ test('memory state reaches presenter and only its trusted window can award a cla
  assert.equal(commands.length,0);
  b.listeners.message({source:b.presenter,origin:'http://localhost:8787',data});
  assert.deepEqual(commands,[{action:'claim',card:0}]);
+});
+
+test('freeze state reaches presenter and freeze command toggles screen freeze',()=>{
+ const b=bridge();
+ b.Player.frozen=true;
+ b.Player.openPresenter();
+ b.Player.syncPresenter();
+ assert.equal(b.messages[0].m.frozen,true);
+ const data={type:'sf-presenter-cmd',cmd:'freeze'};
+ b.listeners.message({source:b.presenter,origin:'http://localhost:8787',data});
+ assert.equal(b.Player.freezeToggled,true);
 });

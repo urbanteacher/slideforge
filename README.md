@@ -1037,6 +1037,21 @@ slide, an elapsed timer and a clickable filmstrip. On a question it shows you th
 correct answer. It drives the main window — projector on one screen, this on your
 laptop. Allow pop-ups if nothing opens.
 
+**Activities & mini games** brings the 54 activity templates, 25 game engines
+and saved quizzes into the presenter window. Create an editable starter or draft
+with AI using the current slide, lesson title or your own brief. Review the
+content and answers, then choose **Check & preview**. Editing a draft requires a
+new preview before **Launch now** or **Queue next** becomes available.
+
+Launch inserts the activity immediately after the current slide; queue adds it
+after other activities queued from that slide. The live room stays connected.
+**Return to lesson** revisits the slide you left. **Save for reuse** saves a quiz
+to the quiz library or a slide activity as a separate lesson. Drafting and
+launching do not alter the saved source lesson. AI needs the configured server
+key; manual editing works without it. The **Quiz on a theme** shortcut also opens
+a private draft for review.
+
+
 ---
 
 ## Files

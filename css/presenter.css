@@ -14,3 +14,16 @@
 #teacherWorkspace{display:block;width:100%;min-height:280px;flex:1;border:1px solid var(--ui-line);border-radius:12px;background:#f5f6f2}.qa{max-height:none}.pv-foot{flex-wrap:wrap}.pv-foot .btn{font-size:12px}.cue{font-size:11px;padding:6px 9px}.cue b{font-size:16px}#qaBadge{color:var(--ui-warn)}
 @media(max-width:900px){.pv{overflow:auto}.now .box{max-height:38vh;width:100%}.pv-foot{position:sticky;bottom:-16px;background:var(--ui-bg);padding:10px 0}.pv-bar .wall{display:none}}
 .quick-card{border:1px solid var(--ui-line);border-radius:12px;padding:16px;background:var(--ui-panel)}.quick-card h2{font-size:21px;margin:6px 0 12px}.quick-card h3{font-size:16px;margin:0 0 10px}.quick-card p{font-size:12px;line-height:1.55;color:var(--ui-dim)}.quick-card label{display:block;font-size:12px;margin:12px 0 5px}.quick-card textarea,.quick-card select{box-sizing:border-box;width:100%;padding:10px;border:1px solid var(--ui-line);border-radius:7px;background:var(--ui-bg);color:var(--ui-text);font:inherit}.quick-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.quick-actions .btn{font-size:12px}#momentTime{display:block;font-size:32px;font-variant-numeric:tabular-nums;font-weight:700}#activityAudio{display:block;width:100%;margin-top:14px}#activityMusic{max-width:100%}.pulse-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--ui-line)}
+
+/* Private activity authoring shares the teaching desk's controls. */
+#activitiesPane input:not([type="checkbox"]){box-sizing:border-box;width:100%;padding:10px;border:1px solid var(--ui-line);border-radius:7px;background:var(--ui-bg);color:var(--ui-text);font:inherit}
+#activitiesPane input[type="checkbox"]{width:20px;height:20px;accent-color:var(--ui-accent)}
+#activityStatus{font-size:13px;line-height:1.5;padding:0 4px;white-space:pre-line}
+.activity-question{border-top:1px solid var(--ui-line);padding:14px 0;margin-top:12px}
+.activity-question summary{cursor:pointer;font-size:14px;font-weight:650;line-height:1.5;overflow-wrap:anywhere}
+.activity-question>.btn{margin-top:12px}
+#activityPreviewBox{width:min(100%,560px);max-height:32vh;aspect-ratio:16/9;min-height:0;flex:none;margin:0}
+#activityPreviewPosition{align-self:center;font-size:12px}
+#activityPreviewArea>p,#activityDraft>p{font-size:12px;color:var(--ui-dim);line-height:1.5}
+#activityDraft>.quick-actions{margin-bottom:12px}
+.pv.activity-authoring .now .box{width:min(100%,360px);max-height:18vh}
