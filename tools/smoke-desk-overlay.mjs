@@ -99,6 +99,11 @@ try {
      session raises it on its own, so it is already up by now. */
   await desk.waitForSelector('#boxNow .desk-wall-rail');
   assert.ok(await wall.evaluate(() => !!SF.Player._rail), 'the wall really has a rail up');
+  /* The middle room-view stop is called "split" where a teacher reads it. */
+  assert.equal((await desk.locator('#btnRail').innerText()).trim(), 'Room: split',
+    'the desk button names the split');
+  assert.ok((await desk.evaluate(() => [...document.querySelectorAll('#boxNow .wall-chrome span')]
+    .map((s) => s.textContent))).includes('Room: split'), 'the chip names the split too');
 
   /* Join QR covers the wall from outside #player, which is exactly why it was
      invisible from the desk — it is in no deck and under no viewport. */

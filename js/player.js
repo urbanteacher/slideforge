@@ -1243,7 +1243,12 @@
    * state. E still jumps straight to full screen for when that is the only
    * thing wanted.
    *
-   *   hidden  →  beside the slide  →  over the slide  →  hidden
+   *   hidden  →  split with the slide  →  over the slide  →  hidden
+   *
+   * The middle stop is called "split" everywhere a teacher reads it; the state
+   * string stays 'beside' because it is the value the desk is sent and
+   * compares against, and renaming a live cross-window protocol to reword a
+   * button would break any desk still open from before the change.
    *
    * A stop with nothing in it is skipped rather than landed on: with nobody
    * joined and no prompt open there is nothing to put on the whole screen, so
@@ -1344,7 +1349,7 @@
          state is already visible on screen, and what a host wants from a
          tooltip mid-lesson is where the button will take them. */
       var nextTip = state === 'hidden'
-        ? 'Show the room beside the slide (S)'
+        ? 'Split the screen with the room (S)'
         : state === 'beside'
           ? 'Put the room on the whole screen (S)'
           : 'Hide the room (S)';

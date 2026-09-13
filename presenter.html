@@ -440,6 +440,8 @@
       <div class="pv-room" id="roomToolsMore">
         <button class="btn" data-cmd="poll" id="btnPoll" title="Ask the room a quick question (V)">Quick poll</button>
         <button class="btn" data-cmd="focus" id="btnFocus" title="Show leaderboard (E)">Show leaderboard</button>
+        <button class="btn" id="footCountdown" title="Thinking-time countdown on the wall (uses Quick → Thinking time)">Timer</button>
+        <button class="btn" id="footBreak" title="5-minute break overlay on the wall">Break</button>
         <button class="btn" data-cmd="reactions" id="btnReactions" title="Turn audience reactions on or off (T)">Reactions: On</button>
         <button class="btn" data-cmd="blankPhones" id="btnBlankPhones" title="Blank every learner phone (Shift+B)">Blank phones</button>
         <button class="btn" data-cmd="floor" id="btnFloor" title="Who may speak (Shift+H)">Floor: follows the lesson</button>
@@ -724,7 +726,7 @@
     shut: 'Floor: closed'
   };
   var ROOM_VIEW_TIP = {
-    hidden: 'Show the room beside the slide (S)',
+    hidden: 'Split the screen with the room (S)',
     beside: 'Put the room on the whole screen (S)',
     full: 'Hide the room (S)'
   };
@@ -750,7 +752,7 @@
     if (rail) {
       var view = d.roomView || 'hidden';
       rail.classList.toggle('on', view !== 'hidden');
-      rail.textContent = view === 'beside' ? 'Room: beside'
+      rail.textContent = view === 'beside' ? 'Room: split'
         : view === 'full' ? 'Room: full screen' : 'Room view';
       rail.title = ROOM_VIEW_TIP[view] || ROOM_VIEW_TIP.hidden;
     }
@@ -1155,7 +1157,7 @@
     if (state.blank) chip('wc-blank', 'Blank');
     if (state.frozen) chip('wc-freeze', '❄️ Frozen');
     if (state.joinCard) chip('wc-join', 'Join QR');
-    if (state.roomView === 'beside') chip('wc-room', 'Room: beside');
+    if (state.roomView === 'beside') chip('wc-room', 'Room: split');
     if (state.roomView === 'full') chip('wc-room', 'Room: full');
     if (state.focusOn) chip('wc-room', 'Focus on wall');
     if (state.inkOn) chip('wc-ink', state.inkMode === 'spot' ? 'Spotlight' : 'Ink');
