@@ -99,13 +99,13 @@ test('a lesson survives being saved and reloaded', () => {
     deck.slides.find((s) => s.type === 'game').gameId);
 });
 
-test('ipdv-intro builds a 33-slide active lecture with formative quiz and 4 feedback moments', () => {
+test('ipdv-intro builds a 40-slide active lecture with formative quiz and 5 feedback moments', () => {
   const SF = load();
   const deck = SF.buildLesson('ipdv-intro');
   assert.ok(deck, 'deck exists');
   assert.equal(deck.title, 'LDSCI6253 Advanced Information Presentation & Visualisation');
   assert.equal(deck.theme, 'northeastern');
-  assert.equal(deck.slides.length, 33);
+  assert.equal(deck.slides.length, 40);
 
   // The lecture wears the university's branding, so buildLesson has to carry a
   // lesson's logo fields onto the deck and not just its theme.
@@ -121,6 +121,12 @@ test('ipdv-intro builds a 33-slide active lecture with formative quiz and 4 feed
   // Diverse slide types represent content visually
   const types = new Set(deck.slides.map((s) => s.type));
   assert.ok(types.has('title'), 'has title');
+  assert.ok(types.has('mindmap'), 'has editable visual thinking');
+  assert.equal(deck.slides[0].date, '2026-09-14');
+  assert.equal(deck.slides[1].type, 'introduction');
+  const map = deck.slides.find(s => s.type === 'mindmap');
+  assert.equal(SF.slideSteps(map).length, 6);
+  assert.equal(SF.normalizeDeck(JSON.parse(JSON.stringify(deck))).slides[1].title, 'Mark Martin');
   assert.ok(types.has('cards'), 'has cards');
   assert.ok(types.has('content'), 'has content');
   assert.ok(types.has('split'), 'has split');
@@ -161,15 +167,17 @@ test('ipdv-intro builds a 33-slide active lecture with formative quiz and 4 feed
 
   // Verify feedback moments
   const feedbackSlides = deck.slides.filter((s) => s.feedback);
-  assert.equal(feedbackSlides.length, 4, 'exactly 4 interactive feedback moments');
-  assert.equal(feedbackSlides[0].feedback.kind, 'wordcloud');
-  assert.ok(feedbackSlides[0].feedback.prompt.includes('what does a graphic do'));
-  assert.equal(feedbackSlides[1].feedback.kind, 'poll');
-  assert.ok(feedbackSlides[1].feedback.prompt.includes('Four datasets'));
+  assert.equal(feedbackSlides.length, 5, 'exactly 5 interactive feedback moments');
+  assert.equal(feedbackSlides[0].feedback.kind, 'poll');
+  assert.ok(feedbackSlides[0].feedback.prompt.includes('AE2 carry-over'));
+  assert.equal(feedbackSlides[1].feedback.kind, 'wordcloud');
+  assert.ok(feedbackSlides[1].feedback.prompt.includes('what does a graphic do'));
   assert.equal(feedbackSlides[2].feedback.kind, 'poll');
-  assert.ok(feedbackSlides[2].feedback.prompt.includes('patient flow'));
-  assert.equal(feedbackSlides[3].feedback.kind, 'scale');
-  assert.ok(feedbackSlides[3].feedback.prompt.includes('4Ps'));
+  assert.ok(feedbackSlides[2].feedback.prompt.includes('Four datasets'));
+  assert.equal(feedbackSlides[3].feedback.kind, 'poll');
+  assert.ok(feedbackSlides[3].feedback.prompt.includes('patient flow'));
+  assert.equal(feedbackSlides[4].feedback.kind, 'scale');
+  assert.ok(feedbackSlides[4].feedback.prompt.includes('4Ps'));
 });
 
 test('ipdv bundle generator exports a valid slideforge-bundle', () => {
@@ -183,7 +191,7 @@ test('ipdv bundle generator exports a valid slideforge-bundle', () => {
   assert.equal(bundle.decks[0].title, 'LDSCI6253 Advanced Information Presentation & Visualisation');
   assert.equal(bundle.decks[0].theme, 'northeastern');
   assert.equal(bundle.decks[0].logo, 'assets/brand/nu-london-logo.png');
-  assert.equal(bundle.decks[0].slides.length, 33);
+  assert.equal(bundle.decks[0].slides.length, 40);
   assert.equal(bundle.games[0].title, 'Lecture 1 Check — Foundations of Visualisation');
   assert.equal(bundle.games[0].questions.length, 4);
 });
