@@ -220,6 +220,42 @@ if (quizGenerate) quizGenerate.onclick = function () {
   } }));
 };
 
+/* The answers on offer, beside the question.
+ *
+ * Running a poll from the desk used to mean watching a reply count climb
+ * without being able to see what was being replied to — the options were on
+ * the wall and on the phones, and the desk had only the prompt. A scale shows
+ * its span and both end labels, because "1 to 5" says nothing without knowing
+ * which end is which. */
+function paintPollChoices(p) {
+  var host = $('pollChoices');
+  if (!host) return;
+  host.textContent = '';
+  var items = [];
+  var opts = (p && p.options) || [];
+  var ends = (p && p.ends) || null;
+  for (var i = 0; i < opts.length; i++) {
+    var text = String(opts[i] == null ? '' : opts[i]).trim();
+    if (!text) continue;
+    /* Name the ends of a scale on the points themselves. The room sees
+       "1 ... 5" under two words; the desk should read the same way. */
+    if (ends && i === 0 && ends.low) text += ' · ' + ends.low;
+    else if (ends && i === opts.length - 1 && ends.high) text += ' · ' + ends.high;
+    items.push({ text: text, end: !!(ends && (i === 0 || i === opts.length - 1)) });
+  }
+  /* A word cloud or a brainstorm has nothing to choose between — the room
+     types. Saying so beats an empty row that looks like a failure to load. */
+  if (p && !items.length) items.push({ text: 'Open replies — the room types', end: true });
+  if (p && p.max > 1) items.push({ text: 'up to ' + p.max + ' each', end: true });
+  for (var n = 0; n < items.length; n++) {
+    var li = document.createElement('li');
+    li.textContent = items[n].text;
+    if (items[n].end) li.className = 'poll-scale-end';
+    host.appendChild(li);
+  }
+  host.hidden = !items.length;
+}
+
 function paintPoll(p) {
   var state = $('pollState');
   var count = $('pollCount');
@@ -227,6 +263,7 @@ function paintPoll(p) {
   var qr = /** @type {HTMLButtonElement|null} */ ($('pollQr'));
   var toggle = /** @type {HTMLButtonElement|null} */ ($('pollWhereToggle'));
   if (state) state.textContent = p ? p.prompt : 'No poll';
+  paintPollChoices(p);
   if (count) {
     count.textContent = !p ? '—'
       : !p.live ? 'Not live'
@@ -239,7 +276,7 @@ function paintPoll(p) {
     toggle.disabled = !p;
     var next = p && p.presentAs === 'focus' ? 'rail' : 'focus';
     toggle.dataset.next = next;
-    toggle.textContent = next === 'rail' ? 'Beside slide' : 'Full screen';
+    toggle.textContent = next === 'rail' ? 'Split screen' : 'Full screen';
   }
 }
 

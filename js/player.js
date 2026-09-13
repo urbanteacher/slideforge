@@ -2335,6 +2335,17 @@
               prompt: SF.Live.prompt.prompt,
               kind: SF.Live.prompt.kind,
               presentAs: SF.Live.prompt.presentAs,
+              /* What the room is choosing between. The desk used to be told
+                 the question and the count of replies but never the answers
+                 on offer, so a teacher running a poll from the desk could see
+                 that eleven people had voted without being able to see what
+                 they were voting on — the options were only ever on the wall
+                 and on the phones. */
+              options: (SF.Live.prompt.options || []).slice(),
+              /* A scale's options are just '1'..'n'; what the numbers mean is
+                 in `ends`, and without it "1 to 5" tells a teacher nothing. */
+              ends: SF.Live.prompt.ends || null,
+              max: SF.Live.prompt.max || 1,
               answered: SF.Live.digest ? (SF.Live.digest.answered || 0) : 0,
               players: SF.Live.digest ? (SF.Live.digest.players || 0) : (SF.Live.players || []).length,
               live: !!SF.Live.active
