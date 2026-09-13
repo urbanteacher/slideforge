@@ -22,7 +22,7 @@ coordinating rather than starting cold.
 | 1 | Present button clipped 17px at 375px | S | **Done** — `18899f7` |
 | 2 | HUD tap targets | S | **Done** — but the finding was mostly wrong |
 | 3 | Before/after drag posts full presenter state per pointermove | S | **Done** — 60 commands → 1 sync |
-| 4 | Inspector mutates the slide mid-render without marking dirty | M | To do |
+| 4 | Inspector mutates the slide mid-render | M | **Done** — smaller than graded |
 | 5 | `explorationValue` re-normalises per call, 101× per graph | S | **Done** — 1.8× on the curve |
 | 6 | Blank the phones from the HUD | S–M | **Done** — `Shift+B` / room menu |
 | 7 | Gate ✋ and ? to junction points | S | To do |
@@ -32,6 +32,7 @@ coordinating rather than starting cold.
 | 11 | Coda — exit ticket penultimate, wrap last | M–L | Deferred · needs a privacy decision |
 | 12 | Visual baselines for slide layouts | M | **Done** — 45 added, 213 total |
 | 13 | No git remote — commits are local only | S | Blocked · needs the repo URL |
+| 18 | **"Add image detail" does nothing** on an Explore slide | ? | **New** · pre-existing, not mine |
 
 ### Open decisions — not mine to make
 
@@ -261,3 +262,38 @@ The runner's header comment said 144 while it ran 168; corrected.
   My first attempt put the rule in `app.css`, where it never applied at all:
   `customize.css` loads later and sets the same selector. It looked right in the
   file and did nothing in the browser.
+
+- **13 Sep** — Item 4 done, and graded too high. The inspector no longer writes
+  to the slide while drawing it: `config(slide)` goes into a local and reaches
+  `slide.exploration` only through `commit()`, from an actual edit.
+
+  Half the original finding does not survive. It claimed edits went unmarked,
+  but `editor.js` passes `touched()` in **both** callbacks, so every edit path
+  already marked the document dirty. And after item 1 gated `exploration` to
+  the types that read it, the render-time write was writing what `normalizeSlide`
+  would write on save anyway. What was left is a render function mutating the
+  document, which is worth not doing, but it was not the data-loss risk I wrote
+  up. Verified: selecting a slide no longer changes it; a text edit still
+  persists.
+
+### 18. "Add image detail" does nothing — **pre-existing, found while doing 4**
+
+On an Explore slide, clicking **Add image detail** adds nothing. No hotspot is
+created, the inspector does not grow a "Detail 1" block, and the saved slide
+keeps `spots: []`. The guided-image-exploration feature cannot be authored at
+all from the editor.
+
+Not a regression — checked out `HEAD:js/explore.js` and it behaves identically.
+
+Ruled out, with evidence:
+- **The model.** `normalizeExploration`, `normalizeSlide` and a full
+  `normalizeDeck` round trip all preserve a pushed spot.
+- **Stale slide objects.** The object the inspector closes over is identical
+  across redraws, same `id`, same reference.
+- **A throwing handler.** Wrapped the button's `onclick`: it runs and does not
+  throw.
+
+Not isolated: even read 200ms after the click, before anything settles,
+`slide.exploration.spots` is already 0. The likely area is the editor's
+redraw/save path rather than `explore.js`, but I stopped rather than spend more
+on another agent's feature without being asked.

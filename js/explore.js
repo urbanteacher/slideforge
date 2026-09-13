@@ -153,12 +153,20 @@
   }
   function inspector(parent, slide, UI, changed, redraw) {
     if (!kinds.includes(slide.type) && slide.type !== 'chart') return false;
-    slide.exploration = config(slide); var c = slide.exploration;
-    function text(label, key, object) { var o = object || c; parent.appendChild(UI.field(label, UI.text(o[key] || '', function (v) { if (key === 'prompt' && slide.feedback && slide.feedback.prompt === o[key]) slide.feedback.prompt = v; o[key] = v; changed(); }))); }
-    function number(label, key, object) { var o = object || c; var input = node('input'); input.type = 'number'; input.value = String(o[key]); input.oninput = function () { if (Number.isFinite(input.valueAsNumber)) { o[key] = input.valueAsNumber; changed(); } }; input.onchange = function () { Object.assign(c, SF.normalizeExploration(c)); redraw(); }; parent.appendChild(UI.field(label, input)); }
-    function image(label, key, object) { var o = object || c; text(label + ' URL', key, o); var file = node('input'); file.type = 'file'; file.accept = 'image/*'; file.setAttribute('aria-label', 'Upload ' + label); file.onchange = function () { var f = file.files && file.files[0]; if (!f) return; if (f.size > 3.5 * 1024 * 1024) { SF.toast('Choose an image smaller than 3.5 MB.'); return; } var reader = new FileReader(); reader.onload = function () { o[key] = String(reader.result); redraw(); }; reader.readAsDataURL(f); }; parent.appendChild(UI.field('Upload ' + label, file)); }
+    /* A local copy, not a write-through. This used to be
+       `slide.exploration = config(slide)`, which meant that merely selecting a
+       slide rewrote part of the document as a side effect of drawing its
+       inspector — and it replaced c.spots with a new array of new objects on
+       every repaint, so anything still holding a reference to a spot was
+       writing to a detached one. Nothing reaches the slide now until an edit
+       does it, through commit(). */
+    var c = config(slide);
+    function commit(then) { slide.exploration = c; (then || changed)(); }
+    function text(label, key, object) { var o = object || c; parent.appendChild(UI.field(label, UI.text(o[key] || '', function (v) { if (key === 'prompt' && slide.feedback && slide.feedback.prompt === o[key]) slide.feedback.prompt = v; o[key] = v; commit(); }))); }
+    function number(label, key, object) { var o = object || c; var input = node('input'); input.type = 'number'; input.value = String(o[key]); input.oninput = function () { if (Number.isFinite(input.valueAsNumber)) { o[key] = input.valueAsNumber; commit(); } }; input.onchange = function () { Object.assign(c, SF.normalizeExploration(c)); commit(redraw); }; parent.appendChild(UI.field(label, input)); }
+    function image(label, key, object) { var o = object || c; text(label + ' URL', key, o); var file = node('input'); file.type = 'file'; file.accept = 'image/*'; file.setAttribute('aria-label', 'Upload ' + label); file.onchange = function () { var f = file.files && file.files[0]; if (!f) return; if (f.size > 3.5 * 1024 * 1024) { SF.toast('Choose an image smaller than 3.5 MB.'); return; } var reader = new FileReader(); reader.onload = function () { o[key] = String(reader.result); commit(redraw); }; reader.readAsDataURL(f); }; parent.appendChild(UI.field('Upload ' + label, file)); }
     if (slide.type === 'chart') {
-      parent.appendChild(UI.check('Predict before revealing the chart', c.prediction, function (v) { c.prediction = v; redraw(); }));
+      parent.appendChild(UI.check('Predict before revealing the chart', c.prediction, function (v) { c.prediction = v; commit(redraw); }));
       if (c.prediction) {
         text('Prediction question', 'prompt');
         parent.appendChild(UI.check('Collect predictions on learner devices', !!slide.feedback, function (v) { slide.feedback = v ? Object.assign(SF.makeFeedback('poll'), { prompt: c.prompt, options: ['Increasing', 'Staying similar', 'Decreasing'] }) : null; redraw(); }));
@@ -173,13 +181,13 @@
       c.spots.forEach(function (spot, i) {
         parent.appendChild(node('h4', null, 'Detail ' + (i + 1))); text('Detail title', 'title', spot); text('Explanation', 'body', spot);
         number('Horizontal position (%)', 'x', spot); number('Vertical position (%)', 'y', spot); number('Zoom (1–4)', 'zoom', spot);
-        parent.appendChild(UI.button('Remove detail', 'ghost', function () { c.spots.splice(i,1); redraw(); }));
+        parent.appendChild(UI.button('Remove detail', 'ghost', function () { c.spots.splice(i,1); commit(redraw); }));
       });
-      if (c.spots.length < 8) parent.appendChild(UI.button('Add image detail', '', function () { c.spots.push({ x: 50, y: 50, zoom: 2, title: 'New detail', body: 'What should learners notice?' }); redraw(); }));
+      if (c.spots.length < 8) parent.appendChild(UI.button('Add image detail', '', function () { c.spots.push({ x: 50, y: 50, zoom: 2, title: 'New detail', body: 'What should learners notice?' }); commit(redraw); }));
       parent.appendChild(node('p', 'hint', 'Positions are percentages of the image. Next visits details in order; Previous steps back.'));
     }
     if (slide.type === 'simulation') {
-      parent.appendChild(UI.field('Relationship', UI.select([{ value: 'linear', label: 'Linear: y = ax + b' }, { value: 'quadratic', label: 'Quadratic: y = ax² + b' }], c.model, function (v) { c.model = v; changed(); })));
+      parent.appendChild(UI.field('Relationship', UI.select([{ value: 'linear', label: 'Linear: y = ax + b' }, { value: 'quadratic', label: 'Quadratic: y = ax² + b' }], c.model, function (v) { c.model = v; commit(); })));
       text('Input label', 'inputLabel'); text('Output label', 'outputLabel');
       number('Minimum input', 'min'); number('Maximum input', 'max'); number('Starting input', 'initial'); number('Multiplier (a)', 'a'); number('Offset (b)', 'b');
       parent.appendChild(node('p', 'hint', 'Present to drag the input and explore the graph. Input range is bounded to −1000…1000; multiplier to −100…100.'));
