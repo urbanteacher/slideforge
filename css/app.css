@@ -711,7 +711,13 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
     scale(calc(1 - var(--depth, 0) * 0.05))
     rotate(calc(var(--depth, 0) * -1.3deg));
 }
-.layout-gallery .fig.step-past .fig-cap { opacity: 0; }
+/* Only the figure on top of the pile shows its caption — a figure is covered
+   when any later one is not still hidden. Stating it that way rather than
+   keying on .step-past covers the static render too: a gallery with the build
+   switched off, an editor preview, a rail thumbnail and the presenter's
+   next-slide pane all used to stack every caption on top of the others,
+   because .step-past is only ever applied by a running build. */
+.layout-gallery .fig:has(~ .fig:not(.step-hidden)) .fig-cap { opacity: 0; }
 .layout-gallery .fig.step-hidden { transform: translateY(36px) scale(.95); }
 
 /* keywords — bold term, lowercase definition */

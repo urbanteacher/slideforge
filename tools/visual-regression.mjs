@@ -1,8 +1,20 @@
 #!/usr/bin/env node
 /* SlideForge Visual Regression Baseline Suite
  *
- * Captures and verifies deterministic 1280x720 slide screenshots across all 24
- * game styles and 6 themes (144 baselines in total).
+ * Captures and verifies deterministic 1280x720 slide screenshots: every game
+ * style across every theme, plus a set of slide layouts.
+ *
+ * The layouts are here because every layout bug found in the September 2026
+ * session — a fourth card clipped off the bottom, an image caption running
+ * past the slide edge, a line chart's end-label cut mid-word, a gallery credit
+ * below the fold — was caught by eye and none would have been caught twice.
+ * Each fixture below is shaped to hold one of those open.
+ *
+ * Layouts run against three themes rather than all seven. Studio and
+ * northeastern are the two carrying per-layout overrides, and midnight is the
+ * plain case; a geometry regression shows up in any of them, while the full
+ * matrix would add ~22MB of PNGs to a baseline directory already at 40MB.
+ * Widen LAYOUT_THEMES if that trade stops being worth it.
  *
  * Usage:
  *   node tools/visual-regression.mjs --update          # Capture and write baseline images
@@ -35,6 +47,15 @@ const diffThreshold = thresholdArgIdx >= 0 && args[thresholdArgIdx + 1]
   ? parseFloat(args[thresholdArgIdx + 1])
   : 0.001; // 0.1% of pixels max tolerance for subpixel antialiasing
 const testDiff = args.includes('--test-diff');
+
+/* One fixture per thing that can go wrong, named for what it holds open. */
+const LAYOUT_CASES = [
+  'layout-title', 'layout-section', 'layout-content', 'layout-cards3',
+  'layout-cards4', 'layout-cards7', 'layout-keywords', 'layout-quote',
+  'layout-table', 'layout-split', 'layout-image-caption', 'layout-gallery',
+  'layout-chart-bar', 'layout-chart-line', 'layout-chart-pie'
+];
+const LAYOUT_THEMES = ['northeastern', 'studio', 'midnight'];
 
 let spawnedServer = null;
 
@@ -140,8 +161,10 @@ async function run() {
     };
   });
 
-  if (filterStyle && !catalog.styles.includes(filterStyle)) {
-    console.error(`Unknown game style: "${filterStyle}".\nValid styles: ${catalog.styles.join(', ')}`);
+  /* --style names a game style or a layout fixture; both are captures. */
+  if (filterStyle && !catalog.styles.includes(filterStyle) && !LAYOUT_CASES.includes(filterStyle)) {
+    console.error(`Unknown capture: "${filterStyle}".\nGame styles: ${catalog.styles.join(', ')}`
+      + `\nLayouts: ${LAYOUT_CASES.join(', ')}`);
     await browser.close();
     cleanup();
     process.exit(1);
@@ -154,17 +177,35 @@ async function run() {
     process.exit(1);
   }
 
-  const styles = filterStyle ? [filterStyle] : catalog.styles;
+  const styles = filterStyle
+    ? (catalog.styles.includes(filterStyle) ? [filterStyle] : [])
+    : catalog.styles;
   const themes = filterTheme ? [filterTheme] : catalog.themes;
 
   const combinations = [];
   for (const style of styles) {
     for (const theme of themes) {
-      combinations.push({ style, theme });
+      combinations.push({ style, theme, kind: 'game' });
     }
   }
 
-  console.log(`Testing ${combinations.length} combinations (${styles.length} styles × ${themes.length} themes)...\n`);
+  /* --style and --theme filter the layouts too, so a single failing fixture
+     can be re-run on its own the same way a game style can. */
+  const layoutCases = filterStyle
+    ? LAYOUT_CASES.filter((c) => c === filterStyle)
+    : LAYOUT_CASES;
+  const layoutThemes = filterTheme
+    ? LAYOUT_THEMES.filter((t) => t === filterTheme)
+    : LAYOUT_THEMES;
+  for (const layout of layoutCases) {
+    for (const theme of layoutThemes) {
+      combinations.push({ style: layout, theme, kind: 'layout' });
+    }
+  }
+
+  console.log(`Testing ${combinations.length} captures — `
+    + `${styles.length} game styles × ${themes.length} themes, `
+    + `${layoutCases.length} layouts × ${layoutThemes.length} themes...\n`);
 
   let passed = 0;
   let updated = 0;
@@ -173,13 +214,13 @@ async function run() {
   const startTime = Date.now();
 
   for (let idx = 0; idx < combinations.length; idx++) {
-    const { style, theme } = combinations[idx];
+    const { style, theme, kind } = combinations[idx];
     const key = `${style}--${theme}`;
     const baselinePath = path.join(BASELINES_DIR, `${key}.png`);
     const baselineExists = fs.existsSync(baselinePath);
 
     // 1. Render deterministic slide in browser
-    await page.evaluate(({ st, th, injectTestDiff }) => {
+    await page.evaluate(({ st, th, injectTestDiff, kind }) => {
       /* Bingo deals each card with Math.random (js/bingo.js), which is right
          for the game — every participant should get a different card — and
          fatal for a baseline, because the render differs every run. Before
@@ -194,14 +235,61 @@ async function run() {
         return seed / 0x100000000;
       };
       try {
+      let rd, slide;
+      if (kind === 'layout') {
+        /* Fixtures are written out rather than borrowed from a lesson, so a
+           baseline never moves because somebody edited the lecture. Content is
+           sized to the failure it holds open: four cards because a fourth used
+           to fall off the bottom, a chart with long series names because an
+           end-label used to be cut mid-word, a gallery layer with a source
+           line because that line used to sit below the fold. */
+        const bullets = (n, text) => Array.from({ length: n }, (_, i) => text + ' ' + (i + 1)
+          + ' — enough words on this line to wrap at least once in a narrow column.');
+        const build = {
+          'layout-title': { type: 'title', title: 'A course title\nover two lines', subtitle: 'Week 1 · Lecture 1' },
+          'layout-section': { type: 'section', title: 'A section break', subtitle: 'The pause before the next idea.' },
+          'layout-content': { type: 'content', title: 'Bullets that wrap', bullets: bullets(4, 'Point') },
+          'layout-cards3': { type: 'cards', title: 'Three cards', bullets: bullets(3, 'Card') },
+          'layout-cards4': { type: 'cards', title: 'Four cards — the one that used to clip', bullets: bullets(4, 'Card') },
+          'layout-cards7': { type: 'cards', title: 'Seven cards — four across, two rows', bullets: bullets(7, 'Card') },
+          'layout-keywords': { type: 'keywords', title: 'Keywords', bullets: [
+            'PLAN\tdefine purpose and audience; establish success metrics',
+            'PREPARE\tclean and validate; inspect outliers; tidy the shape',
+            'PRESENT\tchoose the idiom; build hierarchy; annotate',
+            'POLISH\ttest for accessibility; verify; optimise for the medium'] },
+          'layout-quote': { type: 'quote', body: 'A long enough quotation that it has to wrap across more than a single line on the slide.', subtitle: 'Attributed to someone' },
+          'layout-table': { type: 'table', title: 'A table', body: 'Area|Leave|Remain\nBoston|75|25\nBristol|38|62\nLambeth|21|79' },
+          'layout-split': { type: 'split', title: 'Image and text', bullets: bullets(3, 'Point'),
+            image: 'assets/brand/nu-london-skyline.png', imageFit: 'contain',
+            subtitle: 'Northeastern University London' },
+          'layout-image-caption': { type: 'image', title: 'A caption over an image', subtitle: 'Source · a credit line that used to be clipped',
+            image: 'assets/brand/nu-london-skyline.png', imageFit: 'contain',
+            design: { imageFrame: '4:3', capStyle: 'bar' } },
+          'layout-gallery': { type: 'gallery', title: 'An image stack', imageFit: 'contain',
+            design: { imageFrame: '4:3' },
+            layers: [
+              { image: 'assets/lesson/anscombe/anscombe-i.svg', caption: 'Dataset I — a straight relationship', source: 'Anscombe, F.J. (1973)' },
+              { image: 'assets/lesson/anscombe/anscombe-ii.svg', caption: 'Dataset II — a curve, not a line', source: 'Anscombe, F.J. (1973)' }] },
+          'layout-chart-bar': { type: 'chart', chartKind: 'bar', title: 'Bar chart',
+            body: 'Area|Leave %|Remain %\nBoston|75|25\nBlackpool|67|33\nBristol|38|62\nCambridge|26|74' },
+          'layout-chart-line': { type: 'chart', chartKind: 'line', title: 'Line chart with long series names',
+            body: 'Year|Boston|Cambridge|Bristol\n1996|41|22|35\n2006|58|25|38\n2016|75|26|38' },
+          'layout-chart-pie': { type: 'chart', chartKind: 'pie', title: 'Pie chart',
+            body: 'Continent|Share\nAsia|46\nEurope|21\nAfrica|33' }
+        }[st];
+        rd = window.SF.normalizeDeck({ title: 'Baseline', theme: th, slides: [build] });
+        rd.theme = th;
+        slide = rd.slides[0];
+      } else {
       const g = window.SF.makeGame('Sample ' + st, st);
       g.id = 'baseline-' + st;
       g.questions.forEach((q, i) => { q.id = 'q-' + i; });
-      const rd = window.SF.gameToRunDeck(g);
+      rd = window.SF.gameToRunDeck(g);
       rd.theme = th;
 
       // Select representative game slide (first quiz or board)
-      const slide = rd.slides.find((s) => s.type === 'quiz' || (s.id && !s.id.includes('howto') && s.type !== 'section')) || rd.slides[0];
+      slide = rd.slides.find((s) => s.type === 'quiz' || (s.id && !s.id.includes('howto') && s.type !== 'section')) || rd.slides[0];
+      }
 
       let stage = document.getElementById('visualRegressionStage');
       if (!stage) {
@@ -240,7 +328,7 @@ async function run() {
       } finally {
         Math.random = realRandom;
       }
-    }, { st: style, th: theme, injectTestDiff: testDiff });
+    }, { st: style, th: theme, injectTestDiff: testDiff, kind: kind });
 
     const currentBuffer = await page.locator('#visualRegressionStage .slide').screenshot({ animations: 'disabled' });
 

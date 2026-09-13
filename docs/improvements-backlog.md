@@ -30,7 +30,7 @@ coordinating rather than starting cold.
 | 9 | Progress + persistent score on the phone | S | To do |
 | 10 | Lesson-level standings, teacher-controlled | M | Deferred · shared files |
 | 11 | Coda — exit ticket penultimate, wrap last | M–L | Deferred · needs a privacy decision |
-| 12 | Visual baselines for slide layouts | M | To do |
+| 12 | Visual baselines for slide layouts | M | **Done** — 45 added, 213 total |
 | 13 | No git remote — commits are local only | S | Blocked · needs the repo URL |
 
 ### Open decisions — not mine to make
@@ -145,7 +145,7 @@ are logic tests in `charts.test.js` and `exploration.test.js`. What is missing i
 fourth card, the clipped caption, the clipped line label, the clipped gallery
 credit — was caught by eye, and none would be caught if reintroduced.
 
-The runner's header comment still says 144; it runs 168.
+The runner's header comment said 144 while it ran 168; corrected.
 
 ---
 
@@ -165,3 +165,24 @@ The runner's header comment still says 144; it runs 168.
   First reload test was inconclusive: the phone dropped to the PIN screen
   instead of resuming, so the late-joiner path had to be tested by blanking
   first and joining second.
+
+- **13 Sep** — Item 12 done. 15 layout fixtures × 3 themes = 45 new baselines,
+  213 total. Fixtures are written out in the runner rather than borrowed from a
+  lesson, so a baseline never moves because somebody edited the lecture, and
+  each is sized to the failure it holds open — four cards, a chart with long
+  series names, a gallery layer with a source line.
+
+  Layouts run against northeastern, studio and midnight rather than all seven:
+  the first two carry the per-layout overrides, the third is the plain case, and
+  every layout bug found this session would have been caught by any one of them.
+  The full matrix would have added ~22MB to a directory already at 40MB. Widen
+  `LAYOUT_THEMES` if that trade stops holding.
+
+  **The new baselines immediately caught a bug.** A gallery rendered without a
+  running build stacked every figure's caption on top of the others — the only
+  rule hiding them was `.fig.step-past .fig-cap`, and `step-past` is applied by
+  the reveal driver, so it never fires in a static render. That covers a gallery
+  with Build on Next switched off, the editor preview, rail thumbnails and the
+  presenter's next-slide pane. Now stated as "a figure is covered when a later
+  one is not still hidden", which holds in both cases; re-verified that a live
+  build still shows exactly one caption per press.
