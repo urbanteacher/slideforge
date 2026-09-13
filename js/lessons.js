@@ -275,7 +275,10 @@
             'Invention of Statistical Graphics: Playfair also invented the bar chart and line graph, breaking free from physical geography to plot abstract economic data.',
             'Proportional Angle & Area: Early experiments in communicating part-to-whole relationships visually.'
           ],
-          notes: 'Before Playfair, charts were almost exclusively maps or astronomical diagrams tied to physical space. Playfair realized money, debt, and populations could be plotted as coordinates.'
+          image: 'https://upload.wikimedia.org/wikipedia/commons/5/52/Playfair_TimeSeries-2.png',
+          imageFit: 'contain',
+          subtitle: 'William Playfair, Commercial and Political Atlas (1786) · public domain, Wikimedia Commons',
+          notes: 'Before Playfair, charts were almost exclusively maps or astronomical diagrams tied to physical space. Playfair realized money, debt, and populations could be plotted as coordinates. The chart beside you is his own: England’s imports and exports, the first published time-series of economic data.'
         },
         {
           type: 'cards',
@@ -446,7 +449,14 @@
             'Conservation & Distribution: Immediately reveals where resources originate, branch, concentrate, or are lost.',
             'Alternative to Bar or Flow Charts: Captures multi-stage transitions and system-wide allocation simultaneously.'
           ],
-          notes: 'Sankey diagrams originated in thermodynamics (Capt. Matthew Sankey in 1898 showing steam engine energy efficiency). Widely used today in financial audits, user journey funnels, and supply chains.'
+          image: 'https://upload.wikimedia.org/wikipedia/commons/1/10/JIE_Sankey_V5_Fig1.png',
+          imageFit: 'contain',
+          /* On the left because the deck logo sits top right, and this plate
+             carries its own title along the top edge — the two landed on each
+             other. The text half has a two-word heading and room to spare. */
+          imageSide: 'left',
+          subtitle: 'M. H. Sankey, The Thermal Efficiency of Steam Engines (1898) · public domain, Wikimedia Commons',
+          notes: 'Sankey diagrams originated in thermodynamics (Capt. Matthew Sankey in 1898 showing steam engine energy efficiency). Widely used today in financial audits, user journey funnels, and supply chains. The diagram beside you is Sankey’s own, from the paper the idiom is named after.'
         },
         {
           type: 'keywords',
