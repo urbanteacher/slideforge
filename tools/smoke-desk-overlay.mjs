@@ -74,7 +74,15 @@ try {
   }
 
   /* It must be laid out, not dumped at 1280x720 spilling out of the preview,
-     and it has to cover the slide rather than sit beside it. */
+     and it has to cover the slide rather than sit beside it.
+     SF.fit runs a frame after the node is appended, so the panel exists at
+     full size for one frame before it is scaled — wait for the scale rather
+     than for the element, or this reads the unscaled frame roughly one run
+     in six. */
+  await desk.waitForFunction(() => {
+    const n = document.querySelector('#boxNow .wall-overlay');
+    return n && n.getBoundingClientRect().width < 1280;
+  });
   const geom = await desk.evaluate(() => {
     const box = document.getElementById('boxNow');
     const n = box.querySelector('.wall-overlay');

@@ -21,6 +21,17 @@ function start(kind){
 var btnTask = $('showTask'); if(btnTask) btnTask.onclick=function(){start('task');};
 var btnCountdown = $('showCountdown'); if(btnCountdown) btnCountdown.onclick=function(){start('timer');};
 var btnBreak = $('showBreak'); if(btnBreak) btnBreak.onclick=function(){start('break');};
+/* Footer power buttons — same moments as Quick, without opening that pane. */
+var footCountdown = $('footCountdown');
+if(footCountdown) footCountdown.onclick=function(){
+  if(moment&&moment.kind==='timer'){command({action:'clear'});return;}
+  start('timer');
+};
+var footBreak = $('footBreak');
+if(footBreak) footBreak.onclick=function(){
+  if(moment&&moment.kind==='break'){command({action:'clear'});return;}
+  start('break');
+};
 var btnPause = /** @type {HTMLButtonElement|null} */ ($('pauseMoment'));
 if(btnPause) btnPause.onclick=function(){command({action:moment&&moment.paused?'resume':'pause'});};
 var btnExtend = $('extendMoment'); if(btnExtend) btnExtend.onclick=function(){command({action:'extend'});};
@@ -39,6 +50,20 @@ function clock(){
  if(clearBtn) clearBtn.disabled=!moment;
  var boxNow = $('boxNow');
  if(boxNow) M.paint(boxNow,moment);
+ var footT = /** @type {HTMLButtonElement|null} */ ($('footCountdown'));
+ if(footT){
+  var onTimer=!!(moment&&moment.kind==='timer');
+  footT.classList.toggle('on',onTimer);
+  footT.textContent=onTimer?(left?('Timer '+M.format(left)):'End timer'):'Timer';
+  footT.title=onTimer?'Clear the thinking-time overlay':'Thinking-time countdown on the wall (uses Quick → Thinking time)';
+ }
+ var footB = /** @type {HTMLButtonElement|null} */ ($('footBreak'));
+ if(footB){
+  var onBreak=!!(moment&&moment.kind==='break');
+  footB.classList.toggle('on',onBreak);
+  footB.textContent=onBreak?(left?('Break '+M.format(left)):'End break'):'Break';
+  footB.title=onBreak?'Clear the break overlay':'5-minute break overlay on the wall';
+ }
 }
 function text(box,value){if(!box)return;var p=document.createElement('p');p.textContent=value;box.appendChild(p);}
 function room(pulse){
@@ -218,7 +243,7 @@ function paintPoll(p) {
   }
 }
 
-SF.PresenterLive={update:function(d){lastState=d;paintPoll(d.quickPoll);moment=d.moment||null;room(d.roomPulse);var blocked=!!(d.roomPulse&&d.roomPulse.active&&['reveal','hold'].includes(d.nextAction));['showTask','showCountdown','showBreak'].forEach(function(id){var btn=/** @type {HTMLButtonElement|null} */ ($(id));if(btn)btn.disabled=blocked;});var guard=$('momentGuard');if(guard)guard.textContent=blocked?'Finish the live question first.':'';clock();}};
+SF.PresenterLive={update:function(d){lastState=d;paintPoll(d.quickPoll);moment=d.moment||null;room(d.roomPulse);var blocked=!!(d.roomPulse&&d.roomPulse.active&&['reveal','hold'].includes(d.nextAction));['showTask','showCountdown','showBreak','footCountdown','footBreak'].forEach(function(id){var btn=/** @type {HTMLButtonElement|null} */ ($(id));if(btn)btn.disabled=blocked;});var guard=$('momentGuard');if(guard)guard.textContent=blocked?'Finish the live question first.':'';clock();}};
 setInterval(clock,250);
 var audio = /** @type {HTMLAudioElement|null} */ ($('activityAudio'));
 if(audio) audio.volume=0.3;

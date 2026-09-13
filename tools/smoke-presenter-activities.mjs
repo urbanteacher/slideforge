@@ -41,10 +41,14 @@ try {
   await content.fill('Explain how respiration releases energy.');
   assert.equal(await presenter.locator('#activityLaunch').isDisabled(), true, 'editing invalidates preview approval');
   await presenter.locator('#activityPreview').click();
-  await presenter.waitForFunction(() => !document.getElementById('activityQueue').disabled);
-  await presenter.locator('#activityQueue').click();
-  await page.waitForFunction(() => SF.Player.deck.slides.length === 3);
+  await presenter.waitForFunction(() => !document.getElementById('activityLaunch').disabled);
+  /* Queue used to splice into the lesson; show is now a spontaneous overlay. */
+  await presenter.locator('#activityLaunch').click();
+  await page.waitForFunction(() => !!SF.Player.spontaneous);
+  assert.equal(await page.evaluate(() => SF.Player.deck.slides.length), 2);
   assert.equal(await page.evaluate(() => SF.Player.idx), 0);
+  await presenter.locator('#activityEnd').click();
+  await page.waitForFunction(() => !SF.Player.spontaneous);
   await presenter.locator('#activitySave').click();
   await presenter.waitForFunction(() => document.getElementById('activityStatus').textContent.includes('Saved'));
   assert.equal(await page.evaluate(() => SF.Store.list().some(d => d.title === 'Think-Pair-Share')), true);
@@ -57,10 +61,11 @@ try {
   await presenter.locator('#activityPreview').click();
   await presenter.waitForFunction(() => !document.getElementById('activityLaunch').disabled);
   await presenter.locator('#activityLaunch').click();
-  await page.waitForFunction(() => SF.Player.idx > 0);
-  assert.equal(await page.evaluate(() => SF.Player.deck.slides.some(s => s.memoryBoard)), true);
-  await presenter.locator('#activityReturn').click();
-  await page.waitForFunction(() => SF.Player.idx === 0);
+  await page.waitForFunction(() => !!(SF.Player.spontaneous && SF.Player.spontaneous.slides.some(s => s.memoryBoard)));
+  assert.equal(await page.evaluate(() => SF.Player.deck.slides.some(s => s.memoryBoard)), false);
+  assert.equal(await page.evaluate(() => SF.Player.spontaneous.slides.some(s => s.memoryBoard)), true);
+  await presenter.locator('#activityEnd').click();
+  await page.waitForFunction(() => !SF.Player.spontaneous && SF.Player.idx === 0);
 
   // Existing quiz shortcut also drafts privately instead of projecting immediately.
   await page.evaluate(() => {
@@ -105,16 +110,19 @@ try {
     await presenter.locator('#activityKind').selectOption('game');
     await presenter.locator('#activityChoice').selectOption('race');
     await presenter.locator('#activityManual').click();
-    await presenter.waitForFunction(() => document.getElementById('activityStatus').textContent.includes('Editable starter ready'));
+    await presenter.waitForFunction(() => document.getElementById('activityStatus').textContent.includes('Editable draft ready'));
     // Skip the optional rules slide so the learner receives a scored question immediately.
     await presenter.getByLabel('Show how to play before the game').uncheck();
     await presenter.locator('#activityPreview').click();
     await presenter.waitForFunction(() => !document.getElementById('activityLaunch').disabled);
     await presenter.locator('#activityLaunch').click();
-    await page.waitForFunction(() => SF.Player.deck.slides[SF.Player.idx].type === 'quiz');
+    await page.waitForFunction(() => {
+      const s = SF.Player.wallSlide ? SF.Player.wallSlide() : SF.Player.deck.slides[SF.Player.idx];
+      return s && s.type === 'quiz';
+    });
     await learner.next('question');
     assert.equal(await page.evaluate(() => SF.Live.mechanic), 'race');
-    learner.send({ t: 'answer', choice: await page.evaluate(() => SF.Player.deck.slides[SF.Player.idx].correct) });
+    learner.send({ t: 'answer', choice: await page.evaluate(() => SF.Player.wallSlide().correct) });
     await learner.next('locked');
     await page.waitForFunction(() => SF.Live.snapshot.answers.length === 1);
     await page.waitForFunction(() => Date.now() - SF.Live._askedAt > 1600);
@@ -124,14 +132,14 @@ try {
 
     // A second mini race starts at zero without resetting the learner's lesson score.
     await presenter.locator('#activityManual').click();
-    await presenter.waitForFunction(() => document.getElementById('activityStatus').textContent.includes('Editable starter ready'));
+    await presenter.waitForFunction(() => document.getElementById('activityStatus').textContent.includes('Editable draft ready'));
     await presenter.getByLabel('Show how to play before the game').uncheck();
     await presenter.locator('#activityPreview').click();
     await presenter.waitForFunction(() => !document.getElementById('activityLaunch').disabled);
     await presenter.locator('#activityLaunch').click();
     await learner.next('question');
     assert.equal(await page.evaluate(() => Object.values(SF.Live.pos).reduce((sum, n) => sum + n, 0)), 0);
-    learner.send({ t: 'answer', choice: await page.evaluate(() => SF.Player.deck.slides[SF.Player.idx].correct) });
+    learner.send({ t: 'answer', choice: await page.evaluate(() => SF.Player.wallSlide().correct) });
     await learner.next('locked');
     await page.waitForFunction(() => SF.Live.snapshot.answers.length === 1 && Date.now() - SF.Live._askedAt > 1600);
     await page.evaluate(() => SF.Player.next());
@@ -144,5 +152,5 @@ try {
   await presenter.setViewportSize({ width: 700, height: 900 });
   assert.equal(await presenter.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'narrow presenter does not overflow horizontally');
   assert.deepEqual(errors, []);
-  console.log('Presenter activities: catalogue, manual editing, validation, preview, queue, launch, return, save, AI shortcut, AI failure and live race scoring without reconnecting passed.');
+  console.log('Presenter activities: catalogue, manual editing, validation, preview, spontaneous show, end, save, AI shortcut, AI failure and live race scoring without reconnecting passed.');
 } finally { await browser.close(); await harness.stop(server); await rm(sessionDir, { recursive: true, force: true }); }

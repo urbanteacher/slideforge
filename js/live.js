@@ -1417,7 +1417,8 @@
     SF.Player.on('slide', onSlide);
     SF.Player.on('timeup', function () {
       if (Live.players.some(function(p){return p.manual;})) return;
-      var s = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
+      var s = SF.Player.wallSlide ? SF.Player.wallSlide()
+        : (SF.Player.deck && SF.Player.deck.slides[SF.Player.idx]);
       /* Concept Chain timeout = skip (Reject), not an accidental Accept. */
       if (s && (s.style === 'conceptchain' || s.conceptChain)) {
         s.correct = 1;
@@ -1576,7 +1577,8 @@
    */
   Live.nextAction = function () {
     if (!Live.active) return 'advance';
-    var s = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
+    var s = SF.Player.wallSlide ? SF.Player.wallSlide()
+      : (SF.Player.deck && SF.Player.deck.slides[SF.Player.idx]);
     if (!s || s.type !== 'quiz') return 'advance';
     if (Live.revealed[s.id]) return 'advance';
     if (s.style === 'definition' && SF.Player.definitionPhase &&
@@ -1635,16 +1637,20 @@
     return true;
   }
 
-  /* Position of a quiz slide among the deck's quiz slides, so "Question 3"
-     on a phone matches "Q3" on the projected slide. */
+  /* Position of a quiz slide among the checks the room is in — spontaneous
+     overlays first, otherwise the lasting lesson. Phones need a total that
+     matches what is actually being asked. */
   function quizNumber(slide) {
+    var list = (SF.Player.spontaneous && SF.Player.spontaneous.slides) || Live.deck.slides;
+    var at = list.filter(function (x) { return x.type === 'quiz'; }).indexOf(slide);
+    if (at >= 0) return at + 1;
     return Live.deck.slides.filter(function (x) { return x.type === 'quiz'; }).indexOf(slide) + 1;
   }
 
-  /* How many checks there are altogether. Only the host has the deck, so the
-     total has to travel with the question — a phone cannot work it out. */
   function quizTotal() {
-    return Live.deck.slides.filter(function (x) { return x.type === 'quiz'; }).length;
+    var list = (SF.Player.spontaneous && SF.Player.spontaneous.slides) || Live.deck.slides;
+    var n = list.filter(function (x) { return x.type === 'quiz'; }).length;
+    return n || Live.deck.slides.filter(function (x) { return x.type === 'quiz'; }).length;
   }
 
   /** Everything the rail and the focus view both need. */
@@ -2198,7 +2204,8 @@
   }
 
   function revealNow() {
-    var s = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
+    var s = SF.Player.wallSlide ? SF.Player.wallSlide()
+      : (SF.Player.deck && SF.Player.deck.slides[SF.Player.idx]);
     if (!s || s.type !== 'quiz' || Live.revealed[s.id]) return;
     Live.revealed[s.id] = true;
     stopDrip();
