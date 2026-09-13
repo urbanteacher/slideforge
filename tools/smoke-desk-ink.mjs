@@ -44,7 +44,10 @@ try {
   await desk.waitForSelector('#boxNow .desk-ink');
   assert.equal(await desk.locator('#inkTools').isVisible(), true, 'ink tools appear on the desk');
   assert.equal(await desk.locator('#roomTools').isVisible(), false, 'room tools stand down while inking');
-  assert.equal(await wall.evaluate(() => SF.Teaching.isOpen()), true, 'the wall took the pen out');
+  /* The desk shows its own tools the moment you press, without waiting for
+     the wall to agree, so wait for the wall rather than reading it straight
+     after the click. */
+  await wall.waitForFunction(() => SF.Teaching.isOpen());
 
   /* Draw a stroke on the desk's preview and read it off the wall. The preview
      is far smaller than 1280x720, so this also checks the coordinates are

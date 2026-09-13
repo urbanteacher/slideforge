@@ -113,6 +113,64 @@
   /* A drawable preview needs to look drawable, and needs to stop being a
      click target that turns the page. */
   .now .box.inking { outline: 2px solid #ec346d; outline-offset: 2px; }
+  .now .box.inking .slide { position: relative; }
+  .now .box.inking .desk-ink.drawing {
+    pointer-events: auto; z-index: 60; cursor: crosshair;
+  }
+  .wall-chrome {
+    position: absolute; z-index: 55; left: 10px; right: 10px; top: 10px;
+    display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none;
+  }
+  .wall-chrome span {
+    font-size: 11px; font-weight: 650; letter-spacing: .02em;
+    padding: 4px 8px; border-radius: 999px;
+    background: rgba(14, 20, 18, .82); color: #e8f0e0;
+    border: 1px solid rgba(255,255,255,.18);
+  }
+  .wall-chrome .wc-blank { background: #000; border-color: #444; }
+  .wall-chrome .wc-freeze { background: rgba(20, 50, 80, .9); border-color: rgba(100,180,255,.45); }
+  .wall-chrome .wc-join { background: rgba(45, 70, 30, .92); border-color: rgba(160,200,120,.45); }
+  .wall-chrome .wc-room { background: rgba(40, 40, 20, .9); }
+  .wall-chrome .wc-ink { background: rgba(120, 20, 55, .9); border-color: #ec346d; }
+  .box.wall-blank > .slide { visibility: hidden; }
+  .box.wall-blank::before {
+    content: 'Blanked on wall'; position: absolute; inset: 0; z-index: 50;
+    display: grid; place-items: center; background: #000; color: #c8c8c8;
+    font-size: 18px; font-weight: 650; letter-spacing: .04em;
+  }
+  .box.wall-room-beside { box-shadow: inset -10px 0 0 var(--ui-accent); }
+  .box.wall-join { outline: 2px solid var(--ui-accent); outline-offset: 1px; }
+
+  /* Live wall overlays mirrored into "On screen now". */
+  /* The mirrored overlay is itself a .slide, so it has to be spared here or
+     it hides along with the slide it is covering. */
+  .box.has-wall-overlay > .slide:not(.wall-overlay) { visibility: hidden; }
+  .box .wall-overlay {
+    position: absolute; inset: 0; z-index: 48;
+    transform-origin: 0 0; pointer-events: none;
+  }
+  .box .wall-overlay.desk-join-mirror {
+    display: grid; place-items: center;
+    background: #0b0e13; color: #e8ecf2; text-align: center;
+    padding: 18px 20px; overflow: auto;
+  }
+  .box .wall-overlay.desk-join-mirror .joinqr { width: min(42%, 160px); margin: 0 auto 12px; }
+  .box .wall-overlay.desk-join-mirror .lead { font-size: 11px; color: #8b93a1; letter-spacing: .08em; text-transform: uppercase; }
+  .box .wall-overlay.desk-join-mirror .url { font-size: 15px; margin-top: 4px; }
+  .box .wall-overlay.desk-join-mirror .pin { font-size: 42px; font-weight: 700; letter-spacing: .12em; margin-top: 8px; }
+  .box .wall-overlay.desk-join-mirror .count,
+  .box .wall-overlay.desk-join-mirror .state,
+  .box .wall-overlay.desk-join-mirror .dismiss { font-size: 12px; margin-top: 10px; color: #9aa3b2; }
+  .box .desk-wall-rail {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 30%; z-index: 42;
+    overflow: hidden; pointer-events: none; border-left: 1px solid rgba(255,255,255,.12);
+    background: rgba(8, 12, 10, .55);
+  }
+  .box .desk-wall-rail .scorerail,
+  .box.desk-wall-rail.scorerail {
+    transform-origin: top right;
+  }
+  .box.has-wall-rail > .slide { width: 70%; }
 
   .strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
   .strip .mini {
@@ -428,7 +486,17 @@
        on the show — sending it to the opener would put it on the wall. */
     b.onclick = b.dataset.cmd === 'who'
       ? function () { toggleNamed(); }
-      : function () { cmd(b.dataset.cmd); };
+      : function () {
+          /* Ink: show the desk pen immediately. Waiting for the wall echo made
+             the button feel dead, and teachers went back to the HUD. */
+          if (b.dataset.cmd === 'ink' && state) {
+            var opening = !state.inkOn;
+            state.inkOn = opening;
+            state.inkMode = opening ? (state.inkMode || 'draw') : '';
+            syncInk();
+          }
+          cmd(b.dataset.cmd);
+        };
   });
   $('resetTimer').onclick = function () { timerBase = Date.now(); };
 
@@ -514,6 +582,10 @@
     tools.hidden = !on;
     document.querySelectorAll('.pv-room').forEach(function (el) { el.hidden = on; });
     inkMode = (state && state.inkMode) || '';
+    if (on && !inkMode) {
+      inkMode = 'draw';
+      if (state) state.inkMode = 'draw';
+    }
     paintInkMode();
 
     var box = $('boxNow');
@@ -569,7 +641,13 @@
   $('inkTools').querySelectorAll('[data-ink]').forEach(function (b) {
     b.onclick = function () {
       var act = b.dataset.ink;
-      if (act === 'done') { cmd('ink'); return; }
+      if (act === 'done') {
+        if (state) { state.inkOn = false; state.inkMode = ''; }
+        inkMode = '';
+        syncInk();
+        cmd('ink');
+        return;
+      }
       if (act === 'undo') {
         var last = inkLocal.pop();
         if (last) last.remove();
@@ -619,6 +697,7 @@
     $('teacherWorkspace').hidden=!['mark','roster','questions','tools'].includes(panel);
     $('insightViews').hidden=panel!=='questions';
     document.querySelector('[data-cmd=who]').setAttribute('aria-pressed',String(namedOpen));
+    document.querySelector('[data-cmd=who]').classList.toggle('on', namedOpen);
     syncTeacherView();
     if(state&&panel==='slides')requestAnimationFrame(function(){var n=$('boxNext').querySelector('.slide');if(n)SF.fit($('boxNext'),n);});
   }
@@ -874,7 +953,26 @@
     waitingState = d.waiting || 0;
     drawQA();
     drawCues();
-    state = { startedAt:d.startedAt, deck: SF.normalizeDeck(d.deck), index: d.index, answers: d.answers || {}, ...SF.Boards.snapshot(d), exploreStates:d.exploreStates || {}, revealStep:d.revealStep || 0, effectiveTimeLimit:d.effectiveTimeLimit, inkOn:!!d.inkOn, inkMode:d.inkMode || '' };
+    state = {
+      startedAt: d.startedAt,
+      deck: SF.normalizeDeck(d.deck),
+      index: d.index,
+      answers: d.answers || {},
+      ...SF.Boards.snapshot(d),
+      exploreStates: d.exploreStates || {},
+      revealStep: d.revealStep || 0,
+      effectiveTimeLimit: d.effectiveTimeLimit,
+      inkOn: !!d.inkOn,
+      inkMode: d.inkMode || '',
+      blank: !!d.blank,
+      frozen: !!d.frozen,
+      roomView: d.roomView || 'hidden',
+      joinCard: !!d.joinCard,
+      fullscreen: !!d.fullscreen,
+      focusOn: !!d.focusOn,
+      wallOverlay: d.wallOverlay || '',
+      wallRail: d.wallRail || ''
+    };
 
     drawNextLabel(d.nextAction);
     syncRoomTools(d);
@@ -884,6 +982,8 @@
       freezeBtn.textContent = d.frozen ? '❄️ Unfreeze' : '❄️ Freeze';
       freezeBtn.title = d.frozen ? 'Audience screen is frozen — click to unfreeze' : 'Freeze audience screen for digression (Z)';
     }
+    var whoBtn = document.querySelector('[data-cmd=who]');
+    if (whoBtn) whoBtn.classList.toggle('on', namedOpen);
     if (timerBase == null) timerBase = d.startedAt || Date.now();
     $('waiting').style.display = 'none';
     $('pv').style.display = 'grid';
@@ -908,7 +1008,18 @@
     else if (e.key === 'e' || e.key === 'E') { e.preventDefault(); cmd('focus'); }
     else if (e.key === 't' || e.key === 'T') { e.preventDefault(); cmd('reactions'); }
     else if (e.key === 'r' || e.key === 'R') { e.preventDefault(); cmd('reset'); }
-    else if (e.key === 'i' || e.key === 'I') { e.preventDefault(); cmd('ink'); }
+    else if (e.key === 'i' || e.key === 'I') {
+      e.preventDefault();
+      if (state) {
+        var opening = !state.inkOn;
+        state.inkOn = opening;
+        state.inkMode = opening ? (state.inkMode || 'draw') : '';
+        syncInk();
+        paintWallOverlay($('boxNow'));
+        paintWallChrome($('boxNow'));
+      }
+      cmd('ink');
+    }
     else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); cmd('full'); }
     else if (e.key === '?' || e.key === '/') { e.preventDefault(); cmd('help'); }
     else if (e.key === 'Escape') { e.preventDefault(); cmd('exit'); }
@@ -964,14 +1075,109 @@
       .filter(function (m) { return m.answered; });
   }
 
+  /* What is actually covering the slide.
+   *
+   * The preview calls itself "On screen now", so a leaderboard, a set of
+   * responses or the race track being up on the wall has to show here too —
+   * a chip reading "Focus on wall" tells you a thing happened, which is not
+   * the same as showing you the thing. The markup arrives already built by
+   * the wall, so the desk cannot draw a different leaderboard to the one the
+   * room is looking at. */
+  var wallOverlayStamp = null;
+  var wallRailStamp = null;
+
+  function paintWallOverlay(box) {
+    if (!box || !state) return;
+    var html = state.wallOverlay || '';
+    var showing = box.querySelector('.wall-overlay');
+    /* Rebuilding unchanged markup would flicker, and a scoreboard re-sorts as
+       answers land, so only redraw when the markup itself changed — or when
+       `into` has just rebuilt the box out from under it. */
+    if (html === wallOverlayStamp && !!showing === !!html) return;
+    wallOverlayStamp = html;
+    var old = showing;
+    if (old) old.remove();
+    box.classList.toggle('has-wall-overlay', !!html);
+    if (!html) return;
+
+    var holder = document.createElement('div');
+    holder.innerHTML = html;
+    var node = holder.firstElementChild;
+    if (!node) return;
+    node.classList.add('wall-overlay');
+    box.appendChild(node);
+    requestAnimationFrame(function () {
+      if (node.parentNode !== box) return;
+      if (node.classList.contains('desk-join-mirror')) return;
+      SF.fit(box, node);
+    });
+  }
+
+  function paintWallRail(box) {
+    if (!box || !state) return;
+    var html = state.wallRail || '';
+    var showing = box.querySelector('.desk-wall-rail');
+    if (html === wallRailStamp && !!showing === !!html) {
+      box.classList.toggle('has-wall-rail', !!html);
+      return;
+    }
+    wallRailStamp = html;
+    if (showing) showing.remove();
+    box.classList.toggle('has-wall-rail', !!html);
+    if (!html || state.wallOverlay) return;
+
+    var holder = document.createElement('div');
+    holder.innerHTML = html;
+    var node = holder.firstElementChild;
+    if (!node) return;
+    node.classList.add('desk-wall-rail');
+    box.appendChild(node);
+  }
+
+  function paintWallChrome(box) {
+    if (!box || !state) return;
+    box.classList.toggle('wall-blank', !!state.blank);
+    box.classList.toggle('wall-room-beside', state.roomView === 'beside');
+    box.classList.toggle('wall-join', !!state.joinCard);
+    var strip = box.querySelector('.wall-chrome');
+    if (!strip) {
+      strip = document.createElement('div');
+      strip.className = 'wall-chrome';
+      box.appendChild(strip);
+    }
+    strip.textContent = '';
+    function chip(cls, text) {
+      var s = document.createElement('span');
+      if (cls) s.className = cls;
+      s.textContent = text;
+      strip.appendChild(s);
+    }
+    if (state.blank) chip('wc-blank', 'Blank');
+    if (state.frozen) chip('wc-freeze', '❄️ Frozen');
+    if (state.joinCard) chip('wc-join', 'Join QR');
+    if (state.roomView === 'beside') chip('wc-room', 'Room: beside');
+    if (state.roomView === 'full') chip('wc-room', 'Room: full');
+    if (state.focusOn) chip('wc-room', 'Focus on wall');
+    if (state.inkOn) chip('wc-ink', state.inkMode === 'spot' ? 'Spotlight' : 'Ink');
+    if (state.fullscreen) chip('', 'Full screen');
+    strip.hidden = !strip.childNodes.length;
+  }
+
   function draw() {
     var deck = state.deck, i = state.index;
     var s = deck.slides[i];
+    var nowBox = $('boxNow');
 
     /* Never rebuild the slide someone is drawing on. `into` replaces the node
        the pen is writing against, and a state sync arriving mid-stroke would
-       otherwise cut the line in half. */
-    if (!inkDrawing) into($('boxNow'), s, i);
+       otherwise cut the line in half. While ink is held, also skip rebuilds
+       on roster/HUD echo — those used to steal the pen every few seconds. */
+    var slideId = s ? String(s.id || i) : '';
+    var sameSlide = nowBox.dataset.slideId === slideId;
+    if (!inkDrawing && !(state.inkOn && sameSlide)) {
+      into(nowBox, s, i);
+      nowBox.dataset.slideId = slideId;
+    }
     into($('boxNext'), deck.slides[i + 1], i + 1);
     $('pos').textContent = 'Slide ' + (i + 1) + ' of ' + deck.slides.length + (s.progressive ? ' · ' + state.revealStep + ' points revealed' : '');
 
@@ -1012,8 +1218,11 @@
     }
 
     drawStrip();
-    /* After `into`, because it replaces the node the overlay hangs on. */
+    /* After `into`, because it replaces the node these hang on. */
     syncInk();
+    paintWallOverlay(nowBox);
+    paintWallRail(nowBox);
+    paintWallChrome(nowBox);
   }
 
   function drawStrip() {

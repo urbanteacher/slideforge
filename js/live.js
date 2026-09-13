@@ -1501,7 +1501,11 @@
     goLiveLocally();
     document.body.classList.add('live-on');
     SF.Player.gate = gate;
+    /* Wall = class screen. Desk = where the teacher runs the room. Opening
+       Presenter here is the beginner path: Start must not leave them on a
+       fullscreen HUD with greyed room tools and no map of what to press next. */
     SF.Player.start(Live.deck, 0);
+    if (SF.Player.openPresenter) SF.Player.openPresenter();
     if (!Live.prompt && Live.deck.quiz.scoreboard && Live.rows.length) paintRail();
   };
 

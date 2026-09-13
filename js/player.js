@@ -1428,6 +1428,10 @@
       rxBtn.textContent = rxOn ? 'Reactions: On' : 'Reactions: Off';
       rxBtn.title = rxOn ? 'Turn audience reactions off (T)' : 'Turn audience reactions on (T)';
     });
+    /* Desk labels (Blank / Room / Join QR / …) must track the wall in real
+       time — many room paths only refresh the HUD, and teachers look at the
+       desk, not the projector chrome. */
+    if (presenterWin && !presenterWin.closed) syncPresenter();
   }
   Player.syncHudRoomButtons = syncHudRoomButtons;
 
@@ -2269,6 +2273,44 @@
      presenter window is the only place pending questions are shown. It was
      called as Player.syncPresenter from the start; it was never actually on
      Player, so every Q&A push threw instead of refreshing that window. */
+  /* What is covering the wall right now, for the desk's "On screen now".
+     Focus (leaderboard / responses / race) already travelled this way; Join QR
+     did not, so teachers had to leave Presenter to see the very overlay they
+     had just turned on. Same markup as the wall — stripped of entrance
+     animation so a sync does not flicker it. */
+  function wallOverlayMarkup() {
+    if (typeof document === 'undefined') return null;
+    var card = document.getElementById('joincard');
+    if (card && card.classList.contains('on')) {
+      var body = card.firstElementChild || card;
+      var join = document.createElement('div');
+      join.className = 'desk-join-mirror';
+      join.appendChild(body.cloneNode(true));
+      var dismiss = join.querySelector('.dismiss');
+      if (dismiss) dismiss.textContent = 'On the wall — J or Esc to dismiss';
+      return join.outerHTML;
+    }
+    if (!Player._focus || !viewport) return null;
+    var node = viewport.querySelector('[data-overlay]');
+    if (!node) return null;
+    var copy = node.cloneNode(true);
+    copy.classList.remove('entering', 'tr-fade');
+    copy.removeAttribute('data-overlay');
+    copy.removeAttribute('style');
+    return copy.outerHTML;
+  }
+
+  /* The room rail beside the slide — same reason as the full overlay. */
+  function wallRailMarkup() {
+    if (!Player._rail || Player._focus) return null;
+    var card = document.getElementById('joincard');
+    if (card && card.classList.contains('on')) return null;
+    var copy = Player._rail.cloneNode(true);
+    copy.classList.add('desk-wall-rail');
+    copy.removeAttribute('style');
+    return copy.outerHTML;
+  }
+
   function syncPresenter() {
     if (!presenterWin || presenterWin.closed) return;
     var deck = Player.deck;
@@ -2340,6 +2382,13 @@
         /* So the desk can show the pen as held, and which tool it is. */
         inkOn: !!(SF.Teaching && SF.Teaching.isOpen && SF.Teaching.isOpen()),
         inkMode: (SF.Teaching && SF.Teaching.mode) ? SF.Teaching.mode() : '',
+        /* The leaderboard, the responses, the race track and the Join QR card
+           all cover the wall; the room rail sits beside it. All of them used
+           to be invisible from the desk — its preview drew only the slide and
+           called itself "On screen now". Send the live markup so the desk
+           shows the same thing without leaving Presenter. */
+        wallOverlay: wallOverlayMarkup(),
+        wallRail: wallRailMarkup(),
         focusOn: !!Player._focus,
         focusKind: (SF.Live && SF.Live.active && SF.Live.expandKind)
           ? SF.Live.expandKind() : null,

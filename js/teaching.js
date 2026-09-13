@@ -125,7 +125,7 @@ function isOpen(){
   return !!(inkTools&&!inkTools.hidden);
 }
 
-function toggleBar(force){
+function toggleBar(force, opts){
   if(!ensureInkElements())return;
   var hud=document.getElementById('hud');
   var defTools=document.getElementById('hudDefaultTools');
@@ -147,6 +147,26 @@ function toggleBar(force){
   }
   var btn=document.querySelector('#hud [data-act=ink]');
   if(btn){btn.classList.toggle('on',open);btn.setAttribute('aria-pressed',String(open));}
+  /* Silent when a desk stroke is opening the bar — a sync mid-begin redraws
+     the desk preview and drops the pen. Ordinary I / Done still echo. */
+  if(!(opts&&opts.silent) && P.syncPresenter)P.syncPresenter();
+}
+
+function ensureCanvas(node){
+  if(svg&&svg.isConnected)return true;
+  var host=node||document.querySelector('#player .deck-viewport .slide')||document.querySelector('#player .slide');
+  if(!host)return false;
+  svg=ns('svg');
+  svg.setAttribute('viewBox','0 0 1280 720');
+  svg.classList.add('teaching-ink');
+  svg.setAttribute('aria-label','Temporary slide annotations');
+  if(mode)svg.classList.add('drawing');
+  host.appendChild(svg);
+  strokes=[];
+  svg.onpointerdown=function(ev){if(!mode)return;ev.preventDefault();svg.setPointerCapture(ev.pointerId);beginStroke(point(ev));};
+  svg.onpointermove=function(ev){if(active)extendStroke(point(ev));};
+  svg.onpointerup=svg.onpointercancel=endStroke;
+  return true;
 }
 
 P.on('slide',function(e){
@@ -191,14 +211,16 @@ P.on('close',function(){
 function remote(action,data){
   data=data||{};
   if(action==='mode'){
-    if(!isOpen())toggleBar(true);
+    if(!isOpen())toggleBar(true,{silent:true});
     setMode(data.mode||'');
+    if(P.syncPresenter)P.syncPresenter();
     return true;
   }
-  /* No canvas means no slide is showing — a mark would have nowhere to live. */
-  if(!svg)return false;
+  /* No canvas means no slide is showing — try to attach one before giving up,
+     because desk ink used to arrive before the wall had rebuilt its svg. */
+  if(!ensureCanvas())return false;
   if(action==='begin'){
-    if(!isOpen())toggleBar(true);
+    if(!isOpen())toggleBar(true,{silent:true});
     if(data.mode&&data.mode!==mode)setMode(data.mode);
     if(!mode)return false;
     beginStroke([data.x,data.y]);
