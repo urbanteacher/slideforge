@@ -713,6 +713,7 @@
             blurb: 'Downloads "' + doc.title + '" as a single file.' }
         ];
         if (active.key === 'deck') {
+          items.push({ id: 'pdf', title: 'Student PDF handout', blurb: 'Printable slides: all reveals shown, stacks separated, no private notes or live results.' });
           items.push({
             id: 'md',
             title: 'Practice notes (.md)',
@@ -736,6 +737,7 @@
           onPick: function (it) {
             if (it.id === 'one') return exportDoc();
             if (it.id === 'md') return exportMarkdown();
+            if (it.id === 'pdf') { if (active.flush) active.flush(); return SF.Print.open(active.doc()); }
             if (it.id === 'folder') return exportAllToFolder();
             exportBundle();
           }

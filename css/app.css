@@ -4452,3 +4452,18 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
 .journey-handover .journey-stop:not(:last-child)::after { content: '→'; top: 42%; left: auto; right: -45px; border: 0; height: auto; font-size: 36px; color: var(--s-accent); opacity: 1; }
 .slide .journey-handover .journey-copy h3 { font-size: 44px; margin-bottom: 20px; }
 .slide .journey-handover .journey-copy p { font-size: 24px; line-height: 1.6; }
+/* Keep the teaching route readable beside the live room panel. */
+.deck-viewport.railed .layout-journey h2 { font-size: 32px; }
+.deck-viewport.railed .journey-context { font-size: 18px; margin-bottom: 14px; }
+.deck-viewport.railed .journey-copy h3 { font-size: 22px; }
+.deck-viewport.railed .journey-copy p { font-size: 18px; line-height: 1.25; }
+.deck-viewport.railed .journey-takeaway { font-size: 17px; margin-top: 12px; padding-top: 10px; }
+.deck-viewport.railed .journey-handover { gap: 40px; }
+.deck-viewport.railed .journey-handover .journey-copy h3 { font-size: 34px; }
+.deck-viewport.railed .journey-handover .journey-copy p { font-size: 20px; line-height: 1.4; }
+.deck-viewport.railed .journey-handover .journey-stop:not(:last-child)::after { right: -32px; font-size: 28px; }
+.deck-viewport.railed .mindmap-node { padding: 12px; }
+.deck-viewport.railed .mindmap-node strong { font-size: 21px; }
+.deck-viewport.railed .mindmap-node span { font-size: 17px; }
+.deck-viewport.railed .mindmap-centre { min-height: 140px; padding: 12px; }
+.deck-viewport.railed .mindmap-centre h2 { font-size: 28px; }

@@ -14,6 +14,7 @@
     "smoke:desk-ink": "node tools/smoke-desk-ink.mjs",
     "smoke:desk-overlay": "node tools/smoke-desk-overlay.mjs",
     "smoke:desk-poll": "node tools/smoke-desk-poll.mjs",
+    "smoke:course-overview": "node tools/smoke-course-overview.mjs",
     "smoke:mindmap": "node tools/smoke-mindmap.mjs",
     "smoke:refresh": "node tools/smoke-refresh.mjs",
     "smoke:exploration": "node tools/smoke-exploration.mjs",

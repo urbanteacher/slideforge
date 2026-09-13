@@ -853,12 +853,13 @@
         row.classList.toggle('empty', !SF.parseKeywordLine(s.bullets[i]).term && !SF.parseKeywordLine(s.bullets[i]).def);
       }, leadPh);
       term.className = (term.className ? term.className + ' ' : '') + leadCls;
-      var def = UI.text(parsed.def, function (v) {
+      var def = UI[kind === 'journey' ? 'area' : 'text'](parsed.def, function (v) {
         s.bullets[i] = SF.formatKeywordLine(SF.parseKeywordLine(s.bullets[i]).term, v);
         touched();
         repaint();
         row.classList.toggle('empty', !SF.parseKeywordLine(s.bullets[i]).term && !SF.parseKeywordLine(s.bullets[i]).def);
-      }, trailPh);
+      }, kind === 'journey' ? 4 : trailPh);
+      if (kind === 'journey') def.setAttribute('aria-label', 'What happens here');
       def.className = (def.className ? def.className + ' ' : '') + trailCls;
       if (links) def.inputMode = 'url';
       var fields = el('div', 'kw-pit-fields');
