@@ -36,3 +36,31 @@ body{background:#f5f6f2;color:#24372c;font:14px/1.5 system-ui,sans-serif}*{box-s
 .in-presenter .live-room-gate{margin-bottom:10px;padding:10px 12px}
 .in-presenter .live-room-gate p{font-size:12px;margin-bottom:8px}
 .in-presenter .live-room-pin{font-size:16px}
+
+/* manual.html also loads app.css (dark --ui-* for Studio). Remap tokens so
+   Insights tiles, headlines and answer grids stay readable on this light desk. */
+:root{
+  --ui-bg:#f5f6f2;
+  --ui-panel:#ffffff;
+  --ui-panel-2:#eef2e9;
+  --ui-line:#dce3d9;
+  --ui-text:#24372c;
+  --ui-dim:#637768;
+  --ui-accent:#4b6b36;
+  --ui-accent-soft:#e7eedf;
+  --ui-good:#2f7d4f;
+  --ui-bad:#b3413f;
+  --ui-warn:#7a5a12;
+}
+#status{color:#53624c}
+.grid-headline{color:#24372c}
+.grid-tile{background:#fff;border:1px solid #dce3d9;color:#24372c}
+.grid-tile strong{color:#24372c}
+.grid-tile span{color:#637768}
+.qo-card{background:#eef2e9;border-color:#dce3d9;color:#24372c}
+.answer-grid .g-name{color:#24372c;background:#fff}
+.g-cell{background:#f5f6f2;color:#24372c}
+.g-none{background:#f5f6f2}
+.pulse-guidance{color:#3b5632}
+.live-room-gate p,.in-room-empty,.notice{color:#53624c}
+

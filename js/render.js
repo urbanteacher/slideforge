@@ -68,6 +68,69 @@
     pad.appendChild(el('div', 'accent-bar'));
     pad.appendChild(rich('h1', null, slide, 'title', slide.title || ' '));
     if (slide.subtitle) pad.appendChild(rich('div', 'sub', slide, 'subtitle', slide.subtitle));
+    if (slide.date && /^\d{4}-\d{2}-\d{2}$/.test(slide.date)) {
+      var date = new Date(slide.date + 'T12:00:00');
+      if (Number.isFinite(date.getTime())) {
+        var stamp = el('time', 'slide-date', date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }));
+        stamp.setAttribute('datetime', slide.date); pad.appendChild(stamp);
+      }
+    }
+  }
+
+  function layoutIntroduction(slide, pad) {
+    var portrait = el('div', 'lecturer-portrait');
+    var src = SF.safeMedia(slide.image);
+    if (src) {
+      var img = el('img'); img.src = src; img.alt = slide.title ? 'Portrait of ' + slide.title : 'Lecturer portrait';
+      img.style.objectFit = slide.imageFit || 'cover'; portrait.appendChild(img);
+    } else {
+      portrait.classList.add('empty');
+      portrait.appendChild(el('span', null, 'Headshot'));
+    }
+    var copy = el('div', 'lecturer-copy');
+    copy.appendChild(el('div', 'lecturer-kicker', 'Meet your lecturer'));
+    copy.appendChild(rich('h1', null, slide, 'title', slide.title));
+    if (slide.subtitle) copy.appendChild(rich('div', 'lecturer-role', slide, 'subtitle', slide.subtitle));
+    if (slide.body) copy.appendChild(rich('p', 'lecturer-bio', slide, 'body', slide.body));
+    pad.appendChild(portrait); pad.appendChild(copy);
+  }
+
+  function layoutJourney(slide, pad) {
+    pad.appendChild(rich('h2', null, slide, 'title', slide.title));
+    if(slide.subtitle) pad.appendChild(rich('div','journey-context',slide,'subtitle',slide.subtitle));
+    var stops=(slide.bullets||[]).map(SF.parseKeywordLine).filter(function(p){return p.term||p.def;});
+    var route=el('ol','journey-route'+(slide.journeyMode==='handover'?' journey-handover':''));
+    stops.forEach(function(p,i){
+      var stop=asStep(el('li','journey-stop'),slide);
+      var marker=el('span','journey-marker',String(i+1).padStart(2,'0')); marker.setAttribute('aria-hidden','true');
+      stop.appendChild(marker);
+      var copy=el('div','journey-copy');copy.appendChild(el('h3',null,p.term));
+      if(p.def)copy.appendChild(el('p',null,p.def));stop.appendChild(copy);route.appendChild(stop);
+    });
+    pad.appendChild(route);
+    if(slide.body)pad.appendChild(rich('div','journey-takeaway',slide,'body',slide.body));
+  }
+
+  function layoutMindmap(slide, pad) {
+    var map = el('div', 'mindmap');
+    map.setAttribute('role', 'group'); map.setAttribute('aria-label', 'Mind map: ' + slide.title);
+    var branches = (slide.bullets || []).map(SF.parseKeywordLine).filter(function (p) { return p.term || p.def; });
+    var rows = Math.ceil(branches.length / 2);
+    branches.forEach(function (p, i) {
+      var left = i % 2 === 0, y = (Math.floor(i / 2) + 0.5) * 100 / rows;
+      var branch = asStep(el('div', 'mindmap-branch'), slide);
+      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 100 100'); svg.setAttribute('preserveAspectRatio', 'none'); svg.setAttribute('aria-hidden', 'true');
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M 50 50 C ' + (left ? '32 50, 38 ' : '68 50, 62 ') + y + ', ' + (left ? 18 : 82) + ' ' + y);
+      path.setAttribute('vector-effect', 'non-scaling-stroke'); svg.appendChild(path); branch.appendChild(svg);
+      var node = el('div', 'mindmap-node'); node.style.left = (left ? 17 : 83) + '%'; node.style.top = y + '%';
+      node.appendChild(el('strong', null, p.term));
+      if (p.def) node.appendChild(el('span', null, p.def));
+      branch.appendChild(node); map.appendChild(branch);
+    });
+    var centre = el('div', 'mindmap-centre'); centre.appendChild(rich('h2', null, slide, 'title', slide.title || 'Central idea'));
+    map.appendChild(centre); pad.appendChild(map);
   }
 
   function layoutSection(slide, pad) {
@@ -1739,6 +1802,9 @@
   }
 
   var LAYOUTS = {
+    journey: layoutJourney,
+    mindmap: layoutMindmap,
+    introduction: layoutIntroduction,
     title: layoutTitle,
     section: layoutSection,
     content: layoutContent,

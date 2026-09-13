@@ -123,6 +123,9 @@ function normalizeQuizConfig(raw) {
    compiling a game — but the player and renderer still handle them, which is
    what lets an embedded game expand into ordinary slides at showtime. */
 var SLIDE_TYPES = {
+  journey: { label: 'Journey / handover', icon: '↝' },
+  mindmap: { label: 'Mind map', icon: '✣' },
+  introduction: { label: 'Lecturer introduction', icon: '◎' },
   title:    { label: 'Title',        icon: 'T' },
   section:  { label: 'Section',      icon: 'S' },
   content:  { label: 'Bullets',      icon: '•' },
@@ -215,7 +218,23 @@ function makeSlide(type) {
   switch (s.type) {
     case 'title':
       s.title = 'Presentation title';
-      s.subtitle = 'Your name · ' + new Date().toLocaleDateString();
+      s.subtitle = 'Your name';
+      break;
+    case 'journey':
+      s.title = 'The journey ahead';
+      s.subtitle = 'Reveal each milestone as you explain it';
+      s.bullets = ['Start\tFrame the question.', 'Develop\tExplore and build.', 'Reflect\tEvaluate and improve.'];
+      s.progressive = true;
+      break;
+    case 'mindmap':
+      s.title = 'Central idea';
+      s.bullets = ['Discover\tWhat can we find?', 'Explain\tWhat does it mean?', 'Decide\tWhat should happen next?'];
+      s.progressive = true;
+      break;
+    case 'introduction':
+      s.title = 'Your name';
+      s.subtitle = 'Job title';
+      s.body = 'A little about your teaching, experience and interests.';
       break;
     case 'section':
       s.title = 'Section heading';
@@ -364,6 +383,8 @@ function normalizeSlide(raw) {
   s.timeLimit = Math.max(0, Number(s.timeLimit) || 0);
   s.points = Number(s.points) || 1000;
   if (TRANSITIONS.indexOf(s.transition) === -1) s.transition = 'fade';
+  if (s.journeyMode != null) s.journeyMode = s.journeyMode === 'handover' ? 'handover' : 'path';
+  if (s.date != null) s.date = /^\d{4}-\d{2}-\d{2}$/.test(String(s.date)) && Number.isFinite(Date.parse(s.date)) ? String(s.date) : '';
   s.gameId = String(s.gameId || '');
   s.gameTitle = String(s.gameTitle || '');
   s.imageSide = s.imageSide === 'left' ? 'left' : 'right';

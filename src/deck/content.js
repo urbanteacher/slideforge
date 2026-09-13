@@ -118,10 +118,10 @@ function safeMedia(url) {
 }
 
 // Shared presentation semantics used by authoring, rendering and live context.
-var DECK_TYPES = ['title', 'section', 'content', 'keywords', 'italics', 'links',
+var DECK_TYPES = ['journey','mindmap', 'introduction', 'title', 'section', 'content', 'keywords', 'italics', 'links',
   'split', 'cards', 'table', 'image', 'video', 'quote', 'join', 'chart', 'gallery', 'beforeafter', 'explore', 'simulation'];
 
-var BULLET_LAYOUTS = ['content','cards','split','keywords','italics','links'];
+var BULLET_LAYOUTS = ['journey','mindmap','content','cards','split','keywords','italics','links'];
 
 function prepareLayout(slide, type) {
   if (DECK_TYPES.indexOf(type) < 0) return slide;
@@ -173,9 +173,9 @@ function slideSteps(slide) {
     return (slide.layers||[]).filter(function(l){return l && l.image;})
       .map(function(l,i){return String(l.caption||'').trim() || ('Image '+(i+1));});
   }
-  if(['content','cards','split','keywords','italics'].indexOf(slide.type)<0) return [];
+  if(['journey','mindmap','content','cards','split','keywords','italics'].indexOf(slide.type)<0) return [];
   return (slide.bullets||[]).filter(function(b){return String(b).trim();}).map(function(b){
-    if(slide.type==='keywords'||slide.type==='italics'){var p=parseKeywordLine(b);return [p.term,p.def].filter(Boolean).join(' — ');}
+    if(slide.type==='journey'||slide.type==='mindmap'||slide.type==='keywords'||slide.type==='italics'){var p=parseKeywordLine(b);return [p.term,p.def].filter(Boolean).join(' — ');}
     return String(b).replace(/^(\s{2,}|\t|- )+/, '').trim();
   });
 }

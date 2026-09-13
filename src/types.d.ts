@@ -22,7 +22,7 @@ export type TransitionKey = 'none' | 'fade' | 'push' | 'zoom' | 'wipe';
 
 /** Layouts an author can pick in the deck editor (`DECK_TYPES`). */
 export type DeckSlideType =
-  | 'title' | 'section' | 'content' | 'keywords' | 'italics' | 'links'
+  | 'journey' | 'mindmap' | 'introduction' | 'title' | 'section' | 'content' | 'keywords' | 'italics' | 'links'
   | 'split' | 'cards' | 'table' | 'image' | 'video' | 'quote' | 'join'
   | 'chart' | 'gallery' | 'beforeafter' | 'explore' | 'simulation';
 
@@ -143,6 +143,8 @@ export interface Slide {
   type: SlideType;
   title: string;
   subtitle: string;
+  date?: string;
+  journeyMode?: 'path' | 'handover';
   body: string;
   bullets: string[];
   notes: string;

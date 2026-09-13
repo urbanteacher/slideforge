@@ -74,7 +74,7 @@ export function renderMarkdown(deck, lookupGame = /** @type {(id: string) => any
       (s.bullets || []).filter(function (b) { return String(b).trim(); }).forEach(function (b, i) {
         line((i + 1) + '. ' + String(b).replace(/^(\s{2,}|\t|- )+/, '').trim());
       });
-    } else if (s.type === 'keywords') {
+    } else if (s.type === 'journey' || s.type === 'keywords' || s.type === 'mindmap') {
       line('## ' + n + '. ' + (s.title || 'Keywords').replace(/\n/g, ' '));
       line('');
       (s.bullets || []).map(parseKeywordLine).filter(function (p) { return p.term || p.def; })

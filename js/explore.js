@@ -164,7 +164,29 @@
     function commit(then) { slide.exploration = c; (then || changed)(); }
     function text(label, key, object) { var o = object || c; parent.appendChild(UI.field(label, UI.text(o[key] || '', function (v) { if (key === 'prompt' && slide.feedback && slide.feedback.prompt === o[key]) slide.feedback.prompt = v; o[key] = v; commit(); }))); }
     function number(label, key, object) { var o = object || c; var input = node('input'); input.type = 'number'; input.value = String(o[key]); input.oninput = function () { if (Number.isFinite(input.valueAsNumber)) { o[key] = input.valueAsNumber; commit(); } }; input.onchange = function () { Object.assign(c, SF.normalizeExploration(c)); commit(redraw); }; parent.appendChild(UI.field(label, input)); }
-    function image(label, key, object) { var o = object || c; text(label + ' URL', key, o); var file = node('input'); file.type = 'file'; file.accept = 'image/*'; file.setAttribute('aria-label', 'Upload ' + label); file.onchange = function () { var f = file.files && file.files[0]; if (!f) return; if (f.size > 3.5 * 1024 * 1024) { SF.toast('Choose an image smaller than 3.5 MB.'); return; } var reader = new FileReader(); reader.onload = function () { o[key] = String(reader.result); commit(redraw); }; reader.readAsDataURL(f); }; parent.appendChild(UI.field('Upload ' + label, file)); }
+    function image(label, key, object) {
+      var o = object || c;
+      text(label + ' URL', key, o);
+      var file = node('input');
+      file.type = 'file';
+      file.accept = 'image/*';
+      file.setAttribute('aria-label', 'Upload ' + label);
+      file.onchange = function () {
+        var f = file.files && file.files[0];
+        if (!f) return;
+        if (f.size > 3.5 * 1024 * 1024) { SF.toast('Choose an image smaller than 3.5 MB.'); return; }
+        var reader = new FileReader();
+        reader.onload = function () { o[key] = String(reader.result); commit(redraw); };
+        reader.readAsDataURL(f);
+      };
+      parent.appendChild(UI.field('Upload ' + label, file));
+      if (String(o[key] || '').trim()) {
+        parent.appendChild(UI.button('Remove ' + label.toLowerCase(), 'ghost', function () {
+          o[key] = '';
+          commit(redraw);
+        }));
+      }
+    }
     if (slide.type === 'chart') {
       parent.appendChild(UI.check('Predict before revealing the chart', c.prediction, function (v) { c.prediction = v; commit(redraw); }));
       if (c.prediction) {

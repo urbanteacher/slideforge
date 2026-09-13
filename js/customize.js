@@ -203,7 +203,7 @@
     if(s.type==='split'||s.type==='image') ['X','Y'].forEach(function(axis){
       var r=document.createElement('input');r.type='range';r.min='0';r.max='100';r.value=d['focal'+axis]==null?50:d['focal'+axis];r.onchange=function(){d['focal'+axis]=Number(r.value);change();};box.appendChild(UI.field('Image focus '+(axis==='X'?'horizontal':'vertical'),r));
     });
-    if(['content','cards','split','keywords','italics','table','quote','explain','image','gallery'].includes(s.type)){
+    if(['journey','mindmap','content','cards','split','keywords','italics','table','quote','explain','image','gallery'].includes(s.type)){
       var buildLabel=s.type==='gallery'?'Reveal one picture at a time (animated)'
         :s.type==='image'?'Hold the image back until the next press'
         :s.type==='table'?'Reveal one row at a time (animated)'

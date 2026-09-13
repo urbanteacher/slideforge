@@ -65,12 +65,15 @@
 
   /* One-click presentation shapes — fill the pits after they land. */
   var starters = [
+    { icon: '↝', title: 'Journey / handover', blurb: 'Connect milestones, course topics or stages of a project.', build: function () { return SF.makeSlide('journey'); } },
+    { icon: '✣', title: 'Mind map', blurb: 'One central idea, connected branches, revealed as you teach.', build: function () { return SF.makeSlide('mindmap'); } },
+    { icon: '◎', title: 'Lecturer introduction', blurb: 'Headshot, name, job title and a short introduction.', build: function () { return SF.makeSlide('introduction'); } },
     {
       icon: 'T', title: 'Opening title', blurb: 'Big title at the top. Subtitle underneath.',
       build: function () {
         var s = SF.makeSlide('title');
         s.title = 'Lesson title';
-        s.subtitle = 'Your name · ' + new Date().toLocaleDateString();
+        s.subtitle = 'Your name';
         return s;
       }
     },

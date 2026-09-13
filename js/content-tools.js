@@ -17,11 +17,11 @@ function append(s,text){
  var old=s.formatting||{},next={};Object.keys(old).forEach(function(k){if(!/^bullets\.\d+$/.test(k))next[k]=old[k];});
  s.bullets=keep.map(function(x,i){if(old['bullets.'+x.i])next['bullets.'+i]=old['bullets.'+x.i];return x.v;}).concat(added);s.formatting=next;return added.length;
 }
-function hidden(s){var out=[];var points=['content','cards','split','keywords','italics','links'].includes(s.type);
+function hidden(s){var out=[];var points=['journey','mindmap','content','cards','split','keywords','italics','links'].includes(s.type);
  if(!points&&(s.bullets||[]).some(function(v){return v.trim();}))out.push({label:'Points / cards',field:'bullets',layout:'content'});
- if(!['quote','table'].includes(s.type)&&String(s.body||'').trim())out.push({label:'Body text / table',field:'body',layout:'quote'});
- if(!['title','section','quote'].includes(s.type)&&String(s.subtitle||'').trim())out.push({label:'Subtitle',field:'subtitle',layout:'title'});
- if(!['image','split'].includes(s.type)&&s.image)out.push({label:'Image',field:'image',layout:'split'});
+ if(!['journey','quote','table','introduction'].includes(s.type)&&String(s.body||'').trim())out.push({label:'Body text / table',field:'body',layout:'quote'});
+ if(!['journey','introduction','title','section','quote'].includes(s.type)&&String(s.subtitle||'').trim())out.push({label:'Subtitle',field:'subtitle',layout:'title'});
+ if(!['image','split','introduction'].includes(s.type)&&s.image)out.push({label:'Image',field:'image',layout:'split'});
  if(s.type!=='video'&&s.video)out.push({label:'Video',field:'video',layout:'video'});
  return out;
 }

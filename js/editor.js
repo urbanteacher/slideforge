@@ -688,8 +688,8 @@
     box.appendChild(summary);
     /** @type {[string, string[]][]} */
     var layoutGroups = [
-      ['Introduce', ['title', 'section', 'quote']],
-      ['Explain & organise', ['content', 'keywords', 'italics', 'cards', 'table', 'chart']],
+      ['Introduce', ['title', 'introduction', 'section', 'quote']],
+      ['Explain & organise', ['content', 'journey', 'mindmap', 'keywords', 'italics', 'cards', 'table', 'chart']],
       ['Show & explore', ['split', 'image', 'gallery', 'beforeafter', 'explore', 'simulation', 'video', 'links']]
     ];
     layoutGroups.forEach(function (group) {
@@ -785,7 +785,7 @@
   }
 
   /* Text fields preserve formatting separately from lesson content. */
-  var PIT_MAX = { content: 8, cards: 6, split: 5, keywords: 8, italics: 8, links: 8 };
+  var PIT_MAX = { journey: 6, mindmap: 6, content: 8, cards: 6, split: 5, keywords: 8, italics: 8, links: 8 };
 
   function ensurePits(s) {
     if (!Array.isArray(s.bullets)) s.bullets = [];
@@ -836,11 +836,11 @@
     wrap.className = 'pit-list keyword-pits' + (italic ? ' italics-pits' : '') + (links ? ' links-pits' : '');
     ensurePits(s);
     var max = PIT_MAX[kind] || 8;
-    var leadPh = links ? 'Link label' : italic ? 'Phrase in italics' : 'Keyword';
-    var trailPh = links ? 'https://…' : italic ? 'plain explanation' : 'definition in plain language';
+    var leadPh = kind === 'journey' ? 'Milestone heading' : kind === 'mindmap' ? 'Branch heading' : links ? 'Link label' : italic ? 'Phrase in italics' : 'Keyword';
+    var trailPh = kind === 'journey' ? 'What happens here' : kind === 'mindmap' ? 'Short explanation' : links ? 'https://…' : italic ? 'plain explanation' : 'definition in plain language';
     var leadCls = links ? 'ln-label-input' : italic ? 'it-phrase-input' : 'kw-term-input';
     var trailCls = links ? 'ln-url-input' : italic ? 'it-note-input' : 'kw-def-input';
-    var addLabel = links ? 'link' : italic ? 'phrase' : 'keyword';
+    var addLabel = kind === 'journey' ? 'milestone' : kind === 'mindmap' ? 'branch' : links ? 'link' : italic ? 'phrase' : 'keyword';
     s.bullets.forEach(function (line, i) {
       var parsed = SF.parseKeywordLine(line);
       var row = el('div', 'pit-row keyword' + ((parsed.term || parsed.def) ? '' : ' empty'));
@@ -975,7 +975,13 @@
         fr.onload = function () { layer.image = String(fr.result); touched(); draw(); };
         fr.readAsDataURL(f);
       });
-      row.appendChild(UI.field('Embed a local file', pick));
+      row.appendChild(UI.field('Embed a local file', pick,
+        'Choose another file to replace the picture.'));
+      if (String(layer.image || '').trim()) {
+        row.appendChild(UI.button('Remove image', 'ghost', function () {
+          layer.image = ''; touched(); drawLayers(host, s); repaint();
+        }));
+      }
       row.appendChild(UI.field('Caption',
         UI.text(layer.caption, function (v) { layer.caption = v; touched(); repaint(); })));
       row.appendChild(UI.field('Source / credit',
@@ -999,14 +1005,12 @@
       insp.appendChild(UI.field(opts.captionLabel || 'Caption',
         richField(s, "title", "area", function (v) { s.title = v; touched(); repaint(); }, 2)));
     }
-    insp.appendChild(UI.field('Image URL or data',
-      UI.text(s.image, function (v) { s.image = v.trim(); touched(); repaint(); }),
-      'Paste a URL, or embed a local file below.'));
-
+    var imgWrap = el('div');
+    imgWrap.appendChild(UI.text(s.image, function (v) { s.image = v.trim(); touched(); repaint(); }));
     var pick = el('input');
     pick.type = 'file';
     pick.accept = 'image/*';
-    pick.style.fontSize = '12px';
+    pick.style.cssText = 'font-size:12px;margin-top:7px;display:block;width:100%';
     pick.addEventListener('change', function () {
       var f = pick.files && pick.files[0];
       if (!f) return;
@@ -1017,7 +1021,18 @@
       fr.onload = function () { s.image = fr.result; touched(); draw(); };
       fr.readAsDataURL(f);
     });
-    insp.appendChild(UI.field('Embed a local file', pick));
+    imgWrap.appendChild(pick);
+    if (String(s.image || '').trim()) {
+      var clearImg = UI.button('Remove image', 'ghost', function () {
+        s.image = ''; touched(); draw();
+      });
+      clearImg.style.cssText = 'font-size:12px;margin-top:7px;width:100%';
+      imgWrap.appendChild(clearImg);
+    }
+    insp.appendChild(UI.field('Image', imgWrap,
+      String(s.image || '').trim()
+        ? 'Replace with a new URL or file, or remove to clear the picture.'
+        : 'Paste a URL, or embed a local file.'));
     insp.appendChild(UI.field('Fit', UI.select(
       [{ value: 'cover', label: 'Fill the panel (crop)' },
        { value: 'contain', label: 'Fit inside (letterbox)' }],
@@ -1026,7 +1041,7 @@
     /* Where a borrowed chart says whose it is. Offered on split as well as
        image slides: the attribution belongs beside the picture, not buried in
        a bullet that scrolls past. */
-    insp.appendChild(UI.field('Source / credit',
+    if (opts.credit !== false) insp.appendChild(UI.field('Source / credit',
       richField(s, "subtitle", "text", function (v) { s.subtitle = v; touched(); repaint(); }),
       'Shown small under the caption — e.g. Financial Times, 2016.'));
   }
@@ -1043,9 +1058,21 @@
       'An http(s) URL, or a path relative to the app folder. The file is not ' +
       'copied into the deck \u2014 keep it beside index.html and it works offline.'));
 
-    insp.appendChild(UI.field('Poster image URL (optional)',
-      UI.text(s.videoPoster, function (v) { s.videoPoster = SF.safeMedia(v); touched(); repaint(); }),
-      'The still shown before it plays, and in the slide rail.'));
+    var posterWrap = el('div');
+    posterWrap.appendChild(UI.text(s.videoPoster, function (v) {
+      s.videoPoster = SF.safeMedia(v); touched(); repaint();
+    }));
+    if (String(s.videoPoster || '').trim()) {
+      var clearPoster = UI.button('Remove poster', 'ghost', function () {
+        s.videoPoster = ''; touched(); draw();
+      });
+      clearPoster.style.cssText = 'font-size:12px;margin-top:7px;width:100%';
+      posterWrap.appendChild(clearPoster);
+    }
+    insp.appendChild(UI.field('Poster image URL (optional)', posterWrap,
+      String(s.videoPoster || '').trim()
+        ? 'The still shown before it plays. Replace the URL or remove to clear it.'
+        : 'The still shown before it plays, and in the slide rail.'));
 
     insp.appendChild(UI.field('Start at (seconds)',
       UI.num(s.videoStart || null, function (v) {
@@ -1071,6 +1098,43 @@
   }
 
   function drawContentFields(insp, s) {
+    if (s.type === 'title') {
+      var dateInput = el('input');
+      dateInput.type = 'date'; dateInput.value = s.date || '';
+      dateInput.setAttribute('aria-label', 'Slide date');
+      dateInput.onchange = function () { s.date = dateInput.value; touched(); repaint(); };
+      insp.appendChild(UI.field('Slide date', dateInput, 'Optional. Choose the lesson date; it stays fixed when you reopen the presentation.'));
+      insp.appendChild(UI.button('Insert today’s date', 'ghost', function () {
+        var today = new Date();
+        s.date = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        touched(); draw();
+      }));
+    }
+    if (s.type === 'journey') {
+      insp.appendChild(UI.field('Journey title', richField(s, 'title', 'text', function(v){s.title=v;touched();repaint();})));
+      insp.appendChild(UI.field('Context', richField(s, 'subtitle', 'text', function(v){s.subtitle=v;touched();repaint();})));
+      insp.appendChild(UI.field('Show as', UI.select([{value:'path',label:'Route with milestones'},{value:'handover',label:'Connected stages'}],s.journeyMode||'path',function(v){s.journeyMode=v;touched();repaint();})));
+      var stops=el('div'); drawPairPits(stops,s,'journey');
+      insp.appendChild(UI.field('Milestones · heading and detail',stops,'Use up to six short stops for a route, or two to three connected stages. Next reveals each one.'));
+      insp.appendChild(UI.field('Takeaway / reading',richField(s,'body','area',function(v){s.body=v;touched();repaint();},2)));
+      return;
+    }
+    if (s.type === 'mindmap') {
+      insp.appendChild(UI.field('Central idea', richField(s, 'title', 'area', function (v) { s.title = v; touched(); repaint(); }, 2)));
+      var branches = el('div');
+      drawPairPits(branches, s, 'mindmap');
+      insp.appendChild(UI.field('Branches · heading and explanation', branches,
+        'Keep to six short branches for a readable map. Build on Next reveals one branch at a time.'));
+      return;
+    }
+    if (s.type === 'introduction') {
+      insp.appendChild(UI.field('Lecturer name', richField(s, 'title', 'text', function (v) { s.title = v; touched(); repaint(); })));
+      insp.appendChild(UI.field('Job title', richField(s, 'subtitle', 'text', function (v) { s.subtitle = v; touched(); repaint(); })));
+      insp.appendChild(UI.field('Introduction', richField(s, 'body', 'area', function (v) { s.body = v; touched(); repaint(); }, 4)));
+      drawImageFields(insp, s, { caption: false, credit: false });
+      return;
+    }
+
     if (SF.Explore && SF.Explore.inspector(insp, s, UI, function () { touched(); repaint(); }, function () { touched(); draw(); })) return;
     if (s.type === 'video') {
       drawVideoFields(insp, s);
