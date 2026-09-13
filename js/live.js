@@ -1345,6 +1345,7 @@
     SF.Player.on('qaCommand', moderate);
     SF.Player.on('reactionsToggle', toggleReactions);
     SF.Player.on('blankPhonesToggle', toggleBlankPhones);
+    SF.Player.on('floorCycle', cycleFloor);
   }
 
   /**
@@ -1401,6 +1402,27 @@
     SF.Player.start(Live.deck, 0);
     if (!Live.prompt && Live.deck.quiz.scoreboard && Live.rows.length) paintRail();
   };
+
+  /* Three settings rather than a switch, because the useful default is
+     neither on nor off. 'auto' lets the deck decide — it already knows which
+     slides are checks and which are explanation — and the other two are for
+     when the teacher disagrees with it in the moment. */
+  var FLOOR_MODES = ['auto', 'open', 'shut'];
+  var FLOOR_SAYS = {
+    auto: 'Floor follows the lesson — hands up at checks, not mid-explanation',
+    open: 'Floor open — the room can ask or put a hand up any time',
+    shut: 'Floor closed — no hands, no questions until you reopen it'
+  };
+  function cycleFloor() {
+    if (!Live.active) {
+      SF.toast('The floor needs a live room — start Host live first.');
+      return;
+    }
+    var at = FLOOR_MODES.indexOf(Live.floor || 'auto');
+    Live.floor = FLOOR_MODES[(at + 1) % FLOOR_MODES.length];
+    send({ t: 'floor', mode: Live.floor });
+    SF.toast(FLOOR_SAYS[Live.floor]);
+  }
 
   /* Phones dark on the host's say-so. Deliberately separate from the wall
      Blank (B): they are two screens and a teacher wants them independently —

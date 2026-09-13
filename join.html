@@ -678,6 +678,19 @@
   var flow = createLearnerFlow();
   var panelActivity = null;
   var context = null, reactionsOn = true, acknowledged = {}, saves = [], saveStorageKey = null;
+  /* A hand that is only there when the floor is open means something; one
+     that is always there becomes wallpaper, and the fifth raise in ten minutes
+     tells the teacher nothing. So these leave rather than grey out — and if
+     the learner is mid-question when the floor closes, the panel closes with
+     it rather than stranding them in a form that will be refused. */
+  var floorOpen = false;
+  function setFloor(on) {
+    floorOpen = !!on;
+    header(true);
+    if (!floorOpen && flow.main === 'scAsk') backToActivity();
+    updateContentActions();
+  }
+
   /* Covered, not cleared. A blanked phone keeps its screen, its scroll and
      anything half-typed underneath the veil, so lifting it puts the learner
      back exactly where they were rather than making them find their place. */
@@ -731,7 +744,7 @@
   function updateContentActions() {
     var available = context && context.activity === 'content' && flow.main === 'scWait';
     $('contentActions').hidden = !available;
-    $('gotItBtn').hidden = !reactionsOn;
+    $('gotItBtn').hidden = !reactionsOn || !floorOpen;
     $('gotItBtn').disabled = !!(context && acknowledged[context.slideId]);
     $('gotItBtn').querySelector('span').textContent = context && acknowledged[context.slideId] ? 'Got it ✓' : 'Got it';
     $('helpHereBtn').setAttribute('aria-pressed', paceKind === 'lost' ? 'true' : 'false');
@@ -787,7 +800,9 @@
 
   function header(on) {
     $('hdr').style.display = on ? 'flex' : 'none';
-    $('askBtn').style.display = on ? '' : 'none';
+    $('askBtn').style.display = on && floorOpen ? '' : 'none';
+    /* The hand stays. Telling the teacher you are lost is worth most in the
+       middle of the explanation you are lost in. */
     $('paceBtn').style.display = on ? '' : 'none';
     $('hdrName').textContent = me.name;
     $('hdrScore').textContent = me.score;
@@ -882,6 +897,7 @@
         me.team = m.team != null ? m.team : null;
         me.teamName = m.teamName || null;
         setBlank(m.phonesBlank === true);
+        setFloor(m.floor === true);
         header(true);
         $('foot').textContent = m.title || 'SlideForge · Your lesson companion';
         $('holdWho').textContent = me.teamName
@@ -901,6 +917,7 @@
         me.team = m.team != null ? m.team : null;
         me.teamName = m.teamName || null;
         setBlank(m.phonesBlank === true);
+        setFloor(m.floor === true);
         showReactBar(m.reactions !== false);
         header(true);
         $('waitIcon').textContent = '✓';
@@ -985,6 +1002,10 @@
 
       case 'signalled':
         signalled(m.kind);
+        break;
+
+      case 'floor':
+        setFloor(m.open === true);
         break;
 
       case 'blankPhones':

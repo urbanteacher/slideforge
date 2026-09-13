@@ -815,6 +815,18 @@ function promptMessage(room) {
 }
 
 /** Move everyone held in the waiting room into play. */
+/* Open at a junction, shut while explaining, unless the host has said
+   otherwise. Blanked phones close it regardless: there is nothing to put a
+   hand up about on a dark screen.
+   This governs questions and the Got it acknowledgement. Pace signals are
+   outside it on purpose — see the signal handler. */
+function floorIsOpen(room) {
+  if (!room || room.phonesBlank) return false;
+  if (room.floor === 'open') return true;
+  if (room.floor === 'shut') return false;
+  return room.at && room.at.activity !== 'content';
+}
+
 function admitWaiting(room) {
   if (!room.waiting.size) return;
   for (const p of room.waiting.values()) {
@@ -833,7 +845,8 @@ function admitWaiting(room) {
       admitted: true,
       round: room.roundNo,
       reactions: room.reactions,
-      phonesBlank: room.phonesBlank
+      phonesBlank: room.phonesBlank,
+      floor: floorIsOpen(room)
     });
     sendContext(room, p.sock);
     const open = promptMessage(room);
@@ -954,6 +967,12 @@ ws.attach(server, (sock, req) => {
            to arrive blank — otherwise the one student who reconnects is the
            one student still looking down. Session-scoped, off by default. */
         phonesBlank: false,
+        /* Whether the room may put a hand up or ask something. 'auto' follows
+           the deck, which already knows where its junctions are: room.at
+           .activity is 'content' while the host is explaining and something
+           else at a check, a question or a moment. The two explicit settings
+           are for when the teacher disagrees with the deck. */
+        floor: 'auto',
         reactAt: new Map(),      // playerId -> when they last reacted
         reactBurst: [],          // recent reaction times, for the room ceiling
         /* Where the host is. Sent with each slide so a signal can be filed
@@ -1398,9 +1417,15 @@ ws.attach(server, (sock, req) => {
         record(room, 'qaPin', { id: room.qaPinned ? room.qaPinned.id : null });
         pushQA(room);
 
+      } else if (m.t === 'floor') {
+        room.floor = ['auto', 'open', 'shut'].includes(m.mode) ? m.mode : 'auto';
+        broadcast(room, { t: 'floor', open: floorIsOpen(room), mode: room.floor });
+        log('room ' + room.pin + ' floor ' + room.floor);
+
       } else if (m.t === 'blankPhones') {
         room.phonesBlank = m.on === true;
         broadcast(room, { t: 'blankPhones', on: room.phonesBlank });
+        broadcast(room, { t: 'floor', open: floorIsOpen(room), mode: room.floor });
         log('room ' + room.pin + ' phones ' + (room.phonesBlank ? 'blanked' : 'restored'));
 
       } else if (m.t === 'reactions') {
@@ -1441,6 +1466,9 @@ ws.attach(server, (sock, req) => {
           pushPlayers(room);
         }
         broadcast(room, learnerContext(room));
+        /* Moving between a content slide and a check changes who may speak, so
+           it travels with the slide rather than waiting for the next toggle. */
+        broadcast(room, { t: 'floor', open: floorIsOpen(room), mode: room.floor });
         pushBookmarks(room);
         if (moved && room.signals.size) {
           room.signals.clear();
@@ -1533,7 +1561,7 @@ ws.attach(server, (sock, req) => {
           record(room, 'resume', {id:me.id});
           if (room.waiting.has(me.id) && room.joinOpen) admitWaiting(room);
           const held = room.waiting.has(me.id);
-          sock.json({t:held?'waiting':'joined',name:me.name,title:room.title,phase:room.phase,mode:room.mode,team:me.team,teamName:me.team != null ? room.teams[me.team] : null,score:me.score,resumeToken:me.resumeToken,reactions:room.reactions,phonesBlank:room.phonesBlank});
+          sock.json({t:held?'waiting':'joined',name:me.name,title:room.title,phase:room.phase,mode:room.mode,team:me.team,teamName:me.team != null ? room.teams[me.team] : null,score:me.score,resumeToken:me.resumeToken,reactions:room.reactions,phonesBlank:room.phonesBlank,floor:floorIsOpen(room)});
           if (!held) {
             sendContext(room, sock);
             if (room.phase === 'question' && room.question && room.question.eligible.has(me.id)) {
@@ -1637,7 +1665,8 @@ ws.attach(server, (sock, req) => {
            waiting room, and resuming — because a phone that missed the toggle
            shows a button that does nothing. */
         reactions: room.reactions,
-        phonesBlank: room.phonesBlank
+        phonesBlank: room.phonesBlank,
+        floor: floorIsOpen(room)
       });
       /* A prompt is broadcast when the host opens it, so somebody arriving
          afterwards would never see it. Hand it over on join instead — unlike a
@@ -1656,6 +1685,13 @@ ws.attach(server, (sock, req) => {
 
     if (role === 'player' && m.t === 'ask') {
       if (!room) return;
+      /* Hiding the button is the courtesy; this is the rule. A phone that
+         missed the message, or never had the button, still cannot talk over
+         an explanation. */
+      if (!floorIsOpen(room)) {
+        sock.json({ t: 'askRejected', reason: 'Questions open at the next check-in.' });
+        return;
+      }
       const text = String(m.text || '').trim().slice(0, 240);
       if (!text) return;
       /* A cap per person, so one enthusiast cannot flood the queue. Dismissed
@@ -1735,6 +1771,10 @@ ws.attach(server, (sock, req) => {
 
     if (role === 'player' && m.t === 'signal') {
       if (!room || !rooms.has(room.pin) || !room.players.has(me.id)) return;
+      /* Deliberately not gated by the floor. "I am lost" is only any use while
+         somebody is explaining, which is exactly when the floor is shut, and a
+         pace signal is anonymous, aggregated and expires on its own — it is
+         not the channel anyone can flood. Questions are. */
       if (m.slideId && m.slideId !== room.at.slideId) return;
       const kind = SIGNAL_KINDS.includes(m.kind) ? m.kind : null;
       const mine = room.signals.get(me.id);

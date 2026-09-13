@@ -154,6 +154,7 @@
     freeze: function () { Player.toggleFreeze(); },
     reactions: function () { Player.emit('reactionsToggle', {}); },
     blankPhones: function () { Player.emit('blankPhonesToggle', {}); },
+    floor: function () { Player.emit('floorCycle', {}); },
     reset: function () { Player.resetScores(); },
     /* Named answers live on the private screen. Opening presenter view if it
        is shut is the whole action: there is nowhere else this can go without
@@ -2345,6 +2346,7 @@
       case 't': case 'T': e.preventDefault(); Player.emit('reactionsToggle', {}); break;
       /* Shift+B, next to B for the wall. Two screens, two blanks. */
       case 'B': if (e.shiftKey) { e.preventDefault(); Player.emit('blankPhonesToggle', {}); } break;
+      case 'H': if (e.shiftKey) { e.preventDefault(); Player.emit('floorCycle', {}); } break;
       case 'w': case 'W': e.preventDefault(); Player.control('who'); break;
       /* I opens the pen, not P — P is already Previous, and a pen that also
          went back a slide would be found the hard way. X clears the ink,

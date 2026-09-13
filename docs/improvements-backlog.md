@@ -211,3 +211,29 @@ The runner's header comment said 144 while it ran 168; corrected.
   turned out to be an instrumentation artefact rather than perfect coalescing.
   Timing the two paths, and checking `document.visibilityState` first, gave
   numbers worth quoting.
+
+- **13 Sep** — Item 7 done, as a **floor** the room either has or has not.
+
+  The deck already knows where its junctions are: `room.at.activity` is
+  `content` while the host explains and `question` / `feedback` / `moment` at a
+  check. So `room.floor` defaults to `auto` and follows it, with `open` and
+  `shut` for when the teacher disagrees. `Shift+H` cycles; the room menu says
+  which it is on.
+
+  The buttons **leave** rather than grey out. A hand that is only there when
+  the floor is open means something; one that is always there is wallpaper.
+  Enforced on the server too, not only hidden: a hand-crafted client that
+  joined and sent an `ask` on a content slide came back with *"Questions open
+  at the next check-in."*
+
+  **Corrected mid-build: pace signals are outside the floor.** Gating them
+  broke two tests, and the tests were right — `kind: 'lost'` means "I am lost",
+  which is only any use while somebody is explaining, i.e. exactly when the
+  floor is shut. A pace signal is also anonymous, aggregated and expires on its
+  own, so it is not the channel anyone can flood. Questions are. This differs
+  from the original instruction, which included the hand; worth revisiting if
+  the room turns out to abuse it.
+
+  Verified live across all three modes: auto on content (ask and Got it gone,
+  hand stays), auto at a junction (all three), host-forced open on content, and
+  host-forced shut at a junction.
