@@ -22,8 +22,14 @@ try {
   page.on('pageerror', (e) => errors.push('app: ' + e.message));
   await page.goto(`http://127.0.0.1:${port}/?lesson=ipdv-intro`);
   await page.waitForFunction(() => window.SF?.Editor?.deck());
-  assert.equal(await page.evaluate(() => SF.Editor.deck().slides.length), 40,
-    'the lecture under test is the full one');
+  /* The lecture is edited often, so this checks it is the real one and big
+     enough to be worth printing rather than pinning an exact count that goes
+     stale every time a slide is added. */
+  const lecture = await page.evaluate(() => ({
+    title: SF.Editor.deck().title, n: SF.Editor.deck().slides.length
+  }));
+  assert.match(lecture.title, /Advanced Information Presentation/, 'the IPDV lecture is loaded');
+  assert.ok(lecture.n >= 35, `the full lecture is loaded, got ${lecture.n} slides`);
 
   const [pdf] = await Promise.all([
     page.context().waitForEvent('page'),
@@ -40,7 +46,7 @@ try {
     'the handout finished preparing rather than reporting a failure');
 
   const pages = await pdf.locator('.pdf-page').count();
-  assert.ok(pages >= 44, `the whole lecture is there, got ${pages} pages`);
+  assert.ok(pages >= lecture.n, `every slide reached the handout, got ${pages} pages from ${lecture.n} slides`);
 
   const text = await pdf.evaluate(() => document.body.innerText);
 
@@ -128,7 +134,7 @@ try {
   maps.forEach((m) => assert.equal(m.branches, 6, `page ${m.page} kept all six branches`));
 
   assert.deepEqual(errors, [], 'no page errors');
-  console.log(`PASS: ${pages}-page handout from the 40-slide lecture — questions without answers, no notes, every image loaded, nothing over the edge`);
+  console.log(`PASS: ${pages}-page handout from the ${lecture.n}-slide lecture — questions without answers, no notes, every image loaded, nothing over the edge`);
 } finally {
   await browser.close();
   await harness.stop(relay);

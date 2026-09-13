@@ -99,7 +99,7 @@
       key: 'ipdv-intro',
       title: 'LDSCI6253 Advanced Information Presentation & Visualisation',
       icon: '📊',
-      blurb: 'Foundations of visualisation: cognitive value, Anscombe’s quartet, historical discoveries, chart idioms, and the 4P framework.',
+      blurb: 'Foundations of visualisation: cognitive value, Anscombe’s quartet, historical discoveries, chart idioms, and the 4P framework. Assessment journey and chart-zoo detail sit in an appendix after the core path.',
       minutes: 90,
       theme: 'northeastern',
       logo: 'assets/brand/nu-london-logo.png',
@@ -174,12 +174,6 @@
           body: 'Advanced Information Presentation & Visualisation\nLDSCI6253',
           notes: 'Before teaching: add your job title and upload your headshot in Design & content. Introduce your background and what you enjoy about data visualisation. Invite students to share what they hope to learn.'
         },
-        {"type": "journey", "title": "Your course journey · foundations", "subtitle": "Weeks 1–6 · build the skills you will use in AE1", "progressive": true, "buildMode": "dim", "bullets": ["W1 · Introductions\tWhy visualisation matters and how it evolved. Reading: VAD 1.", "W2 · Visual communication\tMeasurement scales, marks and channels, design guidance. VAD 2, 5, 6.", "W3 · Data abstraction\tData types, tables and tools. VAD 2, 3, 7.", "W4 · Colour\tPerception, cognition and illusions. VAD 10–12.", "W5 · Interaction and animation\tInteraction, animation, reduce and embed. VAD 13, 14.", "W6 · Maps and SciVis\tGeospatial and scientific visualisation. VAD 8."], "notes": "Start with Week 1: you are here. Reveal each stop with Next and ask what it adds to the previous one. VAD means Visualization Analysis and Design by Tamara Munzner. Teaching sequence supplied by the course leader; assessment briefs are for 2026–27. The source timetable header says 2025/6: confirm the year before distributing the complete timetable."},
-        {"type": "journey", "title": "Your course journey · advanced practice", "subtitle": "Extend your visual thinking, then evaluate how well it communicates", "progressive": true, "buildMode": "dim", "bullets": ["W7–8 · Pause and assessment\tWeek 7: reading week. Week 8: exam week in the timetable; use the AE deadlines for coursework.", "W9 · Networks and trees\tGraph structures, network visualisations and trees. VAD 9.", "W10 · Experiential visualisation\tGuest speaker. Reading to be confirmed.", "W11 · Visualisation for ML\tHigh-dimensional data, feature engineering and model performance. Reading TBC.", "Later · Current research\tIEEE VIS and CHI proceedings; how to write a paper. Reading TBC.", "Later · Evaluation and storytelling\tThreats, validation, telling a data story and giving a talk. VAD 4."], "notes": "The supplied timetable lists Week 13 before Week 12. The last two stops deliberately say Later until their order is confirmed. AE2 refers to Weeks 8–11, whereas the timetable places some relevant topics later. Confirm alignment and which material will have been taught before the AE2 deadline. No exact calendar dates have been inferred from teaching-week labels."},
-        {"type": "journey", "journeyMode": "handover", "title": "Two assessments · one developing project", "subtitle": "Green Jobs and Skills in London: Visualising the Data · 2026–27", "progressive": true, "buildMode": "hide", "bullets": ["AE1 · 60%\tBUILD & COMMUNICATE\nPython visualisations + accessible public communication\nSet exercises · 24–32 hours\n30 October 2026 · 13:00 UK", "AE2 · 40%\tEVALUATE & DEVELOP\n2,500-word written report\nDevelop at least one AE1 visualisation, dataset or visual idea\n27 November 2026 · 13:00 UK"], "body": "Carry something forward. Explain what changed, why it changed and how it helps the audience.", "notes": "Both assessments were issued on 14 September 2026. The two percentages total the module assessment weighting. Do not present the stated 24–32 hours as an exam duration. AE2 explicitly builds on AE1. AE1 feedback is planned within 28 calendar days, reaching the AE2 deadline if counted from hand-in; clarify interim feedback arrangements rather than promising feedback will arrive before AE2."},
-        {"type": "journey", "title": "How your project develops", "subtitle": "One public-facing question: what should people understand about London’s green jobs and skills?", "progressive": true, "buildMode": "dim", "bullets": ["Start with real evidence\tRead the GLA analysis. Use the raw datasets provided on Canvas; cite sources.", "Make purposeful choices\tChoose data, marks, channels, colour and interactions to answer a clear question.", "Submit AE1\tReproducible Python visualisations and accessible communication for a general audience.", "Revisit a design decision\tReuse, extend, rework, transform or redesign at least one AE1 element.", "Explain your development in AE2\tUse concrete examples and readings to discuss clarity, trust, ethics and evaluation."], "body": "AE2 reading: GLA green jobs analysis · ONS green jobs estimates (March 2026) · Nesta evidence review (2023)", "notes": "The London Datastore Green Job Postings page provides HTML analysis rather than a raw Lightcast dataset. Use it for context and methodology unless extracting tables is explicitly permitted. Raw downloadable datasets are on Canvas. AE2 should include the carried-over element, comparisons of good and bad practice and visual examples from required readings. New visualisations may be included where useful; they are not mandatory simply because they appear in the list of possible examples."},
-        {"type": "mindmap", "title": "Ready to submit?", "progressive": true, "buildMode": "hide", "bullets": ["Where?\tSubmit online through Canvas.", "Identity\tBoth submissions must be anonymous.", "When?\tAE1: 30 October. AE2: 27 November. Both 13:00 UK, 2026.", "AE1 files\tPython notebook (.ipynb) AND its .html export.", "AI rule\tAI use is prohibited in both assessments.", "Evidence\tUse real, cited data and justify your design choices."], "notes": "Ask students to say what they would check under each branch before revealing it. AE2 is a written report, but its supplied brief also lists .ipynb and .html. Confirm the report packaging before giving a definite AE2 file instruction. Categorical marking applies. Refer students to the full Canvas briefs for complete requirements; these slides summarise them."},
-        {"type": "section", "title": "Check the assessment connection", "subtitle": "Think first, vote, then explain your choice to a partner", "feedback": {"kind": "poll", "prompt": "Which approach meets the AE2 carry-over requirement?", "options": ["Start a completely unrelated project", "Develop an AE1 visualisation, dataset or visual idea and explain the changes", "Resubmit AE1 unchanged with a new title", "Use an AI tool to write the report"], "max": 1}, "notes": "Correct: develop an AE1 visualisation, dataset or visual idea and explain the changes. Give 20 seconds of private thinking, take the vote, then ask pairs to explain why the other choices do not meet the brief. If responses are split, return to Two assessments and explain the connecting arrow. AI use is prohibited on both assignments."},
         {
           type: 'cards',
           title: 'Course Administration & Expectations',
@@ -203,19 +197,22 @@
           notes: 'By the end of this session, students will be able to articulate why visualisation matters and begin applying systematic critique to any chart idiom.'
         },
         {
-          type: 'split',
+          type: 'cards',
           title: 'Reading & Reference Texts',
-          image: 'https://m.media-amazon.com/images/I/A120ud+jUwL._SY522_.jpg',
-          /* A cover is a fixed shape and cropping it to the panel would shave
-             the spine and the series banner, so it is letterboxed. */
-          imageFit: 'contain',
-          subtitle: 'Munzner, Visualization Analysis & Design (CRC Press)',
+          progressive: true,
           bullets: [
-            'Tamara Munzner: Visualization Analysis and Design (Chapters 1 & 6). Focus on task abstraction and visual encoding.',
-            'John Burn-Murdoch: How Charts Work. Real-world explanatory graphics and scatterplot analysis from the Financial Times.',
-            'Weekly Cadence: Read the assigned chapters before Tuesday’s lecture to maximize lab application.'
+            'Munzner · VAD\tVisualization Analysis and Design — Chapters 1 & 6 this week (task abstraction and visual encoding).',
+            'Smith · How Charts Work\tFT visual practice: reading charts, spotting the real story, designing for an audience.',
+            'Burn-Murdoch charts\tExplanatory journalism scatterplots (e.g. Brexit 2016) — we look at one later today.',
+            'Weekly rhythm\tRead before Tuesday’s lecture; submit lab worksheets on Canvas by Friday midday.'
           ],
-          notes: 'Munzner is our primary theoretical text. Burn-Murdoch provides practitioner-grade intuition on explanatory journalism and statistical communication.'
+          images: [
+            'assets/lesson/ipdv/munzner-cover.jpg',
+            'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1667070046i/63127668.jpg',
+            'assets/lesson/ipdv/brexit-scatter-ft.jpg',
+            'assets/brand/nu-london-skyline.png'
+          ],
+          notes: 'Four cards, each with a cover or campus image. Munzner is the theory text; Alan Smith’s How Charts Work is the FT practitioner book (Burn-Murdoch’s Brexit scatter appears inside it — do not attribute the book to Burn-Murdoch). Card 3 teases the case study later; card 4 locks the weekly habit.'
         },
         {
           type: 'section',
@@ -271,46 +268,26 @@
             'Cartography\tScience and aesthetics of spatial reality; communicating geographic relationships effectively.',
             'Christoph Scheiner (1612)\tEngraved observation plates systematically tracking sunspot trajectories over time.'
           ],
-          notes: 'Scheiner’s sunspot drawings represent one of the earliest systematic time-series observations of an astronomical phenomenon.'
-        },
-        {
-          type: 'split',
-          title: 'William Playfair & Abstract Data Space',
-          progressive: true,
-          bullets: [
-            'The 1801 Statistical Breviary: Published the earliest known pie chart showing the Turkish Empire’s landmass across Asia, Europe, and Africa.',
-            'Invention of Statistical Graphics: Playfair also invented the bar chart and line graph, breaking free from physical geography to plot abstract economic data.',
-            'Proportional Angle & Area: Early experiments in communicating part-to-whole relationships visually.'
-          ],
-          image: 'https://upload.wikimedia.org/wikipedia/commons/5/52/Playfair_TimeSeries-2.png',
-          imageFit: 'contain',
-          subtitle: 'William Playfair, Commercial and Political Atlas (1786) · public domain, Wikimedia Commons',
-          notes: 'Before Playfair, charts were almost exclusively maps or astronomical diagrams tied to physical space. Playfair realized money, debt, and populations could be plotted as coordinates. The chart beside you is his own: England’s imports and exports, the first published time-series of economic data.'
+          notes: 'After each item, force the so-what: encoding used → insight unlocked → lesson for today. Tablets: structured columns made accounts auditable. Cartography: spatial encoding made relationships traversable. Scheiner: time-series drawings made sunspot motion undeniable — one of the earliest systematic astronomical series.'
         },
         {
           type: 'cards',
           title: 'When Visualisations Led to Discovery',
           progressive: true,
+          design: { cardPics: 'plates' },
           bullets: [
-            'John Snow (1854): Mapped cholera deaths around the Broad Street pump, proving cholera was water-borne rather than airborne miasma.',
-            'Francis Galton (1883): Plotted barometric pressures and winds across Europe, discovering anti-cyclonic weather patterns.',
-            'E.W. Maunder (1904): The solar "butterfly diagram", uncovering the 11-year sunspot latitude migration cycle.',
-            'Hertzsprung & Russell (1911): Plotted stellar luminosity against spectral class, revealing the main sequence of star evolution.'
+            'Snow · 1854\tMapped cholera deaths around the Broad Street pump — visual proof cholera was water-borne, not miasma.',
+            'Galton · 1861\tSynoptic weather chart of pressure and wind across Britain — the pattern that made anti-cyclones visible.',
+            'Maunder · 1904\tSolar “butterfly diagram”: sunspot latitudes march with the 11-year cycle.',
+            'Hertzsprung–Russell · 1911\tLuminosity vs spectral class — the main sequence of stellar evolution appears as a structure, not a table.'
           ],
-          notes: 'In each of these cases, the discovery could not have been achieved by reviewing raw data tables. The visual spatialization made the invisible pattern undeniable.'
-        },
-        {
-          type: 'content',
-          title: 'Timeline of Data Visualisation',
-          progressive: true,
-          bullets: [
-            'Pre-Historic & Antiquity: Cave paintings, tally sticks, and Roman road itineraries (Peutinger Table).',
-            '10th–17th Century: Celestial movement plots, Van Langren’s 1644 longitude error graphic.',
-            '18th–19th Century: Playfair’s statistical graphics, Minard’s Napoleon march flow map, Nightingale’s rose chart.',
-            '20th Century: Tukey’s Exploratory Data Analysis (EDA), Bertin’s Semiology of Graphics, Cleveland & McGill perception studies.',
-            'The Information Age: Interactive web graphics (D3, Observable), GPU rendering, real-time streaming dashboards.'
+          images: [
+            'https://upload.wikimedia.org/wikipedia/commons/2/27/Snow-cholera-map-1.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/b/b7/Weather_chart_%281861%29.gif',
+            'https://upload.wikimedia.org/wikipedia/commons/2/24/Maunder%2C_E.W._-_Distribution_of_the_latitude_of_sunspot_centres_%28butterfly_diagram%2C_1877-1902%29%2C_1904.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/6/67/HR-diag-no-text-2.svg'
           ],
-          notes: 'Point out John Tukey’s quote: "The greatest value of a picture is when it forces us to notice what we never expected to see." This sets up Anscombe’s Quartet.'
+          notes: 'In each of these cases, the discovery could not have been achieved by reviewing raw data tables. The visual spatialization made the invisible pattern undeniable. Plates: Snow Broad Street map; Galton 1861 weather chart; Maunder butterfly; classic H–R diagram (Commons).'
         },
         {
           type: 'quote',
@@ -418,6 +395,15 @@
           notes: 'Recap before Burn-Murdoch. If short on time, dwell here after a quick flip through I–IV.'
         },
         {
+          type: 'split',
+          image: 'assets/lesson/ipdv/brexit-scatter-ft.jpg',
+          imageFit: 'contain',
+          imageSide: 'right',
+          /* The chart from the course slides plots GDP exported to the EU on x,
+             while the second bullet says percentage with higher education. They
+             are two different Burn-Murdoch charts. The credit names what is
+             actually on screen; the bullet still needs deciding. */
+          subtitle: 'Share of Leave vote against share of regional GDP exported to the EU · Financial Times',
           title: 'Case Study: Scatterplots in Explanatory Journalism',
           progressive: true,
           bullets: [
@@ -427,12 +413,6 @@
             'Scatterplots reveal clustering, variance, and outlier communities simultaneously without losing individual data points.'
           ],
           notes: 'Burn-Murdoch published this chart immediately following the referendum. It replaced pundit speculation with clear empirical evidence of the demographic education divide.'
-        },
-        {
-          type: 'section',
-          title: 'Chart Idioms & Multivariate Analysis',
-          subtitle: 'Selecting the right visual encoding for the analytical task.',
-          notes: 'Now we move from foundational principles to specific chart idioms and their appropriate use cases.'
         },
         {
           type: 'cards',
@@ -447,6 +427,117 @@
           notes: 'Ask students: What question are you asking of the data? The task dictates the idiom, not aesthetic preference.'
         },
         {
+          type: 'section',
+          title: 'Applying What We’ve Learned',
+          subtitle: 'Choose the appropriate idiom for the scenario.',
+          feedback: {
+            kind: 'poll',
+            prompt: 'A hospital needs to track patient flow from admission through triage, testing, wards, and discharge. Which idiom is best?',
+            options: [
+              'Sankey diagram',
+              'Multi-axis line chart',
+              'Radar chart',
+              'Box and whisker plot'
+            ],
+            max: 1
+          },
+          notes: 'Give the room 45 seconds to vote. Correct answer is Sankey diagram because it tracks flow volume across sequential multi-stage nodes.'
+        },
+        {
+          type: 'section',
+          title: 'The Rule of Thumb',
+          subtitle: 'The 4P Framework for visual analysis and design.',
+          notes: 'Now we synthesize this into a repeatable professional practice: the 4P framework.'
+        },
+        {
+          type: 'keywords',
+          title: 'The 4P Methodology',
+          progressive: true,
+          buildMode: 'dim',
+          bullets: [
+            '1. PLAN\tDefine purpose and audience; establish success metrics; gather context; choose core message.',
+            '2. PREPARE\tClean and validate raw data; handle missing values; inspect outliers; structure into tidy format.',
+            '3. PRESENTATION\tSelect appropriate chart idiom; apply intentional color strategy; build visual hierarchy; add annotations.',
+            '4. POLISH\tConduct usability tests; check accessibility (colorblindness, screen readers); verify factual accuracy; optimize for medium.'
+          ],
+          notes: 'Every project in this module will be evaluated against the 4P lifecycle. Emphasize that 80% of project failure happens in Plan and Prepare, not Presentation.'
+        },
+        {
+          type: 'game',
+          gameRef: 'quiz-check',
+          notes: 'Formative quiz time! 4 questions covering Munzner’s definition, Anscombe’s Quartet, Sankey width encoding, and John Snow’s cholera map.'
+        },
+        {
+          type: 'section',
+          title: 'Reflect & Self-Assess',
+          subtitle: 'Check your confidence before our first practical lab.',
+          feedback: {
+            kind: 'scale',
+            prompt: 'How confident do you feel applying the 4Ps to evaluate a visualization?',
+            points: 5,
+            lowLabel: 'Need guidance',
+            highLabel: 'Ready to critique',
+            max: 1
+          },
+          notes: 'Use this scale feedback to gauge student readiness for Lab 1. If many students score 1-2, plan a brief recap at the start of the lab session.'
+        },
+        {
+          type: 'content',
+          title: 'Summary & Looking Ahead to Lab 1',
+          bullets: [
+            'Read Chapter 1 & 6 in Munzner before Thursday’s lab.',
+            'Lab 1 Focus: Setting up your Python environment, importing datasets with Pandas, and building your first clean visualisations.',
+            'Worksheet Submission: Complete and submit Lab 1 worksheets on Canvas by Friday midday.',
+            'Open Q&A: Bring your questions to the desk or post in the course discussion channel.'
+          ],
+          notes: 'Close the lecture. Remind them of the lab schedule and room. Open the floor to initial questions.'
+        },
+        {
+          type: 'section',
+          title: 'Appendix · parked slides',
+          subtitle: 'Still in the deck — not on the Week 1 teaching path.',
+          notes: 'Everything below was moved here rather than deleted. Use if you have spare time, for assessment briefing, or when a student asks. The core lecture ends on Summary & Looking Ahead.'
+        },
+        {"type": "journey", "title": "Your course journey · foundations", "subtitle": "Weeks 1–6 · build the skills you will use in AE1", "progressive": true, "buildMode": "dim", "bullets": ["W1 · Introductions\tWhy visualisation matters and how it evolved. Reading: VAD 1.", "W2 · Visual communication\tMeasurement scales, marks and channels, design guidance. VAD 2, 5, 6.", "W3 · Data abstraction\tData types, tables and tools. VAD 2, 3, 7.", "W4 · Colour\tPerception, cognition and illusions. VAD 10–12.", "W5 · Interaction and animation\tInteraction, animation, reduce and embed. VAD 13, 14.", "W6 · Maps and SciVis\tGeospatial and scientific visualisation. VAD 8."], "notes": "Start with Week 1: you are here. Reveal each stop with Next and ask what it adds to the previous one. VAD means Visualization Analysis and Design by Tamara Munzner. Teaching sequence supplied by the course leader; assessment briefs are for 2026–27. The source timetable header says 2025/6: confirm the year before distributing the complete timetable."},
+        {"type": "journey", "title": "Your course journey · advanced practice", "subtitle": "Extend your visual thinking, then evaluate how well it communicates", "progressive": true, "buildMode": "dim", "bullets": ["W7–8 · Pause and assessment\tWeek 7: reading week. Week 8: exam week in the timetable; use the AE deadlines for coursework.", "W9 · Networks and trees\tGraph structures, network visualisations and trees. VAD 9.", "W10 · Experiential visualisation\tGuest speaker. Reading to be confirmed.", "W11 · Visualisation for ML\tHigh-dimensional data, feature engineering and model performance. Reading TBC.", "Later · Current research\tIEEE VIS and CHI proceedings; how to write a paper. Reading TBC.", "Later · Evaluation and storytelling\tThreats, validation, telling a data story and giving a talk. VAD 4."], "notes": "The supplied timetable lists Week 13 before Week 12. The last two stops deliberately say Later until their order is confirmed. AE2 refers to Weeks 8–11, whereas the timetable places some relevant topics later. Confirm alignment and which material will have been taught before the AE2 deadline. No exact calendar dates have been inferred from teaching-week labels."},
+        {"type": "journey", "journeyMode": "handover", "title": "Two assessments · one developing project", "subtitle": "Green Jobs and Skills in London: Visualising the Data · 2026–27", "progressive": true, "buildMode": "hide", "bullets": ["AE1 · 60%\tBUILD & COMMUNICATE\nPython visualisations + accessible public communication\nSet exercises · 24–32 hours\n30 October 2026 · 13:00 UK", "AE2 · 40%\tEVALUATE & DEVELOP\n2,500-word written report\nDevelop at least one AE1 visualisation, dataset or visual idea\n27 November 2026 · 13:00 UK"], "body": "Carry something forward. Explain what changed, why it changed and how it helps the audience.", "notes": "Both assessments were issued on 14 September 2026. The two percentages total the module assessment weighting. Do not present the stated 24–32 hours as an exam duration. AE2 explicitly builds on AE1. AE1 feedback is planned within 28 calendar days, reaching the AE2 deadline if counted from hand-in; clarify interim feedback arrangements rather than promising feedback will arrive before AE2."},
+        {"type": "journey", "title": "How your project develops", "subtitle": "One public-facing question: what should people understand about London’s green jobs and skills?", "progressive": true, "buildMode": "dim", "bullets": ["Start with real evidence\tRead the GLA analysis. Use the raw datasets provided on Canvas; cite sources.", "Make purposeful choices\tChoose data, marks, channels, colour and interactions to answer a clear question.", "Submit AE1\tReproducible Python visualisations and accessible communication for a general audience.", "Revisit a design decision\tReuse, extend, rework, transform or redesign at least one AE1 element.", "Explain your development in AE2\tUse concrete examples and readings to discuss clarity, trust, ethics and evaluation."], "body": "AE2 reading: GLA green jobs analysis · ONS green jobs estimates (March 2026) · Nesta evidence review (2023)", "notes": "The London Datastore Green Job Postings page provides HTML analysis rather than a raw Lightcast dataset. Use it for context and methodology unless extracting tables is explicitly permitted. Raw downloadable datasets are on Canvas. AE2 should include the carried-over element, comparisons of good and bad practice and visual examples from required readings. New visualisations may be included where useful; they are not mandatory simply because they appear in the list of possible examples."},
+        {"type": "mindmap", "title": "Ready to submit?", "progressive": true, "buildMode": "hide", "bullets": ["Where?\tSubmit online through Canvas.", "Identity\tBoth submissions must be anonymous.", "When?\tAE1: 30 October. AE2: 27 November. Both 13:00 UK, 2026.", "AE1 files\tPython notebook (.ipynb) AND its .html export.", "AI rule\tAI use is prohibited in both assessments.", "Evidence\tUse real, cited data and justify your design choices."], "notes": "Ask students to say what they would check under each branch before revealing it. AE2 is a written report, but its supplied brief also lists .ipynb and .html. Confirm the report packaging before giving a definite AE2 file instruction. Categorical marking applies. Refer students to the full Canvas briefs for complete requirements; these slides summarise them."},
+        {"type": "section", "title": "Check the assessment connection", "subtitle": "Think first, vote, then explain your choice to a partner", "feedback": {"kind": "poll", "prompt": "Which approach meets the AE2 carry-over requirement?", "options": ["Start a completely unrelated project", "Develop an AE1 visualisation, dataset or visual idea and explain the changes", "Resubmit AE1 unchanged with a new title", "Use an AI tool to write the report"], "max": 1}, "notes": "Correct: develop an AE1 visualisation, dataset or visual idea and explain the changes. Give 20 seconds of private thinking, take the vote, then ask pairs to explain why the other choices do not meet the brief. If responses are split, return to Two assessments and explain the connecting arrow. AI use is prohibited on both assignments."},
+        {
+          type: 'split',
+          title: 'William Playfair & Abstract Data Space',
+          progressive: true,
+          bullets: [
+            'The 1801 Statistical Breviary: Published the earliest known pie chart showing the Turkish Empire’s landmass across Asia, Europe, and Africa.',
+            'Invention of Statistical Graphics: Playfair also invented the bar chart and line graph, breaking free from physical geography to plot abstract economic data.',
+            'Proportional Angle & Area: Early experiments in communicating part-to-whole relationships visually.'
+          ],
+          image: 'assets/lesson/ipdv/playfair-pie-1801.jpg',
+          imageFit: 'contain',
+          subtitle: 'William Playfair, Statistical Breviary (1801) · from the course slides',
+          notes: 'Before Playfair, charts were almost exclusively maps or astronomical diagrams tied to physical space. Playfair realized money, debt, and populations could be plotted as coordinates. The chart beside you is his own: England’s imports and exports, the first published time-series of economic data.'
+        },
+        {
+          type: 'content',
+          title: 'Timeline of Data Visualisation',
+          progressive: true,
+          bullets: [
+            'Pre-Historic & Antiquity: Cave paintings, tally sticks, and Roman road itineraries (Peutinger Table).',
+            '10th–17th Century: Celestial movement plots, Van Langren’s 1644 longitude error graphic.',
+            '18th–19th Century: Playfair’s statistical graphics, Minard’s Napoleon march flow map, Nightingale’s rose chart.',
+            '20th Century: Tukey’s Exploratory Data Analysis (EDA), Bertin’s Semiology of Graphics, Cleveland & McGill perception studies.',
+            'The Information Age: Interactive web graphics (D3, Observable), GPU rendering, real-time streaming dashboards.'
+          ],
+          notes: 'Point out John Tukey’s quote: "The greatest value of a picture is when it forces us to notice what we never expected to see." This sets up Anscombe’s Quartet.'
+        },
+        {
+          type: 'section',
+          title: 'Chart Idioms & Multivariate Analysis',
+          subtitle: 'Selecting the right visual encoding for the analytical task.',
+          notes: 'Now we move from foundational principles to specific chart idioms and their appropriate use cases.'
+        },
+        {
           type: 'split',
           title: 'Sankey Diagrams',
           progressive: true,
@@ -456,13 +547,13 @@
             'Conservation & Distribution: Immediately reveals where resources originate, branch, concentrate, or are lost.',
             'Alternative to Bar or Flow Charts: Captures multi-stage transitions and system-wide allocation simultaneously.'
           ],
-          image: 'https://upload.wikimedia.org/wikipedia/commons/1/10/JIE_Sankey_V5_Fig1.png',
+          image: 'assets/lesson/ipdv/sankey-income-spending.jpg',
           imageFit: 'contain',
           /* On the left because the deck logo sits top right, and this plate
              carries its own title along the top edge — the two landed on each
              other. The text half has a two-word heading and room to spare. */
           imageSide: 'left',
-          subtitle: 'M. H. Sankey, The Thermal Efficiency of Steam Engines (1898) · public domain, Wikimedia Commons',
+          subtitle: 'Income and spending Sankey · from the course slides',
           notes: 'Sankey diagrams originated in thermodynamics (Capt. Matthew Sankey in 1898 showing steam engine energy efficiency). Widely used today in financial audits, user journey funnels, and supply chains. The diagram beside you is Sankey’s own, from the paper the idiom is named after.'
         },
         {
@@ -489,48 +580,10 @@
           notes: 'Tukey invented the box plot in 1977. Point out the difference between the box (interquartile range IQR) and the whiskers (typically 1.5 * IQR).'
         },
         {
-          type: 'section',
-          title: 'Applying What We’ve Learned',
-          subtitle: 'Choose the appropriate idiom for the scenario.',
-          feedback: {
-            kind: 'poll',
-            prompt: 'A hospital needs to track patient flow from admission through triage, testing, wards, and discharge. Which idiom is best?',
-            options: [
-              'Sankey diagram',
-              'Multi-axis line chart',
-              'Radar chart',
-              'Box and whisker plot'
-            ],
-            max: 1
-          },
-          notes: 'Give the room 45 seconds to vote. Correct answer is Sankey diagram because it tracks flow volume across sequential multi-stage nodes.'
-        },
-        {
-          type: 'game',
-          gameRef: 'quiz-check',
-          notes: 'Formative quiz time! 4 questions covering Munzner’s definition, Anscombe’s Quartet, Sankey width encoding, and John Snow’s cholera map.'
-        },
-        {
-          type: 'section',
-          title: 'The Rule of Thumb',
-          subtitle: 'The 4P Framework for visual analysis and design.',
-          notes: 'Now we synthesize this into a repeatable professional practice: the 4P framework.'
-        },
-        {
-          type: 'keywords',
-          title: 'The 4P Methodology',
-          progressive: true,
-          buildMode: 'dim',
-          bullets: [
-            '1. PLAN\tDefine purpose and audience; establish success metrics; gather context; choose core message.',
-            '2. PREPARE\tClean and validate raw data; handle missing values; inspect outliers; structure into tidy format.',
-            '3. PRESENTATION\tSelect appropriate chart idiom; apply intentional color strategy; build visual hierarchy; add annotations.',
-            '4. POLISH\tConduct usability tests; check accessibility (colorblindness, screen readers); verify factual accuracy; optimize for medium.'
-          ],
-          notes: 'Every project in this module will be evaluated against the 4P lifecycle. Emphasize that 80% of project failure happens in Plan and Prepare, not Presentation.'
-        },
-        {
-          type: 'content',
+          type: 'split',
+          image: 'assets/lesson/ipdv/ai-and-python-2.png',
+          imageFit: 'contain',
+          imageSide: 'right',
           title: 'Modern Tooling: Python & AI Workflows',
           progressive: true,
           bullets: [
@@ -540,31 +593,6 @@
             'Critical Practitioner Rule: AI generates prototypes; the human practitioner applies the 4Ps, domain expertise, and ethical validation.'
           ],
           notes: 'Distinguish general discussion of AI tools from assignment permissions. AI use is prohibited in AE1 and AE2. Do not suggest students use AI to draft assessment code or reports.'
-        },
-        {
-          type: 'section',
-          title: 'Reflect & Self-Assess',
-          subtitle: 'Check your confidence before our first practical lab.',
-          feedback: {
-            kind: 'scale',
-            prompt: 'How confident do you feel applying the 4Ps to evaluate a visualization?',
-            points: 5,
-            lowLabel: 'Need guidance',
-            highLabel: 'Ready to critique',
-            max: 1
-          },
-          notes: 'Use this scale feedback to gauge student readiness for Lab 1. If many students score 1-2, plan a brief recap at the start of the lab session.'
-        },
-        {
-          type: 'content',
-          title: 'Summary & Looking Ahead to Lab 1',
-          bullets: [
-            'Read Chapter 1 & 6 in Munzner before Thursday’s lab.',
-            'Lab 1 Focus: Setting up your Python environment, importing datasets with Pandas, and building your first clean visualisations.',
-            'Worksheet Submission: Complete and submit Lab 1 worksheets on Canvas by Friday midday.',
-            'Open Q&A: Bring your questions to the desk or post in the course discussion channel.'
-          ],
-          notes: 'Close the lecture. Remind them of the lab schedule and room. Open the floor to initial questions.'
         }
       ]
     },
