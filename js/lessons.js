@@ -555,7 +555,7 @@
       key: 'layout-bank',
       title: 'Layout bank — every slide type, one of each',
       icon: '▦',
-      blurb: 'A reference deck holding all 20 authoring layouts in the Northeastern theme. Page through it to see what each one does, then copy the slide you want into your own lesson.',
+      blurb: 'A reference deck holding every layout in the layout picker, in the Northeastern theme. Page through it to see what each one does, then copy the slide you want into your own lesson.',
       minutes: 15,
       theme: 'northeastern',
       logo: 'assets/brand/nu-london-logo.png',
@@ -632,10 +632,6 @@
           ],
           progressive: true, buildMode: 'dim',
           notes: 'CARDS — items that are peers, arranged in a row with the number on the side rather than across the top, so four fit without shrinking. The card count drives the column ladder automatically: two cards are wide, six are narrow. Also on dim build here.' },
-
-        { type: 'explain', title: 'Explain — running prose',
-          body: 'Some ideas do not survive being cut into bullets. This layout takes paragraphs, separated by a blank line, and sets them as readable prose at a size the back row can still see.\n\nEach paragraph is a build step of its own, so you can walk through an argument a paragraph at a time rather than revealing the whole page.',
-          notes: 'EXPLAIN — paragraphs, not points. Blank line between them. Use it for the two or three moments in a lecture where the reasoning matters more than the summary.' },
 
         { type: 'section', title: 'Data and evidence', subtitle: 'Table, chart in three kinds',
           notes: 'Table and chart read the same pasted text, so a range from a spreadsheet becomes either without retyping.' },
@@ -761,9 +757,9 @@
             'Found a shape you want? Duplicate the slide and paste it into your own deck, then replace the content.',
             'Layouts are app-wide — every one of these is already in the layout picker of every deck you open.',
             'This deck is a reference copy. Edit it freely; rebuild it from the lesson picker whenever you want a clean one.',
-            'Not here: quiz, game, results and join. Those are built by the live session, not chosen from the layout picker.'
+            'Not here: quiz, game, results, join and explain. Those are made for you, not chosen from the picker.'
           ],
-          notes: 'Close. Rebuilding this lesson gives a fresh copy, so nothing here is precious. Twenty of SlideForge’s twenty-five slide types are authoring layouts and all twenty appear in this deck — video is named on its own slide but not rendered, because a placeholder URL would only ever draw a black box. The other four (quiz, game, results, join) are produced by the live session when you host one.' }
+          notes: 'Close. Rebuilding this lesson gives a fresh copy, so nothing here is precious. The picker offers twenty layouts and nineteen of them are in this deck; video is named on its own slide but not rendered, because a placeholder URL would only ever draw a black box. The remaining five slide types never appear in the picker: quiz, game, results and join are built by the live session, and explain is the card that shows the correct answer after a check — which is also why the student handout leaves it out.' }
       ]
     }
   ];
