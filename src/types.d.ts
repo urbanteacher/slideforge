@@ -162,7 +162,9 @@ export interface Slide {
   layers: GalleryLayer[];
   /** Chart layout: which form the same tabular `body` is drawn as. */
   chartKind: 'bar' | 'line' | 'pie';
-  exploration: ReturnType<typeof import('./deck/exploration.js').normalizeExploration>;
+  /** Present only on the kinds that read it — before/after, explore,
+   *  simulation, chart — or on any slide that already carried settings. */
+  exploration?: ReturnType<typeof import('./deck/exploration.js').normalizeExploration>;
   /** Table layout: `body` is tab- or pipe-separated rows, one per line. */
   tableHeader: boolean;
   transition: TransitionKey;

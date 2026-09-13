@@ -6938,6 +6938,7 @@
   };
   var TRANSITIONS = ["none", "fade", "push", "zoom", "wipe"];
   var GALLERY_MAX = 8;
+  var EXPLORATION_TYPES = ["beforeafter", "explore", "simulation", "chart"];
   var TEAM_COLORS = ["#e8474f", "#2b7ce9", "#e8a020", "#29a86b", "#8b5cf0", "#d4477f"];
   var MAX_TEAMS = 6;
   function teamColor(i) {
@@ -7026,7 +7027,6 @@
       // honoured on the projector, never in a preview
       tableHeader: true,
       /* Chart layout: bar, line or pie over the same text a table slide uses. */
-      exploration: normalizeExploration(null),
       chartKind: (
         /** @type {'bar'|'line'|'pie'} */
         "bar"
@@ -7057,6 +7057,7 @@
       // audience feedback attached to this slide (null = none)
       feedback: null
     };
+    if (EXPLORATION_TYPES.indexOf(s.type) >= 0) s.exploration = normalizeExploration(null);
     switch (s.type) {
       case "title":
         s.title = "Presentation title";
@@ -7200,9 +7201,13 @@
     s.videoMuted = s.videoMuted === true;
     s.videoAutoplay = s.videoAutoplay === true;
     s.tableHeader = s.tableHeader !== false;
-    s.exploration = normalizeExploration(raw && raw.exploration);
-    s.exploration.before = safeMedia(s.exploration.before);
-    s.exploration.after = safeMedia(s.exploration.after);
+    if (EXPLORATION_TYPES.indexOf(s.type) >= 0 || raw && raw.exploration) {
+      s.exploration = normalizeExploration(raw && raw.exploration);
+      s.exploration.before = safeMedia(s.exploration.before);
+      s.exploration.after = safeMedia(s.exploration.after);
+    } else {
+      delete s.exploration;
+    }
     s.chartKind = ["bar", "line", "pie"].indexOf(s.chartKind) >= 0 ? s.chartKind : "bar";
     var rawLayers = raw && Array.isArray(raw.layers) ? raw.layers : [];
     s.layers = rawLayers.slice(0, GALLERY_MAX).map(function(layer) {

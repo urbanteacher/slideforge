@@ -43,7 +43,16 @@
   function svg(tag, attrs) { var n = document.createElementNS('http://www.w3.org/2000/svg', tag); Object.keys(attrs || {}).forEach(function (k) { n.setAttribute(k, attrs[k]); }); return n; }
   function photo(url, alt) {
     var image = node('img', 'explore-image'); image.src = SF.safeMedia(url); image.alt = alt;
-    image.draggable = false; image.onerror = function () { image.hidden = true; image.parentElement.appendChild(node('p', 'explore-empty', 'Choose an image in Design & content.')); };
+    image.draggable = false;
+    /* A URL that fails slowly — an unreachable host waiting on DNS — can
+       error after the slide it was on has been removed, which is 700ms after
+       the presenter moves off it. By then there is no parent to explain
+       ourselves to. */
+    image.onerror = function () {
+      image.hidden = true;
+      var host = image.parentElement;
+      if (host) host.appendChild(node('p', 'explore-empty', 'Choose an image in Design & content.'));
+    };
     return image;
   }
   function render(root, pad, slide, opts) {

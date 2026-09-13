@@ -66,6 +66,10 @@ var TRANSITIONS = ['none', 'fade', 'push', 'zoom', 'wipe'];
    being a stack and become a folder. */
 var GALLERY_MAX = 8;
 
+/* The slide kinds that read exploration settings. A chart is here because
+   prediction is a chart setting; everything else never looks at them. */
+var EXPLORATION_TYPES = ['beforeafter', 'explore', 'simulation', 'chart'];
+
 /* Team colours line up with the coloured answer pads on the phones. */
 var TEAM_COLORS = ['#e8474f', '#2b7ce9', '#e8a020', '#29a86b', '#8b5cf0', '#d4477f'];
 
@@ -185,7 +189,6 @@ function makeSlide(type) {
     videoAutoplay: false,   // honoured on the projector, never in a preview
     tableHeader: true,
     /* Chart layout: bar, line or pie over the same text a table slide uses. */
-    exploration: normalizeExploration(null),
     chartKind: /** @type {'bar'|'line'|'pie'} */ ('bar'),
     /* Image stack: each layer is one picture with its own caption and source,
        shown one in front of the last. Empty on every other kind of slide. */
@@ -204,6 +207,10 @@ function makeSlide(type) {
     // audience feedback attached to this slide (null = none)
     feedback: null
   };
+
+  /* Carried only by the kinds that read it, so a blank title slide does not
+     ship sixteen fields nothing will ever look at. */
+  if (EXPLORATION_TYPES.indexOf(s.type) >= 0) s.exploration = normalizeExploration(null);
 
   switch (s.type) {
     case 'title':
@@ -367,9 +374,20 @@ function normalizeSlide(raw) {
   s.videoMuted = s.videoMuted === true;
   s.videoAutoplay = s.videoAutoplay === true;
   s.tableHeader = s.tableHeader !== false;
-  s.exploration = normalizeExploration(raw && raw.exploration);
-  s.exploration.before = safeMedia(s.exploration.before);
-  s.exploration.after = safeMedia(s.exploration.after);
+  /* Only the kinds that read it. Stamping the defaults onto every slide put
+     sixteen unused fields on every title, section and quiz slide: on the
+     29-slide LDSCI6253 deck, none of which uses an exploration, that was
+     8,294 bytes — 22% of the saved deck. Decks live in localStorage beside
+     embedded images, so the space is not free. Authored settings already on
+     a slide are kept whatever its type, so changing a slide's layout and
+     changing it back does not throw the settings away. */
+  if (EXPLORATION_TYPES.indexOf(s.type) >= 0 || (raw && raw.exploration)) {
+    s.exploration = normalizeExploration(raw && raw.exploration);
+    s.exploration.before = safeMedia(s.exploration.before);
+    s.exploration.after = safeMedia(s.exploration.after);
+  } else {
+    delete s.exploration;
+  }
   s.chartKind = ['bar', 'line', 'pie'].indexOf(s.chartKind) >= 0 ? s.chartKind : 'bar';
   /* Layers come off `raw` for the same reason options do: whatever was on disk
      may be strings, may be half-built, may be nothing. Capped because a stack
