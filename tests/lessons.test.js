@@ -99,13 +99,20 @@ test('a lesson survives being saved and reloaded', () => {
     deck.slides.find((s) => s.type === 'game').gameId);
 });
 
-test('ipdv-intro builds a 40-slide active lecture with formative quiz and 5 feedback moments', () => {
+test('ipdv-intro builds a 46-slide active lecture with formative quiz and 5 feedback moments', () => {
   const SF = load();
   const deck = SF.buildLesson('ipdv-intro');
   assert.ok(deck, 'deck exists');
   assert.equal(deck.title, 'LDSCI6253 Advanced Information Presentation & Visualisation');
   assert.equal(deck.theme, 'northeastern');
-  assert.equal(deck.slides.length, 40);
+  assert.equal(deck.slides.length, 46);
+  /* The appendix divides the lecture from the slides parked behind it. Its
+     index moves whenever a slide is added, so what is checked is that it is
+     there, and that it is not the last thing in the deck — an appendix with
+     nothing after it means the parked slides have gone missing. */
+  const appendixAt = deck.slides.findIndex((s) => s.title === 'Appendix · parked slides');
+  assert.ok(appendixAt > 0, 'the parked appendix is still in the deck');
+  assert.ok(appendixAt < deck.slides.length - 1, 'and still has parked slides behind it');
 
   // The lecture wears the university's branding, so buildLesson has to carry a
   // lesson's logo fields onto the deck and not just its theme.
@@ -165,19 +172,19 @@ test('ipdv-intro builds a 40-slide active lecture with formative quiz and 5 feed
   assert.ok(game.questions[3].question.includes('cholera'));
   assert.equal(game.questions[3].correct, 2);
 
-  // Verify feedback moments
+  // Verify feedback moments (assessment poll lives in the parked appendix)
   const feedbackSlides = deck.slides.filter((s) => s.feedback);
   assert.equal(feedbackSlides.length, 5, 'exactly 5 interactive feedback moments');
-  assert.equal(feedbackSlides[0].feedback.kind, 'poll');
-  assert.ok(feedbackSlides[0].feedback.prompt.includes('AE2 carry-over'));
-  assert.equal(feedbackSlides[1].feedback.kind, 'wordcloud');
-  assert.ok(feedbackSlides[1].feedback.prompt.includes('what does a graphic do'));
+  assert.equal(feedbackSlides[0].feedback.kind, 'wordcloud');
+  assert.ok(feedbackSlides[0].feedback.prompt.includes('what does a graphic do'));
+  assert.equal(feedbackSlides[1].feedback.kind, 'poll');
+  assert.ok(feedbackSlides[1].feedback.prompt.includes('Four datasets'));
   assert.equal(feedbackSlides[2].feedback.kind, 'poll');
-  assert.ok(feedbackSlides[2].feedback.prompt.includes('Four datasets'));
-  assert.equal(feedbackSlides[3].feedback.kind, 'poll');
-  assert.ok(feedbackSlides[3].feedback.prompt.includes('patient flow'));
-  assert.equal(feedbackSlides[4].feedback.kind, 'scale');
-  assert.ok(feedbackSlides[4].feedback.prompt.includes('4Ps'));
+  assert.ok(feedbackSlides[2].feedback.prompt.includes('patient flow'));
+  assert.equal(feedbackSlides[3].feedback.kind, 'scale');
+  assert.ok(feedbackSlides[3].feedback.prompt.includes('4Ps'));
+  assert.equal(feedbackSlides[4].feedback.kind, 'poll');
+  assert.ok(feedbackSlides[4].feedback.prompt.includes('AE2 carry-over'));
 });
 
 test('ipdv bundle generator exports a valid slideforge-bundle', () => {
@@ -191,7 +198,7 @@ test('ipdv bundle generator exports a valid slideforge-bundle', () => {
   assert.equal(bundle.decks[0].title, 'LDSCI6253 Advanced Information Presentation & Visualisation');
   assert.equal(bundle.decks[0].theme, 'northeastern');
   assert.equal(bundle.decks[0].logo, 'assets/brand/nu-london-logo.png');
-  assert.equal(bundle.decks[0].slides.length, 40);
+  assert.equal(bundle.decks[0].slides.length, 46);
   assert.equal(bundle.games[0].title, 'Lecture 1 Check — Foundations of Visualisation');
   assert.equal(bundle.games[0].questions.length, 4);
 });

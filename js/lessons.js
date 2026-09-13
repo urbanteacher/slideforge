@@ -197,22 +197,51 @@
           notes: 'By the end of this session, students will be able to articulate why visualisation matters and begin applying systematic critique to any chart idiom.'
         },
         {
-          type: 'cards',
-          title: 'Reading & Reference Texts',
+          /* The reading list, one text per slide. As four cards it asked the
+             room to take in two books, a body of journalism and a weekly
+             deadline in a single glance, and each one wants a sentence. */
+          type: 'split',
+          title: 'Reading · the theory text',
+          image: 'assets/lesson/ipdv/munzner-cover.jpg',
+          imageFit: 'contain',
+          imageSide: 'right',
+          subtitle: 'Munzner, Visualization Analysis & Design (CRC Press)',
           progressive: true,
           bullets: [
-            'Munzner · VAD\tVisualization Analysis and Design — Chapters 1 & 6 this week (task abstraction and visual encoding).',
-            'Smith · How Charts Work\tFT visual practice: reading charts, spotting the real story, designing for an audience.',
-            'Burn-Murdoch charts\tExplanatory journalism scatterplots (e.g. Brexit 2016) — we look at one later today.',
-            'Weekly rhythm\tRead before Tuesday’s lecture; submit lab worksheets on Canvas by Friday midday.'
+            'Chapters 1 and 6 this week — what visualisation is, and why we do it at all.',
+            'Chapter 1 gives you the definition we use all term; chapter 6 gives you rules of thumb to argue with.',
+            'This is the book the assessment criteria are written against. Read it slowly.'
           ],
-          images: [
-            'assets/lesson/ipdv/munzner-cover.jpg',
-            'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1667070046i/63127668.jpg',
-            'assets/lesson/ipdv/brexit-scatter-ft.jpg',
-            'assets/brand/nu-london-skyline.png'
+          notes: 'The theory spine of the course. Flag the chapter numbers explicitly — the Canvas page and an earlier slide have disagreed on this before, so say which is right out loud.'
+        },
+        {
+          type: 'split',
+          title: 'Reading · the practitioner text',
+          image: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1667070046i/63127668.jpg',
+          imageFit: 'contain',
+          imageSide: 'right',
+          subtitle: 'Alan Smith, How Charts Work (FT Publishing)',
+          progressive: true,
+          bullets: [
+            'How a working newsroom reads a chart: finding the real story, then designing for an audience that did not ask for it.',
+            'Where the Financial Times explanatory graphics come from — including John Burn-Murdoch’s scatterplots.',
+            'We look at one of those charts later today.'
           ],
-          notes: 'Four cards, each with a cover or campus image. Munzner is the theory text; Alan Smith’s How Charts Work is the FT practitioner book (Burn-Murdoch’s Brexit scatter appears inside it — do not attribute the book to Burn-Murdoch). Card 3 teases the case study later; card 4 locks the weekly habit.'
+          notes: 'Alan Smith wrote the book; Burn-Murdoch is a colleague whose charts appear in it. Do not attribute the book to Burn-Murdoch — students will cite it wrongly if you do.'
+        },
+        {
+          type: 'split',
+          title: 'Reading · the weekly rhythm',
+          image: 'assets/brand/nu-london-skyline.png',
+          imageFit: 'cover',
+          imageSide: 'right',
+          progressive: true,
+          bullets: [
+            'Read the assigned chapters before Tuesday’s lecture, not after it.',
+            'The lab applies what the reading sets up — arriving cold costs you the session.',
+            'Lab worksheets are submitted on Canvas by Friday midday.'
+          ],
+          notes: 'The habit slide. Tie the reading to the lab rather than to an exam: the pay-off is being able to do Thursday’s work, which is a reason that survives week three.'
         },
         {
           type: 'section',
@@ -260,7 +289,17 @@
           notes: 'We now take a whirlwind tour of data visualisation history to understand the evolution from physical accounting to abstract data coordinates.'
         },
         {
-          type: 'keywords',
+          type: 'gallery',
+          imageFit: 'contain',
+          design: { imageFrame: '4:3', capStyle: 'bar' },
+          layers: [
+            { image: 'assets/lesson/ipdv/clay-tablet-presargonic.jpg', caption: 'Pre-Sargonic tablet',
+              source: 'Sumerian account of silver and commodities, in ruled columns' },
+            { image: 'assets/lesson/ipdv/ptolemy-cartography.jpg', caption: 'Cartography',
+              source: 'Spatial reality made communicable — science and aesthetics together' },
+            { image: 'assets/lesson/ipdv/scheiner-sunspots-1612.jpg', caption: 'Christoph Scheiner, 1612',
+              source: 'Engraved plates tracking sunspot positions over time' }
+          ],
           title: 'Ancient Records to Renaissance Astronomy',
           progressive: true,
           bullets: [
@@ -308,7 +347,10 @@
           notes: 'Contrast visualization with machine learning. When you know exactly what to optimize and trust the model 100%, automate. When there is ambiguity, open-ended exploration, or human accountability, visualize.'
         },
         {
-          type: 'section',
+          type: 'image',
+          image: 'assets/lesson/ipdv/anscombe-raw-data.png',
+          imageFit: 'contain',
+          design: { imageFrame: '4:3', capStyle: 'bar' },
           title: 'The Danger of Summary Statistics',
           subtitle: 'Same numbers on paper — same picture on screen?',
           feedback: {
@@ -384,7 +426,10 @@
           notes: 'Close by asking what the room would have missed with only the summary statistics from the poll slide. High leverage without a plot stays invisible.'
         },
         {
-          type: 'content',
+          type: 'split',
+          image: 'assets/lesson/ipdv/anscombe-four-plots.png',
+          imageFit: 'contain',
+          imageSide: 'left',
           title: 'Four pictures, one quick report',
           progressive: true,
           bullets: [
@@ -416,6 +461,12 @@
         },
         {
           type: 'cards',
+          images: [
+            'assets/lesson/ipdv/multi-axis-sales-profit.jpg',
+            'assets/lesson/ipdv/box-whisker-age-groups.jpg',
+            'assets/lesson/ipdv/brexit-scatter-ft.jpg',
+            'assets/lesson/ipdv/sankey-income-spending.jpg'
+          ],
           title: 'Core Visualisation Use Cases',
           progressive: true,
           bullets: [
@@ -427,7 +478,15 @@
           notes: 'Ask students: What question are you asking of the data? The task dictates the idiom, not aesthetic preference.'
         },
         {
-          type: 'section',
+          type: 'gallery',
+          imageFit: 'contain',
+          design: { imageFrame: '16:9', capStyle: 'bar' },
+          layers: [
+            { image: 'assets/lesson/ipdv/set-exercise-womens-health-1.png',
+              caption: 'Set Exercise 1 & 2', source: 'Women’s and girls’ health in south east London' },
+            { image: 'assets/lesson/ipdv/set-exercise-womens-health-2.jpg',
+              caption: 'Women’s Health', source: 'NHS South East London' }
+          ],
           title: 'Applying What We’ve Learned',
           subtitle: 'Choose the appropriate idiom for the scenario.',
           feedback: {
@@ -482,7 +541,22 @@
           notes: 'Use this scale feedback to gauge student readiness for Lab 1. If many students score 1-2, plan a brief recap at the start of the lab session.'
         },
         {
-          type: 'content',
+          /* The Q&A slide from the course deck, restored so the two pictures
+             that belong to it have somewhere to live. Their original sat
+             between the 4Ps and the closing slide; this keeps that order. */
+          type: 'image',
+          image: 'assets/lesson/ipdv/qa-london-night-1.jpg',
+          imageFit: 'cover',
+          title: 'Q & A',
+          subtitle: 'Ask now, or bring it to the lab.',
+          design: { capStyle: 'scrim', capPos: 'bottom' },
+          notes: 'Open the floor. If nothing comes, offer the two questions most groups ask: which chart do I start with, and how much cleaning counts as enough.'
+        },
+        {
+          type: 'split',
+          image: 'assets/lesson/ipdv/next-lesson-lab1-1.png',
+          imageFit: 'contain',
+          imageSide: 'right',
           title: 'Summary & Looking Ahead to Lab 1',
           bullets: [
             'Read Chapter 1 & 6 in Munzner before Thursday’s lab.',
@@ -532,7 +606,21 @@
           notes: 'Point out John Tukey’s quote: "The greatest value of a picture is when it forces us to notice what we never expected to see." This sets up Anscombe’s Quartet.'
         },
         {
-          type: 'section',
+          /* Its own slide, as it had in the course deck — five long bullets and
+             a picture do not fit one frame together. */
+          type: 'image',
+          image: 'assets/lesson/ipdv/tableau-chronologique-paris.jpg',
+          imageFit: 'contain',
+          design: { imageFrame: '3:2', capStyle: 'bar' },
+          title: 'Tableau chronologique de l’entretien du pavé de Paris',
+          subtitle: 'Paris pavement maintenance over time · from the course slides',
+          notes: 'A 19th-century multi-series time chart. Ask what is being compared before naming it — the shape reads long before the French does.'
+        },
+        {
+          type: 'image',
+          image: 'assets/lesson/ipdv/chart-type-grid.png',
+          imageFit: 'contain',
+          design: { imageFrame: '16:9', capStyle: 'bar' },
           title: 'Chart Idioms & Multivariate Analysis',
           subtitle: 'Selecting the right visual encoding for the analytical task.',
           notes: 'Now we move from foundational principles to specific chart idioms and their appropriate use cases.'
@@ -557,7 +645,10 @@
           notes: 'Sankey diagrams originated in thermodynamics (Capt. Matthew Sankey in 1898 showing steam engine energy efficiency). Widely used today in financial audits, user journey funnels, and supply chains. The diagram beside you is Sankey’s own, from the paper the idiom is named after.'
         },
         {
-          type: 'keywords',
+          type: 'split',
+          image: 'assets/lesson/ipdv/likert-customer-survey.jpg',
+          imageFit: 'contain',
+          imageSide: 'right',
           title: 'Specialized Idioms: Likert & Multi-Axis',
           progressive: true,
           bullets: [
@@ -580,8 +671,25 @@
           notes: 'Tukey invented the box plot in 1977. Point out the difference between the box (interquartile range IQR) and the whiskers (typically 1.5 * IQR).'
         },
         {
+          /* The two idioms as pictures, one after the other. They had a slide
+             each in the course deck; the text above keeps its own frame
+             because four definitions and a chart will not share one. */
+          type: 'gallery',
+          imageFit: 'contain',
+          design: { imageFrame: '16:9', capStyle: 'bar' },
+          layers: [
+            { image: 'assets/lesson/ipdv/radar-product-orders.jpg', caption: 'Radar chart',
+              source: 'Product orders by month — from the course slides' },
+            { image: 'assets/lesson/ipdv/box-whisker-age-groups.jpg', caption: 'Box and whisker plot',
+              source: 'Employee age by department — from the course slides' }
+          ],
+          title: 'Radar and Boxplot, side by side',
+          progressive: true,
+          notes: 'Reveal the radar first and ask what the enclosed area implies, then the boxplot and ask the same of the box. One misleads on area, the other does not.'
+        },
+        {
           type: 'split',
-          image: 'assets/lesson/ipdv/ai-and-python-2.png',
+          image: 'assets/lesson/ipdv/different-charts-python-1.png',
           imageFit: 'contain',
           imageSide: 'right',
           title: 'Modern Tooling: Python & AI Workflows',
