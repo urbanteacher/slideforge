@@ -323,3 +323,48 @@
 .theme-northeastern.layout-quote .slide-logo img {
   filter: brightness(0) invert(1);
 }
+
+/* Split teaching slides: calm media half so charts stay readable.
+   The loud red gradient belongs on section breaks, not behind data ink —
+   red scatter on red page filler competes with the points. Photos that
+   cover the pane can still take the section red; contained charts sit on
+   a quiet navy mist with a white card. */
+.theme-northeastern.layout-split .split-copy {
+  background: #fbfaf8;
+}
+.theme-northeastern.layout-split .split-media {
+  background: linear-gradient(160deg, #e8eef4 0%, #d9e3ec 100%);
+  overflow: hidden;
+}
+.theme-northeastern.layout-split .split-media:has(.img.cover) {
+  background: linear-gradient(150deg, #d41733 0%, #c8102e 55%, #9b0c24 100%);
+}
+.theme-northeastern.layout-split .split-media .img.contain {
+  inset: 28px;
+  border-radius: 14px;
+  background-color: #ffffff;
+  box-shadow: 0 12px 28px rgba(12, 51, 84, .12);
+}
+.theme-northeastern.layout-split .split-media .cap {
+  padding: 18px 28px 16px;
+  background: none;
+  color: #14181f;
+  text-shadow: none;
+}
+.theme-northeastern.layout-split .split-media:has(.img.cover) .cap {
+  background: linear-gradient(transparent, rgba(155, 12, 36, .72));
+  color: #fff;
+}
+.theme-northeastern.layout-split .split-media .cap-credit {
+  color: #14181f;
+  font-size: 13px;
+  letter-spacing: .02em;
+}
+.theme-northeastern.layout-split .split-media:has(.img.cover) .cap-credit {
+  color: rgba(255, 255, 255, .92);
+}
+.theme-northeastern.layout-split .split-empty {
+  border-color: rgba(12, 51, 84, .28);
+  color: #5a6572;
+  background: rgba(255, 255, 255, .55);
+}
