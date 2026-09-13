@@ -66,7 +66,7 @@
   function syncManual() {
     if((!manualWindow || manualWindow.closed) && !manualChannel) return;
     var slide = SF.Player.open && SF.Player.deck.slides[SF.Player.idx];
-    var state={type:'sf-manual-state',active:!!Live.pin,showing:!!(SF.Player&&SF.Player.open),live:!!Live.active,view:manualView,report:lastReport,players:Live.players,teams:Live.teams,mode:Live.mode,
+    var state={type:'sf-manual-state',active:!!Live.pin,showing:!!(SF.Player&&SF.Player.open),live:!!Live.active,view:manualView,report:lastReport,players:Live.players,teams:Live.teams,mode:Live.mode,pin:Live.pin||null,
       question:slide && slide.type==='quiz' ? {id:slide.id,question:slide.question,input:slide.input || 'choice',options:slide.options,range:slide.input==='number'?{min:slide.min,max:slide.max,step:slide.step,unit:slide.unit||''}:null,revealed:!!Live.revealed[slide.id]} : null,
       answers:(Live.snapshot.answers || []).map(function(a){
         /* Marked here, where the answer key is, and only after the reveal.
@@ -297,9 +297,30 @@
     if(t && t.id==='teachClose'){var m=/** @type {HTMLDialogElement|null} */ (document.getElementById('teachModal'));if(m&&m.open)m.close();return;}
     if(t && t.dataset && t.dataset.teach){teachTab(t.dataset.teach);}
   });
+  function postManualError(message) {
+    try { if (manualWindow && !manualWindow.closed) manualWindow.postMessage({ type: 'sf-manual-error', message: message }, location.origin); } catch (e) {}
+    if (manualChannel) manualChannel.postMessage({ type: 'sf-manual-error', message: message });
+  }
+
+  /** Desk Class panel can open the room — paper register does not need phones. */
+  function startLiveFromDesk(force) {
+    if (Live.pin && !force) {
+      postManualError('A live room is already open. Use New room… only if you want a fresh PIN.');
+      return;
+    }
+    var deck = (SF.Player && SF.Player.open && SF.Player.deck) || Live.deck;
+    if (!deck) {
+      postManualError('Present the lesson on the wall first, then start the live room here.');
+      return;
+    }
+    Live.host(deck);
+    SF.toast('Starting live room — add names here; phones are optional');
+  }
+
   function manualCommand(data) {
     if(!data || data.type!=='sf-manual-command') return;
     if(data.action==='hello'){ syncManual(); send({t:'report'}); }
+    else if(data.action==='host') startLiveFromDesk(!!data.force);
     else if(data.action==='add') send({t:'manualAdd',names:data.names,team:data.team});
     else if(data.action==='rename') send({t:'manualRename',playerId:data.playerId,name:data.name});
     else if(data.action==='team') send({t:'manualTeam',playerId:data.playerId,team:data.team});
@@ -644,7 +665,17 @@
         rememberRoom(m.pin, m.hostToken);
         /* A lesson that had already started comes back started. Only the
            lobby is a state worth returning to. */
-        if (m.phase && m.phase !== 'lobby') goLiveLocally();
+        if (m.phase && m.phase !== 'lobby') {
+          goLiveLocally();
+          document.body.classList.add('live-on');
+          SF.Player.gate = gate;
+          var slide = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
+          Live.roundGame = slide && slide.gameId || null;
+          SF.Player.syncHudRoomButtons();
+        } else {
+          drawPlayers();
+          lobby.classList.add('on');
+        }
         SF.toast('Back in the lesson — the room stayed open, PIN ' + m.pin);
         break;
 

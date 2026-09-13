@@ -33,6 +33,16 @@
     SF.Shell.syncChrome();draw();
   }
 
+  function rememberSelection() {
+    if (!deck || !deck.slides[sel]) return;
+    try { sessionStorage.setItem('slideforge.selection.' + deck.id, deck.slides[sel].id); } catch (e) {}
+  }
+  function savedSelection() {
+    var id;
+    try { id = sessionStorage.getItem('slideforge.selection.' + deck.id); } catch (e) {}
+    return Math.max(0, deck.slides.findIndex(function (s) { return s.id === id; }));
+  }
+
   /* ------------------------------------------------------------ helpers */
 
   function current() { return deck.slides[sel]; }
@@ -1582,7 +1592,7 @@
   /* ------------------------------------------------------------ workspace */
 
   function repaint() { drawPreview(); drawRail(); }
-  function draw() { if(historyId!==deck.id) remember(); drawRail(); drawFoot(); drawPreview(); drawInspector(); }
+  function draw() { rememberSelection(); if(historyId!==deck.id) remember(); drawRail(); drawFoot(); drawPreview(); drawInspector(); }
 
   var ws = {
     key: 'deck',
@@ -1592,7 +1602,7 @@
     fileSuffix: '.sfdeck.json',
     store: SF.Store,
     doc: function () { return deck; },
-    setDoc: function (d) { deck = d; sel = 0; },
+    setDoc: function (d) { deck = d; sel = savedSelection(); },
     blank: function () { return SF.makeDeck('Untitled presentation'); },
     draw: draw,
     flush: flush,
@@ -1664,13 +1674,15 @@
     }
 
     deck = loaded;
-    sel = 0;
+    sel = savedSelection();
+    if (requestedLesson) SF.Player.forgetRun();
+    else SF.Player.restoreRun();
 
     /* If this tab was hosting when it reloaded, walk back into the room the
        server is holding rather than leaving a class of phones stranded. Quiet
        when there is nothing held, which is almost always. */
     if (SF.Live && SF.Live.resumeHeldRoom) {
-      try { SF.Live.resumeHeldRoom(deck); } catch (e) {}
+      try { SF.Live.resumeHeldRoom(SF.Player.open ? SF.Player.deck : runDeck()); } catch (e) {}
     }
 
     var notesInput = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
@@ -1738,7 +1750,7 @@
     },
     selectSlide: function (id) {
       var at = deck.slides.findIndex(function (s) { return s.id === id; });
-      if (at >= 0) sel = at;
+      if (at >= 0) { sel = at; rememberSelection(); }
     },
     /**
      * @param {string} kind  a FEEDBACK_KINDS key
@@ -1778,7 +1790,7 @@
       var d = SF.Store.get(id);
       if (!d) return;
       deck = d;
-      sel = 0;
+      sel = savedSelection();
       SF.Shell.syncChrome();
       draw();
     }

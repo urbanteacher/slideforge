@@ -61,6 +61,8 @@
 .player-freeze-pill .pfp-tag{background:#1b4d79;color:#7ad1ff;font-size:10px;font-weight:700;letter-spacing:.8px;padding:2px 7px;border-radius:4px}
 .player-freeze-pill .pfp-unfreeze{padding:3px 10px;font-size:11px;font-weight:600;background:rgba(100,180,255,.18);border:1px solid rgba(100,180,255,.4);color:#ffffff;border-radius:6px;cursor:pointer}
 .player-freeze-pill .pfp-unfreeze:hover{background:rgba(100,180,255,.35)}
+.player-spontaneous-pill{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:124;padding:6px 14px;background:rgba(36,55,44,.92);border:1px solid rgba(180,210,160,.45);border-radius:999px;color:#e8f0e0;font-size:12px;font-weight:600;pointer-events:none;box-shadow:0 6px 22px rgba(0,0,0,.35)}
+#player.is-spontaneous .player-spontaneous-pill{display:block}
 .teaching-ink{position:absolute;inset:0;width:100%;height:100%;z-index:40;pointer-events:none;touch-action:none}
 .teaching-ink.drawing{pointer-events:auto;cursor:crosshair}
 .manual-panel{position:fixed;inset:5vh max(16px,calc((100vw - 700px)/2));z-index:180;background:#fff;color:#243422;padding:22px;border-radius:16px;overflow:auto;box-shadow:0 15px 90px #0008}

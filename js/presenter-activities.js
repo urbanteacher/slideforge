@@ -1,4 +1,4 @@
-/* Private presenter authoring UI. Only explicit launch/queue changes the running lesson. */
+/* Private presenter authoring UI. Show projects a wall overlay; End clears it. */
 (function () {
   'use strict';
   var SF = window.SF, service = SF.LiveActivities;
@@ -6,16 +6,20 @@
   /** @type {any} */ var catalog = null;
   /** @type {any} */ var draft = null;
   /** @type {any[]} */ var preview = [];
-  var previewIndex = 0, revision = 0, checkedRevision = -1, inserted = false, busy = false;
+  var previewIndex = 0, revision = 0, checkedRevision = -1, showing = false, busy = false;
   var sequence = 0;
   var pending = new Map();
   /** @returns {any} */ function $(id) { return document.getElementById(id); }
   function status(message) { $('activityStatus').textContent = message; }
   function controls() {
-    ['activityManual', 'activityAI', 'activityPreview', 'activitySave', 'activityDiscard', 'activityReturn'].forEach(function (id) { $(id).disabled = busy; });
-    $('activityLaunch').disabled = $('activityQueue').disabled = busy || inserted || checkedRevision !== revision || !preview.length;
-    $('activityFields').inert = busy;
-    $('activityTitle').disabled = busy;
+    ['activityManual', 'activityAI', 'activityPreview', 'activitySave', 'activityDiscard'].forEach(function (id) {
+      var el = $(id); if (el) el.disabled = busy;
+    });
+    var launch = $('activityLaunch'), end = $('activityEnd');
+    if (launch) launch.disabled = busy || showing || checkedRevision !== revision || !preview.length;
+    if (end) end.disabled = busy || !showing;
+    if ($('activityFields')) $('activityFields').inert = busy;
+    if ($('activityTitle')) $('activityTitle').disabled = busy;
   }
   function changed() {
     revision++; checkedRevision = -1; preview = [];
@@ -45,6 +49,8 @@
         draft = null; $('activityDraft').hidden = true; changed(); status('A new lesson started. Create a new draft.');
       }
       state = data;
+      showing = !!(data.spontaneous && data.spontaneous.id);
+      controls();
     }
     if (data.type !== 'sf-activity-result') return;
     var wait = pending.get(data.requestId);
@@ -71,7 +77,7 @@
     $('activityDescription').textContent = row ? row.blurb || (kind === 'saved' ? 'Edit a separate copy of this saved quiz.' : SF.gameStyle(row.key).blurb) : 'No matches. Try another search or category.';
   }
   async function load() { catalog = await request('catalogue'); choices(); }
-  window.addEventListener('sf-activities-open', function () { if (!catalog) work('Loading your activities…', async function () { await load(); status('Choose a format to start.'); }); });
+  window.addEventListener('sf-activities-open', function () { if (!catalog) work('Loading…', async function () { await load(); status(''); }); });
   $('activityKind').onchange = function () { $('activitySearch').value = ''; choices(); };
   $('activitySearch').oninput = choices;
   $('activityChoice').onchange = describe;
@@ -86,10 +92,10 @@
     var data = Object.assign({ kind: $('activityKind').value, key: $('activityChoice').value, ai: ai, topic: $('activityTopic').value.trim(), notes: $('activityKeywords').value.trim(), count: Number($('activityCount').value) }, override || {});
     if (!data.key) throw new Error('Choose an activity or game first.');
     var response = await request('draft', data);
-    draft = response.draft; inserted = false; changed(); draw();
+    draft = response.draft; showing = false; changed(); draw();
     $('activityDraft').scrollIntoView({ block: 'start' });
     var summary = draft.generated ? ': ' + draft.generated.accepted + (draft.generated.accepted === 1 ? ' question ready, ' : ' questions ready, ') + draft.generated.rejected + ' rejected.' : '.';
-    status(ai ? 'AI draft ready' + summary + ' Check the content and answers, then preview.' : 'Editable starter ready. Replace the examples for your lesson, then preview.');
+    status(ai ? 'AI draft ready' + summary : 'Editable draft ready — replace examples, then preview.');
   }
   $('activityManual').onclick = function () { work('Preparing an editable draft…', function () { return create(false); }); };
   $('activityAI').onclick = function () { work('Writing a private draft…', function () { return create(true); }); };
@@ -199,17 +205,23 @@
   $('activityPreviewNext').onclick = function () { if (previewIndex + 1 < preview.length) { previewIndex++; showPreview(); } };
   $('activityPreview').onclick = function () { work('Checking this draft…', async function () {
     var result = await request('preview', { draft: draft });
-    preview = result.slides; previewIndex = 0; checkedRevision = revision; showPreview(); $('activityPreviewArea').scrollIntoView({ block: 'start' }); status('Ready to launch or queue. Review every preview page and the answer fields above.');
+    preview = result.slides; previewIndex = 0; checkedRevision = revision; showPreview(); $('activityPreviewArea').scrollIntoView({ block: 'start' }); status('Ready to launch or queue.');
   }); };
-  ['launch', 'queue', 'save'].forEach(function (action) {
-    $('activity' + action[0].toUpperCase() + action.slice(1)).onclick = function () { work(action === 'save' ? 'Saving a reusable copy…' : 'Adding to the lesson…', async function () {
+  ['launch', 'save'].forEach(function (action) {
+    $('activity' + action[0].toUpperCase() + action.slice(1)).onclick = function () { work(action === 'save' ? 'Saving a reusable copy…' : 'Showing on the wall…', async function () {
       var result = await request(action, { draft: draft });
-      if (result.inserted) inserted = true;
+      if (result.showing) showing = true;
       if (action === 'save') { catalog = await request('catalogue'); choices(); }
       status(result.message);
     }); };
   });
+  $('activityEnd').onclick = function () { work('Ending…', async function () {
+    var result = await request('end');
+    showing = false;
+    status(result.message);
+  }); };
   $('activityDiscard').onclick = function () { draft = null; changed(); draw(); status('Draft discarded.'); };
-  $('activityReturn').onclick = function () { work('Returning to the lesson…', async function () { var result = await request('return'); status(result.message); }); };
+  var ret = $('activityReturn');
+  if (ret) ret.onclick = function () { work('Ending…', async function () { var result = await request('end'); showing = false; status(result.message); }); };
   window.addEventListener('resize', function () { if (preview.length) showPreview(); });
 })();

@@ -16,6 +16,8 @@
     open: false,
     blank: false,
     started: 0,
+    /* Spontaneous desk activity/game: shown on the wall without mutating the lesson. */
+    spontaneous: null,
     _timer: null,
     _handlers: {},
     _current: null,
@@ -31,6 +33,35 @@
        which is what a solo run or the editor preview should show. */
     lanesProvider: null
   };
+
+  /* Keep the compiled run: embedded games can expand into several slides,
+     and rebuilding it on reload can give generated slides different ids. */
+  var RUN_KEY = 'slideforge.presentation';
+  var rememberRun = false;
+  function saveRun() {
+    if (!Player.open || !rememberRun) return;
+    try {
+      sessionStorage.setItem(RUN_KEY, JSON.stringify({
+        deck: Player.deck, index: Player.idx, answers: Player.answers
+      }));
+    } catch (e) {}
+  }
+  Player.forgetRun = function () {
+    try { sessionStorage.removeItem(RUN_KEY); } catch (e) {}
+  };
+  Player.restoreRun = function () {
+    var saved;
+    try { saved = JSON.parse(sessionStorage.getItem(RUN_KEY) || 'null'); } catch (e) {}
+    if (!saved || !saved.deck || !Array.isArray(saved.deck.slides) || !saved.deck.slides.length
+        || !Number.isInteger(saved.index)) {
+      Player.forgetRun();
+      return false;
+    }
+    Player.answers = saved.answers || {};
+    Player.start(saved.deck, saved.index, { fullscreen: false, keepAnswers: true });
+    return true;
+  };
+  window.addEventListener('pagehide', saveRun);
 
   /* ------------------------------------------------------------ events */
 
@@ -126,7 +157,8 @@
   function controlEnabled(action) {
     var live = !!(SF.Live && SF.Live.active);
     var slide = Player.deck && Player.deck.slides[Player.idx];
-    if (action === 'teacher' || action === 'join' || action === 'reactions') return live;
+    if (action === 'teacher' || action === 'join' || action === 'reactions'
+        || action === 'blankPhones' || action === 'floor') return live;
     if (action === 'who') return live && !!slide && slide.type === 'quiz';
     return true;
   }
@@ -172,6 +204,8 @@
   Player.control = function (action) {
     if (!controls[action] || !controlEnabled(action)) return;
     controls[action](); syncHudRoomButtons();
+    /* Two-screen teaching: the desk mirrors HUD state after either surface acts. */
+    if (presenterWin && !presenterWin.closed) syncPresenter();
   };
 
   function showHud() {
@@ -217,13 +251,100 @@
     return { answered: m.length, correct: m.filter(function (x) { return x.correct; }).length };
   };
 
+  /* What the wall is actually showing — a spontaneous overlay, or the lesson. */
+  Player.wallSlide = function () {
+    if (Player.spontaneous && Player.spontaneous.slides && Player.spontaneous.slides.length) {
+      return Player.spontaneous.slides[Player.spontaneous.index] || null;
+    }
+    return Player.deck && Player.deck.slides[Player.idx] || null;
+  };
+  Player.wallPos = function () {
+    if (Player.spontaneous && Player.spontaneous.slides) {
+      return {
+        index: Player.spontaneous.index,
+        total: Player.spontaneous.slides.length,
+        spontaneous: true,
+        title: Player.spontaneous.title || ''
+      };
+    }
+    return {
+      index: Player.idx,
+      total: Player.deck ? Player.deck.slides.length : 0,
+      spontaneous: false,
+      title: ''
+    };
+  };
+
+  function syncSpontaneousPill() {
+    if (!root) return;
+    var pill = document.getElementById('playerSpontaneousPill');
+    if (!Player.spontaneous) {
+      if (pill) pill.remove();
+      root.classList.remove('is-spontaneous');
+      return;
+    }
+    root.classList.add('is-spontaneous');
+    /* Resolved in one go rather than reassigned: getElementById gives back a
+       nullable, and narrowing it by assigning into the same variable does not
+       convince the checker, so the pill read as possibly-null on every use
+       below it. */
+    var shown = pill || el('div', 'player-spontaneous-pill');
+    if (!pill) {
+      shown.id = 'playerSpontaneousPill';
+      root.appendChild(shown);
+    }
+    var pos = Player.wallPos();
+    shown.textContent = (Player.spontaneous.title || 'Activity')
+      + ' · ' + (pos.index + 1) + '/' + pos.total
+      + ' · End to return';
+  }
+
+  /**
+   * Project a desk-made activity/game/quiz on the wall without splicing the
+   * running lesson. Clear with Player.endSpontaneous().
+   */
+  Player.openSpontaneous = function (session) {
+    if (!Player.open || !session || !session.slides || !session.slides.length) return false;
+    if (SF.Live && SF.Live.endCustomPrompt) SF.Live.endCustomPrompt();
+    if (Player.momentCommand) Player.momentCommand({ action: 'clear' });
+    if (Player.frozen && Player.toggleFreeze) Player.toggleFreeze(false);
+    if (Player.blank && Player.toggleBlank) Player.toggleBlank();
+    Player.closeFocus();
+    var slides = session.slides.map(function (s) {
+      var copy = Object.assign({}, s);
+      copy.presenterActivity = session.id || copy.presenterActivity || 'spontaneous';
+      return copy;
+    });
+    Player.spontaneous = {
+      id: session.id || SF.uid(),
+      title: String(session.title || 'Activity').trim() || 'Activity',
+      slides: slides,
+      index: Math.max(0, Math.min(slides.length - 1, session.index || 0)),
+      game: session.game || null
+    };
+    renderCurrent(1);
+    syncSpontaneousPill();
+    showHud();
+    return true;
+  };
+
+  Player.endSpontaneous = function () {
+    if (!Player.spontaneous) return false;
+    Player.spontaneous = null;
+    syncSpontaneousPill();
+    if (Player.open && Player.deck) renderCurrent(0);
+    else syncPresenter();
+    return true;
+  };
+
   /* ------------------------------------------------------------ rendering */
 
   function renderCurrent(dir) {
     if (!viewport) return;
     var deck = Player.deck;
     if (!deck) return;
-    var slide = deck.slides[Player.idx];
+    var wall = Player.wallPos();
+    var slide = Player.wallSlide();
     if (!slide) return;
 
     if (SF.LiveActivities) SF.LiveActivities.beforeSlide(deck, slide);
@@ -232,8 +353,8 @@
     if (SF.Boards) SF.Boards.unmountAll();
 
     var node = SF.renderSlide(deck, slide, {
-      index: Player.idx,
-      total: deck.slides.length,
+      index: wall.index,
+      total: wall.total,
       interactive: true,
       exploreState: (Player.exploreStates || {})[slide.id],
       exploreCommand: function(action,value){ if(SF.Explore)SF.Explore.command(Player,action,value); },
@@ -272,7 +393,7 @@
            SF.sampleJoinInfo())
         : null,
       pairBank: (slide.style === 'memorymatch' || slide.style === 'memoryflip')
-        ? deck.slides.filter(function (s) {
+        ? (Player.spontaneous ? Player.spontaneous.slides : deck.slides).filter(function (s) {
             return s.type === 'quiz' && s.style === slide.style;
           }).map(function (s) {
             return {
@@ -319,7 +440,12 @@
       if (slide.type === 'quiz') fitQuizSlide(node);
     }, { once: true });
 
-    if (hudPos) hudPos.textContent = (Player.idx + 1) + ' / ' + deck.slides.length;
+    if (hudPos) {
+      hudPos.textContent = wall.spontaneous
+        ? ('⚡ ' + (wall.index + 1) + ' / ' + wall.total)
+        : ((Player.idx + 1) + ' / ' + deck.slides.length);
+    }
+    syncSpontaneousPill();
     /* The live results sit along the bottom of a question slide, which is
        where the Q&A cue would otherwise be. Marked so the cue can move up and
        clear them — and by how much, because a tally of bars and a number line
@@ -337,7 +463,7 @@
     SF.railSurface(Player._rail, node);
     syncMedia(slide, node);
     syncHudRoomButtons();
-    Player.emit('slide', { slide: slide, index: Player.idx, node: node });
+    Player.emit('slide', { slide: slide, index: wall.index, node: node, spontaneous: wall.spontaneous });
     if (SF.Boards) SF.Boards.mount(Player, slide, node);
     /* Host live owns the rail/focus; solo Present still honours the authored
        Beside / Full screen choice with sample responses for rehearsal. */
@@ -1820,11 +1946,25 @@
 
   Player.goTo = function (i, dir, force) {
     if (!Player.deck) return;
+    /* Strip / goto during a spontaneous overlay moves within that overlay. */
+    if (Player.spontaneous && Player.spontaneous.slides) {
+      var sn = Player.spontaneous.slides.length;
+      i = Math.max(0, Math.min(sn - 1, i));
+      if (i === Player.spontaneous.index && Player._current && !force) return;
+      dir = dir != null ? dir : (i > Player.spontaneous.index ? 1 : -1);
+      Player.spontaneous.index = i;
+      Player.hideLeaderboard();
+      Player.closeFocus();
+      Player.clearTally();
+      renderCurrent(dir);
+      return;
+    }
     var n = Player.deck.slides.length;
     i = Math.max(0, Math.min(n - 1, i));
     if (i === Player.idx && Player._current && !force) return;
     dir = dir != null ? dir : (i > Player.idx ? 1 : -1);
     Player.idx = i;
+    saveRun();
 
     if (Player.frozen && !force) {
       if (hudPos) {
@@ -1854,6 +1994,30 @@
     if (!Player.frozen && SF.Explore && SF.Explore.step(Player, 1)) return;
     if (SF.Teaching && SF.Teaching.next()) return;
     if (!Player.deck) return;
+    if (Player.spontaneous) {
+      var curS = Player.wallSlide();
+      if (curS && curS.style === 'definition' && Player.definitionPhase &&
+          Player.definitionPhase(curS) === 'reading' && Player.answers[curS.id] == null &&
+          !(SF.Live && SF.Live.active)) {
+        Player.definitionCommand('ask');
+        return;
+      }
+      if (curS && (curS.style === 'oddone' || curS.oddoneDiscuss ||
+          curS.style === 'compare' || curS.compareDiscuss) &&
+          Player.answers[curS.id] == null && !(SF.Live && SF.Live.active)) {
+        Player.answers[curS.id] = -1;
+        if (Player._current) paintAnswer(Player._current, curS, -1);
+        if (Player.syncPresenter) Player.syncPresenter();
+        return;
+      }
+      if (Player.gate && Player.gate(curS, Player.spontaneous.index)) return;
+      if (Player.spontaneous.index >= Player.spontaneous.slides.length - 1) {
+        toast('End of activity — End to return to the lesson');
+        return;
+      }
+      Player.goTo(Player.spontaneous.index + 1, 1);
+      return;
+    }
     if (Player.frozen) {
       if (Player.idx >= Player.deck.slides.length - 1) { flashEnd(); return; }
       Player.goTo(Player.idx + 1, 1);
@@ -1884,6 +2048,11 @@
   Player.prev = function () {
     if (!Player.frozen && SF.Explore && SF.Explore.step(Player, -1)) return;
     if (SF.Teaching && SF.Teaching.prev()) return;
+    if (Player.spontaneous) {
+      if (Player.spontaneous.index <= 0) return;
+      Player.goTo(Player.spontaneous.index - 1, -1);
+      return;
+    }
     if (Player.frozen) {
       Player.goTo(Player.idx - 1, -1);
       return;
@@ -1984,6 +2153,8 @@
     Player.deck = deck;
     Player.idx = Math.max(0, Math.min(deck.slides.length - 1, startIndex || 0));
     Player.open = true;
+    rememberRun = !opts.demo;
+    Player.forgetRun();
     Player.blank = false;
     Player.frozen = false;
     Player._frozenSlideIdx = null;
@@ -1991,6 +2162,8 @@
     if (oldFreezePill) oldFreezePill.remove();
     Player.exploreStates = {};
     Player.started = Date.now();
+    Player.spontaneous = null;
+    syncSpontaneousPill();
     Player._current = null;
     Player._liveTally = null;
     Player._rail = null;
@@ -2013,6 +2186,7 @@
     renderCurrent(1);
     showHud();
     if (opts.fullscreen !== false) Player.toggleFullscreen();
+    saveRun();
     Player.emit('open', { deck: deck });
     var oldPill = document.getElementById('playerDemoPill');
     if (oldPill) oldPill.remove();
@@ -2035,6 +2209,7 @@
 
   Player.close = function () {
     if (!Player.open) return;
+    if (Player.spontaneous) Player.endSpontaneous();
     if (Player.frozen) Player.toggleFreeze(false);
     if (SF.Demo) SF.Demo.detach();
     if (SF.Boards) SF.Boards.unmountAll();
@@ -2044,6 +2219,7 @@
     stopVideo(Player._current);
     stopMusic();
     Player.open = false;
+    Player.forgetRun();
     clearTimeout(hudTimer);
     if (hud) hud.classList.remove('show');
     var moreEl = document.getElementById('hudMore');
@@ -2118,8 +2294,19 @@
             }
           : null,
         roomPulse: SF.Live && SF.Live.presenterPulse ? SF.Live.presenterPulse() : null,
-        deck: deck,
-        index: Player.idx,
+        deck: Player.spontaneous
+          ? Object.assign({}, deck, { slides: Player.spontaneous.slides, title: Player.spontaneous.title || deck.title })
+          : deck,
+        index: Player.spontaneous ? Player.spontaneous.index : Player.idx,
+        lessonIndex: Player.idx,
+        spontaneous: Player.spontaneous
+          ? {
+              id: Player.spontaneous.id,
+              title: Player.spontaneous.title,
+              index: Player.spontaneous.index,
+              total: Player.spontaneous.slides.length
+            }
+          : null,
         answers: Player.answers,
         ...(SF.Boards && SF.Boards.snapshot ? SF.Boards.snapshot(Player) : {}),
         chainLinks: Player.chainLinks || [],
@@ -2142,7 +2329,26 @@
         revealStep: Player.revealStep || 0,
         effectiveTimeLimit: SF.questionTimeLimit(deck.slides[Player.idx], SF.Live && SF.Live.active && SF.Live.players.some(function(p){return p.manual;})),
         waiting: Player.waiting || 0,
-        frozen: !!Player.frozen
+        frozen: !!Player.frozen,
+        /* Desk mirrors HUD labels — blank wall, room rail, live toggles. */
+        blank: !!Player.blank,
+        live: !!(SF.Live && SF.Live.active),
+        reactions: !(SF.Live && SF.Live.reactions === false),
+        phonesBlank: !!(SF.Live && SF.Live.phonesBlank),
+        floor: (SF.Live && SF.Live.floor) || 'auto',
+        roomView: Player.roomSidebarState ? Player.roomSidebarState() : 'hidden',
+        focusOn: !!Player._focus,
+        focusKind: (SF.Live && SF.Live.active && SF.Live.expandKind)
+          ? SF.Live.expandKind() : null,
+        pollOpen: !!(SF.Live && SF.Live.customPromptOpen && SF.Live.customPromptOpen()),
+        joinCard: (function () {
+          if (typeof document === 'undefined') return false;
+          var card = document.getElementById('joincard');
+          return !!(card && card.classList.contains('on'));
+        })(),
+        fullscreen: typeof document !== 'undefined'
+          && !!(document.fullscreenElement
+            || /** @type {any} */ (document).webkitFullscreenElement)
       }, location.origin);
       requestedPresenterPanel=null;
     } catch (e) { /* window closing */ }
@@ -2153,12 +2359,7 @@
   window.addEventListener('message', function (ev) {
     var d = ev.data;
     if (ev.source!==presenterWin || ev.origin!==location.origin || !d || d.type !== 'sf-presenter-cmd') return;
-    if (d.cmd === 'next') Player.next();
-    else if (d.cmd === 'prev') Player.prev();
-    else if (d.cmd === 'goto') Player.goTo(d.index);
-    else if (d.cmd === 'blank') Player.toggleBlank();
-    else if (d.cmd === 'freeze') Player.toggleFreeze();
-    else if (d.cmd === 'exit') Player.close();
+    if (d.cmd === 'goto') Player.goTo(d.index);
     else if (d.cmd === 'hello') syncPresenter();
     else if (SF.Boards && SF.Boards.command && SF.Boards.command(d.cmd, d.action, d.card)) {}
     else if (d.cmd === 'moment' && Player.momentCommand) Player.momentCommand(d);
@@ -2174,6 +2375,9 @@
       });
     }
     else if (d.cmd === 'qa') Player.emit('qaCommand', d);
+    /* Desk drives the wall the same way the HUD does — prev/next/blank/
+       freeze/exit and every room tool share Player.control. */
+    else if (typeof Player.control === 'function') Player.control(d.cmd);
   });
 
   /**
@@ -2244,11 +2448,15 @@
       var slides = SF.compileGame(game, { intro: false, scoreSlide: false });
       if (!slides.length) { syncPresenter(); return { error: 'Nothing to show.' }; }
 
-      var at = Player.idx + 1;
-      slides.forEach(function (sl, i) { Player.deck.slides.splice(at + i, 0, sl); });
-      Player.goTo(at, 1);
+      /* Desk quizzes are spontaneous overlays — never splice into the lesson. */
+      Player.openSpontaneous({
+        id: game.id || SF.uid(),
+        title: topic,
+        slides: slides,
+        game: game
+      });
       syncPresenter();
-      return { added: slides.length, rejected: res.rejected, gameId: game.id };
+      return { added: slides.length, rejected: res.rejected, gameId: game.id, overlay: true };
     }).catch(function () {
       Player.quizGenBusy = false;
       syncPresenter();
@@ -2291,7 +2499,7 @@
        answering is what you actually want mid-question. Once the answer is in,
        those keys go back to their normal jobs. */
     if (!Player.deck) return;
-    var live = Player.deck.slides[Player.idx];
+    var live = Player.wallSlide();
     if (!(SF.Live && SF.Live.active) && live && live.type === 'quiz' && Player.answers[live.id] == null && /^[a-f]$/i.test(k)) {
       var pick = SF.LETTERS.indexOf(k.toUpperCase());
       if (pick > -1 && pick < live.options.length) {
@@ -2321,6 +2529,8 @@
           else toggleSoloFeedback({ close: true });
         } else if (SF.Teaching && SF.Teaching.isOpen && SF.Teaching.isOpen()) {
           SF.Teaching.toggleBar(false);
+        } else if (Player.spontaneous) {
+          Player.endSpontaneous();
         } else {
           Player.close();
         }

@@ -27,7 +27,7 @@ var btnExtend = $('extendMoment'); if(btnExtend) btnExtend.onclick=function(){co
 var btnClear = $('clearMoment'); if(btnClear) btnClear.onclick=function(){command({action:'clear'});};
 function clock(){
  var titleEl = $('momentTitle');
- if(titleEl) titleEl.textContent=moment?moment.title:'No activity or countdown is showing.';
+ if(titleEl) titleEl.textContent=moment?moment.title:'Nothing showing';
  var left=M.remaining(moment,Date.now());
  var timeEl = $('momentTime');
  if(timeEl) timeEl.textContent=moment&&moment.timed?(left?M.format(left)+(moment.paused?' · paused':''):'Time is up'):moment?'No countdown':'—';
@@ -46,12 +46,12 @@ function room(pulse){
  if(!box||!fb)return;
  var boxEl=box, fbEl=fb;
  boxEl.replaceChildren();fbEl.replaceChildren();
- if(!pulse||!pulse.active){text(boxEl,'Host a live lesson to see reactions, bookmarks and student signals.');text(fbEl,'No live slide activity.');return;}
+ if(!pulse||!pulse.active){text(boxEl,'Host live for room signals.');text(fbEl,'—');return;}
  var counts=pulse.reactions||{};
  [['yes','👍 Got it'],['clap','👏 Applause'],['wow','✨ Wow'],['idea','💡 Idea']].forEach(function(pair){var row=document.createElement('div');row.className='pulse-line';row.appendChild(document.createElement('span')).textContent=pair[1];row.appendChild(document.createElement('strong')).textContent=String(counts[pair[0]]||0);boxEl.appendChild(row);});
- text(boxEl,(pulse.bookmarks||0)+(pulse.bookmarks===1?' student bookmarked':' students bookmarked')+' this slide.');
+ text(boxEl,(pulse.bookmarks||0)+(pulse.bookmarks===1?' bookmark':' bookmarks'));
  var d=pulse.feedback,p=pulse.prompt||{};
- if(!d){text(fbEl,'Open a slide with a poll, scale, word cloud or brainstorm to see its responses here.');return;}
+ if(!d){text(fbEl,'No responses on this slide.');return;}
  if(p.question||p.prompt)text(fbEl,p.question||p.prompt);
  text(fbEl,(d.total||0)+' responses');
  if(d.counts)d.counts.forEach(function(n,i){text(fbEl,((p.options||[])[i]||'Option '+(i+1))+': '+n);});
@@ -201,12 +201,12 @@ function paintPoll(p) {
   var end = /** @type {HTMLButtonElement|null} */ ($('pollEnd'));
   var qr = /** @type {HTMLButtonElement|null} */ ($('pollQr'));
   var toggle = /** @type {HTMLButtonElement|null} */ ($('pollWhereToggle'));
-  if (state) state.textContent = p ? p.prompt : 'No poll is showing.';
+  if (state) state.textContent = p ? p.prompt : 'No poll';
   if (count) {
     count.textContent = !p ? '—'
-      : !p.live ? 'Not live — host the lesson to collect answers'
-      : p.players ? p.answered + ' of ' + p.players + ' answered'
-      : 'Nobody has joined yet';
+      : !p.live ? 'Not live'
+      : p.players ? p.answered + ' / ' + p.players
+      : 'No one joined';
   }
   if (end) end.disabled = !p;
   if (qr) qr.disabled = !p;
@@ -214,11 +214,11 @@ function paintPoll(p) {
     toggle.disabled = !p;
     var next = p && p.presentAs === 'focus' ? 'rail' : 'focus';
     toggle.dataset.next = next;
-    toggle.textContent = next === 'rail' ? 'Beside the slide' : 'Full screen';
+    toggle.textContent = next === 'rail' ? 'Beside slide' : 'Full screen';
   }
 }
 
-SF.PresenterLive={update:function(d){lastState=d;paintPoll(d.quickPoll);moment=d.moment||null;room(d.roomPulse);var blocked=!!(d.roomPulse&&d.roomPulse.active&&['reveal','hold'].includes(d.nextAction));['showTask','showCountdown','showBreak'].forEach(function(id){var btn=/** @type {HTMLButtonElement|null} */ ($(id));if(btn)btn.disabled=blocked;});var guard=$('momentGuard');if(guard)guard.textContent=blocked?'Finish or reveal the live question before starting another activity.':'Tasks and countdowns appear on the audience screen.';clock();}};
+SF.PresenterLive={update:function(d){lastState=d;paintPoll(d.quickPoll);moment=d.moment||null;room(d.roomPulse);var blocked=!!(d.roomPulse&&d.roomPulse.active&&['reveal','hold'].includes(d.nextAction));['showTask','showCountdown','showBreak'].forEach(function(id){var btn=/** @type {HTMLButtonElement|null} */ ($(id));if(btn)btn.disabled=blocked;});var guard=$('momentGuard');if(guard)guard.textContent=blocked?'Finish the live question first.':'';clock();}};
 setInterval(clock,250);
 var audio = /** @type {HTMLAudioElement|null} */ ($('activityAudio'));
 if(audio) audio.volume=0.3;
@@ -236,11 +236,11 @@ if(musicInput) {
     a.src=musicUrl;
     a.hidden=false;
     var status=$('musicStatus');
-    if(status)status.textContent=file.name+' · press Play when ready.';
+    if(status)status.textContent=file.name;
   };
 }
 if(audio) {
-  audio.onerror=function(){var status=$('musicStatus');if(status)status.textContent='This file could not be played. Choose another audio file.';};
+  audio.onerror=function(){var status=$('musicStatus');if(status)status.textContent='Could not play that file.';};
 }
 window.addEventListener('pagehide',function(){var a=/** @type {HTMLAudioElement|null} */ ($('activityAudio'));if(a)a.pause();if(musicUrl)URL.revokeObjectURL(musicUrl);});
 })();

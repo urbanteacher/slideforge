@@ -16,11 +16,10 @@
   body { overflow: hidden; }
   .pv {
     display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto minmax(280px, 1fr) auto;
-    grid-template-areas: 'bar' 'now' 'side' 'foot';
-    height: 100vh; gap: 12px; padding: 14px;
-    overflow: hidden;
+    grid-template-columns: 1.55fr 1fr;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas: 'bar bar' 'now side' 'foot foot';
+    height: 100vh; gap: 14px; padding: 14px;
   }
   .pv-bar {
     grid-area: bar; display: flex; align-items: center; gap: 14px;
@@ -29,8 +28,7 @@
   .pv-bar .wall { color: var(--ui-dim); font-size: 14px; font-variant-numeric: tabular-nums; }
   .pv-bar .pos { color: var(--ui-dim); font-size: 14px; font-variant-numeric: tabular-nums; }
 
-  /* Slides on top; teaching desk underneath so Live answers / results are not
-     squeezed into a right column over the preview. */
+  /* Current slide left, next + notes + desk right — classic presenter dual view. */
   .now { grid-area: now; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
   .side { grid-area: side; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: hidden; }
   .cap { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ui-dim); }
@@ -55,7 +53,7 @@
   .box {
     position: relative; aspect-ratio: 16/9; background: #000;
     border-radius: 8px; overflow: hidden; border: 1px solid var(--ui-line);
-    width: min(100%, 920px); max-height: 46vh; margin: 0 auto;
+    width: 100%; min-height: 0;
   }
   .box .slide { transform-origin: 0 0; }
   .box.empty::after {
@@ -84,8 +82,23 @@
     white-space: pre-wrap; max-height: 26vh; overflow-y: auto;
   }
 
-  .pv-foot { grid-area: foot; display: flex; align-items: center; gap: 8px; }
-  .pv-foot .spacer { flex: 1; }
+  .pv-foot { grid-area: foot; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .pv-foot .spacer { flex: 1; min-width: 12px; }
+  .pv-foot .btn.on { background: var(--ui-accent); border-color: var(--ui-accent); color: #fff; }
+  .pv-room { position: relative; }
+  .pv-room > summary {
+    list-style: none; cursor: pointer;
+  }
+  .pv-room > summary::-webkit-details-marker { display: none; }
+  .pv-room-menu {
+    position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 20;
+    display: flex; flex-direction: column; gap: 4px; min-width: 200px;
+    padding: 8px; border-radius: 10px;
+    background: var(--ui-panel); border: 1px solid var(--ui-line);
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+  }
+  .pv-room-menu .btn { width: 100%; justify-content: flex-start; text-align: left; }
+  .pv-room-menu .btn:disabled { opacity: .45; cursor: not-allowed; }
 
   .strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
   .strip .mini {
@@ -99,7 +112,24 @@
     position: absolute; left: 3px; bottom: 2px; z-index: 2;
     font-size: 9px; background: rgba(0,0,0,.65); padding: 0 4px; border-radius: 3px;
   }
-  .waiting { display: grid; place-items: center; height: 100vh; color: var(--ui-dim); font-size: 14px; }
+  .waiting {
+    display: grid; place-items: center; height: 100vh; padding: 24px;
+    color: var(--ui-text); background: var(--ui-bg); text-align: left;
+  }
+  .waiting-card {
+    width: min(100%, 420px); padding: 22px 24px;
+    border: 1px solid var(--ui-line); border-radius: 12px; background: var(--ui-panel);
+  }
+  .waiting-card h1 { font-size: 20px; margin: 0 0 8px; letter-spacing: -.3px; }
+  .waiting-card .lead { margin: 0 0 14px; font-size: 14px; color: var(--ui-dim); line-height: 1.45; }
+  .waiting-card ol { margin: 0; padding-left: 1.2em; font-size: 14px; line-height: 1.55; }
+  .waiting-card li + li { margin-top: 8px; }
+  .waiting-card kbd {
+    font: inherit; font-size: 12px; font-weight: 650;
+    background: var(--ui-bg); border: 1px solid var(--ui-line);
+    border-bottom-width: 2px; border-radius: 4px; padding: 1px 6px;
+  }
+  .waiting-card .tip { margin: 16px 0 0; font-size: 12px; color: var(--ui-dim); line-height: 1.45; }
 
   /* Moderation lives here and only here. The host's main window is normally
      the projected one, so a pending question must never be rendered there. */
@@ -130,13 +160,15 @@
   .qa .qempty { font-size: 12px; color: var(--ui-dim); font-style: italic; padding: 4px 2px; }
   #qaCount { color: var(--ui-warn); font-weight: 700; }
 
-  /* a narrow second screen keeps the same stack; foot stays reachable */
+  /* A portrait / narrow second screen stacks rather than cramping two columns. */
   @media (max-width: 900px) {
     .pv {
-      grid-template-rows: auto auto minmax(240px, 1fr) auto;
+      grid-template-columns: 1fr;
+      grid-template-areas: 'bar' 'now' 'side' 'foot';
+      grid-template-rows: auto auto 1fr auto;
       overflow-y: auto;
     }
-    .box { max-height: 38vh; width: 100%; }
+    .box { max-height: 38vh; }
   }
 
   /* Marked when Next is about to do something other than move on. */
@@ -151,8 +183,16 @@
 <body>
 
 <div class="waiting" id="waiting">
-  <div id="waitTitle">Waiting for the slideshow…</div>
-  <div id="waitHint" style="margin-top:14px;font-size:14px;opacity:.75;max-width:28em;line-height:1.45"></div>
+  <div class="waiting-card">
+    <h1 id="waitTitle">Connect this desk to the show</h1>
+    <p class="lead" id="waitLead">This is your private teaching laptop — notes, Class, Answers, and Q&amp;A. It only works when linked to the wall show.</p>
+    <ol id="waitSteps">
+      <li>In SlideForge, start <strong>Present</strong> or <strong>Host live</strong> (the wall).</li>
+      <li>Press <kbd>D</kbd>, or choose <strong>Presenter view</strong> from the show.</li>
+      <li>This window will fill with your desk automatically.</li>
+    </ol>
+    <p class="tip" id="waitHint">Don’t open this page from a bookmark or by typing the URL — open it from the show so the two windows can talk.</p>
+  </div>
 </div>
 
 <div class="pv" id="pv" style="display:none">
@@ -172,81 +212,121 @@
 
   <div class="side">
     <nav class="desk-tabs" aria-label="Presenter workspace">
-      <button class="btn" data-panel="quick" aria-pressed="false">Quick actions</button>
-      <button class="btn" data-panel="activities" aria-pressed="false">Activities &amp; mini games</button>
-      <button class="btn" data-panel="pulse" aria-pressed="false">Room activity</button>
-      <button class="btn" data-panel="slides" aria-pressed="true">Slide notes</button>
-      <button class="btn" data-panel="mark" aria-pressed="false">Live answers</button>
-      <button class="btn" data-panel="roster" aria-pressed="false">Classroom</button>
-      <button class="btn" data-panel="questions" aria-pressed="false">Insights</button>
-      <button class="btn" data-panel="tools" aria-pressed="false">Toolkit &amp; notes</button>
-      <button class="btn" data-panel="qa" aria-pressed="false">Q&amp;A <span id="qaBadge"></span></button>
+      <button class="btn" data-panel="quick" aria-pressed="false" title="Tasks, polls, quiz drafts">Quick</button>
+      <button class="btn" data-panel="activities" aria-pressed="false" title="Activities and mini games">Activities</button>
+      <button class="btn" data-panel="pulse" aria-pressed="false" title="Reactions and slide responses">Pulse</button>
+      <button class="btn" data-panel="slides" aria-pressed="true" title="Next slide and speaker notes">Notes</button>
+      <button class="btn" data-panel="mark" aria-pressed="false" title="Who answered what">Answers</button>
+      <button class="btn" data-panel="roster" aria-pressed="false" title="Classroom register">Class</button>
+      <button class="btn" data-panel="questions" aria-pressed="false" title="Question insights">Insights</button>
+      <button class="btn" data-panel="tools" aria-pressed="false" title="Name picker, timer, notes">Tools</button>
+      <button class="btn" data-panel="qa" aria-pressed="false" title="Learner questions">Q&amp;A <span id="qaBadge"></span></button>
     </nav>
-    <div class="cap" id="cueCap" style="display:none">How the room is doing</div>
+    <div class="cap" id="cueCap" style="display:none">Room cues</div>
     <div class="cues" id="cues" style="display:none"></div>
     <section id="quickPane" class="desk-pane" hidden>
-      <div class="quick-card"><span class="cap">IN THE MOMENT</span><h2>Set the room a task</h2><p>Show instructions above the current slide. The saved deck stays as it is.</p>
-      <label for="quickTask">Task or activity</label><textarea id="quickTask" maxlength="400" rows="3" placeholder="With a partner, find an example and explain why it works…"></textarea>
-      <label for="quickDuration">Thinking time</label><select id="quickDuration"><option value="0">No countdown</option><option value="30">30 seconds</option><option value="60">1 minute</option><option value="120" selected>2 minutes</option><option value="300">5 minutes</option><option value="600">10 minutes</option></select>
-      <div class="quick-actions"><button class="btn primary" id="showTask">Show task on screen</button><button class="btn" id="showCountdown">Countdown above slide</button><button class="btn" id="showBreak">5-minute break screen</button></div><p id="momentGuard" role="status"></p></div>
-      <div class="quick-card"><span class="cap">ASK THE ROOM</span><h2>Quick poll</h2><p>Put a question to the room now. Nothing is added to the deck, and the slide behind it keeps its place.</p>
-      <div class="quick-actions poll-presets">
-        <button class="btn" data-poll="yesno">Yes / No</button>
-        <button class="btn" data-poll="truefalse">True / False</button>
-        <button class="btn" data-poll="abcd">A / B / C / D</button>
-        <button class="btn" data-poll="scale">1 to 5</button>
-        <button class="btn" data-poll="wordcloud">Word cloud</button>
-        <button class="btn" id="pollAiSuggest" title="Generate an assessment poll from the current slide">✨ AI Suggest</button>
+      <div class="quick-card">
+        <h3>Task</h3>
+        <label for="quickTask">Instructions</label>
+        <textarea id="quickTask" maxlength="400" rows="2" placeholder="With a partner, find an example…"></textarea>
+        <label for="quickDuration">Thinking time</label>
+        <select id="quickDuration"><option value="0">No countdown</option><option value="30">30 seconds</option><option value="60">1 minute</option><option value="120" selected>2 minutes</option><option value="300">5 minutes</option><option value="600">10 minutes</option></select>
+        <div class="quick-actions"><button class="btn primary" id="showTask">Show task</button><button class="btn" id="showCountdown">Countdown</button><button class="btn" id="showBreak">5‑min break</button></div>
+        <p id="momentGuard" role="status"></p>
       </div>
-      <label for="pollPrompt">Question</label><textarea id="pollPrompt" maxlength="240" rows="2" placeholder="Shall we do another example, or move on?"></textarea>
-      <label for="pollOptions">Answers <span class="hint-inline">one per line — leave empty for a word cloud</span></label><textarea id="pollOptions" maxlength="400" rows="3" placeholder="Another example&#10;Move on"></textarea>
-      <label for="pollWhere">Show it</label><select id="pollWhere"><option value="focus" selected>Full screen</option><option value="rail">Beside the slide</option></select>
-      <div class="quick-actions"><button class="btn primary" id="pollLaunch">▶ Ask the room</button></div>
-      <p id="pollGuard" role="status"></p></div>
-      <div class="quick-card"><span class="cap">ASK THE ROOM</span><h2>Quiz on a theme</h2><p>Write a quiz about whatever the lesson has arrived at. Review and edit the draft privately in Activities &amp; mini games, then launch it when ready.</p>
-      <label for="quizTheme">Theme</label><input id="quizTheme" type="text" maxlength="120" placeholder="Osmosis in plant cells">
-      <label for="quizWords">Key words <span class="hint-inline">optional, one line</span></label><input id="quizWords" type="text" maxlength="200" placeholder="water potential, turgid, partially permeable">
-      <label for="quizStyle">Format</label><select id="quizStyle"><option value="choice" selected>Multiple choice</option><option value="truefalse">True / false</option><option value="type">Short answer</option><option value="lowstakes">Low-stakes retrieval</option></select>
-      <label for="quizCount">How many</label><select id="quizCount"><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
-      <div class="quick-actions"><button class="btn primary" id="quizGenerate">✨ Draft &amp; review</button></div>
-      <p id="quizGenGuard" role="status"></p></div>
-      <div class="quick-card"><h3>Poll on screen now</h3><p id="pollState">No poll is showing.</p><output id="pollCount">—</output><div class="quick-actions"><button class="btn" id="pollQr" disabled>Show join code</button><button class="btn" id="pollWhereToggle" disabled>Beside the slide</button><button class="btn" id="pollEnd" disabled>✕ End poll</button></div><p>Ending the poll puts the slide back exactly where you left it. Changing slides while it is up does not close it.</p></div>
-      <div class="quick-card"><h3>On the audience screen</h3><p id="momentTitle">No activity or countdown is showing.</p><output id="momentTime">—</output><div class="quick-actions"><button class="btn" id="pauseMoment" disabled>Pause</button><button class="btn" id="extendMoment" disabled>+1 minute</button><button class="btn" id="clearMoment" disabled>Remove from screen</button></div><p>Activity countdowns clear when you leave their slide. Quick tasks stay until removed or a new live quiz starts. Time ending does not advance the lesson.</p></div>
-      <div class="quick-card"><h3>Music for an activity</h3><p>Choose an audio file from your computer. Playback comes from this device; check its volume before starting.</p><label for="activityMusic">Choose music</label><input id="activityMusic" type="file" accept="audio/*"><audio id="activityAudio" controls loop hidden></audio><p id="musicStatus" role="status">No music selected.</p></div>
-      <div class="quick-card"><h3>Need a different teaching move?</h3><div class="quick-actions"><button class="btn" data-panel="tools">Pick a name or jot a note</button><button class="btn" data-panel="qa">Take a question from the room</button></div><p>Try a silent think, a partner explanation, a stretch break, or a quick “what is still unclear?” discussion.</p></div>
+      <div class="quick-card">
+        <h3>Quick poll</h3>
+        <div class="quick-actions poll-presets">
+          <button class="btn" data-poll="yesno">Yes / No</button>
+          <button class="btn" data-poll="truefalse">True / False</button>
+          <button class="btn" data-poll="abcd">A / B / C / D</button>
+          <button class="btn" data-poll="scale">1 to 5</button>
+          <button class="btn" data-poll="wordcloud">Word cloud</button>
+          <button class="btn" id="pollAiSuggest" title="Suggest a poll from the current slide">✨ AI</button>
+        </div>
+        <label for="pollPrompt">Question</label>
+        <textarea id="pollPrompt" maxlength="240" rows="2" placeholder="Another example, or move on?"></textarea>
+        <label for="pollOptions">Answers <span class="hint-inline">one per line</span></label>
+        <textarea id="pollOptions" maxlength="400" rows="2" placeholder="Another example&#10;Move on"></textarea>
+        <label for="pollWhere">Show</label>
+        <select id="pollWhere"><option value="focus" selected>Full screen</option><option value="rail">Beside slide</option></select>
+        <div class="quick-actions"><button class="btn primary" id="pollLaunch">▶ Ask room</button></div>
+        <p id="pollGuard" role="status"></p>
+      </div>
+      <div class="quick-card">
+        <h3>Quiz draft</h3>
+        <label for="quizTheme">Theme</label>
+        <input id="quizTheme" type="text" maxlength="120" placeholder="Osmosis in plant cells">
+        <label for="quizWords">Key words <span class="hint-inline">optional</span></label>
+        <input id="quizWords" type="text" maxlength="200" placeholder="water potential, turgid…">
+        <div class="quick-row">
+          <label for="quizStyle">Format</label>
+          <select id="quizStyle"><option value="choice" selected>Multiple choice</option><option value="truefalse">True / false</option><option value="type">Short answer</option><option value="lowstakes">Low-stakes</option></select>
+          <label for="quizCount">Count</label>
+          <select id="quizCount"><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+        </div>
+        <div class="quick-actions"><button class="btn primary" id="quizGenerate">✨ Draft &amp; review</button></div>
+        <p id="quizGenGuard" role="status"></p>
+      </div>
+      <div class="quick-card quick-status">
+        <h3>Live poll</h3>
+        <p id="pollState">No poll</p>
+        <output id="pollCount">—</output>
+        <div class="quick-actions"><button class="btn" id="pollQr" disabled>Join code</button><button class="btn" id="pollWhereToggle" disabled>Beside slide</button><button class="btn" id="pollEnd" disabled>End poll</button></div>
+      </div>
+      <div class="quick-card quick-status">
+        <h3>On screen</h3>
+        <p id="momentTitle">Nothing showing</p>
+        <output id="momentTime">—</output>
+        <div class="quick-actions"><button class="btn" id="pauseMoment" disabled>Pause</button><button class="btn" id="extendMoment" disabled>+1 min</button><button class="btn" id="clearMoment" disabled>Clear</button></div>
+      </div>
+      <div class="quick-card">
+        <h3>Music</h3>
+        <label for="activityMusic">Audio file</label>
+        <input id="activityMusic" type="file" accept="audio/*">
+        <audio id="activityAudio" controls loop hidden></audio>
+        <p id="musicStatus" role="status">None</p>
+      </div>
     </section>
     <section id="activitiesPane" class="desk-pane" hidden>
-      <div class="quick-card"><span class="cap">RESPOND TO THE ROOM</span><h2>Activities &amp; mini games</h2>
-        <p>Choose a format, adapt its content, then review it privately before showing the room.</p>
-        <label for="activityKind">Choose from</label><select id="activityKind"><option value="activity">Activity catalogue</option><option value="game">Mini games</option><option value="saved">Saved quizzes</option></select>
-        <label for="activitySearch">Find a format</label><input id="activitySearch" type="search" placeholder="Try memory, think, reflection…">
-        <label for="activityChoice">Activity or game</label><select id="activityChoice"></select>
-        <p id="activityDescription"></p>
-        <label for="activityTopic">Topic or brief for AI</label><textarea id="activityTopic" rows="2" maxlength="1000" placeholder="What should learners practise?"></textarea>
-        <div class="quick-actions"><button class="btn" id="activityUseSlide">Use current slide</button><button class="btn" id="activityUseLesson">Use lesson topic</button></div>
-        <label for="activityKeywords">Key words or teaching notes <span class="hint-inline">optional</span></label><textarea id="activityKeywords" rows="2" maxlength="500" placeholder="water potential, turgid, partially permeable"></textarea>
-        <label for="activityCount">AI question / item count</label><input id="activityCount" type="number" min="1" max="24" value="3">
-        <p>Board games may need more items: a 3 × 3 Bingo card needs at least nine distinct terms. The preview checks each format’s requirements.</p>
-        <div class="quick-actions"><button class="btn" id="activityManual">Create editable draft</button><button class="btn primary" id="activityAI">✨ Draft with AI</button></div>
+      <div class="quick-card">
+        <h3>Format</h3>
+        <label for="activityKind">Source</label>
+        <select id="activityKind"><option value="activity">Catalogue</option><option value="game">Mini games</option><option value="saved">Saved</option></select>
+        <label for="activitySearch">Find</label>
+        <input id="activitySearch" type="search" placeholder="memory, think, reflection…">
+        <label for="activityChoice">Activity</label>
+        <select id="activityChoice"></select>
+        <p id="activityDescription" class="desk-blurb"></p>
+        <label for="activityTopic">Topic / AI brief</label>
+        <textarea id="activityTopic" rows="2" maxlength="1000" placeholder="What should they practise?"></textarea>
+        <div class="quick-actions"><button class="btn" id="activityUseSlide">This slide</button><button class="btn" id="activityUseLesson">Lesson topic</button></div>
+        <label for="activityKeywords">Key words <span class="hint-inline">optional</span></label>
+        <textarea id="activityKeywords" rows="2" maxlength="500" placeholder="water potential, turgid…"></textarea>
+        <label for="activityCount" title="Bingo and board games may need more items — preview checks requirements">Items</label>
+        <input id="activityCount" type="number" min="1" max="24" value="3">
+        <div class="quick-actions"><button class="btn" id="activityManual">Editable draft</button><button class="btn primary" id="activityAI">✨ Draft with AI</button></div>
       </div>
       <p id="activityStatus" role="status" aria-live="polite"></p>
       <div id="activityDraft" hidden>
-        <div class="quick-card"><h3>Private draft</h3><label for="activityTitle">Title</label><input id="activityTitle" type="text" maxlength="120"><p id="activityGuidance" style="white-space:pre-line"></p><div id="activityFields"></div></div>
-        <div class="quick-actions"><button class="btn" id="activityPreview">Check &amp; preview</button><button class="btn" id="activitySave">Save for reuse</button><button class="btn" id="activityDiscard">Discard draft</button></div>
-        <div id="activityPreviewArea" hidden><p>Private audience preview · use the editable fields above to check answers.</p><div class="box" id="activityPreviewBox"></div><div class="quick-actions"><button class="btn" id="activityPreviewPrev">‹ Preview page</button><span id="activityPreviewPosition"></span><button class="btn" id="activityPreviewNext">Preview page ›</button></div></div>
-        <div class="quick-actions"><button class="btn primary" id="activityLaunch" disabled>Launch now</button><button class="btn" id="activityQueue" disabled>Queue next</button></div>
-        <p>The activity joins this running lesson. Save for reuse keeps a separate library copy.</p>
+        <div class="quick-card"><h3>Draft</h3><label for="activityTitle">Title</label><input id="activityTitle" type="text" maxlength="120"><p id="activityGuidance" style="white-space:pre-line;font-size:11px;color:var(--ui-dim);line-height:1.35;margin:4px 0 0"></p><div id="activityFields"></div></div>
+        <div class="quick-actions"><button class="btn" id="activityPreview">Preview</button><button class="btn" id="activitySave">Save</button><button class="btn" id="activityDiscard">Discard</button></div>
+        <div id="activityPreviewArea" hidden>
+          <div class="box" id="activityPreviewBox"></div>
+          <div class="quick-actions"><button class="btn" id="activityPreviewPrev">‹ Prev</button><span id="activityPreviewPosition"></span><button class="btn" id="activityPreviewNext">Next ›</button></div>
+        </div>
+        <div class="quick-actions"><button class="btn primary" id="activityLaunch" disabled>Show on wall</button><button class="btn" id="activityEnd" disabled>End</button></div>
       </div>
-      <div class="quick-actions"><button class="btn" id="activityReturn">Return to lesson</button></div>
+      <div class="quick-actions"><button class="btn" id="activityReturn" hidden>Return to lesson</button></div>
     </section>
     <section id="pulsePane" class="desk-pane" hidden>
-      <div class="quick-card"><span class="cap">THIS SLIDE · LIVE</span><h2>Hear from the room</h2><div id="roomActivity"></div><p>Reactions are live taps, not a measure of understanding. Bookmark counts are anonymous and reflect this room.</p></div>
-      <div class="quick-card"><h3>Responses to the slide activity</h3><div id="slideFeedback"></div></div>
+      <div class="quick-card"><h3>Reactions</h3><div id="roomActivity"></div></div>
+      <div class="quick-card"><h3>Slide responses</h3><div id="slideFeedback"></div></div>
     </section>
     <section id="slidePane" class="desk-pane">
-      <div class="cap">Coming up next</div>
+      <div class="cap">Next</div>
       <div class="box" id="boxNext"></div>
-      <div class="cap">Speaker notes · this slide</div>
+      <div class="cap">Notes</div>
       <div class="notes" id="notes"></div>
       <div id="quizinfo"></div>
     </section>
@@ -256,20 +336,35 @@
     </div>
     <iframe id="teacherWorkspace" title="Private classroom controls and teaching toolkit" src="about:blank" hidden></iframe>
     <section id="qaPane" class="desk-pane" hidden>
-      <div class="cap" id="qaCap" style="display:none">Questions from the room <span id="qaCount"></span></div>
-      <p class="desk-hint">Approve questions for the room or choose Show on screen to project one.</p>
+      <div class="cap" id="qaCap" style="display:none">Q&amp;A <span id="qaCount"></span></div>
       <div class="qa" id="qa" style="display:none"></div>
-      <p id="qaUnavailable" class="desk-hint">Host a live lesson to receive questions from learners.</p>
+      <p id="qaUnavailable" class="desk-hint">Host live to take questions.</p>
     </section>
   </div>
 
   <div class="pv-foot">
     <button class="btn" data-cmd="prev">‹ Previous</button>
     <button class="btn primary" data-cmd="next">Next ›</button>
-    <button class="btn" data-cmd="blank">Blank</button>
-    <button class="btn" data-cmd="freeze" id="btnFreeze" title="Freeze audience screen for digression (Alt+F)">❄️ Freeze</button>
+    <button class="btn" data-cmd="blank" id="btnBlank" title="Blank the projector (B)">Blank</button>
+    <button class="btn" data-cmd="freeze" id="btnFreeze" title="Freeze audience screen for digression (Z)">❄️ Freeze</button>
     <button class="btn" data-cmd="who" aria-pressed="false" aria-controls="teacherWorkspace"
             title="Open live responses and teacher entry here (W)">Live answers</button>
+    <details class="pv-room" id="roomTools">
+      <summary class="btn" title="Same room tools as the wall HUD">Room tools ▾</summary>
+      <div class="pv-room-menu" role="group" aria-label="Room tools">
+        <button class="btn" data-cmd="rail" id="btnRail" title="Cycle room view (S)">Room view</button>
+        <button class="btn" data-cmd="join" id="btnJoin" title="Show join QR and PIN (J)">Join QR</button>
+        <button class="btn" data-cmd="poll" id="btnPoll" title="Ask the room a quick question (V)">Quick poll</button>
+        <button class="btn" data-cmd="focus" id="btnFocus" title="Show leaderboard (E)">Show leaderboard</button>
+        <button class="btn" data-cmd="reactions" id="btnReactions" title="Turn audience reactions on or off (T)">Reactions: On</button>
+        <button class="btn" data-cmd="blankPhones" id="btnBlankPhones" title="Blank every learner phone (Shift+B)">Blank phones</button>
+        <button class="btn" data-cmd="floor" id="btnFloor" title="Who may speak (Shift+H)">Floor: follows the lesson</button>
+        <button class="btn" data-cmd="reset" title="Clear answers and score again (R)">Reset scores</button>
+        <button class="btn" data-cmd="ink" title="Draw and spotlight on the wall (I)">Ink</button>
+        <button class="btn" data-cmd="full" id="btnFull" title="Toggle full screen on the wall (F)">Full screen</button>
+        <button class="btn" data-cmd="help" title="Keyboard shortcuts on the wall (?)">Keyboard shortcuts</button>
+      </div>
+    </details>
     <div class="spacer"></div>
     <button class="btn" id="resetTimer">Reset elapsed time</button>
     <button class="btn" data-cmd="exit">End show</button>
@@ -309,7 +404,11 @@
        on the show — sending it to the opener would put it on the wall. */
     b.onclick = b.dataset.cmd === 'who'
       ? function () { toggleNamed(); }
-      : function () { cmd(b.dataset.cmd); };
+      : function () {
+          cmd(b.dataset.cmd);
+          var room = $('roomTools');
+          if (room && room.open && b.closest('.pv-room-menu')) room.open = false;
+        };
   });
   $('resetTimer').onclick = function () { timerBase = Date.now(); };
 
@@ -361,6 +460,104 @@
     b.classList.toggle('will-reveal', action === 'reveal');
     b.classList.toggle('will-hold', action === 'hold');
   }
+
+  var FLOOR_LABEL = {
+    auto: 'Floor: follows the lesson',
+    open: 'Floor: open',
+    shut: 'Floor: closed'
+  };
+  var ROOM_VIEW_TIP = {
+    hidden: 'Show the room beside the slide (S)',
+    beside: 'Put the room on the whole screen (S)',
+    full: 'Hide the room (S)'
+  };
+
+  /* Labels and live-gated disables mirror the wall HUD so the desk stays
+     truthful about what the next press will do. */
+  function syncRoomTools(d) {
+    var live = !!d.live;
+    ['join', 'reactions', 'blankPhones', 'floor'].forEach(function (id) {
+      var map = { join: 'btnJoin', reactions: 'btnReactions', blankPhones: 'btnBlankPhones', floor: 'btnFloor' };
+      var el = $(map[id]);
+      if (el) el.disabled = !live;
+    });
+
+    var blankBtn = $('btnBlank');
+    if (blankBtn) {
+      blankBtn.classList.toggle('on', !!d.blank);
+      blankBtn.textContent = d.blank ? 'Unblank' : 'Blank';
+      blankBtn.title = d.blank ? 'Unblank the projector (B)' : 'Blank the projector (B)';
+    }
+
+    var rail = $('btnRail');
+    if (rail) {
+      var view = d.roomView || 'hidden';
+      rail.classList.toggle('on', view !== 'hidden');
+      rail.textContent = view === 'beside' ? 'Room: beside'
+        : view === 'full' ? 'Room: full screen' : 'Room view';
+      rail.title = ROOM_VIEW_TIP[view] || ROOM_VIEW_TIP.hidden;
+    }
+
+    var join = $('btnJoin');
+    if (join) join.classList.toggle('on', !!d.joinCard);
+
+    var poll = $('btnPoll');
+    if (poll) {
+      poll.classList.toggle('on', !!d.pollOpen);
+      poll.textContent = d.pollOpen ? 'End quick poll' : 'Quick poll';
+      poll.title = d.pollOpen ? 'End the active impromptu poll (V)' : 'Ask the room a quick question (V)';
+    }
+
+    var focus = $('btnFocus');
+    if (focus) {
+      var kind = d.focusKind;
+      var focusLabel;
+      if (d.focusOn) {
+        focusLabel = kind === 'responses' ? 'Hide responses'
+          : kind === 'race' ? 'Hide race' : 'Hide leaderboard';
+      } else if (kind === 'responses') {
+        focusLabel = 'Expand responses';
+      } else if (kind === 'race') {
+        focusLabel = 'Show race';
+      } else {
+        focusLabel = 'Show leaderboard';
+      }
+      focus.classList.toggle('on', !!d.focusOn);
+      focus.textContent = focusLabel;
+      focus.title = focusLabel + ' (E)';
+    }
+
+    var rx = $('btnReactions');
+    if (rx) {
+      var rxOn = d.reactions !== false;
+      rx.classList.toggle('on', rxOn);
+      rx.textContent = rxOn ? 'Reactions: On' : 'Reactions: Off';
+      rx.title = rxOn ? 'Turn audience reactions off (T)' : 'Turn audience reactions on (T)';
+    }
+
+    var phones = $('btnBlankPhones');
+    if (phones) {
+      phones.classList.toggle('on', !!d.phonesBlank);
+      phones.textContent = d.phonesBlank ? 'Unblank phones' : 'Blank phones';
+      phones.title = d.phonesBlank
+        ? 'Restore learner phones (Shift+B)'
+        : 'Blank every learner phone (Shift+B)';
+    }
+
+    var floor = $('btnFloor');
+    if (floor) {
+      var mode = d.floor || 'auto';
+      floor.textContent = FLOOR_LABEL[mode] || FLOOR_LABEL.auto;
+      floor.title = 'Who may speak (Shift+H) — currently ' + mode;
+    }
+
+    var full = $('btnFull');
+    if (full) {
+      full.classList.toggle('on', !!d.fullscreen);
+      full.textContent = d.fullscreen ? 'Leave full screen' : 'Full screen';
+    }
+  }
+
   window.addEventListener('message', function (ev) {
     var d = ev.data;
     if (ev.source!==window.opener || ev.origin!==location.origin) return;
@@ -502,11 +699,12 @@
     state = { startedAt:d.startedAt, deck: SF.normalizeDeck(d.deck), index: d.index, answers: d.answers || {}, ...SF.Boards.snapshot(d), exploreStates:d.exploreStates || {}, revealStep:d.revealStep || 0, effectiveTimeLimit:d.effectiveTimeLimit };
 
     drawNextLabel(d.nextAction);
+    syncRoomTools(d);
     var freezeBtn = $('btnFreeze');
     if (freezeBtn) {
       freezeBtn.classList.toggle('on', !!d.frozen);
       freezeBtn.textContent = d.frozen ? '❄️ Unfreeze' : '❄️ Freeze';
-      freezeBtn.title = d.frozen ? 'Audience screen is frozen — click to unfreeze' : 'Freeze audience screen for digression (Alt+F)';
+      freezeBtn.title = d.frozen ? 'Audience screen is frozen — click to unfreeze' : 'Freeze audience screen for digression (Z)';
     }
     if (timerBase == null) timerBase = d.startedAt || Date.now();
     $('waiting').style.display = 'none';
@@ -518,12 +716,23 @@
   document.addEventListener('keydown', function (e) {
     if(e.metaKey||e.ctrlKey||e.altKey)return;
     if(e.target.closest('input,textarea,select,[contenteditable=true]')) return;
-    if(e.target.closest('button,a') && (e.key===' '||e.key==='Enter')) return;
+    if(e.target.closest('button,a,summary') && (e.key===' '||e.key==='Enter')) return;
     if (e.key === 'w' || e.key === 'W') { e.preventDefault(); toggleNamed(); return; }
     if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); cmd('next'); }
     else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); cmd('prev'); }
+    else if ((e.key === 'b' || e.key === 'B') && e.shiftKey) { e.preventDefault(); cmd('blankPhones'); }
     else if (e.key === 'b' || e.key === 'B') { e.preventDefault(); cmd('blank'); }
-    else if (e.key === 'z' || e.key === 'Z' || ((e.key === 'f' || e.key === 'F') && e.altKey)) { e.preventDefault(); cmd('freeze'); }
+    else if ((e.key === 'h' || e.key === 'H') && e.shiftKey) { e.preventDefault(); cmd('floor'); }
+    else if (e.key === 'z' || e.key === 'Z') { e.preventDefault(); cmd('freeze'); }
+    else if (e.key === 's' || e.key === 'S') { e.preventDefault(); cmd('rail'); }
+    else if (e.key === 'j' || e.key === 'J') { e.preventDefault(); cmd('join'); }
+    else if (e.key === 'v' || e.key === 'V') { e.preventDefault(); cmd('poll'); }
+    else if (e.key === 'e' || e.key === 'E') { e.preventDefault(); cmd('focus'); }
+    else if (e.key === 't' || e.key === 'T') { e.preventDefault(); cmd('reactions'); }
+    else if (e.key === 'r' || e.key === 'R') { e.preventDefault(); cmd('reset'); }
+    else if (e.key === 'i' || e.key === 'I') { e.preventDefault(); cmd('ink'); }
+    else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); cmd('full'); }
+    else if (e.key === '?' || e.key === '/') { e.preventDefault(); cmd('help'); }
     else if (e.key === 'Escape') { e.preventDefault(); cmd('exit'); }
   });
 
@@ -670,12 +879,19 @@
 
   // ask the opener to send state (covers a reload of this window)
   if (!window.opener || window.opener.closed) {
-    $('waitTitle').textContent = 'Open this from the show';
+    $('waitTitle').textContent = 'Connect this desk to the show';
+    $('waitLead').textContent =
+      'This window is waiting for the wall show. Start teaching there first, then open the desk from it.';
     $('waitHint').textContent =
-      'Presenter is your private teaching desk — slide notes, live answers, classroom management, insights, toolkit and Q&A. ' +
-      'Start Present or Host live, then press D (or open Presenter view). ' +
-      'Opening this URL alone has nothing to talk to.';
+      'Tip: after Present or Host live, press D on the show keyboard — that opens and connects this desk in one step.';
   } else {
+    $('waitTitle').textContent = 'Linking to the show…';
+    $('waitLead').textContent = 'Almost there — waiting for the wall window to send the lesson.';
+    $('waitSteps').innerHTML =
+      '<li>Keep the Present / Host live window open.</li>' +
+      '<li>If this stays blank, click the show window once, then press <kbd>D</kbd> again.</li>' +
+      '<li>Or close this tab and reopen Presenter from the show.</li>';
+    $('waitHint').textContent = 'The desk cannot run alone — it needs the show window beside it.';
     cmd('hello');
     setTimeout(function () { cmd('hello'); }, 800);
   }

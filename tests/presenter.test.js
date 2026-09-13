@@ -4,7 +4,15 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 function bridge(){
  const messages=[],listeners={},timers=[];
  const presenter={closed:false,focus(){this.focused=true;},postMessage(m,origin){messages.push({m,origin});},close(){this.closed=true;}};
- const Player={deck:{slides:[{id:'q',type:'quiz'}]},idx:0,answers:{},started:1,next(){this.advanced=true;},prev(){},goTo(){},toggleBlank(){},toggleFreeze(){this.freezeToggled=true;},close(){},emit(){}};
+ const Player={deck:{slides:[{id:'q',type:'quiz'}]},idx:0,answers:{},started:1,next(){this.advanced=true;},prev(){},goTo(){},toggleBlank(){},toggleFreeze(){this.freezeToggled=true;},close(){},emit(){},
+  control(action){
+   this.lastControl=action;
+   if(action==='next')this.next();
+   else if(action==='prev')this.prev();
+   else if(action==='blank')this.toggleBlank();
+   else if(action==='freeze')this.toggleFreeze();
+   else if(action==='exit')this.close();
+  }};
  const SF={Live:{teacherWorkspaceUrl:()=> 'manual.html#'+'a'.repeat(32),nextAction:()=> 'reveal'},questionTimeLimit:()=>0};
  vm.runInNewContext(fs.readFileSync(require.resolve('../js/model.js'),'utf8'),{window:{SF},console});
  const scope={Player,SF,window:{open:()=>presenter,addEventListener:(name,fn)=>listeners[name]=fn},location:{origin:'http://localhost:8787'},toast(){},setTimeout:fn=>timers.push(fn)};
@@ -49,4 +57,21 @@ test('freeze state reaches presenter and freeze command toggles screen freeze',(
  const data={type:'sf-presenter-cmd',cmd:'freeze'};
  b.listeners.message({source:b.presenter,origin:'http://localhost:8787',data});
  assert.equal(b.Player.freezeToggled,true);
+});
+
+test('desk room tools share the HUD control path',()=>{
+ const b=bridge();
+ b.Player.openPresenter();
+ ['rail','join','poll','focus','reactions','blankPhones','floor','reset','ink','full','help'].forEach(function(cmd){
+  b.Player.lastControl=null;
+  b.listeners.message({source:b.presenter,origin:'http://localhost:8787',data:{type:'sf-presenter-cmd',cmd}});
+  assert.equal(b.Player.lastControl,cmd);
+ });
+ b.Player.syncPresenter();
+ const state=b.messages[b.messages.length-1].m;
+ assert.equal(state.blank,false);
+ assert.equal(state.live,false);
+ assert.equal(state.roomView,'hidden');
+ assert.equal(state.floor,'auto');
+ assert.equal(typeof state.reactions,'boolean');
 });

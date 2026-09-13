@@ -99,13 +99,13 @@ test('a lesson survives being saved and reloaded', () => {
     deck.slides.find((s) => s.type === 'game').gameId);
 });
 
-test('ipdv-intro builds a 29-slide active lecture with formative quiz and 4 feedback moments', () => {
+test('ipdv-intro builds a 33-slide active lecture with formative quiz and 4 feedback moments', () => {
   const SF = load();
   const deck = SF.buildLesson('ipdv-intro');
   assert.ok(deck, 'deck exists');
   assert.equal(deck.title, 'LDSCI6253 Advanced Information Presentation & Visualisation');
   assert.equal(deck.theme, 'northeastern');
-  assert.equal(deck.slides.length, 29);
+  assert.equal(deck.slides.length, 33);
 
   // The lecture wears the university's branding, so buildLesson has to carry a
   // lesson's logo fields onto the deck and not just its theme.
@@ -128,6 +128,18 @@ test('ipdv-intro builds a 29-slide active lecture with formative quiz and 4 feed
   assert.ok(types.has('keywords'), 'has keywords');
   assert.ok(types.has('quote'), 'has quote');
   assert.ok(types.has('game'), 'has game');
+
+  // Anscombe beat: graph + text per dataset, not a caption-only gallery
+  const anscombe = deck.slides.filter((s) => /^Anscombe [IVX]+/.test(s.title || ''));
+  assert.equal(anscombe.length, 4, 'four Anscombe split slides');
+  for (const slide of anscombe) {
+    assert.equal(slide.type, 'split');
+    assert.ok(slide.image, slide.title + ' has chart image');
+    assert.equal(slide.imageSide, 'left');
+    assert.ok(slide.bullets && slide.bullets.length >= 3, slide.title + ' has teaching bullets');
+  }
+  assert.ok(deck.slides.some((s) => s.title === 'Four pictures, one quick report'),
+    'Anscombe close slide');
 
   // Verify embedded quiz
   const gameSlide = deck.slides.find((s) => s.type === 'game');
@@ -171,7 +183,7 @@ test('ipdv bundle generator exports a valid slideforge-bundle', () => {
   assert.equal(bundle.decks[0].title, 'LDSCI6253 Advanced Information Presentation & Visualisation');
   assert.equal(bundle.decks[0].theme, 'northeastern');
   assert.equal(bundle.decks[0].logo, 'assets/brand/nu-london-logo.png');
-  assert.equal(bundle.decks[0].slides.length, 29);
+  assert.equal(bundle.decks[0].slides.length, 33);
   assert.equal(bundle.games[0].title, 'Lecture 1 Check — Foundations of Visualisation');
   assert.equal(bundle.games[0].questions.length, 4);
 });

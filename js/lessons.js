@@ -305,43 +305,91 @@
         {
           type: 'section',
           title: 'The Danger of Summary Statistics',
-          subtitle: 'A prediction challenge before we plot.',
+          subtitle: 'Same numbers on paper — same picture on screen?',
           feedback: {
             kind: 'poll',
-            prompt: 'Four datasets have identical mean (x=9, y=7.5), variance, correlation (r=0.816), and regression line. Will their graphs look similar?',
+            prompt: 'Four datasets share the same average, spread, correlation (r ≈ 0.82), and best-fit line. Will their scatterplots look alike?',
             options: [
-              'Yes — nearly identical shapes',
-              'No — completely different distributions',
-              'Only if extreme outliers exist'
+              'Yes — nearly the same shape',
+              'No — they can look totally different',
+              'Only if there are extreme outliers'
             ],
             max: 1
           },
-          notes: 'Ask students to vote. Most who haven’t seen Anscombe will assume identical regression means similar visual scatter.'
+          notes: 'Ask students to vote. Most who haven’t seen Anscombe will assume identical regression means similar visual scatter. Keep the jargon light: averages and “best-fit line” before you say mean/variance/r.'
         },
         {
-          type: 'gallery',
-          title: 'Anscombe’s Quartet (1973)',
+          type: 'split',
+          title: 'Anscombe I — a fair straight line',
           progressive: true,
+          image: 'assets/lesson/anscombe/anscombe-i.svg',
+          imageSide: 'left',
           imageFit: 'contain',
-          design: { imageFrame: '4:3' },
-          layers: [
-            { image: 'assets/lesson/anscombe/anscombe-i.svg',
-              caption: 'Dataset I — a straight relationship',
-              source: 'Anscombe, F.J. (1973) · The American Statistician 27(1)' },
-            { image: 'assets/lesson/anscombe/anscombe-ii.svg',
-              caption: 'Dataset II — a curve, not a line',
-              source: 'Anscombe, F.J. (1973) · The American Statistician 27(1)' },
-            { image: 'assets/lesson/anscombe/anscombe-iii.svg',
-              caption: 'Dataset III — one point drags the line',
-              source: 'Anscombe, F.J. (1973) · The American Statistician 27(1)' },
-            { image: 'assets/lesson/anscombe/anscombe-iv.svg',
-              caption: 'Dataset IV — one point makes the line',
-              source: 'Anscombe, F.J. (1973) · The American Statistician 27(1)' }
+          subtitle: 'Anscombe, F.J. (1973) · The American Statistician 27(1)',
+          bullets: [
+            'Everyday story: hours revised vs exam mark — more study, higher score, with normal scatter around the trend.',
+            'Same quick report as the other three: same average, same spread, same “how together” score, same best-fit line.',
+            'What the plot shows: points hug the line. Here the shortcut numbers and the picture agree.'
           ],
-          notes: 'One plot per press, each landing on the pile of the ones before it — so the room watches four identical summaries turn into four different pictures. Every panel shares the same axes and the same fitted line, y = 3 + 0.5x. I: Gaussian scatter about the line, the only one a linear fit honestly describes. II: a clean parabola — the relationship is real but not linear. III: a tight line with one extreme vertical outlier dragging the slope off it. IV: every x is 8 except one; that single high-leverage point is the only thing defining the slope at all. Close by asking what they would have missed with only the summary statistics from the previous slide.'
+          notes: 'Start with this “normal” scatter. Plain language: average = mean, spread = variance, how-together = correlation, best-fit line = regression. Ask: if you only saw the report, would you expect anything else?'
+        },
+        {
+          type: 'split',
+          title: 'Anscombe II — a curve wearing a straight line',
+          progressive: true,
+          image: 'assets/lesson/anscombe/anscombe-ii.svg',
+          imageSide: 'left',
+          imageFit: 'contain',
+          subtitle: 'Anscombe, F.J. (1973) · The American Statistician 27(1)',
+          bullets: [
+            'Everyday story: practice helps… then levels off. More hours still help early on; later the gains flatten (a curve, not a ramp).',
+            'The printed report still claims the same straight best-fit line as Dataset I.',
+            'What the plot shows: a clear bend. The relationship is real — the straight-line model is the wrong shape.'
+          ],
+          notes: 'Contrast with I. Same string through the glitter; wrong shape of pile. Correlation can look fine while the model is misspecified.'
+        },
+        {
+          type: 'split',
+          title: 'Anscombe III — one bad row spoils the story',
+          progressive: true,
+          image: 'assets/lesson/anscombe/anscombe-iii.svg',
+          imageSide: 'left',
+          imageFit: 'contain',
+          subtitle: 'Anscombe, F.J. (1973) · The American Statistician 27(1)',
+          bullets: [
+            'Everyday story: nine honest marks on a neat line — plus one mistyped score that shoots off the chart.',
+            'Again: the summary report matches Datasets I and II, including that same best-fit line.',
+            'What the plot shows: almost everything is tidy; one extreme point drags the line away from the truth.'
+          ],
+          notes: 'Ask what they would do: fix the typo, investigate, or leave it? Visualisation makes the odd row impossible to ignore before the model ships.'
+        },
+        {
+          type: 'split',
+          title: 'Anscombe IV — one point invents the slope',
+          progressive: true,
+          image: 'assets/lesson/anscombe/anscombe-iv.svg',
+          imageSide: 'left',
+          imageFit: 'contain',
+          subtitle: 'Anscombe, F.J. (1973) · The American Statistician 27(1)',
+          bullets: [
+            'Everyday story: every house on the street costs about the same — except one mansion far out of town that “creates” a trend.',
+            'Same averages and same best-fit line on paper as the other three.',
+            'What the plot shows: almost no spread in x — that single far point is the only reason the line has a slope.'
+          ],
+          notes: 'Close by asking what the room would have missed with only the summary statistics from the poll slide. High leverage without a plot stays invisible.'
         },
         {
           type: 'content',
+          title: 'Four pictures, one quick report',
+          progressive: true,
+          bullets: [
+            'All four datasets share the same short summary — averages, spread, correlation, and best-fit line.',
+            'Only the scatterplots show a fair line, a hidden curve, a rogue point, or a slope built on one observation.',
+            'Rule of thumb: never trust a fitted line you have not plotted. The picture is part of the analysis.'
+          ],
+          notes: 'Recap before Burn-Murdoch. If short on time, dwell here after a quick flip through I–IV.'
+        },
+        {
           title: 'Case Study: Scatterplots in Explanatory Journalism',
           progressive: true,
           bullets: [

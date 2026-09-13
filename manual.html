@@ -36,25 +36,31 @@
 <button type="button" role="tab" data-view="tools" aria-selected="false">Toolkit</button></div><p class="teacher-private">Private workspace · Keep this on your own screen during the lesson.</p><p id="status" role="status">Connecting to the host…</p><p id="error" role="alert"></p>
 <div id="lessonPulse" class="lesson-pulse"></div>
 <section id="entryPane">
-<div class="section-heading"><h2>Manage your classroom</h2><p>One register for devices, paper and mini whiteboards.</p></div><label for="rosterSearch">Find a learner</label><input id="rosterSearch" type="search" placeholder="Search by name…">
+<div class="section-heading"><h2>Classroom</h2></div>
+<div id="liveRoomGate" class="live-room-gate">
+  <p id="liveRoomHint">Start a live room to take the register. Phones are optional — add names here for paper or whiteboards.</p>
+  <button type="button" id="startLiveRoom">Start live room</button>
+  <p id="liveRoomPin" class="live-room-pin" hidden></p>
+</div>
+<label for="rosterSearch">Find</label><input id="rosterSearch" type="search" placeholder="Search by name…">
 <div id="classRoster" class="in-room-panel"></div>
-<details id="addNames"><summary>Add learners or team representatives</summary><label for="names">Names · one per line</label><textarea id="names" placeholder="One name per line"></textarea><label for="team" id="teamLabel">Team</label><select id="team"></select><p id="teamNote">For a shared team answer, add one representative entry for that team. This records team evidence, not each member’s understanding.</p><button id="add">Add names</button><p id="addWhy" class="add-why" hidden></p></details>
-<p class="notice">Add names between questions. You can edit, kick or delete anyone already in the room. Reveal stays under your control. Correct answers earn equal points; entry time is not scored.</p>
+<details id="addNames"><summary>Add names</summary><label for="names">One per line</label><textarea id="names" placeholder="One name per line"></textarea><label for="team" id="teamLabel">Team</label><select id="team"></select><p id="teamNote">For a shared team answer, add one representative for that team.</p><button id="add">Add</button><p id="addWhy" class="add-why" hidden></p></details>
+<p class="notice">Edit, kick or delete anyone already in the room. Reveal stays under your control.</p>
 </section>
 <section id="markPane">
-<p class="notice" id="rollcall">Keyboard roll call: <kbd>A</kbd>–<kbd>F</kbd> or <kbd>1</kbd>–<kbd>6</kbd> records for the highlighted learner and moves down. <kbd>Space</kbd> skips, <kbd>Backspace</kbd> clears, <kbd>↑</kbd><kbd>↓</kbd> move.</p>
+<p class="notice" id="rollcall">Roll call: <kbd>A</kbd>–<kbd>F</kbd> / <kbd>1</kbd>–<kbd>6</kbd> · <kbd>Space</kbd> skip · <kbd>Backspace</kbd> clear · <kbd>↑</kbd><kbd>↓</kbd></p>
 <h2 id="question">Waiting for a question</h2><div id="entries"></div><div id="revealRow" class="reveal-row" hidden></div><button id="reveal" hidden>Reveal and score</button>
 </section>
 <section id="questionsPane" hidden></section>
 <section id="overviewPane" hidden></section>
 <section id="toolsPane" hidden>
-<div class="section-heading"><h2>A little help with the room</h2><p>Private tools for participation, thinking time and follow-up.</p></div>
+<div class="section-heading"><h2>Toolkit</h2></div>
 <div class="tool-grid">
-<article class="tool-card"><span class="teacher-eyebrow">PARTICIPATION</span><h3>Fair name picker</h3><p>Give everyone a turn. Names do not repeat until you reset the round. Disconnected devices are excluded.</p><output id="pickedName" aria-live="polite">Who will share next?</output><div class="tool-actions"><button id="pickName">Pick a learner</button><button id="resetPicker">Reset round</button></div><p id="pickerStatus"></p></article>
-<article class="tool-card"><span class="teacher-eyebrow">THINKING TIME</span><h3>Discussion timer</h3><p>A private countdown for pair talk or independent thinking. It does not change the quiz timer.</p><label for="timerDuration">Duration</label><select id="timerDuration"><option value="30">30 seconds</option><option value="60" selected>1 minute</option><option value="120">2 minutes</option><option value="300">5 minutes</option></select><output id="timerReadout">01:00</output><div class="tool-actions"><button id="timerToggle">Start timer</button><button id="timerReset">Reset</button></div><p id="timerStatus" role="status"></p></article>
+<article class="tool-card"><span class="teacher-eyebrow">PARTICIPATION</span><h3>Name picker</h3><p class="tool-blurb">Names do not repeat until you reset. Disconnected devices are excluded.</p><output id="pickedName" aria-live="polite">Who next?</output><div class="tool-actions"><button id="pickName">Pick</button><button id="resetPicker">Reset round</button></div><p id="pickerStatus"></p></article>
+<article class="tool-card"><span class="teacher-eyebrow">THINKING TIME</span><h3>Timer</h3><p class="tool-blurb">Private countdown — does not change the quiz timer.</p><label for="timerDuration">Duration</label><select id="timerDuration"><option value="30">30 seconds</option><option value="60" selected>1 minute</option><option value="120">2 minutes</option><option value="300">5 minutes</option></select><output id="timerReadout">01:00</output><div class="tool-actions"><button id="timerToggle">Start</button><button id="timerReset">Reset</button></div><p id="timerStatus" role="status"></p></article>
 </div>
-<article class="tool-card"><span class="teacher-eyebrow">NEXT LESSON</span><h3>Private teaching notes</h3><label for="teacherNotes">Misconceptions, follow-ups and what worked</label><textarea id="teacherNotes" rows="4" placeholder="Revisit… / Check in with… / Next time…"></textarea><div class="tool-actions"><button id="downloadNotes">Download notes</button><span id="notesStatus" role="status">Saved in this browser for this workspace.</span></div></article>
-<details class="teaching-tips"><summary>Teaching moves to try</summary><dl><dt>Think → pair → share</dt><dd>Give everyone silent thinking time, then compare with a partner before picking someone to share.</dd><dt>Make the misconception visible</dt><dd>After revealing, use Question insights to compare popular choices. Ask learners to explain why an alternative is tempting.</dd><dt>Check the quiet answers</dt><dd>Look at who has not responded before moving on. Missing evidence is not the same as an incorrect answer.</dd><dt>Recheck after explaining</dt><dd>Use a fresh question to see whether understanding changed. A shared team answer only shows team evidence.</dd></dl></details>
+<article class="tool-card"><span class="teacher-eyebrow">NEXT LESSON</span><h3>Notes</h3><label for="teacherNotes">Misconceptions &amp; follow-ups</label><textarea id="teacherNotes" rows="3" placeholder="Revisit… / Check in with…"></textarea><div class="tool-actions"><button id="downloadNotes">Download</button><span id="notesStatus" role="status">Saved here</span></div></article>
+<details class="teaching-tips"><summary>Teaching moves</summary><dl><dt>Think → pair → share</dt><dd>Silent think, then partner, then share.</dd><dt>Make the misconception visible</dt><dd>Compare popular choices in Insights; ask why the alternative is tempting.</dd><dt>Check the quiet answers</dt><dd>Who has not responded is not the same as wrong.</dd><dt>Recheck after explaining</dt><dd>Ask a fresh question. A team answer is team evidence only.</dd></dl></details>
 </section>
 </main>
 <script>

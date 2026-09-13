@@ -367,14 +367,26 @@ Three of my own bugs on the way, all found by testing rather than reading:
 Server log from the passing run: `host away — holding for 90s` then `host back`
 in the same second; a separate abandoned room closed when its 90s expired.
 
-### 20. What a refresh still loses
+### 20. Refresh recovery — B, C and D fixed
 
-Reproduced alongside 19, not yet fixed:
+- **Presenting** — the tab keeps the compiled run and current slide in
+  `sessionStorage`, so a refresh reopens the presentation at the same position,
+  including inside an embedded game. Explicit exit clears it. Rehearsals are
+  not restored. Browser fullscreen still needs a user gesture after reload.
+- **A student's phone** — a saved identity now rejoins automatically on load.
+  Typed-PIN joins also remember the PIN; an explicit URL PIN takes precedence.
+  Ended and removed seats lose their token as before, and a fresh tab has no
+  identity to reuse.
+- **The editor** — selection is stored per deck by slide id, so reorder does
+  not change the selected slide. A deleted selection falls back to slide 1.
 
-- **Presenting** — refresh closes the presentation entirely and returns to the
-  editor. The player never persists `Player.idx`.
-- **A student's phone** — drops to the join screen. The resume token is written,
-  survives the refresh, and is never used on load; a QR joiner gets the fields
-  prefilled and still has to tap Join, a typed-PIN joiner has to remember the
-  PIN.
-- **The editor** — selected slide resets to 1. The deck itself is fine.
+The restored presentation renders before host recovery wires slide events, so
+reloading does not resend the current question or start a new round. Rehosting
+restores the live controls and quiz navigation gate.
+
+Verified with `node tools/smoke-refresh.mjs`: editor reload/reorder; compiled
+presentation position and explicit exit; typed-PIN and QR learner rejoin; host
+reload with the same PIN and slide; reload during a question with an answer
+already submitted, followed by teacher reveal; fresh tabs and ended rooms.
+All 311 unit tests pass. `npm test` remains blocked by the two existing nullable
+`pill` errors in the separate spontaneous-activity work in `js/player.js`.

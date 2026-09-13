@@ -1,15 +1,17 @@
-/* Shared presenter drafting and launch service. Drafts never mutate a running lesson. */
+/* Shared presenter drafting and launch service. Drafts never mutate a running lesson.
+   Launch projects a spontaneous wall overlay — same spirit as a timer/break — and
+   End clears it. The lasting presentation is never spliced. */
 (function () {
   'use strict';
   var SF = window.SF;
-  var launched = new Set();
-  var returnTo = null;
   var runtimeStates = new WeakMap();
   // The lesson and room remain the same objects. Each impromptu game owns its
   // mechanic state, so a race or battle cannot take over the following lesson.
   function beforeSlide(run, slide) {
     var state = runtimeStates.get(run);
-    var game = slide.presenterActivity && (run.games || []).find(function (g) { return g.id === slide.gameId; });
+    var session = SF.Player && SF.Player.spontaneous;
+    var game = (session && session.game)
+      || (slide && slide.presenterActivity && (run.games || []).find(function (g) { return g.id === slide.gameId; }));
     if (!state && !game) return;
     if (!state || state.started !== SF.Player.started) {
       state = { started: SF.Player.started, current: null, base: state ? state.base : { mechanic: run.mechanic, trackLength: run.trackLength, quiz: run.quiz }, live: new Map() };
@@ -159,6 +161,11 @@
     if (!slides.length) throw new Error('Nothing to show yet.');
     return { item: item, slides: slides };
   }
+  function endOverlay(player) {
+    if (!player.spontaneous) throw new Error('Nothing is showing on the wall.');
+    player.endSpontaneous();
+    return { message: 'Back on the lesson slide.', showing: false };
+  }
   async function handle(request) {
     var player = SF.Player, run = player.deck, started = player.started;
     if (!player.open || !run) throw new Error('Start presenting a lesson first.');
@@ -169,14 +176,7 @@
       item.runStarted = started;
       return { draft: item };
     }
-    if (request.action === 'return') {
-      if (!returnTo || returnTo.run !== run || returnTo.started !== started) throw new Error('There is no interrupted lesson to return to.');
-      var index = run.slides.findIndex(function (s) { return s.id === returnTo.slideId; });
-      if (index < 0) throw new Error('The original slide is no longer in the lesson.');
-      player.goTo(index, 1);
-      returnTo = null;
-      return { message: 'Back at the slide you left.' };
-    }
+    if (request.action === 'end' || request.action === 'return') return endOverlay(player);
     if (!request.draft || request.draft.runStarted !== started) throw new Error('This draft belongs to an earlier lesson. Create a new draft.');
     var working = clone(request.draft);
     // Board teams match the existing live room; launching never rehosts it.
@@ -193,26 +193,30 @@
       if (!store.save(doc)) throw new Error('Could not save on this device. Your draft is still here.');
       return { message: ready.item.game ? 'Saved to your quiz library.' : 'Saved as a reusable lesson in your library.' };
     }
+    /* queue is an alias for launch — spontaneous overlays are never queued into the deck. */
     if (request.action !== 'launch' && request.action !== 'queue') throw new Error('Unknown activity action.');
-    if (launched.has(ready.item.id)) throw new Error('This draft is already in the lesson. Create a new draft to run it again.');
-    var anchor = run.slides[player.idx];
-    var at = player.idx + 1;
-    // Queued drafts retain their order when several are added from the same slide.
-    while (request.action === 'queue' && at < run.slides.length && run.slides[at].presenterQueueAfter === anchor.id) at++;
-    ready.slides.forEach(function (s) { s.presenterQueueAfter = anchor.id; s.presenterActivity = ready.item.id; });
-    run.slides.splice(at, 0, ...ready.slides);
-    if (ready.item.game) { run.games = run.games || []; run.games.push(ready.item.game); }
-    launched.add(ready.item.id);
-    if (request.action === 'launch') {
-      returnTo = { run: run, started: started, slideId: anchor.id };
-      if (SF.Live && SF.Live.endCustomPrompt) SF.Live.endCustomPrompt();
-      if (player.momentCommand) player.momentCommand({ action: 'clear' });
-      if (player.frozen && player.toggleFreeze) player.toggleFreeze(false);
-      if (player.blank && player.toggleBlank) player.toggleBlank();
-      player.goTo(at, 1);
+    if (!player.openSpontaneous) throw new Error('This show cannot project a spontaneous activity.');
+    var before = run.slides.length;
+    var lessonIdx = player.idx;
+    ready.slides.forEach(function (s) {
+      s.presenterActivity = ready.item.id;
+      if (ready.item.game) s.gameId = ready.item.game.id;
+    });
+    player.openSpontaneous({
+      id: ready.item.id,
+      title: ready.item.title,
+      slides: ready.slides,
+      game: ready.item.game || null
+    });
+    if (run.slides.length !== before || player.idx !== lessonIdx) {
+      throw new Error('Spontaneous show must not change the lesson.');
     }
     player.syncPresenter();
-    return { message: request.action === 'launch' ? 'Activity launched. Use Return to lesson to revisit the slide you left.' : 'Queued after this slide. Use Next when you are ready.', inserted: true };
+    return {
+      message: 'On the wall now. End (or Esc) to return to the lesson — nothing was added to the presentation.',
+      inserted: false,
+      showing: true
+    };
   }
   SF.LiveActivities = { beforeSlide: beforeSlide, catalogue: catalogue, draft: draft, prepare: prepare, handle: handle, read: read, write: write };
 })();

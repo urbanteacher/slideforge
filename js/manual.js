@@ -65,7 +65,7 @@ function paintClassRoster(people){
  var box=$('classRoster');
  if(!box) return;
  box.textContent='';
- if(!people.length){box.appendChild(document.createElement('p')).textContent=$('rosterSearch').value?'No learners match your search.':'No learners yet. Add names below or invite learners to join on their devices.';return;}
+ if(!people.length){box.appendChild(document.createElement('p')).textContent=$('rosterSearch').value?'No learners match your search.':(state.active?'No learners yet. Add names below, or share the PIN for phones.':'Start a live room, then add names here.');return;}
  if(window.SF && SF.rosterManage){
   box.appendChild(SF.rosterManage(people, rosterActions()));
   if(!state.active) Array.prototype.forEach.call(box.querySelectorAll('button'),function(b){b.disabled=true;});
@@ -259,6 +259,34 @@ if($('ownTabs')) Array.prototype.forEach.call($('ownTabs').querySelectorAll('[da
  };
 });
 
+function paintLiveGate(){
+ var btn=$('startLiveRoom'), hint=$('liveRoomHint'), pin=$('liveRoomPin');
+ if(!btn) return;
+ if(state.active){
+  btn.textContent='New room…';
+  btn.setAttribute('aria-label','End this room and start a new live room with a fresh PIN');
+  if(hint) hint.textContent='Room is open. Add names below. Share the PIN only if phones will join.';
+  if(pin){
+   pin.hidden=!state.pin;
+   pin.textContent=state.pin ? ('PIN '+state.pin) : '';
+  }
+ }else{
+  btn.textContent='Start live room';
+  btn.setAttribute('aria-label','Start a live room for the register');
+  if(hint) hint.textContent='Start a live room to take the register. Phones are optional — add names here for paper or whiteboards.';
+  if(pin){ pin.hidden=true; pin.textContent=''; }
+ }
+}
+if($('startLiveRoom')) $('startLiveRoom').onclick=function(){
+ if(state.active){
+  if(!confirm('End the current room and start a new one?\n\nEveryone will need the new PIN. Scores from this room will be lost.')) return;
+  send('host',{force:true});
+ }else{
+  send('host');
+ }
+ $('error').textContent='';
+};
+
 function render(){
  applyPanes();
  paintPulse();
@@ -276,8 +304,10 @@ function render(){
  $('status').textContent=state.active
   ? (people.length
     ? people.length+' in the room · '+entered.length+' teacher-entered · '+onPhones.length+' on devices'
-    : 'Nobody in the room yet — add a name below')
-  : 'Host a live lesson to use teacher entry.';
+      + (state.pin ? ' · PIN '+state.pin : '')
+    : 'Room open'+(state.pin ? ' · PIN '+state.pin : '')+' — add a name below')
+  : 'Start a live room to take the register (phones optional).';
+ paintLiveGate();
  paintClassRoster(people);
  if(people.length) $('error').textContent='';
  /* Once the room has taken the names, the box is a draft again — the list
@@ -293,7 +323,7 @@ function render(){
     was up — including in the lobby, where there is no next question yet.
     It is a status, not a prompt. */
  var heading = q ? q.question
-  : !state.active ? 'No live lesson yet'
+  : !state.active ? 'Start a live room to record answers'
   : !state.showing ? 'Start the lesson, then open a quiz slide'
   : 'This slide has no check — advance to a quiz slide to record answers';
  $('question').textContent=heading;
@@ -304,7 +334,7 @@ function render(){
     report it earns. Every reason it cannot be pressed is now written next to
     it, and it is only actually disabled for the reason a teacher can fix by
     waiting. */
- var why = !state.active ? 'Not connected to a live lesson yet \u2014 press Host live first.'
+ var why = !state.active ? 'Start a live room above, then add names.'
   : (q && !q.revealed) ? 'A question is on screen. Add names once you have revealed it or moved on.'
   : (state.mode==='teams' && !(state.teams||[]).length) ? 'This room is in teams mode but has no teams set up. Add teams in the quiz settings, or switch the lesson to individual.'
   : '';
@@ -400,7 +430,7 @@ function paintPulse(){
   card.appendChild(document.createElement('strong')).textContent=x[1];
   card.appendChild(document.createElement('span')).textContent=x[0];box.appendChild(card);
  });
- var advice=!state.active?'Host a live lesson to connect your classroom. The toolkit is ready whenever you need it.'
+ var advice=!state.active?'Start a live room to connect the class. Phones are optional — teacher entry works for paper and whiteboards.'
   :!q?'Add your learners, then open a quiz slide to gather evidence.'
   :!q.revealed?(missing?'Give the room thinking time. '+missing+' learner'+(missing===1?' has':'s have')+' no recorded answer yet.':'All responses are in. Reveal when you are ready.')
   :'No responses were recorded for this question.';

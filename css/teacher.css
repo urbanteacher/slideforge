@@ -1,7 +1,25 @@
 body{background:#f5f6f2;color:#24372c;font:14px/1.5 system-ui,sans-serif}*{box-sizing:border-box}[hidden]{display:none!important}.manual-panel{width:auto;max-width:1100px;margin:0 auto;padding:24px;background:transparent;border:0;border-radius:0;box-shadow:none}.manual-panel header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.manual-panel h1{font-size:28px;letter-spacing:-.8px;margin:4px 0}.teacher-eyebrow{font-size:10px;font-weight:750;letter-spacing:1.7px;color:#637768}.teacher-private{font-size:12px;color:#637768;margin:0 0 8px}#status{font-size:12px;margin:0 0 16px}#error:empty{display:none}.lesson-pulse{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}.pulse-stat{padding:14px 16px;border:1px solid #dce3d9;background:#fff;border-radius:12px}.pulse-stat strong{display:block;font-size:25px;font-weight:650;letter-spacing:-1px}.pulse-stat span{font-size:12px;color:#637768}.pulse-guidance{grid-column:1/-1;margin:0;padding:12px 16px;border-radius:9px;background:#e7eedf;color:#3b5632}.section-heading h2{font-size:19px;margin:0 0 4px}.section-heading p{margin:0 0 18px;color:#637768}button{min-height:36px;padding:8px 12px;border:1px solid #c9d4c8;border-radius:8px;background:#fff;color:#294332;font:inherit}button:hover{background:#e8efdf}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #6f924e;outline-offset:3px}button:disabled{opacity:.5;cursor:not-allowed}input,textarea,select{font:inherit;border:1px solid #c9d4c8;border-radius:8px;padding:10px;background:#fff;color:#24372c;max-width:100%}textarea,#rosterSearch{width:100%}textarea{min-height:100px}#add,#pickName,#timerToggle{background:#36513a;color:#fff}details{border:1px solid #dce3d9;border-radius:12px;background:#fff;padding:15px;margin:16px 0}summary{cursor:pointer;font-weight:650}.notice{font-size:12px;color:#5e6c5b;background:transparent;border-left:2px solid #bbcbb1;border-radius:0;padding:4px 12px;margin:16px 0}.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.tool-card{border:1px solid #dce3d9;border-radius:14px;padding:20px;background:#fff;margin-bottom:14px}.tool-card h3{font-size:18px;margin:7px 0}.tool-card p{font-size:13px;color:#637768}.tool-card output{display:block;font-size:28px;font-weight:650;letter-spacing:-.6px;margin:18px 0;overflow-wrap:anywhere}#timerReadout{font-variant-numeric:tabular-nums}.tool-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#notesStatus,#pickerStatus{font-size:12px;color:#637768}dt{font-weight:650;margin-top:14px}dd{margin:4px 0;color:#637768}.manual-entry{margin-bottom:10px;border:1px solid #dce3d9;border-radius:10px;padding:12px;background:#fff;display:flex;gap:7px;flex-wrap:wrap}.manual-entry strong{flex:1 1 45%}.manual-entry .answer-status{flex-basis:100%;font-size:12px}.own-tabs{gap:6px}.own-tabs button{font-size:12px}.in-room-panel{border-color:#dce3d9}.reveal-opt{font-size:14px}@media(max-width:620px){.manual-panel{padding:16px}.tool-grid{grid-template-columns:1fr}.lesson-pulse{gap:6px}.pulse-stat{padding:10px}.pulse-stat strong{font-size:22px}.manual-panel h1{font-size:24px}}
 
 /* Presenter already supplies the desk heading and live participation counts. */
-.in-presenter .manual-panel{padding:16px}.in-presenter .manual-panel>header,.in-presenter .teacher-private,.in-presenter .pulse-stat{display:none}.in-presenter .lesson-pulse{display:block;margin-bottom:16px}.in-presenter .tool-card{padding:16px}
+.in-presenter .manual-panel{padding:8px 10px}
+.in-presenter .manual-panel>header,
+.in-presenter .teacher-private,
+.in-presenter .pulse-stat,
+.in-presenter .section-heading,
+.in-presenter .tool-blurb,
+.in-presenter .teaching-tips,
+.in-presenter #entryPane > .notice{display:none}
+.in-presenter .lesson-pulse{display:block;margin-bottom:10px}
+.in-presenter .tool-card{padding:10px 12px;margin-bottom:8px;border-radius:8px}
+.in-presenter .tool-card h3{font-size:14px;margin:4px 0 8px}
+.in-presenter .tool-card output{font-size:22px;margin:10px 0}
+.in-presenter .tool-grid{gap:8px}
+.in-presenter .notice{margin:8px 0;font-size:11px;padding:2px 8px}
+.in-presenter #status{margin:0 0 8px}
+.in-presenter details{padding:10px;margin:8px 0}
+.in-presenter textarea{min-height:64px;padding:8px}
+.in-presenter label{margin:8px 0 4px;font-size:12px}
+.in-presenter button{min-height:32px;padding:6px 10px;font-size:12px}
 
 /* Name picker: the draw is already decided, this is the flourish. */
 .tool-card output.spinning{color:#8a9b84;filter:blur(.4px)}
@@ -9,3 +27,12 @@ body{background:#f5f6f2;color:#24372c;font:14px/1.5 system-ui,sans-serif}*{box-s
 .tool-card output.landed{animation:sf-land .34s cubic-bezier(.2,1.2,.3,1);color:#24372c}
 /* The flourish is decoration; the name must never depend on it. */
 @media(prefers-reduced-motion:reduce){.tool-card output.landed{animation:none}.tool-card output.spinning{filter:none}}
+
+.live-room-gate{margin:0 0 14px;padding:12px 14px;border:1px solid #c3cfba;border-radius:10px;background:#fff}
+.live-room-gate p{margin:0 0 10px;font-size:13px;color:#53624c;line-height:1.45}
+.live-room-gate #startLiveRoom{background:#36513a;color:#fff;border-color:#36513a;font-weight:650}
+.live-room-gate #startLiveRoom:hover{background:#2a412e}
+.live-room-pin{margin:10px 0 0;font-size:18px;font-weight:700;letter-spacing:.06em;color:#24372c;font-variant-numeric:tabular-nums}
+.in-presenter .live-room-gate{margin-bottom:10px;padding:10px 12px}
+.in-presenter .live-room-gate p{font-size:12px;margin-bottom:8px}
+.in-presenter .live-room-pin{font-size:16px}

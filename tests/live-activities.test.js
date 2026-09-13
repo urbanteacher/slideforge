@@ -11,8 +11,22 @@ function setup() {
   const SF = scope.SF;
   const deck = SF.makeDeck('Original lesson'); deck.slides = [SF.makeSlide('content'), SF.makeSlide('content')];
   SF.Store.save(deck);
-  SF.Player = { open: true, deck: SF.buildRunDeck(deck, id => SF.GameStore.get(id)), idx: 0, started: 123,
-    answers: { previous: 2 }, goTo(i) { this.idx = i; }, syncPresenter() {} };
+  const run = SF.buildRunDeck(deck, id => SF.GameStore.get(id));
+  SF.Player = {
+    open: true, deck: run, idx: 0, started: 123, answers: { previous: 2 }, spontaneous: null,
+    goTo(i) { this.idx = i; }, syncPresenter() {},
+    openSpontaneous(session) {
+      this.spontaneous = {
+        id: session.id, title: session.title, slides: session.slides, index: 0, game: session.game || null
+      };
+      return true;
+    },
+    endSpontaneous() {
+      if (!this.spontaneous) return false;
+      this.spontaneous = null;
+      return true;
+    }
+  };
   return { SF, storage, api: SF.LiveActivities, deck };
 }
 async function create(api, kind = 'game', key = 'choice') { return (await api.handle({ action: 'draft', kind, key })).draft; }
@@ -39,34 +53,43 @@ test('every game engine can be edited through its own question shape and validat
   }
 });
 
-test('launch preserves the room and answers, rejects duplicate insertion and can return to original slide', async () => {
+test('launch projects an overlay without splicing the lesson and end restores the wall', async () => {
   const { SF, api, deck } = setup();
   SF.Live = { active: true, pin: '123456', mode: 'teams', teams: [{ name: 'Oak' }, { name: 'Elm' }] };
   const live = SF.Live, run = SF.Player.deck, first = run.slides[0].id;
   const draft = await create(api, 'game', 'bingo');
   const preview = await api.handle({ action: 'preview', draft });
   assert.deepEqual(Array.from(preview.slides.find(s => s.bingoBoard).bingoBoard.participants), ['Oak', 'Elm']);
-  await api.handle({ action: 'launch', draft });
+  const beforeLen = run.slides.length;
+  const result = await api.handle({ action: 'launch', draft });
+  assert.equal(result.showing, true);
+  assert.equal(result.inserted, false);
   assert.equal(SF.Live, live); assert.equal(SF.Live.pin, '123456');
   assert.equal(SF.Player.deck, run); assert.equal(SF.Player.answers.previous, 2);
-  assert.equal(SF.Player.idx, 1); assert.equal(SF.GameStore.list().length, 0);
+  assert.equal(SF.Player.idx, 0);
+  assert.equal(run.slides.length, beforeLen);
+  assert.ok(SF.Player.spontaneous);
+  assert.ok(SF.Player.spontaneous.slides.some(s => s.type === 'quiz' || s.bingoBoard));
+  assert.equal(SF.GameStore.list().length, 0);
   assert.equal(SF.Store.get(deck.id).slides.length, 2);
-  const count = run.slides.length;
-  await assert.rejects(api.handle({ action: 'launch', draft }), /already in the lesson/);
-  assert.equal(run.slides.length, count);
-  await api.handle({ action: 'return' });
+  await api.handle({ action: 'end' });
+  assert.equal(SF.Player.spontaneous, null);
   assert.equal(run.slides[SF.Player.idx].id, first);
+  assert.equal(run.slides.length, beforeLen);
 });
 
-test('queue retains creation order and saved drafts are separate reusable copies', async () => {
+test('queue is an overlay alias and saved drafts are separate reusable copies', async () => {
   const { SF, api } = setup();
   const a = await create(api), b = await create(api);
   a.title = 'First'; b.title = 'Second';
   await api.handle({ action: 'queue', draft: a });
+  assert.ok(SF.Player.spontaneous);
+  assert.equal(SF.Player.spontaneous.title, 'First');
+  assert.equal(SF.Player.deck.slides.length, 2);
+  await api.handle({ action: 'end' });
   await api.handle({ action: 'queue', draft: b });
-  assert.equal(SF.Player.idx, 0);
-  const slides = SF.Player.deck.slides;
-  assert.ok(slides.findIndex(s => s.gameTitle === 'First') < slides.findIndex(s => s.gameTitle === 'Second'));
+  assert.equal(SF.Player.spontaneous.title, 'Second');
+  assert.equal(SF.Player.deck.slides.length, 2);
   await api.handle({ action: 'save', draft: a });
   const saved = SF.GameStore.get(a.game.id);
   assert.equal(saved.title, 'First');
@@ -116,21 +139,20 @@ test('multi-page AI content fills each page privately and can be saved as a reus
   assert.match(JSON.stringify(SF.Store.get(draft.id).slides[2]), /Page 3/);
 });
 
-test('game mechanics and progress are restored when moving between an impromptu game and the lesson', async () => {
+test('game mechanics and progress are restored when leaving a spontaneous game overlay', async () => {
   const { SF, api } = setup();
   SF.Live = { active: true, mode: 'individual', teams: [], mechanic: 'points', trackLength: 5, pos: { old: 2 }, winners: [], bossHp: 0, bossMax: 0 };
   const run = SF.Player.deck, original = run.slides[0];
   const race = await create(api, 'game', 'race');
   await api.handle({ action: 'launch', draft: race });
-  const raceSlide = run.slides[SF.Player.idx];
+  const raceSlide = SF.Player.spontaneous.slides[0];
   api.beforeSlide(run, raceSlide);
   assert.equal(run.mechanic, 'race'); assert.equal(SF.Live.mechanic, 'race');
   SF.Live.pos.learner = 3;
+  await api.handle({ action: 'end' });
   api.beforeSlide(run, original);
   assert.equal(SF.Live.mechanic, 'points'); assert.equal(SF.Live.pos.old, 2);
   assert.equal(run.presenterGameId, null);
-  api.beforeSlide(run, raceSlide);
-  assert.equal(SF.Live.pos.learner, 3);
 });
 
 test('invalid answer selection is rejected before normalization can select a different answer', async () => {
@@ -142,18 +164,26 @@ test('invalid answer selection is rejected before normalization can select a dif
   assert.equal(SF.Player.deck.slides.length, 2);
 });
 
-test('launch clears temporary audience overlays and freeze, but queue leaves them alone', async () => {
+test('launch clears temporary audience overlays and freeze via openSpontaneous', async () => {
   const { SF, api } = setup();
   const calls = [];
   SF.Live = { endCustomPrompt: () => calls.push('poll') };
+  const baseOpen = SF.Player.openSpontaneous.bind(SF.Player);
+  SF.Player.openSpontaneous = function (session) {
+    if (SF.Live.endCustomPrompt) SF.Live.endCustomPrompt();
+    if (this.momentCommand) this.momentCommand({ action: 'clear' });
+    if (this.frozen && this.toggleFreeze) this.toggleFreeze(false);
+    if (this.blank && this.toggleBlank) this.toggleBlank();
+    return baseOpen(session);
+  };
   Object.assign(SF.Player, { frozen: true, blank: true, toggleFreeze: () => calls.push('freeze'), toggleBlank: () => calls.push('blank'), momentCommand: () => calls.push('moment') });
-  await api.handle({ action: 'queue', draft: await create(api) });
-  assert.equal(calls.length, 0);
   await api.handle({ action: 'launch', draft: await create(api) });
   assert.deepEqual(calls, ['poll', 'moment', 'freeze', 'blank']);
+  assert.ok(SF.Player.spontaneous);
+  assert.equal(SF.Player.deck.slides.length, 2);
 });
 
-test('impromptu AI quiz preserves keywords and rejection counts, skips rules and keeps the lesson tail', async () => {
+test('impromptu AI quiz overlays the wall and keeps the lesson untouched', async () => {
   const { SF, api } = setup();
   SF.Playbook = { forGame: () => ({ title: 'Multiple choice', howToPlay: ['Read the question'] }) };
   const original = SF.Player.deck.slides.map(s => s.id);
@@ -171,8 +201,9 @@ test('impromptu AI quiz preserves keywords and rejection counts, skips rules and
   assert.equal(preview.slides.length, 2);
   assert.ok(preview.slides.every(s => s.type === 'quiz'));
   await api.handle({ action: 'launch', draft });
-  assert.equal(SF.Player.idx, 1);
-  assert.equal(SF.Player.deck.slides[1].type, 'quiz');
-  assert.equal(SF.Player.deck.slides[0].id, original[0]);
-  assert.equal(SF.Player.deck.slides.at(-1).id, original[1]);
+  assert.equal(SF.Player.idx, 0);
+  assert.equal(SF.Player.deck.slides.length, 2);
+  assert.equal(SF.Player.deck.slides.map(s => s.id).join(), original.join());
+  assert.ok(SF.Player.spontaneous);
+  assert.equal(SF.Player.spontaneous.slides[0].type, 'quiz');
 });

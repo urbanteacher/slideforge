@@ -843,7 +843,10 @@
   var ended = false;
   function rememberIdentity(m) {
     if (!m.resumeToken || !pending) return;
-    try { sessionStorage.setItem('slideforge.resume.' + pending.pin, JSON.stringify({token:m.resumeToken,name:m.name})); } catch (_) {}
+    try {
+      sessionStorage.setItem('slideforge.resume.' + pending.pin, JSON.stringify({token:m.resumeToken,name:m.name}));
+      sessionStorage.setItem('slideforge.resume.pin', pending.pin);
+    } catch (_) {}
   }
 
   function join() {
@@ -1874,9 +1877,19 @@
   $('joinBtn').onclick = join;
   $('reconnectBtn').onclick = function () { show('scJoin'); join(); };
   var urlPin = new URLSearchParams(location.search).get('pin');
-  if (urlPin && /^\d{6}$/.test(urlPin)) {
-    $('pin').value = urlPin;
-    try { var savedIdentity = JSON.parse(sessionStorage.getItem('slideforge.resume.' + urlPin)); if (savedIdentity) $('name').value = savedIdentity.name; } catch (_) {}
+  var resumePin = urlPin;
+  if (!resumePin) {
+    try { resumePin = sessionStorage.getItem('slideforge.resume.pin'); } catch (_) {}
+  }
+  if (resumePin && /^\d{6}$/.test(resumePin)) {
+    $('pin').value = resumePin;
+    try {
+      var savedIdentity = JSON.parse(sessionStorage.getItem('slideforge.resume.' + resumePin));
+      if (savedIdentity && savedIdentity.name && savedIdentity.token) {
+        $('name').value = savedIdentity.name;
+        join();
+      }
+    } catch (_) {}
   }
   $('name').addEventListener('keydown', function (e) { if (e.key === 'Enter') join(); });
   $('pin').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('name').focus(); });
