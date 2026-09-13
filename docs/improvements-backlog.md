@@ -32,7 +32,7 @@ coordinating rather than starting cold.
 | 11 | Coda — exit ticket penultimate, wrap last | M–L | Deferred · needs a privacy decision |
 | 12 | Visual baselines for slide layouts | M | **Done** — 45 added, 213 total |
 | 13 | No git remote — commits are local only | S | Blocked · needs the repo URL |
-| 18 | **"Add image detail" does nothing** on an Explore slide | ? | **New** · pre-existing, not mine |
+| 18 | ~~"Add image detail" does nothing~~ | — | **Retracted** · it works; my probe clicked the wrong button |
 
 ### Open decisions — not mine to make
 
@@ -276,24 +276,29 @@ The runner's header comment said 144 while it ran 168; corrected.
   up. Verified: selecting a slide no longer changes it; a text edit still
   persists.
 
-### 18. "Add image detail" does nothing — **pre-existing, found while doing 4**
+### 18. "Add image detail" — **retracted, there was no bug**
 
-On an Explore slide, clicking **Add image detail** adds nothing. No hotspot is
-created, the inspector does not grow a "Detail 1" block, and the saved slide
-keeps `spots: []`. The guided-image-exploration feature cannot be authored at
-all from the editor.
+Reported as: clicking **Add image detail** on an Explore slide adds nothing.
+That was wrong. It works — add, edit, add again, remove, all persist, and an
+earlier detail survives removing a later one.
 
-Not a regression — checked out `HEAD:js/explore.js` and it behaves identically.
+The cause was my probe, not the app. I selected the button with
+`find(b => /Add image detail/.test(b.textContent))`, and **two** buttons match
+that text: the real one in the inspector, and a card in the "Try another
+layout" grid whose handler is `SF.prepareLayout(s, type)`. `find` returned the
+layout card every time, so I was clicking "switch this slide to the Explore
+layout" and then asking why no hotspot appeared.
 
-Ruled out, with evidence:
-- **The model.** `normalizeExploration`, `normalizeSlide` and a full
-  `normalizeDeck` round trip all preserve a pushed spot.
-- **Stale slide objects.** The object the inspector closes over is identical
-  across redraws, same `id`, same reference.
-- **A throwing handler.** Wrapped the button's `onclick`: it runs and does not
-  throw.
+What makes this worth writing down is that every check I ran **corroborated**
+the wrong conclusion:
 
-Not isolated: even read 200ms after the click, before anything settles,
-`slide.exploration.spots` is already 0. The likely area is the editor's
-redraw/save path rather than `explore.js`, but I stopped rather than spend more
-on another agent's feature without being asked.
+- the handler ran and did not throw — true, it was the layout-switcher's
+- the model preserved a pushed spot — true and irrelevant
+- the slide object was stable across redraws — true and irrelevant
+- reverting to `HEAD:js/explore.js` reproduced it — of course; the same probe
+  clicked the same wrong button
+
+Four pieces of consistent evidence and a reproduction against a known-good
+build, all of it downstream of a premise nobody checked. The check that would
+have caught it in the first minute was counting the matches:
+`document.querySelectorAll` for that label returns two.
