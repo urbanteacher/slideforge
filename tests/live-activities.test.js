@@ -152,3 +152,27 @@ test('launch clears temporary audience overlays and freeze, but queue leaves the
   await api.handle({ action: 'launch', draft: await create(api) });
   assert.deepEqual(calls, ['poll', 'moment', 'freeze', 'blank']);
 });
+
+test('impromptu AI quiz preserves keywords and rejection counts, skips rules and keeps the lesson tail', async () => {
+  const { SF, api } = setup();
+  SF.Playbook = { forGame: () => ({ title: 'Multiple choice', howToPlay: ['Read the question'] }) };
+  const original = SF.Player.deck.slides.map(s => s.id);
+  let brief;
+  SF.AI = { generateQuestionsForGame: async (game, options) => {
+    brief = options;
+    return { questions: game.questions.slice(0, 2), rejected: 1 };
+  } };
+  const { draft } = await api.handle({ action: 'draft', kind: 'game', key: 'choice', ai: true, impromptu: true,
+    topic: 'Osmosis in plant cells', notes: 'water potential, turgid', count: 3 });
+  assert.equal(brief.notes, 'water potential, turgid');
+  assert.equal(draft.generated.accepted, 2); assert.equal(draft.generated.rejected, 1);
+  assert.equal(SF.Player.deck.slides.length, 2, 'generation remains private');
+  const preview = await api.handle({ action: 'preview', draft });
+  assert.equal(preview.slides.length, 2);
+  assert.ok(preview.slides.every(s => s.type === 'quiz'));
+  await api.handle({ action: 'launch', draft });
+  assert.equal(SF.Player.idx, 1);
+  assert.equal(SF.Player.deck.slides[1].type, 'quiz');
+  assert.equal(SF.Player.deck.slides[0].id, original[0]);
+  assert.equal(SF.Player.deck.slides.at(-1).id, original[1]);
+});

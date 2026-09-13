@@ -572,6 +572,72 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
   padding: 30px;
 }
 
+/* ---- charts ------------------------------------------------------------- */
+
+/* Six categorical slots, derived from Northeastern London's hues and stepped
+   until they passed every check in scripts/validate_palette.js: OKLCH
+   lightness band, chroma floor, CVD separation under protanopia and
+   deuteranopia, a normal-vision floor, and 3:1 against the surface.
+   Light: worst adjacent pair ΔE 10.3 (deutan), 22.7 normal, all >= 3:1.
+   Dark:  worst adjacent pair ΔE  9.6 (deutan), 22.3 normal, all >= 3:1.
+
+   The order is the safety mechanism, so it is fixed and never cycled. The
+   raw brand accents do NOT pass — navy reads gray at C 0.073 and gold sits
+   above the lightness band — which is why these are stepped versions of the
+   same hues rather than the swatches themselves. Re-run the validator before
+   changing any value here. */
+.slide {
+  --chart-1: #BA0428;  /* red    */
+  --chart-2: #049F6C;  /* sage   */
+  --chart-3: #DF5904;  /* orange */
+  --chart-4: #0C97B6;  /* sky    */
+  --chart-5: #8B6404;  /* gold   */
+  --chart-6: #006EB8;  /* navy   */
+}
+/* Dark grounds take their own steps from the same hues, validated against a
+   dark surface — not an automatic lightening of the light set. */
+.slide.theme-midnight, .slide.theme-ocean, .slide.theme-ember, .slide.theme-mono {
+  --chart-1: #CA042C;
+  --chart-2: #049F6C;
+  --chart-3: #B84701;
+  --chart-4: #1198B8;
+  --chart-5: #A77804;
+  --chart-6: #008DEB;
+}
+
+.layout-chart .pad { padding: 56px 60px 40px; }
+.layout-chart h2 { margin-bottom: 18px; }
+.chart-wrap { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.chart-svg { width: 100%; height: 100%; overflow: visible; }
+
+/* Recessive: hairline, solid, one step off the surface. Never dashed. */
+.ch-grid { stroke: var(--s-rule); stroke-width: 1; }
+.ch-axis { stroke: var(--s-rule); stroke-width: 1.5; }
+/* Text wears text tokens, never the series colour. */
+.ch-tick, .ch-cat { fill: var(--s-dim); font-size: 19px; }
+.ch-value { fill: var(--s-fg); font-size: 20px; font-weight: 650; }
+.ch-end { fill: var(--s-dim); font-size: 19px; font-weight: 600; }
+.ch-slice-label { fill: var(--s-fg); font-size: 19px; font-weight: 600; }
+/* The 2px surface ring that keeps a marker legible where two lines cross. */
+.ch-dot { stroke: var(--s-bg); stroke-width: 2; }
+.ch-wedge { stroke: var(--s-bg); stroke-width: 2; }
+
+/* Legend — always present for two or more series, so identity never depends
+   on colour-matching alone. */
+.chart-key {
+  flex: none; display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 10px 28px; margin-top: 14px;
+}
+.ck-item { display: inline-flex; align-items: center; gap: 9px; font-size: 21px; color: var(--s-dim); }
+.ck-dot { width: 15px; height: 15px; border-radius: 3px; flex: none; }
+
+/* The same numbers, for a screen reader and for anyone the hues fail. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
 /* ---- image stack -------------------------------------------------------- */
 
 /* Same idea as the stacked cards, with a picture instead of a paragraph: one
@@ -4318,3 +4384,24 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
   font-size: 11px; font-weight: 700; color: var(--ui-dim);
   background: var(--ui-panel-2); border-radius: 4px; padding: 3px 8px;
 }
+
+.field-warn { color: #8a4b2a; font-weight: 600; }
+
+/* Teaching exploration: movement has a destination and then settles. */
+.exploration-slide .pad{gap:14px;display:flex;flex-direction:column;padding:40px 60px}
+.exploration-slide h2{margin:0;font-size:40px}.exploration-slide [hidden]{display:none!important}
+.explore-compare,.explore-scene{position:relative;flex:1;min-height:0;overflow:hidden;border-radius:18px;background:rgba(128,128,128,.12)}
+.explore-image{width:100%;height:100%;object-fit:contain;display:block}
+.explore-after,.explore-moving{position:absolute;inset:0}.explore-moving{transition:transform .45s ease,transform-origin .45s ease}
+.explore-divider{position:absolute;top:0;bottom:0;width:3px;background:currentColor;pointer-events:none}
+.explore-before-label,.explore-after-label{position:absolute;top:16px;border-radius:10px;padding:8px 14px;background:#17251fee;color:white;font-size:21px}.explore-before-label{left:16px}.explore-after-label{right:16px}
+.explore-range{display:flex;align-items:center;gap:24px;font-size:22px}.explore-range input{flex:1;min-width:100px;accent-color:var(--accent,#1d6b45);height:32px;cursor:ew-resize}
+.explore-actions{display:flex;gap:12px}.explore-button{font:inherit;font-size:20px;border:1px solid currentColor;color:inherit;background:transparent;border-radius:10px;padding:10px 18px;cursor:pointer;align-self:flex-start}
+.explore-button:disabled{cursor:default;opacity:.65}.explore-button:focus-visible,.explore-hotspot:focus-visible,.explore-range input:focus-visible{outline:4px solid #d88716;outline-offset:4px}
+.explore-hotspot{position:absolute;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#fff;color:#17251f;border:3px solid #1d6b45;font-size:23px;font-weight:700;cursor:pointer;box-shadow:0 2px 10px #0003}
+.explore-hotspot[aria-pressed=true]{background:#1d6b45;color:white}.explore-caption{font-size:22px;min-height:90px}.explore-caption p{margin:7px 0;line-height:1.4}
+.explore-graph{flex:1;min-height:0;width:100%;color:inherit}.explore-graph circle{transition:cx .12s linear,cy .12s linear}
+.explore-reading{font-size:30px;font-weight:700}.explore-formula{font-size:21px;margin:0;opacity:.8}
+.explore-predict{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:20px}.explore-predict h3{font-size:45px;margin:0}.explore-predict p{font-size:24px;line-height:1.5;max-width:850px}.explore-eyebrow{font-size:18px;letter-spacing:3px}
+.explore-chart-result{display:flex;flex-direction:column;flex:1;min-height:0}.explore-revealed{animation:sf-fade-in .35s ease both}.explore-empty{padding:30px;font-size:24px}
+@media(prefers-reduced-motion:reduce){.explore-moving,.explore-graph circle{transition:none}.explore-revealed{animation:none}}

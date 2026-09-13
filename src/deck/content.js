@@ -25,7 +25,41 @@ function parseTable(text) {
   return rows;
 }
 
-/** Pair pits (keywords / italics / links) store "Lead\\tdefinition". Also accepts "Lead: def" when pasted. */
+/**
+ * Read a chart slide's data out of the same text a table slide uses, so a
+ * range pasted from a spreadsheet becomes a chart with no re-typing. First row
+ * names the series, first column names the categories:
+ *
+ *     Year | Leave | Remain
+ *     2016 | 52    | 48
+ *
+ * Values that will not parse as numbers come back as null and are skipped
+ * rather than drawn as zero — a gap in the data is not a measurement of nought.
+ *
+ * @param {object} slide
+ * @returns {{categories: string[], series: {name: string, values: (number|null)[]}[]}}
+ */
+function chartData(slide) {
+  var rows = parseTable(slide && slide.body);
+  if (rows.length < 2) return { categories: [], series: [] };
+  var head = rows[0], body = rows.slice(1);
+  var names = head.slice(1).filter(function (h) { return String(h).trim(); });
+  var categories = body.map(function (r) { return String(r[0] || '').trim(); });
+  var series = names.map(function (name, i) {
+    return {
+      name: String(name).trim(),
+      values: body.map(function (r) {
+        var raw = String(r[i + 1] == null ? '' : r[i + 1]).replace(/[,\s%£$€]/g, '');
+        if (!raw) return null;
+        var n = Number(raw);
+        return Number.isFinite(n) ? n : null;
+      })
+    };
+  });
+  return { categories: categories, series: series };
+}
+
+/** Pair pits (keywords / italics / links) store "Lead\tdefinition". Also accepts "Lead: def" when pasted. */
 function parseKeywordLine(line) {
   var s = String(line == null ? '' : line);
   var tab = s.indexOf('\t');
@@ -85,7 +119,7 @@ function safeMedia(url) {
 
 // Shared presentation semantics used by authoring, rendering and live context.
 var DECK_TYPES = ['title', 'section', 'content', 'keywords', 'italics', 'links',
-  'split', 'cards', 'table', 'image', 'video', 'quote', 'join'];
+  'split', 'cards', 'table', 'image', 'video', 'quote', 'join', 'chart', 'gallery', 'beforeafter', 'explore', 'simulation'];
 
 var BULLET_LAYOUTS = ['content','cards','split','keywords','italics','links'];
 
@@ -127,6 +161,14 @@ function slideSteps(slide) {
   if(slide.type==='explain') {
     return String(slide.body||'').split(/\n{2,}/).map(function(l){return l.trim();}).filter(Boolean);
   }
+  /* A chart with one series is read category by category; with several, the
+     series are the thing being compared, so those are the beats. */
+  if(slide.type==='chart') {
+    var cd=chartData(slide);
+    if(!cd.series.length) return [];
+    if(cd.series.length>1) return cd.series.map(function(x){return x.name;});
+    return cd.categories.slice();
+  }
   if(slide.type==='gallery') {
     return (slide.layers||[]).filter(function(l){return l && l.image;})
       .map(function(l,i){return String(l.caption||'').trim() || ('Image '+(i+1));});
@@ -139,6 +181,9 @@ function slideSteps(slide) {
 }
 
 function slideExcerpt(slide, revealed) {
+  if(slide.type==='chart' && slide.exploration && slide.exploration.prediction) return slide.exploration.prompt;
+  if(['beforeafter','explore','simulation'].includes(slide.type)) return slide.title || '';
+
   if(slide.type==='quiz') return slide.question || '';
   var steps=slideSteps(slide);
   if(steps.length || ['content','cards','split','keywords','italics','table','quote','explain'].includes(slide.type)) {
@@ -162,4 +207,4 @@ function correctAnswerLabel(slide) {
 }
 
 
-export { DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };
+export { DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };

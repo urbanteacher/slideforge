@@ -23,7 +23,8 @@ export type TransitionKey = 'none' | 'fade' | 'push' | 'zoom' | 'wipe';
 /** Layouts an author can pick in the deck editor (`DECK_TYPES`). */
 export type DeckSlideType =
   | 'title' | 'section' | 'content' | 'keywords' | 'italics' | 'links'
-  | 'split' | 'cards' | 'table' | 'image' | 'video' | 'quote' | 'join';
+  | 'split' | 'cards' | 'table' | 'image' | 'video' | 'quote' | 'join'
+  | 'chart' | 'gallery' | 'beforeafter' | 'explore' | 'simulation';
 
 /** Every slide kind the player and renderer handle (`SLIDE_TYPES`). The three
  *  beyond {@link DeckSlideType} are produced by compiling a game. */
@@ -159,6 +160,9 @@ export interface Slide {
   videoAutoplay: boolean;
   /** Image-stack layout: the pictures, shown one in front of the last. */
   layers: GalleryLayer[];
+  /** Chart layout: which form the same tabular `body` is drawn as. */
+  chartKind: 'bar' | 'line' | 'pie';
+  exploration: ReturnType<typeof import('./deck/exploration.js').normalizeExploration>;
   /** Table layout: `body` is tab- or pipe-separated rows, one per line. */
   tableHeader: boolean;
   transition: TransitionKey;

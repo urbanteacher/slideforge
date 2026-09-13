@@ -224,6 +224,7 @@
         <p id="activityDescription"></p>
         <label for="activityTopic">Topic or brief for AI</label><textarea id="activityTopic" rows="2" maxlength="1000" placeholder="What should learners practise?"></textarea>
         <div class="quick-actions"><button class="btn" id="activityUseSlide">Use current slide</button><button class="btn" id="activityUseLesson">Use lesson topic</button></div>
+        <label for="activityKeywords">Key words or teaching notes <span class="hint-inline">optional</span></label><textarea id="activityKeywords" rows="2" maxlength="500" placeholder="water potential, turgid, partially permeable"></textarea>
         <label for="activityCount">AI question / item count</label><input id="activityCount" type="number" min="1" max="24" value="3">
         <p>Board games may need more items: a 3 × 3 Bingo card needs at least nine distinct terms. The preview checks each format’s requirements.</p>
         <div class="quick-actions"><button class="btn" id="activityManual">Create editable draft</button><button class="btn primary" id="activityAI">✨ Draft with AI</button></div>
@@ -277,6 +278,7 @@
 
 <script src="js/model.js"></script>
 <script src="js/customize.js"></script>
+<script src="js/explore.js?v=1"></script>
 <script src="js/render.js"></script>
 <script src="js/memory.js"></script>
 <script src="js/bingo.js"></script>
@@ -351,7 +353,7 @@
 
   /* Next does four things on a live question. Here there is room to say which,
      so it says it rather than hiding it in a tooltip. */
-  var NEXT_LABEL = { reveal: 'Show the answer \u203a', hold: 'Move on, no answer \u203a', advance: 'Next \u203a' };
+  var NEXT_LABEL = { prediction: 'Reveal the chart ›', hotspot: 'Explore next detail ›', comparison: 'Show after ›', reveal: 'Show the answer \u203a', hold: 'Move on, no answer \u203a', advance: 'Next \u203a' };
   function drawNextLabel(action) {
     var b = document.querySelector('[data-cmd=next]');
     if (!b) return;
@@ -497,7 +499,7 @@
     waitingState = d.waiting || 0;
     drawQA();
     drawCues();
-    state = { deck: SF.normalizeDeck(d.deck), index: d.index, answers: d.answers || {}, ...SF.Boards.snapshot(d), revealStep:d.revealStep || 0, effectiveTimeLimit:d.effectiveTimeLimit };
+    state = { startedAt:d.startedAt, deck: SF.normalizeDeck(d.deck), index: d.index, answers: d.answers || {}, ...SF.Boards.snapshot(d), exploreStates:d.exploreStates || {}, revealStep:d.revealStep || 0, effectiveTimeLimit:d.effectiveTimeLimit };
 
     drawNextLabel(d.nextAction);
     var freezeBtn = $('btnFreeze');
@@ -526,6 +528,14 @@
   });
 
   function into(box, slide, index) {
+    var explorationStamp = slide ? JSON.stringify(slide) + state.deck.theme + state.startedAt + (index === state.index) : '';
+    var existing = box.querySelector('.exploration-slide');
+    if (existing && existing._exploreRefresh && box._explorationStamp === explorationStamp) {
+      existing._exploreRefresh((state.exploreStates || {})[slide.id] || {});
+      return;
+    }
+    box._explorationStamp = explorationStamp;
+
     var board = SF.Boards.current(state, slide);
     var stamp = SF.Boards.stamp(state, slide, state.deck.theme);
     if (stamp && box._boardStamp === stamp && SF.Boards.refreshClock(box, state, slide)) {
@@ -540,6 +550,8 @@
       index: index, total: state.deck.slides.length, interactive: false,
       quizNumber: quizNum(index),
       ...SF.Boards.renderOptions(state, slide, index === state.index ? cmd : null),
+      exploreState: (state.exploreStates || {})[slide.id],
+      exploreCommand: index === state.index ? function(action,value){cmd('explore',{action:action,value:value});} : null,
       marks: slide.type === 'results' ? marks() : null
     });
     box.appendChild(node);

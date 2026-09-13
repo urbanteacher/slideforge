@@ -83,19 +83,27 @@
   $('activityUseLesson').onclick = function () { $('activityTopic').value = state ? state.deck.title : ''; };
   async function create(ai, override) {
     if (!catalog) await load();
-    var data = Object.assign({ kind: $('activityKind').value, key: $('activityChoice').value, ai: ai, topic: $('activityTopic').value.trim(), count: Number($('activityCount').value) }, override || {});
+    var data = Object.assign({ kind: $('activityKind').value, key: $('activityChoice').value, ai: ai, topic: $('activityTopic').value.trim(), notes: $('activityKeywords').value.trim(), count: Number($('activityCount').value) }, override || {});
     if (!data.key) throw new Error('Choose an activity or game first.');
     var response = await request('draft', data);
     draft = response.draft; inserted = false; changed(); draw();
     $('activityDraft').scrollIntoView({ block: 'start' });
-    status(ai ? 'AI draft ready. Check the content and answers, then preview.' : 'Editable starter ready. Replace the examples for your lesson, then preview.');
+    var summary = draft.generated ? ': ' + draft.generated.accepted + (draft.generated.accepted === 1 ? ' question ready, ' : ' questions ready, ') + draft.generated.rejected + ' rejected.' : '.';
+    status(ai ? 'AI draft ready' + summary + ' Check the content and answers, then preview.' : 'Editable starter ready. Replace the examples for your lesson, then preview.');
   }
   $('activityManual').onclick = function () { work('Preparing an editable draft…', function () { return create(false); }); };
   $('activityAI').onclick = function () { work('Writing a private draft…', function () { return create(true); }); };
   window.addEventListener('sf-activity-quiz-draft', function (event) {
     var detail = /** @type {CustomEvent} */ (event).detail;
     // Start the work before selecting the tab so its initial catalogue load does not race it.
-    work('Writing a private quiz draft…', function () { return create(true, { kind: 'game', key: detail.style, topic: detail.topic, notes: detail.keywords, count: detail.count }); });
+    work('Writing a private quiz draft…', async function () {
+      if (!catalog) await load();
+      $('activityKind').value = 'game'; $('activitySearch').value = ''; choices();
+      $('activityChoice').value = detail.style; describe();
+      $('activityTopic').value = detail.topic; $('activityKeywords').value = detail.keywords || '';
+      $('activityCount').value = String(detail.count);
+      return create(true, { impromptu: true });
+    });
     var tab = /** @type {HTMLButtonElement|null} */ (document.querySelector('[data-panel="activities"]'));
     if (tab) tab.click();
   });

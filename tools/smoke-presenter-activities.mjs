@@ -69,10 +69,15 @@ try {
   const before = await page.evaluate(() => SF.Player.deck.slides.length);
   await presenter.locator('[data-panel="quick"]').click();
   await presenter.locator('#quizTheme').fill('Cell respiration');
+  await presenter.locator('#quizWords').fill('glucose, mitochondria');
   await presenter.locator('#quizGenerate').click();
   await presenter.waitForFunction(() => document.getElementById('activityStatus').textContent.includes('AI draft ready'));
   assert.equal(await page.evaluate(() => SF.Player.deck.slides.length), before);
   assert.equal(await presenter.locator('#activitiesPane').isVisible(), true);
+  assert.equal(await presenter.locator('#activityKeywords').inputValue(), 'glucose, mitochondria');
+  assert.equal(await presenter.locator('#activityChoice').inputValue(), 'choice');
+  assert.equal(await presenter.getByLabel('Show how to play before the game').isChecked(), false);
+  assert.match(await presenter.locator('#activityStatus').innerText(), /1 question ready, 0 rejected/);
   await presenter.locator('#activityPreview').click();
   await presenter.waitForFunction(() => !document.getElementById('activityLaunch').disabled);
   await presenter.locator('#activityPreviewArea').scrollIntoViewIfNeeded();

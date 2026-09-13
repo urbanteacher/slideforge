@@ -140,9 +140,10 @@ P.on('slide',function(e){
      may also nominate its own steps with .step — emoji guess releases the
      letter pattern and then a hint that way, so the teacher reveals help with
      the same press rather than a control of its own. */
-  steps=Array.from(e.node.querySelectorAll('.pad .step'));
+  var explorationSteps = SF.Explore && SF.Explore.ownsSteps(e.slide);
+  steps=explorationSteps ? [] : Array.from(e.node.querySelectorAll('.pad .step'));
   steps.sort(function(a,b){return (Number(a.dataset.step)||0)-(Number(b.dataset.step)||0);});
-  if(!steps.length&&e.slide.progressive)steps=Array.from(e.node.querySelectorAll('.pad li,.kw-row,.it-row,.q-line,.ex-body > p,tbody tr'));
+  if(!explorationSteps&&!steps.length&&e.slide.progressive)steps=Array.from(e.node.querySelectorAll('.pad li,.kw-row,.it-row,.q-line,.ex-body > p,tbody tr'));
   /* A stack is defined by what shows behind the front of it, so those layouts
      keep their past steps on screen whatever the build mode says. Everywhere
      else it is the author's choice. */

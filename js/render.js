@@ -287,6 +287,305 @@
     return want ? IMAGE_FRAMES[want] : '';
   }
 
+  /* ------------------------------------------------------------- charts */
+
+  /* Bar, line and pie, drawn as SVG from the same tabular text a table slide
+     uses. No chart library: the app is opened from disk as often as served,
+     and a dependency would have to be vendored anyway.
+   *
+   * Colour comes from --chart-1..6, a six-slot categorical palette derived
+   * from the university's hues and validated for colour-vision deficiency —
+   * see css/app.css. Slots are assigned in fixed order and never cycled; a
+   * seventh series is a data problem, not a palette problem.
+   */
+  var CHART = { w: 1180, h: 430, padL: 92, padR: 40, padT: 22, padB: 62 };
+
+  function chartColor(i) { return 'var(--chart-' + ((i % 6) + 1) + ')'; }
+
+  function svgEl(tag, attrs) {
+    var n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    Object.keys(attrs || {}).forEach(function (k) { n.setAttribute(k, String(attrs[k])); });
+    return n;
+  }
+
+  /* Round an axis maximum up to something a reader can do arithmetic with. */
+  function niceMax(v) {
+    if (!(v > 0)) return 1;
+    var mag = Math.pow(10, Math.floor(Math.log10(v)));
+    var step = [1, 2, 2.5, 5, 10].filter(function (s) { return s * mag >= v; })[0] || 10;
+    return step * mag;
+  }
+
+  function axisTicks(max) {
+    var out = [], n = 4;
+    for (var i = 0; i <= n; i++) out.push(max * i / n);
+    return out;
+  }
+
+  function fmt(v) {
+    if (v == null) return '';
+    var a = Math.abs(v);
+    if (a >= 1e6) return (v / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'M';
+    if (a >= 1e4) return (v / 1e3).toFixed(0) + 'k';
+    return String(Math.round(v * 100) / 100).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  /* Legend + a table of the same numbers. The legend is the dependable
+     identity channel for two or more series; the table is what makes the
+     values available to a screen reader, and to anyone who cannot separate
+     two hues at all. */
+  function chartKey(data, slide) {
+    var wrap = el('div', 'chart-key');
+    if (data.series.length > 1) {
+      data.series.forEach(function (s, i) {
+        var item = el('span', 'ck-item');
+        var dot = el('i', 'ck-dot');
+        dot.style.background = chartColor(i);
+        item.appendChild(dot);
+        item.appendChild(el('span', null, s.name));
+        wrap.appendChild(item);
+      });
+    }
+    return wrap;
+  }
+
+  function chartTable(data) {
+    var t = el('table', 'chart-data-table');
+    var head = el('tr');
+    head.appendChild(el('th', null, ''));
+    data.series.forEach(function (s) { head.appendChild(el('th', null, s.name)); });
+    t.appendChild(head);
+    data.categories.forEach(function (c, r) {
+      var tr = el('tr');
+      tr.appendChild(el('th', null, c));
+      data.series.forEach(function (s) { tr.appendChild(el('td', null, fmt(s.values[r]))); });
+      t.appendChild(tr);
+    });
+    return t;
+  }
+
+  function barChart(data, slide, stepOf) {
+    var W = CHART.w, H = CHART.h, P = CHART;
+    var plotW = W - P.padL - P.padR, plotH = H - P.padT - P.padB;
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+
+    var all = [];
+    data.series.forEach(function (s) { s.values.forEach(function (v) { if (v != null) all.push(v); }); });
+    var max = niceMax(Math.max.apply(null, all.concat([0])));
+
+    axisTicks(max).forEach(function (t) {
+      var y = P.padT + plotH - (t / max) * plotH;
+      svg.appendChild(svgEl('line', { x1: P.padL, y1: y, x2: P.padL + plotW, y2: y, class: 'ch-grid' }));
+      var lab = svgEl('text', { x: P.padL - 14, y: y + 7, class: 'ch-tick', 'text-anchor': 'end' });
+      lab.textContent = fmt(t);
+      svg.appendChild(lab);
+    });
+
+    var band = plotW / Math.max(1, data.categories.length);
+    var n = data.series.length;
+    /* One <g class="step"> per beat, with the bars inside it. The reveal
+       driver steps whole elements, so marking each bar individually would
+       release them one at a time — a press has to land a whole series (or,
+       with a single series, a whole category) for the comparison to hold. */
+    var groups = [];
+    var beats = n > 1 ? n : data.categories.length;
+    for (var b = 0; b < beats; b++) {
+      var gg = svgEl('g', { class: 'ch-beat', 'data-step': b });
+      groups.push(gg);
+      svg.appendChild(gg);
+    }
+    var beatFor = function (si, ci) { return groups[n > 1 ? si : ci]; };
+    /* Never fill the band — the leftover is the air that separates one
+       category from the next. Wider than a dashboard's 24px cap because this
+       is a 1280px slide thrown at a lecture-theatre wall, not a card. */
+    var groupW = Math.min(band * 0.62, 78 * n);
+    var barW = Math.max(6, (groupW - (n - 1) * 2) / n);
+
+    data.categories.forEach(function (cat, ci) {
+      var x0 = P.padL + band * ci + (band - groupW) / 2;
+      data.series.forEach(function (s, si) {
+        var v = s.values[ci];
+        if (v == null) return;
+        var hgt = Math.max(0, (v / max) * plotH);
+        var x = x0 + si * (barW + 2);
+        var y = P.padT + plotH - hgt;
+        var g = svgEl('g', { class: 'ch-bar' });
+        /* 4px rounded at the data end, square at the baseline. */
+        var r = Math.min(4, barW / 2);
+        var d = 'M' + x + ' ' + (y + hgt) + ' V' + (y + r) + ' Q' + x + ' ' + y + ' ' + (x + r) + ' ' + y +
+                ' H' + (x + barW - r) + ' Q' + (x + barW) + ' ' + y + ' ' + (x + barW) + ' ' + (y + r) +
+                ' V' + (y + hgt) + ' Z';
+        var path = svgEl('path', { d: d, fill: chartColor(si) });
+        g.appendChild(path);
+        if (n === 1) {
+          var val = svgEl('text', { x: x + barW / 2, y: y - 12, class: 'ch-value', 'text-anchor': 'middle' });
+          val.textContent = fmt(v);
+          g.appendChild(val);
+        }
+        beatFor(si, ci).appendChild(g);
+      });
+      var cl = svgEl('text', { x: P.padL + band * ci + band / 2, y: H - P.padB + 30, class: 'ch-cat', 'text-anchor': 'middle' });
+      cl.textContent = cat;
+      svg.appendChild(cl);
+    });
+
+    svg.appendChild(svgEl('line', { x1: P.padL, y1: P.padT + plotH, x2: P.padL + plotW, y2: P.padT + plotH, class: 'ch-axis' }));
+    return svg;
+  }
+
+  function lineChart(data, slide) {
+    var W = CHART.w, H = CHART.h, P = CHART;
+    /* Reserve the right margin for the end-labels before drawing anything.
+       Sized from the longest series name, because a label that runs past the
+       viewBox is clipped mid-word — which is what happened to "Cambridge"
+       the first time this was rendered. */
+    var longest = data.series.reduce(function (n, x) { return Math.max(n, x.name.length); }, 0);
+    var labelRoom = Math.min(230, 18 + longest * 10.5);
+    var padR = P.padR + labelRoom;
+    var plotW = W - P.padL - padR, plotH = H - P.padT - P.padB;
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+
+    var all = [];
+    data.series.forEach(function (s) { s.values.forEach(function (v) { if (v != null) all.push(v); }); });
+    var max = niceMax(Math.max.apply(null, all.concat([0])));
+
+    axisTicks(max).forEach(function (t) {
+      var y = P.padT + plotH - (t / max) * plotH;
+      svg.appendChild(svgEl('line', { x1: P.padL, y1: y, x2: P.padL + plotW, y2: y, class: 'ch-grid' }));
+      var lab = svgEl('text', { x: P.padL - 14, y: y + 7, class: 'ch-tick', 'text-anchor': 'end' });
+      lab.textContent = fmt(t);
+      svg.appendChild(lab);
+    });
+
+    var cols = Math.max(1, data.categories.length - 1);
+    var xAt = function (i) { return P.padL + (cols ? (plotW * i / cols) : plotW / 2); };
+    var yAt = function (v) { return P.padT + plotH - (v / max) * plotH; };
+
+    data.categories.forEach(function (cat, i) {
+      var cl = svgEl('text', { x: xAt(i), y: H - P.padB + 30, class: 'ch-cat', 'text-anchor': 'middle' });
+      cl.textContent = cat;
+      svg.appendChild(cl);
+    });
+
+    var ends = [];
+    data.series.forEach(function (s, si) {
+      var g = svgEl('g', { class: 'ch-line', 'data-step': si });
+      var pts = [];
+      s.values.forEach(function (v, i) { if (v != null) pts.push([xAt(i), yAt(v)]); });
+      if (!pts.length) return;
+      var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+      g.appendChild(svgEl('path', { d: d, fill: 'none', stroke: chartColor(si), 'stroke-width': 3,
+        'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+      pts.forEach(function (p) {
+        /* A 2px ring in the surface colour, so a marker stays legible where
+           two series cross. */
+        g.appendChild(svgEl('circle', { cx: p[0], cy: p[1], r: 6, fill: chartColor(si), class: 'ch-dot' }));
+      });
+      ends.push({ y: pts[pts.length - 1][1], x: pts[pts.length - 1][0], name: s.name, g: g });
+      svg.appendChild(g);
+    });
+
+    /* Direct end-labels only while the lines actually separate at the right
+       edge. Converging series get nudged labels that detach from their lines
+       and read as noise, so below a comfortable gap the legend carries
+       identity on its own — which it is already doing. */
+    var sorted = ends.slice().sort(function (a, b) { return a.y - b.y; });
+    var crowded = sorted.some(function (e, i) { return i && (e.y - sorted[i - 1].y) < 26; });
+    if (!crowded) {
+      ends.forEach(function (e) {
+        var lab = svgEl('text', { x: e.x + 14, y: e.y + 6, class: 'ch-end' });
+        lab.textContent = e.name;
+        e.g.appendChild(lab);
+      });
+    }
+
+    svg.appendChild(svgEl('line', { x1: P.padL, y1: P.padT + plotH, x2: P.padL + plotW, y2: P.padT + plotH, class: 'ch-axis' }));
+    return svg;
+  }
+
+  /* Part-to-whole. A pie is a weaker read than a stacked bar — angle is
+     harder to compare than length — but this app teaches the history of the
+     form, and you cannot critique Playfair's 1801 pie without showing one. */
+  function pieChart(data, slide) {
+    var W = CHART.w, H = CHART.h;
+    var cx = W / 2, cy = H / 2 + 4, R = Math.min(H / 2 - 14, 200);
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+
+    /* One series: the slices are the categories. Several: the first is used
+       and the rest ignored, which the inspector warns about. */
+    var vals = (data.series[0] ? data.series[0].values : []).map(function (v) { return v == null ? 0 : Math.max(0, v); });
+    var total = vals.reduce(function (a, b) { return a + b; }, 0);
+    if (!total) return svg;
+
+    var angle = -Math.PI / 2;
+    vals.forEach(function (v, i) {
+      var sweep = (v / total) * Math.PI * 2;
+      var a0 = angle, a1 = angle + sweep;
+      angle = a1;
+      if (!v) return;
+      var large = sweep > Math.PI ? 1 : 0;
+      var d = 'M' + cx + ' ' + cy +
+              ' L' + (cx + R * Math.cos(a0)).toFixed(1) + ' ' + (cy + R * Math.sin(a0)).toFixed(1) +
+              ' A' + R + ' ' + R + ' 0 ' + large + ' 1 ' +
+              (cx + R * Math.cos(a1)).toFixed(1) + ' ' + (cy + R * Math.sin(a1)).toFixed(1) + ' Z';
+      var g = svgEl('g', { class: 'ch-slice', 'data-step': i });
+      g.appendChild(svgEl('path', { d: d, fill: chartColor(i), class: 'ch-wedge' }));
+      var mid = (a0 + a1) / 2, lr = R + 34;
+      var lx = cx + lr * Math.cos(mid), ly = cy + lr * Math.sin(mid);
+      var pct = Math.round((v / total) * 100);
+      /* Label outside the wedge, never inside it: a slice narrow enough to
+         crop its own label is exactly the slice you most need named. */
+      var lab = svgEl('text', { x: lx, y: ly, class: 'ch-slice-label',
+        'text-anchor': Math.cos(mid) < -0.2 ? 'end' : (Math.cos(mid) > 0.2 ? 'start' : 'middle') });
+      lab.textContent = (data.categories[i] || '') + ' · ' + pct + '%';
+      g.appendChild(lab);
+      svg.appendChild(g);
+    });
+    return svg;
+  }
+
+  function layoutChart(slide, pad) {
+    if (slide.exploration && slide.exploration.prediction) slide = Object.assign({}, slide, { progressive: false });
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
+    var data = SF.chartData(slide);
+    if (!data.series.length || !data.categories.length) {
+      var e = el('div', 'empty');
+      e.appendChild(el('div', null, '▥'));
+      e.appendChild(el('div', null, 'Paste a range from a spreadsheet — first row names the series, first column the categories'));
+      pad.appendChild(e);
+      return;
+    }
+    var kind = slide.chartKind === 'line' ? 'line' : slide.chartKind === 'pie' ? 'pie' : 'bar';
+    var wrap = el('div', 'chart-wrap chart-' + kind);
+    var stepOf = function (si, ci) { return data.series.length > 1 ? si : ci; };
+    var svg = kind === 'line' ? lineChart(data, slide)
+            : kind === 'pie' ? pieChart(data, slide)
+            : barChart(data, slide, slide.progressive ? stepOf : null);
+
+    /* The build marks whole series (or whole categories) rather than each
+       mark, so a press lands one comparable thing at a time. */
+    /* Only a built chart gets steps; without the class the reveal driver
+       leaves every mark on screen, which is what an unbuilt chart wants. */
+    var beatSel = '.ch-beat, .ch-line, .ch-slice';
+    Array.prototype.forEach.call(svg.querySelectorAll(beatSel), function (n) {
+      n.classList.toggle('step', !!slide.progressive);
+    });
+    var title = svgEl('title', {});
+    title.textContent = (slide.title || 'Chart') + ' — ' + kind + ' chart of ' +
+      data.series.map(function (s) { return s.name; }).join(', ');
+    svg.insertBefore(title, svg.firstChild);
+    wrap.appendChild(svg);
+    pad.appendChild(wrap);
+
+    var key = chartKey(data, slide);
+    if (key.childNodes.length) pad.appendChild(key);
+    /* Present for screen readers and for anyone the colours fail; off-screen
+       rather than absent, so the numbers are never gated behind the hues. */
+    var tbl = chartTable(data);
+    tbl.classList.add('sr-only');
+    pad.appendChild(tbl);
+  }
+
   /* A table, from tab- or pipe-separated text. */
   function layoutTable(slide, pad) {
     if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
@@ -1450,6 +1749,7 @@
     split: layoutSplit,
     quote: layoutQuote,
     table: layoutTable,
+    chart: layoutChart,
     image: layoutImage,
     gallery: layoutGallery,
     video: layoutVideo,
@@ -1530,6 +1830,7 @@
     var pad = el('div', 'pad');
     root.appendChild(pad);
     if (!SF.Boards || !SF.Boards.render(pad, slide, opts, root)) (LAYOUTS[slide.type] || layoutContent)(slide, pad, opts, root);
+    if (SF.Explore) SF.Explore.render(root, pad, slide, opts);
     if (SF.Custom) SF.Custom.layout(root, slide);
 
     if (opts.chrome !== false && deck.showSlideNumbers && opts.index != null && slide.type !== 'title') {

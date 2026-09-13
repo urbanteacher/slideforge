@@ -85,6 +85,11 @@
       result.fields = (activity.pages || [activity]).map(function (part) { return clone(part.fields || []); });
       result.guidance = (activity.steps || []).join('\n');
     } else throw new Error('Choose a game or activity.');
+    if (request.impromptu && result.game) {
+      result.game.settings.intro = false;
+      result.game.settings.howTo = false;
+      result.game.settings.scoreSlide = false;
+    }
     result.title = result.game ? result.game.title : activity.title;
     result.guidance = result.guidance || (result.game ? SF.gameStyle(result.game.style).blurb : activity.blurb);
     if (request.ai) {
@@ -93,6 +98,7 @@
         var generated = await SF.AI.generateQuestionsForGame(result.game, { topic: request.topic, notes: request.notes, count: Math.max(1, Math.min(24, Number(request.count) || 3)) });
         if (generated.error) throw new Error(generated.error);
         result.game.questions = generated.questions;
+        result.generated = { accepted: generated.questions.length, rejected: generated.rejected || 0 };
         result.title = result.game.title = request.topic;
         if (generated.rejected) result.guidance += '\n' + generated.rejected + ' unusable AI items were omitted. Check the remaining content.';
       } else {

@@ -1,6 +1,7 @@
+import { normalizeExploration, explorationValue } from './deck/exploration.js';
 import { createBoardRuntime } from "./boards/runtime.js";
 import { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes } from "./activities/catalogue.js";
-import { DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
+import { DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
 import { FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest } from "./deck/feedback.js";
 import { renderMarkdown } from "./deck/markdown.js";
 import sampleDeck from "./samples/deck.json" with { type: "json" };
@@ -127,6 +128,10 @@ var SLIDE_TYPES = {
   split:    { label: 'Image + text',         icon: '◫' },
   cards:    { label: 'Cards',        icon: '▦' },
   table:    { label: 'Table',        icon: '⊞' },
+  beforeafter: { label: 'Before / after', icon: '◐' },
+  explore: { label: 'Explore an image', icon: '◎' },
+  simulation: { label: 'What if? graph', icon: '↗' },
+  chart:    { label: 'Chart',        icon: '▥' },
   image:    { label: 'Image',        icon: '▣' },
   gallery:  { label: 'Image stack',   icon: '▤' },
   video:    { label: 'Video',        icon: '▶' },
@@ -179,6 +184,9 @@ function makeSlide(type) {
     videoMuted: false,
     videoAutoplay: false,   // honoured on the projector, never in a preview
     tableHeader: true,
+    /* Chart layout: bar, line or pie over the same text a table slide uses. */
+    exploration: normalizeExploration(null),
+    chartKind: /** @type {'bar'|'line'|'pie'} */ ('bar'),
     /* Image stack: each layer is one picture with its own caption and source,
        shown one in front of the last. Empty on every other kind of slide. */
     layers: /** @type {import('./types.js').GalleryLayer[]} */ ([]),
@@ -254,6 +262,15 @@ function makeSlide(type) {
       break;
     case 'results':
       s.title = 'Results';
+      break;
+    case 'beforeafter':
+      s.title = 'What changed?';
+      break;
+    case 'explore':
+      s.title = 'Look closer';
+      break;
+    case 'simulation':
+      s.title = 'What happens when the input changes?';
       break;
     case 'game':
       s.title = 'Game';
@@ -350,6 +367,10 @@ function normalizeSlide(raw) {
   s.videoMuted = s.videoMuted === true;
   s.videoAutoplay = s.videoAutoplay === true;
   s.tableHeader = s.tableHeader !== false;
+  s.exploration = normalizeExploration(raw && raw.exploration);
+  s.exploration.before = safeMedia(s.exploration.before);
+  s.exploration.after = safeMedia(s.exploration.after);
+  s.chartKind = ['bar', 'line', 'pie'].indexOf(s.chartKind) >= 0 ? s.chartKind : 'bar';
   /* Layers come off `raw` for the same reason options do: whatever was on disk
      may be strings, may be half-built, may be nothing. Capped because a stack
      is read one layer at a time and nobody narrates twelve. */
@@ -926,7 +947,15 @@ function readiness(deck, lookupGame) {
       return;
     }
 
-    if (s.type === 'image' || s.type === 'split') {
+    if (s.type === 'beforeafter') {
+      var comparison = normalizeExploration(s.exploration);
+      if (!comparison.before || !comparison.after) add('stop', i, label, 'Choose both a before image and an after image.');
+      media(i, label, comparison.before, 'The before image');
+      media(i, label, comparison.after, 'The after image');
+      return;
+    }
+
+    if (s.type === 'image' || s.type === 'split' || s.type === 'explore') {
       if (!String(s.image || '').trim()) {
         add('stop', i, label, 'An image slide with no image on it.');
       } else {
@@ -1067,6 +1096,9 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   makeQuizConfig: makeQuizConfig,
   normalizeQuizConfig: normalizeQuizConfig,
   SLIDE_TYPES: SLIDE_TYPES,
+  chartData: chartData,
+  normalizeExploration: normalizeExploration,
+  explorationValue: explorationValue,
   GALLERY_MAX: GALLERY_MAX,
   uid: uid,
   makeSlide: makeSlide,
@@ -1159,4 +1191,4 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   GameStore: GameStore
 });
 
-export { SLIDE_W, SLIDE_H, THEMES, TRANSITIONS, GALLERY_MAX, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, GAME_FORMAT_PRESETS, getShowcaseGame };
+export { SLIDE_W, SLIDE_H, THEMES, TRANSITIONS, GALLERY_MAX, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, GAME_FORMAT_PRESETS, getShowcaseGame };

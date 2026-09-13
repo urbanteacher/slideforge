@@ -1,6 +1,46 @@
 /* Generated from src/model.js. Do not edit; run npm run build. */
 "use strict";
 (() => {
+  // src/deck/exploration.js
+  function bounded(value, fallback, min, max) {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
+  }
+  function normalizeExploration(raw) {
+    const r = raw && typeof raw === "object" ? raw : {};
+    const min = bounded(r.min, 0, -1e3, 999);
+    const max = bounded(r.max, 10, min + 1, 1e3);
+    return {
+      before: String(r.before || ""),
+      after: String(r.after || ""),
+      beforeLabel: String(r.beforeLabel || "Before").slice(0, 80),
+      afterLabel: String(r.afterLabel || "After").slice(0, 80),
+      alt: String(r.alt || "Compare the two states").slice(0, 300),
+      spots: (Array.isArray(r.spots) ? r.spots : []).slice(0, 8).map((p) => ({
+        x: bounded(p && p.x, 50, 0, 100),
+        y: bounded(p && p.y, 50, 0, 100),
+        zoom: bounded(p && p.zoom, 2, 1, 4),
+        title: String(p && p.title || "Detail").slice(0, 100),
+        body: String(p && p.body || "").slice(0, 500)
+      })),
+      model: r.model === "quadratic" ? "quadratic" : "linear",
+      min,
+      max,
+      initial: bounded(r.initial, min, min, max),
+      a: bounded(r.a, 2, -100, 100),
+      b: bounded(r.b, 0, -1e3, 1e3),
+      inputLabel: String(r.inputLabel || "Input").slice(0, 80),
+      outputLabel: String(r.outputLabel || "Output").slice(0, 80),
+      prediction: r.prediction === true,
+      prompt: String(r.prompt || "What pattern do you predict?").slice(0, 240)
+    };
+  }
+  function explorationValue(config, x) {
+    const c = normalizeExploration(config);
+    const input = bounded(x, c.initial, c.min, c.max);
+    return c.a * (c.model === "quadratic" ? input * input : input) + c.b;
+  }
+
   // src/boards/runtime.js
   function createBoardRuntime(namespace, styles, clock = {
     now: () => Date.now(),
@@ -2491,6 +2531,29 @@
     });
     return rows2;
   }
+  function chartData(slide) {
+    var rows2 = parseTable(slide && slide.body);
+    if (rows2.length < 2) return { categories: [], series: [] };
+    var head = rows2[0], body = rows2.slice(1);
+    var names = head.slice(1).filter(function(h) {
+      return String(h).trim();
+    });
+    var categories = body.map(function(r) {
+      return String(r[0] || "").trim();
+    });
+    var series = names.map(function(name, i) {
+      return {
+        name: String(name).trim(),
+        values: body.map(function(r) {
+          var raw = String(r[i + 1] == null ? "" : r[i + 1]).replace(/[,\s%£$€]/g, "");
+          if (!raw) return null;
+          var n = Number(raw);
+          return Number.isFinite(n) ? n : null;
+        })
+      };
+    });
+    return { categories, series };
+  }
   function parseKeywordLine(line) {
     var s = String(line == null ? "" : line);
     var tab = s.indexOf("	");
@@ -2534,7 +2597,12 @@
     "image",
     "video",
     "quote",
-    "join"
+    "join",
+    "chart",
+    "gallery",
+    "beforeafter",
+    "explore",
+    "simulation"
   ];
   var BULLET_LAYOUTS = ["content", "cards", "split", "keywords", "italics", "links"];
   function prepareLayout(slide, type2) {
@@ -2578,6 +2646,14 @@
         return l.trim();
       }).filter(Boolean);
     }
+    if (slide.type === "chart") {
+      var cd = chartData(slide);
+      if (!cd.series.length) return [];
+      if (cd.series.length > 1) return cd.series.map(function(x) {
+        return x.name;
+      });
+      return cd.categories.slice();
+    }
     if (slide.type === "gallery") {
       return (slide.layers || []).filter(function(l) {
         return l && l.image;
@@ -2597,6 +2673,8 @@
     });
   }
   function slideExcerpt(slide, revealed) {
+    if (slide.type === "chart" && slide.exploration && slide.exploration.prediction) return slide.exploration.prompt;
+    if (["beforeafter", "explore", "simulation"].includes(slide.type)) return slide.title || "";
     if (slide.type === "quiz") return slide.question || "";
     var steps = slideSteps(slide);
     if (steps.length || ["content", "cards", "split", "keywords", "italics", "table", "quote", "explain"].includes(slide.type)) {
@@ -6906,6 +6984,10 @@
     split: { label: "Image + text", icon: "◫" },
     cards: { label: "Cards", icon: "▦" },
     table: { label: "Table", icon: "⊞" },
+    beforeafter: { label: "Before / after", icon: "◐" },
+    explore: { label: "Explore an image", icon: "◎" },
+    simulation: { label: "What if? graph", icon: "↗" },
+    chart: { label: "Chart", icon: "▥" },
     image: { label: "Image", icon: "▣" },
     gallery: { label: "Image stack", icon: "▤" },
     video: { label: "Video", icon: "▶" },
@@ -6943,6 +7025,12 @@
       videoAutoplay: false,
       // honoured on the projector, never in a preview
       tableHeader: true,
+      /* Chart layout: bar, line or pie over the same text a table slide uses. */
+      exploration: normalizeExploration(null),
+      chartKind: (
+        /** @type {'bar'|'line'|'pie'} */
+        "bar"
+      ),
       /* Image stack: each layer is one picture with its own caption and source,
          shown one in front of the last. Empty on every other kind of slide. */
       layers: (
@@ -7027,6 +7115,15 @@
       case "results":
         s.title = "Results";
         break;
+      case "beforeafter":
+        s.title = "What changed?";
+        break;
+      case "explore":
+        s.title = "Look closer";
+        break;
+      case "simulation":
+        s.title = "What happens when the input changes?";
+        break;
       case "game":
         s.title = "Game";
         s.transition = "zoom";
@@ -7103,6 +7200,10 @@
     s.videoMuted = s.videoMuted === true;
     s.videoAutoplay = s.videoAutoplay === true;
     s.tableHeader = s.tableHeader !== false;
+    s.exploration = normalizeExploration(raw && raw.exploration);
+    s.exploration.before = safeMedia(s.exploration.before);
+    s.exploration.after = safeMedia(s.exploration.after);
+    s.chartKind = ["bar", "line", "pie"].indexOf(s.chartKind) >= 0 ? s.chartKind : "bar";
     var rawLayers = raw && Array.isArray(raw.layers) ? raw.layers : [];
     s.layers = rawLayers.slice(0, GALLERY_MAX).map(function(layer) {
       var l = layer && typeof layer === "object" ? layer : {};
@@ -7518,7 +7619,14 @@
         }
         return;
       }
-      if (s.type === "image" || s.type === "split") {
+      if (s.type === "beforeafter") {
+        var comparison = normalizeExploration(s.exploration);
+        if (!comparison.before || !comparison.after) add("stop", i, label, "Choose both a before image and an after image.");
+        media(i, label, comparison.before, "The before image");
+        media(i, label, comparison.after, "The after image");
+        return;
+      }
+      if (s.type === "image" || s.type === "split" || s.type === "explore") {
         if (!String(s.image || "").trim()) {
           add("stop", i, label, "An image slide with no image on it.");
         } else {
@@ -7631,6 +7739,9 @@
     makeQuizConfig,
     normalizeQuizConfig,
     SLIDE_TYPES,
+    chartData,
+    normalizeExploration,
+    explorationValue,
     GALLERY_MAX,
     uid,
     makeSlide,

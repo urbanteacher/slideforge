@@ -209,6 +209,8 @@
       index: Player.idx,
       total: deck.slides.length,
       interactive: true,
+      exploreState: (Player.exploreStates || {})[slide.id],
+      exploreCommand: function(action,value){ if(SF.Explore)SF.Explore.command(Player,action,value); },
       ...(SF.Boards ? SF.Boards.renderOptions(Player, slide) : {}),
       quizNumber: slide.type === 'quiz' ? quizNumberOf(deck, slide) : 0,
       marks: slide.type === 'results' ? marksFor(deck, Player.answers) : null,
@@ -1823,6 +1825,7 @@
   Player.gate = null;
 
   Player.next = function () {
+    if (!Player.frozen && SF.Explore && SF.Explore.step(Player, 1)) return;
     if (SF.Teaching && SF.Teaching.next()) return;
     if (!Player.deck) return;
     if (Player.frozen) {
@@ -1853,6 +1856,7 @@
     Player.goTo(Player.idx + 1, 1);
   };
   Player.prev = function () {
+    if (!Player.frozen && SF.Explore && SF.Explore.step(Player, -1)) return;
     if (SF.Teaching && SF.Teaching.prev()) return;
     if (Player.frozen) {
       Player.goTo(Player.idx - 1, -1);
@@ -1959,6 +1963,7 @@
     Player._frozenSlideIdx = null;
     var oldFreezePill = document.getElementById('playerFreezePill');
     if (oldFreezePill) oldFreezePill.remove();
+    Player.exploreStates = {};
     Player.started = Date.now();
     Player._current = null;
     Player._liveTally = null;
@@ -2103,7 +2108,8 @@
         confidence: Player.confidence || null,
         /* What the next press will do, so the private screen can say it in
            words rather than a tooltip nobody hovers mid-lesson. */
-        nextAction: (SF.Live && SF.Live.nextAction) ? SF.Live.nextAction() : 'advance',
+        exploreStates: Player.exploreStates || {},
+        nextAction: (SF.Explore && SF.Explore.nextAction(Player)) || ((SF.Live && SF.Live.nextAction) ? SF.Live.nextAction() : 'advance'),
         /* "3 unanswered", "12 waiting" — the cues that tell the host whether
            to wait or move on. Only meaningful live, null otherwise. */
         progress: Player._liveProgress || null,
@@ -2131,6 +2137,7 @@
     else if (SF.Boards && SF.Boards.command && SF.Boards.command(d.cmd, d.action, d.card)) {}
     else if (d.cmd === 'moment' && Player.momentCommand) Player.momentCommand(d);
     else if (d.cmd === 'quickPoll') Player.quickPoll(d);
+    else if (d.cmd === 'explore' && SF.Explore) SF.Explore.command(Player,d.action,d.value);
     else if (d.cmd === 'quizGen') Player.quizGen(d);
     else if (d.cmd === 'activity' && SF.LiveActivities) {
       var sender = ev.source;

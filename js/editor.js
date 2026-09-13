@@ -679,8 +679,8 @@
     /** @type {[string, string[]][]} */
     var layoutGroups = [
       ['Introduce', ['title', 'section', 'quote']],
-      ['Explain & organise', ['content', 'keywords', 'italics', 'cards', 'table']],
-      ['Show & explore', ['split', 'image', 'gallery', 'video', 'links']]
+      ['Explain & organise', ['content', 'keywords', 'italics', 'cards', 'table', 'chart']],
+      ['Show & explore', ['split', 'image', 'gallery', 'beforeafter', 'explore', 'simulation', 'video', 'links']]
     ];
     layoutGroups.forEach(function (group) {
       box.appendChild(el('h4', null, group[0]));
@@ -1061,8 +1061,41 @@
   }
 
   function drawContentFields(insp, s) {
+    if (SF.Explore && SF.Explore.inspector(insp, s, UI, function () { touched(); repaint(); }, function () { touched(); draw(); })) return;
     if (s.type === 'video') {
       drawVideoFields(insp, s);
+      return;
+    }
+
+    if (s.type === 'chart') {
+      insp.appendChild(UI.field('Chart title',
+        richField(s, "title", "area", function (v) { s.title = v; touched(); repaint(); }, 2)));
+      insp.appendChild(UI.field('Chart type', UI.select(
+        [{ value: 'bar', label: 'Bar — compare magnitude' },
+         { value: 'line', label: 'Line — change over time' },
+         { value: 'pie', label: 'Pie — parts of one whole' }],
+        s.chartKind, function (v) { s.chartKind = v; touched(); repaint(); })));
+      insp.appendChild(UI.field('Data \u2014 one row per line',
+        richField(s, "body", "area", function (v) { s.body = v; touched(); repaint(); }, 9),
+        'First row names the series, first column the categories. Separate ' +
+        'cells with | \u2014 or paste a range straight from a spreadsheet, ' +
+        'which arrives tab-separated and needs no editing.'));
+      var cd = SF.chartData(s);
+      var note = cd.series.length
+        ? cd.series.length + (cd.series.length === 1 ? ' series' : ' series') + ' \u00d7 ' +
+          cd.categories.length + (cd.categories.length === 1 ? ' category' : ' categories')
+        : 'No data yet \u2014 needs a header row and at least one row of values.';
+      insp.appendChild(el('p', 'hint', note));
+      /* Said plainly rather than enforced: the author may have a reason, and
+         a slide that silently drops a column is worse than a warning. */
+      if (s.chartKind === 'pie' && cd.series.length > 1) {
+        insp.appendChild(el('p', 'hint field-warn',
+          'A pie shows one series. Only \u201c' + cd.series[0].name + '\u201d is drawn; the rest are ignored. Bar compares them all.'));
+      }
+      if (cd.series.length > 6) {
+        insp.appendChild(el('p', 'hint field-warn',
+          'Six series is the ceiling \u2014 past that the colours stop being tellable apart. Group the tail into \u201cOther\u201d, or split the chart.'));
+      }
       return;
     }
 

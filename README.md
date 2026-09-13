@@ -1030,6 +1030,29 @@ selection · `Backspace` delete
 
 ---
 
+## Explore, predict and compare
+
+In Lesson studio, choose **Before / after**, **Explore an image** or **What if?
+graph** from the layout picker’s Show & explore group.
+
+- **Before / after:** upload two images, label the states, then drag the divider
+  or use the keyboard slider while presenting. Next shows the after state.
+- **Explore an image:** upload an image and add up to eight numbered details,
+  with positions, zoom levels and explanations. Click a marker or use Next to
+  visit details; Whole image returns to the overview.
+- **What if? graph:** choose a linear or quadratic relationship, label the input
+  and output, and set the range and coefficients. Drag the input while
+  presenting to move the point and see the calculated output. No code is run
+  from a formula field.
+- **Chart prediction:** on a Chart slide, enable Predict before revealing the
+  chart. Optionally collect a live poll; edit its choices in Engagement. Next
+  reveals the chart with the predictions still beside it. The concealed values
+  are omitted from learner excerpts.
+
+Presenter view carries the same controls. Exploration state survives leaving a
+slide and returning during the same show; a new show resets it. Moving a slider
+never edits the saved slide. Motion respects the system reduced-motion setting.
+
 ## Presenter view
 
 **Presenter**, or `D` mid-show, opens a second window with notes, the next
