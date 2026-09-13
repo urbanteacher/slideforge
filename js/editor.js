@@ -1666,6 +1666,13 @@
     deck = loaded;
     sel = 0;
 
+    /* If this tab was hosting when it reloaded, walk back into the room the
+       server is holding rather than leaving a class of phones stranded. Quiet
+       when there is nothing held, which is almost always. */
+    if (SF.Live && SF.Live.resumeHeldRoom) {
+      try { SF.Live.resumeHeldRoom(deck); } catch (e) {}
+    }
+
     var notesInput = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
     if (notesInput) {
       var nInput = notesInput;

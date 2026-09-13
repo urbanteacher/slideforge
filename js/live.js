@@ -469,6 +469,20 @@
 
   /* ------------------------------------------------------------ host */
 
+  /* Called at boot with whatever deck was open. Walks back into a room this
+     tab was hosting before a reload, if the server is still holding it. */
+  Live.resumeHeldRoom = function (deck) {
+    var held = heldRoom();
+    if (!held || !held.pin || !held.token) return false;
+    if (!deck) return false;
+    if (!lobby) refs();
+    Live.deck = deck;
+    Live.players = [];
+    Live.revealed = {};
+    connect(held);
+    return true;
+  };
+
   Live.host = function (deck) {
     if (!lobby) refs();
     closeOverlays();
@@ -521,7 +535,25 @@
     connect();
   };
 
-  function connect() {
+  /* Per tab, on purpose: a refresh should walk back into the lesson, and a
+     brand new tab should not silently take over a room somebody else is
+     hosting. sessionStorage gives exactly that lifetime for free. */
+  var HELD_KEY = 'slideforge.hostedRoom';
+  function rememberRoom(pin, token) {
+    /* No deck id here. The first version stored one and refused to resume
+       unless it matched the deck open at boot — but Live.host is handed a
+       compiled run deck, whose id is not the authored deck's, so the check
+       never matched and quietly deleted the token it was meant to guard. The
+       server holds the real gate: the room must exist, the token must match,
+       and the room must actually be hostless. */
+    try { sessionStorage.setItem(HELD_KEY, JSON.stringify({ pin: pin, token: token })); } catch (e) {}
+  }
+  function forgetRoom() { try { sessionStorage.removeItem(HELD_KEY); } catch (e) {} }
+  function heldRoom() {
+    try { return JSON.parse(sessionStorage.getItem(HELD_KEY) || 'null'); } catch (e) { return null; }
+  }
+
+  function connect(resume) {
     var url = relayUrl();
     var ws;
     try {
@@ -540,6 +572,10 @@
     ws.onopen = function () {
       settled = true;
       clearTimeout(giveUp);
+      if (resume && resume.pin && resume.token) {
+        send({ t: 'rehost', pin: resume.pin, hostToken: resume.token });
+        return;
+      }
       send({
         t: 'host',
         title: Live.deck.title,
@@ -586,16 +622,45 @@
         break;
       case 'sessionReport':
       case 'sessionClosed':
+        /* These two share a body, so this has to ask which one it is. Dropped
+           in unguarded, it meant every routine session report wiped the token
+           that lets a reloaded host back in — the room was held open and the
+           only key to it had been thrown away a second after the lesson
+           started. */
+        if (m.t === 'sessionClosed') forgetRoom();
         lastReport = m.report || lastReport;
         if (SF.Reports) SF.Reports.receive(m.report);
         Live.paintOverview(m.report);
         break;
+      /* Back in a room that was being held for us. */
+      case 'rehosted':
+        Live.pin = m.pin;
+        Live.joinUrl = m.joinUrl || joinAddress();
+        Live.mode = m.mode || 'individual';
+        Live.teams = (m.teams || []).map(function (n) { return { name: n }; });
+        Live.session = m.session || null;
+        if (pinEl) pinEl.textContent = m.pin;
+        if (urlEl && m.joinUrl) urlEl.textContent = String(m.joinUrl).replace(/^https?:\/\//, '');
+        rememberRoom(m.pin, m.hostToken);
+        /* A lesson that had already started comes back started. Only the
+           lobby is a state worth returning to. */
+        if (m.phase && m.phase !== 'lobby') goLiveLocally();
+        SF.toast('Back in the lesson — the room stayed open, PIN ' + m.pin);
+        break;
+
+      case 'rehostFailed':
+        forgetRoom();
+        Live.stop();
+        SF.toast(m.reason || 'That lesson is no longer open.');
+        break;
+
       case 'hosted':
         reactionCounts={};reactionSlide=null;bookmarkState=null;
         Live.session = m.session || null;
         if (m.session && SF.Reports) SF.Reports.track(m.session);
         else if (SF.Reports) { SF.Reports.recording(false); warn('This relay does not support session reports. Restart it with the updated server.'); }
         Live.pin = m.pin;
+        rememberRoom(m.pin, m.hostToken);
         Live.joinUrl = m.joinUrl || joinAddress();
         pinEl.textContent = m.pin;
         Live.mode = m.mode || 'individual';
@@ -1387,16 +1452,22 @@
     if (SF.Player.syncHudRoomButtons) SF.Player.syncHudRoomButtons();
   }
 
-  Live.begin = function () {
-    if (!Live.pin) { warn('Not connected to the relay yet.'); return; }
+  /* Everything going live does on this machine. Split out because coming back
+     to a room that is already running has to do all of it except tell the
+     server to start again. */
+  function goLiveLocally() {
     lobby.classList.remove('on');
     Live.active = true;
-    send({ t: 'begin' });
-
     wire();
     SF.Player.lanesProvider = function () {
       return Live.mechanic === 'race' ? raceLanes() : null;
     };
+  }
+
+  Live.begin = function () {
+    if (!Live.pin) { warn('Not connected to the relay yet.'); return; }
+    send({ t: 'begin' });
+    goLiveLocally();
     document.body.classList.add('live-on');
     SF.Player.gate = gate;
     SF.Player.start(Live.deck, 0);
@@ -1769,12 +1840,13 @@
 
   function sendSlideContext(s) {
     var companion = phoneCompanion(s);
+    var pos = SF.Player.wallPos ? SF.Player.wallPos() : { index: SF.Player.idx, total: Live.deck.slides.length };
     send({
       t: 'at',
       slideId: s.id,
       title: s.title || s.question || s.gameTitle || '',
-      n: SF.Player.idx + 1,
-      total: Live.deck.slides.length,
+      n: pos.index + 1,
+      total: pos.total,
       activity: s.type === 'quiz' ? (Live.revealed[s.id] ? 'moment' : 'question') : SF.slideFeedback(s) ? 'feedback' : (s.type === 'results' || s.gameId) ? 'moment' : 'content',
       text: SF.slideExcerpt(s, SF.Player.revealStep || 0),
       style: companion.style,
@@ -1783,7 +1855,11 @@
       headPrompt: companion.headPrompt
     });
   }
-  SF.Player.on('step',function(){if(Live.active){sendSlideContext(SF.Player.deck.slides[SF.Player.idx]);syncManual();}});
+  SF.Player.on('step',function(){
+    if(!Live.active)return;
+    var s = SF.Player.wallSlide ? SF.Player.wallSlide() : (SF.Player.deck && SF.Player.deck.slides[SF.Player.idx]);
+    if(s){sendSlideContext(s);syncManual();}
+  });
 
   /* Land on a question with teacher-entered learners in the room and the
      entry window comes to you.

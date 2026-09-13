@@ -343,6 +343,11 @@ const server = http.createServer(serve);
 /** pin -> room */
 const rooms = new Map();
 
+/* How long a room waits for a host who has gone quiet. Long enough to cover a
+   page reload, a browser crash and reopen, or a laptop asleep for a minute;
+   short enough that a room nobody returns to is not left open. */
+const HOST_GRACE_MS = 90 * 1000;
+
 function newPin() {
   let pin;
   do {
@@ -868,6 +873,7 @@ function record(room, type, data) {
 function closeRoom(room, reason) {
   if (!rooms.has(room.pin)) return;
   if (room.sweeper) { clearInterval(room.sweeper); room.sweeper = null; }
+  if (room.hostGrace) { clearTimeout(room.hostGrace); room.hostGrace = null; }
   record(room, 'end', {reason:reason || 'The host ended the session.'});
   if (room.host && room.host.open) room.host.json({t:'sessionClosed', report:Sessions.project(room.audit)});
   const why = reason || 'The host ended the quiz.';
@@ -902,6 +908,42 @@ ws.attach(server, (sock, req) => {
 
     /* ---- host side ---- */
 
+    /* Coming back to a room that is being held. Deliberately narrow: the pin
+       must exist, the token must match, and the room must actually be without
+       a host — this cannot be used to take a room off somebody still in it. */
+    if (m.t === 'rehost') {
+      if (role) return;
+      const target = rooms.get(String(m.pin || ''));
+      if (!target || typeof m.hostToken !== 'string' || m.hostToken.length !== 64) {
+        sock.json({ t: 'rehostFailed', reason: 'That lesson is no longer open.' });
+        return;
+      }
+      if (target.hostToken !== m.hostToken || (target.host && target.host.open)) {
+        sock.json({ t: 'rehostFailed', reason: 'That lesson is no longer open.' });
+        return;
+      }
+      role = 'host';
+      room = target;
+      room.host = sock;
+      room.hostAwaySince = null;
+      if (room.hostGrace) { clearTimeout(room.hostGrace); room.hostGrace = null; }
+      broadcast(room, { t: 'hostAway', away: false });
+      sock.json({
+        t: 'rehosted',
+        phase: room.phase,
+        pin: room.pin,
+        hostToken: room.hostToken,
+        joinUrl: JOIN_URL,
+        mode: room.mode,
+        teams: room.teams,
+        title: room.title,
+        session: { id: room.audit.meta.id, title: room.title, createdAt: room.audit.meta.createdAt }
+      });
+      pushPlayers(room);
+      log('room ' + room.pin + ' host back');
+      return;
+    }
+
     if (m.t === 'host') {
       if (role) return;
       role = 'host';
@@ -914,6 +956,12 @@ ws.attach(server, (sock, req) => {
         pin,
         title: String(m.title || 'Quiz').slice(0, 80),
         host: sock,
+        /* The same courtesy a player already gets. A learner who drops keeps
+           their seat; before this the host who dropped destroyed the room, so
+           one reload mid-lecture ended the lesson for everybody. */
+        hostToken: crypto.randomBytes(32).toString('hex'),
+        hostAwaySince: null,
+        hostGrace: null,
         // teams mode needs at least two teams to be meaningful
         mode: m.mode === 'teams' && teams.length >= 2 ? 'teams' : 'individual',
         teams,
@@ -991,6 +1039,7 @@ ws.attach(server, (sock, req) => {
       sock.json({
         t: 'hosted',
         session: {id:room.audit.meta.id, token:created.token, title:room.title, createdAt:room.audit.meta.createdAt},
+        hostToken: room.hostToken,
         pin,
         joinUrl: JOIN_URL,
         mode: room.mode,
@@ -1919,7 +1968,21 @@ ws.attach(server, (sock, req) => {
 
   sock.on('close', () => {
     if (role === 'host' && room) {
-      closeRoom(room, 'The host disconnected.');
+      /* Hold the room rather than ending the lesson. A refresh, a crash, a lid
+         closed for a minute — none of those are a decision to stop teaching,
+         and the room going down takes every phone in it with a victory screen.
+         The window is long enough for a reload and a reconnect, short enough
+         that a genuinely abandoned room does not linger. */
+      if (room.host !== sock) return;
+      if (!rooms.has(room.pin)) return;
+      room.host = null;
+      room.hostAwaySince = Date.now();
+      broadcast(room, { t: 'hostAway', away: true });
+      log('room ' + room.pin + ' host away — holding for ' + (HOST_GRACE_MS / 1000) + 's');
+      room.hostGrace = setTimeout(() => {
+        room.hostGrace = null;
+        if (rooms.has(room.pin) && !room.host) closeRoom(room, 'The host disconnected.');
+      }, HOST_GRACE_MS);
     } else if (role === 'player' && room && me) {
       if (me.sock !== sock) return;
       me.sock = null;

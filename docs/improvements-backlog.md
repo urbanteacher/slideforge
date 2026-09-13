@@ -33,6 +33,8 @@ coordinating rather than starting cold.
 | 12 | Visual baselines for slide layouts | M | **Done** — 45 added, 213 total |
 | 13 | No git remote — commits are local only | S | Blocked · needs the repo URL |
 | 18 | ~~"Add image detail" does nothing~~ | — | **Retracted** · it works; my probe clicked the wrong button |
+| 19 | **A host refresh destroyed the live room** | M | **Done** — 90s grace + reconnect |
+| 20 | Refresh loses the presentation, the student's seat, the selected slide | M | To do — B, C, D |
 
 ### Open decisions — not mine to make
 
@@ -325,3 +327,54 @@ have caught it in the first minute was counting the matches:
 
   Verified live: "Question 1 of 4" with an empty chip before anything is asked,
   "1 / 1" after a correct answer, "1 / 2" after a missed one.
+
+### 19. A host refresh destroyed the live room — **done**
+
+Reproduced before touching anything: the teacher refreshes mid-lesson and every
+phone in the room gets *"The host disconnected"* and a **"You won!"** screen,
+because closing the room runs the end-of-game path. The PIN dies with it.
+
+The asymmetry is what showed it was never a decision. A **player** who drops
+keeps their seat — socket set to null, `resumeToken` lets them back in, the room
+carries on. A **host** who dropped hit `closeRoom` on the next line. The
+machinery to survive a disconnect already existed; the teacher just never got
+it.
+
+Now: the server holds the room for 90 seconds, issues the host a token like it
+already issues players one, and accepts a `rehost` that proves it. The host
+client keeps `{pin, token}` in sessionStorage — per tab, so a reload walks back
+in and a fresh tab cannot quietly take over someone's room — and tries to
+resume at boot. Phones say nothing for the first six seconds, because a banner
+that flashes up and vanishes is worse than the pause it describes.
+
+Three of my own bugs on the way, all found by testing rather than reading:
+
+1. **The deck-id guard.** I stored the deck id and refused to resume unless it
+   matched the deck open at boot. `Live.host` is handed a *compiled run deck*,
+   whose id is not the authored deck's, so it never matched — and the guard
+   deleted the very token it was meant to protect. Removed: the server's token
+   check is the real gate.
+2. **`forgetRoom()` in a shared case body.** `case 'sessionReport':` and
+   `case 'sessionClosed':` fall through to one body. Dropping the call in
+   unguarded meant every routine session report wiped the token, so the room
+   was held open and the only key to it was thrown away a second after the
+   lesson started.
+3. **Coming back dead.** `rehosted` restored the pin but not the running state,
+   because `Live.active` is set by `begin()`, which also tells the server to
+   start. Split the local half out so returning can use it without starting the
+   lesson twice.
+
+Server log from the passing run: `host away — holding for 90s` then `host back`
+in the same second; a separate abandoned room closed when its 90s expired.
+
+### 20. What a refresh still loses
+
+Reproduced alongside 19, not yet fixed:
+
+- **Presenting** — refresh closes the presentation entirely and returns to the
+  editor. The player never persists `Player.idx`.
+- **A student's phone** — drops to the join screen. The resume token is written,
+  survives the refresh, and is never used on load; a QR joiner gets the fields
+  prefilled and still has to tap Join, a typed-PIN joiner has to remember the
+  PIN.
+- **The editor** — selected slide resets to 1. The deck itself is fine.

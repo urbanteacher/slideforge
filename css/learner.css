@@ -176,3 +176,10 @@ body.phones-blank{overflow:hidden}
   #blankVeil{animation:veilIn .18s ease}
   @keyframes veilIn{from{opacity:0}to{opacity:1}}
 }
+
+/* The host's screen has gone quiet. Only ever shown after a few seconds — a
+   reload is over before this appears. */
+#hostAwayNote{position:fixed;left:12px;right:12px;bottom:12px;z-index:150;
+  padding:12px 16px;border-radius:12px;text-align:center;font-size:13px;
+  background:#3b3320;color:#f3e6c8;border:1px solid #6a5a34}
+#hostAwayNote[hidden]{display:none}

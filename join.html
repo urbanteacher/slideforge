@@ -487,6 +487,7 @@
 
 </main>
 
+<div id="hostAwayNote" hidden role="status">Waiting for your teacher’s screen — stay here, nothing is lost.</div>
 <div id="blankVeil" hidden aria-live="assertive">
   <div class="veil-inner">
     <div class="veil-mark">✋</div>
@@ -683,7 +684,7 @@
      tells the teacher nothing. So these leave rather than grey out — and if
      the learner is mid-question when the floor closes, the panel closes with
      it rather than stranding them in a form that will be refused. */
-  var floorOpen = false;
+  var floorOpen = false, hostAwayTimer = null;
   function setFloor(on) {
     floorOpen = !!on;
     header(true);
@@ -1014,6 +1015,21 @@
 
       case 'signalled':
         signalled(m.kind);
+        break;
+
+      /* A host who reloads is away for a second or two, not gone. Say nothing
+         at first — a banner that flashes up and vanishes is worse than the
+         pause it was describing — and only speak if the gap gets long enough
+         to worry about. */
+      case 'hostAway':
+        clearTimeout(hostAwayTimer);
+        if (m.away === true) {
+          hostAwayTimer = setTimeout(function () {
+            $('hostAwayNote').hidden = false;
+          }, 6000);
+        } else {
+          $('hostAwayNote').hidden = true;
+        }
         break;
 
       case 'floor':
