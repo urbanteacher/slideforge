@@ -27,7 +27,7 @@ coordinating rather than starting cold.
 | 6 | Blank the phones from the HUD | S–M | **Done** — `Shift+B` / room menu |
 | 7 | Gate ✋ and ? to junction points | S | To do |
 | 8 | Learner theming — deck theme has no route to the phone | M | Deferred · shared files |
-| 9 | Progress + persistent score on the phone | S | To do |
+| 9 | Progress + tally on the phone | S | **Done** — "Question 3 of 4", "2 / 3" |
 | 10 | Lesson-level standings, teacher-controlled | M | Deferred · shared files |
 | 11 | Coda — exit ticket penultimate, wrap last | M–L | Deferred · needs a privacy decision |
 | 12 | Visual baselines for slide layouts | M | **Done** — 45 added, 213 total |
@@ -302,3 +302,26 @@ Four pieces of consistent evidence and a reproduction against a known-good
 build, all of it downstream of a premise nobody checked. The check that would
 have caught it in the first minute was counting the matches:
 `document.querySelectorAll` for that label returns two.
+
+- **13 Sep** — Item 9 done, with one substitution worth flagging.
+
+  **Progress** was the straightforward half: the phone said "Question 3" with no
+  denominator because only the host has the deck and nobody was sending the
+  count. It now travels with the question, and the phone says "Question 3 of 4"
+  — or falls back to "Question 3" when the host did not send one, rather than
+  inventing a total.
+
+  **The score chip shows a tally, not points.** The ask was "current score and
+  total score"; points have no honest denominator to a learner mid-lesson, and a
+  raw points figure only means something held against somebody else's. The
+  server already keeps `correctCount` and `askedCount` per player for the
+  report, so the chip is now **"1 / 2"** — their own, readable about themselves,
+  and the denominator grows as questions are asked whether or not they answered.
+  Points are still on the result screen, where the standing lives.
+
+  Checked first that a denominator would even be honest: a correct answer gains
+  at most `question.points` (the speed multiplier tops out at 1.0), so nothing
+  can exceed its own total.
+
+  Verified live: "Question 1 of 4" with an empty chip before anything is asked,
+  "1 / 1" after a correct answer, "1 / 2" after a missed one.

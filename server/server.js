@@ -786,6 +786,7 @@ function questionMessage(room, timeLimit) {
     range: q.range,
     confidence: q.confidence,
     count: q.options.length,
+    total: q.total || 0,
     timeLimit: timeLimit != null ? timeLimit : q.timeLimit
   };
   if (q.style) msg.style = q.style;
@@ -1179,6 +1180,7 @@ ws.attach(server, (sock, req) => {
           // the host knows where this question sits in the deck; fall back to
           // a running count if an older client doesn't send it
           index: Number(m.n) > 0 ? Number(m.n) : room.asked,
+          total: Math.max(0, Number(m.total) || 0),
           /* Companion skin — identity for the phone UI, never the answer. */
           style: String(m.style || '').slice(0, 40),
           headPrompt: String(m.headPrompt || '').slice(0, 200),
@@ -1316,6 +1318,11 @@ ws.attach(server, (sock, req) => {
             answered: p.answer != null,
             gained: p.lastGain,
             score: p.score,
+            /* Their own running tally. Both halves are already kept for the
+               report; a learner wants them more than the raw points, which
+               only mean anything next to somebody else's. */
+            correct: p.correctCount || 0,
+            asked: p.askedCount || 0,
             rank: r.rank,
             of: r.of,
             tied: r.tied,

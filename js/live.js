@@ -1535,6 +1535,12 @@
     return Live.deck.slides.filter(function (x) { return x.type === 'quiz'; }).indexOf(slide) + 1;
   }
 
+  /* How many checks there are altogether. Only the host has the deck, so the
+     total has to travel with the question — a phone cannot work it out. */
+  function quizTotal() {
+    return Live.deck.slides.filter(function (x) { return x.type === 'quiz'; }).length;
+  }
+
   /** Everything the rail and the focus view both need. */
   function feedbackOpts() {
     var kind = SF.FEEDBACK_KINDS[Live.prompt.kind];
@@ -1804,6 +1810,7 @@
       t: 'question',
       id: s.id,
       n: quizNumber(s),
+      total: quizTotal(),
       question: s.question,
       /* Journalled so the report knows an unrevealed check was meant to be
          unrevealed, rather than reading as a loop somebody forgot to close. */

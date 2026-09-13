@@ -798,6 +798,14 @@
     show('scSaved');
   }
 
+  /* "Question 3 of 4" when the host has told us how many there are, and just
+     "Question 3" when it has not — an older host, or a single check dropped
+     into a lesson. Never invent the denominator. */
+  function questionLabel(m) {
+    var n = m.n || 1;
+    return 'Question ' + n + (m.total > 0 ? ' of ' + m.total : '');
+  }
+
   function header(on) {
     $('hdr').style.display = on ? 'flex' : 'none';
     $('askBtn').style.display = on && floorOpen ? '' : 'none';
@@ -805,7 +813,11 @@
        middle of the explanation you are lost in. */
     $('paceBtn').style.display = on ? '' : 'none';
     $('hdrName').textContent = me.name;
-    $('hdrScore').textContent = me.score;
+    /* Their own tally rather than the raw points. "3 / 4" is something a
+       learner can read about themselves; a points total only means anything
+       held up against somebody else's, and this chip is on their phone. The
+       points are still on the result screen, where the standing lives. */
+    $('hdrScore').textContent = me.asked > 0 ? me.correct + ' / ' + me.asked : '';
     var badge = $('hdrTeam');
     if (me.teamName) {
       badge.textContent = me.teamName;
@@ -1025,6 +1037,7 @@
 
       case 'result':
         me.score = m.score;
+        if (m.asked != null) { me.correct = m.correct || 0; me.asked = m.asked; }
         header(true);
         stopTick();
         $('rVerdict').textContent = !m.answered ? 'Too slow!' : (m.right ? 'Correct!' : 'Not this time');
@@ -1591,7 +1604,7 @@
       $('qNumLo').textContent = withUnit(range.min);
       $('qNumHi').textContent = withUnit(range.max);
       drawNumValue();
-      $('qNum').textContent = 'Question ' + (m.n || 1);
+      $('qNum').textContent = questionLabel(m);
       show('scQuestion');
       if (m.timeLimit > 0) startTick(m.timeLimit);
       else { $('qTime').textContent = ''; $('qBar').style.width = '100%'; }
@@ -1608,7 +1621,7 @@
       if (!(m.style === 'emoji' || m.clueMode === 'emoji')) {
         $('qTypeLead').textContent = 'Type your answer';
       }
-      $('qNum').textContent = 'Question ' + (m.n || 1);
+      $('qNum').textContent = questionLabel(m);
       show('scQuestion');
       if (m.timeLimit > 0) startTick(m.timeLimit);
       else { $('qTime').textContent = ''; $('qBar').style.width = '100%'; }
@@ -1634,7 +1647,7 @@
       pad.appendChild(b);
     }
 
-    $('qNum').textContent = 'Question ' + (m.n || 1);
+    $('qNum').textContent = questionLabel(m);
     show('scQuestion');
 
     if (m.timeLimit > 0) startTick(m.timeLimit);
