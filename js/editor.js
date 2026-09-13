@@ -111,32 +111,128 @@
      slides, numbered 0..length — reordering moves a slide into a slot, never
      onto another slide, which is what makes "above or below this one?"
      answerable. The caret is drawn in the slot, so what you see is exactly
-     where it lands. */
+     where it lands. A *block* is a run of slides moved together, which is how a
+     folded section travels.
 
-  var dragFrom = null;   /* index being dragged, or null */
-  var placing = null;    /* index being carried by ⌘X, or null */
-  var placeAt = null;    /* slot the carried slide would land in */
+     The deck also folds at its section slides. A ninety-minute lecture is eight
+     sections, not forty-nine slides, and eight rows is a shape you can read
+     without scrolling — which is the thing a rail is for. Fold a section and it
+     also becomes one object: dragging or carrying its header moves the whole
+     run, so "this block belongs before the break" is one gesture. */
+
+  var dragFrom = null;   /* first index being dragged, or null */
+  var dragCount = 1;     /* how many slides travel with it */
+  var placing = null;    /* first index being carried by ⌘X, or null */
+  var placeCount = 1;
+  var placeAt = null;    /* slot the carried block would land in */
   var caretAt = null;    /* slot the caret is currently drawn in */
 
-  /** Move the slide at `from` into `at`, a slot in the array as it stands now.
-      Taking the slide out first shifts every later slot down one, which is the
-      step the old drop handler skipped: it is why dragging downwards used to
-      land a slide one place further on than the indicator promised. */
-  function moveSlide(from, at) {
-    if (from == null || at == null || !deck.slides[from]) return false;
+  /* ------------------------------------------------------------ sections */
+
+  /** The deck cut at its section slides. Each group is a section slide — its
+      `head` — and the run of slides under it. The slides before the first
+      section slide are a group too, with no head of their own. */
+  function sections() {
+    /** @type {{ head: number|null, from: number, to: number, count: number,
+                 key: string, label: string, body: number[] }[]} */
+    var groups = [];
+    /** @type {number|null} */ var head = null;
+    /** @type {number[]} */ var body = [];
+    var from = 0;
+    function close() {
+      if (head == null && !body.length) return;
+      var to = body.length ? body[body.length - 1] + 1 : from + 1;
+      groups.push({
+        head: head, from: from, to: to, count: to - from, body: body,
+        key: head == null ? '@opening' : deck.slides[head].id,
+        label: head == null ? 'Opening' : oneLine(deck.slides[head].title) || 'Section'
+      });
+    }
+    deck.slides.forEach(function (s, i) {
+      if (s.type !== 'section') { body.push(i); return; }
+      close();
+      head = i; from = i; body = [];
+    });
+    close();
+    return groups;
+  }
+
+  /** Section titles wrap on purpose — on a slide. On one rail row they cannot. */
+  function oneLine(text) { return String(text || '').replace(/\s+/g, ' ').trim(); }
+
+  /* Which sections are folded, kept per deck for the tab. Keyed by the section
+     slide's id rather than its index so a fold survives the reordering it
+     exists to make easy. */
+  var folds = {};
+  var foldsFor = null;
+  function loadFolds() {
+    folds = {};
+    foldsFor = deck.id;
+    try {
+      var raw = sessionStorage.getItem('slideforge.folds.' + deck.id);
+      (raw ? JSON.parse(raw) : []).forEach(function (k) { folds[k] = true; });
+    } catch (e) {}
+  }
+  function saveFolds() {
+    try {
+      sessionStorage.setItem('slideforge.folds.' + deck.id, JSON.stringify(Object.keys(folds)));
+    } catch (e) {}
+  }
+
+  function toggleFold(g) {
+    if (folds[g.key]) delete folds[g.key];
+    else {
+      folds[g.key] = true;
+      /* Folding the section you are working in would hide the selection under
+         it, so the selection comes up to the header instead of disappearing.
+         The opening run has no header of its own, so it hands the selection to
+         the first section below it. */
+      if (sel >= g.from && sel < g.to) {
+        sel = g.head == null ? Math.min(g.to, deck.slides.length - 1) : g.head;
+      }
+    }
+    saveFolds();
+    draw();
+  }
+
+  function foldAll(shut) {
+    sections().forEach(function (g) {
+      if (!shut) { delete folds[g.key]; return; }
+      folds[g.key] = true;
+      if (sel >= g.from && sel < g.to) {
+        sel = g.head == null ? Math.min(g.to, deck.slides.length - 1) : g.head;
+      }
+    });
+    saveFolds();
+    draw();
+  }
+
+  /* ------------------------------------------------------------ moving */
+
+  /** Move the `count` slides starting at `from` into `at`, a slot in the array
+      as it stands now. Taking the block out first shifts every later slot down
+      by its length, which is the step the old drop handler skipped: it is why
+      dragging downwards used to land a slide one place further on than the
+      indicator promised. */
+  function moveBlock(from, count, at) {
+    if (from == null || at == null || count < 1 || !deck.slides[from]) return false;
     at = Math.max(0, Math.min(deck.slides.length, at));
-    if (at > from) at -= 1;
-    if (at === from) return false;
-    deck.slides.splice(at, 0, deck.slides.splice(from, 1)[0]);
+    if (at >= from && at <= from + count) return false;
+    var block = deck.slides.splice(from, count);
+    if (at > from) at -= count;
+    for (var n = 0; n < block.length; n++) deck.slides.splice(at + n, 0, block[n]);
     sel = at;
     return true;
   }
 
-  /** Which slot a pointer resting on this row means: above it or below it. */
+  function moveSlide(from, at) { return moveBlock(from, 1, at); }
+
+  /** Which slot a pointer resting on this row means: above it or below it. A
+      row says so itself, because a folded section header stands for a run and
+      "below" it is the slot after the last slide it hides, not the next one. */
   function slotFor(row, clientY) {
-    var i = Number(row.dataset.i);
     var box = row.getBoundingClientRect();
-    return clientY < box.top + box.height / 2 ? i : i + 1;
+    return Number(clientY < box.top + box.height / 2 ? row.dataset.before : row.dataset.after);
   }
 
   /** @returns {HTMLElement|null} the slot the caret now sits in */
@@ -156,22 +252,35 @@
     return slot;
   }
 
-  function focusThumb(i) {
+  /** Put focus back on whatever row now stands for slide `i` — its own
+      thumbnail, or the section header that has folded it out of sight. */
+  function focusRow(i) {
     var rail = $('railList');
-    var row = /** @type {HTMLElement|null} */ (
-      rail && rail.querySelector('.thumb[data-i="' + i + '"]'));
+    if (!rail) return;
+    var row = /** @type {HTMLElement|null} */ (rail.querySelector('[data-from="' + i + '"]'));
+    if (!row) {
+      var groups = sections();
+      for (var n = 0; n < groups.length; n++) {
+        if (i >= groups[n].from && i < groups[n].to) {
+          row = /** @type {HTMLElement|null} */ (
+            rail.querySelector('[data-from="' + groups[n].from + '"]'));
+          break;
+        }
+      }
+    }
     if (!row) return;
     row.focus();
     row.scrollIntoView({ block: 'nearest' });
   }
 
-  /* ------------------------------------------------- carrying a slide */
+  /* ------------------------------------------------- carrying a block */
 
-  function beginPlacing(i) {
-    if (!deck.slides[i] || placing != null) return;
-    sel = i;
-    placing = i;
-    placeAt = i;
+  function beginPlacing(from, count) {
+    if (!deck.slides[from] || placing != null) return;
+    sel = from;
+    placing = from;
+    placeCount = count || 1;
+    placeAt = from;
     draw();
     var slot = showCaret(placeAt);
     if (slot) slot.focus();
@@ -187,24 +296,29 @@
 
   function commitPlacing(at) {
     if (placing == null) return;
-    var from = placing;
+    var from = placing, count = placeCount;
     var to = at == null ? placeAt : at;
-    placing = null; placeAt = null; caretAt = null;
-    if (moveSlide(from, to)) touched();
+    placing = null; placeAt = null; placeCount = 1; caretAt = null;
+    if (moveBlock(from, count, to)) touched();
     draw();
-    focusThumb(sel);
+    focusRow(sel);
   }
 
   function cancelPlacing() {
     if (placing == null) return;
-    placing = null; placeAt = null; caretAt = null;
+    placing = null; placeAt = null; placeCount = 1; caretAt = null;
     draw();
-    focusThumb(sel);
+    focusRow(sel);
   }
 
-  /* The band above the rail while a slide is in hand. It says which slide is
-     being carried and which position it would land in — the position, not the
-     slot, because "lands at 1" is the thing being asked for and "slot 0" is
+  /** Is this row part of what is currently in hand? */
+  function carried(from) {
+    return placing != null && from >= placing && from < placing + placeCount;
+  }
+
+  /* The band above the rail while something is in hand. It says what is being
+     carried and which position it would land in — the position, not the slot,
+     because "lands at 1" is the thing being asked for and "slot 0" is
      bookkeeping. */
   function drawPlacingBar() {
     var rail = $('railList');
@@ -216,9 +330,13 @@
     if (!found) host.insertBefore(bar, rail);
     bar.innerHTML = '';
     var s = deck.slides[placing];
-    var lands = placeAt > placing ? placeAt : placeAt + 1;
-    bar.appendChild(el('strong', null, 'Carrying slide ' + (placing + 1) + ' → lands at ' + lands));
-    bar.appendChild(el('span', 'rail-placing-what', s.title || SF.SLIDE_TYPES[s.type].label));
+    var lands = placeAt > placing ? placeAt - placeCount + 1 : placeAt + 1;
+    var what = placeCount > 1
+      ? 'Carrying ' + placeCount + ' slides'
+      : 'Carrying slide ' + (placing + 1);
+    bar.appendChild(el('strong', null, what + ' → lands at ' + lands));
+    bar.appendChild(el('span', 'rail-placing-what',
+      (placeCount > 1 ? 'Section · ' : '') + (oneLine(s.title) || SF.SLIDE_TYPES[s.type].label)));
     bar.appendChild(el('span', 'rail-placing-hint',
       '↑ ↓ Home End to choose a place · Enter to drop it · Esc to cancel'));
     bar.appendChild(UI.button('Cancel', 'ghost', cancelPlacing));
@@ -246,6 +364,7 @@
 
   function endDrag() {
     dragFrom = null;
+    dragCount = 1;
     scroller.y = null;
     if (scroller.raf) cancelAnimationFrame(scroller.raf);
     scroller.raf = 0;
@@ -255,17 +374,18 @@
   }
 
   function dropAt(at) {
-    var from = dragFrom;
+    var from = dragFrom, count = dragCount;
     endDrag();
-    if (!moveSlide(from, at)) return;
+    if (!moveBlock(from, count, at)) return;
     touched();
     draw();
-    focusThumb(sel);
+    focusRow(sel);
   }
 
   function wireDrag(row) {
     row.addEventListener('dragstart', function (e) {
-      dragFrom = Number(row.dataset.i);
+      dragFrom = Number(row.dataset.from);
+      dragCount = Number(row.dataset.count) || 1;
       e.dataTransfer.effectAllowed = 'move';
       try { e.dataTransfer.setData('text/plain', String(dragFrom)); } catch (err) {}
       var rail = $('railList');
@@ -316,15 +436,188 @@
     return slot;
   }
 
+  /** One section, as a row you can fold, select, drag and carry. */
+  function sectionRow(g) {
+    var head = g.head == null ? null : deck.slides[g.head];
+    var shut = !!folds[g.key];
+    var row = el('div', 'rail-sect' + (shut ? ' folded' : '') +
+      (head && g.head === sel ? ' sel' : '') + (carried(g.from) ? ' carried' : ''));
+    row.dataset.before = String(g.from);
+    row.dataset.after = String(shut ? g.to : (head ? g.head + 1 : g.from));
+    row.dataset.from = String(g.from);
+    /* Folded, the header stands for the whole run and travels with it. Open, it
+       is just the section slide, which is the only row that slide has. */
+    row.dataset.count = String(shut && head ? g.count : 1);
+
+    var fold = UI.button(shut ? '▸' : '▾', 'sect-fold', function (e) {
+      e.stopPropagation();
+      toggleFold(g);
+    });
+    fold.setAttribute('aria-expanded', shut ? 'false' : 'true');
+    fold.setAttribute('aria-label', (shut ? 'Unfold ' : 'Fold ') + g.label);
+    fold.title = shut ? 'Unfold this section' : 'Fold this section — folded, it drags as one block';
+    row.appendChild(fold);
+
+    var copy = el('div', 'sect-copy');
+    copy.appendChild(el('span', 'sect-title', g.label));
+    copy.appendChild(el('span', 'sect-meta', (head ? (g.head + 1) + ' · ' : '') +
+      g.body.length + (g.body.length === 1 ? ' slide' : ' slides')));
+    row.appendChild(copy);
+
+    /* The opening run has no section slide of its own, so there is nothing to
+       pick up — but it still has to accept a drop, or the slot above the first
+       slide would be unreachable by drag. */
+    if (head) {
+      row.draggable = true;
+      var grip = UI.button('⠿', 'thumb-grip', function (e) {
+        e.stopPropagation();
+        beginPlacing(g.from, Number(row.dataset.count));
+      });
+      grip.title = shut
+        ? 'Pick the whole section up to move it (⌘X)'
+        : 'Pick this section slide up to move it (⌘X). Fold the section to move all of it.';
+      grip.setAttribute('aria-label', 'Move ' + g.label);
+      row.appendChild(grip);
+    }
+    wireDrag(row);
+
+    row.tabIndex = 0;
+    row.setAttribute('role', 'button');
+    row.setAttribute('aria-label', g.label + ', ' + g.body.length + ' slides' +
+      (head ? ', slide ' + (g.head + 1) : ''));
+    row.onclick = function (e) {
+      if (placing != null) { commitPlacing(slotFor(row, e.clientY)); return; }
+      if (head) select(g.head); else toggleFold(g);
+    };
+    /* Left and right fold and unfold, the way they do in every other tree. */
+    row.onkeydown = function (e) {
+      if (e.target !== row) return;
+      if (e.key === 'ArrowLeft' && !shut) { e.preventDefault(); e.stopPropagation(); toggleFold(g); }
+      else if (e.key === 'ArrowRight' && shut) { e.preventDefault(); e.stopPropagation(); toggleFold(g); }
+      else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault(); e.stopPropagation();
+        if (placing != null) commitPlacing(g.from);
+        else if (head) select(g.head);
+        else toggleFold(g);
+      }
+    };
+    return row;
+  }
+
+  /** One slide, as a thumbnail. */
+  function thumbRow(s, i) {
+    var row = el('div', 'thumb' + (i === sel ? ' sel' : '') + (carried(i) ? ' carried' : ''));
+    row.draggable = true;
+    row.tabIndex = 0;
+    row.setAttribute('role', 'button');
+    row.setAttribute('aria-label', 'Slide ' + (i + 1) + ': ' + (s.title || SF.SLIDE_TYPES[s.type].label));
+    row.setAttribute('aria-current', i === sel ? 'true' : 'false');
+    /* Only when the row itself has focus: the grip inside it is a button, and
+       swallowing its Enter here would redraw the rail out from under the
+       click it was about to fire. */
+    row.onkeydown = function (e) {
+      if (e.target !== row) return;
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault(); e.stopPropagation();
+      if (placing != null) commitPlacing(i);
+      else select(i);
+    };
+    row.dataset.i = String(i);
+    row.dataset.from = String(i);
+    row.dataset.count = '1';
+    row.dataset.before = String(i);
+    row.dataset.after = String(i + 1);
+
+    var gutter = el('div', 'thumb-gutter');
+    gutter.appendChild(el('div', 'num', String(i + 1)));
+    var grip = UI.button('⠿', 'thumb-grip', function (e) {
+      e.stopPropagation();
+      beginPlacing(i, 1);
+    });
+    grip.title = 'Pick this slide up to move it (⌘X). Drag to nudge it a place or two.';
+    grip.setAttribute('aria-label', 'Move slide ' + (i + 1));
+    gutter.appendChild(grip);
+    row.appendChild(gutter);
+
+    var body = el('div', 'thumb-body');
+    var frame = el('div', 'frame');
+    if (s.type === 'game') {
+      var g = gameFor(s);
+      frame.appendChild(el('div', 'badge quiz', g ? 'GAME' : 'MISSING'));
+    } else if (s.feedback && s.feedback.kind) {
+      var live = SF.slideFeedback(s);
+      frame.appendChild(el('div', 'badge fb' + (live ? '' : ' warn'),
+        SF.FEEDBACK_KINDS[s.feedback.kind].icon +
+        (live ? '' : ' !')));
+    }
+    /* Slides chosen in the activities studio say so, the way a game does.
+       Named after the phase rather than a flat "ACTIVITY", because where
+       it belongs in the lesson is the thing worth reading off a rail —
+       and it is the one fact the slide itself cannot show. Drawn after the
+       two above so a game or a feedback slide keeps its own badge; this
+       one sits under it. */
+    var act = s.activity && SF.Activities && SF.Activities.activity(s.activity);
+    if (act) {
+      var ph = SF.Activities.PHASES.find(function (p) { return p.key === act.phase; });
+      var mark = el('div', 'badge act' + (act.target === 'moment' ? ' timed' : ''),
+        (ph ? ph.label : 'Activity').toUpperCase());
+      mark.title = act.title + (act.minutes ? ' · about ' + act.minutes + ' min' : '');
+      frame.appendChild(mark);
+    }
+    body.appendChild(frame);
+
+    var node = SF.renderSlide(deck, s, Object.assign(slideOpts(i), { chrome: false }));
+    frame.appendChild(node);
+    row.appendChild(body);
+
+    var tx = s.transition || 'fade';
+    var txIcon = { none: '—', fade: '◌', push: '→', zoom: '⊕', wipe: '▭' }[tx] || '◌';
+    var txLabel = tx === 'none' ? 'None' : tx.charAt(0).toUpperCase() + tx.slice(1);
+    var txMark = el('span', 'thumb-tx', txIcon);
+    txMark.title = 'Transition: ' + txLabel;
+    txMark.setAttribute('aria-label', 'Transition ' + txLabel);
+    row.appendChild(txMark);
+
+    /* Clicking a slide while something is in hand puts it down, above or below
+       depending on which half was clicked — the same rule the drag caret
+       follows, so the two never disagree. */
+    row.onclick = function (e) {
+      if (placing != null) commitPlacing(slotFor(row, e.clientY));
+      else select(i);
+    };
+    wireDrag(row);
+    requestAnimationFrame(function () { SF.fit(frame, node); });
+    return row;
+  }
+
   function drawRail() {
     var rail = $('railList');
     if (!rail) return;
-    if (placing != null && !deck.slides[placing]) { placing = null; placeAt = null; }
+    if (foldsFor !== deck.id) loadFolds();
+    if (placing != null && !deck.slides[placing]) { placing = null; placeAt = null; placeCount = 1; }
     rail.innerHTML = '';
     rail.classList.toggle('placing', placing != null);
     caretAt = null;
     var count = $('railCount');
     if (count) count.textContent = String(deck.slides.length);
+
+    var groups = sections();
+    /* A deck with no section slides is one unnamed run, and a lone header over
+       the whole thing would be furniture rather than structure. */
+    var grouped = groups.length > 1 || (groups[0] && groups[0].head != null);
+    /* Whatever is selected has to be visible, so the section holding it opens —
+       unless the selection *is* the header, which is how folding one keeps the
+       selection somewhere you can still see it. */
+    var opened = false;
+    groups.forEach(function (g) {
+      if (folds[g.key] && sel >= g.from && sel < g.to && sel !== g.head) {
+        delete folds[g.key];
+        opened = true;
+      }
+    });
+    if (opened) saveFolds();
+    rail.classList.toggle('grouped', grouped);
+    drawFoldAll(groups, grouped);
 
     /* The rail scrolls itself towards the pointer during a drag; it listens on
        the list rather than on each row so the margins still work when the
@@ -338,92 +631,41 @@
     };
 
     var list = /** @type {HTMLElement} */ (rail);
-    list.appendChild(railSlot(0));
+    var lastSlot = -1;
+    function slotOnce(at) {
+      if (at === lastSlot) return;
+      lastSlot = at;
+      list.appendChild(railSlot(at));
+    }
 
-    deck.slides.forEach(function (s, i) {
-      var row = el('div', 'thumb' + (i === sel ? ' sel' : '') + (i === placing ? ' carried' : ''));
-      row.draggable = true;
-      row.tabIndex = 0;
-      row.setAttribute('role', 'button');
-      row.setAttribute('aria-label', 'Slide ' + (i + 1) + ': ' + (s.title || SF.SLIDE_TYPES[s.type].label));
-      row.setAttribute('aria-current', i === sel ? 'true' : 'false');
-      /* Only when the row itself has focus: the grip inside it is a button, and
-         swallowing its Enter here would redraw the rail out from under the
-         click it was about to fire. */
-      row.onkeydown = function (e) {
-        if (e.target !== row) return;
-        if (e.key !== 'Enter' && e.key !== ' ') return;
-        e.preventDefault(); e.stopPropagation();
-        if (placing != null) commitPlacing(slotFor(row, row.getBoundingClientRect().top));
-        else select(i);
-      };
-      row.dataset.i = String(i);
-
-      var gutter = el('div', 'thumb-gutter');
-      gutter.appendChild(el('div', 'num', String(i + 1)));
-      var grip = UI.button('⠿', 'thumb-grip', function (e) {
-        e.stopPropagation();
-        beginPlacing(i);
+    groups.forEach(function (g) {
+      slotOnce(g.from);
+      if (grouped) list.appendChild(sectionRow(g));
+      if (grouped && folds[g.key]) return;
+      g.body.forEach(function (i) {
+        slotOnce(i);
+        list.appendChild(thumbRow(deck.slides[i], i));
       });
-      grip.title = 'Pick this slide up to move it (⌘X). Drag to nudge it a place or two.';
-      grip.setAttribute('aria-label', 'Move slide ' + (i + 1));
-      gutter.appendChild(grip);
-      row.appendChild(gutter);
-
-      var body = el('div', 'thumb-body');
-      var frame = el('div', 'frame');
-      if (s.type === 'game') {
-        var g = gameFor(s);
-        frame.appendChild(el('div', 'badge quiz', g ? 'GAME' : 'MISSING'));
-      } else if (s.feedback && s.feedback.kind) {
-        var live = SF.slideFeedback(s);
-        frame.appendChild(el('div', 'badge fb' + (live ? '' : ' warn'),
-          SF.FEEDBACK_KINDS[s.feedback.kind].icon +
-          (live ? '' : ' !')));
-      }
-      /* Slides chosen in the activities studio say so, the way a game does.
-         Named after the phase rather than a flat "ACTIVITY", because where
-         it belongs in the lesson is the thing worth reading off a rail —
-         and it is the one fact the slide itself cannot show. Drawn after the
-         two above so a game or a feedback slide keeps its own badge; this
-         one sits under it. */
-      var act = s.activity && SF.Activities && SF.Activities.activity(s.activity);
-      if (act) {
-        var ph = SF.Activities.PHASES.find(function (p) { return p.key === act.phase; });
-        var mark = el('div', 'badge act' + (act.target === 'moment' ? ' timed' : ''),
-          (ph ? ph.label : 'Activity').toUpperCase());
-        mark.title = act.title + (act.minutes ? ' · about ' + act.minutes + ' min' : '');
-        frame.appendChild(mark);
-      }
-      body.appendChild(frame);
-
-      var node = SF.renderSlide(deck, s, Object.assign(slideOpts(i), { chrome: false }));
-      frame.appendChild(node);
-      row.appendChild(body);
-
-      var tx = s.transition || 'fade';
-      var txIcon = { none: '—', fade: '◌', push: '→', zoom: '⊕', wipe: '▭' }[tx] || '◌';
-      var txLabel = tx === 'none' ? 'None' : tx.charAt(0).toUpperCase() + tx.slice(1);
-      var txMark = el('span', 'thumb-tx', txIcon);
-      txMark.title = 'Transition: ' + txLabel;
-      txMark.setAttribute('aria-label', 'Transition ' + txLabel);
-      row.appendChild(txMark);
-
-      /* Clicking a slide while another is in hand puts it down, above or below
-         depending on which half was clicked — the same rule the drag caret
-         follows, so the two never disagree. */
-      row.onclick = function (e) {
-        if (placing != null) commitPlacing(slotFor(row, e.clientY));
-        else select(i);
-      };
-      wireDrag(row);
-      list.appendChild(row);
-      list.appendChild(railSlot(i + 1));
-      requestAnimationFrame(function () { SF.fit(frame, node); });
     });
+    slotOnce(deck.slides.length);
 
     drawPlacingBar();
     if (placing != null) showCaret(placeAt);
+  }
+
+  /* One button for the whole shape of the lecture: everything shut, or
+     everything open. Hidden on a deck with no sections, where it would have
+     nothing to say. */
+  function drawFoldAll(groups, grouped) {
+    var btn = /** @type {HTMLButtonElement|null} */ ($('btnFold'));
+    if (!btn) return;
+    btn.hidden = !grouped;
+    if (!grouped) return;
+    var anyOpen = groups.some(function (g) { return !folds[g.key]; });
+    btn.textContent = anyOpen ? '⊟' : '⊞';
+    btn.title = anyOpen ? 'Fold every section' : 'Unfold every section';
+    btn.setAttribute('aria-label', btn.title);
+    btn.onclick = function () { foldAll(anyOpen); };
   }
 
   function select(i) {
@@ -431,20 +673,34 @@
     draw();
   }
 
-  /** Move the selected slide by `delta` places. */
-  function nudge(delta) {
-    if (!moveSlide(sel, sel + (delta > 0 ? delta + 1 : delta))) return;
-    touched();
-    draw();
-    focusThumb(sel);
+  /** What the selection stands for: one slide, or — when a folded section
+      header is selected — the whole run it has folded away. */
+  function selectionBlock() {
+    var groups = sections();
+    for (var i = 0; i < groups.length; i++) {
+      if (groups[i].head === sel && folds[groups[i].key]) {
+        return { from: groups[i].from, count: groups[i].count };
+      }
+    }
+    return { from: sel, count: 1 };
   }
 
-  /** Send the selected slide to a slot outright — the front, or the end. */
-  function sendTo(at) {
-    if (!moveSlide(sel, at)) return;
+  /** Move the selection by `delta` places. */
+  function nudge(delta) {
+    var b = selectionBlock();
+    if (!moveBlock(b.from, b.count, delta > 0 ? b.from + b.count + 1 : b.from - 1)) return;
     touched();
     draw();
-    focusThumb(sel);
+    focusRow(sel);
+  }
+
+  /** Send the selection to a slot outright — the front, or the end. */
+  function sendTo(at) {
+    var b = selectionBlock();
+    if (!moveBlock(b.from, b.count, at)) return;
+    touched();
+    draw();
+    focusRow(sel);
   }
 
   function drawFoot() {
@@ -1929,7 +2185,7 @@
     fileSuffix: '.sfdeck.json',
     store: SF.Store,
     doc: function () { return deck; },
-    setDoc: function (d) { deck = d; sel = savedSelection(); placing = null; placeAt = null; },
+    setDoc: function (d) { deck = d; sel = savedSelection(); placing = null; placeAt = null; placeCount = 1; foldsFor = null; },
     blank: function () { return SF.makeDeck('Untitled presentation'); },
     draw: draw,
     flush: flush,
@@ -1958,7 +2214,12 @@
         else if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); movePlaceTo(placeAt + 1); }
         return;
       }
-      if (mod && e.key.toLowerCase() === 'x') { e.preventDefault(); beginPlacing(sel); return; }
+      if (mod && e.key.toLowerCase() === 'x') {
+        e.preventDefault();
+        var b = selectionBlock();
+        beginPlacing(b.from, b.count);
+        return;
+      }
       /* Alt + arrows to shuffle a slide along, the same grip the bullet list
          inside a slide already uses. */
       if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
