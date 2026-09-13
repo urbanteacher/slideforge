@@ -89,9 +89,24 @@
     if (root) {
       root.addEventListener('pointerdown', closeMore);
       root.addEventListener('mousemove', showHud);
+      /* Clicking the slide advances it, the way a real slideshow does. It
+         goes through Player.next(), so it is the same press as the right
+         arrow: it steps a build before it steps the slide.
+
+         This used to fire only when the click landed on the viewport or the
+         root element itself. The slide is scaled to fill the viewport, so
+         that dead space measures 1px wide and 0px tall — the condition was
+         unreachable and clicking the slide did nothing at all.
+
+         The guard is now what was clicked rather than where: anything that
+         wants its own click keeps it. Most of that is native — quiz options
+         are real buttons and links are real anchors — and the rest are
+         surfaces a presenter works on rather than reads past. A component can
+         also opt out by stopping propagation, which the link rows do. */
       root.addEventListener('click', function (e) {
-        // clicking dead space advances, like a real slideshow
-        if (e.target === viewport || e.target === root) Player.next();
+        var t = /** @type {Element | null} */ (e.target);
+        if (t && t.closest && t.closest(NO_ADVANCE)) return;
+        Player.next();
       });
     }
     Object.keys(controls).forEach(function (action) {
@@ -115,6 +130,15 @@
     if (action === 'who') return live && !!slide && slide.type === 'quiz';
     return true;
   }
+  /* Clicking any of these is doing something else, so it must not also turn
+     the page. Keep native elements first: they are what most slide content
+     already is. */
+  var NO_ADVANCE = [
+    'button', 'a', 'input', 'select', 'textarea', 'label', 'summary', 'video',
+    '[role="button"]', '[contenteditable="true"]',
+    '.hud', '.scorerail', '.teaching-ink', '.player-freeze-pill', '.player-demo-pill'
+  ].join(',');
+
   var controls = {
     prev: function () { Player.prev(); }, next: function () { Player.next(); },
     rail: function () { Player.toggleRoomSidebar(); },
