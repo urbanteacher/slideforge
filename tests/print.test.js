@@ -132,6 +132,29 @@ test('every reveal is already shown, because nobody can press Next on paper', ()
   assert.deepEqual(plain(pages[0].bullets), ['one', 'two'], 'and every point is present');
 });
 
+test('a response moment asks its question as the heading, not as a bullet', () => {
+  const SF = load();
+  const deck = SF.normalizeDeck({
+    title: 'T',
+    slides: [{
+      type: 'section', title: 'Check the assessment connection',
+      feedback: {
+        kind: 'poll', prompt: 'Which approach meets the AE2 carry-over requirement?',
+        options: ['Start something unrelated', 'Develop an AE1 idea', 'Resubmit unchanged']
+      }
+    }]
+  });
+  const page = SF.Print.pagesFor(deck).find((p) => /AE2 carry-over/.test(p.title));
+  assert.ok(page, 'the prompt is the heading of its page');
+  /* The failure this guards: the question printed as a fourth bullet among
+     three answers, with nothing on the page saying which was which. */
+  assert.ok(!plain(page.bullets).some((b) => /AE2 carry-over/.test(b)),
+    'and is not repeated among the answers');
+  assert.deepEqual(plain(page.bullets),
+    ['Start something unrelated', 'Develop an AE1 idea', 'Resubmit unchanged'],
+    'the answers are the bullets, all of them');
+});
+
 test('building the handout leaves the deck it was built from alone', () => {
   const SF = load();
   const deck = SF.normalizeDeck({

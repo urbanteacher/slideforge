@@ -53,7 +53,11 @@
         pages.push(copy(s));
       }
       if (s.feedback && s.feedback.prompt) {
-        pages.push(textPage('Reflection · ' + (s.title || 'Your response'), [s.feedback.prompt].concat(s.feedback.options || [])));
+        /* The prompt is the heading, not the first bullet. Concatenated into
+           the list it read as one of the answers: a four-option poll printed
+           as five identical bullets with nothing to say which was the
+           question being asked. */
+        pages.push(textPage(s.feedback.prompt, s.feedback.options || []));
       }
     });
     return pages;
