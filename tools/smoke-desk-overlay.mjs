@@ -95,8 +95,54 @@ try {
   await desk.waitForFunction(() => !document.querySelector('#boxNow .wall-overlay'));
   assert.equal(await desk.locator('#boxNow .slide').count(), 1, 'the slide is back on the desk');
 
+  /* The room rail sits beside the slide rather than over it, and a live
+     session raises it on its own, so it is already up by now. */
+  await desk.waitForSelector('#boxNow .desk-wall-rail');
+  assert.ok(await wall.evaluate(() => !!SF.Player._rail), 'the wall really has a rail up');
+
+  /* Join QR covers the wall from outside #player, which is exactly why it was
+     invisible from the desk — it is in no deck and under no viewport. */
+  await desk.locator('[data-cmd=join]').click();
+  await wall.waitForFunction(() => !!document.querySelector('#joincard.on'));
+  await desk.waitForSelector('#boxNow .wall-overlay.desk-join-mirror');
+  const joinText = await desk.evaluate(() =>
+    document.querySelector('#boxNow .wall-overlay').textContent.replace(/\s+/g, ' '));
+  const wallPin = await wall.evaluate(() =>
+    (document.querySelector('#joincard .pin') || {}).textContent || '');
+  assert.ok(wallPin.trim(), 'the wall card is showing a PIN to mirror');
+  assert.ok(joinText.includes(wallPin.trim()), 'the mirrored join card carries the same PIN');
+  await desk.locator('[data-cmd=join]').click();
+  await desk.waitForFunction(() => !document.querySelector('#boxNow .desk-join-mirror'));
+
+  /* A timer or a break is drawn on the wall over the slide. The desk used to
+     get only a readout of it in a side panel, which tells you a countdown is
+     running without showing you what the room is looking at. */
+  await wall.evaluate(() => SF.Player.momentCommand({
+    action: 'start', kind: 'timer', title: 'Thinking time', seconds: 120
+  }));
+  await desk.waitForSelector('#boxNow .lesson-live-overlay');
+  assert.ok((await desk.evaluate(() =>
+    document.querySelector('#boxNow .lesson-live-overlay').textContent)).includes('Thinking time'),
+    'the mirrored timer names the moment');
+
+  await wall.evaluate(() => SF.Player.momentCommand({
+    action: 'start', kind: 'break', title: 'Take a break', seconds: 300
+  }));
+  await desk.waitForSelector('#boxNow .lesson-live-overlay.is-break');
+
+  /* Blank hides the break on the wall, so it must hide it on the desk too —
+     otherwise the preview shows a break the room cannot see. */
+  await desk.locator('[data-cmd=blank]').click();
+  await wall.waitForFunction(() => {
+    var n = document.querySelector('#player .lesson-live-overlay');
+    return !n || getComputedStyle(n).display === 'none';
+  });
+  await desk.waitForFunction(() => document.getElementById('boxNow').classList.contains('wall-blank'));
+  await desk.locator('[data-cmd=blank]').click();
+  await wall.evaluate(() => SF.Player.momentCommand({ action: 'clear' }));
+
   assert.deepEqual(errors, [], 'no page errors');
-  console.log('PASS: the desk mirrors the wall overlay — same panel, same names, scaled to the preview, gone when dismissed');
+  console.log('PASS: the desk mirrors the wall overlay — leaderboard, join QR, room rail, timer and break all reach the preview');
 } finally {
   players.forEach((p) => { try { p.socket.close(); } catch (e) {} });
   await browser.close();
