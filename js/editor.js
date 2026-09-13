@@ -118,17 +118,44 @@
   var placeAt = null;    /* slot the carried slide would land in */
   var caretAt = null;    /* slot the caret is currently drawn in */
 
-  /** Move the slide at `from` into `at`, a slot in the array as it stands now.
-      Taking the slide out first shifts every later slot down one, which is the
-      step the old drop handler skipped: it is why dragging downwards used to
-      land a slide one place further on than the indicator promised. */
+  /** Move slides into a slot, keeping their order among themselves.
+
+      `at` is a slot in the array as it stands *now*, which is the only frame
+      the caret can honestly point at — so the arithmetic has to account for the
+      slides being lifted out of it. Doing that by walking the deck once and
+      dropping the moved run in when the slot comes round is both easier to read
+      than index bookkeeping and correct for a scattered selection, which is
+      what the sorter hands it.
+
+      @param {number[]} indices which slides to move
+      @param {number} at the slot they should land in
+      @returns {number} the moved run's new first index, or -1 for a no-op */
+  function reorder(indices, at) {
+    var picked = indices.slice().sort(function (a, b) { return a - b; });
+    if (!picked.length) return -1;
+    at = Math.max(0, Math.min(deck.slides.length, at));
+    var taken = {};
+    picked.forEach(function (i) { taken[i] = true; });
+    var moved = picked.map(function (i) { return deck.slides[i]; });
+    var next = [], landed = -1;
+    for (var i = 0; i <= deck.slides.length; i++) {
+      if (i === at) { landed = next.length; next = next.concat(moved); }
+      if (i < deck.slides.length && !taken[i]) next.push(deck.slides[i]);
+    }
+    if (next.length !== deck.slides.length) return -1;
+    var same = next.every(function (slide, i) { return slide === deck.slides[i]; });
+    if (same) return -1;
+    deck.slides.length = 0;
+    for (var n = 0; n < next.length; n++) deck.slides.push(next[n]);
+    return landed;
+  }
+
+  /** The rail's case: one slide into one slot. */
   function moveSlide(from, at) {
     if (from == null || at == null || !deck.slides[from]) return false;
-    at = Math.max(0, Math.min(deck.slides.length, at));
-    if (at > from) at -= 1;
-    if (at === from) return false;
-    deck.slides.splice(at, 0, deck.slides.splice(from, 1)[0]);
-    sel = at;
+    var landed = reorder([from], at);
+    if (landed < 0) return false;
+    sel = landed;
     return true;
   }
 
@@ -325,6 +352,7 @@
     caretAt = null;
     var count = $('railCount');
     if (count) count.textContent = String(deck.slides.length);
+    drawSorterButton();
 
     /* The rail scrolls itself towards the pointer during a drag; it listens on
        the list rather than on each row so the margins still work when the
@@ -426,6 +454,22 @@
     if (placing != null) showCaret(placeAt);
   }
 
+  /* The rail head is shared with the quiz studio, which has no sorter, so the
+     button is built here rather than sitting in the markup for both. */
+  function drawSorterButton() {
+    var head = document.querySelector('.rail-head');
+    var cog = $('btnSettings');
+    if (!head || !cog) return;
+    var btn = /** @type {HTMLButtonElement|null} */ (head.querySelector('#btnSorter'));
+    if (!btn) {
+      btn = /** @type {HTMLButtonElement} */ (UI.button('▦', 'rail-cog', openSorter));
+      btn.id = 'btnSorter';
+      head.insertBefore(btn, cog);
+    }
+    btn.title = 'Slide sorter — the whole deck at once, to rearrange it (⌘G)';
+    btn.setAttribute('aria-label', 'Open the slide sorter');
+  }
+
   function select(i) {
     sel = Math.max(0, Math.min(deck.slides.length - 1, i));
     draw();
@@ -445,6 +489,263 @@
     touched();
     draw();
     focusThumb(sel);
+  }
+
+  /* ------------------------------------------------------- slide sorter
+
+     The rail is a column one slide wide: right for working on a slide, wrong
+     for seeing a lesson. Fifty-two slides in it is four thousand pixels of
+     scroll, so "what shape is this lecture, and is that run in the right
+     place?" is a question you can only answer by remembering.
+
+     The sorter answers it by showing the whole deck at once. Every slide is on
+     screen, so every move is a short drag with both ends visible, and slides
+     can be picked in a group — click, shift-click a run, ⌘-click to add — and
+     moved together, which is the thing the rail could never do. */
+
+  var sorter = null;         /* the overlay element, or null when closed */
+  var picked = [];           /* indices selected in the sorter */
+  var anchor = 0;            /* where a shift-click measures its range from */
+  var sorterDrag = false;
+  var sorterAt = null;       /* slot the caret is pointing at */
+
+  function sorterOpen() { return !!sorter; }
+
+  function openSorter() {
+    if (sorter) return;
+    picked = [sel];
+    anchor = sel;
+    sorter = el('div', 'sorter');
+    document.body.appendChild(sorter);
+    document.body.classList.add('sorter-on');
+    drawSorter();
+    var tile = sorter.querySelector('.sorter-tile.sel');
+    if (tile) {
+      /** @type {HTMLElement} */ (tile).focus();
+      tile.scrollIntoView({ block: 'center' });
+    }
+  }
+
+  function closeSorter() {
+    if (!sorter) return;
+    sorter.remove();
+    sorter = null;
+    sorterDrag = false;
+    sorterAt = null;
+    document.body.classList.remove('sorter-on');
+    draw();
+    focusThumb(sel);
+  }
+
+  /** Selection, as the sorter means it: a set, with `sel` on the last one
+      touched so closing the sorter leaves the editor where you were looking. */
+  function pick(i, e) {
+    if (e && e.shiftKey) {
+      var lo = Math.min(anchor, i), hi = Math.max(anchor, i);
+      picked = [];
+      for (var n = lo; n <= hi; n++) picked.push(n);
+    } else if (e && (e.metaKey || e.ctrlKey)) {
+      var at = picked.indexOf(i);
+      if (at < 0) picked.push(i);
+      else if (picked.length > 1) picked.splice(at, 1);
+      anchor = i;
+    } else {
+      picked = [i];
+      anchor = i;
+    }
+    sel = i;
+    drawSorter();
+  }
+
+  /** Which slot a pointer over this tile means. Tiles sit side by side, so the
+      answer is left half or right half — the same rule the rail applies top and
+      bottom, turned ninety degrees. */
+  function sorterSlotFor(tile, clientX) {
+    var i = Number(tile.dataset.i);
+    var box = tile.getBoundingClientRect();
+    return clientX < box.left + box.width / 2 ? i : i + 1;
+  }
+
+  /* The caret is one absolutely positioned bar rather than a gap element per
+     slide: in a wrapping grid a zero-width gap would still take a cell and push
+     the layout around as it appeared. */
+  function showSorterCaret(at) {
+    if (!sorter) return;
+    sorterAt = at;
+    var bar = /** @type {HTMLElement|null} */ (sorter.querySelector('.sorter-caret'));
+    if (!bar) return;
+    if (at == null) { bar.hidden = true; return; }
+    var tiles = sorter.querySelectorAll('.sorter-tile');
+    var last = at >= tiles.length;
+    var tile = /** @type {HTMLElement|null} */ (tiles[last ? tiles.length - 1 : at]);
+    if (!tile) { bar.hidden = true; return; }
+    bar.hidden = false;
+    bar.style.top = tile.offsetTop + 'px';
+    bar.style.height = tile.offsetHeight + 'px';
+    bar.style.left = (last ? tile.offsetLeft + tile.offsetWidth + 5 : tile.offsetLeft - 7) + 'px';
+  }
+
+  /** Put the held slides down in `at`, and keep them selected where they land
+      so a run can be nudged twice without picking it up again. */
+  function sorterDrop(at) {
+    var count = picked.length;
+    var landed = reorder(picked, at);
+    sorterDrag = false;
+    showSorterCaret(null);
+    if (landed < 0) return;
+    picked = [];
+    for (var n = 0; n < count; n++) picked.push(landed + n);
+    sel = landed;
+    anchor = landed;
+    touched();
+    drawSorter();
+    var tile = sorter && sorter.querySelector('.sorter-tile.sel');
+    if (tile) /** @type {HTMLElement} */ (tile).focus();
+  }
+
+  function drawSorter() {
+    if (!sorter) return;
+    picked = picked.filter(function (i) { return deck.slides[i]; });
+    if (!picked.length) picked = [Math.min(sel, deck.slides.length - 1)];
+    sorter.innerHTML = '';
+
+    var head = el('div', 'sorter-head');
+    head.appendChild(el('strong', null, 'Slide sorter'));
+    head.appendChild(el('span', 'sorter-count',
+      deck.slides.length + ' slides' +
+      (picked.length > 1 ? ' · ' + picked.length + ' selected' : '')));
+    head.appendChild(el('span', 'sorter-hint',
+      'Drag to move · shift-click for a run · ⌘-click to add · ↵ to edit · esc to close'));
+    head.appendChild(UI.button('Done', 'primary', closeSorter));
+    sorter.appendChild(head);
+
+    var grid = el('div', 'sorter-grid');
+    var bar = el('div', 'sorter-caret');
+    bar.hidden = true;
+    grid.appendChild(bar);
+
+    deck.slides.forEach(function (s, i) {
+      var on = picked.indexOf(i) >= 0;
+      var tile = el('div', 'sorter-tile' + (on ? ' sel' : ''));
+      tile.dataset.i = String(i);
+      tile.draggable = true;
+      tile.tabIndex = 0;
+      tile.setAttribute('role', 'button');
+      tile.setAttribute('aria-label', 'Slide ' + (i + 1) + ': ' + (s.title || SF.SLIDE_TYPES[s.type].label));
+      tile.setAttribute('aria-pressed', on ? 'true' : 'false');
+
+      var frame = el('div', 'frame');
+      var node = SF.renderSlide(deck, s, Object.assign(slideOpts(i), { chrome: false }));
+      frame.appendChild(node);
+      tile.appendChild(frame);
+
+      var foot = el('div', 'sorter-foot');
+      foot.appendChild(el('span', 'sorter-num', String(i + 1)));
+      foot.appendChild(el('span', 'sorter-title', oneLine(s.title) || SF.SLIDE_TYPES[s.type].label));
+      tile.appendChild(foot);
+
+      tile.onclick = function (e) { pick(i, e); };
+      tile.ondblclick = function () { sel = i; closeSorter(); };
+      tile.addEventListener('dragstart', function (e) {
+        /* Dragging a slide that is not in the selection takes just that one —
+           anything else would move slides you cannot see yourself holding. */
+        if (picked.indexOf(i) < 0) { picked = [i]; anchor = i; drawSorter(); }
+        sorterDrag = true;
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', String(i)); } catch (err) {}
+      });
+      tile.addEventListener('dragend', function () {
+        sorterDrag = false;
+        showSorterCaret(null);
+      });
+      tile.addEventListener('dragover', function (e) {
+        if (!sorterDrag) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        showSorterCaret(sorterSlotFor(tile, e.clientX));
+      });
+      tile.addEventListener('drop', function (e) {
+        if (!sorterDrag) return;
+        e.preventDefault();
+        sorterDrop(sorterSlotFor(tile, e.clientX));
+      });
+
+      grid.appendChild(tile);
+      requestAnimationFrame(function () { SF.fit(frame, node); });
+    });
+
+    /* Dropping past the last tile means the end of the deck. */
+    grid.addEventListener('dragover', function (e) {
+      if (!sorterDrag || e.target !== grid) return;
+      e.preventDefault();
+      showSorterCaret(deck.slides.length);
+    });
+    grid.addEventListener('drop', function (e) {
+      if (!sorterDrag || e.target !== grid) return;
+      e.preventDefault();
+      sorterDrop(deck.slides.length);
+    });
+    sorter.appendChild(grid);
+  }
+
+  /** Slide titles wrap on purpose — on a slide. In a caption they cannot. */
+  function oneLine(text) { return String(text || '').replace(/\s+/g, ' ').trim(); }
+
+  /** How many tiles fit across, so ↑ and ↓ can step a row at a time. */
+  function sorterColumns() {
+    if (!sorter) return 1;
+    var tiles = sorter.querySelectorAll('.sorter-tile');
+    if (tiles.length < 2) return 1;
+    var top = /** @type {HTMLElement} */ (tiles[0]).offsetTop, n = 0;
+    for (var i = 0; i < tiles.length; i++) {
+      if (/** @type {HTMLElement} */ (tiles[i]).offsetTop !== top) break;
+      n++;
+    }
+    return Math.max(1, n);
+  }
+
+  function sorterKeys(e) {
+    var mod = e.metaKey || e.ctrlKey;
+    var last = deck.slides.length - 1;
+    var step = null;
+    if (e.key === 'Escape') { e.preventDefault(); closeSorter(); return; }
+    if (e.key === 'Enter') { e.preventDefault(); closeSorter(); return; }
+    if (mod && e.key.toLowerCase() === 'a') {
+      e.preventDefault();
+      picked = deck.slides.map(function (s, i) { return i; });
+      drawSorter();
+      return;
+    }
+    if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); restoreHistory(e.shiftKey); drawSorter(); return; }
+    if (e.key === 'ArrowRight') step = sel + 1;
+    else if (e.key === 'ArrowLeft') step = sel - 1;
+    else if (e.key === 'ArrowDown') step = sel + sorterColumns();
+    else if (e.key === 'ArrowUp') step = sel - sorterColumns();
+    else if (e.key === 'Home') step = 0;
+    else if (e.key === 'End') step = last;
+    if (step == null) return;
+    e.preventDefault();
+    var to = Math.max(0, Math.min(last, step));
+    /* Alt turns the arrows from "look at that one" into "put it there", which
+       is how a sorter stays usable without a mouse. */
+    if (e.altKey) {
+      var at = to > sel ? to + 1 : to;
+      var landed = reorder(picked, at);
+      if (landed < 0) return;
+      var count = picked.length;
+      picked = [];
+      for (var n = 0; n < count; n++) picked.push(landed + n);
+      sel = landed; anchor = landed;
+      touched();
+      drawSorter();
+    } else {
+      pick(to, e.shiftKey ? { shiftKey: true } : null);
+    }
+    var tile = sorter && sorter.querySelector('.sorter-tile.sel');
+    if (tile) {
+      /** @type {HTMLElement} */ (tile).focus();
+      tile.scrollIntoView({ block: 'nearest' });
+    }
   }
 
   function drawFoot() {
@@ -1946,6 +2247,8 @@
     },
     keydown: function (e) {
       var mod = e.metaKey || e.ctrlKey;
+      if (sorterOpen()) { sorterKeys(e); return; }
+      if (mod && e.key.toLowerCase() === 'g') { e.preventDefault(); openSorter(); return; }
       /* A slide in hand owns the keyboard: the arrows aim it instead of
          changing the selection, and nothing that edits the deck can fire until
          it has been put down or dropped. */

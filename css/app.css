@@ -230,6 +230,54 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 }
 .thumb.sel .thumb-tx { color: var(--ui-accent); opacity: 1; }
 
+/* ------------------------------------------------------------ slide sorter
+
+   The whole deck at once, so a move is a short drag with both ends in view. */
+body.sorter-on { overflow: hidden; }
+.sorter {
+  position: fixed; inset: 0; z-index: 210;
+  display: flex; flex-direction: column;
+  background: var(--ui-bg); color: var(--ui-text);
+}
+.sorter-head {
+  flex: none; display: flex; align-items: center; gap: 12px;
+  padding: 12px 18px; border-bottom: 1px solid var(--ui-line);
+}
+.sorter-head strong { font-size: 14px; }
+.sorter-count { font-size: 12px; color: var(--ui-dim); white-space: nowrap; }
+.sorter-hint { flex: 1; min-width: 0; font-size: 11px; color: var(--ui-dim); }
+.sorter-grid {
+  flex: 1; position: relative; overflow-y: auto; align-content: start;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 16px; padding: 18px;
+}
+.sorter-tile {
+  display: grid; gap: 5px; cursor: pointer;
+  padding: 5px; border-radius: 8px; border: 2px solid transparent;
+}
+.sorter-tile:hover { background: var(--ui-panel-2); }
+.sorter-tile.sel { border-color: var(--ui-accent); background: var(--ui-accent-soft); }
+.sorter-tile:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+.sorter-tile .frame {
+  aspect-ratio: 16/9; border-radius: 5px; overflow: hidden;
+  background: #000; position: relative; pointer-events: none;
+}
+.sorter-tile .frame .slide { transform-origin: 0 0; }
+.sorter-foot { display: flex; gap: 6px; align-items: baseline; min-width: 0; }
+.sorter-num { flex: none; font-size: 11px; color: var(--ui-dim); font-variant-numeric: tabular-nums; }
+.sorter-title {
+  flex: 1; min-width: 0; font-size: 11px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* One bar, moved about, rather than a gap element per slide: in a wrapping
+   grid an empty gap would still take a cell and shove the layout around. */
+.sorter-caret {
+  position: absolute; width: 3px; border-radius: 2px; pointer-events: none;
+  background: var(--ui-accent); box-shadow: 0 0 0 2px var(--ui-accent-soft);
+}
+/* The quiz studio shares the rail head and has no sorter to open. */
+html[data-ws="game"] #btnSorter { display: none; }
+
 .rail-foot { padding: 8px; border-top: 1px solid var(--ui-line); display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
 .rail-foot .rail-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .rail-foot .rail-actions .btn { flex: 1 1 60px; text-align: center; font-size: 12px; padding: 6px 4px; }
