@@ -82,23 +82,37 @@
     white-space: pre-wrap; max-height: 26vh; overflow-y: auto;
   }
 
-  .pv-foot { grid-area: foot; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .pv-foot {
+    grid-area: foot;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pv-foot-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
   .pv-foot .spacer { flex: 1; min-width: 12px; }
   .pv-foot .btn.on { background: var(--ui-accent); border-color: var(--ui-accent); color: #fff; }
-  .pv-room { position: relative; }
-  .pv-room > summary {
-    list-style: none; cursor: pointer;
+  .pv-room {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
   }
-  .pv-room > summary::-webkit-details-marker { display: none; }
-  .pv-room-menu {
-    position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 20;
-    display: flex; flex-direction: column; gap: 4px; min-width: 200px;
-    padding: 8px; border-radius: 10px;
-    background: var(--ui-panel); border: 1px solid var(--ui-line);
-    box-shadow: 0 8px 24px rgba(0,0,0,.18);
-  }
-  .pv-room-menu .btn { width: 100%; justify-content: flex-start; text-align: left; }
-  .pv-room-menu .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .pv-room[hidden] { display: none; }
+  .pv-foot .btn:disabled { opacity: .45; cursor: not-allowed; }
+  /* The pen lives here while it is held, so the room tools are not competing
+     for the eye with the tools of whatever you are in the middle of. */
+  .pv-ink { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .pv-ink[hidden] { display: none; }
+  .pv-ink .btn[aria-pressed=true] { background: #ec346d; border-color: #ec346d; color: #fff; }
+  .pv-ink .pv-ink-done { background: #1d6b45; border-color: #1d6b45; color: #fff; }
+  /* A drawable preview needs to look drawable, and needs to stop being a
+     click target that turns the page. */
+  .now .box.inking { outline: 2px solid #ec346d; outline-offset: 2px; }
 
   .strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
   .strip .mini {
@@ -343,31 +357,41 @@
   </div>
 
   <div class="pv-foot">
-    <button class="btn" data-cmd="prev">‹ Previous</button>
-    <button class="btn primary" data-cmd="next">Next ›</button>
-    <button class="btn" data-cmd="blank" id="btnBlank" title="Blank the projector (B)">Blank</button>
-    <button class="btn" data-cmd="freeze" id="btnFreeze" title="Freeze audience screen for digression (Z)">❄️ Freeze</button>
-    <button class="btn" data-cmd="who" aria-pressed="false" aria-controls="teacherWorkspace"
-            title="Open live responses and teacher entry here (W)">Live answers</button>
-    <details class="pv-room" id="roomTools">
-      <summary class="btn" title="Same room tools as the wall HUD">Room tools ▾</summary>
-      <div class="pv-room-menu" role="group" aria-label="Room tools">
+    <div class="pv-foot-row" role="group" aria-label="Show controls">
+      <button class="btn" data-cmd="prev">‹ Previous</button>
+      <button class="btn primary" data-cmd="next">Next ›</button>
+      <button class="btn" data-cmd="blank" id="btnBlank" title="Blank the projector (B)">Blank</button>
+      <button class="btn" data-cmd="freeze" id="btnFreeze" title="Freeze audience screen for digression (Z)">❄️ Freeze</button>
+      <button class="btn" data-cmd="who" aria-pressed="false" aria-controls="teacherWorkspace"
+              title="Open live responses and teacher entry here (W)">Live answers</button>
+      <div class="pv-room" id="roomTools">
         <button class="btn" data-cmd="rail" id="btnRail" title="Cycle room view (S)">Room view</button>
         <button class="btn" data-cmd="join" id="btnJoin" title="Show join QR and PIN (J)">Join QR</button>
+        <button class="btn" data-cmd="ink" title="Draw and spotlight on the wall (I)">Ink</button>
+        <button class="btn" data-cmd="full" id="btnFull" title="Toggle full screen on the wall (F)">Full screen</button>
+      </div>
+      <div class="pv-ink" id="inkTools" role="group" aria-label="Drawing tools" hidden>
+        <button class="btn" data-ink="draw" aria-pressed="false" title="Draw on the slide">✎ Draw</button>
+        <button class="btn" data-ink="spot" aria-pressed="false" title="Spotlight part of the slide">◎ Spotlight</button>
+        <button class="btn" data-ink="undo" title="Undo the last mark">↶ Undo</button>
+        <button class="btn" data-ink="clear" title="Clear all marks">🗑 Clear</button>
+        <button class="btn pv-ink-done" data-ink="done" title="Done drawing (I or Esc)">✓ Done</button>
+      </div>
+    </div>
+    <div class="pv-foot-row" role="group" aria-label="Room tools">
+      <div class="pv-room" id="roomToolsMore">
         <button class="btn" data-cmd="poll" id="btnPoll" title="Ask the room a quick question (V)">Quick poll</button>
         <button class="btn" data-cmd="focus" id="btnFocus" title="Show leaderboard (E)">Show leaderboard</button>
         <button class="btn" data-cmd="reactions" id="btnReactions" title="Turn audience reactions on or off (T)">Reactions: On</button>
         <button class="btn" data-cmd="blankPhones" id="btnBlankPhones" title="Blank every learner phone (Shift+B)">Blank phones</button>
         <button class="btn" data-cmd="floor" id="btnFloor" title="Who may speak (Shift+H)">Floor: follows the lesson</button>
         <button class="btn" data-cmd="reset" title="Clear answers and score again (R)">Reset scores</button>
-        <button class="btn" data-cmd="ink" title="Draw and spotlight on the wall (I)">Ink</button>
-        <button class="btn" data-cmd="full" id="btnFull" title="Toggle full screen on the wall (F)">Full screen</button>
         <button class="btn" data-cmd="help" title="Keyboard shortcuts on the wall (?)">Keyboard shortcuts</button>
       </div>
-    </details>
-    <div class="spacer"></div>
-    <button class="btn" id="resetTimer">Reset elapsed time</button>
-    <button class="btn" data-cmd="exit">End show</button>
+      <div class="spacer"></div>
+      <button class="btn" id="resetTimer">Reset elapsed time</button>
+      <button class="btn" data-cmd="exit">End show</button>
+    </div>
   </div>
 </div>
 
@@ -404,13 +428,167 @@
        on the show — sending it to the opener would put it on the wall. */
     b.onclick = b.dataset.cmd === 'who'
       ? function () { toggleNamed(); }
-      : function () {
-          cmd(b.dataset.cmd);
-          var room = $('roomTools');
-          if (room && room.open && b.closest('.pv-room-menu')) room.open = false;
-        };
+      : function () { cmd(b.dataset.cmd); };
   });
   $('resetTimer').onclick = function () { timerBase = Date.now(); };
+
+  /* ------------------------------------------------------------------ ink */
+
+  /* Drawing from the desk.
+   *
+   * The canvas that matters is on the wall; this is a second surface over the
+   * "On screen now" preview whose only job is to turn a pen stroke here into
+   * the same stroke there. Points go across in slide space (1280x720), so the
+   * preview can be any size and the mark still lands where it was drawn.
+   *
+   * The teacher is looking at this screen, not at the projector. Before this,
+   * turning ink on from the desk handed them a pen on the far side of the
+   * room. */
+  var inkMode = '', inkDrawing = false, inkSurface = null;
+  /* The desk keeps its own copy of every mark. The wall is where the ink
+     really lives, but a teacher drawing on this screen has to see the line
+     coming out under the pen — watching for it on the projector across the
+     room is not drawing, it is guessing. Same shapes, same colours, built
+     from the same commands, so the two stay in step. */
+  var inkLocal = [], inkActive = null, inkLastIndex = null;
+
+  function inkSvgNode(tag) {
+    return document.createElementNS('http://www.w3.org/2000/svg', tag);
+  }
+
+  function inkLocalBegin(mode, x, y) {
+    if (!inkSurface) return;
+    var n = inkSvgNode(mode === 'spot' ? 'circle' : 'polyline');
+    if (mode === 'spot') {
+      n.setAttribute('r', '100'); n.setAttribute('fill', '#ffe47755');
+      n.setAttribute('stroke', '#ffe477'); n.setAttribute('stroke-width', '5');
+    } else {
+      n.setAttribute('fill', 'none'); n.setAttribute('stroke', '#ec346d');
+      n.setAttribute('stroke-width', '5'); n.setAttribute('stroke-linecap', 'round');
+      n.setAttribute('stroke-linejoin', 'round');
+      n._points = [];
+    }
+    inkSurface.appendChild(n);
+    inkLocal.push(n);
+    inkActive = n;
+    inkLocalMove(x, y);
+  }
+
+  function inkLocalMove(x, y) {
+    var n = inkActive;
+    if (!n) return;
+    if (n.tagName === 'circle') { n.setAttribute('cx', x); n.setAttribute('cy', y); return; }
+    n._points.push(x + ',' + y);
+    if (n._points.length === 1) n._points.push(x + ',' + y);
+    n.setAttribute('points', n._points.join(' '));
+  }
+
+  function inkLocalClear() {
+    inkLocal.forEach(function (n) { n.remove(); });
+    inkLocal = []; inkActive = null;
+  }
+
+  function inkCmd(action, extra) {
+    cmd('ink', Object.assign({ action: action }, extra || {}));
+  }
+
+  function paintInkMode() {
+    $('inkTools').querySelectorAll('[data-ink=draw],[data-ink=spot]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.ink === inkMode));
+    });
+    var svg = $('boxNow').querySelector('.desk-ink');
+    if (svg) svg.classList.toggle('drawing', !!inkMode);
+  }
+
+  function inkPoint(svg, e) {
+    var r = svg.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * 1280 / r.width, y: (e.clientY - r.top) * 720 / r.height };
+  }
+
+  /* The overlay is rebuilt whenever the preview is, because `into` replaces
+     the node it lives in. Putting it inside the slide rather than over the box
+     means it inherits the preview's scale for free. */
+  function syncInk() {
+    var on = !!(state && state.inkOn);
+    var tools = $('inkTools');
+    tools.hidden = !on;
+    document.querySelectorAll('.pv-room').forEach(function (el) { el.hidden = on; });
+    inkMode = (state && state.inkMode) || '';
+    paintInkMode();
+
+    var box = $('boxNow');
+    box.classList.toggle('inking', on);
+    var node = box.querySelector('.slide');
+    var svg = box.querySelector('.desk-ink');
+    if (!on || !node) {
+      inkLocalClear();
+      if (inkSurface) inkSurface.remove();
+      inkSurface = null;
+      inkDrawing = false;
+      return;
+    }
+    /* A new slide gets a new canvas on the wall, so the copy here goes too. */
+    if (inkLastIndex !== state.index) { inkLocalClear(); inkLastIndex = state.index; }
+    /* One surface for the whole session, re-parented rather than rebuilt. A
+       fresh element each redraw would drop the pointer capture and the
+       half-drawn stroke with it. */
+    if (!inkSurface) inkSurface = makeInkSurface();
+    if (inkSurface.parentNode !== node) node.appendChild(inkSurface);
+    inkSurface.classList.toggle('drawing', !!inkMode);
+  }
+
+  function makeInkSurface() {
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 1280 720');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('class', 'teaching-ink desk-ink');
+    svg.onpointerdown = function (ev) {
+      if (!inkMode) return;
+      ev.preventDefault();
+      try { svg.setPointerCapture(ev.pointerId); } catch (e) { /* already gone */ }
+      inkDrawing = true;
+      var p = inkPoint(svg, ev);
+      inkLocalBegin(inkMode, p.x, p.y);
+      inkCmd('begin', Object.assign({ mode: inkMode }, p));
+    };
+    svg.onpointermove = function (ev) {
+      if (!inkDrawing) return;
+      var p = inkPoint(svg, ev);
+      inkLocalMove(p.x, p.y);
+      inkCmd('move', p);
+    };
+    svg.onpointerup = svg.onpointercancel = function () {
+      if (!inkDrawing) return;
+      inkDrawing = false;
+      inkActive = null;
+      inkCmd('end');
+    };
+    return svg;
+  }
+
+  $('inkTools').querySelectorAll('[data-ink]').forEach(function (b) {
+    b.onclick = function () {
+      var act = b.dataset.ink;
+      if (act === 'done') { cmd('ink'); return; }
+      if (act === 'undo') {
+        var last = inkLocal.pop();
+        if (last) last.remove();
+        inkActive = null;
+        inkCmd('undo');
+        return;
+      }
+      if (act === 'clear') { inkLocalClear(); inkCmd('clear'); return; }
+      /* Pressing the tool you are holding puts it down, which is how the wall
+         HUD behaves and the only way to stop drawing without stopping ink. */
+      inkMode = inkMode === act ? '' : act;
+      inkCmd('mode', { mode: inkMode });
+      /* Show it held straight away rather than waiting for the wall to echo
+         the change back: the pen is in this hand, and a button that waits on
+         another window before it looks pressed reads as a dead button. The
+         echo still arrives and agrees. */
+      paintInkMode();
+    };
+  });
 
   /* ---------------------------------------------------------------- Q & A */
 
@@ -696,7 +874,7 @@
     waitingState = d.waiting || 0;
     drawQA();
     drawCues();
-    state = { startedAt:d.startedAt, deck: SF.normalizeDeck(d.deck), index: d.index, answers: d.answers || {}, ...SF.Boards.snapshot(d), exploreStates:d.exploreStates || {}, revealStep:d.revealStep || 0, effectiveTimeLimit:d.effectiveTimeLimit };
+    state = { startedAt:d.startedAt, deck: SF.normalizeDeck(d.deck), index: d.index, answers: d.answers || {}, ...SF.Boards.snapshot(d), exploreStates:d.exploreStates || {}, revealStep:d.revealStep || 0, effectiveTimeLimit:d.effectiveTimeLimit, inkOn:!!d.inkOn, inkMode:d.inkMode || '' };
 
     drawNextLabel(d.nextAction);
     syncRoomTools(d);
@@ -790,7 +968,10 @@
     var deck = state.deck, i = state.index;
     var s = deck.slides[i];
 
-    into($('boxNow'), s, i);
+    /* Never rebuild the slide someone is drawing on. `into` replaces the node
+       the pen is writing against, and a state sync arriving mid-stroke would
+       otherwise cut the line in half. */
+    if (!inkDrawing) into($('boxNow'), s, i);
     into($('boxNext'), deck.slides[i + 1], i + 1);
     $('pos').textContent = 'Slide ' + (i + 1) + ' of ' + deck.slides.length + (s.progressive ? ' · ' + state.revealStep + ' points revealed' : '');
 
@@ -831,6 +1012,8 @@
     }
 
     drawStrip();
+    /* After `into`, because it replaces the node the overlay hangs on. */
+    syncInk();
   }
 
   function drawStrip() {

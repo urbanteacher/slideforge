@@ -2337,6 +2337,9 @@
         phonesBlank: !!(SF.Live && SF.Live.phonesBlank),
         floor: (SF.Live && SF.Live.floor) || 'auto',
         roomView: Player.roomSidebarState ? Player.roomSidebarState() : 'hidden',
+        /* So the desk can show the pen as held, and which tool it is. */
+        inkOn: !!(SF.Teaching && SF.Teaching.isOpen && SF.Teaching.isOpen()),
+        inkMode: (SF.Teaching && SF.Teaching.mode) ? SF.Teaching.mode() : '',
         focusOn: !!Player._focus,
         focusKind: (SF.Live && SF.Live.active && SF.Live.expandKind)
           ? SF.Live.expandKind() : null,
@@ -2361,6 +2364,17 @@
     if (ev.source!==presenterWin || ev.origin!==location.origin || !d || d.type !== 'sf-presenter-cmd') return;
     if (d.cmd === 'goto') Player.goTo(d.index);
     else if (d.cmd === 'hello') syncPresenter();
+    /* Inking driven from the desk. A bare `ink` is still the toggle the HUD
+       sends; only a command carrying an action is the pen itself.
+       A stroke must not sync the desk back. Syncing redraws its preview, and
+       the drawing surface hangs on the very node that redraw replaces — so
+       echoing a stroke back tore the pen out of the teacher's hand halfway
+       through the line they were drawing. The desk already knows what it
+       drew; it is the wall that needed telling. */
+    else if (d.cmd === 'ink' && d.action && SF.Teaching && SF.Teaching.remote) {
+      SF.Teaching.remote(d.action, d);
+      if (d.action !== 'begin' && d.action !== 'move' && d.action !== 'end') syncPresenter();
+    }
     else if (SF.Boards && SF.Boards.command && SF.Boards.command(d.cmd, d.action, d.card)) {}
     else if (d.cmd === 'moment' && Player.momentCommand) Player.momentCommand(d);
     else if (d.cmd === 'quickPoll') Player.quickPoll(d);

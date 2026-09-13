@@ -26,7 +26,22 @@ function update(){
   P.revealStep=shown;P.syncPresenter();P.emit('step',{shown:shown});
 }
 function point(e){var r=svg.getBoundingClientRect();return [(e.clientX-r.left)*1280/r.width,(e.clientY-r.top)*720/r.height];}
-function stroke(e){var p=point(e);if(mode==='spot'){active.setAttribute('cx',p[0]);active.setAttribute('cy',p[1]);}else {active._points.push(p.join(','));if(active._points.length===1)active._points.push(p.join(','));active.setAttribute('points',active._points.join(' '));}}
+/* Strokes are built from slide-space points (1280x720), never from the event.
+   The pen may be on this screen or on the presenter desk across the room, and
+   a mark has to land in the same place on the wall either way. */
+function beginStroke(p){
+  if(!svg)return;
+  active=ns(mode==='spot'?'circle':'polyline');
+  if(mode==='spot'){active.setAttribute('r','100');active.setAttribute('fill','#ffe47755');active.setAttribute('stroke','#ffe477');active.setAttribute('stroke-width','5');}
+  else{active.setAttribute('fill','none');active.setAttribute('stroke','#ec346d');active.setAttribute('stroke-width','5');active.setAttribute('stroke-linecap','round');active.setAttribute('stroke-linejoin','round');active._points=[];}
+  svg.appendChild(active);strokes.push(active);extendStroke(p);
+}
+function extendStroke(p){
+  if(!active)return;
+  if(mode==='spot'){active.setAttribute('cx',p[0]);active.setAttribute('cy',p[1]);}
+  else{active._points.push(p.join(','));if(active._points.length===1)active._points.push(p.join(','));active.setAttribute('points',active._points.join(' '));}
+}
+function endStroke(){active=null;}
 function setMode(v){
   mode=v;
   if(svg)svg.classList.toggle('drawing',!!v);
@@ -154,11 +169,9 @@ P.on('slide',function(e){
   svg=ns('svg');svg.setAttribute('viewBox','0 0 1280 720');svg.classList.add('teaching-ink');svg.setAttribute('aria-label','Temporary slide annotations');
   if(mode)svg.classList.add('drawing');
   e.node.appendChild(svg);strokes=[];
-  svg.onpointerdown=function(ev){if(!mode)return;ev.preventDefault();svg.setPointerCapture(ev.pointerId);active=ns(mode==='spot'?'circle':'polyline');
-  if(mode==='spot'){active.setAttribute('r','100');active.setAttribute('fill','#ffe47755');active.setAttribute('stroke','#ffe477');active.setAttribute('stroke-width','5');}
-  else{active.setAttribute('fill','none');active.setAttribute('stroke','#ec346d');active.setAttribute('stroke-width','5');active.setAttribute('stroke-linecap','round');active.setAttribute('stroke-linejoin','round');active._points=[];}
-  svg.appendChild(active);strokes.push(active);stroke(ev);};
-  svg.onpointermove=function(ev){if(active)stroke(ev);};svg.onpointerup=svg.onpointercancel=function(){active=null;};
+  svg.onpointerdown=function(ev){if(!mode)return;ev.preventDefault();svg.setPointerCapture(ev.pointerId);beginStroke(point(ev));};
+  svg.onpointermove=function(ev){if(active)extendStroke(point(ev));};
+  svg.onpointerup=svg.onpointercancel=endStroke;
 });
 
 P.on('close',function(){
@@ -168,9 +181,41 @@ P.on('close',function(){
   steps=[];dim=false;clear();setMode('');
 });
 
+/* The desk draws on the wall.
+ *
+ * Whoever is teaching is usually looking at the presenter screen, not at the
+ * projector, so "turn inking on" from over there used to hand them a pen they
+ * could not reach: the canvas and its buttons are both on the wall. These let
+ * the desk drive this canvas remotely. Points arrive already in slide space,
+ * so the desk's preview can be any size it likes. */
+function remote(action,data){
+  data=data||{};
+  if(action==='mode'){
+    if(!isOpen())toggleBar(true);
+    setMode(data.mode||'');
+    return true;
+  }
+  /* No canvas means no slide is showing — a mark would have nowhere to live. */
+  if(!svg)return false;
+  if(action==='begin'){
+    if(!isOpen())toggleBar(true);
+    if(data.mode&&data.mode!==mode)setMode(data.mode);
+    if(!mode)return false;
+    beginStroke([data.x,data.y]);
+    return true;
+  }
+  if(action==='move'){extendStroke([data.x,data.y]);return !!active;}
+  if(action==='end'){endStroke();return true;}
+  if(action==='undo'){undo();return true;}
+  if(action==='clear'){clear();return true;}
+  return false;
+}
+
 SF.Teaching={
   toggleBar:toggleBar,
   isOpen:isOpen,
+  mode:function(){return mode;},
+  remote:remote,
   clear:clear,
   undo:undo,
   next:function(){if(shown<steps.length){shown++;update();return true;}return false;},

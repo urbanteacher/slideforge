@@ -11,6 +11,7 @@
     "test:all": "node tools/test-all.mjs",
     "test:all:visual": "node tools/test-all.mjs --visual",
     "smoke": "npm run smoke:activities && npm run smoke:rehearse && npm run smoke:quick-poll && npm run smoke:misconceptions && npm run smoke:demo && npm run smoke:fake-demo && npm run smoke:knowledge-flip && npm run smoke:lowstakes && npm run smoke:live && npm run smoke:exploration",
+    "smoke:desk-ink": "node tools/smoke-desk-ink.mjs",
     "smoke:mindmap": "node tools/smoke-mindmap.mjs",
     "smoke:refresh": "node tools/smoke-refresh.mjs",
     "smoke:exploration": "node tools/smoke-exploration.mjs",
