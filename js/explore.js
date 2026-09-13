@@ -18,9 +18,31 @@
     else return;
     player.exploreStates = player.exploreStates || {};
     player.exploreStates[slide.id] = next;
+    /* The local view updates now — that is what makes a drag feel attached to
+       the finger. The presenter sync is coalesced to one a frame: it builds a
+       full state payload and posts it, and a pointer drag fires at display
+       rate, so an un-throttled sync sent a hundred-odd of them a second to the
+       private screen. Invisible without a presenter window open, which is the
+       one configuration a lecturer does not teach in. */
     if (player._current && player._current._exploreRefresh) player._current._exploreRefresh(next);
-    player.syncPresenter();
+    queueSync(player);
   }
+  /* rAF rather than a timer: the sync lands with the frame the drag is
+     painting, and the last change of a gesture still gets one because the
+     frame after it always runs. Somewhere without animation frames — a test
+     context, a headless render — there is no drag to coalesce either, so the
+     honest fallback is to sync straight away rather than to invent a timer. */
+  var raf = (typeof window !== 'undefined' && window.requestAnimationFrame)
+    ? window.requestAnimationFrame.bind(window)
+    : null;
+  var syncQueued = false;
+  function queueSync(player) {
+    if (!raf) { player.syncPresenter(); return; }
+    if (syncQueued) return;
+    syncQueued = true;
+    raf(function () { syncQueued = false; player.syncPresenter(); });
+  }
+
   function nextAction(player) {
     var s = player.deck && player.deck.slides[player.idx];
     if (!s || !active(s)) return null;
@@ -112,7 +134,7 @@
         requestAnimationFrame(function () { root._exploreRefresh(view); });
       } else {
         var graph = svg('svg', { viewBox: '0 0 1000 360', class: 'explore-graph', role: 'img' });
-        var values = Array.from({ length: 101 }, function (_, i) { var x = c.min + (c.max - c.min) * i / 100; return [x, SF.explorationValue(c, x)]; });
+        var values = SF.explorationCurve(c, 100);
         var low = Math.min(0, ...values.map(function (p) { return p[1]; })), high = Math.max(1, ...values.map(function (p) { return p[1]; }));
         function X(x) { return 90 + (x - c.min) / (c.max - c.min) * 830; }
         function Y(y) { return 290 - (y - low) / (high - low) * 250; }

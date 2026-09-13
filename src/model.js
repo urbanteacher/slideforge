@@ -1,4 +1,4 @@
-import { normalizeExploration, explorationValue } from './deck/exploration.js';
+import { normalizeExploration, explorationValue, explorationCurve } from './deck/exploration.js';
 import { createBoardRuntime } from "./boards/runtime.js";
 import { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes } from "./activities/catalogue.js";
 import { DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
@@ -1117,6 +1117,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   chartData: chartData,
   normalizeExploration: normalizeExploration,
   explorationValue: explorationValue,
+  explorationCurve: explorationCurve,
   GALLERY_MAX: GALLERY_MAX,
   uid: uid,
   makeSlide: makeSlide,

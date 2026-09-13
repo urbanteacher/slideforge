@@ -35,10 +35,22 @@
       prompt: String(r.prompt || "What pattern do you predict?").slice(0, 240)
     };
   }
-  function explorationValue(config, x) {
-    const c = normalizeExploration(config);
+  function valueOf(c, x) {
     const input = bounded(x, c.initial, c.min, c.max);
     return c.a * (c.model === "quadratic" ? input * input : input) + c.b;
+  }
+  function explorationValue(config, x) {
+    return valueOf(normalizeExploration(config), x);
+  }
+  function explorationCurve(config, steps) {
+    const c = normalizeExploration(config);
+    const n = Math.max(1, Math.min(400, Number(steps) || 100));
+    const out = [];
+    for (let i = 0; i <= n; i++) {
+      const x = c.min + (c.max - c.min) * i / n;
+      out.push([x, valueOf(c, x)]);
+    }
+    return out;
   }
 
   // src/boards/runtime.js
@@ -7747,6 +7759,7 @@
     chartData,
     normalizeExploration,
     explorationValue,
+    explorationCurve,
     GALLERY_MAX,
     uid,
     makeSlide,

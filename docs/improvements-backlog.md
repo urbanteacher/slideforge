@@ -21,9 +21,9 @@ coordinating rather than starting cold.
 |---|------|--------|--------|
 | 1 | Present button clipped 17px at 375px | S | **Done** — `18899f7` |
 | 2 | 27 HUD buttons at 36×36, under the 44px touch floor | S | To do |
-| 3 | Before/after drag posts full presenter state per pointermove | S | To do |
+| 3 | Before/after drag posts full presenter state per pointermove | S | **Done** — 60 commands → 1 sync |
 | 4 | Inspector mutates the slide mid-render without marking dirty | M | To do |
-| 5 | `explorationValue` re-normalises per call, 101× per graph | S | To do |
+| 5 | `explorationValue` re-normalises per call, 101× per graph | S | **Done** — 1.8× on the curve |
 | 6 | Blank the phones from the HUD | S–M | **Done** — `Shift+B` / room menu |
 | 7 | Gate ✋ and ? to junction points | S | To do |
 | 8 | Learner theming — deck theme has no route to the phone | M | Deferred · shared files |
@@ -186,3 +186,28 @@ The runner's header comment said 144 while it ran 168; corrected.
   presenter's next-slide pane. Now stated as "a figure is covered when a later
   one is not still hidden", which holds in both cases; re-verified that a live
   build still shows exactly one caption per press.
+
+- **13 Sep** — Items 3 and 5 done.
+
+  **3** The presenter sync is coalesced to one an animation frame. Measured in
+  the browser: 60 `position` commands now produce **1** sync instead of 60, with
+  the final state intact. The local view still updates synchronously, which is
+  what makes a drag feel attached to the finger. Where there are no animation
+  frames — a test vm, a headless render — it syncs straight away rather than
+  inventing a timer; the first attempt used a `setTimeout` fallback and broke
+  three exploration tests, because that vm has no timers either.
+
+  **5** Added `explorationCurve(config, steps)`, which normalises once and
+  samples the curve, and pointed the what-if graph at it. `explorationValue`
+  stays defensive for callers handing it whatever is on a slide.
+
+  Worth recording honestly: the payoff is **1.8×** (5.6ms vs 9.8ms for 200
+  curves), not the order of magnitude "101 normalisations" implied. The finding
+  was real; the cost of it was modest.
+
+  Two measurements had to be thrown away before these. A spy on
+  `SF.normalizeExploration` reported zero calls because `explorationCurve` calls
+  the module-local binding, not the one hung off `SF`; and a sync count of zero
+  turned out to be an instrumentation artefact rather than perfect coalescing.
+  Timing the two paths, and checking `document.visibilityState` first, gave
+  numbers worth quoting.

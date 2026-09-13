@@ -23,9 +23,37 @@ function normalizeExploration(raw) {
     prompt: String(r.prompt || 'What pattern do you predict?').slice(0, 240)
   };
 }
-function explorationValue(config, x) {
-  const c = normalizeExploration(config);
+/* The maths, against a config already known to be sound. Split out so a caller
+   plotting a curve pays for normalising once rather than once per point. */
+function valueOf(c, x) {
   const input = bounded(x, c.initial, c.min, c.max);
   return c.a * (c.model === 'quadratic' ? input * input : input) + c.b;
 }
-export { normalizeExploration, explorationValue };
+
+/* The public one stays defensive: it is handed whatever is on the slide. */
+function explorationValue(config, x) {
+  return valueOf(normalizeExploration(config), x);
+}
+
+/**
+ * The whole curve in one pass. Sampling it through explorationValue meant a
+ * full normalisation per point — rebuilding the spots array and slicing eight
+ * strings, 101 times, to draw one graph.
+ *
+ * @param {any} config
+ * @param {number} [steps]
+ * @returns {[number, number][]} [input, output] pairs across the input range
+ */
+function explorationCurve(config, steps) {
+  const c = normalizeExploration(config);
+  const n = Math.max(1, Math.min(400, Number(steps) || 100));
+  /** @type {[number, number][]} */
+  const out = [];
+  for (let i = 0; i <= n; i++) {
+    const x = c.min + (c.max - c.min) * i / n;
+    out.push([x, valueOf(c, x)]);
+  }
+  return out;
+}
+
+export { normalizeExploration, explorationValue, explorationCurve };
