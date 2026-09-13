@@ -832,7 +832,8 @@ function admitWaiting(room) {
       teamName: p.team != null ? room.teams[p.team] : null,
       admitted: true,
       round: room.roundNo,
-      reactions: room.reactions
+      reactions: room.reactions,
+      phonesBlank: room.phonesBlank
     });
     sendContext(room, p.sock);
     const open = promptMessage(room);
@@ -947,6 +948,12 @@ ws.attach(server, (sock, req) => {
            switched off in the moment it is being abused, not before the
            lesson in a settings panel. Session-scoped, on by default. */
         reactions: true,
+        /* Phones dark, on the host's say-so: a digression, a slide the room
+           should not have in their hand, or simply "eyes up". Room state
+           rather than a broadcast, because a phone that rejoins mid-blank has
+           to arrive blank — otherwise the one student who reconnects is the
+           one student still looking down. Session-scoped, off by default. */
+        phonesBlank: false,
         reactAt: new Map(),      // playerId -> when they last reacted
         reactBurst: [],          // recent reaction times, for the room ceiling
         /* Where the host is. Sent with each slide so a signal can be filed
@@ -1391,6 +1398,11 @@ ws.attach(server, (sock, req) => {
         record(room, 'qaPin', { id: room.qaPinned ? room.qaPinned.id : null });
         pushQA(room);
 
+      } else if (m.t === 'blankPhones') {
+        room.phonesBlank = m.on === true;
+        broadcast(room, { t: 'blankPhones', on: room.phonesBlank });
+        log('room ' + room.pin + ' phones ' + (room.phonesBlank ? 'blanked' : 'restored'));
+
       } else if (m.t === 'reactions') {
         room.reactions = m.on !== false;
         /* The phones are told, so the control disappears from them rather
@@ -1521,7 +1533,7 @@ ws.attach(server, (sock, req) => {
           record(room, 'resume', {id:me.id});
           if (room.waiting.has(me.id) && room.joinOpen) admitWaiting(room);
           const held = room.waiting.has(me.id);
-          sock.json({t:held?'waiting':'joined',name:me.name,title:room.title,phase:room.phase,mode:room.mode,team:me.team,teamName:me.team != null ? room.teams[me.team] : null,score:me.score,resumeToken:me.resumeToken,reactions:room.reactions});
+          sock.json({t:held?'waiting':'joined',name:me.name,title:room.title,phase:room.phase,mode:room.mode,team:me.team,teamName:me.team != null ? room.teams[me.team] : null,score:me.score,resumeToken:me.resumeToken,reactions:room.reactions,phonesBlank:room.phonesBlank});
           if (!held) {
             sendContext(room, sock);
             if (room.phase === 'question' && room.question && room.question.eligible.has(me.id)) {
@@ -1624,7 +1636,8 @@ ws.attach(server, (sock, req) => {
            ways a phone can become a player — joining, being admitted from the
            waiting room, and resuming — because a phone that missed the toggle
            shows a button that does nothing. */
-        reactions: room.reactions
+        reactions: room.reactions,
+        phonesBlank: room.phonesBlank
       });
       /* A prompt is broadcast when the host opens it, so somebody arriving
          afterwards would never see it. Hand it over on join instead — unlike a

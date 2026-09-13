@@ -153,6 +153,7 @@
     },
     freeze: function () { Player.toggleFreeze(); },
     reactions: function () { Player.emit('reactionsToggle', {}); },
+    blankPhones: function () { Player.emit('blankPhonesToggle', {}); },
     reset: function () { Player.resetScores(); },
     /* Named answers live on the private screen. Opening presenter view if it
        is shut is the whole action: there is nowhere else this can go without
@@ -2342,6 +2343,8 @@
       /* T for thumbs. A live control rather than a setting, because switching
          reactions off matters in the moment they are being abused. */
       case 't': case 'T': e.preventDefault(); Player.emit('reactionsToggle', {}); break;
+      /* Shift+B, next to B for the wall. Two screens, two blanks. */
+      case 'B': if (e.shiftKey) { e.preventDefault(); Player.emit('blankPhonesToggle', {}); } break;
       case 'w': case 'W': e.preventDefault(); Player.control('who'); break;
       /* I opens the pen, not P — P is already Previous, and a pen that also
          went back a slide would be found the hard way. X clears the ink,

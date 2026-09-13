@@ -24,7 +24,60 @@ h1{font-size:29px;line-height:1.15;letter-spacing:-1px;font-weight:600}.lead{col
 #scPrompt{gap:18px}#fbKind{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8e799d}#fbPrompt{font-size:27px;max-width:330px}#fbPad{width:100%;grid-template-columns:1fr}#fbPad .pick{font-size:16px;min-height:70px}#fbPad .l{font-size:16px}.pad.scale{max-width:340px}.scale .pick{min-height:50px!important}.scale-end{color:#77886b}
 #scPace .pick{background:#f2eadc;color:#8c7044;border:1px solid #e4d3b6;min-height:76px}.qarow{background:white;border-color:#dfe5d6;color:#354b2d}.qavote{background:#e8efdd;color:#657d4e;border-color:#dbe6ce}.qavote.mine{background:#627c4c;border-color:#627c4c}.qarow .qwho{color:#8c967f}
 #scResult.on{padding-top:25px;gap:18px}#rVerdict{font-size:30px}#rScore,#oScore{font-size:54px;color:#7d9467}.why{background:white;border:1px solid #e1e7d8;color:#4b623c;border-radius:14px;padding:20px}.why-answer{color:#5f7b4b}.why-body{color:#6d7f5f;font-size:14px;line-height:1.7}.gain{color:#82956e}footer{padding:10px 15px;padding-bottom:max(10px,env(safe-area-inset-bottom));font-size:9px;color:#9ba590;background:#f6f7f2;flex:none;border-top:1px solid #e8ecdf}button:focus-visible{outline:2px solid #997daf;outline-offset:3px}
-@media(min-width:600px){main{padding-inline:30px}.lesson-card{padding:30px}.lesson-card h2{font-size:34px}#scWait h1{max-width:none}.center{padding-top:35px}}
+/* Phone-first stays narrow; tablets and laptops grow the companion column
+   without turning it into a second projector. */
+@media(min-width:600px){
+  main{padding-inline:30px}
+  .lesson-card{padding:30px}
+  .lesson-card h2{font-size:34px}
+  #scWait h1,#scWait .lead{max-width:none}
+  .center{padding-top:35px}
+  .quiet-note{max-width:42ch}
+}
+@media(min-width:768px){
+  body{
+    background:
+      radial-gradient(ellipse 70% 45% at 50% 0%,#e7eedc 0%,transparent 60%),
+      #f6f7f2;
+  }
+  header{
+    padding-inline:max(28px,calc((100% - 720px) / 2));
+    box-sizing:border-box;
+  }
+  main{padding-inline:40px;padding-top:28px}
+  .screen{max-width:720px}
+  #lessonPosition,#activityNotice{max-width:720px;width:100%;margin-inline:auto;box-sizing:border-box}
+  #activityNotice{margin-inline:auto}
+  #scJoin h1{max-width:22ch;font-size:42px}
+  #scJoin .lead{max-width:38ch}
+  input[type=text],input[type=tel],.go{max-width:420px}
+  #scWait h1{font-size:30px;max-width:28ch}
+  #scWait .lead{font-size:15px;max-width:48ch}
+  .lesson-card h2{font-size:36px}
+  .lesson-card p{font-size:15px;line-height:1.75}
+  #questionText{font-size:26px}
+  #qPad{grid-template-columns:1fr 1fr}
+  #qPad.one{grid-template-columns:1fr}
+  #qPad .pick{min-height:88px}
+  #qTypeWrap,#qNumWrap{max-width:480px}
+  #qOrderWrap{max-width:520px}
+  #fbPrompt{max-width:36ch;font-size:32px}
+  #fbPad{grid-template-columns:1fr 1fr}
+  #fbPad.one,.pad.scale{grid-template-columns:1fr}
+  .pad.scale{max-width:420px}
+  .teamgrid{max-width:520px}
+  .qalist{max-width:560px}
+}
+@media(min-width:1024px){
+  .screen{max-width:800px}
+  #lessonPosition,#activityNotice{max-width:800px}
+  header{padding-inline:max(48px,calc((100% - 800px) / 2))}
+  main{padding-inline:48px}
+  #questionText{font-size:28px}
+  .lesson-card{padding:34px 36px}
+  .phone-clues{padding:22px 18px}
+  .phone-clues .emoji-clue{min-width:56px;min-height:56px;font-size:32px}
+}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 body:not([data-screen=scQuestion]):not([data-screen=scResult]) #hdrScore{display:none}
 .askbtn{min-width:44px;min-height:44px}#bookmarkCurrent{min-width:44px;min-height:44px}.verdict.right{color:#39764e}.verdict.wrong{color:#aa4b43}
@@ -106,3 +159,20 @@ body[data-game-role=paper] #waitLead{max-width:34ch;color:#5c6d52}
 #scResult .verdict{color:inherit}
 body[data-game-style] #rScore{color:var(--game-accent)}
 
+
+/* Blanked phones. Covers the app rather than replacing it, so the learner's
+   place and any half-typed answer survive underneath. Nothing inside is
+   interactive: the point is that there is nothing to do here. */
+#blankVeil{position:fixed;inset:0;z-index:200;display:grid;place-items:center;
+  background:#1d2a18;color:#eef2e6;text-align:center;padding:32px}
+#blankVeil[hidden]{display:none}
+#blankVeil .veil-inner{max-width:300px;display:grid;gap:12px;justify-items:center}
+#blankVeil .veil-mark{font-size:48px;line-height:1}
+#blankVeil strong{font-size:26px;letter-spacing:-.5px}
+#blankVeil p{font-size:14px;line-height:1.6;color:#b9c8ad;margin:0}
+/* The header stays reachable underneath but nothing can be tapped through. */
+body.phones-blank{overflow:hidden}
+@media (prefers-reduced-motion:no-preference){
+  #blankVeil{animation:veilIn .18s ease}
+  @keyframes veilIn{from{opacity:0}to{opacity:1}}
+}

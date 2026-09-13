@@ -1344,6 +1344,7 @@
     SF.Player.on('sidebarShow', showSidebar);
     SF.Player.on('qaCommand', moderate);
     SF.Player.on('reactionsToggle', toggleReactions);
+    SF.Player.on('blankPhonesToggle', toggleBlankPhones);
   }
 
   /**
@@ -1400,6 +1401,22 @@
     SF.Player.start(Live.deck, 0);
     if (!Live.prompt && Live.deck.quiz.scoreboard && Live.rows.length) paintRail();
   };
+
+  /* Phones dark on the host's say-so. Deliberately separate from the wall
+     Blank (B): they are two screens and a teacher wants them independently —
+     a digression with the slide still up, or a slide up with nothing in the
+     room's hands. Named "Blank phones" everywhere for the same reason. */
+  function toggleBlankPhones() {
+    if (!Live.active) {
+      SF.toast('Blanking phones needs a live room — start Host live first.');
+      return;
+    }
+    Live.phonesBlank = !Live.phonesBlank;
+    send({ t: 'blankPhones', on: Live.phonesBlank });
+    SF.toast(Live.phonesBlank
+      ? 'Phones blanked — the room is looking up'
+      : 'Phones back — the room can answer again');
+  }
 
   function toggleReactions() {
     if (!Live.active) return;

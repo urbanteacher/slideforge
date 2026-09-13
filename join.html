@@ -487,6 +487,13 @@
 
 </main>
 
+<div id="blankVeil" hidden aria-live="assertive">
+  <div class="veil-inner">
+    <div class="veil-mark">✋</div>
+    <strong>Eyes up</strong>
+    <p>Your teacher has paused the phones. Nothing you have typed is lost.</p>
+  </div>
+</div>
 <div class="reactbar" id="reactBar" style="display:none">
   <button type="button" data-react="clap" aria-label="Applause">👏</button>
   <button type="button" data-react="yes" aria-label="Got it">👍</button>
@@ -671,6 +678,16 @@
   var flow = createLearnerFlow();
   var panelActivity = null;
   var context = null, reactionsOn = true, acknowledged = {}, saves = [], saveStorageKey = null;
+  /* Covered, not cleared. A blanked phone keeps its screen, its scroll and
+     anything half-typed underneath the veil, so lifting it puts the learner
+     back exactly where they were rather than making them find their place. */
+  function setBlank(on) {
+    var veil = $('blankVeil');
+    if (!veil) return;
+    veil.hidden = !on;
+    document.body.classList.toggle('phones-blank', !!on);
+  }
+
   function show(id) {
     if (['scAsk','scPace','scSaved'].includes(id) && !flow.panel) panelActivity = (context && context.slideId) + ':' + flow.main;
     var visible = flow.show(id);
@@ -864,6 +881,7 @@
         me.score = m.score || 0;
         me.team = m.team != null ? m.team : null;
         me.teamName = m.teamName || null;
+        setBlank(m.phonesBlank === true);
         header(true);
         $('foot').textContent = m.title || 'SlideForge · Your lesson companion';
         $('holdWho').textContent = me.teamName
@@ -882,6 +900,7 @@
         me.score = m.score || 0;
         me.team = m.team != null ? m.team : null;
         me.teamName = m.teamName || null;
+        setBlank(m.phonesBlank === true);
         showReactBar(m.reactions !== false);
         header(true);
         $('waitIcon').textContent = '✓';
@@ -966,6 +985,10 @@
 
       case 'signalled':
         signalled(m.kind);
+        break;
+
+      case 'blankPhones':
+        setBlank(m.on === true);
         break;
 
       case 'reactions':
