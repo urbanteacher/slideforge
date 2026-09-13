@@ -167,6 +167,8 @@
         },
         {
           type: 'introduction',
+          image: 'https://cdn.asp.events/CLIENT_Ascentia_4E961A52_5056_B739_54289B84DF34E888/sites/bett-show-uk-2024/media/Pages/Advisory-board/Mark-Martin.jpg',
+          imageFit: 'cover',
           title: 'Mark Martin',
           subtitle: 'Course leader',
           body: 'Advanced Information Presentation & Visualisation\nLDSCI6253',
@@ -203,6 +205,11 @@
         {
           type: 'split',
           title: 'Reading & Reference Texts',
+          image: 'https://m.media-amazon.com/images/I/A120ud+jUwL._SY522_.jpg',
+          /* A cover is a fixed shape and cropping it to the panel would shave
+             the spine and the series banner, so it is letterboxed. */
+          imageFit: 'contain',
+          subtitle: 'Munzner, Visualization Analysis & Design (CRC Press)',
           bullets: [
             'Tamara Munzner: Visualization Analysis and Design (Chapters 1 & 6). Focus on task abstraction and visual encoding.',
             'John Burn-Murdoch: How Charts Work. Real-world explanatory graphics and scatterplot analysis from the Financial Times.',
