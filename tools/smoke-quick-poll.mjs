@@ -119,19 +119,34 @@ try {
   assert.equal(gen.added, 1, 'only the question the engine accepted is inserted');
   assert.equal(gen.rejected, 1, 'and the broken draft is reported, not silently dropped');
 
+  /* A desk quiz goes over the lesson, it does not join it. The deck is left
+     exactly as it was and the questions live on Player.spontaneous, so Esc
+     hands the wall back with the lesson still on its own slide. */
+  assert.ok(gen.overlay, 'the quiz came up as an overlay');
   const afterGen = await page.evaluate(() => ({
     n: SF.Player.deck.slides.length,
     at: SF.Player.idx,
-    lands: SF.Player.deck.slides[SF.Player.idx].question,
+    overlay: SF.Player.spontaneous ? SF.Player.spontaneous.slides.length : 0,
+    title: SF.Player.spontaneous && SF.Player.spontaneous.title,
+    lands: SF.Player.wallSlide().question,
     tail: SF.Player.deck.slides[SF.Player.deck.slides.length - 1].title
   }));
-  assert.equal(afterGen.n, beforeGen.n + 1, 'the lesson grew rather than being replaced');
-  assert.equal(afterGen.at, beforeGen.at + 1, 'and it advanced onto the new question');
+  assert.equal(afterGen.n, beforeGen.n, 'the lesson is untouched, not spliced into');
+  assert.equal(afterGen.at, beforeGen.at, 'and it kept its place underneath');
+  assert.equal(afterGen.overlay, 1, 'the accepted question is the overlay');
+  assert.equal(afterGen.title, 'Osmosis', 'the overlay is named after the theme asked for');
   assert.match(afterGen.lands, /Which process moves water/, 'straight to the question, no How to play card');
-  assert.equal(afterGen.tail, 'Three', 'the rest of the lesson is still after it');
+  assert.equal(afterGen.tail, 'Three', 'the lesson still ends where it did');
+
+  /* And handing the wall back leaves the lesson exactly where it was. */
+  await page.evaluate(() => SF.Player.endSpontaneous());
+  await page.waitForFunction(() => !SF.Player.spontaneous);
+  const back = await page.evaluate(() => ({ n: SF.Player.deck.slides.length, at: SF.Player.idx }));
+  assert.equal(back.n, beforeGen.n, 'the lesson is the same length afterwards');
+  assert.equal(back.at, beforeGen.at, 'and on the slide it was on before the quiz');
 
   assert.deepEqual(errors, [], 'no page errors while polling');
-  console.log('Quick poll smoke passed: sheet, validation, survives slide changes, ends clean.');
+  console.log('Quick poll smoke passed: sheet, validation, survives slide changes, desk quiz overlays the lesson and hands it back, ends clean.');
 } finally {
   await browser.close();
 }

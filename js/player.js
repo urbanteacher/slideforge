@@ -2481,17 +2481,21 @@
   };
 
   /**
-   * Build a quiz on a theme and drop it into the lesson already running.
+   * Build a quiz on a theme and put it over the lesson already running.
    *
-   * The questions are spliced in directly after the slide on the wall and the
-   * show advances onto the first one, so the lesson keeps its place and its
-   * live session: the relay sends a question when the host lands on a quiz
-   * slide, and these are quiz slides like any other. The alternative — start
-   * the quiz as its own show — would end the lesson the teacher is in the
-   * middle of, and a live room would have to rejoin.
+   * The questions go up as a spontaneous overlay rather than being spliced
+   * into the deck: the lesson keeps its place and its live session, and Esc
+   * or End hands the wall straight back without the teacher having to undo
+   * anything. Starting the quiz as its own show would end the lesson they are
+   * in the middle of, and a live room would have to rejoin.
    *
-   * Nothing is inserted unless questions came back, so a failed generation
-   * leaves the deck exactly as it was.
+   * They are quiz slides like any other, so the relay still sends a question
+   * when the host lands on one — see Player.wallSlide, which is what the live
+   * marking reads so a check inside an overlay marks the overlay's question
+   * and not whatever lesson slide is underneath.
+   *
+   * Nothing goes up unless questions came back, so a failed generation leaves
+   * the wall exactly as it was.
    */
   Player.quizGen = function (d) {
     d = d || {};
