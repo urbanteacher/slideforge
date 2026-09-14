@@ -2600,20 +2600,29 @@
   }
   function chartPoints(slide) {
     var rows2 = dataRows(slide && slide.body);
-    if (rows2.length < 2) return { series: [], xLabel: "", yLabel: "" };
+    if (rows2.length < 2) return { series: [], xLabel: "", yLabel: "", labelled: false };
     var head = rows2[0], body = rows2.slice(1);
-    var names = head.slice(1).filter(function(h) {
+    var labelled = body.length > 0 && chartNumber(body[0][0]) == null;
+    var xCol = labelled ? 1 : 0;
+    var names = head.slice(xCol + 1).filter(function(h) {
       return String(h).trim();
     });
     var series = names.map(function(name, i) {
       var pts = [];
       body.forEach(function(r) {
-        var x = chartNumber(r[0]), y = chartNumber(r[i + 1]);
-        if (x != null && y != null) pts.push({ x, y });
+        var x = chartNumber(r[xCol]), y = chartNumber(r[xCol + 1 + i]);
+        if (x != null && y != null) {
+          pts.push({ x, y, label: labelled ? String(r[0] || "").trim() : "" });
+        }
       });
       return { name: String(name).trim(), points: pts };
     });
-    return { series, xLabel: String(head[0] || "").trim(), yLabel: names.length === 1 ? names[0] : "" };
+    return {
+      series,
+      xLabel: String(head[xCol] || "").trim(),
+      yLabel: names.length === 1 ? names[0] : "",
+      labelled
+    };
   }
   function chartGroups(slide) {
     var rows2 = dataRows(slide && slide.body);
@@ -2733,8 +2742,18 @@
     return { name: cells[0] || "", role: cells[1] || "", boss: cells[2] || "", photo: safeMedia(cells[3] || "") };
   }
   function orgTree(lines) {
-    var people = (lines || []).map(parsePerson).filter(function(p) {
-      return p.name;
+    var warnings = [];
+    var seen = {};
+    var people = [];
+    (lines || []).map(parsePerson).forEach(function(p) {
+      if (!p.name) return;
+      var key = p.name.toLowerCase();
+      if (seen[key]) {
+        warnings.push("Two people are both named “" + p.name + "”. Only the first is kept.");
+        return;
+      }
+      seen[key] = 1;
+      people.push(p);
     });
     var byName = {};
     people.forEach(function(p) {
@@ -2743,25 +2762,64 @@
     });
     var roots = [];
     people.forEach(function(p) {
-      var boss2 = p.boss && byName[p.boss.toLowerCase()];
-      if (boss2 && boss2 !== p) boss2.reports.push(p);
-      else roots.push(p);
+      if (!p.boss) {
+        roots.push(p);
+        return;
+      }
+      if (p.boss.toLowerCase() === p.name.toLowerCase()) {
+        warnings.push("“" + p.name + "” reports to themselves — drawn as top-level.");
+        roots.push(p);
+        return;
+      }
+      var boss2 = byName[p.boss.toLowerCase()];
+      if (!boss2) {
+        warnings.push("“" + p.boss + "” is not on this slide — “" + p.name + "” is drawn as top-level.");
+        roots.push(p);
+        return;
+      }
+      boss2.reports.push(p);
     });
     if (!roots.length && people.length) {
+      warnings.push("Everyone reports in a loop — drawn as a flat team with no connectors.");
       people.forEach(function(p) {
         p.reports = [];
       });
       roots = people.slice();
     }
-    function depth(p, seen, d) {
-      if (d > people.length) return d;
-      return p.reports.reduce(function(m, c) {
-        return seen.indexOf(c) >= 0 ? m : Math.max(m, depth(c, seen.concat([p]), d + 1));
-      }, d);
+    var attached = {};
+    function mark(p) {
+      var k = p.name.toLowerCase();
+      if (attached[k]) return;
+      attached[k] = 1;
+      (p.reports || []).forEach(mark);
     }
-    return { roots, people, levels: roots.reduce(function(m, r) {
-      return Math.max(m, depth(r, [], 1));
-    }, 0) };
+    roots.forEach(mark);
+    var orphans = people.filter(function(p) {
+      return !attached[p.name.toLowerCase()];
+    });
+    if (orphans.length) {
+      warnings.push(orphans.length === 1 ? "“" + orphans[0].name + "” sits in a reporting loop and was not under any head — drawn as top-level." : orphans.length + " people sit in a reporting loop off the main tree — drawn as top-level.");
+      orphans.forEach(function(p) {
+        p.reports = [];
+        roots.push(p);
+      });
+    }
+    function depth(p, visiting, d) {
+      if (d > people.length) return d;
+      var k = p.name.toLowerCase();
+      if (visiting[k]) return d;
+      visiting[k] = 1;
+      var max = d;
+      (p.reports || []).forEach(function(c) {
+        max = Math.max(max, depth(c, visiting, d + 1));
+      });
+      delete visiting[k];
+      return max;
+    }
+    var levels = roots.reduce(function(m, r) {
+      return Math.max(m, depth(r, {}, 1));
+    }, 0);
+    return { roots, people, levels, warnings };
   }
   function parseKeywordLine(line) {
     var s = String(line == null ? "" : line);

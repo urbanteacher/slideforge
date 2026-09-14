@@ -980,11 +980,43 @@
       svg.appendChild(lab);
     });
 
+    /* Labels are nudged up until they clear the ones already placed, and a
+       leader line keeps each one attached to its dot. Taken from the
+       tube-line scatter in the pollution explorer, where the whole point is
+       naming which line is the outlier rather than noting that one exists.
+
+       Greedy and in drawing order rather than an optimiser: a lecturer wants
+       the same arrangement every time they open the slide, and a solver that
+       finds a prettier answer on the second run is worse than a plain rule
+       that never moves. */
+    var placed = [];
     d.series.forEach(function (sr, si) {
       var g = svgEl('g', { class: 'ch-line ch-points', 'data-step': si, 'data-series': String(si) });
       sr.points.forEach(function (pt) {
-        g.appendChild(svgEl('circle', { cx: xAt(pt.x).toFixed(1), cy: yAt(pt.y).toFixed(1),
-          r: 9, fill: chartColor(si), class: 'ch-point' }));
+        var cx = xAt(pt.x), cy = yAt(pt.y), r = 9;
+        var dot = svgEl('circle', { cx: cx.toFixed(1), cy: cy.toFixed(1), r: r, fill: chartColor(si), class: 'ch-point' });
+        if (pt.label) {
+          var tip = svgEl('title', {});
+          tip.textContent = pt.label + ' · ' + d.xLabel + ' ' + fmt(pt.x) + ' · ' + fmt(pt.y);
+          dot.appendChild(tip);
+        }
+        g.appendChild(dot);
+        if (!pt.label) return;
+        var wide = pt.label.length * 7.4;
+        var ly = cy - r - 9;
+        var guard = 0;
+        while (guard++ < 24 && placed.some(function (q) {
+          return Math.abs(q.y - ly) < 16 && Math.abs(q.x - cx) < (q.w + wide) / 2 + 6;
+        })) ly -= 17;
+        placed.push({ x: cx, y: ly, w: wide });
+        /* Only drawn once the label has actually moved: a leader from a dot
+           to the text directly above it is a line nobody needs. */
+        if (cy - r - ly > 13) {
+          g.appendChild(svgEl('line', { x1: cx, y1: cy - r, x2: cx, y2: ly + 4, class: 'ch-leader' }));
+        }
+        var lab = svgEl('text', { x: cx.toFixed(1), y: ly.toFixed(1), class: 'ch-point-label', 'text-anchor': 'middle' });
+        lab.textContent = pt.label;
+        g.appendChild(lab);
       });
       svg.appendChild(g);
     });
