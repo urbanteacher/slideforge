@@ -573,6 +573,38 @@
     return step * mag;
   }
 
+  /* A range that hugs the data instead of climbing to the next round
+     number. niceMax alone turns a spread of 22–61 into an axis of 0–100 and
+     squashes every box into the lower half — which is the axis working
+     against the one thing a box plot is for. Pads by a tenth of the spread,
+     then rounds each end to a readable step. Zero is kept when the data is
+     already near it, because a distribution that reaches the floor should
+     be seen to. */
+  function niceStep(rough) {
+    if (!(rough > 0)) return 1;
+    var mag = Math.pow(10, Math.floor(Math.log10(rough)));
+    return ([1, 2, 2.5, 5, 10].filter(function (m) { return m * mag >= rough; })[0] || 10) * mag;
+  }
+
+  function niceRange(lo, hi) {
+    if (!(hi > lo)) return { lo: Math.min(0, lo), hi: (hi || 0) + 1 };
+    var span = hi - lo, pad = span * 0.1;
+    /* Sized from the gap between ticks rather than from the magnitude of
+       the span: rounding 0–100 to the next whole hundred-and-fifty is how a
+       chart ends up with half its height empty. */
+    var step = niceStep(span / 4);
+    var top = Math.ceil((hi + pad) / step) * step;
+    /* No forced zero. That rule belongs to bars, where length encodes the
+       quantity and a cropped baseline exaggerates every difference. A box
+       plot and a scatter encode value as position, where insisting on zero
+       just pushes the data into a corner — ages of 22 to 61 do not become
+       more honest for having forty empty units under them. Zero is still
+       used when the data nearly reaches it, because a distribution that
+       touches the floor should be seen to. */
+    var bottom = lo >= 0 && lo <= span * 0.15 ? 0 : Math.floor(lo / step) * step;
+    return { lo: bottom, hi: top };
+  }
+
   function axisTicks(max) {
     var out = [], n = 4;
     for (var i = 0; i <= n; i++) out.push(max * i / n);
@@ -599,7 +631,13 @@
        ring that is only Full time, which is the chart contradicting itself.
        The inspector already warns that the other series are dropped; this
        stops the drawing from implying otherwise. */
-    var oneSeriesIdiom = slide && (slide.chartKind === 'pie' || slide.chartKind === 'donut');
+    /* Idioms whose columns are not series. A pie cuts one series into
+       categories; a box plot's columns are repeated observations of the
+       same thing and a histogram's are just numbers — labelling them "28,
+       31, 33" in a legend is the chart naming its own raw data as though
+       each value were a category. */
+    var oneSeriesIdiom = slide && ['pie', 'donut', 'box', 'histogram', 'pictogram']
+      .indexOf(slide.chartKind) >= 0;
     if (data.series.length > 1 && !oneSeriesIdiom) {
       data.series.forEach(function (s, i) {
         var item = el('span', 'ck-item');
@@ -826,6 +864,221 @@
     return svg;
   }
 
+  /* Position against two common scales — the encoding at the top of the
+     effectiveness ranking, and the only one here that answers "do these two
+     things move together". Everything above this point in the file compares
+     magnitudes; this is the first that shows a relationship. */
+  function scatterChart(slide) {
+    var W = CHART.w, H = CHART.h, P = CHART;
+    var d = SF.chartPoints(slide);
+    var padL = P.padL, plotW = W - padL - P.padR, plotH = H - P.padT - P.padB;
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+    var xs = [], ys = [];
+    d.series.forEach(function (sr) { sr.points.forEach(function (pt) { xs.push(pt.x); ys.push(pt.y); }); });
+    if (!xs.length) return svg;
+    /* Both axes start at zero unless the data does not go near it. A
+       scatter is read for its shape, and a truncated axis makes a weak
+       relationship look like a strong one — the exact failure the lecture
+       spends a slide on. */
+    var xr = niceRange(Math.min.apply(null, xs), Math.max.apply(null, xs));
+    var yr = niceRange(Math.min.apply(null, ys), Math.max.apply(null, ys));
+    var x0 = xr.lo, xMax = xr.hi, y0 = yr.lo, yMax = yr.hi;
+    var xAt = function (v) { return padL + ((v - x0) / (xMax - x0 || 1)) * plotW; };
+    var yAt = function (v) { return P.padT + plotH - ((v - y0) / (yMax - y0 || 1)) * plotH; };
+
+    axisTicks(yMax - y0).forEach(function (t) {
+      var y = yAt(y0 + t);
+      svg.appendChild(svgEl('line', { x1: padL, y1: y, x2: padL + plotW, y2: y, class: 'ch-grid' }));
+      var lab = svgEl('text', { x: padL - 14, y: y + 7, class: 'ch-tick', 'text-anchor': 'end' });
+      lab.textContent = fmt(y0 + t);
+      svg.appendChild(lab);
+    });
+    axisTicks(xMax - x0).forEach(function (t) {
+      var x = xAt(x0 + t);
+      var lab = svgEl('text', { x: x, y: H - P.padB + 30, class: 'ch-tick', 'text-anchor': 'middle' });
+      lab.textContent = fmt(x0 + t);
+      svg.appendChild(lab);
+    });
+
+    d.series.forEach(function (sr, si) {
+      var g = svgEl('g', { class: 'ch-line ch-points', 'data-step': si, 'data-series': String(si) });
+      sr.points.forEach(function (pt) {
+        g.appendChild(svgEl('circle', { cx: xAt(pt.x).toFixed(1), cy: yAt(pt.y).toFixed(1),
+          r: 9, fill: chartColor(si), class: 'ch-point' }));
+      });
+      svg.appendChild(g);
+    });
+
+    if (d.xLabel) {
+      var xl = svgEl('text', { x: padL + plotW / 2, y: H - 6, class: 'ch-axis-label', 'text-anchor': 'middle' });
+      xl.textContent = d.xLabel;
+      svg.appendChild(xl);
+    }
+    svg.appendChild(svgEl('line', { x1: padL, y1: P.padT + plotH, x2: padL + plotW, y2: P.padT + plotH, class: 'ch-axis' }));
+    svg.appendChild(svgEl('line', { x1: padL, y1: P.padT, x2: padL, y2: P.padT + plotH, class: 'ch-axis' }));
+    return svg;
+  }
+
+  /* One variable's shape. Bars touching, because the x axis is continuous
+     and a gap between them would say these are separate categories. */
+  function histogramChart(slide) {
+    var W = CHART.w, H = CHART.h, P = CHART;
+    var vals = SF.chartValues(slide);
+    var bins = SF.histogramBins(vals);
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+    if (!bins.length) return svg;
+    var plotW = W - P.padL - P.padR, plotH = H - P.padT - P.padB;
+    var max = niceMax(Math.max.apply(null, bins.map(function (b) { return b.count; })));
+
+    axisTicks(max).forEach(function (t) {
+      var y = P.padT + plotH - (t / max) * plotH;
+      svg.appendChild(svgEl('line', { x1: P.padL, y1: y, x2: P.padL + plotW, y2: y, class: 'ch-grid' }));
+      var lab = svgEl('text', { x: P.padL - 14, y: y + 7, class: 'ch-tick', 'text-anchor': 'end' });
+      lab.textContent = fmt(t);
+      svg.appendChild(lab);
+    });
+
+    var bw = plotW / bins.length;
+    var g = svgEl('g', { class: 'ch-beat', 'data-step': 0, 'data-series': '0' });
+    bins.forEach(function (b, i) {
+      var hgt = (b.count / max) * plotH;
+      g.appendChild(svgEl('rect', { x: P.padL + i * bw, y: P.padT + plotH - hgt,
+        width: Math.max(1, bw - 1), height: Math.max(0, hgt), fill: chartColor(0), class: 'ch-bin' }));
+      if (i === 0 || i === bins.length - 1 || i % 2 === 0) {
+        var lab = svgEl('text', { x: P.padL + i * bw, y: H - P.padB + 30, class: 'ch-tick', 'text-anchor': 'middle' });
+        lab.textContent = fmt(Math.round(b.from * 10) / 10);
+        svg.appendChild(lab);
+      }
+    });
+    svg.appendChild(g);
+    var n = svgEl('text', { x: P.padL + plotW, y: P.padT - 12, class: 'ch-tick', 'text-anchor': 'end' });
+    n.textContent = vals.length + ' values · ' + bins.length + ' bins';
+    svg.appendChild(n);
+    svg.appendChild(svgEl('line', { x1: P.padL, y1: P.padT + plotH, x2: P.padL + plotW, y2: P.padT + plotH, class: 'ch-axis' }));
+    return svg;
+  }
+
+  /* The five-number summary, drawn. What a bar chart of means hides and
+     what the lecture spends a slide asking for: spread, skew and the points
+     that sit outside the fence. */
+  function boxChart(slide) {
+    var W = CHART.w, H = CHART.h, P = CHART;
+    var groups = SF.chartGroups(slide);
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+    if (!groups.length) return svg;
+    var summaries = groups.map(function (g) { return SF.fiveNumber(g.values); });
+    var all = [];
+    groups.forEach(function (g) { g.values.forEach(function (v) { all.push(v); }); });
+    var lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+    var rng = niceRange(lo, hi);
+    var base = rng.lo, top = rng.hi;
+    var plotW = W - P.padL - P.padR, plotH = H - P.padT - P.padB;
+    var yAt = function (v) { return P.padT + plotH - ((v - base) / (top - base || 1)) * plotH; };
+
+    axisTicks(top - base).forEach(function (t) {
+      var y = yAt(base + t);
+      svg.appendChild(svgEl('line', { x1: P.padL, y1: y, x2: P.padL + plotW, y2: y, class: 'ch-grid' }));
+      var lab = svgEl('text', { x: P.padL - 14, y: y + 7, class: 'ch-tick', 'text-anchor': 'end' });
+      lab.textContent = fmt(base + t);
+      svg.appendChild(lab);
+    });
+
+    var band = plotW / groups.length;
+    var bw = Math.min(band * 0.5, 130);
+    groups.forEach(function (grp, i) {
+      var f = summaries[i];
+      var cx = P.padL + band * i + band / 2, x = cx - bw / 2;
+      var g = svgEl('g', { class: 'ch-beat ch-box', 'data-step': i, 'data-series': String(i) });
+      var col = chartColor(i);
+      /* Whisker, then box, then median: the median line has to sit above
+         the fill or it disappears into it. */
+      g.appendChild(svgEl('line', { x1: cx, y1: yAt(f.min), x2: cx, y2: yAt(f.max), class: 'ch-whisker', stroke: col }));
+      g.appendChild(svgEl('line', { x1: cx - bw / 4, y1: yAt(f.min), x2: cx + bw / 4, y2: yAt(f.min), class: 'ch-whisker', stroke: col }));
+      g.appendChild(svgEl('line', { x1: cx - bw / 4, y1: yAt(f.max), x2: cx + bw / 4, y2: yAt(f.max), class: 'ch-whisker', stroke: col }));
+      g.appendChild(svgEl('rect', { x: x, y: yAt(f.q3), width: bw, height: Math.max(1, yAt(f.q1) - yAt(f.q3)),
+        fill: col, opacity: 0.32, stroke: col, 'stroke-width': 2, rx: 3 }));
+      g.appendChild(svgEl('line', { x1: x, y1: yAt(f.median), x2: x + bw, y2: yAt(f.median), class: 'ch-median', stroke: col }));
+      f.outliers.forEach(function (v) {
+        g.appendChild(svgEl('circle', { cx: cx, cy: yAt(v), r: 5, class: 'ch-outlier', stroke: col }));
+      });
+      svg.appendChild(g);
+      var cl = svgEl('text', { x: cx, y: H - P.padB + 30, class: 'ch-cat', 'text-anchor': 'middle' });
+      cl.textContent = grp.name + ' · n=' + f.n;
+      svg.appendChild(cl);
+    });
+    svg.appendChild(svgEl('line', { x1: P.padL, y1: P.padT + plotH, x2: P.padL + plotW, y2: P.padT + plotH, class: 'ch-axis' }));
+    return svg;
+  }
+
+  /* An ISOTYPE chart: a row of repeated icons, where the count of icons is
+     the quantity. Not decoration — the point of the form is that the reader
+     counts rather than measures against an axis, which is why Neurath built
+     it for audiences who could not be assumed to read charts at all.
+
+     It survives the projector badly if the icon is fussy, and it lies if
+     the icon is scaled instead of repeated, so this repeats and never
+     scales. A half unit is drawn as a clipped icon rather than a small one,
+     for the same reason.
+
+     One icon is worth chartUnit, shown in the key. Without that a row of
+     forty icons is unreadable and a row of two says nothing. */
+  function pictogramChart(data, slide) {
+    var W = CHART.w, H = CHART.h, P = CHART;
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg ch-picto', role: 'img' });
+    var icon = String(slide.chartIcon || '').trim() || '●';
+    var vals = (data.series[0] ? data.series[0].values : []).map(function (v) { return v == null ? 0 : Math.max(0, v); });
+    if (!vals.length) return svg;
+    var max = Math.max.apply(null, vals);
+    /* Pick a unit that keeps the longest row inside about twenty icons
+       unless the author has set one: past that nobody counts, they
+       estimate, and an estimate off a row of dots is worse than a bar. */
+    var unit = Number(slide.chartUnit) > 1 ? Number(slide.chartUnit)
+      : Math.max(1, Math.pow(10, Math.max(0, Math.ceil(Math.log10(Math.max(1, max / 20))))));
+    var labelRoom = Math.min(300, 40 + data.categories.reduce(function (n, c) {
+      return Math.max(n, String(c).length); }, 0) * 10);
+    var rowH = Math.min(78, (H - P.padT - P.padB) / Math.max(1, data.categories.length));
+    var size = Math.min(rowH * 0.74, 46);
+
+    data.categories.forEach(function (cat, ci) {
+      var y = P.padT + rowH * ci + rowH / 2;
+      var lab = svgEl('text', { x: labelRoom - 16, y: y + 7, class: 'ch-cat', 'text-anchor': 'end' });
+      lab.textContent = cat;
+      svg.appendChild(lab);
+      var g = svgEl('g', { class: 'ch-beat', 'data-step': ci, 'data-series': '0' });
+      var whole = Math.floor(vals[ci] / unit);
+      var part = (vals[ci] % unit) / unit;
+      for (var i = 0; i < whole && i < 40; i++) {
+        var t = svgEl('text', { x: labelRoom + i * (size * 0.92), y: y + size * 0.34,
+          class: 'ch-icon', 'font-size': size });
+        t.textContent = icon;
+        g.appendChild(t);
+      }
+      if (part > 0.08 && whole < 40) {
+        /* The remainder as a clipped icon: a smaller one would encode the
+           value in area, which is the thing this form exists to avoid. */
+        var cid = 'picto-clip-' + ci;
+        var clip = svgEl('clipPath', { id: cid });
+        clip.appendChild(svgEl('rect', { x: labelRoom + whole * (size * 0.92), y: y - size * 0.7,
+          width: Math.max(1, size * part), height: size * 1.3 }));
+        svg.appendChild(clip);
+        var ht = svgEl('text', { x: labelRoom + whole * (size * 0.92), y: y + size * 0.34,
+          class: 'ch-icon', 'font-size': size, 'clip-path': 'url(#' + cid + ')' });
+        ht.textContent = icon;
+        g.appendChild(ht);
+      }
+      var vlab = svgEl('text', { x: labelRoom + Math.min(whole + 1, 41) * (size * 0.92) + 12,
+        y: y + 7, class: 'ch-value' });
+      vlab.textContent = fmt(vals[ci]);
+      g.appendChild(vlab);
+      svg.appendChild(g);
+    });
+
+    var key = svgEl('text', { x: labelRoom, y: H - 10, class: 'ch-tick' });
+    key.textContent = icon + ' = ' + fmt(unit) + (data.series[0] && data.series[0].name ? ' ' + data.series[0].name.toLowerCase() : '');
+    svg.appendChild(key);
+    return svg;
+  }
+
   function lineChart(data, slide, area) {
     var W = CHART.w, H = CHART.h, P = CHART;
     /* Reserve the right margin for the end-labels before drawing anything.
@@ -965,14 +1218,30 @@
     if (slide.exploration && slide.exploration.prediction) slide = Object.assign({}, slide, { progressive: false });
     if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
     var data = SF.chartData(slide);
-    if (!data.series.length || !data.categories.length) {
+    /* The three position-based idioms read the same pasted table
+       differently, so "is there anything to draw" cannot be one question
+       about categories and series. */
+    var k0 = slide.chartKind;
+    var empty = k0 === 'scatter' ? !SF.chartPoints(slide).series.some(function (x) { return x.points.length; })
+              : k0 === 'histogram' ? SF.chartValues(slide).length < 2
+              : k0 === 'box' ? !SF.chartGroups(slide).length
+              : (!data.series.length || !data.categories.length);
+    if (empty) {
       var e = el('div', 'empty');
       e.appendChild(el('div', null, '▥'));
-      e.appendChild(el('div', null, 'Paste a range from a spreadsheet — first row names the series, first column the categories'));
+      /* The empty state has to teach the shape this idiom wants, or the
+         author pastes a table that is right for a bar chart and is told
+         only that nothing happened. */
+      e.appendChild(el('div', null,
+        k0 === 'scatter' ? 'Two numeric columns: the first is x, the second is y. One row per point.'
+        : k0 === 'histogram' ? 'One column of numbers. They are counted into bins for you.'
+        : k0 === 'box' ? 'One row per group: its name, then every value measured in it.'
+        : 'Paste a range from a spreadsheet — first row names the series, first column the categories'));
       pad.appendChild(e);
       return;
     }
-    var KINDS = ['bar', 'stack', 'hbar', 'line', 'area', 'pie', 'donut'];
+    var KINDS = ['bar', 'stack', 'hbar', 'line', 'area', 'pie', 'donut',
+                 'scatter', 'histogram', 'box', 'pictogram'];
     var kind = KINDS.indexOf(slide.chartKind) >= 0 ? slide.chartKind : 'bar';
     var wrap = el('div', 'chart-wrap chart-' + kind);
     var design = slide.design || {};
@@ -990,7 +1259,11 @@
       wrap.dataset.focus = String(Number(design.chartFocus));
     }
     var stepOf = function (si, ci) { return data.series.length > 1 ? si : ci; };
-    var svg = kind === 'line' ? lineChart(data, slide, false)
+    var svg = kind === 'scatter' ? scatterChart(slide)
+            : kind === 'histogram' ? histogramChart(slide)
+            : kind === 'box' ? boxChart(slide)
+            : kind === 'pictogram' ? pictogramChart(data, slide)
+            : kind === 'line' ? lineChart(data, slide, false)
             : kind === 'area' ? lineChart(data, slide, true)
             : kind === 'pie' ? pieChart(data, slide, false)
             : kind === 'donut' ? pieChart(data, slide, true)

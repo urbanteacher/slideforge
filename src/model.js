@@ -1,7 +1,7 @@
 import { normalizeExploration, explorationValue, explorationCurve } from './deck/exploration.js';
 import { createBoardRuntime } from "./boards/runtime.js";
 import { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes } from "./activities/catalogue.js";
-import { SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
+import { chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
 import { FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest } from "./deck/feedback.js";
 import { renderMarkdown } from "./deck/markdown.js";
 import sampleDeck from "./samples/deck.json" with { type: "json" };
@@ -184,7 +184,9 @@ function makeSlide(type) {
     videoAutoplay: false,   // honoured on the projector, never in a preview
     tableHeader: true,
     /* Chart layout: bar, line or pie over the same text a table slide uses. */
-    chartKind: /** @type {'bar'|'stack'|'hbar'|'line'|'area'|'pie'|'donut'} */ ('bar'),
+    chartKind: /** @type {'bar'|'stack'|'hbar'|'line'|'area'|'pie'|'donut'|'scatter'|'histogram'|'box'|'pictogram'} */ ('bar'),
+    chartIcon: '',
+    chartUnit: 1,
     /* Image stack: each layer is one picture with its own caption and source,
        shown one in front of the last. Empty on every other kind of slide. */
     layers: /** @type {import('./types.js').GalleryLayer[]} */ ([]),
@@ -415,7 +417,13 @@ function normalizeSlide(raw) {
      renderer under options, area is the line renderer, donut is the pie —
      the drawing is shared because the question a lecturer is answering is
      "which of these reads best", not "which of these is implemented". */
-  s.chartKind = ['bar', 'stack', 'hbar', 'line', 'area', 'pie', 'donut'].indexOf(s.chartKind) >= 0 ? s.chartKind : 'bar';
+  s.chartKind = ['bar', 'stack', 'hbar', 'line', 'area', 'pie', 'donut',
+                 'scatter', 'histogram', 'box', 'pictogram'].indexOf(s.chartKind) >= 0 ? s.chartKind : 'bar';
+  /* One icon per unit, for the pictogram. A single character so a count of
+     them is a count of things; an emoji that renders as two glyphs would
+     make eleven look like twenty-two. */
+  s.chartIcon = String(s.chartIcon || '').trim().slice(0, 4);
+  s.chartUnit = Math.max(1, Math.min(10000, Number(s.chartUnit) || 1));
   /* Layers come off `raw` for the same reason options do: whatever was on disk
      may be strings, may be half-built, may be nothing. Capped because a stack
      is read one layer at a time and nobody narrates twelve. */
@@ -1153,6 +1161,11 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   normalizeQuizConfig: normalizeQuizConfig,
   SLIDE_TYPES: SLIDE_TYPES,
   chartData: chartData,
+  chartPoints: chartPoints,
+  chartGroups: chartGroups,
+  fiveNumber: fiveNumber,
+  chartValues: chartValues,
+  histogramBins: histogramBins,
   normalizeExploration: normalizeExploration,
   explorationValue: explorationValue,
   explorationCurve: explorationCurve,
@@ -1250,4 +1263,4 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   GameStore: GameStore
 });
 
-export { SLIDE_W, SLIDE_H, ASPECTS, slideHeight, THEMES, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, GAME_FORMAT_PRESETS, getShowcaseGame };
+export { SLIDE_W, SLIDE_H, ASPECTS, slideHeight, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, GAME_FORMAT_PRESETS, getShowcaseGame };

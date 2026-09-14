@@ -5143,3 +5143,16 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
   #player .ch-motion .ch-donut-total,
   #player .ch-motion .ch-donut-cap { animation: none; }
 }
+
+/* The position-based idioms and the pictogram. */
+#player .ch-point, #previewBox .ch-point { stroke: var(--s-bg, #fff); stroke-width: 2; }
+#player .ch-axis-label, #previewBox .ch-axis-label { fill: var(--s-fg); font-size: 17px; opacity: .7; }
+#player .ch-bin, #previewBox .ch-bin { stroke: var(--s-bg, #fff); stroke-width: 1; }
+#player .ch-whisker, #previewBox .ch-whisker { stroke-width: 2; }
+/* The median is the line the eye should land on first, so it is the heaviest
+   mark in the box — a 2px median inside a 2px outline reads as decoration. */
+#player .ch-median, #previewBox .ch-median { stroke-width: 5; stroke-linecap: round; }
+/* Hollow, so an outlier reads as a point standing apart rather than another
+   filled mark competing with the box. */
+#player .ch-outlier, #previewBox .ch-outlier { fill: none; stroke-width: 2; }
+#player .ch-icon, #previewBox .ch-icon { dominant-baseline: alphabetic; }

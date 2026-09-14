@@ -165,7 +165,11 @@ export interface Slide {
   /** Image-stack layout: the pictures, shown one in front of the last. */
   layers: GalleryLayer[];
   /** Chart layout: which form the same tabular `body` is drawn as. */
-  chartKind: 'bar' | 'stack' | 'hbar' | 'line' | 'area' | 'pie' | 'donut';
+  chartKind: 'bar' | 'stack' | 'hbar' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram' | 'box' | 'pictogram';
+  /** One icon per unit on a pictogram. */
+  chartIcon: string;
+  /** What one icon is worth. */
+  chartUnit: number;
   /** Present only on the kinds that read it — before/after, explore,
    *  simulation, chart — or on any slide that already carried settings. */
   exploration?: ReturnType<typeof import('./deck/exploration.js').normalizeExploration>;

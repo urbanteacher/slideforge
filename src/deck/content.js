@@ -59,6 +59,127 @@ function chartData(slide) {
   return { categories: categories, series: series };
 }
 
+/* The three idioms above the bar family on Munzner's channel ranking need
+   the same pasted table read differently, so each reading lives here beside
+   chartData rather than being improvised in the renderer.
+
+   A number, or null. Currency, thousands separators and a trailing percent
+   are stripped, because a column copied out of a spreadsheet arrives with
+   them and refusing it would send the author back to clean data by hand. */
+/* parseTable caps rows at six columns and twelve lines, which is right for a
+   table someone has to read on a wall and wrong for data nobody reads
+   directly. A box plot of five observations is barely a box plot, and a
+   scatter of eleven points cannot show a relationship. So the idioms that
+   consume numbers rather than display them get their own read, with limits
+   set by what the renderer can draw legibly instead of by what a reader can
+   scan. */
+var DATA_MAX_COLS = 200, DATA_MAX_ROWS = 200;
+
+function dataRows(text) {
+  return String(text == null ? '' : text).split(/\r?\n/)
+    .filter(function (l) { return l.trim(); })
+    .slice(0, DATA_MAX_ROWS)
+    .map(function (line) {
+      var cells = line.indexOf('\t') !== -1 ? line.split('\t') : line.split('|');
+      return cells.map(function (c) { return c.trim(); }).slice(0, DATA_MAX_COLS);
+    });
+}
+
+function chartNumber(cell) {
+  var raw = String(cell == null ? '' : cell).replace(/[,\s%£$€]/g, '');
+  if (!raw) return null;
+  var n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Points for a scatterplot: the first column is x, every other column is a
+ * series of y. Position against two common scales, which is the encoding
+ * Munzner ranks first and the only one that answers correlation.
+ */
+function chartPoints(slide) {
+  var rows = dataRows(slide && slide.body);
+  if (rows.length < 2) return { series: [], xLabel: '', yLabel: '' };
+  var head = rows[0], body = rows.slice(1);
+  var names = head.slice(1).filter(function (h) { return String(h).trim(); });
+  var series = names.map(function (name, i) {
+    var pts = [];
+    body.forEach(function (r) {
+      var x = chartNumber(r[0]), y = chartNumber(r[i + 1]);
+      /* A row missing either coordinate is not a point at zero — it is not
+         a point. Plotting it would invent an observation. */
+      if (x != null && y != null) pts.push({ x: x, y: y });
+    });
+    return { name: String(name).trim(), points: pts };
+  });
+  return { series: series, xLabel: String(head[0] || '').trim(), yLabel: names.length === 1 ? names[0] : '' };
+}
+
+/**
+ * Observations per category for a box plot: each row is a category and the
+ * cells after its name are the values measured in it.
+ */
+function chartGroups(slide) {
+  var rows = dataRows(slide && slide.body);
+  if (!rows.length) return [];
+  /* A header row is optional here: the columns are repeated observations,
+     not named series, so they have nothing to be called. Detected by its
+     first data cell not being a number. */
+  var body = rows.length > 1 && chartNumber(rows[0][1]) == null ? rows.slice(1) : rows;
+  return body.map(function (r) {
+    var vals = r.slice(1).map(chartNumber).filter(function (v) { return v != null; });
+    vals.sort(function (a, b) { return a - b; });
+    return { name: String(r[0] || '').trim(), values: vals };
+  }).filter(function (g) { return g.values.length; });
+}
+
+/** Quartiles by the linear-interpolation method, and the fences that decide outliers. */
+function fiveNumber(sorted) {
+  if (!sorted.length) return null;
+  function q(p) {
+    var pos = (sorted.length - 1) * p, lo = Math.floor(pos), hi = Math.ceil(pos);
+    return lo === hi ? sorted[lo] : sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
+  }
+  var q1 = q(0.25), med = q(0.5), q3 = q(0.75), iqr = q3 - q1;
+  /* Tukey's 1.5×IQR. The whisker stops at the furthest observation still
+     inside the fence rather than at the fence itself, so it always lands on
+     a real measurement. */
+  var loFence = q1 - 1.5 * iqr, hiFence = q3 + 1.5 * iqr;
+  var inside = sorted.filter(function (v) { return v >= loFence && v <= hiFence; });
+  return {
+    min: inside.length ? inside[0] : sorted[0],
+    q1: q1, median: med, q3: q3,
+    max: inside.length ? inside[inside.length - 1] : sorted[sorted.length - 1],
+    outliers: sorted.filter(function (v) { return v < loFence || v > hiFence; }),
+    n: sorted.length
+  };
+}
+
+/** Every number on the slide, pooled, for a histogram of one variable. */
+function chartValues(slide) {
+  var rows = dataRows(slide && slide.body);
+  var out = [];
+  rows.forEach(function (r) {
+    r.forEach(function (c) { var n = chartNumber(c); if (n != null) out.push(n); });
+  });
+  return out.sort(function (a, b) { return a - b; });
+}
+
+/** Equal-width bins. Sturges, clamped: enough shape to read, few enough to see. */
+function histogramBins(values, want) {
+  if (!values.length) return [];
+  var lo = values[0], hi = values[values.length - 1];
+  if (hi === lo) return [{ from: lo, to: lo, count: values.length }];
+  var n = want || Math.max(5, Math.min(14, Math.ceil(Math.log2(values.length) + 1)));
+  var width = (hi - lo) / n, bins = [];
+  for (var i = 0; i < n; i++) bins.push({ from: lo + i * width, to: lo + (i + 1) * width, count: 0 });
+  values.forEach(function (v) {
+    var idx = Math.min(n - 1, Math.floor((v - lo) / width));
+    bins[idx].count++;
+  });
+  return bins;
+}
+
 /** Pair pits (keywords / italics / links) store "Lead\tdefinition". Also accepts "Lead: def" when pasted. */
 function parseKeywordLine(line) {
   var s = String(line == null ? '' : line);
@@ -304,4 +425,4 @@ function correctAnswerLabel(slide) {
 }
 
 
-export { SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };
+export { chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, chartNumber, SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };

@@ -2566,6 +2566,106 @@
     });
     return { categories, series };
   }
+  var DATA_MAX_COLS = 200;
+  var DATA_MAX_ROWS = 200;
+  function dataRows(text2) {
+    return String(text2 == null ? "" : text2).split(/\r?\n/).filter(function(l) {
+      return l.trim();
+    }).slice(0, DATA_MAX_ROWS).map(function(line) {
+      var cells = line.indexOf("	") !== -1 ? line.split("	") : line.split("|");
+      return cells.map(function(c) {
+        return c.trim();
+      }).slice(0, DATA_MAX_COLS);
+    });
+  }
+  function chartNumber(cell) {
+    var raw = String(cell == null ? "" : cell).replace(/[,\s%£$€]/g, "");
+    if (!raw) return null;
+    var n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  }
+  function chartPoints(slide) {
+    var rows2 = dataRows(slide && slide.body);
+    if (rows2.length < 2) return { series: [], xLabel: "", yLabel: "" };
+    var head = rows2[0], body = rows2.slice(1);
+    var names = head.slice(1).filter(function(h) {
+      return String(h).trim();
+    });
+    var series = names.map(function(name, i) {
+      var pts = [];
+      body.forEach(function(r) {
+        var x = chartNumber(r[0]), y = chartNumber(r[i + 1]);
+        if (x != null && y != null) pts.push({ x, y });
+      });
+      return { name: String(name).trim(), points: pts };
+    });
+    return { series, xLabel: String(head[0] || "").trim(), yLabel: names.length === 1 ? names[0] : "" };
+  }
+  function chartGroups(slide) {
+    var rows2 = dataRows(slide && slide.body);
+    if (!rows2.length) return [];
+    var body = rows2.length > 1 && chartNumber(rows2[0][1]) == null ? rows2.slice(1) : rows2;
+    return body.map(function(r) {
+      var vals = r.slice(1).map(chartNumber).filter(function(v) {
+        return v != null;
+      });
+      vals.sort(function(a, b) {
+        return a - b;
+      });
+      return { name: String(r[0] || "").trim(), values: vals };
+    }).filter(function(g) {
+      return g.values.length;
+    });
+  }
+  function fiveNumber(sorted) {
+    if (!sorted.length) return null;
+    function q(p) {
+      var pos = (sorted.length - 1) * p, lo = Math.floor(pos), hi = Math.ceil(pos);
+      return lo === hi ? sorted[lo] : sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
+    }
+    var q1 = q(0.25), med = q(0.5), q3 = q(0.75), iqr = q3 - q1;
+    var loFence = q1 - 1.5 * iqr, hiFence = q3 + 1.5 * iqr;
+    var inside = sorted.filter(function(v) {
+      return v >= loFence && v <= hiFence;
+    });
+    return {
+      min: inside.length ? inside[0] : sorted[0],
+      q1,
+      median: med,
+      q3,
+      max: inside.length ? inside[inside.length - 1] : sorted[sorted.length - 1],
+      outliers: sorted.filter(function(v) {
+        return v < loFence || v > hiFence;
+      }),
+      n: sorted.length
+    };
+  }
+  function chartValues(slide) {
+    var rows2 = dataRows(slide && slide.body);
+    var out = [];
+    rows2.forEach(function(r) {
+      r.forEach(function(c) {
+        var n = chartNumber(c);
+        if (n != null) out.push(n);
+      });
+    });
+    return out.sort(function(a, b) {
+      return a - b;
+    });
+  }
+  function histogramBins(values, want) {
+    if (!values.length) return [];
+    var lo = values[0], hi = values[values.length - 1];
+    if (hi === lo) return [{ from: lo, to: lo, count: values.length }];
+    var n = want || Math.max(5, Math.min(14, Math.ceil(Math.log2(values.length) + 1)));
+    var width = (hi - lo) / n, bins = [];
+    for (var i = 0; i < n; i++) bins.push({ from: lo + i * width, to: lo + (i + 1) * width, count: 0 });
+    values.forEach(function(v) {
+      var idx = Math.min(n - 1, Math.floor((v - lo) / width));
+      bins[idx].count++;
+    });
+    return bins;
+  }
   function parseKeywordLine(line) {
     var s = String(line == null ? "" : line);
     var tab = s.indexOf("	");
@@ -7264,9 +7364,11 @@
       tableHeader: true,
       /* Chart layout: bar, line or pie over the same text a table slide uses. */
       chartKind: (
-        /** @type {'bar'|'stack'|'hbar'|'line'|'area'|'pie'|'donut'} */
+        /** @type {'bar'|'stack'|'hbar'|'line'|'area'|'pie'|'donut'|'scatter'|'histogram'|'box'|'pictogram'} */
         "bar"
       ),
+      chartIcon: "",
+      chartUnit: 1,
       /* Image stack: each layer is one picture with its own caption and source,
          shown one in front of the last. Empty on every other kind of slide. */
       layers: (
@@ -7468,7 +7570,21 @@
     } else {
       delete s.exploration;
     }
-    s.chartKind = ["bar", "stack", "hbar", "line", "area", "pie", "donut"].indexOf(s.chartKind) >= 0 ? s.chartKind : "bar";
+    s.chartKind = [
+      "bar",
+      "stack",
+      "hbar",
+      "line",
+      "area",
+      "pie",
+      "donut",
+      "scatter",
+      "histogram",
+      "box",
+      "pictogram"
+    ].indexOf(s.chartKind) >= 0 ? s.chartKind : "bar";
+    s.chartIcon = String(s.chartIcon || "").trim().slice(0, 4);
+    s.chartUnit = Math.max(1, Math.min(1e4, Number(s.chartUnit) || 1));
     var rawLayers = raw && Array.isArray(raw.layers) ? raw.layers : [];
     s.layers = rawLayers.slice(0, GALLERY_MAX).map(function(layer) {
       var l = layer && typeof layer === "object" ? layer : {};
@@ -8010,6 +8126,11 @@
     normalizeQuizConfig,
     SLIDE_TYPES,
     chartData,
+    chartPoints,
+    chartGroups,
+    fiveNumber,
+    chartValues,
+    histogramBins,
     normalizeExploration,
     explorationValue,
     explorationCurve,
