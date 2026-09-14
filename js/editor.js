@@ -1994,8 +1994,33 @@
          { value: 'line', label: 'Line — change over time' },
          { value: 'area', label: 'Area — change over time, with the volume under it' },
          { value: 'pie', label: 'Pie — parts of one whole' },
-         { value: 'donut', label: 'Donut — parts of one whole, total in the middle' }],
+         { value: 'donut', label: 'Donut — parts of one whole, total in the middle' },
+         { value: 'scatter', label: 'Scatter — do two things move together' },
+         { value: 'histogram', label: 'Histogram — the shape of one variable' },
+         { value: 'box', label: 'Box plot — spread, skew and outliers' },
+         { value: 'pictogram', label: 'Pictogram — counted in icons, not measured' }],
         s.chartKind, function (v) { s.chartKind = v; touched(); repaint(); })));
+
+    /* Each idiom reads the same pasted table differently, and an author who
+       is not told will paste the shape the last one wanted. */
+    var SHAPES = {
+      scatter: 'Two numeric columns: the first is x, the second y. One row per point.',
+      histogram: 'One column of numbers. SlideForge counts them into bins.',
+      box: 'One row per group: its name, then every value measured in it.',
+      pictogram: 'One row per category, with the count beside it.'
+    };
+    if (SHAPES[s.chartKind]) insp.appendChild(el('p', 'hint', SHAPES[s.chartKind]));
+
+    if (s.chartKind === 'pictogram') {
+      insp.appendChild(UI.field('Icon', UI.text(s.chartIcon || '', function (v) {
+        s.chartIcon = String(v).trim().slice(0, 4); touched(); repaint();
+      }), 'One emoji or character, repeated once per unit. A person, a book, a bus — something the room can count at a glance.'));
+      insp.appendChild(UI.field('One icon is worth',
+        UI.num(s.chartUnit > 1 ? s.chartUnit : null, function (v) {
+          s.chartUnit = Math.max(1, Number(v) || 1); touched(); repaint();
+        }, 1, null, 'chosen for you'),
+        'Left empty, a unit is picked that keeps the longest row under twenty icons — past that nobody counts, they estimate.'));
+    }
       insp.appendChild(UI.field('Data \u2014 one row per line',
         richField(s, "body", "area", function (v) { s.body = v; touched(); repaint(); }, 9),
         'First row names the series, first column the categories. Separate ' +
@@ -2009,7 +2034,7 @@
       insp.appendChild(el('p', 'hint', note));
       /* Said plainly rather than enforced: the author may have a reason, and
          a slide that silently drops a column is worse than a warning. */
-      if ((s.chartKind === 'pie' || s.chartKind === 'donut') && cd.series.length > 1) {
+      if (['pie', 'donut', 'pictogram'].indexOf(s.chartKind) >= 0 && cd.series.length > 1) {
         insp.appendChild(el('p', 'hint field-warn',
           'A ' + (s.chartKind === 'donut' ? 'donut' : 'pie') + ' shows one series. Only \u201c' +
           cd.series[0].name + '\u201d is drawn; the rest are ignored. Bar compares them all.'));
