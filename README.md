@@ -1,5 +1,58 @@
 # SlideForge
 
+A lesson engine with a live room: author a deck of **typed layouts**, present it
+with builds and notes, and let the class answer from their phones. Reports,
+handouts and exports come out the other side.
+
+## What this is, and what it is not
+
+It is a **teaching tool**, and the shape of the code follows from that.
+
+- **Typed layouts, not a freeform canvas.** A slide is a `title`, a `quote`, an
+  `image`, a `quiz` — not a bag of positioned boxes. New visual behaviour belongs
+  on `slide.design` and in the layout that reads it, never as a parallel system.
+- **No `.pptx` round-trip.** Decks are JSON and the show is HTML. Interactive
+  questions could not survive the conversion, so it is not attempted.
+- **The room is the point.** Live answers, activities and the report are the
+  product; the editor exists to feed them.
+
+If a change only makes sense for an Office clone or a design canvas, it does not
+belong here.
+
+## Where a change goes
+
+Find the seam before adding anything. If you cannot name one, you are about to
+bypass it.
+
+| To change… | Follow |
+| --- | --- |
+| How a slide looks or behaves | `slide.design` → `js/customize.js` (inspector) → `layoutX` in `js/render.js` → CSS under `#player` |
+| The deck or game schema | `src/model.js`, then `npm run build` — `js/model.js` is generated and `npm test` fails if it drifts |
+| Presenting: builds, transitions, navigation | `js/player.js` |
+| The live room and phones | `js/live.js`, `server/server.js` |
+| A game's rules or scoring | `src/games/` |
+| Lesson content | `js/lessons.js` — content, never engine |
+
+The image slow-zoom (`design.imageMotion` → `.img-motion-zoom`) is the worked
+example: one design field, one layout branch, one CSS rule.
+
+## Where your work lives — read this before believing the screen
+
+Decks autosave to **browser local storage**, and that save **wins over the
+lesson the app ships**. A browser that opened a lesson last week keeps showing
+last week's copy, with nothing on screen to say so — a stale deck reads as
+missing slides, not as a stale deck.
+
+- **Lecture setup → Reload … from this version of the app** rebuilds it and keeps your work.
+- Storage is **per-origin**: `file://` and `http://localhost:8787` and a hosted
+  address are three separate libraries.
+- **Export is the durable copy.** Browser storage is easy to lose.
+- **Hosted sessions do not survive a deploy.** Attendance and results are written
+  to the container filesystem and are gone at the next release unless a
+  persistent disk is attached — see `render.yaml`.
+
+Full caveats in [Known limits](#known-limits).
+
 ## Developing the model
 
 The model source lives in `src/`: game definitions and scoring in `src/games/`,
