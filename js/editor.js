@@ -416,9 +416,12 @@
   }
 
   function findInDeck() {
+    /* Mark the File-menu / toast hint as seen once someone opens Find —
+       they have found the door; nagging again would be noise. */
+    try { localStorage.setItem('slideforge.findHint.v1', '1'); } catch (e) {}
     SF.askText({
       title: 'Find in this lesson',
-      detail: 'Searches slide text and speaker notes.',
+      detail: 'Searches slide text and speaker notes. Open again anytime with ⌘F (Ctrl+F), or File → Find in lesson…',
       placeholder: 'A word or phrase',
       confirm: 'Find'
     }, function (term) {
@@ -2544,6 +2547,15 @@
        one wherever the focus happens to be — and the handler bows out on
        its own when the focus is somewhere a paste means something else. */
     document.addEventListener('paste', pasteImage);
+    /* Once: Find is easy to miss next to Present keys. Opening Find (or
+       File → Find) marks it seen so this does not repeat. */
+    setTimeout(function () {
+      try {
+        if (localStorage.getItem('slideforge.findHint.v1') === '1') return;
+        localStorage.setItem('slideforge.findHint.v1', '1');
+      } catch (e) { return; }
+      SF.toast('Find across the lesson: ⌘F / Ctrl+F, or File → Find in lesson…');
+    }, 1800);
     /* The activities studio is a third view of this same deck, so it
        delegates title, theme, play and settings back here rather than
        keeping a second copy of any of them. */
@@ -2696,6 +2708,7 @@
     },
     deck: function () { return deck; },
     selected: function () { return sel; },
+    findInDeck: findInDeck,
     /* The activities studio attaches feedback with this editor rather than a
        second one of its own — same picker, same prompts, same per-kind
        settings. It passes its own redraw. */

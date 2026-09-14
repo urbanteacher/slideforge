@@ -364,7 +364,63 @@
     }
     el2.title = 'Autosaved to this browser only — invisible, tied to this address, ' +
       'and lost if the profile is cleared. It also wins over the lesson the app ships. ' +
-      'Click to export a copy you can keep.';
+      'Click for Export, or to reload a shipped lesson from this app.';
+  }
+
+  function lessonBehindOpenDoc() {
+    var doc = active && active.doc && active.doc();
+    if (!doc || !active || active.key !== 'deck') return null;
+    return (SF.LESSONS || []).filter(function (l) { return l.title === doc.title; })[0] || null;
+  }
+
+  function openStoreState() {
+    if (!active) return;
+    if (active.flush) active.flush();
+    var lesson = lessonBehindOpenDoc();
+    picker({
+      title: 'Where this work lives',
+      wide: true,
+      items: function () {
+        var items = [
+          { id: 'export', title: 'Export a durable copy',
+            blurb: 'Browser storage is a draft. Export writes a file (or the app folder) you can keep, commit, or move.' }
+        ];
+        if (lesson) {
+          items.push({ id: 'refresh', title: 'Reload “' + lesson.title + '” from this version of the app',
+            blurb: 'This browser may be showing an older saved copy. Rebuilds the shipped lesson (' +
+              (lesson.slides || []).length + ' slides). Your current copy stays under File → Open.' });
+        }
+        items.push({ id: 'ready', title: 'Lecture setup…',
+          blurb: 'Wake the server, clear browser saves, join-page checks — everything that goes wrong between a working app and a working room.' });
+        return items;
+      },
+      describe: function (it) { return it.blurb; },
+      onPick: function (it) {
+        if (it.id === 'export') {
+          var ex = $('btnExport');
+          if (ex) ex.click();
+          return;
+        }
+        if (it.id === 'ready') {
+          var ready = $('btnLectureReady');
+          if (ready) ready.click();
+          return;
+        }
+        if (it.id === 'refresh') {
+          var L = lessonBehindOpenDoc();
+          if (!L || !SF.Editor || !SF.Editor.useLesson) return;
+          SF.ask({
+            title: 'Reload the shipped lesson?',
+            detail: 'Rebuilds “' + L.title + '” as this version of the app ships it. ' +
+              'The copy currently open stays available under File → Open saved document.',
+            confirm: 'Reload from app'
+          }, function () {
+            SF.Editor.useLesson(L.key);
+            SF.toast('Reloaded from this version of the app. Export if you want a durable copy.');
+          });
+        }
+      }
+    });
   }
 
   function openSaved() {
@@ -877,9 +933,16 @@
     var storeBtn = $('storeState');
     if (storeBtn) {
       setStored('stored');
-      storeBtn.onclick = function () {
-        var ex = $('btnExport');
-        if (ex) ex.click();
+      storeBtn.onclick = openStoreState;
+    }
+
+    var btnFind = $('btnFind');
+    if (btnFind) {
+      btnFind.onclick = function () {
+        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
+        if (menu) menu.open = false;
+        if (SF.Editor && SF.Editor.findInDeck) SF.Editor.findInDeck();
+        else SF.toast('Open a presentation to search it.');
       };
     }
 

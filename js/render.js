@@ -39,19 +39,19 @@
     if (P && P.open && P.deck && P.deck.slides) {
       var authored = (SF.Editor && SF.Editor.deck && SF.Editor.deck().slides) || P.deck.slides;
       var want = authored[n - 1];
-      if (!want) { if (SF.toast) SF.toast('There is no slide ' + n + '.'); return; }
+      if (!want) { if (SF.toast) SF.toast('There is no rail slide ' + n + ' (authoring order).'); return; }
       var at = -1;
       P.deck.slides.forEach(function (s, i) {
         if (at < 0 && (s.id === want.id || s.sourceSlideId === want.id)) at = i;
       });
-      if (at < 0) { if (SF.toast) SF.toast('Slide ' + n + ' is not in this show — it may be hidden.'); return; }
+      if (at < 0) { if (SF.toast) SF.toast('Rail slide ' + n + ' is not in this show — it may be hidden.'); return; }
       P.goTo(at, at > P.idx ? 1 : -1);
       return;
     }
     if (SF.Editor && SF.Editor.selectSlide) {
       var d = SF.Editor.deck();
       var target = d && d.slides[n - 1];
-      if (!target) { if (SF.toast) SF.toast('There is no slide ' + n + '.'); return; }
+      if (!target) { if (SF.toast) SF.toast('There is no rail slide ' + n + ' (authoring order).'); return; }
       SF.Editor.selectSlide(target.id);
     }
   };
