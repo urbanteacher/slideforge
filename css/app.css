@@ -5315,3 +5315,13 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
    it is there to attach, not to be read. */
 #player .ch-point-label, #previewBox .ch-point-label { font-size: 15px; font-weight: 600; fill: var(--s-fg); }
 #player .ch-leader, #previewBox .ch-leader { stroke: currentColor; stroke-width: 1; opacity: .38; }
+
+/* Small multiples. Colour says direction, not identity: every panel is the
+   same measure, so what differs between them is whether it rose or fell. */
+#player .ch-multiple-title, #previewBox .ch-multiple-title { font-size: 15px; font-weight: 700; }
+#player .ch-mult-value, #previewBox .ch-mult-value { font-size: 12px; fill: var(--s-fg); opacity: .8; }
+#player .ch-mult-axis, #previewBox .ch-mult-axis { font-size: 11px; fill: var(--s-fg); opacity: .5; }
+.ch-mult-line.dir-up, .ch-mult-dot.dir-up { stroke: #C83D77; fill: #C83D77; }
+.ch-mult-line.dir-down, .ch-mult-dot.dir-down { stroke: #477F54; fill: #477F54; }
+.ch-mult-line.dir-flat, .ch-mult-dot.dir-flat { stroke: #8A7A6D; fill: #8A7A6D; }
+.ch-mult-line { fill: none; }

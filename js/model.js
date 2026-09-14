@@ -7463,8 +7463,8 @@
       label: "Change over time",
       question: "What is the trend?",
       note: "Give the period enough context for the reader to judge the change.",
-      kinds: ["line", "area", "combo"],
-      home: ["line", "area", "combo"],
+      kinds: ["line", "area", "combo", "multiples"],
+      home: ["line", "area", "combo", "multiples"],
       missing: ["slope", "candlestick", "calendar heatmap", "streamgraph", "fan chart"]
     },
     {
@@ -7849,7 +7849,8 @@
       "combo",
       "waffle",
       "dumbbell",
-      "matrix"
+      "matrix",
+      "multiples"
     ].indexOf(s.chartKind) >= 0 ? s.chartKind : "bar";
     s.chartSource = String(s.chartSource || "").trim().slice(0, 200);
     if (!s.chartSource) delete s.chartSource;

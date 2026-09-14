@@ -1491,6 +1491,115 @@
     return svg;
   }
 
+  /* Small multiples: a panel per item, every panel on the same scale.
+
+     Ported from the platform-peaks chart in the pollution explorer. The
+     discipline that makes the idiom work is the shared scale — it is what
+     lets a reader compare panels by eye instead of re-reading four axes —
+     so the scale is computed across every value and then stated on the
+     slide, not left for the reader to check.
+
+     The table is read transposed: each row becomes a panel and the columns
+     become the axis inside it. "Station | 2023 | 2024 | 2025" is one panel
+     per station with years across the bottom, which is how the data arrives
+     and saves an author pivoting it first.
+
+     Colour carries direction, not identity. Every panel is the same series,
+     so colouring them apart would say they are different things; what
+     differs is whether each one rose or fell, and that is worth a hue. */
+  function multiplesChart(data, slide) {
+    var W = CHART.w, H = CHART.h;
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+    var panels = data.categories.map(function (name, i) {
+      return { name: name, values: data.series.map(function (sr) { return sr.values[i]; }) };
+    }).filter(function (p) { return p.values.some(function (v) { return v != null; }); });
+    if (!panels.length || data.series.length < 2) return svg;
+
+    var all = [];
+    panels.forEach(function (p) { p.values.forEach(function (v) { if (v != null) all.push(v); }); });
+    var rng = niceRange(Math.min.apply(null, all), Math.max.apply(null, all));
+
+    /* Wide before tall: a row of panels is read left to right like a
+       sentence, and a tall grid of narrow ones is read as a table. */
+    var cols = Math.min(panels.length, panels.length <= 4 ? panels.length : Math.ceil(Math.sqrt(panels.length * 1.9)));
+    var rows = Math.ceil(panels.length / cols);
+    var padTop = 26, padBottom = 34;
+    var cellW = (W - 36) / cols, cellH = (H - padTop - padBottom) / rows;
+    var plotW = cellW - 30, plotH = Math.max(22, cellH - 48);
+
+    panels.forEach(function (p, i) {
+      var cx = 18 + (i % cols) * cellW, cy = padTop + Math.floor(i / cols) * cellH;
+      var g = svgEl('g', { class: 'ch-beat ch-multiple', 'data-step': i, 'data-series': '0' });
+      var n = p.values.length;
+      var sx = function (j) { return cx + 14 + (n < 2 ? plotW / 2 : (plotW * j) / (n - 1)); };
+      var sy = function (v) { return cy + 26 + plotH - ((v - rng.lo) / (rng.hi - rng.lo || 1)) * plotH; };
+
+      var lab = svgEl('text', { x: cx + 14, y: cy + 12, class: 'ch-cat ch-multiple-title' });
+      lab.textContent = p.name;
+      g.appendChild(lab);
+
+      /* Floor and ceiling only. Four gridlines in a panel this size is a
+         texture, not a scale. */
+      [rng.lo, rng.hi].forEach(function (v) {
+        g.appendChild(svgEl('line', { x1: sx(0), x2: sx(n - 1), y1: sy(v), y2: sy(v), class: 'ch-grid' }));
+      });
+
+      /** @type {number|null} */ var first = null;
+      /** @type {number|null} */ var last = null;
+      p.values.forEach(function (v) { if (v != null) { if (first === null) first = v; last = v; } });
+      /* Both null together or neither, but the checker cannot see that from
+         the loop, and a panel of blanks should read flat rather than throw.
+
+         Flat is a band, not an exact tie. A station going 1,010 to 1,008 is
+         not falling — it is holding — and colouring two units of drift on a
+         thousand-unit scale as a decline is the chart making a claim the
+         data does not support. Two per cent of the shared range, so the
+         threshold means the same thing in every panel. */
+      var slack = (rng.hi - rng.lo) * 0.02;
+      var dir = (first === null || last === null || Math.abs(last - first) <= slack) ? 'flat'
+              : (last > first ? 'up' : 'down');
+
+      var pts = [];
+      p.values.forEach(function (v, j) { if (v != null) pts.push([sx(j), sy(v)]); });
+      if (pts.length > 1) {
+        g.appendChild(svgEl('polyline', {
+          points: pts.map(function (q) { return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' '),
+          fill: 'none', class: 'ch-mult-line dir-' + dir, 'stroke-width': 2.5, 'stroke-linejoin': 'round'
+        }));
+      }
+      p.values.forEach(function (v, j) {
+        if (v == null) return;
+        g.appendChild(svgEl('circle', { cx: sx(j), cy: sy(v), r: 3.5, class: 'ch-mult-dot dir-' + dir }));
+        /* Only the ends carry a number. Labelling every point in a panel
+           two inches wide turns the shape back into a table. */
+        if (j === 0 || j === n - 1) {
+          var vl = svgEl('text', { x: sx(j), y: sy(v) - 8, class: 'ch-mult-value',
+            'text-anchor': j === 0 ? 'start' : 'end' });
+          vl.textContent = fmt(v);
+          g.appendChild(vl);
+        }
+      });
+      /* The axis is named once per panel, at the ends, rather than under
+         every point. */
+      [0, n - 1].forEach(function (j) {
+        var t = svgEl('text', { x: sx(j), y: cy + 26 + plotH + 15, class: 'ch-mult-axis',
+          'text-anchor': j === 0 ? 'start' : 'end' });
+        t.textContent = (data.series[j] && data.series[j].name) || '';
+        g.appendChild(t);
+      });
+      svg.appendChild(g);
+    });
+
+    /* The shared scale, said out loud. Without it a reader has no way to
+       know the panels are comparable, which is the entire claim the layout
+       is making. */
+    var note = svgEl('text', { x: 18, y: H - 10, class: 'ch-tick' });
+    note.textContent = 'Every panel on the same ' + fmt(rng.lo) + '–' + fmt(rng.hi) + ' scale' +
+      ' · rose, fell or held is shown by colour';
+    svg.appendChild(note);
+    return svg;
+  }
+
   function lineChart(data, slide, area) {
     var W = CHART.w, H = CHART.h, P = CHART;
     /* Reserve the right margin for the end-labels before drawing anything.
@@ -1949,6 +2058,7 @@
               : k0 === 'sankey' ? !SF.chartFlows(slide).links.length
               : k0 === 'matrix' ? SF.parseTable(slide.body).length < 2
               : k0 === 'dumbbell' ? data.series.length < 2
+              : k0 === 'multiples' ? (data.series.length < 2 || !data.categories.length)
               : k0 === 'radar' ? (data.categories.length < 3 || !data.series.length)
               : (!data.series.length || !data.categories.length);
     if (empty) {
@@ -1963,6 +2073,7 @@
         : k0 === 'box' ? 'One row per group: its name, then every value measured in it.'
         : k0 === 'sankey' ? 'Three columns: from, to, amount. One row per flow.'
         : k0 === 'dumbbell' ? 'One row per category, then exactly two numbers \u2014 the two states being compared.'
+        : k0 === 'multiples' ? 'One row per panel. The columns become the axis inside every panel.'
         : k0 === 'matrix' ? 'First row names the conditions. Then one row per item, with a rating in each cell.'
         : k0 === 'radar' ? 'At least three categories — they become the spokes. Each series is a shape.'
         : k0 === 'bullet' ? 'First column Actual, second Target (optional). One row per category.'
@@ -1974,7 +2085,7 @@
     }
     var KINDS = ['bar', 'stack', 'hbar', 'line', 'area', 'pie', 'donut',
                  'scatter', 'histogram', 'box', 'pictogram', 'radar', 'sankey',
-                 'treemap', 'bullet', 'combo', 'waffle', 'dumbbell', 'matrix'];
+                 'treemap', 'bullet', 'combo', 'waffle', 'dumbbell', 'matrix', 'multiples'];
     var kind = KINDS.indexOf(slide.chartKind) >= 0 ? slide.chartKind : 'bar';
     var wrap = el('div', 'chart-wrap chart-' + kind);
     var design = slide.design || {};
@@ -1992,7 +2103,8 @@
       wrap.dataset.focus = String(Number(design.chartFocus));
     }
     var stepOf = function (si, ci) { return data.series.length > 1 ? si : ci; };
-    var svg = kind === 'dumbbell' ? dumbbellChart(data, slide)
+    var svg = kind === 'multiples' ? multiplesChart(data, slide)
+            : kind === 'dumbbell' ? dumbbellChart(data, slide)
             : kind === 'matrix' ? matrixChart(slide)
             : kind === 'sankey' ? sankeyChart(slide)
             : kind === 'radar' ? radarChart(data, slide)

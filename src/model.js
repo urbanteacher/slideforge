@@ -3,7 +3,7 @@ import { createBoardRuntime } from "./boards/runtime.js";
 import { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes } from "./activities/catalogue.js";
 import { parsePerson, orgTree, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
 import { FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest } from "./deck/feedback.js";
-import { renderMarkdown } from "./deck/markdown.js";
+import { renderMarkdown, parseMarkdownDeck } from "./deck/markdown.js";
 import sampleDeck from "./samples/deck.json" with { type: "json" };
 /* SlideForge — model. Edit source here; npm run build updates js/model.js. */
 import { uid } from "./core/identity.js";
@@ -88,8 +88,8 @@ var CHART_TAXONOMY = [
   { key: 'time', label: 'Change over time',
     question: 'What is the trend?',
     note: 'Give the period enough context for the reader to judge the change.',
-    kinds: ['line', 'area', 'combo'],
-    home: ['line', 'area', 'combo'],
+    kinds: ['line', 'area', 'combo', 'multiples'],
+    home: ['line', 'area', 'combo', 'multiples'],
     missing: ['slope', 'candlestick', 'calendar heatmap', 'streamgraph', 'fan chart'] },
   { key: 'magnitude', label: 'Magnitude',
     question: 'Which is bigger?',
@@ -525,7 +525,7 @@ function normalizeSlide(raw) {
      "which of these reads best", not "which of these is implemented". */
   s.chartKind = ['bar', 'stack', 'hbar', 'line', 'area', 'pie', 'donut',
                  'scatter', 'histogram', 'box', 'pictogram', 'radar', 'sankey',
-                 'treemap', 'bullet', 'combo', 'waffle', 'dumbbell', 'matrix'].indexOf(s.chartKind) >= 0 ? s.chartKind : 'bar';
+                 'treemap', 'bullet', 'combo', 'waffle', 'dumbbell', 'matrix', 'multiples'].indexOf(s.chartKind) >= 0 ? s.chartKind : 'bar';
   /* One icon per unit, for the pictogram. A single character so a count of
      them is a count of things; an emoji that renders as two glyphs would
      make eleven look like twenty-two. */
@@ -1255,6 +1255,20 @@ function deckToMarkdown(deck) {
   return renderMarkdown(normalizeDeck(deck || {}), id => GameStore.get(id));
 }
 
+/**
+ * Starter deck from a Markdown outline. Supports title / section / content /
+ * cards / quote / image / keywords / links — not games or live activities.
+ * @param {string} text
+ */
+function markdownToDeck(text) {
+  var parsed = parseMarkdownDeck(text);
+  var deck = makeDeck(parsed.title || 'Imported from Markdown');
+  deck.slides = (parsed.slides.length ? parsed.slides : [{ type: 'title', title: deck.title }])
+    .map(function (s) { return normalizeSlide(s); });
+  if (!deck.slides.length) deck.slides = [makeSlide('title')];
+  return normalizeDeck(deck);
+}
+
 const { Store, GameStore } = createStores({ normalizeDeck, normalizeGame, storage: () => localStorage });
 
 /* One statement rather than "create, then fill": the namespace is not a
@@ -1315,6 +1329,8 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   formatKeywordLine: formatKeywordLine,
   safeHref: safeHref,
   deckToMarkdown: deckToMarkdown,
+  markdownToDeck: markdownToDeck,
+  parseMarkdownDeck: parseMarkdownDeck,
   DECK_TYPES: DECK_TYPES,
   BULLET_LAYOUTS: BULLET_LAYOUTS,
   LAYOUT_GROUPS: LAYOUT_GROUPS,
