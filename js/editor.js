@@ -345,6 +345,74 @@
     return slot;
   }
 
+  /* Keep a slide in the deck and out of the show. Written work does not have
+     to be finished work, and the alternative people actually use — deleting
+     it and hoping it is in an export somewhere — loses the slide. */
+  function toggleHidden(i) {
+    var s = deck.slides[i];
+    if (!s) return;
+    if (s.hidden === true) delete s.hidden; else s.hidden = true;
+    touched();
+    draw();
+    SF.toast(s.hidden === true
+      ? '"' + (s.title || SF.SLIDE_TYPES[s.type].label) + '" is hidden from the show. It stays in the deck.'
+      : '"' + (s.title || SF.SLIDE_TYPES[s.type].label) + '" is back in the show.');
+  }
+
+  /* Find a slide in a deck too long to eyeball. A 74-slide lecture is past
+     the point where a rail of thumbnails answers "where did I say that" —
+     the pictures stop being distinguishable somewhere around forty.
+
+     Searches what a person would expect to be searchable: the words on the
+     slide and the words they wrote underneath it. Notes are included because
+     the phrase you remember is as often in the script as on the wall. */
+  function slideHaystack(s) {
+    var parts = [s.title, s.subtitle, s.body, s.notes, s.quote, s.attribution, s.gameTitle];
+    if (Array.isArray(s.bullets)) parts = parts.concat(s.bullets);
+    if (Array.isArray(s.options)) parts = parts.concat(s.options);
+    return parts.filter(Boolean).join(' \n ');
+  }
+
+  function findInDeck() {
+    SF.askText({
+      title: 'Find in this lesson',
+      detail: 'Searches slide text and speaker notes.',
+      placeholder: 'A word or phrase',
+      confirm: 'Find'
+    }, function (term) {
+      var q = String(term || '').trim().toLowerCase();
+      if (!q) return;
+      var hits = [];
+      deck.slides.forEach(function (s, i) {
+        var hay = slideHaystack(s);
+        if (hay.toLowerCase().indexOf(q) < 0) return;
+        /* A line of context, so a list of twelve hits is choosable without
+           opening each one. */
+        var line = hay.split('\n').filter(function (l) {
+          return l.toLowerCase().indexOf(q) >= 0;
+        })[0] || '';
+        hits.push({ i: i, slide: s, line: line.trim().slice(0, 120) });
+      });
+      if (!hits.length) { SF.toast('No slide mentions “' + term + '”.'); return; }
+      SF.Shell.picker({
+        title: hits.length + (hits.length === 1 ? ' slide mentions ' : ' slides mention ') + '“' + term + '”',
+        wide: true,
+        items: function () {
+          return hits.map(function (h) {
+            return {
+              id: String(h.i),
+              title: (h.i + 1) + '. ' + (h.slide.title || SF.SLIDE_TYPES[h.slide.type].label) +
+                (h.slide.hidden === true ? '  · hidden' : ''),
+              blurb: h.line
+            };
+          });
+        },
+        describe: function (it) { return it.blurb; },
+        onPick: function (it) { select(Number(it.id)); }
+      });
+    });
+  }
+
   function drawRail() {
     var rail = $('railList');
     if (!rail) return;
@@ -353,7 +421,14 @@
     rail.classList.toggle('placing', placing != null);
     caretAt = null;
     var count = $('railCount');
-    if (count) count.textContent = String(deck.slides.length);
+    if (count) {
+      var off = deck.slides.filter(function (x) { return x.hidden === true; }).length;
+      /* Both numbers, because either alone misleads: the deck has 74 slides
+         and the room will see 70, and a lecturer planning a timing needs the
+         second one. */
+      count.textContent = off ? (deck.slides.length - off) + ' of ' + deck.slides.length : String(deck.slides.length);
+      count.title = off ? off + ' slide' + (off === 1 ? '' : 's') + ' hidden from the show' : '';
+    }
     drawSorterButton();
 
     /* The rail scrolls itself towards the pointer during a drag; it listens on
@@ -371,11 +446,13 @@
     list.appendChild(railSlot(0));
 
     deck.slides.forEach(function (s, i) {
-      var row = el('div', 'thumb' + (i === sel ? ' sel' : '') + (i === placing ? ' carried' : ''));
+      var row = el('div', 'thumb' + (i === sel ? ' sel' : '') + (i === placing ? ' carried' : '') +
+        (s.hidden === true ? ' hidden-slide' : ''));
       row.draggable = true;
       row.tabIndex = 0;
       row.setAttribute('role', 'button');
-      row.setAttribute('aria-label', 'Slide ' + (i + 1) + ': ' + (s.title || SF.SLIDE_TYPES[s.type].label));
+      row.setAttribute('aria-label', 'Slide ' + (i + 1) + ': ' + (s.title || SF.SLIDE_TYPES[s.type].label) +
+        (s.hidden === true ? ' — hidden from the show' : ''));
       row.setAttribute('aria-current', i === sel ? 'true' : 'false');
       /* Only when the row itself has focus: the grip inside it is a button, and
          swallowing its Enter here would redraw the rail out from under the
@@ -398,6 +475,20 @@
       grip.title = 'Pick this slide up to move it (⌘X). Drag to nudge it a place or two.';
       grip.setAttribute('aria-label', 'Move slide ' + (i + 1));
       gutter.appendChild(grip);
+      /* In the gutter beside the number, because hiding is a fact about
+         where the slide sits in the running order rather than about its
+         content — and because a control the rail does not show is a control
+         only its author knows about. */
+      var eye = UI.button(s.hidden === true ? '⦸' : '👁', 'thumb-hide', function (e) {
+        e.stopPropagation();
+        toggleHidden(i);
+      });
+      eye.title = s.hidden === true
+        ? 'Hidden from the show — click to put it back (H)'
+        : 'Hide from the show, keeping it in the deck (H)';
+      eye.setAttribute('aria-label', (s.hidden === true ? 'Show' : 'Hide') + ' slide ' + (i + 1));
+      eye.setAttribute('aria-pressed', String(s.hidden === true));
+      gutter.appendChild(eye);
       row.appendChild(gutter);
 
       var body = el('div', 'thumb-body');
@@ -2300,6 +2391,7 @@
       var mod = e.metaKey || e.ctrlKey;
       if (sorterOpen()) { sorterKeys(e); return; }
       if (mod && e.key.toLowerCase() === 'g') { e.preventDefault(); openSorter(); return; }
+      if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); findInDeck(); return; }
       /* A slide in hand owns the keyboard: the arrows aim it instead of
          changing the selection, and nothing that edits the deck can fire until
          it has been put down or dropped. */
@@ -2329,6 +2421,7 @@
          the other means the key someone actually presses does nothing. */
       else if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'j') { e.preventDefault(); select(sel + 1); }
       else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'k') { e.preventDefault(); select(sel - 1); }
+      else if (e.key === 'h' || e.key === 'H') { e.preventDefault(); toggleHidden(sel); }
       else if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); removeSlide(); }
       else if (e.key === 'F5') { e.preventDefault(); present(); }
       else if (mod && e.key === 'd') { e.preventDefault(); duplicate(); }

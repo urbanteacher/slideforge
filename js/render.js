@@ -16,6 +16,46 @@
     return n;
   }
 
+  /* "slide:12" — a jump inside the lesson. Returns the 1-based number the
+     author wrote, or 0 for anything else, so callers can use it as a test. */
+  SF.slideJumpTarget = function (value) {
+    var m = /^\s*slide:\s*(\d{1,4})\s*$/i.exec(String(value || ''));
+    var n = m ? Number(m[1]) : 0;
+    return n >= 1 ? n : 0;
+  };
+
+  /* Going there means two different things depending on who is looking.
+
+     The author is holding the deck, so the number they wrote is the number
+     they meant. The room is watching a show built from that deck — games
+     have expanded into their questions and hidden slides are gone — so the
+     same number points somewhere else entirely. The slide's id is the only
+     thing both lists agree on, so the number is resolved against the deck
+     and the id is looked up in the show. A link to a slide that is hidden
+     therefore goes nowhere, which is the honest outcome: it is not in the
+     lesson the room is being shown. */
+  SF.jumpToSlide = function (n) {
+    var P = SF.Player;
+    if (P && P.open && P.deck && P.deck.slides) {
+      var authored = (SF.Editor && SF.Editor.deck && SF.Editor.deck().slides) || P.deck.slides;
+      var want = authored[n - 1];
+      if (!want) { if (SF.toast) SF.toast('There is no slide ' + n + '.'); return; }
+      var at = -1;
+      P.deck.slides.forEach(function (s, i) {
+        if (at < 0 && (s.id === want.id || s.sourceSlideId === want.id)) at = i;
+      });
+      if (at < 0) { if (SF.toast) SF.toast('Slide ' + n + ' is not in this show — it may be hidden.'); return; }
+      P.goTo(at, at > P.idx ? 1 : -1);
+      return;
+    }
+    if (SF.Editor && SF.Editor.selectSlide) {
+      var d = SF.Editor.deck();
+      var target = d && d.slides[n - 1];
+      if (!target) { if (SF.toast) SF.toast('There is no slide ' + n + '.'); return; }
+      SF.Editor.selectSlide(target.id);
+    }
+  };
+
   function rich(tag, cls, slide, key, text) {
     var n = el(tag, cls, text);
     n.dataset.contentKey=key;

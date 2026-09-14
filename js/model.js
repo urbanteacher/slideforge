@@ -7444,6 +7444,8 @@
     s.videoMuted = s.videoMuted === true;
     s.videoAutoplay = s.videoAutoplay === true;
     s.tableHeader = s.tableHeader !== false;
+    if (s.hidden === true) s.hidden = true;
+    else delete s.hidden;
     if (EXPLORATION_TYPES.indexOf(s.type) >= 0 || raw && raw.exploration) {
       s.exploration = normalizeExploration(raw && raw.exploration);
       s.exploration.before = safeMedia(s.exploration.before);
@@ -7767,6 +7769,7 @@
     run.missingGames = [];
     run.games = [];
     deck.slides.forEach(function(s) {
+      if (s.hidden === true) return;
       if (s.type !== "game") {
         run.slides.push(s);
         return;
