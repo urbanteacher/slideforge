@@ -160,6 +160,7 @@ function makeSlide(type) {
     video: '',
     videoPoster: '',
     videoStart: 0,          // seconds in, for a clip inside a longer file
+    videoEnd: 0,            // seconds, where to stop; 0 means play to the end
     videoLoop: false,
     videoMuted: false,
     videoAutoplay: false,   // honoured on the projector, never in a preview
@@ -364,6 +365,10 @@ function normalizeSlide(raw) {
   s.video = safeMedia(s.video);
   s.videoPoster = safeMedia(s.videoPoster);
   s.videoStart = Math.max(0, Number(s.videoStart) || 0);
+  s.videoEnd = Math.max(0, Number(s.videoEnd) || 0);
+  /* A stop before the start is not a clip, it is a typo, and honouring it
+     would play nothing at all with no sign why. */
+  if (s.videoEnd && s.videoEnd <= s.videoStart) s.videoEnd = 0;
   s.videoLoop = s.videoLoop === true;
   s.videoMuted = s.videoMuted === true;
   s.videoAutoplay = s.videoAutoplay === true;
