@@ -90,12 +90,27 @@
       });
       return i;
     },
+    /* An option may carry `group`, in which case consecutive options sharing
+       a name are wrapped in an optgroup. Grouped rather than sorted: a list
+       of seventeen chart types is unreadable flat, and the heading a reader
+       needs is the question the chart answers, not its alphabet. */
     select: function (options, value, onchange) {
       var s = el('select');
+      var host = s, lastGroup = null;
       options.forEach(function (o) {
+        if (o.group !== lastGroup) {
+          lastGroup = o.group;
+          if (o.group) {
+            host = document.createElement('optgroup');
+            host.label = o.group;
+            s.appendChild(host);
+          } else {
+            host = s;
+          }
+        }
         var op = el('option', null, o.label);
         op.value = o.value;
-        s.appendChild(op);
+        host.appendChild(op);
       });
       s.value = value;
       s.addEventListener('change', function () { onchange(s.value); });

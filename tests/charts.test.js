@@ -114,3 +114,23 @@ test('a chart survives a save and reload unchanged', () => {
   assert.equal(back.slides[0].chartKind, 'pie');
   assert.deepEqual(plain(SF.chartData(back.slides[0])).series[0].values, [46, 21]);
 });
+
+test('the series legend is an allowlist, not a growing exclusion list', () => {
+  const SF = load();
+  assert.equal(typeof SF.chartUsesSeriesLegend, 'function');
+  /* Multi-series peers on the drawing. */
+  assert.equal(SF.chartUsesSeriesLegend('bar', 2), true);
+  assert.equal(SF.chartUsesSeriesLegend('combo', 2), true);
+  assert.equal(SF.chartUsesSeriesLegend('radar', 2), true);
+  assert.equal(SF.chartUsesSeriesLegend('bullet', 2), true);
+  /* One series: nothing to key. */
+  assert.equal(SF.chartUsesSeriesLegend('bar', 1), false);
+  /* Columns are not series on the drawing — pie/treemap/waffle/sankey. */
+  assert.equal(SF.chartUsesSeriesLegend('pie', 2), false);
+  assert.equal(SF.chartUsesSeriesLegend('treemap', 2), false);
+  assert.equal(SF.chartUsesSeriesLegend('waffle', 2), false);
+  assert.equal(SF.chartUsesSeriesLegend('sankey', 3), false,
+    'From/To/Amount must not become a three-item legend');
+  assert.equal(SF.chartUsesSeriesLegend('histogram', 2), false);
+  assert.equal(SF.chartUsesSeriesLegend('box', 2), false);
+});

@@ -2566,6 +2566,20 @@
     });
     return { categories, series };
   }
+  var SERIES_LEGEND_KINDS = {
+    bar: 1,
+    stack: 1,
+    hbar: 1,
+    line: 1,
+    area: 1,
+    combo: 1,
+    radar: 1,
+    bullet: 1,
+    scatter: 1
+  };
+  function chartUsesSeriesLegend(kind, seriesCount) {
+    return (seriesCount == null ? 2 : seriesCount) > 1 && !!SERIES_LEGEND_KINDS[kind];
+  }
   var DATA_MAX_COLS = 200;
   var DATA_MAX_ROWS = 200;
   function dataRows(text2) {
@@ -7321,6 +7335,85 @@
   var runtime = window;
   var SLIDE_W = 1280;
   var SLIDE_H = 720;
+  var CHART_TAXONOMY = [
+    {
+      key: "correlation",
+      label: "Correlation",
+      question: "Do two things move together?",
+      note: "Be mindful that readers will often assume the relationship you show is causal.",
+      kinds: ["scatter", "combo"],
+      missing: ["bubble", "connected scatterplot", "XY heatmap"]
+    },
+    {
+      key: "distribution",
+      label: "Distribution",
+      question: "What values occur, and how often?",
+      note: "The shape — the skew — is often the point, and the thing a summary statistic hides.",
+      kinds: ["histogram", "box"],
+      missing: ["violin plot", "dot strip", "beeswarm", "population pyramid", "cumulative curve"]
+    },
+    {
+      key: "time",
+      label: "Change over time",
+      question: "What is the trend?",
+      note: "Give the period enough context for the reader to judge the change.",
+      kinds: ["line", "area", "combo"],
+      missing: ["slope", "candlestick", "calendar heatmap", "streamgraph", "fan chart"]
+    },
+    {
+      key: "magnitude",
+      label: "Magnitude",
+      question: "Which is bigger?",
+      note: "A counted number — barrels, dollars, people — reads better here than a rate.",
+      kinds: ["bar", "hbar", "pictogram", "bullet", "radar"],
+      missing: ["paired column", "lollipop", "marimekko", "proportional symbol", "parallel coordinates"]
+    },
+    {
+      key: "ranking",
+      label: "Ranking",
+      question: "What is the order?",
+      note: "Use where position matters more than the value itself. Sort it, and label the points of interest.",
+      kinds: ["hbar", "bar"],
+      missing: ["ordered proportional symbol", "dot strip", "slope", "lollipop", "bump"]
+    },
+    {
+      key: "part",
+      label: "Part-to-whole",
+      question: "How does one thing divide up?",
+      note: "Only worth it when the reader cares about the components, not just the total.",
+      kinds: ["stack", "pie", "donut", "treemap", "waffle"],
+      missing: ["marimekko", "arc", "voronoi", "Venn"]
+    },
+    {
+      key: "flow",
+      label: "Flow",
+      question: "Where does it go?",
+      note: "Volumes or intensity of movement between states, conditions or places.",
+      kinds: ["sankey"],
+      missing: ["waterfall", "chord", "network"]
+    },
+    {
+      key: "deviation",
+      label: "Deviation",
+      question: "How far from a baseline?",
+      note: "Variation above and below a fixed reference — a target, a long-run average, zero.",
+      kinds: ["bullet"],
+      missing: ["diverging bar", "diverging stacked bar", "spine", "surplus/deficit filled line"]
+    },
+    {
+      key: "spatial",
+      label: "Spatial",
+      question: "Where, on a map?",
+      note: "Only when location matters more to the reader than anything else about the data.",
+      kinds: [],
+      missing: ["choropleth", "proportional symbol", "flow map", "contour", "cartogram", "dot density", "heat map"]
+    }
+  ];
+  function chartCategories(kind) {
+    return CHART_TAXONOMY.filter(function(c) {
+      return c.kinds.indexOf(kind) >= 0;
+    });
+  }
   var ASPECTS = {
     "16:9": { h: 720, label: "16:9 — widescreen, most projectors" },
     "16:10": { h: 800, label: "16:10 — a little taller, common on laptops" },
@@ -8167,6 +8260,8 @@
     SLIDE_W,
     SLIDE_H,
     ASPECTS,
+    CHART_TAXONOMY,
+    chartCategories,
     slideHeight,
     THEMES,
     TRANSITIONS,
@@ -8177,6 +8272,7 @@
     normalizeQuizConfig,
     SLIDE_TYPES,
     chartData,
+    chartUsesSeriesLegend,
     chartPoints,
     chartFlows,
     chartGroups,

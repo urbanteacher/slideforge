@@ -1,7 +1,7 @@
 import { normalizeExploration, explorationValue, explorationCurve } from './deck/exploration.js';
 import { createBoardRuntime } from "./boards/runtime.js";
 import { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes } from "./activities/catalogue.js";
-import { chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
+import { chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
 import { FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest } from "./deck/feedback.js";
 import { renderMarkdown } from "./deck/markdown.js";
 import sampleDeck from "./samples/deck.json" with { type: "json" };
@@ -56,6 +56,75 @@ var SLIDE_H = 720;
    varying the height only ever hands them more room than they were drawn
    for. 16:9 is the default and what a modern projector wants; 4:3 is still
    what a good many lecture theatres have bolted to the ceiling. */
+/* The Financial Times' Visual Vocabulary, as far as this app can draw it.
+
+   The poster's whole argument is the order of the questions: decide which
+   relationship in your data matters, then choose a chart inside that
+   family. A flat list of seventeen types invites picking by appearance,
+   which on a module about choosing idioms is the wrong lesson to teach by
+   accident.
+
+   Categories and their framing follow the FT's. Two honest notes carried in
+   the data rather than hidden: Spatial is empty, because SlideForge draws no
+   maps, and every category lists the FT types it cannot draw — so an author
+   reaching for a violin plot learns that it exists and that this tool has
+   no violin, instead of concluding a violin is not a thing.
+
+   Some kinds appear under more than one heading, as they do on the poster:
+   a bar answers magnitude and, once sorted, ranking. */
+var CHART_TAXONOMY = [
+  { key: 'correlation', label: 'Correlation',
+    question: 'Do two things move together?',
+    note: 'Be mindful that readers will often assume the relationship you show is causal.',
+    kinds: ['scatter', 'combo'],
+    missing: ['bubble', 'connected scatterplot', 'XY heatmap'] },
+  { key: 'distribution', label: 'Distribution',
+    question: 'What values occur, and how often?',
+    note: 'The shape — the skew — is often the point, and the thing a summary statistic hides.',
+    kinds: ['histogram', 'box'],
+    missing: ['violin plot', 'dot strip', 'beeswarm', 'population pyramid', 'cumulative curve'] },
+  { key: 'time', label: 'Change over time',
+    question: 'What is the trend?',
+    note: 'Give the period enough context for the reader to judge the change.',
+    kinds: ['line', 'area', 'combo'],
+    missing: ['slope', 'candlestick', 'calendar heatmap', 'streamgraph', 'fan chart'] },
+  { key: 'magnitude', label: 'Magnitude',
+    question: 'Which is bigger?',
+    note: 'A counted number — barrels, dollars, people — reads better here than a rate.',
+    kinds: ['bar', 'hbar', 'pictogram', 'bullet', 'radar'],
+    missing: ['paired column', 'lollipop', 'marimekko', 'proportional symbol', 'parallel coordinates'] },
+  { key: 'ranking', label: 'Ranking',
+    question: 'What is the order?',
+    note: 'Use where position matters more than the value itself. Sort it, and label the points of interest.',
+    kinds: ['hbar', 'bar'],
+    missing: ['ordered proportional symbol', 'dot strip', 'slope', 'lollipop', 'bump'] },
+  { key: 'part', label: 'Part-to-whole',
+    question: 'How does one thing divide up?',
+    note: 'Only worth it when the reader cares about the components, not just the total.',
+    kinds: ['stack', 'pie', 'donut', 'treemap', 'waffle'],
+    missing: ['marimekko', 'arc', 'voronoi', 'Venn'] },
+  { key: 'flow', label: 'Flow',
+    question: 'Where does it go?',
+    note: 'Volumes or intensity of movement between states, conditions or places.',
+    kinds: ['sankey'],
+    missing: ['waterfall', 'chord', 'network'] },
+  { key: 'deviation', label: 'Deviation',
+    question: 'How far from a baseline?',
+    note: 'Variation above and below a fixed reference — a target, a long-run average, zero.',
+    kinds: ['bullet'],
+    missing: ['diverging bar', 'diverging stacked bar', 'spine', 'surplus/deficit filled line'] },
+  { key: 'spatial', label: 'Spatial',
+    question: 'Where, on a map?',
+    note: 'Only when location matters more to the reader than anything else about the data.',
+    kinds: [],
+    missing: ['choropleth', 'proportional symbol', 'flow map', 'contour', 'cartogram', 'dot density', 'heat map'] }
+];
+
+/** Which FT categories a chart kind belongs to. */
+function chartCategories(kind) {
+  return CHART_TAXONOMY.filter(function (c) { return c.kinds.indexOf(kind) >= 0; });
+}
+
 var ASPECTS = {
   '16:9': { h: 720, label: '16:9 — widescreen, most projectors' },
   '16:10': { h: 800, label: '16:10 — a little taller, common on laptops' },
@@ -1152,6 +1221,8 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   SLIDE_W: SLIDE_W,
   SLIDE_H: SLIDE_H,
   ASPECTS: ASPECTS,
+  CHART_TAXONOMY: CHART_TAXONOMY,
+  chartCategories: chartCategories,
   slideHeight: slideHeight,
   THEMES: THEMES,
   TRANSITIONS: TRANSITIONS,
@@ -1162,6 +1233,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   normalizeQuizConfig: normalizeQuizConfig,
   SLIDE_TYPES: SLIDE_TYPES,
   chartData: chartData,
+  chartUsesSeriesLegend: chartUsesSeriesLegend,
   chartPoints: chartPoints,
   chartFlows: chartFlows,
   chartGroups: chartGroups,
@@ -1265,4 +1337,4 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   GameStore: GameStore
 });
 
-export { SLIDE_W, SLIDE_H, ASPECTS, slideHeight, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, GAME_FORMAT_PRESETS, getShowcaseGame };
+export { SLIDE_W, SLIDE_H, ASPECTS, CHART_TAXONOMY, chartCategories, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, GAME_FORMAT_PRESETS, getShowcaseGame };
