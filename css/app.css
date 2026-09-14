@@ -5010,3 +5010,36 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
 @keyframes store-pulse { 0%, 100% { opacity: .3 } 50% { opacity: 1 } }
 @media (prefers-reduced-motion: reduce) { .store-state.is-saving::before { animation: none } }
 @media (max-width: 900px) { .store-state { display: none } }
+
+/* A slide kept in the deck and out of the show. Dimmed rather than hidden:
+   the rail is where its author goes looking for it, so it has to stay
+   findable — and the strike through the number says "not in the running
+   order" more plainly than opacity alone, which just reads as unselected. */
+.rail-list .thumb.hidden-slide .frame { opacity: .38; filter: grayscale(1); }
+.rail-list .thumb.hidden-slide .num { text-decoration: line-through; opacity: .6; }
+.rail-list .thumb-hide {
+  display: block;
+  margin-top: 4px;
+  padding: 2px 3px;
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.rail-list .thumb:hover .thumb-hide,
+.rail-list .thumb:focus-within .thumb-hide,
+.rail-list .thumb.hidden-slide .thumb-hide { opacity: .75; }
+.rail-list .thumb-hide:hover { opacity: 1; }
+
+/* A jump inside the lesson. Marked as a link because it is one, but dotted
+   rather than solid: it does not leave the deck, and a solid underline on a
+   projected slide promises a web page. */
+#player .slide-jump, #previewBox .slide-jump {
+  color: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+#player .slide-jump:hover { text-decoration-style: solid; }

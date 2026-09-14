@@ -42,6 +42,11 @@
   function pagesFor(deck) {
     var pages = [];
     deck.slides.forEach(function (s) {
+      /* A slide held back from the room is held back from the handout too.
+         The alternative — printing what the class never saw — is the more
+         surprising of the two, and it is the handout that gets marked
+         against. */
+      if (s.hidden === true) return;
       if (s.type === 'join' || s.type === 'results' || s.type === 'explain') return;
       if (s.type === 'image' && String(s.body || '').trim()) {
         pages.push(copy(s, { body: '' }));

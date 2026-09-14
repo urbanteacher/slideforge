@@ -368,6 +368,10 @@ function normalizeSlide(raw) {
   s.videoMuted = s.videoMuted === true;
   s.videoAutoplay = s.videoAutoplay === true;
   s.tableHeader = s.tableHeader !== false;
+  /* Kept off the slide unless it is true, for the reason the note below
+     gives about unused fields: a boolean stamped on all 74 slides of a
+     lecture is bytes in localStorage bought for nothing. */
+  if (s.hidden === true) s.hidden = true; else delete s.hidden;
   /* Only the kinds that read it. Stamping the defaults onto every slide put
      sixteen unused fields on every title, section and quiz slide: on the
      29-slide LDSCI6253 deck, none of which uses an exploration, that was
@@ -815,6 +819,12 @@ function buildRunDeck(deck, lookupGame) {
   run.games = [];
 
   deck.slides.forEach(function (s) {
+    /* A hidden slide is kept in the deck and left out of the show. This is
+       the one place that decides what the room sees, so present, presenter,
+       rehearsal and the live wall all agree without being told separately —
+       and a slide cannot be hidden on the wall while still counting on a
+       phone. */
+    if (s.hidden === true) return;
     if (s.type !== 'game') { run.slides.push(s); return; }
     var game = lookupGame(s.gameId);
     if (!game) {

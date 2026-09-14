@@ -173,6 +173,9 @@ export interface Slide {
   /** Build on Next: release this slide's points one press at a time
    *  instead of landing the whole slide at once. */
   progressive?: boolean;
+  /** Kept in the deck, left out of the show. Absent rather than false when
+      off, so it costs nothing on the slides that never use it. */
+  hidden?: boolean;
   /** What a build does with a point it has already been through: leave
    *  only the unreached ones hidden ('hide'), or keep the reached ones on
    *  screen dimmed back so the argument so far stays readable ('dim'). */

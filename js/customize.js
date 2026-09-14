@@ -65,7 +65,13 @@
       var b = points[i+1], styles = {};
       marks.forEach(function(m) { if (m.start <= a+offset && m.end >= b+offset) styles[m.kind] = m.value; });
       var href = styles.link && SF.safeHref(styles.link);
-      var span = document.createElement(href ? 'a' : 'span'); span.textContent = text.slice(a,b);
+      /* "slide:12" is a jump inside the lesson rather than a trip out of it.
+         Kept in the same mark as a web link because to the author it is the
+         same act — put a link on this word — and a second mechanism would
+         mean a second inspector, a second renderer and two ways to say one
+         thing. safeHref refuses it, which is how the two are told apart. */
+      var jump = !href && styles.link && SF.slideJumpTarget && SF.slideJumpTarget(styles.link);
+      var span = document.createElement(href || jump ? 'a' : 'span'); span.textContent = text.slice(a,b);
       if (styles.bold) span.style.fontWeight = '800';
       if (styles.italic) span.style.fontStyle = 'italic';
       if (styles.underline) span.style.textDecoration = 'underline';
@@ -75,6 +81,12 @@
         var link = /** @type {HTMLAnchorElement} */ (span);
         link.href = href; link.target = '_blank'; link.rel = 'noopener noreferrer';
         link.onclick = function(e){e.stopPropagation();};
+      } else if (jump) {
+        var hop = /** @type {HTMLAnchorElement} */ (span);
+        hop.href = '#';
+        hop.className = 'slide-jump';
+        hop.title = 'Go to slide ' + jump;
+        hop.onclick = function(e){ e.preventDefault(); e.stopPropagation(); SF.jumpToSlide(jump); };
       }
       node.appendChild(span);
     });
@@ -104,7 +116,7 @@
       });
       var c = document.createElement('input'); c.type='color'; c.value='#426332'; c.title='Text colour'; c.setAttribute('aria-label','Text colour'); c.oninput=function(){format('color',c.value);}; bar.appendChild(c);
       var link = document.createElement('input'); link.type='url'; link.placeholder='https://…'; link.setAttribute('aria-label','Link for selected text'); bar.appendChild(link);
-      var lb=document.createElement('button'); lb.type='button'; lb.textContent='Link'; lb.onclick=function(){ if(SF.safeHref(link.value)) format('link',link.value); else SF.toast('Enter an http or https link'); }; bar.appendChild(lb);
+      var lb=document.createElement('button'); lb.type='button'; lb.textContent='Link'; lb.onclick=function(){ if(SF.safeHref(link.value)||SF.slideJumpTarget(link.value)) format('link',link.value); else SF.toast('Enter an http(s) link, or slide:12 to jump inside this lesson'); }; bar.appendChild(lb);
       input.addEventListener('keydown',function(e){
         var k=e.key.toLowerCase();if((e.metaKey||e.ctrlKey)&&['b','i','u'].includes(k)){e.preventDefault();capture();format({b:'bold',i:'italic',u:'underline'}[k],true);}
       });
