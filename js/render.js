@@ -222,15 +222,19 @@
      instead of being measured against them. */
   function personCard(p, slide) {
     var card = el('div', 'org-card');
+    card.setAttribute('aria-label', p.name + (p.role ? ', ' + p.role : ''));
     if (p.photo) {
       var ph = el('div', 'org-photo');
       ph.style.backgroundImage = 'url("' + String(p.photo).replace(/"/g, '&quot;') + '")';
+      ph.setAttribute('role', 'img');
+      ph.setAttribute('aria-label', p.name);
       card.appendChild(ph);
     } else if (p.name) {
       /* Initials rather than a grey silhouette: a placeholder that says who
          is missing is more use than one that says somebody is. */
       var mono = el('div', 'org-photo org-initials');
       mono.textContent = p.name.split(/\s+/).slice(0, 2).map(function (w) { return w.charAt(0); }).join('').toUpperCase();
+      mono.setAttribute('aria-hidden', 'true');
       card.appendChild(mono);
     }
     var who = el('div', 'org-who');
@@ -240,12 +244,14 @@
     return card;
   }
 
-  function orgBranch(p, slide, depth) {
+  function orgBranch(p, slide) {
     var node = el('div', 'org-node');
     node.appendChild(asStep(personCard(p, slide), slide));
-    if (p.reports && p.reports.length && depth < 4) {
+    /* Draw every report — capping depth used to drop people with no warning.
+       Density CSS (lvl-N / org-dense) keeps a deep tree readable on the wall. */
+    if (p.reports && p.reports.length) {
       var kids = el('div', 'org-kids' + (p.reports.length === 1 ? ' one' : ''));
-      p.reports.forEach(function (c) { kids.appendChild(orgBranch(c, slide, depth + 1)); });
+      p.reports.forEach(function (c) { kids.appendChild(orgBranch(c, slide)); });
       node.appendChild(kids);
     }
     return node;
@@ -262,13 +268,14 @@
       pad.appendChild(e);
       return;
     }
-    var wrap = el('div', 'org-chart lvl-' + Math.min(4, tree.levels) +
-      (tree.levels === 1 ? ' org-flat' : '') + (tree.people.length > 8 ? ' org-dense' : ''));
+    var wrap = el('div', 'org-chart lvl-' + Math.min(6, Math.max(1, tree.levels)) +
+      (tree.levels === 1 ? ' org-flat' : '') +
+      (tree.people.length > 8 || tree.levels > 4 ? ' org-dense' : ''));
     wrap.setAttribute('role', 'group');
     wrap.setAttribute('aria-label', 'People: ' + tree.people.map(function (p) {
       return p.name + (p.role ? ', ' + p.role : '');
     }).join('; '));
-    tree.roots.forEach(function (r) { wrap.appendChild(orgBranch(r, slide, 1)); });
+    tree.roots.forEach(function (r) { wrap.appendChild(orgBranch(r, slide)); });
     pad.appendChild(wrap);
   }
 
@@ -1310,6 +1317,148 @@
     return svg;
   }
 
+  /* A dumbbell: one row per category, two marks joined by a bar. Ported
+     from the tube-noise chart in the pollution explorer on this machine.
+
+     It answers a question a paired bar answers badly — how far apart are
+     these two states — because the gap is drawn as a gap rather than left
+     for the eye to compute between two column heights. The bar is the
+     subject; the dots only say which end is which.
+
+     Exactly two series. A third would make the connecting bar a lie about
+     which pair it joins, so the inspector says so rather than drawing it. */
+  function dumbbellChart(data, slide) {
+    var W = CHART.w, H = CHART.h, P = CHART;
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+    if (data.series.length < 2) return svg;
+    var a = data.series[0], b = data.series[1];
+    var vals = [];
+    [a, b].forEach(function (sr) { sr.values.forEach(function (v) { if (v != null) vals.push(v); }); });
+    if (!vals.length) return svg;
+    var rng = niceRange(Math.min.apply(null, vals), Math.max.apply(null, vals));
+
+    var longest = data.categories.reduce(function (n, c) { return Math.max(n, String(c).length); }, 0);
+    var padL = Math.min(330, 40 + longest * 9.5);
+    var plotW = W - padL - P.padR, plotH = H - P.padT - P.padB;
+    var sx = function (v) { return padL + ((v - rng.lo) / (rng.hi - rng.lo || 1)) * plotW; };
+    var rowH = plotH / Math.max(1, data.categories.length);
+
+    axisTicks(rng.hi - rng.lo).forEach(function (t) {
+      var x = sx(rng.lo + t);
+      svg.appendChild(svgEl('line', { x1: x, y1: P.padT - 6, x2: x, y2: P.padT + plotH - rowH / 2 + 6, class: 'ch-grid' }));
+      var lab = svgEl('text', { x: x, y: P.padT + plotH + 18, class: 'ch-tick', 'text-anchor': 'middle' });
+      lab.textContent = fmt(rng.lo + t);
+      svg.appendChild(lab);
+    });
+
+    data.categories.forEach(function (cat, i) {
+      var va = a.values[i], vb = b.values[i];
+      if (va == null || vb == null) return;
+      var y = P.padT + rowH * i + rowH / 2 - rowH / 2 + 10;
+      var g = svgEl('g', { class: 'ch-beat ch-dumbbell', 'data-step': i, 'data-series': '0' });
+      var lo = Math.min(sx(va), sx(vb)), hi = Math.max(sx(va), sx(vb));
+      /* Drawn before the dots so the ends sit on top of it. */
+      g.appendChild(svgEl('line', { x1: lo, y1: y, x2: hi, y2: y, class: 'ch-bell-bar' }));
+      [[va, 0], [vb, 1]].forEach(function (pair) {
+        var dot = svgEl('circle', { cx: sx(pair[0]), cy: y, r: 8, fill: chartColor(pair[1]), class: 'ch-bell-dot' });
+        var tip = svgEl('title', {});
+        tip.textContent = cat + ' · ' + (pair[1] ? b.name : a.name) + ': ' + fmt(pair[0]);
+        dot.appendChild(tip);
+        g.appendChild(dot);
+      });
+      /* The gap named, not just shown: the number is what gets quoted. */
+      var diff = Math.abs(va - vb);
+      if (hi - lo > 54) {
+        var dl = svgEl('text', { x: (lo + hi) / 2, y: y - 12, class: 'ch-tick', 'text-anchor': 'middle' });
+        dl.textContent = fmt(diff);
+        g.appendChild(dl);
+      }
+      var cl = svgEl('text', { x: padL - 14, y: y + 6, class: 'ch-cat', 'text-anchor': 'end' });
+      cl.textContent = cat;
+      g.appendChild(cl);
+      svg.appendChild(g);
+    });
+    return svg;
+  }
+
+  /* A categorical evidence matrix: items down, conditions across, and a
+     graded label in every cell. Ported from the line-ratings chart in the
+     pollution explorer.
+
+     Colour carries an order, not a quantity. Low / Medium / High are
+     ordinal — the distance between them is not a number — so the scale is
+     three steps of one hue rather than a continuous ramp, which would
+     invite reading a gap that the data does not contain. Any vocabulary
+     works; recognised words are ordered, and anything else falls back to
+     the order the author wrote them in. */
+  var ORDINAL_WORDS = ['none', 'very low', 'low', 'l', 'medium', 'med', 'moderate', 'm',
+                       'high', 'h', 'very high', 'severe'];
+  function matrixChart(slide) {
+    var W = CHART.w, H = CHART.h, P = CHART;
+    var rows = SF.parseTable(slide.body);
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+    if (rows.length < 2) return svg;
+    var head = rows[0], body = rows.slice(1);
+    var cols = head.slice(1).filter(function (h) { return String(h).trim(); });
+    if (!cols.length) return svg;
+
+    /* Rank every value once so the whole matrix shares one scale — colouring
+       each column on its own would make a cell's shade mean something
+       different depending on where it sits. */
+    var seen = [];
+    body.forEach(function (r) {
+      cols.forEach(function (_, j) {
+        var v = String(r[j + 1] || '').trim();
+        if (v && seen.indexOf(v) < 0) seen.push(v);
+      });
+    });
+    var ordered = seen.slice().sort(function (x, y) {
+      var ix = ORDINAL_WORDS.indexOf(x.toLowerCase()), iy = ORDINAL_WORDS.indexOf(y.toLowerCase());
+      if (ix >= 0 && iy >= 0) return ix - iy;
+      if (ix >= 0) return -1;
+      if (iy >= 0) return 1;
+      return seen.indexOf(x) - seen.indexOf(y);
+    });
+    var rank = {};
+    ordered.forEach(function (v, i) { rank[v] = ordered.length > 1 ? i / (ordered.length - 1) : 1; });
+
+    var longest = body.reduce(function (n, r) { return Math.max(n, String(r[0] || '').length); }, 0);
+    var padL = Math.min(300, 30 + longest * 9.5);
+    var plotW = W - padL - P.padR, plotH = H - P.padT - 42;
+    var cw = plotW / cols.length, rh = Math.min(34, plotH / Math.max(1, body.length + 1));
+
+    cols.forEach(function (c, j) {
+      var lab = svgEl('text', { x: padL + cw * j + cw / 2, y: P.padT + 16, class: 'ch-cat', 'text-anchor': 'middle' });
+      lab.textContent = c;
+      svg.appendChild(lab);
+    });
+
+    body.forEach(function (r, i) {
+      var y = P.padT + 30 + rh * i;
+      var g = svgEl('g', { class: 'ch-beat', 'data-step': i, 'data-series': '0' });
+      var rl = svgEl('text', { x: padL - 12, y: y + rh * 0.62, class: 'ch-cat', 'text-anchor': 'end' });
+      rl.textContent = String(r[0] || '');
+      g.appendChild(rl);
+      cols.forEach(function (_, j) {
+        var v = String(r[j + 1] || '').trim();
+        if (!v) return;
+        var t = rank[v] == null ? 0 : rank[v];
+        var cell = svgEl('rect', { x: padL + cw * j + 4, y: y, width: Math.max(8, cw - 8),
+          height: rh - 6, rx: 5, class: 'ch-cell', fill: chartColor(0),
+          'fill-opacity': (0.16 + t * 0.78).toFixed(2) });
+        g.appendChild(cell);
+        /* The label goes in the cell, so the chart is readable without the
+           key and by anyone the hues fail. */
+        var tx = svgEl('text', { x: padL + cw * j + cw / 2, y: y + rh * 0.62,
+          class: 'ch-cell-label' + (t > 0.55 ? ' on-dark' : ''), 'text-anchor': 'middle' });
+        tx.textContent = v;
+        g.appendChild(tx);
+      });
+      svg.appendChild(g);
+    });
+    return svg;
+  }
+
   function lineChart(data, slide, area) {
     var W = CHART.w, H = CHART.h, P = CHART;
     /* Reserve the right margin for the end-labels before drawing anything.
@@ -1766,6 +1915,8 @@
               : k0 === 'histogram' ? SF.chartValues(slide).length < 2
               : k0 === 'box' ? !SF.chartGroups(slide).length
               : k0 === 'sankey' ? !SF.chartFlows(slide).links.length
+              : k0 === 'matrix' ? SF.parseTable(slide.body).length < 2
+              : k0 === 'dumbbell' ? data.series.length < 2
               : k0 === 'radar' ? (data.categories.length < 3 || !data.series.length)
               : (!data.series.length || !data.categories.length);
     if (empty) {
@@ -1779,6 +1930,8 @@
         : k0 === 'histogram' ? 'One column of numbers. They are counted into bins for you.'
         : k0 === 'box' ? 'One row per group: its name, then every value measured in it.'
         : k0 === 'sankey' ? 'Three columns: from, to, amount. One row per flow.'
+        : k0 === 'dumbbell' ? 'One row per category, then exactly two numbers \u2014 the two states being compared.'
+        : k0 === 'matrix' ? 'First row names the conditions. Then one row per item, with a rating in each cell.'
         : k0 === 'radar' ? 'At least three categories — they become the spokes. Each series is a shape.'
         : k0 === 'bullet' ? 'First column Actual, second Target (optional). One row per category.'
         : k0 === 'combo' ? 'First series draws as columns; later series draw as markers on top.'
@@ -1789,7 +1942,7 @@
     }
     var KINDS = ['bar', 'stack', 'hbar', 'line', 'area', 'pie', 'donut',
                  'scatter', 'histogram', 'box', 'pictogram', 'radar', 'sankey',
-                 'treemap', 'bullet', 'combo', 'waffle'];
+                 'treemap', 'bullet', 'combo', 'waffle', 'dumbbell', 'matrix'];
     var kind = KINDS.indexOf(slide.chartKind) >= 0 ? slide.chartKind : 'bar';
     var wrap = el('div', 'chart-wrap chart-' + kind);
     var design = slide.design || {};
@@ -1807,7 +1960,9 @@
       wrap.dataset.focus = String(Number(design.chartFocus));
     }
     var stepOf = function (si, ci) { return data.series.length > 1 ? si : ci; };
-    var svg = kind === 'sankey' ? sankeyChart(slide)
+    var svg = kind === 'dumbbell' ? dumbbellChart(data, slide)
+            : kind === 'matrix' ? matrixChart(slide)
+            : kind === 'sankey' ? sankeyChart(slide)
             : kind === 'radar' ? radarChart(data, slide)
             : kind === 'scatter' ? scatterChart(slide)
             : kind === 'histogram' ? histogramChart(slide)

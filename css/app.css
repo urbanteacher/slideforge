@@ -5227,7 +5227,8 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
 .org-chart {
   display: flex; justify-content: center; align-items: flex-start;
   gap: 26px; flex: 1; min-height: 0; padding-top: 6px;
-  overflow: hidden;
+  /* Wide teams scroll rather than clipping mid-name. */
+  overflow-x: auto; overflow-y: hidden;
 }
 .org-node { display: flex; flex-direction: column; align-items: center; position: relative; }
 .org-card {
@@ -5244,12 +5245,11 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
 .org-initials {
   display: grid; place-content: center;
   font-size: 19px; font-weight: 800; letter-spacing: .04em;
+  /* Disc is the text colour; letters are the slide background so they stay
+     readable whatever the theme made currentColor. */
   background: currentColor;
+  color: var(--s-bg, #fff);
 }
-/* The letters take the slide's background so they read against the disc,
-   whatever colour the theme made it. */
-.org-initials { color: inherit; }
-.org-initials::first-line { color: inherit; }
 .org-who { display: flex; flex-direction: column; min-width: 0; }
 .org-who strong { font-size: 21px; line-height: 1.2; }
 .org-who span { font-size: 16px; opacity: .72; line-height: 1.25; }
@@ -5281,6 +5281,16 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
 .org-chart.lvl-4 .org-photo { width: 36px; height: 36px; flex-basis: 36px; }
 .org-chart.lvl-4 .org-who strong { font-size: 16px; }
 .org-chart.lvl-4 .org-who span { font-size: 13px; }
+.org-chart.lvl-5 .org-card,
+.org-chart.lvl-6 .org-card { padding: 5px 10px 5px 5px; max-width: 200px; }
+.org-chart.lvl-5 .org-photo,
+.org-chart.lvl-6 .org-photo { width: 32px; height: 32px; flex-basis: 32px; }
+.org-chart.lvl-5 .org-who strong,
+.org-chart.lvl-6 .org-who strong { font-size: 14px; }
+.org-chart.lvl-5 .org-who span,
+.org-chart.lvl-6 .org-who span { font-size: 12px; }
+.org-chart.lvl-5 .org-kids,
+.org-chart.lvl-6 .org-kids { gap: 14px; margin-top: 22px; }
 
 /* The line under a chart saying where the numbers came from and what they
    are not. Quiet, but on the slide rather than in the speaker notes: a
@@ -5293,3 +5303,10 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
   max-width: 90%;
 }
 @media print { .chart-source { opacity: .8; font-size: 12px; } }
+
+/* Dumbbell and evidence matrix. */
+#player .ch-bell-bar, #previewBox .ch-bell-bar { stroke: currentColor; stroke-width: 4; opacity: .28; stroke-linecap: round; }
+#player .ch-bell-dot, #previewBox .ch-bell-dot { stroke: var(--s-bg, #fff); stroke-width: 2; }
+#player .ch-cell-label, #previewBox .ch-cell-label { font-size: 15px; font-weight: 600; fill: var(--s-fg); }
+/* Flipped on the darker cells, where the slide's own text colour disappears. */
+#player .ch-cell-label.on-dark, #previewBox .ch-cell-label.on-dark { fill: var(--s-bg, #fff); }

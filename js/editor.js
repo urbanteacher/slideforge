@@ -1952,6 +1952,30 @@
         'Keep to six short branches for a readable map. Build on Next reveals one branch at a time.'));
       return;
     }
+    if (s.type === 'orgchart') {
+      insp.appendChild(UI.field('Title',
+        richField(s, 'title', 'area', function (v) { s.title = v; touched(); repaint(); }, 2)));
+      insp.appendChild(UI.field('Subtitle',
+        richField(s, 'subtitle', 'text', function (v) { s.subtitle = v; touched(); repaint(); })));
+      var people = el('div');
+      drawPits(people, s);
+      insp.appendChild(UI.field('People · one per line', people,
+        'Name | Role | Reports to | photo. Reports-to is a name on this slide, not a row number — reorder freely. Leave Reports to blank for a flat team (no connectors).'));
+      var tree = SF.orgTree(s.bullets || []);
+      insp.appendChild(el('p', 'hint',
+        tree.people.length
+          ? tree.people.length + (tree.people.length === 1 ? ' person' : ' people') +
+            (tree.levels > 1 ? ' · ' + tree.levels + ' levels' : ' · flat team')
+          : 'No people yet.'));
+      (tree.warnings || []).forEach(function (w) {
+        insp.appendChild(el('p', 'hint field-warn', w));
+      });
+      if (tree.levels > 4) {
+        insp.appendChild(el('p', 'hint field-warn',
+          'This tree is ' + tree.levels + ' levels deep — it still draws, but cards shrink. Prefer fewer layers on a lecture slide.'));
+      }
+      return;
+    }
     if (s.type === 'keyfact') {
       insp.appendChild(UI.field('Heading',
         richField(s, 'title', 'text', function (v) { s.title = v; touched(); repaint(); })));
@@ -2009,7 +2033,9 @@
         scatter: 'Scatter — do two things move together',
         histogram: 'Histogram — the shape of one variable',
         box: 'Box plot — spread, skew and outliers',
-        pictogram: 'Pictogram — counted in icons, not measured'
+        pictogram: 'Pictogram — counted in icons, not measured',
+        dumbbell: 'Dumbbell — the gap between two states',
+        matrix: 'Evidence matrix — ratings across conditions'
       };
       /* Once each. A <select> cannot hold the poster's cross-listings: two
          options sharing a value are not two choices, and picking the second
@@ -2102,7 +2128,9 @@
       bullet: 'First series is Actual, second is Target. One row per category.',
       combo: 'First series draws as columns; every series after that draws as markers on the same axis.',
       radar: 'At least three categories (the spokes). Each series is one polygon.',
-      sankey: 'Three columns: from, to, amount. One row per flow.'
+      sankey: 'Three columns: from, to, amount. One row per flow.',
+      dumbbell: 'One row per category, then exactly two numbers — the two states being compared.',
+      matrix: 'First row names the conditions. Then one row per item, with a rating in each cell.'
     };
     if (SHAPES[s.chartKind]) insp.appendChild(el('p', 'hint', SHAPES[s.chartKind]));
 
@@ -2161,6 +2189,21 @@
       })) {
         insp.appendChild(el('p', 'hint field-warn',
           'Stacked bars add values up, so negatives are left out of the stack. Use grouped bars to show them.'));
+      }
+      /* The two ends are the whole idiom, so a third series is not a
+         variation on it — the bar would join a pair it does not describe. */
+      if (s.chartKind === 'dumbbell' && cd.series.length !== 2) {
+        insp.appendChild(el('p', 'hint field-warn', cd.series.length < 2
+          ? 'A dumbbell needs two numbers per row \u2014 the two states you are comparing.'
+          : 'A dumbbell draws the first two series. The bar joins a pair, so the rest are left out; ' +
+            'use grouped bars to show them all.'));
+      }
+      /* Ordinal, not interval: the point the source chart makes, and the one
+         a data-visualisation course should not let slide. */
+      if (s.chartKind === 'matrix') {
+        insp.appendChild(el('p', 'hint',
+          'Shade carries an order, not a distance. Low / Medium / High are ordinal \u2014 ' +
+          'the gap between them is not a number, so say so in the source line.'));
       }
       if (cd.series.length > 6) {
         insp.appendChild(el('p', 'hint field-warn',
