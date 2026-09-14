@@ -43,7 +43,10 @@
     var pages = [];
     deck.slides.forEach(function (s) {
       if (s.type === 'join' || s.type === 'results' || s.type === 'explain') return;
-      if (s.type === 'game') {
+      if (s.type === 'image' && String(s.body || '').trim()) {
+        pages.push(copy(s, { body: '' }));
+        pages.push(textPage(s.title || 'Behind the image', String(s.body).split(/\n/).filter(function (line) { return line.trim(); })));
+      } else if (s.type === 'game') {
         var game = SF.GameStore.get(s.gameId);
         if (!game) {
           pages.push(textPage(s.gameTitle || s.title || 'Activity', ['This activity is not available in this browser.']));
@@ -104,17 +107,40 @@
     var css = doc.createElement('style');
     css.textContent = '@page{size:338.6667mm 190.5mm;margin:0}' +
       'html,body{margin:0!important;padding:0!important;height:auto!important;overflow:visible!important;background:#ddd!important}' +
-      '.pdf-toolbar{padding:18px;font:16px system-ui;background:white;position:sticky;top:0;z-index:10}.pdf-toolbar button{margin-right:16px;padding:10px 18px}' +
+      '.pdf-toolbar{padding:18px;font:16px system-ui;background:white;position:sticky;top:0;z-index:100;display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px}' +
+      /* App stylesheets are also linked into this window; pin the toolbar
+         controls so a global button rule cannot hide or disable them. */
+      '.pdf-toolbar button{display:inline-block!important;visibility:visible!important;pointer-events:auto!important;opacity:1!important;margin:0;padding:10px 18px;cursor:pointer;font:inherit}' +
+      '.pdf-toolbar button:disabled{opacity:.55!important;cursor:wait}' +
+      '.pdf-toolbar .pdf-hint{flex:1;min-width:16rem;color:#333}' +
       '.pdf-page{width:1280px;height:720px;overflow:hidden;margin:20px auto;position:relative;break-after:page;page-break-after:always}' +
       '.pdf-page:last-child{break-after:auto;page-break-after:auto}.pdf-page .slide{position:relative!important;transform:none!important;opacity:1!important;animation:none!important}' +
-      '.pdf-page{overflow-wrap:anywhere}.pdf-page .step{opacity:1!important;visibility:visible!important;animation:none!important}.pdf-page button,.pdf-page input,.pdf-page select,.pdf-page textarea{display:none!important}' +
+      '.pdf-page{overflow-wrap:anywhere}.pdf-page .step{opacity:1!important;visibility:visible!important;animation:none!important}' +
+      '.pdf-page button,.pdf-page input,.pdf-page select,.pdf-page textarea{display:none!important}' +
       '@media print{.pdf-toolbar{display:none!important}.pdf-page{margin:0!important}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;animation:none!important;transition:none!important}}';
     doc.head.appendChild(css);
     var toolbar = doc.createElement('div'); toolbar.className = 'pdf-toolbar';
-    var print = doc.createElement('button'); print.textContent = 'Loading images…'; print.disabled = true;
-    print.onclick = function () { preview.focus(); preview.print(); };
+    var print = doc.createElement('button');
+    print.type = 'button';
+    print.textContent = 'Loading images…';
+    print.disabled = true;
+    print.onclick = function () {
+      /* focus() then print() in the same tick is dropped in some Chromium
+         builds for about:blank previews — defer so the click gesture sticks. */
+      try { preview.focus(); } catch (e) {}
+      setTimeout(function () {
+        try {
+          if (preview && typeof preview.print === 'function') preview.print();
+          else throw new Error('no print');
+        } catch (err) {
+          hint.textContent = 'Print dialog did not open. Press ⌘P (Mac) or Ctrl+P (Windows) in this window, then choose Save as PDF.';
+        }
+      }, 50);
+    };
     toolbar.appendChild(print);
-    var hint = doc.createElement('span'); hint.textContent = 'Choose Save as PDF. All reveals are visible; stacks are separate pages. Private notes, live results and the quiz answer key are excluded.';
+    var hint = doc.createElement('span');
+    hint.className = 'pdf-hint';
+    hint.textContent = 'Choose Save as PDF. All reveals are visible; stacks are separate pages. Private notes, live results and the quiz answer key are excluded. If the button does nothing, press ⌘P / Ctrl+P.';
     toolbar.appendChild(hint); doc.body.appendChild(toolbar);
     try {
       var pages = pagesFor(deck);

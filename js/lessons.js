@@ -99,13 +99,167 @@
       key: 'ipdv-intro',
       title: 'LDSCI6253 Advanced Information Presentation & Visualisation',
       icon: '📊',
-      blurb: 'Foundations of visualisation: cognitive value, Anscombe’s quartet, historical discoveries, chart idioms, and the 4P framework. Assessment journey and chart-zoo detail sit in an appendix after the core path.',
+      blurb: 'Week 1 foundations: course journey and assessment, why we visualise, history and discovery plates, Anscombe, the 4Ps, and a formative check.',
       minutes: 90,
       theme: 'northeastern',
+      org: 'Northeastern University London',
       logo: 'assets/brand/nu-london-logo.png',
       logoOn: 'all',
       logoSize: 'small',
-      games: [{
+      games: [
+      {
+        ref: 'check-admin',
+        title: 'Check · Course and assessment',
+        style: 'choice',
+        settings: { defaultTime: 20, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
+        questions: [
+          {
+            question: "Your lab worksheet is due on Canvas when?",
+            options: [
+        "As you leave the lab",
+        "The Friday after the lab, by midday",
+        "The Monday after the lab",
+        "Before the next lecture"
+            ],
+            correct: 1,
+            explanation: "Friday after each lab, 12:00. It is the one deadline that repeats every week of the term."
+          }
+        ]
+      },
+      {
+        ref: 'check-why',
+        title: 'Check · Why visualise',
+        style: 'choice',
+        settings: { defaultTime: 20, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
+        questions: [
+          {
+            question: "What does a graphic let you do that a table of the same numbers does not?",
+            options: [
+        "Store the data more efficiently",
+        "Prove that a relationship is causal",
+        "See patterns, outliers and relationships you were not looking for",
+        "Remove the need to check the data"
+            ],
+            correct: 2,
+            explanation: "Visualisation is for discovery as much as explanation: the eye finds structure nobody thought to query for."
+          }
+        ]
+      },
+      {
+        ref: 'check-history',
+        title: 'Check · A history of seeing patterns',
+        style: 'choice',
+        settings: { defaultTime: 20, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
+        questions: [
+          {
+            question: "Which of these was the first to chart abstract quantities — money and trade — rather than physical space?",
+            options: [
+        "Ptolemy’s world map, 1482",
+        "Christoph Scheiner’s sunspot plates, 1612",
+        "William Playfair’s Statistical Breviary, 1801",
+        "Charles Joseph Minard’s Pavé de Paris, 1826"
+            ],
+            correct: 2,
+            explanation: "Before Playfair, graphics were maps or astronomical diagrams tied to physical space. He plotted money, debt and population — quantities with no shape of their own."
+          }
+        ]
+      },
+      {
+        ref: 'check-discovery',
+        title: 'Check · When visualisations led to discovery',
+        style: 'choice',
+        settings: { defaultTime: 20, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
+        questions: [
+          {
+            question: "What did John Snow’s 1854 map make undeniable that a list of the same deaths could not?",
+            options: [
+        "That the deaths clustered tightly around one water pump",
+        "How many people had died in total",
+        "The dates on which the deaths occurred",
+        "The ages of those who died"
+            ],
+            correct: 0,
+            explanation: "Spatialising the cases turned a column of addresses into a cluster. The pattern was in the data all along; the map is what made it arguable."
+          }
+        ]
+      },
+      {
+        ref: 'check-framework',
+        title: 'Check · What, Why and How',
+        style: 'choice',
+        settings: { defaultTime: 20, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
+        questions: [
+          {
+            question: "In the What–Why–How framework, “What” asks about:",
+            options: [
+        "The idiom you will draw",
+        "The data you have",
+        "The task the reader needs to do",
+        "The algorithm’s running time"
+            ],
+            correct: 1,
+            explanation: "What = data, Why = task, How = idiom. Keeping them in that order stops you choosing a chart before you know what it is for."
+          }
+        ]
+      },
+      {
+        ref: 'check-summaries',
+        title: 'Check · When summaries mislead',
+        style: 'choice',
+        settings: { defaultTime: 20, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
+        questions: [
+          {
+            question: "In Anscombe’s fourth dataset, ten of the eleven points share the same x value. What follows?",
+            options: [
+        "The correlation falls to zero",
+        "The means of x and y differ from the other three sets",
+        "The one remaining point decides the slope by itself",
+        "The regression line cannot be calculated"
+            ],
+            correct: 2,
+            explanation: "Points that never vary in x carry no information about slope. That is leverage: the further a point sits from the rest along x, the harder it can swing the line."
+          }
+        ]
+      },
+      {
+        ref: 'check-idioms',
+        title: 'Check · Choosing the right chart',
+        style: 'choice',
+        settings: { defaultTime: 20, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
+        questions: [
+          {
+            question: "You need to show how a total divides, recombines and is partly lost as it moves through a system. Which idiom fits?",
+            options: [
+        "A histogram",
+        "A Sankey diagram",
+        "A scatterplot",
+        "A box plot"
+            ],
+            correct: 1,
+            explanation: "Band width carries the quantity moving between stages, so branching and loss are visible as shape rather than arithmetic."
+          }
+        ]
+      },
+      {
+        ref: 'check-multivariate',
+        title: 'Check · Idioms for many variables',
+        style: 'choice',
+        settings: { defaultTime: 20, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
+        questions: [
+          {
+            question: "Why can a radar chart mislead when you compare two profiles?",
+            options: [
+        "It cannot show more than three variables",
+        "It requires every axis to use the same units",
+        "Changing the order of the axes changes the enclosed area",
+        "It only works for data measured over time"
+            ],
+            correct: 2,
+            explanation: "The polygon’s area is an artefact of axis order, not of the data. Two identical datasets can enclose very different-looking shapes."
+          }
+        ]
+      },
+      {
         ref: 'quiz-check',
         title: 'Lecture 1 Check — Foundations of Visualisation',
         style: 'choice',
@@ -148,7 +302,7 @@
             question: 'Which historical breakthrough used a spatial visualization of water pump locations to isolate a cholera outbreak?',
             options: [
               'William Playfair (1801)',
-              'Francis Galton (1883)',
+              'Francis Galton (1863)',
               'John Snow (1854)',
               'E.W. Maunder (1904)'
             ],
@@ -159,548 +313,892 @@
       }],
       slides: [
         {
-          type: 'title',
-          title: 'Introduction\n& Foundations',
-          subtitle: 'Week 1 · Lecture 1',
-          date: '2026-09-14',
-          notes: 'Welcome to Advanced Information Presentation & Visualisation (LDSCI6253). This semester explores how visual representations transform raw data into human insight. Today we examine why we visualise, historical breakthroughs, core definitions, and foundational idioms.'
+          type: "title",
+          title: "Introduction\n& Foundations",
+          subtitle: "Week 1 · Lecture 1",
+          notes: "Welcome to Advanced Information Presentation & Visualisation (LDSCI6253). This semester explores how visual representations transform raw data into human insight. Today we examine why we visualise, historical breakthroughs, core definitions, and foundational idioms.",
+          date: "2026-09-14"
         },
         {
-          type: 'introduction',
-          image: 'https://cdn.asp.events/CLIENT_Ascentia_4E961A52_5056_B739_54289B84DF34E888/sites/bett-show-uk-2024/media/Pages/Advisory-board/Mark-Martin.jpg',
-          imageFit: 'cover',
-          title: 'Mark Martin',
-          subtitle: 'Course leader',
-          body: 'Advanced Information Presentation & Visualisation\nLDSCI6253',
-          notes: 'Before teaching: add your job title and upload your headshot in Design & content. Introduce your background and what you enjoy about data visualisation. Invite students to share what they hope to learn.'
+          type: "introduction",
+          title: "Mark Martin",
+          subtitle: "Course leader",
+          body: "Advanced Information Presentation & Visualisation\nLDSCI6253",
+          notes: "Before teaching: add your job title and upload your headshot in Design & content. Introduce your background and what you enjoy about data visualisation. Invite students to share what they hope to learn.",
+          image: "assets/lesson/ipdv/mark-martin-portrait.jpg"
         },
         {
-          type: 'cards',
-          title: 'Course Administration & Expectations',
+          type: "section",
+          title: "Your Course,\nYour Assessment",
+          subtitle: "Where the term is going, and what you are judged on.",
+          notes: "Red beat before the housekeeping. Twelve minutes of course mechanics is a lot to sit through cold — tell them this block is the map, and that the subject itself starts at Why Visualise?"
+        },
+        {
+          type: "journey",
+          title: "Your course journey · foundations",
+          subtitle: "Weeks 1–6 · build the skills you will use in AE1",
           bullets: [
-            'Canvas Deadlines: Worksheets must be submitted on Canvas by the Friday after each lab at midday.',
-            'Time Management & Balance: Consistent weekly practice across theory, design, and code prevents last-minute overload.',
-            'Active Support: When unsure, ask questions during lecture, in labs, or via discussion boards early.'
+            "W1 · Introductions\tWhy visualisation matters and how it evolved. Reading: VAD 1.",
+            "W2 · Visual communication\tMeasurement scales, marks and channels, design guidance. VAD 2, 5, 6.",
+            "W3 · Data abstraction\tData types, tables and tools. VAD 2, 3, 7.",
+            "W4 · Colour\tPerception, cognition and illusions. VAD 10–12.",
+            "W5 · Interaction and animation\tInteraction, animation, reduce and embed. VAD 13, 14.",
+            "W6 · Maps and SciVis\tGeospatial and scientific visualisation. VAD 8."
           ],
-          notes: 'Emphasize the Friday midday submission rhythm. Lab sessions reinforce lecture concepts with practical coding and analysis.'
+          notes: "Start with Week 1: you are here. Reveal each stop with Next and ask what it adds to the previous one. VAD means Visualization Analysis and Design by Tamara Munzner. Teaching sequence supplied by the course leader; assessment briefs are for 2026–27. The source timetable header says 2025/6: confirm the year before distributing the complete timetable.",
+          buildMode: "dim",
+          progressive: true
         },
         {
-          type: 'content',
-          title: 'Learning Objectives',
+          type: "journey",
+          title: "Your course journey · advanced practice",
+          subtitle: "Extend your visual thinking, then evaluate how well it communicates",
           bullets: [
-            'Define visualisation and explain its cognitive value over pure statistics.',
-            'Apply Tamara Munzner’s What-Why-How framework to deconstruct visualisations.',
-            'Identify the four levels of the nested model for visualisation design.',
-            'Distinguish between principles, guidelines, and rules of thumb (the 4Ps).',
-            'Critique visualisations using systematic analytical criteria.'
+            "W7–8 · Pause and assessment\tWeek 7: reading week. Week 8: exam week in the timetable; use the AE deadlines for coursework.",
+            "W9 · Networks and trees\tGraph structures, network visualisations and trees. VAD 9.",
+            "W10 · Experiential visualisation\tGuest speaker. Reading to be confirmed.",
+            "W11 · Visualisation for ML\tHigh-dimensional data, feature engineering and model performance. Reading TBC.",
+            "Later · Current research\tIEEE VIS and CHI proceedings; how to write a paper. Reading TBC.",
+            "Later · Evaluation and storytelling\tThreats, validation, telling a data story and giving a talk. VAD 4."
           ],
-          notes: 'By the end of this session, students will be able to articulate why visualisation matters and begin applying systematic critique to any chart idiom.'
+          notes: "The supplied timetable lists Week 13 before Week 12. The last two stops deliberately say Later until their order is confirmed. AE2 refers to Weeks 8–11, whereas the timetable places some relevant topics later. Confirm alignment and which material will have been taught before the AE2 deadline. No exact calendar dates have been inferred from teaching-week labels.",
+          buildMode: "dim",
+          progressive: true
         },
         {
-          /* The reading list, one text per slide. As four cards it asked the
-             room to take in two books, a body of journalism and a weekly
-             deadline in a single glance, and each one wants a sentence. */
-          type: 'split',
-          title: 'Reading · the theory text',
-          image: 'assets/lesson/ipdv/munzner-cover.jpg',
-          imageFit: 'contain',
-          imageSide: 'right',
-          subtitle: 'Munzner, Visualization Analysis & Design (CRC Press)',
+          type: "journey",
+          title: "Two assessments · one developing project",
+          subtitle: "Green Jobs and Skills in London: Visualising the Data · 2026–27",
+          body: "Carry something forward. Explain what changed, why it changed and how it helps the audience.",
+          bullets: [
+            "AE1 · 60%\tBUILD & COMMUNICATE\nPython visualisations + accessible public communication\nSet exercises · 24–32 hours\n30 October 2026 · 13:00 UK",
+            "AE2 · 40%\tEVALUATE & DEVELOP\n2,500-word written report\nDevelop at least one AE1 visualisation, dataset or visual idea\n27 November 2026 · 13:00 UK",
+            ""
+          ],
+          notes: "Both assessments were issued on 14 September 2026. The two percentages total the module assessment weighting. Do not present the stated 24–32 hours as an exam duration. AE2 explicitly builds on AE1. AE1 feedback is planned within 28 calendar days, reaching the AE2 deadline if counted from hand-in; clarify interim feedback arrangements rather than promising feedback will arrive before AE2.",
           progressive: true,
-          bullets: [
-            'Chapters 1 and 6 this week — what visualisation is, and why we do it at all.',
-            'Chapter 1 gives you the definition we use all term; chapter 6 gives you rules of thumb to argue with.',
-            'This is the book the assessment criteria are written against. Read it slowly.'
-          ],
-          notes: 'The theory spine of the course. Flag the chapter numbers explicitly — the Canvas page and an earlier slide have disagreed on this before, so say which is right out loud.'
+          journeyMode: "handover"
         },
         {
-          type: 'split',
-          title: 'Reading · the practitioner text',
-          image: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1667070046i/63127668.jpg',
-          imageFit: 'contain',
-          imageSide: 'right',
-          subtitle: 'Alan Smith, How Charts Work (FT Publishing)',
-          progressive: true,
+          type: "journey",
+          title: "How your project develops",
+          subtitle: "One public-facing question: what should people understand about London’s green jobs and skills?",
+          body: "AE2 reading: GLA green jobs analysis · ONS green jobs estimates (March 2026) · Nesta evidence review (2023)",
           bullets: [
-            'How a working newsroom reads a chart: finding the real story, then designing for an audience that did not ask for it.',
-            'Where the Financial Times explanatory graphics come from — including John Burn-Murdoch’s scatterplots.',
-            'We look at one of those charts later today.'
+            "Start with real evidence\tRead the GLA analysis. Use the raw datasets provided on Canvas; cite sources.",
+            "Make purposeful choices\tChoose data, marks, channels, colour and interactions to answer a clear question.",
+            "Submit AE1\tReproducible Python visualisations and accessible communication for a general audience.",
+            "Revisit a design decision\tReuse, extend, rework, transform or redesign at least one AE1 element.",
+            "Explain your development in AE2\tUse concrete examples and readings to discuss clarity, trust, ethics and evaluation."
           ],
-          notes: 'Alan Smith wrote the book; Burn-Murdoch is a colleague whose charts appear in it. Do not attribute the book to Burn-Murdoch — students will cite it wrongly if you do.'
+          notes: "The London Datastore Green Job Postings page provides HTML analysis rather than a raw Lightcast dataset. Use it for context and methodology unless extracting tables is explicitly permitted. Raw downloadable datasets are on Canvas. AE2 should include the carried-over element, comparisons of good and bad practice and visual examples from required readings. New visualisations may be included where useful; they are not mandatory simply because they appear in the list of possible examples.",
+          buildMode: "dim",
+          progressive: true
         },
         {
-          type: 'split',
-          title: 'Reading · the weekly rhythm',
-          image: 'assets/brand/nu-london-skyline.png',
-          imageFit: 'cover',
-          imageSide: 'right',
-          progressive: true,
+          type: "mindmap",
+          title: "Ready to submit?",
           bullets: [
-            'Read the assigned chapters before Tuesday’s lecture, not after it.',
-            'The lab applies what the reading sets up — arriving cold costs you the session.',
-            'Lab worksheets are submitted on Canvas by Friday midday.'
+            "Where?\tSubmit online through Canvas.",
+            "Identity\tBoth submissions must be anonymous.",
+            "When?\tAE1: 30 October. AE2: 27 November. Both 13:00 UK, 2026.",
+            "AE1 files\tPython notebook (.ipynb) AND its .html export.",
+            "AI rule\tAI use is prohibited in both assessments.",
+            "Evidence\tUse real, cited data and justify your design choices."
           ],
-          notes: 'The habit slide. Tie the reading to the lab rather than to an exam: the pay-off is being able to do Thursday’s work, which is a reason that survives week three.'
+          notes: "Ask students to say what they would check under each branch before revealing it. AE2 is a written report, but its supplied brief also lists .ipynb and .html. Confirm the report packaging before giving a definite AE2 file instruction. Categorical marking applies. Refer students to the full Canvas briefs for complete requirements; these slides summarise them.",
+          progressive: true
         },
         {
-          type: 'section',
-          title: 'Why Visualise?',
-          subtitle: 'Beyond raw numbers and summary tables.',
+          type: "keyfact",
+          title: "Course Administration & Expectations",
+          subtitle: "Canvas deadline",
+          body: "Friday after each lab,\n12:00",
+          notes: "One fact, nothing beside it. The reminders used to sit under this in grey, which said they mattered less — they do not, so they have a slide of their own now. Read this out, pause, then move on."
+        },
+        {
+          type: "cards",
+          title: "Three things that keep you out of trouble",
+          design: {
+            cardsMode: "rows"
+          },
+          bullets: [
+            "Time management\tDon’t wait until the last minute. Manage your time and keep a balance.",
+            "Ask early\tWhen unsure, ask for help.",
+            "One submission\tSubmit worksheets on Canvas by midday on the Friday after the lab."
+          ],
+          notes: "All three carry equal weight, which is why they are equal on the slide. The third repeats the deadline deliberately — it is the one students get wrong, and hearing it twice in two minutes is the point.",
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "Reading · the theory text",
+          subtitle: "Munzner, Visualization Analysis & Design (CRC Press)",
+          bullets: [
+            "Chapters 1 and 6 this week — what visualisation is, and why we do it at all.",
+            "Chapter 1 gives you the definition we use all term; chapter 6 gives you rules of thumb to argue with.",
+            "This is the book the assessment criteria are written against. Read it slowly."
+          ],
+          notes: "The theory spine of the course. Flag the chapter numbers explicitly — the Canvas page and an earlier slide have disagreed on this before, so say which is right out loud.",
+          image: "assets/lesson/ipdv/munzner-cover.jpg",
+          imageFit: "contain",
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "Reading · the practitioner text",
+          subtitle: "Alan Smith, How Charts Work (FT Publishing)",
+          bullets: [
+            "How a working newsroom reads a chart: finding the real story, then designing for an audience that did not ask for it.",
+            "Where the Financial Times explanatory graphics come from — including John Burn-Murdoch’s scatterplots.",
+            "We look at one of those charts later today."
+          ],
+          notes: "Alan Smith wrote the book; Burn-Murdoch is a colleague whose charts appear in it. Do not attribute the book to Burn-Murdoch — students will cite it wrongly if you do.",
+          image: "assets/lesson/ipdv/smith-how-charts-work-cover.jpg",
+          imageFit: "contain",
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "Reading · the weekly rhythm",
+          bullets: [
+            "Read the assigned chapters before Tuesday’s lecture, not after it.",
+            "The lab applies what the reading sets up — arriving cold costs you the session.",
+            "Lab worksheets are submitted on Canvas by Friday midday."
+          ],
+          notes: "The habit slide. Tie the reading to the lab rather than to an exam: the pay-off is being able to do Thursday’s work, which is a reason that survives week three.",
+          image: "assets/brand/nu-london-skyline.png",
+          progressive: true
+        },
+        {
+          type: "content",
+          title: "Learning Objectives",
+          bullets: [
+            "Define visualisation and explain its cognitive value over pure statistics.",
+            "Apply Tamara Munzner’s What-Why-How framework to deconstruct visualisations.",
+            "Identify the four levels of the nested model for visualisation design.",
+            "Distinguish principles, guidelines and rules of thumb, then use the 4Ps as a practical workflow.",
+            "Critique visualisations using systematic analytical criteria."
+          ],
+          notes: "By the end of this session, students will be able to articulate why visualisation matters and begin applying systematic critique to any chart idiom."
+        },
+        {
+          type: "game",
+          gameRef: "check-admin",
+          notes: "Closes the housekeeping block. If more than a couple get this wrong, say the deadline again before moving on — it is the only administrative fact they cannot afford to lose."
+        },
+        {
+          type: "section",
+          title: "Why Visualise?",
+          subtitle: "Beyond raw numbers and summary tables.",
+          notes: "Launch the word cloud. Ask students to submit on their phones. Highlight words like \"patterns\", \"outliers\", \"speed\", \"intuition\", \"relationships\".",
           feedback: {
-            kind: 'wordcloud',
-            prompt: 'In one word: what does a graphic do that statistics alone cannot?',
+            kind: "wordcloud",
+            prompt: "In one word: what does a graphic do that statistics alone cannot?",
             options: [],
             max: 2
+          }
+        },
+        {
+          type: "mindmap",
+          title: "Why visualise?",
+          bullets: [
+            "Discover\tSpot patterns we did not expect.",
+            "Explain\tMake a finding understandable to others.",
+            "Compare\tSee differences between groups.",
+            "Question\tNotice outliers and challenge assumptions.",
+            "Decide\tUse evidence to choose what to do next.",
+            "Think\tPut relationships on the page to reason about them."
+          ],
+          notes: "Connect this map to the preceding word cloud. Ask which branch a student contribution belongs to. Reveal one branch at a time with Next. Ask for an example before moving on. These branches organise reasons to visualise; they are not numerical measurements.",
+          buildMode: "dim",
+          progressive: true
+        },
+        {
+          type: "content",
+          title: "Big Questions for Data Practitioners",
+          bullets: [
+            "What were historical authors thinking when they invented new visual forms?",
+            "What visual ideas and computational tools were available in their era?",
+            "What was needed to see and understand something genuinely new?",
+            "What are the modern challenges in big data, AI, and decision-making?"
+          ],
+          notes: "As we trace the history of charts, observe that every new visual idiom was invented because an existing representation failed to answer an urgent question.",
+          progressive: true
+        },
+        {
+          type: "game",
+          gameRef: "check-why",
+          notes: "Watch for anyone picking the causal option — that misconception comes back at the Brexit scatterplot, so it is worth naming now."
+        },
+        {
+          type: "section",
+          title: "A History of Seeing Patterns",
+          subtitle: "From ancient clay tablets to modern computational graphics.",
+          notes: "We now take a whirlwind tour of data visualisation history to understand the evolution from physical accounting to abstract data coordinates."
+        },
+        {
+          type: "content",
+          title: "Timeline of Data Visualisation",
+          bullets: [
+            "Pre-Historic & Antiquity: Cave paintings, tally sticks, and Roman road itineraries (Peutinger Table).",
+            "10th–17th Century: Celestial movement plots, Van Langren’s 1644 longitude error graphic.",
+            "18th–19th Century: Playfair’s statistical graphics, Minard’s Napoleon march flow map, Nightingale’s rose chart.",
+            "20th Century: Tukey’s Exploratory Data Analysis (EDA), Bertin’s Semiology of Graphics, Cleveland & McGill perception studies.",
+            "The Information Age: Interactive web graphics (D3, Observable), GPU rendering, real-time streaming dashboards."
+          ],
+          notes: "Point out John Tukey’s quote: \"The greatest value of a picture is when it forces us to notice what we never expected to see.\" This sets up Anscombe’s Quartet.",
+          progressive: true
+        },
+        {
+          type: "image",
+          title: "Pre-Sargonic tablet · c. 2500 BC",
+          body: "This tablet records silver and other commodities.\nRuled columns separate entries into a structured account.\nIts organisation connects an ancient record to the tables we use today.",
+          subtitle: "Sumerian account of silver and commodities, in ruled columns · from the course slides",
+          notes: "Encoding used → insight unlocked: structured columns made accounts auditable. Ask what the grid is doing before naming “spreadsheet”.",
+          image: "assets/lesson/ipdv/clay-tablet-presargonic.jpg",
+          imageFit: "contain",
+          design: {
+            capStyle: "scrim"
+          }
+        },
+        {
+          type: "image",
+          title: "Ptolemy’s world map · 1482",
+          body: "Maps encode places through their position on a surface.\nA grid provides a shared reference for locating and comparing places.\nEvery flat world map must make choices about how to represent a curved Earth.",
+          subtitle: "Spatial reality made communicable — science and aesthetics together · from the course slides",
+          notes: "Spatial encoding made relationships traversable. Maps are the oldest data graphics many students already trust — use that familiarity.",
+          image: "assets/lesson/ipdv/ptolemy-cartography.jpg",
+          imageFit: "contain",
+          design: {
+            capStyle: "scrim"
+          }
+        },
+        {
+          type: "image",
+          title: "Christoph Scheiner · 1612",
+          body: "The plates record sunspot positions at different times.\nRepeated observations turn a changing phenomenon into a visible sequence.\nKeeping a consistent frame makes movement easier to compare.",
+          subtitle: "Engraved plates tracking sunspot positions over time · from the course slides",
+          notes: "Time-series drawings made sunspot motion undeniable — one of the earliest systematic astronomical series. Force the so-what before moving on to discovery cases.",
+          image: "assets/lesson/ipdv/scheiner-sunspots-1612.jpg",
+          imageFit: "contain",
+          design: {
+            capStyle: "scrim"
+          }
+        },
+        {
+          type: "image",
+          title: "William Playfair · Statistical Breviary, 1801",
+          body: "This chart compares the Turkish Empire’s land across Asia, Europe and Africa.\nThe circle represents a whole and its sectors represent shares.\nThe visual task is comparing proportions rather than geographic locations.",
+          subtitle: "Pie chart of the Turkish Empire’s landmass · from the course slides",
+          notes: "Before Playfair, charts were almost exclusively maps or astronomical diagrams tied to physical space. Playfair realized money, debt, and populations could be plotted as coordinates. Teaching beats if asked: earliest known pie chart; also invented bar and line charts; proportional angle and area for part-to-whole.",
+          image: "assets/lesson/ipdv/playfair-pie-1801.jpg",
+          imageFit: "contain",
+          design: {
+            capStyle: "scrim"
+          }
+        },
+        {
+          type: "image",
+          title: "Charles Joseph Minard · Pavé de Paris, 1826",
+          body: "The chart records the maintenance of Paris pavements over time.\nA chronological arrangement makes successive periods comparable.\nIt shows how an everyday administrative record can become a visual account of change.",
+          subtitle: "Tableau chronologique de l’entretien du pavé de Paris — his earliest statistical graphic · from the course slides",
+          notes: "Minard’s first statistical graphic, forty-three years before the Napoleon map — from Projet de canal et de chemin de fer pour le transport de pavés à Paris (1826). Ask what is being compared before naming it — the shape reads long before the French does.",
+          image: "assets/lesson/ipdv/tableau-chronologique-paris.jpg",
+          imageFit: "contain",
+          design: {
+            capStyle: "scrim"
+          }
+        },
+        {
+          type: "game",
+          gameRef: "check-history",
+          notes: "The point of the plate run in one question: the jump is from drawing things that have a location to drawing things that do not."
+        },
+        {
+          type: "section",
+          title: "When Visualisations\nLed to Discovery",
+          subtitle: "Four cases where the picture made the pattern undeniable.",
+          notes: "Red section break after the ancient plates. Pause here: the next four slides are full-bleed discovery cases — Snow, Galton, Maunder, Hertzsprung–Russell. Ask what those three plates already shared before naming the pattern."
+        },
+        {
+          type: "image",
+          title: "John Snow · 1854",
+          body: "The map places cholera deaths in their street locations.\nTheir concentration around Broad Street made a spatial pattern visible.\nThe map supported Snow’s investigation; a cluster alone does not establish its cause.",
+          subtitle: "Cholera deaths around the Broad Street pump — visual proof the disease was water-borne, not miasma",
+          notes: "Discovery beat 1 of 4. Could not have been achieved from raw death tables alone — the map made the cluster undeniable. Ask: what would a spreadsheet of the same cases have hidden?",
+          image: "assets/lesson/ipdv/snow-cholera-map-1854.jpg",
+          imageFit: "contain",
+          design: {
+            capStyle: "scrim"
+          }
+        },
+        {
+          type: "image",
+          title: "Francis Galton · 1863",
+          body: "Weather maps bring observations from different places into a shared geographic view.\nSymbols allow several weather conditions to be compared across locations.\nGalton’s Meteorographica appeared in 1863 and used observations from December 1861.",
+          subtitle: "Meteorographica, built from December 1861 observations · the pattern that made anti-cyclones visible",
+          notes: "Discovery beat 2 of 4. Spatialising barometric readings revealed a structure no column of numbers showed. Tie back to Snow: same lesson, different domain.",
+          image: "assets/lesson/ipdv/galton-weather-chart-1861.gif",
+          imageFit: "contain",
+          design: {
+            capStyle: "scrim"
+          }
+        },
+        {
+          type: "image",
+          title: "E.W. Maunder · 1904",
+          body: "The butterfly diagram plots sunspot latitude against time.\nRepeated bands show how sunspot locations shift during successive solar cycles.\nIts distinctive shape comes from a pattern in the observations.",
+          subtitle: "Solar “butterfly diagram” — sunspot latitudes march with the 11-year cycle",
+          notes: "Discovery beat 3 of 4. The cycle was in the data; the diagram made the migration pattern obvious. Link to Scheiner’s earlier sunspot plates if you still have that beat warm.",
+          image: "assets/lesson/ipdv/maunder-butterfly-1904.jpg",
+          imageFit: "contain",
+          design: {
+            capStyle: "scrim"
+          }
+        },
+        {
+          type: "image",
+          title: "Hertzsprung–Russell · 1911",
+          body: "The diagram compares stellar luminosity with spectral class or temperature.\nStars form recognisable groups rather than filling the chart uniformly.\nThe main sequence illustrates how a scatterplot can reveal structure across many observations.",
+          subtitle: "Luminosity vs spectral class — the main sequence of stellar evolution appears as a structure, not a table",
+          notes: "Discovery beat 4 of 4. Close the set: in every case the visual spatialisation made the invisible pattern undeniable. Then land Munzner’s definition.",
+          image: "assets/lesson/ipdv/hr-diagram-1911.svg",
+          imageFit: "contain",
+          design: {
+            logoGround: "dark",
+            capStyle: "scrim"
+          }
+        },
+        {
+          type: "quote",
+          title: "",
+          subtitle: "Tamara Munzner · Visualization Analysis and Design",
+          body: "Computer-based visualization systems provide visual representations of datasets designed to help people carry out tasks more effectively.",
+          notes: "Unpack this definition carefully: computer-based (scalable, interactive), visual representations (encoding data onto visual channels), datasets, tasks (why are we doing this?), and effectively (validation)."
+        },
+        {
+          type: "content",
+          title: "Augmenting Human Capabilities",
+          bullets: [
+            "Human-in-the-Loop: Visualisation is needed when computational algorithms alone cannot make fully automated decisions.",
+            "Huge Design Space: Infinite combinations of visual idioms exist; most possibilities in the design space are ineffective for a given task.",
+            "Trade-offs & Constraints: Every visual encoding prioritizes some comparisons while obscuring others.",
+            "Validation is Difficult: Must validate at all four levels: domain problem, data/task abstraction, visual encoding, and algorithm efficiency."
+          ],
+          notes: "Contrast visualization with machine learning. When you know exactly what to optimize and trust the model 100%, automate. When there is ambiguity, open-ended exploration, or human accountability, visualize.",
+          progressive: true
+        },
+        {
+          type: "game",
+          gameRef: "check-discovery",
+          notes: "Note that every wrong option is something the table does tell you. The map did not add data — it changed what could be seen in it."
+        },
+        {
+          type: "section",
+          title: "From Examples\nto a Framework",
+          subtitle: "The history showed what works. Now the vocabulary for why.",
+          notes: "Red section break after the discovery cases. They have just watched five centuries of examples; this is the turn from \"look at these\" to \"here is how we analyse any of them\". Say the shift out loud — it is the moment students lose the thread if you do not."
+        },
+        {
+          type: "mindmap",
+          title: "What, Why and How",
+          bullets: [
+            "WHAT · Data\tWhat information do we have: tables, networks, fields, geometry or combinations?",
+            "WHY · Task\tWhat does the audience need to discover, compare, locate, explain or decide?",
+            "HOW · Encode\tWhich marks and visual channels will make the important comparison easiest to see?",
+            "HOW · Interact\tHow can people filter, select, navigate, rearrange or change the view?"
+          ],
+          notes: "Use one familiar chart and walk around the map. WHAT describes the data, WHY names the human task, and HOW covers the visual idiom and interaction. Ask students to change one branch and predict how the design must change.",
+          buildMode: "dim",
+          progressive: true
+        },
+        {
+          type: "journey",
+          title: "Four levels of the nested model",
+          subtitle: "Validate from the domain question inward",
+          bullets: [
+            "1 · Domain problem\tUnderstand the people, vocabulary, decisions and real-world constraints.",
+            "2 · Data and task abstraction\tTranslate the domain into data types and actions without losing what matters.",
+            "3 · Visual encoding and interaction\tChoose marks, channels and controls that support those tasks.",
+            "4 · Algorithm\tImplement the design accurately and efficiently at the required scale."
+          ],
+          body: "A failure at an outer level cannot be repaired by polishing an inner one.",
+          notes: "Reveal from the outside in. Give one failure example at each level: solving the wrong domain problem, abstracting the wrong task, choosing an ineffective idiom, or implementing a slow algorithm. Validation is different at every level.",
+          buildMode: "dim",
+          progressive: true
+        },
+        {
+          type: "game",
+          gameRef: "check-framework",
+          notes: "Quick check before Anscombe. If the room confuses What with How, the rest of the term gets harder — it is the difference between the data and the picture of it."
+        },
+        {
+          type: "section",
+          title: "When Summaries\nMislead",
+          subtitle: "Four datasets that agree on paper and disagree on sight.",
+          notes: "Red beat before Anscombe. Ask for a show of hands: who would trust a mean, a spread and a correlation to describe a dataset they had never seen? Then show them the four plots."
+        },
+        {
+          type: "image",
+          title: "The Danger of Summary Statistics",
+          body: "Anscombe’s Quartet contains four datasets with closely matching summary statistics.\nTheir scatterplots reveal very different patterns.\nAverages and a fitted line cannot fully describe the shape of a dataset.",
+          subtitle: "All four: mean x 9 · mean y 7.50 · correlation 0.816 · line y = 3 + 0.5x",
+          notes: "Vote before you reveal anything. Most students who have not met Anscombe assume identical numbers mean similar-looking data. Read the four statistics off the slide, then ask the room to sketch what they expect the scatter to look like. Keep the plain words in front: average, spread, how-together, best-fit line.",
+          image: "assets/lesson/ipdv/anscombe-raw-data.png",
+          imageFit: "contain",
+          design: {
+            imageFrame: "4:3",
+            capStyle: "bar"
+          }
+        },
+        {
+          type: "split",
+          title: "Anscombe I — a fair straight line",
+          subtitle: "Anscombe, F.J. (1973) · The American Statistician 27(1)",
+          bullets: [
+            "The story: hours revised against exam mark. More study, higher score, with ordinary scatter either side of the trend.",
+            "Why it works: the data really is a straight line with even scatter, so an average, a spread and a straight best-fit line are the right tools to describe it.",
+            "Hold on to this one. It is the only dataset of the four where the numbers and the picture tell the same story."
+          ],
+          notes: "Establish the honest case first — everything after this is measured against it. Plain language: average = mean, spread = variance, how-together = correlation, best-fit line = regression. Say explicitly that nothing is wrong here, so nobody assumes statistics are always a trick.",
+          image: "assets/lesson/anscombe/anscombe-i.svg",
+          design: {
+            mediaGround: "full"
           },
-          notes: 'Launch the word cloud. Ask students to submit on their phones. Highlight words like "patterns", "outliers", "speed", "intuition", "relationships".'
+          imageFit: "contain",
+          imageSide: "left",
+          progressive: true
         },
         {
-          type: 'mindmap',
-          title: 'Why visualise?',
-          progressive: true,
-          buildMode: 'dim',
+          type: "split",
+          title: "Anscombe II — a curve wearing a straight line",
+          subtitle: "Anscombe, F.J. (1973) · The American Statistician 27(1)",
           bullets: [
-            'Discover\tSpot patterns we did not expect.',
-            'Explain\tMake a finding understandable to others.',
-            'Compare\tSee differences between groups.',
-            'Question\tNotice outliers and challenge assumptions.',
-            'Decide\tUse evidence to choose what to do next.',
-            'Think\tPut relationships on the page to reason about them.'
+            "The story: practice helps, then levels off. Early hours add a lot, later hours add less. The data bends.",
+            "Why the numbers miss it: a correlation measures how straight a relationship is. Asked about curved data it still answers 0.816 — it replies to the question you asked, not the one you should have asked.",
+            "No tool warns you. Software fits a straight line to anything, including a curve. Only the plot shows the bend."
           ],
-          notes: 'Connect this map to the preceding word cloud. Ask which branch a student contribution belongs to. Reveal one branch at a time with Next. Ask for an example before moving on. These branches organise reasons to visualise; they are not numerical measurements.'
-        },
-        {
-          type: 'content',
-          title: 'Big Questions for Data Practitioners',
-          progressive: true,
-          bullets: [
-            'What were historical authors thinking when they invented new visual forms?',
-            'What visual ideas and computational tools were available in their era?',
-            'What was needed to see and understand something genuinely new?',
-            'What are the modern challenges in big data, AI, and decision-making?'
-          ],
-          notes: 'As we trace the history of charts, observe that every new visual idiom was invented because an existing representation failed to answer an urgent question.'
-        },
-        {
-          type: 'section',
-          title: 'A History of Seeing Patterns',
-          subtitle: 'From ancient clay tablets to modern computational graphics.',
-          notes: 'We now take a whirlwind tour of data visualisation history to understand the evolution from physical accounting to abstract data coordinates.'
-        },
-        {
-          type: 'gallery',
-          imageFit: 'contain',
-          design: { imageFrame: '4:3', capStyle: 'bar' },
-          layers: [
-            { image: 'assets/lesson/ipdv/clay-tablet-presargonic.jpg', caption: 'Pre-Sargonic tablet',
-              source: 'Sumerian account of silver and commodities, in ruled columns' },
-            { image: 'assets/lesson/ipdv/ptolemy-cartography.jpg', caption: 'Cartography',
-              source: 'Spatial reality made communicable — science and aesthetics together' },
-            { image: 'assets/lesson/ipdv/scheiner-sunspots-1612.jpg', caption: 'Christoph Scheiner, 1612',
-              source: 'Engraved plates tracking sunspot positions over time' }
-          ],
-          title: 'Ancient Records to Renaissance Astronomy',
-          progressive: true,
-          bullets: [
-            'Pre-Sargonic Tablets\tSumerian accounts of silver and commodities arranged in structured grid columns.',
-            'Cartography\tScience and aesthetics of spatial reality; communicating geographic relationships effectively.',
-            'Christoph Scheiner (1612)\tEngraved observation plates systematically tracking sunspot trajectories over time.'
-          ],
-          notes: 'After each item, force the so-what: encoding used → insight unlocked → lesson for today. Tablets: structured columns made accounts auditable. Cartography: spatial encoding made relationships traversable. Scheiner: time-series drawings made sunspot motion undeniable — one of the earliest systematic astronomical series.'
-        },
-        {
-          type: 'cards',
-          title: 'When Visualisations Led to Discovery',
-          progressive: true,
-          design: { cardPics: 'plates' },
-          bullets: [
-            'Snow · 1854\tMapped cholera deaths around the Broad Street pump — visual proof cholera was water-borne, not miasma.',
-            'Galton · 1861\tSynoptic weather chart of pressure and wind across Britain — the pattern that made anti-cyclones visible.',
-            'Maunder · 1904\tSolar “butterfly diagram”: sunspot latitudes march with the 11-year cycle.',
-            'Hertzsprung–Russell · 1911\tLuminosity vs spectral class — the main sequence of stellar evolution appears as a structure, not a table.'
-          ],
-          images: [
-            'https://upload.wikimedia.org/wikipedia/commons/2/27/Snow-cholera-map-1.jpg',
-            'https://upload.wikimedia.org/wikipedia/commons/b/b7/Weather_chart_%281861%29.gif',
-            'https://upload.wikimedia.org/wikipedia/commons/2/24/Maunder%2C_E.W._-_Distribution_of_the_latitude_of_sunspot_centres_%28butterfly_diagram%2C_1877-1902%29%2C_1904.jpg',
-            'https://upload.wikimedia.org/wikipedia/commons/6/67/HR-diag-no-text-2.svg'
-          ],
-          notes: 'In each of these cases, the discovery could not have been achieved by reviewing raw data tables. The visual spatialization made the invisible pattern undeniable. Plates: Snow Broad Street map; Galton 1861 weather chart; Maunder butterfly; classic H–R diagram (Commons).'
-        },
-        {
-          type: 'quote',
-          body: 'Computer-based visualization systems provide visual representations of datasets designed to help people carry out tasks more effectively.',
-          subtitle: 'Tamara Munzner · Visualization Analysis and Design',
-          notes: 'Unpack this definition carefully: computer-based (scalable, interactive), visual representations (encoding data onto visual channels), datasets, tasks (why are we doing this?), and effectively (validation).'
-        },
-        {
-          type: 'content',
-          title: 'Augmenting Human Capabilities',
-          progressive: true,
-          bullets: [
-            'Human-in-the-Loop: Visualisation is needed when computational algorithms alone cannot make fully automated decisions.',
-            'Huge Design Space: Infinite combinations of visual idioms exist; most possibilities in the design space are ineffective for a given task.',
-            'Trade-offs & Constraints: Every visual encoding prioritizes some comparisons while obscuring others.',
-            'Validation is Difficult: Must validate at all four levels: domain problem, data/task abstraction, visual encoding, and algorithm efficiency.'
-          ],
-          notes: 'Contrast visualization with machine learning. When you know exactly what to optimize and trust the model 100%, automate. When there is ambiguity, open-ended exploration, or human accountability, visualize.'
-        },
-        {
-          type: 'image',
-          image: 'assets/lesson/ipdv/anscombe-raw-data.png',
-          imageFit: 'contain',
-          design: { imageFrame: '4:3', capStyle: 'bar' },
-          title: 'The Danger of Summary Statistics',
-          subtitle: 'Same numbers on paper — same picture on screen?',
-          feedback: {
-            kind: 'poll',
-            prompt: 'Four datasets share the same average, spread, correlation (r ≈ 0.82), and best-fit line. Will their scatterplots look alike?',
-            options: [
-              'Yes — nearly the same shape',
-              'No — they can look totally different',
-              'Only if there are extreme outliers'
-            ],
-            max: 1
+          notes: "The point is not that 0.816 is wrong, it is that it is the wrong measurement. Ask: what would you have to plot to notice? Nothing in the printed report can tell you the shape is unsuitable — that is the whole lesson.",
+          image: "assets/lesson/anscombe/anscombe-ii.svg",
+          design: {
+            mediaGround: "full"
           },
-          notes: 'Ask students to vote. Most who haven’t seen Anscombe will assume identical regression means similar visual scatter. Keep the jargon light: averages and “best-fit line” before you say mean/variance/r.'
+          imageFit: "contain",
+          imageSide: "left",
+          progressive: true
         },
         {
-          type: 'split',
-          title: 'Anscombe I — a fair straight line',
-          progressive: true,
-          image: 'assets/lesson/anscombe/anscombe-i.svg',
-          imageSide: 'left',
-          imageFit: 'contain',
-          subtitle: 'Anscombe, F.J. (1973) · The American Statistician 27(1)',
+          type: "split",
+          title: "Anscombe III — one bad row spoils the story",
+          subtitle: "Anscombe, F.J. (1973) · The American Statistician 27(1)",
           bullets: [
-            'Everyday story: hours revised vs exam mark — more study, higher score, with normal scatter around the trend.',
-            'Same quick report as the other three: same average, same spread, same “how together” score, same best-fit line.',
-            'What the plot shows: points hug the line. Here the shortcut numbers and the picture agree.'
+            "The story: ten marks sitting on a perfect straight line, plus one mistyped score far above it.",
+            "Why the numbers miss it: without that one row the correlation would be 1.00, a flawless fit. That single point drags it down to 0.816 and pulls the line up with it.",
+            "The summary reports one mediocre relationship. The plot reports ten perfect points and one error to go and check."
           ],
-          notes: 'Start with this “normal” scatter. Plain language: average = mean, spread = variance, how-together = correlation, best-fit line = regression. Ask: if you only saw the report, would you expect anything else?'
-        },
-        {
-          type: 'split',
-          title: 'Anscombe II — a curve wearing a straight line',
-          progressive: true,
-          image: 'assets/lesson/anscombe/anscombe-ii.svg',
-          imageSide: 'left',
-          imageFit: 'contain',
-          subtitle: 'Anscombe, F.J. (1973) · The American Statistician 27(1)',
-          bullets: [
-            'Everyday story: practice helps… then levels off. More hours still help early on; later the gains flatten (a curve, not a ramp).',
-            'The printed report still claims the same straight best-fit line as Dataset I.',
-            'What the plot shows: a clear bend. The relationship is real — the straight-line model is the wrong shape.'
-          ],
-          notes: 'Contrast with I. Same string through the glitter; wrong shape of pile. Correlation can look fine while the model is misspecified.'
-        },
-        {
-          type: 'split',
-          title: 'Anscombe III — one bad row spoils the story',
-          progressive: true,
-          image: 'assets/lesson/anscombe/anscombe-iii.svg',
-          imageSide: 'left',
-          imageFit: 'contain',
-          subtitle: 'Anscombe, F.J. (1973) · The American Statistician 27(1)',
-          bullets: [
-            'Everyday story: nine honest marks on a neat line — plus one mistyped score that shoots off the chart.',
-            'Again: the summary report matches Datasets I and II, including that same best-fit line.',
-            'What the plot shows: almost everything is tidy; one extreme point drags the line away from the truth.'
-          ],
-          notes: 'Ask what they would do: fix the typo, investigate, or leave it? Visualisation makes the odd row impossible to ignore before the model ships.'
-        },
-        {
-          type: 'split',
-          title: 'Anscombe IV — one point invents the slope',
-          progressive: true,
-          image: 'assets/lesson/anscombe/anscombe-iv.svg',
-          imageSide: 'left',
-          imageFit: 'contain',
-          subtitle: 'Anscombe, F.J. (1973) · The American Statistician 27(1)',
-          bullets: [
-            'Everyday story: every house on the street costs about the same — except one mansion far out of town that “creates” a trend.',
-            'Same averages and same best-fit line on paper as the other three.',
-            'What the plot shows: almost no spread in x — that single far point is the only reason the line has a slope.'
-          ],
-          notes: 'Close by asking what the room would have missed with only the summary statistics from the poll slide. High leverage without a plot stays invisible.'
-        },
-        {
-          type: 'split',
-          image: 'assets/lesson/ipdv/anscombe-four-plots.png',
-          imageFit: 'contain',
-          imageSide: 'left',
-          title: 'Four pictures, one quick report',
-          progressive: true,
-          bullets: [
-            'All four datasets share the same short summary — averages, spread, correlation, and best-fit line.',
-            'Only the scatterplots show a fair line, a hidden curve, a rogue point, or a slope built on one observation.',
-            'Rule of thumb: never trust a fitted line you have not plotted. The picture is part of the analysis.'
-          ],
-          notes: 'Recap before Burn-Murdoch. If short on time, dwell here after a quick flip through I–IV.'
-        },
-        {
-          type: 'split',
-          image: 'assets/lesson/ipdv/brexit-scatter-ft.jpg',
-          imageFit: 'contain',
-          imageSide: 'right',
-          /* The chart from the course slides plots GDP exported to the EU on x,
-             while the second bullet says percentage with higher education. They
-             are two different Burn-Murdoch charts. The credit names what is
-             actually on screen; the bullet still needs deciding. */
-          subtitle: 'Share of Leave vote against share of regional GDP exported to the EU · Financial Times',
-          title: 'Case Study: Scatterplots in Explanatory Journalism',
-          progressive: true,
-          bullets: [
-            'Financial Times Brexit Analysis (John Burn-Murdoch, June 2016).',
-            'Plotted percentage with higher education (x-axis) against percentage voting Leave (y-axis) across UK local authorities.',
-            'Revealed an unmistakable strong negative correlation: areas with lower formal education voted overwhelmingly to Leave.',
-            'Scatterplots reveal clustering, variance, and outlier communities simultaneously without losing individual data points.'
-          ],
-          notes: 'Burn-Murdoch published this chart immediately following the referendum. It replaced pundit speculation with clear empirical evidence of the demographic education divide.'
-        },
-        {
-          type: 'cards',
-          images: [
-            'assets/lesson/ipdv/multi-axis-sales-profit.jpg',
-            'assets/lesson/ipdv/box-whisker-age-groups.jpg',
-            'assets/lesson/ipdv/brexit-scatter-ft.jpg',
-            'assets/lesson/ipdv/sankey-income-spending.jpg'
-          ],
-          title: 'Core Visualisation Use Cases',
-          progressive: true,
-          bullets: [
-            'Changes Over Time: The most common analytical task. Line charts, area plots, and connected scatterplots showing trend and seasonality.',
-            'Frequency & Distribution: Histograms, density estimates, and frequency polygons showing skewness, modality, and spread.',
-            'Relationships & Correlation: Scatterplots, scatter matrices (SPLOMs), and heatmaps displaying multi-variable association.',
-            'Value, Flow & Risk: Sankey diagrams, treemaps, and risk matrices communicating resource transfer and hierarchical composition.'
-          ],
-          notes: 'Ask students: What question are you asking of the data? The task dictates the idiom, not aesthetic preference.'
-        },
-        {
-          type: 'gallery',
-          imageFit: 'contain',
-          design: { imageFrame: '16:9', capStyle: 'bar' },
-          layers: [
-            { image: 'assets/lesson/ipdv/set-exercise-womens-health-1.png',
-              caption: 'Set Exercise 1 & 2', source: 'Women’s and girls’ health in south east London' },
-            { image: 'assets/lesson/ipdv/set-exercise-womens-health-2.jpg',
-              caption: 'Women’s Health', source: 'NHS South East London' }
-          ],
-          title: 'Applying What We’ve Learned',
-          subtitle: 'Choose the appropriate idiom for the scenario.',
-          feedback: {
-            kind: 'poll',
-            prompt: 'A hospital needs to track patient flow from admission through triage, testing, wards, and discharge. Which idiom is best?',
-            options: [
-              'Sankey diagram',
-              'Multi-axis line chart',
-              'Radar chart',
-              'Box and whisker plot'
-            ],
-            max: 1
+          notes: "The counterfactual is the teaching moment: a correlation of 0.816 sounds like slightly noisy data, when what it actually describes is perfect data plus one mistake. Ask what they would do — fix it, investigate it, or drop it — and make them justify the choice.",
+          image: "assets/lesson/anscombe/anscombe-iii.svg",
+          design: {
+            mediaGround: "full"
           },
-          notes: 'Give the room 45 seconds to vote. Correct answer is Sankey diagram because it tracks flow volume across sequential multi-stage nodes.'
+          imageFit: "contain",
+          imageSide: "left",
+          progressive: true
         },
         {
-          type: 'section',
-          title: 'The Rule of Thumb',
-          subtitle: 'The 4P Framework for visual analysis and design.',
-          notes: 'Now we synthesize this into a repeatable professional practice: the 4P framework.'
-        },
-        {
-          type: 'keywords',
-          title: 'The 4P Methodology',
-          progressive: true,
-          buildMode: 'dim',
+          type: "split",
+          title: "Anscombe IV — one point invents the slope",
+          subtitle: "Anscombe, F.J. (1973) · The American Statistician 27(1)",
           bullets: [
-            '1. PLAN\tDefine purpose and audience; establish success metrics; gather context; choose core message.',
-            '2. PREPARE\tClean and validate raw data; handle missing values; inspect outliers; structure into tidy format.',
-            '3. PRESENTATION\tSelect appropriate chart idiom; apply intentional color strategy; build visual hierarchy; add annotations.',
-            '4. POLISH\tConduct usability tests; check accessibility (colorblindness, screen readers); verify factual accuracy; optimize for medium.'
+            "The story: every house on the street costs about the same, except one mansion far out of town.",
+            "Why the numbers miss it: ten of the eleven points share the same x value of 8. Only one sits out at x = 19. Points that never vary in x can say nothing about slope, so that one far point decides the line by itself.",
+            "This is leverage: the further a point sits from the rest along x, the harder it can swing the line. Remove it and there is no slope left to report."
           ],
-          notes: 'Every project in this module will be evaluated against the 4P lifecycle. Emphasize that 80% of project failure happens in Plan and Prepare, not Presentation.'
+          notes: "Name leverage, then show it rather than defining it: cover the far point with your hand and ask what the slope is now. Close the set by asking what the room would have missed with only the four numbers from the poll slide.",
+          image: "assets/lesson/anscombe/anscombe-iv.svg",
+          design: {
+            mediaGround: "full"
+          },
+          imageFit: "contain",
+          imageSide: "left",
+          progressive: true
         },
         {
-          type: 'game',
-          gameRef: 'quiz-check',
-          notes: 'Formative quiz time! 4 questions covering Munzner’s definition, Anscombe’s Quartet, Sankey width encoding, and John Snow’s cholera map.'
+          type: "split",
+          title: "Four pictures, one quick report",
+          bullets: [
+            "All four: mean x 9, mean y 7.50, correlation 0.816, best-fit line y = 3 + 0.5x — identical to two decimal places, from eleven points each.",
+            "A summary squeezes eleven points into four numbers, and squeezing throws the shape away. That is why different shapes can squeeze down to the same numbers.",
+            "So the numbers cannot tell you whether the numbers are the right ones. Only the picture can. Plot the data before you trust any summary of it."
+          ],
+          notes: "This is the slide to dwell on if time is short. Anscombe built the quartet in 1973 to counter the belief that numerical calculations are exact and graphs are rough. If the room wants more, the Datasaurus Dozen (Matejka and Fitzmaurice, 2017) pushes the same trick to thirteen datasets, one of which is a dinosaur.",
+          image: "assets/lesson/ipdv/anscombe-four-plots.png",
+          design: {
+            mediaGround: "full"
+          },
+          imageFit: "contain",
+          imageSide: "left",
+          progressive: true
         },
         {
-          type: 'section',
-          title: 'Reflect & Self-Assess',
-          subtitle: 'Check your confidence before our first practical lab.',
+          type: "split",
+          title: "Case Study: Scatterplots in Explanatory Journalism",
+          subtitle: "Share of Leave vote against share of regional GDP exported to the EU · Financial Times",
+          bullets: [
+            "Financial Times Brexit Analysis (John Burn-Murdoch, June 2016).",
+            "Each point is a UK region: the x-axis shows the share of regional GDP exported to the EU; the y-axis shows the Leave vote share.",
+            "The chart shows a positive association: regions with greater export exposure often recorded a higher Leave vote.",
+            "The labelled regions reveal exceptions and context. Association alone does not explain why people voted as they did."
+          ],
+          notes: "Read the axes before interpreting the line. The surprising relationship is economic exposure to EU trade against Leave vote, not education. Ask why this pattern might exist, then separate hypotheses from evidence: the scatterplot shows association, not a causal explanation.",
+          image: "assets/lesson/ipdv/brexit-scatter-ft.jpg",
+          design: {
+            mediaGround: "full"
+          },
+          imageFit: "contain",
+          progressive: true
+        },
+        {
+          type: "keywords",
+          title: "Error Analysis · what the scatterplot does not say",
+          bullets: [
+            "The claim\t“Regions that export more to the EU voted Leave. So exposure to EU trade caused the Leave vote.”",
+            "Spot · 3 min\tFind three things wrong with that sentence as a reading of the chart you have just seen.",
+            "Correct · 3 min\tRewrite the claim so it says only what the scatterplot can actually support.",
+            "Reflect · 2 min\tWhat further evidence would you need before the word “caused” is allowed?"
+          ],
+          notes: "Three errors to land: association is not causation; the dotted line is a model someone fitted, not something the data reported; and the labelled exceptions — Inner London, Eastern Scotland — already contradict a simple rule. A fourth, if the room is strong: these are regional averages, so they say nothing about how any individual voted. Ten minutes.",
+          timeLimit: 600,
+          modelAnswer: "The chart shows that regions exporting more to the EU tended to record a higher Leave vote. It does not show why. The dotted line is a model someone fitted, Inner London and Eastern Scotland sit well off it, and these are regional averages — they say nothing about how any one person voted.",
+          activity: "error-analysis",
+          activityPresentation: "brief",
+          progressive: true
+        },
+        {
+          type: "keyfact",
+          title: "After Anscombe",
+          subtitle: "The habit",
+          body: "Plot the data before you\ntrust any summary of it.",
+          notes: "The whole section in one line. Say it, let it sit, then check. If they remember nothing else from this half of the lecture, this is the sentence worth keeping."
+        },
+        {
+          type: "game",
+          gameRef: "check-summaries",
+          notes: "The hardest of the four datasets, so it is the one worth checking. Cover the far point with your hand again if the room hesitates."
+        },
+        {
+          type: "section",
+          title: "Choosing the\nRight Chart",
+          subtitle: "The question you are asking decides the shape you reach for.",
+          notes: "Red section break after the case study. The run before this was about being misled; this one is about choosing well. Four analytical tasks, four families of chart."
+        },
+        {
+          type: "split",
+          title: "Changes over time",
+          subtitle: "Time charts reveal direction, pace, cycles and turning points.",
+          bullets: [
+            "Line position shows how a value rises, falls or remains stable across time.",
+            "Slope reveals the direction and rate of change; repeated shapes reveal seasonal cycles.",
+            "Peaks, troughs and changes in direction identify the moments that need explanation."
+          ],
+          notes: "Time is ordered from left to right. Explain the overall trend first, then identify cycles and the specific points where the direction or rate changes.",
+          image: "assets/lesson/ipdv/multi-axis-sales-profit.jpg",
+          design: {
+            mediaGround: "full"
+          },
+          imageFit: "contain",
+          imageSide: "left",
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "Frequency and distribution",
+          subtitle: "A distribution reveals what is typical, how values vary and what is unusual.",
+          bullets: [
+            "Histograms and density plots reveal the shape, concentration and skew of values.",
+            "Box plots summarise the median, middle 50%, overall spread and potential outliers.",
+            "Multiple peaks can expose distinct groups that a single average conceals."
+          ],
+          notes: "Connect this directly to Anscombe's Quartet: equal averages can belong to very different distributions. The shape provides evidence that the summary cannot.",
+          image: "assets/lesson/ipdv/box-whisker-age-groups.jpg",
+          design: {
+            mediaGround: "full"
+          },
+          imageFit: "contain",
+          imageSide: "right",
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "Relationships and correlation",
+          subtitle: "Scatterplots show the form, direction and strength of an association.",
+          bullets: [
+            "Each point preserves one observation and its values on two quantitative measures.",
+            "The overall pattern can be positive, negative, curved or show little association.",
+            "Clusters and outliers reveal subgroups and exceptions; correlation alone does not establish cause."
+          ],
+          notes: "Use the preceding Financial Times chart as the example. Describe the overall positive association, the regional clusters and the labelled exceptions without claiming a causal explanation.",
+          image: "assets/lesson/ipdv/brexit-scatter-ft.jpg",
+          design: {
+            mediaGround: "full"
+          },
+          imageFit: "contain",
+          imageSide: "left",
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "Value, flow and risk",
+          subtitle: "Size and position show quantity, movement and concentration across a system.",
+          bullets: [
+            "In a Sankey diagram, band width represents the quantity moving between stages.",
+            "Branches reveal how a total divides, recombines, concentrates or is lost.",
+            "Treemap area represents value within a hierarchy; a risk matrix positions likelihood against consequence."
+          ],
+          notes: "The visual encoding must remain quantitative: thicker bands and larger areas must represent larger values. Preview the detailed Sankey explanation later in the lesson.",
+          image: "assets/lesson/ipdv/sankey-income-spending.jpg",
+          design: {
+            mediaGround: "full"
+          },
+          imageFit: "contain",
+          imageSide: "right",
+          progressive: true
+        },
+        {
+          type: "keyfact",
+          title: "Before you draw anything",
+          subtitle: "The habit",
+          body: "The question you are asking\ndecides the shape you reach for.",
+          notes: "The counterpart to the Anscombe line: that one is about not trusting a summary, this one is about not reaching for a chart before you know what it is for. Together they are the two habits this lecture exists to build."
+        },
+        {
+          type: "game",
+          gameRef: "check-idioms",
+          notes: "Task to idiom, which is the whole point of the run they have just seen. Ask the ones who chose a histogram what question a histogram answers instead."
+        },
+        {
+          type: "section",
+          title: "The Rule of Thumb",
+          subtitle: "Four habits. One professional practice.",
+          notes: "Red beat before the 4Ps. Tell them every project this term is judged against this lifecycle — then reveal the cards."
+        },
+        {
+          type: "cards",
+          title: "Principles, guidelines and rules of thumb",
+          design: {
+            cardsMode: "rows"
+          },
+          bullets: [
+            "Principle\tA broad explanation grounded in how people perceive, think or act.",
+            "Guideline\tAdvice that usually improves a design, but still depends on audience, task and context.",
+            "Rule of thumb\tA memorable shortcut for practice that prompts useful checks rather than guaranteeing an answer."
+          ],
+          notes: "Ask the room which kind of claim can have exceptions. All three can guide design, but they carry different strength. Present the 4Ps next as this course's practical rule of thumb, not a scientific law.",
+          buildMode: "dim",
+          progressive: true
+        },
+        {
+          type: "keywords",
+          title: "The Rule of Thumb (The 4Ps)",
+          bullets: [
+            "Plan\tDefine purpose & audience; set success metrics; gather context; choose the core message.",
+            "Prepare\tClean & validate data; handle missing values; check for outliers; structure the table properly.",
+            "Presentation\tSelect the right chart type; apply colour strategy; create visual hierarchy; add clear annotations.",
+            "Polish\tTest with users; check accessibility; verify accuracy; optimise for the medium."
+          ],
+          notes: "Same keywords layout as Multivariate Idioms. Emphasize that most project failure happens in Plan and Prepare, not Presentation. Reveal one row at a time if you want the room to predict the next P.",
+          progressive: true
+        },
+        {
+          type: "game",
+          gameRef: "quiz-check",
+          notes: "Formative quiz time! 4 questions covering Munzner’s definition, Anscombe’s Quartet, Sankey width encoding, and John Snow’s cholera map.",
+          transition: "zoom"
+        },
+        {
+          type: "section",
+          title: "Idioms for\nMany Variables",
+          subtitle: "When one chart has to carry more than two measures.",
+          notes: "Red beat after the formative quiz. Marks the last teaching block before the wrap-up: Sankey, radar, boxplot, Likert and multi-axis."
+        },
+        {
+          type: "image",
+          title: "Chart Idioms & Multivariate Analysis",
+          body: "Different chart forms support different comparisons.\nMarks represent observations, while channels such as position, length and colour encode values.\nA useful chart makes the audience’s intended comparison easy to see.",
+          subtitle: "Selecting the right visual encoding for the analytical task.",
+          notes: "Now we move from foundational principles to specific chart idioms and their appropriate use cases.",
+          image: "assets/lesson/ipdv/chart-type-grid.png",
+          imageFit: "contain",
+          design: {
+            imageFrame: "16:9",
+            capStyle: "bar"
+          }
+        },
+        {
+          type: "split",
+          title: "Sankey Diagrams",
+          subtitle: "Income and spending Sankey · from the course slides",
+          bullets: [
+            "Directed Flow Networks: Arrows and bands connecting two or more stages of nodes or processes.",
+            "Proportional Width: Link width is strictly proportional to the quantity of flow (energy, material, cost, traffic).",
+            "Conservation & Distribution: Immediately reveals where resources originate, branch, concentrate, or are lost.",
+            "Alternative to Bar or Flow Charts: Captures multi-stage transitions and system-wide allocation simultaneously."
+          ],
+          notes: "Sankey diagrams originated in thermodynamics (Capt. Matthew Sankey in 1898 showing steam engine energy efficiency). Widely used today in financial audits, user journey funnels, and supply chains. The diagram beside you is Sankey’s own, from the paper the idiom is named after.",
+          image: "assets/lesson/ipdv/sankey-income-spending.jpg",
+          design: {
+            mediaGround: "full"
+          },
+          imageFit: "contain",
+          imageSide: "left",
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "Box plots compare distributions at a glance",
+          subtitle: "Employee age by department · from the course slides",
+          bullets: [
+            "The box holds the middle 50% of the values, from the lower quartile to the upper, and the line inside it is the median.",
+            "The whiskers reach the rest of the range; anything drawn beyond them is flagged as an outlier worth going to check.",
+            "Each summary is narrow, so a dozen groups fit side by side — the comparison a histogram cannot make without a dozen charts."
+          ],
+          notes: "Read one box aloud before comparing any: box, median line, whiskers, outlier. Then ask which department has the widest spread and which has the highest median — they are not the same one, which is the point. Tukey introduced the box plot in 1977.",
+          image: "assets/lesson/ipdv/box-whisker-age-groups.jpg",
+          imageFit: "contain",
+          imageSide: "left",
+          design: {
+            mediaGround: "full"
+          },
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "Likert scales show the balance of opinion",
+          bullets: [
+            "Responses run from disagreement through a neutral position to agreement.",
+            "A diverging stacked bar makes the balance on both sides of neutral easy to compare.",
+            "Keep category order, wording and the neutral group consistent across questions."
+          ],
+          notes: "Ask students what the centre line lets them compare. Point out that a Likert response is ordered categorical data; the spacing between response categories is not automatically a measured numerical distance.",
+          image: "assets/lesson/ipdv/likert-customer-survey.jpg",
+          design: {
+            mediaGround: "full"
+          },
+          imageFit: "contain",
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "Multi-axis charts need restraint",
+          bullets: [
+            "Separate axes allow series with different units to share one time scale.",
+            "Changing either axis range can manufacture or hide apparent agreement between the lines.",
+            "Use aligned small multiples or an indexed baseline when the comparison remains clear without two scales."
+          ],
+          notes: "Demonstrate the warning by describing how stretching one axis changes where the lines cross without changing a single value. Ask what comparison the author actually wants the audience to make.",
+          image: "assets/lesson/ipdv/multi-axis-sales-profit.jpg",
+          design: {
+            mediaGround: "full"
+          },
+          imageFit: "contain",
+          imageSide: "left",
+          progressive: true
+        },
+        {
+          type: "keywords",
+          title: "Multivariate Idioms: Radar & Boxplots",
+          bullets: [
+            "Radar Chart\tMultiple quantitative variables plotted on radial axes from a center point; useful for multivariate profile comparison.",
+            "Radar Trade-off\tAxis ordering influences enclosed polygon area, which can mislead viewers into perceiving overall size differences.",
+            "Box & Whisker Plot\tDisplays the 5-number summary: minimum, Q1 (25th), median (50th), Q3 (75th), and maximum, plus outliers.",
+            "Distributional Comparison\tCompact footprint allows side-by-side comparison of dozens of distributions across categories."
+          ],
+          notes: "Tukey invented the box plot in 1977. Point out the difference between the box (interquartile range IQR) and the whiskers (typically 1.5 * IQR).",
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "Modern Tooling: Python & AI Workflows",
+          bullets: [
+            "Computational Libraries: Pandas for data wrangling; Matplotlib & Seaborn for static publication graphics; Altair & Plotly for interactive web charts.",
+            "Grammar of Graphics: Leland Wilkinson’s grammar underlying ggplot2 and Altair separates data, marks, scales, and coordinates.",
+            "Assessment rule: AI use is prohibited in both AE1 and AE2.",
+            "Critical Practitioner Rule: AI generates prototypes; the human practitioner applies the 4Ps, domain expertise, and ethical validation."
+          ],
+          notes: "Distinguish general discussion of AI tools from assignment permissions. AI use is prohibited in AE1 and AE2. Do not suggest students use AI to draft assessment code or reports.",
+          image: "assets/lesson/ipdv/different-charts-python-1.png",
+          design: {
+            mediaGround: "full"
+          },
+          imageFit: "contain",
+          progressive: true
+        },
+        {
+          type: "game",
+          gameRef: "check-multivariate",
+          notes: "Last check before the wrap-up. The general lesson: an encoding that produces an eye-catching shape is not automatically encoding anything."
+        },
+        {
+          type: "section",
+          title: "Reflect & Self-Assess",
+          subtitle: "Check your confidence before our first practical lab.",
+          notes: "Use this scale feedback to gauge student readiness for Lab 1. If many students score 1-2, plan a brief recap at the start of the lab session.",
           feedback: {
-            kind: 'scale',
-            prompt: 'How confident do you feel applying the 4Ps to evaluate a visualization?',
+            kind: "scale",
+            prompt: "How confident do you feel applying the 4Ps to evaluate a visualization?",
             points: 5,
-            lowLabel: 'Need guidance',
-            highLabel: 'Ready to critique',
+            lowLabel: "Need guidance",
+            highLabel: "Ready to critique",
             max: 1
+          }
+        },
+        {
+          type: "split",
+          title: "Summary & Looking Ahead to Lab 1",
+          bullets: [
+            "Read Chapter 1 & 6 in Munzner before Thursday’s lab.",
+            "Lab 1 Focus: Setting up your Python environment, importing datasets with Pandas, and building your first clean visualisations.",
+            "Worksheet Submission: Complete and submit Lab 1 worksheets on Canvas by Friday midday.",
+            "Open Q&A: Bring your questions to the desk or post in the course discussion channel."
+          ],
+          notes: "Close the lecture. Remind them of the lab schedule and room. Open the floor to initial questions.",
+          image: "assets/lesson/ipdv/next-lesson-lab1-1.png",
+          imageFit: "contain"
+        },
+        {
+          type: "keywords",
+          title: "Muddiest Point",
+          bullets: [
+            "Write · 3 min\tThe muddiest point for me is…",
+            "Be specific\tName the idea or the slide. “Anscombe” helps me less than “why the correlation still said 0.816”.",
+            "Listen and revisit\tAfter the explanations, note what is clearer and what you are bringing to Lab 1."
+          ],
+          notes: "Contributions land in the rail as they arrive. Group them live, then address the top three with student explanations before your own. This is the slide that tells you what to recap at the start of Lab 1 — the confidence scale says whether to recap, this says what.",
+          feedback: {
+            kind: "brainstorm",
+            prompt: "The muddiest point for me is…",
+            options: [],
+            max: 1,
+            presentAs: "rail"
           },
-          notes: 'Use this scale feedback to gauge student readiness for Lab 1. If many students score 1-2, plan a brief recap at the start of the lab session.'
+          timeLimit: 780,
+  activity: "muddiest-point",
+          progressive: true
         },
         {
-          /* The Q&A slide from the course deck, restored so the two pictures
-             that belong to it have somewhere to live. Their original sat
-             between the 4Ps and the closing slide; this keeps that order. */
-          type: 'image',
-          image: 'assets/lesson/ipdv/qa-london-night-1.jpg',
-          imageFit: 'cover',
-          title: 'Q & A',
-          subtitle: 'Ask now, or bring it to the lab.',
-          design: { capStyle: 'scrim', capPos: 'bottom' },
-          notes: 'Open the floor. If nothing comes, offer the two questions most groups ask: which chart do I start with, and how much cleaning counts as enough.'
-        },
-        {
-          type: 'split',
-          image: 'assets/lesson/ipdv/next-lesson-lab1-1.png',
-          imageFit: 'contain',
-          imageSide: 'right',
-          title: 'Summary & Looking Ahead to Lab 1',
-          bullets: [
-            'Read Chapter 1 & 6 in Munzner before Thursday’s lab.',
-            'Lab 1 Focus: Setting up your Python environment, importing datasets with Pandas, and building your first clean visualisations.',
-            'Worksheet Submission: Complete and submit Lab 1 worksheets on Canvas by Friday midday.',
-            'Open Q&A: Bring your questions to the desk or post in the course discussion channel.'
-          ],
-          notes: 'Close the lecture. Remind them of the lab schedule and room. Open the floor to initial questions.'
-        },
-        {
-          type: 'section',
-          title: 'Appendix · parked slides',
-          subtitle: 'Still in the deck — not on the Week 1 teaching path.',
-          notes: 'Everything below was moved here rather than deleted. Use if you have spare time, for assessment briefing, or when a student asks. The core lecture ends on Summary & Looking Ahead.'
-        },
-        {"type": "journey", "title": "Your course journey · foundations", "subtitle": "Weeks 1–6 · build the skills you will use in AE1", "progressive": true, "buildMode": "dim", "bullets": ["W1 · Introductions\tWhy visualisation matters and how it evolved. Reading: VAD 1.", "W2 · Visual communication\tMeasurement scales, marks and channels, design guidance. VAD 2, 5, 6.", "W3 · Data abstraction\tData types, tables and tools. VAD 2, 3, 7.", "W4 · Colour\tPerception, cognition and illusions. VAD 10–12.", "W5 · Interaction and animation\tInteraction, animation, reduce and embed. VAD 13, 14.", "W6 · Maps and SciVis\tGeospatial and scientific visualisation. VAD 8."], "notes": "Start with Week 1: you are here. Reveal each stop with Next and ask what it adds to the previous one. VAD means Visualization Analysis and Design by Tamara Munzner. Teaching sequence supplied by the course leader; assessment briefs are for 2026–27. The source timetable header says 2025/6: confirm the year before distributing the complete timetable."},
-        {"type": "journey", "title": "Your course journey · advanced practice", "subtitle": "Extend your visual thinking, then evaluate how well it communicates", "progressive": true, "buildMode": "dim", "bullets": ["W7–8 · Pause and assessment\tWeek 7: reading week. Week 8: exam week in the timetable; use the AE deadlines for coursework.", "W9 · Networks and trees\tGraph structures, network visualisations and trees. VAD 9.", "W10 · Experiential visualisation\tGuest speaker. Reading to be confirmed.", "W11 · Visualisation for ML\tHigh-dimensional data, feature engineering and model performance. Reading TBC.", "Later · Current research\tIEEE VIS and CHI proceedings; how to write a paper. Reading TBC.", "Later · Evaluation and storytelling\tThreats, validation, telling a data story and giving a talk. VAD 4."], "notes": "The supplied timetable lists Week 13 before Week 12. The last two stops deliberately say Later until their order is confirmed. AE2 refers to Weeks 8–11, whereas the timetable places some relevant topics later. Confirm alignment and which material will have been taught before the AE2 deadline. No exact calendar dates have been inferred from teaching-week labels."},
-        {"type": "journey", "journeyMode": "handover", "title": "Two assessments · one developing project", "subtitle": "Green Jobs and Skills in London: Visualising the Data · 2026–27", "progressive": true, "buildMode": "hide", "bullets": ["AE1 · 60%\tBUILD & COMMUNICATE\nPython visualisations + accessible public communication\nSet exercises · 24–32 hours\n30 October 2026 · 13:00 UK", "AE2 · 40%\tEVALUATE & DEVELOP\n2,500-word written report\nDevelop at least one AE1 visualisation, dataset or visual idea\n27 November 2026 · 13:00 UK"], "body": "Carry something forward. Explain what changed, why it changed and how it helps the audience.", "notes": "Both assessments were issued on 14 September 2026. The two percentages total the module assessment weighting. Do not present the stated 24–32 hours as an exam duration. AE2 explicitly builds on AE1. AE1 feedback is planned within 28 calendar days, reaching the AE2 deadline if counted from hand-in; clarify interim feedback arrangements rather than promising feedback will arrive before AE2."},
-        {"type": "journey", "title": "How your project develops", "subtitle": "One public-facing question: what should people understand about London’s green jobs and skills?", "progressive": true, "buildMode": "dim", "bullets": ["Start with real evidence\tRead the GLA analysis. Use the raw datasets provided on Canvas; cite sources.", "Make purposeful choices\tChoose data, marks, channels, colour and interactions to answer a clear question.", "Submit AE1\tReproducible Python visualisations and accessible communication for a general audience.", "Revisit a design decision\tReuse, extend, rework, transform or redesign at least one AE1 element.", "Explain your development in AE2\tUse concrete examples and readings to discuss clarity, trust, ethics and evaluation."], "body": "AE2 reading: GLA green jobs analysis · ONS green jobs estimates (March 2026) · Nesta evidence review (2023)", "notes": "The London Datastore Green Job Postings page provides HTML analysis rather than a raw Lightcast dataset. Use it for context and methodology unless extracting tables is explicitly permitted. Raw downloadable datasets are on Canvas. AE2 should include the carried-over element, comparisons of good and bad practice and visual examples from required readings. New visualisations may be included where useful; they are not mandatory simply because they appear in the list of possible examples."},
-        {"type": "mindmap", "title": "Ready to submit?", "progressive": true, "buildMode": "hide", "bullets": ["Where?\tSubmit online through Canvas.", "Identity\tBoth submissions must be anonymous.", "When?\tAE1: 30 October. AE2: 27 November. Both 13:00 UK, 2026.", "AE1 files\tPython notebook (.ipynb) AND its .html export.", "AI rule\tAI use is prohibited in both assessments.", "Evidence\tUse real, cited data and justify your design choices."], "notes": "Ask students to say what they would check under each branch before revealing it. AE2 is a written report, but its supplied brief also lists .ipynb and .html. Confirm the report packaging before giving a definite AE2 file instruction. Categorical marking applies. Refer students to the full Canvas briefs for complete requirements; these slides summarise them."},
-        {"type": "section", "title": "Check the assessment connection", "subtitle": "Think first, vote, then explain your choice to a partner", "feedback": {"kind": "poll", "prompt": "Which approach meets the AE2 carry-over requirement?", "options": ["Start a completely unrelated project", "Develop an AE1 visualisation, dataset or visual idea and explain the changes", "Resubmit AE1 unchanged with a new title", "Use an AI tool to write the report"], "max": 1}, "notes": "Correct: develop an AE1 visualisation, dataset or visual idea and explain the changes. Give 20 seconds of private thinking, take the vote, then ask pairs to explain why the other choices do not meet the brief. If responses are split, return to Two assessments and explain the connecting arrow. AI use is prohibited on both assignments."},
-        {
-          type: 'split',
-          title: 'William Playfair & Abstract Data Space',
-          progressive: true,
-          bullets: [
-            'The 1801 Statistical Breviary: Published the earliest known pie chart showing the Turkish Empire’s landmass across Asia, Europe, and Africa.',
-            'Invention of Statistical Graphics: Playfair also invented the bar chart and line graph, breaking free from physical geography to plot abstract economic data.',
-            'Proportional Angle & Area: Early experiments in communicating part-to-whole relationships visually.'
-          ],
-          image: 'assets/lesson/ipdv/playfair-pie-1801.jpg',
-          imageFit: 'contain',
-          subtitle: 'William Playfair, Statistical Breviary (1801) · from the course slides',
-          notes: 'Before Playfair, charts were almost exclusively maps or astronomical diagrams tied to physical space. Playfair realized money, debt, and populations could be plotted as coordinates. The chart beside you is his own: England’s imports and exports, the first published time-series of economic data.'
-        },
-        {
-          type: 'content',
-          title: 'Timeline of Data Visualisation',
-          progressive: true,
-          bullets: [
-            'Pre-Historic & Antiquity: Cave paintings, tally sticks, and Roman road itineraries (Peutinger Table).',
-            '10th–17th Century: Celestial movement plots, Van Langren’s 1644 longitude error graphic.',
-            '18th–19th Century: Playfair’s statistical graphics, Minard’s Napoleon march flow map, Nightingale’s rose chart.',
-            '20th Century: Tukey’s Exploratory Data Analysis (EDA), Bertin’s Semiology of Graphics, Cleveland & McGill perception studies.',
-            'The Information Age: Interactive web graphics (D3, Observable), GPU rendering, real-time streaming dashboards.'
-          ],
-          notes: 'Point out John Tukey’s quote: "The greatest value of a picture is when it forces us to notice what we never expected to see." This sets up Anscombe’s Quartet.'
-        },
-        {
-          /* Its own slide, as it had in the course deck — five long bullets and
-             a picture do not fit one frame together. */
-          type: 'image',
-          image: 'assets/lesson/ipdv/tableau-chronologique-paris.jpg',
-          imageFit: 'contain',
-          design: { imageFrame: '3:2', capStyle: 'bar' },
-          title: 'Tableau chronologique de l’entretien du pavé de Paris',
-          subtitle: 'Paris pavement maintenance over time · from the course slides',
-          notes: 'A 19th-century multi-series time chart. Ask what is being compared before naming it — the shape reads long before the French does.'
-        },
-        {
-          type: 'image',
-          image: 'assets/lesson/ipdv/chart-type-grid.png',
-          imageFit: 'contain',
-          design: { imageFrame: '16:9', capStyle: 'bar' },
-          title: 'Chart Idioms & Multivariate Analysis',
-          subtitle: 'Selecting the right visual encoding for the analytical task.',
-          notes: 'Now we move from foundational principles to specific chart idioms and their appropriate use cases.'
-        },
-        {
-          type: 'split',
-          title: 'Sankey Diagrams',
-          progressive: true,
-          bullets: [
-            'Directed Flow Networks: Arrows and bands connecting two or more stages of nodes or processes.',
-            'Proportional Width: Link width is strictly proportional to the quantity of flow (energy, material, cost, traffic).',
-            'Conservation & Distribution: Immediately reveals where resources originate, branch, concentrate, or are lost.',
-            'Alternative to Bar or Flow Charts: Captures multi-stage transitions and system-wide allocation simultaneously.'
-          ],
-          image: 'assets/lesson/ipdv/sankey-income-spending.jpg',
-          imageFit: 'contain',
-          /* On the left because the deck logo sits top right, and this plate
-             carries its own title along the top edge — the two landed on each
-             other. The text half has a two-word heading and room to spare. */
-          imageSide: 'left',
-          subtitle: 'Income and spending Sankey · from the course slides',
-          notes: 'Sankey diagrams originated in thermodynamics (Capt. Matthew Sankey in 1898 showing steam engine energy efficiency). Widely used today in financial audits, user journey funnels, and supply chains. The diagram beside you is Sankey’s own, from the paper the idiom is named after.'
-        },
-        {
-          type: 'split',
-          image: 'assets/lesson/ipdv/likert-customer-survey.jpg',
-          imageFit: 'contain',
-          imageSide: 'right',
-          title: 'Specialized Idioms: Likert & Multi-Axis',
-          progressive: true,
-          bullets: [
-            'Likert Scale Display\tDiverging stacked bar charts showing agreement/disagreement levels centered around a neutral baseline.',
-            'Multi-Axis Line Chart\tPlots multiple data series with different units and scales on separate y-axes.',
-            'Dual-Axis Warning\tCaution: Arbitrary scaling can exaggerate or hide correlations. Often better to use small multiples or normalized indexing.'
-          ],
-          notes: 'Warn students about dual-axis charts: by stretching one axis, you can make two unrelated lines appear to correlate or cross at will.'
-        },
-        {
-          type: 'keywords',
-          title: 'Multivariate Idioms: Radar & Boxplots',
-          progressive: true,
-          bullets: [
-            'Radar Chart\tMultiple quantitative variables plotted on radial axes from a center point; useful for multivariate profile comparison.',
-            'Radar Trade-off\tAxis ordering influences enclosed polygon area, which can mislead viewers into perceiving overall size differences.',
-            'Box & Whisker Plot\tDisplays the 5-number summary: minimum, Q1 (25th), median (50th), Q3 (75th), and maximum, plus outliers.',
-            'Distributional Comparison\tCompact footprint allows side-by-side comparison of dozens of distributions across categories.'
-          ],
-          notes: 'Tukey invented the box plot in 1977. Point out the difference between the box (interquartile range IQR) and the whiskers (typically 1.5 * IQR).'
-        },
-        {
-          /* The two idioms as pictures, one after the other. They had a slide
-             each in the course deck; the text above keeps its own frame
-             because four definitions and a chart will not share one. */
-          type: 'gallery',
-          imageFit: 'contain',
-          design: { imageFrame: '16:9', capStyle: 'bar' },
-          layers: [
-            { image: 'assets/lesson/ipdv/radar-product-orders.jpg', caption: 'Radar chart',
-              source: 'Product orders by month — from the course slides' },
-            { image: 'assets/lesson/ipdv/box-whisker-age-groups.jpg', caption: 'Box and whisker plot',
-              source: 'Employee age by department — from the course slides' }
-          ],
-          title: 'Radar and Boxplot, side by side',
-          progressive: true,
-          notes: 'Reveal the radar first and ask what the enclosed area implies, then the boxplot and ask the same of the box. One misleads on area, the other does not.'
-        },
-        {
-          type: 'split',
-          image: 'assets/lesson/ipdv/different-charts-python-1.png',
-          imageFit: 'contain',
-          imageSide: 'right',
-          title: 'Modern Tooling: Python & AI Workflows',
-          progressive: true,
-          bullets: [
-            'Computational Libraries: Pandas for data wrangling; Matplotlib & Seaborn for static publication graphics; Altair & Plotly for interactive web charts.',
-            'Grammar of Graphics: Leland Wilkinson’s grammar underlying ggplot2 and Altair separates data, marks, scales, and coordinates.',
-            'Assessment rule: AI use is prohibited in both AE1 and AE2.',
-            'Critical Practitioner Rule: AI generates prototypes; the human practitioner applies the 4Ps, domain expertise, and ethical validation.'
-          ],
-          notes: 'Distinguish general discussion of AI tools from assignment permissions. AI use is prohibited in AE1 and AE2. Do not suggest students use AI to draft assessment code or reports.'
+          type: "image",
+          title: "Q & A",
+          body: "This night view shows Westminster Bridge and the Palace of Westminster beside the Thames.\nBright lights stand out against the dark sky and water.\nThe same contrast principle helps important marks stand out in a chart.",
+          subtitle: "Ask now, or bring it to the lab.",
+          notes: "Open the floor. If nothing comes, offer the two questions most groups ask: which chart do I start with, and how much cleaning counts as enough.",
+          image: "assets/lesson/ipdv/qa-london-night-1.jpg",
+          design: {
+            logoGround: "dark",
+            capStyle: "scrim",
+            capPos: "bottom",
+            imageMotion: "zoom"
+          }
         }
       ]
     },
@@ -711,6 +1209,7 @@
       blurb: 'A reference deck holding every layout in the layout picker, in the Northeastern theme. Page through it to see what each one does, then copy the slide you want into your own lesson.',
       minutes: 15,
       theme: 'northeastern',
+      org: 'Northeastern University London',
       logo: 'assets/brand/nu-london-logo.png',
       logoOn: 'all',
       logoSize: 'small',
@@ -932,6 +1431,10 @@
     if (!spec) return null;
     var deck = SF.makeDeck(spec.title);
     deck.theme = spec.theme || 'studio';
+    /* Carried like the logo fields below, and for the same reason: a lesson
+       that names its institution has to hand that to the deck, or the theme
+       prints nothing where the organisation line goes. */
+    if (spec.org) deck.org = spec.org;
     if (spec.logo) {
       deck.logo = spec.logo;
       deck.logoOn = spec.logoOn || 'all';

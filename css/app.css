@@ -541,6 +541,44 @@ html[data-ws="game"] #btnSorter { display: none; }
 .layout-section .accent-bar { margin: 34px auto 0; }
 
 /* bullets */
+/* ---------------------------------------------------------------- key fact
+
+   One thing set at a size nothing else competes with. Every other bullet
+   layout gives its points equal weight, which is right when they are equal and
+   wrong for a deadline or a threshold — the slide where the room only has to
+   leave with one number. The supporting points are deliberately smaller than
+   .layout-content's, because here they are footnotes to the fact above them. */
+.layout-keyfact .pad { justify-content: center; }
+.layout-keyfact .keyfact {
+  border-left: 10px solid var(--s-accent);
+  padding: 4px 0 8px 34px;
+  margin: 0 0 40px;
+}
+.layout-keyfact .keyfact-label {
+  font-size: 23px; line-height: 1.2; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--s-dim); margin-bottom: 16px;
+}
+.layout-keyfact .keyfact-value {
+  font-size: 78px; line-height: 1.05; font-weight: 700; letter-spacing: -.02em;
+  white-space: pre-wrap;
+}
+.layout-keyfact ul.keyfact-notes {
+  margin: 0; padding: 0; list-style: none;
+  display: flex; flex-direction: column; gap: 18px;
+}
+.layout-keyfact ul.keyfact-notes li {
+  font-size: 26px; line-height: 1.38; color: var(--s-dim);
+  padding-left: 34px; position: relative;
+}
+.layout-keyfact ul.keyfact-notes li::before {
+  content: ''; position: absolute; left: 4px; top: .58em;
+  width: 9px; height: 9px; border-radius: 50%; background: var(--s-dim);
+}
+/* A long fact wraps rather than overflowing: better a smaller headline than a
+   number sliced off at the edge of the screen. */
+.layout-keyfact .keyfact-value:not(:empty) { overflow-wrap: anywhere; }
+
 .layout-content ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 24px; }
 .layout-content li {
   font-size: 32px; line-height: 1.36;
@@ -600,6 +638,52 @@ html[data-ws="game"] #btnSorter { display: none; }
   line-height: 1.4;
   padding: 20px;
 }
+
+/* Optional picture on each card — same index as the bullet. Four reading
+   covers or four discovery plates sit above their copy without fighting the
+   number badge. */
+.layout-cards ul.has-card-pics > li {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 16px;
+}
+.layout-cards ul.has-card-pics > li::before {
+  top: 16px;
+}
+.layout-cards .card-pic {
+  flex: none;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  max-height: 210px;
+  border-radius: 10px;
+  background: var(--s-card) center / cover no-repeat;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--s-fg) 12%, transparent);
+}
+.layout-cards ul:not(.cards-stack):has(> li:nth-child(4)) .card-pic {
+  max-height: 168px;
+}
+/* Discovery / scientific plates: show the whole figure instead of crop-as-cover. */
+.layout-cards ul.has-card-plates .card-pic {
+  aspect-ratio: 4 / 3;
+  max-height: 148px;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+.layout-cards .card-copy {
+  flex: 1;
+  min-width: 0;
+}
+.layout-cards .card-copy .card-label,
+.layout-cards .card-copy strong.card-label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.layout-cards .card-copy .card-body {
+  display: block;
+  opacity: .92;
+}
 .layout-cards ul:not(.cards-stack):has(> li:nth-child(5)) {
   grid-template-columns: repeat(3, 1fr);
 }
@@ -629,6 +713,18 @@ html[data-ws="game"] #btnSorter { display: none; }
    showing behind it. The grid puts every card in the same cell; the transform
    fans the finished ones up and back. Needs a build to mean anything, so
    choosing it turns Build on Next on. */
+/* Rows: one card per line, full width, as tall as its own words need. The
+   choice is about the shape of the content — three labelled definitions want
+   width to read along, three short phrases are happier side by side. */
+.layout-cards ul:not(.cards-stack).cards-rows {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  grid-template-columns: none;
+}
+.layout-cards ul:not(.cards-stack).cards-rows > li { width: 100%; }
+
 .layout-cards ul.cards-stack {
   display: grid;
   grid-template-columns: minmax(0, 640px);
@@ -812,7 +908,205 @@ html[data-ws="game"] #btnSorter { display: none; }
 .layout-gallery .fig:has(~ .fig:not(.step-hidden)) .fig-cap { opacity: 0; }
 .layout-gallery .fig.step-hidden { transform: translateY(36px) scale(.95); }
 
+/* Full bleed gallery — no imageFrame. Picture fills the slide; caption sits
+   on it the same way as a full-bleed image slide. The stack still fans past
+   layers so build-on-next keeps its pile. */
+.layout-gallery .pad.img-bleed {
+  padding: 0;
+  position: relative;
+}
+.layout-gallery .pad.img-bleed .fig-stack {
+  position: absolute;
+  inset: 0;
+  display: block;
+  perspective: 1600px;
+}
+.layout-gallery .pad.img-bleed .fig {
+  position: absolute;
+  inset: 0;
+  max-width: none;
+  max-height: none;
+  gap: 0;
+}
+.layout-gallery .pad.img-bleed .fig .img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  aspect-ratio: auto;
+  border-radius: 0;
+  box-shadow: 0 18px 44px rgba(0,0,0,.28);
+}
+.layout-gallery .pad.img-bleed .fig .img.contain {
+  background-color: #0b1220;
+}
+.layout-gallery .pad.img-bleed .fig-cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  max-width: none;
+  text-align: left;
+  padding: 100px 92px 56px;
+  color: #fff;
+  pointer-events: none;
+}
+.layout-gallery .pad.img-bleed .fig-cap .cap-line {
+  font-size: 44px;
+  font-weight: 650;
+  line-height: 1.14;
+}
+.layout-gallery .pad.img-bleed .fig-cap .cap-credit {
+  margin-top: 12px;
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: .82;
+}
+.layout-gallery .pad.img-bleed .fig-cap.cap-scrim {
+  background: linear-gradient(transparent, rgba(0,0,0,.82));
+}
+.layout-gallery .pad.img-bleed .fig-cap.cap-bar {
+  padding: 34px 92px 38px;
+  background: var(--s-accent);
+  border-radius: 0;
+}
+.layout-gallery .pad.img-bleed .fig-cap.cap-bar .cap-credit {
+  color: #fff;
+  opacity: .85;
+}
+.layout-gallery .pad.img-bleed .fig-cap.cap-plain {
+  background: none;
+  text-shadow: 0 2px 18px rgba(0,0,0,.75), 0 1px 2px rgba(0,0,0,.9);
+}
+.layout-gallery .pad.img-bleed .fig-cap.cap-top {
+  top: 0;
+  bottom: auto;
+  order: 0;
+}
+.layout-gallery .pad.img-bleed .fig-cap.cap-scrim.cap-top {
+  background: linear-gradient(rgba(0,0,0,.82), transparent);
+  padding: 56px 92px 100px;
+}
+
 /* keywords — bold term, lowercase definition */
+/* The worked answer, revealed after the room has had its go. Set apart from
+   the task above it rather than styled as another row, because it answers the
+   slide instead of continuing it. */
+.model-answer {
+  margin-top: 26px;
+  padding: 20px 26px;
+  border-left: 8px solid var(--s-accent);
+  background: color-mix(in srgb, var(--s-accent) 9%, transparent);
+  border-radius: 0 8px 8px 0;
+}
+.model-answer-label {
+  font-size: 17px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--s-dim); margin-bottom: 8px;
+}
+.model-answer-body { font-size: 25px; line-height: 1.38; }
+
+/* A model answer is a second block on a slide that already carries a task, so
+   the task tightens to make room for it. Without this the list — which can
+   flex-shrink — was squeezed to half its content height and the rows printed
+   straight over the answer, which looks like a rendering fault rather than a
+   slide with too much on it. `flex: none` is the part that matters: better an
+   honest overflow than silent overlap. */
+/* The card: task on the front, worked answer on the back. It behaves the same
+   in the editor as in the show, because the image-facts card next door does,
+   and a control that means two different things in two places is worse than no
+   control. Editing the answer is the inspector's job either way. */
+.flip { position: relative; perspective: 1800px; min-height: 0; }
+.flip-face {
+  min-height: 0;
+  backface-visibility: hidden;
+  transition: transform .5s cubic-bezier(.3, 0, .2, 1), opacity .5s;
+}
+.flip-back {
+  position: absolute; inset: 0;
+  transform: rotateY(180deg); opacity: 0;
+  display: flex; align-items: center;
+}
+.flipped .flip-front { transform: rotateY(180deg); opacity: 0; }
+.flipped .flip-back { transform: rotateY(360deg); opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .flip-face { transition-duration: 1ms; }
+}
+
+/* Same corner, same size, same shape as .image-facts-toggle. One flip control
+   in the app, not two that look like different features. */
+.flip-toggle {
+  position: absolute;
+  left: 28px;
+  top: 24px;
+  z-index: 9;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--s-fg) 22%, transparent);
+  background: color-mix(in srgb, var(--s-bg) 82%, transparent);
+  color: var(--s-fg);
+  font: 600 22px/1 system-ui, sans-serif;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.flip-toggle:hover {
+  background: var(--s-accent);
+  border-color: var(--s-accent);
+  color: #fff;
+}
+.flip-toggle:focus-visible { outline: 3px solid var(--s-accent); outline-offset: 3px; }
+.flip-toggle[aria-expanded="true"] {
+  background: var(--s-accent);
+  border-color: var(--s-accent);
+  color: #fff;
+}
+
+/* Turned over, the answer is the only thing on the slide, so it gets the slide.
+   No compaction anywhere: the two faces never share the height. */
+.flip-back .model-answer {
+  width: 100%;
+  padding: 34px 44px;
+  border-left-width: 12px;
+  border-radius: 0 14px 14px 0;
+}
+/* A draft never reaches the room: it is library copy about another subject
+   until the author has made it theirs. Loud in the editor, absent in the show. */
+#player .model-answer-draft { display: none; }
+.model-answer-draft {
+  margin-top: 22px;
+  border-left-style: dashed;
+  border-left-color: var(--s-dim);
+  background: color-mix(in srgb, var(--s-dim) 10%, transparent);
+}
+.model-answer-draft .model-answer-label { color: var(--s-dim); }
+.model-answer-draft .model-answer-body { font-size: 24px; opacity: .75; }
+
+/* An activity that needs things in the room says so before it is chosen. */
+.activity-kit {
+  display: block;
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  line-height: 1.35;
+  color: #8a5416;
+}
+.activity-card.needs-kit { border-color: color-mix(in srgb, #8a5416 35%, transparent); }
+
+.model-answer-label { font-size: 22px; margin-bottom: 18px; }
+.model-answer-body { font-size: 40px; line-height: 1.36; }
+
+
 .layout-keywords .kw-list {
   display: flex; flex-direction: column; gap: 22px; margin: 0; min-height: 0;
 }
@@ -1007,10 +1301,26 @@ html[data-ws="game"] #btnSorter { display: none; }
 #previewBox.railed .layout-join .join-pin { font-size: 56px; }
 
 /* image */
-.layout-image .pad { padding: 0; position: relative; }
+.layout-image .pad { padding: 0; position: relative; overflow: hidden; }
 .layout-image .img { position: absolute; inset: 0; background-position: center; background-repeat: no-repeat; }
 .layout-image .img.cover { background-size: cover; }
 .layout-image .img.contain { background-size: contain; }
+
+/* Slow Ken Burns zoom — projector only, so the editor preview does not keep
+   restarting the motion on every redraw. Origin comes from Image focus. */
+@keyframes sf-img-zoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.12); }
+}
+#player .layout-image .img.img-motion-zoom {
+  animation: sf-img-zoom 24s ease-out forwards;
+  transform-origin: var(--img-fx, 50%) var(--img-fy, 50%);
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  #player .layout-image .img.img-motion-zoom { animation: none; }
+}
+
 /* video — the image layout's frame, with a real player in it.
    The caption rules are shared with .layout-image rather than copied: they
    are the same overlay doing the same job, and the last time a caption was
@@ -1019,6 +1329,14 @@ html[data-ws="game"] #btnSorter { display: none; }
 .layout-video .vid {
   position: absolute; inset: 0; width: 100%; height: 100%;
   background: #000; border: 0; display: block;
+}
+/* object-fit means nothing to an iframe; the embedded player letterboxes the
+   clip itself, which is what we want either way. */
+.layout-video iframe.vid-embed { object-fit: unset; background: #000; }
+.layout-video .vid-embed-note {
+  position: absolute; left: 0; right: 0; bottom: 18%;
+  text-align: center; font-size: 17px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--s-dim);
 }
 .layout-video .vid.cover { object-fit: cover; }
 .layout-video .vid.contain { object-fit: contain; }
@@ -1071,6 +1389,19 @@ html[data-ws="game"] #btnSorter { display: none; }
 /* Scrim: the default. A gradient reads over any photograph, which is why it
    is what an author gets without choosing. */
 .layout-image .cap-scrim { background: linear-gradient(transparent, rgba(0,0,0,.82)); }
+
+/* A caption that gets out of the way. Scoped to the player because in the
+   editor a caption that disappeared while you were writing it would read as a
+   bug, and the presenter window keeps its copy so the speaker can still see
+   what the room is looking at. `:not(.step-hidden)` makes a build behave: the
+   clock starts when the caption is revealed, not when the slide is drawn. */
+@keyframes sf-cap-clear { to { opacity: 0; visibility: hidden; } }
+#player .layout-image .cap.cap-fade:not(.step-hidden) {
+  animation: sf-cap-clear 900ms ease var(--sf-cap-fade, 10s) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  #player .layout-image .cap.cap-fade:not(.step-hidden) { animation-duration: 1ms; }
+}
 
 /* Bar: a solid band in the deck's own accent. Crisper than a gradient where
    the image runs to a hard edge — charts, screenshots, diagrams. */
@@ -1164,6 +1495,10 @@ html[data-ws="game"] #btnSorter { display: none; }
 /* A split image credits its source in the corner of the picture, small. The
    heading is already doing the talking on that slide. */
 .split-media { position: relative; }
+/* Edge to edge: no mount, no inset, no tinted ground. The picture gets the
+   whole half it was given. */
+.split-media.split-media-full { background: none; }
+.split-media.split-media-full .img { inset: 0; border-radius: 0; box-shadow: none; }
 .split-media .cap {
   position: absolute; left: 0; right: 0; bottom: 0;
   padding: 44px 28px 16px;
@@ -1386,6 +1721,10 @@ html[data-ws="game"] #btnSorter { display: none; }
    else that scales a slide down. */
 .variant-frame .slide { transform-origin: 0 0; }
 .variant-name { font-size: 10px; color: var(--ui-dim); line-height: 1.2; }
+/* A starter leads with the shape, so the frame takes the space the icon used
+   to and the words sit beneath it. */
+.starter-card .starter-frame { margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.14); }
+.starter-card .activity-icon { display: none; }
 .variant-card:hover .variant-name { color: var(--ui-text); }
 
 /* theme picker — real slides, scaled down, so a theme is chosen by looking */
@@ -1537,6 +1876,32 @@ html[data-ws="game"] #btnSorter { display: none; }
   max-width: 180px;
   object-fit: contain;
 }
+
+/* The reverse lockup, made rather than supplied. brightness(0) crushes every
+   colour to black and invert(1) lifts it to white, so the result is a clean
+   white silhouette with the original anti-aliasing intact — which inverting
+   the pixels would not give, and which works for any deck's logo rather than
+   only the one this repo happens to ship.
+
+   The corner-swap further up was the earlier answer to this ("a deck's logo
+   may be light or dark, and inverting it would fix one and ruin the other").
+   That holds for a blanket rule; it does not hold when the theme is the thing
+   deciding, because a theme knows which of its own grounds are dark. */
+.slide.logo-reverse .slide-logo img { filter: brightness(0) invert(1); }
+.slide.logo-reverse.layout-image .slide-logo img {
+  filter: brightness(0) invert(1) drop-shadow(0 1px 8px rgba(0,0,0,.55));
+}
+
+/* Themes that are dark on every slide. `:not(.logo-normal)` leaves a way out
+   for a deck whose own logo is already white. */
+.theme-midnight .slide:not(.logo-normal) .slide-logo img,
+.theme-ocean .slide:not(.logo-normal) .slide-logo img,
+.theme-ember .slide:not(.logo-normal) .slide-logo img,
+.theme-mono .slide:not(.logo-normal) .slide-logo img,
+.slide.theme-midnight:not(.logo-normal) .slide-logo img,
+.slide.theme-ocean:not(.logo-normal) .slide-logo img,
+.slide.theme-ember:not(.logo-normal) .slide-logo img,
+.slide.theme-mono:not(.logo-normal) .slide-logo img { filter: brightness(0) invert(1); }
 .layout-title .slide-logo,
 .layout-section .slide-logo {
   top: 36px;
@@ -1730,10 +2095,28 @@ html[data-ws="game"] #btnSorter { display: none; }
 .opt.locked { cursor: default; }
 
 /* countdown */
-.layout-quiz .clock {
+.layout-quiz .clock,
+.slide > .clock.slide-clock {
   position: absolute; right: 46px; top: 40px;
   width: 84px; height: 84px;
 }
+.slide > .clock.slide-clock svg { transform: rotate(-90deg); }
+.slide > .clock.slide-clock .ring-bg { stroke: var(--s-rule); }
+.slide > .clock.slide-clock .ring {
+  stroke: var(--s-accent);
+  transition: stroke-dashoffset .3s linear, stroke .3s;
+}
+/* A minute's warning, not five seconds': an activity needs long enough to start
+   wrapping up, which is a different urgency from a quiz question. */
+.slide > .clock.slide-clock.hurry .ring,
+.slide > .clock.slide-clock.done .ring { stroke: #ff5f6d; }
+.slide > .clock.slide-clock.done .n { color: #ff5f6d; }
+.slide > .clock.slide-clock .n {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+/* The logo sits in that corner too, so a timed slide moves it clear. */
+.slide.has-clock > .slide-logo { right: 150px; }
 .layout-quiz .clock svg { transform: rotate(-90deg); }
 .layout-quiz .clock .ring-bg { stroke: var(--s-rule); }
 .layout-quiz .clock .ring { stroke: var(--s-accent); transition: stroke-dashoffset .95s linear, stroke .3s; }
@@ -4559,3 +4942,42 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
 .deck-viewport.railed .mindmap-node span { font-size: 17px; }
 .deck-viewport.railed .mindmap-centre { min-height: 140px; padding: 12px; }
 .deck-viewport.railed .mindmap-centre h2 { font-size: 28px; }
+.image-facts-back { position:absolute; inset:0; z-index:8; padding:90px 100px 110px; background:var(--s-bg); color:var(--s-fg); overflow:auto; }
+.image-facts-back[hidden] { display:none; }
+.slide .image-facts-back h2 { font-size:44px; margin-bottom:36px; }
+.image-facts-back p { font-size:28px; line-height:1.45; max-width:900px; }
+/* Same flip glyph as the editor’s text/image swap (⇄), quiet chrome on the plate. */
+.image-facts-toggle {
+  position: absolute;
+  left: 28px;
+  top: 24px;
+  z-index: 9;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--s-fg) 22%, transparent);
+  background: color-mix(in srgb, var(--s-bg) 82%, transparent);
+  color: var(--s-fg);
+  font: 600 22px/1 system-ui, sans-serif;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.image-facts-toggle:hover {
+  background: var(--s-accent);
+  border-color: var(--s-accent);
+  color: #fff;
+}
+.image-facts-toggle:focus-visible {
+  outline: 3px solid var(--s-accent);
+  outline-offset: 3px;
+}
+.image-facts-toggle[aria-expanded="true"] {
+  background: var(--s-accent);
+  border-color: var(--s-accent);
+  color: #fff;
+}
