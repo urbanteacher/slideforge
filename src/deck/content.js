@@ -260,6 +260,60 @@ function histogramBins(values, want) {
   return bins;
 }
 
+/**
+ * One person on a people/structure slide: "Name | Role | Reports to | photo".
+ *
+ * Tab or pipe separated like every other pasted field here. Reports-to is a
+ * name rather than an index, so reordering the lines cannot silently reassign
+ * who works for whom — the commonest way a hand-maintained org chart goes
+ * quietly wrong.
+ */
+function parsePerson(line) {
+  var raw = String(line == null ? '' : line);
+  var cells = (raw.indexOf('\t') !== -1 ? raw.split('\t') : raw.split('|'))
+    .map(function (c) { return c.trim(); });
+  return { name: cells[0] || '', role: cells[1] || '', boss: cells[2] || '', photo: safeMedia(cells[3] || '') };
+}
+
+/**
+ * People arranged by who reports to whom.
+ *
+ * A name nobody reports to is a root, and there may be several — a slide
+ * showing four directors side by side is a perfectly ordinary team slide,
+ * and forcing a single head would invent a hierarchy the author did not
+ * write. A manager who is named but not listed is treated as absent rather
+ * than conjured, so a typo produces an extra root instead of a ghost box.
+ */
+function orgTree(lines) {
+  var people = (lines || []).map(parsePerson).filter(function (p) { return p.name; });
+  var byName = {};
+  people.forEach(function (p) { byName[p.name.toLowerCase()] = p; p.reports = []; });
+  var roots = [];
+  people.forEach(function (p) {
+    var boss = p.boss && byName[p.boss.toLowerCase()];
+    /* Self-reference and a two-person loop both end here rather than in the
+       renderer's recursion. */
+    if (boss && boss !== p) boss.reports.push(p); else roots.push(p);
+  });
+  /* Two people reporting to each other leaves nobody at the top, and a tree
+     with no root draws nothing at all — a blank slide where the author put
+     six names. A cycle means the hierarchy cannot be inferred, not that
+     there are no people, so they are shown as a flat row instead. */
+  if (!roots.length && people.length) {
+    people.forEach(function (p) { p.reports = []; });
+    roots = people.slice();
+  }
+  /* Depth is capped by the people count, so a cycle deeper in the chain
+     cannot make the walk run forever. */
+  function depth(p, seen, d) {
+    if (d > people.length) return d;
+    return p.reports.reduce(function (m, c) {
+      return seen.indexOf(c) >= 0 ? m : Math.max(m, depth(c, seen.concat([p]), d + 1));
+    }, d);
+  }
+  return { roots: roots, people: people, levels: roots.reduce(function (m, r) { return Math.max(m, depth(r, [], 1)); }, 0) };
+}
+
 /** Pair pits (keywords / italics / links) store "Lead\tdefinition". Also accepts "Lead: def" when pasted. */
 function parseKeywordLine(line) {
   var s = String(line == null ? '' : line);
@@ -338,6 +392,8 @@ function safeMedia(url) {
 var SLIDE_TYPES = {
   journey:     { label: 'Journey / handover', icon: '↝', deck: true, pits: 6, group: 'explain',
                  starters: [{ title: 'Journey / handover', blurb: 'Connect milestones, course topics or stages of a project.' }] },
+  orgchart:    { label: 'People & structure', icon: '⛬', deck: true, pits: 12, group: 'explain',
+                 starters: [{ title: 'Team or org chart', blurb: 'Who reports to whom, with headshots. Also draws a flat team as one row.' }] },
   mindmap:     { label: 'Mind map', icon: '✣', deck: true, pits: 6, group: 'explain',
                  starters: [{ title: 'Mind map', blurb: 'One central idea, connected branches, revealed as you teach.' }] },
   introduction:{ label: 'Lecturer introduction', icon: '◎', deck: true, group: 'introduce',
@@ -505,4 +561,4 @@ function correctAnswerLabel(slide) {
 }
 
 
-export { chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, chartNumber, SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };
+export { parsePerson, orgTree, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, chartNumber, SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };
