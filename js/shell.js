@@ -704,40 +704,53 @@
     var btnDemo = $('btnDemoLesson');
     if (btnDemo) btnDemo.onclick = openDemoLesson;
 
-    /* The two things that go wrong between a working app and a working
-       lecture, neither of which is a bug and both of which look like one
+    /* Lecture setup — the things that go wrong between a working app and a
+       working lecture, none of which is a bug and all of which look like one
        from the back of the room.
 
-       A hosted free instance sleeps when nobody has used it, and the first
-       request after that waits the better part of a minute — which is the
-       moment the first phone scans the code. And a browser restores the deck
-       it had last time, so a laptop that opened the lesson before the app was
-       updated keeps showing the older copy, with nothing on screen to say so.
+       Deliberately not under the document cog: none of this is a property of
+       the deck, and a panel that mixes "what this lesson looks like" with
+       "is the server awake" teaches nobody where to look. Not under File
+       either — none of it is a file.
 
-       Both are one click, and neither belongs in the middle of teaching. */
+       The addresses listed are the ones the app can work out for itself.
+       Accounts and dashboards are not here on purpose: they are personal to
+       whoever deployed this, they need a login anyway, and baking somebody's
+       admin URLs into a page every student can open is a habit worth not
+       starting. Nothing secret is ever put on this page. */
     var btnReady = $('btnLectureReady');
     if (btnReady) {
       btnReady.onclick = function () {
         if (active.flush) active.flush();
-        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
-        if (menu) menu.open = false;
 
-        /* Which ready-made lesson the open deck came from, if any. A deck does
-           not record the lesson that built it, so the title is the only link
-           back — good enough to offer the refresh, and it simply is not
+        function hosted() {
+          return (location.protocol === 'http:' || location.protocol === 'https:') &&
+            !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+        }
+
+        /* Which ready-made lesson the open deck came from, if any. A deck
+           does not record the lesson that built it, so the title is the only
+           link back — enough to offer the reload, and it simply is not
            offered when nothing matches rather than guessing. */
         function lessonBehind() {
           var doc = active.doc();
           if (!doc || active.key !== 'deck') return null;
-          var hit = (SF.LESSONS || []).filter(function (l) { return l.title === doc.title; })[0];
-          return hit || null;
+          return (SF.LESSONS || []).filter(function (l) { return l.title === doc.title; })[0] || null;
+        }
+
+        function savedCount() {
+          try {
+            var raw = JSON.parse(localStorage.getItem('slideforge.decks.v1') || '[]');
+            return (Array.isArray(raw) ? raw : Object.values(raw)).length;
+          } catch (e) { return 0; }
         }
 
         picker({
-          title: 'Before the lecture',
+          title: 'Lecture setup',
+          wide: true,
           items: function () {
             var items = [];
-            if (servedByRelay() && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) {
+            if (hosted()) {
               items.push({ id: 'wake', title: 'Wake the server',
                 blurb: 'A hosted free instance sleeps when idle and takes about a minute to answer the first request. Waking it now means the first phone to scan does not wait.' });
             }
@@ -747,16 +760,29 @@
                 blurb: 'This browser may be showing a copy it saved earlier. Rebuilds the lesson as the app now ships it — ' +
                   (lesson.slides || []).length + ' slides. Your current copy stays in File → Open.' });
             }
+            var n = savedCount();
+            if (n) {
+              items.push({ id: 'wipe', title: 'Clear everything saved in this browser',
+                blurb: 'Deletes all ' + n + ' saved ' + (n === 1 ? 'document' : 'documents') +
+                  ' from this browser, including any you wrote yourself. Anything you have exported to a file is untouched. Asks first.' });
+            }
+            items.push({ id: 'open:' + location.origin + '/join.html',
+              title: 'The join page, as a student sees it',
+              blurb: location.host + '/join.html — open it on a phone to check the room can reach you.' });
+            items.push({ id: 'open:' + location.origin + '/',
+              title: 'This app’s address',
+              blurb: location.host + ' — the address to type if the code will not scan.' });
             return items;
           },
-          empty: 'Nothing to check: this lesson is your own, and the app is running from this machine.',
           describe: function (it) { return it.blurb; },
           onPick: function (it) {
+            if (it.id.indexOf('open:') === 0) { window.open(it.id.slice(5), '_blank', 'noopener'); return; }
+
             if (it.id === 'wake') {
               var began = Date.now();
               SF.toast('Waking the server…');
-              /* Any answer means it is up; a 404 would wake it just as well as
-                 a 200. Only a refusal is worth reporting as a failure. */
+              /* Any answer means it is up; a 404 would wake it as well as a
+                 200. Only a refusal is worth reporting as a failure. */
               fetch(location.origin + '/?wake=' + began, { cache: 'no-store' })
                 .then(function () {
                   var secs = Math.round((Date.now() - began) / 100) / 10;
@@ -767,98 +793,46 @@
                 .catch(function () { SF.toast('Could not reach the server. Check the connection before class.'); });
               return;
             }
+
             if (it.id === 'refresh') {
               var lesson = lessonBehind();
               if (!lesson) return;
               SF.Editor.useLesson(lesson.key);
               SF.toast('“' + lesson.title + '” reloaded from this version of the app. Your previous copy is in File → Open.');
+              return;
+            }
+
+            if (it.id === 'wipe') {
+              var n = savedCount();
+              SF.ask({
+                title: 'Clear everything saved in this browser?',
+                detail: 'All ' + n + ' saved ' + (n === 1 ? 'document' : 'documents') +
+                  ' will be deleted from this browser, including any you wrote yourself. This cannot be undone. ' +
+                  'Files you have exported are not affected. If you only want the newest version of a ready-made lesson, ' +
+                  'close this and use the reload option instead — it keeps your work.',
+                confirm: 'Delete them',
+                danger: true
+              }, function () {
+                /** @type {string[]} */
+                var keys = [];
+                for (var i = 0; i < localStorage.length; i++) {
+                  var k0 = localStorage.key(i);
+                  if (k0) keys.push(k0);
+                }
+                keys.filter(function (k) {
+                  return k && (k.indexOf('slideforge.decks') === 0 || k.indexOf('slideforge.games') === 0 ||
+                    k.indexOf('slideforge.lastDeck') === 0 || k.indexOf('slideforge.lastGame') === 0 ||
+                    k === 'slideforge.presentation' || k === 'slideforge.workspace' ||
+                    k.indexOf('slideforge.selection.') === 0);
+                }).forEach(function (k) { localStorage.removeItem(k); });
+                location.href = location.origin + '/?_=' + Date.now();
+              });
             }
           }
         });
       };
     }
-    var btnExport = $('btnExport');
-    if (btnExport) {
-      btnExport.onclick = function () {
-        var doc = active.doc();
-        var served = servedByRelay();
-        var items = [
-          { id: 'one', title: 'This ' + (active.key === 'deck' ? 'presentation' : 'game'),
-            blurb: 'Downloads "' + doc.title + '" as a single file.' }
-        ];
-        if (active.key === 'deck') {
-          items.push({ id: 'pdf', title: 'Student PDF handout', blurb: 'Printable slides: all reveals shown, stacks separated, no private notes or live results.' });
-          items.push({
-            id: 'md',
-            title: 'Practice notes (.md)',
-            blurb: 'Markdown for Canvas or Colab — prompts and content only, not the live room.'
-          });
-        }
-        items.push({
-          id: 'bundle', title: 'Everything, as one file',
-          blurb: 'Downloads every presentation and game together as a backup.'
-        });
-        if (served) {
-          items.splice(active.key === 'deck' ? 2 : 1, 0, {
-            id: 'folder', title: 'Everything, into the app folder',
-            blurb: 'Writes each one to data/ next to the app, so the folder is self-contained and can be committed.'
-          });
-        }
-        picker({
-          title: 'Export',
-          items: function () { return items; },
-          describe: function (it) { return it.blurb; },
-          onPick: function (it) {
-            if (it.id === 'one') return exportDoc();
-            if (it.id === 'md') return exportMarkdown();
-            if (it.id === 'pdf') { if (active.flush) active.flush(); return SF.Print.open(active.doc()); }
-            if (it.id === 'folder') return exportAllToFolder();
-            exportBundle();
-          }
-        });
-      };
-    }
-    var btnImport = $('btnImport');
-    if (btnImport) {
-      btnImport.onclick = function () {
-        if (!servedByRelay()) {
-          var fi = $('fileInput');
-          if (fi) fi.click();
-          return;
-        }
-        picker({
-          title: 'Import',
-          items: function () {
-            return [
-              { id: 'file', title: 'From a file',
-                blurb: 'Pick a .sfdeck.json, .sfgame.json or backup file.' },
-              { id: 'folder', title: 'From the app folder',
-                blurb: 'Restore everything previously written to data/.' }
-            ];
-          },
-          describe: function (it) { return it.blurb; },
-          onPick: function (it) {
-            if (it.id === 'folder') return restoreFromFolder();
-            var fi = $('fileInput');
-            if (fi) fi.click();
-          }
-        });
-      };
-    }
-    var fileInput = $('fileInput');
-    if (fileInput) fileInput.addEventListener('change', importDoc);
-    var btnHelp = $('btnHelp');
-    if (btnHelp) {
-      btnHelp.onclick = function () {
-        var cheats = $('cheats');
-        if (cheats) cheats.classList.add('on');
-      };
-    }
 
-    /* One Settings button beside File, forwarded to whichever engine is
-       active. It used to be two \u2014 a game-only button over in the actions
-       group, and nothing at all for a presentation, so a lesson looked as
-       though it had no document-wide settings to change. */
     var btnSettings = $('btnSettings');
     if (btnSettings) {
       btnSettings.onclick = function () {
