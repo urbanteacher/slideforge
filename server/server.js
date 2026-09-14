@@ -93,10 +93,27 @@ const MAX_DOC = 8 * 1024 * 1024;          // embedded images make decks large
 
    It is still not private. A link that escapes is a deck that escaped, which
    is what "anyone with the link" means wherever it is offered — so the app
-   says that rather than implying otherwise. */
-const SHARE_DIR = path.join(ROOT, '.slideforge', 'shares');
+   says that rather than implying otherwise.
+
+   Persistence matches sessions: default is under the app tree (ephemeral on
+   a free container deploy). Point SLIDEFORGE_DATA_DIR or SLIDEFORGE_SHARE_DIR
+   at a mounted disk so shares survive the next release. */
+const SHARE_DIR = path.resolve(
+  process.env.SLIDEFORGE_SHARE_DIR ||
+  (process.env.SLIDEFORGE_DATA_DIR
+    ? path.join(process.env.SLIDEFORGE_DATA_DIR, 'shares')
+    : path.join(ROOT, '.slideforge', 'shares'))
+);
 const SHARE_ID = /^[a-f0-9]{32}$/;
 const SHARE_MAX = 40;                     // a lecturer's shelf, not a CDN
+
+/* True when the share shelf is outside the app tree — i.e. almost certainly
+   a persistent volume rather than the container image that deploys wipe. */
+function shareIsDurable() {
+  const root = path.resolve(ROOT);
+  const dir = path.resolve(SHARE_DIR);
+  return dir !== root && !dir.startsWith(root + path.sep);
+}
 
 function shareCreate(req, res) {
   let body = '';
@@ -130,7 +147,7 @@ function shareCreate(req, res) {
       fs.writeFileSync(path.join(SHARE_DIR, id + '.json'),
         JSON.stringify({ key, at: Date.now(), doc }), { mode: 0o600 });
       log('shared "' + String(doc.title || 'untitled').slice(0, 60) + '" as ' + id);
-      return jsonReply(res, 200, { id, key });
+      return jsonReply(res, 200, { id, key, durable: shareIsDurable() });
     } catch (e) {
       return jsonReply(res, 500, { error: 'Could not store the shared copy.' });
     }

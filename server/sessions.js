@@ -3,7 +3,12 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const DIR = path.resolve(process.env.SLIDEFORGE_SESSION_DIR || path.join(__dirname, '..', '.slideforge', 'sessions'));
+const DIR = path.resolve(
+  process.env.SLIDEFORGE_SESSION_DIR ||
+  (process.env.SLIDEFORGE_DATA_DIR
+    ? path.join(process.env.SLIDEFORGE_DATA_DIR, 'sessions')
+    : path.join(__dirname, '..', '.slideforge', 'sessions'))
+);
 const ID = /^[a-f0-9-]{36}$/;
 const digest = token => crypto.createHash('sha256').update(String(token)).digest();
 function write(file, value, flags) {

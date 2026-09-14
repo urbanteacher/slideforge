@@ -51,7 +51,9 @@ missing slides, not as a stale deck.
 - **Export is the durable copy.** Browser storage is easy to lose.
 - **Hosted sessions do not survive a deploy.** Attendance and results are written
   to the container filesystem and are gone at the next release unless a
-  persistent disk is attached — see `render.yaml`.
+  persistent disk is attached. Set `SLIDEFORGE_DATA_DIR` (or
+  `SLIDEFORGE_SESSION_DIR` / `SLIDEFORGE_SHARE_DIR`) to a path on that disk.
+  Share links use the same bargain and tell you which one you are on.
 
 Full caveats in [Known limits](#known-limits).
 
@@ -1295,6 +1297,9 @@ they were.
   `http://localhost:8787`. Use Export/Import to move between them.
 - The live relay has no authentication. Anyone who can reach the port and guess
   a PIN can join. It's built for a room on a trusted network, not the internet.
+- View-only share links and session journals live on the server filesystem.
+  Default paths sit under the app tree, so a free-tier container wipe on deploy
+  removes them. Point `SLIDEFORGE_DATA_DIR` at a persistent volume to keep both.
 - Deleting a game that a presentation embeds leaves that slide marked MISSING —
   the show skips it with a warning rather than failing.
 - The Q&A queue does not deduplicate. If two people ask the same thing you see
