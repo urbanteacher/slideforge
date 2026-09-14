@@ -130,6 +130,15 @@ const AI_WINDOW_MS = 60 * 1000;
 const AI_MAX_PER_WINDOW = 20;
 const aiHits = new Map();
 
+/* What the provider said last time we actually asked it. A key being present
+   is not the same as a key that works: a wrong model name, a project without
+   the API enabled, or a revoked key all fail at the first real call and not
+   before. Reporting "available" from the mere presence of a key is how a
+   lecturer finds out mid-class. Remembering the last upstream refusal costs
+   nothing and no quota, and lets the status say so. Cleared by the next call
+   that succeeds, so a transient outage un-sticks itself. */
+let aiLastFailure = null;    // { status, at } | null
+
 /* Who to count against. On a LAN the socket's own address is the client. Behind
    a platform's proxy it is the proxy, so every teacher in the building shares
    one bucket and the first impatient tab locks out the rest — hence the
@@ -194,8 +203,10 @@ function aiGenerate(req, res) {
       if (!upstream.ok) {
         /* The upstream body can quote the key back in an error. Only the
            status travels onward. */
+        aiLastFailure = { status: upstream.status, at: Date.now() };
         return jsonReply(res, 502, { error: 'AI provider returned ' + upstream.status });
       }
+      aiLastFailure = null;
       const data = await upstream.json();
       const part = data && data.candidates && data.candidates[0] &&
         data.candidates[0].content && data.candidates[0].content.parts &&
@@ -276,7 +287,18 @@ function serve(req, res) {
 
   /* Says only whether live generation is available, never the key itself. */
   if (rel === '/api/ai/status' && req.method === 'GET') {
-    return jsonReply(res, 200, { available: !!AI_KEY, model: AI_KEY ? AI_MODEL : null });
+    if (!AI_KEY) return jsonReply(res, 200, { available: false, model: null });
+    /* Only a refusal about the request itself is held against the key: 401,
+       403 and 404 mean this key cannot call this model and will not start
+       working on its own. A 429 or a 5xx is the provider having a moment, and
+       saying "unavailable" for that would be its own kind of lie. */
+    const hard = aiLastFailure &&
+      [400, 401, 403, 404].includes(aiLastFailure.status);
+    return jsonReply(res, 200, {
+      available: !hard,
+      model: AI_MODEL,
+      lastError: hard ? aiLastFailure.status : null
+    });
   }
   if (rel === '/api/ai/generate' && req.method === 'POST') return aiGenerate(req, res);
 

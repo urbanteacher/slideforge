@@ -34,6 +34,14 @@ services:
       # its offline heuristics rather than failing.
       - key: GEMINI_API_KEY
         sync: false
+      # A moving alias rather than a pinned version. Keys issued in the newer
+      # AQ. format do not resolve the pinned aliases the server defaulted to
+      # (gemini-2.5-flash), and the provider answers 404 for the model rather
+      # than 401 for the key — so the failure reads as "model missing" when
+      # nothing is missing at all. The moving alias is what such a key is
+      # expected to call, and it survives the next model rename too.
+      - key: GEMINI_MODEL
+        value: gemini-flash-latest
 
       # Attendance and live-session journals are written under .slideforge/,
       # which on the free plan is a container filesystem and is discarded at
