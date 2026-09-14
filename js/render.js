@@ -37,6 +37,14 @@
     return node;
   }
 
+  /** Seconds as a clock reads them. The quiz counts bare seconds because its
+      questions are twenty seconds long; an activity is ten minutes, where "600"
+      tells nobody anything. */
+  function clockFace(secs) {
+    var whole = Math.max(0, Math.ceil(secs));
+    return Math.floor(whole / 60) + ':' + String(whole % 60).padStart(2, '0');
+  }
+
   function ring(size, stroke, frac, extraClass) {
     var r = (size - stroke) / 2;
     var c = 2 * Math.PI * r;
@@ -148,6 +156,16 @@
   function layoutContent(slide, pad) {
     if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
     var ul = el('ul');
+    /* Keywords, links and split all show a dim prompt when their pits are
+       empty; this one rendered three invisible list items instead, so a fresh
+       bullets or cards slide looked like a rendering failure. */
+    var anyText = (slide.bullets || []).some(function (b) { return String(b || '').trim(); });
+    if (!anyText) {
+      var hint = el('li', 'dim', 'Add points in the inspector');
+      ul.appendChild(hint);
+      pad.appendChild(ul);
+      return;
+    }
     /* Stacked cards: every card in the same spot, the one being talked about
        in front, the ones already made peeking out behind it. Five things get
        five moments instead of competing for the same glance, and the pile
@@ -157,13 +175,42 @@
     if (slide.type === 'cards' && (slide.design || {}).cardsMode === 'stack') {
       ul.classList.add('cards-stack');
     }
+    /* Rows rather than columns. Three cards side by side give each one about a
+       third of the slide to wrap in, which is fine for three words and cruel to
+       a definition — the column gets so narrow that the label breaks up ("Rule
+       / of / thumb") and the whole thing reads as one card with three columns
+       rather than three cards. Down the slide instead, each card gets the full
+       width and only as much height as it needs. */
+    if (slide.type === 'cards' && (slide.design || {}).cardsMode === 'rows') {
+      ul.classList.add('cards-rows');
+    }
+    var pics = slide.type === 'cards' ? (slide.images || []) : [];
+    if (pics.some(Boolean)) {
+      ul.classList.add('has-card-pics');
+      /* Maps and scientific plates need landscape + contain; book covers keep 3:4 cover. */
+      if ((slide.design || {}).cardPics === 'plates') ul.classList.add('has-card-plates');
+    }
     var lines = (slide.bullets || []).map(function(text,index){return {text:text,index:index};}).filter(function (b) { return String(b.text).trim(); });
     lines.forEach(function (item) {
       var line=item.text;
-      var li = asStep(rich('li', bulletTier(line) === 2 ? 'tier-2' : null, slide, 'bullets.' + item.index, bulletText(line)), slide);
-      if (slide.activity && slide.type === 'cards' && line.indexOf('\t') >= 0) {
+      var li;
+      if (slide.type === 'cards' && line.indexOf('\t') >= 0) {
         var pair = SF.parseKeywordLine(line);
-        li.replaceChildren(el('strong', 'activity-card-label', pair.term), el('span', 'activity-card-copy', pair.def));
+        li = asStep(el('li', bulletTier(line) === 2 ? 'tier-2' : null), slide);
+        li.appendChild(el('strong', slide.activity ? 'activity-card-label' : 'card-label', pair.term));
+        li.appendChild(el('span', slide.activity ? 'activity-card-copy' : 'card-body', pair.def));
+      } else {
+        li = asStep(rich('li', bulletTier(line) === 2 ? 'tier-2' : null, slide, 'bullets.' + item.index, bulletText(line)), slide);
+      }
+      var src = pics[item.index];
+      if (src) {
+        var pic = el('div', 'card-pic');
+        pic.style.backgroundImage = 'url("' + String(src).replace(/"/g, '&quot;') + '")';
+        pic.setAttribute('aria-hidden', 'true');
+        var copy = el('div', 'card-copy');
+        while (li.firstChild) copy.appendChild(li.firstChild);
+        li.appendChild(pic);
+        li.appendChild(copy);
       }
       ul.appendChild(li);
     });
@@ -189,7 +236,46 @@
         list.appendChild(row);
       });
     }
-    pad.appendChild(list);
+    var answer = modelAnswerBox(slide);
+    if (!answer) { pad.appendChild(list); return; }
+    /* A draft answer makes no card. It sits under the task where the author
+       will meet it while editing, and the stylesheet keeps it off the wall —
+       so there is nothing for the clock to turn over and nothing for a room to
+       read until somebody has rewritten it. */
+    if (slide.modelAnswerDraft) {
+      pad.appendChild(list);
+      pad.appendChild(answer);
+      return;
+    }
+    /* Task on the front, worked answer on the back. The room should be looking
+       at the task for the whole of the activity, so the answer is not merely
+       further down the slide — it is behind it, and turning the card over is a
+       deliberate act that happens when the time is up. */
+    var flip = el('div', 'flip');
+    var front = el('div', 'flip-face flip-front');
+    var back = el('div', 'flip-face flip-back');
+    front.appendChild(list);
+    back.appendChild(answer);
+    flip.appendChild(front);
+    flip.appendChild(back);
+    pad.appendChild(flip);
+  }
+
+  /* What a good answer looks like, on the screen rather than only in the
+     speaker notes. An activity that asks the room to attempt something owes
+     them a worked answer afterwards; leaving it in the notes means the lecturer
+     has it and the room does not. Added last and as a build step, so it is
+     always the final press: the attempt has to happen before the answer can. */
+  function modelAnswerBox(slide) {
+    var text = String(slide.modelAnswer || '').trim();
+    if (!text) return null;
+    var draft = !!slide.modelAnswerDraft;
+    var box = el('div', 'model-answer' + (draft ? ' model-answer-draft' : ''));
+    box.appendChild(el('div', 'model-answer-label', draft
+      ? 'Draft from the activity library — rewrite this for your lesson'
+      : 'What a good answer looks like'));
+    box.appendChild(rich('div', 'model-answer-body', slide, 'modelAnswer', text));
+    return box;
   }
 
   /* Italic phrase + plain gloss — emphasis without a formatting ribbon. */
@@ -278,6 +364,18 @@
     return 'cap-' + style + (d.capPos === 'top' ? ' cap-top' : '');
   }
 
+  /* Seconds a caption stays on the picture before clearing itself off it, or 0
+     for never. A full-bleed photograph is partly hidden by its own caption —
+     fine while it is being introduced, a nuisance once the room is looking at
+     the thing itself. Off unless asked for: a caption that vanishes on its own
+     is a choice the author should make deliberately, not discover in front of
+     a room. Capped, because a caption that leaves after five minutes has not
+     left. */
+  function capFade(slide) {
+    var secs = Number((slide.design || {}).capFade);
+    return secs > 0 ? Math.min(120, secs) : 0;
+  }
+
   /* A picture either fills the slide and lets the caption sit on top of it, or
      it takes a shape of its own and the caption sits clear below. Full bleed
      is right for a photograph; a chart wants a frame, because a caption bar
@@ -289,24 +387,54 @@
     return Object.prototype.hasOwnProperty.call(IMAGE_FRAMES, want) ? want : '';
   }
 
-  function layoutImage(slide, pad) {
+  function layoutImage(slide, pad, opts) {
+    var facts = String(slide.body || '').trim();
     var frame = imageFrame(slide);
     if (frame) {
       pad.classList.add('img-framed');
       pad.style.setProperty('--img-ar', IMAGE_FRAMES[frame]);
     }
     if (slide.image) {
-      var img = el('div', 'img ' + (slide.imageFit === 'contain' ? 'contain' : 'cover'));
+      var motion = (slide.design || {}).imageMotion === 'zoom' ? ' img-motion-zoom' : '';
+      var img = el('div', 'img ' + (slide.imageFit === 'contain' ? 'contain' : 'cover') + motion);
       img.style.backgroundImage = 'url("' + String(slide.image).replace(/"/g, '&quot;') + '")';
       /* An image slide has nothing to build but the image, so Build on Next
          here means one thing: the room gets asked before it gets shown. */
       asStep(img, slide);
       pad.appendChild(img);
+      if (facts && (!opts || opts.chrome !== false)) {
+        var back = el('div', 'image-facts-back');
+        back.hidden = true;
+        back.appendChild(el('h2', null, slide.title || 'Behind the image'));
+        facts.split(/\n/).filter(function (line) { return line.trim(); }).forEach(function (line) {
+          back.appendChild(el('p', null, line));
+        });
+        var flip = el('button', 'image-facts-toggle', '\u21c4');
+        flip.type = 'button';
+        flip.title = 'Flip to facts';
+        flip.setAttribute('aria-label', 'Flip to facts');
+        flip.setAttribute('aria-expanded', 'false');
+        flip.onclick = function (event) {
+          event.stopPropagation();
+          back.hidden = !back.hidden;
+          var showingFacts = !back.hidden;
+          flip.title = showingFacts ? 'Back to image' : 'Flip to facts';
+          flip.setAttribute('aria-label', flip.title);
+          flip.setAttribute('aria-expanded', String(showingFacts));
+        };
+        pad.appendChild(back);
+        pad.appendChild(flip);
+      }
       /* Caption and credit travel together as one step: the credit answers
          "says who?" about the caption, so revealing them apart would leave a
          claim on screen with its source still hidden. */
       if (slide.title || slide.subtitle) {
-        var box = asStep(el('div', 'cap ' + capClass(slide)), slide);
+        var fade = capFade(slide);
+        var box = asStep(el('div', 'cap ' + capClass(slide) + (fade ? ' cap-fade' : '')), slide);
+        /* The clock is the delay on a CSS animation rather than a timer here,
+           so it needs no cleanup and restarts by itself every time the slide
+           is drawn — including when a build reveals the caption late. */
+        if (fade) box.style.setProperty('--sf-cap-fade', fade + 's');
         if (slide.title) box.appendChild(rich('div', 'cap-line', slide, 'title', slide.title));
         if (slide.subtitle) box.appendChild(rich('div', 'cap-credit', slide, 'subtitle', slide.subtitle));
         pad.appendChild(box);
@@ -322,9 +450,14 @@
   /* An image stack: several pictures in one place, each in front of the last.
      Five charts get five moments instead of five thumbnails competing for the
      same glance, and the pile behind shows how far through the set the room
-     is. Same --depth mechanic as the stacked cards. */
+     is. Same --depth mechanic as the stacked cards. Empty imageFrame = full
+     bleed (caption over the picture), matching the Design panel and image
+     slides; a set ratio frames the figure with the caption below. */
   function layoutGallery(slide, pad) {
-    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
+    var frame = imageFrame(slide);
+    var bleed = !frame;
+    if (bleed) pad.classList.add('img-bleed');
+    if (slide.title && !bleed) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
     var layers = (slide.layers || []).filter(function (l) { return l && l.image; });
     if (!layers.length) {
       var e = el('div', 'empty');
@@ -334,7 +467,7 @@
       return;
     }
     var stack = el('div', 'fig-stack');
-    if (frameRatio(slide)) stack.style.setProperty('--img-ar', frameRatio(slide));
+    if (frame) stack.style.setProperty('--img-ar', IMAGE_FRAMES[frame]);
     layers.forEach(function (layer) {
       var fig = asStep(el('figure', 'fig'), slide);
       var img = el('div', 'img ' + (slide.imageFit === 'contain' ? 'contain' : 'cover'));
@@ -349,11 +482,6 @@
       stack.appendChild(fig);
     });
     pad.appendChild(stack);
-  }
-
-  function frameRatio(slide) {
-    var want = imageFrame(slide);
-    return want ? IMAGE_FRAMES[want] : '';
   }
 
   /* ------------------------------------------------------------- charts */
@@ -701,6 +829,63 @@
      dozen <video> elements in a sidebar is a dozen decoders; the editor's
      preview gets real controls so a clip can be checked while authoring; and
      only the projector is allowed to start on its own. */
+  /* YouTube and Vimeo hand out a watch page, not a media file, so a <video>
+     element can never play one — paste a youtube.com/watch link into the video
+     field and you get a broken player with no clue why. Both publish an embed
+     form that is designed to be framed, so the fix is to recognise the link and
+     render an iframe instead.
+
+     youtube-nocookie.com rather than youtube.com: same player, but it sets no
+     tracking cookie until the video is actually played, which is the right
+     default for a room of students who did not choose to be there. */
+  function videoEmbed(slide) {
+    var raw = String(slide.video || '').trim();
+    if (!raw) return '';
+    var u;
+    try { u = new URL(raw, 'https://x.invalid'); } catch (e) { return ''; }
+    var host = u.hostname.toLowerCase(), id = '', base = '';
+    if (/(^|\.)youtu\.be$/.test(host)) {
+      id = u.pathname.slice(1).split('/')[0];
+    } else if (/(^|\.)youtube(-nocookie)?\.com$/.test(host)) {
+      if (u.pathname === '/watch') id = u.searchParams.get('v') || '';
+      else {
+        var m = u.pathname.match(/^\/(?:embed|v|shorts|live)\/([^/?#]+)/);
+        id = m ? m[1] : '';
+      }
+    } else if (/(^|\.)vimeo\.com$/.test(host)) {
+      var vm = u.pathname.match(/\/(\d+)/);
+      id = vm ? vm[1] : '';
+      base = 'https://player.vimeo.com/video/';
+    }
+    if (!id || !/^[A-Za-z0-9_-]+$/.test(id)) return '';
+    var vimeo = !!base;
+    base = base || 'https://www.youtube-nocookie.com/embed/';
+    /* "Share at current time" is how a link like this usually arrives, so the
+       t= or #t= already in it counts as the start unless the slide overrides.
+       YouTube writes 90, 1m30s or 90s depending on where you copied from. */
+    var start = Number(slide.videoStart) > 0 ? Math.floor(slide.videoStart) : 0;
+    if (!start) {
+      var t = u.searchParams.get('t') || u.searchParams.get('start') ||
+        (u.hash.indexOf('t=') === 1 ? u.hash.slice(3) : '');
+      var hms = String(t).match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/);
+      if (hms && (hms[1] || hms[2] || hms[3])) {
+        start = (+(hms[1] || 0)) * 3600 + (+(hms[2] || 0)) * 60 + (+(hms[3] || 0));
+      }
+    }
+    var q = [];
+    /* rel=0 matters in a lecture: without it the clip ends on a grid of
+       somebody else's videos, in front of the room. */
+    if (!vimeo) q.push('rel=0', 'modestbranding=1', 'playsinline=1');
+    if (start > 0) q.push((vimeo ? '#t=' : 'start=') + start + (vimeo ? 's' : ''));
+    if (slide.videoMuted) q.push(vimeo ? 'muted=1' : 'mute=1');
+    /* Autoplay is only honoured when muted, on both services. */
+    if (slide.videoAutoplay) q.push('autoplay=1');
+    if (slide.videoLoop) q.push(vimeo ? 'loop=1' : 'loop=1&playlist=' + id);
+    var hash = q.filter(function (p) { return p.charAt(0) === '#'; })[0] || '';
+    var search = q.filter(function (p) { return p.charAt(0) !== '#'; }).join('&');
+    return base + id + (search ? '?' + search : '') + hash;
+  }
+
   function layoutVideo(slide, pad, opts) {
     opts = opts || {};
     var fit = slide.imageFit === 'contain' ? 'contain' : 'cover';
@@ -722,6 +907,36 @@
       }
       still.appendChild(el('div', 'vid-badge', '\u25b6'));
       pad.appendChild(still);
+      if (slide.title) pad.appendChild(rich('div', 'cap', slide, 'title', slide.title));
+      return;
+    }
+
+    var embed = videoEmbed(slide);
+    if (embed && !opts.interactive) {
+      /* The editor gets a still, not a dead frame. Loading the real player
+         beside the inspector would start somebody's clip while they typed,
+         and an empty iframe is just a black rectangle that explains nothing. */
+      var mute = el('div', 'img ' + fit + ' vid-embed-still');
+      if (slide.videoPoster) {
+        mute.style.backgroundImage = 'url("' + slide.videoPoster.replace(/"/g, '&quot;') + '")';
+      } else {
+        mute.classList.add('vid-blank');
+      }
+      mute.appendChild(el('div', 'vid-badge', '\u25b6'));
+      mute.appendChild(el('div', 'vid-embed-note', 'Embedded video · plays in the show'));
+      pad.appendChild(mute);
+      if (slide.title) pad.appendChild(rich('div', 'cap', slide, 'title', slide.title));
+      return;
+    }
+    if (embed) {
+      var frame = el('iframe', 'vid vid-embed ' + fit);
+      frame.src = embed;
+      frame.setAttribute('title', slide.title || 'Embedded video');
+      frame.setAttribute('allow', 'accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen');
+      frame.setAttribute('allowfullscreen', '');
+      frame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+      frame.setAttribute('loading', 'lazy');
+      pad.appendChild(frame);
       if (slide.title) pad.appendChild(rich('div', 'cap', slide, 'title', slide.title));
       return;
     }
@@ -773,7 +988,13 @@
     }
     copy.appendChild(ul);
 
-    var media = el('div', 'split-media');
+    /* The themed mount — an inset white card floating on a tinted ground — is
+       right for a photograph or a scanned plate, which need something to sit
+       on. It is wrong for a chart that already arrives on white: the card is
+       invisible against it and the inset just makes the chart smaller inside a
+       coloured frame that means nothing. So the mount is a choice. */
+    var media = el('div', 'split-media' +
+      ((slide.design || {}).mediaGround === 'full' ? ' split-media-full' : ''));
     if (slide.image) {
       var img = el('div', 'img ' + (slide.imageFit === 'contain' ? 'contain' : 'cover'));
       img.style.backgroundImage = 'url("' + String(slide.image).replace(/"/g, '&quot;') + '")';
@@ -1807,6 +2028,33 @@
     pad.appendChild(hero);
   }
 
+  /* One thing matters more than the rest of the slide, so it is set at a size
+     nothing else on the slide competes with, and everything else is demoted to
+     support it. Every other bullet layout gives its points equal weight, which
+     is right when they are equal and wrong for a deadline, a threshold or the
+     one rule the room has to leave with.
+
+     `body` carries the fact and `subtitle` labels it, because a bare number is
+     not a fact — "12:00" means nothing without "Canvas deadline" above it. */
+  function layoutKeyFact(slide, pad) {
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
+    var hero = el('div', 'keyfact');
+    if (slide.subtitle) hero.appendChild(rich('div', 'keyfact-label', slide, 'subtitle', slide.subtitle));
+    hero.appendChild(rich('div', 'keyfact-value', slide, 'body', slide.body || ''));
+    /* The fact is never a build step. It is the reason the slide exists, so it
+       is on screen the moment the slide is, and the supporting points arrive
+       after it if the author is revealing them one at a time. */
+    pad.appendChild(hero);
+    var points = (slide.bullets || []).filter(function (b) { return String(b || '').trim(); });
+    if (points.length) {
+      var ul = el('ul', 'keyfact-notes');
+      points.forEach(function (b, i) {
+        ul.appendChild(asStep(rich('li', null, slide, 'bullets.' + i, b), slide));
+      });
+      pad.appendChild(ul);
+    }
+  }
+
   var LAYOUTS = {
     journey: layoutJourney,
     mindmap: layoutMindmap,
@@ -1815,6 +2063,7 @@
     section: layoutSection,
     content: layoutContent,
     cards: layoutContent,
+    keyfact: layoutKeyFact,
     keywords: layoutKeywords,
     italics: layoutItalics,
     links: layoutLinks,
@@ -1885,13 +2134,19 @@
         art.innerHTML = '<div class="nu-skyline"></div><div class="nu-n"></div>';
         /* The title slide names the course, so the heading is free to name the
            lecture — which is what the room actually needs to read. The lockup
-           in the corner already says which university this is, so repeating it
-           here would only spend the line twice. Section slides have no course
-           line of their own, so there it stays the institution. */
-        var eyebrow = el('div', 'nu-eyebrow',
-          slide.type === 'title' ? (deck.title || 'Northeastern University London')
-                                 : 'Northeastern University London');
-        art.appendChild(eyebrow);
+           in the corner already says whose deck this is, so repeating it here
+           would only spend the line twice. Section slides have no course line
+           of their own, so there it falls back to the organisation.
+
+           That organisation used to be the string "Northeastern University
+           London", written into the renderer twice and printed on every
+           section slide whatever deck it was — so a second institution using
+           this theme got somebody else's name on their slides. It comes off
+           the deck now, and an unnamed deck simply has no eyebrow rather than
+           borrowing one. */
+        var org = String(deck.org || '').trim();
+        var line = slide.type === 'title' ? (deck.title || org) : org;
+        if (line) art.appendChild(el('div', 'nu-eyebrow', line));
       }
       if (art) {
         art.setAttribute('aria-hidden', 'true');
@@ -1917,6 +2172,16 @@
       img.alt = '';
       img.draggable = false;
       logo.appendChild(img);
+      /* Three voices, narrowest wins. The slide knows about its own
+         photograph, the deck knows about its own logo, and the theme knows
+         which of its grounds are dark — so the slide overrides the deck, and
+         the deck overrides the theme. */
+      var ground = (slide.design || {}).logoGround;
+      var reverse = deck.logoReverse;
+      if (ground === 'dark') root.classList.add('logo-reverse');
+      else if (ground === 'light') root.classList.add('logo-normal');
+      else if (reverse === 'always') root.classList.add('logo-reverse');
+      else if (reverse === 'never') root.classList.add('logo-normal');
       root.appendChild(logo);
     }
     if (opts.chrome !== false && opts.total > 1 && opts.index != null) {
@@ -1926,6 +2191,40 @@
       track.appendChild(i);
       root.appendChild(track);
     }
+
+    /* A timed activity gets the same countdown the quiz has. The quiz builds
+       its own inside layoutQuiz, because there the clock has to clear the
+       question block; anywhere else it can hang off the slide. Drawn whenever a
+       time limit is set — including in the editor, where it shows the length
+       you chose — and it is the player that makes it move. */
+    if (slide.timeLimit > 0 && !root.querySelector('.clock')) {
+      var timed = el('div', 'clock slide-clock');
+      timed.appendChild(ring(84, 8, 1));
+      timed.appendChild(el('div', 'n', clockFace(slide.timeLimit)));
+      timed.setAttribute('aria-hidden', 'true');
+      root.appendChild(timed);
+      root.classList.add('has-clock');
+    }
+
+    /* The teacher's own control over the card. The clock turns it at zero, but
+       a room that finishes early should not have to wait for a timer, and one
+       that needs another minute should be able to turn it back. */
+    if (root.querySelector('.flip') && !slide.modelAnswerDraft) {
+      var swap = el('button', 'flip-toggle', '⇄');
+      swap.type = 'button';
+      swap.title = 'Show the model answer';
+      swap.setAttribute('aria-label', 'Turn the card over to the model answer');
+      swap.setAttribute('aria-expanded', 'false');
+      swap.onclick = function (e) {
+        e.stopPropagation();
+        var on = root.classList.toggle('flipped');
+        swap.title = on ? 'Back to the task' : 'Show the model answer';
+        swap.setAttribute('aria-label', on ? 'Turn the card back to the task' : 'Turn the card over to the model answer');
+        swap.setAttribute('aria-expanded', String(on));
+      };
+      root.appendChild(swap);
+    }
+
     return root;
   }
 
@@ -2907,6 +3206,8 @@
   Object.assign(global.SF, {
     renderSlide: renderSlide,
     fit: fit,
+    clockFace: clockFace,
+    videoEmbed: videoEmbed,
     letterbox: letterbox,
     ring: ring,
     scoreRail: scoreRail,

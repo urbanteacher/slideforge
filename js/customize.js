@@ -141,6 +141,8 @@
       var x=Number.isFinite(d.focalX)?Math.max(0,Math.min(100,d.focalX)):50;
       var y=Number.isFinite(d.focalY)?Math.max(0,Math.min(100,d.focalY)):50;
       img.style.backgroundPosition=x+'% '+y+'%';
+      img.style.setProperty('--img-fx', x + '%');
+      img.style.setProperty('--img-fy', y + '%');
     });
   }
   var expanded=new Set();
@@ -149,7 +151,7 @@
     box.open=expanded.has(s.id);box.ontoggle=function(){if(box.open)expanded.add(s.id);else expanded.delete(s.id);};
     var summary=document.createElement('summary'); summary.textContent='Customise this slide'; box.appendChild(summary);
     var d=s.design || (s.design={});
-    function choose(label,key,opts,fallback){box.appendChild(UI.field(label,UI.select(opts.map(function(x){return {value:String(x[0]),label:x[1]};}),String(d[key]||fallback),function(v){d[key]=key==='imageShare'?Number(v):v;change();})));}
+    function choose(label,key,opts,fallback){box.appendChild(UI.field(label,UI.select(opts.map(function(x){return {value:String(x[0]),label:x[1]};}),String(d[key]||fallback),function(v){d[key]=(key==='imageShare'||key==='capFade')?Number(v):v;change();})));}
     choose('Text alignment','align',[['left','Left'],['center','Centre'],['right','Right']],'left');
     choose('Text size','size',[['small','Small'],['medium','Theme default'],['large','Large']],'medium');
     var fg=document.createElement('input');fg.type='color';fg.value=color(d.textColor)||'#243422';fg.onchange=function(){d.textColor=fg.value;change();};
@@ -162,6 +164,10 @@
         {value:'top',label:'Above text'},{value:'bottom',label:'Below text'}
       ],SF.imagePlacement(s),function(v){SF.setImagePlacement(s,v);change();})));
       choose('Image share','imageShare',[[35,'35% image'],[50,'50% image'],[65,'65% image']],50);
+      choose('Picture mount','mediaGround',[
+        ['card','On a card — for photographs and plates'],
+        ['full','Edge to edge — for charts already on white']
+      ],'card');
       choose('Image arrives','imageStep',[
         ['none','With the slide'],
         ['before','On a press, before the points'],
@@ -171,8 +177,9 @@
     if(s.type==='cards'){
       box.appendChild(UI.field('Cards layout',UI.select([
         {value:'grid',label:'Side by side'},
+        {value:'rows',label:'Rows down the slide — full width each'},
         {value:'stack',label:'Stacked — one in front, the rest behind'}
-      ],d.cardsMode==='stack'?'stack':'grid',function(v){
+      ],d.cardsMode==='stack'?'stack':d.cardsMode==='rows'?'rows':'grid',function(v){
         d.cardsMode=v;
         /* A stack with everything already on screen is just a pile. Choosing
            it turns the build on; going back to a row leaves it alone, since
@@ -180,6 +187,32 @@
         if(v==='stack'){s.progressive=true;s.buildMode='dim';}
         change();
       }),'Each card gets its own moment, with the ones already covered showing behind.'));
+    }
+    if(s.activity){
+      var ma=document.createElement('textarea');ma.rows=3;ma.value=s.modelAnswer||'';
+      ma.placeholder='A worked answer the room sees after their attempt…';
+      /* Typing in it is the confirmation: the draft flag exists to catch copy
+         nobody has looked at, and somebody who has edited it has looked at it. */
+      ma.oninput=function(){s.modelAnswer=ma.value;if(s.modelAnswerDraft)delete s.modelAnswerDraft;change();};
+      box.appendChild(UI.field('Model answer',ma,
+        'Turned over when the timer runs out, or by the ⇄ on the slide. Leave it empty for none — but an activity that asks for an attempt usually owes one.'));
+      if(s.modelAnswerDraft){
+        box.appendChild(SF.el('p','hint field-warn',
+          'This answer came from the activity library and is written about another subject. '+
+          'It will not be shown to the room until you rewrite it, or accept it as it stands.'));
+        box.appendChild(UI.button('Use this answer as written','ghost',function(){
+          delete s.modelAnswerDraft;change();
+        }));
+      }
+    }
+    /* Only worth asking where the answer is not already obvious from the
+       theme: a picture slide's ground is whatever picture is on it. */
+    if(s.type==='image'||s.type==='gallery'||s.type==='video'){
+      choose('Logo sits on','logoGround',[
+        ['','Let the theme decide'],
+        ['dark','A dark background — show the logo white'],
+        ['light','A light background — keep the logo as it is']
+      ],'');
     }
     if(s.type==='image'||s.type==='gallery'){
       choose('Image frame','imageFrame',[
@@ -199,6 +232,23 @@
         ['none','Hide the caption']
       ],'scrim');
       if(s.type==='image'||s.type==='gallery') choose('Caption position','capPos',[['bottom','Bottom'],['top','Top']],'bottom');
+      /* Only the full-bleed picture slide: it is the one whose caption covers
+         the thing the room is being asked to look at. */
+      if(s.type==='image') choose('Caption clears itself','capFade',[
+        [0,'Stays on the picture'],
+        [5,'After 5 seconds'],
+        [10,'After 10 seconds'],
+        [15,'After 15 seconds'],
+        [20,'After 20 seconds'],
+        [30,'After 30 seconds']
+      ],0);
+      if(s.type==='image') box.appendChild(UI.field('Image motion',UI.select([
+        {value:'',label:'Stays still'},
+        {value:'zoom',label:'Slow zoom in'}
+      ],d.imageMotion==='zoom'?'zoom':'',function(v){
+        if(v==='zoom') d.imageMotion='zoom'; else delete d.imageMotion;
+        change();
+      }),'On the projector only. Zooms toward the Image focus point below.'));
     }
     if(s.type==='split'||s.type==='image') ['X','Y'].forEach(function(axis){
       var r=document.createElement('input');r.type='range';r.min='0';r.max='100';r.value=d['focal'+axis]==null?50:d['focal'+axis];r.onchange=function(){d['focal'+axis]=Number(r.value);change();};box.appendChild(UI.field('Image focus '+(axis==='X'?'horizontal':'vertical'),r));

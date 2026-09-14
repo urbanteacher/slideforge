@@ -152,6 +152,37 @@
 .theme-northeastern.layout-title .nu-n { color: var(--nu-red); opacity: .92; }
 .theme-northeastern.layout-title .nu-skyline { opacity: .34; }
 
+/* Title date: a quiet stamp under the thesis line, not another headline. */
+.theme-northeastern.layout-title .slide-date {
+  margin-top: 28px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: #7fa6c6;
+}
+
+/* A soft lift so the room meets the question before the syllabus. */
+@keyframes nu-title-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.theme-northeastern.layout-title .accent-bar,
+.theme-northeastern.layout-title h1,
+.theme-northeastern.layout-title .sub,
+.theme-northeastern.layout-title .slide-date {
+  animation: nu-title-rise .7s cubic-bezier(.2,.75,.2,1) both;
+}
+.theme-northeastern.layout-title h1 { animation-delay: .08s; }
+.theme-northeastern.layout-title .sub { animation-delay: .18s; }
+.theme-northeastern.layout-title .slide-date { animation-delay: .28s; }
+@media (prefers-reduced-motion: reduce) {
+  .theme-northeastern.layout-title .accent-bar,
+  .theme-northeastern.layout-title h1,
+  .theme-northeastern.layout-title .sub,
+  .theme-northeastern.layout-title .slide-date { animation: none; }
+}
+
 /* ---------------------------------------------------------- section breaks */
 
 /* Full red. These are the moments the room looks up, so they get the loudest
@@ -232,6 +263,17 @@
   margin-bottom: 38px;
 }
 
+/* The fact takes the university red and the squared-off marker the rest of
+   this theme uses; the label above it takes navy so the two do not shout
+   together. */
+.theme-northeastern.layout-keyfact .keyfact { border-left-color: var(--nu-red); }
+.theme-northeastern.layout-keyfact .keyfact-label { color: var(--nu-navy); opacity: .75; }
+.theme-northeastern.layout-keyfact .keyfact-value { color: var(--nu-navy); }
+.theme-northeastern.layout-keyfact ul.keyfact-notes li { font-size: 27px; line-height: 1.42; }
+.theme-northeastern.layout-keyfact ul.keyfact-notes li::before {
+  border-radius: 0; width: 9px; height: 9px; background: var(--nu-red); opacity: .55;
+}
+
 .theme-northeastern.layout-content li { font-size: 30px; line-height: 1.42; }
 .theme-northeastern.layout-content li::before {
   border-radius: 0;
@@ -272,6 +314,41 @@
   color: var(--nu-navy);
   opacity: .5;
 }
+/* A card whose text is a "label<tab>definition" pair has three children — the
+   number, the label and the body — and the flex row above laid all three out
+   as columns. That is why a narrow card broke its own label up the screen. The
+   label belongs above the words it names, so those cards switch to a grid with
+   the number beside a two-row column. */
+.theme-northeastern.layout-cards li:has(> .card-label) {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 13px;
+  row-gap: 5px;
+  align-items: baseline;
+}
+.theme-northeastern.layout-cards li:has(> .card-label)::before { grid-column: 1; grid-row: 1; }
+.theme-northeastern.layout-cards li > .card-label { grid-column: 2; display: block; font-weight: 700; }
+.theme-northeastern.layout-cards li > .card-body { grid-column: 2; display: block; opacity: .92; }
+
+/* Given a whole row, the label can sit beside its definition instead of above
+   it, which is the shape a glossary actually wants. */
+.theme-northeastern.layout-cards ul.cards-rows > li:has(> .card-label) {
+  grid-template-columns: auto minmax(150px, 210px) 1fr;
+  column-gap: 20px;
+  row-gap: 0;
+  padding: 18px 24px;
+}
+.theme-northeastern.layout-cards ul.cards-rows > li:has(> .card-label) > .card-label { grid-column: 2; grid-row: 1; }
+.theme-northeastern.layout-cards ul.cards-rows > li:has(> .card-label) > .card-body { grid-column: 3; grid-row: 1; }
+
+/* Navy title, red section breaks and the navy quote: the three grounds this
+   theme paints dark. The black-text lockup disappeared into all of them. */
+.theme-northeastern.layout-title:not(.logo-normal) .slide-logo img,
+.theme-northeastern.layout-section:not(.logo-normal) .slide-logo img,
+.theme-northeastern.layout-quote:not(.logo-normal) .slide-logo img {
+  filter: brightness(0) invert(1);
+}
+
 .theme-northeastern.layout-cards li:nth-child(4n+1) { border-left-color: var(--nu-red); }
 .theme-northeastern.layout-cards li:nth-child(4n+2) { border-left-color: var(--nu-sky); }
 .theme-northeastern.layout-cards li:nth-child(4n+3) { border-left-color: var(--nu-sage); }
@@ -280,6 +357,36 @@
 .theme-northeastern.layout-cards li:nth-child(4n+2)::before { color: var(--nu-sky); }
 .theme-northeastern.layout-cards li:nth-child(4n+3)::before { color: var(--nu-sage); }
 .theme-northeastern.layout-cards li:nth-child(4n+4)::before { color: var(--nu-orange); }
+
+/* Picture cards stack the cover above the copy; the side number stays on the
+   left of the whole stack rather than baseline-aligned with the first line. */
+.theme-northeastern.layout-cards ul.has-card-pics > li {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 16px 18px 18px;
+}
+.theme-northeastern.layout-cards ul.has-card-pics > li::before {
+  align-self: flex-start;
+}
+.theme-northeastern.layout-cards .card-pic {
+  background-color: #f4f6f8;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(12, 51, 84, .1);
+}
+.theme-northeastern.layout-cards ul.has-card-plates .card-pic {
+  background-color: #eef2f5;
+}
+.theme-northeastern.layout-cards .card-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 18px;
+  line-height: 1.35;
+}
+.theme-northeastern.layout-cards ul:not(.cards-stack):has(> li:nth-child(4)).has-card-pics .card-copy {
+  font-size: 16px;
+}
 
 /* Shorter cards leave slack under the row. Let the grid take the slack and
    centre in it, so one row sits in the middle of the slide instead of hanging
@@ -318,10 +425,16 @@
 
 /* The lockup is dark type on transparent, so it needs a light ground. On navy
    and red it gets knocked out to white instead of sitting in a paper box. */
-.theme-northeastern.layout-title .slide-logo img,
-.theme-northeastern.layout-section .slide-logo img,
-.theme-northeastern.layout-quote .slide-logo img {
-  filter: brightness(0) invert(1);
+.theme-northeastern .image-facts-toggle {
+  border-color: rgba(12, 51, 84, .2);
+  background: rgba(255, 255, 255, .9);
+  color: var(--nu-navy);
+}
+.theme-northeastern .image-facts-toggle:hover,
+.theme-northeastern .image-facts-toggle[aria-expanded="true"] {
+  background: var(--nu-red);
+  border-color: var(--nu-red);
+  color: #fff;
 }
 
 /* Split teaching slides: calm media half so charts stay readable.
@@ -344,6 +457,16 @@
   border-radius: 14px;
   background-color: #ffffff;
   box-shadow: 0 12px 28px rgba(12, 51, 84, .12);
+}
+.theme-northeastern.layout-split .split-media-full,
+.theme-northeastern.layout-split .split-media-full:has(.img.cover) {
+  background: none;
+}
+.theme-northeastern.layout-split .split-media-full .img.contain {
+  inset: 0;
+  border-radius: 0;
+  background-color: transparent;
+  box-shadow: none;
 }
 .theme-northeastern.layout-split .split-media .cap {
   padding: 18px 28px 16px;

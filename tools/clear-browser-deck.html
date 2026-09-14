@@ -1,0 +1,30 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Reload IPDV lesson from file</title>
+<body style="font:16px/1.45 system-ui;max-width:36rem;margin:3rem auto;padding:0 1.25rem;color:#0c3354">
+<h1 style="font-size:1.5rem">Reload the lesson from disk</h1>
+<p>Your browser is still showing an older <strong>Saved to this browser</strong> copy (e.g. “Seeing what the numbers hide”). Clearing that save and opening the lesson file fixes it.</p>
+<button id="go" style="font:inherit;padding:.7rem 1.1rem;background:#c8102e;color:#fff;border:0;border-radius:6px;cursor:pointer">Clear save &amp; open Introduction &amp; Foundations</button>
+<pre id="out" style="background:#0c3354;color:#dce8f2;padding:1rem;border-radius:8px;white-space:pre-wrap;margin-top:1.25rem"></pre>
+<script>
+document.getElementById('go').onclick = function () {
+  var keys = [];
+  for (var i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
+  var removed = keys.filter(function (k) {
+    return k && (
+      k.indexOf('slideforge.decks') === 0 ||
+      k.indexOf('slideforge.lastDeck') === 0 ||
+      k === 'slideforge.presentation' ||
+      k.indexOf('slideforge.games') === 0
+    );
+  });
+  removed.forEach(function (k) { localStorage.removeItem(k); });
+  document.getElementById('out').textContent =
+    'Removed:\n' + (removed.join('\n') || '(nothing found)') +
+    '\n\nOpening /?lesson=ipdv-intro …';
+  setTimeout(function () {
+    location.href = '/?lesson=ipdv-intro&_=' + Date.now();
+  }, 400);
+};
+</script>
+</body>

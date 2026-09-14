@@ -99,20 +99,37 @@ test('a lesson survives being saved and reloaded', () => {
     deck.slides.find((s) => s.type === 'game').gameId);
 });
 
-test('ipdv-intro builds a 46-slide active lecture with formative quiz and 5 feedback moments', () => {
+test('ipdv-intro builds a 74-slide active lecture with formative quiz and 2 feedback moments', () => {
   const SF = load();
   const deck = SF.buildLesson('ipdv-intro');
   assert.ok(deck, 'deck exists');
   assert.equal(deck.title, 'LDSCI6253 Advanced Information Presentation & Visualisation');
   assert.equal(deck.theme, 'northeastern');
-  assert.equal(deck.slides.length, 46);
-  /* The appendix divides the lecture from the slides parked behind it. Its
-     index moves whenever a slide is added, so what is checked is that it is
-     there, and that it is not the last thing in the deck — an appendix with
-     nothing after it means the parked slides have gone missing. */
-  const appendixAt = deck.slides.findIndex((s) => s.title === 'Appendix · parked slides');
-  assert.ok(appendixAt > 0, 'the parked appendix is still in the deck');
-  assert.ok(appendixAt < deck.slides.length - 1, 'and still has parked slides behind it');
+  assert.equal(deck.slides.length, 74);
+
+  // Browser-saved teaching order (13 Sep): journey/assessment up front, history
+  // plates together, discovery after a red section — no parked appendix.
+  // Red section breaks carry the topic changes, so the journey block now sits
+  // behind one rather than opening the deck cold.
+  assert.equal(deck.slides[2].type, 'section');
+  assert.equal(deck.slides[3].title, 'Your course journey · foundations');
+  assert.equal(deck.slides.filter((s) => s.type === 'section').length, 10,
+    'ten topic breaks');
+  assert.ok(deck.slides.some((s) => (s.title || '').includes('When Visualisations')),
+    'discovery section divider');
+  assert.ok(deck.slides.some((s) => s.title === 'John Snow · 1854'), 'Snow plate');
+  // Named, not prefix-matched: the 'Use case ·' prefix was dropped from these
+  // four titles and this filter silently matched nothing for a while.
+  const useCaseTitles = ['Changes over time', 'Frequency and distribution',
+    'Relationships and correlation', 'Value, flow and risk'];
+  const useCases = deck.slides.filter((s) => useCaseTitles.includes(s.title));
+  assert.equal(useCases.length, 4, 'four use-case split slides');
+  for (const slide of useCases) {
+    assert.equal(slide.type, 'split');
+    assert.ok(slide.image, slide.title + ' has chart image');
+    assert.ok(slide.bullets && slide.bullets.length >= 3, slide.title + ' has teaching bullets');
+  }
+  assert.equal(deck.slides[deck.slides.length - 1].title, 'Q & A');
 
   // The lecture wears the university's branding, so buildLesson has to carry a
   // lesson's logo fields onto the deck and not just its theme.
@@ -131,7 +148,8 @@ test('ipdv-intro builds a 46-slide active lecture with formative quiz and 5 feed
   assert.ok(types.has('mindmap'), 'has editable visual thinking');
   assert.equal(deck.slides[0].date, '2026-09-14');
   assert.equal(deck.slides[1].type, 'introduction');
-  const map = deck.slides.find(s => s.type === 'mindmap');
+  const map = deck.slides.find(s => s.type === 'mindmap' && s.title === 'Why visualise?');
+  assert.ok(map, 'why-visualise mindmap');
   assert.equal(SF.slideSteps(map).length, 6);
   assert.equal(SF.normalizeDeck(JSON.parse(JSON.stringify(deck))).slides[1].title, 'Mark Martin');
   assert.ok(types.has('cards'), 'has cards');
@@ -155,9 +173,22 @@ test('ipdv-intro builds a 46-slide active lecture with formative quiz and 5 feed
     'Anscombe close slide');
 
   // Verify embedded quiz
-  const gameSlide = deck.slides.find((s) => s.type === 'game');
-  assert.ok(gameSlide, 'game slide exists');
-  assert.ok(gameSlide.gameId, 'game slide has gameId');
+  // Found by name, not by position: the deck now carries a one-question check
+  // at the end of each section as well as the formative quiz, so "the first
+  // game slide" stopped meaning what this test wanted it to mean.
+  const gameSlides = deck.slides.filter((s) => s.type === 'game');
+  assert.equal(gameSlides.length, 9, 'eight section checks plus the formative quiz');
+  assert.ok(gameSlides.every((s) => s.gameId), 'every game slide resolves to a game');
+  const checks = gameSlides
+    .map((s) => SF.GameStore.get(s.gameId))
+    .filter((g) => g && g.title.startsWith('Check · '));
+  assert.equal(checks.length, 8, 'one check per section');
+  assert.ok(checks.every((g) => g.questions.length === 1), 'a check is one question');
+  const gameSlide = gameSlides.find((s) => {
+    const g = SF.GameStore.get(s.gameId);
+    return g && g.title === 'Lecture 1 Check — Foundations of Visualisation';
+  });
+  assert.ok(gameSlide, 'the formative quiz slide exists');
   const game = SF.GameStore.get(gameSlide.gameId);
   assert.ok(game, 'game is saved in GameStore');
   assert.equal(game.title, 'Lecture 1 Check — Foundations of Visualisation');
@@ -172,19 +203,13 @@ test('ipdv-intro builds a 46-slide active lecture with formative quiz and 5 feed
   assert.ok(game.questions[3].question.includes('cholera'));
   assert.equal(game.questions[3].correct, 2);
 
-  // Verify feedback moments (assessment poll lives in the parked appendix)
+  // Interactive moments kept in the 13 Sep teaching path
   const feedbackSlides = deck.slides.filter((s) => s.feedback);
-  assert.equal(feedbackSlides.length, 5, 'exactly 5 interactive feedback moments');
+  assert.equal(feedbackSlides.length, 3, 'wordcloud, confidence scale and Muddiest Point');
   assert.equal(feedbackSlides[0].feedback.kind, 'wordcloud');
   assert.ok(feedbackSlides[0].feedback.prompt.includes('what does a graphic do'));
-  assert.equal(feedbackSlides[1].feedback.kind, 'poll');
-  assert.ok(feedbackSlides[1].feedback.prompt.includes('Four datasets'));
-  assert.equal(feedbackSlides[2].feedback.kind, 'poll');
-  assert.ok(feedbackSlides[2].feedback.prompt.includes('patient flow'));
-  assert.equal(feedbackSlides[3].feedback.kind, 'scale');
-  assert.ok(feedbackSlides[3].feedback.prompt.includes('4Ps'));
-  assert.equal(feedbackSlides[4].feedback.kind, 'poll');
-  assert.ok(feedbackSlides[4].feedback.prompt.includes('AE2 carry-over'));
+  assert.equal(feedbackSlides[1].feedback.kind, 'scale');
+  assert.ok(feedbackSlides[1].feedback.prompt.includes('4Ps'));
 });
 
 test('ipdv bundle generator exports a valid slideforge-bundle', () => {
@@ -194,12 +219,14 @@ test('ipdv bundle generator exports a valid slideforge-bundle', () => {
   assert.equal(bundle.version, 1);
   assert.ok(bundle.exported);
   assert.equal(bundle.decks.length, 1);
-  assert.equal(bundle.games.length, 1);
+  assert.equal(bundle.games.length, 9);
   assert.equal(bundle.decks[0].title, 'LDSCI6253 Advanced Information Presentation & Visualisation');
   assert.equal(bundle.decks[0].theme, 'northeastern');
   assert.equal(bundle.decks[0].logo, 'assets/brand/nu-london-logo.png');
-  assert.equal(bundle.decks[0].slides.length, 46);
-  assert.equal(bundle.games[0].title, 'Lecture 1 Check — Foundations of Visualisation');
-  assert.equal(bundle.games[0].questions.length, 4);
+  assert.equal(bundle.decks[0].slides.length, 74);
+  const formative = bundle.games.find(
+    (g) => g.title === 'Lecture 1 Check — Foundations of Visualisation');
+  assert.ok(formative, 'the formative quiz is in the bundle');
+  assert.equal(formative.questions.length, 4);
+  assert.equal(bundle.games.length, 9, 'the section checks travel with the bundle');
 });
-
