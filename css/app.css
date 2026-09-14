@@ -5052,3 +5052,94 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
 #player .ch-donut-hole, #previewBox .ch-donut-hole { fill: var(--slide-bg, #fff); }
 #player .ch-donut-total, #previewBox .ch-donut-total { font-size: 40px; font-weight: 800; fill: currentColor; }
 #player .ch-donut-cap, #previewBox .ch-donut-cap { font-size: 16px; letter-spacing: .1em; text-transform: uppercase; opacity: .6; fill: currentColor; }
+
+/* ---------------------------------------------------- chart motion & focus
+
+   Two behaviours, both read off slide.design the way image motion is, and
+   both confined to #player: an author changing a number should not have to
+   watch the chart perform every time.
+
+   The generic build animation is a fade and a small lift, which is right for
+   a line of text and wrong for a bar — a bar that fades in has no relation
+   to its own axis, where one that rises out of it is the quantity arriving.
+   So each family grows the way its idiom reads: bars from the baseline,
+   lines along their own stroke, wedges around the centre. */
+@keyframes sf-ch-rise { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes sf-ch-widen { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes sf-ch-draw { from { stroke-dashoffset: var(--ch-len, 2000); } to { stroke-dashoffset: 0; } }
+@keyframes sf-ch-sweep { from { transform: rotate(-90deg) scale(.82); opacity: 0; }
+                         to { transform: rotate(0deg) scale(1); opacity: 1; } }
+@keyframes sf-ch-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* Vertical bars stand on the axis, so that is what they grow out of. The
+   value label is not scaled with them — text stretched from nothing and
+   snapping to size reads as a glitch, so it simply arrives. */
+#player .ch-motion.chart-bar .ch-bar,
+#player .ch-motion.chart-stack .ch-bar {
+  animation: sf-ch-rise .62s cubic-bezier(.2,.75,.2,1) backwards;
+  transform-origin: 50% 100%;
+  transform-box: fill-box;
+}
+#player .ch-motion.chart-hbar .ch-bar {
+  animation: sf-ch-widen .62s cubic-bezier(.2,.75,.2,1) backwards;
+  transform-origin: 0% 50%;
+  transform-box: fill-box;
+}
+#player .ch-motion .ch-value { animation: sf-ch-fade .5s ease .34s backwards; }
+/* Each category a beat behind the last, so the eye reads left to right
+   rather than being handed the whole chart at once. Capped at nine so a
+   wide chart does not spend three seconds assembling itself. */
+#player .ch-motion .ch-bar:nth-child(1) { animation-delay: 0s; }
+#player .ch-motion .ch-bar:nth-child(2) { animation-delay: .06s; }
+#player .ch-motion .ch-bar:nth-child(3) { animation-delay: .12s; }
+#player .ch-motion .ch-bar:nth-child(4) { animation-delay: .18s; }
+#player .ch-motion .ch-bar:nth-child(5) { animation-delay: .24s; }
+#player .ch-motion .ch-bar:nth-child(6) { animation-delay: .30s; }
+#player .ch-motion .ch-bar:nth-child(n+7) { animation-delay: .36s; }
+
+#player .ch-motion.chart-line .ch-line path,
+#player .ch-motion.chart-area .ch-line path[fill="none"] {
+  stroke-dasharray: var(--ch-len, 2000);
+  animation: sf-ch-draw 1.05s ease-out backwards;
+}
+#player .ch-motion .ch-dot { animation: sf-ch-fade .4s ease .7s backwards; }
+#player .ch-motion.chart-area .ch-line path:not([fill="none"]) { animation: sf-ch-fade .7s ease .45s backwards; }
+
+#player .ch-motion.chart-pie .ch-slice,
+#player .ch-motion.chart-donut .ch-slice {
+  animation: sf-ch-sweep .7s cubic-bezier(.2,.75,.2,1) backwards;
+  transform-origin: 50% 50%;
+  transform-box: view-box;
+}
+#player .ch-motion.chart-donut .ch-donut-hole,
+#player .ch-motion.chart-donut .ch-donut-total,
+#player .ch-motion.chart-donut .ch-donut-cap { animation: sf-ch-fade .5s ease .5s backwards; }
+
+/* Isolating a series. Held back, not hidden: the comparison the chart was
+   drawn for stays on the slide, so the room can be brought to one series and
+   returned to all of them without the picture changing shape underneath
+   them.
+
+   Further back than the .38 a build uses for a point already made, and for
+   a reason: that dims grey text against a light slide, where this dims a
+   saturated fill. At .38 a red bar still pulls the eye harder than the
+   green one it is meant to be standing behind, so the number that reads as
+   "retreated" is lower here than it is for type.
+
+   Which marks to dim is decided in the renderer, not here: the focused index
+   is a number on the slide, and CSS cannot compare an attribute against a
+   variable. Shown in the editor as well as the show, because focus is a
+   property of the slide rather than a thing that happens on a projector. */
+.ch-dim { opacity: .18; }
+.chart-wrap [data-series], .chart-wrap .ck-item { transition: opacity .45s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  #player .ch-motion .ch-bar,
+  #player .ch-motion .ch-value,
+  #player .ch-motion .ch-line path,
+  #player .ch-motion .ch-dot,
+  #player .ch-motion .ch-slice,
+  #player .ch-motion .ch-donut-hole,
+  #player .ch-motion .ch-donut-total,
+  #player .ch-motion .ch-donut-cap { animation: none; }
+}
