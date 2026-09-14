@@ -761,9 +761,37 @@
     if (!f) return;
     var fr = new FileReader();
     fr.onload = function () {
+      var text = /** @type {string} */ (fr.result);
+      var name = String(f.name || '').toLowerCase();
+
+      /* Markdown outline → starter deck. Deliberately not a round-trip of
+         practice notes: games and live bits are not reconstructed. */
+      if (/\.md$/.test(name) || (SF.markdownToDeck && looksLikeMarkdown(text))) {
+        if (!SF.markdownToDeck) { SF.toast('Markdown import is not available'); return; }
+        if (active.flush) active.flush();
+        if (SF.History && SF.History.ready() && active && active.doc) {
+          SF.History.snapshot(active.doc(), 'Before importing Markdown');
+        }
+        var fromMd = SF.markdownToDeck(text);
+        if (!fromMd || !(fromMd.slides || []).length) {
+          SF.toast('That Markdown did not contain any slides');
+          return;
+        }
+        activate('deck', { toast: false });
+        workspaces.deck.setDoc(fromMd);
+        workspaces.deck.store.save(fromMd);
+        workspaces.deck._dirty = false;
+        syncChrome();
+        workspaces.deck.draw();
+        SF.toast('Imported “' + fromMd.title + '” · ' + fromMd.slides.length +
+          ' slide' + (fromMd.slides.length === 1 ? '' : 's') +
+          ' — layout types are a starting point, not a lock.');
+        return;
+      }
+
       var raw;
-      try { raw = JSON.parse(/** @type {string} */ (fr.result)); } catch (err) {
-        SF.toast('That file is not valid JSON');
+      try { raw = JSON.parse(text); } catch (err) {
+        SF.toast('That file is not valid JSON or Markdown');
         return;
       }
       if (active.flush) active.flush();
@@ -780,6 +808,10 @@
       var doc = isGame ? SF.normalizeGame(raw) : SF.normalizeDeck(raw);
       if (!doc) { SF.toast('That file is not a SlideForge document'); return; }
 
+      if (SF.History && SF.History.ready() && active && active.doc) {
+        SF.History.snapshot(active.doc(), 'Before importing a file');
+      }
+
       doc.id = SF.uid();                 // keep the file and this copy distinct
       activate(key, { toast: false });
       ws.setDoc(doc);
@@ -791,6 +823,13 @@
     };
     fr.readAsText(f);
     e.target.value = '';
+  }
+
+  /** Cheap sniff when the extension is missing or wrong. */
+  function looksLikeMarkdown(text) {
+    var t = String(text || '').trim();
+    if (!t || t.charAt(0) === '{' || t.charAt(0) === '[') return false;
+    return /^#{1,2}\s+\S/m.test(t) || /^[-*+]\s+\S/m.test(t) || /^>\s+\S/m.test(t);
   }
 
   /* ------------------------------------------------------------ boot */
@@ -825,9 +864,108 @@
     }
 
     var btnSave = $('btnSave');
-    if (btnSave) btnSave.onclick = function () { save(false, true); };
+    if (btnSave) btnSave.onclick = function () {
+      if (SF.History && SF.History.ready() && active && active.doc) {
+        SF.History.snapshot(active.doc(), 'Before Save to browser');
+      }
+      save(false, true);
+    };
     var btnDemo = $('btnDemoLesson');
     if (btnDemo) btnDemo.onclick = openDemoLesson;
+
+    /* Restored: these handlers were dropped when Lecture setup moved to ⚙.
+       Export / Import / Help are file chrome — they are not lecture checks. */
+    var btnExport = $('btnExport');
+    if (btnExport) {
+      btnExport.onclick = function () {
+        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
+        if (menu) menu.open = false;
+        if (active.flush) active.flush();
+        var doc = active.doc();
+        var served = servedByRelay();
+        var items = [
+          { id: 'one', title: 'This ' + (active.key === 'deck' ? 'presentation' : 'game'),
+            blurb: 'Downloads "' + doc.title + '" as a single file.' }
+        ];
+        if (active.key === 'deck') {
+          items.push({ id: 'pdf', title: 'Student PDF handout', blurb: 'Printable slides: all reveals shown, stacks separated, no private notes or live results.' });
+          items.push({
+            id: 'md',
+            title: 'Practice notes (.md)',
+            blurb: 'Markdown for Canvas or Colab — prompts and content only, not the live room.'
+          });
+        }
+        items.push({
+          id: 'bundle', title: 'Everything, as one file',
+          blurb: 'Downloads every presentation and game together as a backup.'
+        });
+        if (served) {
+          items.splice(active.key === 'deck' ? 2 : 1, 0, {
+            id: 'folder', title: 'Everything, into the app folder',
+            blurb: 'Writes each one to data/ next to the app, so the folder is self-contained and can be committed.'
+          });
+        }
+        picker({
+          title: 'Export',
+          items: function () { return items; },
+          describe: function (it) { return it.blurb; },
+          onPick: function (it) {
+            if (it.id === 'one') return exportDoc();
+            /* The handler flushes before opening the picker now, so this no
+               longer needs its own flush the way it did when it was the only
+               path that wrote from the live document. */
+            if (it.id === 'pdf') return SF.Print.open(active.doc());
+            if (it.id === 'md') return exportMarkdown();
+            if (it.id === 'folder') return exportAllToFolder();
+            exportBundle();
+          }
+        });
+      };
+    }
+    var btnImport = $('btnImport');
+    if (btnImport) {
+      btnImport.onclick = function () {
+        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
+        if (menu) menu.open = false;
+        if (!servedByRelay()) {
+          var fi0 = /** @type {HTMLInputElement|null} */ ($('fileInput'));
+          if (fi0) fi0.click();
+          return;
+        }
+        picker({
+          title: 'Import',
+          items: function () {
+            return [
+              { id: 'file', title: 'From a SlideForge file',
+                blurb: 'Pick a .sfdeck.json, .sfgame.json or backup file.' },
+              { id: 'md', title: 'From a Markdown outline',
+                blurb: 'Headings and lists become starter slides (title, content, cards, quote, image). Not a live lesson round-trip.' },
+              { id: 'folder', title: 'From the app folder',
+                blurb: 'Restore everything previously written to data/.' }
+            ];
+          },
+          describe: function (it) { return it.blurb; },
+          onPick: function (it) {
+            if (it.id === 'folder') return restoreFromFolder();
+            var fi = /** @type {HTMLInputElement|null} */ ($('fileInput'));
+            if (!fi) return;
+            if (it.id === 'md') fi.accept = '.md,text/markdown,text/plain';
+            else fi.accept = '.json,application/json,.md,text/markdown';
+            fi.click();
+          }
+        });
+      };
+    }
+    var fileInput = $('fileInput');
+    if (fileInput) fileInput.addEventListener('change', importDoc);
+
+    var btnHelp = $('btnHelp');
+    if (btnHelp) {
+      btnHelp.onclick = function () {
+        var cheats = $('cheats');
+        if (cheats) cheats.classList.add('on');
+      };
+    }
 
     /* Lecture setup — the things that go wrong between a working app and a
        working lecture, none of which is a bug and all of which look like one
@@ -990,7 +1128,7 @@
         var doc = active.doc();
         SF.History.list(doc.id).then(function (rows) {
           if (!rows.length) {
-            SF.toast('No earlier versions of this one yet. One is kept before anything that rewrites the document.');
+            SF.toast('No earlier versions of this one yet. Edits keep a quiet copy after a pause; use “Keep a restore point now” before a big rewrite.');
             return;
           }
           picker({
@@ -1026,6 +1164,22 @@
               });
             }
           });
+        });
+      };
+    }
+
+    var btnHistoryKeep = $('btnHistoryKeep');
+    if (btnHistoryKeep) {
+      if (!(SF.History && SF.History.ready())) btnHistoryKeep.hidden = true;
+      else btnHistoryKeep.onclick = function () {
+        if (active.flush) active.flush();
+        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
+        if (menu) menu.open = false;
+        var doc = active.doc();
+        SF.History.snapshot(doc, 'Restore point').then(function (ok) {
+          SF.toast(ok
+            ? 'Restore point kept for “' + (doc.title || 'this document') + '”.'
+            : 'Could not keep a restore point in this browser.');
         });
       };
     }
@@ -1122,6 +1276,9 @@
           },
           describe: function (it) { return it.blurb; },
           onPick: function (it) {
+            if (SF.History && SF.History.ready() && active && active.doc) {
+              SF.History.snapshot(active.doc(), 'Before starting something new');
+            }
             if (it.id === 'game') {
               activate('game', { toast: false });
               if (workspaces.game.newDoc) workspaces.game.newDoc();
@@ -1160,6 +1317,50 @@
             syncChrome();
             workspaces.deck.draw();
             SF.toast('New presentation');
+          }
+        });
+      };
+    }
+
+    var btnReadyMade = $('btnReadyMade');
+    if (btnReadyMade) {
+      btnReadyMade.onclick = function () {
+        if (active.flush) active.flush();
+        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
+        if (menu) menu.open = false;
+        var lessons = SF.LESSONS || [];
+        if (!lessons.length) {
+          SF.toast('No ready-made lessons in this build.');
+          return;
+        }
+        picker({
+          title: 'Ready-made lessons',
+          items: function () {
+            return lessons.map(function (lesson) {
+              return {
+                id: lesson.key,
+                title: lesson.title,
+                blurb: (lesson.blurb || 'Ready-made lesson') +
+                  (lesson.minutes ? ' · about ' + lesson.minutes + ' min' : '')
+              };
+            });
+          },
+          describe: function (it) { return it.blurb; },
+          onPick: function (it) {
+            if (SF.History && SF.History.ready() && active && active.doc) {
+              SF.History.snapshot(active.doc(), 'Before opening a ready-made lesson');
+            }
+            activate('deck', { toast: false });
+            if (SF.Editor && SF.Editor.useLesson) SF.Editor.useLesson(it.id);
+            else {
+              var lesson = SF.Studio.makeLesson(it.id);
+              workspaces.deck.setDoc(lesson);
+              workspaces.deck.store.save(lesson);
+              workspaces.deck._dirty = false;
+              syncChrome();
+              workspaces.deck.draw();
+            }
+            SF.toast('"' + it.title + '" opened. Your previous lesson stays in File → Open.');
           }
         });
       };
