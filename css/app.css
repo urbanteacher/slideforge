@@ -4981,3 +4981,32 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
   border-color: var(--s-accent);
   color: #fff;
 }
+
+/* Where the work is. Quiet by default — it is a statement of fact, not an
+   alert — and only leans on the eye while a write is in flight. The wording
+   carries "this browser" at all times on purpose: "Saved" alone is the word
+   that makes an invisible, per-origin, easily-lost copy feel filed. */
+.store-state {
+  font-size: 12px;
+  color: var(--ui-dim);
+  padding: 4px 9px;
+  border-color: transparent;
+  background: transparent;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.store-state::before {
+  content: '';
+  display: inline-block;
+  width: 6px; height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #729458;
+  vertical-align: 1px;
+}
+.store-state:hover { color: var(--ui-text); border-color: var(--ui-line); }
+.store-state.is-saving { color: var(--ui-text); }
+.store-state.is-saving::before { background: var(--ui-dim); animation: store-pulse 1s ease-in-out infinite; }
+@keyframes store-pulse { 0%, 100% { opacity: .3 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: reduce) { .store-state.is-saving::before { animation: none } }
+@media (max-width: 900px) { .store-state { display: none } }

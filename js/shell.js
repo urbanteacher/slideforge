@@ -324,6 +324,47 @@
   /** Engines call this from their debounced save path. */
   function touch() {
     if (active) active._dirty = true;
+    setStored('saving');
+  }
+
+  /* ------------------------------------------------- where the work is
+
+     Both engines autosave about half a second after an edit, and until now
+     said nothing about it. The silence reads as safety: work that has been
+     written feels filed, and a browser save is not filed — it is invisible,
+     per-origin, lost with the profile, and it quietly outranks the lesson the
+     app ships. A stale copy of a lesson therefore looks like missing slides
+     rather than like a stale copy, which is a day nobody gets back.
+
+     So the chrome says where the work actually is, and says "this browser"
+     every time rather than the bare word "Saved". Clicking it opens Export,
+     because the honest next step is a file.
+
+     Deliberately not driven by _dirty: that flag means "changed since the
+     last explicit Save", and the autosave writes straight to the store
+     without clearing it. Reporting it would leave "unsaved" on screen over
+     work that is already written — a worse lie than saying nothing. */
+  var storedState = 'stored';
+  var storedTimer = null;
+
+  function setStored(state) {
+    storedState = state;
+    var el2 = $('storeState');
+    if (!el2) return;
+    clearTimeout(storedTimer);
+    if (state === 'saving') {
+      el2.textContent = 'Saving…';
+      el2.className = 'btn ghost store-state is-saving';
+      /* The write lands on its own timer inside the engine. Rather than reach
+         across for it, settle shortly after it would have. */
+      storedTimer = setTimeout(function () { setStored('stored'); }, 900);
+    } else {
+      el2.textContent = 'Saved in this browser';
+      el2.className = 'btn ghost store-state';
+    }
+    el2.title = 'Autosaved to this browser only — invisible, tied to this address, ' +
+      'and lost if the profile is cleared. It also wins over the lesson the app ships. ' +
+      'Click to export a copy you can keep.';
   }
 
   function openSaved() {
@@ -833,6 +874,15 @@
       };
     }
 
+    var storeBtn = $('storeState');
+    if (storeBtn) {
+      setStored('stored');
+      storeBtn.onclick = function () {
+        var ex = $('btnExport');
+        if (ex) ex.click();
+      };
+    }
+
     var btnSettings = $('btnSettings');
     if (btnSettings) {
       btnSettings.onclick = function () {
@@ -1007,6 +1057,8 @@
     save: save,
     openSaved: openSaved,
     touch: touch,
+    /* Engines call this when a debounced write has actually landed. */
+    stored: function () { setStored('stored'); },
     syncChrome: syncChrome,
     picker: picker,
     themePicker: themePicker,

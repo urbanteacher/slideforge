@@ -58,6 +58,7 @@
     saveTimer = setTimeout(function () {
       saveTimer = null;
       SF.Store.save(deck);
+      if (SF.Shell.stored) SF.Shell.stored();
     }, 600);
   }
 
@@ -69,6 +70,7 @@
     clearTimeout(saveTimer);
     saveTimer = null;
     SF.Store.save(deck);
+    if (SF.Shell.stored) SF.Shell.stored();
   }
 
   function gameFor(slide) {
@@ -2320,8 +2322,13 @@
         e.preventDefault(); sendTo(e.key === 'Home' ? 0 : deck.slides.length); return;
       }
       if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); restoreHistory(e.shiftKey); }
-      else if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); select(sel + 1); }
-      else if (e.key === 'ArrowUp' || e.key === 'k') { e.preventDefault(); select(sel - 1); }
+      /* Both axes move the selection. The rail runs down the page, so the
+         vertical pair is the honest one — but a deck is a sequence, every
+         other tool in the room pages through it sideways, and the sorter in
+         this app already answers to left and right. Binding one pair and not
+         the other means the key someone actually presses does nothing. */
+      else if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'j') { e.preventDefault(); select(sel + 1); }
+      else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'k') { e.preventDefault(); select(sel - 1); }
       else if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); removeSlide(); }
       else if (e.key === 'F5') { e.preventDefault(); present(); }
       else if (mod && e.key === 'd') { e.preventDefault(); duplicate(); }
