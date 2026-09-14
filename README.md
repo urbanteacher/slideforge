@@ -631,6 +631,70 @@ The loaded ones are coloured; the rest are quiet. **Reports → Pace &
 confidence** is the same information after the fact, with the signals grouped
 by the slide they came from.
 
+### Charts
+
+Twenty chart types, grouped by the question they answer rather than by their
+shape. That order is the Financial Times' Visual Vocabulary and it is
+deliberate: on a module about choosing idioms, a flat list of twenty invites
+picking by appearance, which is the wrong habit to teach by accident.
+
+The type menu is grouped under those headings. Beside it, **Not sure which?
+Start from the question →** opens the poster's own route in — *"What matters
+most in this data?"* — and narrows from there.
+
+| The question | What it draws | What it cannot |
+| --- | --- | --- |
+| **Correlation** · do two things move together? | scatter, columns + markers, evidence matrix | bubble, connected scatterplot, numeric XY heatmap |
+| **Distribution** · what values occur, how often? | histogram, box plot | violin, dot strip, beeswarm, population pyramid, cumulative curve |
+| **Change over time** · what is the trend? | line, area, columns + markers, small multiples | slope, candlestick, calendar heatmap, streamgraph, fan chart |
+| **Magnitude** · which is bigger? | bar, horizontal bar, pictogram, bullet, radar | paired column, lollipop, marimekko, proportional symbol, parallel coordinates |
+| **Ranking** · what is the order? | horizontal bar, bar, dumbbell | ordered proportional symbol, dot strip, slope, lollipop, bump |
+| **Part-to-whole** · how does one thing divide? | stacked bar, pie, donut, treemap, waffle | marimekko, arc, voronoi, Venn |
+| **Flow** · where does it go? | Sankey | waterfall, chord, network |
+| **Deviation** · how far from a baseline? | bullet, dumbbell | diverging bar, diverging stacked bar, spine, surplus/deficit line |
+| **Spatial** · where, on a map? | *nothing — SlideForge draws no maps* | choropleth, flow map, contour, cartogram, dot density, heat map |
+
+The right-hand column is in the app too. Somebody reaching for a violin plot
+should learn that a violin plot exists and that this tool has none, rather
+than concluding from its absence that the idiom is not a thing.
+
+**How the data is read.** Most types take the same pasted range — first row
+names the series, first column the categories — but five read it their own
+way, and the inspector says which when you pick one:
+
+| Type | One row is |
+| --- | --- |
+| Scatter | either `x, y` or `name, x, y` — a first column of words becomes the point's label |
+| Histogram | just numbers; they are counted into bins for you |
+| Box plot | a group name, then every value measured in it |
+| Sankey | `from, to, amount` — a list of flows, not a table of values |
+| Small multiples | read transposed: each row is a panel, the columns are the axis inside it |
+
+**Source and caveat.** Every chart takes a line printed underneath it and
+carried into the student handout. Where the numbers came from, and what they
+are not — *"Selected platform peaks, not annual means"* does more for a room
+than a citation. In the handout it matters most: that is the copy read a
+week later with nobody there to add the qualification aloud.
+
+**Motion and focus**, on `slide.design` beside the image slow-zoom. Bars rise
+from the axis, lines walk along their own stroke, wedges sweep; the editor
+preview stays still so an author is not watching things fly in on every
+keystroke. Focus holds one series forward and pushes the rest back rather
+than removing them, so a room can be brought to one line and given the
+comparison back.
+
+**Some of these answer back.** A pie or donut given several series says only
+the first is drawn. Stacked bars warn that negatives are left out of a total.
+A dumbbell given a third series says it drew two. A radar repeats its own
+critique — enclosed area grows as the *square* of the values, and reordering
+the columns changes that area without changing the data. Small multiples
+past a dozen panels says a room cannot compare that many.
+
+Several of these — the dumbbell, the evidence matrix, labelled scatter
+points, small multiples and the source line — were taken from the tube
+pollution explorer in `../App /TFL Pollution`, which drew things this app
+could not.
+
 ### Working in a long deck
 
 A lecture is not six slides. Past about forty the rail stops answering
@@ -669,6 +733,33 @@ stays out of the way when the cursor is in a text field, so pasting text into
 a text box is still pasting text into a text box. A pasted screenshot is
 stored inside the deck, so the 3.5 MB warning applies to it as much as to an
 uploaded file.
+
+### People and structure
+
+A slide of people was a bulleted list or a photograph of somebody else's org
+chart. **People & structure** draws both shapes an author actually wants —
+one person per line:
+
+```
+Michael Gaizuits | Founder & CXO |                  | photo.jpg
+Nicole Wiegand   | Client Success Director | Michael Gaizuits
+Ada Okonkwo      | Project Strategy Director | Nicole Wiegand
+```
+
+When the lines say who reports to whom it draws a hierarchy. When they do
+not it draws a row of equals — **and that row has no connectors**, because a
+line between two people who do not report to each other says something
+untrue. A team of four directors is not a degenerate org chart; it is the
+common case.
+
+Reports-to is a name, not a row number, so reordering the lines cannot
+silently reassign who works for whom. A manager named but not listed is
+treated as absent rather than conjured, so a typo grows an extra root
+instead of a ghost box. Two people reporting to each other leaves nobody at
+the top, which would draw nothing at all — so a cycle falls back to the flat
+row rather than to a blank slide. Missing headshots become initials: a
+placeholder that says *who* is missing is more use than one that says
+somebody is.
 
 ### Before the lecture
 
