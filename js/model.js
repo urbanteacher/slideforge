@@ -6576,6 +6576,182 @@
     line("_Exported for Canvas / Colab practice. Re-open the `.sfdeck.json` in SlideForge to host live._");
     return out.join("\n");
   }
+  function parseMarkdownDeck(text2) {
+    var raw = String(text2 || "").replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n");
+    var lines = raw.split("\n");
+    var i = 0;
+    var frontTitle = "";
+    if (lines[0] === "---") {
+      i = 1;
+      while (i < lines.length && lines[i] !== "---") {
+        var fm = lines[i].match(/^\s*title\s*:\s*(.+?)\s*$/i);
+        if (fm) frontTitle = fm[1].replace(/^["']|["']$/g, "").trim();
+        i++;
+      }
+      if (i < lines.length && lines[i] === "---") i++;
+    }
+    function stripExportNum(t) {
+      return String(t || "").replace(/^\d+\.\s+/, "").trim();
+    }
+    function isSkipLine(t) {
+      var s2 = t.trim();
+      if (!s2) return true;
+      if (/^_Practice notes from SlideForge/i.test(s2)) return true;
+      if (/^_Exported for Canvas/i.test(s2)) return true;
+      if (/^<details/i.test(s2) || /^<\/details>/i.test(s2) || /^<summary/i.test(s2)) return true;
+      if (/^###\s+In-class activity/i.test(s2)) return true;
+      return false;
+    }
+    var slides = [];
+    var deckTitle = frontTitle;
+    var cur = null;
+    function flush() {
+      if (!cur) return;
+      var title = stripExportNum(cur.title) || "Slide";
+      var bullets = cur.bullets.filter(function(b) {
+        return String(b).trim();
+      });
+      var paras = cur.body.split(/\n\n+/).map(function(p) {
+        return p.trim();
+      }).filter(Boolean);
+      var image = cur.image || "";
+      var quoteOnly = paras.length === 1 && /^>\s?/.test(paras[0]) && !bullets.length;
+      var allQuotes = paras.length && paras.every(function(p) {
+        return /^>\s?/.test(p);
+      }) && !bullets.length;
+      if ((/^quote$/i.test(title) || quoteOnly || allQuotes) && (paras.length || cur.body)) {
+        var qBody = paras.map(function(p) {
+          return p.replace(/^>\s?/, "").trim();
+        }).join(" ");
+        var attr2 = "";
+        if (/^[—–\-]\s*/.test(cur.subtitle)) attr2 = cur.subtitle.replace(/^[—–\-]\s*/, "");
+        slides.push({ type: "quote", title: "", body: qBody || title, subtitle: attr2 });
+      } else if (image && !bullets.length && paras.length <= 1) {
+        slides.push({
+          type: "image",
+          title: title === "Image" ? "" : title,
+          image,
+          subtitle: paras[0] || ""
+        });
+      } else if (bullets.length && bullets.every(function(b) {
+        return /^\d+\.\s+/.test(b);
+      })) {
+        slides.push({
+          type: "cards",
+          title,
+          bullets: bullets.map(function(b) {
+            return b.replace(/^\d+\.\s+/, "").trim();
+          })
+        });
+      } else if (bullets.length && bullets.every(function(b) {
+        return /\*\*[^*]+\*\*\s*[—–\-:]/.test(b) || /\*[^*]+\*\s*[—–\-:]/.test(b);
+      })) {
+        slides.push({
+          type: "keywords",
+          title,
+          bullets: bullets.map(function(b) {
+            var m = b.match(/^\*\*?([^*]+)\*\*?\s*[—–\-:]\s*(.*)$/);
+            return m ? m[1].trim() + "	" + m[2].trim() : b;
+          })
+        });
+      } else if (bullets.length && bullets.every(function(b) {
+        return /\[[^\]]+\]\([^)]+\)/.test(b);
+      })) {
+        slides.push({
+          type: "links",
+          title,
+          bullets: bullets.map(function(b) {
+            var m = b.match(/\[([^\]]+)\]\(([^)]+)\)/);
+            return m ? m[1].trim() + "	" + m[2].trim() : b;
+          })
+        });
+      } else if (!bullets.length && !image && paras.length <= 1) {
+        var kind = slides.length === 0 ? "title" : "section";
+        slides.push({ type: kind, title, subtitle: paras[0] || cur.subtitle || "" });
+      } else {
+        slides.push({
+          type: "content",
+          title,
+          bullets: bullets.length ? bullets.map(function(b) {
+            return b.replace(/^[-*+]\s+/, "").replace(/^\d+\.\s+/, "").trim();
+          }) : [],
+          body: bullets.length ? "" : paras.join("\n\n"),
+          image
+        });
+      }
+      cur = null;
+    }
+    function startSlide(title) {
+      flush();
+      cur = { type: "content", title, subtitle: "", body: "", bullets: [], image: "" };
+      return (
+        /** @type {{ type: string, title: string, subtitle: string, body: string, bullets: string[], image: string }} */
+        cur
+      );
+    }
+    for (; i < lines.length; i++) {
+      var line = lines[i];
+      var trimmed = line.trim();
+      if (/^---+$/.test(trimmed)) {
+        if (cur) flush();
+        continue;
+      }
+      if (isSkipLine(line) && !cur) continue;
+      var h1 = line.match(/^#\s+(.+)$/);
+      if (h1 && !cur && !deckTitle) {
+        deckTitle = h1[1].trim();
+        continue;
+      }
+      if (h1 && !cur && deckTitle) {
+        startSlide(h1[1].trim());
+        continue;
+      }
+      var h2 = line.match(/^##\s+(.+)$/);
+      if (h2) {
+        startSlide(h2[1].trim());
+        continue;
+      }
+      var s;
+      if (cur) {
+        s = cur;
+      } else {
+        if (!trimmed || isSkipLine(line)) continue;
+        s = startSlide(deckTitle || "Slide");
+      }
+      if (/^###\s+/.test(line)) continue;
+      var img = trimmed.match(/^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)$/);
+      if (img) {
+        if (!s.image) s.image = img[2];
+        continue;
+      }
+      var attr = trimmed.match(/^[—–]\s+(.+)$/);
+      if (attr && (s.body || s.bullets.length)) {
+        s.subtitle = "— " + attr[1].trim();
+        continue;
+      }
+      if (/^>\s?/.test(trimmed)) {
+        s.body = (s.body ? s.body + "\n\n" : "") + trimmed;
+        continue;
+      }
+      if (/^[-*+]\s+/.test(trimmed) || /^\d+\.\s+/.test(trimmed)) {
+        s.bullets.push(trimmed);
+        continue;
+      }
+      if (!trimmed) {
+        if (s.body && !/\n\n$/.test(s.body)) s.body += "\n\n";
+        continue;
+      }
+      if (isSkipLine(line)) continue;
+      if (!s.bullets.length && !s.body && !s.subtitle && s.title && trimmed.length < 120) {
+        s.subtitle = trimmed;
+        continue;
+      }
+      s.body = (s.body ? s.body.replace(/\n\n$/, "\n") + (s.body ? "\n" : "") : "") + trimmed;
+    }
+    flush();
+    if (!deckTitle) deckTitle = slides[0] && slides[0].title || "Imported from Markdown";
+    return { title: deckTitle, slides };
+  }
 
   // src/samples/deck.json
   var deck_default = {
@@ -8379,6 +8555,15 @@
   function deckToMarkdown(deck) {
     return renderMarkdown(normalizeDeck(deck || {}), (id) => GameStore.get(id));
   }
+  function markdownToDeck(text2) {
+    var parsed = parseMarkdownDeck(text2);
+    var deck = makeDeck(parsed.title || "Imported from Markdown");
+    deck.slides = (parsed.slides.length ? parsed.slides : [{ type: "title", title: deck.title }]).map(function(s) {
+      return normalizeSlide(s);
+    });
+    if (!deck.slides.length) deck.slides = [makeSlide("title")];
+    return normalizeDeck(deck);
+  }
   var { Store, GameStore } = createStores({ normalizeDeck, normalizeGame, storage: () => localStorage });
   runtime.SF = Object.assign(runtime.SF || {}, {
     Boards: createBoardRuntime(() => runtime.SF, GAME_STYLES),
@@ -8435,6 +8620,8 @@
     formatKeywordLine,
     safeHref,
     deckToMarkdown,
+    markdownToDeck,
+    parseMarkdownDeck,
     DECK_TYPES,
     BULLET_LAYOUTS,
     LAYOUT_GROUPS,

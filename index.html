@@ -91,6 +91,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
       <button class="btn" data-ws="deck" id="btnFind" title="Search slide text and notes (⌘F)">Find in lesson…</button>
       <button class="btn" data-ws="deck" id="btnShare">Share a read-only link…</button>
       <button class="btn" id="btnHistory">Restore an earlier version…</button>
+      <button class="btn" id="btnHistoryKeep" title="Snapshot this document now">Keep a restore point now</button>
       <button class="btn" id="btnExport">Export file</button>
       <button class="btn" id="btnImport">Import file</button>
     </div></details>
@@ -313,9 +314,9 @@ html:not([data-ready]) body { background: #f0f1ed; }
 </dialog>
 
 <div id="toast"></div>
-<input type="file" id="fileInput" accept=".json,application/json" hidden>
-<!-- .sfdeck.json / .sfgame.json / .sfbundle.json all end in .json, so one
-     accept filter covers every export this app produces. -->
+<input type="file" id="fileInput" accept=".json,application/json,.md,text/markdown" hidden>
+<!-- .sfdeck.json / .sfgame.json / .sfbundle.json all end in .json; .md is a
+     one-way outline import into starter slides. -->
 
 <script src="js/qr.js?v=2"></script>
 <script src="js/model.js?v=19"></script>
@@ -339,10 +340,10 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/teaching.js?v=2"></script>
 <script src="js/lesson-moments.js?v=2"></script>
 <script src="js/print.js?v=2"></script>
-<script src="js/history.js?v=1"></script>
-<script src="js/shell.js?v=18"></script>
+<script src="js/history.js?v=2"></script>
+<script src="js/shell.js?v=19"></script>
 <script src="js/content-tools.js?v=2"></script>
-<script src="js/editor.js?v=22"></script>
+<script src="js/editor.js?v=23"></script>
 <script src="js/games.js?v=8"></script>
 <script src="js/studio.js?v=3"></script>
 <script src="js/activities.js?v=3"></script>

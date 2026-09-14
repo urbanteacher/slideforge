@@ -24,8 +24,18 @@
   /* Enough to cover a working session without becoming an archive. Older
      ones go first, per document, so a deck you have not touched in a week
      does not lose its history because another one was busy. */
-  var KEEP = 25;
+  var KEEP = 40;
   var db = null, failed = false;
+  /* Quiet "while editing" points: wait until typing has paused, then at
+     most one every few minutes per document. Named restore points and the
+     "before …" ones still fire immediately. */
+  var QUIET_DELAY = 90 * 1000;
+  var QUIET_MIN_GAP = 4 * 60 * 1000;
+  var quietTimer = null;
+  /** @type {any} */
+  var quietDoc = null;
+  /** @type {Record<string, number>} */
+  var lastQuietAt = Object.create(null);
 
   function open() {
     if (db) return Promise.resolve(db);
@@ -118,6 +128,27 @@
     });
   }
 
+  /**
+   * Schedule a coalesced restore point after ordinary edits. Safe to call
+   * on every keystroke — only one write lands after a pause, and not more
+   * often than QUIET_MIN_GAP for the same document.
+   * @param {any} doc
+   */
+  function noteChange(doc) {
+    if (!doc || !doc.id || !ready()) return;
+    quietDoc = doc;
+    if (quietTimer) clearTimeout(quietTimer);
+    quietTimer = setTimeout(function () {
+      quietTimer = null;
+      var d = quietDoc;
+      if (!d || !d.id) return;
+      var now = Date.now();
+      if (lastQuietAt[d.id] && now - lastQuietAt[d.id] < QUIET_MIN_GAP) return;
+      lastQuietAt[d.id] = now;
+      snapshot(d, 'While editing');
+    }, QUIET_DELAY);
+  }
+
   /** The stored document for one snapshot, or null. */
   function get(id) {
     return tx('readonly').then(function (st) {
@@ -139,5 +170,8 @@
     });
   }
 
-  SF.History = { ready: ready, snapshot: snapshot, list: list, get: get, removeAll: removeAll, KEEP: KEEP };
+  SF.History = {
+    ready: ready, snapshot: snapshot, noteChange: noteChange,
+    list: list, get: get, removeAll: removeAll, KEEP: KEEP
+  };
 })(window);
