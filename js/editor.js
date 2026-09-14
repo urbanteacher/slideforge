@@ -1959,10 +1959,17 @@
     if (s.type === 'chart') {
       insp.appendChild(UI.field('Chart title',
         richField(s, "title", "area", function (v) { s.title = v; touched(); repaint(); }, 2)));
+      /* Named by the question each one answers, not by its shape. Choosing
+         a chart is the subject of this course; a list reading "bar, line,
+         pie" teaches nobody when to reach for which. */
       insp.appendChild(UI.field('Chart type', UI.select(
         [{ value: 'bar', label: 'Bar — compare magnitude' },
+         { value: 'stack', label: 'Stacked bar — the total, and what makes it up' },
+         { value: 'hbar', label: 'Horizontal bar — when the names are long' },
          { value: 'line', label: 'Line — change over time' },
-         { value: 'pie', label: 'Pie — parts of one whole' }],
+         { value: 'area', label: 'Area — change over time, with the volume under it' },
+         { value: 'pie', label: 'Pie — parts of one whole' },
+         { value: 'donut', label: 'Donut — parts of one whole, total in the middle' }],
         s.chartKind, function (v) { s.chartKind = v; touched(); repaint(); })));
       insp.appendChild(UI.field('Data \u2014 one row per line',
         richField(s, "body", "area", function (v) { s.body = v; touched(); repaint(); }, 9),
@@ -1977,9 +1984,18 @@
       insp.appendChild(el('p', 'hint', note));
       /* Said plainly rather than enforced: the author may have a reason, and
          a slide that silently drops a column is worse than a warning. */
-      if (s.chartKind === 'pie' && cd.series.length > 1) {
+      if ((s.chartKind === 'pie' || s.chartKind === 'donut') && cd.series.length > 1) {
         insp.appendChild(el('p', 'hint field-warn',
-          'A pie shows one series. Only \u201c' + cd.series[0].name + '\u201d is drawn; the rest are ignored. Bar compares them all.'));
+          'A ' + (s.chartKind === 'donut' ? 'donut' : 'pie') + ' shows one series. Only \u201c' +
+          cd.series[0].name + '\u201d is drawn; the rest are ignored. Bar compares them all.'));
+      }
+      /* Stacking negatives is not a thing this renderer does, and silently
+         dropping them would make a total that does not match the data. */
+      if (s.chartKind === 'stack' && cd.series.some(function (sr) {
+        return sr.values.some(function (v) { return v != null && v < 0; });
+      })) {
+        insp.appendChild(el('p', 'hint field-warn',
+          'Stacked bars add values up, so negatives are left out of the stack. Use grouped bars to show them.'));
       }
       if (cd.series.length > 6) {
         insp.appendChild(el('p', 'hint field-warn',

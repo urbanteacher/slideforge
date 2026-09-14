@@ -165,7 +165,7 @@ export interface Slide {
   /** Image-stack layout: the pictures, shown one in front of the last. */
   layers: GalleryLayer[];
   /** Chart layout: which form the same tabular `body` is drawn as. */
-  chartKind: 'bar' | 'line' | 'pie';
+  chartKind: 'bar' | 'stack' | 'hbar' | 'line' | 'area' | 'pie' | 'donut';
   /** Present only on the kinds that read it — before/after, explore,
    *  simulation, chart — or on any slide that already carried settings. */
   exploration?: ReturnType<typeof import('./deck/exploration.js').normalizeExploration>;

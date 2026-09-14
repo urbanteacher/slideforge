@@ -166,7 +166,7 @@ function makeSlide(type) {
     videoAutoplay: false,   // honoured on the projector, never in a preview
     tableHeader: true,
     /* Chart layout: bar, line or pie over the same text a table slide uses. */
-    chartKind: /** @type {'bar'|'line'|'pie'} */ ('bar'),
+    chartKind: /** @type {'bar'|'stack'|'hbar'|'line'|'area'|'pie'|'donut'} */ ('bar'),
     /* Image stack: each layer is one picture with its own caption and source,
        shown one in front of the last. Empty on every other kind of slide. */
     layers: /** @type {import('./types.js').GalleryLayer[]} */ ([]),
@@ -391,7 +391,11 @@ function normalizeSlide(raw) {
   } else {
     delete s.exploration;
   }
-  s.chartKind = ['bar', 'line', 'pie'].indexOf(s.chartKind) >= 0 ? s.chartKind : 'bar';
+  /* Seven idioms over one data shape. Stacked and horizontal are the bar
+     renderer under options, area is the line renderer, donut is the pie —
+     the drawing is shared because the question a lecturer is answering is
+     "which of these reads best", not "which of these is implemented". */
+  s.chartKind = ['bar', 'stack', 'hbar', 'line', 'area', 'pie', 'donut'].indexOf(s.chartKind) >= 0 ? s.chartKind : 'bar';
   /* Layers come off `raw` for the same reason options do: whatever was on disk
      may be strings, may be half-built, may be nothing. Capped because a stack
      is read one layer at a time and nobody narrates twelve. */

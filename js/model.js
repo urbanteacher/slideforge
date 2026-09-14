@@ -7255,7 +7255,7 @@
       tableHeader: true,
       /* Chart layout: bar, line or pie over the same text a table slide uses. */
       chartKind: (
-        /** @type {'bar'|'line'|'pie'} */
+        /** @type {'bar'|'stack'|'hbar'|'line'|'area'|'pie'|'donut'} */
         "bar"
       ),
       /* Image stack: each layer is one picture with its own caption and source,
@@ -7457,7 +7457,7 @@
     } else {
       delete s.exploration;
     }
-    s.chartKind = ["bar", "line", "pie"].indexOf(s.chartKind) >= 0 ? s.chartKind : "bar";
+    s.chartKind = ["bar", "stack", "hbar", "line", "area", "pie", "donut"].indexOf(s.chartKind) >= 0 ? s.chartKind : "bar";
     var rawLayers = raw && Array.isArray(raw.layers) ? raw.layers : [];
     s.layers = rawLayers.slice(0, GALLERY_MAX).map(function(layer) {
       var l = layer && typeof layer === "object" ? layer : {};
