@@ -5215,3 +5215,69 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
 #player .ch-flow:hover, #previewBox .ch-flow:hover { opacity: .72; }
 #player .ch-node, #previewBox .ch-node { rx: 2; }
 #player .ch-node-label, #previewBox .ch-node-label { font-size: 17px; }
+
+/* ---------------------------------------------------- people & structure
+
+   Flex columns rather than a grid of fixed tracks: a chart is two levels
+   deep and four wide as often as it is four deep and two wide, and the
+   layout has to hold both without the author choosing a shape. Connectors
+   are borders on the wrappers, so they follow the boxes at whatever size
+   the names force rather than being positioned against a guess. */
+.layout-orgchart .pad { display: flex; flex-direction: column; }
+.org-chart {
+  display: flex; justify-content: center; align-items: flex-start;
+  gap: 26px; flex: 1; min-height: 0; padding-top: 6px;
+  overflow: hidden;
+}
+.org-node { display: flex; flex-direction: column; align-items: center; position: relative; }
+.org-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--s-card, #ffffff14); border: 2px solid currentColor;
+  border-radius: 14px; padding: 10px 16px 10px 10px; max-width: 290px;
+  box-shadow: 0 2px 10px #0000000f;
+}
+.org-photo {
+  width: 54px; height: 54px; flex: 0 0 54px; border-radius: 50%;
+  background-size: cover; background-position: 50% 30%;
+  border: 3px solid currentColor;
+}
+.org-initials {
+  display: grid; place-content: center;
+  font-size: 19px; font-weight: 800; letter-spacing: .04em;
+  background: currentColor;
+}
+/* The letters take the slide's background so they read against the disc,
+   whatever colour the theme made it. */
+.org-initials { color: inherit; }
+.org-initials::first-line { color: inherit; }
+.org-who { display: flex; flex-direction: column; min-width: 0; }
+.org-who strong { font-size: 21px; line-height: 1.2; }
+.org-who span { font-size: 16px; opacity: .72; line-height: 1.25; }
+
+.org-kids { display: flex; gap: 22px; margin-top: 30px; position: relative; }
+/* The stem down from a parent, and the rail across its children. Drawn from
+   the children's wrapper so it spans exactly what is under it. */
+.org-kids::before {
+  content: ''; position: absolute; left: 0; right: 0; top: -16px;
+  border-top: 2px solid currentColor; opacity: .38;
+}
+.org-kids.one::before { left: 50%; right: 50%; }
+.org-node > .org-kids::after {
+  content: ''; position: absolute; left: 50%; top: -30px; height: 14px;
+  border-left: 2px solid currentColor; opacity: .38;
+}
+.org-kids > .org-node::before {
+  content: ''; position: absolute; left: 50%; top: -16px; height: 16px;
+  border-left: 2px solid currentColor; opacity: .38;
+}
+/* A flat team is a row of equals, so it loses the connectors entirely —
+   lines between people who do not report to each other say something untrue. */
+.org-flat .org-card { padding: 12px 18px 12px 12px; }
+.org-chart.org-dense .org-card { padding: 7px 12px 7px 7px; max-width: 232px; }
+.org-chart.org-dense .org-photo { width: 42px; height: 42px; flex-basis: 42px; }
+.org-chart.org-dense .org-who strong { font-size: 18px; }
+.org-chart.org-dense .org-who span { font-size: 14px; }
+.org-chart.lvl-4 .org-card { padding: 6px 11px 6px 6px; }
+.org-chart.lvl-4 .org-photo { width: 36px; height: 36px; flex-basis: 36px; }
+.org-chart.lvl-4 .org-who strong { font-size: 16px; }
+.org-chart.lvl-4 .org-who span { font-size: 13px; }

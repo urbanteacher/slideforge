@@ -207,6 +207,71 @@
     map.appendChild(centre); pad.appendChild(map);
   }
 
+  /* People, and who reports to whom.
+
+     One layout covers both shapes an author actually wants: a hierarchy when
+     the lines say who reports to whom, and a single row of equals when they
+     do not. A team slide of four directors is not a degenerate org chart, it
+     is the ordinary case, and forcing a head onto it would invent a
+     hierarchy nobody wrote.
+
+     CSS grid rather than absolute positions or SVG: the boxes have to hold
+     real names at real sizes, and a name that is one word longer should push
+     its own row rather than overlap the next. Connectors are drawn with
+     borders on the grid cells for the same reason — they follow the boxes
+     instead of being measured against them. */
+  function personCard(p, slide) {
+    var card = el('div', 'org-card');
+    if (p.photo) {
+      var ph = el('div', 'org-photo');
+      ph.style.backgroundImage = 'url("' + String(p.photo).replace(/"/g, '&quot;') + '")';
+      card.appendChild(ph);
+    } else if (p.name) {
+      /* Initials rather than a grey silhouette: a placeholder that says who
+         is missing is more use than one that says somebody is. */
+      var mono = el('div', 'org-photo org-initials');
+      mono.textContent = p.name.split(/\s+/).slice(0, 2).map(function (w) { return w.charAt(0); }).join('').toUpperCase();
+      card.appendChild(mono);
+    }
+    var who = el('div', 'org-who');
+    who.appendChild(el('strong', null, p.name));
+    if (p.role) who.appendChild(el('span', null, p.role));
+    card.appendChild(who);
+    return card;
+  }
+
+  function orgBranch(p, slide, depth) {
+    var node = el('div', 'org-node');
+    node.appendChild(asStep(personCard(p, slide), slide));
+    if (p.reports && p.reports.length && depth < 4) {
+      var kids = el('div', 'org-kids' + (p.reports.length === 1 ? ' one' : ''));
+      p.reports.forEach(function (c) { kids.appendChild(orgBranch(c, slide, depth + 1)); });
+      node.appendChild(kids);
+    }
+    return node;
+  }
+
+  function layoutOrg(slide, pad) {
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
+    if (slide.subtitle) pad.appendChild(rich('div', 'sub', slide, 'subtitle', slide.subtitle));
+    var tree = SF.orgTree(slide.bullets || []);
+    if (!tree.people.length) {
+      var e = el('div', 'empty');
+      e.appendChild(el('div', null, '\u26ec'));
+      e.appendChild(el('div', null, 'One person per line: Name | Role | Reports to | photo'));
+      pad.appendChild(e);
+      return;
+    }
+    var wrap = el('div', 'org-chart lvl-' + Math.min(4, tree.levels) +
+      (tree.levels === 1 ? ' org-flat' : '') + (tree.people.length > 8 ? ' org-dense' : ''));
+    wrap.setAttribute('role', 'group');
+    wrap.setAttribute('aria-label', 'People: ' + tree.people.map(function (p) {
+      return p.name + (p.role ? ', ' + p.role : '');
+    }).join('; '));
+    tree.roots.forEach(function (r) { wrap.appendChild(orgBranch(r, slide, 1)); });
+    pad.appendChild(wrap);
+  }
+
   function layoutSection(slide, pad) {
     pad.appendChild(rich('h1', null, slide, 'title', slide.title || ' '));
     if (slide.subtitle) pad.appendChild(rich('div', 'sub', slide, 'subtitle', slide.subtitle));
@@ -3106,6 +3171,7 @@
   var LAYOUTS = {
     journey: layoutJourney,
     mindmap: layoutMindmap,
+    orgchart: layoutOrg,
     introduction: layoutIntroduction,
     title: layoutTitle,
     section: layoutSection,

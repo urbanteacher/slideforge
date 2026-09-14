@@ -2725,6 +2725,44 @@
     });
     return bins;
   }
+  function parsePerson(line) {
+    var raw = String(line == null ? "" : line);
+    var cells = (raw.indexOf("	") !== -1 ? raw.split("	") : raw.split("|")).map(function(c) {
+      return c.trim();
+    });
+    return { name: cells[0] || "", role: cells[1] || "", boss: cells[2] || "", photo: safeMedia(cells[3] || "") };
+  }
+  function orgTree(lines) {
+    var people = (lines || []).map(parsePerson).filter(function(p) {
+      return p.name;
+    });
+    var byName = {};
+    people.forEach(function(p) {
+      byName[p.name.toLowerCase()] = p;
+      p.reports = [];
+    });
+    var roots = [];
+    people.forEach(function(p) {
+      var boss2 = p.boss && byName[p.boss.toLowerCase()];
+      if (boss2 && boss2 !== p) boss2.reports.push(p);
+      else roots.push(p);
+    });
+    if (!roots.length && people.length) {
+      people.forEach(function(p) {
+        p.reports = [];
+      });
+      roots = people.slice();
+    }
+    function depth(p, seen, d) {
+      if (d > people.length) return d;
+      return p.reports.reduce(function(m, c) {
+        return seen.indexOf(c) >= 0 ? m : Math.max(m, depth(c, seen.concat([p]), d + 1));
+      }, d);
+    }
+    return { roots, people, levels: roots.reduce(function(m, r) {
+      return Math.max(m, depth(r, [], 1));
+    }, 0) };
+  }
   function parseKeywordLine(line) {
     var s = String(line == null ? "" : line);
     var tab = s.indexOf("	");
@@ -2763,6 +2801,14 @@
       pits: 6,
       group: "explain",
       starters: [{ title: "Journey / handover", blurb: "Connect milestones, course topics or stages of a project." }]
+    },
+    orgchart: {
+      label: "People & structure",
+      icon: "⛬",
+      deck: true,
+      pits: 12,
+      group: "explain",
+      starters: [{ title: "Team or org chart", blurb: "Who reports to whom, with headshots. Also draws a flat team as one row." }]
     },
     mindmap: {
       label: "Mind map",
@@ -8291,6 +8337,8 @@
     chartUsesSeriesLegend,
     chartPoints,
     chartFlows,
+    parsePerson,
+    orgTree,
     chartGroups,
     fiveNumber,
     chartValues,
