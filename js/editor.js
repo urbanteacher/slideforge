@@ -2121,6 +2121,14 @@
         'First row names the series, first column the categories. Separate ' +
         'cells with | \u2014 or paste a range straight from a spreadsheet, ' +
         'which arrives tab-separated and needs no editing.'));
+      insp.appendChild(UI.field('Source & caveat',
+        UI.text(s.chartSource || '', function (v) {
+          s.chartSource = String(v).slice(0, 200); touched(); repaint();
+        }),
+        'Printed under the chart and carried into the handout. Where the numbers came from, ' +
+        'and what they are not \u2014 "Selected platform peaks, not annual means" does more ' +
+        'for a room than a citation.'));
+
       var cd = SF.chartData(s);
       var note = cd.series.length
         ? cd.series.length + (cd.series.length === 1 ? ' series' : ' series') + ' \u00d7 ' +

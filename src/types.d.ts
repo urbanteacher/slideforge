@@ -166,6 +166,8 @@ export interface Slide {
   layers: GalleryLayer[];
   /** Chart layout: which form the same tabular `body` is drawn as. */
   chartKind: 'bar' | 'stack' | 'hbar' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram' | 'box' | 'pictogram' | 'radar' | 'sankey' | 'treemap' | 'bullet' | 'combo' | 'waffle';
+  /** Where the numbers came from, and what they are not. Shown under the chart. */
+  chartSource?: string;
   /** One icon per unit on a pictogram. */
   chartIcon: string;
   /** What one icon is worth. */
