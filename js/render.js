@@ -917,6 +917,11 @@
        somebody else's videos, in front of the room. */
     if (!vimeo) q.push('rel=0', 'modestbranding=1', 'playsinline=1');
     if (start > 0) q.push((vimeo ? '#t=' : 'start=') + start + (vimeo ? 's' : ''));
+    /* YouTube stops itself at end=. Vimeo's player has no equivalent, so a
+       stop time there is honoured by the slide rather than the service —
+       see the timeupdate guard on the local player below, which also covers
+       a file served next to the deck. */
+    if (!vimeo && Number(slide.videoEnd) > Number(start)) q.push('end=' + Math.floor(slide.videoEnd));
     if (slide.videoMuted) q.push(vimeo ? 'muted=1' : 'mute=1');
     /* Autoplay is only honoured when muted, on both services. */
     if (slide.videoAutoplay) q.push('autoplay=1');
@@ -1002,6 +1007,18 @@
           v.currentTime = slide.videoStart;
         }
       }, { once: true });
+    }
+    /* Stopping is the slide's job here: a media element has no "play until"
+       and will run to the end of the file, which in a lecture is the clip
+       plus whatever the clip was cut from. Paused rather than ended, so the
+       last frame stays on the wall instead of the black that follows it —
+       and loop is left to win, because someone who asked for both meant the
+       section to repeat. */
+    if (Number(slide.videoEnd) > Number(slide.videoStart || 0) && !v.loop) {
+      var stopAt = Number(slide.videoEnd);
+      v.addEventListener('timeupdate', function () {
+        if (v.currentTime >= stopAt && !v.paused) v.pause();
+      });
     }
     pad.appendChild(v);
     if (slide.title) pad.appendChild(rich('div', 'cap', slide, 'title', slide.title));

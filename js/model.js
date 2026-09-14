@@ -7246,6 +7246,8 @@
       videoPoster: "",
       videoStart: 0,
       // seconds in, for a clip inside a longer file
+      videoEnd: 0,
+      // seconds, where to stop; 0 means play to the end
       videoLoop: false,
       videoMuted: false,
       videoAutoplay: false,
@@ -7440,6 +7442,8 @@
     s.video = safeMedia(s.video);
     s.videoPoster = safeMedia(s.videoPoster);
     s.videoStart = Math.max(0, Number(s.videoStart) || 0);
+    s.videoEnd = Math.max(0, Number(s.videoEnd) || 0);
+    if (s.videoEnd && s.videoEnd <= s.videoStart) s.videoEnd = 0;
     s.videoLoop = s.videoLoop === true;
     s.videoMuted = s.videoMuted === true;
     s.videoAutoplay = s.videoAutoplay === true;

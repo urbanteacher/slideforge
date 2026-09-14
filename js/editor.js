@@ -1863,6 +1863,12 @@
       }, 0, null, '0'),
       'For a clip inside a longer file.'));
 
+    insp.appendChild(UI.field('Stop at (seconds)',
+      UI.num(s.videoEnd || null, function (v) {
+        s.videoEnd = Math.max(0, Number(v) || 0); touched(); repaint();
+      }, 0, null, 'plays to the end'),
+      'Leave empty to play to the end. Stops the clip without you reaching for the keyboard.'));
+
     insp.appendChild(UI.field('Fit', UI.select(
       [{ value: 'cover', label: 'Fill the slide (crop)' },
        { value: 'contain', label: 'Fit inside (letterbox)' }],

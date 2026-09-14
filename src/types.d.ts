@@ -156,6 +156,8 @@ export interface Slide {
   videoPoster: string;
   /** Seconds in, for a clip inside a longer file. */
   videoStart: number;
+  /** Seconds at which to stop. 0 plays to the end. */
+  videoEnd: number;
   videoLoop: boolean;
   videoMuted: boolean;
   /** Honoured on the projector, never in a preview. */
