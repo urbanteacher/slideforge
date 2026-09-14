@@ -2011,9 +2011,16 @@
         box: 'Box plot — spread, skew and outliers',
         pictogram: 'Pictogram — counted in icons, not measured'
       };
+      /* Once each. A <select> cannot hold the poster's cross-listings: two
+         options sharing a value are not two choices, and picking the second
+         makes the control jump to the first — so "Bar" chosen under Ranking
+         would silently relocate to Magnitude. The chooser below keeps the
+         cross-listing, where it can be shown without that failure. */
       var chartOpts = [];
       (SF.CHART_TAXONOMY || []).forEach(function (cat) {
         cat.kinds.forEach(function (k) {
+          var home = SF.chartPrimaryCategory(k);
+          if (home && home.key !== cat.key) return;
           chartOpts.push({ value: k, label: LABELS[k] || k, group: cat.label });
         });
       });
@@ -2022,19 +2029,22 @@
         'Grouped by what the chart is for, after the FT\u2019s Visual Vocabulary.'));
 
       /* The poster's own route in: the question first, the shape second. */
-      var chooser = UI.button('\u2295 Which chart should this be?', 'ghost', function () {
+      var chooser = UI.button('Not sure which? Start from the question \u2192', 'ghost', function () {
         SF.Shell.picker({
           title: 'What matters most in this data?',
           wide: true,
           items: function () {
             return (SF.CHART_TAXONOMY || []).map(function (cat) {
               var can = cat.kinds.length;
+              var lacks = (cat.missing || []).length
+                ? '  Not drawn here: ' + cat.missing.join(', ') + '.'
+                : '';
               return {
                 id: cat.key,
                 title: cat.label + ' \u00b7 ' + cat.question,
                 blurb: cat.note + (can
-                  ? '  \u2014 ' + can + (can === 1 ? ' chart here' : ' charts here')
-                  : '  \u2014 SlideForge draws no maps, so nothing here yet')
+                  ? '  \u2014 ' + can + (can === 1 ? ' chart here.' : ' charts here.')
+                  : '  \u2014 SlideForge draws no maps, so nothing here yet.') + lacks
               };
             });
           },
@@ -2051,15 +2061,17 @@
               title: cat.label + ' \u00b7 ' + cat.question,
               wide: true,
               items: function () {
-                var rows = cat.kinds.map(function (k) {
+                /* Only pickable things. A row that does nothing when
+                   clicked reads as a control that is broken, so what is
+                   missing was said on the category instead. */
+                return cat.kinds.map(function (k) {
+                  var also = SF.chartCategories(k)
+                    .filter(function (c) { return c.key !== cat.key; })
+                    .map(function (c) { return c.label.toLowerCase(); });
                   return { id: k, title: LABELS[k] || k,
-                    blurb: k === s.chartKind ? 'What this slide uses now.' : 'Switch this slide to it.' };
+                    blurb: (k === s.chartKind ? 'What this slide uses now.' : 'Switch this slide to it.') +
+                      (also.length ? '  Also answers ' + also.join(' and ') + '.' : '') };
                 });
-                if (cat.missing && cat.missing.length) {
-                  rows.push({ id: '', title: 'Not drawn here: ' + cat.missing.join(', '),
-                    blurb: 'On the FT poster under this heading, but SlideForge has no renderer for them. Use an image.' });
-                }
-                return rows;
               },
               describe: function (it) { return it.blurb; },
               onPick: function (it) {
@@ -2071,7 +2083,11 @@
           }
         });
       });
-      chooser.style.cssText = 'font-size:12px;margin-bottom:9px;width:100%';
+      /* Quiet, and under the menu it supplements rather than competing with
+         it. The grouped menu is the everyday route; this is for the question
+         "which of these should it even be", which is asked once a slide. */
+      chooser.style.cssText = 'font-size:11.5px;margin:-4px 0 10px;padding:2px 0;border:0;background:none;' +
+        'text-decoration:underline;text-underline-offset:3px;opacity:.72;width:auto';
       insp.appendChild(chooser);
 
     /* Each idiom reads the same pasted table differently, and an author who

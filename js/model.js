@@ -7342,6 +7342,7 @@
       question: "Do two things move together?",
       note: "Be mindful that readers will often assume the relationship you show is causal.",
       kinds: ["scatter", "combo"],
+      home: ["scatter"],
       missing: ["bubble", "connected scatterplot", "XY heatmap"]
     },
     {
@@ -7350,6 +7351,7 @@
       question: "What values occur, and how often?",
       note: "The shape — the skew — is often the point, and the thing a summary statistic hides.",
       kinds: ["histogram", "box"],
+      home: ["histogram", "box"],
       missing: ["violin plot", "dot strip", "beeswarm", "population pyramid", "cumulative curve"]
     },
     {
@@ -7358,6 +7360,7 @@
       question: "What is the trend?",
       note: "Give the period enough context for the reader to judge the change.",
       kinds: ["line", "area", "combo"],
+      home: ["line", "area", "combo"],
       missing: ["slope", "candlestick", "calendar heatmap", "streamgraph", "fan chart"]
     },
     {
@@ -7366,6 +7369,7 @@
       question: "Which is bigger?",
       note: "A counted number — barrels, dollars, people — reads better here than a rate.",
       kinds: ["bar", "hbar", "pictogram", "bullet", "radar"],
+      home: ["bar", "pictogram", "radar"],
       missing: ["paired column", "lollipop", "marimekko", "proportional symbol", "parallel coordinates"]
     },
     {
@@ -7374,6 +7378,7 @@
       question: "What is the order?",
       note: "Use where position matters more than the value itself. Sort it, and label the points of interest.",
       kinds: ["hbar", "bar"],
+      home: ["hbar"],
       missing: ["ordered proportional symbol", "dot strip", "slope", "lollipop", "bump"]
     },
     {
@@ -7382,6 +7387,7 @@
       question: "How does one thing divide up?",
       note: "Only worth it when the reader cares about the components, not just the total.",
       kinds: ["stack", "pie", "donut", "treemap", "waffle"],
+      home: ["stack", "pie", "donut", "treemap", "waffle"],
       missing: ["marimekko", "arc", "voronoi", "Venn"]
     },
     {
@@ -7390,6 +7396,7 @@
       question: "Where does it go?",
       note: "Volumes or intensity of movement between states, conditions or places.",
       kinds: ["sankey"],
+      home: ["sankey"],
       missing: ["waterfall", "chord", "network"]
     },
     {
@@ -7398,6 +7405,7 @@
       question: "How far from a baseline?",
       note: "Variation above and below a fixed reference — a target, a long-run average, zero.",
       kinds: ["bullet"],
+      home: ["bullet"],
       missing: ["diverging bar", "diverging stacked bar", "spine", "surplus/deficit filled line"]
     },
     {
@@ -7406,6 +7414,7 @@
       question: "Where, on a map?",
       note: "Only when location matters more to the reader than anything else about the data.",
       kinds: [],
+      home: [],
       missing: ["choropleth", "proportional symbol", "flow map", "contour", "cartogram", "dot density", "heat map"]
     }
   ];
@@ -7413,6 +7422,12 @@
     return CHART_TAXONOMY.filter(function(c) {
       return c.kinds.indexOf(kind) >= 0;
     });
+  }
+  function chartPrimaryCategory(kind) {
+    var owned = CHART_TAXONOMY.filter(function(c) {
+      return (c.home || []).indexOf(kind) >= 0;
+    })[0];
+    return owned || chartCategories(kind)[0] || null;
   }
   var ASPECTS = {
     "16:9": { h: 720, label: "16:9 — widescreen, most projectors" },
@@ -8262,6 +8277,7 @@
     ASPECTS,
     CHART_TAXONOMY,
     chartCategories,
+    chartPrimaryCategory,
     slideHeight,
     THEMES,
     TRANSITIONS,

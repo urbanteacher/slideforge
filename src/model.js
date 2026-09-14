@@ -77,52 +77,86 @@ var CHART_TAXONOMY = [
     question: 'Do two things move together?',
     note: 'Be mindful that readers will often assume the relationship you show is causal.',
     kinds: ['scatter', 'combo'],
+    home: ['scatter'],
     missing: ['bubble', 'connected scatterplot', 'XY heatmap'] },
   { key: 'distribution', label: 'Distribution',
     question: 'What values occur, and how often?',
     note: 'The shape — the skew — is often the point, and the thing a summary statistic hides.',
     kinds: ['histogram', 'box'],
+    home: ['histogram', 'box'],
     missing: ['violin plot', 'dot strip', 'beeswarm', 'population pyramid', 'cumulative curve'] },
   { key: 'time', label: 'Change over time',
     question: 'What is the trend?',
     note: 'Give the period enough context for the reader to judge the change.',
     kinds: ['line', 'area', 'combo'],
+    home: ['line', 'area', 'combo'],
     missing: ['slope', 'candlestick', 'calendar heatmap', 'streamgraph', 'fan chart'] },
   { key: 'magnitude', label: 'Magnitude',
     question: 'Which is bigger?',
     note: 'A counted number — barrels, dollars, people — reads better here than a rate.',
     kinds: ['bar', 'hbar', 'pictogram', 'bullet', 'radar'],
+    home: ['bar', 'pictogram', 'radar'],
     missing: ['paired column', 'lollipop', 'marimekko', 'proportional symbol', 'parallel coordinates'] },
   { key: 'ranking', label: 'Ranking',
     question: 'What is the order?',
     note: 'Use where position matters more than the value itself. Sort it, and label the points of interest.',
     kinds: ['hbar', 'bar'],
+    home: ['hbar'],
     missing: ['ordered proportional symbol', 'dot strip', 'slope', 'lollipop', 'bump'] },
   { key: 'part', label: 'Part-to-whole',
     question: 'How does one thing divide up?',
     note: 'Only worth it when the reader cares about the components, not just the total.',
     kinds: ['stack', 'pie', 'donut', 'treemap', 'waffle'],
+    home: ['stack', 'pie', 'donut', 'treemap', 'waffle'],
     missing: ['marimekko', 'arc', 'voronoi', 'Venn'] },
   { key: 'flow', label: 'Flow',
     question: 'Where does it go?',
     note: 'Volumes or intensity of movement between states, conditions or places.',
     kinds: ['sankey'],
+    home: ['sankey'],
     missing: ['waterfall', 'chord', 'network'] },
   { key: 'deviation', label: 'Deviation',
     question: 'How far from a baseline?',
     note: 'Variation above and below a fixed reference — a target, a long-run average, zero.',
     kinds: ['bullet'],
+    home: ['bullet'],
     missing: ['diverging bar', 'diverging stacked bar', 'spine', 'surplus/deficit filled line'] },
   { key: 'spatial', label: 'Spatial',
     question: 'Where, on a map?',
     note: 'Only when location matters more to the reader than anything else about the data.',
     kinds: [],
+    home: [],
     missing: ['choropleth', 'proportional symbol', 'flow map', 'contour', 'cartogram', 'dot density', 'heat map'] }
 ];
 
-/** Which FT categories a chart kind belongs to. */
+/** Which FT categories a chart kind belongs to — in poster order. */
 function chartCategories(kind) {
   return CHART_TAXONOMY.filter(function (c) { return c.kinds.indexOf(kind) >= 0; });
+}
+
+/* Where a kind lives in a list that may only hold it once.
+
+   The poster cross-lists deliberately: a bar answers magnitude and, sorted,
+   ranking. A <select> cannot. Two options with the same value are not two
+   choices — picking the second makes the control jump to the first, so a
+   lecturer choosing "Bar" under Ranking watches it relocate to Magnitude.
+
+   So the menu takes the first listing and the chooser keeps the whole truth.
+   That also stops the chooser being a second route to the same place: it
+   now shows what the menu structurally cannot. */
+function chartPrimaryCategory(kind) {
+  /* `home` says which heading owns a kind in a list that may only hold it
+     once. Set deliberately rather than taken from poster order, because
+     order alone emptied two categories: the only ranking charts here are
+     bars, and the only deviation chart is the bullet, so letting Magnitude
+     claim all three made Ranking and Deviation disappear from the menu
+     entirely — which teaches their absence rather than their purpose.
+     A sorted horizontal bar is the FT's own canonical ranking chart, so
+     Ranking gets it, and Magnitude keeps the plain bar. */
+  var owned = CHART_TAXONOMY.filter(function (c) {
+    return (c.home || []).indexOf(kind) >= 0;
+  })[0];
+  return owned || chartCategories(kind)[0] || null;
 }
 
 var ASPECTS = {
@@ -1223,6 +1257,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   ASPECTS: ASPECTS,
   CHART_TAXONOMY: CHART_TAXONOMY,
   chartCategories: chartCategories,
+  chartPrimaryCategory: chartPrimaryCategory,
   slideHeight: slideHeight,
   THEMES: THEMES,
   TRANSITIONS: TRANSITIONS,
@@ -1337,4 +1372,4 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   GameStore: GameStore
 });
 
-export { SLIDE_W, SLIDE_H, ASPECTS, CHART_TAXONOMY, chartCategories, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, GAME_FORMAT_PRESETS, getShowcaseGame };
+export { SLIDE_W, SLIDE_H, ASPECTS, CHART_TAXONOMY, chartCategories, chartPrimaryCategory, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, GAME_FORMAT_PRESETS, getShowcaseGame };
