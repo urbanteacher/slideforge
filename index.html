@@ -25,13 +25,13 @@ html:not([data-ready]) #app { visibility: hidden; }
 /* Same cream the studio chrome uses once CSS loads — avoids a dark→light blink. */
 html:not([data-ready]) body { background: #f0f1ed; }
 </style>
-<link rel="stylesheet" href="css/app.css?v=28">
+<link rel="stylesheet" href="css/app.css?v=29">
 <link rel="stylesheet" href="css/board-common.css?v=1">
 <link rel="stylesheet" href="css/memory.css?v=2">
 <link rel="stylesheet" href="css/bingo.css?v=2">
 <link rel="stylesheet" href="css/bowl.css?v=2">
 <link rel="stylesheet" href="css/lowstakes.css?v=2">
-<link rel="stylesheet" href="css/studio.css?v=3">
+<link rel="stylesheet" href="css/studio.css?v=4">
 <link rel="stylesheet" href="css/northeastern.css?v=7">
 <link rel="stylesheet" href="css/customize.css?v=2">
 <link rel="stylesheet" href="css/lesson-moments.css?v=2"><link rel="stylesheet" href="css/game-polish.css?v=1">
@@ -96,17 +96,23 @@ html:not([data-ready]) body { background: #f0f1ed; }
       <button class="btn" id="btnImport">Import file</button>
     </div></details>
     <button class="btn" id="btnLectureReady" title="Lecture setup — wake the server, refresh this browser’s copy, join addresses" aria-label="Lecture setup">⚙</button>
+    <!-- Chrome that is not a run mode: kept with File so the right side stays
+         “start the room / the show”, not a junk drawer. -->
+    <button class="btn" id="btnReports">Reports</button>
+    <button class="btn" id="btnHelp" title="Keyboard shortcuts">?</button>
 
     <span class="spacer"></span>
 
-    <div class="header-actions">
-    <button class="btn" id="btnReports">Reports</button>
-    <button class="btn" id="btnHelp" title="Keyboard shortcuts">?</button>
-    <button class="btn" data-ws="deck" id="btnPresenter" title="Private presenter workspace: slides, live answers and teaching tools (D)">Presenter</button>
-    <button class="btn" data-ws="deck" id="btnRehearse" title="Dry-run the whole lesson with a SAMPLE class — slides, games and polls, no phones needed">▷ Rehearse lesson</button>
-    <button class="btn live" id="btnLive" title="Run live with phones in the room">◉ Host live</button>
-    <button class="btn primary" data-ws="deck" id="btnPresent" title="Start the slideshow (⌘↵)">▶ Present</button>
-    <button class="btn primary" data-ws="game" id="btnPlay" title="Play this game (⌘↵)">▶ Play game</button>
+    <!-- Run cluster. Lesson: desk → dry-run → phones → projector.
+         Quiz: Host live + Play. Activities: none here (showcase is on the
+         stage toolbar; open Lesson studio to present the whole deck). -->
+    <div class="header-actions" role="group" aria-label="Run this lesson">
+      <button class="btn" data-ws="deck" id="btnPresenter" title="Private teacher desk: notes, live answers and teaching tools — not the projector (D)">Teacher desk</button>
+      <span class="vsep" data-ws="deck" aria-hidden="true"></span>
+      <button class="btn" data-ws="deck" id="btnRehearse" title="Dry-run the whole lesson with a SAMPLE class — slides, games and polls, no phones needed">▷ Rehearse</button>
+      <button class="btn live" data-ws="deck game" id="btnLive" title="Run live with phones in the room">◉ Host live</button>
+      <button class="btn primary" data-ws="deck" id="btnPresent" title="Start the slideshow on the projector (⌘↵)">▶ Present</button>
+      <button class="btn primary" data-ws="game" id="btnPlay" title="Play this game (⌘↵)">▶ Play game</button>
     </div>
   </div>
 
@@ -131,7 +137,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
     <div class="studio-toolbar" data-ws="game"><div><span class="eyebrow">BUILD A CHECK</span><strong id="quizCanvasLabel">Pick a format, or write your own questions.</strong></div><button class="btn" id="btnDemoGame" title="Rehearse with a SAMPLE class of fake players (boards stay interactive in the preview)">▷ Try demo</button><button class="btn primary" id="btnActivitiesGame">＋ Browse quizzes</button></div>
     <!-- The activities studio writes into the same deck, so it wears the same
          toolbar as the other two rather than a shape of its own. -->
-    <div class="studio-toolbar" data-ws="plan"><div><span class="eyebrow">BUILD A LESSON</span><strong id="planCanvasLabel">Pick an activity. It lands in your lesson.</strong></div><button class="btn" id="btnDemoActivity" title="Showcase this activity in the player without playing the whole lesson">▷ Showcase activity</button><button class="btn" id="btnPlanToDeck">▤ Open in Lesson studio</button></div>
+    <div class="studio-toolbar" data-ws="plan"><div><span class="eyebrow">BUILD A LESSON</span><strong id="planCanvasLabel">Pick an activity. It lands in your lesson.</strong></div><button class="btn" id="btnDemoActivity" title="Showcase this activity in the player without playing the whole lesson">▷ Showcase activity</button><button class="btn" id="btnPlanToDeck" title="Present, rehearse and host live from Lesson studio">▤ Open in Lesson studio</button></div>
     <div class="stage-wrap">
       <div id="demoBanner" class="demo-banner" hidden><span id="demoBannerText">Demo uses this format’s engine and How to play. Boards rehearse in the preview; quizzes open a SAMPLE class.</span> <button type="button" id="btnDemoPlayer" class="btn ghost" title="Present this demo in the presentation player">▷ Full presentation demo</button> <button type="button" id="btnDemoReset" class="btn ghost">Reset demo</button></div>
       <div id="previewBox"></div>
@@ -213,7 +219,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
       <tr><td><kbd>J</kbd></td><td>Show the join QR and PIN full screen (Host live)</td></tr>
       <tr><td><kbd>T</kbd></td><td>Turn the room&rsquo;s reactions on or off (live games)</td></tr>
       <tr><td><kbd>V</kbd></td><td>Ask the room a quick poll / vote</td></tr>
-      <tr><td><kbd>D</kbd></td><td>Presenter view (notes + next slide)</td></tr>
+      <tr><td><kbd>D</kbd></td><td>Teacher desk (notes + live answers)</td></tr>
       <tr><td><kbd>?</kbd></td><td>Show this list</td></tr>
       <tr><td><kbd>Esc</kbd></td><td>Exit the show</td></tr>
     </table>
@@ -333,7 +339,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/bowl.js?v=2"></script>
 <script src="js/lowstakes.js?v=2"></script>
 <script src="js/demo.js?v=2"></script>
-<script src="js/player.js?v=6"></script>
+<script src="js/player.js?v=7"></script>
 <script src="js/live.js?v=7"></script>
 <script src="js/ai.js?v=2"></script>
 <script src="js/quick-poll.js?v=1"></script>
@@ -341,7 +347,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/lesson-moments.js?v=2"></script>
 <script src="js/print.js?v=2"></script>
 <script src="js/history.js?v=2"></script>
-<script src="js/shell.js?v=19"></script>
+<script src="js/shell.js?v=20"></script>
 <script src="js/content-tools.js?v=2"></script>
 <script src="js/editor.js?v=23"></script>
 <script src="js/games.js?v=8"></script>

@@ -1393,13 +1393,14 @@
 
     var want = null;
     try { want = localStorage.getItem(LAST_WS); } catch (e) {}
-    active = workspaces[want === 'game' ? 'game' : 'deck'];
+    active = workspaces[want === 'game' || want === 'plan' ? want : 'deck'] || workspaces.deck;
     /* Toggled, not added: the inline script has already guessed from the same
        key, and add() alone would leave both classes on the body if the shell
        landed somewhere else. Keep html[data-ws] in lockstep — CSS prefers it. */
+    document.body.classList.toggle('ws-deck', active.key === 'deck');
     document.body.classList.toggle('ws-game', active.key === 'game');
-    document.body.classList.toggle('ws-deck', active.key !== 'game');
-    document.documentElement.setAttribute('data-ws', active.key === 'game' ? 'game' : 'deck');
+    document.body.classList.toggle('ws-plan', active.key === 'plan');
+    document.documentElement.setAttribute('data-ws', active.key);
     var wsSwitchEl = $('wsSwitch');
     if (wsSwitchEl) {
       Array.prototype.forEach.call(wsSwitchEl.children, function (b) {
