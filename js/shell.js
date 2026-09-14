@@ -703,6 +703,80 @@
     if (btnSave) btnSave.onclick = function () { save(false, true); };
     var btnDemo = $('btnDemoLesson');
     if (btnDemo) btnDemo.onclick = openDemoLesson;
+
+    /* The two things that go wrong between a working app and a working
+       lecture, neither of which is a bug and both of which look like one
+       from the back of the room.
+
+       A hosted free instance sleeps when nobody has used it, and the first
+       request after that waits the better part of a minute — which is the
+       moment the first phone scans the code. And a browser restores the deck
+       it had last time, so a laptop that opened the lesson before the app was
+       updated keeps showing the older copy, with nothing on screen to say so.
+
+       Both are one click, and neither belongs in the middle of teaching. */
+    var btnReady = $('btnLectureReady');
+    if (btnReady) {
+      btnReady.onclick = function () {
+        if (active.flush) active.flush();
+        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
+        if (menu) menu.open = false;
+
+        /* Which ready-made lesson the open deck came from, if any. A deck does
+           not record the lesson that built it, so the title is the only link
+           back — good enough to offer the refresh, and it simply is not
+           offered when nothing matches rather than guessing. */
+        function lessonBehind() {
+          var doc = active.doc();
+          if (!doc || active.key !== 'deck') return null;
+          var hit = (SF.LESSONS || []).filter(function (l) { return l.title === doc.title; })[0];
+          return hit || null;
+        }
+
+        picker({
+          title: 'Before the lecture',
+          items: function () {
+            var items = [];
+            if (servedByRelay() && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) {
+              items.push({ id: 'wake', title: 'Wake the server',
+                blurb: 'A hosted free instance sleeps when idle and takes about a minute to answer the first request. Waking it now means the first phone to scan does not wait.' });
+            }
+            var lesson = lessonBehind();
+            if (lesson) {
+              items.push({ id: 'refresh', title: 'Reload “' + lesson.title + '” from this version of the app',
+                blurb: 'This browser may be showing a copy it saved earlier. Rebuilds the lesson as the app now ships it — ' +
+                  (lesson.slides || []).length + ' slides. Your current copy stays in File → Open.' });
+            }
+            return items;
+          },
+          empty: 'Nothing to check: this lesson is your own, and the app is running from this machine.',
+          describe: function (it) { return it.blurb; },
+          onPick: function (it) {
+            if (it.id === 'wake') {
+              var began = Date.now();
+              SF.toast('Waking the server…');
+              /* Any answer means it is up; a 404 would wake it just as well as
+                 a 200. Only a refusal is worth reporting as a failure. */
+              fetch(location.origin + '/?wake=' + began, { cache: 'no-store' })
+                .then(function () {
+                  var secs = Math.round((Date.now() - began) / 100) / 10;
+                  SF.toast(secs > 5
+                    ? 'Awake — it had gone to sleep and took ' + secs + 's. It is ready now.'
+                    : 'Awake and answering in ' + secs + 's. It was already up.');
+                })
+                .catch(function () { SF.toast('Could not reach the server. Check the connection before class.'); });
+              return;
+            }
+            if (it.id === 'refresh') {
+              var lesson = lessonBehind();
+              if (!lesson) return;
+              SF.Editor.useLesson(lesson.key);
+              SF.toast('“' + lesson.title + '” reloaded from this version of the app. Your previous copy is in File → Open.');
+            }
+          }
+        });
+      };
+    }
     var btnExport = $('btnExport');
     if (btnExport) {
       btnExport.onclick = function () {
