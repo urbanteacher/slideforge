@@ -636,8 +636,7 @@
        same thing and a histogram's are just numbers — labelling them "28,
        31, 33" in a legend is the chart naming its own raw data as though
        each value were a category. */
-    var oneSeriesIdiom = slide && ['pie', 'donut', 'box', 'histogram', 'pictogram']
-      .indexOf(slide.chartKind) >= 0;
+    var oneSeriesIdiom = slide && ['pie', 'donut', 'box', 'histogram', 'pictogram', 'sankey', 'treemap', 'waffle'].indexOf(slide.chartKind) >= 0;
     if (data.series.length > 1 && !oneSeriesIdiom) {
       data.series.forEach(function (s, i) {
         var item = el('span', 'ck-item');
@@ -1079,6 +1078,164 @@
     return svg;
   }
 
+  /* A radar, star or spider plot: one spoke per variable, one polygon per
+     row. It is here because the lecture teaches it, and it is worth being
+     able to draw an idiom in order to argue with it.
+
+     Its weaknesses are the point of the slide that uses it. Area grows as
+     the square of the values, so a row twice as good encloses four times
+     the shape. The order of the spokes is arbitrary and changes that area —
+     which a reader cannot see and an author can now demonstrate by
+     reordering the columns. And it compares position on unaligned scales,
+     several steps down the ranking from the same numbers as bars.
+
+     Scales are shared across spokes by default so the polygon means
+     something; per-spoke normalisation makes every row look similar and is
+     the more common way this chart misleads. */
+  function radarChart(data, slide) {
+    var W = CHART.w, H = CHART.h;
+    var cx = W / 2, cy = H / 2 + 6, R = Math.min(H / 2 - 34, 168);
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+    var axes = data.categories.length;
+    if (axes < 3) return svg;
+    var all = [];
+    data.series.forEach(function (sr) { sr.values.forEach(function (v) { if (v != null) all.push(v); }); });
+    var max = niceMax(Math.max.apply(null, all.concat([0])));
+    var ang = function (i) { return -Math.PI / 2 + (i / axes) * Math.PI * 2; };
+    var at = function (i, v) {
+      var r = (Math.max(0, v) / max) * R;
+      return [cx + r * Math.cos(ang(i)), cy + r * Math.sin(ang(i))];
+    };
+
+    /* Rings first, as a web rather than circles: a polygon read against a
+       circular grid looks bowed where it is straight. */
+    [0.25, 0.5, 0.75, 1].forEach(function (f) {
+      var pts = [];
+      for (var i = 0; i < axes; i++) {
+        pts.push((cx + R * f * Math.cos(ang(i))).toFixed(1) + ',' + (cy + R * f * Math.sin(ang(i))).toFixed(1));
+      }
+      svg.appendChild(svgEl('polygon', { points: pts.join(' '), class: 'ch-grid ch-web', fill: 'none' }));
+    });
+    for (var i = 0; i < axes; i++) {
+      var e = at(i, max);
+      svg.appendChild(svgEl('line', { x1: cx, y1: cy, x2: e[0].toFixed(1), y2: e[1].toFixed(1), class: 'ch-grid' }));
+      var lr = R + 26, lx = cx + lr * Math.cos(ang(i)), ly = cy + lr * Math.sin(ang(i));
+      var cosv = Math.cos(ang(i));
+      var lab = svgEl('text', { x: lx.toFixed(1), y: (ly + 5).toFixed(1), class: 'ch-cat',
+        'text-anchor': cosv < -0.25 ? 'end' : (cosv > 0.25 ? 'start' : 'middle') });
+      lab.textContent = data.categories[i];
+      svg.appendChild(lab);
+    }
+    var tick = svgEl('text', { x: cx + 6, y: cy - R + 4, class: 'ch-tick' });
+    tick.textContent = fmt(max);
+    svg.appendChild(tick);
+
+    data.series.forEach(function (sr, si) {
+      var pts = [];
+      for (var i = 0; i < axes; i++) {
+        var v = sr.values[i];
+        var p = at(i, v == null ? 0 : v);
+        pts.push(p[0].toFixed(1) + ',' + p[1].toFixed(1));
+      }
+      var g = svgEl('g', { class: 'ch-line ch-radar', 'data-step': si, 'data-series': String(si) });
+      g.appendChild(svgEl('polygon', { points: pts.join(' '), fill: chartColor(si),
+        opacity: 0.18, stroke: chartColor(si), 'stroke-width': 3, 'stroke-linejoin': 'round' }));
+      for (var j = 0; j < axes; j++) {
+        var vv = sr.values[j], pp = at(j, vv == null ? 0 : vv);
+        g.appendChild(svgEl('circle', { cx: pp[0].toFixed(1), cy: pp[1].toFixed(1), r: 5,
+          fill: chartColor(si), class: 'ch-dot' }));
+      }
+      svg.appendChild(g);
+    });
+    return svg;
+  }
+
+  /* A Sankey. Band width is the quantity, which is the one thing the
+     lecture's own slide says about it, so width is the only channel used —
+     no colour scale, no varying opacity carrying a second meaning.
+
+     Ribbons are cubic beziers with horizontal control points, so a band
+     leaves and arrives level and its width is readable at both ends. They
+     are drawn before the nodes and in descending size, so a thick flow
+     cannot hide a thin one behind it. */
+  function sankeyChart(slide) {
+    var W = CHART.w, H = CHART.h, P = CHART;
+    var f = SF.chartFlows(slide);
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+    if (!f.links.length) return svg;
+
+    var padT = 18, padB = 26, left = 6, right = 6;
+    var plotH = H - padT - padB;
+    var nodeW = 16;
+    var gap = 16;
+
+    /* Scale: the fullest layer decides, so no column overflows and every
+       band keeps the same units per pixel across the whole diagram. */
+    var byLayer = [];
+    for (var d = 0; d < f.layers; d++) byLayer.push(f.nodes.filter(function (n) { return n.depth === d; }));
+    var heaviest = byLayer.reduce(function (m, col) {
+      return Math.max(m, col.reduce(function (t, n) { return t + n.total; }, 0));
+    }, 0);
+    var tallest = byLayer.reduce(function (m, col) { return Math.max(m, col.length); }, 0);
+    var perUnit = (plotH - (tallest - 1) * gap) / (heaviest || 1);
+
+    var colX = function (d) {
+      return left + (f.layers === 1 ? 0 : d * ((W - left - right - nodeW) / (f.layers - 1)));
+    };
+    byLayer.forEach(function (col, d) {
+      col.sort(function (a, b) { return b.total - a.total; });
+      var used = col.reduce(function (t, n) { return t + n.total * perUnit; }, 0) + (col.length - 1) * gap;
+      var y = padT + (plotH - used) / 2;
+      col.forEach(function (n) {
+        n.x = colX(d);
+        n.y = y;
+        n.h = Math.max(2, n.total * perUnit);
+        n.inAt = n.y;
+        n.outAt = n.y;
+        y += n.h + gap;
+      });
+    });
+
+    var idx = f.index;
+    var ribbons = f.links.slice().sort(function (a, b) { return b.value - a.value; });
+    var g = svgEl('g', { class: 'ch-beat', 'data-step': 0, 'data-series': '0' });
+    ribbons.forEach(function (l) {
+      var a = f.nodes[idx[l.from]], b = f.nodes[idx[l.to]];
+      var t = l.value * perUnit;
+      var x1 = a.x + nodeW, x2 = b.x;
+      var y1 = a.outAt, y2 = b.inAt;
+      a.outAt += t; b.inAt += t;
+      var mx = (x1 + x2) / 2;
+      var d2 = 'M' + x1 + ' ' + y1 +
+        ' C' + mx + ' ' + y1 + ' ' + mx + ' ' + y2 + ' ' + x2 + ' ' + y2 +
+        ' L' + x2 + ' ' + (y2 + t) +
+        ' C' + mx + ' ' + (y2 + t) + ' ' + mx + ' ' + (y1 + t) + ' ' + x1 + ' ' + (y1 + t) + ' Z';
+      var band = svgEl('path', { d: d2, class: 'ch-flow', fill: chartColor(a.depth % 6) });
+      var tip = svgEl('title', {});
+      tip.textContent = l.from + ' → ' + l.to + ': ' + fmt(l.value);
+      band.appendChild(tip);
+      g.appendChild(band);
+    });
+    svg.appendChild(g);
+
+    f.nodes.forEach(function (n) {
+      svg.appendChild(svgEl('rect', { x: n.x, y: n.y, width: nodeW, height: n.h,
+        class: 'ch-node', fill: chartColor(n.depth % 6) }));
+      /* Labels sit outside the column they belong to, except the last,
+         which has nothing to its right to collide with. */
+      var last = n.depth === f.layers - 1;
+      var lab = svgEl('text', {
+        x: last ? n.x - 10 : n.x + nodeW + 10,
+        y: n.y + n.h / 2 + 5,
+        class: 'ch-cat ch-node-label',
+        'text-anchor': last ? 'end' : 'start'
+      });
+      lab.textContent = n.name + ' · ' + fmt(n.total);
+      svg.appendChild(lab);
+    });
+    return svg;
+  }
+
   function lineChart(data, slide, area) {
     var W = CHART.w, H = CHART.h, P = CHART;
     /* Reserve the right margin for the end-labels before drawing anything.
@@ -1214,6 +1371,315 @@
     return svg;
   }
 
+  /* Binary-partition treemap. Good enough for a use-of-funds slide: biggest
+     spend physically dominates. Not a full squarify — those need a library;
+     this stays readable on a 1280 wall without one. */
+  function layoutTreemap(nodes, x, y, w, h) {
+    if (!nodes.length) return [];
+    if (nodes.length === 1) {
+      return [{ name: nodes[0].name, value: nodes[0].value, i: nodes[0].i, x: x, y: y, w: w, h: h }];
+    }
+    var total = 0;
+    nodes.forEach(function (n) { total += n.value; });
+    var acc = 0, mid = 0;
+    for (var i = 0; i < nodes.length; i++) {
+      acc += nodes[i].value;
+      mid = i;
+      if (acc >= total / 2) break;
+    }
+    var left = nodes.slice(0, mid + 1);
+    var right = nodes.slice(mid + 1);
+    if (!right.length) {
+      return [{ name: nodes[0].name, value: nodes[0].value, i: nodes[0].i, x: x, y: y, w: w, h: h }];
+    }
+    var leftSum = 0;
+    left.forEach(function (n) { leftSum += n.value; });
+    var ratio = leftSum / total;
+    if (w >= h) {
+      return layoutTreemap(left, x, y, w * ratio, h)
+        .concat(layoutTreemap(right, x + w * ratio, y, w * (1 - ratio), h));
+    }
+    return layoutTreemap(left, x, y, w, h * ratio)
+      .concat(layoutTreemap(right, x, y + h * ratio, w, h * (1 - ratio)));
+  }
+
+  /* Part-of-whole by area. Same paste as a pie — one series, categories as
+     the parts — but the largest block owns the eye, which is what a use-of-
+     funds slide needs and a pie refuses to do. */
+  function treemapChart(data, slide) {
+    var W = CHART.w, H = CHART.h;
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+    var series = data.series[0];
+    if (!series) return svg;
+    var nodes = [];
+    data.categories.forEach(function (cat, i) {
+      var v = series.values[i];
+      if (v == null || v <= 0) return;
+      nodes.push({ name: cat, value: v, i: i });
+    });
+    nodes.sort(function (a, b) { return b.value - a.value; });
+    var total = 0;
+    nodes.forEach(function (n) { total += n.value; });
+    if (!total) return svg;
+    var gap = 3;
+    var rects = layoutTreemap(nodes, gap, gap, W - gap * 2, H - gap * 2);
+    rects.forEach(function (r) {
+      var g = svgEl('g', { class: 'ch-cell ch-beat', 'data-step': r.i, 'data-series': '0' });
+      var pad = 1.5;
+      g.appendChild(svgEl('rect', {
+        x: r.x + pad, y: r.y + pad,
+        width: Math.max(0, r.w - pad * 2), height: Math.max(0, r.h - pad * 2),
+        fill: chartColor(r.i % 6), class: 'ch-tree-rect', rx: 4
+      }));
+      if (r.w > 70 && r.h > 42) {
+        var name = svgEl('text', {
+          x: r.x + 14, y: r.y + 28, class: 'ch-tree-label', 'text-anchor': 'start'
+        });
+        name.textContent = r.name;
+        g.appendChild(name);
+        var pct = Math.round((r.value / total) * 100);
+        var val = svgEl('text', {
+          x: r.x + 14, y: r.y + 52, class: 'ch-tree-value', 'text-anchor': 'start'
+        });
+        val.textContent = fmt(r.value) + ' · ' + pct + '%';
+        g.appendChild(val);
+      }
+      svg.appendChild(g);
+    });
+    return svg;
+  }
+
+  /* Actual against a target, one row per category. First series is the bar;
+     second (if present) is the target tick. The qualitative ranges a full
+     bullet chart sometimes carries are left out — they need a third kind of
+     column the paste shape does not name. */
+  function bulletChart(data, slide) {
+    var W = CHART.w, H = CHART.h, P = { padL: 160, padR: 40, padT: 18, padB: 28 };
+    var plotW = W - P.padL - P.padR;
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+    var actual = data.series[0];
+    var target = data.series[1] || null;
+    if (!actual) return svg;
+    var all = [];
+    data.series.forEach(function (s) {
+      s.values.forEach(function (v) { if (v != null) all.push(Math.abs(v)); });
+    });
+    var max = niceMax(Math.max.apply(null, all.concat([0])));
+    var rowH = Math.min(72, (H - P.padT - P.padB) / Math.max(1, data.categories.length));
+    var trackH = Math.min(22, rowH * 0.38);
+    var barH = Math.min(12, trackH * 0.55);
+
+    data.categories.forEach(function (cat, ci) {
+      var y = P.padT + rowH * ci + rowH / 2;
+      var lab = svgEl('text', { x: P.padL - 16, y: y + 6, class: 'ch-cat', 'text-anchor': 'end' });
+      lab.textContent = cat;
+      svg.appendChild(lab);
+      var g = svgEl('g', { class: 'ch-beat', 'data-step': ci });
+      g.appendChild(svgEl('rect', {
+        x: P.padL, y: y - trackH / 2, width: plotW, height: trackH,
+        class: 'ch-bullet-track', rx: 2
+      }));
+      var av = actual.values[ci];
+      if (av != null) {
+        var bw = Math.max(0, (Math.abs(av) / max) * plotW);
+        var bar = svgEl('g', { class: 'ch-bar', 'data-series': '0' });
+        bar.appendChild(svgEl('rect', {
+          x: P.padL, y: y - barH / 2, width: bw, height: barH,
+          fill: chartColor(0), rx: 2
+        }));
+        g.appendChild(bar);
+        var vlab = svgEl('text', {
+          x: P.padL + bw + 10, y: y + 5, class: 'ch-value', 'text-anchor': 'start'
+        });
+        vlab.textContent = fmt(av);
+        g.appendChild(vlab);
+      }
+      if (target) {
+        var tv = target.values[ci];
+        if (tv != null) {
+          var tx = P.padL + (Math.abs(tv) / max) * plotW;
+          var mark = svgEl('g', { class: 'ch-bullet-target', 'data-series': '1' });
+          mark.appendChild(svgEl('line', {
+            x1: tx, y1: y - trackH * 0.7, x2: tx, y2: y + trackH * 0.7,
+            class: 'ch-bullet-tick'
+          }));
+          g.appendChild(mark);
+        }
+      }
+      svg.appendChild(g);
+    });
+    return svg;
+  }
+
+  /* Columns for the first series, markers for the rest — the ARR-growth
+     idiom where absolute size and a rate share one picture. Same axis for
+     both: if the marker series is a percentage and the columns are pounds,
+     the paste is the wrong shape and the chart will say so by looking odd. */
+  function comboChart(data, slide) {
+    var W = CHART.w, H = CHART.h, P = CHART;
+    var plotW = W - P.padL - P.padR, plotH = H - P.padT - P.padB;
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+    if (!data.series.length) return svg;
+
+    var all = [];
+    data.series.forEach(function (s) {
+      s.values.forEach(function (v) { if (v != null) all.push(v); });
+    });
+    var max = niceMax(Math.max.apply(null, all.concat([0])));
+
+    axisTicks(max).forEach(function (t) {
+      var y = P.padT + plotH - (t / max) * plotH;
+      svg.appendChild(svgEl('line', { x1: P.padL, y1: y, x2: P.padL + plotW, y2: y, class: 'ch-grid' }));
+      var lab = svgEl('text', { x: P.padL - 14, y: y + 7, class: 'ch-tick', 'text-anchor': 'end' });
+      lab.textContent = fmt(t);
+      svg.appendChild(lab);
+    });
+
+    var band = plotW / Math.max(1, data.categories.length);
+    var barW = Math.min(band * 0.48, 64);
+    var cols = data.series[0];
+    var colG = svgEl('g', { class: 'ch-beat', 'data-step': 0, 'data-series': '0' });
+    data.categories.forEach(function (cat, ci) {
+      var v = cols.values[ci];
+      if (v == null) return;
+      var hgt = Math.max(0, (v / max) * plotH);
+      var x = P.padL + band * ci + (band - barW) / 2;
+      var y = P.padT + plotH - hgt;
+      var g = svgEl('g', { class: 'ch-bar' });
+      var r = Math.min(4, barW / 2);
+      var d = 'M' + x + ' ' + (y + hgt) + ' V' + (y + r) + ' Q' + x + ' ' + y + ' ' + (x + r) + ' ' + y +
+              ' H' + (x + barW - r) + ' Q' + (x + barW) + ' ' + y + ' ' + (x + barW) + ' ' + (y + r) +
+              ' V' + (y + hgt) + ' Z';
+      g.appendChild(svgEl('path', { d: d, fill: chartColor(0) }));
+      colG.appendChild(g);
+      var cl = svgEl('text', {
+        x: P.padL + band * ci + band / 2, y: H - P.padB + 30,
+        class: 'ch-cat', 'text-anchor': 'middle'
+      });
+      cl.textContent = cat;
+      svg.appendChild(cl);
+    });
+    svg.appendChild(colG);
+
+    data.series.slice(1).forEach(function (s, mi) {
+      var si = mi + 1;
+      var g = svgEl('g', { class: 'ch-markers ch-beat', 'data-step': si, 'data-series': String(si) });
+      var pts = [];
+      data.categories.forEach(function (cat, ci) {
+        var v = s.values[ci];
+        if (v == null) return;
+        var cx = P.padL + band * ci + band / 2;
+        var cy = P.padT + plotH - (v / max) * plotH;
+        pts.push([cx, cy]);
+        g.appendChild(svgEl('circle', {
+          cx: cx, cy: cy, r: 7, fill: chartColor(si), class: 'ch-marker',
+          stroke: 'var(--s-bg, #fff)', 'stroke-width': 2
+        }));
+      });
+      if (pts.length > 1) {
+        var path = pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0] + ' ' + p[1]; }).join(' ');
+        g.insertBefore(svgEl('path', {
+          d: path, fill: 'none', stroke: chartColor(si),
+          'stroke-width': 2.5, class: 'ch-marker-line', 'stroke-dasharray': '4 5'
+        }), g.firstChild);
+      }
+      svg.appendChild(g);
+    });
+
+    svg.appendChild(svgEl('line', {
+      x1: P.padL, y1: P.padT + plotH, x2: P.padL + plotW, y2: P.padT + plotH, class: 'ch-axis'
+    }));
+    return svg;
+  }
+
+  /* A 10×10 grid = 100 cells. Categories from one series share the grid by
+     proportion — the waffle's whole point is that five percent is five
+     squares you can count, not a five-degree pie slice. */
+  function waffleChart(data, slide) {
+    var W = CHART.w, H = CHART.h;
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+    var series = data.series[0];
+    if (!series) return svg;
+    var parts = [];
+    var total = 0;
+    data.categories.forEach(function (cat, i) {
+      var v = series.values[i];
+      if (v == null || v <= 0) return;
+      parts.push({ name: cat, value: v, i: i });
+      total += v;
+    });
+    if (!total) return svg;
+
+    /* Single category whose value is already a percentage (≤ 100): fill that
+       many cells and leave the rest as empty track. Multiple categories:
+       share all 100 by proportion. */
+    var cells = [];
+    if (parts.length === 1 && parts[0].value <= 100) {
+      var n = Math.max(0, Math.min(100, Math.round(parts[0].value)));
+      for (var a = 0; a < n; a++) cells.push(parts[0].i);
+      for (var b = n; b < 100; b++) cells.push(-1);
+    } else {
+      var assigned = 0;
+      parts.forEach(function (p, pi) {
+        var count = pi === parts.length - 1
+          ? (100 - assigned)
+          : Math.round((p.value / total) * 100);
+        count = Math.max(0, Math.min(100 - assigned, count));
+        for (var c = 0; c < count; c++) cells.push(p.i);
+        assigned += count;
+      });
+      while (cells.length < 100) cells.push(-1);
+      cells = cells.slice(0, 100);
+    }
+
+    var labelW = Math.min(280, 40 + parts.reduce(function (m, p) {
+      return Math.max(m, String(p.name).length);
+    }, 0) * 10);
+    var gridSize = Math.min(H - 40, W - labelW - 80);
+    var cell = gridSize / 10;
+    var gap = Math.max(2, cell * 0.08);
+    var ox = labelW;
+    var oy = (H - gridSize) / 2;
+
+    for (var i = 0; i < 100; i++) {
+      var col = i % 10;
+      var row = Math.floor(i / 10);
+      var idx = cells[i];
+      var g = svgEl('g', {
+        class: 'ch-waffle-cell' + (idx < 0 ? ' ch-waffle-empty' : ' ch-cell'),
+        'data-step': idx < 0 ? 0 : idx,
+        'data-series': '0'
+      });
+      g.appendChild(svgEl('rect', {
+        x: ox + col * cell + gap / 2,
+        y: oy + row * cell + gap / 2,
+        width: cell - gap,
+        height: cell - gap,
+        rx: 2,
+        fill: idx < 0 ? 'var(--s-muted, #ccc)' : chartColor(idx % 6),
+        opacity: idx < 0 ? 0.22 : 1,
+        class: 'ch-waffle-sq'
+      }));
+      svg.appendChild(g);
+    }
+
+    parts.forEach(function (p, pi) {
+      var y = oy + 22 + pi * 36;
+      var item = svgEl('g', { class: 'ch-beat', 'data-step': p.i, 'data-series': '0' });
+      item.appendChild(svgEl('rect', {
+        x: 24, y: y - 12, width: 18, height: 18, rx: 3, fill: chartColor(p.i % 6)
+      }));
+      var t = svgEl('text', { x: 52, y: y + 2, class: 'ch-cat', 'text-anchor': 'start' });
+      var share = parts.length === 1 && p.value <= 100
+        ? Math.round(p.value)
+        : Math.round((p.value / total) * 100);
+      t.textContent = p.name + ' · ' + share + '%';
+      item.appendChild(t);
+      svg.appendChild(item);
+    });
+    return svg;
+  }
+
   function layoutChart(slide, pad) {
     if (slide.exploration && slide.exploration.prediction) slide = Object.assign({}, slide, { progressive: false });
     if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
@@ -1225,6 +1691,8 @@
     var empty = k0 === 'scatter' ? !SF.chartPoints(slide).series.some(function (x) { return x.points.length; })
               : k0 === 'histogram' ? SF.chartValues(slide).length < 2
               : k0 === 'box' ? !SF.chartGroups(slide).length
+              : k0 === 'sankey' ? !SF.chartFlows(slide).links.length
+              : k0 === 'radar' ? (data.categories.length < 3 || !data.series.length)
               : (!data.series.length || !data.categories.length);
     if (empty) {
       var e = el('div', 'empty');
@@ -1236,12 +1704,18 @@
         k0 === 'scatter' ? 'Two numeric columns: the first is x, the second is y. One row per point.'
         : k0 === 'histogram' ? 'One column of numbers. They are counted into bins for you.'
         : k0 === 'box' ? 'One row per group: its name, then every value measured in it.'
+        : k0 === 'sankey' ? 'Three columns: from, to, amount. One row per flow.'
+        : k0 === 'radar' ? 'At least three categories — they become the spokes. Each series is a shape.'
+        : k0 === 'bullet' ? 'First column Actual, second Target (optional). One row per category.'
+        : k0 === 'combo' ? 'First series draws as columns; later series draw as markers on top.'
+        : k0 === 'treemap' || k0 === 'waffle' ? 'One series of parts that make a whole — same paste as a pie.'
         : 'Paste a range from a spreadsheet — first row names the series, first column the categories'));
       pad.appendChild(e);
       return;
     }
     var KINDS = ['bar', 'stack', 'hbar', 'line', 'area', 'pie', 'donut',
-                 'scatter', 'histogram', 'box', 'pictogram'];
+                 'scatter', 'histogram', 'box', 'pictogram', 'radar', 'sankey',
+                 'treemap', 'bullet', 'combo', 'waffle'];
     var kind = KINDS.indexOf(slide.chartKind) >= 0 ? slide.chartKind : 'bar';
     var wrap = el('div', 'chart-wrap chart-' + kind);
     var design = slide.design || {};
@@ -1259,10 +1733,16 @@
       wrap.dataset.focus = String(Number(design.chartFocus));
     }
     var stepOf = function (si, ci) { return data.series.length > 1 ? si : ci; };
-    var svg = kind === 'scatter' ? scatterChart(slide)
+    var svg = kind === 'sankey' ? sankeyChart(slide)
+            : kind === 'radar' ? radarChart(data, slide)
+            : kind === 'scatter' ? scatterChart(slide)
             : kind === 'histogram' ? histogramChart(slide)
             : kind === 'box' ? boxChart(slide)
             : kind === 'pictogram' ? pictogramChart(data, slide)
+            : kind === 'treemap' ? treemapChart(data, slide)
+            : kind === 'bullet' ? bulletChart(data, slide)
+            : kind === 'combo' ? comboChart(data, slide)
+            : kind === 'waffle' ? waffleChart(data, slide)
             : kind === 'line' ? lineChart(data, slide, false)
             : kind === 'area' ? lineChart(data, slide, true)
             : kind === 'pie' ? pieChart(data, slide, false)
@@ -1275,7 +1755,7 @@
        mark, so a press lands one comparable thing at a time. */
     /* Only a built chart gets steps; without the class the reveal driver
        leaves every mark on screen, which is what an unbuilt chart wants. */
-    var beatSel = '.ch-beat, .ch-line, .ch-slice';
+    var beatSel = '.ch-beat, .ch-line, .ch-slice, .ch-cell';
     Array.prototype.forEach.call(svg.querySelectorAll(beatSel), function (n) {
       n.classList.toggle('step', !!slide.progressive);
     });

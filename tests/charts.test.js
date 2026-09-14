@@ -93,7 +93,9 @@ test('a chart slide normalises to a drawable kind', () => {
      the example of an unknown kind here, which is exactly the way this test
      earns its keep: adding a kind without adding it to the whitelist would
      have silently drawn bars instead. */
-  ['bar', 'stack', 'hbar', 'line', 'area', 'pie', 'donut'].forEach((kind) => {
+  ['bar', 'stack', 'hbar', 'line', 'area', 'pie', 'donut',
+   'scatter', 'histogram', 'box', 'pictogram', 'radar', 'sankey',
+   'treemap', 'bullet', 'combo', 'waffle'].forEach((kind) => {
     assert.equal(SF.normalizeSlide({ type: 'chart', chartKind: kind }).chartKind, kind,
       kind + ' is drawable and must survive normalize');
   });

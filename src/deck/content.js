@@ -155,6 +155,63 @@ function fiveNumber(sorted) {
   };
 }
 
+/**
+ * Flows for a Sankey: three columns — from, to, amount. This is the only
+ * chart here whose data is not a table of values but a list of edges, so it
+ * gets its own reading rather than a clever interpretation of the others.
+ *
+ * Nodes are placed in layers by the longest path that reaches them, not the
+ * shortest: a flow that skips a stage should still arrive at the stage it
+ * belongs to, or the diagram grows a diagonal that crosses everything.
+ */
+function chartFlows(slide) {
+  var rows = dataRows(slide && slide.body);
+  var links = [];
+  rows.forEach(function (r) {
+    var from = String(r[0] || '').trim(), to = String(r[1] || '').trim();
+    var v = chartNumber(r[2]);
+    /* A header line is dropped by its third cell not being a number, which
+       is the same test the other readings use. */
+    if (!from || !to || v == null || v <= 0) return;
+    links.push({ from: from, to: to, value: v });
+  });
+  if (!links.length) return { nodes: [], links: [], layers: 0 };
+
+  var names = [];
+  links.forEach(function (l) {
+    if (names.indexOf(l.from) < 0) names.push(l.from);
+    if (names.indexOf(l.to) < 0) names.push(l.to);
+  });
+  /** @type {{name:string, depth:number, in:number, out:number, total:number,
+   *           x:number, y:number, h:number, inAt:number, outAt:number}[]} */
+  var nodes = names.map(function (n) {
+    return { name: n, depth: 0, in: 0, out: 0, total: 0, x: 0, y: 0, h: 0, inAt: 0, outAt: 0 };
+  });
+  var byName = {};
+  nodes.forEach(function (n, i) { byName[n.name] = i; });
+
+  /* Longest-path layering, relaxed until it settles. Bounded by the node
+     count so a cycle — which a Sankey is not supposed to have, but a typo
+     can produce — stops rather than spins. */
+  for (var pass = 0; pass < nodes.length; pass++) {
+    var moved = false;
+    links.forEach(function (l) {
+      var a = nodes[byName[l.from]], b = nodes[byName[l.to]];
+      if (b.depth < a.depth + 1) { b.depth = a.depth + 1; moved = true; }
+    });
+    if (!moved) break;
+  }
+  links.forEach(function (l) {
+    nodes[byName[l.from]].out += l.value;
+    nodes[byName[l.to]].in += l.value;
+  });
+  /* A node is as thick as the larger of what enters and what leaves it.
+     Taking only one side makes a source or a sink look like nothing. */
+  nodes.forEach(function (n) { n.total = Math.max(n.in, n.out); });
+  var layers = nodes.reduce(function (m, n) { return Math.max(m, n.depth); }, 0) + 1;
+  return { nodes: nodes, links: links, layers: layers, index: byName };
+}
+
 /** Every number on the slide, pooled, for a histogram of one variable. */
 function chartValues(slide) {
   var rows = dataRows(slide && slide.body);
@@ -425,4 +482,4 @@ function correctAnswerLabel(slide) {
 }
 
 
-export { chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, chartNumber, SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };
+export { chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, chartNumber, SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };
