@@ -182,7 +182,14 @@ function aiGenerate(req, res) {
     const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' +
       encodeURIComponent(AI_MODEL) + ':generateContent';
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 10000);
+    /* Ten seconds was too short to be the thing that decides. A flash model
+       under load routinely takes longer than that, and the abort fired before
+       the answer arrived — so a working key, a valid model and a reachable
+       provider still produced "Could not reach the AI provider" seven times
+       out of eight. The timeout exists so a hung request cannot hold a
+       connection open forever, not to impose a latency budget, and thirty
+       seconds serves that without failing the ordinary slow case. */
+    const timer = setTimeout(() => controller.abort(), 30000);
     try {
       const upstream = await fetch(endpoint, {
         method: 'POST',
@@ -215,7 +222,13 @@ function aiGenerate(req, res) {
       return jsonReply(res, 200, { text: String(part.text).slice(0, 20000) });
     } catch (err) {
       clearTimeout(timer);
-      return jsonReply(res, 502, { error: 'Could not reach the AI provider.' });
+      /* Distinguished because the remedies differ: a timeout means try again
+         or write it yourself, and anything else means the provider is not
+         reachable from here at all. Both used to read as the latter. */
+      const aborted = err && (err.name === 'AbortError' || err.name === 'TimeoutError');
+      return jsonReply(res, 504, aborted
+        ? { error: 'The AI provider took too long. Try again, or write the question yourself.' }
+        : { error: 'Could not reach the AI provider.' });
     }
   });
 }
