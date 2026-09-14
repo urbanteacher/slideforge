@@ -404,12 +404,27 @@ test('each format is asked for the shape it actually uses', async () => {
 
 test('a format with no brief says so rather than writing the wrong thing', async () => {
   const { AI } = gameAiModule({ reply: { questions: [] } });
-  /* Slider answers are a value on a line with a tolerance — nothing in the
-     question/options shape describes one. */
+  /* Bowl is a board of categories, not a flat question list — no AI_SPEC yet. */
   const res = await AI.generateQuestionsForGame(
-    { id: 'g6', style: 'slider', title: 'Estimate', questions: [] }, { topic: 'Distances' });
+    { id: 'g6', style: 'bowl', title: 'Bowl', questions: [] }, { topic: 'Distances' });
   assert.match(res.error, /not written by AI yet/);
   assert.match(res.error, /Browse quizzes/);
+});
+
+test('slider estimates are written as target bands, not choices', async () => {
+  const { AI } = gameAiModule({
+    reply: {
+      questions: [
+        { question: 'Estimate Earth–Moon distance', min: 0, max: 500000, target: 384000, tolerance: 20000, unit: 'km' }
+      ]
+    }
+  });
+  const res = await AI.generateQuestionsForGame(
+    { id: 'g-slider', style: 'slider', title: 'Estimate', questions: [] },
+    { topic: 'Astronomy', count: 1 });
+  assert.ok(!res.error, res.error);
+  assert.equal(res.questions[0].target, 384000);
+  assert.equal(res.questions[0].unit, 'km');
 });
 
 test('with no server key it says so instead of inventing subject knowledge', async () => {
@@ -504,11 +519,34 @@ test('an activity is classified by what it is, not by a word in its steps', () =
   assert.equal(kind('worked-example-analysis'), 'worked-example');
   assert.equal(kind('concept-card-sort'), 'sorting');
   assert.equal(kind('hook-and-predict'), 'hook-predict');
+  assert.equal(kind('question-cube-six-question-types'), 'question-cube');
+  assert.equal(kind('quick-practice-stations'), 'practice-stations');
 
   /* The old app searched the description and the steps too, so a
      Think-Pair-Share whose steps say "compare your answers" classified as a
      comparison activity and got told to define two concepts it has not got. */
   assert.equal(kind('think-pair-share'), 'discussion');
+});
+
+test('AI can write the main quiz formats, not only multiple choice', () => {
+  const { AI } = activityAi({});
+  ['choice', 'truefalse', 'lowstakes', 'type', 'oddone', 'bingo',
+    'order', 'wordreveal', 'compare', 'emoji', 'definition', 'slider',
+    'connection', 'randomchallenge', 'headsup', 'spinexplain', 'conceptchain',
+    'boss', 'race', 'memoryflip'].forEach((style) => {
+    assert.ok(AI.gameSpec(style), style + ' needs an AI_SPEC');
+  });
+});
+
+test('question-cube guardrail asks for the six Rosenshine stems', async () => {
+  const mod = activityAi({ f0: 'x', f1: 'y' });
+  await mod.AI.generateActivityContent(activity('question-cube-six-question-types'), {
+    topic: 'Photosynthesis'
+  });
+  const sent = mod.calls.find((c) => /generate$/.test(c.url)).body;
+  assert.match(sent.system, /Define/);
+  assert.match(sent.system, /What-if/);
+  assert.match(sent.system, /Teach before you test/);
 });
 
 test('the material box must hold the material, not a note about it', async () => {
