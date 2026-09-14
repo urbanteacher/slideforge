@@ -373,6 +373,48 @@
     return parts.filter(Boolean).join(' \n ');
   }
 
+  /* Fields a replace may touch. Deliberately not `options` or `gameTitle`:
+     a quiz answer and a game's name are keys other things match on, and
+     rewriting them from a find box breaks those links silently. */
+  var REPLACE_KEYS = ['title', 'subtitle', 'body', 'notes', 'quote', 'attribution'];
+
+  function replaceEverywhere(term, next) {
+    var q = String(term), to = String(next);
+    var slides = 0, hits = 0;
+    deck.slides.forEach(function (s) {
+      var touchedSlide = false;
+      REPLACE_KEYS.forEach(function (k) {
+        var was = s[k];
+        if (typeof was !== 'string' || was.indexOf(q) < 0) return;
+        var now = was.split(q).join(to);
+        hits += was.split(q).length - 1;
+        /* Through rebase, not straight onto the field: bold, colour and
+           links are stored as offsets into this string, and moving the text
+           under them without moving them repaints the formatting over the
+           wrong words. */
+        if (SF.Custom && SF.Custom.rebase) SF.Custom.rebase(s, k, was, now);
+        s[k] = now;
+        touchedSlide = true;
+      });
+      if (Array.isArray(s.bullets)) {
+        s.bullets.forEach(function (b, bi) {
+          if (typeof b !== 'string' || b.indexOf(q) < 0) return;
+          var now = b.split(q).join(to);
+          hits += b.split(q).length - 1;
+          if (SF.Custom && SF.Custom.rebase) SF.Custom.rebase(s, 'bullets.' + bi, b, now);
+          s.bullets[bi] = now;
+          touchedSlide = true;
+        });
+      }
+      if (touchedSlide) slides++;
+    });
+    if (!hits) { SF.toast('Nothing to replace.'); return; }
+    touched();
+    draw();
+    SF.toast('Replaced ' + hits + ' ' + (hits === 1 ? 'match' : 'matches') +
+      ' across ' + slides + ' ' + (slides === 1 ? 'slide' : 'slides') + '. ⌘Z undoes it.');
+  }
+
   function findInDeck() {
     SF.askText({
       title: 'Find in this lesson',
@@ -398,7 +440,7 @@
         title: hits.length + (hits.length === 1 ? ' slide mentions ' : ' slides mention ') + '“' + term + '”',
         wide: true,
         items: function () {
-          return hits.map(function (h) {
+          var rows = hits.map(function (h) {
             return {
               id: String(h.i),
               title: (h.i + 1) + '. ' + (h.slide.title || SF.SLIDE_TYPES[h.slide.type].label) +
@@ -406,11 +448,72 @@
               blurb: h.line
             };
           });
+          rows.push({ id: 'replace', title: '↦ Replace “' + term + '” everywhere',
+            blurb: 'Rewrites it across slide text and notes, keeping bold, colour and links on the right words.' });
+          return rows;
         },
         describe: function (it) { return it.blurb; },
-        onPick: function (it) { select(Number(it.id)); }
+        onPick: function (it) {
+          if (it.id === 'replace') {
+            SF.askText({
+              title: 'Replace “' + term + '” everywhere',
+              detail: 'Across ' + hits.length + ' ' + (hits.length === 1 ? 'slide' : 'slides') +
+                '. Slide text and notes only — quiz options and game names are left alone, ' +
+                'because other things match on those. One undo puts it back.',
+              placeholder: 'Replace with…',
+              confirm: 'Replace all'
+            }, function (next) { replaceEverywhere(term, next); });
+            return;
+          }
+          select(Number(it.id));
+        }
       });
     });
+  }
+
+  /* Paste a picture straight onto the slide.
+
+     The way a lecture picture is actually obtained is a screenshot of a
+     chart, and every other tool in the room takes it from the clipboard.
+     Without this the route is: save the screenshot to a file, find the
+     Image field, browse to it, delete the file later. That is four steps
+     around a keystroke people already know.
+
+     Only when the open slide has somewhere to put it, and never while the
+     cursor is in a field — pasting text into a text box must stay pasting
+     text into a text box. */
+  var IMAGE_SLIDE_TYPES = ['image', 'split', 'gallery', 'introduction', 'keyfact', 'quote'];
+
+  function pasteImage(e) {
+    if (SF.Player && SF.Player.open) return;
+    if (document.querySelector('dialog[open]')) return;
+    var t = /** @type {HTMLElement|null} */ (e.target);
+    var tag = t ? t.tagName : '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || (t && t.isContentEditable)) return;
+    var s = deck.slides[sel];
+    if (!s || IMAGE_SLIDE_TYPES.indexOf(s.type) < 0) return;
+    var items = (e.clipboardData && e.clipboardData.items) || [];
+    var file = null;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].kind === 'file' && /^image\//.test(items[i].type)) { file = items[i].getAsFile(); break; }
+    }
+    if (!file) return;
+    e.preventDefault();
+    /* Same ceiling the file picker warns at, for the same reason: a deck
+       lives in localStorage and a pasted screenshot is a data URI inside
+       it. A warning rather than a refusal — the author knows what the
+       picture is worth. */
+    if (file.size > 3.5 * 1024 * 1024) {
+      SF.toast('That image is over 3.5 MB — it may exceed the browser storage limit.');
+    }
+    var fr = new FileReader();
+    fr.onload = function () {
+      s.image = fr.result;
+      touched();
+      draw();
+      SF.toast('Pasted onto slide ' + (sel + 1) + '.');
+    };
+    fr.readAsDataURL(file);
   }
 
   function drawRail() {
@@ -2431,6 +2534,10 @@
   function install() {
     UI = SF.Shell.UI;
     SF.Shell.register(ws);
+    /* On the document, because the slide being pasted onto is the selected
+       one wherever the focus happens to be — and the handler bows out on
+       its own when the focus is somewhere a paste means something else. */
+    document.addEventListener('paste', pasteImage);
     /* The activities studio is a third view of this same deck, so it
        delegates title, theme, play and settings back here rather than
        keeping a second copy of any of them. */
