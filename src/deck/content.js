@@ -59,6 +59,29 @@ function chartData(slide) {
   return { categories: categories, series: series };
 }
 
+/* Which idioms treat chartData().series as named coloured marks on the
+   drawing. chartData always reads columns as series — that is the right
+   paste for a bar — but a pie, treemap, waffle or Sankey reinterprets the
+   same text. Listing those columns in a legend labels colours that are not
+   on the chart (or, for a Sankey, names the input format as data).
+
+   An exclusion list grew a new bug every time a non-series idiom landed.
+   The allowlist is the contract: if a kind draws multiple series as peers,
+   it is here; if it does not, it is not. */
+var SERIES_LEGEND_KINDS = {
+  bar: 1, stack: 1, hbar: 1, line: 1, area: 1,
+  combo: 1, radar: 1, bullet: 1, scatter: 1
+};
+
+/**
+ * @param {string} kind
+ * @param {number} [seriesCount]
+ * @returns {boolean}
+ */
+function chartUsesSeriesLegend(kind, seriesCount) {
+  return (seriesCount == null ? 2 : seriesCount) > 1 && !!SERIES_LEGEND_KINDS[kind];
+}
+
 /* The three idioms above the bar family on Munzner's channel ranking need
    the same pasted table read differently, so each reading lives here beside
    chartData rather than being improvised in the renderer.
@@ -482,4 +505,4 @@ function correctAnswerLabel(slide) {
 }
 
 
-export { chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, chartNumber, SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };
+export { chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, chartNumber, SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };

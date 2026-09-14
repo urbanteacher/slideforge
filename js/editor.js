@@ -1984,28 +1984,95 @@
     if (s.type === 'chart') {
       insp.appendChild(UI.field('Chart title',
         richField(s, "title", "area", function (v) { s.title = v; touched(); repaint(); }, 2)));
-      /* Named by the question each one answers, not by its shape. Choosing
-         a chart is the subject of this course; a list reading "bar, line,
-         pie" teaches nobody when to reach for which. */
-      insp.appendChild(UI.field('Chart type', UI.select(
-        [{ value: 'bar', label: 'Bar — compare magnitude' },
-         { value: 'stack', label: 'Stacked bar — the total, and what makes it up' },
-         { value: 'hbar', label: 'Horizontal bar — when the names are long' },
-         { value: 'line', label: 'Line — change over time' },
-         { value: 'area', label: 'Area — change over time, with the volume under it' },
-         { value: 'pie', label: 'Pie — parts of one whole' },
-         { value: 'donut', label: 'Donut — parts of one whole, total in the middle' },
-         { value: 'treemap', label: 'Treemap — parts of one whole, biggest owns the eye' },
-         { value: 'waffle', label: 'Waffle — parts of one whole, counted as squares' },
-         { value: 'bullet', label: 'Bullet — actual against a target' },
-         { value: 'combo', label: 'Columns + markers — size and a rate together' },
-         { value: 'radar', label: 'Radar — several variables on one shape (teach with care)' },
-         { value: 'sankey', label: 'Sankey — flows from here to there' },
-         { value: 'scatter', label: 'Scatter — do two things move together' },
-         { value: 'histogram', label: 'Histogram — the shape of one variable' },
-         { value: 'box', label: 'Box plot — spread, skew and outliers' },
-         { value: 'pictogram', label: 'Pictogram — counted in icons, not measured' }],
-        s.chartKind, function (v) { s.chartKind = v; touched(); repaint(); })));
+      /* Grouped by the Financial Times' Visual Vocabulary, whose argument is
+         the order of the questions: decide which relationship in the data
+         matters, then pick a chart inside that family. Seventeen types in a
+         flat list invites choosing by appearance, which on this module is
+         the wrong lesson to teach by accident.
+
+         The labels stay — a heading says what question the family answers,
+         and the option says what that particular chart is for. */
+      var LABELS = {
+        bar: 'Bar — compare magnitude',
+        stack: 'Stacked bar — the total, and what makes it up',
+        hbar: 'Horizontal bar — when the names are long',
+        line: 'Line — change over time',
+        area: 'Area — change over time, with the volume under it',
+        pie: 'Pie — parts of one whole',
+        donut: 'Donut — parts of one whole, total in the middle',
+        treemap: 'Treemap — parts of one whole, biggest owns the eye',
+        waffle: 'Waffle — parts of one whole, counted as squares',
+        bullet: 'Bullet — actual against a target',
+        combo: 'Columns + markers — size and a rate together',
+        radar: 'Radar — several variables on one shape (teach with care)',
+        sankey: 'Sankey — where a quantity goes',
+        scatter: 'Scatter — do two things move together',
+        histogram: 'Histogram — the shape of one variable',
+        box: 'Box plot — spread, skew and outliers',
+        pictogram: 'Pictogram — counted in icons, not measured'
+      };
+      var chartOpts = [];
+      (SF.CHART_TAXONOMY || []).forEach(function (cat) {
+        cat.kinds.forEach(function (k) {
+          chartOpts.push({ value: k, label: LABELS[k] || k, group: cat.label });
+        });
+      });
+      insp.appendChild(UI.field('Chart type', UI.select(chartOpts,
+        s.chartKind, function (v) { s.chartKind = v; touched(); repaint(); }),
+        'Grouped by what the chart is for, after the FT\u2019s Visual Vocabulary.'));
+
+      /* The poster's own route in: the question first, the shape second. */
+      var chooser = UI.button('\u2295 Which chart should this be?', 'ghost', function () {
+        SF.Shell.picker({
+          title: 'What matters most in this data?',
+          wide: true,
+          items: function () {
+            return (SF.CHART_TAXONOMY || []).map(function (cat) {
+              var can = cat.kinds.length;
+              return {
+                id: cat.key,
+                title: cat.label + ' \u00b7 ' + cat.question,
+                blurb: cat.note + (can
+                  ? '  \u2014 ' + can + (can === 1 ? ' chart here' : ' charts here')
+                  : '  \u2014 SlideForge draws no maps, so nothing here yet')
+              };
+            });
+          },
+          describe: function (it) { return it.blurb; },
+          onPick: function (it) {
+            var cat = (SF.CHART_TAXONOMY || []).filter(function (c) { return c.key === it.id; })[0];
+            if (!cat) return;
+            if (!cat.kinds.length) {
+              SF.toast(cat.label + ': ' + cat.missing.slice(0, 3).join(', ') +
+                ' and others are the usual answers, and none of them is drawn here. Use an image for now.');
+              return;
+            }
+            SF.Shell.picker({
+              title: cat.label + ' \u00b7 ' + cat.question,
+              wide: true,
+              items: function () {
+                var rows = cat.kinds.map(function (k) {
+                  return { id: k, title: LABELS[k] || k,
+                    blurb: k === s.chartKind ? 'What this slide uses now.' : 'Switch this slide to it.' };
+                });
+                if (cat.missing && cat.missing.length) {
+                  rows.push({ id: '', title: 'Not drawn here: ' + cat.missing.join(', '),
+                    blurb: 'On the FT poster under this heading, but SlideForge has no renderer for them. Use an image.' });
+                }
+                return rows;
+              },
+              describe: function (it) { return it.blurb; },
+              onPick: function (it) {
+                if (!it.id) return;
+                s.chartKind = it.id; touched(); repaint();
+                SF.toast('Now a ' + (LABELS[it.id] || it.id).split(' \u2014 ')[0].toLowerCase() + '.');
+              }
+            });
+          }
+        });
+      });
+      chooser.style.cssText = 'font-size:12px;margin-bottom:9px;width:100%';
+      insp.appendChild(chooser);
 
     /* Each idiom reads the same pasted table differently, and an author who
        is not told will paste the shape the last one wanted. */

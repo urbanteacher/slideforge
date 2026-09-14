@@ -622,35 +622,44 @@
   /* Legend + a table of the same numbers. The legend is the dependable
      identity channel for two or more series; the table is what makes the
      values available to a screen reader, and to anyone who cannot separate
-     two hues at all. */
+     two hues at all.
+
+     Whether the legend belongs is decided by chartUsesSeriesLegend — not by
+     an exclusion list that every new idiom had to remember to join. */
   function chartKey(data, slide) {
     var wrap = el('div', 'chart-key');
-    /* A pie or a donut cuts one series into its categories, and names each
-       slice on the slice. Listing the series underneath then labels colours
-       that are not on the chart — it says "Full time, Part time" beside a
-       ring that is only Full time, which is the chart contradicting itself.
-       The inspector already warns that the other series are dropped; this
-       stops the drawing from implying otherwise. */
-    /* Idioms whose columns are not series. A pie cuts one series into
-       categories; a box plot's columns are repeated observations of the
-       same thing and a histogram's are just numbers — labelling them "28,
-       31, 33" in a legend is the chart naming its own raw data as though
-       each value were a category. */
-    var oneSeriesIdiom = slide && ['pie', 'donut', 'box', 'histogram', 'pictogram', 'sankey', 'treemap', 'waffle'].indexOf(slide.chartKind) >= 0;
-    if (data.series.length > 1 && !oneSeriesIdiom) {
-      data.series.forEach(function (s, i) {
-        var item = el('span', 'ck-item');
-        var dot = el('i', 'ck-dot');
-        dot.style.background = chartColor(i);
-        item.appendChild(dot);
-        item.appendChild(el('span', null, s.name));
-        wrap.appendChild(item);
-      });
+    if (!SF.chartUsesSeriesLegend || !SF.chartUsesSeriesLegend(slide && slide.chartKind, data.series.length)) {
+      return wrap;
     }
+    data.series.forEach(function (s, i) {
+      var item = el('span', 'ck-item');
+      var dot = el('i', 'ck-dot');
+      dot.style.background = chartColor(i);
+      item.appendChild(dot);
+      item.appendChild(el('span', null, s.name));
+      wrap.appendChild(item);
+    });
     return wrap;
   }
 
-  function chartTable(data) {
+  function chartTable(data, slide) {
+    /* A Sankey's paste is from/to/amount — dumping chartData series would
+       read the column headers as if they were comparable series. */
+    if (slide && slide.chartKind === 'sankey' && SF.chartFlows) {
+      var flows = SF.chartFlows(slide);
+      var ft = el('table', 'chart-data-table');
+      var fh = el('tr');
+      ['From', 'To', 'Amount'].forEach(function (h) { fh.appendChild(el('th', null, h)); });
+      ft.appendChild(fh);
+      flows.links.forEach(function (l) {
+        var tr = el('tr');
+        tr.appendChild(el('td', null, l.from));
+        tr.appendChild(el('td', null, l.to));
+        tr.appendChild(el('td', null, fmt(l.value)));
+        ft.appendChild(tr);
+      });
+      return ft;
+    }
     var t = el('table', 'chart-data-table');
     var head = el('tr');
     head.appendChild(el('th', null, ''));
@@ -1800,7 +1809,7 @@
     }
     /* Present for screen readers and for anyone the colours fail; off-screen
        rather than absent, so the numbers are never gated behind the hues. */
-    var tbl = chartTable(data);
+    var tbl = chartTable(data, slide);
     tbl.classList.add('sr-only');
     pad.appendChild(tbl);
   }
