@@ -5310,3 +5310,8 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
 #player .ch-cell-label, #previewBox .ch-cell-label { font-size: 15px; font-weight: 600; fill: var(--s-fg); }
 /* Flipped on the darker cells, where the slide's own text colour disappears. */
 #player .ch-cell-label.on-dark, #previewBox .ch-cell-label.on-dark { fill: var(--s-bg, #fff); }
+
+/* Named points on a scatter. The leader is lighter than the label it serves:
+   it is there to attach, not to be read. */
+#player .ch-point-label, #previewBox .ch-point-label { font-size: 15px; font-weight: 600; fill: var(--s-fg); }
+#player .ch-leader, #previewBox .ch-leader { stroke: currentColor; stroke-width: 1; opacity: .38; }
