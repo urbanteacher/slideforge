@@ -50,6 +50,7 @@
   function touched() {
     remember();
     SF.Shell.touch();
+    if (SF.History && SF.History.noteChange) SF.History.noteChange(deck);
     var ub = /** @type {HTMLButtonElement|null} */ (document.querySelector('[data-history=undo]'));
     var rb = /** @type {HTMLButtonElement|null} */ (document.querySelector('[data-history=redo]'));
     if (ub) ub.disabled = !past.length;
@@ -2035,7 +2036,8 @@
         box: 'Box plot — spread, skew and outliers',
         pictogram: 'Pictogram — counted in icons, not measured',
         dumbbell: 'Dumbbell — the gap between two states',
-        matrix: 'Evidence matrix — ratings across conditions'
+        matrix: 'Evidence matrix — ratings across conditions',
+        multiples: 'Small multiples — one panel each, same scale'
       };
       /* Once each. A <select> cannot hold the poster's cross-listings: two
          options sharing a value are not two choices, and picking the second
@@ -2130,7 +2132,8 @@
       radar: 'At least three categories (the spokes). Each series is one polygon.',
       sankey: 'Three columns: from, to, amount. One row per flow.',
       dumbbell: 'One row per category, then exactly two numbers — the two states being compared.',
-      matrix: 'First row names the conditions. Then one row per item, with a rating in each cell.'
+      matrix: 'First row names the conditions. Then one row per item, with a rating in each cell.',
+      multiples: 'One row per panel; the columns become the axis inside every panel. Read transposed.'
     };
     if (SHAPES[s.chartKind]) insp.appendChild(el('p', 'hint', SHAPES[s.chartKind]));
 
@@ -2204,6 +2207,13 @@
         insp.appendChild(el('p', 'hint',
           'Shade carries an order, not a distance. Low / Medium / High are ordinal \u2014 ' +
           'the gap between them is not a number, so say so in the source line.'));
+      }
+      /* The shared scale is what makes the layout a comparison rather than
+         a wall of little charts, so an outlier is worth warning about. */
+      if (s.chartKind === 'multiples' && cd.categories.length > 12) {
+        insp.appendChild(el('p', 'hint field-warn',
+          cd.categories.length + ' panels is past the point where each one is readable on a wall. ' +
+          'Around eight is the most a room can compare at once.'));
       }
       if (cd.series.length > 6) {
         insp.appendChild(el('p', 'hint field-warn',
