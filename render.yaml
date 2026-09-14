@@ -1,0 +1,48 @@
+# SlideForge on Render.
+#
+# Render is used rather than a serverless host because the live room is a
+# WebSocket the relay holds open for the length of a lesson, and rooms live in
+# the relay's memory. A serverless function has neither: no socket it can keep,
+# and no memory that outlives the request. So this runs as one long-lived
+# process, exactly as `node server/server.js` does on a laptop.
+#
+# One instance, deliberately. Rooms are held in a Map in that process, so a
+# second instance would answer a phone's PIN with "no such room" whenever the
+# load balancer sent it to the machine the teacher was not on.
+
+services:
+  - type: web
+    name: slideforge
+    runtime: node
+    plan: free
+    # Nothing to build: the server has no runtime dependencies, and the browser
+    # bundle (js/model.js) is committed. This installs nothing and fails loudly
+    # if package-lock.json has drifted.
+    buildCommand: npm ci --omit=dev
+    startCommand: node server/server.js
+    healthCheckPath: /
+    numInstances: 1
+    envVars:
+      - key: NODE_VERSION
+        value: 22.12.0
+      # Turns off the endpoints that write into the project folder. See the
+      # note beside DATA_DIRS in server/server.js.
+      - key: SLIDEFORGE_HOSTED
+        value: "1"
+      # Live AI generation. Unset here on purpose: add the key in Render's
+      # dashboard so it is never committed. Without it the app falls back to
+      # its offline heuristics rather than failing.
+      - key: GEMINI_API_KEY
+        sync: false
+
+      # Attendance and live-session journals are written under .slideforge/,
+      # which on the free plan is a container filesystem and is discarded at
+      # every deploy and restart. A lesson's report survives the lesson, not
+      # the week. To keep them, move to a paid instance and uncomment the disk
+      # below together with this variable:
+      # - key: SLIDEFORGE_SESSION_DIR
+      #   value: /var/data/sessions
+    # disk:
+    #   name: slideforge-data
+    #   mountPath: /var/data
+    #   sizeGB: 1

@@ -66,6 +66,15 @@ const MIME = {
    ------------------------------------------------------------------------- */
 
 const DATA_DIRS = { deck: path.join(ROOT, 'data', 'decks'), game: path.join(ROOT, 'data', 'games') };
+
+/* The endpoints below write to the project folder with no authentication,
+   which is the LAN bargain stated above: whoever can reach the port is
+   already someone you let into the room. On a public host that bargain does
+   not hold — the port is reachable by everyone — and the folder is a
+   container's, thrown away at the next deploy, so the feature would be unsafe
+   and useless at the same time. SLIDEFORGE_HOSTED=1 turns it off, and the app
+   keeps decks in localStorage and exports to file as it does on a laptop. */
+const HOSTED = process.env.SLIDEFORGE_HOSTED === '1';
 const SLUG = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 const MAX_DOC = 8 * 1024 * 1024;          // embedded images make decks large
 
@@ -121,6 +130,18 @@ const AI_WINDOW_MS = 60 * 1000;
 const AI_MAX_PER_WINDOW = 20;
 const aiHits = new Map();
 
+/* Who to count against. On a LAN the socket's own address is the client. Behind
+   a platform's proxy it is the proxy, so every teacher in the building shares
+   one bucket and the first impatient tab locks out the rest — hence the
+   forwarded header, whose first entry is the original client. It is forgeable,
+   and deliberately trusted anyway: this ceiling guards a quota against loops
+   and impatience, not against someone who means it, and the honest failure is
+   the one that does not punish everybody for one person's retry loop. */
+function clientIp(req) {
+  const fwd = String((req.headers && req.headers['x-forwarded-for']) || '').split(',')[0].trim();
+  return fwd || (req.socket && req.socket.remoteAddress) || 'unknown';
+}
+
 function aiRateLimited(ip) {
   const now = Date.now();
   const hits = (aiHits.get(ip) || []).filter((t) => now - t < AI_WINDOW_MS);
@@ -132,7 +153,7 @@ function aiRateLimited(ip) {
 
 function aiGenerate(req, res) {
   if (!AI_KEY) return jsonReply(res, 503, { error: 'No AI key configured on this server.' });
-  const ip = (req.socket && req.socket.remoteAddress) || 'unknown';
+  const ip = clientIp(req);
   if (aiRateLimited(ip)) return jsonReply(res, 429, { error: 'Too many AI requests. Try again shortly.' });
 
   let body = '';
@@ -259,8 +280,10 @@ function serve(req, res) {
   }
   if (rel === '/api/ai/generate' && req.method === 'POST') return aiGenerate(req, res);
 
-  if (rel === '/api/data' && req.method === 'GET') return listData(res);
-  if (rel === '/api/data' && req.method === 'POST') return saveData(req, res);
+  if (rel === '/api/data' && (req.method === 'GET' || req.method === 'POST')) {
+    if (HOSTED) return jsonReply(res, 403, { error: 'Saving into the project folder is off on the hosted app. Use File \u2192 Export to keep a copy.' });
+    return req.method === 'GET' ? listData(res) : saveData(req, res);
+  }
 
   /* One-click demo lesson for File → Open demo lesson. Built on demand so
      the app folder does not need a committed .sfbundle.json snapshot. */
@@ -367,7 +390,27 @@ function lanAddress() {
 }
 
 const LAN = lanAddress();
-const JOIN_URL = 'http://' + LAN + ':' + PORT + '/join.html';
+const LAN_JOIN_URL = 'http://' + LAN + ':' + PORT + '/join.html';
+
+/* Where to tell a phone to go. On a laptop that is this machine's LAN address,
+   which is why the address is found by walking the interfaces at all. Hosted,
+   the interfaces are a container's and say nothing useful, so the name has to
+   come from the request: the Host header the client actually asked for, and
+   the scheme from x-forwarded-proto, because behind a platform's proxy the
+   connection reaching us is plain http on an internal port even when the
+   browser is on https — and a QR pointing at http on such a host is refused
+   rather than merely downgraded.
+
+   Localhost is deliberately excluded. A teacher who opens the deck on
+   localhost still needs the code to carry the LAN address, or it points every
+   phone in the room back at its own handset. */
+function joinUrlFor(req) {
+  const headers = (req && req.headers) || {};
+  const host = String(headers.host || '').trim();
+  if (!host || /^(localhost|127\.0\.0\.1|\[::1\])(:|$)/.test(host)) return LAN_JOIN_URL;
+  const proto = String(headers['x-forwarded-proto'] || '').split(',')[0].trim() || 'http';
+  return proto + '://' + host + '/join.html';
+}
 
 function roomOf(sock) {
   for (const room of rooms.values()) {
@@ -491,7 +534,7 @@ function pushPlayers(room) {
   room.host.json({
     t: 'players',
     pin: room.pin,
-    joinUrl: JOIN_URL,
+    joinUrl: room.joinUrl || LAN_JOIN_URL,
     joinOpen: room.joinOpen,
     waiting: room.waiting.size,
     round: room.roundNo,
@@ -900,6 +943,9 @@ ws.attach(server, (sock, req) => {
   let role = null;      // 'host' | 'player'
   let room = null;
   let me = null;        // player record
+  /* Fixed at connect: the host's own view of where the app lives, which is
+     what the room must hand out. */
+  const joinUrl = joinUrlFor(req);
 
   sock.on('message', (raw) => {
     let m;
@@ -925,6 +971,7 @@ ws.attach(server, (sock, req) => {
       role = 'host';
       room = target;
       room.host = sock;
+      room.joinUrl = joinUrl;
       room.hostAwaySince = null;
       if (room.hostGrace) { clearTimeout(room.hostGrace); room.hostGrace = null; }
       broadcast(room, { t: 'hostAway', away: false });
@@ -933,7 +980,7 @@ ws.attach(server, (sock, req) => {
         phase: room.phase,
         pin: room.pin,
         hostToken: room.hostToken,
-        joinUrl: JOIN_URL,
+        joinUrl: room.joinUrl,
         mode: room.mode,
         teams: room.teams,
         title: room.title,
@@ -956,6 +1003,7 @@ ws.attach(server, (sock, req) => {
         pin,
         title: String(m.title || 'Quiz').slice(0, 80),
         host: sock,
+        joinUrl,
         /* The same courtesy a player already gets. A learner who drops keeps
            their seat; before this the host who dropped destroyed the room, so
            one reload mid-lecture ended the lesson for everybody. */
@@ -1041,7 +1089,7 @@ ws.attach(server, (sock, req) => {
         session: {id:room.audit.meta.id, token:created.token, title:room.title, createdAt:room.audit.meta.createdAt},
         hostToken: room.hostToken,
         pin,
-        joinUrl: JOIN_URL,
+        joinUrl: room.joinUrl,
         mode: room.mode,
         teams: room.teams
       });
@@ -2013,7 +2061,7 @@ server.listen(PORT, HOST, () => {
   console.log('  SlideForge is running.');
   console.log('');
   console.log('    Present from   http://localhost:' + PORT + '/');
-  console.log('    Phones join at ' + JOIN_URL);
+  console.log('    Phones join at ' + LAN_JOIN_URL);
   console.log('');
   console.log('  Open the present-from link on the machine driving the projector,');
   console.log('  press "Host live", and read the PIN out to the room.');
