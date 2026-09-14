@@ -1058,7 +1058,9 @@
             SF.askText({
               title: 'Your read-only link',
               detail: 'Anyone with this address can open the lesson. It is already on your clipboard. ' +
-                'A hosted server loses shared copies when the app is next updated.',
+                (j.durable
+                  ? 'This server keeps shared copies on durable storage — they survive an app update.'
+                  : 'On this server, shared copies live with the app files and are gone at the next deploy unless a persistent disk is attached (SLIDEFORGE_DATA_DIR).'),
               value: url, confirm: 'Done'
             }, function () {});
           }).catch(function (e) {
