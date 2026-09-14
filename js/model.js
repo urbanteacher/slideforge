@@ -7566,6 +7566,9 @@
         /** @type {'bar'|'stack'|'hbar'|'line'|'area'|'pie'|'donut'|'scatter'|'histogram'|'box'|'pictogram'|'radar'|'sankey'|'treemap'|'bullet'|'combo'|'waffle'} */
         "bar"
       ),
+      /* Where the numbers came from, and what they are not. See the note in
+         normalizeSlide. */
+      chartSource: "",
       chartIcon: "",
       chartUnit: 1,
       /* Image stack: each layer is one picture with its own caption and source,
@@ -7788,6 +7791,8 @@
       "combo",
       "waffle"
     ].indexOf(s.chartKind) >= 0 ? s.chartKind : "bar";
+    s.chartSource = String(s.chartSource || "").trim().slice(0, 200);
+    if (!s.chartSource) delete s.chartSource;
     s.chartIcon = String(s.chartIcon || "").trim().slice(0, 4);
     s.chartUnit = Math.max(1, Math.min(1e4, Number(s.chartUnit) || 1));
     var rawLayers = raw && Array.isArray(raw.layers) ? raw.layers : [];

@@ -288,6 +288,9 @@ function makeSlide(type) {
     tableHeader: true,
     /* Chart layout: bar, line or pie over the same text a table slide uses. */
     chartKind: /** @type {'bar'|'stack'|'hbar'|'line'|'area'|'pie'|'donut'|'scatter'|'histogram'|'box'|'pictogram'|'radar'|'sankey'|'treemap'|'bullet'|'combo'|'waffle'} */ ('bar'),
+    /* Where the numbers came from, and what they are not. See the note in
+       normalizeSlide. */
+    chartSource: '',
     chartIcon: '',
     chartUnit: 1,
     /* Image stack: each layer is one picture with its own caption and source,
@@ -526,6 +529,15 @@ function normalizeSlide(raw) {
   /* One icon per unit, for the pictogram. A single character so a count of
      them is a count of things; an emoji that renders as two glyphs would
      make eleven look like twenty-two. */
+  /* A line under the chart for where the data came from and what it does
+     not show. Two hundred characters, because the useful version of this is
+     a sentence — "Selected platform peaks, not annual means" — and a
+     paragraph under a chart on a wall is not read by anybody.
+
+     Absent unless written, like the other optional fields: a blank string on
+     seventy slides is bytes in localStorage bought for nothing. */
+  s.chartSource = String(s.chartSource || '').trim().slice(0, 200);
+  if (!s.chartSource) delete s.chartSource;
   s.chartIcon = String(s.chartIcon || '').trim().slice(0, 4);
   s.chartUnit = Math.max(1, Math.min(10000, Number(s.chartUnit) || 1));
   /* Layers come off `raw` for the same reason options do: whatever was on disk

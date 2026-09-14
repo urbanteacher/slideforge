@@ -1866,6 +1866,13 @@
 
     var key = chartKey(data, slide);
     if (key.childNodes.length) pad.appendChild(key);
+    /* Under the chart, not in the notes: a caveat a lecturer can see and the
+       room cannot is not a caveat. This is a course about the danger of
+       summary statistics — a chart here should be able to say what it is not
+       showing, in the same frame as what it is. */
+    if (slide.chartSource) {
+      pad.appendChild(el('div', 'chart-source', slide.chartSource));
+    }
     if (wrap.classList.contains('ch-focused')) {
       var wantK = Number(design.chartFocus);
       Array.prototype.forEach.call(key.querySelectorAll('.ck-item'), function (n, i) {

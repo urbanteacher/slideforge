@@ -5281,3 +5281,15 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
 .org-chart.lvl-4 .org-photo { width: 36px; height: 36px; flex-basis: 36px; }
 .org-chart.lvl-4 .org-who strong { font-size: 16px; }
 .org-chart.lvl-4 .org-who span { font-size: 13px; }
+
+/* The line under a chart saying where the numbers came from and what they
+   are not. Quiet, but on the slide rather than in the speaker notes: a
+   caveat only the lecturer can see is not a caveat. */
+.chart-source {
+  margin-top: 6px;
+  font-size: 15px;
+  line-height: 1.35;
+  opacity: .62;
+  max-width: 90%;
+}
+@media print { .chart-source { opacity: .8; font-size: 12px; } }
