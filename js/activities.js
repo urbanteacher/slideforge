@@ -59,6 +59,21 @@
 
   /** Feedback activities own a fresh slide so their prompts and materials
    * cannot replace an existing activity's response collection. */
+  /* The nineteen activities whose teacher notes hold a worked answer rather
+     than run-the-room guidance. Read rather than inferred: a note saying
+     "allow two minutes to plan" is not an answer, a game reveals its own, and
+     a reflection has none to reveal. Listing them is honest about that — a
+     regex over the notes got four of them wrong in both directions. */
+  var ANSWER_ACTIVITIES = [
+    'think-pair-share', 'daily-review-routine', 'do-now-bell-ringer',
+    'i-do-we-do-you-do', 'concept-development', 'flipped-instruction',
+    'worked-example-analysis', 'error-analysis', 'quick-practice-stations',
+    'concept-card-sort', 'guided-inquiry-investigation', 'problem-based-learning',
+    'differentiated-practice-menu', 'design-and-create-task',
+    'dialogue-chain-discussion', 'scenario-analysis-discussion',
+    'whiteboards-on-walls', 'connect-four-concept-edition', 'preview-next-lesson'
+  ];
+
   function activitySlides(a) {
     var parts = a.pages || [{ layout: a.layout || 'keywords', fields: a.fields }];
     var instance;
@@ -77,6 +92,16 @@
           JSON.parse(JSON.stringify(a.feedbackPreset || {})));
       }
       if (part.layout === 'table') s.tableHeader = false;
+      /* The worked answer comes across from the teacher notes, where it has
+         always been written and never been seen by a room. It arrives as a
+         draft and nothing else: every one of these is written about perimeter
+         and rectangles, so showing it unread would put another subject's
+         answer on the wall. The card stays shut in the show until somebody
+         has made it theirs. */
+      if (i === 0 && a.teacherNotes && ANSWER_ACTIVITIES.indexOf(a.key) >= 0) {
+        s.modelAnswer = a.teacherNotes;
+        s.modelAnswerDraft = true;
+      }
       applyFields(part, s);
       return s;
     });
@@ -392,6 +417,16 @@
     box.appendChild(wrap);
   }
 
+  /* Things the room has to have in its hands before the activity can run.
+     Twenty of the fifty-four need some — cards to cut out, sticky notes, chart
+     paper — and a lesson taught in a computer lab has none of them. Saying so
+     on the card is the difference between choosing an activity and discovering
+     halfway through the week that it cannot be run. */
+  var PHYSICAL = /card|sticky|paper|marker|print|scissor|poster|handout|whiteboard|worksheet|pen\b|recording sheet|task sheet/i;
+  function physicalKit(a) {
+    return (a.materials || []).filter(function (m) { return PHYSICAL.test(m); });
+  }
+
   function card(a) {
     var b = el('button', 'activity-card act-' + a.target);
     b.appendChild(el('span', 'activity-icon', a.icon));
@@ -403,6 +438,14 @@
       : a.target === 'slide-arc' ? 'A RUN OF SLIDES'
       : 'A SLIDE IN THIS LESSON';
     b.appendChild(el('span', 'activity-tag', a.minutes + ' MIN · ' + tag + '  ↗'));
+    var kit = physicalKit(a);
+    if (kit.length) {
+      var need = el('span', 'activity-kit', 'NEEDS: ' + kit.join(' · '));
+      need.title = 'This activity cannot run on screens alone — ' + kit.join(', ') +
+        ' have to be in the room.';
+      b.appendChild(need);
+      b.classList.add('needs-kit');
+    }
     b.onclick = function () { insert(a); };
     return b;
   }

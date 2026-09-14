@@ -456,6 +456,8 @@
     if (slide.type === 'quiz') {
       wireQuiz(node, slide);
       scheduleQuizFit(node);
+    } else if (slide.timeLimit > 0) {
+      startSlideTimer(node, slide);
     }
 
     /* The rail persists across slides, so its surface has to follow the one
@@ -873,6 +875,7 @@
      also what keeps the editor's preview silent. */
 
   var music = null;
+  var musicTold = '';   /* the track a failure has already been reported for */
 
   function hush(p) {
     /* play() rejects when the browser has not seen a gesture yet, and an
@@ -902,11 +905,32 @@
          question would open on the same four bars. Carrying on from where it
          stopped means the bed moves through the game. */
       music.preload = 'auto';
+      music.addEventListener('error', function () {
+        if (musicTold === music.getAttribute('src')) return;
+        musicTold = music.getAttribute('src') || '';
+        SF.toast('The music track could not be loaded \u2014 check the path or re-add the file.');
+      });
     }
-    if (music.src !== src && music.getAttribute('src') !== src) music.src = src;
+    if (music.src !== src && music.getAttribute('src') !== src) {
+      music.src = src;
+      musicTold = '';
+    }
     var vol = Player.deck && Player.deck.musicVolume;
     music.volume = Math.max(0, Math.min(100, vol == null ? 55 : vol)) / 100;
-    hush(music.play());
+    /* Failure used to be silent in both directions — a missing file and a
+       browser that has not seen a gesture yet looked identical from the room,
+       which is how "I added an mp3 and nothing happened" happens. Said once per
+       track, so a presenter is told rather than left guessing. */
+    var p = music.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(function () {
+        if (musicTold === src) return;
+        musicTold = src;
+        SF.toast(music.error
+          ? 'The music track could not be loaded \u2014 check the path or re-add the file.'
+          : 'The browser blocked the music until you interact with the page. Click the slide once and it will start.');
+      });
+    }
   }
 
   function stopMusic() {
@@ -918,6 +942,12 @@
     if (!node) return;
     Array.prototype.forEach.call(node.querySelectorAll('video'), function (v) {
       v.pause();
+    });
+    /* An embedded player lives in another document, so it cannot be paused
+       from here — but emptying the frame stops it dead. Without this a YouTube
+       clip carries on talking underneath the next slide. */
+    Array.prototype.forEach.call(node.querySelectorAll('iframe.vid-embed'), function (f) {
+      if (f.getAttribute('src')) { f.dataset.src = f.getAttribute('src'); f.removeAttribute('src'); }
     });
   }
 
@@ -1117,6 +1147,35 @@
         timeUp(slide);
       }
     }, 100);
+  }
+
+  /* The activity clock. Deliberately not startTimer: that one ends by revealing
+     a quiz answer, and an activity has no answer to reveal — it just runs out,
+     and the room is told so rather than being moved on. Counted from wall time
+     rather than from ticks, so it stays honest if the tab is backgrounded. */
+  function startSlideTimer(node, slide) {
+    var clock = node.querySelector('.clock');
+    if (!clock) return;
+    var ringEl = clock.querySelector('.ring');
+    var numEl = clock.querySelector('.n');
+    if (!ringEl || !numEl) return;
+    var total = slide.timeLimit;
+    var dash = Number(ringEl.getAttribute('stroke-dasharray'));
+    var endAt = Date.now() + total * 1000;
+
+    Player._timer = setInterval(function () {
+      var left = Math.max(0, endAt - Date.now()) / 1000;
+      ringEl.setAttribute('stroke-dashoffset', String(dash * (1 - left / total)));
+      numEl.textContent = SF.clockFace(left);
+      clock.classList.toggle('hurry', left <= 60);
+      if (left <= 0) {
+        stopTimer();
+        clock.classList.add('done');
+        /* Time up turns the card: the attempt is over, so the answer is what
+           the room should be looking at. The teacher can turn it back. */
+        if (node.querySelector('.flip')) node.classList.add('flipped');
+      }
+    }, 250);
   }
 
   function stopTimer() {

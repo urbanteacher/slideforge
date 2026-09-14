@@ -1,7 +1,7 @@
 import { normalizeExploration, explorationValue, explorationCurve } from './deck/exploration.js';
 import { createBoardRuntime } from "./boards/runtime.js";
 import { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes } from "./activities/catalogue.js";
-import { DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
+import { SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
 import { FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest } from "./deck/feedback.js";
 import { renderMarkdown } from "./deck/markdown.js";
 import sampleDeck from "./samples/deck.json" with { type: "json" };
@@ -122,33 +122,6 @@ function normalizeQuizConfig(raw) {
    authored in the presentation editor any more — they are produced by
    compiling a game — but the player and renderer still handle them, which is
    what lets an embedded game expand into ordinary slides at showtime. */
-var SLIDE_TYPES = {
-  journey: { label: 'Journey / handover', icon: '↝' },
-  mindmap: { label: 'Mind map', icon: '✣' },
-  introduction: { label: 'Lecturer introduction', icon: '◎' },
-  title:    { label: 'Title',        icon: 'T' },
-  section:  { label: 'Section',      icon: 'S' },
-  content:  { label: 'Bullets',      icon: '•' },
-  keywords: { label: 'Keywords',     icon: 'K' },
-  italics:  { label: 'Phrase + explanation',      icon: 'I' },
-  links:    { label: 'Links',        icon: '↗' },
-  split:    { label: 'Image + text',         icon: '◫' },
-  cards:    { label: 'Cards',        icon: '▦' },
-  table:    { label: 'Table',        icon: '⊞' },
-  beforeafter: { label: 'Before / after', icon: '◐' },
-  explore: { label: 'Explore an image', icon: '◎' },
-  simulation: { label: 'What if? graph', icon: '↗' },
-  chart:    { label: 'Chart',        icon: '▥' },
-  image:    { label: 'Image',        icon: '▣' },
-  gallery:  { label: 'Image stack',   icon: '▤' },
-  video:    { label: 'Video',        icon: '▶' },
-  quote:    { label: 'Quote',        icon: '“' },
-  game:     { label: 'Game',         icon: '◈' },
-  quiz:     { label: 'Quiz',         icon: '?' },
-  explain:  { label: 'Explanation',  icon: '💡' },
-  results:  { label: 'Score',        icon: '⚑' },
-  join:     { label: 'Join QR & PIN', icon: '⌗' }
-};
 
 /**
  * Is this one of the slide kinds this build can render?
@@ -453,6 +426,8 @@ function normalizeDeck(raw) {
   d.showSlideNumbers = d.showSlideNumbers !== false;
   d.finalScores = d.finalScores === true;
   d.logo = String(d.logo || '');
+  /* Who the deck belongs to. A theme may print it; none may invent it. */
+  d.org = String(d.org || '');
   d.logoSize = ['small','medium','large'].includes(raw.logoSize) ? raw.logoSize : 'medium';
   if (d.logoOn !== 'all' && d.logoOn !== 'title' && d.logoOn !== 'none') {
     d.logoOn = d.logo ? 'all' : 'none';
@@ -1163,6 +1138,8 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   safeHref: safeHref,
   deckToMarkdown: deckToMarkdown,
   DECK_TYPES: DECK_TYPES,
+  BULLET_LAYOUTS: BULLET_LAYOUTS,
+  LAYOUT_GROUPS: LAYOUT_GROUPS,
   FEEDBACK_KINDS: FEEDBACK_KINDS,
   SCALE_POINTS: SCALE_POINTS,
   scaleLabels: scaleLabels,
@@ -1231,4 +1208,4 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   GameStore: GameStore
 });
 
-export { SLIDE_W, SLIDE_H, THEMES, TRANSITIONS, GALLERY_MAX, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, GAME_FORMAT_PRESETS, getShowcaseGame };
+export { SLIDE_W, SLIDE_H, THEMES, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, GAME_FORMAT_PRESETS, getShowcaseGame };

@@ -117,11 +117,108 @@ function safeMedia(url) {
   return u;                       // relative path, next to the deck
 }
 
-// Shared presentation semantics used by authoring, rendering and live context.
-var DECK_TYPES = ['journey', 'mindmap', 'introduction', 'title', 'section', 'content', 'keywords', 'italics', 'links',
-  'split', 'cards', 'table', 'image', 'video', 'quote', 'join', 'chart', 'gallery', 'beforeafter', 'explore', 'simulation'];
+/* One declaration per layout, and every list in the app derives from it.
 
-var BULLET_LAYOUTS = ['journey','mindmap','content','cards','split','keywords','italics','links'];
+   There used to be five: SLIDE_TYPES for the label, DECK_TYPES for whether you
+   could switch to it, BULLET_LAYOUTS and PIT_MAX for its pits, a hand-written
+   array in the studio for the + Slide menu and another in the editor for the
+   layout picker. Adding a layout meant five edits in four files, and the Key
+   fact layout shipped missing from one of them — the picker offered it and
+   clicking did nothing, because prepareLayout gates on DECK_TYPES.
+
+     label / icon  what it is called and the glyph that stands for it
+     deck          an author can switch a slide to it        -> DECK_TYPES
+     pits          how many bullet pits it takes  -> BULLET_LAYOUTS and PIT_MAX
+     group         where it sits in the layout picker
+     starters      its entries in + Slide; seed is applied over makeSlide()
+
+   No layout without `deck` is authorable: game, quiz, explain and results are
+   built by the quiz engine, so they carry a label and nothing else. */
+var SLIDE_TYPES = {
+  journey:     { label: 'Journey / handover', icon: '↝', deck: true, pits: 6, group: 'explain',
+                 starters: [{ title: 'Journey / handover', blurb: 'Connect milestones, course topics or stages of a project.' }] },
+  mindmap:     { label: 'Mind map', icon: '✣', deck: true, pits: 6, group: 'explain',
+                 starters: [{ title: 'Mind map', blurb: 'One central idea, connected branches, revealed as you teach.' }] },
+  introduction:{ label: 'Lecturer introduction', icon: '◎', deck: true, group: 'introduce',
+                 starters: [{ title: 'Lecturer introduction', blurb: 'Headshot, name, job title and a short introduction.' }] },
+  title:       { label: 'Title', icon: 'T', deck: true, group: 'introduce',
+                 starters: [{ title: 'Opening title', blurb: 'Big title at the top. Subtitle underneath.',
+                              seed: { title: 'Lesson title', subtitle: 'Your name' } }] },
+  section:     { label: 'Section', icon: 'S', deck: true, group: 'introduce',
+                 starters: [{ title: 'Section break', blurb: 'A clean pause between parts of the lesson.',
+                              seed: { title: 'Next idea', subtitle: 'A short bridge into what follows.' } }] },
+  content:     { label: 'Bullets', icon: '•', deck: true, pits: 8, group: 'explain',
+                 starters: [
+                   { title: 'Title + content', blurb: 'Classic teaching slide — heading, then bullet pits.',
+                     seed: { title: 'Slide title', bullets: ['', '', ''] } },
+                   { title: 'Steps', blurb: 'Title plus four numbered teaching steps.',
+                     seed: { title: 'How it works', bullets: ['Step one', 'Step two', 'Step three', 'Step four'] } }
+                 ] },
+  keyfact:     { label: 'Key fact', icon: '!', deck: true, pits: 4, group: 'explain',
+                 starters: [{ title: 'Key fact', blurb: 'One number or rule set large, with the detail beneath it.',
+                              seed: { title: 'The thing they must leave with', subtitle: 'What the fact is',
+                                      body: 'The fact, in a few words', bullets: ['', '', ''] } }] },
+  keywords:    { label: 'Keywords', icon: 'K', deck: true, pits: 8, group: 'explain',
+                 starters: [{ title: 'Keywords', blurb: 'Bold keyword + lowercase definition — vocabulary pits.',
+                              seed: { title: 'Key vocabulary', bullets: ['\t', '\t', '\t'] } }] },
+  italics:     { label: 'Phrase + explanation', icon: 'I', deck: true, pits: 8, group: 'explain',
+                 starters: [{ title: 'Italics', blurb: 'Italic phrase + plain explanation — emphasis pits.',
+                              seed: { title: 'Phrases to notice', bullets: ['\t', '\t', '\t'] } }] },
+  links:       { label: 'Links', icon: '↗', deck: true, pits: 8, group: 'show',
+                 starters: [{ title: 'Hyperlinks', blurb: 'Label + URL — clickable further reading.',
+                              seed: { title: 'Further reading', bullets: ['\t', '\t', '\t'] } }] },
+  split:       { label: 'Image + text', icon: '◫', deck: true, pits: 5, group: 'show',
+                 starters: [{ title: 'Dual coding', blurb: 'Half text, half image — say it and show it.',
+                              seed: { title: 'Say it. Show it.', bullets: ['', '', ''] } }] },
+  cards:       { label: 'Cards', icon: '▦', deck: true, pits: 6, group: 'explain',
+                 starters: [{ title: 'Three cards', blurb: 'Three idea pits side by side.',
+                              seed: { title: 'Three ideas to hold onto.', bullets: ['', '', ''] } }] },
+  table:       { label: 'Table', icon: '⊞', deck: true, group: 'explain',
+                 starters: [{ title: 'Table', blurb: 'Rows and columns — for when the exact value matters.',
+                              seed: { title: 'Side by side' } }] },
+  beforeafter: { label: 'Before / after', icon: '◐', deck: true, group: 'show',
+                 starters: [{ title: 'Before / after', blurb: 'Two states compared — the second lands on a press.' }] },
+  explore:     { label: 'Explore an image', icon: '◎', deck: true, group: 'show',
+                 starters: [{ title: 'Explore an image', blurb: 'One picture the room examines, with details you reveal.' }] },
+  simulation:  { label: 'What if? graph', icon: '↗', deck: true, group: 'show',
+                 starters: [{ title: 'What if? graph', blurb: 'A slider bound to a model — move it and the curve answers.' }] },
+  chart:       { label: 'Chart', icon: '▥', deck: true, group: 'explain',
+                 starters: [{ title: 'Chart', blurb: 'Bar, line or pie drawn from a range you paste in.',
+                              seed: { title: 'What the numbers show', chartKind: 'bar',
+                                      body: 'Day|Students\nMon|12\nTue|19\nWed|15' } }] },
+  image:       { label: 'Image', icon: '▣', deck: true, group: 'show',
+                 starters: [{ title: 'Full-bleed image', blurb: 'One dominant image with a caption.',
+                              seed: { title: 'Caption' } }] },
+  gallery:     { label: 'Image stack', icon: '▤', deck: true, group: 'show',
+                 starters: [{ title: 'Image stack', blurb: 'Several pictures, revealed one press at a time.',
+                              seed: { title: 'One at a time' } }] },
+  video:       { label: 'Video', icon: '▶', deck: true, group: 'show',
+                 starters: [{ title: 'Video', blurb: 'A clip from YouTube, Vimeo or a file beside the deck.',
+                              seed: { title: 'Watch this' } }] },
+  quote:       { label: 'Quote', icon: '“', deck: true, group: 'introduce',
+                 starters: [{ title: 'Quote', blurb: 'A line the room can sit with.',
+                              seed: { body: 'Replace this with the line you want the room to sit with.',
+                                      subtitle: 'Attribution' } }] },
+  join:        { label: 'Join QR & PIN', icon: '⌗', deck: true },
+  game:        { label: 'Game', icon: '◈' },
+  quiz:        { label: 'Quiz', icon: '?' },
+  explain:     { label: 'Explanation', icon: '💡' },
+  results:     { label: 'Score', icon: '⚑' }
+};
+
+var LAYOUT_GROUPS = [
+  ['introduce', 'Introduce'],
+  ['explain', 'Explain & organise'],
+  ['show', 'Show & explore']
+];
+
+function layoutKeys(test) {
+  return Object.keys(SLIDE_TYPES).filter(function (k) { return test(SLIDE_TYPES[k]); });
+}
+
+// Shared presentation semantics used by authoring, rendering and live context.
+var DECK_TYPES = layoutKeys(function (t) { return t.deck; });
+var BULLET_LAYOUTS = layoutKeys(function (t) { return t.pits > 0; });
 
 function prepareLayout(slide, type) {
   if (DECK_TYPES.indexOf(type) < 0) return slide;
@@ -207,4 +304,4 @@ function correctAnswerLabel(slide) {
 }
 
 
-export { DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };
+export { SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };

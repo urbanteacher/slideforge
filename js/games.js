@@ -1816,9 +1816,57 @@
 
       bodyEl.appendChild(UI.field('Music under the thinking time', (function () {
         var box = el('div');
+        /* safeMedia returns '' for anything it will not fetch, and a field that
+           silently empties itself is indistinguishable from one that ignored
+           you. Say which it was, and keep what was typed on screen. */
+        var warn = el('div', 'hint field-warn');
+        warn.hidden = true;
+        /* A path off your own disk is the usual mistake and it is not caught by
+           safeMedia, which treats anything without a scheme as a path relative
+           to the deck — so /Users/you/Music/think.mp3 is stored happily and then
+           404s in front of a room. Catching it here beats finding out live. */
+        function musicComplaint(v) {
+          var t = v.trim();
+          if (!t) return '';
+          if (!SF.safeMedia(t)) return 'That is not something this can fetch. Use a file beside index.html, a full https:// address, or Choose file below.';
+          /* A leading slash alone is not the tell: /audio/think.mp3 is served
+             from the app root and works. These are the roots a file manager
+             hands you, which the app can never reach. */
+          if (/^(~|[A-Za-z]:\\|\/(Users|home|Volumes|private|var|tmp|mnt|media|root)\/)/.test(t)) {
+            return 'That looks like a path on your own computer. The app can only play files it serves — put the track beside index.html (audio/think.mp3), or use Choose file to carry it inside the game.';
+          }
+          return '';
+        }
         box.appendChild(UI.text(st.music || '', function (v) {
+          var msg = musicComplaint(v);
+          warn.hidden = !msg;
+          warn.textContent = msg;
           st.music = SF.safeMedia(v); touched(); draw2();
         }, 'audio/think.mp3'));
+        box.appendChild(warn);
+
+        /* The file itself, not a reference to it. A short loop travels with the
+           game this way; anything long should stay a path, because the whole
+           library shares one browser storage budget. */
+        var pick = /** @type {HTMLInputElement} */ (el('input'));
+        pick.type = 'file';
+        pick.accept = 'audio/*';
+        pick.style.cssText = 'font-size:12px;margin-top:7px';
+        pick.addEventListener('change', function () {
+          var f = pick.files && pick.files[0];
+          if (!f) return;
+          if (f.size > 2.5 * 1024 * 1024) {
+            SF.toast('That track is over 2.5 MB \u2014 keep it beside index.html and use its path instead, or the library may outgrow browser storage.');
+          }
+          var fr = new FileReader();
+          fr.onload = function () {
+            st.music = typeof fr.result === 'string' ? SF.safeMedia(fr.result) : '';
+            warn.hidden = true;
+            touched(); draw2();
+          };
+          fr.readAsDataURL(f);
+        });
+        box.appendChild(pick);
         if (st.music) {
           var vol = el('div');
           vol.style.marginTop = '9px';
@@ -1835,7 +1883,8 @@
           'game \u2014 a deck that travels without it simply plays nothing.'));
         box.appendChild(el('div', 'hint',
           'It starts when a question opens and stops the moment the answer is ' +
-          'revealed, so it doubles as the sound of time running out. It plays ' +
+          'revealed, so it doubles as the sound of time running out \u2014 there is ' +
+          'no music on a title, an explanation or the scoreboard. It plays ' +
           'on the projector only; twenty phones a beat apart is not music.'));
         return box;
       })()));

@@ -307,6 +307,10 @@ export interface Deck {
   logo: string;
   logoOn: 'none' | 'title' | 'all';
   logoSize?: 'small' | 'medium' | 'large';
+  /** Whether a dark ground flips the logo white. Themes decide when 'auto'. */
+  logoReverse?: 'auto' | 'always' | 'never';
+  /** Who the deck belongs to. Printed by themes that carry an institution line. */
+  org?: string;
   quiz: QuizConfig;
   created: number;
   modified: number;

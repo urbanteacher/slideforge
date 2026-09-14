@@ -1199,6 +1199,27 @@
     if (!deck.logo) return;
     insp.appendChild(UI.field('Logo size',UI.select([{value:'small',label:'Small'},{value:'medium',label:'Medium'},{value:'large',label:'Large'}],deck.logoSize||'medium',function(v){deck.logoSize=v;touched();if(redraw)redraw();else draw();})));
 
+    insp.appendChild(UI.field('Organisation',
+      UI.text(deck.org || '', function (v) {
+        deck.org = v.trim(); touched(); if (redraw) redraw(); else draw();
+      }, 'Northeastern University London'),
+      'Printed by themes that carry an institution line — on this theme, across ' +
+      'the top of section slides. Leave it empty and nothing is printed.'));
+
+    /* A one-colour lockup only works on the grounds it was drawn for. The
+       themes already flip it white on the slides they paint dark, but a deck
+       whose logo is already white needs that turned off, and a deck taught on
+       a dark projector may want it on throughout. */
+    insp.appendChild(UI.field('On dark slides', UI.select([
+      { value: 'auto', label: 'Let the theme decide' },
+      { value: 'always', label: 'Always show the logo white' },
+      { value: 'never', label: 'Never change it — my logo is already light' }
+    ], deck.logoReverse === 'always' || deck.logoReverse === 'never' ? deck.logoReverse : 'auto',
+      function (v) { deck.logoReverse = v; touched(); if (redraw) redraw(); else draw(); }),
+      'Your logo is one colour, and a dark title or section slide swallows a dark one. ' +
+      'Auto turns it white only where this theme paints a dark ground; a picture slide ' +
+      'can still be set on its own in Customise this slide.'));
+
     insp.appendChild(UI.field('Show logo on', UI.select([
       { value: 'all', label: 'Every slide' },
       /* Was "Title slide only", which named a layout rather than a position
@@ -1241,12 +1262,14 @@
   function drawLayoutPicker(insp, s) {
     var box = el('details', 'layout-library'), summary = el('summary', null, 'Layout · ' + SF.SLIDE_TYPES[s.type].label);
     box.appendChild(summary);
+    /* Grouped by what each layout says about itself. Join is authorable but
+       has no group — it is inserted by the live flow, not chosen as a shape. */
     /** @type {[string, string[]][]} */
-    var layoutGroups = [
-      ['Introduce', ['title', 'introduction', 'section', 'quote']],
-      ['Explain & organise', ['content', 'journey', 'mindmap', 'keywords', 'italics', 'cards', 'table', 'chart']],
-      ['Show & explore', ['split', 'image', 'gallery', 'beforeafter', 'explore', 'simulation', 'video', 'links']]
-    ];
+    var layoutGroups = SF.LAYOUT_GROUPS.map(function (g) {
+      return [g[1], Object.keys(SF.SLIDE_TYPES).filter(function (k) {
+        return SF.SLIDE_TYPES[k].group === g[0];
+      })];
+    });
     layoutGroups.forEach(function (group) {
       box.appendChild(el('h4', null, group[0]));
       var grid = el('div', 'layout-library-grid');
@@ -1340,7 +1363,15 @@
   }
 
   /* Text fields preserve formatting separately from lesson content. */
-  var PIT_MAX = { journey: 6, mindmap: 6, content: 8, cards: 6, split: 5, keywords: 8, italics: 8, links: 8 };
+  /* Read off the layout table rather than repeated here: a layout that grew a
+     pit cap in one file and not the other is exactly the drift this removes. */
+  var PIT_MAX = (function () {
+    var m = {};
+    Object.keys(SF.SLIDE_TYPES).forEach(function (k) {
+      if (SF.SLIDE_TYPES[k].pits) m[k] = SF.SLIDE_TYPES[k].pits;
+    });
+    return m;
+  })();
 
   function ensurePits(s) {
     if (!Array.isArray(s.bullets)) s.bullets = [];
@@ -1691,6 +1722,21 @@
         'Keep to six short branches for a readable map. Build on Next reveals one branch at a time.'));
       return;
     }
+    if (s.type === 'keyfact') {
+      insp.appendChild(UI.field('Heading',
+        richField(s, 'title', 'text', function (v) { s.title = v; touched(); repaint(); })));
+      insp.appendChild(UI.field('What the fact is',
+        richField(s, 'subtitle', 'text', function (v) { s.subtitle = v; touched(); repaint(); }),
+        'The small line above the fact — "Canvas deadline", "Pass mark", "Word limit". A number on its own does not mean anything.'));
+      insp.appendChild(UI.field('The fact',
+        richField(s, 'body', 'area', function (v) { s.body = v; touched(); repaint(); }, 2),
+        'Keep it to a few words. This is set large, and long sentences stop being one thing the room can hold.'));
+      var notes = el('div');
+      drawPits(notes, s);
+      insp.appendChild(UI.field('Supporting points', notes,
+        'Everything that matters less than the fact above. Three or four at most.'));
+      return;
+    }
     if (s.type === 'introduction') {
       insp.appendChild(UI.field('Lecturer name', richField(s, 'title', 'text', function (v) { s.title = v; touched(); repaint(); })));
       insp.appendChild(UI.field('Job title', richField(s, 'subtitle', 'text', function (v) { s.subtitle = v; touched(); repaint(); })));
@@ -1766,6 +1812,9 @@
 
     if (s.type === 'image') {
       drawImageFields(insp, s);
+      insp.appendChild(UI.field('Flip to facts', UI.area(s.body || '', function (v) {
+        s.body = v; touched(); repaint();
+      }, 4), 'Optional: one short fact per line. Adds a button to reveal a clean facts panel.'));
       return;
     }
 

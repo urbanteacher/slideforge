@@ -2596,30 +2596,264 @@
     }
     return u;
   }
-  var DECK_TYPES = [
-    "journey",
-    "mindmap",
-    "introduction",
-    "title",
-    "section",
-    "content",
-    "keywords",
-    "italics",
-    "links",
-    "split",
-    "cards",
-    "table",
-    "image",
-    "video",
-    "quote",
-    "join",
-    "chart",
-    "gallery",
-    "beforeafter",
-    "explore",
-    "simulation"
+  var SLIDE_TYPES = {
+    journey: {
+      label: "Journey / handover",
+      icon: "↝",
+      deck: true,
+      pits: 6,
+      group: "explain",
+      starters: [{ title: "Journey / handover", blurb: "Connect milestones, course topics or stages of a project." }]
+    },
+    mindmap: {
+      label: "Mind map",
+      icon: "✣",
+      deck: true,
+      pits: 6,
+      group: "explain",
+      starters: [{ title: "Mind map", blurb: "One central idea, connected branches, revealed as you teach." }]
+    },
+    introduction: {
+      label: "Lecturer introduction",
+      icon: "◎",
+      deck: true,
+      group: "introduce",
+      starters: [{ title: "Lecturer introduction", blurb: "Headshot, name, job title and a short introduction." }]
+    },
+    title: {
+      label: "Title",
+      icon: "T",
+      deck: true,
+      group: "introduce",
+      starters: [{
+        title: "Opening title",
+        blurb: "Big title at the top. Subtitle underneath.",
+        seed: { title: "Lesson title", subtitle: "Your name" }
+      }]
+    },
+    section: {
+      label: "Section",
+      icon: "S",
+      deck: true,
+      group: "introduce",
+      starters: [{
+        title: "Section break",
+        blurb: "A clean pause between parts of the lesson.",
+        seed: { title: "Next idea", subtitle: "A short bridge into what follows." }
+      }]
+    },
+    content: {
+      label: "Bullets",
+      icon: "•",
+      deck: true,
+      pits: 8,
+      group: "explain",
+      starters: [
+        {
+          title: "Title + content",
+          blurb: "Classic teaching slide — heading, then bullet pits.",
+          seed: { title: "Slide title", bullets: ["", "", ""] }
+        },
+        {
+          title: "Steps",
+          blurb: "Title plus four numbered teaching steps.",
+          seed: { title: "How it works", bullets: ["Step one", "Step two", "Step three", "Step four"] }
+        }
+      ]
+    },
+    keyfact: {
+      label: "Key fact",
+      icon: "!",
+      deck: true,
+      pits: 4,
+      group: "explain",
+      starters: [{
+        title: "Key fact",
+        blurb: "One number or rule set large, with the detail beneath it.",
+        seed: {
+          title: "The thing they must leave with",
+          subtitle: "What the fact is",
+          body: "The fact, in a few words",
+          bullets: ["", "", ""]
+        }
+      }]
+    },
+    keywords: {
+      label: "Keywords",
+      icon: "K",
+      deck: true,
+      pits: 8,
+      group: "explain",
+      starters: [{
+        title: "Keywords",
+        blurb: "Bold keyword + lowercase definition — vocabulary pits.",
+        seed: { title: "Key vocabulary", bullets: ["	", "	", "	"] }
+      }]
+    },
+    italics: {
+      label: "Phrase + explanation",
+      icon: "I",
+      deck: true,
+      pits: 8,
+      group: "explain",
+      starters: [{
+        title: "Italics",
+        blurb: "Italic phrase + plain explanation — emphasis pits.",
+        seed: { title: "Phrases to notice", bullets: ["	", "	", "	"] }
+      }]
+    },
+    links: {
+      label: "Links",
+      icon: "↗",
+      deck: true,
+      pits: 8,
+      group: "show",
+      starters: [{
+        title: "Hyperlinks",
+        blurb: "Label + URL — clickable further reading.",
+        seed: { title: "Further reading", bullets: ["	", "	", "	"] }
+      }]
+    },
+    split: {
+      label: "Image + text",
+      icon: "◫",
+      deck: true,
+      pits: 5,
+      group: "show",
+      starters: [{
+        title: "Dual coding",
+        blurb: "Half text, half image — say it and show it.",
+        seed: { title: "Say it. Show it.", bullets: ["", "", ""] }
+      }]
+    },
+    cards: {
+      label: "Cards",
+      icon: "▦",
+      deck: true,
+      pits: 6,
+      group: "explain",
+      starters: [{
+        title: "Three cards",
+        blurb: "Three idea pits side by side.",
+        seed: { title: "Three ideas to hold onto.", bullets: ["", "", ""] }
+      }]
+    },
+    table: {
+      label: "Table",
+      icon: "⊞",
+      deck: true,
+      group: "explain",
+      starters: [{
+        title: "Table",
+        blurb: "Rows and columns — for when the exact value matters.",
+        seed: { title: "Side by side" }
+      }]
+    },
+    beforeafter: {
+      label: "Before / after",
+      icon: "◐",
+      deck: true,
+      group: "show",
+      starters: [{ title: "Before / after", blurb: "Two states compared — the second lands on a press." }]
+    },
+    explore: {
+      label: "Explore an image",
+      icon: "◎",
+      deck: true,
+      group: "show",
+      starters: [{ title: "Explore an image", blurb: "One picture the room examines, with details you reveal." }]
+    },
+    simulation: {
+      label: "What if? graph",
+      icon: "↗",
+      deck: true,
+      group: "show",
+      starters: [{ title: "What if? graph", blurb: "A slider bound to a model — move it and the curve answers." }]
+    },
+    chart: {
+      label: "Chart",
+      icon: "▥",
+      deck: true,
+      group: "explain",
+      starters: [{
+        title: "Chart",
+        blurb: "Bar, line or pie drawn from a range you paste in.",
+        seed: {
+          title: "What the numbers show",
+          chartKind: "bar",
+          body: "Day|Students\nMon|12\nTue|19\nWed|15"
+        }
+      }]
+    },
+    image: {
+      label: "Image",
+      icon: "▣",
+      deck: true,
+      group: "show",
+      starters: [{
+        title: "Full-bleed image",
+        blurb: "One dominant image with a caption.",
+        seed: { title: "Caption" }
+      }]
+    },
+    gallery: {
+      label: "Image stack",
+      icon: "▤",
+      deck: true,
+      group: "show",
+      starters: [{
+        title: "Image stack",
+        blurb: "Several pictures, revealed one press at a time.",
+        seed: { title: "One at a time" }
+      }]
+    },
+    video: {
+      label: "Video",
+      icon: "▶",
+      deck: true,
+      group: "show",
+      starters: [{
+        title: "Video",
+        blurb: "A clip from YouTube, Vimeo or a file beside the deck.",
+        seed: { title: "Watch this" }
+      }]
+    },
+    quote: {
+      label: "Quote",
+      icon: "“",
+      deck: true,
+      group: "introduce",
+      starters: [{
+        title: "Quote",
+        blurb: "A line the room can sit with.",
+        seed: {
+          body: "Replace this with the line you want the room to sit with.",
+          subtitle: "Attribution"
+        }
+      }]
+    },
+    join: { label: "Join QR & PIN", icon: "⌗", deck: true },
+    game: { label: "Game", icon: "◈" },
+    quiz: { label: "Quiz", icon: "?" },
+    explain: { label: "Explanation", icon: "💡" },
+    results: { label: "Score", icon: "⚑" }
+  };
+  var LAYOUT_GROUPS = [
+    ["introduce", "Introduce"],
+    ["explain", "Explain & organise"],
+    ["show", "Show & explore"]
   ];
-  var BULLET_LAYOUTS = ["journey", "mindmap", "content", "cards", "split", "keywords", "italics", "links"];
+  function layoutKeys(test) {
+    return Object.keys(SLIDE_TYPES).filter(function(k) {
+      return test(SLIDE_TYPES[k]);
+    });
+  }
+  var DECK_TYPES = layoutKeys(function(t) {
+    return t.deck;
+  });
+  var BULLET_LAYOUTS = layoutKeys(function(t) {
+    return t.pits > 0;
+  });
   function prepareLayout(slide, type2) {
     if (DECK_TYPES.indexOf(type2) < 0) return slide;
     slide.type = type2;
@@ -6990,33 +7224,6 @@
     q.scoreboard = q.scoreboard !== false;
     return q;
   }
-  var SLIDE_TYPES = {
-    journey: { label: "Journey / handover", icon: "↝" },
-    mindmap: { label: "Mind map", icon: "✣" },
-    introduction: { label: "Lecturer introduction", icon: "◎" },
-    title: { label: "Title", icon: "T" },
-    section: { label: "Section", icon: "S" },
-    content: { label: "Bullets", icon: "•" },
-    keywords: { label: "Keywords", icon: "K" },
-    italics: { label: "Phrase + explanation", icon: "I" },
-    links: { label: "Links", icon: "↗" },
-    split: { label: "Image + text", icon: "◫" },
-    cards: { label: "Cards", icon: "▦" },
-    table: { label: "Table", icon: "⊞" },
-    beforeafter: { label: "Before / after", icon: "◐" },
-    explore: { label: "Explore an image", icon: "◎" },
-    simulation: { label: "What if? graph", icon: "↗" },
-    chart: { label: "Chart", icon: "▥" },
-    image: { label: "Image", icon: "▣" },
-    gallery: { label: "Image stack", icon: "▤" },
-    video: { label: "Video", icon: "▶" },
-    quote: { label: "Quote", icon: "“" },
-    game: { label: "Game", icon: "◈" },
-    quiz: { label: "Quiz", icon: "?" },
-    explain: { label: "Explanation", icon: "💡" },
-    results: { label: "Score", icon: "⚑" },
-    join: { label: "Join QR & PIN", icon: "⌗" }
-  };
   function isSlideType(value) {
     return typeof value === "string" && Object.prototype.hasOwnProperty.call(SLIDE_TYPES, value);
   }
@@ -7271,6 +7478,7 @@
     d.showSlideNumbers = d.showSlideNumbers !== false;
     d.finalScores = d.finalScores === true;
     d.logo = String(d.logo || "");
+    d.org = String(d.org || "");
     d.logoSize = ["small", "medium", "large"].includes(raw.logoSize) ? raw.logoSize : "medium";
     if (d.logoOn !== "all" && d.logoOn !== "title" && d.logoOn !== "none") {
       d.logoOn = d.logo ? "all" : "none";
@@ -7808,6 +8016,8 @@
     safeHref,
     deckToMarkdown,
     DECK_TYPES,
+    BULLET_LAYOUTS,
+    LAYOUT_GROUPS,
     FEEDBACK_KINDS,
     SCALE_POINTS,
     scaleLabels,

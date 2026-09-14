@@ -64,124 +64,31 @@
   }
 
   /* One-click presentation shapes — fill the pits after they land. */
-  var starters = [
-    { icon: '↝', title: 'Journey / handover', blurb: 'Connect milestones, course topics or stages of a project.', build: function () { return SF.makeSlide('journey'); } },
-    { icon: '✣', title: 'Mind map', blurb: 'One central idea, connected branches, revealed as you teach.', build: function () { return SF.makeSlide('mindmap'); } },
-    { icon: '◎', title: 'Lecturer introduction', blurb: 'Headshot, name, job title and a short introduction.', build: function () { return SF.makeSlide('introduction'); } },
-    {
-      icon: 'T', title: 'Opening title', blurb: 'Big title at the top. Subtitle underneath.',
-      build: function () {
-        var s = SF.makeSlide('title');
-        s.title = 'Lesson title';
-        s.subtitle = 'Your name';
-        return s;
-      }
-    },
-    {
-      icon: '•', title: 'Title + content', blurb: 'Classic teaching slide — heading, then bullet pits.',
-      build: function () {
-        var s = SF.makeSlide('content');
-        s.title = 'Slide title';
-        s.bullets = ['', '', ''];
-        return s;
-      }
-    },
-    {
-      icon: 'K', title: 'Keywords', blurb: 'Bold keyword + lowercase definition — vocabulary pits.',
-      build: function () {
-        var s = SF.makeSlide('keywords');
-        s.title = 'Key vocabulary';
-        s.bullets = [
-          SF.formatKeywordLine('', ''),
-          SF.formatKeywordLine('', ''),
-          SF.formatKeywordLine('', '')
-        ];
-        return s;
-      }
-    },
-    {
-      icon: 'I', title: 'Italics', blurb: 'Italic phrase + plain explanation — emphasis pits.',
-      build: function () {
-        var s = SF.makeSlide('italics');
-        s.title = 'Phrases to notice';
-        s.bullets = [
-          SF.formatKeywordLine('', ''),
-          SF.formatKeywordLine('', ''),
-          SF.formatKeywordLine('', '')
-        ];
-        return s;
-      }
-    },
-    {
-      icon: '↗', title: 'Hyperlinks', blurb: 'Label + URL — clickable further reading.',
-      build: function () {
-        var s = SF.makeSlide('links');
-        s.title = 'Further reading';
-        s.bullets = [
-          SF.formatKeywordLine('', ''),
-          SF.formatKeywordLine('', ''),
-          SF.formatKeywordLine('', '')
-        ];
-        return s;
-      }
-    },
-    {
-      icon: '◫', title: 'Dual coding', blurb: 'Half text, half image — say it and show it.',
-      build: function () {
-        var s = SF.makeSlide('split');
-        s.title = 'Say it. Show it.';
-        s.bullets = ['', '', ''];
-        s.image = '';
-        s.imageSide = 'right';
-        return s;
-      }
-    },
-    {
-      icon: 'S', title: 'Section break', blurb: 'A clean pause between parts of the lesson.',
-      build: function () {
-        var s = SF.makeSlide('section');
-        s.title = 'Next idea';
-        s.subtitle = 'A short bridge into what follows.';
-        return s;
-      }
-    },
-    {
-      icon: '▣', title: 'Full-bleed image', blurb: 'One dominant image with a caption.',
-      build: function () {
-        var s = SF.makeSlide('image');
-        s.title = 'Caption';
-        s.image = '';
-        return s;
-      }
-    },
-    {
-      icon: '▦', title: 'Three cards', blurb: 'Three idea pits side by side.',
-      build: function () {
-        var s = SF.makeSlide('cards');
-        s.title = 'Three ideas to hold onto.';
-        s.bullets = ['', '', ''];
-        return s;
-      }
-    },
-    {
-      icon: '“', title: 'Quote', blurb: 'A line the room can sit with.',
-      build: function () {
-        var s = SF.makeSlide('quote');
-        s.body = 'Replace this with the line you want the room to sit with.';
-        s.subtitle = 'Attribution';
-        return s;
-      }
-    },
-    {
-      icon: '1', title: 'Steps', blurb: 'Title plus four numbered teaching steps.',
-      build: function () {
-        var s = SF.makeSlide('content');
-        s.title = 'How it works';
-        s.bullets = ['Step one', 'Step two', 'Step three', 'Step four'];
-        return s;
-      }
-    }
-  ];
+  /* Built from the layout table, so + Slide and the layout picker can never
+     again offer different sets. A starter is a title, a blurb and the fields to
+     lay over a fresh slide of that type. */
+  var starters = (function () {
+    var list = [];
+    Object.keys(SF.SLIDE_TYPES).forEach(function (type) {
+      (SF.SLIDE_TYPES[type].starters || []).forEach(function (st) {
+        list.push({
+          icon: SF.SLIDE_TYPES[type].icon,
+          title: st.title,
+          blurb: st.blurb,
+          build: function () {
+            var s = SF.makeSlide(type);
+            if (SF.prepareLayout) SF.prepareLayout(s, type);
+            Object.keys(st.seed || {}).forEach(function (f) {
+              s[f] = Array.isArray(st.seed[f]) ? st.seed[f].slice() : st.seed[f];
+            });
+            return s;
+          }
+        });
+      });
+    });
+    return list;
+  })();
+
 
   function openStarters() {
     returnFocus = document.activeElement;
@@ -191,11 +98,23 @@
     body.replaceChildren();
     body.appendChild(el('p', 'library-note', 'Pick a shape to insert after the selected slide. You can change Layout any time in the right panel.'));
     var grid = el('div', 'activity-grid starters-grid');
+    var fits = [];
     starters.forEach(function (st) {
-      var b = el('button', 'activity-card check');
+      var b = el('button', 'activity-card check starter-card');
       b.type = 'button';
-      b.appendChild(el('span', 'activity-icon', st.icon));
-      b.appendChild(el('strong', null, st.title));
+      /* The shape itself, rendered, rather than a letter standing for it. "K"
+         and "•" say nothing about what you are about to insert, and the layout
+         picker in the inspector has always shown real miniatures — this is the
+         same thing at the point of creation rather than after it. */
+      var frame = el('div', 'variant-frame starter-frame');
+      var node = SF.renderSlide(SF.Editor.deck(), st.build(), { index: 0, total: 1, chrome: false });
+      frame.appendChild(node);
+      b.appendChild(frame);
+      fits.push([frame, node]);
+      /* Named, because the preview inside the card contains <strong> of its
+         own — a keyword term, a mind-map branch — and an unqualified
+         querySelector('strong') now finds the slide rather than the title. */
+      b.appendChild(el('strong', 'starter-title', st.title));
       b.appendChild(el('span', 'activity-description', st.blurb));
       b.appendChild(el('span', 'activity-tag', 'INSERT SLIDE  ↗'));
       b.onclick = function () {
@@ -207,6 +126,11 @@
     });
     body.appendChild(grid);
     modal.showModal();
+    /* Measured after the dialog is up: a frame inside a closed <dialog> has
+       no width, and SF.fit would scale every preview down to nothing. */
+    requestAnimationFrame(function () {
+      fits.forEach(function (pair) { SF.fit(pair[0], pair[1]); });
+    });
   }
 
   /* Catalogue formats that are an existing engine set up a particular way,
