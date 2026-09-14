@@ -14,6 +14,7 @@
     idx: 0,
     answers: {},        // slideId -> chosen option index
     open: false,
+    shareMode: false,   // read-only share link: browse slides, no teaching HUD
     blank: false,
     started: 0,
     /* Spontaneous desk activity/game: shown on the wall without mutating the lesson. */
@@ -155,6 +156,12 @@
   }
 
   function controlEnabled(action) {
+    /* A shared link is a slideshow for a reader, not a teaching desk. Only
+       move and fullscreen belong there — every room tool is dead weight and
+       would look broken without a live session. */
+    if (Player.shareMode) {
+      return action === 'prev' || action === 'next' || action === 'full' || action === 'help';
+    }
     var live = !!(SF.Live && SF.Live.active);
     var slide = Player.deck && Player.deck.slides[Player.idx];
     if (action === 'teacher' || action === 'join' || action === 'reactions'
@@ -2221,7 +2228,12 @@
     Player.deck = deck;
     Player.idx = Math.max(0, Math.min(deck.slides.length - 1, startIndex || 0));
     Player.open = true;
-    rememberRun = !opts.demo;
+    Player.shareMode = !!opts.share;
+    if (root) root.classList.toggle('share-browse', Player.shareMode);
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.classList.toggle('share-browse', Player.shareMode);
+    }
+    rememberRun = !opts.demo && !opts.share;
     Player.forgetRun();
     Player.blank = false;
     Player.frozen = false;
@@ -2287,6 +2299,11 @@
     stopVideo(Player._current);
     stopMusic();
     Player.open = false;
+    Player.shareMode = false;
+    if (root) root.classList.remove('share-browse');
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.classList.remove('share-browse');
+    }
     Player.forgetRun();
     clearTimeout(hudTimer);
     if (hud) hud.classList.remove('show');
@@ -2614,6 +2631,23 @@
     var k = e.key;
     if ((target && target.closest('input,textarea,select,[contenteditable=true]')) || e.metaKey || e.ctrlKey || (e.altKey && k !== 'f' && k !== 'F')) return;
     if ((target && target.closest('button,a')) && (k==='Enter'||k===' ')) return;
+
+    /* Shared view: arrows / space / click only. Esc must not blank the page. */
+    if (Player.shareMode) {
+      switch (k) {
+        case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown': case 'Enter': case 'n':
+          e.preventDefault(); Player.next(); break;
+        case 'ArrowLeft': case 'ArrowUp': case 'PageUp': case 'p':
+          e.preventDefault(); Player.prev(); break;
+        case 'Home': e.preventDefault(); Player.goTo(0, -1); break;
+        case 'End': e.preventDefault(); if (Player.deck) Player.goTo(Player.deck.slides.length - 1, 1); break;
+        case 'f': case 'F': e.preventDefault(); Player.control('full'); break;
+        case 'Escape': e.preventDefault(); break;
+        default: break;
+      }
+      showHud();
+      return;
+    }
 
     if ((k === 'f' || k === 'F') && e.altKey) {
       e.preventDefault();
