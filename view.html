@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A shared lesson — SlideForge</title>
+<!-- A shared deck, read only.
+
+     This is the presentation runtime with the editor left out: the same
+     model, the same renderer, the same player, so a shared copy looks
+     exactly like the lesson rather than like an approximation of it. The
+     scripts that author, store or host are simply not loaded, which is a
+     firmer guarantee than hiding their buttons.
+
+     Generated to match index.html's asset list. If that list changes and
+     this does not, the shared view drifts from the real one. -->
+<link rel="stylesheet" href="css/app.css?v=18">
+<link rel="stylesheet" href="css/board-common.css?v=1">
+<link rel="stylesheet" href="css/memory.css?v=2">
+<link rel="stylesheet" href="css/bingo.css?v=2">
+<link rel="stylesheet" href="css/bowl.css?v=2">
+<link rel="stylesheet" href="css/lowstakes.css?v=2">
+<link rel="stylesheet" href="css/studio.css?v=3">
+<link rel="stylesheet" href="css/northeastern.css?v=7">
+<link rel="stylesheet" href="css/customize.css?v=2">
+<link rel="stylesheet" href="css/lesson-moments.css?v=2">
+<link rel="stylesheet" href="css/game-polish.css?v=1">
+<style>
+  .share-shell { position: fixed; inset: 0; background: #0c0d10; }
+  .share-msg { position: fixed; inset: 0; display: grid; place-content: center; gap: 10px;
+    text-align: center; font: 16px/1.5 system-ui, sans-serif; color: #e7eaf0; padding: 2rem; }
+  .share-msg h1 { font-size: 1.3rem; margin: 0; }
+  .share-msg p { margin: 0; opacity: .75; max-width: 30rem; }
+  .share-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+    display: flex; gap: 14px; align-items: center; justify-content: center;
+    padding: 7px 12px; font: 12px system-ui, sans-serif; color: #aab3c2;
+    background: #00000066; backdrop-filter: blur(6px); }
+  .share-bar b { color: #e7eaf0; font-weight: 600; }
+</style>
+</head>
+<body class="ws-deck share-shell" data-ready>
+<div id="player">
+  <div class="deck-viewport"></div>
+</div>
+<div class="hud" id="hud" role="toolbar" aria-label="Presentation controls">
+  <button data-act="prev" title="Previous point or slide (←)" aria-label="Previous point or slide">‹</button>
+  <span class="pos" aria-live="polite">1 / 1</span>
+  <button data-act="next" title="Next point or slide (→ or space)" aria-label="Next point or slide">›</button>
+  <span class="sep"></span>
+  <div class="hud-group hud-main-tools" id="hudDefaultTools">
+    <button data-act="rail" title="Room view: hidden → split screen → whole screen (S)" aria-label="Room view (S)">◧</button>
+    <button data-act="poll" title="Ask the room a quick question (V)" aria-label="Ask the room a quick question (V)">📊</button>
+    <button data-act="freeze" title="Freeze screen for digression (Z or Alt+F)" aria-label="Freeze screen (Z or Alt+F)">❄️</button>
+    <button data-act="ink" title="Draw and spotlight (I)" aria-label="Draw and spotlight (I)">✎</button>
+    <button data-act="blank" title="Blank the screen (B)" aria-label="Blank the screen (B)">◼</button>
+    <button data-act="more" title="More presentation controls" aria-label="More presentation controls" aria-expanded="false" aria-controls="hudMore">•••</button>
+    <button data-act="exit" title="Exit presentation (Esc)" aria-label="Exit presentation (Esc)">✕</button>
+  </div>
+  <div class="hud-group hud-ink-tools" id="hudInkTools" hidden>
+    <button data-mode="draw" title="Draw on the slide" aria-label="Draw on the slide">✎</button>
+    <button data-mode="spot" title="Spotlight part of the slide" aria-label="Spotlight part of the slide">◎</button>
+    <button data-ink-act="undo" title="Undo the last mark (Z)" aria-label="Undo the last mark (Z)">↶</button>
+    <button data-ink-act="clear" title="Clear all marks (X)" aria-label="Clear all marks (X)">🗑</button>
+    <button data-ink-act="steps" title="Show every step on this slide" aria-label="Show every step on this slide">⋯</button>
+    <span class="sep"></span>
+    <button data-ink-act="close" class="hud-ink-done" title="Done drawing (I or Esc)" aria-label="Done drawing">✓ Done</button>
+  </div>
+  <div id="hudMore" class="hud-more" hidden>
+    <button data-act="rail" title="Cycle room view (S)">Room view</button>
+    <button data-act="join" title="Show join QR and PIN (J)">Join QR</button>
+    <button data-act="poll" title="Ask the room a quick question (V)">Quick poll</button>
+    <button data-act="focus" title="Show leaderboard (E)">Show leaderboard</button>
+    <button data-act="freeze" title="Freeze screen for digression (Z or Alt+F)">Freeze screen</button>
+    <button data-act="reactions" title="Turn audience reactions on or off (T)">Reactions: On</button>
+      <button data-act="blankPhones" title="Blank every learner phone (Shift+B) — separate from blanking the projector">Blank phones</button>
+      <button data-act="floor" title="Who may speak (Shift+H): follows the lesson, always open, or closed">Floor: follows the lesson</button>
+    <button data-act="reset" title="Clear answers and score again (R)">Reset scores</button>
+    <button data-act="who" title="Who answered what, in presenter view only (W)">Named answers ↗</button>
+    <button data-act="teacher" title="Open private teacher entry in another window">Teaching desk ↗</button>
+    <button data-act="presenter" title="Open private notes and next slide (D)">Presenter view ↗</button>
+    <button data-act="full" title="Toggle full screen (F)">Full screen</button>
+    <button data-act="help" title="Keyboard shortcuts (?)">Keyboard shortcuts</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div class="share-msg" id="shareMsg"><h1>Opening the lesson…</h1><p>Fetching a read-only copy.</p></div>
+
+<script src="js/qr.js?v=2"></script>
+<script src="js/model.js?v=9"></script>
+<script src="js/playbook.js?v=2"></script>
+<script src="js/ask.js?v=2"></script>
+<script src="js/race.js?v=2"></script>
+<script src="js/boss.js?v=2"></script>
+<script src="js/lessons.js?v=17"></script>
+<script src="js/customize.js?v=5"></script>
+<script src="js/explore.js?v=1"></script>
+<script src="js/render.js?v=18"></script>
+<script src="js/memory.js?v=2"></script>
+<script src="js/bingo.js?v=2"></script>
+<script src="js/bowl.js?v=2"></script>
+<script src="js/lowstakes.js?v=2"></script>
+<script src="js/demo.js?v=2"></script>
+<script src="js/player.js?v=6"></script>
+<script src="js/live.js?v=7"></script>
+<script src="js/ai.js?v=1"></script>
+<script src="js/quick-poll.js?v=1"></script>
+<script src="js/teaching.js?v=2"></script>
+<script src="js/lesson-moments.js?v=2"></script>
+<script src="js/print.js?v=2"></script>
+<script>
+(function () {
+  'use strict';
+  var SF = window.SF;
+  var msg = document.getElementById('shareMsg');
+  function fail(title, detail) {
+    msg.innerHTML = '';
+    var h = document.createElement('h1'); h.textContent = title;
+    var p = document.createElement('p'); p.textContent = detail;
+    msg.appendChild(h); msg.appendChild(p);
+    msg.style.display = 'grid';
+  }
+  var id = new URLSearchParams(location.search).get('s') || '';
+  if (!/^[a-f0-9]{32}$/.test(id)) {
+    fail('That link is not complete', 'A shared lesson address ends in ?s= followed by the code from the link you were sent.');
+    return;
+  }
+  fetch('/api/share/' + id, { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : r.json().then(function (e) { throw new Error(e.error || 'Not found'); }); })
+    .then(function (data) {
+      var deck = SF.normalizeDeck(data.doc);
+      /* Games are not carried into a share: they are separate documents and
+         the live room they belong to is not running. The slide that embedded
+         one says so rather than failing. */
+      var run = SF.buildRunDeck(deck, function () { return null; });
+      msg.style.display = 'none';
+      SF.Player.start(run, 0, { fullscreen: false });
+      var bar = document.createElement('div');
+      bar.className = 'share-bar';
+      bar.innerHTML = '<span><b>' + (deck.title || 'Shared lesson').replace(/[<&>]/g, '') +
+        '</b> · a read-only copy</span><span>← → to move through it</span>';
+      document.body.appendChild(bar);
+      document.title = (deck.title || 'A shared lesson') + ' — SlideForge';
+    })
+    .catch(function (e) {
+      fail('This link no longer works', String(e.message || e) +
+        ' Shared copies are held on the server, and a hosted server loses them when the app is updated.');
+    });
+})();
+</script>
+</body>
+</html>

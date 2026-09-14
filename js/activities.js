@@ -377,6 +377,21 @@
     var browseBtn = SF.Shell.UI.button('Browse activities', '', browseActivities);
     browseBtn.title = 'Browse the 54 pedagogical activities catalogue';
     browseActions.appendChild(browseBtn);
+
+    /* Quiz studio puts "Write questions" on the rail. Activities already had
+       the same AI path in the inspector (generateActivityContent); it was easy
+       to miss because the rail looked empty of AI. Same brief, same review
+       step — only the door moved into view. */
+    var writeBtn = SF.Shell.UI.button('✨ Write content', 'ghost', writeSelectedActivity);
+    var canWrite = !!(row && A.activity(row.slide.activity) &&
+      (A.activity(row.slide.activity).fields || []).some(function (f) { return f.type !== 'minutes'; }));
+    writeBtn.disabled = !canWrite;
+    writeBtn.title = !row
+      ? 'Pick an activity in the list first.'
+      : !canWrite
+        ? 'This activity runs in the room — there are no slide boxes to fill.'
+        : 'Draft the slide boxes for this activity from a topic. You review every line before you teach.';
+    browseActions.appendChild(writeBtn);
     foot.appendChild(browseActions);
   }
 
@@ -644,6 +659,44 @@
   /* Fill this activity's boxes from a topic. Everything lands through the same
      write() the teacher's own typing goes through, so an AI draft is a draft
      like any other — editable, undoable, and saved the same way. */
+  /* Fill the selected activity's boxes from a topic — same path as the
+     inspector "Write this activity" box, reachable from the rail so Activities
+     matches Quiz studio's "Write questions" affordance. */
+  function writeSelectedActivity() {
+    if (!SF.AI || !SF.AI.generateActivityContent) { SF.toast('AI engine not loaded.'); return; }
+    var row = current();
+    var picked = row && A.activity(row.slide.activity);
+    if (!picked) { SF.toast('Pick an activity in the list first.'); return; }
+    var fields = (picked.fields || []).filter(function (f) { return f.type !== 'minutes'; });
+    if (!fields.length) {
+      SF.toast((picked.title || 'This activity') + ' has nothing to write — it runs in the room, not on the slide.');
+      return;
+    }
+    SF.askText({
+      title: 'Write “' + picked.title + '”',
+      detail: 'Fills the activity boxes below for a topic. You can edit or undo anything it writes. ' +
+        'Needs the AI server key — without it, starter copy in the catalogue is still editable.',
+      placeholder: 'Osmosis in plant cells',
+      confirm: '✨ Write it'
+    }, function (topic) {
+      var t = String(topic || '').trim();
+      if (!t) { SF.toast('Give it a topic to write about.'); return; }
+      SF.toast('Writing…');
+      Promise.resolve(SF.AI.generateActivityContent(picked, { topic: t })).then(function (res) {
+        if (!res || res.error) {
+          SF.toast(res && res.error ? res.error : 'Nothing came back.');
+          return;
+        }
+        Object.keys(res.values).forEach(function (path) { write(row.slide, path, res.values[path]); });
+        SF.Editor.commitActivityChange();
+        draw();
+        SF.toast('Written — read it before you teach it.');
+      }).catch(function () {
+        SF.toast('Could not write this just now.');
+      });
+    });
+  }
+
   function writeActivityBox(picked, row) {
     var box = el('div', 'ai-write');
     var topic = SF.Shell.UI.text('', function () {}, 'Osmosis in plant cells');

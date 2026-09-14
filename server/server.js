@@ -69,6 +69,95 @@ const DATA_DIRS = { deck: path.join(ROOT, 'data', 'decks'), game: path.join(ROOT
 const SLUG = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 const MAX_DOC = 8 * 1024 * 1024;          // embedded images make decks large
 
+/* ------------------------------------------------------------ sharing
+
+   A read-only copy of a deck, at an address that can be sent to someone who
+   was not in the room. Deliberately a different bargain from /api/data:
+
+   - Opt-in per deck. Nothing is published by pressing Save.
+   - The id is sixteen random bytes, so the address is the credential. There
+     is no listing endpoint: a share is opened by whoever holds the link and
+     found by nobody else.
+   - Read-only outward. The viewer is the player with the editor left out,
+     and the server serves the document rather than accepting edits to it.
+   - Revocable. Creating one hands back a key that deletes it.
+
+   It is still not private. A link that escapes is a deck that escaped, which
+   is what "anyone with the link" means wherever it is offered — so the app
+   says that rather than implying otherwise. */
+const SHARE_DIR = path.join(ROOT, '.slideforge', 'shares');
+const SHARE_ID = /^[a-f0-9]{32}$/;
+const SHARE_MAX = 40;                     // a lecturer's shelf, not a CDN
+
+function shareCreate(req, res) {
+  let body = '';
+  let tooBig = false;
+  req.on('data', (chunk) => {
+    body += chunk;
+    if (body.length > MAX_DOC) { tooBig = true; req.destroy(); }
+  });
+  req.on('end', () => {
+    if (tooBig) return jsonReply(res, 413, { error: 'That deck is too large to share. Remove some embedded images first.' });
+    let msg;
+    try { msg = JSON.parse(body); } catch (e) { return jsonReply(res, 400, { error: 'Bad JSON' }); }
+    const doc = msg && msg.doc;
+    if (!doc || typeof doc !== 'object' || !Array.isArray(doc.slides)) {
+      return jsonReply(res, 400, { error: 'No deck to share' });
+    }
+    try {
+      fs.mkdirSync(SHARE_DIR, { recursive: true, mode: 0o700 });
+      /* Oldest first once the shelf is full. A share nobody has opened in a
+         month is a better thing to lose than the one being made right now. */
+      const names = fs.readdirSync(SHARE_DIR).filter((n) => n.endsWith('.json'));
+      if (names.length >= SHARE_MAX) {
+        names
+          .map((n) => ({ n, t: fs.statSync(path.join(SHARE_DIR, n)).mtimeMs }))
+          .sort((a, b) => a.t - b.t)
+          .slice(0, names.length - SHARE_MAX + 1)
+          .forEach((x) => { try { fs.unlinkSync(path.join(SHARE_DIR, x.n)); } catch (e) {} });
+      }
+      const id = crypto.randomBytes(16).toString('hex');
+      const key = crypto.randomBytes(16).toString('hex');
+      fs.writeFileSync(path.join(SHARE_DIR, id + '.json'),
+        JSON.stringify({ key, at: Date.now(), doc }), { mode: 0o600 });
+      log('shared "' + String(doc.title || 'untitled').slice(0, 60) + '" as ' + id);
+      return jsonReply(res, 200, { id, key });
+    } catch (e) {
+      return jsonReply(res, 500, { error: 'Could not store the shared copy.' });
+    }
+  });
+}
+
+function shareRead(res, id) {
+  if (!SHARE_ID.test(id)) return jsonReply(res, 404, { error: 'No such share.' });
+  try {
+    const rec = JSON.parse(fs.readFileSync(path.join(SHARE_DIR, id + '.json'), 'utf8'));
+    /* The withdrawal key never travels to a viewer. */
+    return jsonReply(res, 200, { doc: rec.doc, at: rec.at });
+  } catch (e) {
+    return jsonReply(res, 404, { error: 'That link has expired or was withdrawn.' });
+  }
+}
+
+function shareDelete(req, res, id) {
+  if (!SHARE_ID.test(id)) return jsonReply(res, 404, { error: 'No such share.' });
+  const key = String(req.headers.authorization || '').replace(/^Bearer /, '');
+  const file = path.join(SHARE_DIR, id + '.json');
+  let rec;
+  try { rec = JSON.parse(fs.readFileSync(file, 'utf8')); }
+  catch (e) { return jsonReply(res, 404, { error: 'No such share.' }); }
+  /* Constant-time, because this key is the only thing between a passer-by
+     and withdrawing somebody else's lecture. Length is checked first:
+     timingSafeEqual throws on a mismatch rather than returning false. */
+  const a = Buffer.from(String(rec.key)), b = Buffer.from(key);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return jsonReply(res, 403, { error: 'That key does not open this share.' });
+  }
+  try { fs.unlinkSync(file); } catch (e) { return jsonReply(res, 500, { error: 'Could not withdraw it.' }); }
+  log('share ' + id + ' withdrawn');
+  return jsonReply(res, 200, { deleted: id });
+}
+
 function jsonReply(res, code, obj) {
   const body = JSON.stringify(obj);
   res.writeHead(code, {
@@ -258,6 +347,17 @@ function serve(req, res) {
     return jsonReply(res, 200, { available: !!AI_KEY, model: AI_KEY ? AI_MODEL : null });
   }
   if (rel === '/api/ai/generate' && req.method === 'POST') return aiGenerate(req, res);
+
+  /* Sharing is not gated the way /api/data is when hosted: it is the one
+     endpoint that is for being reachable. It writes only what an author
+     explicitly shared, hands back a key that withdraws it, and never lists
+     what exists. */
+  if (rel === '/api/share' && req.method === 'POST') return shareCreate(req, res);
+  if (rel.startsWith('/api/share/')) {
+    const sid = rel.slice('/api/share/'.length);
+    if (req.method === 'GET') return shareRead(res, sid);
+    if (req.method === 'DELETE') return shareDelete(req, res, sid);
+  }
 
   if (rel === '/api/data' && req.method === 'GET') return listData(res);
   if (rel === '/api/data' && req.method === 'POST') return saveData(req, res);

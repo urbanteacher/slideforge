@@ -1015,6 +1015,59 @@
       };
     }
 
+    /* A copy someone who was not in the room can open. Only where a server
+       is serving this — from a file:// page there is nowhere to put it. */
+    var btnShare = $('btnShare');
+    if (btnShare) {
+      if (!servedByRelay()) btnShare.hidden = true;
+      else btnShare.onclick = function () {
+        if (active.flush) active.flush();
+        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
+        if (menu) menu.open = false;
+        var doc = active.doc();
+        SF.ask({
+          title: 'Share “' + (doc.title || 'this lesson') + '” as a read-only link?',
+          detail: 'Puts a copy on this server at an address nobody can guess, which anyone ' +
+            'holding the link can open and read. They cannot edit it, and it is not listed ' +
+            'anywhere — but a link that escapes is a lesson that escaped. ' +
+            'Games are not carried across; the slides are. You get a key that withdraws it.',
+          confirm: 'Make the link'
+        }, function () {
+          SF.toast('Uploading a copy…');
+          fetch('/api/share', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ doc: doc })
+          }).then(function (r) {
+            return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; });
+          }).then(function (j) {
+            var url = location.origin + '/view.html?s=' + j.id;
+            /* Kept where the author can find it again: the key is the only
+               way to withdraw the copy, and it is shown once otherwise. */
+            try {
+              var keys = JSON.parse(localStorage.getItem('slideforge.shares.v1') || '[]');
+              keys.unshift({ id: j.id, key: j.key, title: doc.title || '', at: Date.now() });
+              localStorage.setItem('slideforge.shares.v1', JSON.stringify(keys.slice(0, 40)));
+            } catch (e) {}
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(url).then(function () {
+                SF.toast('Link copied. Anyone with it can read the lesson.');
+              }, function () { SF.toast('Shared: ' + url); });
+            } else {
+              SF.toast('Shared: ' + url);
+            }
+            SF.askText({
+              title: 'Your read-only link',
+              detail: 'Anyone with this address can open the lesson. It is already on your clipboard. ' +
+                'A hosted server loses shared copies when the app is next updated.',
+              value: url, confirm: 'Done'
+            }, function () {});
+          }).catch(function (e) {
+            SF.toast('Could not share: ' + (e.message || e));
+          });
+        });
+      };
+    }
+
     var btnSettings = $('btnSettings');
     if (btnSettings) {
       btnSettings.onclick = function () {
