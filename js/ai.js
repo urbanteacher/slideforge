@@ -395,10 +395,19 @@
      declares a field labelled "Sample work · 3 errors", Worked Example
      Analysis one called "Completed example". So the rule becomes a check on a
      specific field rather than a paragraph of shouting. */
+  /* Shared classroom voice — ported from the planner's teaching-first tone.
+     Keep short: every activity and game prompt already carries format rules. */
+  var CORE_PEDAGOGY =
+    'Teach before you test. Write material students can use on the slide now, ' +
+    'not instructions to the teacher. Prefer concrete examples, realistic ' +
+    'misconceptions, and language readable from the back of the room. ' +
+    'Never ask learners to analyse, sort, or discuss content you have not provided.';
+
   var ACTIVITY_GUARDRAILS = [
     {
       kind: 'worked-example',
-      match: ['worked example', 'example analysis', 'case study', 'deconstruct'],
+      match: ['worked example', 'example analysis', 'case study', 'deconstruct',
+        'examine example', 'study example', 'analyze example'],
       /* Their field 0 is the example itself. */
       material: /example|work|solution/i,
       rules: 'This activity asks students to analyse an example, so the example ' +
@@ -408,7 +417,8 @@
     },
     {
       kind: 'error-analysis',
-      match: ['error analysis', 'find and fix', 'spot the error', 'spot the mistake', 'identify mistakes'],
+      match: ['error analysis', 'find and fix', 'spot the error', 'spot the mistake',
+        'identify mistakes', 'find the error', 'debug', 'misconception'],
       material: /sample|work|error|mistake/i,
       rules: 'This activity asks students to find mistakes, so the first box ' +
         'must contain the actual flawed work with the mistakes already in it. ' +
@@ -418,12 +428,35 @@
     },
     {
       kind: 'sorting',
-      match: ['card sort', 'categoris', 'categoriz', 'classify', 'sort into', 'organise information'],
+      match: ['card sort', 'categoris', 'categoriz', 'classify', 'sort into',
+        'organise information', 'organize information'],
       material: /categor|items|sort|group/i,
       rules: 'Sorting needs both halves written out: the categories by name, ' +
         'and the items to sort into them. Twelve to twenty items, mixed ' +
         'difficulty, with two or three genuinely debatable ones — those are ' +
         'what the discussion is for.'
+    },
+    {
+      kind: 'question-cube',
+      match: ['question cube', 'six question', 'rosenshine'],
+      material: /define|compare|why|example|what if|benefit|condition|cube/i,
+      /* Ported from buildQuestionCubeGuidance — six Rosenshine stems, not a quiz. */
+      rules: 'Fill six distinct question stems for the same topic: Define, Compare, ' +
+        'Why, Example, What-if, and Benefits/conditions. Each box gets a real ' +
+        'question plus a short model answer or talking points — not a blank ' +
+        '"ask students to define…". Keep each stem on one concept so the cube ' +
+        'deepens understanding rather than jumping topics.'
+    },
+    {
+      kind: 'practice-stations',
+      match: ['practice stations', 'quick practice', 'stations rotation', 'carousel'],
+      material: /station|recall|apply|create|task/i,
+      /* Ported from buildPracticeStationsGuidance — Recall → Apply → Create. */
+      rules: 'Three stations, written as tasks students can do without you: ' +
+        'Station 1 Recall (4–6 short memory questions), Station 2 Apply ' +
+        '(2–3 problems in a new situation), Station 3 Create (one open ' +
+        'product: diagram, analogy, or real-world link). Put the actual ' +
+        'questions and tasks in the boxes — not rotation instructions alone.'
     },
     {
       kind: 'hook-predict',
@@ -438,7 +471,8 @@
     {
       kind: 'discussion',
       match: ['think-pair-share', 'think pair', 'socratic', 'fishbowl', 'jigsaw',
-        'turn and talk', 'discussion', 'dialogue', 'debate', 'peer teaching'],
+        'turn and talk', 'discussion', 'dialogue', 'debate', 'peer teaching',
+        'word splash'],
       material: null,
       rules: 'Discussion needs something to disagree about. Write a prompt with ' +
         'more than one defensible answer, not a question with a right answer — ' +
@@ -446,7 +480,8 @@
     },
     {
       kind: 'retrieval',
-      match: ['retrieval', 'recall', 'review', 'recap', 'exit ticket', 'do now', 'bell ringer'],
+      match: ['retrieval', 'recall', 'review', 'recap', 'exit ticket', 'do now',
+        'bell ringer', 'formative'],
       material: null,
       rules: 'Recall of what was taught before, in plain language a learner can ' +
         'answer in a sentence. No new material here and no trick questions: ' +
@@ -454,7 +489,8 @@
     },
     {
       kind: 'comparison',
-      match: ['compare', 'contrast', 'venn', 'benefits vs', 'similarit'],
+      match: ['compare', 'contrast', 'venn', 'benefits vs', 'similarit',
+        'pros and cons', 'advantages'],
       material: /item|concept|side|option|thing/i,
       rules: 'Name both things being compared and say what each one is before ' +
         'asking for similarities or differences. A comparison of two things the ' +
@@ -597,11 +633,16 @@
         'both work, the set has two answers and is unusable. "correct" is the ' +
         'index of the odd one. The explanation names the rule.',
       toQuestion: function (row) {
+        var opts = (row.options || row.items || []).map(function (o) { return String(o).trim(); });
+        var correct = Number(row.correct);
+        if (!Number.isFinite(correct) && row.oddOneIndex != null) {
+          correct = Number(row.oddOneIndex);
+        }
         return {
           question: String(row.question || 'Which is the odd one out?').trim(),
-          options: (row.options || []).map(function (o) { return String(o).trim(); }),
-          correct: Number(row.correct) || 0,
-          explanation: String(row.explanation || '').trim()
+          options: opts,
+          correct: Number.isFinite(correct) ? correct : 0,
+          explanation: String(row.explanation || row.reason || '').trim()
         };
       }
     },
@@ -624,6 +665,219 @@
           explanation: String(row.explanation || '').trim()
         };
       }
+    },
+
+    /* --- formats ported from vendor/lesson-planner-ai/generators/game-generators.ts --- */
+
+    order: {
+      family: 'Ranking / put in order',
+      row: '{"question":"Put these in order…","options":["first","second","third","fourth"],"explanation":"..."}',
+      required: ['question', 'options'],
+      rules: 'Exactly three to six items already in the correct order in "options". ' +
+        'The room will see them shuffled. Items must be unique and unambiguous — ' +
+        'no two that could swap without changing meaning. The question states ' +
+        'the ordering rule (time, size, process step, etc.).',
+      toQuestion: function (row) {
+        return {
+          question: String(row.question || 'Put these in order.').trim(),
+          options: (row.options || []).map(function (o) { return String(o).trim(); }),
+          correct: 0,
+          explanation: String(row.explanation || '').trim()
+        };
+      }
+    },
+
+    wordreveal: {
+      family: 'Word reveal',
+      row: '{"word":"PHOTOSYNTHESIS","hint":"How plants make food","question":"What word is being revealed?"}',
+      required: ['word', 'hint'],
+      rules: 'One vocabulary word per row, 6–15 letters preferred, uppercase letters ' +
+        'and spaces only. The hint is short and non-spoiling. Do not put the ' +
+        'answer inside the hint.',
+      toQuestion: function (row) {
+        var word = String(row.word || '').trim();
+        return {
+          word: word,
+          hint: String(row.hint || '').trim(),
+          question: String(row.question || 'What word is being revealed?').trim(),
+          accept: [word.toLowerCase()].filter(Boolean),
+          difficulty: 'medium',
+          dripInterval: 5
+        };
+      }
+    },
+
+    compare: {
+      family: 'Compare and contrast',
+      row: '{"itemA":"...","itemB":"...","similarities":"...","differences":"...","question":"..."}',
+      required: ['itemA', 'itemB', 'similarities', 'differences'],
+      rules: 'Two genuinely different concepts. Similarities and differences are ' +
+        'full sentences a teacher can reveal after discussion — not one-word labels. ' +
+        'Name each concept clearly before comparing.',
+      toQuestion: function (row) {
+        return {
+          itemA: String(row.itemA || '').trim(),
+          itemB: String(row.itemB || '').trim(),
+          similarities: String(row.similarities || '').trim(),
+          differences: String(row.differences || '').trim(),
+          question: String(row.question || 'Compare these two — how are they alike, and how do they differ?').trim(),
+          options: [],
+          correct: -1
+        };
+      }
+    },
+
+    emoji: {
+      family: 'Emoji guess',
+      row: '{"clues":"🌱☀️💧→🌿","accept":["photosynthesis"],"hint":"How plants make food"}',
+      required: ['clues', 'accept'],
+      rules: 'Clues are emoji (and maybe arrows), not words. "accept" lists every ' +
+        'spelling you would take. Hint helps without naming the answer.',
+      toQuestion: function (row) {
+        var accept = (Array.isArray(row.accept) ? row.accept : [row.accept])
+          .map(function (a) { return String(a).trim(); }).filter(Boolean);
+        return {
+          clues: String(row.clues || row.question || '').trim(),
+          question: String(row.clues || row.question || '').trim(),
+          accept: accept,
+          hint: String(row.hint || '').trim(),
+          difficulty: 'medium',
+          allowTypos: true
+        };
+      }
+    },
+
+    definition: {
+      family: 'Definition challenge (read then recall)',
+      row: '{"passage":"short factual paragraph","question":"recall question","accept":["answer","variant"]}',
+      required: ['passage', 'question', 'accept'],
+      rules: 'Passage is 2–4 sentences of teaching content. After it clears, the ' +
+        'question must be answerable from that passage alone. "accept" lists ' +
+        'spellings. No trick wording.',
+      toQuestion: function (row) {
+        return {
+          passage: String(row.passage || '').trim(),
+          question: String(row.question || '').trim(),
+          accept: (Array.isArray(row.accept) ? row.accept : [row.accept])
+            .map(function (a) { return String(a).trim(); }).filter(Boolean),
+          allowTypos: true
+        };
+      }
+    },
+
+    slider: {
+      family: 'Slider estimate',
+      row: '{"question":"...","min":0,"max":100,"target":42,"tolerance":5,"unit":"%","explanation":"..."}',
+      required: ['question', 'target'],
+      rules: 'A numeric estimate with a realistic min/max band. Tolerance is how ' +
+        'close counts as correct — wide enough to reward good thinking, not so ' +
+        'wide that every answer scores. Unit is optional and short (%, km, °C).',
+      toQuestion: function (row) {
+        return {
+          question: String(row.question || '').trim(),
+          min: Number(row.min) || 0,
+          max: Number(row.max) || 100,
+          target: Number(row.target),
+          tolerance: row.tolerance != null ? Number(row.tolerance) : 5,
+          step: Number(row.step) || 1,
+          unit: String(row.unit || '').trim(),
+          explanation: String(row.explanation || '').trim()
+        };
+      }
+    },
+
+    connection: {
+      family: 'Connection maker',
+      row: '{"itemA":"...","itemB":"...","question":"How do these connect?","explanation":"..."}',
+      required: ['itemA', 'itemB'],
+      rules: 'Two related ideas from the topic. The question asks for the bridge ' +
+        'between them. The explanation is the model link a teacher can Accept.',
+      toQuestion: function (row) {
+        var a = String(row.itemA || '').trim();
+        var b = String(row.itemB || '').trim();
+        return {
+          itemA: a,
+          itemB: b,
+          question: String(row.question || ('How do ' + a + ' and ' + b + ' connect?')).trim(),
+          explanation: String(row.explanation || '').trim(),
+          options: ['Accept', 'Reject'],
+          correct: 0
+        };
+      }
+    },
+
+    randomchallenge: {
+      family: 'Random challenge (oracy / do-this)',
+      row: '{"challenge":"Explain X to someone who missed last lesson.","explanation":"..."}',
+      required: ['challenge'],
+      rules: 'Short spoken or do-this challenges — explain, draw, give an example, ' +
+        'teach a peer. No multiple-choice. Keep under two lines.',
+      toQuestion: function (row) {
+        var c = String(row.challenge || row.question || '').trim();
+        return {
+          challenge: c,
+          question: c,
+          explanation: String(row.explanation || '').trim(),
+          options: ['Complete', 'Skip'],
+          correct: 0
+        };
+      }
+    },
+
+    headsup: {
+      family: 'Heads up (term to describe)',
+      row: '{"term":"Mitochondria","category":"Biology","hint":"optional short clue"}',
+      required: ['term'],
+      rules: 'Single teachable terms. Category optional. Hint only if the term is ' +
+        'obscure — never the definition itself.',
+      toQuestion: function (row) {
+        var term = String(row.term || '').trim();
+        return {
+          term: term,
+          question: term,
+          category: String(row.category || '').trim(),
+          hint: String(row.hint || '').trim(),
+          options: ['Correct', 'Pass'],
+          correct: 0
+        };
+      }
+    },
+
+    spinexplain: {
+      family: 'Spin and explain',
+      row: '{"term":"Osmosis","hint":"Water moving across a membrane","category":""}',
+      required: ['term'],
+      rules: 'Concept words learners can explain aloud. Hint is a nudge, not the ' +
+        'full answer.',
+      toQuestion: function (row) {
+        var term = String(row.term || '').trim();
+        return {
+          term: term,
+          question: term,
+          hint: String(row.hint || '').trim(),
+          category: String(row.category || '').trim(),
+          options: ['Clear', 'With hint', 'Reject'],
+          correct: 0
+        };
+      }
+    },
+
+    conceptchain: {
+      family: 'Concept chain',
+      row: '{"term":"Cell","prompt":"The basic unit of living things — what connects next?"}',
+      required: ['term', 'prompt'],
+      rules: 'A start term plus a prompt that invites the next justified link in ' +
+        'a chain. Prompts should reward causal or structural links, not random ' +
+        'associations.',
+      toQuestion: function (row) {
+        return {
+          term: String(row.term || '').trim(),
+          prompt: String(row.prompt || '').trim(),
+          question: String(row.prompt || 'Add the next justified link').trim(),
+          options: ['Accept', 'Reject'],
+          correct: 0
+        };
+      }
     }
   };
 
@@ -633,8 +887,8 @@
       family: 'Matching pairs (terms and definitions)'
     });
   });
-  /* And the scored multiple-choice engines share the choice brief. */
-  ['race', 'speed'].forEach(function (k) { AI_SPECS[k] = AI_SPECS.choice; });
+  /* Scored multiple-choice engines share the choice brief. */
+  ['race', 'speed', 'boss'].forEach(function (k) { AI_SPECS[k] = AI_SPECS.choice; });
 
   /* ------------------------------------------------ questions for a game */
 
@@ -686,7 +940,8 @@
       .map(function (q) { return String(q.question || q.term || '').trim(); })
       .filter(Boolean).slice(0, 20);
 
-    var system = 'You write classroom material for a teacher. ' +
+    var system = CORE_PEDAGOGY + ' ' +
+      'You write classroom material for a teacher. ' +
       'Return ONLY a JSON object, no markdown and no code fence: ' +
       '{"questions":[' + spec.row + ']}. ' +
       'Exactly ' + want + ' entries. ' + spec.rules +
@@ -709,6 +964,16 @@
        whether it is usable. Only the last one is authoritative — the first
        two just avoid asking it about obvious rubbish. */
     var all = modelRows(parsed, 'questions').slice(0, want);
+    /* Lesson-planner generators used "items" / "oddOneIndex" / "reason" for
+       odd-one-out; accept those aliases before the required-field gate. */
+    all.forEach(function (row) {
+      if (!row || typeof row !== 'object') return;
+      if (!row.options && Array.isArray(row.items)) row.options = row.items;
+      if (row.correct == null && row.oddOneIndex != null) row.correct = row.oddOneIndex;
+      if (!row.explanation && row.reason) row.explanation = row.reason;
+      if (!row.word && row.term && game.style === 'wordreveal') row.word = row.term;
+      if (!row.clues && row.sentence && game.style === 'emoji') row.clues = row.sentence;
+    });
     var rows = usableRows(all, spec.required);
     var out = [];
     /* Rows thrown out here are rejections too. Counting only the ones the
@@ -764,7 +1029,8 @@
     var shape = {};
     fields.forEach(function (f, i) { shape['f' + i] = f.label; });
 
-    var system = 'You write classroom activity content for a teacher. ' +
+    var system = CORE_PEDAGOGY + ' ' +
+      'You write classroom activity content for a teacher. ' +
       'Return ONLY a JSON object, no markdown and no code fence, with exactly ' +
       'these keys: ' + JSON.stringify(Object.keys(shape)) + '. ' +
       'Each value is the finished text that goes in that box, ready to project. ' +
@@ -828,7 +1094,9 @@
     generateActivityContent: generateActivityContent,
     classifyActivity: classifyActivity,
     generatePollFromPrompt: generatePollFromPrompt,
-    extractSlideTerms: extractSlideTerms
+    extractSlideTerms: extractSlideTerms,
+    /* Exposed for tests and future studio UI that lists AI-writable formats. */
+    gameSpec: function (style) { return AI_SPECS[style] || null; }
   };
 
   SF.AI = AI;
