@@ -1995,6 +1995,12 @@
          { value: 'area', label: 'Area — change over time, with the volume under it' },
          { value: 'pie', label: 'Pie — parts of one whole' },
          { value: 'donut', label: 'Donut — parts of one whole, total in the middle' },
+         { value: 'treemap', label: 'Treemap — parts of one whole, biggest owns the eye' },
+         { value: 'waffle', label: 'Waffle — parts of one whole, counted as squares' },
+         { value: 'bullet', label: 'Bullet — actual against a target' },
+         { value: 'combo', label: 'Columns + markers — size and a rate together' },
+         { value: 'radar', label: 'Radar — several variables on one shape (teach with care)' },
+         { value: 'sankey', label: 'Sankey — flows from here to there' },
          { value: 'scatter', label: 'Scatter — do two things move together' },
          { value: 'histogram', label: 'Histogram — the shape of one variable' },
          { value: 'box', label: 'Box plot — spread, skew and outliers' },
@@ -2007,7 +2013,13 @@
       scatter: 'Two numeric columns: the first is x, the second y. One row per point.',
       histogram: 'One column of numbers. SlideForge counts them into bins.',
       box: 'One row per group: its name, then every value measured in it.',
-      pictogram: 'One row per category, with the count beside it.'
+      pictogram: 'One row per category, with the count beside it.',
+      treemap: 'One series of parts that make a whole — same paste as a pie. Largest block draws the eye first.',
+      waffle: 'One series of parts that make a whole. A single percentage (≤100) fills that many of 100 squares; several categories share the grid.',
+      bullet: 'First series is Actual, second is Target. One row per category.',
+      combo: 'First series draws as columns; every series after that draws as markers on the same axis.',
+      radar: 'At least three categories (the spokes). Each series is one polygon.',
+      sankey: 'Three columns: from, to, amount. One row per flow.'
     };
     if (SHAPES[s.chartKind]) insp.appendChild(el('p', 'hint', SHAPES[s.chartKind]));
 
@@ -2034,10 +2046,22 @@
       insp.appendChild(el('p', 'hint', note));
       /* Said plainly rather than enforced: the author may have a reason, and
          a slide that silently drops a column is worse than a warning. */
-      if (['pie', 'donut', 'pictogram'].indexOf(s.chartKind) >= 0 && cd.series.length > 1) {
+      if (['pie', 'donut', 'pictogram', 'treemap', 'waffle'].indexOf(s.chartKind) >= 0 && cd.series.length > 1) {
+        var oneName = s.chartKind === 'donut' ? 'donut'
+          : s.chartKind === 'treemap' ? 'treemap'
+          : s.chartKind === 'waffle' ? 'waffle'
+          : s.chartKind === 'pictogram' ? 'pictogram' : 'pie';
         insp.appendChild(el('p', 'hint field-warn',
-          'A ' + (s.chartKind === 'donut' ? 'donut' : 'pie') + ' shows one series. Only \u201c' +
+          'A ' + oneName + ' shows one series. Only \u201c' +
           cd.series[0].name + '\u201d is drawn; the rest are ignored. Bar compares them all.'));
+      }
+      if (s.chartKind === 'combo' && cd.series.length < 2) {
+        insp.appendChild(el('p', 'hint field-warn',
+          'Columns + markers needs at least two series — the first for the columns, another for the markers.'));
+      }
+      if (s.chartKind === 'bullet' && cd.series.length < 1) {
+        insp.appendChild(el('p', 'hint field-warn',
+          'A bullet needs an Actual series; add a Target series as the second column to mark the goal.'));
       }
       /* Stacking negatives is not a thing this renderer does, and silently
          dropping them would make a total that does not match the data. */

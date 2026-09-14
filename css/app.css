@@ -5133,6 +5133,51 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
 .ch-dim { opacity: .18; }
 .chart-wrap [data-series], .chart-wrap .ck-item { transition: opacity .45s ease; }
 
+#player .ch-motion.chart-bullet .ch-bar {
+  animation: sf-ch-widen .62s cubic-bezier(.2,.75,.2,1) backwards;
+  transform-origin: 0% 50%;
+  transform-box: fill-box;
+}
+#player .ch-motion.chart-combo .ch-bar {
+  animation: sf-ch-rise .62s cubic-bezier(.2,.75,.2,1) backwards;
+  transform-origin: 50% 100%;
+  transform-box: fill-box;
+}
+#player .ch-motion.chart-combo .ch-marker,
+#player .ch-motion.chart-combo .ch-marker-line {
+  animation: sf-ch-fade .5s ease .4s backwards;
+}
+#player .ch-motion.chart-treemap .ch-tree-rect,
+#player .ch-motion.chart-waffle .ch-waffle-sq {
+  animation: sf-ch-fade .45s ease backwards;
+}
+#player .ch-motion.chart-treemap .ch-cell:nth-child(1) .ch-tree-rect,
+#player .ch-motion.chart-waffle .ch-waffle-cell:nth-child(1) .ch-waffle-sq { animation-delay: 0s; }
+#player .ch-motion.chart-treemap .ch-cell:nth-child(2) .ch-tree-rect,
+#player .ch-motion.chart-waffle .ch-waffle-cell:nth-child(2) .ch-waffle-sq { animation-delay: .04s; }
+#player .ch-motion.chart-treemap .ch-cell:nth-child(3) .ch-tree-rect,
+#player .ch-motion.chart-waffle .ch-waffle-cell:nth-child(3) .ch-waffle-sq { animation-delay: .08s; }
+#player .ch-motion.chart-treemap .ch-cell:nth-child(4) .ch-tree-rect,
+#player .ch-motion.chart-waffle .ch-waffle-cell:nth-child(4) .ch-waffle-sq { animation-delay: .12s; }
+#player .ch-motion.chart-treemap .ch-cell:nth-child(5) .ch-tree-rect,
+#player .ch-motion.chart-waffle .ch-waffle-cell:nth-child(n+5) .ch-waffle-sq { animation-delay: .16s; }
+#player .ch-motion.chart-treemap .ch-cell:nth-child(n+6) .ch-tree-rect { animation-delay: .2s; }
+
+#player .ch-tree-label, #previewBox .ch-tree-label {
+  fill: var(--s-fg); font-size: 18px; font-weight: 650;
+  paint-order: stroke; stroke: var(--s-bg, #fff); stroke-width: 3px;
+}
+#player .ch-tree-value, #previewBox .ch-tree-value {
+  fill: var(--s-fg); font-size: 15px; opacity: .85;
+  paint-order: stroke; stroke: var(--s-bg, #fff); stroke-width: 3px;
+}
+#player .ch-bullet-track, #previewBox .ch-bullet-track {
+  fill: var(--s-muted, #ccc); opacity: .28;
+}
+#player .ch-bullet-tick, #previewBox .ch-bullet-tick {
+  stroke: var(--s-fg); stroke-width: 3; stroke-linecap: round;
+}
+
 @media (prefers-reduced-motion: reduce) {
   #player .ch-motion .ch-bar,
   #player .ch-motion .ch-value,
@@ -5141,7 +5186,11 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
   #player .ch-motion .ch-slice,
   #player .ch-motion .ch-donut-hole,
   #player .ch-motion .ch-donut-total,
-  #player .ch-motion .ch-donut-cap { animation: none; }
+  #player .ch-motion .ch-donut-cap,
+  #player .ch-motion .ch-tree-rect,
+  #player .ch-motion .ch-waffle-sq,
+  #player .ch-motion .ch-marker,
+  #player .ch-motion .ch-marker-line { animation: none; }
 }
 
 /* The position-based idioms and the pictogram. */
@@ -5156,3 +5205,13 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
    filled mark competing with the box. */
 #player .ch-outlier, #previewBox .ch-outlier { fill: none; stroke-width: 2; }
 #player .ch-icon, #previewBox .ch-icon { dominant-baseline: alphabetic; }
+
+/* Radar and Sankey. */
+#player .ch-web, #previewBox .ch-web { stroke-dasharray: 3 5; }
+/* Translucent so a band crossing another still reads as two bands; no
+   colour scale, because width is already carrying the quantity and a second
+   channel saying the same thing adds nothing but noise. */
+#player .ch-flow, #previewBox .ch-flow { opacity: .44; }
+#player .ch-flow:hover, #previewBox .ch-flow:hover { opacity: .72; }
+#player .ch-node, #previewBox .ch-node { rx: 2; }
+#player .ch-node-label, #previewBox .ch-node-label { font-size: 17px; }

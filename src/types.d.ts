@@ -165,7 +165,7 @@ export interface Slide {
   /** Image-stack layout: the pictures, shown one in front of the last. */
   layers: GalleryLayer[];
   /** Chart layout: which form the same tabular `body` is drawn as. */
-  chartKind: 'bar' | 'stack' | 'hbar' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram' | 'box' | 'pictogram';
+  chartKind: 'bar' | 'stack' | 'hbar' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram' | 'box' | 'pictogram' | 'radar' | 'sankey' | 'treemap' | 'bullet' | 'combo' | 'waffle';
   /** One icon per unit on a pictogram. */
   chartIcon: string;
   /** What one icon is worth. */

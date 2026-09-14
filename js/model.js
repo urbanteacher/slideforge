@@ -2640,6 +2640,51 @@
       n: sorted.length
     };
   }
+  function chartFlows(slide) {
+    var rows2 = dataRows(slide && slide.body);
+    var links = [];
+    rows2.forEach(function(r) {
+      var from = String(r[0] || "").trim(), to = String(r[1] || "").trim();
+      var v = chartNumber(r[2]);
+      if (!from || !to || v == null || v <= 0) return;
+      links.push({ from, to, value: v });
+    });
+    if (!links.length) return { nodes: [], links: [], layers: 0 };
+    var names = [];
+    links.forEach(function(l) {
+      if (names.indexOf(l.from) < 0) names.push(l.from);
+      if (names.indexOf(l.to) < 0) names.push(l.to);
+    });
+    var nodes = names.map(function(n) {
+      return { name: n, depth: 0, in: 0, out: 0, total: 0, x: 0, y: 0, h: 0, inAt: 0, outAt: 0 };
+    });
+    var byName = {};
+    nodes.forEach(function(n, i) {
+      byName[n.name] = i;
+    });
+    for (var pass = 0; pass < nodes.length; pass++) {
+      var moved = false;
+      links.forEach(function(l) {
+        var a = nodes[byName[l.from]], b = nodes[byName[l.to]];
+        if (b.depth < a.depth + 1) {
+          b.depth = a.depth + 1;
+          moved = true;
+        }
+      });
+      if (!moved) break;
+    }
+    links.forEach(function(l) {
+      nodes[byName[l.from]].out += l.value;
+      nodes[byName[l.to]].in += l.value;
+    });
+    nodes.forEach(function(n) {
+      n.total = Math.max(n.in, n.out);
+    });
+    var layers = nodes.reduce(function(m, n) {
+      return Math.max(m, n.depth);
+    }, 0) + 1;
+    return { nodes, links, layers, index: byName };
+  }
   function chartValues(slide) {
     var rows2 = dataRows(slide && slide.body);
     var out = [];
@@ -7364,7 +7409,7 @@
       tableHeader: true,
       /* Chart layout: bar, line or pie over the same text a table slide uses. */
       chartKind: (
-        /** @type {'bar'|'stack'|'hbar'|'line'|'area'|'pie'|'donut'|'scatter'|'histogram'|'box'|'pictogram'} */
+        /** @type {'bar'|'stack'|'hbar'|'line'|'area'|'pie'|'donut'|'scatter'|'histogram'|'box'|'pictogram'|'radar'|'sankey'|'treemap'|'bullet'|'combo'|'waffle'} */
         "bar"
       ),
       chartIcon: "",
@@ -7581,7 +7626,13 @@
       "scatter",
       "histogram",
       "box",
-      "pictogram"
+      "pictogram",
+      "radar",
+      "sankey",
+      "treemap",
+      "bullet",
+      "combo",
+      "waffle"
     ].indexOf(s.chartKind) >= 0 ? s.chartKind : "bar";
     s.chartIcon = String(s.chartIcon || "").trim().slice(0, 4);
     s.chartUnit = Math.max(1, Math.min(1e4, Number(s.chartUnit) || 1));
@@ -8127,6 +8178,7 @@
     SLIDE_TYPES,
     chartData,
     chartPoints,
+    chartFlows,
     chartGroups,
     fiveNumber,
     chartValues,
