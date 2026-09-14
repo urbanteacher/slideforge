@@ -89,7 +89,15 @@ test('a chart slide normalises to a drawable kind', () => {
   const SF = load();
   assert.equal(SF.normalizeSlide({ type: 'chart' }).chartKind, 'bar', 'bar is the default');
   assert.equal(SF.normalizeSlide({ type: 'chart', chartKind: 'line' }).chartKind, 'line');
-  assert.equal(SF.normalizeSlide({ type: 'chart', chartKind: 'donut' }).chartKind, 'bar',
+  /* Every idiom the renderer can draw survives normalize. Donut used to be
+     the example of an unknown kind here, which is exactly the way this test
+     earns its keep: adding a kind without adding it to the whitelist would
+     have silently drawn bars instead. */
+  ['bar', 'stack', 'hbar', 'line', 'area', 'pie', 'donut'].forEach((kind) => {
+    assert.equal(SF.normalizeSlide({ type: 'chart', chartKind: kind }).chartKind, kind,
+      kind + ' is drawable and must survive normalize');
+  });
+  assert.equal(SF.normalizeSlide({ type: 'chart', chartKind: 'sunburst' }).chartKind, 'bar',
     'an unknown kind falls back rather than rendering nothing');
   assert.ok(SF.SLIDE_TYPES.chart, 'the layout library can offer it');
 });

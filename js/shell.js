@@ -321,6 +321,19 @@
     if (!quiet) SF.toast('Saved to this browser');
   }
 
+  /* "14 minutes ago" is what someone is looking for in this list; an ISO
+     timestamp makes them do arithmetic to find the version from before
+     lunch. Falls back to a date once the relative form stops being useful. */
+  function when(at) {
+    var secs = Math.max(0, Math.round((Date.now() - at) / 1000));
+    if (secs < 45) return 'Just now';
+    var mins = Math.round(secs / 60);
+    if (mins < 60) return mins + (mins === 1 ? ' minute ago' : ' minutes ago');
+    var hrs = Math.round(mins / 60);
+    if (hrs < 8) return hrs + (hrs === 1 ? ' hour ago' : ' hours ago');
+    return new Date(at).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  }
+
   /** Engines call this from their debounced save path. */
   function touch() {
     if (active) active._dirty = true;
@@ -364,7 +377,63 @@
     }
     el2.title = 'Autosaved to this browser only — invisible, tied to this address, ' +
       'and lost if the profile is cleared. It also wins over the lesson the app ships. ' +
-      'Click to export a copy you can keep.';
+      'Click for Export, or to reload a shipped lesson from this app.';
+  }
+
+  function lessonBehindOpenDoc() {
+    var doc = active && active.doc && active.doc();
+    if (!doc || !active || active.key !== 'deck') return null;
+    return (SF.LESSONS || []).filter(function (l) { return l.title === doc.title; })[0] || null;
+  }
+
+  function openStoreState() {
+    if (!active) return;
+    if (active.flush) active.flush();
+    var lesson = lessonBehindOpenDoc();
+    picker({
+      title: 'Where this work lives',
+      wide: true,
+      items: function () {
+        var items = [
+          { id: 'export', title: 'Export a durable copy',
+            blurb: 'Browser storage is a draft. Export writes a file (or the app folder) you can keep, commit, or move.' }
+        ];
+        if (lesson) {
+          items.push({ id: 'refresh', title: 'Reload “' + lesson.title + '” from this version of the app',
+            blurb: 'This browser may be showing an older saved copy. Rebuilds the shipped lesson (' +
+              (lesson.slides || []).length + ' slides). Your current copy stays under File → Open.' });
+        }
+        items.push({ id: 'ready', title: 'Lecture setup…',
+          blurb: 'Wake the server, clear browser saves, join-page checks — everything that goes wrong between a working app and a working room.' });
+        return items;
+      },
+      describe: function (it) { return it.blurb; },
+      onPick: function (it) {
+        if (it.id === 'export') {
+          var ex = $('btnExport');
+          if (ex) ex.click();
+          return;
+        }
+        if (it.id === 'ready') {
+          var ready = $('btnLectureReady');
+          if (ready) ready.click();
+          return;
+        }
+        if (it.id === 'refresh') {
+          var L = lessonBehindOpenDoc();
+          if (!L || !SF.Editor || !SF.Editor.useLesson) return;
+          SF.ask({
+            title: 'Reload the shipped lesson?',
+            detail: 'Rebuilds “' + L.title + '” as this version of the app ships it. ' +
+              'The copy currently open stays available under File → Open saved document.',
+            confirm: 'Reload from app'
+          }, function () {
+            SF.Editor.useLesson(L.key);
+            SF.toast('Reloaded from this version of the app. Export if you want a durable copy.');
+          });
+        }
+      }
+    });
   }
 
   function openSaved() {
@@ -749,10 +818,9 @@
        working lecture, none of which is a bug and all of which look like one
        from the back of the room.
 
-       Deliberately not under the document cog: none of this is a property of
-       the deck, and a panel that mixes "what this lesson looks like" with
-       "is the server awake" teaches nobody where to look. Not under File
-       either — none of it is a file.
+       Lives as ⚙ beside File, not inside the document menu and not among
+       Present / Host live: none of this is a property of the deck, and mixing
+       "is the server awake" with the show controls teaches nobody where to look.
 
        The addresses listed are the ones the app can work out for itself.
        Accounts and dashboards are not here on purpose: they are personal to
@@ -854,6 +922,11 @@
                 confirm: 'Delete them',
                 danger: true
               }, function () {
+                /* One last copy of what is open, so "clear everything" is
+                   survivable by the document the lecturer was actually in. */
+                if (SF.History && SF.History.ready() && active && active.doc) {
+                  SF.History.snapshot(active.doc(), 'Before clearing this browser');
+                }
                 /** @type {string[]} */
                 var keys = [];
                 for (var i = 0; i < localStorage.length; i++) {
@@ -877,9 +950,121 @@
     var storeBtn = $('storeState');
     if (storeBtn) {
       setStored('stored');
-      storeBtn.onclick = function () {
-        var ex = $('btnExport');
-        if (ex) ex.click();
+      storeBtn.onclick = openStoreState;
+    }
+
+    var btnFind = $('btnFind');
+    if (btnFind) {
+      btnFind.onclick = function () {
+        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
+        if (menu) menu.open = false;
+        if (SF.Editor && SF.Editor.findInDeck) SF.Editor.findInDeck();
+        else SF.toast('Open a presentation to search it.');
+      };
+    }
+
+    /* Restore points. Hidden rather than disabled where IndexedDB is not
+       available — a greyed-out menu item is a question nobody can answer. */
+    var btnHistory = $('btnHistory');
+    if (btnHistory) {
+      if (!(SF.History && SF.History.ready())) btnHistory.hidden = true;
+      else btnHistory.onclick = function () {
+        if (active.flush) active.flush();
+        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
+        if (menu) menu.open = false;
+        var doc = active.doc();
+        SF.History.list(doc.id).then(function (rows) {
+          if (!rows.length) {
+            SF.toast('No earlier versions of this one yet. One is kept before anything that rewrites the document.');
+            return;
+          }
+          picker({
+            title: 'Earlier versions of “' + (doc.title || 'this document') + '”',
+            wide: true,
+            items: function () {
+              return rows.map(function (r) {
+                return { id: String(r.id), title: r.label + ' · ' + when(r.at),
+                  blurb: r.slides + (r.slides === 1 ? ' slide' : ' slides') +
+                    (r.title && r.title !== doc.title ? ' · titled “' + r.title + '”' : '') };
+              });
+            },
+            describe: function (it) { return it.blurb; },
+            onPick: function (it) {
+              var row = rows.filter(function (r) { return String(r.id) === it.id; })[0];
+              SF.ask({
+                title: 'Restore this version?',
+                detail: 'Opens “' + (row.title || doc.title) + '” as it was ' + when(row.at).toLowerCase() +
+                  ', with ' + row.slides + (row.slides === 1 ? ' slide' : ' slides') +
+                  '. The version you have now is kept first, so this is reversible.',
+                confirm: 'Restore it'
+              }, function () {
+                SF.History.snapshot(active.doc(), 'Before restoring').then(function () {
+                  return SF.History.get(row.id);
+                }).then(function (old2) {
+                  if (!old2) { SF.toast('That version could not be read.'); return; }
+                  active.setDoc(active.key === 'game' ? SF.normalizeGame(old2) : SF.normalizeDeck(old2));
+                  active.store.save(active.doc());
+                  syncChrome();
+                  if (active.draw) active.draw();
+                  SF.toast('Restored. The version you were on is in this list as “Before restoring”.');
+                });
+              });
+            }
+          });
+        });
+      };
+    }
+
+    /* A copy someone who was not in the room can open. Only where a server
+       is serving this — from a file:// page there is nowhere to put it. */
+    var btnShare = $('btnShare');
+    if (btnShare) {
+      if (!servedByRelay()) btnShare.hidden = true;
+      else btnShare.onclick = function () {
+        if (active.flush) active.flush();
+        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
+        if (menu) menu.open = false;
+        var doc = active.doc();
+        SF.ask({
+          title: 'Share “' + (doc.title || 'this lesson') + '” as a read-only link?',
+          detail: 'Puts a copy on this server at an address nobody can guess, which anyone ' +
+            'holding the link can open and read. They cannot edit it, and it is not listed ' +
+            'anywhere — but a link that escapes is a lesson that escaped. ' +
+            'Games are not carried across; the slides are. You get a key that withdraws it.',
+          confirm: 'Make the link'
+        }, function () {
+          SF.toast('Uploading a copy…');
+          fetch('/api/share', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ doc: doc })
+          }).then(function (r) {
+            return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; });
+          }).then(function (j) {
+            var url = location.origin + '/view.html?s=' + j.id;
+            /* Kept where the author can find it again: the key is the only
+               way to withdraw the copy, and it is shown once otherwise. */
+            try {
+              var keys = JSON.parse(localStorage.getItem('slideforge.shares.v1') || '[]');
+              keys.unshift({ id: j.id, key: j.key, title: doc.title || '', at: Date.now() });
+              localStorage.setItem('slideforge.shares.v1', JSON.stringify(keys.slice(0, 40)));
+            } catch (e) {}
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(url).then(function () {
+                SF.toast('Link copied. Anyone with it can read the lesson.');
+              }, function () { SF.toast('Shared: ' + url); });
+            } else {
+              SF.toast('Shared: ' + url);
+            }
+            SF.askText({
+              title: 'Your read-only link',
+              detail: 'Anyone with this address can open the lesson. It is already on your clipboard. ' +
+                'A hosted server loses shared copies when the app is next updated.',
+              value: url, confirm: 'Done'
+            }, function () {});
+          }).catch(function (e) {
+            SF.toast('Could not share: ' + (e.message || e));
+          });
+        });
       };
     }
 

@@ -379,6 +379,10 @@
   var REPLACE_KEYS = ['title', 'subtitle', 'body', 'notes', 'quote', 'attribution'];
 
   function replaceEverywhere(term, next) {
+    /* Before, not after. A replace across seventy slides is the one edit in
+       this editor that cannot be eyeballed, and undo only helps the person
+       who notices within the session. */
+    if (SF.History && SF.History.ready()) SF.History.snapshot(deck, 'Before replacing “' + term + '”');
     var q = String(term), to = String(next);
     var slides = 0, hits = 0;
     deck.slides.forEach(function (s) {
@@ -416,9 +420,12 @@
   }
 
   function findInDeck() {
+    /* Mark the File-menu / toast hint as seen once someone opens Find —
+       they have found the door; nagging again would be noise. */
+    try { localStorage.setItem('slideforge.findHint.v1', '1'); } catch (e) {}
     SF.askText({
       title: 'Find in this lesson',
-      detail: 'Searches slide text and speaker notes.',
+      detail: 'Searches slide text and speaker notes. Open again anytime with ⌘F (Ctrl+F), or File → Find in lesson…',
       placeholder: 'A word or phrase',
       confirm: 'Find'
     }, function (term) {
@@ -1200,6 +1207,7 @@
         draw2();
       }), 'Sets the default colours for the presentation. Customise this slide can override text and background colours.'));
       drawLogoFields(bodyEl, draw2);
+      drawAspect(bodyEl, draw2);
       drawEnding(bodyEl, draw2);
       drawAiSettings(bodyEl, draw2);
       drawReadiness(bodyEl);
@@ -1223,6 +1231,26 @@
    * @param {HTMLElement} body   settings panel
    * @param {function} draw2     redraw the panel
    */
+  /* The shape of the stage. In deck settings, not per slide: a deck whose
+     slides disagreed about their own proportions would letterbox differently
+     from one slide to the next, which reads as the projector losing sync. */
+  function drawAspect(body, draw2) {
+    var current = (SF.ASPECTS && SF.ASPECTS[deck.aspect]) ? deck.aspect : '16:9';
+    var opts = Object.keys(SF.ASPECTS || { '16:9': 1 }).map(function (k) {
+      return { value: k, label: SF.ASPECTS[k].label };
+    });
+    body.appendChild(UI.field('Slide shape', UI.select(opts, current, function (v) {
+      deck.aspect = v;
+      touched();
+      draw2();
+      draw();
+    }),
+      current === '16:9'
+        ? 'What most projectors and every laptop want.'
+        : 'Slides keep their width and gain height, so nothing you have written moves — ' +
+          'there is simply more room under it. Check a busy slide before you teach.'));
+  }
+
   function drawEnding(body, draw2) {
     var games = deck.slides.filter(function (s) { return s.type === 'game'; });
     if (!games.length) return;
@@ -1956,10 +1984,17 @@
     if (s.type === 'chart') {
       insp.appendChild(UI.field('Chart title',
         richField(s, "title", "area", function (v) { s.title = v; touched(); repaint(); }, 2)));
+      /* Named by the question each one answers, not by its shape. Choosing
+         a chart is the subject of this course; a list reading "bar, line,
+         pie" teaches nobody when to reach for which. */
       insp.appendChild(UI.field('Chart type', UI.select(
         [{ value: 'bar', label: 'Bar — compare magnitude' },
+         { value: 'stack', label: 'Stacked bar — the total, and what makes it up' },
+         { value: 'hbar', label: 'Horizontal bar — when the names are long' },
          { value: 'line', label: 'Line — change over time' },
-         { value: 'pie', label: 'Pie — parts of one whole' }],
+         { value: 'area', label: 'Area — change over time, with the volume under it' },
+         { value: 'pie', label: 'Pie — parts of one whole' },
+         { value: 'donut', label: 'Donut — parts of one whole, total in the middle' }],
         s.chartKind, function (v) { s.chartKind = v; touched(); repaint(); })));
       insp.appendChild(UI.field('Data \u2014 one row per line',
         richField(s, "body", "area", function (v) { s.body = v; touched(); repaint(); }, 9),
@@ -1974,9 +2009,18 @@
       insp.appendChild(el('p', 'hint', note));
       /* Said plainly rather than enforced: the author may have a reason, and
          a slide that silently drops a column is worse than a warning. */
-      if (s.chartKind === 'pie' && cd.series.length > 1) {
+      if ((s.chartKind === 'pie' || s.chartKind === 'donut') && cd.series.length > 1) {
         insp.appendChild(el('p', 'hint field-warn',
-          'A pie shows one series. Only \u201c' + cd.series[0].name + '\u201d is drawn; the rest are ignored. Bar compares them all.'));
+          'A ' + (s.chartKind === 'donut' ? 'donut' : 'pie') + ' shows one series. Only \u201c' +
+          cd.series[0].name + '\u201d is drawn; the rest are ignored. Bar compares them all.'));
+      }
+      /* Stacking negatives is not a thing this renderer does, and silently
+         dropping them would make a total that does not match the data. */
+      if (s.chartKind === 'stack' && cd.series.some(function (sr) {
+        return sr.values.some(function (v) { return v != null && v < 0; });
+      })) {
+        insp.appendChild(el('p', 'hint field-warn',
+          'Stacked bars add values up, so negatives are left out of the stack. Use grouped bars to show them.'));
       }
       if (cd.series.length > 6) {
         insp.appendChild(el('p', 'hint field-warn',
@@ -2544,6 +2588,15 @@
        one wherever the focus happens to be — and the handler bows out on
        its own when the focus is somewhere a paste means something else. */
     document.addEventListener('paste', pasteImage);
+    /* Once: Find is easy to miss next to Present keys. Opening Find (or
+       File → Find) marks it seen so this does not repeat. */
+    setTimeout(function () {
+      try {
+        if (localStorage.getItem('slideforge.findHint.v1') === '1') return;
+        localStorage.setItem('slideforge.findHint.v1', '1');
+      } catch (e) { return; }
+      SF.toast('Find across the lesson: ⌘F / Ctrl+F, or File → Find in lesson…');
+    }, 1800);
     /* The activities studio is a third view of this same deck, so it
        delegates title, theme, play and settings back here rather than
        keeping a second copy of any of them. */
@@ -2691,11 +2744,16 @@
       inspectorTab = 'content'; touched(); draw();
     },
     useLesson: function (key) {
-      flush(); SF.Store.save(deck); deck = SF.Studio.makeLesson(key); sel = 0;
+      flush(); SF.Store.save(deck);
+      if (SF.History && SF.History.ready() && (deck.slides || []).length) {
+        SF.History.snapshot(deck, 'Before opening another lesson');
+      }
+      deck = SF.Studio.makeLesson(key); sel = 0;
       SF.Store.save(deck); SF.Shell.syncChrome(); draw();
     },
     deck: function () { return deck; },
     selected: function () { return sel; },
+    findInDeck: findInDeck,
     /* The activities studio attaches feedback with this editor rather than a
        second one of its own — same picker, same prompts, same per-kind
        settings. It passes its own redraw. */

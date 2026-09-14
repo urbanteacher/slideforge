@@ -7176,6 +7176,15 @@
   var runtime = window;
   var SLIDE_W = 1280;
   var SLIDE_H = 720;
+  var ASPECTS = {
+    "16:9": { h: 720, label: "16:9 — widescreen, most projectors" },
+    "16:10": { h: 800, label: "16:10 — a little taller, common on laptops" },
+    "4:3": { h: 960, label: "4:3 — older lecture-theatre projectors" }
+  };
+  function slideHeight(deck) {
+    var a = deck && ASPECTS[deck.aspect];
+    return a ? a.h : SLIDE_H;
+  }
   var THEMES = {
     studio: { name: "Studio · Sage & ink", swatch: "#dce8cc" },
     northeastern: { name: "Northeastern London", swatch: "#c8102e" },
@@ -7255,7 +7264,7 @@
       tableHeader: true,
       /* Chart layout: bar, line or pie over the same text a table slide uses. */
       chartKind: (
-        /** @type {'bar'|'line'|'pie'} */
+        /** @type {'bar'|'stack'|'hbar'|'line'|'area'|'pie'|'donut'} */
         "bar"
       ),
       /* Image stack: each layer is one picture with its own caption and source,
@@ -7396,6 +7405,8 @@
          anyone leaves. Off by default: a deck that ends on a reflection slide
          should keep ending there unless the teacher asks otherwise. */
       finalScores: false,
+      /* '16:9' | '16:10' | '4:3' — see ASPECTS. */
+      aspect: "16:9",
       logo: "",
       logoOn: "none",
       // 'none' | 'title' | 'all'
@@ -7457,7 +7468,7 @@
     } else {
       delete s.exploration;
     }
-    s.chartKind = ["bar", "line", "pie"].indexOf(s.chartKind) >= 0 ? s.chartKind : "bar";
+    s.chartKind = ["bar", "stack", "hbar", "line", "area", "pie", "donut"].indexOf(s.chartKind) >= 0 ? s.chartKind : "bar";
     var rawLayers = raw && Array.isArray(raw.layers) ? raw.layers : [];
     s.layers = rawLayers.slice(0, GALLERY_MAX).map(function(layer) {
       var l = layer && typeof layer === "object" ? layer : {};
@@ -7483,6 +7494,7 @@
     if (!d.slides.length) d.slides = [makeSlide("title")];
     d.showSlideNumbers = d.showSlideNumbers !== false;
     d.finalScores = d.finalScores === true;
+    d.aspect = ASPECTS[d.aspect] ? d.aspect : "16:9";
     d.logo = String(d.logo || "");
     d.org = String(d.org || "");
     d.logoSize = ["small", "medium", "large"].includes(raw.logoSize) ? raw.logoSize : "medium";
@@ -7987,6 +7999,8 @@
     Activities: { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes },
     SLIDE_W,
     SLIDE_H,
+    ASPECTS,
+    slideHeight,
     THEMES,
     TRANSITIONS,
     TEAM_COLORS,

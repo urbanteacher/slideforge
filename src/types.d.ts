@@ -165,7 +165,7 @@ export interface Slide {
   /** Image-stack layout: the pictures, shown one in front of the last. */
   layers: GalleryLayer[];
   /** Chart layout: which form the same tabular `body` is drawn as. */
-  chartKind: 'bar' | 'line' | 'pie';
+  chartKind: 'bar' | 'stack' | 'hbar' | 'line' | 'area' | 'pie' | 'donut';
   /** Present only on the kinds that read it — before/after, explore,
    *  simulation, chart — or on any slide that already carried settings. */
   exploration?: ReturnType<typeof import('./deck/exploration.js').normalizeExploration>;
@@ -309,6 +309,8 @@ export interface Deck {
   showSlideNumbers: boolean;
   /** Close the lesson on the scores. Off by default. */
   finalScores: boolean;
+  /** Stage shape: '16:9' (default), '16:10' or '4:3'. Width is always 1280. */
+  aspect: '16:9' | '16:10' | '4:3';
   logo: string;
   logoOn: 'none' | 'title' | 'all';
   logoSize?: 'small' | 'medium' | 'large';

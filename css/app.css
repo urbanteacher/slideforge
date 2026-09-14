@@ -453,7 +453,7 @@ html[data-ws="game"] #btnSorter { display: none; }
 .slide {
   --sf-scale: 1;
   position: absolute; inset: 0;
-  width: 1280px; height: 720px;
+  width: 1280px; height: var(--slide-h, 720px);
   overflow: hidden;
   font-family: var(--s-font);
   background: var(--s-bg);
@@ -5043,3 +5043,12 @@ body.ws-plan [data-ws]:not([data-ws="plan"]) { display: none !important; }
   cursor: pointer;
 }
 #player .slide-jump:hover { text-decoration-style: solid; }
+
+/* Stacked-bar values sit on the fill, so they take the surface colour rather
+   than the text colour — a dark number on a dark segment is invisible. */
+#player .ch-on-fill, #previewBox .ch-on-fill { fill: #fff; font-weight: 700; }
+/* The donut's hole is the slide, not white: these charts are drawn on themed
+   backgrounds and a white disc would be a hole in the wrong colour. */
+#player .ch-donut-hole, #previewBox .ch-donut-hole { fill: var(--slide-bg, #fff); }
+#player .ch-donut-total, #previewBox .ch-donut-total { font-size: 40px; font-weight: 800; fill: currentColor; }
+#player .ch-donut-cap, #previewBox .ch-donut-cap { font-size: 16px; letter-spacing: .1em; text-transform: uppercase; opacity: .6; fill: currentColor; }

@@ -39,22 +39,42 @@
     if (P && P.open && P.deck && P.deck.slides) {
       var authored = (SF.Editor && SF.Editor.deck && SF.Editor.deck().slides) || P.deck.slides;
       var want = authored[n - 1];
-      if (!want) { if (SF.toast) SF.toast('There is no slide ' + n + '.'); return; }
+      if (!want) { if (SF.toast) SF.toast('There is no rail slide ' + n + ' (authoring order).'); return; }
       var at = -1;
       P.deck.slides.forEach(function (s, i) {
         if (at < 0 && (s.id === want.id || s.sourceSlideId === want.id)) at = i;
       });
-      if (at < 0) { if (SF.toast) SF.toast('Slide ' + n + ' is not in this show — it may be hidden.'); return; }
+      if (at < 0) { if (SF.toast) SF.toast('Rail slide ' + n + ' is not in this show — it may be hidden.'); return; }
       P.goTo(at, at > P.idx ? 1 : -1);
       return;
     }
     if (SF.Editor && SF.Editor.selectSlide) {
       var d = SF.Editor.deck();
       var target = d && d.slides[n - 1];
-      if (!target) { if (SF.toast) SF.toast('There is no slide ' + n + '.'); return; }
+      if (!target) { if (SF.toast) SF.toast('There is no rail slide ' + n + ' (authoring order).'); return; }
       SF.Editor.selectSlide(target.id);
     }
   };
+
+  /* Which deck's shape an element is being drawn at. The player's deck when
+     a show is running, the editor's otherwise — and 16:9 when neither is up,
+     which is the rail thumbnail during load. Read rather than threaded
+     through every layout, because the shape is a property of the document
+     and not of the slide being drawn. */
+  /* Stamped on the element rather than set globally: the rail, the preview
+     and the wall are on screen together, and a variable on :root would make
+     a thumbnail change shape because the show did. */
+  function stampAspect(slideEl, deck) {
+    var h = SF.slideHeight(deck);
+    slideEl.style.setProperty('--slide-h', h + 'px');
+    if (h !== SF.SLIDE_H) slideEl.dataset.aspect = (deck && deck.aspect) || '16:9';
+  }
+
+  function deckOf(node) {
+    if (SF.Player && SF.Player.open && SF.Player.deck) return SF.Player.deck;
+    if (SF.Editor && SF.Editor.deck) { try { return SF.Editor.deck(); } catch (e) {} }
+    return null;
+  }
 
   function rich(tag, cls, slide, key, text) {
     var n = el(tag, cls, text);
@@ -573,7 +593,14 @@
      two hues at all. */
   function chartKey(data, slide) {
     var wrap = el('div', 'chart-key');
-    if (data.series.length > 1) {
+    /* A pie or a donut cuts one series into its categories, and names each
+       slice on the slice. Listing the series underneath then labels colours
+       that are not on the chart — it says "Full time, Part time" beside a
+       ring that is only Full time, which is the chart contradicting itself.
+       The inspector already warns that the other series are dropped; this
+       stops the drawing from implying otherwise. */
+    var oneSeriesIdiom = slide && (slide.chartKind === 'pie' || slide.chartKind === 'donut');
+    if (data.series.length > 1 && !oneSeriesIdiom) {
       data.series.forEach(function (s, i) {
         var item = el('span', 'ck-item');
         var dot = el('i', 'ck-dot');
@@ -670,7 +697,133 @@
     return svg;
   }
 
-  function lineChart(data, slide) {
+  /* Stacked bars. The axis is the total rather than the tallest single
+     value, which is the whole point of the idiom: it answers "how big
+     altogether, and of what" where grouped bars answer "which is bigger".
+     One beat per series, so a build lays the composition down a layer at a
+     time — the order the argument is usually made in. */
+  function stackedBar(data, slide, stepOf) {
+    var W = CHART.w, H = CHART.h, P = CHART;
+    var plotW = W - P.padL - P.padR, plotH = H - P.padT - P.padB;
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+
+    var totals = data.categories.map(function (_, ci) {
+      return data.series.reduce(function (sum, s) {
+        var v = s.values[ci];
+        return sum + (v == null ? 0 : Math.max(0, v));
+      }, 0);
+    });
+    var max = niceMax(Math.max.apply(null, totals.concat([0])));
+
+    axisTicks(max).forEach(function (t) {
+      var y = P.padT + plotH - (t / max) * plotH;
+      svg.appendChild(svgEl('line', { x1: P.padL, y1: y, x2: P.padL + plotW, y2: y, class: 'ch-grid' }));
+      var lab = svgEl('text', { x: P.padL - 14, y: y + 7, class: 'ch-tick', 'text-anchor': 'end' });
+      lab.textContent = fmt(t);
+      svg.appendChild(lab);
+    });
+
+    var band = plotW / Math.max(1, data.categories.length);
+    var barW = Math.min(band * 0.62, 120);
+    var groups = data.series.map(function (_, si) {
+      var gg = svgEl('g', { class: 'ch-beat', 'data-step': si });
+      svg.appendChild(gg);
+      return gg;
+    });
+
+    data.categories.forEach(function (cat, ci) {
+      var x = P.padL + band * ci + (band - barW) / 2;
+      var run = 0;
+      data.series.forEach(function (sr, si) {
+        var v = sr.values[ci];
+        if (v == null || v <= 0) return;
+        var hgt = (v / max) * plotH;
+        var y = P.padT + plotH - (run + hgt) / 1 * 1 - 0;
+        y = P.padT + plotH - ((run + v) / max) * plotH;
+        var g = svgEl('g', { class: 'ch-bar' });
+        g.appendChild(svgEl('rect', { x: x, y: y, width: barW, height: Math.max(0, hgt), fill: chartColor(si) }));
+        /* Only where the band is deep enough to hold it; a number printed
+           over a 6px sliver is unreadable and looks like a mistake. */
+        if (hgt > 26) {
+          var val = svgEl('text', { x: x + barW / 2, y: y + hgt / 2 + 6, class: 'ch-value ch-on-fill', 'text-anchor': 'middle' });
+          val.textContent = fmt(v);
+          g.appendChild(val);
+        }
+        groups[si].appendChild(g);
+        run += v;
+      });
+      var cl = svgEl('text', { x: P.padL + band * ci + band / 2, y: H - P.padB + 30, class: 'ch-cat', 'text-anchor': 'middle' });
+      cl.textContent = cat;
+      svg.appendChild(cl);
+    });
+
+    svg.appendChild(svgEl('line', { x1: P.padL, y1: P.padT + plotH, x2: P.padL + plotW, y2: P.padT + plotH, class: 'ch-axis' }));
+    return svg;
+  }
+
+  /* Bars along the x axis. The reason to reach for it is category names:
+     "Development", "Graphics", "Training" laid sideways under vertical bars
+     either overlap or get turned on their side, and a reader should not have
+     to tilt their head in a lecture theatre. */
+  function horizontalBar(data, slide) {
+    var W = CHART.w, H = CHART.h, P = CHART;
+    /* Room on the left is taken from the longest label rather than fixed,
+       for the same reason the line chart sizes its right margin that way. */
+    var longest = data.categories.reduce(function (n2, c) { return Math.max(n2, String(c).length); }, 0);
+    var padL = Math.min(320, 40 + longest * 10);
+    var plotW = W - padL - P.padR, plotH = H - P.padT - P.padB;
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
+
+    var all = [];
+    data.series.forEach(function (sr) { sr.values.forEach(function (v) { if (v != null) all.push(v); }); });
+    var max = niceMax(Math.max.apply(null, all.concat([0])));
+
+    axisTicks(max).forEach(function (t) {
+      var x = padL + (t / max) * plotW;
+      svg.appendChild(svgEl('line', { x1: x, y1: P.padT, x2: x, y2: P.padT + plotH, class: 'ch-grid' }));
+      var lab = svgEl('text', { x: x, y: P.padT + plotH + 28, class: 'ch-tick', 'text-anchor': 'middle' });
+      lab.textContent = fmt(t);
+      svg.appendChild(lab);
+    });
+
+    var band = plotH / Math.max(1, data.categories.length);
+    var n = data.series.length;
+    var groupH = Math.min(band * 0.64, 70 * n);
+    var barH = Math.max(6, (groupH - (n - 1) * 2) / n);
+    var groups = [];
+    var beats = n > 1 ? n : data.categories.length;
+    for (var b = 0; b < beats; b++) {
+      var gg = svgEl('g', { class: 'ch-beat', 'data-step': b });
+      groups.push(gg);
+      svg.appendChild(gg);
+    }
+
+    data.categories.forEach(function (cat, ci) {
+      var y0 = P.padT + band * ci + (band - groupH) / 2;
+      data.series.forEach(function (sr, si) {
+        var v = sr.values[ci];
+        if (v == null) return;
+        var wdt = Math.max(0, (v / max) * plotW);
+        var y = y0 + si * (barH + 2);
+        var g = svgEl('g', { class: 'ch-bar' });
+        g.appendChild(svgEl('rect', { x: padL, y: y, width: wdt, height: barH, rx: Math.min(4, barH / 2), fill: chartColor(si) }));
+        if (n === 1) {
+          var val = svgEl('text', { x: padL + wdt + 10, y: y + barH / 2 + 6, class: 'ch-value' });
+          val.textContent = fmt(v);
+          g.appendChild(val);
+        }
+        groups[n > 1 ? si : ci].appendChild(g);
+      });
+      var cl = svgEl('text', { x: padL - 14, y: P.padT + band * ci + band / 2 + 6, class: 'ch-cat', 'text-anchor': 'end' });
+      cl.textContent = cat;
+      svg.appendChild(cl);
+    });
+
+    svg.appendChild(svgEl('line', { x1: padL, y1: P.padT, x2: padL, y2: P.padT + plotH, class: 'ch-axis' }));
+    return svg;
+  }
+
+  function lineChart(data, slide, area) {
     var W = CHART.w, H = CHART.h, P = CHART;
     /* Reserve the right margin for the end-labels before drawing anything.
        Sized from the longest series name, because a label that runs past the
@@ -711,6 +864,16 @@
       s.values.forEach(function (v, i) { if (v != null) pts.push([xAt(i), yAt(v)]); });
       if (!pts.length) return;
       var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+      /* An area is the same line with the ground under it shaded, drawn
+         first so the stroke and its markers stay on top. Translucent
+         because overlapping areas are the idiom's known weakness and
+         hiding one behind another would be the chart lying. */
+      if (area) {
+        var base = P.padT + plotH;
+        var fillD = d + ' L' + pts[pts.length - 1][0].toFixed(1) + ' ' + base +
+                    ' L' + pts[0][0].toFixed(1) + ' ' + base + ' Z';
+        g.appendChild(svgEl('path', { d: fillD, fill: chartColor(si), opacity: 0.22, stroke: 'none' }));
+      }
       g.appendChild(svgEl('path', { d: d, fill: 'none', stroke: chartColor(si), 'stroke-width': 3,
         'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
       pts.forEach(function (p) {
@@ -743,7 +906,7 @@
   /* Part-to-whole. A pie is a weaker read than a stacked bar — angle is
      harder to compare than length — but this app teaches the history of the
      form, and you cannot critique Playfair's 1801 pie without showing one. */
-  function pieChart(data, slide) {
+  function pieChart(data, slide, donut) {
     var W = CHART.w, H = CHART.h;
     var cx = W / 2, cy = H / 2 + 4, R = Math.min(H / 2 - 14, 200);
     var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img' });
@@ -778,6 +941,20 @@
       g.appendChild(lab);
       svg.appendChild(g);
     });
+    /* A donut is a pie with the middle taken out, and the reason to prefer
+       one is that the hole holds the total — the number a pie makes you add
+       up yourself. Drawn in the surface colour over the wedges rather than
+       as an arc per slice, which keeps the wedge geometry above identical
+       between the two. */
+    if (donut) {
+      svg.appendChild(svgEl('circle', { cx: cx, cy: cy, r: R * 0.58, class: 'ch-donut-hole' }));
+      var tot = svgEl('text', { x: cx, y: cy + 2, class: 'ch-donut-total', 'text-anchor': 'middle' });
+      tot.textContent = fmt(total);
+      svg.appendChild(tot);
+      var cap = svgEl('text', { x: cx, y: cy + 30, class: 'ch-donut-cap', 'text-anchor': 'middle' });
+      cap.textContent = 'total';
+      svg.appendChild(cap);
+    }
     return svg;
   }
 
@@ -792,11 +969,16 @@
       pad.appendChild(e);
       return;
     }
-    var kind = slide.chartKind === 'line' ? 'line' : slide.chartKind === 'pie' ? 'pie' : 'bar';
+    var KINDS = ['bar', 'stack', 'hbar', 'line', 'area', 'pie', 'donut'];
+    var kind = KINDS.indexOf(slide.chartKind) >= 0 ? slide.chartKind : 'bar';
     var wrap = el('div', 'chart-wrap chart-' + kind);
     var stepOf = function (si, ci) { return data.series.length > 1 ? si : ci; };
-    var svg = kind === 'line' ? lineChart(data, slide)
-            : kind === 'pie' ? pieChart(data, slide)
+    var svg = kind === 'line' ? lineChart(data, slide, false)
+            : kind === 'area' ? lineChart(data, slide, true)
+            : kind === 'pie' ? pieChart(data, slide, false)
+            : kind === 'donut' ? pieChart(data, slide, true)
+            : kind === 'stack' ? stackedBar(data, slide, slide.progressive ? stepOf : null)
+            : kind === 'hbar' ? horizontalBar(data, slide)
             : barChart(data, slide, slide.progressive ? stepOf : null);
 
     /* The build marks whole series (or whole categories) rather than each
@@ -2168,6 +2350,7 @@
     opts = opts || {};
     var root = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-' + slide.type);
     root.dataset.slideId = slide.id;
+    stampAspect(root, deck);
     if (slide.activity) {
       root.classList.add('activity-slide');
       var view = slide.activityPresentation;
@@ -2299,7 +2482,11 @@
       retryWhenSized(box, slideEl);
       return;
     }
-    var scale = Math.min(bw / SF.SLIDE_W, bh / SF.SLIDE_H);
+    /* The element already carries its shape from renderSlide, so read it
+         back rather than guessing which deck it came from. */
+    var stamped = Number(String(slideEl.style.getPropertyValue('--slide-h') || '').replace('px', ''));
+    var slideH = stamped > 0 ? stamped : SF.slideHeight(deckOf(slideEl));
+    var scale = Math.min(bw / SF.SLIDE_W, bh / slideH);
     slideEl.style.setProperty('--sf-scale', String(scale));
     /* Also on the box, because the live overlays that sit beside the slide
        rather than inside it — the Q&A cue — have to keep clear of things
@@ -2307,7 +2494,7 @@
     box.style.setProperty('--sf-scale', String(scale));
     slideEl.style.transform = 'scale(' + scale + ')';
     slideEl.style.left = ((bw - SF.SLIDE_W * scale) / 2) + 'px';
-    slideEl.style.top = ((bh - SF.SLIDE_H * scale) / 2) + 'px';
+    slideEl.style.top = ((bh - slideH * scale) / 2) + 'px';
     slideEl.style.right = 'auto';
     slideEl.style.bottom = 'auto';
     slideEl.style.position = 'absolute';
@@ -2336,9 +2523,12 @@
   /** Size a viewport box to the largest 16:9 rect fitting the window. */
   function letterbox(viewport) {
     var w = window.innerWidth, h = window.innerHeight;
-    var scale = Math.min(w / SF.SLIDE_W, h / SF.SLIDE_H);
+    var inner = viewport.querySelector('.slide');
+    var innerH = inner ? Number(String(inner.style.getPropertyValue('--slide-h') || '').replace('px', '')) : 0;
+    var vh = innerH > 0 ? innerH : SF.slideHeight(deckOf(viewport));
+    var scale = Math.min(w / SF.SLIDE_W, h / vh);
     viewport.style.width = Math.floor(SF.SLIDE_W * scale) + 'px';
-    viewport.style.height = Math.floor(SF.SLIDE_H * scale) + 'px';
+    viewport.style.height = Math.floor(vh * scale) + 'px';
     return scale;
   }
 
