@@ -1413,6 +1413,461 @@
           ],
           notes: 'Close. Rebuilding this lesson gives a fresh copy, so nothing here is precious. The picker offers twenty layouts and nineteen of them are in this deck; video is named on its own slide but not rendered, because a placeholder URL would only ever draw a black box. The remaining five slide types never appear in the picker: quiz, game, results and join are built by the live session, and explain is the card that shows the correct answer after a check — which is also why the student handout leaves it out.' }
       ]
+    },
+    {
+      key: 'ukbt-pipeline',
+      title: 'UK Black Tech — building the pipeline',
+      icon: '❯',
+      blurb: 'A community talk about representation, retention and the route into UK tech, in the UK Black Tech theme. Every chart carries sample figures on purpose — swap in your own before you present.',
+      minutes: 40,
+      theme: 'ukbt',
+      org: 'UK Black Tech',
+      slides: [
+        { type: 'title', title: 'Building the pipeline',
+          subtitle: 'Representation, retention and the route into UK tech',
+          notes: 'No deck logo is set — add the official file under Deck settings → Logo and it appears on every slide; the green chevron on the title and section slides is the theme’s own mark, not a substitute for it. Open by saying what the talk is not: it is not a league table of who is failing. It is an argument that the numbers people quote about representation are usually the wrong numbers, and that the interesting question is where people leave rather than how many arrive.' },
+
+        { type: 'introduction', title: 'Your name', subtitle: 'Your role · UK Black Tech',
+          body: 'Replace this with two or three lines about who you are and why you are the person saying this. A talk about representation lands differently depending on who is giving it, and the room will want to know.',
+          notes: 'INTRODUCTION — swap in your own details before presenting. Keep it to the length that is here; the audience wants the argument, not a CV.' },
+
+        { type: 'section', title: 'What the numbers say', subtitle: 'And what they leave out',
+          feedback: { kind: 'wordcloud', prompt: 'In one word — what got you into tech?', options: [], max: 2 },
+          notes: 'Run the word cloud before the first chart. It puts the room’s own routes on the wall, which is the thing the charts are about to abstract away. Keep it to a word each so the cloud stays readable.' },
+
+        { type: 'chart', chartKind: 'hbar', title: 'Share of roles by level · sample figures',
+          body: 'Level\tShare of roles (%)\nEntry\t9.1\nMid\t6.2\nSenior\t3.4\nDirector\t1.8\nExecutive\t0.9',
+          progressive: true,
+          notes: 'SAMPLE DATA — these five numbers are a shape, not a finding, and the slide title says so on the projector. Before you present, replace them with figures you can cite: the ONS Annual Population Survey, the BCS Diversity Report, or your own organisation’s pay-gap return. A sorted horizontal bar is the FT’s ranking chart — the order is the message, so it is sorted and the axis starts at zero.' },
+
+        { type: 'chart', chartKind: 'line', title: 'Entry level moved. Senior did not · sample figures',
+          body: 'Year\tEntry level\tSenior\n2019\t6.8\t2.9\n2020\t7.4\t3.0\n2021\t8.2\t3.1\n2022\t8.7\t3.2\n2023\t9.1\t3.4',
+          progressive: true,
+          notes: 'The point of two lines rather than one: a recruitment number can climb for years while the number that would show people staying and progressing barely moves. Press Next once to draw entry level, let the room read it as good news, then draw senior.' },
+
+        { type: 'content', title: 'Three questions for any representation chart',
+          bullets: [
+            'What is the denominator?\tShare of applicants, of hires, or of everybody in post — three different claims, often drawn identically.',
+            'Who is not in it?\tA chart of people in the industry cannot show the people who left it, or never applied.',
+            'Compared to what?\tA percentage with no baseline — the local population, the graduate pool, last year — is a number, not evidence.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'This is the slide to slow down on. Every one of these questions can be asked of the two charts they have just seen, and asking them out loud is more convincing than saying the charts are illustrative.' },
+
+        { type: 'section', title: 'Where people leave',
+          subtitle: 'A pipeline that leaks is not a pipeline',
+          notes: 'The turn in the talk. Everything so far has been a stock — how many people are in each place. The rest is a flow — where they go.' },
+
+        { type: 'chart', chartKind: 'sankey', title: 'From application to year three · sample figures',
+          body: 'From\tTo\tPeople\nApplied\tInterviewed\t420\nApplied\tRejected at sift\t580\nInterviewed\tOffered\t140\nInterviewed\tNo offer\t280\nOffered\tJoined\t110\nOffered\tDeclined\t30\nJoined\tStill there at year 3\t62\nJoined\tLeft within 3 years\t48',
+          notes: 'SANKEY — the flow chart, and the right idiom here because the question is where it goes, not which is bigger. The band that matters is the last one: of a thousand applications, the sample loses more people after they joined than at offer stage. Ask the room which band their organisation measures.' },
+
+        { type: 'chart', chartKind: 'dumbbell', title: 'The gap between getting in and getting on · sample figures',
+          body: 'Function\tShare at entry (%)\tShare at senior (%)\nEngineering\t8.9\t3.1\nData\t9.6\t3.8\nProduct\t7.2\t2.4\nDesign\t6.4\t2.9\nSecurity\t5.8\t2.1',
+          notes: 'DUMBBELL — deviation: two points on one row, and the bar between them is the finding. Reach for it whenever you would otherwise draw two bars side by side and ask people to subtract. Sorted by the size of the gap would be a fair edit here; sorted by function keeps it neutral.' },
+
+        { type: 'chart', chartKind: 'pictogram', title: 'One icon is one person · sample cohort',
+          body: 'Stage\tPeople\nApplied\t1000\nInterviewed\t420\nOffered\t140\nStill there at year 3\t62',
+          chartIcon: '●', chartUnit: 50,
+          notes: 'PICTOGRAM, in the ISOTYPE tradition: the icon repeats and never grows, so the count is read by counting rather than by judging an area. One dot is fifty people here. It says the same thing the Sankey said, in the register of a poster rather than a report — useful if this deck is going on a wall.' },
+
+        { type: 'cards', title: 'Three levers, and only one of them is hiring',
+          bullets: [
+            'The route in\tWiden where you look, not just how loudly you advertise. Apprenticeships, returners, bootcamp graduates, internal moves.',
+            'The first year\tOnboarding, a real manager, and work that counts. Most of the loss in the flow above happens here.',
+            'Progression\tPromotion criteria written down, applied the same way, and reviewed by someone who did not write them.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'Hold the room on the second card. Hiring is the lever organisations reach for because it is visible and can be announced; the flow chart says it is the one with the least leverage.' },
+
+        { type: 'quote', body: 'Nobody is going to fix this on your behalf, and nobody can fix it on their own either.',
+          subtitle: 'Replace with a quotation of your own',
+          notes: 'QUOTE — a placeholder. Use something from your own community, a partner organisation, or the report you have cited, with the attribution in the subtitle. An unattributed quotation on a slide about evidence is an own goal.' },
+
+        { type: 'journey', title: 'What a twelve-month commitment looks like',
+          subtitle: 'Reveal one at a time',
+          bullets: [
+            'Month 1\tPublish the baseline. Whatever the number is, say it out loud before you change anything.',
+            'Month 3\tFix the route in. One new channel, measured against the old ones.',
+            'Month 6\tFirst-year retention review. Ask the people who left, not only the people who stayed.',
+            'Month 12\tPublish again. The second number is the only one anybody will believe.'
+          ],
+          progressive: true,
+          notes: 'JOURNEY — the ask. Keep it to four milestones; a twelve-step plan from a stage is a plan nobody writes down.' },
+
+        { type: 'table', title: 'What to measure, and how often',
+          body: 'Measure\tWhy it matters\tHow often\nApplication to interview rate\tCatches a sift that filters before a human reads\tMonthly\nOffer acceptance rate\tA low one usually means the process, not the package\tQuarterly\nYear-one retention\tThe largest loss in most pipelines\tQuarterly\nPromotion rate by level\tWhether getting in leads to getting on\tAnnually',
+          progressive: true,
+          notes: 'TABLE rather than a chart because the reader needs the exact wording of each measure, not its shape. Four rows is the limit for something a room is meant to copy down.' },
+
+        { type: 'links', title: 'Where to get real numbers',
+          bullets: [
+            'ONS Annual Population Survey — employment by occupation and ethnicity\thttps://www.ons.gov.uk/employmentandlabourmarket',
+            'BCS, The Chartered Institute for IT — diversity reports\thttps://www.bcs.org/policy-and-influence/diversity-and-inclusion/',
+            'Gov.uk ethnicity facts and figures — workforce and education\thttps://www.ethnicity-facts-figures.service.gov.uk/',
+            'UK Black Tech\thttps://ukblacktech.com/'
+          ],
+          notes: 'LINKS — tappable on learner phones in a live session. Say plainly that the charts in this deck are sample data and that these are where the real figures come from; it is a stronger close than pretending you had them.' },
+
+        { type: 'content', title: 'Before you present this deck',
+          bullets: [
+            'Replace every chart marked "sample figures" with numbers you can cite on the slide.',
+            'Put your own name and role on slide two.',
+            'Attribute the quotation, or cut the slide.',
+            'Decide which one of the three levers you are actually asking this room for.'
+          ],
+          feedback: { kind: 'scale', prompt: 'How ready is your organisation to publish its baseline?', options: [], max: 1 },
+          notes: 'Close on the scale. It is a live measure of the only ask that matters, and the spread is usually more interesting than the average — read it out.' }
+      ]
+    },
+    {
+      key: 'ukbt-institute-session',
+      title: 'UKBT Institute — a teaching session, end to end',
+      icon: '◈',
+      blurb: 'A reusable shape for a ninety-minute technical session in the UKBT Institute theme: recall, teach, practise, check, reflect. Replace the content, keep the bones.',
+      minutes: 90,
+      theme: 'ukbt-institute',
+      org: 'UKBT Institute',
+      games: [{
+        ref: 'recall',
+        title: 'Before we start — what stuck?',
+        style: 'choice',
+        settings: { defaultTime: 20, scoreboard: false, scoreSlide: false, confidence: true },
+        questions: [{
+          question: 'From memory, and before you look anything up — which of these did we cover last session?',
+          options: ['Only the first idea', 'Both ideas, briefly', 'Both ideas in depth', 'Neither'],
+          correct: 1,
+          explanation: 'Rewrite this with your own content. The point of the opener is that they answer from memory first and find out afterwards — the retrieval is the learning, not the score.'
+        }]
+      }, {
+        ref: 'check',
+        title: 'Check before you practise',
+        style: 'choice',
+        settings: { defaultTime: 30, scoreboard: false, scoreSlide: false },
+        questions: [{
+          question: 'You have one number per category and the order is the message. Which chart?',
+          options: ['Pie chart', 'Sorted horizontal bar', 'Line chart', 'Scatterplot'],
+          correct: 1,
+          explanation: 'Ranking: position along a common scale is the channel the eye reads most accurately, and sorting puts the message in the shape. A pie asks the reader to compare angles; a line implies an order in time that is not there.'
+        }]
+      }],
+      slides: [
+        { type: 'title', title: 'Session title',
+          subtitle: 'UKBT Institute · module and week',
+          notes: 'This deck is a shape, not a lesson: recall, teach, practise, check, reflect. Every slide says in its notes what it is doing, so you can replace the content without losing the structure. Start by putting the real session title here. No logo is set: add the official file under Deck settings → Logo and it appears on every slide. The green chevron on the title and section slides is the theme’s own mark, not a substitute for it.' },
+
+        { type: 'content', title: 'By the end of this session you will be able to',
+          bullets: [
+            'Name the thing\tState what it is and when it applies.',
+            'Do the thing\tCarry it out on a worked example, unaided.',
+            'Judge the thing\tSay when it is the wrong tool and what you would use instead.'
+          ],
+          notes: 'OBJECTIVES — three, phrased as things the learner can do, in rising order of difficulty. Resist four. If you cannot write an assessment question for an objective, it is not an objective yet.' },
+
+        { type: 'game', gameRef: 'recall',
+          notes: 'RETRIEVAL OPENER — before any teaching. Confidence is on, so learners say how sure they are as well as what they think; a confident wrong answer is the most useful signal in the room. Do not review the answer until everyone has committed.' },
+
+        { type: 'section', title: 'Teach', subtitle: 'The new material, in the smallest pieces that still make sense',
+          notes: 'Signposting matters more than it looks. The room needs to know when it has stopped being asked to remember and started being asked to learn.' },
+
+        { type: 'keywords', title: 'The vocabulary for today',
+          bullets: [
+            'Term one\tThe definition, in a sentence a learner could repeat.',
+            'Term two\tThe definition, with the common misreading named.',
+            'Term three\tThe definition, and what it is often confused with.'
+          ],
+          progressive: true,
+          notes: 'KEYWORDS — the tab splits each line into term and definition. Reveal one at a time and say each term out loud; a technical word that has only been seen and never heard is a word learners will not use in a seminar.' },
+
+        { type: 'chart', chartKind: 'bar', title: 'A worked example · replace with your own data',
+          body: 'Category\tValue\nFirst\t42\nSecond\t31\nThird\t28\nFourth\t17',
+          progressive: true,
+          notes: 'The teaching chart. Talk through what the axis is, where zero is and what one bar means before you say anything about the pattern — modelling the reading is the lesson as much as the content is.' },
+
+        { type: 'chart', chartKind: 'box', title: 'The same cohort, as a distribution',
+          body: 'Group\nGroup A\t54\t58\t61\t63\t65\t66\t68\t71\t74\t88\nGroup B\t41\t49\t55\t57\t60\t62\t64\t69\t73\t79\nGroup C\t62\t64\t66\t67\t68\t69\t70\t71\t73\t75',
+          notes: 'BOX PLOT — each row is a group and the cells after the name are its raw observations, so a column of marks pasted from a spreadsheet becomes this. Whiskers stop at the furthest real observation inside Tukey’s 1.5×IQR fence; anything beyond is drawn as a point. A and C sit in a similar place — medians 65.5 and 68.5 — but A is spread twice as wide and has one learner at 88 outside the fence. Reported as means, A is 66.8 and C 68.5, and none of that survives.' },
+
+        { type: 'chart', chartKind: 'radar', title: 'Self-assessment across the module',
+          body: 'Skill\tStart of module\tNow\nReading a chart\t2\t4\nChoosing an idiom\t1\t3\nCleaning data\t2\t3\nWriting the caption\t1\t4\nCritique\t2\t4',
+          notes: 'RADAR — defensible here and in few other places: the axes are the same kind of thing on the same 0–5 scale, and the two shapes are the same learner at two times. Do not use it to compare unrelated measures; the area it draws is meaningless when the axes have different units.' },
+
+        { type: 'italics', title: 'Two phrases to carry out of the room',
+          bullets: [
+            'the shape is the finding\tA summary statistic is a claim about a distribution you have not shown.',
+            'say what the axis is\tHalf of chart criticism is noticing that nobody did.'
+          ],
+          notes: 'ITALICS — the same term-and-gloss split as Keywords, with more room, for the two or three phrases you want repeated back to you in the assessment.' },
+
+        { type: 'section', title: 'Practise', subtitle: 'They do it, you watch',
+          notes: 'The hinge of the session. If you are still talking here, the session has become a lecture and the objectives written earlier will not be met.' },
+
+        { type: 'content', title: 'Your turn — twenty minutes',
+          bullets: [
+            'Open the dataset linked at the end of this deck.',
+            'Choose an idiom, and write down the question it answers before you draw anything.',
+            'Draw it. Label the axis and write a caption that states the finding.',
+            'Swap with the person next to you and try to break their reading.'
+          ],
+          progressive: true,
+          notes: 'Four steps, and the third one is the one people skip. Walk the room during step two rather than step three — a wrong idiom chosen early costs the whole twenty minutes.' },
+
+        { type: 'game', gameRef: 'check',
+          notes: 'CHECK — placed after practice, not before it, so it tests what they have just done rather than what they have just heard. If more than a quarter of the room misses it, reteach now; the reflection slide is not the place to find out.' },
+
+        { type: 'cards', title: 'Common mistakes in that task',
+          bullets: [
+            'Chose the chart first\tThe question decides the idiom. Write the question down and the choice usually makes itself.',
+            'Truncated the axis\tFine on a line where zero is meaningless, misleading on a bar where length is the encoding.',
+            'Described instead of concluded\t"Sales by region" is a label. "The south carries the quarter" is a caption.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'Replace these with the mistakes you actually saw while walking the room. Naming a mistake the class has just made beats naming one from a textbook.' },
+
+        { type: 'section', title: 'Reflect', subtitle: 'Two minutes, and it is not optional',
+          feedback: { kind: 'brainstorm', prompt: 'What is still muddy? One sentence.', options: [], max: 2 },
+          notes: 'BRAINSTORM — longer answers than a word cloud, listed newest first. Read two or three out and answer them now; taking them away to answer next week teaches the room that the question was rhetorical.' },
+
+        { type: 'content', title: 'Before next session',
+          bullets: [
+            'Read the chapter and bring one chart you think is wrong.',
+            'Finish the task from the practice block if it is not finished.',
+            'Post your caption — one sentence — to the module space.'
+          ],
+          feedback: { kind: 'poll', prompt: 'How confident are you with today’s material?',
+            options: ['I need another example', 'I could do it with support', 'I could do it unaided'], max: 1 },
+          notes: 'Close on the poll, and use it. If the middle option wins, the next session opens with a second worked example rather than new material.' },
+
+        { type: 'links', title: 'Everything referenced today',
+          bullets: [
+            'Munzner, Visualization Analysis and Design\thttps://www.cs.ubc.ca/~tmm/vadbook/',
+            'Financial Times Visual Vocabulary\thttps://github.com/Financial-Times/chart-doctor',
+            'UKBT Institute\thttps://ukblacktech.com/ukbt-institute/'
+          ],
+          notes: 'LINKS — the dataset for the practice block goes here too. In a live session these become tappable on learner phones, which is the only reliable way to hand a URL to a room.' }
+      ]
+    },
+
+    /* ------------------------------------------------------------------
+       Pacing galleries — openers and breakaways first, then a range of
+       teaching layouts. Copy the shape into a real lesson; swap the words.
+       ------------------------------------------------------------------ */
+    {
+      key: 'pace-nul',
+      title: 'NUL · Openers, breakaways & a layout range',
+      icon: '▣',
+      blurb: 'Northeastern look: big word-leading openers, full-bleed image beats, and red section breaks that cut the argument into chapters. Use it as a pacing template.',
+      minutes: 12,
+      theme: 'northeastern',
+      org: 'Northeastern University London',
+      logo: 'assets/brand/nu-london-logo.png',
+      logoOn: 'all',
+      logoSize: 'small',
+      slides: [
+        {
+          type: 'title',
+          title: 'Open hard.\nBreak often.',
+          subtitle: 'A pacing gallery · Northeastern London',
+          notes: 'OPENER — title. Short line breaks, big type, almost nothing else. Say the idea out loud before you advance.'
+        },
+        {
+          type: 'image',
+          title: 'One claim on a photograph',
+          image: 'assets/lesson/ipdv/qa-london-night-1.jpg',
+          imageFit: 'cover',
+          design: { capStyle: 'scrim', capPos: 'bottom', imageMotion: 'zoom', logoGround: 'dark' },
+          notes: 'OPENER — full-bleed image. The picture is the mood; the caption is the claim. Scrim keeps the words readable.'
+        },
+        {
+          type: 'introduction',
+          title: 'Your name',
+          subtitle: 'Role · Northeastern University London',
+          body: 'Replace this with who is standing at the front, and why this room should listen.',
+          notes: 'OPENER — introduction. Once per cohort, not every week.'
+        },
+        {
+          type: 'section',
+          title: 'Part one',
+          subtitle: 'A breakaway — look up before the next block of content.',
+          notes: 'BREAKAWAY — section. Full red (or theme ground). Use these to cut a long argument into chapters the room can feel.'
+        },
+        {
+          type: 'cards',
+          title: 'Three ideas in this block',
+          bullets: [
+            'Name the question the room is here to answer.',
+            'Show one example that makes the question real.',
+            'Leave one thing unfinished so the next block has work to do.'
+          ],
+          notes: 'CONTENT — cards. Teaching meat after a breakaway. Keep to three.'
+        },
+        {
+          type: 'section',
+          title: 'Part two',
+          subtitle: 'Another breath. Then a different layout.',
+          notes: 'BREAKAWAY again. Two or three section slides per hour is usually enough; more and they stop meaning “look up”.'
+        },
+        {
+          type: 'split',
+          title: 'Say it. Show it.',
+          bullets: [
+            'Left: the claim in words.',
+            'Right: the picture that proves or frames it.',
+            'Build the bullets if you want the eye to wait.'
+          ],
+          image: 'assets/lesson/ipdv/snow-cholera-map-1854.jpg',
+          imageFit: 'cover',
+          design: { mediaGround: 'full' },
+          progressive: true,
+          notes: 'VARIATION — dual coding. Image + text after a breakaway keeps the chapter from feeling like another bullet wall.'
+        },
+        {
+          type: 'quote',
+          body: 'A section break is not decoration. It is where the room breathes.',
+          subtitle: 'SlideForge pacing note',
+          notes: 'VARIATION — quote. Soft landing inside a chapter, or a third kind of opener if the photograph is wrong for the day.'
+        },
+        {
+          type: 'keyfact',
+          title: 'What they must leave with',
+          subtitle: 'One number or rule',
+          body: 'Two breakaways beat twelve busy slides.',
+          bullets: [
+            'Open with words or a photograph.',
+            'Cut chapters with section slides.',
+            'Change layout when the chapter changes.'
+          ],
+          notes: 'VARIATION — key fact. Large claim, short support. Good mid-lesson or close.'
+        },
+        {
+          type: 'journey',
+          title: 'The arc of this hour',
+          subtitle: 'Reveal each beat as you go',
+          bullets: [
+            'Open\tTitle or image that states the stake.',
+            'Break\tSection — Part one.',
+            'Build\tCards, split, keywords — the work.',
+            'Break\tSection — Part two.',
+            'Close\tFact, quote, or photograph.'
+          ],
+          progressive: true,
+          notes: 'VARIATION — journey. Meta: this slide is the map of the gallery itself. Replace milestones with your session outline.'
+        },
+        {
+          type: 'image',
+          title: 'Leave them with a picture',
+          image: 'assets/brand/nu-london-skyline.png',
+          imageFit: 'cover',
+          design: { capStyle: 'scrim', capPos: 'bottom', logoGround: 'dark' },
+          notes: 'CLOSER — image. Same tool as the opener, different job: end on atmosphere and one line, not another bullet list.'
+        }
+      ]
+    },
+    {
+      key: 'pace-studio',
+      title: 'Studio sage · Openers, breakaways & a layout range',
+      icon: '✳',
+      blurb: 'Sage & ink look: curious title art, lilac section breaks, then a run of different teaching layouts. Same pacing idea as the NUL gallery — different skin.',
+      minutes: 12,
+      theme: 'studio',
+      slides: [
+        {
+          type: 'title',
+          title: 'Make space\nfor a pause.',
+          subtitle: 'A pacing gallery · Studio sage',
+          notes: 'OPENER — title. Studio hangs its own abstract art behind the pad. Word-leading: short lines, big type.'
+        },
+        {
+          type: 'quote',
+          body: 'Start with a sentence the room can repeat.',
+          subtitle: 'Then earn the bullets.',
+          notes: 'OPENER — quote as a soft first beat when you do not want a photograph.'
+        },
+        {
+          type: 'section',
+          title: 'First chapter',
+          subtitle: 'Breakaway — lilac ground, look up.',
+          notes: 'BREAKAWAY — section. In Studio this is the lilac full-bleed. Same job as NUL red: cut the hour into chapters.'
+        },
+        {
+          type: 'content',
+          title: 'Teach one move in this chapter',
+          bullets: [
+            'One claim the chapter is for.',
+            'One example that makes it concrete.\tKeep the second half after the tab short.',
+            'One check: ask the room before you go on.'
+          ],
+          progressive: true,
+          buildMode: 'dim',
+          notes: 'CONTENT — bullets with Build on Next (dim). Meat after the first breakaway.'
+        },
+        {
+          type: 'keywords',
+          title: 'Name the vocabulary',
+          bullets: [
+            'Opener\tTitle, image claim, introduction, or quote.',
+            'Breakaway\tSection slide — a breath between blocks.',
+            'Variation\tCards, split, journey, mind map — change the shape of the argument.'
+          ],
+          progressive: true,
+          notes: 'VARIATION — keywords. Term / definition rows after content, still inside chapter one.'
+        },
+        {
+          type: 'section',
+          title: 'Second chapter',
+          subtitle: 'Break again before you change shape.',
+          notes: 'BREAKAWAY — second section. Advance only when you are ready to change the kind of work the room is doing.'
+        },
+        {
+          type: 'mindmap',
+          title: 'What this chapter hangs on',
+          bullets: [
+            'Perception\tWhat they notice first.',
+            'Encoding\tHow the idea is shown.',
+            'Talk\tWhat they say out loud.',
+            'Check\tHow you know it landed.'
+          ],
+          progressive: true,
+          notes: 'VARIATION — mind map. Sibling ideas, no forced order — different from journey.'
+        },
+        {
+          type: 'cards',
+          title: 'Three finishes for a chapter',
+          bullets: [
+            'A key fact they can quote.',
+            'A photograph with one line.',
+            'A short poll or scale in the rail.'
+          ],
+          notes: 'VARIATION — cards. Numbered ideas; good before a closer.'
+        },
+        {
+          type: 'italics',
+          title: 'Phrases worth hearing twice',
+          bullets: [
+            'open hard\tSpend the first slide on the stake, not the agenda.',
+            'break often\tSection slides are the cut, not the decoration.',
+            'change the shape\tWhen the chapter changes, change the layout.'
+          ],
+          progressive: true,
+          notes: 'VARIATION — italics. Phrase + gloss. Teaching voice rather than vocabulary.'
+        },
+        {
+          type: 'section',
+          title: 'Close',
+          subtitle: 'One last breakaway — then send them out.',
+          notes: 'BREAKAWAY into the close. Optional; some rooms prefer to land on a keyfact or links instead.'
+        },
+        {
+          type: 'links',
+          title: 'Take these with you',
+          bullets: [
+            'Munzner — Visualization Analysis and Design\thttps://www.cs.ubc.ca/~tmm/vadbook/',
+            'FT Visual Vocabulary\thttps://github.com/Financial-Times/chart-doctor',
+            'Your module space\thttps://example.com/replace-me'
+          ],
+          notes: 'CLOSER — links. Practical hand-off. Replace the third row with your Canvas / module URL.'
+        }
+      ]
     }
   ];
 

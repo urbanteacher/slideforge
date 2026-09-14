@@ -1,0 +1,150 @@
+/* UK Black Tech, and UKBT Institute.
+
+   Two themes rather than one because they are two organisations sharing a
+   mark: the Institute is the education arm, and its decks sit on charcoal
+   where the parent sits on navy. Everything else — the green, the chevron,
+   the wave — is common, so the shared work is in .theme-ukbt-base and each
+   theme sets only its own ground.
+
+   The palette is taken from the organisation's own deck rather than guessed
+   from a screenshot. Backgrounds are the exact fills used on its slides, and
+   the green is sampled from the logo artwork inside it:
+
+     #00C57F  UKBT green        #264258  UK Black Tech navy
+     #282C2F  logo ink          #2D3134  UKBT Institute charcoal
+
+   The wave is generated rather than shipped. The original is a traced path
+   of 1.1 MB, which is most of a megabyte on every slide of every deck for a
+   texture nobody looks at directly; the same family of phase-shifted sines
+   draws in 38 KB and scales cleanly to any stage.
+
+   Both grounds are dark, which the organisation's decks are. That makes the
+   dark chart palette in app.css the correct one for them — see the selector
+   there, which names themes rather than detecting brightness. */
+
+.theme-ukbt,
+.theme-ukbt-institute {
+  --ukbt-green: #00c57f;
+  --ukbt-green-deep: #00a86c;
+  --ukbt-ink: #282c2f;
+  --ukbt-navy: #264258;
+  --ukbt-charcoal: #2d3134;
+
+  --s-fg: #ffffff;
+  --s-dim: rgba(255, 255, 255, .64);
+  --s-accent: #00c57f;
+  --s-accent-2: #ffffff;
+  --s-rule: rgba(255, 255, 255, .16);
+  --s-font: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+
+  color: var(--s-fg);
+  background: var(--s-bg);
+  position: relative;
+}
+
+.theme-ukbt {
+  --s-bg: #264258;
+  --s-card: rgba(255, 255, 255, .07);
+  --s-scrim: rgba(38, 66, 88, .78);
+}
+.theme-ukbt-institute {
+  --s-bg: #2d3134;
+  --s-card: rgba(255, 255, 255, .06);
+  --s-scrim: rgba(45, 49, 52, .78);
+}
+
+/* The wave sits under everything and is never the thing being read, so it is
+   a background layer on the slide rather than an element the layouts have to
+   make room for. preserveAspectRatio is none in the file, so it stretches to
+   whatever stage shape the deck is set to instead of letterboxing. */
+.theme-ukbt::before,
+.theme-ukbt-institute::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('../assets/brand/ukbt-waves.svg') center bottom / 100% 100% no-repeat;
+  pointer-events: none;
+  z-index: 0;
+}
+.theme-ukbt > *,
+.theme-ukbt-institute > * { position: relative; z-index: 1; }
+
+/* The chevron. One shape, drawn in CSS, used as the accent mark on the two
+   full-bleed layouts — the same gesture the logo opens with. */
+.ukbt-art {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.ukbt-art .ukbt-chevron {
+  position: absolute;
+  left: 60px;
+  top: 96px;
+  width: 92px;
+  height: 92px;
+  background: var(--ukbt-green);
+  clip-path: polygon(0 0, 46% 0, 100% 50%, 46% 100%, 0 100%, 54% 50%);
+}
+/* A single hairline under the heading, in the green, because the brand's own
+   slides separate the title from what follows with the accent rather than
+   with a box. */
+.theme-ukbt .layout-title h1,
+.theme-ukbt-institute .layout-title h1,
+.theme-ukbt .layout-section h1,
+.theme-ukbt-institute .layout-section h1 { letter-spacing: -.015em; }
+
+.theme-ukbt .layout-title .pad,
+.theme-ukbt-institute .layout-title .pad,
+.theme-ukbt .layout-section .pad,
+.theme-ukbt-institute .layout-section .pad { padding-left: 184px; }
+
+.theme-ukbt .accent-bar,
+.theme-ukbt-institute .accent-bar { background: var(--ukbt-green); height: 5px; width: 132px; border-radius: 3px; }
+
+/* Headings keep the wordmark's tight, slightly condensed feel; body stays
+   plain so a wall of teaching text is not fighting the display face. */
+.theme-ukbt h1, .theme-ukbt-institute h1 { font-weight: 800; letter-spacing: -.02em; }
+.theme-ukbt h2, .theme-ukbt-institute h2 { font-weight: 700; letter-spacing: -.01em; }
+
+/* The eyebrow above a title is the one place the green carries text. */
+.theme-ukbt .eyebrow, .theme-ukbt-institute .eyebrow,
+.theme-ukbt .sub, .theme-ukbt-institute .sub { color: var(--s-dim); }
+.theme-ukbt .layout-title .sub,
+.theme-ukbt-institute .layout-title .sub { color: var(--ukbt-green); font-weight: 600; letter-spacing: .01em; }
+
+/* Cards and quotes lift off the ground rather than sitting in a white box:
+   a white panel on a dark brand slide reads as a hole in the design. */
+.theme-ukbt .cards li, .theme-ukbt-institute .cards li,
+.theme-ukbt blockquote, .theme-ukbt-institute blockquote {
+  background: var(--s-card);
+  border: 1px solid var(--s-rule);
+  border-radius: 12px;
+}
+.theme-ukbt blockquote, .theme-ukbt-institute blockquote { border-left: 4px solid var(--ukbt-green); }
+
+/* Keyword leads and bullet marks take the green, which is the only colour
+   the brand uses to point at anything. */
+.theme-ukbt .kw-row strong, .theme-ukbt-institute .kw-row strong,
+.theme-ukbt .pad li::marker, .theme-ukbt-institute .pad li::marker { color: var(--ukbt-green); }
+
+/* The green is a signal colour, not a ground for text. app.css puts white on
+   var(--s-accent) in a handful of places — caption bands, the two reveal
+   toggles — which is fine for the dark accents other themes use and is about
+   2:1 on this green. Those surfaces take the logo ink instead, which is the
+   pairing the brand's own artwork uses. */
+.theme-ukbt .cap-bar,
+.theme-ukbt-institute .cap-bar,
+.theme-ukbt .fig-cap.cap-bar,
+.theme-ukbt-institute .fig-cap.cap-bar,
+.theme-ukbt .flip-toggle:hover,
+.theme-ukbt-institute .flip-toggle:hover,
+.theme-ukbt .flip-toggle[aria-expanded="true"],
+.theme-ukbt-institute .flip-toggle[aria-expanded="true"],
+.theme-ukbt .image-facts-toggle:hover,
+.theme-ukbt-institute .image-facts-toggle:hover,
+.theme-ukbt .image-facts-toggle[aria-expanded="true"],
+.theme-ukbt-institute .image-facts-toggle[aria-expanded="true"] { color: var(--ukbt-ink); }
+
+.theme-ukbt .cap-bar .cap-credit,
+.theme-ukbt-institute .cap-bar .cap-credit { color: var(--ukbt-ink); opacity: .7; }

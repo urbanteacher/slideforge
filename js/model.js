@@ -2575,7 +2575,11 @@
     combo: 1,
     radar: 1,
     bullet: 1,
-    scatter: 1
+    scatter: 1,
+    /* A dumbbell is two named series drawn as two coloured dots and nothing
+       else. Without the key, which end is which is only in a tooltip, and a
+       tooltip is not available to a room looking at a projector. */
+    dumbbell: 1
   };
   function chartUsesSeriesLegend(kind, seriesCount) {
     return (seriesCount == null ? 2 : seriesCount) > 1 && !!SERIES_LEGEND_KINDS[kind];
@@ -7721,6 +7725,8 @@
   var THEMES = {
     studio: { name: "Studio · Sage & ink", swatch: "#dce8cc" },
     northeastern: { name: "Northeastern London", swatch: "#c8102e" },
+    ukbt: { name: "UK Black Tech", swatch: "#264258" },
+    "ukbt-institute": { name: "UKBT Institute", swatch: "#2d3134" },
     midnight: { name: "Midnight", swatch: "#1b2a4a" },
     paper: { name: "Paper", swatch: "#f4f1ea" },
     ocean: { name: "Ocean", swatch: "#0d5c63" },

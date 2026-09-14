@@ -3550,6 +3550,12 @@
       if (deck.theme === 'studio') {
         art = el('div', 'studio-art');
         art.innerHTML = '<div class="art-orbit"></div><div class="art-tile">✳</div><div class="art-dot"></div><div class="art-caption">STAY CURIOUS.</div>';
+      } else if (deck.theme === 'ukbt' || deck.theme === 'ukbt-institute') {
+        /* One chevron, the gesture the wordmark opens with. The wave is a
+           background layer on every slide, so the only thing the full-bleed
+           layouts add is the mark. */
+        art = el('div', 'ukbt-art');
+        art.innerHTML = '<div class="ukbt-chevron"></div>';
       } else if (deck.theme === 'northeastern') {
         art = el('div', 'nu-art');
         art.innerHTML = '<div class="nu-skyline"></div><div class="nu-n"></div>';

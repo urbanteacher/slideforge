@@ -123,6 +123,9 @@ test('the series legend is an allowlist, not a growing exclusion list', () => {
   assert.equal(SF.chartUsesSeriesLegend('combo', 2), true);
   assert.equal(SF.chartUsesSeriesLegend('radar', 2), true);
   assert.equal(SF.chartUsesSeriesLegend('bullet', 2), true);
+  /* Two named series drawn as two coloured dots, with nothing else on the
+     row saying which is which. */
+  assert.equal(SF.chartUsesSeriesLegend('dumbbell', 2), true);
   /* One series: nothing to key. */
   assert.equal(SF.chartUsesSeriesLegend('bar', 1), false);
   /* Columns are not series on the drawing — pie/treemap/waffle/sankey. */
@@ -133,4 +136,8 @@ test('the series legend is an allowlist, not a growing exclusion list', () => {
     'From/To/Amount must not become a three-item legend');
   assert.equal(SF.chartUsesSeriesLegend('histogram', 2), false);
   assert.equal(SF.chartUsesSeriesLegend('box', 2), false);
+  /* Small multiples name each series on its own panel; a matrix colours an
+     ordinal scale, not a set of series. */
+  assert.equal(SF.chartUsesSeriesLegend('multiples', 2), false);
+  assert.equal(SF.chartUsesSeriesLegend('matrix', 2), false);
 });

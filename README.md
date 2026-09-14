@@ -262,7 +262,7 @@ two jobs from tangling.
 
 ### Presentation
 
-Layouts: Title, Section, Bullets, Keywords, Italics, Links, Dual, Cards, Table, Image, Video and the Game embed. Drag slides in the rail to reorder — the caret sits in the gap the slide will land in, and the rail scrolls itself when you drag towards an edge. Dragging is for a slide that has drifted a place or two; for anything further, pick the slide up with the ⠿ grip or `⌘X` and carry it while you scroll. `Home`, `End` and the arrows aim it, `Enter` drops it, `Esc` puts it back. `⌥↑`/`⌥↓` shuffle a slide along one place at a time, `⌥Home`/`⌥End` send it to the front or the end. For anything bigger than a nudge there is the **slide sorter** (`⌘G`, or the ▦ beside the slide count): the whole deck as a grid, so every move is a short drag with both ends in view. Slides can be picked in a group there — click, shift-click a run, ⌘-click to add or drop one — and dragged together, landing as a block in the order they had. `⌥` with the arrows moves the selection instead of changing it. Six themes provide deck defaults, with optional per-slide customisation.
+Layouts: Title, Section, Bullets, Keywords, Italics, Links, Dual, Cards, Table, Image, Video and the Game embed. Drag slides in the rail to reorder — the caret sits in the gap the slide will land in, and the rail scrolls itself when you drag towards an edge. Dragging is for a slide that has drifted a place or two; for anything further, pick the slide up with the ⠿ grip or `⌘X` and carry it while you scroll. `Home`, `End` and the arrows aim it, `Enter` drops it, `Esc` puts it back. `⌥↑`/`⌥↓` shuffle a slide along one place at a time, `⌥Home`/`⌥End` send it to the front or the end. For anything bigger than a nudge there is the **slide sorter** (`⌘G`, or the ▦ beside the slide count): the whole deck as a grid, so every move is a short drag with both ends in view. Slides can be picked in a group there — click, shift-click a run, ⌘-click to add or drop one — and dragged together, landing as a block in the order they had. `⌥` with the arrows moves the selection instead of changing it. Nine themes provide deck defaults, with optional per-slide customisation.
 
 Bullets are one per line; start a line with `- ` or indent it for a sub-bullet.
 Images take a URL or embed a local file (keep those under a few MB — browser
@@ -683,6 +683,14 @@ keystroke. Focus holds one series forward and pushes the rest back rather
 than removing them, so a room can be brought to one line and given the
 comparison back.
 
+**Keys appear where colour is the only label.** Which idioms get a series
+legend is an allowlist in `src/deck/content.js`, not an exclusion list — if a
+kind draws several named series as peers it is listed, and if it does not it is
+not. A Sankey reads `from, to, amount`, so listing its columns would name the
+input format as data; a dumbbell draws two named series as two coloured dots
+and nothing else, so without the key the only thing saying which end is which
+is a tooltip, and a tooltip is not available to a room looking at a projector.
+
 **Some of these answer back.** A pie or donut given several series says only
 the first is drawn. Stacked bars warn that negatives are left out of a total.
 A dumbbell given a third series says it drew two. A radar repeats its own
@@ -891,6 +899,66 @@ or a new layout cannot drift out of step — there is nothing to keep in sync. A
 `url()` background is the exception: that is the slide's own artwork and has no
 business being tiled into a panel beside it, so the rail falls back to the flat
 colour.
+
+### Brand themes
+
+Two of the nine themes are somebody else's brand rather than a mood, and they
+are built the same way: **Northeastern London**, and the pair **UK Black Tech**
+and **UKBT Institute**. Two UKBT themes rather than one because they are two
+organisations sharing a mark — the Institute is the education arm, and its
+decks sit on charcoal where the parent sits on navy. Everything else, the green
+and the chevron and the wave, is common, so `css/ukbt.css` holds the shared work
+once and each theme sets only its own ground.
+
+The palette is taken from the organisation's own deck rather than sampled off a
+screenshot: `#00C57F` green from the logo artwork inside it, `#264258` navy and
+`#2D3134` charcoal from the slide fills themselves.
+
+**The wave is generated, not shipped.** The original is a traced path of 1.1 MB,
+which is most of a megabyte on every slide of every deck for a texture nobody
+looks at directly. `assets/brand/ukbt-waves.svg` draws the same family of
+phase-shifted sines in 38 KB, with `preserveAspectRatio="none"` so it stretches
+to whatever stage shape the deck is set to instead of letterboxing.
+
+**No logo file ships with either theme.** The UKBT brand deck composes its
+lockup from a partial image plus live text on a white ground, so what can be
+extracted from it is a fragment on a white rectangle — worse on a dark slide
+than no logo at all. Both ready-made lessons say so in their opening note: drop
+the official file in under Deck settings → Logo and it appears on every slide.
+The green chevron on the title and section slides is the theme's own mark, not
+a stand-in for the logo.
+
+**Where a green accent is not a ground for text.** `css/app.css` puts white on
+`var(--s-accent)` in a handful of places — caption bands, the two reveal
+toggles — which is fine for the darker accents the other themes use and is
+about 2:1 on this green. Those surfaces take the logo ink instead, which is the
+pairing the brand's own artwork uses.
+
+**Both grounds are dark**, which is what the organisation's decks are, so the
+dark chart palette in `css/app.css` is the correct one for them. That selector
+names themes rather than detecting brightness — a new dark theme has to be
+added to it, which is the sixth of the places a theme is registered.
+
+### Ready-made lessons
+
+`js/lessons.js` is content, not engine: a lesson is a plain object, and adding
+one is adding an entry to an array. Six ship today.
+
+| Lesson | Theme | For |
+| --- | --- | --- |
+| The art of paying attention | Studio | A six-slide teach → check → discuss sequence |
+| Start with what you remember | Studio | A retrieval-practice opener |
+| LDSCI6253 Advanced Information Presentation & Visualisation | Northeastern London | The real lecture, 74 slides |
+| Layout bank | Northeastern London | One of every layout, as a reference to copy from |
+| UK Black Tech — building the pipeline | UK Black Tech | A community talk on representation and retention |
+| UKBT Institute — a teaching session, end to end | UKBT Institute | Recall → teach → practise → check → reflect, as a shell |
+
+The two UKBT decks are templates with real bones and replaceable content. Every
+chart in the pipeline talk carries **sample figures**, and says so in the slide
+title on the projector rather than only in the speaker notes — a plausible
+diversity statistic is exactly the thing that gets quoted from a slide and then
+cannot be sourced. The notes name where the real numbers come from, and the
+closing slide lists what to replace before presenting.
 
 ### How much room the room gets — `S`
 

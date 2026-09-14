@@ -784,7 +784,8 @@ html[data-ws="game"] #btnSorter { display: none; }
 }
 /* Dark grounds take their own steps from the same hues, validated against a
    dark surface — not an automatic lightening of the light set. */
-.slide.theme-midnight, .slide.theme-ocean, .slide.theme-ember, .slide.theme-mono {
+.slide.theme-midnight, .slide.theme-ocean, .slide.theme-ember, .slide.theme-mono,
+.slide.theme-ukbt, .slide.theme-ukbt-institute {
   --chart-1: #CA042C;
   --chart-2: #049F6C;
   --chart-3: #B84701;
@@ -804,6 +805,12 @@ html[data-ws="game"] #btnSorter { display: none; }
 /* Text wears text tokens, never the series colour. */
 .ch-tick, .ch-cat { fill: var(--s-dim); font-size: 19px; }
 .ch-value { fill: var(--s-fg); font-size: 20px; font-weight: 650; }
+/* Pictogram icons are glyphs, and an SVG <text> with no fill is black — which
+   is the look on a light ground and invisible on a dark one. They take the
+   text colour rather than a series colour: there is only ever one series in
+   this form, so a palette step would say nothing, and ISOTYPE draws its
+   figures in ink. */
+.ch-icon { fill: var(--s-fg); }
 .ch-end { fill: var(--s-dim); font-size: 19px; font-weight: 600; }
 .ch-slice-label { fill: var(--s-fg); font-size: 19px; font-weight: 600; }
 /* The 2px surface ring that keeps a marker legible where two lines cross. */
