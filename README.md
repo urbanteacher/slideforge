@@ -43,6 +43,8 @@ lesson the app ships**. A browser that opened a lesson last week keeps showing
 last week's copy, with nothing on screen to say so — a stale deck reads as
 missing slides, not as a stale deck.
 
+- The header says where the work is — **Saved in this browser**, never the bare
+  word *Saved*. Click it to export a copy you can keep.
 - **Lecture setup → Reload … from this version of the app** rebuilds it and keeps your work.
 - Storage is **per-origin**: `file://` and `http://localhost:8787` and a hosted
   address are three separate libraries.
@@ -627,6 +629,85 @@ The loaded ones are coloured; the rest are quiet. **Reports → Pace &
 confidence** is the same information after the fact, with the signals grouped
 by the slide they came from.
 
+### Working in a long deck
+
+A lecture is not six slides. Past about forty the rail stops answering
+"where did I say that", because the thumbnails stop being distinguishable.
+These exist for decks that size.
+
+| Want to | Do |
+| --- | --- |
+| Find a slide | `⌘F` — searches slide text **and speaker notes**, and shows the line that matched so a list of hits is choosable without opening each one |
+| Rename something everywhere | `⌘F`, then **Replace** at the foot of the results |
+| Keep a slide but not show it | `H`, or the eye in the rail beside the slide number |
+| Send the room to another slide | put `slide:12` in the link field instead of a web address |
+| Put a screenshot on a slide | `⌘V` |
+| Move between slides | `←` `→` or `↑` `↓` — the rail runs down the page, but a deck is a sequence |
+
+**Hiding** keeps a slide in the deck and out of the show. It is dropped from
+the presentation, the presenter view, the live wall and the student handout —
+all four, because they are built from one list. Printing what the class never
+saw is the more surprising of the two outcomes, and the handout is what gets
+marked against. The rail then reads *73 of 74*, since a lecturer planning a
+timing needs the second number.
+
+**Replace** goes through the same rebase the inspector uses, so bold, colour
+and links stay on the words they were put on. Quiz options and game names are
+left alone on purpose: other things match on those, and rewriting them from a
+find box would break those links silently. One `⌘Z` puts a replace back.
+
+**A slide link** is resolved by slide id, not by counting. The number you
+write is the number in the deck, but the room is watching a show where games
+have expanded into their questions and hidden slides are gone — so slide 65
+may be the 69th thing on the wall. A link to a hidden slide goes nowhere,
+which is honest: it is not in the lesson being shown.
+
+**Pasting** works on the slide kinds that have somewhere to put a picture. It
+stays out of the way when the cursor is in a text field, so pasting text into
+a text box is still pasting text into a text box. A pasted screenshot is
+stored inside the deck, so the 3.5 MB warning applies to it as much as to an
+uploaded file.
+
+### Before the lecture
+
+**⚑ Lecture setup** in the header holds the two things that go wrong between
+a working app and a working lecture, neither of which is a fault:
+
+- **Wake the server.** A hosted free instance sleeps when idle and takes the
+  better part of a minute to answer the first request — which is the moment
+  the first phone scans the code. Offered only when there is something to
+  wake. It reports whether it was asleep or already up.
+- **Reload this lesson from this version of the app.** A browser restores the
+  deck it had last time, so a laptop that opened the lesson before the app was
+  updated keeps showing the older copy with nothing on screen to say so. This
+  rebuilds it and leaves your copy in File → Open.
+- **Clear everything saved in this browser**, for when the browser itself is
+  the problem. It asks first and says how many documents it will take, because
+  it takes your own decks too — the reload above fixes the common case without
+  deleting anything.
+
+It also lists the join page and the app's own address, for a phone that cannot
+scan.
+
+### Clips that stop
+
+A video slide can start partway in and stop at a time. Starting was always
+half of showing a clip in a lecture; the other half is not running into
+whatever follows while the room watches.
+
+YouTube stops itself. Vimeo and a file served next to the deck have no such
+setting, so the slide watches the clock and **pauses** rather than ends — the
+last frame stays up, which is usually the thing being discussed. If a clip is
+set to loop, looping wins. A stop time earlier than the start is ignored
+rather than obeyed, because obeying it plays nothing and looks like a broken
+file.
+
+YouTube, `youtu.be` and Vimeo links are recognised and embedded; a `t=` in a
+"share at current time" link is read as the start unless the slide sets one.
+YouTube is framed through `youtube-nocookie.com`, which sets no tracking
+cookie until the clip is actually played — the right default for a room of
+students who did not choose to be there.
+
 ### What the rail shows, and when
 
 The rail is the one thing on screen for the whole lesson, so it carries
@@ -1078,8 +1159,12 @@ In solo mode, unanswered multiple-choice questions use A–F as answers. During 
 
 **In the editors**
 
-`⌘S` save · `⌘↵` run · `⌘E` switch engine · `⌘D` duplicate · `↑`/`↓` move
-selection · `Backspace` delete
+`⌘S` save · `⌘↵` run · `⌘E` switch engine · `⌘D` duplicate ·
+`↑`/`↓` or `←`/`→` move selection · `Backspace` delete
+
+`⌘F` find in the deck (and replace, from the results) · `H` hide the selected
+slide from the show, keeping it in the deck · `⌘V` paste a screenshot onto the
+slide
 
 Reordering slides: `⌥↑`/`⌥↓` move the selected slide one place ·
 `⌥Home`/`⌥End` send it to the front or the end · `⌘X` pick it up to carry,
