@@ -1207,6 +1207,7 @@
         draw2();
       }), 'Sets the default colours for the presentation. Customise this slide can override text and background colours.'));
       drawLogoFields(bodyEl, draw2);
+      drawAspect(bodyEl, draw2);
       drawEnding(bodyEl, draw2);
       drawAiSettings(bodyEl, draw2);
       drawReadiness(bodyEl);
@@ -1230,6 +1231,26 @@
    * @param {HTMLElement} body   settings panel
    * @param {function} draw2     redraw the panel
    */
+  /* The shape of the stage. In deck settings, not per slide: a deck whose
+     slides disagreed about their own proportions would letterbox differently
+     from one slide to the next, which reads as the projector losing sync. */
+  function drawAspect(body, draw2) {
+    var current = (SF.ASPECTS && SF.ASPECTS[deck.aspect]) ? deck.aspect : '16:9';
+    var opts = Object.keys(SF.ASPECTS || { '16:9': 1 }).map(function (k) {
+      return { value: k, label: SF.ASPECTS[k].label };
+    });
+    body.appendChild(UI.field('Slide shape', UI.select(opts, current, function (v) {
+      deck.aspect = v;
+      touched();
+      draw2();
+      draw();
+    }),
+      current === '16:9'
+        ? 'What most projectors and every laptop want.'
+        : 'Slides keep their width and gain height, so nothing you have written moves — ' +
+          'there is simply more room under it. Check a busy slide before you teach.'));
+  }
+
   function drawEnding(body, draw2) {
     var games = deck.slides.filter(function (s) { return s.type === 'game'; });
     if (!games.length) return;

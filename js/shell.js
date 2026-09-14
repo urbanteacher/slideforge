@@ -818,10 +818,9 @@
        working lecture, none of which is a bug and all of which look like one
        from the back of the room.
 
-       Deliberately not under the document cog: none of this is a property of
-       the deck, and a panel that mixes "what this lesson looks like" with
-       "is the server awake" teaches nobody where to look. Not under File
-       either — none of it is a file.
+       Lives as ⚙ beside File, not inside the document menu and not among
+       Present / Host live: none of this is a property of the deck, and mixing
+       "is the server awake" with the show controls teaches nobody where to look.
 
        The addresses listed are the ones the app can work out for itself.
        Accounts and dashboards are not here on purpose: they are personal to

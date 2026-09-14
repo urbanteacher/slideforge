@@ -309,6 +309,8 @@ export interface Deck {
   showSlideNumbers: boolean;
   /** Close the lesson on the scores. Off by default. */
   finalScores: boolean;
+  /** Stage shape: '16:9' (default), '16:10' or '4:3'. Width is always 1280. */
+  aspect: '16:9' | '16:10' | '4:3';
   logo: string;
   logoOn: 'none' | 'title' | 'all';
   logoSize?: 'small' | 'medium' | 'large';

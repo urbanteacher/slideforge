@@ -453,7 +453,7 @@ html[data-ws="game"] #btnSorter { display: none; }
 .slide {
   --sf-scale: 1;
   position: absolute; inset: 0;
-  width: 1280px; height: 720px;
+  width: 1280px; height: var(--slide-h, 720px);
   overflow: hidden;
   font-family: var(--s-font);
   background: var(--s-bg);

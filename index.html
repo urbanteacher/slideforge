@@ -25,13 +25,13 @@ html:not([data-ready]) #app { visibility: hidden; }
 /* Same cream the studio chrome uses once CSS loads — avoids a dark→light blink. */
 html:not([data-ready]) body { background: #f0f1ed; }
 </style>
-<link rel="stylesheet" href="css/app.css?v=17">
+<link rel="stylesheet" href="css/app.css?v=18">
 <link rel="stylesheet" href="css/board-common.css?v=1">
 <link rel="stylesheet" href="css/memory.css?v=2">
 <link rel="stylesheet" href="css/bingo.css?v=2">
 <link rel="stylesheet" href="css/bowl.css?v=2">
 <link rel="stylesheet" href="css/lowstakes.css?v=2">
-<link rel="stylesheet" href="css/studio.css?v=2">
+<link rel="stylesheet" href="css/studio.css?v=3">
 <link rel="stylesheet" href="css/northeastern.css?v=7">
 <link rel="stylesheet" href="css/customize.css?v=2">
 <link rel="stylesheet" href="css/lesson-moments.css?v=2"><link rel="stylesheet" href="css/game-polish.css?v=1">
@@ -93,13 +93,13 @@ html:not([data-ready]) body { background: #f0f1ed; }
       <button class="btn" id="btnExport">Export file</button>
       <button class="btn" id="btnImport">Import file</button>
     </div></details>
+    <button class="btn" id="btnLectureReady" title="Lecture setup — wake the server, refresh this browser’s copy, join addresses" aria-label="Lecture setup">⚙</button>
 
     <span class="spacer"></span>
 
     <div class="header-actions">
     <button class="btn" id="btnReports">Reports</button>
     <button class="btn" id="btnHelp" title="Keyboard shortcuts">?</button>
-    <button class="btn" id="btnLectureReady" title="Wake the server, refresh this browser's copy, and the addresses you need">⚑ Lecture setup</button>
     <button class="btn" data-ws="deck" id="btnPresenter" title="Private presenter workspace: slides, live answers and teaching tools (D)">Presenter</button>
     <button class="btn" data-ws="deck" id="btnRehearse" title="Dry-run the whole lesson with a SAMPLE class — slides, games and polls, no phones needed">▷ Rehearse lesson</button>
     <button class="btn live" id="btnLive" title="Run live with phones in the room">◉ Host live</button>
@@ -317,7 +317,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
      accept filter covers every export this app produces. -->
 
 <script src="js/qr.js?v=2"></script>
-<script src="js/model.js?v=8"></script>
+<script src="js/model.js?v=9"></script>
 <script src="js/playbook.js?v=2"></script>
 <script src="js/ask.js?v=2"></script>
 <script src="js/race.js?v=2"></script>
@@ -325,7 +325,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/lessons.js?v=17"></script>
 <script src="js/customize.js?v=5"></script>
 <script src="js/explore.js?v=1"></script>
-<script src="js/render.js?v=17"></script>
+<script src="js/render.js?v=18"></script>
 <script src="js/memory.js?v=2"></script>
 <script src="js/bingo.js?v=2"></script>
 <script src="js/bowl.js?v=2"></script>
@@ -339,9 +339,9 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/lesson-moments.js?v=2"></script>
 <script src="js/print.js?v=2"></script>
 <script src="js/history.js?v=1"></script>
-<script src="js/shell.js?v=14"></script>
+<script src="js/shell.js?v=15"></script>
 <script src="js/content-tools.js?v=2"></script>
-<script src="js/editor.js?v=12"></script>
+<script src="js/editor.js?v=13"></script>
 <script src="js/games.js?v=8"></script>
 <script src="js/studio.js?v=3"></script>
 <script src="js/activities.js?v=2"></script>

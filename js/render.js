@@ -56,6 +56,26 @@
     }
   };
 
+  /* Which deck's shape an element is being drawn at. The player's deck when
+     a show is running, the editor's otherwise — and 16:9 when neither is up,
+     which is the rail thumbnail during load. Read rather than threaded
+     through every layout, because the shape is a property of the document
+     and not of the slide being drawn. */
+  /* Stamped on the element rather than set globally: the rail, the preview
+     and the wall are on screen together, and a variable on :root would make
+     a thumbnail change shape because the show did. */
+  function stampAspect(slideEl, deck) {
+    var h = SF.slideHeight(deck);
+    slideEl.style.setProperty('--slide-h', h + 'px');
+    if (h !== SF.SLIDE_H) slideEl.dataset.aspect = (deck && deck.aspect) || '16:9';
+  }
+
+  function deckOf(node) {
+    if (SF.Player && SF.Player.open && SF.Player.deck) return SF.Player.deck;
+    if (SF.Editor && SF.Editor.deck) { try { return SF.Editor.deck(); } catch (e) {} }
+    return null;
+  }
+
   function rich(tag, cls, slide, key, text) {
     var n = el(tag, cls, text);
     n.dataset.contentKey=key;
@@ -2330,6 +2350,7 @@
     opts = opts || {};
     var root = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-' + slide.type);
     root.dataset.slideId = slide.id;
+    stampAspect(root, deck);
     if (slide.activity) {
       root.classList.add('activity-slide');
       var view = slide.activityPresentation;
@@ -2461,7 +2482,11 @@
       retryWhenSized(box, slideEl);
       return;
     }
-    var scale = Math.min(bw / SF.SLIDE_W, bh / SF.SLIDE_H);
+    /* The element already carries its shape from renderSlide, so read it
+         back rather than guessing which deck it came from. */
+    var stamped = Number(String(slideEl.style.getPropertyValue('--slide-h') || '').replace('px', ''));
+    var slideH = stamped > 0 ? stamped : SF.slideHeight(deckOf(slideEl));
+    var scale = Math.min(bw / SF.SLIDE_W, bh / slideH);
     slideEl.style.setProperty('--sf-scale', String(scale));
     /* Also on the box, because the live overlays that sit beside the slide
        rather than inside it — the Q&A cue — have to keep clear of things
@@ -2469,7 +2494,7 @@
     box.style.setProperty('--sf-scale', String(scale));
     slideEl.style.transform = 'scale(' + scale + ')';
     slideEl.style.left = ((bw - SF.SLIDE_W * scale) / 2) + 'px';
-    slideEl.style.top = ((bh - SF.SLIDE_H * scale) / 2) + 'px';
+    slideEl.style.top = ((bh - slideH * scale) / 2) + 'px';
     slideEl.style.right = 'auto';
     slideEl.style.bottom = 'auto';
     slideEl.style.position = 'absolute';
@@ -2498,9 +2523,12 @@
   /** Size a viewport box to the largest 16:9 rect fitting the window. */
   function letterbox(viewport) {
     var w = window.innerWidth, h = window.innerHeight;
-    var scale = Math.min(w / SF.SLIDE_W, h / SF.SLIDE_H);
+    var inner = viewport.querySelector('.slide');
+    var innerH = inner ? Number(String(inner.style.getPropertyValue('--slide-h') || '').replace('px', '')) : 0;
+    var vh = innerH > 0 ? innerH : SF.slideHeight(deckOf(viewport));
+    var scale = Math.min(w / SF.SLIDE_W, h / vh);
     viewport.style.width = Math.floor(SF.SLIDE_W * scale) + 'px';
-    viewport.style.height = Math.floor(SF.SLIDE_H * scale) + 'px';
+    viewport.style.height = Math.floor(vh * scale) + 'px';
     return scale;
   }
 

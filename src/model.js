@@ -50,6 +50,24 @@ var SLIDE_W = 1280;
 
 var SLIDE_H = 720;
 
+/* A stage is 1280 wide whatever shape it is, and the shape is set by its
+   height. Width is held constant on purpose: every layout in the app is
+   composed against 1280, so varying it would reflow seventy slides, while
+   varying the height only ever hands them more room than they were drawn
+   for. 16:9 is the default and what a modern projector wants; 4:3 is still
+   what a good many lecture theatres have bolted to the ceiling. */
+var ASPECTS = {
+  '16:9': { h: 720, label: '16:9 — widescreen, most projectors' },
+  '16:10': { h: 800, label: '16:10 — a little taller, common on laptops' },
+  '4:3': { h: 960, label: '4:3 — older lecture-theatre projectors' }
+};
+
+/** The stage height this deck presents at. */
+function slideHeight(deck) {
+  var a = deck && ASPECTS[deck.aspect];
+  return a ? a.h : SLIDE_H;
+}
+
 var THEMES = {
   studio: { name: 'Studio · Sage & ink', swatch: '#dce8cc' },
   northeastern: { name: 'Northeastern London', swatch: '#c8102e' },
@@ -303,6 +321,8 @@ function makeDeck(title) {
        anyone leaves. Off by default: a deck that ends on a reflection slide
        should keep ending there unless the teacher asks otherwise. */
     finalScores: false,
+    /* '16:9' | '16:10' | '4:3' — see ASPECTS. */
+    aspect: '16:9',
     logo: '',
     logoOn: 'none', // 'none' | 'title' | 'all'
     quiz: makeQuizConfig(),
@@ -438,6 +458,7 @@ function normalizeDeck(raw) {
   if (!d.slides.length) d.slides = [makeSlide('title')];
   d.showSlideNumbers = d.showSlideNumbers !== false;
   d.finalScores = d.finalScores === true;
+  d.aspect = ASPECTS[d.aspect] ? d.aspect : '16:9';
   d.logo = String(d.logo || '');
   /* Who the deck belongs to. A theme may print it; none may invent it. */
   d.org = String(d.org || '');
@@ -1121,6 +1142,8 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   Activities: { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes },
   SLIDE_W: SLIDE_W,
   SLIDE_H: SLIDE_H,
+  ASPECTS: ASPECTS,
+  slideHeight: slideHeight,
   THEMES: THEMES,
   TRANSITIONS: TRANSITIONS,
   TEAM_COLORS: TEAM_COLORS,
@@ -1227,4 +1250,4 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   GameStore: GameStore
 });
 
-export { SLIDE_W, SLIDE_H, THEMES, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, GAME_FORMAT_PRESETS, getShowcaseGame };
+export { SLIDE_W, SLIDE_H, ASPECTS, slideHeight, THEMES, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, GAME_FORMAT_PRESETS, getShowcaseGame };
