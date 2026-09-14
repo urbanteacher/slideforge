@@ -321,6 +321,19 @@
     if (!quiet) SF.toast('Saved to this browser');
   }
 
+  /* "14 minutes ago" is what someone is looking for in this list; an ISO
+     timestamp makes them do arithmetic to find the version from before
+     lunch. Falls back to a date once the relative form stops being useful. */
+  function when(at) {
+    var secs = Math.max(0, Math.round((Date.now() - at) / 1000));
+    if (secs < 45) return 'Just now';
+    var mins = Math.round(secs / 60);
+    if (mins < 60) return mins + (mins === 1 ? ' minute ago' : ' minutes ago');
+    var hrs = Math.round(mins / 60);
+    if (hrs < 8) return hrs + (hrs === 1 ? ' hour ago' : ' hours ago');
+    return new Date(at).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  }
+
   /** Engines call this from their debounced save path. */
   function touch() {
     if (active) active._dirty = true;
@@ -910,6 +923,11 @@
                 confirm: 'Delete them',
                 danger: true
               }, function () {
+                /* One last copy of what is open, so "clear everything" is
+                   survivable by the document the lecturer was actually in. */
+                if (SF.History && SF.History.ready() && active && active.doc) {
+                  SF.History.snapshot(active.doc(), 'Before clearing this browser');
+                }
                 /** @type {string[]} */
                 var keys = [];
                 for (var i = 0; i < localStorage.length; i++) {
@@ -943,6 +961,58 @@
         if (menu) menu.open = false;
         if (SF.Editor && SF.Editor.findInDeck) SF.Editor.findInDeck();
         else SF.toast('Open a presentation to search it.');
+      };
+    }
+
+    /* Restore points. Hidden rather than disabled where IndexedDB is not
+       available — a greyed-out menu item is a question nobody can answer. */
+    var btnHistory = $('btnHistory');
+    if (btnHistory) {
+      if (!(SF.History && SF.History.ready())) btnHistory.hidden = true;
+      else btnHistory.onclick = function () {
+        if (active.flush) active.flush();
+        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
+        if (menu) menu.open = false;
+        var doc = active.doc();
+        SF.History.list(doc.id).then(function (rows) {
+          if (!rows.length) {
+            SF.toast('No earlier versions of this one yet. One is kept before anything that rewrites the document.');
+            return;
+          }
+          picker({
+            title: 'Earlier versions of “' + (doc.title || 'this document') + '”',
+            wide: true,
+            items: function () {
+              return rows.map(function (r) {
+                return { id: String(r.id), title: r.label + ' · ' + when(r.at),
+                  blurb: r.slides + (r.slides === 1 ? ' slide' : ' slides') +
+                    (r.title && r.title !== doc.title ? ' · titled “' + r.title + '”' : '') };
+              });
+            },
+            describe: function (it) { return it.blurb; },
+            onPick: function (it) {
+              var row = rows.filter(function (r) { return String(r.id) === it.id; })[0];
+              SF.ask({
+                title: 'Restore this version?',
+                detail: 'Opens “' + (row.title || doc.title) + '” as it was ' + when(row.at).toLowerCase() +
+                  ', with ' + row.slides + (row.slides === 1 ? ' slide' : ' slides') +
+                  '. The version you have now is kept first, so this is reversible.',
+                confirm: 'Restore it'
+              }, function () {
+                SF.History.snapshot(active.doc(), 'Before restoring').then(function () {
+                  return SF.History.get(row.id);
+                }).then(function (old2) {
+                  if (!old2) { SF.toast('That version could not be read.'); return; }
+                  active.setDoc(active.key === 'game' ? SF.normalizeGame(old2) : SF.normalizeDeck(old2));
+                  active.store.save(active.doc());
+                  syncChrome();
+                  if (active.draw) active.draw();
+                  SF.toast('Restored. The version you were on is in this list as “Before restoring”.');
+                });
+              });
+            }
+          });
+        });
       };
     }
 

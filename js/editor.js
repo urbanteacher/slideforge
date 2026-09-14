@@ -379,6 +379,10 @@
   var REPLACE_KEYS = ['title', 'subtitle', 'body', 'notes', 'quote', 'attribution'];
 
   function replaceEverywhere(term, next) {
+    /* Before, not after. A replace across seventy slides is the one edit in
+       this editor that cannot be eyeballed, and undo only helps the person
+       who notices within the session. */
+    if (SF.History && SF.History.ready()) SF.History.snapshot(deck, 'Before replacing “' + term + '”');
     var q = String(term), to = String(next);
     var slides = 0, hits = 0;
     deck.slides.forEach(function (s) {
@@ -2719,7 +2723,11 @@
       inspectorTab = 'content'; touched(); draw();
     },
     useLesson: function (key) {
-      flush(); SF.Store.save(deck); deck = SF.Studio.makeLesson(key); sel = 0;
+      flush(); SF.Store.save(deck);
+      if (SF.History && SF.History.ready() && (deck.slides || []).length) {
+        SF.History.snapshot(deck, 'Before opening another lesson');
+      }
+      deck = SF.Studio.makeLesson(key); sel = 0;
       SF.Store.save(deck); SF.Shell.syncChrome(); draw();
     },
     deck: function () { return deck; },
