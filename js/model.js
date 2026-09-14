@@ -7387,9 +7387,9 @@
       label: "Correlation",
       question: "Do two things move together?",
       note: "Be mindful that readers will often assume the relationship you show is causal.",
-      kinds: ["scatter", "combo"],
-      home: ["scatter"],
-      missing: ["bubble", "connected scatterplot", "XY heatmap"]
+      kinds: ["scatter", "combo", "matrix"],
+      home: ["scatter", "matrix"],
+      missing: ["bubble", "connected scatterplot", "numeric XY heatmap"]
     },
     {
       key: "distribution",
@@ -7423,7 +7423,7 @@
       label: "Ranking",
       question: "What is the order?",
       note: "Use where position matters more than the value itself. Sort it, and label the points of interest.",
-      kinds: ["hbar", "bar"],
+      kinds: ["hbar", "bar", "dumbbell"],
       home: ["hbar"],
       missing: ["ordered proportional symbol", "dot strip", "slope", "lollipop", "bump"]
     },
@@ -7450,8 +7450,8 @@
       label: "Deviation",
       question: "How far from a baseline?",
       note: "Variation above and below a fixed reference — a target, a long-run average, zero.",
-      kinds: ["bullet"],
-      home: ["bullet"],
+      kinds: ["bullet", "dumbbell"],
+      home: ["bullet", "dumbbell"],
       missing: ["diverging bar", "diverging stacked bar", "spine", "surplus/deficit filled line"]
     },
     {
@@ -7789,7 +7789,9 @@
       "treemap",
       "bullet",
       "combo",
-      "waffle"
+      "waffle",
+      "dumbbell",
+      "matrix"
     ].indexOf(s.chartKind) >= 0 ? s.chartKind : "bar";
     s.chartSource = String(s.chartSource || "").trim().slice(0, 200);
     if (!s.chartSource) delete s.chartSource;
