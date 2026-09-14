@@ -681,6 +681,7 @@
                 ' V' + (y + hgt) + ' Z';
         var path = svgEl('path', { d: d, fill: chartColor(si) });
         g.appendChild(path);
+        g.setAttribute('data-series', String(si));
         if (n === 1) {
           var val = svgEl('text', { x: x + barW / 2, y: y - 12, class: 'ch-value', 'text-anchor': 'middle' });
           val.textContent = fmt(v);
@@ -741,6 +742,7 @@
         var y = P.padT + plotH - (run + hgt) / 1 * 1 - 0;
         y = P.padT + plotH - ((run + v) / max) * plotH;
         var g = svgEl('g', { class: 'ch-bar' });
+        g.setAttribute('data-series', String(si));
         g.appendChild(svgEl('rect', { x: x, y: y, width: barW, height: Math.max(0, hgt), fill: chartColor(si) }));
         /* Only where the band is deep enough to hold it; a number printed
            over a 6px sliver is unreadable and looks like a mistake. */
@@ -806,6 +808,7 @@
         var wdt = Math.max(0, (v / max) * plotW);
         var y = y0 + si * (barH + 2);
         var g = svgEl('g', { class: 'ch-bar' });
+        g.setAttribute('data-series', String(si));
         g.appendChild(svgEl('rect', { x: padL, y: y, width: wdt, height: barH, rx: Math.min(4, barH / 2), fill: chartColor(si) }));
         if (n === 1) {
           var val = svgEl('text', { x: padL + wdt + 10, y: y + barH / 2 + 6, class: 'ch-value' });
@@ -859,7 +862,7 @@
 
     var ends = [];
     data.series.forEach(function (s, si) {
-      var g = svgEl('g', { class: 'ch-line', 'data-step': si });
+      var g = svgEl('g', { class: 'ch-line', 'data-step': si, 'data-series': String(si) });
       var pts = [];
       s.values.forEach(function (v, i) { if (v != null) pts.push([xAt(i), yAt(v)]); });
       if (!pts.length) return;
@@ -972,6 +975,20 @@
     var KINDS = ['bar', 'stack', 'hbar', 'line', 'area', 'pie', 'donut'];
     var kind = KINDS.indexOf(slide.chartKind) >= 0 ? slide.chartKind : 'bar';
     var wrap = el('div', 'chart-wrap chart-' + kind);
+    var design = slide.design || {};
+    /* Motion is a projector behaviour, like the image slow-zoom: the editor
+       preview stays still so an author is not watching things fly in every
+       time they change a number. */
+    if (design.chartMotion === 'grow') wrap.classList.add('ch-motion');
+    /* Focus dims rather than removes. The comparison the chart was drawn for
+       is still on the slide, a shade back, so the room can be brought to one
+       series and then returned to all of them without the picture changing
+       shape underneath them. */
+    if (design.chartFocus != null && Number.isInteger(Number(design.chartFocus))) {
+      wrap.classList.add('ch-focused');
+      wrap.style.setProperty('--ch-focus', String(Number(design.chartFocus)));
+      wrap.dataset.focus = String(Number(design.chartFocus));
+    }
     var stepOf = function (si, ci) { return data.series.length > 1 ? si : ci; };
     var svg = kind === 'line' ? lineChart(data, slide, false)
             : kind === 'area' ? lineChart(data, slide, true)
@@ -995,9 +1012,39 @@
     svg.insertBefore(title, svg.firstChild);
     wrap.appendChild(svg);
     pad.appendChild(wrap);
+    /* A line draws itself by walking its own dash offset, which needs the
+       real length of the path — a guessed dasharray leaves a short series
+       finished before it starts and a long one still going after the
+       animation ends. Measured once the path is in the document, and only
+       when the motion is actually on. */
+    if (wrap.classList.contains('ch-motion')) {
+      Array.prototype.forEach.call(svg.querySelectorAll('.ch-line path'), function (path) {
+        var len = 0;
+        try { len = path.getTotalLength(); } catch (e) { len = 0; }
+        if (len > 0) path.style.setProperty('--ch-len', Math.ceil(len) + '');
+      });
+    }
+
+    /* Dim everything that is not the series being isolated. Decided here
+       because the focused index is a number on the slide and a stylesheet
+       cannot compare an attribute against it. The legend follows the marks,
+       or it would go on claiming equal billing for a series that has been
+       pushed back. */
+    if (wrap.classList.contains('ch-focused')) {
+      var want = String(Number(design.chartFocus));
+      Array.prototype.forEach.call(svg.querySelectorAll('[data-series]'), function (n) {
+        n.classList.toggle('ch-dim', n.getAttribute('data-series') !== want);
+      });
+    }
 
     var key = chartKey(data, slide);
     if (key.childNodes.length) pad.appendChild(key);
+    if (wrap.classList.contains('ch-focused')) {
+      var wantK = Number(design.chartFocus);
+      Array.prototype.forEach.call(key.querySelectorAll('.ck-item'), function (n, i) {
+        n.classList.toggle('ch-dim', i !== wantK);
+      });
+    }
     /* Present for screen readers and for anyone the colours fail; off-screen
        rather than absent, so the numbers are never gated behind the hues. */
     var tbl = chartTable(data);

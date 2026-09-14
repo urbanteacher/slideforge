@@ -262,6 +262,31 @@
         change();
       }),'On the projector only. Zooms toward the Image focus point below.'));
     }
+    /* Chart motion and focus, on design beside image motion and for the same
+       reason: both are how a slide behaves rather than what it says, and a
+       chart that grows out of its own axis is the same kind of decision as a
+       picture that drifts. */
+    if(s.type==='chart'){
+      box.appendChild(UI.field('Chart motion',UI.select([
+        {value:'',label:'Already drawn'},
+        {value:'grow',label:'Draws itself when the slide arrives'}
+      ],d.chartMotion==='grow'?'grow':'',function(v){
+        if(v==='grow') d.chartMotion='grow'; else delete d.chartMotion;
+        change();
+      }),'Bars rise from the axis, lines draw along, wedges sweep round. On the projector only.'));
+
+      var cd=SF.chartData(s);
+      if(cd.series.length>1){
+        var opts=[{value:'',label:'Show them all evenly'}];
+        cd.series.forEach(function(sr,i){opts.push({value:String(i),label:'Isolate “'+sr.name+'”'});});
+        box.appendChild(UI.field('Focus one series',UI.select(opts,
+          d.chartFocus==null?'':String(d.chartFocus),function(v){
+            if(v==='') delete d.chartFocus; else d.chartFocus=Number(v);
+            change();
+          }),
+          'Holds the others back rather than removing them, so the comparison is still there to return to.'));
+      }
+    }
     if(s.type==='split'||s.type==='image') ['X','Y'].forEach(function(axis){
       var r=document.createElement('input');r.type='range';r.min='0';r.max='100';r.value=d['focal'+axis]==null?50:d['focal'+axis];r.onchange=function(){d['focal'+axis]=Number(r.value);change();};box.appendChild(UI.field('Image focus '+(axis==='X'?'horizontal':'vertical'),r));
     });
