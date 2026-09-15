@@ -28,6 +28,9 @@
      browser, so it is asked for once and remembered. */
   var liveAvailable = null;
   var liveProbe = null;
+  /* One Gemini call at a time from this tab — double-clicks and parallel
+     Write buttons must not stack requests against the shared Render key. */
+  var aiBusy = false;
 
   function aiUrl(path) {
     return (global.location ? global.location.origin : '') + path;
@@ -45,6 +48,13 @@
       .then(function (d) { liveAvailable = !!(d && d.available); return liveAvailable; })
       .catch(function () { liveAvailable = false; return false; });
     return liveProbe;
+  }
+
+  /** Ask the server again — used before Write so a late key deploy is seen. */
+  function recheckLiveAI() {
+    liveAvailable = null;
+    liveProbe = null;
+    return checkLiveAI();
   }
 
   /** Synchronous best guess, for painting a status line before the probe lands. */
@@ -290,19 +300,25 @@
     if (typeof fetchFn !== 'function') {
       throw new Error('fetch is not available in this environment');
     }
+    if (aiBusy) throw new Error('AI is already writing — wait for it to finish.');
+    aiBusy = true;
     var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = controller ? setTimeout(function () { controller.abort(); }, 15000) : null;
+    var timer = controller ? setTimeout(function () { controller.abort(); }, 14000) : null;
     try {
       var res = await fetchFn(aiUrl('/api/ai/generate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ system: systemPrompt, user: userPrompt }),
+        body: JSON.stringify({
+          system: String(systemPrompt || '').slice(0, 2200),
+          user: String(userPrompt || '').slice(0, 1800)
+        }),
         signal: controller ? controller.signal : undefined
       });
       if (timer) clearTimeout(timer);
       if (!res.ok) {
         /* 503 means this deployment has no key, which is not a failure for a
            poll — the heuristics are the designed answer to it. */
+        if (res.status === 429) throw new Error('Too many AI requests — wait a moment and try once.');
         throw new Error('AI endpoint returned status ' + res.status);
       }
       var data = await res.json();
@@ -310,6 +326,7 @@
       return parseModelJson(data.text);
     } finally {
       if (timer) clearTimeout(timer);
+      aiBusy = false;
     }
   }
 
@@ -932,30 +949,32 @@
 
     var topic = String(opts.topic || game.title || '').trim();
     if (!topic) return { error: 'Give it a topic to write about.' };
-    var want = Math.max(1, Math.min(10, Number(opts.count) || 4));
+    var want = Math.max(1, Math.min(6, Number(opts.count) || 4));
 
     var fixed = Array.isArray(engine.fixedOptions) && engine.fixedOptions.length
       ? engine.fixedOptions : null;
     var existing = (game.questions || [])
       .map(function (q) { return String(q.question || q.term || '').trim(); })
-      .filter(Boolean).slice(0, 20);
+      .filter(Boolean).slice(0, 8);
 
     var system = CORE_PEDAGOGY + ' ' +
       'You write classroom material for a teacher. ' +
       'Return ONLY a JSON object, no markdown and no code fence: ' +
       '{"questions":[' + spec.row + ']}. ' +
-      'Exactly ' + want + ' entries. ' + spec.rules +
+      'Exactly ' + want + ' entries. ' + String(spec.rules || '').slice(0, 500) +
       (fixed ? ' The options are fixed: ' + JSON.stringify(fixed) + ', in that order.' : '') +
-      ' Every explanation is one sentence a teacher can read aloud after the reveal.';
+      ' Every explanation is one short sentence.';
 
-    var user = 'Format: ' + spec.family + '. Topic: ' + topic + '.' +
-      (opts.notes ? '\nTeacher notes: ' + String(opts.notes).slice(0, 500) : '') +
-      (existing.length ? '\nAlready in this quiz, do not repeat:\n- ' + existing.join('\n- ') : '');
+    var user = 'Format: ' + spec.family + '. Topic: ' + topic.slice(0, 120) + '.' +
+      (opts.notes ? '\nNotes: ' + String(opts.notes).slice(0, 200) : '') +
+      (existing.length ? '\nAlready written, do not repeat:\n- ' + existing.join('\n- ') : '');
 
     var parsed;
     try {
       parsed = await callServerRaw(system, user);
     } catch (err) {
+      var fail = err && err.message ? String(err.message) : '';
+      if (/Too many AI|already writing/i.test(fail)) return { error: fail };
       return { error: 'The AI server could not be reached. Your questions are untouched.' };
     }
 
@@ -1017,40 +1036,49 @@
       return { error: (activity.title || 'This activity') + ' has nothing to write — it is run in the room, not on the slide.' };
     }
 
-    var live = await checkLiveAI();
+    var live = await recheckLiveAI();
     if (!live) {
       return { error: 'Writing an activity needs the AI server key. Without it, every activity already arrives with editable starter content.' };
     }
 
-    var topic = String(opts.topic || '').trim();
+    var topic = String(opts.topic || '').trim().slice(0, 120);
     if (!topic) return { error: 'Give it a topic to write about.' };
+
+    /* Cap the brief: enough boxes for a slide, not a worksheet. Keeps the
+       Gemini call small on the shared Render key. */
+    fields = fields.slice(0, 6);
 
     var guard = classifyActivity(activity);
     var shape = {};
     fields.forEach(function (f, i) { shape['f' + i] = f.label; });
 
-    var system = CORE_PEDAGOGY + ' ' +
-      'You write classroom activity content for a teacher. ' +
-      'Return ONLY a JSON object, no markdown and no code fence, with exactly ' +
-      'these keys: ' + JSON.stringify(Object.keys(shape)) + '. ' +
-      'Each value is the finished text that goes in that box, ready to project. ' +
-      'Never write an instruction to the teacher, a placeholder, or square ' +
-      'brackets — write the content itself. ' +
-      (guard ? guard.rules : 'Keep each box to what fits on a slide and can be read from the back of a room.');
+    var guardRules = guard && guard.rules
+      ? String(guard.rules).slice(0, 320)
+      : 'Keep each box short enough to read from the back of a room.';
 
-    var user = 'Activity: ' + activity.title + '.' +
-      (activity.blurb ? ' ' + activity.blurb : '') +
+    var system = CORE_PEDAGOGY + ' ' +
+      'Write classroom activity content. Return ONLY JSON, no markdown, keys ' +
+      JSON.stringify(Object.keys(shape)) + '. ' +
+      'Each value is finished text for that box — no teacher instructions, no placeholders. ' +
+      guardRules;
+
+    var user = 'Activity: ' + String(activity.title || '').slice(0, 80) + '.' +
       '\nTopic: ' + topic + '.' +
-      (opts.notes ? '\nTeacher notes: ' + String(opts.notes).slice(0, 500) : '') +
-      '\nThe boxes, in order:\n' +
+      (opts.notes ? '\nNotes: ' + String(opts.notes).slice(0, 160) : '') +
+      '\nBoxes:\n' +
       fields.map(function (f, i) { return 'f' + i + ' = ' + f.label; }).join('\n') +
       (activity.steps && activity.steps.length
-        ? '\nHow it runs:\n- ' + activity.steps.slice(0, 6).join('\n- ') : '');
+        ? '\nRuns as:\n- ' + activity.steps.slice(0, 3).map(function (s) {
+            return String(s).slice(0, 90);
+          }).join('\n- ')
+        : '');
 
     var parsed;
     try {
       parsed = await callServerRaw(system, user);
     } catch (err) {
+      var msg = err && err.message ? String(err.message) : '';
+      if (/Too many AI|already writing/i.test(msg)) return { error: msg };
       return { error: 'The AI server could not be reached. The activity is untouched.' };
     }
 
@@ -1088,6 +1116,7 @@
     /* Availability, not credentials. Nothing here can read or set a key,
        because the browser never has one. */
     checkLiveAI: checkLiveAI,
+    recheckLiveAI: recheckLiveAI,
     liveAIKnown: liveAIKnown,
     generatePollForSlide: generatePollForSlide,
     generateQuestionsForGame: generateQuestionsForGame,

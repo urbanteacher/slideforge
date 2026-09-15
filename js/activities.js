@@ -883,7 +883,10 @@
   /* Fill the selected activity's boxes from a topic — same path as the
      inspector "Write this activity" box, reachable from the rail so Activities
      matches Quiz studio's "Write questions" affordance. */
+  var writeInFlight = false;
+
   function writeSelectedActivity() {
+    if (writeInFlight) { SF.toast('Already writing — wait for it to finish.'); return; }
     if (!SF.AI || !SF.AI.generateActivityContent) { SF.toast('AI engine not loaded.'); return; }
     var row = current();
     var picked = row && A.activity(row.slide.activity);
@@ -893,17 +896,24 @@
       SF.toast((picked.title || 'This activity') + ' has nothing to write — it runs in the room, not on the slide.');
       return;
     }
+    var seed = '';
+    try {
+      seed = String((deck() && deck().title) || '').trim();
+      if (/^untitled/i.test(seed)) seed = '';
+    } catch (e) {}
     SF.askText({
       title: 'Write “' + picked.title + '”',
-      detail: 'Fills the activity boxes below for a topic. You can edit or undo anything it writes. ' +
-        'Needs the AI server key — without it, starter copy in the catalogue is still editable.',
-      placeholder: 'Osmosis in plant cells',
+      detail: 'Fills the activity boxes for a topic. You can edit or undo anything it writes.',
+      value: seed,
+      placeholder: 'e.g. Osmosis in plant cells',
       confirm: '✨ Write it'
     }, function (topic) {
       var t = String(topic || '').trim();
       if (!t) { SF.toast('Give it a topic to write about.'); return; }
+      writeInFlight = true;
       SF.toast('Writing…');
       Promise.resolve(SF.AI.generateActivityContent(picked, { topic: t })).then(function (res) {
+        writeInFlight = false;
         if (!res || res.error) {
           SF.toast(res && res.error ? res.error : 'Nothing came back.');
           return;
@@ -912,38 +922,81 @@
         SF.Editor.commitActivityChange();
         draw();
         SF.toast('Written — read it before you teach it.');
-      }).catch(function () {
-        SF.toast('Could not write this just now.');
+      }).catch(function (err) {
+        writeInFlight = false;
+        SF.toast((err && err.message) ? String(err.message) : 'Could not write this just now.');
       });
     });
   }
 
   function writeActivityBox(picked, row) {
     var box = el('div', 'ai-write');
-    var topic = SF.Shell.UI.text('', function () {}, 'Osmosis in plant cells');
+    var status = el('p', 'hint ai-write-status', 'Checking AI…');
+    status.setAttribute('role', 'status');
+    box.appendChild(status);
+
+    if (SF.AI && SF.AI.recheckLiveAI) {
+      SF.AI.recheckLiveAI().then(function (live) {
+        status.textContent = live
+          ? 'AI is live — type a topic and press Write it. The Edit fields and slide update when it finishes.'
+          : 'AI is offline on this server (no GEMINI_API_KEY). Starter copy in Edit is still yours to type.';
+      });
+    } else {
+      status.textContent = 'AI engine not loaded.';
+    }
+
+    var seed = '';
+    try {
+      seed = String((deck() && deck().title) || '').trim();
+      if (/^untitled/i.test(seed)) seed = '';
+    } catch (e) {}
+    var topic = SF.Shell.UI.text(seed, function () {}, 'e.g. Osmosis in plant cells');
+    topic.setAttribute('aria-label', 'Topic to write about');
     box.appendChild(SF.Shell.UI.field('✨ Write this activity', topic,
-      'A topic. It fills the boxes below; you can edit or undo anything it writes.'));
+      'Type the topic here (the grey example is only a hint). Then press Write it.'));
     var guard = el('p', 'hint', '');
     guard.setAttribute('role', 'status');
-    var go = SF.Shell.UI.button('✨ Write it', 'ghost', function () {
+    var go = SF.Shell.UI.button('✨ Write it', 'primary', function () {
+      if (writeInFlight) {
+        guard.textContent = 'Already writing — wait for it to finish.';
+        SF.toast(guard.textContent);
+        return;
+      }
       var t = String(topic.value || '').trim();
-      if (!t) { guard.textContent = 'Give it a topic to write about.'; return; }
+      if (!t) {
+        guard.textContent = 'Type a topic in the box above first — the grey text is only a placeholder.';
+        SF.toast(guard.textContent);
+        topic.focus();
+        return;
+      }
+      writeInFlight = true;
       go.disabled = true;
       guard.textContent = 'Writing…';
+      SF.toast('Writing…');
       Promise.resolve(SF.AI.generateActivityContent(picked, { topic: t })).then(function (res) {
+        writeInFlight = false;
         go.disabled = false;
-        if (!res || res.error) { guard.textContent = res && res.error ? res.error : 'Nothing came back.'; return; }
+        if (!res || res.error) {
+          var err = res && res.error ? res.error : 'Nothing came back.';
+          guard.textContent = err;
+          SF.toast(err);
+          return;
+        }
         var slide = row.slide;
         Object.keys(res.values).forEach(function (path) { write(slide, path, res.values[path]); });
         SF.Editor.commitActivityChange();
-        guard.textContent = '';
+        guard.textContent = 'Done — check the Edit tab and the slide.';
         draw();
         SF.toast('Written — read it before you teach it.');
-      }).catch(function () {
+      }).catch(function (err) {
+        writeInFlight = false;
         go.disabled = false;
-        guard.textContent = 'Could not write this just now.';
+        var msg = (err && err.message) ? String(err.message) : 'Could not write this just now.';
+        guard.textContent = msg;
+        SF.toast(msg);
       });
     });
+    go.type = 'button';
     box.appendChild(go);
     box.appendChild(guard);
     return box;
