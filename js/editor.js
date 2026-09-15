@@ -3444,6 +3444,11 @@
     var last = SF.Store.lastId();
     var loaded = null;
 
+    /* Asked BEFORE the Library is seeded, because seeding puts eleven brand
+       packs in the store and every question about "is this a first visit"
+       would answer no from then on. */
+    var firstEverVisit = !last && !SF.Store.list().length;
+
     if (SF.seedLibrary) SF.seedLibrary();
 
     if (requestedLesson && SF.Studio && SF.Studio.makeLesson) {
@@ -3457,16 +3462,33 @@
       } catch (e) {}
     } else {
       loaded = (last && SF.Store.get(last)) || null;
-      if (!loaded) {
-        var intro = SF.Store.list().filter(function (d) { return d.sourceKey === 'ipdv-intro'; })[0];
-        loaded = intro || SF.Store.list()[0] || null;
+
+      /* A first visit opens an empty deck, not a finished lecture.
+         It used to land in the 74-slide IPDV lecture, because that was the
+         first thing the Library seeded and the fallback took Store.list()[0].
+         For the person who wrote it that reads as "where I left off". For
+         anybody else it is a stranger's lecture, and the instinct is to type
+         over it — which is how a template gets edited into a one-off.
+
+         makeDeck already gives exactly the right thing: one title slide and
+         nothing else. The eleven packs are still seeded and one click away in
+         the Library, which is where a blank deck should send you. */
+      if (!loaded && firstEverVisit) {
+        loaded = SF.makeDeck('Untitled lesson');
+        SF.Store.save(loaded, { force: true });
+        if (SF.toast) {
+          setTimeout(function () {
+            SF.toast('A blank deck to start. Library has the templates, the lecture and the demo.');
+          }, 900);
+        }
       }
       if (!loaded) {
-        loaded = SF.Studio.makeLesson('ipdv-intro');
-        loaded.sourceKey = 'ipdv-intro';
-        loaded.libraryGroup = 'nul';
+        /* Not a first visit, but nothing opens — a cleared last-id, or every
+           document deleted. Whatever is in the Library beats a blank. */
+        loaded = SF.Store.list()[0] || SF.makeDeck('Untitled lesson');
         SF.Store.save(loaded, { force: true });
-      } else if (loaded.slides.some(function (s) { return s.type === 'quiz' || s.type === 'results'; })) {
+      }
+      if (loaded && loaded.slides.some(function (s) { return s.type === 'quiz' || s.type === 'results'; })) {
         /* Decks authored before questions moved into games still hold quiz
            slides; lift them out into a game once, on load. */
         var made = SF.migrateDeckQuizzes(loaded, function (g) { SF.GameStore.save(g); });

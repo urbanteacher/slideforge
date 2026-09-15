@@ -1077,6 +1077,11 @@
     /* File → Library. Store documents, grouped by brand — not a clone shop. */
     var btnReadyMade = document.getElementById('btnReadyMade');
     if (btnReadyMade) btnReadyMade.onclick = openLessons;
+    /* And on the canvas, one click from a blank deck. A first visit now opens
+       empty rather than inside somebody's finished lecture, so the templates
+       have to be reachable without knowing they live under File. */
+    var btnLibraryOpen = document.getElementById('btnLibraryOpen');
+    if (btnLibraryOpen) btnLibraryOpen.onclick = openLessons;
     document.querySelectorAll('.file-actions button').forEach(function (b) {
       b.addEventListener('click',function () {
         var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));

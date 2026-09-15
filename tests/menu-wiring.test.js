@@ -113,3 +113,24 @@ test('there is exactly one demo, and one thing that opens it', () => {
     'tools/demo-lesson.js is back — the demo lives in js/lessons.js');
   assert.ok(!sources.includes('/api/demo-lesson'), 'something still fetches the old demo bundle');
 });
+
+test('a blank first visit, with the Library one click from the canvas', () => {
+  const editor = fs.readFileSync(path.join(ROOT, 'js', 'editor.js'), 'utf8');
+  const studio = fs.readFileSync(path.join(ROOT, 'js', 'studio.js'), 'utf8');
+
+  /* The question has to be asked before the Library is seeded, or eleven
+     brand packs make every visit look like a returning one. */
+  assert.match(editor, /var firstEverVisit = !last && !SF\.Store\.list\(\)\.length/);
+  assert.match(editor, /if \(SF\.seedLibrary\) SF\.seedLibrary\(\);/);
+  assert.ok(editor.indexOf('var firstEverVisit') < editor.indexOf('if (SF.seedLibrary)'),
+    'firstEverVisit must be decided before seeding, not after');
+
+  /* A first visit opens an empty deck rather than the 74-slide lecture. */
+  assert.match(editor, /if \(!loaded && firstEverVisit\)[\s\S]{0,120}SF\.makeDeck\('Untitled lesson'\)/);
+  assert.ok(!/loaded = SF\.Studio\.makeLesson\('ipdv-intro'\)/.test(editor),
+    'the cold start must not land in somebody else’s lecture');
+
+  /* And the templates are reachable without knowing they live under File. */
+  assert.match(html, /id="btnLibraryOpen"[^>]*>[^<]*Library/);
+  assert.match(studio, /btnLibraryOpen\)? ?.*onclick = openLessons/);
+});
