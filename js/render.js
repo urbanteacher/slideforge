@@ -201,6 +201,29 @@
    */
   var WORD_EFFECTS = ['rise', 'fade', 'reveal'];
   var WORD_SPAN_MS = 900;
+  /* The SHAPE of a planned arrival, as opposed to where it starts from.
+ 
+     A start offset eased to rest can only ever be a settle, however the
+     numbers are set — which is why "bounce it in" was not reachable with
+     coordinates alone. Each arc is a keyframe set reading the same per-word
+     variables, so the plan stays six numbers and the arc picks what those
+     numbers mean on the way in:
+ 
+       settle  eases to rest and stops
+       bounce  goes PAST rest and comes back, twice, smaller each time
+       mist    arrives in place while still soft, then condenses
+ 
+     Loops are deliberately not bouncy: a word overshooting every eight
+     seconds behind a title is a distraction with no end. */
+  var WORD_ARCS = {
+    settle: { on: 'sf-word-plan', loop: 'sf-cycle-plan' },
+    bounce: { on: 'sf-word-plan-bounce', loop: 'sf-cycle-plan' },
+    mist: { on: 'sf-word-plan-mist', loop: 'sf-cycle-mist' }
+  };
+  /* Letters cost one animated box each, so the ceiling is lower than the
+     forty-word one: past about thirty the wave is longer than the sentence is
+     worth and the paint cost starts showing on a projector. */
+  var LETTER_CAP = 30;
 
   /* How fast the whole thing happens, and how far apart the words are.
  
@@ -282,12 +305,17 @@
         else if (kid.nodeType === 1) walk(kid);
       }
     })(node);
-    /* Count first: the delay of a word depends on how many there are. */
+    /* Count first: the delay of a unit depends on how many there are. */
+    var letters = !!(opts && opts.unit === 'letter');
+    /* Kept before the split, to hand back to a screen reader afterwards. */
+    var said = texts.map(function (t) { return String(t.nodeValue); }).join('').trim();
     var total = 0;
     texts.forEach(function (text) {
-      total += String(text.nodeValue).split(/(\s+)/).filter(function (p) { return p.trim(); }).length;
+      String(text.nodeValue).split(/(\s+)/).forEach(function (part) {
+        if (part.trim()) total += letters ? part.length : 1;
+      });
     });
-    if (!total || total > 40) return 0;
+    if (!total || total > (letters ? LETTER_CAP : 40)) return 0;
     /* The wave is as long as the line needs, scaled by the two controls. At
        "together" it is zero, and every word carries the same delay of nothing —
        which is the whole line arriving as one movement. */
@@ -296,29 +324,128 @@
     /* The base wave is as long as the line needs; the cap rises with the
        spread so "one at a time" on a six-word line is not quietly clamped
        back to the same wave as everything else. */
-    var span = Math.min(WORD_SPAN_MS * 3, Math.max(240, total * 130)) * stretch;
+    /* Per unit, letters get a shorter step than words: twenty letters at a
+       word's spacing is a line that takes three seconds to say itself. */
+    var span = Math.min(WORD_SPAN_MS * 3, Math.max(240, total * (letters ? 48 : 130))) * stretch;
     var seen = 0;
     texts.forEach(function (text) {
       var frag = document.createDocumentFragment();
       String(text.nodeValue).split(/(\s+)/).forEach(function (part) {
         if (!part) return;
         if (!part.trim()) { frag.appendChild(document.createTextNode(part)); return; }
-        /* Where this word sits in the wave, 0 first to 1 last — which end
-           that is depends on the origin. */
-        var at = order(seen, total - 1);
-        /* Ease out: 1 - (1 - t)^2.2. Early words are close together, the tail
-           spreads, which is what makes it read as one movement. */
-        var delay = Math.round((1 - Math.pow(1 - at, 2.2)) * span);
-        var w = el('span', 'w');
-        w.style.setProperty('--i', String(seen));
-        w.style.setProperty('--d', delay + 'ms');
-        w.textContent = part;
-        frag.appendChild(w);
-        seen++;
+        /* One box per word even when animating letters, so the line still
+           breaks between words and never down the middle of one. */
+        var host = letters ? el('span', 'wword') : frag;
+        /* A screen reader reading nineteen one-character elements says
+           "E v e r y c h a r t" — it spells the line out. Word spans are
+           invisible to the accessibility tree because a word is still a word;
+           a letter is not, so the split has to be hidden and the sentence
+           given back whole on the line itself. */
+        if (letters) host.setAttribute('aria-hidden', 'true');
+        (letters ? part.split('') : [part]).forEach(function (piece) {
+          /* Where this unit sits in the wave, 0 first to 1 last — which end
+             that is depends on the origin. */
+          var at = order(seen, total - 1);
+          /* Ease out: 1 - (1 - t)^2.2. Early units are close together, the
+             tail spreads, which is what makes it read as one movement. */
+          var delay = Math.round((1 - Math.pow(1 - at, 2.2)) * span);
+          var w = el('span', 'w');
+          w.style.setProperty('--i', String(seen));
+          w.style.setProperty('--d', delay + 'ms');
+          w.textContent = piece;
+          host.appendChild(w);
+          seen++;
+        });
+        if (letters) frag.appendChild(host);
       });
       if (text.parentNode) text.parentNode.replaceChild(frag, text);
     });
+    if (letters && seen) {
+      /* The sentence, once, for anything that is not looking at it.
+ 
+         aria-label was the obvious fix and does not work here: the roles that
+         fit a line of prose take no name from the author, so the label is
+         dropped and the line reads as empty. A visually hidden copy is the
+         thing every screen reader agrees on — measured in
+         tools/smoke-cover-motion.mjs against an unsplit line.
+ 
+         It does mean the line appears twice in textContent while letters are
+         animating. Nothing reads a rendered statement's text: the handout and
+         the PDF re-render from slide.body, and the copy is clipped to a pixel
+         so it costs nothing on screen or on paper. */
+      node.insertBefore(el('span', 'sr-only', said), node.firstChild);
+    }
     return seen;
+  }
+
+  /**
+   * A per-word choreography: where each word starts, and when.
+   *
+   * The three presets move every word the same way and differ only in timing.
+   * A plan gives each word its own offset, rotation, scale, blur and delay —
+   * the thing a motion designer would keyframe by hand, and the thing an
+   * author cannot express by picking from a list of three. Written by the AI
+   * button in the Motion pane, or by hand by anyone who enjoys that.
+   *
+   * Two gates, both necessary.
+   *
+   * The plan carries the line it was written for: edit the words and it is
+   * stale, and a choreography for "Every chart is a choice" applied to
+   * "Charts lie" would place four words that are not there. Same trick the
+   * inline formatting store uses to know when its offsets have expired.
+   *
+   * And every number is clamped here rather than trusted, because this
+   * arrives from a language model: a dy of 4000 flings a word off a
+   * projector, a scale of 0 is an invisible word, and a delay of a minute is
+   * a line that never finishes arriving.
+   *
+   * @param {object} slide
+   * @param {string} said the line as it is now
+   * @param {number} count how many words were wrapped
+   * @returns {Array<{dx:string,dy:string,rot:string,scale:number,blur:string,delay:number}>|null}
+   */
+  /**
+   * Whether a stored plan choreographs words or letters.
+   *
+   * Read BEFORE the line is split, because it decides how to split it: a
+   * letter plan matched against a word count is a plan that never applies.
+   */
+  function wordPlanUnit(slide) {
+    var plan = (slide && slide.design || {}).wordPlan;
+    return plan && plan.unit === 'letter' ? 'letter' : 'word';
+  }
+
+  function wordPlan(slide, said, count) {
+    var plan = (slide.design || {}).wordPlan;
+    if (!plan || !Array.isArray(plan.words) || !plan.words.length) return null;
+    if (String(plan.text || '').trim() !== String(said || '').trim()) return null;
+    if (plan.words.length !== count) return null;
+    /* A number the model left out must come back as the RESTING value, not as
+       a clamp of Number(null) — which is 0, and would silently turn "no scale
+       given" into a word shrunk to the 0.4 floor. */
+    var num = function (v, lo, hi, fallback) {
+      if (v === null || v === undefined || v === '') return fallback;
+      var n = Number(v);
+      return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : fallback;
+    };
+    return plan.words.map(function (w) {
+      var step = w && typeof w === 'object' ? w : {};
+      /* An arc the stylesheet does not have is a word that never animates, so
+         anything unrecognised settles. */
+      var arc = WORD_ARCS[step.arc] ? step.arc : 'settle';
+      return {
+        arc: arc,
+        keys: WORD_ARCS[arc],
+        /* em rather than px: a word set at 320px and one at 44px should not
+           travel the same distance. */
+        dx: num(step.dx, -3, 3, 0).toFixed(2) + 'em',
+        dy: num(step.dy, -3, 3, 0).toFixed(2) + 'em',
+        rot: num(step.rot, -30, 30, 0).toFixed(1) + 'deg',
+        scale: num(step.scale, 0.4, 1.8, 1),
+        blur: num(step.blur, 0, 14, 0).toFixed(1) + 'px',
+        delay: Math.round(num(step.delay, 0, 3000, 0))
+      };
+    });
   }
 
   /** Which per-word entrance a slide asks for, or '' for none. */
@@ -358,7 +485,17 @@
     if (effect) {
       var speed = WORD_SPEEDS[wordSpeed(slide)];
       var stretch = WORD_STAGGERS[wordStagger(slide)] * (speed.span || 1);
-      if (wrapWords(line, { stretch: stretch, from: wordFrom(slide) })) {
+      /* The unit is decided by the stored plan, before the split: a plan
+         written letter by letter has to be matched against letters. */
+      var unit = wordPlanUnit(slide);
+      var wrapped = wrapWords(line, { stretch: stretch, from: wordFrom(slide), unit: unit });
+      /* A line too long to animate letter by letter falls back to whole words
+         rather than to no motion at all. */
+      if (!wrapped && unit === 'letter') {
+        unit = 'word';
+        wrapped = wrapWords(line, { stretch: stretch, from: wordFrom(slide) });
+      }
+      if (wrapped) {
         line.classList.add('words', 'words-' + effect);
         /* The stylesheet reads these: one duration for an entrance, one for a
            cycle, so a change of speed cannot leave the two disagreeing. */
@@ -366,6 +503,28 @@
         line.style.setProperty('--w-cycle', speed.cycle + 'ms');
         line.style.setProperty('--w-lift', speed.lift);
         if (wordsLoop(slide)) line.classList.add('words-loop');
+        /* A choreography replaces the effect's own movement word by word, and
+           its timing too: the plan says where each word starts and when. */
+        var plan = unit === wordPlanUnit(slide) ? wordPlan(slide, said, wrapped) : null;
+        if (plan) {
+          line.classList.add('words-plan');
+          if (unit === 'letter') line.classList.add('words-letters');
+          var looping = wordsLoop(slide);
+          var steps = plan;
+          Array.prototype.forEach.call(line.querySelectorAll('.w'), function (w, i) {
+            var step = steps[i];
+            if (!step) return;
+            w.style.setProperty('--wx', step.dx);
+            w.style.setProperty('--wy', step.dy);
+            w.style.setProperty('--wr', step.rot);
+            w.style.setProperty('--ws', String(step.scale));
+            w.style.setProperty('--wb', step.blur);
+            w.style.setProperty('--d', step.delay + 'ms');
+            /* The arc is the keyframe set, chosen per word — which is how one
+               word can bounce in while the rest of the line settles. */
+            w.style.setProperty('--wk', looping ? step.keys.loop : step.keys.on);
+          });
+        }
       }
     }
     pad.appendChild(line);
@@ -5609,6 +5768,10 @@
     wordStagger: wordStagger,
     WORD_FROMS: WORD_FROMS,
     wordFrom: wordFrom,
+    wordPlan: wordPlan,
+    wordPlanUnit: wordPlanUnit,
+    WORD_ARCS: WORD_ARCS,
+    LETTER_CAP: LETTER_CAP,
     wrapWords: wrapWords,
     BACKDROPS: BACKDROPS,
     backdropMotion: backdropMotion,

@@ -3884,6 +3884,56 @@
           design: { backdrop: 'drift', words: 'rise', wordSpeed: 'medium', wordStagger: 'wave', wordsLoop: true },
           notes: 'AND LEAVE AGAIN \u2014 the loop. Seven seconds: in for the first tenth, held for half, then nearly two seconds of the same eased wave taking them out, and a pause before it comes round. Stay here and watch it twice.' },
 
+        /* The three slides the presets cannot produce.
+ 
+           Everything above is a choice from a list, and all of it moves the
+           whole line the same way. These carry a stored plan: coordinates per
+           word, and an arc per word saying what it does on arrival. They are
+           written out here rather than generated so the deck demonstrates
+           them with no key set \u2014 the AI button in the Motion pane writes
+           exactly this shape. */
+        { type: 'statement', body: 'Every word lands, and settles',
+          subtitle: 'Bounce',
+          design: { words: 'rise', wordSpeed: 'gentle',
+            wordPlan: { text: 'Every word lands, and settles', unit: 'word',
+              note: 'Weight arriving, one word at a time',
+              words: [
+                { dy: -2.2, blur: 3, delay: 0, arc: 'bounce' },
+                { dy: -1.8, blur: 3, delay: 220, arc: 'bounce' },
+                { dy: -2.4, blur: 4, delay: 440, arc: 'bounce' },
+                { dy: -1.4, blur: 2, delay: 660, arc: 'bounce' },
+                { dy: -2.0, blur: 3, delay: 880, arc: 'bounce' }
+              ] } },
+          notes: 'ARC 1 of 3 \u2014 Bounce. Each word falls from above and goes PAST its resting place before coming back: out about 45px, back, out again smaller, then still. Measured, not approximated \u2014 the overshoot is a fraction of that word\u2019s own drop, so the word that fell furthest bounces hardest.\n\nWhy it is not a preset: a start position eased to rest can only ever settle. The arc is a different keyframe set, chosen per word, which is why one word in a line can land like this while the rest do not.' },
+
+        { type: 'statement', body: 'Out of the fog, slowly',
+          subtitle: 'Mist',
+          design: { backdrop: 'drift', words: 'rise', wordSpeed: 'gentle',
+            wordPlan: { text: 'Out of the fog, slowly', unit: 'word',
+              note: 'Resolving rather than arriving',
+              words: [
+                { dy: 0.6, scale: 1.15, blur: 13, delay: 0, arc: 'mist' },
+                { dy: 0.5, scale: 1.1, blur: 12, delay: 350, arc: 'mist' },
+                { dy: 0.6, scale: 1.12, blur: 14, delay: 700, arc: 'mist' },
+                { dy: 0.4, scale: 1.08, blur: 11, delay: 1050, arc: 'mist' },
+                { dy: 0.7, scale: 1.2, blur: 14, delay: 1400, arc: 'mist' }
+              ] } },
+          notes: 'ARC 2 of 3 \u2014 Mist. The difference from a normal arrival is which property finishes last. These words are in position about half way through and still 50% out of focus; the rest of the time is spent condensing, which is what reads as coming out of fog rather than flying in slightly soft.\n\nThe arc supplies its own blur floor, so asking for mist without setting a blur still mists.' },
+
+        { type: 'statement', body: 'Charts lie',
+          subtitle: 'Letter by letter',
+          design: { words: 'rise', wordSpeed: 'quick',
+            wordPlan: { text: 'Charts lie', unit: 'letter',
+              note: 'Typed out, one letter at a time',
+              words: [
+                { dy: -0.25, blur: 2, delay: 0 }, { dy: -0.25, blur: 2, delay: 90 },
+                { dy: -0.25, blur: 2, delay: 180 }, { dy: -0.25, blur: 2, delay: 270 },
+                { dy: -0.25, blur: 2, delay: 360 }, { dy: -0.25, blur: 2, delay: 450 },
+                { dy: -0.25, blur: 2, delay: 600 }, { dy: -0.25, blur: 2, delay: 690 },
+                { dy: -0.25, blur: 2, delay: 780 }
+              ] } },
+          notes: 'ARC 3 of 3 \u2014 the unit itself. Nine steps for nine letters: the line is split by letter instead of by word, and each letter gets its own coordinates. The gap after "Charts" is the word break \u2014 150ms rather than 90.\n\nEach word is still one box, so the line can never break down the middle of a word. And the split is hidden from the accessibility tree with the sentence handed back whole underneath, because nineteen one-character elements are otherwise read out as "C h a r t s l i e". Thirty animated letters is the ceiling; past that it falls back to whole words.' },
+
         { type: 'image', title: 'Ken Burns, with a destination',
           subtitle: 'Travels from the top left to the bottom right over 12 seconds',
           /* A photograph rather than a chart: a pan across a white plot grid

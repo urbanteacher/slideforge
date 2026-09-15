@@ -6142,3 +6142,139 @@ html[data-ws="deck"] #railCount { display: none; }
 /* A handout is read, not presented: every point at full strength. */
 .pdf-page .slide.build-spot::after { display: none; }
 .pdf-page .slide.build-spot .step.step-past { opacity: 1; filter: none; }
+
+/* A per-word choreography, written rather than chosen.
+
+   Each word starts wherever the plan put it — offset, turned, scaled, blurred
+   — and lands at rest. One keyframe set drives all of them because the
+   difference between the words is in the custom properties, not in the
+   animation: eighteen words is eighteen sets of variables and one rule. */
+#player .slide .statement.words-plan .w {
+  /* The arc, per word — settle, bounce or mist. Each keyframe set reads the
+     same six variables, so one word can land differently from its neighbour
+     without a second rule. */
+  animation-name: var(--wk, sf-word-plan) !important;
+  transform-origin: 50% 60%;
+}
+/* Letter by letter. The word stays one box so the line can only break
+   between words; the letters inside it are what move.
+
+   A letter is a narrower box than a word, so the transform origin comes back
+   to the middle — a letter rotating about a point 60% down its own height
+   swings, where a word pivots. */
+#player .slide .statement .wword { display: inline-block; white-space: pre; }
+#player .slide .statement.words-letters .w { transform-origin: 50% 50%; }
+@keyframes sf-word-plan {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--wx, 0), var(--wy, .5em), 0)
+               rotate(var(--wr, 0deg)) scale(var(--ws, 1));
+    filter: blur(var(--wb, 6px));
+  }
+  70% { opacity: 1; }
+  to  { opacity: 1; transform: none; filter: blur(0); }
+}
+/* The loop version: the same start, held, then back out the way it came in —
+   so a planned line can also be left running on a cover. */
+@keyframes sf-cycle-plan {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--wx, 0), var(--wy, .5em), 0)
+               rotate(var(--wr, 0deg)) scale(var(--ws, 1));
+    filter: blur(var(--wb, 6px));
+  }
+  10%, 58% { opacity: 1; transform: none; filter: blur(0); }
+  86%, 100% {
+    opacity: 0;
+    transform: translate3d(var(--wx, 0), var(--wy, .5em), 0)
+               rotate(var(--wr, 0deg)) scale(var(--ws, 1));
+    filter: blur(var(--wb, 6px));
+  }
+}
+/* Past the resting place and back, twice, smaller each time.
+
+   The overshoot is expressed as a fraction of the word's OWN start offset, so
+   a word that came from the left overshoots to the right by a proportional
+   amount and one that barely moved barely overshoots — the bounce stays in
+   proportion to the journey instead of being a fixed jolt bolted on the end.
+   Scale reads the same way: 1 + (1 - --ws) continues past rest in whichever
+   direction the word was growing. */
+@keyframes sf-word-plan-bounce {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--wx, 0px), var(--wy, .5em), 0)
+               rotate(var(--wr, 0deg)) scale(var(--ws, 1));
+    filter: blur(var(--wb, 6px));
+  }
+  42% { opacity: 1; filter: blur(0); }
+  60% {
+    transform: translate3d(calc(var(--wx, 0px) * -0.16), calc(var(--wy, .5em) * -0.16), 0)
+               rotate(calc(var(--wr, 0deg) * -0.16))
+               scale(calc(1 + (1 - var(--ws, 1)) * 0.16));
+  }
+  78% {
+    transform: translate3d(calc(var(--wx, 0px) * 0.07), calc(var(--wy, .5em) * 0.07), 0)
+               rotate(calc(var(--wr, 0deg) * 0.07))
+               scale(calc(1 - (1 - var(--ws, 1)) * 0.07));
+  }
+  90% {
+    transform: translate3d(calc(var(--wx, 0px) * -0.03), calc(var(--wy, .5em) * -0.03), 0)
+               rotate(calc(var(--wr, 0deg) * -0.03))
+               scale(calc(1 + (1 - var(--ws, 1)) * 0.03));
+  }
+  100% { opacity: 1; transform: none; filter: blur(0); }
+}
+/* Out of the mist: in place long before it is in focus.
+
+   The difference from a settle is which property finishes last. A settle
+   clears its blur at 70% and spends the rest arriving; this arrives by 55%
+   and spends the rest condensing, which is what reads as a word resolving out
+   of fog rather than a word flying in slightly soft. The blur floor means a
+   plan with blur 0 still mists — the arc supplies the fog if the numbers
+   did not. */
+@keyframes sf-word-plan-mist {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--wx, 0px), var(--wy, .5em), 0)
+               rotate(var(--wr, 0deg)) scale(var(--ws, 1));
+    filter: blur(max(var(--wb, 6px), 5px));
+  }
+  22% { opacity: .3; }
+  55% {
+    opacity: .72;
+    /* 92% of the way to rest: close enough to read as placed, not yet still. */
+    transform: translate3d(calc(var(--wx, 0px) * 0.08), calc(var(--wy, .5em) * 0.08), 0)
+               rotate(calc(var(--wr, 0deg) * 0.08))
+               scale(calc(var(--ws, 1) + (1 - var(--ws, 1)) * 0.92));
+    filter: blur(calc(max(var(--wb, 6px), 5px) * 0.5));
+  }
+  100% { opacity: 1; transform: none; filter: blur(0); }
+}
+/* The mist loop: in soft, held sharp, back out soft. */
+@keyframes sf-cycle-mist {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--wx, 0px), var(--wy, .5em), 0)
+               rotate(var(--wr, 0deg)) scale(var(--ws, 1));
+    filter: blur(max(var(--wb, 6px), 5px));
+  }
+  14%, 56% { opacity: 1; transform: none; filter: blur(0); }
+  82%, 100% {
+    opacity: 0;
+    transform: translate3d(calc(var(--wx, 0px) * 0.5), calc(var(--wy, .5em) * 0.5), 0)
+               rotate(calc(var(--wr, 0deg) * 0.5)) scale(var(--ws, 1));
+    filter: blur(max(var(--wb, 6px), 5px));
+  }
+}
+#player .slide .statement.words-plan.words-loop .w { animation-name: var(--wk, sf-cycle-plan) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  #player .slide .statement.words-plan .w {
+    animation: none !important;
+    opacity: 1; transform: none; filter: none;
+  }
+}
+
+/* The choreography control: a brief, a button, and what came back. */
+#inspector .word-plan { display: flex; flex-direction: column; gap: 8px; }
+#inspector .word-plan .hint { margin: 2px 0 0; }

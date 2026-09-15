@@ -1275,6 +1275,69 @@
                direction control away, and choosing a wave brings it back. */
             touched(); repaint(); drawInspector();
           }), 'How far apart the words are. The wave is always eased — it starts quickly and slows as it finishes.'));
+          /* The AI button. Everything above is a choice from a list; this is
+             the one control that can produce something not on any list —
+             per-word coordinates, which is what a motion designer would
+             keyframe by hand. */
+          var planBox = el('div', 'word-plan');
+          var plan = d.wordPlan;
+          var planFresh = plan && String(plan.text || '').trim() === String(s.body || '').trim();
+          /* Said back in the author's terms, because the plan is the one
+             thing in this pane with no visible control to read it off: how
+             many pieces, of what kind, and which landings were used. */
+          var planSummary = function () {
+            var n = (plan.words || []).length;
+            var arcs = [];
+            (plan.words || []).forEach(function (w) {
+              var a = (w && w.arc) || 'settle';
+              if (arcs.indexOf(a) < 0) arcs.push(a);
+            });
+            return n + ' ' + (plan.unit === 'letter' ? 'letter' : 'word') + (n === 1 ? '' : 's') +
+              ' placed, landing ' + arcs.join(' and ') + '.';
+          };
+          var planStatus = el('p', 'hint',
+            planFresh
+              ? ('\u2728 Choreographed' + (plan.note ? ': ' + plan.note : '') +
+                 ' \u2014 ' + planSummary())
+              : plan
+                ? 'The choreography was written for different words. Ask again, or clear it.'
+                : 'Per-word coordinates: where each word comes from, how it turns, when, ' +
+                  'and how it lands \u2014 settling, bouncing, or condensing out of mist. ' +
+                  'Ask for letter by letter and it works in letters.');
+          var brief = UI.text('', function () {});
+          brief.placeholder = 'Optional: bounce in, out of smoke, one letter at a time…';
+          var ask = UI.button('\u2728 Choreograph these words', 'primary', function () {
+            if (!SF.AI || !SF.AI.generateWordMotion) {
+              planStatus.textContent = 'The AI engine is not loaded in this build.';
+              return;
+            }
+            ask.disabled = true;
+            planStatus.textContent = '\u2728 Placing the words\u2026';
+            Promise.resolve(SF.AI.generateWordMotion(s.body, { mood: brief.value }))
+              .then(function (res) {
+                if (!res || res.error) {
+                  planStatus.textContent = (res && res.error) || 'Nothing came back.';
+                  return;
+                }
+                /* Stored with the line it was written for, so editing the
+                   words retires it rather than misapplying it. */
+                d.wordPlan = { text: String(s.body || '').trim(), note: res.note,
+                  unit: res.unit === 'letter' ? 'letter' : 'word', words: res.words };
+                if (!d.words) d.words = 'rise';
+                touched(); repaint(); drawInspector();
+              })
+              .catch(function () { planStatus.textContent = 'Could not write a choreography just now.'; })
+              .finally(function () { ask.disabled = false; });
+          });
+          planBox.appendChild(brief);
+          planBox.appendChild(ask);
+          if (plan) {
+            planBox.appendChild(UI.button('Clear choreography', 'ghost', function () {
+              delete d.wordPlan; touched(); repaint(); drawInspector();
+            }));
+          }
+          planBox.appendChild(planStatus);
+          insp.appendChild(UI.field('AI choreography', planBox));
           insp.appendChild(UI.field('And leave again', UI.select([
             { value: '', label: 'No — they arrive and stay' },
             { value: 'loop', label: 'Yes — in, hold, out, round again' }

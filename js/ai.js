@@ -684,6 +684,13 @@
      specific field rather than a paragraph of shouting. */
   /* Shared classroom voice — ported from the planner's teaching-first tone.
      Keep short: every activity and game prompt already carries format rules. */
+  /* Kept in step with WORD_ARCS and LETTER_CAP in render.js by the test in
+     tests/word-plan.test.js: an arc the renderer has never heard of is a word
+     that quietly does not animate, and a letter count over the ceiling is a
+     plan that never applies. */
+  var WORD_ARC_NAMES = ['settle', 'bounce', 'mist'];
+  var LETTER_CAP = 30;
+
   var CORE_PEDAGOGY =
     'Teach before you test. Write material students can use on the slide now, ' +
     'not instructions to the teacher. Prefer concrete examples, realistic ' +
@@ -1440,6 +1447,134 @@
     return { values: values, kind: guard ? guard.kind : null, missing: missing };
   }
 
+  /**
+   * A per-word choreography for one line of type.
+   *
+   * The three presets move every word identically and differ only in timing.
+   * This asks for the thing a motion designer would keyframe: where each word
+   * comes from, how it is turned and scaled on the way in, how soft it starts,
+   * and when it starts. Coordinates, in other words — which is exactly what a
+   * list of three options cannot express.
+   *
+   * The model is given the words and the sense of the line, and told the
+   * ranges. Everything it sends back is clamped again at render time, because
+   * a dy of 4000 flings a word off a projector and a scale of 0 is an
+   * invisible one — this validates the shape, render.js enforces the limits.
+   *
+   * @param {string} line the statement, as written
+   * @param {{mood?: string}} [opts]
+   * @returns {Promise<{words: object[], note: string}|{error: string}>}
+   */
+  async function generateWordMotion(line, opts) {
+    opts = opts || {};
+    var said = String(line || '').trim();
+    if (!said) return { error: 'Write the line first \u2014 the motion is built around the words.' };
+    var words = said.split(/\s+/).filter(Boolean);
+    if (words.length > 12) {
+      return { error: 'Twelve words is the most worth choreographing. This is ' + words.length + '.' };
+    }
+    var live = await checkLiveAI();
+    if (!live) {
+      return { error: 'Choreography needs the AI server key. The Rise, Fade and Reveal presets work without it.' };
+    }
+
+    /* Letter by letter is a real request ("one letter at a time"), so it has
+       to be an option the model can take rather than something the author has
+       to know to ask for in a separate control. It is only offered when the
+       line is short enough to survive it \u2014 thirty animated letters is the
+       renderer's ceiling, and a line over it would come back as a plan that
+       silently never applies. */
+    var chars = said.replace(/\s+/g, '').length;
+    var canLetter = chars <= LETTER_CAP;
+
+    var system = CORE_PEDAGOGY + ' ' +
+      'You are a motion designer working on one line of type for a lecture slide. ' +
+      'Return ONLY a JSON object, no markdown and no code fence: ' +
+      '{"note":"<six words on the idea>","unit":"word","steps":[' +
+      '{"dx":0,"dy":0,"rot":0,"scale":1,"blur":0,"delay":0,"arc":"settle"}]}. ' +
+      'unit is "word" (' + words.length + ' steps, one per word in order)' +
+      (canLetter
+        ? ' or "letter" (' + chars + ' steps, one per letter in order, spaces skipped). ' +
+          'Choose "letter" only when the effect is about the letters themselves \u2014 ' +
+          'typing or spelling out, a word assembling from its parts. For anything ' +
+          'about the meaning of the sentence, use "word".'
+        : '. This line is too long to animate letter by letter, so unit must be "word".') + ' ' +
+      'Each step is where that unit STARTS before it lands: ' +
+      'dx and dy are offsets in em (-3 to 3, negative is left and up), ' +
+      'rot is degrees (-30 to 30), scale is 0.4 to 1.8, ' +
+      'blur is px (0 to 14), delay is ms before it moves (0 to 3000). ' +
+      'Everything ends at rest, so the numbers are the departure, not the arrival. ' +
+      'arc is the shape of the landing, one of: ' +
+      '"settle" eases into place and stops; ' +
+      '"bounce" overshoots past the resting place and comes back \u2014 use it with a ' +
+      'real offset or scale to bounce against, and it reads as weight landing; ' +
+      '"mist" arrives in place while still soft and then condenses \u2014 pair it with ' +
+      'a blur of 8 or more for something appearing out of fog or smoke. ' +
+      'Arcs may differ between steps, but two or three at most in one line. ' +
+      'Make the movement mean something about the sentence: a word about falling can ' +
+      'come from above, a word about doubt can arrive turned, an emphasised word can ' +
+      'arrive last. Keep it legible on a lecture-theatre wall \u2014 a whole line ' +
+      'flying in from twelve different directions is noise, not motion.';
+
+    var user = 'Line: ' + said.slice(0, 200) + '\nWords in order: ' +
+      words.map(function (w, i) { return (i + 1) + '. ' + w; }).join(' ') +
+      (canLetter ? '\nLetters if you choose unit "letter": ' + chars : '') +
+      (opts.mood ? '\nThe author asks for: ' + String(opts.mood).slice(0, 120) : '');
+
+    var parsed;
+    try {
+      /* Room for the unit actually chosen, not the cheapest one: asking for a
+         letter plan and budgeting for a word plan is how a 200 comes back
+         truncated. */
+      parsed = await callServerRaw(system, user, 90 * (canLetter ? chars : words.length) + 400);
+    } catch (err) {
+      var msg = err && err.message ? String(err.message) : '';
+      if (/Too many AI|already writing/i.test(msg)) return { error: msg };
+      if (err && err.aiUnreadable) {
+        return { error: err.aiNoJson
+          ? 'The model answered with something other than a choreography. Press it again.'
+          : 'The reply came back cut off. Press it again \u2014 nothing was changed.' };
+      }
+      return { error: 'The AI server could not be reached. The line is untouched.' };
+    }
+
+    /* "words" as well as "steps": the key was words before letters existed,
+       and a model that half-remembers the older shape is still answering the
+       question. */
+    var rows = modelRows(parsed, 'steps');
+    if (!rows.length) rows = modelRows(parsed, 'words');
+    var unit = canLetter && parsed && parsed.unit === 'letter' ? 'letter' : 'word';
+    var want = unit === 'letter' ? chars : words.length;
+    if (rows.length !== want) {
+      /* One step per unit or nothing: a plan for four words applied to five
+         would animate the wrong words and leave one behind. A count that
+         matches the OTHER unit is a model that chose letters and forgot to
+         say so, which is worth reading rather than rejecting. */
+      if (canLetter && unit === 'word' && rows.length === chars) {
+        unit = 'letter';
+      } else if (unit === 'letter' && rows.length === words.length) {
+        unit = 'word';
+      } else {
+        return { error: 'The model wrote ' + rows.length + ' steps for ' + want + ' ' +
+          unit + 's. Press it again.' };
+      }
+    }
+    var num = function (v) { var n = Number(v); return Number.isFinite(n) ? n : 0; };
+    return {
+      note: String((parsed && parsed.note) || '').trim().slice(0, 80),
+      unit: unit,
+      words: rows.map(function (row) {
+        var r = row && typeof row === 'object' ? row : {};
+        return {
+          dx: num(r.dx), dy: num(r.dy), rot: num(r.rot),
+          scale: Number.isFinite(Number(r.scale)) ? Number(r.scale) : 1,
+          blur: num(r.blur), delay: num(r.delay),
+          arc: WORD_ARC_NAMES.indexOf(String(r.arc)) >= 0 ? String(r.arc) : 'settle'
+        };
+      })
+    };
+  }
+
   var AI = {
     /* Availability, not credentials. Nothing here can read or set a key,
        because the browser never has one. */
@@ -1454,6 +1589,7 @@
     classifyActivity: classifyActivity,
     generatePollFromPrompt: generatePollFromPrompt,
     extractSlideTerms: extractSlideTerms,
+    generateWordMotion: generateWordMotion,
     /* Exposed for tests and future studio UI that lists AI-writable formats. */
     gameSpec: function (style) { return AI_SPECS[style] || null; }
   };

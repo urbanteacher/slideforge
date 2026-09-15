@@ -335,6 +335,129 @@ try {
     ', leaving', cycle.leaving + ', back', cycle.back);
   await page.keyboard.press('Escape');
 
+  /* --- the arcs a choreography can land with ----------------------------- */
+  /* These three are the reason a plan is more than a start position. The
+     numbers say where a word comes from; the arc says what it does when it
+     gets there, and only a browser can answer whether it really does it. */
+  const staged = async (plan, line) => {
+    await page.evaluate(([plan, line]) => {
+      const deck = Object.assign(SF.makeDeck('arc'), { theme: 'midnight' });
+      SF.Editor.workspace.setDoc(deck);
+      const d = SF.Editor.deck();
+      d.slides[0] = SF.normalizeSlide(Object.assign(SF.makeSlide('statement'), {
+        body: line,
+        design: Object.assign({ words: 'rise', wordSpeed: 'gentle' },
+          plan ? { wordPlan: plan } : {})
+      }));
+      SF.Editor.selectSlide(d.slides[0].id);
+      SF.Editor.workspace.play({ fullscreen: false });
+    }, [plan, line]);
+    await page.waitForTimeout(140);
+  };
+  const LINE = 'Every chart is a choice';
+  const at = (over) => Object.assign({ dx: 0, dy: 0, rot: 0, scale: 1, blur: 0, delay: 0 }, over);
+  const every = (over) => Array.from({ length: 5 }, () => at(over));
+
+  /* A bounce has to cross the resting place. A settle approaches zero and
+     stops; if this leg ever reports no crossing, the arc has quietly become
+     an ease with extra keyframes. */
+  await staged({ text: LINE, unit: 'word', words: every({ dx: -2, arc: 'bounce' }) }, LINE);
+  const bounce = await page.evaluate(async () => {
+    const w = document.querySelector('#player .statement.words-plan .w');
+    const dur = parseFloat(getComputedStyle(w).animationDuration) * 1000;
+    const wait = (ms) => new Promise((go) => setTimeout(go, ms));
+    const xs = [];
+    for (let i = 0; i <= 20; i++) {
+      xs.push(+new DOMMatrixReadOnly(getComputedStyle(w).transform).m41.toFixed(2));
+      await wait(dur / 20);
+    }
+    return { name: getComputedStyle(w).animationName, xs: xs };
+  });
+  if (bounce.name !== 'sf-word-plan-bounce') problems.push('bounce: wrong keyframes — ' + bounce.name);
+  const past = Math.max(...bounce.xs);
+  const crossings = bounce.xs.filter((x, i) => i && (x > 0) !== (bounce.xs[i - 1] > 0)).length;
+  if (!(bounce.xs[0] < -40)) problems.push('bounce: it did not start off to the left — ' + bounce.xs[0]);
+  if (!(past > 5)) problems.push('bounce: it never passes the resting place — furthest ' + past);
+  /* Out past rest, back, and out again: a landing, not one overshoot. */
+  if (crossings < 3) problems.push('bounce: only ' + crossings + ' crossings — that is a single overshoot');
+  if (bounce.xs[bounce.xs.length - 1] !== 0) problems.push('bounce: it does not come to rest');
+  console.log('✓ Bounce crosses the resting place', crossings, 'times, furthest', past + 'px past it');
+
+  /* Mist is an ordering claim: in place BEFORE it is in focus. The arc also
+     supplies its own fog, so asking for mist with blur 0 still mists. */
+  await staged({ text: LINE, unit: 'word', words: every({ dy: 0.6, blur: 0, arc: 'mist' }) }, LINE);
+  const mist = await page.evaluate(async () => {
+    const w = document.querySelector('#player .statement.words-plan .w');
+    const dur = parseFloat(getComputedStyle(w).animationDuration) * 1000;
+    const wait = (ms) => new Promise((go) => setTimeout(go, ms));
+    const out = [];
+    for (let i = 0; i <= 10; i++) {
+      const cs = getComputedStyle(w);
+      out.push({ y: Math.abs(+new DOMMatrixReadOnly(cs.transform).m42.toFixed(1)),
+        blur: +(/blur\(([\d.]+)px\)/.exec(cs.filter)?.[1] ?? 0) });
+      await wait(dur / 10);
+    }
+    return { name: getComputedStyle(w).animationName, out: out, start: out[0] };
+  });
+  if (mist.name !== 'sf-word-plan-mist') problems.push('mist: wrong keyframes — ' + mist.name);
+  if (!(mist.start.blur > 3)) problems.push('mist: the arc supplied no fog of its own — ' + mist.start.blur);
+  const half = mist.out[5];
+  const travelled = 1 - half.y / Math.max(mist.start.y, 0.01);
+  const cleared = 1 - half.blur / Math.max(mist.start.blur, 0.01);
+  if (!(travelled > cleared + 0.15)) {
+    problems.push('mist: focus is not lagging the move — travelled ' +
+      travelled.toFixed(2) + ', cleared ' + cleared.toFixed(2));
+  }
+  if (mist.out[10].blur !== 0) problems.push('mist: it never comes into focus');
+  console.log('✓ Mist arrives before it focuses — half way through,',
+    Math.round(travelled * 100) + '% moved but only', Math.round(cleared * 100) + '% cleared');
+
+  /* --- letter by letter -------------------------------------------------- */
+  const letters = Array.from({ length: 19 }, (unused, i) => at({ dy: -0.3, blur: 2, delay: i * 70 }));
+  await staged({ text: LINE, unit: 'letter', words: letters }, LINE);
+  await page.waitForTimeout(250);
+  const split = await page.evaluate(() => {
+    const line = document.querySelector('#player .statement');
+    const words = Array.from(line.querySelectorAll('.wword'));
+    const boxes = Array.from(line.querySelectorAll('.w'));
+    return {
+      letters: boxes.length, words: words.length,
+      wordText: words.map((n) => n.textContent),
+      display: words[0] && getComputedStyle(words[0]).display,
+      /* Each word is one box, so a word can never be broken across lines —
+         which is what animating letters would otherwise allow. */
+      rows: new Set(words.map((n) => Math.round(n.getBoundingClientRect().top))).size,
+      delays: boxes.slice(0, 3).map((n) => getComputedStyle(n).animationDelay),
+      hidden: words.every((n) => n.getAttribute('aria-hidden') === 'true'),
+      said: line.querySelector('.sr-only') && line.querySelector('.sr-only').textContent,
+      wide: boxes.every((n) => n.getBoundingClientRect().width > 0)
+    };
+  });
+  if (split.letters !== 19) problems.push('letters: ' + split.letters + ' boxes, expected 19');
+  if (split.words !== 5) problems.push('letters: the words did not stay whole — ' + split.words + ' boxes');
+  if (split.wordText.join(' ') !== LINE) problems.push('letters: the words read ' + split.wordText.join('|'));
+  if (split.display !== 'inline-block') problems.push('letters: a word is not one box — ' + split.display);
+  if (!split.wide) problems.push('letters: a letter box has no width');
+  if (split.delays[0] === split.delays[1]) problems.push('letters: they all arrive together — ' + split.delays.join(','));
+
+  /* The part that is easy to get wrong and invisible when you do. Nineteen
+     one-character elements are read out as "E v e r y c h a r t" unless the
+     split is hidden and the sentence handed back whole. Proved by comparing
+     the tree with the same line unsplit, rather than by reasoning about it. */
+  if (!split.hidden) problems.push('letters: the split is exposed to the accessibility tree');
+  if (split.said !== LINE) problems.push('letters: the line was not handed back whole — ' + split.said);
+  const spelled = await page.locator('#player .statement').ariaSnapshot();
+  await staged(null, LINE);
+  await page.waitForTimeout(250);
+  const plain = await page.locator('#player .statement').ariaSnapshot();
+  if (spelled !== plain) {
+    problems.push('letters: a screen reader does not hear the same line —\n  split: ' +
+      JSON.stringify(spelled) + '\n  plain: ' + JSON.stringify(plain));
+  }
+  console.log('✓ 19 letters in 5 unbreakable words on', split.rows,
+    'rows, and a screen reader hears', JSON.stringify(plain.replace(/^- text: /, '')));
+  await page.keyboard.press('Escape');
+
   assert.deepEqual(problems, []);
   assert.deepEqual(errors, []);
   console.log('\nCover motion smoke passed.');
