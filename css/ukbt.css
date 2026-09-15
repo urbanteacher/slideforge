@@ -606,6 +606,43 @@
 .theme-ukbt .layout-title .sub,
 .theme-ukbt-institute .layout-title .sub { color: var(--ukbt-green); font-weight: 600; letter-spacing: .01em; }
 
+/* The primary button off the component sheet: black fill, white label, an
+   arrow, and a corner radius small enough to read as a rectangle. The only
+   things on a slide that are buttons are the two reveal toggles, so that is
+   where it goes. The arrow is added here rather than in the markup because it
+   is decoration on a control that already has a label. */
+.theme-ukbt .flip-toggle,
+.theme-ukbt-institute .flip-toggle,
+.theme-ukbt .image-facts-toggle,
+.theme-ukbt-institute .image-facts-toggle {
+  background: var(--ukbt-contrast);
+  color: #ffffff;
+  border: 2px solid var(--ukbt-contrast);
+  border-radius: 6px;
+  font-family: var(--ukbt-font-meta);
+  font-weight: 500;
+  letter-spacing: .01em;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.theme-ukbt .flip-toggle::after,
+.theme-ukbt-institute .flip-toggle::after,
+.theme-ukbt .image-facts-toggle::after,
+.theme-ukbt-institute .image-facts-toggle::after { content: ' \2197'; }
+/* Secondary, which the sheet draws as the same rectangle with no fill. */
+.theme-ukbt .flip-toggle:hover,
+.theme-ukbt-institute .flip-toggle:hover,
+.theme-ukbt .image-facts-toggle:hover,
+.theme-ukbt-institute .image-facts-toggle:hover,
+.theme-ukbt .flip-toggle[aria-expanded="true"],
+.theme-ukbt-institute .flip-toggle[aria-expanded="true"],
+.theme-ukbt .image-facts-toggle[aria-expanded="true"],
+.theme-ukbt-institute .image-facts-toggle[aria-expanded="true"] {
+  background: transparent;
+  color: var(--s-fg);
+  border-color: var(--s-fg);
+}
+
 /* ---------------------------------------------------------- the highlights
 
    Purple, Bright Blue and Orange are listed in the system as "highlight,
@@ -621,15 +658,65 @@
    The two themes run the same three colours from different starting points,
    which keeps them siblings rather than twins: the parent opens on purple,
    the Institute on bright blue. */
+/* The anatomy is the organisation's own CTA card, read off the component
+   sheet: a section flag, a heading set large and black, a paragraph under it,
+   and the whole thing on a highlight ground with square-ish corners.
+
+   What does not carry over is the bottom half of that component — the
+   category and location pills, the date and handle, the primary button. Those
+   are fields a card on a web page has and a slide does not, and inventing
+   content to fill them would be decoration pretending to be information. The
+   button style is used further down, on the two reveal toggles, which are the
+   only things on a slide that are actually buttons. */
+/* The cards sat in a band at the top with half the slide empty under them,
+   which is not what the sheet draws — its cards have room. Centre the row and
+   give each one a floor, so three short cards still read as panels rather
+   than as captions that happen to have a colour. */
+.theme-ukbt.layout-cards .pad,
+.theme-ukbt-institute.layout-cards .pad { justify-content: center; }
 .theme-ukbt.layout-cards li,
 .theme-ukbt-institute.layout-cards li {
   color: var(--ukbt-contrast);
   border: 0;
+  border-radius: 10px;
+  padding: 34px 30px 36px;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+/* The paragraph takes the slack, so the flag and heading stay at the top of
+   the card and the card bottoms line up. */
+.theme-ukbt.layout-cards li .card-body,
+.theme-ukbt-institute.layout-cards li .card-body { flex: 1; }
+/* The counter becomes the section flag: same place, same weight, and it is
+   already the one line above the heading. */
+.theme-ukbt.layout-cards li::before,
+.theme-ukbt-institute.layout-cards li::before {
+  color: var(--ukbt-contrast);
+  opacity: .62;
+  font-family: var(--s-font);
+  font-size: var(--ukbt-xs);
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+/* Heading 4 on the ramp, which is what the sheet sets a card heading at. */
+.theme-ukbt.layout-cards .card-label,
+.theme-ukbt-institute.layout-cards .card-label {
+  font-size: var(--ukbt-2xl);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  margin-bottom: 12px;
 }
 .theme-ukbt.layout-cards li .card-body,
-.theme-ukbt-institute.layout-cards li .card-body { color: var(--ukbt-contrast); opacity: .84; }
-.theme-ukbt.layout-cards li::before,
-.theme-ukbt-institute.layout-cards li::before { color: var(--ukbt-contrast); opacity: .5; }
+.theme-ukbt-institute.layout-cards li .card-body {
+  color: var(--ukbt-contrast);
+  opacity: .84;
+  font-size: var(--ukbt-m);
+  line-height: 1.45;
+}
 
 /* Four in the cycle, not three. On a three-colour cycle a row of four cards —
    which the Townhouse deck has, one rule per floor — came out blue, orange,
