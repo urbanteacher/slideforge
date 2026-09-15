@@ -276,6 +276,77 @@
 .theme-ukbt-institute[data-art-index="2"] .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-shell.png'); }
 .theme-ukbt-institute[data-art-index="3"] .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-dome.png'); }
 
+/* The same objects, quietly, on the slides that carry an argument.
+
+   A deck where only the first slide is designed looks like a template with a
+   cover on it. These sit in the bottom-right corner at a fifth of their
+   strength and a little over half the size — texture, in the way the wave is
+   texture, rather than something the room looks at. The content block is
+   lifted above them and left-aligned with a max width, so they sit in space
+   the copy was never going to use.
+
+   Drawn as ::after on the slide rather than as another div, because nothing
+   here needs markup: ::before is already the wave, and the two stack in the
+   same layer under .pad.
+
+   NOT on chart and table slides. This deck teaches that the ink on a chart
+   should carry data, and putting a decorative object behind one would be
+   chartjunk by the definition the deck itself gives. Not on quiz or game
+   layouts either, where the room is reading an answer under time pressure. */
+.theme-ukbt::after,
+.theme-ukbt-institute::after {
+  content: '';
+  position: absolute;
+  /* A third of it hangs off the slide. At -34px it cleared the copy on a
+     content slide and sat under the third card on a cards slide and under the
+     last bullet on a key fact — which is the thing this was supposed not to
+     do. Far enough into the corner that the overlap cannot happen, rather
+     than far enough on the slides that happened to be checked first. */
+  right: -96px;
+  bottom: -84px;
+  width: 300px;
+  height: 300px;
+  background: no-repeat center / contain;
+  opacity: .19;
+  pointer-events: none;
+  z-index: 0;
+}
+.theme-ukbt.layout-title::after,
+.theme-ukbt-institute.layout-title::after,
+.theme-ukbt.layout-section::after,
+.theme-ukbt-institute.layout-section::after,
+.theme-ukbt.layout-chart::after,
+.theme-ukbt-institute.layout-chart::after,
+.theme-ukbt.layout-table::after,
+.theme-ukbt-institute.layout-table::after,
+.theme-ukbt.layout-quiz::after,
+.theme-ukbt-institute.layout-quiz::after,
+.theme-ukbt.game-stage::after,
+.theme-ukbt-institute.game-stage::after,
+.theme-ukbt.layout-image::after,
+.theme-ukbt-institute.layout-image::after,
+.theme-ukbt.layout-gallery::after,
+.theme-ukbt-institute.layout-gallery::after,
+.theme-ukbt.layout-split::after,
+.theme-ukbt-institute.layout-split::after { content: none; }
+
+.theme-ukbt::after { background-image: url('../assets/brand/ukbt-objects/ukbt-coil.png'); }
+.theme-ukbt[data-art-index="1"]::after { background-image: url('../assets/brand/ukbt-objects/ukbt-asterisk.png'); }
+.theme-ukbt[data-art-index="2"]::after { background-image: url('../assets/brand/ukbt-objects/ukbt-cone.png'); }
+.theme-ukbt[data-art-index="3"]::after { background-image: url('../assets/brand/ukbt-objects/ukbt-torus.png'); }
+
+.theme-ukbt-institute::after { background-image: url('../assets/brand/ukbt-objects/ukbt-knot.png'); }
+.theme-ukbt-institute[data-art-index="1"]::after { background-image: url('../assets/brand/ukbt-objects/ukbt-disc.png'); }
+.theme-ukbt-institute[data-art-index="2"]::after { background-image: url('../assets/brand/ukbt-objects/ukbt-shell.png'); }
+.theme-ukbt-institute[data-art-index="3"]::after { background-image: url('../assets/brand/ukbt-objects/ukbt-dome.png'); }
+
+/* A key fact is one number and a lot of air. It can take a bigger one. */
+.theme-ukbt.layout-keyfact::after,
+.theme-ukbt-institute.layout-keyfact::after {
+  right: -120px; bottom: -110px;
+  width: 400px; height: 400px; opacity: .22;
+}
+
 /* ------------------------------------------------------------- title slide
 
    Its own ground, not the deck's. A title slide that is the same flat colour

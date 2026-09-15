@@ -3627,13 +3627,16 @@
       }
       if (art) {
         art.setAttribute('aria-hidden', 'true');
-        /* Which of a theme's decorations to show can then be a CSS choice.
-           Modulo four because that is how many objects each UKBT set has;
-           any theme that wants fewer can ignore it. */
-        if (opts.index != null) root.dataset.artIndex = String(opts.index % 4);
         root.appendChild(art);
       }
     }
+    /* Which of a theme's decorations a slide shows, as a number a stylesheet
+       can switch on. Stamped on every slide rather than only the two
+       full-bleed ones, because a theme may want quiet decoration on the
+       layouts that carry an argument as well as loud decoration on the two
+       that do not. Modulo four because that is how many objects each UKBT set
+       has; a theme with fewer, or none, ignores it. */
+    if (opts.index != null) root.dataset.artIndex = String(opts.index % 4);
 
     var pad = el('div', 'pad');
     root.appendChild(pad);
