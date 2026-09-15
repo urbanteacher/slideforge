@@ -2861,6 +2861,7 @@
     if (!u) return "";
     if (/^https?:\/\//i.test(u)) return u;
     if (/^\/\//.test(u)) return "https:" + u;
+    if (u.charAt(0) === "/" && u.indexOf("..") < 0 && /^\/[A-Za-z0-9._~/-]*$/.test(u)) return u;
     if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}([\/?#][^\s]*)?$/i.test(u)) return "https://" + u;
     return "";
   }
@@ -3223,6 +3224,22 @@
       }
     }
     return slide;
+  }
+  function pasteTarget(slide) {
+    if (!slide || !slide.type) return null;
+    var type2 = String(slide.type);
+    if (type2 === "gallery") return { field: "layer", become: "gallery" };
+    if (["image", "split", "introduction", "keyfact", "quote"].indexOf(type2) >= 0) {
+      return { field: "image", become: type2 };
+    }
+    var lines = (slide.bullets || []).filter(function(b) {
+      return String(b).trim();
+    }).length;
+    if (lines && BULLET_LAYOUTS.indexOf(type2) >= 0) return { field: "image", become: "split" };
+    if (["title", "section", "content", "cards", "keywords", "italics"].indexOf(type2) >= 0) {
+      return { field: "image", become: "image" };
+    }
+    return null;
   }
   function imagePlacement(slide) {
     var p = slide.design && slide.design.placement;
@@ -8947,6 +8964,7 @@
     deckShowsLogo,
     normalizeSlide,
     prepareLayout,
+    pasteTarget,
     imagePlacement,
     setImagePlacement,
     swapImagePlacement,

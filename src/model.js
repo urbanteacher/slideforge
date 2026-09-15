@@ -1,7 +1,7 @@
 import { normalizeExploration, explorationValue, explorationCurve } from './deck/exploration.js';
 import { createBoardRuntime } from "./boards/runtime.js";
 import { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes } from "./activities/catalogue.js";
-import { parsePerson, orgTree, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, SLIDE_TYPES, LAYOUT_GROUPS, INFO_LAYOUTS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, parseInfoLine, formatInfoLine, infoNumber, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
+import { parsePerson, orgTree, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, SLIDE_TYPES, LAYOUT_GROUPS, INFO_LAYOUTS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, parseInfoLine, formatInfoLine, infoNumber, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
 import { FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest } from "./deck/feedback.js";
 import { renderMarkdown, parseMarkdownDeck } from "./deck/markdown.js";
 import sampleDeck from "./samples/deck.json" with { type: "json" };
@@ -1403,6 +1403,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   deckShowsLogo: deckShowsLogo,
   normalizeSlide: normalizeSlide,
   prepareLayout: prepareLayout,
+  pasteTarget: pasteTarget,
   imagePlacement: imagePlacement,
   setImagePlacement: setImagePlacement,
   swapImagePlacement: swapImagePlacement,
@@ -1499,4 +1500,4 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   LibraryFolders: LibraryFolders
 });
 
-export { SLIDE_W, SLIDE_H, ASPECTS, parsePerson, orgTree, CHART_TAXONOMY, chartCategories, chartPrimaryCategory, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, INFO_LAYOUTS, parseInfoLine, formatInfoLine, infoNumber, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, unusedDraft, libraryGroupFromTheme, normalizeLibraryGroup, LIBRARY_GROUPS, LibraryFolders, GAME_FORMAT_PRESETS, getShowcaseGame };
+export { SLIDE_W, SLIDE_H, ASPECTS, parsePerson, orgTree, CHART_TAXONOMY, chartCategories, chartPrimaryCategory, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, INFO_LAYOUTS, parseInfoLine, formatInfoLine, infoNumber, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, unusedDraft, libraryGroupFromTheme, normalizeLibraryGroup, LIBRARY_GROUPS, LibraryFolders, GAME_FORMAT_PRESETS, getShowcaseGame };

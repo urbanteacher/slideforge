@@ -490,7 +490,6 @@
      Only when the open slide has somewhere to put it, and never while the
      cursor is in a field — pasting text into a text box must stay pasting
      text into a text box. */
-  var IMAGE_SLIDE_TYPES = ['image', 'split', 'gallery', 'introduction', 'keyfact', 'quote'];
 
   function pasteImage(e) {
     if (SF.Player && SF.Player.open) return;
@@ -499,7 +498,13 @@
     var tag = t ? t.tagName : '';
     if (tag === 'INPUT' || tag === 'TEXTAREA' || (t && t.isContentEditable)) return;
     var s = deck.slides[sel];
-    if (!s || IMAGE_SLIDE_TYPES.indexOf(s.type) < 0) return;
+    if (!s) return;
+    /* Where the picture can go, and what this slide would have to become to
+       take it. Refused only where a picture makes no sense — a chart, a
+       table, a code listing. Everywhere else a paste is an intention, not a
+       mistake, so it is answered rather than ignored. */
+    var target = SF.pasteTarget ? SF.pasteTarget(s) : null;
+    if (!target) return;
     var items = (e.clipboardData && e.clipboardData.items) || [];
     var file = null;
     for (var i = 0; i < items.length; i++) {
@@ -516,10 +521,67 @@
     }
     var fr = new FileReader();
     fr.onload = function () {
-      s.image = fr.result;
-      touched();
-      draw();
-      SF.toast('Pasted onto slide ' + (sel + 1) + '.');
+      var uri = fr.result;
+
+      function put(slide) {
+        if (target.field === 'layer') {
+          /* A gallery holds layers. Setting slide.image here is what the old
+             handler did, and the gallery layout never reads it: the toast
+             said "pasted" and the slide stayed empty. */
+          slide.layers = (slide.layers || []).concat([{ image: uri, caption: '', source: '' }]);
+        } else {
+          slide.image = uri;
+        }
+      }
+
+      /* Already the right shape: paste and say so. */
+      if (target.become === s.type) {
+        put(s);
+        touched(); draw();
+        SF.toast('Pasted onto slide ' + (sel + 1) + '.');
+        return;
+      }
+
+      /* It is not, so say what it would become before changing it. The words
+         survive either way — split and image both keep the fields they do not
+         draw — but a layout change is the author's decision, not a side
+         effect of a keystroke. Undo covers it regardless. */
+      var label = (SF.SLIDE_TYPES[target.become] || {}).label || target.become;
+      var lines = (s.bullets || []).filter(function (b) { return String(b).trim(); }).length;
+      var keeps = lines
+        ? 'Your heading and ' + lines + (lines === 1 ? ' point stay' : ' points stay') + ' on the slide.'
+        : 'Your heading stays on the slide.';
+      if (!SF.askChoice) {
+        SF.prepareLayout(s, target.become); put(s);
+        touched(); draw();
+        SF.toast('Slide ' + (sel + 1) + ' is now ' + label + '.');
+        return;
+      }
+      SF.askChoice({
+        title: 'This slide cannot hold a picture yet',
+        detail: 'Slide ' + (sel + 1) + ' is ' + ((SF.SLIDE_TYPES[s.type] || {}).label || s.type) +
+          '. It can become ' + label + ' and take the picture, or the picture can go on a slide of its own.',
+        options: [
+          { value: 'convert', label: 'Make this slide ' + label,
+            detail: keeps + ' Undo puts it back.' },
+          { value: 'new', label: 'Put it on a new slide',
+            detail: 'Leaves this slide alone and adds a picture slide after it.' }
+        ]
+      }, function (choice) {
+        if (choice === 'new') {
+          var next = makeLayoutSlide('image');
+          put(next);
+          deck.slides.splice(sel + 1, 0, next);
+          sel += 1;
+          touched(); draw();
+          SF.toast('Added a picture slide after slide ' + sel + '.');
+          return;
+        }
+        SF.prepareLayout(s, target.become);
+        put(s);
+        touched(); draw();
+        SF.toast('Slide ' + (sel + 1) + ' is now ' + label + '.');
+      });
     };
     fr.readAsDataURL(file);
   }

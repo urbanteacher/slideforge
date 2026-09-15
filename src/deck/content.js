@@ -434,12 +434,16 @@ function infoNumber(value) {
   return m ? parseFloat(m[0]) : NaN;
 }
 
-/** Only http(s) links — blocks javascript: and other schemes. */
+/** Only http(s) links — and same-origin paths for course files. Blocks javascript: and other schemes. */
 function safeHref(url) {
   var u = String(url || '').trim();
   if (!u) return '';
   if (/^https?:\/\//i.test(u)) return u;
   if (/^\/\//.test(u)) return 'https:' + u;
+  /* Course packs (lessons/*.xlsx, *.ipynb) are served from the app origin.
+     Allow a rooted path with no ".." so a links slide can hand students a
+     download without baking in localhost or a Render hostname. */
+  if (u.charAt(0) === '/' && u.indexOf('..') < 0 && /^\/[A-Za-z0-9._~/-]*$/.test(u)) return u;
   if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}([\/?#][^\s]*)?$/i.test(u)) return 'https://' + u;
   return '';
 }
@@ -626,6 +630,52 @@ function prepareLayout(slide, type) {
   return slide;
 }
 
+/**
+ * Where a pasted picture should land, given the slide in front of you.
+ *
+ * Paste used to be refused outright on any layout that has no image field —
+ * ⌘V on a bullets slide did nothing at all, with no message, because the
+ * handler returned early. But "I have a picture for this slide" is a
+ * perfectly ordinary thing to mean, and the app already knows how to reshape
+ * a slide without losing its words: split is a bullet layout, so the text
+ * survives the conversion intact.
+ *
+ * So this answers three questions at once: can this slide hold a picture,
+ * which FIELD does it go in, and if it cannot, what would it have to become.
+ *
+ * @param {Slide|null|undefined} slide
+ * @returns {{field: 'image'|'layer', become: string}|null} null when a picture
+ *   makes no sense here — a chart, a table, a code listing or a game slide is
+ *   not improved by dropping a screenshot into it.
+ */
+function pasteTarget(slide) {
+  if (!slide || !slide.type) return null;
+  var type = String(slide.type);
+
+  /* A gallery is a stack of layers, not one image. Pasting used to set
+     slide.image here, which the gallery layout never reads — so the toast
+     said "pasted" and nothing appeared on the slide. */
+  if (type === 'gallery') return { field: 'layer', become: 'gallery' };
+
+  /* Layouts with an image field of their own: paste and be done. */
+  if (['image', 'split', 'introduction', 'keyfact', 'quote'].indexOf(type) >= 0) {
+    return { field: 'image', become: type };
+  }
+
+  /* Words on the slide and a bullet layout to carry them: Image + text keeps
+     every one of them and puts the picture alongside. */
+  var lines = (slide.bullets || []).filter(function (b) { return String(b).trim(); }).length;
+  if (lines && BULLET_LAYOUTS.indexOf(type) >= 0) return { field: 'image', become: 'split' };
+
+  /* A heading and nothing else wants the picture to be the slide, with the
+     words over it, rather than half a slide of white space. */
+  if (['title', 'section', 'content', 'cards', 'keywords', 'italics'].indexOf(type) >= 0) {
+    return { field: 'image', become: 'image' };
+  }
+
+  return null;
+}
+
 function imagePlacement(slide) {
   var p=slide.design && slide.design.placement;
   return p==='top'||p==='bottom' ? p : slide.imageSide==='left'?'left':'right';
@@ -709,4 +759,4 @@ function correctAnswerLabel(slide) {
 }
 
 
-export { parsePerson, orgTree, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, chartNumber, SLIDE_TYPES, LAYOUT_GROUPS, INFO_LAYOUTS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, parseInfoLine, formatInfoLine, infoNumber, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };
+export { parsePerson, orgTree, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, chartNumber, SLIDE_TYPES, LAYOUT_GROUPS, INFO_LAYOUTS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, parseInfoLine, formatInfoLine, infoNumber, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };

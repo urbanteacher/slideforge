@@ -142,3 +142,54 @@ test('the readiness check finds what fails in the room, and says which is which'
   assert.equal(none.stop, 1);
   assert.equal(none.items[0].slide, null);
 });
+
+test('a pasted picture knows where it can land, and what a slide must become', async () => {
+  const SF = loadModel();
+  const withLines = (type, n) => {
+    const s = SF.makeSlide(type);
+    s.bullets = Array.from({ length: n }, (_, i) => 'point ' + i);
+    return s;
+  };
+
+  /* Layouts with an image field take it where they are. */
+  for (const type of ['image', 'split', 'introduction', 'keyfact', 'quote']) {
+    assert.deepEqual(SF.pasteTarget(SF.makeSlide(type)), { field: 'image', become: type },
+      type + ' should take a picture as it is');
+  }
+
+  /* A gallery is layers, not one image. Pasting used to set slide.image,
+     which layoutGallery never reads — the toast said "pasted" and the slide
+     stayed empty. */
+  assert.deepEqual(SF.pasteTarget(SF.makeSlide('gallery')), { field: 'layer', become: 'gallery' });
+
+  /* Words on a bullet layout: Image + text keeps every one of them. */
+  for (const type of ['content', 'cards', 'keywords', 'stats', 'timeline']) {
+    assert.deepEqual(SF.pasteTarget(withLines(type, 3)), { field: 'image', become: 'split' },
+      type + ' with points should offer Image + text');
+  }
+
+  /* A heading and nothing else: the picture should be the slide. Bullets are
+     cleared explicitly, because a fresh content slide arrives with empty pits
+     and a starter may seed text into them. */
+  for (const type of ['title', 'section', 'content']) {
+    const bare = SF.makeSlide(type);
+    bare.bullets = [];
+    assert.deepEqual(SF.pasteTarget(bare), { field: 'image', become: 'image' },
+      type + ' with no points should offer a full-bleed image');
+  }
+
+  /* And refused where a picture is not an improvement. */
+  for (const type of ['chart', 'table', 'code', 'video', 'game', 'quiz']) {
+    assert.equal(SF.pasteTarget(withLines(type, 3)), null, type + ' must refuse a paste');
+  }
+  assert.equal(SF.pasteTarget(null), null);
+  assert.equal(SF.pasteTarget({}), null);
+
+  /* The conversion the policy names has to be one that keeps the words, or
+     the offer is a lie. */
+  const before = withLines('content', 3);
+  before.title = 'Why we visualise';
+  const after = SF.normalizeSlide(SF.prepareLayout(before, 'split'));
+  assert.equal(after.title, 'Why we visualise');
+  assert.equal(after.bullets.filter((b) => String(b).trim()).length, 3);
+});
