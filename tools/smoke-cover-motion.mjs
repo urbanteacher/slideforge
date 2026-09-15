@@ -181,6 +181,57 @@ try {
   }
   console.log('✓ It plays on the wall and holds still in the editor');
 
+  /* --- and it still reads as a sentence ---------------------------------- */
+  /* Splitting text into LETTERS is an accessibility disaster — Roselli tested
+     eight screen-reader/browser pairs and six failed, from "text never
+     announced" to letters read one at a time. Splitting into WORDS with the
+     spaces left as real text nodes should be invisible to the tree; this
+     proves it rather than assuming it, because a future change to per-letter
+     effects would break silently. */
+  const trees = await page.evaluate(() => {
+    const build = (design) => {
+      const slide = SF.normalizeSlide(Object.assign(SF.makeSlide('statement'),
+        { body: 'Every chart is a choice', subtitle: 'LDSCI6253', design: design }));
+      const node = SF.renderSlide(SF.Editor.deck(), slide, { index: 0, total: 1 });
+      const line = node.querySelector('.statement');
+      return { spans: line.querySelectorAll('.w').length, text: line.textContent };
+    };
+    return { plain: build({}), split: build({ words: 'rise' }) };
+  });
+  if (trees.split.spans < 5) problems.push('the words were not split at all');
+  if (trees.plain.spans) problems.push('an unsplit statement has word spans');
+  if (trees.plain.text !== trees.split.text) {
+    problems.push('splitting changed the text: ' + JSON.stringify(trees.split.text));
+  }
+  const plainTree = (await page.evaluate(() => {
+    document.getElementById('a11y-probe')?.remove();
+    const frame = document.createElement('div');
+    frame.id = 'a11y-probe';
+    Object.assign(frame.style, { position: 'fixed', inset: '0', width: '1280px', height: '720px' });
+    const slide = SF.normalizeSlide(Object.assign(SF.makeSlide('statement'),
+      { body: 'Every chart is a choice', subtitle: 'LDSCI6253' }));
+    frame.appendChild(SF.renderSlide(SF.Editor.deck(), slide, { index: 0, total: 1 }));
+    document.body.appendChild(frame);
+    return true;
+  }), await page.locator('#a11y-probe').ariaSnapshot());
+  const splitTree = (await page.evaluate(() => {
+    document.getElementById('a11y-probe')?.remove();
+    const frame = document.createElement('div');
+    frame.id = 'a11y-probe';
+    Object.assign(frame.style, { position: 'fixed', inset: '0', width: '1280px', height: '720px' });
+    const slide = SF.normalizeSlide(Object.assign(SF.makeSlide('statement'),
+      { body: 'Every chart is a choice', subtitle: 'LDSCI6253', design: { words: 'rise' } }));
+    frame.appendChild(SF.renderSlide(SF.Editor.deck(), slide, { index: 0, total: 1 }));
+    document.body.appendChild(frame);
+    return true;
+  }), await page.locator('#a11y-probe').ariaSnapshot());
+  if (plainTree.trim() !== splitTree.trim()) {
+    problems.push('the split changed the accessibility tree:\n  plain: ' +
+      plainTree.trim() + '\n  split: ' + splitTree.trim());
+  }
+  await page.evaluate(() => document.getElementById('a11y-probe')?.remove());
+  console.log('✓ The accessibility tree is the same split or not —', JSON.stringify(splitTree.trim().slice(0, 48)));
+
   /* --- the two controls, in a browser ------------------------------------ */
   const knobs = await page.evaluate(() => {
     const read = (design) => {
