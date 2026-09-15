@@ -183,6 +183,12 @@
     rail: function () { Player.toggleRoomSidebar(); },
     focus: function () { if (SF.Live && SF.Live.active) Player.emit('focusToggle', {}); else toggleSoloFeedback({}); },
     join: function () { Player.emit('joinToggle', {}); },
+    /* Opens share dialogs on this (wall) window. Presenter Share runs on the
+       desk instead — see sharePrep / shareWatch. */
+    share: function () {
+      if (SF.Shell && typeof SF.Shell.shareLesson === 'function') SF.Shell.shareLesson();
+      else toast('Sharing needs the SlideForge server.');
+    },
     /* One question, asked now. Ends an open one rather than stacking a
        second on top of it — the button is the same button either way. */
     poll: function () {
@@ -2506,11 +2512,37 @@
     return presenterBus;
   }
 
+  /**
+   * Send to the desk — as a reply to one, or as news for all of them.
+   *
+   * The distinction is the whole function. A desk opened by Start has an
+   * opener AND joins the channel, and it listens on both, so anything sent
+   * by both routes arrives twice. That was invisible for as long as this
+   * only carried state: sf-presenter-state is a repaint, and painting twice
+   * looks exactly like painting once. sf-share-prep was the first plain
+   * EVENT to come this way, and an event delivered twice is two share
+   * dialogs stacked exactly on top of each other — which does not look like
+   * a bug, it looks like the teacher being asked the same question twice,
+   * with a second upload waiting behind the first.
+   *
+   * So a reply goes to whoever asked, once. Only a broadcast fans out, and
+   * it has to: an orphaned presenter.html tab is not presenterWin and can
+   * only be reached on the channel, while a desk opened by Start may be
+   * there before the channel is.
+   *
+   * This is the same rule the desk's own sender already follows in the other
+   * direction — see SF.deskSend in presenter.html, and the id dedupe in
+   * alreadyHandled() that catches what slips past it.
+   *
+   * @param {object} payload
+   * @param {Window|null} [sourceWin] the window that asked, for a reply
+   */
   function postPresenter(payload, sourceWin) {
     if (sourceWin) {
       try { sourceWin.postMessage(payload, location.origin); } catch (e) {}
+      return;
     }
-    if (presenterWin && !presenterWin.closed && sourceWin !== presenterWin) {
+    if (presenterWin && !presenterWin.closed) {
       try { presenterWin.postMessage(payload, location.origin); } catch (e) {}
     }
     var ch = presenterChannel();
@@ -2726,6 +2758,9 @@
         /* Desk mirrors HUD labels — blank wall, room rail, live toggles. */
         blank: !!Player.blank,
         live: !!(SF.Live && SF.Live.active),
+        /* Desk chrome shows the PIN without forcing Join QR on the wall. */
+        pin: (SF.Live && SF.Live.pin) || null,
+        joinUrl: (SF.Live && SF.Live.joinUrl) || '',
         reactions: !(SF.Live && SF.Live.reactions === false),
         phonesBlank: !!(SF.Live && SF.Live.phonesBlank),
         floor: (SF.Live && SF.Live.floor) || 'auto',
@@ -2801,6 +2836,22 @@
       });
     }
     else if (d.cmd === 'qa') Player.emit('qaCommand', d);
+    else if (d.cmd === 'sharePrep') {
+      var doc = null;
+      try {
+        if (SF.Shell && typeof SF.Shell.lessonDoc === 'function') doc = SF.Shell.lessonDoc();
+      } catch (e) { doc = null; }
+      if (!doc && Player.deck) doc = Player.deck;
+      postPresenter({
+        type: 'sf-share-prep',
+        doc: doc,
+        live: !!(SF.Live && SF.Live.active)
+      }, sourceWin);
+    }
+    else if (d.cmd === 'shareWatch') {
+      var ok = !!(SF.Live && SF.Live.watchOn && SF.Live.watchOn(d.id));
+      postPresenter({ type: 'sf-share-watch', ok: ok, id: d.id || null }, sourceWin);
+    }
     /* Desk drives the wall the same way the HUD does — prev/next/blank/
        freeze/exit and every room tool share Player.control. */
     else if (typeof Player.control === 'function') Player.control(d.cmd);

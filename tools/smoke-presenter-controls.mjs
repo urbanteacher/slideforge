@@ -163,6 +163,42 @@ try {
   if (!refused) problems.push('the wall acted on a room tool with no live room');
   console.log('✓ Join QR, Reactions, Blank phones, Floor are disabled with no room');
 
+  /* --- one reply, once --------------------------------------------------- */
+  /* A desk opened by Start has an opener AND joins the channel, and it listens
+     on both. For as long as the wall only sent state that was fine, because a
+     repaint painted twice looks like a repaint. The first plain EVENT to come
+     this way — the share dialog's sf-share-prep — arrived twice and opened two
+     modals stacked exactly on top of each other, which reads as the teacher
+     being asked the same question twice with a second upload behind it.
+
+     Measured rather than reasoned about: this counts arrivals of a reply on
+     the desk that asked for it. Two means postPresenter has gone back to
+     fanning replies out over both routes. */
+  const replies = await desk.evaluate(async () => {
+    window.__replies = 0;
+    const count = (ev) => {
+      const d = ev.data;
+      if (d && d.type === 'sf-share-watch') window.__replies++;
+    };
+    window.addEventListener('message', count);
+    try { new BroadcastChannel('slideforge.presenter.v1').onmessage = count; } catch (e) {}
+    return true;
+  });
+  if (!replies) problems.push('could not instrument the desk');
+  /* A real reply over the desk's real sender. shareWatch is the one that
+     answers without putting anything on screen, so this leg counts delivery
+     and nothing else. */
+  await desk.evaluate(() => SF.deskSend({ type: 'sf-presenter-cmd', cmd: 'shareWatch', id: 'smoke' }));
+  await desk.waitForTimeout(700);
+  const arrived = await desk.evaluate(() => window.__replies);
+  if (arrived !== 1) {
+    problems.push('a reply reached the desk ' + arrived + ' times, not once — ' +
+      (arrived > 1 ? 'postPresenter is fanning replies over both routes again'
+                   : 'the reply did not arrive at all'));
+  } else {
+    console.log('✓ A reply reaches the desk that asked exactly once');
+  }
+
   /* --- a desk in a tab of its own, with no opener ------------------------ */
   /* The presenter channel exists for exactly this, and for a while only half
      the desk used it: the footer drove the wall while moments and quick polls
