@@ -124,3 +124,60 @@ test('default share shelf under the app tree is not marked durable', async (t) =
     headers: { Authorization: 'Bearer ' + created.body.key }
   });
 });
+
+/* Host is a forbidden header for fetch(), and this is a test about which Host
+   the client sent, so it has to speak HTTP directly. */
+function postRaw(port, headers, body) {
+  const http = require('node:http');
+  return new Promise((resolve, reject) => {
+    const payload = Buffer.from(body);
+    const req = http.request({
+      host: '127.0.0.1', port, path: '/api/share', method: 'POST',
+      headers: Object.assign({
+        'Content-Type': 'application/json',
+        'Content-Length': payload.length
+      }, headers)
+    }, (res) => {
+      let out = '';
+      res.on('data', (d) => { out += d; });
+      res.on('end', () => {
+        let parsed = {};
+        try { parsed = JSON.parse(out); } catch (e) {}
+        resolve({ status: res.statusCode, body: parsed });
+      });
+    });
+    req.on('error', reject);
+    req.end(payload);
+  });
+}
+
+test('the share link names a host a phone can reach, not localhost', async (t) => {
+  const port = await freePort();
+  const relay = await start(port);
+  t.after(() => stop(relay));
+
+  const doc = { title: 'Reachable', slides: [{ id: 's1', type: 'content', title: 'Hi' }] };
+  const post = (headers) => postRaw(port, headers, JSON.stringify({ doc }));
+
+  /* A laptop opened at localhost. The QR used to carry "localhost", which on
+     a phone is the phone — a valid code pointing at nothing. */
+  const local = await post({ Host: 'localhost:' + port });
+  assert.equal(local.status, 200);
+  assert.ok(!/localhost|127\.0\.0\.1/.test(local.body.base),
+    'a loopback Host must be answered with the LAN address, got ' + local.body.base);
+  assert.equal(local.body.url, local.body.base + '/view.html?s=' + local.body.id);
+
+  /* A real name is how the client reached us, so it is the right answer —
+     on a deploy the LAN address is a container's private IP. */
+  const named = await post({ Host: 'slides.example.ac.uk' });
+  assert.equal(named.body.base, 'http://slides.example.ac.uk');
+
+  /* Render terminates TLS in front of this process. */
+  const proxied = await post({
+    Host: 'internal:10000',
+    'X-Forwarded-Host': 'slideforge-rpjj.onrender.com',
+    'X-Forwarded-Proto': 'https'
+  });
+  assert.equal(proxied.body.base, 'https://slideforge-rpjj.onrender.com');
+  assert.match(proxied.body.url, /^https:\/\/slideforge-rpjj\.onrender\.com\/view\.html\?s=[a-f0-9]{32}$/);
+});

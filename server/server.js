@@ -106,6 +106,28 @@ function shareIsDurable() {
   return dir !== root && !dir.startsWith(root + path.sep);
 }
 
+/* The address a phone can actually reach.
+
+   A share made on a laptop opened at http://localhost:8787 used to hand the
+   QR code "localhost", and localhost on a phone is the phone: a perfectly
+   valid code pointing at nothing. The join flow has used the LAN address
+   since it existed, for exactly this reason; this is the same answer for the
+   share link.
+
+   How the client reached us is the better guide whenever it is a real name.
+   On a hosted deploy the Host header is the public hostname and LAN is a
+   container's private IP, so the LAN address is only substituted when the
+   request arrived on a loopback name. x-forwarded-* is read first because
+   Render terminates TLS in front of this process. */
+function publicBase(req) {
+  const proto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim() || 'http';
+  const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
+  const name = host.replace(/:\d+$/, '').replace(/^\[|\]$/g, '').toLowerCase();
+  const loopback = name === 'localhost' || name === '127.0.0.1' || name === '::1' || name === '0.0.0.0';
+  if (!host || loopback) return 'http://' + LAN + ':' + PORT;
+  return proto + '://' + host;
+}
+
 function shareCreate(req, res) {
   let body = '';
   let tooBig = false;
@@ -138,7 +160,11 @@ function shareCreate(req, res) {
       fs.writeFileSync(path.join(SHARE_DIR, id + '.json'),
         JSON.stringify({ key, at: Date.now(), doc }), { mode: 0o600 });
       log('shared "' + String(doc.title || 'untitled').slice(0, 60) + '" as ' + id);
-      return jsonReply(res, 200, { id, key, durable: shareIsDurable() });
+      const base = publicBase(req);
+      return jsonReply(res, 200, {
+        id, key, durable: shareIsDurable(),
+        base, url: base + '/view.html?s=' + id
+      });
     } catch (e) {
       return jsonReply(res, 500, { error: 'Could not store the shared copy.' });
     }

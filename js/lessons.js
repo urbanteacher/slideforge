@@ -1713,6 +1713,40 @@
           ],
           notes: 'JOIN — the app builds this for you when you host a session, with the real room code in it. What you are looking at now is a sample, because this deck is not live.\n\nLeave it on the wall while the room arrives. Latecomers join off the same code without stopping you.' },
 
+        { type: 'split', imageFit: 'contain', imageSide: 'left', design: { imageShare: 35 },
+          image: 'assets/demo-phone/phone-poll.jpg',
+          title: 'What it looks like in their hand',
+          bullets: [
+            'Their own first name at the top — and a question mark, a raised hand and a heart, so a room can interrupt without interrupting.',
+            'Under it, which slide the wall is on. That line is what stops “which one are we looking at?”',
+            'The heart saves this slide to their own copy, so revision is something they build while the lesson happens.',
+            'The poll itself takes the whole screen. There is nothing else on it to do.'
+          ],
+          notes: 'A REAL SCREENSHOT, not a drawing of one: this deck hosted, joined from a phone-sized browser, photographed mid-poll. The slide number on it is this deck with its games compiled out, which is why it counts past the ninety in the editor.\n\nNo app, no account, a first name only when the activity needs one — and somebody watching a follow-along screen is not in the register at all.\n\nRegenerate all of these with tools/capture-phone.mjs whenever the learner screens change. A screenshot nobody can rebuild goes stale and then lies about the product.' },
+
+        { type: 'split', imageFit: 'contain', imageSide: 'left', design: { imageShare: 35 },
+          image: 'assets/demo-phone/phone-check-answered.jpg',
+          title: 'And when it is a check rather than a poll',
+          bullets: [
+            'A to D, one tap, then “Locked in” — so they know the answer arrived.',
+            'Then, and only then: how sure are you? I’m sure, or just a guess.',
+            'A confident wrong answer is the most useful thing in the room. It is also the one a show of hands never tells you.',
+            'The same screen carries every engine — ranking, typing, estimating, the race, the boss.'
+          ],
+          notes: 'CONFIDENCE is optional on all twenty-three engines and off by default. Turn it on for the questions where being wrong-and-certain is the thing you need to catch.\n\nThe other captured screens — joining, the word cloud, the scale — are in assets/demo-phone if you want them in a deck of your own. They came out of the same run as these two.' },
+
+
+        { type: 'split', imageFit: 'contain', imageSide: 'left', design: { imageShare: 35 },
+          image: 'assets/demo-phone/phone-share.jpg',
+          title: 'And afterwards, the same deck at their own pace',
+          bullets: [
+            'The read-only link opens on a phone as well as a laptop.',
+            'Arrows at the bottom, Full screen if they want it, and a count so they know how far there is to go.',
+            'No PIN, no room, no clock — and nothing they do here reaches your register.',
+            'Speaker notes are not in it. What they get is the slides.'
+          ],
+          notes: 'This is the first of the two shares, seen from the other end: the copy they page through themselves. Worth showing a client next to the live screens, because it answers the question every room asks at the end — “can we get the slides?” — without you emailing a 40 MB file.\n\nThe follow-along screen is the same address with one word added, and it is the one that moves when you move. Both are on the Share button, which asks which you want before it uploads anything.' },
+
         { type: 'content', title: 'Poll — fixed options, counted live',
           bullets: [
             'Add a feedback moment to any slide from the inspector.',
