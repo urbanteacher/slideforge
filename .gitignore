@@ -4,6 +4,7 @@
 *.log
 node_modules/
 .history/
+.claude/
 
 # Exported decks and games. Remove this line if you want them committed —
 # they are plain JSON and diff cleanly. Ignored by default because embedded
