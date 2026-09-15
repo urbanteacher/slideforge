@@ -326,40 +326,46 @@
   content: '';
   position: absolute;
   background: no-repeat center / contain;
-  opacity: .19;
+  /* FULL STRENGTH, and small. The site does not fade these — on the Institute
+     page, on Services and on About they are crisp objects at about a fifth of
+     the page width, sitting against an edge or straddling a section rule. I
+     had them at 19% and 300px, which is a ghost: big enough to be noticed and
+     too faint to be looked at, the worst of both. A small sharp object reads
+     as a designed element; a large faint one reads as a watermark. */
+  opacity: 1;
   pointer-events: none;
   z-index: 0;
   /* Slot 0 — bottom right, off two edges. */
-  right: -96px;
-  bottom: -84px;
-  width: 300px;
-  height: 300px;
+  right: -58px;
+  bottom: -52px;
+  width: 200px;
+  height: 200px;
 }
 /* Slot 1 — the right edge at eye level, the biggest of them. */
 .theme-ukbt[data-art-slot="1"]::after,
 .theme-ukbt-institute[data-art-slot="1"]::after {
-  right: -118px; top: 50%; bottom: auto;
-  width: 360px; height: 360px;
+  right: -66px; top: 50%; bottom: auto;
+  width: 228px; height: 228px;
   transform: translateY(-50%);
 }
 /* Slot 2 — bottom left, off two edges, under where the last line ends. */
 .theme-ukbt[data-art-slot="2"]::after,
 .theme-ukbt-institute[data-art-slot="2"]::after {
-  left: -104px; right: auto; bottom: -96px;
-  width: 290px; height: 290px;
+  left: -62px; right: auto; bottom: -58px;
+  width: 196px; height: 196px;
 }
 /* Slot 3 — top right, starting below the logo band rather than behind it:
    the logo sits at top 28px and is 52px tall, and it paints above this. */
 .theme-ukbt[data-art-slot="3"]::after,
 .theme-ukbt-institute[data-art-slot="3"]::after {
-  right: -92px; top: 96px; bottom: auto;
-  width: 270px; height: 270px;
+  right: -52px; top: 104px; bottom: auto;
+  width: 184px; height: 184px;
 }
 /* Slot 4 — low and central-right, off the bottom edge only. */
 .theme-ukbt[data-art-slot="4"]::after,
 .theme-ukbt-institute[data-art-slot="4"]::after {
-  right: 210px; bottom: -132px;
-  width: 320px; height: 320px;
+  right: 188px; bottom: -74px;
+  width: 212px; height: 212px;
 }
 
 .theme-ukbt.layout-title::after,
@@ -393,8 +399,9 @@
 
 /* A key fact is one number and a lot of air, so whichever slot it lands in it
    can carry a bigger one. */
+/* A key fact is one number and a lot of air, so it can take a bigger one. */
 .theme-ukbt.layout-keyfact::after,
-.theme-ukbt-institute.layout-keyfact::after { opacity: .23; }
+.theme-ukbt-institute.layout-keyfact::after { width: 250px; height: 250px; }
 
 /* ------------------------------------------------------------- title slide
 
@@ -641,6 +648,51 @@
   background: transparent;
   color: var(--s-fg);
   border-color: var(--s-fg);
+}
+
+/* --------------------------------------------------------------- the rule
+
+   Every section on ukblacktech.com is separated by a thin green line running
+   the full width — the Institute page, Services, About, all of them. It is
+   the most repeated thing on the site after the green itself and there was
+   none of it here.
+
+   On a slide the section is the slide, so the rule goes under the heading:
+   full width of the content column, one pixel, green. Not on the two
+   full-bleed layouts, where the heading is the whole slide and a line under
+   it would be furniture. */
+.theme-ukbt.layout-content h2,
+.theme-ukbt-institute.layout-content h2,
+.theme-ukbt.layout-cards h2,
+.theme-ukbt-institute.layout-cards h2,
+.theme-ukbt.layout-keywords h2,
+.theme-ukbt-institute.layout-keywords h2,
+.theme-ukbt.layout-italics h2,
+.theme-ukbt-institute.layout-italics h2,
+.theme-ukbt.layout-journey h2,
+.theme-ukbt-institute.layout-journey h2,
+.theme-ukbt.layout-links h2,
+.theme-ukbt-institute.layout-links h2,
+.theme-ukbt.layout-chart h2,
+.theme-ukbt-institute.layout-chart h2,
+.theme-ukbt.layout-table h2,
+.theme-ukbt-institute.layout-table h2,
+.theme-ukbt.layout-keyfact h2,
+.theme-ukbt-institute.layout-keyfact h2 {
+  border-bottom: 1px solid var(--ukbt-green);
+  padding-bottom: 22px;
+  margin-bottom: 30px;
+  max-width: none;
+}
+/* The journey subtitle sits between the heading and the route, so the rule
+   belongs under it rather than above it. */
+.theme-ukbt.layout-journey h2,
+.theme-ukbt-institute.layout-journey h2 { border-bottom: 0; padding-bottom: 0; margin-bottom: 6px; }
+.theme-ukbt.layout-journey .journey-context,
+.theme-ukbt-institute.layout-journey .journey-context {
+  border-bottom: 1px solid var(--ukbt-green);
+  padding-bottom: 20px;
+  margin-bottom: 26px;
 }
 
 /* ---------------------------------------------------------- the highlights
