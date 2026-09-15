@@ -1178,10 +1178,20 @@
 
     /* A copy someone who was not in the room can open. Only where a server
        is serving this — from a file:// page there is nowhere to put it. */
+    var shareClick = null;
     var btnShareTop = $('btnShareTop');
-    if (btnShareTop) {
-      if (!servedByRelay()) btnShareTop.hidden = true;
-      else btnShareTop.onclick = function () {
+    /* Both surfaces, one handler. A previous pass wired only the top-bar
+       button and left File -> Share a read-only link in index.html with
+       nothing behind it, which is exactly what tests/menu-wiring.test.js
+       exists to catch, and did. Assigned to whichever of the two is present,
+       so this is correct with the menu item and correct without it. */
+    var btnShare = $('btnShare');
+    if (btnShareTop || btnShare) {
+      if (!servedByRelay()) {
+        if (btnShareTop) btnShareTop.hidden = true;
+        if (btnShare) btnShare.hidden = true;
+      }
+      else shareClick = function () {
         /* Always the lesson deck, whichever studio is in front: the viewer
            only opens decks, and the quiz and activities studios both write
            into this same lesson. */
@@ -1280,6 +1290,11 @@
           });
         });
       };
+      /* The same function object on both, not two copies of it. */
+      if (shareClick) {
+        if (btnShareTop) btnShareTop.onclick = shareClick;
+        if (btnShare) btnShare.onclick = shareClick;
+      }
     }
 
     var btnSettings = $('btnSettings');
