@@ -56,6 +56,12 @@ const MIME = {
   '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
+  /* Lab material, served so a student can click it out of a slide. A notebook
+     is JSON, but its own type makes Jupyter and VS Code offer to open it
+     rather than showing 300 kB of cells in a browser tab. */
+  '.ipynb': 'application/x-ipynb+json',
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.csv': 'text/csv; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',

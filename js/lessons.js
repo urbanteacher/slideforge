@@ -1314,9 +1314,10 @@
         { type: 'links', title: 'The dataset: every Santander Cycle hire since 2010',
           bullets: [
             'TfL daily cycle hires · download the .xlsx · 148 kB · Open Government Licence v2\thttps://data.london.gov.uk/dataset/number-of-bicycle-hires-2r84d',
-            'Or bring your own · filter by CSV\thttps://data.london.gov.uk'
+            'Or bring your own · filter by CSV\thttps://data.london.gov.uk',
+            'Worked solutions · the notebook, every cell run\thttps://slideforge-rpjj.onrender.com/lessons/01_Lab_IPDV_CycleHires_Solutions.ipynb'
           ],
-          notes: 'One file, 148 kB, one number per day from 30 July 2010 to 31 August 2026 — 5,877 days and 154,053,134 hires. Small enough to open, long enough to have something to say about.\n\nUse it or bring your own; the four stages and the marks are the same either way.\n\nOn the same site if they want a categorical comparison instead of a time series: London Fire Brigade incident records, where open-space fires spike in heatwaves and link back to task 2, and MPS recorded crime by borough.' },
+          notes: 'One file, 148 kB, one number per day from 30 July 2010 to 31 August 2026 — 5,877 days and 154,053,134 hires. Small enough to open, long enough to have something to say about.\n\nUse it or bring your own; the four stages and the marks are the same either way.\n\nThe third link is the worked notebook — all four stages, every cell run, the chart and the numbers in the file. It ships beside the spreadsheet in lessons/, so the relative path in the code is the path a student actually has. Hand it over after the deadline, or now if the point of the lab is the pipeline rather than the puzzle.\n\nOn the same site if they want a categorical comparison instead of a time series: London Fire Brigade incident records, where open-space fires spike in heatwaves and link back to task 2, and MPS recorded crime by borough.' },
 
         { type: 'code', language: 'python', typewrite: true, typeSpeed: 55,
           title: 'Stage 1 · Raw. Look before you believe.',
