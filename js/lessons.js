@@ -1871,6 +1871,202 @@
       ]
     },
     {
+      key: 'ukbt-institute-townhouse',
+      title: 'UKBT Institute — the Townhouse model',
+      icon: '◈',
+      blurb: 'The four-floor innovation model and its PRL gates, as a deck: twelve stakeholders on Floor 1, then experiment, build and scale. Content follows the model published on ukblacktech.com.',
+      minutes: 45,
+      theme: 'ukbt-institute',
+      org: 'UKBT Institute',
+      /* The official Institute lockup, from the organisation's own site. The
+         brand deck could not supply it: there the mark is an image and the
+         word INSTITUTE is a live text box beside it, so extracting the picture
+         gets ❯UKBT and loses the word. */
+      logo: 'assets/brand/ukbt-institute.svg',
+      logoOn: 'all',
+      logoSize: 'small',
+      logoReverse: 'never',
+      slides: [
+        { type: 'title', title: 'The Townhouse',
+          subtitle: 'A four-floor innovation model · UKBT Institute',
+          notes: 'The deck follows the model published on ukblacktech.com/ukbt-institute — four floors, a Practitioner Readiness Level band on each, and a gate that has to be passed before anything climbs a storey.\n\nThe logo top right is the official Institute lockup. It is not the one in the brand deck: there the mark is a picture and the word INSTITUTE is a live text box under it, so extracting the picture would give ❯UKBT and lose the word.' },
+
+        { type: 'quote', body: 'A townhouse for technologists, academics, professionals, and communities.',
+          subtitle: 'UKBT Institute',
+          notes: 'Why the metaphor earns its place: a townhouse has floors you climb in order, and you cannot be on the third without having been on the first. That is the whole argument — the model is a staircase with locked doors, not a set of parallel workstreams.' },
+
+        { type: 'journey', title: 'Four floors, and you climb them in order',
+          subtitle: 'Practitioner Readiness Level on each',
+          bullets: [
+            'Floor 1 · PRL 1–3\tCOLLABORATE. Knowledge transfer and discovery. All twelve stakeholders validate here.',
+            'Floor 2 · PRL 4–6\tEXPERIMENT. Stress test and validate — cheaply, and before anything is built.',
+            'Floor 3 · PRL 7\tBUILD. Practitioner-led, with academic research alongside it.',
+            'Floor 4 · PRL 8–9\tSCALE. Growth, markets and ecosystem — in public.'
+          ],
+          progressive: true,
+          notes: 'PRL is the Practitioner Readiness Level framework: the same idea as a technology readiness level, but the thing being measured is whether practitioners are ready to use it, not whether the technology works. Reveal a floor at a time; the order is the point and a room that sees all four at once reads them as options.' },
+
+        { type: 'keyfact', title: 'The rule that makes Floor 1 different',
+          subtitle: 'Floor 1 · COLLABORATE · gate score ≥ 60',
+          body: '11 of 12 → proceed',
+          bullets: [
+            'All twelve stakeholders validate on this floor. No exceptions, no proxies.',
+            'Any one of the twelve saying no pivots the project or kills it.',
+            'The core rule is the shortest one in the model: never skip a voice.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'This is the slide to slow down on. Most innovation processes let a strong sponsor override a quiet objection; this one does not, and the cost of that is that Floor 1 takes longer than anyone wants it to. Say out loud that the gate is deliberately cheap to fail and expensive to skip.' },
+
+        { type: 'keywords', title: 'The twelve voices · 1 to 6',
+          bullets: [
+            'Practitioners\tthe people who would live with it, daily',
+            'Customers\tbudget authority — whoever can say yes to paying',
+            'Academics\tresearch and evidence',
+            'Supply chain\tsourcing and manufacturing — can it be made at all?',
+            'Internal champions\torganisational advocates, inside the building',
+            'Market\ttiming and competition'
+          ],
+          progressive: true,
+          notes: 'Six here and six on the next slide — twelve on one slide is a list nobody reads. The questions Floor 1 asks them are blunt on purpose: do you face this daily, is it sector-wide, will you pay today, can we source it, is the timing right. "Let me think about it" counts as a no.' },
+
+        { type: 'keywords', title: 'The twelve voices · 7 to 12',
+          bullets: [
+            'Budget holders\tfinance decision makers',
+            'Finance / procurement\teconomic reality — what the process will allow',
+            'Lawyers / regulatory\tcompliance and risk',
+            'Technologists\timplementation',
+            'Non-technologists\tnon-technical users, who are most of everybody',
+            'Community\tthe community network around it'
+          ],
+          progressive: true,
+          notes: 'The second six are the ones projects skip, and they are where projects die later: procurement, legal, and the non-technical majority. Naming them as voices rather than as approvals is the point — they are consulted at PRL 1, not presented to at PRL 7.' },
+
+        { type: 'section', title: 'Up a floor\nat a time',
+          subtitle: 'Three storeys left, and the gate gets harder on each.',
+          notes: 'The one slide in this deck on the green. Use it as a real break — stop talking, let the room look up, then start on Floor 2. A section slide that goes past in two seconds is a slide you did not need.' },
+
+        { type: 'content', title: 'Floor 2 · EXPERIMENT · PRL 4–6',
+          bullets: [
+            'Who is in the room\tPractitioners, supply chain, market, and non-technologists.',
+            'Core rule\tTest simple before tech. Paper prototypes, a concierge MVP, no-code pilots.',
+            'What counts as success\tRetention rather than clicks, willingness to pay, and whether it fits an existing workflow.',
+            'What kills it\tA shrug. If nobody would fight to keep it, or it saves less than a couple of hours a week, it does not climb.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'Gate score to leave this floor: 80 out of 100. The cheapest floor and the one most often skipped, because building feels like progress and a paper prototype does not. The measure to defend here is retention: clicks are available early and mean nothing, and a pilot that people stop opening has answered the question.' },
+
+        { type: 'content', title: 'Floor 3 · BUILD · PRL 7',
+          bullets: [
+            'Who is in the room\tInternal champions — the people who will have to defend it when you are not there.',
+            'Core rule\tCo-create, don’t dictate. Champions co-own the roadmap.',
+            'What counts as success\tThey use it daily and argue for it: three or more champions, a written case study, academic validation.',
+            'What kills it\t"Nice to have." A champion who will not move a budget, or cannot recruit a peer, is not a champion.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'Gate score to leave this floor: 90 out of 100. The gate jumps from 80 to 90 here, and that is the moment the model gets expensive: this is the first floor where real engineering money is spent, so the bar for spending it is higher than the bar for testing.' },
+
+        { type: 'content', title: 'Floor 4 · SCALE · PRL 8–9',
+          bullets: [
+            'Who is in the room\tCustomers, market, technologists, non-technologists, and the wider community.',
+            'Core rule\tShare everything. Publish the learning, document the failures, keep the roadmap open.',
+            'What counts as success\tOthers copy it, improve it or join in — and there is at least one paying customer.',
+            'What kills it\tNo ecosystem effects. A product nobody recommends to a peer has not scaled, however many users it has.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'Gate: 90 out of 100 and 7% growth week on week — the only floor with a rate on it as well as a threshold. Note what building in public costs: documenting the failures is the part organisations quietly drop, and it is the part that makes the rest credible.' },
+
+        { type: 'chart', chartKind: 'bar', title: 'The gate gets harder as you climb',
+          body: 'Floor\tGate score\nFloor 1 · Collaborate\t60\nFloor 2 · Experiment\t80\nFloor 3 · Build\t90\nFloor 4 · Scale\t90',
+          chartSource: 'Gate thresholds from the UKBT Institute four-floor innovation model, ukblacktech.com/ukbt-institute. Floor 4 also requires 7% week-on-week growth, which is not shown.',
+          progressive: true,
+          notes: 'Four numbers, and the shape is the argument: the model is cheap to enter and expensive to climb. The source line carries the thing the bars cannot — Floor 4 has a growth rate attached as well as a score, so its bar understates it.' },
+
+        { type: 'cards', title: 'One rule per floor',
+          bullets: [
+            'Floor 1\tNever skip a voice.',
+            'Floor 2\tTest simple before tech.',
+            'Floor 3\tCo-create, don’t dictate.',
+            'Floor 4\tShare everything.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'The summary slide, and the one worth photographing. Four rules, in order, each one the thing the floor beneath it earns the right to.' },
+
+        { type: 'keywords', title: 'What a kill sounds like',
+          bullets: [
+            '“Let me think about it.”\tfloor 1 — not a yes. one no out of twelve stops it',
+            '“Maybe” — or a shrug\tfloor 2 — nobody would fight to keep it',
+            '“Nice to have.”\tfloor 3 — no champion will move a budget for it',
+            'No paying customer\tfloor 4 — no ecosystem effect, referral under 30%'
+          ],
+          progressive: true,
+          notes: 'Killing a project is the model working, not the model failing. Say that plainly — a framework whose gates never close is a framework nobody is using.' },
+
+        { type: 'links', title: 'Where this comes from',
+          bullets: [
+            'UKBT Institute — the four-floor innovation model\thttps://ukblacktech.com/ukbt-institute/',
+            'UK Black Tech\thttps://ukblacktech.com/'
+          ],
+          notes: 'Everything in this deck follows the model as published. If the framework moves, this is the page it moves on — check it before presenting, and edit the gate chart and the stakeholder table to match.' }
+      ]
+    },
+    {
+      key: 'ukbt-campaigns',
+      title: 'UK Black Tech — the ask, in five slides',
+      icon: '❯',
+      blurb: 'Five slides to ask an organisation to back one campaign: who you reach, what you build, what you have already done, and the ask. Figures are UK Black Tech’s own — check them before you pitch.',
+      minutes: 10,
+      theme: 'ukbt',
+      org: 'UK Black Tech',
+      logo: 'assets/brand/ukbt-wordmark.png',
+      logoOn: 'all',
+      logoSize: 'small',
+      /* The artwork is already the reversed lockup — white UK and Tech, the
+         green chevron, Black knocked out of a white panel. Never invert it. */
+      logoReverse: 'never',
+      slides: [
+        { type: 'title', title: 'Partner with\nUK Black Tech',
+          subtitle: 'Reach, reputation, and a pipeline that lasts',
+          notes: 'Five slides on purpose. A sponsorship conversation is not a lecture — the deck exists to hold four facts still while you talk, and to leave something behind that survives being forwarded.' },
+
+        { type: 'keyfact', title: 'Who you would be reaching',
+          subtitle: 'Combined reach across the UK Black Tech platform',
+          body: '20,000 tech professionals',
+          bullets: [
+            '60% of the community identifies as women.',
+            '35% of the audience is under 25.',
+            'Partners already include Global Tech Advocates, UAL Creative Computing Institute, Southwark Council and Capital City College.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'Figures as published on ukblacktech.com. Say the number, then stop talking — the two lines under it are what make it different from every other reach figure in the room, and they land better if the room reads them itself. Check the figures are current before you pitch; a number that has moved is worse than no number.' },
+
+        { type: 'cards', title: 'What your money would be building',
+          bullets: [
+            'Smart Cities & Infrastructure\tRobotics, automation and intelligent infrastructure — for communities that are smarter, safer and more sustainable.',
+            'Cyber & Digital Trust\tSecure, resilient and trusted digital technology, protecting people, organisations and critical infrastructure.',
+            'Living in a Digital World\tInclusive, accessible, human-centred design, so that everyone can take part in a connected world.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'The three active campaigns. Name the one that fits the organisation you are sitting in front of and spend your time there — a sponsor backs a thing, not a portfolio. Reveal one at a time so the room is not reading ahead while you talk.' },
+
+        { type: 'cards', title: 'What we have already done',
+          bullets: [
+            '16 courses\tDigital courses built with Tech Mums, FutureLearn and the University of Leeds.',
+            '1 hackathon\tA Sickle Cell Hackathon at the Design Museum — doctors, data scientists, patients and developers in one room.',
+            '5 institutions\tWorking partnerships, including the Computer Science department at London South Bank University.'
+          ],
+          notes: 'Track record, not ambition. This is the slide that answers the question nobody asks out loud, which is whether the last sponsor got anything for their money. Keep it to things that have finished.' },
+
+        { type: 'content', title: 'The ask',
+          bullets: [
+            'Name a campaign\tBack one of the three for a year, and your name is on everything it produces.',
+            'Fund the room\tVenue, facilitation and the practitioner time that turns an event into a case study somebody can cite.',
+            'Open a door\tMentors, placements and a route into hiring — the part money on its own does not buy.'
+          ],
+          progressive: true,
+          notes: 'Finish with one ask, not three. Decide before you walk in which of these you are actually asking this organisation for, and delete the other two — a menu invites a room to choose the cheapest item on it.\n\nIf you price your tiers, add a table slide after this one; the figures are not in this deck because they should not be guessed.' }
+      ]
+    },
+    {
       key: 'pace-nul',
       title: 'NUL · Openers, breakaways & a layout range',
       icon: '▣',
