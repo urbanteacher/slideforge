@@ -2411,14 +2411,32 @@ function broadcast(room, msg) {
 /* ------------------------------------------------------------ go */
 
 server.listen(PORT, HOST, () => {
+  /* Two different rooms to talk to.
+
+     On a laptop these are the addresses you use: localhost for the projector,
+     the LAN address for the phones. In a container they are both wrong and
+     confidently so — the deploy log offered "http://localhost:10000/" and a
+     private 10.x address, and the first person to read that log looking for
+     the join link followed it nowhere. Render publishes the real one as
+     RENDER_EXTERNAL_URL, so a hosted instance prints that instead and says
+     which addresses it does not know. */
+  const external = String(process.env.RENDER_EXTERNAL_URL || '').replace(/\/$/, '');
   console.log('');
   console.log('  SlideForge is running.');
   console.log('');
-  console.log('    Present from   http://localhost:' + PORT + '/');
-  console.log('    Phones join at ' + LAN_JOIN_URL);
-  console.log('');
-  console.log('  Open the present-from link on the machine driving the projector,');
-  console.log('  press "Host live", and read the PIN out to the room.');
+  if (external) {
+    console.log('    Present from   ' + external + '/');
+    console.log('    Phones join at ' + external + '/join.html');
+    console.log('');
+    console.log('  Hosted instance. The join address is taken from the request, so the');
+    console.log('  code a room scans is this public URL, not the container\'s own.');
+  } else {
+    console.log('    Present from   http://localhost:' + PORT + '/');
+    console.log('    Phones join at ' + LAN_JOIN_URL);
+    console.log('');
+    console.log('  Open the present-from link on the machine driving the projector,');
+    console.log('  press "Host live", and read the PIN out to the room.');
+  }
   console.log('  Ctrl-C to stop.');
   console.log('');
 });
