@@ -1205,6 +1205,135 @@
       ]
     },
     {
+      key: 'nul-lab1',
+      title: 'LDSCI6253 Lab 1 · run the room',
+      icon: '⌨',
+      blurb: 'The same Lab 1 worksheet, built to be run rather than read: the room says where it is stuck, the critique has a worked answer behind it, and every setup step is on screen as the command you actually type — including the error you are about to hit.',
+      minutes: 90,
+      theme: 'northeastern',
+      libraryGroup: 'nul',
+      kind: 'lecture',
+      org: 'Northeastern University London',
+      logo: 'assets/brand/nu-london-logo.png',
+      logoOn: 'all',
+      logoSize: 'small',
+      slides: [
+        { type: 'title', title: 'Lab 1', subtitle: 'Information Presentation & Data Visualisation · exercise sheet',
+          date: '2026-09-15',
+          notes: 'Ninety minutes. The worksheet has four tasks and one deadline, and the only one that needs teaching is the critique — the rest is setup, which goes faster if you find out early who is stuck.\n\nSo this deck front-loads the triage: slide 3 asks the room where it is, and you spend the lab on whoever answered “nothing works yet”.' },
+
+        { type: 'cards', design: { cardsMode: 'rows' }, title: 'Four tasks, one deadline',
+          bullets: [
+            '1 · Survey\tFive minutes, on your phone, now. It becomes data we visualise later in the module.',
+            '2 · A chart in the news\tFind one about a natural disaster. Critique it on Canvas. This is the task that carries marks for thinking.',
+            '3 · Python that runs\tAnaconda, then prove it from a terminal.',
+            '4 · A notebook with a chart in it\tYour data, your chart, submitted as the notebook.'
+          ],
+          notes: 'Read this once and do not read it again — the worksheet is on Canvas and they can re-read it there. The room’s time is better spent on tasks 2 and 3.' },
+
+        { type: 'content', title: 'Before anything else: where are you?',
+          bullets: [
+            'Answer honestly. I will spend this lab on whichever group is biggest.',
+            'Nobody is behind — week one of a module is exactly when this is meant to be broken.'
+          ],
+          feedback: { kind: 'poll', prompt: 'Python on the machine in front of you — where are you?',
+            options: [
+              'Anaconda installed, a notebook opens',
+              'Python installed, notebooks not yet',
+              'Installing right now',
+              'Nothing yet / not sure what I have'
+            ], max: 1 },
+          notes: 'THE MOST USEFUL SLIDE IN THE LAB. Thirty seconds, and you know whether to demonstrate the install or move to the critique.\n\nRead the split out loud. If a third are on “nothing yet”, do task 3 together from the front and let the rest start task 2.' },
+
+        { type: 'section', title: 'Task 1', subtitle: 'The survey — five minutes, on your phone',
+          notes: 'Do it in the room. A survey taken later is a survey taken by half the cohort, and this one becomes a dataset we visualise in week 4 — including the favourite-colour question, which is the one they remember.' },
+
+        { type: 'links', title: 'Open this now',
+          bullets: [
+            'Student information survey · 5 min\thttps://forms.office.com/r/9YBnKM34Nt'
+          ],
+          notes: 'Read the address out as well as showing it: a projector at the back of a lab is not always readable.\n\nSay what it is for — background, expectations, favourite colour — and that it comes back later as a chart the cohort made of itself. Consent is easier to give when the use is named.' },
+
+        { type: 'section', title: 'Task 2', subtitle: 'A chart in the news, and what is wrong with it',
+          notes: 'The only task here that is about visualisation rather than software. Give it the time the other three do not need.' },
+
+        { type: 'content', title: 'Find one chart about a natural disaster',
+          bullets: [
+            'A storm, a hurricane season, wildfires, flooding — published, recent, and not from a textbook.',
+            'Post it to Canvas with one paragraph: what it shows, what data is behind it, and where it came from.',
+            'Then the part that earns the marks\tWhat works, what does not, and what you would change.',
+            'Include the URL. A critique of a chart nobody can find is not a critique.'
+          ],
+          progressive: true,
+          notes: 'Push them past “I like the colours”. The question is always: what was the reader meant to take away, and does the chart make that easy or hard?\n\nThe next slide is a worked one. Do not turn it over until they have tried.' },
+
+        { type: 'split', imageFit: 'contain', imageSide: 'left', design: { imageShare: 50 },
+          image: 'assets/lesson/ipdv/brexit-scatter-ft.jpg',
+          title: 'A worked critique, so you know the standard',
+          bullets: [
+            'What it shows: the referendum result against a measure of each area, one dot per area.',
+            'What works: the dots are the data — no summary in the way — and the axes are labelled in the units of the thing.',
+            'What is harder: overlapping dots hide density, and a trend read off a cloud invites a causal claim the chart cannot support.',
+            'What I would change: name the finding in the title, and say how many areas each dot covers.'
+          ],
+          modelAnswer: 'A strong paragraph does four things in order: says what the chart claims, names the data and its source, says which visual channel carries the claim, and then makes ONE concrete change with a reason. “The colours are ugly” is not a critique. “The y-axis starts at 40, so a four-point difference fills half the height” is one, because it names the mechanism and the consequence.',
+          notes: 'Talk through the four bullets, then turn the card over: the box behind it is the standard for the Canvas paragraph, written as a rule rather than an example so it transfers to whatever chart they found.\n\nThis plate is in the module’s own asset folder, so it is the same chart they will meet again in the lecture on correlation.' },
+
+        { type: 'section', title: 'Task 3', subtitle: 'Python that runs — and proving that it does',
+          notes: 'Anaconda rather than a bare Python, because it arrives with pandas, matplotlib, Jupyter and an environment manager, and week one is not the week to teach pip.' },
+
+        { type: 'code', language: 'text', typewrite: true, typeSpeed: 30,
+          title: 'Prove it from a terminal, not from a feeling',
+          code: '# macOS: Terminal · Windows: Anaconda Prompt\n\npython --version\n# Python 3.12.x   ← anything 3.x is fine\n\nconda --version\n# conda 24.x.x    ← Anaconda is on the PATH\n\npython -c "import matplotlib, pandas; print(\'libraries ok\')"\n# libraries ok\n',
+          notes: 'THREE COMMANDS, and they are the whole of task 3. “I think it installed” is not a result; a version number is.\n\nThe third line is the one that matters: Anaconda can be installed and still not be the Python your terminal finds. If that line prints an error and the first two worked, they have two Pythons — next slide.' },
+
+        { type: 'code', language: 'text', typewrite: true, typeSpeed: 30,
+          title: 'The error you are about to hit',
+          code: 'ModuleNotFoundError: No module named \'matplotlib\'\n\n# Not a broken install. The terminal is finding a different Python.\n# Ask which one:\n\nwhich python        # macOS / Linux\nwhere python        # Windows\n\n# If the answer is not inside your anaconda3 folder, open the\n# Anaconda Prompt instead of the system terminal, or run:\n\nconda activate base\n',
+          notes: 'Put this on the wall BEFORE they hit it, because a room of thirty will produce this error about eight times and each one will read as “Anaconda is broken”.\n\nIt is the single most useful slide in the lab. Two Pythons on one machine is the normal state of a laptop, not a fault.' },
+
+        { type: 'links', title: 'The two downloads, and nothing else',
+          bullets: [
+            'Anaconda · Python, Jupyter, pandas, matplotlib in one installer\thttps://www.anaconda.com/download',
+            'Google Colab · a notebook in the browser, nothing to install\thttps://colab.research.google.com'
+          ],
+          notes: 'Colab is the escape hatch, and say so: a machine that will not cooperate today should not cost anybody task 4. The notebook is the deliverable, not the toolchain.\n\nAny editor is allowed as long as it is Python 3.x. Anaconda is the recommendation, not a rule.' },
+
+        { type: 'section', title: 'Task 4', subtitle: 'A notebook with your chart in it',
+          notes: 'Small on purpose. The point is a working pipeline end to end — data in, chart out, notebook submitted — not an impressive chart.' },
+
+        { type: 'code', language: 'python', typewrite: true, typeSpeed: 26,
+          title: 'One cell. Replace the numbers with yours.',
+          code: 'import pandas as pd\nimport matplotlib.pyplot as plt\n\n# Your data. A CSV you found, or typed by hand — both count.\ndata = pd.DataFrame({\n    "year":  [2019, 2020, 2021, 2022, 2023],\n    "events": [14, 9, 17, 22, 19],\n})\n\nax = data.plot(x="year", y="events", kind="bar", legend=False)\nax.set_title("Recorded events per year")   # say the finding, not the subject\nax.set_ylabel("Events")\nplt.tight_layout()\nplt.show()\n',
+          notes: 'Typed out on the wall so the room sees the SHAPE of a first cell: imports, data, one chart, a title that says something.\n\nThe title line is the only opinionated bit, and it is the habit worth starting in week one: a title that names the finding rather than the subject. “Recorded events per year” is the subject; “Events doubled after 2020” would be the finding.' },
+
+        { type: 'keywords', title: 'What to submit, and what “done” means',
+          bullets: [
+            'The notebook\t.ipynb with the chart visible in the output, not just the code that would make it',
+            'A short description\tWhat the data is, where it came from, and what you did — a paragraph, not an essay',
+            'The Canvas post\tTask 2’s critique, with the URL to the original',
+            'Not assessed\tHow pretty the chart is'
+          ],
+          notes: 'The commonest miss is a notebook submitted with the outputs cleared, which reads as code that has never run. Say it out loud: run every cell, then save, then submit.' },
+
+        { type: 'keyfact', title: 'The deadline',
+          subtitle: 'WORKSHEETS GO ON CANVAS',
+          body: 'Monday, 23:59',
+          bullets: [
+            'The Monday after this lab. All four tasks, one submission.',
+            'Colab counts. A machine that would not install Python is not an extension.'
+          ],
+          notes: 'Put it on the wall and leave it there while they pack up. One number, no ambiguity.' },
+
+        { type: 'content', title: 'Before you go',
+          bullets: [
+            'One thing that is still not working, or one thing you now understand that you did not at the start.'
+          ],
+          feedback: { kind: 'brainstorm', prompt: 'What is still broken, or what clicked?', options: [], max: 2 },
+          notes: 'The exit ticket, and it sets next week’s first five minutes. Read two or three out before they leave so they know it was read.\n\nCompare it with the poll from slide 3: the gap between where the room started and where it finished is the lab’s actual outcome, and it is worth writing down.' }
+      ]
+    },
+    {
       key: 'ipdv-lab1',
       title: 'LDSCI6253 Lab 1 · Exercise sheet',
       icon: '💻',
@@ -3528,6 +3657,7 @@
   var LIBRARY_SEED_KEYS = {
     'ipdv-intro': 'nul',
     'ipdv-lab1': 'nul',
+    'nul-lab1': 'nul',
     'layout-bank': 'nul',
     'pace-nul': 'nul',
     'ukbt-sponsorship': 'ukbt',
