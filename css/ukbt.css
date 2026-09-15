@@ -376,6 +376,10 @@
 .theme-ukbt-institute.layout-chart::after,
 .theme-ukbt.layout-table::after,
 .theme-ukbt-institute.layout-table::after,
+.theme-ukbt.layout-stats::after,
+.theme-ukbt-institute.layout-stats::after,
+.theme-ukbt.layout-funnel::after,
+.theme-ukbt-institute.layout-funnel::after,
 .theme-ukbt.layout-quiz::after,
 .theme-ukbt-institute.layout-quiz::after,
 .theme-ukbt.game-stage::after,
@@ -755,7 +759,15 @@
 .theme-ukbt.layout-table h2,
 .theme-ukbt-institute.layout-table h2,
 .theme-ukbt.layout-keyfact h2,
-.theme-ukbt-institute.layout-keyfact h2 {
+.theme-ukbt-institute.layout-keyfact h2,
+.theme-ukbt.layout-stats h2,
+.theme-ukbt-institute.layout-stats h2,
+.theme-ukbt.layout-compare h2,
+.theme-ukbt-institute.layout-compare h2,
+.theme-ukbt.layout-funnel h2,
+.theme-ukbt-institute.layout-funnel h2,
+.theme-ukbt.layout-timeline h2,
+.theme-ukbt-institute.layout-timeline h2 {
   border-bottom: 1px solid var(--ukbt-green);
   padding-bottom: 22px;
   margin-bottom: 30px;
@@ -771,6 +783,72 @@
   padding-bottom: 20px;
   margin-bottom: 26px;
 }
+
+/* ------------------------------------------------------- the infographics
+
+   stats, compare, funnel and timeline arrived theme-aware through the --s-*
+   tokens, so almost nothing needs doing here. What follows is only where the
+   brand does something the generic treatment cannot know about.
+
+   The green rule under the heading and the decorative object are handled up
+   with the rest, not here — but note which way each went. The object is OFF on
+   stats and funnel and ON for compare and timeline, and the line is the same
+   one that keeps it off charts and tables: a stat ring is a conic gauge and a
+   funnel band is a proportional width, so both encode quantity, and a
+   decorative object behind a quantity is chartjunk by the definition these
+   decks teach. Compare and timeline encode order and category, not amount.
+
+   Headings come back to the ramp. The generic rule sets these four to 40px
+   because they are denser than a bullet slide, which is fair, but 40 is not a
+   step in this system and a deck whose headings are 48 everywhere except on
+   four layouts reads as a deck with a mistake in it. */
+.theme-ukbt.layout-stats h2, .theme-ukbt-institute.layout-stats h2,
+.theme-ukbt.layout-compare h2, .theme-ukbt-institute.layout-compare h2,
+.theme-ukbt.layout-funnel h2, .theme-ukbt-institute.layout-funnel h2,
+.theme-ukbt.layout-timeline h2, .theme-ukbt-institute.layout-timeline h2 {
+  font-size: var(--ukbt-3xl);
+}
+
+/* A plain stat number is white, the way the Impact and Community rows on the
+   site are white. The green is kept for the ring and the bar, which are the
+   parts actually measuring something — spending the accent on the numeral
+   would leave nothing louder for the gauge around it. */
+.theme-ukbt .stat-value,
+.theme-ukbt-institute .stat-value { color: var(--s-fg); }
+.theme-ukbt .stat-ring::before,
+.theme-ukbt-institute .stat-ring::before { opacity: 1; }
+
+/* Two sides, two brand colours. The generic rule marks the left column with
+   the accent and the right with a wash of the text colour, which reads as
+   "this one matters and that one does not" — wrong for a comparison, where
+   the point is that both are real options. */
+.theme-ukbt .compare-row:not(.compare-head) .compare-left,
+.theme-ukbt-institute .compare-row:not(.compare-head) .compare-left {
+  border-left-color: var(--ukbt-blue);
+}
+.theme-ukbt .compare-row:not(.compare-head) .compare-right,
+.theme-ukbt-institute .compare-row:not(.compare-head) .compare-right {
+  border-left-color: var(--ukbt-orange);
+}
+
+/* The timeline date is the one small technical line on that layout, so it
+   takes the second face, and the dots run the highlight cycle the journey
+   markers and the glossary terms already run. */
+.theme-ukbt .timeline-date,
+.theme-ukbt-institute .timeline-date { font-family: var(--ukbt-font-meta); font-weight: 500; }
+.theme-ukbt .timeline-event:nth-child(4n+1) .timeline-dot { background: var(--ukbt-green); border-color: var(--ukbt-green); }
+.theme-ukbt .timeline-event:nth-child(4n+2) .timeline-dot { background: var(--ukbt-blue); border-color: var(--ukbt-blue); }
+.theme-ukbt .timeline-event:nth-child(4n+3) .timeline-dot { background: var(--ukbt-orange); border-color: var(--ukbt-orange); }
+.theme-ukbt .timeline-event:nth-child(4n) .timeline-dot { background: var(--ukbt-lime); border-color: var(--ukbt-lime); }
+.theme-ukbt-institute .timeline-event:nth-child(4n+1) .timeline-dot { background: var(--ukbt-blue); border-color: var(--ukbt-blue); }
+.theme-ukbt-institute .timeline-event:nth-child(4n+2) .timeline-dot { background: var(--ukbt-lime); border-color: var(--ukbt-lime); }
+.theme-ukbt-institute .timeline-event:nth-child(4n+3) .timeline-dot { background: var(--ukbt-green); border-color: var(--ukbt-green); }
+.theme-ukbt-institute .timeline-event:nth-child(4n) .timeline-dot { background: var(--ukbt-orange); border-color: var(--ukbt-orange); }
+
+/* An icon on a card sits on a colour panel with dark ink, so it needs the ink
+   rather than the accent it takes elsewhere. */
+.theme-ukbt .layout-cards .card-icon,
+.theme-ukbt-institute .layout-cards .card-icon { color: var(--ukbt-contrast); opacity: .8; }
 
 /* ---------------------------------------------------------- the highlights
 
