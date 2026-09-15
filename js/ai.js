@@ -60,6 +60,123 @@
   /** Synchronous best guess, for painting a status line before the probe lands. */
   function liveAIKnown() { return liveAvailable === true; }
 
+  /**
+   * Full /api/ai/status probe for the studio smoke-test panel.
+   * Updates the cached availability flag used by the rest of the app.
+   * @returns {Promise<{ok:boolean,available:boolean,model:string|null,lastError:*,httpStatus:number,ms:number,origin:string,at:string,error?:string}>}
+   */
+  function probeStatus() {
+    var t0 = Date.now();
+    var origin = aiUrl('');
+    if (typeof global.fetch !== 'function') {
+      liveAvailable = false;
+      return Promise.resolve({
+        ok: false, available: false, model: null, lastError: null,
+        httpStatus: 0, ms: 0, origin: origin, at: new Date().toISOString(),
+        error: 'fetch is not available in this environment'
+      });
+    }
+    return global.fetch(aiUrl('/api/ai/status'), { cache: 'no-store' })
+      .then(function (r) {
+        return r.json().then(function (d) {
+          var available = !!(d && d.available);
+          liveAvailable = available;
+          liveProbe = Promise.resolve(available);
+          return {
+            ok: r.ok,
+            available: available,
+            model: (d && d.model) || null,
+            lastError: d && d.lastError != null ? d.lastError : null,
+            httpStatus: r.status,
+            ms: Date.now() - t0,
+            origin: origin,
+            at: new Date().toISOString()
+          };
+        }, function () {
+          liveAvailable = false;
+          return {
+            ok: false, available: false, model: null, lastError: null,
+            httpStatus: r.status, ms: Date.now() - t0, origin: origin,
+            at: new Date().toISOString(), error: 'Status body was not JSON'
+          };
+        });
+      })
+      .catch(function (err) {
+        liveAvailable = false;
+        return {
+          ok: false, available: false, model: null, lastError: null,
+          httpStatus: 0, ms: Date.now() - t0, origin: origin,
+          at: new Date().toISOString(),
+          error: err && err.message ? String(err.message) : 'Could not reach the server'
+        };
+      });
+  }
+
+  /**
+   * One small generate call for the smoke-test panel — direct, no busy lock /
+   * retry, so the UI sees the raw HTTP result (including a 503).
+   * @param {{topic?: string}} [opts]
+   * @returns {Promise<{ok:boolean,httpStatus:number,ms:number,text:string|null,parsed:*,error:string|null,at:string}>}
+   */
+  function runSmokeTest(opts) {
+    opts = opts || {};
+    var topic = String(opts.topic || 'SlideForge').trim().slice(0, 80) || 'SlideForge';
+    var t0 = Date.now();
+    var at = new Date().toISOString();
+    if (typeof global.fetch !== 'function') {
+      return Promise.resolve({
+        ok: false, httpStatus: 0, ms: 0, text: null, parsed: null,
+        error: 'fetch is not available in this environment', at: at
+      });
+    }
+    var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = controller ? setTimeout(function () { controller.abort(); }, AI_CLIENT_TIMEOUT_MS) : null;
+    return global.fetch(aiUrl('/api/ai/generate'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: 'Reply with only a short JSON object. No markdown.',
+        user: 'Return exactly: {"ok":true,"topic":' + JSON.stringify(topic) + ',"msg":"AI smoke test passed"}'
+      }),
+      signal: controller ? controller.signal : undefined,
+      cache: 'no-store'
+    }).then(function (r) {
+      return r.json().then(function (d) {
+        var text = d && d.text != null ? String(d.text) : null;
+        var errMsg = d && d.error ? String(d.error) : null;
+        var parsed = null;
+        if (text) {
+          try { parsed = parseModelJson(text); } catch (e) { parsed = null; }
+        }
+        return {
+          ok: r.ok && !!text && !errMsg,
+          httpStatus: r.status,
+          ms: Date.now() - t0,
+          text: text,
+          parsed: parsed,
+          error: errMsg || (!r.ok ? ('HTTP ' + r.status) : (!text ? 'No content returned' : null)),
+          at: at
+        };
+      }, function () {
+        return {
+          ok: false, httpStatus: r.status, ms: Date.now() - t0,
+          text: null, parsed: null,
+          error: 'Generate body was not JSON', at: at
+        };
+      });
+    }).catch(function (err) {
+      var msg = err && err.name === 'AbortError'
+        ? 'Timed out waiting for the AI provider'
+        : (err && err.message ? String(err.message) : 'Could not reach the AI endpoint');
+      return {
+        ok: false, httpStatus: 0, ms: Date.now() - t0,
+        text: null, parsed: null, error: msg, at: at
+      };
+    }).finally(function () {
+      if (timer) clearTimeout(timer);
+    });
+  }
+
 
   /* ------------------------------------------------ Offline Pedagogical Heuristics */
 
@@ -380,7 +497,16 @@
         var quick = (Date.now() - started) < AI_RETRY_ONLY_UNDER_MS;
         if (!AI_RETRY_STATUS[status] || !quick) throw first;
         await new Promise(function (go) { setTimeout(go, AI_RETRY_AFTER_MS); });
-        return await attempt();
+        try {
+          return await attempt();
+        } catch (second) {
+          /* Marked so a caller can say "twice" only when it was asked twice.
+             A timeout is never retried — it has no budget left — so a message
+             claiming two refusals would be wrong about the one failure the
+             30s ceiling produces. */
+          if (second) second.aiRetried = true;
+          throw second;
+        }
       }
     } finally {
       aiBusy = false;
@@ -1175,11 +1301,13 @@
          be written. 502 is the provider refusing; a 504 or an abort is it
          being too slow. */
       var status = Number(err && err.aiStatus) || 0;
-      var busy = status === 502 || status === 503 || status === 504 ||
-        /abort|too long/i.test(msg);
-      return draftFromTopic(fields, topic, busy
-        ? 'The AI provider is busy \u2014 it turned this down twice.'
-        : 'The AI server could not be reached.');
+      var slow = status === 504 || /abort|too long/i.test(msg);
+      var refused = status === 502 || status === 503;
+      var why = slow ? 'The AI provider did not answer in time.'
+        : refused && err.aiRetried ? 'The AI provider is busy \u2014 it turned this down twice.'
+        : refused ? 'The AI provider is busy.'
+        : 'The AI server could not be reached.';
+      return draftFromTopic(fields, topic, why);
     }
 
     var values = {};
@@ -1218,6 +1346,8 @@
     checkLiveAI: checkLiveAI,
     recheckLiveAI: recheckLiveAI,
     liveAIKnown: liveAIKnown,
+    probeStatus: probeStatus,
+    runSmokeTest: runSmokeTest,
     generatePollForSlide: generatePollForSlide,
     generateQuestionsForGame: generateQuestionsForGame,
     generateActivityContent: generateActivityContent,

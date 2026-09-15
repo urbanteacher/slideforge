@@ -96,6 +96,7 @@ test('when it refuses twice, the heading is written and nothing is invented', as
   assert.equal(res.fallback, true);
   assert.equal(res.heuristic, true);
   assert.match(res.notice, /busy/i);
+  assert.match(res.notice, /twice/i, 'it was asked twice, so it may say so');
   assert.match(res.notice, /heading/i, 'the notice has to say what it did');
 
   assert.equal(res.values['title'], 'Osmosis in plant cells', 'topic, capitalised, as the heading');
@@ -126,4 +127,22 @@ test('the caller is told, because the toast reads the notice', () => {
   const activities = fs.readFileSync(path.join(__dirname, '..', 'js', 'activities.js'), 'utf8');
   assert.match(activities, /SF\.toast\(res\.notice \|\| 'Written/,
     'a fallback draft must not be announced as "Written"');
+});
+
+test('a timeout is not described as two refusals', async () => {
+  /* The 30s ceiling produces exactly one attempt — a timeout has no budget
+     left for a retry — so the notice must not claim the provider "turned this
+     down twice". Measured twice against the live deploy today: 30.4s and
+     30.3s, both HTTP 504. */
+  const { AI, calls } = loadAI((url) => {
+    if (url.endsWith('/api/ai/status')) return reply({ available: true });
+    return reply({ error: 'The AI provider took too long.' }, 504);
+  });
+
+  const res = await AI.generateActivityContent(activity, { topic: 'osmosis' });
+  assert.equal(res.fallback, true, 'a timeout still gets the heading rather than a dead end');
+  assert.doesNotMatch(res.notice, /twice/i, 'it was only asked once');
+  assert.match(res.notice, /did not answer in time/i);
+  const generates = calls.filter((c) => c.url.endsWith('/api/ai/generate'));
+  assert.equal(generates.length, 1, 'a timeout must not be retried — it already spent the budget');
 });
