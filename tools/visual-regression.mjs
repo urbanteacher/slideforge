@@ -122,6 +122,74 @@ async function startServerIfNeeded() {
   return { url: `http://127.0.0.1:${port}/`, port, spawned: true };
 }
 
+/**
+ * Hold the shot until the slide's decoration has actually arrived.
+ *
+ * A theme hangs its art on elements whose pictures come from CSS, not from
+ * markup: Northeastern's monogram is an SVG `mask` and the London skyline is a
+ * `background-image`. Neither is an <img>, so nothing in the page reports them
+ * as pending — no load event, no decode() to await, and document.fonts.ready
+ * says nothing about either.
+ *
+ * Waiting for the element instead does not work. Measured at the instant the
+ * old code took the screenshot, .nu-n already had its full 900px box while
+ * performance.getEntriesByType('resource') held no entry for the monogram at
+ * all: the browser lays the element out first and only fetches a CSS image
+ * when it comes to paint it. So "exists and has non-zero layout" is true a
+ * frame before there is anything to see, which is precisely the window the
+ * flake lived in — the shot either caught the paint or caught a blank
+ * 900x694 gap, with nothing in between. Hence 13.87%, every time, or nothing.
+ *
+ * So the URLs are read back out of the computed styles and loaded explicitly.
+ * Once each one has been through an Image, it is in the cache and the next
+ * paint has it. Errors resolve rather than reject: a missing asset should
+ * fail as a visual diff that shows which asset is missing, not as a suite
+ * that hangs for thirty seconds.
+ */
+async function waitForSlideArt(page, selector) {
+  await page.evaluate(async (root) => {
+    const stage = document.querySelector(root);
+    if (!stage) return;
+    /* Every way a stylesheet can name a picture, on the elements and on their
+       generated boxes — the skyline and the monogram are on real elements,
+       but other themes draw their art in ::before and ::after. */
+    const PROPS = ['backgroundImage', 'maskImage', 'webkitMaskImage',
+      'borderImageSource', 'listStyleImage'];
+    const urls = new Set();
+    const collect = (node, pseudo) => {
+      const cs = getComputedStyle(node, pseudo || undefined);
+      for (const prop of PROPS) {
+        const value = cs[prop];
+        if (!value || value === 'none') continue;
+        /* One declaration can carry several, and image-set() nests them. */
+        for (const m of value.matchAll(/url\((['"]?)([^'")]+)\1\)/g)) {
+          if (!m[2].startsWith('data:')) urls.add(m[2]);
+        }
+      }
+    };
+    for (const node of [stage, ...stage.querySelectorAll('*')]) {
+      collect(node, null);
+      collect(node, '::before');
+      collect(node, '::after');
+    }
+    /* Across a run of several hundred shots the same dozen theme assets come
+       round again and again; re-Imaging a cached URL costs a promise and a
+       task per shot for nothing. The page outlives the shots, so what has
+       already been through here is remembered on it. */
+    const seen = (window.__vrLoadedArt = window.__vrLoadedArt || new Set());
+    const fresh = [...urls].filter((url) => !seen.has(url));
+    await Promise.all(fresh.map((url) => new Promise((done) => {
+      const img = new Image();
+      img.onload = img.onerror = () => { seen.add(url); done(); };
+      img.src = url;
+    })));
+    await document.fonts.ready;
+    /* Two frames: the first schedules the paint that now has its pictures,
+       the second is after it has been composited. */
+    await new Promise((go) => requestAnimationFrame(() => requestAnimationFrame(go)));
+  }, selector);
+}
+
 function cleanup() {
   if (spawnedServer) {
     try {
@@ -330,6 +398,7 @@ async function run() {
       }
     }, { st: style, th: theme, injectTestDiff: testDiff, kind: kind });
 
+    await waitForSlideArt(page, '#visualRegressionStage');
     const currentBuffer = await page.locator('#visualRegressionStage .slide').screenshot({ animations: 'disabled' });
 
     // 2. If update mode or baseline does not exist yet: write baseline
