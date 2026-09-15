@@ -1416,198 +1416,237 @@
     },
     {
       key: 'ukbt-sponsorship',
-      title: 'UK Black Tech — sponsorship',
+      title: 'UK Black Tech — partnership pack',
       icon: '❯',
-      blurb: 'Five slides to ask an organisation to back a campaign: who you reach, what you build, what you have already done, and the ask. Figures are UK Black Tech’s own — check them before you pitch.',
-      minutes: 10,
+      blurb: 'The partnership pack as a deck: who we are, the audience, the four tiers, the individual opportunities and how it works. Pricing is placeholder and every slide that carries a number says so.',
+      minutes: 25,
       theme: 'ukbt',
       org: 'UK Black Tech',
       logo: 'assets/brand/ukbt-wordmark.png',
       logoOn: 'all',
       logoSize: 'small',
-      /* The artwork is already the reversed lockup — white UK and Tech, the
-         green chevron, Black knocked out of a white panel. Never invert it. */
       logoReverse: 'never',
       slides: [
-        { type: 'title', title: 'Partner with\nUK Black Tech',
-          subtitle: 'Reach, reputation, and a pipeline that lasts',
-          notes: 'Five slides on purpose. A sponsorship conversation is not a lecture — the deck exists to hold four facts still while you talk, and to leave something behind that survives being forwarded.' },
+        { type: 'title', title: 'Partnership\nPack',
+          subtitle: 'Building the UK’s most equitable tech ecosystem — with partners who mean it.',
+          notes: 'The deck follows the written pack, so the two never drift apart. Two things to do before it goes to anybody: set the real prices, and fill in the bracketed confirmations — the pack marks both and so do these notes.' },
+
+        { type: 'section', title: 'Who we are',
+          subtitle: 'Seven years, thirty-five events, one ecosystem.',
+          notes: 'Short. The room already knows roughly who you are or they would not be in it; this is the turn into the substance.' },
+
+        { type: 'content', title: 'What UK Black Tech does',
+          bullets: [
+            'Increases wealth\tBy promoting a culture of innovation, tech and digital skills across its community.',
+            'Moves knowledge\tStimulates and manages the flow of technical insight between universities, R&D institutions, companies and markets.',
+            'Builds companies and talent\tThrough events and spin-off initiatives.',
+            'Serves the wider sector\tValue-added services beyond our own community.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'Straight from §1 of the pack. The line to say out loud and not put on the slide: a great tech ecosystem needs equity, transparency and representation at the cutting edge — not as an afterthought to it.' },
 
         { type: 'keyfact', title: 'Who you would be reaching',
           subtitle: 'Combined reach across the UK Black Tech platform',
           body: '20,000 tech professionals',
           bullets: [
-            '60% of the community identifies as women.',
-            '35% of the audience is under 25.',
-            'Partners already include Global Tech Advocates, UAL Creative Computing Institute, Southwark Council and Capital City College.'
+            '60% identify as women.',
+            '35% are under 25.',
+            'Unusually young and unusually female for UK tech — if your objective is early-careers hiring, graduate pipeline or reaching women in technical roles, this audience over-indexes for you where general tech channels do not.'
           ],
           progressive: true, buildMode: 'dim',
-          notes: 'Figures as published on ukblacktech.com. Say the number, then stop talking — the two lines under it are what make it different from every other reach figure in the room, and they land better if the room reads them itself. Check the figures are current before you pitch; a number that has moved is worse than no number.' },
+          notes: 'Say the number, then stop. The two lines under it are what make it different from every other reach figure in the room.\n\nThe pack flags more to add here if it can be evidenced: newsletter subscribers and open rate, social following, average event attendance, seniority split, geography, top employers represented. A figure you cannot evidence is worse than no figure.' },
 
-        { type: 'cards', title: 'What your money would be building',
+        { type: 'content', title: 'Why partner with us',
           bullets: [
-            'Smart Cities & Infrastructure\tRobotics, automation and intelligent infrastructure — for communities that are smarter, safer and more sustainable.',
-            'Cyber & Digital Trust\tSecure, resilient and trusted digital technology, protecting people, organisations and critical infrastructure.',
-            'Living in a Digital World\tInclusive, accessible, human-centred design, so that everyone can take part in a connected world.'
+            'A hard-to-reach audience\tNot a mailing list bought in — built over seven years of consistent, in-person, sector-specific work.',
+            'Credibility, not visibility\tPresence in this ecosystem signals to Black tech professionals that you are a serious employer or buyer. That signal is earned through repetition.',
+            'A pipeline, not a photo\tPartners use us for hiring, supplier diversity, product research, community insight and thought leadership — often all four.',
+            'Measurable return\tEvery partnership reports against metrics agreed at kick-off.'
           ],
           progressive: true, buildMode: 'dim',
-          notes: 'The three active campaigns. Name the one that fits the organisation you are sitting in front of and spend your time there — a sponsor backs a thing, not a portfolio. Reveal one at a time so the room is not reading ahead while you talk.' },
+          notes: 'Open with the sentence from the pack: most diversity partnerships fail for the same reason — they buy a logo placement at a one-off event and nothing changes. Say it plainly. It is the argument the whole deck rests on and it earns the room’s attention because it concedes something first.' },
 
-        { type: 'cards', title: 'What we have already done',
+        { type: 'section', title: 'Four ways in',
+          subtitle: 'Annual tiers, and single opportunities for partners not ready for one.',
+          notes: 'The turn into the commercial half.' },
+
+        { type: 'table', title: 'Annual tiers · placeholder pricing',
+          body: '\tCommunity\tGrowth\tStrategic\tFounding\nAnnual investment\t£3,000\t£8,500\t£20,000\t£40,000+\nTerm\t12 months\t12 months\t12 months\t24 months\nPlaces available\tOpen\t8\t4\t2\nJob listings\t3 / year\t10 / year\tUnlimited\tUnlimited\nEvents included\t—\t1\t2\t3 + named series\nSpeaking slots\t—\t1\t2\t3 + keynote\nSponsored articles\t—\t1\t2\t4\nRoundtables\t—\t—\t1\t2\nResearch report\t—\t—\t—\t1',
+          notes: 'PRICING IS PLACEHOLDER — the pack says so in a warning box and the slide title says so on the projector. These are a starting structure based on typical UK market rates for an organisation of this size and reach. Set your own numbers before this goes to any partner, and change the title when you do.\n\nThe full matrix in the pack has six more rows — newsletter features, social amplification, survey questions, named manager, reporting, programme input. They are in the leave-behind; this slide is the shape of the offer.' },
+
+        { type: 'cards', title: 'What each tier is for',
           bullets: [
-            '16 courses\tDigital courses built with Tech Mums, FutureLearn and the University of Leeds.',
-            '1 hackathon\tA Sickle Cell Hackathon at the Design Museum — doctors, data scientists, patients and developers in one room.',
-            '5 institutions\tWorking partnerships, including the Computer Science department at London South Bank University.'
+            'Community\tSmaller organisations, startups and scale-ups who want presence and access without a large commitment. An entry point, not a lesser partner.',
+            'Growth\tOrganisations with an active hiring or brand objective. The most common starting tier for corporates testing the relationship.',
+            'Strategic\tPartners with a defined DEI, talent or community strategy who need depth, data and repeated visibility. Includes closed-door roundtable access.',
+            'Founding\tA small number of long-term partners who want to shape the programme itself, not just appear in it. Two places; the 24-month term gives both sides runway to build something real.'
           ],
-          notes: 'Track record, not ambition. This is the slide that answers the question nobody asks out loud, which is whether the last sponsor got anything for their money. Keep it to things that have finished.' },
+          progressive: true, buildMode: 'dim',
+          notes: 'Name the tier you think they belong in before you get to this slide, then let them read the others. A partner who chooses their own tier stays in it.' },
 
-        { type: 'content', title: 'The ask',
+        { type: 'cards', title: 'Single opportunities · placeholder pricing',
           bullets: [
-            'Name a campaign\tBack one of the three for a year, and your name is on everything it produces.',
-            'Fund the room\tVenue, facilitation and the practitioner time that turns an event into a case study somebody can cite.',
-            'Open a door\tMentors, placements and a route into hiring — the part money on its own does not buy.'
+            'Event\t£3,500 — a high-impact event bringing together experts in your target sector. A platform for thought leadership and networking.',
+            'Article\t£1,200 — an expertly crafted piece on a topic or trend relevant to your audience.',
+            'Roundtable\t£5,000 — an intimate, invite-only discussion. A deep dive into an industry challenge, with meaningful dialogue and brand alignment.',
+            'Report\t£12,000 — original insight and data, positioning your organisation as a thought leader.'
+          ],
+          notes: 'For partners not ready for an annual tier, or adding to one. Placeholder pricing again.\n\nAlso in the pack and not on this slide: event hosting from £4,500 virtual and £9,000 in person excluding venue and catering, with a month’s prep and two planning meetings; and platform advertising — £250 a job listing, £1,000 for five, £400 an event listing, £750 a month for a banner.' },
+
+        { type: 'journey', title: 'How it works',
+          subtitle: 'Six steps, and the first one is not a pitch',
+          bullets: [
+            'Intro call\tThirty minutes. We understand your objectives and current activity. No pitch.',
+            'Proposal\tBack within five working days with a recommended tier or bundle, mapped to your objectives.',
+            'Agreement\tContract, invoice, kick-off date set.',
+            'Kick-off\tSixty minutes to agree the activity calendar, success metrics and points of contact.',
+            'Delivery\tWith a named manager at Strategic and Founding.',
+            'Reporting\tQuarterly, against the metrics agreed at kick-off.'
           ],
           progressive: true,
-          notes: 'Finish with one ask, not three. Decide before you walk in which of these you are actually asking this organisation for, and delete the other two — a menu invites a room to choose the cheapest item on it.\n\nIf you price your tiers, add a table slide after this one; the figures are not in this deck because they should not be guessed.' }
+          notes: 'Six steps is the most a room will hold. Reveal them one at a time and dwell on the first: "no pitch" is the promise that makes the call easy to accept, so do not undercut it by pitching on the call.' },
+
+        { type: 'keywords', title: 'What we report, and what we ask',
+          bullets: [
+            'Reach and engagement\timpressions, attendance, open rates, click-throughs, per activity',
+            'Pipeline\tapplications and enquiries generated from job listings',
+            'Who came\tevent attendance profile — seniority, discipline, career stage',
+            'One contact\ta single point of contact with authority to decide',
+            'Assets on time\tslow approvals are the main cause of missed promotion windows',
+            'People who want to be there\tnot people who were told to attend'
+          ],
+          progressive: true,
+          notes: 'Two halves of one bargain, which is why they share a slide. The sentence from §7 worth saying out loud: we would rather report something honest and modest than something impressive and vague — if an activity underperforms we will tell you, and we will fix it.\n\nAnd from §8: we reserve the right to decline or end a partnership where the relationship is inconsistent with our values or our community’s interests. Say it if the room needs to hear it.' },
+
+        { type: 'content', title: 'Next steps',
+          bullets: [
+            'Book an intro call\tThirty minutes, no pitch. Add your booking link before presenting.',
+            'Add your contact details\tName, role, email, phone, website, LinkedIn — the pack leaves all six to confirm.',
+            'Set the prices\tEvery figure in this deck is a placeholder until you replace it.'
+          ],
+          notes: 'This slide is a checklist for you, not for the partner — replace it with your actual contact details and the booking link before this deck leaves the building, and change the two placeholder-pricing titles at the same time.' }
       ]
     },
     {
-      key: 'ukbt-institute-townhouse',
-      title: 'UKBT Institute — the Townhouse model',
+      key: 'ukbt-institute-partnership',
+      title: 'UKBT Institute — partnership pack',
       icon: '◈',
-      blurb: 'The four-floor innovation model and its PRL gates, as a deck: twelve stakeholders on Floor 1, then experiment, build and scale. Content follows the model published on ukblacktech.com.',
-      minutes: 45,
+      blurb: 'The Institute pack as a deck: the method, the track record, the research agenda, the independence terms, and the four partnership routes. Pricing is placeholder and the slides say so.',
+      minutes: 30,
       theme: 'ukbt-institute',
       org: 'UKBT Institute',
-      /* The official Institute lockup, from the organisation's own site. The
-         brand deck could not supply it: there the mark is an image and the
-         word INSTITUTE is a live text box beside it, so extracting the picture
-         gets ❯UKBT and loses the word. */
       logo: 'assets/brand/ukbt-institute.svg',
       logoOn: 'all',
       logoSize: 'small',
       logoReverse: 'never',
       slides: [
-        { type: 'title', title: 'The Townhouse',
-          subtitle: 'A four-floor innovation model · UKBT Institute',
-          notes: 'The deck follows the model published on ukblacktech.com/ukbt-institute — four floors, a Practitioner Readiness Level band on each, and a gate that has to be passed before anything climbs a storey.\n\nThe logo top right is the official Institute lockup. It is not the one in the brand deck: there the mark is a picture and the word INSTITUTE is a live text box under it, so extracting the picture would give ❯UKBT and lose the word.' },
+        { type: 'title', title: 'Partnership\nPack',
+          subtitle: 'Research, hackathons and programmes tackling the social problems technology keeps missing.',
+          notes: 'The deck follows the written pack. Before it goes anywhere: set the real costs, and fill in the bracketed confirmations — particularly the Sickle Cell outcomes, which the pack itself calls the strongest proof point with no numbers attached.' },
 
-        { type: 'quote', body: 'A townhouse for technologists, academics, professionals, and communities.',
-          subtitle: 'UKBT Institute',
-          notes: 'Why the metaphor earns its place: a townhouse has floors you climb in order, and you cannot be on the third without having been on the first. That is the whole argument — the model is a staircase with locked doors, not a set of parallel workstreams.' },
-
-        { type: 'journey', title: 'Four floors, and you climb them in order',
-          subtitle: 'Practitioner Readiness Level on each',
+        { type: 'content', title: 'What the Institute is',
           bullets: [
-            'Floor 1 · PRL 1–3\tCOLLABORATE. Knowledge transfer and discovery. All twelve stakeholders validate here.',
-            'Floor 2 · PRL 4–6\tEXPERIMENT. Stress test and validate — cheaply, and before anything is built.',
-            'Floor 3 · PRL 7\tBUILD. Practitioner-led, with academic research alongside it.',
-            'Floor 4 · PRL 8–9\tSCALE. Growth, markets and ecosystem — in public.'
-          ],
-          progressive: true,
-          notes: 'PRL is the Practitioner Readiness Level framework: the same idea as a technology readiness level, but the thing being measured is whether practitioners are ready to use it, not whether the technology works. Reveal a floor at a time; the order is the point and a room that sees all four at once reads them as options.' },
-
-        { type: 'keyfact', title: 'The rule that makes Floor 1 different',
-          subtitle: 'Floor 1 · COLLABORATE · gate score ≥ 60',
-          body: '11 of 12 → proceed',
-          bullets: [
-            'All twelve stakeholders validate on this floor. No exceptions, no proxies.',
-            'Any one of the twelve saying no pivots the project or kills it.',
-            'The core rule is the shortest one in the model: never skip a voice.'
+            'Why it exists\tA lot of technology gets built for a narrow slice of the population, and the consequences land hardest on communities that were never in the room.',
+            'What it does about it\tPuts those communities in the room — alongside clinicians, data scientists, engineers and academics, on problems that matter to them.',
+            'Where it sits\tThe research and programme arm of UK Black Tech. Where the parent builds the ecosystem, the Institute produces the evidence, the training and the prototypes.'
           ],
           progressive: true, buildMode: 'dim',
-          notes: 'This is the slide to slow down on. Most innovation processes let a strong sponsor override a quiet objection; this one does not, and the cost of that is that Floor 1 takes longer than anyone wants it to. Say out loud that the gate is deliberately cheap to fail and expensive to skip.' },
+          notes: 'Three beats: the problem, the method, the relationship to the parent. The third matters commercially — a partner who wants brand reach across a tech community wants the UK Black Tech pack, not this one, and saying so early saves a wasted meeting.' },
 
-        { type: 'keywords', title: 'The twelve voices · 1 to 6',
+        { type: 'cards', title: 'What we have built so far',
           bullets: [
-            'Practitioners\tthe people who would live with it, daily',
-            'Customers\tbudget authority — whoever can say yes to paying',
-            'Academics\tresearch and evidence',
-            'Supply chain\tsourcing and manufacturing — can it be made at all?',
-            'Internal champions\torganisational advocates, inside the building',
-            'Market\ttiming and competition'
+            '16 courses\tDigital courses created with Tech Mums, FutureLearn and the University of Leeds.',
+            '1 hackathon\tThe Sickle Cell Hackathon — doctors, data scientists, patients and web developers, at the Design Museum.',
+            '5 institutions\tIncluding a collaboration with LSBU’s Computer Science department.'
           ],
-          progressive: true,
-          notes: 'Six here and six on the next slide — twelve on one slide is a list nobody reads. The questions Floor 1 asks them are blunt on purpose: do you face this daily, is it sector-wide, will you pay today, can we source it, is the timing right. "Let me think about it" counts as a no.' },
+          notes: 'Track record, not ambition. Keep it to things that have finished.' },
 
-        { type: 'keywords', title: 'The twelve voices · 7 to 12',
+        { type: 'content', title: 'The Sickle Cell Hackathon',
           bullets: [
-            'Budget holders\tfinance decision makers',
-            'Finance / procurement\teconomic reality — what the process will allow',
-            'Lawyers / regulatory\tcompliance and risk',
-            'Technologists\timplementation',
-            'Non-technologists\tnon-technical users, who are most of everybody',
-            'Community\tthe community network around it'
-          ],
-          progressive: true,
-          notes: 'The second six are the ones projects skip, and they are where projects die later: procurement, legal, and the non-technical majority. Naming them as voices rather than as approvals is the point — they are consulted at PRL 1, not presented to at PRL 7.' },
-
-        { type: 'section', title: 'Up a floor\nat a time',
-          subtitle: 'Three storeys left, and the gate gets harder on each.',
-          notes: 'The one slide in this deck on the green. Use it as a real break — stop talking, let the room look up, then start on Floor 2. A section slide that goes past in two seconds is a slide you did not need.' },
-
-        { type: 'content', title: 'Floor 2 · EXPERIMENT · PRL 4–6',
-          bullets: [
-            'Who is in the room\tPractitioners, supply chain, market, and non-technologists.',
-            'Core rule\tTest simple before tech. Paper prototypes, a concierge MVP, no-code pilots.',
-            'What counts as success\tRetention rather than clicks, willingness to pay, and whether it fits an existing workflow.',
-            'What kills it\tA shrug. If nobody would fight to keep it, or it saves less than a couple of hours a week, it does not climb.'
+            'The condition\tThe UK’s most common genetic blood disorder, disproportionately affecting people of African and Caribbean heritage — and chronically under-served by health technology.',
+            'The method\tPatients in the build process alongside the clinicians treating them and the developers who could prototype. From the first hour, not as a consultation at the end.',
+            'Why it is here\tIt is the clearest example of how the Institute works, and it is the thing partners ask about.'
           ],
           progressive: true, buildMode: 'dim',
-          notes: 'Gate score to leave this floor: 80 out of 100. The cheapest floor and the one most often skipped, because building feels like progress and a paper prototype does not. The measure to defend here is retention: clicks are available early and mean nothing, and a pilot that people stop opening has answered the question.' },
+          notes: 'THIS SLIDE NEEDS NUMBERS. The pack says so itself: participants, prototypes produced, what happened to them afterwards, press coverage, continued development. It is the strongest proof point in the pack and it currently has none attached. A partner will ask, and "I would have to check" is a worse answer than a modest real figure.' },
 
-        { type: 'content', title: 'Floor 3 · BUILD · PRL 7',
+        { type: 'keywords', title: 'The research agenda',
           bullets: [
-            'Who is in the room\tInternal champions — the people who will have to defend it when you are not there.',
-            'Core rule\tCo-create, don’t dictate. Champions co-own the roadmap.',
-            'What counts as success\tThey use it daily and argue for it: three or more champions, a written case study, academic validation.',
-            'What kills it\t"Nice to have." A champion who will not move a budget, or cannot recruit a peer, is not a champion.'
+            'Women’s Health in the Age of Technology\thow digital health tools serve, or fail to serve, women and particularly Black women',
+            'Health equity and clinical data\twhere datasets under-represent communities, and what that produces downstream',
+            'Theme three\tto confirm',
+            'Theme four\tto confirm'
+          ],
+          notes: 'Two real themes and two to fill in. Do not present the placeholders — either add the themes or cut the rows, because an agenda that is half blank reads as an agenda that is half imagined.\n\nThe pack also asks for published outputs, working papers and studies in progress. A partner funding research wants to see what your research actually looks like before they fund more of it.' },
+
+        { type: 'content', title: 'Why partner with the Institute',
+          bullets: [
+            'Communities research fails to reach\tRecruitment into health research from Black and minority communities is a known, documented problem. We have earned the trust to do it — as partners with those communities, not extractors of data.',
+            'Applied output, not shelf-ware\tHackathons produce prototypes. Courses produce trained people. Reports are written to be used.',
+            'Cross-sector convening\tClinicians, patients, academics and engineers in one room is harder to arrange than it sounds. It is most of what we do.',
+            'Credible impact reporting\tSpecific, evidenced and defensible — including under Social Value Model requirements in public procurement.'
           ],
           progressive: true, buildMode: 'dim',
-          notes: 'Gate score to leave this floor: 90 out of 100. The gate jumps from 80 to 90 here, and that is the moment the model gets expensive: this is the first floor where real engineering money is spent, so the bar for spending it is higher than the bar for testing.' },
+          notes: 'The fourth one closes deals with procurement teams and nobody else. Know which of the four the person in front of you is buying.' },
 
-        { type: 'content', title: 'Floor 4 · SCALE · PRL 8–9',
+        { type: 'section', title: 'Partners fund our work.\nPartners do not determine our findings.',
+          subtitle: 'Research independence',
+          notes: 'The most important slide in the deck and the one to slow right down on. It is on the green because it is the thing you want the room to look up at.\n\nThe argument, if it is challenged: a report a sponsor could have edited is a marketing document, and everyone reading it knows that. Independence is not a constraint on the value — it is the value.' },
+
+        { type: 'content', title: 'What that means in practice',
           bullets: [
-            'Who is in the room\tCustomers, market, technologists, non-technologists, and the wider community.',
-            'Core rule\tShare everything. Publish the learning, document the failures, keep the roadmap open.',
-            'What counts as success\tOthers copy it, improve it or join in — and there is at least one paying customer.',
-            'What kills it\tNo ecosystem effects. A product nobody recommends to a peer has not scaled, however many users it has.'
-          ],
-          progressive: true, buildMode: 'dim',
-          notes: 'Gate: 90 out of 100 and 7% growth week on week — the only floor with a rate on it as well as a threshold. Note what building in public costs: documenting the failures is the part organisations quietly drop, and it is the part that makes the rest credible.' },
-
-        { type: 'chart', chartKind: 'bar', title: 'The gate gets harder as you climb',
-          body: 'Floor\tGate score\nFloor 1 · Collaborate\t60\nFloor 2 · Experiment\t80\nFloor 3 · Build\t90\nFloor 4 · Scale\t90',
-          chartSource: 'Gate thresholds from the UKBT Institute four-floor innovation model, ukblacktech.com/ukbt-institute. Floor 4 also requires 7% week-on-week growth, which is not shown.',
-          progressive: true,
-          notes: 'Four numbers, and the shape is the argument: the model is cheap to enter and expensive to climb. The source line carries the thing the bars cannot — Floor 4 has a growth rate attached as well as a score, so its bar understates it.' },
-
-        { type: 'cards', title: 'One rule per floor',
-          bullets: [
-            'Floor 1\tNever skip a voice.',
-            'Floor 2\tTest simple before tech.',
-            'Floor 3\tCo-create, don’t dictate.',
-            'Floor 4\tShare everything.'
-          ],
-          progressive: true, buildMode: 'dim',
-          notes: 'The summary slide, and the one worth photographing. Four rules, in order, each one the thing the floor beneath it earns the right to.' },
-
-        { type: 'keywords', title: 'What a kill sounds like',
-          bullets: [
-            '“Let me think about it.”\tfloor 1 — not a yes. one no out of twelve stops it',
-            '“Maybe” — or a shrug\tfloor 2 — nobody would fight to keep it',
-            '“Nice to have.”\tfloor 3 — no champion will move a budget for it',
-            'No paying customer\tfloor 4 — no ecosystem effect, referral under 30%'
+            'Questions agreed jointly\tAt the outset, and documented.',
+            'Conclusions rest with us\tMethodology, analysis and conclusions sit with the Institute and its academic collaborators.',
+            'You see it first\tPartners see findings before publication and may correct factual errors about their own organisation. They may not require changes to conclusions.',
+            'Funding is disclosed\tIn the published output, every time.',
+            'We publish the inconvenient\tIncluding when it is inconvenient to a funder.'
           ],
           progressive: true,
-          notes: 'Killing a project is the model working, not the model failing. Say that plainly — a framework whose gates never close is a framework nobody is using.' },
+          notes: 'Five rules, revealed one at a time. This is standard practice for a credible research institute — say that, because it reframes the terms from awkward to professional.' },
+
+        { type: 'table', title: 'Partnership routes · placeholder costs',
+          body: 'Route\tScope\tPlaceholder cost\nResearch\tInsight brief\t£15,000\nResearch\tFull study\t£45,000\nResearch\tMulti-year programme\t£100,000+\nProgramme\tCourse development\tfrom £20,000\nProgramme\tCohort delivery\tfrom £12,000\nHackathon\tLead partner\t£30,000\nHackathon\tSupporting partner\t£10,000',
+          notes: 'PLACEHOLDER COSTS, and research scope varies enormously — treat these as the shape of the offer, not the number. Set your own before this goes to a partner and change the title when you do.\n\nThere is no description column: with one, every row wrapped to two or three lines and the last two rows fell off the bottom of the slide. Seven routes and a price is what a table on a wall can carry. The detail is for saying, not showing — an insight brief is desk research plus a community survey with a launch webinar; a full study adds primary fieldwork, academic collaboration, a launch event and media outreach at around forty pages; the multi-year programme runs two to three years with annual outputs. Lead hackathon partners co-define the challenge and take a named, full participating role; supporting partners get presence, mentor places and prize sponsorship.\n\nAlso available and not on the slide: in-kind hackathon support — venue, technical mentors, compute credits, clinical expertise — valued case by case. And learner bursaries at £500 a head, which needs your actual per-learner cost.' },
+
+        { type: 'cards', title: 'Institute Partner · the annual route',
+          bullets: [
+            'Associate · £25,000\t12 months. One insight brief, supporting hackathon role, observer status, five volunteering places.',
+            'Core · £60,000\t24 months. One full study, lead on a hackathon each year, one course, advisory board observer, fifteen places.',
+            'Founding · £120,000+\t36 months. Two or more studies, lead plus challenge-setting, two courses and a bursary fund, full board seat, unlimited places.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'For organisations wanting a sustained relationship across all three strands rather than one commission. Every figure is a placeholder. All three include being named on Institute outputs, early access to findings, and an annual impact report written for your own reporting.' },
+
+        { type: 'content', title: 'What partnership does not buy',
+          bullets: [
+            'Editorial control over findings.',
+            'Exclusive or embargoed access to data beyond the agreed pre-publication window.',
+            'Endorsement of your products or services by the Institute.',
+            'Use of community participant data for commercial purposes.',
+            'Association with our community without a genuine contribution to it.'
+          ],
+          progressive: true,
+          notes: 'Stated plainly so there are no difficult conversations later. It reads as confidence rather than as restriction when it comes straight after the independence slide, which is why it sits here and not at the end.\n\nAnd the one that costs nothing: universities, NHS trusts, patient organisations and charities are not charged to collaborate. Those relationships run on shared contribution — access, expertise, data, ethics approval, co-authorship, venue.' },
+
+        { type: 'journey', title: 'How it works',
+          subtitle: 'Six steps, and ethics before fieldwork',
+          bullets: [
+            'Scoping conversation\tWhat you need to achieve, what we are already working on, and whether there is a genuine overlap. We will say so if there is not.',
+            'Written proposal\tScope, method, timeline, cost, outputs — and the independence terms restated in full.',
+            'Agreement and ethics\tContract signed. Where research involves human participants, ethics approval is secured through our academic partner before any fieldwork begins.',
+            'Delivery\tWith agreed checkpoints. You will know if timelines move, and why.',
+            'Publication and launch\tJoint launch event, media outreach, output published openly.',
+            'Impact reporting\tIn a format that goes straight into your CSR, ESG or social value reporting.'
+          ],
+          progressive: true,
+          notes: 'Step three is the one that separates this from a marketing engagement. Do not rush past it.' },
 
         { type: 'links', title: 'Where this comes from',
           bullets: [
-            'UKBT Institute — the four-floor innovation model\thttps://ukblacktech.com/ukbt-institute/',
+            'UKBT Institute\thttps://ukblacktech.com/ukbt-institute/',
             'UK Black Tech\thttps://ukblacktech.com/'
           ],
-          notes: 'Everything in this deck follows the model as published. If the framework moves, this is the page it moves on — check it before presenting, and edit the gate chart and the stakeholder table to match.' }
+          notes: 'Add the booking link for a scoping conversation, and your contact details — name, role, email, phone, LinkedIn. The pack leaves all of them to confirm and so does this deck.' }
       ]
     },
 

@@ -1048,20 +1048,23 @@ one is adding an entry to an array.
 | Layout bank | Northeastern London | 30 | One of every layout, as a reference to copy from |
 | Pacing gallery · NUL | Northeastern London | 11 | Openers and breakaways, then a range of teaching layouts |
 | Pacing gallery · Studio | Studio | 11 | The same pacing idea in the sage skin |
-| UK Black Tech — sponsorship | UK Black Tech | 5 | Asking an organisation to back a campaign |
-| UKBT Institute — the Townhouse model | UKBT Institute | 13 | The four-floor innovation model and its PRL gates |
+| UK Black Tech — partnership pack | UK Black Tech | 12 | Tiers, opportunities and how a partnership runs |
+| UKBT Institute — partnership pack | UKBT Institute | 13 | Research, hackathons, programmes, and the independence terms |
 
-**The two UKBT decks carry the organisation's own published figures**, not
-invented ones — reach and community make-up, the three active campaigns, the
-track record, and on the Institute side the four floors, the twelve
-stakeholders and the gate score on each. Both decks name ukblacktech.com as the
-source and tell the presenter to check the figures are current before pitching;
-the sponsorship deck deliberately has no price tiers, because those are the one
-thing that cannot be looked up.
+**The two UKBT decks are the written partnership packs, slide for section.**
+Nothing in them is invented: the reach and community figures, the track record,
+the tier structure, the research agenda and the independence terms all come
+from the packs, which in turn come from the organisation.
 
-The sponsorship deck is five slides on purpose. A sponsorship conversation is
-not a lecture: the deck holds four facts still while somebody talks, and is
-worth forwarding afterwards.
+**Every price in both decks is a placeholder, and the slides say so on the
+projector** — not only in the speaker notes. The packs mark their pricing
+tables with a warning that the figures are a starting structure to be replaced
+before the pack reaches a partner, so the slide titles read *placeholder
+pricing* and *placeholder costs* until somebody sets the real ones. The same
+goes for the bracketed confirmations the packs leave open; each one is named in
+the notes of the slide it belongs to rather than quietly filled in. The
+Institute's Sickle Cell slide says outright that it is the strongest proof
+point in the pack and currently has no numbers attached to it.
 
 ### How much room the room gets — `S`
 
