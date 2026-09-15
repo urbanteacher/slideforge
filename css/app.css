@@ -5433,6 +5433,21 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
    than starving the label beside it in the narrowest band. */
 .funnel-value { font-size: 34px; line-height: 1.1; font-weight: 800; letter-spacing: -.02em; max-width: 50%; text-align: right; }
 
+/* The drop between two bands, as a figure rather than a taper. Sits in the
+   flow between them so it moves with a reordered stage and needs no
+   positioning; aria-hidden because the values either side already say it. */
+.funnel-drop {
+  display: flex; justify-content: center; align-items: center;
+  height: 0; margin: -2px 0; pointer-events: none;
+}
+.funnel-drop span {
+  font-size: 17px; font-weight: 700; letter-spacing: .04em;
+  color: var(--s-dim);
+  background: var(--s-bg);
+  padding: 0 10px; border-radius: 999px;
+  position: relative; z-index: 1;
+}
+
 /* --- timeline */
 /* Neither shape stretches to fill the pad: auto margins float the track to
    the vertical middle, so six events sit centred rather than pinned under

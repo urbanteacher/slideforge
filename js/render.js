@@ -289,14 +289,6 @@
     pad.appendChild(el('div', 'accent-bar'));
   }
 
-  /* "🎯 Aim" → { icon: '🎯', rest: 'Aim' }. Null when the label starts with an
-     ordinary letter or digit, so a card without a glyph keeps its whole label. */
-  function splitLeadingGlyph(term) {
-    var m = String(term || '').match(/^(\S{1,3})\s+(.+)$/);
-    if (!m || /^[\p{L}\p{N}]/u.test(m[1])) return null;
-    return { icon: m[1], rest: m[2] };
-  }
-
   function layoutContent(slide, pad) {
     if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
     var ul = el('ul');
@@ -328,13 +320,13 @@
     if (slide.type === 'cards' && (slide.design || {}).cardsMode === 'rows') {
       ul.classList.add('cards-rows');
     }
-    /* Icon grid: an emoji or symbol at the front of a card label is lifted
-       into a badge above the copy, so six short points read as a pictogram
-       row rather than a list — the infographic idiom without a paint tool. */
-    var iconCards = slide.type === 'cards' && (slide.design || {}).cardsMode === 'icons';
-    if (iconCards) ul.classList.add('cards-icons');
+    /* Picture cards: every card carries an image slot above its copy. A slot
+       with nothing in it draws the same dashed "Add an image" prompt as an
+       empty split, so a template can promise a photograph without shipping
+       one — the author sees where it goes. */
+    var pictureCards = slide.type === 'cards' && (slide.design || {}).cardsMode === 'pictures';
     var pics = slide.type === 'cards' ? (slide.images || []) : [];
-    if (pics.some(Boolean)) {
+    if (pics.some(Boolean) || pictureCards) {
       ul.classList.add('has-card-pics');
       /* Maps and scientific plates need landscape + contain; book covers keep 3:4 cover. */
       if ((slide.design || {}).cardPics === 'plates') ul.classList.add('has-card-plates');
@@ -346,13 +338,6 @@
       if (slide.type === 'cards' && line.indexOf('\t') >= 0) {
         var pair = SF.parseKeywordLine(line);
         li = asStep(el('li', bulletTier(line) === 2 ? 'tier-2' : null), slide);
-        var glyph = iconCards ? splitLeadingGlyph(pair.term) : null;
-        if (glyph) {
-          var badge = el('span', 'card-icon', glyph.icon);
-          badge.setAttribute('aria-hidden', 'true');
-          li.appendChild(badge);
-          pair = { term: glyph.rest, def: pair.def };
-        }
         li.appendChild(el('strong', slide.activity ? 'activity-card-label' : 'card-label', pair.term));
         li.appendChild(el('span', slide.activity ? 'activity-card-copy' : 'card-body', pair.def));
       } else if (slide.type === 'content' && bulletTier(line) === 1 && line.indexOf('\t') >= 0) {
@@ -372,9 +357,10 @@
         li = asStep(rich('li', bulletTier(line) === 2 ? 'tier-2' : null, slide, 'bullets.' + item.index, bulletText(line)), slide);
       }
       var src = pics[item.index];
-      if (src) {
-        var pic = el('div', 'card-pic');
-        pic.style.backgroundImage = 'url("' + String(src).replace(/"/g, '&quot;') + '")';
+      if (src || pictureCards) {
+        var pic = el('div', 'card-pic' + (src ? '' : ' card-pic-empty'));
+        if (src) pic.style.backgroundImage = 'url("' + String(src).replace(/"/g, '&quot;') + '")';
+        else pic.appendChild(el('span', null, 'Add an image'));
         pic.setAttribute('aria-hidden', 'true');
         var copy = el('div', 'card-copy');
         while (li.firstChild) copy.appendChild(li.firstChild);
@@ -3647,6 +3633,24 @@
       band.appendChild(copy);
       if (it.value) band.appendChild(el('span', 'funnel-value', it.value));
       list.appendChild(band);
+      /* The drop, named. A funnel's bands encode what is LEFT at each stage,
+         and the number every reader is actually computing in their head is
+         what went missing between two of them — 120 to 48 is -60%. Printing
+         it is the difference between a shape that suggests a loss and a figure
+         that states one.
+
+         Only where both stages are real numbers and the value fell: a stage
+         that grew, or a stage labelled "most of them", has no honest
+         percentage and gets nothing rather than a guess. */
+      if (numeric && i > 0 && nums[i - 1] > 0 && nums[i] < nums[i - 1]) {
+        var drop = Math.round((1 - nums[i] / nums[i - 1]) * 100);
+        if (drop >= 1) {
+          var tag = el('li', 'funnel-drop');
+          tag.setAttribute('aria-hidden', 'true');
+          tag.appendChild(el('span', null, '\u2212' + drop + '%'));
+          list.insertBefore(tag, band);
+        }
+      }
     });
     pad.appendChild(list);
     if (slide.body) pad.appendChild(rich('div', 'info-takeaway', slide, 'body', slide.body));
