@@ -254,12 +254,13 @@ function listData(res) {
    deployment with no key still generates polls. */
 const AI_KEY = process.env.GEMINI_API_KEY || '';
 const AI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-const AI_MAX_BODY = 8 * 1024;
+const AI_MAX_BODY = 6 * 1024;
 /* A LAN-facing proxy onto someone's paid quota needs a ceiling, or one tab in
    a loop spends the teacher's month. Deliberately coarse: this is a guard
-   against accidents and impatience, not an auth system. */
+   against accidents and impatience, not an auth system. Render shares one
+   key across every classroom — keep the window tight. */
 const AI_WINDOW_MS = 60 * 1000;
-const AI_MAX_PER_WINDOW = 20;
+const AI_MAX_PER_WINDOW = 10;
 const aiHits = new Map();
 
 /* What the provider said last time we actually asked it. A key being present
@@ -307,8 +308,10 @@ function aiGenerate(req, res) {
     if (tooBig) return jsonReply(res, 413, { error: 'Prompt too large' });
     let msg;
     try { msg = JSON.parse(body); } catch (e) { return jsonReply(res, 400, { error: 'Bad JSON' }); }
-    const system = String((msg && msg.system) || '').slice(0, 4000);
-    const user = String((msg && msg.user) || '').slice(0, 4000);
+    /* Caps stay well under Gemini's comfort zone — activity boxes and a
+       handful of quiz questions, not an essay. */
+    const system = String((msg && msg.system) || '').slice(0, 2200);
+    const user = String((msg && msg.user) || '').slice(0, 1800);
     if (!user.trim()) return jsonReply(res, 400, { error: 'Nothing to generate from' });
 
     const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' +
@@ -331,8 +334,8 @@ function aiGenerate(req, res) {
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: system + '\n\n' + user }] }],
           generationConfig: {
-            temperature: 0.6,
-            maxOutputTokens: 500,
+            temperature: 0.55,
+            maxOutputTokens: 450,
             responseMimeType: 'application/json'
           }
         }),
@@ -351,7 +354,7 @@ function aiGenerate(req, res) {
         data.candidates[0].content && data.candidates[0].content.parts &&
         data.candidates[0].content.parts[0];
       if (!part || !part.text) return jsonReply(res, 502, { error: 'AI provider returned no content' });
-      return jsonReply(res, 200, { text: String(part.text).slice(0, 20000) });
+      return jsonReply(res, 200, { text: String(part.text).slice(0, 12000) });
     } catch (err) {
       clearTimeout(timer);
       /* Distinguished because the remedies differ: a timeout means try again
