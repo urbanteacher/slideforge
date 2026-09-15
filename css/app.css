@@ -589,6 +589,11 @@ html[data-ws="game"] #btnSorter { display: none; }
   width: 13px; height: 13px; border-radius: 3px;
   background: var(--s-accent);
 }
+/* A lead-in runs on from its own point rather than sitting above it — the
+   bold part is a signpost inside the sentence, not a heading. */
+.layout-content .lead-in { font-weight: 700; }
+.layout-content .lead-in + .lead-rest::before { content: ' '; }
+.layout-content .lead-rest { opacity: .92; }
 .layout-content li.tier-2 { font-size: 26px; margin-left: 46px; color: var(--s-dim); }
 .layout-content li.tier-2::before { width: 8px; height: 8px; border-radius: 50%; background: var(--s-dim); top: .55em; }
 
@@ -674,13 +679,16 @@ html[data-ws="game"] #btnSorter { display: none; }
   flex: 1;
   min-width: 0;
 }
-.layout-cards .card-copy .card-label,
-.layout-cards .card-copy strong.card-label {
+/* Not scoped to .card-copy: that wrapper only exists when the card carries a
+   picture, so scoping the block rules to it left every image-less card running
+   its label straight into its body — "Plan Define the purpose…" as one line. */
+.layout-cards .card-label,
+.layout-cards strong.card-label {
   display: block;
   font-weight: 700;
   margin-bottom: 6px;
 }
-.layout-cards .card-copy .card-body {
+.layout-cards .card-body {
   display: block;
   opacity: .92;
 }

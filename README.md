@@ -923,10 +923,15 @@ to whatever stage shape the deck is set to instead of letterboxing.
 **No logo file ships with either theme.** The UKBT brand deck composes its
 lockup from a partial image plus live text on a white ground, so what can be
 extracted from it is a fragment on a white rectangle — worse on a dark slide
-than no logo at all. Both ready-made lessons say so in their opening note: drop
-the official file in under Deck settings → Logo and it appears on every slide.
-The green chevron on the title and section slides is the theme's own mark, not
-a stand-in for the logo.
+than no logo at all. Both ready-made lessons say so in their opening note. To
+add one: drop the file into `assets/brand/` and point at it under Deck settings
+→ Logo, and it appears on every slide.
+
+Both grounds are dark, so the file wants to be the **reversed** version of the
+mark — white or light lettering, not the dark-ink one. An SVG keeps its edges
+on a projector at any size; a PNG needs real transparency, not a white
+rectangle. The green chevron on the title and section slides is the theme's own
+mark, not a stand-in for the logo.
 
 **Where a green accent is not a ground for text.** `css/app.css` puts white on
 `var(--s-accent)` in a handful of places — caption bands, the two reveal
@@ -942,23 +947,30 @@ added to it, which is the sixth of the places a theme is registered.
 ### Ready-made lessons
 
 `js/lessons.js` is content, not engine: a lesson is a plain object, and adding
-one is adding an entry to an array. Six ship today.
+one is adding an entry to an array.
 
-| Lesson | Theme | For |
-| --- | --- | --- |
-| The art of paying attention | Studio | A six-slide teach → check → discuss sequence |
-| Start with what you remember | Studio | A retrieval-practice opener |
-| LDSCI6253 Advanced Information Presentation & Visualisation | Northeastern London | The real lecture, 74 slides |
-| Layout bank | Northeastern London | One of every layout, as a reference to copy from |
-| UK Black Tech — building the pipeline | UK Black Tech | A community talk on representation and retention |
-| UKBT Institute — a teaching session, end to end | UKBT Institute | Recall → teach → practise → check → reflect, as a shell |
+| Lesson | Theme | Slides | For |
+| --- | --- | --- | --- |
+| The art of paying attention | Studio | 6 | Teach → check → discuss, with three moments the room answers |
+| Start with what you remember | Studio | 4 | A retrieval-practice opener |
+| LDSCI6253 Advanced Information Presentation & Visualisation | Northeastern London | 74 | The real lecture |
+| Layout bank | Northeastern London | 30 | One of every layout, as a reference to copy from |
+| Pacing gallery · NUL | Northeastern London | 11 | Openers and breakaways, then a range of teaching layouts |
+| Pacing gallery · Studio | Studio | 11 | The same pacing idea in the sage skin |
+| UK Black Tech — sponsorship | UK Black Tech | 5 | Asking an organisation to back a campaign |
+| UKBT Institute — the Townhouse model | UKBT Institute | 13 | The four-floor innovation model and its PRL gates |
 
-The two UKBT decks are templates with real bones and replaceable content. Every
-chart in the pipeline talk carries **sample figures**, and says so in the slide
-title on the projector rather than only in the speaker notes — a plausible
-diversity statistic is exactly the thing that gets quoted from a slide and then
-cannot be sourced. The notes name where the real numbers come from, and the
-closing slide lists what to replace before presenting.
+**The two UKBT decks carry the organisation's own published figures**, not
+invented ones — reach and community make-up, the three active campaigns, the
+track record, and on the Institute side the four floors, the twelve
+stakeholders and the gate score on each. Both decks name ukblacktech.com as the
+source and tell the presenter to check the figures are current before pitching;
+the sponsorship deck deliberately has no price tiers, because those are the one
+thing that cannot be looked up.
+
+The sponsorship deck is five slides on purpose. A sponsorship conversation is
+not a lecture: the deck holds four facts still while somebody talks, and is
+worth forwarding afterwards.
 
 ### How much room the room gets — `S`
 

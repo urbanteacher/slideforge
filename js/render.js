@@ -331,6 +331,19 @@
         li = asStep(el('li', bulletTier(line) === 2 ? 'tier-2' : null), slide);
         li.appendChild(el('strong', slide.activity ? 'activity-card-label' : 'card-label', pair.term));
         li.appendChild(el('span', slide.activity ? 'activity-card-copy' : 'card-body', pair.def));
+      } else if (slide.type === 'content' && bulletTier(line) === 1 && line.indexOf('\t') >= 0) {
+        /* The lead-in the layout bank has always documented — the part before
+           the tab set bold, the rest running on from it, so a point can carry
+           its own sub-clause. It had no branch here, so the tab collapsed to a
+           space in HTML and sixteen bullets across the shipped lessons said
+           their lead-in out loud and then didn't show it.
+
+           A leading tab is a sub-bullet, not a lead-in, so tier 2 is excluded:
+           splitting on the first tab there would take the indent as the term. */
+        var lead = SF.parseKeywordLine(line);
+        li = asStep(el('li', null), slide);
+        li.appendChild(el('strong', 'lead-in', lead.term));
+        if (lead.def) li.appendChild(el('span', 'lead-rest', lead.def));
       } else {
         li = asStep(rich('li', bulletTier(line) === 2 ? 'tier-2' : null, slide, 'bullets.' + item.index, bulletText(line)), slide);
       }

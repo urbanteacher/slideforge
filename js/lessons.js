@@ -1415,236 +1415,181 @@
       ]
     },
     {
-      key: 'ukbt-pipeline',
-      title: 'UK Black Tech — building the pipeline',
+      key: 'ukbt-sponsorship',
+      title: 'UK Black Tech — sponsorship',
       icon: '❯',
-      blurb: 'A community talk about representation, retention and the route into UK tech, in the UK Black Tech theme. Every chart carries sample figures on purpose — swap in your own before you present.',
-      minutes: 40,
+      blurb: 'Five slides to ask an organisation to back a campaign: who you reach, what you build, what you have already done, and the ask. Figures are UK Black Tech’s own — check them before you pitch.',
+      minutes: 10,
       theme: 'ukbt',
       org: 'UK Black Tech',
       slides: [
-        { type: 'title', title: 'Building the pipeline',
-          subtitle: 'Representation, retention and the route into UK tech',
-          notes: 'No deck logo is set — add the official file under Deck settings → Logo and it appears on every slide; the green chevron on the title and section slides is the theme’s own mark, not a substitute for it. Open by saying what the talk is not: it is not a league table of who is failing. It is an argument that the numbers people quote about representation are usually the wrong numbers, and that the interesting question is where people leave rather than how many arrive.' },
+        { type: 'title', title: 'Partner with UK Black Tech',
+          subtitle: 'Reach, reputation, and a pipeline that lasts',
+          notes: 'Five slides on purpose. A sponsorship conversation is not a lecture — the deck exists to hold four facts still while you talk, and to leave something behind that survives being forwarded.\n\nNo deck logo is set. Drop the official file into assets/brand/ and point at it under Deck settings → Logo; the green chevron on this slide is the theme’s own mark, not a stand-in for the logo.' },
 
-        { type: 'introduction', title: 'Your name', subtitle: 'Your role · UK Black Tech',
-          body: 'Replace this with two or three lines about who you are and why you are the person saying this. A talk about representation lands differently depending on who is giving it, and the room will want to know.',
-          notes: 'INTRODUCTION — swap in your own details before presenting. Keep it to the length that is here; the audience wants the argument, not a CV.' },
-
-        { type: 'section', title: 'What the numbers say', subtitle: 'And what they leave out',
-          feedback: { kind: 'wordcloud', prompt: 'In one word — what got you into tech?', options: [], max: 2 },
-          notes: 'Run the word cloud before the first chart. It puts the room’s own routes on the wall, which is the thing the charts are about to abstract away. Keep it to a word each so the cloud stays readable.' },
-
-        { type: 'chart', chartKind: 'hbar', title: 'Share of roles by level · sample figures',
-          body: 'Level\tShare of roles (%)\nEntry\t9.1\nMid\t6.2\nSenior\t3.4\nDirector\t1.8\nExecutive\t0.9',
-          progressive: true,
-          notes: 'SAMPLE DATA — these five numbers are a shape, not a finding, and the slide title says so on the projector. Before you present, replace them with figures you can cite: the ONS Annual Population Survey, the BCS Diversity Report, or your own organisation’s pay-gap return. A sorted horizontal bar is the FT’s ranking chart — the order is the message, so it is sorted and the axis starts at zero.' },
-
-        { type: 'chart', chartKind: 'line', title: 'Entry level moved. Senior did not · sample figures',
-          body: 'Year\tEntry level\tSenior\n2019\t6.8\t2.9\n2020\t7.4\t3.0\n2021\t8.2\t3.1\n2022\t8.7\t3.2\n2023\t9.1\t3.4',
-          progressive: true,
-          notes: 'The point of two lines rather than one: a recruitment number can climb for years while the number that would show people staying and progressing barely moves. Press Next once to draw entry level, let the room read it as good news, then draw senior.' },
-
-        { type: 'content', title: 'Three questions for any representation chart',
+        { type: 'keyfact', title: 'Who you would be reaching',
+          subtitle: 'Combined reach across the UK Black Tech platform',
+          body: '20,000 tech professionals',
           bullets: [
-            'What is the denominator?\tShare of applicants, of hires, or of everybody in post — three different claims, often drawn identically.',
-            'Who is not in it?\tA chart of people in the industry cannot show the people who left it, or never applied.',
-            'Compared to what?\tA percentage with no baseline — the local population, the graduate pool, last year — is a number, not evidence.'
+            '60% of the community identifies as women.',
+            '35% of the audience is under 25.',
+            'Partners already include Global Tech Advocates, UAL Creative Computing Institute, Southwark Council and Capital City College.'
           ],
           progressive: true, buildMode: 'dim',
-          notes: 'This is the slide to slow down on. Every one of these questions can be asked of the two charts they have just seen, and asking them out loud is more convincing than saying the charts are illustrative.' },
+          notes: 'Figures as published on ukblacktech.com. Say the number, then stop talking — the two lines under it are what make it different from every other reach figure in the room, and they land better if the room reads them itself. Check the figures are current before you pitch; a number that has moved is worse than no number.' },
 
-        { type: 'section', title: 'Where people leave',
-          subtitle: 'A pipeline that leaks is not a pipeline',
-          notes: 'The turn in the talk. Everything so far has been a stock — how many people are in each place. The rest is a flow — where they go.' },
-
-        { type: 'chart', chartKind: 'sankey', title: 'From application to year three · sample figures',
-          body: 'From\tTo\tPeople\nApplied\tInterviewed\t420\nApplied\tRejected at sift\t580\nInterviewed\tOffered\t140\nInterviewed\tNo offer\t280\nOffered\tJoined\t110\nOffered\tDeclined\t30\nJoined\tStill there at year 3\t62\nJoined\tLeft within 3 years\t48',
-          notes: 'SANKEY — the flow chart, and the right idiom here because the question is where it goes, not which is bigger. The band that matters is the last one: of a thousand applications, the sample loses more people after they joined than at offer stage. Ask the room which band their organisation measures.' },
-
-        { type: 'chart', chartKind: 'dumbbell', title: 'The gap between getting in and getting on · sample figures',
-          body: 'Function\tShare at entry (%)\tShare at senior (%)\nEngineering\t8.9\t3.1\nData\t9.6\t3.8\nProduct\t7.2\t2.4\nDesign\t6.4\t2.9\nSecurity\t5.8\t2.1',
-          notes: 'DUMBBELL — deviation: two points on one row, and the bar between them is the finding. Reach for it whenever you would otherwise draw two bars side by side and ask people to subtract. Sorted by the size of the gap would be a fair edit here; sorted by function keeps it neutral.' },
-
-        { type: 'chart', chartKind: 'pictogram', title: 'One icon is one person · sample cohort',
-          body: 'Stage\tPeople\nApplied\t1000\nInterviewed\t420\nOffered\t140\nStill there at year 3\t62',
-          chartIcon: '●', chartUnit: 50,
-          notes: 'PICTOGRAM, in the ISOTYPE tradition: the icon repeats and never grows, so the count is read by counting rather than by judging an area. One dot is fifty people here. It says the same thing the Sankey said, in the register of a poster rather than a report — useful if this deck is going on a wall.' },
-
-        { type: 'cards', title: 'Three levers, and only one of them is hiring',
+        { type: 'cards', title: 'What your money would be building',
           bullets: [
-            'The route in\tWiden where you look, not just how loudly you advertise. Apprenticeships, returners, bootcamp graduates, internal moves.',
-            'The first year\tOnboarding, a real manager, and work that counts. Most of the loss in the flow above happens here.',
-            'Progression\tPromotion criteria written down, applied the same way, and reviewed by someone who did not write them.'
+            'Smart Cities & Infrastructure\tRobotics, automation and intelligent infrastructure — for communities that are smarter, safer and more sustainable.',
+            'Cyber & Digital Trust\tSecure, resilient and trusted digital technology, protecting people, organisations and critical infrastructure.',
+            'Living in a Digital World\tInclusive, accessible, human-centred design, so that everyone can take part in a connected world.'
           ],
           progressive: true, buildMode: 'dim',
-          notes: 'Hold the room on the second card. Hiring is the lever organisations reach for because it is visible and can be announced; the flow chart says it is the one with the least leverage.' },
+          notes: 'The three active campaigns. Name the one that fits the organisation you are sitting in front of and spend your time there — a sponsor backs a thing, not a portfolio. Reveal one at a time so the room is not reading ahead while you talk.' },
 
-        { type: 'quote', body: 'Nobody is going to fix this on your behalf, and nobody can fix it on their own either.',
-          subtitle: 'Replace with a quotation of your own',
-          notes: 'QUOTE — a placeholder. Use something from your own community, a partner organisation, or the report you have cited, with the attribution in the subtitle. An unattributed quotation on a slide about evidence is an own goal.' },
-
-        { type: 'journey', title: 'What a twelve-month commitment looks like',
-          subtitle: 'Reveal one at a time',
+        { type: 'cards', title: 'What we have already done',
           bullets: [
-            'Month 1\tPublish the baseline. Whatever the number is, say it out loud before you change anything.',
-            'Month 3\tFix the route in. One new channel, measured against the old ones.',
-            'Month 6\tFirst-year retention review. Ask the people who left, not only the people who stayed.',
-            'Month 12\tPublish again. The second number is the only one anybody will believe.'
+            '16 courses\tDigital courses built with Tech Mums, FutureLearn and the University of Leeds.',
+            '1 hackathon\tA Sickle Cell Hackathon at the Design Museum — doctors, data scientists, patients and developers in one room.',
+            '5 institutions\tWorking partnerships, including the Computer Science department at London South Bank University.'
+          ],
+          notes: 'Track record, not ambition. This is the slide that answers the question nobody asks out loud, which is whether the last sponsor got anything for their money. Keep it to things that have finished.' },
+
+        { type: 'content', title: 'The ask',
+          bullets: [
+            'Name a campaign\tBack one of the three for a year, and your name is on everything it produces.',
+            'Fund the room\tVenue, facilitation and the practitioner time that turns an event into a case study somebody can cite.',
+            'Open a door\tMentors, placements and a route into hiring — the part money on its own does not buy.'
           ],
           progressive: true,
-          notes: 'JOURNEY — the ask. Keep it to four milestones; a twelve-step plan from a stage is a plan nobody writes down.' },
-
-        { type: 'table', title: 'What to measure, and how often',
-          body: 'Measure\tWhy it matters\tHow often\nApplication to interview rate\tCatches a sift that filters before a human reads\tMonthly\nOffer acceptance rate\tA low one usually means the process, not the package\tQuarterly\nYear-one retention\tThe largest loss in most pipelines\tQuarterly\nPromotion rate by level\tWhether getting in leads to getting on\tAnnually',
-          progressive: true,
-          notes: 'TABLE rather than a chart because the reader needs the exact wording of each measure, not its shape. Four rows is the limit for something a room is meant to copy down.' },
-
-        { type: 'links', title: 'Where to get real numbers',
-          bullets: [
-            'ONS Annual Population Survey — employment by occupation and ethnicity\thttps://www.ons.gov.uk/employmentandlabourmarket',
-            'BCS, The Chartered Institute for IT — diversity reports\thttps://www.bcs.org/policy-and-influence/diversity-and-inclusion/',
-            'Gov.uk ethnicity facts and figures — workforce and education\thttps://www.ethnicity-facts-figures.service.gov.uk/',
-            'UK Black Tech\thttps://ukblacktech.com/'
-          ],
-          notes: 'LINKS — tappable on learner phones in a live session. Say plainly that the charts in this deck are sample data and that these are where the real figures come from; it is a stronger close than pretending you had them.' },
-
-        { type: 'content', title: 'Before you present this deck',
-          bullets: [
-            'Replace every chart marked "sample figures" with numbers you can cite on the slide.',
-            'Put your own name and role on slide two.',
-            'Attribute the quotation, or cut the slide.',
-            'Decide which one of the three levers you are actually asking this room for.'
-          ],
-          feedback: { kind: 'scale', prompt: 'How ready is your organisation to publish its baseline?', options: [], max: 1 },
-          notes: 'Close on the scale. It is a live measure of the only ask that matters, and the spread is usually more interesting than the average — read it out.' }
+          notes: 'Finish with one ask, not three. Decide before you walk in which of these you are actually asking this organisation for, and delete the other two — a menu invites a room to choose the cheapest item on it.\n\nIf you price your tiers, add a table slide after this one; the figures are not in this deck because they should not be guessed.' }
       ]
     },
     {
-      key: 'ukbt-institute-session',
-      title: 'UKBT Institute — a teaching session, end to end',
+      key: 'ukbt-institute-townhouse',
+      title: 'UKBT Institute — the Townhouse model',
       icon: '◈',
-      blurb: 'A reusable shape for a ninety-minute technical session in the UKBT Institute theme: recall, teach, practise, check, reflect. Replace the content, keep the bones.',
-      minutes: 90,
+      blurb: 'The four-floor innovation model and its PRL gates, as a deck: twelve stakeholders on Floor 1, then experiment, build and scale. Content follows the model published on ukblacktech.com.',
+      minutes: 45,
       theme: 'ukbt-institute',
       org: 'UKBT Institute',
-      games: [{
-        ref: 'recall',
-        title: 'Before we start — what stuck?',
-        style: 'choice',
-        settings: { defaultTime: 20, scoreboard: false, scoreSlide: false, confidence: true },
-        questions: [{
-          question: 'From memory, and before you look anything up — which of these did we cover last session?',
-          options: ['Only the first idea', 'Both ideas, briefly', 'Both ideas in depth', 'Neither'],
-          correct: 1,
-          explanation: 'Rewrite this with your own content. The point of the opener is that they answer from memory first and find out afterwards — the retrieval is the learning, not the score.'
-        }]
-      }, {
-        ref: 'check',
-        title: 'Check before you practise',
-        style: 'choice',
-        settings: { defaultTime: 30, scoreboard: false, scoreSlide: false },
-        questions: [{
-          question: 'You have one number per category and the order is the message. Which chart?',
-          options: ['Pie chart', 'Sorted horizontal bar', 'Line chart', 'Scatterplot'],
-          correct: 1,
-          explanation: 'Ranking: position along a common scale is the channel the eye reads most accurately, and sorting puts the message in the shape. A pie asks the reader to compare angles; a line implies an order in time that is not there.'
-        }]
-      }],
       slides: [
-        { type: 'title', title: 'Session title',
-          subtitle: 'UKBT Institute · module and week',
-          notes: 'This deck is a shape, not a lesson: recall, teach, practise, check, reflect. Every slide says in its notes what it is doing, so you can replace the content without losing the structure. Start by putting the real session title here. No logo is set: add the official file under Deck settings → Logo and it appears on every slide. The green chevron on the title and section slides is the theme’s own mark, not a substitute for it.' },
+        { type: 'title', title: 'The Townhouse',
+          subtitle: 'A four-floor innovation model · UKBT Institute',
+          notes: 'The deck follows the model published on ukblacktech.com/ukbt-institute — four floors, a Practitioner Readiness Level band on each, and a gate that has to be passed before anything climbs a storey.\n\nNo deck logo is set. Drop the official file into assets/brand/ and point at it under Deck settings → Logo.' },
 
-        { type: 'content', title: 'By the end of this session you will be able to',
+        { type: 'quote', body: 'A townhouse for technologists, academics, professionals, and communities.',
+          subtitle: 'UKBT Institute',
+          notes: 'Why the metaphor earns its place: a townhouse has floors you climb in order, and you cannot be on the third without having been on the first. That is the whole argument — the model is a staircase with locked doors, not a set of parallel workstreams.' },
+
+        { type: 'journey', title: 'Four floors, and you climb them in order',
+          subtitle: 'Practitioner Readiness Level on each',
           bullets: [
-            'Name the thing\tState what it is and when it applies.',
-            'Do the thing\tCarry it out on a worked example, unaided.',
-            'Judge the thing\tSay when it is the wrong tool and what you would use instead.'
-          ],
-          notes: 'OBJECTIVES — three, phrased as things the learner can do, in rising order of difficulty. Resist four. If you cannot write an assessment question for an objective, it is not an objective yet.' },
-
-        { type: 'game', gameRef: 'recall',
-          notes: 'RETRIEVAL OPENER — before any teaching. Confidence is on, so learners say how sure they are as well as what they think; a confident wrong answer is the most useful signal in the room. Do not review the answer until everyone has committed.' },
-
-        { type: 'section', title: 'Teach', subtitle: 'The new material, in the smallest pieces that still make sense',
-          notes: 'Signposting matters more than it looks. The room needs to know when it has stopped being asked to remember and started being asked to learn.' },
-
-        { type: 'keywords', title: 'The vocabulary for today',
-          bullets: [
-            'Term one\tThe definition, in a sentence a learner could repeat.',
-            'Term two\tThe definition, with the common misreading named.',
-            'Term three\tThe definition, and what it is often confused with.'
+            'Floor 1 · PRL 1–3\tCOLLABORATE. Knowledge transfer and discovery. All twelve stakeholders validate here.',
+            'Floor 2 · PRL 4–6\tEXPERIMENT. Stress test and validate — cheaply, and before anything is built.',
+            'Floor 3 · PRL 7\tBUILD. Practitioner-led, with academic research alongside it.',
+            'Floor 4 · PRL 8–9\tSCALE. Growth, markets and ecosystem — in public.'
           ],
           progressive: true,
-          notes: 'KEYWORDS — the tab splits each line into term and definition. Reveal one at a time and say each term out loud; a technical word that has only been seen and never heard is a word learners will not use in a seminar.' },
+          notes: 'PRL is the Practitioner Readiness Level framework: the same idea as a technology readiness level, but the thing being measured is whether practitioners are ready to use it, not whether the technology works. Reveal a floor at a time; the order is the point and a room that sees all four at once reads them as options.' },
 
-        { type: 'chart', chartKind: 'bar', title: 'A worked example · replace with your own data',
-          body: 'Category\tValue\nFirst\t42\nSecond\t31\nThird\t28\nFourth\t17',
-          progressive: true,
-          notes: 'The teaching chart. Talk through what the axis is, where zero is and what one bar means before you say anything about the pattern — modelling the reading is the lesson as much as the content is.' },
-
-        { type: 'chart', chartKind: 'box', title: 'The same cohort, as a distribution',
-          body: 'Group\nGroup A\t54\t58\t61\t63\t65\t66\t68\t71\t74\t88\nGroup B\t41\t49\t55\t57\t60\t62\t64\t69\t73\t79\nGroup C\t62\t64\t66\t67\t68\t69\t70\t71\t73\t75',
-          notes: 'BOX PLOT — each row is a group and the cells after the name are its raw observations, so a column of marks pasted from a spreadsheet becomes this. Whiskers stop at the furthest real observation inside Tukey’s 1.5×IQR fence; anything beyond is drawn as a point. A and C sit in a similar place — medians 65.5 and 68.5 — but A is spread twice as wide and has one learner at 88 outside the fence. Reported as means, A is 66.8 and C 68.5, and none of that survives.' },
-
-        { type: 'chart', chartKind: 'radar', title: 'Self-assessment across the module',
-          body: 'Skill\tStart of module\tNow\nReading a chart\t2\t4\nChoosing an idiom\t1\t3\nCleaning data\t2\t3\nWriting the caption\t1\t4\nCritique\t2\t4',
-          notes: 'RADAR — defensible here and in few other places: the axes are the same kind of thing on the same 0–5 scale, and the two shapes are the same learner at two times. Do not use it to compare unrelated measures; the area it draws is meaningless when the axes have different units.' },
-
-        { type: 'italics', title: 'Two phrases to carry out of the room',
+        { type: 'keyfact', title: 'The rule that makes Floor 1 different',
+          subtitle: 'Floor 1 · COLLABORATE · gate score ≥ 60',
+          body: '11 of 12 → proceed',
           bullets: [
-            'the shape is the finding\tA summary statistic is a claim about a distribution you have not shown.',
-            'say what the axis is\tHalf of chart criticism is noticing that nobody did.'
-          ],
-          notes: 'ITALICS — the same term-and-gloss split as Keywords, with more room, for the two or three phrases you want repeated back to you in the assessment.' },
-
-        { type: 'section', title: 'Practise', subtitle: 'They do it, you watch',
-          notes: 'The hinge of the session. If you are still talking here, the session has become a lecture and the objectives written earlier will not be met.' },
-
-        { type: 'content', title: 'Your turn — twenty minutes',
-          bullets: [
-            'Open the dataset linked at the end of this deck.',
-            'Choose an idiom, and write down the question it answers before you draw anything.',
-            'Draw it. Label the axis and write a caption that states the finding.',
-            'Swap with the person next to you and try to break their reading.'
-          ],
-          progressive: true,
-          notes: 'Four steps, and the third one is the one people skip. Walk the room during step two rather than step three — a wrong idiom chosen early costs the whole twenty minutes.' },
-
-        { type: 'game', gameRef: 'check',
-          notes: 'CHECK — placed after practice, not before it, so it tests what they have just done rather than what they have just heard. If more than a quarter of the room misses it, reteach now; the reflection slide is not the place to find out.' },
-
-        { type: 'cards', title: 'Common mistakes in that task',
-          bullets: [
-            'Chose the chart first\tThe question decides the idiom. Write the question down and the choice usually makes itself.',
-            'Truncated the axis\tFine on a line where zero is meaningless, misleading on a bar where length is the encoding.',
-            'Described instead of concluded\t"Sales by region" is a label. "The south carries the quarter" is a caption.'
+            'All twelve stakeholders validate on this floor. No exceptions, no proxies.',
+            'Any one of the twelve saying no pivots the project or kills it.',
+            'The core rule is the shortest one in the model: never skip a voice.'
           ],
           progressive: true, buildMode: 'dim',
-          notes: 'Replace these with the mistakes you actually saw while walking the room. Naming a mistake the class has just made beats naming one from a textbook.' },
+          notes: 'This is the slide to slow down on. Most innovation processes let a strong sponsor override a quiet objection; this one does not, and the cost of that is that Floor 1 takes longer than anyone wants it to. Say out loud that the gate is deliberately cheap to fail and expensive to skip.' },
 
-        { type: 'section', title: 'Reflect', subtitle: 'Two minutes, and it is not optional',
-          feedback: { kind: 'brainstorm', prompt: 'What is still muddy? One sentence.', options: [], max: 2 },
-          notes: 'BRAINSTORM — longer answers than a word cloud, listed newest first. Read two or three out and answer them now; taking them away to answer next week teaches the room that the question was rhetorical.' },
-
-        { type: 'content', title: 'Before next session',
+        { type: 'keywords', title: 'The twelve voices · 1 to 6',
           bullets: [
-            'Read the chapter and bring one chart you think is wrong.',
-            'Finish the task from the practice block if it is not finished.',
-            'Post your caption — one sentence — to the module space.'
+            'Practitioners\tthe people who would live with it, daily',
+            'Customers\tbudget authority — whoever can say yes to paying',
+            'Academics\tresearch and evidence',
+            'Supply chain\tsourcing and manufacturing — can it be made at all?',
+            'Internal champions\torganisational advocates, inside the building',
+            'Market\ttiming and competition'
           ],
-          feedback: { kind: 'poll', prompt: 'How confident are you with today’s material?',
-            options: ['I need another example', 'I could do it with support', 'I could do it unaided'], max: 1 },
-          notes: 'Close on the poll, and use it. If the middle option wins, the next session opens with a second worked example rather than new material.' },
+          progressive: true,
+          notes: 'Six here and six on the next slide — twelve on one slide is a list nobody reads. The questions Floor 1 asks them are blunt on purpose: do you face this daily, is it sector-wide, will you pay today, can we source it, is the timing right. "Let me think about it" counts as a no.' },
 
-        { type: 'links', title: 'Everything referenced today',
+        { type: 'keywords', title: 'The twelve voices · 7 to 12',
           bullets: [
-            'Munzner, Visualization Analysis and Design\thttps://www.cs.ubc.ca/~tmm/vadbook/',
-            'Financial Times Visual Vocabulary\thttps://github.com/Financial-Times/chart-doctor',
-            'UKBT Institute\thttps://ukblacktech.com/ukbt-institute/'
+            'Budget holders\tfinance decision makers',
+            'Finance / procurement\teconomic reality — what the process will allow',
+            'Lawyers / regulatory\tcompliance and risk',
+            'Technologists\timplementation',
+            'Non-technologists\tnon-technical users, who are most of everybody',
+            'Community\tthe community network around it'
           ],
-          notes: 'LINKS — the dataset for the practice block goes here too. In a live session these become tappable on learner phones, which is the only reliable way to hand a URL to a room.' }
+          progressive: true,
+          notes: 'The second six are the ones projects skip, and they are where projects die later: procurement, legal, and the non-technical majority. Naming them as voices rather than as approvals is the point — they are consulted at PRL 1, not presented to at PRL 7.' },
+
+        { type: 'content', title: 'Floor 2 · EXPERIMENT · PRL 4–6',
+          bullets: [
+            'Who is in the room\tPractitioners, supply chain, market, and non-technologists.',
+            'Core rule\tTest simple before tech. Paper prototypes, a concierge MVP, no-code pilots.',
+            'What counts as success\tRetention rather than clicks, willingness to pay, and whether it fits an existing workflow.',
+            'What kills it\tA shrug. If nobody would fight to keep it, or it saves less than a couple of hours a week, it does not climb.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'Gate score to leave this floor: 80 out of 100. The cheapest floor and the one most often skipped, because building feels like progress and a paper prototype does not. The measure to defend here is retention: clicks are available early and mean nothing, and a pilot that people stop opening has answered the question.' },
+
+        { type: 'content', title: 'Floor 3 · BUILD · PRL 7',
+          bullets: [
+            'Who is in the room\tInternal champions — the people who will have to defend it when you are not there.',
+            'Core rule\tCo-create, don’t dictate. Champions co-own the roadmap.',
+            'What counts as success\tThey use it daily and argue for it: three or more champions, a written case study, academic validation.',
+            'What kills it\t"Nice to have." A champion who will not move a budget, or cannot recruit a peer, is not a champion.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'Gate score to leave this floor: 90 out of 100. The gate jumps from 80 to 90 here, and that is the moment the model gets expensive: this is the first floor where real engineering money is spent, so the bar for spending it is higher than the bar for testing.' },
+
+        { type: 'content', title: 'Floor 4 · SCALE · PRL 8–9',
+          bullets: [
+            'Who is in the room\tCustomers, market, technologists, non-technologists, and the wider community.',
+            'Core rule\tShare everything. Publish the learning, document the failures, keep the roadmap open.',
+            'What counts as success\tOthers copy it, improve it or join in — and there is at least one paying customer.',
+            'What kills it\tNo ecosystem effects. A product nobody recommends to a peer has not scaled, however many users it has.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'Gate: 90 out of 100 and 7% growth week on week — the only floor with a rate on it as well as a threshold. Note what building in public costs: documenting the failures is the part organisations quietly drop, and it is the part that makes the rest credible.' },
+
+        { type: 'chart', chartKind: 'bar', title: 'The gate gets harder as you climb',
+          body: 'Floor\tGate score\nFloor 1 · Collaborate\t60\nFloor 2 · Experiment\t80\nFloor 3 · Build\t90\nFloor 4 · Scale\t90',
+          chartSource: 'Gate thresholds from the UKBT Institute four-floor innovation model, ukblacktech.com/ukbt-institute. Floor 4 also requires 7% week-on-week growth, which is not shown.',
+          progressive: true,
+          notes: 'Four numbers, and the shape is the argument: the model is cheap to enter and expensive to climb. The source line carries the thing the bars cannot — Floor 4 has a growth rate attached as well as a score, so its bar understates it.' },
+
+        { type: 'cards', title: 'One rule per floor',
+          bullets: [
+            'Floor 1\tNever skip a voice.',
+            'Floor 2\tTest simple before tech.',
+            'Floor 3\tCo-create, don’t dictate.',
+            'Floor 4\tShare everything.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'The summary slide, and the one worth photographing. Four rules, in order, each one the thing the floor beneath it earns the right to.' },
+
+        { type: 'keywords', title: 'What a kill sounds like',
+          bullets: [
+            '“Let me think about it.”\tfloor 1 — not a yes. one no out of twelve stops it',
+            '“Maybe” — or a shrug\tfloor 2 — nobody would fight to keep it',
+            '“Nice to have.”\tfloor 3 — no champion will move a budget for it',
+            'No paying customer\tfloor 4 — no ecosystem effect, referral under 30%'
+          ],
+          progressive: true,
+          notes: 'Killing a project is the model working, not the model failing. Say that plainly — a framework whose gates never close is a framework nobody is using.' },
+
+        { type: 'links', title: 'Where this comes from',
+          bullets: [
+            'UKBT Institute — the four-floor innovation model\thttps://ukblacktech.com/ukbt-institute/',
+            'UK Black Tech\thttps://ukblacktech.com/'
+          ],
+          notes: 'Everything in this deck follows the model as published. If the framework moves, this is the page it moves on — check it before presenting, and edit the gate chart and the stakeholder table to match.' }
       ]
     },
 
