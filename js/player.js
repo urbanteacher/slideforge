@@ -2243,12 +2243,19 @@
   Player.toggleFullscreen = function () {
     var d = document;
     var isFull = d.fullscreenElement || /** @type {any} */ (d).webkitFullscreenElement;
+    var asked;
     if (!isFull) {
       var r = d.documentElement;
-      (r.requestFullscreen || /** @type {any} */ (r).webkitRequestFullscreen || function () {}).call(r);
+      asked = (r.requestFullscreen || /** @type {any} */ (r).webkitRequestFullscreen || function () {}).call(r);
     } else {
-      (d.exitFullscreen || /** @type {any} */ (d).webkitExitFullscreen || function () {}).call(d);
+      asked = (d.exitFullscreen || /** @type {any} */ (d).webkitExitFullscreen || function () {}).call(d);
     }
+    /* Refused is a fine answer and not an error: fullscreen needs the call to
+       come from a gesture, and starting a live show from a keyboard shortcut
+       or a relay message is a legitimate way to open one. Ignoring the
+       promise instead left an uncaught "Permissions check failed" in the
+       console of a show that had otherwise started perfectly. */
+    if (asked && typeof asked.catch === 'function') asked.catch(function () {});
   };
 
   /* ------------------------------------------------------------ open/close */
