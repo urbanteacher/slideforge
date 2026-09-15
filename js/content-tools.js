@@ -7,7 +7,10 @@ function move(s,from,to){
  var order=s.bullets.map(function(_,i){return i;});order.splice(to,0,order.splice(from,1)[0]);
  var old=s.bullets.slice(),format=s.formatting||{},next={};
  Object.keys(format).forEach(function(k){if(!/^bullets\.\d+$/.test(k))next[k]=format[k];});
- s.bullets=order.map(function(i,j){if(format['bullets.'+i])next['bullets.'+j]=format['bullets.'+i];return old[i];});s.formatting=next;return true;
+ s.bullets=order.map(function(i,j){if(format['bullets.'+i])next['bullets.'+j]=format['bullets.'+i];return old[i];});s.formatting=next;
+ /* Card pictures follow their card. */
+ if(Array.isArray(s.images)&&s.images.length){var pics=s.images.slice();s.images=order.map(function(i){return pics[i]||'';});}
+ return true;
 }
 function lines(text){return String(text).split(/\r?\n/).map(function(line){return line.replace(/^\s*(?:[•*\-]\s+|\d+[.)]\s+)/,'').trim();}).filter(Boolean);}
 function append(s,text){

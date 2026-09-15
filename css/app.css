@@ -148,7 +148,7 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 .rail-slot.at::after {
   content: ''; position: absolute; left: 2px; right: 2px; top: 50%;
   height: 2px; margin-top: -1px; border-radius: 2px;
-  background: var(--ui-accent); box-shadow: 0 0 0 3px var(--ui-accent-soft);
+  background: var(--ui-accent); outline: 3px solid var(--ui-accent-soft);
 }
 .rail-list.placing .rail-slot { height: 20px; cursor: copy; }
 .rail-list.placing .rail-slot::before {
@@ -158,7 +158,7 @@ select.btn { -webkit-appearance: none; appearance: none; padding-right: 26px;
 }
 .rail-list.placing .rail-slot:hover::before,
 .rail-list.placing .rail-slot.at::before {
-  background: var(--ui-accent); box-shadow: 0 0 0 3px var(--ui-accent-soft);
+  background: var(--ui-accent); outline: 3px solid var(--ui-accent-soft);
 }
 .rail-list.placing .rail-slot:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: -2px; }
 .rail-list.placing .thumb.carried { opacity: .4; }
@@ -273,7 +273,7 @@ body.sorter-on { overflow: hidden; }
    grid an empty gap would still take a cell and shove the layout around. */
 .sorter-caret {
   position: absolute; width: 3px; border-radius: 2px; pointer-events: none;
-  background: var(--ui-accent); box-shadow: 0 0 0 2px var(--ui-accent-soft);
+  background: var(--ui-accent); outline: 2px solid var(--ui-accent-soft);
 }
 /* The quiz studio shares the rail head and has no sorter to open. */
 html[data-ws="game"] #btnSorter { display: none; }
@@ -311,7 +311,7 @@ html[data-ws="game"] #btnSorter { display: none; }
   aspect-ratio: 16/9;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0,0,0,.5), 0 0 0 1px var(--ui-line);
+  outline: 1px solid var(--ui-line);
   background: #000;
 }
 #previewBox .slide { transform-origin: 0 0; }
@@ -417,7 +417,6 @@ html[data-ws="game"] #btnSorter { display: none; }
   line-height: 1.45;
   white-space: normal;
   text-align: left;
-  box-shadow: 0 8px 24px #15260b30;
   pointer-events: none;
 }
 
@@ -663,7 +662,7 @@ html[data-ws="game"] #btnSorter { display: none; }
   max-height: 210px;
   border-radius: 10px;
   background: var(--s-card) center / cover no-repeat;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--s-fg) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--s-fg) 12%, transparent);
 }
 .layout-cards ul:not(.cards-stack):has(> li:nth-child(4)) .card-pic {
   max-height: 168px;
@@ -885,7 +884,7 @@ html[data-ws="game"] #btnSorter { display: none; }
   background-repeat: no-repeat;
   border-radius: 3px;
   /* The pile only reads as a pile if each sheet has an edge. */
-  box-shadow: 0 2px 6px rgba(0,0,0,.16), 0 18px 44px rgba(0,0,0,.18);
+  outline: 1px solid rgba(0,0,0,.18);
 }
 .layout-gallery .fig .img.cover { background-size: cover; }
 .layout-gallery .fig .img.contain { background-size: contain; background-color: var(--s-card); }
@@ -954,7 +953,7 @@ html[data-ws="game"] #btnSorter { display: none; }
   max-width: none;
   aspect-ratio: auto;
   border-radius: 0;
-  box-shadow: 0 18px 44px rgba(0,0,0,.28);
+  outline: 0;
 }
 .layout-gallery .pad.img-bleed .fig .img.contain {
   background-color: #0b1220;
@@ -1286,7 +1285,7 @@ html[data-ws="game"] #btnSorter { display: none; }
   border-radius: 18px;
   padding: 14px;
   box-sizing: border-box;
-  box-shadow: 0 18px 50px #00000033;
+  border: 1px solid rgba(0,0,0,.08);
 }
 .layout-join .join-qr svg { width: 100%; height: 100%; display: block; }
 .layout-join .join-side { text-align: left; min-width: 280px; }
@@ -1602,7 +1601,7 @@ html[data-ws="game"] #btnSorter { display: none; }
   border: 0; padding: 0; border-radius: 12px;
   width: min(920px, 94vw); max-height: 88vh;
   background: var(--ui-panel); color: var(--ui-text);
-  box-shadow: 0 30px 80px rgba(0,0,0,.45);
+  border: 1px solid var(--ui-line);
 }
 .teach-modal::backdrop { background: rgba(6,8,12,.6); }
 .teach-modal header {
@@ -1741,7 +1740,7 @@ html[data-ws="game"] #btnSorter { display: none; }
 .variant-name { font-size: 10px; color: var(--ui-dim); line-height: 1.2; }
 /* A starter leads with the shape, so the frame takes the space the icon used
    to and the words sit beneath it. */
-.starter-card .starter-frame { margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.14); }
+.starter-card .starter-frame { margin-bottom: 10px; outline: 1px solid rgba(0,0,0,.12); }
 .starter-card .activity-icon { display: none; }
 .variant-card:hover .variant-name { color: var(--ui-text); }
 
@@ -1998,12 +1997,12 @@ html[data-ws="game"] #btnSorter { display: none; }
 /* Next is about to do something other than move on. A ring rather than a
    colour swap, so it reads as "this one is different" without competing with
    the slide behind it. */
-.hud button.will-reveal { box-shadow: inset 0 0 0 2px #34c98a; }
-.hud button.will-hold { box-shadow: inset 0 0 0 2px #ffc75a; }
+.hud button.will-reveal { outline: 2px solid #34c98a; outline-offset: -2px; }
+.hud button.will-hold { outline: 2px solid #ffc75a; outline-offset: -2px; }
 .hud button.on { background: rgba(255,255,255,.2); }
 /* Three stops on one button, so the button has to show which one it is on:
    an outline for beside the slide, filled for the whole screen. */
-.hud button[data-state="beside"] { box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.55); }
+.hud button[data-state="beside"] { outline: 1.5px solid rgba(255,255,255,.55); outline-offset: -1.5px; }
 .hud button[data-state="full"] { background: #fff; color: #14171d; }
 .hud .pos { font-size: 13px; padding: 0 10px; color: #cfd4de; font-variant-numeric: tabular-nums; }
 .hud .sep { width: 1px; height: 18px; background: rgba(255,255,255,.16); margin: 0 4px; }
@@ -2254,9 +2253,11 @@ html[data-ws="game"] #btnSorter { display: none; }
 }
 .modal .sheet header {
   padding: 15px 18px; border-bottom: 1px solid var(--ui-line);
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; gap: 10px;
 }
-.modal .sheet h3 { margin: 0; font-size: 15px; }
+.modal .sheet h3 { margin: 0; font-size: 15px; flex: 1; min-width: 0; }
+.modal .sheet .sheet-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.modal .sheet .sheet-tools .btn { font-size: 12px; padding: 5px 9px; }
 .modal .sheet .body { overflow-y: auto; padding: 10px; }
 .deck-item {
   display: flex; align-items: center; gap: 12px;
@@ -2268,6 +2269,7 @@ html[data-ws="game"] #btnSorter { display: none; }
 .deck-item .mt { font-size: 12px; color: var(--ui-dim); margin-top: 2px; }
 .deck-item .kill { background: transparent; border: 0; color: var(--ui-dim); cursor: pointer; padding: 6px; }
 .deck-item .kill:hover { color: var(--ui-bad); }
+.deck-item .pick-tick { flex: 0 0 auto; width: 16px; height: 16px; accent-color: var(--ui-accent); cursor: pointer; }
 .empty-note { color: var(--ui-dim); font-size: 13px; padding: 20px; text-align: center; }
 
 @media (max-width: 1240px) {
@@ -2387,11 +2389,11 @@ html[data-ws="game"] #btnSorter { display: none; }
   letter-spacing: -.02em;
 }
 
-.scorerail .srow.lead { background: var(--s-card); box-shadow: inset 0 0 0 1px var(--s-accent); }
+.scorerail .srow.lead { background: var(--s-card); outline: 1px solid var(--s-accent); outline-offset: -1px; }
 .theme-midnight .scorerail .srow.lead,
 .theme-ocean .scorerail .srow.lead,
 .theme-ember .scorerail .srow.lead,
-.theme-mono .scorerail .srow.lead { background: rgba(255,255,255,.17); box-shadow: none; }
+.theme-mono .scorerail .srow.lead { background: rgba(255,255,255,.17); outline: none; }
 .scorerail .srow.gain { animation: sf-score-pop .85s ease; }
 @keyframes sf-score-pop {
   0%   { transform: scale(1); }
@@ -2624,7 +2626,7 @@ html[data-ws="game"] #btnSorter { display: none; }
   font-size: 13px; font-weight: 550; white-space: nowrap;
 }
 .wsswitch button:hover { color: var(--ui-text); }
-.wsswitch button.on { background: var(--ui-panel-2); color: var(--ui-text); box-shadow: 0 1px 3px rgba(0,0,0,.35); }
+.wsswitch button.on { background: var(--ui-panel-2); color: var(--ui-text); }
 
 .vsep { width: 1px; height: 22px; background: var(--ui-line); margin: 0 2px; flex: none; }
 
@@ -2651,6 +2653,22 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
 /* The label takes the slack so the count and the cog stay together on the
    right, rather than space-between spreading all three across the head. */
 .rail-head #railLabel { flex: 1 1 auto; min-width: 0; }
+.rail-tools { display: flex; align-items: center; gap: 6px; flex: none; }
+html[data-ws="deck"] #railCount { display: none; }
+.rail-go {
+  display: flex; align-items: center; gap: 2px;
+  background: var(--ui-bg); border-radius: 999px; padding: 1px 7px 1px 4px;
+  font-size: 10px; color: var(--ui-dim); font-variant-numeric: tabular-nums;
+  letter-spacing: 0; text-transform: none;
+}
+.rail-go input {
+  width: 2.2em; border: 0; background: transparent; padding: 0;
+  font: inherit; color: var(--ui-text); text-align: right;
+  -moz-appearance: textfield;
+}
+.rail-go input:focus { outline: none; color: var(--ui-text); }
+.rail-go input::-webkit-outer-spin-button,
+.rail-go input::-webkit-inner-spin-button { appearance: none; margin: 0; }
 .rail-cog {
   flex: none; width: 22px; height: 22px; padding: 0;
   display: grid; place-items: center;
@@ -2922,13 +2940,14 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
 .deck-viewport.railed .layout-quiz.media-overlay .qmedia { height: 300px; }
 
 /* the countdown sits over the picture in overlay mode, so give it a disc to
-   stand on or it disappears against a light image. A spread box-shadow rather
-   than a pseudo-element: no extra stacking context to get wrong. */
+   stand on or it disappears against a light image. A thick outline rather
+   than a pseudo-element: no extra stacking context to get wrong, and no
+   blur — the app draws no shadows. */
 .layout-quiz.media-overlay .clock {
   z-index: 2;
   background: rgba(6,10,18,.58);
   border-radius: 50%;
-  box-shadow: 0 0 0 10px rgba(6,10,18,.58);
+  outline: 10px solid rgba(6,10,18,.58);
 }
 
 /* reveal: the image shrinks to a strip. An overlaid question is moved out of
@@ -3004,7 +3023,6 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
   font-size: 34px;
   border-radius: 50%;
   background: var(--lane-color, var(--s-accent));
-  box-shadow: 0 4px 16px rgba(0,0,0,.45);
   transition: left .9s cubic-bezier(.34, 1.2, .5, 1);
 }
 .layout-race .lane.moved .runner { animation: sf-gallop .9s ease; }
@@ -3897,7 +3915,6 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
   transform: translateY(-50%);
   border-radius: 50%;
   background: var(--lane-color);
-  box-shadow: 0 2px 7px rgba(0,0,0,.5);
   display: grid; place-items: center;
   font-size: 17px; line-height: 1;
 }
@@ -4344,7 +4361,7 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
   background: var(--s-rule); border-radius: 5px 5px 0 0;
   /* An outline as well as a fill: --s-rule is deliberately faint, and the
      extent of the track is what says how big the bar could have been. */
-  box-shadow: inset 0 0 0 1px var(--s-rule);
+  outline: 1px solid var(--s-rule); outline-offset: -1px;
 }
 .sc-bar { height: 74px; }
 /* Full-screen scale: tall enough to own the middle of the wall. */
@@ -4485,7 +4502,7 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
   /* White behind it whatever the theme is doing: the quiet zone only works
      against a light background, and a dark one stops it scanning. */
   background: #fff;
-  box-shadow: 0 12px 40px rgba(0,0,0,.45);
+  border: 1px solid rgba(0,0,0,.12);
   line-height: 0;
 }
 .joinqr.on { display: block; }
@@ -4632,7 +4649,7 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
 @media(max-width:640px){.teach-modal header{flex-wrap:wrap}.teach-tabs .btn{font-size:12px;padding:7px 9px}.teach-body{padding:8px;max-height:calc(88vh - 160px)}}
 /* Content-first layout selection and accessible structured reordering. */
 .layout-library,.saved-content,.bulk-content{border:1px solid var(--ui-line);border-radius:9px;padding:12px;margin:12px 0}.layout-library summary,.saved-content summary,.bulk-content summary{cursor:pointer;font-size:13px;font-weight:650}.layout-library-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.layout-choice{min-width:0;padding:6px;background:var(--ui-panel);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:8px;cursor:pointer}.layout-choice.on{border-color:var(--ui-accent);background:var(--ui-accent-soft)}.layout-choice>span{display:block;font-size:11px;padding:5px}.layout-choice .variant-frame{width:100%;aspect-ratio:16/9;overflow:hidden}.content-order{display:flex;flex-direction:column;gap:3px;flex:none}.content-order button{padding:2px 5px;font-size:12px;background:var(--ui-panel);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:4px}.content-order .content-grip{cursor:grab;touch-action:pan-y}.content-order button:disabled{opacity:.3}.pit-row.content-drop{outline:2px solid var(--ui-accent);background:var(--ui-accent-soft)}.bulk-content textarea{box-sizing:border-box;width:100%;margin-top:10px;padding:8px;font:inherit;border:1px solid var(--ui-line);border-radius:6px;background:var(--ui-panel);color:var(--ui-text)}.saved-content .btn{display:block;margin-top:6px}button:focus-visible{outline:2px solid var(--ui-accent);outline-offset:2px}
-#inspector .pit-row{display:grid;grid-template-columns:26px 20px minmax(0,1fr) 24px;align-items:center;gap:5px;padding:8px 0;border-bottom:1px solid var(--ui-line)}#inspector .pit-row>.content-order{grid-column:1;grid-row:1 / span 2}#inspector .pit-row>.pit-i{grid-column:2;grid-row:1;font-size:11px}#inspector .pit-row>input,#inspector .pit-row>.kw-pit-fields{grid-column:3;grid-row:1;min-width:0;width:100%;box-sizing:border-box}#inspector .pit-row>.kill{grid-column:4;grid-row:1;padding:4px}#inspector .pit-row>.format-tools{grid-column:2 / -1;grid-row:2;flex-wrap:wrap}#inspector .kw-pit-fields{grid-template-columns:1fr}#previewBox{position:relative}.canvas-editable:hover{outline:2px dashed #729458;outline-offset:4px;cursor:text}.canvas-edit-form{position:absolute;z-index:15;left:5%;right:5%;bottom:12px;background:var(--ui-panel);color:var(--ui-text);padding:16px;border:1px solid var(--ui-accent);border-radius:10px;box-shadow:0 10px 40px #0003;font-size:14px}.canvas-edit-form textarea{display:block;box-sizing:border-box;width:100%;margin:8px 0;font:inherit;padding:10px}.canvas-edit-form button{margin-right:8px}
+#inspector .pit-row{display:grid;grid-template-columns:26px 20px minmax(0,1fr) 24px;align-items:center;gap:5px;padding:8px 0;border-bottom:1px solid var(--ui-line)}#inspector .pit-row>.content-order{grid-column:1;grid-row:1 / span 2}#inspector .pit-row>.pit-i{grid-column:2;grid-row:1;font-size:11px}#inspector .pit-row>input,#inspector .pit-row>.kw-pit-fields{grid-column:3;grid-row:1;min-width:0;width:100%;box-sizing:border-box}#inspector .pit-row>.kill{grid-column:4;grid-row:1;padding:4px}#inspector .pit-row>.format-tools{grid-column:2 / -1;grid-row:2;flex-wrap:wrap}#inspector .kw-pit-fields{grid-template-columns:1fr}#previewBox{position:relative}.canvas-editable:hover{outline:2px dashed #729458;outline-offset:4px;cursor:text}.canvas-edit-form{position:absolute;z-index:15;left:5%;right:5%;bottom:12px;background:var(--ui-panel);color:var(--ui-text);padding:16px;border:1px solid var(--ui-accent);border-radius:10px;font-size:14px}.canvas-edit-form textarea{display:block;box-sizing:border-box;width:100%;margin:8px 0;font:inherit;padding:10px}.canvas-edit-form button{margin-right:8px}
 
 /* Emoji guess: help released a step at a time under the clues. */
 .layout-quiz.present-emoji .emoji-help {
@@ -4693,7 +4710,7 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
   border: none; border-radius: 14px; padding: 22px 24px 18px;
   max-width: 430px; width: calc(100% - 40px);
   background: var(--ui-panel); color: var(--ui-text);
-  box-shadow: 0 24px 60px rgba(0,0,0,.28);
+  border: 1px solid var(--ui-line);
 }
 .ask-modal::backdrop { background: rgba(12,16,14,.45); }
 .ask-modal h3 { margin: 0 0 8px; font-size: 18px; line-height: 1.3; }
@@ -4711,6 +4728,14 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
   background: var(--ui-bg); color: var(--ui-text);
 }
 .ask-modal #askInput[hidden] { display: none; }
+.ask-modal.has-qr { max-width: 460px; }
+.ask-qr {
+  width: 180px; margin: 0 auto 16px; padding: 10px;
+  background: #fff; border: 1px solid var(--ui-line); border-radius: 12px;
+  line-height: 0;
+}
+.ask-qr[hidden] { display: none; }
+.ask-qr svg { width: 100%; height: auto; display: block; }
 
 /* A race the teacher runs: the lanes are the control. */
 .race-strip.runnable .rlane {
@@ -4848,7 +4873,6 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
   margin: 0 0 18px; padding: 10px 22px;
   border: 1px solid var(--s-rule); border-radius: 999px;
   background: var(--s-card); align-self: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   transition: transform 0.15s ease, border-color 0.15s ease;
 }
 .slide.layout-feedback .pad .fk-join:hover {
@@ -4914,7 +4938,7 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
 .explore-range{display:flex;align-items:center;gap:24px;font-size:22px}.explore-range input{flex:1;min-width:100px;accent-color:var(--accent,#1d6b45);height:32px;cursor:ew-resize}
 .explore-actions{display:flex;gap:12px}.explore-button{font:inherit;font-size:20px;border:1px solid currentColor;color:inherit;background:transparent;border-radius:10px;padding:10px 18px;cursor:pointer;align-self:flex-start}
 .explore-button:disabled{cursor:default;opacity:.65}.explore-button:focus-visible,.explore-hotspot:focus-visible,.explore-range input:focus-visible{outline:4px solid #d88716;outline-offset:4px}
-.explore-hotspot{position:absolute;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#fff;color:#17251f;border:3px solid #1d6b45;font-size:23px;font-weight:700;cursor:pointer;box-shadow:0 2px 10px #0003}
+.explore-hotspot{position:absolute;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#fff;color:#17251f;border:3px solid #1d6b45;font-size:23px;font-weight:700;cursor:pointer}
 .explore-hotspot[aria-pressed=true]{background:#1d6b45;color:white}.explore-caption{font-size:22px;min-height:90px}.explore-caption p{margin:7px 0;line-height:1.4}
 .explore-graph{flex:1;min-height:0;width:100%;color:inherit}.explore-graph circle{transition:cx .12s linear,cy .12s linear}
 .explore-reading{font-size:30px;font-weight:700}.explore-formula{font-size:21px;margin:0;opacity:.8}
@@ -5269,7 +5293,6 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
   display: flex; align-items: center; gap: 12px;
   background: var(--s-card, #ffffff14); border: 2px solid currentColor;
   border-radius: 14px; padding: 10px 16px 10px 10px; max-width: 290px;
-  box-shadow: 0 2px 10px #0000000f;
 }
 .org-photo {
   width: 54px; height: 54px; flex: 0 0 54px; border-radius: 50%;
@@ -5378,11 +5401,13 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
 .stats-grid.stats-n2 { grid-template-columns: repeat(2, 1fr); }
 .stats-grid.stats-n4 { grid-template-columns: repeat(4, 1fr); gap: 18px; }
 .stats-grid.stats-n5, .stats-grid.stats-n6 { grid-template-columns: repeat(3, 1fr); }
+/* Flat. A tile is a fill and a hairline, never a drop shadow — shadows on a
+   projector read as clip-art, and the number is meant to do the work. */
 .stat {
   display: flex; flex-direction: column; justify-content: center; gap: 8px;
   padding: 28px 26px; border-radius: 18px;
   background: var(--s-card);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--s-fg) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--s-fg) 10%, transparent);
   min-width: 0;
 }
 .stat-value { font-size: 68px; line-height: 1; font-weight: 800; letter-spacing: -.03em; color: var(--s-accent); overflow-wrap: anywhere; }
@@ -5416,13 +5441,13 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
 .compare-labelled .compare-row { grid-template-columns: .6fr 1fr 1fr; }
 .compare-cell {
   font-size: 25px; line-height: 1.35; padding: 18px 22px; border-radius: 12px;
-  background: var(--s-card); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--s-fg) 10%, transparent);
+  background: var(--s-card); border: 1px solid color-mix(in srgb, var(--s-fg) 10%, transparent);
   min-width: 0; overflow-wrap: anywhere;
 }
 .compare-aspect { font-size: 21px; line-height: 1.3; font-weight: 700; color: var(--s-dim); display: flex; align-items: center; padding: 0 6px; }
 .compare-head .compare-cell {
   font-size: 22px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-  background: none; box-shadow: none; padding: 6px 22px 14px; border-bottom: 3px solid var(--s-accent);
+  background: none; border: 0; border-radius: 0; padding: 6px 22px 14px; border-bottom: 3px solid var(--s-accent);
 }
 .compare-head .compare-right { border-bottom-color: var(--s-fg); opacity: .8; }
 .compare-row:not(.compare-head) .compare-left { border-left: 5px solid var(--s-accent); }
@@ -5483,7 +5508,7 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
 .timeline-horizontal .timeline-dot {
   position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
   width: 22px; height: 22px; border-radius: 50%; background: var(--s-accent); border: 4px solid var(--s-bg);
-  box-shadow: 0 0 0 2px var(--s-accent);
+  outline: 2px solid var(--s-accent);
 }
 .timeline-copy { display: flex; flex-direction: column; gap: 6px; text-align: center; }
 .timeline-date { font-size: 18px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--s-accent); }
@@ -5495,7 +5520,7 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
 .slide .timeline-vertical { display: flex; flex-direction: column; gap: 18px; position: relative; padding-left: 46px; }
 .timeline-vertical::before { content: ''; position: absolute; left: 12px; top: 8px; bottom: 8px; border-left: 4px solid color-mix(in srgb, var(--s-accent) 55%, transparent); border-radius: 2px; }
 .timeline-vertical .timeline-event { position: relative; }
-.timeline-vertical .timeline-dot { position: absolute; left: -46px; top: 6px; width: 28px; height: 28px; border-radius: 50%; background: var(--s-accent); border: 5px solid var(--s-bg); box-shadow: 0 0 0 2px var(--s-accent); }
+.timeline-vertical .timeline-dot { position: absolute; left: -46px; top: 6px; width: 28px; height: 28px; border-radius: 50%; background: var(--s-accent); border: 5px solid var(--s-bg); outline: 2px solid var(--s-accent); }
 .timeline-vertical .timeline-copy { text-align: left; display: grid; grid-template-columns: 150px 1fr; column-gap: 20px; row-gap: 2px; align-items: baseline; }
 .timeline-vertical .timeline-date { grid-row: 1 / span 2; font-size: 20px; }
 .timeline-vertical .timeline-title { font-size: 26px; }
@@ -5510,17 +5535,13 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
 .slide .journey-stepper .journey-copy h3 { font-size: 24px; }
 .slide .journey-stepper .journey-copy p { font-size: 19px; }
 
-/* --- cards · icon grid: glyph badge above the label */
-.layout-cards ul.cards-icons > li { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.layout-cards ul.cards-icons > li::before { display: none; }
-.layout-cards ul.cards-icons { padding-left: 0; }
-.card-icon {
-  display: grid; place-items: center; width: 74px; height: 74px; border-radius: 50%;
-  font-size: 36px; line-height: 1; margin-bottom: 8px;
-  background: color-mix(in srgb, var(--s-accent) 18%, transparent);
-  box-shadow: inset 0 0 0 2px var(--s-accent);
+/* --- cards · picture cards: an empty slot says where the photograph goes */
+.layout-cards .card-pic.card-pic-empty {
+  display: grid; place-items: center;
+  border: 2px dashed var(--s-rule);
+  background: color-mix(in srgb, var(--s-fg) 4%, transparent);
+  color: var(--s-dim); font-size: 17px; text-align: center;
 }
-.layout-cards ul.cards-icons .card-label { font-size: 1.05em; }
 
 /* Beside the live room panel everything steps down a notch. */
 .deck-viewport.railed .stat-value { font-size: 48px; }

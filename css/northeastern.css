@@ -303,7 +303,7 @@
   border-radius: 0 5px 5px 0;
   padding: 22px 24px;
   background: #ffffff;
-  box-shadow: 0 1px 3px rgba(12, 51, 84, .1), 0 10px 26px rgba(12, 51, 84, .07);
+  border: 1px solid rgba(12, 51, 84, .12);
 }
 .theme-northeastern.layout-cards li::before {
   flex: none;
@@ -372,7 +372,7 @@
 .theme-northeastern.layout-cards .card-pic {
   background-color: #f4f6f8;
   border-radius: 6px;
-  box-shadow: inset 0 0 0 1px rgba(12, 51, 84, .1);
+  border: 1px solid rgba(12, 51, 84, .1);
 }
 .theme-northeastern.layout-cards ul.has-card-plates .card-pic {
   background-color: #eef2f5;
@@ -456,7 +456,7 @@
   inset: 28px;
   border-radius: 14px;
   background-color: #ffffff;
-  box-shadow: 0 12px 28px rgba(12, 51, 84, .12);
+  border: 1px solid rgba(12, 51, 84, .12);
 }
 .theme-northeastern.layout-split .split-media-full,
 .theme-northeastern.layout-split .split-media-full:has(.img.cover) {
@@ -491,17 +491,3 @@
   color: #5a6572;
   background: rgba(255, 255, 255, .55);
 }
-
-/* Icon grid: the badge sits above a centred label, so the two-column glossary
-   grid above is undone here — the glyph is the number now. */
-.theme-northeastern.layout-cards ul.cards-icons > li:has(> .card-label) {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 6px;
-}
-.theme-northeastern.layout-cards ul.cards-icons > li::before { display: none; }
-.theme-northeastern.layout-cards ul.cards-icons > li > .card-label,
-.theme-northeastern.layout-cards ul.cards-icons > li > .card-body { grid-column: auto; }
-.theme-northeastern .card-icon { background: color-mix(in srgb, var(--nu-red) 12%, transparent); box-shadow: inset 0 0 0 2px var(--nu-red); }

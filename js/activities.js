@@ -879,6 +879,13 @@
   var toDeck = document.getElementById('btnPlanToDeck');
   if (toDeck) toDeck.onclick = function () { SF.Shell.activate('deck'); };
 
+  /* The top bar's Present button, same place as in the other two studios.
+     Activities write into the lesson deck, so presenting from here is
+     presenting that deck — the whole lesson, not the one activity that
+     ⌘↵ showcases. */
+  var presentPlan = document.getElementById('btnPresentPlan');
+  if (presentPlan) presentPlan.onclick = function () { SF.Editor.workspace.play(); };
+
   var btnDemo = document.getElementById('btnDemoActivity');
   if (btnDemo) btnDemo.onclick = showcaseActivity;
 

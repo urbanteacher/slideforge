@@ -44,6 +44,9 @@
   function removeBullet(slide,index) {
     slide.bullets.splice(index,1);
     if(!slide.bullets.length)slide.bullets.push('');
+    /* Card pictures ride on the same index, so a deleted card takes its photo
+       with it rather than handing it to the card below. */
+    if(Array.isArray(slide.images)&&index<slide.images.length)slide.images.splice(index,1);
     var previous=slide.formatting || {}, next={};
     Object.keys(previous).forEach(function(key){
       if(key.indexOf('bullets.')!==0){next[key]=previous[key];return;}

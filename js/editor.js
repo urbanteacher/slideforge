@@ -426,7 +426,7 @@
     try { localStorage.setItem('slideforge.findHint.v1', '1'); } catch (e) {}
     SF.askText({
       title: 'Find in this lesson',
-      detail: 'Searches slide text and speaker notes. Open again anytime with ⌘F (Ctrl+F), or File → Find in lesson…',
+      detail: 'Searches slide text and speaker notes. Open again anytime with ⌘F (Ctrl+F).',
       placeholder: 'A word or phrase',
       confirm: 'Find'
     }, function (term) {
@@ -532,12 +532,18 @@
     rail.classList.toggle('placing', placing != null);
     caretAt = null;
     var count = $('railCount');
+    var go = /** @type {HTMLInputElement|null} */ ($('railGo'));
+    var total = $('railTotal');
+    var off = deck.slides.filter(function (x) { return x.hidden === true; }).length;
+    var n = deck.slides.length;
+    /* Don't overwrite the field while someone is typing a number to jump. */
+    if (go && go !== document.activeElement) {
+      go.max = String(Math.max(1, n));
+      go.value = String(sel + 1);
+    }
+    if (total) total.textContent = String(n);
     if (count) {
-      var off = deck.slides.filter(function (x) { return x.hidden === true; }).length;
-      /* Both numbers, because either alone misleads: the deck has 74 slides
-         and the room will see 70, and a lecturer planning a timing needs the
-         second one. */
-      count.textContent = off ? (deck.slides.length - off) + ' of ' + deck.slides.length : String(deck.slides.length);
+      count.textContent = off ? (n - off) + ' of ' + n : String(n);
       count.title = off ? off + ' slide' + (off === 1 ? '' : 's') + ' hidden from the show' : '';
     }
     drawSorterButton();
@@ -661,17 +667,11 @@
   /* The rail head is shared with the quiz studio, which has no sorter, so the
      button is built here rather than sitting in the markup for both. */
   function drawSorterButton() {
-    var head = document.querySelector('.rail-head');
-    var cog = $('btnSettings');
-    if (!head || !cog) return;
-    var btn = /** @type {HTMLButtonElement|null} */ (head.querySelector('#btnSorter'));
-    if (!btn) {
-      btn = /** @type {HTMLButtonElement} */ (UI.button('▦', 'rail-cog', openSorter));
-      btn.id = 'btnSorter';
-      head.insertBefore(btn, cog);
-    }
-    btn.title = 'Slide sorter — the whole deck at once, to rearrange it (⌘G)';
-    btn.setAttribute('aria-label', 'Open the slide sorter');
+    var btn = $('btnSorter');
+    if (!btn) return;
+    btn.title = 'Block view — the whole deck at once, to rearrange it (⌘G)';
+    btn.setAttribute('aria-label', 'Block view of all slides');
+    btn.onclick = openSorter;
   }
 
   function select(i) {
@@ -1209,6 +1209,7 @@
       }), 'Sets the default colours for the presentation. Customise this slide can override text and background colours.'));
       drawLogoFields(bodyEl, draw2);
       drawAspect(bodyEl, draw2);
+      drawNumbers(bodyEl);
       drawEnding(bodyEl, draw2);
       drawAiSettings(bodyEl, draw2);
       drawReadiness(bodyEl);
@@ -1250,6 +1251,17 @@
         ? 'What most projectors and every laptop want.'
         : 'Slides keep their width and gain height, so nothing you have written moves — ' +
           'there is simply more room under it. Check a busy slide before you teach.'));
+  }
+
+  /* Slide numbers used to be a checkbox in the top bar, and the only one:
+     every other document-wide choice lives here, so it joins them. */
+  function drawNumbers(body) {
+    var box = el('div');
+    box.appendChild(UI.check('Show slide numbers', deck.showSlideNumbers !== false, function (v) {
+      deck.showSlideNumbers = v; touched(); draw();
+    }));
+    box.appendChild(el('div', 'hint', 'A small counter in the corner of every slide but the title, on the projector and in the shared link.'));
+    body.appendChild(UI.field('Slide numbers', box));
   }
 
   function drawEnding(body, draw2) {
@@ -1784,11 +1796,41 @@
     }
   }
 
+  /* URL box + file picker + clear for one card's picture. Writes into
+     s.images[i], which the renderer already reads. */
+  function cardImageField(s, i, redraw) {
+    if (!Array.isArray(s.images)) s.images = [];
+    var box = el('div', 'card-pic-field');
+    var url = UI.text(s.images[i] || '', function (v) { s.images[i] = v.trim(); touched(); repaint(); }, 'Image URL');
+    url.setAttribute('aria-label', 'Image URL for card ' + (i + 1));
+    box.appendChild(url);
+    var pick = el('input');
+    pick.type = 'file';
+    pick.accept = 'image/*';
+    pick.setAttribute('aria-label', 'Image file for card ' + (i + 1));
+    pick.addEventListener('change', function () {
+      var f = pick.files && pick.files[0];
+      if (!f) return;
+      if (f.size > 3.5 * 1024 * 1024) SF.toast('That image is over 3.5 MB — it may exceed the browser storage limit.');
+      var fr = new FileReader();
+      fr.onload = function () { s.images[i] = String(fr.result); touched(); redraw(); repaint(); };
+      fr.readAsDataURL(f);
+    });
+    box.appendChild(pick);
+    if (s.images[i]) {
+      box.appendChild(UI.button('Remove image', 'ghost', function () {
+        s.images[i] = ''; touched(); redraw(); repaint();
+      }));
+    }
+    return box;
+  }
+
   function drawPits(wrap, s) {
     wrap.innerHTML = '';
     wrap.className = 'pit-list';
     ensurePits(s);
     var max = PIT_MAX[s.type] || 8;
+    var pictureCards = s.type === 'cards' && (s.design || {}).cardsMode === 'pictures';
     s.bullets.forEach(function (text, i) {
       var row = el('div', 'pit-row' + (String(text).trim() ? '' : ' empty'));
       contentOrder(row,s,i,wrap,function(){drawPits(wrap,s);});
@@ -1800,6 +1842,15 @@
         row.classList.toggle('empty', !String(v).trim());
       }, s.type === 'cards' ? 'Card ' + (i + 1) : 'Point ' + (i + 1));
       row.appendChild(input);
+      /* Picture cards: each card owns an image slot, so the picker sits under
+         its own card rather than in a separate list the author has to match
+         up by number. */
+      if (pictureCards) {
+        var fields = el('div', 'kw-pit-fields card-pic-fields');
+        fields.appendChild(input);
+        fields.appendChild(cardImageField(s, i, function () { drawPits(wrap, s); }));
+        row.replaceChild(fields, input);
+      }
       var kill = el('button', 'kill', '×');
       kill.type = 'button';
       kill.title = 'Remove';
@@ -2883,14 +2934,28 @@
        one wherever the focus happens to be — and the handler bows out on
        its own when the focus is somewhere a paste means something else. */
     document.addEventListener('paste', pasteImage);
-    /* Once: Find is easy to miss next to Present keys. Opening Find (or
-       File → Find) marks it seen so this does not repeat. */
+    var railGo = /** @type {HTMLInputElement|null} */ ($('railGo'));
+    if (railGo) {
+      var goField = railGo;
+      function jumpToTyped() {
+        var n = parseInt(goField.value, 10);
+        if (!n) { goField.value = String(sel + 1); return; }
+        select(n - 1);
+        focusThumb(sel);
+      }
+      goField.addEventListener('change', jumpToTyped);
+      goField.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); jumpToTyped(); goField.blur(); }
+      });
+    }
+    /* Once: Find is easy to miss next to Present keys. Opening Find marks
+       it seen so this does not repeat. */
     setTimeout(function () {
       try {
         if (localStorage.getItem('slideforge.findHint.v1') === '1') return;
         localStorage.setItem('slideforge.findHint.v1', '1');
       } catch (e) { return; }
-      SF.toast('Find across the lesson: ⌘F / Ctrl+F, or File → Find in lesson…');
+      SF.toast('Find across the lesson: ⌘F / Ctrl+F');
     }, 1800);
     /* The activities studio is a third view of this same deck, so it
        delegates title, theme, play and settings back here rather than
@@ -2937,6 +3002,7 @@
 
     deck = loaded;
     sel = savedSelection();
+    if (SF.Store.sweepUnused) SF.Store.sweepUnused(loaded && loaded.id);
     if (requestedLesson) SF.Player.forgetRun();
     else SF.Player.restoreRun();
 
@@ -2965,8 +3031,13 @@
     if (btnPresenter) {
       btnPresenter.onclick = function () {
         SF.Store.save(deck);
+        /* Desk first: the pop-out is the whole point of this button. The wall
+           feed starts after, so the desk has a show to follow — not instead
+           of the pop-out. */
+        var desk = SF.Player.openPresenter();
+        if (!desk) return;
         if (!SF.Player.open) SF.Player.start(runDeck(), runIndexFor(sel), { fullscreen: false });
-        SF.Player.openPresenter();
+        if (SF.Player.syncPresenter) SF.Player.syncPresenter();
       };
     }
   }

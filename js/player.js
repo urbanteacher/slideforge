@@ -2336,13 +2336,87 @@
   var requestedPresenterPanel = null;
   Player.hasPresenter = function(){return !!(presenterWin && !presenterWin.closed);};
 
+  /**
+   * Size and place the desk like PowerPoint presenter view: fill a display,
+   * and if a second monitor exists, put this window on it so the wall can
+   * stay on the first.
+   */
+  function screenBox() {
+    var scr = (typeof screen !== 'undefined' && screen) ? screen : {};
+    return {
+      w: Math.max(1100, Number(scr.availWidth) || 1280),
+      h: Math.max(680, Number(scr.availHeight) || 800),
+      x: typeof scr.availLeft === 'number' ? scr.availLeft : 0,
+      y: typeof scr.availTop === 'number' ? scr.availTop : 0
+    };
+  }
+
+  function presenterWindowFeatures() {
+    var box = screenBox();
+    var editorX = window.screenX || window.screenLeft || 0;
+    var left = box.x;
+    /* Editor already on a side monitor → desk on the primary (usually left). */
+    if (editorX > 80 && box.x === 0) left = 0;
+    return 'popup=yes,width=' + box.w + ',height=' + box.h +
+      ',left=' + left + ',top=' + box.y +
+      ',menubar=no,toolbar=no,location=no,status=no';
+  }
+
+  function placePresenterWindow(win) {
+    if (!win || win.closed) return;
+    function apply(left, top, w, h) {
+      try { if (typeof win.moveTo === 'function') win.moveTo(left, top); } catch (e) {}
+      try { if (typeof win.resizeTo === 'function') win.resizeTo(w, h); } catch (e) {}
+      try { if (typeof win.focus === 'function') win.focus(); } catch (e) {}
+    }
+    var box = screenBox();
+    var getDetails = window.getScreenDetails;
+    if (typeof getDetails !== 'function') {
+      apply(box.x, box.y, box.w, box.h);
+      return;
+    }
+    var pending;
+    try { pending = getDetails.call(window); } catch (e) { apply(box.x, box.y, box.w, box.h); return; }
+    Promise.resolve(pending).then(function (details) {
+      if (!win || win.closed) return;
+      var screens = (details && details.screens) || [];
+      var current = details && details.currentScreen;
+      var other = null;
+      for (var i = 0; i < screens.length; i++) {
+        var s = screens[i];
+        if (!current || s.left !== current.left || s.top !== current.top) { other = s; break; }
+      }
+      /* Two displays: desk fills the other one. One display: fill this one. */
+      var target = other || current;
+      if (!target) { apply(box.x, box.y, box.w, box.h); return; }
+      apply(
+        typeof target.availLeft === 'number' ? target.availLeft : target.left,
+        typeof target.availTop === 'number' ? target.availTop : target.top,
+        target.availWidth || target.width || box.w,
+        target.availHeight || target.height || box.h
+      );
+    }).catch(function () { apply(box.x, box.y, box.w, box.h); });
+  }
+
   Player.openPresenter = function (panel) {
     if(typeof panel==='string') requestedPresenterPanel=panel;
-    if (presenterWin && !presenterWin.closed) { presenterWin.focus(); syncPresenter(); return; }
-    presenterWin = window.open('presenter.html', 'sf_presenter',
-      'width=1100,height=680,menubar=no,toolbar=no');
-    if (!presenterWin) { toast('Presenter view was blocked — allow pop-ups for this page'); return; }
+    if (presenterWin && !presenterWin.closed) {
+      presenterWin.focus();
+      syncPresenter();
+      return presenterWin;
+    }
+    /* Must run in the same click as Teacher desk / D. Starting the slideshow
+       first does enough DOM that browsers treat this as a blocked pop-up —
+       so the desk never appeared and the button looked like Present. */
+    presenterWin = window.open('presenter.html', 'sf_presenter', presenterWindowFeatures());
+    if (!presenterWin || presenterWin.closed) {
+      presenterWin = null;
+      toast('Teacher desk needs a pop-up window. Allow pop-ups for this page, then try again.');
+      return null;
+    }
+    placePresenterWindow(presenterWin);
     setTimeout(syncPresenter, 500);
+    return presenterWin;
   };
 
   function closePresenter() {

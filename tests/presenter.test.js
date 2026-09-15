@@ -15,7 +15,7 @@ function bridge(){
   }};
  const SF={Live:{teacherWorkspaceUrl:()=> 'manual.html#'+'a'.repeat(32),nextAction:()=> 'reveal'},questionTimeLimit:()=>0};
  vm.runInNewContext(fs.readFileSync(require.resolve('../js/model.js'),'utf8'),{window:{SF},console});
- const scope={Player,SF,window:{open:()=>presenter,addEventListener:(name,fn)=>listeners[name]=fn},location:{origin:'http://localhost:8787'},toast(){},setTimeout:fn=>timers.push(fn)};
+ const scope={Player,SF,window:{open:(url,name,features)=>{presenter.url=url;presenter.features=features;return presenter;},addEventListener:(name,fn)=>listeners[name]=fn},location:{origin:'http://localhost:8787'},toast(){},setTimeout:fn=>timers.push(fn)};
  const source=fs.readFileSync(require.resolve('../js/player.js'),'utf8');
  vm.runInNewContext(source.slice(source.indexOf('  var presenterWin = null;'),source.indexOf('  /* ------------------------------------------------------------ keyboard */')),scope);
  return {Player,SF,presenter,messages,listeners,timers};
@@ -74,4 +74,13 @@ test('desk room tools share the HUD control path',()=>{
  assert.equal(state.roomView,'hidden');
  assert.equal(state.floor,'auto');
  assert.equal(typeof state.reactions,'boolean');
+});
+
+test('teacher desk opens a large pop-out, not a tiny dialog',()=>{
+ const b=bridge();
+ const win=b.Player.openPresenter();
+ assert.equal(win,b.presenter);
+ assert.equal(b.presenter.url,'presenter.html');
+ assert.match(String(b.presenter.features), /popup=yes/);
+ assert.match(String(b.presenter.features),/width=\d{3,}/);
 });

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Presenter view — SlideForge</title>
-<link rel="stylesheet" href="css/app.css?v=33">
+<link rel="stylesheet" href="css/app.css?v=37">
 <link rel="stylesheet" href="css/board-common.css">
 <link rel="stylesheet" href="css/memory.css">
 <link rel="stylesheet" href="css/bingo.css">
@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="css/studio.css">
 <link rel="stylesheet" href="css/northeastern.css">
 <link rel="stylesheet" href="css/ukbt.css?v=16">
-<link rel="stylesheet" href="css/variant-themes.css?v=3">
+<link rel="stylesheet" href="css/variant-themes.css?v=5">
 <style>
   body { overflow: hidden; }
   .pv {
@@ -259,7 +259,7 @@
   .pv-foot .btn.will-hold { background:#7a5a12; border-color:#7a5a12; color:#fff; }
 </style>
 <link rel="stylesheet" href="css/customize.css">
-<link rel="stylesheet" href="css/presenter.css">
+<link rel="stylesheet" href="css/presenter.css?v=2">
 <link rel="stylesheet" href="css/lesson-moments.css">
 <link rel="stylesheet" href="css/game-polish.css?v=1">
 </head>
@@ -268,11 +268,11 @@
 <div class="waiting" id="waiting">
   <div class="waiting-card">
     <h1 id="waitTitle">Connect this desk to the show</h1>
-    <p class="lead" id="waitLead">This is your private teaching laptop — notes, Class, Answers, and Q&amp;A. It only works when linked to the wall show.</p>
+    <p class="lead" id="waitLead">This is your private teaching laptop — notes, next slide, Class, Answers, and Q&amp;A. It only works when linked to the wall show.</p>
     <ol id="waitSteps">
-      <li>In SlideForge, start <strong>Present</strong> or <strong>Host live</strong> (the wall).</li>
-      <li>Press <kbd>D</kbd>, or choose <strong>Presenter view</strong> from the show.</li>
-      <li>This window will fill with your desk automatically.</li>
+      <li>In SlideForge, click <strong>Teacher desk</strong> (that pop-out is this window).</li>
+      <li>Or start <strong>Present</strong> / <strong>Host live</strong>, then press <kbd>D</kbd>.</li>
+      <li>This window fills with notes and desk controls. Drag it onto your second screen if you have one.</li>
     </ol>
     <p class="tip" id="waitHint">Don’t open this page from a bookmark or by typing the URL — open it from the show so the two windows can talk.</p>
   </div>
@@ -1287,9 +1287,9 @@
   if (!window.opener || window.opener.closed) {
     $('waitTitle').textContent = 'Connect this desk to the show';
     $('waitLead').textContent =
-      'This window is waiting for the wall show. Start teaching there first, then open the desk from it.';
+      'This window is waiting for the wall show. Click Teacher desk from the editor, or start Present and press D.';
     $('waitHint').textContent =
-      'Tip: after Present or Host live, press D on the show keyboard — that opens and connects this desk in one step.';
+      'Tip: Teacher desk opens this pop-out. Allow pop-ups if the browser blocked it.';
   } else {
     $('waitTitle').textContent = 'Linking to the show…';
     $('waitLead').textContent = 'Almost there — waiting for the wall window to send the lesson.';

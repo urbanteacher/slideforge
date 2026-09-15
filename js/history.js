@@ -24,7 +24,7 @@
   /* Enough to cover a working session without becoming an archive. Older
      ones go first, per document, so a deck you have not touched in a week
      does not lose its history because another one was busy. */
-  var KEEP = 40;
+  var KEEP = 16;
   var db = null, failed = false;
   /* Quiet "while editing" points: wait until typing has paused, then at
      most one every few minutes per document. Named restore points and the
@@ -80,7 +80,7 @@
           /* The document itself is not read here — a list of twenty decks
              would be megabytes to draw six lines of text. */
           out.push({ id: cur.value.id, at: cur.value.at, label: cur.value.label,
-                     slides: cur.value.slides, title: cur.value.title });
+                     slides: cur.value.slides, title: cur.value.title, fp: cur.value.fp });
           cur.continue();
         };
         req.onerror = function () { resolve([]); };
@@ -99,6 +99,15 @@
     });
   }
 
+  function fingerprint(doc) {
+    try {
+      return JSON.stringify({
+        t: doc.title, th: doc.theme, a: doc.aspect,
+        s: doc.slides, q: doc.questions, set: doc.settings
+      });
+    } catch (e) { return ''; }
+  }
+
   /**
    * Keep a copy of this document as it is now.
    * @param {any} doc
@@ -106,24 +115,27 @@
    */
   function snapshot(doc, label) {
     if (!doc || !doc.id) return Promise.resolve(false);
-    var copy;
-    /* Cloned through JSON so a later edit cannot reach back into a stored
-       snapshot through a shared array. */
-    try { copy = JSON.parse(JSON.stringify(doc)); } catch (e) { return Promise.resolve(false); }
-    return tx('readwrite').then(function (st) {
-      if (!st) return false;
-      return new Promise(function (resolve) {
-        var req;
-        try {
-          req = st.add({
-            docId: String(doc.id), at: Date.now(), label: String(label || 'Autosave'),
-            title: String(doc.title || ''), slides: (doc.slides || []).length, doc: copy
-          });
-        } catch (e) { resolve(false); return; }
-        req.onsuccess = function () { prune(doc.id); resolve(true); };
-        /* A full disk is not worth a dialog in the middle of a lecture: the
-           work is still saved where it always was. */
-        req.onerror = function () { resolve(false); };
+    /* Blanks with nothing on them are not versions worth keeping. */
+    if (SF.unusedDraft && SF.unusedDraft(doc)) return Promise.resolve(false);
+    var fp = fingerprint(doc);
+    return list(doc.id).then(function (rows) {
+      if (fp && rows[0] && rows[0].fp === fp) return 'same';
+      var copy;
+      try { copy = JSON.parse(JSON.stringify(doc)); } catch (e) { return false; }
+      return tx('readwrite').then(function (st) {
+        if (!st) return false;
+        return new Promise(function (resolve) {
+          var req;
+          try {
+            req = st.add({
+              docId: String(doc.id), at: Date.now(), label: String(label || 'Autosave'),
+              title: String(doc.title || ''), slides: (doc.slides || doc.questions || []).length,
+              fp: fp, doc: copy
+            });
+          } catch (e) { resolve(false); return; }
+          req.onsuccess = function () { prune(doc.id); resolve(true); };
+          req.onerror = function () { resolve(false); };
+        });
       });
     });
   }

@@ -743,8 +743,7 @@
   function init() {
     if(modal)return;modal=el('dialog','reports-modal');modal.setAttribute('aria-labelledby','reportsTitle');
     modal.innerHTML='<header><div><span class="eyebrow">THE LESSON DOESN’T END WITH THE LAST SLIDE</span><h2 id="reportsTitle">Session reports</h2></div><button class="btn ghost" aria-label="Close reports">✕</button></header><div class="reports-layout"><aside id="sessionList"></aside><main id="reportBody"></main></div><footer><span id="reportStatus">Stored locally on the host computer.</span><button class="btn" id="refreshReport">Refresh</button></footer>';
-    document.body.appendChild(modal);list=/** @type {HTMLElement} */(document.getElementById('sessionList'));body=document.getElementById('reportBody');status=document.getElementById('reportStatus');modal.querySelector('header button').onclick=function(){modal.close();};/** @type {HTMLElement} */(document.getElementById('refreshReport')).onclick=function(){if(selected)fetchReport(selected);};drawList();draw();
-    /** @type {HTMLElement} */(document.getElementById('btnReports')).onclick=function(){open();};
+    document.body.appendChild(modal);list=/** @type {HTMLElement} */(document.getElementById('sessionList'));body=document.getElementById('reportBody');status=document.getElementById('reportStatus');    modal.querySelector('header button').onclick=function(){modal.close();};/** @type {HTMLElement} */(document.getElementById('refreshReport')).onclick=function(){if(selected)fetchReport(selected);};drawList();draw();
   }
   SF.Reports={init:init,track:track,recording:recording,receive:receive,open:open,refresh:fetchReport,csv:csv,attendanceCsv:attendanceCsv,answersCsv:answersCsv,grid:answerGrid};
   /* Shared, because presenter view draws the same table live. */
