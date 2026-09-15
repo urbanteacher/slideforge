@@ -177,6 +177,9 @@ export interface Slide {
   /** Present only on the kinds that read it — before/after, explore,
    *  simulation, chart — or on any slide that already carried settings. */
   exploration?: ReturnType<typeof import('./deck/exploration.js').normalizeExploration>;
+  /** Chart callouts: the categories this chart is walked through, in order.
+      Absent on every other layout. */
+  callouts?: { label: string; note: string }[];
   /** Table layout: `body` is tab- or pipe-separated rows, one per line. */
   tableHeader: boolean;
   /** Code viewer layout: source shown on the wall (typed in play, full in preview). */
@@ -200,7 +203,10 @@ export interface Slide {
   /** What a build does with a point it has already been through: leave
    *  only the unreached ones hidden ('hide'), or keep the reached ones on
    *  screen dimmed back so the argument so far stays readable ('dim'). */
-  buildMode: 'hide' | 'dim';
+  /** What a build does with the points it has already been through:
+      remove them, hold them back, or hold them back and spotlight the live
+      one. */
+  buildMode: 'hide' | 'dim' | 'spot';
   question: string;
   options: string[];
   correct: number;

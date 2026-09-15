@@ -187,7 +187,11 @@ var THEMES = {
   mono:     { name: 'Mono',     swatch: '#111111' }
 };
 
-var TRANSITIONS = ['none', 'fade', 'push', 'zoom', 'wipe'];
+/* Morph is last because it is the only one that is a claim about the
+   material rather than a way of getting from A to B: it carries the shared
+   thing — the same heading, picture or chart — across the cut, and falls back
+   to a fade where the browser cannot (or where less motion was asked for). */
+var TRANSITIONS = ['none', 'fade', 'push', 'zoom', 'wipe', 'morph'];
 
 /* A stack is narrated layer by layer; past about eight the slide has stopped
    being a stack and become a folder. */
@@ -302,6 +306,9 @@ function makeSlide(type) {
     /* Image stack: each layer is one picture with its own caption and source,
        shown one in front of the last. Empty on every other kind of slide. */
     layers: /** @type {import('./types.js').GalleryLayer[]} */ ([]),
+    /* Chart callouts: which categories to zoom to, in order, and what to say
+       about each. Empty on every other layout. */
+    callouts: /** @type {{label: string, note: string}[]} */ ([]),
     transition: 'fade',
     buildMode: /** @type {'hide'|'dim'} */ ('hide'),
     // quiz fields
@@ -636,10 +643,30 @@ function normalizeSlide(raw) {
       source: String(l.source || '')
     };
   });
+  /* Callouts come off `raw` like layers do, and for the same reasons: whatever
+     is on disk may be half-built. Capped at six — a chart a teacher walks
+     through six times is a chart that wanted to be six slides.
+
+     The label is a category name rather than a coordinate, so a callout still
+     points at the right thing after the table is edited, re-sorted or has a
+     row inserted above it. */
+  var rawCallouts = raw && Array.isArray(raw.callouts) ? raw.callouts : [];
+  var callouts = rawCallouts.slice(0, 6).map(function (callout) {
+    var c = callout && typeof callout === 'object' ? callout : {};
+    return {
+      label: String(c.label == null ? '' : c.label).trim().slice(0, 80),
+      note: String(c.note == null ? '' : c.note).trim().slice(0, 160)
+    };
+  }).filter(function (c) { return c.label; });
+  if (callouts.length) s.callouts = callouts; else delete s.callouts;
   /* How a build treats the points it has already been through. Kept separate
      from `progressive` so the gate stays a boolean: every existing deck says
      progressive:true and means 'hide', which is still the default here. */
-  s.buildMode = s.buildMode === 'dim' ? 'dim' : 'hide';
+  /* Three ways a build treats what it has already been through: hide them,
+     hold them back, or hold them back and put the room's eye on the live one.
+     Still a string with a default rather than two booleans — every existing
+     deck says progressive:true and means 'hide'. */
+  s.buildMode = s.buildMode === 'dim' || s.buildMode === 'spot' ? s.buildMode : 'hide';
   if (s.imageFit !== 'contain') s.imageFit = 'cover';
   s.feedback = normalizeFeedback(s.feedback);
   return s;

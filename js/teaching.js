@@ -18,6 +18,10 @@ function update(){
   steps.forEach(function(n,i){
     n.classList.toggle('step-hidden',i>=shown);
     n.classList.toggle('step-past',dim&&i<shown-1);
+    /* The one just reached, named so the stylesheet can put the room's eye on
+       it. Three states were already being computed here; only two of them had
+       a class, so "the live one" could not be styled at all. */
+    n.classList.toggle('step-live',i===shown-1);
     /* How many steps back this one now is. Only the stacked-card layout reads
        it, to push each card further behind the current one, but it costs
        nothing to publish for every build. */
@@ -184,7 +188,12 @@ P.on('slide',function(e){
      else it is the author's choice. */
   var stacked=e.slide.type==='gallery'||
     (e.slide.type==='cards'&&(e.slide.design||{}).cardsMode==='stack');
-  dim=stacked||e.slide.buildMode==='dim';
+  /* Spotlight holds the past back as well — it is dim plus a vignette, not a
+     different way of building. */
+  dim=stacked||e.slide.buildMode==='dim'||e.slide.buildMode==='spot';
+  /* The mode goes on the slide so CSS can reach it: the steps are anywhere
+     inside the pad, and a spotlight is about everything except them. */
+  e.node.classList.toggle('build-spot',e.slide.buildMode==='spot'&&!!e.slide.progressive);
   shown=0;update();
   svg=ns('svg');svg.setAttribute('viewBox','0 0 1280 720');svg.classList.add('teaching-ink');svg.setAttribute('aria-label','Temporary slide annotations');
   if(mode)svg.classList.add('drawing');

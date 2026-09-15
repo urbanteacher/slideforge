@@ -6034,3 +6034,106 @@ html[data-ws="deck"] #railCount { display: none; }
     opacity: 1; filter: none; clip-path: none; transform: none;
   }
 }
+
+/* Ken Burns with a destination: from one focus point to another.
+
+   The two frames are computed per slide (see imageTravel in render.js) and
+   handed to the keyframes as custom properties — the browser interpolates
+   between two transforms it was given, which is stable, composited, and does
+   not need a JS timer ticking through a lecture.
+
+   Easy Ease again: a linear pan across a photograph looks like a machine. */
+#player .layout-image .img.img-motion-travel {
+  transform-origin: 0 0;
+  animation: sf-img-travel var(--kb-dur, 20s) cubic-bezier(.33, 0, .67, 1) both;
+  will-change: transform;
+}
+@keyframes sf-img-travel {
+  from { transform: var(--kb-from, scale(1.2)); }
+  to   { transform: var(--kb-to, scale(1.2)); }
+}
+/* Still, on the frame the author chose to start on — which is the
+   establishing shot, not the destination. */
+@media (prefers-reduced-motion: reduce) {
+  #player .layout-image .img.img-motion-travel {
+    animation: none;
+    transform: var(--kb-from, scale(1.2));
+  }
+}
+.pdf-page .img.img-motion-travel { animation: none; transform: var(--kb-from, scale(1.2)); }
+
+/* ---- chart callouts ----------------------------------------------------- */
+
+/* "Look at this bit now", as steps inside one chart slide.
+
+   The zoom is a transform on the SVG rather than a change of viewBox: the
+   transform is composited and animatable, and SVG re-rasterises at the scaled
+   size, so a zoomed axis label is still sharp rather than a blown-up bitmap.
+   The wrapper clips, which is what makes the rest of the chart leave the frame
+   instead of overflowing the slide. */
+.layout-chart .chart-wrap { overflow: hidden; }
+.layout-chart .chart-svg {
+  transition: transform .62s cubic-bezier(.33, 0, .67, 1);   /* Easy Ease */
+  will-change: transform;
+}
+/* The note for the band being looked at. It occupies its line from the start
+   — see the empty element in layoutChart — so beginning the walk does not
+   reflow the chart it is describing. */
+.layout-chart .ch-callout {
+  min-height: 34px;
+  margin-top: 10px;
+  font-size: 23px; font-weight: 600; line-height: 1.25;
+  color: var(--s-fg);
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+.layout-chart .ch-callout.on { opacity: 1; }
+/* A hairline under the zoomed chart, so it reads as a detail of something
+   rather than as a different chart. */
+.layout-chart .chart-svg.ch-zoomed { outline: 1px solid var(--s-rule); outline-offset: -1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .layout-chart .chart-svg { transition: none; }
+}
+
+/* ---- spotlight builds --------------------------------------------------- */
+
+/* The room's eye on the point being made.
+
+   `dim` already holds the past back; this adds the other half of what a
+   presenter does with their hand — it takes the light off everything else.
+   The past steps fall further back than in dim mode, the live one is left at
+   full strength, and a soft vignette closes in from the edges of the slide so
+   the middle reads as lit rather than the rest as broken.
+
+   Everything here is opacity and a gradient: no layout changes, so a build
+   cannot reflow the slide halfway through being taught. */
+#player .slide.build-spot .step.step-past {
+  opacity: .32;
+  filter: saturate(.75);
+}
+#player .slide.build-spot .step.step-live {
+  /* Not a glow. The live point is simply the only thing at full strength;
+     lighting it as well as dimming the others reads as a highlighter pen. */
+  opacity: 1;
+}
+#player .slide.build-spot::after {
+  content: '';
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background: radial-gradient(ellipse 128% 92% at 50% 50%,
+    transparent 38%, color-mix(in srgb, #000 34%, transparent) 100%);
+  opacity: 0;
+  transition: opacity .5s ease;
+}
+/* Only once the build has started: a vignette on an untouched slide is a
+   vignette nobody asked for. */
+#player .slide.build-spot:has(.step-live)::after { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  #player .slide.build-spot::after { transition: none; }
+}
+/* A handout is read, not presented: every point at full strength. */
+.pdf-page .slide.build-spot::after { display: none; }
+.pdf-page .slide.build-spot .step.step-past { opacity: 1; filter: none; }

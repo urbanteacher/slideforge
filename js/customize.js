@@ -451,13 +451,32 @@
         [20,'After 20 seconds'],
         [30,'After 30 seconds']
       ],0);
-      if(s.type==='image') box.appendChild(UI.field('Image motion',UI.select([
-        {value:'',label:'Stays still'},
-        {value:'zoom',label:'Slow zoom in'}
-      ],d.imageMotion==='zoom'?'zoom':'',function(v){
-        if(v==='zoom') d.imageMotion='zoom'; else delete d.imageMotion;
-        change();
-      }),'On the projector only. Zooms toward the Image focus point below.'));
+      if(s.type==='image') {
+        box.appendChild(UI.field('Image motion',UI.select([
+          {value:'',label:'Stays still'},
+          {value:'zoom',label:'Slow zoom in'},
+          {value:'travel',label:'Travel — from one point to another'}
+        ],d.imageMotion==='travel'?'travel':d.imageMotion==='zoom'?'zoom':'',function(v){
+          if(v==='zoom'||v==='travel') d.imageMotion=v; else delete d.imageMotion;
+          change();
+        }),'On the projector only. Zoom drifts toward the focus point below; Travel moves from it to a second point.'));
+        if(d.imageMotion==='travel'){
+          ['X','Y'].forEach(function(axis){
+            var r=document.createElement('input');r.type='range';r.min='0';r.max='100';
+            r.value=d['focal'+axis+'2']==null?50:d['focal'+axis+'2'];
+            r.onchange=function(){d['focal'+axis+'2']=Number(r.value);change();};
+            box.appendChild(UI.field('Travels to '+(axis==='X'?'horizontal':'vertical'),r));
+          });
+          box.appendChild(UI.field('How long the move takes',UI.select([
+            {value:'12',label:'12 seconds'},
+            {value:'20',label:'20 seconds'},
+            {value:'30',label:'30 seconds — barely visible, on purpose'}
+          ],String(d.imageTravelSecs||20),function(v){
+            var n=Number(v); if(n===20) delete d.imageTravelSecs; else d.imageTravelSecs=n;
+            change();
+          }),'Set the start with Image focus below, the end with Travels to above. Same point twice means no move, and none is drawn.'));
+        }
+      }
     }
     /* Code: how it arrives, and how fast. Neither was settable before — the
        layout shipped with a character typewriter at one speed and no way to
@@ -537,16 +556,17 @@
         :s.type==='quote'?'Reveal one line at a time (animated)'
         :s.type==='explain'?'Reveal one paragraph at a time (animated)'
         :'Reveal one bullet / point at a time (animated)';
-      var buildValue=s.progressive!==true?'off':(s.buildMode==='dim'?'dim':'on');
+      var buildValue=s.progressive!==true?'off':(s.buildMode==='dim'||s.buildMode==='spot'?s.buildMode:'on');
       box.appendChild(UI.field('Build on Next',UI.select([
         {value:'off',label:'Show everything at once'},
         {value:'on',label:buildLabel},
-        {value:'dim',label:buildLabel.replace(' (animated)',', dimming the ones before')}
-      ].filter(function(o){return !(o.value==='dim'&&s.type==='image');}),buildValue,function(v){
+        {value:'dim',label:buildLabel.replace(' (animated)',', dimming the ones before')},
+        {value:'spot',label:buildLabel.replace(' (animated)',', with a spotlight on the live one')}
+      ].filter(function(o){return !((o.value==='dim'||o.value==='spot')&&s.type==='image');}),buildValue,function(v){
         s.progressive=v!=='off';
-        s.buildMode=v==='dim'?'dim':'hide';
+        s.buildMode=v==='dim'||v==='spot'?v:'hide';
         change();
-      }),'Dimming keeps earlier points readable instead of hiding them \u2014 useful when the room needs the whole argument in view.'));
+      }),'Dimming keeps earlier points readable instead of hiding them \u2014 useful when the room needs the whole argument in view. Spotlight does that and takes the light off the rest of the slide, which is the other half of what a presenter does with their hand.'));
     }
     box.appendChild(UI.button('Reset to theme','ghost',function(){s.design={};s.formatting={};change();}));
     parent.appendChild(box);

@@ -1235,7 +1235,14 @@
         SF.TRANSITIONS.map(function (t) {
           return { value: t, label: t[0].toUpperCase() + t.slice(1) };
         }),
-        s.transition, function (v) { s.transition = v; touched(); drawRail(); })));
+        s.transition, function (v) { s.transition = v; touched(); drawRail(); drawInspector(); })));
+      if (s.transition === 'morph') {
+        insp.appendChild(el('p', 'hint',
+          'Morph carries one thing across the cut instead of dissolving the slide: the same picture, ' +
+          'the same chart table, or the same heading text as the slide before this one. With nothing ' +
+          'shared \u2014 or in a browser without view transitions, or when less motion has been asked ' +
+          'for \u2014 it is a fade.'));
+      }
       /* A statement is one line with nothing else on the slide, which is the
          only place per-word motion reads as deliberate rather than restless. */
       if (s.type === 'statement') {
@@ -1888,6 +1895,52 @@
         if (node) SF.fit(frame, node);
       });
     });
+  }
+
+  /**
+   * Callouts: which categories the chart is walked through, and what to say.
+   *
+   * Chosen from the chart's own categories rather than typed, for two
+   * reasons: a typo would point at nothing, and a category renamed in the
+   * table would leave the callout behind. Stored as the label, looked up at
+   * the press — so inserting a row above it does not move the callout.
+   *
+   * @param {HTMLElement} insp
+   * @param {object} s
+   * @param {{categories: string[]}} cd  the chart's parsed data
+   */
+  function drawCallouts(insp, s, cd) {
+    var cats = (cd && cd.categories) || [];
+    if (!cats.length) return;
+    var list = Array.isArray(s.callouts) ? s.callouts : [];
+    var box = el('div', 'callout-list');
+    list.forEach(function (callout, i) {
+      var row = el('div', 'callout-row');
+      var pick = UI.select(cats.map(function (c) { return { value: c, label: c }; }),
+        String(callout.label || cats[0]), function (v) {
+          s.callouts[i].label = v; touched(); repaint();
+        });
+      row.appendChild(UI.field('Zoom to', pick));
+      row.appendChild(UI.field('Say', UI.text(callout.note || '', function (v) {
+        s.callouts[i].note = v; touched(); repaint();
+      })));
+      row.appendChild(UI.button('Remove', 'ghost', function () {
+        s.callouts.splice(i, 1);
+        if (!s.callouts.length) delete s.callouts;
+        touched(); draw();
+      }));
+      box.appendChild(row);
+    });
+    if (list.length < 6) {
+      box.appendChild(UI.button('Add a callout', 'ghost', function () {
+        s.callouts = (Array.isArray(s.callouts) ? s.callouts : []).concat([
+          { label: cats[Math.min(list.length, cats.length - 1)], note: '' }
+        ]);
+        touched(); draw();
+      }));
+    }
+    insp.appendChild(UI.field('Walk the chart (optional)', box,
+      'Next zooms to each of these in turn before the slide moves on, and the last press puts the whole chart back. Say what the room should notice \u2014 left empty, the category is named instead.'));
   }
 
   /**
@@ -2787,6 +2840,7 @@
         insp.appendChild(el('p', 'hint field-warn',
           'Six series is the ceiling \u2014 past that the colours stop being tellable apart. Group the tail into \u201cOther\u201d, or split the chart.'));
       }
+      drawCallouts(insp, s, cd);
       return;
     }
 

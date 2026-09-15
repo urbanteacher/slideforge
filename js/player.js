@@ -346,6 +346,72 @@
 
   /* ------------------------------------------------------------ rendering */
 
+  /* ---------------------------------------------------------------- morph */
+
+  /* A match cut: the same thing, seen differently.
+ 
+     Two slides in a row often share one subject — the heading repeats, the
+     chart is the same chart with another series on it, the photograph is the
+     same photograph closer in. A dissolve throws that away and says "here is
+     a new slide"; carrying the shared element across says "this is the same
+     thing, look again", which is a sentence about the material rather than a
+     decoration.
+ 
+     The browser does the animation. view-transition-name pairs the outgoing
+     element with the incoming one and startViewTransition() interpolates
+     position, size and shape between them — so this code's whole job is to
+     decide what counts as "the same thing" and to name it on both sides.
+ 
+     Three pairings, in order of how strongly they mean it: the same picture,
+     the same chart table, the same heading text. Anything else is a fade. */
+  var MORPH_PAIRS = [
+    { name: 'sf-morph-media', pick: function (n) { return n.querySelector('.img, .vid, video'); },
+      same: function (a, b) { return (a.image || a.video) && (a.image || a.video) === (b.image || b.video); } },
+    { name: 'sf-morph-chart', pick: function (n) { return n.querySelector('.chart-svg'); },
+      same: function (a, b) { return a.type === 'chart' && b.type === 'chart' &&
+        String(a.body || '').trim() && String(a.body || '').trim() === String(b.body || '').trim(); } },
+    { name: 'sf-morph-head', pick: function (n) { return n.querySelector('.pad h1, .pad h2, .statement'); },
+      same: function (a, b) { var x = String(a.title || a.body || '').trim();
+        return x && x === String(b.title || b.body || '').trim(); } }
+  ];
+
+  /**
+   * Name the shared element on both slides, if there is one.
+   *
+   * @param {HTMLElement|null} old the outgoing slide
+   * @param {HTMLElement} node the incoming slide
+   * @param {object} slide the incoming slide's data
+   * @returns {boolean} whether there is anything to morph
+   */
+  function canMorph(old, node, slide) {
+    if (!old || typeof (/** @type {any} */ (document).startViewTransition) !== 'function') return false;
+    if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+    var was = Player._currentSlide;
+    if (!was || was.id === slide.id) return false;
+    for (var i = 0; i < MORPH_PAIRS.length; i++) {
+      var pair = MORPH_PAIRS[i];
+      if (!pair.same(was, slide) && !pair.same(slide, was)) continue;
+      var from = pair.pick(old), to = pair.pick(node);
+      if (!from || !to) continue;
+      from.style.viewTransitionName = pair.name;
+      to.style.viewTransitionName = pair.name;
+      return true;
+    }
+    return false;
+  }
+
+  /* The name has to come off again: two elements sharing one
+     view-transition-name in the same document is an error the browser
+     resolves by ignoring both, so a morph would break the next morph. */
+  function clearMorph(old) {
+    if (old) {
+      MORPH_PAIRS.forEach(function (pair) {
+        var n = pair.pick(old);
+        if (n) n.style.viewTransitionName = '';
+      });
+    }
+  }
+
   function renderCurrent(dir) {
     if (!viewport) return;
     var deck = Player.deck;
@@ -413,30 +479,65 @@
 
     var old = Player._current;
     var tr = slide.transition || 'fade';
+    /* Morph asks the browser to carry a shared thing across the cut — the same
+       heading, the same picture, the same chart — instead of dissolving one
+       slide into another. Where that is not available it is a fade, which is
+       what it would have been anyway. */
+    var morphing = tr === 'morph' && canMorph(old, node, slide);
+    if (tr === 'morph') tr = morphing ? 'none' : 'fade';
 
-    viewport.classList.toggle('back', dir < 0);
-    node.classList.add('entering');
-    if (tr !== 'none') node.classList.add('tr-' + tr);
-    viewport.appendChild(node);
-    SF.fit(viewport, node);
+    var place = function () {
+      viewport.classList.toggle('back', dir < 0);
+      node.classList.add('entering');
+      if (tr !== 'none') node.classList.add('tr-' + tr);
+      viewport.appendChild(node);
+      SF.fit(viewport, node);
 
-    if (old) {
-      /* Before the transition, not after: the outgoing slide lingers for up to
-         700ms and a soundtrack playing over the next slide is worse than a
-         hard cut. */
-      stopVideo(old);
-      old.classList.remove('entering');
-      old.classList.add('leaving');
-      if (tr !== 'none') old.classList.add('tr-' + tr);
-      var kill = function () { if (old.parentNode) old.parentNode.removeChild(old); };
-      if (tr === 'none') kill();
-      else {
-        old.addEventListener('animationend', kill, { once: true });
-        setTimeout(kill, 700);
+      if (old) {
+        /* Before the transition, not after: the outgoing slide lingers for up
+           to 700ms and a soundtrack playing over the next slide is worse than
+           a hard cut. */
+        stopVideo(old);
+        old.classList.remove('entering');
+        old.classList.add('leaving');
+        if (tr !== 'none') old.classList.add('tr-' + tr);
+        var kill = function () { if (old.parentNode) old.parentNode.removeChild(old); };
+        if (tr === 'none') kill();
+        else {
+          old.addEventListener('animationend', kill, { once: true });
+          setTimeout(kill, 700);
+        }
       }
+    };
+
+    if (morphing) {
+      /* The swap has to happen inside the callback: the browser photographs
+         the named elements before it runs and again after, and animates
+         between the two. Nothing here waits on the result — a transition the
+         browser abandons must not leave the slide unplaced. */
+      try {
+        /** @type {any} */ (document).startViewTransition(function () { place(); clearMorph(old); });
+      } catch (e) {
+        clearMorph(old);
+        place();
+      }
+    } else {
+      /* Any name left over from a previous morph comes off now. It is inert
+         while no view transition is running, but a stale name is a name that
+         will be captured the next time one is — and two elements sharing one
+         is an error the browser resolves by ignoring both. */
+      clearMorph(old);
+      place();
     }
 
     Player._current = node;
+    /* Which slide is on the wall, kept for the next render: a morph has to ask
+       "is the incoming slide about the same thing as the one leaving", and by
+       then the outgoing slide's data is no longer to hand. */
+    Player._currentSlide = slide;
+    /* A redraw must not throw away a walk in progress — the desk syncs, the
+       ink bar opens, a repaint happens, and the chart would snap back out. */
+    if (SF.Callouts) SF.Callouts.restore(Player, slide, node);
     node.addEventListener('animationend', function () {
       node.classList.remove('entering', 'tr-' + tr);
       node.style.position = 'absolute';
@@ -2108,6 +2209,9 @@
     }
     if (!Player.frozen && SF.Explore && SF.Explore.step(Player, 1)) return;
     if (SF.Teaching && SF.Teaching.next()) return;
+    /* After the build, before the deck: a chart's callouts are the last steps
+       inside the slide, so the bars arrive first and are then walked. */
+    if (!Player.frozen && SF.Callouts && SF.Callouts.step(Player, 1)) return;
     if (!Player.deck) return;
     if (Player.spontaneous) {
       var curS = Player.wallSlide();
@@ -2162,6 +2266,7 @@
   };
   Player.prev = function () {
     if (!Player.frozen && SF.Explore && SF.Explore.step(Player, -1)) return;
+    if (!Player.frozen && SF.Callouts && SF.Callouts.step(Player, -1)) return;
     if (SF.Teaching && SF.Teaching.prev()) return;
     if (Player.spontaneous) {
       if (Player.spontaneous.index <= 0) return;

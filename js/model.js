@@ -8041,7 +8041,7 @@
     ember: { name: "Ember", swatch: "#3d1b2a" },
     mono: { name: "Mono", swatch: "#111111" }
   };
-  var TRANSITIONS = ["none", "fade", "push", "zoom", "wipe"];
+  var TRANSITIONS = ["none", "fade", "push", "zoom", "wipe", "morph"];
   var GALLERY_MAX = 8;
   var EXPLORATION_TYPES = ["beforeafter", "explore", "simulation", "chart"];
   var TEAM_COLORS = ["#e8474f", "#2b7ce9", "#e8a020", "#29a86b", "#8b5cf0", "#d4477f"];
@@ -8123,6 +8123,12 @@
          shown one in front of the last. Empty on every other kind of slide. */
       layers: (
         /** @type {import('./types.js').GalleryLayer[]} */
+        []
+      ),
+      /* Chart callouts: which categories to zoom to, in order, and what to say
+         about each. Empty on every other layout. */
+      callouts: (
+        /** @type {{label: string, note: string}[]} */
         []
       ),
       transition: "fade",
@@ -8414,7 +8420,19 @@
         source: String(l.source || "")
       };
     });
-    s.buildMode = s.buildMode === "dim" ? "dim" : "hide";
+    var rawCallouts = raw && Array.isArray(raw.callouts) ? raw.callouts : [];
+    var callouts = rawCallouts.slice(0, 6).map(function(callout) {
+      var c = callout && typeof callout === "object" ? callout : {};
+      return {
+        label: String(c.label == null ? "" : c.label).trim().slice(0, 80),
+        note: String(c.note == null ? "" : c.note).trim().slice(0, 160)
+      };
+    }).filter(function(c) {
+      return c.label;
+    });
+    if (callouts.length) s.callouts = callouts;
+    else delete s.callouts;
+    s.buildMode = s.buildMode === "dim" || s.buildMode === "spot" ? s.buildMode : "hide";
     if (s.imageFit !== "contain") s.imageFit = "cover";
     s.feedback = normalizeFeedback(s.feedback);
     return s;

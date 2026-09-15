@@ -722,6 +722,54 @@
     return BACKDROPS.indexOf(want) >= 0 ? want : '';
   }
 
+  /**
+   * A Ken Burns move with a destination: where the frame starts, where it
+   * ends, and how long it takes.
+   *
+   * The existing zoom anchors its transform-origin to the focus point, which
+   * drifts *towards* a place but cannot travel *between* two. Teaching wants
+   * the second thing — "start on the whole chart, end on the axis label" — so
+   * this computes both frames and lets CSS interpolate between them.
+   *
+   * The image is scaled up by SCALE so there is somewhere to travel: with
+   * transform-origin at 0 0, bringing the point at fx% to the middle is
+   * translate(50 - fx*s). Clamped to the slack the scale bought, because past
+   * that the picture's own edge comes into frame — and clamping is exactly the
+   * behaviour a focus point on the edge should have: it pans as far as the
+   * edge and stops.
+   *
+   * @param {object} slide
+   * @returns {{from: string, to: string, secs: number}|null}
+   */
+  var TRAVEL_SCALE = 1.2;
+  var TRAVEL_SECS = { 12: 12, 20: 20, 30: 30 };
+
+  function travelFrame(fx, fy) {
+    var s = TRAVEL_SCALE, slack = -(s - 1) * 100;
+    var tx = Math.max(slack, Math.min(0, 50 - fx * s));
+    var ty = Math.max(slack, Math.min(0, 50 - fy * s));
+    return 'translate(' + tx.toFixed(2) + '%, ' + ty.toFixed(2) + '%) scale(' + s + ')';
+  }
+
+  function imageTravel(slide) {
+    var d = slide.design || {};
+    if (d.imageMotion !== 'travel') return null;
+    var num = function (v, fallback) {
+      var n = Number(v);
+      return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : fallback;
+    };
+    var fromX = num(d.focalX, 50), fromY = num(d.focalY, 50);
+    var toX = num(d.focalX2, 50), toY = num(d.focalY2, 50);
+    /* Nowhere to go is not a move: without a destination this would animate
+       from a frame to the same frame for twenty seconds. */
+    if (Math.abs(fromX - toX) < 1 && Math.abs(fromY - toY) < 1) return null;
+    return {
+      from: travelFrame(fromX, fromY),
+      to: travelFrame(toX, toY),
+      secs: TRAVEL_SECS[Number(d.imageTravelSecs)] || 20
+    };
+  }
+
   /* How a caption sits on the picture. Scrim is the default and the safest —
      a gradient reads over any image. Bar and plain assume the author has
      looked at theirs. */
@@ -762,8 +810,17 @@
       pad.style.setProperty('--img-ar', IMAGE_FRAMES[frame]);
     }
     if (slide.image) {
-      var motion = (slide.design || {}).imageMotion === 'zoom' ? ' img-motion-zoom' : '';
+      var travel = imageTravel(slide);
+      var motion = travel ? ' img-motion-travel'
+        : (slide.design || {}).imageMotion === 'zoom' ? ' img-motion-zoom' : '';
       var img = el('div', 'img ' + (slide.imageFit === 'contain' ? 'contain' : 'cover') + motion);
+      if (travel) {
+        /* Read by the keyframes: CSS interpolates between two transforms it
+           was handed rather than between two numbers it computed. */
+        img.style.setProperty('--kb-from', travel.from);
+        img.style.setProperty('--kb-to', travel.to);
+        img.style.setProperty('--kb-dur', travel.secs + 's');
+      }
       img.style.backgroundImage = 'url("' + String(slide.image).replace(/"/g, '&quot;') + '")';
       /* An image slide has nothing to build but the image, so Build on Next
          here means one thing: the room gets asked before it gets shown. */
@@ -2409,6 +2466,10 @@
 
     var key = chartKey(data, slide);
     if (key.childNodes.length) pad.appendChild(key);
+    /* Where a callout's note lands. Rendered empty and filled by SF.Callouts
+       on the press, so the chart does not reflow when the walk starts — a
+       caption that appears from nowhere moves the chart it is describing. */
+    if (SF.Callouts && SF.Callouts.has(slide)) pad.appendChild(el('div', 'ch-callout'));
     /* Under the chart, not in the notes: a caveat a lecturer can see and the
        room cannot is not a caveat. This is a course about the danger of
        summary statistics — a chart here should be able to say what it is not
@@ -5484,6 +5545,8 @@
     /* Exported for the same reason safeMedia is: a link the app claims to
        understand is worth being able to test without a browser. */
     youtubeId: youtubeId,
+    imageTravel: imageTravel,
+    travelFrame: travelFrame,
     statementBand: statementBand,
     statementWordSize: statementWordSize,
     WORD_EFFECTS: WORD_EFFECTS,
