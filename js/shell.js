@@ -1275,7 +1275,11 @@
           }).then(function (r) {
             return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; });
           }).then(function (j) {
-            var url = location.origin + '/view.html?s=' + j.id;
+            /* The server decides the host, not this page: a laptop opened at
+               localhost would otherwise put "localhost" in the QR code, which
+               on a phone is the phone. It answers with the LAN address there
+               and the public hostname on a deploy. */
+            var url = j.url || (String(j.base || location.origin).replace(/\/$/, '') + '/view.html?s=' + j.id);
             /* The same copy, followed instead of read. Registering the share
                id with the relay turns it into a spectator seat: a desktop on
                this address full-screens the slides and moves when the
