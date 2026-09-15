@@ -1204,17 +1204,30 @@
     },
     {
       key: 'layout-bank',
-      title: 'Layout bank — every slide type, one of each',
+      title: 'Layout bank — every layout, every chart, every live moment',
       icon: '▦',
-      blurb: 'A reference deck holding every layout in the layout picker, in the Northeastern theme. Page through it to see what each one does, then copy the slide you want into your own lesson.',
-      minutes: 15,
+      blurb: 'The reference deck: every layout in the picker, all twenty chart idioms, the design variants, and the things the room answers on their phones. Page through it to see what each one does, then copy the slide you want into your own lesson. Every slide says in its notes when to reach for it — and when not to.',
+      minutes: 40,
       theme: 'northeastern',
       org: 'Northeastern University London',
       logo: 'assets/brand/nu-london-logo.png',
       logoOn: 'all',
       logoSize: 'small',
+      games: [{
+        ref: 'check',
+        title: 'A live check, mid-lesson',
+        style: 'choice',
+        settings: { defaultTime: 25, scoreboard: false, scoreSlide: false, confidence: true },
+        questions: [{
+          question: 'One number per category, and the order is the message. Which chart?',
+          options: ['Pie chart', 'Sorted horizontal bar', 'Line chart', 'Radar'],
+          correct: 1,
+          explanation: 'Ranking: position along a common scale is the channel the eye reads most accurately, and sorting puts the message into the shape. A pie asks the reader to compare angles; a line implies an order in time that is not there.'
+        }]
+      }],
       slides: [
-        { type: 'title', title: 'Layout bank', subtitle: 'One of every slide type · Northeastern theme',
+        { type: 'title', title: 'Layout bank', subtitle: 'One of every layout, chart and live moment · Northeastern theme',
+          date: '2026-09-15',
           notes: 'This deck is a reference, not a lesson. Every layout SlideForge can draw appears once, in running order, with a note like this one saying what it is for. Duplicate a slide here and paste it into a real deck to reuse the shape.' },
 
         { type: 'section', title: 'Opening a session', subtitle: 'Title, introduction, section, quote',
@@ -1258,6 +1271,26 @@
           ],
           progressive: true,
           notes: 'MIND MAP — arranges the points around the title in the centre rather than down the page. Use it when the points are siblings with no order; use Journey when the order is the point.' },
+        { type: 'keyfact', title: 'Key fact — one number, set large',
+          subtitle: 'SHARE OF THE WORLD’S DATA CREATED IN THE LAST TWO YEARS',
+          body: '90%',
+          bullets: [
+            'The subtitle above the number is its label; the number itself is never a build step.',
+            'Three supporting lines is the limit — past that the number stops being the point.',
+            'Say the number, then stop talking.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'KEY FACT — for the one figure you want quoted back at you. Reach for it when a chart would bury the finding in axes: a single number needs no scale, no legend and no explanation of what the bars mean.' },
+
+        { type: 'orgchart', title: 'People & structure — who is who',
+          bullets: [
+            'Mark Martin\tCourse Leader',
+            'Ada Lovelace\tLead Tutor\tMark Martin',
+            'Alan Turing\tTutor\tMark Martin',
+            'Grace Hopper\tLab Demonstrator\tAda Lovelace',
+            'Katherine Johnson\tLab Demonstrator\tAlan Turing'
+          ],
+          notes: 'PEOPLE & STRUCTURE — one person per line: name, role, and who they report to. Leave the third column off and they sit at the top. With no reporting lines at all it draws a flat team in one row, which is the right shape for a project group or a panel.' },
 
         { type: 'stats', title: 'Stat tiles — the numbers that matter',
           subtitle: 'From the module survey, week 6 · n = 148',
@@ -1301,6 +1334,56 @@
           ],
           progressive: true,
           notes: 'TIMELINE — date · event · detail, up to eight. Dates are labels, not parsed, so "Week 3" or "Term 2" work. Design → Shape switches to the vertical spine, which gives each event a full line of detail.' },
+        { type: 'stats', design: { statStyle: 'ring' }, title: 'Stat tiles · rings',
+          bullets: [
+            'Attendance\t88%\tweek six',
+            'Submitted on time\t74%\tfirst attempt'
+          ],
+          notes: 'STATS · RING — the same layout, Design → Tile style → Ring. The arc fills to the number’s share of a hundred.\n\nThe inspector warns you when there is more than one of them, and it is right to: an arc is compared less accurately than a length, so four rings are four dials nobody can line up. One hero number in a ring is the fair use.' },
+
+        { type: 'stats', design: { statStyle: 'bar' }, title: 'Stat tiles · KPI bars',
+          bullets: [
+            'Applications\t1,240\ttarget 1,000',
+            'Offers\t860\ttarget 800',
+            'Enrolled\t510\ttarget 600'
+          ],
+          body: 'Two of three targets met — enrolment is the one to talk about.',
+          notes: 'STATS · BAR — Design → Tile style → Bar. This is the variant to prefer when the numbers are being compared, because length on a common baseline is the channel the eye reads most accurately. The line underneath is the takeaway field.' },
+
+        { type: 'funnel', design: { funnelDirection: 'up' }, title: 'Funnel · pyramid',
+          bullets: [
+            'Aware\t4,000\t',
+            'Interested\t1,600\t',
+            'Applied\t420\t',
+            'Enrolled\t180\t'
+          ],
+          notes: 'FUNNEL · UP — Design → Direction → Pyramid. Same data, widest at the bottom, for when the story is the base rather than the loss.\n\nThe drop between two stages is printed for you either way — −60%, −74% — because that is the number a reader is working out in their head. And the inspector will point out that a Sankey answers the same question while also showing where the missing ones went.' },
+
+        { type: 'timeline', design: { timelineMode: 'vertical' }, title: 'Timeline · down the page',
+          bullets: [
+            'Week 1\tFoundations\tWhy we visualise at all, and what a channel is',
+            'Week 6\tColour and scale\tThe grammar of graphics, and where it misleads',
+            'Week 12\tCritique\tSaying why a chart fails, in writing'
+          ],
+          notes: 'TIMELINE · DOWN — Design → Shape → Down. A spine with a paragraph per event, for when the detail matters more than the span. Across is the default and suits six short entries; down suits three long ones.' },
+
+        { type: 'cards', design: { cardsMode: 'stack' }, title: 'Cards · stacked, one at a time',
+          bullets: [
+            'Notice\tSomething in the data does not fit the story.',
+            'Check\tGo back to how it was collected.',
+            'Redraw\tPick the idiom that answers the question.',
+            'Say it\tWrite the finding as a sentence on the slide.'
+          ],
+          progressive: true,
+          notes: 'CARDS · STACK — Design → Card style → Stacked. Every card lands in the same place, the one being talked about in front and the ones already made peeking out behind. Four things get four moments instead of competing for one glance, and the pile shows the room how far through the set you are. Needs Build on Next, which is on here.' },
+
+        { type: 'cards', design: { cardsMode: 'rows' }, title: 'Cards · rows, for cards that have something to say',
+          bullets: [
+            'Rule of thumb\tThree cards across is fine for three words and cruel to a definition.',
+            'What goes wrong\tThe column narrows until the label breaks up, and the set reads as one card with three columns.',
+            'The fix\tDown the slide instead — full width each, and only as much height as the words need.'
+          ],
+          notes: 'CARDS · ROWS — Design → Card style → Rows. The variant to choose the moment a card carries a sentence rather than a phrase. Grid is the default and suits short labels; this suits definitions.' },
 
         { type: 'keywords', title: 'Keywords — term and definition',
           bullets: [
@@ -1371,6 +1454,75 @@
         { type: 'chart', chartKind: 'pie', title: 'Chart — pie, for parts of one whole',
           body: 'Continent\tShare of population\nAsia\t59\nAfrica\t18\nEurope\t9\nAmericas\t13\nOceania\t1',
           notes: 'CHART (pie) — only honest when the slices are parts of a single total and there are few of them. Two series will not work here. If you are comparing magnitudes rather than showing a composition, use the bar.' },
+        { type: 'chart', chartKind: 'hbar', title: 'Chart · ranking — what is the order?',
+          body: 'Barrier\tMentioned by (%)\nNo local network\t62\nCost of travel\t48\nNo one to ask\t41\nTiming of events\t23\nNothing nearby\t12',
+          chartSource: 'Illustrative figures. Every chart carries a line like this one, and it prints under the drawing and into the student handout.',
+          notes: 'RANKING — a sorted horizontal bar is the Financial Times’ own ranking chart, and the reason is that position on a common scale is the channel the eye reads most accurately. Sort it, or it is not a ranking chart.\n\nThis slide is also the one showing the SOURCE LINE. Where the numbers came from and what they are not — that is the thing a reader needs a week later with nobody there to explain it.' },
+
+        { type: 'chart', chartKind: 'stack', title: 'Chart · part-to-whole — how does it divide up?',
+          body: 'Year\tTeaching\tResearch\tOutreach\n2023\t52\t31\t17\n2024\t48\t34\t18\n2025\t44\t35\t21',
+          notes: 'STACKED BAR — for composition over a few categories. It warns you if a series contains negatives, because those are silently left out of a total and the bar would lie.\n\nAlso in this family and drawn by the same picker: pie, donut, treemap and waffle.' },
+
+        { type: 'chart', chartKind: 'donut', title: 'Chart · donut, and its cousins',
+          body: 'Route in\tShare\nUniversity\t44\nApprenticeship\t21\nBootcamp\t18\nSelf-taught\t17',
+          notes: 'DONUT — a pie with the middle taken out, and the same paste. The hole buys you somewhere to put the total, which is the only real reason to prefer it.\n\nTreemap and waffle are further on: the same data, the same question, two better answers to it.' },
+
+        { type: 'chart', chartKind: 'scatter', title: 'Chart · correlation — do two things move together?',
+          body: 'Cohort\tHours on task\tMark\nA\t4\t52\nB\t7\t61\nC\t9\t58\nD\t12\t74\nE\t14\t71\nF\t18\t88\nG\t20\t79',
+          notes: 'SCATTER — a first column of words becomes each point’s label, and labels that would collide are moved and given a leader line. Read x, y with two columns; name, x, y with three.\n\nThe app says out loud what this chart cannot: readers will assume the relationship you draw is causal.' },
+
+        { type: 'chart', chartKind: 'box', title: 'Chart · distribution — what values occur, how often?',
+          body: 'Group\nGroup A\t54\t58\t61\t63\t65\t66\t68\t71\t74\t88\nGroup B\t41\t49\t55\t57\t60\t62\t64\t69\t73\t79\nGroup C\t62\t64\t66\t67\t68\t69\t70\t71\t73\t75',
+          notes: 'BOX PLOT — one row per group, then every value measured in it, so a column of marks pasted from a spreadsheet becomes this. Whiskers stop at the furthest real observation inside Tukey’s 1.5×IQR fence; anything past it is drawn as a point, which is why Group A has one at 88.\n\nA histogram answers the same question for a single ungrouped column.' },
+
+        { type: 'chart', chartKind: 'sankey', title: 'Chart · flow — where does it go?',
+          body: 'From\tTo\tPeople\nApplied\tInterviewed\t420\nApplied\tRejected at sift\t580\nInterviewed\tOffered\t140\nInterviewed\tNo offer\t280\nOffered\tJoined\t110\nOffered\tDeclined\t30',
+          notes: 'SANKEY — from, to, amount: a list of flows rather than a table of values. This is the honest alternative to a funnel, and the inspector points at it from there: a funnel shows what is left at each stage, a Sankey shows where the rest went. On this data that is 580 people rejected at sift who a funnel would simply not draw.' },
+
+        { type: 'chart', chartKind: 'pictogram', chartIcon: '●', chartUnit: 50, title: 'Chart · magnitude — one icon is one unit',
+          body: 'Stage\tPeople\nApplied\t1000\nInterviewed\t420\nOffered\t140\nStill there at year 3\t62',
+          notes: 'PICTOGRAM — the ISOTYPE tradition: the icon repeats and never grows, so the count is read by counting rather than by judging an area. Set the glyph and how many each one stands for; the remainder is drawn as a clipped icon rather than a smaller one, because a smaller one would encode the value in area again.' },
+
+        { type: 'chart', chartKind: 'radar', title: 'Chart · radar, and why to be careful',
+          body: 'Skill\tStart of module\tNow\nReading a chart\t2\t4\nChoosing an idiom\t1\t3\nCleaning data\t2\t3\nWriting the caption\t1\t4\nCritique\t2\t4',
+          notes: 'RADAR — defensible here and in few other places: the axes are the same kind of thing on the same nought-to-five scale, and the two shapes are the same learner at two times.\n\nIt repeats its own critique in the app, which is the point of drawing it at all: enclosed area grows as the SQUARE of the values, so a row twice as good encloses four times the shape — and reordering the spokes changes that area without changing the data.' },
+
+        { type: 'chart', chartKind: 'dumbbell', title: 'Chart · deviation — how far apart are two points?',
+          body: 'Function\tAt entry (%)\tAt senior (%)\nEngineering\t8.9\t3.1\nData\t9.6\t3.8\nProduct\t7.2\t2.4\nDesign\t6.4\t2.9',
+          notes: 'DUMBBELL — two named series as two dots on one row, and the bar between them is the finding. The gap is printed on the row, because that is the number that gets quoted. Reach for it whenever you would otherwise draw two bars side by side and ask the room to subtract.\n\nIt carries a key, because which dot is which would otherwise live only in a tooltip — and a room looking at a projector has no tooltips.' },
+
+        { type: 'chart', chartKind: 'multiples', title: 'Chart · small multiples, on one stated scale',
+          body: 'Line\t2021\t2022\t2023\t2024\nCentral\t18\t22\t26\t31\nVictoria\t12\t15\t14\t19\nNorthern\t24\t23\t27\t29\nBakerloo\t9\t11\t13\t12',
+          chartSource: 'Illustrative. Every panel shares one scale, and the scale is written on the slide rather than left to be assumed.',
+          notes: 'SMALL MULTIPLES — read transposed: each row is a panel and the columns are the axis inside it. The panels share a scale and the app says so on the drawing, because panels on their own scales are the most common way this chart misleads.\n\nPast about a dozen panels it tells you a room cannot compare that many.' },
+
+        { type: 'chart', chartKind: 'bullet', title: 'Chart · against a target',
+          body: 'Measure\tActual\tTarget\nApplications\t1240\t1000\nOffers\t860\t800\nEnrolled\t510\t600',
+          notes: 'BULLET — a value against a reference: a target, a long-run average, or zero. The bar is the actual, the tick is the target, and nobody has to subtract.\n\nThe picker groups all twenty idioms by the question they answer rather than by what they look like, which is the Financial Times’ Visual Vocabulary rather than a gallery of shapes.' },
+        { type: 'chart', chartKind: 'area', title: 'Chart · area — a total, and what it is made of',
+          body: 'Year\tEvents\tCourses\tResearch\n2019\t4\t1\t0\n2020\t6\t3\t0\n2021\t7\t6\t1\n2022\t9\t9\t1\n2023\t11\t12\t2\n2024\t12\t14\t3',
+          notes: 'AREA — a line chart with the space underneath filled, stacked when there is more than one series. Read the top edge as the total and the bands as its composition.\n\nThe honest warning: only the bottom band sits on a flat baseline, so every band above it is harder to read on its own. If a single series is the story, draw it as a line.' },
+
+        { type: 'chart', chartKind: 'combo', title: 'Chart · combo — two units on one slide',
+          body: 'Quarter\tEvents held\tAverage attendance\nQ1\t3\t62\nQ2\t5\t71\nQ3\t4\t88\nQ4\t6\t94',
+          notes: 'COMBO — the first series draws as columns, every later one as markers on top. For a count and a rate together: the bars are how many, the markers are how well.\n\nUse it when the two really are different units. Two series in the same unit belong on the same axis as two bars or two lines.' },
+
+        { type: 'chart', chartKind: 'histogram', title: 'Chart · histogram — the shape of one column',
+          body: 'Mark\n41\n48\n52\n54\n55\n57\n58\n58\n60\n61\n62\n62\n63\n64\n64\n65\n66\n67\n68\n69\n71\n72\n74\n77\n81\n88',
+          chartSource: 'One cohort, one assessment. Bin edges are computed from the data, not chosen to flatter it.',
+          notes: 'HISTOGRAM — paste one column of numbers and they are counted into bins for you. Where a box plot summarises a distribution in five numbers, this draws its actual shape, which is the only way a second peak shows up at all.\n\nBin width is a real editorial choice: too wide hides the shape, too narrow turns it into noise.' },
+
+        { type: 'chart', chartKind: 'treemap', title: 'Chart · treemap — parts of a whole, by area',
+          body: 'Spend\tShare\nDelivery\t44\nVenues\t18\nBursaries\t16\nResearch\t12\nCore costs\t10',
+          notes: 'TREEMAP — the same paste as a pie, drawn as nested rectangles. It holds more categories than a pie without collapsing into slivers, and rectangles are compared slightly better than angles.\n\nStill area, though, and area is judged poorly. If the order is the message, draw the sorted bar.' },
+
+        { type: 'chart', chartKind: 'waffle', title: 'Chart · waffle — a hundred squares, so it can be counted',
+          body: 'Route in\tShare\nUniversity\t44\nApprenticeship\t21\nBootcamp\t18\nSelf-taught\t17',
+          notes: 'WAFFLE — a hundred squares, each one a percentage point. The reader counts rather than estimates, which is why this is the part-to-whole chart to choose when the exact figure matters as much as the split.\n\nOne square is never subdivided — five percent is five squares, and that is the whole point of the idiom.' },
+
+        { type: 'chart', chartKind: 'matrix', title: 'Chart · evidence matrix — ratings across conditions',
+          body: 'Idiom\tSpots the outlier\tShows the total\tHolds 12 categories\tCounts exactly\nSorted bar\tStrong\tWeak\tStrong\tModerate\nStacked bar\tWeak\tStrong\tModerate\tWeak\nPie\tWeak\tStrong\tWeak\tWeak\nBox plot\tStrong\tWeak\tModerate\tWeak\nScatter\tStrong\tWeak\tStrong\tWeak\nWaffle\tWeak\tStrong\tWeak\tStrong\nSorted dumbbell\tModerate\tWeak\tStrong\tModerate',
+          notes: 'EVIDENCE MATRIX — first row names the conditions, then one row per item with a rating in each cell. Words like Strong / Moderate / Weak are ranked once so the whole grid shares a single scale, which is what stops each column being read on its own.\n\nFor ordinal judgements — a systematic review, a shortlist against criteria, exactly this table of chart choices. Numbers in the cells belong in a table or a heatmap instead.\n\nThat is all twenty idioms the app draws. There are no maps, and the picker says so rather than leaving you to conclude it from an absence.' },
 
         { type: 'section', title: 'Pictures', subtitle: 'Image, split, gallery, before/after',
           notes: 'Four ways a picture can carry a slide, and the caption and frame settings that apply across all of them.' },
@@ -1453,6 +1605,56 @@
             'Left out of this bank on purpose — a placeholder clip would only ever show a broken frame.'
           ],
           notes: 'VIDEO — add one from the layout picker and point it at a file or URL. Set videoStart to begin partway into a longer recording. There is deliberately no example here because a fake URL renders as a black box, which would teach you nothing.' },
+
+        { type: 'section', title: 'What the room does', subtitle: 'Four ways a slide can ask, and one live check',
+          notes: 'Everything from here needs Host live and phones in the room. On the projector each of these draws its own control; on a learner phone the same control takes over the screen.' },
+
+        { type: 'join', title: 'Everyone in, in about twenty seconds',
+          subtitle: 'Phones out — the code and the PIN both work',
+          bullets: [
+            'Scan the code, or type the address and the four digits.',
+            'No app, no account, no name unless you ask for one.'
+          ],
+          notes: 'JOIN — the app builds this for you when you host a session, with the real room code in it. What you are looking at now is a sample, because this deck is not live.\n\nLeave it on the wall while the room arrives. Latecomers join off the same code without stopping you.' },
+
+        { type: 'content', title: 'Poll — fixed options, counted live',
+          bullets: [
+            'Add a feedback moment to any slide from the inspector.',
+            'The room answers on their phones; the bars fill in the rail beside the slide.',
+            'Use it to decide what to do next, not to score anybody.'
+          ],
+          feedback: { kind: 'poll', prompt: 'Which of these is the hardest to get right?',
+            options: ['Choosing the idiom', 'Cleaning the data', 'Writing the caption'], max: 1 },
+          notes: 'POLL — the results are for you, in the room, now. Read the split out loud and change the next ten minutes because of it, or do not ask.' },
+
+        { type: 'content', title: 'Word cloud — one word each',
+          bullets: [
+            'Short answers, repeats grow larger.',
+            'Best before you teach something, not after.'
+          ],
+          feedback: { kind: 'wordcloud', prompt: 'One word: what makes a chart honest?', options: [], max: 2 },
+          notes: 'WORD CLOUD — keep it to a word each or the cloud becomes a paragraph nobody reads. A cloud of the room’s own words on the wall is the cheapest way to make a room feel present.' },
+
+        { type: 'content', title: 'Brainstorm — longer contributions, newest first',
+          bullets: [
+            'For sentences rather than single words.',
+            'Contributions arrive with names, so the room can be credited by name.',
+            'Read a few out. An unread brainstorm teaches the room not to bother next time.'
+          ],
+          feedback: { kind: 'brainstorm', prompt: 'Name a chart you have seen this week that misled you — and say how.', options: [], max: 3 },
+          notes: 'BRAINSTORM — the widest of the four: no options, no scale, just what they want to say. It lists newest first so the wall keeps moving while people are still typing.' },
+
+        { type: 'content', title: 'Scale — where do you stand?',
+          bullets: [
+            'One position each, on an ordered run of points.',
+            'It reports the spread as well as the average — and the spread is usually the more interesting half.'
+          ],
+          feedback: { kind: 'scale', prompt: 'How confident are you reading a box plot?', options: [], max: 1,
+            points: 5, lowLabel: 'Not at all', highLabel: 'Completely' },
+          notes: 'SCALE — a poll over points that have an order, so it earns a mean and a distribution rather than a set of independent bars. Name both ends of it, as this one does.\n\nRead the spread out loud. A room split into two camps and a room that is uniformly unsure have the same average and need completely different next ten minutes.' },
+
+        { type: 'game', gameRef: 'check',
+          notes: 'A LIVE CHECK — built for you rather than chosen from the layout picker, which is why it is not in the bank above. Phones answer, you hold the reveal, and the explanation follows. Confidence is on here, so the room says how sure it is as well as what it thinks — a confident wrong answer being the most useful signal you can get.\n\nThe quiz, results, join and explain slides are made the same way, by the live session.' },
 
         { type: 'section', title: 'Two settings that apply everywhere', subtitle: 'Build on Next, and the theme',
           notes: 'Worth knowing before you start copying slides out of this deck.' },

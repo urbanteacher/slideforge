@@ -1440,14 +1440,14 @@
      graded label in every cell. Ported from the line-ratings chart in the
      pollution explorer.
 
-     Colour carries an order, not a quantity. Low / Medium / High are
-     ordinal — the distance between them is not a number — so the scale is
-     three steps of one hue rather than a continuous ramp, which would
-     invite reading a gap that the data does not contain. Any vocabulary
-     works; recognised words are ordered, and anything else falls back to
-     the order the author wrote them in. */
-  var ORDINAL_WORDS = ['none', 'very low', 'low', 'l', 'medium', 'med', 'moderate', 'm',
-                       'high', 'h', 'very high', 'severe'];
+     Colour carries an order, not a quantity. Low / Medium / High and
+     Weak / Moderate / Strong are both ordinal — the distance between the
+     steps is not a number — so the scale is three steps of one hue rather
+     than a continuous ramp, which would invite reading a gap that the data
+     does not contain. Any vocabulary works; recognised words are ordered,
+     and anything else falls back to the order the author wrote them in. */
+  var ORDINAL_WORDS = ['none', 'very low', 'weak', 'low', 'l', 'medium', 'med', 'moderate', 'm',
+                       'high', 'h', 'strong', 'very high', 'severe'];
   function matrixChart(slide) {
     var W = CHART.w, H = CHART.h, P = CHART;
     var rows = SF.parseTable(slide.body);
@@ -2019,9 +2019,21 @@
       cells = cells.slice(0, 100);
     }
 
-    var labelW = Math.min(280, 40 + parts.reduce(function (m, p) {
-      return Math.max(m, String(p.name).length);
-    }, 0) * 10);
+    /* The key sits to the left of the grid, so the grid can only start where
+       the longest key entry ends. Measuring the NAME alone was not enough:
+       every entry also prints its share, so "Apprenticeship" reserved room
+       for fourteen characters and then drew twenty, and the tail of the word
+       ran under the first column of squares. Reserve for the whole string,
+       from where it actually starts (x=52, past the swatch). */
+    parts.forEach(function (p) {
+      var pct = parts.length === 1 && p.value <= 100
+        ? Math.round(p.value)
+        : Math.round((p.value / total) * 100);
+      p.label = p.name + ' · ' + pct + '%';
+    });
+    var labelW = Math.max(160, Math.min(380, 52 + parts.reduce(function (m, p) {
+      return Math.max(m, p.label.length);
+    }, 0) * 9 + 24));
     var gridSize = Math.min(H - 40, W - labelW - 80);
     var cell = gridSize / 10;
     var gap = Math.max(2, cell * 0.08);
@@ -2057,10 +2069,7 @@
         x: 24, y: y - 12, width: 18, height: 18, rx: 3, fill: chartColor(p.i % 6)
       }));
       var t = svgEl('text', { x: 52, y: y + 2, class: 'ch-cat', 'text-anchor': 'start' });
-      var share = parts.length === 1 && p.value <= 100
-        ? Math.round(p.value)
-        : Math.round((p.value / total) * 100);
-      t.textContent = p.name + ' · ' + share + '%';
+      t.textContent = p.label;
       item.appendChild(t);
       svg.appendChild(item);
     });
