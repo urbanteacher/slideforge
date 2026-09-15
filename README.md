@@ -910,9 +910,34 @@ decks sit on charcoal where the parent sits on navy. Everything else, the green
 and the chevron and the wave, is common, so `css/ukbt.css` holds the shared work
 once and each theme sets only its own ground.
 
-The palette is taken from the organisation's own deck rather than sampled off a
-screenshot: `#00C57F` green from the logo artwork inside it, `#264258` navy and
-`#2D3134` charcoal from the slide fills themselves.
+**The palette is the organisation's published design system**, not values read
+off a deck. The first version of this theme carried `#264258` and `#282C2F`,
+taken a digit at a time out of a PowerPoint fill and a compressed PNG, and
+invented a `#2D3134` charcoal and a `#00A86C` deep green that do not exist
+anywhere. The real tokens are UKBT Black `#292C2F`, UKBT Green `#00C57F`, Lime
+Green `#CEFD85`, Dark Blue `#254258`, Contrast Black `#111111`, and the
+highlights Purple `#B97BF7`, Bright Blue `#4ABFFD` and Orange `#FF9667`. The
+parent sits on Dark Blue and the Institute on UKBT Black; their section slides
+take the two loud grounds, green and lime.
+
+Type is **Uncut Sans** for everything the room reads and **Alpha Lyrae Medium**
+for the small technical lines — the date stamp, the page number, the eyebrow
+over a key fact. The scale is the system's own desktop ramp, which is why the
+numbers are not round: 72 / 58 / 48 / 32 / 24 / 22 for headings and
+22 / 18 / 16 / 14 for body, held in `--ukbt-5xl` … `--ukbt-xs`. Neither face
+ships with the app, so both fall back through the stack until the files are
+installed.
+
+**These two themes carry their own chart series.** The six validated steps in
+`css/app.css` were checked against midnight, ocean, ember and mono; against
+Dark Blue five of their twelve combinations fall under 3:1, the red worst at
+1.78:1. The brand's own highlights do better on every count that matters, so
+the UKBT themes came off that selector and define `--chart-1` … `--chart-6`
+themselves — green, purple, lime, blue, orange, cool grey, in that order.
+Measured against `#254258` and `#292C2F`: worst contrast **3.62:1**, worst
+adjacent ΔE **≥ 25.3** under normal, deutan, protan and tritan simulation, and
+worst any-pair ΔE **5.98** (protan). The order is the safety mechanism, as it
+is in `app.css`, so it is fixed and never cycled.
 
 **The wave is generated, not shipped.** The original is a traced path of 1.1 MB,
 which is most of a megabyte on every slide of every deck for a texture nobody

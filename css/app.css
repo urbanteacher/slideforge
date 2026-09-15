@@ -792,8 +792,11 @@ html[data-ws="game"] #btnSorter { display: none; }
 }
 /* Dark grounds take their own steps from the same hues, validated against a
    dark surface — not an automatic lightening of the light set. */
-.slide.theme-midnight, .slide.theme-ocean, .slide.theme-ember, .slide.theme-mono,
-.slide.theme-ukbt, .slide.theme-ukbt-institute {
+/* The UKBT themes used to be on this list and are not any more: five of the
+   twelve combinations of these steps against their two grounds fall under
+   3:1. They carry the brand's own highlight colours in css/ukbt.css, measured
+   the same way. A dark theme belongs here unless it can beat it. */
+.slide.theme-midnight, .slide.theme-ocean, .slide.theme-ember, .slide.theme-mono {
   --chart-1: #CA042C;
   --chart-2: #049F6C;
   --chart-3: #B84701;
