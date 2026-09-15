@@ -1512,7 +1512,8 @@
           progressive: true,
           notes: 'TABLE — paste a range straight from Excel or Sheets; tabs and pipes both work, first row is the header. Build on Next reveals a row at a time. Reach for a table when the reader needs the exact value, a chart when they need the shape.' },
 
-        { type: 'chart', chartKind: 'bar', title: 'Chart — bar, for comparing magnitudes',
+        { type: 'chart', chartKind: 'bar', design: { chartMotion: 'grow' },
+          title: 'Chart — bar, for comparing magnitudes',
           body: 'Region\tLeave %\tRemain %\nBoston\t75.6\t24.4\nBristol\t38.0\t62.0\nLambeth\t21.4\t78.6\nGlasgow\t33.4\t66.6',
           progressive: true,
           notes: 'CHART (bar) — identical text to a table slide; change the type and it draws. Several series means one press of Next lands a whole series; a single series means one press lands a category. Colours come from the validated palette, assigned in fixed order.' },
@@ -1610,6 +1611,21 @@
           imageFit: 'contain',
           design: { imageFrame: '4:3', capStyle: 'bar' },
           notes: 'IMAGE (framed) — the picture takes a shape of its own and the caption sits clear below it. Ratios: 16:9, 4:3, 3:2, 1:1, 4:5. Use a frame for anything with labels near the edge — a caption bar across the bottom of a chart covers its axis. Fit contain shows the whole image; cover crops it to fill.' },
+
+        { type: 'image',
+          design: { imageMotion: 'zoom', capStyle: 'scrim', capPos: 'bottom', capFade: 10, focalX: 56, focalY: 45 },
+          image: 'assets/lesson/ipdv/snow-cholera-map-1854.jpg', imageFit: 'cover',
+          title: 'Every black bar is a death. The pump is in the middle of them.',
+          subtitle: 'John Snow, Broad Street, 1854 · lith. C. F. Cheffins',
+          notes: 'A MOVING IMAGE — Design → Image motion → Slow zoom in. Twenty-four seconds, once, ending where it stops; it does not loop back and start again, because a picture that keeps restarting is a picture nobody finishes reading.\n\nIt zooms toward the Image focus point, which is why this one drifts into Broad Street rather than the middle of the plate. Set the focus first, then the motion.\n\nProjector only. The editor holds it still so the preview is not re-animating every time you type, and a machine set to reduce motion gets the still picture — the slide still works, it simply stops moving.\n\nThe caption clears itself after ten seconds (Design → Caption clears itself). It names the plate while the room needs naming, then gets off the picture.' },
+
+        { type: 'image',
+          design: { imageFrame: '4:3', capStyle: 'bar' },
+          image: 'assets/lesson/ipdv/playfair-pie-1801.jpg', imageFit: 'contain',
+          title: 'The first pie chart anybody drew',
+          subtitle: 'William Playfair, The Statistical Breviary, 1801',
+          body: 'Playfair had already invented the line chart and the bar chart twenty years earlier, in the Commercial and Political Atlas of 1786.\nThe circle was his answer to a different question: not how much, but how a single whole divides — here the Turkish Empire split across Europe, Asia and Africa.\nHe was ignored for most of a century. The chart was not.',
+          notes: 'FLIP TO FACTS — put anything in the slide’s body and the picture gets a ⇄ in the corner. Press it and the same slide turns over: the facts on the back, the picture still there behind them, one more press and you are back.\n\nThe point is that you never leave the slide. The room is looking at the plate, you are asked where it came from, and answering it does not cost you the picture and a click forward and a click back. It is one slide with two faces rather than two slides in a row.\n\nWorks on the projector and in the editor. Nothing about it is a build step, so it does not consume a Next — which is exactly why it suits the question you did not plan for.' },
 
         { type: 'split', title: 'Split — picture on one side, points on the other',
           subtitle: 'NU London',
