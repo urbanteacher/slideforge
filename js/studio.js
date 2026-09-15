@@ -11,6 +11,26 @@
     return (SF.buildLesson && SF.buildLesson(key)) || SF.makeDeck('Untitled lesson');
   }
 
+  /* The official demo. One deck, named once: every layout in the picker, all
+     twenty chart idioms, the design variants, the activities, the games, and
+     the two ways to share — each slide saying in its notes when to reach for
+     it. There used to be a second demo behind File → Open demo lesson, built
+     on the server, which meant the deck most often shown to somebody else was
+     the one deck that could not be opened from a file:// copy. */
+  var DEMO_KEY = 'layout-bank';
+
+  /** Open the demo as a fresh copy. The open document stays in the Library. */
+  function openDemo() {
+    var spec = (SF.LESSONS || []).filter(function (l) { return l.key === DEMO_KEY; })[0];
+    if (!spec || !SF.Editor || !SF.Editor.useLesson) {
+      SF.toast('The demo is missing from this build.');
+      return;
+    }
+    SF.Editor.useLesson(DEMO_KEY);
+    SF.toast('Demo opened — ' + (spec.slides || []).length +
+      ' slides. Your previous lesson is saved in the Library.');
+  }
+
   /** Pick a document from the Library (Store, grouped by brand). */
   function openLessons() {
     returnFocus = document.activeElement;
@@ -952,8 +972,11 @@
        in one studio and not the other. */
     var gameLib = document.getElementById('btnActivitiesGame');
     if (gameLib) gameLib.onclick = function () { openLibrary('check'); };
+    /* The demo, and the only thing that opens it. This button used to be a
+       second copy of File → Library with a different label on it, which is
+       two names for one list and no way at all to reach the demo. */
     var btnTemplate = document.getElementById('btnTemplate');
-    if (btnTemplate) btnTemplate.onclick = openLessons;
+    if (btnTemplate) btnTemplate.onclick = openDemo;
     /* File → Library. Store documents, grouped by brand — not a clone shop. */
     var btnReadyMade = document.getElementById('btnReadyMade');
     if (btnReadyMade) btnReadyMade.onclick = openLessons;
@@ -966,5 +989,5 @@
       });
     });
   }
-  SF.Studio = {init:init,makeLesson:makeLesson,openLibrary:openLibrary,openStarters:openStarters,openLessons:openLessons};
+  SF.Studio = {init:init,makeLesson:makeLesson,DEMO_KEY:DEMO_KEY,openDemo:openDemo,openLibrary:openLibrary,openStarters:openStarters,openLessons:openLessons};
 })();
