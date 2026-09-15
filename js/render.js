@@ -3567,8 +3567,13 @@
         /* One chevron, the gesture the wordmark opens with. The wave is a
            background layer on every slide, so the only thing the full-bleed
            layouts add is the mark. */
+        /* The mark is one chevron drawn twice, the second offset by a third
+           of its width — the geometry is read off the official lockup, not
+           redrawn. Two layers rather than one file so each can be coloured
+           for the ground it lands on. */
         art = el('div', 'ukbt-art');
-        art.innerHTML = '<div class="ukbt-chevron"></div>';
+        art.innerHTML = '<div class="ukbt-chev ukbt-chev-back"></div>' +
+                        '<div class="ukbt-chev ukbt-chev-front"></div>';
       } else if (deck.theme === 'northeastern') {
         art = el('div', 'nu-art');
         art.innerHTML = '<div class="nu-skyline"></div><div class="nu-n"></div>';

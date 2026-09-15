@@ -939,6 +939,29 @@ picture gives ❯UKBT and loses the word. `assets/brand/ukbt-institute.svg` is
 the official lockup from the organisation's own site: vector, transparent,
 white and green, word included.
 
+**The mark is bled, not badged.** On the two full-bleed layouts the chevron is
+drawn past the slide and off the right edge, at about 600 × 930 — the same move
+`nu-art` makes with the Northeastern monogram, and for the same reason: a logo
+scaled down into a corner is what a slide looks like when nobody has designed
+it. The geometry is the brand's own. In the official lockup the mark is one
+chevron drawn twice with the second offset by 7 units in a shape 20.8 wide, so
+`assets/brand/ukbt-chevron.svg` holds that single shape and the CSS draws it
+twice, 33.65% apart, as two mask layers it can colour independently. Light
+behind and dark in front, which is the relationship the lockup has.
+
+**The title slide has its own ground** — a diagonal that deepens the navy or
+the charcoal — because a title slide painted the same flat colour as the
+content behind it reads as the first content slide. Heading, subtitle and date
+lift in on a 0.7s stagger.
+
+**The section slide turns the green into a ground.** It is the one surface in
+the deck that makes a room look up, and the reason an accent that bright exists
+at all. Ink on green, never white: white on this green reads at about 2:1, and
+the ink pairing is about 7:1. The two themes take different steps of the same
+green — `#00c57f` and `#00a86c` — so a deck still knows which organisation it
+belongs to at its loudest moment. The wordmark is hidden there, because it is
+white lettering; the chevron is larger and is the same mark.
+
 **Where a green accent is not a ground for text.** `css/app.css` puts white on
 `var(--s-accent)` in a handful of places — caption bands, the two reveal
 toggles — which is fine for the darker accents the other themes use and is

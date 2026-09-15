@@ -1429,7 +1429,7 @@
          green chevron, Black knocked out of a white panel. Never invert it. */
       logoReverse: 'never',
       slides: [
-        { type: 'title', title: 'Partner with UK Black Tech',
+        { type: 'title', title: 'Partner with\nUK Black Tech',
           subtitle: 'Reach, reputation, and a pipeline that lasts',
           notes: 'Five slides on purpose. A sponsorship conversation is not a lecture — the deck exists to hold four facts still while you talk, and to leave something behind that survives being forwarded.' },
 
@@ -1541,6 +1541,10 @@
           ],
           progressive: true,
           notes: 'The second six are the ones projects skip, and they are where projects die later: procurement, legal, and the non-technical majority. Naming them as voices rather than as approvals is the point — they are consulted at PRL 1, not presented to at PRL 7.' },
+
+        { type: 'section', title: 'Up a floor\nat a time',
+          subtitle: 'Three storeys left, and the gate gets harder on each.',
+          notes: 'The one slide in this deck on the green. Use it as a real break — stop talking, let the room look up, then start on Floor 2. A section slide that goes past in two seconds is a slide you did not need.' },
 
         { type: 'content', title: 'Floor 2 · EXPERIMENT · PRL 4–6',
           bullets: [

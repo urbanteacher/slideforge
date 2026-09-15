@@ -75,38 +75,200 @@
 .theme-ukbt > .pad,
 .theme-ukbt-institute > .pad { position: relative; z-index: 1; }
 
-/* The chevron. One shape, drawn in CSS, used as the accent mark on the two
-   full-bleed layouts — the same gesture the logo opens with. */
+/* ------------------------------------------------------------------ the mark
+
+   The chevron, sized past the slide and bled off the right edge: you get the
+   gesture, not a badge in a corner. It started as a 92px square in the top
+   left, which is what a logo looks like when nobody has designed the slide.
+
+   The geometry is the brand's own. In the official lockup the mark is one
+   chevron drawn twice, the second offset by 7 units in a shape 20.8 wide —
+   33.65% — so that is what the two layers do here, and the ratio 20.8:32 is
+   what sizes the box. */
 .ukbt-art {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   pointer-events: none;
   z-index: 0;
 }
-.ukbt-art .ukbt-chevron {
+.ukbt-art .ukbt-chev {
   position: absolute;
-  left: 60px;
-  top: 96px;
-  width: 92px;
-  height: 92px;
-  background: var(--ukbt-green);
-  clip-path: polygon(0 0, 46% 0, 100% 50%, 46% 100%, 0 100%, 54% 50%);
+  top: 56%;
+  width: 604px;
+  height: 929px;
+  transform: translateY(-50%);
+  -webkit-mask: url('../assets/brand/ukbt-chevron.svg') no-repeat center / contain;
+  mask: url('../assets/brand/ukbt-chevron.svg') no-repeat center / contain;
 }
-/* A single hairline under the heading, in the green, because the brand's own
-   slides separate the title from what follows with the accent rather than
-   with a box. */
-.theme-ukbt .layout-title h1,
-.theme-ukbt-institute .layout-title h1,
-.theme-ukbt .layout-section h1,
-.theme-ukbt-institute .layout-section h1 { letter-spacing: -.015em; }
+/* 604 × 33.65% = 203px between the two, which is the offset in the lockup. */
+.ukbt-art .ukbt-chev-front { right: -232px; }
+.ukbt-art .ukbt-chev-back { right: -29px; }
 
-.theme-ukbt .layout-title .pad,
-.theme-ukbt-institute .layout-title .pad,
-.theme-ukbt .layout-section .pad,
-.theme-ukbt-institute .layout-section .pad { padding-left: 184px; }
+/* ------------------------------------------------------------- title slide
+
+   Its own ground, not the deck's. A title slide that is the same flat colour
+   as the content slides behind it reads as the first content slide. */
+.theme-ukbt.layout-title {
+  --s-bg: linear-gradient(134deg, #33597c 0%, #264258 46%, #15283a 100%);
+  background: var(--s-bg);
+}
+.theme-ukbt-institute.layout-title {
+  --s-bg: linear-gradient(134deg, #3c4247 0%, #2d3134 46%, #1b1e20 100%);
+  background: var(--s-bg);
+}
+.theme-ukbt.layout-title .ukbt-chev-front,
+.theme-ukbt-institute.layout-title .ukbt-chev-front { background: rgba(0, 197, 127, .17); }
+.theme-ukbt.layout-title .ukbt-chev-back,
+.theme-ukbt-institute.layout-title .ukbt-chev-back { background: rgba(255, 255, 255, .085); }
+
+/* The wave is drawn at its own strength in the file, so there is nothing to
+   turn up here — but on the green it is white-on-green rather than
+   white-on-navy, which is far louder. It comes down on the section slide so
+   the headline stays the loudest thing on the surface. */
+.theme-ukbt.layout-section::before,
+.theme-ukbt-institute.layout-section::before { opacity: .45; }
+
+.theme-ukbt.layout-title .pad,
+.theme-ukbt-institute.layout-title .pad {
+  padding: 96px 92px;
+  justify-content: center;
+}
+.theme-ukbt.layout-title h1,
+.theme-ukbt-institute.layout-title h1 {
+  font-size: 86px;
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -.03em;
+  max-width: 800px;
+  white-space: pre-line;
+}
+.theme-ukbt.layout-title .sub,
+.theme-ukbt-institute.layout-title .sub {
+  font-size: 25px;
+  line-height: 1.5;
+  max-width: 640px;
+  margin-top: 30px;
+}
+.theme-ukbt.layout-title .slide-date,
+.theme-ukbt-institute.layout-title .slide-date {
+  margin-top: 26px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--s-dim);
+}
+
+/* ----------------------------------------------------------- section slide
+
+   The green as a ground rather than a detail — the one surface in the deck
+   that makes a room look up, and the reason the accent exists. Ink on green,
+   never white: white on this green reads at about 2:1.
+
+   The two themes take different steps of the same green, so a deck still
+   knows which of the two organisations it belongs to at its loudest moment. */
+.theme-ukbt.layout-section {
+  --s-bg: #00c57f;
+  --s-fg: #282c2f;
+  --s-dim: rgba(40, 44, 47, .74);
+  --s-rule: rgba(40, 44, 47, .22);
+  --s-scrim: rgba(0, 150, 96, .8);
+  background: var(--s-bg);
+  color: var(--s-fg);
+}
+.theme-ukbt-institute.layout-section {
+  --s-bg: #00a86c;
+  --s-fg: #17201c;
+  --s-dim: rgba(23, 32, 28, .74);
+  --s-rule: rgba(23, 32, 28, .22);
+  --s-scrim: rgba(0, 128, 82, .8);
+  background: var(--s-bg);
+  color: var(--s-fg);
+}
+/* Light behind, dark in front — the same relationship the lockup has, with
+   the green standing in for itself. Reversing it reads as a different mark. */
+.theme-ukbt.layout-section .ukbt-chev-back,
+.theme-ukbt-institute.layout-section .ukbt-chev-back { background: rgba(255, 255, 255, .34); }
+.theme-ukbt.layout-section .ukbt-chev-front,
+.theme-ukbt-institute.layout-section .ukbt-chev-front { background: rgba(23, 32, 28, .15); }
+
+.theme-ukbt.layout-section .pad,
+.theme-ukbt-institute.layout-section .pad {
+  padding: 96px 92px;
+  align-items: flex-start;
+  text-align: left;
+  justify-content: center;
+}
+.theme-ukbt.layout-section h1,
+.theme-ukbt-institute.layout-section h1 {
+  font-size: 92px;
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -.035em;
+  max-width: 840px;
+  white-space: pre-line;
+}
+.theme-ukbt.layout-section .sub,
+.theme-ukbt-institute.layout-section .sub {
+  font-size: 27px;
+  max-width: 700px;
+  margin-top: 22px;
+  color: var(--s-dim);
+}
+.theme-ukbt.layout-section .accent-bar,
+.theme-ukbt-institute.layout-section .accent-bar {
+  background: var(--s-fg);
+  /* app.css centres this bar with `margin: 34px auto 0`, which is right for a
+     centred section and leaves it stranded under a left-aligned one. */
+  margin: 38px auto 0 0;
+}
+/* The wordmark is white lettering. On the green that is about 2:1, so the
+   section slide carries the chevron instead — which is larger, and the same
+   mark. */
+.theme-ukbt.layout-section .slide-logo,
+.theme-ukbt-institute.layout-section .slide-logo { display: none; }
 
 .theme-ukbt .accent-bar,
-.theme-ukbt-institute .accent-bar { background: var(--ukbt-green); height: 5px; width: 132px; border-radius: 3px; }
+.theme-ukbt-institute .accent-bar { background: var(--ukbt-green); height: 5px; width: 120px; border-radius: 3px; }
+
+/* A soft lift, so the room meets the line before the furniture. */
+@keyframes ukbt-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.theme-ukbt.layout-title .accent-bar,
+.theme-ukbt.layout-title h1,
+.theme-ukbt.layout-title .sub,
+.theme-ukbt.layout-title .slide-date,
+.theme-ukbt-institute.layout-title .accent-bar,
+.theme-ukbt-institute.layout-title h1,
+.theme-ukbt-institute.layout-title .sub,
+.theme-ukbt-institute.layout-title .slide-date,
+.theme-ukbt.layout-section h1,
+.theme-ukbt.layout-section .sub,
+.theme-ukbt-institute.layout-section h1,
+.theme-ukbt-institute.layout-section .sub {
+  animation: ukbt-rise .7s cubic-bezier(.2,.75,.2,1) both;
+}
+.theme-ukbt.layout-title h1, .theme-ukbt-institute.layout-title h1 { animation-delay: .08s; }
+.theme-ukbt.layout-title .sub, .theme-ukbt-institute.layout-title .sub { animation-delay: .18s; }
+.theme-ukbt.layout-title .slide-date, .theme-ukbt-institute.layout-title .slide-date { animation-delay: .28s; }
+.theme-ukbt.layout-section .sub, .theme-ukbt-institute.layout-section .sub { animation-delay: .12s; }
+@media (prefers-reduced-motion: reduce) {
+  .theme-ukbt.layout-title .accent-bar,
+  .theme-ukbt.layout-title h1,
+  .theme-ukbt.layout-title .sub,
+  .theme-ukbt.layout-title .slide-date,
+  .theme-ukbt-institute.layout-title .accent-bar,
+  .theme-ukbt-institute.layout-title h1,
+  .theme-ukbt-institute.layout-title .sub,
+  .theme-ukbt-institute.layout-title .slide-date,
+  .theme-ukbt.layout-section h1,
+  .theme-ukbt.layout-section .sub,
+  .theme-ukbt-institute.layout-section h1,
+  .theme-ukbt-institute.layout-section .sub { animation: none; }
+}
 
 /* Headings keep the wordmark's tight, slightly condensed feel; body stays
    plain so a wall of teaching text is not fighting the display face. */
