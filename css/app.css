@@ -1629,6 +1629,35 @@ html[data-ws="game"] #btnSorter { display: none; }
 .layout-code .code-pane.code-lines-lg { font-size: 16px; }
 .layout-code .code-pane.code-lines-xl { font-size: 14px; line-height: 1.38; }
 .layout-code .code-pane code { font: inherit; color: inherit; }
+
+/* Syntax colours, chosen by measuring contrast against the two grounds the
+   frame actually has rather than by copying an editor theme. The frame is
+   color-mix(--s-card 88%, #0b1220 12%), which on a light theme resolves to
+   about #dedede and on midnight to about #162137; every colour below clears
+   4.5:1 on its own ground, and the first three drafts did not — a mid grey
+   comment and a mid green string were at 3.6 and 4.0. */
+.layout-code .code-pane .ct-com { color: #525a66; font-style: italic; }
+.layout-code .code-pane .ct-str { color: #11663a; }
+.layout-code .code-pane .ct-num { color: #8f4108; }
+.layout-code .code-pane .ct-kw  { color: #7e2b90; font-weight: 600; }
+.layout-code .code-pane .ct-fn  { color: #1746c0; }
+/* The dark grounds, named rather than detected — the same list the chart
+   palette uses, for the same reason: a theme is dark because we said so. */
+.slide.theme-midnight .code-pane .ct-com, .slide.theme-ocean .code-pane .ct-com,
+.slide.theme-ember .code-pane .ct-com, .slide.theme-mono .code-pane .ct-com,
+.slide.theme-ukbt .code-pane .ct-com, .slide.theme-ukbt-institute .code-pane .ct-com { color: #95a3bd; }
+.slide.theme-midnight .code-pane .ct-str, .slide.theme-ocean .code-pane .ct-str,
+.slide.theme-ember .code-pane .ct-str, .slide.theme-mono .code-pane .ct-str,
+.slide.theme-ukbt .code-pane .ct-str, .slide.theme-ukbt-institute .code-pane .ct-str { color: #7fd9a3; }
+.slide.theme-midnight .code-pane .ct-num, .slide.theme-ocean .code-pane .ct-num,
+.slide.theme-ember .code-pane .ct-num, .slide.theme-mono .code-pane .ct-num,
+.slide.theme-ukbt .code-pane .ct-num, .slide.theme-ukbt-institute .code-pane .ct-num { color: #f0b878; }
+.slide.theme-midnight .code-pane .ct-kw, .slide.theme-ocean .code-pane .ct-kw,
+.slide.theme-ember .code-pane .ct-kw, .slide.theme-mono .code-pane .ct-kw,
+.slide.theme-ukbt .code-pane .ct-kw, .slide.theme-ukbt-institute .code-pane .ct-kw { color: #e0a3f0; }
+.slide.theme-midnight .code-pane .ct-fn, .slide.theme-ocean .code-pane .ct-fn,
+.slide.theme-ember .code-pane .ct-fn, .slide.theme-mono .code-pane .ct-fn,
+.slide.theme-ukbt .code-pane .ct-fn, .slide.theme-ukbt-institute .code-pane .ct-fn { color: #8fc0ff; }
 .layout-code .code-pane.code-typing::after {
   content: '';
   display: inline-block; width: .55ch; height: 1.05em;

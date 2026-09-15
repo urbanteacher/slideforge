@@ -3704,6 +3704,118 @@
    * Code viewer — projector shows source; Present can typewrite it.
    * Not an editor: the wall never accepts keystrokes into the code.
    */
+  /* ------------------------------------------------ code colouring
+
+     A tokeniser rather than a highlighter dependency. The class on the <code>
+     element has said language-python since the layout landed — the hook Prism
+     and highlight.js look for — but nothing ever tokenised it, so every
+     keyword, string and comment arrived in one colour and a slide of code
+     read as a slab.
+
+     Why not the library: this app installs nothing at runtime (npm ci
+     --omit=dev finds zero dependencies) and has to open from a file:// copy,
+     so a CDN script is out and a vendored one would be among the largest
+     files in the repo — to colour three languages whose input we control.
+     The same argument already produced a hand-rolled QR encoder and a
+     hand-rolled WebSocket relay.
+
+     What it is not: a parser. It cannot tell a dict from a set and does not
+     try. It has to be right about comments, strings and keywords on teaching
+     snippets, and wrong only in ways nobody notices. */
+
+  var CODE_KEYWORDS = {
+    python: ('and as assert async await break class continue def del elif else except ' +
+      'finally for from global if import in is lambda nonlocal not or pass raise ' +
+      'return try while with yield None True False self').split(' '),
+    javascript: ('async await break case catch class const continue default delete do ' +
+      'else export extends finally for function if import in instanceof let new of ' +
+      'return static super switch this throw try typeof var void while yield ' +
+      'null true false undefined').split(' ')
+  };
+
+  var CODE_STRING_RE = new RegExp(
+    '^(?:[fFrRbBuU]{0,2})(?:' +
+    '"""[\\s\\S]*?"""' + '|' +
+    "'''[\\s\\S]*?'''" + '|' +
+    '"(?:\\\\.|[^"\\\\\\n])*"?' + '|' +
+    "'(?:\\\\.|[^'\\\\\\n])*'?" + '|' +
+    '`(?:\\\\.|[^`\\\\])*`?' +
+    ')'
+  );
+
+  /* Ordered on purpose: whichever pattern starts earliest wins, so a comment
+     or a string swallows anything that looks like syntax inside it. That
+     ordering is the whole correctness argument. */
+  function codeTokens(src, lang) {
+    var kw = {};
+    (CODE_KEYWORDS[lang] || []).forEach(function (w) { kw[w] = true; });
+    var out = [];
+    var i = 0;
+
+    function push(cls, text) {
+      if (!text) return;
+      var last = out[out.length - 1];
+      if (last && last.cls === cls) last.text += text;   // fewer spans to paint
+      else out.push({ cls: cls, text: text });
+    }
+
+    while (i < src.length) {
+      var rest = src.slice(i);
+      var m;
+
+      if (lang === 'python' && rest.charAt(0) === '#') {
+        m = /^[^\n]*/.exec(rest);
+        push('com', m[0]); i += m[0].length; continue;
+      }
+      if (lang === 'javascript' && rest.slice(0, 2) === '//') {
+        m = /^[^\n]*/.exec(rest);
+        push('com', m[0]); i += m[0].length; continue;
+      }
+      if (lang === 'javascript' && rest.slice(0, 2) === '/*') {
+        var close = rest.indexOf('*/');
+        var block = close < 0 ? rest : rest.slice(0, close + 2);
+        push('com', block); i += block.length; continue;
+      }
+
+      m = CODE_STRING_RE.exec(rest);
+      if (m && m[0].length) { push('str', m[0]); i += m[0].length; continue; }
+
+      m = /^(?:0[xX][0-9a-fA-F]+|\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?)/.exec(rest);
+      if (m) { push('num', m[0]); i += m[0].length; continue; }
+
+      m = /^[A-Za-z_$][\w$]*/.exec(rest);
+      if (m) {
+        var word = m[0];
+        if (kw[word]) push('kw', word);
+        else if (/^\s*\(/.test(rest.slice(word.length))) push('fn', word);
+        else push('', word);
+        i += word.length; continue;
+      }
+
+      if (lang === 'python' && rest.charAt(0) === '@') {
+        m = /^@[\w.]*/.exec(rest);
+        push('fn', m[0]); i += m[0].length; continue;
+      }
+
+      push('', src.charAt(i)); i += 1;
+    }
+    return out;
+  }
+
+  /* Paint the first `budget` characters with every token's colour intact, so
+     the typewriter types IN colour rather than colouring up at the end. */
+  function paintCode(codeEl, tokens, budget) {
+    codeEl.textContent = '';
+    var used = 0;
+    for (var t = 0; t < tokens.length && used < budget; t++) {
+      var text = tokens[t].text;
+      if (used + text.length > budget) text = text.slice(0, budget - used);
+      used += text.length;
+      if (!tokens[t].cls) codeEl.appendChild(document.createTextNode(text));
+      else codeEl.appendChild(el('span', 'ct-' + tokens[t].cls, text));
+    }
+  }
+
   function layoutCode(slide, pad, opts, root) {
     opts = opts || {};
     var src = String(slide.code != null ? slide.code : (slide.body || ''));
@@ -3751,9 +3863,14 @@
     frame.appendChild(pre);
     pad.appendChild(frame);
 
+    /* text is terminal output and notes: no syntax to colour, and pretending
+       otherwise would paint "which python" as a function call. */
+    var tokens = lang === 'text' ? null : codeTokens(src, lang);
+
     var play = !!(opts.interactive && slide.typewrite !== false);
     if (!play) {
-      codeEl.textContent = src;
+      if (tokens) paintCode(codeEl, tokens, src.length);
+      else codeEl.textContent = src;
       return;
     }
 
@@ -3764,7 +3881,8 @@
     var done = false;
 
     function paint() {
-      codeEl.textContent = src.slice(0, i);
+      if (tokens) paintCode(codeEl, tokens, i);
+      else codeEl.textContent = src.slice(0, i);
       pre.classList.toggle('code-typing', !done && i < src.length);
       pre.classList.toggle('code-done', done || i >= src.length);
     }
