@@ -596,11 +596,24 @@ html[data-ws="game"] #btnSorter { display: none; }
 .layout-content li.tier-2 { font-size: 26px; margin-left: 46px; color: var(--s-dim); }
 .layout-content li.tier-2::before { width: 8px; height: 8px; border-radius: 50%; background: var(--s-dim); top: .55em; }
 
-/* Sparse teaching + live feedback: sit the copy in the middle, not marooned at the top. */
+/* Sparse teaching + live feedback: sit the copy in the middle, not marooned at the top.
+   Content and cards already did this; infographic charts stayed pinned to the
+   heading so a poll rail made the diagram look like a title card. */
 .layout-content.has-feedback .pad,
-.layout-cards.has-feedback .pad {
+.layout-cards.has-feedback .pad,
+.layout-stats.has-feedback .pad,
+.layout-compare.has-feedback .pad,
+.layout-funnel.has-feedback .pad,
+.layout-timeline.has-feedback .pad,
+.layout-chart.has-feedback .pad {
   justify-content: center;
   gap: 28px;
+}
+.layout-stats.has-feedback .stats-grid,
+.layout-compare.has-feedback .compare,
+.layout-funnel.has-feedback .funnel,
+.layout-timeline.has-feedback .timeline {
+  flex: none;
 }
 .layout-content.has-feedback h2,
 .layout-cards.has-feedback h2 {
@@ -3957,6 +3970,9 @@ html[data-ws="deck"] #railCount { display: none; }
   display: flex; flex-direction: column; gap: 12px;
   overflow: hidden;
   padding-top: 4px;
+  /* Poll bars and the scale used to stack under the title. The cloud already
+     fills this slot and sits in the middle — same treatment for the rest. */
+  justify-content: center;
 }
 .fbrail .fb-roster-lbl {
   font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
@@ -4349,9 +4365,12 @@ html[data-ws="deck"] #railCount { display: none; }
    ---------------------------------------------------------------------- */
 .sc, .fksc { display: flex; flex-direction: column; gap: 8px; }
 .fksc { gap: 18px; width: 100%; }
+.fbrail .sc { flex: 1; min-height: 0; justify-content: center; }
 .sc-cols, .fksc-cols { display: flex; align-items: flex-end; gap: 6px; }
+.fbrail .sc-cols { flex: 1; min-height: 140px; align-items: stretch; }
 .fksc-cols { gap: 14px; min-height: 300px; }
 .sc-col, .fksc-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.fbrail .sc-col { height: 100%; justify-content: flex-end; }
 .fksc-col { gap: 10px; }
 /* --s-rule, not a 5%-white wash: that measured 1.01:1 against the slide on
    studio and 1.14:1 on midnight, so the unfilled part of a bar was invisible
@@ -4364,6 +4383,7 @@ html[data-ws="deck"] #railCount { display: none; }
   outline: 1px solid var(--s-rule); outline-offset: -1px;
 }
 .sc-bar { height: 74px; }
+.fbrail .sc-bar { flex: 1; height: auto; min-height: 90px; }
 /* Full-screen scale: tall enough to own the middle of the wall. */
 .fksc-bar { height: 280px; border-radius: 8px 8px 0 0; }
 .sc-bar i, .fksc-bar i {
@@ -4648,7 +4668,7 @@ html[data-ws="deck"] #railCount { display: none; }
 #teachFrame{height:62vh}
 @media(max-width:640px){.teach-modal header{flex-wrap:wrap}.teach-tabs .btn{font-size:12px;padding:7px 9px}.teach-body{padding:8px;max-height:calc(88vh - 160px)}}
 /* Content-first layout selection and accessible structured reordering. */
-.layout-library,.saved-content,.bulk-content{border:1px solid var(--ui-line);border-radius:9px;padding:12px;margin:12px 0}.layout-library summary,.saved-content summary,.bulk-content summary{cursor:pointer;font-size:13px;font-weight:650}.layout-library-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.layout-choice{min-width:0;padding:6px;background:var(--ui-panel);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:8px;cursor:pointer}.layout-choice.on{border-color:var(--ui-accent);background:var(--ui-accent-soft)}.layout-choice>span{display:block;font-size:11px;padding:5px}.layout-choice .variant-frame{width:100%;aspect-ratio:16/9;overflow:hidden}.content-order{display:flex;flex-direction:column;gap:3px;flex:none}.content-order button{padding:2px 5px;font-size:12px;background:var(--ui-panel);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:4px}.content-order .content-grip{cursor:grab;touch-action:pan-y}.content-order button:disabled{opacity:.3}.pit-row.content-drop{outline:2px solid var(--ui-accent);background:var(--ui-accent-soft)}.bulk-content textarea{box-sizing:border-box;width:100%;margin-top:10px;padding:8px;font:inherit;border:1px solid var(--ui-line);border-radius:6px;background:var(--ui-panel);color:var(--ui-text)}.saved-content .btn{display:block;margin-top:6px}button:focus-visible{outline:2px solid var(--ui-accent);outline-offset:2px}
+.layout-library,.saved-content,.bulk-content{border:1px solid var(--ui-line);border-radius:9px;padding:12px;margin:12px 0}.unused-on-layout{margin:8px 0 12px;padding:10px;background:#f5f7f1;border-radius:8px}.unused-on-layout .btn{display:block;width:100%;margin-top:6px;text-align:left}.layout-library summary,.saved-content summary,.bulk-content summary{cursor:pointer;font-size:13px;font-weight:650}.layout-library-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.layout-choice{min-width:0;padding:6px;background:var(--ui-panel);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:8px;cursor:pointer}.layout-choice.on{border-color:var(--ui-accent);background:var(--ui-accent-soft)}.layout-choice>span{display:block;font-size:11px;padding:5px}.layout-choice .variant-frame{width:100%;aspect-ratio:16/9;overflow:hidden}.content-order{display:flex;flex-direction:column;gap:3px;flex:none}.content-order button{padding:2px 5px;font-size:12px;background:var(--ui-panel);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:4px}.content-order .content-grip{cursor:grab;touch-action:pan-y}.content-order button:disabled{opacity:.3}.pit-row.content-drop{outline:2px solid var(--ui-accent);background:var(--ui-accent-soft)}.bulk-content textarea{box-sizing:border-box;width:100%;margin-top:10px;padding:8px;font:inherit;border:1px solid var(--ui-line);border-radius:6px;background:var(--ui-panel);color:var(--ui-text)}.saved-content .btn{display:block;margin-top:6px}button:focus-visible{outline:2px solid var(--ui-accent);outline-offset:2px}
 #inspector .pit-row{display:grid;grid-template-columns:26px 20px minmax(0,1fr) 24px;align-items:center;gap:5px;padding:8px 0;border-bottom:1px solid var(--ui-line)}#inspector .pit-row>.content-order{grid-column:1;grid-row:1 / span 2}#inspector .pit-row>.pit-i{grid-column:2;grid-row:1;font-size:11px}#inspector .pit-row>input,#inspector .pit-row>.kw-pit-fields{grid-column:3;grid-row:1;min-width:0;width:100%;box-sizing:border-box}#inspector .pit-row>.kill{grid-column:4;grid-row:1;padding:4px}#inspector .pit-row>.format-tools{grid-column:2 / -1;grid-row:2;flex-wrap:wrap}#inspector .kw-pit-fields{grid-template-columns:1fr}#previewBox{position:relative}.canvas-editable:hover{outline:2px dashed #729458;outline-offset:4px;cursor:text}.canvas-edit-form{position:absolute;z-index:15;left:5%;right:5%;bottom:12px;background:var(--ui-panel);color:var(--ui-text);padding:16px;border:1px solid var(--ui-accent);border-radius:10px;font-size:14px}.canvas-edit-form textarea{display:block;box-sizing:border-box;width:100%;margin:8px 0;font:inherit;padding:10px}.canvas-edit-form button{margin-right:8px}
 
 /* Emoji guess: help released a step at a time under the clues. */

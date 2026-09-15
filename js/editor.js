@@ -998,6 +998,8 @@
      room will see it, 'focus' shows the full-screen version. Stored on the
      feedback so Present / Host live open the same way. */
   var inspectorTab = 'content';
+  var designPane = 'edit';
+  var designPaneSlide = '';
 
   function feedbackPresentAs(slide) {
     var f = slide && slide.feedback;
@@ -1122,11 +1124,12 @@
       tabs.appendChild(b);
     });
     insp.appendChild(tabs);
-    var history=el('div','format-tools');
-    var undo=UI.button('↶ Undo','ghost',function(){restoreHistory(false);});undo.disabled=!past.length;undo.dataset.history='undo';
-    var redo=UI.button('↷ Redo','ghost',function(){restoreHistory(true);});redo.disabled=!future.length;redo.dataset.history='redo';
-    history.appendChild(undo);history.appendChild(redo);
-    history.appendChild(UI.button('Theme','ghost',openDeckSettings));insp.appendChild(history);
+    drawInspectorChrome(insp, { theme: true });
+    if (s.id !== designPaneSlide) {
+      designPaneSlide = s.id;
+      designPane = 'edit';
+    }
+    if (inspectorTab === 'content') drawDesignPaneTabs(insp);
     insp.appendChild(el('h4','eyebrow', inspectorTab === 'content' ? 'MAKE IT YOURS' : 'INVITE EVERY VOICE'));
     insp.appendChild(el('h4', 'insp-title',
       'Slide ' + (sel + 1) + ' — ' + SF.SLIDE_TYPES[s.type].label));
@@ -1136,34 +1139,76 @@
       return;
     }
 
-    drawLayoutPicker(insp, s);
-    drawContentFields(insp, s);
-    SF.Custom.inspector(insp, s, function () { touched(); draw(); });
+    if (designPane === 'customise') {
+      SF.Custom.inspector(insp, s, function () { touched(); draw(); }, { bare: true });
+    } else if (designPane === 'layout') {
+      drawLayoutPicker(insp, s);
+    } else if (designPane === 'transition') {
+      insp.appendChild(el('p', 'hint',
+        'How this slide arrives on the screen. The words stay as they are.'));
+      insp.appendChild(UI.field('Transition in', UI.select(
+        SF.TRANSITIONS.map(function (t) {
+          return { value: t, label: t[0].toUpperCase() + t.slice(1) };
+        }),
+        s.transition, function (v) { s.transition = v; touched(); drawRail(); })));
+    } else {
+      drawContentFields(insp, s);
+      drawUnusedOnLayout(insp, s);
+    }
+  }
 
-    insp.appendChild(UI.field('Transition in', UI.select(
-      SF.TRANSITIONS.map(function (t) {
-        return { value: t, label: t[0].toUpperCase() + t.slice(1) };
-      }),
-      s.transition, function (v) { s.transition = v; touched(); drawRail(); })));
+  /** Undo, theme, duplicate and delete — slide chrome, not part of the words. */
+  function drawInspectorChrome(insp, opts) {
+    opts = opts || {};
+    var history = el('div', 'format-tools insp-chrome');
+    var undo = UI.button('↶ Undo', 'ghost', function () { restoreHistory(false); });
+    undo.disabled = !past.length;
+    undo.dataset.history = 'undo';
+    var redo = UI.button('↷ Redo', 'ghost', function () { restoreHistory(true); });
+    redo.disabled = !future.length;
+    redo.dataset.history = 'redo';
+    history.appendChild(undo);
+    history.appendChild(redo);
+    if (opts.theme) history.appendChild(UI.button('Theme', 'ghost', openDeckSettings));
+    var dup = UI.button('⧉ Duplicate', 'ghost', duplicate);
+    dup.title = 'Duplicate this slide';
+    dup.setAttribute('aria-label', 'Duplicate this slide');
+    history.appendChild(dup);
+    var del = UI.button('✕ Delete', 'ghost', removeSlide);
+    del.title = 'Delete this slide';
+    del.setAttribute('aria-label', 'Delete this slide');
+    del.disabled = deck.slides.length === 1;
+    history.appendChild(del);
+    insp.appendChild(history);
+  }
 
-    var row = el('div', 'field');
-    row.appendChild(UI.button('Duplicate', null, duplicate));
-    var del = UI.button('Delete', null, removeSlide);
-    del.style.marginLeft = '6px';
-    row.appendChild(del);
-    insp.appendChild(row);
+  /** Icon tabs under Undo / Theme so look, layout and motion stay off the editing rail. */
+  function drawDesignPaneTabs(insp) {
+    var panes = el('div', 'format-tools design-panes');
+    panes.setAttribute('role', 'tablist');
+    panes.setAttribute('aria-label', 'Slide tools');
+    [
+      ['edit', '✎', 'Edit', 'Edit the words on this slide'],
+      ['customise', '✦', 'Look', 'Customise this slide'],
+      ['layout', '▦', 'Layout', 'Choose a different layout'],
+      ['transition', '↝', 'Motion', 'How this slide arrives']
+    ].forEach(function (item) {
+      var on = designPane === item[0];
+      var b = UI.button(item[1] + ' ' + item[2], on ? 'active' : 'ghost', function () {
+        designPane = item[0];
+        drawInspector();
+      });
+      b.title = item[3];
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-selected', String(on));
+      panes.appendChild(b);
+    });
+    insp.appendChild(panes);
   }
 
   /** Thin inspector for an embedded game: edit the game in Quiz studio. */
   function drawGameSlideInspector(insp, s) {
-    var history = el('div', 'format-tools');
-    var undo = UI.button('↶ Undo', 'ghost', function () { restoreHistory(false); });
-    undo.disabled = !past.length;
-    var redo = UI.button('↷ Redo', 'ghost', function () { restoreHistory(true); });
-    redo.disabled = !future.length;
-    history.appendChild(undo);
-    history.appendChild(redo);
-    insp.appendChild(history);
+    drawInspectorChrome(insp, { theme: false });
 
     insp.appendChild(el('h4', 'eyebrow', 'CHECK IN THE LESSON'));
     insp.appendChild(el('h4', 'insp-title', 'Slide ' + (sel + 1) + ' — Game'));
@@ -1175,13 +1220,6 @@
         return { value: t, label: t[0].toUpperCase() + t.slice(1) };
       }),
       s.transition, function (v) { s.transition = v; touched(); drawRail(); })));
-
-    var row = el('div', 'field');
-    row.appendChild(UI.button('Duplicate', null, duplicate));
-    var del = UI.button('Delete', null, removeSlide);
-    del.style.marginLeft = '6px';
-    row.appendChild(del);
-    insp.appendChild(row);
   }
 
   /**
@@ -1497,8 +1535,9 @@
   }
 
   function drawLayoutPicker(insp, s) {
-    var box = el('details', 'layout-library'), summary = el('summary', null, 'Layout · ' + SF.SLIDE_TYPES[s.type].label);
-    box.appendChild(summary);
+    var box = el('div', 'layout-library');
+    box.appendChild(el('p', 'hint',
+      'Change the shape of this slide, or add a new one at the end of the deck. The words you just edited stay on the slide.'));
     /* Grouped by what each layout says about itself. Join is authorable but
        has no group — it is inserted by the live flow, not chosen as a shape. */
     /** @type {[string, string[]][]} */
@@ -1507,6 +1546,7 @@
         return SF.SLIDE_TYPES[k].group === g[0];
       })];
     });
+    drawVariants(box, s);
     layoutGroups.forEach(function (group) {
       box.appendChild(el('h4', null, group[0]));
       var grid = el('div', 'layout-library-grid');
@@ -1522,25 +1562,84 @@
         b.appendChild(el('span', null, SF.SLIDE_TYPES[type].label));
         b.onclick = function () { chooseLayout(s, type); };
         grid.appendChild(b);
-        box.addEventListener('toggle', function () {
-          if (box.open) requestAnimationFrame(function () { SF.fit(frame, node); });
-        });
       });
       box.appendChild(grid);
     });
     insp.appendChild(box);
-    drawVariants(insp,s);
-    var hidden=SF.ContentTools.hidden(s);
-    if(hidden.length){var saved=el('details','saved-content');saved.appendChild(el('summary',null,'Saved content outside this layout · '+hidden.length));
-      saved.appendChild(el('p','hint','These items are still saved. Choose one to show it in a suitable layout.'));
-      hidden.forEach(function(item){saved.appendChild(UI.button('Show '+item.label,'ghost',function(){SF.prepareLayout(s,item.layout);touched();draw();}));});insp.appendChild(saved);
+    requestAnimationFrame(function () {
+      box.querySelectorAll('.variant-frame').forEach(function (frame) {
+        var node = frame.firstElementChild;
+        if (node) SF.fit(frame, node);
+      });
+    });
+  }
+
+  /**
+   * Extra fields this layout does not draw. They are still on the slide —
+   * switching layout used to look like they had vanished.
+   *
+   * “Show” changes the shape of this slide (or makes a copy). That used to
+   * happen on the click, which felt like the current layout being overpowered.
+   */
+  function drawUnusedOnLayout(parent, s) {
+    var hidden = SF.ContentTools.hidden(s);
+    if (!hidden.length) return;
+    var note = el('div', 'unused-on-layout');
+    note.appendChild(el('p', 'hint',
+      (hidden.length === 1
+        ? 'This layout is not showing one thing still stored on the slide. It is not deleted. '
+        : 'This layout is not showing ' + hidden.length + ' things still stored on the slide. They are not deleted. ')
+      + 'Showing one changes this slide — you will be asked first.'));
+    hidden.forEach(function (item) {
+      var layoutName = (SF.SLIDE_TYPES[item.layout] && SF.SLIDE_TYPES[item.layout].label) || item.layout;
+      note.appendChild(UI.button('Show the ' + item.label + ' · ' + layoutName, 'ghost', function () {
+        restoreUnused(s, item);
+      }));
+    });
+    parent.appendChild(note);
+  }
+
+  function restoreUnused(s, item) {
+    var here = (SF.SLIDE_TYPES[s.type] && SF.SLIDE_TYPES[s.type].label) || s.type;
+    var there = (SF.SLIDE_TYPES[item.layout] && SF.SLIDE_TYPES[item.layout].label) || item.layout;
+    function overwrite() {
+      SF.prepareLayout(s, item.layout);
+      touched();
+      draw();
+      SF.toast('This slide is now ' + there + ', so the ' + item.label + ' can show.');
     }
+    function addCopy() {
+      var next = SF.normalizeSlide(JSON.parse(JSON.stringify(s)));
+      next.id = SF.uid();
+      SF.prepareLayout(next, item.layout);
+      deck.slides.push(next);
+      sel = deck.slides.length - 1;
+      inspectorTab = 'content';
+      designPane = 'edit';
+      touched();
+      draw();
+      SF.toast(there + ' added at the end, with the ' + item.label + ' showing.');
+    }
+    if (!SF.askChoice) { overwrite(); return; }
+    SF.askChoice({
+      title: 'Show the ' + item.label + '?',
+      detail: 'This slide is a ' + here + '. That layout cannot display the ' + item.label + '. Changing it to ' + there + ' will. Cancel keeps this slide as it is.',
+      options: [
+        { value: 'overwrite', label: 'Change this slide',
+          detail: 'This slide becomes ' + there + '. The ' + item.label + ' will show. Undo puts it back.' },
+        { value: 'add', label: 'Make a new slide instead',
+          detail: 'Puts a copy as ' + there + ' at the end of the deck. This slide stays a ' + here + '.' }
+      ]
+    }, function (choice) {
+      if (choice === 'add') addCopy();
+      else overwrite();
+    });
   }
 
   /**
    * Three alternative layouts for the words and picture already on this slide.
    *
-   * The Layout grid above says what a layout is called; this says what this
+   * The grouped grid below names every layout; this row shows what this
    * slide would look like as one, using the real content. Nothing is
    * converted or discarded on the way: normalizeSlide keeps every field
    * whatever the type, so title, bullets, body and image all survive a switch
@@ -1595,8 +1694,8 @@
       };
       row.appendChild(card);
     });
-    insp.appendChild(UI.field('Try another layout', row,
-      'Preview your content in another structure. Unused content stays saved and can be restored.'));
+    insp.appendChild(UI.field('Try another look', row,
+      'The same words, in a different shape. Extra material stays on the slide even if this layout does not draw it.'));
   }
 
   /* Text fields preserve formatting separately from lesson content. */
@@ -2554,7 +2653,18 @@
    * @param {() => void} [after]
    */
   function drawFeedback(insp, s, after) {
-    var refresh = after || function () { refresh(); };
+    /* Choosing a kind remounts this inspector. Typing in a field only
+       needs the preview — a full draw here used to recurse into itself
+       (`refresh = function () { refresh(); }`) so Poll / Cloud / etc.
+       never appeared to do anything. */
+    function refresh() {
+      if (after) after();
+      else { touched(); draw(); }
+    }
+    function live() {
+      if (after) after();
+      else { touched(); repaint(); }
+    }
     var kinds = Object.keys(SF.FEEDBACK_KINDS);
     var current = s.feedback && s.feedback.kind ? s.feedback.kind : '';
 
@@ -2568,6 +2678,7 @@
       };
     })).forEach(function (c) {
       var b = el('button', current === c.value ? 'on' : null);
+      b.type = 'button';
       b.appendChild(el('span', 'g', c.icon));
       b.appendChild(el('span', null, c.label));
       b.onclick = function () {
@@ -2629,14 +2740,13 @@
         if (!s.feedback) return;
         s.feedback.presentAs = v === 'focus' ? 'focus' : 'rail';
         refresh();
-        drawPreview();
       }),
         'Saved on this slide — Present and Host live open the same way. ' +
         'Host live shows the join QR, PIN, and who arrives. Press E to toggle.'));
     }
 
     insp.appendChild(UI.field('Prompt for the room',
-      UI.area(f.prompt, function (v) { f.prompt = v; refresh(); }, 2),
+      UI.area(f.prompt, function (v) { f.prompt = v; live(); }, 2),
       'Shown on the phones. Keep it short — the slide carries the detail.'));
 
     if (SF.FEEDBACK_KINDS[current].needsOptions) {
@@ -2649,10 +2759,10 @@
          where a scale turns into a poll nobody can read at a glance. */
       var endRow = el('div', 'setrow');
       endRow.appendChild(UI.field('Low end', UI.text(f.lowLabel, function (v) {
-        f.lowLabel = v.slice(0, 40); refresh();
+        f.lowLabel = v.slice(0, 40); live();
       }, 'Not at all')));
       endRow.appendChild(UI.field('High end', UI.text(f.highLabel, function (v) {
-        f.highLabel = v.slice(0, 40); refresh();
+        f.highLabel = v.slice(0, 40); live();
       }, 'Completely')));
       insp.appendChild(UI.field('The two ends', endRow,
         'Both are required — without them the room cannot tell which way the ' +
@@ -2662,7 +2772,7 @@
         SF.SCALE_POINTS.map(function (n) {
           return { value: String(n), icon: String(n), label: n === 5 ? 'Usual' : '' };
         }), String(f.points), function (v) {
-          f.points = Number(v); refresh();
+          f.points = Number(v); live();
         }),
         'An odd count leaves a real middle to sit in. More than seven is a ' +
         'distinction nobody makes honestly on a phone.'));
@@ -2673,7 +2783,7 @@
         'the opposite of a room all sitting at 3.'));
     } else {
       insp.appendChild(UI.field('Responses allowed each',
-        UI.num(f.max, function (v) { f.max = Math.max(1, Math.min(5, v || 1)); refresh(); }, 1, 5),
+        UI.num(f.max, function (v) { f.max = Math.max(1, Math.min(5, v || 1)); live(); }, 1, 5),
         current === 'wordcloud'
           ? 'A word or short phrase per response.'
           : 'Longer contributions, shown newest first with names.'));
@@ -2785,7 +2895,7 @@
     if (current()) slide.transition = current().transition || slide.transition;
     deck.slides.splice(sel + 1, 0, slide);
     sel += 1;
-    /* Always land on Design & content so Layout is visible after insert. */
+    /* Always land on Design & content so the new slide's words are ready. */
     inspectorTab = 'content';
     touched();
     draw();

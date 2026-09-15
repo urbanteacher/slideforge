@@ -161,10 +161,16 @@
     });
   }
   var expanded=new Set();
-  function inspector(parent,s,change) {
-    var UI=SF.Shell.UI, box=document.createElement('details'); box.className='custom-controls';
-    box.open=expanded.has(s.id);box.ontoggle=function(){if(box.open)expanded.add(s.id);else expanded.delete(s.id);};
-    var summary=document.createElement('summary'); summary.textContent='Customise this slide'; box.appendChild(summary);
+  function inspector(parent,s,change,opts) {
+    opts=opts||{};
+    var UI=SF.Shell.UI, box;
+    if(opts.bare){
+      box=document.createElement('div'); box.className='custom-controls';
+    }else{
+      box=document.createElement('details'); box.className='custom-controls';
+      box.open=expanded.has(s.id);box.ontoggle=function(){if(box.open)expanded.add(s.id);else expanded.delete(s.id);};
+      var summary=document.createElement('summary'); summary.textContent='Customise this slide'; box.appendChild(summary);
+    }
     var d=s.design || (s.design={});
     function choose(label,key,opts,fallback){box.appendChild(UI.field(label,UI.select(opts.map(function(x){return {value:String(x[0]),label:x[1]};}),String(d[key]||fallback),function(v){d[key]=(key==='imageShare'||key==='capFade')?Number(v):v;change();})));}
     choose('Text alignment','align',[['left','Left'],['center','Centre'],['right','Right']],'left');

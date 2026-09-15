@@ -9,6 +9,8 @@
   var previewIndex = 0, revision = 0, checkedRevision = -1, showing = false, busy = false;
   var sequence = 0;
   var pending = new Map();
+  var deskBus = null;
+  try { deskBus = new BroadcastChannel('slideforge.presenter.v1'); } catch (e) {}
   /** @returns {any} */ function $(id) { return document.getElementById(id); }
   function status(message) { $('activityStatus').textContent = message; }
   function controls() {
@@ -28,11 +30,14 @@
   }
   function request(action, data) {
     return new Promise(function (resolve, reject) {
-      if (!window.opener || window.opener.closed) { reject(new Error('The slideshow window is closed.')); return; }
+      var hasOpener = window.opener && !window.opener.closed;
+      if (!hasOpener && !deskBus) { reject(new Error('The slideshow window is closed.')); return; }
       var id = 'activity-' + (++sequence);
       var timeout = setTimeout(function () { pending.delete(id); reject(new Error('No reply yet. Your draft is retained. Reopen the presenter if the slideshow has closed.')); }, 120000);
       pending.set(id, { resolve: resolve, reject: reject, timeout: timeout });
-      window.opener.postMessage(Object.assign({ type: 'sf-presenter-cmd', cmd: 'activity', action: action, requestId: id }, data || {}), location.origin);
+      var msg = Object.assign({ type: 'sf-presenter-cmd', cmd: 'activity', action: action, requestId: id }, data || {});
+      if (hasOpener) window.opener.postMessage(msg, location.origin);
+      if (deskBus) deskBus.postMessage(msg);
     });
   }
   async function work(message, operation) {
@@ -41,9 +46,8 @@
     try { await operation(); } catch (error) { status(error instanceof Error ? error.message : 'Could not complete that action.'); }
     finally { busy = false; controls(); }
   }
-  window.addEventListener('message', function (event) {
-    if (event.source !== window.opener || event.origin !== location.origin || !event.data) return;
-    var data = event.data;
+  function takeWallMessage(data) {
+    if (!data) return;
     if (data.type === 'sf-presenter-state') {
       if (state && state.startedAt !== data.startedAt && draft) {
         draft = null; $('activityDraft').hidden = true; changed(); status('A new lesson started. Create a new draft.');
@@ -57,7 +61,13 @@
     if (!wait) return;
     clearTimeout(wait.timeout); pending.delete(data.requestId);
     if (data.error) wait.reject(new Error(data.error)); else wait.resolve(data.result);
+  }
+  window.addEventListener('message', function (event) {
+    if (event.origin !== location.origin || !event.data) return;
+    if (window.opener && !window.opener.closed && event.source !== window.opener) return;
+    takeWallMessage(event.data);
   });
+  if (deskBus) deskBus.onmessage = function (event) { takeWallMessage(event.data); };
   function choices() {
     if (!catalog) return;
     var kind = $('activityKind').value, filter = $('activitySearch').value.toLowerCase();

@@ -21,11 +21,11 @@ function append(s,text){
  s.bullets=keep.map(function(x,i){if(old['bullets.'+x.i])next['bullets.'+i]=old['bullets.'+x.i];return x.v;}).concat(added);s.formatting=next;return added.length;
 }
 function hidden(s){var out=[];var points=['journey','mindmap','content','cards','split','keywords','italics','links'].includes(s.type);
- if(!points&&(s.bullets||[]).some(function(v){return v.trim();}))out.push({label:'Points / cards',field:'bullets',layout:'content'});
- if(!['journey','quote','table','introduction'].includes(s.type)&&String(s.body||'').trim())out.push({label:'Body text / table',field:'body',layout:'quote'});
- if(!['journey','introduction','title','section','quote'].includes(s.type)&&String(s.subtitle||'').trim())out.push({label:'Subtitle',field:'subtitle',layout:'title'});
- if(!['image','split','introduction'].includes(s.type)&&s.image)out.push({label:'Image',field:'image',layout:'split'});
- if(s.type!=='video'&&s.video)out.push({label:'Video',field:'video',layout:'video'});
+ if(!points&&(s.bullets||[]).some(function(v){return v.trim();}))out.push({label:'bullet list',field:'bullets',layout:'content'});
+ if(!['journey','quote','table','introduction'].includes(s.type)&&String(s.body||'').trim())out.push({label:'extra text',field:'body',layout:'quote'});
+ if(!['journey','introduction','title','section','quote'].includes(s.type)&&String(s.subtitle||'').trim())out.push({label:'subtitle',field:'subtitle',layout:'title'});
+ if(!['image','split','introduction'].includes(s.type)&&s.image)out.push({label:'picture',field:'image',layout:'split'});
+ if(s.type!=='video'&&s.video)out.push({label:'video',field:'video',layout:'video'});
  return out;
 }
 function split(s,limit){

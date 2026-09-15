@@ -1498,13 +1498,14 @@
 
   Live.begin = function () {
     if (!Live.pin) { warn('Not connected to the relay yet.'); return; }
+    /* Desk first, in this click. Anything before window.open (lobby teardown,
+       fullscreen) makes the browser treat Teacher Presenter as a blocked pop-up,
+       and D on that waiting card then does nothing because D is a wall key. */
+    if (SF.Player.openPresenter) SF.Player.openPresenter();
     send({ t: 'begin' });
     goLiveLocally();
     document.body.classList.add('live-on');
     SF.Player.gate = gate;
-    /* Wall = class screen. Desk = where the teacher runs the room. Open the
-       desk in this click, before fullscreen, or the browser blocks the pop-out. */
-    if (SF.Player.openPresenter) SF.Player.openPresenter();
     SF.Player.start(Live.deck, 0);
     if (SF.Player.syncPresenter) SF.Player.syncPresenter();
     if (!Live.prompt && Live.deck.quiz.scoreboard && Live.rows.length) paintRail();

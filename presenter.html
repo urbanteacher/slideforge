@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Presenter view — SlideForge</title>
-<link rel="stylesheet" href="css/app.css?v=37">
+<link rel="stylesheet" href="css/app.css?v=41">
 <link rel="stylesheet" href="css/board-common.css">
 <link rel="stylesheet" href="css/memory.css">
 <link rel="stylesheet" href="css/bingo.css">
@@ -268,13 +268,13 @@
 <div class="waiting" id="waiting">
   <div class="waiting-card">
     <h1 id="waitTitle">Connect this desk to the show</h1>
-    <p class="lead" id="waitLead">This is your private teaching laptop — notes, next slide, Class, Answers, and Q&amp;A. It only works when linked to the wall show.</p>
+    <p class="lead" id="waitLead">Host live → Start opens this desk and the wall together. This card only stays up if the two windows are not linked yet.</p>
     <ol id="waitSteps">
-      <li>In SlideForge, click <strong>Teacher Presenter</strong> (that pop-out is this window).</li>
-      <li>Or start <strong>Present</strong> / <strong>Host live</strong>, then press <kbd>D</kbd>.</li>
-      <li>This window fills with notes and desk controls. Drag it onto your second screen if you have one.</li>
+      <li>Go back to the <strong>Host live / Present</strong> window (the lesson on the projector — not this tab).</li>
+      <li>Click that window once, then press <kbd>D</kbd>. Or click <strong>Teacher Presenter</strong> in the editor (Esc first if the wall is full screen).</li>
+      <li>This desk fills with notes and room controls. Drag it onto your laptop screen; leave the wall on the projector.</li>
     </ol>
-    <p class="tip" id="waitHint">Don’t open this page from a bookmark or by typing the URL — open it from the show so the two windows can talk.</p>
+    <p class="tip" id="waitHint">Pressing D here asks the wall to send the lesson. It does not start the show — Start on Host live does that.</p>
   </div>
 </div>
 
@@ -493,7 +493,11 @@
   function cmd(c, extra) {
     var msg = Object.assign({ type: 'sf-presenter-cmd', cmd: c }, extra || {});
     if (window.opener && !window.opener.closed) window.opener.postMessage(msg, location.origin);
+    if (deskBus) deskBus.postMessage(msg);
   }
+
+  var deskBus = null;
+  try { deskBus = new BroadcastChannel('slideforge.presenter.v1'); } catch (e) {}
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-cmd]'), function (b) {
     /* Named answers is the one control that acts on this window rather than
@@ -687,9 +691,7 @@
   var qaState = null;
 
   function qaCmd(id, action) {
-    if (window.opener && !window.opener.closed) {
-      window.opener.postMessage({ type: 'sf-presenter-cmd', cmd: 'qa', id: id, action: action }, location.origin);
-    }
+    cmd('qa', { id: id, action: action });
   }
 
   var paceState = null, confidenceState = null, progressState = null, waitingState = 0;
@@ -831,7 +833,7 @@
 
   window.addEventListener('message', function (ev) {
     var d = ev.data;
-    if (ev.source!==window.opener || ev.origin!==location.origin) return;
+    if (ev.origin!==location.origin) return;
     if (d && d.type === 'sf-presenter-cmd' && d.cmd === 'who') toggleNamed();
   });
 
@@ -953,9 +955,8 @@
     });
   }
 
-  window.addEventListener('message', function (ev) {
-    var d = ev.data;
-    if (ev.source!==window.opener || ev.origin!==location.origin || !d || d.type !== 'sf-presenter-state') return;
+  function onWallState(d) {
+    if (!d || d.type !== 'sf-presenter-state' || !d.deck) return;
     if(d.teacherUrl && $('teacherWorkspace').getAttribute('src')!==d.teacherUrl) $('teacherWorkspace').src=d.teacherUrl;
     if(d.requestedPanel)selectPanel(d.requestedPanel);
     qaState = d.qa || null;
@@ -1003,12 +1004,29 @@
     $('pv').style.display = 'grid';
     draw();
     if(SF.PresenterLive)SF.PresenterLive.update(d);
+  }
+
+  window.addEventListener('message', function (ev) {
+    if (ev.origin !== location.origin) return;
+    onWallState(ev.data);
   });
+  if (deskBus) deskBus.onmessage = function (ev) { onWallState(ev.data); };
 
   document.addEventListener('keydown', function (e) {
     if(e.metaKey||e.ctrlKey||e.altKey)return;
     if(e.target.closest('input,textarea,select,[contenteditable=true]')) return;
     if(e.target.closest('button,a,summary') && (e.key===' '||e.key==='Enter')) return;
+    var waitingOn = $('waiting') && $('waiting').style.display !== 'none';
+    if (waitingOn) {
+      /* D is a wall key. On this card it only asks the show to send the lesson. */
+      if (e.key === 'd' || e.key === 'D') {
+        e.preventDefault();
+        cmd('hello');
+        $('waitLead').textContent = 'Asking the wall for the lesson. If nothing changes, click the Host live / Present window (the projector), then press D there.';
+      }
+      if (e.key === 'Escape') e.preventDefault();
+      return;
+    }
     if (e.key === 'w' || e.key === 'W') { e.preventDefault(); toggleNamed(); return; }
     if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); cmd('next'); }
     else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); cmd('prev'); }
@@ -1283,23 +1301,24 @@
 
   window.addEventListener('resize', function () { if (state) draw(); });
 
-  // ask the opener to send state (covers a reload of this window)
+  cmd('hello');
+  setTimeout(function () { cmd('hello'); }, 800);
+  setTimeout(function () { cmd('hello'); }, 2000);
+
   if (!window.opener || window.opener.closed) {
     $('waitTitle').textContent = 'Connect this desk to the show';
     $('waitLead').textContent =
-      'This window is waiting for the wall show. Click Teacher Presenter from the editor, or start Present and press D.';
+      'Host live → Start should open this desk automatically. If you still see this card, click the wall window and press D — D on this screen only asks that window to send the lesson.';
     $('waitHint').textContent =
-      'Tip: Teacher Presenter opens this pop-out. Allow pop-ups if the browser blocked it.';
+      'Allow pop-ups if Start did not open a second window. Then press D on the wall.';
   } else {
     $('waitTitle').textContent = 'Linking to the show…';
     $('waitLead').textContent = 'Almost there — waiting for the wall window to send the lesson.';
     $('waitSteps').innerHTML =
       '<li>Keep the Present / Host live window open.</li>' +
-      '<li>If this stays blank, click the show window once, then press <kbd>D</kbd> again.</li>' +
+      '<li>If this stays blank, click the show window once, then press <kbd>D</kbd>.</li>' +
       '<li>Or close this tab and reopen Presenter from the show.</li>';
     $('waitHint').textContent = 'The desk cannot run alone — it needs the show window beside it.';
-    cmd('hello');
-    setTimeout(function () { cmd('hello'); }, 800);
   }
 })();
 </script>
