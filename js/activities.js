@@ -432,6 +432,55 @@
     paintSlidePreview(box, row.slide);
   }
 
+  var contentDrag = null;
+
+  function bindCanvasContent(box, node, s) {
+    if (!s || ['game', 'quiz', 'explain', 'results'].indexOf(s.type) >= 0) return;
+    node.querySelectorAll('[data-content-key]').forEach(function (target) {
+      var key = target.dataset.contentKey;
+      target.classList.add('canvas-editable');
+      target.title = 'Double-click to edit this content';
+      target.ondblclick = function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!SF.Custom || !SF.Custom.openCanvasEditor) return;
+        SF.Custom.openCanvasEditor(box, s, key, {
+          onSave: function () {
+            SF.Editor.commitActivityChange();
+            draw();
+          },
+          onCancel: function () {
+            SF.Editor.commitActivityChange();
+            refreshPreview();
+          }
+        });
+      };
+      if (/^bullets\.\d+$/.test(key)) {
+        target.draggable = true;
+        var i = Number(key.slice(8));
+        target.title += ' · drag to reorder';
+        target.ondragstart = function (e) {
+          contentDrag = { slide: s.id, index: i };
+          e.dataTransfer.setData('text/plain', String(i));
+        };
+        target.ondragover = function (e) {
+          if (contentDrag && contentDrag.slide === s.id) e.preventDefault();
+        };
+        target.ondragend = function () { contentDrag = null; };
+        target.ondrop = function (e) {
+          if (!contentDrag || contentDrag.slide !== s.id) return;
+          e.preventDefault();
+          var from = contentDrag.index;
+          contentDrag = null;
+          if (SF.ContentTools && SF.ContentTools.move(s, from, i)) {
+            SF.Editor.commitActivityChange();
+            draw();
+          }
+        };
+      }
+    });
+  }
+
   function paintSlidePreview(box, s) {
     box.replaceChildren();
     box.classList.remove('railed');
@@ -442,6 +491,7 @@
     var digest = f && SF.sampleFeedbackDigest ? SF.sampleFeedbackDigest(f) : null;
     var node = SF.renderSlide(d, s, {});
     box.appendChild(node);
+    bindCanvasContent(box, node, s);
     if (f && digest && SF.feedbackRail && SF.paintFeedbackRail) {
       box.classList.add('railed');
       var rail = SF.feedbackRail(d);

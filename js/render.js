@@ -374,7 +374,7 @@
 
   /* Bold keyword + lowercase definition — glossary / dual-coding of terms. */
   function layoutKeywords(slide, pad) {
-    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
+    var title = slide.title ? rich('h2', null, slide, 'title', slide.title) : null;
     var list = el('div', 'kw-list');
     var rows = (slide.bullets || []).map(SF.parseKeywordLine)
       .filter(function (p) { return p.term || p.def; });
@@ -384,31 +384,39 @@
       empty.appendChild(el('span', 'kw-def', 'add a plain-language definition'));
       list.appendChild(empty);
     } else {
-      rows.forEach(function (p) {
+      rows.forEach(function (p, i) {
         var row = asStep(el('div', 'kw-row'), slide);
-        row.appendChild(el('strong', 'kw-term', p.term || ' '));
-        row.appendChild(el('span', 'kw-def', p.def || ' '));
+        /* Same canvas-edit path as title and bullet lists — double-click the
+           panel to rewrite the label and the line under it. */
+        row.dataset.contentKey = 'bullets.' + i;
+        row.appendChild(rich('strong', 'kw-term', slide, 'bullets.' + i, p.term || ' '));
+        row.appendChild(rich('span', 'kw-def', slide, 'bullets.' + i, p.def || ' '));
         list.appendChild(row);
       });
     }
     var answer = modelAnswerBox(slide);
-    if (!answer) { pad.appendChild(list); return; }
+    if (!answer) {
+      if (title) pad.appendChild(title);
+      pad.appendChild(list);
+      return;
+    }
     /* A draft answer makes no card. It sits under the task where the author
        will meet it while editing, and the stylesheet keeps it off the wall —
        so there is nothing for the clock to turn over and nothing for a room to
        read until somebody has rewritten it. */
     if (slide.modelAnswerDraft) {
+      if (title) pad.appendChild(title);
       pad.appendChild(list);
       pad.appendChild(answer);
       return;
     }
-    /* Task on the front, worked answer on the back. The room should be looking
-       at the task for the whole of the activity, so the answer is not merely
-       further down the slide — it is behind it, and turning the card over is a
-       deliberate act that happens when the time is up. */
+    /* Task on the front, worked answer on the back. The heading belongs on the
+       front with the task — otherwise it stays on the pad when the card turns
+       and the answer draws through it. */
     var flip = el('div', 'flip');
     var front = el('div', 'flip-face flip-front');
     var back = el('div', 'flip-face flip-back');
+    if (title) front.appendChild(title);
     front.appendChild(list);
     back.appendChild(answer);
     flip.appendChild(front);
