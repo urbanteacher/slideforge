@@ -2861,7 +2861,7 @@
     if (!u) return "";
     if (/^https?:\/\//i.test(u)) return u;
     if (/^\/\//.test(u)) return "https:" + u;
-    if (u.charAt(0) === "/" && u.indexOf("..") < 0 && /^\/[A-Za-z0-9._~/-]*$/.test(u)) return u;
+    if (u.charAt(0) === "/" && u.indexOf("..") < 0 && /^\/[A-Za-z0-9._~/-]*(\?[A-Za-z0-9._~/\-=&%+]*)?(#[A-Za-z0-9._~/-]*)?$/.test(u)) return u;
     if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}([\/?#][^\s]*)?$/i.test(u)) return "https://" + u;
     return "";
   }
@@ -8335,10 +8335,11 @@
       s.code = String(s.code != null ? s.code : s.body || "");
       var lang = String(s.language || "python").trim().toLowerCase();
       s.language = lang === "javascript" || lang === "js" ? "javascript" : lang === "text" || lang === "plain" ? "text" : "python";
-      var reveal = String(s.codeReveal || "").trim();
-      if (reveal !== "all" && reveal !== "type" && reveal !== "lines") {
-        reveal = s.typewrite === false ? "all" : "type";
-      }
+      var asked = String(s.codeReveal || "").trim();
+      var reveal = asked === "all" || asked === "type" || asked === "lines" ? (
+        /** @type {'all'|'type'|'lines'} */
+        asked
+      ) : s.typewrite === false ? "all" : "type";
       s.codeReveal = reveal;
       s.typewrite = reveal === "type";
       s.typeSpeed = Math.max(8, Math.min(200, Number(s.typeSpeed) || 55));

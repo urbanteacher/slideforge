@@ -468,9 +468,9 @@
 
       var cd=SF.chartData(s);
       if(cd.series.length>1){
-        var opts=[{value:'',label:'Show them all evenly'}];
-        cd.series.forEach(function(sr,i){opts.push({value:String(i),label:'Isolate “'+sr.name+'”'});});
-        box.appendChild(UI.field('Focus one series',UI.select(opts,
+        var seriesOpts=[{value:'',label:'Show them all evenly'}];
+        cd.series.forEach(function(sr,i){seriesOpts.push({value:String(i),label:'Isolate “'+sr.name+'”'});});
+        box.appendChild(UI.field('Focus one series',UI.select(seriesOpts,
           d.chartFocus==null?'':String(d.chartFocus),function(v){
             if(v==='') delete d.chartFocus; else d.chartFocus=Number(v);
             change();

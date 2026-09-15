@@ -213,12 +213,26 @@
         danger: true
       }, function () {
         var open = currentId();
+        var doomedOpen = ids.indexOf(open) >= 0;
+        /* Remember factory sourceKeys before remove, or seedLibrary puts the
+           pack back the next time the Library opens. */
+        ids.forEach(function (id) {
+          var row = SF.Store.get(id);
+          if (row && row.sourceKey && SF.dismissLibrarySeed) SF.dismissLibrarySeed(row.sourceKey);
+        });
+        /* Cancel autosave first: a pending timer would write the deleted deck
+           back a moment later. Then remove. Then switch away without flush —
+           openDeck's normal path saves the document you leave. */
+        if (doomedOpen && SF.Editor && SF.Editor.cancelPendingSave) {
+          SF.Editor.cancelPendingSave();
+        }
         ids.forEach(function (id) { SF.Store.remove(id); });
         picked = Object.create(null);
-        if (ids.indexOf(open) >= 0) {
+        if (doomedOpen) {
           var leftover = SF.Store.list()[0];
-          if (leftover && SF.Editor && SF.Editor.openDeck) SF.Editor.openDeck(leftover.id);
-          else if (SF.Editor && SF.Editor.workspace && SF.Editor.workspace.blank) {
+          if (leftover && SF.Editor && SF.Editor.openDeck) {
+            SF.Editor.openDeck(leftover.id, { abandon: true });
+          } else if (SF.Editor && SF.Editor.workspace && SF.Editor.workspace.blank) {
             var blank = SF.Editor.workspace.blank();
             SF.Editor.workspace.setDoc(blank);
             if (SF.Shell && SF.Shell.syncChrome) SF.Shell.syncChrome();
@@ -924,8 +938,9 @@
   function drawLibrary(filter) {
     var body = document.getElementById('activityBody');
     if (!body) return;
-    var keepFind = document.activeElement && document.activeElement.id === 'activityFind';
-    var caret = keepFind ? document.activeElement.selectionStart : 0;
+    var focused = /** @type {HTMLInputElement|null} */ (document.activeElement);
+    var keepFind = !!focused && focused.id === 'activityFind';
+    var caret = keepFind && focused ? (focused.selectionStart || 0) : 0;
     body.replaceChildren();
     var tabs = el('div','library-tabs');
     tabs.setAttribute('role', 'tablist');

@@ -376,7 +376,7 @@
         ? function (key, action) { Player.raceStep(key, action); } : null,
       boss: slide.type === 'quiz' ? bossView(deck) : null,
       bossCommand: slide.type === 'quiz' && bossFight(deck)
-        ? function (action) { Player.bossCommand(action); } : null,
+        ? function (action, o) { Player.bossCommand(action, o); } : null,
       definitionPhase: slide.style === 'definition'
         ? definitionState(slide).phase : null,
       definitionCommand: slide.style === 'definition'
@@ -540,18 +540,28 @@
       verdict: SF.Boss.verdict(f) };
   }
 
-  Player.bossCommand = function (action) {
+  Player.bossCommand = function (action, opts) {
     var deck = this.deck;
     if (!bossFight(deck)) return;
     /* Nothing has started until the first question is on screen, so the first
        press starts the fight as well as doing what it says. */
     var f = SF.Boss.forDeck(deck);
     if (f && f.phase === 'ready') SF.Boss.command(deck, 'start');
+    /* A hit or a miss implies the answer is out. The fight only scores while
+       it is marking, so a caller that marks straight off the room's answers —
+       the demo class, and any relay that reveals for us — used to be ignored
+       in silence: the rail announced damage and the HP bar never moved. */
+    if (action === 'hit' || action === 'miss') {
+      var asking = SF.Boss.forDeck(deck);
+      if (asking && asking.phase === 'asking') SF.Boss.command(deck, 'reveal');
+    }
     SF.Boss.command(deck, action);
     renderCurrent(0);
     /* Marked means done with this one, so the room moves on with the fight —
-       otherwise the teacher marks a question the wall is still showing. */
-    if (action === 'hit' || action === 'miss') {
+       otherwise the teacher marks a question the wall is still showing.
+       Only when the press came from the wall: a mark that followed the room's
+       own answers would otherwise skip past the explanation it just revealed. */
+    if ((action === 'hit' || action === 'miss') && !(opts && opts.advance === false)) {
       var fight = SF.Boss.forDeck(deck);
       if (fight && fight.phase !== 'complete') setTimeout(function () { Player.next(); }, 650);
     }
@@ -665,8 +675,7 @@
       node.classList.add('why-open');
       scheduleFit(node);
     }
-    var tally = node.querySelector('.tally');
-    if (tally && Player._liveTally) tally.classList.add('on');
+    if (Player._liveTally) openTally(node);
     /* The answer is out, so the thinking time is over. Both reveal paths \u2014
        an answer and the clock running out \u2014 come through here. */
     stopMusic();
@@ -1279,6 +1288,10 @@
     box.textContent = '';
     var b = box;
     live.forEach(function (n) { b.appendChild(el('div', 'rnote', n.text)); });
+    /* A note is 40-odd px the board did not have a moment ago. Said on the
+       rail so the rows can tighten for as long as it is up, rather than
+       having the bottom of the board clipped mid-row. */
+    if (Player._rail) Player._rail.classList.toggle('has-news', live.length > 0);
   }
 
   Player.setScoreboard = function (rows, opts) {
@@ -1839,6 +1852,28 @@
     Player.scheduleFit(node);
   };
 
+  /**
+   * Open the vote bars — and re-fit the answers, because they are 74px of
+   * slide that was not there a moment ago.
+   *
+   * .opts is flex:1 beside a tally that is zero-height until the reveal, so
+   * the fit that ran when the question arrived had 74px more room than the
+   * revealed slide has. Nothing re-measured, and the answer boxes spilled
+   * over the bars — worst on a boss question, where the crest, the damage
+   * badge and the HP bar have already taken the top of the slide.
+   */
+  function openTally(node) {
+    var tally = node && node.querySelector('.tally');
+    if (!tally || tally.classList.contains('on')) return;
+    tally.classList.add('on');
+    /* Whichever fitter owns the layout on screen: fitQuizSlide hands the
+       revealed slide over to fitInlineWhy and returns, so calling it here
+       would leave the explanation measured against the room it had before
+       the bars appeared — and the wrong answers pushed off the bottom. */
+    if (node.classList.contains('why-open')) scheduleFit(node);
+    else scheduleQuizFit(node);
+  }
+
   function applyTally(node, counts, progress) {
     /* A typed question has no per-option bars — the only live number that
        means anything before the reveal is how many have answered. */
@@ -1850,7 +1885,7 @@
     if (answered) answered.textContent = said;
     var tally = node.querySelector('.tally');
     if (!tally) return;
-    tally.classList.add('on');
+    openTally(node);
     var max = Math.max(1, Math.max.apply(null, counts));
     Array.prototype.forEach.call(tally.querySelectorAll('.col'), function (col, i) {
       var n = counts[i] || 0;
@@ -2893,6 +2928,7 @@
   Player.fitInlineWhy = fitInlineWhy;
   Player.scheduleFit = scheduleFit;
   Player.fitQuizSlide = fitQuizSlide;
+  Player.openTally = openTally;
   Player.flattenOverlay = flattenOverlay;
   SF.Player = Player;
   SF.toast = toast;

@@ -442,8 +442,14 @@ function safeHref(url) {
   if (/^\/\//.test(u)) return 'https:' + u;
   /* Course packs (lessons/*.xlsx, *.ipynb) are served from the app origin.
      Allow a rooted path with no ".." so a links slide can hand students a
-     download without baking in localhost or a Render hostname. */
-  if (u.charAt(0) === '/' && u.indexOf('..') < 0 && /^\/[A-Za-z0-9._~/-]*$/.test(u)) return u;
+     download without baking in localhost or a Render hostname.
+
+     The query string is allowed too, because the app's own deep link is
+     "/?lesson=<key>" — that is how one deck points at another (a lab at the
+     lecture behind it) without knowing whether it is being served from
+     localhost or Render. */
+  if (u.charAt(0) === '/' && u.indexOf('..') < 0 &&
+      /^\/[A-Za-z0-9._~/-]*(\?[A-Za-z0-9._~/\-=&%+]*)?(#[A-Za-z0-9._~/-]*)?$/.test(u)) return u;
   if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}([\/?#][^\s]*)?$/i.test(u)) return 'https://' + u;
   return '';
 }
@@ -643,7 +649,7 @@ function prepareLayout(slide, type) {
  * So this answers three questions at once: can this slide hold a picture,
  * which FIELD does it go in, and if it cannot, what would it have to become.
  *
- * @param {Slide|null|undefined} slide
+ * @param {object|null|undefined} slide
  * @returns {{field: 'image'|'layer', become: string}|null} null when a picture
  *   makes no sense here — a chart, a table, a code listing or a game slide is
  *   not improved by dropping a screenshot into it.

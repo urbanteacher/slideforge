@@ -2255,8 +2255,7 @@
         node.classList.add('why-open');
         SF.Player.scheduleFit(node);
       }
-      var t = node.querySelector('.tally');
-      if (t) t.classList.add('on');
+      SF.Player.openTally(node);
     }
     /* The answer is out, so the music under the thinking time stops. */
     SF.Player.stopMusic();

@@ -74,6 +74,15 @@
     if (SF.Shell.stored) SF.Shell.stored();
   }
 
+  /* Drop a pending autosave without writing. Used when the open document is
+     about to be deleted — otherwise the timer (or openDeck's flush) puts it
+     straight back into the Library. */
+  function cancelPendingSave() {
+    if (!saveTimer) return;
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+
   function gameFor(slide) {
     return slide.gameId ? SF.GameStore.get(slide.gameId) : null;
   }
@@ -3620,6 +3629,9 @@
         SF.History.snapshot(deck, 'Before opening another lesson');
       }
       deck = SF.Studio.makeLesson(key); sel = 0;
+      /* Opening a factory pack again is an intentional restore — clear any
+         Library dismiss so seedLibrary does not keep hiding it. */
+      if (deck && deck.sourceKey && SF.restoreLibrarySeed) SF.restoreLibrarySeed(deck.sourceKey);
       SF.Store.save(deck, { force: true }); SF.Shell.syncChrome(); draw();
     },
     deck: function () { return deck; },
@@ -3630,11 +3642,21 @@
        settings. It passes its own redraw. */
     drawFeedback: drawFeedback,
     openAiSmokeTest: openAiSmokeTest,
-    openDeck: function (id) {
+    cancelPendingSave: cancelPendingSave,
+    /**
+     * @param {string} id
+     * @param {{ abandon?: boolean }} [opts]  abandon: do not flush/save the
+     *   document you are leaving (delete path — otherwise it reappears).
+     */
+    openDeck: function (id, opts) {
       var d = SF.Store.get(id);
       if (!d) return;
-      flush();
-      if (deck && deck.id !== id) SF.Store.save(deck);
+      if (opts && opts.abandon) {
+        cancelPendingSave();
+      } else {
+        flush();
+        if (deck && deck.id !== id) SF.Store.save(deck);
+      }
       deck = d;
       sel = savedSelection();
       SF.Shell.syncChrome();

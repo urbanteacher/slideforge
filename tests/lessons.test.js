@@ -261,6 +261,21 @@ test('saving a seeded pack keeps the same library id', () => {
   assert.equal(SF.Store.list().filter((d) => d.sourceKey === 'ukbt-template').length, 1);
 });
 
+test('deleting a seeded pack stays deleted across re-seed', () => {
+  const SF = load();
+  SF.seedLibrary();
+  const row = SF.Store.list().filter((d) => d.sourceKey === 'nul-lab1')[0];
+  assert.ok(row, 'nul-lab1 was filed');
+  SF.dismissLibrarySeed(row.sourceKey);
+  SF.Store.remove(row.id);
+  assert.equal(SF.Store.list().filter((d) => d.sourceKey === 'nul-lab1').length, 0);
+  assert.equal(SF.seedLibrary(), 0, 'dismissed packs must not come back on seed');
+  assert.equal(SF.Store.list().filter((d) => d.sourceKey === 'nul-lab1').length, 0);
+  SF.restoreLibrarySeed('nul-lab1');
+  assert.ok(SF.seedLibrary() >= 1, 'restore lets seed file the pack again');
+  assert.equal(SF.Store.list().filter((d) => d.sourceKey === 'nul-lab1').length, 1);
+});
+
 test('save assigns libraryGroup from theme when missing', () => {
   const SF = load();
   const deck = SF.makeDeck('A named lesson');

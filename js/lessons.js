@@ -1220,16 +1220,46 @@
       slides: [
         { type: 'title', title: 'Lab 1', subtitle: 'Information Presentation & Data Visualisation · exercise sheet',
           date: '2026-09-15',
-          notes: 'Ninety minutes. The worksheet has four tasks and one deadline, and the only one that needs teaching is the critique — the rest is setup, which goes faster if you find out early who is stuck.\n\nSo this deck front-loads the triage: slide 3 asks the room where it is, and you spend the lab on whoever answered “nothing works yet”.' },
+          notes: 'Ninety minutes. The worksheet has four tasks and one deadline, and the only one that needs teaching is the critique — the rest is setup, which goes faster if you find out early who is stuck.\n\nSo this deck opens with a chart instead of admin — a real pie of real cycle-hire numbers that hides everything — and then asks the room where its Python is. Spend the lab on whoever answered “nothing works yet”.\n\nThe survey is still task 1 on the worksheet; it is not a slide any more. Say it once, point at Canvas, move on.' },
+
+        { type: 'chart', chartKind: 'pie',
+          title: 'Six years of London cycle hires',
+          body: 'Year\tHires\n2018\t10567540\n2019\t10424955\n2020\t10434167\n2021\t10941264\n2022\t11505872\n2023\t8531168',
+          chartSource: 'Every Santander Cycle hire, 2018–2023, summed by year · TfL, London Datastore',
+          feedback: { kind: 'poll', prompt: 'Real numbers, real chart. What has gone missing?',
+            options: [
+              'Which year came first',
+              'Summer vs winter inside each year',
+              'The 2020 break (and the 2023 drop)',
+              'All three'
+            ], max: 1 },
+          notes: 'COLD OPEN. Say nothing about it being a bad chart. Put it up, let them look, take the poll.\n\nThese are real numbers, from a real source, drawn by a real charting library — and the chart still hides everything that matters. That is the whole module in one slide: the same data can be made to say almost anything, and a chart that looks professional is not the same as a chart that is honest.\n\nAsk out loud: what happened in 2020? You cannot tell — 2019 and 2020 are almost the same slice. Where is summer? Gone. Where is April lockdown? Gone.\n\nAnswer is ALL THREE. Then say what the lab is for: by the end of it they draw this same series honestly, from the raw file, themselves.' },
+
+        { type: 'keywords', title: 'Why that chart tells you nothing (say it out loud)',
+          bullets: [
+            'Wrong question\tPies answer “share of a total”. You asked “change over time”.',
+            'Angles are hard\tThe eye compares position on a line far better than slice size.',
+            'COVID vanishes\t2019 ≈ 2020 as annual totals — the crisis is invisible.',
+            'Seasons vanish\tTwelve summers and winters collapse into one blob per year.'
+          ],
+          progressive: true,
+          notes: 'One press at a time.\n\nNobody has to be dishonest to produce that pie — it is the default move: open a spreadsheet, press the chart button, pick the colourful one. Most misleading charts are made exactly that way, which is why you can be the person who does not.\n\nThen say where it goes: in task 2 they owe a news chart this same critique, and in task 4 they draw these same numbers properly from the raw file.' },
 
         { type: 'cards', design: { cardsMode: 'rows' }, title: 'Four tasks, one deadline',
           bullets: [
-            '1 · Survey\tFive minutes, on your phone, now. It becomes data we visualise later in the module.',
+            '1 · Survey\tFive minutes on your phone — link on Canvas. It becomes data we visualise later in the module.',
             '2 · A chart in the news\tFind one about a natural disaster. Critique it on Canvas. This is the task that carries marks for thinking.',
             '3 · Python that runs\tAnaconda, then prove it from a terminal.',
             '4 · A notebook with a chart in it\tYour data, your chart, submitted as the notebook.'
           ],
-          notes: 'Read this once and do not read it again — the worksheet is on Canvas and they can re-read it there. The room’s time is better spent on tasks 2 and 3.' },
+          notes: 'Read this once and do not read it again — the worksheet is on Canvas and they can re-read it there. The room’s time is better spent on tasks 2 and 3.\n\nSurvey link, if you want it on screen or read out: https://forms.office.com/r/9YBnKM34Nt — five minutes, in the room, and say what it is for (background, expectations, favourite colour) because it comes back in week 4 as a chart the cohort made of itself.' },
+
+        { type: 'links', title: 'The lecture behind this lab',
+          bullets: [
+            'Lecture 1 · Information Presentation & Data Visualisation\t/?lesson=ipdv-intro',
+            'Dataset page · London Datastore\thttps://data.london.gov.uk/dataset/number-of-bicycle-hires-2r84d'
+          ],
+          notes: 'The lecture opens in this app, as its own copy — useful mid-lab when somebody asks “what was that chart with the cholera map?”, and useful to them afterwards for the critique in task 2.\n\nDo not teach from it here. This is a pointer, not a detour.' },
 
         { type: 'content', title: 'Before anything else: where are you?',
           bullets: [
@@ -1245,15 +1275,6 @@
             ], max: 1 },
           notes: 'THE MOST USEFUL SLIDE IN THE LAB. Thirty seconds, and you know whether to demonstrate the install or move to the critique.\n\nRead the split out loud. If a third are on “nothing yet”, do task 3 together from the front and let the rest start task 2.' },
 
-        { type: 'section', title: 'Task 1', subtitle: 'The survey — five minutes, on your phone',
-          notes: 'Do it in the room. A survey taken later is a survey taken by half the cohort, and this one becomes a dataset we visualise in week 4 — including the favourite-colour question, which is the one they remember.' },
-
-        { type: 'links', title: 'Open this now',
-          bullets: [
-            'Student information survey · 5 min\thttps://forms.office.com/r/9YBnKM34Nt'
-          ],
-          notes: 'Read the address out as well as showing it: a projector at the back of a lab is not always readable.\n\nSay what it is for — background, expectations, favourite colour — and that it comes back later as a chart the cohort made of itself. Consent is easier to give when the use is named.' },
-
         { type: 'section', title: 'Task 2', subtitle: 'A chart in the news, and what is wrong with it',
           notes: 'The only task here that is about visualisation rather than software. Give it the time the other three do not need.' },
 
@@ -1265,7 +1286,7 @@
             'Include the URL. A critique of a chart nobody can find is not a critique.'
           ],
           progressive: true,
-          notes: 'Push them past “I like the colours”. The question is always: what was the reader meant to take away, and does the chart make that easy or hard?\n\nThe next slide is a worked one. Do not turn it over until they have tried.' },
+          notes: 'Push them past “I like the colours”. The question is always: what was the reader meant to take away, and does the chart make that easy or hard?\n\nThe next slide is a worked one. Do not turn it over until they have tried.\n\nLater in task 4 you will draw a bad pie from THEIR OWN cycle-hire numbers — same critique, now with skin in the game.' },
 
         { type: 'split', imageFit: 'contain', imageSide: 'left', design: { imageShare: 50 },
           image: 'assets/lesson/ipdv/brexit-scatter-ft.jpg',
@@ -1304,12 +1325,12 @@
 
         { type: 'cards', design: { cardsMode: 'rows' }, title: 'Four stages, and you have all four',
           bullets: [
-            'Raw\tGet the file. Look at it before you believe anything about it.',
-            'Clean\tMake it a tidy table: one row per day, a real date, a real number.',
-            'Visualise\tOne chart that answers one question.',
+            'Raw\tOpen the file. Look at the mess before you trust it.',
+            'Clean\tOne row per day — then look at the table on the wall.',
+            'Visualise\tPick a chart that fits the question (and spot one that does not).',
             'Insights\tWhat you found, in sentences. This is the part that is marked.'
           ],
-          notes: 'The shape of every task in this module, and of task 4 in particular. The code for all four stages is on the next slides and on Canvas — nobody is assessed on typing it.\n\nWhat is assessed is the fourth stage. A chart with no sentence under it is half a submission.' },
+          notes: 'The shape of every task in this module. Code for all four stages follows — nobody is marked on typing it.\n\nWhat is marked is stage 4, and stage 3 is where beginners usually go wrong: a colourful pie of years looks like “doing visualisation” and answers the wrong question. You will see that trap on purpose before you draw the line.' },
 
         { type: 'links', title: 'The dataset: every Santander Cycle hire since 2010',
           bullets: [
@@ -1325,29 +1346,52 @@
           code: 'import pandas as pd\n\n# Download the .xlsx from the link on the last slide and put it\n# beside your notebook. Pointing pandas at the URL gives 403.\npath = "tfl-daily-cycle-hires.xlsx"\n\nprint(pd.ExcelFile(path).sheet_names)\n# [\'Metadata\', \'Data\']   <- sheet 0 is NOT the data\n\nraw = pd.read_excel(path, sheet_name="Data", header=None)\nprint(raw.shape)          # (5883, 16)\nprint(raw.iloc[:7, 1:3])  # notes and totals sit above the series\n',
           notes: 'TWO TRAPS, both measured rather than guessed, and either one takes a lab down.\n\nFIRST: read_excel(url) returns HTTP 403 Forbidden. The Datastore refuses the default user agent urllib sends, so a browser download works, curl works, and pandas does not. Download the file and read it from disk — which is also the version that survives lab wifi. Anyone set on the URL needs urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"}).\n\nSECOND: the obvious line — read_excel(url, sheet_name=0) — reads the METADATA sheet: twenty-nine rows of description. pd.to_datetime on that either fails or, worse, does not.\n\nThis file also carries a notes paragraph and three grand totals above the table, and day, month and year blocks side by side across sixteen columns. None of that is a fault; it is what a published spreadsheet looks like.\n\nThe rule, said out loud: print the shape and the first rows before writing a single line that assumes a structure.' },
 
+        { type: 'table', tableHeader: true,
+          title: 'What the Excel looks like on disk',
+          body: 'Column\tValue\n(blank)\t\nNote about delayed system events…\t\n(blank)\t\nDaily Grand Total\t154053134\n(blank)\t\nDay\tNumber of Bicycle Hires\n2010-07-30\t6897\n2010-07-31\t5564\n2010-08-01\t4303',
+          notes: 'THIS is stage 1 on the wall. The real header is “Day / Number of Bicycle Hires”. Everything above it is preamble. Sixteen columns sit beside these two (month and year blocks) — not shown here so the mess stays readable.\n\nPoint at the grand total and the header. Then clean.' },
+
         { type: 'code', language: 'python', typewrite: true, typeSpeed: 55,
           title: 'Stage 2 · Clean. One row per day.',
           code: 'df = pd.read_excel(path, sheet_name="Data", skiprows=5,\n                   usecols=[1, 2], names=["date", "hires"])\n\ndf = df.dropna()\ndf["date"] = pd.to_datetime(df["date"])\ndf["hires"] = pd.to_numeric(df["hires"])\n\n# Check against the total the file states about itself:\nprint(len(df), int(df["hires"].sum()))\n# 5877 154053134   <- matches the sheet’s own Grand Total\n',
           notes: 'Five arguments, and each is a decision they should be able to defend: the sheet by NAME rather than position, skip the five rows above the header, take two of the sixteen columns, name them.\n\nThe print is the habit worth stealing. The file states its own grand total — 154,053,134 — so a clean read can be checked against it. If the sum does not match, the cleaning is wrong, and they have found out in one line instead of in the marking.' },
 
         { type: 'table', tableHeader: true,
-          title: 'This is what stage 2 leaves you with',
-          body: 'date\thires\n2010-07-30\t6897\n2010-07-31\t5564\n2010-08-01\t4303\n2010-08-02\t6642\n2010-08-03\t7966\n…\t…\n2026-08-31\t19426',
-          progressive: true, buildMode: 'dim',
-          notes: 'LOOK AT IT BEFORE YOU PLOT IT. One line does this — print(df.head()) — and it is the cheapest check in the whole pipeline: two columns, one row per day, no notes, no grand totals, no sixteen columns.\n\nThe first row is 30 July 2010 because that is the day the scheme opened, and the last is 31 August 2026 because that is where the file ends. Between them are 5,877 rows, which is the number stage 2 printed — so the table and the count agree, and if they did not you would know the cleaning was wrong.\n\nThe two types are the point, and print(df.dtypes) shows them: date is datetime64, hires is int64. Not strings. That is what makes resample("ME") work on the next slide and what makes a sum a sum rather than a concatenation — a date column read as text plots in alphabetical order, which is the single most common way a first time series goes wrong.\n\nBuild on Next with dim, so you can walk the columns before the rows.' },
+          title: 'After cleaning — one row per day',
+          body: 'date\thires\n2010-07-30\t6897\n2010-07-31\t5564\n2010-08-01\t4303\n2010-08-02\t6642\n2010-08-03\t7966\n2010-08-04\t7893\n2010-08-05\t8724\n2010-08-06\t9797\n2026-08-29\t15779\n2026-08-30\t20335\n2026-08-31\t19426',
+          notes: 'LOOK AT IT BEFORE YOU PLOT IT. Two columns, real dates, real numbers — 5,877 rows in full between the first week and the last three days shown.\n\nShown whole on arrival (not Build on Next): a table you cannot see until you press is not a table on the wall.\n\ndate is datetime, hires is a number — that is what makes resample and sum work on the next slides.' },
+
+        { type: 'content', title: 'Pause. Same table — which chart would you draw?',
+          bullets: [
+            'You have one number per day for years.',
+            'Your question is: how do hires change over time?',
+            'You have already seen what the wrong answer looks like. Vote.'
+          ],
+          feedback: {
+            kind: 'poll',
+            prompt: 'Best first chart for this daily time series?',
+            options: [
+              'Pie of each year as a slice',
+              'Line of hires over months',
+              'Pie of the twelve calendar months',
+              'One giant number: the grand total'
+            ],
+            max: 1
+          },
+          notes: 'ENGAGEMENT BEAT. Do not reveal the answer yet.\n\nThis is the callback to the slide the lab opened on: the pie of years is option one, and some of them will still pick it. That is worth seeing — the default move survives being told it is wrong, which is why they have to draw the honest chart themselves.\n\nCorrect is the line. The giant number is honest but not a chart. Both pies are traps.' },
 
         { type: 'code', language: 'python', typewrite: true, typeSpeed: 55,
           title: 'Stage 3 · Visualise. One question, one chart.',
           code: 'import matplotlib.pyplot as plt\n\nmonthly = df.set_index("date")["hires"].resample("ME").sum()\n\nfig, ax = plt.subplots(figsize=(11, 4))\nax.plot(monthly.index, monthly.values, linewidth=1.2)\nax.set_title("Hires peak every summer — and 2020 broke the pattern")\nax.set_ylabel("Hires per month")\nax.spines[["top", "right"]].set_visible(False)\nplt.tight_layout()\nplt.show()\n',
-          notes: 'Daily is too noisy to read from the back of a room, so resample to monthly totals first. That is an editorial choice and it belongs in the write-up.\n\nThe title is the only line with an opinion in it, and it is the habit this whole module is about: say the finding, not the subject. “Hires per month” is the axis label; “Hires peak every summer and 2020 broke the pattern” is the chart.\n\nThe two removed spines are not decoration — less ink on the frame is more attention on the line.' },
+          notes: 'The pie the lab opened on was these same numbers. This is the chart that answers the question they voted on.\n\nDaily is too noisy from the back of the room, so resample to monthly totals first — an editorial choice that belongs in the write-up.\n\nThe title carries the finding: “Hires per month” is the axis; “Hires peak every summer and 2020 broke the pattern” is the chart. Remove the top and right spines so the ink goes on the line, not the frame.' },
 
         { type: 'chart', chartKind: 'line', design: { chartMotion: 'grow' },
-          title: 'Hires peak every summer — and 2020 broke the pattern',
+          title: 'Same data · a line that answers the question',
           body: 'Month	Hires (thousands)\nJan 18	646\nFeb 18	576\nMar 18	605\nApr 18	825\nMay 18	1113\nJun 18	1182\nJul 18	1253\nAug 18	1058\nSep 18	1008\nOct 18	978\nNov 18	738\nDec 18	585\nJan 19	686\nFeb 19	699\nMar 19	792\nApr 19	890\nMay 19	1007\nJun 19	1006\nJul 19	1152\nAug 19	1054\nSep 19	966\nOct 19	852\nNov 19	729\nDec 19	592\nJan 20	710\nFeb 20	641\nMar 20	554\nApr 20	591\nMay 20	1121\nJun 20	1159\nJul 20	1170\nAug 20	1153\nSep 20	1138\nOct 20	848\nNov 20	760\nDec 20	589\nJan 21	410\nFeb 21	511\nMar 21	749\nApr 21	944\nMay 21	922\nJun 21	1184\nJul 21	1168\nAug 21	1111\nSep 21	1220\nOct 21	1111\nNov 21	945\nDec 21	667\nJan 22	749\nFeb 22	750\nMar 22	1057\nApr 22	1031\nMay 22	1201\nJun 22	1280\nJul 22	1316\nAug 22	1260\nSep 22	801\nOct 22	864\nNov 22	726\nDec 22	472\nJan 23	571\nFeb 23	613\nMar 23	631\nApr 23	647\nMay 23	821\nJun 23	885\nJul 23	809\nAug 23	778\nSep 23	847\nOct 23	790\nNov 23	665\nDec 23	474',
           chartSource: 'TfL daily cycle hires, summed by month (thousands). 2018–2023 only — long enough to see the annual cycle, the April 2020 lockdown dip, the January 2021 floor, and the weaker summers of 2023. Whole-year totals hide all of that: 2019 and 2020 look almost the same.',
-          notes: 'Yes — the old annual chart was a teaching mistake dressed as a chart. Summing to years made COVID invisible (10.42M then 10.43M) and stretched the axis so the line looked flat.\n\nThis monthly view is what their notebook draws. Point at: summer peaks every year; April 2020 crater; January 2021 lowest; 2023 summers lower than 2022. Then advance to the insight stats.\n\nThe title states the finding. The source line states why annual was the wrong grain.' },
+          notes: 'THE PAYOFF. Same cleaned data as the pie — now you can see summers, the April 2020 crater, the January 2021 floor, and weaker 2023 peaks. Ask the room to point at each with a finger.\n\nThis is what their notebook draws. The title states the finding; the pie could not. Then go to the insight numbers.' },
 
-        { type: 'links', title: 'Open the files while this chart is up',
+        { type: 'links', title: 'Your turn — open the files and run it',
           bullets: [
             'Download the Excel · course copy\t/lessons/tfl-daily-cycle-hires.xlsx',
             'Worked Jupyter notebook\t/lessons/01_Lab_IPDV_CycleHires_Solutions.ipynb',
@@ -1355,7 +1399,7 @@
           ],
           notes: 'Leave this up while they work. The notebook is the answer key for stages 1–4; the Excel sits beside it so path = "tfl-daily-cycle-hires.xlsx" resolves.' },
 
-        { type: 'stats', design: { statStyle: 'bar' }, title: 'Stage 4 · Insights, with the numbers attached',
+        { type: 'stats', design: { statStyle: 'bar' }, title: 'Stage 4 · Write the finding (numbers attached)',
           bullets: [
             'Summer against winter\t2.0×\tJuly averages 34,212 hires a day, December 17,132',
             'April 2020 against April 2019\t−34%\t591,294 against 890,148 — the lockdown month',
@@ -1387,7 +1431,7 @@
             'One thing that is still not working, or one thing you now understand that you did not at the start.'
           ],
           feedback: { kind: 'brainstorm', prompt: 'What is still broken, or what clicked?', options: [], max: 2 },
-          notes: 'The exit ticket, and it sets next week’s first five minutes. Read two or three out before they leave so they know it was read.\n\nCompare it with the poll from slide 3: the gap between where the room started and where it finished is the lab’s actual outcome, and it is worth writing down.' }
+          notes: 'The exit ticket, and it sets next week’s first five minutes. Read two or three out before they leave so they know it was read.\n\nListen for: install stuck, pie-vs-line “aha”, or still no notebook path. Compare with the opening poll — that gap is the lab’s real outcome.' }
       ]
     },
     {
@@ -3956,18 +4000,55 @@
   /**
    * File each factory pack into Store once. Later app updates do not overwrite
    * an edited pack — a stored deck with the same sourceKey already counts.
+   * Packs the user deleted stay out until they open that pack again (Demo /
+   * useLesson clears the dismiss).
    *
    * @returns {number} how many packs were added this call
    */
+  var DISMISSED_SEEDS_KEY = 'slideforge.dismissedSeeds.v1';
+
+  function readDismissedSeeds() {
+    try {
+      var raw = JSON.parse((typeof localStorage !== 'undefined' && localStorage.getItem(DISMISSED_SEEDS_KEY)) || '[]');
+      return Array.isArray(raw) ? raw.map(String).filter(Boolean) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function writeDismissedSeeds(keys) {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      localStorage.setItem(DISMISSED_SEEDS_KEY, JSON.stringify(keys));
+    } catch (e) {}
+  }
+
+  function dismissLibrarySeed(key) {
+    var k = String(key || '');
+    if (!k) return;
+    var list = readDismissedSeeds();
+    if (list.indexOf(k) >= 0) return;
+    list.push(k);
+    writeDismissedSeeds(list);
+  }
+
+  function restoreLibrarySeed(key) {
+    var k = String(key || '');
+    if (!k) return;
+    writeDismissedSeeds(readDismissedSeeds().filter(function (x) { return x !== k; }));
+  }
+
   function seedLibrary() {
     if (!SF.Store) return 0;
     var byKey = {};
     SF.Store.list().forEach(function (d) {
       if (d.sourceKey) byKey[d.sourceKey] = d;
     });
+    var dismissed = Object.create(null);
+    readDismissedSeeds().forEach(function (k) { dismissed[k] = true; });
     var added = 0;
     Object.keys(LIBRARY_SEED_KEYS).forEach(function (key) {
-      if (byKey[key]) return;
+      if (byKey[key] || dismissed[key]) return;
       var deck = buildLesson(key);
       if (!deck) return;
       deck.sourceKey = key;
@@ -4172,6 +4253,8 @@
   SF.LIBRARY_SEED_KEYS = LIBRARY_SEED_KEYS;
   SF.buildLesson = buildLesson;
   SF.seedLibrary = seedLibrary;
+  SF.dismissLibrarySeed = dismissLibrarySeed;
+  SF.restoreLibrarySeed = restoreLibrarySeed;
   SF.LessonBank = {
     stamp: stamp,
     folderId: folderId,

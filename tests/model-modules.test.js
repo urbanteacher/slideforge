@@ -160,6 +160,15 @@ test('deck content helpers and layout definitions export cleanly', async () => {
   assert.equal(safeHref('https://example.com'), 'https://example.com');
   assert.equal(safeHref('javascript:alert(1)'), '');
   assert.equal(safeMedia('javascript:alert(1)'), '');
+
+  /* One deck links to another with the app's own deep link, so a rooted path
+     has to keep its query string — while still refusing traversal and the
+     characters that would let a URL carry markup. */
+  assert.equal(safeHref('/?lesson=ipdv-intro'), '/?lesson=ipdv-intro');
+  assert.equal(safeHref('/lessons/lab.ipynb'), '/lessons/lab.ipynb');
+  assert.equal(safeHref('/?lesson=x#stage-2'), '/?lesson=x#stage-2');
+  assert.equal(safeHref('/../etc/passwd'), '');
+  assert.equal(safeHref('/x?y=<script>'), '');
 });
 
 test('save assigns libraryGroup from theme when missing', async () => {

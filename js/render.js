@@ -3772,11 +3772,11 @@
       var m;
 
       if (lang === 'python' && rest.charAt(0) === '#') {
-        m = /^[^\n]*/.exec(rest);
+        m = /^[^\n]*/.exec(rest) || [''];
         push('com', m[0]); i += m[0].length; continue;
       }
       if (lang === 'javascript' && rest.slice(0, 2) === '//') {
-        m = /^[^\n]*/.exec(rest);
+        m = /^[^\n]*/.exec(rest) || [''];
         push('com', m[0]); i += m[0].length; continue;
       }
       if (lang === 'javascript' && rest.slice(0, 2) === '/*') {
@@ -3801,7 +3801,7 @@
       }
 
       if (lang === 'python' && rest.charAt(0) === '@') {
-        m = /^@[\w.]*/.exec(rest);
+        m = /^@[\w.]*/.exec(rest) || [''];
         push('fn', m[0]); i += m[0].length; continue;
       }
 

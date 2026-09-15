@@ -56,7 +56,7 @@
         key: 'demo-' + i,
         name: p.teamName ? (p.name + ' (' + p.teamName + ')') : p.name,
         score: (mode === 'discuss' || mode === 'board') ? '—' : p.score,
-        members: 0,
+        members: null,
         color: p.teamColor || '',
         gained: !!p.gained
       };
@@ -125,6 +125,15 @@
     return response === slide.correct;
   }
 
+  /* What the HP bar reads right now, as "8 / 11 HP" — or '' when nothing is
+     keeping count (a live room owns its own fight). Read from the fight rather
+     than tracked here, so the note and the bar can never disagree. */
+  function bossHpNow() {
+    if (!host || !host.deck || !SF.Boss || !SF.Boss.forDeck) return '';
+    var f = SF.Boss.forDeck(host.deck);
+    return f ? (f.hp + ' / ' + f.max + ' HP') : '';
+  }
+
   function pointsFor(slide) {
     var n = Number(slide.points);
     return Number.isFinite(n) ? Math.max(0, n) : 1;
@@ -179,8 +188,11 @@
         node.classList.add('why-open');
         if (host.scheduleFit) host.scheduleFit(node);
       }
-      var bar = node.querySelector('.tally');
-      if (bar) bar.classList.add('on');
+      if (host.openTally) host.openTally(node);
+      else {
+        var bar = node.querySelector('.tally');
+        if (bar) bar.classList.add('on');
+      }
     }
     players.forEach(function (p) {
       p.gained = false;
@@ -190,18 +202,24 @@
       }
     });
 
-    /* Boss battle mechanic: class hits damage the shared boss HP bar */
+    /* Boss battle mechanic: class hits damage the shared boss HP bar.
+
+       The note says what the bar now reads, because the bar is the thing the
+       room is watching and a note that only announces damage is a claim they
+       cannot check. It is also read AFTER the command, for the same reason. */
     if (host.deck && host.deck.mechanic === 'boss') {
       var dmg = Number(slide.bossDamage) || (SF.bossDamage && SF.bossDamage(slide.difficulty)) || 2;
       var rights = players.filter(function (p) { return p.slideId === slide.id && p.choice != null && isRight(slide, p.choice); }).length;
       var hit = rights >= Math.max(1, Math.floor(players.length * 0.4));
-      if (hit) {
-        if (typeof host.bossCommand === 'function') host.bossCommand('hit');
-        host.railNote('HIT! Room dealt −' + dmg + ' damage to the boss!');
-      } else {
-        if (typeof host.bossCommand === 'function') host.bossCommand('miss');
-        host.railNote('MISS! Boss resisted the attack.');
+      /* advance:false — the demo is on the teacher's arrow keys, and a mark
+         that moved the slide itself would skip the explanation it revealed. */
+      if (typeof host.bossCommand === 'function') {
+        host.bossCommand(hit ? 'hit' : 'miss', { advance: false });
       }
+      var left = bossHpNow();
+      host.railNote(hit
+        ? ('HIT · −' + dmg + ' · ' + (left || 'boss hit'))
+        : ('MISS · no damage · ' + (left || 'boss untouched')));
     }
 
     /* Horse race mechanic: team correct answers advance team lanes */
@@ -245,11 +263,11 @@
     if (host.clearTally) host.clearTally();
     paintRail();
 
-    /* Notice boss / race on entry */
-    if (host.deck && host.deck.mechanic === 'boss') {
-      var bDmg = Number(slide.bossDamage) || (SF.bossDamage && SF.bossDamage(slide.difficulty)) || 2;
-      host.railNote('Boss Battle: ' + (slide.difficulty || 'medium').toUpperCase() + ' · Deals ' + bDmg + ' damage to boss HP');
-    } else if (host.deck && host.deck.mechanic === 'race') {
+    /* Notice race on entry. A boss question gets none: the slide itself now
+       carries the difficulty, the damage and the HP in one band, and the note
+       repeating it was a second card in a rail three cards deep — which is
+       what pushed the leaderboard out of the panel. */
+    if (host.deck && host.deck.mechanic === 'race') {
       host.railNote('Horse Race: Correct team answers advance lanes to the finish');
     }
 

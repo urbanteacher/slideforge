@@ -183,6 +183,9 @@ export interface Slide {
   code?: string;
   /** Language label only — python | javascript | text. Never executed. */
   language?: string;
+  /** How the listing arrives in Present: all at once, or line by line.
+      `typewrite` is the older boolean this replaced and is still read. */
+  codeReveal?: 'all' | 'type' | 'lines';
   /** Auto typewriter drip when the slide opens in Present. Default true for code slides. */
   typewrite?: boolean;
   /** Milliseconds per character for the typewriter (approx). */

@@ -565,10 +565,10 @@ function normalizeSlide(raw) {
        typewrite stays as the older on/off so decks written before this still
        mean what they said — with no mode chosen, false reads as 'all' and
        anything else as 'type'. */
-    var reveal = String(s.codeReveal || '').trim();
-    if (reveal !== 'all' && reveal !== 'type' && reveal !== 'lines') {
-      reveal = s.typewrite === false ? 'all' : 'type';
-    }
+    var asked = String(s.codeReveal || '').trim();
+    var reveal = asked === 'all' || asked === 'type' || asked === 'lines'
+      ? /** @type {'all'|'type'|'lines'} */ (asked)
+      : (s.typewrite === false ? 'all' : 'type');
     s.codeReveal = reveal;
     s.typewrite = reveal === 'type';
     /* 200 rather than 120: the slow end is the point of the control, and a

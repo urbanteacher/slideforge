@@ -2203,7 +2203,11 @@ html[data-ws="game"] #btnSorter { display: none; }
   margin-top: 30px; flex: 1; min-height: 0;
   display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
   grid-auto-rows: min-content;
-  align-content: center;
+  /* `safe` matters: plain `center` splits any overflow evenly above and below,
+     so answers that do not fit ride up over the question and down over the
+     vote bars — and fitQuizSlide's scrollHeight only sees the bottom half of
+     the problem, so it stops shrinking too early. */
+  align-content: safe center;
 }
 .layout-quiz .opts.stack { grid-template-columns: 1fr; }
 
@@ -2483,6 +2487,16 @@ html[data-ws="game"] #btnSorter { display: none; }
 .scorerail[data-density="sm"] { --nm-f: 24px; --sc-f: 24px; --rk-f: 17px; --mem-f: 14px; --row-py: 11px; --row-px: 15px; --row-gap: 9px; --row-max: 88px; }
 .scorerail[data-density="xs"] { --nm-f: 21px; --sc-f: 22px; --rk-f: 15px; --mem-f: 13px; --row-py: 7px;  --row-px: 12px; --row-gap: 5px; --row-r: 9px; --row-max: 62px; }
 
+/* A note on the rail is 40-odd px the board does not have. It steps down one
+   density while the note is up, rather than losing the last row to the clip —
+   a board with a row sliced in half reads as broken, and during a boss battle
+   there is a note after every question. */
+.scorerail.has-news[data-density="xl"] { --nm-f: 34px; --sc-f: 33px; --rk-f: 23px; --mem-f: 17px; --row-py: 19px; --row-px: 20px; --row-gap: 15px; --row-r: 14px; --row-max: 150px; }
+.scorerail.has-news[data-density="lg"] { --nm-f: 29px; --sc-f: 28px; --rk-f: 19px; --mem-f: 16px; --row-py: 15px; --row-px: 18px; --row-gap: 12px; --row-max: 116px; }
+.scorerail.has-news[data-density="md"] { --nm-f: 24px; --sc-f: 24px; --rk-f: 17px; --mem-f: 14px; --row-py: 11px; --row-px: 15px; --row-gap: 9px;  --row-max: 88px; }
+.scorerail.has-news[data-density="sm"] { --nm-f: 21px; --sc-f: 22px; --rk-f: 15px; --mem-f: 13px; --row-py: 7px;  --row-px: 12px; --row-gap: 5px; --row-r: 9px; --row-max: 62px; }
+.scorerail.has-news[data-density="xs"] { --nm-f: 19px; --sc-f: 20px; --rk-f: 14px; --mem-f: 12px; --row-py: 5px;  --row-px: 10px; --row-gap: 4px; --row-r: 8px; --row-max: 54px; }
+
 .scorerail .rail-title {
   font-size: 19px; letter-spacing: .16em; text-transform: uppercase;
   color: var(--s-dim); flex: none; margin-bottom: 3px;
@@ -2495,7 +2509,7 @@ html[data-ws="game"] #btnSorter { display: none; }
    stretching into two absurd slabs */
 .scorerail .rows {
   flex: 1; min-height: 0;
-  display: flex; flex-direction: column; justify-content: center;
+  display: flex; flex-direction: column; justify-content: safe center;
   gap: var(--row-gap);
   overflow: hidden;
 }
@@ -3321,22 +3335,38 @@ html[data-ws="deck"] #railCount { display: none; }
   background: var(--s-card);
 }
 
-/* Boss — crest above the strike */
-.layout-quiz.present-boss .boss-stage { margin-bottom: 6px; }
+/* Boss — one band: what you are hitting, what a hit is worth, what it has left.
+   Stacked down the middle it was a crest, a badge, a bar, a turn line and two
+   buttons: about 240px of furniture above the answers, which then had to
+   overflow something. In a row it reads left to right in one glance and gives
+   the question back its slide. */
+.layout-quiz.present-boss .boss-stage {
+  display: flex; flex-direction: row; flex-wrap: wrap;
+  align-items: center; justify-content: center; gap: 4px 20px;
+  margin-bottom: 6px;
+}
 .layout-quiz.present-boss .boss-crest {
   position: relative; z-index: 1;
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  display: flex; flex-direction: row; align-items: center; gap: 12px;
 }
 .layout-quiz.present-boss .boss-glyph {
-  font-size: 48px; line-height: 1; color: var(--s-accent);
+  font-size: 34px; line-height: 1; color: var(--s-accent);
   animation: sf-boss-bob 2.4s ease-in-out infinite;
 }
 .layout-quiz.present-boss .boss-hit-badge {
-  font-size: 18px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase;
-  padding: 10px 18px; border-radius: 14px;
+  font-size: 16px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase;
+  padding: 7px 14px; border-radius: 12px;
   background: var(--s-card);
-  border: 3px solid var(--s-accent);
+  border: 2px solid var(--s-accent);
   color: var(--s-fg);
+}
+/* Centred on the band now that the band is one line — anchored to the top,
+   the gradient's strong edge cut a pink stripe across the question text. */
+.layout-quiz.present-boss .stage-atmosphere {
+  inset: -22px -100px auto; height: 150px; opacity: .3;
+  background:
+    radial-gradient(ellipse 80% 100% at 50% 50%,
+      color-mix(in srgb, var(--s-accent) 16%, transparent), transparent 72%);
 }
 @keyframes sf-boss-bob {
   0%, 100% { transform: translateY(0); }
@@ -4915,7 +4945,10 @@ html[data-ws="deck"] #railCount { display: none; }
 .layout-quiz.present-boss .boss-hp {
   position: relative; z-index: 1;
   display: flex; align-items: center; gap: 14px;
-  width: min(620px, 100%); margin: 12px auto 0;
+  /* Takes the rest of the band, and there is no band without it: an author
+     preview has no fight to draw, so the crest centres on its own. */
+  flex: 1 1 280px; min-width: 200px;
+  width: auto; margin: 0;
 }
 .layout-quiz.present-boss .boss-hp-rail {
   flex: 1; height: 18px; border-radius: 999px;
@@ -4933,7 +4966,8 @@ html[data-ws="deck"] #railCount { display: none; }
 }
 .layout-quiz.present-boss .boss-turn {
   position: relative; z-index: 1;
-  margin-top: 8px; font-size: 16px; color: var(--s-dim); text-align: center;
+  flex: 0 0 100%;
+  margin-top: 0; font-size: 16px; color: var(--s-dim); text-align: center;
 }
 /* Three looks, from the theme rather than from a palette of its own. */
 .layout-quiz.present-boss.is-hurt .boss-hp-fill { background: var(--s-accent-2, var(--s-accent)); }
@@ -4941,7 +4975,7 @@ html[data-ws="deck"] #railCount { display: none; }
 .layout-quiz.present-boss.is-defeated .boss-hp-fill { background: var(--s-dim); }
 .layout-quiz.present-boss .boss-actions {
   position: relative; z-index: 1;
-  display: flex; justify-content: center; gap: 10px; margin-top: 14px;
+  display: flex; justify-content: center; gap: 10px; margin-top: 8px;
 }
 .layout-quiz.present-boss .boss-button {
   font: inherit; font-size: 16px; font-weight: 600;
