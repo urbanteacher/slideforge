@@ -1012,11 +1012,12 @@
     node.querySelectorAll('[data-content-key]').forEach(function(target){
       var key=target.dataset.contentKey;target.classList.add('canvas-editable');target.title='Double-click to edit this content';
       target.ondblclick=function(e){
-        e.preventDefault();e.stopPropagation();var existing=box.querySelector('.canvas-edit-form');if(existing)existing.remove();
-        var old=key.startsWith('bullets.')?s.bullets[Number(key.slice(8))]:s[key];
-        var form=el('div','canvas-edit-form'),label=el('label',null,'Edit slide content'),area=el('textarea');area.value=old||'';area.rows=3;area.setAttribute('aria-label','Edit slide content');label.appendChild(area);form.appendChild(label);
-        form.appendChild(UI.button('Save content','primary',function(){SF.Custom.rebase(s,key,String(old||''),area.value);if(key.startsWith('bullets.'))s.bullets[Number(key.slice(8))]=area.value;else s[key]=area.value;touched();draw();}));
-        form.appendChild(UI.button('Cancel','ghost',function(){form.remove();}));box.appendChild(form);area.focus();
+        e.preventDefault();e.stopPropagation();
+        if (!SF.Custom || !SF.Custom.openCanvasEditor) return;
+        SF.Custom.openCanvasEditor(box, s, key, {
+          onSave: function () { touched(); draw(); },
+          onCancel: function () { touched(); repaint(); }
+        });
       };
       if(/^bullets\.\d+$/.test(key)){
         target.draggable=true;var i=Number(key.slice(8));target.title+=' · drag to reorder';

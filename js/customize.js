@@ -126,6 +126,103 @@
       input.parentNode.insertBefore(bar,input);
     });
   }
+
+  /**
+   * Double-click editor on the canvas — same text + Bold/Italic/Underline
+   * tools the inspector fields use. `onLive` repaints the slide while typing
+   * or formatting; `onSave` / `onCancel` finish the edit.
+   */
+  function openCanvasEditor(box, s, key, opts) {
+    opts = opts || {};
+    if (!box || !s || !key) return;
+    var existing = box.querySelector('.canvas-edit-form');
+    if (existing) existing.remove();
+
+    var bulletMatch = /^bullets\.(\d+)$/.exec(key);
+    var oldRaw = bulletMatch ? String(s.bullets[Number(bulletMatch[1])] || '') : String(s[key] || '');
+    var oldEntry = s.formatting && s.formatting[key]
+      ? JSON.parse(JSON.stringify(s.formatting[key]))
+      : null;
+    var keywordFriendly = !!(bulletMatch && s.type === 'keywords' && SF.parseKeywordLine && SF.formatKeywordLine);
+    var shown = oldRaw;
+    if (keywordFriendly) {
+      var pair = SF.parseKeywordLine(oldRaw);
+      shown = pair.def ? (pair.term + ' — ' + pair.def) : pair.term;
+    }
+
+    var current = shown;
+    /* While the form is open the slide holds the textarea text so selection
+       indices for Bold / Italic / Underline match what the teacher sees. */
+    if (shown !== oldRaw) {
+      rebase(s, key, oldRaw, shown);
+      if (bulletMatch) s.bullets[Number(bulletMatch[1])] = shown;
+      else s[key] = shown;
+    }
+
+    var form = document.createElement('div');
+    form.className = 'canvas-edit-form';
+    var label = document.createElement('label');
+    label.textContent = 'Edit slide content';
+    var area = document.createElement('textarea');
+    area.value = shown || '';
+    area.rows = 3;
+    area.setAttribute('aria-label', 'Edit slide content');
+    label.appendChild(area);
+    form.appendChild(label);
+
+    function writeShown(v) {
+      var prev = current;
+      current = v;
+      rebase(s, key, prev, v);
+      if (bulletMatch) s.bullets[Number(bulletMatch[1])] = v;
+      else s[key] = v;
+      /* Do not rebuild the preview here — the form lives inside #previewBox,
+         and a repaint would tear it down mid-edit. Save / Cancel redraw. */
+    }
+    area.addEventListener('input', function () { writeShown(area.value); });
+    bind(area, s, key, function () { /* marks land on the slide; visible after Save */ });
+
+    function restore() {
+      if (bulletMatch) s.bullets[Number(bulletMatch[1])] = oldRaw;
+      else s[key] = oldRaw;
+      if (!s.formatting) s.formatting = {};
+      if (oldEntry) s.formatting[key] = oldEntry;
+      else delete s.formatting[key];
+    }
+
+    var save = document.createElement('button');
+    save.type = 'button';
+    save.className = 'btn primary';
+    save.textContent = 'Save content';
+    save.onclick = function () {
+      var next = area.value;
+      if (keywordFriendly) {
+        var edited = SF.parseKeywordLine(next);
+        next = SF.formatKeywordLine(edited.term, edited.def);
+        rebase(s, key, current, next);
+      }
+      if (bulletMatch) s.bullets[Number(bulletMatch[1])] = next;
+      else s[key] = next;
+      form.remove();
+      if (opts.onSave) opts.onSave();
+    };
+    form.appendChild(save);
+
+    var cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'btn ghost';
+    cancel.textContent = 'Cancel';
+    cancel.onclick = function () {
+      restore();
+      form.remove();
+      if (opts.onCancel) opts.onCancel();
+    };
+    form.appendChild(cancel);
+
+    box.appendChild(form);
+    area.focus();
+    area.setSelectionRange(area.value.length, area.value.length);
+  }
   function layout(root,s) {
     var d=s.design || {}, pad=root.querySelector('.pad');
     if (!pad || s.type==='quiz' || s.type==='game') return;
@@ -362,5 +459,5 @@
     box.appendChild(UI.button('Reset to theme','ghost',function(){s.design={};s.formatting={};change();}));
     parent.appendChild(box);
   }
-  SF.Custom={removeBullet:removeBullet,bind:bind,paint:paint,layout:layout,inspector:inspector,rebase:rebase,apply:apply,entry:entry};
+  SF.Custom={removeBullet:removeBullet,bind:bind,openCanvasEditor:openCanvasEditor,paint:paint,layout:layout,inspector:inspector,rebase:rebase,apply:apply,entry:entry};
 })(window);
