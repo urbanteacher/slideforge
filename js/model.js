@@ -8963,6 +8963,8 @@
     normalizeDeck,
     deckShowsLogo,
     normalizeSlide,
+    TABLE_MAX_ROWS,
+    TABLE_MAX_COLS,
     prepareLayout,
     pasteTarget,
     imagePlacement,

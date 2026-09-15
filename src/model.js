@@ -1402,6 +1402,8 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   normalizeDeck: normalizeDeck,
   deckShowsLogo: deckShowsLogo,
   normalizeSlide: normalizeSlide,
+  TABLE_MAX_ROWS: TABLE_MAX_ROWS,
+  TABLE_MAX_COLS: TABLE_MAX_COLS,
   prepareLayout: prepareLayout,
   pasteTarget: pasteTarget,
   imagePlacement: imagePlacement,

@@ -414,6 +414,24 @@
        layout shipped with a character typewriter at one speed and no way to
        ask for anything else, which is fine until you are walking a room
        through fourteen lines and want a press per line. */
+    if(s.type==='chart'){
+      /* Silent truncation is the worst kind. A chart reads its numbers
+         through the table parser, which stops at TABLE_MAX_ROWS — header plus
+         eleven — so a longer paste is quietly cut and the chart looks
+         finished. It cost a real slide in a real lesson: seventy-two months
+         were pasted, eleven were drawn, and the caption underneath went on
+         claiming six years including a lockdown that was no longer on the
+         picture. Nothing warned anybody. */
+      var pasted = String(s.body||'').split(/\r?\n/).filter(function(l){return l.trim();}).length;
+      var drawnRows = Math.max(0, Math.min(pasted, SF.TABLE_MAX_ROWS) - 1);
+      var lost = pasted - 1 - drawnRows;
+      if(lost > 0) box.appendChild(SF.el('p','hint field-warn',
+        'Only the first '+drawnRows+' rows are drawn — '+lost+' more were pasted and are '+
+        'not on the chart. A chart reads its numbers through the table parser, which stops at '+
+        SF.TABLE_MAX_ROWS+' rows including the header. Aggregate them (months to quarters, '+
+        'days to months) or split the range across two slides, and check the caption still '+
+        'describes what is drawn.'));
+    }
     if(s.type==='code'){
       box.appendChild(UI.field('How the code arrives',UI.select([
         {value:'all',label:'All at once'},
