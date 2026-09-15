@@ -1048,8 +1048,24 @@ one is adding an entry to an array.
 | Layout bank | Northeastern London | 30 | One of every layout, as a reference to copy from |
 | Pacing gallery · NUL | Northeastern London | 11 | Openers and breakaways, then a range of teaching layouts |
 | Pacing gallery · Studio | Studio | 11 | The same pacing idea in the sage skin |
+| UK Black Tech — blank template | UK Black Tech | 13 | A starter deck for staff to populate |
+| UKBT Institute — blank template | UKBT Institute | 13 | The same shape in the Institute's brand |
 | UK Black Tech — partnership pack | UK Black Tech | 12 | Tiers, opportunities and how a partnership runs |
 | UKBT Institute — partnership pack | UKBT Institute | 13 | Research, hackathons, programmes, and the independence terms |
+
+**The two blank templates are the same deck twice**, once per brand, so
+somebody who learns the shape in one can work in the other. Thirteen slides,
+one of every layout worth reaching for, each carrying placeholder copy to
+replace and a speaker note saying what that layout is for and when not to use
+it — the table note warns that a wrapping cell pushes the last rows off the
+slide, the keywords note explains that definitions are lower-cased by the
+theme, the chart note says the source line is not optional furniture. The
+featured-card slide ships with no picture on purpose: it draws its own *Add an
+image* state, which is the correct look for a template and the prompt to fill
+it in.
+
+Rebuilding a template from the lesson picker always gives a clean copy, so
+nothing in one is precious.
 
 **The two UKBT decks are the written partnership packs, slide for section.**
 Nothing in them is invented: the reach and community figures, the track record,

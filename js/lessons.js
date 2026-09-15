@@ -1655,6 +1655,222 @@
        teaching layouts. Copy the shape into a real lesson; swap the words.
        ------------------------------------------------------------------ */
     {
+      key: 'ukbt-template',
+      title: 'UK Black Tech — blank template',
+      icon: '❯',
+      blurb: 'A starter deck in the UK Black Tech brand: one of every layout worth using, with placeholder copy to replace and a note on each saying what the layout is for. Rebuild it any time for a clean copy.',
+      minutes: 0,
+      theme: 'ukbt',
+      org: 'UK Black Tech',
+      logo: 'assets/brand/ukbt-wordmark.png',
+      logoOn: 'all',
+      logoSize: 'small',
+      logoReverse: 'never',
+      slides: [
+        { type: 'title', title: 'Your title here',
+          subtitle: 'One line saying what this is and who it is for.',
+          notes: 'TITLE — the only slide in the deck set in Alpha Lyrae, at 104px, which is the brand\u2019s hero treatment. Keep the heading to four or five words; a newline in the field gives you a deliberate line break rather than whatever the box decides.\n\nThe subtitle is a sentence, not a second heading. Set a date in the inspector and it prints under it as a small stamp.\n\nThe object bottom right changes by slide position, so you will not open two decks on the same shape.' },
+
+        { type: 'section', title: 'Your first\nsection',
+          subtitle: 'What this part of the talk is about.',
+          notes: 'SECTION — the loudest surface in the deck: full green, dark ink, the chevron bled off the right. Keep it for the two or three moments you want the room to look up. A deck where every third slide is a section break has no section breaks.\n\nNothing else goes on it. If you find yourself adding bullets here, you want a content slide.' },
+
+        { type: 'content', title: 'A point at a time',
+          bullets: [
+            'A lead-in\tThe part before the tab is set bold and the rest runs on from it, so a point can carry its own sub-clause.',
+            'Another one\tUse lead-ins when the points are of the same kind — four criteria, four risks, four steps.',
+            'Or no lead-in at all\tA line with no tab in it is just a sentence, which is often what you want.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'CONTENT — the workhorse. Build on Next is set to DIM here: points already made stay on screen at 38% so the argument so far is still readable. Switch it to Hide when the next point is a reveal.\n\nFour bullets is comfortable, six is a wall. Copy runs to a measure of about 880px so the right-hand third stays clear for the object; that is deliberate and it is also the readable line length.' },
+
+        { type: 'keyfact', title: 'One number, set large',
+          subtitle: 'COMBINED REACH ACROSS THE PLATFORM',
+          body: '20,000 tech professionals',
+          bullets: [
+            'The first thing the number does not say on its own.',
+            'The second thing.',
+            'Three supporting lines is the limit — past that the number stops being the point.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'KEY FACT — for the one figure you want quoted back at you. The subtitle above it is the label, in the second face; the number is never a build step, so it is on screen the moment the slide is.\n\nSay the number, then stop talking. The supporting lines land better if the room reads them itself.' },
+
+        { type: 'cards', title: 'Three things, side by side',
+          bullets: [
+            'First card\tThe flag above the heading is the card number. The heading is Heading 4 on the ramp and the paragraph sits under it.',
+            'Second card\tCards take a brand colour each — purple, blue, orange, lime — with dark ink on them. Four in the cycle, so a row of four is four different colours.',
+            'Third card\tUse cards for items that are peers. If one of them is more important than the others, it is not a cards slide.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'CARDS — built to the brand\u2019s own CTA card: flag, heading, paragraph, colour ground, square-ish corner. Three or four is right; six starts to shrink.\n\nA cards slide can carry a picture per card — add an images array in the inspector and the photograph sits above the heading. That is the shape the About page uses.' },
+
+        { type: 'keywords', title: 'Terms and what they mean',
+          bullets: [
+            'First term\tthe definition, in a phrase rather than a sentence',
+            'Second term\tterms are coloured on a cycle, so a list of six has a rhythm',
+            'Third term\tdefinitions are set lower case by the theme, so write them as phrases',
+            'Fourth term\tsix rows fit; a seventh will not'
+          ],
+          progressive: true,
+          notes: 'KEYWORDS — a glossary, a set of criteria, anything that is a name and a meaning. The tab splits the two.\n\nThe definition column is lower-cased by the theme, which is a deliberate glossary style — write phrases, not sentences, and do not start one with a proper noun you need capitalised.' },
+
+        { type: 'journey', title: 'A process, in order',
+          subtitle: 'Reveal one step at a time',
+          bullets: [
+            'Step one\tThe text before the tab is the milestone, the text after it the detail.',
+            'Step two\tMarkers are numbered for you and coloured on a cycle.',
+            'Step three\tUse Journey when the order is the point. Use a mind map when the points are siblings with no order.',
+            'Step four\tFour to six steps. A twelve-step plan from a stage is a plan nobody writes down.'
+          ],
+          progressive: true,
+          notes: 'JOURNEY — a route, a timeline, a process, a handover. The green rule on this layout sits under the subtitle rather than the heading, because the subtitle belongs with the heading and the route starts below both.' },
+
+        { type: 'table', title: 'When the exact value matters',
+          body: 'Column\tSecond\tThird\nRow one\tvalue\tvalue\nRow two\tvalue\tvalue\nRow three\tvalue\tvalue\nRow four\tvalue\tvalue',
+          progressive: true,
+          notes: 'TABLE — paste a range straight out of Excel or Sheets; tabs and pipes both work and the first row is the header.\n\nKeep the cells short. A description column that wraps to three lines will push your last rows off the bottom of the slide — check the bottom row is on screen before you present. Reach for a table when the reader needs the number and a chart when they need the shape.' },
+
+        { type: 'chart', chartKind: 'bar', title: 'A chart · replace the numbers',
+          body: 'Year\tEvents\n2022\t4\n2023\t6\n2024\t9\n2025\t12',
+          chartSource: 'Where these numbers came from, and what they are not. Replace this line — it prints under the chart and carries into the student handout.',
+          progressive: true,
+          notes: 'CHART — same pasted text a table takes. Twenty kinds, grouped in the picker by the question they answer rather than by what they look like: which is bigger, what is the trend, how does it divide up, where does it go.\n\nThese themes carry their own series colours, taken from the brand highlights and checked for contrast on both grounds. The source line under the chart is not optional furniture — it is the thing a reader needs a week later with nobody there to explain it.\n\nNo decorative object is drawn on a chart or a table slide, on purpose.' },
+
+        { type: 'split', title: 'An event, a report, a launch',
+          bullets: ['A date, a place, a name.', 'One more line if you need it.'],
+          image: '', imageSide: 'left', imageFit: 'cover',
+          notes: 'FEATURED CARD — a picture on one half, a lime panel with the copy on the other. This is the shape the Events page uses for the thing it wants looked at.\n\nAdd your photograph in the inspector. With the picture on the left the lockup moves to sit over it and switches to the positive version, because white lettering on lime is unreadable — that is handled for you.\n\nWith no image set this slide will look unfinished, which is the point: it is a template.' },
+
+        { type: 'quote', body: 'A sentence worth the whole slide.',
+          subtitle: 'Who said it',
+          notes: 'QUOTE — body is the quotation, subtitle the attribution. If it runs past three lines it has stopped being a quote and wants to be a content slide.\n\nAlways attribute. An unattributed quotation on a slide is a claim with nobody behind it.' },
+
+        { type: 'links', title: 'Where to go next',
+          bullets: [
+            'UK Black Tech\thttps://ukblacktech.com/',
+            'A second link\thttps://example.org/'
+          ],
+          notes: 'LINKS — text before the tab is the label, after it the URL. In a live session these become tappable on learner phones, which is the only reliable way to hand a URL to a room.' },
+
+        { type: 'content', title: 'Before you present this',
+          bullets: [
+            'Replace every placeholder\tIncluding this slide, which is a checklist for you and not for the room.',
+            'Check the bottom of every slide\tLong tables and long card copy push content off the edge. Page through in Present mode once.',
+            'Set the date\tOn the title slide, in the inspector. It prints as a small stamp under the subtitle.',
+            'Say where numbers came from\tEvery chart has a source line. A figure you cannot evidence is worse than no figure.'
+          ],
+          notes: 'Delete this slide before presenting.\n\nRebuilding this template from the lesson picker always gives a clean copy, so nothing here is precious — edit it freely.' }
+      ]
+    },
+    {
+      key: 'ukbt-institute-template',
+      title: 'UKBT Institute — blank template',
+      icon: '◈',
+      blurb: 'A starter deck in the UKBT Institute brand: one of every layout worth using, with placeholder copy to replace and a note on each saying what the layout is for. Rebuild it any time for a clean copy.',
+      minutes: 0,
+      theme: 'ukbt-institute',
+      org: 'UKBT Institute',
+      logo: 'assets/brand/ukbt-institute.svg',
+      logoOn: 'all',
+      logoSize: 'small',
+      logoReverse: 'never',
+      slides: [
+        { type: 'title', title: 'Your title here',
+          subtitle: 'One line saying what this is and who it is for.',
+          notes: 'TITLE — the only slide in the deck set in Alpha Lyrae, at 104px, which is the brand\u2019s hero treatment. Keep the heading to four or five words; a newline in the field gives you a deliberate line break rather than whatever the box decides.\n\nThe subtitle is a sentence, not a second heading. Set a date in the inspector and it prints under it as a small stamp.\n\nThe object bottom right changes by slide position, so you will not open two decks on the same shape.' },
+
+        { type: 'section', title: 'Your first\nsection',
+          subtitle: 'What this part of the talk is about.',
+          notes: 'SECTION — the loudest surface in the deck: full lime, dark ink, the chevron bled off the right. Keep it for the two or three moments you want the room to look up. A deck where every third slide is a section break has no section breaks.\n\nNothing else goes on it. If you find yourself adding bullets here, you want a content slide.' },
+
+        { type: 'content', title: 'A point at a time',
+          bullets: [
+            'A lead-in\tThe part before the tab is set bold and the rest runs on from it, so a point can carry its own sub-clause.',
+            'Another one\tUse lead-ins when the points are of the same kind — four criteria, four risks, four steps.',
+            'Or no lead-in at all\tA line with no tab in it is just a sentence, which is often what you want.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'CONTENT — the workhorse. Build on Next is set to DIM here: points already made stay on screen at 38% so the argument so far is still readable. Switch it to Hide when the next point is a reveal.\n\nFour bullets is comfortable, six is a wall. Copy runs to a measure of about 880px so the right-hand third stays clear for the object; that is deliberate and it is also the readable line length.' },
+
+        { type: 'keyfact', title: 'One number, set large',
+          subtitle: 'DIGITAL COURSES BUILT WITH PARTNERS',
+          body: '16 courses',
+          bullets: [
+            'The first thing the number does not say on its own.',
+            'The second thing.',
+            'Three supporting lines is the limit — past that the number stops being the point.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'KEY FACT — for the one figure you want quoted back at you. The subtitle above it is the label, in the second face; the number is never a build step, so it is on screen the moment the slide is.\n\nSay the number, then stop talking. The supporting lines land better if the room reads them itself.' },
+
+        { type: 'cards', title: 'Three things, side by side',
+          bullets: [
+            'First card\tThe flag above the heading is the card number. The heading is Heading 4 on the ramp and the paragraph sits under it.',
+            'Second card\tCards take a brand colour each — purple, blue, orange, lime — with dark ink on them. Four in the cycle, so a row of four is four different colours.',
+            'Third card\tUse cards for items that are peers. If one of them is more important than the others, it is not a cards slide.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'CARDS — built to the brand\u2019s own CTA card: flag, heading, paragraph, colour ground, square-ish corner. Three or four is right; six starts to shrink.\n\nA cards slide can carry a picture per card — add an images array in the inspector and the photograph sits above the heading. That is the shape the About page uses.' },
+
+        { type: 'keywords', title: 'Terms and what they mean',
+          bullets: [
+            'First term\tthe definition, in a phrase rather than a sentence',
+            'Second term\tterms are coloured on a cycle, so a list of six has a rhythm',
+            'Third term\tdefinitions are set lower case by the theme, so write them as phrases',
+            'Fourth term\tsix rows fit; a seventh will not'
+          ],
+          progressive: true,
+          notes: 'KEYWORDS — a glossary, a set of criteria, anything that is a name and a meaning. The tab splits the two.\n\nThe definition column is lower-cased by the theme, which is a deliberate glossary style — write phrases, not sentences, and do not start one with a proper noun you need capitalised.' },
+
+        { type: 'journey', title: 'A process, in order',
+          subtitle: 'Reveal one step at a time',
+          bullets: [
+            'Step one\tThe text before the tab is the milestone, the text after it the detail.',
+            'Step two\tMarkers are numbered for you and coloured on a cycle.',
+            'Step three\tUse Journey when the order is the point. Use a mind map when the points are siblings with no order.',
+            'Step four\tFour to six steps. A twelve-step plan from a stage is a plan nobody writes down.'
+          ],
+          progressive: true,
+          notes: 'JOURNEY — a route, a timeline, a process, a handover. The green rule on this layout sits under the subtitle rather than the heading, because the subtitle belongs with the heading and the route starts below both.' },
+
+        { type: 'table', title: 'When the exact value matters',
+          body: 'Column\tSecond\tThird\nRow one\tvalue\tvalue\nRow two\tvalue\tvalue\nRow three\tvalue\tvalue\nRow four\tvalue\tvalue',
+          progressive: true,
+          notes: 'TABLE — paste a range straight out of Excel or Sheets; tabs and pipes both work and the first row is the header.\n\nKeep the cells short. A description column that wraps to three lines will push your last rows off the bottom of the slide — check the bottom row is on screen before you present. Reach for a table when the reader needs the number and a chart when they need the shape.' },
+
+        { type: 'chart', chartKind: 'bar', title: 'A chart · replace the numbers',
+          body: 'Stage\tParticipants\nApplied\t120\nShortlisted\t48\nTook part\t32\nCompleted\t29',
+          chartSource: 'Where these numbers came from, and what they are not. Replace this line — it prints under the chart and carries into the student handout.',
+          progressive: true,
+          notes: 'CHART — same pasted text a table takes. Twenty kinds, grouped in the picker by the question they answer rather than by what they look like: which is bigger, what is the trend, how does it divide up, where does it go.\n\nThese themes carry their own series colours, taken from the brand highlights and checked for contrast on both grounds. The source line under the chart is not optional furniture — it is the thing a reader needs a week later with nobody there to explain it.\n\nNo decorative object is drawn on a chart or a table slide, on purpose.' },
+
+        { type: 'split', title: 'A hackathon, a study, a cohort',
+          bullets: ['A date, a place, a name.', 'One more line if you need it.'],
+          image: '', imageSide: 'left', imageFit: 'cover',
+          notes: 'FEATURED CARD — a picture on one half, a lime panel with the copy on the other. This is the shape the Events page uses for the thing it wants looked at.\n\nAdd your photograph in the inspector. With the picture on the left the lockup moves to sit over it and switches to the positive version, because white lettering on lime is unreadable — that is handled for you.\n\nWith no image set this slide will look unfinished, which is the point: it is a template.' },
+
+        { type: 'quote', body: 'A sentence worth the whole slide.',
+          subtitle: 'Who said it',
+          notes: 'QUOTE — body is the quotation, subtitle the attribution. If it runs past three lines it has stopped being a quote and wants to be a content slide.\n\nAlways attribute. An unattributed quotation on a slide is a claim with nobody behind it.' },
+
+        { type: 'links', title: 'Where to go next',
+          bullets: [
+            'UKBT Institute\thttps://ukblacktech.com/ukbt-institute/',
+            'A second link\thttps://example.org/'
+          ],
+          notes: 'LINKS — text before the tab is the label, after it the URL. In a live session these become tappable on learner phones, which is the only reliable way to hand a URL to a room.' },
+
+        { type: 'content', title: 'Before you present this',
+          bullets: [
+            'Replace every placeholder\tIncluding this slide, which is a checklist for you and not for the room.',
+            'Check the bottom of every slide\tLong tables and long card copy push content off the edge. Page through in Present mode once.',
+            'Set the date\tOn the title slide, in the inspector. It prints as a small stamp under the subtitle.',
+            'Say where numbers came from\tEvery chart has a source line. A figure you cannot evidence is worse than no figure.'
+          ],
+          notes: 'Delete this slide before presenting.\n\nRebuilding this template from the lesson picker always gives a clean copy, so nothing here is precious — edit it freely.' }
+      ]
+    },
+    {
       key: 'pace-nul',
       title: 'NUL · Openers, breakaways & a layout range',
       icon: '▣',
