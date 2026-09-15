@@ -3,8 +3,13 @@ import AVFoundation
 import AppKit
 
 let args = CommandLine.arguments
-guard args.count >= 4 else { fputs("usage: enc <framesDir> <out.mp4> <fps>\n", stderr); exit(2) }
+guard args.count >= 4 else {
+  fputs("usage: enc <framesDir> <out.mp4> <fps> [bitrate]\n", stderr); exit(2)
+}
 let dir = args[1], outPath = args[2], fps = Int32(args[3]) ?? 24
+/* A chart animation needs the bits; a diffuse background loop does not, and
+   1.4 Mbps on one buys 800 KB of file for a picture nobody looks at. */
+let bitrate = args.count >= 5 ? (Int(args[4]) ?? 1_400_000) : 1_400_000
 
 let fm = FileManager.default
 let names = try fm.contentsOfDirectory(atPath: dir).filter { $0.hasSuffix(".png") }.sorted()
@@ -19,7 +24,7 @@ let settings: [String: Any] = [
   AVVideoCodecKey: AVVideoCodecType.h264,
   AVVideoWidthKey: w, AVVideoHeightKey: h,
   AVVideoCompressionPropertiesKey: [
-    AVVideoAverageBitRateKey: 1_400_000,
+    AVVideoAverageBitRateKey: bitrate,
     AVVideoMaxKeyFrameIntervalKey: fps * 2,
     AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel
   ]
@@ -67,4 +72,4 @@ done.wait()
 writer.finishWriting {}
 while writer.status == .writing { usleep(50_000) }
 if writer.status != .completed { fputs("writer failed: \(String(describing: writer.error))\n", stderr); exit(1) }
-print("wrote \(outPath) — \(names.count) frames at \(fps)fps, \(w)x\(h)")
+print("wrote \(outPath) — \(names.count) frames at \(fps)fps, \(w)x\(h), \(bitrate / 1000) kbps")

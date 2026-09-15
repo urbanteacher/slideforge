@@ -1380,10 +1380,15 @@ html[data-ws="game"] #btnSorter { display: none; }
 /* object-fit means nothing to an iframe; the embedded player letterboxes the
    clip itself, which is what we want either way. */
 .layout-video iframe.vid-embed { object-fit: unset; background: #000; }
+/* A label on the still, not a line across it: centred at bottom 18% it ran
+   straight through the caption, and over a real thumbnail --s-dim is often
+   invisible. A pill in the top corner sits clear of both. */
 .layout-video .vid-embed-note {
-  position: absolute; left: 0; right: 0; bottom: 18%;
-  text-align: center; font-size: 17px; letter-spacing: .08em;
-  text-transform: uppercase; color: var(--s-dim);
+  position: absolute; left: 22px; top: 22px; right: auto; bottom: auto;
+  padding: 7px 12px; border-radius: 999px;
+  background: rgba(0, 0, 0, .62); color: #fff;
+  font-size: 15px; letter-spacing: .08em; text-transform: uppercase;
+  font-weight: 650;
 }
 .layout-video .vid.cover { object-fit: cover; }
 .layout-video .vid.contain { object-fit: contain; }
@@ -1418,12 +1423,16 @@ html[data-ws="game"] #btnSorter { display: none; }
 /* And it has to clear the control bar as well as let clicks past it, or the
    text sits on top of the scrubber and neither is readable. */
 .layout-video .cap { padding-bottom: 118px; }
+/* Only a caption at the bottom is in the controls' way — the shared .cap-top
+   rules below set the padding for one at the top. */
 
 /* ---- caption treatments ------------------------------------------------- */
 
 /* The caption is a box now rather than a line of text, because a credit sits
    under the caption proper: "says who?" belongs with the claim. */
+.layout-video .cap-line,
 .layout-image .cap-line { font-size: 44px; font-weight: 650; line-height: 1.14; }
+.layout-video .cap-credit,
 .layout-image .cap-credit,
 .split-media .cap-credit {
   margin-top: 12px;
@@ -1431,10 +1440,12 @@ html[data-ws="game"] #btnSorter { display: none; }
   text-transform: uppercase;
   opacity: .82;
 }
+.layout-video .cap-line:only-child,
 .layout-image .cap-line:only-child { margin: 0; }
 
 /* Scrim: the default. A gradient reads over any photograph, which is why it
    is what an author gets without choosing. */
+.layout-video .cap-scrim,
 .layout-image .cap-scrim { background: linear-gradient(transparent, rgba(0,0,0,.82)); }
 
 /* A caption that gets out of the way. Scoped to the player because in the
@@ -1452,21 +1463,25 @@ html[data-ws="game"] #btnSorter { display: none; }
 
 /* Bar: a solid band in the deck's own accent. Crisper than a gradient where
    the image runs to a hard edge — charts, screenshots, diagrams. */
+.layout-video .cap-bar,
 .layout-image .cap-bar {
   padding: 34px 92px 38px;
   background: var(--s-accent);
   color: #fff;
 }
+.layout-video .cap-bar .cap-line,
 .layout-image .cap-bar .cap-line { font-size: 38px; }
 
 /* Plain: no ground at all, for an image with room already in it. The shadow
    is the only thing keeping it legible, so it is heavier than it looks. */
+.layout-video .cap-plain,
 .layout-image .cap-plain {
   background: none;
   padding: 56px 92px;
   text-shadow: 0 2px 18px rgba(0,0,0,.85), 0 1px 4px rgba(0,0,0,.7);
 }
 
+.layout-video .cap-none,
 .layout-image .cap-none { display: none; }
 
 /* ---- framed images ------------------------------------------------------ */
@@ -1530,12 +1545,17 @@ html[data-ws="game"] #btnSorter { display: none; }
   left: 36px;
 }
 
-/* Top: for an image whose subject sits low. Flips the gradient with it. */
+/* Top: for an image whose subject sits low, or a clip whose motion is in the
+   lower half. Flips the gradient with it. */
+.layout-video .cap-top,
 .layout-image .cap-top {
   top: 0; bottom: auto;
   padding: 56px 92px 100px;
 }
+.layout-video .cap-scrim.cap-top,
 .layout-image .cap-scrim.cap-top { background: linear-gradient(rgba(0,0,0,.82), transparent); }
+.layout-video .cap-bar.cap-top,
+.layout-video .cap-plain.cap-top,
 .layout-image .cap-bar.cap-top,
 .layout-image .cap-plain.cap-top { padding: 38px 92px 34px; }
 
@@ -5740,3 +5760,277 @@ html[data-ws="deck"] #railCount { display: none; }
 .deck-viewport.railed .compare-cell { font-size: 20px; padding: 12px 16px; }
 .deck-viewport.railed .funnel-label { font-size: 20px; }
 .deck-viewport.railed .timeline-title { font-size: 19px; }
+
+/* ---- generated cover motion --------------------------------------------- */
+
+/* Motion for a cover, made out of the slide's own colours.
+
+   The alternative was a video file per palette: megabytes, wrong the moment
+   the theme changes, and another asset to keep in step. Every colour here is
+   the theme's own accent at low alpha, so a blob is a wash of the theme over
+   its own ground — pale on paper, a glow on midnight — and a theme added next
+   year is handled without touching this file.
+
+   Alpha rather than a mix towards --s-bg, which was the first attempt: half
+   the themes set that token to a linear-gradient, and color-mix() with a
+   gradient in it is invalid, so the blobs computed to transparent on exactly
+   the themes with the most interesting grounds. Translucency does not care
+   what is behind it.
+
+   Behind everything: the theme art paints over it, the pad sits above both. */
+.slide .slide-motion {
+  position: absolute; inset: 0; z-index: 0;
+  overflow: hidden; pointer-events: none;
+  border-radius: inherit;
+}
+.slide .slide-motion .mo {
+  position: absolute;
+  width: 58%; aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  /* Blurred this hard, the shapes stop being shapes and become weather. */
+  filter: blur(64px);
+  will-change: transform;
+}
+.slide .slide-motion .mo-1 {
+  left: -8%; top: -14%;
+  background: color-mix(in srgb, var(--s-accent) 40%, transparent);
+}
+.slide .slide-motion .mo-2 {
+  right: -12%; top: 12%;
+  background: color-mix(in srgb, var(--s-accent-2, var(--s-accent)) 34%, transparent);
+}
+.slide .slide-motion .mo-3 {
+  left: 26%; bottom: -26%;
+  width: 66%;
+  background: color-mix(in srgb, var(--s-fg) 14%, transparent);
+}
+
+/* Drift: three closed paths at three speeds. Each one returns to where it
+   started, so there is no jump to hide, and the periods are deliberately not
+   multiples of each other — the composite pattern takes minutes to repeat,
+   which is longer than any cover is on screen. */
+@keyframes sf-mo-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(14%, 10%, 0) scale(1.08); }
+}
+@keyframes sf-mo-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.04); }
+  50%      { transform: translate3d(-12%, 14%, 0) scale(1); }
+}
+@keyframes sf-mo-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(8%, -12%, 0) scale(1.1); }
+}
+.slide .motion-drift .mo-1 { animation: sf-mo-a 31s ease-in-out infinite; }
+.slide .motion-drift .mo-2 { animation: sf-mo-b 43s ease-in-out infinite; }
+.slide .motion-drift .mo-3 { animation: sf-mo-c 37s ease-in-out infinite; }
+
+/* Grid: the same tinted ground with a ruled plane travelling over it, one
+   cell per cycle — which is the same picture again, so it never cuts. For a
+   data course this reads as squared paper rather than as decoration. */
+.slide .motion-grid .mo-3 { display: none; }
+.slide .motion-grid::after {
+  content: ''; position: absolute; inset: -80px;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--s-fg) 9%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--s-fg) 9%, transparent) 1px, transparent 1px);
+  background-size: 80px 80px;
+  animation: sf-mo-grid 24s linear infinite;
+}
+@keyframes sf-mo-grid {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(80px, 80px, 0); }
+}
+
+/* Glow: one slow breath behind the words, for a cover whose type is doing the
+   work and only wants the slide to look switched on. */
+.slide .motion-glow .mo-1,
+.slide .motion-glow .mo-2 { display: none; }
+.slide .motion-glow .mo-3 {
+  left: 50%; bottom: auto; top: 50%;
+  width: 92%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side,
+    color-mix(in srgb, var(--s-accent) 34%, transparent), transparent);
+  filter: blur(40px);
+  animation: sf-mo-breathe 19s ease-in-out infinite;
+}
+@keyframes sf-mo-breathe {
+  0%, 100% { opacity: .55; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: .9;  transform: translate(-50%, -50%) scale(1.12); }
+}
+
+/* Still for anyone who asked for still, and in a handout, where a page that
+   animates is a page that prints differently every time. The ground stays —
+   it is the motion that is optional. */
+@media (prefers-reduced-motion: reduce) {
+  .slide .slide-motion .mo,
+  .slide .slide-motion::after { animation: none; }
+}
+.pdf-page .slide-motion .mo,
+.pdf-page .slide-motion::after { animation: none; }
+
+/* Centred type takes its furniture with it. The accent bar is a box, so
+   text-align does nothing to it: pinned left under a centred title it reads as
+   a mistake rather than a choice. */
+.pad.pad-align-center > .accent-bar { margin-left: auto; margin-right: auto; }
+.pad.pad-align-right > .accent-bar { margin-left: auto; margin-right: 0; }
+
+/* ---- statement ---------------------------------------------------------- */
+
+/* One line, bold, in the middle. Title is a front door and Section is a
+   divider; this is for a thought — six words with nothing else on the slide.
+
+   Sized by band rather than by measurement so the editor, the wall, a rail
+   thumbnail and a printed page all agree. */
+.layout-statement .pad {
+  justify-content: center; align-items: center;
+  text-align: center;
+  padding: 72px 96px;
+}
+.layout-statement .statement {
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  /* Breaks the line where the sense is rather than at the right margin. */
+  text-wrap: balance;
+  max-width: 22ch;
+}
+.layout-statement .statement[data-len="xs"] { font-size: 140px; }
+.layout-statement .statement[data-len="sm"] { font-size: 104px; max-width: 26ch; }
+.layout-statement .statement[data-len="md"] { font-size: 78px;  max-width: 30ch; }
+.layout-statement .statement[data-len="lg"] { font-size: 58px;  max-width: 34ch; }
+.layout-statement .statement[data-len="xl"] { font-size: 44px;  max-width: 38ch; }
+.layout-statement .statement.dim { opacity: .45; }
+.layout-statement .statement-credit {
+  margin-top: 34px;
+  font-size: 22px; font-weight: 500; letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--s-dim);
+}
+/* A thumbnail is 1/7 of a slide, and 140px of type in it is one letter. The
+   rail shows the shape of the slide, so the band scales with the frame. */
+.variant-frame .layout-statement .statement,
+.rail .layout-statement .statement { letter-spacing: 0; }
+
+/* One word takes the whole line: the character cap that keeps a sentence to a
+   readable measure would otherwise wrap a long word mid-air. */
+.layout-statement .statement.statement-word {
+  max-width: none;
+  letter-spacing: -0.035em;
+}
+
+/* ---- words arriving ----------------------------------------------------- */
+
+/* A statement can bring its words in one at a time.
+
+   The easing is After Effects' Easy Ease — 33% influence each side, which is
+   cubic-bezier(.33, 0, .67, 1). The stagger is eased too (computed per word in
+   render.js) rather than a fixed step, so the line arrives as one movement
+   that slows as it finishes instead of a metronome.
+
+   The blur is the cheap honest version of motion blur: a few pixels while the
+   word is travelling, resolving to nothing as it lands. It costs one composited
+   filter per word for under a second, and it is what stops a fast transform
+   looking like a jump cut. */
+.slide .statement.words .w { display: inline-block; }
+
+/* Only in the show. In the editor the line is rebuilt on every keystroke, so
+   an entrance would replay while you typed — the same reason the caption fade
+   is scoped to the player. */
+#player .slide .statement.words .w {
+  /* Set per slide from the Speed control; the fallbacks are Medium. */
+  animation-duration: var(--w-dur, 620ms);
+  animation-delay: var(--d, 0ms);
+  animation-timing-function: cubic-bezier(.33, 0, .67, 1);   /* Easy Ease */
+  animation-fill-mode: both;
+}
+
+/* Rise: up from below, blur clearing as it settles. */
+@keyframes sf-word-rise {
+  from { opacity: 0; transform: translate3d(0, .55em, 0); filter: blur(7px); }
+  60%  { opacity: 1; }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
+}
+#player .slide .statement.words-rise .w { animation-name: sf-word-rise; }
+
+/* Fade: no movement, for a statement that should not look like a title card. */
+@keyframes sf-word-fade {
+  from { opacity: 0; filter: blur(4px); }
+  to   { opacity: 1; filter: blur(0); }
+}
+#player .slide .statement.words-fade .w { animation-name: sf-word-fade; }
+
+/* Reveal: each word wiped up from behind its own line, the kinetic-type look.
+   clip-path rather than a mask element, so nothing is added to the DOM. */
+@keyframes sf-word-reveal {
+  from { clip-path: inset(0 0 100% 0); transform: translate3d(0, .22em, 0); }
+  to   { clip-path: inset(0 0 -18% 0); transform: translate3d(0, 0, 0); }
+}
+#player .slide .statement.words-reveal .w {
+  animation-name: sf-word-reveal;
+  /* A wipe needs a little longer than a fade to read as a wipe. */
+  animation-duration: calc(var(--w-dur, 620ms) * 1.13);
+}
+
+/* Asked for less motion: the words are simply there. Not a slower version —
+   a still one. */
+@media (prefers-reduced-motion: reduce) {
+  #player .slide .statement.words .w {
+    animation: none !important;
+    opacity: 1; filter: none; clip-path: none; transform: none;
+  }
+}
+/* And a printed page is a still by definition. */
+.pdf-page .statement.words .w { animation: none !important; }
+
+/* ---- words arriving, and leaving again ---------------------------------- */
+
+/* In, hold, out, round again — for a cover on screen while a room fills.
+
+   One keyframe set per effect rather than an entrance animation plus an exit
+   animation: two animations on one element need their own delays kept in step,
+   and the first time the hold changed they would drift apart. Here the hold is
+   a percentage of the cycle, so there is one number to change.
+
+   The percentages: the words are in by 12%, hold to 74% — about four seconds
+   of a six-second cycle, which is long enough to read a six-word line twice —
+   then the same eased wave takes them out by 88%, and the last stretch is the
+   pause before it comes round. Easy Ease both ways, which is what makes it
+   read as one breath rather than two events. */
+#player .slide .statement.words-loop .w {
+  animation-duration: var(--w-cycle, 6200ms);
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+
+@keyframes sf-cycle-rise {
+  0%          { opacity: 0; transform: translate3d(0, .55em, 0); filter: blur(7px); }
+  12%, 74%    { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
+  88%, 100%   { opacity: 0; transform: translate3d(0, -.4em, 0); filter: blur(7px); }
+}
+#player .slide .statement.words-loop.words-rise .w { animation-name: sf-cycle-rise; }
+
+@keyframes sf-cycle-fade {
+  0%          { opacity: 0; filter: blur(4px); }
+  12%, 74%    { opacity: 1; filter: blur(0); }
+  88%, 100%   { opacity: 0; filter: blur(4px); }
+}
+#player .slide .statement.words-loop.words-fade .w { animation-name: sf-cycle-fade; }
+
+@keyframes sf-cycle-reveal {
+  0%          { clip-path: inset(0 0 100% 0); transform: translate3d(0, .22em, 0); }
+  12%, 74%    { clip-path: inset(0 0 -18% 0); transform: translate3d(0, 0, 0); }
+  88%, 100%   { clip-path: inset(100% 0 0 0); transform: translate3d(0, -.18em, 0); }
+}
+#player .slide .statement.words-loop.words-reveal .w { animation-name: sf-cycle-reveal; }
+
+/* A loop is the one thing reduced motion must not leave running. The rule
+   above it already stops the animation; this makes sure what is left on screen
+   is the readable state rather than whichever frame it stopped on. */
+@media (prefers-reduced-motion: reduce) {
+  #player .slide .statement.words-loop .w {
+    animation: none !important;
+    opacity: 1; filter: none; clip-path: none; transform: none;
+  }
+}

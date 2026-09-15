@@ -2928,6 +2928,24 @@
         seed: { title: "Next idea", subtitle: "A short bridge into what follows." }
       }]
     },
+    /* One line, as big as it fits, in the middle of the slide.
+       
+       Title is a lesson's front door and Section is a divider — both carry an
+       accent bar, an eyebrow and a subtitle, and both are sized for a sentence.
+       Neither is the slide a teacher wants for a thought: six words, bold,
+       centred, nothing else on it. That was being faked with a Section and the
+       text-size control, which caps at the size the divider was designed for. */
+    statement: {
+      label: "Statement",
+      icon: "❝",
+      deck: true,
+      group: "introduce",
+      starters: [{
+        title: "Statement",
+        blurb: "One line, bold and as big as it fits. An opening thought, a provocation, a rule to remember.",
+        seed: { body: "Every chart is a choice", subtitle: "" }
+      }]
+    },
     content: {
       label: "Bullets",
       icon: "•",

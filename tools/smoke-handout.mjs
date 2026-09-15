@@ -130,8 +130,17 @@ try {
   const maps = await pdf.evaluate(() => [...document.querySelectorAll('.pdf-page')]
     .map((p, i) => ({ page: i + 1, branches: p.querySelectorAll('.mindmap-branch').length }))
     .filter((x) => x.branches > 0));
-  assert.equal(maps.length, 2, 'both mind maps are in the handout');
-  maps.forEach((m) => assert.equal(m.branches, 6, `page ${m.page} kept all six branches`));
+  /* Measured against the lecture rather than pinned to a number: "two maps of
+     six branches" was true when it was written and failed the day a third map
+     of four was added — and being outside the smoke chain, nobody heard it.
+     What has to hold is that every map arrives whole. */
+  const authored = await page.evaluate(() => SF.Editor.deck().slides
+    .filter((s) => s.type === 'mindmap')
+    .map((s) => (s.bullets || []).filter((b) => String(b).trim()).length)
+    .sort((a, b) => a - b));
+  assert.ok(authored.length >= 2, 'the lecture still has mind maps to print');
+  assert.deepEqual(maps.map((m) => m.branches).sort((a, b) => a - b), authored,
+    'every mind map printed with all its branches');
 
   assert.deepEqual(errors, [], 'no page errors');
   console.log(`PASS: ${pages}-page handout from the ${lecture.n}-slide lecture — questions without answers, no notes, every image loaded, nothing over the edge`);

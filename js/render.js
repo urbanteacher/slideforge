@@ -145,6 +145,185 @@
     }
   }
 
+  /**
+   * One line, as big as it fits, in the middle of the slide.
+   *
+   * Sized by how much there is to say rather than by measuring: the band goes
+   * on the element and the stylesheet picks the size, so it is the same in the
+   * editor, on the wall, in a 180px rail thumbnail and in a printed handout —
+   * all places where measuring either cannot happen or gives a different
+   * answer. Same idea as the explanation panel's data-len bands and the code
+   * panel's line-count bands.
+   *
+   * Six words get 140px; a sentence steps down rather than overflowing.
+   */
+  function statementBand(text) {
+    var n = String(text || '').trim().length;
+    return n <= 24 ? 'xs' : n <= 48 ? 'sm' : n <= 90 ? 'md' : n <= 170 ? 'lg' : 'xl';
+  }
+
+  /**
+   * The size for a statement that is one word.
+   *
+   * A word has nothing to wrap, so its size is arithmetic rather than a band:
+   * the pad is 1088px wide inside its padding and a bold glyph averages about
+   * 0.58em, so the width is 0.58 × characters × size. Bands are right for a
+   * sentence, where the wrap decides the height; they are wrong for a word,
+   * which at the 140px band covered a quarter of the slide and read as a
+   * small word floating in space rather than as a statement.
+   *
+   * Capped at 320px: with 1.04 line-height that is 333px of a 720px slide,
+   * which leaves the air a one-word slide needs.
+   *
+   * @param {string} word
+   * @returns {number} px
+   */
+  function statementWordSize(word) {
+    /* Floor, not round: rounding up put a nineteen-letter word at 1091px
+       inside 1088px of pad — one pixel over is still over. */
+    return Math.min(320, Math.floor(1088 / (0.58 * Math.max(1, word.length))));
+  }
+
+  /**
+   * Wrap each word of a built node in a span, so they can arrive separately.
+   *
+   * Walks text nodes rather than rewriting innerHTML, because the line may
+   * already contain the author's own inline formatting — a bold word, a
+   * coloured one — and rebuilding the markup would throw it away.
+   *
+   * Each span carries its index and an EASED delay. A linear stagger reads
+   * mechanically; this is the CSS of what After Effects does with ease on a
+   * range selector — the wave starts quickly and slows as it finishes, so the
+   * last word lands rather than stopping.
+   *
+   * @param {HTMLElement} node
+   * @returns {number} how many words were wrapped
+   */
+  var WORD_EFFECTS = ['rise', 'fade', 'reveal'];
+  var WORD_SPAN_MS = 900;
+
+  /* How fast the whole thing happens, and how far apart the words are.
+ 
+     Two controls rather than six. The numbers in here were chosen by eye and
+     were the only thing on offer; what an author actually asks is "slower" or
+     "all together", not "620ms with a 2.2 ease on the stagger". Everything
+     scales from one pair of choices so it cannot be set into an incoherent
+     state — a quick entrance with a four-second wave is not a thing anyone
+     wants, and it was reachable the moment these became six numbers. */
+  var WORD_SPEEDS = {
+    gentle: { dur: 900, cycle: 9000, span: 1.5 },
+    medium: { dur: 620, cycle: 6200, span: 1 },
+    quick:  { dur: 380, cycle: 4200, span: 0.6 }
+  };
+  var WORD_STAGGERS = { together: 0, wave: 1, one: 2 };
+
+  /** The speed record a slide asks for. Medium unless it says otherwise. */
+  function wordSpeed(slide) {
+    var want = String((slide.design || {}).wordSpeed || '').trim();
+    return WORD_SPEEDS[want] ? want : 'medium';
+  }
+
+  /** How far apart the words are: together, an eased wave, or one at a time. */
+  function wordStagger(slide) {
+    var want = String((slide.design || {}).wordStagger || '').trim();
+    return Object.prototype.hasOwnProperty.call(WORD_STAGGERS, want) ? want : 'wave';
+  }
+
+  function wrapWords(node, opts) {
+    var texts = [];
+    (function walk(n) {
+      for (var i = 0; i < n.childNodes.length; i++) {
+        var kid = n.childNodes[i];
+        if (kid.nodeType === 3) { if (String(kid.nodeValue).trim()) texts.push(kid); }
+        else if (kid.nodeType === 1) walk(kid);
+      }
+    })(node);
+    /* Count first: the delay of a word depends on how many there are. */
+    var total = 0;
+    texts.forEach(function (text) {
+      total += String(text.nodeValue).split(/(\s+)/).filter(function (p) { return p.trim(); }).length;
+    });
+    if (!total || total > 40) return 0;
+    /* The wave is as long as the line needs, scaled by the two controls. At
+       "together" it is zero, and every word carries the same delay of nothing —
+       which is the whole line arriving as one movement. */
+    var stretch = (opts && Number.isFinite(opts.stretch)) ? opts.stretch : 1;
+    var span = Math.min(WORD_SPAN_MS * 2, Math.max(240, total * 110)) * stretch;
+    var seen = 0;
+    texts.forEach(function (text) {
+      var frag = document.createDocumentFragment();
+      String(text.nodeValue).split(/(\s+)/).forEach(function (part) {
+        if (!part) return;
+        if (!part.trim()) { frag.appendChild(document.createTextNode(part)); return; }
+        var at = total > 1 ? seen / (total - 1) : 0;
+        /* Ease out: 1 - (1 - t)^2.2. Early words are close together, the tail
+           spreads, which is what makes it read as one movement. */
+        var delay = Math.round((1 - Math.pow(1 - at, 2.2)) * span);
+        var w = el('span', 'w');
+        w.style.setProperty('--i', String(seen));
+        w.style.setProperty('--d', delay + 'ms');
+        w.textContent = part;
+        frag.appendChild(w);
+        seen++;
+      });
+      if (text.parentNode) text.parentNode.replaceChild(frag, text);
+    });
+    return seen;
+  }
+
+  /** Which per-word entrance a slide asks for, or '' for none. */
+  function wordEffect(slide) {
+    var want = String((slide.design || {}).words || '').trim();
+    return WORD_EFFECTS.indexOf(want) >= 0 ? want : '';
+  }
+
+  /**
+   * Whether the words leave again and come back — in, hold, out, round.
+   *
+   * The one-shot entrance is for a statement a teacher talks over: it arrives
+   * once and stays put. A loop is for the cover on screen while the room fills,
+   * where the line has to be readable the fifth time as well as the first —
+   * so the hold is most of the cycle and the wave out is the same eased wave
+   * that brought them in, not a cut.
+   *
+   * Only with an entrance chosen: there is nothing to cycle otherwise.
+   */
+  function wordsLoop(slide) {
+    return !!(slide.design && slide.design.wordsLoop) && !!wordEffect(slide);
+  }
+
+  function layoutStatement(slide, pad) {
+    var said = String(slide.body || '').trim();
+    var line = rich('div', 'statement', slide, 'body', said || 'Say the one thing');
+    line.dataset.len = statementBand(said);
+    /* One word, sized to the slide rather than to a band. */
+    if (said && !/\s/.test(said)) {
+      line.classList.add('statement-word');
+      line.style.fontSize = statementWordSize(said) + 'px';
+    }
+    if (!said) line.classList.add('dim');
+    /* Words arrive one at a time when the slide does. Only worth the markup
+       when there is something to animate. */
+    var effect = said ? wordEffect(slide) : '';
+    if (effect) {
+      var speed = WORD_SPEEDS[wordSpeed(slide)];
+      var stretch = WORD_STAGGERS[wordStagger(slide)] * (speed.span || 1);
+      if (wrapWords(line, { stretch: stretch })) {
+        line.classList.add('words', 'words-' + effect);
+        /* The stylesheet reads these: one duration for an entrance, one for a
+           cycle, so a change of speed cannot leave the two disagreeing. */
+        line.style.setProperty('--w-dur', speed.dur + 'ms');
+        line.style.setProperty('--w-cycle', speed.cycle + 'ms');
+        if (wordsLoop(slide)) line.classList.add('words-loop');
+      }
+    }
+    pad.appendChild(line);
+    /* Whose thought it was, or where the rule comes from. Small, under the
+       line, and absent unless written — a statement with an empty credit
+       under it is a statement with a gap under it. */
+    if (slide.subtitle) pad.appendChild(rich('div', 'statement-credit', slide, 'subtitle', slide.subtitle));
+  }
+
   function layoutIntroduction(slide, pad) {
     var portrait = el('div', 'lecturer-portrait');
     var src = SF.safeMedia(slide.image);
@@ -524,6 +703,23 @@
       pad.appendChild(rich('div', 'q', slide, 'body', text));
     }
     if (slide.subtitle) pad.appendChild(rich('div', 'attrib', slide, 'subtitle', slide.subtitle));
+  }
+
+  /**
+   * Which generated backdrop a cover asks for, or '' for none.
+   *
+   * Named rather than free-form so the stylesheet owns what each one looks
+   * like: an author picks "drift" and gets whatever reads well in their
+   * theme, rather than a set of numbers they have to tune per palette.
+   *
+   * @param {object} slide
+   * @returns {string} 'drift' | 'grid' | 'glow' | ''
+   */
+  var BACKDROPS = ['drift', 'grid', 'glow'];
+
+  function backdropMotion(slide) {
+    var want = String((slide.design || {}).backdrop || '').trim();
+    return BACKDROPS.indexOf(want) >= 0 ? want : '';
   }
 
   /* How a caption sits on the picture. Scrim is the default and the safest —
@@ -2288,6 +2484,55 @@
      youtube-nocookie.com rather than youtube.com: same player, but it sets no
      tracking cookie until the video is actually played, which is the right
      default for a room of students who did not choose to be there. */
+  /**
+   * The service's own still for an embedded clip, when the slide has no poster
+   * of its own.
+   *
+   * A YouTube link used to leave a grey rectangle with "Embedded video · plays
+   * in the show" on it, which reads exactly like nothing happened — the link
+   * was accepted, the show plays it, and the editor showed no sign of either.
+   * YouTube publishes a thumbnail per id, so the author can see the clip they
+   * pasted.
+   *
+   * Only ever used off-stage (the inspector preview and the slide rail). The
+   * show loads the real player, which fetches this image itself, so nothing
+   * reaches Google here that the room was not going to request anyway — and
+   * i.ytimg.com serves the image without setting a cookie, which is the same
+   * reason the player is framed from youtube-nocookie.com.
+   *
+   * Vimeo has no static thumbnail URL without an API call, so it keeps the
+   * placeholder.
+   *
+   * @param {object} slide
+   * @returns {string} '' when there is nothing to show
+   */
+  function videoStill(slide) {
+    if (slide.videoPoster) return String(slide.videoPoster);
+    var id = youtubeId(slide.video);
+    /* hqdefault, not maxresdefault: every video has the first, and a clip
+       uploaded below 720p has no second — which would be a broken image where
+       the point is reassurance. */
+    return id ? 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg' : '';
+  }
+
+  /** The YouTube id in a link, or '' — shared by the embed and the still. */
+  function youtubeId(raw) {
+    var text = String(raw == null ? '' : raw).trim();
+    if (!text) return '';
+    var u;
+    try { u = new URL(text, 'https://x.invalid'); } catch (e) { return ''; }
+    var host = u.hostname.toLowerCase(), id = '';
+    if (/(^|\.)youtu\.be$/.test(host)) id = u.pathname.slice(1).split('/')[0];
+    else if (/(^|\.)youtube(-nocookie)?\.com$/.test(host)) {
+      if (u.pathname === '/watch') id = u.searchParams.get('v') || '';
+      else {
+        var m = u.pathname.match(/^\/(?:embed|v|shorts|live)\/([^/?#]+)/);
+        id = m ? m[1] : '';
+      }
+    }
+    return id && /^[A-Za-z0-9_-]+$/.test(id) ? id : '';
+  }
+
   function videoEmbed(slide) {
     var raw = String(slide.video || '').trim();
     if (!raw) return '';
@@ -2341,6 +2586,27 @@
     return base + id + (search ? '?' + search : '') + hash;
   }
 
+  /**
+   * The words on a video slide — the same caption block a picture slide gets.
+   *
+   * It used to be the title alone, in a band welded to the bottom of the
+   * frame. That is right for a clip the room is watching and wrong for a clip
+   * playing behind a sentence: a looping backdrop wants the text over it,
+   * placed and grounded deliberately, and it wants room for a second line.
+   * So video now reads design.capStyle and design.capPos like an image does,
+   * and takes the subtitle as a credit under the heading.
+   *
+   * @param {object} slide
+   * @param {HTMLElement} pad
+   */
+  function videoCaption(slide, pad) {
+    if (!slide.title && !slide.subtitle) return;
+    var box = asStep(el('div', 'cap ' + capClass(slide)), slide);
+    if (slide.title) box.appendChild(rich('div', 'cap-line', slide, 'title', slide.title));
+    if (slide.subtitle) box.appendChild(rich('div', 'cap-credit', slide, 'subtitle', slide.subtitle));
+    pad.appendChild(box);
+  }
+
   function layoutVideo(slide, pad, opts) {
     opts = opts || {};
     var fit = slide.imageFit === 'contain' ? 'contain' : 'cover';
@@ -2355,14 +2621,15 @@
 
     if (opts.chrome === false) {                 // rail thumbnail
       var still = el('div', 'img ' + fit);
-      if (slide.videoPoster) {
-        still.style.backgroundImage = 'url("' + slide.videoPoster.replace(/"/g, '&quot;') + '")';
+      var railStill = videoStill(slide);
+      if (railStill) {
+        still.style.backgroundImage = 'url("' + railStill.replace(/"/g, '&quot;') + '")';
       } else {
         still.classList.add('vid-blank');
       }
       still.appendChild(el('div', 'vid-badge', '\u25b6'));
       pad.appendChild(still);
-      if (slide.title) pad.appendChild(rich('div', 'cap', slide, 'title', slide.title));
+      videoCaption(slide, pad);
       return;
     }
 
@@ -2372,15 +2639,20 @@
          beside the inspector would start somebody's clip while they typed,
          and an empty iframe is just a black rectangle that explains nothing. */
       var mute = el('div', 'img ' + fit + ' vid-embed-still');
-      if (slide.videoPoster) {
-        mute.style.backgroundImage = 'url("' + slide.videoPoster.replace(/"/g, '&quot;') + '")';
+      var poster = videoStill(slide);
+      if (poster) {
+        mute.style.backgroundImage = 'url("' + poster.replace(/"/g, '&quot;') + '")';
       } else {
         mute.classList.add('vid-blank');
       }
       mute.appendChild(el('div', 'vid-badge', '\u25b6'));
-      mute.appendChild(el('div', 'vid-embed-note', 'Embedded video · plays in the show'));
+      /* Named rather than "embedded": a teacher who pasted a YouTube link
+         wants to be told the link was understood. */
+      mute.appendChild(el('div', 'vid-embed-note',
+        youtubeId(slide.video) ? 'YouTube · plays in the show'
+          : 'Embedded video · plays in the show'));
       pad.appendChild(mute);
-      if (slide.title) pad.appendChild(rich('div', 'cap', slide, 'title', slide.title));
+      videoCaption(slide, pad);
       return;
     }
     if (embed) {
@@ -2392,7 +2664,7 @@
       frame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
       frame.setAttribute('loading', 'lazy');
       pad.appendChild(frame);
-      if (slide.title) pad.appendChild(rich('div', 'cap', slide, 'title', slide.title));
+      videoCaption(slide, pad);
       return;
     }
 
@@ -2431,7 +2703,7 @@
       });
     }
     pad.appendChild(v);
-    if (slide.title) pad.appendChild(rich('div', 'cap', slide, 'title', slide.title));
+    videoCaption(slide, pad);
   }
 
   /* Half text / half image — dual coding without leaving the teaching canvas. */
@@ -3969,6 +4241,7 @@
     introduction: layoutIntroduction,
     title: layoutTitle,
     section: layoutSection,
+    statement: layoutStatement,
     content: layoutContent,
     cards: layoutContent,
     keyfact: layoutKeyFact,
@@ -4073,10 +4346,39 @@
       root.classList.add('game-stage');
     }
     if (slide.feedback && slide.feedback.kind) root.classList.add('has-feedback');
+    if (slide.type === 'title' || slide.type === 'section' || slide.type === 'statement') {
+      /* Motion made out of the slide's own colours.
+     
+         A cover wants something moving behind it while a room settles, and the
+         obvious way to get that is a video file — which is megabytes, is wrong
+         the moment the theme changes, and has to be regenerated per palette.
+         This draws the same thing from the theme tokens instead: the blobs are
+         the background mixed towards the accent, so they cannot fight the text
+         on any theme, including one somebody adds later. Nothing to download,
+         nothing to keep in step.
+     
+         Under the theme art and under the pad, aria-hidden, no pointer events:
+         it is a ground, not content. */
+      var motion = backdropMotion(slide);
+      if (motion) {
+        var moves = el('div', 'slide-motion motion-' + motion);
+        moves.setAttribute('aria-hidden', 'true');
+        moves.innerHTML = '<span class="mo mo-1"></span><span class="mo mo-2"></span>' +
+          '<span class="mo mo-3"></span>';
+        root.appendChild(moves);
+      }
+    }
+    /* A theme can hang decoration behind the pad on its two full-bleed
+       layouts. Everything here is CSS-positioned and aria-hidden: the markup
+       only exists to give the stylesheet something to paint on.
+    
+       Not on a statement, though it is the third full-bleed layout: the
+       decoration is drawn for type held to one side, and a line centred on the
+       slide runs straight through it — Northeastern's N landed across the
+       middle of the words. A statement is one sentence on a clean ground; the
+       brand is still in the logo, the palette, and the backdrop motion if the
+       author wants movement. */
     if (slide.type === 'title' || slide.type === 'section') {
-      /* A theme can hang decoration behind the pad on its two full-bleed
-         layouts. Everything here is CSS-positioned and aria-hidden: the markup
-         only exists to give the stylesheet something to paint on. */
       var art = null;
       var spec = THEME_ART[deck.theme];
       if (spec) {
@@ -5179,6 +5481,22 @@
 
   Object.assign(global.SF, {
     renderSlide: renderSlide,
+    /* Exported for the same reason safeMedia is: a link the app claims to
+       understand is worth being able to test without a browser. */
+    youtubeId: youtubeId,
+    statementBand: statementBand,
+    statementWordSize: statementWordSize,
+    WORD_EFFECTS: WORD_EFFECTS,
+    wordEffect: wordEffect,
+    wordsLoop: wordsLoop,
+    WORD_SPEEDS: WORD_SPEEDS,
+    WORD_STAGGERS: WORD_STAGGERS,
+    wordSpeed: wordSpeed,
+    wordStagger: wordStagger,
+    wrapWords: wrapWords,
+    BACKDROPS: BACKDROPS,
+    backdropMotion: backdropMotion,
+    videoStill: videoStill,
     fit: fit,
     clockFace: clockFace,
     videoEmbed: videoEmbed,

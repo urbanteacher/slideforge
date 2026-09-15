@@ -1236,6 +1236,45 @@
           return { value: t, label: t[0].toUpperCase() + t.slice(1) };
         }),
         s.transition, function (v) { s.transition = v; touched(); drawRail(); })));
+      /* A statement is one line with nothing else on the slide, which is the
+         only place per-word motion reads as deliberate rather than restless. */
+      if (s.type === 'statement') {
+        var d = s.design || (s.design = {});
+        insp.appendChild(UI.field('Words arrive', UI.select([
+          { value: '', label: 'All at once' },
+          { value: 'rise', label: 'Rise — up from below, one at a time' },
+          { value: 'fade', label: 'Fade — in place, one at a time' },
+          { value: 'reveal', label: 'Reveal — wiped up, one at a time' }
+        ], String(d.words || ''), function (v) {
+          if (v) d.words = v; else delete d.words;
+          touched(); repaint(); drawRail();
+        }), 'Plays when the slide arrives in the show — eased, with a little motion blur. Held still for anyone who asked for less motion.'));
+        if (d.words) {
+          insp.appendChild(UI.field('Speed', UI.select([
+            { value: 'gentle', label: 'Gentle — slower, and holds longer' },
+            { value: 'medium', label: 'Medium' },
+            { value: 'quick', label: 'Quick' }
+          ], String(d.wordSpeed || 'medium'), function (v) {
+            if (v && v !== 'medium') d.wordSpeed = v; else delete d.wordSpeed;
+            touched(); repaint();
+          }), 'Moves the whole thing together — each word, the wave between them, and the hold if they leave again.'));
+          insp.appendChild(UI.field('Spacing', UI.select([
+            { value: 'together', label: 'Together — the line arrives as one' },
+            { value: 'wave', label: 'Wave — eased, a little apart' },
+            { value: 'one', label: 'One at a time — the widest spread' }
+          ], String(d.wordStagger || 'wave'), function (v) {
+            if (v && v !== 'wave') d.wordStagger = v; else delete d.wordStagger;
+            touched(); repaint();
+          }), 'How far apart the words are. The wave is always eased — it starts quickly and slows as it finishes.'));
+          insp.appendChild(UI.field('And leave again', UI.select([
+            { value: '', label: 'No — they arrive and stay' },
+            { value: 'loop', label: 'Yes — in, hold, out, round again' }
+          ], d.wordsLoop ? 'loop' : '', function (v) {
+            if (v) d.wordsLoop = true; else delete d.wordsLoop;
+            touched(); repaint(); drawRail();
+          }), 'For a cover on screen while the room fills. Four seconds of the six are the hold, so the line is readable every time round.'));
+        }
+      }
     } else {
       drawContentFields(insp, s);
       drawUnusedOnLayout(insp, s);
@@ -2811,6 +2850,16 @@
         richField(s, "body", "area", function (v) { s.body = v; touched(); repaint(); }, 4)));
       insp.appendChild(UI.field('Attribution',
         richField(s, "subtitle", "text", function (v) { s.subtitle = v; touched(); repaint(); })));
+      return;
+    }
+
+    if (s.type === 'statement') {
+      insp.appendChild(UI.field('The line',
+        richField(s, "body", "area", function (v) { s.body = v; touched(); repaint(); }, 3),
+        'Six words reads best — it is set as large as it fits, so a sentence steps down.'));
+      insp.appendChild(UI.field('Underneath (optional)',
+        richField(s, "subtitle", "text", function (v) { s.subtitle = v; touched(); repaint(); }),
+        'Who said it, or what it is from. Left empty, nothing is drawn.'));
       return;
     }
 

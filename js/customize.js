@@ -226,17 +226,48 @@
   function layout(root,s) {
     var d=s.design || {}, pad=root.querySelector('.pad');
     if (!pad || s.type==='quiz' || s.type==='game') return;
-    if (['left','center','right'].includes(d.align)) pad.style.textAlign=d.align;
+    if (['left','center','right'].includes(d.align)) {
+      pad.style.textAlign=d.align;
+      /* Named as well as styled, because the accent bar is a box rather than
+         text: text-align does nothing to it, and a bar pinned to the left
+         under centred type reads as a mistake rather than a choice. */
+      pad.classList.add('pad-align-'+d.align);
+    }
     if (color(d.background)) root.style.background=d.background;
     if (color(d.textColor)) {
       root.style.setProperty('--s-fg',d.textColor);root.style.setProperty('--s-dim',d.textColor);
       root.querySelectorAll('.pad h1,.pad h2,.sub,.q,.attrib,.cap,.pad li,.kw-term,.kw-def,.it-phrase,.it-note,.ln-label,.ln-link,.tbl th,.tbl td').forEach(function(n){n.style.color=d.textColor;});
     }
-    var scale={small:.85,medium:1,large:1.15}[d.size] || 1;
+    /* Up to five times the theme's own size, for a cover with three words on
+       it. The steps above Large are display sizes: they exist because the
+       answer to "make it huge" used to be +15%, and a hand-typed font size is
+       not something a theme can keep in proportion.
+
+       Asked for, then fitted. Five times a 76px heading is 380px, which is
+       most of a 720px slide before the subtitle, so a wordy title at x5 would
+       simply fall off the bottom. Rather than refuse the size or let it
+       overflow, the pass below grows the type and then steps it back until it
+       fits — never below the theme's own size, which never overflowed. Same
+       discipline as the code panel's font bands and the quiz answer fitter. */
+    var scale={small:.85,medium:1,large:1.15,x2:2,x3:3,x5:5}[d.size] || 1;
     if(scale!==1) requestAnimationFrame(function(){
+      var nodes=[];
       root.querySelectorAll('h1,h2,.sub,.q,.attrib,li,.kw-term,.kw-def,.it-phrase,.it-note,.ln-label,.ln-link,.ln-url').forEach(function(n){
-        var px=parseFloat(getComputedStyle(n).fontSize); if(px) n.style.fontSize=(px*scale)+'px';
+        var px=parseFloat(getComputedStyle(n).fontSize); if(px) nodes.push([n,px]);
       });
+      if(!nodes.length) return;
+      /* Fine steps rather than coarse: at 10% a time, x3 and x5 came to rest
+         on different rungs of the same ladder (215px and 208px for the same
+         four words), which looks like a bug even though both mean "as big as
+         this slide allows". At 4% every request above the ceiling converges
+         on it. */
+      var want=scale;
+      for(var pass=0;pass<40;pass++){
+        nodes.forEach(function(pair){ pair[0].style.fontSize=(pair[1]*want)+'px'; });
+        var overflowing=pad.scrollHeight>pad.clientHeight+1 || pad.scrollWidth>pad.clientWidth+1;
+        if(!overflowing || want<=1) break;
+        want=Math.max(1,want*0.96);
+      }
     });
     if (s.type==='split') {
       var media=root.querySelector('.split-media'), copy=root.querySelector('.split-copy');
@@ -271,7 +302,14 @@
     var d=s.design || (s.design={});
     function choose(label,key,opts,fallback){box.appendChild(UI.field(label,UI.select(opts.map(function(x){return {value:String(x[0]),label:x[1]};}),String(d[key]||fallback),function(v){d[key]=(key==='imageShare'||key==='capFade')?Number(v):v;change();})));}
     choose('Text alignment','align',[['left','Left'],['center','Centre'],['right','Right']],'left');
-    choose('Text size','size',[['small','Small'],['medium','Theme default'],['large','Large']],'medium');
+    choose('Text size','size',[
+      ['small','Small'],
+      ['medium','Theme default'],
+      ['large','Large'],
+      ['x2','Display · twice the size'],
+      ['x3','Poster · three times'],
+      ['x5','Hero · five times, as far as it fits']
+    ],'medium');
     var fg=document.createElement('input');fg.type='color';fg.value=color(d.textColor)||'#243422';fg.onchange=function(){d.textColor=fg.value;change();};
     box.appendChild(UI.field('Text colour · whole slide',fg,'For individual words, select text in its field and use the colour swatch.'));
     var bg=document.createElement('input'); bg.type='color'; bg.value=color(d.background)||'#ffffff'; bg.onchange=function(){d.background=bg.value;change();};
@@ -365,6 +403,17 @@
         }));
       }
     }
+    /* A cover can have motion behind it, drawn from this theme's own colours
+       rather than from a video file. Offered on the two full-bleed layouts
+       only: on a slide with content it would sit under the words. */
+    if(s.type==='title'||s.type==='section'){
+      choose('Backdrop motion','backdrop',[
+        ['','Still — the theme decides'],
+        ['drift','Drift — colour moving slowly'],
+        ['grid','Grid — a ruled plane travelling'],
+        ['glow','Glow — one slow breath behind the words']
+      ],'');
+    }
     /* Only worth asking where the answer is not already obvious from the
        theme: a picture slide's ground is whatever picture is on it. */
     if(s.type==='image'||s.type==='gallery'||s.type==='video'){
@@ -384,14 +433,14 @@
         ['4:5','4:5 portrait — caption below']
       ],'');
     }
-    if(s.type==='image'||s.type==='gallery'||(s.type==='split'&&s.subtitle)){
+    if(s.type==='image'||s.type==='gallery'||s.type==='video'||(s.type==='split'&&s.subtitle)){
       choose('Caption style','capStyle',[
         ['scrim','Gradient over the image'],
         ['bar','Solid accent bar'],
         ['plain','Text only, no ground'],
         ['none','Hide the caption']
       ],'scrim');
-      if(s.type==='image'||s.type==='gallery') choose('Caption position','capPos',[['bottom','Bottom'],['top','Top']],'bottom');
+      if(s.type==='image'||s.type==='gallery'||s.type==='video') choose('Caption position','capPos',[['bottom','Bottom'],['top','Top']],'bottom');
       /* Only the full-bleed picture slide: it is the one whose caption covers
          the thing the room is being asked to look at. */
       if(s.type==='image') choose('Caption clears itself','capFade',[

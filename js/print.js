@@ -81,7 +81,11 @@
           if (e[key]) pages.push(copy(s, {type:'image', image:e[key], imageFit:'contain', title:s.title + ' · ' + (e[key + 'Label'] || key), subtitle:'', exploration:null}));
         });
       } else if (s.type === 'video') {
-        var video = copy(s, {type:s.videoPoster?'split':'content', image:s.videoPoster || '', imageFit:'contain', bullets:['Video: ' + (SF.safeMedia(s.video) || 'No video link provided')], video:''});
+        /* The service's still counts as a poster here too: a handout of a
+           lecture that watched a clip should show the clip, not only quote
+           its address. */
+        var poster = (SF.videoStill ? SF.videoStill(s) : '') || s.videoPoster || '';
+        var video = copy(s, {type:poster?'split':'content', image:poster, imageFit:'contain', bullets:['Video: ' + (SF.safeMedia(s.video) || 'No video link provided')], video:''});
         pages.push(video);
       } else {
         pages.push(copy(s));
