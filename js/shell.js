@@ -749,62 +749,27 @@
     });   // SF.ask
   }
 
-  /** Open a demo bundle as a fresh lesson — new ids, current work left in Open. */
-  function openDemoBundle(raw) {
-    var games = (Array.isArray(raw.games) ? raw.games : []).map(SF.normalizeGame).filter(Boolean);
-    var decks = (Array.isArray(raw.decks) ? raw.decks : []).map(SF.normalizeDeck).filter(Boolean);
-    if (!decks.length) { SF.toast('That demo has no presentation'); return; }
+  /** Which ready-made lesson File → Open demo lesson opens. */
+  var DEMO_LESSON = 'layout-bank';
 
-    var idMap = {};
-    games.forEach(function (g) {
-      var old = g.id;
-      g.id = SF.uid();
-      idMap[old] = g.id;
-      SF.GameStore.save(g);
-    });
-    decks.forEach(function (d) {
-      d.id = SF.uid();
-      (d.slides || []).forEach(function (s) {
-        if (s.gameId && idMap[s.gameId]) {
-          s.gameId = idMap[s.gameId];
-          var g = SF.GameStore.get(s.gameId);
-          if (g) s.gameTitle = g.title;
-        }
-      });
-      SF.Store.save(d);
-    });
-
-    var deck = decks[0];
-    if (active.flush) active.flush();
-    activate('deck', { toast: false });
-    workspaces.deck.setDoc(deck);
-    workspaces.deck._dirty = false;
-    syncChrome();
-    workspaces.deck.draw();
-    SF.toast('"' + deck.title + '" opened. Your previous lesson stays in File → Open.');
-  }
-
+  /* The demo is the layout bank — every layout, all twenty chart idioms, the
+     design variants and the live moments, each slide carrying its own notes on
+     when to reach for it. It used to be a bundle fetched from /api/demo-lesson,
+     which meant the one thing most often shown to somebody else was the one
+     thing that could not be shown from a file:// copy. It is a lesson now, so
+     it opens anywhere the app does, and it brings its own game with it. */
   function openDemoLesson() {
-    if (!servedByRelay()) {
-      SF.toast('Start the app with the relay (node server/server.js) to open the demo.');
-      return;
-    }
     var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
     if (menu) menu.open = false;
-    SF.toast('Opening demo lesson\u2026');
-    fetch('/api/demo-lesson', { cache: 'no-store' })
-      .then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
-      .then(function (raw) {
-        if (raw && raw.error) throw new Error(raw.detail || raw.error);
-        openDemoBundle(raw);
-      })
-      .catch(function (err) {
-        SF.toast('Could not open the demo lesson' +
-          (err && err.message ? ' \u2014 ' + err.message : ''));
-      });
+    if (!SF.Editor || !SF.Editor.useLesson || !SF.buildLesson) {
+      SF.toast('The demo needs the editor \u2014 reload the page and try again.');
+      return;
+    }
+    var spec = (SF.LESSONS || []).filter(function (l) { return l.key === DEMO_LESSON; })[0];
+    if (!spec) { SF.toast('The demo lesson is missing from this build.'); return; }
+    SF.Editor.useLesson(DEMO_LESSON);
+    SF.toast('"' + spec.title + '" opened \u2014 ' + (spec.slides || []).length +
+      ' slides. Your previous lesson stays in File \u2192 Open.');
   }
 
   /* Import sniffs the file rather than trusting the extension, and switches
