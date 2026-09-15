@@ -1479,14 +1479,18 @@
       minutes: 45,
       theme: 'ukbt-institute',
       org: 'UKBT Institute',
-      logo: 'assets/brand/ukbt-mark.png',
+      /* The official Institute lockup, from the organisation's own site. The
+         brand deck could not supply it: there the mark is an image and the
+         word INSTITUTE is a live text box beside it, so extracting the picture
+         gets ❯UKBT and loses the word. */
+      logo: 'assets/brand/ukbt-institute.svg',
       logoOn: 'all',
       logoSize: 'small',
       logoReverse: 'never',
       slides: [
         { type: 'title', title: 'The Townhouse',
           subtitle: 'A four-floor innovation model · UKBT Institute',
-          notes: 'The deck follows the model published on ukblacktech.com/ukbt-institute — four floors, a Practitioner Readiness Level band on each, and a gate that has to be passed before anything climbs a storey.\n\nThe logo top right is the UKBT mark as it appears in the brand deck. The word INSTITUTE beside it there is live text, not part of the image, so it is not in this file — swap in the official Institute lockup under Deck settings → Logo if you want the full one.' },
+          notes: 'The deck follows the model published on ukblacktech.com/ukbt-institute — four floors, a Practitioner Readiness Level band on each, and a gate that has to be passed before anything climbs a storey.\n\nThe logo top right is the official Institute lockup. It is not the one in the brand deck: there the mark is a picture and the word INSTITUTE is a live text box under it, so extracting the picture would give ❯UKBT and lose the word.' },
 
         { type: 'quote', body: 'A townhouse for technologists, academics, professionals, and communities.',
           subtitle: 'UKBT Institute',

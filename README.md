@@ -932,10 +932,12 @@ on every slide, and inverting this one would flatten the green and the knockout
 panel to a single white shape. The UKBT themes are deliberately absent from
 that rule's selector list, and the deck flag is the belt to its braces.
 
-The Institute deck uses the shorter mark. The word *INSTITUTE* beside it in the
-brand deck is live text on the slide — white, Clear Sans, 19.7pt, 9pt tracking
-— not part of the image, so the full Institute lockup is not extractable from
-that file. Point at the official one under Deck settings → Logo if you have it.
+The Institute lockup could not come from that deck at all. There the mark is a
+picture and the word *INSTITUTE* is a live text box under it — white, Clear
+Sans, 19.7pt, 9pt tracking, right-aligned to the mark — so extracting the
+picture gives ❯UKBT and loses the word. `assets/brand/ukbt-institute.svg` is
+the official lockup from the organisation's own site: vector, transparent,
+white and green, word included.
 
 **Where a green accent is not a ground for text.** `css/app.css` puts white on
 `var(--s-accent)` in a handful of places — caption bands, the two reveal
