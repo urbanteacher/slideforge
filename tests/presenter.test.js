@@ -71,9 +71,63 @@ test('desk room tools share the HUD control path',()=>{
  const state=b.messages[b.messages.length-1].m;
  assert.equal(state.blank,false);
  assert.equal(state.live,false);
+ assert.equal(state.pin,null);
+ assert.equal(state.joinUrl,'');
  assert.equal(state.roomView,'hidden');
  assert.equal(state.floor,'auto');
  assert.equal(typeof state.reactions,'boolean');
+});
+
+test('live room identity reaches the presenter desk',()=>{
+ const b=bridge();
+ b.SF.Live.active=true;
+ b.SF.Live.pin='4821';
+ b.SF.Live.joinUrl='https://class.example/play.html';
+ b.SF.Live.players=[];
+ b.Player.openPresenter();
+ b.Player.syncPresenter();
+ const state=b.messages[b.messages.length-1].m;
+ assert.equal(state.live,true);
+ assert.equal(state.pin,'4821');
+ assert.equal(state.joinUrl,'https://class.example/play.html');
+});
+
+test('share prep and watch stay on the wall; dialogs live on the desk',()=>{
+ const b=bridge();
+ let watched=null;
+ b.SF.Live.active=true;
+ b.SF.Live.players=[];
+ b.SF.Live.watchOn=function(id){watched=id;return true;};
+ b.SF.Shell={lessonDoc(){return {title:'Desk share',slides:[]};}};
+ b.Player.openPresenter();
+ b.listeners.message({source:b.presenter,origin:'http://localhost:8787',data:{type:'sf-presenter-cmd',cmd:'sharePrep'}});
+ const prep=b.messages[b.messages.length-1].m;
+ assert.equal(prep.type,'sf-share-prep');
+ assert.equal(prep.doc.title,'Desk share');
+ assert.equal(prep.live,true);
+ b.listeners.message({source:b.presenter,origin:'http://localhost:8787',data:{type:'sf-presenter-cmd',cmd:'shareWatch',id:'abc'}});
+ const watch=b.messages[b.messages.length-1].m;
+ assert.equal(watch.type,'sf-share-watch');
+ assert.equal(watch.ok,true);
+ assert.equal(watched,'abc');
+});
+
+test('share helper and desk Share button are wired for on-desk dialogs',()=>{
+ const player=fs.readFileSync(require.resolve('../js/player.js'),'utf8');
+ const shell=fs.readFileSync(require.resolve('../js/shell.js'),'utf8');
+ const share=fs.readFileSync(require.resolve('../js/share.js'),'utf8');
+ const html=fs.readFileSync(require.resolve('../presenter.html'),'utf8');
+ assert.match(share,/function shareLessonDoc/);
+ assert.match(share,/SF\.shareLessonDoc\s*=\s*shareLessonDoc/);
+ assert.match(shell,/SF\.shareLessonDoc/);
+ assert.match(shell,/function lessonDoc/);
+ assert.match(player,/d\.cmd === 'sharePrep'/);
+ assert.match(player,/d\.cmd === 'shareWatch'/);
+ assert.match(html,/id="btnShareDesk"/);
+ assert.match(html,/shareFromDesk|openShareOnDesk/);
+ assert.match(html,/js\/share\.js/);
+ assert.match(html,/js\/ask\.js/);
+ assert.doesNotMatch(html,/data-cmd="share"/);
 });
 
 test('teacher desk opens a large pop-out, not a tiny dialog',()=>{

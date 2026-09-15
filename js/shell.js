@@ -572,6 +572,40 @@
     return location.protocol === 'http:' || location.protocol === 'https:';
   }
 
+  /**
+   * Share the open lesson as a read-only or follow-along link.
+   * Editor Share button and (via Player.control) any wall-side share entry.
+   * Teacher Presenter opens the same dialogs on the desk via SF.shareLessonDoc.
+   */
+  function shareLesson() {
+    if (!servedByRelay()) {
+      SF.toast('Sharing needs the SlideForge server.');
+      return;
+    }
+    var deckWs = workspaces.deck;
+    if (!deckWs || !deckWs.doc) {
+      SF.toast('No lesson to share.');
+      return;
+    }
+    if (active && active.flush) active.flush();
+    if (deckWs !== active && deckWs.flush) deckWs.flush();
+    var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
+    if (menu) menu.open = false;
+    if (typeof SF.shareLessonDoc !== 'function') {
+      SF.toast('Share is not available in this build.');
+      return;
+    }
+    SF.shareLessonDoc(deckWs.doc(), { live: !!(SF.Live && SF.Live.active) });
+  }
+
+  /** Authored lesson currently in the deck studio — for Presenter share prep. */
+  function lessonDoc() {
+    var deckWs = workspaces.deck;
+    if (!deckWs || !deckWs.doc) return null;
+    if (deckWs.flush) deckWs.flush();
+    return deckWs.doc();
+  }
+
   function download(name, obj) {
     var blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
     var a = document.createElement('a');
@@ -1232,8 +1266,8 @@
     }
 
     /* A copy someone who was not in the room can open. Only where a server
-       is serving this — from a file:// page there is nowhere to put it. */
-    var shareClick = null;
+       is serving this — from a file:// page there is nowhere to put it.
+       Teacher Presenter opens the same dialogs on the desk via share.js. */
     var btnShareTop = $('btnShareTop');
     /* Both surfaces, one handler. A previous pass wired only the top-bar
        button and left File → Share a read-only link in index.html with
@@ -1244,114 +1278,9 @@
       if (!servedByRelay()) {
         if (btnShareTop) btnShareTop.hidden = true;
         if (btnShare) btnShare.hidden = true;
-      }
-      else shareClick = function () {
-        /* Always the lesson deck, whichever studio is in front: the viewer
-           only opens decks, and the quiz and activities studios both write
-           into this same lesson. */
-        var deckWs = workspaces.deck;
-        if (active.flush) active.flush();
-        if (deckWs !== active && deckWs.flush) deckWs.flush();
-        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
-        if (menu) menu.open = false;
-        var doc = deckWs.doc();
-        /* Two things come out of one upload, and this dialog has to say so.
-           It used to open with "share as a read-only link?", which settles the
-           question before offering the alternative — and when no room was live
-           the follow-along screen went unmentioned entirely, so the only way
-           to find it was to already know it was there. */
-        var liveNow = !!(SF.Live && SF.Live.active);
-        /* Two buttons, because this is a choice between two things and not a
-           question with a yes in it. The first version put both behind one
-           "Make both links", which is a sentence rather than an option, and
-           the version before that never mentioned the second one at all. */
-        SF.askChoice({
-          title: 'Share “' + (doc.title || 'this lesson') + '”',
-          detail: 'Either one puts a copy on this server at an address nobody can guess. They cannot ' +
-            'edit it and it is not listed anywhere — but a link that escapes is a lesson that ' +
-            'escaped. Games are not carried across; the slides are. You get a key that withdraws it.',
-          options: [
-            { value: 'read', label: 'A link to read at their own pace',
-              detail: 'They open it whenever they like and page through it themselves. Works whether or not you are presenting.' },
-            { value: 'follow', label: 'A screen that follows you live',
-              disabled: !liveNow,
-              detail: 'Full screen on a desktop or a second projector. It moves when you move, ' +
-                'including through a build, and cannot run ahead. No PIN, and nobody watching ' +
-                'appears in your reports.',
-              why: 'Needs a room running — press Host live first, then share again. It only ' +
-                'works while you are presenting.' }
-          ]
-        }, function (choice) {
-          SF.toast('Uploading a copy…');
-          fetch('/api/share', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ doc: doc })
-          }).then(function (r) {
-            return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; });
-          }).then(function (j) {
-            /* The server decides the host, not this page: a laptop opened at
-               localhost would otherwise put "localhost" in the QR code, which
-               on a phone is the phone. It answers with the LAN address there
-               and the public hostname on a deploy. */
-            var url = j.url || (String(j.base || location.origin).replace(/\/$/, '') + '/view.html?s=' + j.id);
-            /* The same copy, followed instead of read. Registering the share
-               id with the relay turns it into a spectator seat: a desktop on
-               this address full-screens the slides and moves when the
-               presenter moves, with no PIN, no name and no place in the room.
-
-               It is only offered while a room is actually live, because
-               without a host to follow the address is just the read-only
-               link with extra words on it. */
-            var live = !!(SF.Live && SF.Live.watchOn && SF.Live.watchOn(j.id));
-            var followUrl = live ? url + '&follow=1' : '';
-            /* Kept where the author can find it again: the key is the only
-               way to withdraw the copy, and it is shown once otherwise. */
-            try {
-              var keys = JSON.parse(localStorage.getItem('slideforge.shares.v1') || '[]');
-              keys.unshift({ id: j.id, key: j.key, title: doc.title || '', at: Date.now() });
-              localStorage.setItem('slideforge.shares.v1', JSON.stringify(keys.slice(0, 40)));
-            } catch (e) {}
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              navigator.clipboard.writeText(url).then(function () {
-                SF.toast('Link copied. Anyone with it can read the lesson.');
-              }, function () { SF.toast('Shared: ' + url); });
-            } else {
-              SF.toast('Shared: ' + url);
-            }
-            var durability = j.durable
-              ? 'This server keeps shared copies on durable storage — they survive an app update.'
-              : 'On this server, shared copies live with the app files and are gone at the next deploy unless a persistent disk is attached (SLIDEFORGE_DATA_DIR).';
-            /* One choice, one link. Showing the other one afterwards was the
-               sequence this replaced, and it is what made the button label
-               wrong in the first place. */
-            if (choice === 'follow' && followUrl) {
-              SF.askText({
-                title: 'Follow-along link for a big screen',
-                detail: 'Open this on a desktop and it full-screens the lesson and moves when you do. ' +
-                  'No PIN and no joining — whoever holds the address watches, and they cannot run ahead ' +
-                  'of you or answer anything. It stops working when this room ends, or when you withdraw ' +
-                  'the shared copy. Scan the code or paste the link.',
-                value: followUrl, qr: true, confirm: 'Next — the read-only link'
-              }, function () { readOnlyDialog(); });
-              return;
-            }
-            readOnlyDialog();
-            function readOnlyDialog() {
-            SF.askText({
-              title: 'Your read-only link',
-              detail: 'Anyone with this address can open the lesson. Scan the code or paste the link — it is already on your clipboard. ' + durability,
-              value: url, qr: true, confirm: 'Done'
-            }, function () {});
-            }
-          }).catch(function (e) {
-            SF.toast('Could not share: ' + (e.message || e));
-          });
-        });
-      };
-      /* The same function object on both, not two copies of it. */
-      if (shareClick) {
-        if (btnShareTop) btnShareTop.onclick = shareClick;
-        if (btnShare) btnShare.onclick = shareClick;
+      } else {
+        if (btnShareTop) btnShareTop.onclick = shareLesson;
+        if (btnShare) btnShare.onclick = shareLesson;
       }
     }
 
@@ -1525,6 +1454,8 @@
     picker: picker,
     themePicker: themePicker,
     openModal: openModal,
+    shareLesson: shareLesson,
+    lessonDoc: lessonDoc,
     current: function () { return active; },
     UI: UI
   };

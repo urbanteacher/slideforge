@@ -106,6 +106,26 @@
     flex-wrap: wrap;
   }
   .pv-room[hidden] { display: none; }
+  .pv-room-id {
+    display: none;
+    align-items: baseline;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #171b22;
+    border: 1px solid var(--ui-line);
+    font-size: 12px;
+    color: var(--ui-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .pv-room-id.on { display: flex; }
+  .pv-room-id .pin {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: #e8ecf2;
+  }
+  .pv-room-id .host { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pv-foot .btn:disabled { opacity: .45; cursor: not-allowed; }
   /* The pen lives here while it is held, so the room tools are not competing
      for the eye with the tools of whatever you are in the middle of. */
@@ -273,7 +293,7 @@
     <ol id="waitSteps">
       <li>Go back to the <strong>Host live / Present</strong> window (the lesson on the projector — not this tab).</li>
       <li>Click that window once, then press <kbd>D</kbd>. Or click <strong>Teacher Presenter</strong> in the editor (Esc first if the wall is full screen).</li>
-      <li>This desk fills with notes and room controls. Drag it onto your laptop screen; leave the wall on the projector.</li>
+      <li>Once linked, invite the room from this desk: <strong>PIN</strong>, <strong>Join QR</strong>, and <strong>Share</strong> are on the foot bar — you do not need Esc for that.</li>
     </ol>
     <p class="tip" id="waitHint">Pressing D here asks the wall to send the lesson. It does not start the show — Start on Host live does that.</p>
   </div>
@@ -436,9 +456,14 @@
       <button class="btn" data-cmd="who" aria-pressed="false" aria-controls="teacherWorkspace"
               title="Open live responses and teacher entry here (W)">Live answers</button>
       <div class="pv-room" id="roomTools">
-        <button class="btn" data-cmd="rail" id="btnRail" title="Cycle room view (S)">Room view</button>
-        <button class="btn" data-cmd="join" id="btnJoin" title="Show join QR and PIN (J)">Join QR</button>
+        <div class="pv-room-id" id="roomId" aria-live="polite" title="Phones join with this PIN">
+          <span>PIN</span><span class="pin" id="roomPin">····</span>
+          <span class="host" id="roomHost"></span>
+        </div>
+        <button class="btn" data-cmd="join" id="btnJoin" title="Show join QR and PIN on the wall (J)">Join QR</button>
+        <button class="btn" id="btnShareDesk" title="Share a read-only or follow-along link">Share</button>
         <button class="btn" data-cmd="ink" title="Draw and spotlight on the wall (I)">Ink</button>
+        <button class="btn" data-cmd="rail" id="btnRail" title="Cycle room view (S)">Room view</button>
         <button class="btn" data-cmd="full" id="btnFull" title="Toggle full screen on the wall (F)">Full screen</button>
       </div>
       <div class="pv-ink" id="inkTools" role="group" aria-label="Drawing tools" hidden>
@@ -468,7 +493,12 @@
   </div>
 </div>
 
+<div id="toast"></div>
+
 <script src="js/model.js?v=34"></script>
+<script src="js/qr.js?v=2"></script>
+<script src="js/ask.js?v=4"></script>
+<script src="js/share.js?v=1"></script>
 <script src="js/customize.js?v=18"></script>
 <script src="js/explore.js?v=1"></script>
 <script src="js/callouts.js?v=2"></script>
@@ -489,8 +519,21 @@
   var $ = function (id) { return document.getElementById(id); };
 
   var state = null;
+  var roomLive = false;
   var startedAt = Date.now();
   var timerBase = null;
+  var sharePrepWait = null;
+
+  /* Minimal toast — player.js owns the wall's; the desk needs its own. */
+  function deskToast(msg) {
+    var t = $('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('on');
+    clearTimeout(deskToast._t);
+    deskToast._t = setTimeout(function () { t.classList.remove('on'); }, 3200);
+  }
+  if (SF && !SF.toast) SF.toast = deskToast;
 
   var cmdSeq = 0;
 
@@ -554,6 +597,37 @@
         };
   });
   $('resetTimer').onclick = function () { timerBase = Date.now(); };
+
+  /* Share opens on this desk. The wall only supplies the authored lesson and
+     registers follow-along — dialogs stay here so Esc is not the path. */
+  function openShareOnDesk(doc, live) {
+    if (typeof SF.shareLessonDoc !== 'function') {
+      deskToast('Share is not available in this build.');
+      return;
+    }
+    SF.shareLessonDoc(doc, {
+      live: !!live,
+      toast: deskToast,
+      watchOn: function (id) {
+        cmd('shareWatch', { id: id });
+        return !!live;
+      }
+    });
+  }
+
+  function shareFromDesk() {
+    if (sharePrepWait) return;
+    sharePrepWait = setTimeout(function () {
+      sharePrepWait = null;
+      /* Wall did not answer — fall back to the show deck already on the desk. */
+      if (state && state.deck) openShareOnDesk(state.deck, roomLive);
+      else deskToast('Link the desk to the show first, then share.');
+    }, 1200);
+    cmd('sharePrep');
+  }
+
+  var btnShareDesk = $('btnShareDesk');
+  if (btnShareDesk) btnShareDesk.onclick = shareFromDesk;
 
   /* ------------------------------------------------------------------ ink */
 
@@ -786,11 +860,34 @@
      truthful about what the next press will do. */
   function syncRoomTools(d) {
     var live = !!d.live;
+    roomLive = live;
     ['join', 'reactions', 'blankPhones', 'floor'].forEach(function (id) {
       var map = { join: 'btnJoin', reactions: 'btnReactions', blankPhones: 'btnBlankPhones', floor: 'btnFloor' };
       var el = $(map[id]);
       if (el) el.disabled = !live;
     });
+
+    var roomId = $('roomId');
+    var pinEl = $('roomPin');
+    var hostEl = $('roomHost');
+    if (roomId && pinEl) {
+      var pin = d.pin ? String(d.pin) : '';
+      roomId.classList.toggle('on', live && !!pin);
+      pinEl.textContent = pin || '····';
+      if (hostEl) {
+        var host = String(d.joinUrl || '').replace(/^https?:\/\//, '');
+        hostEl.textContent = host;
+        hostEl.title = host;
+      }
+    }
+
+    var share = $('btnShareDesk');
+    if (share) {
+      share.disabled = false;
+      share.title = live
+        ? 'Share a read-only or follow-along link'
+        : 'Share a read-only link — follow-along needs Host live first';
+    }
 
     var blankBtn = $('btnBlank');
     if (blankBtn) {
@@ -993,7 +1090,14 @@
   }
 
   function onWallState(d) {
-    if (!d || d.type !== 'sf-presenter-state' || !d.deck) return;
+    if (!d) return;
+    if (d.type === 'sf-share-prep') {
+      if (sharePrepWait) { clearTimeout(sharePrepWait); sharePrepWait = null; }
+      if (!d.doc) { deskToast('No lesson to share.'); return; }
+      openShareOnDesk(d.doc, d.live);
+      return;
+    }
+    if (d.type !== 'sf-presenter-state' || !d.deck) return;
     if(d.teacherUrl && $('teacherWorkspace').getAttribute('src')!==d.teacherUrl) $('teacherWorkspace').src=d.teacherUrl;
     if(d.requestedPanel)selectPanel(d.requestedPanel);
     qaState = d.qa || null;
@@ -1347,14 +1451,14 @@
     $('waitLead').textContent =
       'Host live → Start should open this desk automatically. If you still see this card, click the wall window and press D — D on this screen only asks that window to send the lesson.';
     $('waitHint').textContent =
-      'Allow pop-ups if Start did not open a second window. Then press D on the wall.';
+      'Allow pop-ups if Start did not open a second window. Then press D on the wall. Once linked, PIN, Join QR, and Share are on this desk’s foot bar.';
   } else {
     $('waitTitle').textContent = 'Linking to the show…';
     $('waitLead').textContent = 'Almost there — waiting for the wall window to send the lesson.';
     $('waitSteps').innerHTML =
       '<li>Keep the Present / Host live window open.</li>' +
       '<li>If this stays blank, click the show window once, then press <kbd>D</kbd>.</li>' +
-      '<li>Or close this tab and reopen Presenter from the show.</li>';
+      '<li>Once linked, invite students from this desk with <strong>PIN</strong>, <strong>Join QR</strong>, or <strong>Share</strong> — not Esc.</li>';
     $('waitHint').textContent = 'The desk cannot run alone — it needs the show window beside it.';
   }
 })();
