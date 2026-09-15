@@ -1586,6 +1586,53 @@ html[data-ws="game"] #btnSorter { display: none; }
   border: 3px dashed var(--s-rule); border-radius: 16px; text-align: center; padding: 30px;
 }
 
+/* Code viewer — typed source on the wall, edited only in the inspector */
+.layout-code .pad { gap: 18px; }
+.layout-code h2 { margin-bottom: 4px; }
+.layout-code .code-frame {
+  flex: 1; min-height: 0; display: flex; flex-direction: column;
+  border: 1px solid var(--s-rule); border-radius: 14px;
+  background: color-mix(in srgb, var(--s-card, var(--s-bg)) 88%, #0b1220 12%);
+  overflow: hidden;
+}
+.layout-code .code-chrome {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-bottom: 1px solid var(--s-rule);
+  font-size: 14px; color: var(--s-dim);
+}
+.layout-code .code-dots::before {
+  content: '';
+  display: inline-block; width: 54px; height: 10px;
+  background:
+    radial-gradient(circle at 5px 5px, #ef6b73 4px, transparent 5px),
+    radial-gradient(circle at 23px 5px, #e6c15a 4px, transparent 5px),
+    radial-gradient(circle at 41px 5px, #61c279 4px, transparent 5px);
+}
+.layout-code .code-filename { flex: 1; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.layout-code .code-lang {
+  font-size: 12px; letter-spacing: .04em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px; border: 1px solid var(--s-rule);
+}
+.layout-code .code-pane {
+  flex: 1; margin: 0; padding: 22px 26px 28px;
+  overflow: auto; white-space: pre; tab-size: 2;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 26px; line-height: 1.45; color: var(--s-fg);
+  background: transparent;
+}
+.layout-code .code-pane code { font: inherit; color: inherit; }
+.layout-code .code-pane.code-typing::after {
+  content: '';
+  display: inline-block; width: .55ch; height: 1.05em;
+  margin-left: 1px; vertical-align: text-bottom;
+  background: var(--s-accent, var(--s-fg));
+  animation: code-caret 1s steps(1) infinite;
+}
+@keyframes code-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
 /* readiness — what will go wrong in the room */
 .ready-box { display: flex; flex-direction: column; gap: 4px; }
 .ready-ok { font-size: 12px; color: var(--ui-good); line-height: 1.5; padding: 8px 10px;
@@ -1608,6 +1655,37 @@ html[data-ws="game"] #btnSorter { display: none; }
 .ready-check .ready-dot { background: var(--ui-warn); }
 .ready-text strong { color: var(--ui-text); }
 .ready-text span { color: var(--ui-dim); }
+
+/* AI smoke test — Lesson studio diagnostics panel */
+.ai-smoke-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.ai-smoke-card {
+  padding: 10px 12px; border-radius: 8px;
+  background: var(--ui-bg); border: 1px solid var(--ui-line);
+}
+.ai-smoke-meta { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.ai-smoke-meta-row {
+  display: grid; grid-template-columns: 88px 1fr; gap: 8px;
+  font-size: 12px; line-height: 1.4;
+}
+.ai-smoke-k { color: var(--ui-dim); }
+.ai-smoke-v { color: var(--ui-text); word-break: break-word; font-variant-numeric: tabular-nums; }
+.ai-smoke-log {
+  max-height: 180px; overflow: auto; display: flex; flex-direction: column; gap: 4px;
+  padding: 8px 10px; border-radius: 8px;
+  background: var(--ui-bg); border: 1px solid var(--ui-line);
+  font-size: 11px; line-height: 1.4;
+}
+.ai-smoke-line { display: grid; grid-template-columns: 58px 1fr; gap: 8px; }
+.ai-smoke-time { color: var(--ui-dim); font-variant-numeric: tabular-nums; }
+.ai-smoke-ok .ai-smoke-msg { color: var(--ui-good, #3d7a4a); }
+.ai-smoke-fail .ai-smoke-msg { color: var(--ui-bad, #b33); }
+.ai-smoke-warn .ai-smoke-msg { color: var(--ui-warn, #a67c00); }
+.ai-smoke-result {
+  margin: 0; max-height: 160px; overflow: auto;
+  padding: 10px 12px; border-radius: 8px;
+  background: var(--ui-bg); border: 1px solid var(--ui-line);
+  font-size: 11px; line-height: 1.45; white-space: pre-wrap; word-break: break-word;
+}
 
 /* the teacher's panel — in the app, poppable out */
 .teach-modal {

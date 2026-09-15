@@ -3700,6 +3700,93 @@
     if (slide.body) pad.appendChild(rich('div', 'info-takeaway', slide, 'body', slide.body));
   }
 
+  /**
+   * Code viewer — projector shows source; Present can typewrite it.
+   * Not an editor: the wall never accepts keystrokes into the code.
+   */
+  function layoutCode(slide, pad, opts, root) {
+    opts = opts || {};
+    var src = String(slide.code != null ? slide.code : (slide.body || ''));
+    var lang = String(slide.language || 'python').toLowerCase();
+    if (lang === 'js') lang = 'javascript';
+    var label = lang === 'javascript' ? 'JavaScript'
+      : lang === 'text' ? 'Text'
+      : 'Python';
+    var fileHint = lang === 'javascript' ? 'snippet.js'
+      : lang === 'text' ? 'notes.txt'
+      : 'snippet.py';
+
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
+
+    var frame = el('div', 'code-frame');
+    var chrome = el('div', 'code-chrome');
+    chrome.appendChild(el('span', 'code-dots', ''));
+    chrome.appendChild(el('span', 'code-filename', fileHint));
+    chrome.appendChild(el('span', 'code-lang', label));
+    frame.appendChild(chrome);
+
+    var pre = el('pre', 'code-pane');
+    pre.setAttribute('aria-label', label + ' source');
+    var codeEl = document.createElement('code');
+    codeEl.className = 'language-' + lang;
+    pre.appendChild(codeEl);
+    frame.appendChild(pre);
+    pad.appendChild(frame);
+
+    var play = !!(opts.interactive && slide.typewrite !== false);
+    if (!play) {
+      codeEl.textContent = src;
+      return;
+    }
+
+    var speed = Math.max(8, Math.min(120, Number(slide.typeSpeed) || 28));
+    var i = 0;
+    var timer = null;
+    var host = root || pre.closest('.slide') || pad.parentElement;
+    var done = false;
+
+    function paint() {
+      codeEl.textContent = src.slice(0, i);
+      pre.classList.toggle('code-typing', !done && i < src.length);
+      pre.classList.toggle('code-done', done || i >= src.length);
+    }
+
+    function finish() {
+      if (done) return true;
+      done = true;
+      if (timer) { clearTimeout(timer); timer = null; }
+      i = src.length;
+      paint();
+      if (host && host._codeTypewrite) host._codeTypewrite.busy = false;
+      return true;
+    }
+
+    function tick() {
+      if (done) return;
+      if (i >= src.length) { finish(); return; }
+      /* Light human jitter: slightly slower on newlines, faster on spaces. */
+      var ch = src.charAt(i);
+      i += 1;
+      paint();
+      var wait = speed;
+      if (ch === '\n') wait = speed * 2.4;
+      else if (ch === ' ' || ch === '\t') wait = speed * 0.55;
+      else wait = speed * (0.75 + Math.random() * 0.6);
+      timer = setTimeout(tick, wait);
+    }
+
+    paint();
+    if (host) {
+      host._codeTypewrite = {
+        busy: src.length > 0,
+        finish: finish,
+        done: function () { return done || i >= src.length; }
+      };
+    }
+    if (src.length) timer = setTimeout(tick, Math.max(120, speed * 2));
+    else finish();
+  }
+
   var LAYOUTS = {
     stats: layoutStats,
     compare: layoutCompare,
@@ -3720,6 +3807,7 @@
     split: layoutSplit,
     quote: layoutQuote,
     table: layoutTable,
+    code: layoutCode,
     chart: layoutChart,
     image: layoutImage,
     gallery: layoutGallery,

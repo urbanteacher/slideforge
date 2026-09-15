@@ -417,6 +417,17 @@ function makeSlide(type) {
       s.body = 'A quotation that makes the point better than a bullet list would.';
       s.subtitle = 'Attribution';
       break;
+    case 'code':
+      s.title = 'Code that writes itself';
+      s.language = 'python';
+      s.typewrite = true;
+      s.typeSpeed = 28;
+      s.code =
+        'import pandas as pd\n\n' +
+        'df = pd.read_csv("attendance.csv")\n' +
+        'by_week = df["week"].value_counts().sort_index()\n' +
+        'print(by_week.head())\n';
+      break;
     case 'quiz':
       s.question = 'Which of these is correct?';
       s.options = ['Option A', 'Option B', 'Option C', 'Option D'];
@@ -538,6 +549,26 @@ function normalizeSlide(raw) {
   s.videoMuted = s.videoMuted === true;
   s.videoAutoplay = s.videoAutoplay === true;
   s.tableHeader = s.tableHeader !== false;
+  /* Code viewer: source lives on `code`. Older drafts may have put it in
+     `body`; promote once so the inspector and the wall agree. */
+  if (s.type === 'code' || (raw && (raw.code != null || raw.language != null))) {
+    s.code = String(s.code != null ? s.code : (s.body || ''));
+    var lang = String(s.language || 'python').trim().toLowerCase();
+    s.language = (lang === 'javascript' || lang === 'js') ? 'javascript'
+      : (lang === 'text' || lang === 'plain') ? 'text'
+      : 'python';
+    s.typewrite = s.typewrite !== false;
+    s.typeSpeed = Math.max(8, Math.min(120, Number(s.typeSpeed) || 28));
+    if (s.type !== 'code') {
+      /* Authored code settings on a non-code slide are kept only while the
+         fields exist — prepareLayout will reattach when the type returns. */
+    }
+  } else {
+    delete s.code;
+    delete s.language;
+    delete s.typewrite;
+    delete s.typeSpeed;
+  }
   /* Kept off the slide unless it is true, for the reason the note below
      gives about unused fields: a boolean stamped on all 74 slides of a
      lecture is bytes in localStorage bought for nothing. */

@@ -1356,7 +1356,191 @@
     paint(!!(SF.AI && SF.AI.liveAIKnown && SF.AI.liveAIKnown()));
     if (SF.AI && SF.AI.checkLiveAI) SF.AI.checkLiveAI().then(paint);
 
+    var actions = el('div', 'ai-smoke-actions');
+    actions.style.marginTop = '10px';
+    actions.appendChild(UI.button('Open AI smoke test…', 'primary', function () {
+      openAiSmokeTest();
+    }));
+    box.appendChild(actions);
+    box.appendChild(el('div', 'hint',
+      'Checks /api/ai/status and runs one small generate call. Use it before class to confirm the key and model are live.'));
+
     body.appendChild(UI.field('AI assistance', box));
+  }
+
+  /**
+   * Interactive AI smoke test — live status + one generate round-trip.
+   * Opens in the settings sheet so Lesson studio keeps one modal pattern.
+   */
+  function openAiSmokeTest() {
+    var body = $('settingsBody');
+    var title = $('settingsTitle');
+    if (title) title.textContent = 'AI smoke test';
+    if (!body) return;
+    var bodyEl = body;
+    var pollTimer = null;
+    var inFlight = false;
+
+    function stopPoll() {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    }
+
+    function line(logEl, kind, msg) {
+      var row = el('div', 'ai-smoke-line ai-smoke-' + (kind || 'info'));
+      var stamp = new Date();
+      var hh = String(stamp.getHours()).padStart(2, '0');
+      var mm = String(stamp.getMinutes()).padStart(2, '0');
+      var ss = String(stamp.getSeconds()).padStart(2, '0');
+      row.appendChild(el('span', 'ai-smoke-time', hh + ':' + mm + ':' + ss));
+      row.appendChild(el('span', 'ai-smoke-msg', msg));
+      logEl.insertBefore(row, logEl.firstChild);
+      while (logEl.children.length > 40) logEl.removeChild(logEl.lastChild);
+    }
+
+    function paintStatus(card, s) {
+      card.innerHTML = '';
+      var live = !!(s && s.available);
+      var badge = el('div', 'ai-badge');
+      badge.style.fontSize = '13px';
+      badge.style.fontWeight = '600';
+      badge.style.color = live ? 'var(--s-accent, #38bdf8)' : 'var(--s-dim, #94a3b8)';
+      badge.textContent = live
+        ? '● AI is live'
+        : '○ AI offline (heuristics only)';
+      card.appendChild(badge);
+
+      var dl = el('div', 'ai-smoke-meta');
+      function meta(k, v) {
+        var row = el('div', 'ai-smoke-meta-row');
+        row.appendChild(el('span', 'ai-smoke-k', k));
+        row.appendChild(el('span', 'ai-smoke-v', v == null || v === '' ? '—' : String(v)));
+        dl.appendChild(row);
+      }
+      meta('Origin', s && s.origin);
+      meta('Model', s && s.model);
+      meta('Available', s ? String(!!s.available) : '—');
+      meta('HTTP', s && s.httpStatus ? String(s.httpStatus) : '—');
+      meta('Probe', s && s.ms != null ? (s.ms + ' ms') : '—');
+      meta('lastError', s && s.lastError != null ? String(s.lastError) : 'none');
+      if (s && s.error) meta('Error', s.error);
+      meta('Checked', s && s.at ? s.at.replace('T', ' ').replace(/\.\d+Z$/, ' Z') : '—');
+      card.appendChild(dl);
+    }
+
+    function refreshStatus(card, logEl, quiet) {
+      if (!SF.AI || !SF.AI.probeStatus) {
+        if (!quiet) line(logEl, 'fail', 'SF.AI.probeStatus is missing in this build.');
+        return Promise.resolve(null);
+      }
+      return SF.AI.probeStatus().then(function (s) {
+        paintStatus(card, s);
+        if (!quiet) {
+          line(logEl, s.available ? 'ok' : 'warn',
+            s.available
+              ? ('Status OK — ' + (s.model || 'model?') + ' in ' + s.ms + ' ms')
+              : ('Status offline' + (s.error ? (': ' + s.error) : '') +
+                (s.lastError != null ? (' (lastError ' + s.lastError + ')') : '') +
+                ' · ' + s.ms + ' ms'));
+        }
+        return s;
+      });
+    }
+
+    function drawPanel() {
+      bodyEl.innerHTML = '';
+
+      var intro = el('div', 'hint',
+        'Realtime check of this deployment’s AI. Status refreshes every few seconds while this panel is open. Run the generate test once before class.');
+      intro.style.marginBottom = '12px';
+      bodyEl.appendChild(intro);
+
+      var statusCard = el('div', 'ai-smoke-card');
+      bodyEl.appendChild(UI.field('Live status', statusCard));
+
+      var topicBox = el('div');
+      var topicInput = UI.text('SlideForge', null, 'Topic for the smoke reply');
+      topicBox.appendChild(topicInput);
+      bodyEl.appendChild(UI.field('Generate topic', topicBox,
+        'Sent in a tiny fixed prompt. Does not touch your lesson.'));
+
+      var logEl = el('div', 'ai-smoke-log');
+      bodyEl.appendChild(UI.field('Event log', logEl));
+
+      var resultEl = el('pre', 'ai-smoke-result');
+      resultEl.textContent = 'Generate result will appear here.';
+      bodyEl.appendChild(UI.field('Last generate', resultEl));
+
+      var row = el('div', 'ai-smoke-actions');
+      var btnRefresh = UI.button('Refresh status', 'ghost', function () {
+        refreshStatus(statusCard, logEl, false);
+      });
+      var btnRun = UI.button('Run generate test', 'primary', function () {
+        if (inFlight) {
+          line(logEl, 'warn', 'Already running a generate test.');
+          return;
+        }
+        inFlight = true;
+        btnRun.disabled = true;
+        btnRun.textContent = 'Generating…';
+        line(logEl, 'info', 'POST /api/ai/generate…');
+        var topic = topicInput.value || 'SlideForge';
+        (SF.AI && SF.AI.runSmokeTest
+          ? SF.AI.runSmokeTest({ topic: topic })
+          : Promise.resolve({ ok: false, error: 'SF.AI.runSmokeTest missing', ms: 0, httpStatus: 0, text: null, parsed: null }))
+          .then(function (r) {
+            if (r.ok) {
+              line(logEl, 'ok', 'Generate OK in ' + r.ms + ' ms (HTTP ' + r.httpStatus + ')');
+              SF.toast('AI smoke test passed — ' + r.ms + ' ms');
+            } else {
+              line(logEl, 'fail',
+                'Generate failed' +
+                (r.httpStatus ? (' HTTP ' + r.httpStatus) : '') +
+                (r.error ? (': ' + r.error) : '') +
+                ' · ' + r.ms + ' ms');
+              SF.toast('AI smoke test failed' + (r.error ? (': ' + r.error) : ''));
+            }
+            try {
+              resultEl.textContent = JSON.stringify({
+                ok: r.ok,
+                httpStatus: r.httpStatus,
+                ms: r.ms,
+                error: r.error,
+                parsed: r.parsed,
+                text: r.text
+              }, null, 2);
+            } catch (e) {
+              resultEl.textContent = String(r && r.text || r && r.error || e);
+            }
+            /* Keep the app-wide AI badge in sync after a real round-trip. */
+            return refreshStatus(statusCard, logEl, true);
+          })
+          .finally(function () {
+            inFlight = false;
+            btnRun.disabled = false;
+            btnRun.textContent = 'Run generate test';
+          });
+      });
+      var btnBack = UI.button('← Presentation settings', 'ghost', function () {
+        stopPoll();
+        openDeckSettings();
+      });
+      row.appendChild(btnRun);
+      row.appendChild(btnRefresh);
+      row.appendChild(btnBack);
+      bodyEl.appendChild(row);
+
+      line(logEl, 'info', 'Panel open — probing status…');
+      refreshStatus(statusCard, logEl, false);
+      stopPoll();
+      pollTimer = setInterval(function () {
+        refreshStatus(statusCard, logEl, true);
+      }, 4000);
+    }
+
+    drawPanel();
+    SF.Shell.openModal('settingsModal', function () {
+      stopPoll();
+    });
   }
 
   /* What will go wrong in the room, listed before the room.
@@ -2495,6 +2679,42 @@
       return;
     }
 
+    if (s.type === 'code') {
+      insp.appendChild(UI.field('Slide title',
+        richField(s, 'title', 'text', function (v) { s.title = v; touched(); repaint(); })));
+      insp.appendChild(UI.field('Language', UI.select([
+        { value: 'python', label: 'Python' },
+        { value: 'javascript', label: 'JavaScript' },
+        { value: 'text', label: 'Plain text' }
+      ], s.language === 'javascript' ? 'javascript' : (s.language === 'text' ? 'text' : 'python'),
+        function (v) { s.language = v; touched(); repaint(); }),
+        'Label only — nothing runs on the wall. This is a viewer, not an editor.'));
+      if (s.code == null) s.code = String(s.body || '');
+      insp.appendChild(UI.field('Source',
+        UI.area(s.code || '', function (v) {
+          s.code = v;
+          touched();
+          repaint();
+        }, 12),
+        'What the projector types. Keep it short enough to read from the back of the room.'));
+      var box = el('div');
+      box.appendChild(UI.check('Type on enter', s.typewrite !== false, function (v) {
+        s.typewrite = v;
+        touched();
+        repaint();
+      }));
+      box.appendChild(el('div', 'hint',
+        'In Present, the code drips in character by character. Next skips to the finished source. The Lesson studio preview always shows the full text.'));
+      insp.appendChild(UI.field('Playback', box));
+      insp.appendChild(UI.field('Speed (ms per character)',
+        UI.num(s.typeSpeed || 28, function (v) {
+          s.typeSpeed = Math.max(8, Math.min(120, Number(v) || 28));
+          touched();
+        }, 8, 120),
+        'Lower is faster. Around 24–36 feels like someone typing.'));
+      return;
+    }
+
     if (s.type === 'quote') {
       insp.appendChild(UI.field('Quotation',
         richField(s, "body", "area", function (v) { s.body = v; touched(); repaint(); }, 4)));
@@ -3325,6 +3545,7 @@
        second one of its own — same picker, same prompts, same per-kind
        settings. It passes its own redraw. */
     drawFeedback: drawFeedback,
+    openAiSmokeTest: openAiSmokeTest,
     openDeck: function (id) {
       var d = SF.Store.get(id);
       if (!d) return;

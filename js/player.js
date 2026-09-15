@@ -2066,6 +2066,11 @@
   Player.gate = null;
 
   Player.next = function () {
+    if (!Player.frozen && Player._current && Player._current._codeTypewrite &&
+        Player._current._codeTypewrite.busy && Player._current._codeTypewrite.finish) {
+      Player._current._codeTypewrite.finish();
+      return;
+    }
     if (!Player.frozen && SF.Explore && SF.Explore.step(Player, 1)) return;
     if (SF.Teaching && SF.Teaching.next()) return;
     if (!Player.deck) return;

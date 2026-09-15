@@ -120,11 +120,11 @@
             options: [
         "As you leave the lab",
         "The Friday after the lab, by midday",
-        "The Monday after the lab",
+        "The Monday after the lab, by 23:59",
         "Before the next lecture"
             ],
-            correct: 1,
-            explanation: "Friday after each lab, 12:00. It is the one deadline that repeats every week of the term."
+            correct: 2,
+            explanation: "Monday after each lab, 23:59. It is the one deadline that repeats every week of the term."
           }
         ]
       },
@@ -1160,8 +1160,8 @@
           title: "Summary & Looking Ahead to Lab 1",
           bullets: [
             "Read Chapter 1 & 6 in Munzner before Thursday’s lab.",
-            "Lab 1 Focus: Setting up your Python environment, importing datasets with Pandas, and building your first clean visualisations.",
-            "Worksheet Submission: Complete and submit Lab 1 worksheets on Canvas by Friday midday.",
+            "Lab 1 Focus: student survey, a news visualisation critique, Python/Anaconda setup, and a first notebook chart.",
+            "Worksheet Submission: Lab 1 on Canvas by the Monday after the lab, 23:59.",
             "Open Q&A: Bring your questions to the desk or post in the course discussion channel."
           ],
           notes: "Close the lecture. Remind them of the lab schedule and room. Open the floor to initial questions.",
@@ -1201,6 +1201,264 @@
             capPos: "bottom",
             imageMotion: "zoom"
           }
+        }
+      ]
+    },
+    {
+      key: 'ipdv-lab1',
+      title: 'LDSCI6253 Lab 1 · Exercise sheet',
+      icon: '💻',
+      blurb: 'Week 1 lab: student survey, a news visualisation critique, Python/Anaconda setup, and a first notebook chart — then submit on Canvas.',
+      minutes: 90,
+      theme: 'northeastern',
+      libraryGroup: 'nul',
+      kind: 'lecture',
+      org: 'Northeastern University London',
+      logo: 'assets/brand/nu-london-logo.png',
+      logoOn: 'all',
+      logoSize: 'small',
+      games: [{
+        ref: 'check-lab1',
+        title: 'Check · Lab 1 submission',
+        style: 'choice',
+        settings: { defaultTime: 20, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
+        questions: [{
+          question: 'Lab 1 worksheets are due on Canvas when?',
+          options: [
+            'As you leave the lab today',
+            'The Friday after the lab, by midday',
+            'The Monday after the lab, by 23:59',
+            'Before next week’s lecture only'
+          ],
+          correct: 2,
+          explanation: 'Submit on Canvas by the Monday after the lab, 23:59. Survey, Canvas post, and notebook are all part of that worksheet pack.'
+        }]
+      }],
+      slides: [
+        {
+          type: 'title',
+          title: 'Lab 1\nExercise sheet',
+          subtitle: 'Information Presentation & Data Visualisation · LDSCI6253',
+          notes: 'Welcome. This is a working session, not a second lecture. Walk the four tasks, then let people start. Circulate for Anaconda and Canvas blockers.'
+        },
+        {
+          type: 'introduction',
+          title: 'Mark Martin',
+          subtitle: 'Module lead · Northeastern University London',
+          body: 'Advanced Information Presentation & Visualisation\nLDSCI6253 · Lab 1',
+          image: 'assets/lesson/ipdv/mark-martin-portrait.jpg',
+          notes: 'Optional if the cohort already knows you from the lecture. Skip if time is tight.'
+        },
+        {
+          type: 'section',
+          title: 'Today’s lab',
+          subtitle: 'Four tasks. One Canvas submission by Monday 23:59.',
+          notes: 'Read the four tasks out once. Point at the clock: survey and news post first; install and notebook second so machines are free while others still write.'
+        },
+        {
+          type: 'cards',
+          title: 'What you will do',
+          bullets: [
+            '1 · Survey\tComplete the short student-information form.',
+            '2 · News viz\tFind a disaster visualisation and post a critique on Canvas.',
+            '3 · Toolkit\tInstall Python 3.x — Anaconda strongly recommended.',
+            '4 · Notebook\tMake one simple chart in Jupyter or Colab and submit it.'
+          ],
+          progressive: true,
+          notes: 'Reveal one card at a time if the room is restless. Otherwise show all four and move on.'
+        },
+        {
+          type: 'keyfact',
+          title: 'Submission',
+          subtitle: 'Canvas · one pack',
+          body: 'Monday after the lab · 23:59',
+          bullets: [
+            'Survey completion counts as Task 1.',
+            'Canvas post = Task 2 (URL + paragraph).',
+            'Notebook + short description = Task 4.',
+            'Task 3 is setup — no separate file unless Canvas asks for a screenshot.'
+          ],
+          notes: 'Say the deadline twice. Then open Task 1.'
+        },
+        {
+          type: 'section',
+          title: 'Task 1',
+          subtitle: 'Student information survey',
+          notes: 'Give them five quiet minutes. Do not talk over the form.'
+        },
+        {
+          type: 'links',
+          title: 'Complete the survey',
+          bullets: [
+            'Student information survey\thttps://forms.office.com/r/9YBnKM34Nt',
+            'Why we ask\tBackground, expectations, and favourite colours — possible fuel for later visualisations.',
+            'Privacy\tAnswer honestly; we use the data for teaching, not for grading individuals.'
+          ],
+          progressive: true,
+          notes: 'Open the form on the projector once so everyone sees the same URL. Confirm when most of the room has submitted before moving on.'
+        },
+        {
+          type: 'section',
+          title: 'Task 2',
+          subtitle: 'Visualisations in the news',
+          notes: 'Natural disasters: a named storm, hurricane season, wildfires, floods, earthquakes. Recent means this year if they can find it.'
+        },
+        {
+          type: 'content',
+          title: 'Find one chart. Critique it.',
+          bullets: [
+            'Topic: a recent visualisation about natural disasters (storm, hurricane, wildfire, related).',
+            'Post to Canvas: the original URL plus one paragraph.',
+            'Say what it shows, what data it uses, and the original source.',
+            'Say what you like and dislike — then give constructive suggestions for improvement.'
+          ],
+          progressive: true,
+          notes: 'Model one sentence of constructive feedback: “The colour scale jumps from pale yellow to deep red with no middle step, so mid-range counties look extreme.” Avoid “I don’t like it.”'
+        },
+        {
+          type: 'keywords',
+          title: 'What a good Canvas post includes',
+          bullets: [
+            'URL\tLink to the original visualisation, not a screenshot alone.',
+            'Show\tOne or two sentences on the claim the graphic makes.',
+            'Data\tWho collected it, for which place and time, if stated.',
+            'Judge\tOne strength, one weakness, one concrete fix.'
+          ],
+          progressive: true,
+          notes: 'If someone cannot find a disaster chart, broaden to climate or emergency response — still news, still recent.'
+        },
+        {
+          type: 'image',
+          title: 'A historical benchmark',
+          body: 'John Snow’s 1854 cholera map — evidence on a street plan.\nYour news example should be equally clear about place, time and claim.',
+          image: 'assets/lesson/ipdv/snow-cholera-map-1854.jpg',
+          imageFit: 'cover',
+          design: { capStyle: 'scrim', capPos: 'bottom', logoGround: 'dark' },
+          notes: 'Optional beat. Use only if Task 2 stalls. Then release the room to search.'
+        },
+        {
+          type: 'section',
+          title: 'Task 3',
+          subtitle: 'Set up your visualisation toolkit',
+          notes: 'Pair people who already have Anaconda with people who do not. Walk the installers aisle.'
+        },
+        {
+          type: 'split',
+          title: 'Install Python 3.x',
+          bullets: [
+            'Any editor is fine — VS Code, Cursor, PyCharm — as long as it runs Python 3.',
+            'Strongly recommended: download and install Anaconda (libraries and Jupyter in one package).',
+            'Confirm in a terminal: python --version (or python3 --version).',
+            'Stuck on university machines? Use Google Colab in the browser for Task 4 today.'
+          ],
+          image: 'assets/lesson/ipdv/different-charts-python-1.png',
+          imageFit: 'contain',
+          design: { mediaGround: 'full' },
+          progressive: true,
+          notes: 'Anaconda: https://www.anaconda.com/download — do not force a full install if Colab unblocks Task 4. Capture names of people still blocked for follow-up.'
+        },
+        {
+          type: 'links',
+          title: 'Useful downloads',
+          bullets: [
+            'Anaconda\thttps://www.anaconda.com/download',
+            'Google Colab\thttps://colab.research.google.com/',
+            'Matplotlib docs\thttps://matplotlib.org/stable/gallery/index.html',
+            'Seaborn gallery\thttps://seaborn.pydata.org/examples/index.html'
+          ],
+          progressive: true,
+          notes: 'Leave this slide up while people install.'
+        },
+        {
+          type: 'section',
+          title: 'Task 4',
+          subtitle: 'One visualisation in a notebook',
+          notes: 'Goal is a working environment, not a masterpiece. Celebrate a bar chart of a tiny CSV.'
+        },
+        {
+          type: 'content',
+          title: 'Create a simple chart',
+          bullets: [
+            'Open a Jupyter Notebook (via Anaconda) or a Google Colab notebook.',
+            'Load a dataset of your choice — course sample, open data, or a tiny table you type in.',
+            'Draw one chart with Matplotlib, Seaborn, or another Python library.',
+            'Submit the notebook on Canvas with a brief description of the data and your approach.'
+          ],
+          progressive: true,
+          notes: 'If someone finishes early: add a title, axis labels, and a one-line caption that states the finding.'
+        },
+        {
+          type: 'code',
+          title: 'A minimal check that Python works',
+          language: 'python',
+          typewrite: true,
+          typeSpeed: 26,
+          code:
+            'import matplotlib.pyplot as plt\n' +
+            '\n' +
+            'cities = ["Boston", "Bristol", "London"]\n' +
+            'values = [12, 19, 15]\n' +
+            '\n' +
+            'plt.bar(cities, values)\n' +
+            'plt.title("A first chart — replace with your data")\n' +
+            'plt.ylabel("Count")\n' +
+            'plt.show()\n',
+          notes: 'Present this so the room sees the shape of a first cell. They should replace the arrays with their own data. Not assessed for style — assessed for “it ran and it is yours.”'
+        },
+        {
+          type: 'split',
+          title: 'What “done” looks like',
+          bullets: [
+            'Notebook runs top to bottom without errors.',
+            'One chart is visible (PNG in the notebook output is fine).',
+            'Two or three sentences: what the data is, and what you plotted.',
+            'Upload follows the Canvas Lab 1 worksheet instructions.'
+          ],
+          image: 'assets/lesson/ipdv/different-charts-python-2.jpg',
+          imageFit: 'contain',
+          design: { mediaGround: 'full' },
+          progressive: true,
+          notes: 'Show an example submission checklist on the board if Canvas has a rubric.'
+        },
+        {
+          type: 'game',
+          gameRef: 'check-lab1',
+          notes: 'Quick check before people leave. Confirm Monday 23:59 is in their calendar.'
+        },
+        {
+          type: 'timeline',
+          title: 'Suggested pace in the room',
+          bullets: [
+            '0:00\tWelcome & plan\t5 min',
+            '0:05\tTask 1 survey\t10 min',
+            '0:15\tTask 2 news viz\t25 min',
+            '0:40\tTask 3 install\t20 min',
+            '1:00\tTask 4 notebook\t25 min',
+            '1:25\tSubmit & questions\t5 min'
+          ],
+          progressive: true,
+          notes: 'Flexible. If installs are painful, swap Task 2 and Task 3 so searching happens while downloads finish.'
+        },
+        {
+          type: 'keywords',
+          title: 'Before you go',
+          bullets: [
+            'Deadline\tMonday after the lab · 23:59 on Canvas.',
+            'Pack\tSurvey · Canvas critique with URL · notebook + short description.',
+            'Help\tStay for the last ten minutes if Anaconda or Colab is stuck.',
+            'Next lecture\tBring one question from something you struggled to plot today.'
+          ],
+          progressive: true,
+          notes: 'Dismiss when the check is done. Keep the links slide available for stragglers.'
+        },
+        {
+          type: 'image',
+          title: 'Questions',
+          body: 'Ask now while the room is here.\nOtherwise post on Canvas discussion.',
+          subtitle: 'Lab 1 · LDSCI6253',
+          image: 'assets/lesson/ipdv/qa-london-night-1.jpg',
+          design: { logoGround: 'dark', capStyle: 'scrim', capPos: 'bottom', imageMotion: 'zoom' },
+          notes: 'Open floor. Common blockers: PATH after Anaconda install, Colab not signed into university Google, Canvas file size limits.'
         }
       ]
     },
@@ -1511,6 +1769,22 @@
           body: 'Dataset\tMean x\tMean y\tCorrelation\nI\t9.00\t7.50\t0.816\nII\t9.00\t7.50\t0.816\nIII\t9.00\t7.50\t0.816\nIV\t9.00\t7.50\t0.816',
           progressive: true,
           notes: 'TABLE — paste a range straight from Excel or Sheets; tabs and pipes both work, first row is the header. Build on Next reveals a row at a time. Reach for a table when the reader needs the exact value, a chart when they need the shape.' },
+
+        { type: 'code', title: 'Code that writes itself',
+          language: 'python',
+          typewrite: true,
+          typeSpeed: 28,
+          code:
+            'import pandas as pd\n' +
+            '\n' +
+            'df = pd.read_csv("attendance.csv")\n' +
+            'by_week = (\n' +
+            '    df["week"]\n' +
+            '      .value_counts()\n' +
+            '      .sort_index()\n' +
+            ')\n' +
+            'print(by_week.head())\n',
+          notes: 'CODE — a viewer, not an IDE. Source types onto the wall when you Present, so the room watches the idea form without you sharing a desktop. Next skips to the finished snippet. Keep it short enough to read from the back; for a long demo, use a Video slide of your editor instead.' },
 
         { type: 'chart', chartKind: 'bar', design: { chartMotion: 'grow' },
           title: 'Chart — bar, for comparing magnitudes',
@@ -3253,6 +3527,7 @@
    *  infographic museum) stay out — those live in Settings → Theme. */
   var LIBRARY_SEED_KEYS = {
     'ipdv-intro': 'nul',
+    'ipdv-lab1': 'nul',
     'layout-bank': 'nul',
     'pace-nul': 'nul',
     'ukbt-sponsorship': 'ukbt',

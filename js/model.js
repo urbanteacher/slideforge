@@ -3034,6 +3034,17 @@
         seed: { title: "Side by side" }
       }]
     },
+    code: {
+      label: "Code",
+      icon: "</>",
+      deck: true,
+      group: "explain",
+      starters: [{
+        title: "Python / code typing",
+        blurb: "Source that types itself on the wall — live-coding feel without sharing an IDE.",
+        seed: { title: "Code that writes itself", language: "python", typewrite: true }
+      }]
+    },
     beforeafter: {
       label: "Before / after",
       icon: "◐",
@@ -3201,6 +3212,15 @@
       return !String(b).trim();
     })) slide.bullets = [];
     if (type2 === "table" && !String(slide.body || "").trim()) slide.body = "Term | What it means\nFirst | \nSecond | ";
+    if (type2 === "code") {
+      if (slide.code == null) slide.code = String(slide.body || "");
+      if (!String(slide.language || "").trim()) slide.language = "python";
+      if (slide.typewrite == null) slide.typewrite = true;
+      if (!Number.isFinite(Number(slide.typeSpeed)) || Number(slide.typeSpeed) <= 0) slide.typeSpeed = 28;
+      if (!String(slide.code || "").trim()) {
+        slide.code = 'import pandas as pd\n\ndf = pd.read_csv("attendance.csv")\nby_week = df["week"].value_counts().sort_index()\nprint(by_week.head())\n';
+      }
+    }
     return slide;
   }
   function imagePlacement(slide) {
@@ -3248,6 +3268,11 @@
         return String(l.caption || "").trim() || "Image " + (i + 1);
       });
     }
+    if (slide.type === "code") {
+      return String(slide.code || slide.body || "").split(/\n/).filter(function(l) {
+        return l.length;
+      });
+    }
     if (["journey", "mindmap", "content", "cards", "split", "keywords", "italics"].concat(INFO_LAYOUTS).indexOf(slide.type) < 0) return [];
     return (slide.bullets || []).filter(function(b) {
       return String(b).trim();
@@ -3267,6 +3292,11 @@
     if (slide.type === "chart" && slide.exploration && slide.exploration.prediction) return slide.exploration.prompt;
     if (["beforeafter", "explore", "simulation"].includes(slide.type)) return slide.title || "";
     if (slide.type === "quiz") return slide.question || "";
+    if (slide.type === "code") {
+      var src = String(slide.code || slide.body || "");
+      if (slide.typewrite !== false && Number.isFinite(revealed)) return src.slice(0, Math.max(0, revealed));
+      return src;
+    }
     var steps = slideSteps(slide);
     if (steps.length || ["content", "cards", "split", "keywords", "italics", "table", "quote", "explain"].includes(slide.type)) {
       var n = slide.progressive === true && Number.isFinite(revealed) ? Math.max(0, revealed) : steps.length;
@@ -8176,6 +8206,13 @@
         s.body = "A quotation that makes the point better than a bullet list would.";
         s.subtitle = "Attribution";
         break;
+      case "code":
+        s.title = "Code that writes itself";
+        s.language = "python";
+        s.typewrite = true;
+        s.typeSpeed = 28;
+        s.code = 'import pandas as pd\n\ndf = pd.read_csv("attendance.csv")\nby_week = df["week"].value_counts().sort_index()\nprint(by_week.head())\n';
+        break;
       case "quiz":
         s.question = "Which of these is correct?";
         s.options = ["Option A", "Option B", "Option C", "Option D"];
@@ -8276,6 +8313,20 @@
     s.videoMuted = s.videoMuted === true;
     s.videoAutoplay = s.videoAutoplay === true;
     s.tableHeader = s.tableHeader !== false;
+    if (s.type === "code" || raw && (raw.code != null || raw.language != null)) {
+      s.code = String(s.code != null ? s.code : s.body || "");
+      var lang = String(s.language || "python").trim().toLowerCase();
+      s.language = lang === "javascript" || lang === "js" ? "javascript" : lang === "text" || lang === "plain" ? "text" : "python";
+      s.typewrite = s.typewrite !== false;
+      s.typeSpeed = Math.max(8, Math.min(120, Number(s.typeSpeed) || 28));
+      if (s.type !== "code") {
+      }
+    } else {
+      delete s.code;
+      delete s.language;
+      delete s.typewrite;
+      delete s.typeSpeed;
+    }
     if (s.hidden === true) s.hidden = true;
     else delete s.hidden;
     if (EXPLORATION_TYPES.indexOf(s.type) >= 0 || raw && raw.exploration) {

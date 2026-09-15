@@ -23,7 +23,7 @@ export type TransitionKey = 'none' | 'fade' | 'push' | 'zoom' | 'wipe';
 /** Layouts an author can pick in the deck editor (`DECK_TYPES`). */
 export type DeckSlideType =
   | 'journey' | 'mindmap' | 'introduction' | 'title' | 'section' | 'content' | 'keywords' | 'italics' | 'links'
-  | 'split' | 'cards' | 'table' | 'image' | 'video' | 'quote' | 'join'
+  | 'split' | 'cards' | 'table' | 'code' | 'image' | 'video' | 'quote' | 'join'
   | 'chart' | 'gallery' | 'beforeafter' | 'explore' | 'simulation'
   | 'keyfact' | 'orgchart'
   | 'stats' | 'compare' | 'funnel' | 'timeline';
@@ -179,6 +179,14 @@ export interface Slide {
   exploration?: ReturnType<typeof import('./deck/exploration.js').normalizeExploration>;
   /** Table layout: `body` is tab- or pipe-separated rows, one per line. */
   tableHeader: boolean;
+  /** Code viewer layout: source shown on the wall (typed in play, full in preview). */
+  code?: string;
+  /** Language label only — python | javascript | text. Never executed. */
+  language?: string;
+  /** Auto typewriter drip when the slide opens in Present. Default true for code slides. */
+  typewrite?: boolean;
+  /** Milliseconds per character for the typewriter (approx). */
+  typeSpeed?: number;
   transition: TransitionKey;
   /** Build on Next: release this slide's points one press at a time
    *  instead of landing the whole slide at once. */

@@ -1023,6 +1023,11 @@
             if (hosted()) {
               items.push({ id: 'wake', title: 'Wake the server',
                 blurb: 'A hosted free instance sleeps when idle and takes about a minute to answer the first request. Waking it now means the first phone to scan does not wait.' });
+              items.push({ id: 'ai-test', title: 'AI smoke test…',
+                blurb: 'Live status for /api/ai/status (model, lastError, latency) and one small generate call — confirm the key before class.' });
+            } else {
+              items.push({ id: 'ai-test', title: 'AI smoke test…',
+                blurb: 'Check whether this local server has GEMINI_API_KEY and can generate. Same panel as Presentation settings → AI.' });
             }
             var lesson = lessonBehind();
             if (lesson) {
@@ -1052,6 +1057,12 @@
               return;
             }
             if (it.id.indexOf('open:') === 0) { window.open(it.id.slice(5), '_blank', 'noopener'); return; }
+
+            if (it.id === 'ai-test') {
+              if (SF.Editor && SF.Editor.openAiSmokeTest) SF.Editor.openAiSmokeTest();
+              else SF.toast('AI smoke test is not available in this build.');
+              return;
+            }
 
             if (it.id === 'wake') {
               var began = Date.now();

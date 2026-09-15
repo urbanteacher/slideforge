@@ -537,6 +537,9 @@ var SLIDE_TYPES = {
   table:       { label: 'Table', icon: '⊞', deck: true, group: 'explain',
                  starters: [{ title: 'Table', blurb: 'Rows and columns — for when the exact value matters.',
                               seed: { title: 'Side by side' } }] },
+  code:        { label: 'Code', icon: '</>', deck: true, group: 'explain',
+                 starters: [{ title: 'Python / code typing', blurb: 'Source that types itself on the wall — live-coding feel without sharing an IDE.',
+                              seed: { title: 'Code that writes itself', language: 'python', typewrite: true } }] },
   beforeafter: { label: 'Before / after', icon: '◐', deck: true, group: 'show',
                  starters: [{ title: 'Before / after', blurb: 'Two states compared — the second lands on a press.' }] },
   explore:     { label: 'Explore an image', icon: '◎', deck: true, group: 'show',
@@ -606,6 +609,19 @@ function prepareLayout(slide, type) {
   if (BULLET_LAYOUTS.indexOf(type) >= 0 && !slide.bullets.length) slide.bullets = ['', '', ''];
   if (BULLET_LAYOUTS.indexOf(type) < 0 && slide.bullets.every(function(b){return !String(b).trim();})) slide.bullets = [];
   if (type === 'table' && !String(slide.body || '').trim()) slide.body = 'Term | What it means\nFirst | \nSecond | ';
+  if (type === 'code') {
+    if (slide.code == null) slide.code = String(slide.body || '');
+    if (!String(slide.language || '').trim()) slide.language = 'python';
+    if (slide.typewrite == null) slide.typewrite = true;
+    if (!Number.isFinite(Number(slide.typeSpeed)) || Number(slide.typeSpeed) <= 0) slide.typeSpeed = 28;
+    if (!String(slide.code || '').trim()) {
+      slide.code =
+        'import pandas as pd\n\n' +
+        'df = pd.read_csv("attendance.csv")\n' +
+        'by_week = df["week"].value_counts().sort_index()\n' +
+        'print(by_week.head())\n';
+    }
+  }
   return slide;
 }
 
@@ -649,6 +665,9 @@ function slideSteps(slide) {
     return (slide.layers||[]).filter(function(l){return l && l.image;})
       .map(function(l,i){return String(l.caption||'').trim() || ('Image '+(i+1));});
   }
+  if(slide.type==='code') {
+    return String(slide.code||slide.body||'').split(/\n/).filter(function(l){return l.length;});
+  }
   if(['journey','mindmap','content','cards','split','keywords','italics'].concat(INFO_LAYOUTS).indexOf(slide.type)<0) return [];
   return (slide.bullets||[]).filter(function(b){return String(b).trim();}).map(function(b){
     if(INFO_LAYOUTS.indexOf(slide.type)>=0){var q=parseInfoLine(b);return [q.label,q.value,q.note].filter(Boolean).join(' · ');}
@@ -662,6 +681,11 @@ function slideExcerpt(slide, revealed) {
   if(['beforeafter','explore','simulation'].includes(slide.type)) return slide.title || '';
 
   if(slide.type==='quiz') return slide.question || '';
+  if(slide.type==='code') {
+    var src=String(slide.code||slide.body||'');
+    if(slide.typewrite!==false && Number.isFinite(revealed)) return src.slice(0, Math.max(0, revealed));
+    return src;
+  }
   var steps=slideSteps(slide);
   if(steps.length || ['content','cards','split','keywords','italics','table','quote','explain'].includes(slide.type)) {
     var n=slide.progressive===true && Number.isFinite(revealed)?Math.max(0,revealed):steps.length;
