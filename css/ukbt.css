@@ -526,11 +526,48 @@
      centred section and leaves it stranded under a left-aligned one. */
   margin: 38px auto 0 0;
 }
-/* The wordmark is white lettering. On the green that is about 2:1, so the
-   section slide carries the chevron instead — which is larger, and the same
-   mark. */
+/* ------------------------------------------------------ the positive lockup
+
+   The shipped lockup is white lettering, which is right on Dark Blue and UKBT
+   Black and about 2:1 on the green and the lime. The section slide used to
+   answer that by hiding the logo, which loses the mark on the loudest slide in
+   the deck.
+
+   assets/brand/ukbt-wordmark-dark.png and ukbt-institute-dark.svg are the
+   positive versions, made by swapping the ink and the white and leaving the
+   chevron alone — the word "Black" is knocked out of its panel either way,
+   which is how the mark works. The swap is a luminance lerp between #292C2F
+   and #FFFFFF rather than a straight invert, so the antialiasing on the
+   letterforms survives it.
+
+   CSS cannot change an img's src, so the box takes the positive as a
+   background and the img is hidden inside it. That means these two rules
+   assume the deck is using the lockup the theme ships; a deck that has
+   pointed Logo at something else will show that something else in white. */
 .theme-ukbt.layout-section .slide-logo,
-.theme-ukbt-institute.layout-section .slide-logo { display: none; }
+.theme-ukbt-institute.layout-section .slide-logo,
+.theme-ukbt.layout-split:has(.image-left) .slide-logo,
+.theme-ukbt-institute.layout-split:has(.image-left) .slide-logo {
+  display: block;
+  width: auto;
+  max-width: 230px;
+  background: no-repeat center right / contain;
+}
+.theme-ukbt.layout-section .slide-logo img,
+.theme-ukbt-institute.layout-section .slide-logo img,
+.theme-ukbt.layout-split:has(.image-left) .slide-logo img,
+.theme-ukbt-institute.layout-split:has(.image-left) .slide-logo img { visibility: hidden; }
+
+.theme-ukbt.layout-section .slide-logo,
+.theme-ukbt.layout-split:has(.image-left) .slide-logo {
+  aspect-ratio: 720 / 170;
+  background-image: url('../assets/brand/ukbt-wordmark-dark.png');
+}
+.theme-ukbt-institute.layout-section .slide-logo,
+.theme-ukbt-institute.layout-split:has(.image-left) .slide-logo {
+  aspect-ratio: 221.6 / 32;
+  background-image: url('../assets/brand/ukbt-institute-dark.svg');
+}
 
 .theme-ukbt .accent-bar,
 .theme-ukbt-institute .accent-bar { background: var(--ukbt-green); height: 5px; width: 120px; border-radius: 3px; }
@@ -676,18 +713,11 @@
 .theme-ukbt-institute.layout-split .split-copy li { color: var(--ukbt-contrast); }
 .theme-ukbt.layout-split .split-copy li::before,
 .theme-ukbt-institute.layout-split .split-copy li::before { background: var(--ukbt-contrast); }
-/* The lockup is white lettering, and the panel it lands on is lime — which is
-   the same 2:1 problem the section slide has, on half a slide instead of all
-   of it. The panel is always the copy side, so when the picture is on the left
-   the logo moves to sit over the picture instead, where white is right.
-   :has() reads the class the layout puts on .pad, which is the only place it
-   records which way round the slide is. */
-.theme-ukbt.layout-split:has(.image-left) .slide-logo,
-.theme-ukbt-institute.layout-split:has(.image-left) .slide-logo {
-  left: 40px;
-  right: auto;
-  filter: drop-shadow(0 1px 10px rgba(0, 0, 0, .55));
-}
+/* The panel is always the copy side, so a picture on the left puts the lockup
+   over lime. It used to move across to sit on the picture; it stays where it
+   belongs now and takes the positive version instead — see below. :has() reads
+   the class the layout writes on .pad, which is the only place the slide
+   records which way round it is. */
 
 /* The caption bar under a split picture is the accent elsewhere; on a lime
    panel it would be green on green, so it takes the ink. */
