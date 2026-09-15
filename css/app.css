@@ -4888,6 +4888,18 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
 /* Share in the top bar. Marked rather than loud: it is the action somebody
    else is waiting on, so it should be findable at a glance, but it is not the
    thing the button cluster to its right is for — that is starting the room. */
+/* A choice dialog: one button per option, stacked, each with its own reason.
+   Wide enough that a sentence of explanation does not wrap to four lines. */
+.ask-choice { max-width: 34rem; }
+.ask-choice .choice-list { display: flex; flex-direction: column; gap: 10px; margin: 14px 0 4px; }
+.ask-choice .choice {
+  display: block; width: 100%; text-align: left;
+  padding: 14px 16px; line-height: 1.35;
+}
+.ask-choice .choice strong { display: block; font-size: 15px; }
+.ask-choice .choice span { display: block; margin-top: 4px; font-size: 13px; opacity: .72; }
+.ask-choice .choice.is-off { opacity: .55; cursor: default; }
+
 .share-btn { font-weight: 600; }
 .share-btn:hover { border-color: var(--ink, currentColor); }
 

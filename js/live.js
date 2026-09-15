@@ -1890,6 +1890,11 @@
       total: pos.total,
       activity: s.type === 'quiz' ? (Live.revealed[s.id] ? 'moment' : 'question') : SF.slideFeedback(s) ? 'feedback' : (s.type === 'results' || s.gameId) ? 'moment' : 'content',
       text: SF.slideExcerpt(s, SF.Player.revealStep || 0),
+      /* How far through a build the room is. The phones only need the excerpt,
+         which already accounts for it — but a big screen renders the slide
+         itself, and without this every Build-on-Next slide sits there showing
+         nothing but its heading for as long as it is up. */
+      step: SF.Player.revealStep || 0,
       style: companion.style,
       role: companion.role,
       participation: companion.participation,
@@ -2342,6 +2347,15 @@
   /* True while an impromptu poll is up, so the player and the presenter desk
      can show "end poll" rather than guessing from the focus overlay. */
   Live.customPromptOpen = function () { return !!(Live.prompt && Live.prompt.custom); };
+
+  /* Turn the big-screen seat on for a share id, or off with no argument.
+     A named method rather than exposing send(): the relay acts on anything it
+     is given, and the rest of the app has no business reaching the socket. */
+  Live.watchOn = function (id) {
+    if (!Live.active) return false;
+    send({ t: 'watchOn', s: typeof id === 'string' ? id : '' });
+    return true;
+  };
 
   SF.Live = Live;
 })(window);

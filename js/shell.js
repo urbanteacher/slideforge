@@ -309,8 +309,6 @@
       docTitle.value = doc.title;
       docTitle.placeholder = active.key === 'deck' ? 'Presentation title' : 'Game title';
     }
-    var numToggle = /** @type {HTMLInputElement|null} */ ($('numToggle'));
-    if (active.key === 'deck' && numToggle) numToggle.checked = doc.showSlideNumbers !== false;
     /* A live lobby is chrome too, and its warning depends on which document
        is open — see deckMismatch in js/live.js. */
     if (SF.Live && SF.Live.syncLobby) SF.Live.syncLobby();
@@ -851,17 +849,6 @@
         if (docTitle) active.onTitle(docTitle.value);
       });
     }
-    var numToggle = /** @type {HTMLInputElement|null} */ ($('numToggle'));
-    if (numToggle) {
-      numToggle.addEventListener('change', function () {
-        var d = workspaces.deck.doc();
-        if (numToggle) {
-          d.showSlideNumbers = numToggle.checked;
-          workspaces.deck.store.save(d);
-          workspaces.deck.draw();
-        }
-      });
-    }
 
     var btnSave = $('btnSave');
     if (btnSave) btnSave.onclick = function () {
@@ -962,6 +949,10 @@
     var btnHelp = $('btnHelp');
     if (btnHelp) {
       btnHelp.onclick = function () {
+        /* Lives in the Settings sheet; step out of it so the shortcut card
+           is not read against a second dimmed layer. */
+        var settings = $('settingsModal');
+        if (settings) settings.classList.remove('on');
         var cheats = $('cheats');
         if (cheats) cheats.classList.add('on');
       };
@@ -971,9 +962,10 @@
        working lecture, none of which is a bug and all of which look like one
        from the back of the room.
 
-       Lives as ⚙ beside File, not inside the document menu and not among
-       Present / Host live: none of this is a property of the deck, and mixing
-       "is the server awake" with the show controls teaches nobody where to look.
+       Lives in File, not as a second gear beside it: ⚙ in the top bar was
+       read as Settings, and Settings itself was a second unlabeled ⚙ on the
+       rail, so File and Settings felt like one confused control. Settings is
+       now a labeled button (theme, logo, numbers). This is the room-ops list.
 
        The addresses listed are the ones the app can work out for itself.
        Accounts and dashboards are not here on purpose: they are personal to
@@ -1186,27 +1178,46 @@
 
     /* A copy someone who was not in the room can open. Only where a server
        is serving this — from a file:// page there is nowhere to put it. */
-    var btnShare = $('btnShare');
-    /* The same action lives in the top bar as well as in File. One handler
-       for both: a toolbar surfaces the frequent thing and the menu stays
-       complete, which is the convention everywhere, but two copies of the
-       handler would be two things to keep in step. */
     var btnShareTop = $('btnShareTop');
-    if (btnShare) {
-      if (!servedByRelay()) { btnShare.hidden = true; if (btnShareTop) btnShareTop.hidden = true; }
-      else btnShare.onclick = function () {
+    if (btnShareTop) {
+      if (!servedByRelay()) btnShareTop.hidden = true;
+      else btnShareTop.onclick = function () {
+        /* Always the lesson deck, whichever studio is in front: the viewer
+           only opens decks, and the quiz and activities studios both write
+           into this same lesson. */
+        var deckWs = workspaces.deck;
         if (active.flush) active.flush();
+        if (deckWs !== active && deckWs.flush) deckWs.flush();
         var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
         if (menu) menu.open = false;
-        var doc = active.doc();
-        SF.ask({
-          title: 'Share “' + (doc.title || 'this lesson') + '” as a read-only link?',
-          detail: 'Puts a copy on this server at an address nobody can guess, which anyone ' +
-            'holding the link can open and read. They cannot edit it, and it is not listed ' +
-            'anywhere — but a link that escapes is a lesson that escaped. ' +
-            'Games are not carried across; the slides are. You get a key that withdraws it.',
-          confirm: 'Make the link'
-        }, function () {
+        var doc = deckWs.doc();
+        /* Two things come out of one upload, and this dialog has to say so.
+           It used to open with "share as a read-only link?", which settles the
+           question before offering the alternative — and when no room was live
+           the follow-along screen went unmentioned entirely, so the only way
+           to find it was to already know it was there. */
+        var liveNow = !!(SF.Live && SF.Live.active);
+        /* Two buttons, because this is a choice between two things and not a
+           question with a yes in it. The first version put both behind one
+           "Make both links", which is a sentence rather than an option, and
+           the version before that never mentioned the second one at all. */
+        SF.askChoice({
+          title: 'Share “' + (doc.title || 'this lesson') + '”',
+          detail: 'Either one puts a copy on this server at an address nobody can guess. They cannot ' +
+            'edit it and it is not listed anywhere — but a link that escapes is a lesson that ' +
+            'escaped. Games are not carried across; the slides are. You get a key that withdraws it.',
+          options: [
+            { value: 'read', label: 'A link to read at their own pace',
+              detail: 'They open it whenever they like and page through it themselves. Works whether or not you are presenting.' },
+            { value: 'follow', label: 'A screen that follows you live',
+              disabled: !liveNow,
+              detail: 'Full screen on a desktop or a second projector. It moves when you move, ' +
+                'including through a build, and cannot run ahead. No PIN, and nobody watching ' +
+                'appears in your reports.',
+              why: 'Needs a room running — press Host live first, then share again. It only ' +
+                'works while you are presenting.' }
+          ]
+        }, function (choice) {
           SF.toast('Uploading a copy…');
           fetch('/api/share', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1215,6 +1226,16 @@
             return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; });
           }).then(function (j) {
             var url = location.origin + '/view.html?s=' + j.id;
+            /* The same copy, followed instead of read. Registering the share
+               id with the relay turns it into a spectator seat: a desktop on
+               this address full-screens the slides and moves when the
+               presenter moves, with no PIN, no name and no place in the room.
+
+               It is only offered while a room is actually live, because
+               without a host to follow the address is just the read-only
+               link with extra words on it. */
+            var live = !!(SF.Live && SF.Live.watchOn && SF.Live.watchOn(j.id));
+            var followUrl = live ? url + '&follow=1' : '';
             /* Kept where the author can find it again: the key is the only
                way to withdraw the copy, and it is shown once otherwise. */
             try {
@@ -1229,22 +1250,36 @@
             } else {
               SF.toast('Shared: ' + url);
             }
+            var durability = j.durable
+              ? 'This server keeps shared copies on durable storage — they survive an app update.'
+              : 'On this server, shared copies live with the app files and are gone at the next deploy unless a persistent disk is attached (SLIDEFORGE_DATA_DIR).';
+            /* One choice, one link. Showing the other one afterwards was the
+               sequence this replaced, and it is what made the button label
+               wrong in the first place. */
+            if (choice === 'follow' && followUrl) {
+              SF.askText({
+                title: 'Follow-along link for a big screen',
+                detail: 'Open this on a desktop and it full-screens the lesson and moves when you do. ' +
+                  'No PIN and no joining — whoever holds the address watches, and they cannot run ahead ' +
+                  'of you or answer anything. It stops working when this room ends, or when you withdraw ' +
+                  'the shared copy. Scan the code or paste the link.',
+                value: followUrl, qr: true, confirm: 'Next — the read-only link'
+              }, function () { readOnlyDialog(); });
+              return;
+            }
+            readOnlyDialog();
+            function readOnlyDialog() {
             SF.askText({
               title: 'Your read-only link',
-              detail: 'Anyone with this address can open the lesson. It is already on your clipboard. ' +
-                (j.durable
-                  ? 'This server keeps shared copies on durable storage — they survive an app update.'
-                  : 'On this server, shared copies live with the app files and are gone at the next deploy unless a persistent disk is attached (SLIDEFORGE_DATA_DIR).'),
-              value: url, confirm: 'Done'
+              detail: 'Anyone with this address can open the lesson. Scan the code or paste the link — it is already on your clipboard. ' + durability,
+              value: url, qr: true, confirm: 'Done'
             }, function () {});
+            }
           }).catch(function (e) {
             SF.toast('Could not share: ' + (e.message || e));
           });
         });
       };
-      /* Same function, not a copy of it. If the guard above hid the menu item
-         there is nothing to point at, which is why this sits inside the else. */
-      if (btnShareTop) btnShareTop.onclick = btnShare.onclick;
     }
 
     var btnSettings = $('btnSettings');
@@ -1417,9 +1452,8 @@
     }
     var railLbl = $('railLabel');
     if (railLbl) railLbl.textContent = active.railLabel;
-    /* Name what the cog opens. "Settings for this document" is true and tells
-       nobody where the board's card size went, which is how it got asked
-       about. */
+    /* Name what Settings opens. The button says Settings; the title says
+       which sheet, because Quiz studio's is teams and card size, not theme. */
     var cog = $('btnSettings'), what = active.settingsLabel || 'Settings';
     if (cog) {
       cog.title = what;
