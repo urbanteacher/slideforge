@@ -1302,10 +1302,51 @@
         { type: 'section', title: 'Task 4', subtitle: 'A notebook with your chart in it',
           notes: 'Small on purpose. The point is a working pipeline end to end — data in, chart out, notebook submitted — not an impressive chart.' },
 
+        { type: 'cards', design: { cardsMode: 'rows' }, title: 'Four stages, and you have all four',
+          bullets: [
+            'Raw\tGet the file. Look at it before you believe anything about it.',
+            'Clean\tMake it a tidy table: one row per day, a real date, a real number.',
+            'Visualise\tOne chart that answers one question.',
+            'Insights\tWhat you found, in sentences. This is the part that is marked.'
+          ],
+          notes: 'The shape of every task in this module, and of task 4 in particular. The code for all four stages is on the next slides and on Canvas — nobody is assessed on typing it.\n\nWhat is assessed is the fourth stage. A chart with no sentence under it is half a submission.' },
+
+        { type: 'links', title: 'The dataset: every Santander Cycle hire since 2010',
+          bullets: [
+            'TfL daily cycle hires · download the .xlsx · 148 kB · Open Government Licence v2\thttps://data.london.gov.uk/dataset/number-of-bicycle-hires-2r84d',
+            'Or bring your own · filter by CSV\thttps://data.london.gov.uk'
+          ],
+          notes: 'One file, 148 kB, one number per day from 30 July 2010 to 31 August 2026 — 5,877 days and 154,053,134 hires. Small enough to open, long enough to have something to say about.\n\nUse it or bring your own; the four stages and the marks are the same either way.\n\nOn the same site if they want a categorical comparison instead of a time series: London Fire Brigade incident records, where open-space fires spike in heatwaves and link back to task 2, and MPS recorded crime by borough.' },
+
         { type: 'code', language: 'python', typewrite: true, typeSpeed: 55,
-          title: 'One cell. Replace the numbers with yours.',
-          code: 'import pandas as pd\nimport matplotlib.pyplot as plt\n\n# Your data. A CSV you found, or typed by hand — both count.\ndata = pd.DataFrame({\n    "year":  [2019, 2020, 2021, 2022, 2023],\n    "events": [14, 9, 17, 22, 19],\n})\n\nax = data.plot(x="year", y="events", kind="bar", legend=False)\nax.set_title("Recorded events per year")   # say the finding, not the subject\nax.set_ylabel("Events")\nplt.tight_layout()\nplt.show()\n',
-          notes: 'Typed out on the wall so the room sees the SHAPE of a first cell: imports, data, one chart, a title that says something.\n\nThe title line is the only opinionated bit, and it is the habit worth starting in week one: a title that names the finding rather than the subject. “Recorded events per year” is the subject; “Events doubled after 2020” would be the finding.' },
+          title: 'Stage 1 · Raw. Look before you believe.',
+          code: 'import pandas as pd\n\n# Download the .xlsx from the link on the last slide and put it\n# beside your notebook. Pointing pandas at the URL gives 403.\npath = "tfl-daily-cycle-hires.xlsx"\n\nprint(pd.ExcelFile(path).sheet_names)\n# [\'Metadata\', \'Data\']   <- sheet 0 is NOT the data\n\nraw = pd.read_excel(path, sheet_name="Data", header=None)\nprint(raw.shape)          # (5883, 16)\nprint(raw.iloc[:7, 1:3])  # notes and totals sit above the series\n',
+          notes: 'TWO TRAPS, both measured rather than guessed, and either one takes a lab down.\n\nFIRST: read_excel(url) returns HTTP 403 Forbidden. The Datastore refuses the default user agent urllib sends, so a browser download works, curl works, and pandas does not. Download the file and read it from disk — which is also the version that survives lab wifi. Anyone set on the URL needs urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"}).\n\nSECOND: the obvious line — read_excel(url, sheet_name=0) — reads the METADATA sheet: twenty-nine rows of description. pd.to_datetime on that either fails or, worse, does not.\n\nThis file also carries a notes paragraph and three grand totals above the table, and day, month and year blocks side by side across sixteen columns. None of that is a fault; it is what a published spreadsheet looks like.\n\nThe rule, said out loud: print the shape and the first rows before writing a single line that assumes a structure.' },
+
+        { type: 'code', language: 'python', typewrite: true, typeSpeed: 55,
+          title: 'Stage 2 · Clean. One row per day.',
+          code: 'df = pd.read_excel(path, sheet_name="Data", skiprows=5,\n                   usecols=[1, 2], names=["date", "hires"])\n\ndf = df.dropna()\ndf["date"] = pd.to_datetime(df["date"])\ndf["hires"] = pd.to_numeric(df["hires"])\n\n# Check against the total the file states about itself:\nprint(len(df), int(df["hires"].sum()))\n# 5877 154053134   <- matches the sheet’s own Grand Total\n',
+          notes: 'Five arguments, and each is a decision they should be able to defend: the sheet by NAME rather than position, skip the five rows above the header, take two of the sixteen columns, name them.\n\nThe print is the habit worth stealing. The file states its own grand total — 154,053,134 — so a clean read can be checked against it. If the sum does not match, the cleaning is wrong, and they have found out in one line instead of in the marking.' },
+
+        { type: 'code', language: 'python', typewrite: true, typeSpeed: 55,
+          title: 'Stage 3 · Visualise. One question, one chart.',
+          code: 'import matplotlib.pyplot as plt\n\nmonthly = df.set_index("date")["hires"].resample("ME").sum()\n\nfig, ax = plt.subplots(figsize=(11, 4))\nax.plot(monthly.index, monthly.values, linewidth=1.2)\nax.set_title("Hires peak every summer — and 2020 broke the pattern")\nax.set_ylabel("Hires per month")\nax.spines[["top", "right"]].set_visible(False)\nplt.tight_layout()\nplt.show()\n',
+          notes: 'Daily is too noisy to read from the back of a room, so resample to monthly totals first. That is an editorial choice and it belongs in the write-up.\n\nThe title is the only line with an opinion in it, and it is the habit this whole module is about: say the finding, not the subject. “Hires per month” is the axis label; “Hires peak every summer and 2020 broke the pattern” is the chart.\n\nThe two removed spines are not decoration — less ink on the frame is more attention on the line.' },
+
+        { type: 'chart', chartKind: 'line', design: { chartMotion: 'grow' },
+          title: 'The same data, on the wall while they work',
+          body: 'Year\tMillions of hires\n2011\t7.14\n2012\t9.52\n2013\t8.05\n2014\t10.02\n2015\t9.87\n2016\t10.30\n2017\t10.45\n2018\t10.57\n2019\t10.42\n2020\t10.43\n2021\t10.94\n2022\t11.51\n2023\t8.53\n2024\t8.77\n2025\t9.07',
+          chartSource: 'TfL daily cycle hires, aggregated to whole years. 2010 and 2026 are part years and are left out on purpose — drawing them makes the scheme look like it collapsed twice.',
+          notes: 'Annual rather than monthly, drawn by the app, so the shape is on the wall while they work.\n\nNote what leaving 2010 and 2026 out does. Both are part years — the scheme opened on 30 July 2010 and the file ends on 31 August 2026 — so including them draws two cliffs that are calendar artefacts rather than cycling. That decision is worth more marks than the chart is.' },
+
+        { type: 'stats', design: { statStyle: 'bar' }, title: 'Stage 4 · Insights, with the numbers attached',
+          bullets: [
+            'Summer against winter\t2.0×\tJuly averages 34,212 hires a day, December 17,132',
+            'April 2020 against April 2019\t−34%\t591,294 against 890,148 — the lockdown month',
+            '2022 against 2023	−26%	11.51M hires to 8.53M — the step the chart cannot explain'
+          ],
+          body: 'And weekdays beat weekends: 27,500 hires a day against 22,998. This is a commuting scheme, not a leisure one.',
+          notes: 'All four are real, computed from the file, and this is the answer sheet.\n\nThe third one is the most useful thing on the slide, because the honest answer is a shrug: the series shows a 26% drop between 2022 and 2023 and contains nothing that explains it. Fares, dock changes, e-bikes, the weather — none of that is in the file. Saying so is a better insight than inventing a cause, and it is the difference between a description and a finding.\n\nTwo more if the room is quick. The deepest month after the launch year is January 2021 at 409,887, and it is a compound of two things — January is the seasonal floor anyway, and that was a lockdown — so it is a warning about reading an event off a seasonal series.\n\nThe trap worth teaching is not on the slide: the LOWEST month in the whole series is July 2010 at 12,461 hires, which looks like a catastrophe and is two days of trading, because the scheme opened on the 30th. A finding that is really a calendar artefact is the commonest mistake in this assignment.\n\nThe weekday number is the one that surprises people — ask the room to predict weekday against weekend before showing it. Most say weekend.' },
 
         { type: 'keywords', title: 'What to submit, and what “done” means',
           bullets: [
