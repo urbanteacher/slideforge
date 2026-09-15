@@ -1831,6 +1831,280 @@
           notes: 'CLOSER — links. Practical hand-off. Replace the third row with your Canvas / module URL.'
         }
       ]
+    },
+
+    /* ------------------------------------------------------------------
+       Five trendy skins — five slides each, image slots as placeholders.
+       Drop your own photographs in the inspector (same habit as NUL decks,
+       without shipping course assets into a design template).
+       ------------------------------------------------------------------ */
+    {
+      key: 'vibe-product',
+      title: 'Product · Keynote minimal',
+      icon: '◇',
+      blurb: 'Apple-style minimal with empty image slots ready for your photos. Title → photo statement → split → two image cards → photo close.',
+      minutes: 5,
+      theme: 'product',
+      slides: [
+        {
+          type: 'title',
+          title: 'Clarity.',
+          subtitle: 'One idea. One slide. Drop your photos on the next four.',
+          notes: 'PRODUCT opener — words first. Image slides below show the built-in placeholder until you add a file or URL.'
+        },
+        {
+          type: 'image',
+          title: 'Say less. Mean more.',
+          subtitle: 'Your photograph · statement caption',
+          notes: 'Statement beat as a full-bleed image slot. Paste a URL or drop a file in the inspector.'
+        },
+        {
+          type: 'split',
+          title: '1 idea',
+          bullets: [
+            'Rule of thumb — one claim per slide.',
+            'If you have three messages, make three slides.',
+            'The picture carries mood; the words carry the rule.'
+          ],
+          imageSide: 'right',
+          progressive: true,
+          notes: 'Fact beat as dual coding — “Add an image” on the media side until you drop one in.'
+        },
+        {
+          type: 'cards',
+          title: 'Two points. Done.',
+          bullets: [
+            'Whitespace\tLeave empty space alone — it is part of the design.',
+            'One accent\tUse the accent colour once per slide, not on everything.'
+          ],
+          notes: 'Two cards. Add card photos in the inspector if you want plates; left empty on purpose.'
+        },
+        {
+          type: 'image',
+          title: 'That’s it.',
+          subtitle: 'Your closing photograph',
+          notes: 'Close on a picture + one line — drop your own image here.'
+        }
+      ]
+    },
+    {
+      key: 'vibe-editorial',
+      title: 'Editorial · Paper & narrative',
+      icon: '¶',
+      blurb: 'Warm paper and serif type with placeholder photo slots. Title → dual-coding → photo claim → cards → photo close.',
+      minutes: 5,
+      theme: 'editorial',
+      slides: [
+        {
+          type: 'title',
+          title: 'A story\nin five frames.',
+          subtitle: 'Editorial · add your own pictures',
+          notes: 'Editorial opener — cream and serif. Placeholders start on the next slide.'
+        },
+        {
+          type: 'split',
+          title: 'The picture is the mood.',
+          bullets: [
+            'The caption is the claim.',
+            'Read the claim once — do not paraphrase it.',
+            'Then advance to the photograph that earns it.'
+          ],
+          imageSide: 'left',
+          notes: 'Quote-energy as dual coding — empty media slot until you add a cover or plate.'
+        },
+        {
+          type: 'image',
+          title: 'Look first. Then decide.',
+          body: 'Replace this body with one or two facts that sit behind the photograph.',
+          subtitle: 'Your photograph · the claim sits on the picture',
+          notes: 'Full-bleed photo slot + claim. Scrim appears once an image is set.'
+        },
+        {
+          type: 'cards',
+          title: 'What the eye did',
+          bullets: [
+            'Cluster\tIt found the pattern before it found the legend.',
+            'Trust\tIt believed the map faster than a paragraph.',
+            'Next step\tIt still needed one sentence for what to do.'
+          ],
+          notes: 'Three cards. Optional: add plate images per card in the inspector.'
+        },
+        {
+          type: 'image',
+          title: 'End on a breath.',
+          subtitle: 'Your closing photograph',
+          notes: 'Photo close — placeholder until you drop a quiet image in.'
+        }
+      ]
+    },
+    {
+      key: 'vibe-cinematic',
+      title: 'Cinematic · Dark pitch',
+      icon: '▣',
+      blurb: 'Dark pitch energy with empty photo slots. Title → stake image → dual-coding → before/after cards → cut image.',
+      minutes: 5,
+      theme: 'cinematic',
+      slides: [
+        {
+          type: 'title',
+          title: 'Make it\nunmissable.',
+          subtitle: 'Cinematic · drop your own night / product stills',
+          notes: 'Gradient title. Image placeholders follow.'
+        },
+        {
+          type: 'image',
+          title: 'The stake',
+          subtitle: 'Your photograph · why this room should care',
+          notes: 'Stake as full-bleed image slot — same job as a section breakaway, with a picture behind it once you add one.'
+        },
+        {
+          type: 'split',
+          title: '3×',
+          bullets: [
+            'Spotlight — clearer slides get more of the questions that matter.',
+            'And fewer of the ones that do not.',
+            'Keep the support line short; the number is the slide.'
+          ],
+          imageSide: 'right',
+          notes: 'Spotlight as dual coding — empty plate until you add a chart or still.'
+        },
+        {
+          type: 'cards',
+          title: 'Before / after',
+          bullets: [
+            'Before\tTwelve bullets, one font size, no hierarchy.',
+            'After\tOne claim, one number, one next step.'
+          ],
+          notes: 'Comparison cards. Add two plate images in the inspector when you have them.'
+        },
+        {
+          type: 'image',
+          title: 'Cut.',
+          subtitle: 'Your closing still',
+          notes: 'Hard close on a photograph slot. One word in the caption is enough.'
+        }
+      ]
+    },
+    {
+      key: 'vibe-studio-teach',
+      title: 'Studio teach · Warm classroom',
+      icon: '✳',
+      blurb: 'Sage Studio teaching arc with empty image slots. Title → hook photo → dual-coding → check cards → reflect photo.',
+      minutes: 8,
+      theme: 'studio',
+      slides: [
+        {
+          type: 'title',
+          title: 'Stay curious.',
+          subtitle: 'Studio teach · add classroom photographs on the next beats',
+          notes: 'Studio opener. Placeholders carry the rest of the arc until you drop images in.'
+        },
+        {
+          type: 'image',
+          title: 'Hook',
+          subtitle: 'Your hook photograph',
+          feedback: {
+            kind: 'wordcloud',
+            prompt: 'One word — what distracts you most when you try to focus?',
+            options: [],
+            max: 2
+          },
+          notes: 'HOOK — image slot + word cloud. Add a photo, then let the room answer.'
+        },
+        {
+          type: 'split',
+          title: 'Three moves that help',
+          bullets: [
+            'Remove one distraction before you start.',
+            'Name a finish line you can see from here.',
+            'Pause once — then adjust, do not restart.'
+          ],
+          imageSide: 'right',
+          progressive: true,
+          buildMode: 'dim',
+          notes: 'CONTENT as dual coding — “Add an image” until you drop a portrait or scene.'
+        },
+        {
+          type: 'cards',
+          title: 'Quick check',
+          bullets: [
+            'Tomorrow\tWhich move will you try first?',
+            'Neighbour\tTell them in one sentence.'
+          ],
+          feedback: {
+            kind: 'poll',
+            prompt: 'Which move are you trying first?',
+            options: ['Remove a distraction', 'Name a finish line', 'Pause once'],
+            max: 1
+          },
+          notes: 'CHECK — cards + poll. Optional card photos later.'
+        },
+        {
+          type: 'image',
+          title: 'Reflect',
+          subtitle: 'Your closing photograph',
+          feedback: {
+            kind: 'scale',
+            prompt: 'How ready do you feel to try one move this week?',
+            points: 5,
+            lowLabel: 'Not yet',
+            highLabel: 'Ready',
+            max: 1
+          },
+          notes: 'REFLECT — photo slot + confidence scale.'
+        }
+      ]
+    },
+    {
+      key: 'vibe-brutal',
+      title: 'Brutal · Mono technical',
+      icon: '▮',
+      blurb: 'Hard mono edges with empty plate slots. Title → agenda image → dual-coding → claim split → end image.',
+      minutes: 5,
+      theme: 'brutal',
+      slides: [
+        {
+          type: 'title',
+          title: 'No chrome.\nJust signal.',
+          subtitle: 'BRUTAL / MONO · drop technical plates below',
+          notes: 'Uppercase opener. Image placeholders start on the next slide.'
+        },
+        {
+          type: 'image',
+          title: 'Agenda',
+          body: '01 Name the constraint.\n02 Show the mechanism.\n03 Ship the rule.',
+          subtitle: 'Your diagram or still · three beats',
+          notes: 'AGENDA as an image slot + numbered caption — add a grid or schematic in the inspector.'
+        },
+        {
+          type: 'split',
+          title: 'Mechanism',
+          bullets: [
+            'Constraint first — what must stay true.',
+            'Mechanism second — the one move that enforces it.',
+            'Rule last — short enough for a README.'
+          ],
+          imageSide: 'left',
+          progressive: true,
+          notes: 'CONTENT as dual coding — empty media until you add a figure.'
+        },
+        {
+          type: 'split',
+          title: 'If it needs a paragraph,',
+          bullets: [
+            'it is not the rule yet.',
+            '// end of mechanism'
+          ],
+          imageSide: 'right',
+          notes: 'QUOTE energy as split — claim beside an empty plate slot.'
+        },
+        {
+          type: 'image',
+          title: 'END',
+          subtitle: 'Your closing plate',
+          notes: 'Acid close — drop a stark chart or still, then walk off.'
+        }
+      ]
     }
   ];
 
