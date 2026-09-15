@@ -1629,6 +1629,11 @@ html[data-ws="game"] #btnSorter { display: none; }
 .layout-code .code-pane.code-lines-lg { font-size: 16px; }
 .layout-code .code-pane.code-lines-xl { font-size: 14px; line-height: 1.38; }
 .layout-code .code-pane code { font: inherit; color: inherit; }
+/* Line by line: a line not yet reached keeps its space, so the frame does not
+   grow under the room as the walk-through proceeds. display:none would make
+   every press nudge everything below it. */
+.layout-code .code-line { display: block; }
+.layout-code .code-line.step-hidden { visibility: hidden; }
 
 /* Syntax colours, chosen by measuring contrast against the two grounds the
    frame actually has rather than by copying an editor theme. The frame is

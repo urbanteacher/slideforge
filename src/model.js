@@ -557,8 +557,23 @@ function normalizeSlide(raw) {
     s.language = (lang === 'javascript' || lang === 'js') ? 'javascript'
       : (lang === 'text' || lang === 'plain') ? 'text'
       : 'python';
-    s.typewrite = s.typewrite !== false;
-    s.typeSpeed = Math.max(8, Math.min(120, Number(s.typeSpeed) || 55));
+    /* How the code arrives. Three answers, because a lecturer wants a
+       different one at different moments: the whole cell to talk over, the
+       typewriter for a live-coding feel, or one line per press when the
+       walk-through IS the teaching.
+
+       typewrite stays as the older on/off so decks written before this still
+       mean what they said — with no mode chosen, false reads as 'all' and
+       anything else as 'type'. */
+    var reveal = String(s.codeReveal || '').trim();
+    if (reveal !== 'all' && reveal !== 'type' && reveal !== 'lines') {
+      reveal = s.typewrite === false ? 'all' : 'type';
+    }
+    s.codeReveal = reveal;
+    s.typewrite = reveal === 'type';
+    /* 200 rather than 120: the slow end is the point of the control, and a
+       room reading along wants about a tenth of a second a character. */
+    s.typeSpeed = Math.max(8, Math.min(200, Number(s.typeSpeed) || 55));
     if (s.type !== 'code') {
       /* Authored code settings on a non-code slide are kept only while the
          fields exist — prepareLayout will reattach when the type returns. */
@@ -568,6 +583,7 @@ function normalizeSlide(raw) {
     delete s.language;
     delete s.typewrite;
     delete s.typeSpeed;
+    delete s.codeReveal;
   }
   /* Kept off the slide unless it is true, for the reason the note below
      gives about unused fields: a boolean stamped on all 74 slides of a

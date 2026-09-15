@@ -3215,6 +3215,7 @@
     if (type2 === "code") {
       if (slide.code == null) slide.code = String(slide.body || "");
       if (!String(slide.language || "").trim()) slide.language = "python";
+      if (!slide.codeReveal) slide.codeReveal = "type";
       if (slide.typewrite == null) slide.typewrite = true;
       if (!Number.isFinite(Number(slide.typeSpeed)) || Number(slide.typeSpeed) <= 0) slide.typeSpeed = 55;
       if (!String(slide.code || "").trim()) {
@@ -8317,8 +8318,13 @@
       s.code = String(s.code != null ? s.code : s.body || "");
       var lang = String(s.language || "python").trim().toLowerCase();
       s.language = lang === "javascript" || lang === "js" ? "javascript" : lang === "text" || lang === "plain" ? "text" : "python";
-      s.typewrite = s.typewrite !== false;
-      s.typeSpeed = Math.max(8, Math.min(120, Number(s.typeSpeed) || 55));
+      var reveal = String(s.codeReveal || "").trim();
+      if (reveal !== "all" && reveal !== "type" && reveal !== "lines") {
+        reveal = s.typewrite === false ? "all" : "type";
+      }
+      s.codeReveal = reveal;
+      s.typewrite = reveal === "type";
+      s.typeSpeed = Math.max(8, Math.min(200, Number(s.typeSpeed) || 55));
       if (s.type !== "code") {
       }
     } else {
@@ -8326,6 +8332,7 @@
       delete s.language;
       delete s.typewrite;
       delete s.typeSpeed;
+      delete s.codeReveal;
     }
     if (s.hidden === true) s.hidden = true;
     else delete s.hidden;

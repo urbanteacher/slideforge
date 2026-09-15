@@ -410,6 +410,31 @@
         change();
       }),'On the projector only. Zooms toward the Image focus point below.'));
     }
+    /* Code: how it arrives, and how fast. Neither was settable before — the
+       layout shipped with a character typewriter at one speed and no way to
+       ask for anything else, which is fine until you are walking a room
+       through fourteen lines and want a press per line. */
+    if(s.type==='code'){
+      box.appendChild(UI.field('How the code arrives',UI.select([
+        {value:'all',label:'All at once'},
+        {value:'type',label:'Types itself'},
+        {value:'lines',label:'One line per press'}
+      ],s.codeReveal||'type',function(v){
+        s.codeReveal=v; s.typewrite=(v==='type');
+        change();
+      }),'All at once to talk over it. Types itself for a live-coding feel. One line per press when the walk-through is the teaching — Next and Prev move through it like bullets.'));
+      if((s.codeReveal||'type')==='type'){
+        box.appendChild(UI.field('Typing speed',UI.select([
+          {value:'110',label:'Slow — read along'},
+          {value:'80',label:'Deliberate'},
+          {value:'55',label:'Steady'},
+          {value:'34',label:'Brisk'},
+          {value:'18',label:'Fast — barely readable'}
+        ],String(s.typeSpeed||55),function(v){
+          s.typeSpeed=Number(v); change();
+        }),'Milliseconds between characters, so a larger number is slower. Press Next while it is typing to skip to the end.'));
+      }
+    }
     /* Chart motion and focus, on design beside image motion and for the same
        reason: both are how a slide behaves rather than what it says, and a
        chart that grows out of its own axis is the same kind of decision as a

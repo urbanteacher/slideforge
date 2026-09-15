@@ -3866,8 +3866,35 @@
     /* text is terminal output and notes: no syntax to colour, and pretending
        otherwise would paint "which python" as a function call. */
     var tokens = lang === 'text' ? null : codeTokens(src, lang);
+    var mode = slide.codeReveal === 'all' || slide.codeReveal === 'lines'
+      ? slide.codeReveal
+      : (slide.typewrite === false ? 'all' : 'type');
 
-    var play = !!(opts.interactive && slide.typewrite !== false);
+    /* Line by line uses the build machinery every other layout uses: one
+       .step span per line, sorted by data-step, and js/teaching.js reveals
+       them on Next exactly as it reveals bullets. No second mechanism, and
+       Prev, the dim-past mode and the presenter's step counter all work
+       without knowing this layout exists.
+
+       Blank lines are never steps. They are spacing, and making a room press
+       Next to receive an empty line is a way of losing it. */
+    if (mode === 'lines') {
+      var lineNo = 0;
+      src.replace(/\n+$/, '').split('\n').forEach(function (line, idx, all) {
+        var row = el('span', 'code-line');
+        if (line.trim()) {
+          row.classList.add('step');
+          row.dataset.step = String(lineNo++);
+        }
+        if (tokens) paintCode(row, codeTokens(line, lang), line.length);
+        else row.textContent = line;
+        if (idx < all.length - 1) row.appendChild(document.createTextNode('\n'));
+        codeEl.appendChild(row);
+      });
+      return;
+    }
+
+    var play = !!(opts.interactive && mode === 'type');
     if (!play) {
       if (tokens) paintCode(codeEl, tokens, src.length);
       else codeEl.textContent = src;
