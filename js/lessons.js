@@ -3871,6 +3871,10 @@
           design: { words: 'fade', wordStagger: 'one' },
           notes: 'SPACING 2 of 2 \u2014 One at a time: two and a half times the wave, which on six words is over a second and a half from first to last. Same Fade effect as the slide before; only the spacing changed.' },
 
+        { type: 'statement', body: 'From the middle, opening outwards',
+          design: { words: 'rise', wordStagger: 'one', wordFrom: 'center' },
+          notes: 'WAVE STARTS: the middle. Same spacing as the slide before \u2014 what changed is the order: the centre word leads and the wave opens to both ends at once (1625, 1271, 0, 1271, 1625 in milliseconds).\n\nIt reads as a phrase opening rather than a line being typed, which suits a statement that is one idea. First word and Last word are the other two.' },
+
         { type: 'statement', body: 'Reveal wipes each word up from its own line',
           design: { backdrop: 'grid', words: 'reveal', wordSpeed: 'medium', wordStagger: 'wave' },
           notes: 'The third effect: Reveal, a clip-path wipe rather than a move. Backdrop: Grid \u2014 a ruled plane travelling exactly one cell per loop, which is the same picture again, so it never cuts.' },

@@ -232,6 +232,35 @@
      obviously different sentences on the wall and not two similar ones. */
   var WORD_STAGGERS = { together: 0, wave: 1, one: 2.5 };
 
+  /* Where the wave starts. Amount and origin are separate choices — the same
+     split Motion's stagger(amount, { from }) makes — because "how far apart"
+     and "in what order" are different questions, and folding them into one
+     list of five options makes a control nobody can reason about.
+ 
+     Centre-out is the one worth having beyond first-to-last: on a short line
+     it reads as the phrase opening from its middle rather than being typed,
+     which suits a statement that is one idea rather than a sentence with a
+     subject and an end. */
+  var WORD_FROMS = {
+    first: function (i, last) { return last ? i / last : 0; },
+    last: function (i, last) { return last ? 1 - i / last : 0; },
+    /* Distance from the middle, normalised so the centre word is 0 and both
+       ends are 1. An even number of words has no middle word, so the two
+       nearest it share the first beat — which is what "from the centre"
+       means when there is no centre. */
+    center: function (i, last) {
+      if (!last) return 0;
+      var middle = last / 2;
+      return Math.abs(i - middle) / middle;
+    }
+  };
+
+  /** Which end the wave starts from. First unless the slide says otherwise. */
+  function wordFrom(slide) {
+    var want = String((slide.design || {}).wordFrom || '').trim();
+    return Object.prototype.hasOwnProperty.call(WORD_FROMS, want) ? want : 'first';
+  }
+
   /** The speed record a slide asks for. Medium unless it says otherwise. */
   function wordSpeed(slide) {
     var want = String((slide.design || {}).wordSpeed || '').trim();
@@ -263,6 +292,7 @@
        "together" it is zero, and every word carries the same delay of nothing —
        which is the whole line arriving as one movement. */
     var stretch = (opts && Number.isFinite(opts.stretch)) ? opts.stretch : 1;
+    var order = WORD_FROMS[(opts && opts.from) || 'first'] || WORD_FROMS.first;
     /* The base wave is as long as the line needs; the cap rises with the
        spread so "one at a time" on a six-word line is not quietly clamped
        back to the same wave as everything else. */
@@ -273,7 +303,9 @@
       String(text.nodeValue).split(/(\s+)/).forEach(function (part) {
         if (!part) return;
         if (!part.trim()) { frag.appendChild(document.createTextNode(part)); return; }
-        var at = total > 1 ? seen / (total - 1) : 0;
+        /* Where this word sits in the wave, 0 first to 1 last — which end
+           that is depends on the origin. */
+        var at = order(seen, total - 1);
         /* Ease out: 1 - (1 - t)^2.2. Early words are close together, the tail
            spreads, which is what makes it read as one movement. */
         var delay = Math.round((1 - Math.pow(1 - at, 2.2)) * span);
@@ -326,7 +358,7 @@
     if (effect) {
       var speed = WORD_SPEEDS[wordSpeed(slide)];
       var stretch = WORD_STAGGERS[wordStagger(slide)] * (speed.span || 1);
-      if (wrapWords(line, { stretch: stretch })) {
+      if (wrapWords(line, { stretch: stretch, from: wordFrom(slide) })) {
         line.classList.add('words', 'words-' + effect);
         /* The stylesheet reads these: one duration for an entrance, one for a
            cycle, so a change of speed cannot leave the two disagreeing. */
@@ -5575,6 +5607,8 @@
     WORD_STAGGERS: WORD_STAGGERS,
     wordSpeed: wordSpeed,
     wordStagger: wordStagger,
+    WORD_FROMS: WORD_FROMS,
+    wordFrom: wordFrom,
     wrapWords: wrapWords,
     BACKDROPS: BACKDROPS,
     backdropMotion: backdropMotion,

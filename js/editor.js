@@ -1271,7 +1271,9 @@
             { value: 'one', label: 'One at a time — the widest spread' }
           ], String(d.wordStagger || 'wave'), function (v) {
             if (v && v !== 'wave') d.wordStagger = v; else delete d.wordStagger;
-            touched(); repaint();
+            /* Redrawn, not just repainted: choosing Together takes the
+               direction control away, and choosing a wave brings it back. */
+            touched(); repaint(); drawInspector();
           }), 'How far apart the words are. The wave is always eased — it starts quickly and slows as it finishes.'));
           insp.appendChild(UI.field('And leave again', UI.select([
             { value: '', label: 'No — they arrive and stay' },

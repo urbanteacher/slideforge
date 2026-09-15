@@ -235,3 +235,30 @@ test('speed and spacing are the two controls, and they compose', () => {
   assert.match(css, /animation-duration: var\(--w-dur, 620ms\)/, 'an entrance ignores the speed');
   assert.match(css, /animation-duration: var\(--w-cycle, 6200ms\)/, 'a cycle ignores the speed');
 });
+
+test('the wave can start from either end or from the middle', () => {
+  /* Amount and origin are separate, the same split Motion's
+     stagger(amount, { from }) makes. */
+  assert.deepEqual(Object.keys(SF.WORD_FROMS).sort(), ['center', 'first', 'last']);
+  assert.equal(SF.wordFrom({}), 'first', 'first-to-last unless asked otherwise');
+  assert.equal(SF.wordFrom({ design: { wordFrom: 'center' } }), 'center');
+  assert.equal(SF.wordFrom({ design: { wordFrom: 'middle' } }), 'first', 'an unknown origin falls back');
+
+  /* Position in the wave, 0 = first to move, 1 = last. Five words, last = 4. */
+  const at = (from, i, last) => Number(SF.WORD_FROMS[from](i, last).toFixed(3));
+  assert.equal(at('first', 0, 4), 0);
+  assert.equal(at('first', 4, 4), 1);
+  assert.equal(at('last', 0, 4), 1);
+  assert.equal(at('last', 4, 4), 0);
+  /* Centre-out is symmetric, with the middle word first and both ends last. */
+  assert.equal(at('center', 2, 4), 0, 'the middle word leads');
+  assert.equal(at('center', 0, 4), 1);
+  assert.equal(at('center', 4, 4), 1);
+  assert.equal(at('center', 1, 4), at('center', 3, 4), 'the two sides move together');
+  /* An even number of words has no middle word: the two nearest it share the
+     first beat, which is what "from the centre" means when there is no centre. */
+  assert.equal(at('center', 1, 3), at('center', 2, 3));
+  assert.ok(at('center', 1, 3) < at('center', 0, 3));
+  /* One word is not a wave, and must not divide by zero. */
+  ['first', 'last', 'center'].forEach((from) => assert.equal(at(from, 0, 0), 0));
+});

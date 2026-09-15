@@ -265,6 +265,29 @@ try {
   if (!(last(knobs.one) > last(knobs.quick))) {
     problems.push('spacing: "one at a time" is not the widest spread');
   }
+  /* The origin of the wave, as delays on the page: first-to-last ascends,
+     last-to-first descends, and centre-out is symmetric with its middle at
+     zero — the shape is the whole feature, so it is checked as a shape. */
+  const origins = await page.evaluate(() => {
+    const delays = (from) => {
+      const slide = SF.normalizeSlide(Object.assign(SF.makeSlide('statement'),
+        { body: 'Every chart is a choice', design: { words: 'rise', wordStagger: 'one', wordFrom: from } }));
+      const line = SF.renderSlide(SF.Editor.deck(), slide, { index: 0, total: 1 })
+        .querySelector('.statement');
+      return Array.from(line.querySelectorAll('.w'))
+        .map((w) => parseInt(w.style.getPropertyValue('--d'), 10));
+    };
+    return { first: delays('first'), center: delays('center'), last: delays('last') };
+  });
+  const rising = (a) => a.every((v, i) => i === 0 || v > a[i - 1]);
+  if (!rising(origins.first)) problems.push('first-to-last is not in order — ' + origins.first.join(','));
+  if (!rising([...origins.last].reverse())) problems.push('last-to-first is not reversed — ' + origins.last.join(','));
+  const c = origins.center;
+  if (c[2] !== 0) problems.push('centre-out does not lead with the middle word — ' + c.join(','));
+  if (c[0] !== c[4] || c[1] !== c[3]) problems.push('centre-out is not symmetric — ' + c.join(','));
+  if (!(c[0] > c[1])) problems.push('centre-out does not reach the ends last — ' + c.join(','));
+  console.log('✓ The wave can start anywhere — centre-out is', c.join('/'));
+
   console.log('✓ Speed and spacing reach the slide — gentle', knobs.gentle.dur,
     'quick', knobs.quick.dur + ', together', knobs.together.delays.join('/'),
     'one at a time', knobs.one.delays.join('/'));
