@@ -2646,8 +2646,23 @@
     } catch (e) { /* window closing */ }
   }
 
+  /* A command carrying an id is acted on once, however many routes it came
+     by. The desk sends one way now, and this is what makes a second route —
+     a mirrored desk, a channel that outlives a reload — harmless rather than
+     a toggle that cancels itself. Bounded, because inking sends a command
+     per pointer move. */
+  var seenCmds = [];
+  function alreadyHandled(d) {
+    if (!d || !d.id) return false;
+    if (seenCmds.indexOf(d.id) >= 0) return true;
+    seenCmds.push(d.id);
+    if (seenCmds.length > 60) seenCmds.shift();
+    return false;
+  }
+
   function handlePresenterCommand(d, sourceWin) {
     if (!d || d.type !== 'sf-presenter-cmd') return;
+    if (alreadyHandled(d)) return;
     if (d.cmd === 'goto') Player.goTo(d.index);
     else if (d.cmd === 'hello') syncPresenter();
     /* Inking driven from the desk. A bare `ink` is still the toggle the HUD

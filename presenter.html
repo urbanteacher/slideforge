@@ -490,10 +490,25 @@
   var startedAt = Date.now();
   var timerBase = null;
 
+  var cmdSeq = 0;
+
+  /* One route to the wall, not both.
+
+     The wall listens on the opener AND on the desk's BroadcastChannel — the
+     channel is there for a desk opened in its own tab, which has no opener.
+     Sending by both meant every command landed twice, and a toggle sent
+     twice is a toggle that did nothing: Blank flicked on and straight back
+     off, Freeze the same, and Next skipped a slide. So the opener wins when
+     there is one, and the channel is the fallback it was added to be.
+
+     The id is the belt to that braces: the wall acts on a command id once,
+     whichever way it arrives. */
   function cmd(c, extra) {
-    var msg = Object.assign({ type: 'sf-presenter-cmd', cmd: c }, extra || {});
+    var msg = Object.assign({
+      type: 'sf-presenter-cmd', cmd: c, id: startedAt + '-' + (++cmdSeq)
+    }, extra || {});
     if (window.opener && !window.opener.closed) window.opener.postMessage(msg, location.origin);
-    if (deskBus) deskBus.postMessage(msg);
+    else if (deskBus) deskBus.postMessage(msg);
   }
 
   var deskBus = null;
