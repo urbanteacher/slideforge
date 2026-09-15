@@ -920,18 +920,22 @@ looks at directly. `assets/brand/ukbt-waves.svg` draws the same family of
 phase-shifted sines in 38 KB, with `preserveAspectRatio="none"` so it stretches
 to whatever stage shape the deck is set to instead of letterboxing.
 
-**No logo file ships with either theme.** The UKBT brand deck composes its
-lockup from a partial image plus live text on a white ground, so what can be
-extracted from it is a fragment on a white rectangle — worse on a dark slide
-than no logo at all. Both ready-made lessons say so in their opening note. To
-add one: drop the file into `assets/brand/` and point at it under Deck settings
-→ Logo, and it appears on every slide.
+**The logo comes out of the brand deck already reversed.**
+`assets/brand/ukbt-wordmark.png` is the full UK Black Tech lockup — green
+chevron, white *UK* and *Tech*, *Black* knocked out of a white panel — and
+`ukbt-mark.png` is the shorter *UKBT* mark. Both are transparent PNGs drawn for
+a dark ground, which is exactly what these two themes are.
 
-Both grounds are dark, so the file wants to be the **reversed** version of the
-mark — white or light lettering, not the dark-ink one. An SVG keeps its edges
-on a projector at any size; a PNG needs real transparency, not a white
-rectangle. The green chevron on the title and section slides is the theme's own
-mark, not a stand-in for the logo.
+Because they are already reversed, both lessons set `logoReverse: 'never'`.
+The blanket rule in `css/app.css` inverts a deck logo on themes that are dark
+on every slide, and inverting this one would flatten the green and the knockout
+panel to a single white shape. The UKBT themes are deliberately absent from
+that rule's selector list, and the deck flag is the belt to its braces.
+
+The Institute deck uses the shorter mark. The word *INSTITUTE* beside it in the
+brand deck is live text on the slide — white, Clear Sans, 19.7pt, 9pt tracking
+— not part of the image, so the full Institute lockup is not extractable from
+that file. Point at the official one under Deck settings → Logo if you have it.
 
 **Where a green accent is not a ground for text.** `css/app.css` puts white on
 `var(--s-accent)` in a handful of places — caption bands, the two reveal

@@ -66,8 +66,14 @@
   pointer-events: none;
   z-index: 0;
 }
-.theme-ukbt > *,
-.theme-ukbt-institute > * { position: relative; z-index: 1; }
+/* Only the content block gets lifted, not every child. Setting position on
+   every direct child took the slide's own chrome with it — the logo, the page
+   number and the progress track are absolutely positioned, and relative put
+   them back in the flow, which dropped the logo off the bottom-left corner of
+   the slide. Chrome does not need lifting: it is positioned already, so it
+   paints after the wave in tree order anyway. */
+.theme-ukbt > .pad,
+.theme-ukbt-institute > .pad { position: relative; z-index: 1; }
 
 /* The chevron. One shape, drawn in CSS, used as the accent mark on the two
    full-bleed layouts — the same gesture the logo opens with. */

@@ -1422,10 +1422,16 @@
       minutes: 10,
       theme: 'ukbt',
       org: 'UK Black Tech',
+      logo: 'assets/brand/ukbt-wordmark.png',
+      logoOn: 'all',
+      logoSize: 'small',
+      /* The artwork is already the reversed lockup — white UK and Tech, the
+         green chevron, Black knocked out of a white panel. Never invert it. */
+      logoReverse: 'never',
       slides: [
         { type: 'title', title: 'Partner with UK Black Tech',
           subtitle: 'Reach, reputation, and a pipeline that lasts',
-          notes: 'Five slides on purpose. A sponsorship conversation is not a lecture — the deck exists to hold four facts still while you talk, and to leave something behind that survives being forwarded.\n\nNo deck logo is set. Drop the official file into assets/brand/ and point at it under Deck settings → Logo; the green chevron on this slide is the theme’s own mark, not a stand-in for the logo.' },
+          notes: 'Five slides on purpose. A sponsorship conversation is not a lecture — the deck exists to hold four facts still while you talk, and to leave something behind that survives being forwarded.' },
 
         { type: 'keyfact', title: 'Who you would be reaching',
           subtitle: 'Combined reach across the UK Black Tech platform',
@@ -1473,10 +1479,14 @@
       minutes: 45,
       theme: 'ukbt-institute',
       org: 'UKBT Institute',
+      logo: 'assets/brand/ukbt-mark.png',
+      logoOn: 'all',
+      logoSize: 'small',
+      logoReverse: 'never',
       slides: [
         { type: 'title', title: 'The Townhouse',
           subtitle: 'A four-floor innovation model · UKBT Institute',
-          notes: 'The deck follows the model published on ukblacktech.com/ukbt-institute — four floors, a Practitioner Readiness Level band on each, and a gate that has to be passed before anything climbs a storey.\n\nNo deck logo is set. Drop the official file into assets/brand/ and point at it under Deck settings → Logo.' },
+          notes: 'The deck follows the model published on ukblacktech.com/ukbt-institute — four floors, a Practitioner Readiness Level band on each, and a gate that has to be passed before anything climbs a storey.\n\nThe logo top right is the UKBT mark as it appears in the brand deck. The word INSTITUTE beside it there is live text, not part of the image, so it is not in this file — swap in the official Institute lockup under Deck settings → Logo if you want the full one.' },
 
         { type: 'quote', body: 'A townhouse for technologists, academics, professionals, and communities.',
           subtitle: 'UKBT Institute',
@@ -1839,6 +1849,9 @@
       deck.logo = spec.logo;
       deck.logoOn = spec.logoOn || 'all';
       deck.logoSize = spec.logoSize || 'medium';
+      /* A logo that is already drawn for a dark ground must say so, or a dark
+         theme's blanket reverse rule flattens its colours to white. */
+      if (spec.logoReverse) deck.logoReverse = spec.logoReverse;
     }
 
     var ids = {};
