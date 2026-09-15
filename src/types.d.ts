@@ -24,7 +24,9 @@ export type TransitionKey = 'none' | 'fade' | 'push' | 'zoom' | 'wipe';
 export type DeckSlideType =
   | 'journey' | 'mindmap' | 'introduction' | 'title' | 'section' | 'content' | 'keywords' | 'italics' | 'links'
   | 'split' | 'cards' | 'table' | 'image' | 'video' | 'quote' | 'join'
-  | 'chart' | 'gallery' | 'beforeafter' | 'explore' | 'simulation';
+  | 'chart' | 'gallery' | 'beforeafter' | 'explore' | 'simulation'
+  | 'keyfact' | 'orgchart'
+  | 'stats' | 'compare' | 'funnel' | 'timeline';
 
 /** Every slide kind the player and renderer handle (`SLIDE_TYPES`). The three
  *  beyond {@link DeckSlideType} are produced by compiling a game. */
@@ -144,7 +146,7 @@ export interface Slide {
   title: string;
   subtitle: string;
   date?: string;
-  journeyMode?: 'path' | 'handover';
+  journeyMode?: 'path' | 'handover' | 'stepper';
   body: string;
   bullets: string[];
   notes: string;

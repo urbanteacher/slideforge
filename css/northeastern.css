@@ -491,3 +491,17 @@
   color: #5a6572;
   background: rgba(255, 255, 255, .55);
 }
+
+/* Icon grid: the badge sits above a centred label, so the two-column glossary
+   grid above is undone here — the glyph is the number now. */
+.theme-northeastern.layout-cards ul.cards-icons > li:has(> .card-label) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+.theme-northeastern.layout-cards ul.cards-icons > li::before { display: none; }
+.theme-northeastern.layout-cards ul.cards-icons > li > .card-label,
+.theme-northeastern.layout-cards ul.cards-icons > li > .card-body { grid-column: auto; }
+.theme-northeastern .card-icon { background: color-mix(in srgb, var(--nu-red) 12%, transparent); box-shadow: inset 0 0 0 2px var(--nu-red); }

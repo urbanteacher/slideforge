@@ -190,8 +190,9 @@
       box.appendChild(UI.field('Cards layout',UI.select([
         {value:'grid',label:'Side by side'},
         {value:'rows',label:'Rows down the slide — full width each'},
-        {value:'stack',label:'Stacked — one in front, the rest behind'}
-      ],d.cardsMode==='stack'?'stack':d.cardsMode==='rows'?'rows':'grid',function(v){
+        {value:'stack',label:'Stacked — one in front, the rest behind'},
+        {value:'pictures',label:'Picture cards — an image slot above each card'}
+      ],['stack','rows','pictures'].indexOf(d.cardsMode)>=0?d.cardsMode:'grid',function(v){
         d.cardsMode=v;
         /* A stack with everything already on screen is just a pile. Choosing
            it turns the build on; going back to a row leaves it alone, since
@@ -199,6 +200,47 @@
         if(v==='stack'){s.progressive=true;s.buildMode='dim';}
         change();
       }),'Each card gets its own moment, with the ones already covered showing behind.'));
+      if(d.cardsMode==='pictures'||(s.images||[]).some(Boolean)){
+        choose('Picture shape','cardPics',[['covers','Portrait 3:4 — crops to fill'],['plates','Landscape 4:3 — whole figure, letterboxed']],'covers');
+      }
+    }
+    if(s.type==='stats'){
+      choose('Tile style','statStyle',[
+        ['tile','Big number over its label'],
+        ['ring','Ring — filled to the number\u2019s share'],
+        ['bar','KPI bar under the number']
+      ],'tile');
+      /* A ring encodes its number as an arc, and arc sits below position and
+         length on the channel ranking this app teaches in the chart picker.
+         One ring is a dial and reads fine; four rings are four dials the eye
+         cannot line up, and the same four numbers as a sorted bar would be
+         read accurately at a glance. Said here rather than refused, because
+         one hero number in a ring is a legitimate choice. */
+      if((s.design||{}).statStyle==='ring'){
+        var ringN=(s.bullets||[]).filter(function(b){
+          var pr=SF.parseInfoLine(b);
+          return String(pr.label||'').trim()||String(pr.value||'').trim();
+        }).length;
+        if(ringN>1) box.appendChild(SF.el('p','hint field-warn',
+          'Rings encode each number as an arc, which the eye compares less accurately than a length. '+
+          'With '+ringN+' of them nobody can line them up \u2014 KPI bar reads the same numbers '+
+          'correctly, and the ring is at its best on a single figure you want looked at.'));
+      }
+    }
+    if(s.type==='funnel'){
+      choose('Direction','funnelDirection',[['down','Funnel — widest at the top'],['up','Pyramid — widest at the bottom']],'down');
+      /* The same move the chart picker makes with "Not sure which? Start from
+         the question": name the honest alternative rather than block the
+         choice. A funnel draws what is LEFT at each stage; the FT taxonomy
+         calls that question Flow, and the Sankey this app already draws shows
+         where the missing ones WENT, which is usually the interesting half. */
+      box.appendChild(SF.el('p','hint',
+        'A funnel shows what is left at each stage. If where the rest went matters \u2014 rejected, '+
+        'declined, lapsed \u2014 that question is Flow in the chart picker, and a Sankey carries both. '+
+        'The drop between two stages is printed for you either way.'));
+    }
+    if(s.type==='timeline'){
+      choose('Shape','timelineMode',[['horizontal','Across — one rail, dates above events'],['vertical','Down — a spine with a paragraph per event']],'horizontal');
     }
     if(s.activity){
       var ma=document.createElement('textarea');ma.rows=3;ma.value=s.modelAnswer||'';

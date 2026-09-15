@@ -410,6 +410,30 @@ function formatKeywordLine(term, def) {
   return String(term || '').trim() + '\t' + String(def || '').trim();
 }
 
+/* Infographic layouts carry up to three things per line — a label, a value
+   and a supporting note — so one pit can say "Retention · 92% · up from 81".
+   Tabs are the canonical separator (the inspector writes them); pipes are
+   accepted because that is what people type when they paste from a table.
+   A two-part line is label + value; the note is optional. */
+function parseInfoLine(line) {
+  var s = String(line == null ? '' : line).trim();
+  var parts = s.indexOf('\t') !== -1 ? s.split('\t') : s.split('|');
+  parts = parts.map(function (p) { return p.trim(); });
+  if (parts.length > 3) parts = [parts[0], parts[1], parts.slice(2).join(' · ')];
+  return { label: parts[0] || '', value: parts[1] || '', note: parts[2] || '' };
+}
+
+function formatInfoLine(label, value, note) {
+  return [label, value, note].map(function (p) { return String(p || '').trim(); }).join('\t').replace(/\t+$/, '');
+}
+
+/* The leading number in a value like "92%", "£1.2m" or "3 of 5" — what a ring
+   or bar needs to draw. NaN when there is no number to find. */
+function infoNumber(value) {
+  var m = String(value || '').replace(/,/g, '').match(/-?\d+(\.\d+)?/);
+  return m ? parseFloat(m[0]) : NaN;
+}
+
 /** Only http(s) links — blocks javascript: and other schemes. */
 function safeHref(url) {
   var u = String(url || '').trim();
@@ -536,6 +560,21 @@ var SLIDE_TYPES = {
                  starters: [{ title: 'Quote', blurb: 'A line the room can sit with.',
                               seed: { body: 'Replace this with the line you want the room to sit with.',
                                       subtitle: 'Attribution' } }] },
+  /* Infographic shapes. Each is still a bullet layout under the hood — a pit
+     per element, revealed on Next — so they inherit reorder, bulk paste,
+     spread-across-slides and the presenter excerpt for free. */
+  stats:       { label: 'Stat tiles', icon: '％', deck: true, pits: 6, group: 'infographic',
+                 starters: [{ title: 'Stat tiles', blurb: 'Three to six big numbers, each with a label and a note.',
+                              seed: { title: 'The numbers that matter', bullets: ['Label\tValue\tNote', '\t\t', '\t\t'] } }] },
+  compare:     { label: 'Versus', icon: '⇄', deck: true, pits: 6, group: 'infographic',
+                 starters: [{ title: 'Versus', blurb: 'Two columns compared row by row — before/after, A/B, myth/fact.',
+                              seed: { title: 'Side by side', subtitle: 'Option A | Option B', bullets: ['\t', '\t', '\t'] } }] },
+  funnel:      { label: 'Funnel', icon: '▽', deck: true, pits: 6, group: 'infographic',
+                 starters: [{ title: 'Funnel', blurb: 'Stages that narrow — applicants to offers, awareness to action.',
+                              seed: { title: 'Where the numbers thin out', bullets: ['Stage\tValue\tNote', '\t\t', '\t\t', '\t\t'] } }] },
+  timeline:    { label: 'Timeline', icon: '⟶', deck: true, pits: 8, group: 'infographic',
+                 starters: [{ title: 'Timeline', blurb: 'Dated events along a track — a history, a plan, a term.',
+                              seed: { title: 'How we got here', bullets: ['Date\tEvent\tDetail', '\t\t', '\t\t', '\t\t'] } }] },
   join:        { label: 'Join QR & PIN', icon: '⌗', deck: true },
   game:        { label: 'Game', icon: '◈' },
   quiz:        { label: 'Quiz', icon: '?' },
@@ -546,8 +585,11 @@ var SLIDE_TYPES = {
 var LAYOUT_GROUPS = [
   ['introduce', 'Introduce'],
   ['explain', 'Explain & organise'],
-  ['show', 'Show & explore']
+  ['show', 'Show & explore'],
+  ['infographic', 'Infographic']
 ];
+
+var INFO_LAYOUTS = ['stats', 'compare', 'funnel', 'timeline'];
 
 function layoutKeys(test) {
   return Object.keys(SLIDE_TYPES).filter(function (k) { return test(SLIDE_TYPES[k]); });
@@ -607,8 +649,9 @@ function slideSteps(slide) {
     return (slide.layers||[]).filter(function(l){return l && l.image;})
       .map(function(l,i){return String(l.caption||'').trim() || ('Image '+(i+1));});
   }
-  if(['journey','mindmap','content','cards','split','keywords','italics'].indexOf(slide.type)<0) return [];
+  if(['journey','mindmap','content','cards','split','keywords','italics'].concat(INFO_LAYOUTS).indexOf(slide.type)<0) return [];
   return (slide.bullets||[]).filter(function(b){return String(b).trim();}).map(function(b){
+    if(INFO_LAYOUTS.indexOf(slide.type)>=0){var q=parseInfoLine(b);return [q.label,q.value,q.note].filter(Boolean).join(' · ');}
     if(slide.type==='journey'||slide.type==='mindmap'||slide.type==='keywords'||slide.type==='italics'){var p=parseKeywordLine(b);return [p.term,p.def].filter(Boolean).join(' — ');}
     return String(b).replace(/^(\s{2,}|\t|- )+/, '').trim();
   });
@@ -641,4 +684,4 @@ function correctAnswerLabel(slide) {
 }
 
 
-export { parsePerson, orgTree, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, chartNumber, SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };
+export { parsePerson, orgTree, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, chartNumber, SLIDE_TYPES, LAYOUT_GROUPS, INFO_LAYOUTS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, parseInfoLine, formatInfoLine, infoNumber, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };

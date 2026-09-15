@@ -4885,6 +4885,12 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
 
 .field-warn { color: #8a4b2a; font-weight: 600; }
 
+/* Share in the top bar. Marked rather than loud: it is the action somebody
+   else is waiting on, so it should be findable at a glance, but it is not the
+   thing the button cluster to its right is for — that is starting the room. */
+.share-btn { font-weight: 600; }
+.share-btn:hover { border-color: var(--ink, currentColor); }
+
 /* Teaching exploration: movement has a destination and then settles. */
 .exploration-slide .pad{gap:14px;display:flex;flex-direction:column;padding:40px 60px}
 .exploration-slide h2{margin:0;font-size:40px}.exploration-slide [hidden]{display:none!important}
@@ -5341,3 +5347,171 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
 .ch-mult-line.dir-down, .ch-mult-dot.dir-down { stroke: #477F54; fill: #477F54; }
 .ch-mult-line.dir-flat, .ch-mult-dot.dir-flat { stroke: #8A7A6D; fill: #8A7A6D; }
 .ch-mult-line { fill: none; }
+
+/* ============================================================ infographic
+   Four shapes that read as a diagram rather than a list: stat tiles, versus
+   columns, a funnel and a timeline. All are theme-aware through --s-* so
+   every skin recolours them; the variant themes tune weights below. Type
+   sizes match the bullet layouts they sit beside, so switching a slide
+   between Cards and Stat tiles does not jump the heading. */
+.layout-stats .pad, .layout-compare .pad, .layout-funnel .pad, .layout-timeline .pad { padding: 58px 80px 48px; }
+.slide.layout-stats h2, .slide.layout-compare h2, .slide.layout-funnel h2, .slide.layout-timeline h2 { font-size: 40px; margin: 0 0 10px; }
+.info-context { font-size: 21px; line-height: 1.35; color: var(--s-dim); margin-bottom: 26px; }
+.info-empty { font-size: 26px; margin: auto 0; }
+.info-takeaway { margin-top: 20px; padding-top: 14px; border-top: 2px solid var(--s-accent); font-size: 21px; line-height: 1.35; }
+
+/* --- stat tiles */
+.stats-grid { display: grid; gap: 22px; flex: 1; min-height: 0; align-content: center; grid-template-columns: repeat(3, 1fr); }
+.stats-grid.stats-n1 { grid-template-columns: 1fr; max-width: 60%; margin: 0 auto; }
+.stats-grid.stats-n2 { grid-template-columns: repeat(2, 1fr); }
+.stats-grid.stats-n4 { grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.stats-grid.stats-n5, .stats-grid.stats-n6 { grid-template-columns: repeat(3, 1fr); }
+.stat {
+  display: flex; flex-direction: column; justify-content: center; gap: 8px;
+  padding: 28px 26px; border-radius: 18px;
+  background: var(--s-card);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--s-fg) 10%, transparent);
+  min-width: 0;
+}
+.stat-value { font-size: 68px; line-height: 1; font-weight: 800; letter-spacing: -.03em; color: var(--s-accent); overflow-wrap: anywhere; }
+.stats-n4 .stat-value, .stats-n5 .stat-value, .stats-n6 .stat-value { font-size: 52px; }
+.stat-label { font-size: 22px; line-height: 1.25; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--s-fg); }
+.stat-note { font-size: 19px; line-height: 1.35; color: var(--s-dim); }
+/* Ring: a conic fill to --share of the circle drawn on ::before and masked
+   to an annulus, so the value can sit unmasked in the hole. */
+.stats-ring .stat { align-items: center; text-align: center; }
+.stat-ring {
+  --ring: 14px;
+  width: 168px; height: 168px; border-radius: 50%; display: grid; place-items: center;
+  position: relative;
+}
+.stat-ring .stat-value { font-size: 40px; color: var(--s-fg); text-align: center; padding: 0 12px; position: relative; }
+.stat-ring::before {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(var(--s-accent) calc(var(--share) * 360deg), color-mix(in srgb, var(--s-fg) 12%, transparent) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring)), #000 calc(100% - var(--ring) + 1px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring)), #000 calc(100% - var(--ring) + 1px));
+}
+.stats-n4 .stat-ring, .stats-n5 .stat-ring, .stats-n6 .stat-ring { width: 128px; height: 128px; --ring: 11px; }
+.stats-n4 .stat-ring .stat-value, .stats-n5 .stat-ring .stat-value, .stats-n6 .stat-ring .stat-value { font-size: 30px; }
+/* Bar: a track under the figure filled to --share. */
+.stat-track { height: 10px; border-radius: 999px; background: color-mix(in srgb, var(--s-fg) 12%, transparent); overflow: hidden; }
+.stat-fill { height: 100%; width: calc(var(--share) * 100%); background: var(--s-accent); border-radius: inherit; transition: width .5s ease; }
+
+/* --- versus */
+.compare { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; justify-content: center; }
+.compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.compare-labelled .compare-row { grid-template-columns: .6fr 1fr 1fr; }
+.compare-cell {
+  font-size: 25px; line-height: 1.35; padding: 18px 22px; border-radius: 12px;
+  background: var(--s-card); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--s-fg) 10%, transparent);
+  min-width: 0; overflow-wrap: anywhere;
+}
+.compare-aspect { font-size: 21px; line-height: 1.3; font-weight: 700; color: var(--s-dim); display: flex; align-items: center; padding: 0 6px; }
+.compare-head .compare-cell {
+  font-size: 22px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  background: none; box-shadow: none; padding: 6px 22px 14px; border-bottom: 3px solid var(--s-accent);
+}
+.compare-head .compare-right { border-bottom-color: var(--s-fg); opacity: .8; }
+.compare-row:not(.compare-head) .compare-left { border-left: 5px solid var(--s-accent); }
+.compare-row:not(.compare-head) .compare-right { border-left: 5px solid color-mix(in srgb, var(--s-fg) 45%, transparent); }
+
+/* --- funnel */
+.slide .funnel { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; justify-content: center; align-items: center; }
+.slide .funnel-up { flex-direction: column-reverse; }
+.funnel-band {
+  width: var(--w, 100%); min-width: 40%;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 16px 30px; border-radius: 12px;
+  background: color-mix(in srgb, var(--s-accent) calc(100% - var(--fade, 0%)), var(--s-card));
+  color: var(--s-bg);
+  box-sizing: border-box;
+}
+/* Later bands lighten so the eye reads the narrowing as a gradient too. */
+.funnel-band:nth-child(1) { --fade: 0%; } .funnel-band:nth-child(2) { --fade: 14%; } .funnel-band:nth-child(3) { --fade: 28%; }
+.funnel-band:nth-child(4) { --fade: 42%; } .funnel-band:nth-child(5) { --fade: 56%; } .funnel-band:nth-child(6) { --fade: 66%; }
+.funnel-band:nth-child(n+3) { color: var(--s-fg); }
+.funnel-copy { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.funnel-value { flex: none; }
+.slide .funnel-label { font-size: 25px; line-height: 1.2; font-weight: 700; }
+.funnel-note { font-size: 18px; line-height: 1.3; opacity: .85; }
+/* Numbers stay on one line; a worded value ("Make something") wraps rather
+   than starving the label beside it in the narrowest band. */
+.funnel-value { font-size: 34px; line-height: 1.1; font-weight: 800; letter-spacing: -.02em; max-width: 50%; text-align: right; }
+
+/* The drop between two bands, as a figure rather than a taper. Sits in the
+   flow between them so it moves with a reordered stage and needs no
+   positioning; aria-hidden because the values either side already say it. */
+.funnel-drop {
+  display: flex; justify-content: center; align-items: center;
+  height: 0; margin: -2px 0; pointer-events: none;
+}
+.funnel-drop span {
+  font-size: 17px; font-weight: 700; letter-spacing: .04em;
+  color: var(--s-dim);
+  background: var(--s-bg);
+  padding: 0 10px; border-radius: 999px;
+  position: relative; z-index: 1;
+}
+
+/* --- timeline */
+/* Neither shape stretches to fill the pad: auto margins float the track to
+   the vertical middle, so six events sit centred rather than pinned under
+   the heading with empty slide beneath. */
+.slide .timeline { list-style: none; margin: auto 0; padding: 0; flex: none; min-height: 0; }
+.slide .timeline-horizontal {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; align-items: start;
+  position: relative; padding-top: 30px;
+}
+.timeline-horizontal::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 30px; height: 4px; border-radius: 2px;
+  background: color-mix(in srgb, var(--s-accent) 55%, transparent);
+}
+.timeline-horizontal .timeline-event { position: relative; padding: 32px 14px 0; min-width: 0; }
+.timeline-horizontal .timeline-dot {
+  position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+  width: 22px; height: 22px; border-radius: 50%; background: var(--s-accent); border: 4px solid var(--s-bg);
+  box-shadow: 0 0 0 2px var(--s-accent);
+}
+.timeline-copy { display: flex; flex-direction: column; gap: 6px; text-align: center; }
+.timeline-date { font-size: 18px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--s-accent); }
+.slide .timeline-title { font-size: 23px; line-height: 1.25; font-weight: 700; }
+.timeline-note { font-size: 18px; line-height: 1.35; color: var(--s-dim); }
+.timeline-n7 .timeline-title, .timeline-n8 .timeline-title { font-size: 19px; }
+.timeline-n7 .timeline-note, .timeline-n8 .timeline-note { font-size: 15px; }
+/* Long-form: spine down the left, one paragraph per event. */
+.slide .timeline-vertical { display: flex; flex-direction: column; gap: 18px; position: relative; padding-left: 46px; }
+.timeline-vertical::before { content: ''; position: absolute; left: 12px; top: 8px; bottom: 8px; border-left: 4px solid color-mix(in srgb, var(--s-accent) 55%, transparent); border-radius: 2px; }
+.timeline-vertical .timeline-event { position: relative; }
+.timeline-vertical .timeline-dot { position: absolute; left: -46px; top: 6px; width: 28px; height: 28px; border-radius: 50%; background: var(--s-accent); border: 5px solid var(--s-bg); box-shadow: 0 0 0 2px var(--s-accent); }
+.timeline-vertical .timeline-copy { text-align: left; display: grid; grid-template-columns: 150px 1fr; column-gap: 20px; row-gap: 2px; align-items: baseline; }
+.timeline-vertical .timeline-date { grid-row: 1 / span 2; font-size: 20px; }
+.timeline-vertical .timeline-title { font-size: 26px; }
+.timeline-vertical .timeline-note { font-size: 20px; }
+
+/* --- journey · stepper: one rail, numbered discs, copy beneath */
+.slide .journey-stepper { flex: none; margin: auto 0; flex-direction: row; gap: 18px; align-items: stretch; position: relative; padding-top: 12px; }
+.slide .journey-stepper::before { content: ''; position: absolute; left: 6%; right: 6%; top: 34px; height: 3px; background: var(--s-accent); opacity: .5; }
+.journey-stepper .journey-stop { flex-direction: column; align-items: center; text-align: center; gap: 16px; }
+.journey-stepper .journey-stop::after { display: none; }
+.journey-stepper .journey-marker { width: 48px; height: 48px; font-size: 21px; background: var(--s-accent); color: var(--s-bg); border-color: var(--s-accent); position: relative; z-index: 1; }
+.slide .journey-stepper .journey-copy h3 { font-size: 24px; }
+.slide .journey-stepper .journey-copy p { font-size: 19px; }
+
+/* --- cards · icon grid: glyph badge above the label */
+.layout-cards ul.cards-icons > li { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.layout-cards ul.cards-icons > li::before { display: none; }
+.layout-cards ul.cards-icons { padding-left: 0; }
+.card-icon {
+  display: grid; place-items: center; width: 74px; height: 74px; border-radius: 50%;
+  font-size: 36px; line-height: 1; margin-bottom: 8px;
+  background: color-mix(in srgb, var(--s-accent) 18%, transparent);
+  box-shadow: inset 0 0 0 2px var(--s-accent);
+}
+.layout-cards ul.cards-icons .card-label { font-size: 1.05em; }
+
+/* Beside the live room panel everything steps down a notch. */
+.deck-viewport.railed .stat-value { font-size: 48px; }
+.deck-viewport.railed .compare-cell { font-size: 20px; padding: 12px 16px; }
+.deck-viewport.railed .funnel-label { font-size: 20px; }
+.deck-viewport.railed .timeline-title { font-size: 19px; }

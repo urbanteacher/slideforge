@@ -2838,6 +2838,24 @@
   function formatKeywordLine(term, def) {
     return String(term || "").trim() + "	" + String(def || "").trim();
   }
+  function parseInfoLine(line) {
+    var s = String(line == null ? "" : line).trim();
+    var parts = s.indexOf("	") !== -1 ? s.split("	") : s.split("|");
+    parts = parts.map(function(p) {
+      return p.trim();
+    });
+    if (parts.length > 3) parts = [parts[0], parts[1], parts.slice(2).join(" · ")];
+    return { label: parts[0] || "", value: parts[1] || "", note: parts[2] || "" };
+  }
+  function formatInfoLine(label, value, note) {
+    return [label, value, note].map(function(p) {
+      return String(p || "").trim();
+    }).join("	").replace(/\t+$/, "");
+  }
+  function infoNumber(value) {
+    var m = String(value || "").replace(/,/g, "").match(/-?\d+(\.\d+)?/);
+    return m ? parseFloat(m[0]) : NaN;
+  }
   function safeHref(url) {
     var u = String(url || "").trim();
     if (!u) return "";
@@ -3099,6 +3117,57 @@
         }
       }]
     },
+    /* Infographic shapes. Each is still a bullet layout under the hood — a pit
+       per element, revealed on Next — so they inherit reorder, bulk paste,
+       spread-across-slides and the presenter excerpt for free. */
+    stats: {
+      label: "Stat tiles",
+      icon: "％",
+      deck: true,
+      pits: 6,
+      group: "infographic",
+      starters: [{
+        title: "Stat tiles",
+        blurb: "Three to six big numbers, each with a label and a note.",
+        seed: { title: "The numbers that matter", bullets: ["Label	Value	Note", "		", "		"] }
+      }]
+    },
+    compare: {
+      label: "Versus",
+      icon: "⇄",
+      deck: true,
+      pits: 6,
+      group: "infographic",
+      starters: [{
+        title: "Versus",
+        blurb: "Two columns compared row by row — before/after, A/B, myth/fact.",
+        seed: { title: "Side by side", subtitle: "Option A | Option B", bullets: ["	", "	", "	"] }
+      }]
+    },
+    funnel: {
+      label: "Funnel",
+      icon: "▽",
+      deck: true,
+      pits: 6,
+      group: "infographic",
+      starters: [{
+        title: "Funnel",
+        blurb: "Stages that narrow — applicants to offers, awareness to action.",
+        seed: { title: "Where the numbers thin out", bullets: ["Stage	Value	Note", "		", "		", "		"] }
+      }]
+    },
+    timeline: {
+      label: "Timeline",
+      icon: "⟶",
+      deck: true,
+      pits: 8,
+      group: "infographic",
+      starters: [{
+        title: "Timeline",
+        blurb: "Dated events along a track — a history, a plan, a term.",
+        seed: { title: "How we got here", bullets: ["Date	Event	Detail", "		", "		", "		"] }
+      }]
+    },
     join: { label: "Join QR & PIN", icon: "⌗", deck: true },
     game: { label: "Game", icon: "◈" },
     quiz: { label: "Quiz", icon: "?" },
@@ -3108,8 +3177,10 @@
   var LAYOUT_GROUPS = [
     ["introduce", "Introduce"],
     ["explain", "Explain & organise"],
-    ["show", "Show & explore"]
+    ["show", "Show & explore"],
+    ["infographic", "Infographic"]
   ];
+  var INFO_LAYOUTS = ["stats", "compare", "funnel", "timeline"];
   function layoutKeys(test) {
     return Object.keys(SLIDE_TYPES).filter(function(k) {
       return test(SLIDE_TYPES[k]);
@@ -3177,10 +3248,14 @@
         return String(l.caption || "").trim() || "Image " + (i + 1);
       });
     }
-    if (["journey", "mindmap", "content", "cards", "split", "keywords", "italics"].indexOf(slide.type) < 0) return [];
+    if (["journey", "mindmap", "content", "cards", "split", "keywords", "italics"].concat(INFO_LAYOUTS).indexOf(slide.type) < 0) return [];
     return (slide.bullets || []).filter(function(b) {
       return String(b).trim();
     }).map(function(b) {
+      if (INFO_LAYOUTS.indexOf(slide.type) >= 0) {
+        var q = parseInfoLine(b);
+        return [q.label, q.value, q.note].filter(Boolean).join(" · ");
+      }
       if (slide.type === "journey" || slide.type === "mindmap" || slide.type === "keywords" || slide.type === "italics") {
         var p = parseKeywordLine(b);
         return [p.term, p.def].filter(Boolean).join(" — ");
@@ -7903,6 +7978,37 @@
       case "image":
         s.title = "Image slide";
         break;
+      case "stats":
+        s.title = "The numbers that matter";
+        s.bullets = [
+          formatInfoLine("Label", "Value", "Note"),
+          formatInfoLine("", "", ""),
+          formatInfoLine("", "", "")
+        ];
+        break;
+      case "compare":
+        s.title = "Side by side";
+        s.subtitle = "Option A | Option B";
+        s.bullets = [formatInfoLine("", ""), formatInfoLine("", ""), formatInfoLine("", "")];
+        break;
+      case "funnel":
+        s.title = "Where the numbers thin out";
+        s.bullets = [
+          formatInfoLine("Stage", "Value", "Note"),
+          formatInfoLine("", "", ""),
+          formatInfoLine("", "", ""),
+          formatInfoLine("", "", "")
+        ];
+        break;
+      case "timeline":
+        s.title = "How we got here";
+        s.bullets = [
+          formatInfoLine("Date", "Event", "Detail"),
+          formatInfoLine("", "", ""),
+          formatInfoLine("", "", ""),
+          formatInfoLine("", "", "")
+        ];
+        break;
       case "quote":
         s.body = "A quotation that makes the point better than a bullet list would.";
         s.subtitle = "Attribution";
@@ -7993,7 +8099,7 @@
     s.timeLimit = Math.max(0, Number(s.timeLimit) || 0);
     s.points = Number(s.points) || 1e3;
     if (TRANSITIONS.indexOf(s.transition) === -1) s.transition = "fade";
-    if (s.journeyMode != null) s.journeyMode = s.journeyMode === "handover" ? "handover" : "path";
+    if (s.journeyMode != null) s.journeyMode = s.journeyMode === "handover" || s.journeyMode === "stepper" ? s.journeyMode : "path";
     if (s.date != null) s.date = /^\d{4}-\d{2}-\d{2}$/.test(String(s.date)) && Number.isFinite(Date.parse(s.date)) ? String(s.date) : "";
     s.gameId = String(s.gameId || "");
     s.gameTitle = String(s.gameTitle || "");
@@ -8635,6 +8741,10 @@
     DECK_TYPES,
     BULLET_LAYOUTS,
     LAYOUT_GROUPS,
+    INFO_LAYOUTS,
+    parseInfoLine,
+    formatInfoLine,
+    infoNumber,
     FEEDBACK_KINDS,
     SCALE_POINTS,
     scaleLabels,

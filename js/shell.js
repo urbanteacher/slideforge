@@ -1187,8 +1187,13 @@
     /* A copy someone who was not in the room can open. Only where a server
        is serving this — from a file:// page there is nowhere to put it. */
     var btnShare = $('btnShare');
+    /* The same action lives in the top bar as well as in File. One handler
+       for both: a toolbar surfaces the frequent thing and the menu stays
+       complete, which is the convention everywhere, but two copies of the
+       handler would be two things to keep in step. */
+    var btnShareTop = $('btnShareTop');
     if (btnShare) {
-      if (!servedByRelay()) btnShare.hidden = true;
+      if (!servedByRelay()) { btnShare.hidden = true; if (btnShareTop) btnShareTop.hidden = true; }
       else btnShare.onclick = function () {
         if (active.flush) active.flush();
         var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
@@ -1237,6 +1242,9 @@
           });
         });
       };
+      /* Same function, not a copy of it. If the guard above hid the menu item
+         there is nothing to point at, which is why this sits inside the else. */
+      if (btnShareTop) btnShareTop.onclick = btnShare.onclick;
     }
 
     var btnSettings = $('btnSettings');

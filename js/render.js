@@ -167,7 +167,11 @@
     pad.appendChild(rich('h2', null, slide, 'title', slide.title));
     if (slide.subtitle) pad.appendChild(rich('div', 'journey-context', slide, 'subtitle', slide.subtitle));
     var stops = (slide.bullets || []).map(SF.parseKeywordLine).filter(function (p) { return p.term || p.def; });
-    var route = el('ol', 'journey-route' + (slide.journeyMode === 'handover' ? ' journey-handover' : ''));
+    /* Stepper: numbered discs on one horizontal rail with the copy beneath —
+       a process read left to right in one glance, the infographic idiom for
+       "first, then, then". Handover keeps its columns; path keeps its route. */
+    var route = el('ol', 'journey-route' +
+      (slide.journeyMode === 'handover' ? ' journey-handover' : slide.journeyMode === 'stepper' ? ' journey-stepper' : ''));
     stops.forEach(function (p, i) {
       var stop = asStep(el('li', 'journey-stop'), slide);
       /* The number is decoration over an ordered list: the list already says
@@ -316,8 +320,13 @@
     if (slide.type === 'cards' && (slide.design || {}).cardsMode === 'rows') {
       ul.classList.add('cards-rows');
     }
+    /* Picture cards: every card carries an image slot above its copy. A slot
+       with nothing in it draws the same dashed "Add an image" prompt as an
+       empty split, so a template can promise a photograph without shipping
+       one — the author sees where it goes. */
+    var pictureCards = slide.type === 'cards' && (slide.design || {}).cardsMode === 'pictures';
     var pics = slide.type === 'cards' ? (slide.images || []) : [];
-    if (pics.some(Boolean)) {
+    if (pics.some(Boolean) || pictureCards) {
       ul.classList.add('has-card-pics');
       /* Maps and scientific plates need landscape + contain; book covers keep 3:4 cover. */
       if ((slide.design || {}).cardPics === 'plates') ul.classList.add('has-card-plates');
@@ -348,9 +357,10 @@
         li = asStep(rich('li', bulletTier(line) === 2 ? 'tier-2' : null, slide, 'bullets.' + item.index, bulletText(line)), slide);
       }
       var src = pics[item.index];
-      if (src) {
-        var pic = el('div', 'card-pic');
-        pic.style.backgroundImage = 'url("' + String(src).replace(/"/g, '&quot;') + '")';
+      if (src || pictureCards) {
+        var pic = el('div', 'card-pic' + (src ? '' : ' card-pic-empty'));
+        if (src) pic.style.backgroundImage = 'url("' + String(src).replace(/"/g, '&quot;') + '")';
+        else pic.appendChild(el('span', null, 'Add an image'));
         pic.setAttribute('aria-hidden', 'true');
         var copy = el('div', 'card-copy');
         while (li.firstChild) copy.appendChild(li.firstChild);
@@ -3487,7 +3497,197 @@
     }
   }
 
+  /* ------------------------------------------------------------ infographic */
+
+  /* Shared plumbing for the four infographic shapes. Every one is a heading,
+     an optional context line, and one pit per element read through
+     SF.parseInfoLine (label · value · note). An empty slide shows the same
+     dim prompt the other bullet layouts do, so a fresh slide never looks
+     like a rendering failure. */
+  function infoItems(slide) {
+    return (slide.bullets || []).map(function (text, index) {
+      var p = SF.parseInfoLine(text);
+      return { label: p.label, value: p.value, note: p.note, index: index, empty: !(p.label || p.value || p.note) };
+    }).filter(function (it) { return !it.empty; });
+  }
+  function infoHead(slide, pad, contextCls) {
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
+    if (slide.subtitle) pad.appendChild(rich('div', contextCls, slide, 'subtitle', slide.subtitle));
+  }
+  function infoEmpty(pad, what) {
+    pad.appendChild(el('p', 'dim info-empty', 'Add ' + what + ' in the inspector'));
+  }
+  /* Progress needs a number and a ceiling. The ceiling is the largest value on
+     the slide unless the value already reads as a percentage, when 100 wins —
+     "92%" beside "48%" should not draw the 92 as a full ring. */
+  function infoScale(items) {
+    var nums = items.map(function (it) { return SF.infoNumber(it.value); }).filter(function (n) { return isFinite(n) && n >= 0; });
+    var pct = items.some(function (it) { return /%/.test(it.value); });
+    var max = nums.length ? Math.max.apply(null, nums) : 0;
+    return pct ? Math.max(100, max) : max;
+  }
+
+  /* Big numbers in a grid. Three to six tiles; each says one figure and what
+     it is. design.statStyle:
+       tile (default)  the figure set large over its label
+       ring            a conic ring filled to the figure's share of the scale
+       bar             a horizontal bar under the figure — a KPI card */
+  function layoutStats(slide, pad) {
+    infoHead(slide, pad, 'info-context');
+    var items = infoItems(slide);
+    if (!items.length) return infoEmpty(pad, 'stats');
+    var style = (slide.design || {}).statStyle;
+    style = style === 'ring' || style === 'bar' ? style : 'tile';
+    var grid = el('div', 'stats-grid stats-' + style + ' stats-n' + Math.min(items.length, 6));
+    grid.setAttribute('role', 'list');
+    var scale = infoScale(items);
+    items.forEach(function (it) {
+      var tile = asStep(el('div', 'stat'), slide);
+      tile.setAttribute('role', 'listitem');
+      var n = SF.infoNumber(it.value);
+      var share = scale > 0 && isFinite(n) ? Math.max(0, Math.min(1, n / scale)) : 0;
+      tile.style.setProperty('--share', String(share));
+      var value = rich('div', 'stat-value', slide, 'bullets.' + it.index, it.value || it.label);
+      if (style === 'ring') {
+        var ring = el('div', 'stat-ring');
+        ring.setAttribute('aria-hidden', 'true');
+        ring.appendChild(value);
+        tile.appendChild(ring);
+      } else {
+        tile.appendChild(value);
+      }
+      if (style === 'bar') {
+        var track = el('div', 'stat-track');
+        track.setAttribute('aria-hidden', 'true');
+        track.appendChild(el('div', 'stat-fill'));
+        tile.appendChild(track);
+      }
+      if (it.value && it.label) tile.appendChild(el('div', 'stat-label', it.label));
+      if (it.note) tile.appendChild(el('div', 'stat-note', it.note));
+      grid.appendChild(tile);
+    });
+    pad.appendChild(grid);
+    if (slide.body) pad.appendChild(rich('div', 'info-takeaway', slide, 'body', slide.body));
+  }
+
+  /* Two columns compared row by row. The subtitle names the columns
+     ("Before | After"); each pit is either "left\tright" or
+     "aspect\tleft\tright" when the row needs a label of its own. Rows build
+     on Next, so the comparison can be argued one line at a time. */
+  function layoutCompare(slide, pad) {
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
+    var heads = SF.parseInfoLine(slide.subtitle || '');
+    var left = heads.label || 'A', right = heads.value || 'B';
+    var rows = (slide.bullets || []).map(function (text, index) {
+      var p = SF.parseInfoLine(text);
+      var labelled = !!p.note;
+      return { aspect: labelled ? p.label : '', left: labelled ? p.value : p.label, right: labelled ? p.note : p.value, index: index };
+    }).filter(function (r) { return r.aspect || r.left || r.right; });
+    if (!rows.length) return infoEmpty(pad, 'rows to compare');
+    var labelled = rows.some(function (r) { return r.aspect; });
+    var table = el('div', 'compare' + (labelled ? ' compare-labelled' : ''));
+    table.setAttribute('role', 'table');
+    var head = el('div', 'compare-row compare-head');
+    head.setAttribute('role', 'row');
+    if (labelled) head.appendChild(el('div', 'compare-aspect', ''));
+    head.appendChild(el('div', 'compare-cell compare-left', left)).setAttribute('role', 'columnheader');
+    head.appendChild(el('div', 'compare-cell compare-right', right)).setAttribute('role', 'columnheader');
+    table.appendChild(head);
+    rows.forEach(function (r) {
+      var row = asStep(el('div', 'compare-row'), slide);
+      row.setAttribute('role', 'row');
+      if (labelled) row.appendChild(el('div', 'compare-aspect', r.aspect)).setAttribute('role', 'rowheader');
+      row.appendChild(el('div', 'compare-cell compare-left', r.left)).setAttribute('role', 'cell');
+      row.appendChild(el('div', 'compare-cell compare-right', r.right)).setAttribute('role', 'cell');
+      table.appendChild(row);
+    });
+    pad.appendChild(table);
+    if (slide.body) pad.appendChild(rich('div', 'info-takeaway', slide, 'body', slide.body));
+  }
+
+  /* Stages that narrow. Each band is a little narrower than the one above,
+     and if the values are numbers the widths follow them, so 1,200 → 300 →
+     40 draws as the cliff it is rather than a polite staircase.
+     design.funnelDirection === 'up' flips it into a pyramid. */
+  function layoutFunnel(slide, pad) {
+    infoHead(slide, pad, 'info-context');
+    var items = infoItems(slide);
+    if (!items.length) return infoEmpty(pad, 'stages');
+    var up = (slide.design || {}).funnelDirection === 'up';
+    var list = el('ol', 'funnel' + (up ? ' funnel-up' : ''));
+    var nums = items.map(function (it) { return SF.infoNumber(it.value); });
+    var numeric = nums.every(function (n) { return isFinite(n) && n >= 0; }) && Math.max.apply(null, nums) > 0;
+    var top = numeric ? Math.max.apply(null, nums) : 0;
+    var n = items.length;
+    items.forEach(function (it, i) {
+      /* Widths run 100% → 40%. Numeric data maps each band's share of the
+         largest stage onto that range, so the smallest stage still has room
+         for its label and 310 → 190 → 160 stay visibly different rather than
+         all hitting the same floor. */
+      var w = numeric ? 0.4 + 0.6 * (nums[i] / top) : 1 - (i / Math.max(1, n - 1)) * 0.6;
+      var band = asStep(el('li', 'funnel-band'), slide);
+      band.style.setProperty('--w', (w * 100).toFixed(1) + '%');
+      var copy = el('div', 'funnel-copy');
+      copy.appendChild(rich('strong', 'funnel-label', slide, 'bullets.' + it.index, it.label));
+      if (it.note) copy.appendChild(el('span', 'funnel-note', it.note));
+      band.appendChild(copy);
+      if (it.value) band.appendChild(el('span', 'funnel-value', it.value));
+      list.appendChild(band);
+      /* The drop, named. A funnel's bands encode what is LEFT at each stage,
+         and the number every reader is actually computing in their head is
+         what went missing between two of them — 120 to 48 is -60%. Printing
+         it is the difference between a shape that suggests a loss and a figure
+         that states one.
+
+         Only where both stages are real numbers and the value fell: a stage
+         that grew, or a stage labelled "most of them", has no honest
+         percentage and gets nothing rather than a guess. */
+      if (numeric && i > 0 && nums[i - 1] > 0 && nums[i] < nums[i - 1]) {
+        var drop = Math.round((1 - nums[i] / nums[i - 1]) * 100);
+        if (drop >= 1) {
+          var tag = el('li', 'funnel-drop');
+          tag.setAttribute('aria-hidden', 'true');
+          tag.appendChild(el('span', null, '\u2212' + drop + '%'));
+          list.insertBefore(tag, band);
+        }
+      }
+    });
+    pad.appendChild(list);
+    if (slide.body) pad.appendChild(rich('div', 'info-takeaway', slide, 'body', slide.body));
+  }
+
+  /* Dated events along a track. Horizontal by default — markers on one rail,
+     dates above, events below, alternating so six entries fit. Vertical
+     (design.timelineMode === 'vertical') is the long-form: a spine down the
+     left with each event as a paragraph, for when the detail matters more
+     than the sweep. */
+  function layoutTimeline(slide, pad) {
+    infoHead(slide, pad, 'info-context');
+    var items = infoItems(slide);
+    if (!items.length) return infoEmpty(pad, 'events');
+    var vertical = (slide.design || {}).timelineMode === 'vertical';
+    var track = el('ol', 'timeline ' + (vertical ? 'timeline-vertical' : 'timeline-horizontal') + ' timeline-n' + Math.min(items.length, 8));
+    items.forEach(function (it, i) {
+      var ev = asStep(el('li', 'timeline-event' + (i % 2 ? ' timeline-alt' : '')), slide);
+      var dot = el('span', 'timeline-dot');
+      dot.setAttribute('aria-hidden', 'true');
+      ev.appendChild(dot);
+      var copy = el('div', 'timeline-copy');
+      if (it.label) copy.appendChild(el('time', 'timeline-date', it.label));
+      copy.appendChild(rich('strong', 'timeline-title', slide, 'bullets.' + it.index, it.value || ''));
+      if (it.note) copy.appendChild(el('span', 'timeline-note', it.note));
+      ev.appendChild(copy);
+      track.appendChild(ev);
+    });
+    pad.appendChild(track);
+    if (slide.body) pad.appendChild(rich('div', 'info-takeaway', slide, 'body', slide.body));
+  }
+
   var LAYOUTS = {
+    stats: layoutStats,
+    compare: layoutCompare,
+    funnel: layoutFunnel,
+    timeline: layoutTimeline,
     journey: layoutJourney,
     mindmap: layoutMindmap,
     orgchart: layoutOrg,
