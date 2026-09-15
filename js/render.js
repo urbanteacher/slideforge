@@ -3636,7 +3636,14 @@
        layouts that carry an argument as well as loud decoration on the two
        that do not. Modulo four because that is how many objects each UKBT set
        has; a theme with fewer, or none, ignores it. */
-    if (opts.index != null) root.dataset.artIndex = String(opts.index % 4);
+    if (opts.index != null) {
+      root.dataset.artIndex = String(opts.index % 4);
+      /* Where it goes, kept on a different cycle from what it is. Four shapes
+         against five positions means the pair does not repeat for twenty
+         slides; on the same modulus, shape and corner would lock together and
+         one object would only ever appear in one place. */
+      root.dataset.artSlot = String(opts.index % 5);
+    }
 
     var pad = el('div', 'pad');
     root.appendChild(pad);

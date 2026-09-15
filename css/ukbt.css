@@ -279,38 +279,89 @@
 /* The same objects, quietly, on the slides that carry an argument.
 
    A deck where only the first slide is designed looks like a template with a
-   cover on it. These sit in the bottom-right corner at a fifth of their
-   strength and a little over half the size — texture, in the way the wave is
-   texture, rather than something the room looks at. The content block is
-   lifted above them and left-aligned with a max width, so they sit in space
-   the copy was never going to use.
+   cover on it. These sit at a fifth of their strength — texture, the way the
+   wave is texture, rather than something the room looks at.
 
-   Drawn as ::after on the slide rather than as another div, because nothing
-   here needs markup: ::before is already the wave, and the two stack in the
-   same layer under .pad.
+   THEY MOVE. Five positions on a cycle of five against four shapes on a cycle
+   of four, so the pair does not repeat for twenty slides. The first version of
+   this put every object in the same bottom-right corner, which is wallpaper
+   rather than design: a reader stops seeing it by slide three and the deck
+   goes back to looking like a template.
+
+   What lets them move is the measure below. Bottom-right was the only safe
+   corner while body copy ran the full 1280, because that is the one place text
+   does not reach. Capping the line length — which is better typography anyway,
+   nothing should run 1160px at 22px — frees the right-hand third by
+   construction, and then the object has somewhere to go.
+
+   Nothing is rotated or mirrored. These are lit 3D renders, and turning one
+   moves its highlight to a place the light never came from.
 
    NOT on chart and table slides. This deck teaches that the ink on a chart
    should carry data, and putting a decorative object behind one would be
    chartjunk by the definition the deck itself gives. Not on quiz or game
-   layouts either, where the room is reading an answer under time pressure. */
+   layouts either, where the room is reading an answer under time pressure,
+   and not on image, gallery or split, where the picture is the content. */
+
+/* A measure. Sixty to seventy characters is the readable line, and it is what
+   opens the right-hand third of the slide. */
+.theme-ukbt.layout-content .pad ul,
+.theme-ukbt-institute.layout-content .pad ul,
+.theme-ukbt.layout-keyfact .keyfact-notes,
+.theme-ukbt-institute.layout-keyfact .keyfact-notes { max-width: 880px; }
+/* Keywords is already two columns, so 880 was measuring the pair rather than
+   the line: it squeezed the term column until "Finance / procurement" broke
+   over two lines, every row grew, and the sixth fell off the bottom of the
+   slide. Wide enough here that the terms hold one line, which is what keeps
+   six rows on the slide. */
+.theme-ukbt.layout-keywords .kw-list,
+.theme-ukbt-institute.layout-keywords .kw-list { max-width: 1080px; }
+.theme-ukbt.layout-content h2,
+.theme-ukbt-institute.layout-content h2,
+.theme-ukbt.layout-keyfact h2,
+.theme-ukbt-institute.layout-keyfact h2 { max-width: 960px; }
+
 .theme-ukbt::after,
 .theme-ukbt-institute::after {
   content: '';
   position: absolute;
-  /* A third of it hangs off the slide. At -34px it cleared the copy on a
-     content slide and sat under the third card on a cards slide and under the
-     last bullet on a key fact — which is the thing this was supposed not to
-     do. Far enough into the corner that the overlap cannot happen, rather
-     than far enough on the slides that happened to be checked first. */
-  right: -96px;
-  bottom: -84px;
-  width: 300px;
-  height: 300px;
   background: no-repeat center / contain;
   opacity: .19;
   pointer-events: none;
   z-index: 0;
+  /* Slot 0 — bottom right, off two edges. */
+  right: -96px;
+  bottom: -84px;
+  width: 300px;
+  height: 300px;
 }
+/* Slot 1 — the right edge at eye level, the biggest of them. */
+.theme-ukbt[data-art-slot="1"]::after,
+.theme-ukbt-institute[data-art-slot="1"]::after {
+  right: -118px; top: 50%; bottom: auto;
+  width: 360px; height: 360px;
+  transform: translateY(-50%);
+}
+/* Slot 2 — bottom left, off two edges, under where the last line ends. */
+.theme-ukbt[data-art-slot="2"]::after,
+.theme-ukbt-institute[data-art-slot="2"]::after {
+  left: -104px; right: auto; bottom: -96px;
+  width: 290px; height: 290px;
+}
+/* Slot 3 — top right, starting below the logo band rather than behind it:
+   the logo sits at top 28px and is 52px tall, and it paints above this. */
+.theme-ukbt[data-art-slot="3"]::after,
+.theme-ukbt-institute[data-art-slot="3"]::after {
+  right: -92px; top: 96px; bottom: auto;
+  width: 270px; height: 270px;
+}
+/* Slot 4 — low and central-right, off the bottom edge only. */
+.theme-ukbt[data-art-slot="4"]::after,
+.theme-ukbt-institute[data-art-slot="4"]::after {
+  right: 210px; bottom: -132px;
+  width: 320px; height: 320px;
+}
+
 .theme-ukbt.layout-title::after,
 .theme-ukbt-institute.layout-title::after,
 .theme-ukbt.layout-section::after,
@@ -340,12 +391,10 @@
 .theme-ukbt-institute[data-art-index="2"]::after { background-image: url('../assets/brand/ukbt-objects/ukbt-shell.png'); }
 .theme-ukbt-institute[data-art-index="3"]::after { background-image: url('../assets/brand/ukbt-objects/ukbt-dome.png'); }
 
-/* A key fact is one number and a lot of air. It can take a bigger one. */
+/* A key fact is one number and a lot of air, so whichever slot it lands in it
+   can carry a bigger one. */
 .theme-ukbt.layout-keyfact::after,
-.theme-ukbt-institute.layout-keyfact::after {
-  right: -120px; bottom: -110px;
-  width: 400px; height: 400px; opacity: .22;
-}
+.theme-ukbt-institute.layout-keyfact::after { opacity: .23; }
 
 /* ------------------------------------------------------------- title slide
 
@@ -556,6 +605,70 @@
 .theme-ukbt .sub, .theme-ukbt-institute .sub { color: var(--s-dim); }
 .theme-ukbt .layout-title .sub,
 .theme-ukbt-institute .layout-title .sub { color: var(--ukbt-green); font-weight: 600; letter-spacing: .01em; }
+
+/* ---------------------------------------------------------- the highlights
+
+   Purple, Bright Blue and Orange are listed in the system as "highlight,
+   background" and the site uses them exactly that way — whole panels of them
+   between the dark sections, not accents on a line. They were only doing duty
+   as chart series here, which is the least of what they are for.
+
+   A card takes one as its ground with Contrast Black on it. Measured against
+   #111111: purple 6.51:1, bright blue 9.14:1, orange 8.82:1, lime 16.20:1 —
+   all clear of 4.5 for body text, and the studio theme already colours its
+   cards this way, so the mechanism is the one this codebase uses.
+
+   The two themes run the same three colours from different starting points,
+   which keeps them siblings rather than twins: the parent opens on purple,
+   the Institute on bright blue. */
+.theme-ukbt.layout-cards li,
+.theme-ukbt-institute.layout-cards li {
+  color: var(--ukbt-contrast);
+  border: 0;
+}
+.theme-ukbt.layout-cards li .card-body,
+.theme-ukbt-institute.layout-cards li .card-body { color: var(--ukbt-contrast); opacity: .84; }
+.theme-ukbt.layout-cards li::before,
+.theme-ukbt-institute.layout-cards li::before { color: var(--ukbt-contrast); opacity: .5; }
+
+/* Four in the cycle, not three. On a three-colour cycle a row of four cards —
+   which the Townhouse deck has, one rule per floor — came out blue, orange,
+   purple, blue, and the first and last read as a pair that means nothing.
+   Lime is the fourth, and 16.20:1 against the ink. */
+.theme-ukbt.layout-cards li:nth-child(4n+1) { background: var(--ukbt-purple); }
+.theme-ukbt.layout-cards li:nth-child(4n+2) { background: var(--ukbt-blue); }
+.theme-ukbt.layout-cards li:nth-child(4n+3) { background: var(--ukbt-orange); }
+.theme-ukbt.layout-cards li:nth-child(4n)   { background: var(--ukbt-lime); }
+
+.theme-ukbt-institute.layout-cards li:nth-child(4n+1) { background: var(--ukbt-blue); }
+.theme-ukbt-institute.layout-cards li:nth-child(4n+2) { background: var(--ukbt-orange); }
+.theme-ukbt-institute.layout-cards li:nth-child(4n+3) { background: var(--ukbt-lime); }
+.theme-ukbt-institute.layout-cards li:nth-child(4n)   { background: var(--ukbt-purple); }
+
+/* A glossary term is large bold type, so 3:1 is the bar it has to clear and
+   the weakest of these is purple at 3.62 on Dark Blue. Cycling them gives a
+   list of six the same rhythm the site's panels have. */
+.theme-ukbt .kw-row:nth-child(4n+1) .kw-term { color: var(--ukbt-green); }
+.theme-ukbt .kw-row:nth-child(4n+2) .kw-term { color: var(--ukbt-blue); }
+.theme-ukbt .kw-row:nth-child(4n+3) .kw-term { color: var(--ukbt-orange); }
+.theme-ukbt .kw-row:nth-child(4n)   .kw-term { color: var(--ukbt-lime); }
+.theme-ukbt-institute .kw-row:nth-child(4n+1) .kw-term { color: var(--ukbt-blue); }
+.theme-ukbt-institute .kw-row:nth-child(4n+2) .kw-term { color: var(--ukbt-lime); }
+.theme-ukbt-institute .kw-row:nth-child(4n+3) .kw-term { color: var(--ukbt-green); }
+.theme-ukbt-institute .kw-row:nth-child(4n)   .kw-term { color: var(--ukbt-orange); }
+
+/* Journey milestones. The real classes are .journey-stop and
+   .journey-marker — I wrote this against .jr-step and .jr-num first, which
+   exist nowhere, so the rule was valid CSS that matched nothing. Read the
+   layout function before styling it. */
+.theme-ukbt .journey-stop:nth-child(4n+1) .journey-marker { color: var(--ukbt-green); border-color: var(--ukbt-green); }
+.theme-ukbt .journey-stop:nth-child(4n+2) .journey-marker { color: var(--ukbt-blue); border-color: var(--ukbt-blue); }
+.theme-ukbt .journey-stop:nth-child(4n+3) .journey-marker { color: var(--ukbt-orange); border-color: var(--ukbt-orange); }
+.theme-ukbt .journey-stop:nth-child(4n)   .journey-marker { color: var(--ukbt-lime); border-color: var(--ukbt-lime); }
+.theme-ukbt-institute .journey-stop:nth-child(4n+1) .journey-marker { color: var(--ukbt-blue); border-color: var(--ukbt-blue); }
+.theme-ukbt-institute .journey-stop:nth-child(4n+2) .journey-marker { color: var(--ukbt-lime); border-color: var(--ukbt-lime); }
+.theme-ukbt-institute .journey-stop:nth-child(4n+3) .journey-marker { color: var(--ukbt-green); border-color: var(--ukbt-green); }
+.theme-ukbt-institute .journey-stop:nth-child(4n)   .journey-marker { color: var(--ukbt-orange); border-color: var(--ukbt-orange); }
 
 /* Cards and quotes lift off the ground rather than sitting in a white box:
    a white panel on a dark brand slide reads as a hole in the design. */
