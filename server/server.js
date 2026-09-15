@@ -19,6 +19,36 @@ const PORT = Number(process.env.PORT) || 8787;
 const HOST = process.env.HOST || '0.0.0.0';
 const ROOT = path.resolve(__dirname, '..');
 
+/* A .env beside the app, so a key can be pasted into a file rather than
+   exported into a shell that forgets it at the next window.
+
+   Hosted deployments set real environment variables and those always win:
+   this only fills in what is missing, so a stray local .env can never
+   override what Render's dashboard says. Still no dependency — the format
+   worth supporting is KEY=value, one per line, # for comments.
+
+   The file is gitignored. This repo is public, and a key in a public commit
+   is a key that has to be revoked. */
+(function loadDotEnv() {
+  try {
+    var text = fs.readFileSync(path.join(ROOT, '.env'), 'utf8');
+    text.split(/\r?\n/).forEach(function (line) {
+      var trimmed = line.trim();
+      if (!trimmed || trimmed.charAt(0) === '#') return;
+      var eq = trimmed.indexOf('=');
+      if (eq < 1) return;
+      var key = trimmed.slice(0, eq).trim();
+      var value = trimmed.slice(eq + 1).trim();
+      /* Quotes are stripped because a key pasted out of a dashboard often
+         arrives wrapped in them, and "AQ.xxx" is not the same string as
+         AQ.xxx as far as the provider is concerned. */
+      if (value.length > 1 && /^['"].*['"]$/.test(value)) value = value.slice(1, -1);
+      if (!key || Object.prototype.hasOwnProperty.call(process.env, key)) return;
+      process.env[key] = value;
+    });
+  } catch (e) { /* no .env is the normal case */ }
+})();
+
 /* ------------------------------------------------------------ static files */
 
 const MIME = {
@@ -253,7 +283,13 @@ function listData(res) {
    Absent key is not an error: SF.AI falls back to its offline heuristics, so a
    deployment with no key still generates polls. */
 const AI_KEY = process.env.GEMINI_API_KEY || '';
-const AI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+/* The moving alias, matching render.yaml rather than fighting it. A key
+   issued in the newer AQ. format does not resolve the pinned aliases, and the
+   provider answers 404 for the MODEL rather than 401 for the key — so a
+   perfectly good key read as "model missing". Local and hosted now default to
+   the same thing, which is one fewer difference between the machine a lesson
+   is written on and the one it is taught from. */
+const AI_MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
 const AI_MAX_BODY = 6 * 1024;
 /* A LAN-facing proxy onto someone's paid quota needs a ceiling, or one tab in
    a loop spends the teacher's month. Deliberately coarse: this is a guard

@@ -11,6 +11,14 @@ node_modules/
 # images make them large and they are a snapshot, not source.
 data/
 
+# Secrets. The Gemini key goes in .env, which is read by server/server.js at
+# boot and must never be committed: this repo is public, and a key in a public
+# commit is a key that has to be revoked. .env.example is the template and
+# carries no value.
+.env
+.env.*
+!.env.example
+
 # Private attendance and live-session journals
 .slideforge/
 
