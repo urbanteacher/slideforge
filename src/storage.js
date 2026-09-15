@@ -222,10 +222,12 @@ export function createStores({ normalizeDeck, normalizeGame, storage, warn = con
   const games = documents('games', 'slideforge.games.v1', 'slideforge.lastGameId', normalizeGame);
   const { read: readDecks, ...Store } = decks;
   const { read: readGames, ...GameStoreBase } = games;
+  const usedByDecks = id => readDecks().filter(deck =>
+    (deck.slides || []).some(slide => slide.type === 'game' && slide.gameId === id)
+  );
   const GameStore = Object.assign(GameStoreBase, {
-    usedBy: id => readDecks().filter(deck =>
-      deck.slides.some(slide => slide.type === 'game' && slide.gameId === id)
-    ).map(deck => deck.title)
+    usedByDecks,
+    usedBy: id => usedByDecks(id).map(deck => deck.title)
   });
   const LibraryFolders = createLibraryFolders({ storage, warn });
   return { Store, GameStore, LibraryFolders };

@@ -962,78 +962,36 @@
   }
 
   function openQuestionBankPicker() {
-    var banks = [
-      {
-        id: 'gk',
-        title: 'General Knowledge Bank (4 questions)',
-        blurb: 'Solar system, chemistry, geography, photosynthesis (Multiple Choice)',
-        getQuestions: function () {
-          var sg = SF.starterGame();
-          return sg ? sg.questions : [];
-        }
-      },
-      {
-        id: 'bio',
-        title: 'Cell Biology & Science Bank (4 questions)',
-        blurb: 'Chloroplasts, respiration, enzymes, osmosis (Graduated difficulty)',
-        getQuestions: function () {
-          return [
-            { question: 'Which organelle contains chlorophyll?', options: ['Nucleus', 'Mitochondrion', 'Chloroplast', 'Ribosome'], correct: 2, explanation: 'Chloroplasts contain chlorophyll for photosynthesis.' },
-            { question: 'Which process releases energy from glucose in living cells?', options: ['Photosynthesis', 'Respiration', 'Diffusion', 'Osmosis'], correct: 1, explanation: 'Cellular respiration releases energy from glucose.' },
-            { question: 'Why does an enzyme stop working above its optimum temperature?', options: ['It dissolves', 'Its active site changes shape (denatures)', 'It runs out of energy', 'It freezes'], correct: 1, explanation: 'High temperatures denature enzymes by altering their active site shape.' },
-            { question: 'Explain how water moves into a plant cell placed in pure water.', options: ['Active transport', 'Osmosis down a water potential gradient', 'Diffusion of mineral salts', 'It does not move'], correct: 1, explanation: 'Water moves into plant cells by osmosis down a water potential gradient.' }
-          ].map(function (row) { return SF.normalizeQuestion(Object.assign(SF.makeQuestion('choice'), row), 'choice'); });
-        }
-      },
-      {
-        id: 'oddone',
-        title: 'Odd One Out Concept Bank (4 sets)',
-        blurb: 'Science, ICT, and literature reasoning sets',
-        getQuestions: function () {
-          var st = SF.gameStyle('oddone').starters;
-          return st ? JSON.parse(JSON.stringify(st)).map(function (row) {
-            return SF.normalizeQuestion(Object.assign(SF.makeQuestion('oddone'), row), 'oddone');
-          }) : [];
-        }
-      },
-      {
-        id: 'compare',
-        title: 'Compare & Contrast Pairs (4 comparisons)',
-        blurb: 'Photosynthesis/Respiration, RAM/SSD, Democracy/Dictatorship, Metaphor/Simile',
-        getQuestions: function () {
-          var st = SF.gameStyle('compare').starters;
-          return st ? JSON.parse(JSON.stringify(st)).map(function (row) {
-            return SF.normalizeQuestion(Object.assign(SF.makeQuestion('compare'), row), 'compare');
-          }) : [];
-        }
-      },
-      {
-        id: 'chain',
-        title: 'Concept Chain Links (4 starting concepts)',
-        blurb: 'Biological hierarchy: Cell → Tissue → Organ → System',
-        getQuestions: function () {
-          var st = SF.gameStyle('conceptchain').starters;
-          return st ? JSON.parse(JSON.stringify(st)).map(function (row) {
-            return SF.normalizeQuestion(Object.assign(SF.makeQuestion('conceptchain'), row), 'conceptchain');
-          }) : [];
-        }
-      }
-    ];
+    var parent = SF.LessonBank && SF.LessonBank.parentLesson
+      ? SF.LessonBank.parentLesson(game && game.id)
+      : null;
+    var group = parent
+      ? SF.LessonBank.folderId(parent)
+      : (game && game.libraryGroup) || 'other';
+    var label = SF.LessonBank && SF.LessonBank.folderLabel
+      ? SF.LessonBank.folderLabel(group)
+      : group;
+    var rows = SF.LessonBank && SF.LessonBank.folderBank
+      ? SF.LessonBank.folderBank(group, game && game.id)
+      : [];
 
     SF.Shell.picker({
-      title: 'Curriculum Question Databanks',
-      items: function () { return banks; },
+      title: 'Lesson bank · ' + label,
+      items: function () { return rows; },
+      empty: 'No questions in this Library folder yet. Checks in other lessons in ' +
+        label + ' will appear here.',
       describe: function (b) { return b.blurb; },
       onPick: function (bank) {
-        var qs = bank.getQuestions();
+        var qs = bank.questions;
         if (!qs || !qs.length) {
-          SF.toast('No questions available in this bank');
+          SF.toast('That check has no questions to copy.');
           return;
         }
         SF.ask({
-          title: 'Add questions from "' + bank.title + '"?',
-          detail: 'This will add ' + qs.length + ' prepared questions to your quiz.',
-          confirm: 'Add to quiz',
+          title: 'Add questions from “' + bank.title + '”?',
+          detail: 'Copies ' + qs.length + ' question' + (qs.length === 1 ? '' : 's') +
+            ' into this check. The original lesson is unchanged.',
+          confirm: 'Add to this check',
           danger: false
         }, function () {
           var onlyOneBlank = game.questions.length === 1 &&
@@ -1050,7 +1008,7 @@
           sel = 0;
           touched();
           draw();
-          SF.toast('Added ' + qs.length + ' questions from databank');
+          SF.toast('Added ' + qs.length + ' from ' + bank.lessonTitle);
         });
       }
     });
@@ -1076,11 +1034,22 @@
     historyTools.appendChild(redo);
 
     var savedBtn = UI.button('📁 Saved', 'ghost', openSavedQuizzesPicker);
-    savedBtn.title = 'Open a saved quiz or switch games';
+    var parent = SF.LessonBank && SF.LessonBank.parentLesson
+      ? SF.LessonBank.parentLesson(game && game.id)
+      : null;
+    savedBtn.title = parent
+      ? 'Checks in “' + parent.title + '”'
+      : 'Open a quiz in this Library folder';
     historyTools.appendChild(savedBtn);
 
-    var bankBtn = UI.button('📚 Databank', 'ghost', openQuestionBankPicker);
-    bankBtn.title = 'Insert questions from curriculum question databanks';
+    var bankBtn = UI.button('📚 Lesson bank', 'ghost', openQuestionBankPicker);
+    var group = parent
+      ? SF.LessonBank.folderId(parent)
+      : (game && game.libraryGroup) || 'other';
+    var folderName = SF.LessonBank && SF.LessonBank.folderLabel
+      ? SF.LessonBank.folderLabel(group)
+      : 'this folder';
+    bankBtn.title = 'Copy questions from other lessons in ' + folderName;
     historyTools.appendChild(bankBtn);
 
     insp.appendChild(historyTools);
@@ -2071,6 +2040,8 @@
         setDemoActive(false);
         var g = SF.makeGame('Untitled ' + SF.GAME_STYLES[it.id].label.toLowerCase(), it.id);
         g.theme = inheritTheme();
+        var host = SF.LessonBank && SF.LessonBank.parentLesson && SF.LessonBank.parentLesson();
+        if (host && SF.LessonBank.stamp) SF.LessonBank.stamp(g, host);
         SF.GameStore.save(g);
         game = g;
         sel = 0;

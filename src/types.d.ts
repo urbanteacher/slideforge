@@ -457,6 +457,10 @@ export interface Game {
   style: GameStyleKey;
   title: string;
   theme: ThemeKey;
+  /** Library folder id (`nul`, `ukbt`, a custom shelf). Empty until stamped. */
+  libraryGroup?: string;
+  /** Lesson that created this check, when known. */
+  sourceDeckId?: string;
   /** Catalogue format. Owns the engine: `normalizeGame` remaps `style` to
    *  match it. */
   format?: string;
@@ -665,6 +669,8 @@ export interface DocumentStore<T> {
 }
 
 export interface GameDocumentStore extends DocumentStore<Game> {
+  /** Decks that embed this game. */
+  usedByDecks(id: string): Deck[];
   /** Titles of the decks that embed this game. */
   usedBy(id: string): string[];
 }

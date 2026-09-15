@@ -9,11 +9,16 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(process.env.SF_URL || 'http://127.0.0.1:8787/');
   await page.waitForFunction(() => window.SF?.Activities?.workspace);
-  await page.evaluate(() => SF.Shell.activate('plan'));
-  assert.equal(await page.locator('.activity-card').count(), 54);
+  await page.evaluate(() => {
+    SF.Editor.workspace.setDoc(SF.makeDeck('Activities smoke'));
+    SF.Shell.activate('plan');
+  });
+  await page.waitForFunction(() => document.querySelectorAll('.activity-card').length === 54);
   assert.equal(await page.locator('.activity-card:disabled').count(), 0);
   const names = await page.locator('.activity-card strong').allTextContents();
   for (const name of names) {
+    await page.evaluate(() => SF.Activities.select(null));
+    await page.waitForSelector('.activity-card');
     await page.locator('.activity-card').filter({ has: page.locator('strong', { hasText: new RegExp('^' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$') }) }).click();
   }
   assert.equal(await page.locator('#railList .qthumb').count(), 54);
@@ -54,13 +59,23 @@ try {
   assert.equal(await page.evaluate(() => SF.Editor.deck().slides.filter(s => s.activity).length), 59);
   await page.evaluate(() => SF.Shell.activate('plan'));
   await page.locator('#railList .qthumb').filter({ hasText: 'Hook & Predict' }).click();
+  assert.ok(await page.locator('#previewBox.is-slide-preview .slide').count() >= 1, 'selected activity shows a slide on the canvas');
+  assert.equal(await page.getByRole('button', { name: 'Edit this slide', exact: true }).count(), 0);
+  await page.getByRole('tab', { name: 'Timer' }).click();
   assert.equal(await page.locator('#inspector input[type=number]').first().inputValue(), '7');
   await page.locator('#inspector input[type=number]').first().fill('9');
   await page.locator('#inspector input[type=number]').first().blur();
   assert.equal(await page.evaluate(() => SF.Editor.deck().slides.find(s => s.activity === 'hook-and-predict').timeLimit), 540);
   await page.waitForFunction(() => SF.Store.get(SF.Editor.deck().id)?.slides.find(s => s.activity === 'hook-and-predict')?.timeLimit === 540);
-  await page.getByRole('button', { name: 'Edit this slide', exact: true }).click();
   assert.equal(await page.evaluate(() => SF.Editor.deck().slides[SF.Editor.selected()].activity), 'hook-and-predict');
+  const gameTitle = await page.evaluate(() => {
+    const a = SF.Activities.ACTIVITIES.find(x => x.target === 'game' && x.enabled !== false);
+    return a ? a.title : '';
+  });
+  assert.ok(gameTitle, 'catalogue has a game activity');
+  await page.locator('#railList .qthumb').filter({ hasText: gameTitle }).click();
+  await page.getByRole('button', { name: 'Edit questions and answers', exact: true }).click();
+  assert.equal(await page.evaluate(() => document.documentElement.getAttribute('data-ws')), 'game');
   await page.evaluate(() => SF.Shell.activate('plan'));
   await page.locator('#railList .qthumb').filter({ hasText: 'Hook & Predict' }).click();
   await page.locator('#btnDemoActivity').click();

@@ -23,7 +23,7 @@ try {
   await page.waitForFunction(() => window.SF?.Editor?.deck());
 
   await page.locator('.inspector-tabs').locator('button', { hasText: 'Engagement' }).click();
-  const picker = page.locator('#inspector .type-grid').first();
+  const picker = page.locator('#inspector .feedback-kinds');
   await picker.getByRole('button', { name: 'Poll' }).waitFor();
 
   async function pick(label, kind) {

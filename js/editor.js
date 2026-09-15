@@ -986,8 +986,9 @@
     });
     addSlideBtn.title = 'Insert a slide starter, then pick a layout';
     actions.appendChild(addSlideBtn);
-    var ins = UI.button('+ Game', null, insertGame);
-    ins.title = 'Drop a game into the presentation at this point';
+    var ins = UI.button('+ Activity', null, openActivityLibrary);
+    ins.id = 'railAddActivity';
+    ins.title = 'Add a game or activity — same catalogue as ＋ Add activity';
     actions.appendChild(ins);
     foot.appendChild(actions);
   }
@@ -1130,12 +1131,12 @@
       designPane = 'edit';
     }
     if (inspectorTab === 'content') drawDesignPaneTabs(insp);
-    insp.appendChild(el('h4','eyebrow', inspectorTab === 'content' ? 'MAKE IT YOURS' : 'INVITE EVERY VOICE'));
+    insp.appendChild(el('h4','eyebrow', inspectorTab === 'content' ? 'MAKE IT YOURS' : 'GAMES AND THE ROOM'));
     insp.appendChild(el('h4', 'insp-title',
       'Slide ' + (sel + 1) + ' — ' + SF.SLIDE_TYPES[s.type].label));
 
     if (inspectorTab === 'engage') {
-      drawFeedback(insp, s);
+      drawEngagePane(insp, s);
       return;
     }
 
@@ -2636,6 +2637,32 @@
       'Presentation theme and logo stay under the rail ⚙ — this slide only links the check.'));
   }
 
+  /* Canvas ＋ Add activity, this pane, and the rail + Activity all open the
+     same catalogue. Games land as the next slide; polls and clouds attach
+     beside this one. Saved games stay a reuse path, not a second catalogue. */
+  function openActivityLibrary() {
+    if (SF.Studio && SF.Studio.openLibrary) SF.Studio.openLibrary('all');
+    else insertGame();
+  }
+
+  function drawEngagePane(insp, s) {
+    var wrap = el('div', 'engage-add');
+    var add = UI.button('＋ Add activity', 'primary', openActivityLibrary);
+    add.id = 'inspAddActivity';
+    add.title = 'Same catalogue as ＋ Add activity on the canvas. Games land as the next slide; polls and clouds attach beside this one.';
+    add.setAttribute('aria-label', 'Add activity');
+    wrap.appendChild(add);
+    var saved = (SF.GameStore && SF.GameStore.list) ? SF.GameStore.list() : [];
+    if (saved.length) {
+      var reuse = UI.button('Insert a saved game…', 'ghost', insertGame);
+      reuse.id = 'inspInsertSavedGame';
+      wrap.appendChild(reuse);
+    }
+    insp.appendChild(UI.field('Add a game or activity', wrap,
+      'Knowledge checks go between slides. Polls, word clouds, brainstorms and scales sit beside this slide.'));
+    drawFeedback(insp, s);
+  }
+
   /* ---------------------------------------------------- audience feedback */
 
   /* Attached to the slide rather than replacing it: the slide still says what
@@ -2668,7 +2695,7 @@
     var kinds = Object.keys(SF.FEEDBACK_KINDS);
     var current = s.feedback && s.feedback.kind ? s.feedback.kind : '';
 
-    var picker = el('div', 'type-grid');
+    var picker = el('div', 'type-grid feedback-kinds');
     picker.style.gridTemplateColumns = 'repeat(4, 1fr)';
     [{ value: '', icon: '—', label: 'None' }].concat(kinds.map(function (k) {
       return {
@@ -2697,10 +2724,10 @@
       picker.appendChild(b);
     });
 
-    insp.appendChild(UI.field('Audience feedback', picker,
+    insp.appendChild(UI.field('Audience feedback on this slide', picker,
       current
         ? SF.FEEDBACK_KINDS[current].blurb + ' Collected while this slide is up.'
-        : 'Attach a poll, scale, word cloud or brainstorm. Responses appear in the rail beside the slide, and need a live session.'));
+        : 'Or pick a kind here. Responses appear in the rail beside the slide, and need a live session.'));
 
     if (!current) return;
     var f = s.feedback;
@@ -3233,7 +3260,11 @@
       Object.keys(preset.seed).forEach(function (k) { q[k] = preset.seed[k]; });
       g.questions = [SF.normalizeQuestion(q, style)];
     }
-    if (!options || options.save !== false) SF.GameStore.save(g);
+    if (!options || options.save !== false) {
+      var host = (SF.Editor && SF.Editor.deck && SF.Editor.deck()) || null;
+      if (host && SF.LessonBank && SF.LessonBank.stamp) SF.LessonBank.stamp(g, host);
+      SF.GameStore.save(g);
+    }
     return g;
   };
 
