@@ -2268,6 +2268,8 @@
     if (opts.fullscreen !== false) Player.toggleFullscreen();
     saveRun();
     Player.emit('open', { deck: deck });
+    presenterChannel();
+    if (Player.syncPresenter) Player.syncPresenter();
     var oldPill = document.getElementById('playerDemoPill');
     if (oldPill) oldPill.remove();
     if (opts.demo && root) {
@@ -2334,7 +2336,34 @@
 
   var presenterWin = null;
   var requestedPresenterPanel = null;
+  var PRESENTER_BUS = 'slideforge.presenter.v1';
+  var presenterBus = null;
   Player.hasPresenter = function(){return !!(presenterWin && !presenterWin.closed);};
+
+  /** Same-origin desk tabs (no opener) still need a way to find the wall. */
+  function presenterChannel() {
+    if (presenterBus) return presenterBus;
+    if (typeof BroadcastChannel === 'undefined') return null;
+    try { presenterBus = new BroadcastChannel(PRESENTER_BUS); }
+    catch (e) { return null; }
+    presenterBus.onmessage = function (ev) {
+      var d = ev.data;
+      if (!d || d.type !== 'sf-presenter-cmd') return;
+      handlePresenterCommand(d, null);
+    };
+    return presenterBus;
+  }
+
+  function postPresenter(payload, sourceWin) {
+    if (sourceWin) {
+      try { sourceWin.postMessage(payload, location.origin); } catch (e) {}
+    }
+    if (presenterWin && !presenterWin.closed && sourceWin !== presenterWin) {
+      try { presenterWin.postMessage(payload, location.origin); } catch (e) {}
+    }
+    var ch = presenterChannel();
+    if (ch) { try { ch.postMessage(payload); } catch (e) {} }
+  }
 
   /**
    * Size and place the desk like PowerPoint presenter view: fill a display,
@@ -2400,6 +2429,7 @@
 
   Player.openPresenter = function (panel) {
     if(typeof panel==='string') requestedPresenterPanel=panel;
+    presenterChannel();
     if (presenterWin && !presenterWin.closed) {
       presenterWin.focus();
       syncPresenter();
@@ -2467,11 +2497,14 @@
   }
 
   function syncPresenter() {
-    if (!presenterWin || presenterWin.closed) return;
     var deck = Player.deck;
     if (!deck) return;
+    if (presenterWin && presenterWin.closed) presenterWin = null;
+    /* An orphaned presenter.html tab has no opener and is not presenterWin —
+       still broadcast so Host live / D can fill that desk. */
+    if ((!presenterWin || presenterWin.closed) && !presenterChannel()) return;
     try {
-      presenterWin.postMessage({
+      var payload = {
         type: 'sf-presenter-state',
         teacherUrl: SF.Live && SF.Live.teacherWorkspaceUrl ? SF.Live.teacherWorkspaceUrl() : null,
         requestedPanel: requestedPresenterPanel,
@@ -2567,16 +2600,14 @@
         fullscreen: typeof document !== 'undefined'
           && !!(document.fullscreenElement
             || /** @type {any} */ (document).webkitFullscreenElement)
-      }, location.origin);
+      };
+      postPresenter(payload);
       requestedPresenterPanel=null;
     } catch (e) { /* window closing */ }
   }
 
-  Player.syncPresenter = syncPresenter;
-
-  window.addEventListener('message', function (ev) {
-    var d = ev.data;
-    if (ev.source!==presenterWin || ev.origin!==location.origin || !d || d.type !== 'sf-presenter-cmd') return;
+  function handlePresenterCommand(d, sourceWin) {
+    if (!d || d.type !== 'sf-presenter-cmd') return;
     if (d.cmd === 'goto') Player.goTo(d.index);
     else if (d.cmd === 'hello') syncPresenter();
     /* Inking driven from the desk. A bare `ink` is still the toggle the HUD
@@ -2596,17 +2627,25 @@
     else if (d.cmd === 'explore' && SF.Explore) SF.Explore.command(Player,d.action,d.value);
     else if (d.cmd === 'quizGen') Player.quizGen(d);
     else if (d.cmd === 'activity' && SF.LiveActivities) {
-      var sender = ev.source;
       Promise.resolve().then(function () { return SF.LiveActivities.handle(d); }).then(function (result) {
-        if (sender && sender === presenterWin) sender.postMessage({ type: 'sf-activity-result', requestId: d.requestId, result: result }, { targetOrigin: location.origin });
+        postPresenter({ type: 'sf-activity-result', requestId: d.requestId, result: result }, sourceWin);
       }).catch(function (error) {
-        if (sender && sender === presenterWin) sender.postMessage({ type: 'sf-activity-result', requestId: d.requestId, error: error.message || 'Could not complete this activity action.' }, { targetOrigin: location.origin });
+        postPresenter({ type: 'sf-activity-result', requestId: d.requestId, error: error.message || 'Could not complete this activity action.' }, sourceWin);
       });
     }
     else if (d.cmd === 'qa') Player.emit('qaCommand', d);
     /* Desk drives the wall the same way the HUD does — prev/next/blank/
        freeze/exit and every room tool share Player.control. */
     else if (typeof Player.control === 'function') Player.control(d.cmd);
+  }
+
+  Player.syncPresenter = syncPresenter;
+
+  window.addEventListener('message', function (ev) {
+    var d = ev.data;
+    if (ev.origin!==location.origin || !d || d.type !== 'sf-presenter-cmd') return;
+    if (presenterWin && ev.source !== presenterWin) return;
+    handlePresenterCommand(d, ev.source);
   });
 
   /**

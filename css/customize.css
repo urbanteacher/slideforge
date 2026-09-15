@@ -1,8 +1,12 @@
 .format-tools{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;padding:6px;background:var(--ui-bg,#f4f6ef);border-radius:8px}
 .format-tools button{min-width:30px;min-height:32px;padding:4px 7px;border:1px solid #bbc6b6;border-radius:6px;background:#fff;color:#243422;cursor:pointer}
+#inspector .insp-chrome{flex-wrap:wrap;gap:4px}
+#inspector .insp-chrome .btn{font-size:11px;padding:4px 6px}
+#inspector .design-panes .btn{flex:1;min-width:0;font-size:10px;padding:7px 2px;line-height:1.2}
+#inspector .design-panes .btn.active{border-color:#9cae8c;background:#eff4e9;color:#3f5a30;font-weight:650}
 .format-tools input[type=color]{width:32px;height:32px;padding:2px;border:0}
 .format-tools input[type=url]{width:115px;min-width:70px;flex:1}
-.custom-controls{margin:14px 0;border:1px solid #b9c6b3;border-radius:10px;padding:12px}
+.custom-controls{margin:4px 0 14px;border:1px solid #b9c6b3;border-radius:10px;padding:12px}
 .custom-controls summary{font-weight:700;cursor:pointer;margin-bottom:10px}
 .custom-controls input[type=range]{width:100%}
 /* Progressive builds: keep layout space, animate each step in. */

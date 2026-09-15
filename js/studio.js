@@ -980,8 +980,6 @@
     /* File → Library. Store documents, grouped by brand — not a clone shop. */
     var btnReadyMade = document.getElementById('btnReadyMade');
     if (btnReadyMade) btnReadyMade.onclick = openLessons;
-    var btnReflect = document.getElementById('btnReflect');
-    if (btnReflect) btnReflect.onclick = function () {SF.Editor.addSlide('section'); SF.Editor.attachFeedback('poll');};
     document.querySelectorAll('.file-actions button').forEach(function (b) {
       b.addEventListener('click',function () {
         var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));

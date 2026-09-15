@@ -1685,13 +1685,22 @@
           ],
           notes: 'LINKS — text before the tab is the label, after it the URL. In a live session these become tappable on learner phones, which is the point: nobody copies a URL off a projector.' },
 
-        { type: 'content', title: 'Video — the one layout this deck cannot show',
+        { type: 'video',
+          video: 'assets/lesson/ipdv/baseline-truncation.mp4',
+          videoPoster: 'assets/lesson/ipdv/baseline-truncation-poster.jpg',
+          videoMuted: true, videoLoop: true, videoAutoplay: true,
+          imageFit: 'contain',
+          title: 'Eleven seconds, no narration, and the point is made',
+          notes: 'VIDEO — a file beside the deck, or a YouTube or Vimeo link. Paste the share URL and it becomes an embed; paste a path and it becomes a real player with the projector’s own controls.\n\nThis one is set muted, looping and autoplaying, which is the combination that works on a wall: sound in a lecture theatre is a gamble, a loop means a latecomer still sees the whole thing, and autoplay saves you walking to the laptop. Autoplay is honoured on the projector and never in the editor — a preview that starts playing while you type is a preview you turn off.\n\nStart and end are settable in seconds, so a forty-minute recording can contribute the ninety seconds you actually want without you editing the file. The poster is the frame it shows before it plays, and it is worth setting: without one the slide is a black rectangle until the first frame decodes.\n\nAn embedded clip draws a still in the editor rather than a dead frame, because loading the real player beside the inspector would start somebody’s video while they worked.' },
+
+        { type: 'content', title: 'Video — what to check before the lecture',
           bullets: [
-            'A video slide takes a file or URL and plays it full bleed, with an optional caption.',
-            'Start time, loop, mute and autoplay are all settable; autoplay is honoured on the projector and never in a preview.',
-            'Left out of this bank on purpose — a placeholder clip would only ever show a broken frame.'
+            'A file beside the deck\tPlays with no network. This is the one to use when the room’s wifi is a rumour.',
+            'A YouTube or Vimeo link\tBecomes an embed on the no-cookie domain. Needs the network, and the site has to be reachable from the lecture theatre.',
+            'Muted, looping, autoplaying\tThe wall combination. Sound only if you have tested the room’s sound.',
+            'Start and end\tClip the ninety seconds you want out of a forty-minute recording, without editing the file.'
           ],
-          notes: 'VIDEO — add one from the layout picker and point it at a file or URL. Set videoStart to begin partway into a longer recording. There is deliberately no example here because a fake URL renders as a black box, which would teach you nothing.' },
+          notes: 'The clip on the previous slide is 291 KB and travels with the deck, which is the whole argument for a file over a link: nothing to load, nothing to log in to, nothing that shows an advert first.\n\nWhat it shows is the same five numbers twice — once on an axis that starts at zero, once on an axis that starts at 55. A bar encodes its value as a LENGTH, so cutting the baseline cuts away the part of the length that carries the value, and the differences that are left look several times larger than they are. It is the most common way a correct number tells a lie, and it is much easier to watch happen than to describe.' },
 
         { type: 'section', title: 'What the room does', subtitle: 'Four ways a slide can ask, and one live check',
           notes: 'Everything from here needs Host live and phones in the room. On the projector each of these draws its own control; on a learner phone the same control takes over the screen.' },
@@ -1877,7 +1886,7 @@
             'This deck is a reference copy. Edit it freely; rebuild it from the lesson picker whenever you want a clean one.',
             'Not chosen from the picker: quiz, results and explain. Those are built by the live session.'
           ],
-          notes: 'Close. Rebuilding this lesson gives a fresh copy, so nothing here is precious. Every layout the picker offers is in this deck except one; video is named on its own slide but not rendered, because a placeholder URL would only ever draw a black box. Three slide types never appear in the picker at all: quiz and results are built by the live session, and explain is the card that shows the correct answer after a check — which is also why the student handout leaves it out.' }
+          notes: 'Close. Rebuilding this lesson gives a fresh copy, so nothing here is precious. Every layout the picker offers is in this deck, video included — it plays a clip that ships with the deck rather than pointing at a URL that might not answer. Three slide types never appear in the picker at all: quiz and results are built by the live session, and explain is the card that shows the correct answer after a check — which is also why the student handout leaves it out.' }
       ]
     },
     {
