@@ -650,6 +650,53 @@
   border-color: var(--s-fg);
 }
 
+/* ------------------------------------------------------- the featured card
+
+   The Events page puts a photograph on one half and a lime panel on the other,
+   with the flag, the heading and a meta line on the colour. A split slide is
+   already that shape — picture one side, copy the other — so it only needed
+   the panel.
+
+   Lime with Contrast Black is 16.20:1, the strongest pairing in the system,
+   which is presumably why they use it for the thing they want looked at. */
+.theme-ukbt.layout-split .split-copy,
+.theme-ukbt-institute.layout-split .split-copy {
+  background: var(--ukbt-lime);
+  color: var(--ukbt-contrast);
+  padding: 56px 52px;
+}
+.theme-ukbt.layout-split .split-copy h2,
+.theme-ukbt-institute.layout-split .split-copy h2 {
+  color: var(--ukbt-contrast);
+  border-bottom: 0;
+  padding-bottom: 0;
+  margin-bottom: 20px;
+}
+.theme-ukbt.layout-split .split-copy li,
+.theme-ukbt-institute.layout-split .split-copy li { color: var(--ukbt-contrast); }
+.theme-ukbt.layout-split .split-copy li::before,
+.theme-ukbt-institute.layout-split .split-copy li::before { background: var(--ukbt-contrast); }
+/* The lockup is white lettering, and the panel it lands on is lime — which is
+   the same 2:1 problem the section slide has, on half a slide instead of all
+   of it. The panel is always the copy side, so when the picture is on the left
+   the logo moves to sit over the picture instead, where white is right.
+   :has() reads the class the layout puts on .pad, which is the only place it
+   records which way round the slide is. */
+.theme-ukbt.layout-split:has(.image-left) .slide-logo,
+.theme-ukbt-institute.layout-split:has(.image-left) .slide-logo {
+  left: 40px;
+  right: auto;
+  filter: drop-shadow(0 1px 10px rgba(0, 0, 0, .55));
+}
+
+/* The caption bar under a split picture is the accent elsewhere; on a lime
+   panel it would be green on green, so it takes the ink. */
+.theme-ukbt.layout-split .split-media .cap-bar,
+.theme-ukbt-institute.layout-split .split-media .cap-bar {
+  background: var(--ukbt-contrast);
+  color: #ffffff;
+}
+
 /* --------------------------------------------------------------- the rule
 
    Every section on ukblacktech.com is separated by a thin green line running
