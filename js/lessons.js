@@ -1282,12 +1282,12 @@
         { type: 'section', title: 'Task 3', subtitle: 'Python that runs — and proving that it does',
           notes: 'Anaconda rather than a bare Python, because it arrives with pandas, matplotlib, Jupyter and an environment manager, and week one is not the week to teach pip.' },
 
-        { type: 'code', language: 'text', typewrite: true, typeSpeed: 55,
+        { type: 'code', language: 'text', codeReveal: 'all',
           title: 'Prove it from a terminal, not from a feeling',
           code: '# macOS: Terminal · Windows: Anaconda Prompt\n\npython --version\n# Python 3.12.x   ← anything 3.x is fine\n\nconda --version\n# conda 24.x.x    ← Anaconda is on the PATH\n\npython -c "import matplotlib, pandas; print(\'libraries ok\')"\n# libraries ok\n',
           notes: 'THREE COMMANDS, and they are the whole of task 3. “I think it installed” is not a result; a version number is.\n\nThe third line is the one that matters: Anaconda can be installed and still not be the Python your terminal finds. If that line prints an error and the first two worked, they have two Pythons — next slide.' },
 
-        { type: 'code', language: 'text', typewrite: true, typeSpeed: 55,
+        { type: 'code', language: 'text', codeReveal: 'all',
           title: 'The error you are about to hit',
           code: 'ModuleNotFoundError: No module named \'matplotlib\'\n\n# Not a broken install. The terminal is finding a different Python.\n# Ask which one:\n\nwhich python        # macOS / Linux\nwhere python        # Windows\n\n# If the answer is not inside your anaconda3 folder, open the\n# Anaconda Prompt instead of the system terminal, or run:\n\nconda activate base\n',
           notes: 'Put this on the wall BEFORE they hit it, because a room of thirty will produce this error about eight times and each one will read as “Anaconda is broken”.\n\nIt is the single most useful slide in the lab. Two Pythons on one machine is the normal state of a laptop, not a fault.' },
