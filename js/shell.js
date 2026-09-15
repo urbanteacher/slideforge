@@ -217,7 +217,7 @@
   /**
    * Generic document picker, used by Open in both engines and by
    * "Insert game" in the presentation editor.
-   * @param {object} o { title, items, empty, onPick, onDelete, describe, wide? }
+   * @param {object} o { title, items, empty, onPick, onDelete, onDeleteMany, onClear, clearLabel, describe, wide? }
    */
   function picker(o) {
     var titleEl = $('pickerTitle');
@@ -225,10 +225,38 @@
     var body = $('pickerBody');
     if (!body) return;
     var bodyEl = body;
+    var tools = $('pickerTools');
+    var picked = Object.create(null);
+
+    function selectedIds() {
+      return Object.keys(picked).filter(function (id) { return picked[id]; });
+    }
+
+    function fillTools(items) {
+      if (!tools) return;
+      tools.innerHTML = '';
+      if (o.onDeleteMany && items && items.length) {
+        var del = el('button', 'btn ghost', 'Delete selected');
+        del.type = 'button';
+        del.onclick = function () {
+          var ids = selectedIds();
+          if (!ids.length) { SF.toast('Tick the ones to delete first.'); return; }
+          o.onDeleteMany(ids, function () { picked = Object.create(null); draw(); });
+        };
+        tools.appendChild(del);
+      }
+      if (o.onClear && items && items.some(function (it) { return it.id !== 'keep'; })) {
+        var clr = el('button', 'btn ghost', o.clearLabel || 'Clear all');
+        clr.type = 'button';
+        clr.onclick = function () { o.onClear(draw); };
+        tools.appendChild(clr);
+      }
+    }
 
     function draw() {
       bodyEl.innerHTML = '';
       var items = o.items();
+      fillTools(items);
       if (!items.length) {
         bodyEl.appendChild(el('div', 'empty-note', o.empty || 'Nothing saved yet.'));
         return;
@@ -239,6 +267,19 @@
         info.appendChild(el('div', 'nm', it.title));
         info.appendChild(el('div', 'mt', o.describe(it)));
         if (o.wide) row.classList.add('wide');
+        if (o.onDeleteMany && it.id !== 'keep') {
+          var tick = document.createElement('input');
+          tick.type = 'checkbox';
+          tick.className = 'pick-tick';
+          tick.checked = !!picked[it.id];
+          tick.setAttribute('aria-label', 'Select ' + it.title);
+          tick.onclick = function (e) { e.stopPropagation(); };
+          tick.onchange = function (e) {
+            e.stopPropagation();
+            picked[it.id] = tick.checked;
+          };
+          row.appendChild(tick);
+        }
         row.appendChild(info);
 
         if (o.onDelete) {
@@ -329,7 +370,7 @@
       if (!quiet) SF.toast('Nothing to save');
       return;
     }
-    active.store.save(active.doc());
+    active.store.save(active.doc(), force ? { force: true } : undefined);
     active._dirty = false;
     if (!quiet) SF.toast('Saved to this browser');
   }
@@ -453,6 +494,8 @@
     if (!active) return;
     if (active.flush) active.flush();
     var ws = active;
+    var openId = ws.doc() && ws.doc().id;
+    if (ws.store.sweepUnused) ws.store.sweepUnused(openId);
     picker({
       title: ws.key === 'deck' ? 'Open a presentation' : 'Saved quizzes & games',
       items: function () { return ws.store.list(); },
@@ -473,6 +516,18 @@
             ws.store.remove(it.id);
             done();
           });
+      },
+      onDeleteMany: function (ids, done) {
+        var n = ids.length;
+        SF.ask({
+          title: n === 1 ? 'Delete this saved document?' : 'Delete ' + n + ' saved documents?',
+          detail: 'This cannot be undone.',
+          confirm: n === 1 ? 'Delete' : 'Delete ' + n,
+          danger: true
+        }, function () {
+          ids.forEach(function (id) { ws.store.remove(id); });
+          done();
+        });
       }
     });
   }
@@ -1004,6 +1059,8 @@
           wide: true,
           items: function () {
             var items = [];
+            items.push({ id: 'reports', title: 'Session reports…',
+              blurb: 'Who was there, what they answered, how the room moved — after a lecture, not during one.' });
             if (hosted()) {
               items.push({ id: 'wake', title: 'Wake the server',
                 blurb: 'A hosted free instance sleeps when idle and takes about a minute to answer the first request. Waking it now means the first phone to scan does not wait.' });
@@ -1030,6 +1087,11 @@
           },
           describe: function (it) { return it.blurb; },
           onPick: function (it) {
+            if (it.id === 'reports') {
+              if (SF.Reports && SF.Reports.open) SF.Reports.open();
+              else SF.toast('Session reports are not available in this build.');
+              return;
+            }
             if (it.id.indexOf('open:') === 0) { window.open(it.id.slice(5), '_blank', 'noopener'); return; }
 
             if (it.id === 'wake') {
@@ -1101,15 +1163,15 @@
     var btnFind = $('btnFind');
     if (btnFind) {
       btnFind.onclick = function () {
-        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
-        if (menu) menu.open = false;
         if (SF.Editor && SF.Editor.findInDeck) SF.Editor.findInDeck();
         else SF.toast('Open a presentation to search it.');
       };
     }
 
     /* Restore points. Hidden rather than disabled where IndexedDB is not
-       available — a greyed-out menu item is a question nobody can answer. */
+       available — a greyed-out menu item is a question nobody can answer.
+       “Keep a restore point now” used to live in File, next to History, which
+       made two doors for the same shelf. It is the first row of this list. */
     var btnHistory = $('btnHistory');
     if (btnHistory) {
       if (!(SF.History && SF.History.ready())) btnHistory.hidden = true;
@@ -1118,23 +1180,57 @@
         var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
         if (menu) menu.open = false;
         var doc = active.doc();
+        function keepPoint() {
+          return SF.History.snapshot(doc, 'Restore point').then(function (ok) {
+            if (ok === true) {
+              SF.toast('Restore point kept for “' + (doc.title || 'this document') + '”.');
+            } else if (ok === 'same') {
+              SF.toast('This version is already the latest restore point.');
+            } else if (SF.unusedDraft && SF.unusedDraft(doc)) {
+              SF.toast('Add something to the lesson first — empty drafts are not saved.');
+            } else {
+              SF.toast('Could not keep a restore point in this browser.');
+            }
+            return ok;
+          });
+        }
         SF.History.list(doc.id).then(function (rows) {
-          if (!rows.length) {
-            SF.toast('No earlier versions of this one yet. Edits keep a quiet copy after a pause; use “Keep a restore point now” before a big rewrite.');
-            return;
-          }
           picker({
             title: 'Earlier versions of “' + (doc.title || 'this document') + '”',
             wide: true,
+            empty: 'No earlier versions yet. Keep a restore point before a rewrite, or wait — edits keep a quiet copy after a pause.',
             items: function () {
-              return rows.map(function (r) {
-                return { id: String(r.id), title: r.label + ' · ' + when(r.at),
+              var items = [{
+                id: 'keep',
+                title: 'Keep a restore point now',
+                blurb: 'Snapshot this version. Use it before a big rewrite.'
+              }];
+              rows.forEach(function (r) {
+                items.push({ id: String(r.id), title: r.label + ' · ' + when(r.at),
                   blurb: r.slides + (r.slides === 1 ? ' slide' : ' slides') +
-                    (r.title && r.title !== doc.title ? ' · titled “' + r.title + '”' : '') };
+                    (r.title && r.title !== doc.title ? ' · titled “' + r.title + '”' : '') });
+              });
+              return items;
+            },
+            clearLabel: 'Clear all',
+            onClear: function (done) {
+              SF.ask({
+                title: 'Clear restore points for this lesson?',
+                detail: 'Removes every earlier version of “' + (doc.title || 'this document') +
+                  '”. The lesson you have open is not deleted.',
+                confirm: 'Clear all',
+                danger: true
+              }, function () {
+                SF.History.removeAll(doc.id).then(function () {
+                  rows = [];
+                  done();
+                  SF.toast('Restore points cleared.');
+                });
               });
             },
             describe: function (it) { return it.blurb; },
             onPick: function (it) {
+              if (it.id === 'keep') { keepPoint(); return; }
               var row = rows.filter(function (r) { return String(r.id) === it.id; })[0];
               SF.ask({
                 title: 'Restore this version?',
@@ -1160,31 +1256,14 @@
       };
     }
 
-    var btnHistoryKeep = $('btnHistoryKeep');
-    if (btnHistoryKeep) {
-      if (!(SF.History && SF.History.ready())) btnHistoryKeep.hidden = true;
-      else btnHistoryKeep.onclick = function () {
-        if (active.flush) active.flush();
-        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
-        if (menu) menu.open = false;
-        var doc = active.doc();
-        SF.History.snapshot(doc, 'Restore point').then(function (ok) {
-          SF.toast(ok
-            ? 'Restore point kept for “' + (doc.title || 'this document') + '”.'
-            : 'Could not keep a restore point in this browser.');
-        });
-      };
-    }
-
     /* A copy someone who was not in the room can open. Only where a server
        is serving this — from a file:// page there is nowhere to put it. */
     var shareClick = null;
     var btnShareTop = $('btnShareTop');
     /* Both surfaces, one handler. A previous pass wired only the top-bar
-       button and left File -> Share a read-only link in index.html with
-       nothing behind it, which is exactly what tests/menu-wiring.test.js
-       exists to catch, and did. Assigned to whichever of the two is present,
-       so this is correct with the menu item and correct without it. */
+       button and left File → Share a read-only link in index.html with
+       nothing behind it — a dead menu item, which is exactly what
+       tests/menu-wiring.test.js exists to catch, and did. */
     var btnShare = $('btnShare');
     if (btnShareTop || btnShare) {
       if (!servedByRelay()) {
@@ -1298,12 +1377,13 @@
     }
 
     var btnSettings = $('btnSettings');
-    if (btnSettings) {
-      btnSettings.onclick = function () {
-        if (active.flush) active.flush();
-        if (active.settings) active.settings();
-      };
+    function openSettings() {
+      if (active.flush) active.flush();
+      if (active.settings) active.settings();
     }
+    if (btnSettings) btnSettings.onclick = openSettings;
+    var btnRailSettings = $('btnRailSettings');
+    if (btnRailSettings) btnRailSettings.onclick = openSettings;
 
     var btnNew = $('btnNew');
     if (btnNew) {
@@ -1311,8 +1391,9 @@
         if (active.flush) active.flush();
         var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
         if (menu) menu.open = false;
-        /* Blank docs plus the ready-made lessons — Example lesson used to be the
-           only door into those, and it is easy to miss. */
+        /* Blank documents only. Ready-made lessons have their own File item
+           (and the Example lesson button); listing them here again made New
+           a second catalogue. */
         picker({
           title: 'Start something new',
           items: function () {
@@ -1322,14 +1403,6 @@
               { id: 'game', title: 'Blank game',
                 blurb: 'A quiz or classroom game on its own. Pick the format next.' }
             ];
-            (SF.LESSONS || []).forEach(function (lesson) {
-              items.push({
-                id: 'lesson:' + lesson.key,
-                title: lesson.title,
-                blurb: (lesson.blurb || 'Ready-made lesson') +
-                  (lesson.minutes ? ' · about ' + lesson.minutes + ' min' : '')
-              });
-            });
             return items;
           },
           describe: function (it) { return it.blurb; },
@@ -1351,22 +1424,6 @@
               }
               return;
             }
-            if (String(it.id).indexOf('lesson:') === 0) {
-              var key = String(it.id).slice(7);
-              activate('deck', { toast: false });
-              if (SF.Editor && SF.Editor.useLesson) {
-                SF.Editor.useLesson(key);
-              } else {
-                var lesson = SF.Studio.makeLesson(key);
-                workspaces.deck.setDoc(lesson);
-                workspaces.deck.store.save(lesson);
-                workspaces.deck._dirty = false;
-                syncChrome();
-                workspaces.deck.draw();
-              }
-              SF.toast('"' + it.title + '" opened. Your previous lesson stays in File → Open.');
-              return;
-            }
             activate('deck', { toast: false });
             var d = workspaces.deck.blank();
             workspaces.deck.setDoc(d);
@@ -1380,49 +1437,8 @@
       };
     }
 
-    var btnReadyMade = $('btnReadyMade');
-    if (btnReadyMade) {
-      btnReadyMade.onclick = function () {
-        if (active.flush) active.flush();
-        var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
-        if (menu) menu.open = false;
-        var lessons = SF.LESSONS || [];
-        if (!lessons.length) {
-          SF.toast('No ready-made lessons in this build.');
-          return;
-        }
-        picker({
-          title: 'Ready-made lessons',
-          items: function () {
-            return lessons.map(function (lesson) {
-              return {
-                id: lesson.key,
-                title: lesson.title,
-                blurb: (lesson.blurb || 'Ready-made lesson') +
-                  (lesson.minutes ? ' · about ' + lesson.minutes + ' min' : '')
-              };
-            });
-          },
-          describe: function (it) { return it.blurb; },
-          onPick: function (it) {
-            if (SF.History && SF.History.ready() && active && active.doc) {
-              SF.History.snapshot(active.doc(), 'Before opening a ready-made lesson');
-            }
-            activate('deck', { toast: false });
-            if (SF.Editor && SF.Editor.useLesson) SF.Editor.useLesson(it.id);
-            else {
-              var lesson = SF.Studio.makeLesson(it.id);
-              workspaces.deck.setDoc(lesson);
-              workspaces.deck.store.save(lesson);
-              workspaces.deck._dirty = false;
-              syncChrome();
-              workspaces.deck.draw();
-            }
-            SF.toast('"' + it.title + '" opened. Your previous lesson stays in File → Open.');
-          }
-        });
-      };
-    }
+    /* Ready-made lessons: wired in js/studio.js (the card grid). A second
+       handler here used to fight it and open a flat picker instead. */
 
     var btnOpen = $('btnOpen');
     if (btnOpen) {
@@ -1473,6 +1489,11 @@
     if (cog) {
       cog.title = what;
       cog.setAttribute('aria-label', what);
+    }
+    var railCog = $('btnRailSettings');
+    if (railCog) {
+      railCog.title = what;
+      railCog.setAttribute('aria-label', what);
     }
     var notesLbl = $('notesLabel');
     if (notesLbl) notesLbl.textContent = active.notesLabel;

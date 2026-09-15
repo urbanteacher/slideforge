@@ -2156,6 +2156,7 @@
          the most recently *saved* game, which is a different thing. */
       game = (SF.GameStore.lastId() && SF.GameStore.get(SF.GameStore.lastId())) || all[0];
     }
+    if (SF.GameStore.sweepUnused) SF.GameStore.sweepUnused(game && game.id);
     sel = 0;
 
     var notesEl = /** @type {HTMLTextAreaElement|null} */ ($('notes'));

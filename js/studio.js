@@ -605,6 +605,7 @@
     if (gameLib) gameLib.onclick = function () { openLibrary('check'); };
     var btnTemplate = document.getElementById('btnTemplate');
     if (btnTemplate) btnTemplate.onclick = openLessons;
+    /* File → Ready-made lessons. The card grid, not a second flat picker. */
     var btnReadyMade = document.getElementById('btnReadyMade');
     if (btnReadyMade) btnReadyMade.onclick = openLessons;
     var btnReflect = document.getElementById('btnReflect');

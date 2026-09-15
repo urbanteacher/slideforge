@@ -1328,16 +1328,16 @@
           progressive: true, buildMode: 'dim',
           notes: 'CARDS — items that are peers, arranged in a row with the number on the side rather than across the top, so four fit without shrinking. The card count drives the column ladder automatically: two cards are wide, six are narrow. Also on dim build here.' },
 
-        { type: 'cards', title: 'Cards · icon grid — a pictogram row',
+        { type: 'cards', title: 'Cards · picture cards — a photograph over each',
           bullets: [
-            '👁 See\tWhat the reader notices in the first second.',
-            '🧭 Orient\tAxes, legend, units — where am I?',
-            '⚖ Compare\tThe one difference the chart exists to show.',
-            '💬 Say\tThe sentence they would repeat to a colleague.'
+            'See\tWhat the reader notices in the first second.',
+            'Orient\tAxes, legend, units — where am I?',
+            'Compare\tThe one difference the chart exists to show.',
+            'Say\tThe sentence they would repeat to a colleague.'
           ],
-          design: { cardsMode: 'icons' },
+          design: { cardsMode: 'pictures' },
           progressive: true,
-          notes: 'CARDS — the same layout with Design → Cards layout set to Icon grid. An emoji or symbol at the front of each label is lifted into a badge above the copy, so the row reads as a pictogram set rather than a list. Cards without a glyph simply keep their label.' },
+          notes: 'CARDS — the same layout with Design → Cards layout set to Picture cards. Every card gets an image slot above its copy; the dashed box is the placeholder until you paste a URL or drop a file under that card in the inspector. Design → Picture shape switches between portrait crops and letterboxed plates.' },
 
         { type: 'journey', journeyMode: 'stepper', title: 'Journey · stepper — a process in one glance',
           subtitle: 'Design → Show as → Stepper',
@@ -2358,7 +2358,7 @@
       key: 'vibe-product',
       title: 'Product · Keynote minimal',
       icon: '◇',
-      blurb: 'Apple-style minimal with empty image slots ready for your photos. Title → photo statement → stat tiles → icon cards → photo close.',
+      blurb: 'Apple-style minimal with empty image slots ready for your photos. Title → photo statement → stat tiles → picture cards → photo close.',
       minutes: 5,
       theme: 'product',
       slides: [
@@ -2389,11 +2389,11 @@
           type: 'cards',
           title: 'Two points. Done.',
           bullets: [
-            '◻ Whitespace\tLeave empty space alone — it is part of the design.',
-            '● One accent\tUse the accent colour once per slide, not on everything.'
+            'Whitespace\tLeave empty space alone — it is part of the design.',
+            'One accent\tUse the accent colour once per slide, not on everything.'
           ],
-          design: { cardsMode: 'icons' },
-          notes: 'CARDS in Icon grid mode — the symbol at the front of each label becomes a badge. Swap the symbols for emoji if the room is informal.'
+          design: { cardsMode: 'pictures' },
+          notes: 'CARDS as picture cards — two photo slots over two points. Drop your own images in the inspector; the dashed boxes are placeholders.'
         },
         {
           type: 'image',
@@ -2639,7 +2639,7 @@
       key: 'infographic-pack',
       title: 'Infographic pack · premium layouts',
       icon: '％',
-      blurb: 'Stat tiles (three styles), versus columns, funnel, pyramid, two timelines, a stepper and an icon grid. Copy any slide into your own deck and swap the numbers.',
+      blurb: 'Stat tiles (three styles), versus columns, funnel, pyramid, two timelines, a stepper and picture cards. Copy any slide into your own deck and swap the numbers.',
       minutes: 8,
       theme: 'studio',
       slides: [
@@ -2775,17 +2775,17 @@
         },
         {
           type: 'cards',
-          title: 'Icon grid',
-          subtitle: 'Design → Cards layout → Icon grid',
+          title: 'Picture cards',
+          subtitle: 'Design → Cards layout → Picture cards',
           bullets: [
-            '🎯 Aim\tOne outcome per session.',
-            '⏱ Time\tTen minutes per activity, then move.',
-            '🗣 Talk\tEvery learner speaks once before the half-hour.',
-            '✅ Check\tOne question the whole room answers.'
+            'Aim\tOne outcome per session.',
+            'Time\tTen minutes per activity, then move.',
+            'Talk\tEvery learner speaks once before the half-hour.',
+            'Check\tOne question the whole room answers.'
           ],
-          design: { cardsMode: 'icons' },
+          design: { cardsMode: 'pictures' },
           progressive: true,
-          notes: 'The emoji or symbol at the front of each label becomes a badge above the copy. Cards without a glyph keep their whole label.'
+          notes: 'An image slot above every card. The dashed boxes are placeholders — paste a URL or drop a file under each card in the inspector. Design → Picture shape switches portrait crops to letterboxed plates.'
         }
       ]
     }

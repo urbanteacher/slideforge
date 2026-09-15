@@ -98,6 +98,52 @@ test('persistence tolerates corrupt data, denied access, and quota failures', as
   assert.ok(warnings.some(message => message === 'Could not save games:'));
 });
 
+test('blank untitled decks are not filed until they have content', async () => {
+  const { createStores, unusedDraft } = await import('../src/storage.js');
+  const values = new Map();
+  const storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
+  const { Store } = createStores({
+    storage: () => storage,
+    normalizeDeck: value => value,
+    normalizeGame: value => value
+  });
+  const blank = {
+    id: 'blank-1',
+    title: 'Untitled presentation',
+    slides: [{ type: 'title', title: '', subtitle: '', body: '', bullets: [] }]
+  };
+  assert.equal(unusedDraft(blank), true);
+  assert.equal(Store.save(blank), true);
+  assert.equal(Store.list().length, 0);
+  const seeded = {
+    id: 'blank-2',
+    title: 'Untitled presentation',
+    slides: [{ type: 'title', title: 'Presentation title', subtitle: 'Your name', body: '', bullets: [] }]
+  };
+  assert.equal(unusedDraft(seeded), true);
+  assert.equal(Store.save(seeded), true);
+  assert.equal(Store.list().length, 0);
+  assert.equal(Store.save(seeded, { force: true }), true);
+  assert.equal(Store.list().length, 1);
+  Store.remove('blank-2');
+  assert.equal(Store.list().length, 0);
+  blank.slides[0].title = 'Week 3';
+  assert.equal(unusedDraft(blank), false);
+  assert.equal(Store.save(blank), true);
+  assert.equal(Store.list().length, 1);
+  blank.slides[0].title = '';
+  assert.equal(unusedDraft(blank), true);
+  assert.equal(Store.save(blank), true);
+  assert.equal(Store.list().length, 1);
+  const namedEmpty = { id: 'named', title: 'Lesson 1', slides: [{ type: 'title', title: '' }] };
+  assert.equal(unusedDraft(namedEmpty), false);
+  const stray = { id: 'blocked' };
+  assert.equal(unusedDraft(stray), false);
+  Store.save({ id: 'keep-me', title: 'Kept', slides: [{ type: 'title', title: 'Hi' }] });
+  assert.equal(Store.sweepUnused('keep-me'), 1);
+  assert.deepEqual(Store.list().map(item => item.id), ['keep-me']);
+});
+
 test('deck content helpers and layout definitions export cleanly', async () => {
   const { DECK_TYPES, prepareLayout, parseTable, safeHref, safeMedia } = await import('../src/deck/content.js');
   assert.ok(Array.isArray(DECK_TYPES));

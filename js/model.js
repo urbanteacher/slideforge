@@ -7214,6 +7214,30 @@
   var INPUTS = ["choice", "text", "number", "order"];
 
   // src/storage.js
+  function unusedDraft(doc) {
+    if (!doc || !doc.id) return false;
+    var title = String(doc.title || "").trim();
+    if (title && !/^(untitled(\s+(deck|presentation|lesson|game))?)$/i.test(title)) {
+      return false;
+    }
+    if (Array.isArray(doc.slides)) {
+      if (doc.slides.length > 1) return false;
+      var slide = doc.slides[0];
+      if (!slide) return true;
+      var text2 = [slide.title, slide.subtitle, slide.body, slide.image, slide.notes].concat(slide.bullets || []).map(function(value) {
+        var t = String(value || "").replace(/\s+/g, " ").trim();
+        if (t === "Presentation title" || t === "Your name") return "";
+        return t;
+      }).join("");
+      return !text2;
+    }
+    if (Array.isArray(doc.questions)) {
+      return doc.questions.every(function(q) {
+        return !q || !String(q.question || "").trim();
+      });
+    }
+    return false;
+  }
   function createStores({ normalizeDeck: normalizeDeck2, normalizeGame: normalizeGame2, storage, warn = console.warn }) {
     function documents(kind, key, lastKey, normalize) {
       function read() {
@@ -7238,7 +7262,11 @@
         list() {
           return read().sort((a, b) => b.modified - a.modified);
         },
-        save(document) {
+        save(document, opts) {
+          if (!(opts && opts.force) && unusedDraft(document)) {
+            const all2 = read();
+            if (!all2.some((item) => item.id === document.id)) return true;
+          }
           document.modified = Date.now();
           const all = read();
           const index = all.findIndex((item) => item.id === document.id);
@@ -7253,6 +7281,14 @@
         },
         remove(id) {
           write(read().filter((item) => item.id !== id));
+        },
+        /* Drop untitled blanks that never got content. keepId stays, so the
+           document on screen is not yanked out from under the editor. */
+        sweepUnused(keepId) {
+          const all = read();
+          const next = all.filter((item) => keepId && item.id === keepId || !unusedDraft(item));
+          if (next.length !== all.length) write(next);
+          return all.length - next.length;
         },
         clear() {
           write([]);
@@ -8810,6 +8846,7 @@
     gameToRunDeck,
     migrateDeckQuizzes,
     Store,
-    GameStore
+    GameStore,
+    unusedDraft
   });
 })();
