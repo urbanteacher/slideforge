@@ -23,8 +23,12 @@
      #757575  Dark Grey        lower-contrast text
      #E3EAE8  Cool Grey        background
 
-   Type is Uncut Sans for everything the room reads, and Alpha Lyrae Medium
-   for the small technical lines — buttons, dates, the organisation stamp. The
+   Type follows ukblacktech.com, not the token sheet alone. The sheet calls
+   Heading 1 "Uncut Sans Bold 72px", which is the heading of a web article;
+   the site's own hero is Alpha Lyrae Medium at 256px in a 900px viewport. A
+   slide is a hero, not an article, so the two full-bleed layouts take Alpha
+   Lyrae and everything from the slide h2 down takes Uncut Sans — the same
+   split the site makes between its hero and its H2s. The
    scale below is the system's desktop ramp, which is why the numbers are not
    round: 72 / 58 / 48 / 32 / 24 / 22 for headings, 22 / 18 / 16 / 14 for
    body. Both faces are bundled under assets/fonts/ukbt — see the @font-face
@@ -226,14 +230,13 @@
 
    Its own ground, not the deck's. A title slide that is the same flat colour
    as the content slides behind it reads as the first content slide. */
-.theme-ukbt.layout-title {
-  --s-bg: linear-gradient(134deg, #33597c 0%, #264258 46%, #15283a 100%);
-  background: var(--s-bg);
-}
-.theme-ukbt-institute.layout-title {
-  --s-bg: linear-gradient(134deg, #3c4247 0%, #2d3134 46%, #1b1e20 100%);
-  background: var(--s-bg);
-}
+/* Flat, because the site is flat. The diagonal gradient that used to be here
+   was invented to make the title feel like its own surface, and it still held
+   the old sampled #264258 and #2D3134 after the tokens were corrected —
+   twice wrong. ukblacktech.com separates its hero from everything else with
+   the size of the type and the objects behind it, never with a gradient. */
+.theme-ukbt.layout-title { background: var(--ukbt-navy); }
+.theme-ukbt-institute.layout-title { background: var(--ukbt-black); }
 .theme-ukbt.layout-title .ukbt-chev-front,
 .theme-ukbt-institute.layout-title .ukbt-chev-front { background: rgba(0, 197, 127, .17); }
 .theme-ukbt.layout-title .ukbt-chev-back,
@@ -253,11 +256,12 @@
 }
 .theme-ukbt.layout-title h1,
 .theme-ukbt-institute.layout-title h1 {
-  font-size: var(--ukbt-5xl);
-  font-weight: 700;
-  line-height: 1.04;
+  font-family: var(--ukbt-font-meta);
+  font-size: 104px;
+  font-weight: 500;
+  line-height: .98;
   letter-spacing: -.02em;
-  max-width: 820px;
+  max-width: 940px;
   white-space: pre-line;
 }
 .theme-ukbt.layout-title .sub,
@@ -323,11 +327,12 @@
 }
 .theme-ukbt.layout-section h1,
 .theme-ukbt-institute.layout-section h1 {
-  font-size: var(--ukbt-5xl);
-  font-weight: 700;
-  line-height: 1.04;
+  font-family: var(--ukbt-font-meta);
+  font-size: 96px;
+  font-weight: 500;
+  line-height: 1;
   letter-spacing: -.02em;
-  max-width: 860px;
+  max-width: 900px;
   white-space: pre-line;
 }
 .theme-ukbt.layout-section .sub,
@@ -399,8 +404,14 @@
 .theme-ukbt h2, .theme-ukbt-institute h2 {
   font-size: var(--ukbt-3xl);
   font-weight: 700;
-  letter-spacing: -.015em;
+  /* Measured off the site: -1.16px on 57.5px and -0.64px on 31.3px are both
+     -2%, and body runs at -1%. Tighter than most decks, and it is part of
+     what makes their type look like theirs. */
+  letter-spacing: -.02em;
 }
+.theme-ukbt .pad li, .theme-ukbt-institute .pad li,
+.theme-ukbt .sub, .theme-ukbt-institute .sub,
+.theme-ukbt .card-body, .theme-ukbt-institute .card-body { letter-spacing: -.01em; }
 .theme-ukbt .pad li, .theme-ukbt-institute .pad li,
 .theme-ukbt .kw-def, .theme-ukbt-institute .kw-def,
 .theme-ukbt .card-body, .theme-ukbt-institute .card-body { font-size: var(--ukbt-l); }
