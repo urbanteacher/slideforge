@@ -176,6 +176,16 @@ var THEMES = {
   northeastern: { name: 'Northeastern London', swatch: '#c8102e' },
   ukbt: { name: 'UK Black Tech', swatch: '#264258' },
   'ukbt-institute': { name: 'UKBT Institute', swatch: '#2d3134' },
+  /* AI Awareness Day 2026. One design, five grounds: the campaign gives each
+     of its principles a colour, and a starter deck belongs to exactly one of
+     them, so the principle is the theme rather than a setting inside it.
+     Picking "Safe" is how a deck gets the cyan badge and the cyan rules —
+     there is nothing else to set. See css/aiad26.css. */
+  'aiad26-safe': { name: 'AI Awareness · Safe', swatch: '#00c4ee' },
+  'aiad26-smart': { name: 'AI Awareness · Smart', swatch: '#ff6734' },
+  'aiad26-creative': { name: 'AI Awareness · Creative', swatch: '#795bff' },
+  'aiad26-responsible': { name: 'AI Awareness · Responsible', swatch: '#00a896' },
+  'aiad26-future': { name: 'AI Awareness · Future', swatch: '#ff7eed' },
   product: { name: 'Product · Keynote minimal', swatch: '#f5f5f7' },
   editorial: { name: 'Editorial · Paper', swatch: '#f3efe6' },
   cinematic: { name: 'Cinematic · Dark pitch', swatch: '#0a0b0f' },

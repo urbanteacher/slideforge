@@ -1,0 +1,7 @@
+# Generated output. The bundles are the deliverable; these are pictures of
+# them, and they go stale the moment starters.js changes.
+#
+#   node AiAd26/contact-sheet.mjs     → preview/, then montage as needed
+#
+preview/
+*.png

@@ -1,0 +1,514 @@
+/* AI Awareness Day 2026 — five themes over one design.
+
+   The campaign names five principles and gives each one a colour. A starter
+   deck belongs to exactly one principle, so the principle is the theme: there
+   is no "which colour" control to get wrong, and a deck cannot end up SAFE in
+   the badge and FUTURE in the rules.
+
+     SAFE         #00C4EE  cyan
+     SMART        #FF6734  orange
+     CREATIVE     #795BFF  violet      (#AEA0FE the light tint the deck uses)
+     RESPONSIBLE  #00A896  teal        (#65DF92 the light tint the deck uses)
+     FUTURE       #FF7EED  pink
+
+   Shared across all five:
+
+     #1A1A2E  ink        headings and body
+     #F7F9FC  paper      the teaching ground
+     #666666  dim        sources, footnotes
+
+   All six values are the campaign's own, read out of the five source .pptx
+   files rather than sampled off a screenshot — see the note in AiAd26/README.md.
+
+   THE ACCENTS ARE ALL TOO BRIGHT TO SET TYPE IN, which is the one thing that
+   shapes this whole file. On white they run 2.07:1 (cyan) to 4.42:1 (violet) —
+   every one of them under the 4.5:1 small text needs. And the app paints in
+   --s-accent far more often as text than as a ground: 90 `color:` rules across
+   the eight stylesheets against 35 backgrounds. A theme that hands the brand
+   cyan straight to --s-accent gets an unreadable board title on every game.
+
+   So the two jobs are split:
+
+     --aiad-accent   the campaign colour. Graphics only — the left-edge rule,
+                     the badge, the accent bar, a tile's left edge. Nothing is
+                     ever set in type on it, so brightness is free.
+     --aiad-deep     the same hue darkened to 4.5:1 on white, wired to
+                     --s-accent. Everything the app decides to paint in the
+                     accent therefore reads, including rules written later.
+
+   The deeps are the lightest value of each hue that clears 4.5:1, so they are
+   as close to the brand colour as the threshold allows. They also happen to
+   clear 4.5:1 the other way round — white on a deep — which is why there is no
+   white-on-accent override block in this file. An earlier version had one, for
+   the .cap-bar family that css/app.css sets in white; against a deep accent
+   white reads at 4.54:1 and the ink it was being forced to at only 3.76:1, so
+   the override was making the thing it was there to fix slightly worse.
+
+   Three grounds, which is the rhythm of the deck: paper to teach on, ink for a
+   section break, and paper again for a statement. */
+
+/* ------------------------------------------------------------ the principles
+
+   One custom property set per theme, then one shared block below does all the
+   work. --aiad-tint is the accent at teaching-slide strength: a wash behind a
+   stat tile or a card, light enough that ink still reads at full contrast. */
+
+.theme-aiad26-safe {
+  --aiad-accent: #00c4ee;
+  --aiad-deep: #00819d;
+  --aiad-tint: #e6f8fe;
+  --aiad-principle: 'SAFE';
+}
+
+.theme-aiad26-smart {
+  --aiad-accent: #ff6734;
+  --aiad-deep: #dd3800;
+  --aiad-tint: #fff0ea;
+  --aiad-principle: 'SMART';
+}
+
+.theme-aiad26-creative {
+  --aiad-accent: #795bff;
+  --aiad-deep: #7658ff;
+  --aiad-tint: #efecff;
+  --aiad-principle: 'CREATIVE';
+}
+
+.theme-aiad26-responsible {
+  --aiad-accent: #00a896;
+  --aiad-deep: #008577;
+  --aiad-tint: #e4f7f4;
+  --aiad-principle: 'RESPONSIBLE';
+}
+
+.theme-aiad26-future {
+  --aiad-accent: #ff7eed;
+  --aiad-deep: #d500b8;
+  --aiad-tint: #ffeffc;
+  --aiad-principle: 'FUTURE';
+}
+
+/* ------------------------------------------------------------------ the base
+
+   Every rule below is written against all five themes at once. The selector
+   list is long but it is the honest one: [class*="theme-aiad26"] would also
+   match a theme somebody adds later called theme-aiad26-draft and quietly
+   style it, which is exactly the kind of half-applied theme this file is
+   trying to avoid. */
+
+.theme-aiad26-safe,
+.theme-aiad26-smart,
+.theme-aiad26-creative,
+.theme-aiad26-responsible,
+.theme-aiad26-future {
+  --aiad-ink: #1a1a2e;
+  --aiad-paper: #f7f9fc;
+
+  --s-bg: #ffffff;
+  --s-fg: var(--aiad-ink);
+  --s-dim: #666666;
+  /* The deep, not the campaign colour — see the note at the top. Everything
+     the app paints in the accent is type more often than it is a ground. */
+  --s-accent: var(--aiad-deep);
+  --s-accent-2: var(--aiad-ink);
+  --s-rule: rgba(26, 26, 46, .14);
+  --s-card: var(--aiad-paper);
+  --s-scrim: rgba(255, 255, 255, .74);
+
+  /* A geometric sans with a single-storey a, which is what the campaign's own
+     slides are set in. Named rather than bundled: these decks are handed to
+     schools to open on whatever is in the classroom, and a 400 KB webfont on a
+     five-slide starter is a poor trade for a shape most of the room will not
+     consciously see. The stack degrades through three geometrics before it
+     reaches a grotesque. */
+  --s-font: 'Poppins', 'Century Gothic', 'Avenir Next', 'Futura',
+    'Segoe UI', -apple-system, BlinkMacSystemFont, Inter, sans-serif;
+
+  background: var(--s-bg);
+}
+
+/* Headings are heavy, tight and uppercase — the campaign sets every headline
+   in caps, and at the size a starter slide needs it is the caps that make a
+   one-line question readable from the back of a hall. text-wrap: balance so a
+   three-line question does not leave one word stranded. */
+.theme-aiad26-safe h1, .theme-aiad26-safe h2,
+.theme-aiad26-smart h1, .theme-aiad26-smart h2,
+.theme-aiad26-creative h1, .theme-aiad26-creative h2,
+.theme-aiad26-responsible h1, .theme-aiad26-responsible h2,
+.theme-aiad26-future h1, .theme-aiad26-future h2 {
+  font-weight: 800;
+  letter-spacing: -.015em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  line-height: 1.04;
+}
+
+/* The accent bar under a heading is the campaign's left-edge rule, turned
+   horizontal. Square, never rounded: there is not one rounded corner in the
+   whole identity. */
+.theme-aiad26-safe .accent-bar,
+.theme-aiad26-smart .accent-bar,
+.theme-aiad26-creative .accent-bar,
+.theme-aiad26-responsible .accent-bar,
+.theme-aiad26-future .accent-bar {
+  height: 6px;
+  width: 104px;
+  border-radius: 0;
+  background: var(--aiad-accent);
+}
+
+/* The left-edge rule itself, on every teaching slide. 10px of accent down the
+   full height — the one mark that makes a slide recognisable as this campaign
+   from across a room, and the cheapest possible way to carry a brand. */
+.slide.theme-aiad26-safe::before,
+.slide.theme-aiad26-smart::before,
+.slide.theme-aiad26-creative::before,
+.slide.theme-aiad26-responsible::before,
+.slide.theme-aiad26-future::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  background: var(--aiad-accent);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ----------------------------------------------------------- the ink ground
+
+   Section breaks invert. The accent is bright enough that ink-on-accent would
+   read, but a bright full-bleed ground every few slides is exhausting in a
+   darkened room, and the campaign's own decks never do it. Ink with the accent
+   as the headline is the same two colours doing the opposite job. */
+
+.slide.theme-aiad26-safe.layout-section,
+.slide.theme-aiad26-smart.layout-section,
+.slide.theme-aiad26-creative.layout-section,
+.slide.theme-aiad26-responsible.layout-section,
+.slide.theme-aiad26-future.layout-section {
+  --s-bg: #12131f;
+  --s-fg: #ffffff;
+  --s-dim: rgba(255, 255, 255, .62);
+  /* The accent flips back to the campaign colour here, because the reason it
+     was darkened does not hold on a dark ground — it reverses. Against this
+     ink the bright accents read 4.17:1 to 8.90:1 and the deeps only about
+     4.0:1, so the deep is now the worse of the two. Per-layout token flips are
+     what the token set is for. */
+  --s-accent: var(--aiad-accent);
+  --s-rule: rgba(255, 255, 255, .18);
+  --s-card: rgba(255, 255, 255, .06);
+  --s-scrim: rgba(18, 19, 31, .74);
+  background: #12131f;
+}
+
+.slide.theme-aiad26-safe.layout-section h1,
+.slide.theme-aiad26-smart.layout-section h1,
+.slide.theme-aiad26-creative.layout-section h1,
+.slide.theme-aiad26-responsible.layout-section h1,
+.slide.theme-aiad26-future.layout-section h1 {
+  color: var(--aiad-accent);
+}
+
+/* -------------------------------------------------------------- the statement
+
+   A statement slide is where the discussion question lives, and it is the one
+   slide the room stares at for a full minute. Paper ground, ink type as big as
+   it fits, nothing else on it.
+
+   DELIBERATELY NOT UPPERCASE, which is the one place this theme departs from
+   the source decks. They set the discussion questions in caps, and at three
+   lines that is the hardest thing in the whole deck to read: caps strip out
+   the ascenders and descenders a reader uses to recognise word shapes, and
+   these questions are long. Headings stay in caps because they are short.
+   Sentence case here is a legibility decision, not an oversight. */
+
+.slide.theme-aiad26-safe.layout-statement .statement,
+.slide.theme-aiad26-smart.layout-statement .statement,
+.slide.theme-aiad26-creative.layout-statement .statement,
+.slide.theme-aiad26-responsible.layout-statement .statement,
+.slide.theme-aiad26-future.layout-statement .statement {
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+/* ----------------------------------------------------------------- the badge
+
+   The campaign mark, redrawn. The original is a 2 KB SVG per principle with
+   the colour baked in and the geometry buried under four nested matrix
+   transforms; resolved, it turns out to be a clean quarter-grid construction,
+   which is what this is:
+
+     a square, top-right and bottom-left corners chamfered at a quarter,
+     folded along a line that runs flat from the left edge to the centre
+     and then away at 45 degrees to the far corner.
+
+   Drawn here rather than shipped, so it takes its colour from the theme and
+   stays sharp at the size the title slide wants it. Five SVG files became two
+   clip-paths.
+
+   .aiad-art is hung on title and section slides by THEME_ART in js/render.js. */
+
+.aiad-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* The mark, bled off the bottom-right corner. Big enough to read as a graphic
+   rather than a logo parked in a corner — the same move the campaign makes on
+   its own title slides, where the badge is a third of the slide height.
+
+   The bleed is 60 of 420px, which is as far as it can go: past about 15% the
+   fold runs off the slide and takes the principle word with it. */
+.aiad-art .aiad-badge {
+  position: absolute;
+  right: -60px;
+  bottom: -60px;
+  width: 420px;
+  height: 420px;
+}
+
+.aiad-art .aiad-badge span {
+  position: absolute;
+  inset: 0;
+}
+
+/* Smaller on a section slide. A section heading is centred rather than set to
+   the left, so it reaches further right than a cover's does — at 420px the
+   badge was taking a bite out of "AFFECTED YOU". Pulled back to 300px it sits
+   entirely below and right of the centred block. */
+.layout-section .aiad-art .aiad-badge {
+  right: -44px;
+  bottom: -44px;
+  width: 300px;
+  height: 300px;
+}
+
+.layout-section .aiad-art .aiad-badge .aiad-word::after {
+  font-size: 15px;
+  letter-spacing: .14em;
+  text-indent: .14em;
+}
+
+.aiad-art .aiad-badge .aiad-face {
+  background: var(--aiad-accent);
+  clip-path: polygon(100% 100%, 100% 25%, 75% 0, 0 0, 0 50%, 50% 50%);
+}
+
+.aiad-art .aiad-badge .aiad-fold {
+  background: var(--aiad-ink);
+  clip-path: polygon(50% 50%, 0 50%, 0 75%, 25% 100%, 100% 100%);
+}
+
+/* On the ink ground the fold would vanish into the background, so it lifts to
+   the paper colour and the word inside it flips to ink. Same shape, same
+   geometry, inverted — which is what the section slide is doing anyway. */
+.layout-section .aiad-art .aiad-badge .aiad-fold {
+  background: var(--aiad-paper);
+}
+
+/* The principle, set along the fold. The content comes from --aiad-principle,
+   so the five themes differ by two custom properties and nothing else.
+
+   rotate(45deg) because the fold runs down-right from the centre; the word
+   sits on it rather than beside it.
+
+   Sized for the longest of the five. RESPONSIBLE is eleven characters, and at
+   45 degrees a word of length L eats L/√2 in both axes at once — so the size
+   that fits SAFE comfortably runs CREATIVE and RESPONSIBLE straight off the
+   corner. 21px with tight tracking fits all five inside the visible wedge. */
+.aiad-art .aiad-badge .aiad-word {
+  display: grid;
+  place-items: center;
+  inset: 46% 20% 32% 0;
+}
+
+.aiad-art .aiad-badge .aiad-word::after {
+  content: var(--aiad-principle, 'AI');
+  transform: rotate(45deg);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 21px;
+  letter-spacing: .16em;
+  text-indent: .16em;
+  white-space: nowrap;
+}
+
+.layout-section .aiad-art .aiad-badge .aiad-word::after { color: var(--aiad-ink); }
+
+/* The campaign lockup, top-left, the same size and weight the source decks set
+   it at. Two lines, hard left, ink — it is a stamp, not a heading. */
+.aiad-art .aiad-lockup {
+  position: absolute;
+  left: 64px;
+  top: 52px;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.16;
+  letter-spacing: .06em;
+  color: var(--aiad-ink);
+  text-transform: uppercase;
+}
+
+.layout-section .aiad-art .aiad-lockup { color: #ffffff; }
+
+.aiad-art .aiad-lockup i {
+  font-style: normal;
+  display: block;
+  color: var(--aiad-accent);
+}
+
+/* The hashtag, bottom-left, on the two full-bleed layouts. Every slide in the
+   source decks carries it; here it is on the covers only. A hashtag repeated
+   on all eleven slides of a five-minute starter is not a campaign, it is
+   wallpaper — and the left-edge rule already carries the identity.
+
+   Left rather than right, where the source deck puts it, because the badge now
+   occupies the bottom-right corner and the two were sitting on top of each
+   other. */
+.aiad-art .aiad-tag {
+  position: absolute;
+  left: 64px;
+  bottom: 34px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  color: var(--aiad-ink);
+  opacity: .5;
+}
+
+.layout-section .aiad-art .aiad-tag { color: #ffffff; opacity: .45; }
+
+/* The title slide sets its type against the badge, so the pad needs to clear
+   the lockup sitting above it. */
+.slide.theme-aiad26-safe.layout-title > .pad,
+.slide.theme-aiad26-smart.layout-title > .pad,
+.slide.theme-aiad26-creative.layout-title > .pad,
+.slide.theme-aiad26-responsible.layout-title > .pad,
+.slide.theme-aiad26-future.layout-title > .pad,
+.slide.theme-aiad26-safe.layout-section > .pad,
+.slide.theme-aiad26-smart.layout-section > .pad,
+.slide.theme-aiad26-creative.layout-section > .pad,
+.slide.theme-aiad26-responsible.layout-section > .pad,
+.slide.theme-aiad26-future.layout-section > .pad {
+  position: relative;
+  z-index: 1;
+  padding-top: 104px;
+}
+
+/* Keep the cover's type out of the badge. The mark occupies the bottom-right
+   quarter, and without this a long title runs under the cyan and loses its
+   last word — "BEHIND THE SCREEN?" was touching it.
+
+   68% of the pad's 1096px content box is 745px, putting the right edge at 837
+   against a badge that starts at 920 — 83px of clearance, which holds at every
+   aspect ratio because the badge is pinned to the right edge and the stage
+   stays 1280 wide. Widening it to fit one more word is not available: that
+   title needs 825px at this size, which lands inside the mark. A cover running
+   to three lines instead of two is the right trade. */
+.slide.theme-aiad26-safe.layout-title > .pad > h1,
+.slide.theme-aiad26-smart.layout-title > .pad > h1,
+.slide.theme-aiad26-creative.layout-title > .pad > h1,
+.slide.theme-aiad26-responsible.layout-title > .pad > h1,
+.slide.theme-aiad26-future.layout-title > .pad > h1,
+.slide.theme-aiad26-safe.layout-title > .pad > .sub,
+.slide.theme-aiad26-smart.layout-title > .pad > .sub,
+.slide.theme-aiad26-creative.layout-title > .pad > .sub,
+.slide.theme-aiad26-responsible.layout-title > .pad > .sub,
+.slide.theme-aiad26-future.layout-title > .pad > .sub {
+  max-width: 68%;
+}
+
+/* The cover's subtitle takes the accent, which is the one place the source
+   decks use the principle colour on type. Not on a section slide: there the
+   heading already has it, and two accent lines on one dark ground is one too
+   many. */
+.slide.theme-aiad26-safe.layout-title .sub,
+.slide.theme-aiad26-smart.layout-title .sub,
+.slide.theme-aiad26-creative.layout-title .sub,
+.slide.theme-aiad26-responsible.layout-title .sub,
+.slide.theme-aiad26-future.layout-title .sub {
+  color: var(--aiad-deep);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------- stat tiles
+
+   The source decks set their statistics as three tinted bars with an accent
+   rule down the left edge. That is a good pattern and it survives the move, so
+   the stat tiles here are the same object: tint ground, accent edge, square. */
+
+.slide.theme-aiad26-safe .stat,
+.slide.theme-aiad26-smart .stat,
+.slide.theme-aiad26-creative .stat,
+.slide.theme-aiad26-responsible .stat,
+.slide.theme-aiad26-future .stat {
+  background: var(--aiad-tint);
+  border: 0;
+  border-left: 6px solid var(--aiad-accent);
+  border-radius: 0;
+}
+
+.slide.theme-aiad26-safe .stat-value,
+.slide.theme-aiad26-smart .stat-value,
+.slide.theme-aiad26-creative .stat-value,
+.slide.theme-aiad26-responsible .stat-value,
+.slide.theme-aiad26-future .stat-value {
+  color: var(--aiad-deep);
+  font-weight: 800;
+  letter-spacing: -.03em;
+}
+
+/* Cards take the same square-edged treatment, so an answer revealed one card
+   at a time reads as the same family of object as the statistics it is
+   answering. The card label picks up the deep accent, which is what separates
+   "Don't share it" from the sentence explaining it. */
+.slide.theme-aiad26-safe.layout-cards li,
+.slide.theme-aiad26-smart.layout-cards li,
+.slide.theme-aiad26-creative.layout-cards li,
+.slide.theme-aiad26-responsible.layout-cards li,
+.slide.theme-aiad26-future.layout-cards li {
+  background: var(--aiad-tint);
+  border: 0;
+  border-left: 6px solid var(--aiad-accent);
+  border-radius: 0;
+}
+
+.slide.theme-aiad26-safe .card-label,
+.slide.theme-aiad26-smart .card-label,
+.slide.theme-aiad26-creative .card-label,
+.slide.theme-aiad26-responsible .card-label,
+.slide.theme-aiad26-future .card-label {
+  color: var(--aiad-deep);
+}
+
+.slide.theme-aiad26-safe .kw-term,
+.slide.theme-aiad26-smart .kw-term,
+.slide.theme-aiad26-creative .kw-term,
+.slide.theme-aiad26-responsible .kw-term,
+.slide.theme-aiad26-future .kw-term {
+  color: var(--aiad-deep);
+  font-weight: 800;
+}
+
+/* app.css lowercases a keyword's definition, so that a vocabulary row reads as
+   term-then-gloss rather than as two competing sentences. It is the right look
+   and the wrong transform for this material: every definition in these five
+   decks is about AI, and "AI that creates new content" was rendering as "ai
+   that creates new content". An initialism is not a capitalisation the reader
+   can put back.
+
+   Turned off here rather than in app.css, which would change how every
+   existing deck's vocabulary slides look. The definitions in starters.js are
+   written in sentence case, so the quiet-gloss effect survives — it is being
+   got from the words instead of from a transform. */
+.slide.theme-aiad26-safe .kw-def,
+.slide.theme-aiad26-smart .kw-def,
+.slide.theme-aiad26-creative .kw-def,
+.slide.theme-aiad26-responsible .kw-def,
+.slide.theme-aiad26-future .kw-def {
+  text-transform: none;
+}

@@ -4572,6 +4572,15 @@
      Each theme's own stylesheet owns the look. The names here are the only
      contract, and they are deliberately short-lived markup: change the art
      and you change this string and that file, nothing else. */
+  /* The AI Awareness Day badge: two clip-paths and a rotated word, plus the
+     campaign lockup and the hashtag. Hoisted out of the table below because
+     all five principle themes hang the identical markup. */
+  var AIAD_ART =
+    '<div class="aiad-badge"><span class="aiad-face"></span>' +
+    '<span class="aiad-fold"></span><span class="aiad-word"></span></div>' +
+    '<div class="aiad-lockup">AI Awareness<i>Day 2026</i></div>' +
+    '<div class="aiad-tag">#AIAWARENESSDAY26</div>';
+
   var THEME_ART = {
     studio: ['studio-art',
       '<div class="art-orbit"></div><div class="art-tile">✳</div>' +
@@ -4599,7 +4608,17 @@
       '<div class="cine-bar cine-top"></div><div class="cine-bar cine-bottom"></div>' +
       '<div class="cine-streak"></div><div class="cine-vignette"></div>'],
     /* Technical drawing: a hairline grid and crop marks in the corners. */
-    brutal: ['brut-art', '<div class="brut-grid"></div><div class="brut-marks"></div>']
+    brutal: ['brut-art', '<div class="brut-grid"></div><div class="brut-marks"></div>'],
+    /* AI Awareness Day: the campaign badge bled off the corner, the lockup
+       top-left, the hashtag bottom-right. Identical for all five principles —
+       which principle it is comes from --aiad-principle in css/aiad26.css, so
+       the five entries below really are the same string five times rather than
+       five variants that could drift apart. */
+    'aiad26-safe': ['aiad-art', AIAD_ART],
+    'aiad26-smart': ['aiad-art', AIAD_ART],
+    'aiad26-creative': ['aiad-art', AIAD_ART],
+    'aiad26-responsible': ['aiad-art', AIAD_ART],
+    'aiad26-future': ['aiad-art', AIAD_ART]
   };
 
   function renderSlide(deck, slide, opts) {
