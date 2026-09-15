@@ -2343,5 +2343,14 @@
      can show "end poll" rather than guessing from the focus overlay. */
   Live.customPromptOpen = function () { return !!(Live.prompt && Live.prompt.custom); };
 
+  /* Turn the big-screen seat on for a share id, or off with no argument.
+     A named method rather than exposing send(): the relay acts on anything it
+     is given, and the rest of the app has no business reaching the socket. */
+  Live.watchOn = function (id) {
+    if (!Live.active) return false;
+    send({ t: 'watchOn', s: typeof id === 'string' ? id : '' });
+    return true;
+  };
+
   SF.Live = Live;
 })(window);

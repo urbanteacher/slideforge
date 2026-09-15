@@ -994,6 +994,12 @@ function closeRoom(room, reason) {
   record(room, 'end', {reason:reason || 'The host ended the session.'});
   if (room.host && room.host.open) room.host.json({t:'sessionClosed', report:Sessions.project(room.audit)});
   const why = reason || 'The host ended the quiz.';
+  /* Tell the big screens the lesson is over rather than leaving them frozen on
+     whatever slide was up when it ended. */
+  if (room.watchers) {
+    for (const w of room.watchers) { if (w.open) w.json({ t: 'watchEnd', message: why }); }
+    room.watchers.clear();
+  }
   for (const p of room.players.values()) {
     if (p.sock && p.sock.open) {
       p.sock.json(Object.assign({ t: 'over', reason: why }, finishPayload(room, p)));
@@ -1611,7 +1617,11 @@ ws.attach(server, (sock, req) => {
       } else if (m.t === 'at') {
         /* Just where the host is. A pace signal is filed against the slide the
            room was looking at when they sent it, which is the only form of it
-           that is any use afterwards. */
+           that is any use afterwards.
+
+           A spectator connecting mid-lesson needs the current position, so it
+           is kept below as room.lastAt — taken from room.at after it has been
+           sanitised, never from the raw message. */
         const moved = room.at.slideId !== String(m.slideId || '').slice(0,160);
         room.at = {
           slideId: String(m.slideId || '').slice(0, 160),
@@ -1638,7 +1648,8 @@ ws.attach(server, (sock, req) => {
           admitWaiting(room);
           pushPlayers(room);
         }
-        broadcast(room, learnerContext(room));
+        room.lastAt = learnerContext(room);
+        broadcast(room, room.lastAt);
         /* Moving between a content slide and a check changes who may speak, so
            it travels with the slide rather than waiting for the next toggle. */
         broadcast(room, { t: 'floor', open: floorIsOpen(room), mode: room.floor });
@@ -1704,6 +1715,24 @@ ws.attach(server, (sock, req) => {
           p.sock.json(Object.assign({ t: 'finish', title: title, note: note }, finishPayload(room, p)));
         }
 
+      } else if (m.t === 'watchOn') {
+        /* Turning the big-screen seat on or off. The id is the share the host
+           has just made, so the relay never holds a deck for this — the copy
+           a watcher renders is the one /api/share already serves, and the id
+           is the only thing that has to be kept.
+
+           This has to live inside the host chain: the block returns, so a
+           branch for it further down was unreachable and the first version of
+           it silently did nothing. */
+        const wid = String(m.s || '');
+        room.watchId = /^[a-f0-9]{32}$/.test(wid) ? wid : null;
+        if (!room.watchId && room.watchers) {
+          for (const w of room.watchers) { if (w.open) w.json({ t: 'watchEnd' }); }
+          room.watchers.clear();
+        }
+        sock.json({ t: 'watchState', on: !!room.watchId });
+        log('room ' + room.pin + ' big screen ' + (room.watchId ? 'on' : 'off'));
+
       } else if (m.t === 'end') {
         closeRoom(room, 'The host ended the quiz.');
         room = null;
@@ -1712,6 +1741,38 @@ ws.attach(server, (sock, req) => {
     }
 
     /* ---- player side ---- */
+
+    /* A desktop following the room on the big screen, with no PIN.
+       The share id in the URL is the whole credential, so it has to be the
+       thing that is checked — 128 random bits, compared in constant time
+       against the id the host registered when it turned watching on. A PIN is
+       five digits and guessable at leisure; this is not, and revoking the
+       share revokes the view.
+
+       A watcher is deliberately not a player: it is never in room.players, so
+       it does not appear in the room list, the attendance record, the
+       scoreboard or any report, and it cannot answer anything. */
+    if (m.t === 'watch') {
+      if (role) return;
+      const want = String(m.s || '');
+      if (!/^[a-f0-9]{32}$/.test(want)) { sock.json({ t: 'error', message: 'That watch link is not complete.' }); return; }
+      let target = null;
+      for (const r of rooms.values()) {
+        if (r.watchId && r.watchId.length === want.length &&
+            crypto.timingSafeEqual(Buffer.from(r.watchId), Buffer.from(want))) { target = r; break; }
+      }
+      if (!target) {
+        sock.json({ t: 'error', message: 'Nobody is presenting this lesson right now. The slides will start moving when they do.' });
+        return;
+      }
+      role = 'watcher';
+      room = target;
+      if (!room.watchers) room.watchers = new Set();
+      room.watchers.add(sock);
+      sock.json({ t: 'watching', title: room.title, at: room.lastAt || null });
+      log('room ' + room.pin + ' watcher joined (' + room.watchers.size + ')');
+      return;
+    }
 
     if (m.t === 'join') {
       if (role) return;
@@ -2084,6 +2145,12 @@ ws.attach(server, (sock, req) => {
   });
 
   sock.on('close', () => {
+    /* A spectator leaving is not an event: nobody was counting them, nothing
+       is owed to them, and the room does not change. Drop the socket and go. */
+    if (role === 'watcher') {
+      if (room && room.watchers) room.watchers.delete(sock);
+      return;
+    }
     if (role === 'host' && room) {
       /* Hold the room rather than ending the lesson. A refresh, a crash, a lid
          closed for a minute — none of those are a decision to stop teaching,
@@ -2120,6 +2187,18 @@ ws.attach(server, (sock, req) => {
 function broadcast(room, msg) {
   for (const p of room.players.values()) {
     if (p.sock && p.sock.open) p.sock.json(msg);
+  }
+  /* Spectators get the slide-position message and nothing else. That message
+     is 'context' — the same one the phones get, already bounded to a title and
+     an excerpt with no speaker notes and no correct answers — so a big screen
+     inherits that guarantee rather than needing its own.
+
+     They are not players: no id, no name, no answers, nothing in the audit
+     record, and nothing they send is acted on. */
+  if (room.watchers && room.watchers.size && msg && msg.t === 'context') {
+    for (const w of room.watchers) {
+      if (w.open) w.json(msg); else room.watchers.delete(w);
+    }
   }
 }
 
