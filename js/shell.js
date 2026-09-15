@@ -962,9 +962,10 @@
        working lecture, none of which is a bug and all of which look like one
        from the back of the room.
 
-       Lives as ⚙ beside File, not inside the document menu and not among
-       Present / Host live: none of this is a property of the deck, and mixing
-       "is the server awake" with the show controls teaches nobody where to look.
+       Lives in File, not as a second gear beside it: ⚙ in the top bar was
+       read as Settings, and Settings itself was a second unlabeled ⚙ on the
+       rail, so File and Settings felt like one confused control. Settings is
+       now a labeled button (theme, logo, numbers). This is the room-ops list.
 
        The addresses listed are the ones the app can work out for itself.
        Accounts and dashboards are not here on purpose: they are personal to
@@ -1177,15 +1178,10 @@
 
     /* A copy someone who was not in the room can open. Only where a server
        is serving this — from a file:// page there is nowhere to put it. */
-    var btnShare = $('btnShare');
-    /* The same action lives in the top bar as well as in File. One handler
-       for both: a toolbar surfaces the frequent thing and the menu stays
-       complete, which is the convention everywhere, but two copies of the
-       handler would be two things to keep in step. */
     var btnShareTop = $('btnShareTop');
-    if (btnShare) {
-      if (!servedByRelay()) { btnShare.hidden = true; if (btnShareTop) btnShareTop.hidden = true; }
-      else btnShare.onclick = function () {
+    if (btnShareTop) {
+      if (!servedByRelay()) btnShareTop.hidden = true;
+      else btnShareTop.onclick = function () {
         /* Always the lesson deck, whichever studio is in front: the viewer
            only opens decks, and the quiz and activities studios both write
            into this same lesson. */
@@ -1201,21 +1197,27 @@
            the follow-along screen went unmentioned entirely, so the only way
            to find it was to already know it was there. */
         var liveNow = !!(SF.Live && SF.Live.active);
-        SF.ask({
-          title: 'Share “' + (doc.title || 'this lesson') + '”?',
-          detail: (liveNow
-            ? 'Two links, one after the other: a screen that follows you in real time — for a ' +
-              'desktop, a second projector, anyone watching remotely — and a copy to read at ' +
-              'their own pace. '
-            : 'A copy anyone can read at their own pace. For a screen that follows you live ' +
-              'instead, press Host live first and share again: that one only works while a ' +
-              'room is running. ') +
-            'Puts a copy on this server at an address nobody can guess, which anyone ' +
-            'holding the link can open and read. They cannot edit it, and it is not listed ' +
-            'anywhere — but a link that escapes is a lesson that escaped. ' +
-            'Games are not carried across; the slides are. You get a key that withdraws it.',
-          confirm: liveNow ? 'Make both links' : 'Make the link'
-        }, function () {
+        /* Two buttons, because this is a choice between two things and not a
+           question with a yes in it. The first version put both behind one
+           "Make both links", which is a sentence rather than an option, and
+           the version before that never mentioned the second one at all. */
+        SF.askChoice({
+          title: 'Share “' + (doc.title || 'this lesson') + '”',
+          detail: 'Either one puts a copy on this server at an address nobody can guess. They cannot ' +
+            'edit it and it is not listed anywhere — but a link that escapes is a lesson that ' +
+            'escaped. Games are not carried across; the slides are. You get a key that withdraws it.',
+          options: [
+            { value: 'read', label: 'A link to read at their own pace',
+              detail: 'They open it whenever they like and page through it themselves. Works whether or not you are presenting.' },
+            { value: 'follow', label: 'A screen that follows you live',
+              disabled: !liveNow,
+              detail: 'Full screen on a desktop or a second projector. It moves when you move, ' +
+                'including through a build, and cannot run ahead. No PIN, and nobody watching ' +
+                'appears in your reports.',
+              why: 'Needs a room running — press Host live first, then share again. It only ' +
+                'works while you are presenting.' }
+          ]
+        }, function (choice) {
           SF.toast('Uploading a copy…');
           fetch('/api/share', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1251,10 +1253,10 @@
             var durability = j.durable
               ? 'This server keeps shared copies on durable storage — they survive an app update.'
               : 'On this server, shared copies live with the app files and are gone at the next deploy unless a persistent disk is attached (SLIDEFORGE_DATA_DIR).';
-            /* Live: the screen that follows you is the link being asked for in
-               the moment, so it comes first and the read-only copy second.
-               Not live: there is only one, and it is this. */
-            if (followUrl) {
+            /* One choice, one link. Showing the other one afterwards was the
+               sequence this replaced, and it is what made the button label
+               wrong in the first place. */
+            if (choice === 'follow' && followUrl) {
               SF.askText({
                 title: 'Follow-along link for a big screen',
                 detail: 'Open this on a desktop and it full-screens the lesson and moves when you do. ' +
@@ -1278,9 +1280,6 @@
           });
         });
       };
-      /* Same function, not a copy of it. If the guard above hid the menu item
-         there is nothing to point at, which is why this sits inside the else. */
-      if (btnShareTop) btnShareTop.onclick = btnShare.onclick;
     }
 
     var btnSettings = $('btnSettings');
@@ -1453,9 +1452,8 @@
     }
     var railLbl = $('railLabel');
     if (railLbl) railLbl.textContent = active.railLabel;
-    /* Name what the cog opens. "Settings for this document" is true and tells
-       nobody where the board's card size went, which is how it got asked
-       about. */
+    /* Name what Settings opens. The button says Settings; the title says
+       which sheet, because Quiz studio's is teams and card size, not theme. */
     var cog = $('btnSettings'), what = active.settingsLabel || 'Settings';
     if (cog) {
       cog.title = what;

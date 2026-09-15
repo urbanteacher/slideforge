@@ -1890,6 +1890,11 @@
       total: pos.total,
       activity: s.type === 'quiz' ? (Live.revealed[s.id] ? 'moment' : 'question') : SF.slideFeedback(s) ? 'feedback' : (s.type === 'results' || s.gameId) ? 'moment' : 'content',
       text: SF.slideExcerpt(s, SF.Player.revealStep || 0),
+      /* How far through a build the room is. The phones only need the excerpt,
+         which already accounts for it — but a big screen renders the slide
+         itself, and without this every Build-on-Next slide sits there showing
+         nothing but its heading for as long as it is up. */
+      step: SF.Player.revealStep || 0,
       style: companion.style,
       role: companion.role,
       participation: companion.participation,

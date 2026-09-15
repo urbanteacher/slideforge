@@ -1628,6 +1628,9 @@ ws.attach(server, (sock, req) => {
           title: String(m.title || '').slice(0, 200),
           n: Math.max(0, Number(m.n) || 0),
           total: Math.max(0, Number(m.total) || 0),
+          /* Bounded like everything else here. A build step is a small
+             integer; anything else is a client sending nonsense. */
+          step: Math.max(0, Math.min(99, Number(m.step) || 0)),
           activity: ['content','question','feedback','moment'].includes(m.activity) ? m.activity : 'content',
           text: String(m.text || '').slice(0,2400),
           bloom: String(m.bloom || '').slice(0,24),

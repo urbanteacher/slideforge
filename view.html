@@ -14,13 +14,13 @@
 
      Navigation only — no teaching HUD. A share is for reading the slides,
      not for hosting the room. -->
-<link rel="stylesheet" href="css/app.css?v=34">
+<link rel="stylesheet" href="css/app.css?v=36">
 <link rel="stylesheet" href="css/board-common.css?v=1">
 <link rel="stylesheet" href="css/memory.css?v=2">
 <link rel="stylesheet" href="css/bingo.css?v=2">
 <link rel="stylesheet" href="css/bowl.css?v=2">
 <link rel="stylesheet" href="css/lowstakes.css?v=2">
-<link rel="stylesheet" href="css/studio.css?v=9">
+<link rel="stylesheet" href="css/studio.css?v=11">
 <link rel="stylesheet" href="css/northeastern.css?v=10">
 <link rel="stylesheet" href="css/ukbt.css?v=16">
 <link rel="stylesheet" href="css/variant-themes.css?v=5">
@@ -38,6 +38,7 @@
     padding: 7px 12px; font: 12px system-ui, sans-serif; color: #aab3c2;
     background: #00000066; backdrop-filter: blur(6px); }
   .share-bar b { color: #e7eaf0; font-weight: 600; }
+  .share-bar { display: flex; gap: 18px; align-items: center; justify-content: space-between; }
   /* Keep the simple ‹ › bar easy to find; hide nothing else because the
      teaching tools are not in the markup for this page. */
   body.share-browse .hud {
@@ -66,7 +67,7 @@
 <script src="js/qr.js?v=2"></script>
 <script src="js/model.js?v=22"></script>
 <script src="js/playbook.js?v=2"></script>
-<script src="js/ask.js?v=2"></script>
+<script src="js/ask.js?v=4"></script>
 <script src="js/race.js?v=2"></script>
 <script src="js/boss.js?v=2"></script>
 <script src="js/lessons.js?v=25"></script>
@@ -79,7 +80,7 @@
 <script src="js/lowstakes.js?v=2"></script>
 <script src="js/demo.js?v=2"></script>
 <script src="js/player.js?v=7"></script>
-<script src="js/live.js?v=8"></script>
+<script src="js/live.js?v=9"></script>
 <script src="js/ai.js?v=2"></script>
 <script src="js/quick-poll.js?v=1"></script>
 <script src="js/teaching.js?v=2"></script>
@@ -135,6 +136,13 @@
         return;
       }
       document.body.classList.add('share-follow');
+      /* The player's own arrows are hidden rather than left to be clicked and
+         ignored: a control that visibly does nothing is worse than no control.
+         Full screen stays — it is the entire point of watching on a desktop. */
+      var css = document.createElement('style');
+      css.textContent = 'body.share-follow .hud .hud-share-only { display: none !important; }' +
+        'body.share-follow .share-bar { gap: 18px; }';
+      document.head.appendChild(css);
       var status = document.createElement('span');
       bar.appendChild(Object.assign(document.createElement('span'), {
         innerHTML: '<b>' + esc(deck.title || 'Live lesson') + '</b> · following the room'
@@ -160,7 +168,16 @@
         if (!m || !m.n) return;
         at = m;
         var i = Math.max(0, Math.min(run.slides.length - 1, m.n - 1));
-        SF.Player.goTo(i, i > SF.Player.idx ? 1 : -1, true);
+        var moved = i !== SF.Player.idx;
+        if (moved) SF.Player.goTo(i, i > SF.Player.idx ? 1 : -1, true);
+        /* Follow the build as well as the slide. Without this a Build-on-Next
+           slide shows its heading and nothing else for as long as it is up —
+           which the smoke test caught, and which would have been the first
+           thing anybody noticed on a real deck. Stepping rather than jumping
+           because that is the only way in, and it is idempotent once there. */
+        var want = Math.max(0, Number(m.step) || 0);
+        var guard = 0;
+        while ((SF.Player.revealStep || 0) < want && guard++ < 40) SF.Player.next();
         say('Slide ' + m.n + (m.total ? ' of ' + m.total : ''));
       }
 
