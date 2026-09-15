@@ -16,6 +16,7 @@
     box.className = 'ask-modal';
     box.innerHTML =
       '<h3 id="askTitle"></h3><p id="askDetail"></p>' +
+      '<div id="askQr" class="ask-qr" hidden></div>' +
       '<input id="askInput" type="text" hidden>' +
       '<div class="ask-actions">' +
       '<button class="btn" value="no" id="askNo">Cancel</button>' +
@@ -50,7 +51,7 @@
   /**
    * Ask before doing something that cannot be undone.
    *
-   * @param {object} o  { title, detail, confirm, danger }
+   * @param {object} o  { title, detail, confirm, danger, value, placeholder, qr }
    * @param {function} yes  run only if they confirm
    */
   function ask(o, yes) {
@@ -66,6 +67,24 @@
     field.hidden = typeof o.value !== 'string';
     field.value = typeof o.value === 'string' ? o.value : '';
     if (o.placeholder) field.placeholder = o.placeholder;
+    /* Same encoder as the join wall. A share URL is a join URL's cousin —
+       origin + a path + a short id — so it fits the version-6 cap. If it
+       does not, the address is still in the field; the code just stays off. */
+    var qrBox = box.querySelector('#askQr');
+    if (qrBox) {
+      var payload = o.qr === true ? field.value : (typeof o.qr === 'string' ? o.qr : '');
+      qrBox.innerHTML = '';
+      qrBox.hidden = true;
+      if (payload && SF.qrSvg) {
+        try {
+          qrBox.innerHTML = SF.qrSvg(payload, {
+            size: 180, quiet: 3, title: 'Open ' + payload
+          });
+          qrBox.hidden = false;
+        } catch (e) {}
+      }
+      box.classList.toggle('has-qr', !qrBox.hidden);
+    }
     var go = box.querySelector('#askYes');
     go.textContent = o.confirm || 'Confirm';
     go.classList.toggle('danger', o.danger !== false);
@@ -79,14 +98,14 @@
    * embedded webview — it throws, so renaming a learner raised an uncaught
    * error rather than doing nothing.
    *
-   * @param {object} o  { title, detail, value, placeholder, confirm }
+   * @param {object} o  { title, detail, value, placeholder, confirm, qr }
    * @param {function} got  run with the text, only if they confirm
    */
   function askText(o, got) {
     o = o || {};
     ask({ title: o.title, detail: o.detail, confirm: o.confirm || 'Save',
       danger: false, value: String(o.value == null ? '' : o.value),
-      placeholder: o.placeholder }, function (value) {
+      placeholder: o.placeholder, qr: o.qr }, function (value) {
         var text = String(value == null ? '' : value).trim();
         if (text) got(text);
       });

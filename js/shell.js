@@ -1240,8 +1240,8 @@
               : 'On this server, shared copies live with the app files and are gone at the next deploy unless a persistent disk is attached (SLIDEFORGE_DATA_DIR).';
             SF.askText({
               title: 'Your read-only link',
-              detail: 'Anyone with this address can open the lesson. It is already on your clipboard. ' + durability,
-              value: url, confirm: followUrl ? 'Next — the big-screen link' : 'Done'
+              detail: 'Anyone with this address can open the lesson. Scan the code or paste the link — it is already on your clipboard. ' + durability,
+              value: url, qr: true, confirm: followUrl ? 'Next — the big-screen link' : 'Done'
             }, function () {
               /* Two addresses, same copy, different jobs: one is read at your
                  own pace, one follows the room. Shown one after the other
@@ -1253,8 +1253,8 @@
                 detail: 'Open this on a desktop and it full-screens the lesson and moves when you do. ' +
                   'No PIN and no joining — whoever holds the address watches, and they cannot run ahead ' +
                   'of you or answer anything. It stops working when this room ends, or when you withdraw ' +
-                  'the shared copy.',
-                value: followUrl, confirm: 'Done'
+                  'the shared copy. Scan the code or paste the link.',
+                value: followUrl, qr: true, confirm: 'Done'
               }, function () {});
             });
           }).catch(function (e) {
