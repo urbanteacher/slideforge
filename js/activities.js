@@ -921,7 +921,10 @@
         Object.keys(res.values).forEach(function (path) { write(row.slide, path, res.values[path]); });
         SF.Editor.commitActivityChange();
         draw();
-        SF.toast('Written — read it before you teach it.');
+        /* A fallback draft says so in its own words. Reporting "written" for
+           a heading the provider refused to help with would be a lie the
+           size of the rest of the slide. */
+        SF.toast(res.notice || 'Written — read it before you teach it.');
       }).catch(function (err) {
         writeInFlight = false;
         SF.toast((err && err.message) ? String(err.message) : 'Could not write this just now.');

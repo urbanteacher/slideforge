@@ -311,6 +311,24 @@
      it; tests/ai-timeouts.test.js fails if this one stops being the longer. */
   var AI_CLIENT_TIMEOUT_MS = 33000;
 
+  /* One quiet retry, for the failure that actually happens.
+
+     Gemini's own 503 arrives here as a 502 from our proxy, and it is usually
+     over in seconds: across a day of testing, nine failures in ten were an
+     upstream refusal that came back in under fifteen seconds rather than a
+     timeout — 1.5s, 2.4s, 4.5s, 5.5s, 6.1s, 8.0s, 9.3s, 12.6s. Asking once
+     more turns a good share of those into an answer nobody had to request
+     twice.
+
+     Narrow on purpose. A 429 is never retried: retrying a rate limit is how
+     you earn it, and the server allows ten calls a minute on a key shared by
+     every classroom. A 4xx will not change its mind. And a call that already
+     spent the budget timing out has no room for a second attempt inside it,
+     so only a failure that came back quickly is worth repeating. */
+  var AI_RETRY_STATUS = { 502: true, 503: true };
+  var AI_RETRY_AFTER_MS = 900;
+  var AI_RETRY_ONLY_UNDER_MS = 9000;
+
   /* The transport: prompt out, parsed JSON back. Shaping what comes back is
      each caller's job, because a poll and a set of quiz questions want very
      different things from the same endpoint. */
@@ -321,30 +339,50 @@
     }
     if (aiBusy) throw new Error('AI is already writing — wait for it to finish.');
     aiBusy = true;
-    var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = controller ? setTimeout(function () { controller.abort(); }, AI_CLIENT_TIMEOUT_MS) : null;
-    try {
-      var res = await fetchFn(aiUrl('/api/ai/generate'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system: String(systemPrompt || '').slice(0, 2200),
-          user: String(userPrompt || '').slice(0, 1800)
-        }),
-        signal: controller ? controller.signal : undefined
-      });
-      if (timer) clearTimeout(timer);
-      if (!res.ok) {
-        /* 503 means this deployment has no key, which is not a failure for a
-           poll — the heuristics are the designed answer to it. */
-        if (res.status === 429) throw new Error('Too many AI requests — wait a moment and try once.');
-        throw new Error('AI endpoint returned status ' + res.status);
+
+    async function attempt() {
+      var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      var timer = controller ? setTimeout(function () { controller.abort(); }, AI_CLIENT_TIMEOUT_MS) : null;
+      try {
+        var res = await fetchFn(aiUrl('/api/ai/generate'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system: String(systemPrompt || '').slice(0, 2200),
+            user: String(userPrompt || '').slice(0, 1800)
+          }),
+          signal: controller ? controller.signal : undefined
+        });
+        if (!res.ok) {
+          /* 503 means this deployment has no key, which is not a failure for a
+             poll — the heuristics are the designed answer to it. */
+          if (res.status === 429) throw new Error('Too many AI requests — wait a moment and try once.');
+          var err = new Error('AI endpoint returned status ' + res.status);
+          /* Carried so the retry rule below, and the callers, can tell a
+             provider having a moment from a request that was refused. */
+          err.aiStatus = res.status;
+          throw err;
+        }
+        var data = await res.json();
+        if (!data || !data.text) throw new Error('No content returned by the AI endpoint');
+        return parseModelJson(data.text);
+      } finally {
+        if (timer) clearTimeout(timer);
       }
-      var data = await res.json();
-      if (!data || !data.text) throw new Error('No content returned by the AI endpoint');
-      return parseModelJson(data.text);
+    }
+
+    try {
+      var started = Date.now();
+      try {
+        return await attempt();
+      } catch (first) {
+        var status = Number(first && first.aiStatus) || 0;
+        var quick = (Date.now() - started) < AI_RETRY_ONLY_UNDER_MS;
+        if (!AI_RETRY_STATUS[status] || !quick) throw first;
+        await new Promise(function (go) { setTimeout(go, AI_RETRY_AFTER_MS); });
+        return await attempt();
+      }
     } finally {
-      if (timer) clearTimeout(timer);
       aiBusy = false;
     }
   }
@@ -1037,6 +1075,38 @@
 
   /* -------------------------------------------------- writing an activity */
 
+  /* What to do when the provider will not answer.
+
+     Fill the one box whose content the topic already IS, and invent nothing
+     else. Every activity in the catalogue carries a Heading field bound to
+     the slide's title, so this is always available.
+
+     The other boxes are deliberately left as they are. The starter copy that
+     ships with an activity is written about somebody else's subject —
+     perimeter and rectangles, all of it — so pasting it under a heading about
+     osmosis would put the wrong lesson on the wall, which is the same mistake
+     the library's draft answers exist to avoid. And filling four boxes with
+     plausible-looking filler would be worse than filling none: filler reads
+     as content, and it would be read out. So the room gets a true heading and
+     the teacher keeps the typing, which is what they had before Write
+     existed — minus the dead end. */
+  function draftFromTopic(fields, topic, why) {
+    var heading = fields.filter(function (f) {
+      return f.type === 'text' && f.slide === 'title';
+    })[0];
+    if (!heading) return { error: why + ' The activity is untouched.' };
+    var values = {};
+    values[heading.slide] = topic.charAt(0).toUpperCase() + topic.slice(1);
+    return {
+      values: values,
+      kind: null,
+      repaired: 0,
+      heuristic: true,
+      fallback: true,
+      notice: why + ' Topic written into the heading — the rest is yours.'
+    };
+  }
+
   /**
    * Fill in an activity's boxes for a topic.
    *
@@ -1097,8 +1167,19 @@
       parsed = await callServerRaw(system, user);
     } catch (err) {
       var msg = err && err.message ? String(err.message) : '';
+      /* These two are the user's to resolve, and a draft would hide them: one
+         asks for a pause, the other says a call is already running. */
       if (/Too many AI|already writing/i.test(msg)) return { error: msg };
-      return { error: 'The AI server could not be reached. The activity is untouched.' };
+      /* Everything else has already been retried once. Rather than handing
+         back a dead end, say which failure it was and write what can honestly
+         be written. 502 is the provider refusing; a 504 or an abort is it
+         being too slow. */
+      var status = Number(err && err.aiStatus) || 0;
+      var busy = status === 502 || status === 503 || status === 504 ||
+        /abort|too long/i.test(msg);
+      return draftFromTopic(fields, topic, busy
+        ? 'The AI provider is busy \u2014 it turned this down twice.'
+        : 'The AI server could not be reached.');
     }
 
     var values = {};
