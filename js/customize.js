@@ -190,8 +190,9 @@
       box.appendChild(UI.field('Cards layout',UI.select([
         {value:'grid',label:'Side by side'},
         {value:'rows',label:'Rows down the slide — full width each'},
-        {value:'stack',label:'Stacked — one in front, the rest behind'}
-      ],d.cardsMode==='stack'?'stack':d.cardsMode==='rows'?'rows':'grid',function(v){
+        {value:'stack',label:'Stacked — one in front, the rest behind'},
+        {value:'icons',label:'Icon grid — emoji at the front of each label becomes a badge'}
+      ],['stack','rows','icons'].indexOf(d.cardsMode)>=0?d.cardsMode:'grid',function(v){
         d.cardsMode=v;
         /* A stack with everything already on screen is just a pile. Choosing
            it turns the build on; going back to a row leaves it alone, since
@@ -199,6 +200,19 @@
         if(v==='stack'){s.progressive=true;s.buildMode='dim';}
         change();
       }),'Each card gets its own moment, with the ones already covered showing behind.'));
+    }
+    if(s.type==='stats'){
+      choose('Tile style','statStyle',[
+        ['tile','Big number over its label'],
+        ['ring','Ring — filled to the number\u2019s share'],
+        ['bar','KPI bar under the number']
+      ],'tile');
+    }
+    if(s.type==='funnel'){
+      choose('Direction','funnelDirection',[['down','Funnel — widest at the top'],['up','Pyramid — widest at the bottom']],'down');
+    }
+    if(s.type==='timeline'){
+      choose('Shape','timelineMode',[['horizontal','Across — one rail, dates above events'],['vertical','Down — a spine with a paragraph per event']],'horizontal');
     }
     if(s.activity){
       var ma=document.createElement('textarea');ma.rows=3;ma.value=s.modelAnswer||'';

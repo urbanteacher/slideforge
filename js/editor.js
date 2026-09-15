@@ -1710,6 +1710,80 @@
     drawPairPits(wrap, s, 'keywords');
   }
 
+  /* Three fields per pit for the infographic layouts — label · value · note —
+     written back as one tab-separated line so the row still reorders, bulk
+     pastes and spreads across slides like any other bullet. `cols` names the
+     fields per type; a two-column type (Versus) simply omits the third. */
+  var INFO_COLS = {
+    stats:    ['Label', 'Value', 'Note'],
+    funnel:   ['Stage', 'Value', 'Note'],
+    timeline: ['Date', 'Event', 'Detail'],
+    compare:  ['Left column', 'Right column', 'Row label (optional)']
+  };
+  function drawInfoPits(wrap, s) {
+    wrap.innerHTML = '';
+    wrap.className = 'pit-list keyword-pits info-pits';
+    ensurePits(s);
+    var max = PIT_MAX[s.type] || 8;
+    var cols = INFO_COLS[s.type] || INFO_COLS.stats;
+    var compare = s.type === 'compare';
+    function isEmpty(line) { var p = SF.parseInfoLine(line); return !(p.label || p.value || p.note); }
+    function readRow(i) {
+      var p = SF.parseInfoLine(s.bullets[i]);
+      /* Versus stores an optional row label first: "aspect\tleft\tright".
+         In the inspector the label is the third field, so map both ways. */
+      return compare && p.note ? [p.value, p.note, p.label] : [p.label, p.value, p.note];
+    }
+    function writeRow(i, parts) {
+      s.bullets[i] = compare
+        ? (parts[2] ? SF.formatInfoLine(parts[2], parts[0], parts[1]) : SF.formatInfoLine(parts[0], parts[1], ''))
+        : SF.formatInfoLine(parts[0], parts[1], parts[2]);
+    }
+    s.bullets.forEach(function (line, i) {
+      var row = el('div', 'pit-row keyword' + (isEmpty(line) ? ' empty' : ''));
+      contentOrder(row, s, i, wrap, function () { drawInfoPits(wrap, s); });
+      row.appendChild(el('span', 'pit-i', String(i + 1).padStart(2, '0')));
+      var fields = el('div', 'kw-pit-fields info-pit-fields');
+      cols.forEach(function (ph, c) {
+        var input = UI.text(readRow(i)[c], function (v) {
+          var parts = readRow(i); parts[c] = v; writeRow(i, parts);
+          touched(); repaint();
+          row.classList.toggle('empty', isEmpty(s.bullets[i]));
+        }, ph);
+        input.className = (input.className ? input.className + ' ' : '') + (c === 0 ? 'kw-term-input' : 'kw-def-input');
+        input.setAttribute('aria-label', ph + ' ' + (i + 1));
+        fields.appendChild(input);
+      });
+      row.appendChild(fields);
+      var kill = el('button', 'kill', '×');
+      kill.type = 'button';
+      kill.title = 'Remove';
+      kill.setAttribute('aria-label', 'Remove row ' + (i + 1));
+      kill.onclick = function () {
+        if (s.bullets.length <= 1) s.bullets[0] = '';
+        else s.bullets.splice(i, 1);
+        ensurePits(s);
+        touched();
+        drawInfoPits(wrap, s);
+        repaint();
+      };
+      row.appendChild(kill);
+      wrap.appendChild(row);
+    });
+    bulkContent(wrap, s, function () { drawInfoPits(wrap, s); });
+    if (s.bullets.length < max) {
+      var add = UI.button('+ Add row', 'ghost pit-add', function () {
+        s.bullets.push('');
+        touched();
+        drawInfoPits(wrap, s);
+        repaint();
+        var sel = wrap.querySelectorAll('.kw-term-input');
+        if (sel.length) sel[sel.length - 1].focus();
+      });
+      wrap.appendChild(add);
+    }
+  }
+
   function drawPits(wrap, s) {
     wrap.innerHTML = '';
     wrap.className = 'pit-list';
@@ -1935,7 +2009,8 @@
         richField(s, 'subtitle', 'text', function (v) { s.subtitle = v; touched(); repaint(); })));
       insp.appendChild(UI.field('Show as', UI.select(
         [{ value: 'path', label: 'Route with milestones' },
-         { value: 'handover', label: 'Connected stages' }],
+         { value: 'handover', label: 'Connected stages' },
+         { value: 'stepper', label: 'Stepper — numbered discs on one rail' }],
         s.journeyMode || 'path', function (v) { s.journeyMode = v; touched(); repaint(); })));
       var stops = el('div');
       drawPairPits(stops, s, 'journey');
@@ -1990,6 +2065,33 @@
       drawPits(notes, s);
       insp.appendChild(UI.field('Supporting points', notes,
         'Everything that matters less than the fact above. Three or four at most.'));
+      return;
+    }
+    if (SF.INFO_LAYOUTS && SF.INFO_LAYOUTS.indexOf(s.type) >= 0) {
+      var INFO_HINTS = {
+        stats:    ['Stats · label, value, note', 'Three to six. The value is set large — "92%", "£1.2m", "3 of 5". Ring and bar styles read the leading number.'],
+        compare:  ['Rows · left, right, optional label', 'Each row is one point of comparison. Add a row label when the rows need naming ("Cost", "Speed").'],
+        funnel:   ['Stages · name, value, note', 'Top to bottom. Numeric values set the band widths; without numbers the bands narrow evenly.'],
+        timeline: ['Events · date, event, detail', 'Up to eight. Dates can be years, terms or "Week 3" — they are labels, not parsed.']
+      };
+      var hint = INFO_HINTS[s.type];
+      insp.appendChild(UI.field('Heading',
+        richField(s, 'title', 'text', function (v) { s.title = v; touched(); repaint(); })));
+      if (s.type === 'compare') {
+        insp.appendChild(UI.field('Column headings',
+          richField(s, 'subtitle', 'text', function (v) { s.subtitle = v; touched(); repaint(); }),
+          'Left | Right — "Before | After", "Myth | Fact", "Option A | Option B".'));
+      } else {
+        insp.appendChild(UI.field('Context line',
+          richField(s, 'subtitle', 'text', function (v) { s.subtitle = v; touched(); repaint(); }),
+          'Optional. Where the numbers come from, or the period they cover.'));
+      }
+      var pits = el('div');
+      drawInfoPits(pits, s);
+      insp.appendChild(UI.field(hint[0], pits, hint[1]));
+      insp.appendChild(UI.field('Takeaway',
+        richField(s, 'body', 'area', function (v) { s.body = v; touched(); repaint(); }, 2),
+        'Optional line under the graphic — the one sentence the numbers add up to.'));
       return;
     }
     if (s.type === 'introduction') {

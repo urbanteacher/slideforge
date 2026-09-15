@@ -1259,6 +1259,49 @@
           progressive: true,
           notes: 'MIND MAP — arranges the points around the title in the centre rather than down the page. Use it when the points are siblings with no order; use Journey when the order is the point.' },
 
+        { type: 'stats', title: 'Stat tiles — the numbers that matter',
+          subtitle: 'From the module survey, week 6 · n = 148',
+          bullets: [
+            'Read the chart first\t92%\tbefore they read the caption',
+            'Found the legend\t48%\ton first look',
+            'Asked a follow-up\t3 of 5\tafter a clear chart'
+          ],
+          progressive: true,
+          notes: 'STAT TILES — each line is label · value · note, and the value is set large. Three to six tiles; three is the sweet spot. Under Design, the Ring style fills a circle to the number’s share and the Bar style adds a KPI bar under it — both read the leading number in the value.' },
+
+        { type: 'compare', title: 'Versus — two columns, row by row',
+          subtitle: 'Bad chart | Good chart',
+          bullets: [
+            'Colour\tOne hue per series, twelve series\tTwo hues: the series that matters, and everything else',
+            'Labels\tA legend the eye has to travel to\tLabels on the lines themselves',
+            'Title\t"Figure 3"\tThe finding, as a sentence'
+          ],
+          progressive: true,
+          notes: 'VERSUS — the subtitle names the two columns ("Before | After", "Myth | Fact"). Each row is left · right, or row label · left · right when the rows need naming, as here. Rows build on Next so the comparison is argued one line at a time.' },
+
+        { type: 'funnel', title: 'Funnel — stages that narrow',
+          subtitle: 'What happens to a chart between the analyst and the reader',
+          bullets: [
+            'Data points plotted\t1,200\teverything the query returned',
+            'Marks the eye registers\t300\tthe rest is texture',
+            'Marks that are compared\t40\twhere the reading actually happens',
+            'Number remembered\t1\tif the title did its job'
+          ],
+          progressive: true,
+          notes: 'FUNNEL — stage · value · note. When the values are numbers the band widths follow them, so a cliff draws as a cliff. Without numbers the bands narrow evenly. Design → Direction flips it to a pyramid.' },
+
+        { type: 'timeline', title: 'Timeline — dated events on a rail',
+          subtitle: 'Where the ideas in this module came from',
+          bullets: [
+            '1786\tPlayfair\tThe bar chart and the line chart, in one atlas',
+            '1858\tNightingale\tThe rose diagram takes an argument to Parliament',
+            '1967\tBertin\tSemiology of Graphics — the visual variables named',
+            '1983\tTufte\tData-ink ratio and chartjunk',
+            '2010s\tFT & Datawrapper\tThe visual vocabulary goes mainstream'
+          ],
+          progressive: true,
+          notes: 'TIMELINE — date · event · detail, up to eight. Dates are labels, not parsed, so "Week 3" or "Term 2" work. Design → Shape switches to the vertical spine, which gives each event a full line of detail.' },
+
         { type: 'keywords', title: 'Keywords — term and definition',
           bullets: [
             'Idiom\tA particular way of encoding data visually.',
@@ -1284,6 +1327,28 @@
           ],
           progressive: true, buildMode: 'dim',
           notes: 'CARDS — items that are peers, arranged in a row with the number on the side rather than across the top, so four fit without shrinking. The card count drives the column ladder automatically: two cards are wide, six are narrow. Also on dim build here.' },
+
+        { type: 'cards', title: 'Cards · icon grid — a pictogram row',
+          bullets: [
+            '👁 See\tWhat the reader notices in the first second.',
+            '🧭 Orient\tAxes, legend, units — where am I?',
+            '⚖ Compare\tThe one difference the chart exists to show.',
+            '💬 Say\tThe sentence they would repeat to a colleague.'
+          ],
+          design: { cardsMode: 'icons' },
+          progressive: true,
+          notes: 'CARDS — the same layout with Design → Cards layout set to Icon grid. An emoji or symbol at the front of each label is lifted into a badge above the copy, so the row reads as a pictogram set rather than a list. Cards without a glyph simply keep their label.' },
+
+        { type: 'journey', journeyMode: 'stepper', title: 'Journey · stepper — a process in one glance',
+          subtitle: 'Design → Show as → Stepper',
+          bullets: [
+            'Question\tWhat does the reader need to decide?',
+            'Data\tThe smallest table that answers it.',
+            'Idiom\tThe chart family that fits the relationship.',
+            'Title\tThe finding, written as a sentence.'
+          ],
+          progressive: true,
+          notes: 'JOURNEY — the third mode. Numbered discs on one horizontal rail with the copy beneath, for a process read left to right. Route keeps the sequence vertical; Handover is two or three big columns; Stepper is the infographic idiom for "first, then, then".' },
 
         { type: 'section', title: 'Data and evidence', subtitle: 'Table, chart in three kinds',
           notes: 'Table and chart read the same pasted text, so a range from a spreadsheet becomes either without retyping.' },
@@ -1411,7 +1476,7 @@
             'This deck is a reference copy. Edit it freely; rebuild it from the lesson picker whenever you want a clean one.',
             'Not here: quiz, game, results, join and explain. Those are made for you, not chosen from the picker.'
           ],
-          notes: 'Close. Rebuilding this lesson gives a fresh copy, so nothing here is precious. The picker offers twenty layouts and nineteen of them are in this deck; video is named on its own slide but not rendered, because a placeholder URL would only ever draw a black box. The remaining five slide types never appear in the picker: quiz, game, results and join are built by the live session, and explain is the card that shows the correct answer after a check — which is also why the student handout leaves it out.' }
+          notes: 'Close. Rebuilding this lesson gives a fresh copy, so nothing here is precious. Every layout the picker offers is in this deck except one; video is named on its own slide but not rendered, because a placeholder URL would only ever draw a black box. The remaining five slide types never appear in the picker: quiz, game, results and join are built by the live session, and explain is the card that shows the correct answer after a check — which is also why the student handout leaves it out.' }
       ]
     },
     {
@@ -2293,7 +2358,7 @@
       key: 'vibe-product',
       title: 'Product · Keynote minimal',
       icon: '◇',
-      blurb: 'Apple-style minimal with empty image slots ready for your photos. Title → photo statement → split → two image cards → photo close.',
+      blurb: 'Apple-style minimal with empty image slots ready for your photos. Title → photo statement → stat tiles → icon cards → photo close.',
       minutes: 5,
       theme: 'product',
       slides: [
@@ -2310,25 +2375,25 @@
           notes: 'Statement beat as a full-bleed image slot. Paste a URL or drop a file in the inspector.'
         },
         {
-          type: 'split',
-          title: '1 idea',
+          type: 'stats',
+          title: 'By the numbers.',
           bullets: [
-            'Rule of thumb — one claim per slide.',
-            'If you have three messages, make three slides.',
-            'The picture carries mood; the words carry the rule.'
+            'idea per slide\t1\tIf you have three messages, make three slides.',
+            'words in a title\t≤ 6\tThe picture carries mood; the words carry the rule.',
+            'accent colour\t1\tUsed once per slide, not on everything.'
           ],
-          imageSide: 'right',
           progressive: true,
-          notes: 'Fact beat as dual coding — “Add an image” on the media side until you drop one in.'
+          notes: 'STAT TILES — the fact beat as three big numbers. Each line is label · value · note. Try Design → Tile style → Ring or Bar.'
         },
         {
           type: 'cards',
           title: 'Two points. Done.',
           bullets: [
-            'Whitespace\tLeave empty space alone — it is part of the design.',
-            'One accent\tUse the accent colour once per slide, not on everything.'
+            '◻ Whitespace\tLeave empty space alone — it is part of the design.',
+            '● One accent\tUse the accent colour once per slide, not on everything.'
           ],
-          notes: 'Two cards. Add card photos in the inspector if you want plates; left empty on purpose.'
+          design: { cardsMode: 'icons' },
+          notes: 'CARDS in Icon grid mode — the symbol at the front of each label becomes a badge. Swap the symbols for emoji if the room is informal.'
         },
         {
           type: 'image',
@@ -2342,7 +2407,7 @@
       key: 'vibe-editorial',
       title: 'Editorial · Paper & narrative',
       icon: '¶',
-      blurb: 'Warm paper and serif type with placeholder photo slots. Title → dual-coding → photo claim → cards → photo close.',
+      blurb: 'Warm paper and serif type with placeholder photo slots. Title → dual-coding → photo claim → timeline → photo close.',
       minutes: 5,
       theme: 'editorial',
       slides: [
@@ -2371,14 +2436,17 @@
           notes: 'Full-bleed photo slot + claim. Scrim appears once an image is set.'
         },
         {
-          type: 'cards',
+          type: 'timeline',
           title: 'What the eye did',
+          subtitle: 'The first three seconds with a photograph',
           bullets: [
-            'Cluster\tIt found the pattern before it found the legend.',
-            'Trust\tIt believed the map faster than a paragraph.',
-            'Next step\tIt still needed one sentence for what to do.'
+            '0.3 s\tCluster\tIt found the pattern before it found the legend.',
+            '1 s\tTrust\tIt believed the picture faster than a paragraph.',
+            '3 s\tNext step\tIt still needed one sentence for what to do.'
           ],
-          notes: 'Three cards. Optional: add plate images per card in the inspector.'
+          design: { timelineMode: 'vertical' },
+          progressive: true,
+          notes: 'TIMELINE in the vertical shape — a spine with serif dates, one paragraph per beat. Switch to Across under Design when the sweep matters more than the detail.'
         },
         {
           type: 'image',
@@ -2392,7 +2460,7 @@
       key: 'vibe-cinematic',
       title: 'Cinematic · Dark pitch',
       icon: '▣',
-      blurb: 'Dark pitch energy with empty photo slots. Title → stake image → dual-coding → before/after cards → cut image.',
+      blurb: 'Dark pitch energy with empty photo slots. Title → stake image → dual-coding → before/after versus → cut image.',
       minutes: 5,
       theme: 'cinematic',
       slides: [
@@ -2420,13 +2488,16 @@
           notes: 'Spotlight as dual coding — empty plate until you add a chart or still.'
         },
         {
-          type: 'cards',
+          type: 'compare',
           title: 'Before / after',
+          subtitle: 'Before | After',
           bullets: [
-            'Before\tTwelve bullets, one font size, no hierarchy.',
-            'After\tOne claim, one number, one next step.'
+            'Text\tTwelve bullets, one font size\tOne claim',
+            'Evidence\tA table nobody reads\tOne number',
+            'Ask\tNothing\tOne next step'
           ],
-          notes: 'Comparison cards. Add two plate images in the inspector when you have them.'
+          progressive: true,
+          notes: 'VERSUS — two glass columns compared row by row. The subtitle names the columns; each line is row label · left · right. Rows land one per press.'
         },
         {
           type: 'image',
@@ -2440,7 +2511,7 @@
       key: 'vibe-studio-teach',
       title: 'Studio teach · Warm classroom',
       icon: '✳',
-      blurb: 'Sage Studio teaching arc with empty image slots. Title → hook photo → dual-coding → check cards → reflect photo.',
+      blurb: 'Sage Studio teaching arc with empty image slots. Title → hook photo → three-step stepper → check cards → reflect photo.',
       minutes: 8,
       theme: 'studio',
       slides: [
@@ -2463,17 +2534,18 @@
           notes: 'HOOK — image slot + word cloud. Add a photo, then let the room answer.'
         },
         {
-          type: 'split',
+          type: 'journey',
+          journeyMode: 'stepper',
           title: 'Three moves that help',
+          subtitle: 'In this order — each one makes the next easier',
           bullets: [
-            'Remove one distraction before you start.',
-            'Name a finish line you can see from here.',
-            'Pause once — then adjust, do not restart.'
+            'Remove\tOne distraction, before you start. Phone in the bag counts.',
+            'Name\tA finish line you can see from here — not the whole essay, the next paragraph.',
+            'Pause\tOnce. Then adjust — do not restart.'
           ],
-          imageSide: 'right',
           progressive: true,
           buildMode: 'dim',
-          notes: 'CONTENT as dual coding — “Add an image” until you drop a portrait or scene.'
+          notes: 'JOURNEY in Stepper mode — numbered discs on one rail, a process read left to right. Dim build keeps earlier moves visible at 38% while the next arrives.'
         },
         {
           type: 'cards',
@@ -2510,7 +2582,7 @@
       key: 'vibe-brutal',
       title: 'Brutal · Mono technical',
       icon: '▮',
-      blurb: 'Hard mono edges with empty plate slots. Title → agenda image → dual-coding → claim split → end image.',
+      blurb: 'Hard mono edges with empty plate slots. Title → agenda image → funnel → claim split → end image.',
       minutes: 5,
       theme: 'brutal',
       slides: [
@@ -2528,16 +2600,16 @@
           notes: 'AGENDA as an image slot + numbered caption — add a grid or schematic in the inspector.'
         },
         {
-          type: 'split',
+          type: 'funnel',
           title: 'Mechanism',
+          subtitle: 'Everything above the rule is scaffolding',
           bullets: [
-            'Constraint first — what must stay true.',
-            'Mechanism second — the one move that enforces it.',
-            'Rule last — short enough for a README.'
+            'Constraint\tI\tWhat must stay true, whatever else changes.',
+            'Mechanism\tII\tThe one move that enforces it.',
+            'Rule\tIII\tShort enough for a README.'
           ],
-          imageSide: 'left',
           progressive: true,
-          notes: 'CONTENT as dual coding — empty media until you add a figure.'
+          notes: 'FUNNEL — three squared bands narrowing to the rule. Values here are roman numerals, not numbers, so the bands narrow evenly; give them real counts and the widths follow the data instead.'
         },
         {
           type: 'split',
@@ -2554,6 +2626,166 @@
           title: 'END',
           subtitle: 'Your closing plate',
           notes: 'Acid close — drop a stark chart or still, then walk off.'
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------
+       Infographic pack — every premium shape once, in the house theme, so
+       the whole set can be paged through and copied slide by slide. Numbers
+       are placeholders written to look like data; replace them.
+       ------------------------------------------------------------------ */
+    {
+      key: 'infographic-pack',
+      title: 'Infographic pack · premium layouts',
+      icon: '％',
+      blurb: 'Stat tiles (three styles), versus columns, funnel, pyramid, two timelines, a stepper and an icon grid. Copy any slide into your own deck and swap the numbers.',
+      minutes: 8,
+      theme: 'studio',
+      slides: [
+        {
+          type: 'title',
+          title: 'Show the shape\nof the numbers.',
+          subtitle: 'Ten infographic slides · every style once · change the theme to recolour them all',
+          notes: 'Every slide in this deck is a bullet layout underneath — one pit per element, tab-separated — so reorder, bulk paste and Build on Next all work. Switch the deck theme and the whole pack recolours.'
+        },
+        {
+          type: 'stats',
+          title: 'Stat tiles',
+          subtitle: 'Label · value · note — the value is set large',
+          bullets: [
+            'Completion\t92%\tup from 81% last term',
+            'Median time\t14 min\tper task',
+            'Rated useful\t4.6 / 5\tn = 148'
+          ],
+          progressive: true,
+          notes: 'Default tile style. Three is the sweet spot; six fit at a smaller size.'
+        },
+        {
+          type: 'stats',
+          title: 'Stat rings',
+          subtitle: 'Design → Tile style → Ring',
+          bullets: [
+            'Attendance\t88%\tweek 6',
+            'Submitted on time\t74%\tfirst attempt',
+            'Passed first time\t61%\tno resit',
+            'Used the feedback\t35%\tself-reported'
+          ],
+          design: { statStyle: 'ring' },
+          progressive: true,
+          notes: 'Each ring fills to the number’s share. Percentages fill against 100; other numbers fill against the largest on the slide.'
+        },
+        {
+          type: 'stats',
+          title: 'KPI bars',
+          subtitle: 'Design → Tile style → Bar',
+          bullets: [
+            'Applications\t1,240\ttarget 1,000',
+            'Offers\t860\ttarget 800',
+            'Enrolled\t510\ttarget 600'
+          ],
+          design: { statStyle: 'bar' },
+          body: 'Two of three targets met — enrolment is the one to talk about.',
+          progressive: true,
+          notes: 'Bars fill against the largest value. The takeaway line under the graphic is optional; use it for the one sentence the numbers add up to.'
+        },
+        {
+          type: 'compare',
+          title: 'Versus',
+          subtitle: 'Lecture | Workshop',
+          bullets: [
+            'Pace\tSet by the speaker\tSet by the slowest table',
+            'Attention\tFalls after 12 minutes\tResets with every task',
+            'Evidence of learning\tNone until the exam\tVisible in the room',
+            'Prep time\tLow once written\tHigh every time'
+          ],
+          progressive: true,
+          notes: 'Column headings live in the subtitle, split on the pipe. Each row is row label · left · right; drop the label and it becomes two plain columns.'
+        },
+        {
+          type: 'funnel',
+          title: 'Funnel',
+          subtitle: 'Where a cohort thins out — the widths follow the numbers',
+          bullets: [
+            'Applied\t1,240\t',
+            'Interviewed\t620\thalf',
+            'Offered\t310\thalf again',
+            'Enrolled\t190\t',
+            'Completed\t160\t84% of starters'
+          ],
+          progressive: true,
+          notes: 'Numeric values drive the band widths, floored at 40% so the last band still has room for its label. Without numbers the bands narrow evenly.'
+        },
+        {
+          type: 'funnel',
+          title: 'Pyramid',
+          subtitle: 'Design → Direction → Pyramid',
+          bullets: [
+            'Recall\tRemember it\tfacts, terms, dates',
+            'Understand\tExplain it\tin your own words',
+            'Apply\tUse it\ton a new problem',
+            'Create\tMake something\tthat did not exist before'
+          ],
+          design: { funnelDirection: 'up' },
+          progressive: true,
+          notes: 'Same layout flipped — widest at the bottom. Non-numeric values, so the bands narrow evenly towards the top.'
+        },
+        {
+          type: 'timeline',
+          title: 'Timeline · across',
+          subtitle: 'The term at a glance',
+          bullets: [
+            'Week 1\tInduction\tTools, groups, expectations',
+            'Week 3\tFormative 1\tShort task, feedback in class',
+            'Week 6\tReading week\tNo sessions',
+            'Week 8\tFormative 2\tDraft of the final piece',
+            'Week 11\tSubmission\tFriday 12:00 on Canvas',
+            'Week 13\tFeedback\tIndividual, in tutorials'
+          ],
+          progressive: true,
+          notes: 'Dates above, events below, one rail. Up to eight; six is comfortable.'
+        },
+        {
+          type: 'timeline',
+          title: 'Timeline · down',
+          subtitle: 'Design → Shape → Down — when the detail matters more than the sweep',
+          bullets: [
+            '2019\tPilot\tOne module, forty students, paper feedback forms.',
+            '2021\tRedesign\tMoved online in a term; kept the weekly check-in.',
+            '2023\tScaled\tFour modules, shared rubric, peer review added.',
+            '2025\tNow\tEvery first-year module; feedback inside 10 days.'
+          ],
+          design: { timelineMode: 'vertical' },
+          progressive: true,
+          notes: 'A spine down the left with a full line per event. Better for four or five events with a sentence each.'
+        },
+        {
+          type: 'journey',
+          journeyMode: 'stepper',
+          title: 'Stepper',
+          subtitle: 'Journey → Show as → Stepper',
+          bullets: [
+            'Draft\tWrite it badly, fast.',
+            'Cut\tRemove every sentence that does not earn its place.',
+            'Check\tRead it aloud once.',
+            'Send\tBefore you re-read it a fourth time.'
+          ],
+          progressive: true,
+          notes: 'Numbered discs on one rail for a process read left to right. Route and Handover are the other two Journey modes.'
+        },
+        {
+          type: 'cards',
+          title: 'Icon grid',
+          subtitle: 'Design → Cards layout → Icon grid',
+          bullets: [
+            '🎯 Aim\tOne outcome per session.',
+            '⏱ Time\tTen minutes per activity, then move.',
+            '🗣 Talk\tEvery learner speaks once before the half-hour.',
+            '✅ Check\tOne question the whole room answers.'
+          ],
+          design: { cardsMode: 'icons' },
+          progressive: true,
+          notes: 'The emoji or symbol at the front of each label becomes a badge above the copy. Cards without a glyph keep their whole label.'
         }
       ]
     }

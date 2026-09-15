@@ -146,6 +146,7 @@
 .deck-viewport.railed .layout-italics .it-phrase,#previewBox.railed .layout-italics .it-phrase{font-size:28px}.deck-viewport.railed .layout-italics .it-note,#previewBox.railed .layout-italics .it-note{font-size:22px}
 .deck-viewport.railed .layout-links .ln-label,#previewBox.railed .layout-links .ln-label{font-size:28px}
 .deck-viewport.railed .layout-links .ln-link,#previewBox.railed .layout-links .ln-link{font-size:18px}
+.kw-pit-fields.info-pit-fields{grid-template-columns:1fr .8fr 1.2fr}
 @media(max-width:800px){.kw-pit-fields{grid-template-columns:1fr}}
 
 @media(max-width:1150px){.starters-grid{grid-template-columns:repeat(2,1fr)}}
