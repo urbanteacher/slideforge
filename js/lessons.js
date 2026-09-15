@@ -1,8 +1,8 @@
-/* Ready-made lessons, as data.
-   These used to be one lesson built by hand inside makeLesson(), which meant
-   the only way to see it again was to clear the browser's storage so the app
-   thought it was a first run. They are content, not code: a lesson here is a
-   plain object, and adding another one is adding an entry to this array.
+/* Factory lesson packs, as seed data for the Library.
+   Looks (Northeastern, UKBT, Studio sage, Product, Editorial) live in
+   Settings → Theme. These packs are documents: seeded once into Store, then
+   opened and saved in place. Vibe galleries and the infographic museum stay
+   in this file for buildLesson, but they are not Library cards.
    A .js file rather than .json so the app still works opened from disk, where
    fetch() of a local file is blocked. */
 (function (global) {
@@ -102,6 +102,8 @@
       blurb: 'Week 1 foundations: course journey and assessment, why we visualise, history and discovery plates, Anscombe, the 4Ps, and a formative check.',
       minutes: 90,
       theme: 'northeastern',
+      libraryGroup: 'nul',
+      kind: 'lecture',
       org: 'Northeastern University London',
       logo: 'assets/brand/nu-london-logo.png',
       logoOn: 'all',
@@ -1209,6 +1211,8 @@
       blurb: 'The reference deck: every layout in the picker, all twenty chart idioms, the design variants, and the things the room answers on their phones. Page through it to see what each one does, then copy the slide you want into your own lesson. Every slide says in its notes when to reach for it — and when not to.',
       minutes: 40,
       theme: 'northeastern',
+      libraryGroup: 'nul',
+      kind: 'template',
       org: 'Northeastern University London',
       logo: 'assets/brand/nu-london-logo.png',
       logoOn: 'all',
@@ -1867,6 +1871,8 @@
       blurb: 'The partnership pack as a deck: who we are, the audience, the four tiers, the individual opportunities and how it works. Pricing is placeholder and every slide that carries a number says so.',
       minutes: 25,
       theme: 'ukbt',
+      libraryGroup: 'ukbt',
+      kind: 'lecture',
       org: 'UK Black Tech',
       logo: 'assets/brand/ukbt-wordmark.png',
       logoOn: 'all',
@@ -1980,6 +1986,8 @@
       blurb: 'The Institute pack as a deck: the method, the track record, the research agenda, the independence terms, and the four partnership routes. Pricing is placeholder and the slides say so.',
       minutes: 30,
       theme: 'ukbt-institute',
+      libraryGroup: 'ukbt-institute',
+      kind: 'lecture',
       org: 'UKBT Institute',
       logo: 'assets/brand/ukbt-institute.svg',
       logoOn: 'all',
@@ -2107,6 +2115,8 @@
       blurb: 'A starter deck in the UK Black Tech brand: one of every layout worth using, with placeholder copy to replace and a note on each saying what the layout is for. Rebuild it any time for a clean copy.',
       minutes: 0,
       theme: 'ukbt',
+      libraryGroup: 'ukbt',
+      kind: 'template',
       org: 'UK Black Tech',
       logo: 'assets/brand/ukbt-wordmark.png',
       logoOn: 'all',
@@ -2215,6 +2225,8 @@
       blurb: 'A starter deck in the UKBT Institute brand: one of every layout worth using, with placeholder copy to replace and a note on each saying what the layout is for. Rebuild it any time for a clean copy.',
       minutes: 0,
       theme: 'ukbt-institute',
+      libraryGroup: 'ukbt-institute',
+      kind: 'template',
       org: 'UKBT Institute',
       logo: 'assets/brand/ukbt-institute.svg',
       logoOn: 'all',
@@ -2323,6 +2335,8 @@
       blurb: 'The four-floor innovation model and its PRL gates, as a deck: twelve stakeholders on Floor 1, then experiment, build and scale. Content follows the model published on ukblacktech.com.',
       minutes: 45,
       theme: 'ukbt-institute',
+      libraryGroup: 'ukbt-institute',
+      kind: 'lecture',
       org: 'UKBT Institute',
       /* The official Institute lockup, from the organisation's own site. The
          brand deck could not supply it: there the mark is an image and the
@@ -2462,6 +2476,8 @@
       blurb: 'Five slides to ask an organisation to back one campaign: who you reach, what you build, what you have already done, and the ask. Figures are UK Black Tech’s own — check them before you pitch.',
       minutes: 10,
       theme: 'ukbt',
+      libraryGroup: 'ukbt',
+      kind: 'lecture',
       org: 'UK Black Tech',
       logo: 'assets/brand/ukbt-wordmark.png',
       logoOn: 'all',
@@ -2519,6 +2535,8 @@
       blurb: 'Northeastern look: big word-leading openers, full-bleed image beats, and red section breaks that cut the argument into chapters. Use it as a pacing template.',
       minutes: 12,
       theme: 'northeastern',
+      libraryGroup: 'nul',
+      kind: 'template',
       org: 'Northeastern University London',
       logo: 'assets/brand/nu-london-logo.png',
       logoOn: 'all',
@@ -3172,12 +3190,58 @@
     }
   ];
 
+  /** Brand packs filed into the Library on first visit. Looks (vibe galleries,
+   *  infographic museum) stay out — those live in Settings → Theme. */
+  var LIBRARY_SEED_KEYS = {
+    'ipdv-intro': 'nul',
+    'layout-bank': 'nul',
+    'pace-nul': 'nul',
+    'ukbt-sponsorship': 'ukbt',
+    'ukbt-campaigns': 'ukbt',
+    'ukbt-template': 'ukbt',
+    'ukbt-institute-partnership': 'ukbt-institute',
+    'ukbt-institute-template': 'ukbt-institute',
+    'ukbt-institute-townhouse': 'ukbt-institute'
+  };
+
+  function groupForSpec(spec) {
+    if (!spec) return 'other';
+    if (spec.libraryGroup) return spec.libraryGroup;
+    if (LIBRARY_SEED_KEYS[spec.key]) return LIBRARY_SEED_KEYS[spec.key];
+    return (SF.libraryGroupFromTheme && SF.libraryGroupFromTheme(spec.theme)) || 'other';
+  }
+
+  /**
+   * File each factory pack into Store once. Later app updates do not overwrite
+   * an edited pack — a stored deck with the same sourceKey already counts.
+   *
+   * @returns {number} how many packs were added this call
+   */
+  function seedLibrary() {
+    if (!SF.Store) return 0;
+    var byKey = {};
+    SF.Store.list().forEach(function (d) {
+      if (d.sourceKey) byKey[d.sourceKey] = d;
+    });
+    var added = 0;
+    Object.keys(LIBRARY_SEED_KEYS).forEach(function (key) {
+      if (byKey[key]) return;
+      var deck = buildLesson(key);
+      if (!deck) return;
+      deck.sourceKey = key;
+      deck.libraryGroup = LIBRARY_SEED_KEYS[key];
+      SF.Store.save(deck, { force: true });
+      added++;
+    });
+    return added;
+  }
+
   /**
    * Turn a lesson in this file into a real deck, with its games saved.
    *
-   * Fresh ids every time, so activating a lesson twice gives two lessons
-   * rather than two references to the same one. Games are created through
-   * makeGame so a lesson here never has to know the shape of a question.
+   * Fresh ids every time, so a factory reset still clones rather than
+   * overwriting the Library row. Opening a Library card uses Store ids
+   * instead — seedLibrary files each pack once.
    *
    * @param {string} [key]  which lesson; the first one by default
    * @returns {object|null} deck
@@ -3187,6 +3251,8 @@
     if (!spec) return null;
     var deck = SF.makeDeck(spec.title);
     deck.theme = spec.theme || 'studio';
+    deck.libraryGroup = groupForSpec(spec);
+    if (LIBRARY_SEED_KEYS[spec.key]) deck.sourceKey = spec.key;
     /* Carried like the logo fields below, and for the same reason: a lesson
        that names its institution has to hand that to the deck, or the theme
        prints nothing where the organisation line goes. */
@@ -3229,5 +3295,7 @@
   }
 
   SF.LESSONS = LESSONS;
+  SF.LIBRARY_SEED_KEYS = LIBRARY_SEED_KEYS;
   SF.buildLesson = buildLesson;
+  SF.seedLibrary = seedLibrary;
 })(typeof window !== 'undefined' ? window : globalThis);

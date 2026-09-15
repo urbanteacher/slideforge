@@ -7238,6 +7238,125 @@
     }
     return false;
   }
+  var LIBRARY_GROUPS = [
+    { id: "nul", label: "Northeastern" },
+    { id: "ukbt", label: "UK Black Tech" },
+    { id: "ukbt-institute", label: "UKBT Institute" },
+    { id: "other", label: "Other" }
+  ];
+  function libraryGroupFromTheme(theme) {
+    if (theme === "northeastern") return "nul";
+    if (theme === "ukbt") return "ukbt";
+    if (theme === "ukbt-institute") return "ukbt-institute";
+    return "other";
+  }
+  function normalizeLibraryGroup(raw, theme) {
+    const id = String(raw || "").trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
+    return id || libraryGroupFromTheme(theme);
+  }
+  function slugLibraryFolder(label) {
+    return normalizeLibraryGroup(label, "") || "folder";
+  }
+  var FOLDER_KEY = "slideforge.libraryFolders.v1";
+  function createLibraryFolders({ storage, warn = console.warn }) {
+    function read() {
+      try {
+        const raw = JSON.parse(storage().getItem(FOLDER_KEY) || "{}");
+        return {
+          folders: Array.isArray(raw.folders) ? raw.folders : [],
+          collapsed: raw.collapsed && typeof raw.collapsed === "object" ? raw.collapsed : {},
+          labels: raw.labels && typeof raw.labels === "object" ? raw.labels : {}
+        };
+      } catch (error) {
+        warn("Could not read library folders:", error);
+        return { folders: [], collapsed: {}, labels: {} };
+      }
+    }
+    function write(state) {
+      try {
+        storage().setItem(FOLDER_KEY, JSON.stringify(state));
+        return true;
+      } catch (error) {
+        warn("Could not save library folders:", error);
+        return false;
+      }
+    }
+    function catalog() {
+      const state = read();
+      const seen = /* @__PURE__ */ Object.create(null);
+      const out = LIBRARY_GROUPS.map(function(g) {
+        seen[g.id] = true;
+        return { id: g.id, label: String(state.labels[g.id] || g.label), builtin: true };
+      });
+      state.folders.forEach(function(f) {
+        const id = normalizeLibraryGroup(f && f.id, "");
+        if (!id || seen[id]) return;
+        seen[id] = true;
+        out.push({ id, label: String(f && f.label || id), builtin: false });
+      });
+      return out;
+    }
+    return {
+      catalog,
+      collapsed: function() {
+        return read().collapsed;
+      },
+      setCollapsed: function(id, on) {
+        const state = read();
+        if (on) state.collapsed[id] = true;
+        else delete state.collapsed[id];
+        write(state);
+      },
+      rename: function(id, label) {
+        const name = String(label || "").trim();
+        if (!id || !name) return false;
+        const state = read();
+        if (LIBRARY_GROUPS.some(function(g) {
+          return g.id === id;
+        })) {
+          state.labels[id] = name;
+        } else {
+          const row = state.folders.filter(function(f) {
+            return f.id === id;
+          })[0];
+          if (row) row.label = name;
+          else state.folders.push({ id, label: name });
+        }
+        return write(state);
+      },
+      create: function(label) {
+        const name = String(label || "").trim();
+        if (!name) return null;
+        let id = slugLibraryFolder(name);
+        const used = /* @__PURE__ */ Object.create(null);
+        catalog().forEach(function(g) {
+          used[g.id] = true;
+        });
+        let n = 2;
+        const base = id;
+        while (used[id]) {
+          id = base + "-" + n;
+          n++;
+        }
+        const state = read();
+        state.folders.push({ id, label: name });
+        write(state);
+        return id;
+      },
+      remove: function(id) {
+        if (!id || LIBRARY_GROUPS.some(function(g) {
+          return g.id === id;
+        })) return false;
+        const state = read();
+        state.folders = state.folders.filter(function(f) {
+          return f.id !== id;
+        });
+        delete state.labels[id];
+        delete state.collapsed[id];
+        return write(state);
+      }
+    };
+  }
   function createStores({ normalizeDeck: normalizeDeck2, normalizeGame: normalizeGame2, storage, warn = console.warn }) {
     function documents(kind, key, lastKey, normalize) {
       function read() {
@@ -7266,6 +7385,9 @@
           if (!(opts && opts.force) && unusedDraft(document)) {
             const all2 = read();
             if (!all2.some((item) => item.id === document.id)) return true;
+          }
+          if (kind === "decks" && document && !document.libraryGroup) {
+            document.libraryGroup = libraryGroupFromTheme(document.theme);
           }
           document.modified = Date.now();
           const all = read();
@@ -7315,7 +7437,8 @@
         (deck) => deck.slides.some((slide) => slide.type === "game" && slide.gameId === id)
       ).map((deck) => deck.title)
     });
-    return { Store: Store2, GameStore: GameStore2 };
+    const LibraryFolders2 = createLibraryFolders({ storage, warn });
+    return { Store: Store2, GameStore: GameStore2, LibraryFolders: LibraryFolders2 };
   }
 
   // src/games/scoring.js
@@ -8212,6 +8335,8 @@
     d.aspect = ASPECTS[d.aspect] ? d.aspect : "16:9";
     d.logo = String(d.logo || "");
     d.org = String(d.org || "");
+    d.sourceKey = String(raw.sourceKey || "");
+    d.libraryGroup = normalizeLibraryGroup(raw.libraryGroup, d.theme);
     d.logoSize = ["small", "medium", "large"].includes(raw.logoSize) ? raw.logoSize : "medium";
     if (d.logoOn !== "all" && d.logoOn !== "title" && d.logoOn !== "none") {
       d.logoOn = d.logo ? "all" : "none";
@@ -8716,7 +8841,7 @@
     if (!deck.slides.length) deck.slides = [makeSlide("title")];
     return normalizeDeck(deck);
   }
-  var { Store, GameStore } = createStores({ normalizeDeck, normalizeGame, storage: () => localStorage });
+  var { Store, GameStore, LibraryFolders } = createStores({ normalizeDeck, normalizeGame, storage: () => localStorage });
   runtime.SF = Object.assign(runtime.SF || {}, {
     Boards: createBoardRuntime(() => runtime.SF, GAME_STYLES),
     /* The activity catalogue. Data only — studio.js reads target and builds. */
@@ -8847,6 +8972,10 @@
     migrateDeckQuizzes,
     Store,
     GameStore,
-    unusedDraft
+    unusedDraft,
+    libraryGroupFromTheme,
+    normalizeLibraryGroup,
+    LIBRARY_GROUPS,
+    LibraryFolders
   });
 })();

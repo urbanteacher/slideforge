@@ -215,8 +215,8 @@
   }
 
   /**
-   * Generic document picker, used by Open in both engines and by
-   * "Insert game" in the presentation editor.
+   * Generic document picker, used by File → Open saved quiz in Quiz studio
+   * and by "Insert game" in the presentation editor.
    * @param {object} o { title, items, empty, onPick, onDelete, onDeleteMany, onClear, clearLabel, describe, wide? }
    */
   function picker(o) {
@@ -350,6 +350,17 @@
       docTitle.value = doc.title;
       docTitle.placeholder = active.key === 'deck' ? 'Presentation title' : 'Game title';
     }
+    var fold = $('docFolder');
+    if (fold) {
+      var folder = null;
+      if (active.key === 'deck' && doc && doc.libraryGroup) {
+        folder = libraryFolders().filter(function (g) { return g.id === doc.libraryGroup; })[0];
+      }
+      fold.textContent = folder ? folder.label : 'Library';
+      fold.title = folder
+        ? 'In Library · ' + folder.label + ' — click to open'
+        : 'Open the Library';
+    }
     /* A live lobby is chrome too, and its warning depends on which document
        is open — see deckMismatch in js/live.js. */
     if (SF.Live && SF.Live.syncLobby) SF.Live.syncLobby();
@@ -372,7 +383,85 @@
     }
     active.store.save(active.doc(), force ? { force: true } : undefined);
     active._dirty = false;
-    if (!quiet) SF.toast('Saved to this browser');
+    if (quiet) return;
+    if (active.key !== 'deck') {
+      SF.toast('Saved to this browser');
+      return;
+    }
+    var group = active.doc() && active.doc().libraryGroup;
+    var folder = libraryFolders().filter(function (g) { return g.id === group; })[0];
+    SF.toast(folder ? 'Saved in Library · ' + folder.label : 'Saved in Library');
+  }
+
+  function libraryFolders() {
+    if (SF.LibraryFolders && SF.LibraryFolders.catalog) return SF.LibraryFolders.catalog();
+    return SF.LIBRARY_GROUPS || [];
+  }
+
+  /** File → Save to Library. Ask which folder, then write that Store record. */
+  function saveToLibrary() {
+    if (!active) return;
+    var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
+    if (menu) menu.open = false;
+    if (active.key !== 'deck') {
+      if (SF.History && SF.History.ready() && active.doc) {
+        SF.History.snapshot(active.doc(), 'Before Save to browser');
+      }
+      save(false, true);
+      return;
+    }
+    var doc = active.doc();
+    var current = doc && doc.libraryGroup;
+    var folders = libraryFolders();
+    var options = folders.map(function (g) {
+      return {
+        value: g.id,
+        label: g.label,
+        detail: g.id === current ? 'Current folder' : ''
+      };
+    });
+    options.push({
+      value: '__new__',
+      label: 'New folder…',
+      detail: 'Create a shelf, then save this lesson there.'
+    });
+    SF.askChoice({
+      title: 'Save to Library',
+      detail: 'Choose a folder for “' + ((doc && doc.title) || 'this lesson') +
+        '”. How it looks is still Settings → Theme.',
+      options: options
+    }, function (group) {
+      if (group === '__new__') {
+        SF.ask({
+          title: 'New folder',
+          detail: 'A name for the shelf in the Library.',
+          confirm: 'Save here',
+          value: '',
+          placeholder: 'e.g. Week 3'
+        }, function (name) {
+          var label = String(name || '').trim();
+          if (!label) return;
+          if (!SF.LibraryFolders || !SF.LibraryFolders.create) {
+            SF.toast('Folders are not available in this build.');
+            return;
+          }
+          var id = SF.LibraryFolders.create(label);
+          if (id) commitLibrarySave(id);
+        });
+        return;
+      }
+      commitLibrarySave(group);
+    });
+  }
+
+  function commitLibrarySave(group) {
+    if (active && active.flush) active.flush();
+    var doc = active && active.doc && active.doc();
+    if (doc && group) doc.libraryGroup = group;
+    if (SF.History && SF.History.ready() && doc) {
+      SF.History.snapshot(doc, 'Before Save to Library');
+    }
+    save(false, true);
   }
 
   /* "14 minutes ago" is what someone is looking for in this list; an ISO
@@ -394,23 +483,11 @@
     setStored('saving');
   }
 
-  /* ------------------------------------------------- where the work is
-
-     Both engines autosave about half a second after an edit, and until now
-     said nothing about it. The silence reads as safety: work that has been
-     written feels filed, and a browser save is not filed — it is invisible,
-     per-origin, lost with the profile, and it quietly outranks the lesson the
-     app ships. A stale copy of a lesson therefore looks like missing slides
-     rather than like a stale copy, which is a day nobody gets back.
-
-     So the chrome says where the work actually is, and says "this browser"
-     every time rather than the bare word "Saved". Clicking it opens Export,
-     because the honest next step is a file.
-
-     Deliberately not driven by _dirty: that flag means "changed since the
-     last explicit Save", and the autosave writes straight to the store
-     without clearing it. Reporting it would leave "unsaved" on screen over
-     work that is already written — a worse lie than saying nothing. */
+  /* Autosave pulse next to the title. The Library folder chip is where the
+     file sits; this only says a write is in flight or landed. Not a button:
+     File → Export and File → Library are the doors. Deliberately not driven
+     by _dirty — that flag means "changed since the last explicit Save", and
+     the autosave writes without clearing it. */
   var storedState = 'stored';
   var storedTimer = null;
 
@@ -421,73 +498,13 @@
     clearTimeout(storedTimer);
     if (state === 'saving') {
       el2.textContent = 'Saving…';
-      el2.className = 'btn ghost store-state is-saving';
-      /* The write lands on its own timer inside the engine. Rather than reach
-         across for it, settle shortly after it would have. */
+      el2.className = 'store-state is-saving';
       storedTimer = setTimeout(function () { setStored('stored'); }, 900);
     } else {
-      el2.textContent = 'Saved in this browser';
-      el2.className = 'btn ghost store-state';
+      el2.textContent = 'Saved';
+      el2.className = 'store-state';
     }
-    el2.title = 'Autosaved to this browser only — invisible, tied to this address, ' +
-      'and lost if the profile is cleared. It also wins over the lesson the app ships. ' +
-      'Click for Export, or to reload a shipped lesson from this app.';
-  }
-
-  function lessonBehindOpenDoc() {
-    var doc = active && active.doc && active.doc();
-    if (!doc || !active || active.key !== 'deck') return null;
-    return (SF.LESSONS || []).filter(function (l) { return l.title === doc.title; })[0] || null;
-  }
-
-  function openStoreState() {
-    if (!active) return;
-    if (active.flush) active.flush();
-    var lesson = lessonBehindOpenDoc();
-    picker({
-      title: 'Where this work lives',
-      wide: true,
-      items: function () {
-        var items = [
-          { id: 'export', title: 'Export a durable copy',
-            blurb: 'Browser storage is a draft. Export writes a file (or the app folder) you can keep, commit, or move.' }
-        ];
-        if (lesson) {
-          items.push({ id: 'refresh', title: 'Reload “' + lesson.title + '” from this version of the app',
-            blurb: 'This browser may be showing an older saved copy. Rebuilds the shipped lesson (' +
-              (lesson.slides || []).length + ' slides). Your current copy stays under File → Open.' });
-        }
-        items.push({ id: 'ready', title: 'Lecture setup…',
-          blurb: 'Wake the server, clear browser saves, join-page checks — everything that goes wrong between a working app and a working room.' });
-        return items;
-      },
-      describe: function (it) { return it.blurb; },
-      onPick: function (it) {
-        if (it.id === 'export') {
-          var ex = $('btnExport');
-          if (ex) ex.click();
-          return;
-        }
-        if (it.id === 'ready') {
-          var ready = $('btnLectureReady');
-          if (ready) ready.click();
-          return;
-        }
-        if (it.id === 'refresh') {
-          var L = lessonBehindOpenDoc();
-          if (!L || !SF.Editor || !SF.Editor.useLesson) return;
-          SF.ask({
-            title: 'Reload the shipped lesson?',
-            detail: 'Rebuilds “' + L.title + '” as this version of the app ships it. ' +
-              'The copy currently open stays available under File → Open saved document.',
-            confirm: 'Reload from app'
-          }, function () {
-            SF.Editor.useLesson(L.key);
-            SF.toast('Reloaded from this version of the app. Export if you want a durable copy.');
-          });
-        }
-      }
-    });
+    el2.title = 'Autosaved in this browser. The Library folder next to the title is where the file sits.';
   }
 
   function openSaved() {
@@ -497,9 +514,9 @@
     var openId = ws.doc() && ws.doc().id;
     if (ws.store.sweepUnused) ws.store.sweepUnused(openId);
     picker({
-      title: ws.key === 'deck' ? 'Open a presentation' : 'Saved quizzes & games',
+      title: 'Saved quizzes & games',
       items: function () { return ws.store.list(); },
-      empty: ws.key === 'deck' ? 'Nothing saved yet — press New to start one.' : 'No saved quizzes yet.',
+      empty: 'No saved quizzes yet.',
       describe: ws.describe,
       onPick: function (it) {
         ws.setDoc(ws.store.get(it.id));
@@ -749,29 +766,6 @@
     });   // SF.ask
   }
 
-  /** Which ready-made lesson File → Open demo lesson opens. */
-  var DEMO_LESSON = 'layout-bank';
-
-  /* The demo is the layout bank — every layout, all twenty chart idioms, the
-     design variants and the live moments, each slide carrying its own notes on
-     when to reach for it. It used to be a bundle fetched from /api/demo-lesson,
-     which meant the one thing most often shown to somebody else was the one
-     thing that could not be shown from a file:// copy. It is a lesson now, so
-     it opens anywhere the app does, and it brings its own game with it. */
-  function openDemoLesson() {
-    var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
-    if (menu) menu.open = false;
-    if (!SF.Editor || !SF.Editor.useLesson || !SF.buildLesson) {
-      SF.toast('The demo needs the editor \u2014 reload the page and try again.');
-      return;
-    }
-    var spec = (SF.LESSONS || []).filter(function (l) { return l.key === DEMO_LESSON; })[0];
-    if (!spec) { SF.toast('The demo lesson is missing from this build.'); return; }
-    SF.Editor.useLesson(DEMO_LESSON);
-    SF.toast('"' + spec.title + '" opened \u2014 ' + (spec.slides || []).length +
-      ' slides. Your previous lesson stays in File \u2192 Open.');
-  }
-
   /* Import sniffs the file rather than trusting the extension, and switches
      workspace if you drop a game while editing a presentation. */
   function importDoc(e) {
@@ -871,14 +865,11 @@
     }
 
     var btnSave = $('btnSave');
-    if (btnSave) btnSave.onclick = function () {
-      if (SF.History && SF.History.ready() && active && active.doc) {
-        SF.History.snapshot(active.doc(), 'Before Save to browser');
-      }
-      save(false, true);
-    };
-    var btnDemo = $('btnDemoLesson');
-    if (btnDemo) btnDemo.onclick = openDemoLesson;
+    if (btnSave) {
+      btnSave.textContent = 'Save to Library…';
+      btnSave.title = 'File this lesson in the Library — you choose the folder';
+      btnSave.onclick = saveToLibrary;
+    }
 
     /* Restored: these handlers were dropped when Lecture setup moved to ⚙.
        Export / Import / Help are file chrome — they are not lecture checks. */
@@ -1079,7 +1070,7 @@
               var lesson = lessonBehind();
               if (!lesson) return;
               SF.Editor.useLesson(lesson.key);
-              SF.toast('“' + lesson.title + '” reloaded from this version of the app. Your previous copy is in File → Open.');
+              SF.toast('“' + lesson.title + '” reloaded from this version of the app. Your previous copy is in the Library.');
               return;
             }
 
@@ -1120,9 +1111,14 @@
     }
 
     var storeBtn = $('storeState');
-    if (storeBtn) {
-      setStored('stored');
-      storeBtn.onclick = openStoreState;
+    if (storeBtn) setStored('stored');
+
+    var docFolder = $('docFolder');
+    if (docFolder) {
+      docFolder.onclick = function () {
+        if (SF.Studio && SF.Studio.openLessons) SF.Studio.openLessons();
+        else SF.toast('The Library is not available in this workspace.');
+      };
     }
 
     var btnFind = $('btnFind');
@@ -1356,9 +1352,8 @@
         if (active.flush) active.flush();
         var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
         if (menu) menu.open = false;
-        /* Blank documents only. Ready-made lessons have their own File item
-           (and the Example lesson button); listing them here again made New
-           a second catalogue. */
+        /* Blank documents only. The Library is File → Library; listing packs
+           here again would make New a second catalogue. */
         picker({
           title: 'Start something new',
           items: function () {
@@ -1402,7 +1397,7 @@
       };
     }
 
-    /* Ready-made lessons: wired in js/studio.js (the card grid). A second
+    /* Library: wired in js/studio.js (the grouped Store grid). A second
        handler here used to fight it and open a flat picker instead. */
 
     var btnOpen = $('btnOpen');

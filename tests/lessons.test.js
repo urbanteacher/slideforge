@@ -230,3 +230,56 @@ test('ipdv bundle generator exports a valid slideforge-bundle', () => {
   assert.equal(formative.questions.length, 4);
   assert.equal(bundle.games.length, 9, 'the section checks travel with the bundle');
 });
+
+test('the library seeds brand packs once and leaves vibe galleries out', () => {
+  const SF = load();
+  const vibe = ['pace-studio', 'vibe-product', 'vibe-editorial', 'vibe-cinematic',
+    'vibe-brutal', 'vibe-studio-teach', 'infographic-pack'];
+  vibe.forEach((key) => {
+    assert.ok(SF.LESSONS.some((l) => l.key === key), key + ' still exists as seed data');
+    assert.equal(SF.LIBRARY_SEED_KEYS[key], undefined, key + ' is not a library card');
+  });
+  const first = SF.seedLibrary();
+  assert.equal(first, Object.keys(SF.LIBRARY_SEED_KEYS).length);
+  assert.equal(SF.seedLibrary(), 0, 'a second seed must not clone the packs');
+  const keys = SF.Store.list().map((d) => String(d.sourceKey || '')).filter(Boolean).sort();
+  assert.equal(keys.join(','), Object.keys(SF.LIBRARY_SEED_KEYS).sort().join(','));
+  vibe.forEach((key) => assert.ok(!keys.includes(key)));
+});
+
+test('saving a seeded pack keeps the same library id', () => {
+  const SF = load();
+  SF.seedLibrary();
+  const a = SF.Store.list().filter((d) => d.sourceKey === 'ukbt-template')[0];
+  assert.ok(a, 'ukbt-template was filed');
+  const id = a.id;
+  a.title = 'Edited UKBT template';
+  SF.Store.save(a);
+  const b = SF.Store.get(id);
+  assert.equal(b.id, id);
+  assert.equal(b.title, 'Edited UKBT template');
+  assert.equal(SF.Store.list().filter((d) => d.sourceKey === 'ukbt-template').length, 1);
+});
+
+test('save assigns libraryGroup from theme when missing', () => {
+  const SF = load();
+  const deck = SF.makeDeck('A named lesson');
+  deck.theme = 'ukbt';
+  deck.slides[0].title = 'Week 3';
+  SF.Store.save(deck);
+  const stored = SF.Store.get(deck.id);
+  assert.equal(stored.libraryGroup, 'ukbt');
+  assert.equal(SF.libraryGroupFromTheme('northeastern'), 'nul');
+  assert.equal(SF.libraryGroupFromTheme('ukbt-institute'), 'ukbt-institute');
+  assert.equal(SF.libraryGroupFromTheme('studio'), 'other');
+});
+
+test('a custom library folder is not rewritten to the theme folder', () => {
+  const SF = load();
+  const deck = SF.makeDeck('Week 3 seminar');
+  deck.theme = 'northeastern';
+  deck.libraryGroup = 'week-3';
+  deck.slides[0].title = 'Seminar';
+  SF.Store.save(deck);
+  assert.equal(SF.Store.get(deck.id).libraryGroup, 'week-3');
+});

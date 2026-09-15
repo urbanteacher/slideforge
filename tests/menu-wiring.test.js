@@ -72,8 +72,14 @@ test('the File menu still offers everything it is meant to', () => {
   const menu = html.slice(html.indexOf('<details class="file-menu"'), html.indexOf('</details>'));
   /* Named individually rather than counted, so deleting one fails here
      instead of quietly shrinking the menu. */
-  ['btnNew', 'btnOpen', 'btnReadyMade', 'btnSave', 'btnExport', 'btnImport']
+  ['btnNew', 'btnReadyMade', 'btnSave', 'btnExport', 'btnImport']
     .forEach((id) => assert.ok(menu.includes('id="' + id + '"'), 'File menu lost ' + id));
+  assert.match(menu, /id="btnReadyMade"[^>]*>Library/);
+  assert.ok(html.includes('id="docFolder"'), 'the title lost its Library folder chip');
+  assert.ok(!menu.includes('Open saved document'), 'Open saved is not a second shelf');
+  assert.ok(!menu.includes('id="btnDemoLesson"'), 'demo lesson is not a File item');
+  assert.ok(menu.includes('id="btnOpen"') && menu.includes('data-ws="game"'),
+    'saved quizzes still open from Quiz studio');
 });
 
 test('Export still offers the student handout and the durable copies', () => {
