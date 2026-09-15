@@ -260,3 +260,158 @@
   border-left: 6px solid var(--s-accent);
   padding-left: 28px;
 }
+
+/* ================================================================= the marks
+
+   Each of these packs had tokens and type but nothing behind the pad, so its
+   title slide was the same flat colour as the content slides that follow it —
+   which is what a slide looks like before anybody has designed it.
+
+   renderSlide() hangs a per-theme art container on the title and section
+   layouts only; the markup is empty divs and the whole container is
+   aria-hidden, so everything below is a box for this stylesheet to paint on.
+   No new image files: every mark here is gradients, borders and one glyph.
+
+   The rule each one follows is the rule nu-art follows — the mark is sized
+   past the slide and bled off an edge, so the room gets the gesture rather
+   than a logo shrunk into a corner. */
+
+.pd-art, .ed-art, .cine-art, .brut-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.theme-product > .pad,
+.theme-editorial > .pad,
+.theme-cinematic > .pad,
+.theme-brutal > .pad { position: relative; z-index: 1; }
+
+/* ---- Product · one bloom, one ring, and nothing else -------------------
+   The restraint is the theme. A keynote slide earns its whitespace, so the
+   mark is a soft light behind the centred line and a ring bled off the
+   bottom-right corner — visible when you look for it, invisible when you are
+   reading the headline. */
+.pd-art .pd-bloom {
+  position: absolute;
+  left: 50%;
+  top: -28%;
+  width: 1180px;
+  height: 900px;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgba(0, 113, 227, .16), rgba(0, 113, 227, 0) 72%);
+}
+.pd-art .pd-ring {
+  position: absolute;
+  right: -260px;
+  bottom: -320px;
+  width: 760px;
+  height: 760px;
+  border: 1.5px solid rgba(29, 29, 31, .10);
+  border-radius: 50%;
+  box-shadow: 0 0 0 60px rgba(29, 29, 31, .02);
+}
+.theme-product.layout-section .pd-bloom { opacity: .55; }
+
+/* ---- Editorial · masthead rules and an oversized quote ------------------
+   Newspapers mark a page with rules and one big piece of type. The quote is
+   set in the theme's own serif at 680px and bled off two edges, so it reads
+   as texture rather than punctuation. */
+.ed-art .ed-rules {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 58px;
+  height: 22px;
+  border-top: 3px solid var(--s-accent);
+  border-bottom: 1px solid rgba(28, 25, 21, .34);
+}
+.ed-art .ed-quote {
+  position: absolute;
+  right: -48px;
+  bottom: -320px;
+  font-family: var(--s-font);
+  font-size: 680px;
+  line-height: 1;
+  color: rgba(139, 58, 26, .10);
+  user-select: none;
+}
+.theme-editorial.layout-section .ed-rules {
+  border-top-color: #c4a574;
+  border-bottom-color: rgba(243, 239, 230, .38);
+}
+.theme-editorial.layout-section .ed-quote { color: rgba(243, 239, 230, .10); }
+
+/* ---- Cinematic · a 2.39:1 crop, one streak, and a vignette --------------
+   The bars are the whole idea. Nothing announces a pitch faster than a film
+   crop, and they also do real work: they push the headline into the middle
+   third instead of letting it float. */
+.cine-art .cine-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 68px;
+  background: #000;
+}
+/* The ground is already near-black, so a black bar on it is a bar nobody can
+   see. A hairline on the inner edge is what makes the crop deliberate. */
+.cine-art .cine-top { top: 0; border-bottom: 1px solid rgba(255, 255, 255, .10); }
+.cine-art .cine-bottom { bottom: 0; border-top: 1px solid rgba(255, 255, 255, .10); }
+.cine-art .cine-streak {
+  position: absolute;
+  left: -20%;
+  top: -40%;
+  width: 62%;
+  height: 190%;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, rgba(255, 59, 92, 0), rgba(255, 59, 92, .14) 46%, rgba(94, 234, 212, .10) 62%, rgba(94, 234, 212, 0));
+  filter: blur(42px);
+}
+.cine-art .cine-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 50% 45%, rgba(0, 0, 0, 0) 42%, rgba(0, 0, 0, .55) 100%);
+}
+/* The bars eat the top and bottom of the stage, so the copy moves in to meet
+   them rather than sitting under one. */
+.theme-cinematic.layout-title .pad,
+.theme-cinematic.layout-section .pad { padding-top: 130px; padding-bottom: 130px; }
+.theme-cinematic.layout-title .slide-logo,
+.theme-cinematic.layout-section .slide-logo { top: 92px; }
+
+/* ---- Brutal · a technical drawing ---------------------------------------
+   A hairline grid on the exact 80px module the pad is padded to, and crop
+   marks at the corners — the furniture of a spec sheet, which is what this
+   theme is dressed as. Nothing is centred and nothing is soft. */
+.brut-art .brut-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(to right, rgba(245, 245, 245, .07) 0 1px, transparent 1px 80px),
+    repeating-linear-gradient(to bottom, rgba(245, 245, 245, .07) 0 1px, transparent 1px 80px);
+}
+.brut-art .brut-marks {
+  position: absolute;
+  inset: 34px;
+  border: 0;
+}
+.brut-art .brut-marks::before,
+.brut-art .brut-marks::after {
+  content: '';
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  border: 2px solid var(--s-accent);
+}
+.brut-art .brut-marks::before { left: 0; top: 0; border-right: 0; border-bottom: 0; }
+.brut-art .brut-marks::after { right: 0; bottom: 0; border-left: 0; border-top: 0; }
+/* The section slide is the accent as a ground, so the grid and the marks flip
+   to the ink or they disappear into it. */
+.theme-brutal.layout-section .brut-grid {
+  background-image:
+    repeating-linear-gradient(to right, rgba(17, 17, 17, .10) 0 1px, transparent 1px 80px),
+    repeating-linear-gradient(to bottom, rgba(17, 17, 17, .10) 0 1px, transparent 1px 80px);
+}
+.theme-brutal.layout-section .brut-marks::before,
+.theme-brutal.layout-section .brut-marks::after { border-color: #111; }

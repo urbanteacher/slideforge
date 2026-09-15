@@ -973,6 +973,35 @@ dark chart palette in `css/app.css` is the correct one for them. That selector
 names themes rather than detecting brightness — a new dark theme has to be
 added to it, which is the sixth of the places a theme is registered.
 
+### The mark behind the pad
+
+Seven themes hang decoration on their two full-bleed layouts — the title and
+the section, and nowhere else. `renderSlide()` looks the theme up in
+`THEME_ART` and drops in a container of empty divs, `aria-hidden`, purely so
+the theme's own stylesheet has boxes to paint on. Northeastern is the one
+exception in code rather than in the table: its eyebrow carries `deck.org`, so
+it is not a constant string.
+
+The rule all of them follow is the one `nu-art` set: **the mark is sized past
+the slide and bled off an edge**, so a room gets the gesture instead of a logo
+shrunk into a corner. A title slide painted the same flat colour as the content
+behind it reads as the first content slide, so each of these also takes a
+ground of its own.
+
+| Theme | Behind the pad |
+| --- | --- |
+| Northeastern London | The monogram at 900 × 694, off two edges, over a skyline strip |
+| Studio | Orbit, tile, dot and a rotated caption |
+| UK Black Tech / UKBT Institute | The chevron at 604 × 929, drawn twice and offset by a third of its width, off the right edge |
+| Product | One blue bloom behind the centred line, one ring bled off the corner |
+| Editorial | Masthead rules, and a 680px serif quote mark bled off two edges |
+| Cinematic | A 2.39:1 letterbox crop, a light streak, and a vignette |
+| Brutal | A hairline grid on the 80px module, and crop marks at the corners |
+
+No image files: everything except the Northeastern monogram and the UKBT
+chevron is gradients, borders and one glyph. Both of those are masks, so the
+CSS colours them per ground rather than shipping a variant per surface.
+
 ### Ready-made lessons
 
 `js/lessons.js` is content, not engine: a lesson is a plain object, and adding

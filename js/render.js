@@ -3540,6 +3540,43 @@
    * @param {object} [opts]  { index, total, interactive, quizNumber, marks, chrome }
    * @returns {HTMLElement} .slide element sized 1280x720
    */
+  /* Decoration a theme hangs behind the pad on its two full-bleed layouts —
+     the title and the section — keyed by theme. It is markup with no content:
+     every one of these divs exists only to give the stylesheet a box to paint
+     on, and the whole container is aria-hidden.
+
+     A table rather than a chain of branches because there are seven themes
+     doing this now and six of them are a constant string. Northeastern stays
+     in code below: its eyebrow carries deck.org, so it is not a constant.
+
+     Each theme's own stylesheet owns the look. The names here are the only
+     contract, and they are deliberately short-lived markup: change the art
+     and you change this string and that file, nothing else. */
+  var THEME_ART = {
+    studio: ['studio-art',
+      '<div class="art-orbit"></div><div class="art-tile">✳</div>' +
+      '<div class="art-dot"></div><div class="art-caption">STAY CURIOUS.</div>'],
+    /* One chevron, drawn twice and offset by a third of its width, which is
+       the geometry of the real lockup rather than a redraw of it. */
+    ukbt: ['ukbt-art',
+      '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div>'],
+    'ukbt-institute': ['ukbt-art',
+      '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div>'],
+    /* Keynote minimal: one soft bloom behind the centred line and a ring
+       bled off the corner. Anything more would stop being this theme. */
+    product: ['pd-art', '<div class="pd-bloom"></div><div class="pd-ring"></div>'],
+    /* Broadsheet: a stack of masthead rules, and an oversized serif quote
+       mark set in the theme's own face and bled off the edge. */
+    editorial: ['ed-art', '<div class="ed-rules"></div><div class="ed-quote">”</div>'],
+    /* Letterbox bars and a single light streak. The bars are the whole idea:
+       nothing says "this is a pitch" faster than a 2.39:1 crop. */
+    cinematic: ['cine-art',
+      '<div class="cine-bar cine-top"></div><div class="cine-bar cine-bottom"></div>' +
+      '<div class="cine-streak"></div><div class="cine-vignette"></div>'],
+    /* Technical drawing: a hairline grid and crop marks in the corners. */
+    brutal: ['brut-art', '<div class="brut-grid"></div><div class="brut-marks"></div>']
+  };
+
   function renderSlide(deck, slide, opts) {
     opts = opts || {};
     var root = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-' + slide.type);
@@ -3560,20 +3597,10 @@
          layouts. Everything here is CSS-positioned and aria-hidden: the markup
          only exists to give the stylesheet something to paint on. */
       var art = null;
-      if (deck.theme === 'studio') {
-        art = el('div', 'studio-art');
-        art.innerHTML = '<div class="art-orbit"></div><div class="art-tile">✳</div><div class="art-dot"></div><div class="art-caption">STAY CURIOUS.</div>';
-      } else if (deck.theme === 'ukbt' || deck.theme === 'ukbt-institute') {
-        /* One chevron, the gesture the wordmark opens with. The wave is a
-           background layer on every slide, so the only thing the full-bleed
-           layouts add is the mark. */
-        /* The mark is one chevron drawn twice, the second offset by a third
-           of its width — the geometry is read off the official lockup, not
-           redrawn. Two layers rather than one file so each can be coloured
-           for the ground it lands on. */
-        art = el('div', 'ukbt-art');
-        art.innerHTML = '<div class="ukbt-chev ukbt-chev-back"></div>' +
-                        '<div class="ukbt-chev ukbt-chev-front"></div>';
+      var spec = THEME_ART[deck.theme];
+      if (spec) {
+        art = el('div', spec[0]);
+        art.innerHTML = spec[1];
       } else if (deck.theme === 'northeastern') {
         art = el('div', 'nu-art');
         art.innerHTML = '<div class="nu-skyline"></div><div class="nu-n"></div>';
