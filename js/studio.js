@@ -320,7 +320,10 @@
         };
         sum.appendChild(tickAll);
         sum.appendChild(el('h3', null, g.label));
-        sum.appendChild(el('span', 'library-folder-count', String(rows.length || (byGroup[g.id] || []).length)));
+        sum.appendChild(el('span', 'library-folder-count',
+          SF.LessonBank && SF.LessonBank.folderChip
+            ? SF.LessonBank.folderChip(rows)
+            : String(rows.length || (byGroup[g.id] || []).length)));
         var foldTools = el('span', 'library-folder-tools');
         var rnFold = el('button', 'btn ghost', 'Rename');
         rnFold.type = 'button';
@@ -356,7 +359,9 @@
           var info = el('div', 'library-row-info');
           info.appendChild(el('strong', null, deck.title || 'Untitled'));
           info.appendChild(el('span', null,
-            (deck.slides || []).length + ((deck.slides || []).length === 1 ? ' slide' : ' slides') +
+            (SF.LessonBank && SF.LessonBank.deckFacts
+              ? SF.LessonBank.deckFacts(deck)
+              : ((deck.slides || []).length + ((deck.slides || []).length === 1 ? ' slide' : ' slides'))) +
             ' · ' + when(deck.modified) +
             (deck.id === openId ? ' · Open' : '')));
           row.appendChild(info);
@@ -413,7 +418,58 @@
   }
 
   /** The tabs the library can open on. Anything else means "everything". */
-  var LIBRARY_TABS = ['all', 'check', 'feedback'];
+  var LIBRARY_FILTERS = [
+    ['all', 'All activities'],
+    ['check', 'Knowledge checks'],
+    ['quiz', 'Quick quizzes'],
+    ['game', 'Games'],
+    ['memory', 'Memory'],
+    ['word', 'Word'],
+    ['talk', 'Discuss'],
+    ['feedback', 'Gather feedback']
+  ];
+  var LIBRARY_TABS = LIBRARY_FILTERS.map(function (t) { return t[0]; });
+  var libraryQuery = '';
+
+  /* Extra facets on top of kind (check vs feedback). A format can sit in
+     more than one — Beat the Clock is a game and a quick quiz. */
+  var ACTIVITY_GROUPS = {
+    'choice': ['quiz'],
+    'truefalse': ['quiz'],
+    'type': ['quiz'],
+    'slider': ['quiz'],
+    'poll': [],
+    'wordcloud': ['word'],
+    'brainstorm': ['talk'],
+    'scale': [],
+    'true-false': ['game', 'quiz'],
+    'low-stakes-quiz': ['quiz'],
+    'quiz-bowl': ['game'],
+    'beat-the-clock': ['game', 'quiz'],
+    'boss-battle': ['game'],
+    'horse-race': ['game'],
+    'memory-flip': ['memory'],
+    'memory-match': ['memory'],
+    'memory-maze': ['memory'],
+    'bingo': ['game'],
+    'knowledge-flip': ['memory'],
+    'definition-challenge': ['memory', 'word'],
+    'emoji-guess': ['word'],
+    'word-reveal': ['word'],
+    'fill-in-the-blanks': ['quiz', 'word'],
+    'heads-up': ['talk', 'word'],
+    'spin-explain': ['talk'],
+    'spot-the-error': ['quiz'],
+    'ranking': ['quiz'],
+    'odd-one-out': ['talk'],
+    'compare-contrast': ['talk'],
+    'predict-outcome': ['quiz'],
+    'time-traveler': ['quiz'],
+    'connection-maker': ['talk'],
+    'question-cube': ['talk'],
+    'random-challenge': ['talk'],
+    'concept-chain': ['talk']
+  };
 
   /**
    * @param {string} [filter] one of LIBRARY_TABS
@@ -425,6 +481,7 @@
    */
   function openLibrary(filter) {
     returnFocus = document.activeElement;
+    libraryQuery = '';
     var modal = /** @type {HTMLDialogElement|null} */ (document.getElementById('activityModal'));
     if (modal) modal.showModal();
     /* Quiz studio opens on the checks, because feedback prompts attach to a
@@ -849,29 +906,65 @@
     ['random-challenge','✦','Random Challenge','Draw varied open challenges. Count only — no scoreboard.','check',true],
     ['concept-chain','⛓','Concept Chain','Grow a justified chain. Type the link, Accept — it appears on the wall.','check',true]
   ];
+  function activityMatches(a, filter, ignoreQuery) {
+    if (filter === 'check' || filter === 'feedback') {
+      if (a[4] !== filter) return false;
+    } else if (filter && filter !== 'all') {
+      var groups = ACTIVITY_GROUPS[a[0]] || [];
+      if (groups.indexOf(filter) < 0) return false;
+    }
+    if (!ignoreQuery && libraryQuery) {
+      var q = libraryQuery.toLowerCase();
+      var hay = (a[0] + ' ' + a[2] + ' ' + a[3]).toLowerCase();
+      if (hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  }
+
   function drawLibrary(filter) {
     var body = document.getElementById('activityBody');
     if (!body) return;
+    var keepFind = document.activeElement && document.activeElement.id === 'activityFind';
+    var caret = keepFind ? document.activeElement.selectionStart : 0;
     body.replaceChildren();
     var tabs = el('div','library-tabs');
-    [['all','All activities'],['check','Knowledge checks'],['feedback','Gather feedback']].forEach(function (t) {
-      var b = SF.Shell.UI.button(t[1], filter === t[0] ? 'active' : '', function () {drawLibrary(t[0]);}); tabs.appendChild(b);
+    tabs.setAttribute('role', 'tablist');
+    tabs.setAttribute('aria-label', 'Activity filters');
+    LIBRARY_FILTERS.forEach(function (t) {
+      var n = activities.filter(function (a) { return activityMatches(a, t[0], true); }).length;
+      var b = SF.Shell.UI.button(t[1] + ' (' + n + ')', filter === t[0] ? 'active' : '', function () {drawLibrary(t[0]);});
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-selected', filter === t[0] ? 'true' : 'false');
+      tabs.appendChild(b);
     });
     body.appendChild(tabs);
+    var find = el('input', 'library-find');
+    find.id = 'activityFind';
+    find.type = 'search';
+    find.placeholder = 'Find a format…';
+    find.setAttribute('aria-label', 'Find a format');
+    find.value = libraryQuery;
+    find.oninput = function () {
+      libraryQuery = String(find.value || '');
+      drawLibrary(filter);
+    };
+    body.appendChild(find);
     /* Say the numbers. "I cannot see the 27" is unanswerable from a grid you
        have to count yourself, and a tab filter quietly hides three of them —
        so the note states how many are here, how many are ready, and where
        the rest went. */
-    var shown = activities.filter(function (a) { return filter === 'all' || a[4] === filter; });
+    var shown = activities.filter(function (a) { return activityMatches(a, filter); });
     var ready = shown.filter(function (a) { return a[5]; }).length;
-    var hidden = activities.length - shown.length;
+    var tabCount = activities.filter(function (a) { return activityMatches(a, filter, true); }).length;
+    var hidden = activities.length - tabCount;
     var note = shown.length + ' formats here \u00b7 ' + ready + ' ready to use, ' +
       (shown.length - ready) + ' planned.';
     if (hidden) note += ' ' + hidden + ' more on the other tabs.';
-    note += ' Choose a format, add your lesson content, then try its demo. Memory Maze is not yet available.';
+    if (libraryQuery && !shown.length) note = 'No formats match \u201c' + libraryQuery + '\u201d. Clear the search or pick another filter.';
+    else note += ' Choose a format, add your lesson content, then try its demo. Memory Maze is not yet available.';
     body.appendChild(el('p','library-note', note));
     var grid = el('div','activity-grid');
-    activities.filter(function (a) {return filter === 'all' || a[4] === filter;}).forEach(function (a) {
+    shown.forEach(function (a) {
       var b = el('button','activity-card ' + a[4]); b.disabled = !a[5];
       b.appendChild(el('span','activity-icon',a[1]));
       b.appendChild(el('strong',null,a[2])); b.appendChild(el('span','activity-description',a[3]));
@@ -929,6 +1022,10 @@
       grid.appendChild(b);
     });
     body.appendChild(grid);
+    if (keepFind) {
+      find.focus();
+      try { find.setSelectionRange(caret, caret); } catch (e) {}
+    }
   }
   function init() {
     var modal = el('dialog','activity-modal'); modal.id = 'activityModal';

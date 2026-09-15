@@ -283,3 +283,61 @@ test('a custom library folder is not rewritten to the theme folder', () => {
   SF.Store.save(deck);
   assert.equal(SF.Store.get(deck.id).libraryGroup, 'week-3');
 });
+
+test('lesson checks are stamped with the lesson folder', () => {
+  const SF = load();
+  const deck = SF.buildLesson('ipdv-intro');
+  SF.Store.save(deck, { force: true });
+  const gameSlide = deck.slides.find((s) => s.type === 'game');
+  const game = SF.GameStore.get(gameSlide.gameId);
+  assert.equal(game.libraryGroup, 'nul');
+  assert.equal(game.sourceDeckId, deck.id);
+  assert.match(SF.LessonBank.deckFacts(deck), /slides/);
+  assert.match(SF.LessonBank.deckFacts(deck), /check/);
+});
+
+test('Lesson bank stays inside the Library folder', () => {
+  const SF = load();
+  const nul = SF.buildLesson('ipdv-intro');
+  SF.Store.save(nul, { force: true });
+  const ukbt = SF.makeDeck('UKBT lesson');
+  ukbt.theme = 'ukbt';
+  ukbt.libraryGroup = 'ukbt';
+  const g = SF.makeGame('UKBT check', 'choice');
+  g.questions[0].question = 'Only on the UKBT shelf';
+  SF.LessonBank.stamp(g, ukbt);
+  SF.GameStore.save(g);
+  const slide = SF.makeSlide('game');
+  slide.gameId = g.id;
+  ukbt.slides = [slide];
+  SF.Store.save(ukbt, { force: true });
+
+  const nulIds = new Set(SF.LessonBank.folderBank('nul').map((r) => r.gameId));
+  const ukbtIds = new Set(SF.LessonBank.folderBank('ukbt').map((r) => r.gameId));
+  assert.ok(nulIds.size > 0, 'Northeastern bank has checks');
+  assert.ok(ukbtIds.has(g.id), 'UKBT bank has its check');
+  assert.equal([...nulIds].filter((id) => ukbtIds.has(id)).length, 0,
+    'folders must not share checks');
+
+  ukbt.libraryGroup = 'nul';
+  SF.Store.save(ukbt, { force: true });
+  const afterMove = new Set(SF.LessonBank.folderBank('nul').map((r) => r.gameId));
+  assert.ok(afterMove.has(g.id), 'Move into Northeastern joins that bank');
+  assert.equal(SF.LessonBank.folderBank('ukbt').length, 0);
+});
+
+test('Saved lists checks on the parent lesson only', () => {
+  const SF = load();
+  const a = SF.buildLesson('ipdv-intro');
+  SF.Store.save(a, { force: true });
+  const b = SF.buildLesson('attention');
+  SF.Store.save(b, { force: true });
+  const gameId = a.slides.find((s) => s.type === 'game').gameId;
+  const saved = SF.LessonBank.savedList(SF.GameStore.get(gameId));
+  const ids = saved.items.map((g) => g.id);
+  a.slides.filter((s) => s.type === 'game' && s.gameId).forEach((s) => {
+    assert.ok(ids.includes(s.gameId), s.gameTitle + ' belongs to this lesson');
+  });
+  const other = b.slides.find((s) => s.type === 'game');
+  if (other) assert.ok(!ids.includes(other.gameId), 'another lesson’s check is not Saved here');
+});

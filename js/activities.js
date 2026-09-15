@@ -18,8 +18,20 @@
   var A = SF.Activities;
 
   var phaseFilter = 'all';
+  var kindFilter = 'all';
+  var KIND_TABS = [
+    ['all', 'All types'],
+    ['slide', 'Slides'],
+    ['game', 'Games'],
+    ['feedback', 'Feedback'],
+    ['moment', 'In the room'],
+    ['slide-arc', 'Slide runs']
+  ];
   /** Slide id of the chosen activity the rail foot acts on, or null. */
   var selected = null;
+  /** Inspector pane while an activity is selected: edit | timer | engage | write | rules. */
+  var inspectorPane = 'edit';
+  var inspectorPaneSlide = '';
 
   function deck() {
     return (SF.Editor && SF.Editor.deck && SF.Editor.deck()) || { slides: [], theme: 'studio' };
@@ -36,7 +48,21 @@
    */
   function insert(a) {
     var previous = current();
-    if (previous) SF.Editor.selectSlide(previous.slides[previous.slides.length - 1].id);
+    if (previous) {
+      SF.Editor.selectSlide(previous.slides[previous.slides.length - 1].id);
+    } else {
+      /* Catalogue browse clears the Activities selection. Still append after
+         the last activity sequence (or the end of the deck) so a pick never
+         splices into the middle of a multi-page run. */
+      var rows = chosen();
+      if (rows.length) {
+        var last = rows[rows.length - 1];
+        SF.Editor.selectSlide(last.slides[last.slides.length - 1].id);
+      } else {
+        var slides = deck().slides;
+        if (slides.length) SF.Editor.selectSlide(slides[slides.length - 1].id);
+      }
+    }
     if (a.target === 'game' && a.style) {
       var game = SF.createPresetGame(a.style, Object.assign({ title: a.title }, a.gamePreset || {}), deck().theme);
       var gameSlide = SF.makeSlide('game');
@@ -323,6 +349,7 @@
   function browseActivities() {
     selected = null;
     phaseFilter = 'all';
+    kindFilter = 'all';
     var box = document.getElementById('previewBox');
     if (box) box.scrollTop = 0;
     draw();
@@ -397,15 +424,75 @@
 
   /* --------------------------------------------------------------- stage */
 
-  function drawStage() {
+  /** Live field edits: commit + canvas only — do not remount the inspector. */
+  function refreshPreview() {
     var box = document.getElementById('previewBox');
-    if (!box) return;
+    var row = current();
+    if (!box || !row) return;
+    paintSlidePreview(box, row.slide);
+  }
+
+  function paintSlidePreview(box, s) {
     box.replaceChildren();
+    box.classList.remove('railed');
+    box.classList.add('is-slide-preview');
+    if (!s || !SF.renderSlide) return;
+    var d = deck();
+    var f = SF.slideFeedback ? SF.slideFeedback(s) : null;
+    var digest = f && SF.sampleFeedbackDigest ? SF.sampleFeedbackDigest(f) : null;
+    var node = SF.renderSlide(d, s, {});
+    box.appendChild(node);
+    if (f && digest && SF.feedbackRail && SF.paintFeedbackRail) {
+      box.classList.add('railed');
+      var rail = SF.feedbackRail(d);
+      box.appendChild(rail);
+      SF.paintFeedbackRail(rail, digest, Object.assign(
+        SF.feedbackViewOpts ? SF.feedbackViewOpts(f) : {},
+        { footnote: 'Sample — ' + digest.answered + ' of ' + digest.players + ' responded' }
+      ));
+      if (SF.railSurface) SF.railSurface(rail, node);
+      requestAnimationFrame(function () {
+        var scale = box.clientWidth / (SF.SLIDE_W || 1280);
+        rail.style.transform = 'scale(' + scale + ')';
+      });
+    }
+    requestAnimationFrame(function () {
+      if (SF.fit) SF.fit(box, node);
+    });
+  }
+
+  function drawCatalogue(box) {
     var wrap = el('div', 'plan-catalogue');
 
+    var kinds = el('div', 'library-tabs');
+    kinds.setAttribute('role', 'tablist');
+    kinds.setAttribute('aria-label', 'Activity type');
+    KIND_TABS.forEach(function (t) {
+      var n = A.ACTIVITIES.filter(function (a) {
+        return a.enabled !== false
+          && (t[0] === 'all' || a.target === t[0])
+          && (phaseFilter === 'all' || a.phase === phaseFilter);
+      }).length;
+      kinds.appendChild(SF.Shell.UI.button(
+        t[1] + ' (' + n + ')',
+        kindFilter === t[0] ? 'active' : '',
+        function () { kindFilter = t[0]; draw(); }
+      ));
+    });
+    wrap.appendChild(kinds);
+
     var tabs = el('div', 'library-tabs');
-    var counts = A.phaseCounts();
-    tabs.appendChild(SF.Shell.UI.button('All phases', phaseFilter === 'all' ? 'active' : '',
+    var counts = {};
+    A.PHASES.forEach(function (p) { counts[p.key] = 0; });
+    A.ACTIVITIES.forEach(function (a) {
+      if (a.enabled === false) return;
+      if (kindFilter !== 'all' && a.target !== kindFilter) return;
+      counts[a.phase] = (counts[a.phase] || 0) + 1;
+    });
+    var allPhase = A.ACTIVITIES.filter(function (a) {
+      return a.enabled !== false && (kindFilter === 'all' || a.target === kindFilter);
+    }).length;
+    tabs.appendChild(SF.Shell.UI.button('All phases (' + allPhase + ')', phaseFilter === 'all' ? 'active' : '',
       function () { phaseFilter = 'all'; draw(); }));
     A.PHASES.forEach(function (p) {
       if (!counts[p.key]) return;
@@ -418,7 +505,9 @@
     wrap.appendChild(tabs);
 
     var shown = A.ACTIVITIES.filter(function (a) {
-      return a.enabled !== false && (phaseFilter === 'all' || a.phase === phaseFilter);
+      return a.enabled !== false
+        && (phaseFilter === 'all' || a.phase === phaseFilter)
+        && (kindFilter === 'all' || a.target === kindFilter);
     });
     var phase = A.PHASES.find(function (p) { return p.key === phaseFilter; });
     wrap.appendChild(el('p', 'library-note',
@@ -430,6 +519,19 @@
     shown.forEach(function (a) { grid.appendChild(card(a)); });
     wrap.appendChild(grid);
     box.appendChild(wrap);
+  }
+
+  function drawStage() {
+    var box = document.getElementById('previewBox');
+    if (!box) return;
+    box.replaceChildren();
+    box.classList.remove('is-slide-preview', 'railed');
+    var row = current();
+    if (row) {
+      paintSlidePreview(box, row.slide);
+      return;
+    }
+    drawCatalogue(box);
   }
 
   /* Things the room has to have in its hands before the activity can run.
@@ -534,17 +636,133 @@
     parent.appendChild(box);
   }
 
+  function activityFields(picked, slide) {
+    return picked.pages ? picked.pages[slide.activityPage || 0].fields : picked.fields;
+  }
+
+  function canWriteActivity(picked) {
+    return !!(picked && (picked.fields || []).some(function (f) { return f.type !== 'minutes'; }));
+  }
+
+  function commitLive() {
+    SF.Editor.commitActivityChange();
+    refreshPreview();
+  }
+
+  function drawInspectorTabs(insp, opts) {
+    var panes = el('div', 'format-tools design-panes');
+    panes.setAttribute('role', 'tablist');
+    panes.setAttribute('aria-label', 'Activity tools');
+    opts.forEach(function (item) {
+      var on = inspectorPane === item[0];
+      var b = SF.Shell.UI.button(item[1], on ? 'active' : 'ghost', function () {
+        inspectorPane = item[0];
+        drawInspector();
+      });
+      b.title = item[2];
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-selected', String(on));
+      panes.appendChild(b);
+    });
+    insp.appendChild(panes);
+  }
+
+  function drawEditPane(insp, row, picked) {
+    if (row.slide.type === 'game') {
+      var gameActions = el('div', 'act-actions');
+      gameActions.style.display = 'flex';
+      gameActions.style.gap = '8px';
+      gameActions.style.margin = '8px 0';
+      var editGame = SF.Shell.UI.button('Edit questions and answers', '', function () {
+        SF.Editor.selectSlide(row.slide.id);
+        SF.Games.openGame(row.slide.gameId);
+        SF.Shell.activate('game');
+      });
+      gameActions.appendChild(editGame);
+      insp.appendChild(gameActions);
+    }
+
+    row.slides.forEach(function (slide) {
+      var fields = activityFields(picked, slide);
+      if (!fields || !fields.length) return;
+      var content = fields.filter(function (f) { return f.type !== 'minutes'; });
+      if (picked.pages && content.length) {
+        insp.appendChild(el('h4', null, 'Slide ' + ((slide.activityPage || 0) + 1)));
+      }
+      if (slide.type === 'keywords') {
+        var views = [
+          { value: 'rows', label: 'Labelled rows' },
+          { value: 'steps', label: 'Numbered steps' },
+          { value: 'brief', label: 'Opening brief' }
+        ];
+        if (slide.bullets.length === 4) views.push({ value: 'panels', label: 'Four panels' });
+        insp.appendChild(SF.Shell.UI.field('Visual structure', SF.Shell.UI.select(views,
+          slide.activityPresentation || 'rows', function (value) {
+            slide.activityPresentation = value; commitLive();
+          })));
+      }
+      content.forEach(function (f) {
+        var now = read(slide, f.slide);
+        var input = f.type === 'area'
+          ? SF.Shell.UI.area(String(now == null ? '' : now), function (v) {
+              write(slide, f.slide, v); commitLive();
+            }, 3)
+          : SF.Shell.UI.text(String(now == null ? '' : now), function (v) {
+              write(slide, f.slide, v); commitLive();
+            });
+        insp.appendChild(SF.Shell.UI.field(f.label, input, f.hint));
+      });
+    });
+    insp.appendChild(el('p', 'hint', 'Starter copy is an editable draft. Replace examples to match your lesson.'));
+  }
+
+  function drawTimerPane(insp, row, picked) {
+    var any = false;
+    row.slides.forEach(function (slide) {
+      var fields = (activityFields(picked, slide) || []).filter(function (f) { return f.type === 'minutes'; });
+      fields.forEach(function (f) {
+        any = true;
+        var now = read(slide, f.slide);
+        var input = SF.Shell.UI.num((Number(now) || 0) / 60, function (v) {
+          write(slide, f.slide, Math.max(0, Number(v) || 0) * 60); commitLive();
+        }, 0, 120);
+        insp.appendChild(SF.Shell.UI.field(f.label, input, f.hint));
+      });
+    });
+    if (!any) {
+      var slide = row.slide;
+      var mins = slide.timeLimit != null
+        ? (Number(slide.timeLimit) || 0) / 60
+        : (picked.minutes || 0);
+      insp.appendChild(SF.Shell.UI.field('Duration (minutes)', SF.Shell.UI.num(mins, function (v) {
+        slide.timeLimit = Math.max(0, Number(v) || 0) * 60;
+        commitLive();
+      }, 0, 120), 'How long this activity should run in the room.'));
+    }
+  }
+
+  function drawRulesPane(insp, picked, row) {
+    appendHowTo(insp, picked, row);
+    if (picked.materials && picked.materials.length) {
+      insp.appendChild(el('p', 'hint', 'Materials: ' + picked.materials.join(' · ')));
+    }
+    if (picked.teacherNotes) insp.appendChild(el('p', 'hint', picked.teacherNotes));
+    if (picked.mappingReason) insp.appendChild(el('p', 'hint', picked.mappingReason));
+  }
+
   function drawInspector() {
     var insp = document.getElementById('inspector');
     if (!insp) return;
     insp.replaceChildren();
 
-    /* Selecting in the rail shows that activity, the way selecting a question
-       in Quiz studio shows that question. Its steps are the useful thing —
-       for the ten protocols they are the whole activity. */
     var row = current();
     var picked = row && A.activity(row.slide.activity);
     if (picked) {
+      if (row.slide.id !== inspectorPaneSlide) {
+        inspectorPane = 'edit';
+        inspectorPaneSlide = row.slide.id;
+      }
+
       insp.appendChild(el('span', 'eyebrow', 'IN THE LESSON'));
       insp.appendChild(el('h3', null, picked.icon + '  ' + picked.title));
       insp.appendChild(el('p', 'hint', picked.blurb));
@@ -552,92 +770,45 @@
       insp.appendChild(el('p', 'hint',
         (ph ? ph.icon + ' ' + ph.label + ' · ' : '') +
         'about ' + picked.minutes + ' min · slide ' + (row.at + 1)));
-      var actions = el('div', 'act-actions');
-      actions.style.display = 'flex';
-      actions.style.gap = '8px';
-      actions.style.margin = '8px 0';
-      var editBtn = SF.Shell.UI.button(row.slide.type === 'game' ? 'Edit questions and answers' : 'Edit this slide', '', function () {
-        SF.Editor.selectSlide(row.slide.id);
-        if (row.slide.type === 'game') {
-          SF.Games.openGame(row.slide.gameId); SF.Shell.activate('game');
-        } else SF.Shell.activate('deck');
-      });
-      var showcaseBtn = SF.Shell.UI.button('▷ Showcase activity', 'ghost', function () {
-        showcaseRow(row);
-      });
-      showcaseBtn.title = 'Rehearse or showcase this activity in isolation';
-      actions.appendChild(editBtn);
-      actions.appendChild(showcaseBtn);
-      insp.appendChild(actions);
 
-      /* The catalogue already names every box this activity needs, so the
-         brief can be exact where a general "write me a starter" cannot. */
-      if (SF.AI && SF.AI.generateActivityContent && (picked.fields || []).length) {
-        insp.appendChild(writeActivityBox(picked, row));
-      }
+      var writable = canWriteActivity(picked);
+      var isGame = row.slide.type === 'game';
+      if (inspectorPane === 'write' && !writable) inspectorPane = 'edit';
+      if (inspectorPane === 'engage' && isGame) inspectorPane = 'edit';
 
-      appendHowTo(insp, picked, row);
+      var tabItems = [
+        ['edit', 'Edit', 'Title, blurb and content pits'],
+        ['timer', 'Timer', 'Duration for this activity']
+      ];
+      if (!isGame) tabItems.push(['engage', 'Engage', 'See what the room thinks']);
+      if (writable) tabItems.push(['write', 'Write', 'Draft content from a topic']);
+      tabItems.push(['rules', 'Rules', 'How to run, materials and notes']);
+      drawInspectorTabs(insp, tabItems);
 
-      if (picked.materials) insp.appendChild(el('p', 'hint', 'Materials: ' + picked.materials.join(' · ')));
-      insp.appendChild(el('p', 'hint', 'Starter copy is an editable draft. Replace examples to match your lesson.'));
-      if (picked.teacherNotes) insp.appendChild(el('p', 'hint', picked.teacherNotes));
-      if (picked.mappingReason) insp.appendChild(el('p', 'hint', picked.mappingReason));
-
-      /* What this activity asks the teacher for, edited against the real
-         slide. Without it the slide lands in the right layout and leaves
-         them guessing which pit is the hook and which is the question. */
-      row.slides.forEach(function (slide) {
-        var fields = picked.pages ? picked.pages[slide.activityPage || 0].fields : picked.fields;
-        if (!fields || !fields.length) return;
-        if (picked.pages) insp.appendChild(el('h4', null, 'Slide ' + ((slide.activityPage || 0) + 1)));
-        /* Mark dirty and stop. Repainting the deck editor draws its
-           inspector over this one, and repainting this one mid-keystroke
-           takes the focus out of the field being typed into. The rail row
-           shows the activity's name, not the slide's, so nothing here needs
-           redrawing; Lesson studio draws fresh when you switch to it. */
-        var changed = function () { SF.Editor.commitActivityChange(); };
-        if (slide.type === 'keywords') {
-          var views = [{ value: 'rows', label: 'Labelled rows' }, { value: 'steps', label: 'Numbered steps' }, { value: 'brief', label: 'Opening brief' }];
-          if (slide.bullets.length === 4) views.push({ value: 'panels', label: 'Four panels' });
-          insp.appendChild(SF.Shell.UI.field('Visual structure', SF.Shell.UI.select(views,
-            slide.activityPresentation || 'rows', function (value) { slide.activityPresentation = value; changed(); })));
+      if (inspectorPane === 'timer') {
+        drawTimerPane(insp, row, picked);
+      } else if (inspectorPane === 'engage') {
+        if (SF.Editor.drawFeedback) {
+          insp.appendChild(el('span', 'eyebrow', 'SEE WHAT THE ROOM THINKS'));
+          SF.Editor.drawFeedback(insp, row.slide, function () {
+            SF.Editor.commitActivityChange();
+            draw();
+          });
         }
-        fields.forEach(function (f) {
-          var now = read(slide, f.slide);
-          var input = f.type === 'minutes'
-            ? SF.Shell.UI.num((Number(now) || 0) / 60, function (v) {
-                write(slide, f.slide, Math.max(0, Number(v) || 0) * 60); changed();
-              }, 0, 120)
-            : f.type === 'area'
-              ? SF.Shell.UI.area(String(now == null ? '' : now), function (v) {
-                  write(slide, f.slide, v); changed();
-                }, 3)
-              : SF.Shell.UI.text(String(now == null ? '' : now), function (v) {
-                  write(slide, f.slide, v); changed();
-                });
-          insp.appendChild(SF.Shell.UI.field(f.label, input, f.hint));
-        });
-      });
-
-      /* Most of these activities are asking the room something — Muddiest
-         Point, Four-Corner, Brain Dump, the reflection ladder. Attaching a
-         poll or a word cloud is what turns "discuss in pairs" into something
-         the teacher can see, on phones or read off the wall, and none of it
-         is new: it is slide.feedback, which already reaches the presenter
-         rail and the learner's phone. A game slide is left out because it
-         collects answers already. */
-      if (row.slide.type !== 'game' && SF.Editor.drawFeedback) {
-        insp.appendChild(el('span', 'eyebrow', 'SEE WHAT THE ROOM THINKS'));
-        SF.Editor.drawFeedback(insp, row.slide, function () {
-          /* This one does repaint: choosing a kind reveals its own settings,
-             and the rail row picks up its feedback mark. */
-          SF.Editor.commitActivityChange();
-          draw();
-        });
+      } else if (inspectorPane === 'write') {
+        if (SF.AI && SF.AI.generateActivityContent) {
+          insp.appendChild(writeActivityBox(picked, row));
+        }
+      } else if (inspectorPane === 'rules') {
+        drawRulesPane(insp, picked, row);
+      } else {
+        drawEditPane(insp, row, picked);
       }
       return;
     }
 
+    inspectorPaneSlide = '';
+    inspectorPane = 'edit';
     insp.appendChild(el('span', 'eyebrow', 'THE LESSON CATALOGUE'));
     insp.appendChild(el('h3', null, A.ACTIVITIES.length + ' activities'));
     insp.appendChild(el('p', 'hint',
@@ -649,10 +820,10 @@
      ['act-feedback', 'A prompt beside the slide, collecting in the rail.'],
      ['act-moment', 'A timed protocol. Happens in the room, not on screen.']
     ].forEach(function (pair) {
-      var row = el('p', 'hint act-legend ' + pair[0]);
-      row.appendChild(el('span', 'activity-icon', '●'));
-      row.appendChild(el('span', null, pair[1]));
-      insp.appendChild(row);
+      var legend = el('p', 'hint act-legend ' + pair[0]);
+      legend.appendChild(el('span', 'activity-icon', '●'));
+      legend.appendChild(el('span', null, pair[1]));
+      insp.appendChild(legend);
     });
   }
 
@@ -877,7 +1048,11 @@
   };
 
   var toDeck = document.getElementById('btnPlanToDeck');
-  if (toDeck) toDeck.onclick = function () { SF.Shell.activate('deck'); };
+  if (toDeck) toDeck.onclick = function () {
+    var row = current();
+    if (row) SF.Editor.selectSlide(row.slide.id);
+    SF.Shell.activate('deck');
+  };
 
   /* The top bar's Present button, same place as in the other two studios.
      Activities write into the lesson deck, so presenting from here is

@@ -737,6 +737,8 @@ function normalizeGame(raw) {
   if (!format && isSpecialStyle(style) && FORMATS[style]) format = style;
   g.format = format;
   if (!THEMES[g.theme]) g.theme = 'midnight';
+  g.libraryGroup = normalizeLibraryGroup(raw.libraryGroup, g.theme);
+  g.sourceDeckId = String(raw.sourceDeckId || '').slice(0, 80);
   g.settings = normalizeGameSettings(raw.settings);
   /* Every question is normalised against the game's style, which is what
      makes converting a game between styles safe. */

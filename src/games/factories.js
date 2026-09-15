@@ -63,6 +63,8 @@ function makeGame(title, style) {
     style: style,
     title: title || 'Untitled game',
     theme: 'studio',
+    libraryGroup: '',
+    sourceDeckId: '',
     created: Date.now(),
     modified: Date.now(),
     settings: {

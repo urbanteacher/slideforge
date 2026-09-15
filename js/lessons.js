@@ -3335,6 +3335,11 @@
           return SF.normalizeQuestion(Object.assign(SF.makeQuestion(g.style), q), g.style);
         });
       }
+      if (SF.LessonBank && SF.LessonBank.stamp) SF.LessonBank.stamp(game, deck);
+      else {
+        game.libraryGroup = deck.libraryGroup;
+        game.sourceDeckId = deck.id;
+      }
       SF.GameStore.save(game);
       ids[g.ref] = game;
     });
@@ -3353,8 +3358,148 @@
     return deck;
   }
 
+  function folderId(deck) {
+    if (!deck) return 'other';
+    if (deck.libraryGroup) return deck.libraryGroup;
+    return (SF.libraryGroupFromTheme && SF.libraryGroupFromTheme(deck.theme)) || 'other';
+  }
+
+  function stamp(game, deck) {
+    if (!game || !deck) return game;
+    game.libraryGroup = folderId(deck);
+    game.sourceDeckId = deck.id || '';
+    return game;
+  }
+
+  function activityCount(deck) {
+    var seen = {};
+    (deck && deck.slides || []).forEach(function (s) {
+      if (!s.activity) return;
+      seen[s.activityInstance || s.id] = true;
+    });
+    return Object.keys(seen).length;
+  }
+
+  function checksOnDeck(deck) {
+    var seen = {};
+    var out = [];
+    (deck && deck.slides || []).forEach(function (s) {
+      if (s.type !== 'game' || !s.gameId || seen[s.gameId]) return;
+      seen[s.gameId] = true;
+      var g = SF.GameStore.get(s.gameId);
+      if (g) out.push(g);
+    });
+    return out;
+  }
+
+  function checkCount(deck) {
+    return (deck && deck.slides || []).filter(function (s) { return s.type === 'game'; }).length;
+  }
+
+  function usedByDecks(gameId) {
+    if (SF.GameStore && SF.GameStore.usedByDecks) return SF.GameStore.usedByDecks(gameId);
+    return (SF.Store.list() || []).filter(function (d) {
+      return (d.slides || []).some(function (s) { return s.type === 'game' && s.gameId === gameId; });
+    });
+  }
+
+  function parentLesson(gameId) {
+    var lastId = SF.Store && SF.Store.lastId && SF.Store.lastId();
+    var last = lastId && SF.Store.get ? SF.Store.get(lastId) : null;
+    if (gameId) {
+      var hosts = usedByDecks(gameId);
+      if (hosts.length) {
+        var hit = last && hosts.filter(function (d) { return d.id === last.id; })[0];
+        return hit || hosts[0];
+      }
+    }
+    return last || null;
+  }
+
+  function folderLabel(group) {
+    var folders = (SF.LibraryFolders && SF.LibraryFolders.catalog && SF.LibraryFolders.catalog())
+      || SF.LIBRARY_GROUPS || [];
+    var hit = folders.filter(function (f) { return f.id === group; })[0];
+    return hit ? hit.label : (group || 'Library');
+  }
+
+  function savedList(game) {
+    var parent = parentLesson(game && game.id);
+    if (parent) {
+      return {
+        title: 'Checks in “' + (parent.title || 'this lesson') + '”',
+        empty: 'This lesson has no other checks yet.',
+        folderId: folderId(parent),
+        items: checksOnDeck(parent)
+      };
+    }
+    var group = (game && game.libraryGroup) || 'other';
+    return {
+      title: 'Quizzes in ' + folderLabel(group),
+      empty: 'No quizzes in this Library folder yet.',
+      folderId: group,
+      items: (SF.GameStore.list() || []).filter(function (g) {
+        var gGroup = g.libraryGroup || (SF.libraryGroupFromTheme && SF.libraryGroupFromTheme(g.theme)) || 'other';
+        return gGroup === group;
+      })
+    };
+  }
+
+  function folderBank(group, excludeGameId) {
+    var rows = [];
+    (SF.Store.list() || []).forEach(function (deck) {
+      if (folderId(deck) !== group) return;
+      checksOnDeck(deck).forEach(function (g) {
+        if (excludeGameId && g.id === excludeGameId) return;
+        var n = (g.questions || []).length;
+        rows.push({
+          id: deck.id + ':' + g.id,
+          gameId: g.id,
+          deckId: deck.id,
+          title: (deck.title || 'Untitled') + ' · ' + (g.title || 'Check'),
+          lessonTitle: deck.title || 'Untitled',
+          gameTitle: g.title || 'Check',
+          questions: g.questions || [],
+          blurb: n + (n === 1 ? ' question' : ' questions')
+        });
+      });
+    });
+    return rows;
+  }
+
+  function deckFacts(deck) {
+    var n = (deck && deck.slides || []).length;
+    var checks = checkCount(deck);
+    var acts = activityCount(deck);
+    var parts = [n + (n === 1 ? ' slide' : ' slides')];
+    if (checks) parts.push(checks + (checks === 1 ? ' check' : ' checks'));
+    if (acts) parts.push(acts + (acts === 1 ? ' activity' : ' activities'));
+    return parts.join(' · ');
+  }
+
+  function folderChip(decks) {
+    var n = decks.length;
+    var checks = 0;
+    decks.forEach(function (d) { checks += checkCount(d); });
+    if (!checks) return String(n);
+    return n + ' · ' + checks + (checks === 1 ? ' check' : ' checks');
+  }
+
   SF.LESSONS = LESSONS;
   SF.LIBRARY_SEED_KEYS = LIBRARY_SEED_KEYS;
   SF.buildLesson = buildLesson;
   SF.seedLibrary = seedLibrary;
+  SF.LessonBank = {
+    stamp: stamp,
+    folderId: folderId,
+    folderLabel: folderLabel,
+    parentLesson: parentLesson,
+    savedList: savedList,
+    folderBank: folderBank,
+    checksOnDeck: checksOnDeck,
+    checkCount: checkCount,
+    activityCount: activityCount,
+    deckFacts: deckFacts,
+    folderChip: folderChip
+  };
 })(typeof window !== 'undefined' ? window : globalThis);

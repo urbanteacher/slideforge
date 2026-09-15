@@ -6982,6 +6982,8 @@
       style,
       title: title || "Untitled game",
       theme: "studio",
+      libraryGroup: "",
+      sourceDeckId: "",
       created: Date.now(),
       modified: Date.now(),
       settings: {
@@ -7432,10 +7434,12 @@
     const games = documents("games", "slideforge.games.v1", "slideforge.lastGameId", normalizeGame2);
     const { read: readDecks, ...Store2 } = decks;
     const { read: readGames, ...GameStoreBase } = games;
+    const usedByDecks = (id) => readDecks().filter(
+      (deck) => (deck.slides || []).some((slide) => slide.type === "game" && slide.gameId === id)
+    );
     const GameStore2 = Object.assign(GameStoreBase, {
-      usedBy: (id) => readDecks().filter(
-        (deck) => deck.slides.some((slide) => slide.type === "game" && slide.gameId === id)
-      ).map((deck) => deck.title)
+      usedByDecks,
+      usedBy: (id) => usedByDecks(id).map((deck) => deck.title)
     });
     const LibraryFolders2 = createLibraryFolders({ storage, warn });
     return { Store: Store2, GameStore: GameStore2, LibraryFolders: LibraryFolders2 };
@@ -8405,6 +8409,8 @@
     if (!format && isSpecialStyle(style) && FORMATS[style]) format = style;
     g.format = format;
     if (!THEMES[g.theme]) g.theme = "midnight";
+    g.libraryGroup = normalizeLibraryGroup(raw.libraryGroup, g.theme);
+    g.sourceDeckId = String(raw.sourceDeckId || "").slice(0, 80);
     g.settings = normalizeGameSettings(raw.settings);
     g.questions = (Array.isArray(raw.questions) ? raw.questions : []).map(function(q) {
       if (!remapped) return normalizeQuestion(q, style);

@@ -513,10 +513,13 @@
     var ws = active;
     var openId = ws.doc() && ws.doc().id;
     if (ws.store.sweepUnused) ws.store.sweepUnused(openId);
+    var scoped = ws.key === 'game' && SF.LessonBank && SF.LessonBank.savedList
+      ? SF.LessonBank.savedList(ws.doc())
+      : null;
     picker({
-      title: 'Saved quizzes & games',
-      items: function () { return ws.store.list(); },
-      empty: 'No saved quizzes yet.',
+      title: scoped ? scoped.title : (ws.key === 'game' ? 'Saved quizzes & games' : 'Saved'),
+      items: function () { return scoped ? scoped.items : ws.store.list(); },
+      empty: scoped ? scoped.empty : (ws.key === 'game' ? 'No saved quizzes yet.' : 'Nothing saved yet.'),
       describe: ws.describe,
       onPick: function (it) {
         ws.setDoc(ws.store.get(it.id));
