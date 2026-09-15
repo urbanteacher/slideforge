@@ -102,6 +102,13 @@ test('there is exactly one demo, and one thing that opens it', () => {
      two names for one list and no route at all to the demo deck. */
   assert.match(html, /id="btnTemplate"[^>]*>[^<]*demo/i, 'the canvas button no longer offers the demo');
   assert.match(studio, /var DEMO_KEY = 'layout-bank'/, 'the demo is not named in studio.js');
+  /* The demo is off the Library shelf: the picker filters its folder out of
+     the list and the count, and opening it drops the copy it replaces. */
+  assert.match(studio, /libraryGroup !== SF\.DEMO_LIBRARY_GROUP/,
+    'the Library picker still lists the demo document');
+  const editor = fs.readFileSync(path.join(ROOT, 'js', 'editor.js'), 'utf8');
+  assert.equal((editor.match(/SF\.keepOneDemoCopy\(/g) || []).length, 2,
+    'both routes to the demo — the button and the ?lesson= link — must keep one copy');
   assert.match(studio, /btnTemplate\.onclick = openDemo/, 'the demo button is wired to something else');
   assert.match(studio, /SF\.Editor\.useLesson\(DEMO_KEY\)/, 'openDemo does not open the named demo');
 

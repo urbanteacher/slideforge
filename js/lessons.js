@@ -1245,6 +1245,16 @@
           progressive: true,
           notes: 'One press at a time.\n\nNobody has to be dishonest to produce that pie — it is the default move: open a spreadsheet, press the chart button, pick the colourful one. Most misleading charts are made exactly that way, which is why you can be the person who does not.\n\nThen say where it goes: in task 2 they owe a news chart this same critique, and in task 4 they draw these same numbers properly from the raw file.' },
 
+        { type: 'split', title: 'Two ways a chart can lie to you',
+          image: 'assets/lesson/ipdv/anscombe-four-plots.png',
+          imageFit: 'contain', design: { mediaGround: 'full' },
+          bullets: [
+            'Anscombe, 1973: four datasets with the same mean, the same spread, the same correlation and the same best-fit line — and four completely different shapes.',
+            'A summary cannot tell you whether the summary is any good. Plot the data before you trust a number about it.',
+            'The pie is the other half of the same lesson: the data was honest and the chart still hid everything. Plotting is not enough — the idiom has to fit the question.'
+          ],
+          notes: 'These two slides are the module in miniature, and the lecture spends six slides on the left half (“When Summaries Mislead”, from slide 40).\n\nLEFT: the numbers agreed to two decimal places and the pictures did not — a curve, an outlier and a single point inventing a slope, all hiding inside identical statistics.\n\nRIGHT: the pie was drawn from real numbers by a real library, and it still lost 2020, the seasons and the order of the years.\n\nSo the habit has two halves: plot the data before you believe a summary of it, and then ask what the plot is actually answering. Task 2 is marked on exactly that second question.' },
+
         { type: 'cards', design: { cardsMode: 'rows' }, title: 'Four tasks, one deadline',
           bullets: [
             '1 · Survey\tFive minutes on your phone — link on Canvas. It becomes data we visualise later in the module.',
@@ -1920,7 +1930,9 @@
       blurb: 'The reference deck: every layout in the picker, all twenty chart idioms, the design variants, and the things the room answers on their phones. Page through it to see what each one does, then copy the slide you want into your own lesson. Every slide says in its notes when to reach for it — and when not to.',
       minutes: 40,
       theme: 'northeastern',
-      libraryGroup: 'nul',
+      /* Not 'nul': the demo is not one of the Northeastern lessons, and this
+         folder is the one the Library does not list. See DEMO_LIBRARY_GROUP. */
+      libraryGroup: 'sf-demo',
       kind: 'template',
       org: 'Northeastern University London',
       logo: 'assets/brand/nu-london-logo.png',
@@ -2008,7 +2020,7 @@
       slides: [
         { type: 'title', title: 'Layout bank', subtitle: 'One of every layout, chart and live moment · Northeastern theme',
           date: '2026-09-15',
-          notes: 'This deck is a reference, not a lesson. Every layout SlideForge can draw appears once, in running order, with a note like this one saying what it is for. Duplicate a slide here and paste it into a real deck to reuse the shape.' },
+          notes: 'This deck is a reference, not a lesson. Every layout SlideForge can draw appears once, in running order, with a note like this one saying what it is for. Copy a slide (⌘C) and paste it into a real deck (⌘V) to reuse the shape.' },
 
         { type: 'section', title: 'Opening a session', subtitle: 'Title, introduction, section, quote',
           notes: 'SECTION — full red, nothing on it but the words. The loudest surface in the theme, so keep it for the two or three moments you want the room to look up. Subtitle is optional.' },
@@ -2640,7 +2652,7 @@
         { type: 'content', title: 'Using this bank',
           bullets: [
             'Page through it once to see what exists.',
-            'Found a shape you want? Duplicate the slide and paste it into your own deck, then replace the content.',
+            'Found a shape you want? Copy the slide (⌘C) and paste it into your own deck (⌘V), then replace the content.',
             'Layouts are app-wide — every one of these is already in the layout picker of every deck you open.',
             'This deck is a reference copy. Edit it freely; rebuild it from the lesson picker whenever you want a clean one.',
             'Not chosen from the picker: quiz, results and explain. Those are built by the live session.'
@@ -3976,11 +3988,20 @@
 
   /** Brand packs filed into the Library on first visit. Looks (vibe galleries,
    *  infographic museum) stay out — those live in Settings → Theme. */
+  /* The demo is reached from its own button and nowhere else.
+
+     Filed in the Library it was eighty-nine slides of sample content sitting
+     in the Northeastern folder, one click away from being edited by mistake —
+     and because makeLesson mints fresh ids, every press of Demo filed another
+     copy beside it. So it is built on demand, kept as a single document in a
+     folder the Library does not list, and replaced rather than added to. */
+  var DEMO_SOURCE_KEY = 'layout-bank';
+  var DEMO_LIBRARY_GROUP = 'sf-demo';
+
   var LIBRARY_SEED_KEYS = {
     'ipdv-intro': 'nul',
     'ipdv-lab1': 'nul',
     'nul-lab1': 'nul',
-    'layout-bank': 'nul',
     'pace-nul': 'nul',
     'ukbt-sponsorship': 'ukbt',
     'ukbt-campaigns': 'ukbt',
@@ -4038,8 +4059,34 @@
     writeDismissedSeeds(readDismissedSeeds().filter(function (x) { return x !== k; }));
   }
 
+  /**
+   * Keep exactly one demo document: the one just built.
+   *
+   * makeLesson mints fresh ids, so every route to the demo — the button and
+   * the ?lesson= link — used to leave another copy behind, and because the
+   * Library does not list that folder they piled up where nobody could see
+   * them. Does nothing for a real lesson: two copies of a lesson are two
+   * documents somebody may want.
+   */
+  function keepOneDemoCopy(deck) {
+    if (!SF.Store || !deck || !deck.sourceKey) return;
+    if (deck.libraryGroup !== DEMO_LIBRARY_GROUP) return;
+    SF.Store.list().forEach(function (d) {
+      if (d.sourceKey === deck.sourceKey && d.id !== deck.id) SF.Store.remove(d.id);
+    });
+  }
+
   function seedLibrary() {
     if (!SF.Store) return 0;
+    /* An install from before the demo left the Library still has it filed.
+       Re-filed rather than deleted: the document survives, the shelf loses
+       it, and the Demo button keeps it current from here on. */
+    SF.Store.list().forEach(function (d) {
+      if (d.sourceKey === DEMO_SOURCE_KEY && d.libraryGroup !== DEMO_LIBRARY_GROUP) {
+        d.libraryGroup = DEMO_LIBRARY_GROUP;
+        SF.Store.save(d, { force: true });
+      }
+    });
     var byKey = {};
     SF.Store.list().forEach(function (d) {
       if (d.sourceKey) byKey[d.sourceKey] = d;
@@ -4075,7 +4122,7 @@
     var deck = SF.makeDeck(spec.title);
     deck.theme = spec.theme || 'studio';
     deck.libraryGroup = groupForSpec(spec);
-    if (LIBRARY_SEED_KEYS[spec.key]) deck.sourceKey = spec.key;
+    if (LIBRARY_SEED_KEYS[spec.key] || spec.key === DEMO_SOURCE_KEY) deck.sourceKey = spec.key;
     /* Carried like the logo fields below, and for the same reason: a lesson
        that names its institution has to hand that to the deck, or the theme
        prints nothing where the organisation line goes. */
@@ -4251,6 +4298,8 @@
 
   SF.LESSONS = LESSONS;
   SF.LIBRARY_SEED_KEYS = LIBRARY_SEED_KEYS;
+  SF.DEMO_LIBRARY_GROUP = DEMO_LIBRARY_GROUP;
+  SF.keepOneDemoCopy = keepOneDemoCopy;
   SF.buildLesson = buildLesson;
   SF.seedLibrary = seedLibrary;
   SF.dismissLibrarySeed = dismissLibrarySeed;

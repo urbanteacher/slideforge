@@ -19,7 +19,15 @@
      the one deck that could not be opened from a file:// copy. */
   var DEMO_KEY = 'layout-bank';
 
-  /** Open the demo as a fresh copy. The open document stays in the Library. */
+  /**
+   * Open the demo as a fresh copy.
+   *
+   * The demo is not filed in the Library — it is a showcase, and ninety-odd
+   * slides of sample content on the same shelf as the real lessons is one
+   * misplaced click from being edited by mistake. It lives in a folder the
+   * Library does not list, as exactly one document; useLesson() replaces that
+   * document rather than adding to it.
+   */
   function openDemo() {
     var spec = (SF.LESSONS || []).filter(function (l) { return l.key === DEMO_KEY; })[0];
     if (!spec || !SF.Editor || !SF.Editor.useLesson) {
@@ -28,7 +36,7 @@
     }
     SF.Editor.useLesson(DEMO_KEY);
     SF.toast('Demo opened — ' + (spec.slides || []).length +
-      ' slides. Your previous lesson is saved in the Library.');
+      ' slides. It is not filed in the Library; press Demo again for a fresh copy.');
   }
 
   /** Pick a document from the Library (Store, grouped by brand). */
@@ -245,7 +253,10 @@
 
     function draw() {
       pane.replaceChildren();
-      var all = (SF.Store && SF.Store.list) ? SF.Store.list() : [];
+      /* The demo document is deliberately off the shelf — and off the count,
+         which would otherwise report a lesson the list does not show. */
+      var all = ((SF.Store && SF.Store.list) ? SF.Store.list() : [])
+        .filter(function (d) { return d.libraryGroup !== SF.DEMO_LIBRARY_GROUP; });
       var openId = currentId();
       var q = searchQuery.trim().toLowerCase();
       var collapsed = (SF.LibraryFolders && SF.LibraryFolders.collapsed)

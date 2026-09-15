@@ -488,7 +488,7 @@
     });
   }
 
-  /* Paste a picture straight onto the slide.
+  /* Paste a picture — or a whole slide — straight onto the deck.
 
      The way a lecture picture is actually obtained is a screenshot of a
      chart, and every other tool in the room takes it from the clipboard.
@@ -496,16 +496,28 @@
      Image field, browse to it, delete the file later. That is four steps
      around a keystroke people already know.
 
-     Only when the open slide has somewhere to put it, and never while the
-     cursor is in a field — pasting text into a text box must stay pasting
+     A copied SlideForge slide (JSON on the clipboard) wins over an image, so
+     Cmd/Ctrl+V between browsers pastes the slide rather than ignoring it.
+
+     Only when the open slide has somewhere to put a picture, and never while
+     the cursor is in a field — pasting text into a text box must stay pasting
      text into a text box. */
 
-  function pasteImage(e) {
+  function pasteOnDocument(e) {
     if (SF.Player && SF.Player.open) return;
     if (document.querySelector('dialog[open]')) return;
     var t = /** @type {HTMLElement|null} */ (e.target);
     var tag = t ? t.tagName : '';
     if (tag === 'INPUT' || tag === 'TEXTAREA' || (t && t.isContentEditable)) return;
+
+    var clipText = e.clipboardData && e.clipboardData.getData('text/plain');
+    var slidePayload = SF.SlideClip && SF.SlideClip.unpack(clipText);
+    if (slidePayload) {
+      e.preventDefault();
+      insertCopiedSlide(slidePayload);
+      return;
+    }
+
     var s = deck.slides[sel];
     if (!s) return;
     /* Where the picture can go, and what this slide would have to become to
@@ -1243,8 +1255,16 @@
     history.appendChild(undo);
     history.appendChild(redo);
     if (opts.theme) history.appendChild(UI.button('Theme', 'ghost', openDeckSettings));
+    var copyBtn = UI.button('⎘ Copy', 'ghost', function () { copySlide(); });
+    copyBtn.title = 'Copy this slide (⌘C / Ctrl+C) — paste in another deck or browser';
+    copyBtn.setAttribute('aria-label', 'Copy this slide');
+    history.appendChild(copyBtn);
+    var pasteBtn = UI.button('⎘ Paste', 'ghost', function () { pasteSlideButton(); });
+    pasteBtn.title = 'Paste a copied slide after this one (⌘V / Ctrl+V)';
+    pasteBtn.setAttribute('aria-label', 'Paste slide');
+    history.appendChild(pasteBtn);
     var dup = UI.button('⧉ Duplicate', 'ghost', duplicate);
-    dup.title = 'Duplicate this slide';
+    dup.title = 'Duplicate this slide in this deck (⌘D / Ctrl+D)';
     dup.setAttribute('aria-label', 'Duplicate this slide');
     history.appendChild(dup);
     var del = UI.button('✕ Delete', 'ghost', removeSlide);
@@ -3270,6 +3290,84 @@
     draw();
   }
 
+  /** Pack the current slide for the system clipboard (and a same-browser stash). */
+  function copySlide() {
+    if (!SF.SlideClip) {
+      SF.toast('Copy is not available in this build.');
+      return;
+    }
+    var s = current();
+    if (!s) return;
+    var slide = JSON.parse(JSON.stringify(s));
+    var game = null;
+    if (slide.type === 'game' && slide.gameId && SF.GameStore) {
+      var g = SF.GameStore.get(slide.gameId);
+      if (g) game = JSON.parse(JSON.stringify(g));
+    }
+    var text = SF.SlideClip.pack(slide, game);
+    SF.SlideClip.stash(text);
+    function ok(cross) {
+      SF.toast(cross
+        ? 'Slide copied — paste in another deck or browser'
+        : 'Slide copied in this browser');
+    }
+    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { ok(true); }).catch(function () { ok(false); });
+    } else {
+      ok(false);
+    }
+  }
+
+  /**
+   * Insert a packed slide after the selection. Fresh ids so two pastes do not
+   * share one game or collide with the source deck.
+   * @param {{ slide: object, game: object|null }} payload
+   */
+  function insertCopiedSlide(payload) {
+    if (!payload || !payload.slide) return;
+    var slide = SF.normalizeSlide(JSON.parse(JSON.stringify(payload.slide)));
+    slide.id = SF.uid();
+    if (slide.type === 'game' && payload.game && SF.GameStore) {
+      var game = JSON.parse(JSON.stringify(payload.game));
+      game.id = SF.uid();
+      SF.GameStore.save(game, { force: true });
+      slide.gameId = game.id;
+      if (game.title) {
+        slide.gameTitle = game.title;
+        slide.title = game.title;
+      }
+    } else if (slide.type === 'game' && !payload.game) {
+      /* Slide shell without the quiz — still pasteable; wire a game later. */
+      slide.gameId = '';
+    }
+    deck.slides.splice(sel + 1, 0, slide);
+    sel++;
+    touched();
+    draw();
+    SF.toast('Pasted as slide ' + (sel + 1));
+  }
+
+  /** Paste button: read system clipboard, then fall back to the local stash. */
+  function pasteSlideButton() {
+    if (!SF.SlideClip) {
+      SF.toast('Paste is not available in this build.');
+      return;
+    }
+    function apply(text) {
+      var payload = SF.SlideClip.unpack(text) || SF.SlideClip.unpack(SF.SlideClip.recall());
+      if (!payload) {
+        SF.toast('Nothing to paste — copy a slide first');
+        return;
+      }
+      insertCopiedSlide(payload);
+    }
+    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.readText) {
+      navigator.clipboard.readText().then(apply).catch(function () { apply(null); });
+    } else {
+      apply(null);
+    }
+  }
+
   function removeSlide() {
     if (deck.slides.length === 1) { SF.toast('A presentation needs at least one slide'); return; }
     deck.slides.splice(sel, 1);
@@ -3384,6 +3482,10 @@
         return;
       }
       if (mod && e.key.toLowerCase() === 'x') { e.preventDefault(); beginPlacing(sel); return; }
+      if (mod && e.key.toLowerCase() === 'c') { e.preventDefault(); copySlide(); return; }
+      /* Paste of a slide is handled on the document paste event (so the
+         system clipboard works across browsers). Cmd/Ctrl+V while placing
+         still means "put the slide down" above. */
       /* Alt + arrows to shuffle a slide along, the same grip the bullet list
          inside a slide already uses. */
       if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
@@ -3413,7 +3515,7 @@
     /* On the document, because the slide being pasted onto is the selected
        one wherever the focus happens to be — and the handler bows out on
        its own when the focus is somewhere a paste means something else. */
-    document.addEventListener('paste', pasteImage);
+    document.addEventListener('paste', pasteOnDocument);
     var railGo = /** @type {HTMLInputElement|null} */ ($('railGo'));
     if (railGo) {
       var goField = railGo;
@@ -3463,6 +3565,7 @@
     if (requestedLesson && SF.Studio && SF.Studio.makeLesson) {
       loaded = SF.Studio.makeLesson(requestedLesson);
       SF.Store.save(loaded, { force: true });
+      if (SF.keepOneDemoCopy) SF.keepOneDemoCopy(loaded);
       try {
         if (window.history && window.history.replaceState) {
           var cleanUrl = window.location.pathname + (window.location.hash || '');
@@ -3632,7 +3735,11 @@
       /* Opening a factory pack again is an intentional restore — clear any
          Library dismiss so seedLibrary does not keep hiding it. */
       if (deck && deck.sourceKey && SF.restoreLibrarySeed) SF.restoreLibrarySeed(deck.sourceKey);
-      SF.Store.save(deck, { force: true }); SF.Shell.syncChrome(); draw();
+      SF.Store.save(deck, { force: true });
+      /* Here rather than in the Demo button, so every route to the demo keeps
+         one document rather than a pile of invisible copies. */
+      if (SF.keepOneDemoCopy) SF.keepOneDemoCopy(deck);
+      SF.Shell.syncChrome(); draw();
     },
     deck: function () { return deck; },
     selected: function () { return sel; },

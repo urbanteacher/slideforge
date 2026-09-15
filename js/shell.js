@@ -1495,7 +1495,9 @@
       if (SF.Player.open || document.querySelector('dialog[open]')) return;
       var target = /** @type {HTMLElement|null} */ (e.target);
       var t = target ? target.tagName : '';
-      var typing = t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT';
+      var typing = t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT' ||
+        !!(target && (target.isContentEditable ||
+          (target.closest && target.closest('[contenteditable="true"]'))));
       var mod = e.metaKey || e.ctrlKey;
 
       if (mod && e.key === 's') { e.preventDefault(); save(); return; }

@@ -247,6 +247,32 @@ test('the library seeds brand packs once and leaves vibe galleries out', () => {
   vibe.forEach((key) => assert.ok(!keys.includes(key)));
 });
 
+test('the demo is not filed in the Library, and an old copy is taken off the shelf', () => {
+  const SF = load();
+  assert.equal(SF.LIBRARY_SEED_KEYS['layout-bank'], undefined, 'the demo is not a library card');
+  SF.seedLibrary();
+  assert.equal(SF.Store.list().filter((d) => d.sourceKey === 'layout-bank').length, 0,
+    'seeding must not file the demo');
+
+  /* Built on demand it keeps its sourceKey — that is how the Demo button finds
+     the one demo document — but it belongs to the folder the Library does not
+     list, so the picker never shows it. */
+  const demo = SF.buildLesson('layout-bank');
+  assert.equal(demo.sourceKey, 'layout-bank');
+  assert.equal(demo.libraryGroup, SF.DEMO_LIBRARY_GROUP);
+  assert.ok(!SF.LIBRARY_GROUPS.some((g) => g.id === SF.DEMO_LIBRARY_GROUP),
+    'the demo folder is not one of the Library shelves');
+
+  /* An install from before this has the demo filed in Northeastern. */
+  const stale = SF.buildLesson('layout-bank');
+  stale.libraryGroup = 'nul';
+  SF.Store.save(stale, { force: true });
+  assert.equal(SF.Store.get(stale.id).libraryGroup, 'nul');
+  SF.seedLibrary();
+  assert.equal(SF.Store.get(stale.id).libraryGroup, SF.DEMO_LIBRARY_GROUP,
+    're-filed rather than deleted: the document survives, the shelf loses it');
+});
+
 test('saving a seeded pack keeps the same library id', () => {
   const SF = load();
   SF.seedLibrary();
