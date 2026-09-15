@@ -27,13 +27,69 @@
    for the small technical lines — buttons, dates, the organisation stamp. The
    scale below is the system's desktop ramp, which is why the numbers are not
    round: 72 / 58 / 48 / 32 / 24 / 22 for headings, 22 / 18 / 16 / 14 for
-   body. Neither face ships with the app, so both fall back through the stack
-   until the files are installed; nothing else about the theme depends on it.
+   body. Both faces are bundled under assets/fonts/ukbt — see the @font-face
+   block below for why they are shipped rather than named and hoped for.
 
    The wave is generated rather than shipped. The original is a traced path
    of 1.1 MB, which is most of a megabyte on every slide of every deck for a
    texture nobody looks at directly; the same family of phase-shifted sines
    draws in 38 KB and scales cleanly to any stage. */
+
+/* ------------------------------------------------------------------- fonts
+
+   Both faces are bundled rather than named and hoped for. A deck is presented
+   from whatever machine is in the room and joined from whatever phone is in
+   the audience, so a font installed on one laptop is not a font the room sees.
+
+   Both are SIL Open Font License 1.1, which permits bundling and redistributing
+   with software; the licences sit beside the files. OFL reserves the font names,
+   so neither family is renamed here.
+
+     Uncut Sans    Kasper Nordkvist            uncut.wtf
+     Alpha Lyrae   Fontfabric for Vega Protocol
+
+   woff2 only. Every browser that can run this app supports it, and the whole
+   set is 420 KB against roughly 1 MB for the same faces as woff. font-display
+   is swap: a slide that appears in the fallback and reflows a moment later is
+   better than a slide that is blank while a font loads. */
+@font-face {
+  font-family: 'Uncut Sans';
+  src: url('../assets/fonts/ukbt/UncutSans-Regular.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Uncut Sans';
+  src: url('../assets/fonts/ukbt/UncutSans-RegularItalic.woff2') format('woff2');
+  font-weight: 400; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: 'Uncut Sans';
+  src: url('../assets/fonts/ukbt/UncutSans-Semibold.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Uncut Sans';
+  src: url('../assets/fonts/ukbt/UncutSans-SemiboldItalic.woff2') format('woff2');
+  font-weight: 600; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: 'Uncut Sans';
+  src: url('../assets/fonts/ukbt/UncutSans-Bold.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Uncut Sans';
+  src: url('../assets/fonts/ukbt/UncutSans-BoldItalic.woff2') format('woff2');
+  font-weight: 700; font-style: italic; font-display: swap;
+}
+/* One weight, and the system only ever asks for one. Declared at 500 because
+   that is what Medium is, so a 600 or 700 request synthesises rather than
+   silently picking the wrong face. */
+@font-face {
+  font-family: 'Alpha Lyrae';
+  src: url('../assets/fonts/ukbt/AlphaLyrae-Medium.woff2') format('woff2');
+  font-weight: 500; font-style: normal; font-display: swap;
+}
 
 .theme-ukbt,
 .theme-ukbt-institute {

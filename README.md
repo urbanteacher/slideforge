@@ -924,9 +924,17 @@ Type is **Uncut Sans** for everything the room reads and **Alpha Lyrae Medium**
 for the small technical lines — the date stamp, the page number, the eyebrow
 over a key fact. The scale is the system's own desktop ramp, which is why the
 numbers are not round: 72 / 58 / 48 / 32 / 24 / 22 for headings and
-22 / 18 / 16 / 14 for body, held in `--ukbt-5xl` … `--ukbt-xs`. Neither face
-ships with the app, so both fall back through the stack until the files are
-installed.
+22 / 18 / 16 / 14 for body, held in `--ukbt-5xl` … `--ukbt-xs`.
+
+**Both faces are bundled** under `assets/fonts/ukbt`, not named and hoped for:
+a deck is presented from whatever machine is in the room and joined from
+whatever phone is in the audience, so a font installed on one laptop is not a
+font the room sees. Both are SIL Open Font License 1.1, which permits bundling
+and redistribution with software, and the licences sit beside the files. woff2
+only — every browser that can run this app supports it, and the seven cuts come
+to 420 KB against roughly a megabyte as woff. `font-display: swap`, because a
+slide that appears in the fallback and reflows is better than one that is blank
+while a font loads.
 
 **These two themes carry their own chart series.** The six validated steps in
 `css/app.css` were checked against midnight, ocean, ember and mono; against
