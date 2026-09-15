@@ -1195,13 +1195,26 @@
         var menu = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.file-menu'));
         if (menu) menu.open = false;
         var doc = deckWs.doc();
+        /* Two things come out of one upload, and this dialog has to say so.
+           It used to open with "share as a read-only link?", which settles the
+           question before offering the alternative — and when no room was live
+           the follow-along screen went unmentioned entirely, so the only way
+           to find it was to already know it was there. */
+        var liveNow = !!(SF.Live && SF.Live.active);
         SF.ask({
-          title: 'Share “' + (doc.title || 'this lesson') + '” as a read-only link?',
-          detail: 'Puts a copy on this server at an address nobody can guess, which anyone ' +
+          title: 'Share “' + (doc.title || 'this lesson') + '”?',
+          detail: (liveNow
+            ? 'Two links, one after the other: a screen that follows you in real time — for a ' +
+              'desktop, a second projector, anyone watching remotely — and a copy to read at ' +
+              'their own pace. '
+            : 'A copy anyone can read at their own pace. For a screen that follows you live ' +
+              'instead, press Host live first and share again: that one only works while a ' +
+              'room is running. ') +
+            'Puts a copy on this server at an address nobody can guess, which anyone ' +
             'holding the link can open and read. They cannot edit it, and it is not listed ' +
             'anywhere — but a link that escapes is a lesson that escaped. ' +
             'Games are not carried across; the slides are. You get a key that withdraws it.',
-          confirm: 'Make the link'
+          confirm: liveNow ? 'Make both links' : 'Make the link'
         }, function () {
           SF.toast('Uploading a copy…');
           fetch('/api/share', {
@@ -1238,25 +1251,28 @@
             var durability = j.durable
               ? 'This server keeps shared copies on durable storage — they survive an app update.'
               : 'On this server, shared copies live with the app files and are gone at the next deploy unless a persistent disk is attached (SLIDEFORGE_DATA_DIR).';
-            SF.askText({
-              title: 'Your read-only link',
-              detail: 'Anyone with this address can open the lesson. Scan the code or paste the link — it is already on your clipboard. ' + durability,
-              value: url, qr: true, confirm: followUrl ? 'Next — the big-screen link' : 'Done'
-            }, function () {
-              /* Two addresses, same copy, different jobs: one is read at your
-                 own pace, one follows the room. Shown one after the other
-                 rather than side by side, because a dialog with two links in
-                 it gets the wrong one pasted. */
-              if (!followUrl) return;
+            /* Live: the screen that follows you is the link being asked for in
+               the moment, so it comes first and the read-only copy second.
+               Not live: there is only one, and it is this. */
+            if (followUrl) {
               SF.askText({
                 title: 'Follow-along link for a big screen',
                 detail: 'Open this on a desktop and it full-screens the lesson and moves when you do. ' +
                   'No PIN and no joining — whoever holds the address watches, and they cannot run ahead ' +
                   'of you or answer anything. It stops working when this room ends, or when you withdraw ' +
                   'the shared copy. Scan the code or paste the link.',
-                value: followUrl, qr: true, confirm: 'Done'
-              }, function () {});
-            });
+                value: followUrl, qr: true, confirm: 'Next — the read-only link'
+              }, function () { readOnlyDialog(); });
+              return;
+            }
+            readOnlyDialog();
+            function readOnlyDialog() {
+            SF.askText({
+              title: 'Your read-only link',
+              detail: 'Anyone with this address can open the lesson. Scan the code or paste the link — it is already on your clipboard. ' + durability,
+              value: url, qr: true, confirm: 'Done'
+            }, function () {});
+            }
           }).catch(function (e) {
             SF.toast('Could not share: ' + (e.message || e));
           });
