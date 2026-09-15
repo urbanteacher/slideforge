@@ -3,9 +3,16 @@
 The brand's rendered objects — the green metallic set (coil, cone, asterisk,
 torus) and the iridescent wire set (torus knot, fan, spiral disc, shell).
 
-**Drop the originals here.** Do not route them through PowerPoint on the way:
-it re-encodes and often downsamples, and it is how the logo ended up looking
-like a fragment on a white rectangle earlier in this repo's history.
+Eight are here and wired in: `ukbt-coil`, `ukbt-asterisk`, `ukbt-cone` and
+`ukbt-torus` are the green set and belong to UK Black Tech; `ukbt-knot`,
+`ukbt-disc`, `ukbt-shell` and `ukbt-dome` are the iridescent set and belong to
+the Institute. All eight have real transparency and transparent corners —
+checked, not assumed.
+
+**They are 300px square, and that is the one thing holding them back.** They
+are drawn at 470 on the slide, a 1.6x upscale, which they survive because they
+are soft-shaded renders with no hard edges and no type in them. Re-export at
+3x (900px) and the size on the slide can go up with them.
 
 ## What to export
 
@@ -34,8 +41,10 @@ The green set belongs to UK Black Tech and the iridescent set to the UKBT
 Institute, which keeps the two themes apart at their loudest moment in the same
 way their section grounds already do.
 
-Nothing references these files yet. Add them and say so, and the theme gets its
-object slot.
+Adding another one is two lines: drop the file here, and add a
+`[data-art-index="N"]` rule in `css/ukbt.css` beside the others. The index is
+stamped on the slide root by `renderSlide` as `slide index % 4`, so a deck that
+opens with several of these layouts does not show the same shape twice.
 
 ## Also in assets/brand
 

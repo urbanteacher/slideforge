@@ -3557,11 +3557,16 @@
       '<div class="art-orbit"></div><div class="art-tile">✳</div>' +
       '<div class="art-dot"></div><div class="art-caption">STAY CURIOUS.</div>'],
     /* One chevron, drawn twice and offset by a third of its width, which is
-       the geometry of the real lockup rather than a redraw of it. */
+       the geometry of the real lockup rather than a redraw of it. The object
+       div is the brand's rendered forms; which one it shows is picked by
+       slide index in CSS, so a deck does not open and break on the same
+       shape. See the comment in css/ukbt.css. */
     ukbt: ['ukbt-art',
-      '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div>'],
+      '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div>' +
+      '<div class="ukbt-object"></div>'],
     'ukbt-institute': ['ukbt-art',
-      '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div>'],
+      '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div>' +
+      '<div class="ukbt-object"></div>'],
     /* Keynote minimal: one soft bloom behind the centred line and a ring
        bled off the corner. Anything more would stop being this theme. */
     product: ['pd-art', '<div class="pd-bloom"></div><div class="pd-ring"></div>'],
@@ -3622,6 +3627,10 @@
       }
       if (art) {
         art.setAttribute('aria-hidden', 'true');
+        /* Which of a theme's decorations to show can then be a CSS choice.
+           Modulo four because that is how many objects each UKBT set has;
+           any theme that wants fewer can ignore it. */
+        if (opts.index != null) root.dataset.artIndex = String(opts.index % 4);
         root.appendChild(art);
       }
     }

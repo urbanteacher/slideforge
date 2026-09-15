@@ -226,6 +226,56 @@
 .ukbt-art .ukbt-chev-front { right: -232px; }
 .ukbt-art .ukbt-chev-back { right: -29px; }
 
+/* --------------------------------------------------------------- the objects
+
+   The brand's rendered forms — coil, asterisk, cone and torus in the green
+   set, knot, disc, shell and dome in the iridescent one. They are the thing
+   that makes these decks look like the organisation rather than like a deck
+   in its colours, so they are shown at full strength and bled off a corner,
+   not faded into the background the way the wave is.
+
+   One per slide, and only on the title. The section slide already has the
+   chevron on a loud ground and a second mark there is a fight, not a
+   composition.
+
+   Which object appears is picked by slide index, stamped on the slide root by
+   renderSlide, so a deck with several of these layouts does not repeat the
+   same shape every time. The green set belongs to the parent and the
+   iridescent set to the Institute, which keeps the two themes apart in the
+   same way their section grounds do.
+
+   The sources are 300px square. Drawn at 470 that is a 1.6x upscale, which
+   these hold because they are soft-shaded renders with no hard edges and no
+   type in them — but it is the reason this is 470 and not 700. Re-export at
+   3x and the number can go up. */
+.ukbt-art .ukbt-object {
+  position: absolute;
+  right: -46px;
+  bottom: -54px;
+  width: 470px;
+  height: 470px;
+  background: no-repeat center / contain;
+}
+/* Only the title carries an object. */
+.theme-ukbt.layout-section .ukbt-object,
+.theme-ukbt-institute.layout-section .ukbt-object { display: none; }
+/* ...and where there is an object, the chevron steps back so the two are not
+   shouting over each other in the same corner. */
+.theme-ukbt.layout-title .ukbt-chev-front { background: rgba(0, 197, 127, .10); }
+.theme-ukbt.layout-title .ukbt-chev-back { background: rgba(255, 255, 255, .05); }
+.theme-ukbt-institute.layout-title .ukbt-chev-front { background: rgba(0, 197, 127, .10); }
+.theme-ukbt-institute.layout-title .ukbt-chev-back { background: rgba(255, 255, 255, .05); }
+
+.theme-ukbt .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-coil.png'); }
+.theme-ukbt[data-art-index="1"] .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-asterisk.png'); }
+.theme-ukbt[data-art-index="2"] .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-cone.png'); }
+.theme-ukbt[data-art-index="3"] .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-torus.png'); }
+
+.theme-ukbt-institute .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-knot.png'); }
+.theme-ukbt-institute[data-art-index="1"] .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-disc.png'); }
+.theme-ukbt-institute[data-art-index="2"] .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-shell.png'); }
+.theme-ukbt-institute[data-art-index="3"] .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-dome.png'); }
+
 /* ------------------------------------------------------------- title slide
 
    Its own ground, not the deck's. A title slide that is the same flat colour
