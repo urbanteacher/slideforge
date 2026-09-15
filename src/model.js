@@ -421,7 +421,7 @@ function makeSlide(type) {
       s.title = 'Code that writes itself';
       s.language = 'python';
       s.typewrite = true;
-      s.typeSpeed = 28;
+      s.typeSpeed = 55;
       s.code =
         'import pandas as pd\n\n' +
         'df = pd.read_csv("attendance.csv")\n' +
@@ -558,7 +558,7 @@ function normalizeSlide(raw) {
       : (lang === 'text' || lang === 'plain') ? 'text'
       : 'python';
     s.typewrite = s.typewrite !== false;
-    s.typeSpeed = Math.max(8, Math.min(120, Number(s.typeSpeed) || 28));
+    s.typeSpeed = Math.max(8, Math.min(120, Number(s.typeSpeed) || 55));
     if (s.type !== 'code') {
       /* Authored code settings on a non-code slide are kept only while the
          fields exist — prepareLayout will reattach when the type returns. */

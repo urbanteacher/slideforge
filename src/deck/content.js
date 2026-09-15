@@ -613,7 +613,7 @@ function prepareLayout(slide, type) {
     if (slide.code == null) slide.code = String(slide.body || '');
     if (!String(slide.language || '').trim()) slide.language = 'python';
     if (slide.typewrite == null) slide.typewrite = true;
-    if (!Number.isFinite(Number(slide.typeSpeed)) || Number(slide.typeSpeed) <= 0) slide.typeSpeed = 28;
+    if (!Number.isFinite(Number(slide.typeSpeed)) || Number(slide.typeSpeed) <= 0) slide.typeSpeed = 55;
     if (!String(slide.code || '').trim()) {
       slide.code =
         'import pandas as pd\n\n' +

@@ -1617,9 +1617,17 @@ html[data-ws="game"] #btnSorter { display: none; }
   flex: 1; margin: 0; padding: 22px 26px 28px;
   overflow: auto; white-space: pre; tab-size: 2;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 26px; line-height: 1.45; color: var(--s-fg);
+  font-size: 24px; line-height: 1.45; color: var(--s-fg);
   background: transparent;
 }
+/* Longer snippets step down instead of scrolling out of the frame. The class
+   comes from the line count in layoutCode; the sizes are what fits the pane
+   at line-height 1.45 with 11, 16 and 24 lines in it. Past that the code is
+   too long for one slide and the honest answer is two slides, but it is still
+   better to show all of it small than four fifths of it large. */
+.layout-code .code-pane.code-lines-md { font-size: 19px; }
+.layout-code .code-pane.code-lines-lg { font-size: 16px; }
+.layout-code .code-pane.code-lines-xl { font-size: 14px; line-height: 1.38; }
 .layout-code .code-pane code { font: inherit; color: inherit; }
 .layout-code .code-pane.code-typing::after {
   content: '';

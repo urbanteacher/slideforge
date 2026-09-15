@@ -3725,7 +3725,25 @@
     chrome.appendChild(el('span', 'code-lang', label));
     frame.appendChild(chrome);
 
-    var pre = el('pre', 'code-pane');
+    /* Size follows the snippet, because the pane scrolls and a projector
+       cannot be scrolled by the room. At 26px a fourteen-line cell ran off the
+       bottom of the frame into an overflow nobody in the third row knew was
+       there — the code was on the slide and unreadable at the same time.
+
+       Bands rather than arithmetic: line height is 1.45, the frame gets what
+       the pad has left after the heading, and these are the counts that fit
+       it. Wide enough to stay legible from the back at every step. */
+    /* Rows actually drawn, not newlines counted: every snippet ends in one, and
+       counting it cost a whole band — fourteen rows were sized as if they were
+       fifteen and still scrolled. */
+    var rows = src.replace(/\n+$/, '').split('\n').length;
+    /* The budget is the pane minus its own padding, which is what scrollHeight
+       measures and the first cut of this missed: 409px of frame is 359px of
+       text. At line-height 1.45 that is 10 rows at 24px, 12 at 19px and 15 at
+       16px; the last band tightens the leading to reach 18. */
+    var band = rows <= 10 ? '' : rows <= 12 ? ' code-lines-md'
+      : rows <= 15 ? ' code-lines-lg' : ' code-lines-xl';
+    var pre = el('pre', 'code-pane' + band);
     pre.setAttribute('aria-label', label + ' source');
     var codeEl = document.createElement('code');
     codeEl.className = 'language-' + lang;
@@ -3739,7 +3757,7 @@
       return;
     }
 
-    var speed = Math.max(8, Math.min(120, Number(slide.typeSpeed) || 28));
+    var speed = Math.max(8, Math.min(120, Number(slide.typeSpeed) || 55));
     var i = 0;
     var timer = null;
     var host = root || pre.closest('.slide') || pad.parentElement;

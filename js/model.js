@@ -3216,7 +3216,7 @@
       if (slide.code == null) slide.code = String(slide.body || "");
       if (!String(slide.language || "").trim()) slide.language = "python";
       if (slide.typewrite == null) slide.typewrite = true;
-      if (!Number.isFinite(Number(slide.typeSpeed)) || Number(slide.typeSpeed) <= 0) slide.typeSpeed = 28;
+      if (!Number.isFinite(Number(slide.typeSpeed)) || Number(slide.typeSpeed) <= 0) slide.typeSpeed = 55;
       if (!String(slide.code || "").trim()) {
         slide.code = 'import pandas as pd\n\ndf = pd.read_csv("attendance.csv")\nby_week = df["week"].value_counts().sort_index()\nprint(by_week.head())\n';
       }
@@ -8210,7 +8210,7 @@
         s.title = "Code that writes itself";
         s.language = "python";
         s.typewrite = true;
-        s.typeSpeed = 28;
+        s.typeSpeed = 55;
         s.code = 'import pandas as pd\n\ndf = pd.read_csv("attendance.csv")\nby_week = df["week"].value_counts().sort_index()\nprint(by_week.head())\n';
         break;
       case "quiz":
@@ -8318,7 +8318,7 @@
       var lang = String(s.language || "python").trim().toLowerCase();
       s.language = lang === "javascript" || lang === "js" ? "javascript" : lang === "text" || lang === "plain" ? "text" : "python";
       s.typewrite = s.typewrite !== false;
-      s.typeSpeed = Math.max(8, Math.min(120, Number(s.typeSpeed) || 28));
+      s.typeSpeed = Math.max(8, Math.min(120, Number(s.typeSpeed) || 55));
       if (s.type !== "code") {
       }
     } else {
