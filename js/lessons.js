@@ -1224,6 +1224,73 @@
           correct: 1,
           explanation: 'Ranking: position along a common scale is the channel the eye reads most accurately, and sorting puts the message into the shape. A pie asks the reader to compare angles; a line implies an order in time that is not there.'
         }]
+      }, {
+        ref: 'rank',
+        title: 'Put the workflow in order',
+        style: 'order',
+        settings: { defaultTime: 60, scoreboard: false, scoreSlide: false },
+        questions: [{
+          question: 'Put these in the order a chart should be made.',
+          options: [
+            'Ask what question the chart has to answer',
+            'Check where the numbers came from, and what they leave out',
+            'Choose the idiom that answers that question',
+            'Write the finding as the title'
+          ],
+          explanation: 'The title is written last and read first. Choosing the idiom before knowing the question is how a deck ends up full of charts that are correct and say nothing.'
+        }]
+      }, {
+        ref: 'race',
+        title: 'Race: name the idiom',
+        style: 'race',
+        settings: { defaultTime: 20, scoreboard: true, scoreSlide: false, mode: 'teams' },
+        questions: [{
+          question: 'Where does it go, and how much gets there?',
+          options: ['Sankey', 'Funnel', 'Waffle', 'Box plot'],
+          correct: 0,
+          explanation: 'A Sankey. A funnel shows what is left at each stage; only the Sankey shows where the rest went.'
+        }, {
+          question: 'One number per category, and the order is the message?',
+          options: ['Pie', 'Radar', 'Sorted horizontal bar', 'Pictogram'],
+          correct: 2,
+          explanation: 'Sorted horizontal bar. Position on a common scale, sorted so the shape carries the finding.'
+        }]
+      }, {
+        ref: 'boss',
+        title: 'Boss battle: the grammar of charts',
+        style: 'boss',
+        settings: { defaultTime: 30, scoreboard: false, scoreSlide: false, confidence: false },
+        questions: [{
+          question: 'Which channel does the eye read most accurately?',
+          options: ['Area', 'Angle', 'Position on a common scale', 'Colour hue'],
+          correct: 2, difficulty: 'easy',
+          explanation: 'Position on a common scale. An easy hit — 1 damage.'
+        }, {
+          question: 'A bar chart whose axis starts at 40 rather than 0 exaggerates what?',
+          options: ['The total', 'The differences between bars', 'The number of categories', 'Nothing — it is a free choice'],
+          correct: 1, difficulty: 'medium',
+          explanation: 'The differences. A bar encodes value as length, so cutting the baseline cuts the length that the value is made of — 2 damage.'
+        }, {
+          question: 'Why is a radar chart hard to read fairly?',
+          options: [
+            'It cannot hold more than three series',
+            'Enclosed area grows as the square of the values, and reordering the spokes changes it',
+            'It needs a legend',
+            'The axes must share a scale'
+          ],
+          correct: 1, difficulty: 'hard',
+          explanation: 'Area grows as the square, and the spoke order changes the area without changing the data — 3 damage.'
+        }, {
+          question: 'A room is shown a scatter with a clear upward trend. What will they conclude that the chart does not say?',
+          options: [
+            'That the two things are measured in the same unit',
+            'That x causes y',
+            'That the sample is large',
+            'That the axis starts at zero'
+          ],
+          correct: 1, difficulty: 'boss',
+          explanation: 'That x causes y. Readers assume the relationship you draw is causal, whatever the caption says — the boss blow, 5 damage.'
+        }]
       }],
       slides: [
         { type: 'title', title: 'Layout bank', subtitle: 'One of every layout, chart and live moment · Northeastern theme',
@@ -1433,7 +1500,7 @@
           progressive: true,
           notes: 'JOURNEY — the third mode. Numbered discs on one horizontal rail with the copy beneath, for a process read left to right. Route keeps the sequence vertical; Handover is two or three big columns; Stepper is the infographic idiom for "first, then, then".' },
 
-        { type: 'section', title: 'Data and evidence', subtitle: 'Table, chart in three kinds',
+        { type: 'section', title: 'Data and evidence', subtitle: 'A table, and all twenty chart idioms',
           notes: 'Table and chart read the same pasted text, so a range from a spreadsheet becomes either without retyping.' },
 
         { type: 'table', title: 'Table — when the numbers are the point',
@@ -1656,6 +1723,118 @@
         { type: 'game', gameRef: 'check',
           notes: 'A LIVE CHECK — built for you rather than chosen from the layout picker, which is why it is not in the bank above. Phones answer, you hold the reveal, and the explanation follows. Confidence is on here, so the room says how sure it is as well as what it thinks — a confident wrong answer being the most useful signal you can get.\n\nThe quiz, results, join and explain slides are made the same way, by the live session.' },
 
+        { type: 'section', title: 'Activities', subtitle: 'Fifty-four of them, filed by where they belong in a lesson',
+          notes: 'The layouts above are shapes you fill in. An activity is the other direction: you pick the teaching move, and it writes the slides.' },
+
+        { type: 'content', title: 'The activity library',
+          bullets: [
+            'Fifty-four activities\tFiled under the eleven phases of a lesson — starter, activation, construction, mini, main, collaboration, mini-quiz, reflection, plenary.',
+            'Each one says what it costs\tHow long it takes, and what has to be in the room before you start.',
+            'Picking one writes the slides\tNot a description of the activity. The actual slides, filled in, in your deck, ready to be rewritten.'
+          ],
+          notes: 'THE ACTIVITY LIBRARY — the Activities studio, or the library dialog from anywhere. Filter by phase and the list stops being fifty-four things and starts being the four that fit where you are.\n\nFormats that are planned but not built are shown and disabled rather than hidden, so the list does not quietly imply the app can do less than it can — or more.' },
+
+        { type: 'cards', design: { cardsMode: 'rows' }, title: 'Where an activity lands',
+          bullets: [
+            'A slide\tTwenty-three write one finished slide, at the layout the activity needs.',
+            'An arc of slides\tTwo write several, because the activity has stages.',
+            'A game\tTen build a game and the slide that runs it.',
+            'A feedback moment\tNine attach a prompt the room answers on their phones.',
+            'A live moment\tTen are run rather than drawn: a task, a timer, a break.'
+          ],
+          notes: 'The library tells you which of these an activity is before you pick it, because “adds a slide” and “runs for ten minutes with phones out” are different commitments.\n\nWhere the original teaching move did not fit an engine honestly, the entry says so and what it does instead. Card Sort wanted fifteen cards in student-chosen groups; Ranking allows eight in one line. So it writes the slide and leaves the cards on the table where they belong.' },
+
+        { type: 'keywords', activity: 'think-pair-share', activityPresentation: 'steps',
+          title: 'Think-Pair-Share',
+          bullets: [
+            'Think · 1 min\tOn your own: which chart in this deck would you not have chosen? One line.',
+            'Pair · 3 min\tSwap with the person beside you and argue for the one you would keep.',
+            'Share · 3 min\tTwo pairs report out. I write the disagreement on the board.'
+          ],
+          modelAnswer: 'Any answer that names the question the chart was meant to answer, and says which channel it asked the eye to judge. “The radar, because area grows as the square of the values” is a strong answer. “The pie, because pies are bad” is not.',
+          modelAnswerDraft: true,
+          notes: 'AN ACTIVITY SLIDE, as the library writes it — rail badge naming its phase, timings in the labels, the steps view so the three stages read as three stages.\n\nThe box underneath is a DRAFT ANSWER. Nineteen activities carry a worked answer in their teacher notes, and the library brings it across rather than leaving it where no room ever sees it. It arrives shut and marked: every one is written about somebody else’s subject, so showing it unread would put the wrong answer on the wall. Rewrite it and it becomes the card on the next slide.' },
+
+        { type: 'keywords', activity: 'i-do-we-do-you-do', activityPresentation: 'panels',
+          title: 'I do · We do · You do',
+          bullets: [
+            'I do\tI build one chart from this table, saying every choice out loud.',
+            'We do\tWe build the next one together — you tell me what to choose and why.',
+            'You do\tYou build the third on your own. I say nothing.',
+            'We check\tTwo of yours on the wall side by side, and we say why they differ.'
+          ],
+          progressive: true,
+          notes: 'THE PANELS VIEW — four equal panels, and only at four: the view needs exactly that many, so three or five falls back to rows rather than drawing a gap. Gradual release is four moves, which is why it is the shape this activity uses.\n\nBuild on Next is on, so the room is not reading “you do” while you are still doing.' },
+
+        { type: 'keywords', activity: 'error-analysis', activityPresentation: 'brief',
+          title: 'Error analysis — find the faults',
+          bullets: [
+            'The chart\tA pie with eleven slices, two of them 3%, no labels, ordered alphabetically.',
+            'Find three faults\tName each one, then say what it costs the reader.',
+            'Then redraw it\tOne sentence: which idiom, and what its title would say.'
+          ],
+          modelAnswer: 'Eleven slices is well past the point where an angle can be judged, and the two 3% slices are unreadable at any size. No labels means the legend is the only key, so the eye travels for every slice. Alphabetical order throws away the ranking, which is the one thing the reader wants. Redraw as a sorted horizontal bar, titled with the finding rather than the subject.',
+          notes: 'THE ANSWER CARD, rewritten and therefore live: the task is on the front and the worked answer is BEHIND it, not further down. Turning the card over is a deliberate act that happens when the time is up — so the room looks at the task for the whole of the activity instead of reading ahead.\n\nThe brief view sets the labels as headings, for an activity whose rows are instructions rather than vocabulary.' },
+
+        { type: 'content', title: 'A moment you run, not a slide you wrote',
+          bullets: [
+            'A task\tInstructions over whatever is on screen, with a countdown if it needs one.',
+            'A timer\tThinking time on its own, so silence in the room is deliberate rather than awkward.',
+            'A break\tFive minutes, said out loud, so nobody has to ask.'
+          ],
+          notes: 'LIVE MOMENTS — started from the presenter desk or the controls on the wall, mid-slide, without leaving the show. The deadline is held by the host rather than each phone, so a learner joining late sees the same clock as everyone else and pausing pauses it for the room.\n\nOne refusal worth knowing: a moment will not start over a knowledge check that is still waiting to be revealed. That would cover the question with a countdown about something else.' },
+
+        { type: 'section', title: 'Games', subtitle: 'Twenty-three engines, twenty-seven ready-made formats',
+          notes: 'A game is its own document, joined to a slide. The three that follow are three different engines on the same subject, so what changes is the shape of the thinking rather than the topic.' },
+
+        { type: 'content', title: 'The game library',
+          bullets: [
+            'Twenty-three engines\tMultiple choice, true / false, ranking, typed answers, estimation, odd-one-out, definitions, memory pairs, heads-up, bingo, a horse race, a boss battle.',
+            'Twenty-seven ready-made formats\tThe same engines set up for a job: Beat the Clock, Spot the Error, Predict the Outcome, Fill in the Blanks, Concept Chain, Question Cube.',
+            'Two places they go\tBetween slides as their own board, or beside a slide as a quick check.'
+          ],
+          notes: 'THE GAME LIBRARY — the same dialog as the activities, and each card says how the room takes part before you pick it.\n\nEvery engine shares the same spine: phones answer, you hold the reveal, the explanation follows, and confidence is optional on all of them. What differs is what the wall does while the room is answering — which is most of whether a class leans in.' },
+
+        { type: 'game', gameRef: 'rank',
+          notes: 'RANKING — one linear order, part marks for the items placed right, so a nearly-correct answer is not scored as a wrong one. Three to eight items; past eight the room is sorting rather than thinking.\n\nGood for a process, a chronology, or a set of priorities. Bad for anything where two items genuinely tie, because the engine will insist on an order the subject does not have.' },
+
+        { type: 'game', gameRef: 'race',
+          notes: 'HORSE RACE — multiple choice, but every right answer moves your team along a track on the wall. The questions are ordinary; the track is what makes a quiet class shout.\n\nTeams, not individuals, which is deliberate: a leaderboard of names is a reason for the weakest learner in the room to stop answering. Keep it for practising something they have already been taught.' },
+
+        { type: 'game', gameRef: 'boss',
+          notes: 'BOSS BATTLE — the whole class against one health bar. Each question carries a difficulty and deals damage to match: an easy hit is 1, the boss blow is 5, so the hard question is worth attempting even by somebody who has got the last three wrong.\n\nNobody is behind anybody. That is the entire pedagogical argument for it, and it is a good one for the end of a topic.' },
+
+        { type: 'section', title: 'Running the room', subtitle: 'Rehearse, present, host — and the two ways to share',
+          notes: 'Everything so far is what goes on the wall. This is what you are holding while it is up there.' },
+
+        { type: 'cards', design: { cardsMode: 'rows' }, title: 'Four ways to run the same deck',
+          bullets: [
+            'Rehearse\tThe whole lesson against a sample class — answers, scores and a room that is not there. Nothing counts.',
+            'Present\tThe show on the wall. Arrow keys, or the controls that fade in when the mouse moves.',
+            'Host live\tThe same show with phones in it: a join code, answers coming back, the room in a rail beside the slide.',
+            'Teacher Presenter\tA second window for you alone — notes, what is next, who answered what, and the room. Press D.'
+          ],
+          notes: 'REHEARSE is the one most people never find, and the one worth finding: it fills the deck with a plausible class so you can see what a poll looks like with thirty answers in it before thirty people are watching you meet it.\n\nTeacher Presenter wants a second screen. Without one, it is still the right window to have on a laptop while the projector shows the wall.' },
+
+        { type: 'table', title: 'The controls on the wall',
+          body: 'Control\tKey\tWhat it does\nBack / forward\t← →\tOne point at a time, on a slide that builds\nRoom view\tS\tHidden, beside the slide, or full screen\nQuick poll\tV\tAsk what you had not planned to ask\nFreeze\tZ\tHold the wall while you digress\nDraw\tI\tInk on the slide, or spotlight part of it\nBlank\tB\tBlack the projector · Shift+B the phones\nJoin code\tJ\tThe QR and PIN, full screen\nEverything else\t?\tThe full list of keys',
+          notes: 'THE CONTROLS fade in when the mouse moves and fade out again, so a still wall is a slide rather than a slide with a toolbar on it. Everything here has a key, and the keys are the faster route.\n\nBehind the ••• as well, each with its own key: the leaderboard (E), the room’s reactions on or off (T), who may speak (Shift+H), reset the scores (R), named answers in the presenter window (W), full screen (F), and the two pop-outs. FREEZE is the one to learn first — it is the difference between a digression and a scramble.' },
+
+        { type: 'table', title: 'Teacher Presenter — nine panels',
+          body: 'Panel\tWhat it holds\nNotes\tYour notes for this slide, and the next slide beside them\nQuick\tA task with a countdown, a break, and five one-tap polls\nActivities\tThe library, runnable mid-lesson without leaving the show\nPulse\tReactions and slide responses as they arrive\nAnswers\tWho answered what — names, not only totals\nClass\tThe register: who joined, who is still missing\nInsights\tWhich questions the room found hard, and how sure it was\nTools\tName picker, timer, a scratch pad\nQ&A\tQuestions from phones, with a badge when one is waiting',
+          notes: 'This window is private. The projector never shows it, which is why the notes you are reading live here rather than on the slide.\n\nIt opens as a real pop-out — drag it to a second screen, or keep it on the laptop while the wall runs the show. Press D from the show, or the button in the bar before you start.' },
+
+        { type: 'compare', title: 'Two ways to share, and they are not the same thing',
+          subtitle: 'Read at their own pace | Follows you live',
+          bullets: [
+            'Needs a live room\tNo — works whether or not you are presenting\tYes — Host live first, or the option is greyed out with the reason on it',
+            'Who drives\tThey do: their pace, their order, their own time\tYou do: it moves when you move, including through a build, and cannot run ahead',
+            'What it is for\tRevision afterwards, and the person who missed the lesson\tA second projector, an overflow room, a desktop at the back of the hall',
+            'PIN\tNone. The address is the whole secret\tNone either — and nobody watching appears in your register or your reports'
+          ],
+          progressive: true,
+          notes: 'SHARE asks which of these you want before it uploads anything, because they come out of one copy and answer completely different questions. Each gets its own QR code and its own address.\n\nWhat both mean: a copy on this server at an address nobody can guess, unlisted and read-only — but a link that escapes is a lesson that escaped. Games are not carried across; the slides are. You get a key that withdraws it, and it is the only way to.' },
+
         { type: 'section', title: 'Two settings that apply everywhere', subtitle: 'Build on Next, and the theme',
           notes: 'Worth knowing before you start copying slides out of this deck.' },
 
@@ -1676,9 +1855,9 @@
             'Found a shape you want? Duplicate the slide and paste it into your own deck, then replace the content.',
             'Layouts are app-wide — every one of these is already in the layout picker of every deck you open.',
             'This deck is a reference copy. Edit it freely; rebuild it from the lesson picker whenever you want a clean one.',
-            'Not here: quiz, game, results, join and explain. Those are made for you, not chosen from the picker.'
+            'Not chosen from the picker: quiz, results and explain. Those are built by the live session.'
           ],
-          notes: 'Close. Rebuilding this lesson gives a fresh copy, so nothing here is precious. Every layout the picker offers is in this deck except one; video is named on its own slide but not rendered, because a placeholder URL would only ever draw a black box. The remaining five slide types never appear in the picker: quiz, game, results and join are built by the live session, and explain is the card that shows the correct answer after a check — which is also why the student handout leaves it out.' }
+          notes: 'Close. Rebuilding this lesson gives a fresh copy, so nothing here is precious. Every layout the picker offers is in this deck except one; video is named on its own slide but not rendered, because a placeholder URL would only ever draw a black box. Three slide types never appear in the picker at all: quiz and results are built by the live session, and explain is the card that shows the correct answer after a check — which is also why the student handout leaves it out.' }
       ]
     },
     {
