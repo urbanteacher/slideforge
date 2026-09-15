@@ -92,3 +92,24 @@ test('Export still offers the student handout and the durable copies', () => {
     assert.ok(shell.includes("id: '" + id + "'"), 'Export lost the "' + id + '" option');
   });
 });
+
+test('there is exactly one demo, and one thing that opens it', () => {
+  const studio = fs.readFileSync(path.join(ROOT, 'js', 'studio.js'), 'utf8');
+  const server = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+
+  /* The button says demo, so it must open the demo. It spent a while being a
+     second copy of File → Library under the label "Example lesson", which is
+     two names for one list and no route at all to the demo deck. */
+  assert.match(html, /id="btnTemplate"[^>]*>[^<]*demo/i, 'the canvas button no longer offers the demo');
+  assert.match(studio, /var DEMO_KEY = 'layout-bank'/, 'the demo is not named in studio.js');
+  assert.match(studio, /btnTemplate\.onclick = openDemo/, 'the demo button is wired to something else');
+  assert.match(studio, /SF\.Editor\.useLesson\(DEMO_KEY\)/, 'openDemo does not open the named demo');
+
+  /* One demo. The server used to build a second one on demand, which meant
+     the deck most often shown to somebody else was the one deck a file://
+     copy could not open. */
+  assert.ok(!server.includes('demo-lesson'), 'the server is building a second demo again');
+  assert.ok(!fs.existsSync(path.join(ROOT, 'tools', 'demo-lesson.js')),
+    'tools/demo-lesson.js is back — the demo lives in js/lessons.js');
+  assert.ok(!sources.includes('/api/demo-lesson'), 'something still fetches the old demo bundle');
+});

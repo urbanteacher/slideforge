@@ -13,9 +13,10 @@ data/
 # Private attendance and live-session journals
 .slideforge/
 
-# The demo lesson, which tools/demo-lesson.js generates. Same reasoning as
-# data/ above: it is a snapshot, its SVG diagrams are data URIs on single
-# lines, and the generator is the readable version.
+# Exported bundles: the "everything, as one file" backup from File → Export,
+# and the lesson bundles tools/build-ipdv-lesson.js generates. Same reasoning
+# as data/ above — they are snapshots whose SVG diagrams are data URIs on
+# single lines, and the generator or the app is the readable version.
 *.sfbundle.json
 
 # Smoke-test screenshots. The tools in tools/ rewrite these on every run and

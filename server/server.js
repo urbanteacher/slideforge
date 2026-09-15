@@ -439,17 +439,6 @@ function serve(req, res) {
     return req.method === 'GET' ? listData(res) : saveData(req, res);
   }
 
-  /* One-click demo lesson for File → Open demo lesson. Built on demand so
-     the app folder does not need a committed .sfbundle.json snapshot. */
-  if (rel === '/api/demo-lesson' && req.method === 'GET') {
-    try {
-      const demo = require(path.join(ROOT, 'tools', 'demo-lesson.js'));
-      return jsonReply(res, 200, demo.buildBundle());
-    } catch (err) {
-      return jsonReply(res, 500, { error: 'Could not build the demo lesson.', detail: String(err && err.message || err) });
-    }
-  }
-
   if (rel === '/') rel = '/index.html';
 
   const full = path.resolve(ROOT, '.' + rel);
