@@ -192,9 +192,11 @@ test('words only cycle when there is an entrance to cycle', () => {
   });
   assert.match(css, /words-loop[\s\S]{0,200}animation-iteration-count: infinite/,
     'the cycle does not repeat');
-  /* The hold is most of the cycle: a line that is readable once is not
-     readable the fifth time round if it spends half the cycle moving. */
-  assert.match(css, /12%, 74%/, 'the hold is no longer the bulk of the cycle');
+  /* The hold is the longest phase, and the exit is long enough to see: at
+     74%→88% the whole wave left in 870ms on the default cycle, which reads as
+     the words being gone rather than going. */
+  assert.match(css, /10%, 58%/, 'the hold is no longer the longest phase');
+  assert.match(css, /86%, 100%/, 'the exit is back to being too quick to read');
   assert.match(css, /prefers-reduced-motion[\s\S]{0,600}words-loop \.w[\s\S]{0,120}animation: none/,
     'a loop is the one thing reduced motion must stop');
 });
@@ -205,6 +207,13 @@ test('speed and spacing are the two controls, and they compose', () => {
   assert.deepEqual(Object.keys(SF.WORD_SPEEDS).sort(), ['gentle', 'medium', 'quick']);
   const gentle = SF.WORD_SPEEDS.gentle, medium = SF.WORD_SPEEDS.medium, quick = SF.WORD_SPEEDS.quick;
   assert.ok(gentle.dur > medium.dur && medium.dur > quick.dur, 'the durations are not ordered');
+  /* Far enough apart to be told apart. Three settings of one effect is three
+     controls that do nothing: gentle is at least 1.7x medium, quick under
+     half of it. */
+  assert.ok(gentle.dur / medium.dur >= 1.7, 'gentle is too close to medium: ' + gentle.dur);
+  assert.ok(quick.dur / medium.dur <= 0.55, 'quick is too close to medium: ' + quick.dur);
+  assert.ok(SF.WORD_STAGGERS.one / SF.WORD_STAGGERS.wave >= 2,
+    'one-at-a-time is too close to the wave');
   assert.ok(gentle.cycle > medium.cycle && medium.cycle > quick.cycle, 'the cycles are not ordered');
   assert.ok(gentle.span > medium.span && medium.span > quick.span, 'the waves are not ordered');
 

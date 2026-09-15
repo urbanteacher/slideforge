@@ -3826,6 +3826,134 @@
     },
 
     /* ------------------------------------------------------------------
+       Motion lab — every moving part once, in the order they were built, with
+       the near-identical settings put side by side. The three word-speed
+       slides exist because a teacher asked "are these the same?" about Gentle
+       and Quick, and the answer on one slide is easy to miss and obvious on
+       three in a row. Nothing here is a lesson; it is a specimen sheet.
+       ------------------------------------------------------------------ */
+    {
+      key: 'motion-lab',
+      title: 'Motion lab — everything that moves, once each',
+      icon: '◈',
+      blurb: 'One slide per moving part: generated cover backdrops, a statement that arrives a word at a time, the three speeds and three spacings side by side, a looping line, Ken Burns with a destination, a chart walked category by category, a spotlight build, a background video, a YouTube embed, and two morphs. Every slide says in its notes which control made it.',
+      minutes: 12,
+      theme: 'midnight',
+      libraryGroup: 'other',
+      kind: 'template',
+      slides: [
+        { type: 'statement', body: 'Motion',
+          design: { backdrop: 'glow', words: 'rise', wordSpeed: 'gentle', wordStagger: 'one', wordsLoop: true },
+          notes: 'STATEMENT + one word, sized by arithmetic rather than by a band \u2014 320px here. Backdrop: Glow. Words: Rise, Gentle, one at a time, and set to leave again, so this cover runs on its own while a room fills.\n\nEverything on this slide is generated: there is no video file and no image.' },
+
+        { type: 'statement', body: 'Every chart is a choice',
+          subtitle: 'The same layout, four words',
+          design: { backdrop: 'drift', words: 'rise', wordStagger: 'wave' },
+          notes: 'The same layout with more to say: the band steps the type down from 320 to 140px on its own. Backdrop: Drift \u2014 the blobs are this theme\u2019s accent at low alpha, so the same slide in the paper theme is a pale wash rather than a glow.\n\nWords: Rise, Medium, Wave. This is the default pairing.' },
+
+        { type: 'statement', body: 'Gentle. Every word takes its time.',
+          design: { words: 'rise', wordSpeed: 'gentle', wordStagger: 'wave' },
+          notes: 'SPEED 1 of 3 \u2014 Gentle: 1300ms a word, a 1.8x wave, and the furthest lift. Page straight through the next two and the difference is obvious; on one slide alone it is not, which is the fair criticism that made these three exist.' },
+
+        { type: 'statement', body: 'Medium. The default.',
+          design: { words: 'rise', wordSpeed: 'medium', wordStagger: 'wave' },
+          notes: 'SPEED 2 of 3 \u2014 Medium: 700ms a word.' },
+
+        { type: 'statement', body: 'Quick. Straight in, no ceremony.',
+          design: { words: 'rise', wordSpeed: 'quick', wordStagger: 'wave' },
+          notes: 'SPEED 3 of 3 \u2014 Quick: 320ms a word and under half the wave. Useful when the words are a punchline rather than a title.' },
+
+        { type: 'statement', body: 'Together the line lands as one',
+          design: { words: 'fade', wordStagger: 'together' },
+          notes: 'SPACING 1 of 2 \u2014 Together: every word carries the same delay of nothing, so the line arrives as a single movement. Effect here is Fade, so the only thing being demonstrated is the spacing.' },
+
+        { type: 'statement', body: 'One at a time, with room between them',
+          design: { words: 'fade', wordStagger: 'one' },
+          notes: 'SPACING 2 of 2 \u2014 One at a time: two and a half times the wave, which on six words is over a second and a half from first to last. Same Fade effect as the slide before; only the spacing changed.' },
+
+        { type: 'statement', body: 'Reveal wipes each word up from its own line',
+          design: { backdrop: 'grid', words: 'reveal', wordSpeed: 'medium', wordStagger: 'wave' },
+          notes: 'The third effect: Reveal, a clip-path wipe rather than a move. Backdrop: Grid \u2014 a ruled plane travelling exactly one cell per loop, which is the same picture again, so it never cuts.' },
+
+        { type: 'statement', body: 'In, hold, out, round again',
+          subtitle: 'Leave this one up',
+          design: { backdrop: 'drift', words: 'rise', wordSpeed: 'medium', wordStagger: 'wave', wordsLoop: true },
+          notes: 'AND LEAVE AGAIN \u2014 the loop. Seven seconds: in for the first tenth, held for half, then nearly two seconds of the same eased wave taking them out, and a pause before it comes round. Stay here and watch it twice.' },
+
+        { type: 'image', title: 'Ken Burns, with a destination',
+          subtitle: 'Travels from the top left to the bottom right over 12 seconds',
+          /* A photograph rather than a chart: a pan across a white plot grid
+             reads as a rendering fault, and the move is the point here. */
+          image: 'assets/lesson/ipdv/qa-london-night-1.jpg',
+          imageFit: 'cover',
+          design: { imageMotion: 'travel', focalX: 14, focalY: 18, focalX2: 86, focalY2: 80,
+            imageTravelSecs: 12, capStyle: 'scrim' },
+          notes: 'IMAGE MOTION: Travel. Two focus points and a duration \u2014 Image focus sets where it starts, Travels to sets where it ends. The old Slow zoom drifts towards one point; this moves between two, which is what \u201cstart on the whole chart, end on the axis label\u201d needs.\n\nOn a still this size it reads as the frame walking across Anscombe\u2019s four plots.' },
+
+        { type: 'chart', chartKind: 'bar',
+          title: 'A chart walked category by category',
+          body: 'Year\tHires\n2018\t10567540\n2019\t10424955\n2020\t10434167\n2021\t10941264\n2022\t11505872\n2023\t8531168',
+          chartSource: 'Every Santander Cycle hire, 2018\u20132023 \u00b7 TfL, London Datastore',
+          callouts: [
+            { label: '2020', note: 'Lockdown year \u2014 and the annual total barely moved.' },
+            { label: '2023', note: 'This is the drop worth explaining.' }
+          ],
+          notes: 'CHART CALLOUTS. Press Next: the chart zooms to 2020 with its own axis label still in frame, then to 2023, then the whole chart comes back before the deck moves on.\n\nCallouts name a CATEGORY from the table rather than a position, so inserting a row above 2020 does not move the callout. Add them in Design & content \u2192 Walk the chart.' },
+
+        { type: 'content', title: 'A build with the light on one point',
+          bullets: [
+            'Wrong question \u2014 a pie answers share of a total',
+            'Angles are hard to compare, lengths are not',
+            'COVID vanishes: 2019 and 2020 are the same slice',
+            'Seasons vanish inside every year'
+          ],
+          progressive: true, buildMode: 'spot',
+          notes: 'BUILD ON NEXT: with a spotlight on the live one. The points already made fall back to a third rather than disappearing, the live one stays at full strength, and a vignette closes in from the edges once the build has started.\n\nIt is opacity and a gradient only \u2014 nothing reflows halfway through being taught, and a printed handout shows every point at full strength.' },
+
+        { type: 'video', title: 'A background video, on a loop',
+          subtitle: 'Eight seconds, 398 KB, generated rather than downloaded',
+          video: 'assets/backdrop/ink-drift.mp4',
+          videoPoster: 'assets/backdrop/ink-drift-poster.jpg',
+          videoLoop: true, videoMuted: true, videoAutoplay: true,
+          design: { capStyle: 'scrim', logoGround: 'dark' },
+          notes: 'VIDEO as a backdrop: Loop, Start muted and Play when the slide appears, with the caption over it. Caption style and position are settable on a video slide now, so the text can sit top or bottom, on a gradient, a bar, or nothing.\n\nThe clip loops seamlessly because every motion in it is periodic in the frame count \u2014 tools/video/backdrop-frames.py, if you want another one.' },
+
+        { type: 'video', title: 'A YouTube link is understood',
+          subtitle: 'The editor shows the clip; the show frames the player',
+          video: 'https://www.youtube.com/watch?v=dWGujFI4AYQ',
+          design: { capStyle: 'scrim' },
+          notes: 'Paste a watch link and the editor shows the video\u2019s own thumbnail with a YOUTUBE pill on it, rather than the grey rectangle it used to draw \u2014 which was indistinguishable from a field that had ignored the link.\n\nIn the show this is the real player, framed from youtube-nocookie.com so nothing is set on a student\u2019s machine until the clip is played.' },
+
+        { type: 'chart', chartKind: 'bar', transition: 'morph',
+          title: 'The same six years',
+          body: 'Year\tHires\n2018\t10567540\n2019\t10424955\n2020\t10434167\n2021\t10941264\n2022\t11505872\n2023\t8531168',
+          notes: 'MORPH, 1 of 2. This slide and the next hold the same table and are set to Morph, so the chart itself travels across the cut rather than the slides dissolving.\n\nPress Next slowly.' },
+
+        { type: 'chart', chartKind: 'line', transition: 'morph',
+          title: 'The same six years',
+          body: 'Year\tHires\n2018\t10567540\n2019\t10424955\n2020\t10434167\n2021\t10941264\n2022\t11505872\n2023\t8531168',
+          chartSource: 'Bars to a line, same numbers \u00b7 TfL, London Datastore',
+          notes: 'MORPH, 2 of 2 \u2014 and the argument for it: this is a claim about the material, not a decoration. The room is told \u201cthis is the same data, drawn the right way\u201d by the fact that it moved rather than changed.\n\nThe browser does the animation; the app\u2019s job is deciding what counts as the same thing \u2014 same picture, same chart table, or same heading text. With nothing shared it is a fade.' },
+
+        { type: 'statement', body: 'The same six years', transition: 'morph',
+          subtitle: 'Morphed from the heading of the slide before',
+          design: { words: '', backdrop: 'glow' },
+          notes: 'The third pairing: the heading text is identical to the previous slide\u2019s title, so the words themselves travel out of the chart slide and into the middle of this one.\n\nWord effects are off here on purpose \u2014 a morph and an entrance both animating the same words fight each other.' },
+
+        { type: 'keywords', title: 'What made each of these',
+          bullets: [
+            'Backdrop motion\tLook \u00b7 Drift, Grid or Glow. Theme colours, no file.',
+            'Image motion\tLook \u00b7 Slow zoom, or Travel between two points.',
+            'Words arrive\tMotion \u00b7 Rise, Fade, Reveal \u2014 plus speed and spacing.',
+            'Transition in\tMotion \u00b7 Morph carries one shared thing across the cut.',
+            'Build on Next\tLook \u00b7 Hide, dim, or spotlight the live point.',
+            'Walk the chart\tContent \u00b7 Up to six callouts, each naming a category.'
+          ],
+          notes: 'Everything in this deck is a control in the right-hand panel, on an ordinary slide. Copy any slide here into your own lesson and the settings come with it.' }
+      ]
+    },
+
+    /* ------------------------------------------------------------------
        Infographic pack — every premium shape once, in the house theme, so
        the whole set can be paged through and copied slide by slide. Numbers
        are placeholders written to look like data; replace them.
@@ -4008,7 +4136,10 @@
     'ukbt-template': 'ukbt',
     'ukbt-institute-partnership': 'ukbt-institute',
     'ukbt-institute-template': 'ukbt-institute',
-    'ukbt-institute-townhouse': 'ukbt-institute'
+    'ukbt-institute-townhouse': 'ukbt-institute',
+    /* Filed, unlike the demo: this one is a specimen sheet a teacher is meant
+       to open, page through and copy slides out of. */
+    'motion-lab': 'other'
   };
 
   function groupForSpec(spec) {

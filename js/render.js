@@ -210,12 +210,27 @@
      scales from one pair of choices so it cannot be set into an incoherent
      state — a quick entrance with a four-second wave is not a thing anyone
      wants, and it was reachable the moment these became six numbers. */
+  /* Spread far enough apart to be told apart.
+ 
+     The first set of numbers — 900/620/380ms with 1.5/1/0.6 on the wave —
+     were all recognisably the same effect at three temperatures. Side by side
+     a teacher could not say which was which, which makes three controls that
+     do nothing. Gentle is now nearly twice Medium and Quick is under half of
+     it, and the wave multiplier moves with it, so the three are different
+     things rather than three settings of one.
+ 
+     Lift travels with speed too: a word that takes 1.3 seconds to arrive
+     should come further than one that takes a third of a second, or the long
+     duration just reads as lag. */
   var WORD_SPEEDS = {
-    gentle: { dur: 900, cycle: 9000, span: 1.5 },
-    medium: { dur: 620, cycle: 6200, span: 1 },
-    quick:  { dur: 380, cycle: 4200, span: 0.6 }
+    gentle: { dur: 1300, cycle: 13000, span: 1.8, lift: '0.85em' },
+    medium: { dur: 700,  cycle: 7000,  span: 1,   lift: '0.55em' },
+    quick:  { dur: 320,  cycle: 3600,  span: 0.45, lift: '0.34em' }
   };
-  var WORD_STAGGERS = { together: 0, wave: 1, one: 2 };
+  /* Together is nothing at all; one-at-a-time is two and a half times the
+     wave, so "the line arrives as one" and "the words arrive one by one" are
+     obviously different sentences on the wall and not two similar ones. */
+  var WORD_STAGGERS = { together: 0, wave: 1, one: 2.5 };
 
   /** The speed record a slide asks for. Medium unless it says otherwise. */
   function wordSpeed(slide) {
@@ -248,7 +263,10 @@
        "together" it is zero, and every word carries the same delay of nothing —
        which is the whole line arriving as one movement. */
     var stretch = (opts && Number.isFinite(opts.stretch)) ? opts.stretch : 1;
-    var span = Math.min(WORD_SPAN_MS * 2, Math.max(240, total * 110)) * stretch;
+    /* The base wave is as long as the line needs; the cap rises with the
+       spread so "one at a time" on a six-word line is not quietly clamped
+       back to the same wave as everything else. */
+    var span = Math.min(WORD_SPAN_MS * 3, Math.max(240, total * 130)) * stretch;
     var seen = 0;
     texts.forEach(function (text) {
       var frag = document.createDocumentFragment();
@@ -314,6 +332,7 @@
            cycle, so a change of speed cannot leave the two disagreeing. */
         line.style.setProperty('--w-dur', speed.dur + 'ms');
         line.style.setProperty('--w-cycle', speed.cycle + 'ms');
+        line.style.setProperty('--w-lift', speed.lift);
         if (wordsLoop(slide)) line.classList.add('words-loop');
       }
     }

@@ -5948,7 +5948,7 @@ html[data-ws="deck"] #railCount { display: none; }
 
 /* Rise: up from below, blur clearing as it settles. */
 @keyframes sf-word-rise {
-  from { opacity: 0; transform: translate3d(0, .55em, 0); filter: blur(7px); }
+  from { opacity: 0; transform: translate3d(0, var(--w-lift, .55em), 0); filter: blur(7px); }
   60%  { opacity: 1; }
   to   { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
 }
@@ -6004,24 +6004,29 @@ html[data-ws="deck"] #railCount { display: none; }
   animation-fill-mode: both;
 }
 
+/* The percentages, and why they moved: the exit used to be 74%→88%, which on
+   a 6.2s cycle is 870ms for the whole wave to leave — quick enough that a
+   room looking at the words saw them gone rather than going. It is 58%→86%
+   now, nearly two seconds on the default cycle, and the hold is still the
+   longest phase at half of it. */
 @keyframes sf-cycle-rise {
-  0%          { opacity: 0; transform: translate3d(0, .55em, 0); filter: blur(7px); }
-  12%, 74%    { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
-  88%, 100%   { opacity: 0; transform: translate3d(0, -.4em, 0); filter: blur(7px); }
+  0%          { opacity: 0; transform: translate3d(0, var(--w-lift, .55em), 0); filter: blur(7px); }
+  10%, 58%    { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
+  86%, 100%   { opacity: 0; transform: translate3d(0, calc(var(--w-lift, .55em) * -0.8), 0); filter: blur(8px); }
 }
 #player .slide .statement.words-loop.words-rise .w { animation-name: sf-cycle-rise; }
 
 @keyframes sf-cycle-fade {
   0%          { opacity: 0; filter: blur(4px); }
-  12%, 74%    { opacity: 1; filter: blur(0); }
-  88%, 100%   { opacity: 0; filter: blur(4px); }
+  10%, 58%    { opacity: 1; filter: blur(0); }
+  86%, 100%   { opacity: 0; filter: blur(5px); }
 }
 #player .slide .statement.words-loop.words-fade .w { animation-name: sf-cycle-fade; }
 
 @keyframes sf-cycle-reveal {
   0%          { clip-path: inset(0 0 100% 0); transform: translate3d(0, .22em, 0); }
-  12%, 74%    { clip-path: inset(0 0 -18% 0); transform: translate3d(0, 0, 0); }
-  88%, 100%   { clip-path: inset(100% 0 0 0); transform: translate3d(0, -.18em, 0); }
+  10%, 58%    { clip-path: inset(0 0 -18% 0); transform: translate3d(0, 0, 0); }
+  86%, 100%   { clip-path: inset(100% 0 0 0); transform: translate3d(0, -.18em, 0); }
 }
 #player .slide .statement.words-loop.words-reveal .w { animation-name: sf-cycle-reveal; }
 

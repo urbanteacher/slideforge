@@ -235,18 +235,30 @@ try {
     await wait(150);
     const style = getComputedStyle(first());
     const read = () => Number(getComputedStyle(first()).opacity);
-    const held = (await wait(2400), read());          /* mid-hold */
-    const leaving = (await wait(2900), read());       /* the wave out */
-    const back = (await wait(1500), read());          /* round again */
+    /* Sampled as fractions of the cycle the slide is actually using, not at
+       fixed times: pinned to 2.4s and 5.3s, this leg reported "the words did
+       not come back" the first time the cycle was retuned, which is a test
+       measuring its own assumptions. */
+    const cycle = parseFloat(style.animationDuration) * 1000 || 7000;
+    const atFraction = async (f) => {
+      const target = cycle * f;
+      await wait(Math.max(0, target - (Date.now() - t0)));
+      return read();
+    };
+    const t0 = Date.now();
+    const held = await atFraction(0.34);      /* mid-hold */
+    const leaving = await atFraction(0.74);   /* the wave out */
+    const back = await atFraction(1.16);      /* round again, and arrived */
     return { name: style.animationName, repeats: style.animationIterationCount,
-      held: held, leaving: leaving, back: back };
+      cycle: cycle, held: held, leaving: leaving, back: back };
   });
   if (cycle.name !== 'sf-cycle-rise') problems.push('cycle: wrong animation — ' + cycle.name);
   if (cycle.repeats !== 'infinite') problems.push('cycle: it does not repeat — ' + cycle.repeats);
   if (!(cycle.held > 0.9)) problems.push('cycle: the words are not solid during the hold — ' + cycle.held);
   if (!(cycle.leaving < 0.6)) problems.push('cycle: the words never leave — ' + cycle.leaving);
   if (!(cycle.back > 0.6)) problems.push('cycle: the words did not come back — ' + cycle.back);
-  console.log('✓ In, hold, out, round again — held', cycle.held + ', leaving', cycle.leaving + ', back', cycle.back);
+  console.log('✓ In, hold, out, round again — over', cycle.cycle + 'ms: held', cycle.held +
+    ', leaving', cycle.leaving + ', back', cycle.back);
   await page.keyboard.press('Escape');
 
   assert.deepEqual(problems, []);
