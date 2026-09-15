@@ -234,7 +234,7 @@
     }
     var scale={small:.85,medium:1,large:1.15}[d.size] || 1;
     if(scale!==1) requestAnimationFrame(function(){
-      root.querySelectorAll('h1,h2,.sub,.q,.attrib,li,.kw-term,.kw-def,.it-phrase,.it-note').forEach(function(n){
+      root.querySelectorAll('h1,h2,.sub,.q,.attrib,li,.kw-term,.kw-def,.it-phrase,.it-note,.ln-label,.ln-link,.ln-url').forEach(function(n){
         var px=parseFloat(getComputedStyle(n).fontSize); if(px) n.style.fontSize=(px*scale)+'px';
       });
     });

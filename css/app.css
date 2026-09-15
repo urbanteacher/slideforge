@@ -1232,6 +1232,23 @@ html[data-ws="game"] #btnSorter { display: none; }
 .layout-links .ln-url.bad { color: var(--s-accent); opacity: .85; }
 .layout-links .ln-row.dim { opacity: .55; font-style: italic; }
 
+/* Sparse link slides fill the wall; dense lists stay readable. */
+.layout-links .ln-list.ln-hero {
+  flex: 1; justify-content: center; gap: 36px;
+}
+.layout-links .ln-list.ln-hero .ln-label { font-size: 52px; line-height: 1.15; }
+.layout-links .ln-list.ln-hero .ln-link,
+.layout-links .ln-list.ln-hero .ln-url { font-size: 36px; line-height: 1.3; }
+.layout-links .ln-list.ln-sparse { gap: 40px; margin-top: 12px; }
+.layout-links .ln-list.ln-sparse .ln-label { font-size: 44px; }
+.layout-links .ln-list.ln-sparse .ln-link,
+.layout-links .ln-list.ln-sparse .ln-url { font-size: 28px; }
+.layout-links .ln-list.ln-dense { gap: 16px; }
+.layout-links .ln-list.ln-dense .ln-row { padding-bottom: 12px; gap: 6px; }
+.layout-links .ln-list.ln-dense .ln-label { font-size: 28px; }
+.layout-links .ln-list.ln-dense .ln-link,
+.layout-links .ln-list.ln-dense .ln-url { font-size: 18px; }
+
 /* quote */
 .layout-quote .pad { justify-content: center; }
 .layout-quote .q {

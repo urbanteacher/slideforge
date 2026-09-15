@@ -1313,11 +1313,12 @@
 
         { type: 'links', title: 'The dataset: every Santander Cycle hire since 2010',
           bullets: [
-            'TfL daily cycle hires · download the .xlsx · 148 kB · Open Government Licence v2\thttps://data.london.gov.uk/dataset/number-of-bicycle-hires-2r84d',
-            'Or bring your own · filter by CSV\thttps://data.london.gov.uk',
-            'Worked solutions · the notebook, every cell run\thttps://slideforge-rpjj.onrender.com/lessons/01_Lab_IPDV_CycleHires_Solutions.ipynb'
+            'Dataset page · London Datastore\thttps://data.london.gov.uk/dataset/number-of-bicycle-hires-2r84d',
+            'Download the Excel · course copy · 148 kB\t/lessons/tfl-daily-cycle-hires.xlsx',
+            'Worked Jupyter notebook · every cell run\t/lessons/01_Lab_IPDV_CycleHires_Solutions.ipynb',
+            'Or bring your own · filter by CSV\thttps://data.london.gov.uk'
           ],
-          notes: 'One file, 148 kB, one number per day from 30 July 2010 to 31 August 2026 — 5,877 days and 154,053,134 hires. Small enough to open, long enough to have something to say about.\n\nUse it or bring your own; the four stages and the marks are the same either way.\n\nThe third link is the worked notebook — all four stages, every cell run, the chart and the numbers in the file. It ships beside the spreadsheet in lessons/, so the relative path in the code is the path a student actually has. Hand it over after the deadline, or now if the point of the lab is the pipeline rather than the puzzle.\n\nOn the same site if they want a categorical comparison instead of a time series: London Fire Brigade incident records, where open-space fires spike in heatwaves and link back to task 2, and MPS recorded crime by borough.' },
+          notes: 'One file, 148 kB, one number per day from 30 July 2010 to 31 August 2026 — 5,877 days and 154,053,134 hires. Small enough to open, long enough to have something to say about.\n\nClick the Excel and the notebook on this slide — both ship with the app under /lessons/. Put the .xlsx beside the notebook so the path in the code is the path they actually have.\n\nUse TfL or bring your own; the four stages and the marks are the same either way.\n\nOn the same site if they want a categorical comparison instead of a time series: London Fire Brigade incident records, where open-space fires spike in heatwaves and link back to task 2, and MPS recorded crime by borough.' },
 
         { type: 'code', language: 'python', typewrite: true, typeSpeed: 55,
           title: 'Stage 1 · Raw. Look before you believe.',
@@ -1335,10 +1336,18 @@
           notes: 'Daily is too noisy to read from the back of a room, so resample to monthly totals first. That is an editorial choice and it belongs in the write-up.\n\nThe title is the only line with an opinion in it, and it is the habit this whole module is about: say the finding, not the subject. “Hires per month” is the axis label; “Hires peak every summer and 2020 broke the pattern” is the chart.\n\nThe two removed spines are not decoration — less ink on the frame is more attention on the line.' },
 
         { type: 'chart', chartKind: 'line', design: { chartMotion: 'grow' },
-          title: 'The same data, on the wall while they work',
-          body: 'Year\tMillions of hires\n2011\t7.14\n2012\t9.52\n2013\t8.05\n2014\t10.02\n2015\t9.87\n2016\t10.30\n2017\t10.45\n2018\t10.57\n2019\t10.42\n2020\t10.43\n2021\t10.94\n2022\t11.51\n2023\t8.53\n2024\t8.77\n2025\t9.07',
-          chartSource: 'TfL daily cycle hires, aggregated to whole years. 2010 and 2026 are part years and are left out on purpose — drawing them makes the scheme look like it collapsed twice.',
-          notes: 'Annual rather than monthly, drawn by the app, so the shape is on the wall while they work.\n\nNote what leaving 2010 and 2026 out does. Both are part years — the scheme opened on 30 July 2010 and the file ends on 31 August 2026 — so including them draws two cliffs that are calendar artefacts rather than cycling. That decision is worth more marks than the chart is.' },
+          title: 'Hires peak every summer — and 2020 broke the pattern',
+          body: 'Month	Hires (thousands)\nJan 18	646\nFeb 18	576\nMar 18	605\nApr 18	825\nMay 18	1113\nJun 18	1182\nJul 18	1253\nAug 18	1058\nSep 18	1008\nOct 18	978\nNov 18	738\nDec 18	585\nJan 19	686\nFeb 19	699\nMar 19	792\nApr 19	890\nMay 19	1007\nJun 19	1006\nJul 19	1152\nAug 19	1054\nSep 19	966\nOct 19	852\nNov 19	729\nDec 19	592\nJan 20	710\nFeb 20	641\nMar 20	554\nApr 20	591\nMay 20	1121\nJun 20	1159\nJul 20	1170\nAug 20	1153\nSep 20	1138\nOct 20	848\nNov 20	760\nDec 20	589\nJan 21	410\nFeb 21	511\nMar 21	749\nApr 21	944\nMay 21	922\nJun 21	1184\nJul 21	1168\nAug 21	1111\nSep 21	1220\nOct 21	1111\nNov 21	945\nDec 21	667\nJan 22	749\nFeb 22	750\nMar 22	1057\nApr 22	1031\nMay 22	1201\nJun 22	1280\nJul 22	1316\nAug 22	1260\nSep 22	801\nOct 22	864\nNov 22	726\nDec 22	472\nJan 23	571\nFeb 23	613\nMar 23	631\nApr 23	647\nMay 23	821\nJun 23	885\nJul 23	809\nAug 23	778\nSep 23	847\nOct 23	790\nNov 23	665\nDec 23	474',
+          chartSource: 'TfL daily cycle hires, summed by month (thousands). 2018–2023 only — long enough to see the annual cycle, the April 2020 lockdown dip, the January 2021 floor, and the weaker summers of 2023. Whole-year totals hide all of that: 2019 and 2020 look almost the same.',
+          notes: 'Yes — the old annual chart was a teaching mistake dressed as a chart. Summing to years made COVID invisible (10.42M then 10.43M) and stretched the axis so the line looked flat.\n\nThis monthly view is what their notebook draws. Point at: summer peaks every year; April 2020 crater; January 2021 lowest; 2023 summers lower than 2022. Then advance to the insight stats.\n\nThe title states the finding. The source line states why annual was the wrong grain.' },
+
+        { type: 'links', title: 'Open the files while this chart is up',
+          bullets: [
+            'Download the Excel · course copy\t/lessons/tfl-daily-cycle-hires.xlsx',
+            'Worked Jupyter notebook\t/lessons/01_Lab_IPDV_CycleHires_Solutions.ipynb',
+            'Dataset page · London Datastore\thttps://data.london.gov.uk/dataset/number-of-bicycle-hires-2r84d'
+          ],
+          notes: 'Leave this up while they work. The notebook is the answer key for stages 1–4; the Excel sits beside it so path = "tfl-daily-cycle-hires.xlsx" resolves.' },
 
         { type: 'stats', design: { statStyle: 'bar' }, title: 'Stage 4 · Insights, with the numbers attached',
           bullets: [
@@ -1379,7 +1388,7 @@
       key: 'ipdv-lab1',
       title: 'LDSCI6253 Lab 1 · Exercise sheet',
       icon: '💻',
-      blurb: 'Week 1 lab: student survey, a news visualisation critique, Python/Anaconda setup, and a first notebook chart — then submit on Canvas.',
+      blurb: 'Week 1 lab: survey, news-viz critique, Python setup, then TfL cycle hires through raw → table → clean → several charts → insights (worked notebook in lessons/).',
       minutes: 90,
       theme: 'northeastern',
       libraryGroup: 'nul',
@@ -1433,7 +1442,7 @@
             '1 · Survey\tComplete the short student-information form.',
             '2 · News viz\tFind a disaster visualisation and post a critique on Canvas.',
             '3 · Toolkit\tInstall Python 3.x — Anaconda strongly recommended.',
-            '4 · Notebook\tMake one simple chart in Jupyter or Colab and submit it.'
+            '4 · Notebook\tTfL cycle hires: raw → table → clean → charts → insights.'
           ],
           progressive: true,
           notes: 'Reveal one card at a time if the room is restless. Otherwise show all four and move on.'
@@ -1446,8 +1455,8 @@
           bullets: [
             'Survey completion counts as Task 1.',
             'Canvas post = Task 2 (URL + paragraph).',
-            'Notebook + short description = Task 4.',
-            'Task 3 is setup — no separate file unless Canvas asks for a screenshot.'
+            'Notebook + insight paragraph = Task 4 (five stages).',
+            'Files · Excel + notebook\t/lessons/ (links on the Task 4 slide)'
           ],
           notes: 'Say the deadline twice. Then open Task 1.'
         },
@@ -1543,53 +1552,274 @@
         {
           type: 'section',
           title: 'Task 4',
-          subtitle: 'One visualisation in a notebook',
-          notes: 'Goal is a working environment, not a masterpiece. Celebrate a bar chart of a tiny CSV.'
+          subtitle: 'Raw → table → clean → visualise → insights',
+          notes: 'Worked answers live in lessons/01_Lab_IPDV_CycleHires_Solutions.ipynb beside the Excel file. Walk the five stages on the wall, then let them run the notebook.'
         },
         {
-          type: 'content',
-          title: 'Create a simple chart',
+          type: 'journey',
+          journeyMode: 'stepper',
+          title: 'The five stages of Task 4',
+          subtitle: 'Marks sit in stage 5 — a chart with no sentence is half a submission',
           bullets: [
-            'Open a Jupyter Notebook (via Anaconda) or a Google Colab notebook.',
-            'Load a dataset of your choice — course sample, open data, or a tiny table you type in.',
-            'Draw one chart with Matplotlib, Seaborn, or another Python library.',
-            'Submit the notebook on Canvas with a brief description of the data and your approach.'
+            'Raw\tOpen the file. Name the sheets. Notice the mess.',
+            'Table\tPreview the rows you will keep — the managed table.',
+            'Clean\tOne row per day; dates and numbers you can trust.',
+            'Visualise\tSeveral charts, each answering one question.',
+            'Insights\tCompute the numbers. Write the paragraph.'
           ],
           progressive: true,
-          notes: 'If someone finishes early: add a title, axis labels, and a one-line caption that states the finding.'
+          notes: 'Reveal one stage at a time. Emphasise that stage 1 is not optional — the TfL workbook punishes anyone who skips it.'
+        },
+        {
+          type: 'links',
+          title: 'Best first pick · TfL daily cycle hires',
+          bullets: [
+            'Dataset page · London Datastore\thttps://data.london.gov.uk/dataset/number-of-bicycle-hires-2r84d',
+            'Download the Excel · course copy\t/lessons/tfl-daily-cycle-hires.xlsx',
+            'Worked Jupyter notebook · every cell run\t/lessons/01_Lab_IPDV_CycleHires_Solutions.ipynb',
+            'Or bring your own · filter by CSV\thttps://data.london.gov.uk'
+          ],
+          progressive: true,
+          notes: '145 kB, Open Government Licence v2, updated monthly. Click the Excel and the notebook — both are served from this app under /lessons/. Sit the .xlsx beside the notebook so path = "tfl-daily-cycle-hires.xlsx" works.'
+        },
+        {
+          type: 'keyfact',
+          title: 'Download the file. Read from disk.',
+          subtitle: 'Do not point pandas at the URL',
+          body: 'HTTP 403',
+          bullets: [
+            'The Datastore refuses the user agent pandas sends.',
+            'sheet_name=0 is Metadata — the data is on sheet “Data”.',
+            'Grand totals and notes sit above the header (skip five rows).',
+            'Keep only the first two columns of the Data sheet.'
+          ],
+          notes: 'Say this twice before anyone codes. It is the whole of stage 1.'
+        },
+        {
+          type: 'links',
+          title: 'Alternatives (same five stages)',
+          bullets: [
+            'London Fire Brigade incidents\thttps://data.london.gov.uk/dataset/london-fire-brigade-incident-records-em8xy/',
+            'MPS crime by borough (~194 kB CSV)\thttps://data.london.gov.uk/dataset/mps-recorded-crime-geographic-breakdown-exy3m',
+            'Browse more (filter CSV)\thttps://data.london.gov.uk',
+            'Fire data tip\tOpen-space / grass fires spike in heatwaves — links to Task 2.'
+          ],
+          progressive: true,
+          notes: 'TfL is the default. Fire brigade is the bridge to the disaster critique. Crime is for people who want bars and heatmaps.'
+        },
+        {
+          type: 'section',
+          title: 'Stage 1 · Raw',
+          subtitle: 'Look before you believe',
+          notes: 'Typewrite the code; leave the three findings on the next slide.'
         },
         {
           type: 'code',
-          title: 'A minimal check that Python works',
+          title: 'Inspect the workbook',
           language: 'python',
           typewrite: true,
-          typeSpeed: 26,
+          typeSpeed: 22,
+          code:
+            'import pandas as pd\n' +
+            '\n' +
+            'path = "tfl-daily-cycle-hires.xlsx"\n' +
+            '\n' +
+            'print(pd.ExcelFile(path).sheet_names)\n' +
+            '# [\'Metadata\', \'Data\']  <- sheet 0 is NOT the data\n' +
+            '\n' +
+            'raw = pd.read_excel(path, sheet_name="Data", header=None)\n' +
+            'print(raw.shape)          # (5883, 16)\n' +
+            'print(raw.iloc[:7, 1:3])  # notes + totals above the header\n',
+          notes: 'Answers they must say out loud: two sheets; wide because day/month/year blocks sit side by side; header is on row 6.'
+        },
+        {
+          type: 'content',
+          title: 'What raw reveals',
+          bullets: [
+            'Two sheets — Data is the second. sheet_name=0 would read the blurb.',
+            '5,883 × 16 — day, month and year blocks sit side by side.',
+            'Notes and a Daily Grand Total sit above the header.',
+            'Header row is “Day” / “Number of Bicycle Hires”, not row 1.'
+          ],
+          progressive: true,
+          notes: 'These three facts are the whole point of stage 1.'
+        },
+        {
+          type: 'section',
+          title: 'Stage 2 · Managed table',
+          subtitle: 'Preview the rows you will keep',
+          notes: 'Show the table on the wall so “managed table” is concrete.'
+        },
+        {
+          type: 'table',
+          title: 'Preview — first days of the series',
+          tableHeader: true,
+          body:
+            'date\thires\n' +
+            '2010-07-30\t6897\n' +
+            '2010-07-31\t5564\n' +
+            '2010-08-01\t4303\n' +
+            '2010-08-02\t6642\n' +
+            '2010-08-03\t7966\n' +
+            '2010-08-04\t7895\n' +
+            '2010-08-05\t8720\n',
+          notes: 'Illustrative head after skiprows=5. The live numbers come from their notebook. Stress that this is still before dropna / dtype coercion.'
+        },
+        {
+          type: 'code',
+          title: 'Print the managed preview',
+          language: 'python',
+          typewrite: true,
+          typeSpeed: 24,
+          code:
+            'preview = pd.read_excel(\n' +
+            '    path, sheet_name="Data", skiprows=5,\n' +
+            '    usecols=[1, 2], names=["date", "hires"])\n' +
+            'print(preview.head(10).to_string(index=False))\n',
+          notes: 'Still messy — may include blank trailer rows. Cleaning is next.'
+        },
+        {
+          type: 'section',
+          title: 'Stage 3 · Clean',
+          subtitle: 'One row per day you can trust',
+          notes: 'Defend every argument: sheet by name, skiprows, usecols, dtypes, dropna.'
+        },
+        {
+          type: 'code',
+          title: 'Clean — and check the grand total',
+          language: 'python',
+          typewrite: true,
+          typeSpeed: 22,
+          code:
+            'df = pd.read_excel(path, sheet_name="Data", skiprows=5,\n' +
+            '                   usecols=[1, 2], names=["date", "hires"])\n' +
+            'df = df.dropna()\n' +
+            'df["date"] = pd.to_datetime(df["date"])\n' +
+            'df["hires"] = pd.to_numeric(df["hires"])\n' +
+            '\n' +
+            'print(len(df), int(df["hires"].sum()))\n' +
+            '# Expect ~5877 and Grand Total 154053134\n',
+          notes: 'If the sum does not match the sheet’s own total, cleaning is wrong — found in one line instead of in the marking.'
+        },
+        {
+          type: 'section',
+          title: 'Stage 4 · Visualise',
+          subtitle: 'Several charts · one question each',
+          notes: 'Titles state findings. Axis labels state subjects.'
+        },
+        {
+          type: 'code',
+          title: 'Chart 1 · Monthly totals over time',
+          language: 'python',
+          typewrite: true,
+          typeSpeed: 20,
           code:
             'import matplotlib.pyplot as plt\n' +
             '\n' +
-            'cities = ["Boston", "Bristol", "London"]\n' +
-            'values = [12, 19, 15]\n' +
+            'monthly = df.set_index("date")["hires"].resample("ME").sum()\n' +
+            'monthly = monthly[(monthly.index.year >= 2011)\n' +
+            '                 & (monthly.index.year <= 2025)]\n' +
             '\n' +
-            'plt.bar(cities, values)\n' +
-            'plt.title("A first chart — replace with your data")\n' +
-            'plt.ylabel("Count")\n' +
-            'plt.show()\n',
-          notes: 'Present this so the room sees the shape of a first cell. They should replace the arrays with their own data. Not assessed for style — assessed for “it ran and it is yours.”'
+            'fig, ax = plt.subplots(figsize=(11, 4))\n' +
+            'ax.plot(monthly.index, monthly.values, linewidth=1.2)\n' +
+            'ax.set_title("Hires peak every summer — and 2020 broke the pattern")\n' +
+            'ax.set_ylabel("Hires per month")\n' +
+            'ax.spines[["top", "right"]].set_visible(False)\n' +
+            'plt.tight_layout(); plt.show()\n',
+          notes: 'Drop part-years (2010 open mid-July; possible trailing year) so the chart does not invent cliffs.'
+        },
+        {
+          type: 'code',
+          title: 'Chart 2 · Seasonality by month',
+          language: 'python',
+          typewrite: false,
+          code:
+            'by_month = df.groupby(df["date"].dt.month)["hires"].mean()\n' +
+            'fig, ax = plt.subplots(figsize=(8, 4))\n' +
+            'ax.bar(range(1, 13), by_month.values)\n' +
+            'ax.set_title("July averages about twice December")\n' +
+            'ax.set_ylabel("Mean daily hires")\n' +
+            'plt.tight_layout(); plt.show()\n',
+          notes: 'Answer: July ~34,212 vs December ~17,132 → about 2×.'
+        },
+        {
+          type: 'code',
+          title: 'Chart 3 · Weekday vs weekend',
+          language: 'python',
+          typewrite: false,
+          code:
+            'wd = df.groupby(df["date"].dt.dayofweek < 5)["hires"].mean()\n' +
+            'fig, ax = plt.subplots(figsize=(5, 4))\n' +
+            'ax.bar(["Weekend", "Weekday"], [wd[False], wd[True]])\n' +
+            'ax.set_title("Weekdays outpace weekends — commuting, not leisure")\n' +
+            'plt.tight_layout(); plt.show()\n',
+          notes: 'Answer: weekend ~22,998 vs weekday ~27,500.'
+        },
+        {
+          type: 'code',
+          title: 'Chart 4 · April 2019 vs April 2020',
+          language: 'python',
+          typewrite: false,
+          code:
+            'apr = {y: int(df[(df["date"].dt.year == y)\n' +
+            '               & (df["date"].dt.month == 4)]["hires"].sum())\n' +
+            '       for y in (2019, 2020)}\n' +
+            'fig, ax = plt.subplots(figsize=(5, 4))\n' +
+            'ax.bar(["April 2019", "April 2020"], [apr[2019], apr[2020]])\n' +
+            'ax.set_title("April 2020 fell 34% — first lockdown")\n' +
+            'plt.tight_layout(); plt.show()\n',
+          notes: 'Answer: 890,148 → 591,294 (−34%).'
+        },
+        {
+          type: 'section',
+          title: 'Stage 5 · Insights',
+          subtitle: 'Compute them. Write the paragraph.',
+          notes: 'Show the numbers, then the model paragraph.'
+        },
+        {
+          type: 'stats',
+          title: 'What we found (computed)',
+          bullets: [
+            'Summer peak\t2.0×\tJuly mean daily vs December',
+            'Lockdown\t−34%\tApril 2020 vs April 2019',
+            '2022→2023\t−26%\tAnnual hires (11.51M → 8.53M)',
+            'Weekday\t27,500\tMean daily vs weekend 22,998'
+          ],
+          progressive: true,
+          notes: 'These are the answer-key figures from the solutions notebook. The 2022–23 drop cannot be explained from this file alone — naming that gap is the finding.'
+        },
+        {
+          type: 'quote',
+          body: 'Santander Cycle hires follow a hard annual cycle: July averages 34,212 hires a day against December’s 17,132 — a factor of two. April 2020 fell 34% below April 2019. Annual hires then dropped 26% between 2022 and 2023; this dataset cannot explain why. Weekdays beat weekends, so this is commuting infrastructure, not a leisure amenity.',
+          subtitle: 'Model insight paragraph · use your own numbers if you chose another dataset',
+          notes: 'Read it once. Stress: inventing a cause for 2022–23 would be wrong; naming the gap is right.'
+        },
+        {
+          type: 'keywords',
+          title: 'Two traps that look like findings',
+          bullets: [
+            'July 2010 low\tNot a collapse — the scheme opened on 30 July (two days of trading).',
+            'January 2021 low\tSeasonal floor and lockdown at once — do not attribute to either alone.',
+            'Part-years\tDrop 2010 and a trailing incomplete year from annual charts.',
+            'Title habit\tSay the finding in the title; put the subject on the axis.'
+          ],
+          progressive: true,
+          notes: 'Both traps are demonstrated in the solutions notebook.'
         },
         {
           type: 'split',
-          title: 'What “done” looks like',
+          title: 'What to submit for Task 4',
           bullets: [
-            'Notebook runs top to bottom without errors.',
-            'One chart is visible (PNG in the notebook output is fine).',
-            'Two or three sentences: what the data is, and what you plotted.',
-            'Upload follows the Canvas Lab 1 worksheet instructions.'
+            'Notebook with outputs visible — run every cell, save, then upload.',
+            'Short description: what the data is, where it came from, what you did.',
+            'Follow the five stages even if you pick Fire Brigade or MPS crime.',
+            'Deadline: Monday after the lab · 23:59 on Canvas.'
           ],
           image: 'assets/lesson/ipdv/different-charts-python-2.jpg',
           imageFit: 'contain',
           design: { mediaGround: 'full' },
           progressive: true,
-          notes: 'Show an example submission checklist on the board if Canvas has a rubric.'
+          notes: 'Cleared outputs read as code that has never run.'
         },
         {
           type: 'game',
@@ -1602,13 +1832,13 @@
           bullets: [
             '0:00\tWelcome & plan\t5 min',
             '0:05\tTask 1 survey\t10 min',
-            '0:15\tTask 2 news viz\t25 min',
-            '0:40\tTask 3 install\t20 min',
-            '1:00\tTask 4 notebook\t25 min',
+            '0:15\tTask 2 news viz\t20 min',
+            '0:35\tTask 3 install\t15 min',
+            '0:50\tTask 4 five stages\t35 min',
             '1:25\tSubmit & questions\t5 min'
           ],
           progressive: true,
-          notes: 'Flexible. If installs are painful, swap Task 2 and Task 3 so searching happens while downloads finish.'
+          notes: 'Flexible. If installs are painful, start Task 4 on Colab while Anaconda downloads.'
         },
         {
           type: 'keywords',
@@ -1616,8 +1846,8 @@
           bullets: [
             'Deadline\tMonday after the lab · 23:59 on Canvas.',
             'Pack\tSurvey · Canvas critique with URL · notebook + short description.',
-            'Help\tStay for the last ten minutes if Anaconda or Colab is stuck.',
-            'Next lecture\tBring one question from something you struggled to plot today.'
+            'Excel\t/lessons/tfl-daily-cycle-hires.xlsx',
+            'Notebook\t/lessons/01_Lab_IPDV_CycleHires_Solutions.ipynb'
           ],
           progressive: true,
           notes: 'Dismiss when the check is done. Keep the links slide available for stragglers.'
@@ -1629,7 +1859,7 @@
           subtitle: 'Lab 1 · LDSCI6253',
           image: 'assets/lesson/ipdv/qa-london-night-1.jpg',
           design: { logoGround: 'dark', capStyle: 'scrim', capPos: 'bottom', imageMotion: 'zoom' },
-          notes: 'Open floor. Common blockers: PATH after Anaconda install, Colab not signed into university Google, Canvas file size limits.'
+          notes: 'Open floor. Common blockers: PATH after Anaconda install, Colab not signed into university Google, Canvas file size limits, Excel sheet_name=0 mistake.'
         }
       ]
     },

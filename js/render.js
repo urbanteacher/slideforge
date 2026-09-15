@@ -469,11 +469,19 @@
     var list = el('div', 'ln-list');
     var rows = (slide.bullets || []).map(SF.parseKeywordLine)
       .filter(function (p) { return p.term || p.def; });
+    /* Density follows how much is on the wall: one URL should read from the
+       back of the room; a long reading list must stay compact. Author can
+       still override with Customise → Text size. */
+    var n = rows.length;
+    if (n <= 1) list.classList.add('ln-hero');
+    else if (n === 2) list.classList.add('ln-sparse');
+    else if (n >= 5) list.classList.add('ln-dense');
     if (!rows.length) {
       var empty = el('div', 'ln-row dim');
       empty.appendChild(el('div', 'ln-label', 'Resource title'));
       empty.appendChild(el('div', 'ln-url', 'https://…'));
       list.appendChild(empty);
+      list.classList.add('ln-hero');
     } else {
       rows.forEach(function (p) {
         var row = el('div', 'ln-row');
