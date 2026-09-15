@@ -331,6 +331,19 @@
         li = asStep(el('li', bulletTier(line) === 2 ? 'tier-2' : null), slide);
         li.appendChild(el('strong', slide.activity ? 'activity-card-label' : 'card-label', pair.term));
         li.appendChild(el('span', slide.activity ? 'activity-card-copy' : 'card-body', pair.def));
+      } else if (slide.type === 'content' && bulletTier(line) === 1 && line.indexOf('\t') >= 0) {
+        /* The lead-in the layout bank has always documented — the part before
+           the tab set bold, the rest running on from it, so a point can carry
+           its own sub-clause. It had no branch here, so the tab collapsed to a
+           space in HTML and sixteen bullets across the shipped lessons said
+           their lead-in out loud and then didn't show it.
+
+           A leading tab is a sub-bullet, not a lead-in, so tier 2 is excluded:
+           splitting on the first tab there would take the indent as the term. */
+        var lead = SF.parseKeywordLine(line);
+        li = asStep(el('li', null), slide);
+        li.appendChild(el('strong', 'lead-in', lead.term));
+        if (lead.def) li.appendChild(el('span', 'lead-rest', lead.def));
       } else {
         li = asStep(rich('li', bulletTier(line) === 2 ? 'tier-2' : null, slide, 'bullets.' + item.index, bulletText(line)), slide);
       }
@@ -3527,6 +3540,48 @@
    * @param {object} [opts]  { index, total, interactive, quizNumber, marks, chrome }
    * @returns {HTMLElement} .slide element sized 1280x720
    */
+  /* Decoration a theme hangs behind the pad on its two full-bleed layouts —
+     the title and the section — keyed by theme. It is markup with no content:
+     every one of these divs exists only to give the stylesheet a box to paint
+     on, and the whole container is aria-hidden.
+
+     A table rather than a chain of branches because there are seven themes
+     doing this now and six of them are a constant string. Northeastern stays
+     in code below: its eyebrow carries deck.org, so it is not a constant.
+
+     Each theme's own stylesheet owns the look. The names here are the only
+     contract, and they are deliberately short-lived markup: change the art
+     and you change this string and that file, nothing else. */
+  var THEME_ART = {
+    studio: ['studio-art',
+      '<div class="art-orbit"></div><div class="art-tile">✳</div>' +
+      '<div class="art-dot"></div><div class="art-caption">STAY CURIOUS.</div>'],
+    /* One chevron, drawn twice and offset by a third of its width, which is
+       the geometry of the real lockup rather than a redraw of it. The object
+       div is the brand's rendered forms; which one it shows is picked by
+       slide index in CSS, so a deck does not open and break on the same
+       shape. See the comment in css/ukbt.css. */
+    ukbt: ['ukbt-art',
+      '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div>' +
+      '<div class="ukbt-object"></div>'],
+    'ukbt-institute': ['ukbt-art',
+      '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div>' +
+      '<div class="ukbt-object"></div>'],
+    /* Keynote minimal: one soft bloom behind the centred line and a ring
+       bled off the corner. Anything more would stop being this theme. */
+    product: ['pd-art', '<div class="pd-bloom"></div><div class="pd-ring"></div>'],
+    /* Broadsheet: a stack of masthead rules, and an oversized serif quote
+       mark set in the theme's own face and bled off the edge. */
+    editorial: ['ed-art', '<div class="ed-rules"></div><div class="ed-quote">”</div>'],
+    /* Letterbox bars and a single light streak. The bars are the whole idea:
+       nothing says "this is a pitch" faster than a 2.39:1 crop. */
+    cinematic: ['cine-art',
+      '<div class="cine-bar cine-top"></div><div class="cine-bar cine-bottom"></div>' +
+      '<div class="cine-streak"></div><div class="cine-vignette"></div>'],
+    /* Technical drawing: a hairline grid and crop marks in the corners. */
+    brutal: ['brut-art', '<div class="brut-grid"></div><div class="brut-marks"></div>']
+  };
+
   function renderSlide(deck, slide, opts) {
     opts = opts || {};
     var root = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-' + slide.type);
@@ -3547,9 +3602,10 @@
          layouts. Everything here is CSS-positioned and aria-hidden: the markup
          only exists to give the stylesheet something to paint on. */
       var art = null;
-      if (deck.theme === 'studio') {
-        art = el('div', 'studio-art');
-        art.innerHTML = '<div class="art-orbit"></div><div class="art-tile">✳</div><div class="art-dot"></div><div class="art-caption">STAY CURIOUS.</div>';
+      var spec = THEME_ART[deck.theme];
+      if (spec) {
+        art = el('div', spec[0]);
+        art.innerHTML = spec[1];
       } else if (deck.theme === 'northeastern') {
         art = el('div', 'nu-art');
         art.innerHTML = '<div class="nu-skyline"></div><div class="nu-n"></div>';
@@ -3573,6 +3629,20 @@
         art.setAttribute('aria-hidden', 'true');
         root.appendChild(art);
       }
+    }
+    /* Which of a theme's decorations a slide shows, as a number a stylesheet
+       can switch on. Stamped on every slide rather than only the two
+       full-bleed ones, because a theme may want quiet decoration on the
+       layouts that carry an argument as well as loud decoration on the two
+       that do not. Modulo four because that is how many objects each UKBT set
+       has; a theme with fewer, or none, ignores it. */
+    if (opts.index != null) {
+      root.dataset.artIndex = String(opts.index % 4);
+      /* Where it goes, kept on a different cycle from what it is. Four shapes
+         against five positions means the pair does not repeat for twenty
+         slides; on the same modulus, shape and corner would lock together and
+         one object would only ever appear in one place. */
+      root.dataset.artSlot = String(opts.index % 5);
     }
 
     var pad = el('div', 'pad');

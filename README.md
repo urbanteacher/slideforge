@@ -262,7 +262,7 @@ two jobs from tangling.
 
 ### Presentation
 
-Layouts: Title, Section, Bullets, Keywords, Italics, Links, Dual, Cards, Table, Image, Video and the Game embed. Drag slides in the rail to reorder — the caret sits in the gap the slide will land in, and the rail scrolls itself when you drag towards an edge. Dragging is for a slide that has drifted a place or two; for anything further, pick the slide up with the ⠿ grip or `⌘X` and carry it while you scroll. `Home`, `End` and the arrows aim it, `Enter` drops it, `Esc` puts it back. `⌥↑`/`⌥↓` shuffle a slide along one place at a time, `⌥Home`/`⌥End` send it to the front or the end. For anything bigger than a nudge there is the **slide sorter** (`⌘G`, or the ▦ beside the slide count): the whole deck as a grid, so every move is a short drag with both ends in view. Slides can be picked in a group there — click, shift-click a run, ⌘-click to add or drop one — and dragged together, landing as a block in the order they had. `⌥` with the arrows moves the selection instead of changing it. Six themes provide deck defaults, with optional per-slide customisation.
+Layouts: Title, Section, Bullets, Keywords, Italics, Links, Dual, Cards, Table, Image, Video and the Game embed. Drag slides in the rail to reorder — the caret sits in the gap the slide will land in, and the rail scrolls itself when you drag towards an edge. Dragging is for a slide that has drifted a place or two; for anything further, pick the slide up with the ⠿ grip or `⌘X` and carry it while you scroll. `Home`, `End` and the arrows aim it, `Enter` drops it, `Esc` puts it back. `⌥↑`/`⌥↓` shuffle a slide along one place at a time, `⌥Home`/`⌥End` send it to the front or the end. For anything bigger than a nudge there is the **slide sorter** (`⌘G`, or the ▦ beside the slide count): the whole deck as a grid, so every move is a short drag with both ends in view. Slides can be picked in a group there — click, shift-click a run, ⌘-click to add or drop one — and dragged together, landing as a block in the order they had. `⌥` with the arrows moves the selection instead of changing it. Nine themes provide deck defaults, with optional per-slide customisation.
 
 Bullets are one per line; start a line with `- ` or indent it for a sub-bullet.
 Images take a URL or embed a local file (keep those under a few MB — browser
@@ -683,6 +683,14 @@ keystroke. Focus holds one series forward and pushes the rest back rather
 than removing them, so a room can be brought to one line and given the
 comparison back.
 
+**Keys appear where colour is the only label.** Which idioms get a series
+legend is an allowlist in `src/deck/content.js`, not an exclusion list — if a
+kind draws several named series as peers it is listed, and if it does not it is
+not. A Sankey reads `from, to, amount`, so listing its columns would name the
+input format as data; a dumbbell draws two named series as two coloured dots
+and nothing else, so without the key the only thing saying which end is which
+is a tooltip, and a tooltip is not available to a room looking at a projector.
+
 **Some of these answer back.** A pie or donut given several series says only
 the first is drawn. Stacked bars warn that negatives are left out of a total.
 A dumbbell given a third series says it drew two. A radar repeats its own
@@ -891,6 +899,172 @@ or a new layout cannot drift out of step — there is nothing to keep in sync. A
 `url()` background is the exception: that is the slide's own artwork and has no
 business being tiled into a panel beside it, so the rail falls back to the flat
 colour.
+
+### Brand themes
+
+Two of the nine themes are somebody else's brand rather than a mood, and they
+are built the same way: **Northeastern London**, and the pair **UK Black Tech**
+and **UKBT Institute**. Two UKBT themes rather than one because they are two
+organisations sharing a mark — the Institute is the education arm, and its
+decks sit on charcoal where the parent sits on navy. Everything else, the green
+and the chevron and the wave, is common, so `css/ukbt.css` holds the shared work
+once and each theme sets only its own ground.
+
+**The palette is the organisation's published design system**, not values read
+off a deck. The first version of this theme carried `#264258` and `#282C2F`,
+taken a digit at a time out of a PowerPoint fill and a compressed PNG, and
+invented a `#2D3134` charcoal and a `#00A86C` deep green that do not exist
+anywhere. The real tokens are UKBT Black `#292C2F`, UKBT Green `#00C57F`, Lime
+Green `#CEFD85`, Dark Blue `#254258`, Contrast Black `#111111`, and the
+highlights Purple `#B97BF7`, Bright Blue `#4ABFFD` and Orange `#FF9667`. The
+parent sits on Dark Blue and the Institute on UKBT Black; their section slides
+take the two loud grounds, green and lime.
+
+Type is **Uncut Sans** for everything the room reads and **Alpha Lyrae Medium**
+for the small technical lines — the date stamp, the page number, the eyebrow
+over a key fact. The scale is the system's own desktop ramp, which is why the
+numbers are not round: 72 / 58 / 48 / 32 / 24 / 22 for headings and
+22 / 18 / 16 / 14 for body, held in `--ukbt-5xl` … `--ukbt-xs`.
+
+**Both faces are bundled** under `assets/fonts/ukbt`, not named and hoped for:
+a deck is presented from whatever machine is in the room and joined from
+whatever phone is in the audience, so a font installed on one laptop is not a
+font the room sees. Both are SIL Open Font License 1.1, which permits bundling
+and redistribution with software, and the licences sit beside the files. woff2
+only — every browser that can run this app supports it, and the seven cuts come
+to 420 KB against roughly a megabyte as woff. `font-display: swap`, because a
+slide that appears in the fallback and reflows is better than one that is blank
+while a font loads.
+
+**These two themes carry their own chart series.** The six validated steps in
+`css/app.css` were checked against midnight, ocean, ember and mono; against
+Dark Blue five of their twelve combinations fall under 3:1, the red worst at
+1.78:1. The brand's own highlights do better on every count that matters, so
+the UKBT themes came off that selector and define `--chart-1` … `--chart-6`
+themselves — green, purple, lime, blue, orange, cool grey, in that order.
+Measured against `#254258` and `#292C2F`: worst contrast **3.62:1**, worst
+adjacent ΔE **≥ 25.3** under normal, deutan, protan and tritan simulation, and
+worst any-pair ΔE **5.98** (protan). The order is the safety mechanism, as it
+is in `app.css`, so it is fixed and never cycled.
+
+**The wave is generated, not shipped.** The original is a traced path of 1.1 MB,
+which is most of a megabyte on every slide of every deck for a texture nobody
+looks at directly. `assets/brand/ukbt-waves.svg` draws the same family of
+phase-shifted sines in 38 KB, with `preserveAspectRatio="none"` so it stretches
+to whatever stage shape the deck is set to instead of letterboxing.
+
+**The logo comes out of the brand deck already reversed.**
+`assets/brand/ukbt-wordmark.png` is the full UK Black Tech lockup — green
+chevron, white *UK* and *Tech*, *Black* knocked out of a white panel — and
+`ukbt-mark.png` is the shorter *UKBT* mark. Both are transparent PNGs drawn for
+a dark ground, which is exactly what these two themes are.
+
+Because they are already reversed, both lessons set `logoReverse: 'never'`.
+The blanket rule in `css/app.css` inverts a deck logo on themes that are dark
+on every slide, and inverting this one would flatten the green and the knockout
+panel to a single white shape. The UKBT themes are deliberately absent from
+that rule's selector list, and the deck flag is the belt to its braces.
+
+The Institute lockup could not come from that deck at all. There the mark is a
+picture and the word *INSTITUTE* is a live text box under it — white, Clear
+Sans, 19.7pt, 9pt tracking, right-aligned to the mark — so extracting the
+picture gives ❯UKBT and loses the word. `assets/brand/ukbt-institute.svg` is
+the official lockup from the organisation's own site: vector, transparent,
+white and green, word included.
+
+**The mark is bled, not badged.** On the two full-bleed layouts the chevron is
+drawn past the slide and off the right edge, at about 600 × 930 — the same move
+`nu-art` makes with the Northeastern monogram, and for the same reason: a logo
+scaled down into a corner is what a slide looks like when nobody has designed
+it. The geometry is the brand's own. In the official lockup the mark is one
+chevron drawn twice with the second offset by 7 units in a shape 20.8 wide, so
+`assets/brand/ukbt-chevron.svg` holds that single shape and the CSS draws it
+twice, 33.65% apart, as two mask layers it can colour independently. Light
+behind and dark in front, which is the relationship the lockup has.
+
+**The title slide has its own ground** — a diagonal that deepens the navy or
+the charcoal — because a title slide painted the same flat colour as the
+content behind it reads as the first content slide. Heading, subtitle and date
+lift in on a 0.7s stagger.
+
+**The section slide turns the green into a ground.** It is the one surface in
+the deck that makes a room look up, and the reason an accent that bright exists
+at all. Ink on green, never white: white on this green reads at about 2:1, and
+the ink pairing is about 7:1. The two themes take different steps of the same
+green — `#00c57f` and `#00a86c` — so a deck still knows which organisation it
+belongs to at its loudest moment. The wordmark is hidden there, because it is
+white lettering; the chevron is larger and is the same mark.
+
+**Where a green accent is not a ground for text.** `css/app.css` puts white on
+`var(--s-accent)` in a handful of places — caption bands, the two reveal
+toggles — which is fine for the darker accents the other themes use and is
+about 2:1 on this green. Those surfaces take the logo ink instead, which is the
+pairing the brand's own artwork uses.
+
+**Both grounds are dark**, which is what the organisation's decks are, so the
+dark chart palette in `css/app.css` is the correct one for them. That selector
+names themes rather than detecting brightness — a new dark theme has to be
+added to it, which is the sixth of the places a theme is registered.
+
+### The mark behind the pad
+
+Seven themes hang decoration on their two full-bleed layouts — the title and
+the section, and nowhere else. `renderSlide()` looks the theme up in
+`THEME_ART` and drops in a container of empty divs, `aria-hidden`, purely so
+the theme's own stylesheet has boxes to paint on. Northeastern is the one
+exception in code rather than in the table: its eyebrow carries `deck.org`, so
+it is not a constant string.
+
+The rule all of them follow is the one `nu-art` set: **the mark is sized past
+the slide and bled off an edge**, so a room gets the gesture instead of a logo
+shrunk into a corner. A title slide painted the same flat colour as the content
+behind it reads as the first content slide, so each of these also takes a
+ground of its own.
+
+| Theme | Behind the pad |
+| --- | --- |
+| Northeastern London | The monogram at 900 × 694, off two edges, over a skyline strip |
+| Studio | Orbit, tile, dot and a rotated caption |
+| UK Black Tech / UKBT Institute | The chevron at 604 × 929, drawn twice and offset by a third of its width, off the right edge |
+| Product | One blue bloom behind the centred line, one ring bled off the corner |
+| Editorial | Masthead rules, and a 680px serif quote mark bled off two edges |
+| Cinematic | A 2.39:1 letterbox crop, a light streak, and a vignette |
+| Brutal | A hairline grid on the 80px module, and crop marks at the corners |
+
+No image files: everything except the Northeastern monogram and the UKBT
+chevron is gradients, borders and one glyph. Both of those are masks, so the
+CSS colours them per ground rather than shipping a variant per surface.
+
+### Ready-made lessons
+
+`js/lessons.js` is content, not engine: a lesson is a plain object, and adding
+one is adding an entry to an array.
+
+| Lesson | Theme | Slides | For |
+| --- | --- | --- | --- |
+| The art of paying attention | Studio | 6 | Teach → check → discuss, with three moments the room answers |
+| Start with what you remember | Studio | 4 | A retrieval-practice opener |
+| LDSCI6253 Advanced Information Presentation & Visualisation | Northeastern London | 74 | The real lecture |
+| Layout bank | Northeastern London | 30 | One of every layout, as a reference to copy from |
+| Pacing gallery · NUL | Northeastern London | 11 | Openers and breakaways, then a range of teaching layouts |
+| Pacing gallery · Studio | Studio | 11 | The same pacing idea in the sage skin |
+| UK Black Tech — partnership pack | UK Black Tech | 12 | Tiers, opportunities and how a partnership runs |
+| UKBT Institute — partnership pack | UKBT Institute | 13 | Research, hackathons, programmes, and the independence terms |
+
+**The two UKBT decks are the written partnership packs, slide for section.**
+Nothing in them is invented: the reach and community figures, the track record,
+the tier structure, the research agenda and the independence terms all come
+from the packs, which in turn come from the organisation.
+
+**Every price in both decks is a placeholder, and the slides say so on the
+projector** — not only in the speaker notes. The packs mark their pricing
+tables with a warning that the figures are a starting structure to be replaced
+before the pack reaches a partner, so the slide titles read *placeholder
+pricing* and *placeholder costs* until somebody sets the real ones. The same
+goes for the bracketed confirmations the packs leave open; each one is named in
+the notes of the slide it belongs to rather than quietly filled in. The
+Institute's Sickle Cell slide says outright that it is the strongest proof
+point in the pack and currently has no numbers attached to it.
 
 ### How much room the room gets — `S`
 

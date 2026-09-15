@@ -1,0 +1,923 @@
+/* UK Black Tech, and UKBT Institute.
+
+   Two themes rather than one because they are two organisations sharing a
+   mark: the parent's decks sit on Dark Blue, the Institute's on UKBT Black.
+   Everything else — the green, the chevron, the wave — is common.
+
+   THE PALETTE IS THE ORGANISATION'S OWN DESIGN SYSTEM, not values sampled off
+   a deck. An earlier version of this file carried #264258 and #282C2F, taken
+   a digit at a time out of a PowerPoint fill and a compressed PNG; the real
+   tokens are one step away from each and are below. It also invented a
+   #2D3134 charcoal for the Institute and a #00A86C deep green, neither of
+   which exists in the system. Both are gone.
+
+     #292C2F  UKBT Black       brand colour, background
+     #00C57F  UKBT Green       background
+     #CEFD85  Lime Green       buttons
+     #FFFFFF  White            text, background
+     #111111  Contrast Black   text, background
+     #254258  Dark Blue        background
+     #B97BF7  Purple           highlight, background
+     #4ABFFD  Bright Blue      highlight, background
+     #FF9667  Orange           highlight, background
+     #757575  Dark Grey        lower-contrast text
+     #E3EAE8  Cool Grey        background
+
+   Type follows ukblacktech.com, not the token sheet alone. The sheet calls
+   Heading 1 "Uncut Sans Bold 72px", which is the heading of a web article;
+   the site's own hero is Alpha Lyrae Medium at 256px in a 900px viewport. A
+   slide is a hero, not an article, so the two full-bleed layouts take Alpha
+   Lyrae and everything from the slide h2 down takes Uncut Sans — the same
+   split the site makes between its hero and its H2s. The
+   scale below is the system's desktop ramp, which is why the numbers are not
+   round: 72 / 58 / 48 / 32 / 24 / 22 for headings, 22 / 18 / 16 / 14 for
+   body. Both faces are bundled under assets/fonts/ukbt — see the @font-face
+   block below for why they are shipped rather than named and hoped for.
+
+   The wave is generated rather than shipped. The original is a traced path
+   of 1.1 MB, which is most of a megabyte on every slide of every deck for a
+   texture nobody looks at directly; the same family of phase-shifted sines
+   draws in 38 KB and scales cleanly to any stage. */
+
+/* ------------------------------------------------------------------- fonts
+
+   Both faces are bundled rather than named and hoped for. A deck is presented
+   from whatever machine is in the room and joined from whatever phone is in
+   the audience, so a font installed on one laptop is not a font the room sees.
+
+   Both are SIL Open Font License 1.1, which permits bundling and redistributing
+   with software; the licences sit beside the files. OFL reserves the font names,
+   so neither family is renamed here.
+
+     Uncut Sans    Kasper Nordkvist            uncut.wtf
+     Alpha Lyrae   Fontfabric for Vega Protocol
+
+   woff2 only. Every browser that can run this app supports it, and the whole
+   set is 420 KB against roughly 1 MB for the same faces as woff. font-display
+   is swap: a slide that appears in the fallback and reflows a moment later is
+   better than a slide that is blank while a font loads. */
+@font-face {
+  font-family: 'Uncut Sans';
+  src: url('../assets/fonts/ukbt/UncutSans-Regular.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Uncut Sans';
+  src: url('../assets/fonts/ukbt/UncutSans-RegularItalic.woff2') format('woff2');
+  font-weight: 400; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: 'Uncut Sans';
+  src: url('../assets/fonts/ukbt/UncutSans-Semibold.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Uncut Sans';
+  src: url('../assets/fonts/ukbt/UncutSans-SemiboldItalic.woff2') format('woff2');
+  font-weight: 600; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: 'Uncut Sans';
+  src: url('../assets/fonts/ukbt/UncutSans-Bold.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Uncut Sans';
+  src: url('../assets/fonts/ukbt/UncutSans-BoldItalic.woff2') format('woff2');
+  font-weight: 700; font-style: italic; font-display: swap;
+}
+/* One weight, and the system only ever asks for one. Declared at 500 because
+   that is what Medium is, so a 600 or 700 request synthesises rather than
+   silently picking the wrong face. */
+@font-face {
+  font-family: 'Alpha Lyrae';
+  src: url('../assets/fonts/ukbt/AlphaLyrae-Medium.woff2') format('woff2');
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+
+.theme-ukbt,
+.theme-ukbt-institute {
+  --ukbt-black: #292c2f;
+  --ukbt-green: #00c57f;
+  --ukbt-lime: #cefd85;
+  --ukbt-navy: #254258;
+  --ukbt-purple: #b97bf7;
+  --ukbt-blue: #4abffd;
+  --ukbt-orange: #ff9667;
+  --ukbt-grey: #757575;
+  --ukbt-cool: #e3eae8;
+  --ukbt-contrast: #111111;
+  /* Kept as the old name because the mark's dark is the brand black. */
+  --ukbt-ink: var(--ukbt-black);
+
+  --s-fg: #ffffff;
+  --s-dim: rgba(255, 255, 255, .66);
+  --s-accent: #00c57f;
+  --s-accent-2: #ffffff;
+  --s-rule: rgba(255, 255, 255, .16);
+  --s-font: 'Uncut Sans', 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  /* The system's second face. Buttons, dates and the organisation stamp —
+     never a paragraph. */
+  --ukbt-font-meta: 'Alpha Lyrae', 'Uncut Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* The desktop ramp, named by the system's own presets. */
+  --ukbt-5xl: 72px;
+  --ukbt-4xl: 58px;
+  --ukbt-3xl: 48px;
+  --ukbt-2xl: 32px;
+  --ukbt-xl: 24px;
+  --ukbt-l: 22px;
+  --ukbt-m: 18px;
+  --ukbt-s: 16px;
+  --ukbt-xs: 14px;
+
+  color: var(--s-fg);
+  background: var(--s-bg);
+  position: relative;
+}
+
+.theme-ukbt {
+  --s-bg: #254258;
+  --s-card: rgba(255, 255, 255, .07);
+  --s-scrim: rgba(37, 66, 88, .78);
+}
+.theme-ukbt-institute {
+  --s-bg: #292c2f;
+  --s-card: rgba(255, 255, 255, .06);
+  --s-scrim: rgba(41, 44, 47, .78);
+}
+
+/* ------------------------------------------------------------ chart series
+
+   The six validated steps in app.css were checked against midnight, ocean,
+   ember and mono — not against these two grounds, and on Dark Blue five of
+   their twelve combinations fall under 3:1, the red worst at 1.78. The
+   brand's own highlight colours are better here on every count that matters,
+   so these themes carry their own set rather than borrowing that one.
+
+   Measured against #254258 and #292C2F, in this order:
+
+     worst contrast        3.62:1   (was 1.78:1)
+     worst adjacent  ΔE  ≥ 25.3     under normal, deutan, protan and tritan
+     worst any pair  ΔE    5.98     protan; 6.36 deutan; 22.73 normal
+
+   The order is the safety mechanism, as it is in app.css — it was chosen to
+   maximise the weakest adjacent separation, so do not cycle it. Cool Grey is
+   last because it is the one step that sits near the text colour. */
+.slide.theme-ukbt,
+.slide.theme-ukbt-institute {
+  --chart-1: #00C57F;  /* UKBT green  */
+  --chart-2: #B97BF7;  /* purple      */
+  --chart-3: #CEFD85;  /* lime        */
+  --chart-4: #4ABFFD;  /* bright blue */
+  --chart-5: #FF9667;  /* orange      */
+  --chart-6: #E3EAE8;  /* cool grey   */
+}
+
+/* The wave sits under everything and is never the thing being read, so it is
+   a background layer on the slide rather than an element the layouts have to
+   make room for. preserveAspectRatio is none in the file, so it stretches to
+   whatever stage shape the deck is set to instead of letterboxing. */
+.theme-ukbt::before,
+.theme-ukbt-institute::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('../assets/brand/ukbt-waves.svg') center bottom / 100% 100% no-repeat;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Only the content block gets lifted, not every child. Setting position on
+   every direct child took the slide's own chrome with it — the logo, the page
+   number and the progress track are absolutely positioned, and relative put
+   them back in the flow, which dropped the logo off the bottom-left corner of
+   the slide. Chrome does not need lifting: it is positioned already, so it
+   paints after the wave in tree order anyway. */
+.theme-ukbt > .pad,
+.theme-ukbt-institute > .pad { position: relative; z-index: 1; }
+
+/* ------------------------------------------------------------------ the mark
+
+   The chevron, sized past the slide and bled off the right edge: you get the
+   gesture, not a badge in a corner. It started as a 92px square in the top
+   left, which is what a logo looks like when nobody has designed the slide.
+
+   The geometry is the brand's own. In the official lockup the mark is one
+   chevron drawn twice, the second offset by 7 units in a shape 20.8 wide —
+   33.65% — so that is what the two layers do here, and the ratio 20.8:32 is
+   what sizes the box. */
+.ukbt-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.ukbt-art .ukbt-chev {
+  position: absolute;
+  top: 56%;
+  width: 604px;
+  height: 929px;
+  transform: translateY(-50%);
+  -webkit-mask: url('../assets/brand/ukbt-chevron.svg') no-repeat center / contain;
+  mask: url('../assets/brand/ukbt-chevron.svg') no-repeat center / contain;
+}
+/* 604 × 33.65% = 203px between the two, which is the offset in the lockup. */
+.ukbt-art .ukbt-chev-front { right: -232px; }
+.ukbt-art .ukbt-chev-back { right: -29px; }
+
+/* --------------------------------------------------------------- the objects
+
+   The brand's rendered forms — coil, asterisk, cone and torus in the green
+   set, knot, disc, shell and dome in the iridescent one. They are the thing
+   that makes these decks look like the organisation rather than like a deck
+   in its colours, so they are shown at full strength and bled off a corner,
+   not faded into the background the way the wave is.
+
+   One per slide, and only on the title. The section slide already has the
+   chevron on a loud ground and a second mark there is a fight, not a
+   composition.
+
+   Which object appears is picked by slide index, stamped on the slide root by
+   renderSlide, so a deck with several of these layouts does not repeat the
+   same shape every time. The green set belongs to the parent and the
+   iridescent set to the Institute, which keeps the two themes apart in the
+   same way their section grounds do.
+
+   The sources are 300px square. Drawn at 470 that is a 1.6x upscale, which
+   these hold because they are soft-shaded renders with no hard edges and no
+   type in them — but it is the reason this is 470 and not 700. Re-export at
+   3x and the number can go up. */
+.ukbt-art .ukbt-object {
+  position: absolute;
+  right: -46px;
+  bottom: -54px;
+  width: 470px;
+  height: 470px;
+  background: no-repeat center / contain;
+}
+/* Only the title carries an object. */
+.theme-ukbt.layout-section .ukbt-object,
+.theme-ukbt-institute.layout-section .ukbt-object { display: none; }
+/* ...and where there is an object, the chevron steps back so the two are not
+   shouting over each other in the same corner. */
+.theme-ukbt.layout-title .ukbt-chev-front { background: rgba(0, 197, 127, .10); }
+.theme-ukbt.layout-title .ukbt-chev-back { background: rgba(255, 255, 255, .05); }
+.theme-ukbt-institute.layout-title .ukbt-chev-front { background: rgba(0, 197, 127, .10); }
+.theme-ukbt-institute.layout-title .ukbt-chev-back { background: rgba(255, 255, 255, .05); }
+
+.theme-ukbt .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-coil.png'); }
+.theme-ukbt[data-art-index="1"] .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-asterisk.png'); }
+.theme-ukbt[data-art-index="2"] .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-cone.png'); }
+.theme-ukbt[data-art-index="3"] .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-torus.png'); }
+
+.theme-ukbt-institute .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-knot.png'); }
+.theme-ukbt-institute[data-art-index="1"] .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-disc.png'); }
+.theme-ukbt-institute[data-art-index="2"] .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-shell.png'); }
+.theme-ukbt-institute[data-art-index="3"] .ukbt-object { background-image: url('../assets/brand/ukbt-objects/ukbt-dome.png'); }
+
+/* The same objects, quietly, on the slides that carry an argument.
+
+   A deck where only the first slide is designed looks like a template with a
+   cover on it. These sit at a fifth of their strength — texture, the way the
+   wave is texture, rather than something the room looks at.
+
+   THEY MOVE. Five positions on a cycle of five against four shapes on a cycle
+   of four, so the pair does not repeat for twenty slides. The first version of
+   this put every object in the same bottom-right corner, which is wallpaper
+   rather than design: a reader stops seeing it by slide three and the deck
+   goes back to looking like a template.
+
+   What lets them move is the measure below. Bottom-right was the only safe
+   corner while body copy ran the full 1280, because that is the one place text
+   does not reach. Capping the line length — which is better typography anyway,
+   nothing should run 1160px at 22px — frees the right-hand third by
+   construction, and then the object has somewhere to go.
+
+   Nothing is rotated or mirrored. These are lit 3D renders, and turning one
+   moves its highlight to a place the light never came from.
+
+   NOT on chart and table slides. This deck teaches that the ink on a chart
+   should carry data, and putting a decorative object behind one would be
+   chartjunk by the definition the deck itself gives. Not on quiz or game
+   layouts either, where the room is reading an answer under time pressure,
+   and not on image, gallery or split, where the picture is the content. */
+
+/* A measure. Sixty to seventy characters is the readable line, and it is what
+   opens the right-hand third of the slide. */
+.theme-ukbt.layout-content .pad ul,
+.theme-ukbt-institute.layout-content .pad ul,
+.theme-ukbt.layout-keyfact .keyfact-notes,
+.theme-ukbt-institute.layout-keyfact .keyfact-notes { max-width: 880px; }
+/* Keywords is already two columns, so 880 was measuring the pair rather than
+   the line: it squeezed the term column until "Finance / procurement" broke
+   over two lines, every row grew, and the sixth fell off the bottom of the
+   slide. Wide enough here that the terms hold one line, which is what keeps
+   six rows on the slide. */
+.theme-ukbt.layout-keywords .kw-list,
+.theme-ukbt-institute.layout-keywords .kw-list { max-width: 1080px; }
+.theme-ukbt.layout-content h2,
+.theme-ukbt-institute.layout-content h2,
+.theme-ukbt.layout-keyfact h2,
+.theme-ukbt-institute.layout-keyfact h2 { max-width: 960px; }
+
+.theme-ukbt::after,
+.theme-ukbt-institute::after {
+  content: '';
+  position: absolute;
+  background: no-repeat center / contain;
+  /* FULL STRENGTH, and small. The site does not fade these — on the Institute
+     page, on Services and on About they are crisp objects at about a fifth of
+     the page width, sitting against an edge or straddling a section rule. I
+     had them at 19% and 300px, which is a ghost: big enough to be noticed and
+     too faint to be looked at, the worst of both. A small sharp object reads
+     as a designed element; a large faint one reads as a watermark. */
+  opacity: 1;
+  pointer-events: none;
+  z-index: 0;
+  /* Slot 0 — bottom right, off two edges. */
+  right: -58px;
+  bottom: -52px;
+  width: 200px;
+  height: 200px;
+}
+/* Slot 1 — the right edge at eye level, the biggest of them. */
+.theme-ukbt[data-art-slot="1"]::after,
+.theme-ukbt-institute[data-art-slot="1"]::after {
+  right: -66px; top: 50%; bottom: auto;
+  width: 228px; height: 228px;
+  transform: translateY(-50%);
+}
+/* Slot 2 — bottom left, off two edges, under where the last line ends. */
+.theme-ukbt[data-art-slot="2"]::after,
+.theme-ukbt-institute[data-art-slot="2"]::after {
+  left: -62px; right: auto; bottom: -58px;
+  width: 196px; height: 196px;
+}
+/* Slot 3 — top right, starting below the logo band rather than behind it:
+   the logo sits at top 28px and is 52px tall, and it paints above this. */
+.theme-ukbt[data-art-slot="3"]::after,
+.theme-ukbt-institute[data-art-slot="3"]::after {
+  right: -52px; top: 104px; bottom: auto;
+  width: 184px; height: 184px;
+}
+/* Slot 4 — low and central-right, off the bottom edge only. */
+.theme-ukbt[data-art-slot="4"]::after,
+.theme-ukbt-institute[data-art-slot="4"]::after {
+  right: 188px; bottom: -74px;
+  width: 212px; height: 212px;
+}
+
+.theme-ukbt.layout-title::after,
+.theme-ukbt-institute.layout-title::after,
+.theme-ukbt.layout-section::after,
+.theme-ukbt-institute.layout-section::after,
+.theme-ukbt.layout-chart::after,
+.theme-ukbt-institute.layout-chart::after,
+.theme-ukbt.layout-table::after,
+.theme-ukbt-institute.layout-table::after,
+.theme-ukbt.layout-quiz::after,
+.theme-ukbt-institute.layout-quiz::after,
+.theme-ukbt.game-stage::after,
+.theme-ukbt-institute.game-stage::after,
+.theme-ukbt.layout-image::after,
+.theme-ukbt-institute.layout-image::after,
+.theme-ukbt.layout-gallery::after,
+.theme-ukbt-institute.layout-gallery::after,
+.theme-ukbt.layout-split::after,
+.theme-ukbt-institute.layout-split::after { content: none; }
+
+.theme-ukbt::after { background-image: url('../assets/brand/ukbt-objects/ukbt-coil.png'); }
+.theme-ukbt[data-art-index="1"]::after { background-image: url('../assets/brand/ukbt-objects/ukbt-asterisk.png'); }
+.theme-ukbt[data-art-index="2"]::after { background-image: url('../assets/brand/ukbt-objects/ukbt-cone.png'); }
+.theme-ukbt[data-art-index="3"]::after { background-image: url('../assets/brand/ukbt-objects/ukbt-torus.png'); }
+
+.theme-ukbt-institute::after { background-image: url('../assets/brand/ukbt-objects/ukbt-knot.png'); }
+.theme-ukbt-institute[data-art-index="1"]::after { background-image: url('../assets/brand/ukbt-objects/ukbt-disc.png'); }
+.theme-ukbt-institute[data-art-index="2"]::after { background-image: url('../assets/brand/ukbt-objects/ukbt-shell.png'); }
+.theme-ukbt-institute[data-art-index="3"]::after { background-image: url('../assets/brand/ukbt-objects/ukbt-dome.png'); }
+
+/* A key fact is one number and a lot of air, so whichever slot it lands in it
+   can carry a bigger one. */
+/* A key fact is one number and a lot of air, so it can take a bigger one. */
+.theme-ukbt.layout-keyfact::after,
+.theme-ukbt-institute.layout-keyfact::after { width: 250px; height: 250px; }
+
+/* ------------------------------------------------------------- title slide
+
+   Its own ground, not the deck's. A title slide that is the same flat colour
+   as the content slides behind it reads as the first content slide. */
+/* Flat, because the site is flat. The diagonal gradient that used to be here
+   was invented to make the title feel like its own surface, and it still held
+   the old sampled #264258 and #2D3134 after the tokens were corrected —
+   twice wrong. ukblacktech.com separates its hero from everything else with
+   the size of the type and the objects behind it, never with a gradient. */
+.theme-ukbt.layout-title { background: var(--ukbt-navy); }
+.theme-ukbt-institute.layout-title { background: var(--ukbt-black); }
+.theme-ukbt.layout-title .ukbt-chev-front,
+.theme-ukbt-institute.layout-title .ukbt-chev-front { background: rgba(0, 197, 127, .17); }
+.theme-ukbt.layout-title .ukbt-chev-back,
+.theme-ukbt-institute.layout-title .ukbt-chev-back { background: rgba(255, 255, 255, .085); }
+
+/* The wave is drawn at its own strength in the file, so there is nothing to
+   turn up here — but on the green it is white-on-green rather than
+   white-on-navy, which is far louder. It comes down on the section slide so
+   the headline stays the loudest thing on the surface. */
+.theme-ukbt.layout-section::before,
+.theme-ukbt-institute.layout-section::before { opacity: .45; }
+
+.theme-ukbt.layout-title .pad,
+.theme-ukbt-institute.layout-title .pad {
+  padding: 96px 92px;
+  justify-content: center;
+}
+.theme-ukbt.layout-title h1,
+.theme-ukbt-institute.layout-title h1 {
+  font-family: var(--ukbt-font-meta);
+  font-size: 104px;
+  font-weight: 500;
+  line-height: .98;
+  letter-spacing: -.02em;
+  max-width: 940px;
+  white-space: pre-line;
+}
+.theme-ukbt.layout-title .sub,
+.theme-ukbt-institute.layout-title .sub {
+  font-size: var(--ukbt-l);
+  line-height: 1.5;
+  max-width: 660px;
+  margin-top: 30px;
+}
+.theme-ukbt.layout-title .slide-date,
+.theme-ukbt-institute.layout-title .slide-date {
+  margin-top: 26px;
+  font-family: var(--ukbt-font-meta);
+  font-size: var(--ukbt-xs);
+  font-weight: 500;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--s-dim);
+}
+
+/* ----------------------------------------------------------- section slide
+
+   The green as a ground rather than a detail — the one surface in the deck
+   that makes a room look up, and the reason the accent exists. Ink on green,
+   never white: white on this green reads at about 2:1.
+
+   The two themes take different steps of the same green, so a deck still
+   knows which of the two organisations it belongs to at its loudest moment. */
+.theme-ukbt.layout-section {
+  --s-bg: #00c57f;
+  --s-fg: #111111;
+  --s-dim: rgba(17, 17, 17, .72);
+  --s-rule: rgba(17, 17, 17, .22);
+  --s-scrim: rgba(0, 150, 96, .8);
+  background: var(--s-bg);
+  color: var(--s-fg);
+}
+.theme-ukbt-institute.layout-section {
+  /* Lime rather than a second green nobody issued: the system has exactly
+     two loud grounds, and giving the Institute the other one keeps the pair
+     distinct without inventing a colour. Contrast Black on it is 12:1. */
+  --s-bg: #cefd85;
+  --s-fg: #111111;
+  --s-dim: rgba(17, 17, 17, .70);
+  --s-rule: rgba(17, 17, 17, .20);
+  --s-scrim: rgba(180, 226, 110, .82);
+  background: var(--s-bg);
+  color: var(--s-fg);
+}
+/* Light behind, dark in front — the same relationship the lockup has, with
+   the green standing in for itself. Reversing it reads as a different mark. */
+.theme-ukbt.layout-section .ukbt-chev-back,
+.theme-ukbt-institute.layout-section .ukbt-chev-back { background: rgba(255, 255, 255, .34); }
+.theme-ukbt.layout-section .ukbt-chev-front,
+.theme-ukbt-institute.layout-section .ukbt-chev-front { background: rgba(23, 32, 28, .15); }
+
+.theme-ukbt.layout-section .pad,
+.theme-ukbt-institute.layout-section .pad {
+  padding: 96px 92px;
+  align-items: flex-start;
+  text-align: left;
+  justify-content: center;
+}
+.theme-ukbt.layout-section h1,
+.theme-ukbt-institute.layout-section h1 {
+  font-family: var(--ukbt-font-meta);
+  font-size: 96px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -.02em;
+  max-width: 900px;
+  white-space: pre-line;
+}
+.theme-ukbt.layout-section .sub,
+.theme-ukbt-institute.layout-section .sub {
+  font-size: var(--ukbt-l);
+  max-width: 700px;
+  margin-top: 22px;
+  color: var(--s-dim);
+}
+.theme-ukbt.layout-section .accent-bar,
+.theme-ukbt-institute.layout-section .accent-bar {
+  background: var(--s-fg);
+  /* app.css centres this bar with `margin: 34px auto 0`, which is right for a
+     centred section and leaves it stranded under a left-aligned one. */
+  margin: 38px auto 0 0;
+}
+/* ------------------------------------------------------ the positive lockup
+
+   The shipped lockup is white lettering, which is right on Dark Blue and UKBT
+   Black and about 2:1 on the green and the lime. The section slide used to
+   answer that by hiding the logo, which loses the mark on the loudest slide in
+   the deck.
+
+   assets/brand/ukbt-wordmark-dark.png and ukbt-institute-dark.svg are the
+   positive versions, made by swapping the ink and the white and leaving the
+   chevron alone — the word "Black" is knocked out of its panel either way,
+   which is how the mark works. The swap is a luminance lerp between #292C2F
+   and #FFFFFF rather than a straight invert, so the antialiasing on the
+   letterforms survives it.
+
+   CSS cannot change an img's src, so the box takes the positive as a
+   background and the img is hidden inside it. That means these two rules
+   assume the deck is using the lockup the theme ships; a deck that has
+   pointed Logo at something else will show that something else in white. */
+.theme-ukbt.layout-section .slide-logo,
+.theme-ukbt-institute.layout-section .slide-logo,
+.theme-ukbt.layout-split:has(.image-left) .slide-logo,
+.theme-ukbt-institute.layout-split:has(.image-left) .slide-logo {
+  display: block;
+  width: auto;
+  max-width: 230px;
+  background: no-repeat center right / contain;
+}
+.theme-ukbt.layout-section .slide-logo img,
+.theme-ukbt-institute.layout-section .slide-logo img,
+.theme-ukbt.layout-split:has(.image-left) .slide-logo img,
+.theme-ukbt-institute.layout-split:has(.image-left) .slide-logo img { visibility: hidden; }
+
+.theme-ukbt.layout-section .slide-logo,
+.theme-ukbt.layout-split:has(.image-left) .slide-logo {
+  aspect-ratio: 720 / 170;
+  background-image: url('../assets/brand/ukbt-wordmark-dark.png');
+}
+.theme-ukbt-institute.layout-section .slide-logo,
+.theme-ukbt-institute.layout-split:has(.image-left) .slide-logo {
+  aspect-ratio: 221.6 / 32;
+  background-image: url('../assets/brand/ukbt-institute-dark.svg');
+}
+
+.theme-ukbt .accent-bar,
+.theme-ukbt-institute .accent-bar { background: var(--ukbt-green); height: 5px; width: 120px; border-radius: 3px; }
+
+/* A soft lift, so the room meets the line before the furniture. */
+@keyframes ukbt-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.theme-ukbt.layout-title .accent-bar,
+.theme-ukbt.layout-title h1,
+.theme-ukbt.layout-title .sub,
+.theme-ukbt.layout-title .slide-date,
+.theme-ukbt-institute.layout-title .accent-bar,
+.theme-ukbt-institute.layout-title h1,
+.theme-ukbt-institute.layout-title .sub,
+.theme-ukbt-institute.layout-title .slide-date,
+.theme-ukbt.layout-section h1,
+.theme-ukbt.layout-section .sub,
+.theme-ukbt-institute.layout-section h1,
+.theme-ukbt-institute.layout-section .sub {
+  animation: ukbt-rise .7s cubic-bezier(.2,.75,.2,1) both;
+}
+.theme-ukbt.layout-title h1, .theme-ukbt-institute.layout-title h1 { animation-delay: .08s; }
+.theme-ukbt.layout-title .sub, .theme-ukbt-institute.layout-title .sub { animation-delay: .18s; }
+.theme-ukbt.layout-title .slide-date, .theme-ukbt-institute.layout-title .slide-date { animation-delay: .28s; }
+.theme-ukbt.layout-section .sub, .theme-ukbt-institute.layout-section .sub { animation-delay: .12s; }
+@media (prefers-reduced-motion: reduce) {
+  .theme-ukbt.layout-title .accent-bar,
+  .theme-ukbt.layout-title h1,
+  .theme-ukbt.layout-title .sub,
+  .theme-ukbt.layout-title .slide-date,
+  .theme-ukbt-institute.layout-title .accent-bar,
+  .theme-ukbt-institute.layout-title h1,
+  .theme-ukbt-institute.layout-title .sub,
+  .theme-ukbt-institute.layout-title .slide-date,
+  .theme-ukbt.layout-section h1,
+  .theme-ukbt.layout-section .sub,
+  .theme-ukbt-institute.layout-section h1,
+  .theme-ukbt-institute.layout-section .sub { animation: none; }
+}
+
+/* Headings keep the wordmark's tight, slightly condensed feel; body stays
+   plain so a wall of teaching text is not fighting the display face. */
+.theme-ukbt h1, .theme-ukbt-institute h1 { font-weight: 700; letter-spacing: -.02em; }
+/* Heading 3 on the slide layouts that carry an argument, Paragraph Large for
+   what sits under it — the system's own pairing. */
+.theme-ukbt h2, .theme-ukbt-institute h2 {
+  font-size: var(--ukbt-3xl);
+  font-weight: 700;
+  /* Measured off the site: -1.16px on 57.5px and -0.64px on 31.3px are both
+     -2%, and body runs at -1%. Tighter than most decks, and it is part of
+     what makes their type look like theirs. */
+  letter-spacing: -.02em;
+}
+.theme-ukbt .pad li, .theme-ukbt-institute .pad li,
+.theme-ukbt .sub, .theme-ukbt-institute .sub,
+.theme-ukbt .card-body, .theme-ukbt-institute .card-body { letter-spacing: -.01em; }
+.theme-ukbt .pad li, .theme-ukbt-institute .pad li,
+.theme-ukbt .kw-def, .theme-ukbt-institute .kw-def,
+.theme-ukbt .card-body, .theme-ukbt-institute .card-body { font-size: var(--ukbt-l); }
+.theme-ukbt .kw-term, .theme-ukbt-institute .kw-term { font-size: var(--ukbt-2xl); }
+/* Blockquote is 2XL in the system, with the citation two steps down. */
+.theme-ukbt .q, .theme-ukbt-institute .q { font-size: var(--ukbt-2xl); }
+.theme-ukbt .attrib, .theme-ukbt-institute .attrib,
+.theme-ukbt .fig-cap, .theme-ukbt-institute .fig-cap,
+.theme-ukbt .ch-source, .theme-ukbt-institute .ch-source { font-size: var(--ukbt-xs); }
+/* The technical lines take the second face: the page number, the eyebrow over
+   a key fact, and anything stamped rather than read. */
+.theme-ukbt .pagenum, .theme-ukbt-institute .pagenum,
+.theme-ukbt .keyfact-label, .theme-ukbt-institute .keyfact-label,
+.theme-ukbt .eyebrow, .theme-ukbt-institute .eyebrow {
+  font-family: var(--ukbt-font-meta);
+  font-weight: 500;
+}
+
+/* The eyebrow above a title is the one place the green carries text. */
+.theme-ukbt .eyebrow, .theme-ukbt-institute .eyebrow,
+.theme-ukbt .sub, .theme-ukbt-institute .sub { color: var(--s-dim); }
+.theme-ukbt .layout-title .sub,
+.theme-ukbt-institute .layout-title .sub { color: var(--ukbt-green); font-weight: 600; letter-spacing: .01em; }
+
+/* The primary button off the component sheet: black fill, white label, an
+   arrow, and a corner radius small enough to read as a rectangle. The only
+   things on a slide that are buttons are the two reveal toggles, so that is
+   where it goes. The arrow is added here rather than in the markup because it
+   is decoration on a control that already has a label. */
+.theme-ukbt .flip-toggle,
+.theme-ukbt-institute .flip-toggle,
+.theme-ukbt .image-facts-toggle,
+.theme-ukbt-institute .image-facts-toggle {
+  background: var(--ukbt-contrast);
+  color: #ffffff;
+  border: 2px solid var(--ukbt-contrast);
+  border-radius: 6px;
+  font-family: var(--ukbt-font-meta);
+  font-weight: 500;
+  letter-spacing: .01em;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.theme-ukbt .flip-toggle::after,
+.theme-ukbt-institute .flip-toggle::after,
+.theme-ukbt .image-facts-toggle::after,
+.theme-ukbt-institute .image-facts-toggle::after { content: ' \2197'; }
+/* Secondary, which the sheet draws as the same rectangle with no fill. */
+.theme-ukbt .flip-toggle:hover,
+.theme-ukbt-institute .flip-toggle:hover,
+.theme-ukbt .image-facts-toggle:hover,
+.theme-ukbt-institute .image-facts-toggle:hover,
+.theme-ukbt .flip-toggle[aria-expanded="true"],
+.theme-ukbt-institute .flip-toggle[aria-expanded="true"],
+.theme-ukbt .image-facts-toggle[aria-expanded="true"],
+.theme-ukbt-institute .image-facts-toggle[aria-expanded="true"] {
+  background: transparent;
+  color: var(--s-fg);
+  border-color: var(--s-fg);
+}
+
+/* ------------------------------------------------------- the featured card
+
+   The Events page puts a photograph on one half and a lime panel on the other,
+   with the flag, the heading and a meta line on the colour. A split slide is
+   already that shape — picture one side, copy the other — so it only needed
+   the panel.
+
+   Lime with Contrast Black is 16.20:1, the strongest pairing in the system,
+   which is presumably why they use it for the thing they want looked at. */
+.theme-ukbt.layout-split .split-copy,
+.theme-ukbt-institute.layout-split .split-copy {
+  background: var(--ukbt-lime);
+  color: var(--ukbt-contrast);
+  padding: 56px 52px;
+}
+.theme-ukbt.layout-split .split-copy h2,
+.theme-ukbt-institute.layout-split .split-copy h2 {
+  color: var(--ukbt-contrast);
+  border-bottom: 0;
+  padding-bottom: 0;
+  margin-bottom: 20px;
+}
+.theme-ukbt.layout-split .split-copy li,
+.theme-ukbt-institute.layout-split .split-copy li { color: var(--ukbt-contrast); }
+.theme-ukbt.layout-split .split-copy li::before,
+.theme-ukbt-institute.layout-split .split-copy li::before { background: var(--ukbt-contrast); }
+/* The panel is always the copy side, so a picture on the left puts the lockup
+   over lime. It used to move across to sit on the picture; it stays where it
+   belongs now and takes the positive version instead — see below. :has() reads
+   the class the layout writes on .pad, which is the only place the slide
+   records which way round it is. */
+
+/* The caption bar under a split picture is the accent elsewhere; on a lime
+   panel it would be green on green, so it takes the ink. */
+.theme-ukbt.layout-split .split-media .cap-bar,
+.theme-ukbt-institute.layout-split .split-media .cap-bar {
+  background: var(--ukbt-contrast);
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------- the rule
+
+   Every section on ukblacktech.com is separated by a thin green line running
+   the full width — the Institute page, Services, About, all of them. It is
+   the most repeated thing on the site after the green itself and there was
+   none of it here.
+
+   On a slide the section is the slide, so the rule goes under the heading:
+   full width of the content column, one pixel, green. Not on the two
+   full-bleed layouts, where the heading is the whole slide and a line under
+   it would be furniture. */
+.theme-ukbt.layout-content h2,
+.theme-ukbt-institute.layout-content h2,
+.theme-ukbt.layout-cards h2,
+.theme-ukbt-institute.layout-cards h2,
+.theme-ukbt.layout-keywords h2,
+.theme-ukbt-institute.layout-keywords h2,
+.theme-ukbt.layout-italics h2,
+.theme-ukbt-institute.layout-italics h2,
+.theme-ukbt.layout-journey h2,
+.theme-ukbt-institute.layout-journey h2,
+.theme-ukbt.layout-links h2,
+.theme-ukbt-institute.layout-links h2,
+.theme-ukbt.layout-chart h2,
+.theme-ukbt-institute.layout-chart h2,
+.theme-ukbt.layout-table h2,
+.theme-ukbt-institute.layout-table h2,
+.theme-ukbt.layout-keyfact h2,
+.theme-ukbt-institute.layout-keyfact h2 {
+  border-bottom: 1px solid var(--ukbt-green);
+  padding-bottom: 22px;
+  margin-bottom: 30px;
+  max-width: none;
+}
+/* The journey subtitle sits between the heading and the route, so the rule
+   belongs under it rather than above it. */
+.theme-ukbt.layout-journey h2,
+.theme-ukbt-institute.layout-journey h2 { border-bottom: 0; padding-bottom: 0; margin-bottom: 6px; }
+.theme-ukbt.layout-journey .journey-context,
+.theme-ukbt-institute.layout-journey .journey-context {
+  border-bottom: 1px solid var(--ukbt-green);
+  padding-bottom: 20px;
+  margin-bottom: 26px;
+}
+
+/* ---------------------------------------------------------- the highlights
+
+   Purple, Bright Blue and Orange are listed in the system as "highlight,
+   background" and the site uses them exactly that way — whole panels of them
+   between the dark sections, not accents on a line. They were only doing duty
+   as chart series here, which is the least of what they are for.
+
+   A card takes one as its ground with Contrast Black on it. Measured against
+   #111111: purple 6.51:1, bright blue 9.14:1, orange 8.82:1, lime 16.20:1 —
+   all clear of 4.5 for body text, and the studio theme already colours its
+   cards this way, so the mechanism is the one this codebase uses.
+
+   The two themes run the same three colours from different starting points,
+   which keeps them siblings rather than twins: the parent opens on purple,
+   the Institute on bright blue. */
+/* The anatomy is the organisation's own CTA card, read off the component
+   sheet: a section flag, a heading set large and black, a paragraph under it,
+   and the whole thing on a highlight ground with square-ish corners.
+
+   What does not carry over is the bottom half of that component — the
+   category and location pills, the date and handle, the primary button. Those
+   are fields a card on a web page has and a slide does not, and inventing
+   content to fill them would be decoration pretending to be information. The
+   button style is used further down, on the two reveal toggles, which are the
+   only things on a slide that are actually buttons. */
+/* The cards sat in a band at the top with half the slide empty under them,
+   which is not what the sheet draws — its cards have room. Centre the row and
+   give each one a floor, so three short cards still read as panels rather
+   than as captions that happen to have a colour. */
+.theme-ukbt.layout-cards .pad,
+.theme-ukbt-institute.layout-cards .pad { justify-content: center; }
+.theme-ukbt.layout-cards li,
+.theme-ukbt-institute.layout-cards li {
+  color: var(--ukbt-contrast);
+  border: 0;
+  border-radius: 10px;
+  padding: 34px 30px 36px;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+/* The paragraph takes the slack, so the flag and heading stay at the top of
+   the card and the card bottoms line up. */
+.theme-ukbt.layout-cards li .card-body,
+.theme-ukbt-institute.layout-cards li .card-body { flex: 1; }
+/* The counter becomes the section flag: same place, same weight, and it is
+   already the one line above the heading. */
+.theme-ukbt.layout-cards li::before,
+.theme-ukbt-institute.layout-cards li::before {
+  color: var(--ukbt-contrast);
+  opacity: .62;
+  font-family: var(--s-font);
+  font-size: var(--ukbt-xs);
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+/* Heading 4 on the ramp, which is what the sheet sets a card heading at. */
+.theme-ukbt.layout-cards .card-label,
+.theme-ukbt-institute.layout-cards .card-label {
+  font-size: var(--ukbt-2xl);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  margin-bottom: 12px;
+}
+.theme-ukbt.layout-cards li .card-body,
+.theme-ukbt-institute.layout-cards li .card-body {
+  color: var(--ukbt-contrast);
+  opacity: .84;
+  font-size: var(--ukbt-m);
+  line-height: 1.45;
+}
+
+/* Four in the cycle, not three. On a three-colour cycle a row of four cards —
+   which the Townhouse deck has, one rule per floor — came out blue, orange,
+   purple, blue, and the first and last read as a pair that means nothing.
+   Lime is the fourth, and 16.20:1 against the ink. */
+.theme-ukbt.layout-cards li:nth-child(4n+1) { background: var(--ukbt-purple); }
+.theme-ukbt.layout-cards li:nth-child(4n+2) { background: var(--ukbt-blue); }
+.theme-ukbt.layout-cards li:nth-child(4n+3) { background: var(--ukbt-orange); }
+.theme-ukbt.layout-cards li:nth-child(4n)   { background: var(--ukbt-lime); }
+
+.theme-ukbt-institute.layout-cards li:nth-child(4n+1) { background: var(--ukbt-blue); }
+.theme-ukbt-institute.layout-cards li:nth-child(4n+2) { background: var(--ukbt-orange); }
+.theme-ukbt-institute.layout-cards li:nth-child(4n+3) { background: var(--ukbt-lime); }
+.theme-ukbt-institute.layout-cards li:nth-child(4n)   { background: var(--ukbt-purple); }
+
+/* A glossary term is large bold type, so 3:1 is the bar it has to clear and
+   the weakest of these is purple at 3.62 on Dark Blue. Cycling them gives a
+   list of six the same rhythm the site's panels have. */
+.theme-ukbt .kw-row:nth-child(4n+1) .kw-term { color: var(--ukbt-green); }
+.theme-ukbt .kw-row:nth-child(4n+2) .kw-term { color: var(--ukbt-blue); }
+.theme-ukbt .kw-row:nth-child(4n+3) .kw-term { color: var(--ukbt-orange); }
+.theme-ukbt .kw-row:nth-child(4n)   .kw-term { color: var(--ukbt-lime); }
+.theme-ukbt-institute .kw-row:nth-child(4n+1) .kw-term { color: var(--ukbt-blue); }
+.theme-ukbt-institute .kw-row:nth-child(4n+2) .kw-term { color: var(--ukbt-lime); }
+.theme-ukbt-institute .kw-row:nth-child(4n+3) .kw-term { color: var(--ukbt-green); }
+.theme-ukbt-institute .kw-row:nth-child(4n)   .kw-term { color: var(--ukbt-orange); }
+
+/* Journey milestones. The real classes are .journey-stop and
+   .journey-marker — I wrote this against .jr-step and .jr-num first, which
+   exist nowhere, so the rule was valid CSS that matched nothing. Read the
+   layout function before styling it. */
+.theme-ukbt .journey-stop:nth-child(4n+1) .journey-marker { color: var(--ukbt-green); border-color: var(--ukbt-green); }
+.theme-ukbt .journey-stop:nth-child(4n+2) .journey-marker { color: var(--ukbt-blue); border-color: var(--ukbt-blue); }
+.theme-ukbt .journey-stop:nth-child(4n+3) .journey-marker { color: var(--ukbt-orange); border-color: var(--ukbt-orange); }
+.theme-ukbt .journey-stop:nth-child(4n)   .journey-marker { color: var(--ukbt-lime); border-color: var(--ukbt-lime); }
+.theme-ukbt-institute .journey-stop:nth-child(4n+1) .journey-marker { color: var(--ukbt-blue); border-color: var(--ukbt-blue); }
+.theme-ukbt-institute .journey-stop:nth-child(4n+2) .journey-marker { color: var(--ukbt-lime); border-color: var(--ukbt-lime); }
+.theme-ukbt-institute .journey-stop:nth-child(4n+3) .journey-marker { color: var(--ukbt-green); border-color: var(--ukbt-green); }
+.theme-ukbt-institute .journey-stop:nth-child(4n)   .journey-marker { color: var(--ukbt-orange); border-color: var(--ukbt-orange); }
+
+/* Cards and quotes lift off the ground rather than sitting in a white box:
+   a white panel on a dark brand slide reads as a hole in the design. */
+.theme-ukbt .cards li, .theme-ukbt-institute .cards li,
+.theme-ukbt blockquote, .theme-ukbt-institute blockquote {
+  background: var(--s-card);
+  border: 1px solid var(--s-rule);
+  border-radius: 12px;
+}
+.theme-ukbt blockquote, .theme-ukbt-institute blockquote { border-left: 4px solid var(--ukbt-green); }
+
+/* Keyword leads and bullet marks take the green, which is the only colour
+   the brand uses to point at anything. */
+.theme-ukbt .kw-row strong, .theme-ukbt-institute .kw-row strong,
+.theme-ukbt .pad li::marker, .theme-ukbt-institute .pad li::marker { color: var(--ukbt-green); }
+
+/* The green is a signal colour, not a ground for text. app.css puts white on
+   var(--s-accent) in a handful of places — caption bands, the two reveal
+   toggles — which is fine for the dark accents other themes use and is about
+   2:1 on this green. Those surfaces take the logo ink instead, which is the
+   pairing the brand's own artwork uses. */
+.theme-ukbt .cap-bar,
+.theme-ukbt-institute .cap-bar,
+.theme-ukbt .fig-cap.cap-bar,
+.theme-ukbt-institute .fig-cap.cap-bar,
+.theme-ukbt .flip-toggle:hover,
+.theme-ukbt-institute .flip-toggle:hover,
+.theme-ukbt .flip-toggle[aria-expanded="true"],
+.theme-ukbt-institute .flip-toggle[aria-expanded="true"],
+.theme-ukbt .image-facts-toggle:hover,
+.theme-ukbt-institute .image-facts-toggle:hover,
+.theme-ukbt .image-facts-toggle[aria-expanded="true"],
+.theme-ukbt-institute .image-facts-toggle[aria-expanded="true"] { color: var(--ukbt-ink); }
+
+.theme-ukbt .cap-bar .cap-credit,
+.theme-ukbt-institute .cap-bar .cap-credit { color: var(--ukbt-ink); opacity: .7; }

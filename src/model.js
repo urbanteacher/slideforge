@@ -174,6 +174,12 @@ function slideHeight(deck) {
 var THEMES = {
   studio: { name: 'Studio · Sage & ink', swatch: '#dce8cc' },
   northeastern: { name: 'Northeastern London', swatch: '#c8102e' },
+  ukbt: { name: 'UK Black Tech', swatch: '#264258' },
+  'ukbt-institute': { name: 'UKBT Institute', swatch: '#2d3134' },
+  product: { name: 'Product · Keynote minimal', swatch: '#f5f5f7' },
+  editorial: { name: 'Editorial · Paper', swatch: '#f3efe6' },
+  cinematic: { name: 'Cinematic · Dark pitch', swatch: '#0a0b0f' },
+  brutal: { name: 'Brutal · Mono', swatch: '#111111' },
   midnight: { name: 'Midnight', swatch: '#1b2a4a' },
   paper:    { name: 'Paper',    swatch: '#f4f1ea' },
   ocean:    { name: 'Ocean',    swatch: '#0d5c63' },

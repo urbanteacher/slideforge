@@ -1413,6 +1413,737 @@
           ],
           notes: 'Close. Rebuilding this lesson gives a fresh copy, so nothing here is precious. The picker offers twenty layouts and nineteen of them are in this deck; video is named on its own slide but not rendered, because a placeholder URL would only ever draw a black box. The remaining five slide types never appear in the picker: quiz, game, results and join are built by the live session, and explain is the card that shows the correct answer after a check — which is also why the student handout leaves it out.' }
       ]
+    },
+    {
+      key: 'ukbt-sponsorship',
+      title: 'UK Black Tech — partnership pack',
+      icon: '❯',
+      blurb: 'The partnership pack as a deck: who we are, the audience, the four tiers, the individual opportunities and how it works. Pricing is placeholder and every slide that carries a number says so.',
+      minutes: 25,
+      theme: 'ukbt',
+      org: 'UK Black Tech',
+      logo: 'assets/brand/ukbt-wordmark.png',
+      logoOn: 'all',
+      logoSize: 'small',
+      logoReverse: 'never',
+      slides: [
+        { type: 'title', title: 'Partnership\nPack',
+          subtitle: 'Building the UK’s most equitable tech ecosystem — with partners who mean it.',
+          notes: 'The deck follows the written pack, so the two never drift apart. Two things to do before it goes to anybody: set the real prices, and fill in the bracketed confirmations — the pack marks both and so do these notes.' },
+
+        { type: 'section', title: 'Who we are',
+          subtitle: 'Seven years, thirty-five events, one ecosystem.',
+          notes: 'Short. The room already knows roughly who you are or they would not be in it; this is the turn into the substance.' },
+
+        { type: 'content', title: 'What UK Black Tech does',
+          bullets: [
+            'Increases wealth\tBy promoting a culture of innovation, tech and digital skills across its community.',
+            'Moves knowledge\tStimulates and manages the flow of technical insight between universities, R&D institutions, companies and markets.',
+            'Builds companies and talent\tThrough events and spin-off initiatives.',
+            'Serves the wider sector\tValue-added services beyond our own community.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'Straight from §1 of the pack. The line to say out loud and not put on the slide: a great tech ecosystem needs equity, transparency and representation at the cutting edge — not as an afterthought to it.' },
+
+        { type: 'keyfact', title: 'Who you would be reaching',
+          subtitle: 'Combined reach across the UK Black Tech platform',
+          body: '20,000 tech professionals',
+          bullets: [
+            '60% identify as women.',
+            '35% are under 25.',
+            'Unusually young and unusually female for UK tech — if your objective is early-careers hiring, graduate pipeline or reaching women in technical roles, this audience over-indexes for you where general tech channels do not.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'Say the number, then stop. The two lines under it are what make it different from every other reach figure in the room.\n\nThe pack flags more to add here if it can be evidenced: newsletter subscribers and open rate, social following, average event attendance, seniority split, geography, top employers represented. A figure you cannot evidence is worse than no figure.' },
+
+        { type: 'content', title: 'Why partner with us',
+          bullets: [
+            'A hard-to-reach audience\tNot a mailing list bought in — built over seven years of consistent, in-person, sector-specific work.',
+            'Credibility, not visibility\tPresence in this ecosystem signals to Black tech professionals that you are a serious employer or buyer. That signal is earned through repetition.',
+            'A pipeline, not a photo\tPartners use us for hiring, supplier diversity, product research, community insight and thought leadership — often all four.',
+            'Measurable return\tEvery partnership reports against metrics agreed at kick-off.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'Open with the sentence from the pack: most diversity partnerships fail for the same reason — they buy a logo placement at a one-off event and nothing changes. Say it plainly. It is the argument the whole deck rests on and it earns the room’s attention because it concedes something first.' },
+
+        { type: 'section', title: 'Four ways in',
+          subtitle: 'Annual tiers, and single opportunities for partners not ready for one.',
+          notes: 'The turn into the commercial half.' },
+
+        { type: 'table', title: 'Annual tiers · placeholder pricing',
+          body: '\tCommunity\tGrowth\tStrategic\tFounding\nAnnual investment\t£3,000\t£8,500\t£20,000\t£40,000+\nTerm\t12 months\t12 months\t12 months\t24 months\nPlaces available\tOpen\t8\t4\t2\nJob listings\t3 / year\t10 / year\tUnlimited\tUnlimited\nEvents included\t—\t1\t2\t3 + named series\nSpeaking slots\t—\t1\t2\t3 + keynote\nSponsored articles\t—\t1\t2\t4\nRoundtables\t—\t—\t1\t2\nResearch report\t—\t—\t—\t1',
+          notes: 'PRICING IS PLACEHOLDER — the pack says so in a warning box and the slide title says so on the projector. These are a starting structure based on typical UK market rates for an organisation of this size and reach. Set your own numbers before this goes to any partner, and change the title when you do.\n\nThe full matrix in the pack has six more rows — newsletter features, social amplification, survey questions, named manager, reporting, programme input. They are in the leave-behind; this slide is the shape of the offer.' },
+
+        { type: 'cards', title: 'What each tier is for',
+          bullets: [
+            'Community\tSmaller organisations, startups and scale-ups who want presence and access without a large commitment. An entry point, not a lesser partner.',
+            'Growth\tOrganisations with an active hiring or brand objective. The most common starting tier for corporates testing the relationship.',
+            'Strategic\tPartners with a defined DEI, talent or community strategy who need depth, data and repeated visibility. Includes closed-door roundtable access.',
+            'Founding\tA small number of long-term partners who want to shape the programme itself, not just appear in it. Two places; the 24-month term gives both sides runway to build something real.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'Name the tier you think they belong in before you get to this slide, then let them read the others. A partner who chooses their own tier stays in it.' },
+
+        { type: 'cards', title: 'Single opportunities · placeholder pricing',
+          bullets: [
+            'Event\t£3,500 — a high-impact event bringing together experts in your target sector. A platform for thought leadership and networking.',
+            'Article\t£1,200 — an expertly crafted piece on a topic or trend relevant to your audience.',
+            'Roundtable\t£5,000 — an intimate, invite-only discussion. A deep dive into an industry challenge, with meaningful dialogue and brand alignment.',
+            'Report\t£12,000 — original insight and data, positioning your organisation as a thought leader.'
+          ],
+          notes: 'For partners not ready for an annual tier, or adding to one. Placeholder pricing again.\n\nAlso in the pack and not on this slide: event hosting from £4,500 virtual and £9,000 in person excluding venue and catering, with a month’s prep and two planning meetings; and platform advertising — £250 a job listing, £1,000 for five, £400 an event listing, £750 a month for a banner.' },
+
+        { type: 'journey', title: 'How it works',
+          subtitle: 'Six steps, and the first one is not a pitch',
+          bullets: [
+            'Intro call\tThirty minutes. We understand your objectives and current activity. No pitch.',
+            'Proposal\tBack within five working days with a recommended tier or bundle, mapped to your objectives.',
+            'Agreement\tContract, invoice, kick-off date set.',
+            'Kick-off\tSixty minutes to agree the activity calendar, success metrics and points of contact.',
+            'Delivery\tWith a named manager at Strategic and Founding.',
+            'Reporting\tQuarterly, against the metrics agreed at kick-off.'
+          ],
+          progressive: true,
+          notes: 'Six steps is the most a room will hold. Reveal them one at a time and dwell on the first: "no pitch" is the promise that makes the call easy to accept, so do not undercut it by pitching on the call.' },
+
+        { type: 'keywords', title: 'What we report, and what we ask',
+          bullets: [
+            'Reach and engagement\timpressions, attendance, open rates, click-throughs, per activity',
+            'Pipeline\tapplications and enquiries generated from job listings',
+            'Who came\tevent attendance profile — seniority, discipline, career stage',
+            'One contact\ta single point of contact with authority to decide',
+            'Assets on time\tslow approvals are the main cause of missed promotion windows',
+            'People who want to be there\tnot people who were told to attend'
+          ],
+          progressive: true,
+          notes: 'Two halves of one bargain, which is why they share a slide. The sentence from §7 worth saying out loud: we would rather report something honest and modest than something impressive and vague — if an activity underperforms we will tell you, and we will fix it.\n\nAnd from §8: we reserve the right to decline or end a partnership where the relationship is inconsistent with our values or our community’s interests. Say it if the room needs to hear it.' },
+
+        { type: 'content', title: 'Next steps',
+          bullets: [
+            'Book an intro call\tThirty minutes, no pitch. Add your booking link before presenting.',
+            'Add your contact details\tName, role, email, phone, website, LinkedIn — the pack leaves all six to confirm.',
+            'Set the prices\tEvery figure in this deck is a placeholder until you replace it.'
+          ],
+          notes: 'This slide is a checklist for you, not for the partner — replace it with your actual contact details and the booking link before this deck leaves the building, and change the two placeholder-pricing titles at the same time.' }
+      ]
+    },
+    {
+      key: 'ukbt-institute-partnership',
+      title: 'UKBT Institute — partnership pack',
+      icon: '◈',
+      blurb: 'The Institute pack as a deck: the method, the track record, the research agenda, the independence terms, and the four partnership routes. Pricing is placeholder and the slides say so.',
+      minutes: 30,
+      theme: 'ukbt-institute',
+      org: 'UKBT Institute',
+      logo: 'assets/brand/ukbt-institute.svg',
+      logoOn: 'all',
+      logoSize: 'small',
+      logoReverse: 'never',
+      slides: [
+        { type: 'title', title: 'Partnership\nPack',
+          subtitle: 'Research, hackathons and programmes tackling the social problems technology keeps missing.',
+          notes: 'The deck follows the written pack. Before it goes anywhere: set the real costs, and fill in the bracketed confirmations — particularly the Sickle Cell outcomes, which the pack itself calls the strongest proof point with no numbers attached.' },
+
+        { type: 'content', title: 'What the Institute is',
+          bullets: [
+            'Why it exists\tA lot of technology gets built for a narrow slice of the population, and the consequences land hardest on communities that were never in the room.',
+            'What it does about it\tPuts those communities in the room — alongside clinicians, data scientists, engineers and academics, on problems that matter to them.',
+            'Where it sits\tThe research and programme arm of UK Black Tech. Where the parent builds the ecosystem, the Institute produces the evidence, the training and the prototypes.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'Three beats: the problem, the method, the relationship to the parent. The third matters commercially — a partner who wants brand reach across a tech community wants the UK Black Tech pack, not this one, and saying so early saves a wasted meeting.' },
+
+        { type: 'cards', title: 'What we have built so far',
+          bullets: [
+            '16 courses\tDigital courses created with Tech Mums, FutureLearn and the University of Leeds.',
+            '1 hackathon\tThe Sickle Cell Hackathon — doctors, data scientists, patients and web developers, at the Design Museum.',
+            '5 institutions\tIncluding a collaboration with LSBU’s Computer Science department.'
+          ],
+          notes: 'Track record, not ambition. Keep it to things that have finished.' },
+
+        { type: 'content', title: 'The Sickle Cell Hackathon',
+          bullets: [
+            'The condition\tThe UK’s most common genetic blood disorder, disproportionately affecting people of African and Caribbean heritage — and chronically under-served by health technology.',
+            'The method\tPatients in the build process alongside the clinicians treating them and the developers who could prototype. From the first hour, not as a consultation at the end.',
+            'Why it is here\tIt is the clearest example of how the Institute works, and it is the thing partners ask about.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'THIS SLIDE NEEDS NUMBERS. The pack says so itself: participants, prototypes produced, what happened to them afterwards, press coverage, continued development. It is the strongest proof point in the pack and it currently has none attached. A partner will ask, and "I would have to check" is a worse answer than a modest real figure.' },
+
+        { type: 'keywords', title: 'The research agenda',
+          bullets: [
+            'Women’s Health in the Age of Technology\thow digital health tools serve, or fail to serve, women and particularly Black women',
+            'Health equity and clinical data\twhere datasets under-represent communities, and what that produces downstream',
+            'Theme three\tto confirm',
+            'Theme four\tto confirm'
+          ],
+          notes: 'Two real themes and two to fill in. Do not present the placeholders — either add the themes or cut the rows, because an agenda that is half blank reads as an agenda that is half imagined.\n\nThe pack also asks for published outputs, working papers and studies in progress. A partner funding research wants to see what your research actually looks like before they fund more of it.' },
+
+        { type: 'content', title: 'Why partner with the Institute',
+          bullets: [
+            'Communities research fails to reach\tRecruitment into health research from Black and minority communities is a known, documented problem. We have earned the trust to do it — as partners with those communities, not extractors of data.',
+            'Applied output, not shelf-ware\tHackathons produce prototypes. Courses produce trained people. Reports are written to be used.',
+            'Cross-sector convening\tClinicians, patients, academics and engineers in one room is harder to arrange than it sounds. It is most of what we do.',
+            'Credible impact reporting\tSpecific, evidenced and defensible — including under Social Value Model requirements in public procurement.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'The fourth one closes deals with procurement teams and nobody else. Know which of the four the person in front of you is buying.' },
+
+        { type: 'section', title: 'Partners fund our work.\nPartners do not determine our findings.',
+          subtitle: 'Research independence',
+          notes: 'The most important slide in the deck and the one to slow right down on. It is on the green because it is the thing you want the room to look up at.\n\nThe argument, if it is challenged: a report a sponsor could have edited is a marketing document, and everyone reading it knows that. Independence is not a constraint on the value — it is the value.' },
+
+        { type: 'content', title: 'What that means in practice',
+          bullets: [
+            'Questions agreed jointly\tAt the outset, and documented.',
+            'Conclusions rest with us\tMethodology, analysis and conclusions sit with the Institute and its academic collaborators.',
+            'You see it first\tPartners see findings before publication and may correct factual errors about their own organisation. They may not require changes to conclusions.',
+            'Funding is disclosed\tIn the published output, every time.',
+            'We publish the inconvenient\tIncluding when it is inconvenient to a funder.'
+          ],
+          progressive: true,
+          notes: 'Five rules, revealed one at a time. This is standard practice for a credible research institute — say that, because it reframes the terms from awkward to professional.' },
+
+        { type: 'table', title: 'Partnership routes · placeholder costs',
+          body: 'Route\tScope\tPlaceholder cost\nResearch\tInsight brief\t£15,000\nResearch\tFull study\t£45,000\nResearch\tMulti-year programme\t£100,000+\nProgramme\tCourse development\tfrom £20,000\nProgramme\tCohort delivery\tfrom £12,000\nHackathon\tLead partner\t£30,000\nHackathon\tSupporting partner\t£10,000',
+          notes: 'PLACEHOLDER COSTS, and research scope varies enormously — treat these as the shape of the offer, not the number. Set your own before this goes to a partner and change the title when you do.\n\nThere is no description column: with one, every row wrapped to two or three lines and the last two rows fell off the bottom of the slide. Seven routes and a price is what a table on a wall can carry. The detail is for saying, not showing — an insight brief is desk research plus a community survey with a launch webinar; a full study adds primary fieldwork, academic collaboration, a launch event and media outreach at around forty pages; the multi-year programme runs two to three years with annual outputs. Lead hackathon partners co-define the challenge and take a named, full participating role; supporting partners get presence, mentor places and prize sponsorship.\n\nAlso available and not on the slide: in-kind hackathon support — venue, technical mentors, compute credits, clinical expertise — valued case by case. And learner bursaries at £500 a head, which needs your actual per-learner cost.' },
+
+        { type: 'cards', title: 'Institute Partner · the annual route',
+          bullets: [
+            'Associate · £25,000\t12 months. One insight brief, supporting hackathon role, observer status, five volunteering places.',
+            'Core · £60,000\t24 months. One full study, lead on a hackathon each year, one course, advisory board observer, fifteen places.',
+            'Founding · £120,000+\t36 months. Two or more studies, lead plus challenge-setting, two courses and a bursary fund, full board seat, unlimited places.'
+          ],
+          progressive: true, buildMode: 'dim',
+          notes: 'For organisations wanting a sustained relationship across all three strands rather than one commission. Every figure is a placeholder. All three include being named on Institute outputs, early access to findings, and an annual impact report written for your own reporting.' },
+
+        { type: 'content', title: 'What partnership does not buy',
+          bullets: [
+            'Editorial control over findings.',
+            'Exclusive or embargoed access to data beyond the agreed pre-publication window.',
+            'Endorsement of your products or services by the Institute.',
+            'Use of community participant data for commercial purposes.',
+            'Association with our community without a genuine contribution to it.'
+          ],
+          progressive: true,
+          notes: 'Stated plainly so there are no difficult conversations later. It reads as confidence rather than as restriction when it comes straight after the independence slide, which is why it sits here and not at the end.\n\nAnd the one that costs nothing: universities, NHS trusts, patient organisations and charities are not charged to collaborate. Those relationships run on shared contribution — access, expertise, data, ethics approval, co-authorship, venue.' },
+
+        { type: 'journey', title: 'How it works',
+          subtitle: 'Six steps, and ethics before fieldwork',
+          bullets: [
+            'Scoping conversation\tWhat you need to achieve, what we are already working on, and whether there is a genuine overlap. We will say so if there is not.',
+            'Written proposal\tScope, method, timeline, cost, outputs — and the independence terms restated in full.',
+            'Agreement and ethics\tContract signed. Where research involves human participants, ethics approval is secured through our academic partner before any fieldwork begins.',
+            'Delivery\tWith agreed checkpoints. You will know if timelines move, and why.',
+            'Publication and launch\tJoint launch event, media outreach, output published openly.',
+            'Impact reporting\tIn a format that goes straight into your CSR, ESG or social value reporting.'
+          ],
+          progressive: true,
+          notes: 'Step three is the one that separates this from a marketing engagement. Do not rush past it.' },
+
+        { type: 'links', title: 'Where this comes from',
+          bullets: [
+            'UKBT Institute\thttps://ukblacktech.com/ukbt-institute/',
+            'UK Black Tech\thttps://ukblacktech.com/'
+          ],
+          notes: 'Add the booking link for a scoping conversation, and your contact details — name, role, email, phone, LinkedIn. The pack leaves all of them to confirm and so does this deck.' }
+      ]
+    },
+
+    /* ------------------------------------------------------------------
+       Pacing galleries — openers and breakaways first, then a range of
+       teaching layouts. Copy the shape into a real lesson; swap the words.
+       ------------------------------------------------------------------ */
+    {
+      key: 'pace-nul',
+      title: 'NUL · Openers, breakaways & a layout range',
+      icon: '▣',
+      blurb: 'Northeastern look: big word-leading openers, full-bleed image beats, and red section breaks that cut the argument into chapters. Use it as a pacing template.',
+      minutes: 12,
+      theme: 'northeastern',
+      org: 'Northeastern University London',
+      logo: 'assets/brand/nu-london-logo.png',
+      logoOn: 'all',
+      logoSize: 'small',
+      slides: [
+        {
+          type: 'title',
+          title: 'Open hard.\nBreak often.',
+          subtitle: 'A pacing gallery · Northeastern London',
+          notes: 'OPENER — title. Short line breaks, big type, almost nothing else. Say the idea out loud before you advance.'
+        },
+        {
+          type: 'image',
+          title: 'One claim on a photograph',
+          image: 'assets/lesson/ipdv/qa-london-night-1.jpg',
+          imageFit: 'cover',
+          design: { capStyle: 'scrim', capPos: 'bottom', imageMotion: 'zoom', logoGround: 'dark' },
+          notes: 'OPENER — full-bleed image. The picture is the mood; the caption is the claim. Scrim keeps the words readable.'
+        },
+        {
+          type: 'introduction',
+          title: 'Your name',
+          subtitle: 'Role · Northeastern University London',
+          body: 'Replace this with who is standing at the front, and why this room should listen.',
+          notes: 'OPENER — introduction. Once per cohort, not every week.'
+        },
+        {
+          type: 'section',
+          title: 'Part one',
+          subtitle: 'A breakaway — look up before the next block of content.',
+          notes: 'BREAKAWAY — section. Full red (or theme ground). Use these to cut a long argument into chapters the room can feel.'
+        },
+        {
+          type: 'cards',
+          title: 'Three ideas in this block',
+          bullets: [
+            'Name the question the room is here to answer.',
+            'Show one example that makes the question real.',
+            'Leave one thing unfinished so the next block has work to do.'
+          ],
+          notes: 'CONTENT — cards. Teaching meat after a breakaway. Keep to three.'
+        },
+        {
+          type: 'section',
+          title: 'Part two',
+          subtitle: 'Another breath. Then a different layout.',
+          notes: 'BREAKAWAY again. Two or three section slides per hour is usually enough; more and they stop meaning “look up”.'
+        },
+        {
+          type: 'split',
+          title: 'Say it. Show it.',
+          bullets: [
+            'Left: the claim in words.',
+            'Right: the picture that proves or frames it.',
+            'Build the bullets if you want the eye to wait.'
+          ],
+          image: 'assets/lesson/ipdv/snow-cholera-map-1854.jpg',
+          imageFit: 'cover',
+          design: { mediaGround: 'full' },
+          progressive: true,
+          notes: 'VARIATION — dual coding. Image + text after a breakaway keeps the chapter from feeling like another bullet wall.'
+        },
+        {
+          type: 'quote',
+          body: 'A section break is not decoration. It is where the room breathes.',
+          subtitle: 'SlideForge pacing note',
+          notes: 'VARIATION — quote. Soft landing inside a chapter, or a third kind of opener if the photograph is wrong for the day.'
+        },
+        {
+          type: 'keyfact',
+          title: 'What they must leave with',
+          subtitle: 'One number or rule',
+          body: 'Two breakaways beat twelve busy slides.',
+          bullets: [
+            'Open with words or a photograph.',
+            'Cut chapters with section slides.',
+            'Change layout when the chapter changes.'
+          ],
+          notes: 'VARIATION — key fact. Large claim, short support. Good mid-lesson or close.'
+        },
+        {
+          type: 'journey',
+          title: 'The arc of this hour',
+          subtitle: 'Reveal each beat as you go',
+          bullets: [
+            'Open\tTitle or image that states the stake.',
+            'Break\tSection — Part one.',
+            'Build\tCards, split, keywords — the work.',
+            'Break\tSection — Part two.',
+            'Close\tFact, quote, or photograph.'
+          ],
+          progressive: true,
+          notes: 'VARIATION — journey. Meta: this slide is the map of the gallery itself. Replace milestones with your session outline.'
+        },
+        {
+          type: 'image',
+          title: 'Leave them with a picture',
+          image: 'assets/brand/nu-london-skyline.png',
+          imageFit: 'cover',
+          design: { capStyle: 'scrim', capPos: 'bottom', logoGround: 'dark' },
+          notes: 'CLOSER — image. Same tool as the opener, different job: end on atmosphere and one line, not another bullet list.'
+        }
+      ]
+    },
+    {
+      key: 'pace-studio',
+      title: 'Studio sage · Openers, breakaways & a layout range',
+      icon: '✳',
+      blurb: 'Sage & ink look: curious title art, lilac section breaks, then a run of different teaching layouts. Same pacing idea as the NUL gallery — different skin.',
+      minutes: 12,
+      theme: 'studio',
+      slides: [
+        {
+          type: 'title',
+          title: 'Make space\nfor a pause.',
+          subtitle: 'A pacing gallery · Studio sage',
+          notes: 'OPENER — title. Studio hangs its own abstract art behind the pad. Word-leading: short lines, big type.'
+        },
+        {
+          type: 'quote',
+          body: 'Start with a sentence the room can repeat.',
+          subtitle: 'Then earn the bullets.',
+          notes: 'OPENER — quote as a soft first beat when you do not want a photograph.'
+        },
+        {
+          type: 'section',
+          title: 'First chapter',
+          subtitle: 'Breakaway — lilac ground, look up.',
+          notes: 'BREAKAWAY — section. In Studio this is the lilac full-bleed. Same job as NUL red: cut the hour into chapters.'
+        },
+        {
+          type: 'content',
+          title: 'Teach one move in this chapter',
+          bullets: [
+            'One claim the chapter is for.',
+            'One example that makes it concrete.\tKeep the second half after the tab short.',
+            'One check: ask the room before you go on.'
+          ],
+          progressive: true,
+          buildMode: 'dim',
+          notes: 'CONTENT — bullets with Build on Next (dim). Meat after the first breakaway.'
+        },
+        {
+          type: 'keywords',
+          title: 'Name the vocabulary',
+          bullets: [
+            'Opener\tTitle, image claim, introduction, or quote.',
+            'Breakaway\tSection slide — a breath between blocks.',
+            'Variation\tCards, split, journey, mind map — change the shape of the argument.'
+          ],
+          progressive: true,
+          notes: 'VARIATION — keywords. Term / definition rows after content, still inside chapter one.'
+        },
+        {
+          type: 'section',
+          title: 'Second chapter',
+          subtitle: 'Break again before you change shape.',
+          notes: 'BREAKAWAY — second section. Advance only when you are ready to change the kind of work the room is doing.'
+        },
+        {
+          type: 'mindmap',
+          title: 'What this chapter hangs on',
+          bullets: [
+            'Perception\tWhat they notice first.',
+            'Encoding\tHow the idea is shown.',
+            'Talk\tWhat they say out loud.',
+            'Check\tHow you know it landed.'
+          ],
+          progressive: true,
+          notes: 'VARIATION — mind map. Sibling ideas, no forced order — different from journey.'
+        },
+        {
+          type: 'cards',
+          title: 'Three finishes for a chapter',
+          bullets: [
+            'A key fact they can quote.',
+            'A photograph with one line.',
+            'A short poll or scale in the rail.'
+          ],
+          notes: 'VARIATION — cards. Numbered ideas; good before a closer.'
+        },
+        {
+          type: 'italics',
+          title: 'Phrases worth hearing twice',
+          bullets: [
+            'open hard\tSpend the first slide on the stake, not the agenda.',
+            'break often\tSection slides are the cut, not the decoration.',
+            'change the shape\tWhen the chapter changes, change the layout.'
+          ],
+          progressive: true,
+          notes: 'VARIATION — italics. Phrase + gloss. Teaching voice rather than vocabulary.'
+        },
+        {
+          type: 'section',
+          title: 'Close',
+          subtitle: 'One last breakaway — then send them out.',
+          notes: 'BREAKAWAY into the close. Optional; some rooms prefer to land on a keyfact or links instead.'
+        },
+        {
+          type: 'links',
+          title: 'Take these with you',
+          bullets: [
+            'Munzner — Visualization Analysis and Design\thttps://www.cs.ubc.ca/~tmm/vadbook/',
+            'FT Visual Vocabulary\thttps://github.com/Financial-Times/chart-doctor',
+            'Your module space\thttps://example.com/replace-me'
+          ],
+          notes: 'CLOSER — links. Practical hand-off. Replace the third row with your Canvas / module URL.'
+        }
+      ]
+    },
+
+    /* ------------------------------------------------------------------
+       Five trendy skins — five slides each, image slots as placeholders.
+       Drop your own photographs in the inspector (same habit as NUL decks,
+       without shipping course assets into a design template).
+       ------------------------------------------------------------------ */
+    {
+      key: 'vibe-product',
+      title: 'Product · Keynote minimal',
+      icon: '◇',
+      blurb: 'Apple-style minimal with empty image slots ready for your photos. Title → photo statement → split → two image cards → photo close.',
+      minutes: 5,
+      theme: 'product',
+      slides: [
+        {
+          type: 'title',
+          title: 'Clarity.',
+          subtitle: 'One idea. One slide. Drop your photos on the next four.',
+          notes: 'PRODUCT opener — words first. Image slides below show the built-in placeholder until you add a file or URL.'
+        },
+        {
+          type: 'image',
+          title: 'Say less. Mean more.',
+          subtitle: 'Your photograph · statement caption',
+          notes: 'Statement beat as a full-bleed image slot. Paste a URL or drop a file in the inspector.'
+        },
+        {
+          type: 'split',
+          title: '1 idea',
+          bullets: [
+            'Rule of thumb — one claim per slide.',
+            'If you have three messages, make three slides.',
+            'The picture carries mood; the words carry the rule.'
+          ],
+          imageSide: 'right',
+          progressive: true,
+          notes: 'Fact beat as dual coding — “Add an image” on the media side until you drop one in.'
+        },
+        {
+          type: 'cards',
+          title: 'Two points. Done.',
+          bullets: [
+            'Whitespace\tLeave empty space alone — it is part of the design.',
+            'One accent\tUse the accent colour once per slide, not on everything.'
+          ],
+          notes: 'Two cards. Add card photos in the inspector if you want plates; left empty on purpose.'
+        },
+        {
+          type: 'image',
+          title: 'That’s it.',
+          subtitle: 'Your closing photograph',
+          notes: 'Close on a picture + one line — drop your own image here.'
+        }
+      ]
+    },
+    {
+      key: 'vibe-editorial',
+      title: 'Editorial · Paper & narrative',
+      icon: '¶',
+      blurb: 'Warm paper and serif type with placeholder photo slots. Title → dual-coding → photo claim → cards → photo close.',
+      minutes: 5,
+      theme: 'editorial',
+      slides: [
+        {
+          type: 'title',
+          title: 'A story\nin five frames.',
+          subtitle: 'Editorial · add your own pictures',
+          notes: 'Editorial opener — cream and serif. Placeholders start on the next slide.'
+        },
+        {
+          type: 'split',
+          title: 'The picture is the mood.',
+          bullets: [
+            'The caption is the claim.',
+            'Read the claim once — do not paraphrase it.',
+            'Then advance to the photograph that earns it.'
+          ],
+          imageSide: 'left',
+          notes: 'Quote-energy as dual coding — empty media slot until you add a cover or plate.'
+        },
+        {
+          type: 'image',
+          title: 'Look first. Then decide.',
+          body: 'Replace this body with one or two facts that sit behind the photograph.',
+          subtitle: 'Your photograph · the claim sits on the picture',
+          notes: 'Full-bleed photo slot + claim. Scrim appears once an image is set.'
+        },
+        {
+          type: 'cards',
+          title: 'What the eye did',
+          bullets: [
+            'Cluster\tIt found the pattern before it found the legend.',
+            'Trust\tIt believed the map faster than a paragraph.',
+            'Next step\tIt still needed one sentence for what to do.'
+          ],
+          notes: 'Three cards. Optional: add plate images per card in the inspector.'
+        },
+        {
+          type: 'image',
+          title: 'End on a breath.',
+          subtitle: 'Your closing photograph',
+          notes: 'Photo close — placeholder until you drop a quiet image in.'
+        }
+      ]
+    },
+    {
+      key: 'vibe-cinematic',
+      title: 'Cinematic · Dark pitch',
+      icon: '▣',
+      blurb: 'Dark pitch energy with empty photo slots. Title → stake image → dual-coding → before/after cards → cut image.',
+      minutes: 5,
+      theme: 'cinematic',
+      slides: [
+        {
+          type: 'title',
+          title: 'Make it\nunmissable.',
+          subtitle: 'Cinematic · drop your own night / product stills',
+          notes: 'Gradient title. Image placeholders follow.'
+        },
+        {
+          type: 'image',
+          title: 'The stake',
+          subtitle: 'Your photograph · why this room should care',
+          notes: 'Stake as full-bleed image slot — same job as a section breakaway, with a picture behind it once you add one.'
+        },
+        {
+          type: 'split',
+          title: '3×',
+          bullets: [
+            'Spotlight — clearer slides get more of the questions that matter.',
+            'And fewer of the ones that do not.',
+            'Keep the support line short; the number is the slide.'
+          ],
+          imageSide: 'right',
+          notes: 'Spotlight as dual coding — empty plate until you add a chart or still.'
+        },
+        {
+          type: 'cards',
+          title: 'Before / after',
+          bullets: [
+            'Before\tTwelve bullets, one font size, no hierarchy.',
+            'After\tOne claim, one number, one next step.'
+          ],
+          notes: 'Comparison cards. Add two plate images in the inspector when you have them.'
+        },
+        {
+          type: 'image',
+          title: 'Cut.',
+          subtitle: 'Your closing still',
+          notes: 'Hard close on a photograph slot. One word in the caption is enough.'
+        }
+      ]
+    },
+    {
+      key: 'vibe-studio-teach',
+      title: 'Studio teach · Warm classroom',
+      icon: '✳',
+      blurb: 'Sage Studio teaching arc with empty image slots. Title → hook photo → dual-coding → check cards → reflect photo.',
+      minutes: 8,
+      theme: 'studio',
+      slides: [
+        {
+          type: 'title',
+          title: 'Stay curious.',
+          subtitle: 'Studio teach · add classroom photographs on the next beats',
+          notes: 'Studio opener. Placeholders carry the rest of the arc until you drop images in.'
+        },
+        {
+          type: 'image',
+          title: 'Hook',
+          subtitle: 'Your hook photograph',
+          feedback: {
+            kind: 'wordcloud',
+            prompt: 'One word — what distracts you most when you try to focus?',
+            options: [],
+            max: 2
+          },
+          notes: 'HOOK — image slot + word cloud. Add a photo, then let the room answer.'
+        },
+        {
+          type: 'split',
+          title: 'Three moves that help',
+          bullets: [
+            'Remove one distraction before you start.',
+            'Name a finish line you can see from here.',
+            'Pause once — then adjust, do not restart.'
+          ],
+          imageSide: 'right',
+          progressive: true,
+          buildMode: 'dim',
+          notes: 'CONTENT as dual coding — “Add an image” until you drop a portrait or scene.'
+        },
+        {
+          type: 'cards',
+          title: 'Quick check',
+          bullets: [
+            'Tomorrow\tWhich move will you try first?',
+            'Neighbour\tTell them in one sentence.'
+          ],
+          feedback: {
+            kind: 'poll',
+            prompt: 'Which move are you trying first?',
+            options: ['Remove a distraction', 'Name a finish line', 'Pause once'],
+            max: 1
+          },
+          notes: 'CHECK — cards + poll. Optional card photos later.'
+        },
+        {
+          type: 'image',
+          title: 'Reflect',
+          subtitle: 'Your closing photograph',
+          feedback: {
+            kind: 'scale',
+            prompt: 'How ready do you feel to try one move this week?',
+            points: 5,
+            lowLabel: 'Not yet',
+            highLabel: 'Ready',
+            max: 1
+          },
+          notes: 'REFLECT — photo slot + confidence scale.'
+        }
+      ]
+    },
+    {
+      key: 'vibe-brutal',
+      title: 'Brutal · Mono technical',
+      icon: '▮',
+      blurb: 'Hard mono edges with empty plate slots. Title → agenda image → dual-coding → claim split → end image.',
+      minutes: 5,
+      theme: 'brutal',
+      slides: [
+        {
+          type: 'title',
+          title: 'No chrome.\nJust signal.',
+          subtitle: 'BRUTAL / MONO · drop technical plates below',
+          notes: 'Uppercase opener. Image placeholders start on the next slide.'
+        },
+        {
+          type: 'image',
+          title: 'Agenda',
+          body: '01 Name the constraint.\n02 Show the mechanism.\n03 Ship the rule.',
+          subtitle: 'Your diagram or still · three beats',
+          notes: 'AGENDA as an image slot + numbered caption — add a grid or schematic in the inspector.'
+        },
+        {
+          type: 'split',
+          title: 'Mechanism',
+          bullets: [
+            'Constraint first — what must stay true.',
+            'Mechanism second — the one move that enforces it.',
+            'Rule last — short enough for a README.'
+          ],
+          imageSide: 'left',
+          progressive: true,
+          notes: 'CONTENT as dual coding — empty media until you add a figure.'
+        },
+        {
+          type: 'split',
+          title: 'If it needs a paragraph,',
+          bullets: [
+            'it is not the rule yet.',
+            '// end of mechanism'
+          ],
+          imageSide: 'right',
+          notes: 'QUOTE energy as split — claim beside an empty plate slot.'
+        },
+        {
+          type: 'image',
+          title: 'END',
+          subtitle: 'Your closing plate',
+          notes: 'Acid close — drop a stark chart or still, then walk off.'
+        }
+      ]
     }
   ];
 
@@ -1439,6 +2170,9 @@
       deck.logo = spec.logo;
       deck.logoOn = spec.logoOn || 'all';
       deck.logoSize = spec.logoSize || 'medium';
+      /* A logo that is already drawn for a dark ground must say so, or a dark
+         theme's blanket reverse rule flattens its colours to white. */
+      if (spec.logoReverse) deck.logoReverse = spec.logoReverse;
     }
 
     var ids = {};

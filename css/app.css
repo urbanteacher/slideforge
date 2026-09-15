@@ -589,6 +589,11 @@ html[data-ws="game"] #btnSorter { display: none; }
   width: 13px; height: 13px; border-radius: 3px;
   background: var(--s-accent);
 }
+/* A lead-in runs on from its own point rather than sitting above it — the
+   bold part is a signpost inside the sentence, not a heading. */
+.layout-content .lead-in { font-weight: 700; }
+.layout-content .lead-in + .lead-rest::before { content: ' '; }
+.layout-content .lead-rest { opacity: .92; }
 .layout-content li.tier-2 { font-size: 26px; margin-left: 46px; color: var(--s-dim); }
 .layout-content li.tier-2::before { width: 8px; height: 8px; border-radius: 50%; background: var(--s-dim); top: .55em; }
 
@@ -674,13 +679,16 @@ html[data-ws="game"] #btnSorter { display: none; }
   flex: 1;
   min-width: 0;
 }
-.layout-cards .card-copy .card-label,
-.layout-cards .card-copy strong.card-label {
+/* Not scoped to .card-copy: that wrapper only exists when the card carries a
+   picture, so scoping the block rules to it left every image-less card running
+   its label straight into its body — "Plan Define the purpose…" as one line. */
+.layout-cards .card-label,
+.layout-cards strong.card-label {
   display: block;
   font-weight: 700;
   margin-bottom: 6px;
 }
-.layout-cards .card-copy .card-body {
+.layout-cards .card-body {
   display: block;
   opacity: .92;
 }
@@ -784,6 +792,10 @@ html[data-ws="game"] #btnSorter { display: none; }
 }
 /* Dark grounds take their own steps from the same hues, validated against a
    dark surface — not an automatic lightening of the light set. */
+/* The UKBT themes used to be on this list and are not any more: five of the
+   twelve combinations of these steps against their two grounds fall under
+   3:1. They carry the brand's own highlight colours in css/ukbt.css, measured
+   the same way. A dark theme belongs here unless it can beat it. */
 .slide.theme-midnight, .slide.theme-ocean, .slide.theme-ember, .slide.theme-mono {
   --chart-1: #CA042C;
   --chart-2: #049F6C;
@@ -804,6 +816,12 @@ html[data-ws="game"] #btnSorter { display: none; }
 /* Text wears text tokens, never the series colour. */
 .ch-tick, .ch-cat { fill: var(--s-dim); font-size: 19px; }
 .ch-value { fill: var(--s-fg); font-size: 20px; font-weight: 650; }
+/* Pictogram icons are glyphs, and an SVG <text> with no fill is black — which
+   is the look on a light ground and invisible on a dark one. They take the
+   text colour rather than a series colour: there is only ever one series in
+   this form, so a palette step would say nothing, and ISOTYPE draws its
+   figures in ink. */
+.ch-icon { fill: var(--s-fg); }
 .ch-end { fill: var(--s-dim); font-size: 19px; font-weight: 600; }
 .ch-slice-label { fill: var(--s-fg); font-size: 19px; font-weight: 600; }
 /* The 2px surface ring that keeps a marker legible where two lines cross. */

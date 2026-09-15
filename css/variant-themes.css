@@ -1,0 +1,417 @@
+/* Trendy variant themes — used by the five ready-made design galleries.
+   Tokens only where possible; layout tweaks for title / section / keyfact
+   so each pack reads as a different product, not a recolor. */
+
+/* ---- 1. Product · Apple-keynote minimal ---- */
+.theme-product {
+  --s-bg: #f5f5f7;
+  --s-fg: #1d1d1f;
+  --s-dim: #6e6e73;
+  --s-accent: #0071e3;
+  --s-accent-2: #1d1d1f;
+  --s-rule: rgba(0, 0, 0, .08);
+  --s-card: #ffffff;
+  --s-scrim: rgba(245, 245, 247, .78);
+  --s-font: 'SF Pro Display', 'Avenir Next', Avenir, 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--s-bg);
+}
+.theme-product.layout-title {
+  background: #ffffff;
+}
+.theme-product.layout-title .pad {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 80px 120px;
+}
+.theme-product.layout-title h1 {
+  font-size: 96px;
+  font-weight: 650;
+  letter-spacing: -.04em;
+  line-height: 1.02;
+  max-width: 900px;
+}
+.theme-product.layout-title .sub {
+  font-size: 24px;
+  margin-top: 28px;
+  color: var(--s-dim);
+}
+.theme-product.layout-title .accent-bar {
+  display: none;
+}
+.theme-product.layout-section {
+  background: #f5f5f7;
+}
+.theme-product.layout-section .pad {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.theme-product.layout-section h1 {
+  font-size: 72px;
+  font-weight: 650;
+  letter-spacing: -.035em;
+  max-width: 820px;
+}
+.theme-product.layout-section .accent-bar { display: none; }
+.theme-product.layout-keyfact .keyfact-value {
+  font-size: 110px;
+  font-weight: 650;
+  letter-spacing: -.05em;
+  color: var(--s-accent);
+}
+.theme-product.layout-cards {
+  background: #ffffff;
+}
+.theme-product.layout-cards ul {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px;
+}
+.theme-product.layout-cards li {
+  background: #f5f5f7;
+  border: 0;
+  border-radius: 22px;
+  padding: 36px 32px;
+  font-size: 28px;
+}
+
+/* ---- 2. Editorial · paper / narrative ---- */
+.theme-editorial {
+  --s-bg: #f3efe6;
+  --s-fg: #1c1915;
+  --s-dim: #6a6358;
+  --s-accent: #8b3a1a;
+  --s-accent-2: #2f4a3c;
+  --s-rule: rgba(28, 25, 21, .14);
+  --s-card: #faf7f0;
+  --s-scrim: rgba(243, 239, 230, .72);
+  --s-font: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  background: var(--s-bg);
+}
+.theme-editorial.layout-title {
+  background: #ebe4d6;
+}
+.theme-editorial.layout-title .pad {
+  justify-content: flex-end;
+  padding: 90px 100px 100px;
+}
+.theme-editorial.layout-title h1 {
+  font-size: 84px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  line-height: 1.08;
+  max-width: 860px;
+}
+.theme-editorial.layout-title .accent-bar {
+  height: 2px;
+  width: 120px;
+  border-radius: 0;
+  background: var(--s-accent);
+  margin-bottom: 28px;
+}
+.theme-editorial.layout-quote {
+  background: #1c1915;
+  color: #f3efe6;
+}
+.theme-editorial.layout-quote .pad { color: #f3efe6; }
+.theme-editorial.layout-quote .q {
+  color: #f3efe6;
+  font-size: 44px;
+  line-height: 1.35;
+  font-style: italic;
+}
+.theme-editorial.layout-quote .attrib {
+  color: #c4b8a4;
+}
+.theme-editorial.layout-cards li {
+  background: #faf7f0;
+  border: 1px solid var(--s-rule);
+  border-radius: 0;
+  box-shadow: none;
+}
+.theme-editorial.layout-section {
+  background: #2f4a3c;
+  color: #f3efe6;
+}
+.theme-editorial.layout-section h1,
+.theme-editorial.layout-section .sub { color: #f3efe6; }
+.theme-editorial.layout-section .accent-bar {
+  background: #c4a574;
+  height: 2px;
+  border-radius: 0;
+}
+
+/* ---- 3. Cinematic · dark tech pitch ---- */
+.theme-cinematic {
+  --s-bg: #0a0b0f;
+  --s-fg: #f2f4f8;
+  --s-dim: #9aa3b5;
+  --s-accent: #ff3b5c;
+  --s-accent-2: #5eead4;
+  --s-rule: rgba(255, 255, 255, .12);
+  --s-card: rgba(255, 255, 255, .06);
+  --s-scrim: rgba(0, 0, 0, .55);
+  --s-font: 'Avenir Next', Avenir, 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: radial-gradient(1200px 600px at 80% -10%, #1a1020 0%, #0a0b0f 55%);
+}
+.theme-cinematic.layout-title .pad {
+  justify-content: center;
+  padding: 90px 100px;
+}
+.theme-cinematic.layout-title h1 {
+  font-size: 88px;
+  font-weight: 700;
+  letter-spacing: -.03em;
+  background: linear-gradient(120deg, #fff 20%, #ff8fa3 70%, #5eead4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.theme-cinematic.layout-title .accent-bar {
+  height: 3px;
+  width: 80px;
+  border-radius: 0;
+  background: var(--s-accent);
+}
+.theme-cinematic.layout-section {
+  background: linear-gradient(135deg, #14121c 0%, #0a0b0f 60%);
+}
+.theme-cinematic.layout-section h1 {
+  font-size: 70px;
+  letter-spacing: -.025em;
+}
+.theme-cinematic.layout-keyfact .keyfact-value {
+  font-size: 120px;
+  font-weight: 700;
+  letter-spacing: -.04em;
+  color: var(--s-accent-2);
+  text-shadow: 0 0 40px rgba(94, 234, 212, .25);
+}
+.theme-cinematic.layout-cards li {
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
+}
+.theme-cinematic.layout-cards ul {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* ---- 4. Brutal / mono · hard edges, technical ---- */
+.theme-brutal {
+  --s-bg: #111111;
+  --s-fg: #f5f5f5;
+  --s-dim: #a3a3a3;
+  --s-accent: #e8ff47;
+  --s-accent-2: #ffffff;
+  --s-rule: rgba(255, 255, 255, .22);
+  --s-card: #1a1a1a;
+  --s-scrim: rgba(0, 0, 0, .55);
+  --s-font: 'IBM Plex Mono', 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+  background: var(--s-bg);
+}
+.theme-brutal.layout-title {
+  background: #000;
+}
+.theme-brutal.layout-title .pad {
+  padding: 70px 80px;
+  justify-content: flex-end;
+}
+.theme-brutal.layout-title h1 {
+  font-size: 78px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  text-transform: uppercase;
+  max-width: 980px;
+}
+.theme-brutal.layout-title .accent-bar {
+  height: 8px;
+  width: 100%;
+  max-width: 980px;
+  border-radius: 0;
+  background: var(--s-accent);
+  margin-bottom: 24px;
+}
+.theme-brutal.layout-section {
+  background: var(--s-accent);
+  color: #111;
+}
+.theme-brutal.layout-section h1,
+.theme-brutal.layout-section .sub { color: #111; }
+.theme-brutal.layout-section .accent-bar { display: none; }
+.theme-brutal.layout-content,
+.theme-brutal.layout-journey {
+  background: #111;
+}
+.theme-brutal.layout-content li,
+.theme-brutal .pad li {
+  font-size: 28px;
+  border-left: 3px solid var(--s-accent);
+  padding-left: 18px;
+  margin-bottom: 18px;
+}
+.theme-brutal.layout-quote {
+  background: #1a1a1a;
+}
+.theme-brutal.layout-quote .q {
+  font-family: inherit;
+  font-style: normal;
+  font-size: 36px;
+  border-left: 6px solid var(--s-accent);
+  padding-left: 28px;
+}
+
+/* ================================================================= the marks
+
+   Each of these packs had tokens and type but nothing behind the pad, so its
+   title slide was the same flat colour as the content slides that follow it —
+   which is what a slide looks like before anybody has designed it.
+
+   renderSlide() hangs a per-theme art container on the title and section
+   layouts only; the markup is empty divs and the whole container is
+   aria-hidden, so everything below is a box for this stylesheet to paint on.
+   No new image files: every mark here is gradients, borders and one glyph.
+
+   The rule each one follows is the rule nu-art follows — the mark is sized
+   past the slide and bled off an edge, so the room gets the gesture rather
+   than a logo shrunk into a corner. */
+
+.pd-art, .ed-art, .cine-art, .brut-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.theme-product > .pad,
+.theme-editorial > .pad,
+.theme-cinematic > .pad,
+.theme-brutal > .pad { position: relative; z-index: 1; }
+
+/* ---- Product · one bloom, one ring, and nothing else -------------------
+   The restraint is the theme. A keynote slide earns its whitespace, so the
+   mark is a soft light behind the centred line and a ring bled off the
+   bottom-right corner — visible when you look for it, invisible when you are
+   reading the headline. */
+.pd-art .pd-bloom {
+  position: absolute;
+  left: 50%;
+  top: -28%;
+  width: 1180px;
+  height: 900px;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgba(0, 113, 227, .16), rgba(0, 113, 227, 0) 72%);
+}
+.pd-art .pd-ring {
+  position: absolute;
+  right: -260px;
+  bottom: -320px;
+  width: 760px;
+  height: 760px;
+  border: 1.5px solid rgba(29, 29, 31, .10);
+  border-radius: 50%;
+  box-shadow: 0 0 0 60px rgba(29, 29, 31, .02);
+}
+.theme-product.layout-section .pd-bloom { opacity: .55; }
+
+/* ---- Editorial · masthead rules and an oversized quote ------------------
+   Newspapers mark a page with rules and one big piece of type. The quote is
+   set in the theme's own serif at 680px and bled off two edges, so it reads
+   as texture rather than punctuation. */
+.ed-art .ed-rules {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 58px;
+  height: 22px;
+  border-top: 3px solid var(--s-accent);
+  border-bottom: 1px solid rgba(28, 25, 21, .34);
+}
+.ed-art .ed-quote {
+  position: absolute;
+  right: -48px;
+  bottom: -320px;
+  font-family: var(--s-font);
+  font-size: 680px;
+  line-height: 1;
+  color: rgba(139, 58, 26, .10);
+  user-select: none;
+}
+.theme-editorial.layout-section .ed-rules {
+  border-top-color: #c4a574;
+  border-bottom-color: rgba(243, 239, 230, .38);
+}
+.theme-editorial.layout-section .ed-quote { color: rgba(243, 239, 230, .10); }
+
+/* ---- Cinematic · a 2.39:1 crop, one streak, and a vignette --------------
+   The bars are the whole idea. Nothing announces a pitch faster than a film
+   crop, and they also do real work: they push the headline into the middle
+   third instead of letting it float. */
+.cine-art .cine-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 68px;
+  background: #000;
+}
+/* The ground is already near-black, so a black bar on it is a bar nobody can
+   see. A hairline on the inner edge is what makes the crop deliberate. */
+.cine-art .cine-top { top: 0; border-bottom: 1px solid rgba(255, 255, 255, .10); }
+.cine-art .cine-bottom { bottom: 0; border-top: 1px solid rgba(255, 255, 255, .10); }
+.cine-art .cine-streak {
+  position: absolute;
+  left: -20%;
+  top: -40%;
+  width: 62%;
+  height: 190%;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, rgba(255, 59, 92, 0), rgba(255, 59, 92, .14) 46%, rgba(94, 234, 212, .10) 62%, rgba(94, 234, 212, 0));
+  filter: blur(42px);
+}
+.cine-art .cine-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 50% 45%, rgba(0, 0, 0, 0) 42%, rgba(0, 0, 0, .55) 100%);
+}
+/* The bars eat the top and bottom of the stage, so the copy moves in to meet
+   them rather than sitting under one. */
+.theme-cinematic.layout-title .pad,
+.theme-cinematic.layout-section .pad { padding-top: 130px; padding-bottom: 130px; }
+.theme-cinematic.layout-title .slide-logo,
+.theme-cinematic.layout-section .slide-logo { top: 92px; }
+
+/* ---- Brutal · a technical drawing ---------------------------------------
+   A hairline grid on the exact 80px module the pad is padded to, and crop
+   marks at the corners — the furniture of a spec sheet, which is what this
+   theme is dressed as. Nothing is centred and nothing is soft. */
+.brut-art .brut-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(to right, rgba(245, 245, 245, .07) 0 1px, transparent 1px 80px),
+    repeating-linear-gradient(to bottom, rgba(245, 245, 245, .07) 0 1px, transparent 1px 80px);
+}
+.brut-art .brut-marks {
+  position: absolute;
+  inset: 34px;
+  border: 0;
+}
+.brut-art .brut-marks::before,
+.brut-art .brut-marks::after {
+  content: '';
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  border: 2px solid var(--s-accent);
+}
+.brut-art .brut-marks::before { left: 0; top: 0; border-right: 0; border-bottom: 0; }
+.brut-art .brut-marks::after { right: 0; bottom: 0; border-left: 0; border-top: 0; }
+/* The section slide is the accent as a ground, so the grid and the marks flip
+   to the ink or they disappear into it. */
+.theme-brutal.layout-section .brut-grid {
+  background-image:
+    repeating-linear-gradient(to right, rgba(17, 17, 17, .10) 0 1px, transparent 1px 80px),
+    repeating-linear-gradient(to bottom, rgba(17, 17, 17, .10) 0 1px, transparent 1px 80px);
+}
+.theme-brutal.layout-section .brut-marks::before,
+.theme-brutal.layout-section .brut-marks::after { border-color: #111; }
