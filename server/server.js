@@ -283,13 +283,23 @@ function listData(res) {
    Absent key is not an error: SF.AI falls back to its offline heuristics, so a
    deployment with no key still generates polls. */
 const AI_KEY = process.env.GEMINI_API_KEY || '';
-/* The moving alias, matching render.yaml rather than fighting it. A key
-   issued in the newer AQ. format does not resolve the pinned aliases, and the
-   provider answers 404 for the MODEL rather than 401 for the key — so a
-   perfectly good key read as "model missing". Local and hosted now default to
-   the same thing, which is one fewer difference between the machine a lesson
-   is written on and the one it is taught from. */
-const AI_MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
+/* Moving aliases, not pinned versions: a key issued in the newer AQ. format
+   does not resolve pinned aliases, and the provider answers 404 for the MODEL
+   rather than 401 for the key — so a perfectly good key reads as "model
+   missing".
+
+   Lite first, on measurement rather than taste. Across a day of testing on a
+   free-tier key, gemini-flash-latest answered 0 of 11 requests — nine fast
+   503s and two timeouts at the ceiling — while gemini-flash-lite-latest
+   answered in 1.1s and 1.3s on a key minutes old. The asks here are 450
+   tokens of JSON: a handful of quiz questions or the boxes on one slide. That
+   is lite's work, and the heavier alias was buying nothing but refusals.
+
+   The other alias is kept as the fallback rather than dropped, because both
+   are unreliable on the free tier and a second opinion is cheap. */
+const AI_MODEL = process.env.GEMINI_MODEL || 'gemini-flash-lite-latest';
+const AI_MODEL_FALLBACK = process.env.GEMINI_MODEL_FALLBACK ||
+  (AI_MODEL === 'gemini-flash-latest' ? 'gemini-flash-lite-latest' : 'gemini-flash-latest');
 const AI_MAX_BODY = 6 * 1024;
 /* A LAN-facing proxy onto someone's paid quota needs a ceiling, or one tab in
    a loop spends the teacher's month. Deliberately coarse: this is a guard
@@ -350,56 +360,110 @@ function aiGenerate(req, res) {
     const user = String((msg && msg.user) || '').slice(0, 1800);
     if (!user.trim()) return jsonReply(res, 400, { error: 'Nothing to generate from' });
 
-    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' +
-      encodeURIComponent(AI_MODEL) + ':generateContent';
-    const controller = new AbortController();
-    /* Ten seconds was too short to be the thing that decides. A flash model
-       under load routinely takes longer than that, and the abort fired before
-       the answer arrived — so a working key, a valid model and a reachable
-       provider still produced "Could not reach the AI provider" seven times
-       out of eight. The timeout exists so a hung request cannot hold a
-       connection open forever, not to impose a latency budget, and thirty
-       seconds serves that without failing the ordinary slow case. */
-    const timer = setTimeout(() => controller.abort(), 30000);
-    try {
-      const upstream = await fetch(endpoint, {
-        method: 'POST',
-        /* Header rather than ?key=, so the credential stays out of request
-           lines, proxy logs and anything that records URLs. */
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': AI_KEY },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: system + '\n\n' + user }] }],
-          generationConfig: {
-            temperature: 0.55,
-            maxOutputTokens: 450,
-            responseMimeType: 'application/json'
-          }
-        }),
-        signal: controller.signal
-      });
-      clearTimeout(timer);
-      if (!upstream.ok) {
-        /* The upstream body can quote the key back in an error. Only the
-           status travels onward. */
-        aiLastFailure = { status: upstream.status, at: Date.now() };
-        return jsonReply(res, 502, { error: 'AI provider returned ' + upstream.status });
+    /* One budget for the whole request, shared by both models.
+
+       Thirty seconds, because ten was too short to be the thing that decides:
+       a flash model under load routinely takes longer than that, the abort
+       fired before the answer arrived, and a working key with a valid model
+       still produced "could not reach the provider" seven times in eight. The
+       timeout exists so a hung request cannot hold a connection open forever,
+       not to impose a latency budget.
+
+       It is a DEADLINE rather than a per-attempt timer so that asking a second
+       model cannot push the total past what the browser will wait for (33s).
+       A fallback only happens when the first refusal came back quickly, which
+       is how they arrive — 1.5s, 2.4s, 5.5s — so there is budget left. */
+    const deadline = Date.now() + 30000;
+
+    async function ask(model) {
+      const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' +
+        encodeURIComponent(model) + ':generateContent';
+      const controller = new AbortController();
+      const left = Math.max(1000, deadline - Date.now());
+      const timer = setTimeout(() => controller.abort(), left);
+      try {
+        const upstream = await fetch(endpoint, {
+          method: 'POST',
+          /* Header rather than ?key=, so the credential stays out of request
+             lines, proxy logs and anything that records URLs. */
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': AI_KEY },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: system + '\n\n' + user }] }],
+            generationConfig: {
+              temperature: 0.55,
+              maxOutputTokens: 450,
+              responseMimeType: 'application/json'
+            }
+          }),
+          signal: controller.signal
+        });
+        if (!upstream.ok) {
+          /* The upstream body can quote the key back in an error. Only the
+             status travels onward. */
+          return { status: upstream.status };
+        }
+        const data = await upstream.json();
+        const part = data && data.candidates && data.candidates[0] &&
+          data.candidates[0].content && data.candidates[0].content.parts &&
+          data.candidates[0].content.parts[0];
+        if (!part || !part.text) return { status: 0, empty: true };
+        return { text: String(part.text).slice(0, 12000) };
+      } catch (err) {
+        const aborted = err && (err.name === 'AbortError' || err.name === 'TimeoutError');
+        return { aborted: aborted, failed: true };
+      } finally {
+        clearTimeout(timer);
       }
-      aiLastFailure = null;
-      const data = await upstream.json();
-      const part = data && data.candidates && data.candidates[0] &&
-        data.candidates[0].content && data.candidates[0].content.parts &&
-        data.candidates[0].content.parts[0];
-      if (!part || !part.text) return jsonReply(res, 502, { error: 'AI provider returned no content' });
-      return jsonReply(res, 200, { text: String(part.text).slice(0, 12000) });
-    } catch (err) {
-      clearTimeout(timer);
+    }
+
+    /* A second model is worth asking when the first one is simply unavailable:
+       503 is the provider having a moment and 500/502 are its own faults, none
+       of which the same request to a different alias has to inherit. A 429 is
+       not retried anywhere — retrying a rate limit is how you earn one — and a
+       404 or 401 means the key cannot call that model, which a fallback WILL
+       usefully answer, so it is included. */
+    function worthSecondOpinion(r) {
+      return r.status === 503 || r.status === 500 || r.status === 502 ||
+        r.status === 404 || r.empty === true;
+    }
+
+    try {
+      let served = AI_MODEL;
+      let out = await ask(AI_MODEL);
+      const room = deadline - Date.now() > 6000;
+      if (!out.text && AI_MODEL_FALLBACK && AI_MODEL_FALLBACK !== AI_MODEL &&
+          worthSecondOpinion(out) && room) {
+        log('ai: ' + AI_MODEL + ' returned ' + (out.status || 'nothing') +
+          ' — asking ' + AI_MODEL_FALLBACK);
+        const second = await ask(AI_MODEL_FALLBACK);
+        if (second.text) { out = second; served = AI_MODEL_FALLBACK; }
+        else if (!out.status && second.status) out = second;
+      }
+
+      if (out.text) {
+        aiLastFailure = null;
+        /* Which model answered, so a status panel can say so rather than
+           showing the configured one and being wrong. */
+        return jsonReply(res, 200, { text: out.text, model: served });
+      }
+      if (out.status) {
+        aiLastFailure = { status: out.status, at: Date.now() };
+        return jsonReply(res, 502, { error: 'AI provider returned ' + out.status });
+      }
+      if (out.empty) return jsonReply(res, 502, { error: 'AI provider returned no content' });
       /* Distinguished because the remedies differ: a timeout means try again
          or write it yourself, and anything else means the provider is not
          reachable from here at all. Both used to read as the latter. */
-      const aborted = err && (err.name === 'AbortError' || err.name === 'TimeoutError');
-      return jsonReply(res, 504, aborted
+      return jsonReply(res, 504, out.aborted
         ? { error: 'The AI provider took too long. Try again, or write the question yourself.' }
         : { error: 'Could not reach the AI provider.' });
+    } catch (err) {
+      /* ask() already catches its own network faults, so anything arriving
+         here is a bug in this handler rather than the provider. Still answered
+         rather than left hanging: a request with no reply is a Write button
+         that spins until the browser gives up. */
+      log('ai: handler fault \u2014 ' + String((err && err.message) || err));
+      return jsonReply(res, 500, { error: 'The AI proxy failed. Try again, or write it yourself.' });
     }
   });
 }

@@ -32,8 +32,13 @@ test('the page outlasts the server on an AI generation', () => {
   const server = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
 
   const clientMs = only(/AI_CLIENT_TIMEOUT_MS = (\d+)/g, client, 'client timeout');
-  const serverMs = only(/setTimeout\(\(\) => controller\.abort\(\), (\d+)\)/g, server,
-    'server abort in the AI proxy');
+  /* The server's abort is a deadline shared by both models rather than a
+     per-attempt timer, so that asking a fallback cannot push the total past
+     what the browser will wait for. The number to compare is the deadline. */
+  const serverMs = only(/deadline = Date\.now\(\) \+ (\d+)/g, server,
+    'server deadline in the AI proxy');
+  assert.match(server, /setTimeout\(\(\) => controller\.abort\(\), left\)/,
+    'each attempt must abort on what is left of the deadline, not its own fresh timer');
 
   assert.ok(clientMs > serverMs,
     'the page gives up first (client ' + clientMs + 'ms vs server ' + serverMs + 'ms), so the ' +

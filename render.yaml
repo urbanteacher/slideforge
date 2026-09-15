@@ -40,7 +40,15 @@ services:
       # than 401 for the key — so the failure reads as "model missing" when
       # nothing is missing at all. The moving alias is what such a key is
       # expected to call, and it survives the next model rename too.
+      # Lite first, on measurement rather than taste: on this key,
+      # gemini-flash-latest answered 0 of 11 requests — nine fast 503s and two
+      # hangs to the timeout — while gemini-flash-lite-latest answered in one
+      # to five seconds. The asks are 450 tokens of JSON, which is lite's
+      # work. The server falls back to the other alias when the first is
+      # simply unavailable, so an outage on one does not stop a lesson.
       - key: GEMINI_MODEL
+        value: gemini-flash-lite-latest
+      - key: GEMINI_MODEL_FALLBACK
         value: gemini-flash-latest
 
       # Attendance and live-session journals are written under .slideforge/,
