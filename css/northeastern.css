@@ -294,16 +294,22 @@
    between fitting and the fourth card being clipped off the bottom, since
    .slide hides its overflow. Colour down the side and the number beside the
    text it labels buys that height back. */
+/* The hairline goes first, the coloured edge second. Both orders look
+   reasonable in a diff and only one works: `border` is a shorthand and resets
+   all four sides, so a `border: 1px solid` written below `border-left: 7px`
+   silently throws the 7px away. That is what happened when the card's drop
+   shadow was traded for a hairline — the edge measured 1px from then on, and
+   the thing this comment calls "a coloured edge, a number, and the words" had
+   quietly become a number and some words in a faint box. */
 .theme-northeastern.layout-cards li {
   display: flex;
   align-items: baseline;
   gap: 13px;
-  border: 0;
+  border: 1px solid rgba(12, 51, 84, .12);
   border-left: 7px solid var(--nu-navy);
   border-radius: 0 5px 5px 0;
   padding: 22px 24px;
   background: #ffffff;
-  border: 1px solid rgba(12, 51, 84, .12);
 }
 .theme-northeastern.layout-cards li::before {
   flex: none;
