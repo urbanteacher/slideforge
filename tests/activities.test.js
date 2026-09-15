@@ -231,7 +231,13 @@ test('activity showcase isolates only that activity into the player without full
   assert.equal(startedOpts.demoMode, 'discuss');
 });
 
-test('activity inspector renders steps in howto drawer at top matching quiz studio style', () => {
+/* How to run used to sit at the top of the activity inspector. The inspector
+   is tabbed now — Edit / Timer / Engage / Write / Rules — and the drawer moved
+   into Rules with the materials, the teacher notes and the mapping reason. The
+   drawer itself is unchanged: a details/summary with a Reveal toggle and the
+   steps as an ordered list, and the old bottom "HOW IT RUNS" eyebrow stays
+   gone. This follows it to its new home rather than pinning the old one. */
+test('activity inspector keeps How to run, with its steps, behind the Rules tab', () => {
   const vm = require('node:vm'), fs = require('node:fs');
   const store = new Map();
   const storage = {
@@ -242,6 +248,11 @@ test('activity inspector renders steps in howto drawer at top matching quiz stud
   };
   function makeMockNode(tag, cls, text) {
     const children = [];
+    /* Attributes are recorded rather than ignored. The inspector's tab strip
+       is a real tablist — role and aria-selected on the strip and on every
+       button — and a stub without setAttribute does not fail an assertion,
+       it throws inside the code under test. */
+    const attrs = {};
     return {
       tagName: (tag || 'div').toUpperCase(),
       className: cls || '',
@@ -249,6 +260,13 @@ test('activity inspector renders steps in howto drawer at top matching quiz stud
       children,
       childNodes: children,
       style: {},
+      attrs,
+      setAttribute(name, value) { attrs[String(name)] = String(value); },
+      getAttribute(name) {
+        return Object.prototype.hasOwnProperty.call(attrs, name) ? attrs[name] : null;
+      },
+      hasAttribute(name) { return Object.prototype.hasOwnProperty.call(attrs, name); },
+      removeAttribute(name) { delete attrs[String(name)]; },
       appendChild(child) { children.push(child); return child; },
       replaceChildren(...args) { children.length = 0; if (args) children.push(...args); },
       querySelector(sel) {
@@ -282,7 +300,14 @@ test('activity inspector renders steps in howto drawer at top matching quiz stud
   c.SF = {
     Shell: {
       UI: {
-        button: (text, cls, fn) => makeMockNode('button', cls, text),
+        /* The handler is kept, not dropped: the inspector is tabbed now, so a
+           test that cannot press a tab can only ever see the default pane. */
+        button: (text, cls, fn) => {
+          const b = makeMockNode('button', cls, text);
+          b.onclick = fn || null;
+          b.click = () => { if (b.onclick) b.onclick(); };
+          return b;
+        },
         field: (label, input, hint) => makeMockNode('div', 'field'),
         num: () => makeMockNode('input'),
         text: () => makeMockNode('input'),
@@ -307,11 +332,34 @@ test('activity inspector renders steps in howto drawer at top matching quiz stud
 
   SF.Activities.draw();
 
-  // Verify inspector children
   assert.ok(inspector.children.length > 0, 'inspector populated');
-  // Find howto element
+
+  /* The tab strip is a real tablist, and Edit is the pane you land on. */
+  function tabStrip() {
+    return inspector.children.find((c) => String(c.className).includes('design-panes'));
+  }
+  function tab(label) {
+    const strip = tabStrip();
+    assert.ok(strip, 'inspector has a tab strip');
+    const hit = strip.children.find((b) => b.textContent === label);
+    assert.ok(hit, 'inspector has a ' + label + ' tab');
+    return hit;
+  }
+  assert.equal(tabStrip().getAttribute('role'), 'tablist');
+  assert.equal(tab('Edit').getAttribute('role'), 'tab');
+  assert.equal(tab('Edit').getAttribute('aria-selected'), 'true', 'Edit is the default pane');
+  assert.equal(tab('Rules').getAttribute('aria-selected'), 'false');
+  ['Edit', 'Timer', 'Engage', 'Rules'].forEach((t) => tab(t));
+
+  /* Nothing about how to run it on the pane you type on. */
+  assert.equal(inspector.children.find((c) => c.className === 'howto'), undefined,
+    'the drawer does not sit on the Edit pane');
+
+  tab('Rules').click();
+  assert.equal(tab('Rules').getAttribute('aria-selected'), 'true', 'Rules is selected after pressing it');
+
   const howto = inspector.children.find(c => c.className === 'howto');
-  assert.ok(howto, 'details.howto drawer exists');
+  assert.ok(howto, 'details.howto drawer exists on the Rules pane');
   const summary = howto.children.find(c => c.className === 'howto-summary');
   assert.ok(summary, 'summary.howto-summary exists');
   assert.ok(summary.children[0].textContent.includes('How to run — Hook + Objectives'));
@@ -340,8 +388,14 @@ test('activity inspector renders steps in howto drawer at top matching quiz stud
   SF.Editor.currentSlideId = () => gameSlide.id;
   SF.Activities.draw();
 
+  /* A game row has no Engage tab — the room answers the game itself — but it
+     still has Rules, and there the drawer says "How to play". */
+  assert.equal(tabStrip().children.find((b) => b.textContent === 'Engage'), undefined,
+    'a game activity offers no Engage tab');
+  tab('Rules').click();
+
   const gameHowto = inspector.children.find(c => c.className === 'howto');
-  assert.ok(gameHowto, 'game details.howto exists');
+  assert.ok(gameHowto, 'game details.howto exists on the Rules pane');
   const gameSummary = gameHowto.children.find(c => c.className === 'howto-summary');
   assert.ok(gameSummary.children[0].textContent.includes('How to play — ' + gameAct.title));
 });
