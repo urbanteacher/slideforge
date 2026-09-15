@@ -380,7 +380,15 @@
 
     /* Prose either side of the JSON: take the outermost object or array. */
     var span = raw.match(/[{[][\s\S]*[}\]]/);
-    if (!span) throw new Error('No JSON in the response');
+    if (!span) {
+      var none = new Error('No JSON in the response');
+      /* Still the server answering, not the server missing: prose instead of
+         JSON — a refusal, an apology, a chatty preamble with nothing after
+         it — or a reply that stopped before the first brace closed. */
+      none.aiUnreadable = true;
+      none.aiNoJson = true;
+      throw none;
+    }
     var body = span[0];
 
     try { return JSON.parse(body); } catch (e) { /* fall through and repair */ }
@@ -389,7 +397,77 @@
       .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')   // control characters
       .replace(/[\u200B-\u200D\uFEFF]/g, '')           // zero-width junk
       .replace(/,(\s*[}\]])/g, '$1');                   // trailing commas
-    return JSON.parse(repaired);
+    try { return JSON.parse(repaired); } catch (e) { /* fall through and salvage */ }
+
+    /* Cut off mid-answer.
+
+       A model asked for several questions can fill its output budget and stop
+       inside a string, which leaves valid JSON up to that point and nothing
+       that closes it. Everything before the last complete entry is perfectly
+       good material — and the rows are validated one by one afterwards
+       anyway — so the array is closed after the last entry that did arrive
+       rather than thrown away whole. Two questions is a usable draft; the
+       error it used to raise was not. */
+    var salvaged = salvageTruncated(repaired);
+    if (salvaged) return salvaged;
+    var cut = new Error('The reply was cut off before it could be read');
+    cut.aiUnreadable = true;
+    throw cut;
+  }
+
+  /**
+   * Close a truncated JSON object/array after its last complete element.
+   * @param {string} body
+   * @returns {object|null} null when there is nothing whole to keep
+   */
+  function salvageTruncated(body) {
+    /* Walk to the end of the last balanced element, ignoring braces that are
+       inside strings, then close whatever is still open. */
+    var depth = 0, inString = false, escaped = false, lastWhole = -1;
+    for (var i = 0; i < body.length; i++) {
+      var c = body.charAt(i);
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (c === '\\') escaped = true;
+        else if (c === '"') inString = false;
+        continue;
+      }
+      if (c === '"') { inString = true; continue; }
+      if (c === '{' || c === '[') depth++;
+      else if (c === '}' || c === ']') {
+        depth--;
+        /* The end of any nested value that did arrive whole — the questions
+           array sits inside an object, so its entries close at depth 2, and a
+           row that lost only its last field closes deeper still. Cut
+           generously here; the field-by-field gates downstream drop anything
+           half-built, which is the check that should decide. */
+        if (depth >= 1) lastWhole = i;
+      }
+    }
+    if (lastWhole < 0) return null;
+    var head = body.slice(0, lastWhole + 1);
+    /* Close the containers the walk left open, innermost first. */
+    var open = [];
+    inString = false; escaped = false;
+    for (var j = 0; j < head.length; j++) {
+      var d = head.charAt(j);
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (d === '\\') escaped = true;
+        else if (d === '"') inString = false;
+        continue;
+      }
+      if (d === '"') { inString = true; continue; }
+      if (d === '{' || d === '[') open.push(d === '{' ? '}' : ']');
+      else if (d === '}' || d === ']') open.pop();
+    }
+    while (open.length) head += open.pop();
+    try {
+      var out = JSON.parse(head);
+      return out && typeof out === 'object' ? out : null;
+    } catch (e) {
+      return null;
+    }
   }
 
   /* Rows that are missing the fields the caller needs are dropped here rather
@@ -449,7 +527,14 @@
   /* The transport: prompt out, parsed JSON back. Shaping what comes back is
      each caller's job, because a poll and a set of quiz questions want very
      different things from the same endpoint. */
-  async function callServerRaw(systemPrompt, userPrompt) {
+  /**
+   * @param {string} systemPrompt
+   * @param {string} userPrompt
+   * @param {number} [maxTokens]  room for the answer; the relay clamps it. Left
+   *   out for a poll, which is four options and never needs more than the
+   *   default — a set of questions with explanations does.
+   */
+  async function callServerRaw(systemPrompt, userPrompt, maxTokens) {
     var fetchFn = global.fetch;
     if (typeof fetchFn !== 'function') {
       throw new Error('fetch is not available in this environment');
@@ -464,10 +549,12 @@
         var res = await fetchFn(aiUrl('/api/ai/generate'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system: String(systemPrompt || '').slice(0, 2200),
-            user: String(userPrompt || '').slice(0, 1800)
-          }),
+          body: JSON.stringify(maxTokens
+            ? { system: String(systemPrompt || '').slice(0, 2200),
+                user: String(userPrompt || '').slice(0, 1800),
+                maxTokens: maxTokens }
+            : { system: String(systemPrompt || '').slice(0, 2200),
+                user: String(userPrompt || '').slice(0, 1800) }),
           signal: controller ? controller.signal : undefined
         });
         if (!res.ok) {
@@ -1154,10 +1241,21 @@
 
     var parsed;
     try {
-      parsed = await callServerRaw(system, user);
+      /* Room for what was asked for: a question with options and a one-line
+         explanation runs to roughly 200 tokens, and the default 450 covered
+         two of them. The relay clamps this. */
+      parsed = await callServerRaw(system, user, 260 * want + 260);
     } catch (err) {
       var fail = err && err.message ? String(err.message) : '';
       if (/Too many AI|already writing/i.test(fail)) return { error: fail };
+      /* The server answered; the answer was not readable. Saying it could not
+         be reached sends the teacher to check their key and their network
+         over a reply that simply needs asking for again. */
+      if (err && err.aiUnreadable) {
+        return { error: err.aiNoJson
+          ? 'The model answered with something other than a question set. Press it again — nothing was changed.'
+          : 'The reply came back cut off. Press it again — nothing was changed.' };
+      }
       return { error: 'The AI server could not be reached. Your questions are untouched.' };
     }
 
@@ -1290,7 +1388,7 @@
 
     var parsed;
     try {
-      parsed = await callServerRaw(system, user);
+      parsed = await callServerRaw(system, user, 1200);
     } catch (err) {
       var msg = err && err.message ? String(err.message) : '';
       /* These two are the user's to resolve, and a draft would hide them: one
@@ -1306,6 +1404,8 @@
       var why = slow ? 'The AI provider did not answer in time.'
         : refused && err.aiRetried ? 'The AI provider is busy \u2014 it turned this down twice.'
         : refused ? 'The AI provider is busy.'
+        : err && err.aiNoJson ? 'The model answered with something other than a draft.'
+        : err && err.aiUnreadable ? 'The reply came back cut off.'
         : 'The AI server could not be reached.';
       return draftFromTopic(fields, topic, why);
     }

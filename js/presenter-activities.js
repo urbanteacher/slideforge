@@ -35,9 +35,17 @@
       var id = 'activity-' + (++sequence);
       var timeout = setTimeout(function () { pending.delete(id); reject(new Error('No reply yet. Your draft is retained. Reopen the presenter if the slideshow has closed.')); }, 120000);
       pending.set(id, { resolve: resolve, reject: reject, timeout: timeout });
-      var msg = Object.assign({ type: 'sf-presenter-cmd', cmd: 'activity', action: action, requestId: id }, data || {});
-      if (hasOpener) window.opener.postMessage(msg, location.origin);
-      if (deskBus) deskBus.postMessage(msg);
+      /* One route to the wall, not both — through the desk's one sender.
+         Sending by the opener AND the channel meant the wall ran every
+         request twice: the second AI draft hit the "already writing" lock the
+         first one was holding, and that error is what came back, so a first
+         press of Draft with AI reported a busy engine. */
+      var msg = Object.assign({
+        type: 'sf-presenter-cmd', cmd: 'activity', action: action, requestId: id, id: id
+      }, data || {});
+      if (SF && SF.deskSend) SF.deskSend(msg);
+      else if (hasOpener) window.opener.postMessage(msg, location.origin);
+      else if (deskBus) deskBus.postMessage(msg);
     });
   }
   async function work(message, operation) {

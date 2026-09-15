@@ -466,14 +466,17 @@ test('model JSON survives the three things models actually get wrong', async () 
     assert.equal(res.questions.length, 1, label);
   }
 
-  /* And genuinely unusable output is an error, not a silently empty quiz. */
+  /* And genuinely unusable output is an error, not a silently empty quiz —
+     and it says what happened rather than blaming the connection: the server
+     answered, the model just did not answer in the form it was asked for. */
   const broken = withEngines(createAiModule({
     live: true,
     routes: { [gen]: async () => ({ ok: true, json: async () => ({ text: 'I cannot help with that.' }) }) }
   }));
   const res = await broken.AI.generateQuestionsForGame(
     { id: 'g', style: 'choice', title: 'Gases', questions: [] }, { topic: 'Air' });
-  assert.match(res.error, /could not be reached|Nothing came back/);
+  assert.match(res.error, /other than a question set|cut off|Nothing came back/);
+  assert.doesNotMatch(res.error, /could not be reached/);
 });
 
 test('the toast count includes rows dropped before the engine saw them', async () => {

@@ -163,6 +163,37 @@ try {
   if (!refused) problems.push('the wall acted on a room tool with no live room');
   console.log('✓ Join QR, Reactions, Blank phones, Floor are disabled with no room');
 
+  /* --- a desk in a tab of its own, with no opener ------------------------ */
+  /* The presenter channel exists for exactly this, and for a while only half
+     the desk used it: the footer drove the wall while moments and quick polls
+     posted to an opener that was not there, so those buttons did nothing at
+     all. Driven here through one control of each kind. */
+  const loose = await ctx.newPage();
+  const looseErrors = [];
+  loose.on('pageerror', (e) => looseErrors.push(e.message));
+  await loose.goto(`http://127.0.0.1:${port}/presenter.html`);
+  await loose.waitForFunction(() => document.querySelector('[data-cmd=blank]'), { timeout: 10000 });
+  await loose.waitForTimeout(700);
+  assert.equal(await loose.evaluate(() => !!window.opener), false, 'this leg needs a desk with no opener');
+  assert.equal(await loose.evaluate(() => typeof SF.deskSend), 'function', 'the desk has one sender');
+
+  const idxBefore = (await wallState()).idx;
+  await loose.click('[data-cmd=next]');
+  await loose.waitForTimeout(600);
+  if ((await wallState()).idx !== idxBefore + 1) problems.push('no-opener desk: Next did not reach the wall');
+
+  await loose.click('[data-panel=quick]');
+  await loose.waitForTimeout(300);
+  await loose.selectOption('#quickDuration', { index: 1 }).catch(() => {});
+  await loose.click('#showCountdown');
+  await loose.waitForTimeout(900);
+  const moment = await wall.evaluate(() =>
+    (document.querySelector('#player .lesson-live-overlay') || {}).innerText || '');
+  if (!moment) problems.push('no-opener desk: a lesson moment did not reach the wall');
+  if (looseErrors.length) problems.push('no-opener desk errors: ' + looseErrors.join(' | '));
+  console.log('✓ A desk with no opener drives the wall too —', JSON.stringify(moment.replace(/\n/g, ' ')));
+  await loose.close();
+
   /* --- and the way out -------------------------------------------------- */
   await desk.click('[data-cmd=exit]');
   await wall.waitForFunction(() => !window.SF.Player.open, { timeout: 8000 });

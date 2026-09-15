@@ -477,7 +477,7 @@
 <script src="js/lowstakes.js"></script>
 <script src="js/lesson-moments.js"></script>
 <script src="js/ai.js"></script>
-<script src="js/presenter-live.js"></script>
+<script src="js/presenter-live.js?v=13"></script>
 <script src="js/live-activities.js"></script>
 <script src="js/presenter-activities.js"></script>
 <script>
@@ -492,6 +492,30 @@
 
   var cmdSeq = 0;
 
+  /**
+   * Send one message to the wall, by one route.
+   *
+   * Shared as SF.deskSend because the desk has three senders — the footer
+   * buttons here, the moments and quick polls in presenter-live.js, and the
+   * activity drafts in presenter-activities.js — and each one had its own
+   * idea of how to reach the wall. Two of them sent by both routes at once
+   * (every command ran twice) and the other two only ever spoke to the
+   * opener, so a desk opened in its own tab could not run a poll at all.
+   * One rule, in one place: the opener if there is one, the channel if not.
+   *
+   * @param {object} msg  a `sf-presenter-cmd` payload
+   */
+  function deskSend(msg) {
+    if (!msg.id) msg.id = startedAt + '-' + (++cmdSeq);
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage(msg, location.origin);
+      return true;
+    }
+    if (deskBus) { deskBus.postMessage(msg); return true; }
+    return false;
+  }
+  if (SF) SF.deskSend = deskSend;
+
   /* One route to the wall, not both.
 
      The wall listens on the opener AND on the desk's BroadcastChannel — the
@@ -504,11 +528,7 @@
      The id is the belt to that braces: the wall acts on a command id once,
      whichever way it arrives. */
   function cmd(c, extra) {
-    var msg = Object.assign({
-      type: 'sf-presenter-cmd', cmd: c, id: startedAt + '-' + (++cmdSeq)
-    }, extra || {});
-    if (window.opener && !window.opener.closed) window.opener.postMessage(msg, location.origin);
-    else if (deskBus) deskBus.postMessage(msg);
+    deskSend(Object.assign({ type: 'sf-presenter-cmd', cmd: c }, extra || {}));
   }
 
   var deskBus = null;

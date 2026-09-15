@@ -7,7 +7,16 @@ var M=SF.LessonMoments;
 var $=function(id){return document.getElementById(id);};
 var moment=null,musicUrl=null;
 var lastState=null;
-function command(data){if(window.opener&&!window.opener.closed)window.opener.postMessage(Object.assign({type:'sf-presenter-cmd',cmd:'moment'},data),location.origin);}
+/* Through the desk's one sender (SF.deskSend, defined in presenter.html), so
+   a moment works from a desk that has no opener — the tab-of-its-own case the
+   presenter channel exists for. The direct post is the fallback for a desk
+   loaded without that script. */
+function send(msg){
+ if(SF && SF.deskSend) return SF.deskSend(msg);
+ if(window.opener&&!window.opener.closed){window.opener.postMessage(msg,location.origin);return true;}
+ return false;
+}
+function command(data){send(Object.assign({type:'sf-presenter-cmd',cmd:'moment'},data));}
 function start(kind){
  var durEl = /** @type {HTMLSelectElement|null} */ ($('quickDuration'));
  var seconds=kind==='break'?300:Number(durEl?durEl.value:0);
@@ -99,9 +108,7 @@ var POLL_PRESETS = {
 var pollKind = 'poll';
 
 function pollCommand(data) {
-  if (window.opener && !window.opener.closed) {
-    window.opener.postMessage(Object.assign({ type: 'sf-presenter-cmd', cmd: 'quickPoll' }, data), location.origin);
-  }
+  send(Object.assign({ type: 'sf-presenter-cmd', cmd: 'quickPoll' }, data));
 }
 
 function pollLines() {

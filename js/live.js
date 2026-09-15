@@ -317,8 +317,17 @@
     SF.toast('Starting live room — add names here; phones are optional');
   }
 
+  /* Same reason the wall dedupes desk commands: this is listened for on two
+     routes, and adding a roster twice is not something a teacher can undo in
+     the moment. Bounded — a workspace sends a handful of these a minute. */
+  var seenManual = [];
   function manualCommand(data) {
     if(!data || data.type!=='sf-manual-command') return;
+    if (data.id) {
+      if (seenManual.indexOf(data.id) >= 0) return;
+      seenManual.push(data.id);
+      if (seenManual.length > 60) seenManual.shift();
+    }
     if(data.action==='hello'){ syncManual(); send({t:'report'}); }
     else if(data.action==='host') startLiveFromDesk(!!data.force);
     else if(data.action==='add') send({t:'manualAdd',names:data.names,team:data.team});

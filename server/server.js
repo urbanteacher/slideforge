@@ -366,6 +366,18 @@ function aiGenerate(req, res) {
     const user = String((msg && msg.user) || '').slice(0, 1800);
     if (!user.trim()) return jsonReply(res, 400, { error: 'Nothing to generate from' });
 
+    /* How much room the answer gets, asked for by the caller and clamped here.
+
+       450 is right for a poll — a prompt and four options — and far too tight
+       for a set of quiz questions with options and an explanation each. The
+       model filled the budget and stopped mid-string, the client could not
+       parse the half-written JSON, and the teacher was told the AI server
+       could not be reached by a server that had answered in full. */
+    const asked = Number(msg && msg.maxTokens);
+    const maxOutputTokens = Number.isFinite(asked)
+      ? Math.max(200, Math.min(2400, Math.round(asked)))
+      : 450;
+
     /* One budget for the whole request, shared by both models.
 
        Thirty seconds, because ten was too short to be the thing that decides:
@@ -397,7 +409,7 @@ function aiGenerate(req, res) {
             contents: [{ role: 'user', parts: [{ text: system + '\n\n' + user }] }],
             generationConfig: {
               temperature: 0.55,
-              maxOutputTokens: 450,
+              maxOutputTokens: maxOutputTokens,
               responseMimeType: 'application/json'
             }
           }),

@@ -5,9 +5,20 @@ var SF = window.SF || /** @type {any} */ ({});
 var key=location.hash.slice(1),channel=/^[a-f0-9]{32}$/.test(key)?new BroadcastChannel('sf-manual-'+key):null;
 /** @type {(id: string) => any} */
 var $=function(id){return document.getElementById(id);};
-var state={},lastKey='',lastQ=null;
+var state={},lastKey='',lastQ=null,startedAt=Date.now();
 var draftKey='sf-entry-draft-'+(key||'none');
-function send(action,extra){var m=Object.assign({type:'sf-manual-command',action:action},extra||{});if(channel)channel.postMessage(m);else if(window.opener)window.opener.postMessage(m,location.origin);}
+var seq=0;
+/* One route, and an id on every command.
+
+   The wall listens for these on the window AND on the channel, and the
+   actions here are not idempotent — add, kick, delete, mark an answer. One
+   sender sending by both routes would add the same learners twice, which is
+   exactly what happened to the presenter desk's toggles before the id was
+   there to stop it. */
+function send(action,extra){
+ var m=Object.assign({type:'sf-manual-command',action:action,id:'m'+(++seq)+'-'+startedAt},extra||{});
+ if(channel)channel.postMessage(m);else if(window.opener)window.opener.postMessage(m,location.origin);
+}
 function button(text,fn){var b=document.createElement('button');b.textContent=text;b.onclick=fn;return b;}
 function saveDraft(){try{sessionStorage.setItem(draftKey,$('names').value);}catch(e){}}
 function loadDraft(){
