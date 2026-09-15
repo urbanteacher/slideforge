@@ -270,7 +270,7 @@
     <h1 id="waitTitle">Connect this desk to the show</h1>
     <p class="lead" id="waitLead">This is your private teaching laptop — notes, next slide, Class, Answers, and Q&amp;A. It only works when linked to the wall show.</p>
     <ol id="waitSteps">
-      <li>In SlideForge, click <strong>Teacher desk</strong> (that pop-out is this window).</li>
+      <li>In SlideForge, click <strong>Teacher Presenter</strong> (that pop-out is this window).</li>
       <li>Or start <strong>Present</strong> / <strong>Host live</strong>, then press <kbd>D</kbd>.</li>
       <li>This window fills with notes and desk controls. Drag it onto your second screen if you have one.</li>
     </ol>
@@ -280,7 +280,7 @@
 
 <div class="pv" id="pv" style="display:none">
   <div class="pv-bar">
-    <div class="pv-identity"><strong>Teaching desk</strong><span>Private presenter workspace</span></div>
+    <div class="pv-identity"><strong>Teacher Presenter</strong><span>Private presenter workspace</span></div>
     <div class="clock" id="elapsed">0:00</div>
     <div class="wall" id="wall">—</div>
     <div class="spacer" style="flex:1"></div>
@@ -1287,9 +1287,9 @@
   if (!window.opener || window.opener.closed) {
     $('waitTitle').textContent = 'Connect this desk to the show';
     $('waitLead').textContent =
-      'This window is waiting for the wall show. Click Teacher desk from the editor, or start Present and press D.';
+      'This window is waiting for the wall show. Click Teacher Presenter from the editor, or start Present and press D.';
     $('waitHint').textContent =
-      'Tip: Teacher desk opens this pop-out. Allow pop-ups if the browser blocked it.';
+      'Tip: Teacher Presenter opens this pop-out. Allow pop-ups if the browser blocked it.';
   } else {
     $('waitTitle').textContent = 'Linking to the show…';
     $('waitLead').textContent = 'Almost there — waiting for the wall window to send the lesson.';

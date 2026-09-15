@@ -25,13 +25,13 @@ html:not([data-ready]) #app { visibility: hidden; }
 /* Same cream the studio chrome uses once CSS loads — avoids a dark→light blink. */
 html:not([data-ready]) body { background: #f0f1ed; }
 </style>
-<link rel="stylesheet" href="css/app.css?v=38">
+<link rel="stylesheet" href="css/app.css?v=39">
 <link rel="stylesheet" href="css/board-common.css?v=1">
 <link rel="stylesheet" href="css/memory.css?v=2">
 <link rel="stylesheet" href="css/bingo.css?v=2">
 <link rel="stylesheet" href="css/bowl.css?v=2">
 <link rel="stylesheet" href="css/lowstakes.css?v=2">
-<link rel="stylesheet" href="css/studio.css?v=11">
+<link rel="stylesheet" href="css/studio.css?v=15">
 <link rel="stylesheet" href="css/northeastern.css?v=10">
 <link rel="stylesheet" href="css/ukbt.css?v=16">
 <link rel="stylesheet" href="css/variant-themes.css?v=5">
@@ -72,11 +72,13 @@ html:not([data-ready]) body { background: #f0f1ed; }
       <button data-go="plan">◇ Activities</button>
     </div>
 
+    <div class="header-name" role="group" aria-label="Lesson name">
     <input id="docTitle" type="text" placeholder="Title" spellcheck="false">
+    <button class="btn ghost doc-folder" id="docFolder" data-ws="deck" type="button" title="Open this folder in the Library">Library</button>
+    </div>
 
-    <!-- Says where the work actually is. A browser save is not a filed copy,
-         and the chrome should not let it feel like one. -->
-    <button class="btn ghost store-state" id="storeState" type="button">Saved in this browser</button>
+    <!-- Autosave pulse only. Where the file lives is the folder chip and File → Library. -->
+    <span class="store-state" id="storeState" role="status" aria-live="polite">Saved</span>
 
     <!-- Two rows, both right-aligned on the action side. Row 1: document
          (brand, studio, title, saved) then File · History · Settings · Share.
@@ -87,11 +89,10 @@ html:not([data-ready]) body { background: #f0f1ed; }
     <div class="header-doc" role="group" aria-label="Document">
     <details class="file-menu"><summary class="btn">File ▾</summary><div class="file-actions">
       <button class="btn" id="btnNew">New…</button>
-      <button class="btn" id="btnOpen">Open saved document</button>
-      <button class="btn" id="btnReadyMade">Ready-made lessons…</button>
-      <button class="btn" id="btnDemoLesson">Open demo lesson</button>
+      <button class="btn" id="btnReadyMade">Library…</button>
+      <button class="btn" id="btnOpen" data-ws="game">Open saved quiz</button>
       <span class="file-sep" aria-hidden="true"></span>
-      <button class="btn" id="btnSave">Save to browser</button>
+      <button class="btn" id="btnSave">Save to Library…</button>
       <button class="btn" id="btnExport">Export file</button>
       <button class="btn" id="btnImport">Import file</button>
       <span class="file-sep" aria-hidden="true"></span>
@@ -114,11 +115,11 @@ html:not([data-ready]) body { background: #f0f1ed; }
     <span class="bar-break" aria-hidden="true"></span>
 
     <!-- Run cluster. Same shape in every studio, pinned to the right:
-           Lesson:     Teacher desk · Rehearse · Host live · Present
+           Lesson:     Teacher Presenter · Rehearse · Host live · Present
            Quiz:                      Host live · Present
            Activities:                       Present -->
     <div class="header-actions" role="group" aria-label="Run this lesson">
-      <button class="btn" data-ws="deck" id="btnPresenter" title="Pop out presenter view: notes, next slide and desk controls on your screen — not the projector (D)">Teacher desk</button>
+      <button class="btn" data-ws="deck" id="btnPresenter" title="Pop out presenter view: notes, next slide and controls on your screen — not the projector (D)">Teacher Presenter</button>
       <button class="btn" data-ws="deck" id="btnRehearse" title="Practice the whole lesson with a SAMPLE class. No live room, no phones.">▷ Rehearse</button>
       <button class="btn live" data-ws="deck game" id="btnLive" title="Run live with phones in the room">◉ Host live</button>
       <button class="btn primary" data-ws="deck" id="btnPresent" title="Slideshow on the wall / projector (⌘↵)">▶ Present</button>
@@ -239,7 +240,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
       <tr><td><kbd>J</kbd></td><td>Show the join QR and PIN full screen (Host live)</td></tr>
       <tr><td><kbd>T</kbd></td><td>Turn the room&rsquo;s reactions on or off (live games)</td></tr>
       <tr><td><kbd>V</kbd></td><td>Ask the room a quick poll / vote</td></tr>
-      <tr><td><kbd>D</kbd></td><td>Teacher desk (notes + live answers)</td></tr>
+      <tr><td><kbd>D</kbd></td><td>Teacher Presenter (notes + live answers)</td></tr>
       <tr><td><kbd>?</kbd></td><td>Show this list</td></tr>
       <tr><td><kbd>Esc</kbd></td><td>Exit the show</td></tr>
     </table>
@@ -353,7 +354,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
      one-way outline import into starter slides. -->
 
 <script src="js/qr.js?v=2"></script>
-<script src="js/model.js?v=23"></script>
+<script src="js/model.js?v=25"></script>
 <script src="js/playbook.js?v=2"></script>
 <script src="js/ask.js?v=4"></script>
 <script src="js/race.js?v=2"></script>
@@ -367,7 +368,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/bowl.js?v=2"></script>
 <script src="js/lowstakes.js?v=2"></script>
 <script src="js/demo.js?v=2"></script>
-<script src="js/player.js?v=8"></script>
+<script src="js/player.js?v=9"></script>
 <script src="js/live.js?v=10"></script>
 <script src="js/ai.js?v=2"></script>
 <script src="js/quick-poll.js?v=1"></script>
@@ -375,11 +376,11 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/lesson-moments.js?v=2"></script>
 <script src="js/print.js?v=2"></script>
 <script src="js/history.js?v=3"></script>
-<script src="js/shell.js?v=31"></script>
+<script src="js/shell.js?v=35"></script>
 <script src="js/content-tools.js?v=3"></script>
-<script src="js/editor.js?v=31"></script>
+<script src="js/editor.js?v=33"></script>
 <script src="js/games.js?v=9"></script>
-<script src="js/studio.js?v=4"></script>
+<script src="js/studio.js?v=6"></script>
 <script src="js/activities.js?v=4"></script>
 <script src="js/live-activities.js?v=1"></script>
 <script src="js/adapt.js?v=2"></script>

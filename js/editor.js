@@ -1520,7 +1520,7 @@
         frame.appendChild(node);
         b.appendChild(frame);
         b.appendChild(el('span', null, SF.SLIDE_TYPES[type].label));
-        b.onclick = function () { SF.prepareLayout(s, type); touched(); draw(); };
+        b.onclick = function () { chooseLayout(s, type); };
         grid.appendChild(b);
         box.addEventListener('toggle', function () {
           if (box.open) requestAnimationFrame(function () { SF.fit(frame, node); });
@@ -2710,8 +2710,9 @@
 
   /* ------------------------------------------------------------ slide ops */
 
-  function addSlide(type) {
+  function makeLayoutSlide(type) {
     var s = SF.makeSlide(type);
+    if (SF.prepareLayout) SF.prepareLayout(s, type);
     if (type === 'content' || type === 'cards' || type === 'split') s.bullets = ['', '', ''];
     if (type === 'keywords' || type === 'italics' || type === 'links') {
       s.bullets = [
@@ -2721,6 +2722,56 @@
       ];
     }
     if (current()) s.transition = current().transition;
+    return s;
+  }
+
+  /**
+   * Layout library: overwrite this slide, or append a new one at the end
+   * of the deck (the bottom of the slide list).
+   */
+  function chooseLayout(s, type) {
+    var label = (SF.SLIDE_TYPES[type] && SF.SLIDE_TYPES[type].label) || type;
+    function overwrite() {
+      SF.prepareLayout(s, type);
+      touched();
+      draw();
+      SF.toast('This slide is now ' + label + '.');
+    }
+    function addNew() {
+      var next = makeLayoutSlide(type);
+      deck.slides.push(next);
+      sel = deck.slides.length - 1;
+      inspectorTab = 'content';
+      touched();
+      draw();
+      SF.toast(label + ' added at the end of the deck.');
+    }
+    if (s.type === type) {
+      SF.ask({
+        title: 'Add another ' + label + ' slide?',
+        detail: 'This slide is already that layout. A new one will go at the bottom of the slide list.',
+        confirm: 'Add at the end'
+      }, addNew);
+      return;
+    }
+    if (!SF.askChoice) { overwrite(); return; }
+    SF.askChoice({
+      title: 'Use ' + label + '?',
+      detail: 'Overwrite this slide, or add a new one at the bottom of the slide list.',
+      options: [
+        { value: 'overwrite', label: 'Overwrite this slide',
+          detail: 'Changes the current slide to ' + label + '. Words and pictures stay where they still fit.' },
+        { value: 'add', label: 'Add a new slide',
+          detail: 'Puts a ' + label + ' slide at the end of the deck, like + Slide.' }
+      ]
+    }, function (choice) {
+      if (choice === 'add') addNew();
+      else overwrite();
+    });
+  }
+
+  function addSlide(type) {
+    var s = makeLayoutSlide(type);
     deck.slides.splice(sel + 1, 0, s);
     sel += 1;
     touched();
@@ -2973,9 +3024,11 @@
     var last = SF.Store.lastId();
     var loaded = null;
 
+    if (SF.seedLibrary) SF.seedLibrary();
+
     if (requestedLesson && SF.Studio && SF.Studio.makeLesson) {
       loaded = SF.Studio.makeLesson(requestedLesson);
-      SF.Store.save(loaded);
+      SF.Store.save(loaded, { force: true });
       try {
         if (window.history && window.history.replaceState) {
           var cleanUrl = window.location.pathname + (window.location.hash || '');
@@ -2983,10 +3036,16 @@
         }
       } catch (e) {}
     } else {
-      loaded = (last && SF.Store.get(last)) || SF.Store.list()[0] || null;
+      loaded = (last && SF.Store.get(last)) || null;
       if (!loaded) {
-        loaded = SF.Studio.makeLesson();
-        SF.Store.save(loaded);
+        var intro = SF.Store.list().filter(function (d) { return d.sourceKey === 'ipdv-intro'; })[0];
+        loaded = intro || SF.Store.list()[0] || null;
+      }
+      if (!loaded) {
+        loaded = SF.Studio.makeLesson('ipdv-intro');
+        loaded.sourceKey = 'ipdv-intro';
+        loaded.libraryGroup = 'nul';
+        SF.Store.save(loaded, { force: true });
       } else if (loaded.slides.some(function (s) { return s.type === 'quiz' || s.type === 'results'; })) {
         /* Decks authored before questions moved into games still hold quiz
            slides; lift them out into a game once, on load. */
@@ -3031,7 +3090,7 @@
     if (btnPresenter) {
       btnPresenter.onclick = function () {
         SF.Store.save(deck);
-        /* Desk first: the pop-out is the whole point of this button. The wall
+        /* Teacher Presenter first: the pop-out is the whole point of this button. The wall
            feed starts after, so the desk has a show to follow — not instead
            of the pop-out. */
         var desk = SF.Player.openPresenter();
@@ -3115,7 +3174,7 @@
         SF.History.snapshot(deck, 'Before opening another lesson');
       }
       deck = SF.Studio.makeLesson(key); sel = 0;
-      SF.Store.save(deck); SF.Shell.syncChrome(); draw();
+      SF.Store.save(deck, { force: true }); SF.Shell.syncChrome(); draw();
     },
     deck: function () { return deck; },
     selected: function () { return sel; },
@@ -3127,6 +3186,8 @@
     openDeck: function (id) {
       var d = SF.Store.get(id);
       if (!d) return;
+      flush();
+      if (deck && deck.id !== id) SF.Store.save(deck);
       deck = d;
       sel = savedSelection();
       SF.Shell.syncChrome();

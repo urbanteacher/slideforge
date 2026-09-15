@@ -162,6 +162,43 @@ test('deck content helpers and layout definitions export cleanly', async () => {
   assert.equal(safeMedia('javascript:alert(1)'), '');
 });
 
+test('save assigns libraryGroup from theme when missing', async () => {
+  const { createStores, libraryGroupFromTheme } = await import('../src/storage.js');
+  assert.equal(libraryGroupFromTheme('ukbt'), 'ukbt');
+  assert.equal(libraryGroupFromTheme('northeastern'), 'nul');
+  assert.equal(libraryGroupFromTheme('studio'), 'other');
+  const values = new Map();
+  const storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
+  const { Store } = createStores({
+    storage: () => storage,
+    normalizeDeck: value => value,
+    normalizeGame: value => value
+  });
+  const deck = { id: 'd1', title: 'Lesson', theme: 'ukbt', slides: [{ type: 'title', title: 'Hi' }] };
+  Store.save(deck);
+  assert.equal(Store.get('d1').libraryGroup, 'ukbt');
+});
+
+test('custom library folders can be created and survive save', async () => {
+  const { createStores, normalizeLibraryGroup } = await import('../src/storage.js');
+  assert.equal(normalizeLibraryGroup('week-3', 'studio'), 'week-3');
+  assert.equal(normalizeLibraryGroup('', 'ukbt'), 'ukbt');
+  const values = new Map();
+  const storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
+  const { Store, LibraryFolders } = createStores({
+    storage: () => storage,
+    normalizeDeck: value => value,
+    normalizeGame: value => value
+  });
+  const id = LibraryFolders.create('Week 3');
+  assert.equal(id, 'week-3');
+  LibraryFolders.rename(id, 'Week three');
+  assert.equal(LibraryFolders.catalog().find(f => f.id === id).label, 'Week three');
+  const deck = { id: 'd2', title: 'Seminar', theme: 'northeastern', libraryGroup: 'week-3', slides: [{ type: 'title', title: 'Hi' }] };
+  Store.save(deck);
+  assert.equal(Store.get('d2').libraryGroup, 'week-3');
+});
+
 test('board runtime manages lifecycle and snapshots without DOM dependencies', async () => {
   const { createBoardRuntime } = await import('../src/boards/runtime.js');
   const { GAME_STYLES } = await import('../src/games/registry.js');

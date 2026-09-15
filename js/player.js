@@ -2370,7 +2370,7 @@
       try { if (typeof win.focus === 'function') win.focus(); } catch (e) {}
     }
     var box = screenBox();
-    var getDetails = window.getScreenDetails;
+    var getDetails = /** @type {{ getScreenDetails?: function(): Promise<any> }} */ (window).getScreenDetails;
     if (typeof getDetails !== 'function') {
       apply(box.x, box.y, box.w, box.h);
       return;
@@ -2405,13 +2405,13 @@
       syncPresenter();
       return presenterWin;
     }
-    /* Must run in the same click as Teacher desk / D. Starting the slideshow
+    /* Must run in the same click as Teacher Presenter / D. Starting the slideshow
        first does enough DOM that browsers treat this as a blocked pop-up —
-       so the desk never appeared and the button looked like Present. */
+       so the window never appeared and the button looked like Present. */
     presenterWin = window.open('presenter.html', 'sf_presenter', presenterWindowFeatures());
     if (!presenterWin || presenterWin.closed) {
       presenterWin = null;
-      toast('Teacher desk needs a pop-up window. Allow pop-ups for this page, then try again.');
+      toast('Teacher Presenter needs a pop-up window. Allow pop-ups for this page, then try again.');
       return null;
     }
     placePresenterWindow(presenterWin);

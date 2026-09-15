@@ -5048,10 +5048,11 @@ html[data-ws="deck"] #railCount { display: none; }
   font-size: 12px;
   color: var(--ui-dim);
   padding: 4px 9px;
-  border-color: transparent;
+  border: 0;
   background: transparent;
   white-space: nowrap;
-  cursor: pointer;
+  cursor: default;
+  pointer-events: none;
 }
 .store-state::before {
   content: '';
@@ -5062,7 +5063,7 @@ html[data-ws="deck"] #railCount { display: none; }
   background: #729458;
   vertical-align: 1px;
 }
-.store-state:hover { color: var(--ui-text); border-color: var(--ui-line); }
+.store-state:hover { color: var(--ui-dim); }
 .store-state.is-saving { color: var(--ui-text); }
 .store-state.is-saving::before { background: var(--ui-dim); animation: store-pulse 1s ease-in-out infinite; }
 @keyframes store-pulse { 0%, 100% { opacity: .3 } 50% { opacity: 1 } }

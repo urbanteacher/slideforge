@@ -326,6 +326,10 @@ export interface Deck {
   logoReverse?: 'auto' | 'always' | 'never';
   /** Who the deck belongs to. Printed by themes that carry an institution line. */
   org?: string;
+  /** Factory pack this was seeded from. Empty for documents you wrote yourself. */
+  sourceKey?: string;
+  /** Library folder id: a brand default (nul, ukbt, …) or a custom slug. */
+  libraryGroup?: string;
   quiz: QuizConfig;
   created: number;
   modified: number;
