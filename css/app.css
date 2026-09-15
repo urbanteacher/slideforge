@@ -4885,6 +4885,12 @@ body.ws-plan [data-ws]:not([data-ws~="plan"]) { display: none !important; }
 
 .field-warn { color: #8a4b2a; font-weight: 600; }
 
+/* Share in the top bar. Marked rather than loud: it is the action somebody
+   else is waiting on, so it should be findable at a glance, but it is not the
+   thing the button cluster to its right is for — that is starting the room. */
+.share-btn { font-weight: 600; }
+.share-btn:hover { border-color: var(--ink, currentColor); }
+
 /* Teaching exploration: movement has a destination and then settles. */
 .exploration-slide .pad{gap:14px;display:flex;flex-direction:column;padding:40px 60px}
 .exploration-slide h2{margin:0;font-size:40px}.exploration-slide [hidden]{display:none!important}

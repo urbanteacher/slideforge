@@ -25,7 +25,7 @@ html:not([data-ready]) #app { visibility: hidden; }
 /* Same cream the studio chrome uses once CSS loads — avoids a dark→light blink. */
 html:not([data-ready]) body { background: #f0f1ed; }
 </style>
-<link rel="stylesheet" href="css/app.css?v=32">
+<link rel="stylesheet" href="css/app.css?v=33">
 <link rel="stylesheet" href="css/board-common.css?v=1">
 <link rel="stylesheet" href="css/memory.css?v=2">
 <link rel="stylesheet" href="css/bingo.css?v=2">
@@ -101,6 +101,13 @@ html:not([data-ready]) body { background: #f0f1ed; }
     <!-- Chrome that is not a run mode: kept with File so the right side stays
          “start the room / the show”, not a junk drawer. -->
     <button class="btn" id="btnReports">Reports</button>
+    <!-- Share sits out here rather than only in File because it is the one
+         thing in that menu somebody else is waiting on, and every app it
+         would be compared to puts it in the top bar. It is the same action as
+         File → Share a read-only link, not a second route to a different
+         place: one handler, wired to both. Hidden from a file:// page, where
+         there is no server to put a copy on. -->
+    <button class="btn share-btn" data-ws="deck" id="btnShareTop" title="Share a read-only link to this lesson">↗ Share</button>
     <button class="btn" id="btnHelp" title="Keyboard shortcuts">?</button>
 
     <span class="spacer"></span>
@@ -349,7 +356,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/lesson-moments.js?v=2"></script>
 <script src="js/print.js?v=2"></script>
 <script src="js/history.js?v=2"></script>
-<script src="js/shell.js?v=20"></script>
+<script src="js/shell.js?v=21"></script>
 <script src="js/content-tools.js?v=2"></script>
 <script src="js/editor.js?v=24"></script>
 <script src="js/games.js?v=8"></script>
