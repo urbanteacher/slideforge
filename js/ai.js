@@ -292,6 +292,25 @@
     });
   }
 
+  /* How long this page waits before giving up on a generation.
+
+     It has to OUTLAST the server's own abort, not undercut it. The server
+     waits 30s (server.js, raised from 10s because a working key and a valid
+     model still failed most of the time — flash routinely takes longer than
+     ten seconds and the abort fired first). This side was aborting at 14s, so
+     the browser killed the request less than halfway through the server's
+     patience: any answer between 14 and 30 seconds was thrown away after the
+     server had waited for it, and Write reported a failure for a call that
+     was about to succeed. Measured against the live deploy, one real call was
+     still running at 30.4s.
+
+     Three seconds of headroom past the server, so the reply that reaches the
+     room is the server's own 504 — "The AI provider took too long. Try
+     again, or write the question yourself." — rather than a bare client
+     abort with nothing to say. If the server's timeout moves, move this with
+     it; tests/ai-timeouts.test.js fails if this one stops being the longer. */
+  var AI_CLIENT_TIMEOUT_MS = 33000;
+
   /* The transport: prompt out, parsed JSON back. Shaping what comes back is
      each caller's job, because a poll and a set of quiz questions want very
      different things from the same endpoint. */
@@ -303,7 +322,7 @@
     if (aiBusy) throw new Error('AI is already writing — wait for it to finish.');
     aiBusy = true;
     var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = controller ? setTimeout(function () { controller.abort(); }, 14000) : null;
+    var timer = controller ? setTimeout(function () { controller.abort(); }, AI_CLIENT_TIMEOUT_MS) : null;
     try {
       var res = await fetchFn(aiUrl('/api/ai/generate'), {
         method: 'POST',
