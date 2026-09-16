@@ -5092,7 +5092,7 @@
       "logoOn": "all",
       "logoSize": "large",
       "logoReverse": "never",
-      "showSlideNumbers": true,
+      "showSlideNumbers": false,
       "slides": [
         {
           "type": "title",
@@ -5272,7 +5272,7 @@
       "logoOn": "all",
       "logoSize": "large",
       "logoReverse": "never",
-      "showSlideNumbers": true,
+      "showSlideNumbers": false,
       "slides": [
         {
           "type": "title",
@@ -5439,7 +5439,7 @@
       "logoOn": "all",
       "logoSize": "large",
       "logoReverse": "never",
-      "showSlideNumbers": true,
+      "showSlideNumbers": false,
       "slides": [
         {
           "type": "title",
@@ -5592,7 +5592,7 @@
       "logoOn": "all",
       "logoSize": "large",
       "logoReverse": "never",
-      "showSlideNumbers": true,
+      "showSlideNumbers": false,
       "slides": [
         {
           "type": "title",
@@ -5764,7 +5764,7 @@
       "logoOn": "all",
       "logoSize": "large",
       "logoReverse": "never",
-      "showSlideNumbers": true,
+      "showSlideNumbers": false,
       "slides": [
         {
           "type": "title",
@@ -5928,7 +5928,7 @@
         {
           "type": "title",
           "title": "Would you tell an AI your secret?",
-          "subtitle": "Five Minutes to Think",
+          "subtitle": "Starter activity",
           "notes": "SLIDE 1 · TITLE. Up as the class comes in. The question does the work; do not explain it yet.\n\nThe full teacher page is the hidden slide before this one — purpose, timing, script, safeguarding, SEND and an extension.",
           "design": {
             "composition": "poster-art"
@@ -6067,7 +6067,7 @@
         {
           "type": "title",
           "title": "What happens when AI acts for you?",
-          "subtitle": "Five Minutes to Think",
+          "subtitle": "Starter activity",
           "notes": "SLIDE 1 · TITLE. Up as the class comes in. The question does the work; do not explain it yet.\n\nThe full teacher page is the hidden slide before this one — purpose, timing, script, safeguarding, SEND and an extension.",
           "design": {
             "composition": "poster-art"
@@ -6205,7 +6205,7 @@
         {
           "type": "title",
           "title": "Who really made it?",
-          "subtitle": "Five Minutes to Think",
+          "subtitle": "Starter activity",
           "notes": "SLIDE 1 · TITLE. Up as the class comes in. The question does the work; do not explain it yet.\n\nThe full teacher page is the hidden slide before this one — purpose, timing, script, safeguarding, SEND and an extension.",
           "design": {
             "composition": "poster-art"
@@ -6346,7 +6346,7 @@
         {
           "type": "title",
           "title": "Should AI decide?",
-          "subtitle": "Five Minutes to Think",
+          "subtitle": "Starter activity",
           "notes": "SLIDE 1 · TITLE. Up as the class comes in. The question does the work; do not explain it yet.\n\nThe full teacher page is the hidden slide before this one — purpose, timing, script, safeguarding, SEND and an extension.",
           "design": {
             "composition": "poster-art"
@@ -6485,7 +6485,7 @@
         {
           "type": "title",
           "title": "What skills must stay human?",
-          "subtitle": "Five Minutes to Think",
+          "subtitle": "Starter activity",
           "notes": "SLIDE 1 · TITLE. Up as the class comes in. The question does the work; do not explain it yet.\n\nThe full teacher page is the hidden slide before this one — purpose, timing, script, safeguarding, SEND and an extension.",
           "design": {
             "composition": "poster-art"

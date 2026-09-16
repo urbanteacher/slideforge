@@ -130,7 +130,7 @@ const STARTERS_27 = [
       {
         type: 'title',
         title: 'Would you tell an AI your secret?',
-        subtitle: 'Five Minutes to Think',
+        subtitle: 'Starter activity',
         notes:
           'SLIDE 1 · TITLE. Up as the class comes in. The question does the work; ' +
           'do not explain it yet.\n\n' +
@@ -269,7 +269,7 @@ const STARTERS_27 = [
       {
         type: 'title',
         title: 'What happens when AI acts for you?',
-        subtitle: 'Five Minutes to Think',
+        subtitle: 'Starter activity',
         notes:
           'SLIDE 1 · TITLE. Up as the class comes in. The question does the work; ' +
           'do not explain it yet.\n\n' +
@@ -397,7 +397,7 @@ const STARTERS_27 = [
       {
         type: 'title',
         title: 'Who really made it?',
-        subtitle: 'Five Minutes to Think',
+        subtitle: 'Starter activity',
         notes:
           'SLIDE 1 · TITLE. Up as the class comes in. The question does the work; ' +
           'do not explain it yet.\n\n' +
@@ -528,7 +528,7 @@ const STARTERS_27 = [
       {
         type: 'title',
         title: 'Should AI decide?',
-        subtitle: 'Five Minutes to Think',
+        subtitle: 'Starter activity',
         notes:
           'SLIDE 1 · TITLE. Up as the class comes in. The question does the work; ' +
           'do not explain it yet.\n\n' +
@@ -663,7 +663,7 @@ const STARTERS_27 = [
       {
         type: 'title',
         title: 'What skills must stay human?',
-        subtitle: 'Five Minutes to Think',
+        subtitle: 'Starter activity',
         notes:
           'SLIDE 1 · TITLE. Up as the class comes in. The question does the work; ' +
           'do not explain it yet.\n\n' +

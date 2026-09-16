@@ -24,6 +24,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
+const { DECK_SETTINGS: A27 } = require('../AiAd27/deck-settings.js');
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TARGET = path.join(ROOT, 'js', 'lessons.js');
 
@@ -61,19 +62,14 @@ const CAMPAIGNS = [
     module: 'AiAd27/starters27.js',
     exportName: 'STARTERS_27',
     theme: (s) => `aiad27-${s.key}`,
-    logo: () => 'assets/brand/aiad27/aiad27-lockup.svg',
-    /* The campaign's line rides the closing rule on every slide, and the
-       lockup holds the corner the header reserves for it. The two say the
-       same words; the repetition is deliberate, the way a printed programme
-       carries its mark on every page. */
-    closingNote: 'Keep humans in the loop',
-    /* The header reserves a corner for the mark on every slide, and 2026 already
-       carries its badge throughout. 'title' left that corner empty on six of the
-       seven student slides. */
-    logoOn: 'all',
-    /* Unset: the ink lockup is reversed by the shared dark-ground rule on the
-       scenario and rules slides, and left alone on the five light ones. */
-    logoReverse: undefined
+    /* Deck-level settings live in AiAd27/deck-settings.js, shared with the
+       bundle builder so the Library card and the importable file cannot
+       describe the same deck differently. */
+    logo: () => A27.logo,
+    closingNote: A27.closingNote,
+    logoOn: A27.logoOn,
+    logoReverse: A27.logoReverse,
+    showSlideNumbers: A27.showSlideNumbers
   }
 ];
 
@@ -101,9 +97,7 @@ function lessonSpec(campaign, starter) {
     logoSize: 'large',
     ...(campaign.logoReverse ? { logoReverse: campaign.logoReverse } : {}),
     ...(campaign.closingNote ? { closingNote: campaign.closingNote } : {}),
-    /* The closing rule carries it, so it is a position in the five minutes
-       rather than clutter: "04 / 07" tells a room how far through it is. */
-    showSlideNumbers: true,
+    showSlideNumbers: campaign.showSlideNumbers !== undefined ? campaign.showSlideNumbers : false,
     slides: starter.slides
   };
 }

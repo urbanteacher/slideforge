@@ -23,7 +23,12 @@
   --a27-xs:18px; --a27-sm:22px; --a27-base:24px; --a27-lg:28px;
   --a27-xl:33px; --a27-2xl:48px; --a27-3xl:52px;
   --a27-4xl:62px; --a27-5xl:68px;
-  --a27-display-short:112px; --a27-display-medium:86px;
+  /* 88 is the campaign's own cover size, and the reason the ramp does not get
+     to choose it. The shared ramp reaches for 112 on a short headline, which
+     is 27% larger than this design was drawn at — enough to push three of the
+     five covers onto an extra line. The steps below it still catch long copy;
+     the top of the ramp is simply the size the campaign uses. */
+  --a27-display-short:88px; --a27-display-medium:86px;
   --a27-display-long:72px; --a27-display-longest:60px;
   --composition-caption:var(--a27-xs); --composition-context:var(--a27-sm);
   --composition-body:var(--a27-base); --composition-supporting:var(--a27-lg);
@@ -68,7 +73,11 @@
    2.21:1 on pink, 1.68:1 on mint. Full opacity, 700, and a larger size are
    as much as the combination can be given. */
 [class*='theme-aiad27-']:is(.layout-title,.layout-statement,.layout-keyfact) .cp-eyebrow {
-  color:#FFFFFF; font-weight:700; opacity:1; font-size:24px; }
+  color:#FFFFFF; font-weight:700; opacity:1; font-size:var(--a27-base); }
+/* The cover's label sits above a 112px headline, so it wants to be the
+   smallest thing on the slide rather than compete — the other two accent
+   grounds carry a question with nothing else on them and can take more. */
+[class*='theme-aiad27-'].layout-title .cp-eyebrow { font-size:var(--a27-xs); }
 [class*='theme-aiad27-']:is(.layout-quote,.layout-journey) { --s-bg:#231F20; --s-fg:#F6F4ED; --s-dim:#D5D0CC; --s-accent:var(--a27-color); --s-rule:#686366; background:var(--s-bg); }
 [class*='theme-aiad27-'] .cp-letter { background:var(--a27-color); color:#231F20; }
 [class*='theme-aiad27-'] .cp-compare-head h3:first-of-type { background:var(--a27-color); color:#231F20; }

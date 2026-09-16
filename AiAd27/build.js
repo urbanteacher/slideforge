@@ -25,6 +25,7 @@ global.localStorage = localStorage;
 require(path.join(__dirname, '..', 'js', 'model.js'));
 const SF = global.window.SF;
 const { STARTERS_27 } = require('./starters27.js');
+const { DECK_SETTINGS } = require('./deck-settings.js');
 
 const STAMP = Date.parse('2026-09-16T00:00:00Z');
 
@@ -37,14 +38,9 @@ function buildDeck(starter) {
        name and its mark appear together on every slide. See css/aiad27.css. */
     theme: `aiad27-${starter.key}`,
     aspect: '16:9',
-    org: 'AI Awareness Day 2027',
-    /* The campaign lockup, on the title slide only. Every other slide is
-       already stamped by the strand furniture, and the brief asks for one
-       strong element per slide rather than several competing. */
-    logo: 'assets/brand/aiad27/aiad27-lockup.svg',
-    logoOn: 'all',
-    logoSize: 'large',
-    showSlideNumbers: false,
+    /* Shared with tools/build-aiad-lessons.mjs — see AiAd27/deck-settings.js
+       for why these are not written out twice. */
+    ...DECK_SETTINGS,
     finalScores: false,
     created: STAMP,
     modified: STAMP,

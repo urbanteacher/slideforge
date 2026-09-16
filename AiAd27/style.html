@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><base href="/">
+<title>AI Awareness Day 2027 — Style and design</title>
+<link rel="stylesheet" href="css/app.css"><link rel="stylesheet" href="css/aiad27.css"><link rel="stylesheet" href="css/customize.css">
+<style>
+/* Read from the live theme, never restated here — see the script below. A
+   swatch that has to be kept in step with a stylesheet is a swatch that lies. */
+body{overflow:auto;background:#e8e5dc;color:#231f20;font-family:'AIAD Sans',Arial,sans-serif;margin:0}
+main{max-width:1180px;margin:auto;padding:50px 36px 90px}
+.sg-head{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:8px;flex-wrap:wrap}
+.sg-head h1{font-size:clamp(34px,5vw,64px);line-height:.98;letter-spacing:-.05em;margin:10px 0}
+.sg-kicker{letter-spacing:.14em;font-size:13px;font-weight:600;margin:0}
+.sg-head a{color:inherit}
+.sg-note{max-width:760px;line-height:1.6;margin:0 0 10px}
+nav.sg-nav{display:flex;gap:10px;flex-wrap:wrap;margin:28px 0 50px}
+nav.sg-nav a{border:1px solid #231f20;padding:9px 18px;border-radius:30px;text-decoration:none;color:inherit;font-size:15px}
+section{scroll-margin-top:24px;margin-bottom:64px}
+section>h2{font-size:32px;letter-spacing:-.03em;border-bottom:2px solid;padding-bottom:12px;margin-bottom:8px}
+section>p{max-width:760px;line-height:1.6}
+table{border-collapse:collapse;width:100%;font-size:15px;margin-top:18px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid #c9c6be}
+th{font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums}
+.pass{color:#176E3B;font-weight:600}.fail{color:#A7350B;font-weight:600}
+.swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-top:22px}
+.sw{border:1px solid #c9c6be;background:#fff}
+.sw-band{height:92px;display:flex;align-items:flex-end;padding:10px}
+.sw-band span{font-size:13px;font-weight:700}
+.sw-body{padding:12px;font-size:13px;line-height:1.5}
+.sw-body b{display:block;font-size:15px}
+.sw-body code{font-size:12px}
+.grounds{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:22px}
+.gr{padding:22px;min-height:132px;display:flex;flex-direction:column;justify-content:space-between}
+.gr b{font-size:19px}.gr span{font-size:13px;opacity:.8}
+.scale li{margin:0;padding:12px 0;border-bottom:1px solid #c9c6be;display:flex;align-items:baseline;gap:18px;list-style:none}
+.scale{padding:0;margin:22px 0 0}
+.scale .tok{font-size:12px;letter-spacing:.06em;text-transform:uppercase;width:210px;flex:none;opacity:.7}
+.scale .px{width:66px;flex:none;font-variant-numeric:tabular-nums;font-size:13px;opacity:.7}
+.marks{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:20px;margin-top:22px}
+.mk{border:1px solid #c9c6be;background:#fff;padding:18px;text-align:center}
+.mk img{display:block;margin:0 auto 12px;max-width:100%}
+.mk b{display:block;font-size:14px}.mk span{font-size:12px;opacity:.7}
+.lockup{border:1px solid #c9c6be;background:#fff;padding:26px;margin-top:22px;display:flex;gap:30px;align-items:center;flex-wrap:wrap}
+.rule-list{max-width:790px;line-height:1.65}
+.rule-list li{margin-bottom:9px}
+footer.sg-foot{border-top:1px solid #231f20;padding-top:16px;font-size:14px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+@media(max-width:750px){main{padding:24px 16px}.sg-head{display:block}}
+</style></head>
+<body><main>
+
+<header class="sg-head">
+  <div>
+    <p class="sg-kicker">AI AWARENESS DAY / 2027</p>
+    <h1>Style and design</h1>
+  </div>
+  <p class="sg-note"><a href="AiAd27/preview.html">← Back to the slide review</a><br>
+  Every value on this page is read out of the live theme as you load it.</p>
+</header>
+
+<p class="sg-note">Five strands of one campaign, each with a colour, a word and a mark. The design
+is three grounds and one typeface, and it holds together because the strand colour is used as a
+<em>ground</em> far more than as ink. The long-form version, with the reasoning, is in
+<code>docs/aiad27-style-guide.md</code>.</p>
+
+<nav class="sg-nav" aria-label="Sections">
+  <a href="#grounds">Grounds</a><a href="#palette">Palette</a><a href="#contrast">Contrast</a>
+  <a href="#type">Typography</a><a href="#marks">Marks</a><a href="#rules">The rules</a>
+</nav>
+
+<section id="grounds"><h2>The three grounds</h2>
+  <p>Every surface is one of three. There is no fourth. The rhythm across a seven-slide starter is
+  loud, quiet, working — and never two strand-coloured slides in a row.</p>
+  <div class="grounds" id="groundGrid"></div>
+</section>
+
+<section id="palette"><h2>The palette</h2>
+  <p>Each strand has two values and they are not interchangeable. <b>Bright is a ground and a
+  graphic. Deep is ink.</b> All five brights fail as text on cream, which is why the deeps exist —
+  the same hues darkened until they clear 4.5:1.</p>
+  <div class="swatches" id="swatchGrid"></div>
+</section>
+
+<section id="contrast"><h2>Contrast, measured</h2>
+  <p>WCAG relative luminance, computed from the live tokens. 4.5:1 is the bar for body text, 3:1
+  for large text and non-text graphics.</p>
+  <div id="contrastTables"></div>
+</section>
+
+<section id="type"><h2>Typography</h2>
+  <p id="fontNote"></p>
+  <ul class="scale" id="scaleList"></ul>
+  <p style="margin-top:22px">Hierarchy is made by <b>size and weight, never colour</b> — on a strand
+  ground there is only one usable ink, so a label is separated from a headline by being small,
+  uppercase and letterspaced against something five times its size.</p>
+</section>
+
+<section id="marks"><h2>The marks</h2>
+  <p>All artwork is SVG, generated by <code>AiAd27/make-marks.js</code>. Regenerate rather than
+  hand-edit.</p>
+  <h3 style="margin-top:26px;font-size:19px">The lockup</h3>
+  <div class="lockup" id="lockupBox"></div>
+  <h3 style="margin-top:34px;font-size:19px">Strand icons <span style="font-weight:400;opacity:.7;font-size:15px">— 24×24, filled with the strand's bright</span></h3>
+  <div class="marks" id="iconGrid"></div>
+  <h3 style="margin-top:34px;font-size:19px">Poster graphics <span style="font-weight:400;opacity:.7;font-size:15px">— 480×490, chamfered panel plus the strand symbol</span></h3>
+  <div class="marks" id="posterGrid"></div>
+</section>
+
+<section id="rules"><h2>The rules</h2>
+  <ol class="rule-list">
+    <li><b>Three grounds:</b> cream, ink, strand colour.</li>
+    <li><b>Bright is a ground. Deep is ink.</b> Never swap them.</li>
+    <li><b>On a strand colour, type is black.</b> Nothing light survives it — Responsible reversed
+    out in white is 1.68:1.</li>
+    <li><b>On ink, use cream or the bright</b> — never the deep, which was built for cream and goes
+    muddy on black.</li>
+    <li><b>One typeface.</b> Hierarchy by size and weight, never by colour.</li>
+    <li><b>The chamfer is the signature</b> — the poster panel and the ballot letter tile, nowhere
+    else.</li>
+    <li><b>Never two loud grounds in a row.</b> The colour stops meaning anything.</li>
+  </ol>
+  <p style="margin-top:22px"><b>One documented exception.</b> The decks set the small label above a
+  headline in white on the strand ground, at 24px/700. It fails the table above — worst case 1.68:1
+  on Responsible. It is a deliberate choice, legible at that size on a bright screen, and carries
+  nothing that appears nowhere else. Do not extend it to body copy and do not assume it survives
+  print.</p>
+</section>
+
+<footer class="sg-foot">
+  <span>Keep humans in the loop</span>
+  <span><a href="AiAd27/preview.html" style="color:inherit">Slide review</a> · <a href="design-guide.html" style="color:inherit">SlideForge design controls</a></span>
+</footer>
+
+</main>
+<script>
+(function () {
+  'use strict';
+  var STRANDS = ['safe', 'smart', 'creative', 'responsible', 'future'];
+  var CREAM = '#F6F4ED', INK = '#231F20', WHITE = '#FFFFFF';
+
+  /* Read a theme's own custom properties by mounting an element in it, so
+     this page cannot disagree with the stylesheet it documents. */
+  function tokens(strand) {
+    var probe = document.createElement('div');
+    probe.className = 'theme-aiad27-' + strand;
+    probe.style.cssText = 'position:fixed;left:-9999px;top:0';
+    document.body.appendChild(probe);
+    var cs = getComputedStyle(probe);
+    var read = function (name) { return cs.getPropertyValue(name).trim(); };
+    var out = { bright: read('--a27-color'), deep: read('--a27-deep'),
+                name: read('--a27-name').replace(/^['"]|['"]$/g, ''),
+                bg: read('--s-bg'), fg: read('--s-fg'), dim: read('--s-dim'),
+                rule: read('--s-rule'), card: read('--s-card'), font: read('--s-font') };
+    ['xs','sm','base','lg','xl','2xl','3xl','4xl','5xl',
+     'display-longest','display-long','display-medium','display-short'].forEach(function (k) {
+      out['t-' + k] = read('--a27-' + k);
+    });
+    probe.remove();
+    return out;
+  }
+
+  function lum(hex) {
+    var h = String(hex).replace('#', '').trim();
+    if (h.length === 3) h = h.split('').map(function (c) { return c + c; }).join('');
+    var v = [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16) / 255; })
+      .map(function (x) { return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
+    return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+  }
+  function ratio(a, b) {
+    var x = lum(a), y = lum(b);
+    if (x < y) { var t = x; x = y; y = t; }
+    return Math.round(((x + 0.05) / (y + 0.05)) * 100) / 100;
+  }
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  var T = {};
+  STRANDS.forEach(function (s) { T[s] = tokens(s); });
+  var any = T.safe;
+
+  /* --- grounds ------------------------------------------------------- */
+  [['Cream', any.bg, any.fg, 'the working ground — lists, tables, comparisons'],
+   ['Ink', '#231F20', CREAM, 'the quiet ground — one human voice, rules to remember'],
+   ['Strand colour', T.future.bright, INK, 'the loud ground — covers, the question, the commitment']
+  ].forEach(function (g) {
+    var box = el('div', 'gr');
+    box.style.background = g[1]; box.style.color = g[2];
+    box.appendChild(el('b', null, g[0]));
+    var foot = el('div');
+    foot.appendChild(el('span', null, g[3]));
+    foot.appendChild(document.createElement('br'));
+    foot.appendChild(el('code', null, g[1]));
+    box.appendChild(foot);
+    document.getElementById('groundGrid').appendChild(box);
+  });
+
+  /* --- palette ------------------------------------------------------- */
+  STRANDS.forEach(function (s) {
+    var t = T[s], card = el('div', 'sw');
+    var band = el('div', 'sw-band'); band.style.background = t.bright;
+    band.appendChild(el('span', null, t.name));
+    band.style.color = INK;
+    card.appendChild(band);
+    var deep = el('div', 'sw-band'); deep.style.background = t.deep; deep.style.height = '46px';
+    deep.appendChild(el('span', null, 'deep')); deep.style.color = CREAM;
+    card.appendChild(deep);
+    var body = el('div', 'sw-body');
+    body.appendChild(el('b', null, t.name));
+    body.appendChild(el('code', null, 'bright ' + t.bright.toUpperCase()));
+    body.appendChild(document.createElement('br'));
+    body.appendChild(el('code', null, 'deep   ' + t.deep.toUpperCase()));
+    card.appendChild(body);
+    document.getElementById('swatchGrid').appendChild(card);
+  });
+
+  /* --- contrast ------------------------------------------------------ */
+  function table(caption, rows) {
+    var wrap = el('div');
+    wrap.appendChild(el('h3', null, caption)).style.cssText = 'font-size:18px;margin:30px 0 0';
+    var t = el('table'), head = el('tr');
+    head.appendChild(el('th', null, 'Ink'));
+    STRANDS.forEach(function (s) { head.appendChild(el('th', null, T[s].name)); });
+    t.appendChild(head);
+    rows.forEach(function (r) {
+      var tr = el('tr');
+      tr.appendChild(el('td', null, r.label));
+      STRANDS.forEach(function (s) {
+        var v = r.value(s), td = el('td', 'num');
+        td.appendChild(el('span', v >= 4.5 ? 'pass' : (v >= 3 ? '' : 'fail'), v.toFixed(2)));
+        tr.appendChild(td);
+      });
+      t.appendChild(tr);
+    });
+    wrap.appendChild(t);
+    document.getElementById('contrastTables').appendChild(wrap);
+  }
+  table('On cream — ' + any.bg.toUpperCase(), [
+    { label: 'Black #231F20', value: function () { return ratio(INK, any.bg); } },
+    { label: 'Strand deep', value: function (s) { return ratio(T[s].deep, any.bg); } },
+    { label: 'Strand bright', value: function (s) { return ratio(T[s].bright, any.bg); } }
+  ]);
+  table('On ink — #231F20', [
+    { label: 'Cream #F6F4ED', value: function () { return ratio(CREAM, INK); } },
+    { label: 'Strand bright', value: function (s) { return ratio(T[s].bright, INK); } },
+    { label: 'Strand deep', value: function (s) { return ratio(T[s].deep, INK); } }
+  ]);
+  table('On the strand colour itself', [
+    { label: 'Black #231F20', value: function (s) { return ratio(INK, T[s].bright); } },
+    { label: 'White #FFFFFF', value: function (s) { return ratio(WHITE, T[s].bright); } },
+    { label: 'Cream #F6F4ED', value: function (s) { return ratio(CREAM, T[s].bright); } }
+  ]);
+
+  /* --- typography ---------------------------------------------------- */
+  document.getElementById('fontNote').innerHTML =
+    'The face is <b>' + any.font.split(',')[0].replace(/['"]/g, '') + '</b> — Uncut Sans, SIL Open ' +
+    'Font License 1.1, bundled as woff2 at weights 400, 600 and 700. Fallback ' +
+    '<code>' + any.font.split(',').slice(1).join(',').trim() + '</code>.';
+  [['xs', 'caption, closing rule'], ['sm', 'context line, small label'], ['base', 'body'],
+   ['lg', 'supporting paragraph'], ['xl', 'numbered rule heading'], ['2xl', 'ballot option heading'],
+   ['3xl', 'section heading'], ['4xl', 'the quoted voice'], ['5xl', 'the discussion question'],
+   ['display-longest', 'cover headline, longest copy'], ['display-long', 'cover headline'],
+   ['display-medium', 'cover headline'], ['display-short', 'cover headline, shortest copy']
+  ].forEach(function (row) {
+    var size = any['t-' + row[0]];
+    if (!size) return;
+    var li = el('li');
+    li.appendChild(el('span', 'tok', '--a27-' + row[0]));
+    li.appendChild(el('span', 'px', size));
+    var sample = el('span', null, row[1]);
+    sample.style.fontSize = 'min(' + size + ', 44px)';
+    sample.style.fontWeight = parseFloat(size) >= 48 ? '700' : '400';
+    sample.style.letterSpacing = parseFloat(size) >= 48 ? '-.035em' : '0';
+    li.appendChild(sample);
+    document.getElementById('scaleList').appendChild(li);
+  });
+
+  /* --- marks --------------------------------------------------------- */
+  var lock = document.getElementById('lockupBox');
+  var lockImg = new Image(); lockImg.src = 'assets/brand/aiad27/aiad27-lockup.svg'; lockImg.alt = '';
+  lockImg.style.cssText = 'width:300px;height:56px';
+  lock.appendChild(lockImg);
+  var lockText = el('div');
+  lockText.style.cssText = 'font-size:14px;line-height:1.6;max-width:430px';
+  lockText.innerHTML = '<b>300 × 56, drawn 1:1</b> with the box it is given, so the sizes in the ' +
+    'file are the sizes on screen. Heading 20px/700, rule 40 × 2.5, subline 13px/500 at 75%. ' +
+    'A single flat ink, so it reverses cleanly to white on dark grounds — <b>do not add a second ' +
+    'colour</b>. The heading matches the strand name opposite it in the header.';
+  lock.appendChild(lockText);
+
+  var SHAPES = { safe: 'shield', smart: 'cursor', creative: 'eight-point star',
+                 responsible: 'balance scales', future: 'rising stepped arrow' };
+  STRANDS.forEach(function (s) {
+    var card = el('div', 'mk');
+    var img = new Image(); img.src = 'assets/brand/aiad27/icon-' + s + '.svg'; img.alt = '';
+    img.style.cssText = 'width:46px;height:46px';
+    card.appendChild(img);
+    card.appendChild(el('b', null, T[s].name));
+    card.appendChild(el('span', null, SHAPES[s]));
+    document.getElementById('iconGrid').appendChild(card);
+  });
+  STRANDS.forEach(function (s) {
+    var card = el('div', 'mk');
+    var img = new Image(); img.src = 'assets/brand/aiad27/poster-' + s + '.svg'; img.alt = '';
+    img.style.cssText = 'width:100%;max-width:150px';
+    card.appendChild(img);
+    card.appendChild(el('b', null, T[s].name));
+    card.appendChild(el('span', null, 'poster-' + s + '.svg'));
+    document.getElementById('posterGrid').appendChild(card);
+  });
+})();
+</script>
+</body></html>
