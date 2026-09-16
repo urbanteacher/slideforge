@@ -145,16 +145,23 @@ Fallback `Arial, sans-serif`. `font-display: swap`.
 | `--a27-3xl` | 52 | section heading |
 | `--a27-4xl` | 62 | the quoted voice |
 | `--a27-5xl` | 68 | the discussion question |
-| display | 112 / 86 / 72 / 60 | the cover headline, stepping down as the words get longer |
+| display | 88 / 86 / 72 / 60 | the cover headline, stepping down as the words get longer |
 
-The display size is chosen by length, not by hand: ≤35 characters gets 112px,
+The display size is chosen by length, not by hand: ≤35 characters gets 88px,
 then 86, 72, and 60 past 95. A long question shrinks rather than overflowing.
+
+**88, not the shared ramp's 112.** The composition system's top step is 112px
+and the campaign's covers were designed at 88; adopting the ramp wholesale
+re-broke every cover headline onto more lines than it was drawn with.
+`--a27-display-short` is the campaign saying so. The near-tie between 88 and
+86 is deliberate — the first two steps are a nudge, not a jump, because a
+cover that loses one word should not visibly change size.
 
 ### How hierarchy is made
 
 Size and weight, **not colour**. On a strand ground there is only one usable
 ink, so the label above a headline is separated by being small, uppercase,
-`letter-spacing: .14em` and 600 — the headline is 112px/700. That contrast of
+`letter-spacing: .14em` and 600 — the headline is 88px/700. That contrast of
 scale does the work colour cannot.
 
 Display type is tight: `letter-spacing: -.035em` to `-.052em` at the largest
@@ -172,7 +179,7 @@ changed in the place that paints with it.
 
 Not everything the campaign draws is a file; see §6b.
 
-### The lockup — `aiad27-lockup*.svg` (seven files)
+### The lockup — `aiad27-lockup*.svg` (twelve files)
 
 Artboard **300 × 56**, drawn 1:1 with the box it is given so the sizes in the
 file are the sizes on screen.
@@ -316,28 +323,55 @@ not certain, set them as SVG paths.
 
 ## 7. Layout
 
-### The header
+### The furniture: header, body, closing rule
+
+**The pad is a flex column.** Header 40px, footer 32px with `margin-top:auto`,
+body taking whatever is left. That one rule is the whole layout: the closing
+line sits on the same baseline on all thirty-five slides no matter how much
+copy is above it, because nothing positions it — the column pushes it down.
+Anything that tries to place the footer absolutely is fighting this and will
+drift the moment the body changes length.
 
 ```
-[ icon + strand word ]        [ context line ]        [ lockup ]
-        left                       centre                right
+┌────────────────────────────────────────────────────────────┐ ← pad 32px 52px 24px
+│ ✦ Responsible        Five minutes to think    AI AWARENESS │ 40px header
+│                                             Keep Humans... │   (330px reserved →)
+│                                                            │
+│   STARTER ACTIVITY                                         │ flex:1
+│   Should AI decide?                                        │
+│                                                            │
+├────────────────────────────────────────────────────────────┤ 1px rule
+│ Keep humans in the loop                            02 / 07 │ 32px footer
+└────────────────────────────────────────────────────────────┘
 ```
 
-40px tall, all three items on one baseline, 20px/700 for the two identity
-items. The context line is lighter at 22px/400. Reserve **330px** at the right
-for the lockup.
+| Part | Class | Specification |
+| --- | --- | --- |
+| Pad | `.slide.cp .pad` | padding `32px 52px 24px`, flex column, height 100% |
+| Header | `.cp-header` | **40px**, flex space-between, 20px / 600, `flex:none` |
+| Identity | `.cp-header::before` | strand icon 22×22 + name, 700, `padding-left:32px` |
+| Corner reserve | `.has-corner-mark .cp-header` | `padding-right:330px` |
+| Lockup | `.slide-logo` | max 300×56, `top:32px` — level with the header |
+| Footer | `.cp-footer` | **32px**, `margin-top:auto`, 1px top rule, flex space-between |
+| Campaign line | `.cp-footer-note` | 20px / 700, full-strength ink |
+| Position | `.cp-footer .pagenum` | 18px, `--s-dim`, `margin-left:auto` when alone |
 
-### The closing rule
+**The 330px reserve is conditional.** It is on `.has-corner-mark`, not on
+`.cp-header`, so a deck with no logo gets the full width back instead of a
+third of its header held empty for a mark that is not coming. 330 = the
+lockup's 300 plus a 30px gap.
 
-```
-──────────────────────────────────────────────────────────
-Keep humans in the loop                              04 / 07
-```
+**The rule takes the colour of its ground** — `--cp-rule` is ink on a strand
+colour and the theme's grey elsewhere. A single grey everywhere washes out on
+the bright grounds.
 
-A 1px rule, the campaign line left at 20px/700, the position right at 18px.
-**The rule takes the colour of its ground**: ink on a strand colour, the
-theme's grey on ink, the hairline grey on cream. A single grey everywhere
-washes out on the bright grounds.
+**The lockup's 300px and the 52px pad are the same edge.** The mark's right
+edge and the closing rule's right end both land on x=1228, which is why the
+lockup is set from its right edge (§6): anything anchored left stops short of
+that line and the corner reads as unaligned.
+
+Numbering counts the slides the room sees, not the slides in the file, and
+covers are excluded — 30 of the 35 slides number themselves.
 
 Numbering counts the slides the room sees, not the slides in the file.
 

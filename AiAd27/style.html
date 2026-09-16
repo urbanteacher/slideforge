@@ -124,6 +124,15 @@ is three grounds and one typeface, and it holds together because the strand colo
   ballot tile cuts one, because at that size two cuts read as a hexagon instead of a signature.
   The two cuts are the same intended angle expressed twice &mdash; keep them within a point of
   each other.</p>
+  <h3 style="margin-top:34px;font-size:19px">The header and the closing rule <span style="font-weight:400;opacity:.7;font-size:15px">&mdash; the furniture every slide carries</span></h3>
+  <p style="font-size:14px;opacity:.8;margin-top:8px">The pad is a <b>flex column</b>: header at
+  <b>40px</b>, footer at <b>32px</b> with <code>margin-top:auto</code>, body taking whatever is
+  left. That one rule is why the closing line sits on the same baseline on all thirty-five slides
+  no matter how much copy is above it &mdash; nothing positions it, the column pushes it down.
+  Shown at true 1280&times;720 proportions.</p>
+  <div id="chromeDemo" style="margin-top:22px"></div>
+  <table id="chromeSpec" style="margin-top:18px"></table>
+
   <h3 style="margin-top:34px;font-size:19px">The comparison table <span style="font-weight:400;opacity:.7;font-size:15px">&mdash; two claimed columns, no box</span></h3>
   <p style="font-size:14px;opacity:.8;margin-top:8px">The campaign's only table, and it does not look
   like one. There is <b>no outer border and no grid</b> &mdash; a single hairline under each row and
@@ -389,6 +398,74 @@ is three grounds and one typeface, and it holds together because the strand colo
     card.appendChild(el('b', null, v.name));
     card.appendChild(el('span', null, v.note));
     document.getElementById('chamferGrid').appendChild(card);
+  });
+
+  /* --- the header and the closing rule --------------------------------
+     Drawn at 1280x720 and scaled, rather than sketched at page size: the
+     40/32px bars and the 52px content edge only read correctly against the
+     real slide, and the whole point of the section is the proportion. */
+  var CHROME = [
+    ['Pad', '.slide.cp .pad', 'padding 32px 52px 24px · flex column · height 100%'],
+    ['Header', '.cp-header', '40px · flex space-between · 20px/600 · flex:none'],
+    ['Identity', '.cp-header::before', 'strand icon 22×22 + name · 700 · padding-left 32px'],
+    ['Corner reserve', '.has-corner-mark .cp-header', 'padding-right 330px — only when a mark is there'],
+    ['Lockup', '.slide-logo', 'max 300×56 · top 32px, level with the header'],
+    ['Footer', '.cp-footer', '32px · margin-top:auto · 1px top rule · flex space-between'],
+    ['Campaign line', '.cp-footer-note', '20px / 700 · full-strength ink'],
+    ['Position', '.cp-footer .pagenum', '18px · --s-dim · margin-left:auto when alone'],
+    ['Rule colour', '--cp-rule', 'ink on a strand ground, the theme grey otherwise']
+  ];
+  var cd = document.getElementById('chromeDemo');
+  var SC = 0.53;
+  var outer = el('div');
+  outer.style.cssText = 'width:' + (1280 * SC) + 'px;height:' + (720 * SC) + 'px;overflow:hidden';
+  var slide = el('div');
+  slide.style.cssText = 'width:1280px;height:720px;background:' + T.responsible.bright +
+    ';color:' + INK + ';transform:scale(' + SC + ');transform-origin:top left;' +
+    'padding:32px 52px 24px;display:flex;flex-direction:column;position:relative';
+  var hdr = el('div');
+  hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;height:40px;' +
+    'flex:none;font-size:20px;font-weight:600;padding-right:330px';
+  var ident = el('span', null, 'Responsible');
+  ident.style.cssText = 'font-weight:700;padding-left:32px;background:url(assets/brand/aiad27/icon-responsible.svg)' +
+    ' left center / 22px 22px no-repeat;filter:brightness(0)';
+  hdr.appendChild(ident);
+  hdr.appendChild(el('span', null, 'Five minutes to think'));
+  slide.appendChild(hdr);
+  var mark = new Image();
+  mark.src = 'assets/brand/aiad27/aiad27-lockup.svg'; mark.alt = '';
+  mark.style.cssText = 'position:absolute;top:32px;right:52px;width:300px;height:56px';
+  slide.appendChild(mark);
+  var body = el('div');
+  body.style.cssText = 'flex:1;display:flex;flex-direction:column;justify-content:center';
+  var eyebrow = el('div', null, 'STARTER ACTIVITY');
+  eyebrow.style.cssText = 'font-size:20px;font-weight:700;letter-spacing:.14em;color:#FFFFFF;margin-bottom:26px';
+  var head = el('div', null, 'Should AI decide?');
+  head.style.cssText = 'font-size:88px;font-weight:700;letter-spacing:-.045em;line-height:1.02';
+  body.appendChild(eyebrow); body.appendChild(head);
+  slide.appendChild(body);
+  var ftr = el('div');
+  ftr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex:none;' +
+    'height:32px;margin-top:auto;border-top:1px solid ' + INK + ';font-size:18px';
+  var note = el('span', null, 'Keep humans in the loop');
+  note.style.cssText = 'font-size:20px;font-weight:700';
+  var pos = el('span', null, '02 / 07');
+  pos.style.cssText = 'font-size:18px;opacity:.65';
+  ftr.appendChild(note); ftr.appendChild(pos);
+  slide.appendChild(ftr);
+  outer.appendChild(slide);
+  cd.appendChild(outer);
+  var cs = document.getElementById('chromeSpec');
+  var ch = el('tr');
+  ['Part', 'Class', 'Specification'].forEach(function (t) { ch.appendChild(el('th', null, t)); });
+  cs.appendChild(ch);
+  CHROME.forEach(function (r) {
+    var tr = el('tr');
+    tr.appendChild(el('td', null, r[0]));
+    var c = el('td', null, r[1]); c.style.fontFamily = 'ui-monospace,SFMono-Regular,Menlo,monospace';
+    tr.appendChild(c);
+    tr.appendChild(el('td', null, r[2]));
+    cs.appendChild(tr);
   });
 
   /* --- the comparison table ------------------------------------------
