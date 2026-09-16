@@ -15,10 +15,16 @@ services:
     name: slideforge
     runtime: node
     plan: free
-    # Nothing to build: the server has no runtime dependencies, and the browser
-    # bundle (js/model.js) is committed. This installs nothing and fails loudly
-    # if package-lock.json has drifted.
-    buildCommand: npm ci --omit=dev
+    # npm ci installs nothing the server needs — it has no runtime dependencies
+    # and the browser bundle (js/model.js) is committed — but it fails loudly
+    # if package-lock.json has drifted, which is worth a few seconds.
+    #
+    # The campaign bundles are NOT committed: they are build output and
+    # .gitignore says so. That meant AiAd27/preview.html 404'd on every deploy
+    # while working perfectly on a laptop, which is the worst shape a bug can
+    # have. Building them here is the fix — AiAd27/build.js needs only node:fs
+    # and node:path, so it runs fine after an --omit=dev install.
+    buildCommand: npm ci --omit=dev && node AiAd27/build.js
     startCommand: node server/server.js
     healthCheckPath: /
     numInstances: 1
