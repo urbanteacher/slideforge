@@ -1235,6 +1235,20 @@
             ], max: 1 },
           notes: 'COLD OPEN. Say nothing about it being a bad chart. Put it up, let them look, take the poll.\n\nThese are real numbers, from a real source, drawn by a real charting library — and the chart still hides everything that matters. That is the whole module in one slide: the same data can be made to say almost anything, and a chart that looks professional is not the same as a chart that is honest.\n\nAsk out loud: what happened in 2020? You cannot tell — 2019 and 2020 are almost the same slice. Where is summer? Gone. Where is April lockdown? Gone.\n\nAnswer is ALL THREE. Then say what the lab is for: by the end of it they draw this same series honestly, from the raw file, themselves.' },
 
+        { type: 'content', title: 'Before anything else: where are you?',
+          bullets: [
+            'Answer honestly. I will spend this lab on whichever group is biggest.',
+            'Nobody is behind — week one of a module is exactly when this is meant to be broken.'
+          ],
+          feedback: { kind: 'poll', prompt: 'Python on the machine in front of you — where are you?',
+            options: [
+              'Anaconda installed, a notebook opens',
+              'Python installed, notebooks not yet',
+              'Installing right now',
+              'Nothing yet / not sure what I have'
+            ], max: 1 },
+          notes: 'THE MOST USEFUL SLIDE IN THE LAB. Thirty seconds, and you know whether to demonstrate the install or move to the critique.\n\nRead the split out loud. If a third are on “nothing yet”, do task 3 together from the front and let the rest start task 2.' },
+
         { type: 'keywords', title: 'Why that chart tells you nothing (say it out loud)',
           bullets: [
             'Wrong question\tPies answer “share of a total”. You asked “change over time”.',
@@ -1271,20 +1285,6 @@
           ],
           notes: 'The lecture opens in this app, as its own copy — useful mid-lab when somebody asks “what was that chart with the cholera map?”, and useful to them afterwards for the critique in task 2.\n\nDo not teach from it here. This is a pointer, not a detour.' },
 
-        { type: 'content', title: 'Before anything else: where are you?',
-          bullets: [
-            'Answer honestly. I will spend this lab on whichever group is biggest.',
-            'Nobody is behind — week one of a module is exactly when this is meant to be broken.'
-          ],
-          feedback: { kind: 'poll', prompt: 'Python on the machine in front of you — where are you?',
-            options: [
-              'Anaconda installed, a notebook opens',
-              'Python installed, notebooks not yet',
-              'Installing right now',
-              'Nothing yet / not sure what I have'
-            ], max: 1 },
-          notes: 'THE MOST USEFUL SLIDE IN THE LAB. Thirty seconds, and you know whether to demonstrate the install or move to the critique.\n\nRead the split out loud. If a third are on “nothing yet”, do task 3 together from the front and let the rest start task 2.' },
-
         { type: 'section', title: 'Task 2', subtitle: 'A chart in the news, and what is wrong with it',
           notes: 'The only task here that is about visualisation rather than software. Give it the time the other three do not need.' },
 
@@ -1313,6 +1313,13 @@
         { type: 'section', title: 'Task 3', subtitle: 'Python that runs — and proving that it does',
           notes: 'Anaconda rather than a bare Python, because it arrives with pandas, matplotlib, Jupyter and an environment manager, and week one is not the week to teach pip.' },
 
+        { type: 'links', title: 'The two downloads, and nothing else',
+          bullets: [
+            'Anaconda · Python, Jupyter, pandas, matplotlib in one installer\thttps://www.anaconda.com/download',
+            'Google Colab · a notebook in the browser, nothing to install\thttps://colab.research.google.com'
+          ],
+          notes: 'Colab is the escape hatch, and say so: a machine that will not cooperate today should not cost anybody task 4. The notebook is the deliverable, not the toolchain.\n\nAny editor is allowed as long as it is Python 3.x. Anaconda is the recommendation, not a rule.' },
+
         { type: 'code', language: 'text', codeReveal: 'all',
           title: 'Prove it from a terminal, not from a feeling',
           code: '# macOS: Terminal · Windows: Anaconda Prompt\n\npython --version\n# Python 3.12.x   ← anything 3.x is fine\n\nconda --version\n# conda 24.x.x    ← Anaconda is on the PATH\n\npython -c "import matplotlib, pandas; print(\'libraries ok\')"\n# libraries ok\n',
@@ -1322,13 +1329,6 @@
           title: 'The error you are about to hit',
           code: 'ModuleNotFoundError: No module named \'matplotlib\'\n\n# Not a broken install. The terminal is finding a different Python.\n# Ask which one:\n\nwhich python        # macOS / Linux\nwhere python        # Windows\n\n# If the answer is not inside your anaconda3 folder, open the\n# Anaconda Prompt instead of the system terminal, or run:\n\nconda activate base\n',
           notes: 'Put this on the wall BEFORE they hit it, because a room of thirty will produce this error about eight times and each one will read as “Anaconda is broken”.\n\nIt is the single most useful slide in the lab. Two Pythons on one machine is the normal state of a laptop, not a fault.' },
-
-        { type: 'links', title: 'The two downloads, and nothing else',
-          bullets: [
-            'Anaconda · Python, Jupyter, pandas, matplotlib in one installer\thttps://www.anaconda.com/download',
-            'Google Colab · a notebook in the browser, nothing to install\thttps://colab.research.google.com'
-          ],
-          notes: 'Colab is the escape hatch, and say so: a machine that will not cooperate today should not cost anybody task 4. The notebook is the deliverable, not the toolchain.\n\nAny editor is allowed as long as it is Python 3.x. Anaconda is the recommendation, not a rule.' },
 
         { type: 'section', title: 'Task 4', subtitle: 'A notebook with your chart in it',
           notes: 'Small on purpose. The point is a working pipeline end to end — data in, chart out, notebook submitted — not an impressive chart.' },
