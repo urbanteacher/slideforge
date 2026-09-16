@@ -171,11 +171,31 @@ function slideHeight(deck) {
   return a ? a.h : SLIDE_H;
 }
 
+/* `ground: 'dark'` is the one intrinsic fact about a theme that shared code
+   outside its own stylesheet has to know: whether a slide is dark before
+   anything is drawn on it. Four separate places in css/app.css used to answer
+   that by naming themes — the chart palette, the code-pane syntax colours, the
+   logo inversion and the score rail's leader row — and the four lists had
+   drifted apart. cinematic (#0a0b0f) and brutal (#111111) are the darkest
+   grounds in the app and were on none of them, so both were drawing charts
+   from the light-ground steps: brutal's worst series read 2.82:1, under the
+   3:1 floor for non-text graphics.
+
+   So it is declared once here and stamped as data-ground by renderSlide.
+   A theme with a better answer of its own still wins: UKBT carries the brand's
+   own --chart-* values and css/ukbt.css loads after css/app.css, which is how
+   the carve-out documented at the dark-palette rule keeps working without
+   anybody maintaining a list.
+
+   Whole-theme only, deliberately. northeastern is dark on title and section
+   and light everywhere else, and the aiad27 layouts flip per slide; both
+   already handle themselves in their own stylesheets, and a per-layout ground
+   is a separate change that needs its own visual review. */
 var THEMES = {
   studio: { name: 'Studio · Sage & ink', swatch: '#dce8cc' },
   northeastern: { name: 'Northeastern London', swatch: '#c8102e' },
-  ukbt: { name: 'UK Black Tech', swatch: '#264258' },
-  'ukbt-institute': { name: 'UKBT Institute', swatch: '#2d3134' },
+  ukbt: { name: 'UK Black Tech', swatch: '#264258', ground: 'dark' },
+  'ukbt-institute': { name: 'UKBT Institute', swatch: '#2d3134', ground: 'dark' },
   /* AI Awareness Day 2026. One design, five grounds: the campaign gives each
      of its principles a colour, and a starter deck belongs to exactly one of
      them, so the principle is the theme rather than a setting inside it.
@@ -197,14 +217,20 @@ var THEMES = {
   'aiad27-future': { name: 'AIAD27 · Future', swatch: '#16a34a' },
   product: { name: 'Product · Keynote minimal', swatch: '#f5f5f7' },
   editorial: { name: 'Editorial · Paper', swatch: '#f3efe6' },
-  cinematic: { name: 'Cinematic · Dark pitch', swatch: '#0a0b0f' },
-  brutal: { name: 'Brutal · Mono', swatch: '#111111' },
-  midnight: { name: 'Midnight', swatch: '#1b2a4a' },
+  cinematic: { name: 'Cinematic · Dark pitch', swatch: '#0a0b0f', ground: 'dark' },
+  brutal: { name: 'Brutal · Mono', swatch: '#111111', ground: 'dark' },
+  midnight: { name: 'Midnight', swatch: '#1b2a4a', ground: 'dark' },
   paper:    { name: 'Paper',    swatch: '#f4f1ea' },
-  ocean:    { name: 'Ocean',    swatch: '#0d5c63' },
-  ember:    { name: 'Ember',    swatch: '#3d1b2a' },
-  mono:     { name: 'Mono',     swatch: '#111111' }
+  ocean:    { name: 'Ocean',    swatch: '#0d5c63', ground: 'dark' },
+  ember:    { name: 'Ember',    swatch: '#3d1b2a', ground: 'dark' },
+  mono:     { name: 'Mono',     swatch: '#111111', ground: 'dark' }
 };
+
+/** 'dark' or 'light' for a theme key, light for anything unknown. */
+function themeGround(theme) {
+  var t = THEMES[theme];
+  return t && t.ground === 'dark' ? 'dark' : 'light';
+}
 
 /* Morph is last because it is the only one that is a claim about the
    material rather than a way of getting from A to B: it carries the shared
@@ -1466,7 +1492,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   chartCategories: chartCategories,
   chartPrimaryCategory: chartPrimaryCategory,
   slideHeight: slideHeight,
-  THEMES: THEMES,
+  THEMES: THEMES, themeGround,
   TRANSITIONS: TRANSITIONS,
   TEAM_COLORS: TEAM_COLORS,
   MAX_TEAMS: MAX_TEAMS,
@@ -1595,4 +1621,4 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   LibraryFolders: LibraryFolders
 });
 
-export { SLIDE_W, SLIDE_H, ASPECTS, parsePerson, orgTree, CHART_TAXONOMY, chartCategories, chartPrimaryCategory, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, INFO_LAYOUTS, parseInfoLine, formatInfoLine, infoNumber, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, unusedDraft, libraryGroupFromTheme, normalizeLibraryGroup, LIBRARY_GROUPS, LibraryFolders, GAME_FORMAT_PRESETS, getShowcaseGame };
+export { SLIDE_W, SLIDE_H, ASPECTS, parsePerson, orgTree, CHART_TAXONOMY, chartCategories, chartPrimaryCategory, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, themeGround, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, INFO_LAYOUTS, parseInfoLine, formatInfoLine, infoNumber, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, unusedDraft, libraryGroupFromTheme, normalizeLibraryGroup, LIBRARY_GROUPS, LibraryFolders, GAME_FORMAT_PRESETS, getShowcaseGame };

@@ -9,6 +9,33 @@
   var SF = global.SF;
   var LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
+  /**
+   * A root that carries a deck's theme, and the one fact about that theme
+   * shared CSS needs before anything is painted on it.
+   *
+   * Ten call sites used to write `'theme-' + (deck.theme || 'midnight')` by
+   * hand — slides, question and feedback slides, the two score rails, the
+   * solo score, and the race, boss, wordreveal and study boards. Which was
+   * fine until css/app.css needed to know whether the ground was dark, and
+   * answered it by naming themes in four separate selector lists that then
+   * drifted apart. data-ground is that answer, declared once in THEMES.
+   *
+   * The 'midnight' fallback is kept exactly as it was: normalizeDeck already
+   * resolves an unknown theme to studio, so this only fires for a deck object
+   * that never went through it, and changing what those get is a separate
+   * decision from this one.
+   *
+   * @param {string} cls classes before the theme, e.g. 'slide' or 'scorerail'
+   * @param {{theme?: string}} deck
+   * @param {string} [after] classes appended after the theme, e.g. 'layout-title'
+   */
+  function themedRoot(cls, deck, after) {
+    var theme = (deck && deck.theme) || 'midnight';
+    var node = el('div', cls + ' theme-' + theme + (after ? ' ' + after : ''));
+    node.dataset.ground = SF.themeGround ? SF.themeGround(theme) : 'light';
+    return node;
+  }
+
   function el(tag, cls, text) {
     var n = document.createElement(tag);
     if (cls) n.className = cls;
@@ -4921,7 +4948,7 @@
 
   function renderSlide(deck, slide, opts) {
     opts = opts || {};
-    var root = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-' + slide.type);
+    var root = themedRoot('slide', deck, 'layout-' + slide.type);
     root.dataset.slideId = slide.id;
     stampAspect(root, deck);
     if (slide.activity) {
@@ -5155,7 +5182,7 @@
   /* One approved question, on the wall. Deliberately plain: it is somebody's
      question being taken seriously, not a data visualisation. */
   function questionCard(deck, item) {
-    var node = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-question');
+    var node = themedRoot('slide', deck, 'layout-question');
     var pad = el('div', 'pad');
     pad.appendChild(el('div', 'qc-label', 'From the room'));
     pad.appendChild(el('div', 'qc-text', item.text || ''));
@@ -5178,7 +5205,7 @@
    */
   function feedbackFocus(deck, digest, opts) {
     opts = opts || {};
-    var node = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-feedback');
+    var node = themedRoot('slide', deck, 'layout-feedback');
     var pad = el('div', 'pad');
 
     /* The room the poll is for is the room still arriving. The rail has said
@@ -5362,7 +5389,7 @@
   /* Same slot and geometry as the scoreboard — a presentation only ever needs
      one side panel, and reusing the shell means one scaling path. */
   function feedbackRail(deck) {
-    var root = el('div', 'scorerail fbrail theme-' + (deck.theme || 'midnight'));
+    var root = themedRoot('scorerail fbrail', deck);
     root.appendChild(el('div', 'rail-title', 'Feedback'));
     root.appendChild(el('div', 'rail-sub', ''));
     root.appendChild(el('div', 'rail-news'));
@@ -5600,7 +5627,7 @@
     opts = opts || {};
     var len = Math.max(1, opts.length || 5);
 
-    var node = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-race');
+    var node = themedRoot('slide', deck, 'layout-race');
     var pad = el('div', 'pad');
 
     pad.appendChild(el('div', 'race-title', opts.title || 'The race'));
@@ -5659,7 +5686,7 @@
     var max = Math.max(1, Number(opts.max) || 1);
     var hp = Math.max(0, Math.min(max, Number(opts.hp) || 0));
     var pct = Math.round((hp / max) * 100);
-    var node = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-boss' +
+    var node = themedRoot('slide', deck, 'layout-boss' +
       (opts.hit ? ' boss-hit' : '') + (hp <= 0 ? ' boss-down' : ''));
     var pad = el('div', 'pad');
     pad.appendChild(el('div', 'boss-title', opts.title || 'Boss battle'));
@@ -5677,7 +5704,7 @@
   /** Word Reveal drip wall — letter mask over the deck. */
   function wordRevealWall(deck, opts) {
     opts = opts || {};
-    var node = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-wordreveal');
+    var node = themedRoot('slide', deck, 'layout-wordreveal');
     var pad = el('div', 'pad');
     pad.appendChild(el('div', 'wr-title', 'Word reveal'));
     if (opts.hint) pad.appendChild(el('div', 'wr-hint', opts.hint));
@@ -5691,7 +5718,7 @@
   /** Memory / knowledge study card on the wall. */
   function studyCards(deck, opts) {
     opts = opts || {};
-    var node = el('div', 'slide theme-' + (deck.theme || 'midnight') + ' layout-study');
+    var node = themedRoot('slide', deck, 'layout-study');
     var pad = el('div', 'pad');
     pad.appendChild(el('div', 'study-term', opts.term || ''));
     if (opts.definition) pad.appendChild(el('div', 'study-def', opts.definition));
@@ -5707,7 +5734,7 @@
 
   /** Empty rail shell. Built once per show; rows are painted into it. */
   function scoreRail(deck) {
-    var root = el('div', 'scorerail theme-' + (deck.theme || 'midnight'));
+    var root = themedRoot('scorerail', deck);
     root.appendChild(el('div', 'rail-title', 'The room'));
     root.appendChild(el('div', 'rail-sub', ''));
     /* Arrivals, briefly. Above the board because that is where the eye is
@@ -5760,6 +5787,11 @@
       if (value) rail.style.setProperty(token, value);
       else rail.style.removeProperty(token);
     });
+    /* Same reasoning as the tokens above, for the one thing that is not a
+       token: the rail reads its ground off the slide it is butted against
+       rather than off the deck, so a theme that flips ground per layout gets
+       a rail that flips with it. */
+    if (slideEl.dataset.ground) rail.dataset.ground = slideEl.dataset.ground;
   }
 
   /**
@@ -6061,7 +6093,7 @@
 
   /** Compact "3 / 5 correct" pill for a show with no audience attached. */
   function soloScore(deck) {
-    var root = el('div', 'soloscore theme-' + (deck.theme || 'midnight'));
+    var root = themedRoot('soloscore', deck);
     root.appendChild(el('span', 'lbl', 'Score'));
     root.appendChild(el('span', 'val', '0 / 0'));
     return root;

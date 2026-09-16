@@ -8146,8 +8146,8 @@
   var THEMES = {
     studio: { name: "Studio · Sage & ink", swatch: "#dce8cc" },
     northeastern: { name: "Northeastern London", swatch: "#c8102e" },
-    ukbt: { name: "UK Black Tech", swatch: "#264258" },
-    "ukbt-institute": { name: "UKBT Institute", swatch: "#2d3134" },
+    ukbt: { name: "UK Black Tech", swatch: "#264258", ground: "dark" },
+    "ukbt-institute": { name: "UKBT Institute", swatch: "#2d3134", ground: "dark" },
     /* AI Awareness Day 2026. One design, five grounds: the campaign gives each
        of its principles a colour, and a starter deck belongs to exactly one of
        them, so the principle is the theme rather than a setting inside it.
@@ -8169,14 +8169,18 @@
     "aiad27-future": { name: "AIAD27 · Future", swatch: "#16a34a" },
     product: { name: "Product · Keynote minimal", swatch: "#f5f5f7" },
     editorial: { name: "Editorial · Paper", swatch: "#f3efe6" },
-    cinematic: { name: "Cinematic · Dark pitch", swatch: "#0a0b0f" },
-    brutal: { name: "Brutal · Mono", swatch: "#111111" },
-    midnight: { name: "Midnight", swatch: "#1b2a4a" },
+    cinematic: { name: "Cinematic · Dark pitch", swatch: "#0a0b0f", ground: "dark" },
+    brutal: { name: "Brutal · Mono", swatch: "#111111", ground: "dark" },
+    midnight: { name: "Midnight", swatch: "#1b2a4a", ground: "dark" },
     paper: { name: "Paper", swatch: "#f4f1ea" },
-    ocean: { name: "Ocean", swatch: "#0d5c63" },
-    ember: { name: "Ember", swatch: "#3d1b2a" },
-    mono: { name: "Mono", swatch: "#111111" }
+    ocean: { name: "Ocean", swatch: "#0d5c63", ground: "dark" },
+    ember: { name: "Ember", swatch: "#3d1b2a", ground: "dark" },
+    mono: { name: "Mono", swatch: "#111111", ground: "dark" }
   };
+  function themeGround(theme) {
+    var t = THEMES[theme];
+    return t && t.ground === "dark" ? "dark" : "light";
+  }
   var TRANSITIONS = ["none", "fade", "push", "zoom", "wipe", "morph"];
   var GALLERY_MAX = 8;
   var EXPLORATION_TYPES = ["beforeafter", "explore", "simulation", "chart", "spotfake"];
@@ -9152,6 +9156,7 @@
     chartPrimaryCategory,
     slideHeight,
     THEMES,
+    themeGround,
     TRANSITIONS,
     TEAM_COLORS,
     MAX_TEAMS,

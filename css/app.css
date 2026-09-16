@@ -851,11 +851,19 @@ html[data-ws="game"] #btnSorter { display: none; }
 }
 /* Dark grounds take their own steps from the same hues, validated against a
    dark surface — not an automatic lightening of the light set. */
-/* The UKBT themes used to be on this list and are not any more: five of the
-   twelve combinations of these steps against their two grounds fall under
-   3:1. They carry the brand's own highlight colours in css/ukbt.css, measured
-   the same way. A dark theme belongs here unless it can beat it. */
-.slide.theme-midnight, .slide.theme-ocean, .slide.theme-ember, .slide.theme-mono {
+/* Every dark ground, from the theme's own `ground: 'dark'` in THEMES rather
+   than from a list of names kept by hand. cinematic and brutal are the
+   darkest grounds in the app and were missing from the list this replaces, so
+   both were drawing from the light-ground steps above — brutal's worst series
+   at 2.82:1, under the 3:1 floor for non-text graphics.
+
+   The UKBT carve-out survives without being maintained. Five of the twelve
+   combinations of these steps against its two grounds fall under 3:1, so it
+   carries the brand's own highlight colours instead — and because
+   css/ukbt.css loads after this file, those simply win. A dark theme belongs
+   on these steps unless it can beat them, and beating them now means
+   declaring better ones rather than being left off a list. */
+.slide[data-ground="dark"] {
   --chart-1: #CA042C;
   --chart-2: #049F6C;
   --chart-3: #B84701;
@@ -1732,21 +1740,11 @@ html[data-ws="game"] #btnSorter { display: none; }
 .layout-code .code-pane .ct-fn  { color: #1746c0; }
 /* The dark grounds, named rather than detected — the same list the chart
    palette uses, for the same reason: a theme is dark because we said so. */
-.slide.theme-midnight .code-pane .ct-com, .slide.theme-ocean .code-pane .ct-com,
-.slide.theme-ember .code-pane .ct-com, .slide.theme-mono .code-pane .ct-com,
-.slide.theme-ukbt .code-pane .ct-com, .slide.theme-ukbt-institute .code-pane .ct-com { color: #95a3bd; }
-.slide.theme-midnight .code-pane .ct-str, .slide.theme-ocean .code-pane .ct-str,
-.slide.theme-ember .code-pane .ct-str, .slide.theme-mono .code-pane .ct-str,
-.slide.theme-ukbt .code-pane .ct-str, .slide.theme-ukbt-institute .code-pane .ct-str { color: #7fd9a3; }
-.slide.theme-midnight .code-pane .ct-num, .slide.theme-ocean .code-pane .ct-num,
-.slide.theme-ember .code-pane .ct-num, .slide.theme-mono .code-pane .ct-num,
-.slide.theme-ukbt .code-pane .ct-num, .slide.theme-ukbt-institute .code-pane .ct-num { color: #f0b878; }
-.slide.theme-midnight .code-pane .ct-kw, .slide.theme-ocean .code-pane .ct-kw,
-.slide.theme-ember .code-pane .ct-kw, .slide.theme-mono .code-pane .ct-kw,
-.slide.theme-ukbt .code-pane .ct-kw, .slide.theme-ukbt-institute .code-pane .ct-kw { color: #e0a3f0; }
-.slide.theme-midnight .code-pane .ct-fn, .slide.theme-ocean .code-pane .ct-fn,
-.slide.theme-ember .code-pane .ct-fn, .slide.theme-mono .code-pane .ct-fn,
-.slide.theme-ukbt .code-pane .ct-fn, .slide.theme-ukbt-institute .code-pane .ct-fn { color: #8fc0ff; }
+.slide[data-ground="dark"] .code-pane .ct-com { color: #95a3bd; }
+.slide[data-ground="dark"] .code-pane .ct-str { color: #7fd9a3; }
+.slide[data-ground="dark"] .code-pane .ct-num { color: #f0b878; }
+.slide[data-ground="dark"] .code-pane .ct-kw { color: #e0a3f0; }
+.slide[data-ground="dark"] .code-pane .ct-fn { color: #8fc0ff; }
 .layout-code .code-pane.code-typing::after {
   content: '';
   display: inline-block; width: .55ch; height: 1.05em;
@@ -2126,16 +2124,12 @@ html[data-ws="game"] #btnSorter { display: none; }
   filter: brightness(0) invert(1) drop-shadow(0 1px 8px rgba(0,0,0,.55));
 }
 
-/* Themes that are dark on every slide. `:not(.logo-normal)` leaves a way out
-   for a deck whose own logo is already white. */
-.theme-midnight .slide:not(.logo-normal) .slide-logo img,
-.theme-ocean .slide:not(.logo-normal) .slide-logo img,
-.theme-ember .slide:not(.logo-normal) .slide-logo img,
-.theme-mono .slide:not(.logo-normal) .slide-logo img,
-.slide.theme-midnight:not(.logo-normal) .slide-logo img,
-.slide.theme-ocean:not(.logo-normal) .slide-logo img,
-.slide.theme-ember:not(.logo-normal) .slide-logo img,
-.slide.theme-mono:not(.logo-normal) .slide-logo img { filter: brightness(0) invert(1); }
+/* Any dark ground. `:not(.logo-normal)` leaves a way out for a deck whose own
+   logo is already white — which is how the UKBT decks are unaffected by
+   joining this rule: every one of them sets logoReverse: 'never', because the
+   brand ships its wordmark already reversed. */
+[data-ground="dark"] .slide:not(.logo-normal) .slide-logo img,
+.slide[data-ground="dark"]:not(.logo-normal) .slide-logo img { filter: brightness(0) invert(1); }
 .layout-title .slide-logo,
 .layout-section .slide-logo {
   top: 36px;
@@ -2621,10 +2615,13 @@ html[data-ws="game"] #btnSorter { display: none; }
 }
 
 .scorerail .srow.lead { background: var(--s-card); outline: 1px solid var(--s-accent); outline-offset: -1px; }
-.theme-midnight .scorerail .srow.lead,
-.theme-ocean .scorerail .srow.lead,
-.theme-ember .scorerail .srow.lead,
-.theme-mono .scorerail .srow.lead { background: rgba(255,255,255,.17); outline: none; }
+/* On a dark ground the leader is lifted rather than outlined: every dark
+   theme's --s-card is translucent white at 6-8%, and a 1px accent outline on
+   top of that reads as noise next to the glow of the accent itself. The rail
+   takes its ground from the slide beside it, so this matches whichever side
+   of a per-layout flip is on screen. */
+[data-ground="dark"] .scorerail .srow.lead,
+.scorerail[data-ground="dark"] .srow.lead { background: rgba(255,255,255,.17); outline: none; }
 .scorerail .srow.gain { animation: sf-score-pop .85s ease; }
 @keyframes sf-score-pop {
   0%   { transform: scale(1); }

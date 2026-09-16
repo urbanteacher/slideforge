@@ -1275,6 +1275,25 @@
                direction control away, and choosing a wave brings it back. */
             touched(); repaint(); drawInspector();
           }), 'How far apart the words are. The wave is always eased — it starts quickly and slows as it finishes.'));
+          /* Which end the wave starts from. The renderer has read this since
+             the word animation landed — wordFrom() in js/render.js, with
+             three orders in WORD_FROMS — and the motion-lab specimen deck
+             demonstrates all three. There was simply never a control, so the
+             only way to ask for anything but 'first' was to hand-edit the
+             deck JSON. The line above already redraws the pane for it.
+
+             Hidden for Together, where every word shares one beat and a
+             direction would be a setting with nothing to order. */
+          if ((d.wordStagger || 'wave') !== 'together') {
+            insp.appendChild(UI.field('Direction', UI.select([
+              { value: 'first', label: 'From the first word' },
+              { value: 'last', label: 'From the last word' },
+              { value: 'center', label: 'From the centre — outwards to both ends' }
+            ], String(d.wordFrom || 'first'), function (v) {
+              if (v && v !== 'first') d.wordFrom = v; else delete d.wordFrom;
+              touched(); repaint();
+            }), 'Which end the wave starts from. From the centre sends it outwards both ways at once; with an even number of words the middle two share the first beat.'));
+          }
           /* The AI button. Everything above is a choice from a list; this is
              the one control that can produce something not on any list —
              per-word coordinates, which is what a motion designer would
