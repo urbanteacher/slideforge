@@ -30,7 +30,7 @@ Nothing else needs setting up. The live polls are optional (see below).
 
 ## What is on each deck
 
-Nine or ten slides in the show, plus two or three held back as extension.
+Nine or ten slides in the show, plus three or four held back as extension.
 
 | # | Slide | What it is |
 |---|---|---|
@@ -38,17 +38,29 @@ Nine or ten slides in the show, plus two or three held back as extension.
 | 2 | **Statement** | The discussion question, full screen. *This is the 60 seconds.* |
 | 3 | Stat tiles | The "Did you know?" numbers, sourced |
 | 4 | **Cards** | The answers — revealed **one at a time** |
-| 5–6 | *hidden* | The teacher pack's sub-question and its answers |
-| 7 | Keywords | The two definitions, which were never on a slide before |
-| 8 | Journey | The five takeaways, as a path |
-| 9 | Key fact | The one line they leave with |
-| 10 | Section | "If any of this affected you" — on an ink ground |
-| 11 | Links | Reporting and support, every link live |
+| … | *hidden* | The teacher pack's sub-question and its answers |
+| | Keywords | The two definitions, which were never on a slide before |
+| | Journey | The five takeaways, as a path |
+| | Key fact | The one line they leave with |
+| | Section | "If any of this affected you" — on an ink ground |
+| | Links | Reporting and support, every link live |
 
-SMART has an extra slide: a **Versus** layout setting *predicting* against
-*understanding*. It carries that starter's whole argument on its own.
+Four decks vary from that spine, each with a layout built for the shape its
+content actually has:
 
-FUTURE has a **Versus** too, for jobs changing against jobs growing.
+- **SMART** — a **Versus** setting *predicting* against *understanding*. It
+  carries that starter's whole argument on its own.
+- **FUTURE** — a **Versus** for jobs changing against jobs growing (hidden).
+- **RESPONSIBLE** — **What lies beneath** replaces the stat tiles: same numbers,
+  same sources, but "you saw one line of text, here is what was under it"
+  instead of three figures side by side. Then a **Spectrum** for the teacher
+  pack's cost–benefit sub-question, which had no slide because it is a
+  judgement about where things sit rather than a list.
+- **SAFE** — a **Claim & source** on the deck's own "8 million" figure, three
+  minutes after telling the room to check where things come from. Plus a
+  hidden **Then / now / next** drawing 500,000 → 8 million as ×16.
+
+Five of those layouts did not exist before this folder; see below.
 
 ### The hidden slides
 
@@ -158,12 +170,31 @@ RESPONSIBLE  #00A896
 FUTURE       #FF7EED
 ```
 
-The badge is redrawn rather than shipped. The original is a 2 KB SVG per
-principle with the colour baked in and the geometry under four nested matrix
-transforms; resolved, it is a clean quarter-grid construction — a square with
-two opposite corners chamfered at a quarter, folded from the left edge to the
-centre and then away at 45°. Five SVG files became two CSS clip-paths that take
-their colour from the theme.
+**The badge is the designer's artwork, not a redraw.** The five SVGs live in
+`assets/brand/aiad26/` and are carried in each deck's `logo` slot, so the mark
+lands on every slide rather than only on the two full-bleed layouts.
+
+An earlier version of this theme drew the badge in CSS from two clip-paths and
+a rotated word, on the assumption that the five were one shape recoloured. They
+are not: each principle puts its dark wedge somewhere different and sets its
+word at its own angle — RESPONSIBLE reads bottom-to-top up the left edge, SAFE
+runs down-right, SMART up-right. Standardising them lost the thing that made
+each one its own mark.
+
+`logoReverse: 'never'` and `logoSize: 'large'` on every deck. The first because
+each badge already contains both grounds, so the invert `css/app.css` applies on
+dark themes would flatten it to one white silhouette. The second because
+`renderSlide` writes the logo height inline from that field — 72px at 'large' —
+which a stylesheet cannot raise without `!important`, and a theme overriding an
+author's own size control is the wrong way round.
+
+**What the theme draws is the fold.** The badge geometry — a square cut by a
+fold that runs flat and then away at 45°, with the opposite corner chamfered —
+is taken at slide scale on covers and section breaks, bled off the bottom-right
+corner with the seam at full strength. It takes the fold's *wedge* half, which
+is bottom-heavy by construction: the first attempt scaled up the large half,
+whose mass sits in its own top-left, and put a pale block straight through the
+middle of every cover title.
 
 **The accent does two jobs, so it is two tokens.** All five campaign colours
 are too bright to set type in — on white they run 2.07:1 (cyan) to 4.42:1
@@ -195,6 +226,26 @@ This was found by reviewing the generated baselines, which is what they are
 for.
 
 ---
+
+## Five layouts this built
+
+All five are registered app-wide — any deck, any theme, in the picker under
+Infographic (Spot the fake sits under Show & explore).
+
+| Layout | The shape it is for |
+|---|---|
+| **What lies beneath** | One small visible fact, and the mass under it. Pits widen as they deepen and reveal one at a time, so the shape argues before the words do. |
+| **Spectrum** | A continuum with named ends. The pit's value is a *position*, not a magnitude — every other info layout reads it as a size. |
+| **Claim & source** | A claim, then who said it, when, on what basis, and what it leaves out. Rows build, so a claim comes apart in front of the room. |
+| **Then / now / next** | One quantity across three or four moments, with the multiple between each pair worked out. A column with no number draws as a dashed unknown. |
+| **Spot the fake** | Two images, one not real. The room commits before the tells appear. Reuses `exploration.before/after`, so no new field. |
+
+**One trap worth knowing.** `SF.infoNumber` reads a leading numeral and stops,
+which is right for `92%` and wrong for `8 million` — it returns 8. Then / now /
+next drew 500,000 as a full-height bar beside a stub and labelled it −100%, so
+it uses its own magnitude-aware reader. That reader is deliberately local:
+`funnel` and the stat rings scale by `infoNumber` too, and changing what it
+returns under existing decks is a separate decision from adding a layout.
 
 ## Rebuilding
 

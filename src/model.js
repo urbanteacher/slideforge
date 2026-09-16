@@ -209,7 +209,10 @@ var GALLERY_MAX = 8;
 
 /* The slide kinds that read exploration settings. A chart is here because
    prediction is a chart setting; everything else never looks at them. */
-var EXPLORATION_TYPES = ['beforeafter', 'explore', 'simulation', 'chart'];
+/* spotfake is here for `exploration.before` / `.after` only: it needs two
+   images and labels, which is exactly what that block already holds. It uses
+   none of the zoom, model or prediction fields. */
+var EXPLORATION_TYPES = ['beforeafter', 'explore', 'simulation', 'chart', 'spotfake'];
 
 /* Team colours line up with the coloured answer pads on the phones. */
 var TEAM_COLORS = ['#e8474f', '#2b7ce9', '#e8a020', '#29a86b', '#8b5cf0', '#d4477f'];
@@ -420,6 +423,50 @@ function makeSlide(type) {
         formatInfoLine('', '', ''),
         formatInfoLine('', '', '')
       ];
+      break;
+    case 'spectrum':
+      s.title = 'Where does each one sit?';
+      s.subtitle = 'Never worth it | Always worth it';
+      s.bullets = [
+        formatInfoLine('Something', '20', 'Why it sits there'),
+        formatInfoLine('', '50', ''),
+        formatInfoLine('', '85', '')
+      ];
+      break;
+    case 'sourcecheck':
+      s.title = '"The claim, quoted as it was made"';
+      s.bullets = [
+        formatInfoLine('Who', 'The source', ''),
+        formatInfoLine('When', 'The date', ''),
+        formatInfoLine('Basis', 'What it rests on', ''),
+        formatInfoLine('Gap', 'What it does not say', '')
+      ];
+      s.progressive = true;
+      break;
+    case 'shift':
+      s.title = 'How fast this moved';
+      s.bullets = [
+        formatInfoLine('Then', '100', 'Where it started'),
+        formatInfoLine('Now', '400', 'Where it is'),
+        formatInfoLine('Next', '', 'Where it goes')
+      ];
+      break;
+    case 'spotfake':
+      s.title = 'Which one is real?';
+      s.subtitle = 'A | B';
+      s.correct = 0;
+      s.bullets = ['The first tell', 'The second tell', 'The third tell'];
+      s.progressive = true;
+      break;
+    case 'iceberg':
+      s.title = 'The hidden costs';
+      s.subtitle = 'What you see';
+      s.bullets = [
+        formatInfoLine('What it costs', 'Value', 'Note'),
+        formatInfoLine('', '', ''),
+        formatInfoLine('', '', '')
+      ];
+      s.progressive = true;
       break;
     case 'timeline':
       s.title = 'How we got here';

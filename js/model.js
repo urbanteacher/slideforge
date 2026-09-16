@@ -3198,6 +3198,119 @@
         seed: { title: "How we got here", bullets: ["Date	Event	Detail", "		", "		", "		"] }
       }]
     },
+    /* What you see, and what is under it.
+    
+         The other infographics all lay their parts out side by side, which says
+         "these are comparable". A great many things a school teaches are the
+         opposite shape: one small visible fact sitting on a mass that is bigger
+         than it and deliberately out of view. The cost of a t-shirt. What a
+         headline leaves out. What one question to a chatbot actually spends.
+    
+         Above the waterline goes the subtitle — the thing everyone already sees.
+         Below it the pits widen as they deepen, so the shape argues before the
+         words do, and they reveal one at a time so a class meets the mass at the
+         speed the teacher sets rather than all at once. */
+    iceberg: {
+      label: "What lies beneath",
+      icon: "◭",
+      deck: true,
+      pits: 6,
+      group: "infographic",
+      starters: [{
+        title: "What lies beneath",
+        blurb: "One visible thing, and the mass underneath it — hidden costs, what a headline leaves out.",
+        seed: {
+          title: "The hidden costs",
+          subtitle: "What you see",
+          bullets: ["What it costs	Value	Note", "		", "		"]
+        }
+      }]
+    },
+    /* A continuum with named ends, and things placed along it.
+    
+       A compare slide asks "which of these two", and a stat tile asks "how big".
+       Neither asks the question a class argues about best: where does this sit
+       between two extremes, and does everyone agree? The pits carry a position
+       rather than a magnitude, so two items 4 points apart are 4 points apart on
+       the line — which is the whole claim the slide is making. */
+    spectrum: {
+      label: "Spectrum",
+      icon: "⇹",
+      deck: true,
+      pits: 6,
+      group: "infographic",
+      starters: [{
+        title: "Spectrum",
+        blurb: "One end to the other, with things placed along it — never/always, cheap/costly, safe/risky.",
+        seed: {
+          title: "Where does each one sit?",
+          subtitle: "Never worth it | Always worth it",
+          bullets: ["Something	20	Why it sits there", "	50	", "	85	"]
+        }
+      }]
+    },
+    /* A claim, and what is actually behind it.
+    
+       The move every media-literacy lesson teaches and no layout supported: put
+       the assertion up, then take it apart by provenance — who said it, when,
+       what it is based on, and what it does not say. The last row is the one
+       that matters and the one an author will skip, so the seed names it. */
+    sourcecheck: {
+      label: "Claim & source",
+      icon: "⌕",
+      deck: true,
+      pits: 6,
+      group: "infographic",
+      starters: [{
+        title: "Claim & source",
+        blurb: "A claim, then who said it, when, on what basis, and what it leaves out.",
+        seed: {
+          title: '"The claim, quoted as it was made"',
+          bullets: ["Who	The source", "When	The date", "Basis	What it rests on", "Gap	What it does not say"]
+        }
+      }]
+    },
+    /* One quantity, across three or four moments.
+    
+       A timeline puts events on a track and says when. This says how much, and
+       prints the change between each pair — which is the number every reader is
+       computing anyway and usually getting wrong. 500,000 to 8 million is not
+       "a rise", it is sixteenfold, and the slide should say so. */
+    shift: {
+      label: "Then / now / next",
+      icon: "⇗",
+      deck: true,
+      pits: 4,
+      group: "infographic",
+      starters: [{
+        title: "Then / now / next",
+        blurb: "One quantity across three moments, with the change between them worked out.",
+        seed: { title: "How fast this moved", bullets: ["Then	100	Where it started", "Now	400	Where it is", "Next		Where it goes"] }
+      }]
+    },
+    /* Two images, one of them not real.
+    
+       beforeafter is one image changing; this is two competing, and the room has
+       to commit to one before the tells appear. That commitment is the entire
+       pedagogy — a class shown the answer first learns that deepfakes are
+       detectable, and a class made to guess first learns that they are not. */
+    spotfake: {
+      label: "Spot the fake",
+      icon: "◐",
+      deck: true,
+      pits: 6,
+      group: "show",
+      starters: [{
+        title: "Spot the fake",
+        blurb: "Two images side by side. The room votes, then the tells are named one at a time.",
+        seed: {
+          title: "Which one is real?",
+          subtitle: "A | B",
+          correct: 0,
+          bullets: ["The first tell", "The second tell", "The third tell"]
+        }
+      }]
+    },
     join: { label: "Join QR & PIN", icon: "⌗", deck: true },
     game: { label: "Game", icon: "◈" },
     quiz: { label: "Quiz", icon: "?" },
@@ -3210,7 +3323,7 @@
     ["show", "Show & explore"],
     ["infographic", "Infographic"]
   ];
-  var INFO_LAYOUTS = ["stats", "compare", "funnel", "timeline"];
+  var INFO_LAYOUTS = ["stats", "compare", "funnel", "timeline", "iceberg", "spectrum", "sourcecheck", "shift"];
   function layoutKeys(test) {
     return Object.keys(SLIDE_TYPES).filter(function(k) {
       return test(SLIDE_TYPES[k]);
@@ -7310,12 +7423,14 @@
     { id: "nul", label: "Northeastern" },
     { id: "ukbt", label: "UK Black Tech" },
     { id: "ukbt-institute", label: "UKBT Institute" },
+    { id: "aiad26", label: "AI Awareness Day" },
     { id: "other", label: "Other" }
   ];
   function libraryGroupFromTheme(theme) {
     if (theme === "northeastern") return "nul";
     if (theme === "ukbt") return "ukbt";
     if (theme === "ukbt-institute") return "ukbt-institute";
+    if (theme && theme.indexOf("aiad26-") === 0) return "aiad26";
     return "other";
   }
   function normalizeLibraryGroup(raw, theme) {
@@ -8053,7 +8168,7 @@
   };
   var TRANSITIONS = ["none", "fade", "push", "zoom", "wipe", "morph"];
   var GALLERY_MAX = 8;
-  var EXPLORATION_TYPES = ["beforeafter", "explore", "simulation", "chart"];
+  var EXPLORATION_TYPES = ["beforeafter", "explore", "simulation", "chart", "spotfake"];
   var TEAM_COLORS = ["#e8474f", "#2b7ce9", "#e8a020", "#29a86b", "#8b5cf0", "#d4477f"];
   var MAX_TEAMS = 6;
   function teamColor(i) {
@@ -8244,6 +8359,50 @@
           formatInfoLine("", "", ""),
           formatInfoLine("", "", "")
         ];
+        break;
+      case "spectrum":
+        s.title = "Where does each one sit?";
+        s.subtitle = "Never worth it | Always worth it";
+        s.bullets = [
+          formatInfoLine("Something", "20", "Why it sits there"),
+          formatInfoLine("", "50", ""),
+          formatInfoLine("", "85", "")
+        ];
+        break;
+      case "sourcecheck":
+        s.title = '"The claim, quoted as it was made"';
+        s.bullets = [
+          formatInfoLine("Who", "The source", ""),
+          formatInfoLine("When", "The date", ""),
+          formatInfoLine("Basis", "What it rests on", ""),
+          formatInfoLine("Gap", "What it does not say", "")
+        ];
+        s.progressive = true;
+        break;
+      case "shift":
+        s.title = "How fast this moved";
+        s.bullets = [
+          formatInfoLine("Then", "100", "Where it started"),
+          formatInfoLine("Now", "400", "Where it is"),
+          formatInfoLine("Next", "", "Where it goes")
+        ];
+        break;
+      case "spotfake":
+        s.title = "Which one is real?";
+        s.subtitle = "A | B";
+        s.correct = 0;
+        s.bullets = ["The first tell", "The second tell", "The third tell"];
+        s.progressive = true;
+        break;
+      case "iceberg":
+        s.title = "The hidden costs";
+        s.subtitle = "What you see";
+        s.bullets = [
+          formatInfoLine("What it costs", "Value", "Note"),
+          formatInfoLine("", "", ""),
+          formatInfoLine("", "", "")
+        ];
+        s.progressive = true;
         break;
       case "timeline":
         s.title = "How we got here";

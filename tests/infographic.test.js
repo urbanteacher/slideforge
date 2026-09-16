@@ -38,9 +38,13 @@ test('parseInfoLine splits label · value · note on tabs or pipes', async () =>
   assert.ok(Number.isNaN(infoNumber('n/a')));
 });
 
-test('the four infographic types are deck layouts in their own picker group', async () => {
+test('the infographic types are deck layouts in their own picker group', async () => {
   const { SLIDE_TYPES, LAYOUT_GROUPS, DECK_TYPES, BULLET_LAYOUTS, INFO_LAYOUTS } = await import('../src/deck/content.js');
-  assert.deepEqual(INFO_LAYOUTS, ['stats', 'compare', 'funnel', 'timeline']);
+  /* Pinned rather than counted. Every entry has to earn the five assertions
+     below — a group, a picker slot, pit behaviour and a starter — and adding
+     one without them is the failure this list is here to catch. */
+  assert.deepEqual(INFO_LAYOUTS,
+    ['stats', 'compare', 'funnel', 'timeline', 'iceberg', 'spectrum', 'sourcecheck', 'shift']);
   for (const t of INFO_LAYOUTS) {
     assert.ok(SLIDE_TYPES[t], t + ' is a slide type');
     assert.equal(SLIDE_TYPES[t].group, 'infographic');

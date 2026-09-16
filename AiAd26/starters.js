@@ -201,6 +201,58 @@ const STARTERS = [
           'of anyone is illegal — a sexual offence — even if it was "just a joke".'
       },
       {
+        /* The deck marks its own homework.
+
+           Slide 3 asserted "8 million" and the room took it, three minutes
+           after being told to check where things come from. Turning the
+           starter's own lesson back on the starter is the strongest version
+           of it available, and it costs one slide. */
+        type: 'sourcecheck',
+        title: '"8 million deepfakes will be shared online in 2025"',
+        subtitle: 'We put that on a slide three minutes ago. Should you have believed it?',
+        bullets: [
+          info('Who', 'European Parliament', ''),
+          info('When', '2025', 'quoted in the AI Awareness Day teacher pack'),
+          info('Basis', 'A projection', 'for a year that has not finished — not a count'),
+          info('Against', '500,000 in 2023', 'the figure it is measured from'),
+          info('Gap', 'No method shown', 'this deck never tells you how it was worked out')
+        ],
+        progressive: true,
+        notes:
+          'REVEAL ONE ROW AT A TIME. The room should feel the claim come apart.\n\n' +
+          'BE FAIR TO THE NUMBER. The point is not that it is wrong — it is a ' +
+          'serious figure from a serious source, and it is very likely sound. ' +
+          'The point is that nobody in the room asked, including you, three ' +
+          'minutes after being told to check where things come from.\n\n' +
+          'The last row is the one that matters, and it is about this deck: the ' +
+          'method is not on the slide. Neither is it on most slides anywhere.\n\n' +
+          'If a student says "so should we not believe it?" — the answer is that ' +
+          'believing it is fine; believing it WITHOUT NOTICING is the habit ' +
+          'deepfakes exploit.'
+      },
+      {
+        type: 'shift',
+        hidden: true,
+        title: 'How fast this moved',
+        subtitle: 'Deepfakes shared online',
+        bullets: [
+          info('2023', '500,000', 'where it started'),
+          info('2025', '8 million', 'projected'),
+          info('2027', '', 'nobody knows')
+        ],
+        body: 'European Parliament 2025',
+        notes:
+          'HIDDEN BY DEFAULT — the growth is already a tile on the "did you ' +
+          'know" slide, and a five-minute starter should not spend two slides ' +
+          'on one number.\n\n' +
+          'Unhide it when you have longer, or when a class has shrugged at "8 ' +
+          'million". The stat slide reports the rise; this one draws it, and ' +
+          'the ×16 in the gutter is the thing nobody works out for themselves. ' +
+          'Two years.\n\n' +
+          'The 2027 column is deliberately empty. Ask the room to fill it before ' +
+          'you move on.'
+      },
+      {
         type: 'statement',
         hidden: true,
         body: 'How would you verify whether content is genuine?',
@@ -733,20 +785,29 @@ const STARTERS = [
           '→ What might you use instead of AI for simple tasks?'
       },
       {
-        type: 'stats',
-        title: "AI's carbon footprint in 2025 could match New York City's total emissions",
-        subtitle: 'Did you know?',
+        /* The one slide in the five decks that is not a list of facts but an
+           argument about proportion, so it gets the layout built for that
+           shape rather than stat tiles. Same numbers, same sources — the
+           difference is that the tiles say "here are three figures" and this
+           says "you saw one line of text; this is what was under it". */
+        type: 'iceberg',
+        title: "What's under one question",
+        subtitle: 'One answer from a chatbot',
         bullets: [
-          info('Of global electricity used by data centres', '1%', 'expected to double by 2026'),
-          info('Training one large AI model', '5 cars', 'as much CO₂ as five cars over their lifetimes'),
-          info("AI's carbon footprint in 2025", '32.6–79.7 Mt', 'CO₂ equivalent')
+          info('Electricity', '1%', 'of all global electricity goes to data centres — doubling by 2026'),
+          info('Carbon', '32.6–79.7 Mt', "AI's 2025 footprint, CO₂ equivalent — about New York City's"),
+          info('Per model trained', '5 cars', 'as much CO₂ as five cars over their entire lifetimes'),
+          info('Water for cooling', '≈ all bottled water', 'AI data centres could use as much this year as the global bottled water industry')
         ],
+        progressive: true,
         body: 'Nature Sustainability 2025 · International Energy Agency 2025 · MIT',
         notes:
-          'The water figure is worth adding aloud: AI data centres could use as ' +
-          'much water this year as the entire global bottled water industry. It ' +
-          'is the statistic students remember, because nobody expects computing ' +
-          'to be thirsty.\n\n' +
+          'REVEAL ONE LAYER AT A TIME — press → for each. The room should be ' +
+          'guessing how far down this goes.\n\n' +
+          'Start by pointing at the line above the waterline: that is all anyone ' +
+          'sees when they use it. Everything below is the same single answer.\n\n' +
+          'The water layer is the one students remember, because nobody expects ' +
+          'computing to be thirsty. Save it for last, which is where it is.\n\n' +
           'The range on the third tile (32.6–79.7) is not vagueness — it is ' +
           'honest reporting of a genuinely uncertain measurement. Worth naming ' +
           'if anyone asks why it is not one number.'
@@ -772,6 +833,38 @@ const STARTERS = [
           'Cost-benefit, if it comes up: complex research, accessibility needs ' +
           'and real productivity gains can justify the cost. Simple questions you ' +
           'could answer yourself, and trivial entertainment, mostly do not.'
+      },
+      {
+        /* The teacher pack's first sub-question — "Is using AI to save time
+           worth its environmental cost?" — which had no slide because it is
+           not a list, it is a judgement about where things sit. This is the
+           layout for that, so the question finally has one.
+
+           THE ORDER IS THE PACK'S; THE POSITIONS ARE A READING OF IT. The pack
+           names the categories and says plainly which end each belongs at
+           ("higher-impact uses may justify higher costs; lower-impact uses may
+           not"). It gives no numbers, and these are not presented as any. */
+        type: 'spectrum',
+        title: 'When is it worth it?',
+        subtitle: 'Rarely worth the cost | Clearly worth the cost',
+        bullets: [
+          info('A question you could answer yourself', '10', 'a search would do'),
+          info('Jokes and trivial entertainment', '24', ''),
+          info('Work you then rewrite yourself', '52', ''),
+          info('Accessibility needs', '82', ''),
+          info('Medical research, climate modelling', '94', '')
+        ],
+        body: 'Categories and ordering from the AI Awareness Day teacher pack',
+        notes:
+          'THE POSITIONS ARE ARGUABLE AND THAT IS THE EXERCISE. The teacher ' +
+          'pack names these categories and says which end each belongs at; it ' +
+          'gives no numbers. Do not defend the exact spots.\n\n' +
+          'Best use: ask the room to move one. "Which of these is in the wrong ' +
+          'place?" gets further in ninety seconds than any amount of explaining, ' +
+          'and the argument is always about the middle one.\n\n' +
+          'The question underneath, from the pack: is AI the most efficient tool ' +
+          'here, or would a simple search have worked?\n\n' +
+          'Keep the tone off guilt. This is a slide about judgement, not abstinence.'
       },
       {
         type: 'statement',

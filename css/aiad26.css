@@ -30,8 +30,9 @@
    So the two jobs are split:
 
      --aiad-accent   the campaign colour. Graphics only — the left-edge rule,
-                     the badge, the accent bar, a tile's left edge. Nothing is
-                     ever set in type on it, so brightness is free.
+                     the accent bar, a tile's left edge. Nothing is ever set in
+                     type on it, so brightness is free. (The badge is not drawn
+                     from this; it is artwork, under assets/brand/aiad26/.)
      --aiad-deep     the same hue darkened to 4.5:1 on white, wired to
                      --s-accent. Everything the app decides to paint in the
                      accent therefore reads, including rules written later.
@@ -57,35 +58,30 @@
   --aiad-accent: #00c4ee;
   --aiad-deep: #00819d;
   --aiad-tint: #e6f8fe;
-  --aiad-principle: 'SAFE';
 }
 
 .theme-aiad26-smart {
   --aiad-accent: #ff6734;
   --aiad-deep: #dd3800;
   --aiad-tint: #fff0ea;
-  --aiad-principle: 'SMART';
 }
 
 .theme-aiad26-creative {
   --aiad-accent: #795bff;
   --aiad-deep: #7658ff;
   --aiad-tint: #efecff;
-  --aiad-principle: 'CREATIVE';
 }
 
 .theme-aiad26-responsible {
   --aiad-accent: #00a896;
   --aiad-deep: #008577;
   --aiad-tint: #e4f7f4;
-  --aiad-principle: 'RESPONSIBLE';
 }
 
 .theme-aiad26-future {
   --aiad-accent: #ff7eed;
   --aiad-deep: #d500b8;
   --aiad-tint: #ffeffc;
-  --aiad-principle: 'FUTURE';
 }
 
 /* ------------------------------------------------------------------ the base
@@ -233,22 +229,27 @@
   letter-spacing: -.02em;
 }
 
-/* ----------------------------------------------------------------- the badge
+/* ------------------------------------------------------------------ the fold
 
-   The campaign mark, redrawn. The original is a 2 KB SVG per principle with
-   the colour baked in and the geometry buried under four nested matrix
-   transforms; resolved, it turns out to be a clean quarter-grid construction,
-   which is what this is:
+   The campaign's geometry, blown up. The badge is a square cut by a fold that
+   runs flat from one edge to the centre and then away at 45 degrees, with the
+   opposite corner chamfered. That shape is the identity — more than the colour
+   is, since five colours share it — so the cover takes it at slide scale and
+   bleeds it off two edges.
 
-     a square, top-right and bottom-left corners chamfered at a quarter,
-     folded along a line that runs flat from the left edge to the centre
-     and then away at 45 degrees to the far corner.
+   IT TAKES THE WEDGE, NOT THE WHOLE BADGE. The first version scaled up the
+   badge's accent face — the big half, above the fold — and bled it off the
+   bottom-right at 16%. The mass of that polygon sits in its own top-left, so
+   pinning the box to the corner put a pale block through the middle of the
+   slide: "BEHIND THE SCREEN?" and "AFFECTED YOU" both ran across it. That is
+   the fault the Northeastern art comment already records, where the monogram
+   landed across the middle of a statement.
 
-   Drawn here rather than shipped, so it takes its colour from the theme and
-   stays sharp at the size the title slide wants it. Five SVG files became two
-   clip-paths.
-
-   .aiad-art is hung on title and section slides by THEME_ART in js/render.js. */
+   So the theme takes the other half: the fold's wedge, which is bottom-heavy
+   by construction and has its own chamfered corner. It hugs the bottom-right
+   below y≈550 — under a cover title that runs to three lines (y≈470) and well
+   clear of the logo at the top. Same geometry, a quarter of the footprint,
+   and nothing behind the words. */
 
 .aiad-art {
   position: absolute;
@@ -257,182 +258,88 @@
   pointer-events: none;
 }
 
-/* The mark, bled off the bottom-right corner. Big enough to read as a graphic
-   rather than a logo parked in a corner — the same move the campaign makes on
-   its own title slides, where the badge is a third of the slide height.
-
-   The bleed is 60 of 420px, which is as far as it can go: past about 15% the
-   fold runs off the slide and takes the principle word with it. */
-.aiad-art .aiad-badge {
+.aiad-art .aiad-fold {
   position: absolute;
-  right: -60px;
-  bottom: -60px;
-  width: 420px;
-  height: 420px;
-}
-
-.aiad-art .aiad-badge span {
-  position: absolute;
-  inset: 0;
-}
-
-/* Smaller on a section slide. A section heading is centred rather than set to
-   the left, so it reaches further right than a cover's does — at 420px the
-   badge was taking a bite out of "AFFECTED YOU". Pulled back to 300px it sits
-   entirely below and right of the centred block. */
-.layout-section .aiad-art .aiad-badge {
-  right: -44px;
-  bottom: -44px;
-  width: 300px;
-  height: 300px;
-}
-
-.layout-section .aiad-art .aiad-badge .aiad-word::after {
-  font-size: 15px;
-  letter-spacing: .14em;
-  text-indent: .14em;
-}
-
-.aiad-art .aiad-badge .aiad-face {
+  right: -40px;
+  bottom: -40px;
+  width: 460px;
+  height: 460px;
   background: var(--aiad-accent);
-  clip-path: polygon(100% 100%, 100% 25%, 75% 0, 0 0, 0 50%, 50% 50%);
-}
-
-.aiad-art .aiad-badge .aiad-fold {
-  background: var(--aiad-ink);
+  /* The badge's wedge: flat across at the fold, chamfer off the bottom-left,
+     square into the corner. The same polygon the mark uses at 142px. */
   clip-path: polygon(50% 50%, 0 50%, 0 75%, 25% 100%, 100% 100%);
+  opacity: .2;
 }
 
-/* On the ink ground the fold would vanish into the background, so it lifts to
-   the paper colour and the word inside it flips to ink. Same shape, same
-   geometry, inverted — which is what the section slide is doing anyway. */
-.layout-section .aiad-art .aiad-badge .aiad-fold {
-  background: var(--aiad-paper);
-}
-
-/* The principle, set along the fold. The content comes from --aiad-principle,
-   so the five themes differ by two custom properties and nothing else.
-
-   rotate(45deg) because the fold runs down-right from the centre; the word
-   sits on it rather than beside it.
-
-   Sized for the longest of the five. RESPONSIBLE is eleven characters, and at
-   45 degrees a word of length L eats L/√2 in both axes at once — so the size
-   that fits SAFE comfortably runs CREATIVE and RESPONSIBLE straight off the
-   corner. 21px with tight tracking fits all five inside the visible wedge. */
-.aiad-art .aiad-badge .aiad-word {
-  display: grid;
-  place-items: center;
-  inset: 46% 20% 32% 0;
-}
-
-.aiad-art .aiad-badge .aiad-word::after {
-  content: var(--aiad-principle, 'AI');
-  transform: rotate(45deg);
-  color: #ffffff;
-  font-weight: 800;
-  font-size: 21px;
-  letter-spacing: .16em;
-  text-indent: .16em;
-  white-space: nowrap;
-}
-
-.layout-section .aiad-art .aiad-badge .aiad-word::after { color: var(--aiad-ink); }
-
-/* The campaign lockup, top-left, the same size and weight the source decks set
-   it at. Two lines, hard left, ink — it is a stamp, not a heading. */
-.aiad-art .aiad-lockup {
+/* The seam: the 45-degree run of the fold, drawn as a line rather than as an
+   edge, at full strength. One hairline out through the corner — what the
+   badge's own split does, at slide scale. */
+.aiad-art .aiad-seam {
   position: absolute;
-  left: 64px;
-  top: 52px;
-  font-size: 19px;
-  font-weight: 800;
-  line-height: 1.16;
-  letter-spacing: .06em;
-  color: var(--aiad-ink);
-  text-transform: uppercase;
-}
-
-.layout-section .aiad-art .aiad-lockup { color: #ffffff; }
-
-.aiad-art .aiad-lockup i {
-  font-style: normal;
-  display: block;
-  color: var(--aiad-accent);
-}
-
-/* The hashtag, bottom-left, on the two full-bleed layouts. Every slide in the
-   source decks carries it; here it is on the covers only. A hashtag repeated
-   on all eleven slides of a five-minute starter is not a campaign, it is
-   wallpaper — and the left-edge rule already carries the identity.
-
-   Left rather than right, where the source deck puts it, because the badge now
-   occupies the bottom-right corner and the two were sitting on top of each
-   other. */
-.aiad-art .aiad-tag {
-  position: absolute;
-  left: 64px;
-  bottom: 34px;
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: .04em;
-  color: var(--aiad-ink);
+  right: -40px;
+  bottom: -40px;
+  width: 460px;
+  height: 460px;
+  background:
+    linear-gradient(to bottom right, transparent calc(50% - 1.5px),
+      var(--aiad-accent) calc(50% - 1.5px), var(--aiad-accent) calc(50% + 1.5px),
+      transparent calc(50% + 1.5px));
+  clip-path: polygon(50% 50%, 100% 100%, 50% 100%);
   opacity: .5;
 }
 
-.layout-section .aiad-art .aiad-tag { color: #ffffff; opacity: .45; }
+/* On the ink ground the wash has to work harder — 20% of a bright accent on
+   near-black is almost nothing, where on paper it is a clear tint. */
+.layout-section .aiad-art .aiad-fold { opacity: .3; }
 
-/* The title slide sets its type against the badge, so the pad needs to clear
-   the lockup sitting above it. */
-.slide.theme-aiad26-safe.layout-title > .pad,
-.slide.theme-aiad26-smart.layout-title > .pad,
-.slide.theme-aiad26-creative.layout-title > .pad,
-.slide.theme-aiad26-responsible.layout-title > .pad,
-.slide.theme-aiad26-future.layout-title > .pad,
-.slide.theme-aiad26-safe.layout-section > .pad,
-.slide.theme-aiad26-smart.layout-section > .pad,
-.slide.theme-aiad26-creative.layout-section > .pad,
-.slide.theme-aiad26-responsible.layout-section > .pad,
-.slide.theme-aiad26-future.layout-section > .pad {
-  position: relative;
-  z-index: 1;
-  padding-top: 104px;
+/* ----------------------------------------------------------------- the mark
+
+   The campaign badge is a real asset per principle — assets/brand/aiad26/ —
+   carried in the deck's logo slot, so it lands on every slide rather than only
+   on the two full-bleed layouts the theme-art hook covers.
+
+   It is square and carries the campaign line inside it, so it needs more
+   height than a wordmark does. That comes from the deck's own logoSize field
+   ('large' = 72px), not from here: renderSlide writes the height inline, so a
+   rule in this file could only win with !important — and a theme overriding
+   an author's size control is the wrong way round. All this file does is pull
+   the square in tight and stop the mark being inverted.
+
+   The five are not one shape recoloured. Each principle puts its dark wedge
+   somewhere different and sets its word at its own angle — RESPONSIBLE reads
+   bottom-to-top up the left edge, SAFE runs down-right, SMART up-right. That
+   is why these are five files and not one file plus a hue rotation. */
+
+.slide.theme-aiad26-safe .slide-logo,
+.slide.theme-aiad26-smart .slide-logo,
+.slide.theme-aiad26-creative .slide-logo,
+.slide.theme-aiad26-responsible .slide-logo,
+.slide.theme-aiad26-future .slide-logo {
+  max-width: 72px;
+  top: 30px;
+  right: 34px;
 }
 
-/* Keep the cover's type out of the badge. The mark occupies the bottom-right
-   quarter, and without this a long title runs under the cyan and loses its
-   last word — "BEHIND THE SCREEN?" was touching it.
-
-   68% of the pad's 1096px content box is 745px, putting the right edge at 837
-   against a badge that starts at 920 — 83px of clearance, which holds at every
-   aspect ratio because the badge is pinned to the right edge and the stage
-   stays 1280 wide. Widening it to fit one more word is not available: that
-   title needs 825px at this size, which lands inside the mark. A cover running
-   to three lines instead of two is the right trade. */
-.slide.theme-aiad26-safe.layout-title > .pad > h1,
-.slide.theme-aiad26-smart.layout-title > .pad > h1,
-.slide.theme-aiad26-creative.layout-title > .pad > h1,
-.slide.theme-aiad26-responsible.layout-title > .pad > h1,
-.slide.theme-aiad26-future.layout-title > .pad > h1,
-.slide.theme-aiad26-safe.layout-title > .pad > .sub,
-.slide.theme-aiad26-smart.layout-title > .pad > .sub,
-.slide.theme-aiad26-creative.layout-title > .pad > .sub,
-.slide.theme-aiad26-responsible.layout-title > .pad > .sub,
-.slide.theme-aiad26-future.layout-title > .pad > .sub {
-  max-width: 68%;
+.slide.theme-aiad26-safe .slide-logo img,
+.slide.theme-aiad26-smart .slide-logo img,
+.slide.theme-aiad26-creative .slide-logo img,
+.slide.theme-aiad26-responsible .slide-logo img,
+.slide.theme-aiad26-future .slide-logo img {
+  max-width: 72px;
 }
 
-/* The cover's subtitle takes the accent, which is the one place the source
-   decks use the principle colour on type. Not on a section slide: there the
-   heading already has it, and two accent lines on one dark ground is one too
-   many. */
-.slide.theme-aiad26-safe.layout-title .sub,
-.slide.theme-aiad26-smart.layout-title .sub,
-.slide.theme-aiad26-creative.layout-title .sub,
-.slide.theme-aiad26-responsible.layout-title .sub,
-.slide.theme-aiad26-future.layout-title .sub {
-  color: var(--aiad-deep);
-  font-weight: 600;
+/* Never inverted. Each badge already carries both grounds inside it — a dark
+   wedge with the principle knocked out in white, and the campaign line in ink
+   on the colour — so the brightness(0) invert(1) that css/app.css uses to
+   reverse a single-colour mark would flatten the whole thing to one white
+   silhouette. The decks set logoReverse: 'never'; this backs that up for a
+   deck that gets the theme applied by hand. */
+.slide.theme-aiad26-safe .slide-logo img,
+.slide.theme-aiad26-smart .slide-logo img,
+.slide.theme-aiad26-creative .slide-logo img,
+.slide.theme-aiad26-responsible .slide-logo img,
+.slide.theme-aiad26-future .slide-logo img {
+  filter: none;
 }
 
 /* --------------------------------------------------------------- stat tiles

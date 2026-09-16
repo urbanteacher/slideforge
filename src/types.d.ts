@@ -26,7 +26,8 @@ export type DeckSlideType =
   | 'split' | 'cards' | 'table' | 'code' | 'image' | 'video' | 'quote' | 'join'
   | 'chart' | 'gallery' | 'beforeafter' | 'explore' | 'simulation'
   | 'keyfact' | 'orgchart'
-  | 'stats' | 'compare' | 'funnel' | 'timeline';
+  | 'stats' | 'compare' | 'funnel' | 'timeline' | 'iceberg'
+  | 'spectrum' | 'sourcecheck' | 'shift' | 'spotfake';
 
 /** Every slide kind the player and renderer handle (`SLIDE_TYPES`). The three
  *  beyond {@link DeckSlideType} are produced by compiling a game. */

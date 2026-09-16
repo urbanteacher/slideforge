@@ -59,6 +59,24 @@ function buildDeck(starter) {
     theme: starter.theme,
     aspect: '16:9',
     org: 'AI Awareness Day 2026',
+    /* The campaign badge for this principle, as the deck's mark. One file per
+       principle because the five are genuinely different drawings, not one
+       shape in five colours — the dark wedge moves and the word takes its own
+       angle in each.
+
+       logoReverse 'never' because each badge already contains both grounds: a
+       dark wedge with the principle knocked out in white, and the campaign
+       line in ink on the colour. The invert css/app.css applies on dark themes
+       would flatten all of that to a single white silhouette. */
+    logo: `assets/brand/aiad26/aiad26-${starter.key}.svg`,
+    logoOn: 'all',
+    logoReverse: 'never',
+    /* 'large' is 72px. The badge is square and carries the campaign line
+       inside it, so it needs the height a wordmark does not — and 72 is the
+       ceiling: renderSlide writes the height inline from this field, so a
+       stylesheet cannot raise it without !important, and overriding an
+       author's own size control from a theme would be the wrong trade. */
+    logoSize: 'large',
     showSlideNumbers: false,
     finalScores: false,
     created: STAMP,
@@ -79,6 +97,19 @@ function buildDeck(starter) {
  * block that will not present because it is missing a prompt or an option. */
 function checkDeck(deck, starter) {
   const problems = [];
+
+  /* The logo is three fields that have to survive together, and two of them
+     are not normalised by the model — they ride through on Object.assign, so a
+     typo does not error, it just quietly stops being there. */
+  const wantLogo = `assets/brand/aiad26/aiad26-${starter.key}.svg`;
+  if (deck.logo !== wantLogo) problems.push(`logo is "${deck.logo}", expected "${wantLogo}"`);
+  if (!fs.existsSync(path.join(__dirname, '..', wantLogo))) {
+    problems.push(`logo file missing on disk: ${wantLogo}`);
+  }
+  if (deck.logoOn !== 'all') problems.push(`logoOn is "${deck.logoOn}", expected "all"`);
+  if (deck.logoReverse !== 'never') {
+    problems.push(`logoReverse is "${deck.logoReverse}", expected "never"`);
+  }
 
   if (deck.slides.length !== starter.slides.length) {
     problems.push(`slide count changed: ${starter.slides.length} in, ${deck.slides.length} out`);

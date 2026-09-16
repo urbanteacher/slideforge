@@ -4138,6 +4138,270 @@
     if (slide.body) pad.appendChild(rich('div', 'info-takeaway', slide, 'body', slide.body));
   }
 
+  /* What you see, and the mass under it.
+
+     Every other infographic here lays its parts out as peers — side by side,
+     along a track, down a funnel — which is an argument that they are
+     comparable. This one is for the opposite shape: a small visible fact
+     sitting on top of something larger that is deliberately out of view.
+
+     The subtitle is the part above the waterline, because that is the thing
+     the room already believes. The pits are what is underneath, and they get
+     WIDER as they get deeper — so by the time the last one lands, the shape
+     has already made the point the words are about to make.
+
+     Progressive by default (see makeSlide). A class that meets the whole mass
+     at once has been told something; a class that meets it a layer at a time
+     is still guessing how far down it goes, which is the only part of this
+     that teaches. */
+  function layoutIceberg(slide, pad) {
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
+    var items = infoItems(slide);
+    if (!items.length) return infoEmpty(pad, 'what is underneath');
+
+    var berg = el('div', 'berg');
+
+    var tip = el('div', 'berg-tip');
+    tip.appendChild(rich('div', 'berg-seen', slide, 'subtitle', slide.subtitle || 'What you see'));
+    berg.appendChild(tip);
+
+    var line = el('div', 'berg-line');
+    line.setAttribute('aria-hidden', 'true');
+    berg.appendChild(line);
+
+    var mass = el('ol', 'berg-mass');
+    var n = items.length;
+    items.forEach(function (it, i) {
+      var band = asStep(el('li', 'berg-band'), slide);
+      /* 60% to 94%. Not from zero: a first band much narrower than the tip
+         reads as a stalactite rather than a mass, and the label has to fit.
+         Not to 100% either — the widest band needs to stop short of the pad
+         edge or it reads as a full-bleed strip rather than the bottom of a
+         shape, and a long value has nowhere to go. */
+      band.style.setProperty('--w', (n === 1 ? 94 : 60 + 34 * (i / (n - 1))).toFixed(1) + '%');
+      band.style.setProperty('--depth', String(i));
+      var copy = el('div', 'berg-copy');
+      copy.appendChild(rich('strong', 'berg-label', slide, 'bullets.' + it.index, it.label));
+      if (it.note) copy.appendChild(el('span', 'berg-note', it.note));
+      band.appendChild(copy);
+      if (it.value) band.appendChild(el('span', 'berg-value', it.value));
+      mass.appendChild(band);
+    });
+    berg.appendChild(mass);
+    pad.appendChild(berg);
+    if (slide.body) pad.appendChild(rich('div', 'info-takeaway', slide, 'body', slide.body));
+  }
+
+  /* A continuum with named ends, and things placed along it.
+
+     The pit's value is a POSITION, not a magnitude — which is the one thing
+     an author has to be told, because every other info layout reads it as a
+     size. Numbers are taken on whatever scale they are already in: 0-100 if
+     any value exceeds 5, otherwise 1-5, so "3" out of a five-point scale and
+     "60" out of a hundred both land in the middle without a setting. */
+  function layoutSpectrum(slide, pad) {
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
+    var items = infoItems(slide);
+    if (!items.length) return infoEmpty(pad, 'things to place');
+
+    var ends = SF.parseInfoLine(slide.subtitle || '');
+    var lowLabel = ends.label || 'One end';
+    var highLabel = ends.value || 'The other';
+
+    var nums = items.map(function (it) { return SF.infoNumber(it.value); });
+    var top = nums.some(function (n) { return isFinite(n) && n > 5; }) ? 100 : 5;
+    var base = top === 100 ? 0 : 1;
+
+    var wrap = el('div', 'spectrum');
+    var axis = el('div', 'spec-axis');
+    axis.setAttribute('aria-hidden', 'true');
+    wrap.appendChild(axis);
+
+    var ticks = el('div', 'spec-ends');
+    ticks.appendChild(el('span', 'spec-end', lowLabel));
+    ticks.appendChild(el('span', 'spec-end spec-end-hi', highLabel));
+    wrap.appendChild(ticks);
+
+    var marks = el('ol', 'spec-marks');
+    items.forEach(function (it) {
+      var n = SF.infoNumber(it.value);
+      /* A pit with no number has no position, so it is listed off the line
+         rather than dropped at zero — which would be a claim. */
+      var placed = isFinite(n);
+      var pct = placed ? Math.max(0, Math.min(100, ((n - base) / (top - base)) * 100)) : 0;
+      var mark = asStep(el('li', 'spec-mark' + (placed ? '' : ' spec-unplaced')), slide);
+      mark.style.setProperty('--at', pct.toFixed(1) + '%');
+      var dot = el('span', 'spec-dot');
+      dot.setAttribute('aria-hidden', 'true');
+      mark.appendChild(dot);
+      var copy = el('span', 'spec-copy');
+      copy.appendChild(rich('strong', 'spec-label', slide, 'bullets.' + it.index, it.label));
+      if (it.note) copy.appendChild(el('span', 'spec-note', it.note));
+      mark.appendChild(copy);
+      marks.appendChild(mark);
+    });
+    wrap.appendChild(marks);
+    pad.appendChild(wrap);
+    if (slide.body) pad.appendChild(rich('div', 'info-takeaway', slide, 'body', slide.body));
+  }
+
+  /* A claim, and what is behind it.
+
+     The title is the assertion, set as a quotation because that is what it is.
+     Each pit is one dimension of provenance — who, when, what it rests on,
+     what it leaves out — and they build, so the claim can be taken apart in
+     front of the room rather than arriving pre-demolished. */
+  function layoutSourceCheck(slide, pad) {
+    var claim = el('blockquote', 'claim-quote');
+    claim.appendChild(rich('p', null, slide, 'title', slide.title || 'The claim'));
+    pad.appendChild(claim);
+    if (slide.subtitle) pad.appendChild(rich('div', 'info-context', slide, 'subtitle', slide.subtitle));
+
+    var items = infoItems(slide);
+    if (!items.length) return infoEmpty(pad, 'what is behind it');
+
+    var list = el('dl', 'claim-rows');
+    items.forEach(function (it) {
+      var row = asStep(el('div', 'claim-row'), slide);
+      row.appendChild(rich('dt', 'claim-key', slide, 'bullets.' + it.index, it.label || '—'));
+      var dd = el('dd', 'claim-val', it.value);
+      if (it.note) dd.appendChild(el('span', 'claim-note', it.note));
+      row.appendChild(dd);
+      list.appendChild(row);
+    });
+    pad.appendChild(list);
+    if (slide.body) pad.appendChild(rich('div', 'info-takeaway', slide, 'body', slide.body));
+  }
+
+  /* "8 million" is 8000000, not 8.
+
+     SF.infoNumber reads the leading numeral and stops, which is exactly right
+     for "92%" or "4.6 / 5" and wrong for every large number a person writes by
+     hand. A then/now/next of 500,000 and "8 million" came out as a full-height
+     bar next to a stub, labelled -100% — a shape that states the opposite of
+     the data it was given, which is worse than drawing nothing.
+
+     Deliberately local rather than a fix to SF.infoNumber: the funnel and the
+     stat rings scale by that function too, and changing what it returns under
+     existing decks is a separate decision from adding this layout.
+
+     A trailing word that is not a magnitude is a unit — "5 cars", "8 lifetimes"
+     — so the number stands as written. */
+  var MAGNITUDES = {
+    k: 1e3, thousand: 1e3, thousands: 1e3,
+    m: 1e6, mn: 1e6, million: 1e6, millions: 1e6,
+    bn: 1e9, billion: 1e9, billions: 1e9,
+    tn: 1e12, trillion: 1e12, trillions: 1e12
+  };
+  function magnitudeNumber(value) {
+    var raw = String(value == null ? '' : value).trim();
+    var m = raw.match(/(-?[\d][\d,.]*)\s*([a-zA-Z]+)?/);
+    if (!m) return NaN;
+    var n = parseFloat(m[1].replace(/,/g, ''));
+    if (!isFinite(n)) return NaN;
+    var word = String(m[2] || '').toLowerCase();
+    return Object.prototype.hasOwnProperty.call(MAGNITUDES, word) ? n * MAGNITUDES[word] : n;
+  }
+
+  /* One quantity across three or four moments, with the change worked out.
+
+     A timeline answers "when". This answers "how much, and how much more" —
+     and prints the multiple between each pair, because that is the number the
+     room is computing in its head and the one it gets wrong. 500,000 to 8
+     million is not "a rise", it is sixteenfold.
+
+     A column with no number still draws: the last one is often the unknown,
+     and "Next / ?" is the point of the slide rather than missing data. */
+  function layoutShift(slide, pad) {
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
+    if (slide.subtitle) pad.appendChild(rich('div', 'info-context', slide, 'subtitle', slide.subtitle));
+    var items = infoItems(slide);
+    if (!items.length) return infoEmpty(pad, 'moments');
+
+    var nums = items.map(function (it) { return magnitudeNumber(it.value); });
+    var known = nums.filter(function (n) { return isFinite(n) && n > 0; });
+    var top = known.length ? Math.max.apply(null, known) : 0;
+
+    var track = el('ol', 'shift-track shift-n' + Math.min(items.length, 4));
+    items.forEach(function (it, i) {
+      var step = asStep(el('li', 'shift-step'), slide);
+      var n = nums[i];
+      var known2 = isFinite(n) && n > 0;
+      /* A floor of 8% so a small first value is still a visible block rather
+         than a hairline — the shape has to read as "this one is small", not
+         as "this one is missing". */
+      var h = known2 && top > 0 ? Math.max(8, (n / top) * 100) : 0;
+      var bar = el('div', 'shift-bar' + (known2 ? '' : ' shift-bar-unknown'));
+      bar.style.setProperty('--h', h.toFixed(1) + '%');
+      bar.setAttribute('aria-hidden', 'true');
+      step.appendChild(bar);
+      step.appendChild(el('div', 'shift-value', it.value || '?'));
+      step.appendChild(rich('div', 'shift-label', slide, 'bullets.' + it.index, it.label));
+      if (it.note) step.appendChild(el('div', 'shift-note', it.note));
+      track.appendChild(step);
+
+      /* The multiple, between this column and the last. Only where both are
+         real and positive — a change from or to an unknown has no honest
+         figure, and inventing one would be the fault this layout exists to
+         correct. */
+      if (i > 0 && isFinite(nums[i - 1]) && nums[i - 1] > 0 && known2) {
+        var ratio = n / nums[i - 1];
+        var text = ratio >= 2 ? '\u00d7' + (Math.round(ratio * 10) / 10)
+          : (ratio > 1 ? '+' : '') + Math.round((ratio - 1) * 100) + '%';
+        var gap = el('li', 'shift-gap' + (ratio < 1 ? ' shift-down' : ''));
+        gap.appendChild(el('span', null, text));
+        track.insertBefore(gap, step);
+      }
+    });
+    pad.appendChild(track);
+    if (slide.body) pad.appendChild(rich('div', 'info-takeaway', slide, 'body', slide.body));
+  }
+
+  /* Two images, one of them not real.
+
+     The images come from the exploration block's before/after, which already
+     holds two sources and two labels — no new field for a shape that already
+     exists. `correct` says which one is genuine, 0 for the first.
+
+     The verdict and the tells are steps, so the room votes into silence and
+     then gets told. Revealing first teaches that deepfakes are detectable;
+     making the room commit first teaches that they are not, which is the
+     lesson the starter is actually for. */
+  function layoutSpotFake(slide, pad) {
+    if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
+    var ex = slide.exploration || {};
+    var names = SF.parseInfoLine(slide.subtitle || '');
+    var labels = [names.label || 'A', names.value || 'B'];
+    var srcs = [ex.before, ex.after];
+    var real = Number(slide.correct) === 1 ? 1 : 0;
+
+    var pair = el('div', 'fake-pair');
+    srcs.forEach(function (src, i) {
+      var fig = el('figure', 'fake-side');
+      var shot = el('div', 'fake-shot' + (src ? '' : ' fake-shot-empty'));
+      if (src) shot.style.backgroundImage = 'url("' + String(src).replace(/"/g, '&quot;') + '")';
+      else shot.appendChild(el('span', null, 'Add image ' + labels[i]));
+      fig.appendChild(shot);
+      fig.appendChild(el('figcaption', 'fake-name', labels[i]));
+      /* The verdict rides on the panel rather than in a line underneath, so
+         at the back of a room the answer is a colour on a picture. */
+      var verdict = asStep(el('div', 'fake-verdict ' + (i === real ? 'is-real' : 'is-fake')), slide);
+      verdict.appendChild(el('span', null, i === real ? 'Real' : 'AI-generated'));
+      fig.appendChild(verdict);
+      pair.appendChild(fig);
+    });
+    pad.appendChild(pair);
+
+    var tells = (slide.bullets || []).filter(function (b) { return String(b).trim(); });
+    if (tells.length) {
+      var ul = el('ul', 'fake-tells');
+      tells.forEach(function (t, i) {
+        ul.appendChild(asStep(rich('li', null, slide, 'bullets.' + i, t), slide));
+      });
+      pad.appendChild(ul);
+    }
+  }
+
   /* Two columns compared row by row. The subtitle names the columns
      ("Before | After"); each pit is either "left\tright" or
      "aspect\tleft\tright" when the row needs a label of its own. Rows build
@@ -4505,6 +4769,11 @@
     stats: layoutStats,
     compare: layoutCompare,
     funnel: layoutFunnel,
+    iceberg: layoutIceberg,
+    spectrum: layoutSpectrum,
+    sourcecheck: layoutSourceCheck,
+    shift: layoutShift,
+    spotfake: layoutSpotFake,
     timeline: layoutTimeline,
     journey: layoutJourney,
     mindmap: layoutMindmap,
@@ -4572,14 +4841,20 @@
      Each theme's own stylesheet owns the look. The names here are the only
      contract, and they are deliberately short-lived markup: change the art
      and you change this string and that file, nothing else. */
-  /* The AI Awareness Day badge: two clip-paths and a rotated word, plus the
-     campaign lockup and the hashtag. Hoisted out of the table below because
-     all five principle themes hang the identical markup. */
+  /* The campaign's fold, at slide scale.
+
+     The badge itself is not drawn here — it is artwork per principle under
+     assets/brand/aiad26/, carried in the logo slot, because the five are five
+     different drawings and a redraw flattened that. What the theme takes from
+     it instead is the geometry: a square cut by a fold that runs flat and then
+     away at 45 degrees, with the corner chamfered. Blown up to most of the
+     slide and bled off two edges, that reads as architecture rather than as a
+     logo printed twice, and the cover carries the identity without competing
+     with the mark in the corner.
+
+     Two pieces: the fold itself, and the seam along its hypotenuse. */
   var AIAD_ART =
-    '<div class="aiad-badge"><span class="aiad-face"></span>' +
-    '<span class="aiad-fold"></span><span class="aiad-word"></span></div>' +
-    '<div class="aiad-lockup">AI Awareness<i>Day 2026</i></div>' +
-    '<div class="aiad-tag">#AIAWARENESSDAY26</div>';
+    '<div class="aiad-fold"></div><div class="aiad-seam"></div>';
 
   var THEME_ART = {
     studio: ['studio-art',
@@ -4609,11 +4884,8 @@
       '<div class="cine-streak"></div><div class="cine-vignette"></div>'],
     /* Technical drawing: a hairline grid and crop marks in the corners. */
     brutal: ['brut-art', '<div class="brut-grid"></div><div class="brut-marks"></div>'],
-    /* AI Awareness Day: the campaign badge bled off the corner, the lockup
-       top-left, the hashtag bottom-right. Identical for all five principles —
-       which principle it is comes from --aiad-principle in css/aiad26.css, so
-       the five entries below really are the same string five times rather than
-       five variants that could drift apart. */
+    /* Same markup for all five: which principle it is comes from the accent
+       token, and the badge in the logo slot says the name. */
     'aiad26-safe': ['aiad-art', AIAD_ART],
     'aiad26-smart': ['aiad-art', AIAD_ART],
     'aiad26-creative': ['aiad-art', AIAD_ART],

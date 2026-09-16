@@ -598,6 +598,62 @@ var SLIDE_TYPES = {
   timeline:    { label: 'Timeline', icon: '⟶', deck: true, pits: 8, group: 'infographic',
                  starters: [{ title: 'Timeline', blurb: 'Dated events along a track — a history, a plan, a term.',
                               seed: { title: 'How we got here', bullets: ['Date\tEvent\tDetail', '\t\t', '\t\t', '\t\t'] } }] },
+  /* What you see, and what is under it.
+
+     The other infographics all lay their parts out side by side, which says
+     "these are comparable". A great many things a school teaches are the
+     opposite shape: one small visible fact sitting on a mass that is bigger
+     than it and deliberately out of view. The cost of a t-shirt. What a
+     headline leaves out. What one question to a chatbot actually spends.
+
+     Above the waterline goes the subtitle — the thing everyone already sees.
+     Below it the pits widen as they deepen, so the shape argues before the
+     words do, and they reveal one at a time so a class meets the mass at the
+     speed the teacher sets rather than all at once. */
+  iceberg:     { label: 'What lies beneath', icon: '◭', deck: true, pits: 6, group: 'infographic',
+                 starters: [{ title: 'What lies beneath', blurb: 'One visible thing, and the mass underneath it — hidden costs, what a headline leaves out.',
+                              seed: { title: 'The hidden costs', subtitle: 'What you see',
+                                      bullets: ['What it costs\tValue\tNote', '\t\t', '\t\t'] } }] },
+  /* A continuum with named ends, and things placed along it.
+  
+     A compare slide asks "which of these two", and a stat tile asks "how big".
+     Neither asks the question a class argues about best: where does this sit
+     between two extremes, and does everyone agree? The pits carry a position
+     rather than a magnitude, so two items 4 points apart are 4 points apart on
+     the line — which is the whole claim the slide is making. */
+  spectrum:    { label: 'Spectrum', icon: '⇹', deck: true, pits: 6, group: 'infographic',
+                 starters: [{ title: 'Spectrum', blurb: 'One end to the other, with things placed along it — never/always, cheap/costly, safe/risky.',
+                              seed: { title: 'Where does each one sit?', subtitle: 'Never worth it | Always worth it',
+                                      bullets: ['Something\t20\tWhy it sits there', '\t50\t', '\t85\t'] } }] },
+  /* A claim, and what is actually behind it.
+  
+     The move every media-literacy lesson teaches and no layout supported: put
+     the assertion up, then take it apart by provenance — who said it, when,
+     what it is based on, and what it does not say. The last row is the one
+     that matters and the one an author will skip, so the seed names it. */
+  sourcecheck: { label: 'Claim & source', icon: '⌕', deck: true, pits: 6, group: 'infographic',
+                 starters: [{ title: 'Claim & source', blurb: 'A claim, then who said it, when, on what basis, and what it leaves out.',
+                              seed: { title: '"The claim, quoted as it was made"',
+                                      bullets: ['Who\tThe source', 'When\tThe date', 'Basis\tWhat it rests on', 'Gap\tWhat it does not say'] } }] },
+  /* One quantity, across three or four moments.
+  
+     A timeline puts events on a track and says when. This says how much, and
+     prints the change between each pair — which is the number every reader is
+     computing anyway and usually getting wrong. 500,000 to 8 million is not
+     "a rise", it is sixteenfold, and the slide should say so. */
+  shift:       { label: 'Then / now / next', icon: '⇗', deck: true, pits: 4, group: 'infographic',
+                 starters: [{ title: 'Then / now / next', blurb: 'One quantity across three moments, with the change between them worked out.',
+                              seed: { title: 'How fast this moved', bullets: ['Then\t100\tWhere it started', 'Now\t400\tWhere it is', 'Next\t\tWhere it goes'] } }] },
+  /* Two images, one of them not real.
+  
+     beforeafter is one image changing; this is two competing, and the room has
+     to commit to one before the tells appear. That commitment is the entire
+     pedagogy — a class shown the answer first learns that deepfakes are
+     detectable, and a class made to guess first learns that they are not. */
+  spotfake:    { label: 'Spot the fake', icon: '◐', deck: true, pits: 6, group: 'show',
+                 starters: [{ title: 'Spot the fake', blurb: 'Two images side by side. The room votes, then the tells are named one at a time.',
+                              seed: { title: 'Which one is real?', subtitle: 'A | B', correct: 0,
+                                      bullets: ['The first tell', 'The second tell', 'The third tell'] } }] },
   join:        { label: 'Join QR & PIN', icon: '⌗', deck: true },
   game:        { label: 'Game', icon: '◈' },
   quiz:        { label: 'Quiz', icon: '?' },
@@ -612,7 +668,7 @@ var LAYOUT_GROUPS = [
   ['infographic', 'Infographic']
 ];
 
-var INFO_LAYOUTS = ['stats', 'compare', 'funnel', 'timeline'];
+var INFO_LAYOUTS = ['stats', 'compare', 'funnel', 'timeline', 'iceberg', 'spectrum', 'sourcecheck', 'shift'];
 
 function layoutKeys(test) {
   return Object.keys(SLIDE_TYPES).filter(function (k) { return test(SLIDE_TYPES[k]); });
