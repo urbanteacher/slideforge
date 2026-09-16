@@ -17,8 +17,8 @@
  *   1  Title             the question, dominant, with the campaign lockup
  *   2  The scenario      30s   one realistic situation, two or three sentences
  *   3  Make your choice  45s   they vote BEFORE the explanation
- *   4  Talk to someone   90s   one question, in pairs, least clutter in the deck
- *   5  The reveal        90s   the concept, and the assumption it breaks
+ *   4  Talk to someone   75s   one question, in pairs, least clutter in the deck
+ *   5  The reveal        75s   the concept, and the assumption it breaks
  *   6  What to remember  45s   three short practical rules, numbered
  *   7  Your choice             one personal action, and the campaign close
  *
@@ -102,7 +102,7 @@ const teacherPage = (opts) => ({
   subtitle: opts.purpose,
   bullets: [
     'Ages ' + opts.ages + '  ·  5 minutes  ·  no preparation, no account, no extra materials',
-    'Timing  30s scenario  ·  45s vote  ·  90s pairs  ·  90s reveal  ·  45s action',
+    'Timing  30s scenario  ·  45s vote  ·  75s pairs  ·  75s reveal  ·  30s remember  ·  45s action',
     'You need  this deck on the board. Phones are optional \u2014 a show of hands works.'
   ],
   notes: opts.notes
@@ -150,7 +150,7 @@ const STARTERS_27 = [
       },
       {
         type: 'cards',
-        title: 'Make your choice: where does that message go now?',
+        title: 'Where does that message go?',
         bullets: [
           card('It stays between us', 'Nobody else ever sees it.'),
           card('Stored, but safely', 'Kept on a server, protected, not looked at.'),
@@ -176,9 +176,9 @@ const STARTERS_27 = [
       {
         type: 'statement',
         body: 'Where does a secret go when you tell it to something that cannot keep one?',
-        subtitle: 'Discuss in pairs · 90 seconds',
+        subtitle: 'Discuss in pairs · 75 seconds',
         notes:
-          'BEAT 3 · 90 SECONDS. The 90 seconds are the lesson. Resist filling them.\n\n' +
+          'BEAT 3 · 75 SECONDS. The 75 seconds are the lesson. Resist filling them.\n\n' +
           'Listen for "but it does not tell anyone". That is the assumption beat ' +
           '4 breaks: not telling anyone and not keeping a secret are different ' +
           'things.\n\n' +
@@ -187,7 +187,7 @@ const STARTERS_27 = [
       },
       {
         type: 'iceberg',
-        title: 'What is under a conversation that felt private',
+        title: 'A private feeling. Four possible risks.',
         subtitle: 'A message you would never say out loud',
         bullets: [
           /* Each note is held to one line at 28pt. Two-line notes put the
@@ -203,9 +203,9 @@ const STARTERS_27 = [
            slide. The floor is the brief's and it wins, so the figure moved to
            the source line where it still gets said — the four named harms are
            what the layout is for. */
-        body: '20 million+ children across 10 countries already use them · UNICEF, "When AI becomes a friend", June 2026',
+        body: 'Source: UNICEF, “When AI becomes a friend”, June 2026',
         notes:
-          'BEAT 4 · 90 SECONDS. Reveal one layer at a time.\n\n' +
+          'BEAT 4 · 75 SECONDS. Reveal one layer at a time.\n\n' +
           'THE SECOND ROW IS THE POINT. "Data elicitation" is UNICEF’s own term ' +
           'and it is the one students have never considered: a companion that ' +
           'asks follow-up questions is not being curious, it is being designed. ' +
@@ -226,7 +226,7 @@ const STARTERS_27 = [
         ],
         progressive: true,
         notes:
-          'SLIDE 6 · 45 SECONDS. Reveal one at a time. Three is the limit — a ' +
+          'SLIDE 6 · 30 SECONDS. Reveal one at a time. Three is the limit — a ' +
           'fourth rule is a rule nobody remembers.\n\n' +
           'Numbered rather than bulleted so the order is part of the message, and so ' +
           'nothing here depends on colour to be understood.'
@@ -288,7 +288,7 @@ const STARTERS_27 = [
       },
       {
         type: 'cards',
-        title: 'Make your choice: which of these can it do without asking?',
+        title: 'What can it do without asking?',
         bullets: [
           card('Read your emails', 'To find the details it needs.'),
           card('Send a message as you', 'In your name, in your words.'),
@@ -313,9 +313,9 @@ const STARTERS_27 = [
       {
         type: 'statement',
         body: 'If it makes a mistake while acting as you, whose mistake is it?',
-        subtitle: 'Discuss in pairs · 90 seconds',
+        subtitle: 'Discuss in pairs · 75 seconds',
         notes:
-          'BEAT 3 · 90 SECONDS.\n\n' +
+          'BEAT 3 · 75 SECONDS.\n\n' +
           'Push on "the company’s". Ask what happens if the message has already ' +
           'been sent, or the money already spent. Fault and consequence are not ' +
           'the same thing, and only one of them lands on the student.\n\n' +
@@ -334,7 +334,7 @@ const STARTERS_27 = [
           versus('Wrong once', 'Wrong repeatedly, quickly, in your name')
         ],
         notes:
-          'BEAT 4 · 90 SECONDS. Left column first if you can.\n\n' +
+          'BEAT 4 · 75 SECONDS. Left column first if you can.\n\n' +
           'THE THIRD ROW IS THE WHOLE LESSON. Everything else follows from it. ' +
           'An answer you can ignore; an action has already happened.\n\n' +
           'The last row is the one that surprises: an agent does not make one ' +
@@ -353,7 +353,7 @@ const STARTERS_27 = [
         ],
         progressive: true,
         notes:
-          'SLIDE 6 · 45 SECONDS. Reveal one at a time. Three is the limit — a ' +
+          'SLIDE 6 · 30 SECONDS. Reveal one at a time. Three is the limit — a ' +
           'fourth rule is a rule nobody remembers.\n\n' +
           'Numbered rather than bulleted so the order is part of the message, and so ' +
           'nothing here depends on colour to be understood.'
@@ -416,7 +416,7 @@ const STARTERS_27 = [
       },
       {
         type: 'cards',
-        title: 'Make your choice: who made it?',
+        title: 'Who made it?',
         bullets: [
           card('You did', 'It was your idea. Nobody else would have asked for that.'),
           card('Partly you', 'You started it. Something else finished it.'),
@@ -440,9 +440,9 @@ const STARTERS_27 = [
       {
         type: 'statement',
         body: 'What would you have to add before you would put your name on it?',
-        subtitle: 'Discuss in pairs · 90 seconds',
+        subtitle: 'Discuss in pairs · 75 seconds',
         notes:
-          'BEAT 3 · 90 SECONDS.\n\n' +
+          'BEAT 3 · 75 SECONDS.\n\n' +
           'Better than "is it yours", because it cannot be answered yes or no. ' +
           'It forces them to name a contribution.\n\n' +
           'Listen for "changing a few words". Ask whether they would accept that ' +
@@ -463,7 +463,7 @@ const STARTERS_27 = [
         progressive: true,
         body: 'Modelled on Content Credentials (C2PA) — provenance attached to the file, not guessed from it',
         notes:
-          'BEAT 4 · 90 SECONDS. Reveal one row at a time.\n\n' +
+          'BEAT 4 · 75 SECONDS. Reveal one row at a time.\n\n' +
           'This is a content credential, rendered as a slide. The real ones ride ' +
           'inside the file and say what tool touched it and when — provenance ' +
           'attached, rather than guessed at afterwards.\n\n' +
@@ -484,7 +484,7 @@ const STARTERS_27 = [
         ],
         progressive: true,
         notes:
-          'SLIDE 6 · 45 SECONDS. Reveal one at a time. Three is the limit — a ' +
+          'SLIDE 6 · 30 SECONDS. Reveal one at a time. Three is the limit — a ' +
           'fourth rule is a rule nobody remembers.\n\n' +
           'Numbered rather than bulleted so the order is part of the message, and so ' +
           'nothing here depends on colour to be understood.'
@@ -546,12 +546,12 @@ const STARTERS_27 = [
       },
       {
         type: 'cards',
-        title: 'Make your choice: which of these could AI decide on its own?',
+        title: 'Where would you draw the line?',
         bullets: [
-          card('Choosing who gets a job', 'From hundreds of applications.'),
-          card('Marking an exam', 'Against a published mark scheme.'),
-          card('Recommending a treatment', 'Based on your symptoms and history.'),
-          card('Excluding a student', 'On the evidence in the file.')
+          card('None of them', 'Jobs, exam marks, treatment or exclusion.'),
+          card('Marking only', 'A published mark scheme could set the rules.'),
+          card('Marking and shortlisting', 'Let it score answers and sort applications.'),
+          card('Any of them, with a human check', 'A person reviews it before it takes effect.')
         ],
         feedback: {
           kind: 'poll',
@@ -563,8 +563,8 @@ const STARTERS_27 = [
         },
         notes:
           'BEAT 2 · 45 SECONDS. Vote before anything is explained.\n\n' +
-          'The four cards are the decisions; the four poll options are the ' +
-          'positions. Read the cards, then take the vote.\n\n' +
+          'The cards and poll show the same four positions. Consider jobs, ' +
+          'exam marks, treatment and exclusion, then take the vote.\n\n' +
           'Marking is the one rooms hand over most readily — it feels objective. ' +
           'That is exactly the assumption beat 4 takes apart, with the ' +
           'regulator’s own words.'
@@ -572,9 +572,9 @@ const STARTERS_27 = [
       {
         type: 'statement',
         body: 'What makes a decision too important for a machine to make on its own?',
-        subtitle: 'Discuss in pairs · 90 seconds',
+        subtitle: 'Discuss in pairs · 75 seconds',
         notes:
-          'BEAT 3 · 90 SECONDS.\n\n' +
+          'BEAT 3 · 75 SECONDS.\n\n' +
           'You are steering towards a principle, not a list: the greater the ' +
           'effect on someone’s life, the greater the need for human oversight.\n\n' +
           'If they say "when it might be wrong" — push. Humans are wrong too. ' +
@@ -590,11 +590,11 @@ const STARTERS_27 = [
           info('Training new examiners', '20', ''),
           info('Flagging an answer for a person to look at', '34', ''),
           info('Awarding the final mark', '84', 'does not meet the rules on its own'),
-          info('Excluding a student', '96', 'no regulator anywhere permits this')
+          info('Excluding a student', '96', 'a decision with serious consequences')
         ],
-        body: 'Ofqual, "Using AI in marking", 14 January 2026 — positions read from its stated direction',
+        body: 'Discussion guide. Exam-marking examples: Ofqual, “Using AI in marking”, 14 January 2026.',
         notes:
-          'BEAT 4 · 90 SECONDS. Ask the room to move one before you defend any.\n\n' +
+          'BEAT 4 · 75 SECONDS. Ask the room to move one before you defend any.\n\n' +
           'OFQUAL’S OWN WORDS, worth reading out — they are stronger than any ' +
           'paraphrase:\n' +
           '· AI is "nowhere near ready to take over high stakes marking".\n' +
@@ -619,7 +619,7 @@ const STARTERS_27 = [
         ],
         progressive: true,
         notes:
-          'SLIDE 6 · 45 SECONDS. Reveal one at a time. Three is the limit — a ' +
+          'SLIDE 6 · 30 SECONDS. Reveal one at a time. Three is the limit — a ' +
           'fourth rule is a rule nobody remembers.\n\n' +
           'Numbered rather than bulleted so the order is part of the message, and so ' +
           'nothing here depends on colour to be understood.'
@@ -627,7 +627,7 @@ const STARTERS_27 = [
       {
         type: 'keyfact',
         subtitle: 'Your choice · 45 seconds',
-        title: 'The bigger the effect on a life, the more human the decision',
+        title: 'Which decision needs a person?',
         body: 'Decide one decision about you that you would always want a person to make, and be able to explain.',
         notes:
           'BEAT 5 · 45 SECONDS.\n\n' +
@@ -681,7 +681,7 @@ const STARTERS_27 = [
       },
       {
         type: 'cards',
-        title: 'Make your choice: what would you struggle with most?',
+        title: 'What would you struggle with most?',
         bullets: [
           card('Starting from nothing', 'The blank page.'),
           card('Explaining my reasoning', 'Saying why, not just what.'),
@@ -706,9 +706,9 @@ const STARTERS_27 = [
       {
         type: 'statement',
         body: 'Which part of your thinking have you quietly stopped practising?',
-        subtitle: 'Discuss in pairs · 90 seconds',
+        subtitle: 'Discuss in pairs · 75 seconds',
         notes:
-          'BEAT 3 · 90 SECONDS. The sharpest question in the campaign, and the ' +
+          'BEAT 3 · 75 SECONDS. The sharpest question in the campaign, and the ' +
           'one that needs the safest room. Pairs, not the whole class.\n\n' +
           'You are not fishing for confessions. You are making the difference ' +
           'between using a tool and outsourcing a skill something they can feel.'
@@ -727,7 +727,7 @@ const STARTERS_27 = [
         progressive: true,
         body: 'Frame after the EEF on metacognition — plan, monitor, evaluate your own learning',
         notes:
-          'BEAT 4 · 90 SECONDS. Reveal a row at a time.\n\n' +
+          'BEAT 4 · 75 SECONDS. Reveal a row at a time.\n\n' +
           'NOT AN ANTI-AI SLIDE, and it will be misread as one if you let it. ' +
           'Every left-hand row involves using AI. The difference is where the ' +
           'thinking happened.\n\n' +
@@ -748,7 +748,7 @@ const STARTERS_27 = [
         ],
         progressive: true,
         notes:
-          'SLIDE 6 · 45 SECONDS. Reveal one at a time. Three is the limit — a ' +
+          'SLIDE 6 · 30 SECONDS. Reveal one at a time. Three is the limit — a ' +
           'fourth rule is a rule nobody remembers.\n\n' +
           'Numbered rather than bulleted so the order is part of the message, and so ' +
           'nothing here depends on colour to be understood.'
@@ -773,5 +773,18 @@ const STARTERS_27 = [
     ]
   }
 ];
+
+// Arrangements travel with these authored slides when the user changes theme.
+const COMPOSITION_DEFAULTS = {title:'poster-art',quote:'voice',cards:'ballot',statement:'prompt',iceberg:'reveal-map',compare:'comparison',sourcecheck:'credits',spectrum:'lanes',journey:'rules',keyfact:'commitment'};
+STARTERS_27.forEach(starter => starter.slides.forEach(slide => {
+  if (slide.hidden) return;
+  slide.design = Object.assign({}, slide.design, {composition: COMPOSITION_DEFAULTS[slide.type]});
+  if (slide.type === 'title') {
+    slide.image = 'assets/brand/aiad27/poster-' + starter.key + '.svg';
+    slide.body = 'Your AI. Your choices.';
+  }
+  if (slide.type === 'cards') slide.body = 'Choose A, B, C or D. Be ready to say why.';
+  if (slide.type === 'keyfact') slide.bullets = ['One choice I will make:'];
+}));
 
 module.exports = { STARTERS_27 };

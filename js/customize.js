@@ -228,6 +228,7 @@
     if (!pad || s.type==='quiz' || s.type==='game') return;
     if (['left','center','right'].includes(d.align)) {
       pad.style.textAlign=d.align;
+      if (root.dataset.composition) root.querySelectorAll('[data-content-key]').forEach(function(n){n.style.textAlign=d.align;});
       /* Named as well as styled, because the accent bar is a box rather than
          text: text-align does nothing to it, and a bar pinned to the left
          under centred type reads as a mistake rather than a choice. */
@@ -252,7 +253,7 @@
     var scale={small:.85,medium:1,large:1.15,x2:2,x3:3,x5:5}[d.size] || 1;
     if(scale!==1) requestAnimationFrame(function(){
       var nodes=[];
-      root.querySelectorAll('h1,h2,.sub,.q,.attrib,li,.kw-term,.kw-def,.it-phrase,.it-note,.ln-label,.ln-link,.ln-url').forEach(function(n){
+      root.querySelectorAll('h1,h2,.sub,.q,.attrib,li,.kw-term,.kw-def,.it-phrase,.it-note,.ln-label,.ln-link,.ln-url,.cp [data-content-key]').forEach(function(n){
         var px=parseFloat(getComputedStyle(n).fontSize); if(px) nodes.push([n,px]);
       });
       if(!nodes.length) return;
@@ -301,6 +302,22 @@
     }
     var d=s.design || (s.design={});
     function choose(label,key,opts,fallback){box.appendChild(UI.field(label,UI.select(opts.map(function(x){return {value:String(x[0]),label:x[1]};}),String(d[key]||fallback),function(v){d[key]=(key==='imageShare'||key==='capFade')?Number(v):v;change();})));}
+    var currentDeck = SF.Editor && SF.Editor.deck ? SF.Editor.deck() : null;
+    var compositions = SF.compositionOptions ? SF.compositionOptions(s, currentDeck && currentDeck.theme) : [];
+    if (compositions.length) {
+      choose('Composition','composition', [['','Theme default'],['none','Original layout']].concat(compositions.map(function (key) {
+        return [key, SF.COMPOSITIONS[key].label];
+      })), '');
+      var compositionHint = document.createElement('p');
+      compositionHint.className = 'hint';
+      compositionHint.textContent = 'Change the arrangement without changing your theme or content. Shorten copy before increasing text size.';
+      box.appendChild(compositionHint);
+    }
+    if (SF.slideComposition(currentDeck, s) === 'poster-art') {
+      var artworkInput=document.createElement('input'); artworkInput.type='text'; artworkInput.value=s.image || '';
+      artworkInput.onchange=function(){s.image=SF.safeMedia(artworkInput.value);change();};
+      box.appendChild(UI.field('Poster artwork · image URL or asset path',artworkInput));
+    }
     choose('Text alignment','align',[['left','Left'],['center','Centre'],['right','Right']],'left');
     choose('Text size','size',[
       ['small','Small'],

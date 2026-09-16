@@ -96,3 +96,136 @@
 .roster-acts{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
 .roster-act{font-size:12px;padding:5px 9px!important}
 .manual-entry.on-phone .answer-status{color:#4a5c3d}
+
+/* Composition foundations. Opt-in, independent of theme; existing decks
+   retain their own layout until the author chooses a composition. */
+.slide[data-composition] .pad { position:relative; z-index:1; padding:86px 88px; align-items:stretch; text-align:left; }
+.slide[data-composition] > :is(.nu-art,.studio-art,.ukbt-art,.product-art,.editorial-art,.cine-art,.brut-art,.aiad-art) { display:none; }
+.slide[data-composition] .pad > .accent-bar { display:none; }
+.slide[data-composition] :is(h1,.statement,.q) { font-size:var(--composition-display); line-height:1.04; letter-spacing:-.035em; max-width:none; font-style:normal; text-wrap:balance; }
+.slide[data-composition] :is(.sub,.statement-credit,.attrib) { font-size:27px; line-height:1.35; letter-spacing:0; text-transform:none; max-width:800px; margin-top:30px; }
+.slide[data-composition] .q { border:0; padding:0; }
+.slide[data-composition] .q::before { display:none; }
+.slide[data-composition] .slide-logo { top:26px; bottom:auto; right:40px; max-height:38px; }
+/* The shape sits in its own right-hand area, never behind the headline. */
+.slide[data-composition='poster']::after { content:''; position:absolute; width:390px; height:390px; right:-90px; top:165px; border:68px solid var(--s-accent); border-radius:50%; opacity:.85; pointer-events:none; }
+.slide[data-composition='poster'] .pad { justify-content:flex-end; padding:100px 380px 110px 88px; }
+.slide[data-composition='poster'] :is(h1,.statement,.q) { max-width:810px; }
+.slide[data-composition='poster'] :is(.sub,.statement-credit,.attrib) { max-width:710px; }
+/* Lower-left type and a long rule create a quiet editorial opener. */
+.slide[data-composition='editorial'] .pad { justify-content:flex-end; padding:96px 160px 110px 110px; }
+.slide[data-composition='editorial'] .pad::before { content:''; position:absolute; left:110px; right:110px; top:100px; height:3px; background:var(--s-accent); }
+.slide[data-composition='editorial'] :is(h1,.statement,.q) { max-width:1000px; }
+.slide[data-composition='editorial'] :is(.sub,.statement-credit,.attrib) { max-width:880px; }
+/* A frame is a boundary, not a container for more text. */
+.slide[data-composition='frame']::after { content:''; position:absolute; inset:62px; border:2px solid var(--s-rule); pointer-events:none; }
+.slide[data-composition='frame'] .pad { justify-content:center; align-items:center; text-align:center; padding:110px 150px; }
+.slide[data-composition='frame'] :is(h1,.statement,.q) { max-width:970px; }
+.slide[data-composition='frame'] :is(.sub,.statement-credit,.attrib) { max-width:800px; }
+/* Two independent text areas: the title gives the subject, the supporting
+   copy gives the context. No forced image placeholder. */
+.slide[data-composition='sidecar'] .pad { display:grid; grid-template-columns:1.25fr 1fr; gap:54px; align-content:center; align-items:center; padding:100px 88px; }
+.slide[data-composition='sidecar'] h1 { font-size:calc(var(--composition-display) * .82); }
+.slide[data-composition='sidecar'] .sub { border-left:3px solid var(--s-accent); padding:22px 0 22px 38px; margin:0; font-size:30px; }
+.slide[data-composition='sidecar'] .slide-date { grid-column:2; }
+/* Content compositions keep the original list and step markers. */
+.slide[data-composition='rail'] .pad { display:grid; grid-template-columns:340px 1fr; gap:60px; align-items:start; align-content:center; }
+.slide[data-composition='rail'] h2 { font-size:54px; line-height:1.06; letter-spacing:-.025em; margin:0; padding-top:20px; text-align:left; }
+.slide[data-composition='rail'] ul { gap:0; margin:0; padding:0; width:auto; }
+.slide[data-composition='rail'] li { list-style:none; font-size:30px; line-height:1.25; padding:22px 0; border-top:1px solid var(--s-rule); }
+.slide[data-composition='rail'][data-composition-density='dense'] li { font-size:26px; padding:15px 0; }
+.slide[data-composition='columns'] .pad { justify-content:center; }
+.slide[data-composition='columns'] h2 { font-size:56px; margin:0 0 48px; text-align:left; max-width:1050px; }
+.slide[data-composition='columns'] ul { display:grid; grid-template-columns:repeat(var(--composition-columns),minmax(0,1fr)); gap:30px; margin:0; padding:0; align-items:start; }
+.slide[data-composition='columns'] li { list-style:none; width:auto; font-size:30px; line-height:1.3; padding:26px 0 0; border-top:5px solid var(--s-accent); }
+.slide[data-composition='columns'][data-composition-density='dense'] li { font-size:26px; padding-top:16px; }
+@media print { .slide[data-composition]::after { opacity:.35; } }
+
+/* Structured compositions. Shared semantic fields, not campaign markup. */
+.slide.cp { color:var(--s-fg); --cp-color:var(--s-accent); --cp-deep:var(--s-accent); }
+
+.slide.cp .pad { padding:32px 52px 24px; display:flex; flex-direction:column; gap:0; height:100%; position:relative; z-index:1; align-items:stretch; justify-content:flex-start; text-align:left; }
+
+.cp h1,.cp h2,.cp h3,.cp p,.cp blockquote { margin:0; font-family:var(--s-font); color:inherit; }
+.cp-header { display:flex; justify-content:space-between; align-items:center; height:40px; flex:none; font-size:20px; font-weight:600; }
+.cp-beat { font-weight:400; }
+.cp-body { flex:1; min-height:0; position:relative; padding:32px 0 26px; }
+.cp .cp-heading { font-size:52px; line-height:1.03; letter-spacing:-.035em; font-weight:700; max-width:1120px; text-wrap:balance; }
+.cp .cp-prompt { font-size:24px; font-weight:500; }
+.cp .cp-source { font-size:18px; line-height:1.25; margin-top:14px; max-width:1130px; }
+/* Poster with an authored illustration. */
+
+.cp-title .cp-body { display:grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr); align-items:center; gap:12px; padding:26px 0 30px; }
+.cp-title h1 { font-size:var(--cp-display,88px); font-weight:700; line-height:.98; letter-spacing:-.052em; text-wrap:balance; max-width:650px; }
+.cp .cp-tagline { font-size:28px; margin-top:32px; }
+.cp-art { width:100%; height:490px; position:relative; }
+.cp-prop { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+/* A human voice against a quiet dark ground. */
+
+.cp-quote .cp-body { display:flex; flex-direction:column; justify-content:center; padding:35px 60px 30px 150px; }
+.cp .cp-quote-mark { position:absolute; top:24px; left:0; font-size:230px; color:var(--cp-color); line-height:1; }
+.cp .cp-scenario { border:0; padding:0; font-size:var(--cp-voice-size,62px); line-height:1.1; font-weight:600; letter-spacing:-.025em; max-width:920px; }
+.cp-quote .cp-prompt { margin-top:38px; color:var(--cp-color); }
+/* Two by two ballot: the wall and the live poll use the same letters. */
+.cp-cards .cp-body { display:flex; flex-direction:column; gap:22px; padding-top:26px; }
+.slide.cp-cards .cp-heading { text-align:left; margin:0; font-size:48px; max-width:1070px; }
+.cp-choices { display:grid; grid-template-columns:1fr 1fr; gap:0 38px; flex:1; }
+.cp-choice { display:flex; gap:22px; align-items:center; padding:20px 0; border-top:2px solid var(--s-fg); }
+.cp-letter { display:flex; align-items:center; justify-content:center; width:76px; height:76px; flex:none; background:var(--s-card); font-size:50px; font-weight:700; clip-path:polygon(0 0,78% 0,100% 22%,100% 100%,0 100%); }
+.cp-choice h3 { font-size:29px; line-height:1.06; font-weight:700; letter-spacing:-.02em; }
+.cp-choice p { font-size:24px; line-height:1.15; margin-top:9px; }
+/* A single question needs room, and a sharp change of pace. */
+
+.cp-statement .cp-body { display:flex; flex-direction:column; justify-content:center; gap:30px; }
+.cp-discussion { display:grid; grid-template-columns:140px 1fr; align-items:start; gap:24px; }
+.cp-pair-mark { font-size:130px; line-height:.85; font-weight:700; }
+.cp .cp-question { font-size:var(--cp-question-size,68px); letter-spacing:-.04em; line-height:1.06; text-align:left; font-weight:700; max-width:980px; }
+.cp-statement .cp-prompt { margin-left:164px; }
+/* Reveals have shapes that suit their argument, rather than one shared template. */
+.cp-risk-map { display:grid; grid-template-columns:1fr; gap:38px; margin-top:30px; }
+.cp-risks { display:grid; grid-template-columns:1fr 1fr; gap:22px 30px; }
+.cp-risk { border-top:2px solid var(--s-fg); padding-top:12px; }
+.cp-risk-number { color:var(--cp-deep); font-size:24px; font-weight:700; }
+.cp-risk h3 { font-size:29px; line-height:1.08; margin:9px 0; }
+.cp-risk p { font-size:24px; line-height:1.17; }
+.cp-comparison { margin-top:28px; }
+.cp-compare-head,.cp-compare-row { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+.cp-compare-head h3 { font-size:27px; padding:16px 22px; background:var(--s-card); }
+.cp-compare-head h3:last-child { background:var(--s-fg); color:var(--s-bg); }
+.cp-compare-row p { font-size:25px; line-height:1.13; padding:13px 22px; border-bottom:1px solid var(--s-rule); }
+.cp-compare-row p:nth-child(2) { border-left:1px solid var(--s-rule); }
+.cp-credits { margin-top:26px; border-top:5px solid var(--cp-color); }
+.cp-credit { display:grid; grid-template-columns:240px 180px 1fr; gap:20px; align-items:center; border-bottom:1px solid var(--s-rule); padding:12px 0; }
+.cp-credit span { font-size:24px; }.cp-credit strong { font-size:25px; color:var(--cp-deep); }.cp-credit p { font-size:24px; line-height:1.13; }
+.cp-lanes { display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-top:30px; }
+.cp-lane { border-top:12px solid var(--cp-color); padding-top:18px; }
+.cp-lane:nth-child(2) { border-color:var(--s-fg); }
+.cp-lane h3 { font-size:32px; margin-bottom:14px; }
+.cp-lane-item { border-top:1px solid var(--s-rule); padding:17px 0; }
+.cp-lane-item strong { font-size:28px; line-height:1.13; display:block; }.cp-lane-item p { font-size:23px; margin-top:6px; }
+/* Large numbered rules, then a personal commitment. */
+
+.cp-rules { margin-top:25px; }
+.cp-rule { display:grid; grid-template-columns:105px 1fr; gap:25px; padding:19px 0; border-top:1px solid var(--s-rule); align-items:center; }
+.cp-rule-number { font-size:66px; line-height:1; font-weight:700; color:var(--cp-color); letter-spacing:-.05em; }
+.cp-rule h3 { font-size:33px; line-height:1.07; }.cp-rule p { font-size:25px; line-height:1.17; margin-top:8px; max-width:960px; }
+
+.cp-keyfact .cp-body { display:grid; grid-template-columns:270px 1fr; gap:40px; align-items:center; }
+.cp-action-number { font-size:230px; letter-spacing:-.085em; line-height:1; font-weight:700; align-self:start; padding-top:65px; }
+.cp-action h2 { font-size:60px; line-height:1.03; letter-spacing:-.04em; font-weight:700; }
+.cp-action p { font-size:28px; line-height:1.2; margin-top:25px; }
+.cp-write-line { font-size:22px; margin-top:28px; padding-bottom:30px; border-bottom:3px solid var(--s-fg); }
+
+.slide.cp .pad { padding-bottom:62px; }
+.slide.cp .cp-header { padding-right:330px; }
+.slide.cp .cp-beat { font-size:22px; line-height:1.2; }
+.slide.cp .cp-question { font-size:var(--cp-question-size,68px); }
+.slide.cp .cp-scenario { font-size:var(--cp-voice-size,62px); }
+.slide.cp .cp-scenario::before { display:none; }
+.cp-lane-position { font-size:18px; opacity:.8; }
+.cp .cp-compare-row.labelled,.cp .cp-compare-head.labelled { grid-template-columns:.65fr 1fr 1fr; }
+.cp .cp-compare-row.labelled p:first-child { font-weight:700; }
+.slide.cp .slide-logo { top:30px; bottom:auto; right:52px; max-height:42px; }
+.slide.cp .pagenum { bottom:22px; }
+.slide.cp .cp-choice-copy { min-width:0; }
+.slide.cp :is(.cp-rule,.cp-credit,.cp-risk,.cp-choice) [data-content-key] { overflow-wrap:break-word; }

@@ -1,2 +1,5 @@
 preview/
 *.png
+
+# Supplied undated props are runtime assets, not preview screenshots.
+!assets/props/*.png

@@ -191,6 +191,41 @@ function slideHeight(deck) {
    and light everywhere else, and the aiad27 layouts flip per slide; both
    already handle themselves in their own stylesheets, and a per-layout ground
    is a separate change that needs its own visual review. */
+// Layout choices belong to the engine; themes may choose defaults.
+var COMPOSITIONS = {
+  poster: { label: 'Poster · bold headline and graphic', types: ['title','section','statement','quote'] },
+  editorial: { label: 'Editorial · offset headline', types: ['title','section','statement','quote'] },
+  frame: { label: 'Frame · centred with breathing room', types: ['title','section','statement','quote'] },
+  sidecar: { label: 'Side by side · headline and support', types: ['title','section'] },
+  rail: { label: 'Side heading · points alongside', types: ['content'] },
+  columns: { label: 'Columns · parallel ideas', types: ['content'] },
+  'poster-art': { label: 'Poster with artwork', types: ['title'], structured: true },
+  voice: { label: 'Voice · large quotation', types: ['quote'], structured: true },
+  ballot: { label: 'Ballot · lettered choices', types: ['cards'], structured: true },
+  prompt: { label: 'Discussion · one question', types: ['statement'], structured: true },
+  rules: { label: 'Rules · numbered steps', types: ['journey'], structured: true },
+  commitment: { label: 'Commitment · a next action', types: ['keyfact'], structured: true },
+  comparison: { label: 'Comparison · paired rows', types: ['compare'], structured: true },
+  'reveal-map': { label: 'Reveal map · labelled risks or factors', types: ['iceberg'], structured: true },
+  credits: { label: 'Credits · contribution record', types: ['sourcecheck'], structured: true },
+  lanes: { label: 'Decision lanes · below / at least 50', types: ['spectrum'], structured: true }
+};
+function compositionOptions(slide, _theme) {
+  return Object.keys(COMPOSITIONS).filter(function (key) { return COMPOSITIONS[key].types.includes(slide.type); });
+}
+function slideComposition(deck, slide) {
+  var explicit = (slide.design || {}).composition;
+  if (explicit === 'none') return '';
+  var defaults = (THEMES[deck && deck.theme] || {}).defaults || {};
+  var key = explicit || defaults[slide.type] || '';
+  return compositionOptions(slide).includes(key) ? key : '';
+}
+var CAMPAIGN_COMPOSITIONS = {
+  title:'poster-art', quote:'voice', cards:'ballot', statement:'prompt',
+  journey:'rules', keyfact:'commitment', compare:'comparison',
+  iceberg:'reveal-map', sourcecheck:'credits', spectrum:'lanes'
+};
+
 var THEMES = {
   studio: { name: 'Studio · Sage & ink', swatch: '#dce8cc' },
   northeastern: { name: 'Northeastern London', swatch: '#c8102e' },
@@ -207,14 +242,13 @@ var THEMES = {
   'aiad26-responsible': { name: 'AI Awareness · Responsible', swatch: '#00a896' },
   'aiad26-future': { name: 'AI Awareness · Future', swatch: '#ff7eed' },
   /* AI Awareness Day 2027 — Keep Humans in the Loop. Five themes, one per
-     strand, each with its own colour AND icon: the campaign brief requires
-     that meaning is never carried by colour alone, so every slide shows the
-     strand's name and mark together. See css/aiad27.css. */
-  'aiad27-safe': { name: 'AIAD27 · Safe', swatch: '#00a6a6' },
-  'aiad27-smart': { name: 'AIAD27 · Smart', swatch: '#1f6feb' },
-  'aiad27-creative': { name: 'AIAD27 · Creative', swatch: '#7a3ff2' },
-  'aiad27-responsible': { name: 'AIAD27 · Responsible', swatch: '#f0a500' },
-  'aiad27-future': { name: 'AIAD27 · Future', swatch: '#16a34a' },
+     strand. Colour is paired with the strand name on every slide, and each
+     cover has a distinct graphic. See css/aiad27.css. */
+  'aiad27-safe': { name: 'AIAD27 · Safe', swatch: '#00BEDD', defaults: CAMPAIGN_COMPOSITIONS },
+  'aiad27-smart': { name: 'AIAD27 · Smart', swatch: '#FF7038', defaults: CAMPAIGN_COMPOSITIONS },
+  'aiad27-creative': { name: 'AIAD27 · Creative', swatch: '#AC91FF', defaults: CAMPAIGN_COMPOSITIONS },
+  'aiad27-responsible': { name: 'AIAD27 · Responsible', swatch: '#63DF93', defaults: CAMPAIGN_COMPOSITIONS },
+  'aiad27-future': { name: 'AIAD27 · Future', swatch: '#FA83EB', defaults: CAMPAIGN_COMPOSITIONS },
   product: { name: 'Product · Keynote minimal', swatch: '#f5f5f7' },
   editorial: { name: 'Editorial · Paper', swatch: '#f3efe6' },
   cinematic: { name: 'Cinematic · Dark pitch', swatch: '#0a0b0f', ground: 'dark' },
@@ -1492,7 +1526,10 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   chartCategories: chartCategories,
   chartPrimaryCategory: chartPrimaryCategory,
   slideHeight: slideHeight,
-  THEMES: THEMES, themeGround,
+  THEMES: THEMES,
+  COMPOSITIONS: COMPOSITIONS,
+  compositionOptions: compositionOptions,
+  slideComposition: slideComposition, themeGround,
   TRANSITIONS: TRANSITIONS,
   TEAM_COLORS: TEAM_COLORS,
   MAX_TEAMS: MAX_TEAMS,
@@ -1621,4 +1658,4 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   LibraryFolders: LibraryFolders
 });
 
-export { SLIDE_W, SLIDE_H, ASPECTS, parsePerson, orgTree, CHART_TAXONOMY, chartCategories, chartPrimaryCategory, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, themeGround, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, INFO_LAYOUTS, parseInfoLine, formatInfoLine, infoNumber, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, unusedDraft, libraryGroupFromTheme, normalizeLibraryGroup, LIBRARY_GROUPS, LibraryFolders, GAME_FORMAT_PRESETS, getShowcaseGame };
+export { COMPOSITIONS, compositionOptions, slideComposition, SLIDE_W, SLIDE_H, ASPECTS, parsePerson, orgTree, CHART_TAXONOMY, chartCategories, chartPrimaryCategory, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, themeGround, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, INFO_LAYOUTS, parseInfoLine, formatInfoLine, infoNumber, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, unusedDraft, libraryGroupFromTheme, normalizeLibraryGroup, LIBRARY_GROUPS, LibraryFolders, GAME_FORMAT_PRESETS, getShowcaseGame };

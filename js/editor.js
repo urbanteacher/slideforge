@@ -2593,6 +2593,16 @@
   }
 
   function drawContentFields(insp, s) {
+    // Additional authored fields exposed by shared structured compositions.
+    var composition = SF.slideComposition(deck, s);
+    if (composition === 'poster-art' || composition === 'ballot') {
+      insp.appendChild(UI.field(composition === 'poster-art' ? 'Supporting line' : 'Voting instruction',
+        richField(s, 'body', 'area', function(v){s.body=v;touched();repaint();}, 2)));
+    }
+    if (composition === 'ballot') {
+      insp.appendChild(UI.field('Context',
+        richField(s, 'subtitle', 'text', function(v){s.subtitle=v;touched();repaint();})));
+    }
     if (s.type === 'title') {
       var dateInput = el('input');
       dateInput.type = 'date'; dateInput.value = s.date || '';

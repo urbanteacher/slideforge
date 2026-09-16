@@ -163,6 +163,10 @@
     pad.appendChild(el('div', 'accent-bar'));
     pad.appendChild(rich('h1', null, slide, 'title', slide.title || ' '));
     if (slide.subtitle) pad.appendChild(rich('div', 'sub', slide, 'subtitle', slide.subtitle));
+    appendSlideDate(slide, pad);
+  }
+
+  function appendSlideDate(slide, pad) {
     if (slide.date && /^\d{4}-\d{2}-\d{2}$/.test(slide.date)) {
       var date = new Date(slide.date + 'T12:00:00');
       if (Number.isFinite(date.getTime())) {
@@ -930,7 +934,7 @@
       if (lines.length > 1) {
         var wrap = el('div', 'q q-build');
         lines.forEach(function (line) {
-          wrap.appendChild(asStep(el('div', 'q-line', line), slide));
+          wrap.appendChild(asStep(rich('div', 'q-line', slide, 'body', line), slide));
         });
         pad.appendChild(wrap);
       } else {
@@ -4883,16 +4887,6 @@
   var AIAD_ART =
     '<div class="aiad-fold"></div><div class="aiad-seam"></div>';
 
-  /* The chamfered square, the AI Awareness Day device. One large, bled off the
-     corner, and three small ones in a row — the header rhythm the campaign's
-     own poster uses. All five strands hang the same markup; the colour comes
-     from the strand token. */
-  var A27_ART =
-    '<span class="a27-slab"></span>' +
-    '<span class="a27-tile a27-t1"></span>' +
-    '<span class="a27-tile a27-t2"></span>' +
-    '<span class="a27-tile a27-t3"></span>';
-
   var THEME_ART = {
     studio: ['studio-art',
       '<div class="art-orbit"></div><div class="art-tile">✳</div>' +
@@ -4928,23 +4922,136 @@
     'aiad26-creative': ['aiad-art', AIAD_ART],
     'aiad26-responsible': ['aiad-art', AIAD_ART],
     'aiad26-future': ['aiad-art', AIAD_ART],
-    /* 2027: the campaign's chamfered square, at three scales.
 
-       The device is the organisation's own — it is the shape the AI Awareness
-       Day lockup sits inside, the tile the poster repeats down its header, and
-       the panel its cut-out photography stands on. Same move Northeastern
-       makes with the monogram and UKBT makes with the chevron: take the one
-       shape the brand already owns and build everything from it.
-
-       A cover gets the big one bled off the corner and a row of three small
-       ones; every other slide gets the chamfer on its own components, which is
-       in css/aiad27.css rather than here. */
-    'aiad27-safe': ['a27-art', A27_ART],
-    'aiad27-smart': ['a27-art', A27_ART],
-    'aiad27-creative': ['a27-art', A27_ART],
-    'aiad27-responsible': ['a27-art', A27_ART],
-    'aiad27-future': ['a27-art', A27_ART]
   };
+
+  /* Structured compositions use ordinary slide fields, so editing, polls,
+     presenter notes and progressive reveals retain the normal data model. */
+  function layoutComposition(deck, slide, pad, root) {
+    var choice = SF.slideComposition(deck, slide);
+    if (!choice || !SF.COMPOSITIONS[choice].structured) return false;
+    root.classList.add('composition-structured', 'cp', 'cp-' + slide.type);
+    var header = el('div', 'cp-header');
+    if (slide.subtitle && !['compare','spectrum'].includes(slide.type)) header.appendChild(rich('div','cp-beat',slide,'subtitle',slide.subtitle));
+    pad.appendChild(header);
+    var body = el('div', 'cp-body'); pad.appendChild(body);
+    function field(tag, cls, key) { return rich(tag, cls, slide, key, slide[key] || ''); }
+    function heading() { body.appendChild(field('h2', 'cp-heading', 'title')); }
+    function note() { if (slide.body) body.appendChild(field('p', 'cp-source', 'body')); }
+    function parts(line) { return SF.parseInfoLine(line); }
+    function bullet(tag, cls, i, text) { return rich(tag, cls, slide, 'bullets.' + i, text); }
+    function artwork() {
+      var art = el('div', 'cp-art');
+      if (SF.safeMedia(slide.image)) {
+        var img = el('img', 'cp-prop'); img.alt = ''; img.src = SF.safeMedia(slide.image); art.appendChild(img);
+      }
+      return art;
+    }
+    if (slide.type === 'title') {
+      var title = el('div', 'cp-title-copy');
+
+      title.appendChild(field('h1','','title'));
+      if (slide.body) title.appendChild(field('p','cp-tagline','body'));
+      appendSlideDate(slide, title);
+      body.appendChild(title); body.appendChild(artwork());
+    } else if (slide.type === 'quote') {
+      body.appendChild(el('span','cp-quote-mark','“'));
+      layoutQuote(Object.assign({},slide,{subtitle:''}),body);
+      body.querySelector('.q').classList.add('cp-scenario');
+
+    } else if (slide.type === 'cards') {
+      heading();
+      var choices = el('div','cp-choices');
+      (slide.bullets || []).forEach(function (line,i) {
+        var p=SF.parseKeywordLine(line), card=asStep(el('div','cp-choice'),slide);
+        card.appendChild(el('span','cp-letter',LETTERS[i] || String(i+1)));
+        var copy=el('div','cp-choice-copy');
+        copy.appendChild(bullet('h3','',i,p.term)); copy.appendChild(bullet('p','',i,p.def));
+        card.appendChild(copy); choices.appendChild(card);
+      });
+      body.appendChild(choices);
+      if (slide.body) body.appendChild(field('p','cp-prompt','body'));
+    } else if (slide.type === 'statement') {
+      var discussion = el('div','cp-discussion');
+      discussion.appendChild(el('span','cp-pair-mark','↔'));
+      layoutStatement(Object.assign({}, slide, {subtitle:''}), discussion);
+      discussion.querySelector('.statement').classList.add('cp-question');
+      body.appendChild(discussion);
+
+    } else if (slide.type === 'journey') {
+      heading();
+      var rules=el('div','cp-rules');
+      (slide.bullets || []).forEach(function(line,i) {
+        var p=SF.parseKeywordLine(line), row=asStep(el('div','cp-rule'),slide);
+        row.appendChild(el('span','cp-rule-number','0'+(i+1)));
+        var copy=el('div'); copy.appendChild(bullet('h3','',i,p.term)); copy.appendChild(bullet('p','',i,p.def));
+        row.appendChild(copy); rules.appendChild(row);
+      });
+      body.appendChild(rules); note();
+    } else if (slide.type === 'keyfact') {
+      var actionMark = el('div','cp-action-number','↗'); actionMark.setAttribute('aria-hidden','true'); body.appendChild(actionMark);
+      var action=el('div','cp-action');
+      action.appendChild(field('h2','','title')); action.appendChild(field('p','','body'));
+      (slide.bullets || []).forEach(function(line,i) { action.appendChild(asStep(bullet('p','cp-write-line',i,line),slide)); });
+      body.appendChild(action);
+    } else if (slide.type === 'compare') {
+      heading(); var heads=parts(slide.subtitle), table=el('div','cp-comparison');
+      var labelled=(slide.bullets || []).some(function(line){return !!parts(line).note;});
+      var th=el('div','cp-compare-head'+(labelled?' labelled':''));
+      if(labelled) th.appendChild(el('span'));
+      th.appendChild(rich('h3','',slide,'subtitle',heads.label)); th.appendChild(rich('h3','',slide,'subtitle',heads.value)); table.appendChild(th);
+      (slide.bullets || []).forEach(function(line,i){
+        var p=parts(line), row=asStep(el('div','cp-compare-row'+(labelled?' labelled':'')),slide);
+        if(labelled) row.appendChild(bullet('p','',i,p.note));
+        row.appendChild(bullet('p','',i,p.label)); row.appendChild(bullet('p','',i,p.value)); table.appendChild(row);
+      });
+      body.appendChild(table); note();
+    } else if (slide.type === 'iceberg') {
+      heading();
+      var reveal=el('div','cp-risk-map');
+
+      var risks=el('div','cp-risks');
+      (slide.bullets || []).forEach(function(line,i) {
+        var p=parts(line), row=asStep(el('div','cp-risk'),slide);
+        row.appendChild(bullet('span','cp-risk-number',i,p.value || String(i+1)));
+        row.appendChild(bullet('h3','',i,p.label)); row.appendChild(bullet('p','',i,p.note)); risks.appendChild(row);
+      });
+      reveal.appendChild(risks); body.appendChild(reveal); note();
+    } else if (slide.type === 'sourcecheck') {
+      heading(); var receipt=el('div','cp-credits');
+      (slide.bullets || []).forEach(function(line,i) {
+        var p=parts(line), row=asStep(el('div','cp-credit'),slide);
+        row.appendChild(bullet('span','',i,p.label)); row.appendChild(bullet('strong','',i,p.value)); row.appendChild(bullet('p','',i,p.note)); receipt.appendChild(row);
+      });
+      body.appendChild(receipt); note();
+    } else if (slide.type === 'spectrum') {
+      heading(); var lanes=el('div','cp-lanes');
+      [parts(slide.subtitle).label,parts(slide.subtitle).value].forEach(function(label,side) {
+        var lane=el('div','cp-lane'); lane.appendChild(rich('h3','',slide,'subtitle',label));
+        (slide.bullets || []).forEach(function(line,i) {
+          var p=parts(line); if ((Number(p.value)>=50?1:0)!==side) return;
+          var item=asStep(el('div','cp-lane-item'),slide); item.dataset.step = String(i); item.appendChild(bullet('strong','',i,p.label));
+          item.appendChild(bullet('span','cp-lane-position',i,p.value));
+          if(p.note) item.appendChild(bullet('p','',i,p.note)); lane.appendChild(item);
+        }); lanes.appendChild(lane);
+      });
+      body.appendChild(lanes); note();
+    }
+    return true;
+  }
+
+  function applyComposition(root, deck, slide) {
+    var choice = SF.slideComposition(deck, slide);
+    if (!choice) return;
+    root.dataset.composition = choice;
+    var statement = root.querySelector('.statement-word');
+    if (statement) statement.style.removeProperty('font-size');
+    var words = String(slide.type === 'quote' || slide.type === 'statement' ? slide.body || '' : slide.title || '');
+    root.style.setProperty('--composition-display', (words.length > 95 ? 60 : words.length > 65 ? 72 : words.length > 35 ? 86 : 112) + 'px');
+    var n = (slide.bullets || []).filter(function (x) { return String(x).trim(); }).length;
+    root.style.setProperty('--composition-columns', String(n === 2 ? 2 : 3));
+    root.dataset.compositionDensity = n > 4 ? 'dense' : 'normal';
+  }
 
   function renderSlide(deck, slide, opts) {
     opts = opts || {};
@@ -5040,7 +5147,8 @@
 
     var pad = el('div', 'pad');
     root.appendChild(pad);
-    if (!SF.Boards || !SF.Boards.render(pad, slide, opts, root)) (LAYOUTS[slide.type] || layoutContent)(slide, pad, opts, root);
+    if (!layoutComposition(deck, slide, pad, root) && (!SF.Boards || !SF.Boards.render(pad, slide, opts, root))) (LAYOUTS[slide.type] || layoutContent)(slide, pad, opts, root);
+    applyComposition(root, deck, slide);
     if (SF.Explore) SF.Explore.render(root, pad, slide, opts);
     if (SF.Custom) SF.Custom.layout(root, slide);
 

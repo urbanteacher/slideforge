@@ -25,8 +25,8 @@ const path = require('node:path');
    elements on a slide. Painting the icon here frees ::before to carry the
    name as text beside it, and ::after to sit top-right as the brief asks. */
 const STRAND = {
-  safe: '#00A6A6', smart: '#1F6FEB', creative: '#7A3FF2',
-  responsible: '#F0A500', future: '#16A34A'
+  safe: '#00BEDD', smart: '#FF7038', creative: '#AC91FF',
+  responsible: '#63DF93', future: '#FA83EB'
 };
 
 /* 24x24 viewBox, the grid these are drawn on. Kept coarse on purpose: at the
@@ -78,8 +78,9 @@ fs.readdirSync(OUT).filter((f) => /^aiad27-(safe|smart|creative|responsible|futu
 let n = 0;
 Object.keys(ICONS).forEach((key) => {
   fs.writeFileSync(path.join(OUT, `icon-${key}.svg`), icon(key, ICONS[key]), 'utf8');
-  n++;
+  fs.writeFileSync(path.join(OUT, `poster-${key}.svg`), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 490"><path fill="#231F20" d="M0 0H380L480 100V490H100L0 390Z"/><path fill="${STRAND[key]}" transform="translate(108 113) scale(11)" d="${ICONS[key]}"/></svg>\n`, 'utf8');
+  n += 2;
 });
 fs.writeFileSync(path.join(OUT, 'aiad27-lockup.svg'), lockup(), 'utf8');
 n++;
-console.log(`Wrote ${n} assets to assets/brand/aiad27/ — five theme icons and the campaign lockup.`);
+console.log(`Wrote ${n} assets to assets/brand/aiad27/ — five theme icons, five poster graphics and the campaign lockup.`);

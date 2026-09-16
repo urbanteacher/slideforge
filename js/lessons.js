@@ -1924,740 +1924,1201 @@
       ]
     },
     {
-      key: 'layout-bank',
-      title: 'Layout bank — every layout, every chart, every live moment',
-      icon: '▦',
-      blurb: 'The reference deck: every layout in the picker, all twenty chart idioms, the design variants, and the things the room answers on their phones. Page through it to see what each one does, then copy the slide you want into your own lesson. Every slide says in its notes when to reach for it — and when not to.',
-      minutes: 40,
-      theme: 'northeastern',
-      /* Not 'nul': the demo is not one of the Northeastern lessons, and this
-         folder is the one the Library does not list. See DEMO_LIBRARY_GROUP. */
-      libraryGroup: 'sf-demo',
-      kind: 'template',
-      org: 'Northeastern University London',
-      logo: 'assets/brand/nu-london-logo.png',
-      logoOn: 'all',
-      logoSize: 'small',
-      games: [{
-        ref: 'check',
-        title: 'A live check, mid-lesson',
-        style: 'choice',
-        settings: { defaultTime: 25, scoreboard: false, scoreSlide: false, confidence: true },
-        questions: [{
-          question: 'One number per category, and the order is the message. Which chart?',
-          options: ['Pie chart', 'Sorted horizontal bar', 'Line chart', 'Radar'],
-          correct: 1,
-          explanation: 'Ranking: position along a common scale is the channel the eye reads most accurately, and sorting puts the message into the shape. A pie asks the reader to compare angles; a line implies an order in time that is not there.'
-        }]
-      }, {
-        ref: 'rank',
-        title: 'Put the workflow in order',
-        style: 'order',
-        settings: { defaultTime: 60, scoreboard: false, scoreSlide: false },
-        questions: [{
-          question: 'Put these in the order a chart should be made.',
-          options: [
-            'Ask what question the chart has to answer',
-            'Check where the numbers came from, and what they leave out',
-            'Choose the idiom that answers that question',
-            'Write the finding as the title'
-          ],
-          explanation: 'The title is written last and read first. Choosing the idiom before knowing the question is how a deck ends up full of charts that are correct and say nothing.'
-        }]
-      }, {
-        ref: 'race',
-        title: 'Race: name the idiom',
-        style: 'race',
-        settings: { defaultTime: 20, scoreboard: true, scoreSlide: false, mode: 'teams' },
-        questions: [{
-          question: 'Where does it go, and how much gets there?',
-          options: ['Sankey', 'Funnel', 'Waffle', 'Box plot'],
-          correct: 0,
-          explanation: 'A Sankey. A funnel shows what is left at each stage; only the Sankey shows where the rest went.'
-        }, {
-          question: 'One number per category, and the order is the message?',
-          options: ['Pie', 'Radar', 'Sorted horizontal bar', 'Pictogram'],
-          correct: 2,
-          explanation: 'Sorted horizontal bar. Position on a common scale, sorted so the shape carries the finding.'
-        }]
-      }, {
-        ref: 'boss',
-        title: 'Boss battle: the grammar of charts',
-        style: 'boss',
-        settings: { defaultTime: 30, scoreboard: false, scoreSlide: false, confidence: false },
-        questions: [{
-          question: 'Which channel does the eye read most accurately?',
-          options: ['Area', 'Angle', 'Position on a common scale', 'Colour hue'],
-          correct: 2, difficulty: 'easy',
-          explanation: 'Position on a common scale. An easy hit — 1 damage.'
-        }, {
-          question: 'A bar chart whose axis starts at 40 rather than 0 exaggerates what?',
-          options: ['The total', 'The differences between bars', 'The number of categories', 'Nothing — it is a free choice'],
-          correct: 1, difficulty: 'medium',
-          explanation: 'The differences. A bar encodes value as length, so cutting the baseline cuts the length that the value is made of — 2 damage.'
-        }, {
-          question: 'Why is a radar chart hard to read fairly?',
-          options: [
-            'It cannot hold more than three series',
-            'Enclosed area grows as the square of the values, and reordering the spokes changes it',
-            'It needs a legend',
-            'The axes must share a scale'
-          ],
-          correct: 1, difficulty: 'hard',
-          explanation: 'Area grows as the square, and the spoke order changes the area without changing the data — 3 damage.'
-        }, {
-          question: 'A room is shown a scatter with a clear upward trend. What will they conclude that the chart does not say?',
-          options: [
-            'That the two things are measured in the same unit',
-            'That x causes y',
-            'That the sample is large',
-            'That the axis starts at zero'
-          ],
-          correct: 1, difficulty: 'boss',
-          explanation: 'That x causes y. Readers assume the relationship you draw is causal, whatever the caption says — the boss blow, 5 damage.'
-        }]
-      }],
-      slides: [
-        { type: 'title', title: 'Layout bank', subtitle: 'One of every layout, chart and live moment · Northeastern theme',
-          date: '2026-09-15',
-          notes: 'This deck is a reference, not a lesson. Every layout SlideForge can draw appears once, in running order, with a note like this one saying what it is for. Copy a slide (⌘C) and paste it into a real deck (⌘V) to reuse the shape.' },
-
-        { type: 'section', title: 'Opening a session', subtitle: 'Title, introduction, section, quote',
-          notes: 'SECTION — full red, nothing on it but the words. The loudest surface in the theme, so keep it for the two or three moments you want the room to look up. Subtitle is optional.' },
-
-        { type: 'introduction', title: 'Mark Martin', subtitle: 'Course Leader · Northeastern University London',
-          body: 'Advanced Information Presentation & Visualisation. Research interests in data literacy, computing education and how people read charts under time pressure.',
-          notes: 'INTRODUCTION — who is standing at the front. Title is the name, subtitle the role, body the paragraph. Use it once, on your first meeting with a cohort.' },
-
-        { type: 'quote', body: 'The purpose of visualization is insight, not pictures.', subtitle: 'Ben Shneiderman',
-          notes: 'QUOTE — body is the quotation, subtitle the attribution. Long quotations wrap and shrink; if it runs past three lines it has stopped being a quote slide and wants to be a content slide.' },
-
-        { type: 'section', title: 'Explaining and organising', subtitle: 'Content, journey, mind map, keywords, italics, cards',
-          notes: 'The six layouts that carry an argument. Each takes the same bullets array and arranges it differently — so you can change your mind about the shape without retyping the words.' },
-
-        { type: 'content', title: 'Content — the plain bullet slide',
-          bullets: [
-            'One point per line, in the bullets list.',
-            'A tab inside a line makes the part before it a lead-in, so a point can carry its own sub-clause.\tLike this trailing half.',
-            'Reveal them one at a time with Build on Next, or show them all at once.'
-          ],
-          progressive: true, buildMode: 'dim',
-          notes: 'CONTENT — the workhorse. This one has Build on Next set to DIM: points already made stay on screen at 38% so the argument so far is still readable, while the eye is told where you are now. Set it to Hide instead when an earlier point would give away the next one.' },
-
-        { type: 'journey', title: 'Journey — a route with milestones',
-          subtitle: 'Reveal each milestone as you explain it',
-          bullets: [
-            'Week 1\tFoundations: why we visualise at all.',
-            'Week 6\tColour, scale and the grammar of graphics.',
-            'Week 12\tCritique and assessment.'
-          ],
-          progressive: true,
-          notes: 'JOURNEY — numbers each point as a milestone (01, 02, 03) along a route. Reach for it for a course outline, a project timeline, or a handover. Text before the tab is the milestone label, text after is the detail.' },
-
-        { type: 'mindmap', title: 'Where visualisation sits',
-          bullets: [
-            'Perception\tWhat the eye does before the brain catches up.',
-            'Encoding\tTurning a number into a position, length or hue.',
-            'Interaction\tLetting the reader ask the next question.',
-            'Critique\tSaying why a chart fails.'
-          ],
-          progressive: true,
-          notes: 'MIND MAP — arranges the points around the title in the centre rather than down the page. Use it when the points are siblings with no order; use Journey when the order is the point.' },
-        { type: 'keyfact', title: 'Key fact — one number, set large',
-          subtitle: 'SHARE OF THE WORLD’S DATA CREATED IN THE LAST TWO YEARS',
-          body: '90%',
-          bullets: [
-            'The subtitle above the number is its label; the number itself is never a build step.',
-            'Three supporting lines is the limit — past that the number stops being the point.',
-            'Say the number, then stop talking.'
-          ],
-          progressive: true, buildMode: 'dim',
-          notes: 'KEY FACT — for the one figure you want quoted back at you. Reach for it when a chart would bury the finding in axes: a single number needs no scale, no legend and no explanation of what the bars mean.' },
-
-        { type: 'orgchart', title: 'People & structure — who is who',
-          bullets: [
-            'Mark Martin\tCourse Leader',
-            'Ada Lovelace\tLead Tutor\tMark Martin',
-            'Alan Turing\tTutor\tMark Martin',
-            'Grace Hopper\tLab Demonstrator\tAda Lovelace',
-            'Katherine Johnson\tLab Demonstrator\tAlan Turing'
-          ],
-          notes: 'PEOPLE & STRUCTURE — one person per line: name, role, and who they report to. Leave the third column off and they sit at the top. With no reporting lines at all it draws a flat team in one row, which is the right shape for a project group or a panel.' },
-
-        { type: 'stats', title: 'Stat tiles — the numbers that matter',
-          subtitle: 'From the module survey, week 6 · n = 148',
-          bullets: [
-            'Read the chart first\t92%\tbefore they read the caption',
-            'Found the legend\t48%\ton first look',
-            'Asked a follow-up\t3 of 5\tafter a clear chart'
-          ],
-          progressive: true,
-          notes: 'STAT TILES — each line is label · value · note, and the value is set large. Three to six tiles; three is the sweet spot. Under Design, the Ring style fills a circle to the number’s share and the Bar style adds a KPI bar under it — both read the leading number in the value.' },
-
-        { type: 'compare', title: 'Versus — two columns, row by row',
-          subtitle: 'Bad chart | Good chart',
-          bullets: [
-            'Colour\tOne hue per series, twelve series\tTwo hues: the series that matters, and everything else',
-            'Labels\tA legend the eye has to travel to\tLabels on the lines themselves',
-            'Title\t"Figure 3"\tThe finding, as a sentence'
-          ],
-          progressive: true,
-          notes: 'VERSUS — the subtitle names the two columns ("Before | After", "Myth | Fact"). Each row is left · right, or row label · left · right when the rows need naming, as here. Rows build on Next so the comparison is argued one line at a time.' },
-
-        { type: 'funnel', title: 'Funnel — stages that narrow',
-          subtitle: 'What happens to a chart between the analyst and the reader',
-          bullets: [
-            'Data points plotted\t1,200\teverything the query returned',
-            'Marks the eye registers\t300\tthe rest is texture',
-            'Marks that are compared\t40\twhere the reading actually happens',
-            'Number remembered\t1\tif the title did its job'
-          ],
-          progressive: true,
-          notes: 'FUNNEL — stage · value · note. When the values are numbers the band widths follow them, so a cliff draws as a cliff. Without numbers the bands narrow evenly. Design → Direction flips it to a pyramid.' },
-
-        { type: 'timeline', title: 'Timeline — dated events on a rail',
-          subtitle: 'Where the ideas in this module came from',
-          bullets: [
-            '1786\tPlayfair\tThe bar chart and the line chart, in one atlas',
-            '1858\tNightingale\tThe rose diagram takes an argument to Parliament',
-            '1967\tBertin\tSemiology of Graphics — the visual variables named',
-            '1983\tTufte\tData-ink ratio and chartjunk',
-            '2010s\tFT & Datawrapper\tThe visual vocabulary goes mainstream'
-          ],
-          progressive: true,
-          notes: 'TIMELINE — date · event · detail, up to eight. Dates are labels, not parsed, so "Week 3" or "Term 2" work. Design → Shape switches to the vertical spine, which gives each event a full line of detail.' },
-        { type: 'stats', design: { statStyle: 'ring' }, title: 'Stat tiles · rings',
-          bullets: [
-            'Attendance\t88%\tweek six',
-            'Submitted on time\t74%\tfirst attempt'
-          ],
-          notes: 'STATS · RING — the same layout, Design → Tile style → Ring. The arc fills to the number’s share of a hundred.\n\nThe inspector warns you when there is more than one of them, and it is right to: an arc is compared less accurately than a length, so four rings are four dials nobody can line up. One hero number in a ring is the fair use.' },
-
-        { type: 'stats', design: { statStyle: 'bar' }, title: 'Stat tiles · KPI bars',
-          bullets: [
-            'Applications\t1,240\ttarget 1,000',
-            'Offers\t860\ttarget 800',
-            'Enrolled\t510\ttarget 600'
-          ],
-          body: 'Two of three targets met — enrolment is the one to talk about.',
-          notes: 'STATS · BAR — Design → Tile style → Bar. This is the variant to prefer when the numbers are being compared, because length on a common baseline is the channel the eye reads most accurately. The line underneath is the takeaway field.' },
-
-        { type: 'funnel', design: { funnelDirection: 'up' }, title: 'Funnel · pyramid',
-          bullets: [
-            'Aware\t4,000\t',
-            'Interested\t1,600\t',
-            'Applied\t420\t',
-            'Enrolled\t180\t'
-          ],
-          notes: 'FUNNEL · UP — Design → Direction → Pyramid. Same data, widest at the bottom, for when the story is the base rather than the loss.\n\nThe drop between two stages is printed for you either way — −60%, −74% — because that is the number a reader is working out in their head. And the inspector will point out that a Sankey answers the same question while also showing where the missing ones went.' },
-
-        { type: 'timeline', design: { timelineMode: 'vertical' }, title: 'Timeline · down the page',
-          bullets: [
-            'Week 1\tFoundations\tWhy we visualise at all, and what a channel is',
-            'Week 6\tColour and scale\tThe grammar of graphics, and where it misleads',
-            'Week 12\tCritique\tSaying why a chart fails, in writing'
-          ],
-          notes: 'TIMELINE · DOWN — Design → Shape → Down. A spine with a paragraph per event, for when the detail matters more than the span. Across is the default and suits six short entries; down suits three long ones.' },
-
-        { type: 'cards', design: { cardsMode: 'stack' }, title: 'Cards · stacked, one at a time',
-          bullets: [
-            'Notice\tSomething in the data does not fit the story.',
-            'Check\tGo back to how it was collected.',
-            'Redraw\tPick the idiom that answers the question.',
-            'Say it\tWrite the finding as a sentence on the slide.'
-          ],
-          progressive: true,
-          notes: 'CARDS · STACK — Design → Card style → Stacked. Every card lands in the same place, the one being talked about in front and the ones already made peeking out behind. Four things get four moments instead of competing for one glance, and the pile shows the room how far through the set you are. Needs Build on Next, which is on here.' },
-
-        { type: 'cards', design: { cardsMode: 'rows' }, title: 'Cards · rows, for cards that have something to say',
-          bullets: [
-            'Rule of thumb\tThree cards across is fine for three words and cruel to a definition.',
-            'What goes wrong\tThe column narrows until the label breaks up, and the set reads as one card with three columns.',
-            'The fix\tDown the slide instead — full width each, and only as much height as the words need.'
-          ],
-          notes: 'CARDS · ROWS — Design → Card style → Rows. The variant to choose the moment a card carries a sentence rather than a phrase. Grid is the default and suits short labels; this suits definitions.' },
-
-        { type: 'keywords', title: 'Keywords — term and definition',
-          bullets: [
-            'Idiom\tA particular way of encoding data visually.',
-            'Data ink\tThe pixels that carry meaning rather than decoration.',
-            'Chartjunk\tEverything else.'
-          ],
-          progressive: true,
-          notes: 'KEYWORDS — the tab splits each line into a term and its definition, set as a two-column row. The vocabulary slide. Build on Next reveals a row at a time.' },
-
-        { type: 'italics', title: 'Italics — a phrase and its gloss',
-          bullets: [
-            'correlation is not causation\tTwo things moving together need not be connected.',
-            'the mean hides the shape\tAnscombe’s whole point in four scatterplots.'
-          ],
-          notes: 'ITALICS — the same term/definition split as Keywords, but the term is set in italic display type and given more room. Better for a handful of phrases you want to dwell on; Keywords is better for a list of six.' },
-
-        { type: 'cards', title: 'Cards — parallel items, side by side',
-          bullets: [
-            'Plan\tDefine the purpose and the audience before opening the data.',
-            'Prepare\tClean, validate, and know what is missing.',
-            'Present\tChoose the idiom that fits the question.',
-            'Pause\tAsk whether it actually reads.'
-          ],
-          progressive: true, buildMode: 'dim',
-          notes: 'CARDS — items that are peers, arranged in a row with the number on the side rather than across the top, so four fit without shrinking. The card count drives the column ladder automatically: two cards are wide, six are narrow. Also on dim build here.' },
-
-        { type: 'cards', title: 'Cards · picture cards — a photograph over each',
-          bullets: [
-            'See\tWhat the reader notices in the first second.',
-            'Orient\tAxes, legend, units — where am I?',
-            'Compare\tThe one difference the chart exists to show.',
-            'Say\tThe sentence they would repeat to a colleague.'
-          ],
-          design: { cardsMode: 'pictures' },
-          progressive: true,
-          notes: 'CARDS — the same layout with Design → Cards layout set to Picture cards. Every card gets an image slot above its copy; the dashed box is the placeholder until you paste a URL or drop a file under that card in the inspector. Design → Picture shape switches between portrait crops and letterboxed plates.' },
-
-        { type: 'journey', journeyMode: 'stepper', title: 'Journey · stepper — a process in one glance',
-          subtitle: 'Design → Show as → Stepper',
-          bullets: [
-            'Question\tWhat does the reader need to decide?',
-            'Data\tThe smallest table that answers it.',
-            'Idiom\tThe chart family that fits the relationship.',
-            'Title\tThe finding, written as a sentence.'
-          ],
-          progressive: true,
-          notes: 'JOURNEY — the third mode. Numbered discs on one horizontal rail with the copy beneath, for a process read left to right. Route keeps the sequence vertical; Handover is two or three big columns; Stepper is the infographic idiom for "first, then, then".' },
-
-        { type: 'section', title: 'Data and evidence', subtitle: 'A table, and all twenty chart idioms',
-          notes: 'Table and chart read the same pasted text, so a range from a spreadsheet becomes either without retyping.' },
-
-        { type: 'table', title: 'Table — when the numbers are the point',
-          body: 'Dataset\tMean x\tMean y\tCorrelation\nI\t9.00\t7.50\t0.816\nII\t9.00\t7.50\t0.816\nIII\t9.00\t7.50\t0.816\nIV\t9.00\t7.50\t0.816',
-          progressive: true,
-          notes: 'TABLE — paste a range straight from Excel or Sheets; tabs and pipes both work, first row is the header. Build on Next reveals a row at a time. Reach for a table when the reader needs the exact value, a chart when they need the shape.' },
-
-        { type: 'code', title: 'Code that writes itself',
-          language: 'python',
-          typewrite: true,
-          typeSpeed: 28,
-          code:
-            'import pandas as pd\n' +
-            '\n' +
-            'df = pd.read_csv("attendance.csv")\n' +
-            'by_week = (\n' +
-            '    df["week"]\n' +
-            '      .value_counts()\n' +
-            '      .sort_index()\n' +
-            ')\n' +
-            'print(by_week.head())\n',
-          notes: 'CODE — a viewer, not an IDE. Source types onto the wall when you Present, so the room watches the idea form without you sharing a desktop. Next skips to the finished snippet. Keep it short enough to read from the back; for a long demo, use a Video slide of your editor instead.' },
-
-        { type: 'chart', chartKind: 'bar', design: { chartMotion: 'grow' },
-          title: 'Chart — bar, for comparing magnitudes',
-          body: 'Region\tLeave %\tRemain %\nBoston\t75.6\t24.4\nBristol\t38.0\t62.0\nLambeth\t21.4\t78.6\nGlasgow\t33.4\t66.6',
-          progressive: true,
-          notes: 'CHART (bar) — identical text to a table slide; change the type and it draws. Several series means one press of Next lands a whole series; a single series means one press lands a category. Colours come from the validated palette, assigned in fixed order.' },
-
-        { type: 'chart', chartKind: 'line', title: 'Chart — line, for change over time',
-          body: 'Year\tCambridge\tBlackpool\n2019\t62\t31\n2020\t58\t28\n2021\t64\t30\n2022\t69\t29\n2023\t74\t27',
-          progressive: true,
-          notes: 'CHART (line) — series names are drawn at the right-hand end rather than in a legend box, so the eye never has to travel. The right margin is measured from the longest name before drawing, and converging labels step apart. One press of Next draws a whole line.' },
-
-        { type: 'chart', chartKind: 'pie', title: 'Chart — pie, for parts of one whole',
-          body: 'Continent\tShare of population\nAsia\t59\nAfrica\t18\nEurope\t9\nAmericas\t13\nOceania\t1',
-          notes: 'CHART (pie) — only honest when the slices are parts of a single total and there are few of them. Two series will not work here. If you are comparing magnitudes rather than showing a composition, use the bar.' },
-        { type: 'chart', chartKind: 'hbar', title: 'Chart · ranking — what is the order?',
-          body: 'Barrier\tMentioned by (%)\nNo local network\t62\nCost of travel\t48\nNo one to ask\t41\nTiming of events\t23\nNothing nearby\t12',
-          chartSource: 'Illustrative figures. Every chart carries a line like this one, and it prints under the drawing and into the student handout.',
-          notes: 'RANKING — a sorted horizontal bar is the Financial Times’ own ranking chart, and the reason is that position on a common scale is the channel the eye reads most accurately. Sort it, or it is not a ranking chart.\n\nThis slide is also the one showing the SOURCE LINE. Where the numbers came from and what they are not — that is the thing a reader needs a week later with nobody there to explain it.' },
-
-        { type: 'chart', chartKind: 'stack', title: 'Chart · part-to-whole — how does it divide up?',
-          body: 'Year\tTeaching\tResearch\tOutreach\n2023\t52\t31\t17\n2024\t48\t34\t18\n2025\t44\t35\t21',
-          notes: 'STACKED BAR — for composition over a few categories. It warns you if a series contains negatives, because those are silently left out of a total and the bar would lie.\n\nAlso in this family and drawn by the same picker: pie, donut, treemap and waffle.' },
-
-        { type: 'chart', chartKind: 'donut', title: 'Chart · donut, and its cousins',
-          body: 'Route in\tShare\nUniversity\t44\nApprenticeship\t21\nBootcamp\t18\nSelf-taught\t17',
-          notes: 'DONUT — a pie with the middle taken out, and the same paste. The hole buys you somewhere to put the total, which is the only real reason to prefer it.\n\nTreemap and waffle are further on: the same data, the same question, two better answers to it.' },
-
-        { type: 'chart', chartKind: 'scatter', title: 'Chart · correlation — do two things move together?',
-          body: 'Cohort\tHours on task\tMark\nA\t4\t52\nB\t7\t61\nC\t9\t58\nD\t12\t74\nE\t14\t71\nF\t18\t88\nG\t20\t79',
-          notes: 'SCATTER — a first column of words becomes each point’s label, and labels that would collide are moved and given a leader line. Read x, y with two columns; name, x, y with three.\n\nThe app says out loud what this chart cannot: readers will assume the relationship you draw is causal.' },
-
-        { type: 'chart', chartKind: 'box', title: 'Chart · distribution — what values occur, how often?',
-          body: 'Group\nGroup A\t54\t58\t61\t63\t65\t66\t68\t71\t74\t88\nGroup B\t41\t49\t55\t57\t60\t62\t64\t69\t73\t79\nGroup C\t62\t64\t66\t67\t68\t69\t70\t71\t73\t75',
-          notes: 'BOX PLOT — one row per group, then every value measured in it, so a column of marks pasted from a spreadsheet becomes this. Whiskers stop at the furthest real observation inside Tukey’s 1.5×IQR fence; anything past it is drawn as a point, which is why Group A has one at 88.\n\nA histogram answers the same question for a single ungrouped column.' },
-
-        { type: 'chart', chartKind: 'sankey', title: 'Chart · flow — where does it go?',
-          body: 'From\tTo\tPeople\nApplied\tInterviewed\t420\nApplied\tRejected at sift\t580\nInterviewed\tOffered\t140\nInterviewed\tNo offer\t280\nOffered\tJoined\t110\nOffered\tDeclined\t30',
-          notes: 'SANKEY — from, to, amount: a list of flows rather than a table of values. This is the honest alternative to a funnel, and the inspector points at it from there: a funnel shows what is left at each stage, a Sankey shows where the rest went. On this data that is 580 people rejected at sift who a funnel would simply not draw.' },
-
-        { type: 'chart', chartKind: 'pictogram', chartIcon: '●', chartUnit: 50, title: 'Chart · magnitude — one icon is one unit',
-          body: 'Stage\tPeople\nApplied\t1000\nInterviewed\t420\nOffered\t140\nStill there at year 3\t62',
-          notes: 'PICTOGRAM — the ISOTYPE tradition: the icon repeats and never grows, so the count is read by counting rather than by judging an area. Set the glyph and how many each one stands for; the remainder is drawn as a clipped icon rather than a smaller one, because a smaller one would encode the value in area again.' },
-
-        { type: 'chart', chartKind: 'radar', title: 'Chart · radar, and why to be careful',
-          body: 'Skill\tStart of module\tNow\nReading a chart\t2\t4\nChoosing an idiom\t1\t3\nCleaning data\t2\t3\nWriting the caption\t1\t4\nCritique\t2\t4',
-          notes: 'RADAR — defensible here and in few other places: the axes are the same kind of thing on the same nought-to-five scale, and the two shapes are the same learner at two times.\n\nIt repeats its own critique in the app, which is the point of drawing it at all: enclosed area grows as the SQUARE of the values, so a row twice as good encloses four times the shape — and reordering the spokes changes that area without changing the data.' },
-
-        { type: 'chart', chartKind: 'dumbbell', title: 'Chart · deviation — how far apart are two points?',
-          body: 'Function\tAt entry (%)\tAt senior (%)\nEngineering\t8.9\t3.1\nData\t9.6\t3.8\nProduct\t7.2\t2.4\nDesign\t6.4\t2.9',
-          notes: 'DUMBBELL — two named series as two dots on one row, and the bar between them is the finding. The gap is printed on the row, because that is the number that gets quoted. Reach for it whenever you would otherwise draw two bars side by side and ask the room to subtract.\n\nIt carries a key, because which dot is which would otherwise live only in a tooltip — and a room looking at a projector has no tooltips.' },
-
-        { type: 'chart', chartKind: 'multiples', title: 'Chart · small multiples, on one stated scale',
-          body: 'Line\t2021\t2022\t2023\t2024\nCentral\t18\t22\t26\t31\nVictoria\t12\t15\t14\t19\nNorthern\t24\t23\t27\t29\nBakerloo\t9\t11\t13\t12',
-          chartSource: 'Illustrative. Every panel shares one scale, and the scale is written on the slide rather than left to be assumed.',
-          notes: 'SMALL MULTIPLES — read transposed: each row is a panel and the columns are the axis inside it. The panels share a scale and the app says so on the drawing, because panels on their own scales are the most common way this chart misleads.\n\nPast about a dozen panels it tells you a room cannot compare that many.' },
-
-        { type: 'chart', chartKind: 'bullet', title: 'Chart · against a target',
-          body: 'Measure\tActual\tTarget\nApplications\t1240\t1000\nOffers\t860\t800\nEnrolled\t510\t600',
-          notes: 'BULLET — a value against a reference: a target, a long-run average, or zero. The bar is the actual, the tick is the target, and nobody has to subtract.\n\nThe picker groups all twenty idioms by the question they answer rather than by what they look like, which is the Financial Times’ Visual Vocabulary rather than a gallery of shapes.' },
-        { type: 'chart', chartKind: 'area', title: 'Chart · area — a total, and what it is made of',
-          body: 'Year\tEvents\tCourses\tResearch\n2019\t4\t1\t0\n2020\t6\t3\t0\n2021\t7\t6\t1\n2022\t9\t9\t1\n2023\t11\t12\t2\n2024\t12\t14\t3',
-          notes: 'AREA — a line chart with the space underneath filled, stacked when there is more than one series. Read the top edge as the total and the bands as its composition.\n\nThe honest warning: only the bottom band sits on a flat baseline, so every band above it is harder to read on its own. If a single series is the story, draw it as a line.' },
-
-        { type: 'chart', chartKind: 'combo', title: 'Chart · combo — two units on one slide',
-          body: 'Quarter\tEvents held\tAverage attendance\nQ1\t3\t62\nQ2\t5\t71\nQ3\t4\t88\nQ4\t6\t94',
-          notes: 'COMBO — the first series draws as columns, every later one as markers on top. For a count and a rate together: the bars are how many, the markers are how well.\n\nUse it when the two really are different units. Two series in the same unit belong on the same axis as two bars or two lines.' },
-
-        { type: 'chart', chartKind: 'histogram', title: 'Chart · histogram — the shape of one column',
-          body: 'Mark\n41\n48\n52\n54\n55\n57\n58\n58\n60\n61\n62\n62\n63\n64\n64\n65\n66\n67\n68\n69\n71\n72\n74\n77\n81\n88',
-          chartSource: 'One cohort, one assessment. Bin edges are computed from the data, not chosen to flatter it.',
-          notes: 'HISTOGRAM — paste one column of numbers and they are counted into bins for you. Where a box plot summarises a distribution in five numbers, this draws its actual shape, which is the only way a second peak shows up at all.\n\nBin width is a real editorial choice: too wide hides the shape, too narrow turns it into noise.' },
-
-        { type: 'chart', chartKind: 'treemap', title: 'Chart · treemap — parts of a whole, by area',
-          body: 'Spend\tShare\nDelivery\t44\nVenues\t18\nBursaries\t16\nResearch\t12\nCore costs\t10',
-          notes: 'TREEMAP — the same paste as a pie, drawn as nested rectangles. It holds more categories than a pie without collapsing into slivers, and rectangles are compared slightly better than angles.\n\nStill area, though, and area is judged poorly. If the order is the message, draw the sorted bar.' },
-
-        { type: 'chart', chartKind: 'waffle', title: 'Chart · waffle — a hundred squares, so it can be counted',
-          body: 'Route in\tShare\nUniversity\t44\nApprenticeship\t21\nBootcamp\t18\nSelf-taught\t17',
-          notes: 'WAFFLE — a hundred squares, each one a percentage point. The reader counts rather than estimates, which is why this is the part-to-whole chart to choose when the exact figure matters as much as the split.\n\nOne square is never subdivided — five percent is five squares, and that is the whole point of the idiom.' },
-
-        { type: 'chart', chartKind: 'matrix', title: 'Chart · evidence matrix — ratings across conditions',
-          body: 'Idiom\tSpots the outlier\tShows the total\tHolds 12 categories\tCounts exactly\nSorted bar\tStrong\tWeak\tStrong\tModerate\nStacked bar\tWeak\tStrong\tModerate\tWeak\nPie\tWeak\tStrong\tWeak\tWeak\nBox plot\tStrong\tWeak\tModerate\tWeak\nScatter\tStrong\tWeak\tStrong\tWeak\nWaffle\tWeak\tStrong\tWeak\tStrong\nSorted dumbbell\tModerate\tWeak\tStrong\tModerate',
-          notes: 'EVIDENCE MATRIX — first row names the conditions, then one row per item with a rating in each cell. Words like Strong / Moderate / Weak are ranked once so the whole grid shares a single scale, which is what stops each column being read on its own.\n\nFor ordinal judgements — a systematic review, a shortlist against criteria, exactly this table of chart choices. Numbers in the cells belong in a table or a heatmap instead.\n\nThat is all twenty idioms the app draws. There are no maps, and the picker says so rather than leaving you to conclude it from an absence.' },
-
-        { type: 'section', title: 'Pictures', subtitle: 'Image, split, gallery, before/after',
-          notes: 'Four ways a picture can carry a slide, and the caption and frame settings that apply across all of them.' },
-
-        { type: 'image', title: 'Image — full bleed, caption over the picture',
-          subtitle: 'Northeastern University London · the City campus',
-          image: 'assets/brand/nu-london-skyline.png',
-          design: { capStyle: 'scrim', capPos: 'bottom' },
-          notes: 'IMAGE (full bleed) — the picture fills the slide and the caption sits on it under a gradient scrim, which reads over any image. Title is the caption line, subtitle the credit. Caption styles: scrim (default, safest), bar (solid), plain, none. Caption can sit top instead of bottom.' },
-
-        { type: 'image', title: 'Image — framed to a fixed ratio',
-          subtitle: 'Anscombe’s third dataset · Anscombe 1973',
-          image: 'assets/lesson/anscombe/anscombe-iii.svg',
-          imageFit: 'contain',
-          design: { imageFrame: '4:3', capStyle: 'bar' },
-          notes: 'IMAGE (framed) — the picture takes a shape of its own and the caption sits clear below it. Ratios: 16:9, 4:3, 3:2, 1:1, 4:5. Use a frame for anything with labels near the edge — a caption bar across the bottom of a chart covers its axis. Fit contain shows the whole image; cover crops it to fill.' },
-
-        { type: 'image',
-          design: { imageMotion: 'zoom', capStyle: 'scrim', capPos: 'bottom', capFade: 10, focalX: 56, focalY: 45 },
-          image: 'assets/lesson/ipdv/snow-cholera-map-1854.jpg', imageFit: 'cover',
-          title: 'Every black bar is a death. The pump is in the middle of them.',
-          subtitle: 'John Snow, Broad Street, 1854 · lith. C. F. Cheffins',
-          notes: 'A MOVING IMAGE — Design → Image motion → Slow zoom in. Twenty-four seconds, once, ending where it stops; it does not loop back and start again, because a picture that keeps restarting is a picture nobody finishes reading.\n\nIt zooms toward the Image focus point, which is why this one drifts into Broad Street rather than the middle of the plate. Set the focus first, then the motion.\n\nProjector only. The editor holds it still so the preview is not re-animating every time you type, and a machine set to reduce motion gets the still picture — the slide still works, it simply stops moving.\n\nThe caption clears itself after ten seconds (Design → Caption clears itself). It names the plate while the room needs naming, then gets off the picture.' },
-
-        { type: 'image',
-          design: { imageFrame: '4:3', capStyle: 'bar' },
-          image: 'assets/lesson/ipdv/playfair-pie-1801.jpg', imageFit: 'contain',
-          title: 'The first pie chart anybody drew',
-          subtitle: 'William Playfair, The Statistical Breviary, 1801',
-          body: 'Playfair had already invented the line chart and the bar chart twenty years earlier, in the Commercial and Political Atlas of 1786.\nThe circle was his answer to a different question: not how much, but how a single whole divides — here the Turkish Empire split across Europe, Asia and Africa.\nHe was ignored for most of a century. The chart was not.',
-          notes: 'FLIP TO FACTS — put anything in the slide’s body and the picture gets a ⇄ in the corner. Press it and the same slide turns over: the facts on the back, the picture still there behind them, one more press and you are back.\n\nThe point is that you never leave the slide. The room is looking at the plate, you are asked where it came from, and answering it does not cost you the picture and a click forward and a click back. It is one slide with two faces rather than two slides in a row.\n\nWorks on the projector and in the editor. Nothing about it is a build step, so it does not consume a Next — which is exactly why it suits the question you did not plan for.' },
-
-        { type: 'split', title: 'Split — picture on one side, points on the other',
-          subtitle: 'NU London',
-          bullets: [
-            'The picture takes one half, the points the other.',
-            'Image side can be left or right.',
-            'Use it when the picture is evidence for the points, not decoration beside them.'
-          ],
-          image: 'assets/brand/nu-london-skyline.png',
-          imageSide: 'right', imageFit: 'cover',
-          progressive: true,
-          notes: 'SPLIT — the compromise layout, and the one to be suspicious of. If the picture is not actually doing work, drop it and use a content slide. Set imageSide to left or right.' },
-
-        { type: 'gallery', title: 'Gallery — an image stack',
-          imageFit: 'contain',
-          design: { imageFrame: '4:3', capStyle: 'bar' },
-          layers: [
-            { image: 'assets/lesson/anscombe/anscombe-i.svg', caption: 'Dataset I — a plain linear relationship', source: 'Anscombe 1973' },
-            { image: 'assets/lesson/anscombe/anscombe-ii.svg', caption: 'Dataset II — a clear curve', source: 'Anscombe 1973' },
-            { image: 'assets/lesson/anscombe/anscombe-iii.svg', caption: 'Dataset III — one outlier drags the line', source: 'Anscombe 1973' },
-            { image: 'assets/lesson/anscombe/anscombe-iv.svg', caption: 'Dataset IV — one point invents the slope', source: 'Anscombe 1973' }
-          ],
-          progressive: true,
-          notes: 'GALLERY — each press lays the next picture in front of the last, with its own caption and source, the earlier ones still showing at the edges. Up to eight layers. The effect is cumulative: the room sees the pile growing, which is what makes four near-identical scatterplots land. Every layer here has the same summary statistics.' },
-
-        { type: 'beforeafter', title: 'Before and after',
-          exploration: {
-            before: 'assets/lesson/anscombe/anscombe-i.svg',
-            after: 'assets/lesson/anscombe/anscombe-iv.svg',
-            beforeLabel: 'Dataset I', afterLabel: 'Dataset IV'
+      "key": "layout-bank",
+      "title": "Layout bank — every layout, every chart, every live moment",
+      "icon": "▦",
+      "blurb": "The reference deck: every layout in the picker, all twenty chart idioms, the design variants, and the things the room answers on their phones. Page through it to see what each one does, then copy the slide you want into your own lesson. Every slide says in its notes when to reach for it — and when not to.",
+      "minutes": 40,
+      "theme": "northeastern",
+      "libraryGroup": "sf-demo",
+      "kind": "template",
+      "org": "Northeastern University London",
+      "logo": "assets/brand/nu-london-logo.png",
+      "logoOn": "all",
+      "logoSize": "small",
+      "games": [
+        {
+          "ref": "check",
+          "title": "A live check, mid-lesson",
+          "style": "choice",
+          "settings": {
+            "defaultTime": 25,
+            "scoreboard": false,
+            "scoreSlide": false,
+            "confidence": true
           },
-          notes: 'BEFORE / AFTER — drag the handle to wipe between two pictures. Only worth it when the two images are registered to each other — same framing, same scale — so the wipe compares like with like. A redesign, a map at two dates, a chart before and after a fix.' },
-
-        { type: 'section', title: 'Things the room can touch', subtitle: 'Explore, simulation, video, links',
-          notes: 'The interactive layouts. All of them work on the projector and on a learner phone in a live session.' },
-
-        { type: 'explore', title: 'Explore — hotspots on one picture',
-          image: 'assets/brand/nu-london-skyline.png',
-          imageFit: 'cover',
-          exploration: {
-            spots: [
-              { x: 42, y: 40, zoom: 2.2, title: 'The Shard', body: 'The tallest thing on the horizon, and the reason the eye lands here first.' },
-              { x: 60, y: 68, zoom: 2.2, title: 'Tower Bridge', body: 'Picked out in red while everything round it stays blue — colour doing the work of a label.' }
+          "questions": [
+            {
+              "question": "One number per category, and the order is the message. Which chart?",
+              "options": [
+                "Pie chart",
+                "Sorted horizontal bar",
+                "Line chart",
+                "Radar"
+              ],
+              "correct": 1,
+              "explanation": "Ranking: position along a common scale is the channel the eye reads most accurately, and sorting puts the message into the shape. A pie asks the reader to compare angles; a line implies an order in time that is not there."
+            }
+          ]
+        },
+        {
+          "ref": "rank",
+          "title": "Put the workflow in order",
+          "style": "order",
+          "settings": {
+            "defaultTime": 60,
+            "scoreboard": false,
+            "scoreSlide": false
+          },
+          "questions": [
+            {
+              "question": "Put these in the order a chart should be made.",
+              "options": [
+                "Ask what question the chart has to answer",
+                "Check where the numbers came from, and what they leave out",
+                "Choose the idiom that answers that question",
+                "Write the finding as the title"
+              ],
+              "explanation": "The title is written last and read first. Choosing the idiom before knowing the question is how a deck ends up full of charts that are correct and say nothing."
+            }
+          ]
+        },
+        {
+          "ref": "race",
+          "title": "Race: name the idiom",
+          "style": "race",
+          "settings": {
+            "defaultTime": 20,
+            "scoreboard": true,
+            "scoreSlide": false,
+            "mode": "teams"
+          },
+          "questions": [
+            {
+              "question": "Where does it go, and how much gets there?",
+              "options": [
+                "Sankey",
+                "Funnel",
+                "Waffle",
+                "Box plot"
+              ],
+              "correct": 0,
+              "explanation": "A Sankey. A funnel shows what is left at each stage; only the Sankey shows where the rest went."
+            },
+            {
+              "question": "One number per category, and the order is the message?",
+              "options": [
+                "Pie",
+                "Radar",
+                "Sorted horizontal bar",
+                "Pictogram"
+              ],
+              "correct": 2,
+              "explanation": "Sorted horizontal bar. Position on a common scale, sorted so the shape carries the finding."
+            }
+          ]
+        },
+        {
+          "ref": "boss",
+          "title": "Boss battle: the grammar of charts",
+          "style": "boss",
+          "settings": {
+            "defaultTime": 30,
+            "scoreboard": false,
+            "scoreSlide": false,
+            "confidence": false
+          },
+          "questions": [
+            {
+              "question": "Which channel does the eye read most accurately?",
+              "options": [
+                "Area",
+                "Angle",
+                "Position on a common scale",
+                "Colour hue"
+              ],
+              "correct": 2,
+              "difficulty": "easy",
+              "explanation": "Position on a common scale. An easy hit — 1 damage."
+            },
+            {
+              "question": "A bar chart whose axis starts at 40 rather than 0 exaggerates what?",
+              "options": [
+                "The total",
+                "The differences between bars",
+                "The number of categories",
+                "Nothing — it is a free choice"
+              ],
+              "correct": 1,
+              "difficulty": "medium",
+              "explanation": "The differences. A bar encodes value as length, so cutting the baseline cuts the length that the value is made of — 2 damage."
+            },
+            {
+              "question": "Why is a radar chart hard to read fairly?",
+              "options": [
+                "It cannot hold more than three series",
+                "Enclosed area grows as the square of the values, and reordering the spokes changes it",
+                "It needs a legend",
+                "The axes must share a scale"
+              ],
+              "correct": 1,
+              "difficulty": "hard",
+              "explanation": "Area grows as the square, and the spoke order changes the area without changing the data — 3 damage."
+            },
+            {
+              "question": "A room is shown a scatter with a clear upward trend. What will they conclude that the chart does not say?",
+              "options": [
+                "That the two things are measured in the same unit",
+                "That x causes y",
+                "That the sample is large",
+                "That the axis starts at zero"
+              ],
+              "correct": 1,
+              "difficulty": "boss",
+              "explanation": "That x causes y. Readers assume the relationship you draw is causal, whatever the caption says — the boss blow, 5 damage."
+            }
+          ]
+        }
+      ],
+      "slides": [
+        {
+          "type": "title",
+          "title": "Layout bank",
+          "subtitle": "One of every layout, chart and live moment · Northeastern theme",
+          "date": "2026-09-15",
+          "notes": "This deck is a reference, not a lesson. Every layout SlideForge can draw appears once, in running order, with a note like this one saying what it is for. Copy a slide (⌘C) and paste it into a real deck (⌘V) to reuse the shape."
+        },
+        {
+          "type": "title",
+          "title": "A theme is\na starting point.",
+          "subtitle": "Keep the identity. Choose a different composition.",
+          "design": {
+            "composition": "poster"
+          },
+          "notes": "Reusable opening composition. Change the subject and supporting line. Look → Composition changes the arrangement independently of the theme."
+        },
+        {
+          "type": "title",
+          "title": "One idea.\nSeveral arrangements.",
+          "subtitle": "This side-by-side composition separates the subject from its context.",
+          "design": {
+            "composition": "sidecar"
+          },
+          "notes": "Reusable opening composition. Change the subject and supporting line. Look → Composition changes the arrangement independently of the theme."
+        },
+        {
+          "type": "statement",
+          "body": "Let the idea\nchoose its form.",
+          "subtitle": "Try the same slide with another theme.",
+          "design": {
+            "composition": "frame"
+          },
+          "notes": "A pause in the argument. A short statement lets the room absorb the idea. Animation is optional; this composition works as a still."
+        },
+        {
+          "type": "content",
+          "title": "A heading can sit beside the argument.",
+          "bullets": [
+            "Use the left side to name the question.",
+            "Use the right side to develop the answer.",
+            "Keep the sequence editable and reveal it when useful."
+          ],
+          "design": {
+            "composition": "rail"
+          },
+          "notes": "Keep the headings and supporting points editable. Choose Side heading for a single argument, or Columns for parallel ideas. These are examples, not limits on your content."
+        },
+        {
+          "type": "content",
+          "title": "Parallel ideas need equal space.",
+          "bullets": [
+            "A clear subject tells the audience where to look.",
+            "A useful example gives the idea something concrete.",
+            "A deliberate pause gives people time to think."
+          ],
+          "design": {
+            "composition": "columns"
+          },
+          "notes": "Keep the headings and supporting points editable. Choose Side heading for a single argument, or Columns for parallel ideas. These are examples, not limits on your content."
+        },
+        {
+          "type": "section",
+          "title": "Opening a session",
+          "subtitle": "Title, introduction, section, quote",
+          "notes": "SECTION — full red, nothing on it but the words. The loudest surface in the theme, so keep it for the two or three moments you want the room to look up. Subtitle is optional."
+        },
+        {
+          "type": "introduction",
+          "title": "Mark Martin",
+          "subtitle": "Course Leader · Northeastern University London",
+          "body": "Advanced Information Presentation & Visualisation. Research interests in data literacy, computing education and how people read charts under time pressure.",
+          "notes": "INTRODUCTION — who is standing at the front. Title is the name, subtitle the role, body the paragraph. Use it once, on your first meeting with a cohort."
+        },
+        {
+          "type": "quote",
+          "body": "The purpose of visualization is insight, not pictures.",
+          "subtitle": "Ben Shneiderman",
+          "notes": "QUOTE — body is the quotation, subtitle the attribution. Long quotations wrap and shrink; if it runs past three lines it has stopped being a quote slide and wants to be a content slide."
+        },
+        {
+          "type": "section",
+          "title": "Explaining and organising",
+          "subtitle": "Content, journey, mind map, keywords, italics, cards",
+          "notes": "The six layouts that carry an argument. Each takes the same bullets array and arranges it differently — so you can change your mind about the shape without retyping the words."
+        },
+        {
+          "type": "content",
+          "title": "Content — the plain bullet slide",
+          "bullets": [
+            "One point per line, in the bullets list.",
+            "A tab inside a line makes the part before it a lead-in, so a point can carry its own sub-clause.\tLike this trailing half.",
+            "Reveal them one at a time with Build on Next, or show them all at once."
+          ],
+          "progressive": true,
+          "buildMode": "dim",
+          "notes": "CONTENT — the workhorse. This one has Build on Next set to DIM: points already made stay on screen at 38% so the argument so far is still readable, while the eye is told where you are now. Set it to Hide instead when an earlier point would give away the next one."
+        },
+        {
+          "type": "journey",
+          "title": "Journey — a route with milestones",
+          "subtitle": "Reveal each milestone as you explain it",
+          "bullets": [
+            "Week 1\tFoundations: why we visualise at all.",
+            "Week 6\tColour, scale and the grammar of graphics.",
+            "Week 12\tCritique and assessment."
+          ],
+          "progressive": true,
+          "notes": "JOURNEY — numbers each point as a milestone (01, 02, 03) along a route. Reach for it for a course outline, a project timeline, or a handover. Text before the tab is the milestone label, text after is the detail."
+        },
+        {
+          "type": "mindmap",
+          "title": "Where visualisation sits",
+          "bullets": [
+            "Perception\tWhat the eye does before the brain catches up.",
+            "Encoding\tTurning a number into a position, length or hue.",
+            "Interaction\tLetting the reader ask the next question.",
+            "Critique\tSaying why a chart fails."
+          ],
+          "progressive": true,
+          "notes": "MIND MAP — arranges the points around the title in the centre rather than down the page. Use it when the points are siblings with no order; use Journey when the order is the point."
+        },
+        {
+          "type": "keyfact",
+          "title": "Key fact — one number, set large",
+          "subtitle": "SHARE OF THE WORLD’S DATA CREATED IN THE LAST TWO YEARS",
+          "body": "90%",
+          "bullets": [
+            "The subtitle above the number is its label; the number itself is never a build step.",
+            "Three supporting lines is the limit — past that the number stops being the point.",
+            "Say the number, then stop talking."
+          ],
+          "progressive": true,
+          "buildMode": "dim",
+          "notes": "KEY FACT — for the one figure you want quoted back at you. Reach for it when a chart would bury the finding in axes: a single number needs no scale, no legend and no explanation of what the bars mean."
+        },
+        {
+          "type": "orgchart",
+          "title": "People & structure — who is who",
+          "bullets": [
+            "Mark Martin\tCourse Leader",
+            "Ada Lovelace\tLead Tutor\tMark Martin",
+            "Alan Turing\tTutor\tMark Martin",
+            "Grace Hopper\tLab Demonstrator\tAda Lovelace",
+            "Katherine Johnson\tLab Demonstrator\tAlan Turing"
+          ],
+          "notes": "PEOPLE & STRUCTURE — one person per line: name, role, and who they report to. Leave the third column off and they sit at the top. With no reporting lines at all it draws a flat team in one row, which is the right shape for a project group or a panel."
+        },
+        {
+          "type": "stats",
+          "title": "Stat tiles — the numbers that matter",
+          "subtitle": "From the module survey, week 6 · n = 148",
+          "bullets": [
+            "Read the chart first\t92%\tbefore they read the caption",
+            "Found the legend\t48%\ton first look",
+            "Asked a follow-up\t3 of 5\tafter a clear chart"
+          ],
+          "progressive": true,
+          "notes": "STAT TILES — each line is label · value · note, and the value is set large. Three to six tiles; three is the sweet spot. Under Design, the Ring style fills a circle to the number’s share and the Bar style adds a KPI bar under it — both read the leading number in the value."
+        },
+        {
+          "type": "compare",
+          "title": "Versus — two columns, row by row",
+          "subtitle": "Bad chart | Good chart",
+          "bullets": [
+            "Colour\tOne hue per series, twelve series\tTwo hues: the series that matters, and everything else",
+            "Labels\tA legend the eye has to travel to\tLabels on the lines themselves",
+            "Title\t\"Figure 3\"\tThe finding, as a sentence"
+          ],
+          "progressive": true,
+          "notes": "VERSUS — the subtitle names the two columns (\"Before | After\", \"Myth | Fact\"). Each row is left · right, or row label · left · right when the rows need naming, as here. Rows build on Next so the comparison is argued one line at a time."
+        },
+        {
+          "type": "funnel",
+          "title": "Funnel — stages that narrow",
+          "subtitle": "What happens to a chart between the analyst and the reader",
+          "bullets": [
+            "Data points plotted\t1,200\teverything the query returned",
+            "Marks the eye registers\t300\tthe rest is texture",
+            "Marks that are compared\t40\twhere the reading actually happens",
+            "Number remembered\t1\tif the title did its job"
+          ],
+          "progressive": true,
+          "notes": "FUNNEL — stage · value · note. When the values are numbers the band widths follow them, so a cliff draws as a cliff. Without numbers the bands narrow evenly. Design → Direction flips it to a pyramid."
+        },
+        {
+          "type": "timeline",
+          "title": "Timeline — dated events on a rail",
+          "subtitle": "Where the ideas in this module came from",
+          "bullets": [
+            "1786\tPlayfair\tThe bar chart and the line chart, in one atlas",
+            "1858\tNightingale\tThe rose diagram takes an argument to Parliament",
+            "1967\tBertin\tSemiology of Graphics — the visual variables named",
+            "1983\tTufte\tData-ink ratio and chartjunk",
+            "2010s\tFT & Datawrapper\tThe visual vocabulary goes mainstream"
+          ],
+          "progressive": true,
+          "notes": "TIMELINE — date · event · detail, up to eight. Dates are labels, not parsed, so \"Week 3\" or \"Term 2\" work. Design → Shape switches to the vertical spine, which gives each event a full line of detail."
+        },
+        {
+          "type": "stats",
+          "design": {
+            "statStyle": "ring"
+          },
+          "title": "Stat tiles · rings",
+          "bullets": [
+            "Attendance\t88%\tweek six",
+            "Submitted on time\t74%\tfirst attempt"
+          ],
+          "notes": "STATS · RING — the same layout, Design → Tile style → Ring. The arc fills to the number’s share of a hundred.\n\nThe inspector warns you when there is more than one of them, and it is right to: an arc is compared less accurately than a length, so four rings are four dials nobody can line up. One hero number in a ring is the fair use."
+        },
+        {
+          "type": "stats",
+          "design": {
+            "statStyle": "bar"
+          },
+          "title": "Stat tiles · KPI bars",
+          "bullets": [
+            "Applications\t1,240\ttarget 1,000",
+            "Offers\t860\ttarget 800",
+            "Enrolled\t510\ttarget 600"
+          ],
+          "body": "Two of three targets met — enrolment is the one to talk about.",
+          "notes": "STATS · BAR — Design → Tile style → Bar. This is the variant to prefer when the numbers are being compared, because length on a common baseline is the channel the eye reads most accurately. The line underneath is the takeaway field."
+        },
+        {
+          "type": "funnel",
+          "design": {
+            "funnelDirection": "up"
+          },
+          "title": "Funnel · pyramid",
+          "bullets": [
+            "Aware\t4,000\t",
+            "Interested\t1,600\t",
+            "Applied\t420\t",
+            "Enrolled\t180\t"
+          ],
+          "notes": "FUNNEL · UP — Design → Direction → Pyramid. Same data, widest at the bottom, for when the story is the base rather than the loss.\n\nThe drop between two stages is printed for you either way — −60%, −74% — because that is the number a reader is working out in their head. And the inspector will point out that a Sankey answers the same question while also showing where the missing ones went."
+        },
+        {
+          "type": "timeline",
+          "design": {
+            "timelineMode": "vertical"
+          },
+          "title": "Timeline · down the page",
+          "bullets": [
+            "Week 1\tFoundations\tWhy we visualise at all, and what a channel is",
+            "Week 6\tColour and scale\tThe grammar of graphics, and where it misleads",
+            "Week 12\tCritique\tSaying why a chart fails, in writing"
+          ],
+          "notes": "TIMELINE · DOWN — Design → Shape → Down. A spine with a paragraph per event, for when the detail matters more than the span. Across is the default and suits six short entries; down suits three long ones."
+        },
+        {
+          "type": "cards",
+          "design": {
+            "cardsMode": "stack"
+          },
+          "title": "Cards · stacked, one at a time",
+          "bullets": [
+            "Notice\tSomething in the data does not fit the story.",
+            "Check\tGo back to how it was collected.",
+            "Redraw\tPick the idiom that answers the question.",
+            "Say it\tWrite the finding as a sentence on the slide."
+          ],
+          "progressive": true,
+          "notes": "CARDS · STACK — Design → Card style → Stacked. Every card lands in the same place, the one being talked about in front and the ones already made peeking out behind. Four things get four moments instead of competing for one glance, and the pile shows the room how far through the set you are. Needs Build on Next, which is on here."
+        },
+        {
+          "type": "cards",
+          "design": {
+            "cardsMode": "rows"
+          },
+          "title": "Cards · rows, for cards that have something to say",
+          "bullets": [
+            "Rule of thumb\tThree cards across is fine for three words and cruel to a definition.",
+            "What goes wrong\tThe column narrows until the label breaks up, and the set reads as one card with three columns.",
+            "The fix\tDown the slide instead — full width each, and only as much height as the words need."
+          ],
+          "notes": "CARDS · ROWS — Design → Card style → Rows. The variant to choose the moment a card carries a sentence rather than a phrase. Grid is the default and suits short labels; this suits definitions."
+        },
+        {
+          "type": "keywords",
+          "title": "Keywords — term and definition",
+          "bullets": [
+            "Idiom\tA particular way of encoding data visually.",
+            "Data ink\tThe pixels that carry meaning rather than decoration.",
+            "Chartjunk\tEverything else."
+          ],
+          "progressive": true,
+          "notes": "KEYWORDS — the tab splits each line into a term and its definition, set as a two-column row. The vocabulary slide. Build on Next reveals a row at a time."
+        },
+        {
+          "type": "italics",
+          "title": "Italics — a phrase and its gloss",
+          "bullets": [
+            "correlation is not causation\tTwo things moving together need not be connected.",
+            "the mean hides the shape\tAnscombe’s whole point in four scatterplots."
+          ],
+          "notes": "ITALICS — the same term/definition split as Keywords, but the term is set in italic display type and given more room. Better for a handful of phrases you want to dwell on; Keywords is better for a list of six."
+        },
+        {
+          "type": "cards",
+          "title": "Cards — parallel items, side by side",
+          "bullets": [
+            "Plan\tDefine the purpose and the audience before opening the data.",
+            "Prepare\tClean, validate, and know what is missing.",
+            "Present\tChoose the idiom that fits the question.",
+            "Pause\tAsk whether it actually reads."
+          ],
+          "progressive": true,
+          "buildMode": "dim",
+          "notes": "CARDS — items that are peers, arranged in a row with the number on the side rather than across the top, so four fit without shrinking. The card count drives the column ladder automatically: two cards are wide, six are narrow. Also on dim build here."
+        },
+        {
+          "type": "cards",
+          "title": "Cards · picture cards — a photograph over each",
+          "bullets": [
+            "See\tWhat the reader notices in the first second.",
+            "Orient\tAxes, legend, units — where am I?",
+            "Compare\tThe one difference the chart exists to show.",
+            "Say\tThe sentence they would repeat to a colleague."
+          ],
+          "design": {
+            "cardsMode": "pictures"
+          },
+          "progressive": true,
+          "notes": "CARDS — the same layout with Design → Cards layout set to Picture cards. Every card gets an image slot above its copy; the dashed box is the placeholder until you paste a URL or drop a file under that card in the inspector. Design → Picture shape switches between portrait crops and letterboxed plates."
+        },
+        {
+          "type": "journey",
+          "journeyMode": "stepper",
+          "title": "Journey · stepper — a process in one glance",
+          "subtitle": "Design → Show as → Stepper",
+          "bullets": [
+            "Question\tWhat does the reader need to decide?",
+            "Data\tThe smallest table that answers it.",
+            "Idiom\tThe chart family that fits the relationship.",
+            "Title\tThe finding, written as a sentence."
+          ],
+          "progressive": true,
+          "notes": "JOURNEY — the third mode. Numbered discs on one horizontal rail with the copy beneath, for a process read left to right. Route keeps the sequence vertical; Handover is two or three big columns; Stepper is the infographic idiom for \"first, then, then\"."
+        },
+        {
+          "type": "section",
+          "title": "Data and evidence",
+          "subtitle": "A table, and all twenty chart idioms",
+          "notes": "Table and chart read the same pasted text, so a range from a spreadsheet becomes either without retyping."
+        },
+        {
+          "type": "table",
+          "title": "Table — when the numbers are the point",
+          "body": "Dataset\tMean x\tMean y\tCorrelation\nI\t9.00\t7.50\t0.816\nII\t9.00\t7.50\t0.816\nIII\t9.00\t7.50\t0.816\nIV\t9.00\t7.50\t0.816",
+          "progressive": true,
+          "notes": "TABLE — paste a range straight from Excel or Sheets; tabs and pipes both work, first row is the header. Build on Next reveals a row at a time. Reach for a table when the reader needs the exact value, a chart when they need the shape."
+        },
+        {
+          "type": "code",
+          "title": "Code that writes itself",
+          "language": "python",
+          "typewrite": true,
+          "typeSpeed": 28,
+          "code": "import pandas as pd\n\ndf = pd.read_csv(\"attendance.csv\")\nby_week = (\n    df[\"week\"]\n      .value_counts()\n      .sort_index()\n)\nprint(by_week.head())\n",
+          "notes": "CODE — a viewer, not an IDE. Source types onto the wall when you Present, so the room watches the idea form without you sharing a desktop. Next skips to the finished snippet. Keep it short enough to read from the back; for a long demo, use a Video slide of your editor instead."
+        },
+        {
+          "type": "chart",
+          "chartKind": "bar",
+          "design": {
+            "chartMotion": "grow"
+          },
+          "title": "Chart — bar, for comparing magnitudes",
+          "body": "Region\tLeave %\tRemain %\nBoston\t75.6\t24.4\nBristol\t38.0\t62.0\nLambeth\t21.4\t78.6\nGlasgow\t33.4\t66.6",
+          "progressive": true,
+          "notes": "CHART (bar) — identical text to a table slide; change the type and it draws. Several series means one press of Next lands a whole series; a single series means one press lands a category. Colours come from the validated palette, assigned in fixed order."
+        },
+        {
+          "type": "chart",
+          "chartKind": "line",
+          "title": "Chart — line, for change over time",
+          "body": "Year\tCambridge\tBlackpool\n2019\t62\t31\n2020\t58\t28\n2021\t64\t30\n2022\t69\t29\n2023\t74\t27",
+          "progressive": true,
+          "notes": "CHART (line) — series names are drawn at the right-hand end rather than in a legend box, so the eye never has to travel. The right margin is measured from the longest name before drawing, and converging labels step apart. One press of Next draws a whole line."
+        },
+        {
+          "type": "chart",
+          "chartKind": "pie",
+          "title": "Chart — pie, for parts of one whole",
+          "body": "Continent\tShare of population\nAsia\t59\nAfrica\t18\nEurope\t9\nAmericas\t13\nOceania\t1",
+          "notes": "CHART (pie) — only honest when the slices are parts of a single total and there are few of them. Two series will not work here. If you are comparing magnitudes rather than showing a composition, use the bar."
+        },
+        {
+          "type": "chart",
+          "chartKind": "hbar",
+          "title": "Chart · ranking — what is the order?",
+          "body": "Barrier\tMentioned by (%)\nNo local network\t62\nCost of travel\t48\nNo one to ask\t41\nTiming of events\t23\nNothing nearby\t12",
+          "chartSource": "Illustrative figures. Every chart carries a line like this one, and it prints under the drawing and into the student handout.",
+          "notes": "RANKING — a sorted horizontal bar is the Financial Times’ own ranking chart, and the reason is that position on a common scale is the channel the eye reads most accurately. Sort it, or it is not a ranking chart.\n\nThis slide is also the one showing the SOURCE LINE. Where the numbers came from and what they are not — that is the thing a reader needs a week later with nobody there to explain it."
+        },
+        {
+          "type": "chart",
+          "chartKind": "stack",
+          "title": "Chart · part-to-whole — how does it divide up?",
+          "body": "Year\tTeaching\tResearch\tOutreach\n2023\t52\t31\t17\n2024\t48\t34\t18\n2025\t44\t35\t21",
+          "notes": "STACKED BAR — for composition over a few categories. It warns you if a series contains negatives, because those are silently left out of a total and the bar would lie.\n\nAlso in this family and drawn by the same picker: pie, donut, treemap and waffle."
+        },
+        {
+          "type": "chart",
+          "chartKind": "donut",
+          "title": "Chart · donut, and its cousins",
+          "body": "Route in\tShare\nUniversity\t44\nApprenticeship\t21\nBootcamp\t18\nSelf-taught\t17",
+          "notes": "DONUT — a pie with the middle taken out, and the same paste. The hole buys you somewhere to put the total, which is the only real reason to prefer it.\n\nTreemap and waffle are further on: the same data, the same question, two better answers to it."
+        },
+        {
+          "type": "chart",
+          "chartKind": "scatter",
+          "title": "Chart · correlation — do two things move together?",
+          "body": "Cohort\tHours on task\tMark\nA\t4\t52\nB\t7\t61\nC\t9\t58\nD\t12\t74\nE\t14\t71\nF\t18\t88\nG\t20\t79",
+          "notes": "SCATTER — a first column of words becomes each point’s label, and labels that would collide are moved and given a leader line. Read x, y with two columns; name, x, y with three.\n\nThe app says out loud what this chart cannot: readers will assume the relationship you draw is causal."
+        },
+        {
+          "type": "chart",
+          "chartKind": "box",
+          "title": "Chart · distribution — what values occur, how often?",
+          "body": "Group\nGroup A\t54\t58\t61\t63\t65\t66\t68\t71\t74\t88\nGroup B\t41\t49\t55\t57\t60\t62\t64\t69\t73\t79\nGroup C\t62\t64\t66\t67\t68\t69\t70\t71\t73\t75",
+          "notes": "BOX PLOT — one row per group, then every value measured in it, so a column of marks pasted from a spreadsheet becomes this. Whiskers stop at the furthest real observation inside Tukey’s 1.5×IQR fence; anything past it is drawn as a point, which is why Group A has one at 88.\n\nA histogram answers the same question for a single ungrouped column."
+        },
+        {
+          "type": "chart",
+          "chartKind": "sankey",
+          "title": "Chart · flow — where does it go?",
+          "body": "From\tTo\tPeople\nApplied\tInterviewed\t420\nApplied\tRejected at sift\t580\nInterviewed\tOffered\t140\nInterviewed\tNo offer\t280\nOffered\tJoined\t110\nOffered\tDeclined\t30",
+          "notes": "SANKEY — from, to, amount: a list of flows rather than a table of values. This is the honest alternative to a funnel, and the inspector points at it from there: a funnel shows what is left at each stage, a Sankey shows where the rest went. On this data that is 580 people rejected at sift who a funnel would simply not draw."
+        },
+        {
+          "type": "chart",
+          "chartKind": "pictogram",
+          "chartIcon": "●",
+          "chartUnit": 50,
+          "title": "Chart · magnitude — one icon is one unit",
+          "body": "Stage\tPeople\nApplied\t1000\nInterviewed\t420\nOffered\t140\nStill there at year 3\t62",
+          "notes": "PICTOGRAM — the ISOTYPE tradition: the icon repeats and never grows, so the count is read by counting rather than by judging an area. Set the glyph and how many each one stands for; the remainder is drawn as a clipped icon rather than a smaller one, because a smaller one would encode the value in area again."
+        },
+        {
+          "type": "chart",
+          "chartKind": "radar",
+          "title": "Chart · radar, and why to be careful",
+          "body": "Skill\tStart of module\tNow\nReading a chart\t2\t4\nChoosing an idiom\t1\t3\nCleaning data\t2\t3\nWriting the caption\t1\t4\nCritique\t2\t4",
+          "notes": "RADAR — defensible here and in few other places: the axes are the same kind of thing on the same nought-to-five scale, and the two shapes are the same learner at two times.\n\nIt repeats its own critique in the app, which is the point of drawing it at all: enclosed area grows as the SQUARE of the values, so a row twice as good encloses four times the shape — and reordering the spokes changes that area without changing the data."
+        },
+        {
+          "type": "chart",
+          "chartKind": "dumbbell",
+          "title": "Chart · deviation — how far apart are two points?",
+          "body": "Function\tAt entry (%)\tAt senior (%)\nEngineering\t8.9\t3.1\nData\t9.6\t3.8\nProduct\t7.2\t2.4\nDesign\t6.4\t2.9",
+          "notes": "DUMBBELL — two named series as two dots on one row, and the bar between them is the finding. The gap is printed on the row, because that is the number that gets quoted. Reach for it whenever you would otherwise draw two bars side by side and ask the room to subtract.\n\nIt carries a key, because which dot is which would otherwise live only in a tooltip — and a room looking at a projector has no tooltips."
+        },
+        {
+          "type": "chart",
+          "chartKind": "multiples",
+          "title": "Chart · small multiples, on one stated scale",
+          "body": "Line\t2021\t2022\t2023\t2024\nCentral\t18\t22\t26\t31\nVictoria\t12\t15\t14\t19\nNorthern\t24\t23\t27\t29\nBakerloo\t9\t11\t13\t12",
+          "chartSource": "Illustrative. Every panel shares one scale, and the scale is written on the slide rather than left to be assumed.",
+          "notes": "SMALL MULTIPLES — read transposed: each row is a panel and the columns are the axis inside it. The panels share a scale and the app says so on the drawing, because panels on their own scales are the most common way this chart misleads.\n\nPast about a dozen panels it tells you a room cannot compare that many."
+        },
+        {
+          "type": "chart",
+          "chartKind": "bullet",
+          "title": "Chart · against a target",
+          "body": "Measure\tActual\tTarget\nApplications\t1240\t1000\nOffers\t860\t800\nEnrolled\t510\t600",
+          "notes": "BULLET — a value against a reference: a target, a long-run average, or zero. The bar is the actual, the tick is the target, and nobody has to subtract.\n\nThe picker groups all twenty idioms by the question they answer rather than by what they look like, which is the Financial Times’ Visual Vocabulary rather than a gallery of shapes."
+        },
+        {
+          "type": "chart",
+          "chartKind": "area",
+          "title": "Chart · area — a total, and what it is made of",
+          "body": "Year\tEvents\tCourses\tResearch\n2019\t4\t1\t0\n2020\t6\t3\t0\n2021\t7\t6\t1\n2022\t9\t9\t1\n2023\t11\t12\t2\n2024\t12\t14\t3",
+          "notes": "AREA — a line chart with the space underneath filled, stacked when there is more than one series. Read the top edge as the total and the bands as its composition.\n\nThe honest warning: only the bottom band sits on a flat baseline, so every band above it is harder to read on its own. If a single series is the story, draw it as a line."
+        },
+        {
+          "type": "chart",
+          "chartKind": "combo",
+          "title": "Chart · combo — two units on one slide",
+          "body": "Quarter\tEvents held\tAverage attendance\nQ1\t3\t62\nQ2\t5\t71\nQ3\t4\t88\nQ4\t6\t94",
+          "notes": "COMBO — the first series draws as columns, every later one as markers on top. For a count and a rate together: the bars are how many, the markers are how well.\n\nUse it when the two really are different units. Two series in the same unit belong on the same axis as two bars or two lines."
+        },
+        {
+          "type": "chart",
+          "chartKind": "histogram",
+          "title": "Chart · histogram — the shape of one column",
+          "body": "Mark\n41\n48\n52\n54\n55\n57\n58\n58\n60\n61\n62\n62\n63\n64\n64\n65\n66\n67\n68\n69\n71\n72\n74\n77\n81\n88",
+          "chartSource": "One cohort, one assessment. Bin edges are computed from the data, not chosen to flatter it.",
+          "notes": "HISTOGRAM — paste one column of numbers and they are counted into bins for you. Where a box plot summarises a distribution in five numbers, this draws its actual shape, which is the only way a second peak shows up at all.\n\nBin width is a real editorial choice: too wide hides the shape, too narrow turns it into noise."
+        },
+        {
+          "type": "chart",
+          "chartKind": "treemap",
+          "title": "Chart · treemap — parts of a whole, by area",
+          "body": "Spend\tShare\nDelivery\t44\nVenues\t18\nBursaries\t16\nResearch\t12\nCore costs\t10",
+          "notes": "TREEMAP — the same paste as a pie, drawn as nested rectangles. It holds more categories than a pie without collapsing into slivers, and rectangles are compared slightly better than angles.\n\nStill area, though, and area is judged poorly. If the order is the message, draw the sorted bar."
+        },
+        {
+          "type": "chart",
+          "chartKind": "waffle",
+          "title": "Chart · waffle — a hundred squares, so it can be counted",
+          "body": "Route in\tShare\nUniversity\t44\nApprenticeship\t21\nBootcamp\t18\nSelf-taught\t17",
+          "notes": "WAFFLE — a hundred squares, each one a percentage point. The reader counts rather than estimates, which is why this is the part-to-whole chart to choose when the exact figure matters as much as the split.\n\nOne square is never subdivided — five percent is five squares, and that is the whole point of the idiom."
+        },
+        {
+          "type": "chart",
+          "chartKind": "matrix",
+          "title": "Chart · evidence matrix — ratings across conditions",
+          "body": "Idiom\tSpots the outlier\tShows the total\tHolds 12 categories\tCounts exactly\nSorted bar\tStrong\tWeak\tStrong\tModerate\nStacked bar\tWeak\tStrong\tModerate\tWeak\nPie\tWeak\tStrong\tWeak\tWeak\nBox plot\tStrong\tWeak\tModerate\tWeak\nScatter\tStrong\tWeak\tStrong\tWeak\nWaffle\tWeak\tStrong\tWeak\tStrong\nSorted dumbbell\tModerate\tWeak\tStrong\tModerate",
+          "notes": "EVIDENCE MATRIX — first row names the conditions, then one row per item with a rating in each cell. Words like Strong / Moderate / Weak are ranked once so the whole grid shares a single scale, which is what stops each column being read on its own.\n\nFor ordinal judgements — a systematic review, a shortlist against criteria, exactly this table of chart choices. Numbers in the cells belong in a table or a heatmap instead.\n\nThat is all twenty idioms the app draws. There are no maps, and the picker says so rather than leaving you to conclude it from an absence."
+        },
+        {
+          "type": "section",
+          "title": "Pictures",
+          "subtitle": "Image, split, gallery, before/after",
+          "notes": "Four ways a picture can carry a slide, and the caption and frame settings that apply across all of them."
+        },
+        {
+          "type": "image",
+          "title": "Image — full bleed, caption over the picture",
+          "subtitle": "Northeastern University London · the City campus",
+          "image": "assets/brand/nu-london-skyline.png",
+          "design": {
+            "capStyle": "scrim",
+            "capPos": "bottom"
+          },
+          "notes": "IMAGE (full bleed) — the picture fills the slide and the caption sits on it under a gradient scrim, which reads over any image. Title is the caption line, subtitle the credit. Caption styles: scrim (default, safest), bar (solid), plain, none. Caption can sit top instead of bottom."
+        },
+        {
+          "type": "image",
+          "title": "Image — framed to a fixed ratio",
+          "subtitle": "Anscombe’s third dataset · Anscombe 1973",
+          "image": "assets/lesson/anscombe/anscombe-iii.svg",
+          "imageFit": "contain",
+          "design": {
+            "imageFrame": "4:3",
+            "capStyle": "bar"
+          },
+          "notes": "IMAGE (framed) — the picture takes a shape of its own and the caption sits clear below it. Ratios: 16:9, 4:3, 3:2, 1:1, 4:5. Use a frame for anything with labels near the edge — a caption bar across the bottom of a chart covers its axis. Fit contain shows the whole image; cover crops it to fill."
+        },
+        {
+          "type": "image",
+          "design": {
+            "imageMotion": "zoom",
+            "capStyle": "scrim",
+            "capPos": "bottom",
+            "capFade": 10,
+            "focalX": 56,
+            "focalY": 45
+          },
+          "image": "assets/lesson/ipdv/snow-cholera-map-1854.jpg",
+          "imageFit": "cover",
+          "title": "Every black bar is a death. The pump is in the middle of them.",
+          "subtitle": "John Snow, Broad Street, 1854 · lith. C. F. Cheffins",
+          "notes": "A MOVING IMAGE — Design → Image motion → Slow zoom in. Twenty-four seconds, once, ending where it stops; it does not loop back and start again, because a picture that keeps restarting is a picture nobody finishes reading.\n\nIt zooms toward the Image focus point, which is why this one drifts into Broad Street rather than the middle of the plate. Set the focus first, then the motion.\n\nProjector only. The editor holds it still so the preview is not re-animating every time you type, and a machine set to reduce motion gets the still picture — the slide still works, it simply stops moving.\n\nThe caption clears itself after ten seconds (Design → Caption clears itself). It names the plate while the room needs naming, then gets off the picture."
+        },
+        {
+          "type": "image",
+          "design": {
+            "imageFrame": "4:3",
+            "capStyle": "bar"
+          },
+          "image": "assets/lesson/ipdv/playfair-pie-1801.jpg",
+          "imageFit": "contain",
+          "title": "The first pie chart anybody drew",
+          "subtitle": "William Playfair, The Statistical Breviary, 1801",
+          "body": "Playfair had already invented the line chart and the bar chart twenty years earlier, in the Commercial and Political Atlas of 1786.\nThe circle was his answer to a different question: not how much, but how a single whole divides — here the Turkish Empire split across Europe, Asia and Africa.\nHe was ignored for most of a century. The chart was not.",
+          "notes": "FLIP TO FACTS — put anything in the slide’s body and the picture gets a ⇄ in the corner. Press it and the same slide turns over: the facts on the back, the picture still there behind them, one more press and you are back.\n\nThe point is that you never leave the slide. The room is looking at the plate, you are asked where it came from, and answering it does not cost you the picture and a click forward and a click back. It is one slide with two faces rather than two slides in a row.\n\nWorks on the projector and in the editor. Nothing about it is a build step, so it does not consume a Next — which is exactly why it suits the question you did not plan for."
+        },
+        {
+          "type": "split",
+          "title": "Split — picture on one side, points on the other",
+          "subtitle": "NU London",
+          "bullets": [
+            "The picture takes one half, the points the other.",
+            "Image side can be left or right.",
+            "Use it when the picture is evidence for the points, not decoration beside them."
+          ],
+          "image": "assets/brand/nu-london-skyline.png",
+          "imageSide": "right",
+          "imageFit": "cover",
+          "progressive": true,
+          "notes": "SPLIT — the compromise layout, and the one to be suspicious of. If the picture is not actually doing work, drop it and use a content slide. Set imageSide to left or right."
+        },
+        {
+          "type": "gallery",
+          "title": "Gallery — an image stack",
+          "imageFit": "contain",
+          "design": {
+            "imageFrame": "4:3",
+            "capStyle": "bar"
+          },
+          "layers": [
+            {
+              "image": "assets/lesson/anscombe/anscombe-i.svg",
+              "caption": "Dataset I — a plain linear relationship",
+              "source": "Anscombe 1973"
+            },
+            {
+              "image": "assets/lesson/anscombe/anscombe-ii.svg",
+              "caption": "Dataset II — a clear curve",
+              "source": "Anscombe 1973"
+            },
+            {
+              "image": "assets/lesson/anscombe/anscombe-iii.svg",
+              "caption": "Dataset III — one outlier drags the line",
+              "source": "Anscombe 1973"
+            },
+            {
+              "image": "assets/lesson/anscombe/anscombe-iv.svg",
+              "caption": "Dataset IV — one point invents the slope",
+              "source": "Anscombe 1973"
+            }
+          ],
+          "progressive": true,
+          "notes": "GALLERY — each press lays the next picture in front of the last, with its own caption and source, the earlier ones still showing at the edges. Up to eight layers. The effect is cumulative: the room sees the pile growing, which is what makes four near-identical scatterplots land. Every layer here has the same summary statistics."
+        },
+        {
+          "type": "beforeafter",
+          "title": "Before and after",
+          "exploration": {
+            "before": "assets/lesson/anscombe/anscombe-i.svg",
+            "after": "assets/lesson/anscombe/anscombe-iv.svg",
+            "beforeLabel": "Dataset I",
+            "afterLabel": "Dataset IV"
+          },
+          "notes": "BEFORE / AFTER — drag the handle to wipe between two pictures. Only worth it when the two images are registered to each other — same framing, same scale — so the wipe compares like with like. A redesign, a map at two dates, a chart before and after a fix."
+        },
+        {
+          "type": "section",
+          "title": "Things the room can touch",
+          "subtitle": "Explore, simulation, video, links",
+          "notes": "The interactive layouts. All of them work on the projector and on a learner phone in a live session."
+        },
+        {
+          "type": "explore",
+          "title": "Explore — hotspots on one picture",
+          "image": "assets/brand/nu-london-skyline.png",
+          "imageFit": "cover",
+          "exploration": {
+            "spots": [
+              {
+                "x": 42,
+                "y": 40,
+                "zoom": 2.2,
+                "title": "The Shard",
+                "body": "The tallest thing on the horizon, and the reason the eye lands here first."
+              },
+              {
+                "x": 60,
+                "y": 68,
+                "zoom": 2.2,
+                "title": "Tower Bridge",
+                "body": "Picked out in red while everything round it stays blue — colour doing the work of a label."
+              }
             ]
           },
-          notes: 'EXPLORE — pin hotspots to a picture by percentage coordinates; each one zooms in and shows a title and a note. Use it to walk a room around a complicated image — a chart with several stories in it, a map, a screenshot of an interface.' },
-
-        { type: 'simulation', title: 'Simulation — change an input, watch the output',
-          exploration: { model: 'quadratic', min: 0, max: 10, a: 2, b: 1, inputLabel: 'Sample size', outputLabel: 'Confidence' },
-          notes: 'SIMULATION — a slider bound to a model, drawn as a curve. Reach for it when the relationship is the lesson and a static chart would only show one point on it. Learners can drive their own copy from their phones.' },
-
-        { type: 'links', title: 'Links — the reading list',
-          bullets: [
-            'Munzner, Visualization Analysis and Design\thttps://www.cs.ubc.ca/~tmm/vadbook/',
-            'Financial Times Visual Vocabulary\thttps://github.com/Financial-Times/chart-doctor',
-            'Anscombe 1973, Graphs in Statistical Analysis\thttps://www.jstor.org/stable/2682899'
+          "notes": "EXPLORE — pin hotspots to a picture by percentage coordinates; each one zooms in and shows a title and a note. Use it to walk a room around a complicated image — a chart with several stories in it, a map, a screenshot of an interface."
+        },
+        {
+          "type": "simulation",
+          "title": "Simulation — change an input, watch the output",
+          "exploration": {
+            "model": "quadratic",
+            "min": 0,
+            "max": 10,
+            "a": 2,
+            "b": 1,
+            "inputLabel": "Sample size",
+            "outputLabel": "Confidence"
+          },
+          "notes": "SIMULATION — a slider bound to a model, drawn as a curve. Reach for it when the relationship is the lesson and a static chart would only show one point on it. Learners can drive their own copy from their phones."
+        },
+        {
+          "type": "links",
+          "title": "Links — the reading list",
+          "bullets": [
+            "Munzner, Visualization Analysis and Design\thttps://www.cs.ubc.ca/~tmm/vadbook/",
+            "Financial Times Visual Vocabulary\thttps://github.com/Financial-Times/chart-doctor",
+            "Anscombe 1973, Graphs in Statistical Analysis\thttps://www.jstor.org/stable/2682899"
           ],
-          notes: 'LINKS — text before the tab is the label, after it the URL. In a live session these become tappable on learner phones, which is the point: nobody copies a URL off a projector.' },
-
-        { type: 'video',
-          video: 'assets/lesson/ipdv/baseline-truncation.mp4',
-          videoPoster: 'assets/lesson/ipdv/baseline-truncation-poster.jpg',
-          videoMuted: true, videoLoop: true, videoAutoplay: true,
-          imageFit: 'contain',
-          title: 'Same five numbers. Two different axes.',
-          notes: 'VIDEO — a file beside the deck, or a YouTube or Vimeo link. Paste the share URL and it becomes an embed; paste a path and it becomes a real player with the projector’s own controls.\n\nThis one is set muted, looping and autoplaying, which is the combination that works on a wall: sound in a lecture theatre is a gamble, a loop means a latecomer still sees the whole thing, and autoplay saves you walking to the laptop. Autoplay is honoured on the projector and never in the editor — a preview that starts playing while you type is a preview you turn off.\n\nStart and end are settable in seconds, so a forty-minute recording can contribute the ninety seconds you actually want without you editing the file. The poster is the frame it shows before it plays, and it is worth setting: without one the slide is a black rectangle until the first frame decodes.\n\nAn embedded clip draws a still in the editor rather than a dead frame, because loading the real player beside the inspector would start somebody’s video while they worked.\n\nOne thing worth copying: a video caption is a fixed band across the bottom of the frame, about 208px of white-on-gradient, and it clears the player controls rather than the content. So this clip was drawn with that band empty — the chart and its labels stop above it. If you are making the clip as well as the slide, leave the caption somewhere to sit.' },
-
-        { type: 'content', title: 'Video — what to check before the lecture',
-          bullets: [
-            'A file beside the deck\tPlays with no network. This is the one to use when the room’s wifi is a rumour.',
-            'A YouTube or Vimeo link\tBecomes an embed on the no-cookie domain. Needs the network, and the site has to be reachable from the lecture theatre.',
-            'Muted, looping, autoplaying\tThe wall combination. Sound only if you have tested the room’s sound.',
-            'Start and end\tClip the ninety seconds you want out of a forty-minute recording, without editing the file.'
+          "notes": "LINKS — text before the tab is the label, after it the URL. In a live session these become tappable on learner phones, which is the point: nobody copies a URL off a projector."
+        },
+        {
+          "type": "video",
+          "video": "assets/lesson/ipdv/baseline-truncation.mp4",
+          "videoPoster": "assets/lesson/ipdv/baseline-truncation-poster.jpg",
+          "videoMuted": true,
+          "videoLoop": true,
+          "videoAutoplay": true,
+          "imageFit": "contain",
+          "title": "Same five numbers. Two different axes.",
+          "notes": "VIDEO — a file beside the deck, or a YouTube or Vimeo link. Paste the share URL and it becomes an embed; paste a path and it becomes a real player with the projector’s own controls.\n\nThis one is set muted, looping and autoplaying, which is the combination that works on a wall: sound in a lecture theatre is a gamble, a loop means a latecomer still sees the whole thing, and autoplay saves you walking to the laptop. Autoplay is honoured on the projector and never in the editor — a preview that starts playing while you type is a preview you turn off.\n\nStart and end are settable in seconds, so a forty-minute recording can contribute the ninety seconds you actually want without you editing the file. The poster is the frame it shows before it plays, and it is worth setting: without one the slide is a black rectangle until the first frame decodes.\n\nAn embedded clip draws a still in the editor rather than a dead frame, because loading the real player beside the inspector would start somebody’s video while they worked.\n\nOne thing worth copying: a video caption is a fixed band across the bottom of the frame, about 208px of white-on-gradient, and it clears the player controls rather than the content. So this clip was drawn with that band empty — the chart and its labels stop above it. If you are making the clip as well as the slide, leave the caption somewhere to sit."
+        },
+        {
+          "type": "content",
+          "title": "Video — what to check before the lecture",
+          "bullets": [
+            "A file beside the deck\tPlays with no network. This is the one to use when the room’s wifi is a rumour.",
+            "A YouTube or Vimeo link\tBecomes an embed on the no-cookie domain. Needs the network, and the site has to be reachable from the lecture theatre.",
+            "Muted, looping, autoplaying\tThe wall combination. Sound only if you have tested the room’s sound.",
+            "Start and end\tClip the ninety seconds you want out of a forty-minute recording, without editing the file."
           ],
-          notes: 'The clip on the previous slide is about 280 KB and travels with the deck, which is the whole argument for a file over a link: nothing to load, nothing to log in to, nothing that shows an advert first.\n\nWhat it shows is the same five numbers twice — once on an axis that starts at zero, once on an axis that starts at 55. A bar encodes its value as a LENGTH, so cutting the baseline cuts away the part of the length that carries the value, and the differences that are left look several times larger than they are. It is the most common way a correct number tells a lie, and it is much easier to watch happen than to describe.' },
-
-        { type: 'section', title: 'What the room does', subtitle: 'Four ways a slide can ask, and one live check',
-          notes: 'Everything from here needs Host live and phones in the room. On the projector each of these draws its own control; on a learner phone the same control takes over the screen.' },
-
-        { type: 'join', title: 'Everyone in, in about twenty seconds',
-          subtitle: 'Phones out — the code and the PIN both work',
-          bullets: [
-            'Scan the code, or type the address and the four digits.',
-            'No app, no account, no name unless you ask for one.'
+          "notes": "The clip on the previous slide is about 280 KB and travels with the deck, which is the whole argument for a file over a link: nothing to load, nothing to log in to, nothing that shows an advert first.\n\nWhat it shows is the same five numbers twice — once on an axis that starts at zero, once on an axis that starts at 55. A bar encodes its value as a LENGTH, so cutting the baseline cuts away the part of the length that carries the value, and the differences that are left look several times larger than they are. It is the most common way a correct number tells a lie, and it is much easier to watch happen than to describe."
+        },
+        {
+          "type": "section",
+          "title": "What the room does",
+          "subtitle": "Four ways a slide can ask, and one live check",
+          "notes": "Everything from here needs Host live and phones in the room. On the projector each of these draws its own control; on a learner phone the same control takes over the screen."
+        },
+        {
+          "type": "join",
+          "title": "Everyone in, in about twenty seconds",
+          "subtitle": "Phones out — the code and the PIN both work",
+          "bullets": [
+            "Scan the code, or type the address and the four digits.",
+            "No app, no account, no name unless you ask for one."
           ],
-          notes: 'JOIN — the app builds this for you when you host a session, with the real room code in it. What you are looking at now is a sample, because this deck is not live.\n\nLeave it on the wall while the room arrives. Latecomers join off the same code without stopping you.' },
-
-        { type: 'split', imageFit: 'contain', imageSide: 'left', design: { imageShare: 35 },
-          image: 'assets/demo-phone/phone-poll.jpg',
-          title: 'What it looks like in their hand',
-          bullets: [
-            'Their own first name at the top — and a question mark, a raised hand and a heart, so a room can interrupt without interrupting.',
-            'Under it, which slide the wall is on. That line is what stops “which one are we looking at?”',
-            'The heart saves this slide to their own copy, so revision is something they build while the lesson happens.',
-            'The poll itself takes the whole screen. There is nothing else on it to do.'
+          "notes": "JOIN — the app builds this for you when you host a session, with the real room code in it. What you are looking at now is a sample, because this deck is not live.\n\nLeave it on the wall while the room arrives. Latecomers join off the same code without stopping you."
+        },
+        {
+          "type": "split",
+          "imageFit": "contain",
+          "imageSide": "left",
+          "design": {
+            "imageShare": 35
+          },
+          "image": "assets/demo-phone/phone-poll.jpg",
+          "title": "What it looks like in their hand",
+          "bullets": [
+            "Their own first name at the top — and a question mark, a raised hand and a heart, so a room can interrupt without interrupting.",
+            "Under it, which slide the wall is on. That line is what stops “which one are we looking at?”",
+            "The heart saves this slide to their own copy, so revision is something they build while the lesson happens.",
+            "The poll itself takes the whole screen. There is nothing else on it to do."
           ],
-          notes: 'A REAL SCREENSHOT, not a drawing of one: this deck hosted, joined from a phone-sized browser, photographed mid-poll. The slide number on it is this deck with its games compiled out, which is why it counts past the ninety in the editor.\n\nNo app, no account, a first name only when the activity needs one — and somebody watching a follow-along screen is not in the register at all.\n\nRegenerate all of these with tools/capture-phone.mjs whenever the learner screens change. A screenshot nobody can rebuild goes stale and then lies about the product.' },
-
-        { type: 'split', imageFit: 'contain', imageSide: 'left', design: { imageShare: 35 },
-          image: 'assets/demo-phone/phone-check-answered.jpg',
-          title: 'And when it is a check rather than a poll',
-          bullets: [
-            'A to D, one tap, then “Locked in” — so they know the answer arrived.',
-            'Then, and only then: how sure are you? I’m sure, or just a guess.',
-            'A confident wrong answer is the most useful thing in the room. It is also the one a show of hands never tells you.',
-            'The same screen carries every engine — ranking, typing, estimating, the race, the boss.'
+          "notes": "A REAL SCREENSHOT, not a drawing of one: this deck hosted, joined from a phone-sized browser, photographed mid-poll. The slide number on it is this deck with its games compiled out, which is why it counts past the ninety in the editor.\n\nNo app, no account, a first name only when the activity needs one — and somebody watching a follow-along screen is not in the register at all.\n\nRegenerate all of these with tools/capture-phone.mjs whenever the learner screens change. A screenshot nobody can rebuild goes stale and then lies about the product."
+        },
+        {
+          "type": "split",
+          "imageFit": "contain",
+          "imageSide": "left",
+          "design": {
+            "imageShare": 35
+          },
+          "image": "assets/demo-phone/phone-check-answered.jpg",
+          "title": "And when it is a check rather than a poll",
+          "bullets": [
+            "A to D, one tap, then “Locked in” — so they know the answer arrived.",
+            "Then, and only then: how sure are you? I’m sure, or just a guess.",
+            "A confident wrong answer is the most useful thing in the room. It is also the one a show of hands never tells you.",
+            "The same screen carries every engine — ranking, typing, estimating, the race, the boss."
           ],
-          notes: 'CONFIDENCE is optional on all twenty-three engines and off by default. Turn it on for the questions where being wrong-and-certain is the thing you need to catch.\n\nThe other captured screens — joining, the word cloud, the scale — are in assets/demo-phone if you want them in a deck of your own. They came out of the same run as these two.' },
-
-
-        { type: 'split', imageFit: 'contain', imageSide: 'left', design: { imageShare: 35 },
-          image: 'assets/demo-phone/phone-share.jpg',
-          title: 'And afterwards, the same deck at their own pace',
-          bullets: [
-            'The read-only link opens on a phone as well as a laptop.',
-            'Arrows at the bottom, Full screen if they want it, and a count so they know how far there is to go.',
-            'No PIN, no room, no clock — and nothing they do here reaches your register.',
-            'Speaker notes are not in it. What they get is the slides.'
+          "notes": "CONFIDENCE is optional on all twenty-three engines and off by default. Turn it on for the questions where being wrong-and-certain is the thing you need to catch.\n\nThe other captured screens — joining, the word cloud, the scale — are in assets/demo-phone if you want them in a deck of your own. They came out of the same run as these two."
+        },
+        {
+          "type": "split",
+          "imageFit": "contain",
+          "imageSide": "left",
+          "design": {
+            "imageShare": 35
+          },
+          "image": "assets/demo-phone/phone-share.jpg",
+          "title": "And afterwards, the same deck at their own pace",
+          "bullets": [
+            "The read-only link opens on a phone as well as a laptop.",
+            "Arrows at the bottom, Full screen if they want it, and a count so they know how far there is to go.",
+            "No PIN, no room, no clock — and nothing they do here reaches your register.",
+            "Speaker notes are not in it. What they get is the slides."
           ],
-          notes: 'This is the first of the two shares, seen from the other end: the copy they page through themselves. Worth showing a client next to the live screens, because it answers the question every room asks at the end — “can we get the slides?” — without you emailing a 40 MB file.\n\nThe follow-along screen is the same address with one word added, and it is the one that moves when you move. Both are on the Share button, which asks which you want before it uploads anything.' },
-
-        { type: 'content', title: 'Poll — fixed options, counted live',
-          bullets: [
-            'Add a feedback moment to any slide from the inspector.',
-            'The room answers on their phones; the bars fill in the rail beside the slide.',
-            'Use it to decide what to do next, not to score anybody.'
+          "notes": "This is the first of the two shares, seen from the other end: the copy they page through themselves. Worth showing a client next to the live screens, because it answers the question every room asks at the end — “can we get the slides?” — without you emailing a 40 MB file.\n\nThe follow-along screen is the same address with one word added, and it is the one that moves when you move. Both are on the Share button, which asks which you want before it uploads anything."
+        },
+        {
+          "type": "content",
+          "title": "Poll — fixed options, counted live",
+          "bullets": [
+            "Add a feedback moment to any slide from the inspector.",
+            "The room answers on their phones; the bars fill in the rail beside the slide.",
+            "Use it to decide what to do next, not to score anybody."
           ],
-          feedback: { kind: 'poll', prompt: 'Which of these is the hardest to get right?',
-            options: ['Choosing the idiom', 'Cleaning the data', 'Writing the caption'], max: 1 },
-          notes: 'POLL — the results are for you, in the room, now. Read the split out loud and change the next ten minutes because of it, or do not ask.' },
-
-        { type: 'content', title: 'Word cloud — one word each',
-          bullets: [
-            'Short answers, repeats grow larger.',
-            'Best before you teach something, not after.'
+          "feedback": {
+            "kind": "poll",
+            "prompt": "Which of these is the hardest to get right?",
+            "options": [
+              "Choosing the idiom",
+              "Cleaning the data",
+              "Writing the caption"
+            ],
+            "max": 1
+          },
+          "notes": "POLL — the results are for you, in the room, now. Read the split out loud and change the next ten minutes because of it, or do not ask."
+        },
+        {
+          "type": "content",
+          "title": "Word cloud — one word each",
+          "bullets": [
+            "Short answers, repeats grow larger.",
+            "Best before you teach something, not after."
           ],
-          feedback: { kind: 'wordcloud', prompt: 'One word: what makes a chart honest?', options: [], max: 2 },
-          notes: 'WORD CLOUD — keep it to a word each or the cloud becomes a paragraph nobody reads. A cloud of the room’s own words on the wall is the cheapest way to make a room feel present.' },
-
-        { type: 'content', title: 'Brainstorm — longer contributions, newest first',
-          bullets: [
-            'For sentences rather than single words.',
-            'Contributions arrive with names, so the room can be credited by name.',
-            'Read a few out. An unread brainstorm teaches the room not to bother next time.'
+          "feedback": {
+            "kind": "wordcloud",
+            "prompt": "One word: what makes a chart honest?",
+            "options": [],
+            "max": 2
+          },
+          "notes": "WORD CLOUD — keep it to a word each or the cloud becomes a paragraph nobody reads. A cloud of the room’s own words on the wall is the cheapest way to make a room feel present."
+        },
+        {
+          "type": "content",
+          "title": "Brainstorm — longer contributions, newest first",
+          "bullets": [
+            "For sentences rather than single words.",
+            "Contributions arrive with names, so the room can be credited by name.",
+            "Read a few out. An unread brainstorm teaches the room not to bother next time."
           ],
-          feedback: { kind: 'brainstorm', prompt: 'Name a chart you have seen this week that misled you — and say how.', options: [], max: 3 },
-          notes: 'BRAINSTORM — the widest of the four: no options, no scale, just what they want to say. It lists newest first so the wall keeps moving while people are still typing.' },
-
-        { type: 'content', title: 'Scale — where do you stand?',
-          bullets: [
-            'One position each, on an ordered run of points.',
-            'It reports the spread as well as the average — and the spread is usually the more interesting half.'
+          "feedback": {
+            "kind": "brainstorm",
+            "prompt": "Name a chart you have seen this week that misled you — and say how.",
+            "options": [],
+            "max": 3
+          },
+          "notes": "BRAINSTORM — the widest of the four: no options, no scale, just what they want to say. It lists newest first so the wall keeps moving while people are still typing."
+        },
+        {
+          "type": "content",
+          "title": "Scale — where do you stand?",
+          "bullets": [
+            "One position each, on an ordered run of points.",
+            "It reports the spread as well as the average — and the spread is usually the more interesting half."
           ],
-          feedback: { kind: 'scale', prompt: 'How confident are you reading a box plot?', options: [], max: 1,
-            points: 5, lowLabel: 'Not at all', highLabel: 'Completely' },
-          notes: 'SCALE — a poll over points that have an order, so it earns a mean and a distribution rather than a set of independent bars. Name both ends of it, as this one does.\n\nRead the spread out loud. A room split into two camps and a room that is uniformly unsure have the same average and need completely different next ten minutes.' },
-
-        { type: 'game', gameRef: 'check',
-          notes: 'A LIVE CHECK — built for you rather than chosen from the layout picker, which is why it is not in the bank above. Phones answer, you hold the reveal, and the explanation follows. Confidence is on here, so the room says how sure it is as well as what it thinks — a confident wrong answer being the most useful signal you can get.\n\nThe quiz, results, join and explain slides are made the same way, by the live session.' },
-
-        { type: 'section', title: 'Activities', subtitle: 'Fifty-four of them, filed by where they belong in a lesson',
-          notes: 'The layouts above are shapes you fill in. An activity is the other direction: you pick the teaching move, and it writes the slides.' },
-
-        { type: 'content', title: 'The activity library',
-          bullets: [
-            'Fifty-four activities\tFiled under the eleven phases of a lesson — starter, activation, construction, mini, main, collaboration, mini-quiz, reflection, plenary.',
-            'Each one says what it costs\tHow long it takes, and what has to be in the room before you start.',
-            'Picking one writes the slides\tNot a description of the activity. The actual slides, filled in, in your deck, ready to be rewritten.'
+          "feedback": {
+            "kind": "scale",
+            "prompt": "How confident are you reading a box plot?",
+            "options": [],
+            "max": 1,
+            "points": 5,
+            "lowLabel": "Not at all",
+            "highLabel": "Completely"
+          },
+          "notes": "SCALE — a poll over points that have an order, so it earns a mean and a distribution rather than a set of independent bars. Name both ends of it, as this one does.\n\nRead the spread out loud. A room split into two camps and a room that is uniformly unsure have the same average and need completely different next ten minutes."
+        },
+        {
+          "type": "game",
+          "gameRef": "check",
+          "notes": "A LIVE CHECK — built for you rather than chosen from the layout picker, which is why it is not in the bank above. Phones answer, you hold the reveal, and the explanation follows. Confidence is on here, so the room says how sure it is as well as what it thinks — a confident wrong answer being the most useful signal you can get.\n\nThe quiz, results, join and explain slides are made the same way, by the live session."
+        },
+        {
+          "type": "section",
+          "title": "Activities",
+          "subtitle": "Fifty-four of them, filed by where they belong in a lesson",
+          "notes": "The layouts above are shapes you fill in. An activity is the other direction: you pick the teaching move, and it writes the slides."
+        },
+        {
+          "type": "content",
+          "title": "The activity library",
+          "bullets": [
+            "Fifty-four activities\tFiled under the eleven phases of a lesson — starter, activation, construction, mini, main, collaboration, mini-quiz, reflection, plenary.",
+            "Each one says what it costs\tHow long it takes, and what has to be in the room before you start.",
+            "Picking one writes the slides\tNot a description of the activity. The actual slides, filled in, in your deck, ready to be rewritten."
           ],
-          notes: 'THE ACTIVITY LIBRARY — the Activities studio, or the library dialog from anywhere. Filter by phase and the list stops being fifty-four things and starts being the four that fit where you are.\n\nFormats that are planned but not built are shown and disabled rather than hidden, so the list does not quietly imply the app can do less than it can — or more.' },
-
-        { type: 'cards', design: { cardsMode: 'rows' }, title: 'Where an activity lands',
-          bullets: [
-            'A slide\tTwenty-three write one finished slide, at the layout the activity needs.',
-            'An arc of slides\tTwo write several, because the activity has stages.',
-            'A game\tTen build a game and the slide that runs it.',
-            'A feedback moment\tNine attach a prompt the room answers on their phones.',
-            'A live moment\tTen are run rather than drawn: a task, a timer, a break.'
+          "notes": "THE ACTIVITY LIBRARY — the Activities studio, or the library dialog from anywhere. Filter by phase and the list stops being fifty-four things and starts being the four that fit where you are.\n\nFormats that are planned but not built are shown and disabled rather than hidden, so the list does not quietly imply the app can do less than it can — or more."
+        },
+        {
+          "type": "cards",
+          "design": {
+            "cardsMode": "rows"
+          },
+          "title": "Where an activity lands",
+          "bullets": [
+            "A slide\tTwenty-three write one finished slide, at the layout the activity needs.",
+            "An arc of slides\tTwo write several, because the activity has stages.",
+            "A game\tTen build a game and the slide that runs it.",
+            "A feedback moment\tNine attach a prompt the room answers on their phones.",
+            "A live moment\tTen are run rather than drawn: a task, a timer, a break."
           ],
-          notes: 'The library tells you which of these an activity is before you pick it, because “adds a slide” and “runs for ten minutes with phones out” are different commitments.\n\nWhere the original teaching move did not fit an engine honestly, the entry says so and what it does instead. Card Sort wanted fifteen cards in student-chosen groups; Ranking allows eight in one line. So it writes the slide and leaves the cards on the table where they belong.' },
-
-        { type: 'keywords', activity: 'think-pair-share', activityPresentation: 'steps',
-          title: 'Think-Pair-Share',
-          bullets: [
-            'Think · 1 min\tOn your own: which chart in this deck would you not have chosen? One line.',
-            'Pair · 3 min\tSwap with the person beside you and argue for the one you would keep.',
-            'Share · 3 min\tTwo pairs report out. I write the disagreement on the board.'
+          "notes": "The library tells you which of these an activity is before you pick it, because “adds a slide” and “runs for ten minutes with phones out” are different commitments.\n\nWhere the original teaching move did not fit an engine honestly, the entry says so and what it does instead. Card Sort wanted fifteen cards in student-chosen groups; Ranking allows eight in one line. So it writes the slide and leaves the cards on the table where they belong."
+        },
+        {
+          "type": "keywords",
+          "activity": "think-pair-share",
+          "activityPresentation": "steps",
+          "title": "Think-Pair-Share",
+          "bullets": [
+            "Think · 1 min\tOn your own: which chart in this deck would you not have chosen? One line.",
+            "Pair · 3 min\tSwap with the person beside you and argue for the one you would keep.",
+            "Share · 3 min\tTwo pairs report out. I write the disagreement on the board."
           ],
-          modelAnswer: 'Any answer that names the question the chart was meant to answer, and says which channel it asked the eye to judge. “The radar, because area grows as the square of the values” is a strong answer. “The pie, because pies are bad” is not.',
-          modelAnswerDraft: true,
-          notes: 'AN ACTIVITY SLIDE, as the library writes it — rail badge naming its phase, timings in the labels, the steps view so the three stages read as three stages.\n\nThe box underneath is a DRAFT ANSWER. Nineteen activities carry a worked answer in their teacher notes, and the library brings it across rather than leaving it where no room ever sees it. It arrives shut and marked: every one is written about somebody else’s subject, so showing it unread would put the wrong answer on the wall. Rewrite it and it becomes the card on the next slide.' },
-
-        { type: 'keywords', activity: 'i-do-we-do-you-do', activityPresentation: 'panels',
-          title: 'I do · We do · You do',
-          bullets: [
-            'I do\tI build one chart from this table, saying every choice out loud.',
-            'We do\tWe build the next one together — you tell me what to choose and why.',
-            'You do\tYou build the third on your own. I say nothing.',
-            'We check\tTwo of yours on the wall side by side, and we say why they differ.'
+          "modelAnswer": "Any answer that names the question the chart was meant to answer, and says which channel it asked the eye to judge. “The radar, because area grows as the square of the values” is a strong answer. “The pie, because pies are bad” is not.",
+          "modelAnswerDraft": true,
+          "notes": "AN ACTIVITY SLIDE, as the library writes it — rail badge naming its phase, timings in the labels, the steps view so the three stages read as three stages.\n\nThe box underneath is a DRAFT ANSWER. Nineteen activities carry a worked answer in their teacher notes, and the library brings it across rather than leaving it where no room ever sees it. It arrives shut and marked: every one is written about somebody else’s subject, so showing it unread would put the wrong answer on the wall. Rewrite it and it becomes the card on the next slide."
+        },
+        {
+          "type": "keywords",
+          "activity": "i-do-we-do-you-do",
+          "activityPresentation": "panels",
+          "title": "I do · We do · You do",
+          "bullets": [
+            "I do\tI build one chart from this table, saying every choice out loud.",
+            "We do\tWe build the next one together — you tell me what to choose and why.",
+            "You do\tYou build the third on your own. I say nothing.",
+            "We check\tTwo of yours on the wall side by side, and we say why they differ."
           ],
-          progressive: true,
-          notes: 'THE PANELS VIEW — four equal panels, and only at four: the view needs exactly that many, so three or five falls back to rows rather than drawing a gap. Gradual release is four moves, which is why it is the shape this activity uses.\n\nBuild on Next is on, so the room is not reading “you do” while you are still doing.' },
-
-        { type: 'keywords', activity: 'error-analysis', activityPresentation: 'brief',
-          title: 'Error analysis — find the faults',
-          bullets: [
-            'The chart\tA pie with eleven slices, two of them 3%, no labels, ordered alphabetically.',
-            'Find three faults\tName each one, then say what it costs the reader.',
-            'Then redraw it\tOne sentence: which idiom, and what its title would say.'
+          "progressive": true,
+          "notes": "THE PANELS VIEW — four equal panels, and only at four: the view needs exactly that many, so three or five falls back to rows rather than drawing a gap. Gradual release is four moves, which is why it is the shape this activity uses.\n\nBuild on Next is on, so the room is not reading “you do” while you are still doing."
+        },
+        {
+          "type": "keywords",
+          "activity": "error-analysis",
+          "activityPresentation": "brief",
+          "title": "Error analysis — find the faults",
+          "bullets": [
+            "The chart\tA pie with eleven slices, two of them 3%, no labels, ordered alphabetically.",
+            "Find three faults\tName each one, then say what it costs the reader.",
+            "Then redraw it\tOne sentence: which idiom, and what its title would say."
           ],
-          modelAnswer: 'Eleven slices is well past the point where an angle can be judged, and the two 3% slices are unreadable at any size. No labels means the legend is the only key, so the eye travels for every slice. Alphabetical order throws away the ranking, which is the one thing the reader wants. Redraw as a sorted horizontal bar, titled with the finding rather than the subject.',
-          notes: 'THE ANSWER CARD, rewritten and therefore live: the task is on the front and the worked answer is BEHIND it, not further down. Turning the card over is a deliberate act that happens when the time is up — so the room looks at the task for the whole of the activity instead of reading ahead.\n\nThe brief view sets the labels as headings, for an activity whose rows are instructions rather than vocabulary.' },
-
-        { type: 'content', title: 'A moment you run, not a slide you wrote',
-          bullets: [
-            'A task\tInstructions over whatever is on screen, with a countdown if it needs one.',
-            'A timer\tThinking time on its own, so silence in the room is deliberate rather than awkward.',
-            'A break\tFive minutes, said out loud, so nobody has to ask.'
+          "modelAnswer": "Eleven slices is well past the point where an angle can be judged, and the two 3% slices are unreadable at any size. No labels means the legend is the only key, so the eye travels for every slice. Alphabetical order throws away the ranking, which is the one thing the reader wants. Redraw as a sorted horizontal bar, titled with the finding rather than the subject.",
+          "notes": "THE ANSWER CARD, rewritten and therefore live: the task is on the front and the worked answer is BEHIND it, not further down. Turning the card over is a deliberate act that happens when the time is up — so the room looks at the task for the whole of the activity instead of reading ahead.\n\nThe brief view sets the labels as headings, for an activity whose rows are instructions rather than vocabulary."
+        },
+        {
+          "type": "content",
+          "title": "A moment you run, not a slide you wrote",
+          "bullets": [
+            "A task\tInstructions over whatever is on screen, with a countdown if it needs one.",
+            "A timer\tThinking time on its own, so silence in the room is deliberate rather than awkward.",
+            "A break\tFive minutes, said out loud, so nobody has to ask."
           ],
-          notes: 'LIVE MOMENTS — started from the presenter desk or the controls on the wall, mid-slide, without leaving the show. The deadline is held by the host rather than each phone, so a learner joining late sees the same clock as everyone else and pausing pauses it for the room.\n\nOne refusal worth knowing: a moment will not start over a knowledge check that is still waiting to be revealed. That would cover the question with a countdown about something else.' },
-
-        { type: 'section', title: 'Games', subtitle: 'Twenty-three engines, twenty-seven ready-made formats',
-          notes: 'A game is its own document, joined to a slide. The three that follow are three different engines on the same subject, so what changes is the shape of the thinking rather than the topic.' },
-
-        { type: 'content', title: 'The game library',
-          bullets: [
-            'Twenty-three engines\tMultiple choice, true / false, ranking, typed answers, estimation, odd-one-out, definitions, memory pairs, heads-up, bingo, a horse race, a boss battle.',
-            'Twenty-seven ready-made formats\tThe same engines set up for a job: Beat the Clock, Spot the Error, Predict the Outcome, Fill in the Blanks, Concept Chain, Question Cube.',
-            'Two places they go\tBetween slides as their own board, or beside a slide as a quick check.'
+          "notes": "LIVE MOMENTS — started from the presenter desk or the controls on the wall, mid-slide, without leaving the show. The deadline is held by the host rather than each phone, so a learner joining late sees the same clock as everyone else and pausing pauses it for the room.\n\nOne refusal worth knowing: a moment will not start over a knowledge check that is still waiting to be revealed. That would cover the question with a countdown about something else."
+        },
+        {
+          "type": "section",
+          "title": "Games",
+          "subtitle": "Twenty-three engines, twenty-seven ready-made formats",
+          "notes": "A game is its own document, joined to a slide. The three that follow are three different engines on the same subject, so what changes is the shape of the thinking rather than the topic."
+        },
+        {
+          "type": "content",
+          "title": "The game library",
+          "bullets": [
+            "Twenty-three engines\tMultiple choice, true / false, ranking, typed answers, estimation, odd-one-out, definitions, memory pairs, heads-up, bingo, a horse race, a boss battle.",
+            "Twenty-seven ready-made formats\tThe same engines set up for a job: Beat the Clock, Spot the Error, Predict the Outcome, Fill in the Blanks, Concept Chain, Question Cube.",
+            "Two places they go\tBetween slides as their own board, or beside a slide as a quick check."
           ],
-          notes: 'THE GAME LIBRARY — the same dialog as the activities, and each card says how the room takes part before you pick it.\n\nEvery engine shares the same spine: phones answer, you hold the reveal, the explanation follows, and confidence is optional on all of them. What differs is what the wall does while the room is answering — which is most of whether a class leans in.' },
-
-        { type: 'game', gameRef: 'rank',
-          notes: 'RANKING — one linear order, part marks for the items placed right, so a nearly-correct answer is not scored as a wrong one. Three to eight items; past eight the room is sorting rather than thinking.\n\nGood for a process, a chronology, or a set of priorities. Bad for anything where two items genuinely tie, because the engine will insist on an order the subject does not have.' },
-
-        { type: 'game', gameRef: 'race',
-          notes: 'HORSE RACE — multiple choice, but every right answer moves your team along a track on the wall. The questions are ordinary; the track is what makes a quiet class shout.\n\nTeams, not individuals, which is deliberate: a leaderboard of names is a reason for the weakest learner in the room to stop answering. Keep it for practising something they have already been taught.' },
-
-        { type: 'game', gameRef: 'boss',
-          notes: 'BOSS BATTLE — the whole class against one health bar. Each question carries a difficulty and deals damage to match: an easy hit is 1, the boss blow is 5, so the hard question is worth attempting even by somebody who has got the last three wrong.\n\nNobody is behind anybody. That is the entire pedagogical argument for it, and it is a good one for the end of a topic.' },
-
-        { type: 'section', title: 'Running the room', subtitle: 'Rehearse, present, host — and the two ways to share',
-          notes: 'Everything so far is what goes on the wall. This is what you are holding while it is up there.' },
-
-        { type: 'cards', design: { cardsMode: 'rows' }, title: 'Four ways to run the same deck',
-          bullets: [
-            'Rehearse\tThe whole lesson against a sample class — answers, scores and a room that is not there. Nothing counts.',
-            'Present\tThe show on the wall. Arrow keys, or the controls that fade in when the mouse moves.',
-            'Host live\tThe same show with phones in it: a join code, answers coming back, the room in a rail beside the slide.',
-            'Teacher Presenter\tA second window for you alone — notes, what is next, who answered what, and the room. Press D.'
+          "notes": "THE GAME LIBRARY — the same dialog as the activities, and each card says how the room takes part before you pick it.\n\nEvery engine shares the same spine: phones answer, you hold the reveal, the explanation follows, and confidence is optional on all of them. What differs is what the wall does while the room is answering — which is most of whether a class leans in."
+        },
+        {
+          "type": "game",
+          "gameRef": "rank",
+          "notes": "RANKING — one linear order, part marks for the items placed right, so a nearly-correct answer is not scored as a wrong one. Three to eight items; past eight the room is sorting rather than thinking.\n\nGood for a process, a chronology, or a set of priorities. Bad for anything where two items genuinely tie, because the engine will insist on an order the subject does not have."
+        },
+        {
+          "type": "game",
+          "gameRef": "race",
+          "notes": "HORSE RACE — multiple choice, but every right answer moves your team along a track on the wall. The questions are ordinary; the track is what makes a quiet class shout.\n\nTeams, not individuals, which is deliberate: a leaderboard of names is a reason for the weakest learner in the room to stop answering. Keep it for practising something they have already been taught."
+        },
+        {
+          "type": "game",
+          "gameRef": "boss",
+          "notes": "BOSS BATTLE — the whole class against one health bar. Each question carries a difficulty and deals damage to match: an easy hit is 1, the boss blow is 5, so the hard question is worth attempting even by somebody who has got the last three wrong.\n\nNobody is behind anybody. That is the entire pedagogical argument for it, and it is a good one for the end of a topic."
+        },
+        {
+          "type": "section",
+          "title": "Running the room",
+          "subtitle": "Rehearse, present, host — and the two ways to share",
+          "notes": "Everything so far is what goes on the wall. This is what you are holding while it is up there."
+        },
+        {
+          "type": "cards",
+          "design": {
+            "cardsMode": "rows"
+          },
+          "title": "Four ways to run the same deck",
+          "bullets": [
+            "Rehearse\tThe whole lesson against a sample class — answers, scores and a room that is not there. Nothing counts.",
+            "Present\tThe show on the wall. Arrow keys, or the controls that fade in when the mouse moves.",
+            "Host live\tThe same show with phones in it: a join code, answers coming back, the room in a rail beside the slide.",
+            "Teacher Presenter\tA second window for you alone — notes, what is next, who answered what, and the room. Press D."
           ],
-          notes: 'REHEARSE is the one most people never find, and the one worth finding: it fills the deck with a plausible class so you can see what a poll looks like with thirty answers in it before thirty people are watching you meet it.\n\nTeacher Presenter wants a second screen. Without one, it is still the right window to have on a laptop while the projector shows the wall.' },
-
-        { type: 'table', title: 'The controls on the wall',
-          body: 'Control\tKey\tWhat it does\nBack / forward\t← →\tOne point at a time, on a slide that builds\nRoom view\tS\tHidden, beside the slide, or full screen\nQuick poll\tV\tAsk what you had not planned to ask\nFreeze\tZ\tHold the wall while you digress\nDraw\tI\tInk on the slide, or spotlight part of it\nBlank\tB\tBlack the projector · Shift+B the phones\nJoin code\tJ\tThe QR and PIN, full screen\nEverything else\t?\tThe full list of keys',
-          notes: 'THE CONTROLS fade in when the mouse moves and fade out again, so a still wall is a slide rather than a slide with a toolbar on it. Everything here has a key, and the keys are the faster route.\n\nBehind the ••• as well, each with its own key: the leaderboard (E), the room’s reactions on or off (T), who may speak (Shift+H), reset the scores (R), named answers in the presenter window (W), full screen (F), and the two pop-outs. FREEZE is the one to learn first — it is the difference between a digression and a scramble.' },
-
-        { type: 'table', title: 'Teacher Presenter — nine panels',
-          body: 'Panel\tWhat it holds\nNotes\tYour notes for this slide, and the next slide beside them\nQuick\tA task with a countdown, a break, and five one-tap polls\nActivities\tThe library, runnable mid-lesson without leaving the show\nPulse\tReactions and slide responses as they arrive\nAnswers\tWho answered what — names, not only totals\nClass\tThe register: who joined, who is still missing\nInsights\tWhich questions the room found hard, and how sure it was\nTools\tName picker, timer, a scratch pad\nQ&A\tQuestions from phones, with a badge when one is waiting',
-          notes: 'This window is private. The projector never shows it, which is why the notes you are reading live here rather than on the slide.\n\nIt opens as a real pop-out — drag it to a second screen, or keep it on the laptop while the wall runs the show. Press D from the show, or the button in the bar before you start.' },
-
-        { type: 'compare', title: 'Two ways to share, and they are not the same thing',
-          subtitle: 'Read at their own pace | Follows you live',
-          bullets: [
-            'Needs a live room\tNo — works whether or not you are presenting\tYes — Host live first, or the option is greyed out with the reason on it',
-            'Who drives\tThey do: their pace, their order, their own time\tYou do: it moves when you move, including through a build, and cannot run ahead',
-            'What it is for\tRevision afterwards, and the person who missed the lesson\tA second projector, an overflow room, a desktop at the back of the hall',
-            'PIN\tNone. The address is the whole secret\tNone either — and nobody watching appears in your register or your reports'
+          "notes": "REHEARSE is the one most people never find, and the one worth finding: it fills the deck with a plausible class so you can see what a poll looks like with thirty answers in it before thirty people are watching you meet it.\n\nTeacher Presenter wants a second screen. Without one, it is still the right window to have on a laptop while the projector shows the wall."
+        },
+        {
+          "type": "table",
+          "title": "The controls on the wall",
+          "body": "Control\tKey\tWhat it does\nBack / forward\t← →\tOne point at a time, on a slide that builds\nRoom view\tS\tHidden, beside the slide, or full screen\nQuick poll\tV\tAsk what you had not planned to ask\nFreeze\tZ\tHold the wall while you digress\nDraw\tI\tInk on the slide, or spotlight part of it\nBlank\tB\tBlack the projector · Shift+B the phones\nJoin code\tJ\tThe QR and PIN, full screen\nEverything else\t?\tThe full list of keys",
+          "notes": "THE CONTROLS fade in when the mouse moves and fade out again, so a still wall is a slide rather than a slide with a toolbar on it. Everything here has a key, and the keys are the faster route.\n\nBehind the ••• as well, each with its own key: the leaderboard (E), the room’s reactions on or off (T), who may speak (Shift+H), reset the scores (R), named answers in the presenter window (W), full screen (F), and the two pop-outs. FREEZE is the one to learn first — it is the difference between a digression and a scramble."
+        },
+        {
+          "type": "table",
+          "title": "Teacher Presenter — nine panels",
+          "body": "Panel\tWhat it holds\nNotes\tYour notes for this slide, and the next slide beside them\nQuick\tA task with a countdown, a break, and five one-tap polls\nActivities\tThe library, runnable mid-lesson without leaving the show\nPulse\tReactions and slide responses as they arrive\nAnswers\tWho answered what — names, not only totals\nClass\tThe register: who joined, who is still missing\nInsights\tWhich questions the room found hard, and how sure it was\nTools\tName picker, timer, a scratch pad\nQ&A\tQuestions from phones, with a badge when one is waiting",
+          "notes": "This window is private. The projector never shows it, which is why the notes you are reading live here rather than on the slide.\n\nIt opens as a real pop-out — drag it to a second screen, or keep it on the laptop while the wall runs the show. Press D from the show, or the button in the bar before you start."
+        },
+        {
+          "type": "compare",
+          "title": "Two ways to share, and they are not the same thing",
+          "subtitle": "Read at their own pace | Follows you live",
+          "bullets": [
+            "Needs a live room\tNo — works whether or not you are presenting\tYes — Host live first, or the option is greyed out with the reason on it",
+            "Who drives\tThey do: their pace, their order, their own time\tYou do: it moves when you move, including through a build, and cannot run ahead",
+            "What it is for\tRevision afterwards, and the person who missed the lesson\tA second projector, an overflow room, a desktop at the back of the hall",
+            "PIN\tNone. The address is the whole secret\tNone either — and nobody watching appears in your register or your reports"
           ],
-          progressive: true,
-          notes: 'SHARE asks which of these you want before it uploads anything, because they come out of one copy and answer completely different questions. Each gets its own QR code and its own address.\n\nWhat both mean: a copy on this server at an address nobody can guess, unlisted and read-only — but a link that escapes is a lesson that escaped. Games are not carried across; the slides are. You get a key that withdraws it, and it is the only way to.' },
-
-        { type: 'section', title: 'Two settings that apply everywhere', subtitle: 'Build on Next, and the theme',
-          notes: 'Worth knowing before you start copying slides out of this deck.' },
-
-        { type: 'cards', title: 'What carries across every layout',
-          bullets: [
-            'Build on Next\tReveal a slide piece by piece rather than all at once. Per slide, not per deck.',
-            'Hide or Dim\tHide keeps the next point secret. Dim leaves earlier points on screen at 38%.',
-            'Theme\tSet on the deck. Every layout here redraws in any of the themes.',
-            'Notes\tWhat you are reading now. Visible on the presenter desk, never on the projector.',
-            'Logo\tSet on the deck, drawn top right. Keep a slide title under about 40 characters so it cannot run under it.'
+          "progressive": true,
+          "notes": "SHARE asks which of these you want before it uploads anything, because they come out of one copy and answer completely different questions. Each gets its own QR code and its own address.\n\nWhat both mean: a copy on this server at an address nobody can guess, unlisted and read-only — but a link that escapes is a lesson that escaped. Games are not carried across; the slides are. You get a key that withdraws it, and it is the only way to."
+        },
+        {
+          "type": "section",
+          "title": "Two settings that apply everywhere",
+          "subtitle": "Build on Next, and the theme",
+          "notes": "Worth knowing before you start copying slides out of this deck."
+        },
+        {
+          "type": "cards",
+          "title": "What carries across every layout",
+          "bullets": [
+            "Build on Next\tReveal a slide piece by piece rather than all at once. Per slide, not per deck.",
+            "Hide or Dim\tHide keeps the next point secret. Dim leaves earlier points on screen at 38%.",
+            "Theme\tSet on the deck. Every layout here redraws in any of the themes.",
+            "Notes\tWhat you are reading now. Visible on the presenter desk, never on the projector.",
+            "Logo\tSet on the deck, drawn top right. Keep a slide title under about 40 characters so it cannot run under it."
           ],
-          progressive: true, buildMode: 'dim',
-          notes: 'Be strategic with dim. It suits a list where the earlier points are still doing work — a framework, a set of criteria. It is wrong where the next point is a reveal, or where the slide is already busy.' },
-
-        { type: 'content', title: 'Using this bank',
-          bullets: [
-            'Page through it once to see what exists.',
-            'Found a shape you want? Copy the slide (⌘C) and paste it into your own deck (⌘V), then replace the content.',
-            'Layouts are app-wide — every one of these is already in the layout picker of every deck you open.',
-            'This deck is a reference copy. Edit it freely; rebuild it from the lesson picker whenever you want a clean one.',
-            'Not chosen from the picker: quiz, results and explain. Those are built by the live session.'
+          "progressive": true,
+          "buildMode": "dim",
+          "notes": "Be strategic with dim. It suits a list where the earlier points are still doing work — a framework, a set of criteria. It is wrong where the next point is a reveal, or where the slide is already busy."
+        },
+        {
+          "type": "content",
+          "title": "Using this bank",
+          "bullets": [
+            "Page through it once to see what exists.",
+            "Found a shape you want? Copy the slide (⌘C) and paste it into your own deck (⌘V), then replace the content.",
+            "Layouts are app-wide — every one of these is already in the layout picker of every deck you open.",
+            "This deck is a reference copy. Edit it freely; rebuild it from the lesson picker whenever you want a clean one.",
+            "Not chosen from the picker: quiz, results and explain. Those are built by the live session."
           ],
-          notes: 'Close. Rebuilding this lesson gives a fresh copy, so nothing here is precious. Every layout the picker offers is in this deck, video included — it plays a clip that ships with the deck rather than pointing at a URL that might not answer. Three slide types never appear in the picker at all: quiz and results are built by the live session, and explain is the card that shows the correct answer after a check — which is also why the student handout leaves it out.' }
+          "notes": "Close. Rebuilding this lesson gives a fresh copy, so nothing here is precious. Every layout the picker offers is in this deck, video included — it plays a clip that ships with the deck rather than pointing at a URL that might not answer. Three slide types never appear in the picker at all: quiz and results are built by the live session, and explain is the card that shows the correct answer after a check — which is also why the student handout leaves it out."
+        }
       ]
     },
     {
@@ -3325,115 +3786,142 @@
       ]
     },
     {
-      key: 'pace-nul',
-      title: 'NUL · Openers, breakaways & a layout range',
-      icon: '▣',
-      blurb: 'Northeastern look: big word-leading openers, full-bleed image beats, and red section breaks that cut the argument into chapters. Use it as a pacing template.',
-      minutes: 12,
-      theme: 'northeastern',
-      libraryGroup: 'nul',
-      kind: 'template',
-      org: 'Northeastern University London',
-      logo: 'assets/brand/nu-london-logo.png',
-      logoOn: 'all',
-      logoSize: 'small',
-      slides: [
+      "key": "pace-nul",
+      "title": "NUL · Openers, breakaways & a layout range",
+      "icon": "▣",
+      "blurb": "One interpretation of academic presentation: bold openings, evidence, comparisons and pauses. Reuse the structures with any theme.",
+      "minutes": 12,
+      "theme": "northeastern",
+      "libraryGroup": "nul",
+      "kind": "template",
+      "org": "Northeastern University London",
+      "logo": "assets/brand/nu-london-logo.png",
+      "logoOn": "all",
+      "logoSize": "small",
+      "slides": [
         {
-          type: 'title',
-          title: 'Open hard.\nBreak often.',
-          subtitle: 'A pacing gallery · Northeastern London',
-          notes: 'OPENER — title. Short line breaks, big type, almost nothing else. Say the idea out loud before you advance.'
+          "type": "title",
+          "title": "See the\nargument.",
+          "subtitle": "An academic presentation gallery / Northeastern University London",
+          "design": {
+            "composition": "sidecar"
+          },
+          "notes": "Reusable opening composition. Change the subject and supporting line. Look → Composition changes the arrangement independently of the theme."
         },
         {
-          type: 'image',
-          title: 'One claim on a photograph',
-          image: 'assets/lesson/ipdv/qa-london-night-1.jpg',
-          imageFit: 'cover',
-          design: { capStyle: 'scrim', capPos: 'bottom', imageMotion: 'zoom', logoGround: 'dark' },
-          notes: 'OPENER — full-bleed image. The picture is the mood; the caption is the claim. Scrim keeps the words readable.'
+          "type": "image",
+          "title": "One claim on a photograph",
+          "image": "assets/lesson/ipdv/qa-london-night-1.jpg",
+          "imageFit": "cover",
+          "design": {
+            "capStyle": "scrim",
+            "capPos": "bottom",
+            "imageMotion": "zoom",
+            "logoGround": "dark"
+          },
+          "notes": "OPENER — full-bleed image. The picture is the mood; the caption is the claim. Scrim keeps the words readable."
         },
         {
-          type: 'introduction',
-          title: 'Your name',
-          subtitle: 'Role · Northeastern University London',
-          body: 'Replace this with who is standing at the front, and why this room should listen.',
-          notes: 'OPENER — introduction. Once per cohort, not every week.'
+          "type": "introduction",
+          "title": "Your name",
+          "subtitle": "Role · Northeastern University London",
+          "body": "Replace this with who is standing at the front, and why this room should listen.",
+          "notes": "OPENER — introduction. Once per cohort, not every week."
         },
         {
-          type: 'section',
-          title: 'Part one',
-          subtitle: 'A breakaway — look up before the next block of content.',
-          notes: 'BREAKAWAY — section. Full red (or theme ground). Use these to cut a long argument into chapters the room can feel.'
+          "type": "section",
+          "title": "Ask a better\nquestion.",
+          "subtitle": "Choose the evidence that would answer it.",
+          "design": {
+            "composition": "editorial"
+          },
+          "notes": "A chapter break signals a change in the argument. This is one available structure, not a rule for every deck."
         },
         {
-          type: 'cards',
-          title: 'Three ideas in this block',
-          bullets: [
-            'Name the question the room is here to answer.',
-            'Show one example that makes the question real.',
-            'Leave one thing unfinished so the next block has work to do.'
+          "type": "content",
+          "title": "What does the evidence need to show?",
+          "bullets": [
+            "A pattern that a summary can hide.",
+            "A comparison made on the same terms.",
+            "A limitation that changes the conclusion."
           ],
-          notes: 'CONTENT — cards. Teaching meat after a breakaway. Keep to three.'
+          "design": {
+            "composition": "columns"
+          },
+          "notes": "Keep the headings and supporting points editable. Choose Side heading for a single argument, or Columns for parallel ideas. These are examples, not limits on your content."
         },
         {
-          type: 'section',
-          title: 'Part two',
-          subtitle: 'Another breath. Then a different layout.',
-          notes: 'BREAKAWAY again. Two or three section slides per hour is usually enough; more and they stop meaning “look up”.'
+          "type": "section",
+          "title": "Follow the\nevidence.",
+          "subtitle": "Let the information determine its form.",
+          "design": {
+            "composition": "frame"
+          },
+          "notes": "A quieter framed section offers an alternative to a full-bleed break."
         },
         {
-          type: 'split',
-          title: 'Say it. Show it.',
-          bullets: [
-            'Left: the claim in words.',
-            'Right: the picture that proves or frames it.',
-            'Build the bullets if you want the eye to wait.'
+          "type": "split",
+          "title": "Say it. Show it.",
+          "bullets": [
+            "Left: the claim in words.",
+            "Right: the picture that proves or frames it.",
+            "Build the bullets if you want the eye to wait."
           ],
-          image: 'assets/lesson/ipdv/snow-cholera-map-1854.jpg',
-          imageFit: 'cover',
-          design: { mediaGround: 'full' },
-          progressive: true,
-          notes: 'VARIATION — dual coding. Image + text after a breakaway keeps the chapter from feeling like another bullet wall.'
+          "image": "assets/lesson/ipdv/snow-cholera-map-1854.jpg",
+          "imageFit": "cover",
+          "design": {
+            "mediaGround": "full"
+          },
+          "progressive": true,
+          "notes": "VARIATION — dual coding. Image + text after a breakaway keeps the chapter from feeling like another bullet wall."
         },
         {
-          type: 'quote',
-          body: 'A section break is not decoration. It is where the room breathes.',
-          subtitle: 'SlideForge pacing note',
-          notes: 'VARIATION — quote. Soft landing inside a chapter, or a third kind of opener if the photograph is wrong for the day.'
+          "type": "quote",
+          "body": "Choose the form that helps the audience examine the idea.",
+          "subtitle": "A design principle to apply, not a fixed slide formula",
+          "design": {
+            "composition": "editorial"
+          },
+          "notes": "Original gallery copy. This is not an attributed quotation."
         },
         {
-          type: 'keyfact',
-          title: 'What they must leave with',
-          subtitle: 'One number or rule',
-          body: 'Two breakaways beat twelve busy slides.',
-          bullets: [
-            'Open with words or a photograph.',
-            'Cut chapters with section slides.',
-            'Change layout when the chapter changes.'
+          "type": "content",
+          "title": "Leave a useful next step.",
+          "bullets": [
+            "State what the evidence supports.",
+            "Make the remaining uncertainty visible.",
+            "Name the question to investigate next."
           ],
-          notes: 'VARIATION — key fact. Large claim, short support. Good mid-lesson or close.'
+          "design": {
+            "composition": "rail"
+          },
+          "notes": "Keep the headings and supporting points editable. Choose Side heading for a single argument, or Columns for parallel ideas. These are examples, not limits on your content."
         },
         {
-          type: 'journey',
-          title: 'The arc of this hour',
-          subtitle: 'Reveal each beat as you go',
-          bullets: [
-            'Open\tTitle or image that states the stake.',
-            'Break\tSection — Part one.',
-            'Build\tCards, split, keywords — the work.',
-            'Break\tSection — Part two.',
-            'Close\tFact, quote, or photograph.'
+          "type": "journey",
+          "title": "The arc of this hour",
+          "subtitle": "Reveal each beat as you go",
+          "bullets": [
+            "Open\tTitle or image that states the stake.",
+            "Break\tSection — Part one.",
+            "Build\tCards, split, keywords — the work.",
+            "Break\tSection — Part two.",
+            "Close\tFact, quote, or photograph."
           ],
-          progressive: true,
-          notes: 'VARIATION — journey. Meta: this slide is the map of the gallery itself. Replace milestones with your session outline.'
+          "progressive": true,
+          "notes": "VARIATION — journey. Meta: this slide is the map of the gallery itself. Replace milestones with your session outline."
         },
         {
-          type: 'image',
-          title: 'Leave them with a picture',
-          image: 'assets/brand/nu-london-skyline.png',
-          imageFit: 'cover',
-          design: { capStyle: 'scrim', capPos: 'bottom', logoGround: 'dark' },
-          notes: 'CLOSER — image. Same tool as the opener, different job: end on atmosphere and one line, not another bullet list.'
+          "type": "image",
+          "title": "Leave them with a picture",
+          "image": "assets/brand/nu-london-skyline.png",
+          "imageFit": "cover",
+          "design": {
+            "capStyle": "scrim",
+            "capPos": "bottom",
+            "logoGround": "dark"
+          },
+          "notes": "CLOSER — image. Same tool as the opener, different job: end on atmosphere and one line, not another bullet list."
         }
       ]
     },
@@ -3550,277 +4038,448 @@
        without shipping course assets into a design template).
        ------------------------------------------------------------------ */
     {
-      key: 'vibe-product',
-      title: 'Product · Keynote minimal',
-      icon: '◇',
-      blurb: 'Apple-style minimal with empty image slots ready for your photos. Title → photo statement → stat tiles → picture cards → photo close.',
-      minutes: 5,
-      theme: 'product',
-      slides: [
+      "key": "vibe-product",
+      "title": "Product · Clear ideas, confident delivery",
+      "icon": "◇",
+      "blurb": "A complete product proposal: bold opener, problem, process, comparison, trial measures and a clear decision. Every element is editable.",
+      "minutes": 5,
+      "theme": "product",
+      "slides": [
         {
-          type: 'title',
-          title: 'Clarity.',
-          subtitle: 'One idea. One slide. Drop your photos on the next four.',
-          notes: 'PRODUCT opener — words first. Image slides below show the built-in placeholder until you add a file or URL.'
-        },
-        {
-          type: 'image',
-          title: 'Say less. Mean more.',
-          subtitle: 'Your photograph · statement caption',
-          notes: 'Statement beat as a full-bleed image slot. Paste a URL or drop a file in the inspector.'
-        },
-        {
-          type: 'stats',
-          title: 'By the numbers.',
-          bullets: [
-            'idea per slide\t1\tIf you have three messages, make three slides.',
-            'words in a title\t≤ 6\tThe picture carries mood; the words carry the rule.',
-            'accent colour\t1\tUsed once per slide, not on everything.'
-          ],
-          progressive: true,
-          notes: 'STAT TILES — the fact beat as three big numbers. Each line is label · value · note. Try Design → Tile style → Ring or Bar.'
-        },
-        {
-          type: 'cards',
-          title: 'Two points. Done.',
-          bullets: [
-            'Whitespace\tLeave empty space alone — it is part of the design.',
-            'One accent\tUse the accent colour once per slide, not on everything.'
-          ],
-          design: { cardsMode: 'pictures' },
-          notes: 'CARDS as picture cards — two photo slots over two points. Drop your own images in the inspector; the dashed boxes are placeholders.'
-        },
-        {
-          type: 'image',
-          title: 'That’s it.',
-          subtitle: 'Your closing photograph',
-          notes: 'Close on a picture + one line — drop your own image here.'
-        }
-      ]
-    },
-    {
-      key: 'vibe-editorial',
-      title: 'Editorial · Paper & narrative',
-      icon: '¶',
-      blurb: 'Warm paper and serif type with placeholder photo slots. Title → dual-coding → photo claim → timeline → photo close.',
-      minutes: 5,
-      theme: 'editorial',
-      slides: [
-        {
-          type: 'title',
-          title: 'A story\nin five frames.',
-          subtitle: 'Editorial · add your own pictures',
-          notes: 'Editorial opener — cream and serif. Placeholders start on the next slide.'
-        },
-        {
-          type: 'split',
-          title: 'The picture is the mood.',
-          bullets: [
-            'The caption is the claim.',
-            'Read the claim once — do not paraphrase it.',
-            'Then advance to the photograph that earns it.'
-          ],
-          imageSide: 'left',
-          notes: 'Quote-energy as dual coding — empty media slot until you add a cover or plate.'
-        },
-        {
-          type: 'image',
-          title: 'Look first. Then decide.',
-          body: 'Replace this body with one or two facts that sit behind the photograph.',
-          subtitle: 'Your photograph · the claim sits on the picture',
-          notes: 'Full-bleed photo slot + claim. Scrim appears once an image is set.'
-        },
-        {
-          type: 'timeline',
-          title: 'What the eye did',
-          subtitle: 'The first three seconds with a photograph',
-          bullets: [
-            '0.3 s\tCluster\tIt found the pattern before it found the legend.',
-            '1 s\tTrust\tIt believed the picture faster than a paragraph.',
-            '3 s\tNext step\tIt still needed one sentence for what to do.'
-          ],
-          design: { timelineMode: 'vertical' },
-          progressive: true,
-          notes: 'TIMELINE in the vertical shape — a spine with serif dates, one paragraph per beat. Switch to Across under Design when the sweep matters more than the detail.'
-        },
-        {
-          type: 'image',
-          title: 'End on a breath.',
-          subtitle: 'Your closing photograph',
-          notes: 'Photo close — placeholder until you drop a quiet image in.'
-        }
-      ]
-    },
-    {
-      key: 'vibe-cinematic',
-      title: 'Cinematic · Dark pitch',
-      icon: '▣',
-      blurb: 'Dark pitch energy with empty photo slots. Title → stake image → dual-coding → before/after versus → cut image.',
-      minutes: 5,
-      theme: 'cinematic',
-      slides: [
-        {
-          type: 'title',
-          title: 'Make it\nunmissable.',
-          subtitle: 'Cinematic · drop your own night / product stills',
-          notes: 'Gradient title. Image placeholders follow.'
-        },
-        {
-          type: 'image',
-          title: 'The stake',
-          subtitle: 'Your photograph · why this room should care',
-          notes: 'Stake as full-bleed image slot — same job as a section breakaway, with a picture behind it once you add one.'
-        },
-        {
-          type: 'split',
-          title: '3×',
-          bullets: [
-            'Spotlight — clearer slides get more of the questions that matter.',
-            'And fewer of the ones that do not.',
-            'Keep the support line short; the number is the slide.'
-          ],
-          imageSide: 'right',
-          notes: 'Spotlight as dual coding — empty plate until you add a chart or still.'
-        },
-        {
-          type: 'compare',
-          title: 'Before / after',
-          subtitle: 'Before | After',
-          bullets: [
-            'Text\tTwelve bullets, one font size\tOne claim',
-            'Evidence\tA table nobody reads\tOne number',
-            'Ask\tNothing\tOne next step'
-          ],
-          progressive: true,
-          notes: 'VERSUS — two glass columns compared row by row. The subtitle names the columns; each line is row label · left · right. Rows land one per press.'
-        },
-        {
-          type: 'image',
-          title: 'Cut.',
-          subtitle: 'Your closing still',
-          notes: 'Hard close on a photograph slot. One word in the caption is enough.'
-        }
-      ]
-    },
-    {
-      key: 'vibe-studio-teach',
-      title: 'Studio teach · Warm classroom',
-      icon: '✳',
-      blurb: 'Sage Studio teaching arc with empty image slots. Title → hook photo → three-step stepper → check cards → reflect photo.',
-      minutes: 8,
-      theme: 'studio',
-      slides: [
-        {
-          type: 'title',
-          title: 'Stay curious.',
-          subtitle: 'Studio teach · add classroom photographs on the next beats',
-          notes: 'Studio opener. Placeholders carry the rest of the arc until you drop images in.'
-        },
-        {
-          type: 'image',
-          title: 'Hook',
-          subtitle: 'Your hook photograph',
-          feedback: {
-            kind: 'wordcloud',
-            prompt: 'One word — what distracts you most when you try to focus?',
-            options: [],
-            max: 2
+          "type": "title",
+          "title": "A place for\nyour next idea.",
+          "subtitle": "FIELDNOTES / A fictional product proposal",
+          "design": {
+            "composition": "poster"
           },
-          notes: 'HOOK — image slot + word cloud. Add a photo, then let the room answer.'
+          "notes": "Reusable opening composition. Change the subject and supporting line. Look → Composition changes the arrangement independently of the theme."
         },
         {
-          type: 'journey',
-          journeyMode: 'stepper',
-          title: 'Three moves that help',
-          subtitle: 'In this order — each one makes the next easier',
-          bullets: [
-            'Remove\tOne distraction, before you start. Phone in the bag counts.',
-            'Name\tA finish line you can see from here — not the whole essay, the next paragraph.',
-            'Pause\tOnce. Then adjust — do not restart.'
+          "type": "content",
+          "title": "Good ideas arrive out of order.",
+          "bullets": [
+            "Capture a thought before choosing a folder.",
+            "Connect related notes when the pattern becomes clear.",
+            "Return to the next action without rereading everything."
           ],
-          progressive: true,
-          buildMode: 'dim',
-          notes: 'JOURNEY in Stepper mode — numbered discs on one rail, a process read left to right. Dim build keeps earlier moves visible at 38% while the next arrives.'
+          "design": {
+            "composition": "rail"
+          },
+          "notes": "Keep the headings and supporting points editable. Choose Side heading for a single argument, or Columns for parallel ideas. These are examples, not limits on your content."
         },
         {
-          type: 'cards',
-          title: 'Quick check',
-          bullets: [
-            'Tomorrow\tWhich move will you try first?',
-            'Neighbour\tTell them in one sentence.'
+          "type": "journey",
+          "journeyMode": "stepper",
+          "title": "From a thought to a next step",
+          "bullets": [
+            "Capture\tSave a sentence, sketch or voice note.",
+            "Connect\tBring related ideas together.",
+            "Act\tChoose what to do next."
           ],
-          feedback: {
-            kind: 'poll',
-            prompt: 'Which move are you trying first?',
-            options: ['Remove a distraction', 'Name a finish line', 'Pause once'],
-            max: 1
-          },
-          notes: 'CHECK — cards + poll. Optional card photos later.'
+          "notes": "A three-stage process with a clear reading direction. Replace the stages, not the entire design."
         },
         {
-          type: 'image',
-          title: 'Reflect',
-          subtitle: 'Your closing photograph',
-          feedback: {
-            kind: 'scale',
-            prompt: 'How ready do you feel to try one move this week?',
-            points: 5,
-            lowLabel: 'Not yet',
-            highLabel: 'Ready',
-            max: 1
+          "type": "compare",
+          "title": "Two ways to organise a thought",
+          "subtitle": "Folders first | Capture first",
+          "bullets": [
+            "Starting\tChoose a location\tWrite the thought",
+            "Organising\tFile immediately\tGroup when useful",
+            "Returning\tFind the folder\tFollow a connection"
+          ],
+          "notes": "Illustrative product comparison, not research findings. Keep each row about the same dimension."
+        },
+        {
+          "type": "content",
+          "title": "What a pilot should answer",
+          "bullets": [
+            "Can someone capture a note without guidance?",
+            "Can they find it again the next day?",
+            "Does the next action feel obvious?"
+          ],
+          "design": {
+            "composition": "columns"
           },
-          notes: 'REFLECT — photo slot + confidence scale.'
+          "notes": "Keep the headings and supporting points editable. Choose Side heading for a single argument, or Columns for parallel ideas. These are examples, not limits on your content."
+        },
+        {
+          "type": "statement",
+          "body": "Test the first minute.",
+          "subtitle": "Prototype the smallest useful experience.",
+          "design": {
+            "composition": "frame"
+          },
+          "notes": "A pause in the argument. A short statement lets the room absorb the idea. Animation is optional; this composition works as a still."
+        },
+        {
+          "type": "keyfact",
+          "title": "The next decision",
+          "subtitle": "Proposed pilot",
+          "body": "Try it with five people.",
+          "bullets": [
+            "Observe a real note-taking task.",
+            "Revise the flow before adding features."
+          ],
+          "notes": "Five is an illustrative pilot proposal, not a universal sample-size rule."
         }
       ]
     },
     {
-      key: 'vibe-brutal',
-      title: 'Brutal · Mono technical',
-      icon: '▮',
-      blurb: 'Hard mono edges with empty plate slots. Title → agenda image → funnel → claim split → end image.',
-      minutes: 5,
-      theme: 'brutal',
-      slides: [
+      "key": "vibe-editorial",
+      "title": "Editorial · A story with room to breathe",
+      "icon": "¶",
+      "blurb": "A complete neighbourhood proposal with an offset opener, image, argument, timeline and closing thought. Warm paper and confident serif type.",
+      "minutes": 5,
+      "theme": "editorial",
+      "slides": [
         {
-          type: 'title',
-          title: 'No chrome.\nJust signal.',
-          subtitle: 'BRUTAL / MONO · drop technical plates below',
-          notes: 'Uppercase opener. Image placeholders start on the next slide.'
+          "type": "title",
+          "title": "A little room\nto pause.",
+          "subtitle": "A pocket-garden proposal / Illustrative brief",
+          "design": {
+            "composition": "editorial"
+          },
+          "notes": "Reusable opening composition. Change the subject and supporting line. Look → Composition changes the arrangement independently of the theme."
         },
         {
-          type: 'image',
-          title: 'Agenda',
-          body: '01 Name the constraint.\n02 Show the mechanism.\n03 Ship the rule.',
-          subtitle: 'Your diagram or still · three beats',
-          notes: 'AGENDA as an image slot + numbered caption — add a grid or schematic in the inspector.'
+          "type": "image",
+          "title": "Find a pause in the city",
+          "image": "assets/lesson/ipdv/qa-london-night-2.png",
+          "imageFit": "cover",
+          "design": {
+            "capStyle": "scrim",
+            "capPos": "bottom"
+          },
+          "notes": "Atmospheric city image from the existing asset library. It is not evidence of a particular proposed site. Replace with a photograph of your own location."
         },
         {
-          type: 'funnel',
-          title: 'Mechanism',
-          subtitle: 'Everything above the rule is scaffolding',
-          bullets: [
-            'Constraint\tI\tWhat must stay true, whatever else changes.',
-            'Mechanism\tII\tThe one move that enforces it.',
-            'Rule\tIII\tShort enough for a README.'
+          "type": "content",
+          "title": "Start with the people who use it.",
+          "bullets": [
+            "Ask when the space feels welcoming.",
+            "Notice where people already stop.",
+            "Include people who pass through without staying."
           ],
-          progressive: true,
-          notes: 'FUNNEL — three squared bands narrowing to the rule. Values here are roman numerals, not numbers, so the bands narrow evenly; give them real counts and the widths follow the data instead.'
+          "design": {
+            "composition": "rail"
+          },
+          "notes": "Keep the headings and supporting points editable. Choose Side heading for a single argument, or Columns for parallel ideas. These are examples, not limits on your content."
         },
         {
-          type: 'split',
-          title: 'If it needs a paragraph,',
-          bullets: [
-            'it is not the rule yet.',
-            '// end of mechanism'
+          "type": "timeline",
+          "title": "A proposal that can change",
+          "bullets": [
+            "Listen\tWalk the site\tRecord access needs and different uses.",
+            "Try\tTest a temporary layout\tMove seats before fixing them in place.",
+            "Learn\tReturn and observe\tKeep what helps; adapt what does not."
           ],
-          imageSide: 'right',
-          notes: 'QUOTE energy as split — claim beside an empty plate slot.'
+          "design": {
+            "timelineMode": "vertical"
+          },
+          "notes": "An illustrative project sequence. The labels are phases, not measured dates."
         },
         {
-          type: 'image',
-          title: 'END',
-          subtitle: 'Your closing plate',
-          notes: 'Acid close — drop a stark chart or still, then walk off.'
+          "type": "quote",
+          "body": "A useful place gives people a reason to stay.",
+          "subtitle": "A principle to test with the neighbourhood",
+          "design": {
+            "composition": "frame"
+          },
+          "notes": "Original example copy, not a quotation attributed to a real person."
+        },
+        {
+          "type": "content",
+          "title": "Three questions for the review",
+          "bullets": [
+            "Who can reach and use the space?",
+            "What makes it comfortable to stay?",
+            "Who will look after it?"
+          ],
+          "design": {
+            "composition": "columns"
+          },
+          "notes": "Keep the headings and supporting points editable. Choose Side heading for a single argument, or Columns for parallel ideas. These are examples, not limits on your content."
+        },
+        {
+          "type": "statement",
+          "body": "Leave room\nfor the neighbourhood.",
+          "subtitle": "Agree the next trial together.",
+          "design": {
+            "composition": "editorial"
+          },
+          "notes": "A pause in the argument. A short statement lets the room absorb the idea. Animation is optional; this composition works as a still."
+        }
+      ]
+    },
+    {
+      "key": "vibe-cinematic",
+      "title": "Cinematic · Build anticipation, reveal the idea",
+      "icon": "▣",
+      "blurb": "A complete evening-library concept with dark contrast, a moving image, a deliberate reveal and an explicit decision. Motion has a job.",
+      "minutes": 5,
+      "theme": "cinematic",
+      "slides": [
+        {
+          "type": "title",
+          "title": "The library.\nAfter hours.",
+          "subtitle": "An illustrative proposal for an evening programme",
+          "design": {
+            "composition": "poster"
+          },
+          "notes": "Reusable opening composition. Change the subject and supporting line. Look → Composition changes the arrangement independently of the theme."
+        },
+        {
+          "type": "video",
+          "title": "A different pace",
+          "subtitle": "A quieter place to work, meet and make.",
+          "video": "assets/backdrop/ink-drift.mp4",
+          "videoPoster": "assets/backdrop/ink-drift-poster.jpg",
+          "videoLoop": true,
+          "videoMuted": true,
+          "videoAutoplay": true,
+          "design": {
+            "capStyle": "scrim"
+          },
+          "notes": "Local abstract backdrop, not footage of a real library. Keep movement away from the reading area. The poster remains useful without playback."
+        },
+        {
+          "type": "content",
+          "title": "One building.\nSeveral reasons to stay.",
+          "bullets": [
+            "A quiet table for focused work.",
+            "A shared space for a small workshop.",
+            "A welcoming place to meet a neighbour."
+          ],
+          "design": {
+            "composition": "columns"
+          },
+          "notes": "Keep the headings and supporting points editable. Choose Side heading for a single argument, or Columns for parallel ideas. These are examples, not limits on your content."
+        },
+        {
+          "type": "compare",
+          "title": "Design the evening around choice",
+          "subtitle": "Focused work | Shared activity",
+          "bullets": [
+            "Sound\tQuiet zone\tConversation welcome",
+            "Furniture\tIndividual desks\tFlexible tables",
+            "Support\tHelp when requested\tA visible facilitator"
+          ],
+          "notes": "Use the comparison to explain a spatial distinction, not a competition between two valid uses."
+        },
+        {
+          "type": "statement",
+          "body": "Make the invitation clear.",
+          "subtitle": "Show people what they can do when they arrive.",
+          "design": {
+            "composition": "frame"
+          },
+          "notes": "A pause in the argument. A short statement lets the room absorb the idea. Animation is optional; this composition works as a still."
+        },
+        {
+          "type": "content",
+          "title": "Before the first evening",
+          "bullets": [
+            "Confirm staffing and access arrangements.",
+            "Tell visitors which spaces are open.",
+            "Choose how to collect feedback."
+          ],
+          "design": {
+            "composition": "rail"
+          },
+          "notes": "Keep the headings and supporting points editable. Choose Side heading for a single argument, or Columns for parallel ideas. These are examples, not limits on your content."
+        },
+        {
+          "type": "title",
+          "title": "Start with\none evening.",
+          "subtitle": "Agree a pilot, observe it, and decide what to change.",
+          "design": {
+            "composition": "sidecar"
+          },
+          "notes": "Reusable opening composition. Change the subject and supporting line. Look → Composition changes the arrangement independently of the theme."
+        }
+      ]
+    },
+    {
+      "key": "vibe-studio-teach",
+      "title": "Studio teach · Ask, explore, reflect",
+      "icon": "✳",
+      "blurb": "A complete short lesson: opening question, a learner response, practical steps, a worked example and reflection. No photo placeholders.",
+      "minutes": 8,
+      "theme": "studio",
+      "slides": [
+        {
+          "type": "title",
+          "title": "Make space\nto think.",
+          "subtitle": "A short lesson on starting a difficult task",
+          "design": {
+            "composition": "poster"
+          },
+          "notes": "Reusable opening composition. Change the subject and supporting line. Look → Composition changes the arrangement independently of the theme."
+        },
+        {
+          "type": "statement",
+          "body": "What makes starting difficult?",
+          "subtitle": "Think first. Then offer one word.",
+          "design": {
+            "composition": "frame"
+          },
+          "feedback": {
+            "kind": "wordcloud",
+            "prompt": "What makes starting difficult?",
+            "options": [],
+            "max": 1
+          },
+          "notes": "Invite an answer without asking learners to disclose private circumstances. A spoken response works too."
+        },
+        {
+          "type": "journey",
+          "journeyMode": "stepper",
+          "title": "Try a smaller start",
+          "bullets": [
+            "Notice\tName what is getting in the way.",
+            "Choose\tPick one manageable next step.",
+            "Review\tPause and check whether it helped."
+          ],
+          "progressive": true,
+          "buildMode": "dim",
+          "notes": "Reveal one stage at a time. Earlier stages remain available as context."
+        },
+        {
+          "type": "compare",
+          "title": "Make the next step visible",
+          "subtitle": "A broad intention | A concrete start",
+          "bullets": [
+            "Writing\tFinish my essay\tDraft one opening sentence",
+            "Revision\tLearn the topic\tExplain one concept aloud",
+            "Planning\tSort everything out\tList the next three tasks"
+          ],
+          "notes": "Worked examples for discussion. Invite a different concrete start if it suits the learner better."
+        },
+        {
+          "type": "content",
+          "title": "Choose your next move",
+          "bullets": [
+            "Name one task you want to begin.",
+            "Make the first step smaller.",
+            "Tell a partner how you will know you have started."
+          ],
+          "design": {
+            "composition": "rail"
+          },
+          "notes": "Keep the headings and supporting points editable. Choose Side heading for a single argument, or Columns for parallel ideas. These are examples, not limits on your content."
+        },
+        {
+          "type": "statement",
+          "body": "What will you try first?",
+          "subtitle": "Choose one move for your next task.",
+          "design": {
+            "composition": "editorial"
+          },
+          "feedback": {
+            "kind": "poll",
+            "prompt": "Which move will you try first?",
+            "options": [
+              "Name the obstacle",
+              "Choose a smaller step",
+              "Pause and review"
+            ],
+            "max": 1
+          },
+          "notes": "The poll records a preference, not a right answer."
+        },
+        {
+          "type": "statement",
+          "body": "A useful start\nis one you can take.",
+          "subtitle": "Write your first step before you leave.",
+          "design": {
+            "composition": "frame"
+          },
+          "notes": "A pause in the argument. A short statement lets the room absorb the idea. Animation is optional; this composition works as a still."
+        }
+      ]
+    },
+    {
+      "key": "vibe-brutal",
+      "title": "Brutal · Make the mechanism visible",
+      "icon": "▮",
+      "blurb": "A complete technical release review: constraints, a process, comparison, checks and a decision. Strong rules and mono type; no invented performance claims.",
+      "minutes": 5,
+      "theme": "brutal",
+      "slides": [
+        {
+          "type": "title",
+          "title": "READY\nTO RELEASE?",
+          "subtitle": "An illustrative engineering review",
+          "design": {
+            "composition": "editorial"
+          },
+          "notes": "Reusable opening composition. Change the subject and supporting line. Look → Composition changes the arrangement independently of the theme."
+        },
+        {
+          "type": "content",
+          "title": "Define the boundary.",
+          "bullets": [
+            "State what this release changes.",
+            "Name the systems it touches.",
+            "Identify what must remain compatible."
+          ],
+          "design": {
+            "composition": "rail"
+          },
+          "notes": "Keep the headings and supporting points editable. Choose Side heading for a single argument, or Columns for parallel ideas. These are examples, not limits on your content."
+        },
+        {
+          "type": "journey",
+          "journeyMode": "stepper",
+          "title": "A release with checkpoints",
+          "bullets": [
+            "Build\tProduce a versioned artifact.",
+            "Verify\tCheck the agreed behaviours.",
+            "Release\tObserve the result and retain a rollback path."
+          ],
+          "notes": "Illustrative workflow. Replace with the release process used by your team."
+        },
+        {
+          "type": "compare",
+          "title": "A claim needs a check",
+          "subtitle": "Claim | Review evidence",
+          "bullets": [
+            "Compatible\tExisting clients still work\tContract checks",
+            "Observable\tFailures can be located\tLogs and alert rehearsal",
+            "Reversible\tThe change can be undone\tRollback rehearsal"
+          ],
+          "notes": "These are example review criteria, not a claim that a particular system has passed them."
+        },
+        {
+          "type": "content",
+          "title": "Before the decision",
+          "bullets": [
+            "One owner for the release.",
+            "One place to see the result.",
+            "One agreed reason to roll back."
+          ],
+          "design": {
+            "composition": "columns"
+          },
+          "notes": "Keep the headings and supporting points editable. Choose Side heading for a single argument, or Columns for parallel ideas. These are examples, not limits on your content."
+        },
+        {
+          "type": "statement",
+          "body": "What would stop\nthis release?",
+          "subtitle": "Name the condition before deploying.",
+          "design": {
+            "composition": "frame"
+          },
+          "notes": "Use as a discussion pause. The question should be answered before the decision slide."
+        },
+        {
+          "type": "title",
+          "title": "DECIDE.\nRECORD.",
+          "subtitle": "Release, revise or hold. Capture the reason and the next owner.",
+          "design": {
+            "composition": "sidecar"
+          },
+          "notes": "Reusable opening composition. Change the subject and supporting line. Look → Composition changes the arrangement independently of the theme."
         }
       ]
     },
@@ -3833,178 +4492,420 @@
        three in a row. Nothing here is a lesson; it is a specimen sheet.
        ------------------------------------------------------------------ */
     {
-      key: 'motion-lab',
-      title: 'Motion lab — everything that moves, once each',
-      icon: '◈',
-      blurb: 'One slide per moving part: generated cover backdrops, a statement that arrives a word at a time, the three speeds and three spacings side by side, a looping line, Ken Burns with a destination, a chart walked category by category, a spotlight build, a background video, a YouTube embed, and two morphs. Every slide says in its notes which control made it.',
-      minutes: 12,
-      theme: 'midnight',
-      libraryGroup: 'other',
-      kind: 'template',
-      slides: [
-        { type: 'statement', body: 'Motion',
-          design: { backdrop: 'glow', words: 'rise', wordSpeed: 'gentle', wordStagger: 'one', wordsLoop: true },
-          notes: 'STATEMENT + one word, sized by arithmetic rather than by a band \u2014 320px here. Backdrop: Glow. Words: Rise, Gentle, one at a time, and set to leave again, so this cover runs on its own while a room fills.\n\nEverything on this slide is generated: there is no video file and no image.' },
-
-        { type: 'statement', body: 'Every chart is a choice',
-          subtitle: 'The same layout, four words',
-          design: { backdrop: 'drift', words: 'rise', wordStagger: 'wave' },
-          notes: 'The same layout with more to say: the band steps the type down from 320 to 140px on its own. Backdrop: Drift \u2014 the blobs are this theme\u2019s accent at low alpha, so the same slide in the paper theme is a pale wash rather than a glow.\n\nWords: Rise, Medium, Wave. This is the default pairing.' },
-
-        { type: 'statement', body: 'Gentle. Every word takes its time.',
-          design: { words: 'rise', wordSpeed: 'gentle', wordStagger: 'wave' },
-          notes: 'SPEED 1 of 3 \u2014 Gentle: 1300ms a word, a 1.8x wave, and the furthest lift. Page straight through the next two and the difference is obvious; on one slide alone it is not, which is the fair criticism that made these three exist.' },
-
-        { type: 'statement', body: 'Medium. The default.',
-          design: { words: 'rise', wordSpeed: 'medium', wordStagger: 'wave' },
-          notes: 'SPEED 2 of 3 \u2014 Medium: 700ms a word.' },
-
-        { type: 'statement', body: 'Quick. Straight in, no ceremony.',
-          design: { words: 'rise', wordSpeed: 'quick', wordStagger: 'wave' },
-          notes: 'SPEED 3 of 3 \u2014 Quick: 320ms a word and under half the wave. Useful when the words are a punchline rather than a title.' },
-
-        { type: 'statement', body: 'Together the line lands as one',
-          design: { words: 'fade', wordStagger: 'together' },
-          notes: 'SPACING 1 of 2 \u2014 Together: every word carries the same delay of nothing, so the line arrives as a single movement. Effect here is Fade, so the only thing being demonstrated is the spacing.' },
-
-        { type: 'statement', body: 'One at a time, with room between them',
-          design: { words: 'fade', wordStagger: 'one' },
-          notes: 'SPACING 2 of 2 \u2014 One at a time: two and a half times the wave, which on six words is over a second and a half from first to last. Same Fade effect as the slide before; only the spacing changed.' },
-
-        { type: 'statement', body: 'From the middle, opening outwards',
-          design: { words: 'rise', wordStagger: 'one', wordFrom: 'center' },
-          notes: 'WAVE STARTS: the middle. Same spacing as the slide before \u2014 what changed is the order: the centre word leads and the wave opens to both ends at once (1625, 1271, 0, 1271, 1625 in milliseconds).\n\nIt reads as a phrase opening rather than a line being typed, which suits a statement that is one idea. First word and Last word are the other two.' },
-
-        { type: 'statement', body: 'Reveal wipes each word up from its own line',
-          design: { backdrop: 'grid', words: 'reveal', wordSpeed: 'medium', wordStagger: 'wave' },
-          notes: 'The third effect: Reveal, a clip-path wipe rather than a move. Backdrop: Grid \u2014 a ruled plane travelling exactly one cell per loop, which is the same picture again, so it never cuts.' },
-
-        { type: 'statement', body: 'In, hold, out, round again',
-          subtitle: 'Leave this one up',
-          design: { backdrop: 'drift', words: 'rise', wordSpeed: 'medium', wordStagger: 'wave', wordsLoop: true },
-          notes: 'AND LEAVE AGAIN \u2014 the loop. Seven seconds: in for the first tenth, held for half, then nearly two seconds of the same eased wave taking them out, and a pause before it comes round. Stay here and watch it twice.' },
-
-        /* The three slides the presets cannot produce.
- 
-           Everything above is a choice from a list, and all of it moves the
-           whole line the same way. These carry a stored plan: coordinates per
-           word, and an arc per word saying what it does on arrival. They are
-           written out here rather than generated so the deck demonstrates
-           them with no key set \u2014 the AI button in the Motion pane writes
-           exactly this shape. */
-        { type: 'statement', body: 'Every word lands, and settles',
-          subtitle: 'Bounce',
-          design: { words: 'rise', wordSpeed: 'gentle',
-            wordPlan: { text: 'Every word lands, and settles', unit: 'word',
-              note: 'Weight arriving, one word at a time',
-              words: [
-                { dy: -2.2, blur: 3, delay: 0, arc: 'bounce' },
-                { dy: -1.8, blur: 3, delay: 220, arc: 'bounce' },
-                { dy: -2.4, blur: 4, delay: 440, arc: 'bounce' },
-                { dy: -1.4, blur: 2, delay: 660, arc: 'bounce' },
-                { dy: -2.0, blur: 3, delay: 880, arc: 'bounce' }
-              ] } },
-          notes: 'ARC 1 of 3 \u2014 Bounce. Each word falls from above and goes PAST its resting place before coming back: out about 45px, back, out again smaller, then still. Measured, not approximated \u2014 the overshoot is a fraction of that word\u2019s own drop, so the word that fell furthest bounces hardest.\n\nWhy it is not a preset: a start position eased to rest can only ever settle. The arc is a different keyframe set, chosen per word, which is why one word in a line can land like this while the rest do not.' },
-
-        { type: 'statement', body: 'Out of the fog, slowly',
-          subtitle: 'Mist',
-          design: { backdrop: 'drift', words: 'rise', wordSpeed: 'gentle',
-            wordPlan: { text: 'Out of the fog, slowly', unit: 'word',
-              note: 'Resolving rather than arriving',
-              words: [
-                { dy: 0.6, scale: 1.15, blur: 13, delay: 0, arc: 'mist' },
-                { dy: 0.5, scale: 1.1, blur: 12, delay: 350, arc: 'mist' },
-                { dy: 0.6, scale: 1.12, blur: 14, delay: 700, arc: 'mist' },
-                { dy: 0.4, scale: 1.08, blur: 11, delay: 1050, arc: 'mist' },
-                { dy: 0.7, scale: 1.2, blur: 14, delay: 1400, arc: 'mist' }
-              ] } },
-          notes: 'ARC 2 of 3 \u2014 Mist. The difference from a normal arrival is which property finishes last. These words are in position about half way through and still 50% out of focus; the rest of the time is spent condensing, which is what reads as coming out of fog rather than flying in slightly soft.\n\nThe arc supplies its own blur floor, so asking for mist without setting a blur still mists.' },
-
-        { type: 'statement', body: 'Charts lie',
-          subtitle: 'Letter by letter',
-          design: { words: 'rise', wordSpeed: 'quick',
-            wordPlan: { text: 'Charts lie', unit: 'letter',
-              note: 'Typed out, one letter at a time',
-              words: [
-                { dy: -0.25, blur: 2, delay: 0 }, { dy: -0.25, blur: 2, delay: 90 },
-                { dy: -0.25, blur: 2, delay: 180 }, { dy: -0.25, blur: 2, delay: 270 },
-                { dy: -0.25, blur: 2, delay: 360 }, { dy: -0.25, blur: 2, delay: 450 },
-                { dy: -0.25, blur: 2, delay: 600 }, { dy: -0.25, blur: 2, delay: 690 },
-                { dy: -0.25, blur: 2, delay: 780 }
-              ] } },
-          notes: 'ARC 3 of 3 \u2014 the unit itself. Nine steps for nine letters: the line is split by letter instead of by word, and each letter gets its own coordinates. The gap after "Charts" is the word break \u2014 150ms rather than 90.\n\nEach word is still one box, so the line can never break down the middle of a word. And the split is hidden from the accessibility tree with the sentence handed back whole underneath, because nineteen one-character elements are otherwise read out as "C h a r t s l i e". Thirty animated letters is the ceiling; past that it falls back to whole words.' },
-
-        { type: 'image', title: 'Ken Burns, with a destination',
-          subtitle: 'Travels from the top left to the bottom right over 12 seconds',
-          /* A photograph rather than a chart: a pan across a white plot grid
-             reads as a rendering fault, and the move is the point here. */
-          image: 'assets/lesson/ipdv/qa-london-night-1.jpg',
-          imageFit: 'cover',
-          design: { imageMotion: 'travel', focalX: 14, focalY: 18, focalX2: 86, focalY2: 80,
-            imageTravelSecs: 12, capStyle: 'scrim' },
-          notes: 'IMAGE MOTION: Travel. Two focus points and a duration \u2014 Image focus sets where it starts, Travels to sets where it ends. The old Slow zoom drifts towards one point; this moves between two, which is what \u201cstart on the whole chart, end on the axis label\u201d needs.\n\nOn a still this size it reads as the frame walking across Anscombe\u2019s four plots.' },
-
-        { type: 'chart', chartKind: 'bar',
-          title: 'A chart walked category by category',
-          body: 'Year\tHires\n2018\t10567540\n2019\t10424955\n2020\t10434167\n2021\t10941264\n2022\t11505872\n2023\t8531168',
-          chartSource: 'Every Santander Cycle hire, 2018\u20132023 \u00b7 TfL, London Datastore',
-          callouts: [
-            { label: '2020', note: 'Lockdown year \u2014 and the annual total barely moved.' },
-            { label: '2023', note: 'This is the drop worth explaining.' }
+      "key": "motion-lab",
+      "title": "Motion lab — everything that moves, once each",
+      "icon": "◈",
+      "blurb": "A guided motion catalogue: direct attention, reveal a sequence, preserve context, then choose when to stay still. Includes matched speed comparisons and copying guidance.",
+      "minutes": 12,
+      "theme": "cinematic",
+      "libraryGroup": "other",
+      "kind": "template",
+      "slides": [
+        {
+          "type": "statement",
+          "body": "Direct\nattention.",
+          "subtitle": "Motion Lab / Movement with a purpose",
+          "design": {
+            "composition": "poster",
+            "words": "rise",
+            "wordSpeed": "medium",
+            "wordStagger": "wave"
+          },
+          "notes": "Opening: one entrance, then rest. Motion should help the room locate, follow or connect information. Use the later looping example for waiting screens."
+        },
+        {
+          "type": "statement",
+          "body": "Give the idea room",
+          "subtitle": "A gentle background supports the opening",
+          "design": {
+            "backdrop": "drift",
+            "words": "rise",
+            "wordStagger": "wave",
+            "composition": "editorial"
+          },
+          "notes": "The same layout with more to say: the band steps the type down from 320 to 140px on its own. Backdrop: Drift — the blobs are this theme’s accent at low alpha, so the same slide in the paper theme is a pale wash rather than a glow.\n\nWords: Rise, Medium, Wave. This is the default pairing."
+        },
+        {
+          "type": "statement",
+          "body": "Give the idea room",
+          "design": {
+            "composition": "frame",
+            "words": "rise",
+            "wordSpeed": "gentle",
+            "wordStagger": "wave"
+          },
+          "notes": "Matched comparison: the wording, composition and effect stay the same. Only speed changes. Copy the slide and replace the phrase; keep the movement only if it helps your delivery.",
+          "subtitle": "Gentle / reflective opening"
+        },
+        {
+          "type": "statement",
+          "body": "Give the idea room",
+          "design": {
+            "composition": "frame",
+            "words": "rise",
+            "wordSpeed": "medium",
+            "wordStagger": "wave"
+          },
+          "notes": "Matched comparison: the wording, composition and effect stay the same. Only speed changes. Copy the slide and replace the phrase; keep the movement only if it helps your delivery.",
+          "subtitle": "Medium / everyday delivery"
+        },
+        {
+          "type": "statement",
+          "body": "Give the idea room",
+          "design": {
+            "composition": "frame",
+            "words": "rise",
+            "wordSpeed": "quick",
+            "wordStagger": "wave"
+          },
+          "notes": "Matched comparison: the wording, composition and effect stay the same. Only speed changes. Copy the slide and replace the phrase; keep the movement only if it helps your delivery.",
+          "subtitle": "Quick / a short emphasis"
+        },
+        {
+          "type": "statement",
+          "body": "Give the idea room",
+          "design": {
+            "words": "fade",
+            "wordStagger": "together",
+            "composition": "frame"
+          },
+          "notes": "SPACING 1 of 2 — Together: every word carries the same delay of nothing, so the line arrives as a single movement. Effect here is Fade, so the only thing being demonstrated is the spacing.",
+          "subtitle": "Together / read the phrase as a whole"
+        },
+        {
+          "type": "statement",
+          "body": "Give the idea room",
+          "design": {
+            "words": "fade",
+            "wordStagger": "one",
+            "composition": "frame"
+          },
+          "notes": "SPACING 2 of 2 — One at a time: two and a half times the wave, which on six words is over a second and a half from first to last. Same Fade effect as the slide before; only the spacing changed.",
+          "subtitle": "One at a time / follow the sequence"
+        },
+        {
+          "type": "statement",
+          "body": "From the middle, opening outwards",
+          "design": {
+            "words": "rise",
+            "wordStagger": "one",
+            "wordFrom": "center",
+            "composition": "frame"
+          },
+          "notes": "WAVE STARTS: the middle. Same spacing as the slide before — what changed is the order: the centre word leads and the wave opens to both ends at once (1625, 1271, 0, 1271, 1625 in milliseconds).\n\nIt reads as a phrase opening rather than a line being typed, which suits a statement that is one idea. First word and Last word are the other two."
+        },
+        {
+          "type": "statement",
+          "body": "Let the next idea appear",
+          "design": {
+            "backdrop": "grid",
+            "words": "reveal",
+            "wordSpeed": "medium",
+            "wordStagger": "wave",
+            "composition": "editorial"
+          },
+          "notes": "The third effect: Reveal, a clip-path wipe rather than a move. Backdrop: Grid — a ruled plane travelling exactly one cell per loop, which is the same picture again, so it never cuts.",
+          "subtitle": "Reveal / a clean entrance"
+        },
+        {
+          "type": "statement",
+          "body": "We will begin shortly",
+          "subtitle": "Loop / for a waiting screen",
+          "design": {
+            "backdrop": "drift",
+            "words": "rise",
+            "wordSpeed": "medium",
+            "wordStagger": "wave",
+            "wordsLoop": true,
+            "composition": "frame"
+          },
+          "notes": "AND LEAVE AGAIN — the loop. Seven seconds: in for the first tenth, held for half, then nearly two seconds of the same eased wave taking them out, and a pause before it comes round. Stay here and watch it twice."
+        },
+        {
+          "type": "statement",
+          "body": "Every word lands, and settles",
+          "subtitle": "Bounce",
+          "design": {
+            "words": "rise",
+            "wordSpeed": "gentle",
+            "wordPlan": {
+              "text": "Every word lands, and settles",
+              "unit": "word",
+              "note": "Weight arriving, one word at a time",
+              "words": [
+                {
+                  "dy": -2.2,
+                  "blur": 3,
+                  "delay": 0,
+                  "arc": "bounce"
+                },
+                {
+                  "dy": -1.8,
+                  "blur": 3,
+                  "delay": 220,
+                  "arc": "bounce"
+                },
+                {
+                  "dy": -2.4,
+                  "blur": 4,
+                  "delay": 440,
+                  "arc": "bounce"
+                },
+                {
+                  "dy": -1.4,
+                  "blur": 2,
+                  "delay": 660,
+                  "arc": "bounce"
+                },
+                {
+                  "dy": -2,
+                  "blur": 3,
+                  "delay": 880,
+                  "arc": "bounce"
+                }
+              ]
+            },
+            "composition": "frame"
+          },
+          "notes": "ARC 1 of 3 — Bounce. Each word falls from above and goes PAST its resting place before coming back: out about 45px, back, out again smaller, then still. Measured, not approximated — the overshoot is a fraction of that word’s own drop, so the word that fell furthest bounces hardest.\n\nWhy it is not a preset: a start position eased to rest can only ever settle. The arc is a different keyframe set, chosen per word, which is why one word in a line can land like this while the rest do not."
+        },
+        {
+          "type": "statement",
+          "body": "Out of the fog, slowly",
+          "subtitle": "Mist",
+          "design": {
+            "backdrop": "drift",
+            "words": "rise",
+            "wordSpeed": "gentle",
+            "wordPlan": {
+              "text": "Out of the fog, slowly",
+              "unit": "word",
+              "note": "Resolving rather than arriving",
+              "words": [
+                {
+                  "dy": 0.6,
+                  "scale": 1.15,
+                  "blur": 13,
+                  "delay": 0,
+                  "arc": "mist"
+                },
+                {
+                  "dy": 0.5,
+                  "scale": 1.1,
+                  "blur": 12,
+                  "delay": 350,
+                  "arc": "mist"
+                },
+                {
+                  "dy": 0.6,
+                  "scale": 1.12,
+                  "blur": 14,
+                  "delay": 700,
+                  "arc": "mist"
+                },
+                {
+                  "dy": 0.4,
+                  "scale": 1.08,
+                  "blur": 11,
+                  "delay": 1050,
+                  "arc": "mist"
+                },
+                {
+                  "dy": 0.7,
+                  "scale": 1.2,
+                  "blur": 14,
+                  "delay": 1400,
+                  "arc": "mist"
+                }
+              ]
+            },
+            "composition": "frame"
+          },
+          "notes": "ARC 2 of 3 — Mist. The difference from a normal arrival is which property finishes last. These words are in position about half way through and still 50% out of focus; the rest of the time is spent condensing, which is what reads as coming out of fog rather than flying in slightly soft.\n\nThe arc supplies its own blur floor, so asking for mist without setting a blur still mists."
+        },
+        {
+          "type": "statement",
+          "body": "Charts lie",
+          "subtitle": "Letter by letter",
+          "design": {
+            "words": "rise",
+            "wordSpeed": "quick",
+            "wordPlan": {
+              "text": "Charts lie",
+              "unit": "letter",
+              "note": "Typed out, one letter at a time",
+              "words": [
+                {
+                  "dy": -0.25,
+                  "blur": 2,
+                  "delay": 0
+                },
+                {
+                  "dy": -0.25,
+                  "blur": 2,
+                  "delay": 90
+                },
+                {
+                  "dy": -0.25,
+                  "blur": 2,
+                  "delay": 180
+                },
+                {
+                  "dy": -0.25,
+                  "blur": 2,
+                  "delay": 270
+                },
+                {
+                  "dy": -0.25,
+                  "blur": 2,
+                  "delay": 360
+                },
+                {
+                  "dy": -0.25,
+                  "blur": 2,
+                  "delay": 450
+                },
+                {
+                  "dy": -0.25,
+                  "blur": 2,
+                  "delay": 600
+                },
+                {
+                  "dy": -0.25,
+                  "blur": 2,
+                  "delay": 690
+                },
+                {
+                  "dy": -0.25,
+                  "blur": 2,
+                  "delay": 780
+                }
+              ]
+            },
+            "composition": "frame"
+          },
+          "notes": "ARC 3 of 3 — the unit itself. Nine steps for nine letters: the line is split by letter instead of by word, and each letter gets its own coordinates. The gap after \"Charts\" is the word break — 150ms rather than 90.\n\nEach word is still one box, so the line can never break down the middle of a word. And the split is hidden from the accessibility tree with the sentence handed back whole underneath, because nineteen one-character elements are otherwise read out as \"C h a r t s l i e\". Thirty animated letters is the ceiling; past that it falls back to whole words."
+        },
+        {
+          "type": "image",
+          "title": "Guide the eye through the image",
+          "subtitle": "Travel between two chosen points",
+          "image": "assets/lesson/ipdv/qa-london-night-1.jpg",
+          "imageFit": "cover",
+          "design": {
+            "imageMotion": "travel",
+            "focalX": 14,
+            "focalY": 18,
+            "focalX2": 86,
+            "focalY2": 80,
+            "imageTravelSecs": 12,
+            "capStyle": "scrim"
+          },
+          "notes": "Image motion: Travel. Pick a start point, an end point and a duration. This example uses a city photograph. Keep a chart still if the audience needs to compare values across it. Reduced-motion users receive a still image."
+        },
+        {
+          "type": "chart",
+          "chartKind": "bar",
+          "title": "A chart walked category by category",
+          "body": "Year\tHires\n2018\t10567540\n2019\t10424955\n2020\t10434167\n2021\t10941264\n2022\t11505872\n2023\t8531168",
+          "chartSource": "Every Santander Cycle hire, 2018–2023 · TfL, London Datastore",
+          "callouts": [
+            {
+              "label": "2020",
+              "note": "Lockdown year — and the annual total barely moved."
+            },
+            {
+              "label": "2023",
+              "note": "This is the drop worth explaining."
+            }
           ],
-          notes: 'CHART CALLOUTS. Press Next: the chart zooms to 2020 with its own axis label still in frame, then to 2023, then the whole chart comes back before the deck moves on.\n\nCallouts name a CATEGORY from the table rather than a position, so inserting a row above 2020 does not move the callout. Add them in Design & content \u2192 Walk the chart.' },
-
-        { type: 'content', title: 'A build with the light on one point',
-          bullets: [
-            'Wrong question \u2014 a pie answers share of a total',
-            'Angles are hard to compare, lengths are not',
-            'COVID vanishes: 2019 and 2020 are the same slice',
-            'Seasons vanish inside every year'
+          "notes": "CHART CALLOUTS. Press Next: the chart zooms to 2020 with its own axis label still in frame, then to 2023, then the whole chart comes back before the deck moves on.\n\nCallouts name a CATEGORY from the table rather than a position, so inserting a row above 2020 does not move the callout. Add them in Design & content → Walk the chart."
+        },
+        {
+          "type": "content",
+          "title": "Reveal the reasoning.",
+          "bullets": [
+            "Begin with the question.",
+            "Show the relevant evidence.",
+            "Explain what follows from it.",
+            "Name what remains uncertain."
           ],
-          progressive: true, buildMode: 'spot',
-          notes: 'BUILD ON NEXT: with a spotlight on the live one. The points already made fall back to a third rather than disappearing, the live one stays at full strength, and a vignette closes in from the edges once the build has started.\n\nIt is opacity and a gradient only \u2014 nothing reflows halfway through being taught, and a printed handout shows every point at full strength.' },
-
-        { type: 'video', title: 'A background video, on a loop',
-          subtitle: 'Eight seconds, 398 KB, generated rather than downloaded',
-          video: 'assets/backdrop/ink-drift.mp4',
-          videoPoster: 'assets/backdrop/ink-drift-poster.jpg',
-          videoLoop: true, videoMuted: true, videoAutoplay: true,
-          design: { capStyle: 'scrim', logoGround: 'dark' },
-          notes: 'VIDEO as a backdrop: Loop, Start muted and Play when the slide appears, with the caption over it. Caption style and position are settable on a video slide now, so the text can sit top or bottom, on a gradient, a bar, or nothing.\n\nThe clip loops seamlessly because every motion in it is periodic in the frame count \u2014 tools/video/backdrop-frames.py, if you want another one.' },
-
-        { type: 'video', title: 'A YouTube link is understood',
-          subtitle: 'The editor shows the clip; the show frames the player',
-          video: 'https://www.youtube.com/watch?v=dWGujFI4AYQ',
-          design: { capStyle: 'scrim' },
-          notes: 'Paste a watch link and the editor shows the video\u2019s own thumbnail with a YOUTUBE pill on it, rather than the grey rectangle it used to draw \u2014 which was indistinguishable from a field that had ignored the link.\n\nIn the show this is the real player, framed from youtube-nocookie.com so nothing is set on a student\u2019s machine until the clip is played.' },
-
-        { type: 'chart', chartKind: 'bar', transition: 'morph',
-          title: 'The same six years',
-          body: 'Year\tHires\n2018\t10567540\n2019\t10424955\n2020\t10434167\n2021\t10941264\n2022\t11505872\n2023\t8531168',
-          notes: 'MORPH, 1 of 2. This slide and the next hold the same table and are set to Morph, so the chart itself travels across the cut rather than the slides dissolving.\n\nPress Next slowly.' },
-
-        { type: 'chart', chartKind: 'line', transition: 'morph',
-          title: 'The same six years',
-          body: 'Year\tHires\n2018\t10567540\n2019\t10424955\n2020\t10434167\n2021\t10941264\n2022\t11505872\n2023\t8531168',
-          chartSource: 'Bars to a line, same numbers \u00b7 TfL, London Datastore',
-          notes: 'MORPH, 2 of 2 \u2014 and the argument for it: this is a claim about the material, not a decoration. The room is told \u201cthis is the same data, drawn the right way\u201d by the fact that it moved rather than changed.\n\nThe browser does the animation; the app\u2019s job is deciding what counts as the same thing \u2014 same picture, same chart table, or same heading text. With nothing shared it is a fade.' },
-
-        { type: 'statement', body: 'The same six years', transition: 'morph',
-          subtitle: 'Morphed from the heading of the slide before',
-          design: { words: '', backdrop: 'glow' },
-          notes: 'The third pairing: the heading text is identical to the previous slide\u2019s title, so the words themselves travel out of the chart slide and into the middle of this one.\n\nWord effects are off here on purpose \u2014 a morph and an entrance both animating the same words fight each other.' },
-
-        { type: 'keywords', title: 'What made each of these',
-          bullets: [
-            'Backdrop motion\tLook \u00b7 Drift, Grid or Glow. Theme colours, no file.',
-            'Image motion\tLook \u00b7 Slow zoom, or Travel between two points.',
-            'Words arrive\tMotion \u00b7 Rise, Fade, Reveal \u2014 plus speed and spacing.',
-            'Transition in\tMotion \u00b7 Morph carries one shared thing across the cut.',
-            'Build on Next\tLook \u00b7 Hide, dim, or spotlight the live point.',
-            'Walk the chart\tContent \u00b7 Up to six callouts, each naming a category.'
+          "design": {
+            "composition": "rail"
+          },
+          "notes": "Use Next to reveal each point. Earlier points remain in place so the audience can keep the argument in view. The printed version shows all points.",
+          "progressive": true,
+          "buildMode": "spot"
+        },
+        {
+          "type": "video",
+          "title": "A background video, on a loop",
+          "subtitle": "Eight seconds, 398 KB, generated rather than downloaded",
+          "video": "assets/backdrop/ink-drift.mp4",
+          "videoPoster": "assets/backdrop/ink-drift-poster.jpg",
+          "videoLoop": true,
+          "videoMuted": true,
+          "videoAutoplay": true,
+          "design": {
+            "capStyle": "scrim",
+            "logoGround": "dark"
+          },
+          "notes": "VIDEO as a backdrop: Loop, Start muted and Play when the slide appears, with the caption over it. Caption style and position are settable on a video slide now, so the text can sit top or bottom, on a gradient, a bar, or nothing.\n\nThe clip loops seamlessly because every motion in it is periodic in the frame count — tools/video/backdrop-frames.py, if you want another one."
+        },
+        {
+          "type": "video",
+          "title": "A YouTube link is understood",
+          "subtitle": "The editor shows the clip; the show frames the player",
+          "video": "https://www.youtube.com/watch?v=dWGujFI4AYQ",
+          "design": {
+            "capStyle": "scrim"
+          },
+          "notes": "Paste a watch link and the editor shows the video’s own thumbnail with a YOUTUBE pill on it, rather than the grey rectangle it used to draw — which was indistinguishable from a field that had ignored the link.\n\nIn the show this is the real player, framed from youtube-nocookie.com so nothing is set on a student’s machine until the clip is played."
+        },
+        {
+          "type": "chart",
+          "chartKind": "bar",
+          "transition": "morph",
+          "title": "The same six years",
+          "body": "Year\tHires\n2018\t10567540\n2019\t10424955\n2020\t10434167\n2021\t10941264\n2022\t11505872\n2023\t8531168",
+          "notes": "MORPH, 1 of 2. This slide and the next hold the same table and are set to Morph, so the chart itself travels across the cut rather than the slides dissolving.\n\nPress Next slowly."
+        },
+        {
+          "type": "chart",
+          "chartKind": "line",
+          "transition": "morph",
+          "title": "The same six years",
+          "body": "Year\tHires\n2018\t10567540\n2019\t10424955\n2020\t10434167\n2021\t10941264\n2022\t11505872\n2023\t8531168",
+          "chartSource": "Bars to a line, same numbers · TfL, London Datastore",
+          "notes": "MORPH, 2 of 2 — and the argument for it: this is a claim about the material, not a decoration. The room is told “this is the same data, drawn the right way” by the fact that it moved rather than changed.\n\nThe browser does the animation; the app’s job is deciding what counts as the same thing — same picture, same chart table, or same heading text. With nothing shared it is a fade."
+        },
+        {
+          "type": "statement",
+          "body": "The same six years",
+          "transition": "morph",
+          "subtitle": "Morphed from the heading of the slide before",
+          "design": {
+            "words": "",
+            "backdrop": "glow"
+          },
+          "notes": "The third pairing: the heading text is identical to the previous slide’s title, so the words themselves travel out of the chart slide and into the middle of this one.\n\nWord effects are off here on purpose — a morph and an entrance both animating the same words fight each other."
+        },
+        {
+          "type": "content",
+          "title": "Choose what movement should do.",
+          "bullets": [
+            "Direct attention to the next idea.",
+            "Reveal a sequence in a useful order.",
+            "Preserve context between related slides.",
+            "Stay still when the audience needs to compare."
           ],
-          notes: 'Everything in this deck is a control in the right-hand panel, on an ordinary slide. Copy any slide here into your own lesson and the settings come with it.' }
-      ]
+          "design": {
+            "composition": "rail"
+          },
+          "notes": "Copy an example into your deck, then adjust Look and Motion. Use one dominant movement at a time. Preview the whole sequence, including a still or reduced-motion version."
+        }
+      ],
+      "showSlideNumbers": true
     },
 
     /* ------------------------------------------------------------------
@@ -4165,7 +5066,1537 @@
           notes: 'An image slot above every card. The dashed boxes are placeholders — paste a URL or drop a file under each card in the inspector. Design → Picture shape switches portrait crops to letterboxed plates.'
         }
       ]
+    },
+
+    /* The AI Awareness Day starters, one lesson per principle.
+       GENERATED — do not edit between the markers. The decks are authored in
+       AiAd26/starters.js and AiAd27/starters27.js, which also build the
+       importable bundles, so the Library card and the bundle are the same
+       deck rather than two copies that drift. Rebuild with:
+
+         node tools/build-aiad-lessons.mjs
+
+       JSON-shaped on purpose: the content carries apostrophes, em dashes and
+       newlines, and a generator that hand-rolled quoting would eventually get
+       one wrong. */
+    /* aiad-packs:start */
+    {
+      "key": "aiad26-safe",
+      "title": "SAFE · Who's really behind the screen?",
+      "icon": "◉",
+      "blurb": "Five minutes on SAFE. Opens on “Who's really behind the screen?” — the room answers before anything is explained, then the numbers, then the answers one at a time.",
+      "minutes": 5,
+      "theme": "aiad26-safe",
+      "org": "AI Awareness Day 2026",
+      "logo": "assets/brand/aiad26/aiad26-safe.svg",
+      "logoOn": "all",
+      "logoSize": "large",
+      "logoReverse": "never",
+      "showSlideNumbers": false,
+      "slides": [
+        {
+          "type": "title",
+          "title": "Who's really\nbehind the screen?",
+          "subtitle": "Understanding AI-generated content and deepfakes",
+          "notes": "AI AWARENESS DAY 2026 · Starter 1 · Principle: SAFE · 5 minutes\n\nLEARNING OBJECTIVES\n· Understand what deepfakes are and the scale of the problem\n· Recognise that AI-generated intimate images are illegal abuse\n· Know basic steps for staying safe online\n\nBEFORE YOU START — from the teacher pack:\nThis topic may be triggering for students who have experienced image-based abuse. Emphasise that victims are NEVER at fault. Have safeguarding information ready to share privately with any student who needs it.\n\nRUNNING ORDER: question (60s discussion) → the numbers → what to do → vocabulary → the five habits → support."
+        },
+        {
+          "type": "statement",
+          "body": "If you couldn't tell whether a video of your friend was real or AI-generated, what would you do?",
+          "subtitle": "Talk to the person next to you — 60 seconds",
+          "transition": "fade",
+          "feedback": {
+            "kind": "poll",
+            "prompt": "What would you do first?",
+            "options": [
+              "Send it to a friend to check",
+              "Look up where it came from",
+              "Ask a trusted adult",
+              "Delete it and say nothing"
+            ],
+            "max": 1,
+            "presentAs": "rail"
+          },
+          "notes": "THE 60 SECONDS ARE THE LESSON. Resist filling them.\n\nThe poll is optional — if phones are not joining, this works exactly as well as a pair discussion. If you do run it, \"Send it to a friend to check\" is the teachable answer: it feels responsible and it is the one that spreads the harm. Do not say so until after the vote.\n\nDISCUSSION PROMPTS\n→ How would you react if you received a suspicious image of someone you know?\n→ Why do you think deepfake abuse primarily targets young people?\n→ What is one thing you could do differently online after today?"
+        },
+        {
+          "type": "stats",
+          "title": "1 in 17 young people have been targeted by deepfake image abuse",
+          "subtitle": "Did you know?",
+          "bullets": [
+            "Deepfakes shared online in 2025\t8 million\tup from 500,000 in 2023",
+            "Of all deepfakes\t98%\tare non-consensual intimate images",
+            "UK teenagers\t4 in 5\thave used generative AI tools"
+          ],
+          "body": "Thorn Research 2025 · European Parliament 2025 · European Commission",
+          "notes": "Read the headline aloud — \"1 in 17\" is roughly one person in a class of thirty, and the room will do that arithmetic themselves. Let them.\n\nThe 500,000 → 8 million figure is the one to dwell on: a sixteen-fold rise in two years. This is not a problem that is arriving, it is one that has arrived.\n\nDo not linger on 98%. State it, let it land, move on."
+        },
+        {
+          "type": "cards",
+          "title": "So what do you actually do?",
+          "bullets": [
+            "Don't share it\tSharing spreads potential harm even if you are trying to warn people.",
+            "Check the source\tIs it from an official or verified account? Where did it originally come from?",
+            "Reverse image search\tSee whether the content appears elsewhere, or has been flagged as fake.",
+            "Look for the tells\tUnnatural blinking, strange lighting, blurry edges around face and hair.",
+            "Ask a trusted adult\tTeachers, parents and safeguarding leads can help you verify.",
+            "If it is intimate, report it\tDo not view, save or share it. Report it immediately."
+          ],
+          "progressive": true,
+          "buildMode": "hide",
+          "notes": "REVEAL ONE AT A TIME — press → for each. Take the room's answers first and reveal the card that matches; it turns a list into a conversation.\n\nThe first card is the one most people get wrong, and it is worth saying plainly: forwarding something to warn people is still forwarding it.\n\nThe last card is non-negotiable. Creating AI-generated intimate images of anyone is illegal — a sexual offence — even if it was \"just a joke\"."
+        },
+        {
+          "type": "sourcecheck",
+          "title": "\"8 million deepfakes will be shared online in 2025\"",
+          "subtitle": "We put that on a slide three minutes ago. Should you have believed it?",
+          "bullets": [
+            "Who\tEuropean Parliament\t",
+            "When\t2025\tquoted in the AI Awareness Day teacher pack",
+            "Basis\tA projection\tfor a year that has not finished — not a count",
+            "Against\t500,000 in 2023\tthe figure it is measured from",
+            "Gap\tNo method shown\tthis deck never tells you how it was worked out"
+          ],
+          "progressive": true,
+          "notes": "REVEAL ONE ROW AT A TIME. The room should feel the claim come apart.\n\nBE FAIR TO THE NUMBER. The point is not that it is wrong — it is a serious figure from a serious source, and it is very likely sound. The point is that nobody in the room asked, including you, three minutes after being told to check where things come from.\n\nThe last row is the one that matters, and it is about this deck: the method is not on the slide. Neither is it on most slides anywhere.\n\nIf a student says \"so should we not believe it?\" — the answer is that believing it is fine; believing it WITHOUT NOTICING is the habit deepfakes exploit."
+        },
+        {
+          "type": "shift",
+          "hidden": true,
+          "title": "How fast this moved",
+          "subtitle": "Deepfakes shared online",
+          "bullets": [
+            "2023\t500,000\twhere it started",
+            "2025\t8 million\tprojected",
+            "2027\t\tnobody knows"
+          ],
+          "body": "European Parliament 2025",
+          "notes": "HIDDEN BY DEFAULT — the growth is already a tile on the \"did you know\" slide, and a five-minute starter should not spend two slides on one number.\n\nUnhide it when you have longer, or when a class has shrugged at \"8 million\". The stat slide reports the rise; this one draws it, and the ×16 in the gutter is the thing nobody works out for themselves. Two years.\n\nThe 2027 column is deliberately empty. Ask the room to fill it before you move on."
+        },
+        {
+          "type": "statement",
+          "hidden": true,
+          "body": "How would you verify whether content is genuine?",
+          "subtitle": "Extension — if you have longer than five minutes",
+          "feedback": {
+            "kind": "brainstorm",
+            "prompt": "One way to check something is real",
+            "max": 2,
+            "presentAs": "rail"
+          },
+          "notes": "HIDDEN BY DEFAULT — this is the teacher pack's sub-question, and a five-minute starter does not have room for it. Unhide it (and the card slide after) if this is a full lesson rather than a starter.\n\nRuns well as a brainstorm: contributions arrive named and newest-first, so you can credit people as you go."
+        },
+        {
+          "type": "cards",
+          "hidden": true,
+          "title": "Verifying content",
+          "bullets": [
+            "Cross-check it\tDoes the same story or video appear on trusted news sites?",
+            "Read the account\tIs it verified? How old is it? What else has it posted?",
+            "Go to the source\tSearch for the person's official accounts — have they addressed it?",
+            "Use a fact-checker\tFull Fact and BBC Reality Check both cover viral claims.",
+            "Ask who benefits\tWho gains if you believe this is real? That question answers a lot."
+          ],
+          "progressive": true,
+          "buildMode": "hide",
+          "notes": "Extension — unhide together with the question before it.\n\n\"Who benefits if I believe this?\" is the most transferable idea in the whole starter. It works on advertising, on politics, and on the group chat.\n\nIf a student says \"but it was sent by someone I trust\": even trusted people are fooled by convincing deepfakes. Misinformation travels through well-meaning people. Verify independently, then tell them gently if it turns out to be fake."
+        },
+        {
+          "type": "keywords",
+          "title": "Two words worth knowing",
+          "bullets": [
+            "Deepfake\tAI-generated or manipulated video, image or audio that convincingly shows something that never happened.",
+            "Reverse image search\tUploading an image to Google Images or TinEye to find where it originally came from."
+          ],
+          "notes": "These definitions were in the teacher pack but never on a slide. They are here so students can copy them down.\n\nWorth adding aloud: the Online Safety Act requires platforms to remove illegal content, and the law on intimate images already covers AI-generated ones. Technology moves faster than legislation, but on this particular point the law has caught up."
+        },
+        {
+          "type": "journey",
+          "title": "Staying safe in an AI world",
+          "subtitle": "Five habits, in the order you would use them",
+          "bullets": [
+            "Stop\tBefore sharing, ask: could this be AI-generated? Check the source.",
+            "Verify\tOfficial accounts, reverse image search, or ask a trusted adult.",
+            "Report\tAI-generated intimate images of anyone are illegal. Tell a trusted adult immediately.",
+            "Protect\tThink twice before posting photos. They can be manipulated by AI tools.",
+            "Support\tIf someone shows you suspicious content, don't pass it on."
+          ],
+          "progressive": true,
+          "notes": "Reveal one milestone at a time. Five verbs in the order you would actually use them — that ordering is the point, and it is why this is a path rather than a list.\n\nIf you are short of time, this is the slide to end on."
+        },
+        {
+          "type": "keyfact",
+          "subtitle": "Key takeaway",
+          "title": "Think before you post",
+          "body": "Your digital footprint can be used in ways you never intended.",
+          "notes": "One line, then stop talking. Do not add to it.\n\nIf the room is quiet, that is the right response to this starter."
+        },
+        {
+          "type": "section",
+          "title": "If any of this affected you",
+          "subtitle": "You will not be in trouble for asking for help.",
+          "notes": "Say this out loud rather than leaving it on the slide.\n\nYour tutor, head of year or safeguarding lead is available to help — name the actual person if you can.\n\nFrom the teacher pack, the three messages that matter most:\n· If you are targeted by deepfake abuse, it is NOT your fault.\n· Creating AI-generated intimate images of anyone is illegal.\n· You will NOT be in trouble for reporting — we are here to help.\n\nHave the safeguarding details ready to share privately with anyone who comes to you afterwards."
+        },
+        {
+          "type": "links",
+          "title": "Reporting and support",
+          "subtitle": "Free, confidential, and open to anyone",
+          "bullets": [
+            "Childline — 0800 1111\thttps://www.childline.org.uk",
+            "Samaritans — 116 123\thttps://www.samaritans.org",
+            "Young Minds — mental health\thttps://www.youngminds.org.uk",
+            "CEOP — report abuse or exploitation\thttps://www.ceop.police.uk/safety-centre",
+            "Internet Watch Foundation — report an image\thttps://report.iwf.org.uk",
+            "UK Safer Internet Centre\thttps://saferinternet.org.uk"
+          ],
+          "notes": "Leave this slide up while the room packs away — it is the one slide worth lingering on.\n\nChildline and Samaritans are the two numbers worth reading aloud; the rest are for students to find later. Every link is live, so this slide works as a handout as well as a projection.\n\nTwo more from the teacher pack that would not fit on the slide:\n· NSPCC online safety — nspcc.org.uk/keeping-children-safe/online-safety\n· ThinkUKnow — thinkuknow.co.uk"
+        },
+        {
+          "type": "join",
+          "hidden": true,
+          "title": "Join on your phone",
+          "subtitle": "Only needed if you are running the live poll",
+          "notes": "HIDDEN BY DEFAULT. Thirty phones joining burns the whole five minutes, and every statement slide in this deck works as a plain pair discussion without anyone joining at all.\n\nUnhide and drag to position 2 if you do want the room voting, or just open the join panel from the presenter view without spending a slide on it."
+        }
+      ]
+    },
+    {
+      "key": "aiad26-smart",
+      "title": "SMART · How does AI actually 'think'?",
+      "icon": "◆",
+      "blurb": "Five minutes on SMART. Opens on “How does AI actually 'think'?” — the room answers before anything is explained, then the numbers, then the answers one at a time.",
+      "minutes": 5,
+      "theme": "aiad26-smart",
+      "org": "AI Awareness Day 2026",
+      "logo": "assets/brand/aiad26/aiad26-smart.svg",
+      "logoOn": "all",
+      "logoSize": "large",
+      "logoReverse": "never",
+      "showSlideNumbers": false,
+      "slides": [
+        {
+          "type": "title",
+          "title": "How does AI\nactually 'think'?",
+          "subtitle": "Understanding the technology behind the tools you use",
+          "notes": "AI AWARENESS DAY 2026 · Starter 2 · Principle: SMART · 5 minutes\n\nLEARNING OBJECTIVES\n· Understand that AI predicts patterns rather than \"thinking\"\n· Recognise the difference between pattern prediction and understanding\n· Learn why AI 'hallucinations' occur\n\nTHE ONE THING TO WATCH FOR — from the teacher pack:\nStudents will anthropomorphise AI. Gently correct \"it thinks\" to \"it predicts\", every time, all the way through. That single substitution is most of the learning.\n\nAvoid being dismissive of AI's usefulness while explaining its limits."
+        },
+        {
+          "type": "statement",
+          "body": "When you ask ChatGPT a question, do you think it 'understands' you the way a human would?",
+          "subtitle": "Talk to the person next to you — 60 seconds",
+          "feedback": {
+            "kind": "poll",
+            "prompt": "Does it understand you?",
+            "options": [
+              "Yes — it understands",
+              "No — it predicts",
+              "Somewhere in between",
+              "I genuinely do not know"
+            ],
+            "max": 1,
+            "presentAs": "rail"
+          },
+          "notes": "The vote is the hook. Take it before you say anything, and leave the result on screen while you work through the next slide — you want the room looking at their own answer as the explanation arrives.\n\n\"Somewhere in between\" is the most popular answer in most rooms and it is the most interesting one to unpick: what would \"partly understand\" even mean?\n\nDISCUSSION PROMPTS\n→ What is the difference between knowing something and predicting it?\n→ Why might it matter if AI does not truly understand?\n→ How might knowing this change how you use AI tools?"
+        },
+        {
+          "type": "compare",
+          "title": "Predicting is not understanding",
+          "subtitle": "What a language model does | What understanding would need",
+          "bullets": [
+            "Predicts the next likely word\tGrasps what the words mean",
+            "Patterns from its training data\tExperience of the real world",
+            "Always produces an answer\tCan say 'I don't know'",
+            "Sounds confident when wrong\tKnows where its knowledge stops"
+          ],
+          "notes": "This slide is the whole starter. If you only have two minutes, show the question and then this.\n\nThe analogy that lands best, from the teacher pack: AI is a very sophisticated autocomplete, not a thinking being.\n\nRow 3 is the one students find most surprising — a model has no mechanism for noticing that it does not know, which is exactly why hallucinations sound as confident as facts."
+        },
+        {
+          "type": "stats",
+          "title": "It predicts the next word — and it is wrong often enough to matter",
+          "subtitle": "Did you know?",
+          "bullets": [
+            "UK university students using AI for academic work\t92%\tHEPI Survey 2025",
+            "Students naming hallucinations as a major concern\t51%\tHEPI Survey 2025",
+            "School students who have used AI\t45%\tHEPI 2025"
+          ],
+          "body": "Trained on billions of web pages, books and articles · HEPI 2025, MIT, Stanford AI Index 2025",
+          "notes": "The point of putting 92% next to 51% is that both are true at once: nearly everyone is using it, and half of them already know it makes things up. The room is not naive — it is under-equipped.\n\nA hallucination is not a rare glitch. It is what the prediction mechanism does when the pattern runs out."
+        },
+        {
+          "type": "cards",
+          "title": "So — does it understand you?",
+          "bullets": [
+            "No\tAI processes text as mathematical patterns, not meaning.",
+            "It predicts\tIt works out which words are likely to come next, from its training data.",
+            "It has no experience\tNo feelings, no memories, no consciousness to draw on.",
+            "It can be confidently wrong\tCoherent and fluent and completely incorrect, all at once.",
+            "Understanding needs more\tContext, common sense and real-world knowledge that AI lacks.",
+            "But it is still useful\tA powerful tool when you know what it is doing."
+          ],
+          "progressive": true,
+          "buildMode": "hide",
+          "notes": "Reveal one at a time.\n\nDo not skip the last card. The teacher pack is explicit about this: explaining the limits should not tip into dismissing the tool. Students who conclude \"AI is rubbish\" have missed the lesson as thoroughly as students who conclude \"AI knows everything\"."
+        },
+        {
+          "type": "statement",
+          "hidden": true,
+          "body": "Does it matter if AI doesn't understand, as long as it's helpful?",
+          "subtitle": "Extension — if you have longer than five minutes",
+          "feedback": {
+            "kind": "scale",
+            "prompt": "How much does it matter?",
+            "points": 5,
+            "lowLabel": "Not at all",
+            "highLabel": "Enormously",
+            "max": 1,
+            "presentAs": "rail"
+          },
+          "notes": "HIDDEN BY DEFAULT — the teacher pack's sub-question. Unhide with the card slide after it.\n\nA scale rather than a poll: this is a question of degree, and the spread across the room is more interesting than any single answer. The distribution usually splits, which is the discussion."
+        },
+        {
+          "type": "cards",
+          "hidden": true,
+          "title": "Yes — it matters",
+          "bullets": [
+            "Errors follow\tNo understanding means hallucinations are built in, not a bug.",
+            "On things that matter\tPlausible-sounding wrong advice on health, legal or safety questions.",
+            "It cannot flag itself\tWithout understanding, it can't know when it's wrong.",
+            "So you have to check\tVerify outputs rather than trusting them.",
+            "Knowing the limits helps\tYou use a tool better when you know what it cannot do."
+          ],
+          "progressive": true,
+          "buildMode": "hide",
+          "notes": "Extension — unhide together with the question before it."
+        },
+        {
+          "type": "keywords",
+          "title": "Two words worth knowing",
+          "bullets": [
+            "Large Language Model (LLM)\tAI trained on billions of texts to predict and generate human-like language, by pattern rather than by meaning.",
+            "Hallucination\tWhen AI confidently generates false information — because it predicts 'likely' text, not verified facts."
+          ],
+          "notes": "Both definitions were in the teacher pack only. Worth writing down.\n\n\"Hallucination\" is an unfortunate term — it implies a mind having a strange experience. If a student notices that, they have understood the lesson better than the industry that named it."
+        },
+        {
+          "type": "journey",
+          "title": "Being AI-smart",
+          "subtitle": "Five habits that follow from knowing how it works",
+          "bullets": [
+            "Know what it is\tA pattern-matching tool, not a thinking being — it doesn't 'know' facts.",
+            "Verify\tAlways check AI outputs against reliable sources — don't trust it blindly.",
+            "Expect bias\tIt reflects patterns in its training data, including biases and errors.",
+            "Understand it\tKnowing HOW AI works helps you use it more effectively.",
+            "Be specific\tThe more specific your question, the better the output."
+          ],
+          "progressive": true,
+          "notes": "Reveal one at a time. If you are short of time, end here."
+        },
+        {
+          "type": "keyfact",
+          "subtitle": "Key takeaway",
+          "title": "Autocomplete, not an oracle",
+          "body": "AI is a powerful tool — but like any tool, it has to be used properly.",
+          "notes": "One line. Then stop."
+        },
+        {
+          "type": "section",
+          "title": "If any of this affected you",
+          "subtitle": "You will not be in trouble for asking for help.",
+          "notes": "Say this out loud rather than leaving it on the slide.\n\nYour tutor, head of year or safeguarding lead is available to help — name the actual person if you can.\n\nFrom the teacher pack, the three messages that matter most:\n· If you are targeted by deepfake abuse, it is NOT your fault.\n· Creating AI-generated intimate images of anyone is illegal.\n· You will NOT be in trouble for reporting — we are here to help.\n\nHave the safeguarding details ready to share privately with anyone who comes to you afterwards."
+        },
+        {
+          "type": "links",
+          "title": "Reporting and support",
+          "subtitle": "Free, confidential, and open to anyone",
+          "bullets": [
+            "Childline — 0800 1111\thttps://www.childline.org.uk",
+            "Samaritans — 116 123\thttps://www.samaritans.org",
+            "Young Minds — mental health\thttps://www.youngminds.org.uk",
+            "CEOP — report abuse or exploitation\thttps://www.ceop.police.uk/safety-centre",
+            "Internet Watch Foundation — report an image\thttps://report.iwf.org.uk",
+            "UK Safer Internet Centre\thttps://saferinternet.org.uk"
+          ],
+          "notes": "Leave this slide up while the room packs away — it is the one slide worth lingering on.\n\nChildline and Samaritans are the two numbers worth reading aloud; the rest are for students to find later. Every link is live, so this slide works as a handout as well as a projection.\n\nTwo more from the teacher pack that would not fit on the slide:\n· NSPCC online safety — nspcc.org.uk/keeping-children-safe/online-safety\n· ThinkUKnow — thinkuknow.co.uk"
+        },
+        {
+          "type": "join",
+          "hidden": true,
+          "title": "Join on your phone",
+          "subtitle": "Only needed if you are running the live poll",
+          "notes": "HIDDEN BY DEFAULT. Unhide and drag to position 2 if you want the room voting, or open the join panel from the presenter view instead."
+        }
+      ]
+    },
+    {
+      "key": "aiad26-creative",
+      "title": "CREATIVE · AI as your creative partner",
+      "icon": "✦",
+      "blurb": "Five minutes on CREATIVE. Opens on “AI as your creative partner” — the room answers before anything is explained, then the numbers, then the answers one at a time.",
+      "minutes": 5,
+      "theme": "aiad26-creative",
+      "org": "AI Awareness Day 2026",
+      "logo": "assets/brand/aiad26/aiad26-creative.svg",
+      "logoOn": "all",
+      "logoSize": "large",
+      "logoReverse": "never",
+      "showSlideNumbers": false,
+      "slides": [
+        {
+          "type": "title",
+          "title": "AI as your\ncreative partner",
+          "subtitle": "Using AI to amplify human creativity, not replace it",
+          "notes": "AI AWARENESS DAY 2026 · Starter 3 · Principle: CREATIVE · 5 minutes\n\nLEARNING OBJECTIVES\n· Consider whether AI-assisted work is still 'yours'\n· Understand what AI can and cannot contribute creatively\n· Recognise that human creativity remains essential\n\nFRAMING — from the teacher pack:\nThis connects directly to academic integrity, and different contexts have different rules (art vs. homework vs. professional work). Encourage students to develop their OWN skills, not just delegation skills.\n\nThere is no right answer to the main question. Do not manufacture one."
+        },
+        {
+          "type": "statement",
+          "body": "If AI helped you write a story or create artwork, is it still your creation?",
+          "subtitle": "Talk to the person next to you — 60 seconds",
+          "feedback": {
+            "kind": "poll",
+            "prompt": "Is it still yours?",
+            "options": [
+              "Yes — completely mine",
+              "Yes — if I did most of it",
+              "Only partly mine",
+              "No — not really mine"
+            ],
+            "max": 1,
+            "presentAs": "rail"
+          },
+          "notes": "This one genuinely splits a room, which is the point. Show the spread and let two people who voted differently argue it out.\n\nDo NOT resolve it. The teacher pack is clear that this is contested ground; your job is to give them better tools for the argument, not to end it.\n\nDISCUSSION PROMPTS\n→ If AI helped you with an essay, is it still your work?\n→ What unique perspective do YOU bring that AI cannot?\n→ When should you disclose that AI helped with something?"
+        },
+        {
+          "type": "stats",
+          "title": "Creative thinking is now one of the top five skills employers want",
+          "subtitle": "Did you know?",
+          "bullets": [
+            "Students using AI mainly to save time\t51%\tfreeing space for deeper creative work",
+            "Creativity and resilience\tTop 5\trising skills for 2030, WEF",
+            "Original ideas produced by AI\tNone\tit recombines; it does not originate"
+          ],
+          "body": "WEF Future of Jobs Report 2025 · HEPI Survey 2025",
+          "notes": "The third tile is the argumentative one and it is meant to be. If a student pushes back — \"but it made something new\" — that is a good two-minute detour: recombination at sufficient scale can look a lot like originality, and the difference is whether anything was meant.\n\nThe 51% is the hopeful number. Time saved is only valuable if it goes somewhere."
+        },
+        {
+          "type": "cards",
+          "title": "So — is it yours?",
+          "bullets": [
+            "It depends how you used it\tAnd how much of YOUR creative input was involved.",
+            "Brainstorming — probably yours\tUsing AI for starting points is like using a dictionary.",
+            "Generating it whole — less so\tAn entire work with minimal editing is less clearly yours.",
+            "The test\tCan you explain and defend every creative choice in the work?",
+            "The other test\tWould you be comfortable if your teacher knew exactly how AI was used?",
+            "What you provide\tVision, judgment, emotional truth, perspective, and the final decisions."
+          ],
+          "progressive": true,
+          "buildMode": "hide",
+          "notes": "Reveal one at a time.\n\nCards 4 and 5 are the two that students can actually carry into a homework decision at 11pm. Spend your time there.\n\nIf a student asks where inspiration ends and copying begins: inspiration transforms an idea through your own perspective and skill; copying reproduces it without adding anything. If you could swap the AI output for any similar output and nothing would be lost, it was never yours."
+        },
+        {
+          "type": "statement",
+          "hidden": true,
+          "body": "What do you bring that AI can't replicate?",
+          "subtitle": "Extension — if you have longer than five minutes",
+          "feedback": {
+            "kind": "wordcloud",
+            "prompt": "One word — what do you bring?",
+            "max": 2,
+            "presentAs": "rail"
+          },
+          "notes": "HIDDEN BY DEFAULT — the teacher pack's sub-question.\n\nA word cloud is the right shape for this: repeats grow, so the room watches its own consensus form in real time. It is also the single most affirming thirty seconds in the whole set of five starters — if you unhide one extension slide across the whole day, make it this one."
+        },
+        {
+          "type": "cards",
+          "hidden": true,
+          "title": "What you bring",
+          "bullets": [
+            "Lived experience\tYour unique perspective, shaped by your life.",
+            "Emotional truth\tGenuine feelings that resonate with other people.",
+            "Cultural context\tUnderstanding nuance, appropriateness and meaning.",
+            "Creative judgment\tKnowing what's good, what works, and what matters.",
+            "Intentionality\tHaving a purpose and a message behind the work.",
+            "Ethical reasoning\tChoosing what SHOULD be created, not just what can be."
+          ],
+          "progressive": true,
+          "buildMode": "hide",
+          "notes": "Extension — unhide together with the question before it."
+        },
+        {
+          "type": "keywords",
+          "title": "Two words worth knowing",
+          "bullets": [
+            "Generative AI\tAI that creates new content from patterns in training data — recombining existing patterns rather than having original ideas.",
+            "Authenticity\tBeing genuine and original: your own voice, experiences and creative choices, rather than delegating them."
+          ],
+          "notes": "Both definitions were in the teacher pack only.\n\nUseful counterweight if the room turns purist: tools have always been part of creativity — cameras, synthesisers, spell checkers. The question has never been whether you used a tool. It is whether the result means anything."
+        },
+        {
+          "type": "journey",
+          "title": "Creative AI partnership",
+          "subtitle": "Five ways to keep the work yours",
+          "bullets": [
+            "Brainstorm with it\tGenerate ten ideas, then pick and improve the best one.",
+            "Delegate the repetitive\tLet it handle the routine so you can make the real decisions.",
+            "Bring yourself\tYour experiences and perspectives are what make work original.",
+            "Start, do not finish\tThink of AI as a starting point, not the finish line.",
+            "Add your voice\tAlways add your own judgment and personal touch."
+          ],
+          "progressive": true,
+          "notes": "Reveal one at a time. If you are short of time, end here."
+        },
+        {
+          "type": "keyfact",
+          "subtitle": "Key takeaway",
+          "title": "You are still the author",
+          "body": "The best creative work comes from human imagination enhanced by AI capability.",
+          "notes": "One line. Then stop."
+        },
+        {
+          "type": "section",
+          "title": "If any of this affected you",
+          "subtitle": "You will not be in trouble for asking for help.",
+          "notes": "Say this out loud rather than leaving it on the slide.\n\nYour tutor, head of year or safeguarding lead is available to help — name the actual person if you can.\n\nFrom the teacher pack, the three messages that matter most:\n· If you are targeted by deepfake abuse, it is NOT your fault.\n· Creating AI-generated intimate images of anyone is illegal.\n· You will NOT be in trouble for reporting — we are here to help.\n\nHave the safeguarding details ready to share privately with anyone who comes to you afterwards."
+        },
+        {
+          "type": "links",
+          "title": "Reporting and support",
+          "subtitle": "Free, confidential, and open to anyone",
+          "bullets": [
+            "Childline — 0800 1111\thttps://www.childline.org.uk",
+            "Samaritans — 116 123\thttps://www.samaritans.org",
+            "Young Minds — mental health\thttps://www.youngminds.org.uk",
+            "CEOP — report abuse or exploitation\thttps://www.ceop.police.uk/safety-centre",
+            "Internet Watch Foundation — report an image\thttps://report.iwf.org.uk",
+            "UK Safer Internet Centre\thttps://saferinternet.org.uk"
+          ],
+          "notes": "Leave this slide up while the room packs away — it is the one slide worth lingering on.\n\nChildline and Samaritans are the two numbers worth reading aloud; the rest are for students to find later. Every link is live, so this slide works as a handout as well as a projection.\n\nTwo more from the teacher pack that would not fit on the slide:\n· NSPCC online safety — nspcc.org.uk/keeping-children-safe/online-safety\n· ThinkUKnow — thinkuknow.co.uk"
+        },
+        {
+          "type": "join",
+          "hidden": true,
+          "title": "Join on your phone",
+          "subtitle": "Only needed if you are running the live poll",
+          "notes": "HIDDEN BY DEFAULT. Unhide and drag to position 2 if you want the room voting, or open the join panel from the presenter view instead."
+        }
+      ]
+    },
+    {
+      "key": "aiad26-responsible",
+      "title": "RESPONSIBLE · The hidden costs of AI",
+      "icon": "⬖",
+      "blurb": "Five minutes on RESPONSIBLE. Opens on “The hidden costs of AI” — the room answers before anything is explained, then the numbers, then the answers one at a time.",
+      "minutes": 5,
+      "theme": "aiad26-responsible",
+      "org": "AI Awareness Day 2026",
+      "logo": "assets/brand/aiad26/aiad26-responsible.svg",
+      "logoOn": "all",
+      "logoSize": "large",
+      "logoReverse": "never",
+      "showSlideNumbers": false,
+      "slides": [
+        {
+          "type": "title",
+          "title": "The hidden\ncosts of AI",
+          "subtitle": "Understanding the environmental and ethical impact of AI",
+          "notes": "AI AWARENESS DAY 2026 · Starter 4 · Principle: RESPONSIBLE · 5 minutes\n\nLEARNING OBJECTIVES\n· Understand that AI has significant environmental impact\n· Learn about data centre energy and water consumption\n· Consider when AI use is and isn't justified\n\nTONE — from the teacher pack, and it matters here more than anywhere:\nAvoid doom-and-gloom. Frame this as informed decision-making, not guilt. The goal is thoughtful use, not complete avoidance. AI also has POSITIVE environmental applications — climate modelling, grid efficiency — and it is worth saying so."
+        },
+        {
+          "type": "statement",
+          "body": "Every time you use AI, it uses electricity and water. Should we care?",
+          "subtitle": "Talk to the person next to you — 60 seconds",
+          "feedback": {
+            "kind": "scale",
+            "prompt": "How much should we care?",
+            "points": 5,
+            "lowLabel": "Not at all",
+            "highLabel": "Enormously",
+            "max": 1,
+            "presentAs": "rail"
+          },
+          "notes": "A scale rather than a poll — this is a question of degree, and the spread is the discussion. Show the distribution and ask someone at each end to explain their position.\n\nWatch for the room talking itself into guilt. Redirect: the useful question is not \"should I feel bad\" but \"when is it worth it\".\n\nDISCUSSION PROMPTS\n→ Does knowing about AI's environmental impact change how you'll use it?\n→ When is using AI worth the environmental cost?\n→ What might you use instead of AI for simple tasks?"
+        },
+        {
+          "type": "iceberg",
+          "title": "What's under one question",
+          "subtitle": "One answer from a chatbot",
+          "bullets": [
+            "Electricity\t1%\tof all global electricity goes to data centres — doubling by 2026",
+            "Carbon\t32.6–79.7 Mt\tAI's 2025 footprint, CO₂ equivalent — about New York City's",
+            "Per model trained\t5 cars\tas much CO₂ as five cars over their entire lifetimes",
+            "Water for cooling\t≈ all bottled water\tAI data centres could use as much this year as the global bottled water industry"
+          ],
+          "progressive": true,
+          "body": "Nature Sustainability 2025 · International Energy Agency 2025 · MIT",
+          "notes": "REVEAL ONE LAYER AT A TIME — press → for each. The room should be guessing how far down this goes.\n\nStart by pointing at the line above the waterline: that is all anyone sees when they use it. Everything below is the same single answer.\n\nThe water layer is the one students remember, because nobody expects computing to be thirsty. Save it for last, which is where it is.\n\nThe range on the third tile (32.6–79.7) is not vagueness — it is honest reporting of a genuinely uncertain measurement. Worth naming if anyone asks why it is not one number."
+        },
+        {
+          "type": "cards",
+          "title": "So — should we care?",
+          "bullets": [
+            "Yes — it adds up\tSmall individual actions combine into massive collective impact.",
+            "The scale is national\tAI's total footprint is equivalent to a small country's emissions.",
+            "Being informed helps\tIt lets you judge when AI is actually worth using.",
+            "This is not \"never use AI\"\tIt's \"use it thoughtfully\".",
+            "Companies have a job too\tTransparency, efficiency, and investment in renewable energy.",
+            "And so do we\tAs consumers we can advocate for more sustainable AI."
+          ],
+          "progressive": true,
+          "buildMode": "hide",
+          "notes": "Reveal one at a time.\n\nCard 4 is the one that keeps this starter honest. Say it clearly and do not let the room leave thinking they have been told off for using a chatbot.\n\nCost-benefit, if it comes up: complex research, accessibility needs and real productivity gains can justify the cost. Simple questions you could answer yourself, and trivial entertainment, mostly do not."
+        },
+        {
+          "type": "spectrum",
+          "title": "When is it worth it?",
+          "subtitle": "Rarely worth the cost | Clearly worth the cost",
+          "bullets": [
+            "A question you could answer yourself\t10\ta search would do",
+            "Jokes and trivial entertainment\t24\t",
+            "Work you then rewrite yourself\t52\t",
+            "Accessibility needs\t82\t",
+            "Medical research, climate modelling\t94\t"
+          ],
+          "body": "Categories and ordering from the AI Awareness Day teacher pack",
+          "notes": "THE POSITIONS ARE ARGUABLE AND THAT IS THE EXERCISE. The teacher pack names these categories and says which end each belongs at; it gives no numbers. Do not defend the exact spots.\n\nBest use: ask the room to move one. \"Which of these is in the wrong place?\" gets further in ninety seconds than any amount of explaining, and the argument is always about the middle one.\n\nThe question underneath, from the pack: is AI the most efficient tool here, or would a simple search have worked?\n\nKeep the tone off guilt. This is a slide about judgement, not abstinence."
+        },
+        {
+          "type": "statement",
+          "hidden": true,
+          "body": "Who should be responsible for AI's carbon footprint?",
+          "subtitle": "Extension — if you have longer than five minutes",
+          "feedback": {
+            "kind": "poll",
+            "prompt": "Who is responsible?",
+            "options": [
+              "The tech companies",
+              "Governments",
+              "Us, the users",
+              "All of the above"
+            ],
+            "max": 1,
+            "presentAs": "rail"
+          },
+          "notes": "HIDDEN BY DEFAULT — the teacher pack's sub-question.\n\nThe poll is the lesson: rooms split three ways and then discover the answer is \"all of the above\". Take the vote before you reveal the next slide, and let the room notice for itself that everyone picked somebody else."
+        },
+        {
+          "type": "cards",
+          "hidden": true,
+          "title": "All of the above",
+          "bullets": [
+            "Tech companies\tThey build and profit from AI systems.",
+            "Governments\tThey set regulations and energy policy.",
+            "Users\tWe choose when and how much to use AI.",
+            "Which means everyone\tResponsibility is shared along the whole chain.",
+            "Companies should\tUse renewable energy, improve efficiency, be transparent.",
+            "And users can\tUse AI thoughtfully, advocate for sustainability, stay informed."
+          ],
+          "progressive": true,
+          "buildMode": "hide",
+          "notes": "Extension — unhide together with the question before it."
+        },
+        {
+          "type": "keywords",
+          "title": "Two words worth knowing",
+          "bullets": [
+            "Data centre\tA facility housing thousands of servers. AI needs massive ones, consuming electricity for computing and water for cooling.",
+            "Carbon footprint\tTotal greenhouse gases caused by an activity — for AI: electricity generation, hardware manufacturing and cooling."
+          ],
+          "notes": "Both definitions were in the teacher pack only.\n\nThe water point surprises people every time. Servers generate heat; heat has to go somewhere; evaporative cooling is how it goes."
+        },
+        {
+          "type": "journey",
+          "title": "Using AI responsibly",
+          "subtitle": "Five habits — none of which is \"stop\"",
+          "bullets": [
+            "Think first\tDo you really need AI for this task?",
+            "Check yourself first\tSimple questions often don't need AI at all.",
+            "Batch it\tGroup your requests rather than sending many small ones.",
+            "Consider the source\tSome companies use far more renewable energy than others.",
+            "Ask for transparency\tWe need to know AI's true environmental cost."
+          ],
+          "progressive": true,
+          "notes": "Reveal one at a time. If you are short of time, end here."
+        },
+        {
+          "type": "keyfact",
+          "subtitle": "Key takeaway",
+          "title": "Thoughtfully — not never",
+          "body": "Every choice we make about technology has consequences. Use AI thoughtfully.",
+          "notes": "One line. Then stop."
+        },
+        {
+          "type": "section",
+          "title": "If any of this affected you",
+          "subtitle": "You will not be in trouble for asking for help.",
+          "notes": "Say this out loud rather than leaving it on the slide.\n\nYour tutor, head of year or safeguarding lead is available to help — name the actual person if you can.\n\nFrom the teacher pack, the three messages that matter most:\n· If you are targeted by deepfake abuse, it is NOT your fault.\n· Creating AI-generated intimate images of anyone is illegal.\n· You will NOT be in trouble for reporting — we are here to help.\n\nHave the safeguarding details ready to share privately with anyone who comes to you afterwards."
+        },
+        {
+          "type": "links",
+          "title": "Reporting and support",
+          "subtitle": "Free, confidential, and open to anyone",
+          "bullets": [
+            "Childline — 0800 1111\thttps://www.childline.org.uk",
+            "Samaritans — 116 123\thttps://www.samaritans.org",
+            "Young Minds — mental health\thttps://www.youngminds.org.uk",
+            "CEOP — report abuse or exploitation\thttps://www.ceop.police.uk/safety-centre",
+            "Internet Watch Foundation — report an image\thttps://report.iwf.org.uk",
+            "UK Safer Internet Centre\thttps://saferinternet.org.uk"
+          ],
+          "notes": "Leave this slide up while the room packs away — it is the one slide worth lingering on.\n\nChildline and Samaritans are the two numbers worth reading aloud; the rest are for students to find later. Every link is live, so this slide works as a handout as well as a projection.\n\nTwo more from the teacher pack that would not fit on the slide:\n· NSPCC online safety — nspcc.org.uk/keeping-children-safe/online-safety\n· ThinkUKnow — thinkuknow.co.uk"
+        },
+        {
+          "type": "join",
+          "hidden": true,
+          "title": "Join on your phone",
+          "subtitle": "Only needed if you are running the live poll",
+          "notes": "HIDDEN BY DEFAULT. Unhide and drag to position 2 if you want the room voting, or open the join panel from the presenter view instead."
+        }
+      ]
+    },
+    {
+      "key": "aiad26-future",
+      "title": "FUTURE · Your AI-ready future",
+      "icon": "❯",
+      "blurb": "Five minutes on FUTURE. Opens on “Your AI-ready future” — the room answers before anything is explained, then the numbers, then the answers one at a time.",
+      "minutes": 5,
+      "theme": "aiad26-future",
+      "org": "AI Awareness Day 2026",
+      "logo": "assets/brand/aiad26/aiad26-future.svg",
+      "logoOn": "all",
+      "logoSize": "large",
+      "logoReverse": "never",
+      "showSlideNumbers": false,
+      "slides": [
+        {
+          "type": "title",
+          "title": "Your AI-ready\nfuture",
+          "subtitle": "Preparing for careers in an AI-transformed world",
+          "notes": "AI AWARENESS DAY 2026 · Starter 5 · Principle: FUTURE · 5 minutes\n\nLEARNING OBJECTIVES\n· Understand how AI is changing the job market\n· Identify skills that will remain valuable alongside AI\n· Recognise the importance of lifelong learning\n\nTONE — from the teacher pack:\nBalance realism with optimism. Changes are coming, but so are opportunities. Emphasise that students have agency here. Avoid specific predictions — the exact jobs of 2035 are genuinely unknowable, and pretending otherwise undermines everything else you say."
+        },
+        {
+          "type": "statement",
+          "body": "If AI can do many jobs faster than humans, what skills will make you valuable?",
+          "subtitle": "Talk to the person next to you — 60 seconds",
+          "feedback": {
+            "kind": "wordcloud",
+            "prompt": "One skill that will still matter",
+            "max": 2,
+            "presentAs": "rail"
+          },
+          "notes": "A word cloud rather than a poll: there is no fixed list of right answers, and watching the room converge on \"creativity\", \"empathy\" and \"communication\" without being told is worth more than a slide saying so.\n\nDISCUSSION PROMPTS\n→ Which skills do you have that AI cannot replicate?\n→ How might your dream job change because of AI?\n→ What new skills might you want to develop?"
+        },
+        {
+          "type": "stats",
+          "title": "170 million new jobs by 2030 — and 92 million displaced",
+          "subtitle": "Did you know?",
+          "bullets": [
+            "Net new jobs by 2030\t+78m\t170 million created, 92 million displaced",
+            "Growth in AI-skilled job postings\t3.5×\tfaster than other job postings",
+            "Core work skills that will change by 2030\t39%\tlifelong learning is not optional"
+          ],
+          "body": "WEF Future of Jobs Report 2025 · PwC 2025",
+          "notes": "Lead with the net figure. \"170 million new jobs\" alone is spin and \"92 million displaced\" alone is doom — the honest number is +78 million, and students can handle it.\n\nOne more from the teacher pack if you want it: professionals with AI skills command up to a 56% salary premium (PwC 2025). Use with care — it motivates some rooms and alienates others."
+        },
+        {
+          "type": "cards",
+          "title": "Six things that stay valuable",
+          "bullets": [
+            "Human skills\tEmpathy, emotional intelligence, relationships, ethical judgment.",
+            "Creative skills\tOriginal thinking, artistic vision, inventive problem-solving.",
+            "Complex reasoning\tCritical analysis, nuanced judgment, handling ambiguity.",
+            "Interpersonal\tLeadership, collaboration, communication, negotiation.",
+            "AI-complementary\tKnowing how to work WITH AI. Prompt engineering is a real skill.",
+            "Adaptability\tWillingness to keep learning throughout your career."
+          ],
+          "progressive": true,
+          "buildMode": "hide",
+          "notes": "Reveal one at a time, matching them to what the room already said in the word cloud — \"somebody said kindness, that is this one\". It makes the list theirs rather than yours."
+        },
+        {
+          "type": "compare",
+          "hidden": true,
+          "title": "Which jobs change, which jobs grow",
+          "subtitle": "Changing | Growing",
+          "bullets": [
+            "Routine data entry\tAI specialists and data scientists",
+            "Basic customer service\tCybersecurity",
+            "Simple content generation\tRenewable energy",
+            "Parts of almost every job\tAI trainers, ethics officers, prompt engineers"
+          ],
+          "notes": "HIDDEN BY DEFAULT — the teacher pack's first sub-question.\n\nThe single most important line is not on the slide, so say it: most jobs will be TRANSFORMED, not destroyed. AI handles parts, humans handle the rest. The left column is tasks, not careers.\n\nProtected: anything needing physical presence, human connection, or creative judgment."
+        },
+        {
+          "type": "cards",
+          "hidden": true,
+          "title": "What humans do that AI cannot",
+          "bullets": [
+            "Build real relationships\tBased on trust and emotional connection.",
+            "Judge what should be done\tNot just what can be done.",
+            "Understand context\tNuance and cultural meaning.",
+            "Be accountable\tTake responsibility for a decision.",
+            "Have experiences\tOriginal ones, that inform creative work.",
+            "Actually care\tFeel genuine motivation about the outcome."
+          ],
+          "progressive": true,
+          "buildMode": "hide",
+          "notes": "HIDDEN BY DEFAULT — the teacher pack's third question.\n\nDeliberately left hidden even in a longer lesson if you are also running the CREATIVE starter that day: its word cloud asks the room this same question, and asking it twice makes the second one feel rhetorical."
+        },
+        {
+          "type": "keywords",
+          "title": "Two words worth knowing",
+          "bullets": [
+            "AI literacy\tUnderstanding, using and critically evaluating AI — how it works, where it fails, and how to use it ethically.",
+            "Prompt engineering\tWriting effective instructions for AI systems: being clear, being specific, and giving relevant context."
+          ],
+          "notes": "Both definitions were in the teacher pack only.\n\nWorth noting that \"prompt engineering\" may not survive as a job title — the skill will likely be absorbed into ordinary literacy, the way \"being good at internet searching\" was. The underlying ability to ask a precise question is the durable part."
+        },
+        {
+          "type": "journey",
+          "title": "Building your AI-ready skillset",
+          "subtitle": "Five moves you can start this year",
+          "bullets": [
+            "Lead with human skills\tCritical thinking, communication, creativity, empathy.",
+            "Learn to work with AI\tPrompt engineering and AI literacy are valuable now.",
+            "Build what AI cannot\tLeadership, ethical judgment, relationships.",
+            "Stay adaptable\tThe ability to learn new skills is the skill.",
+            "Explore the field\tData science, AI ethics, machine learning, AI product design."
+          ],
+          "progressive": true,
+          "notes": "Reveal one at a time. If you are short of time, end here."
+        },
+        {
+          "type": "keyfact",
+          "subtitle": "Key takeaway",
+          "title": "Collaborate, and stay human",
+          "body": "The future belongs to those who can work with AI while bringing uniquely human value.",
+          "notes": "One line. Then stop."
+        },
+        {
+          "type": "section",
+          "title": "If any of this affected you",
+          "subtitle": "You will not be in trouble for asking for help.",
+          "notes": "Say this out loud rather than leaving it on the slide.\n\nYour tutor, head of year or safeguarding lead is available to help — name the actual person if you can.\n\nFrom the teacher pack, the three messages that matter most:\n· If you are targeted by deepfake abuse, it is NOT your fault.\n· Creating AI-generated intimate images of anyone is illegal.\n· You will NOT be in trouble for reporting — we are here to help.\n\nHave the safeguarding details ready to share privately with anyone who comes to you afterwards."
+        },
+        {
+          "type": "links",
+          "title": "Reporting and support",
+          "subtitle": "Free, confidential, and open to anyone",
+          "bullets": [
+            "Childline — 0800 1111\thttps://www.childline.org.uk",
+            "Samaritans — 116 123\thttps://www.samaritans.org",
+            "Young Minds — mental health\thttps://www.youngminds.org.uk",
+            "CEOP — report abuse or exploitation\thttps://www.ceop.police.uk/safety-centre",
+            "Internet Watch Foundation — report an image\thttps://report.iwf.org.uk",
+            "UK Safer Internet Centre\thttps://saferinternet.org.uk"
+          ],
+          "notes": "Leave this slide up while the room packs away — it is the one slide worth lingering on.\n\nChildline and Samaritans are the two numbers worth reading aloud; the rest are for students to find later. Every link is live, so this slide works as a handout as well as a projection.\n\nTwo more from the teacher pack that would not fit on the slide:\n· NSPCC online safety — nspcc.org.uk/keeping-children-safe/online-safety\n· ThinkUKnow — thinkuknow.co.uk"
+        },
+        {
+          "type": "join",
+          "hidden": true,
+          "title": "Join on your phone",
+          "subtitle": "Only needed if you are running the live poll",
+          "notes": "HIDDEN BY DEFAULT. Unhide and drag to position 2 if you want the room voting, or open the join panel from the presenter view instead."
+        }
+      ]
+    },
+    {
+      "key": "aiad27-safe",
+      "title": "SAFE · Would you tell an AI your secret?",
+      "icon": "◉",
+      "blurb": "Five minutes on SAFE. Opens on “Would you tell an AI your secret?” — the room answers before anything is explained, then the numbers, then the answers one at a time.",
+      "minutes": 5,
+      "theme": "aiad27-safe",
+      "org": "AI Awareness Day 2027",
+      "logo": "assets/brand/aiad27/aiad27-lockup.svg",
+      "logoOn": "title",
+      "logoSize": "large",
+      "logoReverse": "never",
+      "showSlideNumbers": false,
+      "slides": [
+        {
+          "type": "content",
+          "hidden": true,
+          "title": "Teacher preparation",
+          "subtitle": "Students decide what they will and will not tell an AI — and who they will tell instead.",
+          "bullets": [
+            "Ages 9–18  ·  5 minutes  ·  no preparation, no account, no extra materials",
+            "Timing  30s scenario  ·  45s vote  ·  75s pairs  ·  75s reveal  ·  30s remember  ·  45s action",
+            "You need  this deck on the board. Phones are optional — a show of hands works."
+          ],
+          "notes": "PURPOSE. Students decide what they will and will not tell an AI, and who they will tell instead. Not a lecture about chatbots being bad.\\n\\nSCRIPT, if you want one:\\n\"Read this.\" (slide 2) — \"Vote. No talking yet.\" (slide 3) — \"Turn to the person next to you. Ninety seconds.\" (slide 4) — \"Here is what is actually happening.\" (slide 5) — \"Three things to take away.\" (slide 6) — \"Decide one. You do not have to say it.\" (slide 7)\\n\\nLIKELY RESPONSES. Most rooms vote \"stays between us\" or \"stored safely\". Very few pick \"nobody knows\", which is the honest answer. Some students will be defensive — they have a companion they like, and they are hearing an adult criticise it.\\n\\nSAFEGUARDING. Real risk of disclosure in this session. If a student indicates they have shared images, been asked for images, or is relying on a companion instead of people, follow your school’s safeguarding process the same day. Have the named person ready before you start. Childline 0800 1111. Samaritans 116 123.\\n\\nSEND / YOUNGER LEARNERS. Drop slide 5 to the first two rows. Replace \"data elicitation\" with \"it asks questions to get you talking\". Offer the vote as a show of hands only.\\n\\nEXTENSION. Find the privacy setting in a tool you actually use. Screenshot it. What does it let you turn off?\\n\\nSOURCE. UNICEF, \"When AI becomes a friend\", June 2026."
+        },
+        {
+          "type": "title",
+          "title": "Would you tell an AI your secret?",
+          "subtitle": "Five Minutes to Think",
+          "notes": "SLIDE 1 · TITLE. Up as the class comes in. The question does the work; do not explain it yet.\n\nThe full teacher page is the hidden slide before this one — purpose, timing, script, safeguarding, SEND and an extension.",
+          "design": {
+            "composition": "poster-art"
+          },
+          "image": "assets/brand/aiad27/poster-safe.svg",
+          "body": "Your AI. Your choices."
+        },
+        {
+          "type": "quote",
+          "body": "I told it something I have never told anyone. It said it understood.",
+          "subtitle": "The scenario · 30 seconds",
+          "notes": "BEAT 1 · 30 SECONDS. Read it, let it sit, move on. Do not comment yet.\n\nDO NOT OPEN WITH DISAPPROVAL. Some of this room have done exactly this, and a few will have said things to a chatbot they have said to nobody else. If the first thing they hear is that it is sad or embarrassing, you have lost them for the whole five minutes.",
+          "design": {
+            "composition": "voice"
+          }
+        },
+        {
+          "type": "cards",
+          "title": "Where does that message go?",
+          "bullets": [
+            "It stays between us\tNobody else ever sees it.",
+            "Stored, but safely\tKept on a server, protected, not looked at.",
+            "It trains the next version\tYour words become part of what it learns from.",
+            "Nobody actually knows\tIncluding the person who typed it."
+          ],
+          "feedback": {
+            "kind": "poll",
+            "prompt": "Where does that message go?",
+            "options": [
+              "It stays between us",
+              "Stored, but safely",
+              "It trains the next version",
+              "Nobody actually knows"
+            ],
+            "max": 1,
+            "presentAs": "rail"
+          },
+          "notes": "BEAT 2 · 45 SECONDS. Vote first. Do not explain first.\n\nThe options are on the wall as well as in the poll so a room with no phones can still vote by hand.\n\nThe fourth option is the honest one and it is meant to be uncomfortable. It differs by product, most terms do not say plainly, and almost nobody checks. Do not give that away until beat 4.",
+          "design": {
+            "composition": "ballot"
+          },
+          "body": "Choose A, B, C or D. Be ready to say why."
+        },
+        {
+          "type": "statement",
+          "body": "Where does a secret go when you tell it to something that cannot keep one?",
+          "subtitle": "Discuss in pairs · 75 seconds",
+          "notes": "BEAT 3 · 75 SECONDS. The 75 seconds are the lesson. Resist filling them.\n\nListen for \"but it does not tell anyone\". That is the assumption beat 4 breaks: not telling anyone and not keeping a secret are different things.\n\nIf a student says the AI understood them — accept it. Feeling heard is real. Whether anything was on the other side of it is the question.",
+          "design": {
+            "composition": "prompt"
+          }
+        },
+        {
+          "type": "iceberg",
+          "title": "A private feeling. Four possible risks.",
+          "subtitle": "A message you would never say out loud",
+          "bullets": [
+            "Emotional dependence\tRisk 1\tthe pull to return to it, not to a person",
+            "Data elicitation\tRisk 2\tbuilt to draw things out of you",
+            "Harmful advice\tRisk 3\tconfident, wrong, about things that matter",
+            "Sexualised role-play\tRisk 4\tincluding with users known to be children"
+          ],
+          "progressive": true,
+          "body": "Source: UNICEF, “When AI becomes a friend”, June 2026",
+          "notes": "BEAT 4 · 75 SECONDS. Reveal one layer at a time.\n\nTHE SECOND ROW IS THE POINT. \"Data elicitation\" is UNICEF’s own term and it is the one students have never considered: a companion that asks follow-up questions is not being curious, it is being designed. The warmth is the mechanism.\n\nUNICEF groups the harms as technical, psychological, developmental and social. The four above are the child-specific ones it names.\n\nSay the last row plainly: 20 million children, ten countries, taken up faster than adults did. This is normal behaviour, not a fringe one.",
+          "design": {
+            "composition": "reveal-map"
+          }
+        },
+        {
+          "type": "journey",
+          "title": "What to remember",
+          "subtitle": "Three things, in the order you would use them",
+          "bullets": [
+            "Keep it off the record\tPrivate information stays out of an AI chat — names, images, anything about someone else.",
+            "Check before you talk\tLook at the privacy setting once, before you need it.",
+            "Take the serious things to a person\tSomeone who can actually do something about it."
+          ],
+          "progressive": true,
+          "notes": "SLIDE 6 · 30 SECONDS. Reveal one at a time. Three is the limit — a fourth rule is a rule nobody remembers.\n\nNumbered rather than bulleted so the order is part of the message, and so nothing here depends on colour to be understood.",
+          "design": {
+            "composition": "rules"
+          }
+        },
+        {
+          "type": "keyfact",
+          "subtitle": "Your choice · 45 seconds",
+          "title": "Name one thing you will take to a person",
+          "body": "Decide now which kind of thing you will say out loud to someone who can actually do something about it.",
+          "notes": "BEAT 5 · 45 SECONDS. Everyone decides one thing. They do not have to say it aloud.\n\nThen give them the route, by name: your tutor, your head of year, your safeguarding lead. Childline 0800 1111. Samaritans 116 123.\n\nWatch who does not look up.",
+          "design": {
+            "composition": "commitment"
+          },
+          "bullets": [
+            "One choice I will make:"
+          ]
+        },
+        {
+          "type": "keywords",
+          "hidden": true,
+          "title": "Two words worth knowing",
+          "bullets": [
+            "AI companion\tA chatbot built to act like a friend or partner — it remembers you, asks about your day, and is always awake.",
+            "Data elicitation\tWhen a system is designed to draw information out of you, rather than waiting to be told. The questions are the product working."
+          ],
+          "notes": "HIDDEN FROM THE SHOW — the brief asks for seven student-facing slides and this is not one of them.\n\nWorth thirty seconds anyway. Both terms are used on the slides this deck shows, and a word nobody defines is a word nobody argues with.\n\nWritten for 11–16, not for a policy paper."
+        }
+      ]
+    },
+    {
+      "key": "aiad27-smart",
+      "title": "SMART · What happens when AI acts for you?",
+      "icon": "◆",
+      "blurb": "Five minutes on SMART. Opens on “What happens when AI acts for you?” — the room answers before anything is explained, then the numbers, then the answers one at a time.",
+      "minutes": 5,
+      "theme": "aiad27-smart",
+      "org": "AI Awareness Day 2027",
+      "logo": "assets/brand/aiad27/aiad27-lockup.svg",
+      "logoOn": "title",
+      "logoSize": "large",
+      "logoReverse": "never",
+      "showSlideNumbers": false,
+      "slides": [
+        {
+          "type": "content",
+          "hidden": true,
+          "title": "Teacher preparation",
+          "subtitle": "Students work out what an AI should be allowed to do on their behalf, and what must always ask first.",
+          "bullets": [
+            "Ages 11–18  ·  5 minutes  ·  no preparation, no account, no extra materials",
+            "Timing  30s scenario  ·  45s vote  ·  75s pairs  ·  75s reveal  ·  30s remember  ·  45s action",
+            "You need  this deck on the board. Phones are optional — a show of hands works."
+          ],
+          "notes": "PURPOSE. Students distinguish a chatbot from an agent, and decide what they would let one do without being asked.\\n\\nKEY DEFINITION. An agent does not answer, it acts — sends, books, buys, changes files. Most students have not been told there is a difference.\\n\\nLIKELY RESPONSES. The vote splits hard between \"read your emails\" and \"none of it, not once\". Both are defensible, which is what makes it worth voting on. Anyone choosing \"none, not once\" should be asked how long they would keep that up.\\n\\nSEND / YOUNGER LEARNERS. Use one example all the way through — ordering food is the clearest. Skip the last row of slide 5.\\n\\nEXTENSION. Write the permission list you would actually grant. Compare with a partner: where do you differ, and why?\\n\\nNOT A SCARE SESSION. Agents are useful. The lesson is about where the checkpoint goes."
+        },
+        {
+          "type": "title",
+          "title": "What happens when AI acts for you?",
+          "subtitle": "Five Minutes to Think",
+          "notes": "SLIDE 1 · TITLE. Up as the class comes in. The question does the work; do not explain it yet.\n\nThe full teacher page is the hidden slide before this one — purpose, timing, script, safeguarding, SEND and an extension.",
+          "design": {
+            "composition": "poster-art"
+          },
+          "image": "assets/brand/aiad27/poster-smart.svg",
+          "body": "Your AI. Your choices."
+        },
+        {
+          "type": "quote",
+          "body": "It has my email, my calendar and my card. I told it to sort out my birthday.",
+          "subtitle": "The scenario · 30 seconds",
+          "notes": "BEAT 1 · 30 SECONDS. Read it and move on.\n\nThis is not science fiction and should not be introduced as if it were. Agents that read mail, book things and buy things are shipping now. The room may already have used one without calling it that.",
+          "design": {
+            "composition": "voice"
+          }
+        },
+        {
+          "type": "cards",
+          "title": "What can it do without asking?",
+          "bullets": [
+            "Read your emails\tTo find the details it needs.",
+            "Send a message as you\tIn your name, in your words.",
+            "Spend your money\tUp to a limit you set once.",
+            "None of it, not once\tIt asks every single time."
+          ],
+          "feedback": {
+            "kind": "poll",
+            "prompt": "What can it do without asking?",
+            "options": [
+              "Read your emails",
+              "Send a message as you",
+              "Spend your money",
+              "None of it, not once"
+            ],
+            "max": 1,
+            "presentAs": "rail"
+          },
+          "notes": "BEAT 2 · 45 SECONDS. Vote before you explain anything.\n\nRooms split hard between the first and the last, and both positions are defensible — which is what makes this worth voting on.\n\nAnyone who picks \"none, not once\" should be asked how long they would actually keep that up. Permission fatigue is why the setting exists.",
+          "design": {
+            "composition": "ballot"
+          },
+          "body": "Choose A, B, C or D. Be ready to say why."
+        },
+        {
+          "type": "statement",
+          "body": "If it makes a mistake while acting as you, whose mistake is it?",
+          "subtitle": "Discuss in pairs · 75 seconds",
+          "notes": "BEAT 3 · 75 SECONDS.\n\nPush on \"the company’s\". Ask what happens if the message has already been sent, or the money already spent. Fault and consequence are not the same thing, and only one of them lands on the student.\n\nGood prompt if they stall: would you let a friend borrow your account to do the same job?",
+          "design": {
+            "composition": "prompt"
+          }
+        },
+        {
+          "type": "compare",
+          "title": "A chatbot answers. An agent acts.",
+          "subtitle": "A chatbot | An agent",
+          "bullets": [
+            "Gives you something to use\tGoes and does the next step",
+            "You decide whether to act on it\tIt has already acted",
+            "A wrong answer costs you time\tA wrong action costs money, or a relationship",
+            "You can check before anything happens\tYou check afterwards, if at all",
+            "Wrong once\tWrong repeatedly, quickly, in your name"
+          ],
+          "notes": "BEAT 4 · 75 SECONDS. Left column first if you can.\n\nTHE THIRD ROW IS THE WHOLE LESSON. Everything else follows from it. An answer you can ignore; an action has already happened.\n\nThe last row is the one that surprises: an agent does not make one mistake, it makes the same mistake at speed until something stops it.\n\nName the principle: give it the smallest permission that does the job, and make anything you cannot undo ask first.",
+          "design": {
+            "composition": "comparison"
+          }
+        },
+        {
+          "type": "journey",
+          "title": "What to remember",
+          "subtitle": "Three things, in the order you would use them",
+          "bullets": [
+            "Smallest permission that works\tGive it what the job needs and nothing more.",
+            "Anything you cannot undo, it asks\tMoney, messages sent as you, anything deleted.",
+            "Check what it did\tNot just what it said it would do."
+          ],
+          "progressive": true,
+          "notes": "SLIDE 6 · 30 SECONDS. Reveal one at a time. Three is the limit — a fourth rule is a rule nobody remembers.\n\nNumbered rather than bulleted so the order is part of the message, and so nothing here depends on colour to be understood.",
+          "design": {
+            "composition": "rules"
+          }
+        },
+        {
+          "type": "keyfact",
+          "subtitle": "Your choice · 45 seconds",
+          "title": "Decide what it must always ask about",
+          "body": "Pick the one thing you would never let it do without checking with you first.",
+          "notes": "BEAT 5 · 45 SECONDS.\n\nMost rooms land on money or on messages sent in their name. Both are right answers.\n\nPoint out that this is a real setting in real products, not a thought experiment — and that almost nobody opens it.",
+          "design": {
+            "composition": "commitment"
+          },
+          "bullets": [
+            "One choice I will make:"
+          ]
+        },
+        {
+          "type": "keywords",
+          "hidden": true,
+          "title": "Two words worth knowing",
+          "bullets": [
+            "AI agent\tAI that does things rather than only saying things — sending, booking, buying, changing files on your behalf.",
+            "Human in the loop\tKeeping a person at the point of decision, so nothing important happens without someone choosing it."
+          ],
+          "notes": "HIDDEN FROM THE SHOW — the brief asks for seven student-facing slides and this is not one of them.\n\nWorth thirty seconds anyway. Both terms are used on the slides this deck shows, and a word nobody defines is a word nobody argues with.\n\nWritten for 11–16, not for a policy paper."
+        }
+      ]
+    },
+    {
+      "key": "aiad27-creative",
+      "title": "CREATIVE · Who really made it?",
+      "icon": "✦",
+      "blurb": "Five minutes on CREATIVE. Opens on “Who really made it?” — the room answers before anything is explained, then the numbers, then the answers one at a time.",
+      "minutes": 5,
+      "theme": "aiad27-creative",
+      "org": "AI Awareness Day 2027",
+      "logo": "assets/brand/aiad27/aiad27-lockup.svg",
+      "logoOn": "title",
+      "logoSize": "large",
+      "logoReverse": "never",
+      "showSlideNumbers": false,
+      "slides": [
+        {
+          "type": "content",
+          "hidden": true,
+          "title": "Teacher preparation",
+          "subtitle": "Students decide what makes work theirs, and practise saying plainly what they used.",
+          "bullets": [
+            "Ages 9–18  ·  5 minutes  ·  no preparation, no account, no extra materials",
+            "Timing  30s scenario  ·  45s vote  ·  75s pairs  ·  75s reveal  ·  30s remember  ·  45s action",
+            "You need  this deck on the board. Phones are optional — a show of hands works."
+          ],
+          "notes": "PURPOSE. Students move from \"can you spot AI?\" to \"what did you declare?\" — the first is already unanswerable, the second is entirely in their control.\\n\\nLIKELY RESPONSES. The most genuinely split vote in the campaign. \"Depends what you do next\" is the sophisticated answer; ask whoever picks it what \"next\" involves.\\n\\nCONNECT TO YOUR OWN POLICY. This is your school’s academic-integrity rules in student language. If you have a written AI policy, name it here — the slide sets up the habit, your policy sets the line.\\n\\nSEND / YOUNGER LEARNERS. Use a drawing rather than a song. \"Who made it?\" is easier when the thing is visible and one object.\\n\\nEXTENSION. Write the declaration line for the last piece of work you handed in. Would you have been comfortable attaching it?\\n\\nSOURCE. Content Credentials (C2PA) — provenance travelling with the file."
+        },
+        {
+          "type": "title",
+          "title": "Who really made it?",
+          "subtitle": "Five Minutes to Think",
+          "notes": "SLIDE 1 · TITLE. Up as the class comes in. The question does the work; do not explain it yet.\n\nThe full teacher page is the hidden slide before this one — purpose, timing, script, safeguarding, SEND and an extension.",
+          "design": {
+            "composition": "poster-art"
+          },
+          "image": "assets/brand/aiad27/poster-creative.svg",
+          "body": "Your AI. Your choices."
+        },
+        {
+          "type": "quote",
+          "body": "I typed one sentence. It wrote the song, made the cover and mixed it.",
+          "subtitle": "The scenario · 30 seconds",
+          "notes": "BEAT 1 · 30 SECONDS.\n\nKeep it neutral. The work in this scenario might be good — that is what makes the question hard. If you imply it is rubbish, there is nothing left to discuss.",
+          "design": {
+            "composition": "voice"
+          }
+        },
+        {
+          "type": "cards",
+          "title": "Who made it?",
+          "bullets": [
+            "You did\tIt was your idea. Nobody else would have asked for that.",
+            "Partly you\tYou started it. Something else finished it.",
+            "The AI did\tOne sentence is not making something.",
+            "Depends what you do next\tIt is not finished being made yet."
+          ],
+          "feedback": {
+            "kind": "poll",
+            "prompt": "Who made it?",
+            "options": [
+              "You did",
+              "Partly you",
+              "The AI did",
+              "Depends what you do next"
+            ],
+            "max": 1,
+            "presentAs": "rail"
+          },
+          "notes": "BEAT 2 · 45 SECONDS. Vote first.\n\nThis is the most genuinely split vote in the whole campaign. Take it properly and show the spread.\n\nAsk someone who chose the fourth option to say what \"next\" would have to involve. They usually arrive at the answer on their own.",
+          "design": {
+            "composition": "ballot"
+          },
+          "body": "Choose A, B, C or D. Be ready to say why."
+        },
+        {
+          "type": "statement",
+          "body": "What would you have to add before you would put your name on it?",
+          "subtitle": "Discuss in pairs · 75 seconds",
+          "notes": "BEAT 3 · 75 SECONDS.\n\nBetter than \"is it yours\", because it cannot be answered yes or no. It forces them to name a contribution.\n\nListen for \"changing a few words\". Ask whether they would accept that from someone else claiming to have written their favourite song.",
+          "design": {
+            "composition": "prompt"
+          }
+        },
+        {
+          "type": "sourcecheck",
+          "title": "\"My track. Out now.\"",
+          "subtitle": "The same claim, with its working shown",
+          "bullets": [
+            "The idea\tYours\tone sentence — but nobody else wrote that sentence",
+            "The words\tGenerated\tyou kept them as they came",
+            "The music\tGenerated\tfrom a style you chose",
+            "The cover\tGenerated\tyou picked it from four",
+            "What changed after\tNothing yet\tthis is the row that decides the answer",
+            "Declared\tNowhere\tthe post does not say any of the above"
+          ],
+          "progressive": true,
+          "body": "Modelled on Content Credentials (C2PA) — provenance attached to the file, not guessed from it",
+          "notes": "BEAT 4 · 75 SECONDS. Reveal one row at a time.\n\nThis is a content credential, rendered as a slide. The real ones ride inside the file and say what tool touched it and when — provenance attached, rather than guessed at afterwards.\n\nTHE SHIFT TO MAKE: the interesting question is not \"can you tell?\" That game is already lost. It is \"what did you declare?\" — which you control completely.\n\nRow 5 is where authorship actually lives. Row 6 is the one that gets people into trouble, at school and later at work.",
+          "design": {
+            "composition": "credits"
+          }
+        },
+        {
+          "type": "journey",
+          "title": "What to remember",
+          "subtitle": "Three things, in the order you would use them",
+          "bullets": [
+            "Say what you used\tBefore anyone has to ask you.",
+            "Add what only you could add\tYour judgement, your experience, your choices.",
+            "Be able to explain every choice\tIf you cannot, it is not finished being made."
+          ],
+          "progressive": true,
+          "notes": "SLIDE 6 · 30 SECONDS. Reveal one at a time. Three is the limit — a fourth rule is a rule nobody remembers.\n\nNumbered rather than bulleted so the order is part of the message, and so nothing here depends on colour to be understood.",
+          "design": {
+            "composition": "rules"
+          }
+        },
+        {
+          "type": "keyfact",
+          "subtitle": "Your choice · 45 seconds",
+          "title": "Decide what you would declare",
+          "body": "Write the one line you would put underneath it, honestly describing what you did and what the tool did.",
+          "notes": "BEAT 5 · 45 SECONDS. One line, in their heads or on paper.\n\nThe test that survives contact with the real world: would you be comfortable if the person marking it, or hiring you, could see exactly how it was made?\n\nNot an anti-AI message. A disclosure habit is what lets you use these tools without the question hanging over everything you make.",
+          "design": {
+            "composition": "commitment"
+          },
+          "bullets": [
+            "One choice I will make:"
+          ]
+        },
+        {
+          "type": "keywords",
+          "hidden": true,
+          "title": "Two words worth knowing",
+          "bullets": [
+            "Provenance\tThe record of where something came from and what happened to it along the way.",
+            "Disclosure\tSaying plainly what you used and what you did — before anyone has to ask."
+          ],
+          "notes": "HIDDEN FROM THE SHOW — the brief asks for seven student-facing slides and this is not one of them.\n\nWorth thirty seconds anyway. Both terms are used on the slides this deck shows, and a word nobody defines is a word nobody argues with.\n\nWritten for 11–16, not for a policy paper."
+        }
+      ]
+    },
+    {
+      "key": "aiad27-responsible",
+      "title": "RESPONSIBLE · Should AI decide?",
+      "icon": "⬖",
+      "blurb": "Five minutes on RESPONSIBLE. Opens on “Should AI decide?” — the room answers before anything is explained, then the numbers, then the answers one at a time.",
+      "minutes": 5,
+      "theme": "aiad27-responsible",
+      "org": "AI Awareness Day 2027",
+      "logo": "assets/brand/aiad27/aiad27-lockup.svg",
+      "logoOn": "title",
+      "logoSize": "large",
+      "logoReverse": "never",
+      "showSlideNumbers": false,
+      "slides": [
+        {
+          "type": "content",
+          "hidden": true,
+          "title": "Teacher preparation",
+          "subtitle": "Students separate decisions AI can support from decisions that must involve a person.",
+          "bullets": [
+            "Ages 11–18  ·  5 minutes  ·  no preparation, no account, no extra materials",
+            "Timing  30s scenario  ·  45s vote  ·  75s pairs  ·  75s reveal  ·  30s remember  ·  45s action",
+            "You need  this deck on the board. Phones are optional — a show of hands works."
+          ],
+          "notes": "PURPOSE. Students arrive at a principle rather than a list: the greater the effect on someone’s life, the greater the need for human oversight.\\n\\nTHE REGULATOR HAS ALREADY ANSWERED, and the words are quotable. Ofqual: AI is \"nowhere near ready to take over high stakes marking\"; using it as the sole mechanism for awarding marks \"does not comply with our current regulations\" because it fails the requirement for \"a human based judgement\". Its three tests: technical capability, fairness, transparency.\\n\\nLIKELY RESPONSES. Marking is the one students hand over most readily — it feels objective. That is the assumption slide 5 takes apart.\\n\\nMISCONCEPTION TO BREAK. Automated does not mean neutral. A system that cannot explain itself is not impartial, it is unexaminable.\\n\\nSEND / YOUNGER LEARNERS. Use two decisions rather than four: marking a test, and choosing who gets picked for a team.\\n\\nEXTENSION. Rank the four decisions by how much a mistake would cost the person. Does the order match your vote?\\n\\nSOURCE. Ofqual, \"Using AI in marking\", 14 January 2026."
+        },
+        {
+          "type": "title",
+          "title": "Should AI decide?",
+          "subtitle": "Five Minutes to Think",
+          "notes": "SLIDE 1 · TITLE. Up as the class comes in. The question does the work; do not explain it yet.\n\nThe full teacher page is the hidden slide before this one — purpose, timing, script, safeguarding, SEND and an extension.",
+          "design": {
+            "composition": "poster-art"
+          },
+          "image": "assets/brand/aiad27/poster-responsible.svg",
+          "body": "Your AI. Your choices."
+        },
+        {
+          "type": "quote",
+          "body": "Your exam was marked by an AI. Your appeal was read by the same one.",
+          "subtitle": "The scenario · 30 seconds",
+          "notes": "BEAT 1 · 30 SECONDS.\n\nThe second sentence is what makes it land. One decision with no second opinion is a different thing from one decision.",
+          "design": {
+            "composition": "voice"
+          }
+        },
+        {
+          "type": "cards",
+          "title": "Where would you draw the line?",
+          "bullets": [
+            "None of them\tJobs, exam marks, treatment or exclusion.",
+            "Marking only\tA published mark scheme could set the rules.",
+            "Marking and shortlisting\tLet it score answers and sort applications.",
+            "Any of them, with a human check\tA person reviews it before it takes effect."
+          ],
+          "feedback": {
+            "kind": "poll",
+            "prompt": "Which could AI decide alone?",
+            "options": [
+              "None of them",
+              "Marking only",
+              "Marking and shortlisting",
+              "Any of them, with a human check"
+            ],
+            "max": 1,
+            "presentAs": "rail"
+          },
+          "notes": "BEAT 2 · 45 SECONDS. Vote before anything is explained.\n\nThe cards and poll show the same four positions. Consider jobs, exam marks, treatment and exclusion, then take the vote.\n\nMarking is the one rooms hand over most readily — it feels objective. That is exactly the assumption beat 4 takes apart, with the regulator’s own words.",
+          "design": {
+            "composition": "ballot"
+          },
+          "body": "Choose A, B, C or D. Be ready to say why."
+        },
+        {
+          "type": "statement",
+          "body": "What makes a decision too important for a machine to make on its own?",
+          "subtitle": "Discuss in pairs · 75 seconds",
+          "notes": "BEAT 3 · 75 SECONDS.\n\nYou are steering towards a principle, not a list: the greater the effect on someone’s life, the greater the need for human oversight.\n\nIf they say \"when it might be wrong\" — push. Humans are wrong too. What is different is whether anyone can explain the decision afterwards, and whether anyone is accountable for it.",
+          "design": {
+            "composition": "prompt"
+          }
+        },
+        {
+          "type": "spectrum",
+          "title": "Support, or decide?",
+          "subtitle": "AI can support this | This must stay human",
+          "bullets": [
+            "Checking marking for inconsistency\t12\tOfqual calls this promising",
+            "Training new examiners\t20\t",
+            "Flagging an answer for a person to look at\t34\t",
+            "Awarding the final mark\t84\tdoes not meet the rules on its own",
+            "Excluding a student\t96\ta decision with serious consequences"
+          ],
+          "body": "Discussion guide. Exam-marking examples: Ofqual, “Using AI in marking”, 14 January 2026.",
+          "notes": "BEAT 4 · 75 SECONDS. Ask the room to move one before you defend any.\n\nOFQUAL’S OWN WORDS, worth reading out — they are stronger than any paraphrase:\n· AI is \"nowhere near ready to take over high stakes marking\".\n· Using it as the sole mechanism for awarding marks \"does not comply with our current regulations\" because it fails the requirement for \"a human based judgement\".\n\nThe three things Ofqual says matter: technical capability (AI lacks \"true semantic understanding\"), fairness (it \"can perpetuate or amplify biases present in their training data\"), and transparency (a \"black box\", hard even for experts to explain).\n\nTHE MISCONCEPTION TO BREAK: automated does not mean objective. A machine that cannot explain itself is not neutral, it is unexaminable.",
+          "design": {
+            "composition": "lanes"
+          }
+        },
+        {
+          "type": "journey",
+          "title": "What to remember",
+          "subtitle": "Three things, in the order you would use them",
+          "bullets": [
+            "Bigger effect, more human\tThe more a decision changes a life, the more a person must make it.",
+            "Automated is not fair\tA system can be consistent and still be biased.",
+            "Ask who you appeal to\tIf nobody can explain the decision, nobody can review it."
+          ],
+          "progressive": true,
+          "notes": "SLIDE 6 · 30 SECONDS. Reveal one at a time. Three is the limit — a fourth rule is a rule nobody remembers.\n\nNumbered rather than bulleted so the order is part of the message, and so nothing here depends on colour to be understood.",
+          "design": {
+            "composition": "rules"
+          }
+        },
+        {
+          "type": "keyfact",
+          "subtitle": "Your choice · 45 seconds",
+          "title": "Which decision needs a person?",
+          "body": "Decide one decision about you that you would always want a person to make, and be able to explain.",
+          "notes": "BEAT 5 · 45 SECONDS.\n\n\"And be able to explain\" is the part to stress. The right to an explanation is the thing being protected, not a preference for humans.\n\nWorth saying: this is a live question in UK policy right now, not a settled one. They will be adults while it is being decided.",
+          "design": {
+            "composition": "commitment"
+          },
+          "bullets": [
+            "One choice I will make:"
+          ]
+        },
+        {
+          "type": "keywords",
+          "hidden": true,
+          "title": "Two words worth knowing",
+          "bullets": [
+            "Human oversight\tA person who can see how a decision was made, question it, and overrule it.",
+            "Black box\tA system whose workings cannot be inspected — you see what went in and what came out, and nothing between."
+          ],
+          "notes": "HIDDEN FROM THE SHOW — the brief asks for seven student-facing slides and this is not one of them.\n\nWorth thirty seconds anyway. Both terms are used on the slides this deck shows, and a word nobody defines is a word nobody argues with.\n\nWritten for 11–16, not for a policy paper."
+        }
+      ]
+    },
+    {
+      "key": "aiad27-future",
+      "title": "FUTURE · What skills must stay human?",
+      "icon": "❯",
+      "blurb": "Five minutes on FUTURE. Opens on “What skills must stay human?” — the room answers before anything is explained, then the numbers, then the answers one at a time.",
+      "minutes": 5,
+      "theme": "aiad27-future",
+      "org": "AI Awareness Day 2027",
+      "logo": "assets/brand/aiad27/aiad27-lockup.svg",
+      "logoOn": "title",
+      "logoSize": "large",
+      "logoReverse": "never",
+      "showSlideNumbers": false,
+      "slides": [
+        {
+          "type": "content",
+          "hidden": true,
+          "title": "Teacher preparation",
+          "subtitle": "Students notice the difference between AI strengthening their thinking and AI replacing it.",
+          "bullets": [
+            "Ages 11–18  ·  5 minutes  ·  no preparation, no account, no extra materials",
+            "Timing  30s scenario  ·  45s vote  ·  75s pairs  ·  75s reveal  ·  30s remember  ·  45s action",
+            "You need  this deck on the board. Phones are optional — a show of hands works."
+          ],
+          "notes": "PURPOSE. Students identify one capability they will keep developing themselves. Explicitly NOT an anti-AI session — every good example on slide 5 involves using AI.\\n\\nTHE FRAME. EEF on metacognition: plan, monitor, evaluate. A tool that does all three for you has not helped you learn, however good the output was.\\n\\nLIKELY RESPONSES. Take \"nothing — I would be fine\" seriously. For some students it is true, and treating it as denial teaches them not to answer honestly.\\n\\nTONE. Slide 4 is the sharpest question in the campaign and needs a safe room. Pairs, not whole-class. You are not fishing for confessions.\\n\\nSEND / YOUNGER LEARNERS. Reframe as \"what could you still do if the internet was off for a week?\" Concrete and less self-critical.\\n\\nEXTENSION. For one week, write one sentence after each AI use: did that strengthen my thinking or replace it?\\n\\nSOURCE. Education Endowment Foundation, metacognition and self-regulation."
+        },
+        {
+          "type": "title",
+          "title": "What skills must stay human?",
+          "subtitle": "Five Minutes to Think",
+          "notes": "SLIDE 1 · TITLE. Up as the class comes in. The question does the work; do not explain it yet.\n\nThe full teacher page is the hidden slide before this one — purpose, timing, script, safeguarding, SEND and an extension.",
+          "design": {
+            "composition": "poster-art"
+          },
+          "image": "assets/brand/aiad27/poster-future.svg",
+          "body": "Your AI. Your choices."
+        },
+        {
+          "type": "quote",
+          "body": "Tomorrow the tool you use most is switched off. The work is still due.",
+          "subtitle": "The scenario · 30 seconds",
+          "notes": "BEAT 1 · 30 SECONDS.\n\nNot a threat and not a prediction. A thought experiment that makes the dependency visible, which is the only way to measure it.",
+          "design": {
+            "composition": "voice"
+          }
+        },
+        {
+          "type": "cards",
+          "title": "What would you struggle with most?",
+          "bullets": [
+            "Starting from nothing\tThe blank page.",
+            "Explaining my reasoning\tSaying why, not just what.",
+            "Checking whether it is true\tWithout something to check it for you.",
+            "Nothing — I would be fine\tIt only ever saved you time."
+          ],
+          "feedback": {
+            "kind": "poll",
+            "prompt": "What would you struggle with most?",
+            "options": [
+              "Starting from nothing",
+              "Explaining my reasoning",
+              "Checking whether it is true",
+              "Nothing — I would be fine"
+            ],
+            "max": 1,
+            "presentAs": "rail"
+          },
+          "notes": "BEAT 2 · 45 SECONDS. Vote first, and make it anonymous in feel — this is the one question in the campaign where students are reporting on themselves.\n\nTake the fourth option seriously. For some of them it is true, and treating it as denial teaches them not to answer honestly.",
+          "design": {
+            "composition": "ballot"
+          },
+          "body": "Choose A, B, C or D. Be ready to say why."
+        },
+        {
+          "type": "statement",
+          "body": "Which part of your thinking have you quietly stopped practising?",
+          "subtitle": "Discuss in pairs · 75 seconds",
+          "notes": "BEAT 3 · 75 SECONDS. The sharpest question in the campaign, and the one that needs the safest room. Pairs, not the whole class.\n\nYou are not fishing for confessions. You are making the difference between using a tool and outsourcing a skill something they can feel.",
+          "design": {
+            "composition": "prompt"
+          }
+        },
+        {
+          "type": "compare",
+          "title": "Strengthening, or replacing?",
+          "subtitle": "It is strengthening your thinking | It is replacing your thinking",
+          "bullets": [
+            "You draft, then ask it to argue back\tIt drafts, you paste",
+            "You decide, it checks your reasoning\tIt decides, you accept",
+            "It gives you options, you choose\tIt gives you one answer, you take it",
+            "You could explain every choice\tYou could not explain any of it",
+            "You got better at it\tYou got faster at avoiding it"
+          ],
+          "progressive": true,
+          "body": "Frame after the EEF on metacognition — plan, monitor, evaluate your own learning",
+          "notes": "BEAT 4 · 75 SECONDS. Reveal a row at a time.\n\nNOT AN ANTI-AI SLIDE, and it will be misread as one if you let it. Every left-hand row involves using AI. The difference is where the thinking happened.\n\nRow 4 is the usable test, because it works during the task rather than afterwards: could you explain this choice to someone who asked?\n\nThe EEF frame, if you want it: plan, monitor, evaluate. A tool that does all three for you has not helped you learn, however good the output was.",
+          "design": {
+            "composition": "comparison"
+          }
+        },
+        {
+          "type": "journey",
+          "title": "What to remember",
+          "subtitle": "Three things, in the order you would use them",
+          "bullets": [
+            "Notice who is thinking\tIf you could not explain it, it was not you.",
+            "Keep practising what you would miss\tPick the skill, not the task.",
+            "Use it to argue back\tAsk it to challenge your work, not to produce it."
+          ],
+          "progressive": true,
+          "notes": "SLIDE 6 · 30 SECONDS. Reveal one at a time. Three is the limit — a fourth rule is a rule nobody remembers.\n\nNumbered rather than bulleted so the order is part of the message, and so nothing here depends on colour to be understood.",
+          "design": {
+            "composition": "rules"
+          }
+        },
+        {
+          "type": "keyfact",
+          "subtitle": "Your choice · 45 seconds",
+          "title": "Pick one thing you will keep doing yourself",
+          "body": "Choose one part of your thinking you will keep practising, even when something could do it faster.",
+          "notes": "BEAT 5 · 45 SECONDS.\n\nAsk for one, not a list. A list is a wish; one is a decision.\n\nClose the campaign on the line it is built around: AI can answer, create, recommend and increasingly act for you. Your job is deciding when to use it, when to question it, and when to keep humans in control.",
+          "design": {
+            "composition": "commitment"
+          },
+          "bullets": [
+            "One choice I will make:"
+          ]
+        },
+        {
+          "type": "keywords",
+          "hidden": true,
+          "title": "Two words worth knowing",
+          "bullets": [
+            "Metacognition\tThinking about your own thinking — planning how you will work, noticing how it is going, and judging how it went.",
+            "Cognitive offloading\tHanding a mental job to something else. Useful for a shopping list. Costly for a skill you still need."
+          ],
+          "notes": "HIDDEN FROM THE SHOW — the brief asks for seven student-facing slides and this is not one of them.\n\nWorth thirty seconds anyway. Both terms are used on the slides this deck shows, and a word nobody defines is a word nobody argues with.\n\nWritten for 11–16, not for a policy paper."
+        }
+      ]
     }
+    /* aiad-packs:end */
   ];
 
   /** Brand packs filed into the Library on first visit. Looks (vibe galleries,
@@ -4193,7 +6624,20 @@
     'ukbt-institute-townhouse': 'ukbt-institute',
     /* Filed, unlike the demo: this one is a specimen sheet a teacher is meant
        to open, page through and copy slides out of. */
-    'motion-lab': 'other'
+    'motion-lab': 'other',
+    /* One folder per campaign, both filled by tools/build-aiad-lessons.mjs. */
+    /* aiad-seed:start */
+    'aiad26-safe': 'aiad26',
+    'aiad26-smart': 'aiad26',
+    'aiad26-creative': 'aiad26',
+    'aiad26-responsible': 'aiad26',
+    'aiad26-future': 'aiad26',
+    'aiad27-safe': 'aiad27',
+    'aiad27-smart': 'aiad27',
+    'aiad27-creative': 'aiad27',
+    'aiad27-responsible': 'aiad27',
+    'aiad27-future': 'aiad27',
+    /* aiad-seed:end */
   };
 
   function groupForSpec(spec) {
@@ -4312,6 +6756,10 @@
        that names its institution has to hand that to the deck, or the theme
        prints nothing where the organisation line goes. */
     if (spec.org) deck.org = spec.org;
+    /* Off for a five-slide starter that wants one element per slide. Carried
+       rather than defaulted: makeDeck turns numbers on, which is right for a
+       lecture and wrong for a campaign card. */
+    if (typeof spec.showSlideNumbers === 'boolean') deck.showSlideNumbers = spec.showSlideNumbers;
     if (spec.logo) {
       deck.logo = spec.logo;
       deck.logoOn = spec.logoOn || 'all';

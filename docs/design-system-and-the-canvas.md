@@ -990,6 +990,41 @@ does not match. Any future census of the design surface has to scan the
 computed-property assignments too, or it will invent gaps. The caveat is
 recorded in §2 next to the census it belongs to.
 
+### 2026-09-16 — shared compositions, first foundation repair
+
+The measurements above describe the pre-repair implementation. This pass closes
+step 1 of §14 and repairs the main data losses in step 5; it does not claim to
+complete the rest of the roadmap.
+
+- `src/model.js` now owns `COMPOSITIONS`, compatibility and resolution. Six
+  existing arrangements and ten structured arrangements are offered independently
+  of theme. The five campaign themes declare type-to-composition defaults.
+  `design.composition: 'none'` opts out; starter slides store explicit choices
+  so re-theming preserves arrangement.
+- `layoutAwareness27` is replaced by theme-independent `layoutComposition`.
+  Shared geometry lives in `css/customize.css`; campaign CSS owns its palette,
+  local font declaration and identity. No campaign names, lesson instructions
+  or artwork paths remain in the composition renderer.
+- Subtitles and parsed bullet text use `rich()`. Ballots participate in reveal
+  steps. Quote and statement compositions reuse their shared rendering/motion
+  functions. Normal logo, backdrop, track and page-number rendering remain.
+  Dates render on poster titles; extra poster/ballot copy is editable in Content,
+  and artwork is settable in Look. Explicit text size/alignment remain effective.
+- Comparison rows retain the original left / right / optional row-label meaning.
+  Decision lanes display numeric positions and group them below / at least 50;
+  the picker names that threshold. The spatial scale is intentionally replaced
+  by groups only when that named composition is selected.
+- `tools/smoke-design-foundations.mjs` checks refreshed demos and all 16
+  compositions across all themes (436 renders), plus editable fields, step
+  counts, opt-out, persistence, chrome, dates, size/alignment and comparison
+  semantics. These checks do not replace visual review or pixel baselines.
+
+Still open: manifest art/per-layout ground, typed design-surface inventory and
+reachability, renderer module boundaries, shared preview tooling, dedicated
+composition pixel baselines, and canvas regions. The refreshed gallery, NUL and
+Motion Lab demos remain specimens rather than a definition of the engine.
+No blanket visual-baseline update was made.
+
 ## Appendix — how the figures were produced
 
 - **Editable fields / step nodes / subtitles rendered**: `SF.renderSlide` called
