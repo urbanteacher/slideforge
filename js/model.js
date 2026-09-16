@@ -30,14 +30,13 @@
         return rich(tag, cls, slide, "bullets." + i, text2);
       }
       function artwork() {
-        var art = el("div", "cp-art");
-        if (SF.safeMedia(slide.image)) {
-          var img = el("img", "cp-prop");
-          img.alt = "";
-          img.src = SF.safeMedia(slide.image);
-          art.appendChild(img);
-        }
-        return art;
+        if (!SF.safeMedia(slide.image)) return null;
+        var art2 = el("div", "cp-art");
+        var img = el("img", "cp-prop");
+        img.alt = "";
+        img.src = SF.safeMedia(slide.image);
+        art2.appendChild(img);
+        return art2;
       }
       if (slide.type === "title") {
         var title = el("div", "cp-title-copy");
@@ -45,7 +44,9 @@
         if (slide.body) title.appendChild(field("p", "cp-tagline", "body"));
         appendSlideDate(slide, title);
         body.appendChild(title);
-        body.appendChild(artwork());
+        var art = artwork();
+        if (art) body.appendChild(art);
+        else root.classList.add("cp-title-unillustrated");
       } else if (slide.type === "quote") {
         body.appendChild(el("span", "cp-quote-mark", "“"));
         layoutQuote(Object.assign({}, slide, { subtitle: "" }), body);
@@ -8917,11 +8918,17 @@
     if (!d.logo) d.logoOn = "none";
     return d;
   }
+  function firstShownIndex(deck) {
+    var slides = deck && deck.slides || [];
+    for (var i = 0; i < slides.length; i++) if (!slides[i].hidden) return i;
+    return 0;
+  }
   function deckShowsLogo(deck, slide, index) {
     if (!deck || !String(deck.logo || "").trim()) return false;
     if (deck.logoOn === "all") return true;
     if (deck.logoOn !== "title") return false;
-    if (typeof index === "number") return index === 0;
+    if (slide && slide.hidden) return false;
+    if (typeof index === "number") return index === firstShownIndex(deck);
     return !!(slide && (slide.type === "title" || slide.type === "section"));
   }
   function normalizeQuestion(raw, style) {

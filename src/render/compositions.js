@@ -19,11 +19,16 @@ export function createCompositionRenderer(SF, helpers) {
     function note() { if (slide.body) body.appendChild(field('p', 'cp-source', 'body')); }
     function parts(line) { return SF.parseInfoLine(line); }
     function bullet(tag, cls, i, text) { return rich(tag, cls, slide, 'bullets.' + i, text); }
+    /* Null when there is nothing to show, so the caller can leave the column
+       out rather than reserve it. A cover saved before this composition had
+       artwork — or one whose author simply removed the picture — used to get
+       a 495px hole beside the headline, which reads as a broken slide rather
+       than a plain one. */
     function artwork() {
+      if (!SF.safeMedia(slide.image)) return null;
       var art = el('div', 'cp-art');
-      if (SF.safeMedia(slide.image)) {
-        var img = el('img', 'cp-prop'); img.alt = ''; img.src = SF.safeMedia(slide.image); art.appendChild(img);
-      }
+      var img = el('img', 'cp-prop'); img.alt = ''; img.src = SF.safeMedia(slide.image);
+      art.appendChild(img);
       return art;
     }
     if (slide.type === 'title') {
@@ -32,7 +37,9 @@ export function createCompositionRenderer(SF, helpers) {
       title.appendChild(field('h1','','title'));
       if (slide.body) title.appendChild(field('p','cp-tagline','body'));
       appendSlideDate(slide, title);
-      body.appendChild(title); body.appendChild(artwork());
+      body.appendChild(title);
+      var art = artwork();
+      if (art) body.appendChild(art); else root.classList.add('cp-title-unillustrated');
     } else if (slide.type === 'quote') {
       body.appendChild(el('span','cp-quote-mark','“'));
       layoutQuote(Object.assign({},slide,{subtitle:''}),body);

@@ -770,24 +770,49 @@ function normalizeDeck(raw) {
   return d;
 }
 
+/** Index of the first slide the room will see, ignoring hidden ones. */
+function firstShownIndex(deck) {
+  var slides = (deck && deck.slides) || [];
+  for (var i = 0; i < slides.length; i++) if (!slides[i].hidden) return i;
+  return 0;
+}
+
 /**
  * Whether this slide carries the deck's corner mark.
  *
+ * @param {object} deck
+ * @param {object} [slide]
  * @param {number} [index] position in the deck, when the caller knows it
  *
  * 'title' means the front of the deck, decided by position and not by
  * layout. Matching slide.type === 'title' looked equivalent and was not: a
  * deck that opens on a Section \u2014 which is how most of them open, and how
  * every lesson built from the example does \u2014 has no slide of that type at
- * all, so the option put the logo on none of them and said nothing about
- * why. Falls back to the layout test when there is no index to go on, so a
- * preview rendered on its own still shows the mark.
+ * all, so the option put the logo on none of them and said nothing about why.
+ * Falls back to the layout test when there is no index to go on, so a preview
+ * rendered on its own still shows the mark.
+ *
+ * The front of the deck is the first slide the room will see.
+ *
+ * This used to be `index === 0`, which is the first row of the editor — not
+ * the same thing. Every AI Awareness Day deck opens with a hidden teacher
+ * preparation page, so the mark was painted onto a slide nobody could ever
+ * see and withheld from the cover behind it. Present was right and the editor
+ * was wrong, because the running order has already dropped the hidden slides
+ * by then; the two surfaces disagreed about the same deck.
+ *
+ * The old signature also answered differently depending on whether a caller
+ * passed an index at all — position for some, slide type for others. One
+ * question deserves one answer, so the deck is consulted either way.
  */
 function deckShowsLogo(deck, slide, index) {
   if (!deck || !String(deck.logo || '').trim()) return false;
   if (deck.logoOn === 'all') return true;
   if (deck.logoOn !== 'title') return false;
-  if (typeof index === 'number') return index === 0;
+  if (slide && slide.hidden) return false;
+  if (typeof index === 'number') return index === firstShownIndex(deck);
+  /* No index to place it by — fall back to the shape of the slide, which is
+     what a standalone renderer (a review page, a thumbnail) can still see. */
   return !!(slide && (slide.type === 'title' || slide.type === 'section'));
 }
 
