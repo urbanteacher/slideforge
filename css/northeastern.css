@@ -347,14 +347,6 @@
 .theme-northeastern.layout-cards ul.cards-rows > li:has(> .card-label) > .card-label { grid-column: 2; grid-row: 1; }
 .theme-northeastern.layout-cards ul.cards-rows > li:has(> .card-label) > .card-body { grid-column: 3; grid-row: 1; }
 
-/* Navy title, red section breaks and the navy quote: the three grounds this
-   theme paints dark. The black-text lockup disappeared into all of them. */
-.theme-northeastern.layout-title:not(.logo-normal) .slide-logo img,
-.theme-northeastern.layout-section:not(.logo-normal) .slide-logo img,
-.theme-northeastern.layout-quote:not(.logo-normal) .slide-logo img {
-  filter: brightness(0) invert(1);
-}
-
 .theme-northeastern.layout-cards li:nth-child(4n+1) { border-left-color: var(--nu-red); }
 .theme-northeastern.layout-cards li:nth-child(4n+2) { border-left-color: var(--nu-sky); }
 .theme-northeastern.layout-cards li:nth-child(4n+3) { border-left-color: var(--nu-sage); }

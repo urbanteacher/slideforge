@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Design controls — SlideForge</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#20251f;background:#f4f3ed}body{margin:0}main{max-width:1120px;margin:auto;padding:50px 28px 80px}a{color:#365b39}header{border-bottom:2px solid #20251f;padding-bottom:30px;margin-bottom:30px}.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase}h1{font-size:clamp(36px,6vw,70px);line-height:1.05;letter-spacing:-.05em;margin:20px 0}header p{max-width:680px;font-size:18px;line-height:1.6}label{font-weight:600;display:block;margin-bottom:10px}input{box-sizing:border-box;width:100%;font:inherit;padding:14px;border:1px solid #a0aa9c;border-radius:6px;background:white}input:focus-visible,a:focus-visible{outline:3px solid #719450;outline-offset:3px}#count{color:#52604d}section{margin-top:34px}h2{font-size:28px}article{display:grid;grid-template-columns:260px 1fr;gap:26px;border-top:1px solid #cbd0c4;padding:24px 0}h3{font-size:20px;margin:0 0 8px}article p{margin:0 0 10px;line-height:1.55}.where{font-size:14px;color:#52604d}.when{font-size:14px}.empty{padding:30px 0}footer{border-top:1px solid #cbd0c4;margin-top:40px;padding-top:20px;font-size:14px;color:#52604d}@media(max-width:650px){main{padding:30px 20px}article{grid-template-columns:1fr;gap:8px}}
+</style></head><body><main>
+<header><a href="/">← SlideForge</a><p class="eyebrow">Make it yours</p><h1>Design with room<br>to experiment.</h1><p>Choose a slide, then open <strong>Look</strong> to shape its appearance or <strong>Motion</strong> to control how words arrive. Compositions change the arrangement while keeping your theme and content.</p></header>
+<label for="search">Find a control or slide type</label><input id="search" type="search" placeholder="Try image, caption, direction or composition…"><p id="count" role="status"></p><div id="controls"></div><noscript>This guide needs JavaScript to load the current control catalogue.</noscript>
+<footer>Some controls appear only after another option is enabled. Motion is best checked in Present. Reset to theme clears slide design overrides and text formatting.</footer>
+</main><script src="js/model.js"></script><script>
+const host=document.querySelector('#controls'),search=document.querySelector('#search');
+const entries=Object.entries(SF.DESIGN_CONTROLS);
+function element(tag,text,cls){const n=document.createElement(tag);n.textContent=text;if(cls)n.className=cls;return n;}
+function draw(){host.replaceChildren();let count=0;const query=search.value.trim().toLowerCase();
+for(const pane of ['Look','Motion']){const section=element('section','');section.append(element('h2',pane));let found=0;
+for(const [key,c] of entries){const types=c.types==='*'?'Slides other than quiz and game':c.types.map(t=>SF.SLIDE_TYPES[t]?.label||t).join(' · ');if(![c.label,c.description,c.when,types,pane].join(' ').toLowerCase().includes(query))continue;if(c.pane!==pane)continue;
+const item=element('article','');item.id=key;const title=element('div','');title.append(element('h3',c.label),element('p',types,'where'));const copy=element('div','');copy.append(element('p',c.description));if(c.when)copy.append(element('p','Available when: '+c.when+'.','when'));item.append(title,copy);section.append(item);found++;count++;}
+if(found)host.append(section);}
+document.querySelector('#count').textContent=count+' of '+entries.length+' controls';if(!count)host.append(element('p','No controls match. Try a slide type or a shorter phrase.','empty'));}
+search.addEventListener('input',draw);draw();
+</script></body></html>

@@ -55,6 +55,7 @@
 <section id="overviewPane" hidden></section>
 <section id="toolsPane" hidden>
 <div class="section-heading"><h2>Toolkit</h2></div>
+<p><a href="design-guide.html" target="_blank" rel="noopener">Slide design controls guide</a></p>
 <div class="tool-grid">
 <article class="tool-card"><span class="teacher-eyebrow">PARTICIPATION</span><h3>Name picker</h3><p class="tool-blurb">Names do not repeat until you reset. Disconnected devices are excluded.</p><output id="pickedName" aria-live="polite">Who next?</output><div class="tool-actions"><button id="pickName">Pick</button><button id="resetPicker">Reset round</button></div><p id="pickerStatus"></p></article>
 <article class="tool-card"><span class="teacher-eyebrow">THINKING TIME</span><h3>Timer</h3><p class="tool-blurb">Private countdown — does not change the quiz timer.</p><label for="timerDuration">Duration</label><select id="timerDuration"><option value="30">30 seconds</option><option value="60" selected>1 minute</option><option value="120">2 minutes</option><option value="300">5 minutes</option></select><output id="timerReadout">01:00</output><div class="tool-actions"><button id="timerToggle">Start</button><button id="timerReset">Reset</button></div><p id="timerStatus" role="status"></p></article>

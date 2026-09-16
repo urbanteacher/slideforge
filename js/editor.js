@@ -1254,7 +1254,7 @@
           { value: 'reveal', label: 'Reveal — wiped up, one at a time' }
         ], String(d.words || ''), function (v) {
           if (v) d.words = v; else delete d.words;
-          touched(); repaint(); drawRail();
+          touched(); repaint(); drawRail(); drawInspector();
         }), 'Plays when the slide arrives in the show — eased, with a little motion blur. Held still for anyone who asked for less motion.'));
         if (d.words) {
           insp.appendChild(UI.field('Speed', UI.select([
@@ -1370,6 +1370,7 @@
       drawContentFields(insp, s);
       drawUnusedOnLayout(insp, s);
     }
+    if (designPane === 'transition') SF.Custom.tagControls(insp,s,'Motion');
   }
 
   /** Undo, theme, duplicate and delete — slide chrome, not part of the words. */
@@ -2399,9 +2400,9 @@
          up by number. */
       if (pictureCards) {
         var fields = el('div', 'kw-pit-fields card-pic-fields');
+        row.replaceChild(fields, input);
         fields.appendChild(input);
         fields.appendChild(cardImageField(s, i, function () { drawPits(wrap, s); }));
-        row.replaceChild(fields, input);
       }
       var kill = el('button', 'kill', '×');
       kill.type = 'button';
@@ -3856,7 +3857,7 @@
   SF.createPresetGame = function (style, preset, theme, options) {
     preset = preset || {};
     var g = SF.makeGame(preset.title || 'Quick knowledge check', style);
-    g.theme = theme || 'midnight';
+    g.theme = SF.resolveTheme(theme);
     g.settings.defaultTime = 0;
     g.settings.scoreboard = false;
     g.settings.scoreSlide = false;

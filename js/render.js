@@ -9,30 +9,18 @@
   var SF = global.SF;
   var LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-  /**
-   * A root that carries a deck's theme, and the one fact about that theme
-   * shared CSS needs before anything is painted on it.
-   *
-   * Ten call sites used to write `'theme-' + (deck.theme || 'midnight')` by
-   * hand — slides, question and feedback slides, the two score rails, the
-   * solo score, and the race, boss, wordreveal and study boards. Which was
-   * fine until css/app.css needed to know whether the ground was dark, and
-   * answered it by naming themes in four separate selector lists that then
-   * drifted apart. data-ground is that answer, declared once in THEMES.
-   *
-   * The 'midnight' fallback is kept exactly as it was: normalizeDeck already
-   * resolves an unknown theme to studio, so this only fires for a deck object
-   * that never went through it, and changing what those get is a separate
-   * decision from this one.
+  /** A shared themed root: the manifest owns both the fallback and ground.
+   * Explicit saved themes are preserved; missing/retired themes use Studio.
    *
    * @param {string} cls classes before the theme, e.g. 'slide' or 'scorerail'
    * @param {{theme?: string}} deck
    * @param {string} [after] classes appended after the theme, e.g. 'layout-title'
+   * @param {string} [layout] layout whose intrinsic ground to resolve
    */
-  function themedRoot(cls, deck, after) {
-    var theme = (deck && deck.theme) || 'midnight';
+  function themedRoot(cls, deck, after, layout) {
+    var theme = SF.resolveTheme(deck && deck.theme);
     var node = el('div', cls + ' theme-' + theme + (after ? ' ' + after : ''));
-    node.dataset.ground = SF.themeGround ? SF.themeGround(theme) : 'light';
+    node.dataset.ground = SF.themeGround ? SF.themeGround(theme, layout) : 'light';
     return node;
   }
 
@@ -4854,208 +4842,20 @@
     return out;
   }
 
+  var compositions = SF.createCompositionRenderer(SF, {
+    el:el, rich:rich, asStep:asStep, layoutQuote:layoutQuote,
+    layoutStatement:layoutStatement, appendSlideDate:appendSlideDate
+  });
+
   /**
    * @param {object} deck
    * @param {object} slide
    * @param {object} [opts]  { index, total, interactive, quizNumber, marks, chrome }
    * @returns {HTMLElement} .slide element sized 1280x720
    */
-  /* Decoration a theme hangs behind the pad on its two full-bleed layouts —
-     the title and the section — keyed by theme. It is markup with no content:
-     every one of these divs exists only to give the stylesheet a box to paint
-     on, and the whole container is aria-hidden.
-
-     A table rather than a chain of branches because there are seven themes
-     doing this now and six of them are a constant string. Northeastern stays
-     in code below: its eyebrow carries deck.org, so it is not a constant.
-
-     Each theme's own stylesheet owns the look. The names here are the only
-     contract, and they are deliberately short-lived markup: change the art
-     and you change this string and that file, nothing else. */
-  /* The campaign's fold, at slide scale.
-
-     The badge itself is not drawn here — it is artwork per principle under
-     assets/brand/aiad26/, carried in the logo slot, because the five are five
-     different drawings and a redraw flattened that. What the theme takes from
-     it instead is the geometry: a square cut by a fold that runs flat and then
-     away at 45 degrees, with the corner chamfered. Blown up to most of the
-     slide and bled off two edges, that reads as architecture rather than as a
-     logo printed twice, and the cover carries the identity without competing
-     with the mark in the corner.
-
-     Two pieces: the fold itself, and the seam along its hypotenuse. */
-  var AIAD_ART =
-    '<div class="aiad-fold"></div><div class="aiad-seam"></div>';
-
-  var THEME_ART = {
-    studio: ['studio-art',
-      '<div class="art-orbit"></div><div class="art-tile">✳</div>' +
-      '<div class="art-dot"></div><div class="art-caption">STAY CURIOUS.</div>'],
-    /* One chevron, drawn twice and offset by a third of its width, which is
-       the geometry of the real lockup rather than a redraw of it. The object
-       div is the brand's rendered forms; which one it shows is picked by
-       slide index in CSS, so a deck does not open and break on the same
-       shape. See the comment in css/ukbt.css. */
-    ukbt: ['ukbt-art',
-      '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div>' +
-      '<div class="ukbt-object"></div>'],
-    'ukbt-institute': ['ukbt-art',
-      '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div>' +
-      '<div class="ukbt-object"></div>'],
-    /* Keynote minimal: one soft bloom behind the centred line and a ring
-       bled off the corner. Anything more would stop being this theme. */
-    product: ['pd-art', '<div class="pd-bloom"></div><div class="pd-ring"></div>'],
-    /* Broadsheet: a stack of masthead rules, and an oversized serif quote
-       mark set in the theme's own face and bled off the edge. */
-    editorial: ['ed-art', '<div class="ed-rules"></div><div class="ed-quote">”</div>'],
-    /* Letterbox bars and a single light streak. The bars are the whole idea:
-       nothing says "this is a pitch" faster than a 2.39:1 crop. */
-    cinematic: ['cine-art',
-      '<div class="cine-bar cine-top"></div><div class="cine-bar cine-bottom"></div>' +
-      '<div class="cine-streak"></div><div class="cine-vignette"></div>'],
-    /* Technical drawing: a hairline grid and crop marks in the corners. */
-    brutal: ['brut-art', '<div class="brut-grid"></div><div class="brut-marks"></div>'],
-    /* Same markup for all five: which principle it is comes from the accent
-       token, and the badge in the logo slot says the name. */
-    'aiad26-safe': ['aiad-art', AIAD_ART],
-    'aiad26-smart': ['aiad-art', AIAD_ART],
-    'aiad26-creative': ['aiad-art', AIAD_ART],
-    'aiad26-responsible': ['aiad-art', AIAD_ART],
-    'aiad26-future': ['aiad-art', AIAD_ART],
-
-  };
-
-  /* Structured compositions use ordinary slide fields, so editing, polls,
-     presenter notes and progressive reveals retain the normal data model. */
-  function layoutComposition(deck, slide, pad, root) {
-    var choice = SF.slideComposition(deck, slide);
-    if (!choice || !SF.COMPOSITIONS[choice].structured) return false;
-    root.classList.add('composition-structured', 'cp', 'cp-' + slide.type);
-    var header = el('div', 'cp-header');
-    if (slide.subtitle && !['compare','spectrum'].includes(slide.type)) header.appendChild(rich('div','cp-beat',slide,'subtitle',slide.subtitle));
-    pad.appendChild(header);
-    var body = el('div', 'cp-body'); pad.appendChild(body);
-    function field(tag, cls, key) { return rich(tag, cls, slide, key, slide[key] || ''); }
-    function heading() { body.appendChild(field('h2', 'cp-heading', 'title')); }
-    function note() { if (slide.body) body.appendChild(field('p', 'cp-source', 'body')); }
-    function parts(line) { return SF.parseInfoLine(line); }
-    function bullet(tag, cls, i, text) { return rich(tag, cls, slide, 'bullets.' + i, text); }
-    function artwork() {
-      var art = el('div', 'cp-art');
-      if (SF.safeMedia(slide.image)) {
-        var img = el('img', 'cp-prop'); img.alt = ''; img.src = SF.safeMedia(slide.image); art.appendChild(img);
-      }
-      return art;
-    }
-    if (slide.type === 'title') {
-      var title = el('div', 'cp-title-copy');
-
-      title.appendChild(field('h1','','title'));
-      if (slide.body) title.appendChild(field('p','cp-tagline','body'));
-      appendSlideDate(slide, title);
-      body.appendChild(title); body.appendChild(artwork());
-    } else if (slide.type === 'quote') {
-      body.appendChild(el('span','cp-quote-mark','“'));
-      layoutQuote(Object.assign({},slide,{subtitle:''}),body);
-      body.querySelector('.q').classList.add('cp-scenario');
-
-    } else if (slide.type === 'cards') {
-      heading();
-      var choices = el('div','cp-choices');
-      (slide.bullets || []).forEach(function (line,i) {
-        var p=SF.parseKeywordLine(line), card=asStep(el('div','cp-choice'),slide);
-        card.appendChild(el('span','cp-letter',LETTERS[i] || String(i+1)));
-        var copy=el('div','cp-choice-copy');
-        copy.appendChild(bullet('h3','',i,p.term)); copy.appendChild(bullet('p','',i,p.def));
-        card.appendChild(copy); choices.appendChild(card);
-      });
-      body.appendChild(choices);
-      if (slide.body) body.appendChild(field('p','cp-prompt','body'));
-    } else if (slide.type === 'statement') {
-      var discussion = el('div','cp-discussion');
-      discussion.appendChild(el('span','cp-pair-mark','↔'));
-      layoutStatement(Object.assign({}, slide, {subtitle:''}), discussion);
-      discussion.querySelector('.statement').classList.add('cp-question');
-      body.appendChild(discussion);
-
-    } else if (slide.type === 'journey') {
-      heading();
-      var rules=el('div','cp-rules');
-      (slide.bullets || []).forEach(function(line,i) {
-        var p=SF.parseKeywordLine(line), row=asStep(el('div','cp-rule'),slide);
-        row.appendChild(el('span','cp-rule-number','0'+(i+1)));
-        var copy=el('div'); copy.appendChild(bullet('h3','',i,p.term)); copy.appendChild(bullet('p','',i,p.def));
-        row.appendChild(copy); rules.appendChild(row);
-      });
-      body.appendChild(rules); note();
-    } else if (slide.type === 'keyfact') {
-      var actionMark = el('div','cp-action-number','↗'); actionMark.setAttribute('aria-hidden','true'); body.appendChild(actionMark);
-      var action=el('div','cp-action');
-      action.appendChild(field('h2','','title')); action.appendChild(field('p','','body'));
-      (slide.bullets || []).forEach(function(line,i) { action.appendChild(asStep(bullet('p','cp-write-line',i,line),slide)); });
-      body.appendChild(action);
-    } else if (slide.type === 'compare') {
-      heading(); var heads=parts(slide.subtitle), table=el('div','cp-comparison');
-      var labelled=(slide.bullets || []).some(function(line){return !!parts(line).note;});
-      var th=el('div','cp-compare-head'+(labelled?' labelled':''));
-      if(labelled) th.appendChild(el('span'));
-      th.appendChild(rich('h3','',slide,'subtitle',heads.label)); th.appendChild(rich('h3','',slide,'subtitle',heads.value)); table.appendChild(th);
-      (slide.bullets || []).forEach(function(line,i){
-        var p=parts(line), row=asStep(el('div','cp-compare-row'+(labelled?' labelled':'')),slide);
-        if(labelled) row.appendChild(bullet('p','',i,p.note));
-        row.appendChild(bullet('p','',i,p.label)); row.appendChild(bullet('p','',i,p.value)); table.appendChild(row);
-      });
-      body.appendChild(table); note();
-    } else if (slide.type === 'iceberg') {
-      heading();
-      var reveal=el('div','cp-risk-map');
-
-      var risks=el('div','cp-risks');
-      (slide.bullets || []).forEach(function(line,i) {
-        var p=parts(line), row=asStep(el('div','cp-risk'),slide);
-        row.appendChild(bullet('span','cp-risk-number',i,p.value || String(i+1)));
-        row.appendChild(bullet('h3','',i,p.label)); row.appendChild(bullet('p','',i,p.note)); risks.appendChild(row);
-      });
-      reveal.appendChild(risks); body.appendChild(reveal); note();
-    } else if (slide.type === 'sourcecheck') {
-      heading(); var receipt=el('div','cp-credits');
-      (slide.bullets || []).forEach(function(line,i) {
-        var p=parts(line), row=asStep(el('div','cp-credit'),slide);
-        row.appendChild(bullet('span','',i,p.label)); row.appendChild(bullet('strong','',i,p.value)); row.appendChild(bullet('p','',i,p.note)); receipt.appendChild(row);
-      });
-      body.appendChild(receipt); note();
-    } else if (slide.type === 'spectrum') {
-      heading(); var lanes=el('div','cp-lanes');
-      [parts(slide.subtitle).label,parts(slide.subtitle).value].forEach(function(label,side) {
-        var lane=el('div','cp-lane'); lane.appendChild(rich('h3','',slide,'subtitle',label));
-        (slide.bullets || []).forEach(function(line,i) {
-          var p=parts(line); if ((Number(p.value)>=50?1:0)!==side) return;
-          var item=asStep(el('div','cp-lane-item'),slide); item.dataset.step = String(i); item.appendChild(bullet('strong','',i,p.label));
-          item.appendChild(bullet('span','cp-lane-position',i,p.value));
-          if(p.note) item.appendChild(bullet('p','',i,p.note)); lane.appendChild(item);
-        }); lanes.appendChild(lane);
-      });
-      body.appendChild(lanes); note();
-    }
-    return true;
-  }
-
-  function applyComposition(root, deck, slide) {
-    var choice = SF.slideComposition(deck, slide);
-    if (!choice) return;
-    root.dataset.composition = choice;
-    var statement = root.querySelector('.statement-word');
-    if (statement) statement.style.removeProperty('font-size');
-    var words = String(slide.type === 'quote' || slide.type === 'statement' ? slide.body || '' : slide.title || '');
-    root.style.setProperty('--composition-display', (words.length > 95 ? 60 : words.length > 65 ? 72 : words.length > 35 ? 86 : 112) + 'px');
-    var n = (slide.bullets || []).filter(function (x) { return String(x).trim(); }).length;
-    root.style.setProperty('--composition-columns', String(n === 2 ? 2 : 3));
-    root.dataset.compositionDensity = n > 4 ? 'dense' : 'normal';
-  }
-
   function renderSlide(deck, slide, opts) {
     opts = opts || {};
-    var root = themedRoot('slide', deck, 'layout-' + slide.type);
+    var root = themedRoot('slide', deck, 'layout-' + slide.type, slide.type);
     root.dataset.slideId = slide.id;
     stampAspect(root, deck);
     if (slide.activity) {
@@ -5090,45 +4890,18 @@
         root.appendChild(moves);
       }
     }
-    /* A theme can hang decoration behind the pad on its two full-bleed
-       layouts. Everything here is CSS-positioned and aria-hidden: the markup
-       only exists to give the stylesheet something to paint on.
-    
-       Not on a statement, though it is the third full-bleed layout: the
-       decoration is drawn for type held to one side, and a line centred on the
-       slide runs straight through it — Northeastern's N landed across the
-       middle of the words. A statement is one sentence on a clean ground; the
-       brand is still in the logo, the palette, and the backdrop motion if the
-       author wants movement. */
-    if (slide.type === 'title' || slide.type === 'section') {
-      var art = null;
-      var spec = THEME_ART[deck.theme];
-      if (spec) {
-        art = el('div', spec[0]);
-        art.innerHTML = spec[1];
-      } else if (deck.theme === 'northeastern') {
-        art = el('div', 'nu-art');
-        art.innerHTML = '<div class="nu-skyline"></div><div class="nu-n"></div>';
-        /* The title slide names the course, so the heading is free to name the
-           lecture — which is what the room actually needs to read. The lockup
-           in the corner already says whose deck this is, so repeating it here
-           would only spend the line twice. Section slides have no course line
-           of their own, so there it falls back to the organisation.
-
-           That organisation used to be the string "Northeastern University
-           London", written into the renderer twice and printed on every
-           section slide whatever deck it was — so a second institution using
-           this theme got somebody else's name on their slides. It comes off
-           the deck now, and an unnamed deck simply has no eyebrow rather than
-           borrowing one. */
-        var org = String(deck.org || '').trim();
-        var line = slide.type === 'title' ? (deck.title || org) : org;
-        if (line) art.appendChild(el('div', 'nu-eyebrow', line));
+    // The manifest owns eligibility and decoration; deck text is always textContent.
+    var spec = SF.THEMES[SF.resolveTheme(deck.theme)].art;
+    if (spec && spec.layouts.includes(slide.type)) {
+      var art = el('div', 'theme-art ' + spec.className);
+      art.innerHTML = spec.html;
+      if (spec.eyebrow) {
+        var fields = spec.eyebrow[slide.type] || [];
+        var line = fields.map(function(key){return String(deck[key] || '').trim();}).find(Boolean);
+        if (line) art.appendChild(el('div', spec.eyebrow.className, line));
       }
-      if (art) {
-        art.setAttribute('aria-hidden', 'true');
-        root.appendChild(art);
-      }
+      art.setAttribute('aria-hidden', 'true');
+      root.appendChild(art);
     }
     /* Which of a theme's decorations a slide shows, as a number a stylesheet
        can switch on. Stamped on every slide rather than only the two
@@ -5147,8 +4920,8 @@
 
     var pad = el('div', 'pad');
     root.appendChild(pad);
-    if (!layoutComposition(deck, slide, pad, root) && (!SF.Boards || !SF.Boards.render(pad, slide, opts, root))) (LAYOUTS[slide.type] || layoutContent)(slide, pad, opts, root);
-    applyComposition(root, deck, slide);
+    if (!compositions.render(deck, slide, pad, root) && (!SF.Boards || !SF.Boards.render(pad, slide, opts, root))) (LAYOUTS[slide.type] || layoutContent)(slide, pad, opts, root);
+    compositions.apply(root, deck, slide);
     if (SF.Explore) SF.Explore.render(root, pad, slide, opts);
     if (SF.Custom) SF.Custom.layout(root, slide);
 
@@ -5290,7 +5063,7 @@
   /* One approved question, on the wall. Deliberately plain: it is somebody's
      question being taken seriously, not a data visualisation. */
   function questionCard(deck, item) {
-    var node = themedRoot('slide', deck, 'layout-question');
+    var node = themedRoot('slide', deck, 'layout-question', 'question');
     var pad = el('div', 'pad');
     pad.appendChild(el('div', 'qc-label', 'From the room'));
     pad.appendChild(el('div', 'qc-text', item.text || ''));
@@ -5313,7 +5086,7 @@
    */
   function feedbackFocus(deck, digest, opts) {
     opts = opts || {};
-    var node = themedRoot('slide', deck, 'layout-feedback');
+    var node = themedRoot('slide', deck, 'layout-feedback', 'feedback');
     var pad = el('div', 'pad');
 
     /* The room the poll is for is the room still arriving. The rail has said
@@ -5735,7 +5508,7 @@
     opts = opts || {};
     var len = Math.max(1, opts.length || 5);
 
-    var node = themedRoot('slide', deck, 'layout-race');
+    var node = themedRoot('slide', deck, 'layout-race', 'race');
     var pad = el('div', 'pad');
 
     pad.appendChild(el('div', 'race-title', opts.title || 'The race'));
@@ -5795,7 +5568,7 @@
     var hp = Math.max(0, Math.min(max, Number(opts.hp) || 0));
     var pct = Math.round((hp / max) * 100);
     var node = themedRoot('slide', deck, 'layout-boss' +
-      (opts.hit ? ' boss-hit' : '') + (hp <= 0 ? ' boss-down' : ''));
+      (opts.hit ? ' boss-hit' : '') + (hp <= 0 ? ' boss-down' : ''), 'boss');
     var pad = el('div', 'pad');
     pad.appendChild(el('div', 'boss-title', opts.title || 'Boss battle'));
     if (opts.note) pad.appendChild(el('div', 'boss-note', opts.note));
@@ -5812,7 +5585,7 @@
   /** Word Reveal drip wall — letter mask over the deck. */
   function wordRevealWall(deck, opts) {
     opts = opts || {};
-    var node = themedRoot('slide', deck, 'layout-wordreveal');
+    var node = themedRoot('slide', deck, 'layout-wordreveal', 'wordreveal');
     var pad = el('div', 'pad');
     pad.appendChild(el('div', 'wr-title', 'Word reveal'));
     if (opts.hint) pad.appendChild(el('div', 'wr-hint', opts.hint));
@@ -5826,7 +5599,7 @@
   /** Memory / knowledge study card on the wall. */
   function studyCards(deck, opts) {
     opts = opts || {};
-    var node = themedRoot('slide', deck, 'layout-study');
+    var node = themedRoot('slide', deck, 'layout-study', 'study');
     var pad = el('div', 'pad');
     pad.appendChild(el('div', 'study-term', opts.term || ''));
     if (opts.definition) pad.appendChild(el('div', 'study-def', opts.definition));

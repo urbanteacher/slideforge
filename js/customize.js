@@ -355,6 +355,7 @@
         {value:'pictures',label:'Picture cards — an image slot above each card'}
       ],['stack','rows','pictures'].indexOf(d.cardsMode)>=0?d.cardsMode:'grid',function(v){
         d.cardsMode=v;
+        if (SF.slideComposition(currentDeck,s)) d.composition='none';
         /* A stack with everything already on screen is just a pile. Choosing
            it turns the build on; going back to a row leaves it alone, since
            a side-by-side build is a perfectly ordinary thing to want. */
@@ -586,7 +587,20 @@
       }),'Dimming keeps earlier points readable instead of hiding them \u2014 useful when the room needs the whole argument in view. Spotlight does that and takes the light off the rest of the slide, which is the other half of what a presenter does with their hand.'));
     }
     box.appendChild(UI.button('Reset to theme','ghost',function(){s.design={};s.formatting={};change();}));
+    var guide=document.createElement('a');guide.href='design-guide.html';guide.target='_blank';guide.rel='noopener';guide.textContent='Design controls guide';
+    box.appendChild(guide);
+    tagControls(box,s,'Look');
     parent.appendChild(box);
   }
-  SF.Custom={removeBullet:removeBullet,bind:bind,openCanvasEditor:openCanvasEditor,paint:paint,layout:layout,inspector:inspector,rebase:rebase,apply:apply,entry:entry};
+  // The guide and reachability checks share the same public control identifiers.
+  function tagControls(root, slide, pane) {
+    root.querySelectorAll('.field > label').forEach(function(label){
+      var text=label.firstChild ? label.firstChild.textContent.trim() : '';
+      var key=Object.keys(SF.DESIGN_CONTROLS).find(function(k){
+        var c=SF.DESIGN_CONTROLS[k];return c.pane===pane && c.label===text && SF.designApplies(k,slide.type);
+      });
+      if(key) label.parentElement.dataset.designKey=key;
+    });
+  }
+  SF.Custom={tagControls:tagControls,removeBullet:removeBullet,bind:bind,openCanvasEditor:openCanvasEditor,paint:paint,layout:layout,inspector:inspector,rebase:rebase,apply:apply,entry:entry};
 })(window);

@@ -1,3 +1,4 @@
+import { DEFAULT_THEME } from '../themes.js';
 import sampleQuiz from "../samples/quiz.json" with { type: "json" };
 /* SlideForge — games/factories. Edit source here; npm run build updates js/model.js. */
 import { uid } from "../core/identity.js";
@@ -62,7 +63,7 @@ function makeGame(title, style) {
     kind: 'game',
     style: style,
     title: title || 'Untitled game',
-    theme: 'studio',
+    theme: DEFAULT_THEME,
     libraryGroup: '',
     sourceDeckId: '',
     created: Date.now(),

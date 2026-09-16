@@ -1,3 +1,6 @@
+import { createCompositionRenderer } from './render/compositions.js';
+import { DESIGN_CONTROLS, designApplies } from './design-controls.js';
+import { THEMES, themeGround, DEFAULT_THEME, resolveTheme } from './themes.js';
 import { normalizeExploration, explorationValue, explorationCurve } from './deck/exploration.js';
 import { createBoardRuntime } from "./boards/runtime.js";
 import { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes } from "./activities/catalogue.js";
@@ -171,26 +174,6 @@ function slideHeight(deck) {
   return a ? a.h : SLIDE_H;
 }
 
-/* `ground: 'dark'` is the one intrinsic fact about a theme that shared code
-   outside its own stylesheet has to know: whether a slide is dark before
-   anything is drawn on it. Four separate places in css/app.css used to answer
-   that by naming themes — the chart palette, the code-pane syntax colours, the
-   logo inversion and the score rail's leader row — and the four lists had
-   drifted apart. cinematic (#0a0b0f) and brutal (#111111) are the darkest
-   grounds in the app and were on none of them, so both were drawing charts
-   from the light-ground steps: brutal's worst series read 2.82:1, under the
-   3:1 floor for non-text graphics.
-
-   So it is declared once here and stamped as data-ground by renderSlide.
-   A theme with a better answer of its own still wins: UKBT carries the brand's
-   own --chart-* values and css/ukbt.css loads after css/app.css, which is how
-   the carve-out documented at the dark-palette rule keeps working without
-   anybody maintaining a list.
-
-   Whole-theme only, deliberately. northeastern is dark on title and section
-   and light everywhere else, and the aiad27 layouts flip per slide; both
-   already handle themselves in their own stylesheets, and a per-layout ground
-   is a separate change that needs its own visual review. */
 // Layout choices belong to the engine; themes may choose defaults.
 var COMPOSITIONS = {
   poster: { label: 'Poster · bold headline and graphic', types: ['title','section','statement','quote'] },
@@ -220,57 +203,11 @@ function slideComposition(deck, slide) {
   var key = explicit || defaults[slide.type] || '';
   return compositionOptions(slide).includes(key) ? key : '';
 }
-var CAMPAIGN_COMPOSITIONS = {
-  title:'poster-art', quote:'voice', cards:'ballot', statement:'prompt',
-  journey:'rules', keyfact:'commitment', compare:'comparison',
-  iceberg:'reveal-map', sourcecheck:'credits', spectrum:'lanes'
-};
-
-var THEMES = {
-  studio: { name: 'Studio · Sage & ink', swatch: '#dce8cc' },
-  northeastern: { name: 'Northeastern London', swatch: '#c8102e' },
-  ukbt: { name: 'UK Black Tech', swatch: '#264258', ground: 'dark' },
-  'ukbt-institute': { name: 'UKBT Institute', swatch: '#2d3134', ground: 'dark' },
-  /* AI Awareness Day 2026. One design, five grounds: the campaign gives each
-     of its principles a colour, and a starter deck belongs to exactly one of
-     them, so the principle is the theme rather than a setting inside it.
-     Picking "Safe" is how a deck gets the cyan badge and the cyan rules —
-     there is nothing else to set. See css/aiad26.css. */
-  'aiad26-safe': { name: 'AI Awareness · Safe', swatch: '#00c4ee' },
-  'aiad26-smart': { name: 'AI Awareness · Smart', swatch: '#ff6734' },
-  'aiad26-creative': { name: 'AI Awareness · Creative', swatch: '#795bff' },
-  'aiad26-responsible': { name: 'AI Awareness · Responsible', swatch: '#00a896' },
-  'aiad26-future': { name: 'AI Awareness · Future', swatch: '#ff7eed' },
-  /* AI Awareness Day 2027 — Keep Humans in the Loop. Five themes, one per
-     strand. Colour is paired with the strand name on every slide, and each
-     cover has a distinct graphic. See css/aiad27.css. */
-  'aiad27-safe': { name: 'AIAD27 · Safe', swatch: '#00BEDD', defaults: CAMPAIGN_COMPOSITIONS },
-  'aiad27-smart': { name: 'AIAD27 · Smart', swatch: '#FF7038', defaults: CAMPAIGN_COMPOSITIONS },
-  'aiad27-creative': { name: 'AIAD27 · Creative', swatch: '#AC91FF', defaults: CAMPAIGN_COMPOSITIONS },
-  'aiad27-responsible': { name: 'AIAD27 · Responsible', swatch: '#63DF93', defaults: CAMPAIGN_COMPOSITIONS },
-  'aiad27-future': { name: 'AIAD27 · Future', swatch: '#FA83EB', defaults: CAMPAIGN_COMPOSITIONS },
-  product: { name: 'Product · Keynote minimal', swatch: '#f5f5f7' },
-  editorial: { name: 'Editorial · Paper', swatch: '#f3efe6' },
-  cinematic: { name: 'Cinematic · Dark pitch', swatch: '#0a0b0f', ground: 'dark' },
-  brutal: { name: 'Brutal · Mono', swatch: '#111111', ground: 'dark' },
-  midnight: { name: 'Midnight', swatch: '#1b2a4a', ground: 'dark' },
-  paper:    { name: 'Paper',    swatch: '#f4f1ea' },
-  ocean:    { name: 'Ocean',    swatch: '#0d5c63', ground: 'dark' },
-  ember:    { name: 'Ember',    swatch: '#3d1b2a', ground: 'dark' },
-  mono:     { name: 'Mono',     swatch: '#111111', ground: 'dark' }
-};
-
-/** 'dark' or 'light' for a theme key, light for anything unknown. */
-function themeGround(theme) {
-  var t = THEMES[theme];
-  return t && t.ground === 'dark' ? 'dark' : 'light';
-}
-
 /* Morph is last because it is the only one that is a claim about the
    material rather than a way of getting from A to B: it carries the shared
    thing — the same heading, picture or chart — across the cut, and falls back
    to a fade where the browser cannot (or where less motion was asked for). */
-var TRANSITIONS = ['none', 'fade', 'push', 'zoom', 'wipe', 'morph'];
+var TRANSITIONS = /** @type {const} */ (['none', 'fade', 'push', 'zoom', 'wipe', 'morph']);
 
 /* A stack is narrated layer by layer; past about eight the slide has stopped
    being a stack and become a folder. */
@@ -596,7 +533,7 @@ function makeDeck(title) {
     /* The house theme. This was midnight, so New blank document handed back
        a navy deck inside a sage app — and makeLesson had to override it to
        studio to get the default anyone actually sees. */
-    theme: 'studio',
+    theme: DEFAULT_THEME,
     /* Which catalogue format this game was created as.
        The engine is how it plays; the format is what it is for. Without
        this, every preset over `choice` authored as "Multiple choice" and a
@@ -813,7 +750,7 @@ function normalizeDeck(raw) {
   var d = Object.assign(makeDeck(), raw);
   d.id = d.id || uid();
   d.title = String(d.title || 'Untitled deck');
-  if (!THEMES[d.theme]) d.theme = 'studio';
+  d.theme = resolveTheme(d.theme);
   d.quiz = normalizeQuizConfig(raw.quiz);
   d.slides = (Array.isArray(raw.slides) ? raw.slides : []).map(normalizeSlide);
   if (!d.slides.length) d.slides = [makeSlide('title')];
@@ -936,7 +873,7 @@ function normalizeGame(raw) {
      blank quiz and offered Beat the Clock beside them. */
   if (!format && isSpecialStyle(style) && FORMATS[style]) format = style;
   g.format = format;
-  if (!THEMES[g.theme]) g.theme = 'midnight';
+  g.theme = resolveTheme(g.theme);
   g.libraryGroup = normalizeLibraryGroup(raw.libraryGroup, g.theme);
   g.sourceDeckId = String(raw.sourceDeckId || '').slice(0, 80);
   g.settings = normalizeGameSettings(raw.settings);
@@ -1527,6 +1464,9 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   chartPrimaryCategory: chartPrimaryCategory,
   slideHeight: slideHeight,
   THEMES: THEMES,
+  DEFAULT_THEME, resolveTheme,
+  createCompositionRenderer,
+  DESIGN_CONTROLS, designApplies,
   COMPOSITIONS: COMPOSITIONS,
   compositionOptions: compositionOptions,
   slideComposition: slideComposition, themeGround,
@@ -1658,4 +1598,4 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   LibraryFolders: LibraryFolders
 });
 
-export { COMPOSITIONS, compositionOptions, slideComposition, SLIDE_W, SLIDE_H, ASPECTS, parsePerson, orgTree, CHART_TAXONOMY, chartCategories, chartPrimaryCategory, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, themeGround, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, INFO_LAYOUTS, parseInfoLine, formatInfoLine, infoNumber, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, unusedDraft, libraryGroupFromTheme, normalizeLibraryGroup, LIBRARY_GROUPS, LibraryFolders, GAME_FORMAT_PRESETS, getShowcaseGame };
+export { DEFAULT_THEME, resolveTheme, DESIGN_CONTROLS, designApplies, COMPOSITIONS, compositionOptions, slideComposition, SLIDE_W, SLIDE_H, ASPECTS, parsePerson, orgTree, CHART_TAXONOMY, chartCategories, chartPrimaryCategory, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, themeGround, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, INFO_LAYOUTS, parseInfoLine, formatInfoLine, infoNumber, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, unusedDraft, libraryGroupFromTheme, normalizeLibraryGroup, LIBRARY_GROUPS, LibraryFolders, GAME_FORMAT_PRESETS, getShowcaseGame };

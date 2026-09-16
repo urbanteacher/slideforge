@@ -1,6 +1,284 @@
 /* Generated from src/model.js. Do not edit; run npm run build. */
 "use strict";
 (() => {
+  // src/render/compositions.js
+  function createCompositionRenderer(SF, helpers) {
+    const { el, rich, asStep, layoutQuote, layoutStatement, appendSlideDate } = helpers;
+    const LETTERS = ["A", "B", "C", "D", "E", "F"];
+    function layoutComposition(deck, slide, pad, root) {
+      var choice3 = SF.slideComposition(deck, slide);
+      if (!choice3 || !SF.COMPOSITIONS[choice3].structured) return false;
+      root.classList.add("composition-structured", "cp", "cp-" + slide.type);
+      var header = el("div", "cp-header");
+      if (slide.subtitle && !["compare", "spectrum"].includes(slide.type)) header.appendChild(rich("div", "cp-beat", slide, "subtitle", slide.subtitle));
+      pad.appendChild(header);
+      var body = el("div", "cp-body");
+      pad.appendChild(body);
+      function field(tag, cls, key) {
+        return rich(tag, cls, slide, key, slide[key] || "");
+      }
+      function heading() {
+        body.appendChild(field("h2", "cp-heading", "title"));
+      }
+      function note() {
+        if (slide.body) body.appendChild(field("p", "cp-source", "body"));
+      }
+      function parts(line) {
+        return SF.parseInfoLine(line);
+      }
+      function bullet(tag, cls, i, text2) {
+        return rich(tag, cls, slide, "bullets." + i, text2);
+      }
+      function artwork() {
+        var art = el("div", "cp-art");
+        if (SF.safeMedia(slide.image)) {
+          var img = el("img", "cp-prop");
+          img.alt = "";
+          img.src = SF.safeMedia(slide.image);
+          art.appendChild(img);
+        }
+        return art;
+      }
+      if (slide.type === "title") {
+        var title = el("div", "cp-title-copy");
+        title.appendChild(field("h1", "", "title"));
+        if (slide.body) title.appendChild(field("p", "cp-tagline", "body"));
+        appendSlideDate(slide, title);
+        body.appendChild(title);
+        body.appendChild(artwork());
+      } else if (slide.type === "quote") {
+        body.appendChild(el("span", "cp-quote-mark", "“"));
+        layoutQuote(Object.assign({}, slide, { subtitle: "" }), body);
+        body.querySelector(".q").classList.add("cp-scenario");
+      } else if (slide.type === "cards") {
+        heading();
+        var choices = el("div", "cp-choices");
+        (slide.bullets || []).forEach(function(line, i) {
+          var p = SF.parseKeywordLine(line), card = asStep(el("div", "cp-choice"), slide);
+          card.appendChild(el("span", "cp-letter", LETTERS[i] || String(i + 1)));
+          var copy = el("div", "cp-choice-copy");
+          copy.appendChild(bullet("h3", "", i, p.term));
+          copy.appendChild(bullet("p", "", i, p.def));
+          card.appendChild(copy);
+          choices.appendChild(card);
+        });
+        body.appendChild(choices);
+        if (slide.body) body.appendChild(field("p", "cp-prompt", "body"));
+      } else if (slide.type === "statement") {
+        var discussion = el("div", "cp-discussion");
+        discussion.appendChild(el("span", "cp-pair-mark", "↔"));
+        layoutStatement(Object.assign({}, slide, { subtitle: "" }), discussion);
+        discussion.querySelector(".statement").classList.add("cp-question");
+        body.appendChild(discussion);
+      } else if (slide.type === "journey") {
+        heading();
+        var rules = el("div", "cp-rules");
+        (slide.bullets || []).forEach(function(line, i) {
+          var p = SF.parseKeywordLine(line), row = asStep(el("div", "cp-rule"), slide);
+          row.appendChild(el("span", "cp-rule-number", "0" + (i + 1)));
+          var copy = el("div");
+          copy.appendChild(bullet("h3", "", i, p.term));
+          copy.appendChild(bullet("p", "", i, p.def));
+          row.appendChild(copy);
+          rules.appendChild(row);
+        });
+        body.appendChild(rules);
+        note();
+      } else if (slide.type === "keyfact") {
+        var actionMark = el("div", "cp-action-number", "↗");
+        actionMark.setAttribute("aria-hidden", "true");
+        body.appendChild(actionMark);
+        var action = el("div", "cp-action");
+        action.appendChild(field("h2", "", "title"));
+        action.appendChild(field("p", "", "body"));
+        (slide.bullets || []).forEach(function(line, i) {
+          action.appendChild(asStep(bullet("p", "cp-write-line", i, line), slide));
+        });
+        body.appendChild(action);
+      } else if (slide.type === "compare") {
+        heading();
+        var heads = parts(slide.subtitle), table = el("div", "cp-comparison");
+        var labelled = (slide.bullets || []).some(function(line) {
+          return !!parts(line).note;
+        });
+        var th = el("div", "cp-compare-head" + (labelled ? " labelled" : ""));
+        if (labelled) th.appendChild(el("span"));
+        th.appendChild(rich("h3", "", slide, "subtitle", heads.label));
+        th.appendChild(rich("h3", "", slide, "subtitle", heads.value));
+        table.appendChild(th);
+        (slide.bullets || []).forEach(function(line, i) {
+          var p = parts(line), row = asStep(el("div", "cp-compare-row" + (labelled ? " labelled" : "")), slide);
+          if (labelled) row.appendChild(bullet("p", "", i, p.note));
+          row.appendChild(bullet("p", "", i, p.label));
+          row.appendChild(bullet("p", "", i, p.value));
+          table.appendChild(row);
+        });
+        body.appendChild(table);
+        note();
+      } else if (slide.type === "iceberg") {
+        heading();
+        var reveal = el("div", "cp-risk-map");
+        var risks = el("div", "cp-risks");
+        (slide.bullets || []).forEach(function(line, i) {
+          var p = parts(line), row = asStep(el("div", "cp-risk"), slide);
+          row.appendChild(bullet("span", "cp-risk-number", i, p.value || String(i + 1)));
+          row.appendChild(bullet("h3", "", i, p.label));
+          row.appendChild(bullet("p", "", i, p.note));
+          risks.appendChild(row);
+        });
+        reveal.appendChild(risks);
+        body.appendChild(reveal);
+        note();
+      } else if (slide.type === "sourcecheck") {
+        heading();
+        var receipt = el("div", "cp-credits");
+        (slide.bullets || []).forEach(function(line, i) {
+          var p = parts(line), row = asStep(el("div", "cp-credit"), slide);
+          row.appendChild(bullet("span", "", i, p.label));
+          row.appendChild(bullet("strong", "", i, p.value));
+          row.appendChild(bullet("p", "", i, p.note));
+          receipt.appendChild(row);
+        });
+        body.appendChild(receipt);
+        note();
+      } else if (slide.type === "spectrum") {
+        heading();
+        var lanes = el("div", "cp-lanes");
+        [parts(slide.subtitle).label, parts(slide.subtitle).value].forEach(function(label, side) {
+          var lane = el("div", "cp-lane");
+          lane.appendChild(rich("h3", "", slide, "subtitle", label));
+          (slide.bullets || []).forEach(function(line, i) {
+            var p = parts(line);
+            if ((Number(p.value) >= 50 ? 1 : 0) !== side) return;
+            var item = asStep(el("div", "cp-lane-item"), slide);
+            item.dataset.step = String(i);
+            item.appendChild(bullet("strong", "", i, p.label));
+            item.appendChild(bullet("span", "cp-lane-position", i, p.value));
+            if (p.note) item.appendChild(bullet("p", "", i, p.note));
+            lane.appendChild(item);
+          });
+          lanes.appendChild(lane);
+        });
+        body.appendChild(lanes);
+        note();
+      }
+      return true;
+    }
+    function applyComposition(root, deck, slide) {
+      var choice3 = SF.slideComposition(deck, slide);
+      if (!choice3) return;
+      root.dataset.composition = choice3;
+      var statement = root.querySelector(".statement-word");
+      if (statement) statement.style.removeProperty("font-size");
+      var words = String(slide.type === "quote" || slide.type === "statement" ? slide.body || "" : slide.title || "");
+      root.style.setProperty("--composition-display", words.length > 95 ? "var(--composition-display-longest,60px)" : words.length > 65 ? "var(--composition-display-long,72px)" : words.length > 35 ? "var(--composition-display-medium,86px)" : "var(--composition-display-short,112px)");
+      var n = (slide.bullets || []).filter(function(x) {
+        return String(x).trim();
+      }).length;
+      root.style.setProperty("--composition-columns", String(n === 2 ? 2 : 3));
+      root.dataset.compositionDensity = n > 4 ? "dense" : "normal";
+    }
+    return { render: layoutComposition, apply: applyComposition };
+  }
+
+  // src/design-controls.js
+  var DESIGN_CONTROLS = {
+    composition: { label: "Composition", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], description: "Arrange the same content. Theme default follows the theme; Original layout opts out." },
+    align: { label: "Text alignment", pane: "Look", types: "*", description: "Align text left, centre or right." },
+    size: { label: "Text size", pane: "Look", types: "*", description: "Scale text relative to the theme. Display sizes grow only as far as the content fits." },
+    textColor: { label: "Text colour · whole slide", pane: "Look", types: "*", description: "Set the slide text colour. Individual words use the text formatting toolbar." },
+    background: { label: "Slide background", pane: "Look", types: "*", description: "Replace the background with a solid colour. Check contrast after changing it." },
+    placement: { label: "Image placement", pane: "Look", types: ["split"], description: "Place the picture left, right, above or below the text. Left/right also updates the image-side field." },
+    imageShare: { label: "Image share", pane: "Look", types: ["split"], description: "Give the picture 35%, 50% or 65% of the split." },
+    mediaGround: { label: "Picture mount", pane: "Look", types: ["split"], description: "Mount the picture on a card or extend it to the edges." },
+    imageStep: { label: "Image arrives", pane: "Look", types: ["split"], description: "Show the picture with the slide, before the points or after them." },
+    cardsMode: { label: "Cards layout", pane: "Look", types: ["cards"], description: "Choose a grid, full-width rows, a stack or picture cards. Selecting one returns to the original cards layout. Stack enables progressive builds." },
+    cardPics: { label: "Picture shape", pane: "Look", types: ["cards"], when: "Picture cards selected or card images supplied", description: "Crop to portrait covers or contain landscape plates." },
+    statStyle: { label: "Tile style", pane: "Look", types: ["stats"], description: "Display statistics as numbers, rings or KPI bars." },
+    funnelDirection: { label: "Direction", pane: "Look", types: ["funnel"], description: "Draw a descending funnel or an ascending pyramid." },
+    timelineMode: { label: "Shape", pane: "Look", types: ["timeline"], description: "Arrange dated events across a rail or down a spine." },
+    backdrop: { label: "Backdrop motion", pane: "Look", types: ["title", "section"], description: "Animate a drift, grid or glow using theme colours." },
+    logoGround: { label: "Logo sits on", pane: "Look", types: ["image", "gallery", "video"], description: "Choose the logo variant for the image behind it. Overrides the deck preference." },
+    imageFrame: { label: "Image frame", pane: "Look", types: ["image", "gallery"], description: "Use full bleed or a fixed image ratio with the caption below." },
+    capStyle: { label: "Caption style", pane: "Look", types: ["image", "gallery", "video", "split"], when: "Split slides need a caption", description: "Place a gradient or colour bar behind the caption, use plain text or hide it." },
+    capPos: { label: "Caption position", pane: "Look", types: ["image", "gallery", "video"], description: "Place the caption at the top or bottom." },
+    capFade: { label: "Caption clears itself", pane: "Look", types: ["image"], description: "Keep the caption or clear it after 5–30 seconds in the show." },
+    imageMotion: { label: "Image motion", pane: "Look", types: ["image"], description: "Keep the image still, zoom slowly or travel between two focal points. Motion plays in Present." },
+    focalX: { label: "Image focus horizontal", pane: "Look", types: ["split", "image"], description: "Choose the horizontal focus, from 0 to 100 percent." },
+    focalY: { label: "Image focus vertical", pane: "Look", types: ["split", "image"], description: "Choose the vertical focus, from 0 to 100 percent." },
+    focalX2: { label: "Travels to horizontal", pane: "Look", types: ["image"], when: "Image motion is Travel", description: "Set the horizontal destination of the image move." },
+    focalY2: { label: "Travels to vertical", pane: "Look", types: ["image"], when: "Image motion is Travel", description: "Set the vertical destination of the image move." },
+    imageTravelSecs: { label: "How long the move takes", pane: "Look", types: ["image"], when: "Image motion is Travel", description: "Choose a 12, 20 or 30 second move." },
+    chartMotion: { label: "Chart motion", pane: "Look", types: ["chart"], description: "Show the chart already drawn or animate it on arrival in Present." },
+    chartFocus: { label: "Focus one series", pane: "Look", types: ["chart"], when: "Chart has more than one series", description: "Emphasise one series while retaining the others for comparison." },
+    words: { label: "Words arrive", pane: "Motion", types: ["statement"], description: "Animate the statement with Rise, Fade or Reveal. Reduced-motion preferences are respected." },
+    wordSpeed: { label: "Speed", pane: "Motion", types: ["statement"], when: "Word animation enabled", description: "Set the speed of the word movement and its hold." },
+    wordStagger: { label: "Spacing", pane: "Motion", types: ["statement"], when: "Word animation enabled", description: "Bring the words together, in a wave or one at a time." },
+    wordFrom: { label: "Direction", pane: "Motion", types: ["statement"], when: "Word animation enabled; spacing is not Together", description: "Start at the first word, last word or centre." },
+    wordsLoop: { label: "And leave again", pane: "Motion", types: ["statement"], when: "Word animation enabled", description: "Repeat the arrival, hold and exit." },
+    wordPlan: { label: "AI choreography", pane: "Motion", types: ["statement"], when: "Word animation enabled", description: "Request a movement plan for these words or letters. Editing the text retires the old plan; Clear choreography removes it." }
+  };
+  function designApplies(key, type2) {
+    const control = DESIGN_CONTROLS[key];
+    return !!control && (control.types === "*" ? !["quiz", "game"].includes(type2) : control.types.includes(type2));
+  }
+
+  // src/themes.js
+  var DEFAULT_THEME = "studio";
+  var CAMPAIGN_COMPOSITIONS = {
+    title: "poster-art",
+    quote: "voice",
+    cards: "ballot",
+    statement: "prompt",
+    journey: "rules",
+    keyfact: "commitment",
+    compare: "comparison",
+    iceberg: "reveal-map",
+    sourcecheck: "credits",
+    spectrum: "lanes"
+  };
+  var THEMES = {
+    studio: { name: "Studio · Sage & ink", swatch: "#dce8cc", art: { "className": "studio-art", "html": '<div class="art-orbit"></div><div class="art-tile">✳</div><div class="art-dot"></div><div class="art-caption">STAY CURIOUS.</div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    northeastern: { name: "Northeastern London", swatch: "#c8102e", ground: { default: "light", title: "dark", section: "dark", quote: "dark" }, art: { "className": "nu-art", "html": '<div class="nu-skyline"></div><div class="nu-n"></div>', "layouts": ["title", "section"], "eyebrow": { "className": "nu-eyebrow", "title": ["title", "org"], "section": ["org"] } }, defaults: {} },
+    ukbt: { name: "UK Black Tech", swatch: "#264258", ground: "dark", art: { "className": "ukbt-art", "html": '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div><div class="ukbt-object"></div>', "layouts": ["title", "section"] }, defaults: {} },
+    "ukbt-institute": { name: "UKBT Institute", swatch: "#2d3134", ground: "dark", art: { "className": "ukbt-art", "html": '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div><div class="ukbt-object"></div>', "layouts": ["title", "section"] }, defaults: {} },
+    /* AI Awareness Day 2026. One design, five grounds: the campaign gives each
+       of its principles a colour, and a starter deck belongs to exactly one of
+       them, so the principle is the theme rather than a setting inside it.
+       Picking "Safe" is how a deck gets the cyan badge and the cyan rules —
+       there is nothing else to set. See css/aiad26.css. */
+    "aiad26-safe": { name: "AI Awareness · Safe", swatch: "#00c4ee", art: { "className": "aiad-art", "html": '<div class="aiad-fold"></div><div class="aiad-seam"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    "aiad26-smart": { name: "AI Awareness · Smart", swatch: "#ff6734", art: { "className": "aiad-art", "html": '<div class="aiad-fold"></div><div class="aiad-seam"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    "aiad26-creative": { name: "AI Awareness · Creative", swatch: "#795bff", art: { "className": "aiad-art", "html": '<div class="aiad-fold"></div><div class="aiad-seam"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    "aiad26-responsible": { name: "AI Awareness · Responsible", swatch: "#00a896", art: { "className": "aiad-art", "html": '<div class="aiad-fold"></div><div class="aiad-seam"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    "aiad26-future": { name: "AI Awareness · Future", swatch: "#ff7eed", art: { "className": "aiad-art", "html": '<div class="aiad-fold"></div><div class="aiad-seam"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    /* AI Awareness Day 2027 — Keep Humans in the Loop. Five themes, one per
+       strand. Colour is paired with the strand name on every slide, and each
+       cover has a distinct graphic. See css/aiad27.css. */
+    "aiad27-safe": { name: "AIAD27 · Safe", swatch: "#00BEDD", ground: { default: "light", quote: "dark", journey: "dark" }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
+    "aiad27-smart": { name: "AIAD27 · Smart", swatch: "#FF7038", ground: { default: "light", quote: "dark", journey: "dark" }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
+    "aiad27-creative": { name: "AIAD27 · Creative", swatch: "#AC91FF", ground: { default: "light", quote: "dark", journey: "dark" }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
+    "aiad27-responsible": { name: "AIAD27 · Responsible", swatch: "#63DF93", ground: { default: "light", quote: "dark", journey: "dark" }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
+    "aiad27-future": { name: "AIAD27 · Future", swatch: "#FA83EB", ground: { default: "light", quote: "dark", journey: "dark" }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
+    product: { name: "Product · Keynote minimal", swatch: "#f5f5f7", art: { "className": "pd-art", "html": '<div class="pd-bloom"></div><div class="pd-ring"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    editorial: { name: "Editorial · Paper", swatch: "#f3efe6", art: { "className": "ed-art", "html": '<div class="ed-rules"></div><div class="ed-quote">”</div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    cinematic: { name: "Cinematic · Dark pitch", swatch: "#0a0b0f", ground: "dark", art: { "className": "cine-art", "html": '<div class="cine-bar cine-top"></div><div class="cine-bar cine-bottom"></div><div class="cine-streak"></div><div class="cine-vignette"></div>', "layouts": ["title", "section"] }, defaults: {} },
+    brutal: { name: "Brutal · Mono", swatch: "#111111", ground: "dark", art: { "className": "brut-art", "html": '<div class="brut-grid"></div><div class="brut-marks"></div>', "layouts": ["title", "section"] }, defaults: {} },
+    midnight: { name: "Midnight", swatch: "#1b2a4a", ground: "dark", art: null, defaults: {} },
+    paper: { name: "Paper", swatch: "#f4f1ea", ground: "light", art: null, defaults: {} },
+    ocean: { name: "Ocean", swatch: "#0d5c63", ground: "dark", art: null, defaults: {} },
+    ember: { name: "Ember", swatch: "#3d1b2a", ground: "dark", art: null, defaults: {} },
+    mono: { name: "Mono", swatch: "#111111", ground: "dark", art: null, defaults: {} }
+  };
+  function themeGround(theme, layout) {
+    const ground = THEMES[theme]?.ground;
+    const resolved = typeof ground === "object" && ground ? layout && ground[layout] || ground.default : ground;
+    return resolved === "dark" ? "dark" : "light";
+  }
+  function resolveTheme(theme) {
+    return Object.hasOwn(THEMES, theme) ? theme : DEFAULT_THEME;
+  }
+
   // src/deck/exploration.js
   function bounded(value, fallback, min, max) {
     const n = Number(value);
@@ -7160,7 +7438,7 @@
       kind: "game",
       style,
       title: title || "Untitled game",
-      theme: "studio",
+      theme: DEFAULT_THEME,
       libraryGroup: "",
       sourceDeckId: "",
       created: Date.now(),
@@ -8173,56 +8451,10 @@
     var key = explicit || defaults[slide.type] || "";
     return compositionOptions(slide).includes(key) ? key : "";
   }
-  var CAMPAIGN_COMPOSITIONS = {
-    title: "poster-art",
-    quote: "voice",
-    cards: "ballot",
-    statement: "prompt",
-    journey: "rules",
-    keyfact: "commitment",
-    compare: "comparison",
-    iceberg: "reveal-map",
-    sourcecheck: "credits",
-    spectrum: "lanes"
-  };
-  var THEMES = {
-    studio: { name: "Studio · Sage & ink", swatch: "#dce8cc" },
-    northeastern: { name: "Northeastern London", swatch: "#c8102e" },
-    ukbt: { name: "UK Black Tech", swatch: "#264258", ground: "dark" },
-    "ukbt-institute": { name: "UKBT Institute", swatch: "#2d3134", ground: "dark" },
-    /* AI Awareness Day 2026. One design, five grounds: the campaign gives each
-       of its principles a colour, and a starter deck belongs to exactly one of
-       them, so the principle is the theme rather than a setting inside it.
-       Picking "Safe" is how a deck gets the cyan badge and the cyan rules —
-       there is nothing else to set. See css/aiad26.css. */
-    "aiad26-safe": { name: "AI Awareness · Safe", swatch: "#00c4ee" },
-    "aiad26-smart": { name: "AI Awareness · Smart", swatch: "#ff6734" },
-    "aiad26-creative": { name: "AI Awareness · Creative", swatch: "#795bff" },
-    "aiad26-responsible": { name: "AI Awareness · Responsible", swatch: "#00a896" },
-    "aiad26-future": { name: "AI Awareness · Future", swatch: "#ff7eed" },
-    /* AI Awareness Day 2027 — Keep Humans in the Loop. Five themes, one per
-       strand. Colour is paired with the strand name on every slide, and each
-       cover has a distinct graphic. See css/aiad27.css. */
-    "aiad27-safe": { name: "AIAD27 · Safe", swatch: "#00BEDD", defaults: CAMPAIGN_COMPOSITIONS },
-    "aiad27-smart": { name: "AIAD27 · Smart", swatch: "#FF7038", defaults: CAMPAIGN_COMPOSITIONS },
-    "aiad27-creative": { name: "AIAD27 · Creative", swatch: "#AC91FF", defaults: CAMPAIGN_COMPOSITIONS },
-    "aiad27-responsible": { name: "AIAD27 · Responsible", swatch: "#63DF93", defaults: CAMPAIGN_COMPOSITIONS },
-    "aiad27-future": { name: "AIAD27 · Future", swatch: "#FA83EB", defaults: CAMPAIGN_COMPOSITIONS },
-    product: { name: "Product · Keynote minimal", swatch: "#f5f5f7" },
-    editorial: { name: "Editorial · Paper", swatch: "#f3efe6" },
-    cinematic: { name: "Cinematic · Dark pitch", swatch: "#0a0b0f", ground: "dark" },
-    brutal: { name: "Brutal · Mono", swatch: "#111111", ground: "dark" },
-    midnight: { name: "Midnight", swatch: "#1b2a4a", ground: "dark" },
-    paper: { name: "Paper", swatch: "#f4f1ea" },
-    ocean: { name: "Ocean", swatch: "#0d5c63", ground: "dark" },
-    ember: { name: "Ember", swatch: "#3d1b2a", ground: "dark" },
-    mono: { name: "Mono", swatch: "#111111", ground: "dark" }
-  };
-  function themeGround(theme) {
-    var t = THEMES[theme];
-    return t && t.ground === "dark" ? "dark" : "light";
-  }
-  var TRANSITIONS = ["none", "fade", "push", "zoom", "wipe", "morph"];
+  var TRANSITIONS = (
+    /** @type {const} */
+    ["none", "fade", "push", "zoom", "wipe", "morph"]
+  );
   var GALLERY_MAX = 8;
   var EXPLORATION_TYPES = ["beforeafter", "explore", "simulation", "chart", "spotfake"];
   var TEAM_COLORS = ["#e8474f", "#2b7ce9", "#e8a020", "#29a86b", "#8b5cf0", "#d4477f"];
@@ -8512,7 +8744,7 @@
       /* The house theme. This was midnight, so New blank document handed back
          a navy deck inside a sage app — and makeLesson had to override it to
          studio to get the default anyone actually sees. */
-      theme: "studio",
+      theme: DEFAULT_THEME,
       /* Which catalogue format this game was created as.
          The engine is how it plays; the format is what it is for. Without
          this, every preset over `choice` authored as "Multiple choice" and a
@@ -8667,7 +8899,7 @@
     var d = Object.assign(makeDeck(), raw);
     d.id = d.id || uid();
     d.title = String(d.title || "Untitled deck");
-    if (!THEMES[d.theme]) d.theme = "studio";
+    d.theme = resolveTheme(d.theme);
     d.quiz = normalizeQuizConfig(raw.quiz);
     d.slides = (Array.isArray(raw.slides) ? raw.slides : []).map(normalizeSlide);
     if (!d.slides.length) d.slides = [makeSlide("title")];
@@ -8745,7 +8977,7 @@
     g.title = String(g.title || "Untitled game");
     if (!format && isSpecialStyle(style) && FORMATS[style]) format = style;
     g.format = format;
-    if (!THEMES[g.theme]) g.theme = "midnight";
+    g.theme = resolveTheme(g.theme);
     g.libraryGroup = normalizeLibraryGroup(raw.libraryGroup, g.theme);
     g.sourceDeckId = String(raw.sourceDeckId || "").slice(0, 80);
     g.settings = normalizeGameSettings(raw.settings);
@@ -9197,6 +9429,11 @@
     chartPrimaryCategory,
     slideHeight,
     THEMES,
+    DEFAULT_THEME,
+    resolveTheme,
+    createCompositionRenderer,
+    DESIGN_CONTROLS,
+    designApplies,
     COMPOSITIONS,
     compositionOptions,
     slideComposition,

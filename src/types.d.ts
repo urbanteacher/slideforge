@@ -15,14 +15,14 @@
 /* ---------------------------------------------------------------- enums --*/
 
 /** Theme keys in `THEMES`. */
-export type ThemeKey = 'studio' | 'midnight' | 'paper' | 'ocean' | 'ember' | 'mono';
+export type ThemeKey = keyof typeof import('./themes.js').THEMES;
 
 /** Slide-to-slide animations in `TRANSITIONS`. */
-export type TransitionKey = 'none' | 'fade' | 'push' | 'zoom' | 'wipe';
+export type TransitionKey = typeof import('./model.js').TRANSITIONS[number];
 
 /** Layouts an author can pick in the deck editor (`DECK_TYPES`). */
 export type DeckSlideType =
-  | 'journey' | 'mindmap' | 'introduction' | 'title' | 'section' | 'content' | 'keywords' | 'italics' | 'links'
+  | 'statement' | 'journey' | 'mindmap' | 'introduction' | 'title' | 'section' | 'content' | 'keywords' | 'italics' | 'links'
   | 'split' | 'cards' | 'table' | 'code' | 'image' | 'video' | 'quote' | 'join'
   | 'chart' | 'gallery' | 'beforeafter' | 'explore' | 'simulation'
   | 'keyfact' | 'orgchart'
@@ -131,7 +131,51 @@ export interface GalleryLayer {
   source: string;
 }
 
+export interface WordMotionStep {
+  dx?: number; dy?: number; rot?: number; scale?: number; blur?: number; delay?: number;
+  arc?: 'settle' | 'bounce' | 'mist';
+}
+export interface SlideDesign {
+  composition?: string;
+  align?: 'left' | 'center' | 'right';
+  size?: 'small' | 'medium' | 'large' | 'x2' | 'x3' | 'x5';
+  textColor?: string; background?: string;
+  placement?: 'side' | 'top' | 'bottom';
+  imageShare?: 35 | 50 | 65;
+  mediaGround?: 'card' | 'full';
+  imageStep?: 'none' | 'before' | 'after';
+  cardsMode?: 'grid' | 'rows' | 'stack' | 'pictures';
+  cardPics?: 'covers' | 'plates';
+  statStyle?: 'tile' | 'ring' | 'bar';
+  funnelDirection?: 'down' | 'up';
+  timelineMode?: 'horizontal' | 'vertical';
+  backdrop?: '' | 'drift' | 'grid' | 'glow';
+  logoGround?: '' | 'light' | 'dark';
+  imageFrame?: '' | '16:9' | '4:3' | '3:2' | '1:1' | '4:5';
+  capStyle?: 'scrim' | 'bar' | 'plain' | 'none';
+  capPos?: 'bottom' | 'top';
+  capFade?: 0 | 5 | 10 | 15 | 20 | 30;
+  imageMotion?: '' | 'zoom' | 'travel';
+  focalX?: number; focalY?: number; focalX2?: number; focalY2?: number;
+  imageTravelSecs?: 12 | 20 | 30;
+  chartMotion?: '' | 'grow'; chartFocus?: number;
+  words?: '' | 'rise' | 'fade' | 'reveal';
+  wordSpeed?: 'gentle' | 'medium' | 'quick';
+  wordStagger?: 'together' | 'wave' | 'one';
+  wordFrom?: 'first' | 'last' | 'center';
+  wordsLoop?: boolean;
+  wordPlan?: {text:string; note?:string; unit?:'word'|'letter'; words:WordMotionStep[]};
+}
+export interface DesignControl {
+  label: string;
+  pane: 'Look' | 'Motion';
+  types: '*' | SlideType[];
+  when?: string;
+  description: string;
+}
+
 export interface Slide {
+  design?: SlideDesign;
   /** The {@link Activity} key this slide was built from, when it was chosen
    *  in the activities studio. Only that studio reads these four — to
    *  everything else the slide is an ordinary one. */

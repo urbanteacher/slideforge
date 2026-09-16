@@ -123,9 +123,13 @@ actually be set:
 
 | Where | Keys | Which |
 | --- | --- | --- |
-| `js/customize.js` — "Customise this slide" rail | **27** | align, backdrop, background, capFade, capPos, capStyle, cardPics, cardsMode, chartFocus, chartMotion, composition, focalX, focalY, focalX2, focalY2, funnelDirection, imageFrame, imageMotion, imageShare, imageStep, imageTravelSecs, logoGround, mediaGround, size, statStyle, textColor, timelineMode |
+| `js/customize.js` — "Customise this slide" rail | **28** | align, backdrop, background, capFade, capPos, capStyle, cardPics, cardsMode, chartFocus, chartMotion, composition, focalX, focalY, focalX2, focalY2, funnelDirection, imageFrame, imageMotion, imageShare, imageStep, imageTravelSecs, logoGround, mediaGround, **placement**, size, statStyle, textColor, timelineMode |
 | `js/editor.js` — the Motion tab, for word animation | **6** | words, wordSpeed, wordStagger, wordsLoop, wordPlan, **wordFrom** (added 2026-09-16) |
 | **nowhere** | **0** | — |
+
+**34 settings in total** — and arriving at that number took three attempts, which
+is the argument for the declared inventory rather than a footnote to it. See the
+census warning below.
 
 Two observations follow, and they are the substance of the point.
 
@@ -142,19 +146,37 @@ only way to ask for anything but `first` was to hand-edit the deck JSON. The
 Together takes the direction control away, and choosing a wave brings it
 back"* — the control was designed and never written. Fixed; see §16.
 
-A caution for anyone re-running this census: the first pass of it also reported
-`focalX2` and `focalY2` as orphans, and they are not. They are set by two
-range sliders in `customize.js` labelled *"Travels to horizontal / vertical"*,
-written as `d['focal' + axis + '2']`, which a search for `d.focalX2` does not
-find. Grep the computed-property forms too, or the census will invent
-gaps. `slide.design` has **33** keys in total and, as of this fix, every one of
-them is reachable.
+**A caution for anyone re-running this census — it defeated three attempts.**
+A design key can be written in at least **five** syntactically different ways,
+and each missed form invents a phantom gap or hides a real setting:
 
-**And none of it is documented outside the deck.** `wordFrom`, `focalX2`,
-`wordStagger`, "word animation" and "Image motion" each appear **zero** times
-in `manual.html`, in `docs/`, and in the 88 KB `README.md`. The engine surface
-is knowable by reading `js/render.js`, or by opening the specimen deck and
-copying a slide out of it. Nothing else.
+| Form | Example | What missing it costs |
+| --- | --- | --- |
+| direct | `d.imageMotion = v` | — |
+| delete-to-default | `delete d.wordFrom` | — |
+| picker helper | `choose('Text size','size',…)` | — |
+| computed property | `d['focal' + axis + '2'] = n` | reported `focalX2`/`focalY2` as unreachable orphans when they have sliders |
+| **model helper** | `SF.setImagePlacement(s, v)` → `slide.design.placement` | missed `placement` entirely — the 34th setting |
+
+Counting reads is harder still: most layout code aliases `var d = slide.design
+|| {}` and then reads `d.X`, so a grep for `slide.design.X` finds a fifth of
+them. **No regex pass over this codebase produces a trustworthy total.** That is
+the case for step 3 of §14: the number should come from a declared
+`SlideDesign` and a test that walks the editor, not from pattern-matching.
+
+**And none of it is documented anywhere a user could reach.** `wordFrom`,
+`focalX2`, `wordStagger`, "word animation" and "Image motion" appear **zero**
+times in `docs/` or the 88 KB `README.md`, and **the app ships no design
+reference page at all**. The engine surface is knowable by reading
+`js/render.js`, or by opening the specimen deck and copying a slide out of it.
+Nothing else.
+
+*Correction:* an earlier revision also counted zero hits in `manual.html` as
+evidence. That was a category error — `manual.html` is titled "Private teacher
+controls" and is the **live classroom desk** (name picker, timer, roster,
+reveal controls, Toolkit). It was never documentation, so finding nothing in it
+proves nothing. The right target is a generated reference page of its own; see
+§14 step 3.
 
 ### Why a deck cannot do the job of a check
 
@@ -561,10 +583,24 @@ literals were ten correct lines nobody had a reason to read together.
 
 | Era | The generalisation it invented | The one-off it left | State |
 | --- | --- | --- | --- |
-| 1 | `--s-*` tokens + `.theme-X` | `'midnight'` as the literal fallback, written out at **10** call sites in `render.js`, while `normalizeDeck` and `makeDeck` default to `studio` | **partly retired.** `themedRoot()` reduced ten copies to one. The fallback value is deliberately unchanged — see §16. One copy remains in `editor.js`, and games still default to `midnight` ([src/model.js:878](src/model.js:878), [js/editor.js:3830](js/editor.js:3830)), so decks and games still have different house themes. |
-| 3 | `.theme-X.layout-Y` scoping, `slide.design`, `SF.Custom.layout` | `northeastern` as a hardcoded `else if` at [js/render.js:5104](js/render.js:5104), beside the `THEME_ART` table invented later to do exactly that job | **still there.** Never migrated. |
-| 1–3 | *nothing — never generalised* | **Four** independent name-lists in `css/app.css` answering "is this theme dark?", with divergent membership | **retired.** Now one `ground: 'dark'` declaration — see §10. |
-| 6 | `slide.design.composition` + `applyComposition` | `layoutAwareness27` — a second dispatch path in the same function, whose guard excludes the first | **still there**, and the open decision — see §12. |
+| 1 | `--s-*` tokens + `.theme-X` | `'midnight'` as the literal fallback at **10** call sites in `render.js` plus one in `editor.js`, while the model defaulted to `studio` — decks and games had different house themes | **retired.** `themedRoot()` reduced ten copies to one, then `resolveTheme()` / `DEFAULT_THEME` in `src/themes.js` removed the literal entirely. Games resolve through the same function, so there is now one house theme. |
+| 3 | `.theme-X.layout-Y` scoping, `slide.design`, `SF.Custom.layout` | `northeastern` as a hardcoded `else if` in `renderSlide`, beside the `THEME_ART` table invented later to do the same job | **retired.** Theme art moved into the manifest's `art` descriptor; `THEME_ART` is gone from `render.js` too. |
+| 1–3 | *nothing — never generalised* | **Four** independent name-lists in `css/app.css` answering "is this theme dark?", with divergent membership | **retired.** One `ground` declaration, now per-layout — see §10. |
+| 6 | `slide.design.composition` + `applyComposition` | `layoutAwareness27` — a second dispatch path whose guard excluded the first | **retired.** Replaced by composition-gated `layoutComposition`; see §12 and §16. |
+
+**All four are now closed.** Worth recording what actually cleared them,
+because it was not diligence: in every case the one-off survived because
+nothing in the build could see it, and it died when something could. The dark
+lists went when a theme had to *declare* a ground. The `northeastern` branch
+went when art became a manifest field. The `midnight` literals went when ten
+copies became one function. `layoutAwareness27` went when arrangement became
+data with a picker.
+
+The standing lesson for era 7: **a one-off survives exactly as long as no
+check can name it.** The three bindings added in §16 — `SlideDesign` ↔
+catalogue by `@satisfies`, catalogue ↔ behavioural probes by assertion, and
+the theme manifest test — are the first mechanisms in this codebase that would
+fail on a new one rather than wait for somebody to notice it.
 
 ## 10. Darkness: one declaration now, and the four lists it replaced
 
@@ -820,9 +856,11 @@ The structure-first step, and the one with no theme in it at all. `wordFrom`
 now has a control and `ground` is the manifest's first field, so what remains
 is the part that makes both self-maintaining:
 
-- **Declare `SlideDesign`** with all **33** keys — 27 in the rail, 6 in the
+- **Declare `SlideDesign`** with all **34** keys — 28 in the rail, 6 in the
   Motion tab — each carrying which slide types it applies to. It appears
-  nowhere in `src/types.d.ts` today.
+  nowhere in `src/types.d.ts` today. `TransitionKey` is also still five of six
+  (`morph` missing); `ThemeKey` is now derived from the manifest and the same
+  one-line treatment fixes it.
 - **Generate `ThemeKey` from `THEMES`** rather than hand-listing it, and add
   the test the other two generated artefacts already have: a theme missing a
   required manifest field fails `npm test`.
@@ -831,8 +869,11 @@ is the part that makes both self-maintaining:
   `SlideDesign`. This is the test that turns the specimen decks from
   documentation into coverage. It would have found `wordFrom` immediately;
   a hand census took an afternoon and got the answer wrong once first.
-- **Put the surface in `manual.html`**, generated from the same declaration.
-  The motion engine is still documented nowhere outside the specimen deck.
+- **Generate a design reference page** from the same declaration, and link it
+  from the **Look** tab and from the teacher desk's **Toolkit** pane. Not into
+  `manual.html` itself — that file is the live classroom desk, and a control
+  reference does not belong in the surface a teacher is driving a room from.
+  The motion engine is currently documented nowhere outside the specimen deck.
 
 This is the step that stops era 7 leaving its own one-off.
 
@@ -980,7 +1021,25 @@ predate this work: the committed baselines were measured against the previous
 tree — it would bless its current state along with everything else. Filter by
 theme, and look at the results.
 
-### One correction to this document
+### 2026-09-16 — four corrections found by review
+
+All four are errors in this document's own analysis, found by the agent
+implementing against it. Recorded rather than quietly patched, because each one
+is a reusable lesson about how the codebase misleads a reader.
+
+| What this doc said | What is true | Why it was missed |
+| --- | --- | --- |
+| northeastern is dark on `title` and `section` | also on **`quote`** | `.theme-northeastern.layout-quote` was in my own grep output and I did not read it |
+| the composition opt-out hides theme art | `.product-art` and `.editorial-art` **never matched** — the real classes are `pd-art` and `ed-art`, so Product and Editorial art was never hidden | the `THEME_ART` table naming them was on screen at the time |
+| `slide.design` has 33 keys | **34** — `placement` is written only through `SF.setImagePlacement()` | a fifth write form, model-helper indirection, not covered by the census |
+| the motion surface appears zero times in `manual.html` | `manual.html` is the **live teacher desk**, not documentation, so the count was meaningless | assumed from the filename |
+
+The last one also invalidated a plan step: "put the surface in `manual.html`"
+would have placed a control reference inside the surface a teacher drives a
+room from. Step 3 now specifies a generated reference page linked from **Look**
+and the desk's **Toolkit**.
+
+### An earlier correction to this document
 
 An earlier revision reported **three** unreachable design keys: `wordFrom`,
 `focalX2` and `focalY2`. Only `wordFrom` was. The focal pair is set by two
@@ -1024,6 +1083,115 @@ reachability, renderer module boundaries, shared preview tooling, dedicated
 composition pixel baselines, and canvas regions. The refreshed gallery, NUL and
 Motion Lab demos remain specimens rather than a definition of the engine.
 No blanket visual-baseline update was made.
+
+### 2026-09-16 — theme manifest completed
+
+Step 2 of §14 now uses `src/themes.js` as the single manifest, imported into
+the existing model build. It contains each theme's identity, explicit ground,
+art descriptor (or `null`), and composition defaults. `ThemeKey` is derived from
+its keys instead of the old six-item union.
+
+- `themeGround(theme, layout)` resolves per-layout overrides with a default for
+  other slides and non-slide boards. NUL declares title, section **and quote**
+  dark; AIAD27 declares quote and journey dark. The earlier descriptions of NUL
+  mentioning only title/section omitted the navy quote ground.
+- Theme decoration moved out of `render.js`. The renderer mounts the manifest's
+  trusted static markup and binds optional deck title/organisation as text.
+  This retires the NUL branch without losing its course eyebrow. All decorative
+  containers carry `.theme-art`, which is also the composition opt-out selector;
+  this fixes the old Product/Editorial selector names that missed their art.
+- The shared ground rule now handles NUL logo reversal, replacing its separate
+  CSS list. Explicit logo overrides remain. AIAD27's white-paper print treatment
+  resets automatic inversion so its logo remains visible in PDF/print output.
+- `tests/theme-manifest.test.js` checks required fields, valid grounds, layout
+  keys and compatible composition defaults. `tools/smoke-theme-manifest.mjs`
+  checks 184 theme/layout renders, artwork, safe eyebrow text, logo overrides,
+  and the actual editor, player and handout/print surfaces. Run it with the
+  local server running. No visual baselines were rewritten.
+
+Verification: 420 unit tests pass; the 184 manifest checks and existing 436
+composition/demo render checks pass. Dark-screen and white-print screenshots
+were visually inspected. This validates intrinsic theme grounds; it does not
+infer arbitrary photo backgrounds or replace the author's logo-ground override.
+
+The next milestone is §14 step 3: the complete typed design-surface declaration,
+control reachability checks and generated manual. The renderer module split and
+canvas regions remain separate work.
+
+### 2026-09-16 — declared design surface and live control checks
+
+Step 3 of §14 now has a typed `SlideDesign` with all 34 settings, attached to
+`Slide.design`. `src/design-controls.js` declares each setting's label, pane,
+applicable slide types, explanatory text and conditional availability. Its
+`@satisfies` contract requires exactly the keys of `SlideDesign`; the catalogue
+is exposed as `SF.DESIGN_CONTROLS` through the existing model build.
+
+`TransitionKey` now derives from the runtime transition tuple, including morph.
+The missing statement layout was added to `DeckSlideType` when the catalogue's
+type check exposed that omission. Imported decks retain inactive settings when
+switching layouts; this work does not introduce destructive normalization.
+
+The editor tags its actual fields with catalogue identifiers. `npm test` runs
+`tools/smoke-design-controls.mjs` on a temporary local server and operates all
+34 controls, checking the resulting stored design values. It exercises the
+computed focal-point sliders, image-placement helper, conditional word controls,
+and generation/clearing of choreography. Choreography uses a deterministic
+service stub: no credits or external AI calls are needed. Seeded library decks
+are checked for undeclared design keys as well.
+
+These checks found and fixed three authoring defects:
+
+- Enabling word animation now redraws its dependent controls immediately.
+- Opening picture cards no longer moves an input before replacing it, which
+  threw `NotFoundError` and prevented the inspector from opening.
+- Choosing a cards layout explicitly opts out of a composition such as Ballot,
+  so the selected rows/stack/pictures arrangement can actually take effect.
+
+`design-guide.html` renders a searchable reference directly from the catalogue,
+linked from Look and the classroom desk's Toolkit. It shows user-facing control
+names, slide types and prerequisites. The classroom desk remains a live tool.
+The browser test checks guide completeness and filtering; its layout was also
+visually inspected.
+
+These are reachability and persistence tests, not a claim that every value on
+every layout has been visually verified. Rendering checks and visual regression
+remain separate. Future settings must join the typed catalogue and receive a
+real editor interaction probe. The next work is the remaining theme typography
+and renderer/tooling cleanup before composition-region canvas gestures.
+
+### 2026-09-16 — shared typography and the composition renderer boundary
+
+The shared composition CSS now reads named type-role tokens instead of embedding
+font sizes in each arrangement. The five AIAD27 themes supply a private scale
+and map it to those roles. Adaptive cover sizes also resolve theme tokens; the
+renderer chooses a length band rather than writing an unchangeable pixel size.
+The previous unused `--cp-display` declaration was removed.
+
+The composition renderer and its sizing pass moved to
+`src/render/compositions.js`. It is bundled through the existing model entry
+point and receives the browser's DOM, rich-text, step and standard text-layout
+helpers. No extra script tag or second build entry point is needed. The main
+renderer retains dispatch and chrome. This establishes a module boundary for
+compositions; it is not a claim that the remaining 6,000-line renderer is fully
+split.
+
+`DEFAULT_THEME` and `resolveTheme` in the theme manifest now govern deck/game
+factories, normalization, editor game creation and rendered roots. Missing or
+retired names consistently use Studio. Explicitly saved themes, including
+Midnight, remain unchanged. Game factories already used Studio; the earlier
+Midnight normalization fallback was inconsistent with those factories.
+
+Validation: computed text sizes match exactly before/after on all 78 AIAD27,
+NUL and Motion Lab slides. All 423 tests, 436 composition/demo render checks,
+184 manifest render checks and 45 campaign slide-fit checks pass. Browser checks
+also verify that overriding a typography token changes the actual rendered size,
+and that fallback theme artwork agrees with the fallback root. No blanket
+visual-baseline update was made.
+
+Remaining before canvas work: generalise the campaign fit/preview tools to the
+platform and continue the broader renderer split where it has a concrete
+boundary. Authored campaign poster images remain authored images; this pass
+does not silently replace them with index-selected decoration.
 
 ## Appendix — how the figures were produced
 

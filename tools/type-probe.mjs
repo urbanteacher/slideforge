@@ -37,7 +37,7 @@ const cases = [
   ['board engine drops a required hook', 'src/boards/bingo.js',
     'decorateIntro,', 'xdecorateIntro,'],
   ['deck built with a theme that does not exist', 'src/model.js',
-    "theme: 'studio',", "theme: 'chartreuse',"],
+    "theme: DEFAULT_THEME,", "theme: 'chartreuse',"],
   ['engine given a style key that is not registered', 'src/games/race.js',
     "key: 'race',", "key: 'racing',"],
   ['slide given a transition that does not exist', 'src/model.js',
