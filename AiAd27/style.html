@@ -124,6 +124,15 @@ is three grounds and one typeface, and it holds together because the strand colo
   ballot tile cuts one, because at that size two cuts read as a hexagon instead of a signature.
   The two cuts are the same intended angle expressed twice &mdash; keep them within a point of
   each other.</p>
+  <h3 style="margin-top:34px;font-size:19px">The comparison table <span style="font-weight:400;opacity:.7;font-size:15px">&mdash; two claimed columns, no box</span></h3>
+  <p style="font-size:14px;opacity:.8;margin-top:8px">The campaign's only table, and it does not look
+  like one. There is <b>no outer border and no grid</b> &mdash; a single hairline under each row and
+  one down the middle. The work is done by the two headers: the left is the <b>strand bright</b> as a
+  ground, the right is <b>solid ink</b>, so each column is visibly claimed by a side before a word is
+  read. It sits on cream, the working ground.</p>
+  <div id="tableDemo" style="margin-top:22px"></div>
+  <table id="tableSpec" style="margin-top:18px"></table>
+
   <h3 style="margin-top:34px;font-size:19px">The numbered row <span style="font-weight:400;opacity:.7;font-size:15px">&mdash; index, title, supporting line</span></h3>
   <p style="font-size:14px;opacity:.8;margin-top:8px">The campaign's densest pattern, and the one
   place three type sizes meet. A <b>105px</b> fixed first column holds the index, so every title
@@ -380,6 +389,54 @@ is three grounds and one typeface, and it holds together because the strand colo
     card.appendChild(el('b', null, v.name));
     card.appendChild(el('span', null, v.note));
     document.getElementById('chamferGrid').appendChild(card);
+  });
+
+  /* --- the comparison table ------------------------------------------
+     The headers are the one place in the system where the bright is used as
+     a ground INSIDE a component rather than across a whole slide, and the
+     one place two grounds meet on the same line. Both carry ink or cream and
+     both clear the table above; that is what makes the device safe. */
+  var TBL = [
+    ['Head row', '.cp-compare-head', 'grid 1fr / 1fr · gap 0 · (.labelled → .65fr / 1fr / 1fr)'],
+    ['Left head', '.cp-compare-head h3:first-of-type', '27px · padding 16px 22px · strand BRIGHT ground, ink type'],
+    ['Right head', '.cp-compare-head h3:last-child', '27px · padding 16px 22px · ink ground, ground-colour type'],
+    ['Cell', '.cp-compare-row p', '25px / 400 · line-height 1.13 · padding 13px 22px · 1px bottom rule'],
+    ['Divider', '.cp-compare-row p:nth-child(2)', '1px left rule — the only vertical line in the table']
+  ];
+  var td_ = document.getElementById('tableDemo');
+  td_.style.cssText = 'background:#F6F4ED;color:' + INK + ';padding:26px 30px';
+  var grid = el('div');
+  grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:0';
+  [[ 'A person decides', T.responsible.bright, INK ],
+   [ 'A system decides', INK, '#F6F4ED' ]].forEach(function (h) {
+    var c = el('div', null, h[0]);
+    c.style.cssText = 'font-size:27px;font-weight:700;padding:16px 22px;background:' + h[1] +
+      ';color:' + h[2];
+    grid.appendChild(c);
+  });
+  [['Can be asked why', 'Can only be audited'],
+   ['Answers to someone', 'Answers to nobody'],
+   ['Changes its mind', 'Repeats itself exactly']
+  ].forEach(function (row) {
+    row.forEach(function (cell, i) {
+      var c = el('div', null, cell);
+      c.style.cssText = 'font-size:25px;line-height:1.13;padding:13px 22px;border-bottom:1px solid #C9C6BE' +
+        (i === 1 ? ';border-left:1px solid #C9C6BE' : '');
+      grid.appendChild(c);
+    });
+  });
+  td_.appendChild(grid);
+  var ts = document.getElementById('tableSpec');
+  var th_ = el('tr');
+  ['Part', 'Class', 'Specification'].forEach(function (t) { th_.appendChild(el('th', null, t)); });
+  ts.appendChild(th_);
+  TBL.forEach(function (r) {
+    var tr = el('tr');
+    tr.appendChild(el('td', null, r[0]));
+    var c = el('td', null, r[1]); c.style.fontFamily = 'ui-monospace,SFMono-Regular,Menlo,monospace';
+    tr.appendChild(c);
+    tr.appendChild(el('td', null, r[2]));
+    ts.appendChild(tr);
   });
 
   /* --- the numbered row ----------------------------------------------

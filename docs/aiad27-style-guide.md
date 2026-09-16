@@ -341,6 +341,41 @@ washes out on the bright grounds.
 
 Numbering counts the slides the room sees, not the slides in the file.
 
+### The comparison table
+
+The campaign's only table, and it does not look like one.
+
+```
+┌──────────────────────────┬──────────────────────────┐
+│ A person decides         │ A system decides         │  27px / 700
+│ strand BRIGHT ground     │ INK ground               │  padding 16px 22px
+├──────────────────────────┼──────────────────────────┤
+│ Can be asked why         │ Can only be audited      │  25px / 400
+│ Answers to someone       │ Answers to nobody        │  padding 13px 22px
+└──────────────────────────┴──────────────────────────┘
+```
+
+| Part | Class | Specification |
+| --- | --- | --- |
+| Head row | `.cp-compare-head` | grid `1fr / 1fr`, gap 0 |
+| Left head | `…h3:first-of-type` | 27px, padding `16px 22px`, **strand bright** ground, ink type |
+| Right head | `…h3:last-child` | 27px, padding `16px 22px`, **ink** ground, ground-colour type |
+| Cell | `.cp-compare-row p` | 25px / 400, line-height 1.13, padding `13px 22px`, 1px bottom rule |
+| Divider | `…p:nth-child(2)` | 1px left rule — the only vertical line in the table |
+
+**There is no outer border and no grid.** A single hairline under each row and
+one down the middle, and that is all. The work is done by the two headers: the
+left is the strand bright as a ground, the right is solid ink, so each column
+is visibly claimed by a side before a word is read.
+
+This is the one place the bright is used as a ground *inside* a component
+rather than across a whole slide, and the one place two grounds meet on the
+same line. Both carry ink or cream and both clear §4 — that is what makes the
+device safe, and why it must not be extended to a bright *cell*.
+
+A three-column variant exists: add `.labelled` to both rows for
+`.65fr / 1fr / 1fr`, with the first cell set at 700 as a row label.
+
 ### The numbered row
 
 The campaign's densest pattern, and the one place three type sizes meet.
