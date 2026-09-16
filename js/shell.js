@@ -1554,6 +1554,20 @@
         !!(target && (target.isContentEditable ||
           (target.closest && target.closest('[contenteditable="true"]'))));
       var mod = e.metaKey || e.ctrlKey;
+      /* Words the reader has highlighted outrank the slide they sit on.
+         `typing` only asks where the caret is, and slide text is ordinary
+         rendered HTML — not an input — so selecting a heading in the preview
+         and pressing Cmd+C used to reach copySlide(), whose preventDefault
+         threw the selection away and put the whole slide on the clipboard
+         instead. Copy and cut only: those two are unambiguously about the
+         selection whenever there is one, while every other shortcut here
+         means the same thing with or without text highlighted, and a stray
+         selection should not disable the app. With nothing highlighted,
+         Cmd+C still copies the slide. */
+      var highlighted = (function () {
+        var sel = window.getSelection && window.getSelection();
+        return !!(sel && sel.rangeCount && !sel.isCollapsed && String(sel).trim());
+      })();
 
       if (mod && e.key === 's') { e.preventDefault(); save(); return; }
       if (mod && e.key === 'Enter') { e.preventDefault(); active.play(); return; }
@@ -1570,6 +1584,8 @@
       if (mod && e.altKey && e.code === 'Digit0') { e.preventDefault(); setZoom(1); return; }
 
       if (typing) return;
+      if (highlighted && mod && !e.altKey && (e.key === 'c' || e.key === 'x' ||
+          e.key === 'C' || e.key === 'X')) return;
       if (active.keydown) active.keydown(e);
     });
   }
