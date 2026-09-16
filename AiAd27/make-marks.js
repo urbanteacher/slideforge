@@ -4,7 +4,12 @@
  *
  *   node AiAd27/make-marks.js
  *
- * Five theme icons and one campaign lockup.
+ * Five theme icons, five posters, seven lockups and two chamfer shapes.
+ *
+ * Not everything the campaign draws is a file. The quotation mark, the pair
+ * arrow and the big step numbers are set as glyphs by the renderer, because
+ * they are type and want the type's weight, colour and optical size. They are
+ * specified in docs/aiad27-style-guide.md rather than generated here.
  *
  * THE ICONS ARE DRAWN AS SILHOUETTES, single-path where possible, and used as
  * CSS masks — so each one takes its colour from the theme token rather than
@@ -24,10 +29,24 @@ const path = require('node:path');
    name AND a timer, which is three things and there are only two pseudo-
    elements on a slide. Painting the icon here frees ::before to carry the
    name as text beside it, and ::after to sit top-right as the brief asks. */
-const STRAND = {
-  safe: '#00BEDD', smart: '#FF7038', creative: '#AC91FF',
-  responsible: '#63DF93', future: '#FA83EB'
-};
+/* Read out of the stylesheet, not retyped. css/aiad27.css declares both
+   values per strand and the slides render from it, so a map here would be a
+   second copy of a fact that has already changed once. Parsing it means a
+   colour can only ever be edited in the place that paints with it, and a
+   strand that loses its declaration fails the build instead of silently
+   generating a black icon. */
+const { STRAND, DEEP } = (() => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'css', 'aiad27.css'), 'utf8');
+  const bright = {}, deep = {};
+  const re = /\.theme-aiad27-([a-z]+)\s*\{[^}]*?--a27-color:\s*(#[0-9A-Fa-f]{6})[^}]*?--a27-deep:\s*(#[0-9A-Fa-f]{6})/g;
+  for (let m; (m = re.exec(css)); ) { bright[m[1]] = m[2]; deep[m[1]] = m[3]; }
+  const want = ['safe', 'smart', 'creative', 'responsible', 'future'];
+  const missing = want.filter((k) => !bright[k] || !deep[k]);
+  if (missing.length) {
+    throw new Error(`css/aiad27.css has no --a27-color/--a27-deep for: ${missing.join(', ')}`);
+  }
+  return { STRAND: bright, DEEP: deep };
+})();
 
 /* 24x24 viewBox, the grid these are drawn on. Kept coarse on purpose: at the
    30px they render in the corner, detail below about a 1.5px stroke fills in
@@ -66,18 +85,45 @@ function icon(name, d) {
    band. 20px here is 20px on the wall — the same size as the strand name across the header from
    it, which is what makes the two read as one line of furniture.
 
+   Set from the right edge, not the left. The artboard's right edge already
+   landed on the closing rule's right end — both align to the 52px content
+   edge — but the type inside was anchored at 0 and stopped wherever the words
+   ran out, leaving a ragged strip of empty board between the final 7 and the
+   line below it. The box was flush and the ink was not. Anchored at 300 both
+   lines end together, and the rule moves under the end of the heading to
+   match. Anchoring beats trimming the board to a measured width: the font
+   here is a fallback stack, so the same string is not the same width on every
+   machine, and the right edge has to hold on all of them.
+
    Ink only. The mark is reversed to white on dark grounds by the shared
    data-ground rule, which needs a single flat colour to inverse cleanly. */
-function lockup() {
+function lockup(fill = '#231F20') {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 56" width="300" height="56"
      role="img" aria-label="AI Awareness Day 2027 — Keep Humans in the Loop">
-  <text x="0" y="27" font-family="Inter, Helvetica, Arial, sans-serif" font-size="20"
-        font-weight="700" letter-spacing="-0.4" fill="#231F20">AI Awareness Day 2027</text>
-  <rect x="0" y="34" width="40" height="2.5" fill="#231F20"/>
-  <text x="0" y="50" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13"
-        font-weight="500" letter-spacing="0.1" fill="#231F20" opacity="0.75">Keep Humans in the Loop</text>
+  <text x="300" y="27" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="20"
+        font-weight="700" letter-spacing="-0.4" fill="${fill}">AI Awareness Day 2027</text>
+  <rect x="260" y="34" width="40" height="2.5" fill="${fill}"/>
+  <text x="300" y="50" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13"
+        font-weight="500" letter-spacing="0.1" fill="${fill}" opacity="0.75">Keep Humans in the Loop</text>
 </svg>\n`;
 }
+
+/* THE CHAMFER — the campaign's one structural motif, and the only shape in
+   the system that is not a letter or an icon. A corner is cut at a little
+   over a fifth of the shorter side. The panel cuts two opposite corners
+   (top-right, bottom-left) so the block reads as sheared rather than merely
+   clipped; the ballot tile cuts the top-right only, because at 76px two cuts
+   read as a hexagon instead of a signature.
+
+   It is written once here and exported as a shape file because it was living
+   in two hand-typed forms — this path inside every poster, and a percentage
+   polygon in css/customize.css — with no way to notice when one moved. The
+   two are geometrically the same cut: 100/480 on the panel is 20.8%, and the
+   tile rounds it to 22%. Keep them within a point of each other, and when the
+   website needs the shape take it from shape-chamfer-*.svg rather than
+   retyping the numbers a third time. */
+const CHAMFER_PANEL = 'M0 0H380L480 100V490H100L0 390Z';
+const CHAMFER_TILE = 'M0 0H59.28L76 16.72V76H0Z';   /* 76x76, 22% top-right */
 
 fs.mkdirSync(OUT, { recursive: true });
 /* The 2026-style broken-rule marks are gone: the brief replaced that system
@@ -89,9 +135,36 @@ fs.readdirSync(OUT).filter((f) => /^aiad27-(safe|smart|creative|responsible|futu
 let n = 0;
 Object.keys(ICONS).forEach((key) => {
   fs.writeFileSync(path.join(OUT, `icon-${key}.svg`), icon(key, ICONS[key]), 'utf8');
-  fs.writeFileSync(path.join(OUT, `poster-${key}.svg`), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 490"><path fill="#231F20" d="M0 0H380L480 100V490H100L0 390Z"/><path fill="${STRAND[key]}" transform="translate(108 113) scale(11)" d="${ICONS[key]}"/></svg>\n`, 'utf8');
+  fs.writeFileSync(path.join(OUT, `poster-${key}.svg`), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 490"><path fill="#231F20" d="${CHAMFER_PANEL}"/><path fill="${STRAND[key]}" transform="translate(108 113) scale(11)" d="${ICONS[key]}"/></svg>\n`, 'utf8');
   n += 2;
 });
 fs.writeFileSync(path.join(OUT, 'aiad27-lockup.svg'), lockup(), 'utf8');
+
+/* Three inks of the same drawing, because a brand kit is asked for the file
+   and cannot apply a CSS filter. The decks keep using the plain ink one and
+   let the shared data-ground rule reverse it — that stays the single source
+   on a slide. These are for the website, print and anyone sent a folder.
+
+   The coloured set is the strand's DEEP, not its bright. The lockup is type,
+   and rule 1 of the contrast table says type on cream is black or deep and
+   never bright: all five brights land between 1.53:1 and 2.50:1 on cream,
+   which is the ground this mark is normally on. A bright lockup would be the
+   one asset in the kit that fails the kit's own table. */
+fs.writeFileSync(path.join(OUT, 'aiad27-lockup-reverse.svg'), lockup('#FFFFFF'), 'utf8');
+n += 1;
+Object.keys(DEEP).forEach((key) => {
+  fs.writeFileSync(path.join(OUT, `aiad27-lockup-${key}.svg`), lockup(DEEP[key]), 'utf8');
+  n += 1;
+});
+
+/* The chamfer on its own, at both the sizes the campaign uses it, so the web
+   and print can reach for the shape without owning a copy of the geometry.
+   currentColor, not a fixed ink: unlike the lockup these are used on every
+   ground and have no reversal rule of their own. */
+fs.writeFileSync(path.join(OUT, 'shape-chamfer-panel.svg'),
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 490" role="img" aria-label="Chamfered panel"><path fill="currentColor" d="${CHAMFER_PANEL}"/></svg>\n`, 'utf8');
+fs.writeFileSync(path.join(OUT, 'shape-chamfer-tile.svg'),
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 76" role="img" aria-label="Chamfered tile"><path fill="currentColor" d="${CHAMFER_TILE}"/></svg>\n`, 'utf8');
+n += 2;
 n++;
-console.log(`Wrote ${n} assets to assets/brand/aiad27/ — five theme icons, five poster graphics and the campaign lockup.`);
+console.log(`Wrote ${n} assets to assets/brand/aiad27/ — five theme icons, five poster graphics, seven lockups (ink, reverse, five strands) and two chamfer shapes.`);
