@@ -147,8 +147,23 @@
 .slide.cp .pad { padding:32px 52px 24px; display:flex; flex-direction:column; gap:0; height:100%; position:relative; z-index:1; align-items:stretch; justify-content:flex-start; text-align:left; }
 
 .cp h1,.cp h2,.cp h3,.cp p,.cp blockquote { margin:0; font-family:var(--s-font); color:inherit; }
-.cp-header { display:flex; justify-content:space-between; align-items:center; height:40px; flex:none; font-size:var(--composition-meta,20px); font-weight:600; }
+.cp-header { position:relative; display:flex; justify-content:space-between; align-items:center; height:40px; flex:none; font-size:var(--composition-meta,20px); font-weight:600; }
 .cp-beat { font-weight:400; }
+/* The context line sits in the middle of the slide, not in the middle of
+   whatever room the other two items left it.
+
+   space-between put it hard against the corner reserve, so it drifted with
+   the identity's length and sat about two thirds across — close enough to
+   centre to look like a mistake rather than a choice. Absolute at left:50%
+   resolves against the header's PADDING box, which still spans the full
+   52px-to-52px content width even when has-corner-mark pads 330px off the
+   right, so this lands on the slide's true centre whether or not a mark is
+   in the corner.
+
+   The cap is the narrower of the two gaps it has to clear: the mark starts
+   330px from the right, so the centred line has 288px either side of centre
+   before it runs under it. 560 leaves a little air. */
+.cp-header .cp-beat { position:absolute; left:50%; transform:translateX(-50%); max-width:560px; text-align:center; }
 .cp-body { flex:1; min-height:0; position:relative; padding:32px 0 26px; }
 .cp .cp-heading { font-size:var(--composition-heading,52px); line-height:1.03; letter-spacing:-.035em; font-weight:700; max-width:1120px; text-wrap:balance; }
 .cp .cp-prompt { font-size:var(--composition-body,24px); font-weight:500; }

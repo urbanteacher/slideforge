@@ -63,6 +63,7 @@ try {
       const mark = header && getComputedStyle(header, '::before');
       const foot = n.querySelector('.cp-footer');
       const rect = (el) => { const r = el.getBoundingClientRect(); return { top: r.top - box.top, w: r.width, h: r.height }; };
+      const beatEl = header && header.querySelector('.cp-beat');
       out.push({
         type: s.type, hidden: !!s.hidden, ground: n.dataset.ground,
         slideBg: getComputedStyle(n).backgroundColor,
@@ -79,7 +80,16 @@ try {
         eyebrow: (n.querySelector('.cp-eyebrow') || {}).textContent || null,
         eyebrowColor: n.querySelector('.cp-eyebrow') ? getComputedStyle(n.querySelector('.cp-eyebrow')).color : null,
         closingLine: (n.querySelector('.cp-closing-line') || {}).textContent || null,
-        beatInHeader: !!(header && header.querySelector('.cp-beat')),
+        beatInHeader: !!beatEl,
+        /* Offset of the context line's centre from the slide's, in px. The
+           header's own box is 330px narrower than the slide when a mark is
+           reserved, so comparing against the header would pass while the line
+           sat 165px left of where the eye expects it. */
+        beatCentreOffset: beatEl
+          ? ((r) => (r.left + r.right) / 2 - (box.left + box.right) / 2)(beatEl.getBoundingClientRect())
+          : null,
+        beatRight: beatEl ? beatEl.getBoundingClientRect().right - box.left : null,
+        logoLeft: logo ? logo.getBoundingClientRect().left - box.left : null,
         noteType: foot && foot.querySelector('.cp-footer-note')
           ? (cs => cs.fontSize + '/' + cs.fontWeight)(getComputedStyle(foot.querySelector('.cp-footer-note'))) : null,
         strandType: mark ? mark.fontSize + '/' + mark.fontWeight : null
@@ -171,6 +181,23 @@ try {
       } else if (asClosing) {
         assert.ok(s.closingLine, where(s.type) + ': no line closing the list');
         assert.equal(s.beatInHeader, false, where(s.type) + ': beat is in two places at once');
+      }
+    }
+    checked++;
+
+    /* 9b. And when it is in the header it sits on the SLIDE's centre, not on
+           the middle of whatever room the identity and the corner reserve
+           left it. space-between put it about two thirds across — close
+           enough to centre to read as a mistake rather than a choice. It must
+           also stay clear of the mark; if a context line ever grows past the
+           560px cap this is what will say so. */
+    for (const s of visible.filter(x => x.beatInHeader)) {
+      assert.ok(Math.abs(s.beatCentreOffset) <= 1,
+        where(s.type) + ': context line is ' + Math.round(s.beatCentreOffset) +
+        'px off the slide centre');
+      if (s.logoLeft != null) {
+        assert.ok(s.beatRight < s.logoLeft,
+          where(s.type) + ': context line runs under the corner mark');
       }
     }
     checked++;

@@ -424,13 +424,20 @@ is three grounds and one typeface, and it holds together because the strand colo
     ';color:' + INK + ';transform:scale(' + SC + ');transform-origin:top left;' +
     'padding:32px 52px 24px;display:flex;flex-direction:column;position:relative';
   var hdr = el('div');
-  hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;height:40px;' +
-    'flex:none;font-size:20px;font-weight:600;padding-right:330px';
+  hdr.style.cssText = 'position:relative;display:flex;justify-content:space-between;align-items:center;' +
+    'height:40px;flex:none;font-size:20px;font-weight:600;padding-right:330px';
   var ident = el('span', null, 'Responsible');
   ident.style.cssText = 'font-weight:700;padding-left:32px;background:url(assets/brand/aiad27/icon-responsible.svg)' +
     ' left center / 22px 22px no-repeat;filter:brightness(0)';
   hdr.appendChild(ident);
-  hdr.appendChild(el('span', null, 'Five minutes to think'));
+  /* Centred on the slide, not on the room the other two left it — absolute at
+     left:50% resolves against the header's padding box, which still spans the
+     full content width even with the 330px corner reserve. Same declaration
+     as .cp-header .cp-beat in css/customize.css. */
+  var beat = el('span', null, 'Five minutes to think');
+  beat.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);max-width:560px;' +
+    'text-align:center;font-weight:400';
+  hdr.appendChild(beat);
   slide.appendChild(hdr);
   var mark = new Image();
   mark.src = 'assets/brand/aiad27/aiad27-lockup.svg'; mark.alt = '';

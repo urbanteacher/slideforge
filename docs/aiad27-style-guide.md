@@ -350,11 +350,21 @@ drift the moment the body changes length.
 | Pad | `.slide.cp .pad` | padding `32px 52px 24px`, flex column, height 100% |
 | Header | `.cp-header` | **40px**, flex space-between, 20px / 600, `flex:none` |
 | Identity | `.cp-header::before` | strand icon 22×22 + name, 700, `padding-left:32px` |
+| Context | `.cp-header .cp-beat` | 22px / 400, **centred on the slide**, max-width 560px |
 | Corner reserve | `.has-corner-mark .cp-header` | `padding-right:330px` |
 | Lockup | `.slide-logo` | max 300×56, `top:32px` — level with the header |
 | Footer | `.cp-footer` | **32px**, `margin-top:auto`, 1px top rule, flex space-between |
 | Campaign line | `.cp-footer-note` | 20px / 700, full-strength ink |
 | Position | `.cp-footer .pagenum` | 18px, `--s-dim`, `margin-left:auto` when alone |
+
+**The context line is centred on the slide, not on the space left over.**
+`space-between` put it hard against the corner reserve, so it drifted with the
+identity's length and sat about two thirds across — close enough to centre to
+read as a mistake rather than a choice. It is absolute at `left:50%`, which
+resolves against the header's *padding* box: that still spans the full
+52px-to-52px content width even when the 330px reserve is on, so the line
+lands on the slide's true centre whether or not a mark is in the corner. The
+560px cap is the narrower of the two gaps it must clear.
 
 **The 330px reserve is conditional.** It is on `.has-corner-mark`, not on
 `.cp-header`, so a deck with no logo gets the full width back instead of a
