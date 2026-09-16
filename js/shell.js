@@ -1203,6 +1203,17 @@
             items.push({ id: 'open:' + location.origin + '/',
               title: 'This app’s address',
               blurb: location.host + ' — the address to type if the code will not scan.' });
+            /* The campaign's design system, as the app is currently serving
+               it. Origin-relative like the two above, so the one entry is
+               the local copy on a laptop and the deployed copy when hosted —
+               which is the point: the guide reads its colours and sizes out
+               of the live stylesheet, so the version that matters is
+               whichever build the room is about to see. Not a deck link;
+               File → Open already has the decks. */
+            items.push({ id: 'open:' + location.origin + '/AiAd27/style.html',
+              title: 'AI Awareness Day 2027 — style and design guide',
+              blurb: location.host + '/AiAd27/style.html — grounds, palette with measured contrast, ' +
+                'type scale, every mark and the slide furniture, read live out of the stylesheet.' });
             return items;
           },
           describe: function (it) { return it.blurb; },
