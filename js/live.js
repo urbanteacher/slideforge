@@ -583,8 +583,30 @@
     try { return JSON.parse(sessionStorage.getItem(HELD_KEY) || 'null'); } catch (e) { return null; }
   }
 
-  function connect(resume) {
+  /* Local laptop answers in under a second. Render's free plan sleeps after
+     idle time and can take half a minute to wake — 4s used to call that
+     "relay not running" and strand the lobby on ✕ while the instance was
+     still booting. Hosted gets a long wait and a couple of retries. */
+  function relayIsHosted() {
+    return location.protocol === 'https:' || /\.onrender\.com$/i.test(location.hostname);
+  }
+  function connectBudgetMs() {
+    return relayIsHosted() ? 45000 : 4000;
+  }
+  var CONNECT_RETRIES = 2;
+
+  function connect(resume, attempt) {
+    attempt = attempt || 0;
     var url = relayUrl();
+    var hosted = relayIsHosted();
+    if (pinEl && !Live.pin) {
+      pinEl.textContent = '····';
+      if (hosted && attempt > 0) {
+        warn('The live room is waking up — try ' + (attempt + 1) + ' of ' + (CONNECT_RETRIES + 1) + '…');
+      } else if (hosted) {
+        warn('Connecting to the live room… (first open after idle can take up to a minute)');
+      }
+    }
     var ws;
     try {
       ws = new WebSocket(url);
@@ -596,12 +618,21 @@
 
     var settled = false;
     var giveUp = setTimeout(function () {
-      if (!settled) { try { ws.close(); } catch (e) {} offline(url); }
-    }, 4000);
+      if (!settled) {
+        settled = true;
+        try { ws.close(); } catch (e) {}
+        if (hosted && attempt < CONNECT_RETRIES) {
+          connect(resume, attempt + 1);
+          return;
+        }
+        offline(url);
+      }
+    }, connectBudgetMs());
 
     ws.onopen = function () {
       settled = true;
       clearTimeout(giveUp);
+      if (lobbyWarning && /waking|Connecting to the live room/.test(lobbyWarning)) warn('');
       if (resume && resume.pin && resume.token) {
         send({ t: 'rehost', pin: resume.pin, hostToken: resume.token });
         return;
@@ -622,12 +653,22 @@
     };
 
     ws.onerror = function () {
-      if (!settled) { settled = true; clearTimeout(giveUp); offline(url); }
+      /* Do not call offline here — onclose always follows, and hosted retries
+         need a single decision point so two failures do not double-book. */
     };
 
     ws.onclose = function () {
       if (Live.ws !== ws) return;
-      if (!settled) { settled = true; clearTimeout(giveUp); offline(url); return; }
+      if (!settled) {
+        settled = true;
+        clearTimeout(giveUp);
+        if (hosted && attempt < CONNECT_RETRIES) {
+          connect(resume, attempt + 1);
+          return;
+        }
+        offline(url);
+        return;
+      }
       if (Live.active) SF.toast('Lost the connection to the live relay');
       Live.active = false;
       Live.pin = null; syncManual();
@@ -638,6 +679,12 @@
   function offline(url) {
     pinEl.textContent = '✕';
     urlEl.textContent = 'relay not running';
+    if (relayIsHosted()) {
+      warn('Could not reach the live relay at ' + url + '. On the free Render plan the app sleeps when idle — open https://' +
+           location.host + '/ in a tab, wait until the page loads (up to a minute), then press Host live again. ' +
+           'Everything else works without the relay — close this and press Present.');
+      return;
+    }
     warn('Could not reach the live relay at ' + url + '. Start it with "node server/server.js" ' +
          'in the slideforge folder, then open the app at the address it prints so phones on the ' +
          'same Wi-Fi can reach it. Everything else works without the relay — close this and press Present.');
