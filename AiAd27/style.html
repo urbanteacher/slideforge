@@ -105,7 +105,13 @@ is three grounds and one typeface, and it holds together because the strand colo
   see the glyph marks below.</p>
   <h3 style="margin-top:26px;font-size:19px">The lockup</h3>
   <div class="lockup" id="lockupBox"></div>
-  <h3 style="margin-top:34px;font-size:19px">Three inks <span style="font-weight:400;opacity:.7;font-size:15px">&mdash; seven files, one drawing</span></h3>
+  <h3 style="margin-top:34px;font-size:19px">Twelve files, one drawing <span style="font-weight:400;opacity:.7;font-size:15px">&mdash; each shown on the ground it is for</span></h3>
+  <p style="font-size:14px;opacity:.8;margin-top:8px">Two coloured sets, because the contrast table
+  gives each one a ground and neither covers both. <b>Deep on cream</b> (the brights fail there,
+  1.53&ndash;2.50:1). <b>Bright on ink</b> (the deeps go muddy there, 2.32&ndash;2.61:1) &mdash; and
+  bright beats plain white on dark, because it still says which strand it is. Every card below
+  carries its measured ratio; swapping a set onto the other ground is the one way to get an
+  inaccessible lockup out of this kit.</p>
   <div class="marks" id="lockupGrid"></div>
   <h3 style="margin-top:34px;font-size:19px">Strand icons <span style="font-weight:400;opacity:.7;font-size:15px">— 24×24, filled with the strand's bright</span></h3>
   <div class="marks" id="iconGrid"></div>
@@ -118,12 +124,29 @@ is three grounds and one typeface, and it holds together because the strand colo
   ballot tile cuts one, because at that size two cuts read as a hexagon instead of a signature.
   The two cuts are the same intended angle expressed twice &mdash; keep them within a point of
   each other.</p>
+  <h3 style="margin-top:34px;font-size:19px">The numbered row <span style="font-weight:400;opacity:.7;font-size:15px">&mdash; index, title, supporting line</span></h3>
+  <p style="font-size:14px;opacity:.8;margin-top:8px">The campaign's densest pattern, and the one
+  place three type sizes meet. A <b>105px</b> fixed first column holds the index, so every title
+  starts at the same x however many rules there are; a <b>1px</b> rule separates the rows rather
+  than a box around each. Shown on ink, which is the ground the rules slide uses.</p>
+  <div id="ruleDemo" style="margin-top:22px"></div>
+  <p style="font-size:14px;opacity:.8;margin-top:18px">The index set on its own. Tabular, two
+  digits always &mdash; <code>01</code>, never <code>1</code> &mdash; so the column stays the same
+  width from the first row to the last and the titles never shift.</p>
+  <div id="numDemo" style="margin-top:12px"></div>
+  <table id="ruleSpec" style="margin-top:18px"></table>
+
   <h3 style="margin-top:34px;font-size:19px">Marks that are not files <span style="font-weight:400;opacity:.7;font-size:15px">&mdash; glyphs, set as type</span></h3>
   <div class="marks" id="glyphGrid"></div>
   <p style="margin-top:14px;font-size:14px;opacity:.8">These are set by the renderer as type, because
   they want the typeface's weight and optical size and they take their colour from the ground.
-  Do not replace them with SVG &mdash; but note that <b>&#8596;</b> is not in every fallback stack,
-  and at 130px a substituted glyph is not subtle. If Uncut Sans is not certain, draw it as a path.</p>
+  Do not replace them with SVG &mdash; but note that <b>&#8596;</b> and <b>&#8599;</b> are not in
+  every fallback stack, and at 130&ndash;230px a substituted glyph is not subtle. If Uncut Sans is
+  not certain, draw them as paths.</p>
+  <p style="margin-top:10px;font-size:14px;opacity:.8"><b>A warning about the name.</b>
+  <code>.cp-action-number</code> never holds a number. It is hard-coded to <b>&#8599;</b> in
+  <code>src/render/compositions.js</code> and always has been &mdash; the class is named for the
+  slot, not its contents. Read the renderer, not the class, before assuming what a mark is.</p>
 </section>
 
 <section id="rules"><h2>The rules</h2>
@@ -313,17 +336,23 @@ is three grounds and one typeface, and it holds together because the strand colo
     'The heading matches the strand name opposite it in the header.';
   lock.appendChild(lockText);
 
-  /* The seven lockups, each on the ground it is for. The coloured set is the
-     strand's DEEP, never its bright: the mark is type, and rule 1 of the
-     contrast table above puts type on cream in black or deep. Shown on that
-     ground so the claim can be checked by eye against the table. */
+  /* The twelve lockups, each shown on the ground it is FOR, with the measured
+     ratio beside it — so the pairing is not a claim to be taken on trust but
+     something the eye and the number agree on. Deep belongs on cream and
+     bright belongs on ink; the table above is why, and swapping them is the
+     one way to get an inaccessible lockup out of this kit. */
   [{ f: 'aiad27-lockup', name: 'Ink', note: '#231F20 — the decks load this one',
-     bg: '#F6F4ED', ink: INK },
+     bg: '#F6F4ED', ink: INK, on: INK, against: '#F6F4ED' },
    { f: 'aiad27-lockup-reverse', name: 'Reverse', note: '#FFFFFF — dark grounds, no filter',
-     bg: INK, ink: CREAM }
+     bg: INK, ink: CREAM, on: WHITE, against: INK }
   ].concat(STRANDS.map(function (s) {
-    return { f: 'aiad27-lockup-' + s, name: T[s].name, note: T[s].deep + ' — the strand deep',
-             bg: '#F6F4ED', ink: INK };
+    return { f: 'aiad27-lockup-' + s, name: T[s].name + ' deep',
+             note: T[s].deep + ' — on cream', bg: '#F6F4ED', ink: INK,
+             on: T[s].deep, against: '#F6F4ED' };
+  })).concat(STRANDS.map(function (s) {
+    return { f: 'aiad27-lockup-' + s + '-bright', name: T[s].name + ' bright',
+             note: T[s].bright + ' — on ink', bg: INK, ink: CREAM,
+             on: T[s].bright, against: INK };
   })).forEach(function (v) {
     var card = el('div', 'mk');
     card.style.background = v.bg; card.style.color = v.ink;
@@ -332,6 +361,11 @@ is three grounds and one typeface, and it holds together because the strand colo
     card.appendChild(img);
     card.appendChild(el('b', null, v.name));
     card.appendChild(el('span', null, v.note));
+    var r = ratio(v.on, v.against);
+    var score = el('span', null, r + ':1 · ' + (parseFloat(r) >= 4.5 ? 'passes' : 'FAILS'));
+    score.style.opacity = '.95';
+    score.style.fontWeight = parseFloat(r) >= 4.5 ? '400' : '700';
+    card.appendChild(score);
     document.getElementById('lockupGrid').appendChild(card);
   });
 
@@ -348,15 +382,71 @@ is three grounds and one typeface, and it holds together because the strand colo
     document.getElementById('chamferGrid').appendChild(card);
   });
 
+  /* --- the numbered row ----------------------------------------------
+     Built from the same numbers the table below prints, so the example
+     cannot drift from its own specification. On ink, because that is the
+     ground the rules slide uses — and note the index lands in the strand
+     BRIGHT there, at 9.71:1 for Responsible, which is the bright set's
+     whole argument. */
+  var RULE = [
+    ['Row', '.cp-rule', 'grid 105px / 1fr · gap 25px · padding 19px 0 · 1px top rule · centred'],
+    ['Index', '.cp-rule-number', '66px / 700 · line-height 1 · tracking -.05em · strand accent'],
+    ['Title', '.cp-rule h3', '33px / 700 · line-height 1.07'],
+    ['Supporting line', '.cp-rule p', '25px / 400 · line-height 1.17 · margin-top 8px · max-width 960px']
+  ];
+  var demo = document.getElementById('ruleDemo');
+  demo.style.cssText = 'background:' + INK + ';color:' + CREAM + ';padding:26px 30px';
+  [['01', 'Bigger effect, more human', 'The more a decision changes a life, the more a person must make it.'],
+   ['02', 'Automated is not fair', 'A system can be consistent and still be biased.']
+  ].forEach(function (r, i) {
+    var row = el('div');
+    row.style.cssText = 'display:grid;grid-template-columns:105px 1fr;gap:25px;padding:19px 0;' +
+      'align-items:center;border-top:1px solid #686366';
+    var idx = el('span', null, r[0]);
+    idx.style.cssText = 'font-size:66px;line-height:1;font-weight:700;letter-spacing:-.05em;color:' +
+      T.responsible.bright;
+    var text = el('div');
+    var h = el('div', null, r[1]); h.style.cssText = 'font-size:33px;line-height:1.07;font-weight:700';
+    var sub = el('div', null, r[2]); sub.style.cssText = 'font-size:25px;line-height:1.17;margin-top:8px;max-width:960px';
+    text.appendChild(h); text.appendChild(sub);
+    row.appendChild(idx); row.appendChild(text);
+    demo.appendChild(row);
+  });
+  /* Numbers only. The index is a mark in its own right and the decks never
+     show more than a few at a time, so the whole set is worth seeing in one
+     line — it is where a digit that sits oddly at 66px would show up. */
+  var nd = document.getElementById('numDemo');
+  nd.style.cssText = 'background:' + INK + ';padding:22px 30px;display:flex;gap:34px;flex-wrap:wrap';
+  ['01','02','03','04','05','06','07'].forEach(function (t) {
+    var n = el('span', null, t);
+    n.style.cssText = 'font-size:66px;line-height:1;font-weight:700;letter-spacing:-.05em;color:' +
+      T.responsible.bright;
+    nd.appendChild(n);
+  });
+
+  var rs = document.getElementById('ruleSpec');
+  var rh = el('tr');
+  ['Part', 'Class', 'Specification'].forEach(function (t) { rh.appendChild(el('th', null, t)); });
+  rs.appendChild(rh);
+  RULE.forEach(function (r) {
+    var tr = el('tr');
+    tr.appendChild(el('td', null, r[0]));
+    var c = el('td', null, r[1]); c.style.fontFamily = 'ui-monospace,SFMono-Regular,Menlo,monospace';
+    tr.appendChild(c);
+    tr.appendChild(el('td', null, r[2]));
+    rs.appendChild(tr);
+  });
+
   [{ g: '\u201C', name: 'Quotation', cls: '.cp-quote-mark',
      note: 'U+201C · 230px · strand deep · hangs left of the text at top:24px',
      size: 110, color: T.safe.deep, weight: 400 },
    { g: '\u2194', name: 'Pair arrow', cls: '.cp-pair-mark',
      note: 'U+2194 · 130px/700 · the ground\u2019s ink · fixed 140px column',
      size: 96, color: INK, weight: 700 },
-   { g: '03', name: 'Step number', cls: '.cp-action-number',
-     note: '230px/700 · tracking -.085em · the ground\u2019s ink',
-     size: 78, color: INK, weight: 700 }
+   { g: '\u2197', name: 'Rising arrow', cls: '.cp-action-number',
+     note: 'U+2197 · 230px/700 · tracking -.085em · the ground\u2019s ink · ' +
+           'the commitment slide, top-left, padding-top 65px',
+     size: 96, color: INK, weight: 700 }
   ].forEach(function (v) {
     var card = el('div', 'mk');
     var glyph = el('div', null, v.g);

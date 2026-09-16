@@ -194,26 +194,29 @@ the same width on every machine, and the right edge has to hold on all of them.
 The 20px/700 heading is deliberately identical to the strand name at the other
 end of the header, so the two read as one line of furniture.
 
-**Three inks, seven files:**
+**Twelve files, one drawing:**
 
-| File | Ink | Use |
-| --- | --- | --- |
-| `aiad27-lockup.svg` | `#231F20` | the default, and the only one the decks load |
-| `aiad27-lockup-reverse.svg` | `#FFFFFF` | dark grounds where a filter is not available |
-| `aiad27-lockup-<strand>.svg` | the strand's **deep** | on cream, when the mark should carry the strand |
+| File | Ink | Ground it is for | Measured |
+| --- | --- | --- | --- |
+| `aiad27-lockup.svg` | `#231F20` | cream — and the only one the decks load | 14.81:1 |
+| `aiad27-lockup-reverse.svg` | `#FFFFFF` | ink, where a filter is not available | 16.30:1 |
+| `aiad27-lockup-<strand>.svg` | the strand's **deep** | **cream** | 5.68–6.38:1 |
+| `aiad27-lockup-<strand>-bright.svg` | the strand's **bright** | **ink** | 5.92–9.71:1 |
+
+**Two coloured sets, because the contrast table gives each one a ground and
+neither covers both.** Deep on cream (the brights fail there, 1.53–2.50:1).
+Bright on ink (the deeps go muddy there, 2.32–2.61:1) — and bright beats plain
+white on dark, because it still says which strand it is. All twelve pass on
+their paired ground; putting a set on the other one is the single way to get
+an inaccessible lockup out of this kit.
 
 Each file is a **single flat ink** — that is what lets the decks ship one file
 and reverse it with `brightness(0) invert(1)`. **Do not add a second colour to
 any of them**; it would break the reversal and there would be nothing the
 strand versions could do that seven files do not already cover.
 
-The coloured set is **deep, never bright**. The lockup is type, and rule 1 of
-§4 says type on cream is black or deep — all five brights land between 1.53:1
-and 2.50:1 there. A bright lockup would be the one asset in the kit that fails
-the kit's own table.
-
 *On a slide, keep using the plain ink file and let the ground reverse it.* The
-other six exist for the website, for print, and for anyone sent a folder.
+other eleven exist for the website, for print, and for anyone sent a folder.
 
 ### The strand icons — `icon-<strand>.svg`
 
@@ -284,7 +287,7 @@ do reproduce them exactly.
 | --- | --- | --- | --- | --- |
 | Quotation | `"` U+201C | `.cp-quote-mark` | **230px**, line-height 1 | `--cp-color` → strand **deep** |
 | Pair arrow | `↔` U+2194 | `.cp-pair-mark` | **130px** / 700, line-height .85 | inherits the ground's ink |
-| Step number | `01`–`07` | `.cp-action-number` | **230px** / 700, tracking -.085em | inherits the ground's ink |
+| Rising arrow | `↗` U+2197 | `.cp-action-number` | **230px** / 700, tracking -.085em | inherits the ground's ink |
 
 The quotation mark is absolutely positioned at `top:24px; left:0` and the
 quote body is indented `padding-left:150px` to clear it — it hangs outside the
@@ -294,9 +297,20 @@ The pair arrow occupies a fixed **140px** first column of a two-column grid, so
 the question beside it starts at the same x on every discussion slide
 regardless of how long the question is.
 
-**For the web:** these need the same font loaded, and `↔` in particular is not
-in every fallback. If Uncut Sans is unavailable, set the arrow as an SVG path
-rather than letting a fallback substitute a differently-weighted glyph.
+The rising arrow is the commitment slide's mark. It sits top-left with
+`padding-top:65px`, opposite the action the slide is asking for, and it is the
+only one of the three that is decorative — it carries `aria-hidden`.
+
+> **The class name lies.** `.cp-action-number` never holds a number. It is
+> hard-coded to `↗` in `src/render/compositions.js` and always has been; the
+> class is named for the slot, not its contents. This guide said "01–07" for
+> exactly as long as it took someone to look at a slide. Read the renderer,
+> not the class name, before assuming what a mark is.
+
+**For the web:** these need the same font loaded, and `↔` and `↗` are not in
+every fallback. At 130–230px a substituted glyph is not subtle — it will
+arrive at a different weight and a different optical size. If Uncut Sans is
+not certain, set them as SVG paths.
 
 ---
 
@@ -326,6 +340,41 @@ theme's grey on ink, the hairline grey on cream. A single grey everywhere
 washes out on the bright grounds.
 
 Numbering counts the slides the room sees, not the slides in the file.
+
+### The numbered row
+
+The campaign's densest pattern, and the one place three type sizes meet.
+
+```
+105px        1fr
+┌─────┬──────────────────────────────────────────────┐
+│ 01  │ Bigger effect, more human                    │  33px / 700
+│     │ The more a decision changes a life, the more │  25px / 400
+└─────┴──────────────────────────────────────────────┘
+```
+
+| Part | Class | Specification |
+| --- | --- | --- |
+| Row | `.cp-rule` | grid `105px / 1fr`, gap 25px, padding `19px 0`, 1px top rule, centred |
+| Index | `.cp-rule-number` | **66px / 700**, line-height 1, tracking -.05em, strand accent |
+| Title | `.cp-rule h3` | **33px / 700**, line-height 1.07 |
+| Supporting line | `.cp-rule p` | **25px / 400**, line-height 1.17, margin-top 8px, max-width 960px |
+
+**The index is always two digits** — `01`, never `1`:
+
+```
+01  02  03  04  05  06  07     66px / 700 / -.05em / strand accent
+```
+
+The **105px first column is fixed**, so every title starts at the same x
+however many rules the slide carries, and the two-digit index means the column
+does not change width between the first row and the last. Rows are separated by a 1px rule, not by
+a box around each — the campaign never draws a card where a line will do.
+
+This slide is on ink, so the index lands in the strand's **bright** —
+9.71:1 for Responsible. It is the clearest case for the bright lockup set
+above: on a dark ground the bright is both the accessible choice and the one
+that still says which strand you are in.
 
 ### Spacing
 

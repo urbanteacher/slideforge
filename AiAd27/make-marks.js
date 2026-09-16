@@ -4,7 +4,7 @@
  *
  *   node AiAd27/make-marks.js
  *
- * Five theme icons, five posters, seven lockups and two chamfer shapes.
+ * Five theme icons, five posters, twelve lockups and two chamfer shapes.
  *
  * Not everything the campaign draws is a file. The quotation mark, the pair
  * arrow and the big step numbers are set as glyphs by the renderer, because
@@ -145,16 +145,23 @@ fs.writeFileSync(path.join(OUT, 'aiad27-lockup.svg'), lockup(), 'utf8');
    let the shared data-ground rule reverse it — that stays the single source
    on a slide. These are for the website, print and anyone sent a folder.
 
-   The coloured set is the strand's DEEP, not its bright. The lockup is type,
-   and rule 1 of the contrast table says type on cream is black or deep and
-   never bright: all five brights land between 1.53:1 and 2.50:1 on cream,
-   which is the ground this mark is normally on. A bright lockup would be the
-   one asset in the kit that fails the kit's own table. */
+   TWO coloured sets, because the contrast table gives each one a ground and
+   neither covers both. On cream the brights fail as type, 1.53:1 to 2.50:1,
+   and the deeps pass at 5.68 to 6.38 — so the deep set is the one for cream.
+   On ink it reverses exactly: the deeps go muddy at 2.32 to 2.61 and the
+   brights pass at 5.92 to 9.71 — so the bright set is the one for dark, and
+   it beats plain white there because it still says which strand it is.
+
+   The file name carries the ink, not the intent, so nobody has to remember
+   which is which; the pairing is written down in the style guide and shown on
+   AiAd27/style.html against the ground each is for. Using one on the other's
+   ground is the single way to get an inaccessible lockup out of this kit. */
 fs.writeFileSync(path.join(OUT, 'aiad27-lockup-reverse.svg'), lockup('#FFFFFF'), 'utf8');
 n += 1;
 Object.keys(DEEP).forEach((key) => {
   fs.writeFileSync(path.join(OUT, `aiad27-lockup-${key}.svg`), lockup(DEEP[key]), 'utf8');
-  n += 1;
+  fs.writeFileSync(path.join(OUT, `aiad27-lockup-${key}-bright.svg`), lockup(STRAND[key]), 'utf8');
+  n += 2;
 });
 
 /* The chamfer on its own, at both the sizes the campaign uses it, so the web
@@ -167,4 +174,4 @@ fs.writeFileSync(path.join(OUT, 'shape-chamfer-tile.svg'),
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 76" role="img" aria-label="Chamfered tile"><path fill="currentColor" d="${CHAMFER_TILE}"/></svg>\n`, 'utf8');
 n += 2;
 n++;
-console.log(`Wrote ${n} assets to assets/brand/aiad27/ — five theme icons, five poster graphics, seven lockups (ink, reverse, five strands) and two chamfer shapes.`);
+console.log(`Wrote ${n} assets to assets/brand/aiad27/ — five theme icons, five poster graphics, twelve lockups (ink, reverse, five deep, five bright) and two chamfer shapes.`);
