@@ -186,6 +186,15 @@ var THEMES = {
   'aiad26-creative': { name: 'AI Awareness · Creative', swatch: '#795bff' },
   'aiad26-responsible': { name: 'AI Awareness · Responsible', swatch: '#00a896' },
   'aiad26-future': { name: 'AI Awareness · Future', swatch: '#ff7eed' },
+  /* AI Awareness Day 2027 — Keep Humans in the Loop. Five themes, one per
+     strand, each with its own colour AND icon: the campaign brief requires
+     that meaning is never carried by colour alone, so every slide shows the
+     strand's name and mark together. See css/aiad27.css. */
+  'aiad27-safe': { name: 'AIAD27 · Safe', swatch: '#00a6a6' },
+  'aiad27-smart': { name: 'AIAD27 · Smart', swatch: '#1f6feb' },
+  'aiad27-creative': { name: 'AIAD27 · Creative', swatch: '#7a3ff2' },
+  'aiad27-responsible': { name: 'AIAD27 · Responsible', swatch: '#f0a500' },
+  'aiad27-future': { name: 'AIAD27 · Future', swatch: '#16a34a' },
   product: { name: 'Product · Keynote minimal', swatch: '#f5f5f7' },
   editorial: { name: 'Editorial · Paper', swatch: '#f3efe6' },
   cinematic: { name: 'Cinematic · Dark pitch', swatch: '#0a0b0f' },

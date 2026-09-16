@@ -5821,8 +5821,29 @@ html[data-ws="deck"] #railCount { display: none; }
   display: flex; flex-direction: column; gap: 2px;
   text-align: center;
 }
-.spec-mark:nth-child(odd) .spec-copy { bottom: 26px; }
-.spec-mark:nth-child(even) .spec-copy { top: 26px; }
+/* FOUR bands, not two. Alternating above/below separates a mark from its
+   immediate neighbour and that is all — with five marks, items 1, 3 and 5 all
+   sit above, so two of them 18% apart on the axis put two 200px labels in the
+   same place. "Junior software development" landed on top of "Routine customer
+   service". Cycling four positions doubles the clearance between same-side
+   neighbours without shrinking the labels. */
+.spec-mark:nth-child(4n+1) .spec-copy { bottom: 94px; }
+.spec-mark:nth-child(4n+3) .spec-copy { bottom: 26px; }
+.spec-mark:nth-child(4n+2) .spec-copy { top: 26px; }
+.spec-mark:nth-child(4n+4) .spec-copy { top: 94px; }
+/* A stem from dot to label, now that some labels sit a band further out.
+   Without it a far label is loose text near a line rather than a reading. */
+.spec-mark::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 1px;
+  background: var(--s-rule);
+}
+.spec-mark:nth-child(4n+1)::before { bottom: 12px; height: 80px; }
+.spec-mark:nth-child(4n+2)::before { top: 12px; height: 12px; }
+.spec-mark:nth-child(4n+3)::before { bottom: 12px; height: 12px; }
+.spec-mark:nth-child(4n+4)::before { top: 12px; height: 80px; }
 .spec-label { font-size: 20px; font-weight: 700; line-height: 1.2; color: var(--s-fg); }
 .spec-note { font-size: 16px; line-height: 1.3; color: var(--s-dim); }
 /* Anything the author gave no number sits at the start with its dot hollow,
@@ -5848,6 +5869,15 @@ html[data-ws="deck"] #railCount { display: none; }
 }
 .claim-val { margin: 0; font-size: 23px; line-height: 1.3; color: var(--s-fg); }
 .claim-note { display: block; font-size: 17px; line-height: 1.35; color: var(--s-dim); margin-top: 3px; }
+
+/* Five rows or more and the stack runs into the source line under it:
+   .claim-rows centres its content in a flex:1 box, so an overflowing set grows
+   through whatever follows rather than being clipped by it. Same treatment the
+   iceberg uses at five bands. */
+.claim-rows:has(> div:nth-child(5)) .claim-row { padding: 8px 0; }
+.claim-rows:has(> div:nth-child(5)) .claim-val { font-size: 21px; }
+.claim-rows:has(> div:nth-child(5)) .claim-note { font-size: 15px; }
+.claim-rows:has(> div:nth-child(6)) .claim-row { padding: 6px 0; }
 
 /* --- then / now / next
 

@@ -4856,6 +4856,16 @@
   var AIAD_ART =
     '<div class="aiad-fold"></div><div class="aiad-seam"></div>';
 
+  /* The chamfered square, the AI Awareness Day device. One large, bled off the
+     corner, and three small ones in a row — the header rhythm the campaign's
+     own poster uses. All five strands hang the same markup; the colour comes
+     from the strand token. */
+  var A27_ART =
+    '<span class="a27-slab"></span>' +
+    '<span class="a27-tile a27-t1"></span>' +
+    '<span class="a27-tile a27-t2"></span>' +
+    '<span class="a27-tile a27-t3"></span>';
+
   var THEME_ART = {
     studio: ['studio-art',
       '<div class="art-orbit"></div><div class="art-tile">✳</div>' +
@@ -4890,7 +4900,23 @@
     'aiad26-smart': ['aiad-art', AIAD_ART],
     'aiad26-creative': ['aiad-art', AIAD_ART],
     'aiad26-responsible': ['aiad-art', AIAD_ART],
-    'aiad26-future': ['aiad-art', AIAD_ART]
+    'aiad26-future': ['aiad-art', AIAD_ART],
+    /* 2027: the campaign's chamfered square, at three scales.
+
+       The device is the organisation's own — it is the shape the AI Awareness
+       Day lockup sits inside, the tile the poster repeats down its header, and
+       the panel its cut-out photography stands on. Same move Northeastern
+       makes with the monogram and UKBT makes with the chevron: take the one
+       shape the brand already owns and build everything from it.
+
+       A cover gets the big one bled off the corner and a row of three small
+       ones; every other slide gets the chamfer on its own components, which is
+       in css/aiad27.css rather than here. */
+    'aiad27-safe': ['a27-art', A27_ART],
+    'aiad27-smart': ['a27-art', A27_ART],
+    'aiad27-creative': ['a27-art', A27_ART],
+    'aiad27-responsible': ['a27-art', A27_ART],
+    'aiad27-future': ['a27-art', A27_ART]
   };
 
   function renderSlide(deck, slide, opts) {

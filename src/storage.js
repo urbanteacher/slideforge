@@ -42,7 +42,8 @@ export const LIBRARY_GROUPS = [
   { id: 'nul', label: 'Northeastern' },
   { id: 'ukbt', label: 'UK Black Tech' },
   { id: 'ukbt-institute', label: 'UKBT Institute' },
-  { id: 'aiad26', label: 'AI Awareness Day' },
+  { id: 'aiad26', label: 'AI Awareness Day 2026' },
+  { id: 'aiad27', label: 'AI Awareness Day 2027' },
   { id: 'other', label: 'Other' }
 ];
 
@@ -55,6 +56,7 @@ export function libraryGroupFromTheme(theme) {
      running the day wants them in one place — not scattered through Other with
      everything else. */
   if (theme && theme.indexOf('aiad26-') === 0) return 'aiad26';
+  if (theme && theme.indexOf('aiad27-') === 0) return 'aiad27';
   return 'other';
 }
 
