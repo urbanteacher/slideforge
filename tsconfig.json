@@ -45,6 +45,7 @@
     "js/reports.js",
     "js/teaching.js",
     "js/render.js",
+    "js/review.js",
     "js/explore.js",
     "js/studio.js",
     "js/editor.js",

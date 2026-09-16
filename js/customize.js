@@ -587,6 +587,7 @@
       }),'Dimming keeps earlier points readable instead of hiding them \u2014 useful when the room needs the whole argument in view. Spotlight does that and takes the light off the rest of the slide, which is the other half of what a presenter does with their hand.'));
     }
     box.appendChild(UI.button('Reset to theme','ghost',function(){s.design={};s.formatting={};change();}));
+    if (SF.Review && currentDeck) box.appendChild(UI.button('Review slides & check fit','ghost',function(){SF.Review.open(currentDeck);}));
     var guide=document.createElement('a');guide.href='design-guide.html';guide.target='_blank';guide.rel='noopener';guide.textContent='Design controls guide';
     box.appendChild(guide);
     tagControls(box,s,'Look');
