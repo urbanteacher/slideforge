@@ -25,7 +25,7 @@ html:not([data-ready]) #app { visibility: hidden; }
 /* Same cream the studio chrome uses once CSS loads — avoids a dark→light blink. */
 html:not([data-ready]) body { background: #f0f1ed; }
 </style>
-<link rel="stylesheet" href="css/app.css?v=60">
+<link rel="stylesheet" href="css/app.css?v=61">
 <link rel="stylesheet" href="css/board-common.css?v=1">
 <link rel="stylesheet" href="css/memory.css?v=2">
 <link rel="stylesheet" href="css/bingo.css?v=2">
@@ -164,6 +164,25 @@ html:not([data-ready]) body { background: #f0f1ed; }
     <div class="stage-wrap">
       <div id="demoBanner" class="demo-banner" hidden><span id="demoBannerText">Demo uses this format’s engine and How to play. Boards rehearse in the preview; quizzes open a SAMPLE class.</span> <button type="button" id="btnDemoPlayer" class="btn ghost" title="Present this demo in the presentation player">▷ Full presentation demo</button> <button type="button" id="btnDemoReset" class="btn ghost">Reset demo</button></div>
       <div id="previewBox"></div>
+    </div>
+    <!-- Canvas bar: the status strip every slide tool has along the bottom.
+         Zoom on the left of it, the Design/Engagement panel switch on the
+         right, because that panel is the thing the zoom is competing with
+         for width. -->
+    <div class="canvas-bar">
+      <div class="canvas-zoom" role="group" aria-label="Canvas zoom">
+        <button class="canvas-bar-btn" id="btnZoomOut" type="button" title="Zoom out (⌘⌥−)" aria-label="Zoom out">−</button>
+        <select class="canvas-zoom-level" id="zoomLevel" aria-label="Zoom level">
+          <option value="0.5">50%</option>
+          <option value="0.75">75%</option>
+          <option value="1">Fit</option>
+          <option value="1.25">125%</option>
+          <option value="1.5">150%</option>
+          <option value="2">200%</option>
+        </select>
+        <button class="canvas-bar-btn" id="btnZoomIn" type="button" title="Zoom in (⌘⌥+)" aria-label="Zoom in">+</button>
+      </div>
+      <button class="canvas-bar-btn wide" id="btnInspector" type="button" title="Hide the Design &amp; Engagement panel (⌘\)" aria-pressed="true">◨ Panel</button>
     </div>
     <div class="notes-strip">
       <label for="notes" id="notesLabel">Speaker notes — visible in presenter view only</label>
@@ -379,7 +398,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/lesson-moments.js?v=2"></script>
 <script src="js/print.js?v=3"></script>
 <script src="js/history.js?v=3"></script>
-<script src="js/shell.js?v=40"></script>
+<script src="js/shell.js?v=42"></script>
 <script src="js/content-tools.js?v=5"></script>
 <script src="js/slide-clip.js?v=1"></script>
 <script src="js/editor.js?v=55"></script>

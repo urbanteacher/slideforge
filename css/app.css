@@ -302,8 +302,18 @@ html[data-ws="game"] #btnSorter { display: none; }
     radial-gradient(1200px 500px at 50% -10%, #1d2027, var(--ui-bg));
 }
 .stage-wrap {
-  flex: 1; display: grid; place-items: center;
-  padding: 24px; min-height: 0;
+  flex: 1; display: grid; padding: 24px; min-height: 0;
+  /* Zoomed past Fit the canvas is wider than this area, so it scrolls. The
+     `safe` keyword matters: plain `center` on an item bigger than its box
+     overflows equally in both directions and puts the slide's top-left
+     corner somewhere you cannot scroll back to. */
+  align-items: safe center; justify-items: safe center;
+  overflow: auto;
+  /* A definite column, not the implicit auto one. #previewBox is sized in
+     percent, and a percentage against an auto track is circular: the browser
+     resolves it once and then keeps that number, so hiding the panel widened
+     the stage by 300px and left the canvas exactly where it was. */
+  grid-template-columns: minmax(0, 1fr);
 }
 #previewBox {
   position: relative;
@@ -330,6 +340,43 @@ html[data-ws="game"] #btnSorter { display: none; }
 #previewBox:hover .canvas-btn, .canvas-btn:focus-visible { opacity: 1; }
 .canvas-btn:hover { background: rgba(12,14,18,.85); }
 .canvas-btn.swap-sides { top: 12px; right: 12px; }
+
+/* canvas bar ------------------------------------------------------------- */
+
+.canvas-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 14px;
+  border-top: 1px solid var(--ui-line);
+  background: var(--ui-panel);
+  flex: none;
+}
+.canvas-zoom { display: flex; align-items: center; gap: 4px; }
+.canvas-bar > #btnInspector { margin-left: auto; }
+.canvas-bar-btn {
+  min-width: 26px; height: 24px; padding: 0 6px;
+  display: inline-grid; place-items: center;
+  font-size: 13px; line-height: 1; cursor: pointer;
+  color: var(--ui-dim); background: transparent;
+  border: 1px solid transparent; border-radius: 6px;
+}
+.canvas-bar-btn.wide { font-size: 12px; gap: 5px; grid-auto-flow: column; }
+.canvas-bar-btn:hover { color: var(--ui-text); background: var(--ui-bg); border-color: var(--ui-line); }
+.canvas-bar-btn:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 1px; }
+.canvas-bar-btn[aria-pressed="false"] { color: var(--ui-accent); }
+.canvas-zoom-level {
+  height: 24px; padding: 0 4px;
+  font: inherit; font-size: 12px;
+  color: var(--ui-dim); background: transparent;
+  border: 1px solid transparent; border-radius: 6px;
+  cursor: pointer; text-align: center;
+}
+.canvas-zoom-level:hover { color: var(--ui-text); border-color: var(--ui-line); }
+.canvas-zoom-level:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 1px; }
+
+/* The panel hidden. Specificity (#app + class) beats the plain #app rules in
+   the width media queries below, so those do not need their own copy. */
+#app.no-inspector { grid-template-columns: 216px 1fr 0; }
+#app.no-inspector .inspector { display: none; }
 
 .notes-strip {
   border-top: 1px solid var(--ui-line);

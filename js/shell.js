@@ -32,6 +32,128 @@
   var workspaces = {};
   var active = null;
   var LAST_WS = 'slideforge.workspace';
+  var ZOOM_KEY = 'slideforge.canvasZoom';
+  var PANEL_KEY = 'slideforge.canvasPanel';
+
+  /* ----------------------------------------------------------- canvas view
+
+     Zoom, and the Design & Engagement panel — the two chrome controls every
+     slide tool puts within reach of the canvas rather than in a menu.
+
+     Zoom is a multiple of Fit, not of the slide's own 1280x720. Fit already
+     caps at 980px so the notes strip keeps its room, which means a true
+     "100%" would be a percentage of a cap nobody can see. Fit is the honest
+     name for the default, and the rest read as "bigger than that". */
+
+  var ZOOMS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+  var zoom = 1;
+
+  /** Width the canvas takes at Fit: the largest 16:9 box the stage can show
+      whole. Height is in the min because a slide that runs off the bottom is
+      not fitted, and because leaving one axis to the stylesheet is what broke
+      this — see sizeCanvas. */
+  function fitWidth(wrap) {
+    var cs = getComputedStyle(wrap);
+    var availW = wrap.clientWidth -
+      parseFloat(cs.paddingLeft || '0') - parseFloat(cs.paddingRight || '0');
+    var availH = wrap.clientHeight -
+      parseFloat(cs.paddingTop || '0') - parseFloat(cs.paddingBottom || '0');
+    var banner = $('demoBanner');
+    if (banner && !banner.hidden) availH -= banner.offsetHeight;
+    return Math.max(160, Math.min(availW, 980, availH * 16 / 9));
+  }
+
+  /* Both axes, always — at Fit as well as zoomed.
+
+     The stylesheet sizes the canvas with `width: 100%` and `aspect-ratio`,
+     and that pair is circular inside a grid: the row is sized from the item's
+     height, the item's height comes from its width, and its width comes back
+     from the row. Chrome settles on one answer and keeps it, so the canvas
+     stayed 850px wide no matter what the stage did — hiding the panel gave
+     the stage 300 more pixels and the slide did not move. Measuring the stage
+     and pinning both numbers is the way out; the CSS stays as the pre-script
+     default. 9/16 is the ratio the stylesheet states, and the two must agree. */
+  function sizeCanvas() {
+    var wrap = document.querySelector('.stage-wrap');
+    var box = $('previewBox');
+    if (!wrap || !box) return;
+    var w = Math.round(fitWidth(wrap) * zoom);
+    box.style.maxWidth = 'none';
+    box.style.width = w + 'px';
+    box.style.height = Math.round(w * 9 / 16) + 'px';
+  }
+
+  /* Rescale the slide already on the canvas. Cheaper than a redraw and it
+     keeps the scroll position, which matters when zoomed past Fit — but only
+     a .slide can be re-fitted in place, so anything else falls back. */
+  function refitCanvas() {
+    var box = $('previewBox');
+    if (!box) return;
+    var slide = box.querySelector('.slide');
+    if (slide && SF.fit) SF.fit(box, slide);
+    else if (active && active.draw) active.draw();
+  }
+
+  function applyCanvas() { sizeCanvas(); refitCanvas(); }
+
+  function setZoom(z) {
+    zoom = ZOOMS.indexOf(z) >= 0 ? z : 1;
+    var sel = /** @type {HTMLSelectElement|null} */ ($('zoomLevel'));
+    if (sel) sel.value = String(zoom);
+    var out = $('btnZoomOut'), into = $('btnZoomIn');
+    if (out) out.toggleAttribute('disabled', zoom === ZOOMS[0]);
+    if (into) into.toggleAttribute('disabled', zoom === ZOOMS[ZOOMS.length - 1]);
+    try { localStorage.setItem(ZOOM_KEY, String(zoom)); } catch (e) {}
+    applyCanvas();
+  }
+
+  function stepZoom(dir) {
+    var i = ZOOMS.indexOf(zoom);
+    setZoom(ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, (i < 0 ? 2 : i) + dir))]);
+  }
+
+  function panelOpen() {
+    var app = $('app');
+    return !(app && app.classList.contains('no-inspector'));
+  }
+
+  function setPanel(open) {
+    var app = $('app');
+    if (app) app.classList.toggle('no-inspector', !open);
+    var b = $('btnInspector');
+    if (b) {
+      b.setAttribute('aria-pressed', String(open));
+      b.title = (open ? 'Hide' : 'Show') +
+        ' the Design & Engagement panel (⌘\\)';
+      b.textContent = (open ? '◨' : '◧') + ' Panel';
+    }
+    try { localStorage.setItem(PANEL_KEY, open ? '1' : '0'); } catch (e) {}
+    /* The stage just changed width, so Fit means something else now. */
+    applyCanvas();
+  }
+
+  function installCanvasBar() {
+    var stored = null, storedPanel = null;
+    try {
+      stored = localStorage.getItem(ZOOM_KEY);
+      storedPanel = localStorage.getItem(PANEL_KEY);
+    } catch (e) {}
+
+    var out = $('btnZoomOut'), into = $('btnZoomIn');
+    var sel = /** @type {HTMLSelectElement|null} */ ($('zoomLevel'));
+    if (out) out.onclick = function () { stepZoom(-1); };
+    if (into) into.onclick = function () { stepZoom(1); };
+    if (sel) {
+      var levels = sel;
+      levels.onchange = function () { setZoom(Number(levels.value)); };
+    }
+    var panelBtn = $('btnInspector');
+    if (panelBtn) panelBtn.onclick = function () { setPanel(!panelOpen()); };
+
+    setPanel(storedPanel !== '0');
+    setZoom(stored ? Number(stored) : 1);
+  }
+
 
   /* ------------------------------------------------------------ shared UI */
 
@@ -1410,7 +1532,11 @@
        lesson-shell flash on Quiz studio refresh. */
     document.documentElement.setAttribute('data-ready', '1');
 
-    window.addEventListener('resize', function () { active.draw(); });
+    installCanvasBar();
+
+    /* Size first, draw second: Fit is a share of the stage, so the box has to
+       be its new width before the slide is scaled into it. */
+    window.addEventListener('resize', function () { sizeCanvas(); active.draw(); });
     /* Deliberately a flush, not a save: every edit is already persisted by the
        engines' debounce, and an unconditional write at unload can clobber
        newer data with an idle in-memory copy. */
@@ -1436,6 +1562,13 @@
         activate(active.key === 'deck' ? 'game' : 'deck');
         return;
       }
+      /* e.code, not e.key: Option on macOS turns Alt+= into a different
+         character entirely, and the physical key is what was pressed. */
+      if (mod && e.code === 'Backslash') { e.preventDefault(); setPanel(!panelOpen()); return; }
+      if (mod && e.altKey && e.code === 'Equal') { e.preventDefault(); stepZoom(1); return; }
+      if (mod && e.altKey && e.code === 'Minus') { e.preventDefault(); stepZoom(-1); return; }
+      if (mod && e.altKey && e.code === 'Digit0') { e.preventDefault(); setZoom(1); return; }
+
       if (typing) return;
       if (active.keydown) active.keydown(e);
     });
