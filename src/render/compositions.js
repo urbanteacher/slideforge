@@ -11,9 +11,29 @@ export function createCompositionRenderer(SF, helpers) {
     if (!choice || !SF.COMPOSITIONS[choice].structured) return false;
     root.classList.add('composition-structured', 'cp', 'cp-' + slide.type);
     var header = el('div', 'cp-header');
-    if (slide.subtitle && !['compare','spectrum'].includes(slide.type)) header.appendChild(rich('div','cp-beat',slide,'subtitle',slide.subtitle));
+    /* compare and spectrum spend the subtitle on their column and lane
+       headings; the poster cover sets it above the headline as an eyebrow,
+       where it reads as a label for the question rather than as chrome. Each
+       field is rendered once, so the editable node is never duplicated. */
+    /* The beat sits with the words it introduces wherever there is a single
+       block of words to introduce — cover, scenario, discussion. compare and
+       spectrum spend the subtitle on their column and lane headings instead,
+       and the list layouts keep it in the header where it labels the whole
+       slide rather than one sentence. */
+    var beatAsEyebrow = ['title','quote','statement','keyfact'].includes(slide.type);
+    var beatAsClosing = slide.type === 'journey';
+    var beatInHeader = slide.subtitle && !beatAsEyebrow && !beatAsClosing && !['compare','spectrum'].includes(slide.type);
+    if (beatInHeader) header.appendChild(rich('div','cp-beat',slide,'subtitle',slide.subtitle));
     pad.appendChild(header);
     var body = el('div', 'cp-body'); pad.appendChild(body);
+    /* The closing rule. Its right-hand end is deliberately empty: the deck's
+       own page number is moved onto this line by CSS rather than counted
+       again here. The first draft of this composition did count again, and a
+       deck with slide numbers on then showed two of them. */
+    var footer = el('div', 'cp-footer');
+    var closing = deck.closingNote || deck.org;
+    if (closing) footer.appendChild(el('span', 'cp-footer-note', closing));
+    pad.appendChild(footer);
     function field(tag, cls, key) { return rich(tag, cls, slide, key, slide[key] || ''); }
     function heading() { body.appendChild(field('h2', 'cp-heading', 'title')); }
     function note() { if (slide.body) body.appendChild(field('p', 'cp-source', 'body')); }
@@ -33,7 +53,12 @@ export function createCompositionRenderer(SF, helpers) {
     }
     if (slide.type === 'title') {
       var title = el('div', 'cp-title-copy');
-
+      /* "Five Minutes to Think" belongs to the question, not to the furniture:
+         above the headline it tells the room what the next five minutes are
+         for. Ink rather than paper — every strand ground fails white text,
+         1.68:1 on mint at worst, so the separation is carried by size and
+         letter-spacing instead of by colour. */
+      if (slide.subtitle) title.appendChild(rich('p','cp-eyebrow',slide,'subtitle',slide.subtitle));
       title.appendChild(field('h1','','title'));
       if (slide.body) title.appendChild(field('p','cp-tagline','body'));
       appendSlideDate(slide, title);
@@ -42,6 +67,10 @@ export function createCompositionRenderer(SF, helpers) {
       if (art) body.appendChild(art); else root.classList.add('cp-title-unillustrated');
     } else if (slide.type === 'quote') {
       body.appendChild(el('span','cp-quote-mark','“'));
+      /* Same move as the cover: the beat sits with the words it introduces
+         rather than in the corner furniture, so "The scenario · 30 seconds"
+         reads as an instruction about the next half minute. */
+      if (slide.subtitle) body.appendChild(rich('p','cp-eyebrow',slide,'subtitle',slide.subtitle));
       layoutQuote(Object.assign({},slide,{subtitle:''}),body);
       body.querySelector('.q').classList.add('cp-scenario');
 
@@ -58,6 +87,7 @@ export function createCompositionRenderer(SF, helpers) {
       body.appendChild(choices);
       if (slide.body) body.appendChild(field('p','cp-prompt','body'));
     } else if (slide.type === 'statement') {
+      if (slide.subtitle) body.appendChild(rich('p','cp-eyebrow',slide,'subtitle',slide.subtitle));
       var discussion = el('div','cp-discussion');
       discussion.appendChild(el('span','cp-pair-mark','↔'));
       layoutStatement(Object.assign({}, slide, {subtitle:''}), discussion);
@@ -73,10 +103,18 @@ export function createCompositionRenderer(SF, helpers) {
         var copy=el('div'); copy.appendChild(bullet('h3','',i,p.term)); copy.appendChild(bullet('p','',i,p.def));
         row.appendChild(copy); rules.appendChild(row);
       });
-      body.appendChild(rules); note();
+      body.appendChild(rules);
+      /* Under the last rule, not above the first: on this layout the line is
+         a summary of the three, and the numbers should be the first thing
+         read. */
+      if (slide.subtitle) body.appendChild(rich('p','cp-closing-line',slide,'subtitle',slide.subtitle));
+      note();
     } else if (slide.type === 'keyfact') {
       var actionMark = el('div','cp-action-number','↗'); actionMark.setAttribute('aria-hidden','true'); body.appendChild(actionMark);
       var action=el('div','cp-action');
+      /* Inside the action column, not across the grid: the label belongs to
+         the heading it introduces, so it starts where the heading starts. */
+      if (slide.subtitle) action.appendChild(rich('p','cp-eyebrow',slide,'subtitle',slide.subtitle));
       action.appendChild(field('h2','','title')); action.appendChild(field('p','','body'));
       (slide.bullets || []).forEach(function(line,i) { action.appendChild(asStep(bullet('p','cp-write-line',i,line),slide)); });
       body.appendChild(action);

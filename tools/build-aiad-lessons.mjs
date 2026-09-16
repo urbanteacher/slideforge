@@ -40,10 +40,10 @@ const ICONS = {
 /* What differs between the two years. Everything else — the title shape, the
    five-minute length, numbers off — is the campaign, not the year.
 
-   The logo rules are the ones the bundle builders already settled on, and the
-   reasons are written up there: 2026 has a per-principle badge on every slide,
-   2027 has one campaign lockup on the title slide only, and both are drawn for
-   their own ground so logoReverse stays 'never'. */
+   The logo rules follow each campaign's own artwork. 2026 has a per-principle
+   badge on every slide, drawn for its own ground, so it is never reversed.
+   2027 has one ink lockup, and now carries it on every slide — two of which
+   are dark — so it leaves reversal to the ground rather than refusing it. */
 const CAMPAIGNS = [
   {
     group: 'aiad26',
@@ -52,7 +52,8 @@ const CAMPAIGNS = [
     exportName: 'STARTERS',
     theme: (s) => s.theme,
     logo: (s) => `assets/brand/aiad26/aiad26-${s.key}.svg`,
-    logoOn: 'all'
+    logoOn: 'all',
+    logoReverse: 'never'
   },
   {
     group: 'aiad27',
@@ -61,7 +62,18 @@ const CAMPAIGNS = [
     exportName: 'STARTERS_27',
     theme: (s) => `aiad27-${s.key}`,
     logo: () => 'assets/brand/aiad27/aiad27-lockup.svg',
-    logoOn: 'title'
+    /* The campaign's line rides the closing rule on every slide, and the
+       lockup holds the corner the header reserves for it. The two say the
+       same words; the repetition is deliberate, the way a printed programme
+       carries its mark on every page. */
+    closingNote: 'Keep humans in the loop',
+    /* The header reserves a corner for the mark on every slide, and 2026 already
+       carries its badge throughout. 'title' left that corner empty on six of the
+       seven student slides. */
+    logoOn: 'all',
+    /* Unset: the ink lockup is reversed by the shared dark-ground rule on the
+       scenario and rules slides, and left alone on the five light ones. */
+    logoReverse: undefined
   }
 ];
 
@@ -87,9 +99,11 @@ function lessonSpec(campaign, starter) {
     logo: campaign.logo(starter),
     logoOn: campaign.logoOn,
     logoSize: 'large',
-    logoReverse: 'never',
-    /* A starter is one idea per slide; a page number is a second thing. */
-    showSlideNumbers: false,
+    ...(campaign.logoReverse ? { logoReverse: campaign.logoReverse } : {}),
+    ...(campaign.closingNote ? { closingNote: campaign.closingNote } : {}),
+    /* The closing rule carries it, so it is a position in the five minutes
+       rather than clutter: "04 / 07" tells a room how far through it is. */
+    showSlideNumbers: true,
     slides: starter.slides
   };
 }

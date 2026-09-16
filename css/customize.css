@@ -221,8 +221,41 @@
 .cp-action p { font-size:var(--composition-supporting,28px); line-height:1.2; margin-top:25px; }
 .cp-write-line { font-size:var(--composition-context,22px); margin-top:28px; padding-bottom:30px; border-bottom:3px solid var(--s-fg); }
 
-.slide.cp .pad { padding-bottom:62px; }
-.slide.cp .cp-header { padding-right:330px; }
+/* The pad keeps its own 24px foot. This used to be 62px, holding the closing
+   rule clear of a page number that floated above it; the number sits on the
+   rule now, so the reservation went with it. */
+/* The closing rule, and the deck's own page number brought onto it. The
+   number stays the platform's — absolutely positioned as everywhere else —
+   and is only nudged to share this line, so there is one counter, not two. */
+.cp-footer { display:flex; justify-content:space-between; align-items:center; flex:none;
+  height:32px; margin-top:auto; border-top:1px solid var(--cp-rule,var(--s-rule)); font-size:18px; }
+/* Matched to the strand name in the header opposite: same 20px, same 700.
+   The two are the deck's identity at either end of the slide, so they are
+   set alike; the page number stays smaller because it is a position, not a
+   name. */
+.cp-footer-note { font-size:20px; font-weight:700; color:var(--s-fg); }
+/* In the footer it is a flex child, so it needs no coordinates at all. */
+.cp-footer .pagenum { position:static; font-size:18px; letter-spacing:0; color:var(--s-dim); }
+/* A composition footer with no note still pushes the number to the right. */
+.cp-footer .pagenum:only-child { margin-left:auto; }
+/* Only when a mark is actually in that corner — see has-corner-mark in
+   renderSlide. Otherwise the header keeps the full width. */
+.slide.cp.has-corner-mark .cp-header { padding-right:330px; }
+/* The cover's eyebrow: a label for the question, sized and spaced apart
+   rather than coloured apart, because every campaign ground fails light text. */
+.cp-title .cp-eyebrow, .cp-quote .cp-eyebrow, .cp-statement .cp-eyebrow,
+.cp-keyfact .cp-eyebrow { font-size:20px; font-weight:600; letter-spacing:.14em;
+  text-transform:uppercase; margin-bottom:26px; opacity:.85; }
+/* The discussion slide centres its question, so the label centres with it. */
+.cp-statement .cp-eyebrow { margin-bottom:20px; }
+/* Closing the numbered list rather than labelling it from the corner. Needs
+   to outrank the `.cp p { margin:0 }` reset above, or it sits tight under the
+   last rule and reads as part of it. */
+.cp .cp-closing-line { margin-top:44px; font-size:var(--composition-context,20px);
+  color:var(--s-accent); font-weight:600; }
+/* The scenario's ground is dark and its quote mark is already at the top
+   left, so the eyebrow clears it rather than sitting under it. */
+.cp-quote .cp-eyebrow { margin-bottom:22px; }
 .slide.cp .cp-beat { font-size:var(--composition-context,22px); line-height:1.2; }
 .slide.cp .cp-question { font-size:var(--cp-question-size,68px); }
 .slide.cp .cp-scenario { font-size:var(--cp-voice-size,62px); }

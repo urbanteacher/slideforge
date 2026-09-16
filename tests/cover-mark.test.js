@@ -57,6 +57,8 @@ test('the corner mark goes on the first slide the room sees, not the first row',
   /* 'all' and 'none' are untouched by any of this. */
   const every = { logo: 'x.png', logoOn: 'all', slides: [{ type: 'content', hidden: true }, { type: 'content' }] };
   assert.equal(SF.deckShowsLogo(every, every.slides[1], 1), true);
+  assert.equal(SF.deckShowsLogo(every, every.slides[0], 0), false,
+    "'all' still means every slide the room sees, not the hidden ones");
   const never = { logo: 'x.png', logoOn: 'none', slides: [{ type: 'title' }] };
   assert.equal(SF.deckShowsLogo(never, never.slides[0], 0), false);
 });

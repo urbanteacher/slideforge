@@ -36,6 +36,39 @@
   --composition-display-longest:var(--a27-display-longest);
 }
 [class*='theme-aiad27-']:is(.layout-title,.layout-statement,.layout-keyfact) { --s-bg:var(--a27-color); background:var(--s-bg); }
+/* The mark is an SVG with the strand colour baked in, and these three layouts
+   put that same colour on the ground — pink on pink, mint on mint. A
+   background-image cannot be recoloured by CSS, so it is driven to the ink the
+   strand name beside it already uses. Flip this to a mask if the icon set is
+   ever redrawn; then it would follow currentColor everywhere for free. */
+[class*='theme-aiad27-']:is(.layout-title,.layout-statement,.layout-keyfact) .cp-header::before { filter:brightness(0); }
+/* The closing rule follows its ground rather than one shared grey: ink on a
+   strand colour, where a warm grey washes out; the theme's own rule on the
+   dark slides, which is already a readable grey; unchanged on paper. */
+[class*='theme-aiad27-']:is(.layout-title,.layout-statement,.layout-keyfact) { --cp-rule:var(--s-fg); }
+/* On the dark grounds the strand colour is the accent and reads at 7:1 or
+   better, so the eyebrow takes it — the label is the campaign's voice, the
+   sentence under it is the room's. On a strand-coloured ground the same move
+   would be the colour on itself, so there it stays ink. */
+[class*='theme-aiad27-']:is(.layout-quote,.layout-journey) .cp-eyebrow { color:var(--s-accent); }
+/* Drawn 1:1, so it needs room to render at its own size rather than being
+   clamped to the 180px default and scaled down with its type. Hung flush with
+   the top of the header — the same 32px the pad uses — so the lockup's first
+   line shares a baseline with the strand name opposite it; its subline hangs
+   below the band on purpose. The header reserves 330px, so it clears the beat. */
+/* .slide.cp in css/customize.css caps the mark at 42px and loads after this
+   file. Matching its .cp as well as the theme puts these one class ahead, so
+   they win on specificity rather than tying and losing on order. */
+.slide.cp[class*='theme-aiad27-'] .slide-logo,
+.slide.cp[class*='theme-aiad27-'] .slide-logo img { max-width:300px; max-height:56px; }
+.slide.cp[class*='theme-aiad27-'] .slide-logo { top:32px; }
+/* The labels on the strand-coloured grounds — the cover and the discussion
+   slide — are set white and bold by choice. These are the only places in the
+   theme where type is lighter than its ground, and the accents are bright:
+   2.21:1 on pink, 1.68:1 on mint. Full opacity, 700, and a larger size are
+   as much as the combination can be given. */
+[class*='theme-aiad27-']:is(.layout-title,.layout-statement,.layout-keyfact) .cp-eyebrow {
+  color:#FFFFFF; font-weight:700; opacity:1; font-size:24px; }
 [class*='theme-aiad27-']:is(.layout-quote,.layout-journey) { --s-bg:#231F20; --s-fg:#F6F4ED; --s-dim:#D5D0CC; --s-accent:var(--a27-color); --s-rule:#686366; background:var(--s-bg); }
 [class*='theme-aiad27-'] .cp-letter { background:var(--a27-color); color:#231F20; }
 [class*='theme-aiad27-'] .cp-compare-head h3:first-of-type { background:var(--a27-color); color:#231F20; }

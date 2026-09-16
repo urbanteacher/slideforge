@@ -57,14 +57,25 @@ function icon(name, d) {
 /* The campaign lockup, for the title slide's logo slot only. Two lines: what
    the day is, and what it is asking. Ink, so it sits on the light ground the
    brief asks for — including on the printable version. */
+/* Drawn 1:1 against the slot it is given, so the type inside it is the size
+   it says it is. The old lockup was a 300x58 board squeezed into a 180px box:
+   everything in it rendered at 0.6, and its 17px heading arrived on the slide
+   at about ten. Here the viewBox matches the rendered box, and the block is hung flush with the header rather than
+   floated at some offset above it, so its first line falls on the same
+   baseline as the strand name across from it and the subline hangs below the
+   band. 20px here is 20px on the wall — the same size as the strand name across the header from
+   it, which is what makes the two read as one line of furniture.
+
+   Ink only. The mark is reversed to white on dark grounds by the shared
+   data-ground rule, which needs a single flat colour to inverse cleanly. */
 function lockup() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 58" width="300" height="58"
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 56" width="300" height="56"
      role="img" aria-label="AI Awareness Day 2027 — Keep Humans in the Loop">
-  <text x="0" y="17" font-family="Inter, Helvetica, Arial, sans-serif" font-size="17"
-        font-weight="800" letter-spacing="-0.3" fill="#14161A">AI Awareness Day 2027</text>
-  <rect x="0" y="27" width="34" height="3" fill="#14161A"/>
-  <text x="0" y="50" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14.5"
-        font-weight="600" letter-spacing="0.2" fill="#45484F">Keep Humans in the Loop</text>
+  <text x="0" y="27" font-family="Inter, Helvetica, Arial, sans-serif" font-size="20"
+        font-weight="700" letter-spacing="-0.4" fill="#231F20">AI Awareness Day 2027</text>
+  <rect x="0" y="34" width="40" height="2.5" fill="#231F20"/>
+  <text x="0" y="50" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13"
+        font-weight="500" letter-spacing="0.1" fill="#231F20" opacity="0.75">Keep Humans in the Loop</text>
 </svg>\n`;
 }
 

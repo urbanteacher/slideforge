@@ -760,6 +760,11 @@ function normalizeDeck(raw) {
   d.logo = String(d.logo || '');
   /* Who the deck belongs to. A theme may print it; none may invent it. */
   d.org = String(d.org || '');
+  /* The line a composition sets on its closing rule. A campaign's own words
+     — "Keep humans in the loop" — belong to the deck, not to the renderer;
+     the first draft of these layouts compiled about thirty such strings into
+     js/render.js and none of them could be edited or translated. */
+  d.closingNote = String(d.closingNote || '');
   d.sourceKey = String(raw.sourceKey || '');
   d.libraryGroup = normalizeLibraryGroup(raw.libraryGroup, d.theme);
   d.logoSize = ['small','medium','large'].includes(raw.logoSize) ? raw.logoSize : 'medium';
@@ -807,9 +812,12 @@ function firstShownIndex(deck) {
  */
 function deckShowsLogo(deck, slide, index) {
   if (!deck || !String(deck.logo || '').trim()) return false;
+  /* Nothing is chrome on a slide the room never reaches. A hidden page is
+     usually a teacher's own layout with no corner reserved for a mark, so
+     drawing one lands it on top of their notes. */
+  if (slide && slide.hidden) return false;
   if (deck.logoOn === 'all') return true;
   if (deck.logoOn !== 'title') return false;
-  if (slide && slide.hidden) return false;
   if (typeof index === 'number') return index === firstShownIndex(deck);
   /* No index to place it by — fall back to the shape of the slide, which is
      what a standalone renderer (a review page, a thumbnail) can still see. */

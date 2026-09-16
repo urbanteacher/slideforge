@@ -4926,9 +4926,28 @@
     if (SF.Custom) SF.Custom.layout(root, slide);
 
     if (opts.chrome !== false && deck.showSlideNumbers && opts.index != null && slide.type !== 'title') {
-      root.appendChild(el('div', 'pagenum', (opts.index + 1) + ' / ' + opts.total));
+      /* Counted over the running order, not the editor's rows. A deck with a
+         hidden teacher page said "3 / 9" in the editor and "3 / 7" in Present
+         — the same slide, two numbers, because the show has already dropped
+         the hidden ones by the time it renders. The room's count is the true
+         one, so the editor is made to agree with it rather than the reverse.
+         Same reasoning as deckShowsLogo and the first shown slide. */
+      var shown = (deck.slides || []).filter(function (x) { return !x.hidden; });
+      var place = shown.indexOf(slide);
+      var num = el('div', 'pagenum', place < 0
+        ? (opts.index + 1) + ' / ' + opts.total
+        : (place + 1) + ' / ' + shown.length);
+      /* A composition with a closing rule takes the number onto it, rather
+         than having the number guess where that rule is. Everything else
+         keeps the corner it has always had. */
+      (root.querySelector('.cp-footer') || root).appendChild(num);
     }
     if (opts.chrome !== false && SF.deckShowsLogo(deck, slide, opts.index)) {
+      /* Said on the slide so layout can react to it. The corner mark is
+         positioned absolutely, so a header sharing that corner has no way to
+         know whether it is there — it used to hold 330px open on every slide
+         and got an empty gap on the ones with no mark. */
+      root.classList.add('has-corner-mark');
       var logo = el('div', 'slide-logo');
       var logoScale={small:36,medium:52,large:72}[deck.logoSize || 'medium'] || 52;
       logo.style.height=logoScale+'px';

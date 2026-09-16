@@ -42,8 +42,7 @@ function buildDeck(starter) {
        already stamped by the strand furniture, and the brief asks for one
        strong element per slide rather than several competing. */
     logo: 'assets/brand/aiad27/aiad27-lockup.svg',
-    logoOn: 'title',
-    logoReverse: 'never',
+    logoOn: 'all',
     logoSize: 'large',
     showSlideNumbers: false,
     finalScores: false,
@@ -70,8 +69,8 @@ function checkDeck(deck, starter) {
   if (deck.theme !== `aiad27-${starter.key}`) {
     problems.push(`theme is "${deck.theme}" — did src/model.js register it?`);
   }
-  if (deck.logoOn !== 'title') problems.push(`logoOn is "${deck.logoOn}", expected "title"`);
-  if (deck.logoReverse !== 'never') problems.push('logoReverse was dropped');
+  if (deck.logoOn !== 'all') problems.push(`logoOn is "${deck.logoOn}", expected "all"`);
+  if (deck.logoReverse) problems.push(`logoReverse is "${deck.logoReverse}"; the ground should decide`);
   /* SEVEN student-facing slides, and they are a fixed sequence: title,
      scenario, choice, discuss, reveal, remember, action. Two more are hidden —
      the teacher page and the vocabulary — because the brief wants teacher

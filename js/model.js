@@ -10,10 +10,17 @@
       if (!choice3 || !SF.COMPOSITIONS[choice3].structured) return false;
       root.classList.add("composition-structured", "cp", "cp-" + slide.type);
       var header = el("div", "cp-header");
-      if (slide.subtitle && !["compare", "spectrum"].includes(slide.type)) header.appendChild(rich("div", "cp-beat", slide, "subtitle", slide.subtitle));
+      var beatAsEyebrow = ["title", "quote", "statement", "keyfact"].includes(slide.type);
+      var beatAsClosing = slide.type === "journey";
+      var beatInHeader = slide.subtitle && !beatAsEyebrow && !beatAsClosing && !["compare", "spectrum"].includes(slide.type);
+      if (beatInHeader) header.appendChild(rich("div", "cp-beat", slide, "subtitle", slide.subtitle));
       pad.appendChild(header);
       var body = el("div", "cp-body");
       pad.appendChild(body);
+      var footer = el("div", "cp-footer");
+      var closing = deck.closingNote || deck.org;
+      if (closing) footer.appendChild(el("span", "cp-footer-note", closing));
+      pad.appendChild(footer);
       function field(tag, cls, key) {
         return rich(tag, cls, slide, key, slide[key] || "");
       }
@@ -40,6 +47,7 @@
       }
       if (slide.type === "title") {
         var title = el("div", "cp-title-copy");
+        if (slide.subtitle) title.appendChild(rich("p", "cp-eyebrow", slide, "subtitle", slide.subtitle));
         title.appendChild(field("h1", "", "title"));
         if (slide.body) title.appendChild(field("p", "cp-tagline", "body"));
         appendSlideDate(slide, title);
@@ -49,6 +57,7 @@
         else root.classList.add("cp-title-unillustrated");
       } else if (slide.type === "quote") {
         body.appendChild(el("span", "cp-quote-mark", "“"));
+        if (slide.subtitle) body.appendChild(rich("p", "cp-eyebrow", slide, "subtitle", slide.subtitle));
         layoutQuote(Object.assign({}, slide, { subtitle: "" }), body);
         body.querySelector(".q").classList.add("cp-scenario");
       } else if (slide.type === "cards") {
@@ -66,6 +75,7 @@
         body.appendChild(choices);
         if (slide.body) body.appendChild(field("p", "cp-prompt", "body"));
       } else if (slide.type === "statement") {
+        if (slide.subtitle) body.appendChild(rich("p", "cp-eyebrow", slide, "subtitle", slide.subtitle));
         var discussion = el("div", "cp-discussion");
         discussion.appendChild(el("span", "cp-pair-mark", "↔"));
         layoutStatement(Object.assign({}, slide, { subtitle: "" }), discussion);
@@ -84,12 +94,14 @@
           rules.appendChild(row);
         });
         body.appendChild(rules);
+        if (slide.subtitle) body.appendChild(rich("p", "cp-closing-line", slide, "subtitle", slide.subtitle));
         note();
       } else if (slide.type === "keyfact") {
         var actionMark = el("div", "cp-action-number", "↗");
         actionMark.setAttribute("aria-hidden", "true");
         body.appendChild(actionMark);
         var action = el("div", "cp-action");
+        if (slide.subtitle) action.appendChild(rich("p", "cp-eyebrow", slide, "subtitle", slide.subtitle));
         action.appendChild(field("h2", "", "title"));
         action.appendChild(field("p", "", "body"));
         (slide.bullets || []).forEach(function(line, i) {
@@ -8909,6 +8921,7 @@
     d.aspect = ASPECTS[d.aspect] ? d.aspect : "16:9";
     d.logo = String(d.logo || "");
     d.org = String(d.org || "");
+    d.closingNote = String(d.closingNote || "");
     d.sourceKey = String(raw.sourceKey || "");
     d.libraryGroup = normalizeLibraryGroup(raw.libraryGroup, d.theme);
     d.logoSize = ["small", "medium", "large"].includes(raw.logoSize) ? raw.logoSize : "medium";
@@ -8925,9 +8938,9 @@
   }
   function deckShowsLogo(deck, slide, index) {
     if (!deck || !String(deck.logo || "").trim()) return false;
+    if (slide && slide.hidden) return false;
     if (deck.logoOn === "all") return true;
     if (deck.logoOn !== "title") return false;
-    if (slide && slide.hidden) return false;
     if (typeof index === "number") return index === firstShownIndex(deck);
     return !!(slide && (slide.type === "title" || slide.type === "section"));
   }

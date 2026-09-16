@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 58" width="300" height="58"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 56" width="300" height="56"
      role="img" aria-label="AI Awareness Day 2027 — Keep Humans in the Loop">
-  <text x="0" y="17" font-family="Inter, Helvetica, Arial, sans-serif" font-size="17"
-        font-weight="800" letter-spacing="-0.3" fill="#14161A">AI Awareness Day 2027</text>
-  <rect x="0" y="27" width="34" height="3" fill="#14161A"/>
-  <text x="0" y="50" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14.5"
-        font-weight="600" letter-spacing="0.2" fill="#45484F">Keep Humans in the Loop</text>
+  <text x="0" y="27" font-family="Inter, Helvetica, Arial, sans-serif" font-size="20"
+        font-weight="700" letter-spacing="-0.4" fill="#231F20">AI Awareness Day 2027</text>
+  <rect x="0" y="34" width="40" height="2.5" fill="#231F20"/>
+  <text x="0" y="50" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13"
+        font-weight="500" letter-spacing="0.1" fill="#231F20" opacity="0.75">Keep Humans in the Loop</text>
 </svg>

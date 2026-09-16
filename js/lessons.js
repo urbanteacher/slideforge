@@ -5092,7 +5092,7 @@
       "logoOn": "all",
       "logoSize": "large",
       "logoReverse": "never",
-      "showSlideNumbers": false,
+      "showSlideNumbers": true,
       "slides": [
         {
           "type": "title",
@@ -5272,7 +5272,7 @@
       "logoOn": "all",
       "logoSize": "large",
       "logoReverse": "never",
-      "showSlideNumbers": false,
+      "showSlideNumbers": true,
       "slides": [
         {
           "type": "title",
@@ -5439,7 +5439,7 @@
       "logoOn": "all",
       "logoSize": "large",
       "logoReverse": "never",
-      "showSlideNumbers": false,
+      "showSlideNumbers": true,
       "slides": [
         {
           "type": "title",
@@ -5592,7 +5592,7 @@
       "logoOn": "all",
       "logoSize": "large",
       "logoReverse": "never",
-      "showSlideNumbers": false,
+      "showSlideNumbers": true,
       "slides": [
         {
           "type": "title",
@@ -5764,7 +5764,7 @@
       "logoOn": "all",
       "logoSize": "large",
       "logoReverse": "never",
-      "showSlideNumbers": false,
+      "showSlideNumbers": true,
       "slides": [
         {
           "type": "title",
@@ -5908,10 +5908,10 @@
       "theme": "aiad27-safe",
       "org": "AI Awareness Day 2027",
       "logo": "assets/brand/aiad27/aiad27-lockup.svg",
-      "logoOn": "title",
+      "logoOn": "all",
       "logoSize": "large",
-      "logoReverse": "never",
-      "showSlideNumbers": false,
+      "closingNote": "Keep humans in the loop",
+      "showSlideNumbers": true,
       "slides": [
         {
           "type": "content",
@@ -6047,10 +6047,10 @@
       "theme": "aiad27-smart",
       "org": "AI Awareness Day 2027",
       "logo": "assets/brand/aiad27/aiad27-lockup.svg",
-      "logoOn": "title",
+      "logoOn": "all",
       "logoSize": "large",
-      "logoReverse": "never",
-      "showSlideNumbers": false,
+      "closingNote": "Keep humans in the loop",
+      "showSlideNumbers": true,
       "slides": [
         {
           "type": "content",
@@ -6185,10 +6185,10 @@
       "theme": "aiad27-creative",
       "org": "AI Awareness Day 2027",
       "logo": "assets/brand/aiad27/aiad27-lockup.svg",
-      "logoOn": "title",
+      "logoOn": "all",
       "logoSize": "large",
-      "logoReverse": "never",
-      "showSlideNumbers": false,
+      "closingNote": "Keep humans in the loop",
+      "showSlideNumbers": true,
       "slides": [
         {
           "type": "content",
@@ -6326,10 +6326,10 @@
       "theme": "aiad27-responsible",
       "org": "AI Awareness Day 2027",
       "logo": "assets/brand/aiad27/aiad27-lockup.svg",
-      "logoOn": "title",
+      "logoOn": "all",
       "logoSize": "large",
-      "logoReverse": "never",
-      "showSlideNumbers": false,
+      "closingNote": "Keep humans in the loop",
+      "showSlideNumbers": true,
       "slides": [
         {
           "type": "content",
@@ -6465,10 +6465,10 @@
       "theme": "aiad27-future",
       "org": "AI Awareness Day 2027",
       "logo": "assets/brand/aiad27/aiad27-lockup.svg",
-      "logoOn": "title",
+      "logoOn": "all",
       "logoSize": "large",
-      "logoReverse": "never",
-      "showSlideNumbers": false,
+      "closingNote": "Keep humans in the loop",
+      "showSlideNumbers": true,
       "slides": [
         {
           "type": "content",
@@ -6756,6 +6756,9 @@
        that names its institution has to hand that to the deck, or the theme
        prints nothing where the organisation line goes. */
     if (spec.org) deck.org = spec.org;
+    /* The line a composition prints on its closing rule, carried for the same
+       reason as org: it is the deck's own words, not the renderer's. */
+    if (spec.closingNote) deck.closingNote = spec.closingNote;
     /* Off for a five-slide starter that wants one element per slide. Carried
        rather than defaulted: makeDeck turns numbers on, which is right for a
        lecture and wrong for a campaign card. */

@@ -9,7 +9,7 @@ Every number below was measured, not estimated — mostly by rendering slides in
 a browser and reading the DOM. The method for each figure is in the appendix.
 
 The body describes the **current** state of the code. Two of the defects it
-identifies have since been fixed; §16 is the change log, and each fix is also
+identifies have since been fixed; §17 is the change log, and each fix is also
 described in the section it belongs to rather than only at the end.
 
 ---
@@ -21,7 +21,7 @@ described in the section it belongs to rather than only at the end.
    `pace-nul` (6 design keys, 8 slide types) — are a capability catalogue
    published as *data*. One engine key, `wordFrom`, was read by the renderer,
    demonstrated only by `motion-lab`, and settable by no interface — **fixed
-   2026-09-16**, see §16. None of the motion surface appears in `manual.html`,
+   2026-09-16**, see §17. None of the motion surface appears in `manual.html`,
    `docs/` or the README. **This platform scales through structure, not through
    slide features** — and the rule that follows is *structure first, theme
    second*.
@@ -144,7 +144,7 @@ function at [js/render.js:282](js/render.js:282) and three orders in
 only way to ask for anything but `first` was to hand-edit the deck JSON. The
 `wordStagger` handler even called `drawInspector()` with the comment *"choosing
 Together takes the direction control away, and choosing a wave brings it
-back"* — the control was designed and never written. Fixed; see §16.
+back"* — the control was designed and never written. Fixed; see §17.
 
 **A caution for anyone re-running this census — it defeated three attempts.**
 A design key can be written in at least **five** syntactically different ways,
@@ -161,7 +161,7 @@ and each missed form invents a phantom gap or hides a real setting:
 Counting reads is harder still: most layout code aliases `var d = slide.design
 || {}` and then reads `d.X`, so a grep for `slide.design.X` finds a fifth of
 them. **No regex pass over this codebase produces a trustworthy total.** That is
-the case for step 3 of §14: the number should come from a declared
+the case for step 3 of §15: the number should come from a declared
 `SlideDesign` and a test that walks the editor, not from pattern-matching.
 
 **And none of it is documented anywhere a user could reach.** `wordFrom`,
@@ -176,7 +176,7 @@ evidence. That was a category error — `manual.html` is titled "Private teacher
 controls" and is the **live classroom desk** (name picker, timer, roster,
 reveal controls, Toolkit). It was never documentation, so finding nothing in it
 proves nothing. The right target is a generated reference page of its own; see
-§14 step 3.
+§15 step 3.
 
 ### Why a deck cannot do the job of a check
 
@@ -200,7 +200,7 @@ a snap region — because every theme gets it at once, for free, forever.
 AiAd27 made the opposite trade: **252 shared lines to raise the ceiling for
 five themes only**, and it had to break the editing contract to do it.
 
-So the rule to write down, and the one the plan in §14 follows:
+So the rule to write down, and the one the plan in §15 follows:
 
 > **Structure first, theme second.** A capability enters the platform as an
 > engine feature with a name, a control and a check. A theme then chooses
@@ -231,7 +231,7 @@ specimen deck can still carry one forever. Plan step 3 (declare `SlideDesign`
 (`studio | midnight | paper | ocean | ember | mono`). Runtime `THEMES` has
 on the order of twenty-three. That is the same class of defect as an undeclared
 `SlideDesign`: the type claims to be the catalogue and is not. Generating
-`ThemeKey` from `THEMES` (doc §14 step 3) is the theme-shaped twin of this
+`ThemeKey` from `THEMES` (doc §15 step 3) is the theme-shaped twin of this
 section's engine-shaped fix — listed here so it is not forgotten when someone
 opens only §2.
 
@@ -270,7 +270,7 @@ state after step 3's type+test land.
 **7. Specimen decks still cannot police contrast.** Closing the `wordFrom`
 control does not retire the earlier finding: `motion-lab` on `cinematic` was
 demonstrating sub-3:1 chart ink on a near-black ground because a deck is data.
-The `ground: 'dark'` fix (§10 / §16) raised cinematic's worst chart step above
+The `ground: 'dark'` fix (§10 / §17) raised cinematic's worst chart step above
 the floor; the *category* of bug — capability shown in a deck, defect invisible
 to the deck — still needs a check, not another slide.
 
@@ -586,7 +586,7 @@ literals were ten correct lines nobody had a reason to read together.
 | 1 | `--s-*` tokens + `.theme-X` | `'midnight'` as the literal fallback at **10** call sites in `render.js` plus one in `editor.js`, while the model defaulted to `studio` — decks and games had different house themes | **retired.** `themedRoot()` reduced ten copies to one, then `resolveTheme()` / `DEFAULT_THEME` in `src/themes.js` removed the literal entirely. Games resolve through the same function, so there is now one house theme. |
 | 3 | `.theme-X.layout-Y` scoping, `slide.design`, `SF.Custom.layout` | `northeastern` as a hardcoded `else if` in `renderSlide`, beside the `THEME_ART` table invented later to do the same job | **retired.** Theme art moved into the manifest's `art` descriptor; `THEME_ART` is gone from `render.js` too. |
 | 1–3 | *nothing — never generalised* | **Four** independent name-lists in `css/app.css` answering "is this theme dark?", with divergent membership | **retired.** One `ground` declaration, now per-layout — see §10. |
-| 6 | `slide.design.composition` + `applyComposition` | `layoutAwareness27` — a second dispatch path whose guard excluded the first | **retired.** Replaced by composition-gated `layoutComposition`; see §12 and §16. |
+| 6 | `slide.design.composition` + `applyComposition` | `layoutAwareness27` — a second dispatch path whose guard excluded the first | **retired.** Replaced by composition-gated `layoutComposition`; see §12 and §17. |
 
 **All four are now closed.** Worth recording what actually cleared them,
 because it was not diligence: in every case the one-off survived because
@@ -597,7 +597,7 @@ copies became one function. `layoutAwareness27` went when arrangement became
 data with a picker.
 
 The standing lesson for era 7: **a one-off survives exactly as long as no
-check can name it.** The three bindings added in §16 — `SlideDesign` ↔
+check can name it.** The three bindings added in §17 — `SlideDesign` ↔
 catalogue by `@satisfies`, catalogue ↔ behavioural probes by assertion, and
 the theme manifest test — are the first mechanisms in this codebase that would
 fail on a new one rather than wait for somebody to notice it.
@@ -706,7 +706,7 @@ It should live where the platform already looks: `src/model.js`, beside
 `THEMES`, typed in `src/types.d.ts`, checked by `npm test`.
 
 **One field of it now does.** `ground: 'dark'` (§10) is the first entry in what
-the plan in §14 calls the theme manifest, and it is worth naming what made it
+the plan in §15 calls the theme manifest, and it is worth naming what made it
 work, because the next field should be added the same way: it is declared in
 one place, it is *asked* rather than enumerated, a theme can override the
 consequence with something better of its own, and shared CSS reads it through
@@ -733,7 +733,7 @@ that should have noticed cannot: `ThemeKey` is only consulted where a theme key
 is annotated, and `design` is annotated nowhere. Adding `ground` did not change
 that — a ninth theme could be given a dark ground tomorrow and forget to
 declare it, and the only thing that would notice is somebody measuring contrast
-by hand again. **That is the gap the reachability check in §14 step 3 closes,
+by hand again. **That is the gap the reachability check in §15 step 3 closes,
 and it is why declaring the field was the smaller half of the work.**
 
 Worth being fair about the contrast. `js/model.js` *cannot* drift from
@@ -809,7 +809,98 @@ themeable, reflowable value — the same class of thing
 `slide.design.composition` already is. The canvas becomes the *instrument* for
 setting design values, not a new storage model.
 
-## 14. The plan, in order
+## 14. Slide chrome: two regions, not six absolute things
+
+Proposed, not built. This is the step between compositions and the canvas, and
+it is the smallest useful version of the region model the canvas needs.
+
+### What chrome is today
+
+Six things can appear around a slide's content, and no two are placed the same
+way:
+
+| Thing | Controlled by | How it is placed |
+| --- | --- | --- |
+| `.pagenum` | `showSlideNumbers` | absolute, bottom-right — except on a composition, where it is moved into the footer |
+| `.slide-logo` | `logoOn`, `logoSize`, `logoGround`, `logoReverse` | absolute, top-right |
+| `.track` | nothing — always on | absolute, full-width foot |
+| `.slide-date` | a per-slide field | in the flow |
+| `.cp-header` | the composition | in the flow |
+| `.cp-footer` | the composition | in the flow |
+
+Four settings for one of them, none for another, and two that exist only if a
+composition happens to draw them.
+
+### The 330px, as the worked example
+
+`.cp-header` reserves `padding-right: 330px` so its text cannot collide with
+the corner mark. The mark is `position: absolute`, so the two are not related
+in any way a browser can see — the number is a guess that has to be kept true
+by hand.
+
+Everything that went wrong with it in one afternoon:
+
+- It reserved the space on **every** slide and on every theme, so a deck with
+  no logo got a 330px hole. Fixed by stamping `has-corner-mark` and scoping
+  the rule to it — but that is a second fact kept in step with the first.
+- The lockup was drawn on a 300×72 artboard and capped to 42px tall by a
+  third rule, so it rendered at 0.58 and its 20px heading arrived at 10px.
+  Three separate places had an opinion about the mark's size and none of them
+  knew what was inside the artwork.
+- Aligning the lockup's first line with the strand name opposite it meant
+  computing a `top` from the pad's padding, the header's height and the
+  artboard's internal baseline — four numbers in three files.
+
+None of these are hard. All of them are the same shape: **a spatial
+relationship expressed as arithmetic in two places instead of as structure in
+one.**
+
+### The proposal
+
+Two declared regions, each holding named slots the author fills:
+
+```
+header   [ identity ]   [ context ]   [ mark ]
+footer   [ mark/text ]  [ context ]   [ number ]
+```
+
+- **Slots take a named thing, never a free text box.** The mark, the page
+  number, the deck's organisation, the slide's own context line. The moment a
+  slot accepts arbitrary type at arbitrary size, overflow is back — in a 40px
+  strip, where there is no room to reflow out of it.
+- **The mark becomes a child of its region.** No reservation, no gap when it
+  is absent, no magic number to keep in step, and the artwork is drawn to a
+  slot whose height is declared once.
+- **Chrome stops belonging to a composition.** The AiAd27 footer was lost
+  entirely in the composition rewrite — carrying the campaign line and the
+  page count — because it lived inside one renderer branch. A declared region
+  cannot disappear that way.
+- **One control surface.** `showSlideNumbers`, `logoOn`, `logoSize`,
+  `logoGround` and `logoReverse` become "what is in footer-right" and "what is
+  in header-right".
+
+### Why it is the right first canvas gesture
+
+Dragging the mark from `header-right` to `footer-left` is drag-and-snap with
+three targets in a strip, nothing free-form, and nothing that can overflow. It
+proves the region model on the safest surface in the app before anything
+touches the body of a slide.
+
+It also settles a question the campaign work kept re-asking by hand: the beat
+line sits in the header on four layouts, above the words on three, and below
+the list on one. Today that is a list of slide types in `compositions.js`.
+Under slots it is a per-composition default — data, visible in the picker,
+changeable without a renderer edit.
+
+### A smaller idea that belongs with it
+
+`slide.timeLimit` already exists in the model, and the teacher desk already
+has a timer. The campaign beat says "· 30 seconds" as *text*, so the deck and
+the timer can disagree and nothing notices. If the context slot read the
+slide's own `timeLimit`, the label on the wall and the countdown on the desk
+would agree by construction rather than by proofreading.
+
+## 15. The plan, in order
 
 Each step depends on the one before.
 
@@ -904,7 +995,14 @@ deck and wired into `npm test` would have caught the overlaps visible in
 better design-review surface than anything the app currently has. Neither
 belongs in a campaign folder.
 
-**8. Then the canvas, on top of compositions.** Once arrangement is a named
+**7a. Then slide chrome as two regions (§14).** The smallest version of the
+region model, on the safest surface: header and footer as declared slots, the
+corner mark as a child of one rather than an absolute thing the header dodges
+with a hardcoded 330px. Do this before the canvas — it is the same mechanism
+at a tenth of the risk, and it retires a family of arithmetic bugs that cost
+most of an afternoon on 2026-09-16.
+
+**8. Then the canvas, on top of compositions and regions.** Once arrangement is a named
 value in `slide.design`, the canvas has something to manipulate: snap targets
 are the composition's regions, and the gesture writes a design value. Building
 the canvas first, against no composition model, is how the coordinate trap gets
@@ -920,7 +1018,7 @@ esbuild entry point versus plain scripts with a registry. A per-theme
 layout-defaults map wants to live next to the layouts, so step 2 needs this
 answered.
 
-## 15. Open decisions
+## 16. Open decisions
 
 - **Is AiAd27 allowed to ship as-is, with the regressions documented?** These
   are five fixed teaching decks and a teacher who edits them is not the main
@@ -949,7 +1047,7 @@ answered.
 
 ---
 
-## 16. Change log
+## 17. Change log
 
 The body of this document describes the current state. This is what has moved
 since it was written, so a reader can tell the analysis from the work.
@@ -992,7 +1090,7 @@ further issues were written under *Further issues the §2 census still leaves
 open* (undeclared `SlideDesign`, stale `ThemeKey`, missed `placement` via
 helper writer, nested `wordPlan` false keys, full write-pattern set,
 undocumented motion surface, specimen≠check, and AiAd27/era 6 designing
-*beyond* the platform spine). Two matching open decisions were added to §15.
+*beyond* the platform spine). Two matching open decisions were added to §16.
 Plan step 3 remains the place the type/test debt turns into a catalogue —
 this entry only stops the findings living in chat.
 
@@ -1020,6 +1118,43 @@ predate this work: the committed baselines were measured against the previous
 **Do not run a bare `npm run visual:update`** while that rewrite is in the
 tree — it would bless its current state along with everything else. Filter by
 theme, and look at the results.
+
+### 2026-09-16 — campaign chrome, and six faults behind it
+
+The AI Awareness Day header and footer were rebuilt slide by slide against a
+live review. Six defects surfaced, all of the same family — a fact held in two
+places that had drifted:
+
+| Fault | Cause |
+| --- | --- |
+| Corner mark on the hidden teacher page, not the cover | `logoOn: 'title'` meant editor row 0, not the first slide the room sees |
+| Strand mark invisible on three of seven slides | an SVG with the strand colour baked in, on a ground of that colour |
+| 330px of empty header on every slide | the reservation could not tell whether a mark was coming |
+| Page number "3 / 9" in the editor, "3 / 7" in Present | one counted deck rows, the other the running order |
+| `closingNote` never reached the deck | `buildLesson` copies deck fields by an allowlist |
+| Lockup rendering at 0.58 of its stated size | three rules with an opinion about its size, none aware of the artboard |
+
+Also restored the closing rule the composition rewrite had lost entirely, and
+moved the beat line onto the words it introduces — an eyebrow above the cover,
+scenario, discussion and commitment slides; a closing line under the rules.
+
+**The structure stayed shared.** Verified after the fact: all ten structured
+compositions still apply on northeastern, ukbt, studio and midnight, each
+taking its own `closingNote`, with no overflow. Only the colour decisions are
+scoped to the campaign — the white eyebrow, the inked strand mark, the rule
+that follows its ground. That is the right line, and it is the line this
+document exists to defend.
+
+`tools/smoke-campaign-chrome.mjs` now holds 53 assertions across the five
+strands covering every fault above, plus one that is not about any of them:
+**nothing may be set in a colour its own ground would swallow**, measured by
+luminance rather than by eye. Three of the six were re-introduced deliberately
+to confirm the check fails on them.
+
+Two limits worth recording. The fit checker caught the keyfact overflow this
+work caused and could not catch the misalignment that came with it — a label
+orphaned at the far left is inside the box. And half the faults above were
+found by a person looking at a screen, not by any tool.
 
 ### 2026-09-16 — four corrections found by review
 
@@ -1052,7 +1187,7 @@ recorded in §2 next to the census it belongs to.
 ### 2026-09-16 — shared compositions, first foundation repair
 
 The measurements above describe the pre-repair implementation. This pass closes
-step 1 of §14 and repairs the main data losses in step 5; it does not claim to
+step 1 of §15 and repairs the main data losses in step 5; it does not claim to
 complete the rest of the roadmap.
 
 - `src/model.js` now owns `COMPOSITIONS`, compatibility and resolution. Six
@@ -1086,7 +1221,7 @@ No blanket visual-baseline update was made.
 
 ### 2026-09-16 — theme manifest completed
 
-Step 2 of §14 now uses `src/themes.js` as the single manifest, imported into
+Step 2 of §15 now uses `src/themes.js` as the single manifest, imported into
 the existing model build. It contains each theme's identity, explicit ground,
 art descriptor (or `null`), and composition defaults. `ThemeKey` is derived from
 its keys instead of the old six-item union.
@@ -1114,13 +1249,13 @@ composition/demo render checks pass. Dark-screen and white-print screenshots
 were visually inspected. This validates intrinsic theme grounds; it does not
 infer arbitrary photo backgrounds or replace the author's logo-ground override.
 
-The next milestone is §14 step 3: the complete typed design-surface declaration,
+The next milestone is §15 step 3: the complete typed design-surface declaration,
 control reachability checks and generated manual. The renderer module split and
 canvas regions remain separate work.
 
 ### 2026-09-16 — declared design surface and live control checks
 
-Step 3 of §14 now has a typed `SlideDesign` with all 34 settings, attached to
+Step 3 of §15 now has a typed `SlideDesign` with all 34 settings, attached to
 `Slide.design`. `src/design-controls.js` declares each setting's label, pane,
 applicable slide types, explanatory text and conditional availability. Its
 `@satisfies` contract requires exactly the keys of `SlideDesign`; the catalogue
