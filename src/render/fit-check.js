@@ -48,11 +48,18 @@ function clipper(el, root) {
   return null;
 }
 
-/** Which way, and by how much, a rect escapes a frame. */
-function escapes(rect, frame, tolerance) {
+/** Which way, and by how much, a rect escapes a frame.
+ *
+ * `allowAscent` drops the top edge. A word's client rect starts at the top of its
+ * line box, and a font's ascent reaches above that whenever line-height is tight
+ * — so a heading in a box sized to its own text reports 3 to 7px of "overflow"
+ * with nothing clipped. Callers measuring a block against its declared box want
+ * this; callers measuring against the slide frame do not, because text above the
+ * slide really is off the slide. */
+function escapes(rect, frame, tolerance, allowAscent) {
   const out = [];
   if (rect.bottom > frame.bottom + tolerance) out.push(['bottom', rect.bottom - frame.bottom]);
-  if (rect.top < frame.top - tolerance) out.push(['top', frame.top - rect.top]);
+  if (!allowAscent && rect.top < frame.top - tolerance) out.push(['top', frame.top - rect.top]);
   if (rect.right > frame.right + tolerance) out.push(['right', rect.right - frame.right]);
   if (rect.left < frame.left - tolerance) out.push(['left', frame.left - rect.left]);
   return out;
@@ -65,9 +72,10 @@ function escapes(rect, frame, tolerance) {
  * detached or zero-size stage answers null rather than a plausible pass.
  *
  * @param {Element} root a rendered .slide
- * @param {{tolerance?:number, floor?:number, frame?:Element}} [opts]
+ * @param {{tolerance?:number, floor?:number, frame?:Element, allowAscent?:boolean}} [opts]
  *   `frame` bounds the content when it is not the slide itself — the lab passes
- *   a slot so a block is judged against its declared box.
+ *   a slot so a block is judged against its declared box. Pass `allowAscent`
+ *   with it: a box sized to its own text always has the font's ascent above it.
  * @returns {{fits:boolean, legible:boolean, issues:Array<{element:string,direction:string,px:number,text:string}>, smallest:number|null, smallestIn:string|null}|null}
  */
 export function measureSlideFit(root, opts = {}) {
@@ -77,6 +85,7 @@ export function measureSlideFit(root, opts = {}) {
   const tolerance = opts.tolerance ?? FIT_TOLERANCE;
   const floor = opts.floor ?? LEGIBLE_FLOOR;
   const frame = (opts.frame ?? root).getBoundingClientRect();
+  const allowAscent = opts.allowAscent ?? false;
   const issues = [];
   const seen = new Set();
   const add = (element, direction, px, text) => {
@@ -122,11 +131,11 @@ export function measureSlideFit(root, opts = {}) {
       range.setEnd(node, (word.index ?? 0) + word[0].length);
       for (const box of range.getClientRects()) {
         if (!box.width || !box.height) continue;
-        for (const [direction, px] of escapes(box, frame, tolerance)) {
+        for (const [direction, px] of escapes(box, frame, tolerance, allowAscent)) {
           add(describe(el), direction, px, word[0]);
         }
         if (clipBox) {
-          for (const [direction, px] of escapes(box, clipBox, tolerance)) {
+          for (const [direction, px] of escapes(box, clipBox, tolerance, allowAscent)) {
             add(describe(el), `clipped-${direction}`, px, word[0]);
           }
         }

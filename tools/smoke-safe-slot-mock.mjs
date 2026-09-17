@@ -12,6 +12,20 @@ try {
   assert.ok(await page.locator('#safe-deck .safe-slot').count()>=2);
   if(i>0&&i<8)assert.equal(await page.locator('#safe-deck .safe-stage .pagenum').innerText(),`${i} / 7`);
  }
+ /* Safe shares SF.measureSlideFit with Demo and with production, so it reads
+    painted size rather than declared and can see its own legibility problems.
+    Two campaign slides paint at 18px; the ratchet holds that at two. */
+ const painted=[];
+ for(let i=0;i<9;i++){
+  await page.selectOption('#safe-slide',String(i));await settled();
+  const size=Number(await page.locator('#safe-deck .safe-status').getAttribute('data-smallest'));
+  assert.ok(Number.isFinite(size)&&size>0,`slide ${i+1} reported no painted text size`);
+  painted.push(size);
+ }
+ const underFloor=painted.filter(px=>px<20).length;
+ assert.ok(underFloor<=2,`${underFloor} Safe slides under the 20px floor (was 2): ${painted.join(', ')}`);
+ await page.selectOption('#safe-slide','0');await settled();
+
  await page.check('#safe-audience');assert.equal(await page.locator('#safe-slide option').count(),7);
  assert.equal(await page.locator('#safe-slide').inputValue(),'1');
  await settled();
@@ -50,5 +64,5 @@ try {
  assert.equal(saved.deck.slides.length,9);assert.equal(saved.deck.slides.filter(s=>!s.hidden).length,7);assert.equal(saved.recipes.cards[1][1],'Voting block');
  await page.uncheck('#safe-grid');
  for(const i of [1,3,5,7]){await page.selectOption('#safe-slide',String(i));await settled();await page.locator('#safe-deck .safe-stage').screenshot({path:`/tmp/safe-slot-${i+1}.png`});}
- assert.deepEqual(errors,[]);console.log('Safe mock: 9 slides fit; 7 audience slides; numbering, slot and chrome-band overflow, reset, comparison and snapshot verified.');
+ assert.deepEqual(errors,[]);console.log(`Safe mock: 9 slides fit on the shared instrument; ${underFloor} under the 20px floor; 7 audience slides; numbering, slot and chrome-band overflow, reset, comparison and snapshot verified.`);
 } finally { await browser.close(); }

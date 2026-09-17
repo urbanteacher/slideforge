@@ -324,21 +324,25 @@ async function render() {
 
   function measure() {
     const failed = [];
-    for (const box of root.querySelectorAll('.safe-slot')) {
-      const r = box.getBoundingClientRect();
-      let bad = box.scrollHeight > box.clientHeight + 1 || box.scrollWidth > box.clientWidth + 1;
-      const walk = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
-      if (!/mark/i.test(box.dataset.name))
-        while (walk.nextNode()) {
-          if (!walk.currentNode.textContent.trim()) continue;
-          for (const word of walk.currentNode.textContent.matchAll(/\S+/g)) {
-            const range = document.createRange();
-            range.setStart(walk.currentNode, word.index);
-            range.setEnd(walk.currentNode, word.index + word[0].length);
-            for (const t of range.getClientRects())
-              if (t.bottom > r.bottom + 1 || t.right > r.right + 1 || t.left < r.left - 1) bad = true;
-          }
-        }
+    const slots = [...root.querySelectorAll('.safe-slot')];
+    /* A slide that placed nothing reported "All 0 slots fit": the loop below has
+       no boxes to find fault with. Demo hit this first; the fix belongs here too. */
+    if (!original && !slots.length) failed.push('nothing placed');
+    let smallest = null;
+    for (const box of slots) {
+      /* Shared with Demo and with production through SF.measureSlideFit: one
+         instrument, so a correction to it lands everywhere at once. This is what
+         the two engines were diverging over — Safe carried its own copy, without
+         the painted-size reading or the legibility floor. */
+      const verdict = SF.measureSlideFit(box, { frame: box, floor: SF.LEGIBLE_FLOOR, allowAscent: true });
+      /* Slots whose name contains "mark" are exempt: the quote glyph and the
+         action mark are drawn to exceed their box on purpose. */
+      const exempt = /mark/i.test(box.dataset.name || '');
+      const scrolls = box.scrollHeight > box.clientHeight + 1 || box.scrollWidth > box.clientWidth + 1;
+      const bad = !!verdict && ((!exempt && !verdict.fits) || scrolls);
+      if (verdict?.smallest != null && !exempt && (smallest === null || verdict.smallest < smallest)) {
+        smallest = verdict.smallest;
+      }
       box.classList.toggle('safe-overflow', bad);
       if (bad) failed.push(box.dataset.name);
     }
@@ -359,6 +363,12 @@ async function render() {
       }
     }
     $('.safe-status').dataset.fits = original ? 'original' : String(!failed.length);
+    $('.safe-status').dataset.smallest = smallest == null ? '' : String(smallest);
+    /* Reported, not enforced: geometry can pass at a size nobody can read. */
+    const tiny =
+      smallest != null && smallest < SF.LEGIBLE_FLOOR
+        ? ` · smallest text ${Math.round(smallest)}px, under the ${SF.LEGIBLE_FLOOR}px floor`
+        : '';
     const chromeHelp = root.classList.contains('chrome-regions')
       ? ' · drag ✥ on header/footer to rearrange'
       : '';
@@ -366,7 +376,7 @@ async function render() {
       ? 'Original design for comparison.'
       : failed.length
         ? 'Needs more space: ' + failed.join(', ') + '. Text is not automatically shrunk.'
-        : `${slide.hidden ? 'Hidden support slide' : `Audience ${audience} / 7`} · All ${used.length} slots fit, chrome inside its bands · 16×12${chromeHelp}`;
+        : `${slide.hidden ? 'Hidden support slide' : `Audience ${audience} / 7`} · All ${used.length} slots fit, chrome inside its bands · 16×12${tiny}${chromeHelp}`;
   }
   editable(root, slide, measure);
   measure();

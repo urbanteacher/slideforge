@@ -29,6 +29,20 @@ contains the deck and recipe definitions; it is not yet an editor import format.
 Live voting, new asset selection, content flips, backdrop editing and production
 save/load/export are not implemented by this mock.
 
+Fit and legibility come from `SF.measureSlideFit` — the same module Demo and
+production use — called once per slot with the slot as its own frame. That is
+what stopped the two engines diverging: Safe carried its own copy of the check
+and so missed the painted-size reading and the legibility floor entirely. It now
+reports the smallest painted text per slide, and **two campaign slides paint at
+18px**, under the 20px floor.
+
+Slot callers pass `allowAscent`. A word's client rect starts at the top of its
+line box and a font's ascent reaches above that, so a heading in a box sized to
+its own text reports 3–7px of "overflow" with nothing clipped — every one of the
+nine slides failed on that edge alone the first time the shared check ran. A
+caller measuring against the slide frame does not pass it, because text above the
+slide really is off the slide.
+
 Fit checks wait for fonts, image decode and layout. Text Range top edges are not
 used as line-box boundaries: font ascent can extend above a tight line-height
 without overflowing painted text. Horizontal and bottom extents and scroll sizes
