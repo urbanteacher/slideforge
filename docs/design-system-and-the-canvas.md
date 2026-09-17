@@ -1254,6 +1254,56 @@ pitch. `--sf-header-h` and `--sf-footer-h` exist and are not yet load-bearing;
 the next step is a body region measured between them, and only then is there
 something for rows to divide.
 
+### 2026-09-17 — `poster-art` re-fitted onto the rows
+
+Done, for one composition. `16 x 36` on the 576px body.
+
+**The pitch was chosen by measuring the re-fit, not the fit.** No pitch has
+lines where the blocks already are — across 298 campaign blocks every
+candidate sits at or near chance (48px 1.01x, 36px 0.90x, 32px 1.11x, 24px
+1.02x, 18px 1.11x, 16px 0.90x). So the question is not which pitch matches,
+it is which pitch is cheapest to move to:
+
+| Pitch | eyebrow | heading | tagline | art |
+| --- | --- | --- | --- | --- |
+| **36px** | +14 | **+3** | +4 | +3 |
+| 32px | −2 | **+15** | −8 | −1 |
+
+Similar totals, but 32px puts its movement in the headline and 36px puts it in
+the eyebrow. Moving an 88px headline 15px is visible; moving a 20px label 14px
+is not. 36px also lands the two-line heading within 3px of five whole rows,
+which 32px cannot.
+
+**`align-items: center` had to go.** A centred item's offset is a function of
+its own height, so two items of different heights — a copy stack and a 490px
+artboard — can never both sit on a line. The body is `align-items: start` now
+and each item is placed explicitly, which answers the anchor question from the
+span map for this composition:
+
+```
+art          rows 2-15   (margin-top 36, height 504 = 14 rows exactly)
+eyebrow      row 5       (stack margin-top 144)
+heading      row 6       (eyebrow margin-bottom 15, was 26)
+tagline      row 12      (heading margin-top 33, was 32)
+```
+
+**Result: 19 of 20 block tops sit on a row line.** The one miss is Smart's
+tagline, 17px off — and it is the variable-span problem, now with a number
+against it. Smart is the three-line headline: 274.5px is 7.63 rows, so
+anything below it lands off the lattice no matter what the margins say. The
+fix is a heading padded to whole rows, which needs either an authored span or
+a `ceil()` CSS cannot do.
+
+So the rule earned here: **a block can only put the block after it on a line
+if its own height is a whole number of rows.** Fixed-height things — the art,
+the eyebrow, the tagline — are easy. Text that wraps is the whole problem, and
+it is one composition in, not ten.
+
+*Verified:* 433 tests, 45 campaign slides fit with 0 overflow, 63
+campaign-chrome checks. All 597 visual baselines pass, which again is not
+evidence — `visual-regression.mjs` builds decks with no composition, so no
+baseline renders a `.cp-*` slide at all. The evidence is the measurement.
+
 ### The span map for `poster-art`, measured across all five covers
 
 *(Row counts below are against the retired 592px/37px body — see the entry

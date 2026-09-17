@@ -181,7 +181,19 @@
 .cp .cp-source { font-size:var(--composition-caption,18px); line-height:1.25; margin-top:14px; max-width:1130px; }
 /* Poster with an authored illustration. */
 
-.cp-title .cp-body { display:grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr); align-items:center; gap:12px; padding:10px 0 30px; }
+/* RE-FIT onto the 16x36 body, so the row lines fall on the blocks.
+   align-items:center had to go: a centred item's offset is a function of its
+   own height, so two items of different heights can never both sit on a line.
+   Start-aligned, and each item placed explicitly — which is the anchor
+   question from §14b answered for this one composition.
+   art rows 2-15 · eyebrow row 5 · heading rows 6-10 · tagline row 12 */
+.cp-title .cp-body { display:grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr); align-items:start; gap:12px; padding:0; }
+.cp-title .cp-title-copy { margin-top:144px; }
+.cp-title .cp-art { margin-top:36px; height:504px; }
+/* .slide-qualified, because the shared eyebrow and tagline rules further down
+   this file carry the same specificity and would otherwise win on order. */
+.slide.cp-title .cp-eyebrow { margin-bottom:15px; }
+.slide.cp-title .cp-tagline { margin-top:33px; }
 
 /* A cover with no picture is one column, not one column and a hole. */
 .cp-title-unillustrated .cp-body { grid-template-columns: minmax(0,1fr); }
