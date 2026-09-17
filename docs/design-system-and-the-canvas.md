@@ -1177,6 +1177,43 @@ were computed against the 592px body at 37px and need redoing at whatever
 pitch is chosen for 576. The method in it stands: spans round up, the heading
 span is variable, margins become gaps, and centring becomes an anchor.
 
+### The chrome is not consistent across the app, measured
+
+`modular-canvas/preview.html` now draws the header and footer as **measured**
+bands on every tile, with their slots named — identity, context, mark above;
+note, context, number below — because the proposal is that those positions are
+interchangeable, so which slot a thing sits in is the thing worth seeing.
+
+Doing that to all eight tiles surfaced the gap:
+
+| Slide | Header band | Footer band | Slots found |
+| --- | --- | --- | --- |
+| campaign `poster-art`, `voice` | **real, 56px** | **real, 32px** | identity, mark, note, number |
+| NUL `sidecar` | implied, 36px | — (no page number) | mark |
+| NUL `editorial`, `introduction`, `chart` | implied, 36px | implied, 22px | mark, number |
+| `split`, `full-bleed-image` | implied, 36px · *claimed by full bleed* | implied, 22px · *claimed* | mark, number |
+
+**Only the campaign has a frame.** Everything else has the furniture without
+it: a mark and usually a page number, placed per layout rather than into a
+region. And they are placed inconsistently — measured across the six generic
+slides, the mark's top is **24, 26 or 28px** and its left is **1088, 1092 or
+1100**; the page number's left is **1181 or 1191**. The campaign's mark is at a
+fixed `top:32 / right:52` on all thirty-five.
+
+That is the concrete version of "generic layouts are not on the modular chrome
+yet". It is not that they are 9px off a lattice; it is that there is no region
+for them to be in, so each layout re-decides where its furniture goes to the
+nearest few pixels.
+
+Which reorders the work again. A shared **header and footer region** for the
+generic layouts is worth more than a row pitch, comes first, and is a much
+smaller change: it gives the marks one place to be, makes the bands real
+rather than implied, and only then is there a body region for rows to divide.
+
+Full-bleed keeps its escape. Those two tiles draw the same bands and label
+them *claimed*, because the chrome is still there — the media simply runs over
+it. Drawing nothing made an escape look like an absence.
+
 ### The span map for `poster-art`, measured across all five covers
 
 *(Row counts below are against the retired 592px/37px body — see the entry

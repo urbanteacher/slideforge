@@ -194,6 +194,12 @@
     color: #0b3a63; background: rgba(255, 255, 255, 0.88);
     padding: 1px 4px; border-radius: 3px; white-space: nowrap;
   }
+  .lab-chrome-band.implied {
+    border-style: dotted;
+    border-color: rgba(150, 60, 10, 0.75);
+    background: rgba(200, 110, 30, 0.10);
+  }
+  .lab-chrome-band.implied > span { color: #6b2d05; }
   .lab-chrome-band {
     position: absolute;
     left: 0;
@@ -518,7 +524,12 @@
     overlay.style.transform = `scale(${scale})`;
     overlay.style.transformOrigin = 'top left';
 
-    if (t.chrome && plan.host !== 'slide') {
+    /* Full-bleed slides are no longer skipped. They still carry a mark and a
+       page number; the media simply runs under them. Drawing nothing made the
+       escape look like an absence of chrome, when it is chrome with something
+       on top of it — which is the thing a row model has to make a first-class
+       state rather than a violation. */
+    if (t.chrome) {
       /* The bands are MEASURED, and they are the regions themselves.
          They used to be drawn at top:0 and STAGE_H-37, one row tall — an
          invented strip at each edge of the stage, which put the band above
@@ -538,9 +549,9 @@
         left: (r.left - sr.left) / k, top: (r.top - sr.top) / k,
         width: r.width / k, height: r.height / k,
       });
-      const band = (r, label) => {
+      const band = (r, label, cls) => {
         const el = document.createElement('div');
-        el.className = 'lab-chrome-band';
+        el.className = 'lab-chrome-band' + (cls ? ' ' + cls : '');
         el.style.top = r.top + 'px';
         el.style.height = r.height + 'px';
         const tag = document.createElement('span');
@@ -561,6 +572,30 @@
       const hdr = slideRoot.querySelector('.cp-header');
       const ftr = slideRoot.querySelector('.cp-footer');
       const mark = slideRoot.querySelector('.slide-logo');
+      const num = slideRoot.querySelector('.pagenum');
+      /* Every tile gets the same vocabulary, whether the slide has a formal
+         header or not. The campaign has .cp-header and .cp-footer; the generic
+         layouts have neither, yet they still carry a mark and a page number —
+         so those regions get drawn as IMPLIED bands, from the chrome that is
+         actually there.
+
+         Labelling them as implied is the point. It shows at a glance that NUL
+         has the furniture without the frame, which is the difference the row
+         model has to close, and it stops the absence looking like nothing
+         to see. */
+      const visible = (el) => {
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return r.height > 1 && r.width > 1 && r.top - sr.top > -100 ? r : null;
+      };
+      const impliedBand = (parts, label, cls) => {
+        const rects = parts.map(visible).filter(Boolean).map(toSlide);
+        if (!rects.length) return null;
+        const top = Math.min(...rects.map((r) => r.top));
+        const bottom = Math.max(...rects.map((r) => r.top + r.height));
+        band({ top, height: bottom - top }, `${label} · implied · ${Math.round(bottom - top)}px`, cls);
+        return { top, height: bottom - top };
+      };
       if (hdr) {
         const h = toSlide(hdr.getBoundingClientRect());
         /* The band spans the header and whatever hangs below it — today the
@@ -583,9 +618,27 @@
         const f = toSlide(ftr.getBoundingClientRect());
         band(f, `footer · ${Math.round(f.height)}px`);
         const note = ftr.querySelector('.cp-footer-note');
-        const num = ftr.querySelector('.pagenum');
+        const fnum = ftr.querySelector('.pagenum');
         if (note) slot(toSlide(note.getBoundingClientRect()), 'note');
-        if (num) slot(toSlide(num.getBoundingClientRect()), 'number');
+        if (fnum) slot(toSlide(fnum.getBoundingClientRect()), 'number');
+      }
+      /* No .cp-header: imply the band from the mark and any theme eyebrow. */
+      if (!hdr) {
+        const eyebrow = slideRoot.querySelector('.nu-eyebrow');
+        const claimed = plan.bleed ? ' · claimed by full bleed' : '';
+        if (impliedBand([mark, eyebrow], 'header' + claimed, 'implied')) {
+          const m = visible(mark);
+          if (m) slot(toSlide(m), 'mark');
+          const e = visible(eyebrow);
+          if (e) slot(toSlide(e), 'identity');
+        }
+      }
+      /* No .cp-footer: imply it from the page number. */
+      if (!ftr && !slideRoot.querySelector('.cp-footer')) {
+        if (impliedBand([num], 'footer' + (plan.bleed ? ' · claimed by full bleed' : ''), 'implied')) {
+          const n = visible(num);
+          if (n) slot(toSlide(n), 'number');
+        }
       }
     }
 
