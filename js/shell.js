@@ -1515,6 +1515,7 @@
     // engines register themselves when their script runs
     SF.Editor.install();
     SF.Games.install();
+    if (SF.Artwork) SF.Artwork.install();
 
     var want = null;
     try { want = localStorage.getItem(LAST_WS); } catch (e) {}

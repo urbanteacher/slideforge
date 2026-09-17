@@ -26,6 +26,7 @@ html:not([data-ready]) #app { visibility: hidden; }
 html:not([data-ready]) body { background: #f0f1ed; }
 </style>
 <link rel="stylesheet" href="css/app.css?v=62">
+<link rel="stylesheet" href="css/artwork.css?v=1">
 <link rel="stylesheet" href="css/board-common.css?v=1">
 <link rel="stylesheet" href="css/memory.css?v=2">
 <link rel="stylesheet" href="css/bingo.css?v=2">
@@ -182,6 +183,20 @@ html:not([data-ready]) body { background: #f0f1ed; }
           <option value="2">200%</option>
         </select>
         <button class="canvas-bar-btn" id="btnZoomIn" type="button" title="Zoom in (⌘⌥+)" aria-label="Zoom in">+</button>
+      </div>
+      <!-- The art face. A slide's decoration comes from its theme and paints on
+           every slide of the type, so everything here is this slide only. -->
+      <button class="canvas-bar-btn" id="btnArtFlip" type="button" title="Move, size, hide or replace this slide's artwork" aria-pressed="false">◇ Artwork</button>
+      <div class="art-bar" id="artBar" role="group" aria-label="Slide artwork" hidden>
+        <span class="art-what" id="artWhat">Click a shape or picture</span>
+        <button class="canvas-bar-btn" id="btnArtSmaller" type="button" data-art-needs-selection title="Smaller">−</button>
+        <button class="canvas-bar-btn" id="btnArtBigger" type="button" data-art-needs-selection title="Bigger">+</button>
+        <button class="canvas-bar-btn" id="btnArtHide" type="button" data-art-needs-selection title="Hide on this slide">◌ Hide</button>
+        <button class="canvas-bar-btn" id="btnArtDelete" type="button" data-art-needs-selection title="Remove this picture from the slide">✕</button>
+        <label class="canvas-bar-btn art-pick" title="Place your own picture on this slide">＋ Picture
+          <input type="file" id="artPicture" accept="image/*" aria-label="Place a picture on this slide">
+        </label>
+        <button class="canvas-bar-btn" id="btnArtReset" type="button" title="Drop this slide's artwork changes and follow the theme again">↺ Theme</button>
       </div>
       <button class="canvas-bar-btn wide" id="btnInspector" type="button" title="Hide the Design &amp; Engagement panel (⌘\)" aria-pressed="true">◨ Panel</button>
     </div>
@@ -404,6 +419,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/content-tools.js?v=5"></script>
 <script src="js/slide-clip.js?v=1"></script>
 <script src="js/editor.js?v=55"></script>
+<script src="js/artwork.js?v=1"></script>
 <script src="js/games.js?v=10"></script>
 <script src="js/studio.js?v=14"></script>
 <script src="js/activities.js?v=10"></script>

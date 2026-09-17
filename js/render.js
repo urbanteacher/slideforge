@@ -31,6 +31,70 @@
     return n;
   }
 
+  /* ---------------------------------------------------------- slide artwork
+     The theme manifest paints the same decoration on every slide of an eligible
+     type. A pose is one slide's disagreement with that: where a shape sits, how
+     big it is, and whether it is there at all. Poses are per slide, so a slide
+     nobody has touched still follows its theme — and still restyles when the
+     theme changes. They live on slide.art, which survives normalizeSlide
+     untouched because that copies the raw slide over the base.
+
+     Keyed by the shape's first class, which is what the theme manifest names it
+     (art-orbit, art-tile, art-dot). Editing the manifest's html can orphan a
+     pose; an orphan is ignored rather than applied to the wrong shape. */
+  function artKeyOf(node, i) {
+    var cls = String(node.className || '').split(/\s+/).filter(Boolean)[0];
+    return cls || 'art-' + i;
+  }
+  SF.artKeyOf = artKeyOf;
+
+  /* Tags every shape with its key so the editor can find it, then applies any
+     pose. Theme shapes are placed off right/bottom, so a pose that sets a
+     corner has to release the other one or the shape is pinned by both. */
+  SF.applyArtPoses = function (layer, poses) {
+    if (!layer) return;
+    Array.prototype.forEach.call(layer.children, function (node, i) {
+      var key = artKeyOf(node, i);
+      node.setAttribute('data-art-key', key);
+      var pose = poses && poses[key];
+      if (!pose) return;
+      if (pose.x != null && pose.y != null) {
+        node.style.left = pose.x + 'px';
+        node.style.top = pose.y + 'px';
+        node.style.right = 'auto';
+        node.style.bottom = 'auto';
+      }
+      if (pose.scale != null) {
+        node.style.transform = 'scale(' + pose.scale + ')';
+        node.style.transformOrigin = 'top left';
+      }
+      if (pose.hidden) node.style.display = 'none';
+    });
+  };
+
+  /* Null rather than an empty layer when there is nothing placed: an empty
+     absolutely positioned box over every slide is a hit-testing hazard for no
+     reason. Coordinates are true slide pixels — callers scale the whole slide,
+     so a pose means the same thing in the rail, the editor and the player. */
+  SF.placedArtLayer = function (pictures) {
+    var list = Array.isArray(pictures) ? pictures.filter(function (p) {
+      return p && p.src && !p.hidden;
+    }) : [];
+    if (!list.length) return null;
+    var layer = el('div', 'slide-art');
+    list.forEach(function (pic, i) {
+      var img = el('img', 'slide-art-img');
+      img.src = pic.src;
+      img.alt = String(pic.alt || '');
+      img.setAttribute('data-art-pic', String(pic.id == null ? i : pic.id));
+      img.style.left = (pic.x || 0) + 'px';
+      img.style.top = (pic.y || 0) + 'px';
+      if (pic.w) img.style.width = pic.w + 'px';
+      layer.appendChild(img);
+    });
+    return layer;
+  };
+
   /* "slide:12" — a jump inside the lesson. Returns the 1-based number the
      author wrote, or 0 for anything else, so callers can use it as a test. */
   SF.slideJumpTarget = function (value) {
@@ -4892,8 +4956,9 @@
     }
     // The manifest owns eligibility and decoration; deck text is always textContent.
     var spec = SF.THEMES[SF.resolveTheme(deck.theme)].art;
+    var art;
     if (spec && spec.layouts.includes(slide.type)) {
-      var art = el('div', 'theme-art ' + spec.className);
+      art = el('div', 'theme-art ' + spec.className);
       art.innerHTML = spec.html;
       if (spec.eyebrow) {
         var fields = spec.eyebrow[slide.type] || [];
@@ -4901,8 +4966,16 @@
         if (line) art.appendChild(el('div', spec.eyebrow.className, line));
       }
       art.setAttribute('aria-hidden', 'true');
+      SF.applyArtPoses(art, slide.art && slide.art.poses);
       root.appendChild(art);
     }
+    /* Pictures the author placed on this slide, in their own layer. The theme
+       layer above is decoration and stays aria-hidden; these are not, so they
+       carry whatever alt text the author gave them. The layer exists even on a
+       slide type the theme does not decorate — placing a picture must not
+       depend on the theme happening to paint here. */
+    var placed = SF.placedArtLayer(slide.art && slide.art.pictures);
+    if (placed) root.appendChild(placed);
     /* Which of a theme's decorations a slide shows, as a number a stylesheet
        can switch on. Stamped on every slide rather than only the two
        full-bleed ones, because a theme may want quiet decoration on the

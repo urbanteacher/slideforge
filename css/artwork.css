@@ -1,0 +1,96 @@
+/* Slide artwork — placed pictures, and the flip that makes theme decoration
+   editable. Kept out of app.css so the art face can be reasoned about (and
+   reverted) on its own.
+
+   Two layers sit over a slide: .theme-art, the manifest's decoration, which is
+   aria-hidden and inert; and .slide-art, pictures the author placed, which are
+   content. Both are inert while presenting — the flip below is the only thing
+   that makes either of them answer the mouse. */
+
+.slide-art {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.slide-art-img {
+  position: absolute;
+  max-width: none;
+  display: block;
+}
+
+/* ---------------------------------------------------------------- the flip */
+/* Presenting is the default, so interaction is opt-in: only an editor that has
+   set .art-editing wakes the layers up. .studio-art and its siblings declare
+   pointer-events:none in their own theme sheets, which is exactly why nothing
+   on the canvas could be touched before — so this has to reach the children
+   too, not just the layer. */
+.art-editing .theme-art,
+.art-editing .theme-art > *,
+.art-editing .slide-art,
+.art-editing .slide-art-img { pointer-events: auto; }
+
+.art-editing .theme-art > *,
+.art-editing .slide-art-img {
+  cursor: grab;
+  outline: 1px dashed rgba(12, 51, 84, .55);
+  outline-offset: 3px;
+}
+.art-editing .theme-art > *:hover,
+.art-editing .slide-art-img:hover { outline-color: rgba(12, 51, 84, .9); }
+.art-editing [data-art-selected] {
+  outline: 2px solid #0c3354;
+  outline-offset: 3px;
+  cursor: grabbing;
+}
+
+/* A hidden shape still has to be reachable, or hiding it is a one-way door:
+   ghosted on the art face, gone everywhere else. */
+.art-editing [data-art-hidden] {
+  display: block !important;
+  opacity: .25;
+  outline-style: dotted;
+}
+
+/* Content is not the subject while the art face is up. Ghosting it says so,
+   and stops a click meant for a shape landing in a text box behind it. */
+.art-editing .pad { opacity: .45; pointer-events: none; }
+
+/* --------------------------------------------------------------- the bar */
+/* Lives in the canvas bar beside zoom, and only while the flip is up: these
+   are verbs with no meaning on the content face. */
+/* Seven more controls do not fit beside zoom and the panel switch — they
+   collided with both and pushed "Panel" off the end. The art bar takes a row of
+   its own instead, which it can do without disturbing the bar's own layout
+   because it is only there while the flip is up. */
+.canvas-bar { flex-wrap: wrap; }
+.art-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 0 100%;
+  order: 1;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(12, 51, 84, .14);
+}
+.art-bar[hidden] { display: none; }
+.art-bar .canvas-bar-btn { white-space: nowrap; }
+.art-what {
+  color: #53604f;
+  font: 600 11px/1 system-ui;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  padding: 0 2px;
+}
+.art-bar .canvas-bar-btn[disabled] { opacity: .4; cursor: not-allowed; }
+/* The picker is a label so it can look like the buttons beside it; the input
+   itself is never the thing you see. */
+.art-pick { position: relative; overflow: hidden; cursor: pointer; }
+.art-pick input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 0;
+}

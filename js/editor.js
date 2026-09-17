@@ -1186,6 +1186,9 @@
     requestAnimationFrame(function () { if (boxEl2) SF.fit(boxEl2, node); });
     var notesArea2 = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
     if (notesArea2) notesArea2.value = s.notes || '';
+    /* The canvas was just rebuilt, so anything the art face puts on top of it —
+       the selection ring, the ghost on a hidden shape — has to go back on. */
+    if (SF.Artwork) SF.Artwork.afterPaint();
   }
 
   /* ------------------------------------------------------------ inspector */
@@ -3943,6 +3946,12 @@
     addSlide: addSlide,
     insertStarter: insertStarter,
     commitActivityChange: touched,
+    /** The slide the canvas is showing, for tools that edit it in place. */
+    currentSlide: current,
+    /** Repaint the canvas after such a tool has changed that slide. Redraws the
+        rail too, because a thumbnail is the same render and would otherwise
+        keep showing artwork where it no longer is. */
+    refreshCanvas: function () { drawRail(); drawPreview(); },
     /** Insert an activity sequence as one edit, preserving page order. */
     insertStarters: function (slides) {
       if (!slides || !slides.length) return;
