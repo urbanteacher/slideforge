@@ -133,7 +133,19 @@ than 44 slides under the 20px floor. Both budgets equal the current state on
 purpose: any slack lets a regression hide inside it. The legibility budget is a
 ratchet against getting worse, not a claim that 24 is acceptable.
 
-## How rearranging should work
+## Rearranging
+
+Drag a slot's grip. Within a stack the others are **pushed aside**; across stacks
+the **sides swap**. The row budget is shown next to the recipe line, and it cannot
+move under a rearrange — each gap travels with its item, so the multiset of spans
+and gaps is unchanged and its sum cannot change. The smoke asserts that over five
+moves and one real pointer drag rather than trusting the argument.
+
+Vector blocks carry a readable minimum width (`MIN_COLS`) alongside their span,
+and too-narrow is reported like a bad fit. Nothing else catches it: a chart cannot
+overflow, it scales to its box, so illegibility is its only failure mode.
+
+## Why it works this way
 
 `node tools/stack-audit.mjs` answers this by measurement rather than taste, and
 the answer is unusually clean:
@@ -154,17 +166,17 @@ The body has 16 x 12 = 192 cells. A map of 192 cells is a spreadsheet, not a map
 But the body's *slots* number 1–5 and sit in one stack, so **the body's map is a
 list, not a grid.**
 
-### Derive position, do not author it
+### Position is derived at the moment of a move
 
 This is the part that decides whether the feature is cheap or a nightmare.
 
-Recipes today author the row: `['h1', 'Headline', 1, 12, 3, 6]` puts the headline
-at row 3. Row 3 is a consequence of what sits above it, so authoring it means every
-reorder rewrites every coordinate below the moved item — which is exactly the
-coordinate-shuffling that made the reverted canvas editor unworkable.
+Recipes still store a row, because the renderer needs one. But no row is ever
+*authored by hand* after a move: `magneticMove` reads the group's gaps, reorders
+the list, and re-stacks. Authoring row 3 by hand would mean every reorder rewrites
+every coordinate below the moved item, which is the coordinate-shuffling that made
+the reverted canvas editor unworkable.
 
-If an item declares only its span and its column share, and row position is derived
-by stacking, then the gaps become items too:
+Read as gaps-plus-spans, slide 1 is:
 
 ```
 title: [{ space: 2 }, { headline: 6 }, { space: 1 },
@@ -182,9 +194,9 @@ That is slide 1 exactly. And then:
 
 One assertion covers all four, and no coordinate is ever written.
 
-### Canvas or panel
+### Canvas, with a panel for the budget
 
-Both, split by what each is actually good at.
+Split by what each is actually good at.
 
 **Canvas owns arrangement.** Every gesture a stack needs is one-dimensional and
 snapped: drag up/down to reorder, drag the bottom edge to change span, drag a side
@@ -201,13 +213,10 @@ editing because it is the slide.
 **Chrome keeps its map.** Six cells is genuinely a map, and swapping is genuinely
 the only operation it needs.
 
-### Build order
+### Engines
 
-Convert one recipe from authored rows to a derived stack and prove a drag-reorder
-against it. Do that before anything else: if position is still authored when the
-first drag lands, every drag becomes a coordinate rewrite and the rest of the work
-is built on the thing we already reverted once.
-
-Blocks also need a **minimum readable size** next to their span, because an SVG
-block cannot fail the fit check — it shrinks instead of overflowing. A chart is not
-"12 rows"; it is "12 rows and at least 8 columns".
+Three, and no more: **playground** for free-typed content and theme switching,
+**Safe** for the AiAd27 campaign deck, **Demo** for the NUL layout bank. A fourth
+engine briefly held the derived-stack prototype; it is gone, and its behaviour and
+its tests live here instead. New positioning work belongs in Demo, because that is
+where all 97 slides can contradict it.

@@ -8,6 +8,8 @@ let index = 0;
 let revision = 0;
 /** content = edit slots; artwork = freeform move of theme assets with lattice snap */
 let flipMode = 'content';
+/* What the last rearrange did, so measure() can keep it instead of overwriting. */
+let lastMove = '';
 let selectedArt = null;
 deck.showSlideNumbers = true;
 
@@ -103,6 +105,81 @@ const recipes = {
    room: 20px on a 1280x720 slide is 2.8% of slide height. Measured, not enforced —
    most sub-floor sizes come from production CSS, not from Demo's overrides. */
 const LEGIBLE_FLOOR = 20;
+const ROWS = 16;
+
+/* Narrowest column span that keeps a block's own labels readable. A vector block
+   cannot overflow — it scales to its box — so too-narrow is its only failure
+   mode, and it has to be reported like a bad fit. */
+const MIN_COLS = [
+  [/chart/i, 8],
+  [/table/i, 8],
+  [/compare/i, 8],
+  [/mind map|org chart|funnel|timeline/i, 8],
+  [/gallery|stat tiles|voting|numbered rules|risk/i, 6],
+];
+function minCols(name) {
+  for (const [re, n] of MIN_COLS) if (re.test(name || '')) return n;
+  return 1;
+}
+
+/* Two slots belong to the same stack when their column ranges intersect. Measured
+   across the whole bank (tools/stack-audit.mjs), every layout is such a stack:
+   30 of 30 types, only introduction and split side by side. */
+function columnGroup(recipe, idx) {
+  const lo = recipe[idx][2];
+  const hi = lo + recipe[idx][3] - 1;
+  return recipe
+    .map((r, i) => ({ i, col: r[2], cols: r[3], row: r[4], rows: r[5], name: r[1] }))
+    .filter((s) => s.col <= hi && lo <= s.col + s.cols - 1);
+}
+
+/* Re-stack a column group so a dropped item pushes the others aside instead of
+   landing on top of them. Each gap travels with the item below it, so the sum of
+   spans and gaps is unchanged and a reorder cannot move the row budget. */
+function magneticMove(recipe, idx, dropRow) {
+  const group = columnGroup(recipe, idx).sort((a, b) => a.row - b.row);
+  if (group.length < 2) return null;
+  let cursor = 1;
+  for (const s of group) {
+    s.gap = Math.max(0, s.row - cursor);
+    cursor = s.row + s.rows;
+  }
+  const self = group.find((s) => s.i === idx);
+  const others = group.filter((s) => s.i !== idx);
+  /* A stack has no "over" — only before and after — so the target is a gap, and
+     for n items there are n+1 of them. One midline comparison picks it. */
+  let at = 0;
+  for (const s of others) if (dropRow > s.row + s.rows / 2) at++;
+  const order = [...others];
+  order.splice(at, 0, self);
+  let row = 1;
+  for (const s of order) {
+    row += s.gap;
+    recipe[s.i][4] = row;
+    row += s.rows;
+  }
+  return { order, used: row - 1, over: Math.max(0, row - 1 - ROWS), at, moved: self.name };
+}
+
+/* The row budget of every column group on the slide, for the readout. */
+function budgets(recipe) {
+  const seen = new Set();
+  const out = [];
+  for (let i = 0; i < recipe.length; i++) {
+    if (seen.has(i)) continue;
+    const group = columnGroup(recipe, i).sort((a, b) => a.row - b.row);
+    group.forEach((s) => seen.add(s.i));
+    let cursor = 1;
+    const parts = [];
+    for (const s of group) {
+      const gap = Math.max(0, s.row - cursor);
+      parts.push(`${gap ? gap + '+' : ''}${s.rows}`);
+      cursor = s.row + s.rows;
+    }
+    out.push({ cols: group[0].cols, col: group[0].col, items: group, parts, used: cursor - 1 });
+  }
+  return out;
+}
 
 /* Scale between an SVG's user units and its painted box. 1 for ordinary HTML. */
 function svgScale(el) {
@@ -160,6 +237,7 @@ section.innerHTML = `
   </div>
   <p class="safe-status demo-status" role="status"></p>
   <div class="safe-recipe demo-recipe"></div>
+  <div class="demo-budget" aria-label="Row budget"></div>
   <pre class="demo-audit-out" hidden></pre>
   <p class="safe-scope">
     Prototype only. Fits/fails are measured against declared slots.
@@ -175,6 +253,7 @@ const $ = (s) => section.querySelector(s);
 const stage = $('.demo-stage');
 const status = $('.demo-status');
 const recipeEl = $('.demo-recipe');
+const budgetEl = $('.demo-budget');
 const auditOut = $('.demo-audit-out');
 const stackEl = $('#demo-stack');
 const stackList = $('.demo-stack-list');
@@ -255,13 +334,14 @@ function ensureMockRecipe(slide) {
   return slide.mockRecipe;
 }
 
-/** Map a pointer on .safe-body to 1-based lattice column/row. */
+/** Map a pointer on .safe-body to the nearest lattice origin (magnet to lines). */
 function latticeAt(body, clientX, clientY) {
   const br = body.getBoundingClientRect();
   const x = ((clientX - br.left) / br.width) * 1176;
   const y = ((clientY - br.top) / br.height) * 576;
-  const col = Math.max(1, Math.min(12, Math.floor(x / SNAP_X) + 1));
-  const row = Math.max(1, Math.min(16, Math.floor(y / SNAP_Y) + 1));
+  /* round → closest column/row start; floor was "cell under cursor" and felt sticky. */
+  const col = Math.max(1, Math.min(12, Math.round(x / SNAP_X) + 1));
+  const row = Math.max(1, Math.min(16, Math.round(y / SNAP_Y) + 1));
   return { col, row };
 }
 
@@ -283,7 +363,7 @@ function bindSlotDrag(root, slide, body) {
     const grip = document.createElement('button');
     grip.type = 'button';
     grip.className = 'demo-slot-grip';
-    grip.title = 'Drag to move on the lattice, or drop on another slot to swap';
+    grip.title = 'Drag to move. Within a stack the others are pushed aside; across stacks the sides swap.';
     grip.setAttribute('aria-label', `Move ${box.dataset.name}`);
     grip.textContent = '⠿';
     box.append(grip);
@@ -314,8 +394,6 @@ function bindSlotDrag(root, slide, body) {
         const dy = (ev.clientY - startY) / scale;
         if (!dragging && Math.hypot(dx, dy) > 4) dragging = true;
         if (!dragging) return;
-        box.style.transform = `translate(${dx}px, ${dy}px)`;
-        box.style.zIndex = '8';
 
         clearOver();
         box.style.pointerEvents = 'none';
@@ -324,13 +402,32 @@ function bindSlotDrag(root, slide, body) {
         if (hit && hit !== box && body.contains(hit)) {
           over = hit;
           over.classList.add('demo-slot-drop');
+          /* Free follow while aiming at a swap target. */
+          box.style.transform = `translate(${dx}px, ${dy}px)`;
+          box.style.zIndex = '8';
+          /* Stale snap data here made a drop read the row the pointer crossed on
+             the way in, not the row it landed on. */
+          delete box.dataset.snapCol;
+          delete box.dataset.snapRow;
+          const sameStack = columnGroup(recipe, idx).some((g) => g.i === Number(over.dataset.recipeIndex));
+          status.textContent = sameStack
+            ? `Drop to place before/after ${over.dataset.name} — the rest move aside`
+            : `Drop to swap sides with ${over.dataset.name}`;
+          return;
         }
 
-        const at = latticeAt(body, ev.clientX, ev.clientY);
-        const clamped = clampOrigin(at.col, at.row, cols, rows);
-        status.textContent = over
-          ? `Drop to swap with ${over.dataset.name}`
-          : `Move ${box.dataset.name} → col ${clamped.col}, row ${clamped.row} (${cols}c × ${rows}r)`;
+        /* Magnet: snap the slot origin to the closest lattice lines while dragging. */
+        const hitAt = latticeAt(body, ev.clientX, ev.clientY);
+        const at = clampOrigin(hitAt.col, hitAt.row, cols, rows);
+        const natX = (spec[2] - 1) * SNAP_X;
+        const natY = (spec[4] - 1) * SNAP_Y;
+        const wantX = (at.col - 1) * SNAP_X;
+        const wantY = (at.row - 1) * SNAP_Y;
+        box.style.transform = `translate(${wantX - natX}px, ${wantY - natY}px)`;
+        box.style.zIndex = '8';
+        box.dataset.snapCol = String(at.col);
+        box.dataset.snapRow = String(at.row);
+        status.textContent = `Magnet → col ${at.col}, row ${at.row} (${cols}c × ${rows}r)`;
       };
 
       const up = (ev) => {
@@ -354,9 +451,29 @@ function bindSlotDrag(root, slide, body) {
         const drop = over;
         clearOver();
 
+        const at = latticeAt(body, ev.clientX, ev.clientY);
+
         if (drop && drop !== box && body.contains(drop)) {
           const j = Number(drop.dataset.recipeIndex);
           if (Number.isFinite(j) && recipe[j] && j !== idx) {
+            const sameStack = columnGroup(recipe, idx).some((s) => s.i === j);
+            if (sameStack) {
+              /* Dropping onto a slot in your own stack means "put me here" —
+                 push, do not swap. Swapping would leave the two sizes exchanged,
+                 which is never what the drop looked like. */
+              const magnet = magneticMove(recipe, idx, at.row);
+              if (magnet) {
+                lastMove = magnet.over
+                  ? `Moved ${magnet.moved}, ${magnet.over} rows over budget`
+                  : `Moved ${magnet.moved}, ${magnet.order.length - 1} pushed aside`;
+                delete box.dataset.snapCol;
+                delete box.dataset.snapRow;
+                render();
+                return;
+              }
+            }
+            /* Different stacks sit side by side, so there is nothing to push:
+               swapping sides is the honest reading of that drop. */
             const a = recipe[idx];
             const b = recipe[j];
             const aPos = [a[2], a[3], a[4], a[5]];
@@ -368,17 +485,38 @@ function bindSlotDrag(root, slide, body) {
             b[3] = aPos[1];
             b[4] = aPos[2];
             b[5] = aPos[3];
-            status.textContent = `Swapped ${a[1]} ↔ ${b[1]}`;
+            lastMove = `Swapped sides: ${a[1]} and ${b[1]}`;
             render();
             return;
           }
         }
 
-        const at = latticeAt(body, ev.clientX, ev.clientY);
-        const clamped = clampOrigin(at.col, at.row, cols, rows);
+        /* Free placement into space, then re-stack so the drop cannot overlap. */
+        const landedRow = Number(box.dataset.snapRow) || at.row;
+        const landedCol = Number(box.dataset.snapCol) || at.col;
+        if (landedCol === spec[2]) {
+          const magnet = magneticMove(recipe, idx, landedRow);
+          if (magnet) {
+            lastMove = magnet.over
+              ? `Moved ${magnet.moved}, ${magnet.over} rows over budget`
+              : `Moved ${magnet.moved}, ${magnet.order.length - 1} pushed aside`;
+            delete box.dataset.snapCol;
+            delete box.dataset.snapRow;
+            render();
+            return;
+          }
+        }
+        const clamped = clampOrigin(
+          Number(box.dataset.snapCol) || at.col,
+          Number(box.dataset.snapRow) || at.row,
+          cols,
+          rows
+        );
+        delete box.dataset.snapCol;
+        delete box.dataset.snapRow;
         spec[2] = clamped.col;
         spec[4] = clamped.row;
-        status.textContent = `Placed ${spec[1]} at col ${clamped.col}, row ${clamped.row}`;
+        lastMove = `Placed ${spec[1]} at col ${clamped.col}, row ${clamped.row}`;
         render();
       };
 
@@ -819,9 +957,31 @@ async function render() {
           }
         }
       }
+
       box.classList.toggle('safe-overflow', bad);
       if (bad) failed.push(box.dataset.name);
     }
+
+    /* A block narrower than its readable minimum is a failure of the same kind as
+       an overflow, and nothing else catches it: vector blocks shrink silently. */
+    const narrow = [];
+    for (const spec of recipeFor(slide)) {
+      const need = minCols(spec[1]);
+      if (spec[3] < need) narrow.push(`${spec[1]} needs ${need} columns, has ${spec[3]}`);
+    }
+    failed.push(...narrow);
+
+    /* Row budget per column group, so an over-budget stack says so. */
+    const groups = budgets(recipeFor(slide));
+    budgetEl.replaceChildren();
+    for (const [n, g] of groups.entries()) {
+      const el = document.createElement('span');
+      el.className = 'demo-budget-col' + (g.used > ROWS ? ' is-over' : '');
+      el.textContent = `${groups.length > 1 ? `stack ${n + 1} (${g.cols}c) ` : ''}${g.parts.join(' + ')} = ${g.used} of ${ROWS}`;
+      budgetEl.append(el);
+    }
+    for (const g of groups) if (g.used > ROWS) failed.push(`${g.used - ROWS} rows over budget`);
+
     let smallest = null, smallestWhere = '';
     for (const box of root.querySelectorAll('.safe-slot')) {
       const walk = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
@@ -847,7 +1007,8 @@ async function render() {
     const bleedNote = isBleed ? ' · BLEED candidate' : '';
     status.textContent = failed.length
       ? `Needs more space: ${failed.join(', ')}. Text is not auto-shrunk.${bleedNote}`
-      : `Slide ${index + 1} / ${deck.slides.length} · ${slide.type} · All ${used.length} slots fit · 16×12${bleedNote}${tiny}`;
+      : `${lastMove ? lastMove + ' · ' : ''}Slide ${index + 1} / ${deck.slides.length} · ${slide.type} · All ${used.length} slots fit · 16×12${bleedNote}${tiny}`;
+    lastMove = '';
     return { failed, smallest };
   }
 
@@ -985,6 +1146,20 @@ $('#demo-audit').onclick = () => {
   });
 };
 window.__demoAuditAll = auditAll;
+
+/* Exposed for tools/smoke-demo-deck.mjs: exercise the magnet without a pointer,
+   and read back the rows so a test can prove they were re-stacked, not authored. */
+window.__demoRows = () =>
+  recipeFor(deck.slides[index]).map((r) => ({ name: r[1], col: r[2], cols: r[3], row: r[4], rows: r[5] }));
+window.__demoBudget = () => budgets(recipeFor(deck.slides[index])).map((g) => ({ cols: g.cols, used: g.used, parts: g.parts }));
+window.__demoMagnet = (name, dropRow) => {
+  const recipe = ensureMockRecipe(deck.slides[index]);
+  const idx = recipe.findIndex((r) => r[1] === name);
+  if (idx < 0) throw new Error(`no slot named ${name}`);
+  const result = magneticMove(recipe, idx, dropRow);
+  render();
+  return result && { ...result, order: result.order.map((o) => o.name) };
+};
 
 function currentRoot() {
   return stage.firstElementChild;
