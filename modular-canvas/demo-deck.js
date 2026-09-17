@@ -112,10 +112,6 @@ const recipes = {
   game: [['.gamecard', 'Game card', 1, 12, 1, 16]],
 };
 
-/* Text this small passes geometry and still cannot be read from the back of a
-   room: 20px on a 1280x720 slide is 2.8% of slide height. Measured, not enforced —
-   most sub-floor sizes come from production CSS, not from Demo's overrides. */
-const LEGIBLE_FLOOR = 20;
 const ROWS = 16;
 
 /* Narrowest column span that keeps a block's own labels readable. A vector block
@@ -190,16 +186,6 @@ function budgets(recipe) {
     out.push({ cols: group[0].cols, col: group[0].col, items: group, parts, used: cursor - 1 });
   }
   return out;
-}
-
-/* Scale between an SVG's user units and its painted box. 1 for ordinary HTML. */
-function svgScale(el) {
-  const svg = el.ownerSVGElement;
-  if (!svg) return 1;
-  const view = svg.viewBox?.baseVal;
-  const box = svg.getBoundingClientRect();
-  if (!view || !view.width || !view.height || !box.width) return 1;
-  return Math.min(box.width / view.width, box.height / view.height);
 }
 
 const bleedTypes = new Set(['image', 'split', 'video']);
@@ -1081,30 +1067,32 @@ function slotify(root, slide) {
   return used;
 }
 
-/* Which slots overflow. The per-word check is skipped for blocks that paint on
-   their own rim; scroll fit is the contract for those. */
-function overflowIn(root) {
+/* Measure every slot with the instrument Safe and production also use. One pass
+   returns both verdicts, because they come from the same walk: whether a block
+   escapes its declared box, and the smallest text painted inside it.
+
+   Blocks that paint on their own rim are exempt from the glyph check — a chart's
+   axis labels and a media caption are drawn to sit outside the content box — so
+   for those, scroll fit is the contract. */
+const RIM_PAINTERS = /chart|image|media|video|mind map|join|game/i;
+
+function measureSlots(root) {
   const failed = [];
+  let smallest = null;
+  let smallestIn = '';
   for (const box of root.querySelectorAll('.safe-slot')) {
-    const r = box.getBoundingClientRect();
-    let bad = box.scrollHeight > box.clientHeight + 1 || box.scrollWidth > box.clientWidth + 1;
-    if (!/chart|image|media|video|mind map|join|game/i.test(box.dataset.name || '')) {
-      const walk = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
-      while (walk.nextNode()) {
-        if (!walk.currentNode.textContent.trim()) continue;
-        for (const word of walk.currentNode.textContent.matchAll(/\S+/g)) {
-          const range = document.createRange();
-          range.setStart(walk.currentNode, word.index);
-          range.setEnd(walk.currentNode, word.index + word[0].length);
-          for (const t of range.getClientRects())
-            if (t.bottom > r.bottom + 1 || t.right > r.right + 1 || t.left < r.left - 1) bad = true;
-        }
-      }
+    const exempt = RIM_PAINTERS.test(box.dataset.name || '');
+    const verdict = SF.measureSlideFit(box, { frame: box, floor: SF.LEGIBLE_FLOOR });
+    const scrolls = box.scrollHeight > box.clientHeight + 1 || box.scrollWidth > box.clientWidth + 1;
+    const bad = !!verdict && ((!exempt && !verdict.fits) || scrolls);
+    if (verdict?.smallest != null && (smallest === null || verdict.smallest < smallest)) {
+      smallest = verdict.smallest;
+      smallestIn = verdict.smallestIn || '';
     }
     box.classList.toggle('safe-overflow', bad);
     if (bad) failed.push(box.dataset.name);
   }
-  return failed;
+  return { failed, smallest, smallestIn };
 }
 
 /* Would this swap fit?
@@ -1131,14 +1119,14 @@ async function trialFit(slide, type) {
     total: deck.slides.length,
     prepareLayout: SF.prepareLayout,
     renderSlide: SF.renderSlide,
-    floor: LEGIBLE_FLOOR,
+    floor: SF.LEGIBLE_FLOOR,
     settle: async () => {
       await document.fonts.ready;
       await new Promise(requestAnimationFrame);
       await new Promise(requestAnimationFrame);
     },
     /* Rearrange before settling, measure after: the lattice has to be laid out
-       before overflowIn reads it, or every block looks like it fits. */
+       before measureSlots reads it, or every block looks like it fits. */
     prepare: (root, trial) => {
       /* The clone carries the source slide's mockRecipe, whose selectors were
          written for the old shape. Left in place, a quote trial looked for an h2
@@ -1149,7 +1137,7 @@ async function trialFit(slide, type) {
     },
     inspect: (root) =>
       lastPlaced.length
-        ? { placed: lastPlaced.length, failed: overflowIn(root) }
+        ? { placed: lastPlaced.length, failed: measureSlots(root).failed }
         : { placed: 0, failed: ['nothing placed'] },
   });
   /* The lattice verdict decides, because that is what applying the swap will
@@ -1302,7 +1290,8 @@ async function render() {
     if (!used.length) {
       failed.push(`nothing placed: a ${slide.type} slide needs a picture or video, and this one has none`);
     }
-    failed.push(...overflowIn(root));
+    const slots = measureSlots(root);
+    failed.push(...slots.failed);
 
     /* A block narrower than its readable minimum is a failure of the same kind as
        an overflow, and nothing else catches it: vector blocks shrink silently. */
@@ -1324,27 +1313,11 @@ async function render() {
     }
     for (const g of groups) if (g.used > ROWS) failed.push(`${g.used - ROWS} rows over budget`);
 
-    let smallest = null, smallestWhere = '';
-    for (const box of root.querySelectorAll('.safe-slot')) {
-      const walk = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
-      while (walk.nextNode()) {
-        if (walk.currentNode.textContent.trim().length < 3) continue;
-        const el = walk.currentNode.parentElement;
-        /* offsetHeight is undefined on SVG elements, so testing it skipped every
-           chart label. Use the painted rect instead. */
-        if (!el || !el.getBoundingClientRect().height) continue;
-        /* An SVG paints its text at the viewBox scale, not at the declared size:
-           a chart in a narrow slot shrinks rather than overflowing, so declared
-           font-size overstates what the room actually sees. */
-        const size = parseFloat(getComputedStyle(el).fontSize) * svgScale(el);
-        const name = el.className?.baseVal || el.className || el.tagName;
-        if (smallest == null || size < smallest) { smallest = size; smallestWhere = name; }
-      }
-    }
+    const { smallest, smallestIn } = slots;
     status.dataset.fits = String(!failed.length);
     status.dataset.smallest = smallest == null ? '' : String(Math.round(smallest * 10) / 10);
-    const tiny = smallest != null && smallest < LEGIBLE_FLOOR
-      ? ` · smallest text ${Math.round(smallest)}px in .${String(smallestWhere).split(' ')[0]} (under the ${LEGIBLE_FLOOR}px floor)`
+    const tiny = smallest != null && smallest < SF.LEGIBLE_FLOOR
+      ? ` · smallest text ${Math.round(smallest)}px in .${smallestIn} (under the ${SF.LEGIBLE_FLOOR}px floor)`
       : '';
     const bleedNote = isBleed ? ' · BLEED candidate' : '';
     status.textContent = failed.length
@@ -1404,7 +1377,7 @@ async function auditAll() {
       fits: !failed.length,
       failed,
       smallest: result.smallest ?? null,
-      legible: result.smallest == null || result.smallest >= LEGIBLE_FLOOR,
+      legible: result.smallest == null || result.smallest >= SF.LEGIBLE_FLOOR,
       title: (s.title || '').toString().replace(/\s+/g, ' ').trim().slice(0, 50),
     });
   }
@@ -1429,7 +1402,7 @@ async function auditAll() {
       .sort((a, b) => b[1] - a[1])
       .map(([t, n]) => `${t} ${n}`)
       .join(', ') || '—'}\n` +
-    `Under the ${LEGIBLE_FLOOR}px legibility floor: ${tiny.length} · ${Object.entries(tinyByType)
+    `Under the ${SF.LEGIBLE_FLOOR}px legibility floor: ${tiny.length} · ${Object.entries(tinyByType)
       .sort((a, b) => b[1] - a[1])
       .map(([t, n]) => `${t} ${n}`)
       .join(', ') || '—'}\n\n` +

@@ -36,12 +36,12 @@ and so missed the painted-size reading and the legibility floor entirely. It now
 reports the smallest painted text per slide, and **two campaign slides paint at
 18px**, under the 20px floor.
 
-Slot callers pass `allowAscent`. A word's client rect starts at the top of its
-line box and a font's ascent reaches above that, so a heading in a box sized to
-its own text reports 3–7px of "overflow" with nothing clipped — every one of the
-nine slides failed on that edge alone the first time the shared check ran. A
-caller measuring against the slide frame does not pass it, because text above the
-slide really is off the slide.
+The top edge is not checked, by anyone. A word's client rect starts at the top of
+its line box and a font's ascent reaches above that, so a heading in a box sized
+to its own text reports 3–7px of "overflow" with nothing clipped — all nine
+slides failed on that edge alone the first time the shared check ran. It was
+briefly an opt-out, then measured: across the 97 bank slides the top edge catches
+nothing the other three edges miss, so it is gone and there is no option to pass.
 
 Fit checks wait for fonts, image decode and layout. Text Range top edges are not
 used as line-box boundaries: font ascent can extend above a tight line-height

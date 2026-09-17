@@ -1,4 +1,7 @@
-# Fit check · the part that integrates
+# Fit check
+
+Production module, not a lab note — it moved here out of `modular-canvas/` when
+`js/editor.js` started calling it.
 
 `src/render/fit-check.js`, exposed as `SF.measureSlideFit`, `SF.probeLayoutFit`,
 `SF.svgScale`, `SF.FIT_TOLERANCE`, `SF.LEGIBLE_FLOOR`.
@@ -57,6 +60,20 @@ The lab also has to `delete trial.mockRecipe` in `prepare`. `structuredClone`
 carries the source slide's recipe, whose selectors were written for the old
 shape — left in place, a quote trial looked for an `h2` and a `ul`, found
 neither, and reported "needs a picture".
+
+## In use
+
+`js/editor.js` · `markLayoutFit` labels every thumbnail in the layout picker.
+The picker already renders a trial of each candidate shape and threw the render
+away; these are those renders, measured where they sit. Only problems are
+labelled — `may not fit` with the direction and pixels on hover, or `small text`
+for the separate legibility verdict. The thumbnail is scaled and
+`getBoundingClientRect` is post-transform, so the tolerance scales with it: a
+flat 1px would allow roughly eight slide pixels through at thumbnail size.
+
+`modular-canvas/safe-deck.js` and `demo-deck.js` call it once per slot with the
+slot as its own frame, and pass their own list of blocks that paint on their rim.
+Sharing it is what stopped those two engines diverging.
 
 ## What is deliberately not in here
 
