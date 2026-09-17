@@ -183,7 +183,11 @@
 /* min-height only, no margin. Two rows is the heading's box and the slack
    inside it is the gap — adding a margin on top spent 108px where the old
    layout spent 41, and a rules slide overflowed in chrome-regions mode. */
-.cp .cp-heading { min-height:72px; margin:0; }
+/* .slide-qualified so it outranks the per-layout h2 rules in app.css —
+   .slide.layout-journey h2 sets a 10px bottom margin, which put every rule
+   row on that slide 10px below its line, and comparison the same. Three
+   classes beat two classes and an element. */
+.slide.cp .cp-heading { min-height:72px; margin:0; }
 .cp .cp-heading { font-size:var(--composition-heading,52px); line-height:1.03; letter-spacing:-.035em; font-weight:700; max-width:1120px; text-wrap:balance; }
 .cp .cp-prompt { font-size:var(--composition-body,24px); font-weight:500; }
 .cp .cp-source { font-size:var(--composition-caption,18px); line-height:1.25; margin-top:14px; max-width:1130px; }
@@ -338,3 +342,95 @@
 .slide.cp.chrome-regions .chrome-slot .pagenum { font-size:18px; white-space:nowrap; }
 .slide.cp.chrome-regions .cp-header::before { content:none; }
 .slide.cp.chrome-regions .chrome-identity { font-weight:700; padding-left:32px; background:var(--a27-icon,none) left center / 22px 22px no-repeat; overflow-wrap:anywhere; }
+
+/* ── THE SLOT TABLE ─────────────────────────────────────────────────────────
+ *
+ * Every campaign composition is two or three top-level slots, and each slot is
+ * a whole number of 36px rows. That is the whole model: a slot is what a
+ * person places, a row is what a slot boundary lands on.
+ *
+ * Declared here rather than derived, because a slot's height must not depend
+ * on its wording — that was the fault in every earlier attempt. A heading
+ * that grows by a line used to push everything below it off the lattice; a
+ * heading in a two-row box does not.
+ *
+ *   poster-art   copy 11 · art 14                 (two columns)
+ *   voice        label 1 · voice 6
+ *   ballot       heading 2 · choices 11 · prompt 1
+ *   prompt       label 1 · discussion 6
+ *   reveal-map   heading 2 · map 8 · source 1
+ *   rules        heading 2 · rules 12 · closing 1
+ *   commitment   mark 9 · action 11               (two columns)
+ *   comparison   heading 2 · table 12
+ *   credits      heading 2 · credits 12 · source 1
+ *   lanes        heading 2 · lanes 11 · source 1
+ *
+ * Repeated items inside a slot are whole rows too, so the sixth is as
+ * predictable as the first: a choice is 5 rows, a rule 4, a credit 2.
+ *
+ * Scoped to :not(.chrome-regions). Named regions reassemble the chrome into
+ * slots, which changes the body's height — so the 16x36 lattice, which is
+ * measured against the standard 576px body, does not hold there. Applying it
+ * anyway overflowed the ballot slide in regions mode. Regions needs its own
+ * lattice; it does not get to borrow this one.
+ *
+ * Measured, not guessed — tools/row-audit.mjs reports every block against
+ * this lattice, and tools/slot-table.mjs prints the table above from the
+ * live slides.
+ */
+.slide.cp:not(.chrome-regions) :is(.cp-eyebrow,.cp-prompt,.cp-source,.cp-closing-line) { min-height:36px; }
+.slide.cp:not(.chrome-regions) .cp-eyebrow { margin-bottom:0; }
+
+/* voice — a label and a human sentence. */
+.slide.cp-quote:not(.chrome-regions) .q { min-height:216px; margin:0; }
+
+/* prompt — a label and one question with its arrow. */
+.slide.cp-statement:not(.chrome-regions) .cp-discussion { min-height:216px; margin:0; }
+.slide.cp-statement:not(.chrome-regions) .cp-prompt { margin-top:0; }
+
+/* ballot — four choices as two rows of two, five rows each. */
+.slide.cp-cards:not(.chrome-regions) .cp-choices { min-height:396px; gap:36px 38px; }
+.slide.cp-cards:not(.chrome-regions) .cp-choice { height:180px; padding:0; box-sizing:border-box; }
+
+/* rules — three numbered rows, four rows each. */
+.slide.cp-journey:not(.chrome-regions) .cp-rules { margin-top:0; }
+.slide.cp-journey:not(.chrome-regions) .cp-rule { height:144px; padding:0; box-sizing:border-box; }
+.slide.cp-journey:not(.chrome-regions) .cp-closing-line { margin-top:0; }
+
+/* reveal-map — a heading, the map, a source line. */
+.slide.cp-iceberg:not(.chrome-regions) .cp-risk-map { min-height:288px; margin-top:0; gap:36px; }
+
+/* comparison — a heading and a twelve-row table. */
+.slide.cp-compare:not(.chrome-regions) .cp-comparison { min-height:432px; }
+
+/* credits — six two-row rows under a heading. */
+.slide.cp-sourcecheck:not(.chrome-regions) .cp-credits { min-height:432px; }
+
+/* lanes — two eleven-row columns. */
+.slide.cp-spectrum:not(.chrome-regions) .cp-lanes { min-height:396px; }
+
+/* commitment — the rising mark beside the action, nine rows and eleven. */
+.slide.cp-keyfact:not(.chrome-regions) .cp-action-number { min-height:324px; padding-top:0; }
+.slide.cp-keyfact:not(.chrome-regions) .cp-action { min-height:396px; }
+/* The slot was right and its contents were not: three 25px margins inside it
+   put the label, the sentence and the write-line each a third of a row off.
+   Whole-row boxes instead of margins, same as the heading. */
+.slide.cp-keyfact:not(.chrome-regions) .cp-action :is(.cp-eyebrow,p,.cp-write-line) { margin-top:0; }
+.slide.cp-keyfact:not(.chrome-regions) .cp-action :is(h1,h2,.cp-heading) { min-height:144px; margin:0; }
+.slide.cp-keyfact:not(.chrome-regions) .cp-action p { min-height:72px; }
+.slide.cp-keyfact:not(.chrome-regions) .cp-write-line { min-height:72px; }
+
+/* A decorative rule is decoration: it draws, it does not take part in the
+   lattice. Left as a border it added 5px to the credits box and 12px to a
+   lane, which put every row below it that far off a line — the credits were
+   out by exactly their own border. As a pseudo-element the rule is still
+   there and the rows land. */
+.slide.cp-sourcecheck:not(.chrome-regions) .cp-credits { border-top:0; position:relative; }
+.slide.cp-sourcecheck:not(.chrome-regions) .cp-credits::before { content:''; position:absolute; left:0; right:0; top:-5px; height:5px; background:var(--cp-color); }
+.slide.cp-spectrum:not(.chrome-regions) .cp-lane { border-top:0; padding-top:0; position:relative; }
+.slide.cp-spectrum:not(.chrome-regions) .cp-lane::before { content:''; position:absolute; left:0; right:0; top:-12px; height:12px; background:var(--cp-color); }
+
+/* comparison — the 28px lead-in becomes a row, and the head a two-row band
+   like every other row of the table. */
+.slide.cp-compare:not(.chrome-regions) .cp-comparison { margin-top:0; }
+.slide.cp-compare:not(.chrome-regions) .cp-compare-head h3 { height:72px; padding:0 22px; display:flex; align-items:center; box-sizing:border-box; }
