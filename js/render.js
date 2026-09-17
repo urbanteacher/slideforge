@@ -157,6 +157,61 @@
     return true;
   };
 
+  /* ------------------------------------------------------- does it fit?
+     Counted in lines, not boxes. A slot measures its element box, but a display
+     face paints an inline box half a leading taller, and the app's escapes()
+     reads a bottom overhang as an overflow while ignoring an identical one at
+     the top — so the same block passed or failed on where it happened to sit.
+     Lines count the block, not its leading.
+
+     A region's `rows` is its tariff: the lines the author gave it. The tariff
+     does not grow from paint, because the empty lines under a heading are
+     composition rather than slack. Overflowing is allowed and reported, never
+     refused. Same rule and the same arithmetic as Engine 3, published here so
+     the two cannot answer the question differently. */
+  SF.linesFor = function (px) {
+    var tol = SF.FIT_TOLERANCE == null ? 1 : SF.FIT_TOLERANCE;
+    return Math.max(1, Math.ceil((px - tol) / LATTICE.stepY));
+  };
+
+  /* Null for a block that spends no lines: out of flow is out of the count. */
+  SF.linesNeeded = function (slot) {
+    var node = slot.firstElementChild;
+    if (!node) return null;
+    var pos = getComputedStyle(node).position;
+    if (pos === 'absolute' || pos === 'fixed') return null;
+    return SF.linesFor(node.scrollHeight);
+  };
+
+  /* Measures every slot against the lines its region gave it. Marks the verdict
+     on the slot so CSS and tests can both read it, and returns the rows so a
+     caller can say which block wants what. */
+  SF.latticeFit = function (root) {
+    var out = [];
+    if (!root) return out;
+    root.querySelectorAll('.sf-slot').forEach(function (slot) {
+      var parts = (slot.getAttribute('data-region') || '').split(',');
+      var have = Number(parts[2]) || Math.max(1, Math.round(slot.clientHeight / LATTICE.stepY));
+      var need = SF.linesNeeded(slot);
+      /* Sideways is not a line question, and nothing else catches it. Measured
+         on the content, never on the slot: the arranging face hangs a label off
+         the slot in an ::after, and an absolutely positioned pseudo-element
+         still counts toward scrollWidth — "accent-bar · 1r x 1c" is 198px of
+         text, which reported a 66px rule in a 65px column as three columns of
+         overflow. */
+      var node = slot.firstElementChild;
+      var wide = need != null && !!node && node.scrollWidth > slot.clientWidth + 1;
+      var over = need != null && (need > have || wide);
+      slot.setAttribute('data-fit', over ? 'over' : 'ok');
+      if (need != null) slot.setAttribute('data-need', String(need));
+      out.push({
+        key: slot.getAttribute('data-block-key'),
+        need: need, have: have, wide: wide, over: over
+      });
+    });
+    return out;
+  };
+
   /* "slide:12" — a jump inside the lesson. Returns the 1-based number the
      author wrote, or 0 for anything else, so callers can use it as a test. */
   SF.slideJumpTarget = function (value) {

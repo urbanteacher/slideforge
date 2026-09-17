@@ -60,6 +60,22 @@
 /* Text stays readable but stops taking the click — the subject is the box. */
 .arranging .sf-slot > * { pointer-events: none; }
 
+/* ------------------------------------------------------------- the verdict */
+/* A block needing more lines than its region gave it. Marked on every render
+   so a test can read it, but only drawn on the arranging face: a red rule
+   across the canvas while someone is writing would be shouting about a
+   measurement they have not asked for yet. */
+.arranging .sf-slot[data-fit="over"] {
+  outline: 2px solid #de394e;
+  background: rgba(222, 57, 78, .07);
+}
+.arranging .sf-slot[data-fit="over"]::after {
+  content: attr(data-block-key) " · " attr(data-span) " · needs " attr(data-need);
+  background: #ffe3e6;
+  color: #8c1424;
+}
+.arrange-what[data-fit="over"] { color: #a3152a; }
+
 /* --------------------------------------------------------------- the guides */
 /* Drawn only while a drag is within the snap threshold of an edge, a centre
    line or a neighbour's edge. Absolute against the slide, not the lattice, so

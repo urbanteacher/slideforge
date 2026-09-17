@@ -254,6 +254,29 @@
     SF.toast && SF.toast('Arrangement reset — this slide follows its theme again.');
   }
 
+  // ------------------------------------------------------------------- fit
+  /* The last measurement, so the bar can speak without re-measuring on every
+     repaint of its own text. */
+  var verdict = [];
+
+  /* Measured after a frame, not in the same tick as the paint that caused it:
+     scrollHeight on a block whose font has not settled reports short, and a
+     block would be declared to fit on the strength of a metric that is about to
+     change. */
+  function measure() {
+    var rt = root();
+    if (!rt || !arranging) return;
+    requestAnimationFrame(function () {
+      if (!arranging) return;
+      verdict = SF.latticeFit(rt);
+      paintBar();
+    });
+  }
+
+  function verdictFor(key) {
+    return verdict.find(function (v) { return v.key === key; }) || null;
+  }
+
   // --------------------------------------------------------------------- bar
   function paintBar() {
     var bar = document.getElementById('arrangeBar');
@@ -263,12 +286,27 @@
       b.disabled = !selected;
     });
     var what = document.getElementById('arrangeWhat');
-    if (what) {
+    if (!what) return;
+    var over = verdict.filter(function (v) { return v.over; });
+    if (selected) {
       var s = slide();
-      var r = selected && regionsOf(s) && regionsOf(s)[selected];
-      what.textContent = !selected ? 'Click a block'
-        : selected + (r ? ' · row ' + r.row + ', col ' + r.col + ' · ' + r.rows + 'r x ' + r.cols + 'c' : '');
+      var r = regionsOf(s) && regionsOf(s)[selected];
+      var v = verdictFor(selected);
+      var where = r ? ' · row ' + r.row + ', col ' + r.col + ' · ' + r.rows + 'r x ' + r.cols + 'c' : '';
+      /* The number the author needs in order to act is the shortfall, so say
+         what it needs rather than only that it does not fit. */
+      var fit = !v ? ''
+        : v.wide && v.need <= v.have ? ' — overflows sideways'
+        : v.over ? ' — needs ' + v.need + ' lines, has ' + v.have
+        : '';
+      what.textContent = selected + where + fit;
+      what.dataset.fit = v && v.over ? 'over' : 'ok';
+      return;
     }
+    what.textContent = !verdict.length ? 'Click a block'
+      : over.length ? over.length + (over.length === 1 ? ' block does not fit' : ' blocks do not fit')
+      : 'Click a block · all ' + verdict.length + ' fit';
+    what.dataset.fit = over.length ? 'over' : 'ok';
   }
 
   function afterPaint() {
@@ -285,11 +323,12 @@
       if (key === selected) slot.setAttribute('data-arrange-selected', '');
     });
     paintBar();
+    measure();
   }
 
   function setArranging(on) {
     arranging = !!on;
-    if (!arranging) { selected = null; clearGuides(); }
+    if (!arranging) { selected = null; verdict = []; clearGuides(); }
     var toggle = document.getElementById('btnArrange');
     if (toggle) {
       toggle.setAttribute('aria-pressed', String(arranging));
