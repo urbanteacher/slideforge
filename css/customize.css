@@ -175,7 +175,15 @@
    330px from the right, so the centred line has 288px either side of centre
    before it runs under it. 560 leaves a little air. */
 .cp-header .cp-beat { position:absolute; left:50%; transform:translateX(-50%); max-width:560px; text-align:center; }
-.cp-body { flex:1; min-height:0; position:relative; padding:16px 0 26px; }
+/* RE-FIT: the body starts on row 2, and the heading occupies whole rows.
+   A heading whose height varies with its wording cannot put the block after
+   it on a line — so it is given a two-row box instead of a margin, and
+   everything below it lands by construction rather than by arithmetic. */
+.cp-body { flex:1; min-height:0; position:relative; padding:36px 0 0; }
+/* min-height only, no margin. Two rows is the heading's box and the slack
+   inside it is the gap — adding a margin on top spent 108px where the old
+   layout spent 41, and a rules slide overflowed in chrome-regions mode. */
+.cp .cp-heading { min-height:72px; margin:0; }
 .cp .cp-heading { font-size:var(--composition-heading,52px); line-height:1.03; letter-spacing:-.035em; font-weight:700; max-width:1120px; text-wrap:balance; }
 .cp .cp-prompt { font-size:var(--composition-body,24px); font-weight:500; }
 .cp .cp-source { font-size:var(--composition-caption,18px); line-height:1.25; margin-top:14px; max-width:1130px; }
@@ -205,12 +213,13 @@
 .cp-prop { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
 /* A human voice against a quiet dark ground. */
 
-.cp-quote .cp-body { display:flex; flex-direction:column; justify-content:center; padding:19px 60px 30px 150px; }
+/* Start, not centre: a centred stack's top is a function of its own height. */
+.cp-quote .cp-body { display:flex; flex-direction:column; justify-content:flex-start; padding:72px 60px 0 150px; }
 .cp .cp-quote-mark { position:absolute; top:24px; left:0; font-size:var(--composition-hero-mark,230px); color:var(--cp-color); line-height:1; }
 .cp .cp-scenario { border:0; padding:0; font-size:var(--cp-voice-size,62px); line-height:1.1; font-weight:600; letter-spacing:-.025em; max-width:920px; }
 .cp-quote .cp-prompt { margin-top:38px; color:var(--cp-color); }
 /* Two by two ballot: the wall and the live poll use the same letters. */
-.cp-cards .cp-body { display:flex; flex-direction:column; gap:22px; padding-top:10px; }
+.cp-cards .cp-body { display:flex; flex-direction:column; gap:36px; padding-top:36px; }
 .slide.cp-cards .cp-heading { text-align:left; margin:0; font-size:var(--composition-ballot-heading,48px); max-width:1070px; }
 .cp-choices { display:grid; grid-template-columns:1fr 1fr; gap:0 38px; flex:1; }
 .cp-choice { display:flex; gap:22px; align-items:center; padding:20px 0; border-top:2px solid var(--s-fg); }
@@ -219,7 +228,7 @@
 .cp-choice p { font-size:var(--composition-body,24px); line-height:1.15; margin-top:9px; }
 /* A single question needs room, and a sharp change of pace. */
 
-.cp-statement .cp-body { display:flex; flex-direction:column; justify-content:center; gap:30px; }
+.cp-statement .cp-body { display:flex; flex-direction:column; justify-content:flex-start; gap:36px; }
 .cp-discussion { display:grid; grid-template-columns:140px 1fr; align-items:start; gap:24px; }
 .cp-pair-mark { font-size:var(--composition-symbol,130px); line-height:.85; font-weight:700; }
 .cp .cp-question { font-size:var(--cp-question-size,68px); letter-spacing:-.04em; line-height:1.06; text-align:left; font-weight:700; max-width:980px; }
@@ -235,12 +244,16 @@
 .cp-compare-head,.cp-compare-row { display:grid; grid-template-columns:1fr 1fr; gap:0; }
 .cp-compare-head h3 { font-size:var(--composition-column-heading,27px); padding:16px 22px; background:var(--s-card); }
 .cp-compare-head h3:last-child { background:var(--s-fg); color:var(--s-bg); }
-.cp-compare-row p { font-size:var(--composition-row,25px); line-height:1.13; padding:13px 22px; border-bottom:1px solid var(--s-rule); }
+/* Same two-row band as a credit: the table's fifth row has to be as
+   predictable as its first. */
+.cp-compare-row p { font-size:var(--composition-row,25px); line-height:1.13; padding:0 22px; height:72px; display:flex; align-items:center; border-bottom:1px solid var(--s-rule); box-sizing:border-box; }
 .cp-compare-row p:nth-child(2) { border-left:1px solid var(--s-rule); }
-.cp-credits { margin-top:26px; border-top:5px solid var(--cp-color); }
-.cp-credit { display:grid; grid-template-columns:240px 180px 1fr; gap:20px; align-items:center; border-bottom:1px solid var(--s-rule); padding:12px 0; }
+.cp-credits { margin-top:0; border-top:5px solid var(--cp-color); }
+/* Two rows each, so the sixth credit lands on a line as reliably as the
+   first. At 55px they were 1.53 rows and drifted 17px every other row. */
+.cp-credit { display:grid; grid-template-columns:240px 180px 1fr; gap:20px; align-items:center; border-bottom:1px solid var(--s-rule); height:72px; padding:0; box-sizing:border-box; }
 .cp-credit span { font-size:var(--composition-body,24px); }.cp-credit strong { font-size:var(--composition-row,25px); color:var(--cp-deep); }.cp-credit p { font-size:var(--composition-body,24px); line-height:1.13; }
-.cp-lanes { display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-top:30px; }
+.cp-lanes { display:grid; grid-template-columns:1fr 1fr; gap:36px; margin-top:0; }
 .cp-lane { border-top:12px solid var(--cp-color); padding-top:18px; }
 .cp-lane:nth-child(2) { border-color:var(--s-fg); }
 .cp-lane h3 { font-size:var(--composition-lane-heading,32px); margin-bottom:14px; }
@@ -253,7 +266,7 @@
 .cp-rule-number { font-size:var(--composition-index,66px); line-height:1; font-weight:700; color:var(--cp-color); letter-spacing:-.05em; }
 .cp-rule h3 { font-size:var(--composition-rule-heading,33px); line-height:1.07; }.cp-rule p { font-size:var(--composition-row,25px); line-height:1.17; margin-top:8px; max-width:960px; }
 
-.cp-keyfact .cp-body { display:grid; grid-template-columns:270px 1fr; gap:40px; align-items:center; }
+.cp-keyfact .cp-body { display:grid; grid-template-columns:270px 1fr; gap:36px; align-items:start; }
 .cp-action-number { font-size:var(--composition-hero-mark,230px); letter-spacing:-.085em; line-height:1; font-weight:700; align-self:start; padding-top:65px; }
 .cp-action h2 { font-size:var(--composition-action-heading,60px); line-height:1.03; letter-spacing:-.04em; font-weight:700; }
 .cp-action p { font-size:var(--composition-supporting,28px); line-height:1.2; margin-top:25px; }
