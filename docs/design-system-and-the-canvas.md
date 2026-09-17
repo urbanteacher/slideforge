@@ -1173,11 +1173,21 @@ by construction rather than by luck.
 
 Stack totals **9 rows** on a 2-line cover and **12** on a 3-line one.
 
+> **Corrected 2026-09-17.** An earlier version of this section had Safe and
+> Smart both at three lines. Measured on `AiAd27/preview.html`, which is the
+> page that actually shows the deck, **only Smart is three lines** — Safe,
+> Creative, Responsible and Future are all two. The wrong figure came from a
+> headless probe that rendered the slide into the app's index page instead,
+> where the heading laid out narrower and wrapped to three. The lesson is
+> worth more than the number: **measure in the page that shows the deck.** A
+> detached render is a different layout context and can change a line count,
+> which changes a span, which changes the map.
+
 ### The three decisions, answered by measurement
 
-**1. The heading span is variable, not fixed.** Creative, Responsible and
-Future are two lines (5 rows); Safe and Smart are three (8 rows). Forcing
-three lines into five rows means dropping the type to about 72px, which
+**1. The heading span is variable, not fixed.** Safe, Creative, Responsible
+and Future are two lines (5 rows); Smart is three (8 rows). Forcing three
+lines into five rows means dropping the type to about 72px, which
 contradicts the 88px top step the campaign deliberately set — see the change
 log for `--a27-display-short`. So the span follows the content.
 
@@ -1195,18 +1205,22 @@ the margins go to 0. Cost: 26 → 37 (+11px) and 32 → 37 (+5px). The stack gro
 cheapest anchor available, and it is cheap because the current design is
 already nearly there:
 
-| Cover | Lines | Stack rows | Start row | New ink top | Today | Shift |
-| --- | --- | --- | --- | --- | --- | --- |
-| creative | 2 | 9 | 5 | 148px | 147px | **+1px** |
-| responsible | 2 | 9 | 5 | 148px | 147px | **+1px** |
-| future | 2 | 9 | 5 | 148px | 147px | **+1px** |
-| safe | 3 | 12 | 3 | 74px | 101px | **−27px** |
-| smart | 3 | 12 | 3 | 74px | 101px | **−27px** |
-| art (all five) | — | 14 | 2 | 51px | 49px | **+2px** |
+| Cover | Lines | Heading | Stack rows | Start row | Shift |
+| --- | --- | --- | --- | --- | --- |
+| safe | 2 | 5 rows | 9 | 5 | **+2px** |
+| creative | 2 | 5 rows | 9 | 5 | **+1px** |
+| responsible | 2 | 5 rows | 9 | 5 | **+1px** |
+| future | 2 | 5 rows | 9 | 5 | **+1px** |
+| smart | 3 | **8 rows** | 12 | 3 | **−27px** |
+| art (all five) | — | 14 rows | — | 2 | **+2px** |
 
-Three of five covers move by a pixel. The art moves by two, because the span
-*contains* the 490px artboard rather than stretching it. Only the two 3-line
-covers move visibly, and they move up 27px.
+**Four of the five covers move by one or two pixels.** The art moves by two,
+because the span *contains* the 490px artboard rather than stretching it. Only
+Smart moves visibly, up 27px, because it is the one three-line headline.
+
+That makes the re-fit cheaper than it first looked — and leaves the variable
+span just as necessary, because Smart still needs eight rows where the others
+need five.
 
 The alternative anchor — top-align every stack at a fixed row — was rejected
 on this evidence: it would move the 2-line covers up 74px.
