@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <base href="/">
-<title>Modular canvas — concept lab</title>
+<title>Modular canvas — Engine 3</title>
 <link rel="stylesheet" href="css/app.css">
 <link rel="stylesheet" href="css/northeastern.css">
 <link rel="stylesheet" href="css/aiad27.css">
@@ -63,14 +63,12 @@
 <main>
   <header class="lab-header">
     <div>
-      <p>SlideForge · concept lab</p>
-      <h1>Modular canvas</h1>
+      <p>SlideForge · canvas engine</p>
+      <h1>Modular canvas · Engine 3</h1>
     </div>
     <p class="lab-lede">
-      <strong>Start in <a href="#demo-deck">Demo</a></strong> — one engine, two decks: the NUL
-      layout bank and the AI Awareness Day campaign deck you present.
-      <a href="#playground">Build with slots</a> is a scratchpad for arbitrary words.
-      Production CSS and Library decks are untouched.
+      The 97-slide layout-bank canvas is the single active engine.
+      Production CSS and Library decks remain untouched.
       <a href="AiAd27/preview.html">AI Awareness Day review</a>
     </p>
   </header>
@@ -80,8 +78,8 @@
     <ul>
       <li>Fixed header / footer chrome; the middle is the composition.</li>
       <li>Body pitch on a measured lattice — blocks get spans, not free coordinates.</li>
-      <li>Content that outgrows a span fails a measured fit check (no type-shrink).</li>
-      <li>Demo engine stress-tests every layout-bank type so we know what to re-fit in production.</li>
+      <li>Fit is counted in lines: a block that needs more lines than it holds fails (no type-shrink).</li>
+      <li>Engine 3 stress-tests every layout-bank type so we know what to re-fit in production.</li>
     </ul>
   </aside>
 
@@ -93,7 +91,6 @@
 <script src="js/render.js"></script>
 <script src="js/customize.js"></script>
 <script src="js/review.js"></script>
-<script type="module" src="modular-canvas/playground.js"></script>
 <script type="module" src="modular-canvas/demo-deck.js"></script>
 </body>
 </html>

@@ -20,10 +20,32 @@ try {
 
   const boot = await page.evaluate(() => ({
     options: document.querySelector('#demo-slide')?.options?.length,
-    engines: ['playground', 'demo-deck'].every((id) => document.getElementById(id)),
+    engine: !!document.getElementById('demo-deck'),
   }));
   if (boot.options !== 97) throw new Error(`expected 97 demo slides, got ${boot.options}`);
-  if (!boot.engines) throw new Error('playground / demo-deck missing');
+  if (!boot.engine) throw new Error('Engine 3 canvas missing');
+  assert.deepEqual(
+    await page.locator('#demo-deck .demo-tool-label').allInnerTexts(),
+    ['SLIDE', 'EDIT', 'TOOLS', 'CHROME'],
+    'the Engine 3 controls are not grouped by navigation, mode, canvas tools and chrome'
+  );
+  await page.click('#demo-flip');
+  await page.waitForFunction(() => document.querySelector('#demo-flip')?.getAttribute('aria-pressed') === 'true');
+  assert.equal(await page.locator('#demo-content-mode').getAttribute('aria-pressed'), 'false', 'Artwork mode left Content active');
+  await page.click('#demo-content-mode');
+  await page.waitForFunction(() => document.querySelector('#demo-content-mode')?.getAttribute('aria-pressed') === 'true');
+  await page.setViewportSize({ width: 820, height: 1100 });
+  await page.click('#demo-flip');
+  await page.waitForSelector('#demo-stack:not([hidden])');
+  const artworkDrawer = await page.evaluate(() => {
+    const panel = document.querySelector('#demo-stack').getBoundingClientRect();
+    const stage = document.querySelector('#demo-deck .demo-stage').getBoundingClientRect();
+    return { inViewport: panel.top >= 0 && panel.bottom <= innerHeight, aboveCanvas: panel.top < stage.top };
+  });
+  assert.ok(artworkDrawer.inViewport && artworkDrawer.aboveCanvas, 'Artwork controls fell below the canvas instead of opening as a drawer');
+  await page.click('#demo-content-mode');
+  await page.setViewportSize({ width: 1400, height: 1100 });
+  await page.waitForTimeout(100);
 
   const summary = await page.evaluate(async () => {
     const rows = await window.__demoAuditAll();
@@ -60,20 +82,95 @@ try {
   await page.selectOption('#demo-slide', '0');
   await settled();
   await page.locator('#demo-deck .safe-stage').scrollIntoViewIfNeeded();
+  assert.match(
+    await page.locator('#demo-deck .demo-chrome-measure').innerText(),
+    /header 88px · body 576px · footer 56px/,
+    'the Demo canvas does not report its measured header and footer reserves'
+  );
+  assert.deepEqual(
+    await page.locator('#demo-deck .demo-chrome-band').allInnerTexts(),
+    ['header reserve · implied · 88px', 'footer reserve · implied · 56px'],
+    'the header/footer measurements are not drawn over the canvas'
+  );
+  assert.equal(await page.locator('#demo-chrome-map').isVisible(), true, 'Engine 3 has no header/footer controller');
+  assert.deepEqual(
+    await page.locator('#demo-chrome-map [data-band-cells="header"] button').allInnerTexts(),
+    ['·', 'Context', 'Logo'],
+    'the controller did not expose the title slide’s header furniture'
+  );
+  await page.click('#demo-chrome-map [data-snap-slot="header-center"]');
+  await page.click('#demo-chrome-map [data-snap-slot="header-left"]');
+  await settled();
+  assert.equal(
+    await page.locator('#demo-deck [data-chrome-item="contextSlot"]').evaluate((n) => n.parentElement?.dataset.region),
+    'header-left',
+    'the header controller did not move Context into the requested slot'
+  );
+  await page.click('#demo-reset');
+  await settled();
+  const contentBeforeSwap = await page.evaluate(() => ({
+    type: document.querySelector('#demo-deck .slide')?.className,
+    rows: window.__demoRows(),
+    headline: document.querySelector('#demo-deck .safe-slot[data-name="Headline"]')?.textContent,
+    subtitle: document.querySelector('#demo-deck .safe-slot[data-name="Subtitle"]')?.textContent,
+  }));
+  await page.click('#demo-deck .safe-slot[data-name="Headline"] .demo-slot-swap');
+  assert.equal(await page.locator('#demo-feature-panel').isHidden(), true, 'content ⇄ opened the layout picker');
+  assert.match(await page.locator('#demo-deck .demo-status').innerText(), /choose another compatible content block/i);
+  await page.click('#demo-deck .safe-slot[data-name="Subtitle"] .demo-slot-swap');
+  await page.waitForFunction((before) => {
+    const headline = document.querySelector('#demo-deck .safe-slot[data-name="Headline"]')?.textContent || '';
+    const subtitle = document.querySelector('#demo-deck .safe-slot[data-name="Subtitle"]')?.textContent || '';
+    return headline.includes(before.subtitle) && subtitle.includes(before.headline);
+  }, contentBeforeSwap);
+  const contentAfterSwap = await page.evaluate(() => ({
+    type: document.querySelector('#demo-deck .slide')?.className,
+    rows: window.__demoRows(),
+  }));
+  await settled();
+  assert.match(contentAfterSwap.type, /layout-title/, 'content ⇄ changed the slide layout');
+  assert.equal(contentAfterSwap.type, contentBeforeSwap.type, 'content ⇄ changed the slide type');
+  assert.deepEqual(contentAfterSwap.rows, contentBeforeSwap.rows, 'content ⇄ moved the slots instead of swapping content');
+  assert.match(await page.locator('#demo-deck .demo-status').innerText(), /Swapped content/i);
+  await page.click('#demo-reset');
+  await settled();
+  /* The original renderer remains available as a visual comparison. */
+  await page.check('#demo-original');
+  await settled();
+  assert.match(
+    await page.locator('#demo-deck .demo-chrome-measure').innerText(),
+    /Measured original-design reserves/,
+    'the original-design comparison mode did not render'
+  );
+  await page.uncheck('#demo-original');
+  await settled();
+  assert.deepEqual(
+    await page.evaluate(() => {
+      const stage = document.querySelector('#demo-deck .safe-stage');
+      return {
+        accent: !!stage.querySelector('.safe-slot .accent-bar'),
+        heading: getComputedStyle(stage.querySelector('.safe-slot h1')).fontSize,
+        subtitle: getComputedStyle(stage.querySelector('.safe-slot .sub')).fontSize,
+        date: getComputedStyle(stage.querySelector('.safe-slot .slide-date')).fontSize,
+      };
+    }),
+    { accent: true, heading: '84px', subtitle: '25px', date: '15px' },
+    'title reflow changed the original campaign hierarchy instead of only anchoring it'
+  );
 
   const rows = () => page.evaluate(() => window.__demoRows());
   const budget = () => page.evaluate(() => window.__demoBudget());
   const at = (list, name) => list.find((r) => r.name === name).row;
   const before = await rows();
-  assert.deepEqual(before.map((r) => r.name), ['Headline', 'Subtitle', 'Date']);
-  assert.deepEqual(before.map((r) => r.row), [3, 10, 14]);
+  assert.deepEqual(before.map((r) => r.name), ['Accent', 'Headline', 'Subtitle', 'Date']);
+  assert.deepEqual(before.map((r) => r.row), [4, 5, 9, 12]);
   const startBudget = (await budget())[0].used;
 
   /* The magnet: drop the date where the subtitle is and the subtitle is pushed
      below it. The budget cannot move, because each gap travels with its item. */
   const magnet = await page.evaluate(() => window.__demoMagnet('Date', 10));
   await settled();
-  assert.deepEqual(magnet.order, ['Headline', 'Date', 'Subtitle']);
+  assert.deepEqual(magnet.order, ['Accent', 'Headline', 'Date', 'Subtitle']);
   const after = await rows();
   assert.ok(at(after, 'Date') < at(before, 'Date'), 'the date did not move up');
   assert.ok(at(after, 'Subtitle') > at(before, 'Subtitle'), 'the subtitle was not pushed down');
@@ -144,51 +241,13 @@ try {
   assert.ok(chartSlot, 'no chart slot on slide 42');
   assert.ok(chartSlot.cols >= 8, `chart is ${chartSlot.cols} columns wide, under its readable minimum`);
 
-  /* --- Content swap: ⇄ exchanges two blocks without changing the slide type. --- */
-  await page.click('#demo-reset');
-  await settled();
-  await page.selectOption('#demo-filter', 'content');
-  await settled();
-  await page.locator('#demo-deck .safe-stage').scrollIntoViewIfNeeded();
-  const typeBeforeSwap = await page.locator('#demo-deck .safe-stage .slide').getAttribute('class');
-  const slotsBeforeSwap = await rows();
-  await page.click('#demo-deck .safe-slot[data-name="Heading"] .demo-slot-swap');
-  assert.match(await page.locator('#demo-deck .demo-status').innerText(), /choose the content block/i);
-  assert.equal(await page.locator('.demo-slot-swap.is-armed').count(), 1, 'the first content block was not armed');
-  assert.equal(await page.locator('.demo-slot-swap.is-target').count(), 1, 'the other content block was not offered as a target');
-  await page.click('#demo-deck .safe-slot[data-name="Bullet list"] .demo-slot-swap');
-  await settled();
-  const typeAfterSwap = await page.locator('#demo-deck .safe-stage .slide').getAttribute('class');
-  const slotsAfterSwap = await rows();
-  const beforeHeading = slotsBeforeSwap.find((slot) => slot.name === 'Heading');
-  const beforeBullets = slotsBeforeSwap.find((slot) => slot.name === 'Bullet list');
-  const afterHeading = slotsAfterSwap.find((slot) => slot.name === 'Heading');
-  const afterBullets = slotsAfterSwap.find((slot) => slot.name === 'Bullet list');
-  assert.equal(typeAfterSwap, typeBeforeSwap, 'content swap changed the slide type');
-  assert.deepEqual(
-    [afterHeading.col, afterHeading.cols, afterHeading.row, afterHeading.rows],
-    [beforeBullets.col, beforeBullets.cols, beforeBullets.row, beforeBullets.rows],
-    'the heading did not take the bullet block position'
-  );
-  assert.deepEqual(
-    [afterBullets.col, afterBullets.cols, afterBullets.row, afterBullets.rows],
-    [beforeHeading.col, beforeHeading.cols, beforeHeading.row, beforeHeading.rows],
-    'the bullet block did not take the heading position'
-  );
-  assert.equal(await page.locator('#demo-feature-panel:not([hidden])').count(), 0, 'content swap opened the slide-feature picker');
-  assert.match(await page.locator('#demo-deck .demo-status').innerText(), /swapped content positions/i);
-
-  /* Removed behaviour: ⇄ used to open a feature picker and mutate slide.type.
-     Keep this old probe out of the run while its assertions are replaced by the
-     content-level contract above. */
-  if (false) {
   /* --- Feature swap: change what the slide is, via the app's own layout machinery --- */
   await page.click('#demo-reset');
   await settled();
   await page.selectOption('#demo-filter', 'content');
   await settled();
   await page.locator('#demo-deck .safe-stage').scrollIntoViewIfNeeded();
-  await page.click('#demo-deck .safe-slot[data-name="Bullet list"] .demo-slot-swap');
+  await page.click('#demo-layout-picker');
   await page.waitForSelector('#demo-feature-panel:not([hidden])');
 
   /* The picker is the app's list, not a lab copy: every authorable type, in the
@@ -245,7 +304,7 @@ try {
   for (const pictureShape of ['image', 'gallery', 'video']) {
     await page.click('#demo-reset');
     await settled();
-    await page.click('#demo-deck .safe-slot .demo-slot-swap');
+    await page.click('#demo-layout-picker');
     await page.waitForSelector('#demo-feature-panel:not([hidden])');
     const choice = page.locator(`.demo-feature-option[data-feature="${pictureShape}"]`);
     await choice.click();
@@ -277,7 +336,7 @@ try {
     await page.click('#demo-reset');
     await settled();
     await page.locator('#demo-deck .safe-stage').scrollIntoViewIfNeeded();
-    await page.click('#demo-deck .safe-slot[data-name="Bullet list"] .demo-slot-swap');
+    await page.click('#demo-layout-picker');
     await page.waitForSelector('#demo-feature-panel:not([hidden])');
   };
   await openPicker();
@@ -288,7 +347,7 @@ try {
   );
   /* Contained, not floating: the panel must sit inside the section and beside the
      canvas. As a popover it anchored against the page — #demo-deck is not
-     positioned — so it rendered over the playground with its labels cut off. */
+     positioned — so it rendered over the canvas with its labels cut off. */
   const placement = await page.evaluate(() => {
     const panel = document.querySelector('#demo-feature-panel');
     const stage = document.querySelector('#demo-deck .demo-stage');
@@ -315,15 +374,13 @@ try {
   await page.waitForTimeout(300);
   const narrow = await page.evaluate(() => {
     const panel = document.querySelector('#demo-feature-panel');
-    const sec = document.querySelector('#demo-deck');
     const p = panel.getBoundingClientRect();
-    const s = sec.getBoundingClientRect();
     return {
-      inside: p.left >= s.left - 1 && p.right <= s.right + 1,
+      inViewport: p.left >= 0 && p.right <= innerWidth && p.top >= 0 && p.bottom <= innerHeight,
       clipped: [...document.querySelectorAll('.demo-feature-option')].filter((b) => b.scrollWidth > b.clientWidth + 1).length,
     };
   });
-  assert.ok(narrow.inside, 'the picker spills outside the section at 820px');
+  assert.ok(narrow.inViewport, 'the picker drawer spills outside the viewport at 820px');
   assert.equal(narrow.clipped, 0, 'option labels clip at 820px');
   await page.setViewportSize({ width: 1600, height: 1200 });
   await page.waitForTimeout(300);
@@ -380,9 +437,18 @@ try {
   assert.ok(Object.values(predictions).includes('no'), 'no shape was predicted to be too tight');
 
   let disagreements = 0;
-  for (const [shape, said] of Object.entries(predictions)) {
+  for (const shape of Object.keys(predictions)) {
     await openPicker();
     const choice = page.locator(`.demo-feature-option[data-feature="${shape}"]`);
+    /* Every applied choice changes the content the next picker measures. Compare
+       the eventual result with this opening's live prediction, not with the
+       first content slide's now-stale prediction. */
+    await page.waitForFunction((type) => {
+      const button = document.querySelector(`.demo-feature-option[data-feature="${type}"]`);
+      return button?.dataset.fit === 'yes' || button?.dataset.fit === 'no';
+    }, shape);
+    const said = await choice.getAttribute('data-fit');
+    assert.ok(said === 'yes' || said === 'no', `${shape} was not measured in the reopened picker`);
     await choice.click();
     if (await page.locator('#demo-feature-panel:not([hidden])').count()) await choice.click();
     await settled();
@@ -395,8 +461,6 @@ try {
     }
   }
   assert.ok(disagreements <= 2, `the picker disagreed with its own result ${disagreements} times`);
-
-  }
 
   /* --- Formatting: the app's own canvas editor, not a lab copy --- */
   await page.click('#demo-reset');
@@ -431,91 +495,12 @@ try {
   await page.click('#demo-reset');
   await settled();
 
-  /* --- The campaign deck, folded in when Safe's engine was retired ---
-     Same engine, second deck. What it proves that the bank cannot: the campaign
-     slides carry structured compositions, so production allows named chrome
-     regions on them, and the recipe has to follow the composition rather than
-     the type name. */
-  await page.selectOption('#demo-deck-pick', 'aiad27-safe');
-  await settled();
-  assert.equal(await page.locator('#demo-slide option').count(), 9, 'the campaign deck is nine slides');
-
-  const campaign = [];
-  for (let i = 0; i < 9; i++) {
-    await page.selectOption('#demo-slide', String(i));
-    await settled();
-    const slide = await page.evaluate(() => {
-      const status = document.querySelector('#demo-deck .demo-status');
-      return {
-        fits: status.dataset.fits,
-        smallest: Number(status.dataset.smallest),
-        slots: document.querySelectorAll('#demo-deck .safe-slot').length,
-        chrome: document.querySelectorAll('#demo-deck .chrome-slot').length,
-        handles: document.querySelectorAll('#demo-deck .canvas-region-handle').length,
-      };
-    });
-    assert.equal(slide.fits, 'true', `campaign slide ${i + 1} does not fit`);
-    assert.ok(slide.slots >= 2, `campaign slide ${i + 1} placed ${slide.slots} slots`);
-    assert.ok(Number.isFinite(slide.smallest) && slide.smallest > 0, `slide ${i + 1} reported no painted size`);
-    campaign.push(slide);
-  }
-
-  /* Two campaign slides paint under the floor; the ratchet holds that at two. */
-  const tiny = campaign.filter((c) => c.smallest < 20).length;
-  assert.ok(tiny <= 2, `${tiny} campaign slides under the 20px floor (was 2)`);
-
-  /* Named chrome is production's decision, not the engine's: seven of the nine
-     have a structured composition, and the two support slides do not. */
-  const withChrome = campaign.filter((c) => c.chrome > 0).length;
-  assert.equal(withChrome, 7, `expected 7 campaign slides to allow chrome regions, got ${withChrome}`);
-  assert.equal(campaign[0].chrome, 0, 'the teacher-preparation slide has no composition');
-  assert.equal(campaign[8].chrome, 0, 'the vocabulary slide has no composition');
-  assert.ok(campaign[1].handles >= 3, 'the poster slide should offer chrome handles');
-
-  /* Composition-aware recipes: a campaign title is an eyebrow, headline,
-     tagline and artwork, not the bank's headline, subtitle and date. */
-  await page.selectOption('#demo-slide', '1');
-  await settled();
-  assert.deepEqual(
-    (await rows()).map((r) => r.name),
-    ['Eyebrow', 'Headline', 'Tagline', 'Artwork'],
-    'the campaign title slide did not use the campaign recipe'
-  );
-
-  /* Moving the logo between chrome slots, through production's own binding. */
-  const logoX = () => page.evaluate(() => {
-    const logo = document.querySelector('#demo-deck .slide-logo');
-    const slide = document.querySelector('#demo-deck .slide').getBoundingClientRect();
-    const box = logo.getBoundingClientRect();
-    return Math.round((box.left - slide.left) / (slide.width / 1280));
-  });
-  const wasAt = await logoX();
-  await page.click('#demo-deck [data-move-item="logoSlot"]');
-  await page.waitForSelector('#demo-deck [data-snap-slot="header-left"]');
-  await page.click('#demo-deck [data-snap-slot="header-left"]');
-  await settled();
-  assert.ok((await logoX()) < wasAt, 'the logo did not move to the left header slot');
-
-  /* Chrome is editable on these slides, so it is measured: a long context line
-     grows down into the first slot, and every slot would still report fitting. */
-  await page.selectOption('#demo-slide', '5');
-  await settled();
-  const beat = page.locator('#demo-deck [data-content-key="subtitle"]').first();
-  assert.ok(await beat.evaluate((n) => !n.closest('.safe-slot')), 'expected the context line in the chrome');
-  await beat.fill('A message you would never say out loud to anyone at all, not even the people you trust the most, because once it is written down it stops being yours');
-  await page.waitForFunction(() => document.querySelector('#demo-deck .demo-status').dataset.fits === 'false');
-  assert.match(await page.locator('#demo-deck .demo-status').innerText(), /Header band/);
-
-  await page.selectOption('#demo-deck-pick', 'layout-bank');
-  await settled();
-
   if (errors.length) throw new Error(`page errors: ${errors.slice(0, 3).join('; ')}`);
 
   console.log(
     `ok · demo-deck ${summary.fit}/${summary.total} fit · ${summary.needSpace} need space · ` +
       `${summary.underFloor} under the 20px floor (smallest ${summary.smallest}px) · ` +
-      `rearrange budget-neutral, no column drift · picker matches the editor and admits when it is wrong · ` +
-      `campaign deck: 9 fit, 7 allow chrome regions, logo moves between slots`
+      `rearrange budget-neutral, no column drift · picker matches the editor, predicts fit and admits when it is wrong · format toolbar paints`
   );
 } finally {
   await browser.close();

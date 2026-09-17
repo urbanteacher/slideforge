@@ -1,48 +1,24 @@
-# Demo · slot positioning
+# Engine 3 · layout-bank positioning deck
 
-Open `/modular-canvas/preview.html#demo-deck`. One engine, two decks.
+Open `/modular-canvas/preview.html#demo-deck`.
 
-## The two decks
-
-| Deck | What it proves |
-|------|----------------|
-| **NUL layout bank** (97) | every layout type against the 16 x 12 lattice |
-| **AI Awareness Day · Safe** (9) | the deck actually presented, and the only one where named chrome regions apply |
-
-They are not interchangeable, and the difference is production's, not the lab's.
-`SF.supportsChromeRegions` requires a **structured composition**, so the ✥ handles
-that move identity, context, logo, closing and page number between header and
-footer slots are available on **7 of the 9** campaign slides and on **none of the
-97** bank slides. The two campaign slides without them — teacher preparation and
-vocabulary — are plain types with no composition. Asking the gate per slide is
-what lets one engine serve both without hard-coding which is which.
-
-The recipe table is keyed by **deck**, not by "has a composition". The bank slides
-have compositions too — `title/poster`, `statement/frame`, `content/rail` — and
-testing for one sent a NUL statement slide hunting for `.cp-discussion` and
-placing nothing at all.
-
-Chrome is editable on composition slides, so it is measured: the campaign's
-context line renders into the header, and without a band check a long one grows
-25px down into the first slot while every slot still reports as fitting. That was
-found in the Safe engine and came across with it.
-
-Demo applies the same **Safe** slot lattice (16 rows × 12 columns inside the pad)
+Engine 3 applies a 16 × 12 slot lattice inside the pad
 to every slide in the NUL `layout-bank` lesson (97 slides). It is the stress test
 for a professional positioning tool: recipes declare spans; measured fit fails
 when content outgrows a span. Production northeastern CSS is not modified.
 
 ## Controls
 
-- Filter by slide type, step through slides, toggle **Original design** vs slotted.
+- Filter by slide type, step through slides, toggle **Show original design** for comparison.
 - **Show slots** outlines the lattice.
+- **Header / footer controller** moves existing chrome between left, centre and right without touching content slots.
 - **Audit all 97** measures every slide and prints fail-by-type + first failures.
 - **Flip · artwork** locks content slots and opens a **Stack** panel beside the
   canvas (back → front). Select an asset, toggle **Plane / Hide / Lock**, reorder
   with Back/Front, drag on the canvas to snap. **Flip · content** returns to slot
   editing. Poses live on `slide.mockArt` (`plane`, `hidden`, `locked`, `order`, `x`, `y`).
   This is not the reverted always-on Layers panel — the stack only appears on the art face.
-- Edit text on the canvas. **⠿** moves a slot; **⇄** opens the feature picker.
+- Edit text on the canvas. **⠿** moves a slot; **⇄** swaps compatible content fields on the current slide. **Change slide layout…** opens the separate layout picker.
   **Reset this slide** / **Download snapshot**.
 
 ## Latest audit (lab)
@@ -58,9 +34,26 @@ slide can pass one and fail the other, so neither number is allowed to hide the 
 
 ### Fit
 
+Fit is counted in **lines**, not boxes. A block occupies whole lines of the
+16-line lattice — how many depends on what it is, so a bigger heading takes more
+of them and what follows moves down — and the only fit failure is a block that
+needs more lines than it holds. Blocks that are out of flow do not spend lines:
+the caption on a full-bleed picture is an absolutely positioned scrim, 242px of
+which 156px is the gradient's own padding, drawn over the picture on purpose.
+
+The box was the previous detector and could not be made to agree with itself. A
+slot measures its element box, but a display face paints an inline box half a
+leading taller — an 84px Iowan line is 87.4px of box inside 114.5px of ink — and
+`escapes()` reads a bottom overhang as an overflow while ignoring an identical
+one at the top. The same title passed or failed on where it happened to sit in
+its slot, and the line was measured moving 14px between two paints of one slide.
+Lines count the block, not its leading, so a composition gets the same verdict
+wherever it sits. Both detectors return the same bank verdict; only one of them
+can be counted.
+
 | # | Type | Slot | Verdict |
 |---|------|------|---------|
-| 94 | `compare` | Compare | **Over budget.** No recipe change closes it — see below |
+| 94 | `compare` | Compare | **Needs 17 lines, has 14.** No recipe change closes it — see below |
 
 Re-fit, without shrinking any type:
 
@@ -345,19 +338,3 @@ Three, and no more: **playground** for free-typed content and theme switching,
 engine briefly held the derived-stack prototype; it is gone, and its behaviour and
 its tests live here instead. New positioning work belongs in Demo, because that is
 where all 97 slides can contradict it.
-
-## Retired: the Safe engine
-
-Safe was a second engine over the same lattice. It became a deck here, because
-the only thing it had that Demo lacked was `chromeLayout: 'regions'` — three
-lines setting a production flag — while Demo had the reorder, the feature picker,
-the fit estimate, the audit and the artwork flip. Keeping both meant fixes landed
-in one and not the other: for a while Safe had no legibility floor, read declared
-type size rather than painted, and reported a pass on a slide that placed
-nothing.
-
-Its chrome **map** panel did not come across. It listed the same six header and
-footer cells the ✥ handles already offer on the canvas, and two affordances for
-one job is how a prototype turns into clutter. Its audience filter and `n / 7`
-page numbering did not either: both faked a seven-slide show, and production
-numbering already accounts for hidden slides.

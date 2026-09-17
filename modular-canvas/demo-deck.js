@@ -1,6 +1,5 @@
-/* Lab-only: the slot lattice, over two decks — the 97 NUL layout-bank slides and
-   the nine AI Awareness Day campaign slides. Prototype; writes no Library deck
-   and no production CSS. */
+/* Lab-only: apply Safe-style slot lattice to all 97 NUL layout-bank slides.
+   Prototype — does not write Library decks or production CSS. */
 const SF = window.SF;
 /* The formatting toolbar reports through SF.toast, which the shell owns and this
    page does not load. Without a shim, "select the words first" throws instead. */
@@ -9,17 +8,8 @@ if (!SF.toast) SF.toast = (message) => {
   if (el) el.textContent = String(message);
 };
 if (!SF.slideJumpTarget) SF.slideJumpTarget = () => null;
-/* Two decks, one engine. They test different things and production treats them
-   differently: the campaign slides carry structured compositions, so named
-   chrome regions apply to them, and the bank slides carry none, so it does not.
-   Asking SF.supportsChromeRegions per slide is what lets one engine serve both
-   without hard-coding which is which. */
-const DECKS = [
-  { key: 'layout-bank', label: 'NUL layout bank (97)' },
-  { key: 'aiad27-safe', label: 'AI Awareness Day · Safe (9)' },
-];
-let LESSON = DECKS[0].key;
-let baseline = SF.buildLesson(LESSON);
+const LESSON = 'layout-bank';
+const baseline = SF.buildLesson(LESSON);
 let deck = structuredClone(baseline);
 let index = 0;
 let revision = 0;
@@ -28,10 +18,11 @@ let flipMode = 'content';
 /* What the last rearrange did, so measure() can keep it instead of overwriting. */
 let lastMove = '';
 let selectedArt = null;
-/* A content swap is deliberately scoped to this slide. The slot button moves
-   a block to another block's position; it must never turn the slide into a
-   different layout. */
-let armedSlot = null;
+/* ⇄ is an in-slide content-location control: select one slot, then another.
+   It is deliberately separate from the optional layout picker. */
+let contentSwapArmed = null;
+/* The open layout picker, if any. */
+let featurePicker = null;
 deck.showSlideNumbers = true;
 
 /* Recipes: [selector, label, col, cols, row, rows]
@@ -42,9 +33,13 @@ const BODY = (sel, name, row = 5, rows = 12) => [sel, name, 1, 12, row, rows];
 
 const recipes = {
   title: [
-    ['h1', 'Headline', 1, 12, 3, 6],
-    ['.sub', 'Subtitle', 1, 10, 10, 3],
-    ['.slide-date', 'Date', 1, 6, 14, 2],
+    /* Keep the campaign title composition intact: a quiet rule, display line,
+       supporting line and date. The grid only gives their existing blocks
+       shared anchors; it must not replace the hierarchy with lab typography. */
+    ['.accent-bar', 'Accent', 1, 2, 4, 1],
+    ['h1', 'Headline', 1, 12, 5, 4],
+    ['.sub', 'Subtitle', 1, 10, 8, 2],
+    ['.slide-date', 'Date', 1, 6, 11, 1],
   ],
   statement: [
     ['.statement', 'Statement', 1, 12, 3, 11],
@@ -203,28 +198,43 @@ const bleedTypes = new Set(['image', 'split', 'video']);
 const section = document.createElement('section');
 section.id = 'demo-deck';
 section.innerHTML = `
-  <h2>Demo · slot positioning</h2>
-  <p class="lab-role is-current">Start here. Every current control lives in this engine: drag to reorder, swap content blocks, format text, audit all 97.</p>
+  <h2>Engine 3 · layout bank</h2>
+  <p class="lab-role is-current">A single canvas for 97 layouts. Edit content, arrange its slots, or switch to artwork—without leaving the current slide.</p>
   <p>
-    One engine over two decks. The bank stress-tests every layout type; the campaign deck is the acceptance test for the nine slides you present.
-    Use this to see which types fit the 16×12 lattice and which need a new recipe or BLEED rule — before changing production styles.
+    The canvas keeps campaign typography intact while it measures content inside a 16×12 lattice. Use the tools below to change a current slide; Audit checks the full bank separately.
   </p>
-  <div class="safe-toolbar demo-toolbar">
-    <label>Deck <select aria-label="Deck" id="demo-deck-pick"></select></label>
-    <button type="button" data-nav="-1">← Previous</button>
-    <select aria-label="Demo slide" id="demo-slide"></select>
-    <button type="button" data-nav="1">Next →</button>
-    <label>Filter
-      <select id="demo-filter" aria-label="Filter by type">
-        <option value="">All types</option>
-      </select>
-    </label>
-    <label><input type="checkbox" id="demo-original"> Original design</label>
-    <label><input type="checkbox" id="demo-grid" checked> Show slots</label>
-    <button type="button" id="demo-flip" aria-pressed="false">Flip · artwork</button>
-    <button type="button" id="demo-audit">Audit this deck</button>
-    <button type="button" id="demo-download">Download snapshot</button>
-    <button type="button" id="demo-reset">Reset this slide</button>
+  <div class="demo-toolbar" aria-label="Engine 3 controls">
+    <div class="demo-tool-group" aria-label="Slide navigation">
+      <span class="demo-tool-label">Slide</span>
+      <button type="button" data-nav="-1" aria-label="Previous slide">←</button>
+      <select aria-label="Demo slide" id="demo-slide"></select>
+      <button type="button" data-nav="1" aria-label="Next slide">→</button>
+      <label class="demo-filter-label">Type
+        <select id="demo-filter" aria-label="Filter by type"><option value="">All types</option></select>
+      </label>
+    </div>
+    <div class="demo-tool-group" aria-label="Canvas mode">
+      <span class="demo-tool-label">Edit</span>
+      <button type="button" id="demo-content-mode" aria-pressed="true">Flip · content</button>
+      <button type="button" id="demo-flip" aria-pressed="false">Flip · artwork</button>
+      <label class="demo-toggle"><input type="checkbox" id="demo-original"> Original</label>
+    </div>
+    <div class="demo-tool-group" aria-label="Canvas tools">
+      <span class="demo-tool-label">Tools</span>
+      <label class="demo-toggle"><input type="checkbox" id="demo-grid" checked> Slots</label>
+      <button type="button" id="demo-layout-picker">Change layout</button>
+    </div>
+    <div class="demo-tool-group demo-chrome-toolgroup" id="demo-chrome-map" hidden aria-label="Header and footer controller" title="Bands fixed · click a position, then click another to move or swap its furniture">
+      <span class="demo-tool-label">Chrome</span>
+      <div class="demo-chrome-inline" data-band-cells="header" aria-label="Header positions"></div>
+      <span class="demo-chrome-inline-sep" aria-hidden="true">/</span>
+      <div class="demo-chrome-inline" data-band-cells="footer" aria-label="Footer positions"></div>
+    </div>
+    <div class="demo-tool-group demo-tool-group-actions" aria-label="Utilities">
+      <button type="button" id="demo-audit">Audit 97</button>
+      <button type="button" id="demo-reset">Reset</button>
+      <button type="button" id="demo-download">Download</button>
+    </div>
   </div>
   <div class="demo-workspace">
     <div class="safe-stage demo-stage"></div>
@@ -245,23 +255,26 @@ section.innerHTML = `
     </aside>
     <aside class="demo-feature-panel" id="demo-feature-panel" hidden aria-label="Swap this slide’s feature"></aside>
   </div>
+  <p class="demo-canvas-hint"><strong>Content:</strong> edit text, drag ⠿ to rearrange, ⇄ to exchange compatible content. <strong>Artwork:</strong> move only the visual assets. The right panel always describes the active tool.</p>
   <p class="safe-status demo-status" role="status"></p>
+  <p class="demo-chrome-measure" aria-live="polite"></p>
   <div class="safe-recipe demo-recipe"></div>
   <div class="demo-budget" aria-label="Row budget"></div>
   <pre class="demo-audit-out" hidden></pre>
   <p class="safe-scope">
-    Prototype only. Fits/fails are measured against declared slots.
+    Engine 3 retains the campaign hierarchy and only measures/repositions content into shared containers. Original is a comparison view; it is never the editing default.
     Production northeastern CSS is not modified. BLEED types (image, split, video) still use the lattice so overflow is visible.
-    ⇄ swaps two content blocks on this slide; it never changes the slide type. Flip separates content (front face) from decoration (back face) — no always-on Layers panel.
   </p>
 `;
 
-const host = document.querySelector('#playground') || document.querySelector('.lab-contract');
+const host = document.querySelector('.lab-contract');
 host.after(section);
 
 const $ = (s) => section.querySelector(s);
 const stage = $('.demo-stage');
 const status = $('.demo-status');
+const chromeMeasureEl = $('.demo-chrome-measure');
+const chromeMapEl = $('#demo-chrome-map');
 const recipeEl = $('.demo-recipe');
 const budgetEl = $('.demo-budget');
 const auditOut = $('.demo-audit-out');
@@ -326,68 +339,11 @@ function typeOf(slide) {
   return slide.type;
 }
 
-const CAMPAIGN_RECIPES = {
-  content: [
-    ['h2', 'Heading', 1, 12, 1, 2],
-    ['ul', 'Bullet list', 1, 12, 4, 12],
-  ],
-  title: [
-    ['.cp-eyebrow', 'Eyebrow', 1, 7, 5, 1],
-    ['h1', 'Headline', 1, 7, 6, 6],
-    ['.cp-tagline', 'Tagline', 1, 7, 13, 1],
-    ['.cp-art', 'Artwork', 8, 5, 2, 14],
-  ],
-  quote: [
-    ['.cp-quote-mark', 'Quote mark', 1, 2, 3, 8],
-    ['.cp-eyebrow', 'Eyebrow', 3, 10, 3, 1],
-    ['.cp-scenario', 'Voice', 3, 10, 5, 10],
-  ],
-  cards: [
-    ['.cp-heading', 'Heading', 1, 12, 2, 2],
-    ['.cp-choices', 'Voting block', 1, 12, 5, 11],
-    ['.cp-prompt', 'Instruction', 1, 12, 16, 1],
-  ],
-  statement: [
-    ['.cp-eyebrow', 'Eyebrow', 1, 12, 3, 1],
-    ['.cp-discussion', 'Discussion block', 1, 12, 5, 10],
-  ],
-  iceberg: [
-    ['.cp-heading', 'Heading', 1, 12, 2, 2],
-    ['.cp-risk-map', 'Risk diagram', 1, 12, 5, 10],
-    ['.cp-source', 'Source', 1, 12, 16, 1],
-  ],
-  journey: [
-    ['.cp-heading', 'Heading', 1, 12, 1, 2],
-    ['.cp-rules', 'Numbered rules', 1, 12, 3, 12],
-    ['.cp-closing-line', 'Supporting line', 1, 12, 16, 1],
-  ],
-  keyfact: [
-    ['.cp-action-number', 'Action mark', 1, 3, 3, 9],
-    ['.cp-eyebrow', 'Eyebrow', 4, 9, 3, 1],
-    ['.cp-action h2', 'Headline', 4, 9, 5, 4],
-    ['.cp-action > p:not([class])', 'Prompt', 4, 9, 10, 3],
-    ['.cp-write-line', 'Response line', 4, 9, 14, 2],
-  ],
-  keywords: [
-    ['h2', 'Heading', 1, 12, 1, 2],
-    ['.kw-list', 'Vocabulary block', 1, 12, 4, 12],
-  ],
-};
-
-/* A campaign `title` slide has different DOM from a bank one — .cp-eyebrow and
-   .cp-art rather than h1 and .sub — so one recipe table cannot serve both.
-   Keyed by deck, not by "has a composition": the bank slides have compositions
-   too (title/poster, statement/frame, content/rail), and testing for one sent a
-   NUL statement slide looking for .cp-discussion, which placed nothing at all. */
-function recipesFor() {
-  return LESSON === 'aiad27-safe' ? CAMPAIGN_RECIPES : recipes;
-}
-
 function recipeFor(slide) {
   if (Array.isArray(slide.mockRecipe) && slide.mockRecipe.length) {
     return slide.mockRecipe.map((r) => r.slice());
   }
-  const base = recipesFor()[slide.type] || [
+  const base = recipes[slide.type] || [
     H('h1,h2', 'Heading'),
     BODY('.pad > *:not(h1):not(h2):not(.accent-bar):not(.slide-logo):not(.pagenum):not(.track)', 'Body'),
   ];
@@ -435,6 +391,40 @@ function swapSlotGeometry(recipe, i, j) {
   return { a: a[1], b: b[1] };
 }
 
+/* ⇄ exchanges values, not recipes. A rendered slot can contain one editable
+   field (title/subtitle/body) or several (a bullet list); only like-for-like
+   field sets are safe to exchange without turning an array into a scalar. */
+function slotContentKeys(box) {
+  return [...box.querySelectorAll('[data-content-key]')]
+    .filter((node) => !node.querySelector('[data-content-key]'))
+    .map((node) => node.dataset.contentKey)
+    .filter(Boolean);
+}
+function readContentKey(slide, key) {
+  const bullet = /^bullets\.(\d+)$/.exec(key);
+  return bullet ? slide.bullets?.[Number(bullet[1])] ?? '' : slide[key] ?? '';
+}
+function writeContentKey(slide, key, value) {
+  const bullet = /^bullets\.(\d+)$/.exec(key);
+  if (bullet) {
+    if (!Array.isArray(slide.bullets)) slide.bullets = [];
+    slide.bullets[Number(bullet[1])] = value;
+  } else slide[key] = value;
+}
+function swapSlotContent(slide, first, second) {
+  const a = slotContentKeys(first.box);
+  const b = slotContentKeys(second.box);
+  if (!a.length || !b.length) return { error: 'Only editable content blocks can be swapped.' };
+  if (a.length !== b.length) {
+    return { error: `${first.name} has ${a.length} field${a.length === 1 ? '' : 's'} and ${second.name} has ${b.length}; choose matching content blocks.` };
+  }
+  const left = a.map((key) => readContentKey(slide, key));
+  const right = b.map((key) => readContentKey(slide, key));
+  a.forEach((key, i) => writeContentKey(slide, key, right[i]));
+  b.forEach((key, i) => writeContentKey(slide, key, left[i]));
+  return { a: first.name, b: second.name };
+}
+
 /* Which features can this slide become, and what carries over.
    Reuses the app's own layout machinery rather than inventing a parallel list:
    SF.SLIDE_TYPES declares every layout, SF.DECK_TYPES is the authorable subset,
@@ -474,6 +464,12 @@ function closeFeaturePicker() {
   }
   featurePicker = null;
   section.classList.remove('demo-swap-picking');
+  const root = stage.firstElementChild;
+  const restoreChrome =
+    !!root &&
+    !$('#demo-original').checked &&
+    flipMode !== 'artwork';
+  if (restoreChrome) paintDemoChromeMap(deck.slides[index], root, true);
 }
 
 function openFeaturePicker(button, slide, slotName) {
@@ -482,6 +478,8 @@ function openFeaturePicker(button, slide, slotName) {
      A popover here anchored against the page rather than the section — #demo-deck
      is not positioned — so it landed on top of the playground, half of it cut off. */
   const pop = $('#demo-feature-panel');
+  /* The chrome controller lives in the toolbar now, not the workspace column,
+     so it no longer competes with this picker for space and stays put. */
   pop.hidden = false;
   pop.replaceChildren();
   const points = (slide.bullets || []).filter((b) => String(b).trim()).length;
@@ -587,14 +585,19 @@ function applyFeature(slide, type, slotName, predicted) {
   const was = SF.SLIDE_TYPES[slide.type]?.label || slide.type;
   const pointsBefore = (slide.bullets || []).filter((b) => String(b).trim()).length;
   closeFeaturePicker();
+  contentSwapArmed = null;
   SF.prepareLayout(slide, type);
   /* Positions belonged to the old feature. Drop them so the new one takes its
      own recipe instead of inheriting spans that were measured for something else. */
   delete slide.mockRecipe;
+  delete slide.mockTitleNormalized;
   render().then((result) => {
+    /* The rendered status is authoritative. A title may have taken an internal
+       second pass to establish its measured rows, so the outer promise result
+       can describe the provisional pass rather than what the canvas shows. */
     const now = SF.SLIDE_TYPES[type]?.label || type;
     const shown = pointsBefore && SF.BULLET_LAYOUTS.includes(type);
-    const fitted = !result?.failed?.length;
+    const fitted = status.dataset.fits === 'true';
     /* The picker's verdict is a prediction from a trial render, and a prediction
        can be wrong. Say so when it is, rather than letting the two disagree in
        silence — a quiet wrong "should fit" is worse than no estimate at all. */
@@ -614,7 +617,7 @@ function applyFeature(slide, type, slotName, predicted) {
       (pointsBefore ? `, ${pointsBefore} points ${shown ? 'carried' : 'kept in the data'}` : '') +
       (headingGone ? ', heading off the slide (still in the data)' : '') +
       surprise;
-    reportSwapFit(lastMove, result);
+    reportSwapFit(lastMove, { failed: fitted ? [] : result?.failed || ['measure'] });
   });
 }
 
@@ -625,15 +628,6 @@ function reportSwapFit(label, result) {
     ? `${label} · Needs more space: ${failed.join(', ')}. Text is not auto-shrunk.`
     : `${label} · fit check passed · 16×12`;
   lastMove = '';
-}
-
-function clearContentSwap() {
-  armedSlot = null;
-  section.querySelectorAll('.demo-slot-swap').forEach((button) => {
-    button.classList.remove('is-armed', 'is-target');
-    button.setAttribute('aria-pressed', 'false');
-  });
-  section.classList.remove('demo-swap-picking');
 }
 
 function bindSlotDrag(root, slide, body) {
@@ -659,43 +653,60 @@ function bindSlotDrag(root, slide, body) {
     const swapBtn = document.createElement('button');
     swapBtn.type = 'button';
     swapBtn.className = 'demo-slot-swap';
-    swapBtn.title = 'Swap this content block with another block on this slide.';
-    swapBtn.setAttribute('aria-label', `Swap ${box.dataset.name} with another content block on this slide`);
+    swapBtn.title = 'Swap this content — choose this block, then another compatible block on this slide.';
+    swapBtn.setAttribute('aria-label', `Swap content in ${box.dataset.name}`);
     swapBtn.setAttribute('aria-pressed', 'false');
     swapBtn.textContent = '\u21c4';
+    const armedHere = contentSwapArmed?.slide === slide && contentSwapArmed.recipeIndex === idx;
+    swapBtn.classList.toggle('is-armed', armedHere);
+    swapBtn.setAttribute('aria-pressed', String(armedHere));
+    if (contentSwapArmed?.slide === slide && !armedHere) swapBtn.classList.add('is-target');
     tools.append(swapBtn);
 
     swapBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       if (flipMode === 'artwork') return;
-      if (armedSlot && armedSlot.index === idx) {
-        clearContentSwap();
+      if (contentSwapArmed?.slide === slide && contentSwapArmed.recipeIndex === idx) {
+        contentSwapArmed = null;
+        root.querySelectorAll('.demo-slot-swap').forEach((button) => {
+          button.classList.remove('is-armed', 'is-target');
+          button.setAttribute('aria-pressed', 'false');
+        });
         status.textContent = 'Content swap cancelled.';
         return;
       }
-      if (!armedSlot) {
-        armedSlot = { index: idx, name: box.dataset.name };
-        swapBtn.classList.add('is-armed');
-        swapBtn.setAttribute('aria-pressed', 'true');
-        boxes.forEach((other) => {
-          if (other !== box) other.querySelector('.demo-slot-swap')?.classList.add('is-target');
-        });
-        section.classList.add('demo-swap-picking');
-        status.textContent = `Choose the content block to swap with ${box.dataset.name}.`;
+      if (contentSwapArmed?.slide === slide) {
+        const first = contentSwapArmed;
+        const swapped = swapSlotContent(slide, first, { box, name: box.dataset.name });
+        if (swapped.error) {
+          status.textContent = `Content swap not applied: ${swapped.error}`;
+          return;
+        }
+        contentSwapArmed = null;
+        if (swapped) {
+          lastMove = `Swapped content: ${swapped.a} ⇄ ${swapped.b}`;
+          render();
+        }
         return;
       }
-      const source = armedSlot;
-      const swapped = swapSlotGeometry(recipe, source.index, idx);
-      clearContentSwap();
-      if (!swapped) return;
-      lastMove = `Swapped content positions: ${swapped.a} and ${swapped.b}`;
-      render();
+      if (!slotContentKeys(box).length) {
+        status.textContent = `${box.dataset.name} is decoration, not editable content. Choose a text/content block.`;
+        return;
+      }
+      contentSwapArmed = { slide, recipeIndex: idx, name: box.dataset.name, box };
+      root.querySelectorAll('.demo-slot-swap').forEach((button) => {
+        const own = button === swapBtn;
+        button.classList.toggle('is-armed', own);
+        button.classList.toggle('is-target', !own);
+        button.setAttribute('aria-pressed', String(own));
+      });
+      status.textContent = `${box.dataset.name} selected · choose another compatible content block to swap. Slide layout stays ${SF.SLIDE_TYPES[slide.type]?.label || slide.type}.`;
     });
 
     grip.addEventListener('pointerdown', (e) => {
       if (e.button !== 0) return;
-      clearContentSwap();
+      closeFeaturePicker();
       e.preventDefault();
       e.stopPropagation();
       const spec = recipe[idx];
@@ -1116,13 +1127,13 @@ function bindArtwork(root, slide) {
 }
 
 function syncFlipButton() {
-  const btn = $('#demo-flip');
+  const artworkBtn = $('#demo-flip');
+  const contentBtn = $('#demo-content-mode');
   const art = flipMode === 'artwork';
-  btn.setAttribute('aria-pressed', String(art));
-  btn.textContent = art ? 'Flip · content' : 'Flip · artwork';
-  btn.title = art
-    ? 'Return to content slots (structure editing)'
-    : 'Flip canvas: move background assets freely; content stays locked';
+  artworkBtn.setAttribute('aria-pressed', String(art));
+  contentBtn.setAttribute('aria-pressed', String(!art));
+  artworkBtn.title = 'Artwork mode: move background and decorative assets';
+  contentBtn.title = 'Content mode: edit text and arrange content slots';
   if (!art) {
     stackEl.hidden = true;
     selectedArt = null;
@@ -1161,6 +1172,58 @@ function slotify(root, slide) {
   return used;
 }
 
+/* A title has one genuinely variable block: the headline. Its row span follows
+   the already-rendered text instead of shrinking 84px campaign type to make a
+   fixed recipe pass. The remaining blocks flow beneath it on whole rows, so a
+   longer heading moves the subtitle/date but never changes their design. */
+function normalizeTitleRows(root, slide) {
+  if (slide.type !== 'title') return false;
+  /* This establishes the starting anchors only. Once a person rearranges a
+     title, their order and rows win; rendering must not silently snap it back
+     to the automated starting composition. */
+  if (slide.mockTitleNormalized) return false;
+  const recipe = slide.mockRecipe;
+  if (!Array.isArray(recipe)) return false;
+  const byName = (name) => recipe.find((item) => item[1] === name);
+  const boxFor = (name) => root.querySelector(`.safe-slot[data-name="${name}"]`);
+  const rowsFor = (name, minimum, guard = 0) => {
+    const node = boxFor(name)?.firstElementChild;
+    return Math.max(minimum, Math.ceil((node?.scrollHeight || 0) / 36) + guard);
+  };
+  const accent = byName('Accent');
+  const headline = byName('Headline');
+  const subtitle = byName('Subtitle');
+  const date = byName('Date');
+  if (!accent || !headline || !subtitle) return false;
+  /* These are lower bounds from the campaign composition, not compactness
+     targets. The first paint can report a deceptively short scroll height while
+     font metrics settle; never collapse a display line because it happened to
+     fit for one frame. Display type gets a one-row guard; other blocks use
+     their measured height directly so the canvas remains compact. */
+  const headlineRows = rowsFor('Headline', 4, 1);
+  const subtitleRows = rowsFor('Subtitle', 2);
+  const hasDate = !!boxFor('Date');
+  const dateRows = hasDate ? rowsFor('Date', 2) : 0;
+  const next = [
+    [accent, 4, 1],
+    [headline, 5, headlineRows],
+    [subtitle, 5 + headlineRows, subtitleRows],
+    ...(hasDate ? [[date, 5 + headlineRows + subtitleRows, dateRows]] : []),
+  ];
+  /* A recipe is a description of what actually appears on this slide. Remove
+     a missing date from title variants so it cannot consume invisible budget. */
+  const dateMissing = !!date && !hasDate;
+  const changed = dateMissing || next.some(([spec, row, rows]) => spec[4] !== row || spec[5] !== rows);
+  slide.mockTitleNormalized = true;
+  if (!changed) return false;
+  if (dateMissing) recipe.splice(recipe.indexOf(date), 1);
+  next.forEach(([spec, row, rows]) => {
+    spec[4] = row;
+    spec[5] = rows;
+  });
+  return true;
+}
+
 /* Measure every slot with the instrument Safe and production also use. One pass
    returns both verdicts, because they come from the same walk: whether a block
    escapes its declared box, and the smallest text painted inside it.
@@ -1169,24 +1232,238 @@ function slotify(root, slide) {
    axis labels and a media caption are drawn to sit outside the content box — so
    for those, scroll fit is the contract. */
 const RIM_PAINTERS = /chart|image|media|video|mind map|join|game/i;
+/* Campaign dates are deliberately small, tracked metadata—not body copy. They
+   must fit their slot, but should not make an otherwise readable title fail the
+   general 20px body-text floor. */
+const MICROTYPE = /^(Accent|Date)$/;
 
+/* One line of the lattice. */
+const ROW_H = 36;
+/* How many lines a block needs. Sub-pixel is not a line: the same 1px tolerance
+   the app's own fit check uses, so a block landing exactly on a boundary is not
+   rounded up into a line it does not occupy. */
+function linesFor(px) {
+  return Math.max(1, Math.ceil((px - (SF.FIT_TOLERANCE ?? 1)) / ROW_H));
+}
+
+/* The lattice is the instrument, not the box. A block occupies whole lines —
+   how many depends on what it is, so a bigger heading takes more of them and
+   what follows moves down — and the only fit failure is content needing more
+   lines than it holds.
+   Boxes were the previous detector and could not be made to agree with
+   themselves. A slot measures its element box, but a display face paints an
+   inline box half a leading taller: an 84px Iowan line is 87.4px of box inside
+   114.5px of ink. escapes() (js/model.js) reads a bottom overhang as overflow
+   and ignores an identical one at the top, so the same title passed or failed
+   on where it happened to sit in its slot — measured moving 14px between two
+   paints of the same slide. Lines are countable and symmetric, so a composition
+   gets the same verdict wherever it sits. */
 function measureSlots(root) {
   const failed = [];
   let smallest = null;
   let smallestIn = '';
   for (const box of root.querySelectorAll('.safe-slot')) {
-    const exempt = RIM_PAINTERS.test(box.dataset.name || '');
+    /* Vector blocks scale to their box, so they cannot need a line they do not
+       have. Too narrow is their only failure mode and minCols reports it. */
+    const fitExempt = RIM_PAINTERS.test(box.dataset.name || '');
+    const microtype = MICROTYPE.test(box.dataset.name || '');
+    /* Still walked, but now only for the legibility verdict: the smallest type
+       on a slide is a size question, and lines say nothing about size. */
     const verdict = SF.measureSlideFit(box, { frame: box, floor: SF.LEGIBLE_FLOOR });
-    const scrolls = box.scrollHeight > box.clientHeight + 1 || box.scrollWidth > box.clientWidth + 1;
-    const bad = !!verdict && ((!exempt && !verdict.fits) || scrolls);
-    if (verdict?.smallest != null && (smallest === null || verdict.smallest < smallest)) {
+    if (!microtype && verdict?.smallest != null && (smallest === null || verdict.smallest < smallest)) {
       smallest = verdict.smallest;
       smallestIn = verdict.smallestIn || '';
     }
+    const node = box.firstElementChild;
+    /* Out of flow, out of the line count. The caption on a full-bleed picture is
+       an absolutely positioned scrim: 242px tall, of which 156px is the
+       gradient's own padding around 74px of text. It is drawn over the picture
+       on purpose and occupies no line of the stack, so counting its box as
+       seven lines failed three slides that are not overflowing anything. */
+    const inFlow = !!node && !/^(absolute|fixed)$/.test(getComputedStyle(node).position);
+    const have = Math.max(1, Math.round(box.clientHeight / ROW_H));
+    const need = inFlow ? linesFor(node.scrollHeight) : 0;
+    /* Sideways is not a line question, and nothing else catches it. */
+    const wide = inFlow && box.scrollWidth > box.clientWidth + 1;
+    const bad = !fitExempt && (need > have || wide);
     box.classList.toggle('safe-overflow', bad);
-    if (bad) failed.push(box.dataset.name);
+    if (bad) {
+      failed.push(
+        need > have
+          ? `${box.dataset.name} needs ${need} lines, has ${have}`
+          : `${box.dataset.name} overflows sideways`
+      );
+    }
   }
   return { failed, smallest, smallestIn };
+}
+
+/* The grid is the measured body frame. The space above and below it is not
+   guessed chrome: read the rendered rectangles so the report remains true at
+   every preview scale. The reserves include the pad that keeps furniture away
+   from the slide edge: 56px header + 32px top pad, then 32px footer + 24px
+   bottom pad on the current 16:9 frame. */
+function measureChromeBands(root) {
+  const grid = root.querySelector('.safe-body');
+  const slide = root.getBoundingClientRect();
+  const scale = slide.width / 1280;
+  if (!(scale > 0)) return null;
+  /* In preserve-original mode there is no injected .safe-body. The frame is
+     still the same declared 16×12 body: report that boundary without touching
+     the original DOM. */
+  if (!grid) return { header: 88, body: 576, footer: 56, implied: true };
+  const body = grid.getBoundingClientRect();
+  const px = (value) => Math.round(value / scale);
+  return {
+    header: px(body.top - slide.top),
+    body: px(body.height),
+    footer: px(slide.bottom - body.bottom),
+  };
+}
+
+/* Put the measurement where it can be judged: on the slide. Generic layouts
+   have furniture without formal header/footer elements, so their bands are
+   marked as implied reserves from the measured slot body; campaign slides use
+   their real .cp-header / .cp-footer elements. */
+function paintChromeBands(root) {
+  root.querySelector('.demo-chrome-overlay')?.remove();
+  const slide = root.getBoundingClientRect();
+  const scale = slide.width / 1280;
+  if (!(scale > 0)) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'demo-chrome-overlay';
+  overlay.setAttribute('aria-hidden', 'true');
+  const toSlide = (rect) => ({
+    top: (rect.top - slide.top) / scale,
+    height: rect.height / scale,
+  });
+  const add = (band, label, implied) => {
+    if (!band || band.height < 1) return;
+    const el = document.createElement('div');
+    el.className = 'demo-chrome-band' + (implied ? ' implied' : '');
+    el.dataset.band = label.startsWith('header') ? 'header' : 'footer';
+    el.style.top = `${band.top}px`;
+    el.style.height = `${band.height}px`;
+    const tag = document.createElement('span');
+    tag.textContent = label;
+    el.append(tag);
+    overlay.append(el);
+  };
+  const header = root.querySelector('.cp-header');
+  const footer = root.querySelector('.cp-footer');
+  const body = root.querySelector('.safe-body');
+  if (header) {
+    add(toSlide(header.getBoundingClientRect()), `header · ${Math.round(toSlide(header.getBoundingClientRect()).height)}px`, false);
+  } else {
+    const frame = body ? toSlide(body.getBoundingClientRect()) : { top: 88, height: 576 };
+    add({ top: 0, height: frame.top }, `header reserve · implied · ${Math.round(frame.top)}px`, true);
+  }
+  if (footer) {
+    add(toSlide(footer.getBoundingClientRect()), `footer · ${Math.round(toSlide(footer.getBoundingClientRect()).height)}px`, false);
+  } else {
+    const frame = body ? toSlide(body.getBoundingClientRect()) : { top: 88, height: 576 };
+    const bottom = frame.top + frame.height;
+    add({ top: bottom, height: 720 - bottom }, `footer reserve · implied · ${Math.round(720 - bottom)}px`, true);
+  }
+  root.append(overlay);
+}
+
+/* Engine 3 uses campaign theme furniture rather than Safe's .cp-header and
+   .cp-footer markup. Give that existing furniture the same six named positions
+   without touching body slots: context/eyebrow and logo belong to the header;
+   page number or the existing progress line belongs to the footer. The shared
+   SF chrome position model keeps the values compatible with the app controller. */
+const DEMO_CHROME_LABELS = {
+  identitySlot: 'Identity',
+  contextSlot: 'Context',
+  logoSlot: 'Logo',
+  closingSlot: 'Progress',
+  numberSlot: 'Page no.',
+};
+
+function demoChromeItems(root) {
+  const context =
+    root.querySelector('.cp-header .cp-beat') ||
+    root.querySelector('.nu-eyebrow') ||
+    root.querySelector('[class*="eyebrow"]');
+  const footerNote = root.querySelector('.cp-footer-note');
+  const page = root.querySelector('.pagenum');
+  const progress = root.querySelector('.track');
+  return {
+    contextSlot: context,
+    logoSlot: root.querySelector('.slide-logo'),
+    closingSlot: footerNote || progress,
+    numberSlot: page,
+  };
+}
+
+function applyDemoChromeRegions(root, slide, enabled) {
+  if (!enabled) return;
+  const items = demoChromeItems(root);
+  if (!Object.values(items).some(Boolean)) return;
+  /* setChromeSlot owns the same persisted names as the Safe controller. The
+     value also makes an exported snapshot unambiguous about what was moved. */
+  slide.design = { ...(slide.design || {}), chromeLayout: 'regions' };
+  const positions = SF.chromePositions(slide.design);
+  const layer = document.createElement('div');
+  layer.className = 'demo-engine-chrome';
+  for (const slot of ['header-left', 'header-center', 'header-right', 'footer-left', 'footer-center', 'footer-right']) {
+    const region = document.createElement('div');
+    region.className = 'chrome-slot';
+    region.dataset.region = slot;
+    layer.append(region);
+  }
+  for (const [key, item] of Object.entries(items)) {
+    if (!item) continue;
+    item.dataset.chromeItem = key;
+    layer.querySelector(`[data-region="${positions[key]}"]`).append(item);
+  }
+  root.classList.add('demo-chrome-regions');
+  root.append(layer);
+}
+
+function paintDemoChromeMap(slide, root, enabled) {
+  chromeMapEl.hidden = !enabled;
+  section.classList.toggle('demo-chrome-on', enabled);
+  if (!enabled) {
+    delete chromeMapEl.dataset.pending;
+    return;
+  }
+  const positions = SF.chromePositions(slide.design || {});
+  const bySlot = {};
+  for (const [key, slot] of Object.entries(positions)) {
+    if (root.querySelector(`[data-chrome-item="${key}"]`)) bySlot[slot] = key;
+  }
+  for (const band of ['header', 'footer']) {
+    const cells = chromeMapEl.querySelector(`[data-band-cells="${band}"]`);
+    cells.replaceChildren();
+    for (const side of ['left', 'center', 'right']) {
+      const slot = `${band}-${side}`;
+      const key = bySlot[slot];
+      const cell = document.createElement('button');
+      cell.type = 'button';
+      cell.className = 'demo-chrome-cell' + (key ? ' is-filled' : '');
+      if (chromeMapEl.dataset.pending === key) cell.classList.add('is-pending');
+      cell.dataset.snapSlot = slot;
+      cell.textContent = key ? DEMO_CHROME_LABELS[key] : '·';
+      cell.title = key
+        ? `${DEMO_CHROME_LABELS[key]} · click another position to move here (swap if occupied)`
+        : `Empty ${band} ${side}`;
+      cell.onclick = () => {
+        if (!key && !chromeMapEl.dataset.pending) return;
+        if (!chromeMapEl.dataset.pending) {
+          chromeMapEl.dataset.pending = key;
+          paintDemoChromeMap(slide, root, enabled);
+          return;
+        }
+        const from = chromeMapEl.dataset.pending;
+        delete chromeMapEl.dataset.pending;
+        if (from && SF.setChromeSlot(slide, from, slot)) render();
+        else paintDemoChromeMap(slide, root, enabled);
+      };
+      cells.append(cell);
+    }
+  }
 }
 
 /* Would this swap fit?
@@ -1321,15 +1598,17 @@ function editable(root, slide, measure) {
 
 async function render() {
   const run = ++revision;
-  /* A pending swap belongs to the slots currently on screen. Navigating or
-     re-rendering must never apply it to a replacement slide. */
-  clearContentSwap();
+  /* A picker outlives the render that replaced its slot otherwise, and it closes
+     over the slide it was opened on — so navigating with it open would apply the
+     next choice to the previous slide. */
+  closeFeaturePicker();
   const slide = deck.slides[index];
   const original = $('#demo-original').checked;
   const root = SF.renderSlide(deck, slide, { index, total: deck.slides.length, revealed: 99 });
   const used = [];
   const isBleed = bleedTypes.has(slide.type);
   const artwork = !original && flipMode === 'artwork';
+  const chromeController = !original && !artwork;
 
   if (!original) {
     root.classList.add('safe-slotted', 'demo-slotted');
@@ -1337,6 +1616,8 @@ async function render() {
     root.classList.toggle('demo-flip-art', artwork);
     used.push(...slotify(root, slide));
   }
+
+  applyDemoChromeRegions(root, slide, chromeController);
 
   /* Restore art poses in both modes so flips keep placement. */
   if (slide.mockArt) {
@@ -1349,6 +1630,7 @@ async function render() {
 
   stage.replaceChildren(root);
   fit();
+  paintDemoChromeMap(slide, root, chromeController);
   if (!artwork) stackEl.hidden = true;
   status.textContent = 'Measuring…';
   recipeEl.textContent = original
@@ -1366,15 +1648,28 @@ async function render() {
   await new Promise(requestAnimationFrame);
   await new Promise(requestAnimationFrame);
   if (run !== revision) return { failed: ['stale'] };
+  if (!original && !artwork && normalizeTitleRows(root, slide)) return render();
+  paintChromeBands(root);
 
   function measure() {
     if (original) {
       status.dataset.fits = 'original';
       status.textContent = 'Original design for comparison.';
+      const chrome = measureChromeBands(root);
+      chromeMeasureEl.textContent = chrome
+        ? `Measured original-design reserves · header ${chrome.header}px · body ${chrome.body}px · footer ${chrome.footer}px`
+        : 'Chrome measurement unavailable: the slide has no measurable frame.';
       return { failed: [] };
     }
-    if (artwork) return { failed: [] };
+    if (artwork) {
+      chromeMeasureEl.textContent = 'Chrome measurement is paused while editing artwork.';
+      return { failed: [] };
+    }
     const failed = [];
+    const chrome = measureChromeBands(root);
+    chromeMeasureEl.textContent = chrome
+      ? `Measured chrome reserves · header ${chrome.header}px · body ${chrome.body}px · footer ${chrome.footer}px`
+      : 'Chrome measurement unavailable: this slide has no declared body frame.';
     /* A slide with no slots used to report "All 0 slots fit": measure() loops over
        the boxes, and zero boxes means zero failures. Swapping a wordy slide to
        Image, Image stack or Video hits this — the layout renders a placeholder
@@ -1385,26 +1680,6 @@ async function render() {
     }
     const slots = measureSlots(root);
     failed.push(...slots.failed);
-
-    /* Chrome is editable on composition slides — the campaign's context line
-       renders into the header — so it has to be measured too. Without this a
-       long header grows down into the first slot while every slot still reports
-       as fitting. Ported from Safe, which is where that was found. */
-    const grid = root.querySelector('.safe-body');
-    if (grid) {
-      const g = grid.getBoundingClientRect();
-      const frame = root.getBoundingClientRect();
-      for (const node of root.querySelectorAll('[contenteditable]')) {
-        if (node.closest('.safe-slot')) continue;
-        const r = node.getBoundingClientRect();
-        const band = r.top < g.top
-          ? { name: 'Header band', top: frame.top, bottom: g.top }
-          : { name: 'Footer band', top: g.bottom, bottom: frame.bottom };
-        const spills = r.bottom > band.bottom + 1 || r.top < band.top - 1;
-        node.classList.toggle('safe-overflow', spills);
-        if (spills && !failed.includes(band.name)) failed.push(band.name);
-      }
-    }
 
     /* A block narrower than its readable minimum is a failure of the same kind as
        an overflow, and nothing else catches it: vector blocks shrink silently. */
@@ -1433,9 +1708,10 @@ async function render() {
       ? ` · smallest text ${Math.round(smallest)}px in .${smallestIn} (under the ${SF.LEGIBLE_FLOOR}px floor)`
       : '';
     const bleedNote = isBleed ? ' · BLEED candidate' : '';
+    const action = lastMove ? lastMove + ' · ' : '';
     status.textContent = failed.length
-      ? `Needs more space: ${failed.join(', ')}. Text is not auto-shrunk.${bleedNote}`
-      : `${lastMove ? lastMove + ' · ' : ''}Slide ${index + 1} / ${deck.slides.length} · ${slide.type} · All ${used.length} slots fit · 16×12${bleedNote}${tiny}`;
+      ? `${action}Needs more space: ${failed.join(', ')}. Text is not auto-shrunk.${bleedNote}`
+      : `${action}Slide ${index + 1} / ${deck.slides.length} · ${slide.type} · All ${used.length} slots fit · 16×12${bleedNote}${tiny}`;
     lastMove = '';
     return { failed, smallest };
   }
@@ -1450,14 +1726,6 @@ async function render() {
   }
 
   editable(root, slide, measure);
-  /* The ✥ handles for moving identity, context, logo, closing and page number
-     between header and footer slots. Production owns the behaviour; this only
-     binds it, and only when the renderer decided the slide qualifies — which is
-     why the two campaign support slides show no handles and the bank shows none
-     at all. */
-  if (root.classList.contains('chrome-regions')) {
-    SF.bindCanvasRegions(root, slide, () => render());
-  }
   const body = root.querySelector('.safe-body');
   if (body) bindSlotDrag(root, slide, body);
   const result = measure();
@@ -1468,6 +1736,7 @@ async function render() {
 }
 
 function show(i) {
+  contentSwapArmed = null;
   const seq = filteredIndexes();
   index = seq.includes(i) ? i : seq[0] ?? 0;
   options();
@@ -1544,42 +1813,9 @@ async function auditAll() {
   return rows;
 }
 
-/* Named chrome is a production capability, not a lab one: setting the flag is
-   all the lab does, and SF.supportsChromeRegions decides whether it takes. On
-   the campaign deck 7 of 9 slides qualify — the two support slides are plain
-   types with no composition — and on the bank, none of the 97 are. */
-function loadDeck(key) {
-  LESSON = key;
-  baseline = SF.buildLesson(key);
-  deck = structuredClone(baseline);
-  for (const slide of deck.slides) {
-    if (!slide.design) slide.design = {};
-    slide.design = { ...slide.design, chromeLayout: 'regions' };
-  }
-  deck.showSlideNumbers = true;
-  index = 0;
-  flipMode = 'content';
-  syncFlipButton();
-  fillFilter();
-  options();
-  show(0);
-}
-
-function deckOptions() {
-  const select = $('#demo-deck-pick');
-  select.replaceChildren();
-  for (const entry of DECKS) {
-    const option = document.createElement('option');
-    option.value = entry.key;
-    option.textContent = entry.label;
-    select.append(option);
-  }
-  select.value = LESSON;
-}
-
-deckOptions();
-$('#demo-deck-pick').onchange = (e) => loadDeck(e.target.value);
-loadDeck(LESSON);
+fillFilter();
+options();
+show(0);
 
 $('#demo-slide').onchange = (e) => show(Number(e.target.value));
 $('#demo-filter').onchange = () => {
@@ -1599,9 +1835,21 @@ $('#demo-original').onchange = () => {
   render();
 };
 $('#demo-grid').onchange = render;
+$('#demo-content-mode').onclick = () => {
+  if ($('#demo-original').checked) $('#demo-original').checked = false;
+  flipMode = 'content';
+  syncFlipButton();
+  render();
+};
+$('#demo-layout-picker').onclick = (e) => {
+  if ($('#demo-original').checked) $('#demo-original').checked = false;
+  flipMode = 'content';
+  syncFlipButton();
+  openFeaturePicker(e.currentTarget, deck.slides[index], '');
+};
 $('#demo-flip').onclick = () => {
   if ($('#demo-original').checked) $('#demo-original').checked = false;
-  flipMode = flipMode === 'artwork' ? 'content' : 'artwork';
+  flipMode = 'artwork';
   syncFlipButton();
   render();
 };
@@ -1680,10 +1928,10 @@ new ResizeObserver(fit).observe(stage);
 
 section.addEventListener('keydown', (e) => {
   if (e.target.closest('[contenteditable]')) return;
-  if (e.key === 'Escape' && armedSlot) {
+  if (e.key === 'Escape' && featurePicker) {
     e.preventDefault();
-    clearContentSwap();
-    status.textContent = 'Content swap cancelled.';
+    closeFeaturePicker();
+    status.textContent = 'Swap cancelled.';
     return;
   }
   if (e.key === 'ArrowRight') {
