@@ -43,7 +43,6 @@
     "typecheck:probe": "node tools/type-probe.mjs",
     "smoke:fit-check": "node tools/smoke-fit-check.mjs",
     "smoke:demo-deck": "node tools/smoke-demo-deck.mjs",
-    "smoke:body-region": "node tools/smoke-body-region.mjs",
     "audit:stacks": "node tools/stack-audit.mjs",
     "smoke:layout-fit": "node tools/smoke-layout-fit.mjs"
   },

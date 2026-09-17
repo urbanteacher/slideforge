@@ -71,9 +71,13 @@ for the separate legibility verdict. The thumbnail is scaled and
 `getBoundingClientRect` is post-transform, so the tolerance scales with it: a
 flat 1px would allow roughly eight slide pixels through at thumbnail size.
 
-`modular-canvas/safe-deck.js` and `demo-deck.js` call it once per slot with the
-slot as its own frame, and pass their own list of blocks that paint on their rim.
-Sharing it is what stopped those two engines diverging.
+`modular-canvas/demo-deck.js` calls it once per Engine 3 slot with the slot as
+its own frame, but only for the legibility verdict. Engine 3 counts fit in lines
+of its own lattice instead: a display face paints an inline box half a leading
+taller than its element box, and `escapes` reads a bottom overhang as an overflow
+while ignoring an identical one at the top, so the same block passed or failed on
+where it sat in its slot. That asymmetry is right for a whole slide, which has no
+line below it to spill into, and wrong for one slot in a stack.
 
 ## What is deliberately not in here
 
