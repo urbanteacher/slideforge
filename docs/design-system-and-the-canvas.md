@@ -1067,6 +1067,53 @@ at 720px and are a weaker signal. And the fit checker reports **0 failures**
 today, which is a statement about slide boundaries, not about spans — it
 becomes the span guardrail only once a pitch exists to measure against.
 
+### The same test on NUL, and why it lands the same way
+
+`node tools/smoke-nul-row-middle.mjs --lesson layout-bank` measures the 97
+slides of the layout bank against a header / middle / footer band model.
+
+| Metric | Result |
+| --- | --- |
+| Fully snapped (every edge ≤6px) | **0 / 97** |
+| Mean / worst middle error | 9.9 / 18px |
+| Full-bleed slides that ignore the chrome bands | 9 / 97 |
+| Slides with media in the middle | 32 (21 of them charts) |
+| Fit-check failures | 0 |
+
+**Read against chance, 9.9px is nothing.** Random placement over that geometry
+gives 9.14px, so the layout bank sits at **1.08× chance** — marginally worse
+than random. Exactly the same answer as the campaign, by the same
+null-model correction, and the second time the raw millimetres have looked
+more encouraging than they are.
+
+**The band model as proposed cannot be built.** Header 37 + middle 646 +
+footer 37 does total 720, but 646/37 = **17.46 rows**. There is no such thing
+as 17.46 rows. Several clean decompositions of 720 do exist — `40 + 16×40 +
+40`, `27 + 18×37 + 27`, `64 + 16×37 + 64` — but inventing one for the generic
+layouts is the wrong instinct, because:
+
+**the campaign already has a working decomposition.** `40 header + 592 body +
+32 footer + 56 pad = 720`, and **592 = 16 × 37 exactly**. The campaign's body
+is already sixteen whole rows. What NUL lacks is not a pitch, it is a *body
+region* — it has no `.cp-body` equivalent at all, which is why its figures had
+to be taken against the full 720px stage and were never comparable.
+
+So the honest sequence for the generic layouts is: give them the campaign's
+chrome-and-body decomposition first, then one pitch serves both families and
+the measurement becomes apples-to-apples. Not a second geometry.
+
+### The finding that actually sets the scope
+
+Chrome is easy. The middle is **thirty-odd different recipes**, and a row
+model does not reduce that number — each recipe still needs its own span map
+authored. Charts alone are 20 of the 97 slides, all heading-plus-plot, none
+of them on a lattice.
+
+And the 9 full-bleed slides are not failures. Image, split and video
+deliberately claim the whole stage and ignore the chrome bands. A row model
+therefore needs an explicit **full-bleed escape** as a first-class state,
+rather than treating those slides as things to be corrected.
+
 ### The order that follows
 
 1. **Choose the pitch, then make the campaign land on it.** AiAd27 is already
