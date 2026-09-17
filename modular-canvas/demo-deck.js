@@ -208,6 +208,7 @@ const section = document.createElement('section');
 section.id = 'demo-deck';
 section.innerHTML = `
   <h2>Demo · layout bank (97)</h2>
+  <p class="lab-role is-current">Start here. Every current control lives in this engine: drag to reorder, swap the feature, format text, audit all 97.</p>
   <p>
     Same slot engine as Safe, applied to every NUL layout-bank slide.
     Use this to see which types fit the 16×12 lattice and which need a new recipe or BLEED rule — before changing production styles.
@@ -225,7 +226,7 @@ section.innerHTML = `
     <label><input type="checkbox" id="demo-grid" checked> Show slots</label>
     <button type="button" id="demo-flip" aria-pressed="false">Flip · artwork</button>
     <button type="button" id="demo-audit">Audit all 97</button>
-    <button type="button" id="demo-download">Download mock JSON</button>
+    <button type="button" id="demo-download">Download snapshot</button>
     <button type="button" id="demo-reset">Reset this slide</button>
   </div>
   <div class="demo-workspace">

@@ -18,7 +18,7 @@ when content outgrows a span. Production northeastern CSS is not modified.
   editing. Poses live on `slide.mockArt` (`plane`, `hidden`, `locked`, `order`, `x`, `y`).
   This is not the reverted always-on Layers panel — the stack only appears on the art face.
 - Edit text on the canvas. **⠿** moves a slot; **⇄** opens the feature picker.
-  **Reset this slide** / **Download mock JSON**.
+  **Reset this slide** / **Download snapshot**.
 
 ## Latest audit (lab)
 

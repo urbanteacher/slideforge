@@ -2,7 +2,9 @@
  * replaces only this preview's body. Never writes a deck or production CSS. */
 const SF=window.SF;
 const section=document.createElement('section');section.id='playground';
-section.innerHTML=`<h2>Build with slots</h2><p>Experimental preview. Pick what belongs on the slide; its box comes with it. Nothing is saved to your decks. <a href="#safe-deck">Try the complete Safe deck ↓</a></p>
+section.innerHTML=`<h2>Build with slots</h2>
+<p class="lab-role">Scratchpad: type any words, switch theme, see them land on the lattice. Oldest engine — it tests the frame, not the controls.</p>
+<p>Experimental preview. Pick what belongs on the slide; its box comes with it. Nothing is saved to your decks. <a href="#safe-deck">Try the complete Safe deck ↓</a></p>
 <div class="slot-controls">
 <label>Theme <select id="slot-theme"><option value="northeastern">NUL</option><option value="ukbt">UK Black Tech</option><option value="studio">Studio</option><option value="aiad27-safe">AIAD Safe</option></select></label>
 <label>Arrangement <select id="slot-layout"><option value="split">Text + image</option><option value="cards">Four cards</option><option value="quote">Quote + context</option></select></label>

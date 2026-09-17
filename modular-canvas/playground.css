@@ -499,3 +499,7 @@
 .demo-feature-close { margin-top:10px; width:100%; padding:6px 8px; font:13px/1.2 system-ui; border:1px solid #c8d2c2; border-radius:8px; background:#fbfdfa; cursor:pointer; }
 .demo-feature-close:hover { border-color:#0c3354; background:#fff3db; }
 @media (max-width:900px) { .demo-feature-panel { position:static; max-height:none; } }
+/* Which engine to use, said once per section rather than inferred from the docs. */
+.lab-role { margin:2px 0 10px; font:13px/1.5 system-ui; color:#53604f; }
+.lab-role.is-current { color:#14543e; font-weight:600; }
+.lab-role.is-behind { color:#8a5a12; }
