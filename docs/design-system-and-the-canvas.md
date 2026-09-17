@@ -1483,11 +1483,106 @@ Studio (`studio`, currently labelled “Studio · Sage & ink”) share this capa
 when using supported compositions, as do UKBT and the AIAD themes. There is no
 separate theme key named Studio Hue in the current manifest.
 
-Validation extends the region coverage to 126 AIAD/UKBT/NUL/Studio slide-and-aspect
-checks. Browser interaction checks drag on the scaled canvas, swap an occupied
+The initial compatibility test rendered 126 campaign fixtures with substituted
+themes and injected compositions. It did not measure existing Library coverage;
+see the correction below. Browser interaction checks drag on the scaled canvas, swap an occupied
 slot, Undo the move, choose a slot by keyboard, restore focus, cancel with Escape
 and an outside drop, and verify clean shared rendering. The active snap-target
 view was visually inspected.
+
+### 2026-09-17 — coverage correction and split-body canvas
+
+The previous cross-theme region test manufactured its precondition by applying
+campaign compositions to re-themed campaign decks. It has been replaced with
+an unmodified census of all 31 Library decks. Current capability is 35/45 for
+AIAD27, 0/252 for NUL, 0/70 for UKBT (including its Institute variant), and 0/39
+for Studio. Other existing Library decks also have no region-capable slides.
+The test now measures exactly 70 enabled campaign slide/aspect cases, and
+asserts that the unconverted libraries remain reported as unsupported. Choosing
+a structured composition manually can enable regions, but this is a design
+change, not a capability already present in those decks.
+
+The next canvas increment deliberately extends the **existing Text + image
+(`split`) layout**. It does not migrate a theme or add a campaign composition.
+AIAD27 has no split default; creating a split slide on that theme still uses the
+legacy renderer, without the campaign's structured header and closing rule.
+No composition defaults or campaign starter data were changed. The new
+`campaign-builders` guard for the duplicated composition maps is retained;
+consolidating those maps remains separate work.
+
+On split slides, move handles place either text or image left/right/above/below.
+The divider snaps the image share to 35/50/65 percent, using the same values as
+Look. A drag previews the DOM and commits once on release; Escape, lost pointer
+capture and a release outside the slide restore the preview. Keyboard placement
+and resizing use the same setters. Click text to select its field, then use
+Edit text; Edit image opens a cancellable source/upload/fit dialog. These are
+editor-only tools. Existing content, themes and export layout continue through
+the shared renderer; the Edit panel remains available.
+
+The divider's commit function has a distinct name from the placement callback,
+and the placement callback is block-scoped. A regression drives both a pointer
+resize to 35 percent and keyboard resize to 65 percent, checking the saved deck,
+not merely the transient preview. Split fit checks use 120 synthetic short-copy
+fixtures across five themes, two aspect ratios, four placements and three image
+shares. Those checks demonstrate layout behaviour, not Library migration or a
+guarantee that arbitrary long text fits. Gesture checks also cover Undo, cancel,
+text/image editing and shared rendering without editor tools.
+
+### 2026-09-17 — card arrangement and editing on the canvas
+
+Card rendering now identifies each card by its original bullet index in both
+the standard renderer and the campaign ballot composition. This is metadata
+only; default themes, compositions and slide data remain unchanged. The editor
+adds Edit/Move handles and an Arrange cards list. The list makes every rendered
+card reachable even in a stack. It omits blank standard-card placeholders using
+the renderer's own indices rather than guessing indices from DOM order.
+
+Drag Move onto a card or a labelled destination to move into that position;
+click Move to select a destination with keyboard-accessible buttons. Escape or
+a drop outside the destinations cancels. Editing uses the full underlying card
+line, including structured title/detail content. The existing ContentTools.move
+operation retains picture ownership and per-card formatting, and the editor's
+normal history/save path handles Undo. Campaign letters follow the new display
+order. The feature does not rewrite notes that refer to an old letter or position.
+
+The split and card tools now share the pointer lifecycle helper: preview starts
+after the movement threshold, pointer capture keeps a drag coherent, and cancel
+never commits a data change. Shared slide rendering includes no editor controls.
+
+Validation uses all **39 actual Library card slides**, without changing their
+themes or composition selection, to verify index mapping and unchanged data.
+A real campaign ballot exercises drag, keyboard cancellation and Undo; separate
+sparse picture-card fixtures verify that images and formatting move with cards.
+The stacked-card list supports moving and editing covered cards. A screenshot
+of that list was inspected. These tests establish card support; they do not
+extend header/footer region capability to unconverted Library decks.
+
+### 2026-09-17 — editable decorative artwork layers
+
+Layers is now available from the editing canvas, independently of composition
+selection. User-created images, rectangles and circles are typed `slide.artwork`
+objects. They have back/front content groups, within-group ordering, visibility,
+locking, percentage position/size, opacity, rotation and image-fit controls.
+Uploaded images are decoded before saving. Selected unlocked artwork can be
+dragged; numeric position controls provide a keyboard alternative. Normal Undo
+and deck serialization apply. These are decorative objects, not a second model
+for text/cards/charts; the region rule for structured content remains intact.
+
+Existing theme decoration stays locked as a group, including CSS pseudo-elements.
+Its original rendering path is untouched on slides without visible user artwork.
+For artwork slides, explicit planes establish theme decoration → user background
+→ layout content → user foreground → slide chrome. Opaque layout content can
+cover background artwork by design. Theme internals are not yet individually
+editable, and content is not a reorderable artwork layer. See
+`docs/artwork-layers.md` for behaviour and limits.
+
+Validation: 435 tests pass. The layer test checks all 322 existing NUL/UKBT slides
+for unchanged data and absence of new artwork planes before adding artwork. UI
+checks exercise adding shapes/images, plane order, transforms, lock/hide, scaled
+canvas dragging, Undo, save/load, aspect-relative positioning, invalid imports,
+and shared rendering without editor controls. The UKBT Layers view was visually
+inspected after its existing entrance animation completed; initial faint text
+was animation timing, not a layer-order change.
 
 ## Appendix — how the figures were produced
 

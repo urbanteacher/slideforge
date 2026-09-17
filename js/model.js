@@ -319,6 +319,7 @@
         var choices = el("div", "cp-choices");
         (slide.bullets || []).forEach(function(line, i) {
           var p = SF.parseKeywordLine(line), card = asStep(el("div", "cp-choice"), slide);
+          card.dataset.cardIndex = String(i);
           card.appendChild(el("span", "cp-letter", LETTERS[i] || String(i + 1)));
           var copy = el("div", "cp-choice-copy");
           copy.appendChild(bullet("h3", "", i, p.term));
@@ -3964,6 +3965,684 @@
   function correctAnswerLabel(slide) {
     if (slide.input === "text" || slide.input === "number") return String(slide.answer || "");
     return ("ABCDEF"[slide.correct] || "?") + " — " + ((slide.options || [])[slide.correct] || "");
+  }
+
+  // src/render/canvas-split.js
+  var SHARES = [35, 50, 65];
+  var opposite = { left: "right", right: "left", top: "bottom", bottom: "top" };
+  var snap = (value) => SHARES.reduce((best, n) => Math.abs(n - value) < Math.abs(best - value) ? n : best, 50);
+  function bindCanvasDrag(handle, { begin, move, end, cancel, click }) {
+    let origin = null, started = false, suppress = false;
+    function abort() {
+      if (origin) {
+        suppress = started;
+        origin = null;
+        started = false;
+        cancel();
+      }
+    }
+    handle.onpointerdown = (e) => {
+      if (e.button !== 0) return;
+      e.stopPropagation();
+      handle.focus();
+      suppress = false;
+      origin = { x: e.clientX, y: e.clientY };
+      handle.setPointerCapture(e.pointerId);
+    };
+    handle.onpointermove = (e) => {
+      if (!origin) return;
+      if (!started && Math.hypot(e.clientX - origin.x, e.clientY - origin.y) > 5) {
+        started = true;
+        begin();
+      }
+      if (started) move(e);
+    };
+    handle.onpointerup = (e) => {
+      if (!origin) return;
+      origin = null;
+      if (started) {
+        started = false;
+        suppress = true;
+        end(e);
+      }
+    };
+    handle.onpointercancel = abort;
+    handle.onlostpointercapture = abort;
+    handle.onclick = (e) => {
+      e.stopPropagation();
+      if (suppress) {
+        suppress = false;
+        return;
+      }
+      if (click) click();
+    };
+    handle.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        e.preventDefault();
+        abort();
+      }
+    });
+  }
+  function bindCanvasSplit(root, slide, actions) {
+    if (slide.type !== "split") return;
+    const pad = root.querySelector(".split-pad"), media = root.querySelector(".split-media"), copy = root.querySelector(".split-copy");
+    if (!pad || !media || !copy) return;
+    root.classList.add("canvas-split");
+    let chooser = null;
+    function close() {
+      chooser?.remove();
+      chooser = null;
+    }
+    function button(parent, label, id) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = label;
+      b.dataset.splitTool = id;
+      b.setAttribute("aria-label", label);
+      parent.appendChild(b);
+      return b;
+    }
+    function tools(parent) {
+      const bar = document.createElement("div");
+      bar.className = "canvas-split-tools";
+      parent.appendChild(bar);
+      return bar;
+    }
+    const mediaTools = tools(media), copyTools = tools(copy);
+    let selected = slide.title ? "title" : slide.bullets?.length ? "bullets.0" : "title";
+    const edit = button(copyTools, "Edit text", "edit-text");
+    edit.onclick = (e) => {
+      e.stopPropagation();
+      close();
+      actions.edit(selected);
+    };
+    copy.querySelectorAll("[data-content-key]").forEach((field) => field.addEventListener("click", (e) => {
+      e.stopPropagation();
+      selected = field.dataset.contentKey;
+      copy.querySelectorAll(".canvas-field-selected").forEach((n) => n.classList.remove("canvas-field-selected"));
+      field.classList.add("canvas-field-selected");
+      edit.textContent = selected === "title" ? "Edit heading" : "Edit point";
+    }));
+    const image = button(mediaTools, "Edit image", "edit-image");
+    image.onclick = (e) => {
+      e.stopPropagation();
+      close();
+      actions.image();
+    };
+    for (const [kind, bar] of [["image", mediaTools], ["text", copyTools]]) {
+      let show2 = function(keyboard) {
+        close();
+        chooser = document.createElement("div");
+        chooser.className = "canvas-split-targets";
+        chooser.setAttribute("role", "group");
+        chooser.setAttribute("aria-label", "Place " + kind);
+        const positions = ["left", "top", "right", "bottom"];
+        positions.forEach((slot, i) => {
+          const target = button(chooser, "Place " + kind + " " + ({ top: "above", bottom: "below" }[slot] || slot), "target-" + slot);
+          target.dataset.splitTarget = slot;
+          target.onclick = (e) => {
+            e.stopPropagation();
+            commitPlacement(slot);
+          };
+          target.onkeydown = (e) => {
+            if (e.metaKey || e.ctrlKey) return;
+            e.stopPropagation();
+            if (e.key === "Escape") {
+              e.preventDefault();
+              close();
+              handle.focus();
+            }
+            const delta = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -1, ArrowDown: 1 }[e.key];
+            if (delta) {
+              e.preventDefault();
+              chooser.querySelectorAll("button")[(i + delta + 4) % 4].focus();
+            }
+          };
+        });
+        const hint = document.createElement("span");
+        hint.className = "split-target-hint";
+        hint.textContent = "Move " + kind + " · Esc cancels";
+        chooser.appendChild(hint);
+        root.appendChild(chooser);
+        if (keyboard) chooser.querySelector("button")?.focus();
+      }, hit2 = function(e) {
+        const target = document.elementFromPoint(e.clientX, e.clientY)?.closest("[data-split-target]");
+        return target && chooser?.contains(target) ? target : null;
+      };
+      var show = show2, hit = hit2;
+      const handle = button(bar, "Move " + kind, "move-" + kind);
+      handle.style.touchAction = "none";
+      handle.title = "Drag to a region or click to choose";
+      const commitPlacement = (slot) => {
+        if (!Object.hasOwn(opposite, slot)) return;
+        const placement2 = kind === "image" ? slot : opposite[slot];
+        close();
+        if (placement2 !== imagePlacement(slide)) {
+          setImagePlacement(slide, placement2);
+          actions.change("move-" + kind);
+        } else handle.focus();
+      };
+      bindCanvasDrag(handle, { begin: () => show2(false), move: (e) => {
+        const target = hit2(e);
+        chooser.querySelectorAll("button").forEach((b) => b.classList.toggle("snap-active", b === target));
+      }, end: (e) => {
+        const target = hit2(e);
+        if (target) commitPlacement(target.getAttribute("data-split-target"));
+        else {
+          close();
+          handle.focus();
+        }
+      }, cancel: () => {
+        close();
+        handle.focus();
+      }, click: () => show2(true) });
+    }
+    const divider = document.createElement("div");
+    divider.className = "canvas-split-divider";
+    divider.tabIndex = 0;
+    divider.setAttribute("role", "slider");
+    divider.setAttribute("aria-label", "Image share");
+    divider.setAttribute("aria-valuemin", "35");
+    divider.setAttribute("aria-valuemax", "65");
+    divider.dataset.splitTool = "resize";
+    pad.appendChild(divider);
+    const placement = imagePlacement(slide), vertical = ["top", "bottom"].includes(placement), first = ["left", "top"].includes(placement);
+    divider.classList.toggle("horizontal", vertical);
+    divider.setAttribute("aria-orientation", vertical ? "vertical" : "horizontal");
+    let original = SHARES.includes(slide.design?.imageShare) ? slide.design.imageShare : 50, pending = original;
+    function paint(value) {
+      const edge = first ? value : 100 - value;
+      divider.style[vertical ? "top" : "left"] = edge + "%";
+      divider.setAttribute("aria-valuenow", String(value));
+      divider.setAttribute("aria-valuetext", value + " percent image");
+      divider.textContent = value + "%";
+    }
+    function reset() {
+      media.style.flex = "0 0 " + original + "%";
+      pending = original;
+      paint(original);
+      root.classList.remove("resizing-split");
+    }
+    function commitShare() {
+      root.classList.remove("resizing-split");
+      if (pending !== original) {
+        slide.design = slide.design || {};
+        slide.design.imageShare = pending;
+        actions.change("resize");
+      } else reset();
+    }
+    paint(original);
+    bindCanvasDrag(divider, { begin: () => {
+      close();
+      root.classList.add("resizing-split");
+    }, move: (e) => {
+      const rect = pad.getBoundingClientRect(), fraction = vertical ? (e.clientY - rect.top) / rect.height : (e.clientX - rect.left) / rect.width;
+      pending = snap((first ? fraction : 1 - fraction) * 100);
+      media.style.flex = "0 0 " + pending + "%";
+      paint(pending);
+    }, end: (e) => {
+      const r = pad.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) reset();
+      else commitShare();
+    }, cancel: reset, click: null });
+    divider.addEventListener("keydown", (e) => {
+      if (e.metaKey || e.ctrlKey) return;
+      e.stopPropagation();
+      const delta = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1 }[e.key];
+      if (delta || e.key === "Home" || e.key === "End") {
+        e.preventDefault();
+        pending = e.key === "Home" ? 35 : e.key === "End" ? 65 : SHARES[Math.max(0, Math.min(2, SHARES.indexOf(original) + delta))];
+        commitShare();
+      }
+    });
+  }
+
+  // src/render/canvas-cards.js
+  function bindCanvasCards(root, slide, actions) {
+    if (slide.type !== "cards") return;
+    const cards = [...root.querySelectorAll("[data-card-index]")];
+    if (!cards.length) return;
+    root.classList.add("canvas-cards");
+    let panel = null;
+    const label = (index) => String(slide.bullets[index] || "Empty card").replace(/\t/g, " — ").slice(0, 70);
+    function button(parent, text2) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = text2;
+      parent.appendChild(b);
+      return b;
+    }
+    function close() {
+      panel?.remove();
+      panel = null;
+      cards.forEach((c) => c.classList.remove("card-drop-target", "card-drop-active"));
+    }
+    function panelFor(title, onCancel) {
+      close();
+      panel = document.createElement("div");
+      panel.className = "canvas-card-panel";
+      panel.setAttribute("role", "group");
+      panel.setAttribute("aria-label", title);
+      const heading = document.createElement("strong");
+      heading.textContent = title;
+      panel.appendChild(heading);
+      const cancel = button(panel, "Close");
+      cancel.onclick = onCancel;
+      panel.addEventListener("keydown", (e) => {
+        if (e.metaKey || e.ctrlKey) return;
+        e.stopPropagation();
+        if (e.key === "Escape") {
+          e.preventDefault();
+          onCancel();
+        }
+      });
+      root.appendChild(panel);
+      return panel;
+    }
+    function choose(index, handle, keyboard) {
+      const p = panelFor("Move card " + (index + 1) + " to a position", () => {
+        close();
+        handle.focus();
+      });
+      cards.forEach((card) => {
+        const destination2 = Number(card.dataset.cardIndex);
+        card.classList.add("card-drop-target");
+        const target = button(p, "Position " + (destination2 + 1) + " · " + label(destination2));
+        target.dataset.cardDestination = String(destination2);
+        target.onclick = (e) => {
+          e.stopPropagation();
+          close();
+          if (index === destination2) handle.focus();
+          else actions.move(index, destination2);
+        };
+      });
+      if (keyboard) p.querySelector('[data-card-destination="' + index + '"]')?.focus();
+    }
+    function destination(e) {
+      const node = document.elementFromPoint(e.clientX, e.clientY);
+      const target = node?.closest("[data-card-destination],[data-card-index]");
+      if (!target || !root.contains(target)) return null;
+      return Number(target.getAttribute("data-card-destination") ?? target.getAttribute("data-card-index"));
+    }
+    cards.forEach((card) => {
+      const index = Number(card.dataset.cardIndex), bar = document.createElement("div");
+      bar.className = "canvas-card-tools";
+      card.appendChild(bar);
+      const edit = button(bar, "Edit");
+      edit.setAttribute("aria-label", "Edit card " + (index + 1));
+      edit.onclick = (e) => {
+        e.stopPropagation();
+        close();
+        actions.edit(index);
+      };
+      const move = button(bar, "Move");
+      move.dataset.cardMove = String(index);
+      move.setAttribute("aria-label", "Move card " + (index + 1));
+      move.title = "Drag to a card position or click to choose";
+      bindCanvasDrag(move, { begin: () => choose(index, move, false), move: (e) => {
+        const to = destination(e);
+        cards.forEach((c) => c.classList.toggle("card-drop-active", Number(c.dataset.cardIndex) === to));
+      }, end: (e) => {
+        const to = destination(e);
+        close();
+        if (to !== null && to !== index) actions.move(index, to);
+        else move.focus();
+      }, cancel: () => {
+        close();
+        move.focus();
+      }, click: () => choose(index, move, true) });
+      card.addEventListener("dblclick", (e) => {
+        if (e.target.closest("button")) return;
+        e.preventDefault();
+        e.stopPropagation();
+        close();
+        actions.edit(index);
+      });
+    });
+    const browse = button(root, "Arrange cards");
+    browse.className = "canvas-card-browse";
+    browse.onclick = () => {
+      const p = panelFor("Cards in this slide", () => {
+        close();
+        browse.focus();
+      });
+      cards.forEach((card) => {
+        const index = Number(card.dataset.cardIndex), row = document.createElement("div");
+        row.className = "canvas-card-row";
+        const name = document.createElement("span");
+        name.textContent = index + 1 + ". " + label(index);
+        row.appendChild(name);
+        const edit = button(row, "Edit");
+        edit.setAttribute("aria-label", "Edit card " + (index + 1) + " from list");
+        edit.onclick = () => {
+          close();
+          actions.edit(index);
+        };
+        const move = button(row, "Move");
+        move.setAttribute("aria-label", "Move card " + (index + 1) + " from list");
+        move.onclick = () => choose(index, browse, true);
+        p.appendChild(row);
+      });
+      p.querySelector("button")?.focus();
+    };
+  }
+
+  // src/render/artwork.js
+  var bounded2 = (value, min, max, fallback) => typeof value === "number" && Number.isFinite(value) ? Math.max(min, Math.min(max, value)) : fallback;
+  function normalizeArtwork(raw) {
+    if (!Array.isArray(raw)) return [];
+    const ids = /* @__PURE__ */ new Set();
+    return raw.slice(0, 40).filter((a) => a && ["image", "rectangle", "circle"].includes(a.kind)).map((a, i) => {
+      let id = typeof a.id === "string" && /^[a-zA-Z0-9_-]{1,80}$/.test(a.id) ? a.id : "art-" + i;
+      while (ids.has(id)) id += "-copy";
+      ids.add(id);
+      return { id, name: String(a.name || a.kind).slice(0, 100), kind: a.kind, src: safeMedia(a.src || ""), color: /^#[0-9a-f]{6}$/i.test(a.color) ? a.color : "#77bfa3", plane: a.plane === "front" ? "front" : "back", hidden: a.hidden === true, locked: a.locked === true, x: bounded2(a.x, 0, 100, 65), y: bounded2(a.y, 0, 100, 55), width: bounded2(a.width, 1, 100, 25), height: bounded2(a.height, 1, 100, 30), opacity: bounded2(a.opacity, 0, 100, 100), rotation: bounded2(a.rotation, -180, 180, 0), fit: a.fit === "cover" ? "cover" : "contain" };
+    });
+  }
+  function renderArtwork(root, slide) {
+    const items = normalizeArtwork(slide.artwork);
+    if (!items.some((a) => !a.hidden)) return;
+    root.classList.add("has-user-artwork");
+    for (const plane of ["back", "front"]) {
+      const layer = document.createElement("div");
+      layer.className = "artwork-plane artwork-" + plane;
+      layer.setAttribute("aria-hidden", "true");
+      for (const art of items.filter((a) => a.plane === plane && !a.hidden)) {
+        const node = document.createElement("div");
+        node.className = "artwork-object artwork-" + art.kind;
+        node.dataset.artworkId = art.id;
+        Object.assign(node.style, { left: art.x + "%", top: art.y + "%", width: art.width + "%", height: art.height + "%", opacity: String(art.opacity / 100), transform: "rotate(" + art.rotation + "deg)" });
+        if (art.kind === "image") {
+          if (art.src) {
+            const img = document.createElement("img");
+            img.src = art.src;
+            img.alt = "";
+            img.draggable = false;
+            img.style.objectFit = art.fit;
+            node.appendChild(img);
+          }
+        } else node.style.background = art.color;
+        layer.appendChild(node);
+      }
+      root.appendChild(layer);
+    }
+  }
+
+  // src/render/artwork-editor.js
+  function bindArtworkEditor(box2, root, slide, change) {
+    let selected = null, panel = null;
+    const launch = document.createElement("button");
+    launch.type = "button";
+    launch.className = "canvas-layers-launch";
+    launch.textContent = "Layers";
+    box2.appendChild(launch);
+    function clearSelection() {
+      root.querySelectorAll(".artwork-move").forEach((n) => n.remove());
+      root.querySelectorAll(".artwork-selected").forEach((n) => n.classList.remove("artwork-selected"));
+    }
+    function button(parent, label, fn) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = label;
+      b.onclick = fn;
+      parent.appendChild(b);
+      return b;
+    }
+    function field(parent, label, input) {
+      input.setAttribute("aria-label", label);
+      const wrap = document.createElement("label");
+      wrap.textContent = label;
+      wrap.appendChild(input);
+      parent.appendChild(wrap);
+      return input;
+    }
+    function close() {
+      clearSelection();
+      panel?.remove();
+      panel = null;
+      launch.focus();
+    }
+    function commit(items, id) {
+      const label = panel?.contains(document.activeElement) ? document.activeElement?.closest("label")?.firstChild?.textContent : null;
+      slide.artwork = normalizeArtwork(items);
+      panel?.remove();
+      panel = null;
+      clearSelection();
+      change(id, label);
+    }
+    function draw() {
+      panel?.remove();
+      clearSelection();
+      panel = document.createElement("div");
+      panel.className = "canvas-layers-panel";
+      panel.setAttribute("role", "region");
+      panel.setAttribute("aria-label", "Slide layers");
+      panel.addEventListener("keydown", (e) => {
+        if (e.metaKey || e.ctrlKey) return;
+        e.stopPropagation();
+        if (e.key === "Escape") {
+          e.preventDefault();
+          close();
+        }
+      });
+      box2.appendChild(panel);
+      const title = document.createElement("h3");
+      title.textContent = "Layers";
+      panel.appendChild(title);
+      button(panel, "Close layers", close);
+      const hint = document.createElement("p");
+      hint.textContent = "Artwork is decorative. Content stays in its layout. Top items appear in front.";
+      panel.appendChild(hint);
+      const items = normalizeArtwork(slide.artwork);
+      function list(plane2) {
+        const heading = document.createElement("h4");
+        heading.textContent = plane2 === "front" ? "In front of content" : "Behind content";
+        panel.appendChild(heading);
+        [...items].reverse().filter((a) => a.plane === plane2).forEach((a) => {
+          const row = button(panel, a.name + (a.hidden ? " · hidden" : "") + (a.locked ? " · locked" : ""), () => {
+            selected = a.id;
+            draw();
+          });
+          row.className = "layer-row";
+          row.dataset.layerId = a.id;
+          row.setAttribute("aria-pressed", String(selected === a.id));
+        });
+      }
+      list("front");
+      const content = document.createElement("p");
+      content.className = "layer-fixed";
+      content.textContent = "Slide content · managed by layout";
+      panel.appendChild(content);
+      list("back");
+      const theme = root.querySelector(".theme-art");
+      const pseudo = ["::before", "::after"].some((p) => {
+        const s = getComputedStyle(root, p);
+        return s.content !== "none" && s.content !== "normal" && s.display !== "none";
+      });
+      if (theme || pseudo) {
+        const themeButton = button(panel, "Theme artwork · locked", () => {
+          selected = "theme";
+          draw();
+          if (theme) theme.classList.add("artwork-selected");
+        });
+        themeButton.className = "layer-row";
+        themeButton.setAttribute("aria-pressed", String(selected === "theme"));
+      }
+      const add = document.createElement("div");
+      add.className = "layer-add";
+      panel.appendChild(add);
+      for (const kind of ["rectangle", "circle", "image"]) button(add, "Add " + kind, () => {
+        const id = "art-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
+        commit([...items, { id, kind, name: kind === "image" ? "New image" : "New " + kind }], id);
+      }).disabled = items.length >= 40;
+      const art = items.find((a) => a.id === selected);
+      if (!art) {
+        const info = document.createElement("p");
+        info.textContent = selected === "theme" ? "Theme artwork is protected in this release. Add your own image or shape to create editable layers." : "Select a layer to edit it.";
+        panel.appendChild(info);
+        return;
+      }
+      const node = [...root.querySelectorAll("[data-artwork-id]")].find((n) => n.dataset.artworkId === art.id);
+      node?.classList.add("artwork-selected");
+      if (node && !art.locked) {
+        const handle = document.createElement("button");
+        handle.type = "button";
+        handle.className = "artwork-move";
+        handle.textContent = "Move";
+        handle.setAttribute("aria-label", "Move artwork");
+        root.appendChild(handle);
+        const original = { x: art.x, y: art.y };
+        let origin = null, next = { ...original };
+        const paint = (point) => {
+          node.style.left = point.x + "%";
+          node.style.top = point.y + "%";
+          handle.style.left = point.x + "%";
+          handle.style.top = point.y + "%";
+        };
+        paint(original);
+        handle.addEventListener("pointerdown", (e) => {
+          origin = { x: e.clientX, y: e.clientY };
+        });
+        bindCanvasDrag(handle, { begin: () => {
+        }, move: (e) => {
+          if (!origin) return;
+          const r = root.getBoundingClientRect();
+          next = { x: Math.max(0, Math.min(100, original.x + (e.clientX - origin.x) / r.width * 100)), y: Math.max(0, Math.min(100, original.y + (e.clientY - origin.y) / r.height * 100)) };
+          paint(next);
+        }, end: () => {
+          if (next.x === original.x && next.y === original.y) return;
+          art.x = Math.round(next.x);
+          art.y = Math.round(next.y);
+          commit(items, art.id);
+        }, cancel: () => paint(original), click: null });
+      }
+      const edit = document.createElement("div");
+      edit.className = "layer-properties";
+      panel.appendChild(edit);
+      const write = (key, value) => {
+        art[key] = value;
+        commit(items, art.id);
+      };
+      const name = document.createElement("input");
+      name.value = art.name;
+      name.disabled = art.locked;
+      name.onchange = () => write("name", name.value);
+      field(edit, "Layer name", name);
+      for (const [key, label] of [["hidden", "Hidden"], ["locked", "Locked"]]) {
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = art[key];
+        input.onchange = () => write(key, input.checked);
+        field(edit, label, input);
+      }
+      const props = document.createElement("fieldset");
+      props.disabled = art.locked;
+      edit.appendChild(props);
+      const plane = document.createElement("select");
+      for (const [value, label] of [["back", "Behind content"], ["front", "In front of content"]]) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        plane.appendChild(option);
+      }
+      plane.value = art.plane;
+      plane.onchange = () => write("plane", plane.value);
+      field(props, "Layer group", plane);
+      const peers = items.filter((a) => a.plane === art.plane), index = peers.indexOf(art);
+      const reorder = (delta) => {
+        const other = peers[index + delta];
+        if (!other) return;
+        const a = items.indexOf(art), b = items.indexOf(other);
+        [items[a], items[b]] = [items[b], items[a]];
+        commit(items, art.id);
+      };
+      button(props, "Bring forward", () => reorder(1)).disabled = index === peers.length - 1;
+      button(props, "Send backward", () => reorder(-1)).disabled = index === 0;
+      for (const [key, label, min, max] of [["x", "Horizontal position (%)", 0, 100], ["y", "Vertical position (%)", 0, 100], ["width", "Width (%)", 1, 100], ["height", "Height (%)", 1, 100], ["opacity", "Opacity (%)", 0, 100], ["rotation", "Rotation (degrees)", -180, 180]]) {
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = String(min);
+        input.max = String(max);
+        input.value = String(art[key]);
+        input.onchange = () => {
+          const value = Number(input.value);
+          if (input.value !== "" && Number.isFinite(value)) write(key, Math.max(Number(min), Math.min(Number(max), value)));
+        };
+        field(props, String(label), input);
+      }
+      if (art.kind === "image") {
+        const source = document.createElement("input");
+        source.value = art.src;
+        field(props, "Image source", source);
+        source.onchange = () => {
+          const value = safeMedia(source.value);
+          if (value || !source.value.trim()) write("src", value);
+          else source.setCustomValidity("Use an image URL or asset path.");
+        };
+        const upload = document.createElement("input");
+        upload.type = "file";
+        upload.accept = "image/*";
+        field(props, "Upload image", upload);
+        const status = document.createElement("p");
+        status.setAttribute("role", "status");
+        props.appendChild(status);
+        upload.onchange = () => {
+          const file = upload.files?.[0];
+          if (!file) return;
+          if (file.size > 3.5 * 1024 * 1024) {
+            status.textContent = "Choose an image smaller than 3.5 MB.";
+            return;
+          }
+          const owner = panel, reader = new FileReader();
+          status.textContent = "Reading image…";
+          reader.onerror = () => {
+            status.textContent = "Could not read that file.";
+          };
+          reader.onload = () => {
+            const src = String(reader.result || ""), img = new Image();
+            img.onload = () => {
+              if (owner?.isConnected) write("src", src);
+            };
+            img.onerror = () => {
+              status.textContent = "Could not decode that image.";
+            };
+            img.src = src;
+          };
+          reader.readAsDataURL(file);
+        };
+        const fit = document.createElement("select");
+        for (const value of ["contain", "cover"]) {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = value === "contain" ? "Fit whole image" : "Fill and crop";
+          fit.appendChild(option);
+        }
+        fit.value = art.fit;
+        fit.onchange = () => write("fit", fit.value);
+        field(props, "Image fit", fit);
+      } else {
+        const color = document.createElement("input");
+        color.type = "color";
+        color.value = art.color;
+        color.onchange = () => write("color", color.value);
+        field(props, "Fill colour", color);
+      }
+      button(props, "Delete layer", () => commit(items.filter((a) => a.id !== art.id), null));
+    }
+    launch.onclick = () => {
+      selected = null;
+      draw();
+      panel?.querySelector("button")?.focus();
+    };
+    return { open(id, focusLabel) {
+      selected = id;
+      draw();
+      const label = [...panel?.querySelectorAll("label") || []].find((n) => n.firstChild?.textContent === focusLabel);
+      const input = label?.querySelector("input,select");
+      if (input) input.focus();
+      else panel?.querySelector("button")?.focus();
+    } };
   }
 
   // src/deck/feedback.js
@@ -9005,6 +9684,7 @@
     var base = makeSlide(isSlideType(raw && raw.type) ? raw.type : "content");
     var s = Object.assign(base, raw || {});
     s.id = s.id || uid();
+    if (raw && Object.hasOwn(raw, "artwork")) s.artwork = normalizeArtwork(raw.artwork);
     if (!SLIDE_TYPES[s.type]) s.type = "content";
     if (!Array.isArray(s.bullets)) s.bullets = [];
     var rawOptions = raw && Array.isArray(raw.options) ? raw.options : [];
@@ -9657,6 +10337,11 @@
     resolveTheme,
     createCompositionRenderer,
     bindCanvasRegions,
+    bindCanvasSplit,
+    bindCanvasCards,
+    normalizeArtwork,
+    renderArtwork,
+    bindArtworkEditor,
     CHROME_SLOTS,
     chromePositions,
     setChromeSlot,

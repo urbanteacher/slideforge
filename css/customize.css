@@ -302,3 +302,15 @@
 .slide.cp.chrome-regions .chrome-slot .pagenum { font-size:18px; white-space:nowrap; }
 .slide.cp.chrome-regions .cp-header::before { content:none; }
 .slide.cp.chrome-regions .chrome-identity { font-weight:700; padding-left:32px; background:var(--a27-icon,none) left center / 22px 22px no-repeat; overflow-wrap:anywhere; }
+
+/* Only slides with user artwork establish these explicit paint planes.
+   Existing themes without artwork keep their exact stacking behaviour. */
+.slide.has-user-artwork > .theme-art { z-index:0; }
+.slide.has-user-artwork > .pad { position:relative; z-index:2; }
+.slide.has-user-artwork > :is(.slide-logo,.pagenum,.track) { z-index:4; }
+.artwork-plane { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.artwork-back { z-index:1; }
+.artwork-front { z-index:3; }
+.artwork-object { position:absolute; pointer-events:none; transform-origin:center; }
+.artwork-circle { border-radius:50%; }
+.artwork-object img { display:block; width:100%; height:100%; }

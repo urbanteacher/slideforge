@@ -764,6 +764,7 @@
       } else {
         li = asStep(rich('li', bulletTier(line) === 2 ? 'tier-2' : null, slide, 'bullets.' + item.index, bulletText(line)), slide);
       }
+      if(slide.type==='cards')li.dataset.cardIndex=String(item.index);
       var src = pics[item.index];
       if (src || pictureCards) {
         var pic = el('div', 'card-pic' + (src ? '' : ' card-pic-empty'));
@@ -4969,6 +4970,7 @@
       root.appendChild(logo);
     }
     SF.applyChromeRegions(root, slide, deck);
+    SF.renderArtwork(root,slide);
     if (opts.chrome !== false && opts.total > 1 && opts.index != null) {
       var track = el('div', 'track');
       var i = el('i');

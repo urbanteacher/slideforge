@@ -10,24 +10,37 @@ try {
  const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto(`http://127.0.0.1:${port}`);await page.waitForFunction(()=>window.SF?.Review&&SF.Editor?.deck());
+ // Census the actual Library without changing theme, type or composition.
+ const coverage=await page.evaluate(()=>SF.LESSONS.map(({key})=>{
+   const deck=SF.buildLesson(key),before=JSON.stringify(deck);
+   const supported=deck.slides.filter(s=>SF.supportsChromeRegions(SF,deck,s)).length;
+   if(JSON.stringify(deck)!==before)throw Error('Coverage mutated '+key);
+   return {key,theme:deck.theme,total:deck.slides.length,supported};
+ }));
+ const campaign=coverage.filter(d=>d.theme.startsWith('aiad27-'));
+ assert.equal(campaign.reduce((n,d)=>n+d.supported,0),35,'actual campaign region coverage');
+ for(const theme of ['northeastern','studio','ukbt']){
+   const decks=coverage.filter(d=>d.theme===theme);assert.ok(decks.length,theme+' is represented');
+   assert.equal(decks.reduce((n,d)=>n+d.supported,0),0,theme+' Library decks have not been migrated');
+ }
+ console.log('Library region coverage: '+coverage.map(d=>d.key+' '+d.supported+'/'+d.total).join(', '));
  const results=await page.evaluate(async()=>{
   const checks=[];
-  for(const theme of ['aiad27-safe','aiad27-smart','aiad27-creative','aiad27-responsible','aiad27-future','ukbt','ukbt-institute','northeastern','studio']){
-   const d=SF.buildLesson(theme.startsWith('aiad27-')?theme:'aiad27-safe');d.theme=theme;
+  for(const theme of ['aiad27-safe','aiad27-smart','aiad27-creative','aiad27-responsible','aiad27-future']){
+   const d=SF.buildLesson(theme);
    for(const aspect of ['16:9','4:3']) {
     d.aspect=aspect;
     for(let i=0;i<d.slides.length;i++) {
      const s=d.slides[i];
-     // Supply the campaign compositions explicitly to test UKBT on the same structure.
-     s.design={...s.design,composition:SF.THEMES['aiad27-safe'].defaults[s.type],chromeLayout:'regions'};
      if(!SF.supportsChromeRegions(SF,d,s))continue;
+     s.design={...s.design,chromeLayout:'regions'};
      checks.push({theme,aspect,index:i,...await SF.Review.check(d,s,i)});
     }
    }
   }
   return checks;
  });
- assert.ok(results.length>=70);assert.deepEqual(results.filter(r=>!r.fits),[],'region campaign and UKBT slides fit');
+ assert.equal(results.length,70);assert.deepEqual(results.filter(r=>!r.fits),[],'existing region-capable campaign slides fit');
  await page.evaluate(()=>{
   const d=SF.buildLesson('aiad27-safe');d.slides=[d.slides[2]];d.slides[0].design={...d.slides[0].design,chromeLayout:'regions'};
   SF.Store.save(d);SF.Editor.openDeck(d.id);
@@ -115,5 +128,5 @@ try {
  });
  assert.deepEqual(safeguards,{logos:0,numbers:0,unsupported:false,unique:5,unchanged:true});
  assert.deepEqual(errors,[]);
- console.log(`Named regions passed: ${results.length} AIAD/UKBT/NUL/Studio aspect checks, slot swaps, persistence, visibility and legacy fallback.`);
+ console.log(`Named regions passed: ${results.length} existing campaign aspect checks, slot swaps, persistence, visibility and legacy fallback.`);
 }finally{await browser.close();await harness.stop(relay);fs.rmSync(dir,{recursive:true,force:true});}

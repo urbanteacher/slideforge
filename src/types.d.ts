@@ -177,7 +177,13 @@ export interface DesignControl {
   description: string;
 }
 
+export interface ArtworkLayer {
+  id:string; name:string; kind:'image'|'rectangle'|'circle'; src:string; color:string;
+  plane:'back'|'front'; hidden:boolean; locked:boolean;
+  x:number; y:number; width:number; height:number; opacity:number; rotation:number; fit:'contain'|'cover';
+}
 export interface Slide {
+  artwork?: ArtworkLayer[];
   design?: SlideDesign;
   /** The {@link Activity} key this slide was built from, when it was chosen
    *  in the activities studio. Only that studio reads these four — to
