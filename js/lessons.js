@@ -1205,6 +1205,562 @@
       ]
     },
     {
+      key: 'ipdv-vc',
+      title: 'LDSCI6253 Week 2 · Visual Communication',
+      icon: '👁',
+      blurb: 'Week 2: what visual communication is, Tufte on graphical integrity and the lie factor, rules of thumb, data and attribute types, marks and channels, the Cleveland–McGill ranking, colour, luminance and accessibility.',
+      minutes: 90,
+      theme: 'northeastern',
+      libraryGroup: 'nul',
+      kind: 'lecture',
+      org: 'Northeastern University London',
+      logo: 'assets/brand/nu-london-logo.png',
+      logoOn: 'all',
+      logoSize: 'small',
+      games: [
+        {
+          ref: 'check-integrity',
+          title: 'Check · Graphical integrity',
+          style: 'choice',
+          settings: { defaultTime: 25, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
+          questions: [
+            {
+              question: "A bar chart's y-axis starts at 90 instead of 0. The real difference between two bars is 4%, but on screen one bar looks three times the other. What is the lie factor?",
+              options: [
+                "About 0.3 — the graphic understates the effect",
+                "About 1.0 — the graphic is honest",
+                "About 3 — the graphic overstates the effect",
+                "It cannot be calculated without the raw data"
+              ],
+              correct: 2,
+              explanation: "Lie factor = effect shown ÷ effect in the data. Three times the visual difference for the same 4% gives roughly 3. Tufte wants it close to 1.0, and a truncated baseline is the most common way it stops being."
+            }
+          ]
+        },
+        {
+          ref: 'check-attributes',
+          title: 'Check · Attribute types',
+          style: 'choice',
+          settings: { defaultTime: 25, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
+          questions: [
+            {
+              question: "T-shirt sizes — S, M, L, XL. What kind of attribute is that?",
+              options: [
+                "Categorical — the labels are just names",
+                "Ordinal — ordered, but the gaps are not measurable",
+                "Quantitative interval — ordered with equal gaps, no true zero",
+                "Quantitative ratio — ordered with equal gaps and a true zero"
+              ],
+              correct: 1,
+              explanation: "There is a real order — M is bigger than S — but L minus M is not a number. That is exactly ordinal: order without arithmetic. Encode it with a sequential ramp or position, never with unordered hues."
+            }
+          ]
+        },
+        {
+          ref: 'check-channels',
+          title: 'Check · Marks and channels',
+          style: 'choice',
+          settings: { defaultTime: 25, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
+          questions: [
+            {
+              question: "You need people to compare quantities as accurately as possible. Which channel should carry the number?",
+              options: [
+                "Area — bubbles scale naturally with the value",
+                "Colour hue — it is the easiest to tell apart",
+                "Position along a common scale",
+                "Angle — pie slices are familiar to everyone"
+              ],
+              correct: 2,
+              explanation: "Cleveland and McGill ranked position along a common scale first for accuracy. Area is well down the list, and hue is an identity channel — it says which, not how much."
+            }
+          ]
+        },
+        {
+          ref: 'check-colour',
+          title: 'Check · Colour schemes',
+          style: 'choice',
+          settings: { defaultTime: 25, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
+          questions: [
+            {
+              question: "You are mapping profit and loss by region, where zero matters. Which colour scheme?",
+              options: [
+                "Sequential — one hue, light to dark",
+                "Diverging — two hues away from a neutral middle",
+                "Categorical — a distinct hue per region",
+                "Rainbow — the full spectrum covers the range"
+              ],
+              correct: 1,
+              explanation: "A meaningful midpoint is the signature of diverging data. Sequential would hide the sign change, categorical would deny the order, and rainbow invents boundaries the data does not have."
+            }
+          ]
+        }
+      ],
+      slides: [
+        {
+          type: "title",
+          title: "Visual\nCommunication",
+          subtitle: "Week 2 · Lecture 2",
+          notes: "Week 1 asked why we visualise at all. Week 2 is the craft: how a number becomes a mark on a screen, and how that mark can tell the truth or quietly lie. Everything today comes back to one question — can the room read the quantity you meant?",
+          date: "2026-09-21"
+        },
+        {
+          type: "keyfact",
+          title: "Before anything else",
+          subtitle: "Canvas deadline",
+          body: "Friday after each lab,\n12:00",
+          notes: "One fact, on its own, because it is the one students get wrong. Say it, pause, move on — you will say it again at the end of the lab."
+        },
+        {
+          type: "cards",
+          title: "Four reminders",
+          design: { cardsMode: "rows" },
+          bullets: [
+            "Don't wait\tThe worksheet is not a Thursday-night job. Start it in the lab while help is in the room.",
+            "Ask early\tWhen you are unsure, ask. An hour stuck alone is an hour you do not get back.",
+            "Time management\tThis module rewards steady work more than a sprint.",
+            "Balance\tTwelve weeks is a long run. Pace it."
+          ],
+          notes: "Equal weight, so equal on the slide. Keep this to ninety seconds — the subject starts on the next slide but one.",
+          progressive: true
+        },
+        {
+          type: "cards",
+          title: "By the end of this lesson you can…",
+          subtitle: "Four things, and the lab will ask you for all of them",
+          design: { cardsMode: "rows" },
+          bullets: [
+            "Name the data\tMaster the three attribute types and what each one allows you to do.",
+            "Apply the rules\tUse design rules of thumb to make a visualisation that works.",
+            "Match the channel\tPut the right visual channel on the right kind of data.",
+            "Critique on evidence\tJudge a visualisation with perceptual principles, not taste."
+          ],
+          notes: "Read these as promises you intend to keep. The fourth is the one that changes how they argue in the lab: 'I don't like it' becomes 'that channel cannot carry that data'.",
+          progressive: true
+        },
+        {
+          type: "sourcecheck",
+          title: "Describe the data before you choose the chart.",
+          subtitle: "This week's reading",
+          bullets: [
+            "Book\tVisualization Analysis and Design\tTamara Munzner",
+            "Chapter\t2 · What: Data Abstraction\tRead before the lab",
+            "The move\tDescribe data independently of what it is about\tSo the same vocabulary works on any dataset",
+            "It asks\tItems, attributes, links, positions?\tAnd: categorical, ordinal or quantitative?"
+          ],
+          body: "A chart type chosen before the data is described is a guess. Munzner's abstraction is how you stop guessing.",
+          notes: "The point of Chapter 2 is the order of operations. Students reach for a bar chart first and ask what the data is afterwards. Munzner reverses it, and the whole module depends on that reversal.",
+          progressive: true
+        },
+        {
+          type: "section",
+          title: "What visual\ncommunication is",
+          subtitle: "Data, encoding, perception — and the gap between them.",
+          notes: "A short definitional block. Do not linger: the interesting material is graphical integrity, twenty minutes from here."
+        },
+        {
+          type: "italics",
+          title: "Using visual elements to carry information, ideas or a message.",
+          body: "In data visualisation that means three things at once: translating abstract data into something you can see, so that a person can understand it, find something they were not looking for, and decide.",
+          notes: "The definition is deliberately plain. What matters is the next slide — the three parts, because failure in any one of them looks identical from the outside: the room does not get it."
+        },
+        {
+          type: "cards",
+          title: "Three parts, and all three can fail",
+          bullets: [
+            "Data\tThe information you want to communicate. Wrong here and nothing downstream can save it.",
+            "Visual encoding\tHow you represent that data — the marks and the channels you put it on.",
+            "Human perception\tHow a viewer actually reads it, which is not always how you meant it."
+          ],
+          notes: "Ask which of the three they think most projects get wrong. Most rooms say data. It is usually perception — the chart is accurate and still unreadable, which is the whole reason this module exists.",
+          progressive: true
+        },
+        {
+          type: "section",
+          title: "Design criteria",
+          subtitle: "What a visualisation is for, and what it costs.",
+          notes: "From definitions to judgement."
+        },
+        {
+          type: "cards",
+          title: "Three goals, in tension",
+          bullets: [
+            "Effectiveness\tIt conveys the intended information accurately.",
+            "Efficiency\tIt minimises the mental effort needed to read it.",
+            "Aesthetics\tIt is something a person is willing to look at."
+          ],
+          notes: "Order matters. Aesthetics is last because a beautiful chart that misleads is worse than a plain one that does not — but it is on the list, because a chart nobody reads has also failed.",
+          progressive: true
+        },
+        {
+          type: "content",
+          title: "Four questions before you draw anything",
+          bullets: [
+            "What is the message or the story?",
+            "Who is the audience?",
+            "What decision gets made from this?",
+            "Where will it be seen — a talk, a report, a dashboard?"
+          ],
+          notes: "The third is the one that changes designs. 'What decision gets made from this' turns a chart of everything into a chart of the thing that matters. Ask the room for their AE1 answer to it.",
+          progressive: true
+        },
+        {
+          type: "compare",
+          title: "Every design choice is a trade",
+          subtitle: "What you gain\tWhat it costs",
+          bullets: [
+            "Simplicity vs completeness\tFaster to read, one clear message\tDetail is gone, and someone needed it",
+            "Novelty vs familiarity\tAttention, and a shape that fits odd data\tThe room spends effort learning the chart",
+            "Beauty vs clarity\tPeople look, and keep looking\tDecoration can bend the quantity"
+          ],
+          notes: "Nobody escapes these — the skill is choosing on purpose rather than by accident. Push them: which trade is right for a dashboard a nurse reads at 3am? Which for a front page?",
+          progressive: true
+        },
+        {
+          type: "section",
+          title: "Graphical\nintegrity",
+          subtitle: "Tufte's question: does the picture say what the numbers say?",
+          notes: "The spine of the lecture. Everything from here to the rules of thumb is one argument — the graphic is a measurement, and a measurement can be wrong."
+        },
+        {
+          type: "split",
+          title: "Read this chart, then answer",
+          subtitle: "Polling from a local election · five candidates · three points in time",
+          bullets: [
+            "In the first election, is candidate 5 doing better than candidate 3?",
+            "Between time A and time B, who did better — candidate 2 or candidate 4?",
+            "Who has the most momentum in the race?"
+          ],
+          image: "assets/lesson/ipdv/election-polling-lines.jpg",
+          notes: "Run this cold, before any theory. Give them ninety seconds and take answers. The point is not the answers — it is how long the third question takes, and how much of the work is the chart's fault rather than theirs.",
+          progressive: true,
+          imageSide: "right"
+        },
+        {
+          type: "content",
+          title: "Tufte's six principles of graphical integrity",
+          bullets: [
+            "The size of the effect on the page should be proportional to the size of the effect in the data.",
+            "Label clearly and thoroughly. Write explanations on the graph itself.",
+            "Show data variation, not design variation.",
+            "For money over time, use deflated and standardised units.",
+            "Keep the number of information-carrying dimensions at or below the number in the data.",
+            "Do not quote data out of context."
+          ],
+          notes: "The first is the one the lie factor measures, and the one they will break by accident. The fifth is why a 3D pie chart is not a style choice — it adds a dimension the data does not have.",
+          progressive: true,
+          buildMode: "dim"
+        },
+        {
+          type: "keyfact",
+          title: "The lie factor",
+          subtitle: "Effect shown in the graphic ÷ effect in the data",
+          body: "Should be\n1.0",
+          notes: "Write the division on the board. Anything far from 1.0 means the picture is a different measurement from the data. Tufte's own examples run past 14. A truncated bar axis is the everyday version."
+        },
+        {
+          type: "split",
+          title: "Where it usually goes wrong",
+          subtitle: "The bar chart that does not start at zero",
+          bullets: [
+            "A bar says 'how much' by its length.",
+            "Cut the baseline and the length stops matching the quantity.",
+            "The reader is not being careless — they are reading the channel correctly. It is the chart that lied."
+          ],
+          image: "assets/lesson/ipdv/lie-factor-example.jpg",
+          notes: "Important framing: do not blame the audience. Length is the channel a bar uses, so length is what gets read. If the baseline is cut, the chart has broken its own promise. Line charts are different — they encode position, so a truncated axis can be legitimate there.",
+          progressive: true
+        },
+        {
+          type: "cards",
+          title: "Four common violations",
+          design: { cardsMode: "rows" },
+          bullets: [
+            "Truncated axes\tLength or height no longer matches quantity.",
+            "Distorted aspect ratios\tThe same data made to look flat or steep at will.",
+            "Cherry-picked ranges\tThe window chosen so the trend points the desired way.",
+            "3D effects\tA third dimension the data never had, and perspective that shrinks the back."
+          ],
+          notes: "Ask for the fifth from the room — dual axes usually comes up, and it is a good answer. Every one of these is available by default in Excel, which is the uncomfortable part.",
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "The third dimension is not free",
+          subtitle: "Perspective makes the far slice smaller than the near one, at identical values",
+          image: "assets/lesson/ipdv/violations-3d-distortion.jpg",
+          bullets: [
+            "Depth adds an information-carrying dimension the data does not have.",
+            "It also adds occlusion: the front hides the back.",
+            "Nothing is gained. Something is always lost."
+          ],
+          notes: "This is Tufte's fifth principle with a picture attached. If a student protests that it looks better, that is the beauty-versus-clarity trade from earlier — name it, and make them choose.",
+          progressive: true,
+          imageSide: "left"
+        },
+        {
+          type: "section",
+          title: "Rules of thumb",
+          subtitle: "Not laws. Defaults you should need a reason to break.",
+          notes: "Tone shift: the integrity block was about not lying. This block is about being read."
+        },
+        {
+          type: "split",
+          title: "Clarity over cleverness",
+          subtitle: "Maximise the data-ink ratio",
+          bullets: [
+            "Every drop of ink should carry information.",
+            "Gridlines, borders, shadows, gradients, clip-art — pay rent or leave.",
+            "Chart junk is not only ugly. It competes with the data for attention."
+          ],
+          image: "assets/lesson/ipdv/chart-junk-data-ink.png",
+          notes: "Tufte's data-ink ratio. Worth saying plainly: the default settings of most tools have a poor ratio, so the ordinary act of accepting defaults is already a design decision.",
+          progressive: true
+        },
+        {
+          type: "cards",
+          title: "Four defaults worth keeping",
+          bullets: [
+            "7±2\tLimit distinct categories to about five to nine. Past that, distinguishing them becomes the reader's job.",
+            "Get it right in black and white\tIf it only works in colour, it does not work. Colour is the last layer, not the first.",
+            "Overview first, zoom and filter, details on demand\tShneiderman's mantra — the shape of every good interactive.",
+            "Start with standard chart types\tBar, line, scatter. Familiar shapes cost the reader nothing to learn."
+          ],
+          notes: "'Get it right in black and white' is the one to dwell on, because it pre-empts the accessibility block at the end. If the design already works without hue, colour-vision deficiency stops being a special case.",
+          progressive: true
+        },
+        {
+          type: "statement",
+          title: "Clarity over cleverness.",
+          body: "If the room has to work out the chart before it can read the data, the chart has taken the attention you needed for the argument.",
+          notes: "A beat. Let it sit, then move into data abstraction."
+        },
+        {
+          type: "section",
+          title: "What: data\nabstraction",
+          subtitle: "Describe the data without mentioning what it is about.",
+          notes: "Munzner Chapter 2 proper. The discipline is to stop saying 'it's sales data' and start saying 'it's a table of items with two quantitative and one categorical attribute'."
+        },
+        {
+          type: "cards",
+          title: "Four dataset types",
+          bullets: [
+            "Tables\tItems and their attributes. A spreadsheet is the everyday case.",
+            "Networks\tNodes and the links between them. Social graphs, trees, hierarchies.",
+            "Fields\tContinuous values sampled over space. Weather, medical imaging.",
+            "Geometry\tShape and position in space. Maps, 3D models."
+          ],
+          notes: "Most of this module lives in tables. Networks arrive in Week 9, fields and geometry in Week 6. Flag that a dataset can sometimes be transformed from one into another — a table of who-emailed-whom is also a network.",
+          progressive: true
+        },
+        {
+          type: "table",
+          title: "Three attribute types — and what each one lets you do",
+          tableHeader: true,
+          body: "Type|Ordered?|Arithmetic?|Example\nCategorical|No|No|Country, product, gender\nOrdinal|Yes|No|Rankings, S/M/L/XL, education level\nQuantitative · interval|Yes|Differences only|Temperature in °C — no true zero\nQuantitative · ratio|Yes|Yes, including ratios|Height, weight, count — true zero",
+          notes: "Walk the columns, not the rows. 'Ordered?' and 'Arithmetic?' are the two questions that decide everything downstream — which channel is allowed, which colour scheme, whether a mean is even meaningful. 20°C is not twice 10°C; 20kg is twice 10kg. That is the interval/ratio line.",
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "Categorical needs identity, ordinal needs order",
+          subtitle: "Match the channel to the question the data can answer",
+          bullets: [
+            "Categorical → hue, shape, spatial grouping. Bar charts for counts; pie only for two to five slices.",
+            "Ordinal → a sequential ramp, size progression, or position along an axis.",
+            "Ordinal in unordered hues throws the order away — the reader cannot get it back."
+          ],
+          image: "assets/lesson/ipdv/categorical-channels.jpg",
+          notes: "The pie caveat is worth stating out loud: it encodes angle, which is well down the accuracy ranking they will see in ten minutes. Two to five slices, or use a bar.",
+          progressive: true,
+          imageSide: "right"
+        },
+        {
+          type: "statement",
+          title: "Never put a continuous colour scale on categorical data.",
+          body: "It implies an order that does not exist — and the reader will believe it, because that is what the channel means.",
+          notes: "The single most common colour error in student work. Say it now; it will reappear in the colour block and again in Week 4."
+        },
+        {
+          type: "section",
+          title: "Marks and\nchannels",
+          subtitle: "The atoms of every visualisation you will ever build.",
+          notes: "If they remember one section of this lecture, it should be this one. Marks are what you draw; channels are how you vary it."
+        },
+        {
+          type: "split",
+          title: "Marks are geometry. Channels are what you vary.",
+          subtitle: "Points, lines, areas — then everything you can do to them",
+          bullets: [
+            "Points (0D) — a location. Scatter plots.",
+            "Lines (1D) — a connection or a trend.",
+            "Areas (2D) — a region, a proportion.",
+            "A channel is any property you change to carry a value: position, length, size, angle, hue, shape, texture."
+          ],
+          image: "assets/lesson/ipdv/marks-and-channels.jpg",
+          notes: "Draw the distinction physically: hold up a dot, then ask what you could change about it. Everything they name is a channel. That is the whole vocabulary.",
+          progressive: true
+        },
+        {
+          type: "compare",
+          title: "Two families of channel, two different jobs",
+          subtitle: "Magnitude · how much\tIdentity · which one",
+          bullets: [
+            "What it encodes\tOrdered, quantitative values\tCategories with no order",
+            "The channels\tPosition, length, area, volume, angle, luminance\tHue, shape, pattern and texture",
+            "Read as\tMore or less than\tSame or different from",
+            "Gets it wrong when\tThe scale is truncated or non-linear\tThere are too many categories to tell apart"
+          ],
+          notes: "This table is the practical takeaway. Quantitative data on an identity channel is unreadable as a quantity; categorical data on a magnitude channel invents an order. Both mistakes appear in the lab.",
+          progressive: true
+        },
+        {
+          type: "funnel",
+          title: "How accurately people read each channel",
+          subtitle: "Cleveland & McGill's ranking — most accurate at the top",
+          bullets: [
+            "Position along a common scale\t100",
+            "Position along non-aligned scales\t85",
+            "Length, direction, angle\t70",
+            "Area\t55",
+            "Volume, curvature\t40",
+            "Shading, colour saturation\t28"
+          ],
+          notes: "Alberto Cairo discusses this hierarchy in The Functional Art, from Cleveland and McGill's 1980s experiments. The numbers here are a visual ordering, not published effect sizes — say so if a student asks. The lesson is the order: put your most important quantity on position, and never on saturation.",
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "The ranking, as Cairo draws it",
+          subtitle: "Same data, six channels, six different degrees of accuracy",
+          image: "assets/lesson/ipdv/cleveland-mcgill-ranking.png",
+          bullets: [
+            "This is a hierarchy of elementary perceptual tasks.",
+            "It is not about taste. It is about how accurately a person can recover a number from a picture.",
+            "Use it as a tie-breaker whenever two chart types would both 'work'."
+          ],
+          notes: "Point at where pie charts sit — angle, third band. Then at where bubble charts sit — area, fourth. Neither is banned; both are a choice you should now be able to defend.",
+          progressive: true,
+          imageSide: "left"
+        },
+        {
+          type: "section",
+          title: "Colour and\nluminance",
+          subtitle: "The channel everyone reaches for first, and understands least.",
+          notes: "Week 4 is a whole lecture on colour. Today is the working minimum: pick the right scheme, know that luminance is relative, and design so colour is never load-bearing on its own."
+        },
+        {
+          type: "cards",
+          title: "Three schemes. The data chooses, not you.",
+          bullets: [
+            "Sequential\tOrdered data, low to high. One hue, light to dark.",
+            "Diverging\tData with a meaningful middle. Two hues away from a neutral centre.",
+            "Categorical\tDiscrete groups with no order. Distinct hues at similar saturation and luminance."
+          ],
+          notes: "Make the diagnosis explicit: is it ordered? does zero or an average mean something? If yes to both, diverging. If ordered with no special middle, sequential. If unordered, categorical. Three questions, one answer.",
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "The same numbers, three different claims",
+          image: "assets/lesson/ipdv/colour-schemes-three.png",
+          bullets: [
+            "Sequential says: more of the same thing.",
+            "Diverging says: two directions from a middle that matters.",
+            "Categorical says: these are different kinds, none is more."
+          ],
+          notes: "Each scheme makes a claim about the data's structure. Choosing the wrong one is not a style error — it is a false statement about what the numbers are.",
+          progressive: true,
+          imageSide: "right"
+        },
+        {
+          type: "split",
+          title: "Same pixels. Two answers.",
+          subtitle: "The dress, 2015",
+          bullets: [
+            "Some people saw blue and black. Others saw white and gold.",
+            "Identical image, identical screen, different perception.",
+            "Your viewers are not reading the pixels. They are reading pixels plus an assumption about the light."
+          ],
+          image: "assets/lesson/ipdv/the-dress-2015.jpg",
+          notes: "Take a show of hands — you will get a split in most rooms, and the argument makes the point better than any slide. Then land it: if perception is this unstable for a photograph, a colour legend is not a guarantee of anything.",
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "We perceive luminance relatively, not absolutely",
+          bullets: [
+            "The eye is more sensitive to luminance than to hue — so put the most important distinction there.",
+            "But the same grey looks lighter or darker depending on what surrounds it.",
+            "So: give reference points, legends and direct labels. Never ask the room to judge a value from a shade alone."
+          ],
+          image: "assets/lesson/ipdv/luminance-contrast.png",
+          notes: "The practical consequence is the last bullet. Heatmaps without direct labels ask for exactly the judgement humans are worst at. Pair the colour with a number.",
+          progressive: true,
+          imageSide: "left"
+        },
+        {
+          type: "stats",
+          title: "Design for the room you actually have",
+          subtitle: "Colour vision deficiency, in a lecture theatre of this size",
+          bullets: [
+            "8%\tof men",
+            "0.5%\tof women",
+            "1 in 12\tmen in this room, roughly"
+          ],
+          notes: "Do the arithmetic out loud for the actual headcount. It stops being a statistic and becomes a person in row three. Then give the fix: never let hue be the only channel carrying meaning.",
+          progressive: true
+        },
+        {
+          type: "split",
+          title: "The fix is not a colour. It is a second channel.",
+          bullets: [
+            "Always pair colour with shape, pattern, position or a direct label.",
+            "Test with a colourblind simulator before you submit.",
+            "'Get it right in black and white' — the rule from earlier is the same rule as this one."
+          ],
+          image: "assets/lesson/ipdv/simultaneous-contrast.jpg",
+          notes: "Close the loop back to the rules of thumb deliberately. Accessibility is not a separate checklist bolted on at the end; it falls out of a design principle they already agreed to twenty minutes ago.",
+          progressive: true
+        },
+        {
+          type: "compare",
+          title: "Good practice · reaching the reader",
+          subtitle: "Do\tDon't",
+          bullets: [
+            "Audience\tKnow their expertise and what they need\tDon't assume colour means the same to everyone",
+            "Starting point\tStart simple, with a familiar chart type\tDon't overload one view with every variable",
+            "Labelling\tLabel axes, units, titles and legends\tDon't hide the context or the relevant range"
+          ],
+          notes: "First half of the summary. Three rows, not six — six labelled rows do not fit a slide at a readable size, and the fix is to split the content rather than shrink the type. Every row on the left is something from today; every row on the right is a way of breaking it.",
+          progressive: true
+        },
+        {
+          type: "compare",
+          title: "Good practice · telling the truth",
+          subtitle: "Do\tDon't",
+          bullets: [
+            "Honesty\tShow uncertainty — error bars, intervals\tDon't distort; keep the representation proportional",
+            "Comparison\tUse common baselines and aligned scales\tDon't decorate; minimise non-data ink",
+            "Process\tIterate — test it on someone, then fix it\tDon't ship the first draft"
+          ],
+          notes: "Second half. If they photograph one slide, it is this one — honesty and comparison are what the whole integrity block was for. End on Process: the first draft is never the one you submit.",
+          progressive: true
+        },
+        {
+          type: "join",
+          title: "Questions",
+          subtitle: "And anything from the reading you want to argue with.",
+          notes: "Leave real time here. The reading is dense and the attribute-type distinctions are where students quietly stay confused. Invite the interval-versus-ratio question if nobody asks it."
+        },
+        {
+          type: "section",
+          title: "Next: Lab 1",
+          subtitle: "Data types, marks and channels — in code.",
+          notes: "The lab turns today into practice: 02_Code_IPDV_DataTypes_Marks_Channels. Remind them of the deadline one last time — Friday after the lab, midday, on Canvas."
+        }
+      ]
+    },
+    {
       key: 'nul-lab1',
       title: 'LDSCI6253 Lab 1 · run the room',
       icon: '⌨',
@@ -6613,6 +7169,7 @@
 
   var LIBRARY_SEED_KEYS = {
     'ipdv-intro': 'nul',
+    'ipdv-vc': 'nul',
     'ipdv-lab1': 'nul',
     'nul-lab1': 'nul',
     'pace-nul': 'nul',
