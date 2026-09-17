@@ -483,7 +483,9 @@
            in the middle of the body instead of crossing the art column. */
         const k = slide.height / STAGE_H;
         const b = body.getBoundingClientRect();
-        const height = b.height / k;
+        /* offsetHeight is the untransformed height — 576, whatever the tile
+           is scaled to — so the pitch never drifts with the thumbnail size. */
+        const height = body.offsetHeight || b.height / k;
         return {
           el: body,
           left: (b.left - slide.left) / k,
@@ -708,20 +710,31 @@
              slide origin plus host.top. Doing the arithmetic put everything
              exactly one row out, and a derivation that can be one row wrong is
              no better than the hard-coded numbers it replaced. */
+          /* LAYOUT values, not screen values divided by a scale.
+             getBoundingClientRect returns the transformed box, so recovering
+             slide units means dividing by the tile scale — and that scale is
+             where the errors came from. At 0.51 it put a block on row 5
+             exactly one row out; at 0.31 it reported an 183px heading as 8
+             rows and pushed the tagline box 72px clear of the text it was
+             meant to wrap. Both were the arithmetic, not the slide.
+
+             offsetHeight and offsetTop are pre-transform, so they are already
+             slide units and need no division. The scale is derived from the
+             host itself where there is one, which keeps it self-consistent
+             rather than assuming STAGE_H. */
+          const bodyEl = host.el;
           const sRect = slideRoot.getBoundingClientRect();
-          const k = sRect.height / STAGE_H;
-          const base = host.el ? host.el.getBoundingClientRect() : sRect;
+          const k = bodyEl
+            ? bodyEl.getBoundingClientRect().height / bodyEl.offsetHeight
+            : sRect.height / STAGE_H;
+          const base = bodyEl ? bodyEl.getBoundingClientRect() : sRect;
           const r = node.getBoundingClientRect();
           const pitch = host.pitch;
-          const topInHost = (r.top - base.top) / k + (host.el ? 0 : -host.top);
-          const hInHost = r.height / k;
-          /* Sub-pixel tolerance, because dividing a measured rect by the tile
-             scale lands just under an exact boundary: a block truly on row 5
-             measured 143.99999, floor(143.99999/36) gave 3 instead of 4, and
-             the label read "+36px off line" for a slide that was exactly
-             right. The art's 504px height crossed ceil(14.0000) the other way
-             and claimed a fifteenth row. Half a pixel of slack in both
-             directions; nothing real is that close to a line. */
+          const topInHost = (r.top - base.top) / k + (bodyEl ? 0 : -host.top);
+          const hInHost = node.offsetHeight || r.height / k;
+          /* Half a pixel of slack at the boundaries: nothing real is that
+             close to a line, and an exact value can still arrive as
+             143.99999 from the rect subtraction above. */
           const EPS = 0.5;
           row = Math.floor((topInHost + EPS) / pitch) + 1;
           span = Math.max(1, Math.ceil((hInHost - EPS) / pitch));
@@ -756,6 +769,24 @@
     root.style.transform = `scale(${mount.clientWidth / 1280})`;
     resize.observe(mount);
     paintOverlays(mount);
+    /* Then paint it again once the tile has settled.
+       The overlays are measurements, and the first paint happens before the
+       web font and the artwork have landed — so a heading could be measured
+       mid-reflow and reported as eight rows when it is six, which then pushed
+       the tagline's box two rows clear of the text it was meant to wrap. It
+       was intermittent by tile width, which is the signature of a race rather
+       than a rule. Waiting for fonts and images, then measuring again, is the
+       fix; a measurement tool that races the layout is worse than none. */
+    settle(mount).then(() => paintOverlays(mount));
+  }
+
+  async function settle(mount) {
+    try { await document.fonts.ready; } catch (e) { /* no font API, fine */ }
+    const images = [...mount.querySelectorAll('img')];
+    await Promise.all(images.map((i) => (i.decode ? i.decode().catch(() => {}) : null)));
+    /* One frame, so the reflow those two caused is in the layout before the
+       next measurement reads it. */
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   }
 
   async function fitBadge(deck, slide, index) {
