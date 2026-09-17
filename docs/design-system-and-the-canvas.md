@@ -1022,29 +1022,50 @@ all divide it exactly.
 
 ### The measurement that should stop a retrofit
 
-494 rendered slides, every direct child of the body measured against four
-candidate grids. Mean and worst distance from a row line, in px:
+Run `node tools/smoke-row-grid.mjs` against a live server. It renders the 35
+campaign body slides plus 78 pad-only ones, measures every block edge against
+four candidate pitches, and reports the distance to the nearest row line.
 
-| Family | 8×74 | 12×42+8 | 16×37 | 24×17+8 |
-| --- | --- | --- | --- | --- |
-| **aiad27** | 19.8 / 37 | 13.0 / 25 | **7.9 / 18** | 5.8 / 12 |
-| northeastern | 19.1 / 45 | 12.2 / 30 | 9.0 / 23 | 7.2 / 15 |
-| ukbt | 20.0 / 45 | 14.9 / 30 | 10.7 / 22 | 6.8 / 15 |
-| studio | 24.1 / 43 | 13.4 / 28 | 11.6 / 22 | 8.2 / 15 |
-| brutal | 24.8 / 43 | 13.7 / 28 | 13.5 / 22 | 6.5 / 14 |
+Corrected 2026-09-17 after two errors, one in each direction.
 
-AiAd27 is the most regular deck on every grid, which matches the intuition
-that it was drawn to a proportion. **But no grid puts more than 8% of slides
-fully within 6px of a row line**, and even AiAd27's worst edge is 12–18px out.
+**First correction — the measurement.** An earlier pass generated row lines at
+band tops only, which unfairly penalised the guttered pitches: with a gap,
+an edge can legitimately sit on a band's *bottom* too. `smoke-row-grid.mjs`
+emits both. The figures below are the corrected ones.
 
-So a row grid would not be *formalising* what exists. It would **move**
-existing content. That is the named-region trap in new clothing: impose it and
-494 slides reflow; make it opt-in and it reaches almost nothing, exactly as
-regions reach 0 of 252 NUL slides.
+**Second correction — the comparison.** Distance to the nearest line is biased
+towards whichever grid has the most lines, and the four candidates differ by
+more than five times. Against a uniform-random null model over the same body:
 
-*Caveat on these figures:* campaign slides have a `.cp-body` of 592px;
-other themes have no equivalent, so their rows were measured against `.pad`
-at 720px. AiAd27 winning is safe; the precise gap to the others is not.
+| Grid | Lines | ±6px covers | Random mean | AiAd27 observed | vs chance |
+| --- | --- | --- | --- | --- | --- |
+| 8×74 | 9 | 18% | 18.5 | 18.8 / worst 36.5 | **1.02×** |
+| 12×42+8 | 24 | 49% | 9.2 | 8.0 / worst 18.8 | 0.87× |
+| 16×37 | 17 | 34% | 9.3 | 8.3 / worst 18.1 | 0.90× |
+| 24×17+8 | 48 | **97%** | 3.6 | 3.6 / worst 8.0 | **1.01×** |
+
+**AiAd27 is at chance on two of the four pitches, and at best 13% better than
+random on the others.** The apparent strength of 24×17+8 is entirely line
+density: its ±6px windows cover 97% of the 592px body, so "within 6px of a
+line" is very close to vacuous there. On that pitch 45.7% of slides have every
+edge inside tolerance — which sounds like the best result in the table until
+you notice random placement would score higher.
+
+So the conclusion is firmer than "looks regular but is not yet formal". There
+is **no latent row structure to formalise.** The campaign reads as
+well-proportioned because its blocks are internally consistent — a 26px
+eyebrow gap, a 32px tagline gap, a 40px column gutter — not because they land
+on a shared vertical lattice. They do not.
+
+That reframes step 1 below. It is not a nudge onto a pitch the deck is nearly
+on. It is **imposing a vertical rhythm the deck has never had**, which is a
+real design act on 35 finished slides and should be decided as one.
+
+*Two caveats on the figures.* Only `.cp-body` slides (592px) are comparable to
+the campaign arithmetic; the 78 pad-only slides were measured against `.pad`
+at 720px and are a weaker signal. And the fit checker reports **0 failures**
+today, which is a statement about slide boundaries, not about spans — it
+becomes the span guardrail only once a pitch exists to measure against.
 
 ### The order that follows
 
@@ -1056,9 +1077,11 @@ at 720px. AiAd27 winning is safe; the precise gap to the others is not.
 3. **Then decide per theme** whether NUL and UKBT re-fit — as a deliberate,
    reviewed reflow, never a silent one.
 
-Recommended pitch: **16 rows × 37px**. 24×17+8 scores better numerically but
-17px rows are too fine to author with; sixteen is coarse enough to mean
-something and is already the campaign's best realistic fit.
+Recommended pitch: **16 rows × 37px** — but on design grounds now, not
+measurement, because the measurement does not favour any of them. Sixteen is
+coarse enough that a span means something and fine enough for a caption;
+24×17+8 is too fine to author with, and its better-looking numbers are the
+line-density artefact above.
 
 ### The guardrail
 
