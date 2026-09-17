@@ -105,6 +105,28 @@ try {
   assert.ok(at(dragged, 'Date') < at(before, 'Date'), 'the pointer drag did not push');
   assert.equal((await budget())[0].used, startBudget);
 
+  /* Regression: a vertical drag that wanders sideways must not change columns.
+     It did, which made every drag after the first look freeform. */
+  await page.click('#demo-reset');
+  await settled();
+  await page.locator('#demo-deck .safe-stage').scrollIntoViewIfNeeded();
+  const columnsOf = async () => (await rows()).map((r) => `${r.name}:${r.col}-${r.col + r.cols - 1}`);
+  const startColumns = await columnsOf();
+  for (const [name, onto, frac] of [['Date', 'Subtitle', 0.2], ['Headline', 'Date', 0.2], ['Subtitle', 'Headline', 0.2], ['Date', 'Headline', 0.8]]) {
+    const from = await page.locator(`#demo-deck .safe-slot[data-name="${name}"] .demo-slot-grip`).boundingBox();
+    const onto_ = await page.locator(`#demo-deck .safe-slot[data-name="${onto}"]`).boundingBox();
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await page.mouse.down();
+    /* Wander sideways on the way, the way a hand does. */
+    await page.mouse.move(from.x + from.width / 2 - 180, from.y + from.height / 2 - 20, { steps: 6 });
+    await page.mouse.move(onto_.x + onto_.width / 2, onto_.y + onto_.height * frac, { steps: 14 });
+    await page.mouse.up();
+    await settled();
+    assert.deepEqual(await columnsOf(), startColumns, `dragging ${name} onto ${onto} moved a column`);
+    for (const g of await budget())
+      assert.equal(g.used, startBudget, `dragging ${name} onto ${onto} changed the budget`);
+  }
+
   /* Side-by-side stacks have nothing to push, so that drop swaps sides instead. */
   await page.selectOption('#demo-filter', 'split');
   await settled();
@@ -127,7 +149,7 @@ try {
   console.log(
     `ok · demo-deck ${summary.fit}/${summary.total} fit · ${summary.needSpace} need space · ` +
       `${summary.underFloor} under the 20px floor (smallest ${summary.smallest}px) · ` +
-      `magnetic rearrange budget-neutral over 5 moves + a pointer drag`
+      `rearrange budget-neutral over 5 moves, 5 pointer drags, no column drift`
   );
 } finally {
   await browser.close();

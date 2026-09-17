@@ -11,6 +11,8 @@ let flipMode = 'content';
 /* What the last rearrange did, so measure() can keep it instead of overwriting. */
 let lastMove = '';
 let selectedArt = null;
+/** Click ⇄ twice to swap any two Demo features (same slide or across slides). */
+let swapArm = null;
 deck.showSlideNumbers = true;
 
 /* Recipes: [selector, label, col, cols, row, rows]
@@ -352,6 +354,58 @@ function clampOrigin(col, row, cols, rows) {
   };
 }
 
+function swapSlotGeometry(recipe, i, j) {
+  if (i === j || !recipe[i] || !recipe[j]) return null;
+  const a = recipe[i];
+  const b = recipe[j];
+  const aPos = [a[2], a[3], a[4], a[5]];
+  a[2] = b[2];
+  a[3] = b[3];
+  a[4] = b[4];
+  a[5] = b[5];
+  b[2] = aPos[0];
+  b[3] = aPos[1];
+  b[4] = aPos[2];
+  b[5] = aPos[3];
+  return { a: a[1], b: b[1] };
+}
+
+function clearSwapArm(body) {
+  swapArm = null;
+  body?.querySelectorAll('.demo-slot-swap-armed, .demo-slot-swap-target').forEach((n) => {
+    n.classList.remove('demo-slot-swap-armed', 'demo-slot-swap-target');
+  });
+  body?.querySelectorAll('.demo-slot-swap.is-armed, .demo-slot-swap.is-target').forEach((n) => {
+    n.classList.remove('is-armed', 'is-target');
+  });
+  section.classList.remove('demo-swap-picking');
+}
+
+function paintSwapTargets(body) {
+  if (!swapArm || !body) return;
+  for (const box of body.querySelectorAll('.safe-slot')) {
+    const i = Number(box.dataset.recipeIndex);
+    const btn = box.querySelector('.demo-slot-swap');
+    if (swapArm.slideIndex === index && i === swapArm.recipeIndex) {
+      box.classList.add('demo-slot-swap-armed');
+      btn?.classList.add('is-armed');
+    } else {
+      box.classList.add('demo-slot-swap-target');
+      btn?.classList.add('is-target');
+    }
+  }
+  section.classList.add('demo-swap-picking');
+}
+
+function reportSwapFit(label, result) {
+  const failed = result?.failed || [];
+  status.dataset.fits = failed.length ? 'false' : 'true';
+  status.textContent = failed.length
+    ? `${label} · Needs more space: ${failed.join(', ')}. Text is not auto-shrunk.`
+    : `${label} · fit check passed · 16×12`;
+  lastMove = '';
+}
+
 function bindSlotDrag(root, slide, body) {
   const recipe = ensureMockRecipe(slide);
   const boxes = [...body.querySelectorAll('.safe-slot')];
@@ -360,16 +414,89 @@ function bindSlotDrag(root, slide, body) {
     const idx = Number(box.dataset.recipeIndex);
     if (!Number.isFinite(idx) || !recipe[idx]) continue;
 
+    const tools = document.createElement('div');
+    tools.className = 'demo-slot-tools';
+    box.append(tools);
+
     const grip = document.createElement('button');
     grip.type = 'button';
     grip.className = 'demo-slot-grip';
-    grip.title = 'Drag to move. Within a stack the others are pushed aside; across stacks the sides swap.';
+    grip.title = 'Drag up or down to reorder (the rest move aside). Drag sideways to change columns.';
     grip.setAttribute('aria-label', `Move ${box.dataset.name}`);
     grip.textContent = '⠿';
-    box.append(grip);
+    tools.append(grip);
+
+    const swapBtn = document.createElement('button');
+    swapBtn.type = 'button';
+    swapBtn.className = 'demo-slot-swap';
+    swapBtn.title =
+      'Swap with any feature: click ⇄ here, then ⇄ on another slot (this slide or another). Fit is re-checked.';
+    swapBtn.setAttribute('aria-label', `Swap ${box.dataset.name}`);
+    swapBtn.textContent = '⇄';
+    tools.append(swapBtn);
+
+    swapBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (flipMode === 'artwork') return;
+
+      if (!swapArm) {
+        swapArm = {
+          slideIndex: index,
+          recipeIndex: idx,
+          name: box.dataset.name || recipe[idx][1],
+        };
+        paintSwapTargets(body);
+        status.dataset.fits = 'swap';
+        status.textContent = `Swap armed: ${swapArm.name}. Click ⇄ on another feature (navigate if needed). Esc cancels.`;
+        return;
+      }
+
+      if (swapArm.slideIndex === index && swapArm.recipeIndex === idx) {
+        clearSwapArm(body);
+        status.textContent = 'Swap cancelled.';
+        return;
+      }
+
+      const fromSlide = deck.slides[swapArm.slideIndex];
+      const fromRecipe = ensureMockRecipe(fromSlide);
+      const toRecipe = ensureMockRecipe(slide);
+      const fromIdx = swapArm.recipeIndex;
+      const fromName = swapArm.name;
+      const toName = box.dataset.name || toRecipe[idx][1];
+
+      if (swapArm.slideIndex === index) {
+        const swapped = swapSlotGeometry(toRecipe, fromIdx, idx);
+        clearSwapArm(body);
+        if (!swapped) return;
+        render().then((result) => reportSwapFit(`Swapped ${swapped.a} ↔ ${swapped.b}`, result));
+        return;
+      }
+
+      if (!fromRecipe[fromIdx] || !toRecipe[idx]) {
+        clearSwapArm(body);
+        status.textContent = 'Swap failed — slot missing on one of the slides.';
+        return;
+      }
+      const a = fromRecipe[fromIdx];
+      const b = toRecipe[idx];
+      const aPos = [a[2], a[3], a[4], a[5]];
+      a[2] = b[2];
+      a[3] = b[3];
+      a[4] = b[4];
+      a[5] = b[5];
+      b[2] = aPos[0];
+      b[3] = aPos[1];
+      b[4] = aPos[2];
+      b[5] = aPos[3];
+      const label = `Swapped ${fromName} (slide ${swapArm.slideIndex + 1}) ↔ ${toName} (slide ${index + 1})`;
+      clearSwapArm(body);
+      render().then((result) => reportSwapFit(label, result));
+    });
 
     grip.addEventListener('pointerdown', (e) => {
       if (e.button !== 0) return;
+      if (swapArm) clearSwapArm(body);
       e.preventDefault();
       e.stopPropagation();
       const spec = recipe[idx];
@@ -416,9 +543,17 @@ function bindSlotDrag(root, slide, body) {
           return;
         }
 
-        /* Magnet: snap the slot origin to the closest lattice lines while dragging. */
+        /* One gesture, one axis. Without this a reorder that wanders a few pixels
+           sideways became a column move, so the second drag looked freeform. The
+           dominant axis of travel decides, and the other coordinate is held. */
         const hitAt = latticeAt(body, ev.clientX, ev.clientY);
-        const at = clampOrigin(hitAt.col, hitAt.row, cols, rows);
+        const vertical = Math.abs(dy) >= Math.abs(dx);
+        const at = clampOrigin(
+          vertical ? spec[2] : hitAt.col,
+          vertical ? hitAt.row : spec[4],
+          cols,
+          rows
+        );
         const natX = (spec[2] - 1) * SNAP_X;
         const natY = (spec[4] - 1) * SNAP_Y;
         const wantX = (at.col - 1) * SNAP_X;
@@ -427,7 +562,10 @@ function bindSlotDrag(root, slide, body) {
         box.style.zIndex = '8';
         box.dataset.snapCol = String(at.col);
         box.dataset.snapRow = String(at.row);
-        status.textContent = `Magnet → col ${at.col}, row ${at.row} (${cols}c × ${rows}r)`;
+        box.dataset.snapAxis = vertical ? 'row' : 'col';
+        status.textContent = vertical
+          ? `Reorder → row ${at.row}; the rest move aside (${rows} rows)`
+          : `Column → ${at.col}–${at.col + cols - 1}; row ${at.row} held`;
       };
 
       const up = (ev) => {
@@ -468,33 +606,27 @@ function bindSlotDrag(root, slide, body) {
                   : `Moved ${magnet.moved}, ${magnet.order.length - 1} pushed aside`;
                 delete box.dataset.snapCol;
                 delete box.dataset.snapRow;
+                delete box.dataset.snapAxis;
                 render();
                 return;
               }
             }
             /* Different stacks sit side by side, so there is nothing to push:
                swapping sides is the honest reading of that drop. */
-            const a = recipe[idx];
-            const b = recipe[j];
-            const aPos = [a[2], a[3], a[4], a[5]];
-            a[2] = b[2];
-            a[3] = b[3];
-            a[4] = b[4];
-            a[5] = b[5];
-            b[2] = aPos[0];
-            b[3] = aPos[1];
-            b[4] = aPos[2];
-            b[5] = aPos[3];
-            lastMove = `Swapped sides: ${a[1]} and ${b[1]}`;
-            render();
+            const swapped = swapSlotGeometry(recipe, idx, j);
+            if (swapped) {
+              lastMove = `Swapped sides: ${swapped.a} and ${swapped.b}`;
+              render();
+            }
             return;
           }
         }
 
-        /* Free placement into space, then re-stack so the drop cannot overlap. */
+        /* Vertical travel is always a reorder, never a reposition: the column is
+           held, so the stack stays a stack and cannot drift into freeform. */
         const landedRow = Number(box.dataset.snapRow) || at.row;
-        const landedCol = Number(box.dataset.snapCol) || at.col;
-        if (landedCol === spec[2]) {
+        const axis = box.dataset.snapAxis || (Math.abs(ev.clientY - startY) >= Math.abs(ev.clientX - startX) ? 'row' : 'col');
+        if (axis === 'row') {
           const magnet = magneticMove(recipe, idx, landedRow);
           if (magnet) {
             lastMove = magnet.over
@@ -502,21 +634,18 @@ function bindSlotDrag(root, slide, body) {
               : `Moved ${magnet.moved}, ${magnet.order.length - 1} pushed aside`;
             delete box.dataset.snapCol;
             delete box.dataset.snapRow;
+            delete box.dataset.snapAxis;
             render();
             return;
           }
         }
-        const clamped = clampOrigin(
-          Number(box.dataset.snapCol) || at.col,
-          Number(box.dataset.snapRow) || at.row,
-          cols,
-          rows
-        );
+        const clamped = clampOrigin(Number(box.dataset.snapCol) || at.col, spec[4], cols, rows);
         delete box.dataset.snapCol;
         delete box.dataset.snapRow;
+        delete box.dataset.snapAxis;
+        /* Only the column moves here. Rows belong to the stack. */
         spec[2] = clamped.col;
-        spec[4] = clamped.row;
-        lastMove = `Placed ${spec[1]} at col ${clamped.col}, row ${clamped.row}`;
+        lastMove = `Moved ${spec[1]} to columns ${clamped.col}\u2013${clamped.col + cols - 1}`;
         render();
       };
 
@@ -525,6 +654,8 @@ function bindSlotDrag(root, slide, body) {
       grip.addEventListener('pointercancel', up);
     });
   }
+
+  if (swapArm) paintSwapTargets(body);
 }
 
 function filteredIndexes() {
@@ -1026,7 +1157,7 @@ async function render() {
   if (body) bindSlotDrag(root, slide, body);
   const result = measure();
   if (!result.failed?.length) {
-    status.textContent = `${status.textContent} · drag ⠿ to move or swap slots`;
+    status.textContent = `${status.textContent} · ⠿ move · ⇄ swap (fit re-checked)`;
   }
   return result;
 }
@@ -1211,6 +1342,12 @@ new ResizeObserver(fit).observe(stage);
 
 section.addEventListener('keydown', (e) => {
   if (e.target.closest('[contenteditable]')) return;
+  if (e.key === 'Escape' && swapArm) {
+    e.preventDefault();
+    clearSwapArm(stage.querySelector('.safe-body'));
+    status.textContent = 'Swap cancelled.';
+    return;
+  }
   if (e.key === 'ArrowRight') {
     e.preventDefault();
     section.querySelector('[data-nav="1"]').click();
