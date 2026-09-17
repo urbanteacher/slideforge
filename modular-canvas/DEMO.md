@@ -148,6 +148,35 @@ table shows the heading and table, with the points still there if you swap back.
 Positions are dropped on a swap (`delete slide.mockRecipe`), because spans measured
 for the old shape mean nothing to the new one. Fit is re-checked immediately.
 
+### Each option says whether it will fit
+
+On opening, the picker renders every offered shape off screen with your actual
+words — `prepareLayout` on a clone, the same conversion the swap performs — and
+labels it **should fit**, **too tight** or **needs a picture**. 33 shapes measure
+in about a second. A too-tight shape asks once more before it commits.
+
+It is a prediction, so it can be wrong, and when it is the status says so rather
+than letting the two disagree in silence: *"the picker expected this to fit; it
+does not."* One shape in 256 swaps does this — chart to Statement, where the
+chart's data ends up as 58px display type. A quiet wrong "should fit" would be
+worse than no estimate at all.
+
+### Bugs this found
+
+A 256-swap sweep across eight source slides turned up three:
+
+- **A slide with no slots reported a pass.** `measure()` loops over the slot
+  boxes, so zero boxes meant zero failures: swapping a wordy slide to Image,
+  Image stack or Video claimed *"All 0 slots fit"* while the recipe line said
+  *"No recipe matches"* — the two contradicted each other in the same breath. The
+  layout renders a placeholder with no `.img`/`.vid` for the recipe to find, so
+  nothing is placed. Zero slots is now a failure that names the cause.
+- **The picker outlived its own slide.** Nothing closed it on re-render, and it
+  closes over the slide it was opened on, so navigating with it open would apply
+  the next choice to the previous slide. `render()` closes it.
+- **The trial normalized and the swap did not**, so the two ran different
+  conversions. The trial now matches `applyFeature` exactly.
+
 An authorable type with **no** group is excluded on purpose, matching the editor:
 `join` is inserted by the live flow rather than chosen as a shape. The smoke
 asserts the picker and the editor agree on that set, so neither can drift.

@@ -173,9 +173,13 @@ try {
   assert.deepEqual(groupNames, appGroups, 'groups are not the app\u2019s');
   const keepsPoints = await page.evaluate(() =>
     [...document.querySelectorAll('.demo-feature-option')]
-      .filter((b) => b.querySelector('.demo-feature-keep'))
+      .filter((b) => b.dataset.keepsPoints === '1')
       .map((b) => b.dataset.feature).sort());
-  const withPits = await page.evaluate(() => window.SF.BULLET_LAYOUTS.filter((t) => window.SF.DECK_TYPES.includes(t)).sort());
+  const withPits = await page.evaluate(() =>
+    window.SF.BULLET_LAYOUTS
+      .filter((t) => window.SF.DECK_TYPES.includes(t))
+      .filter((t) => window.SF.LAYOUT_GROUPS.some((g) => window.SF.SLIDE_TYPES[t].group === g[0]))
+      .sort());
   assert.deepEqual(keepsPoints, withPits, 'the "keeps points" marks do not match BULLET_LAYOUTS');
 
   /* Bullets to a table: the heading carries, the points stay in the data. */
@@ -188,6 +192,86 @@ try {
   assert.equal(await page.locator('#demo-deck .safe-slot h2').first().innerText(), headingBefore, 'the heading did not carry over');
   assert.match(await page.locator('#demo-deck .demo-status').innerText(), /Bullets .* Table/);
   assert.equal(await page.locator('#demo-deck .demo-status').getAttribute('data-fits'), 'true');
+
+  /* A shape that places nothing must not report a pass. measure() loops over the
+     slot boxes, so zero boxes used to mean zero failures: swapping a wordy slide
+     to Image claimed "All 0 slots fit" while the recipe line said no match. */
+  await page.click('#demo-reset');
+  await settled();
+  /* The filter is still on the previous type; slide 0 is not in that list. */
+  await page.selectOption('#demo-filter', '');
+  await settled();
+  await page.selectOption('#demo-slide', '0');
+  await settled();
+  await page.locator('#demo-deck .safe-stage').scrollIntoViewIfNeeded();
+  for (const pictureShape of ['image', 'gallery', 'video']) {
+    await page.click('#demo-reset');
+    await settled();
+    await page.click('#demo-deck .safe-slot .demo-slot-swap');
+    await page.waitForSelector('.demo-feature-pop');
+    const choice = page.locator(`.demo-feature-option[data-feature="${pictureShape}"]`);
+    await choice.click();
+    if (await page.locator('.demo-feature-pop').count()) await choice.click();
+    await settled();
+    assert.equal(
+      await page.locator('#demo-deck .demo-status').getAttribute('data-fits'),
+      'false',
+      `${pictureShape} placed nothing and still reported a pass`
+    );
+    /* __demoRows reports the recipe; count the boxes actually placed. */
+    assert.equal(
+      await page.locator('#demo-deck .safe-slot').count(),
+      0,
+      `${pictureShape} should place no slots on a title slide with no picture`
+    );
+  }
+
+  /* The picker predicts fit from a trial render, and must agree with the result
+     it produces — or say plainly that it did not. */
+  /* Pin the slide by index and keep the filter off: a swap changes the slide's
+     type, so a type filter would move the selection out from under the test. */
+  const CONTENT_SLIDE = '4';
+  const openPicker = async () => {
+    await page.selectOption('#demo-filter', '');
+    await settled();
+    await page.selectOption('#demo-slide', CONTENT_SLIDE);
+    await settled();
+    await page.click('#demo-reset');
+    await settled();
+    await page.locator('#demo-deck .safe-stage').scrollIntoViewIfNeeded();
+    await page.click('#demo-deck .safe-slot[data-name="Bullet list"] .demo-slot-swap');
+    await page.waitForSelector('.demo-feature-pop');
+  };
+  await openPicker();
+  await page.waitForFunction(
+    () => ![...document.querySelectorAll('.demo-feature-fit')].some((n) => n.textContent === '\u2026'),
+    null,
+    { timeout: 60000 }
+  );
+  const predictions = await page.evaluate(() =>
+    Object.fromEntries([...document.querySelectorAll('.demo-feature-option')]
+      .filter((b) => b.dataset.fit)
+      .map((b) => [b.dataset.feature, b.dataset.fit])));
+  assert.ok(Object.keys(predictions).length > 20, 'the picker measured almost nothing');
+  assert.ok(Object.values(predictions).includes('yes'), 'no shape was predicted to fit');
+  assert.ok(Object.values(predictions).includes('no'), 'no shape was predicted to be too tight');
+
+  let disagreements = 0;
+  for (const [shape, said] of Object.entries(predictions)) {
+    await openPicker();
+    const choice = page.locator(`.demo-feature-option[data-feature="${shape}"]`);
+    await choice.click();
+    if (await page.locator('.demo-feature-pop').count()) await choice.click();
+    await settled();
+    const text = await page.locator('#demo-deck .demo-status').innerText();
+    const got = (await page.locator('#demo-deck .demo-status').getAttribute('data-fits')) === 'true' ? 'yes' : 'no';
+    if (got !== said) {
+      disagreements++;
+      assert.match(text, /the picker expected|better than the picker expected/,
+        `${shape}: predicted ${said}, got ${got}, and the status did not say so`);
+    }
+  }
+  assert.ok(disagreements <= 2, `the picker disagreed with its own result ${disagreements} times`);
 
   /* --- Formatting: the app's own canvas editor, not a lab copy --- */
   await page.click('#demo-reset');
@@ -227,7 +311,7 @@ try {
   console.log(
     `ok · demo-deck ${summary.fit}/${summary.total} fit · ${summary.needSpace} need space · ` +
       `${summary.underFloor} under the 20px floor (smallest ${summary.smallest}px) · ` +
-      `rearrange budget-neutral, no column drift · feature picker matches the editor · shared format toolbar paints`
+      `rearrange budget-neutral, no column drift · picker matches the editor, predicts fit and admits when it is wrong · format toolbar paints`
   );
 } finally {
   await browser.close();

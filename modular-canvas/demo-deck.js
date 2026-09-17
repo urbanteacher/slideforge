@@ -442,16 +442,24 @@ function openFeaturePicker(button, slide, slotName) {
       btn.type = 'button';
       btn.className = 'demo-feature-option' + (item.type === slide.type ? ' is-current' : '');
       btn.dataset.feature = item.type;
+      /* Independent of the fit measurement: whether this shape takes bullet pits
+         at all. A shape can keep your points and still be too tight for them. */
+      btn.dataset.keepsPoints = item.takesPoints ? '1' : '0';
       btn.disabled = item.type === slide.type;
       btn.title = item.carries.length ? `Carries over: ${item.carries.join(', ')}` : 'Starts this feature fresh';
       btn.innerHTML =
         `<span class="demo-feature-icon" aria-hidden="true">${item.icon || '\u25a6'}</span>` +
         `<span class="demo-feature-label">${item.label}</span>` +
-        (points && item.takesPoints ? `<span class="demo-feature-keep">keeps points</span>` : '');
+        `<span class="demo-feature-fit" aria-live="polite">${item.type === slide.type ? 'current' : '\u2026'}</span>`;
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        applyFeature(slide, item.type, slotName);
+        if (btn.dataset.fit === 'no' && !btn.dataset.confirmed) {
+          btn.dataset.confirmed = '1';
+          btn.querySelector('.demo-feature-fit').textContent = 'swap anyway?';
+          return;
+        }
+        applyFeature(slide, item.type, slotName, btn.dataset.fit);
       });
       list.append(btn);
     }
@@ -468,9 +476,43 @@ function openFeaturePicker(button, slide, slotName) {
   pop.style.top = `${anchor.bottom - host.top + 6}px`;
   pop.style.left = `${Math.max(8, Math.min(anchor.left - host.left, host.width - pop.offsetWidth - 8))}px`;
   pop.querySelector('.demo-feature-option:not([disabled])')?.focus();
+  annotateFits(pop, slide);
 }
 
-function applyFeature(slide, type, slotName) {
+/* Measure every offered shape against this slide's actual words, in order, and
+   label each one. Sequential on purpose: each trial mounts a real render, and
+   running 33 at once would fight for layout. The picker stays usable throughout. */
+async function annotateFits(pop, slide) {
+  const buttons = [...pop.querySelectorAll('.demo-feature-option')];
+  const points = (slide.bullets || []).filter((b) => String(b).trim()).length;
+  for (const btn of buttons) {
+    if (!pop.isConnected) return;
+    const type = btn.dataset.feature;
+    const tag = btn.querySelector('.demo-feature-fit');
+    if (type === slide.type) continue;
+    let verdict;
+    try {
+      verdict = await trialFit(slide, type);
+    } catch (e) {
+      tag.textContent = 'untested';
+      continue;
+    }
+    if (!pop.isConnected) return;
+    btn.dataset.fit = verdict.fits ? 'yes' : 'no';
+    btn.classList.toggle('is-tight', !verdict.fits);
+    if (verdict.fits) {
+      tag.textContent = points && SF.BULLET_LAYOUTS.includes(type) ? 'should fit · keeps points' : 'should fit';
+    } else if (!verdict.placed) {
+      tag.textContent = 'needs a picture';
+      btn.title = `A ${type} slide needs a picture or video, and this one has none.`;
+    } else {
+      tag.textContent = 'too tight';
+      btn.title = `Would overflow: ${verdict.failed.join(', ')}. Click again to swap anyway.`;
+    }
+  }
+}
+
+function applyFeature(slide, type, slotName, predicted) {
   const was = SF.SLIDE_TYPES[slide.type]?.label || slide.type;
   const pointsBefore = (slide.bullets || []).filter((b) => String(b).trim()).length;
   closeFeaturePicker();
@@ -481,8 +523,17 @@ function applyFeature(slide, type, slotName) {
   render().then((result) => {
     const now = SF.SLIDE_TYPES[type]?.label || type;
     const shown = pointsBefore && SF.BULLET_LAYOUTS.includes(type);
+    const fitted = !result?.failed?.length;
+    /* The picker's verdict is a prediction from a trial render, and a prediction
+       can be wrong. Say so when it is, rather than letting the two disagree in
+       silence — a quiet wrong "should fit" is worse than no estimate at all. */
+    const surprise =
+      predicted === 'yes' && !fitted ? ' \u2014 the picker expected this to fit; it does not'
+      : predicted === 'no' && fitted ? ' \u2014 better than the picker expected'
+      : '';
     lastMove = `${slotName ? slotName + ': ' : ''}${was} \u2192 ${now}` +
-      (pointsBefore ? `, ${pointsBefore} points ${shown ? 'carried' : 'kept in the data'}` : '');
+      (pointsBefore ? `, ${pointsBefore} points ${shown ? 'carried' : 'kept in the data'}` : '') +
+      surprise;
     reportSwapFit(lastMove, result);
   });
 }
@@ -972,6 +1023,95 @@ function syncFlipButton() {
   }
 }
 
+/* Build the slot grid for a slide. Shared by render() and by the picker's trial
+   renders, so what the picker promises is measured the same way as the result. */
+function slotify(root, slide) {
+  const used = [];
+  const owner = root.querySelector('.cp-body') || root.querySelector('.pad') || root;
+  const hadCompositionBody = !!root.querySelector('.cp-body');
+  const body = document.createElement('div');
+  body.className = 'safe-body';
+  const specs = recipeFor(slide);
+  if (!slide.mockRecipe) slide.mockRecipe = specs.map((r) => r.slice());
+  specs.forEach((spec, recipeIndex) => {
+    const [sel, name, col, cols, row, rows] = spec;
+    const node = pick(owner, sel);
+    if (!node) return;
+    const box = document.createElement('div');
+    box.className = 'safe-slot';
+    box.style.gridArea = `${row} / ${col} / span ${rows} / span ${cols}`;
+    box.dataset.name = name;
+    box.dataset.label = `${name} · ${rows}r × ${cols}c`;
+    box.dataset.recipeIndex = String(recipeIndex);
+    box.append(node);
+    body.append(box);
+    used.push({ name, col, cols, row, rows });
+  });
+  if (hadCompositionBody) owner.replaceWith(body);
+  else {
+    owner.replaceChildren(body);
+    root.classList.add('safe-generic');
+  }
+  return used;
+}
+
+/* Which slots overflow. The per-word check is skipped for blocks that paint on
+   their own rim; scroll fit is the contract for those. */
+function overflowIn(root) {
+  const failed = [];
+  for (const box of root.querySelectorAll('.safe-slot')) {
+    const r = box.getBoundingClientRect();
+    let bad = box.scrollHeight > box.clientHeight + 1 || box.scrollWidth > box.clientWidth + 1;
+    if (!/chart|image|media|video|mind map|join|game/i.test(box.dataset.name || '')) {
+      const walk = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
+      while (walk.nextNode()) {
+        if (!walk.currentNode.textContent.trim()) continue;
+        for (const word of walk.currentNode.textContent.matchAll(/\S+/g)) {
+          const range = document.createRange();
+          range.setStart(walk.currentNode, word.index);
+          range.setEnd(walk.currentNode, word.index + word[0].length);
+          for (const t of range.getClientRects())
+            if (t.bottom > r.bottom + 1 || t.right > r.right + 1 || t.left < r.left - 1) bad = true;
+        }
+      }
+    }
+    box.classList.toggle('safe-overflow', bad);
+    if (bad) failed.push(box.dataset.name);
+  }
+  return failed;
+}
+
+/* Would this swap fit? Measured on a real render of the converted slide, off
+   screen, using the editor's own trial approach: prepareLayout on a clone. The
+   picker can then say so before you commit, instead of after it breaks. */
+let trialHost = null;
+async function trialFit(slide, type) {
+  if (!trialHost) {
+    trialHost = document.createElement('div');
+    trialHost.setAttribute('aria-hidden', 'true');
+    trialHost.style.cssText = 'position:absolute;left:-4000px;top:0;width:1280px;height:720px;pointer-events:none';
+    /* Inside the section, not the body: some rules are scoped to #demo-deck, and
+       a trial mounted outside it measures under different CSS than the result. */
+    section.append(trialHost);
+  }
+  /* prepareLayout on a plain clone — exactly what applyFeature does to the real
+     slide. The editor's own thumbnail normalizes first, which is fine for an
+     illustration but made this verdict disagree with its own result: on a chart
+     slide, normalizing reshaped the body before the conversion saw it. */
+  const trial = SF.prepareLayout(structuredClone(slide), type);
+  delete trial.mockRecipe;
+  const root = SF.renderSlide(deck, trial, { index, total: deck.slides.length, revealed: 99 });
+  root.classList.add('safe-slotted', 'demo-slotted');
+  const placed = slotify(root, trial);
+  trialHost.replaceChildren(root);
+  await document.fonts.ready;
+  await new Promise(requestAnimationFrame);
+  await new Promise(requestAnimationFrame);
+  const failed = placed.length ? overflowIn(root) : ['nothing placed'];
+  trialHost.replaceChildren();
+  return { placed: placed.length, failed, fits: !failed.length };
+}
+
 function pick(owner, selector) {
   for (const part of selector.split(',').map((s) => s.trim())) {
     const n = owner.querySelector(part);
@@ -1054,6 +1194,10 @@ function editable(root, slide, measure) {
 
 async function render() {
   const run = ++revision;
+  /* A picker outlives the render that replaced its slot otherwise, and it closes
+     over the slide it was opened on — so navigating with it open would apply the
+     next choice to the previous slide. */
+  closeFeaturePicker();
   const slide = deck.slides[index];
   const original = $('#demo-original').checked;
   const root = SF.renderSlide(deck, slide, { index, total: deck.slides.length, revealed: 99 });
@@ -1065,30 +1209,7 @@ async function render() {
     root.classList.add('safe-slotted', 'demo-slotted');
     root.classList.toggle('safe-grid', $('#demo-grid').checked || artwork);
     root.classList.toggle('demo-flip-art', artwork);
-    const owner = root.querySelector('.cp-body') || root.querySelector('.pad') || root;
-    const body = document.createElement('div');
-    body.className = 'safe-body';
-    const specs = recipeFor(slide);
-    if (!slide.mockRecipe) slide.mockRecipe = specs.map((r) => r.slice());
-    specs.forEach((spec, recipeIndex) => {
-      const [sel, name, col, cols, row, rows] = spec;
-      const node = pick(owner, sel);
-      if (!node) return;
-      const box = document.createElement('div');
-      box.className = 'safe-slot';
-      box.style.gridArea = `${row} / ${col} / span ${rows} / span ${cols}`;
-      box.dataset.name = name;
-      box.dataset.label = `${name} · ${rows}r × ${cols}c`;
-      box.dataset.recipeIndex = String(recipeIndex);
-      box.append(node);
-      body.append(box);
-      used.push({ name, col, cols, row, rows });
-    });
-    if (root.querySelector('.cp-body')) owner.replaceWith(body);
-    else {
-      owner.replaceChildren(body);
-      root.classList.add('safe-generic');
-    }
+    used.push(...slotify(root, slide));
   }
 
   /* Restore art poses in both modes so flips keep placement. */
@@ -1128,29 +1249,15 @@ async function render() {
     }
     if (artwork) return { failed: [] };
     const failed = [];
-    for (const box of root.querySelectorAll('.safe-slot')) {
-      const r = box.getBoundingClientRect();
-      let bad = box.scrollHeight > box.clientHeight + 1 || box.scrollWidth > box.clientWidth + 1;
-      /* Charts/media often paint labels on the rim; scroll fit is the contract. */
-      const skipGlyphs = /chart|image|media|video|mind map|join|game/i.test(box.dataset.name || '');
-      if (!skipGlyphs) {
-        const walk = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
-        while (walk.nextNode()) {
-          if (!walk.currentNode.textContent.trim()) continue;
-          for (const word of walk.currentNode.textContent.matchAll(/\S+/g)) {
-            const range = document.createRange();
-            range.setStart(walk.currentNode, word.index);
-            range.setEnd(walk.currentNode, word.index + word[0].length);
-            for (const t of range.getClientRects()) {
-              if (t.bottom > r.bottom + 1 || t.right > r.right + 1 || t.left < r.left - 1) bad = true;
-            }
-          }
-        }
-      }
-
-      box.classList.toggle('safe-overflow', bad);
-      if (bad) failed.push(box.dataset.name);
+    /* A slide with no slots used to report "All 0 slots fit": measure() loops over
+       the boxes, and zero boxes means zero failures. Swapping a wordy slide to
+       Image, Image stack or Video hits this — the layout renders a placeholder
+       with no .img/.vid for the recipe to find, so nothing is placed at all, and
+       the status claimed a pass while the recipe line said "No recipe matches". */
+    if (!used.length) {
+      failed.push(`nothing placed: a ${slide.type} slide needs a picture or video, and this one has none`);
     }
+    failed.push(...overflowIn(root));
 
     /* A block narrower than its readable minimum is a failure of the same kind as
        an overflow, and nothing else catches it: vector blocks shrink silently. */
