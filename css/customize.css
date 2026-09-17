@@ -147,7 +147,15 @@
 .slide.cp .pad { padding:32px 52px 24px; display:flex; flex-direction:column; gap:0; height:100%; position:relative; z-index:1; align-items:stretch; justify-content:flex-start; text-align:left; }
 
 .cp h1,.cp h2,.cp h3,.cp p,.cp blockquote { margin:0; font-family:var(--s-font); color:inherit; }
-.cp-header { position:relative; display:flex; justify-content:space-between; align-items:center; height:40px; flex:none; font-size:var(--composition-meta,20px); font-weight:600; }
+/* 56px, because that is how tall the thing in it is.
+   The band was 40px while the campaign lockup beside it is 56, so the mark
+   hung 16px below its own header and into the body — which never showed,
+   because the body happened to pad its top by 32px and hold content clear.
+   The band was not containing its contents; the body was covering for it.
+   Fixing that is free: the 16px moves out of every body's top padding and
+   into the header, so every content box stays exactly where it was, and the
+   body becomes 576px — which is 16 rows of 36 exactly, see §14b. */
+.cp-header { position:relative; display:flex; justify-content:space-between; align-items:center; height:56px; flex:none; font-size:var(--composition-meta,20px); font-weight:600; }
 .cp-beat { font-weight:400; }
 /* The context line sits in the middle of the slide, not in the middle of
    whatever room the other two items left it.
@@ -164,13 +172,13 @@
    330px from the right, so the centred line has 288px either side of centre
    before it runs under it. 560 leaves a little air. */
 .cp-header .cp-beat { position:absolute; left:50%; transform:translateX(-50%); max-width:560px; text-align:center; }
-.cp-body { flex:1; min-height:0; position:relative; padding:32px 0 26px; }
+.cp-body { flex:1; min-height:0; position:relative; padding:16px 0 26px; }
 .cp .cp-heading { font-size:var(--composition-heading,52px); line-height:1.03; letter-spacing:-.035em; font-weight:700; max-width:1120px; text-wrap:balance; }
 .cp .cp-prompt { font-size:var(--composition-body,24px); font-weight:500; }
 .cp .cp-source { font-size:var(--composition-caption,18px); line-height:1.25; margin-top:14px; max-width:1130px; }
 /* Poster with an authored illustration. */
 
-.cp-title .cp-body { display:grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr); align-items:center; gap:12px; padding:26px 0 30px; }
+.cp-title .cp-body { display:grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr); align-items:center; gap:12px; padding:10px 0 30px; }
 
 /* A cover with no picture is one column, not one column and a hole. */
 .cp-title-unillustrated .cp-body { grid-template-columns: minmax(0,1fr); }
@@ -182,12 +190,12 @@
 .cp-prop { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
 /* A human voice against a quiet dark ground. */
 
-.cp-quote .cp-body { display:flex; flex-direction:column; justify-content:center; padding:35px 60px 30px 150px; }
+.cp-quote .cp-body { display:flex; flex-direction:column; justify-content:center; padding:19px 60px 30px 150px; }
 .cp .cp-quote-mark { position:absolute; top:24px; left:0; font-size:var(--composition-hero-mark,230px); color:var(--cp-color); line-height:1; }
 .cp .cp-scenario { border:0; padding:0; font-size:var(--cp-voice-size,62px); line-height:1.1; font-weight:600; letter-spacing:-.025em; max-width:920px; }
 .cp-quote .cp-prompt { margin-top:38px; color:var(--cp-color); }
 /* Two by two ballot: the wall and the live poll use the same letters. */
-.cp-cards .cp-body { display:flex; flex-direction:column; gap:22px; padding-top:26px; }
+.cp-cards .cp-body { display:flex; flex-direction:column; gap:22px; padding-top:10px; }
 .slide.cp-cards .cp-heading { text-align:left; margin:0; font-size:var(--composition-ballot-heading,48px); max-width:1070px; }
 .cp-choices { display:grid; grid-template-columns:1fr 1fr; gap:0 38px; flex:1; }
 .cp-choice { display:flex; gap:22px; align-items:center; padding:20px 0; border-top:2px solid var(--s-fg); }

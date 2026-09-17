@@ -1138,7 +1138,49 @@ five rows and has four" is a number, not an opinion — and it already runs
 across both aspect ratios. A span model without a measured fit check is just
 a new way to overflow.
 
+### 2026-09-17 — the header now fits its contents, and the body arithmetic moved
+
+The header band was 40px while the campaign lockup beside it is 56px, so the
+mark hung 16px below its own header and into the body. It never showed,
+because the body padded its top by 32px and held content clear — the band was
+not containing its contents, the body was covering for it.
+
+Fixed by moving the 16px out of every body's top padding and into the header:
+`.cp-header` 40 → 56, and the four `.cp-body` top paddings each down by 16
+(32→16, 26→10, 35→19, 26→10). Measured before and after across all 35
+campaign slides: **content-box tops and heights are identical** (98/104/107
+and 527/534/536/540), the header bottom now equals the lockup bottom at 88px,
+and all 597 visual baselines pass unchanged. Zero visual change, by
+construction and by measurement.
+
+**But it moves the arithmetic the span map was built on.** The body is now
+**576px, not 592** — which is 16 rows of 36 exactly, so the band decomposition
+gets cleaner:
+
+```
+32 pad + 56 header + 576 body + 32 footer + 24 pad = 720
+576 = 16 x 36
+```
+
+The catch is that 36px fits the content *worse* than 37px did. A two-line
+heading is 183px: that is 4.95 rows of 37 — which is why 5 rows looked so
+convincing — but 5.08 rows of 36, so it would need 6 and gain 33px of slack.
+The 37px fit was a coincidence of the old body height, not a property of the
+design.
+
+Candidate pitches on 576 (`576 = 2^6 x 9`): **18 rows x 32px**, 16 x 36,
+12 x 48, 24 x 24. On the 183px heading, 32 / 48 / 24 all round to 192px — 9px
+of slack — and 36 is the worst of them at 216.
+
+**So the pitch is open again, and the span map below is stale.** Its row counts
+were computed against the 592px body at 37px and need redoing at whatever
+pitch is chosen for 576. The method in it stands: spans round up, the heading
+span is variable, margins become gaps, and centring becomes an anchor.
+
 ### The span map for `poster-art`, measured across all five covers
+
+*(Row counts below are against the retired 592px/37px body — see the entry
+above. The reasoning holds; the numbers need recomputing.)*
 
 Sketch, not an implementation. 16 rows x 37px in the 592px body; the two
 columns stay as they are (668.672 | 495.328, 12px gap).
