@@ -195,13 +195,41 @@
 .demo-slotted.safe-generic .safe-slot > .sub,
 .demo-slotted.safe-generic .safe-slot > .attrib { font-size:22px; line-height:1.3; }
 .demo-slotted.safe-generic .safe-slot > .q { font-size:36px; line-height:1.15; }
-.demo-slotted.safe-generic .safe-slot > .lecturer-portrait,
-.demo-slotted.safe-generic .safe-slot > .lecturer-copy,
-.demo-slotted.safe-generic .safe-slot > .split-copy {
-  width: 100% !important;
-  height: 100% !important;
-  min-height: 0 !important;
-  flex-shrink: 0;
+.demo-slotted .safe-slot {
+  position: relative;
+}
+.demo-slot-grip {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 7;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #0c3354;
+  border-radius: 6px;
+  background: #fff3db;
+  color: #0c3354;
+  font: 16px/1 system-ui;
+  cursor: grab;
+  opacity: 0.85;
+}
+.demo-slot-grip:hover,
+.demo-slot-grip:focus-visible {
+  opacity: 1;
+  outline: 2px solid #0c3354;
+}
+.demo-slot-lifting {
+  opacity: 0.92;
+  box-shadow: 0 12px 28px rgba(12, 51, 84, 0.28);
+  outline: 3px solid #0c3354 !important;
+}
+.demo-slot-drop {
+  outline: 3px dashed #c8102e !important;
+  background: rgba(200, 16, 46, 0.08);
+}
+.demo-flip-art .demo-slot-grip {
+  display: none;
 }
 /* Production uses width:33% / height:390px for the row flex layout; in a slot that
    leaves a skinny placeholder inside a wide box. The slot owns the size now. */

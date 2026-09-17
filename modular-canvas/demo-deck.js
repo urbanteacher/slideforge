@@ -238,10 +238,155 @@ function typeOf(slide) {
 }
 
 function recipeFor(slide) {
-  return recipes[slide.type] || [
+  if (Array.isArray(slide.mockRecipe) && slide.mockRecipe.length) {
+    return slide.mockRecipe.map((r) => r.slice());
+  }
+  const base = recipes[slide.type] || [
     H('h1,h2', 'Heading'),
     BODY('.pad > *:not(h1):not(h2):not(.accent-bar):not(.slide-logo):not(.pagenum):not(.track)', 'Body'),
   ];
+  return base.map((r) => r.slice());
+}
+
+function ensureMockRecipe(slide) {
+  if (!Array.isArray(slide.mockRecipe) || !slide.mockRecipe.length) {
+    slide.mockRecipe = recipeFor(slide);
+  }
+  return slide.mockRecipe;
+}
+
+/** Map a pointer on .safe-body to 1-based lattice column/row. */
+function latticeAt(body, clientX, clientY) {
+  const br = body.getBoundingClientRect();
+  const x = ((clientX - br.left) / br.width) * 1176;
+  const y = ((clientY - br.top) / br.height) * 576;
+  const col = Math.max(1, Math.min(12, Math.floor(x / SNAP_X) + 1));
+  const row = Math.max(1, Math.min(16, Math.floor(y / SNAP_Y) + 1));
+  return { col, row };
+}
+
+function clampOrigin(col, row, cols, rows) {
+  return {
+    col: Math.max(1, Math.min(12 - cols + 1, col)),
+    row: Math.max(1, Math.min(16 - rows + 1, row)),
+  };
+}
+
+function bindSlotDrag(root, slide, body) {
+  const recipe = ensureMockRecipe(slide);
+  const boxes = [...body.querySelectorAll('.safe-slot')];
+
+  for (const box of boxes) {
+    const idx = Number(box.dataset.recipeIndex);
+    if (!Number.isFinite(idx) || !recipe[idx]) continue;
+
+    const grip = document.createElement('button');
+    grip.type = 'button';
+    grip.className = 'demo-slot-grip';
+    grip.title = 'Drag to move on the lattice, or drop on another slot to swap';
+    grip.setAttribute('aria-label', `Move ${box.dataset.name}`);
+    grip.textContent = '⠿';
+    box.append(grip);
+
+    grip.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const spec = recipe[idx];
+      const cols = spec[3];
+      const rows = spec[5];
+      const scale = root.getBoundingClientRect().width / 1280;
+      const startX = e.clientX;
+      const startY = e.clientY;
+      let dragging = false;
+      let over = null;
+
+      box.classList.add('demo-slot-lifting');
+      grip.setPointerCapture(e.pointerId);
+
+      const clearOver = () => {
+        if (over) over.classList.remove('demo-slot-drop');
+        over = null;
+      };
+
+      const move = (ev) => {
+        const dx = (ev.clientX - startX) / scale;
+        const dy = (ev.clientY - startY) / scale;
+        if (!dragging && Math.hypot(dx, dy) > 4) dragging = true;
+        if (!dragging) return;
+        box.style.transform = `translate(${dx}px, ${dy}px)`;
+        box.style.zIndex = '8';
+
+        clearOver();
+        box.style.pointerEvents = 'none';
+        const hit = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.safe-slot');
+        box.style.pointerEvents = '';
+        if (hit && hit !== box && body.contains(hit)) {
+          over = hit;
+          over.classList.add('demo-slot-drop');
+        }
+
+        const at = latticeAt(body, ev.clientX, ev.clientY);
+        const clamped = clampOrigin(at.col, at.row, cols, rows);
+        status.textContent = over
+          ? `Drop to swap with ${over.dataset.name}`
+          : `Move ${box.dataset.name} → col ${clamped.col}, row ${clamped.row} (${cols}c × ${rows}r)`;
+      };
+
+      const up = (ev) => {
+        try {
+          grip.releasePointerCapture(ev.pointerId);
+        } catch (_) {
+          /* already released */
+        }
+        grip.removeEventListener('pointermove', move);
+        grip.removeEventListener('pointerup', up);
+        grip.removeEventListener('pointercancel', up);
+        box.style.transform = '';
+        box.style.zIndex = '';
+        box.classList.remove('demo-slot-lifting');
+
+        if (!dragging) {
+          clearOver();
+          return;
+        }
+
+        const drop = over;
+        clearOver();
+
+        if (drop && drop !== box && body.contains(drop)) {
+          const j = Number(drop.dataset.recipeIndex);
+          if (Number.isFinite(j) && recipe[j] && j !== idx) {
+            const a = recipe[idx];
+            const b = recipe[j];
+            const aPos = [a[2], a[3], a[4], a[5]];
+            a[2] = b[2];
+            a[3] = b[3];
+            a[4] = b[4];
+            a[5] = b[5];
+            b[2] = aPos[0];
+            b[3] = aPos[1];
+            b[4] = aPos[2];
+            b[5] = aPos[3];
+            status.textContent = `Swapped ${a[1]} ↔ ${b[1]}`;
+            render();
+            return;
+          }
+        }
+
+        const at = latticeAt(body, ev.clientX, ev.clientY);
+        const clamped = clampOrigin(at.col, at.row, cols, rows);
+        spec[2] = clamped.col;
+        spec[4] = clamped.row;
+        status.textContent = `Placed ${spec[1]} at col ${clamped.col}, row ${clamped.row}`;
+        render();
+      };
+
+      grip.addEventListener('pointermove', move);
+      grip.addEventListener('pointerup', up);
+      grip.addEventListener('pointercancel', up);
+    });
+  }
 }
 
 function filteredIndexes() {
@@ -596,18 +741,21 @@ async function render() {
     const body = document.createElement('div');
     body.className = 'safe-body';
     const specs = recipeFor(slide);
-    for (const [sel, name, col, cols, row, rows] of specs) {
+    if (!slide.mockRecipe) slide.mockRecipe = specs.map((r) => r.slice());
+    specs.forEach((spec, recipeIndex) => {
+      const [sel, name, col, cols, row, rows] = spec;
       const node = pick(owner, sel);
-      if (!node) continue;
+      if (!node) return;
       const box = document.createElement('div');
       box.className = 'safe-slot';
       box.style.gridArea = `${row} / ${col} / span ${rows} / span ${cols}`;
       box.dataset.name = name;
       box.dataset.label = `${name} · ${rows}r × ${cols}c`;
+      box.dataset.recipeIndex = String(recipeIndex);
       box.append(node);
       body.append(box);
       used.push({ name, col, cols, row, rows });
-    }
+    });
     if (root.querySelector('.cp-body')) owner.replaceWith(body);
     else {
       owner.replaceChildren(body);
@@ -713,7 +861,13 @@ async function render() {
   }
 
   editable(root, slide, measure);
-  return measure();
+  const body = root.querySelector('.safe-body');
+  if (body) bindSlotDrag(root, slide, body);
+  const result = measure();
+  if (!result.failed?.length) {
+    status.textContent = `${status.textContent} · drag ⠿ to move or swap slots`;
+  }
+  return result;
 }
 
 function show(i) {

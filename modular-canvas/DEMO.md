@@ -17,7 +17,9 @@ when content outgrows a span. Production northeastern CSS is not modified.
   with Back/Front, drag on the canvas to snap. **Flip · content** returns to slot
   editing. Poses live on `slide.mockArt` (`plane`, `hidden`, `locked`, `order`, `x`, `y`).
   This is not the reverted always-on Layers panel — the stack only appears on the art face.
-- Edit text on the canvas; **Reset this slide** / **Download mock JSON**.
+- Edit text on the canvas; **drag the ⠿ grip** on a slot to move it on the
+  lattice (snaps to columns/rows) or drop onto another slot to swap. **Reset this
+  slide** / **Download mock JSON**.
 
 ## Latest audit (lab)
 
@@ -130,3 +132,82 @@ Expects 97 slides, need-space ≤ 1 (the one known over-budget slide) and no mor
 than 44 slides under the 20px floor. Both budgets equal the current state on
 purpose: any slack lets a regression hide inside it. The legibility budget is a
 ratchet against getting worse, not a claim that 24 is acceptable.
+
+## How rearranging should work
+
+`node tools/stack-audit.mjs` answers this by measurement rather than taste, and
+the answer is unusually clean:
+
+**30 of 30 slide types express as vertical stacks. Only 2 put stacks side by side
+(`introduction`, `split`). The only gaps used anywhere are 1, 2 and 3 rows.**
+
+So the body is not a 192-cell canvas that happens to have things on it. It is a
+stack of 1–5 items with small explicit gaps, and in two cases two such stacks.
+
+### Why the chrome map does not generalise
+
+The chrome map works because the header and footer have **three slots each, a
+closed set, and one operation** — swap. Six cells drawn as two rows *is* the thing
+it represents, so there is nothing to translate.
+
+The body has 16 x 12 = 192 cells. A map of 192 cells is a spreadsheet, not a map.
+But the body's *slots* number 1–5 and sit in one stack, so **the body's map is a
+list, not a grid.**
+
+### Derive position, do not author it
+
+This is the part that decides whether the feature is cheap or a nightmare.
+
+Recipes today author the row: `['h1', 'Headline', 1, 12, 3, 6]` puts the headline
+at row 3. Row 3 is a consequence of what sits above it, so authoring it means every
+reorder rewrites every coordinate below the moved item — which is exactly the
+coordinate-shuffling that made the reverted canvas editor unworkable.
+
+If an item declares only its span and its column share, and row position is derived
+by stacking, then the gaps become items too:
+
+```
+title: [{ space: 2 }, { headline: 6 }, { space: 1 },
+        { subtitle: 3 }, { space: 1 }, { date: 2 }, { space: 1 }]   // = 16
+```
+
+That is slide 1 exactly. And then:
+
+| Operation | Implementation | Invariant |
+|-----------|----------------|-----------|
+| Reorder | array move | spans + spacers = 16 |
+| Insert | splice | same |
+| Delete | splice | same |
+| Resize | change one span | same |
+
+One assertion covers all four, and no coordinate is ever written.
+
+### Canvas or panel
+
+Both, split by what each is actually good at.
+
+**Canvas owns arrangement.** Every gesture a stack needs is one-dimensional and
+snapped: drag up/down to reorder, drag the bottom edge to change span, drag a side
+edge to change column share. There is no free positioning, so there is no pixel
+precision to get wrong — which is why this is not a repeat of the reverted editor.
+That attempt put freeform handles on the same surface as content, so the two
+competed for clicks and it needed a pointer-transparency mode with an unguessable
+side effect. A snapped stack needs none of that, and you can see what you are
+editing because it is the slide.
+
+**Panel owns the budget and the palette.** A row counter (`16 rows: 2 + 6 + 1 + 3
++ 1 + 2 + 1`) and the list of items you can add. Those are lists, not positions.
+
+**Chrome keeps its map.** Six cells is genuinely a map, and swapping is genuinely
+the only operation it needs.
+
+### Build order
+
+Convert one recipe from authored rows to a derived stack and prove a drag-reorder
+against it. Do that before anything else: if position is still authored when the
+first drag lands, every drag becomes a coordinate rewrite and the rest of the work
+is built on the thing we already reverted once.
+
+Blocks also need a **minimum readable size** next to their span, because an SVG
+block cannot fail the fit check — it shrinks instead of overflowing. A chart is not
+"12 rows"; it is "12 rows and at least 8 columns".
