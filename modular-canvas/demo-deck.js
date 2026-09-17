@@ -245,6 +245,7 @@ section.innerHTML = `
         <button type="button" id="demo-art-lock" title="Lock or unlock">Lock</button>
       </div>
     </aside>
+    <aside class="demo-feature-panel" id="demo-feature-panel" hidden aria-label="Swap this slide’s feature"></aside>
   </div>
   <p class="safe-status demo-status" role="status"></p>
   <div class="safe-recipe demo-recipe"></div>
@@ -411,17 +412,23 @@ function featureOptions(slide) {
 }
 
 function closeFeaturePicker() {
-  featurePicker?.remove();
+  const panel = $('#demo-feature-panel');
+  if (panel) {
+    panel.replaceChildren();
+    panel.hidden = true;
+  }
   featurePicker = null;
   section.classList.remove('demo-swap-picking');
 }
 
 function openFeaturePicker(button, slide, slotName) {
   closeFeaturePicker();
-  const pop = document.createElement('div');
-  pop.className = 'demo-feature-pop';
-  pop.setAttribute('role', 'dialog');
-  pop.setAttribute('aria-label', 'Swap this slide\u2019s feature');
+  /* Contained in the workspace column beside the canvas, not floating over it.
+     A popover here anchored against the page rather than the section — #demo-deck
+     is not positioned — so it landed on top of the playground, half of it cut off. */
+  const pop = $('#demo-feature-panel');
+  pop.hidden = false;
+  pop.replaceChildren();
   const points = (slide.bullets || []).filter((b) => String(b).trim()).length;
   pop.innerHTML =
     `<header><strong>Swap feature</strong>` +
@@ -466,15 +473,17 @@ function openFeaturePicker(button, slide, slotName) {
     box.append(list);
     pop.append(box);
   }
-  section.append(pop);
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'demo-feature-close';
+  close.textContent = 'Close';
+  close.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeFeaturePicker();
+  });
+  pop.append(close);
   featurePicker = pop;
   section.classList.add('demo-swap-picking');
-
-  /* Anchor under the button, then pull back inside the section if it would spill. */
-  const anchor = button.getBoundingClientRect();
-  const host = section.getBoundingClientRect();
-  pop.style.top = `${anchor.bottom - host.top + 6}px`;
-  pop.style.left = `${Math.max(8, Math.min(anchor.left - host.left, host.width - pop.offsetWidth - 8))}px`;
   pop.querySelector('.demo-feature-option:not([disabled])')?.focus();
   annotateFits(pop, slide);
 }
@@ -486,7 +495,7 @@ async function annotateFits(pop, slide) {
   const buttons = [...pop.querySelectorAll('.demo-feature-option')];
   const points = (slide.bullets || []).filter((b) => String(b).trim()).length;
   for (const btn of buttons) {
-    if (!pop.isConnected) return;
+    if (pop.hidden || featurePicker !== pop) return;
     const type = btn.dataset.feature;
     const tag = btn.querySelector('.demo-feature-fit');
     if (type === slide.type) continue;
@@ -497,7 +506,7 @@ async function annotateFits(pop, slide) {
       tag.textContent = 'untested';
       continue;
     }
-    if (!pop.isConnected) return;
+    if (pop.hidden || featurePicker !== pop) return;
     btn.dataset.fit = verdict.fits ? 'yes' : 'no';
     btn.classList.toggle('is-tight', !verdict.fits);
     btn.dataset.keepsHeading = verdict.keepsHeading ? '1' : '0';

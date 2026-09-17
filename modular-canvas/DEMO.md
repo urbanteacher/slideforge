@@ -148,6 +148,19 @@ table shows the heading and table, with the points still there if you swap back.
 Positions are dropped on a swap (`delete slide.mockRecipe`), because spans measured
 for the old shape mean nothing to the new one. Fit is re-checked immediately.
 
+### Where the picker sits
+
+In the workspace column beside the canvas, in normal flow — the same place the
+artwork stack uses, and only one of the two is ever open. It does not float.
+
+It was a popover, and it anchored against the page rather than the section
+because `#demo-deck` is not positioned: the offsets were computed inside the
+section and applied to the document, so it rendered on top of the playground
+above with half its labels cut off. Each option is now a two-line cell (name,
+then verdict) in an `auto-fill` grid, so nothing clips at any width, and the
+column becomes full width below 900px. The smoke asserts placement and checks
+for clipped labels at both widths.
+
 ### Each option says whether it will fit
 
 On opening, the picker renders every offered shape off screen with your actual

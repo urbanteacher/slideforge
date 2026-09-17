@@ -151,7 +151,7 @@ try {
   await settled();
   await page.locator('#demo-deck .safe-stage').scrollIntoViewIfNeeded();
   await page.click('#demo-deck .safe-slot[data-name="Bullet list"] .demo-slot-swap');
-  await page.waitForSelector('.demo-feature-pop');
+  await page.waitForSelector('#demo-feature-panel:not([hidden])');
 
   /* The picker is the app's list, not a lab copy: every authorable type, in the
      app's own groups, and only the ones that take pits are marked as keeping points. */
@@ -208,10 +208,10 @@ try {
     await page.click('#demo-reset');
     await settled();
     await page.click('#demo-deck .safe-slot .demo-slot-swap');
-    await page.waitForSelector('.demo-feature-pop');
+    await page.waitForSelector('#demo-feature-panel:not([hidden])');
     const choice = page.locator(`.demo-feature-option[data-feature="${pictureShape}"]`);
     await choice.click();
-    if (await page.locator('.demo-feature-pop').count()) await choice.click();
+    if (await page.locator('#demo-feature-panel:not([hidden])').count()) await choice.click();
     await settled();
     assert.equal(
       await page.locator('#demo-deck .demo-status').getAttribute('data-fits'),
@@ -240,7 +240,7 @@ try {
     await settled();
     await page.locator('#demo-deck .safe-stage').scrollIntoViewIfNeeded();
     await page.click('#demo-deck .safe-slot[data-name="Bullet list"] .demo-slot-swap');
-    await page.waitForSelector('.demo-feature-pop');
+    await page.waitForSelector('#demo-feature-panel:not([hidden])');
   };
   await openPicker();
   await page.waitForFunction(
@@ -248,6 +248,48 @@ try {
     null,
     { timeout: 60000 }
   );
+  /* Contained, not floating: the panel must sit inside the section and beside the
+     canvas. As a popover it anchored against the page — #demo-deck is not
+     positioned — so it rendered over the playground with its labels cut off. */
+  const placement = await page.evaluate(() => {
+    const panel = document.querySelector('#demo-feature-panel');
+    const stage = document.querySelector('#demo-deck .demo-stage');
+    const sec = document.querySelector('#demo-deck');
+    const p = panel.getBoundingClientRect();
+    const st = stage.getBoundingClientRect();
+    const s = sec.getBoundingClientRect();
+    return {
+      inSection: sec.contains(panel),
+      inside: p.left >= s.left - 1 && p.right <= s.right + 1 && p.top >= s.top - 1,
+      overlapsCanvas: p.left < st.right - 1,
+      clipped: [...document.querySelectorAll('.demo-feature-option')]
+        .filter((b) => b.scrollWidth > b.clientWidth + 1 || b.scrollHeight > b.clientHeight + 1)
+        .map((b) => b.dataset.feature),
+    };
+  });
+  assert.ok(placement.inSection, 'the picker is not inside the demo section');
+  assert.ok(placement.inside, 'the picker spills outside the section');
+  assert.ok(!placement.overlapsCanvas, 'the picker floats over the canvas');
+  assert.deepEqual(placement.clipped, [], 'some option labels are cut off');
+
+  /* And it has to survive a narrow viewport without clipping. */
+  await page.setViewportSize({ width: 820, height: 1150 });
+  await page.waitForTimeout(300);
+  const narrow = await page.evaluate(() => {
+    const panel = document.querySelector('#demo-feature-panel');
+    const sec = document.querySelector('#demo-deck');
+    const p = panel.getBoundingClientRect();
+    const s = sec.getBoundingClientRect();
+    return {
+      inside: p.left >= s.left - 1 && p.right <= s.right + 1,
+      clipped: [...document.querySelectorAll('.demo-feature-option')].filter((b) => b.scrollWidth > b.clientWidth + 1).length,
+    };
+  });
+  assert.ok(narrow.inside, 'the picker spills outside the section at 820px');
+  assert.equal(narrow.clipped, 0, 'option labels clip at 820px');
+  await page.setViewportSize({ width: 1600, height: 1200 });
+  await page.waitForTimeout(300);
+
   /* Regression: trials must not join the live DOM. Mounted inside #demo-deck,
      every trial's .safe-slot boxes appeared alongside the slide's, so the slot
      list grew by a whole extra layout each time the picker opened. */
@@ -276,7 +318,7 @@ try {
   /* A lossy choice asks once more, like a tight one, and then says what it did. */
   const quote = page.locator('.demo-feature-option[data-feature="quote"]');
   await quote.click();
-  assert.ok(await page.locator('.demo-feature-pop').count(), 'a heading-dropping swap applied on the first click');
+  assert.ok(await page.locator('#demo-feature-panel:not([hidden])').count(), 'a heading-dropping swap applied on the first click');
   await quote.click();
   await settled();
   assert.match(
@@ -304,7 +346,7 @@ try {
     await openPicker();
     const choice = page.locator(`.demo-feature-option[data-feature="${shape}"]`);
     await choice.click();
-    if (await page.locator('.demo-feature-pop').count()) await choice.click();
+    if (await page.locator('#demo-feature-panel:not([hidden])').count()) await choice.click();
     await settled();
     const text = await page.locator('#demo-deck .demo-status').innerText();
     const got = (await page.locator('#demo-deck .demo-status').getAttribute('data-fits')) === 'true' ? 'yes' : 'no';
