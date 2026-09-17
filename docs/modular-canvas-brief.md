@@ -112,8 +112,39 @@ the lattice. A heading in a two-row *box* does not. Boxes, not margins.
 | --- | --- |
 | Block tops on a row line | **141 / 148 (95%)** — was 30/148 |
 | Perfect compositions | ballot, rules, voice, prompt, commitment |
+| Reference implementation | **`poster-art`** — see below |
 | Campaign slides fitting | 45 / 45, 0 overflow |
 | Tests | 433 pass |
+
+### `poster-art` is the reference — start there
+
+It was re-fitted first and by hand, and everything else was derived from what
+it taught. If you want to see the model working, open the first tile in the
+lab and look at that slide.
+
+```
+safe         4/4   eyebrow r5 · heading r6 · tagline r12 · art r2
+creative     4/4   eyebrow r5 · heading r6 · tagline r12 · art r2
+responsible  4/4   eyebrow r5 · heading r6 · tagline r12 · art r2
+future       4/4   eyebrow r5 · heading r6 · tagline r12 · art r2
+smart        3/4   tagline off 20
+```
+
+**Four of the five covers are exact**, and the fifth is off for a structural
+reason rather than a layout mistake — see the note below. Every block sits on
+its line, the art is 14 whole rows, and the whole re-fit cost the design about
+three pixels of visible movement.
+
+Three things it established, which the other nine compositions then inherited:
+
+- `align-items: center` cannot coexist with a lattice. A centred item's offset
+  is a function of its own height, so a copy stack and a 490px artboard can
+  never both sit on a line. Start-aligned, placed explicitly.
+- Whole-row boxes, not margins. The eyebrow's 26px margin became a one-row box
+  and the tagline's 32px a row gap.
+- A span contains its block, so **round up, never to nearest**. 275px of
+  heading does not fit 7 rows of 36; it needs 8. Overflow becomes impossible by
+  construction rather than by luck.
 
 The 7 remaining misses are two separate things:
 
