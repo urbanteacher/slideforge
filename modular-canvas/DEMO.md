@@ -12,9 +12,11 @@ when content outgrows a span. Production northeastern CSS is not modified.
 - Filter by slide type, step through slides, toggle **Original design** vs slotted.
 - **Show slots** outlines the lattice.
 - **Audit all 97** measures every slide and prints fail-by-type + first failures.
-- **Flip · artwork** locks content slots and lets you drag theme assets (N, skyline,
-  eyebrow, logo) with snap to the 16×12 lattice. **Flip · content** returns to
-  slot editing. Poses store on `slide.mockArt` in the mock JSON.
+- **Flip · artwork** locks content slots and opens a **Stack** panel beside the
+  canvas (back → front). Select an asset, toggle **Plane / Hide / Lock**, reorder
+  with Back/Front, drag on the canvas to snap. **Flip · content** returns to slot
+  editing. Poses live on `slide.mockArt` (`plane`, `hidden`, `locked`, `order`, `x`, `y`).
+  This is not the reverted always-on Layers panel — the stack only appears on the art face.
 - Edit text on the canvas; **Reset this slide** / **Download mock JSON**.
 
 ## Latest audit (lab)
@@ -26,7 +28,7 @@ slide can pass one and fail the other, so neither number is allowed to hide the 
 |--------|------:|
 | Fit | 96 |
 | Need space | 1 |
-| Under the 20px legibility floor | 24 |
+| Under the 20px legibility floor | 44 |
 
 ### Fit
 
@@ -64,13 +66,14 @@ supposed to refuse here. Split the content or shorten the cells.
 
 ### Legibility
 
-24 of 97 slides paint text under 20px — on a 1280×720 slide, 20px is 2.8% of slide
-height. Crucially, **only 5 of 97 use smaller type than the original renderer**, and
-three of those are table headers. Demo is not buying its fit with shrinkage; the
-lattice is exposing sizes production already ships.
+44 of 97 slides paint text under 20px — on a 1280x720 slide, 20px is 2.8% of slide
+height. Only 5 of 97 use smaller type than the original renderer, and three of
+those are table headers: Demo is not buying its fit with shrinkage, the lattice is
+exposing sizes production already ships.
 
-| Type | Slides | Smallest |
-|------|-------:|---------:|
+| Type | Slides | Smallest painted |
+|------|-------:|-----------------:|
+| `chart` | 20 | 14.7px |
 | `image` | 4 | 17px |
 | `game` | 4 | 17px |
 | `table` | 3 | 12.2px |
@@ -85,8 +88,19 @@ lattice is exposing sizes production already ships.
 | `introduction` | 1 | 19px |
 | `journey` | 1 | 19px |
 
-These are production re-fit targets, not lab bugs. Raising them belongs with the
-northeastern CSS work, because it moves 597 visual baselines.
+#### Painted size, not declared size
+
+The first version of this check read `getComputedStyle(el).fontSize` and gated on
+`el.offsetHeight`. Both were wrong for charts. `offsetHeight` is undefined on SVG
+elements, so **all 20 chart slides were skipped silently**, and the declared size
+overstates what the room sees: an SVG paints its text at the viewBox scale. Slide
+42's flow chart declares 19px and paints 17.5px at full width.
+
+**This matters more than the numbers.** An SVG block in a slot can never fail the
+fit check, because it scales to its box instead of overflowing. Transplant that
+same chart into a 7-column slot and it paints at roughly 11px with **zero measured
+overflow**. For vector blocks, illegibility is the only failure mode there is, so a
+painted-size floor is not a nicety — it is the whole contract.
 
 ## What Demo informs for production
 
@@ -113,6 +127,6 @@ node tools/smoke-demo-deck.mjs
 ```
 
 Expects 97 slides, need-space ≤ 1 (the one known over-budget slide) and no more
-than 24 slides under the 20px floor. Both budgets equal the current state on
+than 44 slides under the 20px floor. Both budgets equal the current state on
 purpose: any slack lets a regression hide inside it. The legibility budget is a
 ratchet against getting worse, not a claim that 24 is acceptable.

@@ -104,6 +104,16 @@ const recipes = {
    most sub-floor sizes come from production CSS, not from Demo's overrides. */
 const LEGIBLE_FLOOR = 20;
 
+/* Scale between an SVG's user units and its painted box. 1 for ordinary HTML. */
+function svgScale(el) {
+  const svg = el.ownerSVGElement;
+  if (!svg) return 1;
+  const view = svg.viewBox?.baseVal;
+  const box = svg.getBoundingClientRect();
+  if (!view || !view.width || !view.height || !box.width) return 1;
+  return Math.min(box.width / view.width, box.height / view.height);
+}
+
 const bleedTypes = new Set(['image', 'split', 'video']);
 
 const section = document.createElement('section');
@@ -450,7 +460,7 @@ function bindArtwork(root, slide) {
     node.addEventListener('pointerdown', (e) => {
       if (e.button !== 0) return;
       selectArt(key, root);
-      if (pose.locked || slide.mockArt[key].locked) {
+      if (slide.mockArt[key].locked) {
         status.textContent = `Flip · artwork · ${artLabel(key)} is locked — Unlock in the stack.`;
         return;
       }
@@ -670,9 +680,15 @@ async function render() {
       while (walk.nextNode()) {
         if (walk.currentNode.textContent.trim().length < 3) continue;
         const el = walk.currentNode.parentElement;
-        if (!el || !el.offsetHeight) continue;
-        const size = parseFloat(getComputedStyle(el).fontSize);
-        if (smallest == null || size < smallest) { smallest = size; smallestWhere = el.className || el.tagName; }
+        /* offsetHeight is undefined on SVG elements, so testing it skipped every
+           chart label. Use the painted rect instead. */
+        if (!el || !el.getBoundingClientRect().height) continue;
+        /* An SVG paints its text at the viewBox scale, not at the declared size:
+           a chart in a narrow slot shrinks rather than overflowing, so declared
+           font-size overstates what the room actually sees. */
+        const size = parseFloat(getComputedStyle(el).fontSize) * svgScale(el);
+        const name = el.className?.baseVal || el.className || el.tagName;
+        if (smallest == null || size < smallest) { smallest = size; smallestWhere = name; }
       }
     }
     status.dataset.fits = String(!failed.length);

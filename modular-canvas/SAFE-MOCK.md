@@ -5,6 +5,13 @@ Open `/modular-canvas/preview.html#safe-deck`.
 For the same slot engine on all 97 NUL layout-bank slides, see
 [`DEMO.md`](./DEMO.md) (`#demo-deck`).
 
+**Named chrome (default on):** header and footer bands stay fixed; furniture
+items (theme identity, optional context, logo · closing text, page number) move
+between left / centre / right via ✥ drag handles or the Chrome map beside the
+canvas. Occupied slots swap. This reuses `SF.setChromeSlot` /
+`SF.bindCanvasRegions` — the same contract as Look → Header and footer in the
+editor. Toggle **Named chrome** off to compare theme placement.
+
 All nine original Safe slides are available; Audience sequence hides the teacher
 preparation and vocabulary slides. The seven audience slides carry their own
 numbering and progress. Original design switches back to the campaign renderer
