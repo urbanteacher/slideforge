@@ -1,6 +1,260 @@
 /* Generated from src/model.js. Do not edit; run npm run build. */
 "use strict";
 (() => {
+  // src/themes.js
+  var DEFAULT_THEME = "studio";
+  var CAMPAIGN_COMPOSITIONS = {
+    title: "poster-art",
+    quote: "voice",
+    cards: "ballot",
+    statement: "prompt",
+    journey: "rules",
+    keyfact: "commitment",
+    compare: "comparison",
+    iceberg: "reveal-map",
+    sourcecheck: "credits",
+    spectrum: "lanes"
+  };
+  var THEMES = {
+    studio: { name: "Studio · Sage & ink", swatch: "#dce8cc", art: { "className": "studio-art", "html": '<div class="art-orbit"></div><div class="art-tile">✳</div><div class="art-dot"></div><div class="art-caption">STAY CURIOUS.</div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    northeastern: { name: "Northeastern London", swatch: "#c8102e", ground: { default: "light", title: "dark", section: "dark", quote: "dark" }, art: { "className": "nu-art", "html": '<div class="nu-skyline"></div><div class="nu-n"></div>', "layouts": ["title", "section"], "eyebrow": { "className": "nu-eyebrow", "title": ["title", "org"], "section": ["org"] } }, defaults: {} },
+    ukbt: { name: "UK Black Tech", swatch: "#264258", ground: "dark", art: { "className": "ukbt-art", "html": '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div><div class="ukbt-object"></div>', "layouts": ["title", "section"] }, defaults: {} },
+    "ukbt-institute": { name: "UKBT Institute", swatch: "#2d3134", ground: "dark", art: { "className": "ukbt-art", "html": '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div><div class="ukbt-object"></div>', "layouts": ["title", "section"] }, defaults: {} },
+    /* AI Awareness Day 2026. One design, five grounds: the campaign gives each
+       of its principles a colour, and a starter deck belongs to exactly one of
+       them, so the principle is the theme rather than a setting inside it.
+       Picking "Safe" is how a deck gets the cyan badge and the cyan rules —
+       there is nothing else to set. See css/aiad26.css. */
+    "aiad26-safe": { name: "AI Awareness · Safe", swatch: "#00c4ee", art: { "className": "aiad-art", "html": '<div class="aiad-fold"></div><div class="aiad-seam"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    "aiad26-smart": { name: "AI Awareness · Smart", swatch: "#ff6734", art: { "className": "aiad-art", "html": '<div class="aiad-fold"></div><div class="aiad-seam"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    "aiad26-creative": { name: "AI Awareness · Creative", swatch: "#795bff", art: { "className": "aiad-art", "html": '<div class="aiad-fold"></div><div class="aiad-seam"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    "aiad26-responsible": { name: "AI Awareness · Responsible", swatch: "#00a896", art: { "className": "aiad-art", "html": '<div class="aiad-fold"></div><div class="aiad-seam"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    "aiad26-future": { name: "AI Awareness · Future", swatch: "#ff7eed", art: { "className": "aiad-art", "html": '<div class="aiad-fold"></div><div class="aiad-seam"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    /* AI Awareness Day 2027 — Keep Humans in the Loop. Five themes, one per
+       strand. Colour is paired with the strand name on every slide, and each
+       cover has a distinct graphic. See css/aiad27.css. */
+    "aiad27-safe": { chromeIdentity: "Safe", name: "AIAD27 · Safe", swatch: "#00BEDD", ground: { default: "light", quote: "dark", journey: "dark" }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
+    "aiad27-smart": { chromeIdentity: "Smart", name: "AIAD27 · Smart", swatch: "#FF7038", ground: { default: "light", quote: "dark", journey: "dark" }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
+    "aiad27-creative": { chromeIdentity: "Creative", name: "AIAD27 · Creative", swatch: "#AC91FF", ground: { default: "light", quote: "dark", journey: "dark" }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
+    "aiad27-responsible": { chromeIdentity: "Responsible", name: "AIAD27 · Responsible", swatch: "#63DF93", ground: { default: "light", quote: "dark", journey: "dark" }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
+    "aiad27-future": { chromeIdentity: "Future", name: "AIAD27 · Future", swatch: "#FA83EB", ground: { default: "light", quote: "dark", journey: "dark" }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
+    product: { name: "Product · Keynote minimal", swatch: "#f5f5f7", art: { "className": "pd-art", "html": '<div class="pd-bloom"></div><div class="pd-ring"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    editorial: { name: "Editorial · Paper", swatch: "#f3efe6", art: { "className": "ed-art", "html": '<div class="ed-rules"></div><div class="ed-quote">”</div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
+    cinematic: { name: "Cinematic · Dark pitch", swatch: "#0a0b0f", ground: "dark", art: { "className": "cine-art", "html": '<div class="cine-bar cine-top"></div><div class="cine-bar cine-bottom"></div><div class="cine-streak"></div><div class="cine-vignette"></div>', "layouts": ["title", "section"] }, defaults: {} },
+    brutal: { name: "Brutal · Mono", swatch: "#111111", ground: "dark", art: { "className": "brut-art", "html": '<div class="brut-grid"></div><div class="brut-marks"></div>', "layouts": ["title", "section"] }, defaults: {} },
+    midnight: { name: "Midnight", swatch: "#1b2a4a", ground: "dark", art: null, defaults: {} },
+    paper: { name: "Paper", swatch: "#f4f1ea", ground: "light", art: null, defaults: {} },
+    ocean: { name: "Ocean", swatch: "#0d5c63", ground: "dark", art: null, defaults: {} },
+    ember: { name: "Ember", swatch: "#3d1b2a", ground: "dark", art: null, defaults: {} },
+    mono: { name: "Mono", swatch: "#111111", ground: "dark", art: null, defaults: {} }
+  };
+  function themeGround(theme, layout) {
+    const ground = THEMES[theme]?.ground;
+    const resolved = typeof ground === "object" && ground ? layout && ground[layout] || ground.default : ground;
+    return resolved === "dark" ? "dark" : "light";
+  }
+  function resolveTheme(theme) {
+    return Object.hasOwn(THEMES, theme) ? theme : DEFAULT_THEME;
+  }
+
+  // src/render/regions.js
+  var CHROME_SLOTS = ["header-left", "header-center", "header-right", "footer-left", "footer-center", "footer-right"];
+  var DEFAULTS = { identitySlot: "header-left", logoSlot: "header-right", contextSlot: "header-center", closingSlot: "footer-left", numberSlot: "footer-right" };
+  function supportsChromeRegions(SF, deck, slide) {
+    const choice3 = SF.slideComposition(deck, slide);
+    return !!(choice3 && SF.COMPOSITIONS[choice3]?.structured);
+  }
+  function chromePositions(design = {}) {
+    const result = { ...DEFAULTS }, used = /* @__PURE__ */ new Set();
+    for (const key of Object.keys(DEFAULTS)) {
+      const wanted = CHROME_SLOTS.includes(design[key]) ? design[key] : DEFAULTS[key];
+      const slot = !used.has(wanted) ? wanted : CHROME_SLOTS.find((s) => !used.has(s));
+      result[key] = slot;
+      used.add(slot);
+    }
+    return result;
+  }
+  function setChromeSlot(slide, key, slot) {
+    if (!Object.hasOwn(DEFAULTS, key) || !CHROME_SLOTS.includes(slot)) return false;
+    const design = slide.design || (slide.design = {}), positions = chromePositions(design), previous = positions[key];
+    const occupant = Object.keys(positions).find((k) => k !== key && positions[k] === slot);
+    if (occupant) positions[occupant] = previous;
+    positions[key] = slot;
+    Object.assign(design, positions, { chromeLayout: "regions" });
+    return true;
+  }
+  function applyChromeRegions(root, slide, deck) {
+    if (slide.design?.chromeLayout !== "regions" || !root.classList.contains("composition-structured")) return;
+    const header = root.querySelector(".cp-header"), footer = root.querySelector(".cp-footer");
+    if (!header || !footer) return;
+    const nodes = (
+      /** @type {Record<string, HTMLElement|null>} */
+      { logoSlot: root.querySelector(".slide-logo"), contextSlot: header.querySelector(".cp-beat"), closingSlot: footer.querySelector(".cp-footer-note"), numberSlot: root.querySelector(".pagenum") }
+    );
+    const identity = THEMES[resolveTheme(deck.theme)].chromeIdentity;
+    if (identity) {
+      const node = document.createElement("div");
+      node.className = "chrome-identity";
+      node.textContent = identity;
+      nodes.identitySlot = node;
+    }
+    root.classList.add("chrome-regions");
+    root.classList.remove("has-corner-mark");
+    const slots = {};
+    for (const name of CHROME_SLOTS) {
+      const slot = document.createElement("div");
+      slot.className = "chrome-slot";
+      slot.dataset.region = name;
+      (name.startsWith("header-") ? header : footer).appendChild(slot);
+      slots[name] = slot;
+    }
+    const positions = chromePositions(slide.design);
+    for (const [key, node] of Object.entries(nodes)) if (node) {
+      node.dataset.chromeItem = key;
+      slots[positions[key]].appendChild(node);
+    }
+    for (const region of [header, footer]) region.classList.toggle("region-empty", !region.querySelector("[data-chrome-item]"));
+  }
+
+  // src/render/canvas-regions.js
+  var LABELS = { identitySlot: "theme identity", logoSlot: "logo", contextSlot: "slide context", closingSlot: "closing text", numberSlot: "page number" };
+  var slotLabel = (slot) => slot.replace("-", " ").replace("center", "centre");
+  function bindCanvasRegions(root, slide, onChange) {
+    if (!root.classList.contains("chrome-regions")) return;
+    let overlay = null, active = null;
+    function dismiss(focus = true) {
+      overlay?.remove();
+      overlay = null;
+      if (active) {
+        active.setAttribute("aria-expanded", "false");
+        if (focus) active.focus();
+      }
+      active = null;
+    }
+    function commit(key, slot) {
+      if (chromePositions(slide.design)[key] === slot) {
+        dismiss();
+        return;
+      }
+      dismiss(false);
+      if (setChromeSlot(slide, key, slot)) onChange(key);
+    }
+    function show(handle, key, keyboard) {
+      dismiss(false);
+      active = handle;
+      handle.setAttribute("aria-expanded", "true");
+      overlay = document.createElement("div");
+      overlay.className = "canvas-region-targets";
+      overlay.setAttribute("role", "group");
+      overlay.setAttribute("aria-label", "Choose a position for " + LABELS[key]);
+      const positions = chromePositions(slide.design);
+      for (const [i, slot] of CHROME_SLOTS.entries()) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.dataset.snapSlot = slot;
+        button.style.gridColumn = String(i % 3 + 1);
+        button.style.gridRow = i < 3 ? "1" : "3";
+        const occupant = Object.keys(positions).find((k) => k !== key && positions[k] === slot && root.querySelector("[data-chrome-item=" + k + "]"));
+        button.textContent = slotLabel(slot) + (occupant ? " · swap " + LABELS[occupant] : "");
+        button.setAttribute("aria-label", "Move " + LABELS[key] + " to " + slotLabel(slot) + (occupant ? ", swap with " + LABELS[occupant] : ""));
+        button.onclick = (e) => {
+          e.stopPropagation();
+          commit(key, slot);
+        };
+        button.onkeydown = (e) => {
+          if (e.metaKey || e.ctrlKey) return;
+          e.stopPropagation();
+          if (e.key === "Escape") {
+            e.preventDefault();
+            dismiss();
+          }
+          const delta = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -3, ArrowDown: 3 }[e.key];
+          if (delta) {
+            e.preventDefault();
+            const buttons = overlay.querySelectorAll("button");
+            buttons[(i + delta + 6) % 6].focus();
+          }
+        };
+        overlay.appendChild(button);
+      }
+      const hint = document.createElement("div");
+      hint.className = "canvas-region-hint";
+      hint.textContent = "Choose a slot · occupied items swap · Esc cancels";
+      hint.setAttribute("role", "status");
+      overlay.appendChild(hint);
+      root.appendChild(overlay);
+      if (keyboard) overlay.querySelector('button[data-snap-slot="' + positions[key] + '"]')?.focus();
+    }
+    root.querySelectorAll("[data-chrome-item]").forEach((item) => {
+      const key = item.dataset.chromeItem, handle = document.createElement("button");
+      handle.type = "button";
+      handle.className = "canvas-region-handle";
+      handle.dataset.moveItem = key;
+      handle.textContent = "✥";
+      handle.title = "Drag " + LABELS[key] + " to a slot, or click to choose";
+      handle.setAttribute("aria-label", "Move " + LABELS[key]);
+      handle.setAttribute("aria-expanded", "false");
+      item.parentElement.appendChild(handle);
+      let start = null, dragging = false, suppressClick = false;
+      function hit(e) {
+        return document.elementFromPoint(e.clientX, e.clientY)?.closest("[data-snap-slot]");
+      }
+      function cancel() {
+        if (start || dragging) suppressClick = true;
+        start = null;
+        dragging = false;
+        dismiss();
+      }
+      handle.onpointerdown = (e) => {
+        if (e.button !== 0) return;
+        e.stopPropagation();
+        suppressClick = false;
+        start = { x: e.clientX, y: e.clientY };
+        handle.setPointerCapture(e.pointerId);
+      };
+      handle.onpointermove = (e) => {
+        if (!start) return;
+        if (!dragging && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 5) {
+          dragging = true;
+          show(handle, key, false);
+        }
+        if (!dragging) return;
+        const target = hit(e);
+        overlay.querySelectorAll("button").forEach((b) => b.classList.toggle("snap-active", b === target));
+      };
+      handle.onpointerup = (e) => {
+        if (!start) return;
+        start = null;
+        if (!dragging) return;
+        dragging = false;
+        suppressClick = true;
+        const target = hit(e);
+        if (target && overlay?.contains(target)) commit(key, target.getAttribute("data-snap-slot"));
+        else dismiss();
+      };
+      handle.onpointercancel = cancel;
+      handle.onlostpointercapture = () => {
+        if (start) cancel();
+      };
+      handle.onkeydown = (e) => {
+        if (e.metaKey || e.ctrlKey) return;
+        e.stopPropagation();
+        if (e.key === "Escape") {
+          e.preventDefault();
+          cancel();
+        }
+      };
+      handle.onclick = (e) => {
+        e.stopPropagation();
+        if (suppressClick) {
+          suppressClick = false;
+          return;
+        }
+        show(handle, key, true);
+      };
+    });
+  }
+
   // src/render/compositions.js
   function createCompositionRenderer(SF, helpers) {
     const { el, rich, asStep, layoutQuote, layoutStatement, appendSlideDate } = helpers;
@@ -196,6 +450,12 @@
 
   // src/design-controls.js
   var DESIGN_CONTROLS = {
+    chromeLayout: { label: "Header and footer", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], when: "Structured composition", description: "Use named slots for slide furniture. Theme placement preserves the existing design." },
+    logoSlot: { label: "Logo position", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], when: "Structured composition with named regions enabled", description: "Move the deck logo to a named slot. Logo visibility still follows the deck settings." },
+    identitySlot: { label: "Theme identity position", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], when: "Structured composition with named regions enabled", description: "Move the theme identity to a named slot, when the theme supplies one." },
+    contextSlot: { label: "Slide context position", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], when: "Structured composition with named regions enabled", description: "Move the context line when this composition places it in the header. Eyebrows and lane headings stay with their content." },
+    closingSlot: { label: "Closing text position", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], when: "Structured composition with named regions enabled", description: "Move the deck closing note or organisation to a named slot." },
+    numberSlot: { label: "Page number position", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], when: "Structured composition with named regions enabled", description: "Move the page number. Visibility still follows the deck settings." },
     composition: { label: "Composition", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], description: "Arrange the same content. Theme default follows the theme; Original layout opts out." },
     align: { label: "Text alignment", pane: "Look", types: "*", description: "Align text left, centre or right." },
     size: { label: "Text size", pane: "Look", types: "*", description: "Scale text relative to the theme. Display sizes grow only as far as the content fits." },
@@ -234,62 +494,6 @@
   function designApplies(key, type2) {
     const control = DESIGN_CONTROLS[key];
     return !!control && (control.types === "*" ? !["quiz", "game"].includes(type2) : control.types.includes(type2));
-  }
-
-  // src/themes.js
-  var DEFAULT_THEME = "studio";
-  var CAMPAIGN_COMPOSITIONS = {
-    title: "poster-art",
-    quote: "voice",
-    cards: "ballot",
-    statement: "prompt",
-    journey: "rules",
-    keyfact: "commitment",
-    compare: "comparison",
-    iceberg: "reveal-map",
-    sourcecheck: "credits",
-    spectrum: "lanes"
-  };
-  var THEMES = {
-    studio: { name: "Studio · Sage & ink", swatch: "#dce8cc", art: { "className": "studio-art", "html": '<div class="art-orbit"></div><div class="art-tile">✳</div><div class="art-dot"></div><div class="art-caption">STAY CURIOUS.</div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
-    northeastern: { name: "Northeastern London", swatch: "#c8102e", ground: { default: "light", title: "dark", section: "dark", quote: "dark" }, art: { "className": "nu-art", "html": '<div class="nu-skyline"></div><div class="nu-n"></div>', "layouts": ["title", "section"], "eyebrow": { "className": "nu-eyebrow", "title": ["title", "org"], "section": ["org"] } }, defaults: {} },
-    ukbt: { name: "UK Black Tech", swatch: "#264258", ground: "dark", art: { "className": "ukbt-art", "html": '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div><div class="ukbt-object"></div>', "layouts": ["title", "section"] }, defaults: {} },
-    "ukbt-institute": { name: "UKBT Institute", swatch: "#2d3134", ground: "dark", art: { "className": "ukbt-art", "html": '<div class="ukbt-chev ukbt-chev-back"></div><div class="ukbt-chev ukbt-chev-front"></div><div class="ukbt-object"></div>', "layouts": ["title", "section"] }, defaults: {} },
-    /* AI Awareness Day 2026. One design, five grounds: the campaign gives each
-       of its principles a colour, and a starter deck belongs to exactly one of
-       them, so the principle is the theme rather than a setting inside it.
-       Picking "Safe" is how a deck gets the cyan badge and the cyan rules —
-       there is nothing else to set. See css/aiad26.css. */
-    "aiad26-safe": { name: "AI Awareness · Safe", swatch: "#00c4ee", art: { "className": "aiad-art", "html": '<div class="aiad-fold"></div><div class="aiad-seam"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
-    "aiad26-smart": { name: "AI Awareness · Smart", swatch: "#ff6734", art: { "className": "aiad-art", "html": '<div class="aiad-fold"></div><div class="aiad-seam"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
-    "aiad26-creative": { name: "AI Awareness · Creative", swatch: "#795bff", art: { "className": "aiad-art", "html": '<div class="aiad-fold"></div><div class="aiad-seam"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
-    "aiad26-responsible": { name: "AI Awareness · Responsible", swatch: "#00a896", art: { "className": "aiad-art", "html": '<div class="aiad-fold"></div><div class="aiad-seam"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
-    "aiad26-future": { name: "AI Awareness · Future", swatch: "#ff7eed", art: { "className": "aiad-art", "html": '<div class="aiad-fold"></div><div class="aiad-seam"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
-    /* AI Awareness Day 2027 — Keep Humans in the Loop. Five themes, one per
-       strand. Colour is paired with the strand name on every slide, and each
-       cover has a distinct graphic. See css/aiad27.css. */
-    "aiad27-safe": { name: "AIAD27 · Safe", swatch: "#00BEDD", ground: { default: "light", quote: "dark", journey: "dark" }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
-    "aiad27-smart": { name: "AIAD27 · Smart", swatch: "#FF7038", ground: { default: "light", quote: "dark", journey: "dark" }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
-    "aiad27-creative": { name: "AIAD27 · Creative", swatch: "#AC91FF", ground: { default: "light", quote: "dark", journey: "dark" }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
-    "aiad27-responsible": { name: "AIAD27 · Responsible", swatch: "#63DF93", ground: { default: "light", quote: "dark", journey: "dark" }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
-    "aiad27-future": { name: "AIAD27 · Future", swatch: "#FA83EB", ground: { default: "light", quote: "dark", journey: "dark" }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
-    product: { name: "Product · Keynote minimal", swatch: "#f5f5f7", art: { "className": "pd-art", "html": '<div class="pd-bloom"></div><div class="pd-ring"></div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
-    editorial: { name: "Editorial · Paper", swatch: "#f3efe6", art: { "className": "ed-art", "html": '<div class="ed-rules"></div><div class="ed-quote">”</div>', "layouts": ["title", "section"] }, ground: "light", defaults: {} },
-    cinematic: { name: "Cinematic · Dark pitch", swatch: "#0a0b0f", ground: "dark", art: { "className": "cine-art", "html": '<div class="cine-bar cine-top"></div><div class="cine-bar cine-bottom"></div><div class="cine-streak"></div><div class="cine-vignette"></div>', "layouts": ["title", "section"] }, defaults: {} },
-    brutal: { name: "Brutal · Mono", swatch: "#111111", ground: "dark", art: { "className": "brut-art", "html": '<div class="brut-grid"></div><div class="brut-marks"></div>', "layouts": ["title", "section"] }, defaults: {} },
-    midnight: { name: "Midnight", swatch: "#1b2a4a", ground: "dark", art: null, defaults: {} },
-    paper: { name: "Paper", swatch: "#f4f1ea", ground: "light", art: null, defaults: {} },
-    ocean: { name: "Ocean", swatch: "#0d5c63", ground: "dark", art: null, defaults: {} },
-    ember: { name: "Ember", swatch: "#3d1b2a", ground: "dark", art: null, defaults: {} },
-    mono: { name: "Mono", swatch: "#111111", ground: "dark", art: null, defaults: {} }
-  };
-  function themeGround(theme, layout) {
-    const ground = THEMES[theme]?.ground;
-    const resolved = typeof ground === "object" && ground ? layout && ground[layout] || ground.default : ground;
-    return resolved === "dark" ? "dark" : "light";
-  }
-  function resolveTheme(theme) {
-    return Object.hasOwn(THEMES, theme) ? theme : DEFAULT_THEME;
   }
 
   // src/deck/exploration.js
@@ -7857,22 +8061,22 @@
         list() {
           return read().sort((a, b) => b.modified - a.modified);
         },
-        save(document, opts) {
-          if (!(opts && opts.force) && unusedDraft(document)) {
+        save(document2, opts) {
+          if (!(opts && opts.force) && unusedDraft(document2)) {
             const all2 = read();
-            if (!all2.some((item) => item.id === document.id)) return true;
+            if (!all2.some((item) => item.id === document2.id)) return true;
           }
-          if (kind === "decks" && document && !document.libraryGroup) {
-            document.libraryGroup = libraryGroupFromTheme(document.theme);
+          if (kind === "decks" && document2 && !document2.libraryGroup) {
+            document2.libraryGroup = libraryGroupFromTheme(document2.theme);
           }
-          document.modified = Date.now();
+          document2.modified = Date.now();
           const all = read();
-          const index = all.findIndex((item) => item.id === document.id);
-          if (index === -1) all.push(document);
-          else all[index] = document;
+          const index = all.findIndex((item) => item.id === document2.id);
+          if (index === -1) all.push(document2);
+          else all[index] = document2;
           const ok = write(all);
           try {
-            storage().setItem(lastKey, document.id);
+            storage().setItem(lastKey, document2.id);
           } catch (error) {
           }
           return ok;
@@ -9452,6 +9656,12 @@
     DEFAULT_THEME,
     resolveTheme,
     createCompositionRenderer,
+    bindCanvasRegions,
+    CHROME_SLOTS,
+    chromePositions,
+    setChromeSlot,
+    supportsChromeRegions,
+    applyChromeRegions,
     DESIGN_CONTROLS,
     designApplies,
     COMPOSITIONS,

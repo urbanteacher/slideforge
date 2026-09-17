@@ -13,7 +13,7 @@ try{
  const page=await browser.newPage({viewport:{width:1400,height:1000}}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto(`http://127.0.0.1:${port}`);await page.waitForFunction(()=>window.SF?.Editor?.deck());
- const probes={composition:'editorial',align:'right',size:'small',textColor:'#123456',background:'#abcdef',placement:'top',imageShare:65,mediaGround:'full',imageStep:'after',cardsMode:'rows',cardPics:'plates',statStyle:'bar',funnelDirection:'up',timelineMode:'vertical',backdrop:'glow',logoGround:'dark',imageFrame:'4:3',capStyle:'plain',capPos:'top',capFade:10,imageMotion:'zoom',focalX:25,focalY:75,focalX2:35,focalY2:65,imageTravelSecs:12,chartMotion:'grow',chartFocus:1,words:'fade',wordSpeed:'quick',wordStagger:'one',wordFrom:'last',wordsLoop:true,wordPlan:'generated'};
+ const probes={chromeLayout:'regions',identitySlot:'footer-center',logoSlot:'footer-left',contextSlot:'header-left',closingSlot:'footer-center',numberSlot:'header-right',composition:'editorial',align:'right',size:'small',textColor:'#123456',background:'#abcdef',placement:'top',imageShare:65,mediaGround:'full',imageStep:'after',cardsMode:'rows',cardPics:'plates',statStyle:'bar',funnelDirection:'up',timelineMode:'vertical',backdrop:'glow',logoGround:'dark',imageFrame:'4:3',capStyle:'plain',capPos:'top',capFade:10,imageMotion:'zoom',focalX:25,focalY:75,focalX2:35,focalY2:65,imageTravelSecs:12,chartMotion:'grow',chartFocus:1,words:'fade',wordSpeed:'quick',wordStagger:'one',wordFrom:'last',wordsLoop:true,wordPlan:'generated'};
  const keys=await page.evaluate(()=>Object.keys(SF.DESIGN_CONTROLS));assert.deepEqual(Object.keys(probes).sort(),keys.sort(),'every control needs a behavioural probe');
  for(const key of keys){
   const written=await page.evaluate(async({key,value})=>{
@@ -21,6 +21,7 @@ try{
    const deck=SF.makeDeck('Control probe');deck.theme='studio';
    const slide=SF.makeSlide(type);slide.body=type==='chart'?'Label | One | Two\nA | 2 | 3\nB | 4 | 5':'Words can move';slide.subtitle='Caption';
    slide.design={};
+   if(['chromeLayout','identitySlot','logoSlot','contextSlot','closingSlot','numberSlot'].includes(key)){slide.design={composition:'poster-art',chromeLayout:'regions'};}
    if(type==='image')slide.design.imageMotion='travel';
    if(type==='cards')slide.design.cardsMode='pictures';
    if(type==='statement'){slide.design.words='rise';slide.design.wordStagger='wave';}

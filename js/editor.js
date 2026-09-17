@@ -1140,6 +1140,10 @@
     var node = SF.renderSlide(deck, s, slideOpts(sel));
     box.appendChild(node);
     bindCanvasContent(box,node,s);
+    SF.bindCanvasRegions(node,s,function(key){
+      touched();draw();
+      var handle=box && box.querySelector('button[data-move-item='+key+']');if(handle)/** @type {HTMLButtonElement} */ (handle).focus();
+    });
 
     /* Swap sides, on the canvas rather than buried in the inspector.
        imageSide already existed as a dropdown three fields down; putting it

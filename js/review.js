@@ -21,7 +21,9 @@
       var walk=document.createTreeWalker(pad,NodeFilter.SHOW_TEXT);
       while(walk.nextNode()){
         var text=walk.currentNode,parent=text.parentElement,said=(text.textContent||'').trim();
-        if(!said||!parent||parent.closest('[aria-hidden="true"],.sr-only,iframe'))continue;
+        if(!said||!parent)continue;
+        var ignored=parent.closest('[aria-hidden="true"],.sr-only,iframe');
+        if(ignored && root.contains(ignored))continue;
         var range=document.createRange();range.selectNodeContents(text);
         Array.from(range.getClientRects()).forEach(function(r){
           if(!r.width||!r.height)return;
@@ -55,19 +57,19 @@
     var viewer=el('section','review-viewer');viewer.hidden=true;
     var back=el('button','','Back to grid'),prev=el('button','','← Previous'),next=el('button','','Next →'),position=el('span'),controls=el('div','review-view-controls');
     [back,prev,next].forEach(function(b){b.type='button';});controls.append(back,prev,position,next);viewer.appendChild(controls);
-    var stage=el('div','review-stage');viewer.appendChild(stage);dialog.appendChild(viewer);
+    var stage=el('div','review-stage');stage.inert=true;viewer.appendChild(stage);dialog.appendChild(viewer);
     var observer=new ResizeObserver(function(entries){entries.forEach(function(entry){
       var n=/** @type {HTMLElement|null} */(entry.target.querySelector('.slide'));
       if(n)n.style.transform='scale('+entry.target.clientWidth/1280+')';});});
-    function render(target,d,s,i){target.style.aspectRatio='1280 / '+SF.slideHeight(d);target.replaceChildren(SF.renderSlide(d,s,{interactive:false,revealed:9999,index:i,total:d.slides.length}));observer.observe(target);}
-    function draw(){observer.disconnect();all=[];grid.replaceChildren();viewer.hidden=true;grid.hidden=false;bar.hidden=false;
+    function render(target,d,s,i){target.style.aspectRatio='1280 / '+SF.slideHeight(d);target.style.setProperty('--review-ratio',String(1280/SF.slideHeight(d)));target.replaceChildren(SF.renderSlide(d,s,{interactive:false,revealed:9999,index:i,total:d.slides.length}));observer.observe(target);}
+    function draw(){dialog.classList.remove('review-detail');observer.disconnect();all=[];grid.replaceChildren();viewer.hidden=true;grid.hidden=false;bar.hidden=false;
       decks.forEach(function(d){d.slides.forEach(function(s,i){if(s.hidden&&!hidden.checked)return;var item={d:d,s:s,index:i},n=all.length;all.push(item);
-        var tile=el('button','review-tile');tile.type='button';var thumb=el('span','review-thumb');thumb.setAttribute('aria-hidden','true');render(thumb,d,s,i);
+        var tile=el('button','review-tile');tile.type='button';var thumb=el('span','review-thumb');thumb.inert=true;thumb.setAttribute('aria-hidden','true');render(thumb,d,s,i);
         var label=el('span','review-caption',d.title+' · '+(i+1)+' · '+(s.title||s.body||s.type)+(s.hidden?' · Hidden':''));tile.append(thumb,label);item.tile=tile;
         tile.onclick=function(){view(n);back.focus();};grid.appendChild(tile);
       });});status.textContent=all.length+' slides shown';checkButton.disabled=!all.length;}
-    function view(i){current=i;var item=all[i];grid.hidden=true;bar.hidden=true;viewer.hidden=false;render(stage,item.d,item.s,item.index);position.textContent=(i+1)+' / '+all.length;prev.disabled=i===0;next.disabled=i===all.length-1;}
-    back.onclick=function(){viewer.hidden=true;grid.hidden=false;bar.hidden=false;all[current].tile.focus();};prev.onclick=function(){if(current>0)view(current-1);};next.onclick=function(){if(current<all.length-1)view(current+1);};
+    function view(i){dialog.classList.add('review-detail');dialog.scrollTop=0;current=i;var item=all[i];grid.hidden=true;bar.hidden=true;viewer.hidden=false;render(stage,item.d,item.s,item.index);position.textContent=(i+1)+' / '+all.length;prev.disabled=i===0;next.disabled=i===all.length-1;if(document.activeElement===prev&&prev.disabled||document.activeElement===next&&next.disabled)back.focus();}
+    back.onclick=function(){dialog.classList.remove('review-detail');viewer.hidden=true;grid.hidden=false;bar.hidden=false;all[current].tile.focus();};prev.onclick=function(){if(current>0)view(current-1);};next.onclick=function(){if(current<all.length-1)view(current+1);};
     dialog.addEventListener('keydown',function(e){if(viewer.hidden)return;if(e.key==='ArrowRight'){e.preventDefault();next.click();}if(e.key==='ArrowLeft'){e.preventDefault();prev.click();}});
     hidden.onchange=draw;
     load.onchange=async function(){try{if(!load.files.length)return;decks=readDecks(JSON.parse(await load.files[0].text()));title.querySelector('h1').textContent=decks.length===1?decks[0].title:decks.length+' decks';draw();}catch(e){status.textContent=said(e);}finally{load.value='';}};

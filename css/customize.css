@@ -282,3 +282,23 @@
 .slide.cp .pagenum { bottom:22px; }
 .slide.cp .cp-choice-copy { min-width:0; }
 .slide.cp :is(.cp-rule,.cp-credit,.cp-risk,.cp-choice) [data-content-key] { overflow-wrap:break-word; }
+
+/* Opt-in region furniture shares the composition's flow. Each occupied slot
+   owns its contents; there are no mark-sized padding reservations. */
+.slide.cp.chrome-regions :is(.cp-header,.cp-footer) {
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px;
+  height:auto; min-height:0; padding:8px 0; align-items:center;
+}
+.slide.cp.chrome-regions .region-empty { display:none; }
+.slide.cp.chrome-regions .chrome-slot { min-width:0; display:flex; align-items:center; }
+.slide.cp.chrome-regions [data-region$='center'] { justify-content:center; text-align:center; }
+.slide.cp.chrome-regions [data-region$='right'] { justify-content:flex-end; text-align:right; }
+.slide.cp.chrome-regions .chrome-slot :is(.slide-logo,.pagenum,.cp-beat,.cp-footer-note) {
+  position:static; inset:auto; transform:none; margin:0; min-width:0; max-width:100%;
+}
+.slide.cp.chrome-regions .chrome-slot .slide-logo { max-height:72px; flex-shrink:1; }
+.slide.cp.chrome-regions .chrome-slot .slide-logo img { display:block; width:100%; height:100%; object-fit:contain; }
+.slide.cp.chrome-regions .chrome-slot :is(.cp-beat,.cp-footer-note) { overflow-wrap:anywhere; font-size:var(--composition-meta,20px); line-height:1.2; }
+.slide.cp.chrome-regions .chrome-slot .pagenum { font-size:18px; white-space:nowrap; }
+.slide.cp.chrome-regions .cp-header::before { content:none; }
+.slide.cp.chrome-regions .chrome-identity { font-weight:700; padding-left:32px; background:var(--a27-icon,none) left center / 22px 22px no-repeat; overflow-wrap:anywhere; }

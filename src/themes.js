@@ -28,11 +28,11 @@ export const THEMES = {
   /* AI Awareness Day 2027 — Keep Humans in the Loop. Five themes, one per
      strand. Colour is paired with the strand name on every slide, and each
      cover has a distinct graphic. See css/aiad27.css. */
-  'aiad27-safe': { name: 'AIAD27 · Safe', swatch: '#00BEDD', ground: { default: 'light', quote: 'dark', journey: 'dark' }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
-  'aiad27-smart': { name: 'AIAD27 · Smart', swatch: '#FF7038', ground: { default: 'light', quote: 'dark', journey: 'dark' }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
-  'aiad27-creative': { name: 'AIAD27 · Creative', swatch: '#AC91FF', ground: { default: 'light', quote: 'dark', journey: 'dark' }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
-  'aiad27-responsible': { name: 'AIAD27 · Responsible', swatch: '#63DF93', ground: { default: 'light', quote: 'dark', journey: 'dark' }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
-  'aiad27-future': { name: 'AIAD27 · Future', swatch: '#FA83EB', ground: { default: 'light', quote: 'dark', journey: 'dark' }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
+  'aiad27-safe': { chromeIdentity:'Safe', name: 'AIAD27 · Safe', swatch: '#00BEDD', ground: { default: 'light', quote: 'dark', journey: 'dark' }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
+  'aiad27-smart': { chromeIdentity:'Smart', name: 'AIAD27 · Smart', swatch: '#FF7038', ground: { default: 'light', quote: 'dark', journey: 'dark' }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
+  'aiad27-creative': { chromeIdentity:'Creative', name: 'AIAD27 · Creative', swatch: '#AC91FF', ground: { default: 'light', quote: 'dark', journey: 'dark' }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
+  'aiad27-responsible': { chromeIdentity:'Responsible', name: 'AIAD27 · Responsible', swatch: '#63DF93', ground: { default: 'light', quote: 'dark', journey: 'dark' }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
+  'aiad27-future': { chromeIdentity:'Future', name: 'AIAD27 · Future', swatch: '#FA83EB', ground: { default: 'light', quote: 'dark', journey: 'dark' }, defaults: CAMPAIGN_COMPOSITIONS, art: null },
   product: { name: 'Product · Keynote minimal', swatch: '#f5f5f7', art: {"className": "pd-art", "html": "<div class=\"pd-bloom\"></div><div class=\"pd-ring\"></div>", "layouts": ["title", "section"]}, ground: 'light', defaults: {} },
   editorial: { name: 'Editorial · Paper', swatch: '#f3efe6', art: {"className": "ed-art", "html": "<div class=\"ed-rules\"></div><div class=\"ed-quote\">\u201d</div>", "layouts": ["title", "section"]}, ground: 'light', defaults: {} },
   cinematic: { name: 'Cinematic · Dark pitch', swatch: '#0a0b0f', ground: 'dark', art: {"className": "cine-art", "html": "<div class=\"cine-bar cine-top\"></div><div class=\"cine-bar cine-bottom\"></div><div class=\"cine-streak\"></div><div class=\"cine-vignette\"></div>", "layouts": ["title", "section"]}, defaults: {} },

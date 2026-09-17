@@ -91,3 +91,8 @@ formatting, ballot reveals, logos and normal page chrome use the shared engine.
 Run `node tools/smoke-design-foundations.mjs` with the server running to check
 the refreshed demos and every composition against every theme. This is a render
 and contract check, not a pixel baseline update.
+
+The campaign fit command now delegates to the platform checker. For any deck,
+use **Look → Review slides & check fit**, or
+`node tools/check-fit.mjs path/to/deck.json`. See [slide review](../docs/slide-review.md)
+for supported inputs and the limits of boundary checks.

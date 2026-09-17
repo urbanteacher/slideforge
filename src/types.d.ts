@@ -135,7 +135,10 @@ export interface WordMotionStep {
   dx?: number; dy?: number; rot?: number; scale?: number; blur?: number; delay?: number;
   arc?: 'settle' | 'bounce' | 'mist';
 }
+export type ChromeSlot = 'header-left' | 'header-center' | 'header-right' | 'footer-left' | 'footer-center' | 'footer-right';
 export interface SlideDesign {
+  chromeLayout?: '' | 'regions';
+  identitySlot?: ChromeSlot; logoSlot?: ChromeSlot; contextSlot?: ChromeSlot; closingSlot?: ChromeSlot; numberSlot?: ChromeSlot;
   composition?: string;
   align?: 'left' | 'center' | 'right';
   size?: 'small' | 'medium' | 'large' | 'x2' | 'x3' | 'x5';

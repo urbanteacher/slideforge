@@ -1328,6 +1328,95 @@ platform and continue the broader renderer split where it has a concrete
 boundary. Authored campaign poster images remain authored images; this pass
 does not silently replace them with index-selected decoration.
 
+### 2026-09-17 — platform review and fit checker completed
+
+The review introduced before the pause now has a general command-line entry
+point (`tools/check-fit.mjs`) for deck/bundle files and library lesson keys.
+The campaign command is a compatibility wrapper. Both paths use the same
+`SF.Review.check`; missing files and zero-slide inputs fail instead of reporting
+an empty successful run.
+
+The browser regression test exposed a measurement bug: the offscreen stage was
+`aria-hidden`, and a `closest()` exclusion consequently skipped every text node.
+The exclusion now applies only to hidden decoration *inside* the rendered slide.
+A regression moves text beyond the left edge without increasing scroll width,
+so this error cannot be masked by the separate scroll check.
+
+Review detail now fits the viewport for the deck's aspect ratio. Thumbnail and
+detail slide controls are inert, preventing nested slide buttons from taking
+keyboard focus. Imports remain snapshots; hidden-slide selection and errors are
+covered. `tests/slide-review.test.js` adds the browser workflow and 46 file/campaign
+slides to `npm test`. The full suite passes 430 tests; the standalone campaign
+wrapper passes all 45 slides, and NUL/Motion Lab pass all 33.
+
+See `docs/slide-review.md` for usage and limits. This is an overflow check, not an
+overlap/contrast/motion certification. The campaign's branded preview remains
+available; general deck review lives in the editor's Look panel.
+
+### 2026-09-17 — first named header and footer regions
+
+Structured compositions now offer **Look → Header and footer → Named regions**.
+This is opt-in: existing decks keep their authored placement. Six slots span
+header/footer × left/centre/right; five named items can occupy them: theme
+identity, logo, header context, closing text and page number. `chromeLayout`
+and the five slot fields join the typed design catalogue (40 controls total).
+
+`src/render/regions.js` owns slot resolution, swaps and the DOM arrangement.
+Moving an item to an occupied slot swaps the two saved names. Invalid or
+colliding imported names resolve deterministically without rewriting the input.
+Unused settings stay dormant when changing composition or returning to Theme
+placement. Logo and page-number visibility still follows existing deck rules.
+
+AIAD's strand identity is declared in the theme manifest for this mode; its
+legacy CSS label is suppressed only after the real identity node enters a slot.
+The existing composition header and footer stay in document flow. Their slot
+children own the mark and text, removing the corner-mark reservation in this
+mode. Context used as an eyebrow, lane heading or body content stays there;
+this feature does not duplicate or detach it from its composition.
+
+Scope: the ten structured compositions, including campaign defaults and those
+same compositions selected with UKBlackTech or other themes. Original UKBT
+layouts and other unstructured layouts retain their existing arrangement.
+There are no drag handles yet. This establishes the semantic values and shared
+setter for the next canvas gesture; the Edit panel remains available alongside
+existing double-click canvas text editing.
+
+Validation: 431 tests pass, including real editor probes for all 40 design
+controls. Named-region checks cover 98 campaign/UKBT slide-and-aspect cases
+(16:9 and 4:3), occupied-slot swaps, serialization, disabled visibility, malformed
+imports and legacy fallback. Additional checks move four visible furniture
+items through all six slots and confirm the region containers do not overlap.
+A moved-logo editor view was visually inspected. These checks do not guarantee
+arbitrary imported content will fit; the shared review checker remains useful.
+
+### 2026-09-17 — canvas gestures for named chrome regions
+
+The editor now binds move handles to visible region items after rendering.
+Hover over a header/footer item to reveal its handle; drag to one of six
+labelled targets. The active target highlights and identifies any visible item
+that will swap. Touch pointers use the same path. Only the named destination
+is persisted; pointer coordinates never enter the deck.
+
+Clicking a handle (or pressing Enter/Space on it) opens the same target chooser.
+Arrow keys move focus, Enter/Space chooses and Escape cancels. Dropping outside
+the targets cancels. A completed move uses the editor's normal history/save
+path, supports Undo and restores focus to the moved item's handle. Cancelling
+writes nothing. Handles and targets are bound only in the editor; shared
+rendering, review, presenter and exports receive no interactive furniture.
+
+This remains header/footer arrangement on structured compositions. Body content
+keeps existing double-click editing and bullet reordering; body-region dragging
+is separate work. The Edit panel remains available. NUL (`northeastern`) and
+Studio (`studio`, currently labelled “Studio · Sage & ink”) share this capability
+when using supported compositions, as do UKBT and the AIAD themes. There is no
+separate theme key named Studio Hue in the current manifest.
+
+Validation extends the region coverage to 126 AIAD/UKBT/NUL/Studio slide-and-aspect
+checks. Browser interaction checks drag on the scaled canvas, swap an occupied
+slot, Undo the move, choose a slot by keyboard, restore focus, cancel with Escape
+and an outside drop, and verify clean shared rendering. The active snap-target
+view was visually inspected.
+
 ## Appendix — how the figures were produced
 
 - **Editable fields / step nodes / subtitles rendered**: `SF.renderSlide` called

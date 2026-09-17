@@ -1,3 +1,5 @@
+import {bindCanvasRegions} from './render/canvas-regions.js';
+import { CHROME_SLOTS, chromePositions, setChromeSlot, supportsChromeRegions, applyChromeRegions } from './render/regions.js';
 import { createCompositionRenderer } from './render/compositions.js';
 import { DESIGN_CONTROLS, designApplies } from './design-controls.js';
 import { THEMES, themeGround, DEFAULT_THEME, resolveTheme } from './themes.js';
@@ -1498,7 +1500,8 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   slideHeight: slideHeight,
   THEMES: THEMES,
   DEFAULT_THEME, resolveTheme,
-  createCompositionRenderer,
+  createCompositionRenderer, bindCanvasRegions,
+  CHROME_SLOTS, chromePositions, setChromeSlot, supportsChromeRegions, applyChromeRegions,
   DESIGN_CONTROLS, designApplies,
   COMPOSITIONS: COMPOSITIONS,
   compositionOptions: compositionOptions,

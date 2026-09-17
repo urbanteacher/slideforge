@@ -4968,6 +4968,7 @@
       else if (reverse === 'never') root.classList.add('logo-normal');
       root.appendChild(logo);
     }
+    SF.applyChromeRegions(root, slide, deck);
     if (opts.chrome !== false && opts.total > 1 && opts.index != null) {
       var track = el('div', 'track');
       var i = el('i');

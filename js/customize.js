@@ -313,6 +313,16 @@
       compositionHint.textContent = 'Change the arrangement without changing your theme or content. Shorten copy before increasing text size.';
       box.appendChild(compositionHint);
     }
+    if (SF.supportsChromeRegions(SF,currentDeck,s)) {
+      choose('Header and footer','chromeLayout',[['','Theme placement'],['regions','Named regions']],'');
+      if(d.chromeLayout==='regions') {
+        var positions=SF.chromePositions(d);
+        [['identitySlot','Theme identity position'],['logoSlot','Logo position'],['contextSlot','Slide context position'],['closingSlot','Closing text position'],['numberSlot','Page number position']].forEach(function(pair){
+          box.appendChild(UI.field(pair[1],UI.select(SF.CHROME_SLOTS.map(function(slot){return {value:slot,label:slot.replace('-', ' · ').replace('center','centre')};}),positions[pair[0]],function(value){SF.setChromeSlot(s,pair[0],value);change();})));
+        });
+        var regionHint=document.createElement('p');regionHint.className='hint';regionHint.textContent='Hover over a header or footer item and drag its move handle, or click the handle to choose a slot. Moving into an occupied slot swaps positions. Deck settings still control logo and number visibility. Context stays with the body when the composition uses it there.';box.appendChild(regionHint);
+      }
+    }
     if (SF.slideComposition(currentDeck, s) === 'poster-art') {
       var artworkInput=document.createElement('input'); artworkInput.type='text'; artworkInput.value=s.image || '';
       artworkInput.onchange=function(){s.image=SF.safeMedia(artworkInput.value);change();};
