@@ -107,43 +107,6 @@ try {
     'the header controller did not move Context into the requested slot'
   );
   await page.click('#demo-reset');
-  await settled();
-  const contentBeforeSwap = await page.evaluate(() => ({
-    type: document.querySelector('#demo-deck .slide')?.className,
-    rows: window.__demoRows(),
-    headline: document.querySelector('#demo-deck .safe-slot[data-name="Headline"]')?.textContent,
-    subtitle: document.querySelector('#demo-deck .safe-slot[data-name="Subtitle"]')?.textContent,
-  }));
-  await page.click('#demo-deck .safe-slot[data-name="Headline"] .demo-slot-swap');
-  assert.equal(await page.locator('#demo-feature-panel').isHidden(), true, 'content ⇄ opened the layout picker');
-  assert.match(await page.locator('#demo-deck .demo-status').innerText(), /choose another compatible content block/i);
-  await page.click('#demo-deck .safe-slot[data-name="Subtitle"] .demo-slot-swap');
-  await page.waitForFunction((before) => {
-    const headline = document.querySelector('#demo-deck .safe-slot[data-name="Headline"]')?.textContent || '';
-    const subtitle = document.querySelector('#demo-deck .safe-slot[data-name="Subtitle"]')?.textContent || '';
-    return headline.includes(before.subtitle) && subtitle.includes(before.headline);
-  }, contentBeforeSwap);
-  const contentAfterSwap = await page.evaluate(() => ({
-    type: document.querySelector('#demo-deck .slide')?.className,
-    rows: window.__demoRows(),
-  }));
-  await settled();
-  assert.match(contentAfterSwap.type, /layout-title/, 'content ⇄ changed the slide layout');
-  assert.equal(contentAfterSwap.type, contentBeforeSwap.type, 'content ⇄ changed the slide type');
-  /* Which slots exist, in what order, over which columns — that is what ⇄ must
-     not touch. Their spans are no longer fixed: a block takes the lines its
-     content needs, so exchanging content is expected to move rows. */
-  const shape = (rows) => rows.map((r) => ({ name: r.name, col: r.col, cols: r.cols }));
-  assert.deepEqual(shape(contentAfterSwap.rows), shape(contentBeforeSwap.rows), 'content ⇄ moved the slots instead of swapping content');
-  /* And the lines did follow: an 84px display line handed the subtitle's words
-     needs more of them than the four the title composition authored. */
-  const headlineBefore = contentBeforeSwap.rows.find((r) => r.name === 'Headline');
-  const headlineAfter = contentAfterSwap.rows.find((r) => r.name === 'Headline');
-  assert.ok(
-    headlineAfter.rows > headlineBefore.rows,
-    `the headline kept ${headlineBefore.rows} lines instead of taking the lines its new content needs`
-  );
-  assert.match(await page.locator('#demo-deck .demo-status').innerText(), /Swapped content/i);
   await page.click('#demo-reset');
   await settled();
   /* The original renderer remains available as a visual comparison. */
@@ -188,6 +151,20 @@ try {
   assert.ok(at(after, 'Subtitle') > at(before, 'Subtitle'), 'the subtitle was not pushed down');
   assert.equal(at(after, 'Headline'), at(before, 'Headline'), 'the item above the drop moved');
   assert.equal((await budget())[0].used, startBudget, 'a rearrange changed the row budget');
+
+  /* Line tariff: raising Headline pushes siblings; budget used grows with the tariff. */
+  const tariffed = await page.evaluate(() => window.__demoSetTariff('Headline', 6));
+  await settled();
+  assert.equal(tariffed.rows, 6);
+  assert.equal((await rows()).find((r) => r.name === 'Headline').rows, 6);
+  assert.ok((await budget())[0].used >= startBudget, 'raising a tariff should not shrink the stack');
+  const narrowed = await page.evaluate(() => window.__demoSetCols('Headline', 6));
+  await settled();
+  assert.equal(narrowed.cols, 6);
+  assert.equal(narrowed.col, 1, 'condensing from full width should pin to column 1');
+  assert.equal((await rows()).find((r) => r.name === 'Headline').cols, 6);
+  await page.click('#demo-reset');
+  await settled();
 
   /* Budget invariance over a run of moves, rather than trusting the argument. */
   for (const [name, row] of [['Headline', 14], ['Subtitle', 1], ['Date', 8], ['Headline', 1]]) {

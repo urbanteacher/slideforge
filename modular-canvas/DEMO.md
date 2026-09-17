@@ -18,8 +18,7 @@ when content outgrows a span. Production northeastern CSS is not modified.
   with Back/Front, drag on the canvas to snap. **Flip · content** returns to slot
   editing. Poses live on `slide.mockArt` (`plane`, `hidden`, `locked`, `order`, `x`, `y`).
   This is not the reverted always-on Layers panel — the stack only appears on the art face.
-- Edit text on the canvas. **⠿** moves a slot; **⇄** swaps compatible content fields on the current slide. **Change slide layout…** opens the separate layout picker.
-  **Reset this slide** / **Download snapshot**.
+- Edit text on the canvas (double-click). **⠿** moves a slot. **⬚** (or the edit box) sets **line tariff** and **column width** so the slide stays uncluttered — e.g. Headline **12c → 6c** for ~50%. **+ Heading** / **+ Body** insert a full-width block. On **split** slides, use the Split presets. **Change layout** opens the layout picker. **Reset** / **Download**.
 
 ## Latest audit (lab)
 
@@ -34,38 +33,29 @@ slide can pass one and fail the other, so neither number is allowed to hide the 
 
 ### Fit
 
-Fit is counted in **lines**, not boxes. A block occupies whole lines of the
-16-line lattice — how many depends on what it is, so a bigger heading takes more
-of them and what follows moves down — and the only fit failure is a block that
-needs more lines than it holds. Blocks that are out of flow do not spend lines:
-the caption on a full-bleed picture is an absolutely positioned scrim, 242px of
-which 156px is the gradient's own padding, drawn over the picture on purpose.
+Fit is counted in **lines** (tariffs), not boxes. Each slot has an authored
+**line tariff** — its operating budget on the 16-line lattice. Content
+top-aligns inside that budget; empty lines below are **tariff air** (intentional
+padding), not a bug. The only fit failure is measured **need > tariff** (or
+sideways overflow). Blocks that are out of flow do not spend lines: the caption
+on a full-bleed picture is an absolutely positioned scrim drawn over the picture
+on purpose.
 
-A block **takes** the lines its content needs, and the rest of its column group
-moves down. Same walk as a drag reorder — recover each gap from the running
-cursor, then replay the stack — except it resizes rather than reorders, so the
-rhythm between blocks survives one of them growing through it.
+**Tariff does not auto-grow from paint.** Typing past a heading’s budget bleeds
+and reports `needs N lines, tariff T` until the author raises the tariff with
+**− / +** (or the 2 / 3 / 4 band buttons) on the slot. Raising a tariff restacks
+siblings; past line 16 is allowed and reported as over budget.
 
-Grow only. A block never gives back a line the design gave it: the empty lines
-under a heading are composition, not slack, and shrinking every block to its own
-text would pull all 97 slides up to the top of the body. The authored span is
-kept beside the effective one, so a block that grew comes back when the words are
-cut. This is dormant on a bank that fits — the audit below is unchanged by it —
-and only speaks when someone types past a span.
+| Role | Default tariff |
+|------|----------------|
+| Common heading (`h2` / Heading) | **3** (text + air). Compact **2** by choice or on dense bank recipes (`content`, `compare`). **1** is never a default — it crushes titles. |
+| Display Headline (title) | **4+** (first-paint settle may set more) |
+| + Heading / + Body | Full row (**12c**); heading **3r**, body **4r** |
+| Mind map / chart SVG | Whole canvas; more nodes densify — **legibility**, not line bleed |
+| Journey / lists | One tariff for the whole container; add nodes freely; bleed when maxed |
 
-Past line 16 is allowed and reported, not refused. Typing the title long enough
-to need 15 lines reads in two phases:
-
-| Phase | Verdict |
-|-------|---------|
-| While typing | `Headline needs 15 lines, has 4` — measured live and in place, because a render would replace the slide under the caret |
-| Once the edit settles | `8 rows over budget` — the block took its 15 lines, the stack is 24 of 16, and that is the slide's problem, said once |
-
-A block is judged against the lines the recipe gave it, not the height it paints
-in. The lattice defines 16 tracks, so a block pushed past them lands in implicit
-auto tracks and measures short: before that distinction, an over-budget title
-reported `Headline needs 15 lines, has 12` and `Subtitle needs 3 lines, has 1` —
-two consequences of one cause, neither of them the block's own fault.
+**Split** column presets (both sides still 16 rows): **50/50**, **40/60**, **58/42**
+(bank default), **20/80**.
 
 The box was the previous detector and could not be made to agree with itself. A
 slot measures its element box, but a display face paints an inline box half a
@@ -153,8 +143,10 @@ painted-size floor is not a nicety — it is the whole contract.
 2. **Dense lists** — AiAd27’s `li { min-height:108px }` must not leak into NUL;
    Demo overrides that for the bank.
 3. **Headings** — long titles need 2–3 rows at ~40px; 2-row headings fail when copy wraps.
-4. **BLEED** — `image` / `split` / `video` still sit on the lattice so overflow stays visible;
-   full-bleed chrome work comes later.
+4. **BLEED** — media panes (`Media` / `Image` / `Video` · BLEED) leave the
+   16-line body and paint **full-slide** (header → footer, flush edges).
+   Split **copy** stays on the body lattice. Column share still comes from
+   the lattice (e.g. 7/5 or 50/50); media height is not clipped to the body band.
 5. **Columns are the second axis** — #70 was fixed by moving the split from 6/6 to
    7/5 columns, not by shrinking type. Column share belongs in the authoring
    surface alongside row spans.
@@ -178,10 +170,12 @@ ratchet against getting worse, not a claim that 24 is acceptable.
 
 ## Swapping the feature
 
-**⇄** pops a picker of every shape this slide can become. It is the app's own
+**Change layout** opens a picker of every shape this slide can become. It is the app's own
 layout machinery, not a lab copy: `SF.SLIDE_TYPES` supplies the labels and icons,
 `SF.LAYOUT_GROUPS` the grouping, `SF.DECK_TYPES` the authorable set, and
 `SF.prepareLayout` does the conversion — the same call `js/editor.js` makes.
+
+In-slot content ⇄ exchange is disabled for now.
 
 **The heading always carries over, and nothing is deleted.** `prepareLayout` only
 sets the type and seeds fields the new shape needs; a field the new shape cannot
@@ -218,12 +212,9 @@ does not."* One shape in 256 swaps does this — chart to Statement, where the
 chart's data ends up as 58px display type. A quiet wrong "should fit" would be
 worse than no estimate at all.
 
-### What ⇄ actually changes
+### What Change layout actually changes
 
-**The whole slide, not the box it sits on.** Every slot carries a ⇄ and they all
-do the same thing, because a feature is a property of the slide. The picker says
-so at the top; the slot name only appears in the report, to say where you asked
-from.
+**The whole slide, not a single box.** A feature is a property of the slide.
 
 A shape that shows no heading is flagged **drops the heading** — `quote` and
 `statement` carry the words but not the title. The title stays in the data, so a

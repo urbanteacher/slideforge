@@ -216,6 +216,23 @@
 .demo-slotted .safe-slot {
   position: relative;
 }
+/* True BLEED: full-slide height (and edge-flush width). Overrides the body
+   lattice so split media / image / video match production header→footer fill. */
+.demo-slotted .safe-slot.safe-slot-bleed {
+  position: absolute;
+  margin: 0;
+  z-index: 1;
+}
+.demo-slotted .safe-body {
+  z-index: 2;
+  pointer-events: none;
+}
+.demo-slotted .safe-body .safe-slot {
+  pointer-events: auto;
+}
+.demo-slotted .safe-slot.safe-slot-bleed {
+  pointer-events: auto;
+}
 /* Restored: the drag-grip styling replaced this block, and without it .split-copy
    falls back to production's row-flex sizing, so slide 70 needed 644px in 576
    again. The slot owns the size; the grip only needs the positioning context. */
@@ -233,10 +250,14 @@
   right: 4px;
   z-index: 7;
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 4px;
+  max-width: calc(100% - 8px);
 }
 .demo-slot-grip,
-.demo-slot-swap {
+.demo-slot-size,
+.demo-slot-tariff-btn {
   width: 28px;
   height: 28px;
   padding: 0;
@@ -248,28 +269,52 @@
   opacity: 0.9;
   cursor: pointer;
 }
+.demo-slot-tariff {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  background: rgba(255, 243, 219, 0.95);
+  border: 1px solid #0c3354;
+}
+.demo-slot-tariff-val {
+  font: 600 12px/1 system-ui;
+  color: #0c3354;
+  min-width: 1.6em;
+  text-align: center;
+}
+.demo-slot-tariff-btn {
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+}
+.demo-slot-tariff-band {
+  font-size: 11px;
+  font-weight: 600;
+}
 .demo-slot-grip { cursor: grab; }
 .demo-slot-grip:hover,
 .demo-slot-grip:focus-visible,
-.demo-slot-swap:hover,
-.demo-slot-swap:focus-visible {
+.demo-slot-size:hover,
+.demo-slot-size:focus-visible,
+.demo-slot-tariff-btn:hover,
+.demo-slot-tariff-btn:focus-visible {
   opacity: 1;
   outline: 2px solid #0c3354;
 }
-.demo-slot-swap.is-armed,
-.demo-slot-swap-armed {
-  outline: 3px solid #c8102e !important;
+#demo-split-share [aria-pressed="true"] {
+  outline: 2px solid #c8102e;
   background: #fde8ec;
 }
-.demo-slot-swap.is-target {
-  background: #e4f178;
-  border-color: #172d22;
+.demo-split-inline {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
 }
-.demo-slot-swap-target {
-  outline: 2px dashed #61b6d0;
-}
-.demo-swap-picking .demo-status {
-  font-weight: 600;
+.demo-split-inline[hidden] {
+  display: none !important;
 }
 .demo-slot-lifting {
   opacity: 0.92;
@@ -545,14 +590,137 @@
 .demo-feature-icon { grid-row:1 / span 2; align-self:center; width:18px; text-align:center; font-size:15px; }
 .demo-feature-label { min-width:0; overflow-wrap:anywhere; }
 .demo-feature-keep { font-size:10px; letter-spacing:.04em; text-transform:uppercase; color:#2a6b4f; }
-/* The lab has no shell chrome, so the format toolbar needs its own frame. */
-#demo-deck .canvas-edit-form { position:absolute; z-index:21; left:8px; right:8px; bottom:8px; padding:10px; border:1px solid #0c3354; border-radius:10px; background:#fff; box-shadow:0 12px 32px rgba(12,51,84,.2); }
-#demo-deck .canvas-edit-form label { display:block; font:12px/1.4 system-ui; color:#53604f; }
-#demo-deck .canvas-edit-form textarea { width:100%; font:15px/1.4 system-ui; margin-top:4px; }
-#demo-deck .format-tools { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px; }
-#demo-deck .format-tools button { font:13px/1 system-ui; padding:4px 8px; border:1px solid #c8d2c2; border-radius:6px; background:#fbfdfa; cursor:pointer; }
-#demo-deck .format-tools button:hover { border-color:#0c3354; background:#fff3db; }
-#demo-deck .format-tools input[type=text] { flex:1 1 140px; min-width:0; font:12px/1.3 system-ui; }
+/* The lab has no shell chrome, so the format toolbar needs its own frame.
+   Form sits on the slide, so slide --s-fg (white) must not leak onto controls. */
+#demo-deck .canvas-edit-form {
+  position: absolute;
+  z-index: 40;
+  left: 8px;
+  top: 8px;
+  right: auto;
+  bottom: auto;
+  width: min(420px, calc(100% - 16px));
+  max-height: calc(100% - 16px);
+  overflow: auto;
+  padding: 0 10px 10px;
+  border: 1px solid #0c3354;
+  border-radius: 10px;
+  background: #fff;
+  color: #14181f;
+  box-shadow: 0 12px 32px rgba(12, 51, 84, 0.28);
+}
+/* Form mounts on .slide — keep it above lattice chrome and slot outlines. */
+#demo-deck .slide > .canvas-edit-form {
+  pointer-events: auto;
+}
+#demo-deck .canvas-edit-form,
+#demo-deck .canvas-edit-form * {
+  color: #14181f;
+}
+#demo-deck .canvas-edit-drag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 -10px 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #d5ddd0;
+  background: #f4f7f1;
+  border-radius: 10px 10px 0 0;
+  cursor: grab;
+  user-select: none;
+  font: 650 13px/1.2 system-ui;
+  color: #0c3354;
+}
+#demo-deck .canvas-edit-drag:active { cursor: grabbing; }
+#demo-deck .canvas-edit-drag-hint {
+  margin-left: auto;
+  font: 12px/1 system-ui;
+  font-weight: 500;
+  color: #53604f;
+}
+#demo-deck .canvas-edit-form label { display: block; font: 12px/1.4 system-ui; color: #53604f; }
+#demo-deck .canvas-edit-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font: 15px/1.4 system-ui;
+  margin-top: 4px;
+  padding: 8px;
+  color: #14181f;
+  background: #fff;
+  border: 1px solid #c5d0c0;
+  border-radius: 6px;
+}
+#demo-deck .canvas-edit-lattice {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 8px 10px;
+  border: 1px solid #c5d0c0;
+  border-radius: 8px;
+  background: #f7f9f4;
+}
+#demo-deck .canvas-edit-lattice-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+#demo-deck .canvas-edit-lattice-label {
+  font: 650 12px/1 system-ui;
+  color: #53604f;
+  min-width: 3.2em;
+}
+#demo-deck .canvas-edit-lattice-val {
+  font: 650 13px/1 system-ui;
+  min-width: 2.2em;
+  text-align: center;
+  color: #0c3354;
+}
+#demo-deck .canvas-edit-form .btn,
+#demo-deck .canvas-edit-lattice-row .btn,
+#demo-deck .canvas-edit-form button {
+  margin: 0 6px 0 0;
+  padding: 6px 10px;
+  font: 600 12px/1.2 system-ui;
+  color: #0c3354 !important;
+  background: #fff3db !important;
+  border: 1px solid #0c3354 !important;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#demo-deck .canvas-edit-form .btn.primary {
+  color: #fff !important;
+  background: #0c3354 !important;
+  border-color: #0c3354 !important;
+}
+#demo-deck .canvas-edit-form .btn.ghost,
+#demo-deck .canvas-edit-lattice-row .btn.ghost {
+  color: #0c3354 !important;
+  background: #fff !important;
+  border: 1px solid #0c3354 !important;
+}
+#demo-deck .format-tools { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+#demo-deck .format-tools button {
+  font: 13px/1 system-ui;
+  padding: 4px 8px;
+  border: 1px solid #0c3354 !important;
+  border-radius: 6px;
+  background: #fbfdfa !important;
+  color: #0c3354 !important;
+  cursor: pointer;
+}
+#demo-deck .format-tools button:hover { background: #fff3db !important; }
+#demo-deck .format-tools input[type=text] {
+  flex: 1 1 140px;
+  min-width: 0;
+  font: 12px/1.3 system-ui;
+  color: #14181f;
+  background: #fff;
+  border: 1px solid #c5d0c0;
+  border-radius: 6px;
+  padding: 4px 8px;
+}
 .demo-feature-fit { min-width:0; overflow-wrap:anywhere; font-size:10px; letter-spacing:.03em; text-transform:uppercase; color:#2a6b4f; }
 .demo-feature-option.is-tight { border-color:#e0a4ae; background:#fdf3f5; }
 .demo-feature-option.is-tight .demo-feature-fit { color:#a3152a; }

@@ -18,20 +18,31 @@ let flipMode = 'content';
 /* What the last rearrange did, so measure() can keep it instead of overwriting. */
 let lastMove = '';
 let selectedArt = null;
-/* ⇄ is an in-slide content-location control: select one slot, then another.
-   It is deliberately separate from the optional layout picker. */
-let contentSwapArmed = null;
 /* The open layout picker, if any. */
 let featurePicker = null;
 /* Re-render depth while a stack is settling into its measured lines. */
 let reflowPasses = 0;
 deck.showSlideNumbers = true;
 
-/* Recipes: [selector, label, col, cols, row, rows]
-   Selectors resolve inside .pad (NUL layouts rarely use .cp-body). */
-/* Default body recipe: heading 3 rows (wraps), body from row 5 for 12 rows. */
-const H = (sel = 'h2', name = 'Heading') => [sel, name, 1, 12, 1, 3];
+/* Recipes: [selector, label, col, cols, row, rows, tariff?]
+   Selectors resolve inside .pad (NUL layouts rarely use .cp-body).
+   rows = tariff = operating line budget. Paint checks need vs tariff; air inside
+   the tariff is intentional (content top-aligns). Do not map h1…h6 → lines. */
+/* Common heading default: 3 lines (text + air). Compact override is 2; 1 is never
+   a default — it crushes titles. Body starts at row 5 for 12 rows. */
+const HEADING_TARIFF = 3;
+const HEADING_COMPACT = 2;
+const BODY_DEFAULT_TARIFF = 4;
+const H = (sel = 'h2', name = 'Heading', rows = HEADING_TARIFF) => [sel, name, 1, 12, 1, rows];
 const BODY = (sel, name, row = 5, rows = 12) => [sel, name, 1, 12, row, rows];
+
+/* Split column shares on the 12-col axis (both stacks stay 16 rows tall). */
+const SPLIT_PRESETS = [
+  { id: '50-50', label: '50/50', left: 6 },
+  { id: '40-60', label: '40/60', left: 5 },
+  { id: '58-42', label: '58/42', left: 7 },
+  { id: '20-80', label: '20/80', left: 2 },
+];
 
 const recipes = {
   title: [
@@ -48,8 +59,9 @@ const recipes = {
     ['.statement-credit', 'Credit', 1, 10, 15, 1],
   ],
   content: [
-    ['h2', 'Heading', 1, 12, 1, 2],
-    ['ul', 'Bullet list', 1, 12, 3, 14],
+    /* Dense bank slide #97 needs 14 list lines; compact heading keeps the stack at 16. */
+    H('h2', 'Heading', HEADING_COMPACT),
+    BODY('ul', 'Bullet list', 3, 14),
   ],
   section: [
     ['h1', 'Headline', 1, 12, 4, 6],
@@ -81,8 +93,9 @@ const recipes = {
     BODY('.stats-grid', 'Stat tiles', 6, 11),
   ],
   compare: [
-    ['h2', 'Heading', 1, 12, 1, 2],
-    ['.compare', 'Compare', 1, 12, 3, 14],
+    /* #94 still cannot fit four labelled steps in 14 rows — known content-budget fail. */
+    H('h2', 'Heading', HEADING_COMPACT),
+    BODY('.compare', 'Compare', 3, 14),
   ],
   funnel: [H(), BODY('.funnel, ol, ul', 'Funnel')],
   timeline: [H(), BODY('.timeline, ol, ul', 'Timeline')],
@@ -92,8 +105,8 @@ const recipes = {
   table: [H(), BODY('.tbl, table', 'Table')],
   code: [H(), BODY('.code-frame', 'Code')],
   chart: [
-    ['h2', 'Heading', 1, 12, 1, 2],
-    ['.chart-wrap', 'Chart', 1, 12, 3, 11],
+    H(),
+    ['.chart-wrap', 'Chart', 1, 12, 5, 10],
     ['.chart-key', 'Key', 1, 12, 15, 2],
   ],
   image: [
@@ -101,9 +114,8 @@ const recipes = {
     ['.cap', 'Caption', 1, 12, 13, 4],
   ],
   split: [
-    /* Copy takes 7 of 12: at 6 columns (570px) the longest bank slide needed 594
-       in 576. A wider measure costs the picture 101px and shrinks no type. */
-    ['.split-copy', 'Copy · BLEED', 1, 7, 1, 16],
+    /* Copy stays on the 16-line body. Media · BLEED paints full-slide height. */
+    ['.split-copy', 'Copy', 1, 7, 1, 16],
     ['.split-media', 'Media · BLEED', 8, 5, 1, 16],
   ],
   gallery: [H(), BODY('.fig-stack', 'Gallery')],
@@ -212,59 +224,192 @@ function budgets(recipe) {
   return out;
 }
 
-/* A block takes the lines its content needs, and what follows moves down.
-   Same walk as magneticMove — recover each gap from the running cursor, then
-   replay the stack — except this resizes instead of reordering, so the rhythm
-   between blocks survives a block growing through it.
+/* Tariff model: the authored span (spec[6], else spec[5]) is the line budget.
+   Paint may need more lines than the tariff — that bleeds and is reported; we do
+   not auto-grow the tariff from scrollHeight (air under a heading is composition).
+   Changing a tariff is an explicit user action via setSlotTariff. */
+function ensureTariff(spec) {
+  if (spec[6] == null) spec[6] = spec[5];
+  return spec[6];
+}
 
-   Grow only. A block never gives back a line the design gave it: the empty lines
-   under a heading are composition, not slack, and shrinking every block to its
-   own text would pull all 97 slides up to the top of the body. So this is
-   dormant on a bank that fits, and only speaks when someone types past a span.
-
-   Past line 16 is allowed and reported, not refused — budgets() already counts a
-   group's gaps and spans against ROWS, and an over-budget stack says so. */
-function reflowRows(root, slide) {
+function reflowRows(_root, slide) {
   const recipe = ensureMockRecipe(slide);
-  /* The authored span has to outlive the measurement, or a block that grew once
-     would never come back when the words are cut. Kept beside the effective
-     span, not in place of it. */
-  for (const spec of recipe) if (spec[6] == null) spec[6] = spec[5];
+  for (const spec of recipe) ensureTariff(spec);
+  /* No auto-grow from paint. */
+  return false;
+}
 
-  const need = new Map();
-  for (const box of root.querySelectorAll('.safe-slot')) {
-    const i = Number(box.dataset.recipeIndex);
-    const lines = linesNeeded(box);
-    if (Number.isInteger(i) && lines != null) need.set(i, lines);
+/* Change one slot's line tariff and restack its column group (siblings push).
+   Gaps travel with the item below them, same as magneticMove. Over-16 is allowed. */
+function setSlotTariff(recipe, idx, newRows) {
+  const rows = Math.max(1, Math.min(ROWS, Math.round(newRows)));
+  const group = columnGroup(recipe, idx).sort((a, b) => a.row - b.row);
+  let cursor = 1;
+  for (const s of group) {
+    s.gap = Math.max(0, s.row - cursor);
+    cursor = s.row + s.rows;
+  }
+  recipe[idx][5] = rows;
+  recipe[idx][6] = rows;
+  let row = 1;
+  for (const s of group) {
+    row += s.gap;
+    recipe[s.i][4] = row;
+    row += recipe[s.i][5];
+  }
+  return { rows, used: row - 1, over: Math.max(0, row - 1 - ROWS), name: recipe[idx][1] };
+}
+
+/* Stretch or condense column span. Origin stays put when it still fits; otherwise
+   it clamps so the block stays on the 12-col grid (e.g. 12c → 6c left-aligned
+   leaves columns 7–12 free for later content). */
+function setSlotCols(recipe, idx, newCols) {
+  const cols = Math.max(1, Math.min(12, Math.round(newCols)));
+  const spec = recipe[idx];
+  const prev = spec[3];
+  spec[3] = cols;
+  const maxStart = 12 - cols + 1;
+  /* Condensing from full width: pin to column 1 so the right half stays free. */
+  if (prev >= 12 && cols < 12) spec[2] = 1;
+  else spec[2] = Math.max(1, Math.min(maxStart, spec[2]));
+  return { cols, col: spec[2], name: spec[1], end: spec[2] + cols - 1 };
+}
+
+function applySplitShare(slide, leftCols) {
+  const left = Math.max(1, Math.min(11, leftCols));
+  const right = 12 - left;
+  const recipe = ensureMockRecipe(slide);
+  const copy = recipe.find((r) => /copy/i.test(r[1]));
+  const media = recipe.find((r) => /media/i.test(r[1]));
+  if (!copy || !media) return null;
+  const copyLeft = copy[2] <= media[2];
+  const a = copyLeft ? copy : media;
+  const b = copyLeft ? media : copy;
+  a[2] = 1;
+  a[3] = left;
+  a[4] = 1;
+  a[5] = 16;
+  a[6] = 16;
+  b[2] = left + 1;
+  b[3] = right;
+  b[4] = 1;
+  b[5] = 16;
+  b[6] = 16;
+  slide.mockSplitShare = left;
+  return { left, right };
+}
+
+/* Insert a block with role default tariff. Unsplit body → full 12 columns.
+   On split slides, append into the copy stack using that side's column share. */
+function addFullRowContent(slide, role = 'body') {
+  const recipe = ensureMockRecipe(slide);
+  if (!slide.mockExtras) slide.mockExtras = [];
+  const id = `extra-${Date.now().toString(36)}`;
+  const isHeading = role === 'heading';
+  const tariff = isHeading ? HEADING_TARIFF : BODY_DEFAULT_TARIFF;
+  const name = isHeading ? 'Heading' : 'Body';
+  const text = isHeading ? 'New heading' : 'New content';
+  slide.mockExtras.push({ id, role, text, name });
+  const sel = `[data-mock-extra="${id}"]`;
+
+  let col = 1;
+  let cols = 12;
+  const copy = recipe.find((r) => /copy/i.test(r[1]));
+  const media = recipe.find((r) => /media/i.test(r[1]));
+  const splitSide = slide.type === 'split' && copy && media;
+  if (splitSide) {
+    /* Prefer the copy column for new text; keep media's full-height bleed alone. */
+    col = copy[2];
+    cols = copy[3];
   }
 
-  let changed = false;
-  const seen = new Set();
-  for (let i = 0; i < recipe.length; i++) {
-    if (seen.has(i)) continue;
-    const group = columnGroup(recipe, i).sort((a, b) => a.row - b.row);
-    group.forEach((s) => seen.add(s.i));
-    let cursor = 1;
-    const gaps = group.map((s) => {
-      const gap = Math.max(0, s.row - cursor);
-      cursor = s.row + s.rows;
-      return gap;
-    });
-    let row = 1;
-    group.forEach((s, n) => {
-      const spec = recipe[s.i];
-      const rows = Math.max(spec[6], need.get(s.i) ?? spec[6]);
-      row += gaps[n];
-      if (spec[4] !== row || spec[5] !== rows) changed = true;
-      spec[4] = row;
-      spec[5] = rows;
-      row += rows;
-    });
+  const groupIdxs = recipe
+    .map((r, i) => ({ i, col: r[2], cols: r[3], row: r[4], rows: r[5] }))
+    .filter((s) => s.col === col && s.cols === cols)
+    .sort((a, b) => a.row - b.row);
+
+  let cursor = 1;
+  const gaps = [];
+  for (const s of groupIdxs) {
+    gaps.push(Math.max(0, s.row - cursor));
+    cursor = s.row + s.rows;
   }
-  return changed;
+  /* Append after the stack with a 1-line gap when the group already has items. */
+  const leadGap = groupIdxs.length ? 1 : 0;
+  const spec = [sel, name, col, cols, cursor + leadGap, tariff, tariff];
+  recipe.push(spec);
+
+  /* Restack the column group so gaps + spans stay consistent. */
+  const idx = recipe.length - 1;
+  const group = columnGroup(recipe, idx).sort((a, b) => a.row - b.row);
+  let row = 1;
+  let prevEnd = 1;
+  for (let n = 0; n < group.length; n++) {
+    const s = group[n];
+    const gap = n < gaps.length ? gaps[n] : n === group.length - 1 ? leadGap : 0;
+    row = prevEnd + gap;
+    recipe[s.i][4] = row;
+    prevEnd = row + recipe[s.i][5];
+  }
+
+  slide.mockRecipe = recipe;
+  const used = prevEnd - 1;
+  return { id, tariff, name, cols, over: Math.max(0, used - ROWS) };
 }
 
 const bleedTypes = new Set(['image', 'split', 'video']);
+/** Safe lattice pitch on the 1280×720 slide (body origin 52,88). */
+const SNAP_X = 101; /* 65 col + 36 gutter */
+const SNAP_Y = 36;
+const BODY_LEFT = 52;
+const BODY_TOP = 88;
+const SLIDE_W = 1280;
+const SLIDE_H = 720;
+const COL_W = 65;
+const COL_GAP = 36;
+const COL_STEP = COL_W + COL_GAP;
+
+function isBleedName(name) {
+  /* Only media panes override the body band. Copy stays on the 16-line lattice. */
+  return /BLEED/i.test(name || '') && /(Media|Image|Video)/i.test(name || '');
+}
+
+/* Map lattice columns to slide X, flushing to the slide edge when the recipe
+   touches the body edge — so split media / full-bleed images override the
+   body band and reach header + footer like production. */
+function bleedFrame(col, cols) {
+  let left = BODY_LEFT + (col - 1) * COL_STEP;
+  let width = cols * COL_W + Math.max(0, cols - 1) * COL_GAP;
+  if (col <= 1) {
+    width += left;
+    left = 0;
+  }
+  if (col + cols - 1 >= 12) width = SLIDE_W - left;
+  return { left, top: 0, width, height: SLIDE_H };
+}
+
+function applyBleedSlots(root, slide, body) {
+  const recipe = ensureMockRecipe(slide);
+  for (const box of [...body.querySelectorAll('.safe-slot')]) {
+    const idx = Number(box.dataset.recipeIndex);
+    const spec = recipe[idx];
+    if (!spec || !isBleedName(spec[1])) continue;
+    const [, name, col, cols] = spec;
+    const frame = bleedFrame(col, cols);
+    box.classList.add('safe-slot-bleed');
+    box.dataset.bleed = '1';
+    box.dataset.label = `${name} · full-slide × ${cols}c`;
+    box.style.gridArea = '';
+    box.style.position = 'absolute';
+    box.style.left = `${frame.left}px`;
+    box.style.top = `${frame.top}px`;
+    box.style.width = `${frame.width}px`;
+    box.style.height = `${frame.height}px`;
+    box.style.zIndex = '1';
+    root.append(box);
+  }
+}
 
 const section = document.createElement('section');
 section.id = 'demo-deck';
@@ -294,6 +439,11 @@ section.innerHTML = `
       <span class="demo-tool-label">Tools</span>
       <label class="demo-toggle"><input type="checkbox" id="demo-grid" checked> Slots</label>
       <button type="button" id="demo-layout-picker">Change layout</button>
+      <button type="button" id="demo-add-heading" title="Add a full-width heading (3-line tariff)">+ Heading</button>
+      <button type="button" id="demo-add-body" title="Add a full-width body block (4-line tariff)">+ Body</button>
+      <span id="demo-split-share" hidden class="demo-split-inline" aria-label="Split column share">
+        ${SPLIT_PRESETS.map((p) => `<button type="button" data-split-left="${p.left}" title="Split ${p.label}">${p.label}</button>`).join('')}
+      </span>
     </div>
     <div class="demo-tool-group demo-chrome-toolgroup" id="demo-chrome-map" hidden aria-label="Header and footer controller" title="Bands fixed · click a position, then click another to move or swap its furniture">
       <span class="demo-tool-label">Chrome</span>
@@ -326,7 +476,7 @@ section.innerHTML = `
     </aside>
     <aside class="demo-feature-panel" id="demo-feature-panel" hidden aria-label="Swap this slide’s feature"></aside>
   </div>
-  <p class="demo-canvas-hint"><strong>Content:</strong> edit text, drag ⠿ to rearrange, ⇄ to exchange compatible content. <strong>Artwork:</strong> move only the visual assets. The right panel always describes the active tool.</p>
+  <p class="demo-canvas-hint"><strong>Content:</strong> edit text (double-click), ⠿ to rearrange, ⬚ for lines/width in the edit box. <strong>Artwork:</strong> move only the visual assets.</p>
   <p class="safe-status demo-status" role="status"></p>
   <p class="demo-chrome-measure" aria-live="polite"></p>
   <div class="safe-recipe demo-recipe"></div>
@@ -334,7 +484,7 @@ section.innerHTML = `
   <pre class="demo-audit-out" hidden></pre>
   <p class="safe-scope">
     Engine 3 retains the campaign hierarchy and only measures/repositions content into shared containers. Original is a comparison view; it is never the editing default.
-    Production northeastern CSS is not modified. BLEED types (image, split, video) still use the lattice so overflow is visible.
+    Production northeastern CSS is not modified. BLEED slots (image, split, video) paint full-slide (header→footer); the body lattice keeps column share.
   </p>
 `;
 
@@ -460,40 +610,6 @@ function swapSlotGeometry(recipe, i, j) {
   b[4] = aPos[2];
   b[5] = aPos[3];
   return { a: a[1], b: b[1] };
-}
-
-/* ⇄ exchanges values, not recipes. A rendered slot can contain one editable
-   field (title/subtitle/body) or several (a bullet list); only like-for-like
-   field sets are safe to exchange without turning an array into a scalar. */
-function slotContentKeys(box) {
-  return [...box.querySelectorAll('[data-content-key]')]
-    .filter((node) => !node.querySelector('[data-content-key]'))
-    .map((node) => node.dataset.contentKey)
-    .filter(Boolean);
-}
-function readContentKey(slide, key) {
-  const bullet = /^bullets\.(\d+)$/.exec(key);
-  return bullet ? slide.bullets?.[Number(bullet[1])] ?? '' : slide[key] ?? '';
-}
-function writeContentKey(slide, key, value) {
-  const bullet = /^bullets\.(\d+)$/.exec(key);
-  if (bullet) {
-    if (!Array.isArray(slide.bullets)) slide.bullets = [];
-    slide.bullets[Number(bullet[1])] = value;
-  } else slide[key] = value;
-}
-function swapSlotContent(slide, first, second) {
-  const a = slotContentKeys(first.box);
-  const b = slotContentKeys(second.box);
-  if (!a.length || !b.length) return { error: 'Only editable content blocks can be swapped.' };
-  if (a.length !== b.length) {
-    return { error: `${first.name} has ${a.length} field${a.length === 1 ? '' : 's'} and ${second.name} has ${b.length}; choose matching content blocks.` };
-  }
-  const left = a.map((key) => readContentKey(slide, key));
-  const right = b.map((key) => readContentKey(slide, key));
-  a.forEach((key, i) => writeContentKey(slide, key, right[i]));
-  b.forEach((key, i) => writeContentKey(slide, key, left[i]));
-  return { a: first.name, b: second.name };
 }
 
 /* Which features can this slide become, and what carries over.
@@ -656,12 +772,13 @@ function applyFeature(slide, type, slotName, predicted) {
   const was = SF.SLIDE_TYPES[slide.type]?.label || slide.type;
   const pointsBefore = (slide.bullets || []).filter((b) => String(b).trim()).length;
   closeFeaturePicker();
-  contentSwapArmed = null;
   SF.prepareLayout(slide, type);
   /* Positions belonged to the old feature. Drop them so the new one takes its
      own recipe instead of inheriting spans that were measured for something else. */
   delete slide.mockRecipe;
   delete slide.mockTitleNormalized;
+  delete slide.mockExtras;
+  delete slide.mockSplitShare;
   render().then((result) => {
     /* The rendered status is authoritative. A title may have taken an internal
        second pass to establish its measured rows, so the outer promise result
@@ -703,7 +820,8 @@ function reportSwapFit(label, result) {
 
 function bindSlotDrag(root, slide, body) {
   const recipe = ensureMockRecipe(slide);
-  const boxes = [...body.querySelectorAll('.safe-slot')];
+  /* Include BLEED slots mounted on the slide, not only body-lattice slots. */
+  const boxes = [...root.querySelectorAll('.safe-slot')];
 
   for (const box of boxes) {
     const idx = Number(box.dataset.recipeIndex);
@@ -716,63 +834,138 @@ function bindSlotDrag(root, slide, body) {
     const grip = document.createElement('button');
     grip.type = 'button';
     grip.className = 'demo-slot-grip';
-    grip.title = 'Drag up or down to reorder (the rest move aside). Drag sideways to change columns.';
+    grip.title = 'Drag up/down to reorder; sideways to move column origin. Use −/+ c to stretch or condense width.';
     grip.setAttribute('aria-label', `Move ${box.dataset.name}`);
     grip.textContent = '⠿';
     tools.append(grip);
 
-    const swapBtn = document.createElement('button');
-    swapBtn.type = 'button';
-    swapBtn.className = 'demo-slot-swap';
-    swapBtn.title = 'Swap this content — choose this block, then another compatible block on this slide.';
-    swapBtn.setAttribute('aria-label', `Swap content in ${box.dataset.name}`);
-    swapBtn.setAttribute('aria-pressed', 'false');
-    swapBtn.textContent = '\u21c4';
-    const armedHere = contentSwapArmed?.slide === slide && contentSwapArmed.recipeIndex === idx;
-    swapBtn.classList.toggle('is-armed', armedHere);
-    swapBtn.setAttribute('aria-pressed', String(armedHere));
-    if (contentSwapArmed?.slide === slide && !armedHere) swapBtn.classList.add('is-target');
-    tools.append(swapBtn);
+    /* Layout (lines + width) lives in the edit form — keep the canvas clear.
+       A small “Size” opens that form (or a lattice-only panel for decoration). */
+    const sizeBtn = document.createElement('button');
+    sizeBtn.type = 'button';
+    sizeBtn.className = 'demo-slot-size';
+    sizeBtn.title = 'Lines and width — opens in the edit box';
+    sizeBtn.setAttribute('aria-label', `Size ${box.dataset.name}`);
+    sizeBtn.textContent = '⬚';
+    tools.append(sizeBtn);
 
-    swapBtn.addEventListener('click', (e) => {
+    const openLatticeEditor = () => {
+      if (flipMode === 'artwork') return;
+      const content = [...box.children].find((el) => !el.classList.contains('demo-slot-tools') && !el.classList.contains('canvas-edit-form'));
+      const keyNode = content?.matches?.('[data-content-key]')
+        ? content
+        : content?.querySelector?.('[data-content-key]');
+      const key = keyNode?.dataset?.contentKey;
+      const recipeIndex = idx;
+      let pendingRows = ensureTariff(recipe[recipeIndex]);
+      let pendingCols = recipe[recipeIndex][3];
+      const lattice = {
+        get rows() {
+          return pendingRows;
+        },
+        get cols() {
+          return pendingCols;
+        },
+        rowBands: [HEADING_COMPACT, HEADING_TARIFF, 4],
+        colBands: [5, 6, 12],
+        onRows: (n) => {
+          pendingRows = Math.max(1, Math.min(ROWS, Math.round(n)));
+          return pendingRows;
+        },
+        onCols: (n) => {
+          pendingCols = Math.max(1, Math.min(12, Math.round(n)));
+          return pendingCols;
+        },
+      };
+      const commitSize = () => {
+        setSlotTariff(recipe, recipeIndex, pendingRows);
+        setSlotCols(recipe, recipeIndex, pendingCols);
+        lastMove = `Size ${recipe[recipeIndex][1]} → ${pendingRows}r × ${pendingCols}c`;
+      };
+      if (key && SF.Custom?.openCanvasEditor) {
+        SF.Custom.openCanvasEditor(box, slide, key, {
+          lattice,
+          onSave: () => {
+            commitSize();
+            render();
+          },
+          onCancel: () => render(),
+        });
+        return;
+      }
+      /* Decoration (e.g. Accent): lattice-only panel on the slide canvas. */
+      const host = SF.Custom.canvasEditHost?.(box) || box.closest('.slide') || box;
+      host.querySelectorAll('.canvas-edit-form').forEach((n) => n.remove());
+      const form = document.createElement('div');
+      form.className = 'canvas-edit-form';
+      const drag = document.createElement('div');
+      drag.className = 'canvas-edit-drag';
+      drag.innerHTML = '<span>Slot size</span><span class="canvas-edit-drag-hint">Drag</span>';
+      form.append(drag);
+      if (SF.Custom?.enableCanvasEditDrag) SF.Custom.enableCanvasEditDrag(form, drag, host);
+      const layout = document.createElement('div');
+      layout.className = 'canvas-edit-lattice';
+      const addRow = (label, get, set, bands, suffix) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'canvas-edit-lattice-row';
+        const name = document.createElement('span');
+        name.className = 'canvas-edit-lattice-label';
+        name.textContent = label;
+        const val = document.createElement('span');
+        val.className = 'canvas-edit-lattice-val';
+        val.textContent = `${get()}${suffix}`;
+        const apply = (n) => {
+          set(n);
+          val.textContent = `${get()}${suffix}`;
+        };
+        const dec = document.createElement('button');
+        dec.type = 'button';
+        dec.className = 'btn ghost';
+        dec.textContent = '−';
+        dec.onclick = () => apply(get() - 1);
+        const inc = document.createElement('button');
+        inc.type = 'button';
+        inc.className = 'btn ghost';
+        inc.textContent = '+';
+        inc.onclick = () => apply(get() + 1);
+        wrap.append(name, dec, val, inc);
+        for (const n of bands) {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'btn ghost';
+          b.textContent = String(n);
+          b.onclick = () => apply(n);
+          wrap.append(b);
+        }
+        layout.append(wrap);
+      };
+      addRow('Lines', () => pendingRows, (n) => lattice.onRows(n), lattice.rowBands, 'r');
+      addRow('Width', () => pendingCols, (n) => lattice.onCols(n), lattice.colBands, 'c');
+      form.append(layout);
+      const done = document.createElement('button');
+      done.type = 'button';
+      done.className = 'btn primary';
+      done.textContent = 'Done';
+      done.onclick = () => {
+        commitSize();
+        render();
+      };
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'btn ghost';
+      cancel.textContent = 'Cancel';
+      cancel.onclick = () => {
+        form.remove();
+      };
+      form.append(done, cancel);
+      if (SF.Custom?.placeCanvasEditForm) SF.Custom.placeCanvasEditForm(form, box, host);
+      else host.append(form);
+    };
+
+    sizeBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (flipMode === 'artwork') return;
-      if (contentSwapArmed?.slide === slide && contentSwapArmed.recipeIndex === idx) {
-        contentSwapArmed = null;
-        root.querySelectorAll('.demo-slot-swap').forEach((button) => {
-          button.classList.remove('is-armed', 'is-target');
-          button.setAttribute('aria-pressed', 'false');
-        });
-        status.textContent = 'Content swap cancelled.';
-        return;
-      }
-      if (contentSwapArmed?.slide === slide) {
-        const first = contentSwapArmed;
-        const swapped = swapSlotContent(slide, first, { box, name: box.dataset.name });
-        if (swapped.error) {
-          status.textContent = `Content swap not applied: ${swapped.error}`;
-          return;
-        }
-        contentSwapArmed = null;
-        if (swapped) {
-          lastMove = `Swapped content: ${swapped.a} ⇄ ${swapped.b}`;
-          render();
-        }
-        return;
-      }
-      if (!slotContentKeys(box).length) {
-        status.textContent = `${box.dataset.name} is decoration, not editable content. Choose a text/content block.`;
-        return;
-      }
-      contentSwapArmed = { slide, recipeIndex: idx, name: box.dataset.name, box };
-      root.querySelectorAll('.demo-slot-swap').forEach((button) => {
-        const own = button === swapBtn;
-        button.classList.toggle('is-armed', own);
-        button.classList.toggle('is-target', !own);
-        button.setAttribute('aria-pressed', String(own));
-      });
-      status.textContent = `${box.dataset.name} selected · choose another compatible content block to swap. Slide layout stays ${SF.SLIDE_TYPES[slide.type]?.label || slide.type}.`;
+      openLatticeEditor();
     });
 
     grip.addEventListener('pointerdown', (e) => {
@@ -982,11 +1175,7 @@ function fit() {
   stage.style.height = 720 * scale + 'px';
 }
 
-/** Safe lattice pitch on the 1280×720 slide (body origin 52,88). */
-const SNAP_X = 101; /* 65 col + 36 gutter */
-const SNAP_Y = 36;
-const BODY_LEFT = 52;
-const BODY_TOP = 88;
+/** Safe lattice pitch — see SNAP_* / BODY_* above. */
 
 function artKey(node) {
   return (
@@ -1217,11 +1406,20 @@ function slotify(root, slide) {
   const used = [];
   const owner = root.querySelector('.cp-body') || root.querySelector('.pad') || root;
   const hadCompositionBody = !!root.querySelector('.cp-body');
+  /* Lab-only extras from + Heading / + Body — inject before recipe pick. */
+  for (const extra of slide.mockExtras || []) {
+    if (owner.querySelector(`[data-mock-extra="${extra.id}"]`)) continue;
+    const node = document.createElement(extra.role === 'heading' ? 'h2' : 'p');
+    node.dataset.mockExtra = extra.id;
+    node.dataset.contentKey = `mockExtra.${extra.id}`;
+    node.textContent = extra.text || '';
+    owner.append(node);
+  }
   const body = document.createElement('div');
   body.className = 'safe-body';
-  const specs = recipeFor(slide);
-  if (!slide.mockRecipe) slide.mockRecipe = specs.map((r) => r.slice());
+  const specs = ensureMockRecipe(slide);
   specs.forEach((spec, recipeIndex) => {
+    ensureTariff(spec);
     const [sel, name, col, cols, row, rows] = spec;
     const node = pick(owner, sel);
     if (!node) return;
@@ -1230,12 +1428,8 @@ function slotify(root, slide) {
     box.style.gridArea = `${row} / ${col} / span ${rows} / span ${cols}`;
     box.dataset.name = name;
     box.dataset.label = `${name} · ${rows}r × ${cols}c`;
-    /* The lines the recipe gave this block, which past line 16 is more than the
-       grid can hand it: the lattice defines 16 tracks, so a block pushed beyond
-       them paints in implicit auto tracks and measures short. The allocation is
-       what the block should be judged against; whether the slide can hold the
-       whole stack is budgets()' verdict, not this block's fault. */
     box.dataset.rows = String(rows);
+    box.dataset.tariff = String(ensureTariff(spec));
     box.dataset.recipeIndex = String(recipeIndex);
     box.append(node);
     body.append(box);
@@ -1246,6 +1440,8 @@ function slotify(root, slide) {
     owner.replaceChildren(body);
     root.classList.add('safe-generic');
   }
+  /* BLEED slots leave the 16-line body and paint full-slide (header→footer). */
+  applyBleedSlots(root, slide, body);
   return used;
 }
 
@@ -1297,6 +1493,7 @@ function normalizeTitleRows(root, slide) {
   next.forEach(([spec, row, rows]) => {
     spec[4] = row;
     spec[5] = rows;
+    spec[6] = rows; /* authored tariff from first title settle */
   });
   return true;
 }
@@ -1314,18 +1511,11 @@ const RIM_PAINTERS = /chart|image|media|video|mind map|join|game/i;
    general 20px body-text floor. */
 const MICROTYPE = /^(Accent|Date)$/;
 
-/* The lattice is the instrument, not the box. A block occupies whole lines —
-   how many depends on what it is, so a bigger heading takes more of them and
-   what follows moves down — and the only fit failure is content needing more
-   lines than it holds.
-   Boxes were the previous detector and could not be made to agree with
-   themselves. A slot measures its element box, but a display face paints an
-   inline box half a leading taller: an 84px Iowan line is 87.4px of box inside
-   114.5px of ink. escapes() (js/model.js) reads a bottom overhang as overflow
-   and ignores an identical one at the top, so the same title passed or failed
-   on where it happened to sit in its slot — measured moving 14px between two
-   paints of the same slide. Lines are countable and symmetric, so a composition
-   gets the same verdict wherever it sits. */
+/* The lattice is the instrument, not the box. A block's tariff (recipe rows) is
+   its operating budget; air under top-aligned content is intentional. Fit fails
+   only when measured need exceeds that tariff (or the block is too wide).
+   Vector / canvas blocks (mindmap, chart, …) scale inside the slot — more nodes
+   densify; legibility is their failure mode, not line bleed. */
 function measureSlots(root) {
   const failed = [];
   let smallest = null;
@@ -1335,34 +1525,28 @@ function measureSlots(root) {
        have. Too narrow is their only failure mode and minCols reports it. */
     const fitExempt = RIM_PAINTERS.test(box.dataset.name || '');
     const microtype = MICROTYPE.test(box.dataset.name || '');
-    /* Still walked, but now only for the legibility verdict: the smallest type
-       on a slide is a size question, and lines say nothing about size. */
-    const verdict = SF.measureSlideFit(box, { frame: box, floor: SF.LEGIBLE_FLOOR });
+    /* Measure content only — slot tools (−/+/Nr) are lab chrome and must not
+       drag the legibility floor (a "16r" label is 12px). */
+    const content = [...box.children].find((el) => !el.classList.contains('demo-slot-tools'));
+    const verdict = content
+      ? SF.measureSlideFit(content, { frame: box, floor: SF.LEGIBLE_FLOOR })
+      : null;
     if (!microtype && verdict?.smallest != null && (smallest === null || verdict.smallest < smallest)) {
       smallest = verdict.smallest;
       smallestIn = verdict.smallestIn || '';
     }
-    /* linesNeeded returns null for a block that is out of flow, and so spends no
-       line: the caption on a full-bleed picture is an absolutely positioned
-       scrim, 242px of which 156px is the gradient's own padding around 74px of
-       text. Counting its box as seven lines failed three slides that overflow
-       nothing. reflowRows reads the same helper, so what a block is given and
-       what it is judged against cannot drift apart. */
     const lines = linesNeeded(box);
-    /* What the recipe gave it, falling back to what it paints in. While someone
-       is typing this is still the pre-edit span, so the verdict stays live: the
-       block is short of lines until the stack settles and reflowRows hands them
-       over, and then the shortfall becomes the slide's, where budgets() has it. */
-    const have = Number(box.dataset.rows) || Math.max(1, Math.round(box.clientHeight / ROW_H));
+    const have = Number(box.dataset.tariff || box.dataset.rows) || Math.max(1, Math.round(box.clientHeight / ROW_H));
     const need = lines ?? 0;
-    /* Sideways is not a line question, and nothing else catches it. */
     const wide = lines != null && box.scrollWidth > box.clientWidth + 1;
-    const bad = !fitExempt && (need > have || wide);
+    /* Full-slide BLEED panes are sized to the slide, not the 16-line tariff. */
+    const bleedPane = box.classList.contains('safe-slot-bleed');
+    const bad = !fitExempt && !bleedPane && (need > have || wide);
     box.classList.toggle('safe-overflow', bad);
     if (bad) {
       failed.push(
         need > have
-          ? `${box.dataset.name} needs ${need} lines, has ${have}`
+          ? `${box.dataset.name} needs ${need} lines, tariff ${have}`
           : `${box.dataset.name} overflows sideways`
       );
     }
@@ -1606,9 +1790,22 @@ function editable(root, slide, measure) {
   }
   for (const [key, nodes] of groups) {
     const bullet = key.startsWith('bullets.');
+    const extra = key.startsWith('mockExtra.');
     const i = Number(key.split('.')[1]);
-    const read = () => (bullet ? slide.bullets?.[i] : slide[key]);
+    const extraId = extra ? key.slice('mockExtra.'.length) : '';
+    const read = () => {
+      if (extra) {
+        const item = (slide.mockExtras || []).find((x) => x.id === extraId);
+        return item?.text || '';
+      }
+      return bullet ? slide.bullets?.[i] : slide[key];
+    };
     const write = (v) => {
+      if (extra) {
+        const item = (slide.mockExtras || []).find((x) => x.id === extraId);
+        if (item) item.text = v;
+        return;
+      }
       if (bullet) {
         if (!slide.bullets) slide.bullets = [];
         slide.bullets[i] = v;
@@ -1636,18 +1833,11 @@ function editable(root, slide, measure) {
         save(n.innerText.replace(/\t/g, ' ').trimEnd());
         measure();
       });
-      /* Typing stays in place — a render would replace the slide under the caret
-         — so measure() keeps the verdict honest while the words arrive and the
-         stack settles when the edit is finished. Only when the span actually has
-         to change: a small edit inside the lines a block already owns must not
-         yank the DOM out from under the next click. */
+      /* Tariff does not auto-grow from typing — bleed shows while need > tariff.
+         User raises tariff with −/+ on the slot. */
       n.addEventListener('blur', () => {
         if (value() === before) return;
-        const box = n.closest('.safe-slot');
-        const spec = box && slide.mockRecipe?.[Number(box.dataset.recipeIndex)];
-        const lines = box && linesNeeded(box);
-        if (!spec || lines == null) return;
-        if (Math.max(spec[6] ?? spec[5], lines) !== spec[5]) render();
+        measure();
       });
       n.addEventListener('keydown', (e) => {
         e.stopPropagation();
@@ -1659,19 +1849,44 @@ function editable(root, slide, measure) {
           n.blur();
         }
       });
-      /* Bold, italic, underline, highlight, colour and links come from the app's
-         own canvas editor (SF.Custom.openCanvasEditor) rather than a lab copy, so
-         the marks land in slide.formatting and paint through the same renderer
-         path. Typing stays in place; double-click asks for the toolbar. */
       n.addEventListener('dblclick', (e) => {
         if (!SF.Custom || !SF.Custom.openCanvasEditor) return;
         e.preventDefault();
         e.stopPropagation();
         const box = n.closest('.safe-slot') || n.parentElement;
         n.blur();
+        const recipeIndex = Number(box?.dataset?.recipeIndex);
+        const recipe = ensureMockRecipe(slide);
+        let pendingRows = Number.isFinite(recipeIndex) ? ensureTariff(recipe[recipeIndex]) : 3;
+        let pendingCols = Number.isFinite(recipeIndex) ? recipe[recipeIndex][3] : 12;
+        const lattice = Number.isFinite(recipeIndex)
+          ? {
+              get rows() {
+                return pendingRows;
+              },
+              get cols() {
+                return pendingCols;
+              },
+              rowBands: [HEADING_COMPACT, HEADING_TARIFF, 4],
+              colBands: [5, 6, 12],
+              onRows: (v) => {
+                pendingRows = Math.max(1, Math.min(ROWS, Math.round(v)));
+                return pendingRows;
+              },
+              onCols: (v) => {
+                pendingCols = Math.max(1, Math.min(12, Math.round(v)));
+                return pendingCols;
+              },
+            }
+          : null;
         SF.Custom.openCanvasEditor(box, slide, key, {
+          lattice,
           onSave: () => {
-            lastMove = `Formatted ${key}`;
+            if (Number.isFinite(recipeIndex)) {
+              setSlotTariff(recipe, recipeIndex, pendingRows);
+              setSlotCols(recipe, recipeIndex, pendingCols);
+              lastMove = `Size ${recipe[recipeIndex][1]} → ${pendingRows}r × ${pendingCols}c`;
+            } else lastMove = `Formatted ${key}`;
             render();
           },
           onCancel: () => render(),
@@ -1734,16 +1949,21 @@ async function render() {
   await new Promise(requestAnimationFrame);
   if (run !== revision) return { failed: ['stale'] };
   if (!original && !artwork && normalizeTitleRows(root, slide)) return render();
-  /* Growing a slot does not change what its content measures, so this settles on
-     the second pass. The cap is not the mechanism, it is the seatbelt: a block
-     that did reflow its own height would otherwise re-render forever, and the
-     detector is a better place to admit a bad fit than a hung tab. */
-  if (!original && !artwork && reflowPasses < 3 && reflowRows(root, slide)) {
-    reflowPasses++;
-    return render();
-  }
+  reflowRows(root, slide);
   reflowPasses = 0;
   paintChromeBands(root);
+
+  const splitShare = $('#demo-split-share');
+  if (splitShare) {
+    const isSplit = slide.type === 'split';
+    splitShare.hidden = original || artwork || !isSplit;
+    if (isSplit) {
+      const left = slide.mockSplitShare || recipeFor(slide).find((r) => /copy/i.test(r[1]))?.[3] || 7;
+      splitShare.querySelectorAll('[data-split-left]').forEach((btn) => {
+        btn.setAttribute('aria-pressed', String(Number(btn.dataset.splitLeft) === left));
+      });
+    }
+  }
 
   function measure() {
     if (original) {
@@ -1824,13 +2044,12 @@ async function render() {
   if (body) bindSlotDrag(root, slide, body);
   const result = measure();
   if (!result.failed?.length) {
-    status.textContent = `${status.textContent} · ⠿ move · ⇄ swap (fit re-checked)`;
+    status.textContent = `${status.textContent} · ⠿ move · ⬚ size in edit box`;
   }
   return result;
 }
 
 function show(i) {
-  contentSwapArmed = null;
   const seq = filteredIndexes();
   index = seq.includes(i) ? i : seq[0] ?? 0;
   options();
@@ -1941,6 +2160,37 @@ $('#demo-layout-picker').onclick = (e) => {
   syncFlipButton();
   openFeaturePicker(e.currentTarget, deck.slides[index], '');
 };
+$('#demo-add-heading').onclick = () => {
+  if ($('#demo-original').checked) $('#demo-original').checked = false;
+  flipMode = 'content';
+  syncFlipButton();
+  const added = addFullRowContent(deck.slides[index], 'heading');
+  lastMove = added.over
+    ? `Added ${added.name} · ${added.tariff}r × ${added.cols}c (${added.over} over budget)`
+    : `Added ${added.name} · ${added.tariff}r × ${added.cols}c`;
+  render();
+};
+$('#demo-add-body').onclick = () => {
+  if ($('#demo-original').checked) $('#demo-original').checked = false;
+  flipMode = 'content';
+  syncFlipButton();
+  const added = addFullRowContent(deck.slides[index], 'body');
+  lastMove = added.over
+    ? `Added ${added.name} · ${added.tariff}r × ${added.cols}c (${added.over} over budget)`
+    : `Added ${added.name} · ${added.tariff}r × ${added.cols}c`;
+  render();
+};
+$('#demo-split-share')?.querySelectorAll('[data-split-left]').forEach((btn) => {
+  btn.onclick = () => {
+    const slide = deck.slides[index];
+    if (slide.type !== 'split') return;
+    const left = Number(btn.dataset.splitLeft);
+    const share = applySplitShare(slide, left);
+    if (!share) return;
+    lastMove = `Split ${share.left}/${share.right} columns`;
+    render();
+  };
+});
 $('#demo-flip').onclick = () => {
   if ($('#demo-original').checked) $('#demo-original').checked = false;
   flipMode = 'artwork';
@@ -1970,6 +2220,27 @@ window.__demoMagnet = (name, dropRow) => {
   const result = magneticMove(recipe, idx, dropRow);
   render();
   return result && { ...result, order: result.order.map((o) => o.name) };
+};
+window.__demoSetTariff = (name, rows) => {
+  const recipe = ensureMockRecipe(deck.slides[index]);
+  const idx = recipe.findIndex((r) => r[1] === name);
+  if (idx < 0) throw new Error(`no slot named ${name}`);
+  const result = setSlotTariff(recipe, idx, rows);
+  render();
+  return result;
+};
+window.__demoSetCols = (name, cols) => {
+  const recipe = ensureMockRecipe(deck.slides[index]);
+  const idx = recipe.findIndex((r) => r[1] === name);
+  if (idx < 0) throw new Error(`no slot named ${name}`);
+  const result = setSlotCols(recipe, idx, cols);
+  render();
+  return result;
+};
+window.__demoSplitShare = (left) => {
+  const result = applySplitShare(deck.slides[index], left);
+  render();
+  return result;
 };
 
 function currentRoot() {

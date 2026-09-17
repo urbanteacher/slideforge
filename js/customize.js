@@ -132,11 +132,79 @@
    * tools the inspector fields use. `onLive` repaints the slide while typing
    * or formatting; `onSave` / `onCancel` finish the edit.
    */
+  function enableCanvasEditDrag(form, handle, box) {
+    if (!form || !handle) return;
+    handle.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0) return;
+      if (e.target.closest('button, input, textarea, a, select, label')) return;
+      e.preventDefault();
+      var parent = form._canvasEditHost || box || form.offsetParent || form.parentElement;
+      if (!parent) return;
+      var pRect = parent.getBoundingClientRect();
+      var fRect = form.getBoundingClientRect();
+      var scaleX = pRect.width ? form.offsetWidth / fRect.width : 1;
+      var scaleY = pRect.height ? form.offsetHeight / fRect.height : 1;
+      var startX = e.clientX;
+      var startY = e.clientY;
+      var origLeft = form.offsetLeft;
+      var origTop = form.offsetTop;
+      form.style.right = 'auto';
+      form.style.bottom = 'auto';
+      form.style.left = origLeft + 'px';
+      form.style.top = origTop + 'px';
+      handle.setPointerCapture(e.pointerId);
+      function move(ev) {
+        var dx = (ev.clientX - startX) * scaleX;
+        var dy = (ev.clientY - startY) * scaleY;
+        var maxL = Math.max(0, parent.clientWidth - form.offsetWidth);
+        var maxT = Math.max(0, parent.clientHeight - form.offsetHeight);
+        form.style.left = Math.max(0, Math.min(maxL, origLeft + dx)) + 'px';
+        form.style.top = Math.max(0, Math.min(maxT, origTop + dy)) + 'px';
+      }
+      function up(ev) {
+        try { handle.releasePointerCapture(ev.pointerId); } catch (_) {}
+        handle.removeEventListener('pointermove', move);
+        handle.removeEventListener('pointerup', up);
+        handle.removeEventListener('pointercancel', up);
+      }
+      handle.addEventListener('pointermove', move);
+      handle.addEventListener('pointerup', up);
+      handle.addEventListener('pointercancel', up);
+    });
+  }
+
+  /* Mount on the slide/canvas, not the slot — otherwise drag is trapped in one
+     lattice cell and the panel covers the words it is editing. */
+  function canvasEditHost(box) {
+    return (box && (box.closest('.slide') || box.closest('#previewBox') || box.closest('.safe-stage'))) || box;
+  }
+
+  function placeCanvasEditForm(form, box, host) {
+    host = host || canvasEditHost(box);
+    form._canvasEditHost = host;
+    var b = box.getBoundingClientRect();
+    var h = host.getBoundingClientRect();
+    var scaleX = h.width ? host.clientWidth / h.width : 1;
+    var scaleY = h.height ? host.clientHeight / h.height : 1;
+    var left = (b.left - h.left) * scaleX;
+    var top = (b.bottom - h.top) * scaleY + 8;
+    host.appendChild(form);
+    var maxL = Math.max(0, host.clientWidth - form.offsetWidth);
+    var maxT = Math.max(0, host.clientHeight - form.offsetHeight);
+    /* Prefer below the slot; if that clips, sit above or to the side. */
+    if (top > maxT) top = Math.max(0, (b.top - h.top) * scaleY - form.offsetHeight - 8);
+    if (left > maxL) left = maxL;
+    form.style.right = 'auto';
+    form.style.bottom = 'auto';
+    form.style.left = Math.max(0, Math.min(maxL, left)) + 'px';
+    form.style.top = Math.max(0, Math.min(maxT, top)) + 'px';
+  }
+
   function openCanvasEditor(box, s, key, opts) {
     opts = opts || {};
     if (!box || !s || !key) return;
-    var existing = box.querySelector('.canvas-edit-form');
-    if (existing) existing.remove();
+    var host = canvasEditHost(box);
+    host.querySelectorAll('.canvas-edit-form').forEach(function (n) { n.remove(); });
 
     var bulletMatch = /^bullets\.(\d+)$/.exec(key);
     var oldRaw = bulletMatch ? String(s.bullets[Number(bulletMatch[1])] || '') : String(s[key] || '');
@@ -161,14 +229,76 @@
 
     var form = document.createElement('div');
     form.className = 'canvas-edit-form';
+    var drag = document.createElement('div');
+    drag.className = 'canvas-edit-drag';
+    drag.setAttribute('role', 'button');
+    drag.tabIndex = 0;
+    drag.title = 'Drag to move this panel across the canvas';
+    drag.innerHTML = '<span>Edit slide content</span><span class="canvas-edit-drag-hint">Drag</span>';
+    form.appendChild(drag);
+    enableCanvasEditDrag(form, drag, host);
+
     var label = document.createElement('label');
-    label.textContent = 'Edit slide content';
+    label.textContent = 'Text';
     var area = document.createElement('textarea');
     area.value = shown || '';
     area.rows = 3;
     area.setAttribute('aria-label', 'Edit slide content');
     label.appendChild(area);
     form.appendChild(label);
+
+    /* Lab lattice (Engine 3): line tariff + column width live in this form so
+       the slide is not crowded with per-slot −/+ chrome. Production ignores this. */
+    if (opts.lattice) {
+      var lattice = opts.lattice;
+      var layout = document.createElement('div');
+      layout.className = 'canvas-edit-lattice';
+      layout.setAttribute('role', 'group');
+      layout.setAttribute('aria-label', 'Slot size on the 16×12 lattice');
+
+      function row(kind, value, bands, apply) {
+        var wrap = document.createElement('div');
+        wrap.className = 'canvas-edit-lattice-row';
+        var name = document.createElement('span');
+        name.className = 'canvas-edit-lattice-label';
+        name.textContent = kind === 'rows' ? 'Lines' : 'Width';
+        var dec = document.createElement('button');
+        dec.type = 'button';
+        dec.className = 'btn ghost';
+        dec.textContent = '−';
+        var val = document.createElement('span');
+        val.className = 'canvas-edit-lattice-val';
+        val.textContent = value + (kind === 'rows' ? 'r' : 'c');
+        var inc = document.createElement('button');
+        inc.type = 'button';
+        inc.className = 'btn ghost';
+        inc.textContent = '+';
+        function set(n) {
+          var next = apply(n);
+          if (next == null) return;
+          val.textContent = next + (kind === 'rows' ? 'r' : 'c');
+          value = next;
+        }
+        dec.onclick = function () { set(value - 1); };
+        inc.onclick = function () { set(value + 1); };
+        wrap.appendChild(name);
+        wrap.appendChild(dec);
+        wrap.appendChild(val);
+        wrap.appendChild(inc);
+        bands.forEach(function (n) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'btn ghost';
+          b.textContent = String(n);
+          b.onclick = function () { set(n); };
+          wrap.appendChild(b);
+        });
+        layout.appendChild(wrap);
+      }
+      row('rows', lattice.rows, lattice.rowBands || [2, 3, 4], lattice.onRows);
+      row('cols', lattice.cols, lattice.colBands || [5, 6, 12], lattice.onCols);
+      form.appendChild(layout);
+    }
 
     function writeShown(v) {
       var prev = current;
@@ -219,7 +349,7 @@
     };
     form.appendChild(cancel);
 
-    box.appendChild(form);
+    placeCanvasEditForm(form, box, host);
     area.focus();
     area.setSelectionRange(area.value.length, area.value.length);
   }
@@ -613,5 +743,5 @@
       if(key) label.parentElement.dataset.designKey=key;
     });
   }
-  SF.Custom={tagControls:tagControls,removeBullet:removeBullet,bind:bind,openCanvasEditor:openCanvasEditor,paint:paint,layout:layout,inspector:inspector,rebase:rebase,apply:apply,entry:entry};
+  SF.Custom={tagControls:tagControls,removeBullet:removeBullet,bind:bind,openCanvasEditor:openCanvasEditor,enableCanvasEditDrag:enableCanvasEditDrag,placeCanvasEditForm:placeCanvasEditForm,canvasEditHost:canvasEditHost,paint:paint,layout:layout,inspector:inspector,rebase:rebase,apply:apply,entry:entry};
 })(window);
