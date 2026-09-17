@@ -23,11 +23,26 @@ try{
  await panel.getByLabel('Locked',{exact:true}).check();assert.equal(await page.locator('#previewBox .artwork-move').count(),0);assert.equal(await panel.getByLabel('Width (%)',{exact:true}).isDisabled(),true);
  await panel.getByLabel('Hidden',{exact:true}).check();assert.equal(await page.locator('#previewBox .artwork-object').count(),0);
  await panel.getByLabel('Hidden',{exact:true}).uncheck();await panel.getByLabel('Locked',{exact:true}).uncheck();
- // Move the selected artwork, accounting for the canvas scale.
- const handle=page.getByRole('button',{name:'Move artwork',exact:true});let b=await handle.boundingBox();const rootBox=await page.locator('#previewBox .slide').boundingBox();
- await page.mouse.move(b.x+b.width/2,b.y+b.height/2);await page.mouse.down();await page.mouse.move(b.x+b.width/2+rootBox.width*.10,b.y+b.height/2+rootBox.height*.10,{steps:7});await page.mouse.up();
+ /* Move the selected artwork and check it reaches the deck. Keyboard rather
+    than pointer: the Move button beside the object is gone — direct
+    manipulation replaced it, because aiming at a button next to the thing you
+    can already see was the clunkiness people complained about — and the
+    pointer drag is covered in full by smoke-artwork-transform.mjs. What this
+    case is for is that a move persists and Undo takes it back, and the keys
+    reach that through the same setters with no gesture choreography.
+
+    From 10,15 in steps of five: two right, two down. */
+ await page.locator('#previewBox .artwork-frame').waitFor();
+ await page.locator('#previewBox .artwork-frame').focus();
+ for(const key of ['Shift+ArrowRight','Shift+ArrowRight','Shift+ArrowDown','Shift+ArrowDown']){
+  await page.keyboard.press(key);
+  await page.locator('#previewBox .artwork-frame').waitFor();
+  await page.locator('#previewBox .artwork-frame').focus();
+ }
  assert.deepEqual(await page.evaluate(()=>{const a=SF.Editor.deck().slides[0].artwork[0];return [a.x,a.y];}),[20,25]);
- await page.getByRole('button',{name:'↶ Undo',exact:true}).click();assert.deepEqual(await page.evaluate(()=>{const a=SF.Editor.deck().slides[0].artwork[0];return [a.x,a.y];}),[10,15]);
+ /* One undo per key, since each commits its own step. */
+ for(let i=0;i<4;i++)await page.getByRole('button',{name:'↶ Undo',exact:true}).click();
+ assert.deepEqual(await page.evaluate(()=>{const a=SF.Editor.deck().slides[0].artwork[0];return [a.x,a.y];}),[10,15]);
  await page.getByRole('button',{name:'Layers',exact:true}).click();await page.locator('.layer-row[data-layer-id]').click();
  await page.getByRole('button',{name:'Add circle',exact:true}).click();await panel.getByLabel('Layer group',{exact:true}).selectOption('front');
  await panel.getByRole('button',{name:'Send backward',exact:true}).click();assert.deepEqual(await page.evaluate(()=>SF.Editor.deck().slides[0].artwork.map(a=>a.kind)),['circle','rectangle']);

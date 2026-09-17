@@ -23,7 +23,7 @@ export function bindArtworkEditor(box,root,slide,change){
  };
  staged(false);
  const launch=document.createElement('button');launch.type='button';launch.className='canvas-layers-launch';launch.textContent='Layers';box.appendChild(launch);
- function clearSelection(){root.querySelectorAll('.artwork-move').forEach(n=>n.remove());root.querySelectorAll('.artwork-selected').forEach(n=>n.classList.remove('artwork-selected'));}
+ function clearSelection(){root.classList.remove('artwork-editing');root.querySelectorAll('.artwork-move,.artwork-frame').forEach(n=>n.remove());root.querySelectorAll('.artwork-selected').forEach(n=>n.classList.remove('artwork-selected'));}
  function button(parent,label,fn){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=fn;parent.appendChild(b);return b;}
  function field(parent,label,input){input.setAttribute('aria-label',label);const wrap=document.createElement('label');wrap.textContent=label;wrap.appendChild(input);parent.appendChild(wrap);return input;}
  function close(){clearSelection();panel?.remove();panel=null;staged(false);launch.focus();}
@@ -45,16 +45,127 @@ export function bindArtworkEditor(box,root,slide,change){
   if(theme||pseudo){const themeButton=button(panel,'Theme artwork · locked',()=>{selected='theme';draw();if(theme)theme.classList.add('artwork-selected');});themeButton.className='layer-row';themeButton.setAttribute('aria-pressed',String(selected==='theme'));}
   const add=document.createElement('div');add.className='layer-add';panel.appendChild(add);
   for(const kind of ['rectangle','circle','image'])button(add,'Add '+kind,()=>{const id='art-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);commit([...items,{id,kind,name:kind==='image'?'New image':'New '+kind}],id);}).disabled=items.length>=40;
+  /* Editing mode. The artwork planes are pointer-events:none so a presented
+     slide behaves as it always did; objects become clickable only while the
+     panel is open. Clicking the shape is how anyone expects to select it —
+     before this the only way in was finding its name in the list. */
+  root.classList.add('artwork-editing');
+  for(const n of root.querySelectorAll('[data-artwork-id]')){
+   const id=n.dataset.artworkId;
+   if(id===selected)continue;
+   const owner=items.find(a=>a.id===id);
+   if(!owner||owner.locked)continue;
+   n.addEventListener('pointerdown',e=>{e.stopPropagation();selected=id;draw();
+    /* Hand focus to the new selection so the arrow keys work straight away
+       without a second click. */
+    root.querySelector('.artwork-frame')?.focus({preventScroll:true});});
+  }
   const art=items.find(a=>a.id===selected);
   if(!art){const info=document.createElement('p');info.textContent=selected==='theme'?'Theme artwork is protected in this release. Add your own image or shape to create editable layers.':'Select a layer to edit it.';panel.appendChild(info);return;}
   const node=[...root.querySelectorAll('[data-artwork-id]')].find(n=>n.dataset.artworkId===art.id);node?.classList.add('artwork-selected');
+  /* Direct manipulation. Selecting used to mean finding the object in a list,
+     and resizing meant typing a percentage into a number field — you could
+     not touch the thing you were changing. Everything below works in pixels
+     against the slide's own box and converts to the stored percentages once,
+     on release, so a scaled canvas needs no special case and the model stays
+     resolution independent. */
   if(node&&!art.locked){
-   const handle=document.createElement('button');handle.type='button';handle.className='artwork-move';handle.textContent='Move';handle.setAttribute('aria-label','Move artwork');root.appendChild(handle);
-   const original={x:art.x,y:art.y};let origin=null,next={...original};
-   const paint=point=>{node.style.left=point.x+'%';node.style.top=point.y+'%';handle.style.left=point.x+'%';handle.style.top=point.y+'%';};paint(original);
-   handle.addEventListener('pointerdown',e=>{origin={x:e.clientX,y:e.clientY};});
-   bindCanvasDrag(handle,{begin:()=>{},move:e=>{if(!origin)return;const r=root.getBoundingClientRect();next={x:Math.max(0,Math.min(100,original.x+(e.clientX-origin.x)/r.width*100)),y:Math.max(0,Math.min(100,original.y+(e.clientY-origin.y)/r.height*100))};paint(next);},end:()=>{if(next.x===original.x&&next.y===original.y)return;art.x=Math.round(next.x);art.y=Math.round(next.y);commit(items,art.id);},cancel:()=>paint(original),click:null});
+   const box=()=>root.getBoundingClientRect();
+   /* Each gesture takes its origin from its own first move event rather than
+      from a pointerdown listener. Two earlier attempts failed the same way:
+      bindCanvasDrag owns onpointerdown as a property, and a sibling listener
+      — whether on the node or captured on the slide — was still null by the
+      time begin() ran, so every drag computed a delta from nothing and saved
+      nothing. Self-contained is worth the one move event it costs. */
+   /* Stored as top-left + size; rotation spins about the centre. Resizing a
+      rotated object therefore moves its centre, so the maths is done on the
+      centre and converted back, rather than nudging left/top and hoping. */
+   const toPx=(a,r)=>({cx:(a.x+a.width/2)/100*r.width,cy:(a.y+a.height/2)/100*r.height,
+                       w:a.width/100*r.width,h:a.height/100*r.height});
+   const toPct=(g,r)=>({x:(g.cx-g.w/2)/r.width*100,y:(g.cy-g.h/2)/r.height*100,
+                        width:g.w/r.width*100,height:g.h/r.height*100});
+   const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+   const frame=document.createElement('div');frame.className='artwork-frame';frame.setAttribute('aria-hidden','true');root.appendChild(frame);
+   /** @type {[string,number,number][]} */
+   const HANDLES=[['nw',-1,-1],['n',0,-1],['ne',1,-1],['e',1,0],['se',1,1],['s',0,1],['sw',-1,1],['w',-1,0]];
+   const paint=a=>{
+    for(const el of [node,frame]){
+     el.style.left=a.x+'%';el.style.top=a.y+'%';el.style.width=a.width+'%';el.style.height=a.height+'%';
+     el.style.transform='rotate('+a.rotation+'deg)';
+    }
+   };
+   let live={x:art.x,y:art.y,width:art.width,height:art.height,rotation:art.rotation};
+   const reset=()=>{live={x:art.x,y:art.y,width:art.width,height:art.height,rotation:art.rotation};paint(live);};
+   const save=()=>{
+    const same=live.x===art.x&&live.y===art.y&&live.width===art.width&&live.height===art.height&&live.rotation===art.rotation;
+    if(same)return reset();
+    art.x=Math.round(live.x);art.y=Math.round(live.y);art.width=Math.round(live.width);
+    art.height=Math.round(live.height);art.rotation=Math.round(live.rotation);
+    commit(items,art.id);
+   };
+   paint(live);
+
+   /* Drag the object itself. The old build put a Move button beside it, which
+      is one more thing to aim at than the object you are already looking at. */
+   let from=null,startG=null,r0=null;
+   bindCanvasDrag(node,{
+    begin:()=>{from=null;r0=box();startG=toPx(art,r0);},
+    move:e=>{if(!from){from={x:e.clientX,y:e.clientY};return;}const g={...startG,cx:startG.cx+(e.clientX-from.x),cy:startG.cy+(e.clientY-from.y)};
+             const p=toPct(g,r0);live={...live,x:clamp(p.x,0,100),y:clamp(p.y,0,100)};paint(live);},
+    end:save,cancel:reset,click:null});
+
+   for(const [name,hx,hy] of HANDLES){
+    const h=document.createElement('button');h.type='button';h.className='artwork-handle artwork-handle-'+name;
+    h.dataset.handle=name;h.setAttribute('aria-label','Resize '+art.name+' from the '+name);frame.appendChild(h);
+    let hFrom=null,hStart=null,hr=null;
+    bindCanvasDrag(h,{
+     begin:()=>{hFrom=null;hr=box();hStart=toPx(art,hr);},
+     move:e=>{
+      if(!hFrom){hFrom={x:e.clientX,y:e.clientY};return;}
+      /* Into the object's own axes, so a handle on a rotated shape pulls the
+         edge the user is holding rather than a screen-aligned one. */
+      const rad=-art.rotation*Math.PI/180,dx=e.clientX-hFrom.x,dy=e.clientY-hFrom.y;
+      const lx=dx*Math.cos(rad)-dy*Math.sin(rad),ly=dx*Math.sin(rad)+dy*Math.cos(rad);
+      const w=Math.max(8,hStart.w+hx*lx),hh=Math.max(8,hStart.h+hy*ly);
+      /* The edge opposite the handle stays put: the centre moves by half of
+         whatever the size actually changed by, rotated back into the page. */
+      const sw=(w-hStart.w)*hx/2,sh=(hh-hStart.h)*hy/2,wr=art.rotation*Math.PI/180;
+      const g={w,h:hh,cx:hStart.cx+sw*Math.cos(wr)-sh*Math.sin(wr),cy:hStart.cy+sw*Math.sin(wr)+sh*Math.cos(wr)};
+      const p=toPct(g,hr);
+      live={...live,x:clamp(p.x,-50,100),y:clamp(p.y,-50,100),width:clamp(p.width,1,100),height:clamp(p.height,1,100)};
+      paint(live);
+     },
+     end:save,cancel:reset,click:null});
+   }
+
+   const spin=document.createElement('button');spin.type='button';spin.className='artwork-handle artwork-rotate';
+   spin.dataset.handle='rotate';spin.setAttribute('aria-label','Rotate '+art.name);frame.appendChild(spin);
+   let centre=null;
+   bindCanvasDrag(spin,{
+    begin:()=>{const r=box(),g=toPx(art,r);centre={x:r.left+g.cx,y:r.top+g.cy};},
+    move:e=>{
+     if(!centre)return;
+     const deg=Math.atan2(e.clientY-centre.y,e.clientX-centre.x)*180/Math.PI+90;
+     /* Shift snaps to 15 degrees, which is how you get a straight edge back. */
+     const snapped=e.shiftKey?Math.round(deg/15)*15:Math.round(deg);
+     live={...live,rotation:clamp(((snapped+180)%360+360)%360-180,-180,180)};paint(live);
+    },
+    end:save,cancel:reset,click:null});
+
+   /* Keyboard parity: the handles are buttons, so they already take focus.
+      Arrows nudge, shift makes it a bigger step, alt resizes instead. */
+   frame.tabIndex=0;frame.setAttribute('aria-label','Selected artwork: '+art.name);
+   frame.addEventListener('keydown',e=>{
+    const step={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];
+    if(!step||e.metaKey||e.ctrlKey)return;
+    e.preventDefault();e.stopPropagation();
+    const n=e.shiftKey?5:1;
+    if(e.altKey)live={...live,width:clamp(live.width+step[0]*n,1,100),height:clamp(live.height+step[1]*n,1,100)};
+    else live={...live,x:clamp(live.x+step[0]*n,0,100),y:clamp(live.y+step[1]*n,0,100)};
+    paint(live);save();
+   });
   }
+
   const edit=document.createElement('div');edit.className='layer-properties';panel.appendChild(edit);
   const write=(key,value)=>{art[key]=value;commit(items,art.id);};
   const name=document.createElement('input');name.value=art.name;name.disabled=art.locked;name.onchange=()=>write('name',name.value);field(edit,'Layer name',name);

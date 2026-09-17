@@ -6729,4 +6729,30 @@ html[data-ws="deck"] #railCount { display: none; }
 .layer-properties input:not([type=checkbox]),.layer-properties select { width:145px; min-width:0; }
 .layer-properties fieldset { border:0; padding:0; margin:0; }
 #previewBox .artwork-selected { outline:3px dashed #c6d957; outline-offset:-3px; }
+/* Direct manipulation. Only while the layers panel is open: the planes stay
+   pointer-events:none everywhere else so a presented slide is untouched. */
+.artwork-editing .artwork-object { pointer-events:auto; cursor:move; }
+/* Layers is a mode, and while it is on the content is transparent to the
+   pointer. Without this a background object cannot be clicked at all: it
+   renders behind .pad, so every click over it lands on the text in front —
+   and the objects that most need selecting are exactly the ones underneath
+   something. The slide still looks identical; only what the pointer can
+   reach changes, and closing the panel gives it all back. */
+.artwork-editing > :is(.pad,.slide-logo,.pagenum,.track,.theme-art) { pointer-events:none; }
+.artwork-editing .artwork-object:hover { outline:2px solid #c6d95788; outline-offset:-2px; }
+.artwork-frame { position:absolute; z-index:58; transform-origin:center; pointer-events:none;
+  outline:2px solid #c6d957; outline-offset:-1px; }
+.artwork-frame:focus-visible { outline:3px solid #fff; box-shadow:0 0 0 5px #c6d957; }
+.artwork-handle { position:absolute; z-index:59; pointer-events:auto; touch-action:none;
+  width:14px; height:14px; margin:-7px 0 0 -7px; padding:0; border:2px solid #213d31;
+  border-radius:3px; background:#fff; cursor:nwse-resize; }
+.artwork-handle:is(:hover,:focus-visible) { background:#c6d957; outline:none; }
+.artwork-handle-nw { left:0; top:0 } .artwork-handle-n { left:50%; top:0; cursor:ns-resize }
+.artwork-handle-ne { left:100%; top:0; cursor:nesw-resize } .artwork-handle-e { left:100%; top:50%; cursor:ew-resize }
+.artwork-handle-se { left:100%; top:100% } .artwork-handle-s { left:50%; top:100%; cursor:ns-resize }
+.artwork-handle-sw { left:0; top:100%; cursor:nesw-resize } .artwork-handle-w { left:0; top:50%; cursor:ew-resize }
+/* Above the top edge, on a stalk, so it is never mistaken for a corner. */
+.artwork-rotate { left:50%; top:0; margin-top:-34px; border-radius:50%; cursor:grab; }
+.artwork-rotate::before { content:''; position:absolute; left:50%; top:100%; width:2px; height:20px;
+  margin-left:-1px; background:#213d31; }
 .artwork-move { position:absolute; z-index:60; touch-action:none; pointer-events:auto; cursor:move; padding:8px 14px; border:2px solid white; border-radius:8px; background:#213d31; color:#fff; font:600 18px/1.2 system-ui; }

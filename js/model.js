@@ -4384,7 +4384,8 @@
     launch.textContent = "Layers";
     box2.appendChild(launch);
     function clearSelection() {
-      root.querySelectorAll(".artwork-move").forEach((n) => n.remove());
+      root.classList.remove("artwork-editing");
+      root.querySelectorAll(".artwork-move,.artwork-frame").forEach((n) => n.remove());
       root.querySelectorAll(".artwork-selected").forEach((n) => n.classList.remove("artwork-selected"));
     }
     function button(parent, label, fn) {
@@ -4484,6 +4485,19 @@
         const id = "art-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
         commit([...items, { id, kind, name: kind === "image" ? "New image" : "New " + kind }], id);
       }).disabled = items.length >= 40;
+      root.classList.add("artwork-editing");
+      for (const n of root.querySelectorAll("[data-artwork-id]")) {
+        const id = n.dataset.artworkId;
+        if (id === selected) continue;
+        const owner = items.find((a) => a.id === id);
+        if (!owner || owner.locked) continue;
+        n.addEventListener("pointerdown", (e) => {
+          e.stopPropagation();
+          selected = id;
+          draw();
+          root.querySelector(".artwork-frame")?.focus({ preventScroll: true });
+        });
+      }
       const art = items.find((a) => a.id === selected);
       if (!art) {
         const info = document.createElement("p");
@@ -4494,36 +4508,140 @@
       const node = [...root.querySelectorAll("[data-artwork-id]")].find((n) => n.dataset.artworkId === art.id);
       node?.classList.add("artwork-selected");
       if (node && !art.locked) {
-        const handle = document.createElement("button");
-        handle.type = "button";
-        handle.className = "artwork-move";
-        handle.textContent = "Move";
-        handle.setAttribute("aria-label", "Move artwork");
-        root.appendChild(handle);
-        const original = { x: art.x, y: art.y };
-        let origin = null, next = { ...original };
-        const paint = (point) => {
-          node.style.left = point.x + "%";
-          node.style.top = point.y + "%";
-          handle.style.left = point.x + "%";
-          handle.style.top = point.y + "%";
-        };
-        paint(original);
-        handle.addEventListener("pointerdown", (e) => {
-          origin = { x: e.clientX, y: e.clientY };
+        const box3 = () => root.getBoundingClientRect();
+        const toPx = (a, r) => ({
+          cx: (a.x + a.width / 2) / 100 * r.width,
+          cy: (a.y + a.height / 2) / 100 * r.height,
+          w: a.width / 100 * r.width,
+          h: a.height / 100 * r.height
         });
-        bindCanvasDrag(handle, { begin: () => {
-        }, move: (e) => {
-          if (!origin) return;
-          const r = root.getBoundingClientRect();
-          next = { x: Math.max(0, Math.min(100, original.x + (e.clientX - origin.x) / r.width * 100)), y: Math.max(0, Math.min(100, original.y + (e.clientY - origin.y) / r.height * 100)) };
-          paint(next);
-        }, end: () => {
-          if (next.x === original.x && next.y === original.y) return;
-          art.x = Math.round(next.x);
-          art.y = Math.round(next.y);
+        const toPct = (g, r) => ({
+          x: (g.cx - g.w / 2) / r.width * 100,
+          y: (g.cy - g.h / 2) / r.height * 100,
+          width: g.w / r.width * 100,
+          height: g.h / r.height * 100
+        });
+        const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+        const frame = document.createElement("div");
+        frame.className = "artwork-frame";
+        frame.setAttribute("aria-hidden", "true");
+        root.appendChild(frame);
+        const HANDLES = [["nw", -1, -1], ["n", 0, -1], ["ne", 1, -1], ["e", 1, 0], ["se", 1, 1], ["s", 0, 1], ["sw", -1, 1], ["w", -1, 0]];
+        const paint = (a) => {
+          for (const el of [node, frame]) {
+            el.style.left = a.x + "%";
+            el.style.top = a.y + "%";
+            el.style.width = a.width + "%";
+            el.style.height = a.height + "%";
+            el.style.transform = "rotate(" + a.rotation + "deg)";
+          }
+        };
+        let live = { x: art.x, y: art.y, width: art.width, height: art.height, rotation: art.rotation };
+        const reset = () => {
+          live = { x: art.x, y: art.y, width: art.width, height: art.height, rotation: art.rotation };
+          paint(live);
+        };
+        const save = () => {
+          const same = live.x === art.x && live.y === art.y && live.width === art.width && live.height === art.height && live.rotation === art.rotation;
+          if (same) return reset();
+          art.x = Math.round(live.x);
+          art.y = Math.round(live.y);
+          art.width = Math.round(live.width);
+          art.height = Math.round(live.height);
+          art.rotation = Math.round(live.rotation);
           commit(items, art.id);
-        }, cancel: () => paint(original), click: null });
+        };
+        paint(live);
+        let from = null, startG = null, r0 = null;
+        bindCanvasDrag(node, {
+          begin: () => {
+            from = null;
+            r0 = box3();
+            startG = toPx(art, r0);
+          },
+          move: (e) => {
+            if (!from) {
+              from = { x: e.clientX, y: e.clientY };
+              return;
+            }
+            const g = { ...startG, cx: startG.cx + (e.clientX - from.x), cy: startG.cy + (e.clientY - from.y) };
+            const p = toPct(g, r0);
+            live = { ...live, x: clamp(p.x, 0, 100), y: clamp(p.y, 0, 100) };
+            paint(live);
+          },
+          end: save,
+          cancel: reset,
+          click: null
+        });
+        for (const [name2, hx, hy] of HANDLES) {
+          const h = document.createElement("button");
+          h.type = "button";
+          h.className = "artwork-handle artwork-handle-" + name2;
+          h.dataset.handle = name2;
+          h.setAttribute("aria-label", "Resize " + art.name + " from the " + name2);
+          frame.appendChild(h);
+          let hFrom = null, hStart = null, hr = null;
+          bindCanvasDrag(h, {
+            begin: () => {
+              hFrom = null;
+              hr = box3();
+              hStart = toPx(art, hr);
+            },
+            move: (e) => {
+              if (!hFrom) {
+                hFrom = { x: e.clientX, y: e.clientY };
+                return;
+              }
+              const rad = -art.rotation * Math.PI / 180, dx = e.clientX - hFrom.x, dy = e.clientY - hFrom.y;
+              const lx = dx * Math.cos(rad) - dy * Math.sin(rad), ly = dx * Math.sin(rad) + dy * Math.cos(rad);
+              const w = Math.max(8, hStart.w + hx * lx), hh = Math.max(8, hStart.h + hy * ly);
+              const sw = (w - hStart.w) * hx / 2, sh = (hh - hStart.h) * hy / 2, wr = art.rotation * Math.PI / 180;
+              const g = { w, h: hh, cx: hStart.cx + sw * Math.cos(wr) - sh * Math.sin(wr), cy: hStart.cy + sw * Math.sin(wr) + sh * Math.cos(wr) };
+              const p = toPct(g, hr);
+              live = { ...live, x: clamp(p.x, -50, 100), y: clamp(p.y, -50, 100), width: clamp(p.width, 1, 100), height: clamp(p.height, 1, 100) };
+              paint(live);
+            },
+            end: save,
+            cancel: reset,
+            click: null
+          });
+        }
+        const spin = document.createElement("button");
+        spin.type = "button";
+        spin.className = "artwork-handle artwork-rotate";
+        spin.dataset.handle = "rotate";
+        spin.setAttribute("aria-label", "Rotate " + art.name);
+        frame.appendChild(spin);
+        let centre = null;
+        bindCanvasDrag(spin, {
+          begin: () => {
+            const r = box3(), g = toPx(art, r);
+            centre = { x: r.left + g.cx, y: r.top + g.cy };
+          },
+          move: (e) => {
+            if (!centre) return;
+            const deg = Math.atan2(e.clientY - centre.y, e.clientX - centre.x) * 180 / Math.PI + 90;
+            const snapped = e.shiftKey ? Math.round(deg / 15) * 15 : Math.round(deg);
+            live = { ...live, rotation: clamp(((snapped + 180) % 360 + 360) % 360 - 180, -180, 180) };
+            paint(live);
+          },
+          end: save,
+          cancel: reset,
+          click: null
+        });
+        frame.tabIndex = 0;
+        frame.setAttribute("aria-label", "Selected artwork: " + art.name);
+        frame.addEventListener("keydown", (e) => {
+          const step = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+          if (!step || e.metaKey || e.ctrlKey) return;
+          e.preventDefault();
+          e.stopPropagation();
+          const n = e.shiftKey ? 5 : 1;
+          if (e.altKey) live = { ...live, width: clamp(live.width + step[0] * n, 1, 100), height: clamp(live.height + step[1] * n, 1, 100) };
+          else live = { ...live, x: clamp(live.x + step[0] * n, 0, 100), y: clamp(live.y + step[1] * n, 0, 100) };
+          paint(live);
+          save();
+        });
       }
       const edit = document.createElement("div");
       edit.className = "layer-properties";
