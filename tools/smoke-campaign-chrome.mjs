@@ -66,6 +66,12 @@ try {
       const beatEl = header && header.querySelector('.cp-beat');
       out.push({
         type: s.type, hidden: !!s.hidden, ground: n.dataset.ground,
+        /* The campaign frame is a property of the COMPOSITION, not the theme.
+           A slide type missing from CAMPAIGN_COMPOSITIONS gets no composition,
+           so no .cp-header and no .cp-footer — it leaves the campaign without
+           saying so. Recorded per slide so check 11 can name the offender. */
+        composition: SF.slideComposition(d, s) || null,
+        hasChrome: !!header && !!foot,
         slideBg: getComputedStyle(n).backgroundColor,
         headerPadRight: header ? getComputedStyle(header).paddingRight : null,
         markFilter: mark ? mark.filter : null,
@@ -240,6 +246,27 @@ try {
     assert.equal(r.mark, false, theme + ': a deck with no logo rendered one');
     assert.notEqual(r.pad, '330px',
       theme + ': header reserved 330px for a mark that is not coming');
+    checked++;
+  }
+
+  /* 11. Every slide the campaign actually ships keeps the campaign frame.
+         The chrome hangs off the composition table, which names ten types;
+         split, content and chart are not among them, and those are exactly
+         the three that would carry an image or a graph. Add a picture to a
+         2027 deck today and the slide does not bend the system, it silently
+         leaves it — no identity, no closing line, no page number, and nothing
+         anywhere says so. This fails at the point somebody falls in, rather
+         than on a projector. See docs/design-system-and-the-canvas.md §8. */
+  for (const strand of STRANDS) {
+    const { slides } = await read('aiad27-' + strand);
+    for (const s of slides.filter(x => !x.hidden)) {
+      assert.ok(s.composition,
+        strand + '/' + s.type + ': no composition — this type is missing from ' +
+        'CAMPAIGN_COMPOSITIONS in src/themes.js, so the slide renders on the ' +
+        'legacy layout path with none of the campaign chrome');
+      assert.ok(s.hasChrome,
+        strand + '/' + s.type + ': lost the campaign header or closing rule');
+    }
     checked++;
   }
 

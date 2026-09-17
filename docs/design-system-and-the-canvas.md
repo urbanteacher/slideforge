@@ -564,6 +564,78 @@ ways the shared layout DOM could not have produced:
   an approximation) are reusable platform tools that happen to live in a
   campaign folder.
 
+### And what it did not prove: the frame has never met a picture
+
+Measured 2026-09-17, across all 45 campaign slides: **zero images, zero charts,
+zero tables.** AiAd27 is a text-and-shape system. Everything above about the
+frame holding — the 40px header, the 32px closing rule, the repeated 52px
+content edge — is evidence about type and flat colour only. It is genuinely
+unknown whether that frame survives a photograph or a bar chart, because no
+campaign slide has ever contained one.
+
+That is worth stating plainly because the discipline is easy to over-read. The
+decks look systematic partly because they declined the hardest case.
+
+**Worse, the question cannot currently be asked inside the campaign.** The
+chrome is a property of the *composition*, not of the theme, and the campaign's
+composition table names ten slide types. A type outside that list gets no
+composition at all, which means no `composition-structured`, which means no
+`.cp-header`, no `.cp-footer`, no lockup and no closing rule:
+
+| Slide type on an aiad27 theme | Composition | Campaign frame |
+| --- | --- | --- |
+| title, quote, statement, cards, journey, keyfact, compare, iceberg, sourcecheck, spectrum | yes | ✅ |
+| **split** | none | **✗ falls back to `layout-split`** |
+| **content** | none | **✗ falls back to `layout-content`** |
+| **chart** | none | **✗ falls back to `layout-chart`** |
+
+So the three types that would carry an image or a graph are exactly the three
+that drop out of the campaign. Add a picture to a 2027 deck today and the slide
+does not bend the system — it silently leaves it, losing the identity, the
+closing line and the page number with no warning anywhere.
+
+This is the same fault family as everything in Part III: *the frame is attached
+to the wrong noun.* It is hung off the composition, so it is only as complete
+as the composition table, when what a reader sees is a theme.
+
+Two consequences for the plan:
+
+1. **`imageShare` — the 35/50/65 control — lives only on `split`,** the one
+   type the campaign never uses. Any claim that the campaign's proportions are
+   settled does not cover images, because that control has never run inside it.
+2. **The split canvas work in §15 is being built against the legacy path** for
+   campaign decks, not against the composition path, and the two do not share
+   chrome. Whichever way that is resolved, it should be a decision rather than
+   a discovery.
+
+`tools/smoke-campaign-chrome.mjs` now fails if a campaign slide renders
+without its header or closing rule, so the trap is caught at the point somebody
+falls into it rather than on a projector.
+
+### And the table itself is written down twice
+
+Found while trying to make the check above fail on purpose — it would not,
+which is its own finding.
+
+There are **two copies of the type-to-composition map**:
+
+| Where | Name | How it is used |
+| --- | --- | --- |
+| `AiAd27/starters27.js` | `COMPOSITION_DEFAULTS` | baked into every slide's `design.composition` at build time |
+| `src/themes.js` | `CAMPAIGN_COMPOSITIONS` | the theme's `defaults` |
+
+Same ten pairs today. Nothing links them, and **the baked one wins** —
+`slideComposition` reads `slide.design.composition` first. So editing
+`src/themes.js` changes nothing for a deck that already exists: the edit looks
+applied, every existing deck carries on as before, and the two only disagree
+somewhere nobody is looking. Removing `compare` from `src/themes.js` entirely
+and rebuilding changed no rendered slide.
+
+That is this document's recurring fault in its purest form, and it was hiding
+behind a test that could not fail. `tests/campaign-builders.test.js` now
+asserts the two agree for every real starter slide, checked against what the
+renderer resolves rather than by parsing both files.
+
 ---
 
 # Part III — The foundations: what was wrong, and what still is

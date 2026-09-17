@@ -63,3 +63,38 @@ test('the bundle and the Library describe the same deck', () => {
       theme + ': different slide counts from the same starters');
   }
 });
+
+test('the composition table is not written down twice', () => {
+  const SF = library();
+
+  /* There are two copies of the campaign's type-to-composition map:
+     COMPOSITION_DEFAULTS in AiAd27/starters27.js, which is baked into every
+     slide's design at build time, and CAMPAIGN_COMPOSITIONS in src/themes.js,
+     which is the theme's defaults. They are the same ten pairs today and
+     nothing links them.
+
+     The baked one wins. slideComposition reads slide.design.composition
+     first, so editing src/themes.js changes nothing for a deck that already
+     exists — the change looks applied, the decks carry on as before, and the
+     two only disagree somewhere nobody is looking. That is the fault this
+     whole document keeps finding: a fact held in two places.
+
+     Checked against real slides rather than by parsing both files, so it
+     tests what the renderer will actually resolve. */
+  for (const strand of STRANDS) {
+    const theme = 'aiad27-' + strand;
+    const defaults = SF.THEMES[theme].defaults;
+    for (const slide of SF.buildLesson(theme).slides) {
+      if (slide.hidden) continue;
+      const baked = slide.design && slide.design.composition;
+      assert.ok(baked,
+        theme + '/' + slide.type + ': no composition baked by starters27.js — ' +
+        'without one the slide renders on the legacy path and loses the ' +
+        'campaign header, closing rule and lockup');
+      assert.equal(defaults[slide.type], baked,
+        theme + '/' + slide.type + ': starters27.js bakes "' + baked +
+        '" but src/themes.js defaults to "' + defaults[slide.type] + '" — ' +
+        'the baked one wins, so the theme table is quietly dead');
+    }
+  }
+});
