@@ -182,6 +182,18 @@
     padding: 2px 5px;
     max-width: calc(100% - 8px);
   }
+  .lab-slot {
+    position: absolute;
+    border: 1px dashed rgba(20, 90, 160, 0.85);
+    background: rgba(40, 120, 200, 0.12);
+    pointer-events: none;
+  }
+  .lab-slot > span {
+    position: absolute; left: 2px; top: 2px;
+    font: 600 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: #0b3a63; background: rgba(255, 255, 255, 0.88);
+    padding: 1px 4px; border-radius: 3px; white-space: nowrap;
+  }
   .lab-chrome-band {
     position: absolute;
     left: 0;
@@ -266,7 +278,7 @@
     <strong>What we are testing</strong>
     <ul>
       <li>Fixed header / footer chrome; the middle is the composition.</li>
-      <li>Body pitch <b>16 × 37px</b> on campaign <code>.cp-body</code> (592px).</li>
+      <li>Body pitch <b>16 rows</b> on the real campaign <code>.cp-body</code> — height and pitch are measured, not assumed.</li>
       <li>Blocks get spans, not free coordinates — like modular web sections.</li>
       <li>Content that outgrows a span fails a measured fit check (no type-shrink).</li>
       <li>Full-bleed image/split/video may claim chrome — labelled BLEED.</li>
@@ -278,7 +290,7 @@
     <label><input type="checkbox" id="togGrid" checked> Row grid</label>
     <label><input type="checkbox" id="togSpans" checked> Proposed spans</label>
     <label><input type="checkbox" id="togChrome" checked> Chrome bands</label>
-    <span class="lab-note">Orange = proposed (not live layout). Green = 37px pitch.</span>
+    <span class="lab-note" id="pitchNote">Orange = proposed (not live layout). Green = the measured body pitch.</span>
   </div>
 
   <nav aria-label="Jump to section" id="nav"></nav>
@@ -383,7 +395,7 @@
     {
       id: 'campaign',
       title: 'Campaign body',
-      why: 'AiAd27 Safe — real .cp-body at 592px = 16×37. Starting place for the pitch.',
+      why: 'AiAd27 Safe — the real .cp-body, measured. Starting place for the pitch.',
       items: [
         { lesson: 'aiad27-safe', index: 1, plan: 'poster-art' },
         { lesson: 'aiad27-safe', index: 2, plan: 'voice' },
@@ -507,22 +519,89 @@
     overlay.style.transformOrigin = 'top left';
 
     if (t.chrome && plan.host !== 'slide') {
-      for (const [top, label] of [
-        [0, 'header · 1 row'],
-        [STAGE_H - PITCH, 'footer · 1 row'],
-      ]) {
-        const band = document.createElement('div');
-        band.className = 'lab-chrome-band';
-        band.style.top = top + 'px';
-        band.style.height = PITCH + 'px';
+      /* The bands are MEASURED, and they are the regions themselves.
+         They used to be drawn at top:0 and STAGE_H-37, one row tall — an
+         invented strip at each edge of the stage, which put the band above
+         the identity and the lockup instead of around them. The header is a
+         region with slots in it; a band that does not contain them describes
+         nothing.
+
+         Slots are drawn inside, and named, because that is the proposal:
+         header [identity][context][mark] and footer [note][context][number]
+         are interchangeable positions, so what matters is which slot a thing
+         is in, not where it happens to sit. */
+      /* Overlay coordinates are slide units (1280x720); the slide itself is
+         transform-scaled, so a measured rect divides back by that scale. */
+      const sr = slideRoot.getBoundingClientRect();
+      const k = sr.height / STAGE_H;
+      const toSlide = (r) => ({
+        left: (r.left - sr.left) / k, top: (r.top - sr.top) / k,
+        width: r.width / k, height: r.height / k,
+      });
+      const band = (r, label) => {
+        const el = document.createElement('div');
+        el.className = 'lab-chrome-band';
+        el.style.top = r.top + 'px';
+        el.style.height = r.height + 'px';
         const tag = document.createElement('span');
         tag.textContent = label;
-        band.append(tag);
-        overlay.append(band);
+        el.append(tag);
+        overlay.append(el);
+      };
+      const slot = (r, label) => {
+        const el = document.createElement('div');
+        el.className = 'lab-slot';
+        Object.assign(el.style, { left: r.left + 'px', top: r.top + 'px',
+          width: Math.max(8, r.width) + 'px', height: Math.max(8, r.height) + 'px' });
+        const tag = document.createElement('span');
+        tag.textContent = label;
+        el.append(tag);
+        overlay.append(el);
+      };
+      const hdr = slideRoot.querySelector('.cp-header');
+      const ftr = slideRoot.querySelector('.cp-footer');
+      const mark = slideRoot.querySelector('.slide-logo');
+      if (hdr) {
+        const h = toSlide(hdr.getBoundingClientRect());
+        /* The band spans the header and whatever hangs below it — today the
+           lockup is 56px and the band is 56px, so they agree; when they did
+           not, this is where it showed. */
+        const marked = mark ? toSlide(mark.getBoundingClientRect()) : null;
+        const bottom = Math.max(h.top + h.height, marked ? marked.top + marked.height : 0);
+        band({ top: h.top, height: bottom - h.top },
+          `header · ${Math.round(bottom - h.top)}px` +
+          (marked && Math.round(bottom) > Math.round(h.top + h.height)
+            ? ` · mark overflows by ${Math.round(bottom - h.top - h.height)}px` : ''));
+        const pre = getComputedStyle(hdr, '::before');
+        const preW = parseFloat(pre.width) || 120;
+        slot({ left: h.left, top: h.top, width: preW, height: h.height }, 'identity');
+        const beat = hdr.querySelector('.cp-beat');
+        if (beat) slot(toSlide(beat.getBoundingClientRect()), 'context');
+        if (marked) slot(marked, 'mark');
+      }
+      if (ftr) {
+        const f = toSlide(ftr.getBoundingClientRect());
+        band(f, `footer · ${Math.round(f.height)}px`);
+        const note = ftr.querySelector('.cp-footer-note');
+        const num = ftr.querySelector('.pagenum');
+        if (note) slot(toSlide(note.getBoundingClientRect()), 'note');
+        if (num) slot(toSlide(num.getBoundingClientRect()), 'number');
       }
     }
 
     const host = hostRect(slideRoot, plan.host);
+    /* Say what the pitch actually is. The legend used to read "37px pitch",
+       which was true of a 592px body and became wrong the moment the header
+       was made to fit its lockup and the body became 576. Derived text cannot
+       go stale. */
+    if (plan.host === 'body') {
+      const note = document.getElementById('pitchNote');
+      const h = Math.round(parseFloat(getComputedStyle(slideRoot.querySelector('.cp-body')).height));
+      if (note) {
+        note.textContent = 'Orange = proposed (not live layout). Green = measured body pitch: ' +
+          h + 'px / ' + BODY_ROWS + ' rows = ' + Math.round((h / BODY_ROWS) * 100) / 100 + 'px.';
+      }
+    }
     if (t.grid) {
       const lines = Math.floor(host.rows) + 1;
       for (let i = 0; i < lines; i++) {
