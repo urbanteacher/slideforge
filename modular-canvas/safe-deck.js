@@ -334,7 +334,7 @@ async function render() {
          instrument, so a correction to it lands everywhere at once. This is what
          the two engines were diverging over — Safe carried its own copy, without
          the painted-size reading or the legibility floor. */
-      const verdict = SF.measureSlideFit(box, { frame: box, floor: SF.LEGIBLE_FLOOR, allowAscent: true });
+      const verdict = SF.measureSlideFit(box, { frame: box, floor: SF.LEGIBLE_FLOOR });
       /* Slots whose name contains "mark" are exempt: the quote glyph and the
          action mark are drawn to exceed their box on purpose. */
       const exempt = /mark/i.test(box.dataset.name || '');

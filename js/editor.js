@@ -1983,6 +1983,57 @@
         var node = frame.firstElementChild;
         if (node) SF.fit(frame, node);
       });
+      /* Second frame, because fit() has just rescaled every trial and the
+         measurement below reads painted geometry. */
+      requestAnimationFrame(function () { markLayoutFit(box); });
+    });
+  }
+
+  /**
+   * Label each layout thumbnail with whether this slide's words would survive
+   * the change.
+   *
+   * The picker already renders a trial of every candidate shape and throws the
+   * render away. These are the same renders, still mounted, so measuring them
+   * costs one pass — no second render, no extra state.
+   *
+   * Only problems are labelled. A badge on the 27 shapes that are fine is noise;
+   * the two that would break are the whole point.
+   *
+   * @param {HTMLElement} box the .layout-library just drawn
+   */
+  function markLayoutFit(box) {
+    if (!SF.measureSlideFit) return;
+    box.querySelectorAll('.layout-choice').forEach(function (el2) {
+      var choice = /** @type {HTMLElement} */ (el2);
+      var node = choice.querySelector('.variant-frame > *');
+      if (!node) return;
+      /* fit() scales the trial down, and getBoundingClientRect is post-transform.
+         Scaling the tolerance with it keeps the threshold at one slide pixel
+         rather than the eight or so a thumbnail would otherwise allow. */
+      var scale = node.getBoundingClientRect().width / SF.SLIDE_W;
+      if (!(scale > 0)) return;
+      var verdict = SF.measureSlideFit(node, { tolerance: SF.FIT_TOLERANCE * scale });
+      if (!verdict) return;
+      var badge = choice.querySelector('.layout-fit') || el('span', 'layout-fit');
+      if (!verdict.fits) {
+        choice.dataset.fit = 'tight';
+        badge.textContent = 'may not fit';
+        badge.title = 'Your words overflow this shape: ' +
+          verdict.issues.slice(0, 3).map(function (i) {
+            return i.element + ' ' + i.direction + ' by ' + Math.round(i.px) + 'px';
+          }).join(', ') + '. Nothing is shrunk to hide it.';
+      } else if (!verdict.legible) {
+        choice.dataset.fit = 'small';
+        badge.textContent = 'small text';
+        badge.title = 'This shape paints text at ' + verdict.smallest + 'px in ' +
+          verdict.smallestIn + ', under the ' + SF.LEGIBLE_FLOOR + 'px floor. It fits, but the back of the room will not read it.';
+      } else {
+        choice.dataset.fit = 'ok';
+        badge.remove();
+        return;
+      }
+      if (!badge.parentNode) choice.appendChild(badge);
     });
   }
 

@@ -69,10 +69,9 @@
     }
     return null;
   }
-  function escapes(rect, frame, tolerance, allowAscent) {
+  function escapes(rect, frame, tolerance) {
     const out = [];
     if (rect.bottom > frame.bottom + tolerance) out.push(["bottom", rect.bottom - frame.bottom]);
-    if (!allowAscent && rect.top < frame.top - tolerance) out.push(["top", frame.top - rect.top]);
     if (rect.right > frame.right + tolerance) out.push(["right", rect.right - frame.right]);
     if (rect.left < frame.left - tolerance) out.push(["left", frame.left - rect.left]);
     return out;
@@ -84,7 +83,6 @@
     const tolerance = opts.tolerance ?? FIT_TOLERANCE;
     const floor = opts.floor ?? LEGIBLE_FLOOR;
     const frame = (opts.frame ?? root).getBoundingClientRect();
-    const allowAscent = opts.allowAscent ?? false;
     const issues = [];
     const seen = /* @__PURE__ */ new Set();
     const add = (element, direction, px, text2) => {
@@ -119,11 +117,11 @@
         range.setEnd(node, (word.index ?? 0) + word[0].length);
         for (const box2 of range.getClientRects()) {
           if (!box2.width || !box2.height) continue;
-          for (const [direction, px] of escapes(box2, frame, tolerance, allowAscent)) {
+          for (const [direction, px] of escapes(box2, frame, tolerance)) {
             add(describe(el), direction, px, word[0]);
           }
           if (clipBox) {
-            for (const [direction, px] of escapes(box2, clipBox, tolerance, allowAscent)) {
+            for (const [direction, px] of escapes(box2, clipBox, tolerance)) {
               add(describe(el), `clipped-${direction}`, px, word[0]);
             }
           }
