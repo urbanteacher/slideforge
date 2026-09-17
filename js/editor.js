@@ -1189,6 +1189,7 @@
     /* The canvas was just rebuilt, so anything the art face puts on top of it —
        the selection ring, the ghost on a hidden shape — has to go back on. */
     if (SF.Artwork) SF.Artwork.afterPaint();
+    if (SF.Arrange) SF.Arrange.afterPaint();
   }
 
   /* ------------------------------------------------------------ inspector */

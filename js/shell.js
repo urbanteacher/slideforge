@@ -1516,6 +1516,7 @@
     SF.Editor.install();
     SF.Games.install();
     if (SF.Artwork) SF.Artwork.install();
+    if (SF.Arrange) SF.Arrange.install();
 
     var want = null;
     try { want = localStorage.getItem(LAST_WS); } catch (e) {}

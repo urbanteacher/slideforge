@@ -1,0 +1,98 @@
+/* The lattice — arranging content by named region.
+   Geometry is the one Engine 3 measured the layout bank against: a 1176x576
+   body inset 52 from the left and 88 from the top, twelve 65px columns with a
+   36px gutter (101 per step) and sixteen 36px rows. Kept in one place here and
+   in SF.LATTICE so the renderer, the editor and the lab cannot drift apart.
+
+   Only a slide that has regions is latticed, so every deck that has never been
+   arranged renders exactly as it did before this file existed. */
+
+.sf-latticed .pad { position: relative; }
+.sf-lattice {
+  position: absolute;
+  left: 52px;
+  top: 88px;
+  width: 1176px;
+  height: 576px;
+  display: grid;
+  grid-template-columns: repeat(12, 65px);
+  grid-template-rows: repeat(16, 36px);
+  column-gap: 36px;
+}
+.sf-slot { position: relative; min-width: 0; min-height: 0; }
+/* The slot owns the box now, so a block's own margin would be a second,
+   invisible spacing system inside a cell that already has a size. */
+.sf-slot > * { margin: 0 !important; max-width: none; box-sizing: border-box; }
+
+/* ------------------------------------------------------------ arrange mode */
+/* Content is inert while presenting; only an editor that has set .arranging
+   makes a block answer the mouse. */
+.arranging .sf-lattice {
+  background-image:
+    repeating-linear-gradient(to bottom, rgba(113, 131, 119, .28) 0 1px, transparent 1px 36px),
+    repeating-linear-gradient(to right, rgba(113, 131, 119, .18) 0 1px, transparent 1px 101px);
+}
+.arranging .sf-slot {
+  outline: 1px solid rgba(215, 148, 58, .85);
+  cursor: grab;
+}
+.arranging .sf-slot:hover { outline-color: #0c3354; }
+.arranging .sf-slot[data-arrange-selected] {
+  outline: 2px solid #0c3354;
+  background: rgba(12, 51, 84, .06);
+  cursor: grabbing;
+}
+/* The cell range, where the lab puts it: above the slot, so a block's own text
+   is never competing with its label. */
+.arranging .sf-slot::after {
+  content: attr(data-block-key) " · " attr(data-span);
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateY(-100%);
+  background: #fff3db;
+  color: #573811;
+  padding: 2px 5px;
+  font: 12px/1.2 system-ui;
+  white-space: nowrap;
+  pointer-events: none;
+}
+/* Text stays readable but stops taking the click — the subject is the box. */
+.arranging .sf-slot > * { pointer-events: none; }
+
+/* --------------------------------------------------------------- the guides */
+/* Drawn only while a drag is within the snap threshold of an edge, a centre
+   line or a neighbour's edge. Absolute against the slide, not the lattice, so
+   a guide can run the full bleed and show a block is flush with the slide. */
+.sf-guides {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+}
+.sf-guide { position: absolute; background: #e5177b; }
+.sf-guide[data-axis="x"] { top: 0; bottom: 0; width: 1px; }
+.sf-guide[data-axis="y"] { left: 0; right: 0; height: 1px; }
+.sf-guide[data-kind="edge"] { background: #0c3354; }
+
+/* ----------------------------------------------------------------- the bar */
+.arrange-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 0 100%;
+  order: 2;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(12, 51, 84, .14);
+}
+.arrange-bar[hidden] { display: none; }
+.arrange-bar .canvas-bar-btn { white-space: nowrap; }
+.arrange-what {
+  color: #53604f;
+  font: 600 11px/1 system-ui;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  padding: 0 2px;
+}
+.arrange-bar .canvas-bar-btn[disabled] { opacity: .4; cursor: not-allowed; }

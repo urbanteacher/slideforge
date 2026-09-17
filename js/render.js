@@ -95,6 +95,68 @@
     return layer;
   };
 
+  /* ------------------------------------------------------------- the lattice
+     A drag manipulates a named region in a grid, never a coordinate. Free-form
+     {x,y,w,h} forfeits reflow, re-theming, aspect export and print, so what a
+     slide stores is a cell range — col, row and spans — on the same 16x12
+     lattice Engine 3 has been proving against the layout bank.
+
+     The pad keeps its identity and only its children are re-parented, which is
+     safe here because no theme sheet uses a `.pad >` selector: descendant rules
+     like `.theme-studio.layout-title h1` still match through the wrapper, and
+     every nth-child rule in the theme sheets targets `li` inside a list or
+     .timeline-event inside its own container, neither of which is re-parented.
+
+     A slide with no regions is not latticed at all, so every existing deck
+     renders exactly as before. */
+  var LATTICE = { left: 52, top: 88, w: 1176, h: 576, cols: 12, rows: 16, stepX: 101, stepY: 36 };
+  SF.LATTICE = LATTICE;
+
+  /* What a content block is called in a region map. The editable key when the
+     block has one, so a region survives the text changing; otherwise the class
+     the theme gave it, which is what an accent rule or a decorative bar has. */
+  function blockKeyOf(node, i) {
+    var key = node.getAttribute && node.getAttribute('data-content-key');
+    if (key) return key;
+    var cls = String(node.className || '').split(/\s+/).filter(Boolean)[0];
+    return cls || 'block-' + i;
+  }
+  SF.blockKeyOf = blockKeyOf;
+
+  SF.latticeHost = function (root) {
+    return root.querySelector('.cp-body') || root.querySelector('.pad') || null;
+  };
+
+  /* Wraps each pad child in a cell of the lattice. Blocks the map does not
+     mention are left to auto-flow rather than dropped — a region map that has
+     gone stale should misplace a block, not lose it. */
+  SF.applyRegions = function (root, slide) {
+    var regions = slide && slide.design && slide.design.regions;
+    if (!regions || !Object.keys(regions).length) return false;
+    var host = SF.latticeHost(root);
+    if (!host) return false;
+    var kids = Array.prototype.slice.call(host.children).filter(function (n) {
+      return n.nodeType === 1;
+    });
+    if (!kids.length) return false;
+    var grid = el('div', 'sf-lattice');
+    kids.forEach(function (node, i) {
+      var key = blockKeyOf(node, i);
+      var r = regions[key];
+      var slot = el('div', 'sf-slot');
+      slot.setAttribute('data-block-key', key);
+      if (r) {
+        slot.style.gridArea = r.row + ' / ' + r.col + ' / span ' + r.rows + ' / span ' + r.cols;
+        slot.setAttribute('data-region', r.row + ',' + r.col + ',' + r.rows + ',' + r.cols);
+      }
+      slot.appendChild(node);
+      grid.appendChild(slot);
+    });
+    host.replaceChildren(grid);
+    root.classList.add('sf-latticed');
+    return true;
+  };
+
   /* "slide:12" — a jump inside the lesson. Returns the 1-based number the
      author wrote, or 0 for anything else, so callers can use it as a test. */
   SF.slideJumpTarget = function (value) {
@@ -4998,6 +5060,10 @@
     SF.declareBodyRegion(root,slide);
     if (SF.Explore) SF.Explore.render(root, pad, slide, opts);
     if (SF.Custom) SF.Custom.layout(root, slide);
+    /* Last, once compositions, boards, Explore and Customise have all finished
+       shaping the pad: regions are the slide's explicit arrangement, so they
+       are applied to whatever those produced rather than racing them. */
+    SF.applyRegions(root, slide);
 
     if (opts.chrome !== false && deck.showSlideNumbers && opts.index != null && slide.type !== 'title') {
       /* Counted over the running order, not the editor's rows. A deck with a
