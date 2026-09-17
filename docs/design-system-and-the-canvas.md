@@ -1214,6 +1214,46 @@ Full-bleed keeps its escape. Those two tiles draw the same bands and label
 them *claimed*, because the chrome is still there — the media simply runs over
 it. Drawing nothing made an escape look like an absence.
 
+### 2026-09-17 — the generic layouts got a chrome region
+
+Built. `--sf-chrome-top`, `--sf-chrome-side`, `--sf-header-h`,
+`--sf-footer-h` on `.slide`, consumed by `.slide-logo` and `.pagenum`.
+
+The mark's inset was set in **five places**, three of them on `.slide-logo`
+alone — so the page number never came with it:
+
+| Was | Now |
+| --- | --- |
+| base `top:28 right:36`, number `right:40` | region `28/40`, both |
+| `[data-composition]` `top:26 right:40` | dropped; inherits the region |
+| `.layout-title/.layout-section` `top:36 right:48` | region override `36/48` |
+| `.layout-image` `top:24 right:28` | region override `24/28` |
+| `theme-aiad26-*` `top:30 right:34` | region override on the theme |
+
+Measured across the Library afterwards: **307 of 309** slides carrying both a
+mark and a number now have them on the same right edge. The two exceptions are
+the `has-clock` slides, where the clock takes the corner and the mark steps
+aside deliberately. Generic insets are down to a declared set of three —
+`24/28`, `28/40`, `36/48` — from five sources and a spread of nine values.
+
+Size stayed on the mark; only position moved to the region. How big a mark is,
+is its own business.
+
+**The visual baselines could not have caught any of this.**
+`tools/visual-regression.mjs` builds its decks with no `logo` and no
+`showSlideNumbers`, and renders with no `index` — so not one of the 597
+baselines contains a mark or a page number. They all pass, which proves only
+that the bodies were left alone. `tools/smoke-chrome-region.mjs` is the check
+that actually covers it, and it is mutation-verified: putting `top/right` back
+on `.slide-logo` fails it with "mark and page number on different right edges:
+41 of 309 slides".
+
+**What this unlocks.** The generic layouts now have a declared region where
+their furniture lives, which was the precondition recorded above — not a row
+pitch. `--sf-header-h` and `--sf-footer-h` exist and are not yet load-bearing;
+the next step is a body region measured between them, and only then is there
+something for rows to divide.
+
 ### The span map for `poster-art`, measured across all five covers
 
 *(Row counts below are against the retired 592px/37px body — see the entry

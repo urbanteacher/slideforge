@@ -106,7 +106,10 @@
 .slide[data-composition] :is(.sub,.statement-credit,.attrib) { font-size:var(--composition-column-heading,27px); line-height:1.35; letter-spacing:0; text-transform:none; max-width:800px; margin-top:30px; }
 .slide[data-composition] .q { border:0; padding:0; }
 .slide[data-composition] .q::before { display:none; }
-.slide[data-composition] .slide-logo { top:26px; bottom:auto; right:40px; max-height:38px; }
+/* Only the size is a composition decision; where it sits is the region's.
+   This used to set top:26 and right:40 of its own, which is why 50 of the 405
+   logo-bearing slides sat 2px higher and 4px further in than the other 355. */
+.slide[data-composition] .slide-logo { bottom:auto; max-height:38px; }
 /* The shape sits in its own right-hand area, never behind the headline. */
 .slide[data-composition='poster']::after { content:''; position:absolute; width:390px; height:390px; right:-90px; top:165px; border:68px solid var(--s-accent); border-radius:50%; opacity:.85; pointer-events:none; }
 .slide[data-composition='poster'] .pad { justify-content:flex-end; padding:100px 380px 110px 88px; }

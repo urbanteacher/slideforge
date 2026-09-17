@@ -310,15 +310,10 @@
    bottom-to-top up the left edge, SAFE runs down-right, SMART up-right. That
    is why these are five files and not one file plus a hue rotation. */
 
-.slide.theme-aiad26-safe .slide-logo,
-.slide.theme-aiad26-smart .slide-logo,
-.slide.theme-aiad26-creative .slide-logo,
-.slide.theme-aiad26-responsible .slide-logo,
-.slide.theme-aiad26-future .slide-logo {
-  max-width: 72px;
-  top: 30px;
-  right: 34px;
-}
+/* The 2026 badge sits tighter than the platform default. Declared on the
+   region so the page number comes with it, rather than on the mark alone. */
+.slide[class*='theme-aiad26-'] { --sf-chrome-top: 30px; --sf-chrome-side: 34px; }
+.slide[class*='theme-aiad26-'] .slide-logo { max-width: 72px; }
 
 .slide.theme-aiad26-safe .slide-logo img,
 .slide.theme-aiad26-smart .slide-logo img,

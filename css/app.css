@@ -2085,8 +2085,28 @@ html[data-ws="game"] #btnSorter { display: none; }
 }
 
 /* slide number + progress */
+/* THE GENERIC CHROME REGION.
+ *
+ * One declaration for where a slide's furniture lives, so the layouts stop
+ * each deciding it. Measured before this existed: across six generic slides
+ * the mark's top was 24, 26 or 28px and its right edge 36 or 40, because the
+ * base rule said 28/36 and a [data-composition] override said 26/40 — and
+ * separately the mark sat at right:36 while the page number sat at right:40,
+ * so the two had never lined up with each other at all.
+ *
+ * The campaign does not use these: it has a real .cp-header and .cp-footer
+ * and its own 52px content edge, and it keeps them. These tokens are the
+ * generic layouts' equivalent — the region the mark and the number sit in,
+ * and the thing a body region can later be measured between.
+ */
+.slide {
+  --sf-chrome-top: 28px;
+  --sf-chrome-side: 40px;
+  --sf-header-h: 52px;
+  --sf-footer-h: 30px;
+}
 .slide .pagenum {
-  position: absolute; right: 40px; bottom: 26px;
+  position: absolute; right: var(--sf-chrome-side); bottom: 26px;
   font-size: 17px; color: var(--s-dim); letter-spacing: .04em;
 }
 .slide .track { position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: var(--s-rule); }
@@ -2094,10 +2114,10 @@ html[data-ws="game"] #btnSorter { display: none; }
 
 .slide-logo {
   position: absolute;
-  top: 28px;
-  right: 36px;
+  top: var(--sf-chrome-top);
+  right: var(--sf-chrome-side);
   z-index: 4;
-  height: 52px;
+  height: var(--sf-header-h);
   max-width: 180px;
   pointer-events: none;
 }
@@ -2130,16 +2150,21 @@ html[data-ws="game"] #btnSorter { display: none; }
    brand ships its wordmark already reversed. */
 [data-ground="dark"] .slide:not(.logo-normal) .slide-logo img,
 .slide[data-ground="dark"]:not(.logo-normal) .slide-logo img { filter: brightness(0) invert(1); }
+/* These move the REGION, not just the mark in it. Setting top/right on
+   .slide-logo alone left the page number behind at the default inset, so on a
+   title or section the mark sat 48px in and the number 40px in — the two
+   never lined up. Shifting the tokens moves both, which is the point of
+   having them. Size stays on the mark: how big it is, is its own business. */
+.layout-title,
+.layout-section { --sf-chrome-top: 36px; --sf-chrome-side: 48px; }
 .layout-title .slide-logo,
 .layout-section .slide-logo {
-  top: 36px;
-  right: 48px;
   height: 60px;
   max-width: 200px;
 }
+/* Tighter into the corner, because the photograph goes under it. */
+.layout-image { --sf-chrome-top: 24px; --sf-chrome-side: 28px; }
 .layout-image .slide-logo {
-  top: 24px;
-  right: 28px;
   height: 44px;
   filter: drop-shadow(0 1px 8px rgba(0,0,0,.35));
 }
