@@ -4922,6 +4922,7 @@
     root.appendChild(pad);
     if (!compositions.render(deck, slide, pad, root) && (!SF.Boards || !SF.Boards.render(pad, slide, opts, root))) (LAYOUTS[slide.type] || layoutContent)(slide, pad, opts, root);
     compositions.apply(root, deck, slide);
+    SF.declareBodyRegion(root,slide);
     if (SF.Explore) SF.Explore.render(root, pad, slide, opts);
     if (SF.Custom) SF.Custom.layout(root, slide);
 
