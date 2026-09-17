@@ -1375,6 +1375,20 @@
           progressive: true
         },
         {
+          type: "quote",
+          body: "The greatest value of a picture is when it forces us to notice what we never expected to see.",
+          subtitle: "John W. Tukey",
+          notes: "Tukey invented the box plot and the word 'software'. Note what the sentence does not say — it is not about explaining what you already know. The value is in being surprised, which is why exploratory work matters as much as presentation."
+        },
+        {
+          type: "image",
+          title: "Tecidos de Algodão, 1927",
+          subtitle: "Brazilian cotton textiles · production, factories, capital, imports and tax, on one sheet",
+          image: "assets/lesson/ipdv/tecidos-de-algodao-1927.jpg",
+          notes: "No lecture text on this one — let them look. Ask what they can find in thirty seconds, then ask which encodings are doing the work. Small multiples, a ring for regional share, paired bars for imports. Then the useful question: which of these choices would you keep, and which would you now defend differently after today? Framed 3:2 rather than full bleed because a dense sheet has to be seen whole — a caption over the artwork would cover the very thing they are reading.",
+          design: { imageFrame: "3:2" }
+        },
+        {
           type: "section",
           title: "Design criteria",
           subtitle: "What a visualisation is for, and what it costs.",
@@ -1390,6 +1404,21 @@
           ],
           notes: "Order matters. Aesthetics is last because a beautiful chart that misleads is worse than a plain one that does not — but it is on the list, because a chart nobody reads has also failed.",
           progressive: true
+        },
+        {
+          type: "split",
+          title: "Explain, enlighten, engage",
+          subtitle: "Narrative, visuals and data — and what each pair gives you",
+          bullets: [
+            "Narrative + data, without visuals → you can explain it.",
+            "Visuals + data, without narrative → you can enlighten.",
+            "Narrative + visuals, without data → you can engage, and that is all.",
+            "Only the centre does all three."
+          ],
+          image: "assets/lesson/ipdv/explain-enlighten-engage.png",
+          notes: "The third case is the warning: narrative and visuals with no data is advertising. Students recognise it instantly once named, and it is a fair description of a lot of infographics.",
+          progressive: true,
+          imageSide: "right"
         },
         {
           type: "content",
@@ -1423,15 +1452,29 @@
         },
         {
           type: "split",
-          title: "Read this chart, then answer",
-          subtitle: "Polling from a local election · five candidates · three points in time",
+          title: "Read these, then answer three questions",
+          subtitle: "Local election polling · five candidates · three points in time, A, B and C",
           bullets: [
-            "In the first election, is candidate 5 doing better than candidate 3?",
-            "Between time A and time B, who did better — candidate 2 or candidate 4?",
+            "In the first poll, is candidate 5 doing better than candidate 3?",
+            "Between A and B, who improved more — candidate 2 or candidate 4?",
             "Who has the most momentum in the race?"
           ],
-          image: "assets/lesson/ipdv/election-polling-lines.jpg",
-          notes: "Run this cold, before any theory. Give them ninety seconds and take answers. The point is not the answers — it is how long the third question takes, and how much of the work is the chart's fault rather than theirs.",
+          image: "assets/lesson/ipdv/polling-three-pies.jpg",
+          notes: "Run this cold, before any theory. Ninety seconds, take answers, and let the room struggle — that is the experiment. Watch how long question three takes and how much hedging you hear. Do not reveal the next slide until someone says the chart is the problem.",
+          progressive: true,
+          imageSide: "right"
+        },
+        {
+          type: "split",
+          title: "Same numbers. Same order. Bars.",
+          subtitle: "Now answer the same three questions",
+          bullets: [
+            "Candidate 5 falls 23 → 20 → 17. Candidate 1 climbs 17 → 20 → 23.",
+            "The momentum question took a minute on pies. It takes a second here.",
+            "Nothing was added. The data never changed — only the channel it was put on."
+          ],
+          image: "assets/lesson/ipdv/polling-three-bars.jpg",
+          notes: "The payoff, and the single most convincing two minutes in the lecture. Angle is the channel a pie uses, and angle is well down the accuracy ranking they meet later today. Position on a common scale is at the top of it. This slide is that ranking, demonstrated before it is stated.",
           progressive: true,
           imageSide: "right"
         },
@@ -1455,7 +1498,15 @@
           title: "The lie factor",
           subtitle: "Effect shown in the graphic ÷ effect in the data",
           body: "Should be\n1.0",
-          notes: "Write the division on the board. Anything far from 1.0 means the picture is a different measurement from the data. Tufte's own examples run past 14. A truncated bar axis is the everyday version."
+          notes: "Write the division on the board. Anything far from 1.0 means the picture is a different measurement from the data. A truncated bar axis is the everyday version; the next slide is the famous one."
+        },
+        {
+          type: "keyfact",
+          title: "The New York Times fuel-economy graphic",
+          subtitle: "783 ÷ 53",
+          body: "Lie factor\n14.8",
+          notes: "Tufte's own example. The effect drawn on the page was 783% while the effect in the data was 53% — the graphic overstates it by nearly fifteen times. Say the arithmetic out loud: this is not a matter of taste, it is a number you can compute and check.",
+          progressive: true
         },
         {
           type: "split",
@@ -1482,6 +1533,32 @@
           ],
           notes: "Ask for the fifth from the room — dual axes usually comes up, and it is a good answer. Every one of these is available by default in Excel, which is the uncomfortable part.",
           progressive: true
+        },
+        {
+          type: "split",
+          title: "Show data variation, not design variation",
+          subtitle: "Chernoff faces · Facing the Nation",
+          bullets: [
+            "Each facial feature carries a different variable.",
+            "The design varies enormously. The data varies much less.",
+            "We read faces involuntarily — which means the encoding borrows emotional weight the numbers never had."
+          ],
+          image: "assets/lesson/ipdv/chernoff-faces.png",
+          notes: "A genuinely interesting failure rather than a lazy one: Chernoff was exploiting real perceptual machinery. Ask which feature they noticed first — it will not be the one carrying the most important variable, and that is the problem in one observation.",
+          progressive: true,
+          imageSide: "right"
+        },
+        {
+          type: "beforeafter",
+          title: "Cumulative sales always go up",
+          exploration: {
+            before: "assets/lesson/ipdv/iphone-cumulative-apple.jpg",
+            after: "assets/lesson/ipdv/iphone-quarterly-quartz.jpg",
+            beforeLabel: "As Apple showed it",
+            afterLabel: "As Quartz redrew it",
+            alt: "Cumulative iPhone sales as an unlabelled rising curve, against the same period redrawn as quarterly sales with the cumulative line behind it"
+          },
+          notes: "Drag the divider live. Nothing in the first chart is fabricated, which is what makes it the better example — a cumulative total is a real number, it just cannot fall, so it cannot show a bad quarter. Ask what question the first chart is built to prevent. Then note the missing y-axis labels: Tufte's second principle, on a stage in front of thousands of people."
         },
         {
           type: "split",
@@ -1515,6 +1592,13 @@
           image: "assets/lesson/ipdv/chart-junk-data-ink.png",
           notes: "Tufte's data-ink ratio. Worth saying plainly: the default settings of most tools have a poor ratio, so the ordinary act of accepting defaults is already a design decision.",
           progressive: true
+        },
+        {
+          type: "keyfact",
+          title: "Why five to nine",
+          subtitle: "Miller's law — the limit belongs to the reader, not the designer",
+          body: "7 ± 2",
+          notes: "Working memory holds about seven items, give or take two. Past that, telling categories apart becomes the reader's job rather than the chart's. The fix is almost never a better palette — it is fewer categories, or a different question asked of the chart."
         },
         {
           type: "cards",
@@ -1556,8 +1640,8 @@
           type: "table",
           title: "Three attribute types — and what each one lets you do",
           tableHeader: true,
-          body: "Type|Ordered?|Arithmetic?|Example\nCategorical|No|No|Country, product, gender\nOrdinal|Yes|No|Rankings, S/M/L/XL, education level\nQuantitative · interval|Yes|Differences only|Temperature in °C — no true zero\nQuantitative · ratio|Yes|Yes, including ratios|Height, weight, count — true zero",
-          notes: "Walk the columns, not the rows. 'Ordered?' and 'Arithmetic?' are the two questions that decide everything downstream — which channel is allowed, which colour scheme, whether a mean is even meaningful. 20°C is not twice 10°C; 20kg is twice 10kg. That is the interval/ratio line.",
+          body: "Type|Ordered?|Arithmetic?|Example\nCategorical / nominal|No|No|Country, product, gender\nOrdinal|Yes|No|Rankings, S/M/L/XL, education level\nQuantitative · interval|Yes|Differences only|Temperature in °C — no true zero\nQuantitative · ratio|Yes|Yes, including ratios|Height, weight, count — true zero",
+          notes: "Walk the columns, not the rows. 'Ordered?' and 'Arithmetic?' are the two questions that decide everything downstream — which channel is allowed, which colour scheme, whether a mean is even meaningful. 20°C is not twice 10°C; 20kg is twice 10kg. That is the interval/ratio line. Both words are given because students meet both: Munzner says categorical, Stevens says nominal, and they mean the same thing.",
           progressive: true
         },
         {
@@ -1612,6 +1696,22 @@
           ],
           notes: "This table is the practical takeaway. Quantitative data on an identity channel is unreadable as a quantity; categorical data on a magnitude channel invents an order. Both mistakes appear in the lab.",
           progressive: true
+        },
+        {
+          type: "split",
+          title: "What each channel is actually good for",
+          subtitle: "Bertin's visual variables, and the four properties",
+          bullets: [
+            "Selective — can you pick one group out at a glance?",
+            "Associative — can you group them together while ignoring the rest?",
+            "Ordered — does it carry a sequence?",
+            "Quantitative — can you read a number off it?",
+            "Only position is all four. Shape is associative and nothing else."
+          ],
+          image: "assets/lesson/ipdv/bertin-visual-variables.jpg",
+          notes: "Bertin got here in 1967, before any of the experiments. Read the bottom row of the figure with them: position earns all four properties, hue earns two, shape earns one. That is the same conclusion as the ranking on the next slide, arrived at by reasoning rather than measurement.",
+          progressive: true,
+          imageSide: "right"
         },
         {
           type: "funnel",
@@ -1712,13 +1812,27 @@
         },
         {
           type: "split",
+          title: "The same square, two surrounds",
+          subtitle: "Simultaneous chromatic contrast",
+          bullets: [
+            "The two central squares are identical. They do not look it.",
+            "Colour is judged against its neighbours, not in isolation.",
+            "So a legend swatch and the same colour on a crowded chart are not the same colour to a reader."
+          ],
+          image: "assets/lesson/ipdv/simultaneous-contrast.jpg",
+          notes: "This is the luminance point extended to hue. It is also the reason a colour key placed far from the data is weaker than a direct label on it — by the time the eye travels back, the surround has changed.",
+          progressive: true,
+          imageSide: "right"
+        },
+        {
+          type: "split",
           title: "The fix is not a colour. It is a second channel.",
           bullets: [
             "Always pair colour with shape, pattern, position or a direct label.",
             "Test with a colourblind simulator before you submit.",
             "'Get it right in black and white' — the rule from earlier is the same rule as this one."
           ],
-          image: "assets/lesson/ipdv/simultaneous-contrast.jpg",
+          image: "assets/lesson/ipdv/patterns-as-second-channel.png",
           notes: "Close the loop back to the rules of thumb deliberately. Accessibility is not a separate checklist bolted on at the end; it falls out of a design principle they already agreed to twenty minutes ago.",
           progressive: true
         },
