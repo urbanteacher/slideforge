@@ -60,6 +60,17 @@
       parseFloat(cs.paddingTop || '0') - parseFloat(cs.paddingBottom || '0');
     var banner = $('demoBanner');
     if (banner && !banner.hidden) availH -= banner.offsetHeight;
+    /* The layers panel takes a column of the stage when the window is wide
+       enough for one. Measuring the whole stage then sized a 16/9 box wider
+       than the column it had to sit in, and the overspill landed underneath
+       the panel — the canvas and the panel overlapping again, which is the
+       thing moving the panel out of the canvas was meant to end. When the
+       panel is stacked instead there is one column and the stage scrolls, so
+       the canvas keeps its full width. */
+    var panel = wrap.querySelector('.canvas-layers-panel');
+    if (panel && cs.gridTemplateColumns.trim().split(/\s+/).length > 1) {
+      availW -= panel.offsetWidth + (parseFloat(cs.columnGap || '0') || 0);
+    }
     return Math.max(160, Math.min(availW, 980, availH * 16 / 9));
   }
 
@@ -95,6 +106,11 @@
   }
 
   function applyCanvas() { sizeCanvas(); refitCanvas(); }
+  /* Opening the layers panel changes how much stage the canvas has, and that
+     fires no resize event. refitCanvas rescales the slide in place rather
+     than redrawing, so this cannot re-enter the editor draw that opened the
+     panel in the first place. */
+  SF.applyCanvas = applyCanvas;
 
   function setZoom(z) {
     zoom = ZOOMS.indexOf(z) >= 0 ? z : 1;

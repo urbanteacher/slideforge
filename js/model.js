@@ -4372,6 +4372,12 @@
   // src/render/artwork-editor.js
   function bindArtworkEditor(box2, root, slide, change) {
     let selected = null, panel = null;
+    const stage = box2.parentElement || box2;
+    stage.querySelectorAll(":scope > .canvas-layers-panel").forEach((n) => n.remove());
+    const staged = (open) => {
+      if (stage.classList.toggle("has-layers-panel", open) === open) window.SF?.applyCanvas?.();
+    };
+    staged(false);
     const launch = document.createElement("button");
     launch.type = "button";
     launch.className = "canvas-layers-launch";
@@ -4401,6 +4407,7 @@
       clearSelection();
       panel?.remove();
       panel = null;
+      staged(false);
       launch.focus();
     }
     function commit(items, id) {
@@ -4426,7 +4433,8 @@
           close();
         }
       });
-      box2.appendChild(panel);
+      stage.appendChild(panel);
+      staged(true);
       const title = document.createElement("h3");
       title.textContent = "Layers";
       panel.appendChild(title);

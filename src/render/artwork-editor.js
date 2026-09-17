@@ -1,19 +1,37 @@
 import {bindCanvasDrag} from './canvas-split.js';
 import {normalizeArtwork} from './artwork.js';
 import {safeMedia} from '../deck/content.js';
-/* Panel lives beside the canvas, outside its scaling. No controls enter exports. */
+/* Panel lives beside the canvas, outside its scaling. No controls enter exports.
+ *
+ * BESIDE, not on top. It used to mount inside #previewBox, which made it an
+ * overlay covering the slide: 330x344 of a canvas that is only 360 tall at
+ * Fit on a laptop, so you could not see the artwork you were positioning, and
+ * its max-height was capped by the canvas it was sitting in — the lower half
+ * of the panel scrolled away behind an edge with no affordance. Both faults
+ * were the same mistake. It now mounts in the stage beside the canvas and
+ * takes a grid column of its own, so the slide stays visible while you edit
+ * it and the panel is as tall as the stage.
+ *
+ * Mounting outside #previewBox means the editor's redraw no longer disposes
+ * of it, so a stale panel is cleared on every bind. */
 export function bindArtworkEditor(box,root,slide,change){
  let selected=null,panel=null;
+ const stage=box.parentElement||box;
+ stage.querySelectorAll(':scope > .canvas-layers-panel').forEach(n=>n.remove());
+ const staged=open=>{
+  if(stage.classList.toggle('has-layers-panel',open)===open)window.SF?.applyCanvas?.();
+ };
+ staged(false);
  const launch=document.createElement('button');launch.type='button';launch.className='canvas-layers-launch';launch.textContent='Layers';box.appendChild(launch);
  function clearSelection(){root.querySelectorAll('.artwork-move').forEach(n=>n.remove());root.querySelectorAll('.artwork-selected').forEach(n=>n.classList.remove('artwork-selected'));}
  function button(parent,label,fn){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=fn;parent.appendChild(b);return b;}
  function field(parent,label,input){input.setAttribute('aria-label',label);const wrap=document.createElement('label');wrap.textContent=label;wrap.appendChild(input);parent.appendChild(wrap);return input;}
- function close(){clearSelection();panel?.remove();panel=null;launch.focus();}
+ function close(){clearSelection();panel?.remove();panel=null;staged(false);launch.focus();}
  function commit(items,id){const label=panel?.contains(document.activeElement)?document.activeElement?.closest('label')?.firstChild?.textContent:null;slide.artwork=normalizeArtwork(items);panel?.remove();panel=null;clearSelection();change(id,label);}
  function draw(){
   panel?.remove();clearSelection();panel=document.createElement('div');panel.className='canvas-layers-panel';panel.setAttribute('role','region');panel.setAttribute('aria-label','Slide layers');
   panel.addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey)return;e.stopPropagation();if(e.key==='Escape'){e.preventDefault();close();}});
-  box.appendChild(panel);const title=document.createElement('h3');title.textContent='Layers';panel.appendChild(title);button(panel,'Close layers',close);
+  stage.appendChild(panel);staged(true);const title=document.createElement('h3');title.textContent='Layers';panel.appendChild(title);button(panel,'Close layers',close);
   const hint=document.createElement('p');hint.textContent='Artwork is decorative. Content stays in its layout. Top items appear in front.';panel.appendChild(hint);
   const items=normalizeArtwork(slide.artwork);
   function list(plane){

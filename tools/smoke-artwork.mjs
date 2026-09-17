@@ -37,5 +37,51 @@ try{
  for(const aspect of ['16:9','4:3']){const dims=await page.evaluate(aspect=>{const d=SF.normalizeDeck(JSON.parse(JSON.stringify(SF.Editor.deck())));d.aspect=aspect;const r=SF.renderSlide(d,d.slides[0],{index:0,total:d.slides.length});document.body.appendChild(r);const a=r.querySelector('.artwork-image'),answer={height:r.offsetHeight,x:a.offsetLeft/r.offsetWidth};r.remove();return answer;},aspect);assert.equal(dims.height,aspect==='4:3'?960:720);assert.ok(Math.abs(dims.x-.65)<.005);}
  const invalid=await page.evaluate(()=>SF.normalizeArtwork([{id:'same',kind:'circle',x:-100,width:200,color:'url(bad)'},{id:'same',kind:'image',src:'javascript:alert(1)',opacity:NaN},{kind:'script'}]));assert.equal(invalid.length,2);assert.equal(new Set(invalid.map(a=>a.id)).size,2);assert.equal(invalid[0].x,0);assert.equal(invalid[0].width,100);assert.equal(invalid[1].src,'');
  await panel.getByRole('button',{name:'Close layers',exact:true}).click();await page.getByRole('button',{name:'Layers',exact:true}).click();await page.waitForFunction(()=>Number(getComputedStyle(document.querySelector('#previewBox h1')).opacity)>.99);await page.screenshot({path:'/tmp/slideforge-layers.png'});
- assert.deepEqual(errors,[]);console.log(`Artwork passed: ${census} unchanged NUL/UKBT slides; layers, transforms, ordering, lock/hide, scaled drag, Undo, persistence and clean rendering.`);
+ /* The panel is beside the canvas, never over it. It began as an overlay
+    inside #previewBox: 330x344 on a canvas 360 tall, so it hid the artwork
+    being positioned, and its height was capped by the canvas so the lower
+    half scrolled away behind an edge that gave no sign there was more.
+    Checked at two widths because the failure modes differ — side by side the
+    canvas has to give up the column (it kept claiming it via 16/9 and
+    overlapped by 27px), stacked the canvas must stay whole and the stage
+    scroll (sharing a fixed height crushed the canvas to 18px). */
+ for(const [w,h,expectSideBySide] of [[1500,950,true],[900,820,false]]){
+  await page.setViewportSize({width:w,height:h});
+  /* A resize redraws the editor, which re-binds and drops the panel — true
+     before this moved too, since it used to be cleared along with the canvas
+     it lived in. Reopen, then measure where it lands. */
+  await page.waitForTimeout(300);
+  if(!await page.locator('.canvas-layers-panel').count())
+   await page.getByRole('button',{name:'Layers',exact:true}).click();
+  await page.locator('.canvas-layers-panel').waitFor();
+  await page.waitForTimeout(250);
+  const layout=await page.evaluate(()=>{
+   const p=document.querySelector('.canvas-layers-panel'),box=document.querySelector('#previewBox');
+   if(!p||!box)return null;
+   const pr=p.getBoundingClientRect(),br=box.getBoundingClientRect();
+   const wrap=p.parentElement,wr=wrap.getBoundingClientRect(),ws=getComputedStyle(wrap);
+   const room=wr.height-parseFloat(ws.paddingTop||'0')-parseFloat(ws.paddingBottom||'0');
+   return {overlaps:!(pr.right<=br.left||pr.left>=br.right||pr.bottom<=br.top||pr.top>=br.bottom),
+           sideBySide:pr.left>=br.right-1, canvasW:Math.round(br.width), canvasH:Math.round(br.height),
+           hidden:Math.max(0,p.scrollHeight-p.clientHeight),
+           scrollable:getComputedStyle(p).overflowY!=='visible',
+           panelH:Math.round(pr.height), contentH:p.scrollHeight, room:Math.round(room)};
+  });
+  assert.ok(layout,`${w}x${h}: the layers panel is not on the page`);
+  assert.equal(layout.overlaps,false,`${w}x${h}: the layers panel is covering the canvas`);
+  assert.equal(layout.sideBySide,expectSideBySide,`${w}x${h}: wrong placement for this width`);
+  /* Not "nothing is ever hidden" — beside a tall slide the panel may still be
+     shorter than its contents, and that is fine so long as it scrolls. What
+     must not recur is a panel capped well below the room it has, which is
+     what made the overlay version feel truncated rather than scrollable. */
+  assert.ok(layout.hidden===0||layout.scrollable,
+   `${w}x${h}: ${layout.hidden}px of the panel is unreachable and it does not scroll`);
+  assert.ok(layout.panelH>=Math.min(layout.contentH,layout.room)-4,
+   `${w}x${h}: panel is ${layout.panelH}px with ${layout.room}px of stage available for ${layout.contentH}px of content`);
+  assert.ok(layout.canvasW>=320&&layout.canvasH>=180,
+   `${w}x${h}: the canvas was squeezed to ${layout.canvasW}x${layout.canvasH} making room for the panel`);
+ }
+ await page.setViewportSize({width:1440,height:1000});
+
+ assert.deepEqual(errors,[]);console.log(`Artwork passed: ${census} unchanged NUL/UKBT slides; layers, transforms, ordering, lock/hide, scaled drag, Undo, persistence, panel placement at two widths and clean rendering.`);
 }finally{await browser.close();await harness.stop(relay);fs.rmSync(dir,{recursive:true,force:true});}
