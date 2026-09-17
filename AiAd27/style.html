@@ -154,6 +154,23 @@ is three grounds and one typeface, and it holds together because the strand colo
   consume layout space, and it attaches to the discussion statement rather than the cover. A slot
   box never constrains it.</p>
 
+  <h3 style="margin-top:34px;font-size:19px">What each item costs <span style="font-weight:400;opacity:.7;font-size:15px">&mdash; rows per item, measured across 520 Library slides</span></h3>
+  <p style="font-size:14px;opacity:.8;margin-top:8px">So that adding something can bring its
+  measurements with it. These are medians from real slides, rounded up to whole rows, because a
+  span has to contain its block.</p>
+  <table id="costTable" style="margin-top:14px"></table>
+
+  <h3 style="margin-top:34px;font-size:19px">Columns <span style="font-weight:400;opacity:.7;font-size:15px">&mdash; the same idea across the page</span></h3>
+  <p style="font-size:14px;opacity:.8;margin-top:8px">Rows answer "how tall"; columns answer "how
+  wide, and how far apart". The usable width is <b>1176px</b> (1280 less the two 52px edges), and it
+  divides as <b>12 columns of 65px with 36px gutters</b> &mdash; the gutter is the row pitch, so both
+  axes share one unit.</p>
+  <table id="colTable" style="margin-top:14px"></table>
+  <p style="font-size:14px;opacity:.8;margin-top:14px"><b>This is also the answer to moving an
+  image closer to the text.</b> That is not a freeform drag, it is a change of column span: an image
+  on columns 8&ndash;12 dragged to 7&ndash;12 gets wider and closer, and still lands flush. Snapping
+  in the second axis does the job people reach for freeform to do, without leaving the grid.</p>
+
   <h3 style="margin-top:34px;font-size:19px">The comparison table <span style="font-weight:400;opacity:.7;font-size:15px">&mdash; two claimed columns, no box</span></h3>
   <p style="font-size:14px;opacity:.8;margin-top:8px">The campaign's only table, and it does not look
   like one. There is <b>no outer border and no grid</b> &mdash; a single hairline under each row and
@@ -541,6 +558,62 @@ is three grounds and one typeface, and it holds together because the strand colo
       tr.appendChild(el('td', null, slots));
       tr.appendChild(el('td', null, note));
       t.appendChild(tr);
+    }
+  })();
+
+  /* --- what each item costs, and the column grid ---------------------- */
+  (function () {
+    /* Medians measured across the 520 Library slides, rounded up. Full-bleed
+       media is deliberately not a row count: it claims the whole stage and
+       leaves the lattice, which is a state rather than a size. */
+    const COST = [
+      ['Header band', 'chrome', '56px, outside the body — not a row count'],
+      ['Footer band', 'chrome', '32px, outside the body — not a row count'],
+      ['Heading', '2 rows', 'median 59px across 337 headings'],
+      ['Cover headline', '5 rows', '180px at 2 lines · 8 rows at 3 — the one variable slot'],
+      ['One line of text', '1 row', 'median 35px across 90'],
+      ['List item', '3 rows', 'median 85px across 169'],
+      ['Card', '5–6 rows', 'median 207px across 39; the ballot uses 5'],
+      ['Inset image', '13 rows+', 'smallest measured 480px'],
+      ['Full-bleed image or video', '—', 'claims the stage and leaves the lattice'],
+      ['Chart', '14 rows', 'the body less a two-row heading — target, not yet measured'],
+    ];
+    const ct = document.getElementById('costTable');
+    const h1 = el('tr');
+    ['Item', 'Rows', 'Where the number comes from'].forEach((h) => h1.appendChild(el('th', null, h)));
+    ct.appendChild(h1);
+    for (const [item, rows, note] of COST) {
+      const tr = el('tr');
+      tr.appendChild(el('td', null, item));
+      const r = el('td', null, rows);
+      r.style.fontWeight = '700';
+      tr.appendChild(r);
+      tr.appendChild(el('td', null, note));
+      ct.appendChild(tr);
+    }
+
+    const C = 65, G = 36;
+    const span = (n) => n * C + (n - 1) * G;
+    const COLS = [
+      ['2 across', '6 columns each', span(6)],
+      ['3 across', '4 columns each', span(4)],
+      ['4 across', '3 columns each', span(3)],
+      ['6 across', '2 columns each', span(2)],
+      ['copy and art', '7 / 5', span(7) + ' + ' + span(5)],
+      ['mark and action', '3 / 9', span(3) + ' + ' + span(9)],
+    ];
+    const lt = document.getElementById('colTable');
+    const h2 = el('tr');
+    ['Arrangement', 'Span', 'Width each'].forEach((h) => h2.appendChild(el('th', null, h)));
+    lt.appendChild(h2);
+    for (const [name, sp, w] of COLS) {
+      const tr = el('tr');
+      tr.appendChild(el('td', null, name));
+      tr.appendChild(el('td', null, sp));
+      const c = el('td', null, String(w) + 'px');
+      c.style.fontFamily = 'ui-monospace,SFMono-Regular,Menlo,monospace';
+      tr.appendChild(c);
+      lt.appendChild(tr);
     }
   })();
 

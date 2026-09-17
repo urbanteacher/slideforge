@@ -157,6 +157,76 @@ The 7 remaining misses are two separate things:
 
 ---
 
+## What each item costs, and the second axis
+
+This is the piece that makes the goal reachable: for "add a heading" to bring
+its measurements, every kind of item needs a row cost. Measured across the 520
+Library slides, medians rounded up, because a span has to contain its block:
+
+| Item | Rows | Where the number comes from |
+| --- | --- | --- |
+| Header band | *chrome* | 56px, outside the body — not a row count |
+| Footer band | *chrome* | 32px, outside the body |
+| Heading | **2** | median 59px across 337 headings |
+| Cover headline | **5** | 180px at two lines; **8** at three — the one variable slot |
+| One line of text | **1** | median 35px across 90 |
+| List item | **3** | median 85px across 169 |
+| Card | **5–6** | median 207px across 39; the ballot uses 5 |
+| Inset image | **13+** | smallest measured 480px |
+| Full-bleed image or video | *none* | claims the stage and leaves the lattice |
+| Chart | **14** (target) | the body less a two-row heading; not yet measured |
+
+Two corrections worth carrying, because the intuitions were close but not
+right. An **image is not 8 rows** — the median is 720px, because most images in
+the Library are full-bleed. Full-bleed is a *state*, not a size: it opts out of
+the lattice, and the other 61 are "media-stage" insets starting at 480px = 13
+rows. Same for **video**: all three measured are full-bleed. An inset video at
+10 rows and centred is a reasonable design target, not a measurement.
+
+### Columns — the same idea across the page
+
+Rows answer "how tall". Columns answer "how wide, and how far apart". The
+usable width is **1176px** (1280 less two 52px edges), and it divides as
+**12 columns of 65px with 36px gutters** — the gutter *is* the row pitch, so
+both axes share one unit.
+
+It lands exactly, which is the strongest argument for it:
+
+```
+2 across   6 cols each   570px   →  1176 exact
+3 across   4 cols each   368px   →  1176 exact
+4 across   3 cols each   267px   →  1176 exact
+6 across   2 cols each   166px   →  1176 exact
+7 / 5      671 + 36 + 469        →  1176 exact
+6 / 6      570 + 36 + 570        →  1176 exact
+9 / 3      873 + 36 + 267        →  1176 exact
+```
+
+And it is mostly already there: the existing `1fr 1fr` splits are 569px, one
+pixel off six columns; keyfact's `270px | 1fr` is three off a 3/9 split.
+
+**This is also the answer to "can you freeform on a row to move an image
+closer to the text".** That is not a freeform drag — it is a change of column
+span. An image on columns 8–12 dragged to 7–12 gets wider and closer, and
+still lands flush. Snapping in the second axis does the job people reach for
+freeform to do, without leaving the grid. It is also the only version that
+survives a theme change.
+
+### What is fixed and what is not
+
+- **Most default slides already have a heading**, so that slot is already
+  formatted and positioned. The work is in what sits under it.
+- **Games are fixed.** Leave them.
+- **Activities are mostly fixed**; some customisation would be welcome but is
+  not on the path.
+- **The cover headline is the one genuinely variable slot** — and for
+  wrapping, not for motion.
+- **Word motion is not a constraint.** It attaches to the discussion
+  statement, not the cover, and animates with transform, opacity, blur and
+  clip-path — none of which consume layout space. A slot box can only ever
+  make a box taller, so it cannot clip a transform inside it. Do not design
+  around this; it is already fine.
+
 ## The instruments — use these, do not eyeball
 
 | Tool | What it answers |
@@ -237,3 +307,24 @@ before the font and artwork landed. It now measures in layout units
 - Do not trust the visual baselines as evidence for chrome or compositions.
 - Do not set `top`/`right` on `.slide-logo`; move the region tokens instead.
 - Do not express slot spacing as margins. Boxes.
+
+## Follow-up — generic body measurement foundation
+
+The shared renderer now identifies the existing content owner with
+`data-body-region`. `SF.measureBodyRegion` measures it in layout units only
+when attached to a visible stage. Generic text layouts use the existing pad's
+**content box**, excluding padding; media layouts declare their stage explicitly;
+compositions retain their own `.cp-body`. This does not move content or change
+production CSS, and does not impose a pitch on generic layouts.
+
+The lab now outlines generic frames instead of applying a guessed middle-stage
+row grid. Its frame tooltip reports contact with reserved chrome bands. That is
+a geometry diagnostic, not proof that text overlaps a logo. Detached renders
+return no measurement, and changing thumbnail scale does not change the bounds.
+
+Coverage of the actual 520 Library slides: 424 content frames, 61 media stages,
+35 composition bodies. Campaign checks remain 141/148 aligned and 45/45 fitting.
+**This is the measurement prerequisite, not the structural conversion in step
+2 above.** Generic layouts still need declared slot boxes and, where their
+current padding enters a chrome band, an explicit allocation of body space.
+No new generic lattice or slot-editor capability is claimed.
