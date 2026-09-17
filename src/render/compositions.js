@@ -79,7 +79,6 @@ export function createCompositionRenderer(SF, helpers) {
       var choices = el('div','cp-choices');
       (slide.bullets || []).forEach(function (line,i) {
         var p=SF.parseKeywordLine(line), card=asStep(el('div','cp-choice'),slide);
-        card.dataset.cardIndex=String(i);
         card.appendChild(el('span','cp-letter',LETTERS[i] || String(i+1)));
         var copy=el('div','cp-choice-copy');
         copy.appendChild(bullet('h3','',i,p.term)); copy.appendChild(bullet('p','',i,p.def));

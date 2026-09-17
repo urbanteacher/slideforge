@@ -16,7 +16,6 @@
   var deck = null;
   var sel = 0;
   var saveTimer = null;
-  var artworkToOpen = null;
   var historyId=null, past=[], future=[], checkpoint=null, restoring=false;
   function remember() {
     if (!deck) return;
@@ -1103,7 +1102,7 @@
           onCancel: function () { touched(); repaint(); }
         });
       };
-      if(s.type!=='cards' && /^bullets\.\d+$/.test(key)){
+      if(/^bullets\.\d+$/.test(key)){
         target.draggable=true;var i=Number(key.slice(8));target.title+=' · drag to reorder';
         target.ondragstart=function(e){contentDrag={slide:s.id,index:i};e.dataTransfer.setData('text/plain',String(i));};
         target.ondragover=function(e){if(contentDrag&&contentDrag.slide===s.id)e.preventDefault();};
@@ -1112,39 +1111,6 @@
       }
     });
   }
-  function openCanvasImage(box,s) {
-    box.querySelector('.canvas-image-form')?.remove();
-    var dialog=document.createElement('dialog');dialog.className='canvas-image-form';
-    var heading=el('h2',null,'Edit image');dialog.appendChild(heading);
-    var source=UI.text(s.image||'',function(){},'Image URL or asset path');source.setAttribute('aria-label','Image source');
-    dialog.appendChild(UI.field('Image source',source));
-    var fit=UI.select([{value:'cover',label:'Fill panel (crop)'},{value:'contain',label:'Fit whole image'}],s.imageFit||'cover',function(){});
-    dialog.appendChild(UI.field('Image fit',fit));
-    var upload=el('input');upload.type='file';upload.accept='image/*';upload.setAttribute('aria-label','Upload image');dialog.appendChild(upload);
-    var message=el('p','hint','');message.setAttribute('role','status');dialog.appendChild(message);
-    var closed=false,version=0;
-    function close(){closed=true;version++;dialog.close();dialog.remove();var b=box.querySelector('[data-split-tool=edit-image]');if(b)b.focus();}
-    var save=UI.button('Save image','primary',function(){
-      var value=SF.safeMedia(source.value.trim());
-      if(source.value.trim()&&!value){message.textContent='Use an image URL, asset path or uploaded image.';return;}
-      s.image=value;s.imageFit=fit.value;close();touched();draw();
-      var b=box.querySelector('[data-split-tool=edit-image]');if(b)b.focus();
-    });
-    upload.onchange=function(){
-      var file=upload.files&&upload.files[0];if(!file)return;
-      if(file.size>3.5*1024*1024){message.textContent='Choose an image smaller than 3.5 MB.';return;}
-      var attempt=++version,reader=new FileReader();save.disabled=true;message.textContent='Reading image…';
-      reader.onload=function(){if(closed||attempt!==version)return;var data=String(reader.result||''),test=new Image();
-        test.onload=function(){if(closed||attempt!==version)return;source.value=data;save.disabled=false;message.textContent='Image ready.';};
-        test.onerror=function(){if(closed||attempt!==version)return;save.disabled=false;message.textContent='That file could not be decoded as an image.';};test.src=data;
-      };
-      reader.onerror=function(){if(closed||attempt!==version)return;save.disabled=false;message.textContent='That file could not be read.';};reader.readAsDataURL(file);
-    };
-    dialog.appendChild(save);dialog.appendChild(UI.button('Cancel','ghost',close));
-    dialog.oncancel=function(e){e.preventDefault();close();};dialog.addEventListener('keydown',function(e){e.stopPropagation();});
-    box.appendChild(dialog);dialog.showModal();source.focus();
-  }
-
   function drawPreview() {
     var box = $('previewBox');
     if (!box) return;
@@ -1174,21 +1140,9 @@
     var node = SF.renderSlide(deck, s, slideOpts(sel));
     box.appendChild(node);
     bindCanvasContent(box,node,s);
-    var layers=SF.bindArtworkEditor(box,node,s,function(id,focusLabel){artworkToOpen={slideId:s.id,id:id,focusLabel:focusLabel};touched();draw();});
-    if(artworkToOpen){var pending=artworkToOpen;artworkToOpen=null;if(pending.slideId===s.id)layers.open(pending.id,pending.focusLabel);}
     SF.bindCanvasRegions(node,s,function(key){
       touched();draw();
       var handle=box && box.querySelector('button[data-move-item='+key+']');if(handle)/** @type {HTMLButtonElement} */ (handle).focus();
-    });
-
-    SF.bindCanvasCards(node,s,{
-      move:function(from,to){if(!SF.ContentTools.move(s,from,to))return;touched();draw();var handle=box && box.querySelector('[data-card-move="'+to+'"]');if(handle)/** @type {HTMLElement} */ (handle).focus();},
-      edit:function(index){SF.Custom.openCanvasEditor(box,s,'bullets.'+index,{onSave:function(){touched();draw();},onCancel:function(){repaint();}});}
-    });
-    SF.bindCanvasSplit(node,s,{
-      change:function(tool){touched();draw();var control=box && box.querySelector('[data-split-tool='+tool+']');if(control)/** @type {HTMLElement} */ (control).focus();},
-      edit:function(key){SF.Custom.openCanvasEditor(box,s,key,{onSave:function(){touched();draw();},onCancel:function(){repaint();}});},
-      image:function(){openCanvasImage(box,s);}
     });
 
     /* Swap sides, on the canvas rather than buried in the inspector.

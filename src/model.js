@@ -7,10 +7,6 @@ import { normalizeExploration, explorationValue, explorationCurve } from './deck
 import { createBoardRuntime } from "./boards/runtime.js";
 import { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes } from "./activities/catalogue.js";
 import { parsePerson, orgTree, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, SLIDE_TYPES, LAYOUT_GROUPS, INFO_LAYOUTS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, parseInfoLine, formatInfoLine, infoNumber, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
-import {bindCanvasSplit} from './render/canvas-split.js';
-import {bindCanvasCards} from './render/canvas-cards.js';
-import {normalizeArtwork,renderArtwork} from './render/artwork.js';
-import {bindArtworkEditor} from './render/artwork-editor.js';
 import { FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest } from "./deck/feedback.js";
 import { renderMarkdown, parseMarkdownDeck } from "./deck/markdown.js";
 import sampleDeck from "./samples/deck.json" with { type: "json" };
@@ -595,7 +591,6 @@ function normalizeSlide(raw) {
   /** @type {Slide} */
   var s = Object.assign(base, raw || {});
   s.id = s.id || uid();
-  if(raw && Object.hasOwn(raw,'artwork'))s.artwork=normalizeArtwork(raw.artwork);
   if (!SLIDE_TYPES[s.type]) s.type = 'content';
   if (!Array.isArray(s.bullets)) s.bullets = [];
   /* Options are read back off `raw` rather than off `s`. An older build
@@ -1505,7 +1500,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   slideHeight: slideHeight,
   THEMES: THEMES,
   DEFAULT_THEME, resolveTheme,
-  createCompositionRenderer, bindCanvasRegions, bindCanvasSplit, bindCanvasCards, normalizeArtwork, renderArtwork, bindArtworkEditor,
+  createCompositionRenderer, bindCanvasRegions,
   CHROME_SLOTS, chromePositions, setChromeSlot, supportsChromeRegions, applyChromeRegions,
   DESIGN_CONTROLS, designApplies,
   COMPOSITIONS: COMPOSITIONS,
