@@ -972,6 +972,112 @@ the timer can disagree and nothing notices. If the context slot read the
 slide's own `timeLimit`, the label on the wall and the countdown on the desk
 would agree by construction rather than by proofreading.
 
+## 14b. The row model: compose blocks into a frame, not onto a plane
+
+Proposed 2026-09-17, after freeform canvas editing was built and reverted.
+Nothing here is implemented. The numbers are measured; the design is not yet
+argued with, which is the point of writing it down.
+
+### The idea, as an analogy
+
+A good marketing page is sections in a grid. It is not a Photoshop artboard.
+The same distinction separates this proposal from what was reverted:
+
+| Web, modular and responsive | This proposal |
+| --- | --- |
+| Independent sections — header, card, gallery | Blocks in the body's own grid |
+| Fluid width: `%`, `fr`, `max-width` | **Spans of a row and column pitch**, never free `{x,y}` |
+| Flex and Grid for structure | The composition grid content already sits in |
+| Reflow when the viewport changes | Refit when theme, aspect or span changes — **structure stays** |
+| Absolute `top/left` posters | Freeform handles — what this is deliberately *not* |
+
+**The twist a slide adds:** a page is endlessly tall and breakpoint-fluid; a
+slide is a fixed stage. So "responsive" here means blocks share a row and
+column system *inside* 1280×720, and content that outgrows its span fails a
+measured check at authoring time rather than overflowing on a projector.
+
+### Why this rather than the freeform model
+
+Freeform gave every object five continuous, unbounded degrees of freedom —
+x, y, width, height, rotation. A span model gives a block two small integers.
+Bounded, serialisable, diffable, and it *reflows*, because a row is a ratio of
+the body rather than a pixel count. It also survives a theme change, which
+free coordinates cannot.
+
+The engine is already half-way there on one axis and nowhere on the other.
+Counted in `css/customize.css`:
+
+| | Occurrences |
+| --- | --- |
+| `grid-template-columns` | **17** |
+| `grid-template-rows` | **0** |
+
+The campaign has always thought in columns and has never once thought in
+rows. Vertical rhythm is flex, gaps, padding and `justify-content:center`,
+which is exactly why nothing snaps vertically today.
+
+The arithmetic is available: the body is `720 − 40 header − 32 footer −
+32/24 pad` = **exactly 592px**, a definite height. 8×74, 16×37 and 12×42+8
+all divide it exactly.
+
+### The measurement that should stop a retrofit
+
+494 rendered slides, every direct child of the body measured against four
+candidate grids. Mean and worst distance from a row line, in px:
+
+| Family | 8×74 | 12×42+8 | 16×37 | 24×17+8 |
+| --- | --- | --- | --- | --- |
+| **aiad27** | 19.8 / 37 | 13.0 / 25 | **7.9 / 18** | 5.8 / 12 |
+| northeastern | 19.1 / 45 | 12.2 / 30 | 9.0 / 23 | 7.2 / 15 |
+| ukbt | 20.0 / 45 | 14.9 / 30 | 10.7 / 22 | 6.8 / 15 |
+| studio | 24.1 / 43 | 13.4 / 28 | 11.6 / 22 | 8.2 / 15 |
+| brutal | 24.8 / 43 | 13.7 / 28 | 13.5 / 22 | 6.5 / 14 |
+
+AiAd27 is the most regular deck on every grid, which matches the intuition
+that it was drawn to a proportion. **But no grid puts more than 8% of slides
+fully within 6px of a row line**, and even AiAd27's worst edge is 12–18px out.
+
+So a row grid would not be *formalising* what exists. It would **move**
+existing content. That is the named-region trap in new clothing: impose it and
+494 slides reflow; make it opt-in and it reaches almost nothing, exactly as
+regions reach 0 of 252 NUL slides.
+
+*Caveat on these figures:* campaign slides have a `.cp-body` of 592px;
+other themes have no equivalent, so their rows were measured against `.pad`
+at 720px. AiAd27 winning is safe; the precise gap to the others is not.
+
+### The order that follows
+
+1. **Choose the pitch, then make the campaign land on it.** AiAd27 is already
+   within ~8px mean at 16×37. Moving its paddings and gaps onto the pitch is
+   a stylesheet change, not an engine change, and `check fit` verifies all 45
+   slides afterwards.
+2. **Then add spans**, because only now does a span mean something.
+3. **Then decide per theme** whether NUL and UKBT re-fit — as a deliberate,
+   reviewed reflow, never a silent one.
+
+Recommended pitch: **16 rows × 37px**. 24×17+8 scores better numerically but
+17px rows are too fine to author with; sixteen is coarse enough to mean
+something and is already the campaign's best realistic fit.
+
+### The guardrail
+
+`Look → Review slides & check fit` is the reason this is safe to attempt. It
+measures rendered boxes rather than counting characters, so "this block needs
+five rows and has four" is a number, not an opinion — and it already runs
+across both aspect ratios. A span model without a measured fit check is just
+a new way to overflow.
+
+### Open questions
+
+- What happens when content exceeds its span: refuse, auto-grow and push, or
+  shrink type? Each is defensible; the deck's promise is that the room can
+  read it, which argues against shrink.
+- Do columns get a pitch too, or stay per-composition as today?
+- Is a span authored per slide, or per composition with per-slide override?
+- Decorative artwork stays out of this. Freeform remains the right model for
+  a decorative plane, and the wrong one for content.
+
 ## 15. The plan, in order
 
 Each step depends on the one before.
