@@ -227,6 +227,86 @@ survives a theme change.
   make a box taller, so it cannot clip a transform inside it. Do not design
   around this; it is already fine.
 
+## Proposed: flip the slide to edit the backdrop
+
+Not built. Recorded because the gap is real and the shape is right.
+
+### The gap, measured
+
+There is **no way to put your own image behind the presentation content.**
+What exists:
+
+| Control | What it actually does |
+| --- | --- |
+| `design.background` | *a solid colour*, nothing more |
+| `design.backdrop` | an animated `drift`/`grid`/`glow` in theme colours, and only on `title` and `section` |
+| `slide.image` | **content**, consumed by the split/image/gallery layouts — not a backdrop |
+| theme art (`nu-art`, `studio-art`) | theme-owned, no editor path at all |
+
+Every `background-image` in the renderer is content. So a backdrop image is
+not merely hard to reach; there is no field for it.
+
+### The proposal
+
+A button that **flips the slide over.** The front is the structured face —
+slots, rows, columns, everything in this document. The back is the backdrop:
+images and patterns, moved freely, with the content shown as a dimmed ghost so
+you can see what you are positioning behind.
+
+### Why this is a better shape than the editor that was reverted
+
+This is not the reverted freeform editor again, and the difference is the
+whole point.
+
+That version put freeform handles on the **same surface** as the content, so
+the two competed for the same clicks. It needed a mode that made content
+pointer-transparent just so a background object could be selected at all —
+a fix that worked but left "Layers is open, so text is not clickable" as a
+side-effect nobody would guess.
+
+A flip separates the surfaces physically. Front is structured, back is
+freeform, and there is no ambiguity about which set of rules is in force,
+because you can see which face you are on. It also matches how people already
+think: a backdrop is *behind*, and you turn the thing around to get at it.
+
+And it keeps both methods without either one compromising:
+
+- content stays semantic, snapped, theme-safe, reflowing
+- backdrop stays free, because a decorative image genuinely wants `{x, y}`
+- the rule from the top of this document holds unchanged — **freeform for
+  decoration, never for content**
+
+### What to reuse rather than rebuild
+
+The reverted work already had the right data model, and it is in git history
+at `936c3a9`:
+
+- `src/render/artwork.js` — `plane: 'back' | 'front'` with x, y, width,
+  height, opacity, rotation and fit. **The back plane is exactly this
+  feature.** Only the front plane was competing with content.
+- `normalizeArtwork` was hardened properly: `javascript:` and
+  `data:text/html` sources stripped, CSS-injection colours rejected, unknown
+  kinds dropped, path-traversal ids replaced, every numeric clamped, list
+  capped at 40. Probed with hostile input. Do not write that again.
+- The direct-manipulation handles from `91c1043` — click to select, eight
+  resize handles, rotate with 15° snap, keyboard nudge — are the right
+  gestures for a freeform face.
+
+### Constraints to hold it to
+
+- **Exports carry the backdrop, not the editor.** The reverted smoke checked
+  a normalised render had zero `.artwork-frame`, `.artwork-handle` or panel
+  nodes while keeping the artwork itself. Keep that check.
+- **Contrast is the real risk.** The campaign's palette discipline assumes
+  flat grounds — the whole of §4 in the style guide is contrast ratios
+  against three solid colours. An arbitrary photograph behind 88px type
+  breaks that silently. A backdrop needs a scrim, or a measured contrast
+  check at the darkest and lightest sampled point, before it can be offered.
+- **Print and present parity.** The backdrop must render through
+  `SF.renderSlide` like everything else, or it exists only in the editor.
+- **The theme still owns theme art.** NUL's skyline and UKBT's objects stay
+  locked; a user backdrop is a new layer, not an override of a brand asset.
+
 ## The instruments — use these, do not eyeball
 
 | Tool | What it answers |
