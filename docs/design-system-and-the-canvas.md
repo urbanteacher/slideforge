@@ -1138,6 +1138,90 @@ five rows and has four" is a number, not an opinion — and it already runs
 across both aspect ratios. A span model without a measured fit check is just
 a new way to overflow.
 
+### The span map for `poster-art`, measured across all five covers
+
+Sketch, not an implementation. 16 rows x 37px in the 592px body; the two
+columns stay as they are (668.672 | 495.328, 12px gap).
+
+```
+         col A  text (668px)              col B  art (495px)
+row 1    ·                                ·                     ← 1 spare row
+row 2    ·                                ┌ art span, 14 rows ┐
+row 3    eyebrow      1 row   (21px ink)  │                   │
+row 4    · gap        1 row               │  490px artboard,  │
+row 5    ┌ heading    5 rows (2-line)     │  centred in its   │
+  …      │            or 8 rows (3-line)  │  span, NOT        │
+row 9/12 └                                │  stretched        │
+row 10   · gap        1 row               │                   │
+row 11   tagline      1 row   (32px ink)  │                   │
+  …      ·                                └───────────────────┘
+row 16   ·                                ·                     ← 1 spare row
+```
+
+**Spans round UP, because a span contains its block.** 275px of heading does
+not fit 7 rows (259px); it needs 8. This is the rule that makes the model
+honest — a span is never smaller than its content, so overflow is impossible
+by construction rather than by luck.
+
+| Block | Ink | Span | Slack |
+| --- | --- | --- | --- |
+| eyebrow | 21px | **1 row** (37) | 16px |
+| heading, 2 lines | 183px | **5 rows** (185) | 2px |
+| heading, 3 lines | 275px | **8 rows** (296) | 21px |
+| tagline | 32px | **1 row** (37) | 5px |
+| art | 490px | **14 rows** (518) | 28px |
+
+Stack totals **9 rows** on a 2-line cover and **12** on a 3-line one.
+
+### The three decisions, answered by measurement
+
+**1. The heading span is variable, not fixed.** Creative, Responsible and
+Future are two lines (5 rows); Safe and Smart are three (8 rows). Forcing
+three lines into five rows means dropping the type to about 72px, which
+contradicts the 88px top step the campaign deliberately set — see the change
+log for `--a27-display-short`. So the span follows the content.
+
+The consequence is the actual model: because the stack length varies, **you
+cannot author absolute row lines.** You author *spans plus an anchor rule*,
+and let the stack flow. A fixed lattice map would need one per headline
+length.
+
+**2. Margins become row gaps.** The rhythm today is `margin-bottom: 26px` on
+the eyebrow and `margin-top: 32px` on the tagline. Both become a 1-row gap and
+the margins go to 0. Cost: 26 → 37 (+11px) and 32 → 37 (+5px). The stack grows
+16px, which the anchor absorbs.
+
+**3. `align-items: center` becomes centre-to-nearest-whole-row.** This is the
+cheapest anchor available, and it is cheap because the current design is
+already nearly there:
+
+| Cover | Lines | Stack rows | Start row | New ink top | Today | Shift |
+| --- | --- | --- | --- | --- | --- | --- |
+| creative | 2 | 9 | 5 | 148px | 147px | **+1px** |
+| responsible | 2 | 9 | 5 | 148px | 147px | **+1px** |
+| future | 2 | 9 | 5 | 148px | 147px | **+1px** |
+| safe | 3 | 12 | 3 | 74px | 101px | **−27px** |
+| smart | 3 | 12 | 3 | 74px | 101px | **−27px** |
+| art (all five) | — | 14 | 2 | 51px | 49px | **+2px** |
+
+Three of five covers move by a pixel. The art moves by two, because the span
+*contains* the 490px artboard rather than stretching it. Only the two 3-line
+covers move visibly, and they move up 27px.
+
+The alternative anchor — top-align every stack at a fixed row — was rejected
+on this evidence: it would move the 2-line covers up 74px.
+
+### What this sketch does not settle
+
+- It is **one composition of ten**. The other nine — `voice`, `ballot`,
+  `prompt`, `rules`, `commitment`, `comparison`, `reveal-map`, `credits`,
+  `lanes` — each need the same treatment, and the layout bank adds thirty-odd
+  more recipes on top.
+- Columns are left alone. Whether they get a pitch too is still open.
+- Full-bleed stays an escape from the grid, not a span.
+- Nothing here is worth building until a second composition is mapped and the
+  anchor rule survives it. One slide type agreeing is not a system.
+
 ### Open questions
 
 - What happens when content exceeds its span: refuse, auto-grow and push, or
