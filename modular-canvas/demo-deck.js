@@ -1,6 +1,13 @@
 /* Lab-only: apply Safe-style slot lattice to all 97 NUL layout-bank slides.
    Prototype — does not write Library decks or production CSS. */
 const SF = window.SF;
+/* The formatting toolbar reports through SF.toast, which the shell owns and this
+   page does not load. Without a shim, "select the words first" throws instead. */
+if (!SF.toast) SF.toast = (message) => {
+  const el = document.querySelector('#demo-deck .demo-status');
+  if (el) el.textContent = String(message);
+};
+if (!SF.slideJumpTarget) SF.slideJumpTarget = () => null;
 const LESSON = 'layout-bank';
 const baseline = SF.buildLesson(LESSON);
 let deck = structuredClone(baseline);
@@ -12,7 +19,9 @@ let flipMode = 'content';
 let lastMove = '';
 let selectedArt = null;
 /** Click ⇄ twice to swap any two Demo features (same slide or across slides). */
-let swapArm = null;
+/* The open feature picker, if any. Replaces the old arm-then-click-another-slot
+   swap, which exchanged slot geometry rather than changing what the slide is. */
+let featurePicker = null;
 deck.showSlideNumbers = true;
 
 /* Recipes: [selector, label, col, cols, row, rows]
@@ -370,31 +379,112 @@ function swapSlotGeometry(recipe, i, j) {
   return { a: a[1], b: b[1] };
 }
 
-function clearSwapArm(body) {
-  swapArm = null;
-  body?.querySelectorAll('.demo-slot-swap-armed, .demo-slot-swap-target').forEach((n) => {
-    n.classList.remove('demo-slot-swap-armed', 'demo-slot-swap-target');
-  });
-  body?.querySelectorAll('.demo-slot-swap.is-armed, .demo-slot-swap.is-target').forEach((n) => {
-    n.classList.remove('is-armed', 'is-target');
-  });
+/* Which features can this slide become, and what carries over.
+   Reuses the app's own layout machinery rather than inventing a parallel list:
+   SF.SLIDE_TYPES declares every layout, SF.DECK_TYPES is the authorable subset,
+   SF.BULLET_LAYOUTS is the ones that take bullet pits, and SF.prepareLayout does
+   the conversion — the same call the editor's layout picker makes. */
+function featureOptions(slide) {
+  const groups = [];
+  const points = (slide.bullets || []).filter((b) => String(b).trim()).length;
+  /* Grouped by what each layout says about itself, matching js/editor.js. A type
+     with no group is authorable but not choosable as a shape — `join` is inserted
+     by the live flow — so an ungrouped type is excluded on purpose, not lost. */
+  const placed = new Set();
+  const describe = (t) => {
+    const spec = SF.SLIDE_TYPES[t];
+    const takesPoints = SF.BULLET_LAYOUTS.includes(t);
+    const carries = [];
+    if (slide.title) carries.push('heading');
+    if (slide.subtitle) carries.push('subtitle');
+    /* prepareLayout never deletes a field it cannot render, so a swap is
+       reversible: the points are still in the data, just not on the slide. */
+    if (points) carries.push(takesPoints ? `${points} points` : `${points} points (kept, not shown)`);
+    return { type: t, label: spec.label, icon: spec.icon, takesPoints, carries };
+  };
+  for (const [key, label] of SF.LAYOUT_GROUPS) {
+    const items = SF.DECK_TYPES.filter((t) => SF.SLIDE_TYPES[t].group === key);
+    items.forEach((t) => placed.add(t));
+    if (items.length) groups.push({ key, label, items: items.map(describe) });
+  }
+  return groups;
+}
+
+function closeFeaturePicker() {
+  featurePicker?.remove();
+  featurePicker = null;
   section.classList.remove('demo-swap-picking');
 }
 
-function paintSwapTargets(body) {
-  if (!swapArm || !body) return;
-  for (const box of body.querySelectorAll('.safe-slot')) {
-    const i = Number(box.dataset.recipeIndex);
-    const btn = box.querySelector('.demo-slot-swap');
-    if (swapArm.slideIndex === index && i === swapArm.recipeIndex) {
-      box.classList.add('demo-slot-swap-armed');
-      btn?.classList.add('is-armed');
-    } else {
-      box.classList.add('demo-slot-swap-target');
-      btn?.classList.add('is-target');
+function openFeaturePicker(button, slide, slotName) {
+  closeFeaturePicker();
+  const pop = document.createElement('div');
+  pop.className = 'demo-feature-pop';
+  pop.setAttribute('role', 'dialog');
+  pop.setAttribute('aria-label', 'Swap this slide\u2019s feature');
+  const points = (slide.bullets || []).filter((b) => String(b).trim()).length;
+  pop.innerHTML =
+    `<header><strong>Swap feature</strong>` +
+    `<span>${slotName ? slotName + ' \u00b7 ' : ''}now: ${SF.SLIDE_TYPES[slide.type]?.label || slide.type}</span></header>` +
+    `<p class="demo-feature-note">The heading always carries over. ` +
+    (points
+      ? `Your ${points} point${points === 1 ? '' : 's'} carry into any layout that takes points; elsewhere they stay in the data, so the swap is reversible.`
+      : `Nothing is deleted \u2014 fields a layout cannot show are kept, so you can swap back.`) +
+    `</p>`;
+  for (const group of featureOptions(slide)) {
+    const box = document.createElement('div');
+    box.className = 'demo-feature-group';
+    box.innerHTML = `<h4>${group.label}</h4>`;
+    const list = document.createElement('div');
+    list.className = 'demo-feature-list';
+    for (const item of group.items) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'demo-feature-option' + (item.type === slide.type ? ' is-current' : '');
+      btn.dataset.feature = item.type;
+      btn.disabled = item.type === slide.type;
+      btn.title = item.carries.length ? `Carries over: ${item.carries.join(', ')}` : 'Starts this feature fresh';
+      btn.innerHTML =
+        `<span class="demo-feature-icon" aria-hidden="true">${item.icon || '\u25a6'}</span>` +
+        `<span class="demo-feature-label">${item.label}</span>` +
+        (points && item.takesPoints ? `<span class="demo-feature-keep">keeps points</span>` : '');
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        applyFeature(slide, item.type, slotName);
+      });
+      list.append(btn);
     }
+    box.append(list);
+    pop.append(box);
   }
+  section.append(pop);
+  featurePicker = pop;
   section.classList.add('demo-swap-picking');
+
+  /* Anchor under the button, then pull back inside the section if it would spill. */
+  const anchor = button.getBoundingClientRect();
+  const host = section.getBoundingClientRect();
+  pop.style.top = `${anchor.bottom - host.top + 6}px`;
+  pop.style.left = `${Math.max(8, Math.min(anchor.left - host.left, host.width - pop.offsetWidth - 8))}px`;
+  pop.querySelector('.demo-feature-option:not([disabled])')?.focus();
+}
+
+function applyFeature(slide, type, slotName) {
+  const was = SF.SLIDE_TYPES[slide.type]?.label || slide.type;
+  const pointsBefore = (slide.bullets || []).filter((b) => String(b).trim()).length;
+  closeFeaturePicker();
+  SF.prepareLayout(slide, type);
+  /* Positions belonged to the old feature. Drop them so the new one takes its
+     own recipe instead of inheriting spans that were measured for something else. */
+  delete slide.mockRecipe;
+  render().then((result) => {
+    const now = SF.SLIDE_TYPES[type]?.label || type;
+    const shown = pointsBefore && SF.BULLET_LAYOUTS.includes(type);
+    lastMove = `${slotName ? slotName + ': ' : ''}${was} \u2192 ${now}` +
+      (pointsBefore ? `, ${pointsBefore} points ${shown ? 'carried' : 'kept in the data'}` : '');
+    reportSwapFit(lastMove, result);
+  });
 }
 
 function reportSwapFit(label, result) {
@@ -429,74 +519,26 @@ function bindSlotDrag(root, slide, body) {
     const swapBtn = document.createElement('button');
     swapBtn.type = 'button';
     swapBtn.className = 'demo-slot-swap';
-    swapBtn.title =
-      'Swap with any feature: click ⇄ here, then ⇄ on another slot (this slide or another). Fit is re-checked.';
-    swapBtn.setAttribute('aria-label', `Swap ${box.dataset.name}`);
-    swapBtn.textContent = '⇄';
+    swapBtn.title = "Swap this slide's feature \u2014 pick from the list. The heading carries over.";
+    swapBtn.setAttribute('aria-label', `Swap feature on this slide (${box.dataset.name})`);
+    swapBtn.setAttribute('aria-haspopup', 'dialog');
+    swapBtn.textContent = '\u21c4';
     tools.append(swapBtn);
 
     swapBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       if (flipMode === 'artwork') return;
-
-      if (!swapArm) {
-        swapArm = {
-          slideIndex: index,
-          recipeIndex: idx,
-          name: box.dataset.name || recipe[idx][1],
-        };
-        paintSwapTargets(body);
-        status.dataset.fits = 'swap';
-        status.textContent = `Swap armed: ${swapArm.name}. Click ⇄ on another feature (navigate if needed). Esc cancels.`;
+      if (featurePicker) {
+        closeFeaturePicker();
         return;
       }
-
-      if (swapArm.slideIndex === index && swapArm.recipeIndex === idx) {
-        clearSwapArm(body);
-        status.textContent = 'Swap cancelled.';
-        return;
-      }
-
-      const fromSlide = deck.slides[swapArm.slideIndex];
-      const fromRecipe = ensureMockRecipe(fromSlide);
-      const toRecipe = ensureMockRecipe(slide);
-      const fromIdx = swapArm.recipeIndex;
-      const fromName = swapArm.name;
-      const toName = box.dataset.name || toRecipe[idx][1];
-
-      if (swapArm.slideIndex === index) {
-        const swapped = swapSlotGeometry(toRecipe, fromIdx, idx);
-        clearSwapArm(body);
-        if (!swapped) return;
-        render().then((result) => reportSwapFit(`Swapped ${swapped.a} ↔ ${swapped.b}`, result));
-        return;
-      }
-
-      if (!fromRecipe[fromIdx] || !toRecipe[idx]) {
-        clearSwapArm(body);
-        status.textContent = 'Swap failed — slot missing on one of the slides.';
-        return;
-      }
-      const a = fromRecipe[fromIdx];
-      const b = toRecipe[idx];
-      const aPos = [a[2], a[3], a[4], a[5]];
-      a[2] = b[2];
-      a[3] = b[3];
-      a[4] = b[4];
-      a[5] = b[5];
-      b[2] = aPos[0];
-      b[3] = aPos[1];
-      b[4] = aPos[2];
-      b[5] = aPos[3];
-      const label = `Swapped ${fromName} (slide ${swapArm.slideIndex + 1}) ↔ ${toName} (slide ${index + 1})`;
-      clearSwapArm(body);
-      render().then((result) => reportSwapFit(label, result));
+      openFeaturePicker(swapBtn, slide, box.dataset.name);
     });
 
     grip.addEventListener('pointerdown', (e) => {
       if (e.button !== 0) return;
-      if (swapArm) clearSwapArm(body);
+      closeFeaturePicker();
       e.preventDefault();
       e.stopPropagation();
       const spec = recipe[idx];
@@ -655,7 +697,6 @@ function bindSlotDrag(root, slide, body) {
     });
   }
 
-  if (swapArm) paintSwapTargets(body);
 }
 
 function filteredIndexes() {
@@ -988,6 +1029,24 @@ function editable(root, slide, measure) {
           measure();
           n.blur();
         }
+      });
+      /* Bold, italic, underline, highlight, colour and links come from the app's
+         own canvas editor (SF.Custom.openCanvasEditor) rather than a lab copy, so
+         the marks land in slide.formatting and paint through the same renderer
+         path. Typing stays in place; double-click asks for the toolbar. */
+      n.addEventListener('dblclick', (e) => {
+        if (!SF.Custom || !SF.Custom.openCanvasEditor) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const box = n.closest('.safe-slot') || n.parentElement;
+        n.blur();
+        SF.Custom.openCanvasEditor(box, slide, key, {
+          onSave: () => {
+            lastMove = `Formatted ${key}`;
+            render();
+          },
+          onCancel: () => render(),
+        });
       });
     });
   }
@@ -1342,9 +1401,9 @@ new ResizeObserver(fit).observe(stage);
 
 section.addEventListener('keydown', (e) => {
   if (e.target.closest('[contenteditable]')) return;
-  if (e.key === 'Escape' && swapArm) {
+  if (e.key === 'Escape' && featurePicker) {
     e.preventDefault();
-    clearSwapArm(stage.querySelector('.safe-body'));
+    closeFeaturePicker();
     status.textContent = 'Swap cancelled.';
     return;
   }

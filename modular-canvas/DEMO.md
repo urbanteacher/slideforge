@@ -17,9 +17,8 @@ when content outgrows a span. Production northeastern CSS is not modified.
   with Back/Front, drag on the canvas to snap. **Flip · content** returns to slot
   editing. Poses live on `slide.mockArt` (`plane`, `hidden`, `locked`, `order`, `x`, `y`).
   This is not the reverted always-on Layers panel — the stack only appears on the art face.
-- Edit text on the canvas; **drag the ⠿ grip** on a slot to move it on the
-  lattice (snaps to columns/rows) or drop onto another slot to swap. **Reset this
-  slide** / **Download mock JSON**.
+- Edit text on the canvas. **⠿** moves a slot; **⇄** opens the feature picker.
+  **Reset this slide** / **Download mock JSON**.
 
 ## Latest audit (lab)
 
@@ -132,6 +131,44 @@ Expects 97 slides, need-space ≤ 1 (the one known over-budget slide) and no mor
 than 44 slides under the 20px floor. Both budgets equal the current state on
 purpose: any slack lets a regression hide inside it. The legibility budget is a
 ratchet against getting worse, not a claim that 24 is acceptable.
+
+## Swapping the feature
+
+**⇄** pops a picker of every shape this slide can become. It is the app's own
+layout machinery, not a lab copy: `SF.SLIDE_TYPES` supplies the labels and icons,
+`SF.LAYOUT_GROUPS` the grouping, `SF.DECK_TYPES` the authorable set, and
+`SF.prepareLayout` does the conversion — the same call `js/editor.js` makes.
+
+**The heading always carries over, and nothing is deleted.** `prepareLayout` only
+sets the type and seeds fields the new shape needs; a field the new shape cannot
+render stays in the data, so the swap is reversible. Options that take bullet pits
+are marked *keeps points*, which is exactly `SF.BULLET_LAYOUTS` — so bullets to a
+table shows the heading and table, with the points still there if you swap back.
+
+Positions are dropped on a swap (`delete slide.mockRecipe`), because spans measured
+for the old shape mean nothing to the new one. Fit is re-checked immediately.
+
+An authorable type with **no** group is excluded on purpose, matching the editor:
+`join` is inserted by the live flow rather than chosen as a shape. The smoke
+asserts the picker and the editor agree on that set, so neither can drift.
+
+This replaced a two-click arm that exchanged **slot geometry** between two slots —
+including across slides. That moved boxes around; it never changed what the slide
+was, which is what "swap this for a chart" means.
+
+## Formatting text
+
+Double-click any text on the canvas and the app's own editor opens:
+`SF.Custom.openCanvasEditor` with the shared **B / I / U / ▰ / Clear / Link**
+toolbar, colour picker and ⌘B/⌘I/⌘U. Marks land in `slide.formatting` and paint
+through `SF.Custom.paint` inside `rich()`, so they survive a re-render and behave
+the same here as in the editor. Typing stays in place; only formatting needs the
+toolbar.
+
+The lab loads `js/customize.js` for this. It calls `SF.toast` and
+`SF.slideJumpTarget`, which the shell owns and this page does not load, so both
+are shimmed — without them "select the words you want to format first" throws
+instead of reporting. Loading it does not move the audit: still 96 of 97.
 
 ## Rearranging
 

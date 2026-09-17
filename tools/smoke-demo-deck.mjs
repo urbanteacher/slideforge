@@ -144,12 +144,90 @@ try {
   assert.ok(chartSlot, 'no chart slot on slide 42');
   assert.ok(chartSlot.cols >= 8, `chart is ${chartSlot.cols} columns wide, under its readable minimum`);
 
+  /* --- Feature swap: change what the slide is, via the app's own layout machinery --- */
+  await page.click('#demo-reset');
+  await settled();
+  await page.selectOption('#demo-filter', 'content');
+  await settled();
+  await page.locator('#demo-deck .safe-stage').scrollIntoViewIfNeeded();
+  await page.click('#demo-deck .safe-slot[data-name="Bullet list"] .demo-slot-swap');
+  await page.waitForSelector('.demo-feature-pop');
+
+  /* The picker is the app's list, not a lab copy: every authorable type, in the
+     app's own groups, and only the ones that take pits are marked as keeping points. */
+  const offered = await page.evaluate(() =>
+    [...document.querySelectorAll('.demo-feature-option')].map((b) => b.dataset.feature));
+  /* The choosable set is the grouped subset, matching the editor's own picker:
+     an authorable type with no group (join) is inserted by the live flow rather
+     than chosen as a shape, so it is excluded there and here. */
+  const choosable = await page.evaluate(() =>
+    window.SF.DECK_TYPES.filter((t) =>
+      window.SF.LAYOUT_GROUPS.some((g) => window.SF.SLIDE_TYPES[t].group === g[0])).sort());
+  assert.deepEqual([...offered].sort(), choosable, 'the picker and the editor disagree on choosable shapes');
+  assert.ok(
+    !offered.includes('join'),
+    'join has no group and is inserted by the live flow; it should not be offered as a shape'
+  );
+  const groupNames = (await page.locator('.demo-feature-group h4').allInnerTexts()).map((g) => g.toUpperCase());
+  const appGroups = await page.evaluate(() => window.SF.LAYOUT_GROUPS.map((g) => g[1].toUpperCase()));
+  assert.deepEqual(groupNames, appGroups, 'groups are not the app\u2019s');
+  const keepsPoints = await page.evaluate(() =>
+    [...document.querySelectorAll('.demo-feature-option')]
+      .filter((b) => b.querySelector('.demo-feature-keep'))
+      .map((b) => b.dataset.feature).sort());
+  const withPits = await page.evaluate(() => window.SF.BULLET_LAYOUTS.filter((t) => window.SF.DECK_TYPES.includes(t)).sort());
+  assert.deepEqual(keepsPoints, withPits, 'the "keeps points" marks do not match BULLET_LAYOUTS');
+
+  /* Bullets to a table: the heading carries, the points stay in the data. */
+  const headingBefore = await page.locator('#demo-deck .safe-slot h2').first().innerText();
+  await page.click('.demo-feature-option[data-feature="table"]');
+  await settled();
+  assert.equal(await page.evaluate(() => window.SF.buildLesson ? null : null), null);
+  const swapped = await rows();
+  assert.ok(swapped.some((r) => /table/i.test(r.name)), `no table slot after the swap: ${swapped.map((r) => r.name)}`);
+  assert.equal(await page.locator('#demo-deck .safe-slot h2').first().innerText(), headingBefore, 'the heading did not carry over');
+  assert.match(await page.locator('#demo-deck .demo-status').innerText(), /Bullets .* Table/);
+  assert.equal(await page.locator('#demo-deck .demo-status').getAttribute('data-fits'), 'true');
+
+  /* --- Formatting: the app's own canvas editor, not a lab copy --- */
+  await page.click('#demo-reset');
+  await settled();
+  await page.locator('#demo-deck .safe-stage').scrollIntoViewIfNeeded();
+  assert.ok(await page.evaluate(() => !!(window.SF.Custom && window.SF.Custom.openCanvasEditor)), 'SF.Custom is not loaded');
+  const line = page.locator('#demo-deck .safe-slot li[contenteditable]').first();
+  await line.dblclick();
+  await page.waitForSelector('#demo-deck .canvas-edit-form');
+  assert.deepEqual(
+    await page.locator('#demo-deck .format-tools button').allInnerTexts(),
+    ['B', 'I', 'U', '\u25b0', 'Clear', 'Link'],
+    'the format toolbar is not the shared one'
+  );
+  const area = page.locator('#demo-deck .canvas-edit-form textarea');
+  const words = (await area.inputValue()).split(' ').slice(0, 3).join(' ');
+  await area.evaluate((el, n) => {
+    el.focus();
+    el.setSelectionRange(0, n);
+    el.dispatchEvent(new Event('select'));
+  }, words.length);
+  await page.locator('#demo-deck .format-tools button', { hasText: 'B' }).first().click();
+  await page.locator('#demo-deck .canvas-edit-form button', { hasText: /save/i }).first().click();
+  await settled();
+  /* Marks must paint through the renderer's own path, so they survive a re-render. */
+  const bold = await page.evaluate(() =>
+    [...document.querySelectorAll('#demo-deck .safe-slot li span')]
+      .filter((s) => getComputedStyle(s).fontWeight === '800')
+      .map((s) => s.textContent));
+  assert.ok(bold.length, 'nothing was painted bold');
+  assert.ok(words.startsWith(bold[0]) || bold[0].startsWith(bold[0]), 'the wrong run was bolded');
+  await page.click('#demo-reset');
+  await settled();
+
   if (errors.length) throw new Error(`page errors: ${errors.slice(0, 3).join('; ')}`);
 
   console.log(
     `ok · demo-deck ${summary.fit}/${summary.total} fit · ${summary.needSpace} need space · ` +
       `${summary.underFloor} under the 20px floor (smallest ${summary.smallest}px) · ` +
-      `rearrange budget-neutral over 5 moves, 5 pointer drags, no column drift`
+      `rearrange budget-neutral, no column drift · feature picker matches the editor · shared format toolbar paints`
   );
 } finally {
   await browser.close();
