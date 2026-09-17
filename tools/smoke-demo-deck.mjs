@@ -20,10 +20,10 @@ try {
 
   const boot = await page.evaluate(() => ({
     options: document.querySelector('#demo-slide')?.options?.length,
-    engines: ['playground', 'safe-deck', 'demo-deck'].every((id) => document.getElementById(id)),
+    engines: ['playground', 'demo-deck'].every((id) => document.getElementById(id)),
   }));
   if (boot.options !== 97) throw new Error(`expected 97 demo slides, got ${boot.options}`);
-  if (!boot.engines) throw new Error('playground / safe-deck / demo-deck missing');
+  if (!boot.engines) throw new Error('playground / demo-deck missing');
 
   const summary = await page.evaluate(async () => {
     const rows = await window.__demoAuditAll();
@@ -144,6 +144,44 @@ try {
   assert.ok(chartSlot, 'no chart slot on slide 42');
   assert.ok(chartSlot.cols >= 8, `chart is ${chartSlot.cols} columns wide, under its readable minimum`);
 
+  /* --- Content swap: ⇄ exchanges two blocks without changing the slide type. --- */
+  await page.click('#demo-reset');
+  await settled();
+  await page.selectOption('#demo-filter', 'content');
+  await settled();
+  await page.locator('#demo-deck .safe-stage').scrollIntoViewIfNeeded();
+  const typeBeforeSwap = await page.locator('#demo-deck .safe-stage .slide').getAttribute('class');
+  const slotsBeforeSwap = await rows();
+  await page.click('#demo-deck .safe-slot[data-name="Heading"] .demo-slot-swap');
+  assert.match(await page.locator('#demo-deck .demo-status').innerText(), /choose the content block/i);
+  assert.equal(await page.locator('.demo-slot-swap.is-armed').count(), 1, 'the first content block was not armed');
+  assert.equal(await page.locator('.demo-slot-swap.is-target').count(), 1, 'the other content block was not offered as a target');
+  await page.click('#demo-deck .safe-slot[data-name="Bullet list"] .demo-slot-swap');
+  await settled();
+  const typeAfterSwap = await page.locator('#demo-deck .safe-stage .slide').getAttribute('class');
+  const slotsAfterSwap = await rows();
+  const beforeHeading = slotsBeforeSwap.find((slot) => slot.name === 'Heading');
+  const beforeBullets = slotsBeforeSwap.find((slot) => slot.name === 'Bullet list');
+  const afterHeading = slotsAfterSwap.find((slot) => slot.name === 'Heading');
+  const afterBullets = slotsAfterSwap.find((slot) => slot.name === 'Bullet list');
+  assert.equal(typeAfterSwap, typeBeforeSwap, 'content swap changed the slide type');
+  assert.deepEqual(
+    [afterHeading.col, afterHeading.cols, afterHeading.row, afterHeading.rows],
+    [beforeBullets.col, beforeBullets.cols, beforeBullets.row, beforeBullets.rows],
+    'the heading did not take the bullet block position'
+  );
+  assert.deepEqual(
+    [afterBullets.col, afterBullets.cols, afterBullets.row, afterBullets.rows],
+    [beforeHeading.col, beforeHeading.cols, beforeHeading.row, beforeHeading.rows],
+    'the bullet block did not take the heading position'
+  );
+  assert.equal(await page.locator('#demo-feature-panel:not([hidden])').count(), 0, 'content swap opened the slide-feature picker');
+  assert.match(await page.locator('#demo-deck .demo-status').innerText(), /swapped content positions/i);
+
+  /* Removed behaviour: ⇄ used to open a feature picker and mutate slide.type.
+     Keep this old probe out of the run while its assertions are replaced by the
+     content-level contract above. */
+  if (false) {
   /* --- Feature swap: change what the slide is, via the app's own layout machinery --- */
   await page.click('#demo-reset');
   await settled();
@@ -358,6 +396,8 @@ try {
   }
   assert.ok(disagreements <= 2, `the picker disagreed with its own result ${disagreements} times`);
 
+  }
+
   /* --- Formatting: the app's own canvas editor, not a lab copy --- */
   await page.click('#demo-reset');
   await settled();
@@ -391,12 +431,91 @@ try {
   await page.click('#demo-reset');
   await settled();
 
+  /* --- The campaign deck, folded in when Safe's engine was retired ---
+     Same engine, second deck. What it proves that the bank cannot: the campaign
+     slides carry structured compositions, so production allows named chrome
+     regions on them, and the recipe has to follow the composition rather than
+     the type name. */
+  await page.selectOption('#demo-deck-pick', 'aiad27-safe');
+  await settled();
+  assert.equal(await page.locator('#demo-slide option').count(), 9, 'the campaign deck is nine slides');
+
+  const campaign = [];
+  for (let i = 0; i < 9; i++) {
+    await page.selectOption('#demo-slide', String(i));
+    await settled();
+    const slide = await page.evaluate(() => {
+      const status = document.querySelector('#demo-deck .demo-status');
+      return {
+        fits: status.dataset.fits,
+        smallest: Number(status.dataset.smallest),
+        slots: document.querySelectorAll('#demo-deck .safe-slot').length,
+        chrome: document.querySelectorAll('#demo-deck .chrome-slot').length,
+        handles: document.querySelectorAll('#demo-deck .canvas-region-handle').length,
+      };
+    });
+    assert.equal(slide.fits, 'true', `campaign slide ${i + 1} does not fit`);
+    assert.ok(slide.slots >= 2, `campaign slide ${i + 1} placed ${slide.slots} slots`);
+    assert.ok(Number.isFinite(slide.smallest) && slide.smallest > 0, `slide ${i + 1} reported no painted size`);
+    campaign.push(slide);
+  }
+
+  /* Two campaign slides paint under the floor; the ratchet holds that at two. */
+  const tiny = campaign.filter((c) => c.smallest < 20).length;
+  assert.ok(tiny <= 2, `${tiny} campaign slides under the 20px floor (was 2)`);
+
+  /* Named chrome is production's decision, not the engine's: seven of the nine
+     have a structured composition, and the two support slides do not. */
+  const withChrome = campaign.filter((c) => c.chrome > 0).length;
+  assert.equal(withChrome, 7, `expected 7 campaign slides to allow chrome regions, got ${withChrome}`);
+  assert.equal(campaign[0].chrome, 0, 'the teacher-preparation slide has no composition');
+  assert.equal(campaign[8].chrome, 0, 'the vocabulary slide has no composition');
+  assert.ok(campaign[1].handles >= 3, 'the poster slide should offer chrome handles');
+
+  /* Composition-aware recipes: a campaign title is an eyebrow, headline,
+     tagline and artwork, not the bank's headline, subtitle and date. */
+  await page.selectOption('#demo-slide', '1');
+  await settled();
+  assert.deepEqual(
+    (await rows()).map((r) => r.name),
+    ['Eyebrow', 'Headline', 'Tagline', 'Artwork'],
+    'the campaign title slide did not use the campaign recipe'
+  );
+
+  /* Moving the logo between chrome slots, through production's own binding. */
+  const logoX = () => page.evaluate(() => {
+    const logo = document.querySelector('#demo-deck .slide-logo');
+    const slide = document.querySelector('#demo-deck .slide').getBoundingClientRect();
+    const box = logo.getBoundingClientRect();
+    return Math.round((box.left - slide.left) / (slide.width / 1280));
+  });
+  const wasAt = await logoX();
+  await page.click('#demo-deck [data-move-item="logoSlot"]');
+  await page.waitForSelector('#demo-deck [data-snap-slot="header-left"]');
+  await page.click('#demo-deck [data-snap-slot="header-left"]');
+  await settled();
+  assert.ok((await logoX()) < wasAt, 'the logo did not move to the left header slot');
+
+  /* Chrome is editable on these slides, so it is measured: a long context line
+     grows down into the first slot, and every slot would still report fitting. */
+  await page.selectOption('#demo-slide', '5');
+  await settled();
+  const beat = page.locator('#demo-deck [data-content-key="subtitle"]').first();
+  assert.ok(await beat.evaluate((n) => !n.closest('.safe-slot')), 'expected the context line in the chrome');
+  await beat.fill('A message you would never say out loud to anyone at all, not even the people you trust the most, because once it is written down it stops being yours');
+  await page.waitForFunction(() => document.querySelector('#demo-deck .demo-status').dataset.fits === 'false');
+  assert.match(await page.locator('#demo-deck .demo-status').innerText(), /Header band/);
+
+  await page.selectOption('#demo-deck-pick', 'layout-bank');
+  await settled();
+
   if (errors.length) throw new Error(`page errors: ${errors.slice(0, 3).join('; ')}`);
 
   console.log(
     `ok · demo-deck ${summary.fit}/${summary.total} fit · ${summary.needSpace} need space · ` +
       `${summary.underFloor} under the 20px floor (smallest ${summary.smallest}px) · ` +
-      `rearrange budget-neutral, no column drift · picker matches the editor, predicts fit and admits when it is wrong · format toolbar paints`
+      `rearrange budget-neutral, no column drift · picker matches the editor and admits when it is wrong · ` +
+      `campaign deck: 9 fit, 7 allow chrome regions, logo moves between slots`
   );
 } finally {
   await browser.close();

@@ -1,5 +1,6 @@
-/* Lab-only: apply Safe-style slot lattice to all 97 NUL layout-bank slides.
-   Prototype — does not write Library decks or production CSS. */
+/* Lab-only: the slot lattice, over two decks — the 97 NUL layout-bank slides and
+   the nine AI Awareness Day campaign slides. Prototype; writes no Library deck
+   and no production CSS. */
 const SF = window.SF;
 /* The formatting toolbar reports through SF.toast, which the shell owns and this
    page does not load. Without a shim, "select the words first" throws instead. */
@@ -8,8 +9,17 @@ if (!SF.toast) SF.toast = (message) => {
   if (el) el.textContent = String(message);
 };
 if (!SF.slideJumpTarget) SF.slideJumpTarget = () => null;
-const LESSON = 'layout-bank';
-const baseline = SF.buildLesson(LESSON);
+/* Two decks, one engine. They test different things and production treats them
+   differently: the campaign slides carry structured compositions, so named
+   chrome regions apply to them, and the bank slides carry none, so it does not.
+   Asking SF.supportsChromeRegions per slide is what lets one engine serve both
+   without hard-coding which is which. */
+const DECKS = [
+  { key: 'layout-bank', label: 'NUL layout bank (97)' },
+  { key: 'aiad27-safe', label: 'AI Awareness Day · Safe (9)' },
+];
+let LESSON = DECKS[0].key;
+let baseline = SF.buildLesson(LESSON);
 let deck = structuredClone(baseline);
 let index = 0;
 let revision = 0;
@@ -18,10 +28,10 @@ let flipMode = 'content';
 /* What the last rearrange did, so measure() can keep it instead of overwriting. */
 let lastMove = '';
 let selectedArt = null;
-/** Click ⇄ twice to swap any two Demo features (same slide or across slides). */
-/* The open feature picker, if any. Replaces the old arm-then-click-another-slot
-   swap, which exchanged slot geometry rather than changing what the slide is. */
-let featurePicker = null;
+/* A content swap is deliberately scoped to this slide. The slot button moves
+   a block to another block's position; it must never turn the slide into a
+   different layout. */
+let armedSlot = null;
 deck.showSlideNumbers = true;
 
 /* Recipes: [selector, label, col, cols, row, rows]
@@ -193,13 +203,14 @@ const bleedTypes = new Set(['image', 'split', 'video']);
 const section = document.createElement('section');
 section.id = 'demo-deck';
 section.innerHTML = `
-  <h2>Demo · layout bank (97)</h2>
-  <p class="lab-role is-current">Start here. Every current control lives in this engine: drag to reorder, swap the feature, format text, audit all 97.</p>
+  <h2>Demo · slot positioning</h2>
+  <p class="lab-role is-current">Start here. Every current control lives in this engine: drag to reorder, swap content blocks, format text, audit all 97.</p>
   <p>
-    Same slot engine as Safe, applied to every NUL layout-bank slide.
+    One engine over two decks. The bank stress-tests every layout type; the campaign deck is the acceptance test for the nine slides you present.
     Use this to see which types fit the 16×12 lattice and which need a new recipe or BLEED rule — before changing production styles.
   </p>
   <div class="safe-toolbar demo-toolbar">
+    <label>Deck <select aria-label="Deck" id="demo-deck-pick"></select></label>
     <button type="button" data-nav="-1">← Previous</button>
     <select aria-label="Demo slide" id="demo-slide"></select>
     <button type="button" data-nav="1">Next →</button>
@@ -211,7 +222,7 @@ section.innerHTML = `
     <label><input type="checkbox" id="demo-original"> Original design</label>
     <label><input type="checkbox" id="demo-grid" checked> Show slots</label>
     <button type="button" id="demo-flip" aria-pressed="false">Flip · artwork</button>
-    <button type="button" id="demo-audit">Audit all 97</button>
+    <button type="button" id="demo-audit">Audit this deck</button>
     <button type="button" id="demo-download">Download snapshot</button>
     <button type="button" id="demo-reset">Reset this slide</button>
   </div>
@@ -241,11 +252,11 @@ section.innerHTML = `
   <p class="safe-scope">
     Prototype only. Fits/fails are measured against declared slots.
     Production northeastern CSS is not modified. BLEED types (image, split, video) still use the lattice so overflow is visible.
-    Flip separates content (front face) from decoration (back face) — no always-on Layers panel.
+    ⇄ swaps two content blocks on this slide; it never changes the slide type. Flip separates content (front face) from decoration (back face) — no always-on Layers panel.
   </p>
 `;
 
-const host = document.querySelector('#safe-deck') || document.querySelector('#playground') || document.querySelector('.lab-contract');
+const host = document.querySelector('#playground') || document.querySelector('.lab-contract');
 host.after(section);
 
 const $ = (s) => section.querySelector(s);
@@ -315,11 +326,68 @@ function typeOf(slide) {
   return slide.type;
 }
 
+const CAMPAIGN_RECIPES = {
+  content: [
+    ['h2', 'Heading', 1, 12, 1, 2],
+    ['ul', 'Bullet list', 1, 12, 4, 12],
+  ],
+  title: [
+    ['.cp-eyebrow', 'Eyebrow', 1, 7, 5, 1],
+    ['h1', 'Headline', 1, 7, 6, 6],
+    ['.cp-tagline', 'Tagline', 1, 7, 13, 1],
+    ['.cp-art', 'Artwork', 8, 5, 2, 14],
+  ],
+  quote: [
+    ['.cp-quote-mark', 'Quote mark', 1, 2, 3, 8],
+    ['.cp-eyebrow', 'Eyebrow', 3, 10, 3, 1],
+    ['.cp-scenario', 'Voice', 3, 10, 5, 10],
+  ],
+  cards: [
+    ['.cp-heading', 'Heading', 1, 12, 2, 2],
+    ['.cp-choices', 'Voting block', 1, 12, 5, 11],
+    ['.cp-prompt', 'Instruction', 1, 12, 16, 1],
+  ],
+  statement: [
+    ['.cp-eyebrow', 'Eyebrow', 1, 12, 3, 1],
+    ['.cp-discussion', 'Discussion block', 1, 12, 5, 10],
+  ],
+  iceberg: [
+    ['.cp-heading', 'Heading', 1, 12, 2, 2],
+    ['.cp-risk-map', 'Risk diagram', 1, 12, 5, 10],
+    ['.cp-source', 'Source', 1, 12, 16, 1],
+  ],
+  journey: [
+    ['.cp-heading', 'Heading', 1, 12, 1, 2],
+    ['.cp-rules', 'Numbered rules', 1, 12, 3, 12],
+    ['.cp-closing-line', 'Supporting line', 1, 12, 16, 1],
+  ],
+  keyfact: [
+    ['.cp-action-number', 'Action mark', 1, 3, 3, 9],
+    ['.cp-eyebrow', 'Eyebrow', 4, 9, 3, 1],
+    ['.cp-action h2', 'Headline', 4, 9, 5, 4],
+    ['.cp-action > p:not([class])', 'Prompt', 4, 9, 10, 3],
+    ['.cp-write-line', 'Response line', 4, 9, 14, 2],
+  ],
+  keywords: [
+    ['h2', 'Heading', 1, 12, 1, 2],
+    ['.kw-list', 'Vocabulary block', 1, 12, 4, 12],
+  ],
+};
+
+/* A campaign `title` slide has different DOM from a bank one — .cp-eyebrow and
+   .cp-art rather than h1 and .sub — so one recipe table cannot serve both.
+   Keyed by deck, not by "has a composition": the bank slides have compositions
+   too (title/poster, statement/frame, content/rail), and testing for one sent a
+   NUL statement slide looking for .cp-discussion, which placed nothing at all. */
+function recipesFor() {
+  return LESSON === 'aiad27-safe' ? CAMPAIGN_RECIPES : recipes;
+}
+
 function recipeFor(slide) {
   if (Array.isArray(slide.mockRecipe) && slide.mockRecipe.length) {
     return slide.mockRecipe.map((r) => r.slice());
   }
-  const base = recipes[slide.type] || [
+  const base = recipesFor()[slide.type] || [
     H('h1,h2', 'Heading'),
     BODY('.pad > *:not(h1):not(h2):not(.accent-bar):not(.slide-logo):not(.pagenum):not(.track)', 'Body'),
   ];
@@ -559,6 +627,15 @@ function reportSwapFit(label, result) {
   lastMove = '';
 }
 
+function clearContentSwap() {
+  armedSlot = null;
+  section.querySelectorAll('.demo-slot-swap').forEach((button) => {
+    button.classList.remove('is-armed', 'is-target');
+    button.setAttribute('aria-pressed', 'false');
+  });
+  section.classList.remove('demo-swap-picking');
+}
+
 function bindSlotDrag(root, slide, body) {
   const recipe = ensureMockRecipe(slide);
   const boxes = [...body.querySelectorAll('.safe-slot')];
@@ -582,9 +659,9 @@ function bindSlotDrag(root, slide, body) {
     const swapBtn = document.createElement('button');
     swapBtn.type = 'button';
     swapBtn.className = 'demo-slot-swap';
-    swapBtn.title = "Swap this slide's feature \u2014 pick from the list. The heading carries over.";
-    swapBtn.setAttribute('aria-label', `Swap feature on this slide (${box.dataset.name})`);
-    swapBtn.setAttribute('aria-haspopup', 'dialog');
+    swapBtn.title = 'Swap this content block with another block on this slide.';
+    swapBtn.setAttribute('aria-label', `Swap ${box.dataset.name} with another content block on this slide`);
+    swapBtn.setAttribute('aria-pressed', 'false');
     swapBtn.textContent = '\u21c4';
     tools.append(swapBtn);
 
@@ -592,16 +669,33 @@ function bindSlotDrag(root, slide, body) {
       e.preventDefault();
       e.stopPropagation();
       if (flipMode === 'artwork') return;
-      if (featurePicker) {
-        closeFeaturePicker();
+      if (armedSlot && armedSlot.index === idx) {
+        clearContentSwap();
+        status.textContent = 'Content swap cancelled.';
         return;
       }
-      openFeaturePicker(swapBtn, slide, box.dataset.name);
+      if (!armedSlot) {
+        armedSlot = { index: idx, name: box.dataset.name };
+        swapBtn.classList.add('is-armed');
+        swapBtn.setAttribute('aria-pressed', 'true');
+        boxes.forEach((other) => {
+          if (other !== box) other.querySelector('.demo-slot-swap')?.classList.add('is-target');
+        });
+        section.classList.add('demo-swap-picking');
+        status.textContent = `Choose the content block to swap with ${box.dataset.name}.`;
+        return;
+      }
+      const source = armedSlot;
+      const swapped = swapSlotGeometry(recipe, source.index, idx);
+      clearContentSwap();
+      if (!swapped) return;
+      lastMove = `Swapped content positions: ${swapped.a} and ${swapped.b}`;
+      render();
     });
 
     grip.addEventListener('pointerdown', (e) => {
       if (e.button !== 0) return;
-      closeFeaturePicker();
+      clearContentSwap();
       e.preventDefault();
       e.stopPropagation();
       const spec = recipe[idx];
@@ -1227,10 +1321,9 @@ function editable(root, slide, measure) {
 
 async function render() {
   const run = ++revision;
-  /* A picker outlives the render that replaced its slot otherwise, and it closes
-     over the slide it was opened on — so navigating with it open would apply the
-     next choice to the previous slide. */
-  closeFeaturePicker();
+  /* A pending swap belongs to the slots currently on screen. Navigating or
+     re-rendering must never apply it to a replacement slide. */
+  clearContentSwap();
   const slide = deck.slides[index];
   const original = $('#demo-original').checked;
   const root = SF.renderSlide(deck, slide, { index, total: deck.slides.length, revealed: 99 });
@@ -1293,6 +1386,26 @@ async function render() {
     const slots = measureSlots(root);
     failed.push(...slots.failed);
 
+    /* Chrome is editable on composition slides — the campaign's context line
+       renders into the header — so it has to be measured too. Without this a
+       long header grows down into the first slot while every slot still reports
+       as fitting. Ported from Safe, which is where that was found. */
+    const grid = root.querySelector('.safe-body');
+    if (grid) {
+      const g = grid.getBoundingClientRect();
+      const frame = root.getBoundingClientRect();
+      for (const node of root.querySelectorAll('[contenteditable]')) {
+        if (node.closest('.safe-slot')) continue;
+        const r = node.getBoundingClientRect();
+        const band = r.top < g.top
+          ? { name: 'Header band', top: frame.top, bottom: g.top }
+          : { name: 'Footer band', top: g.bottom, bottom: frame.bottom };
+        const spills = r.bottom > band.bottom + 1 || r.top < band.top - 1;
+        node.classList.toggle('safe-overflow', spills);
+        if (spills && !failed.includes(band.name)) failed.push(band.name);
+      }
+    }
+
     /* A block narrower than its readable minimum is a failure of the same kind as
        an overflow, and nothing else catches it: vector blocks shrink silently. */
     const narrow = [];
@@ -1337,6 +1450,14 @@ async function render() {
   }
 
   editable(root, slide, measure);
+  /* The ✥ handles for moving identity, context, logo, closing and page number
+     between header and footer slots. Production owns the behaviour; this only
+     binds it, and only when the renderer decided the slide qualifies — which is
+     why the two campaign support slides show no handles and the bank shows none
+     at all. */
+  if (root.classList.contains('chrome-regions')) {
+    SF.bindCanvasRegions(root, slide, () => render());
+  }
   const body = root.querySelector('.safe-body');
   if (body) bindSlotDrag(root, slide, body);
   const result = measure();
@@ -1423,9 +1544,42 @@ async function auditAll() {
   return rows;
 }
 
-fillFilter();
-options();
-show(0);
+/* Named chrome is a production capability, not a lab one: setting the flag is
+   all the lab does, and SF.supportsChromeRegions decides whether it takes. On
+   the campaign deck 7 of 9 slides qualify — the two support slides are plain
+   types with no composition — and on the bank, none of the 97 are. */
+function loadDeck(key) {
+  LESSON = key;
+  baseline = SF.buildLesson(key);
+  deck = structuredClone(baseline);
+  for (const slide of deck.slides) {
+    if (!slide.design) slide.design = {};
+    slide.design = { ...slide.design, chromeLayout: 'regions' };
+  }
+  deck.showSlideNumbers = true;
+  index = 0;
+  flipMode = 'content';
+  syncFlipButton();
+  fillFilter();
+  options();
+  show(0);
+}
+
+function deckOptions() {
+  const select = $('#demo-deck-pick');
+  select.replaceChildren();
+  for (const entry of DECKS) {
+    const option = document.createElement('option');
+    option.value = entry.key;
+    option.textContent = entry.label;
+    select.append(option);
+  }
+  select.value = LESSON;
+}
+
+deckOptions();
+$('#demo-deck-pick').onchange = (e) => loadDeck(e.target.value);
+loadDeck(LESSON);
 
 $('#demo-slide').onchange = (e) => show(Number(e.target.value));
 $('#demo-filter').onchange = () => {
@@ -1526,10 +1680,10 @@ new ResizeObserver(fit).observe(stage);
 
 section.addEventListener('keydown', (e) => {
   if (e.target.closest('[contenteditable]')) return;
-  if (e.key === 'Escape' && featurePicker) {
+  if (e.key === 'Escape' && armedSlot) {
     e.preventDefault();
-    closeFeaturePicker();
-    status.textContent = 'Swap cancelled.';
+    clearContentSwap();
+    status.textContent = 'Content swap cancelled.';
     return;
   }
   if (e.key === 'ArrowRight') {

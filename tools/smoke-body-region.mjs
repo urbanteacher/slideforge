@@ -10,14 +10,14 @@ try{
  const page=await browser.newPage({viewport:{width:1500,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(`http://127.0.0.1:${port}/modular-canvas/preview.html`,{waitUntil:'networkidle'});
  await page.evaluate(async()=>{await document.fonts.ready;await Promise.all([...document.images].map(i=>i.decode().catch(()=>{})));});
- /* The overlay lab that drew .lab-body-frame is gone from preview.html; the three
-    engines mount real slides instead. The Safe mock swaps .cp-body out for its own
-    grid, so a composition region only exists on its original design; Demo keeps
-    .pad either way. No single screen carries all three kinds, so arrange each in
-    turn and accumulate — scale invariance is the property under test, not co-presence. */
+ /* The overlay lab that drew .lab-body-frame is gone from preview.html; the two
+    engines mount real slides instead. Slotting swaps .cp-body out for the lab's
+    own grid, so a composition region only exists on the original design — and
+    only on the campaign deck, since bank slides have no .cp-body at all. No
+    single screen carries all three kinds, so arrange each in turn and accumulate:
+    scale invariance is the property under test, not co-presence. */
  await page.waitForFunction(()=>[...document.querySelectorAll('.slide')].some(r=>r.querySelector('[data-body-region]')&&r.offsetWidth));
  await page.waitForSelector('#demo-slide');
- await page.check('#safe-original');
  const probe=()=>page.evaluate(()=>[...document.querySelectorAll('.slide')].flatMap(root=>{
   const frame=SF.measureBodyRegion(root);if(!frame)return [];
   const before={left:frame.left,top:frame.top,width:frame.width,height:frame.height};
@@ -36,6 +36,17 @@ try{
   await page.waitForFunction(k=>[...document.querySelectorAll('.slide')].some(r=>r.querySelector(`[data-body-region="${k}"]`)&&r.offsetWidth),kind);
   out.push(...await probe());
  }
+ /* The campaign deck on its original design is the only place a mounted
+    composition region exists — and only on a slide that has a composition: its
+    first slide is the plain teacher-preparation one, with no .cp-body at all. */
+ /* Each of these three triggers an async render; without settling between them
+    the next click lands on the previous deck and the wait below times out. */
+ const demoSettled=()=>page.waitForFunction(()=>{const n=document.querySelector('#demo-deck .demo-status');return !!n&&n.textContent!==''&&n.textContent!=='Measuring…';});
+ await page.selectOption('#demo-deck-pick','aiad27-safe');await demoSettled();
+ await page.check('#demo-original');await demoSettled();
+ await page.selectOption('#demo-slide','1');await demoSettled();
+ await page.waitForFunction(()=>[...document.querySelectorAll('.slide')].some(r=>r.querySelector('[data-body-region="composition"]')&&r.offsetWidth));
+ out.push(...await probe());
  const report={out,detached:await page.evaluate(()=>{
   const d=SF.buildLesson('pace-nul'),detached=SF.renderSlide(d,d.slides[0],{index:0,total:d.slides.length});
   return SF.measureBodyRegion(detached);

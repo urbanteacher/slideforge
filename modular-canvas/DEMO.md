@@ -1,6 +1,31 @@
-# Demo · layout-bank positioning deck
+# Demo · slot positioning
 
-Open `/modular-canvas/preview.html#demo-deck`.
+Open `/modular-canvas/preview.html#demo-deck`. One engine, two decks.
+
+## The two decks
+
+| Deck | What it proves |
+|------|----------------|
+| **NUL layout bank** (97) | every layout type against the 16 x 12 lattice |
+| **AI Awareness Day · Safe** (9) | the deck actually presented, and the only one where named chrome regions apply |
+
+They are not interchangeable, and the difference is production's, not the lab's.
+`SF.supportsChromeRegions` requires a **structured composition**, so the ✥ handles
+that move identity, context, logo, closing and page number between header and
+footer slots are available on **7 of the 9** campaign slides and on **none of the
+97** bank slides. The two campaign slides without them — teacher preparation and
+vocabulary — are plain types with no composition. Asking the gate per slide is
+what lets one engine serve both without hard-coding which is which.
+
+The recipe table is keyed by **deck**, not by "has a composition". The bank slides
+have compositions too — `title/poster`, `statement/frame`, `content/rail` — and
+testing for one sent a NUL statement slide hunting for `.cp-discussion` and
+placing nothing at all.
+
+Chrome is editable on composition slides, so it is measured: the campaign's
+context line renders into the header, and without a band check a long one grows
+25px down into the first slot while every slot still reports as fitting. That was
+found in the Safe engine and came across with it.
 
 Demo applies the same **Safe** slot lattice (16 rows × 12 columns inside the pad)
 to every slide in the NUL `layout-bank` lesson (97 slides). It is the stress test
@@ -320,3 +345,19 @@ Three, and no more: **playground** for free-typed content and theme switching,
 engine briefly held the derived-stack prototype; it is gone, and its behaviour and
 its tests live here instead. New positioning work belongs in Demo, because that is
 where all 97 slides can contradict it.
+
+## Retired: the Safe engine
+
+Safe was a second engine over the same lattice. It became a deck here, because
+the only thing it had that Demo lacked was `chromeLayout: 'regions'` — three
+lines setting a production flag — while Demo had the reorder, the feature picker,
+the fit estimate, the audit and the artwork flip. Keeping both meant fixes landed
+in one and not the other: for a while Safe had no legibility floor, read declared
+type size rather than painted, and reported a pass on a slide that placed
+nothing.
+
+Its chrome **map** panel did not come across. It listed the same six header and
+footer cells the ✥ handles already offer on the canvas, and two affordances for
+one job is how a prototype turns into clutter. Its audience filter and `n / 7`
+page numbering did not either: both faked a seven-slide show, and production
+numbering already accounts for hidden slides.
