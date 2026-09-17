@@ -1,5 +1,14 @@
 preview/
-*.png
 
-# Supplied undated props are runtime assets, not preview screenshots.
+# Preview screenshots are generated; the supplied campaign art is not.
+*.png
 !assets/props/*.png
+!assets/logos/*.png
+!assets/badges/*.png
+
+# Layered originals stay out. Six posters at 24-38MB each is 176MB, which would
+# be two thirds again on top of a 270MB repository, for files git cannot diff and
+# nothing here loads: the covers are authored SVGs in assets/brand/aiad27/.
+# They are byte-identical to the copies kept with the campaign working files
+# outside this repository, so this is a duplicate being dropped, not an original.
+*.psd

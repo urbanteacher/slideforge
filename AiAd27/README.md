@@ -62,7 +62,9 @@ progressive reveals use the normal SlideForge model.
 - `../js/render.js`: theme-independent structured compositions.
 - `../css/customize.css`: reusable composition geometry.
 - `../css/aiad27.css`: campaign styling, scoped to the five 2027 themes.
-- `assets/`: supplied logos, badges and props.
+- `assets/`: supplied logos, badges and props. The flat PNGs are committed; the
+  layered `.psd` posters are not, because they are 176MB of files nothing here
+  loads and they are kept with the campaign working files outside the repository.
 - `preview.html`: interactive design review.
 
 ```sh

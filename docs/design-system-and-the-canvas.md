@@ -454,9 +454,10 @@ thirty strings are compiled into the renderer instead of read from the deck:
 `'Keep humans in the loop'`, `'One choice I will make:'`, the per-strand poster
 words (`PRIVATE?`, `ASK FIRST`, …) and the whole `beat` map. All built with
 `el()`, not `rich()` — so none carries a `data-content-key` and none is
-reachable by any editing surface. Asset paths are compiled the same way
-(`'AiAd27/assets/props/' + {safe:'prop 11.png', …}`), so a deck is no longer
-self-contained: it depends on a folder inside this repository.
+reachable by any editing surface. Asset paths were compiled the same way
+(`'AiAd27/assets/props/' + {safe:'prop 11.png', …}`), which made a deck depend on
+a folder inside this repository — that went with `30ae026`, and the covers now
+reference authored SVGs in `assets/brand/aiad27/` instead.
 
 And one field was quietly redefined. `spectrum` carries a
 label / value / note triple where the value is a position on a scale; the
