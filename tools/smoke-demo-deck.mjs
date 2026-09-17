@@ -130,7 +130,19 @@ try {
   await settled();
   assert.match(contentAfterSwap.type, /layout-title/, 'content ⇄ changed the slide layout');
   assert.equal(contentAfterSwap.type, contentBeforeSwap.type, 'content ⇄ changed the slide type');
-  assert.deepEqual(contentAfterSwap.rows, contentBeforeSwap.rows, 'content ⇄ moved the slots instead of swapping content');
+  /* Which slots exist, in what order, over which columns — that is what ⇄ must
+     not touch. Their spans are no longer fixed: a block takes the lines its
+     content needs, so exchanging content is expected to move rows. */
+  const shape = (rows) => rows.map((r) => ({ name: r.name, col: r.col, cols: r.cols }));
+  assert.deepEqual(shape(contentAfterSwap.rows), shape(contentBeforeSwap.rows), 'content ⇄ moved the slots instead of swapping content');
+  /* And the lines did follow: an 84px display line handed the subtitle's words
+     needs more of them than the four the title composition authored. */
+  const headlineBefore = contentBeforeSwap.rows.find((r) => r.name === 'Headline');
+  const headlineAfter = contentAfterSwap.rows.find((r) => r.name === 'Headline');
+  assert.ok(
+    headlineAfter.rows > headlineBefore.rows,
+    `the headline kept ${headlineBefore.rows} lines instead of taking the lines its new content needs`
+  );
   assert.match(await page.locator('#demo-deck .demo-status').innerText(), /Swapped content/i);
   await page.click('#demo-reset');
   await settled();

@@ -23,6 +23,8 @@ let selectedArt = null;
 let contentSwapArmed = null;
 /* The open layout picker, if any. */
 let featurePicker = null;
+/* Re-render depth while a stack is settling into its measured lines. */
+let reflowPasses = 0;
 deck.showSlideNumbers = true;
 
 /* Recipes: [selector, label, col, cols, row, rows]
@@ -118,6 +120,23 @@ const recipes = {
 };
 
 const ROWS = 16;
+/* One line of the lattice. */
+const ROW_H = 36;
+/* How many lines a block needs. Sub-pixel is not a line: the same 1px tolerance
+   the app's own fit check uses, so a block landing exactly on a boundary is not
+   rounded up into a line it does not occupy. */
+function linesFor(px) {
+  return Math.max(1, Math.ceil((px - (SF.FIT_TOLERANCE ?? 1)) / ROW_H));
+}
+/* What a block in a rendered slot needs, or null when it does not spend lines.
+   Out of flow is out of the count: the caption on a full-bleed picture is an
+   absolutely positioned scrim drawn over the picture on purpose. */
+function linesNeeded(box) {
+  const node = box.firstElementChild;
+  if (!node) return null;
+  if (/^(absolute|fixed)$/.test(getComputedStyle(node).position)) return null;
+  return linesFor(node.scrollHeight);
+}
 
 /* Narrowest column span that keeps a block's own labels readable. A vector block
    cannot overflow — it scales to its box — so too-narrow is its only failure
@@ -191,6 +210,58 @@ function budgets(recipe) {
     out.push({ cols: group[0].cols, col: group[0].col, items: group, parts, used: cursor - 1 });
   }
   return out;
+}
+
+/* A block takes the lines its content needs, and what follows moves down.
+   Same walk as magneticMove — recover each gap from the running cursor, then
+   replay the stack — except this resizes instead of reordering, so the rhythm
+   between blocks survives a block growing through it.
+
+   Grow only. A block never gives back a line the design gave it: the empty lines
+   under a heading are composition, not slack, and shrinking every block to its
+   own text would pull all 97 slides up to the top of the body. So this is
+   dormant on a bank that fits, and only speaks when someone types past a span.
+
+   Past line 16 is allowed and reported, not refused — budgets() already counts a
+   group's gaps and spans against ROWS, and an over-budget stack says so. */
+function reflowRows(root, slide) {
+  const recipe = ensureMockRecipe(slide);
+  /* The authored span has to outlive the measurement, or a block that grew once
+     would never come back when the words are cut. Kept beside the effective
+     span, not in place of it. */
+  for (const spec of recipe) if (spec[6] == null) spec[6] = spec[5];
+
+  const need = new Map();
+  for (const box of root.querySelectorAll('.safe-slot')) {
+    const i = Number(box.dataset.recipeIndex);
+    const lines = linesNeeded(box);
+    if (Number.isInteger(i) && lines != null) need.set(i, lines);
+  }
+
+  let changed = false;
+  const seen = new Set();
+  for (let i = 0; i < recipe.length; i++) {
+    if (seen.has(i)) continue;
+    const group = columnGroup(recipe, i).sort((a, b) => a.row - b.row);
+    group.forEach((s) => seen.add(s.i));
+    let cursor = 1;
+    const gaps = group.map((s) => {
+      const gap = Math.max(0, s.row - cursor);
+      cursor = s.row + s.rows;
+      return gap;
+    });
+    let row = 1;
+    group.forEach((s, n) => {
+      const spec = recipe[s.i];
+      const rows = Math.max(spec[6], need.get(s.i) ?? spec[6]);
+      row += gaps[n];
+      if (spec[4] !== row || spec[5] !== rows) changed = true;
+      spec[4] = row;
+      spec[5] = rows;
+      row += rows;
+    });
+  }
+  return changed;
 }
 
 const bleedTypes = new Set(['image', 'split', 'video']);
@@ -1159,6 +1230,12 @@ function slotify(root, slide) {
     box.style.gridArea = `${row} / ${col} / span ${rows} / span ${cols}`;
     box.dataset.name = name;
     box.dataset.label = `${name} · ${rows}r × ${cols}c`;
+    /* The lines the recipe gave this block, which past line 16 is more than the
+       grid can hand it: the lattice defines 16 tracks, so a block pushed beyond
+       them paints in implicit auto tracks and measures short. The allocation is
+       what the block should be judged against; whether the slide can hold the
+       whole stack is budgets()' verdict, not this block's fault. */
+    box.dataset.rows = String(rows);
     box.dataset.recipeIndex = String(recipeIndex);
     box.append(node);
     body.append(box);
@@ -1237,15 +1314,6 @@ const RIM_PAINTERS = /chart|image|media|video|mind map|join|game/i;
    general 20px body-text floor. */
 const MICROTYPE = /^(Accent|Date)$/;
 
-/* One line of the lattice. */
-const ROW_H = 36;
-/* How many lines a block needs. Sub-pixel is not a line: the same 1px tolerance
-   the app's own fit check uses, so a block landing exactly on a boundary is not
-   rounded up into a line it does not occupy. */
-function linesFor(px) {
-  return Math.max(1, Math.ceil((px - (SF.FIT_TOLERANCE ?? 1)) / ROW_H));
-}
-
 /* The lattice is the instrument, not the box. A block occupies whole lines —
    how many depends on what it is, so a bigger heading takes more of them and
    what follows moves down — and the only fit failure is content needing more
@@ -1274,17 +1342,21 @@ function measureSlots(root) {
       smallest = verdict.smallest;
       smallestIn = verdict.smallestIn || '';
     }
-    const node = box.firstElementChild;
-    /* Out of flow, out of the line count. The caption on a full-bleed picture is
-       an absolutely positioned scrim: 242px tall, of which 156px is the
-       gradient's own padding around 74px of text. It is drawn over the picture
-       on purpose and occupies no line of the stack, so counting its box as
-       seven lines failed three slides that are not overflowing anything. */
-    const inFlow = !!node && !/^(absolute|fixed)$/.test(getComputedStyle(node).position);
-    const have = Math.max(1, Math.round(box.clientHeight / ROW_H));
-    const need = inFlow ? linesFor(node.scrollHeight) : 0;
+    /* linesNeeded returns null for a block that is out of flow, and so spends no
+       line: the caption on a full-bleed picture is an absolutely positioned
+       scrim, 242px of which 156px is the gradient's own padding around 74px of
+       text. Counting its box as seven lines failed three slides that overflow
+       nothing. reflowRows reads the same helper, so what a block is given and
+       what it is judged against cannot drift apart. */
+    const lines = linesNeeded(box);
+    /* What the recipe gave it, falling back to what it paints in. While someone
+       is typing this is still the pre-edit span, so the verdict stays live: the
+       block is short of lines until the stack settles and reflowRows hands them
+       over, and then the shortfall becomes the slide's, where budgets() has it. */
+    const have = Number(box.dataset.rows) || Math.max(1, Math.round(box.clientHeight / ROW_H));
+    const need = lines ?? 0;
     /* Sideways is not a line question, and nothing else catches it. */
-    const wide = inFlow && box.scrollWidth > box.clientWidth + 1;
+    const wide = lines != null && box.scrollWidth > box.clientWidth + 1;
     const bad = !fitExempt && (need > have || wide);
     box.classList.toggle('safe-overflow', bad);
     if (bad) {
@@ -1564,6 +1636,19 @@ function editable(root, slide, measure) {
         save(n.innerText.replace(/\t/g, ' ').trimEnd());
         measure();
       });
+      /* Typing stays in place — a render would replace the slide under the caret
+         — so measure() keeps the verdict honest while the words arrive and the
+         stack settles when the edit is finished. Only when the span actually has
+         to change: a small edit inside the lines a block already owns must not
+         yank the DOM out from under the next click. */
+      n.addEventListener('blur', () => {
+        if (value() === before) return;
+        const box = n.closest('.safe-slot');
+        const spec = box && slide.mockRecipe?.[Number(box.dataset.recipeIndex)];
+        const lines = box && linesNeeded(box);
+        if (!spec || lines == null) return;
+        if (Math.max(spec[6] ?? spec[5], lines) !== spec[5]) render();
+      });
       n.addEventListener('keydown', (e) => {
         e.stopPropagation();
         if (e.key === 'Escape') {
@@ -1649,6 +1734,15 @@ async function render() {
   await new Promise(requestAnimationFrame);
   if (run !== revision) return { failed: ['stale'] };
   if (!original && !artwork && normalizeTitleRows(root, slide)) return render();
+  /* Growing a slot does not change what its content measures, so this settles on
+     the second pass. The cap is not the mechanism, it is the seatbelt: a block
+     that did reflow its own height would otherwise re-render forever, and the
+     detector is a better place to admit a bad fit than a hung tab. */
+  if (!original && !artwork && reflowPasses < 3 && reflowRows(root, slide)) {
+    reflowPasses++;
+    return render();
+  }
+  reflowPasses = 0;
   paintChromeBands(root);
 
   function measure() {

@@ -41,6 +41,32 @@ needs more lines than it holds. Blocks that are out of flow do not spend lines:
 the caption on a full-bleed picture is an absolutely positioned scrim, 242px of
 which 156px is the gradient's own padding, drawn over the picture on purpose.
 
+A block **takes** the lines its content needs, and the rest of its column group
+moves down. Same walk as a drag reorder — recover each gap from the running
+cursor, then replay the stack — except it resizes rather than reorders, so the
+rhythm between blocks survives one of them growing through it.
+
+Grow only. A block never gives back a line the design gave it: the empty lines
+under a heading are composition, not slack, and shrinking every block to its own
+text would pull all 97 slides up to the top of the body. The authored span is
+kept beside the effective one, so a block that grew comes back when the words are
+cut. This is dormant on a bank that fits — the audit below is unchanged by it —
+and only speaks when someone types past a span.
+
+Past line 16 is allowed and reported, not refused. Typing the title long enough
+to need 15 lines reads in two phases:
+
+| Phase | Verdict |
+|-------|---------|
+| While typing | `Headline needs 15 lines, has 4` — measured live and in place, because a render would replace the slide under the caret |
+| Once the edit settles | `8 rows over budget` — the block took its 15 lines, the stack is 24 of 16, and that is the slide's problem, said once |
+
+A block is judged against the lines the recipe gave it, not the height it paints
+in. The lattice defines 16 tracks, so a block pushed past them lands in implicit
+auto tracks and measures short: before that distinction, an over-budget title
+reported `Headline needs 15 lines, has 12` and `Subtitle needs 3 lines, has 1` —
+two consequences of one cause, neither of them the block's own fault.
+
 The box was the previous detector and could not be made to agree with itself. A
 slot measures its element box, but a display face paints an inline box half a
 leading taller — an 84px Iowan line is 87.4px of box inside 114.5px of ink — and
