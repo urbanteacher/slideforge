@@ -133,6 +133,27 @@ is three grounds and one typeface, and it holds together because the strand colo
   <div id="chromeDemo" style="margin-top:22px"></div>
   <table id="chromeSpec" style="margin-top:18px"></table>
 
+  <h3 style="margin-top:34px;font-size:19px">The row lattice <span style="font-weight:400;opacity:.7;font-size:15px">&mdash; what a block's height is allowed to be</span></h3>
+  <p style="font-size:14px;opacity:.8;margin-top:8px">The stage divides once and the body divides
+  evenly inside it, so a block's boundary always has a line to land on:</p>
+  <pre id="frameSum" style="font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;background:#fff;border:1px solid #c9c6be;padding:14px 16px;margin-top:10px;overflow:auto"></pre>
+  <p style="font-size:14px;opacity:.8;margin-top:14px"><b>A slot is what you place; a row is what
+  its boundary lands on.</b> Every composition is two or three top-level slots and every slot is a
+  whole number of rows &mdash; because a slot's height must not depend on its wording. A heading
+  that grows by a line would otherwise push everything below it off the lattice; a heading in a
+  two-row <i>box</i> does not. Spacing lives in boxes, not margins.</p>
+  <table id="slotTable" style="margin-top:14px"></table>
+  <p style="font-size:14px;opacity:.8;margin-top:14px"><b>Spans round up.</b> A span contains its
+  block, so 275px of heading does not fit seven rows of 36 &mdash; it needs eight. Overflow becomes
+  impossible by construction rather than by luck.</p>
+  <p style="font-size:14px;opacity:.8;margin-top:10px"><b>Two exceptions, for different reasons.</b>
+  The <i>cover headline</i> is the one variable slot: four of the five covers are two lines and take
+  five rows, Smart is three lines and takes eight, and forcing three into five would mean dropping
+  the type to about 72px against the 88px the campaign set. And <i>word motion</i> is not an
+  exception at all &mdash; it animates with transform, opacity, blur and clip-path, none of which
+  consume layout space, and it attaches to the discussion statement rather than the cover. A slot
+  box never constrains it.</p>
+
   <h3 style="margin-top:34px;font-size:19px">The comparison table <span style="font-weight:400;opacity:.7;font-size:15px">&mdash; two claimed columns, no box</span></h3>
   <p style="font-size:14px;opacity:.8;margin-top:8px">The campaign's only table, and it does not look
   like one. There is <b>no outer border and no grid</b> &mdash; a single hairline under each row and
@@ -474,6 +495,54 @@ is three grounds and one typeface, and it holds together because the strand colo
     tr.appendChild(el('td', null, r[2]));
     cs.appendChild(tr);
   });
+
+  /* --- the row lattice ------------------------------------------------
+     The frame sum is measured from a real slide, so it cannot drift from the
+     stylesheet the way a typed number would. */
+  (function () {
+    const probe = document.createElement('div');
+    probe.className = 'slide theme-aiad27-safe cp cp-title';
+    probe.style.cssText = 'position:absolute;left:-4000px;top:0;width:1280px;height:720px';
+    probe.innerHTML = '<div class="pad"><div class="cp-header"></div><div class="cp-body"></div><div class="cp-footer"></div></div>';
+    document.body.appendChild(probe);
+    const pad = probe.querySelector('.pad');
+    const cs = getComputedStyle(pad);
+    const hdr = probe.querySelector('.cp-header').offsetHeight;
+    const ftr = probe.querySelector('.cp-footer').offsetHeight;
+    const padTop = parseFloat(cs.paddingTop), padBot = parseFloat(cs.paddingBottom);
+    const body = 720 - padTop - hdr - ftr - padBot;
+    probe.remove();
+    const rows = 16, pitch = body / rows;
+    document.getElementById('frameSum').textContent =
+      `${padTop} pad  +  ${hdr} header  +  ${body} body  +  ${ftr} footer  +  ${padBot} pad  =  720\n` +
+      `${body} body  /  ${rows} rows  =  ${pitch}px pitch`;
+
+    const SLOTS = [
+      ['poster-art', 'copy 11 · art 14', 'two columns'],
+      ['voice', 'label 1 · voice 6', ''],
+      ['ballot', 'heading 2 · choices 11 · prompt 1', 'a choice is 5 rows'],
+      ['prompt', 'label 1 · discussion 6', ''],
+      ['reveal-map', 'heading 2 · map 8 · source 1', ''],
+      ['rules', 'heading 2 · rules 12 · closing 1', 'a rule is 4 rows'],
+      ['commitment', 'mark 9 · action 11', 'two columns'],
+      ['comparison', 'heading 2 · table 12', 'a row is 2 rows'],
+      ['credits', 'heading 2 · credits 12 · source 1', 'a credit is 2 rows'],
+      ['lanes', 'heading 2 · lanes 11 · source 1', ''],
+    ];
+    const t = document.getElementById('slotTable');
+    const head = el('tr');
+    ['Composition', 'Slots', 'Repeated item'].forEach((h) => head.appendChild(el('th', null, h)));
+    t.appendChild(head);
+    for (const [name, slots, note] of SLOTS) {
+      const tr = el('tr');
+      const a = el('td', null, name);
+      a.style.fontFamily = 'ui-monospace,SFMono-Regular,Menlo,monospace';
+      tr.appendChild(a);
+      tr.appendChild(el('td', null, slots));
+      tr.appendChild(el('td', null, note));
+      t.appendChild(tr);
+    }
+  })();
 
   /* --- the comparison table ------------------------------------------
      The headers are the one place in the system where the bright is used as
