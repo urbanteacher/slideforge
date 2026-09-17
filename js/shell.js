@@ -1214,6 +1214,17 @@
               title: 'AI Awareness Day 2027 — style and design guide',
               blurb: location.host + '/AiAd27/style.html — grounds, palette with measured contrast, ' +
                 'type scale, every mark and the slide furniture, read live out of the stylesheet.' });
+            /* The positioning work in progress, alongside the style guide: same
+               origin-relative form, so it is the local copy on a laptop and the
+               deployed copy when hosted. A prototype rather than part of the
+               app — it changes no deck and writes nothing — so it is named as
+               one here rather than offered from File. */
+            items.push({ id: 'open:' + location.origin + '/modular-canvas/preview.html#demo-deck',
+              title: 'Concept lab — slot positioning (prototype)',
+              blurb: location.host + '/modular-canvas/preview.html — every layout-bank slide on a ' +
+                '16 × 12 lattice: drag a block and the rest move aside, swap the slide\u2019s feature ' +
+                'with a measured fit estimate, and audit all 97 for overflow and unreadable type. ' +
+                'Saves nothing to your decks.' });
             return items;
           },
           describe: function (it) { return it.blurb; },
