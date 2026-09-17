@@ -483,3 +483,6 @@
 .demo-feature-option.is-tight { border-color:#e0a4ae; background:#fdf3f5; }
 .demo-feature-option.is-tight .demo-feature-fit { color:#a3152a; }
 .demo-feature-option[data-confirmed] { border-color:#a3152a; background:#fde8ec; }
+.demo-trial-host { position:fixed; left:-4000px; top:0; width:1280px; height:720px; pointer-events:none; }
+.demo-feature-option.is-lossy { border-color:#d7943a; background:#fffaf0; }
+.demo-feature-option.is-lossy .demo-feature-fit { color:#8a5a12; }

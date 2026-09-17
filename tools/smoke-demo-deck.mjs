@@ -248,6 +248,49 @@ try {
     null,
     { timeout: 60000 }
   );
+  /* Regression: trials must not join the live DOM. Mounted inside #demo-deck,
+     every trial's .safe-slot boxes appeared alongside the slide's, so the slot
+     list grew by a whole extra layout each time the picker opened. */
+  const liveSlots = () => page.locator('#demo-deck .safe-slot').count();
+  const slotsWhileOpen = await liveSlots();
+  assert.equal(slotsWhileOpen, 2, `the picker leaked trial slots into the page: ${slotsWhileOpen}`);
+  assert.equal(await page.locator('.demo-trial-host .slide').count(), 0, 'a trial render was left mounted');
+
+  /* Shapes that show no heading have to say so: Quote and Statement carry the
+     words but not the title, which otherwise reads as the slide eating it. */
+  const lossy = await page.evaluate(() =>
+    [...document.querySelectorAll('.demo-feature-option')]
+      .filter((b) => b.dataset.keepsHeading === '0' && b.dataset.fit === 'yes')
+      .map((b) => b.dataset.feature).sort());
+  assert.deepEqual(lossy, ['quote', 'statement'], `unexpected heading-dropping shapes: ${lossy}`);
+  for (const shape of lossy) {
+    const label = await page.locator(`.demo-feature-option[data-feature="${shape}"] .demo-feature-fit`).innerText();
+    assert.match(label, /drops the heading/i, `${shape} did not warn about the heading`);
+  }
+  /* A shape that places nothing is described by that, not by the heading. */
+  for (const shape of ['image', 'gallery', 'video']) {
+    const label = await page.locator(`.demo-feature-option[data-feature="${shape}"] .demo-feature-fit`).innerText();
+    assert.match(label, /needs a picture/i, `${shape} label was "${label}"`);
+  }
+
+  /* A lossy choice asks once more, like a tight one, and then says what it did. */
+  const quote = page.locator('.demo-feature-option[data-feature="quote"]');
+  await quote.click();
+  assert.ok(await page.locator('.demo-feature-pop').count(), 'a heading-dropping swap applied on the first click');
+  await quote.click();
+  await settled();
+  assert.match(
+    await page.locator('#demo-deck .demo-status').innerText(),
+    /heading off the slide/i,
+    'the swap dropped the heading without saying so'
+  );
+
+  await openPicker();
+  await page.waitForFunction(
+    () => ![...document.querySelectorAll('.demo-feature-fit')].some((n) => n.textContent === '\u2026'),
+    null,
+    { timeout: 60000 }
+  );
   const predictions = await page.evaluate(() =>
     Object.fromEntries([...document.querySelectorAll('.demo-feature-option')]
       .filter((b) => b.dataset.fit)

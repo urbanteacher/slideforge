@@ -426,7 +426,7 @@ function openFeaturePicker(button, slide, slotName) {
   pop.innerHTML =
     `<header><strong>Swap feature</strong>` +
     `<span>${slotName ? slotName + ' \u00b7 ' : ''}now: ${SF.SLIDE_TYPES[slide.type]?.label || slide.type}</span></header>` +
-    `<p class="demo-feature-note">The heading always carries over. ` +
+    `<p class="demo-feature-note">Changes the whole slide, not just this box. ` +
     (points
       ? `Your ${points} point${points === 1 ? '' : 's'} carry into any layout that takes points; elsewhere they stay in the data, so the swap is reversible.`
       : `Nothing is deleted \u2014 fields a layout cannot show are kept, so you can swap back.`) +
@@ -454,7 +454,7 @@ function openFeaturePicker(button, slide, slotName) {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (btn.dataset.fit === 'no' && !btn.dataset.confirmed) {
+        if ((btn.dataset.fit === 'no' || btn.dataset.keepsHeading === '0') && !btn.dataset.confirmed) {
           btn.dataset.confirmed = '1';
           btn.querySelector('.demo-feature-fit').textContent = 'swap anyway?';
           return;
@@ -500,11 +500,18 @@ async function annotateFits(pop, slide) {
     if (!pop.isConnected) return;
     btn.dataset.fit = verdict.fits ? 'yes' : 'no';
     btn.classList.toggle('is-tight', !verdict.fits);
-    if (verdict.fits) {
-      tag.textContent = points && SF.BULLET_LAYOUTS.includes(type) ? 'should fit · keeps points' : 'should fit';
-    } else if (!verdict.placed) {
+    btn.dataset.keepsHeading = verdict.keepsHeading ? '1' : '0';
+    /* Most specific reason first: a shape that places nothing is not usefully
+       described as "drops the heading", even though it does. */
+    if (!verdict.placed) {
       tag.textContent = 'needs a picture';
       btn.title = `A ${type} slide needs a picture or video, and this one has none.`;
+    } else if (!verdict.keepsHeading) {
+      btn.classList.add('is-lossy');
+      tag.textContent = verdict.fits ? 'drops the heading' : 'drops the heading · tight';
+      btn.title = `This shape shows no heading, so the title comes off the slide. It stays in the data, so you can swap back.${verdict.fits ? '' : ' It would also overflow: ' + verdict.failed.join(', ') + '.'}`;
+    } else if (verdict.fits) {
+      tag.textContent = points && SF.BULLET_LAYOUTS.includes(type) ? 'should fit · keeps points' : 'should fit';
     } else {
       tag.textContent = 'too tight';
       btn.title = `Would overflow: ${verdict.failed.join(', ')}. Click again to swap anyway.`;
@@ -531,8 +538,17 @@ function applyFeature(slide, type, slotName, predicted) {
       predicted === 'yes' && !fitted ? ' \u2014 the picker expected this to fit; it does not'
       : predicted === 'no' && fitted ? ' \u2014 better than the picker expected'
       : '';
+    /* Say when the heading came off, rather than reporting a clean pass for a
+       slide that just lost its title. */
+    const titleBefore = String(slide.title || '').trim();
+    const headingGone =
+      titleBefore &&
+      !document.querySelector('#demo-deck .safe-stage')?.textContent
+        .replace(/\s+/g, ' ')
+        .includes(titleBefore.replace(/\s+/g, ' '));
     lastMove = `${slotName ? slotName + ': ' : ''}${was} \u2192 ${now}` +
       (pointsBefore ? `, ${pointsBefore} points ${shown ? 'carried' : 'kept in the data'}` : '') +
+      (headingGone ? ', heading off the slide (still in the data)' : '') +
       surprise;
     reportSwapFit(lastMove, result);
   });
@@ -1089,10 +1105,12 @@ async function trialFit(slide, type) {
   if (!trialHost) {
     trialHost = document.createElement('div');
     trialHost.setAttribute('aria-hidden', 'true');
-    trialHost.style.cssText = 'position:absolute;left:-4000px;top:0;width:1280px;height:720px;pointer-events:none';
-    /* Inside the section, not the body: some rules are scoped to #demo-deck, and
-       a trial mounted outside it measures under different CSS than the result. */
-    section.append(trialHost);
+    trialHost.className = 'demo-trial-host';
+    /* Outside #demo-deck on purpose. Mounted inside it, every trial's .safe-slot
+       boxes joined the live DOM, so anything asking "#demo-deck .safe-slot" saw
+       the trial's slots as well as the slide's — the slot list grew by a whole
+       extra layout each time the picker opened. */
+    document.body.append(trialHost);
   }
   /* prepareLayout on a plain clone — exactly what applyFeature does to the real
      slide. The editor's own thumbnail normalizes first, which is fine for an
@@ -1108,8 +1126,13 @@ async function trialFit(slide, type) {
   await new Promise(requestAnimationFrame);
   await new Promise(requestAnimationFrame);
   const failed = placed.length ? overflowIn(root) : ['nothing placed'];
+  /* Does this shape show the heading at all? Quote and Statement carry the words
+     but not the title, so a swap there loses it — which reads as the slide
+     silently eating your heading unless the picker says so first. */
+  const title = String(slide.title || '').trim();
+  const keepsHeading = !title || root.textContent.replace(/\s+/g, ' ').includes(title.replace(/\s+/g, ' '));
   trialHost.replaceChildren();
-  return { placed: placed.length, failed, fits: !failed.length };
+  return { placed: placed.length, failed, fits: !failed.length, keepsHeading };
 }
 
 function pick(owner, selector) {

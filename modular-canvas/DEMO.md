@@ -161,6 +161,19 @@ does not."* One shape in 256 swaps does this — chart to Statement, where the
 chart's data ends up as 58px display type. A quiet wrong "should fit" would be
 worse than no estimate at all.
 
+### What ⇄ actually changes
+
+**The whole slide, not the box it sits on.** Every slot carries a ⇄ and they all
+do the same thing, because a feature is a property of the slide. The picker says
+so at the top; the slot name only appears in the report, to say where you asked
+from.
+
+A shape that shows no heading is flagged **drops the heading** — `quote` and
+`statement` carry the words but not the title. The title stays in the data, so a
+swap back restores it, but the slide loses it, and that reads as the app eating
+your heading unless it is said first. Those choices ask once more before
+committing, and the report says what happened.
+
 ### Bugs this found
 
 A 256-swap sweep across eight source slides turned up three:
@@ -176,6 +189,14 @@ A 256-swap sweep across eight source slides turned up three:
   the next choice to the previous slide. `render()` closes it.
 - **The trial normalized and the swap did not**, so the two ran different
   conversions. The trial now matches `applyFeature` exactly.
+- **Trial renders joined the live DOM.** The trial host was mounted inside
+  `#demo-deck`, so every trial's `.safe-slot` boxes sat alongside the slide's:
+  opening the picker on a two-slot slide made the page report three slots, then
+  five. Off screen and invisible, but anything asking `#demo-deck .safe-slot` —
+  including a test — saw the trial. The host now lives outside the section.
+- **"The heading always carries over" was wrong**, and the picker said it in
+  print. `prepareLayout` keeps the field; it is the layout that decides whether
+  to render it, and `quote` and `statement` do not.
 
 An authorable type with **no** group is excluded on purpose, matching the editor:
 `join` is inserted by the live flow rather than chosen as a shape. The smoke
