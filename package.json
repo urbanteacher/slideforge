@@ -10,7 +10,7 @@
     "test": "npm run build:check && npm run typecheck && node --test tests/*.test.js",
     "test:all": "node tools/test-all.mjs",
     "test:all:visual": "node tools/test-all.mjs --visual",
-    "smoke": "npm run smoke:activities && npm run smoke:rehearse && npm run smoke:quick-poll && npm run smoke:misconceptions && npm run smoke:demo && npm run smoke:fake-demo && npm run smoke:knowledge-flip && npm run smoke:lowstakes && npm run smoke:live && npm run smoke:exploration && npm run smoke:audience-feedback && npm run smoke:add-activity && npm run smoke:lesson-bank && npm run smoke:cold-start && npm run smoke:boss && npm run smoke:presenter-controls && npm run smoke:handout && npm run smoke:cover-motion && npm run smoke:chart-callouts",
+    "smoke": "npm run smoke:activities && npm run smoke:rehearse && npm run smoke:quick-poll && npm run smoke:misconceptions && npm run smoke:demo && npm run smoke:fake-demo && npm run smoke:knowledge-flip && npm run smoke:lowstakes && npm run smoke:live && npm run smoke:exploration && npm run smoke:audience-feedback && npm run smoke:add-activity && npm run smoke:lesson-bank && npm run smoke:cold-start && npm run smoke:boss && npm run smoke:presenter-controls && npm run smoke:handout && npm run smoke:cover-motion && npm run smoke:chart-callouts && npm run smoke:fit-check && npm run smoke:demo-deck && npm run smoke:safe-mock",
     "smoke:desk-ink": "node tools/smoke-desk-ink.mjs",
     "smoke:handout": "node tools/smoke-handout.mjs",
     "smoke:exports": "node tools/smoke-exports.mjs",
@@ -40,7 +40,12 @@
     "smoke:live": "node tools/smoke-live-quiz.mjs",
     "visual:check": "node tools/visual-regression.mjs --check",
     "visual:update": "node tools/visual-regression.mjs --update",
-    "typecheck:probe": "node tools/type-probe.mjs"
+    "typecheck:probe": "node tools/type-probe.mjs",
+    "smoke:fit-check": "node tools/smoke-fit-check.mjs",
+    "smoke:demo-deck": "node tools/smoke-demo-deck.mjs",
+    "smoke:safe-mock": "node tools/smoke-safe-slot-mock.mjs",
+    "smoke:body-region": "node tools/smoke-body-region.mjs",
+    "audit:stacks": "node tools/stack-audit.mjs"
   },
   "devDependencies": {
     "esbuild": "0.28.2",

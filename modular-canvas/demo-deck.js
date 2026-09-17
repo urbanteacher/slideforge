@@ -1106,42 +1106,54 @@ function overflowIn(root) {
   return failed;
 }
 
-/* Would this swap fit? Measured on a real render of the converted slide, off
-   screen, using the editor's own trial approach: prepareLayout on a clone. The
-   picker can then say so before you commit, instead of after it breaks. */
+/* Would this swap fit?
+ *
+ * SF.probeLayoutFit renders the converted slide off screen and measures it —
+ * the same module the editor's layout picker will call, so nothing here has to
+ * move when this lands in production. The lab adds one stricter test through the
+ * inspect hook: a block must fit its declared slot, not merely the slide. */
 let trialHost = null;
+/* Slots placed by the last trial's prepare pass, read by its inspect pass. */
+let lastPlaced = [];
 async function trialFit(slide, type) {
   if (!trialHost) {
     trialHost = document.createElement('div');
     trialHost.setAttribute('aria-hidden', 'true');
     trialHost.className = 'demo-trial-host';
-    /* Outside #demo-deck on purpose. Mounted inside it, every trial's .safe-slot
+    /* Outside #demo-deck on purpose: mounted inside it, every trial's .safe-slot
        boxes joined the live DOM, so anything asking "#demo-deck .safe-slot" saw
-       the trial's slots as well as the slide's — the slot list grew by a whole
-       extra layout each time the picker opened. */
+       the trial's slots as well as the slide's. */
     document.body.append(trialHost);
   }
-  /* prepareLayout on a plain clone — exactly what applyFeature does to the real
-     slide. The editor's own thumbnail normalizes first, which is fine for an
-     illustration but made this verdict disagree with its own result: on a chart
-     slide, normalizing reshaped the body before the conversion saw it. */
-  const trial = SF.prepareLayout(structuredClone(slide), type);
-  delete trial.mockRecipe;
-  const root = SF.renderSlide(deck, trial, { index, total: deck.slides.length, revealed: 99 });
-  root.classList.add('safe-slotted', 'demo-slotted');
-  const placed = slotify(root, trial);
-  trialHost.replaceChildren(root);
-  await document.fonts.ready;
-  await new Promise(requestAnimationFrame);
-  await new Promise(requestAnimationFrame);
-  const failed = placed.length ? overflowIn(root) : ['nothing placed'];
-  /* Does this shape show the heading at all? Quote and Statement carry the words
-     but not the title, so a swap there loses it — which reads as the slide
-     silently eating your heading unless the picker says so first. */
-  const title = String(slide.title || '').trim();
-  const keepsHeading = !title || root.textContent.replace(/\s+/g, ' ').includes(title.replace(/\s+/g, ' '));
-  trialHost.replaceChildren();
-  return { placed: placed.length, failed, fits: !failed.length, keepsHeading };
+  const verdict = await SF.probeLayoutFit(deck, slide, type, trialHost, {
+    index,
+    total: deck.slides.length,
+    prepareLayout: SF.prepareLayout,
+    renderSlide: SF.renderSlide,
+    floor: LEGIBLE_FLOOR,
+    settle: async () => {
+      await document.fonts.ready;
+      await new Promise(requestAnimationFrame);
+      await new Promise(requestAnimationFrame);
+    },
+    /* Rearrange before settling, measure after: the lattice has to be laid out
+       before overflowIn reads it, or every block looks like it fits. */
+    prepare: (root, trial) => {
+      /* The clone carries the source slide's mockRecipe, whose selectors were
+         written for the old shape. Left in place, a quote trial looked for an h2
+         and a ul, found neither, and reported "needs a picture". */
+      delete trial.mockRecipe;
+      root.classList.add('safe-slotted', 'demo-slotted');
+      lastPlaced = slotify(root, trial);
+    },
+    inspect: (root) =>
+      lastPlaced.length
+        ? { placed: lastPlaced.length, failed: overflowIn(root) }
+        : { placed: 0, failed: ['nothing placed'] },
+  });
+  /* The lattice verdict decides, because that is what applying the swap will
+     produce; the frame verdict and the legibility reading come along with it. */
+  return { ...verdict, fits: verdict.placed > 0 && !verdict.failed.length };
 }
 
 function pick(owner, selector) {

@@ -1,4 +1,5 @@
 import {declareBodyRegion,measureBodyRegion} from './render/body-region.js';
+import {measureSlideFit,probeLayoutFit,svgScale,FIT_TOLERANCE,LEGIBLE_FLOOR} from './render/fit-check.js';
 import {bindCanvasRegions} from './render/canvas-regions.js';
 import { CHROME_SLOTS, chromePositions, setChromeSlot, supportsChromeRegions, applyChromeRegions } from './render/regions.js';
 import { createCompositionRenderer } from './render/compositions.js';
@@ -1502,6 +1503,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   THEMES: THEMES,
   DEFAULT_THEME, resolveTheme,
   createCompositionRenderer, bindCanvasRegions, declareBodyRegion, measureBodyRegion,
+  measureSlideFit, probeLayoutFit, svgScale, FIT_TOLERANCE, LEGIBLE_FLOOR,
   CHROME_SLOTS, chromePositions, setChromeSlot, supportsChromeRegions, applyChromeRegions,
   DESIGN_CONTROLS, designApplies,
   COMPOSITIONS: COMPOSITIONS,

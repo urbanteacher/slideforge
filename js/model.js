@@ -46,6 +46,125 @@
     };
   }
 
+  // src/render/fit-check.js
+  var FIT_TOLERANCE = 1;
+  var LEGIBLE_FLOOR = 20;
+  function svgScale(el) {
+    const svg = el.ownerSVGElement;
+    if (!svg) return 1;
+    const view = svg.viewBox?.baseVal;
+    const box2 = svg.getBoundingClientRect();
+    if (!view || !view.width || !view.height || !box2.width) return 1;
+    return Math.min(box2.width / view.width, box2.height / view.height);
+  }
+  function describe(el) {
+    const cls = el.className?.baseVal ?? el.className;
+    const first = String(cls || "").trim().split(/\s+/)[0];
+    return first ? `${el.tagName.toLowerCase()}.${first}` : el.tagName.toLowerCase();
+  }
+  function clipper(el, root) {
+    for (let node = el; node && node !== root.parentElement; node = node.parentElement) {
+      const style = getComputedStyle(node);
+      if (/hidden|clip|auto|scroll/.test(style.overflowX + " " + style.overflowY)) return node;
+    }
+    return null;
+  }
+  function escapes(rect, frame, tolerance) {
+    const out = [];
+    if (rect.bottom > frame.bottom + tolerance) out.push(["bottom", rect.bottom - frame.bottom]);
+    if (rect.top < frame.top - tolerance) out.push(["top", frame.top - rect.top]);
+    if (rect.right > frame.right + tolerance) out.push(["right", rect.right - frame.right]);
+    if (rect.left < frame.left - tolerance) out.push(["left", frame.left - rect.left]);
+    return out;
+  }
+  function measureSlideFit(root, opts = {}) {
+    if (!root?.isConnected) return null;
+    const rect = root.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    const tolerance = opts.tolerance ?? FIT_TOLERANCE;
+    const floor = opts.floor ?? LEGIBLE_FLOOR;
+    const frame = (opts.frame ?? root).getBoundingClientRect();
+    const issues = [];
+    const seen = /* @__PURE__ */ new Set();
+    const add = (element, direction, px, text2) => {
+      const key = `${element}|${direction}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      issues.push({ element, direction, px: Math.round(px * 10) / 10, text: text2 });
+    };
+    let smallest = null;
+    let smallestIn = null;
+    const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    while (walk.nextNode()) {
+      const node = walk.currentNode;
+      const words = node.textContent || "";
+      if (!words.trim()) continue;
+      const el = node.parentElement;
+      if (!el) continue;
+      const painted = el.getBoundingClientRect();
+      if (!painted.height) continue;
+      if (words.trim().length >= 3) {
+        const size = parseFloat(getComputedStyle(el).fontSize) * svgScale(el);
+        if (Number.isFinite(size) && (smallest === null || size < smallest)) {
+          smallest = size;
+          smallestIn = describe(el);
+        }
+      }
+      const clip = clipper(el, root);
+      const clipBox = clip && clip !== root ? clip.getBoundingClientRect() : null;
+      for (const word of words.matchAll(/\S+/g)) {
+        const range = document.createRange();
+        range.setStart(node, word.index ?? 0);
+        range.setEnd(node, (word.index ?? 0) + word[0].length);
+        for (const box2 of range.getClientRects()) {
+          if (!box2.width || !box2.height) continue;
+          for (const [direction, px] of escapes(box2, frame, tolerance)) {
+            add(describe(el), direction, px, word[0]);
+          }
+          if (clipBox) {
+            for (const [direction, px] of escapes(box2, clipBox, tolerance)) {
+              add(describe(el), `clipped-${direction}`, px, word[0]);
+            }
+          }
+        }
+      }
+    }
+    return {
+      fits: !issues.length,
+      legible: smallest === null || smallest >= floor,
+      issues,
+      smallest: smallest === null ? null : Math.round(smallest * 10) / 10,
+      smallestIn
+    };
+  }
+  async function probeLayoutFit(deck, slide, type2, host, api) {
+    const trial = api.prepareLayout(structuredClone(slide), type2);
+    const root = api.renderSlide(deck, trial, {
+      index: api.index ?? 0,
+      total: api.total ?? 1,
+      revealed: 99
+    });
+    host.replaceChildren(root);
+    if (api.prepare) api.prepare(root, trial);
+    if (api.settle) await api.settle();
+    const verdict = measureSlideFit(root, { tolerance: api.tolerance, floor: api.floor });
+    const extra = api.inspect ? api.inspect(root, trial) || {} : {};
+    const title = String(slide.title || "").trim();
+    const flat = (root.textContent || "").replace(/\s+/g, " ");
+    const keepsHeading = !title || flat.includes(title.replace(/\s+/g, " "));
+    host.replaceChildren();
+    return {
+      type: type2,
+      rendered: !!verdict,
+      fits: !!verdict?.fits,
+      legible: !!verdict?.legible,
+      keepsHeading,
+      issues: verdict?.issues ?? [],
+      smallest: verdict?.smallest ?? null,
+      ...extra
+    };
+  }
+
   // src/themes.js
   var DEFAULT_THEME = "studio";
   var CAMPAIGN_COMPOSITIONS = {
@@ -9704,6 +9823,11 @@
     bindCanvasRegions,
     declareBodyRegion,
     measureBodyRegion,
+    measureSlideFit,
+    probeLayoutFit,
+    svgScale,
+    FIT_TOLERANCE,
+    LEGIBLE_FLOOR,
     CHROME_SLOTS,
     chromePositions,
     setChromeSlot,
