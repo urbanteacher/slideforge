@@ -74,19 +74,35 @@
     return art.pictures.find(function (p) { return String(p.id) === String(id); }) || null;
   }
 
-  /* Where a shape sits right now, in slide pixels, whether or not it has been
-     posed before. Read from the render rather than from the theme sheet: the
-     first drag of a shape that has never been posed has to continue from where
-     the theme put it, not jump to the origin. */
+  /* Where a shape sits right now, whether or not it has been posed before.
+     Read from the render rather than from the theme sheet, so the first move of
+     a shape the author has never touched continues from where the theme put it
+     instead of jumping to the origin.
+
+     Measured with offsetLeft/offsetTop, in the coordinate space that
+     node.style.left actually resolves in — the shape's own offsetParent, which
+     is the theme's art layer. It used to be measured off the canvas instead:
+     the shape's screen rect minus #previewBox's, divided by the slide scale.
+     That is slide space, and the art layer is not the slide — a studio title's
+     layer measures 219x233 inside a 1280-wide slide — so the number written
+     into `left` was never the number read back out of it. Every nudge then
+     added the shape's whole current offset rather than one pixel: one press of
+     ArrowRight moved it 1px, the next moved it 874, the next 860. A drag
+     compounded the same way on its second go.
+
+     A transform does not move a box in layout, so pose.scale and pose.x are
+     independent here, which is what lets them be set in either order. */
   function originOf(target, root) {
     if (target.kind === 'picture') {
       var pic = pictureById(slide(), target.key);
       return { x: (pic && pic.x) || 0, y: (pic && pic.y) || 0 };
     }
-    var s = scaleOf(root);
-    var a = target.node.getBoundingClientRect();
-    var b = root.getBoundingClientRect();
-    return { x: Math.round((a.left - b.left) / s), y: Math.round((a.top - b.top) / s) };
+    var node = target.node;
+    if (node.offsetParent) return { x: Math.round(node.offsetLeft), y: Math.round(node.offsetTop) };
+    /* No offsetParent means the node is not rendered (display:none, or a
+       detached measure pass); fall back to the pose it carries. */
+    var pose = readPose(target);
+    return { x: Math.round(pose.x || 0), y: Math.round(pose.y || 0) };
   }
 
   function writePose(target, patch) {

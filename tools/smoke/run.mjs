@@ -40,15 +40,17 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
    be the fast check, and they were a second index of which smokes matter,
    kept in nine separate files. The coverage did not move — it is named here
    instead, where the other sets are, and the runner fails if any of it goes
-   missing. Measured at 76s for the whole ci set, of which demo-deck is 39. */
+   missing. Measured at 84s for the whole ci set, of which demo-deck is 39. */
 const SETS = {
   ci: [
-    'campaign-chrome', 'canvas-edit', 'chrome-region', 'chrome-regions',
-    'clipboard-selection', 'demo-deck', 'design-controls', 'fit-check',
-    'handout', 'layout-face', 'layout-fit', 'lesson-bank', 'review-tool',
-    'slide-review',
+    'artwork-face', 'campaign-chrome', 'canvas-edit', 'chrome-region',
+    'chrome-regions', 'clipboard-selection', 'demo-deck', 'design-controls',
+    'fit-check', 'handout', 'layout-face', 'layout-fit', 'lesson-bank',
+    'review-tool', 'slide-review',
   ],
-  canvas: ['canvas-edit', 'layout-face', 'demo-deck', 'layout-fit', 'fit-check', 'row-grid'],
+  /* The three faces of a slide — content, artwork, layout — and the measures
+     they answer to. What to run after touching the canvas. */
+  canvas: ['canvas-edit', 'artwork-face', 'layout-face', 'demo-deck', 'layout-fit', 'fit-check', 'row-grid'],
   review: ['review-tool', 'slide-review', 'fit-check'],
 };
 

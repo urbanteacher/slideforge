@@ -1,4 +1,4 @@
-# The suite existed long before this file did. 426 unit assertions, 44 smoke
+# The suite existed long before this file did. 425 unit assertions, 45 smoke
 # scripts and 597 visual baselines, all of which ran only when somebody
 # remembered — which worked, right up until the first busy week. This is the
 # trigger, not the tests.
@@ -61,9 +61,9 @@ jobs:
 
       # Curated rather than all 42, which take long enough that people start
       # skipping the branch. The set is named `ci` in tools/smoke/run.mjs, so
-      # the same fourteen run here and on a laptop with `npm run smoke:ci`,
+      # the same fifteen run here and on a laptop with `npm run smoke:ci`,
       # and the runner fails loudly if the set names a smoke that no longer
-      # exists rather than quietly running thirteen of fourteen.
+      # exists rather than quietly running fourteen of fifteen.
       #
       # Nine of them arrived here from `npm test`, where a wrapper test used
       # to spawn each one and match a line of its output. That put a browser
@@ -75,6 +75,7 @@ jobs:
       #   demo-deck            the 97-slide layout bank, audit and budget
       #   layout-fit           the picker's predictions match real renders
       #   layout-face          the lattice: click, move, resize, anchor, reset
+      #   artwork-face         posing a theme shape, and placing a picture
       #   canvas-edit          a click on the canvas edits the block it hit
       #   lesson-bank          the library files and clones
       #   handout              the print path, every image resolved
@@ -84,7 +85,7 @@ jobs:
       #   campaign-chrome      campaign furniture across five strands
       #   chrome-region(s)     declared insets, and region coverage
       #   clipboard-selection  highlighted text keeps the clipboard
-      # Measured locally at 76s in total, of which demo-deck is 39.
+      # Measured locally at 84s in total, of which demo-deck is 39.
       - run: npm run smoke:ci
 
       - name: upload failure output

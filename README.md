@@ -71,8 +71,8 @@ The committed bundle still runs without installing tools or building first.
 For browser smoke checks, run `npx playwright install chromium`, then:
 
 ```
-npm run smoke:list          # the 44 smokes and the named sets
-npm run smoke:ci            # the fourteen CI runs (about 75s)
+npm run smoke:list          # the 45 smokes and the named sets
+npm run smoke:ci            # the fifteen CI runs (about 85s)
 npm run smoke -- fit-check  # one by name
 npm run smoke               # all of them
 ```
