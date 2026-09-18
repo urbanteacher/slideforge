@@ -53,10 +53,27 @@
 /* ------------------------------------------------------------ arrange mode */
 /* Content is inert while presenting; only an editor that has set .arranging
    makes a block answer the mouse. */
+/* The guides describe the tracks, not a pitch.
+   A rule every 101px across a 1176px box is 11.64 repeats, so the twelfth band
+   came out 65px wide with no rule closing it and the grid read as twelve and a
+   half columns across. The rows had the matching fault at the other edge: a
+   rule at the top of each of the sixteen, and nothing at the bottom of the
+   last, so it read as fifteen and a half going down. The cells were right the
+   whole time — 1176x576, twelve tracks of 65 with eleven 36px gutters, sixteen
+   rows of 36 — and only the drawing was wrong.
+   So the columns are shaded as bands rather than marked with lines. 65 shaded,
+   36 clear, and the twelfth band ends at 11x101+65 = 1176, exactly on the
+   edge. It also makes the gutters legible as gutters: a line every 101px
+   implied a 101px cell, and nothing can be placed in the 36px between two. */
 .arranging .sf-lattice {
   background-image:
     repeating-linear-gradient(to bottom, rgba(113, 131, 119, .28) 0 1px, transparent 1px 36px),
-    repeating-linear-gradient(to right, rgba(113, 131, 119, .18) 0 1px, transparent 1px 101px);
+    repeating-linear-gradient(to right, rgba(113, 131, 119, .10) 0 65px, transparent 65px 101px);
+  /* The two edges a repeating gradient cannot reach: it paints the start of
+     each period, so the far side of the last row and the last column never get
+     one. These close the box. */
+  box-shadow: inset -1px 0 0 rgba(113, 131, 119, .28),
+              inset 0 -1px 0 rgba(113, 131, 119, .28);
 }
 .arranging .sf-slot {
   outline: 1px solid rgba(215, 148, 58, .85);
