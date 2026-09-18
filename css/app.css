@@ -1682,6 +1682,14 @@ html[data-ws="game"] #btnSorter { display: none; }
   color: #fff;
   pointer-events: none;
 }
+/* A caption over a full-bleed image is the only text on the slide that is not
+   inside the body, and it was the only text that did not start where the body
+   starts. 28px is right against an inset image — it is a margin on the picture
+   — but a full-bleed picture is the slide, so the same 28 put the credit 28px
+   from the edge while the grid, the header and the footer all began at 52.
+   Measured across 686 library slides: eleven captions sat inside the body
+   margin and every one of them was this rule. */
+.split-media.split-media-full .cap { padding-left: 52px; padding-right: 52px; }
 .split-media .cap-scrim { background: linear-gradient(transparent, rgba(0,0,0,.78)); }
 .split-media .cap-bar { background: var(--s-accent); padding: 12px 28px; }
 .split-media .cap-plain { background: none; text-shadow: 0 2px 14px rgba(0,0,0,.85); }

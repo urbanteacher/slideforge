@@ -472,6 +472,16 @@
   color: #14181f;
   text-shadow: none;
 }
+/* 28px is a margin on the picture, which is right while the picture is inset.
+   A full-bleed picture is the slide, so the same 28 put the credit 28px from
+   the edge while the grid, the header and the footer all began at 52 — the
+   only text on the slide that did not start where the body starts. Stated in
+   the theme because the theme is what sets the padding: the base rule in
+   app.css says the same thing and this file loads after it. */
+.theme-northeastern.layout-split .split-media.split-media-full .cap {
+  padding-left: 52px;
+  padding-right: 52px;
+}
 /* A scrim's job is to buy contrast for the caption, so it has to be neutral.
    This was the brand red at 72%, which is a mid-tone: white text on it cleared
    the picture underneath but not the red, and the panel read as a banner rather

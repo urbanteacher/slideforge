@@ -220,17 +220,34 @@
           layer.appendChild(cell);
         } else { occupied.push({node:cell, index:i}); row.appendChild(cell); }
       });
-      // Only occupied neighbours bound a slot. Empty middle slots release space.
+      /* Only occupied neighbours bound a slot. Empty middle slots release space.
+
+         Measured in columns rather than percent, so the furniture lands on the
+         same edges as the body. The row already started and ended on the grid
+         — 52 in from each side — but it divided the space at 25% and 75%, which
+         is 346 and 934, while the columns break at 355 and 961. The two ends
+         agreed and everything between them was a few pixels out, which is the
+         kind of misalignment that is only visible once you put a header over a
+         grid and then impossible to stop seeing.
+         Three columns, six, three: the same proportions the percentages
+         described, now expressed in the unit the slide is actually built from.
+         A slot from boundary a to boundary b spans (b-a) columns, which is
+         (b-a)*101 wide less the 36px gutter that does not follow the last one. */
+      /* Derived, not restated: the body is cols tracks plus cols-1 gutters, so
+         cols*stepX overshoots the width by exactly one gutter. Writing 36 here
+         would be a third place the number lives. */
+      var GUTTER = LATTICE.cols * LATTICE.stepX - LATTICE.w;
+      var COLS = LATTICE.cols, HALF = COLS / 2, THIRD = COLS / 4;
       occupied.forEach(function (entry, i) {
         var prev = occupied[i - 1], next = occupied[i + 1];
-        var left = prev ? (prev.index + entry.index) * 25 : 0;
-        var right = next ? (entry.index + next.index) * 25 : 100;
+        var from = prev ? (prev.index + entry.index) * THIRD : 0;
+        var to = next ? (entry.index + next.index) * THIRD : COLS;
         if (entry.index === 1) {
-          var radius = Math.min(50 - left, right - 50);
-          left = 50 - radius; right = 50 + radius;
+          var radius = Math.min(HALF - from, to - HALF);
+          from = HALF - radius; to = HALF + radius;
         }
-        entry.node.style.left = left + '%';
-        entry.node.style.width = (right - left) + '%';
+        entry.node.style.left = (from * LATTICE.stepX) + 'px';
+        entry.node.style.width = ((to - from) * LATTICE.stepX - GUTTER) + 'px';
       });
       if (occupied.length) {
         layer.appendChild(row);

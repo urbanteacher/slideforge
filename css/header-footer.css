@@ -23,13 +23,17 @@
   padding:24px 52px !important; box-sizing:border-box;
 }
 .sf-hf-managed.sf-latticed .sf-lattice { top:0; height:100%; grid-template-rows:repeat(16,minmax(0,1fr)); }
-.sf-furniture-canvas { width:32%; height:48px; }
+/* Canvas-anchored furniture sits on the grid too. It was 32% wide at 34% from
+   the left — 410px at 435, near the middle and on nothing. Four columns now:
+   4x101-36 = 368 wide, starting at column 1, 5 or 9, so the three anchors land
+   on 52, 456 and 860 and the right one ends at 1228, flush with the body. */
+.sf-furniture-canvas { width:368px; height:48px; }
 .sf-furniture-canvas[data-anchor^=top] { top:calc(var(--sf-header-space) + 24px); }
 .sf-furniture-canvas[data-anchor^=middle] { top:50%; margin-top:-24px; }
 .sf-furniture-canvas[data-anchor^=bottom] { bottom:calc(var(--sf-footer-space) + 24px); }
 .sf-furniture-canvas[data-anchor$=left] { left:52px; justify-content:flex-start; text-align:left; }
-.sf-furniture-canvas[data-anchor$=center] { left:34%; justify-content:center; text-align:center; }
-.sf-furniture-canvas[data-anchor$=right] { right:52px; justify-content:flex-end; text-align:right; }
+.sf-furniture-canvas[data-anchor$=center] { left:456px; justify-content:center; text-align:center; }
+.sf-furniture-canvas[data-anchor$=right] { left:860px; justify-content:flex-end; text-align:right; }
 .hf-editing .sf-furniture-cell { pointer-events:auto; cursor:pointer; outline:1px dashed #718377; }
 .hf-editing .sf-furniture-cell[data-hf-selected] { outline:3px solid #536b3c; }
 /* Inside the inspector's Header pane, so it follows that panel's conventions
