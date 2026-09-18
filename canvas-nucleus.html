@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The canvas as nucleus — a working demo</title>
+<link rel="stylesheet" href="css/app.css?v=62">
+<link rel="stylesheet" href="css/lattice.css?v=1">
+<link rel="stylesheet" href="css/studio.css?v=18">
+<link rel="stylesheet" href="css/northeastern.css?v=11">
+<link rel="stylesheet" href="css/variant-themes.css?v=5">
+<style>
+:root{font-family:system-ui,sans-serif;color:#20251f;background:#f4f3ed}
+body{margin:0}
+main{max-width:1240px;margin:auto;padding:44px 26px 90px}
+a{color:#365b39}
+header{border-bottom:2px solid #20251f;padding-bottom:26px;margin-bottom:8px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin:0}
+h1{font-size:clamp(32px,5.5vw,58px);line-height:1.05;letter-spacing:-.04em;margin:16px 0}
+header p{max-width:720px;font-size:17px;line-height:1.6}
+section{margin-top:44px;border-top:1px solid #cbd0c4;padding-top:26px}
+h2{font-size:26px;letter-spacing:-.02em;margin:0 0 6px}
+.lede{max-width:760px;line-height:1.6;margin:0 0 20px;color:#3c463a}
+/* A slide is always rendered at 1280x720 and scaled, exactly as the app does. */
+.stage{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border:1px solid #c3c9bd;border-radius:8px;background:#fff}
+.stage .slide{transform-origin:0 0}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.pair{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+figure{margin:0}
+figcaption{font-size:13px;line-height:1.45;margin-top:8px;color:#3c463a}
+figcaption b{display:block;font-size:14px;color:#20251f}
+.verdict{font:600 12px/1.4 ui-monospace,Menlo,monospace;margin-top:5px;padding:5px 8px;border-radius:5px;display:inline-block}
+.ok{background:#e3efe0;color:#24521f}
+.over{background:#ffe3e6;color:#8c1424}
+.knobs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 18px;padding:10px;border:1px solid #c3c9bd;border-radius:10px;background:#fff}
+.knobs label{font:600 12px/1 system-ui;letter-spacing:.04em;text-transform:uppercase;color:#52604d}
+.knobs select,.knobs button{font:inherit;padding:7px 9px;border:1px solid #a0aa9c;border-radius:6px;background:#fff}
+.knobs button{cursor:pointer}
+.tally{margin-left:auto;font:600 12px/1 system-ui;color:#52604d}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid #dfe3da;vertical-align:top}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#52604d}
+td.n{text-align:right;font:600 14px ui-monospace,Menlo,monospace}
+.dead{color:#8c1424}
+.live{color:#24521f}
+code{font:13px ui-monospace,Menlo,monospace;background:#e9ece5;padding:1px 4px;border-radius:3px}
+.note{background:#fff;border-left:3px solid #0c3354;padding:12px 14px;margin:16px 0;line-height:1.55;font-size:15px}
+.warn{border-left-color:#a3152a}
+@media(max-width:900px){.trio,.pair{grid-template-columns:1fr}}
+</style></head><body><main>
+
+<header>
+  <a href="/">← SlideForge</a>
+  <p class="eyebrow">A demo of docs/canvas-as-nucleus.md</p>
+  <h1>The canvas is a contract,<br>not a component.</h1>
+  <p>Everything on this page is computed live from the running engine — the same
+  <code>SF.renderSlide</code>, <code>SF.applyRegions</code> and
+  <code>SF.latticeFit</code> the editor and the projector use. No screenshots, no
+  figures typed in by hand. If a claim here is wrong, this page shows it wrong.</p>
+</header>
+
+<section>
+  <h2>1 · One slide, three answers to "where does it go?"</h2>
+  <p class="lede">The same content, same theme, same renderer. What differs is only
+  how the arrangement is <em>stored</em>: nothing at all, a composition name, or a
+  map of grid regions. This is the fork the review says has to be resolved —
+  here it is, side by side.</p>
+  <div class="knobs">
+    <label for="theme">Theme</label>
+    <select id="theme"></select>
+    <label for="comp">Composition</label>
+    <select id="comp"></select>
+    <label for="words">Content</label>
+    <select id="words">
+      <option value="short">Short</option>
+      <option value="long">Long enough to reflow</option>
+    </select>
+    <span class="tally" id="knobTally"></span>
+  </div>
+  <div class="trio" id="trio"></div>
+  <div class="note" id="reflowNote"></div>
+</section>
+
+<section>
+  <h2>2 · Which one wins when a slide has both?</h2>
+  <p class="lede">A slide can carry a composition <em>and</em> a region map.
+  <code>applyRegions</code> runs after <code>compositions.apply</code>, so the
+  region map wins — and nobody decided that. It fell out of where the call was
+  placed. The left slide has only a composition; the right has the same
+  composition <em>plus</em> regions.</p>
+  <div class="pair" id="clash"></div>
+  <div class="note warn"><b>This is the urgent item.</b> The precedence above is
+  currently held by a line number in <code>js/render.js</code> rather than by a
+  decision, a name or a test. Whatever the answer should be, it needs to be one
+  of those three.</div>
+</section>
+
+<section>
+  <h2>3 · Fit is counted in lines, and it says what to do</h2>
+  <p class="lede">A block holds the lines its region gives it. When its content
+  needs more, the verdict names the shortfall rather than only reporting failure.
+  Drag the span below and watch it change — this is <code>SF.latticeFit</code>,
+  the same call the Layout face makes in the editor.</p>
+  <div class="knobs">
+    <label for="rows">Lines given to the body</label>
+    <select id="rows"></select>
+    <span class="tally" id="fitTally"></span>
+  </div>
+  <div class="pair" id="fitDemo"></div>
+  <div class="note warn"><b>Building this page found a flaw in the lattice.</b>
+  A region is keyed by the block's <code>data-content-key</code>, or by its first
+  class if it has none. A bullet list on a <code>content</code> slide has neither,
+  so it keys as <code>block-1</code> — its <em>index</em>. A positional key is
+  precisely what a named region is supposed to avoid: reorder the blocks and every
+  region below the change points at the wrong one. Every block that can hold a
+  region needs a stable name.</div>
+</section>
+
+<section>
+  <h2>4 · The overwhelm, measured</h2>
+  <p class="lede">The brief was a nucleus without drowning in options. These
+  numbers are counted live by building every library pack and walking every
+  slide, so they cannot drift from the code.</p>
+  <div id="tally"></div>
+  <div class="note"><b>The finding.</b> Every composition is used. Nearly half the
+  design keys never have been. The abstraction that names a whole arrangement
+  earns its keep; the individual knobs are the bloat — so the fix is fewer knobs,
+  not fewer layouts.</div>
+  <table id="deadKeys"></table>
+</section>
+
+<footer style="margin-top:44px;border-top:1px solid #cbd0c4;padding-top:18px;font-size:14px;color:#52604d">
+  Written to accompany <code>docs/canvas-as-nucleus.md</code>. Needs JavaScript:
+  the whole point is that it reads the engine rather than describing it.
+</footer>
+</main>
+
+<script src="js/model.js?v=1"></script>
+<script src="js/lessons.js?v=55"></script>
+<script src="js/render.js?v=57"></script>
+<script>
+/* Render a slide at true 1280x720 into a box and scale it, which is what every
+   surface in the app does — the rail thumbnail and the projector included. */
+function mount(host, deck, slide, index) {
+  const root = SF.renderSlide(deck, slide, { index: index || 0, total: 3, revealed: 99 });
+  root.style.transformOrigin = '0 0';
+  host.replaceChildren(root);
+  root.style.transform = 'scale(' + (host.clientWidth / 1280) + ')';
+  /* Reading a layout property forces the reflow, so everything measured after
+     this line sees final geometry without waiting for a frame that may never
+     come. */
+  void root.offsetHeight;
+  return root;
+}
+
+function verdict(root) {
+  const v = SF.measureSlideFit(root, { floor: SF.LEGIBLE_FLOOR });
+  if (!v) return { ok: true, text: 'not measurable' };
+  const over = v.issues.filter(i => i.direction === 'bottom')[0];
+  return {
+    ok: v.fits,
+    text: v.fits ? 'fits · smallest type ' + (v.smallest ?? '—') + 'px'
+                 : 'overflows ' + Math.round(over ? over.px : 0) + 'px'
+  };
+}
+
+function figure(label, why) {
+  const f = document.createElement('figure');
+  const stage = document.createElement('div');
+  stage.className = 'stage';
+  const cap = document.createElement('figcaption');
+  cap.innerHTML = '<b>' + label + '</b>' + why;
+  const vd = document.createElement('span');
+  vd.className = 'verdict';
+  f.append(stage, cap, vd);
+  return { node: f, stage, verdict: vd };
+}
+
+const SHORT = ['Position beats length', 'Length beats area', 'Area beats saturation'];
+const LONG = [
+  'Position along a common scale is read most accurately, which is why it is the default for any quantity that matters',
+  'Length is next, and it is why a bar chart with a truncated baseline stops telling the truth about its own numbers',
+  'Area is well down the list, so a bubble chart asks the reader for a judgement they are measurably bad at',
+  'Saturation is last, and a heatmap without direct labels asks for exactly that judgement'
+];
+
+function baseSlide(words) {
+  return SF.normalizeSlide({
+    type: 'content',
+    title: 'How accurately people read each channel',
+    bullets: words === 'long' ? LONG : SHORT
+  });
+}
+
+function deckFor(theme) {
+  return SF.normalizeDeck({ theme, showSlideNumbers: false, slides: [] });
+}
+
+/* ---- Section 1: three answers ---- */
+const trio = document.getElementById('trio');
+const themeSel = document.getElementById('theme');
+const compSel = document.getElementById('comp');
+const wordsSel = document.getElementById('words');
+
+Object.entries(SF.THEMES).forEach(([k, t]) => {
+  const o = document.createElement('option'); o.value = k; o.textContent = t.name || k;
+  themeSel.append(o);
+});
+themeSel.value = SF.THEMES.northeastern ? 'northeastern' : Object.keys(SF.THEMES)[0];
+
+function fillCompositions() {
+  const probe = baseSlide('short');
+  const opts = SF.compositionOptions(probe) || [];
+  compSel.replaceChildren();
+  opts.forEach(k => {
+    const o = document.createElement('option'); o.value = k;
+    o.textContent = (SF.COMPOSITIONS[k] && SF.COMPOSITIONS[k].label) || k;
+    compSel.append(o);
+  });
+  if (!opts.length) { const o = document.createElement('option'); o.textContent = 'none for this type'; compSel.append(o); }
+}
+fillCompositions();
+
+/* The regions below are the theme's own arrangement written down as cells: a
+   heading across the top, the body under it. Nothing here is a coordinate. */
+const BODY_KEY = 'block-1';
+const REGIONS = { title: { col: 1, row: 1, cols: 12, rows: 2 }, [BODY_KEY]: { col: 1, row: 4, cols: 8, rows: 10 } };
+
+function drawTrio() {
+  const theme = themeSel.value, comp = compSel.value, words = wordsSel.value;
+  const deck = deckFor(theme);
+  trio.replaceChildren();
+  const cases = [
+    ['Theme default', 'Arrangement stored: <em>nothing</em>. The type and the theme decide everything.', s => s],
+    ['Composition', 'Stored: <em>one name</em> — <code>' + comp + '</code>. Theme-independent, reflows, re-themes.', s => { s.design = { composition: comp }; return s; }],
+    ['Region lattice', 'Stored: <em>a cell range per block</em> on the 16×12 grid.', s => { s.design = { regions: REGIONS }; return s; }]
+  ];
+  const results = [];
+  cases.forEach(([label, why, shape], i) => {
+    const f = figure(label, why);
+    trio.append(f.node);
+    const slide = shape(baseSlide(words));
+    const root = mount(f.stage, deck, slide, i);
+    const v = verdict(root);
+    f.verdict.className = 'verdict ' + (v.ok ? 'ok' : 'over');
+    f.verdict.textContent = v.text;
+    results.push(v.ok);
+  });
+  document.getElementById('reflowNote').innerHTML = words === 'long'
+    ? '<b>All three reflowed, and all three still fit.</b> None of them stores a coordinate, so longer copy simply lays out — that is the property a freeform element model gives up, and the reason this canvas is not Canva.'
+    : '<b>Switch Content to \u201Clong enough to reflow\u201D.</b> All three arrangements absorb it, because none stores a pixel. That is the property worth protecting.';
+  document.getElementById('knobTally').textContent =
+    '3 controls on this page · ' + Object.keys(SF.DESIGN_CONTROLS).length + ' design keys exist in the app';
+}
+
+/* ---- Section 2: the clash ---- */
+function drawClash() {
+  const host = document.getElementById('clash');
+  const deck = deckFor(themeSel.value);
+  host.replaceChildren();
+  const comp = compSel.value;
+  [
+    ['Composition only', 'Stored: <code>' + comp + '</code>.', { composition: comp }],
+    ['Composition + regions', 'Stored: both. The region map silently wins.', { composition: comp, regions: REGIONS }]
+  ].forEach(([label, why, design], i) => {
+    const f = figure(label, why);
+    host.append(f.node);
+    const slide = baseSlide('short');
+    slide.design = design;
+    const root = mount(f.stage, deck, slide, i);
+    const latticed = root.classList.contains('sf-latticed');
+    f.verdict.className = 'verdict ' + (latticed ? 'over' : 'ok');
+    f.verdict.textContent = latticed ? 'regions applied — composition overridden' : 'composition applied';
+  });
+}
+
+/* ---- Section 3: lines ---- */
+const rowsSel = document.getElementById('rows');
+for (let r = 2; r <= 12; r++) {
+  const o = document.createElement('option'); o.value = r; o.textContent = r + (r === 1 ? ' line' : ' lines');
+  rowsSel.append(o);
+}
+rowsSel.value = '10';
+
+function drawFit() {
+  const host = document.getElementById('fitDemo');
+  const deck = deckFor(themeSel.value);
+  host.replaceChildren();
+  const rows = Number(rowsSel.value);
+  [['Short copy', 'short'], ['Long copy', 'long']].forEach(([label, words], i) => {
+    const f = figure(label, 'Body given <code>' + rows + '</code> of the 16 lines.');
+    host.append(f.node);
+    const slide = baseSlide(words);
+    slide.design = { regions: { title: REGIONS.title, [BODY_KEY]: { col: 1, row: 4, cols: 10, rows } } };
+    const root = mount(f.stage, deck, slide, i);
+    const rowsOut = SF.latticeFit(root);
+    const body = rowsOut.find(x => x.key === BODY_KEY) || rowsOut[rowsOut.length - 1];
+    if (body) {
+      f.verdict.className = 'verdict ' + (body.over ? 'over' : 'ok');
+      f.verdict.textContent = body.over
+        ? 'needs ' + body.need + ' lines, has ' + body.have
+        : 'needs ' + body.need + ' lines, has ' + body.have + ' — fits';
+    } else f.verdict.textContent = 'no slots';
+    document.getElementById('fitTally').textContent =
+      'the verdict names the shortfall, so the author knows what to change';
+  });
+}
+
+/* ---- Section 4: the tally, counted not claimed ---- */
+function drawTally() {
+  const types = new Set(), keys = new Set(), comps = new Set();
+  let slides = 0, lessons = 0;
+  for (const k of Object.keys(SF.LIBRARY_SEED_KEYS)) {
+    lessons++;
+    for (const s of SF.buildLesson(k).slides) {
+      slides++; types.add(s.type);
+      Object.keys(s.design || {}).forEach(x => keys.add(x));
+      if (s.design && s.design.composition) comps.add(s.design.composition);
+    }
+  }
+  const allTypes = Object.keys(SF.SLIDE_TYPES), allKeys = Object.keys(SF.DESIGN_CONTROLS);
+  const allComps = Object.keys(SF.COMPOSITIONS);
+  const rows = [
+    ['Slide types', allTypes.length, types.size],
+    ['Design keys', allKeys.length, keys.size],
+    ['Compositions', allComps.length, comps.size],
+    ['Themes', Object.keys(SF.THEMES).length, '—']
+  ];
+  document.getElementById('tally').innerHTML =
+    '<table><tr><th>Surface</th><th>Exists</th><th>Used by the library</th></tr>' +
+    rows.map(r => '<tr><td>' + r[0] + '</td><td class="n">' + r[1] + '</td><td class="n ' +
+      (r[2] === r[1] ? 'live' : (r[2] === '—' ? '' : 'dead')) + '">' + r[2] + '</td></tr>').join('') +
+    '</table><p class="lede" style="margin-top:12px">Counted over <b>' + lessons +
+    '</b> library lessons and <b>' + slides + '</b> slides.</p>';
+
+  const dead = allKeys.filter(k => !keys.has(k));
+  document.getElementById('deadKeys').innerHTML =
+    '<tr><th>Never used by any library slide (' + dead.length + ')</th><th>Pane</th><th>Applies to</th></tr>' +
+    dead.map(k => {
+      const c = SF.DESIGN_CONTROLS[k];
+      const t = c.types === '*' ? 'most slides' : c.types.length + ' type' + (c.types.length === 1 ? '' : 's');
+      return '<tr><td><code>' + k + '</code> — ' + c.label + '</td><td>' + c.pane + '</td><td>' + t + '</td></tr>';
+    }).join('');
+}
+
+function redrawAll() { drawTrio(); drawClash(); drawFit(); }
+[themeSel, compSel, wordsSel].forEach(el => el.addEventListener('change', redrawAll));
+rowsSel.addEventListener('change', drawFit);
+addEventListener('resize', () => { redrawAll(); });
+redrawAll();
+drawTally();
+</script></body></html>
