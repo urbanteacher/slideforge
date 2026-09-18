@@ -61,9 +61,9 @@ jobs:
 
       # Curated rather than all 42, which take long enough that people start
       # skipping the branch. The set is named `ci` in tools/smoke/run.mjs, so
-      # the same nineteen run here and on a laptop with `npm run smoke:ci`,
+      # the same twenty-one run here and on a laptop with `npm run smoke:ci`,
       # and the runner fails loudly if the set names a smoke that no longer
-      # exists rather than quietly running eighteen of nineteen.
+      # exists rather than quietly running twenty of twenty-one.
       #
       # Nine of them arrived here from `npm test`, where a wrapper test used
       # to spawn each one and match a line of its output. That put a browser
@@ -88,13 +88,15 @@ jobs:
       #   refresh              a reload comes back to the deck you were on
       #   exports / share      writing a deck out, and sending a copy
       #   live-quiz            the multi-client live path
+      #   mindmap              build steps, uploads, and reload persistence
+      #   desk-overlay         what covers the wall, mirrored on the desk
       #
       # The last four were added after all four turned out to have been broken
       # for a day with nobody noticing: refresh by a real regression, the other
       # three by a path this suite's own move redirected. A curated set that
       # leaves out the things most likely to break quietly is a set that hides
       # them.
-      # Measured locally at 110s in total, of which demo-deck is 39.
+      # Measured locally at 150s in total, of which demo-deck is 39.
       - run: npm run smoke:ci
 
       - name: upload failure output

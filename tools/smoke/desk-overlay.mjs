@@ -103,8 +103,38 @@ try {
   await desk.waitForFunction(() => !document.querySelector('#boxNow .wall-overlay'));
   assert.equal(await desk.locator('#boxNow .slide').count(), 1, 'the slide is back on the desk');
 
-  /* The room rail sits beside the slide rather than over it, and a live
-     session raises it on its own, so it is already up by now. */
+  /* The room rail sits beside the slide rather than over it. This used to say
+     a live session raises it on its own and waited — but the rail goes up when
+     scores or responses arrive, and nobody in this room has answered anything,
+     so nothing raised it and the wait was the whole failure. Pressed here
+     through the control a teacher presses, which is also the honest subject of
+     the check: what the desk does with a rail that is up, not what puts one up.
+     Cycled rather than set, because Room view is a cycle: off, beside, full. */
+  /* Onto a slide that asks the room something. The rail is not a thing a live
+     session raises by itself, which is what this used to assume and wait for:
+     showSidebar raises the feedback rail when the slide has a prompt and the
+     score rail when the deck's quiz keeps a scoreboard, and with neither it
+     opens the join card instead — "the join card is the room". A lesson deck
+     has no quiz scoreboard, so with no prompt on screen the press this check
+     needs cycles the join card on and off and no rail ever appears. Worse, the
+     mirror is suppressed while that card is up, by design. So: stand on a
+     prompt slide, which is the state a teacher is in when they want the room
+     beside the slide. */
+  const promptAt = await wall.evaluate(() =>
+    SF.Player.deck.slides.findIndex((s) => !!(SF.slideFeedback && SF.slideFeedback(s))));
+  assert.ok(promptAt > -1, 'the lesson should carry a slide that asks the room something');
+  await wall.evaluate((i) => SF.Player.goTo(i), promptAt);
+  await wall.waitForFunction((i) => SF.Player.idx === i, promptAt);
+  await wall.waitForFunction(() => !!(SF.Live && SF.Live.prompt));
+
+  for (let i = 0; i < 3; i++) {
+    if ((await desk.locator('#btnRail').innerText()).trim() === 'Room: split') break;
+    await desk.locator('[data-cmd=rail]').click();
+    await desk.waitForTimeout(500);
+  }
+  assert.equal((await desk.locator('#btnRail').innerText()).trim(), 'Room: split',
+    'Room view should cycle to the split, which is the state this check is about');
+  await wall.waitForFunction(() => !!SF.Player._rail);
   await desk.waitForSelector('#boxNow .desk-wall-rail');
   assert.ok(await wall.evaluate(() => !!SF.Player._rail), 'the wall really has a rail up');
   /* The middle room-view stop is called "split" where a teacher reads it. */

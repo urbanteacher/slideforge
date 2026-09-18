@@ -36,13 +36,29 @@ try {
  assert.equal(await page.locator('#previewBox .mindmap-node strong').first().textContent(),'Find patterns');
  await page.evaluate(()=>SF.Editor.workspace.play());
  const before = await page.locator('#player .mindmap-branch.step').count(); assert.equal(before,6);
+ /* Player.idx is the slide index, and this asserted it was 6 after one press —
+    a hard-coded position inside a 74-slide lesson that people edit. The mindmap
+    sits at 7 now and the number was never the point: what matters is that a
+    press reveals a branch instead of leaving the slide, which is what
+    progressive means. Asked relative to wherever the slide is. */
+ const mindmapAt = await page.evaluate(()=>SF.Player.idx);
+ assert.equal(await page.evaluate(()=>SF.Player.deck.slides[SF.Player.idx].type),'mindmap');
  await page.evaluate(()=>SF.Player.next());
- assert.equal(await page.evaluate(()=>SF.Player.idx),6);
+ assert.equal(await page.evaluate(()=>SF.Player.idx),mindmapAt,
+  'a build step should reveal a branch, not move to the next slide');
  await page.evaluate(()=>{for(let i=0;i<5;i++)SF.Player.next();});
+ assert.equal(await page.evaluate(()=>SF.Player.idx),mindmapAt,
+  'six presses reveal six branches and stay on the slide');
  await page.waitForFunction(()=>Array.from(document.querySelectorAll('#player .slide')).every(n=>getComputedStyle(n).opacity==='1'));
  await page.locator('#player .slide').screenshot({path:'/tmp/sf-mindmap-preview.png'});
  const overflow = await page.locator('#player .mindmap-node, #player .mindmap-centre').evaluateAll(nodes=>nodes.some(n=>n.scrollHeight>n.clientHeight+2||n.scrollWidth>n.clientWidth+2));
  assert.equal(overflow,false);
+ /* The other half of the contract: the press after the last branch leaves the
+    slide. Checked here rather than before the screenshot so the run never has
+    to jump back to a slide it already left. */
+ await page.evaluate(()=>SF.Player.next());
+ assert.equal(await page.evaluate(()=>SF.Player.idx),mindmapAt+1,
+  'the press after the last branch moves on');
  await page.evaluate(()=>SF.Player.close());
  await page.reload();
  assert.equal(await page.evaluate(()=>SF.Editor.deck().slides.find(s=>s.type==='mindmap').bullets[0].startsWith('Find patterns')),true);
