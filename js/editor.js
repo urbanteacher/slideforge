@@ -1932,7 +1932,23 @@
       image.onerror=function(){SF.toast('Could not load that image. Check the URL or upload a file.');};image.src=src;
     }));
     if (!deck.logo) return;
-    insp.appendChild(UI.field('Logo size',UI.select([{value:'small',label:'Small'},{value:'medium',label:'Medium'},{value:'large',label:'Large'}],deck.logoSize||'medium',function(v){deck.logoSize=v;touched();if(redraw)redraw();else draw();})));
+
+    /* Where the logo goes is the header/footer slots' business once they are
+       switched on: a logo slot reads deck.logo and header-footer.css hides
+       .slide-logo on a managed slide, so Logo size and Show logo on would be
+       two controls for a position they no longer decide. The upload above
+       stays either way — it is the only thing that sets deck.logo, and the
+       slot has nothing to draw without it.
+       Not removed outright: every one of the 22 library decks still uses the
+       legacy path, because headerFooter.enabled defaults to false. */
+    var managed = !!(deck.headerFooter && deck.headerFooter.enabled);
+    if (managed) {
+      insp.appendChild(el('p', 'hint',
+        'Header and footer slots are on, so they decide where this logo sits and how '
+        + 'big it is. Put it in a slot from Header & footer in the slide panel.'));
+    }
+
+    if (!managed) insp.appendChild(UI.field('Logo size',UI.select([{value:'small',label:'Small'},{value:'medium',label:'Medium'},{value:'large',label:'Large'}],deck.logoSize||'medium',function(v){deck.logoSize=v;touched();if(redraw)redraw();else draw();})));
 
     insp.appendChild(UI.field('Organisation',
       UI.text(deck.org || '', function (v) {
@@ -1955,7 +1971,7 @@
       'Auto turns it white only where this theme paints a dark ground; a picture slide ' +
       'can still be set on its own in Customise this slide.'));
 
-    insp.appendChild(UI.field('Show logo on', UI.select([
+    if (!managed) insp.appendChild(UI.field('Show logo on', UI.select([
       { value: 'all', label: 'Every slide' },
       /* Was "Title slide only", which named a layout rather than a position
          and so did nothing at all on a deck that opens on a Section. */

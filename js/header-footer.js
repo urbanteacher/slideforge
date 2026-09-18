@@ -148,11 +148,20 @@
     picture.onchange=function(){
       var file=picture.files&&picture.files[0];picture.value='';if(!file)return;
       if(!/^image\//.test(file.type)){SF.toast('Choose an image file.');return;}
-      if(file.size>3.5*1024*1024){SF.toast('Choose an image below 3.5 MB for reliable deck storage.');return;}
+      if(file.size>3.5*1024*1024){SF.toast('That file is '+(file.size/1024/1024).toFixed(1)+' MB. Slot images have to stay under 3.5 MB, or the lesson outgrows the browser storage it is saved in.');return;}
       var owner=scope==='deck'?deck():slide(), selectedAtStart=selected, scopeAtStart=scope;
       var reader=new FileReader();reader.onload=function(){
         if(scope!==scopeAtStart||selected!==selectedAtStart||owner!==(scope==='deck'?deck():slide())){SF.toast('Selection changed. Choose the image again in the intended slot.');return;}
-        updateItem('src',String(reader.result));
+        /* Decode before keeping it, the way the deck logo picker already does.
+           A file named like an image that the browser cannot draw stores
+           perfectly and renders as nothing — an empty slot and no message,
+           which is the one failure indistinguishable from the feature being
+           broken. */
+        if(typeof reader.result!=='string')return;
+        var dataUrl=reader.result, test=new Image();
+        test.onload=function(){updateItem('src',dataUrl);};
+        test.onerror=function(){SF.toast('That file is named like an image but the browser cannot draw it, so the slot would stay empty. Try a PNG or SVG.');};
+        test.src=dataUrl;
       };reader.onerror=function(){SF.toast('Could not read that image.');};reader.readAsDataURL(file);
     };
     warning=node('p','',panel);warning.className='hf-hint';warning.setAttribute('aria-live','polite');
