@@ -56,23 +56,18 @@
 .art-editing .pad { opacity: .45; pointer-events: none; }
 
 /* --------------------------------------------------------------- the bar */
-/* Lives in the canvas bar beside zoom, and only while the flip is up: these
-   are verbs with no meaning on the content face. */
-/* Seven more controls do not fit beside zoom and the panel switch — they
-   collided with both and pushed "Panel" off the end. The art bar takes a row of
-   its own instead, which it can do without disturbing the bar's own layout
-   because it is only there while the flip is up. */
+/* The toggle stays in the canvas bar beside zoom; the controls it opens live in
+   the side column. Seven of them never fitted next to zoom and the panel switch
+   — they pushed "Panel" off the end — and even wrapped to their own row they
+   were taking the canvas's height to do it. The bar still wraps, because the
+   three face toggles plus zoom can still meet on a narrow window. */
 .canvas-bar { flex-wrap: wrap; }
 .art-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  flex: 1 0 100%;
-  order: 1;
-  margin-top: 6px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(12, 51, 84, .14);
+  min-width: 0;
 }
 .art-bar[hidden] { display: none; }
 .canvas-mode-help {

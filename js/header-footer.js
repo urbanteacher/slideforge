@@ -103,7 +103,9 @@
     refresh();
   }
   function install() {
-    var bar=document.querySelector('.canvas-bar');if(!bar)return;
+    /* The side column, not the canvas bar: an eighteen-control form under
+       the slide left it 169px tall on a 900px window. */
+    var bar=document.getElementById('canvasFacePanel')||document.querySelector('.canvas-bar');if(!bar)return;
     panel=node('section','',bar);panel.className='hf-panel';panel.hidden=true;panel.id='headerFooterPanel';
     panel.setAttribute('aria-label','Header and footer slots');
     var toolbar=node('div','',panel);toolbar.className='hf-toolbar';

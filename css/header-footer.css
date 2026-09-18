@@ -32,24 +32,17 @@
 .sf-furniture-canvas[data-anchor$=right] { right:52px; justify-content:flex-end; text-align:right; }
 .hf-editing .sf-furniture-cell { pointer-events:auto; cursor:pointer; outline:1px dashed #718377; }
 .hf-editing .sf-furniture-cell[data-hf-selected] { outline:3px solid #536b3c; }
-/* Eighteen controls in a bar under the canvas. Two things have to hold: it
-   cannot grow past the bar sideways, and it cannot grow past the window
-   downwards — measured at 375px wide the panel was 328px inside a 260px
-   container, and at 645px tall the file input sat at 657px with the panel
-   set to overflow:visible, so "Choose image" could not be reached at all. */
+/* Eighteen controls, now in the side column. They still have to survive a
+   narrow measure: at 375px this was 328px inside a 260px container with six
+   children past the right edge and no scroll to reach them, which is what the
+   min-width:0 rules below are for. The height problem the column solves. */
 .hf-panel {
-  flex:1 0 100%;
-  order:3;
-  padding:12px 0;
-  border-top:1px solid #ccd3c6;
+  padding:0;
   /* A flex item's min-width is auto, so a child with a wide basis pushes the
      whole panel past its container instead of wrapping. */
   min-width:0;
-  /* Leave the canvas the larger share of a short window, and scroll rather
-     than clip: a control you cannot reach is the same as a missing one. */
-  max-height:min(48vh, 440px);
-  overflow-y:auto;
-  overscroll-behavior:contain;
+  /* .canvas-face-panel scrolls the column, so the panel no longer caps its
+     own height — two nested scrollers would trap the wheel in the inner one. */
 }
 .hf-panel[hidden] { display:none; }
 .hf-toolbar,.hf-fields { display:flex; flex-wrap:wrap; gap:10px; align-items:center; min-width:0; }
