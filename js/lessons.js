@@ -1345,7 +1345,8 @@
             "Book\tVisualization Analysis and Design\tTamara Munzner",
             "Chapter\t2 · What: Data Abstraction\tRead before the lab",
             "The move\tDescribe data independently of what it is about\tSo the same vocabulary works on any dataset",
-            "It asks\tItems, attributes, links, positions?\tAnd: categorical, ordinal or quantitative?"
+            "It asks\tItems, attributes, links, positions?\tAnd: categorical, ordinal or quantitative?",
+            "And then\tWhich attributes are keys, and which are values?\tA key identifies an item; a value is what you measured about it"
           ],
           body: "A chart type chosen before the data is described is a guess. Munzner's abstraction is how you stop guessing.",
           notes: "The point of Chapter 2 is the order of operations. Students reach for a bar chart first and ask what the data is afterwards. Munzner reverses it, and the whole module depends on that reversal.",
@@ -1529,7 +1530,8 @@
             "Truncated axes\tLength or height no longer matches quantity.",
             "Distorted aspect ratios\tThe same data made to look flat or steep at will.",
             "Cherry-picked ranges\tThe window chosen so the trend points the desired way.",
-            "3D effects\tA third dimension the data never had, and perspective that shrinks the back."
+            "3D effects\tA third dimension the data never had, and perspective that shrinks the back.",
+            "Inconsistent scales\tTwo panels side by side on different axes, compared as though they were the same."
           ],
           notes: "Ask for the fifth from the room — dual axes usually comes up, and it is a good answer. Every one of these is available by default in Excel, which is the uncomfortable part.",
           progressive: true
@@ -1594,6 +1596,18 @@
           progressive: true
         },
         {
+          type: "cards",
+          title: "Consistency, and context",
+          subtitle: "The other two thirds of the rules-of-thumb slide",
+          design: { cardsMode: "rows" },
+          bullets: [
+            "Consistency\tSame encoding for the same kind of data, every time. If blue meant 2024 on slide six, it cannot mean Europe on slide nine. Keep the visual hierarchy stable too.",
+            "Context\tA number alone is not a finding. Give reference points and benchmarks — last year, the target, the average — and annotate the moments that explain a shape."
+          ],
+          notes: "Consistency is the one that fails across a deck rather than within a slide, so it is invisible while you build and obvious to the room. Context is what turns 'sales were 4.2m' into 'sales were 4.2m against a 5m target' — same number, entirely different slide.",
+          progressive: true
+        },
+        {
           type: "keyfact",
           title: "Why five to nine",
           subtitle: "Miller's law — the limit belongs to the reader, not the designer",
@@ -1646,17 +1660,31 @@
         },
         {
           type: "split",
-          title: "Categorical needs identity, ordinal needs order",
-          subtitle: "Match the channel to the question the data can answer",
+          title: "Categorical needs identity",
+          subtitle: "No order to preserve — so the channel only has to say which",
           bullets: [
-            "Categorical → hue, shape, spatial grouping. Bar charts for counts; pie only for two to five slices.",
-            "Ordinal → a sequential ramp, size progression, or position along an axis.",
-            "Ordinal in unordered hues throws the order away — the reader cannot get it back."
+            "Best channels: hue, shape, spatial grouping.",
+            "Bar charts for counts.",
+            "Pie charts sparingly — two to five slices, no more.",
+            "Dot plots with colour coding, when the bars would be mostly empty ink."
           ],
           image: "assets/lesson/ipdv/categorical-channels.jpg",
-          notes: "The pie caveat is worth stating out loud: it encodes angle, which is well down the accuracy ranking they will see in ten minutes. Two to five slices, or use a bar.",
+          notes: "The pie caveat is worth stating out loud: a pie encodes angle, which is well down the accuracy ranking they met ten minutes ago. Two to five slices, or use a bar. The dot plot is the one students have usually never been shown — worth sketching on the board.",
           progressive: true,
           imageSide: "right"
+        },
+        {
+          type: "content",
+          title: "Ordinal needs order",
+          subtitle: "There is a sequence, and the channel has to carry it",
+          bullets: [
+            "Best channels: a sequential palette, a size progression, or position along an axis.",
+            "Diverging bar charts for Likert scales — agree and disagree growing away from a neutral centre.",
+            "Heatmaps with a sequential ramp, never a rainbow.",
+            "Ranked lists, where position does the whole job."
+          ],
+          notes: "Likert is the one they will actually meet in AE1 and in their own survey data. Point out that a diverging bar for Likert is the same reasoning as a diverging colour scheme later in the lecture: a meaningful middle, and two directions away from it.",
+          progressive: true
         },
         {
           type: "statement",
