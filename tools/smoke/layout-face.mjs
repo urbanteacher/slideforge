@@ -521,7 +521,12 @@ try {
     await page.waitForTimeout(600);
     at = await centreOf('.sf-slot[data-block-key="block-1"]');
     await page.mouse.click(at.x, at.y);
-    await page.waitForTimeout(300);
+    /* Waited for rather than slept through: paintBar runs on a frame after the
+       click, so a fixed pause races it and the control is still disabled. */
+    await page.waitForFunction(() => {
+      const n = document.getElementById('arrangeSplit');
+      return !!n && !n.disabled;
+    }, null, { timeout: 8000 });
   };
   const shares = () => page.evaluate(() => {
     const r = SF.Editor.currentSlide().design.regions;
@@ -534,7 +539,7 @@ try {
   for (const [share, want] of [['50', [6, 6]], ['40', [5, 7]], ['60', [7, 5]],
                                ['20', [2, 10]], ['80', [10, 2]]]) {
     await seedSplit(12);
-    await page.selectOption('#arrangeSplit', share);
+    await page.selectOption('#arrangeSplit', 'col:' + share);
     await page.waitForTimeout(700);
     const got = await shares();
     assert.deepEqual([got.left, got.right], want,
@@ -576,17 +581,112 @@ try {
      across the half just freed and sit on top of the new one — the split would
      look as though it had not happened. */
   await seedSplit(12, { anchorX: 'center' });
-  await page.selectOption('#arrangeSplit', '50');
+  await page.selectOption('#arrangeSplit', 'col:50');
   await page.waitForTimeout(700);
   const cut = await shares();
   assert.equal(cut.anchored, false, 'the anchor should go with the width it described');
   assert.ok(cut.leftCol + cut.left <= cut.rightCol, 'and the two halves must not overlap');
   checks++;
 
+  /* 7e. The same cut the other way. A block divides its own footprint, so
+         nothing else on the slide moves — which is the whole reason this was
+         safe to add after the columns: a split is not a resize, and the two
+         halves together occupy exactly the cells the one block did. */
+  const rowShares = () => page.evaluate(() => {
+    const r = SF.Editor.currentSlide().design.regions;
+    const made = Object.keys(r).find((k) => k.startsWith('blocks.'));
+    return { top: r['block-1'].rows, topRow: r['block-1'].row,
+             bottom: made ? r[made].rows : null, bottomRow: made ? r[made].row : null,
+             cols: made ? r[made].cols : null,
+             anchoredY: 'anchorY' in r['block-1'], aligned: 'alignY' in r['block-1'],
+             anchoredX: r['block-1'].anchorX };
+  });
+  const seedRows = async (rows, extra) => {
+    await page.evaluate(({ n, e }) => {
+      const s = SF.Editor.currentSlide();
+      s.blocks = [];
+      s.design.regions = { title: { col: 1, row: 1, cols: 12, rows: 2 },
+                           'block-1': Object.assign({ col: 1, row: 3, cols: 11, rows: n }, e || {}) };
+      SF.Editor.refreshCanvas();
+      SF.Arrange.afterPaint();
+    }, { n: rows, e: extra });
+    await page.waitForTimeout(600);
+    at = await centreOf('.sf-slot[data-block-key="block-1"]');
+    await page.mouse.click(at.x, at.y);
+    await page.waitForFunction(() => {
+      const n = document.getElementById('arrangeSplit');
+      return !!n && !n.disabled;
+    }, null, { timeout: 8000 });
+  };
+
+  for (const [share, want] of [['50', [4, 4]], ['40', [3, 5]], ['60', [5, 3]],
+                               ['20', [2, 6]], ['80', [6, 2]]]) {
+    await seedRows(8);
+    await page.selectOption('#arrangeSplit', 'row:' + share);
+    await page.waitForTimeout(700);
+    const got = await rowShares();
+    assert.deepEqual([got.top, got.bottom], want,
+      `${share}/${100 - Number(share)} of eight lines should be ${want.join(' + ')}`);
+    assert.equal(got.bottomRow, got.topRow + got.top,
+      'the second block should start where the first ends, with no gap and no overlap');
+    assert.equal(got.cols, 11, 'and keep the full width, because only the rows were cut');
+  }
+  checks++;
+
+  /* Nothing under it moves. The footprint is unchanged, so a block parked
+     below is exactly where it was. */
+  await page.evaluate(() => {
+    const s = SF.Editor.currentSlide();
+    s.blocks = [{ id: 'below', kind: 'text', text: 'under' }];
+    s.design.regions = { title: { col: 1, row: 1, cols: 12, rows: 2 },
+                         'block-1': { col: 1, row: 3, cols: 11, rows: 6 },
+                         'blocks.below': { col: 1, row: 12, cols: 11, rows: 3 } };
+    SF.Editor.refreshCanvas();
+    SF.Arrange.afterPaint();
+  });
+  await page.waitForTimeout(600);
+  at = await centreOf('.sf-slot[data-block-key="block-1"]');
+  await page.mouse.click(at.x, at.y);
+  await page.waitForTimeout(300);
+  await page.selectOption('#arrangeSplit', 'row:50');
+  await page.waitForTimeout(700);
+  const settled = await page.evaluate(() => {
+    const r = SF.Editor.currentSlide().design.regions;
+    const made = Object.keys(r).filter((k) => k.startsWith('blocks.') && k !== 'blocks.below');
+    return { below: r['blocks.below'], top: r['block-1'].rows,
+             bottom: made.length ? r[made[0]].rows : null };
+  });
+  assert.deepEqual(settled.below, { col: 1, row: 12, cols: 11, rows: 3 },
+    'a block below the one being split must not move: a split is not a resize');
+  assert.equal(settled.top + settled.bottom, 6,
+    'and the two halves should occupy exactly the rows the one block did');
+  checks++;
+
+  /* The anchor on the axis being cut goes; the other axis keeps its own. */
+  await seedRows(6, { anchorY: 'middle', alignY: 'bottom', anchorX: 'center' });
+  await page.selectOption('#arrangeSplit', 'row:50');
+  await page.waitForTimeout(700);
+  const rowCut = await rowShares();
+  assert.equal(rowCut.anchoredY, false, 'the vertical anchor goes with the height it described');
+  assert.equal(rowCut.aligned, false,
+    'and so does alignY, which placed words in rows the block no longer has all of');
+  assert.equal(rowCut.anchoredX, 'center', 'the horizontal anchor is untouched by a horizontal cut');
+  checks++;
+
   /* One column cannot become two, and the control says so rather than failing
      quietly when pressed. */
   await seedSplit(1);
-  assert.equal(await page.isDisabled('#arrangeSplit'), true, 'a one-column block cannot be split');
+  await page.evaluate(() => {
+    SF.Editor.currentSlide().design.regions['block-1'].rows = 1;
+    SF.Editor.refreshCanvas();
+    SF.Arrange.afterPaint();
+  });
+  await page.waitForTimeout(500);
+  at = await centreOf('.sf-slot[data-block-key="block-1"]');
+  await page.mouse.click(at.x, at.y);
+  await page.waitForTimeout(300);
+  assert.equal(await page.isDisabled('#arrangeSplit'), true,
+    'a single cell has neither columns nor lines to cut');
   assert.match(await page.getAttribute('#arrangeSplit', 'title'), /cannot become two/,
     'and the control should say why');
   checks++;
@@ -651,7 +751,8 @@ try {
     + `the top, middle or `
     + `bottom of its own rows, the bar speaks SF.latticeFit, `
     + `blocks can be added, typed into, duplicated and removed while layout blocks cannot, `
-    + `a block splits 50/50, 40/60 or 20/80 with a new block in what is freed, `
+    + `a block splits 50/50, 40/60 or 20/80 either way with a new block in what is freed `
+    + `and nothing else moving, `
     + `Theme drops the map and Escape finishes`);
 } finally {
   await browser.close();

@@ -289,25 +289,46 @@ try {
     document.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
     await new Promise((x) => setTimeout(x, 300));
     const out = { offered: [...picker.options].map((o) => o.textContent.trim()).filter((t) => !/Split/.test(t)) };
-    picker.value = '40';
+    picker.value = 'col:40';
     picker.dispatchEvent(new Event('change'));
     await new Promise((x) => setTimeout(x, 700));
     const rs = SF.Editor.currentSlide().design.regions;
     const made = Object.keys(rs).find((k) => k.startsWith('blocks.'));
     out.left = rs['block-1'].cols;
     out.right = made ? rs[made].cols : null;
+    /* And the other axis, on a fresh block. */
+    s.blocks = [];
+    s.design.regions = { title: { col: 1, row: 1, cols: 12, rows: 2 },
+                         'block-1': { col: 1, row: 3, cols: 12, rows: 8 } };
+    SF.Editor.refreshCanvas(); SF.Arrange.afterPaint();
+    await new Promise((x) => setTimeout(x, 500));
+    const slot2 = document.querySelector('#previewBox .sf-slot[data-block-key="block-1"]');
+    const r2 = slot2.getBoundingClientRect();
+    slot2.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 1,
+      isPrimary: true, clientX: r2.left + r2.width / 2, clientY: r2.top + r2.height / 2 }));
+    document.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
+    await new Promise((x) => setTimeout(x, 300));
+    picker.value = 'row:40';
+    picker.dispatchEvent(new Event('change'));
+    await new Promise((x) => setTimeout(x, 700));
+    const rs2 = SF.Editor.currentSlide().design.regions;
+    const made2 = Object.keys(rs2).find((k) => k.startsWith('blocks.'));
+    out.top = rs2['block-1'].rows;
+    out.bottom = made2 ? rs2[made2].rows : null;
     out.newBlock = !!made;
     out.selected = document.querySelector('#previewBox [data-arrange-selected]')?.dataset.blockKey === made;
     return out;
   });
   note('5. split a region to add an item', splitResult ? 'reached' : 'blocked',
     splitResult
-      ? `Split offers ${splitResult.offered.join(', ')}. A twelve-column block cut at 40/60 `
-        + `became ${splitResult.left} + ${splitResult.right} columns with a new block in what was `
-        + `freed, selected and ready to type into. The proportion is of the block's own width, so `
-        + `splitting a half again gives quarters, and it rounds to whole columns because the cell `
-        + `is the unit the fit check measures against. Columns only: cutting rows would have to `
-        + `decide what happens to everything pushed down, which is a different decision.`
+      ? `Both axes. A twelve-column block cut at 40/60 became ${splitResult.left} + `
+        + `${splitResult.right} columns; an eight-line block cut the same way became `
+        + `${splitResult.top} + ${splitResult.bottom} lines. Either way a new block lands in what `
+        + `was freed, selected and ready to type into, and nothing else on the slide moves — the `
+        + `two halves occupy exactly the cells the one block did, so a split is not a resize. `
+        + `The proportion is of the block's own span, so splitting a half again gives quarters, `
+        + `and it rounds to whole cells because the cell is the unit the fit check measures `
+        + `against.`
       : `No split control: arrange bar ids are ${split.ids.join(', ')}.`);
 
   // ==================== 6. change what an item is, not just what it says
@@ -371,8 +392,8 @@ try {
   console.log('  All four are done:');
   console.log('    1. align within a region  — region.alignY, top | middle | bottom.');
   console.log('    2. push-down on growth    — SF.restackRegions, plus ↕ Fit to text.');
-  console.log('    3. split                  — Split cuts a block 50/50, 40/60 or 20/80 and');
-  console.log('       puts a new block in what it frees. Two moves became one.');
+  console.log('    3. split                  — Split cuts a block 50/50, 40/60 or 20/80, side by');
+  console.log('       side or one above the other, and puts a new block in what it frees.');
   console.log('    4. add and remove blocks  — slide.blocks, keyed blocks.<id>, which is a');
   console.log('       content key: the lattice, the marks engine, the canvas editor and the');
   console.log('       fit check all index by content key, so one field on the model reached');

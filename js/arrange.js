@@ -358,36 +358,53 @@
     { value: '80', label: '80 · 20' }
   ];
 
-  function splitRegion(leftPercent) {
+  /* One axis or the other, and the shape of it is the same either way: divide
+     the block's own footprint and put a new block in the part that is freed.
+
+     Nothing else on the slide moves, because nothing needs to — the two halves
+     together occupy exactly the cells the one block did. That is what made the
+     row split safe to add after all: the note here used to say cutting rows
+     would have to decide what happens to everything underneath, and it does
+     not, any more than cutting columns decides what happens to either side.
+     A split is not a resize. */
+  function splitRegion(axis, firstPercent) {
     if (!selected) return;
     var s = slide();
     var map = regionsOf(s, true);
     var r = map && map[selected];
     if (!r) return;
-    if (r.cols < 2) {
-      SF.toast && SF.toast('Too narrow to split — one column cannot become two.');
+    var down = axis === 'row';
+    var span = down ? r.rows : r.cols;
+    if (span < 2) {
+      SF.toast && SF.toast(down
+        ? 'Too short to split — one line cannot become two.'
+        : 'Too narrow to split — one column cannot become two.');
       return;
     }
-    var left = clamp(Math.round(r.cols * leftPercent / 100), 1, r.cols - 1);
-    var right = r.cols - left;
+    var first = clamp(Math.round(span * firstPercent / 100), 1, span - 1);
+    var second = span - first;
     var id = 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
     SF.freeBlocksOf(s, true).push({ id: id, kind: 'text', text: '' });
-    map[SF.freeBlockKey(id)] = {
-      col: r.col + left, row: r.row, cols: right, rows: r.rows, alignY: r.alignY
-    };
-    /* The anchor has to go. anchorRegion recomputes col from it on every
-       render, so an anchored block would snap back across the half just freed
-       and sit on top of the new one — the split would look like it had not
-       happened. Being half as wide as it was, it is no longer the thing the
-       anchor was describing. */
-    delete r.anchorX;
-    r.cols = left;
+    map[SF.freeBlockKey(id)] = down
+      ? { col: r.col, row: r.row + first, cols: r.cols, rows: second }
+      : { col: r.col + first, row: r.row, cols: second, rows: r.rows, alignY: r.alignY };
+    /* The anchor on the axis being cut has to go. anchorRegion recomputes that
+       coordinate from it on every render, so an anchored block would snap back
+       across the half just freed and sit on top of the new one — the split
+       would look as though it had not happened. Being half the size it was, it
+       is no longer the thing the anchor was describing. The other axis keeps
+       its anchor, which is untouched by the cut. */
+    if (down) delete r.anchorY; else delete r.anchorX;
+    /* And a vertical cut ends where the words were packed to: alignY says
+       where text sits in rows the block no longer has all of. */
+    if (down) delete r.alignY;
+    if (down) r.rows = first; else r.cols = first;
     selected = SF.freeBlockKey(id);
     selectedSlide = s;
     commit(true);
     afterPaint();
-    SF.toast && SF.toast('Split ' + left + ' · ' + right
-      + ' columns. Click the new block to type into it.');
+    SF.toast && SF.toast('Split ' + first + ' · ' + second + (down ? ' lines' : ' columns')
+      + '. Click the new block to type into it.');
   }
 
   function duplicateBlock() {
@@ -510,10 +527,16 @@
        bar, and the title says why rather than the button just being dead. */
     var splitSel = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeSplit'));
     if (splitSel) {
-      splitSel.disabled = !region || region.cols < 2;
+      var canCut = !!region && (region.cols > 1 || region.rows > 1);
+      splitSel.disabled = !canCut;
       splitSel.title = !region ? 'Select a block to split'
-        : region.cols < 2 ? 'One column cannot become two — make it wider first'
-        : 'Cut this block\'s ' + region.cols + ' columns in two and put a new block in the rest';
+        : !canCut ? 'A single cell cannot become two — make it wider or taller first'
+        : 'Cut this block\'s ' + region.cols + ' columns or ' + region.rows
+          + ' lines in two, and put a new block in the rest';
+      /* An option for an axis with nothing to cut is offered and refused with
+         a toast rather than hidden, because a select whose contents change as
+         you move between blocks is harder to learn than one that always
+         reads the same. */
     }
     var isFree = !!(selected && SF.freeBlockId && SF.freeBlockId(selected));
     [['btnArrangeDuplicate', 'Copy this block, one row below'],
@@ -652,9 +675,11 @@
     if (splitter) {
       var splitPicker = splitter;
       splitPicker.addEventListener('change', function () {
-        var share = splitPicker.value;
+        /* "col:40" — the axis travels with the share, so one control offers
+           both cuts and the option's own group says which is which. */
+        var choice = String(splitPicker.value || '').split(':');
         splitPicker.value = '';
-        if (share) splitRegion(Number(share));
+        if (choice.length === 2) splitRegion(choice[0], Number(choice[1]));
       });
     }
     var dup = document.getElementById('btnArrangeDuplicate');
