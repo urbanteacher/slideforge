@@ -7,7 +7,7 @@ Production module, not a lab note — it moved here out of `modular-canvas/` whe
 `SF.svgScale`, `SF.FIT_TOLERANCE`, `SF.LEGIBLE_FLOOR`.
 
 Built into `js/model.js` and covered by `npm test`
-(`tests/fit-check.test.js` → `tools/smoke-fit-check.mjs`), which exercises it on
+(`tests/fit-check.test.js` → `tools/smoke/fit-check.mjs`), which exercises it on
 **production rendering with no lab page involved**. That independence is the
 point: these are the two functions `js/editor.js` calls, so they have to hold up
 without the lattice, the recipes, or anything else the lab adds.

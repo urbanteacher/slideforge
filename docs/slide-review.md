@@ -55,5 +55,5 @@ authored slides, not expanded into every possible live state.
 
 `npm test` exercises all three shapes, known overflow, hidden-slide selection,
 file imports, original-deck preservation, and the five campaign starter decks.
-`node tools/smoke-slide-review.mjs` runs just that browser check on a temporary
+`node tools/smoke/slide-review.mjs` runs just that browser check on a temporary
 local server.

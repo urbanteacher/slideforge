@@ -15,7 +15,7 @@ const root = path.resolve(__dirname, '..');
 test('campaign slide chrome holds across all five strands',
   { timeout: 120000 }, async () => {
     const { stdout } = await promisify(execFile)(
-      process.execPath, ['tools/smoke-campaign-chrome.mjs'],
+      process.execPath, ['tools/smoke/campaign-chrome.mjs'],
       { cwd: root, timeout: 115000 });
     assert.match(stdout, /header, rule and both marks hold/);
   });

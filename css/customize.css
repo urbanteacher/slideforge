@@ -434,3 +434,42 @@
    like every other row of the table. */
 .slide.cp-compare:not(.chrome-regions) .cp-comparison { margin-top:0; }
 .slide.cp-compare:not(.chrome-regions) .cp-compare-head h3 { height:72px; padding:0 22px; display:flex; align-items:center; box-sizing:border-box; }
+
+/* ------------------------------------------- editing a block on the canvas
+   The block itself takes the caret, so there is no panel over the slide and
+   no dock over the rail. Only the format bar floats, and it is fixed to the
+   viewport rather than parented into #previewBox, which clips its overflow,
+   or into #inspector, which drawInspector() empties. */
+.canvas-editable[contenteditable="plaintext-only"] {
+  outline: 2px solid #729458;
+  outline-offset: 4px;
+  cursor: text;
+  /* Typing inside a slot the lattice sized can want more room than the region
+     granted; let it show rather than clip the words being written. Layout
+     reports the overflow, which is the honest order: see it, then decide. */
+  overflow: visible;
+}
+.canvas-editable[contenteditable="plaintext-only"]:empty::before {
+  content: attr(data-placeholder);
+  opacity: .45;
+}
+.canvas-inline-tools {
+  position: fixed;
+  z-index: 70;
+  margin: 0;
+  box-shadow: 0 6px 20px rgba(12, 51, 84, .18);
+  border: 1px solid var(--ui-line, #d9dfd0);
+  max-width: calc(100vw - 16px);
+}
+.canvas-inline-tools input[type="text"] {
+  width: 150px;
+  min-width: 90px;
+  flex: 1 1 90px;
+  padding: 4px 7px;
+  border: 1px solid #bbc6b6;
+  border-radius: 6px;
+  font: inherit;
+  min-height: 32px;
+  box-sizing: border-box;
+}
+.canvas-inline-tools .canvas-inline-done { font-weight: 650; }

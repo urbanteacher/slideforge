@@ -102,4 +102,4 @@ The label/value storage remains compatible with `keywords`, but activities no lo
 
 ## Verification
 
-`npm test` checks the build, TypeScript, source fidelity, default completeness, field persistence, timer units, feedback validity and game compilation. `SF_URL=http://localhost:8799 node tools/smoke-activities.mjs` checks all 54 insertions, sequence edits/duplication/removal, timer editing, ten automatic countdowns in the real player, and 294 slide renders across all six themes in an isolated browser. Run a local server first.
+`npm test` checks the build, TypeScript, source fidelity, default completeness, field persistence, timer units, feedback validity and game compilation. `SF_URL=http://localhost:8799 node tools/smoke/activities.mjs` checks all 54 insertions, sequence edits/duplication/removal, timer editing, ten automatic countdowns in the real player, and 294 slide renders across all six themes in an isolated browser. Run a local server first.

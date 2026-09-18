@@ -314,9 +314,9 @@ at `936c3a9`:
 | `node tools/row-audit.mjs [--detail]` | every campaign block against the lattice, per composition |
 | `modular-canvas/preview.html` | the grid, slots and chrome bands drawn over real slides |
 | `node AiAd27/check-fit.mjs` | does anything overflow its slide |
-| `node tools/smoke-chrome-region.mjs` | mark and number share one declared inset |
-| `node tools/smoke-campaign-chrome.mjs` | header, closing rule, both marks |
-| `node tools/smoke-row-grid.mjs` | how well content matches a candidate pitch |
+| `node tools/smoke/chrome-region.mjs` | mark and number share one declared inset |
+| `node tools/smoke/campaign-chrome.mjs` | header, closing rule, both marks |
+| `node tools/smoke/row-grid.mjs` | how well content matches a candidate pitch |
 
 ---
 

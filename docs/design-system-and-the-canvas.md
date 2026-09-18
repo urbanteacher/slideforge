@@ -528,7 +528,7 @@ Other confirmed defects:
 - **`keyfact` always numbers itself `01`.**
 - **No composition options.** `compositionOptions()` returns `[]` for any
   aiad27 theme ([js/render.js:5032](js/render.js:5032)), and
-  `tools/smoke-design-foundations.mjs` *asserts* that (`campaign: 0`) and
+  `tools/smoke/design-foundations.mjs` *asserts* that (`campaign: 0`) and
   excludes aiad27 from its theme matrix. The carve-out is already a codified
   contract, not an oversight.
 
@@ -609,7 +609,7 @@ Two consequences for the plan:
    chrome. Whichever way that is resolved, it should be a decision rather than
    a discovery.
 
-`tools/smoke-campaign-chrome.mjs` now fails if a campaign slide renders
+`tools/smoke/campaign-chrome.mjs` now fails if a campaign slide renders
 without its header or closing rule, so the trap is caught at the point somebody
 falls into it rather than on a projector.
 
@@ -828,7 +828,7 @@ disagree.
 **Compositions** — uncommitted, in `css/customize.css` (+44),
 `js/customize.js` (+11), and `SF.COMPOSITIONS` / `compositionOptions` /
 `applyComposition` in `render.js`, verified by
-`tools/smoke-design-foundations.mjs`. Six arrangements (`poster`, `editorial`,
+`tools/smoke/design-foundations.mjs`. Six arrangements (`poster`, `editorial`,
 `frame`, `sidecar`, `rail`, `columns`) offered per slide type, stored as
 `slide.design.composition`, applied as `root.dataset.composition`, styled
 entirely in CSS against the *existing* DOM. Theme-independent, opt-in,
@@ -1023,7 +1023,7 @@ all divide it exactly.
 
 ### The measurement that should stop a retrofit
 
-Run `node tools/smoke-row-grid.mjs` against a live server. It renders the 35
+Run `node tools/smoke/row-grid.mjs` against a live server. It renders the 35
 campaign body slides plus 78 pad-only ones, measures every block edge against
 four candidate pitches, and reports the distance to the nearest row line.
 
@@ -1031,7 +1031,7 @@ Corrected 2026-09-17 after two errors, one in each direction.
 
 **First correction — the measurement.** An earlier pass generated row lines at
 band tops only, which unfairly penalised the guttered pitches: with a gap,
-an edge can legitimately sit on a band's *bottom* too. `smoke-row-grid.mjs`
+an edge can legitimately sit on a band's *bottom* too. `tools/smoke/row-grid.mjs`
 emits both. The figures below are the corrected ones.
 
 **Second correction — the comparison.** Distance to the nearest line is biased
@@ -1070,7 +1070,7 @@ becomes the span guardrail only once a pitch exists to measure against.
 
 ### The same test on NUL, and why it lands the same way
 
-`node tools/smoke-nul-row-middle.mjs --lesson layout-bank` measures the 97
+`node tools/smoke/nul-row-middle.mjs --lesson layout-bank` measures the 97
 slides of the layout bank against a header / middle / footer band model.
 
 | Metric | Result |
@@ -1244,7 +1244,7 @@ is its own business.
 `tools/visual-regression.mjs` builds its decks with no `logo` and no
 `showSlideNumbers`, and renders with no `index` — so not one of the 597
 baselines contains a mark or a page number. They all pass, which proves only
-that the bodies were left alone. `tools/smoke-chrome-region.mjs` is the check
+that the bodies were left alone. `tools/smoke/chrome-region.mjs` is the check
 that actually covers it, and it is mutation-verified: putting `top/right` back
 on `.slide-logo` fails it with "mark and page number on different right edges:
 41 of 309 slides".
@@ -1661,7 +1661,7 @@ scoped to the campaign — the white eyebrow, the inked strand mark, the rule
 that follows its ground. That is the right line, and it is the line this
 document exists to defend.
 
-`tools/smoke-campaign-chrome.mjs` now holds 53 assertions across the five
+`tools/smoke/campaign-chrome.mjs` now holds 53 assertions across the five
 strands covering every fault above, plus one that is not about any of them:
 **nothing may be set in a colour its own ground would swallow**, measured by
 luminance rather than by eye. Three of the six were re-introduced deliberately
@@ -1724,7 +1724,7 @@ complete the rest of the roadmap.
   Decision lanes display numeric positions and group them below / at least 50;
   the picker names that threshold. The spatial scale is intentionally replaced
   by groups only when that named composition is selected.
-- `tools/smoke-design-foundations.mjs` checks refreshed demos and all 16
+- `tools/smoke/design-foundations.mjs` checks refreshed demos and all 16
   compositions across all themes (436 renders), plus editable fields, step
   counts, opt-out, persistence, chrome, dates, size/alignment and comparison
   semantics. These checks do not replace visual review or pixel baselines.
@@ -1755,7 +1755,7 @@ its keys instead of the old six-item union.
   CSS list. Explicit logo overrides remain. AIAD27's white-paper print treatment
   resets automatic inversion so its logo remains visible in PDF/print output.
 - `tests/theme-manifest.test.js` checks required fields, valid grounds, layout
-  keys and compatible composition defaults. `tools/smoke-theme-manifest.mjs`
+  keys and compatible composition defaults. `tools/smoke/theme-manifest.mjs`
   checks 184 theme/layout renders, artwork, safe eyebrow text, logo overrides,
   and the actual editor, player and handout/print surfaces. Run it with the
   local server running. No visual baselines were rewritten.
@@ -1783,7 +1783,7 @@ type check exposed that omission. Imported decks retain inactive settings when
 switching layouts; this work does not introduce destructive normalization.
 
 The editor tags its actual fields with catalogue identifiers. `npm test` runs
-`tools/smoke-design-controls.mjs` on a temporary local server and operates all
+`tools/smoke/design-controls.mjs` on a temporary local server and operates all
 34 controls, checking the resulting stored design values. It exercises the
 computed focal-point sliders, image-placement helper, conditional word controls,
 and generation/clearing of choreography. Choreography uses a deterministic
@@ -1988,8 +1988,8 @@ measurements below are of structure, not semantics. Taken 2026-09-18.
 Two of those numbers are genuinely good and worth defending before criticising
 anything: **zero runtime dependencies**, and a test suite larger than a tenth of
 the product. Neither PPTist nor Polotno has the second. The instinct to check
-behaviour by rendering it and measuring the result — `smoke-fit-check`,
-`smoke-demo-deck`, the design-catalogue test — is this codebase's best habit and
+behaviour by rendering it and measuring the result — `fit-check`,
+`demo-deck`, the design-catalogue test — is this codebase's best habit and
 is the reason the canvas work in this session was caught three separate times by
 its own tooling.
 

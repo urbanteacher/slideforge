@@ -68,8 +68,18 @@ Use Node 22.12 or newer and `npm ci` to install development tools. `npm test`
 checks that the bundle matches its source and runs the full test suite.
 `npm run dev:build` rebuilds when source files change. `npm start` runs the relay.
 The committed bundle still runs without installing tools or building first.
-For browser smoke checks, run `npx playwright install chromium`, start the relay,
-then run a `tools/smoke-*.mjs` script (set `SF_URL` to use a different port).
+For browser smoke checks, run `npx playwright install chromium`, then:
+
+```
+npm run smoke:list          # the 42 smokes and the named sets
+npm run smoke:ci            # the six CI runs
+npm run smoke -- fit-check  # one by name
+npm run smoke               # all of them
+```
+
+They live in `tools/smoke/` and the runner discovers them, so a new file is
+reachable as soon as it is written. Each one starts and stops its own relay;
+set `SF_URL` to point at a server you are already running.
 
 See [the modernization notes](docs/codebase-modernization.md) for the engine
 contract, compatibility constraints, and remaining migration work.

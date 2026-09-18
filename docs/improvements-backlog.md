@@ -384,7 +384,7 @@ The restored presentation renders before host recovery wires slide events, so
 reloading does not resend the current question or start a new round. Rehosting
 restores the live controls and quiz navigation gate.
 
-Verified with `node tools/smoke-refresh.mjs`: editor reload/reorder; compiled
+Verified with `node tools/smoke/refresh.mjs`: editor reload/reorder; compiled
 presentation position and explicit exit; typed-PIN and QR learner rejoin; host
 reload with the same PIN and slide; reload during a question with an answer
 already submitted, followed by teacher reveal; fresh tabs and ended rooms.

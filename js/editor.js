@@ -105,6 +105,13 @@
       value = v; change(v);
     }, extra);
     SF.Custom.bind(input, s, key, function () { touched(); repaint(); });
+    /* Named so the canvas can hand a block to the field that owns it. A block
+       drawing only part of its field cannot be typed into in place — a
+       keywords row draws its term and definition as two nodes sharing one
+       bullets.N key — and the rail has always had the right control for it,
+       with the two halves kept apart. Before this it got a floating panel
+       instead, which is the one thing the rail was supposed to stop. */
+    input.dataset.contentKey = key;
     return input;
   }
 
@@ -1090,14 +1097,22 @@
     return (f && f.presentAs === 'focus') ? 'focus' : 'rail';
   }
 
+  /* One click puts a caret in the block. It was a double-click on to a panel,
+     and the panel was handed `box` — the whole preview — as its anchor, so it
+     opened in the same place whichever block you picked, and docked over the
+     rail whenever it was taller than the canvas. The block itself is the
+     anchor now, and for a block whose text round-trips there is no panel at
+     all. See editCanvasBlock. */
   function bindCanvasContent(box,node,s){
     if(['game','quiz','explain','results'].includes(s.type))return;
     node.querySelectorAll('[data-content-key]').forEach(function(target){
-      var key=target.dataset.contentKey;target.classList.add('canvas-editable');target.title='Double-click to edit this content';
-      target.ondblclick=function(e){
+      var key=target.dataset.contentKey;target.classList.add('canvas-editable');target.title='Click to edit these words';
+      target.onclick=function(e){
+        if(target.isContentEditable)return;
+        if(e.target instanceof Element && e.target.closest('a'))return;
         e.preventDefault();e.stopPropagation();
-        if (!SF.Custom || !SF.Custom.openCanvasEditor) return;
-        SF.Custom.openCanvasEditor(box, s, key, {
+        if (!SF.Custom || !SF.Custom.editCanvasBlock) return;
+        SF.Custom.editCanvasBlock(target, s, key, {
           onSave: function () { touched(); draw(); },
           onCancel: function () { touched(); repaint(); }
         });
@@ -1200,7 +1215,13 @@
     if (!insp) return;
     insp.innerHTML = '';
     var s = current();
-    if (!s) return;
+    if (!s) { delete insp.dataset.slide; return; }
+    /* Which slide's fields these are. A canvas click hands a composite block
+       to the rail field that owns it, and the fields are keyed by content key
+       alone — bullets.0 exists on every slide that has a bullet. Without this
+       a rail that had not caught up would take the click and focus the last
+       slide's first point, which looks like it worked. */
+    insp.dataset.slide = s.id;
 
     /* A game slide is a pointer into Quiz studio — not a place to redesign
        content or attach engagement. One panel: what is linked, edit there,
@@ -2376,6 +2397,8 @@
         row.classList.toggle('empty', !SF.parseKeywordLine(s.bullets[i]).term && !SF.parseKeywordLine(s.bullets[i]).def);
       }, leadPh);
       term.className = (term.className ? term.className + ' ' : '') + leadCls;
+      term.dataset.contentKey = 'bullets.' + i;
+      term.dataset.contentPart = 'lead';
       var def = UI[kind === 'journey' ? 'area' : 'text'](parsed.def, function (v) {
         s.bullets[i] = SF.formatKeywordLine(SF.parseKeywordLine(s.bullets[i]).term, v);
         touched();
@@ -2384,6 +2407,8 @@
       }, kind === 'journey' ? 4 : trailPh);
       if (kind === 'journey') def.setAttribute('aria-label', 'What happens here');
       def.className = (def.className ? def.className + ' ' : '') + trailCls;
+      def.dataset.contentKey = 'bullets.' + i;
+      def.dataset.contentPart = 'trail';
       if (links) def.inputMode = 'url';
       var fields = el('div', 'kw-pit-fields');
       fields.appendChild(term);

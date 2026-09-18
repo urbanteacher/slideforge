@@ -75,7 +75,7 @@ compared. No selector that matches a real element changed. The only removals
 were `.board-slide` and `.board-btn`, two generic selectors `board-common.css`
 introduced that no code path ever emits, and one `transition` on `.mem-button`
 that no memory button previously had. Both boards were then exercised in a
-real browser (`tools/smoke-lowstakes.mjs`, `tools/smoke-knowledge-flip.mjs`).
+real browser (`tools/smoke/lowstakes.mjs`, `tools/smoke/knowledge-flip.mjs`).
 
 ### What was deliberately *not* deduplicated
 

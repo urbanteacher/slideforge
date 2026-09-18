@@ -174,9 +174,22 @@
   }
 
   /* Mount on the slide/canvas, not the slot — otherwise drag is trapped in one
-     lattice cell and the panel covers the words it is editing. */
+     lattice cell and the panel covers the words it is editing.
+     `box` is the block being edited. It used to be #previewBox itself, passed
+     by both callers, which is why the panel ignored where you clicked: closest
+     walks up from the node, so the container was its own host and every block
+     produced the same rectangle. */
   function canvasEditHost(box) {
-    return (box && (box.closest('.slide') || box.closest('#previewBox') || box.closest('.safe-stage'))) || box;
+    if (!box) return box;
+    /* The stage before the slide, and this order matters now that `box` is
+       the block rather than the container: .slide is transform-scaled to fit
+       the canvas, so a panel mounted inside it is scaled with it — measured
+       at 87px wide and unreadable on a 1100px window. #previewBox is the
+       nearest ancestor drawn at its own size. */
+    var stage = box.closest('#previewBox') || box.closest('.safe-stage');
+    if (stage && stage !== box) return stage;
+    var slide = box.closest('.slide');
+    return slide && slide !== box ? slide : box;
   }
 
   function placeCanvasEditForm(form, box, host) {
@@ -229,6 +242,345 @@
     form.style.top = Math.max(0, Math.min(maxT, top)) + 'px';
   }
 
+
+  /* ------------------------------------------------- editing on the canvas
+     Click a block and type into it.
+
+     What this replaces put a 320x225 panel on the slide, and measured the
+     wrong thing to place it: bindCanvasContent handed openCanvasEditor the
+     whole #previewBox as its anchor rather than the block that was clicked,
+     so the panel opened in the same spot whatever you double-clicked. Worse,
+     the panel was routinely taller than the preview it was supposed to float
+     over, and the fallback for that docked it over the editor rail — so one
+     click landed in two completely different places depending on the window
+     width. Editing the words where they already are has no position to get
+     wrong, and it is what the canvas did before the panel: one click, a
+     caret, type.
+
+     plaintext-only, deliberately. A block's text is a plain string on the
+     slide and its marks live in slide.formatting with offsets into that
+     string, so letting the browser write its own <b> and <span> here would
+     be a second source of the same formatting, disagreeing with the first.
+     The same mechanism and the same reason as the Engine 3 lab, which has
+     edited its slots this way since the slot labs. */
+
+  /* Offsets into a block's plain text, counted across the mark spans paint()
+     leaves behind, because a selection lands in one of those spans and the
+     marks engine indexes the whole string. */
+  function flatRange(node) {
+    var sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return [0, 0];
+    var r = sel.getRangeAt(0);
+    if (!node.contains(r.startContainer) || !node.contains(r.endContainer)) return [0, 0];
+    function at(container, offset) {
+      if (container === node) {
+        var n = 0;
+        for (var i = 0; i < offset && i < node.childNodes.length; i++) n += (node.childNodes[i].textContent || '').length;
+        return n;
+      }
+      var seen = 0, walk = document.createTreeWalker(node, NodeFilter.SHOW_TEXT), t;
+      while ((t = walk.nextNode())) {
+        if (t === container) return seen + offset;
+        seen += (t.textContent || '').length;
+      }
+      return seen;
+    }
+    var a = at(r.startContainer, r.startOffset), b = at(r.endContainer, r.endOffset);
+    return a <= b ? [a, b] : [b, a];
+  }
+
+  /* Put the caret (or a selection) back at a flat offset after a repaint. */
+  function selectFlat(node, start, end) {
+    var range = document.createRange(), walk = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+    var seen = 0, t, haveStart = false, haveEnd = false;
+    while ((t = walk.nextNode())) {
+      var len = (t.textContent || '').length;
+      if (!haveStart && start <= seen + len) { range.setStart(t, start - seen); haveStart = true; }
+      if (!haveEnd && end <= seen + len) { range.setEnd(t, end - seen); haveEnd = true; break; }
+      seen += len;
+    }
+    if (!haveStart) { range.selectNodeContents(node); range.collapse(false); }
+    else if (!haveEnd) range.setEnd(node, node.childNodes.length);
+    var sel = window.getSelection();
+    if (!sel) return;
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  /* A block can be typed into when what it draws is what is stored. A
+     keywords row draws its term and its definition as two nodes carrying one
+     bullets.N key, so neither node holds the whole line and typing into
+     either would drop the other half — that block gets the form instead.
+     Asked of the rendered node rather than of slide.type, so a layout that
+     starts splitting a field does not silently start losing half of it. */
+  function inlineEditable(node, s, key) {
+    if (!node || !node.isConnected) return false;
+    var stored = storedText(s, key);
+    if (/\t/.test(stored)) return false;
+    var flat = function (v) { return String(v || '').replace(/\s+/g, ' ').trim(); };
+    return flat(node.textContent) === flat(stored);
+  }
+
+  function storedText(s, key) {
+    var m = /^bullets\.(\d+)$/.exec(key);
+    return m ? String((s.bullets || [])[Number(m[1])] || '') : String(s[key] || '');
+  }
+  function writeText(s, key, v) {
+    var m = /^bullets\.(\d+)$/.exec(key);
+    if (m) s.bullets[Number(m[1])] = v;
+    else s[key] = v;
+  }
+
+  var inlineEdit = null;
+  /* Takes the document-level selectionchange listener back off when the bar
+     goes. On the module rather than on the node: only one block is edited at
+     a time, and a listener left on the document outlives whatever element it
+     was attached to. */
+  var releaseTools = null;
+
+  /* The format bar follows the block instead of being part of a panel: fixed
+     to the viewport and parented to the body, because #previewBox clips its
+     overflow and drawInspector() empties the rail, and a toolbar that is
+     inside either one disappears mid-edit. */
+  function inlineTools(node, s, key, repaint) {
+    var bar = document.createElement('div');
+    bar.className = 'format-tools canvas-inline-tools';
+    bar.setAttribute('role', 'toolbar');
+    bar.setAttribute('aria-label', 'Format selected text');
+    var held = [0, 0];
+    function capture() { held = flatRange(node); }
+    node.addEventListener('keyup', capture);
+    node.addEventListener('mouseup', capture);
+    document.addEventListener('selectionchange', capture);
+    bar.dataset.release = '1';
+    releaseTools = function () { document.removeEventListener('selectionchange', capture); };
+
+    function format(kind, v) {
+      var a = held[0], b = held[1];
+      if (['bold', 'italic', 'underline', 'highlight'].includes(kind) && b > a) {
+        var marks = entry(s, key).marks, all = true;
+        for (var i = a; i < b; i++) {
+          var on = false;
+          marks.forEach(function (m) { if (m.kind === kind && m.start <= i && m.end > i) on = !!m.value; });
+          if (!on) { all = false; break; }
+        }
+        v = !all;
+      }
+      if (!apply(s, key, a, b, kind, v)) { SF.toast('Select the words you want to format first'); return; }
+      repaint();
+      node.focus();
+      selectFlat(node, a, b);
+      held = [a, b];
+    }
+
+    [['B', 'Bold', 'bold'], ['I', 'Italic', 'italic'], ['U', 'Underline', 'underline'],
+     ['▰', 'Highlight', 'highlight'], ['Clear', 'Clear formatting', 'clear']].forEach(function (item) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.textContent = item[0]; b.title = item[1];
+      b.setAttribute('aria-label', item[1]);
+      /* mousedown, not click: the click has already moved the selection out
+         of the block and into the button by then. */
+      b.onmousedown = function (e) { e.preventDefault(); };
+      b.onclick = function () { format(item[2], true); };
+      bar.appendChild(b);
+    });
+    var colour = document.createElement('input');
+    colour.type = 'color'; colour.value = '#426332';
+    colour.title = 'Text colour'; colour.setAttribute('aria-label', 'Text colour');
+    colour.oninput = function () { format('color', colour.value); };
+    bar.appendChild(colour);
+    var link = document.createElement('input');
+    link.type = 'text'; link.placeholder = 'https://… or slide:12';
+    link.setAttribute('aria-label', 'Web link or slide:N using the rail number');
+    link.title = 'Web: https://… · Inside this lesson: slide:12 — the number on the left of the rail (author order; hidden slides still count)';
+    bar.appendChild(link);
+    var lb = document.createElement('button');
+    lb.type = 'button'; lb.textContent = 'Link';
+    lb.onmousedown = function (e) { e.preventDefault(); };
+    lb.onclick = function () {
+      if (SF.safeHref(link.value) || SF.slideJumpTarget(link.value)) format('link', link.value);
+      else SF.toast('Use an http(s) address, or slide:12 with the number on the left of the rail (author order — not the show count when slides are hidden)');
+    };
+    bar.appendChild(lb);
+    var done = document.createElement('button');
+    done.type = 'button'; done.className = 'canvas-inline-done';
+    done.textContent = 'Done'; done.title = 'Finish editing this block (Escape keeps your text too)';
+    done.onmousedown = function (e) { e.preventDefault(); };
+    done.onclick = function () { endInlineEdit('save'); };
+    bar.appendChild(done);
+
+    document.body.appendChild(bar);
+    return bar;
+  }
+
+  /* Above the block if there is room, below it if not, and never off either
+     side. Re-run on scroll and resize, since the bar is fixed and the canvas
+     is not. */
+  function placeInlineTools(bar, node) {
+    var b = node.getBoundingClientRect();
+    var w = bar.offsetWidth, h = bar.offsetHeight;
+    var left = Math.max(8, Math.min(window.innerWidth - w - 8, b.left));
+    var top = b.top - h - 8;
+    if (top < 8) top = Math.min(window.innerHeight - h - 8, b.bottom + 8);
+    bar.style.left = Math.round(left) + 'px';
+    bar.style.top = Math.round(Math.max(8, top)) + 'px';
+  }
+
+  function endInlineEdit(how) {
+    var open = inlineEdit;
+    if (!open) return;
+    inlineEdit = null;
+    var node = open.node;
+    node.contentEditable = 'false';
+    node.removeAttribute('role');
+    node.removeAttribute('aria-multiline');
+    if (open.wasDraggable) node.draggable = true;
+    if (releaseTools) { releaseTools(); releaseTools = null; }
+    if (open.bar) open.bar.remove();
+    window.removeEventListener('scroll', open.follow, true);
+    window.removeEventListener('resize', open.follow);
+    if (open.watch) open.watch.disconnect();
+    if (how === 'cancel') {
+      writeText(open.slide, open.key, open.was);
+      if (!open.slide.formatting) open.slide.formatting = {};
+      if (open.wasEntry) open.slide.formatting[open.key] = open.wasEntry;
+      else delete open.slide.formatting[open.key];
+      if (open.onCancel) open.onCancel();
+      return;
+    }
+    if (open.onSave) open.onSave();
+  }
+
+  function beginInlineEdit(node, s, key, opts) {
+    opts = opts || {};
+    if (inlineEdit && inlineEdit.node === node) { node.focus(); return true; }
+    endInlineEdit('save');
+    var open = {
+      node: node, slide: s, key: key,
+      was: storedText(s, key),
+      wasEntry: s.formatting && s.formatting[key] ? JSON.parse(JSON.stringify(s.formatting[key])) : null,
+      wasDraggable: !!node.draggable,
+      onSave: opts.onSave, onCancel: opts.onCancel
+    };
+    inlineEdit = open;
+    /* draggable wins over a caret in every browser, and bullets are draggable
+       so they can be reordered. Reordering is a gesture on a block you are not
+       editing; give the caret the block while it is being typed into. */
+    node.draggable = false;
+    node.contentEditable = 'plaintext-only';
+    node.setAttribute('role', 'textbox');
+    node.setAttribute('aria-multiline', 'false');
+
+    function repaint() {
+      var here = flatRange(node);
+      paint(node, s, key, storedText(s, key));
+      selectFlat(node, here[0], here[1]);
+    }
+
+    open.bar = inlineTools(node, s, key, repaint);
+    open.follow = function () { placeInlineTools(open.bar, node); };
+    window.addEventListener('scroll', open.follow, true);
+    window.addEventListener('resize', open.follow);
+    /* The stage scales the slide to fit, and the scale is not always settled
+       in the tick the click arrives in — placing once put the bar 28px below
+       where the block ended up and 54px to its right, measured against a
+       rectangle that no longer existed. Watching the stage is cheaper than
+       guessing how many frames to wait, and it also keeps the bar on the
+       block when the zoom control or the panel toggle reflows the canvas. */
+    var stage = node.closest('#previewBox') || node.closest('.safe-stage');
+    if (stage && typeof ResizeObserver === 'function') {
+      open.watch = new ResizeObserver(open.follow);
+      open.watch.observe(stage);
+      open.watch.observe(node);
+    }
+
+    node.addEventListener('input', function () {
+      if (inlineEdit !== open) return;
+      var next = node.innerText.replace(/[\t\r\n]+/g, ' ');
+      rebase(s, key, storedText(s, key), next);
+      writeText(s, key, next);
+      /* No repaint here: rebuilding the spans on every keystroke would move
+         the caret out from under the person typing. Marks land on the slide
+         and are drawn when the edit finishes, or immediately when a format
+         button asks for them. */
+      open.follow();
+    });
+    node.addEventListener('keydown', function (e) {
+      if (inlineEdit !== open) return;
+      e.stopPropagation();
+      var k = e.key.toLowerCase();
+      if ((e.metaKey || e.ctrlKey) && ['b', 'i', 'u'].includes(k)) { e.preventDefault(); return; }
+      if (e.key === 'Escape') { e.preventDefault(); endInlineEdit('cancel'); return; }
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); endInlineEdit('save'); }
+    });
+    node.addEventListener('blur', function () {
+      /* A format button takes focus for an instant; only a click that lands
+         outside both the block and its bar ends the edit. */
+      setTimeout(function () {
+        if (inlineEdit !== open) return;
+        var to = document.activeElement;
+        if (to && (to === node || node.contains(to) || (open.bar && open.bar.contains(to)))) return;
+        endInlineEdit('save');
+      }, 0);
+    });
+
+    node.focus();
+    placeInlineTools(open.bar, node);
+    requestAnimationFrame(function () { if (inlineEdit === open) open.follow(); });
+    return true;
+  }
+
+  /* Which half of a split field a block is drawing, read off the class the
+     renderer gave it. kw-term / it-phrase / ln-label draw the first half;
+     kw-def / it-note / ln-link draw the second. */
+  function blockPart(node) {
+    var cls = ' ' + (node.className || '') + ' ';
+    if (/ (kw-term|it-phrase|ln-label|journey-step-title) /.test(cls)) return 'lead';
+    if (/ (kw-def|it-note|ln-link|journey-step-body) /.test(cls)) return 'trail';
+    return null;
+  }
+
+  /* The rail field that owns the same words, if there is one — and only if
+     the rail is showing the slide those words are on. drawInspector stamps
+     the slide it drew; a stale rail holds fields with the right content keys
+     and the wrong slide's text, and focusing one of those is worse than not
+     handing over at all. */
+  function railFieldFor(s, key, part) {
+    var insp = document.getElementById('inspector');
+    if (!insp || insp.dataset.slide !== s.id) return null;
+    var all = Array.prototype.slice.call(insp.querySelectorAll('[data-content-key="' + key + '"]'));
+    if (!all.length) return null;
+    if (part) {
+      var half = all.filter(function (n) { return n.dataset.contentPart === part; });
+      if (half.length) return half[0];
+    }
+    return all[0];
+  }
+
+  /* One entry point for the canvas, in three tiers.
+
+     A block whose text is the whole of its field is typed into where it sits.
+     A block drawing half a field — a keywords term beside its definition,
+     both carrying one bullets.N key — hands over to the rail control that
+     already keeps the two halves apart, because the rail is the editor and a
+     floating panel over the slide was the thing it was meant to replace.
+     The panel is the last resort, for a composite block with no rail field to
+     hand to, and it opens against the block rather than the canvas. */
+  function editCanvasBlock(node, s, key, opts) {
+    if (!node || !s || !key) return;
+    if (document.querySelector('.arranging, .art-editing')) return;
+    if (inlineEditable(node, s, key)) { beginInlineEdit(node, s, key, opts); return; }
+    var field = railFieldFor(s, key, blockPart(node));
+    if (field) {
+      endInlineEdit('save');
+      if (field.scrollIntoView) field.scrollIntoView({ block: 'nearest' });
+      field.focus();
+      if (field.select) field.select();
+      return;
+    }
+    openCanvasEditor(node, s, key, opts);
+  }
+
   function openCanvasEditor(box, s, key, opts) {
     opts = opts || {};
     if (!box || !s || !key) return;
@@ -279,59 +631,6 @@
     label.appendChild(area);
     form.appendChild(label);
 
-    /* Lab lattice (Engine 3): line tariff + column width live in this form so
-       the slide is not crowded with per-slot −/+ chrome. Production ignores this. */
-    if (opts.lattice) {
-      var lattice = opts.lattice;
-      var layout = document.createElement('div');
-      layout.className = 'canvas-edit-lattice';
-      layout.setAttribute('role', 'group');
-      layout.setAttribute('aria-label', 'Slot size on the 16×12 lattice');
-
-      function row(kind, value, bands, apply) {
-        var wrap = document.createElement('div');
-        wrap.className = 'canvas-edit-lattice-row';
-        var name = document.createElement('span');
-        name.className = 'canvas-edit-lattice-label';
-        name.textContent = kind === 'rows' ? 'Lines' : 'Width';
-        var dec = document.createElement('button');
-        dec.type = 'button';
-        dec.className = 'btn ghost';
-        dec.textContent = '−';
-        var val = document.createElement('span');
-        val.className = 'canvas-edit-lattice-val';
-        val.textContent = value + (kind === 'rows' ? 'r' : 'c');
-        var inc = document.createElement('button');
-        inc.type = 'button';
-        inc.className = 'btn ghost';
-        inc.textContent = '+';
-        function set(n) {
-          var next = apply(n);
-          if (next == null) return;
-          val.textContent = next + (kind === 'rows' ? 'r' : 'c');
-          value = next;
-        }
-        dec.onclick = function () { set(value - 1); };
-        inc.onclick = function () { set(value + 1); };
-        wrap.appendChild(name);
-        wrap.appendChild(dec);
-        wrap.appendChild(val);
-        wrap.appendChild(inc);
-        bands.forEach(function (n) {
-          var b = document.createElement('button');
-          b.type = 'button';
-          b.className = 'btn ghost';
-          b.textContent = String(n);
-          b.onclick = function () { set(n); };
-          wrap.appendChild(b);
-        });
-        layout.appendChild(wrap);
-      }
-      row('rows', lattice.rows, lattice.rowBands || [2, 3, 4], lattice.onRows);
-      row('cols', lattice.cols, lattice.colBands || [5, 6, 12], lattice.onCols);
-      form.appendChild(layout);
-    }
-
     function writeShown(v) {
       var prev = current;
       current = v;
@@ -381,9 +680,15 @@
     };
     form.appendChild(cancel);
 
-    placeCanvasEditForm(form, box, host);
+    /* Attach and focus before placing. bind() builds the format toolbar on the
+       textarea's first focus, so a form placed before that was measured
+       without it — 212x225 for a decision that a moment later applied to a
+       491x304 panel. That is how a form two thirds larger than the canvas came
+       to be told it fitted, and then drew outside it. */
+    host.appendChild(form);
     area.focus();
     area.setSelectionRange(area.value.length, area.value.length);
+    placeCanvasEditForm(form, box, host);
   }
   function layout(root,s) {
     var d=s.design || {}, pad=root.querySelector('.pad');
@@ -781,5 +1086,5 @@
       if(key) label.parentElement.dataset.designKey=key;
     });
   }
-  SF.Custom={tagControls:tagControls,removeBullet:removeBullet,bind:bind,openCanvasEditor:openCanvasEditor,enableCanvasEditDrag:enableCanvasEditDrag,placeCanvasEditForm:placeCanvasEditForm,canvasEditHost:canvasEditHost,paint:paint,layout:layout,inspector:inspector,rebase:rebase,apply:apply,entry:entry};
+  SF.Custom={tagControls:tagControls,removeBullet:removeBullet,bind:bind,editCanvasBlock:editCanvasBlock,endInlineEdit:endInlineEdit,inlineEditable:inlineEditable,openCanvasEditor:openCanvasEditor,enableCanvasEditDrag:enableCanvasEditDrag,placeCanvasEditForm:placeCanvasEditForm,canvasEditHost:canvasEditHost,paint:paint,layout:layout,inspector:inspector,rebase:rebase,apply:apply,entry:entry};
 })(window);

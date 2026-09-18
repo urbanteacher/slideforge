@@ -15,7 +15,7 @@ const root = path.resolve(__dirname, '..');
 test('any deck can be reviewed, and the fit check still fails on overflow',
   { timeout: 120000 }, async () => {
     const { stdout } = await promisify(execFile)(
-      process.execPath, ['tools/smoke-review-tool.mjs'],
+      process.execPath, ['tools/smoke/review-tool.mjs'],
       { cwd: root, timeout: 115000 });
     assert.match(stdout, /any deck can be reviewed and fit-checked/);
   });

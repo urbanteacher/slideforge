@@ -155,7 +155,7 @@ a second implementation to maintain.
    visual regressions are now automatically detected prior to selector changes.
 
 6. **[Completed] End-to-end multi-client live quiz smoke test suite**:
-   `tools/smoke-live-quiz.mjs` (`npm run smoke:live`) verifies the multi-client
+   `tools/smoke/live-quiz.mjs` (`npm run smoke -- live-quiz`) verifies the multi-client
    WebSocket presentation runtime (`Ada`, `Bo`, `Cy`) against a live relay
    server, asserting room PIN generation, live question delivery, grace period
    gate enforcement in `SF.Player.gate`, answer submission, verdict distribution,

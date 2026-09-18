@@ -1,4 +1,4 @@
-# The suite existed long before this file did. 435 unit assertions, 51 smoke
+# The suite existed long before this file did. 435 unit assertions, 42 smoke
 # scripts and 597 visual baselines, all of which ran only when somebody
 # remembered — which worked, right up until the first busy week. This is the
 # trigger, not the tests.
@@ -59,20 +59,20 @@ jobs:
       # and tell us nothing we are currently asking.
       - run: npx playwright install --with-deps chromium
 
-      # Curated rather than `npm run smoke`, which chains 22 and takes long
-      # enough that people start skipping the branch. These five are the ones
-      # that guard the engine's contract:
+      # Curated rather than all 42, which take long enough that people start
+      # skipping the branch. The set is named `ci` in tools/smoke/run.mjs, so
+      # the same six run here and on a laptop with `npm run smoke:ci`, and the
+      # runner fails loudly if the set names a smoke that no longer exists
+      # rather than quietly running five of six. They guard the engine's
+      # contract:
       #   fit-check    every library slide still fits its frame
       #   demo-deck    the 97-slide layout bank, its audit and its budget
       #   layout-fit   the picker's fit predictions match real renders
       #   lesson-bank  the library files and clones
       #   handout      the print path, every image resolved
-      # Measured locally at 8s, 39s, 3s, 1s, 1s.
-      - run: npm run smoke:fit-check
-      - run: npm run smoke:demo-deck
-      - run: npm run smoke:layout-fit
-      - run: npm run smoke:lesson-bank
-      - run: npm run smoke:handout
+      #   canvas-edit  a click on the canvas edits the block it landed on
+      # Measured locally at 8s, 39s, 3s, 1s, 1s, 7s.
+      - run: npm run smoke:ci
 
       - name: upload failure output
         if: failure()

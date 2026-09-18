@@ -439,12 +439,15 @@
     node.querySelectorAll('[data-content-key]').forEach(function (target) {
       var key = target.dataset.contentKey;
       target.classList.add('canvas-editable');
-      target.title = 'Double-click to edit this content';
-      target.ondblclick = function (e) {
+      target.title = 'Click to edit these words';
+      target.onclick = function (e) {
+        if (target.isContentEditable) return;
+        if (e.target instanceof Element && e.target.closest('a')) return;
         e.preventDefault();
         e.stopPropagation();
-        if (!SF.Custom || !SF.Custom.openCanvasEditor) return;
-        SF.Custom.openCanvasEditor(box, s, key, {
+        if (!SF.Custom || !SF.Custom.editCanvasBlock) return;
+        /* The block, not the container: see bindCanvasContent in editor.js. */
+        SF.Custom.editCanvasBlock(target, s, key, {
           onSave: function () {
             SF.Editor.commitActivityChange();
             draw();

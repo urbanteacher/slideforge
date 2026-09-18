@@ -23,6 +23,6 @@ test('the design catalogue documents valid slide types and every seeded demo set
  assert.equal(SF.designApplies('unknown','title'),false);
 });
 test('every declared design setting can be written through its editor control',{timeout:90000},async()=>{
- const {stdout}=await promisify(execFile)(process.execPath,['tools/smoke-design-controls.mjs'],{cwd:root,timeout:85000});
+ const {stdout}=await promisify(execFile)(process.execPath,['tools/smoke/design-controls.mjs'],{cwd:root,timeout:85000});
  assert.match(stdout,/design controls written through the editor/);
 });

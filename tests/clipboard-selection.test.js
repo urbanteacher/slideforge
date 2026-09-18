@@ -16,7 +16,7 @@ const root = path.resolve(__dirname, '..');
 test('highlighted text keeps the clipboard, and the slide shortcuts survive',
   { timeout: 90000 }, async () => {
     const { stdout } = await promisify(execFile)(
-      process.execPath, ['tools/smoke-clipboard-selection.mjs'],
+      process.execPath, ['tools/smoke/clipboard-selection.mjs'],
       { cwd: root, timeout: 85000 });
     assert.match(stdout, /highlighted text keeps the clipboard/);
   });
