@@ -2232,6 +2232,22 @@
           "progressive": true
         },
         {
+          "type": "image",
+          "title": "Explain, enlighten, engage",
+          "subtitle": "What narrative, visuals and data do when you combine them two at a time",
+          "bullets": [],
+          "image": "assets/lesson/ipdv/explain-enlighten-engage.png",
+          "imageFit": "contain",
+          "notes": "The slide that names the trade-off the whole design-criteria section is circling. Narrative and data without visuals EXPLAIN; visuals and data without narrative ENLIGHTEN; narrative and visuals without data merely ENGAGE. Ask which of the three the room’s own coursework is currently doing, and which one it is missing.\nSource: figure from the supplied Week 2 lecture deck (01_Lecture_IPDV_2_2).",
+          "progressive": false,
+          "imageSide": "right",
+          "design": {
+            "imageFrame": "16:9",
+            "capStyle": "bar"
+          },
+          "body": "Narrative + Data — explain.\n\nVisuals + Data — enlighten.\n\nNarrative + Visuals — engage, and nothing more."
+        },
+        {
           "type": "section",
           "title": "Graphical\nintegrity",
           "subtitle": "Tufte's question: does the picture say what the numbers say?",
@@ -2296,6 +2312,38 @@
         },
         {
           "type": "image",
+          "title": "The lie factor, measured",
+          "subtitle": "The New York Times fuel-economy graphic, and the arithmetic on it",
+          "bullets": [],
+          "image": "assets/lesson/ipdv/lie-factor-example.jpg",
+          "imageFit": "contain",
+          "notes": "The worked example behind the definition on the slide before. The graphic exaggerates the effect by 783 to 53 — a lie factor of 14.8, where 1.0 is honest. Walk the two numbers out loud: the size of the effect shown, over the size of the effect in the data.\nSource: figure from the supplied Week 2 lecture deck (01_Lecture_IPDV_2_2).",
+          "progressive": false,
+          "imageSide": "right",
+          "design": {
+            "imageFrame": "16:9",
+            "capStyle": "bar"
+          },
+          "body": "Effect in the graphic: 783.\n\nEffect in the data: 53.\n\nLie factor = 14.8. Honest is 1.0."
+        },
+        {
+          "type": "image",
+          "title": "Facing the Nation",
+          "subtitle": "Chernoff faces, and design variation standing in for data variation",
+          "bullets": [],
+          "image": "assets/lesson/ipdv/chernoff-faces.png",
+          "imageFit": "contain",
+          "notes": "The counter-example for \"show data variation, not design variation\". Each face encodes several variables at once in features we are evolved to read — which is the appeal — but small changes in feature shape are not read proportionally, so the encoding flatters some differences and hides others. A memorable figure to argue with rather than to copy.\nSource: figure from the supplied Week 2 lecture deck (01_Lecture_IPDV_2_2).",
+          "progressive": false,
+          "imageSide": "right",
+          "design": {
+            "imageFrame": "16:9",
+            "capStyle": "bar"
+          },
+          "body": "Several attributes, one mark.\n\nThe eye reads faces well, and reads their measurements badly."
+        },
+        {
+          "type": "image",
           "title": "Truncated axis, and the same data from zero",
           "subtitle": "The ✗ / ✓ pair the lecture uses for the baseline rule",
           "bullets": [],
@@ -2347,6 +2395,22 @@
           "body": "Occlusion — the near series hides the far ones.\n\nDistortion — perspective changes apparent size."
         },
         {
+          "type": "image",
+          "title": "Misleading, and accurate, side by side",
+          "subtitle": "The same numbers drawn twice — once to persuade, once to inform",
+          "bullets": [],
+          "image": "assets/lesson/ipdv/violations-3d-distortion.jpg",
+          "imageFit": "contain",
+          "notes": "The pair to end the integrity section on. Left column: a truncated axis and a cherry-picked range. Right column: the same values with the axis restored and the full series shown. Ask which one a reader would quote, and which one they would be right to quote.\nSource: figure from the supplied Week 2 lecture deck (01_Lecture_IPDV_2_2).",
+          "progressive": false,
+          "imageSide": "right",
+          "design": {
+            "imageFrame": "16:9",
+            "capStyle": "bar"
+          },
+          "body": "Truncated axis, and the same bars from zero.\n\nA rising fragment, and the whole series it was cut from."
+        },
+        {
           "type": "beforeafter",
           "title": "Cumulative and quarterly sales",
           "exploration": {
@@ -2374,6 +2438,23 @@
           },
           "body": "Day\tHires\nMon\t42\nTue\t58\nWed\t47\nThu\t70\nFri\t64",
           "chartSource": "Synthetic teaching examples, not observed research data."
+        },
+        {
+          "type": "split",
+          "title": "Useful ink",
+          "subtitle": "Maximise the data-ink ratio",
+          "bullets": [
+            "Keep marks that explain the data.",
+            "Remove decoration that competes with the comparison.",
+            "Retain useful labels, reference lines and context."
+          ],
+          "image": "assets/lesson/ipdv/chart-junk-data-ink.png",
+          "imageFit": "contain",
+          "notes": "Shown after the transformation. This is the figure the animated states replace — use it to name the published convention once students have made and tested their own prediction.\nTufte’s data-ink principle is a design heuristic. A bare chart is not automatically better. Ask which elements in the source examples help interpretation and which obstruct it. Distinguish memorability from numerical accuracy.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "design": {
+            "mediaGround": "full"
+          }
         },
         {
           "type": "image",
@@ -2492,6 +2573,77 @@
           "body": "A natural order or rank.\n\nAnalysed with the mode, median and range."
         },
         {
+          "type": "table",
+          "title": "The four types, and what each one lets you say",
+          "tableHeader": true,
+          "body": "Type\tOrder?\tEqual gaps?\tTrue zero?\tExample items\nNominal\tNo\t—\t—\tBus · Train · Walk · Cycle\nOrdinal\tYes\tNot guaranteed\t—\tGrade A · B · C\nInterval\tYes\tYes\tNo\t4°C · 12°C · 19°C\nRatio\tYes\tYes\tYes\t42 · 58 · 70 hires",
+          "notes": "The table to keep open while the four charts that follow go past. Read down the \"True zero?\" column: it is the one that decides whether a ratio is a sentence you are allowed to say, and it is also what decides whether a bar has to start at zero.\nSource: adapted from the supplied Week 2 lecture materials."
+        },
+        {
+          "type": "chart",
+          "chartKind": "bar",
+          "title": "Nominal · how the room travels in",
+          "subtitle": "No order to lose, so you may sort these any way that helps",
+          "bullets": [],
+          "body": "Mode\tStudents\nBus\t42\nTrain\t35\nWalk\t27\nCycle\t18\nCar\t12",
+          "chartSource": "Illustrative class survey, 134 responses.",
+          "notes": "The bars are sorted by size here, and nothing was lost by doing it — that is the test for nominal. The quantity is a COUNT of each category; the category itself has no magnitude. Ask what the mean of \"Bus, Train, Walk\" would be. Colour or a label identifies; length carries the count.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": false,
+          "imageFit": "contain",
+          "imageSide": "right",
+          "design": {
+            "chartMotion": "grow"
+          }
+        },
+        {
+          "type": "chart",
+          "chartKind": "stack",
+          "title": "Ordinal · module feedback, kept in order",
+          "subtitle": "The order is the data, so you may not sort these by size",
+          "bullets": [],
+          "body": "Statement\tStrongly disagree\tDisagree\tNeutral\tAgree\tStrongly agree\nThe labs were useful\t2\t4\t9\t18\t12\nThe pace was right\t5\t8\t11\t14\t7\nI knew what was assessed\t3\t5\t8\t16\t13",
+          "chartSource": "Illustrative end-of-module survey, 45 responses per statement.",
+          "notes": "The opposite of the slide before: reorder these segments and the chart stops meaning anything. Order is real, equal spacing is not — the step from Disagree to Neutral need not match Agree to Strongly agree, which is why the median and the mode are safe here and the mean is an argument.\n\nWorth naming out loud, because the chart is not innocent: the STACKING ORDER is carrying the sequence, and the five hues are only identifying the levels. Unordered hues on an ordered attribute is exactly the fault the next experiment fixes with a light-to-dark ramp. Ask the room to critique this chart before you show them that one.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": false,
+          "imageFit": "contain",
+          "imageSide": "right",
+          "design": {
+            "chartMotion": "grow"
+          }
+        },
+        {
+          "type": "chart",
+          "chartKind": "line",
+          "title": "Interval · temperature through the year",
+          "subtitle": "Differences are real; zero is a convention, not an absence",
+          "bullets": [],
+          "body": "Month\t°C\nJan\t4\nMar\t8\nMay\t14\nJul\t19\nSep\t16\nNov\t8",
+          "chartSource": "Illustrative London monthly means, every other month, °C.",
+          "notes": "July at 19°C is 15 degrees warmer than January at 4°C — that subtraction is meaningful. \"Nearly five times as warm\" is not, because 0°C is a agreed point on a scale rather than an absence of temperature.\n\nThis is also the one honest exception to the zero-baseline rule from earlier in the lesson: a line on an interval scale has no zero to be truthful about, so cropping the axis here is reading the scale correctly rather than distorting it. The next slide is the case where it would be a lie.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": false,
+          "imageFit": "contain",
+          "imageSide": "right",
+          "design": {
+            "chartMotion": "grow"
+          }
+        },
+        {
+          "type": "chart",
+          "chartKind": "bar",
+          "title": "Ratio · hires, day by day",
+          "subtitle": "Zero means none, so the bar has to start there",
+          "bullets": [],
+          "body": "Day\tHires\nMon\t42\nTue\t58\nWed\t47\nThu\t70\nFri\t64",
+          "chartSource": "Illustrative daily hire counts.",
+          "notes": "The pair to the temperature line. Zero hires is genuinely no hires, so ratios are sentences you may say: Thursday is not quite twice Monday. That true zero is exactly what makes the truncated axis from the integrity section a lie on this chart and not on that one — the rule was never \"always start at zero\", it was \"start at zero when zero means something\".\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": false,
+          "imageFit": "contain",
+          "imageSide": "right",
+          "design": {
+            "chartMotion": "grow"
+          }
+        },
+        {
           "type": "game",
           "gameRef": "check-attributes",
           "notes": "2 min. Invite an individual answer, then ask for the reason before showing the explanation. Use a show of hands if students are not connected. Revisit the example if answers are split."
@@ -2594,6 +2746,22 @@
           "progressive": true
         },
         {
+          "type": "image",
+          "title": "A sequential heatmap, doing it right",
+          "subtitle": "Ordinal levels carried by lightness rather than by unrelated hues",
+          "bullets": [],
+          "image": "assets/lesson/ipdv/ordinal-heatmap-sequential.jpg",
+          "imageFit": "contain",
+          "notes": "The published version of what the experiment two slides back demonstrates. Light to dark follows low to high without anyone having to read the legend first. Contrast it with the stacked Likert chart earlier in the lesson, where five unordered hues were doing the identifying and only the stacking order carried the sequence.\nSource: figure from the supplied Week 2 lecture deck (01_Lecture_IPDV_2_2).",
+          "progressive": false,
+          "imageSide": "right",
+          "design": {
+            "imageFrame": "16:9",
+            "capStyle": "bar"
+          },
+          "body": "Lightness carries the order.\n\nThe levels are ranks, not measured distances."
+        },
+        {
           "type": "experiment",
           "title": "Marks and channels",
           "subtitle": "Points, lines, areas — then everything you can do to them",
@@ -2609,6 +2777,23 @@
           },
           "body": "Item\tValue\nA\t20\nB\t24\nC\t38\nD\t42",
           "chartSource": "Synthetic teaching examples, not observed research data."
+        },
+        {
+          "type": "split",
+          "title": "Marks and channels",
+          "subtitle": "Points, lines, areas — then everything you can do to them",
+          "bullets": [
+            "Marks: points, lines and areas.",
+            "Channels: position, length, hue, shape and other properties.",
+            "A scatterplot uses points and encodes two values by position."
+          ],
+          "image": "assets/lesson/ipdv/marks-and-channels.jpg",
+          "imageFit": "contain",
+          "notes": "Shown after the transformation. This is the figure the animated states replace — use it to name the published convention once students have made and tested their own prediction.\nAsk students to name the mark and channels in the polling bars. Marks are areas (rectangles), length represents support and position identifies a candidate. Source: supplied lecture figure and Munzner Chapter 5. https://www.cs.ubc.ca/~tmm/courses/journ15/slides/journ1.pdf\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "design": {
+            "mediaGround": "full"
+          }
         },
         {
           "type": "compare",
@@ -2729,6 +2914,23 @@
           "chartSource": "Synthetic teaching examples, not observed research data."
         },
         {
+          "type": "split",
+          "title": "Colour schemes express structure",
+          "image": "assets/lesson/ipdv/colour-schemes-three.png",
+          "imageFit": "contain",
+          "bullets": [
+            "Sequential: ordered low to high.",
+            "Diverging: departures from a meaningful midpoint.",
+            "Categorical: distinct groups without an order."
+          ],
+          "notes": "Shown after the transformation. This is the figure the animated states replace — use it to name the published convention once students have made and tested their own prediction.\nAsk for a scheme for daily hires (sequential), change relative to zero (diverging) and station operator (categorical). A sequential scheme may use more than one hue. Source and palette guidance: https://colorbrewer2.org/learnmore/schemes.html . Source image supplied in Week 2 lecture.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "imageSide": "right",
+          "design": {
+            "mediaGround": "full"
+          }
+        },
+        {
           "type": "game",
           "gameRef": "check-colour",
           "notes": "2 min. Invite an individual answer, then ask for the reason before showing the explanation. Use a show of hands if students are not connected. Revisit the example if answers are split."
@@ -2810,6 +3012,22 @@
           },
           "body": "Group\tValue\nNorth\t20\nEast\t24\nSouth\t38\nWest\t42",
           "chartSource": "Synthetic teaching examples, not observed research data."
+        },
+        {
+          "type": "split",
+          "title": "Colour needs a second cue",
+          "bullets": [
+            "Pair colour with labels, position, shape or pattern.",
+            "Check contrast at projection size.",
+            "Test with colour-vision simulators and real readers."
+          ],
+          "image": "assets/lesson/ipdv/patterns-as-second-channel.png",
+          "imageFit": "contain",
+          "notes": "Shown after the transformation. This is the figure the animated states replace — use it to name the published convention once students have made and tested their own prediction.\nThe source lecture gives prevalence estimates of 8% and 0.5%. These depend on population and condition, so do not estimate the number of affected students in this room from those figures. The practical design requirement stands without a prevalence claim. A simulator is a useful check, not proof of accessibility.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "design": {
+            "mediaGround": "full"
+          }
         },
         {
           "type": "compare",
