@@ -13,7 +13,12 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import harness from '../../tests/harness.js';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+/* '../..' — two levels, because this file lives in tools/smoke/ and ROOT is
+   the repo. It was '..' when the smokes sat directly in tools/, and the move
+   into their own folder did not change it: relative imports fail loudly, a
+   path built by hand just points somewhere else. This one went looking for
+   tools/data/decks and reported that the relay had not written the file. */
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const stamp = new Date().toISOString().slice(0, 10);
 const outDir = path.join(os.homedir(), 'Desktop', `SlideForge-exports-${stamp}`);
 fs.mkdirSync(outDir, { recursive: true });

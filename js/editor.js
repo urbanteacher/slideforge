@@ -4145,6 +4145,19 @@
         if (deck && deck.id !== id) SF.Store.save(deck);
       }
       deck = d;
+      /* The deck you just opened is the one to come back to.
+         Saving the deck being left writes the store's last-opened id as a side
+         effect — flush() does it when there are pending edits, and the line
+         above does it unconditionally to catch a deck mutated without going
+         through touched(). Both happen after the incoming deck was saved, so
+         without this the id left behind is the deck you switched away from:
+         open a lesson from the Library, reload, and you are back on the
+         previous one. Stated here rather than left to the order of two saves
+         that exist for another reason.
+         It costs a `modified` bump on the deck being opened, which floats it to
+         the top of the Library — which is where the thing you just opened
+         belongs. */
+      SF.Store.save(deck);
       sel = savedSelection();
       SF.Shell.syncChrome();
       draw();

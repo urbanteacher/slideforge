@@ -15,6 +15,12 @@ try {
  await page.goto(`http://127.0.0.1:${port}/?lesson=ipdv-intro`);
  await page.waitForFunction(()=>window.SF?.Editor?.deck());
  assert.equal(await page.locator('#previewBox .slide-date').textContent(),'14 September 2026');
+ /* Through Header & footer, which is where the date lives now. It was in the
+    Edit pane until the date became a furniture kind that can also sit in a
+    slot — one control for one value, wherever it is printed — so the test has
+    to open that pane rather than expecting the field beside the heading. */
+ await page.locator('#btnHeaderFooter').click();
+ await page.getByLabel('Slide date',{exact:true}).waitFor({timeout:10000});
  await page.getByLabel('Slide date',{exact:true}).fill('2026-09-15');
  await page.getByLabel('Slide date',{exact:true}).press('Tab');
  assert.equal(await page.locator('#previewBox .slide-date').textContent(),'15 September 2026');

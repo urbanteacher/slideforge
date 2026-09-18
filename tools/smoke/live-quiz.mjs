@@ -17,7 +17,10 @@ import { chromium } from 'playwright';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const ROOT = path.resolve(__dirname, '..');
+/* '../..' — two levels: this file lives in tools/smoke/ and ROOT is the repo.
+   See the note in exports.mjs; the move into this folder left three of these
+   pointing at tools/ instead. */
+const ROOT = path.resolve(__dirname, '../..');
 
 let spawnedServer = null;
 let tempSessionDir = null;
