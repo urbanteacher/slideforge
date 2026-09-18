@@ -283,7 +283,7 @@
     if (!bar) return;
     bar.hidden = !arranging;
     bar.querySelectorAll('[data-arrange-needs-selection]').forEach(function (b) {
-      b.disabled = !selected;
+      /** @type {HTMLButtonElement} */ (b).disabled = !selected;
     });
     var what = document.getElementById('arrangeWhat');
     if (!what) return;
@@ -318,6 +318,9 @@
     var map = regionsOf(s);
     rt.querySelectorAll('.sf-slot').forEach(function (slot) {
       var key = slot.getAttribute('data-block-key');
+      /* A slot without a key is not a block this face owns — the lattice tags
+         every cell it builds, so an untagged one came from somewhere else. */
+      if (!key) return;
       var r = map && map[key];
       if (r) slot.setAttribute('data-span', r.rows + 'r x ' + r.cols + 'c');
       if (key === selected) slot.setAttribute('data-arrange-selected', '');
@@ -350,13 +353,18 @@
     if (b) b.addEventListener('pointerdown', beginDrag);
     var flip = document.getElementById('btnArrange');
     if (flip) flip.addEventListener('click', function () { setArranging(!arranging); });
-    var pairs = [
-      ['btnArrangeWider', 1, 0], ['btnArrangeNarrower', -1, 0],
-      ['btnArrangeTaller', 0, 1], ['btnArrangeShorter', 0, -1]
+    /* Named rather than positional: a mixed [id, cols, rows] literal infers
+       (string|number)[], so the id could not be passed to getElementById
+       without a cast that would hide a genuine mix-up. */
+    var sizers = [
+      { id: 'btnArrangeWider', cols: 1, rows: 0 },
+      { id: 'btnArrangeNarrower', cols: -1, rows: 0 },
+      { id: 'btnArrangeTaller', cols: 0, rows: 1 },
+      { id: 'btnArrangeShorter', cols: 0, rows: -1 }
     ];
-    pairs.forEach(function (p) {
-      var el = document.getElementById(p[0]);
-      if (el) el.addEventListener('click', function () { resize(p[1], p[2]); });
+    sizers.forEach(function (sizer) {
+      var el = document.getElementById(sizer.id);
+      if (el) el.addEventListener('click', function () { resize(sizer.cols, sizer.rows); });
     });
     var reset = document.getElementById('btnArrangeReset');
     if (reset) reset.addEventListener('click', resetArrangement);

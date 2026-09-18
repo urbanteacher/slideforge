@@ -141,8 +141,13 @@
     if (!target) { select(null); return; }
     e.preventDefault();
     select(target);
+    /* Bound once, after the guard above, because the drag handlers below close
+       over it: a captured `target` could in principle be reassigned before they
+       run, so nothing downstream can rely on the null check. This is the thing
+       that was picked, and it does not change for the life of the drag. */
+    var picked = target;
     var scale = scaleOf(root);
-    var start = originOf(target, root);
+    var start = originOf(picked, root);
     var fromX = e.clientX;
     var fromY = e.clientY;
     var moved = false;
@@ -156,20 +161,20 @@
       var y = start.y + dy;
       /* Painting straight onto the node keeps the drag at pointer speed; the
          pose is written once on release, so one drag is one undo step. */
-      target.node.style.left = x + 'px';
-      target.node.style.top = y + 'px';
-      target.node.style.right = 'auto';
-      target.node.style.bottom = 'auto';
-      target.node.dataset.artDragX = String(x);
-      target.node.dataset.artDragY = String(y);
+      picked.node.style.left = x + 'px';
+      picked.node.style.top = y + 'px';
+      picked.node.style.right = 'auto';
+      picked.node.style.bottom = 'auto';
+      picked.node.dataset.artDragX = String(x);
+      picked.node.dataset.artDragY = String(y);
     }
     function up() {
       document.removeEventListener('pointermove', move);
       document.removeEventListener('pointerup', up);
       if (!moved) return;
-      writePose(target, {
-        x: Number(target.node.dataset.artDragX),
-        y: Number(target.node.dataset.artDragY)
+      writePose(picked, {
+        x: Number(picked.node.dataset.artDragX),
+        y: Number(picked.node.dataset.artDragY)
       });
       commit(false);
       SF.toast && SF.toast('Moved. This slide only — other slides keep the theme.');
@@ -264,10 +269,12 @@
     var has = !!selected;
     var isShape = has && selected.kind === 'shape';
     var pose = has ? readPose(selected) : {};
-    bar.querySelectorAll('[data-art-needs-selection]').forEach(function (b) { b.disabled = !has; });
+    bar.querySelectorAll('[data-art-needs-selection]').forEach(function (b) {
+      /** @type {HTMLButtonElement} */ (b).disabled = !has;
+    });
     var hide = document.getElementById('btnArtHide');
     if (hide) hide.textContent = pose.hidden ? '◉ Show' : '◌ Hide';
-    var del = document.getElementById('btnArtDelete');
+    var del = /** @type {HTMLButtonElement|null} */ (document.getElementById('btnArtDelete'));
     if (del) {
       del.disabled = !has || isShape;
       del.title = isShape
@@ -336,9 +343,10 @@
     if (reset) reset.addEventListener('click', resetArt);
     var pick = /** @type {HTMLInputElement|null} */ (document.getElementById('artPicture'));
     if (pick) {
-      pick.addEventListener('change', function () {
-        addPicture(pick.files && pick.files[0]);
-        pick.value = '';
+      var input = pick;
+      input.addEventListener('change', function () {
+        addPicture(input.files && input.files[0]);
+        input.value = '';
       });
     }
     /* Escape leaves the art face rather than only dropping the selection: it is
