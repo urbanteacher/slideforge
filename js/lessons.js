@@ -1706,6 +1706,19 @@
           progressive: true
         },
         {
+          type: "beforeafter",
+          title: "Unordered hues, or an ordered ramp?",
+          exploration: {
+            before: "assets/lesson/ipdv/categorical-channels.jpg",
+            after: "assets/lesson/ipdv/ordinal-heatmap-sequential.jpg",
+            beforeLabel: "Categorical · distinct hues",
+            afterLabel: "Ordinal · one hue, light to dark",
+            alt: "Five categorical chart types using distinct unordered hues, against a heatmap using a single sequential blue ramp from light to dark"
+          },
+          notes: "Flip between them and ask what each palette is claiming. The left says these are different kinds and none is more; the right says more of the same thing, and the direction of more is legible without reading the legend. Put the wrong one on your data and the palette contradicts it — which is the next slide, and it is the most common colour error in student work.",
+          progressive: true
+        },
+        {
           type: "statement",
           title: "Never put a continuous colour scale on categorical data.",
           body: "It implies an order that does not exist — and the reader will believe it, because that is what the channel means.",
