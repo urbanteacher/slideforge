@@ -502,6 +502,71 @@ try {
   assert.equal(removed.selectionGone, true, 'and leave nothing selected');
   checks++;
 
+  /* 7c2. Centre in the grid. Content is top-aligned by default — .pad is a
+          flex column starting at the top — so a slide with a few rows of
+          content in a sixteen-row grid sits high with the rest as air. Across
+          the library, 123 of 686 slides are top-heavy that way.
+          Down the slide only: across it the left edge is what matters, since
+          the body, the header and the footer all begin on column 1, and
+          "centring" an eleven-column block in twelve would nudge it one column
+          right and break that flush edge to gain half a column of symmetry. */
+  await page.evaluate(() => {
+    const s = SF.Editor.currentSlide();
+    s.blocks = [];
+    s.design.regions = { title: { col: 1, row: 1, cols: 11, rows: 2 },
+                         'block-1': { col: 1, row: 4, cols: 11, rows: 4 } };
+    SF.Editor.refreshCanvas();
+    SF.Arrange.afterPaint();
+  });
+  await page.waitForTimeout(600);
+  const beforeCentre = await page.evaluate(() =>
+    JSON.parse(JSON.stringify(SF.Editor.currentSlide().design.regions)));
+  await page.click('#btnArrangeCentre');
+  await page.waitForTimeout(700);
+  const centred = await page.evaluate(() => {
+    const r = SF.Editor.currentSlide().design.regions;
+    const v = Object.values(r);
+    const top = Math.min(...v.map((x) => x.row));
+    const bottom = Math.max(...v.map((x) => x.row + x.rows - 1));
+    return { regions: JSON.parse(JSON.stringify(r)), above: top - 1, below: 16 - bottom };
+  });
+  assert.ok(Math.abs(centred.above - centred.below) <= 1,
+    `the air should be split evenly, got ${centred.above} above and ${centred.below} below`);
+  assert.deepEqual(Object.keys(centred.regions).map((k) => centred.regions[k].col),
+    Object.keys(beforeCentre).map((k) => beforeCentre[k].col),
+    'the left edge must not move: it is flush with the header and the footer');
+  /* The gap the author left between the heading and the body travels with
+     them: this shifts the bounding box, it does not redistribute inside it. */
+  assert.equal(centred.regions['block-1'].row - (centred.regions.title.row + centred.regions.title.rows),
+    beforeCentre['block-1'].row - (beforeCentre.title.row + beforeCentre.title.rows),
+    'the spacing between blocks should be preserved');
+  assert.deepEqual(Object.keys(centred.regions).map((k) => centred.regions[k].rows),
+    Object.keys(beforeCentre).map((k) => beforeCentre[k].rows), 'and nothing resized');
+  checks++;
+
+  /* Pressing it again does nothing, rather than drifting a row at a time. */
+  await page.click('#btnArrangeCentre');
+  await page.waitForTimeout(600);
+  assert.deepEqual(await page.evaluate(() =>
+    JSON.parse(JSON.stringify(SF.Editor.currentSlide().design.regions))), centred.regions,
+    'centring an already-centred slide should be a no-op');
+
+  /* A block with a vertical anchor has been told where to be, so it stays. */
+  await page.evaluate(() => {
+    const s = SF.Editor.currentSlide();
+    s.design.regions = { title: { col: 1, row: 1, cols: 11, rows: 2, anchorY: 'top' },
+                         'block-1': { col: 1, row: 4, cols: 11, rows: 4 } };
+    SF.Editor.refreshCanvas();
+    SF.Arrange.afterPaint();
+  });
+  await page.waitForTimeout(600);
+  await page.click('#btnArrangeCentre');
+  await page.waitForTimeout(700);
+  const anchored = await page.evaluate(() => SF.Editor.currentSlide().design.regions);
+  assert.equal(anchored.title.row, 1, 'an anchored block keeps the row its anchor gives it');
+  assert.ok(anchored['block-1'].row > 4, 'while the rest of the arrangement still moves');
+  checks++;
+
   /* 7d. Splits. The thing asked for at the very start — "split 50% left and
          50% right that can allow to add new content" — and the second half of
          that sentence is why it came last: there was nothing to put in the
@@ -751,6 +816,7 @@ try {
     + `the top, middle or `
     + `bottom of its own rows, the bar speaks SF.latticeFit, `
     + `blocks can be added, typed into, duplicated and removed while layout blocks cannot, `
+    + `everything centres down the grid without losing the left edge, `
     + `a block splits 50/50, 40/60 or 20/80 either way with a new block in what is freed `
     + `and nothing else moving, `
     + `Theme drops the map and Escape finishes`);

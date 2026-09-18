@@ -247,6 +247,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
           <span class="arrange-group-label">Place</span>
           <label class="anchor-control">Across <select id="arrangeAnchorX" data-arrange-needs-selection><option value="">Free</option><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></label>
           <label class="anchor-control">Down <select id="arrangeAnchorY" data-arrange-needs-selection><option value="">Free</option><option value="top">Top</option><option value="middle">Middle</option><option value="bottom">Bottom</option></select></label>
+          <button class="canvas-bar-btn" id="btnArrangeCentre" type="button" title="Move everything on this slide into the middle of the grid, keeping the spacing between blocks">⌗ Centre</button>
           <label class="anchor-control" title="Where the words sit inside the rows this block was given — not where the block sits on the slide">In rows <select id="arrangeAlignY" data-arrange-needs-selection>
             <option value="">Top</option>
             <option value="middle">Centred</option>
@@ -520,7 +521,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/slide-clip.js?v=1"></script>
 <script src="js/editor.js?v=60"></script>
 <script src="js/artwork.js?v=4"></script>
-<script src="js/arrange.js?v=6"></script>
+<script src="js/arrange.js?v=8"></script>
 <script src="js/header-footer.js?v=1"></script>
 <script src="js/games.js?v=10"></script>
 <script src="js/studio.js?v=14"></script>

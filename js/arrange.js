@@ -334,6 +334,60 @@
     SF.toast && SF.toast(spec.label + ' added. Click it to type, drag to move.');
   }
 
+  /* Put everything on the slide in the middle of the grid.
+
+     Content is top-aligned by default — .pad is a flex column starting at the
+     top, and only title and section slides centre themselves — so a slide with
+     four rows of content in a sixteen-row grid sits high with twelve rows of
+     air beneath it. Measured across the library: of 686 slides, 291 fill the
+     band and 259 are already about right, but 123 are top-heavy that way.
+
+     An action rather than a new default. Centring every slide would stop the
+     heading sitting in the same place from one slide to the next, so a deck
+     would jitter as you advance through it — which is the reason top-aligned
+     is the usual choice and not an oversight. This makes it a decision per
+     slide, and ↺ Theme takes it back.
+
+     The whole arrangement moves together, so the spacing the author set
+     between blocks is preserved: this shifts the bounding box, it does not
+     redistribute anything inside it. A block with a vertical anchor is left
+     alone — it has been told where to be. */
+  function centreInGrid() {
+    var s = slide();
+    var map = regionsOf(s);
+    var keys = map ? Object.keys(map).filter(function (k) { return map[k]; }) : [];
+    if (!keys.length) return;
+    var g = L();
+    var minRow = Infinity, maxRow = -Infinity;
+    keys.forEach(function (k) {
+      var r = map[k];
+      minRow = Math.min(minRow, r.row);
+      maxRow = Math.max(maxRow, r.row + r.rows - 1);
+    });
+    var usedRows = maxRow - minRow + 1;
+    /* Down the slide only. Across it, the left edge is the thing to keep: the
+       body, the header and the footer all start on column 1, and a block
+       spanning eleven of twelve columns would be nudged one column right to
+       "centre" it — breaking the flush edge to gain half a column of symmetry
+       nobody asked for. Centring one block across is what the horizontal
+       anchor is for, and it is per block because that is the only level at
+       which the question makes sense.
+       Clamped, so content taller than the grid stays inside it rather than
+       being centred off the top: over-16 is allowed when an author asks for
+       it, and should not arrive as a side effect of tidying. */
+    var wantRow = clamp(Math.floor((g.rows - usedRows) / 2) + 1, 1, Math.max(1, g.rows - usedRows + 1));
+    var dRow = wantRow - minRow;
+    if (!dRow) { SF.toast && SF.toast('Already centred in the grid.'); return; }
+    keys.forEach(function (k) {
+      var r = map[k];
+      if (!r.anchorY) r.row += dRow;
+    });
+    commit(true);
+    afterPaint();
+    SF.toast && SF.toast('Centred — ' + usedRows + ' of ' + g.rows + ' lines used, '
+      + (g.rows - usedRows) + ' split above and below.');
+  }
+
   /* ---------------------------------------------------------------- splits
      Cut a block's columns at a named proportion and put a new block in what
      is freed. The thing asked for at the start of all this — "if I want to
@@ -662,6 +716,8 @@
     if (reset) reset.addEventListener('click', resetArrangement);
     var fit = document.getElementById('btnArrangeFit');
     if (fit) fit.addEventListener('click', fitToText);
+    var centre = document.getElementById('btnArrangeCentre');
+    if (centre) centre.addEventListener('click', centreInGrid);
     var adder = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeAdd'));
     if (adder) {
       var addPicker = adder;
