@@ -2736,18 +2736,9 @@
       insp.appendChild(UI.field('Context',
         richField(s, 'subtitle', 'text', function(v){s.subtitle=v;touched();repaint();})));
     }
-    if (s.type === 'title') {
-      var dateInput = el('input');
-      dateInput.type = 'date'; dateInput.value = s.date || '';
-      dateInput.setAttribute('aria-label', 'Slide date');
-      dateInput.onchange = function () { s.date = dateInput.value; touched(); repaint(); };
-      insp.appendChild(UI.field('Slide date', dateInput, 'Optional. Choose the lesson date; it stays fixed when you reopen the presentation.'));
-      insp.appendChild(UI.button('Insert today’s date', 'ghost', function () {
-        var today = new Date();
-        s.date = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-        touched(); draw();
-      }));
-    }
+    /* Slide date moved to the Header & footer pane on 2026-09-18, next to the
+       date slot that can now display it. It is the same slide.date either way;
+       a title slide still prints it under the subtitle. */
     if (s.type === 'journey') {
       insp.appendChild(UI.field('Journey title',
         richField(s, 'title', 'text', function (v) { s.title = v; touched(); repaint(); })));

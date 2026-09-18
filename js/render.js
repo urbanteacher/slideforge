@@ -158,6 +158,7 @@
           : item.kind === 'pages' ? number + ' / ' + total
           : item.kind === 'title' ? deck.title
           : item.kind === 'section' ? section
+          : item.kind === 'date' ? SF.formatSlideDate(slide.date)
           : item.kind === 'tagline' ? deck.closingNote || deck.org || ''
           : item.text || '';
         if (item.kind === 'image' || item.kind === 'logo') {
@@ -438,14 +439,22 @@
     appendSlideDate(slide, pad);
   }
 
+  /* Shared with the header/footer date slot, so a date reads the same wherever
+     it is put. Midday, not midnight: a date-only string parsed as UTC midnight
+     is the previous day in any negative offset. */
+  SF.formatSlideDate = function (iso) {
+    if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
+    var date = new Date(iso + 'T12:00:00');
+    if (!Number.isFinite(date.getTime())) return '';
+    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
   function appendSlideDate(slide, pad) {
-    if (slide.date && /^\d{4}-\d{2}-\d{2}$/.test(slide.date)) {
-      var date = new Date(slide.date + 'T12:00:00');
-      if (Number.isFinite(date.getTime())) {
-        var stamp = el('time', 'slide-date', date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }));
-        stamp.setAttribute('datetime', slide.date); pad.appendChild(stamp);
-      }
-    }
+    var text = SF.formatSlideDate(slide.date);
+    if (!text) return;
+    var stamp = el('time', 'slide-date', text);
+    stamp.setAttribute('datetime', slide.date);
+    pad.appendChild(stamp);
   }
 
   /**

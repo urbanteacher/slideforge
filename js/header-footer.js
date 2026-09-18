@@ -77,6 +77,7 @@
     fields.picture.parentElement.hidden=item.kind!=='image';
     fields.tagline.parentElement.hidden=item.kind!=='tagline';
     if(document.activeElement!==fields.tagline)fields.tagline.value=deck().closingNote||'';
+    if(fields.date&&document.activeElement!==fields.date)fields.date.value=slide().date||'';
     fields.anchor.parentElement.hidden=item.placement!=='canvas';
     panel.querySelectorAll('[data-hf-choice]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.hfChoice===selected));});
     if(preview)preview.querySelectorAll('[data-hf-slot]').forEach(function(n){n.toggleAttribute('data-hf-selected',n.dataset.hfSlot===selected);});
@@ -132,7 +133,7 @@
       b.type='button';b.dataset.hfChoice=key;b.onclick=function(){selected=key;refresh();};
     });});
     var form=node('div','',panel);form.className='hf-fields';
-    selectField(form,'Content','kind',[['empty','Empty'],['text','Text'],['image','Image'],['logo','Presentation logo'],['number','Page number'],['pages','Page / total'],['tagline','Theme tagline'],['title','Presentation title'],['section','Section title']],function(v){updateItem('kind',v);});
+    selectField(form,'Content','kind',[['empty','Empty'],['text','Text'],['image','Image'],['logo','Presentation logo'],['number','Page number'],['pages','Page / total'],['date','Slide date'],['tagline','Theme tagline'],['title','Presentation title'],['section','Section title']],function(v){updateItem('kind',v);});
     selectField(form,'Place','placement',[['slot','Header / footer slot'],['canvas','Canvas anchor']],function(v){updateItem('placement',v);});
     var anchors=[];['top','middle','bottom'].forEach(function(y){['left','center','right'].forEach(function(x){anchors.push([y+'-'+x,y+' '+(x==='center'?'centre':x)]);});});
     selectField(form,'Anchor','anchor',anchors,function(v){updateItem('anchor',v);});
@@ -163,6 +164,23 @@
         test.onerror=function(){SF.toast('That file is named like an image but the browser cannot draw it, so the slot would stay empty. Try a PNG or SVG.');};
         test.src=dataUrl;
       };reader.onerror=function(){SF.toast('Could not read that image.');};reader.readAsDataURL(file);
+    };
+    /* The date lives with the furniture that can show it. It is per slide, not
+       per scope — a lesson date belongs to the slide it is written on — so it
+       sits below the slot fields rather than inside them, and the Apply to
+       selector above does not govern it. */
+    var dateWrap=node('div','',panel);dateWrap.className='hf-fields hf-date';
+    var dateLabel=node('label','Slide date',dateWrap), dateInput=node('input','',dateLabel);
+    dateInput.type='date';fields.date=dateInput;
+    dateInput.onchange=function(){
+      var sl=slide();if(!sl)return;
+      sl.date=dateInput.value;SF.Editor.commitActivityChange();SF.Editor.refreshCanvas();refresh();
+    };
+    var today=node('button','Insert today',dateWrap);today.type='button';today.className='canvas-bar-btn';
+    today.onclick=function(){
+      var sl=slide();if(!sl)return;var d=new Date();
+      sl.date=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      SF.Editor.commitActivityChange();SF.Editor.refreshCanvas();refresh();
     };
     warning=node('p','',panel);warning.className='hf-hint';warning.setAttribute('aria-live','polite');
     /* No id wiring: the Header & footer button lives in the inspector's face
