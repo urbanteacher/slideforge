@@ -1405,6 +1405,7 @@
           title: "Tecidos de Algodão, 1927",
           subtitle: "Brazilian cotton textiles · production, factories, capital, imports and tax, on one sheet",
           image: "assets/lesson/ipdv/tecidos-de-algodao-1927.jpg",
+          imageFit: "contain",
           notes: "No lecture text on this one — let them look. Ask what they can find in thirty seconds, then ask which encodings are doing the work. Small multiples, a ring for regional share, paired bars for imports. Then the useful question: which of these choices would you keep, and which would you now defend differently after today? Framed 3:2 rather than full bleed because a dense sheet has to be seen whole — a caption over the artwork would cover the very thing they are reading.",
           design: { imageFrame: "3:2" }
         },
@@ -1436,6 +1437,7 @@
             "Only the centre does all three."
           ],
           image: "assets/lesson/ipdv/explain-enlighten-engage.png",
+          imageFit: "contain",
           notes: "The third case is the warning: narrative and visuals with no data is advertising. Students recognise it instantly once named, and it is a fair description of a lot of infographics.",
           progressive: true,
           imageSide: "right"
@@ -1480,6 +1482,7 @@
             "Who has the most momentum in the race?"
           ],
           image: "assets/lesson/ipdv/polling-three-pies.jpg",
+          imageFit: "contain",
           notes: "Run this cold, before any theory. Ninety seconds, take answers, and let the room struggle — that is the experiment. Watch how long question three takes and how much hedging you hear. Do not reveal the next slide until someone says the chart is the problem.",
           progressive: true,
           imageSide: "right"
@@ -1494,6 +1497,7 @@
             "Nothing was added. The data never changed — only the channel it was put on."
           ],
           image: "assets/lesson/ipdv/polling-three-bars.jpg",
+          imageFit: "contain",
           notes: "The payoff, and the single most convincing two minutes in the lecture. Angle is the channel a pie uses, and angle is well down the accuracy ranking they meet later today. Position on a common scale is at the top of it. This slide is that ranking, demonstrated before it is stated. The underlying evidence is Simkin & Hastie, 'An Information-Processing Analysis of Graph Perception', JASA (1987): pies are workable for part-whole judgements and poor for exactly the comparison and change-over-time tasks these questions ask. Spence & Lewandowsky (1991) is the partial defence.",
           progressive: true,
           imageSide: "right"
@@ -1538,6 +1542,7 @@
             "The reader is not being careless — they are reading the channel correctly. It is the chart that lied."
           ],
           image: "assets/lesson/ipdv/lie-factor-example.jpg",
+          imageFit: "contain",
           notes: "Important framing: do not blame the audience. Length is the channel a bar uses, so length is what gets read. If the baseline is cut, the chart has broken its own promise. Line charts are different — they encode position, so a truncated axis can be legitimate there.",
           progressive: true
         },
@@ -1565,6 +1570,7 @@
             "We read faces involuntarily — which means the encoding borrows emotional weight the numbers never had."
           ],
           image: "assets/lesson/ipdv/chernoff-faces.png",
+          imageFit: "contain",
           notes: "A genuinely interesting failure rather than a lazy one: Chernoff was exploiting real perceptual machinery. Ask which feature they noticed first — it will not be the one carrying the most important variable, and that is the problem in one observation.",
           progressive: true,
           imageSide: "right"
@@ -1586,6 +1592,7 @@
           title: "The third dimension is not free",
           subtitle: "Perspective makes the far slice smaller than the near one, at identical values",
           image: "assets/lesson/ipdv/violations-3d-distortion.jpg",
+          imageFit: "contain",
           bullets: [
             "Depth adds an information-carrying dimension the data does not have.",
             "It also adds occlusion: the front hides the back.",
@@ -1611,6 +1618,7 @@
             "Chart junk is not only ugly. It competes with the data for attention."
           ],
           image: "assets/lesson/ipdv/chart-junk-data-ink.png",
+          imageFit: "contain",
           notes: "Tufte's data-ink ratio. Worth saying plainly: the default settings of most tools have a poor ratio, so the ordinary act of accepting defaults is already a design decision. Tufte, Visual Display (1983), ch. 4.",
           progressive: true
         },
@@ -1688,6 +1696,7 @@
             "Dot plots with colour coding, when the bars would be mostly empty ink."
           ],
           image: "assets/lesson/ipdv/categorical-channels.jpg",
+          imageFit: "contain",
           notes: "The pie caveat is worth stating out loud: a pie encodes angle, which is well down the accuracy ranking they met ten minutes ago. Two to five slices, or use a bar. The dot plot is the one students have usually never been shown — worth sketching on the board.",
           progressive: true,
           imageSide: "right"
@@ -1741,6 +1750,7 @@
             "A channel is any property you change to carry a value: position, length, size, angle, hue, shape, texture."
           ],
           image: "assets/lesson/ipdv/marks-and-channels.jpg",
+          imageFit: "contain",
           notes: "Draw the distinction physically: hold up a dot, then ask what you could change about it. Everything they name is a channel. That is the whole vocabulary. Munzner, Visualization Analysis and Design (2014), ch. 5.",
           progressive: true
         },
@@ -1769,6 +1779,7 @@
             "Only position is all four. Shape is associative and nothing else."
           ],
           image: "assets/lesson/ipdv/bertin-visual-variables.jpg",
+          imageFit: "contain",
           notes: "Bertin got here in 1967, before any of the experiments. Read the bottom row of the figure with them: position earns all four properties, hue earns two, shape earns one. That is the same conclusion as the ranking on the next slide, arrived at by reasoning rather than measurement. Bertin, Semiologie Graphique (1967).",
           progressive: true,
           imageSide: "right"
@@ -1793,6 +1804,7 @@
           title: "The ranking, as Cairo draws it",
           subtitle: "Same data, six channels, six different degrees of accuracy",
           image: "assets/lesson/ipdv/cleveland-mcgill-ranking.png",
+          imageFit: "contain",
           bullets: [
             "This is a hierarchy of elementary perceptual tasks.",
             "It is not about taste. It is about how accurately a person can recover a number from a picture.",
@@ -1823,6 +1835,7 @@
           type: "split",
           title: "The same numbers, three different claims",
           image: "assets/lesson/ipdv/colour-schemes-three.png",
+          imageFit: "contain",
           bullets: [
             "Sequential says: more of the same thing.",
             "Diverging says: two directions from a middle that matters.",
@@ -1842,6 +1855,7 @@
             "Your viewers are not reading the pixels. They are reading pixels plus an assumption about the light."
           ],
           image: "assets/lesson/ipdv/the-dress-2015.jpg",
+          imageFit: "contain",
           notes: "Take a show of hands — you will get a split in most rooms, and the argument makes the point better than any slide. Then land it: if perception is this unstable for a photograph, a colour legend is not a guarantee of anything. Lafer-Sousa, Hermann & Conway, Current Biology 25:13 (2015) — the warm/cool illumination figure comes from that paper.",
           progressive: true
         },
@@ -1854,6 +1868,7 @@
             "So: give reference points, legends and direct labels. Never ask the room to judge a value from a shade alone."
           ],
           image: "assets/lesson/ipdv/luminance-contrast.png",
+          imageFit: "contain",
           notes: "The practical consequence is the last bullet. Heatmaps without direct labels ask for exactly the judgement humans are worst at. Pair the colour with a number. Ware, Information Visualization, ch. 4, on luminance carrying more information than hue.",
           progressive: true,
           imageSide: "left"
@@ -1880,6 +1895,7 @@
             "So a legend swatch and the same colour on a crowded chart are not the same colour to a reader."
           ],
           image: "assets/lesson/ipdv/simultaneous-contrast.jpg",
+          imageFit: "contain",
           notes: "This is the luminance point extended to hue. It is also the reason a colour key placed far from the data is weaker than a direct label on it — by the time the eye travels back, the surround has changed. Simultaneous contrast goes back to Chevreul (1839); Ware, Information Visualization, is the standard modern treatment.",
           progressive: true,
           imageSide: "right"
@@ -1893,6 +1909,7 @@
             "'Get it right in black and white' — the rule from earlier is the same rule as this one."
           ],
           image: "assets/lesson/ipdv/patterns-as-second-channel.png",
+          imageFit: "contain",
           notes: "Close the loop back to the rules of thumb deliberately. Accessibility is not a separate checklist bolted on at the end; it falls out of a design principle they already agreed to twenty minutes ago.",
           progressive: true
         },

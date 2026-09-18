@@ -472,8 +472,14 @@
   color: #14181f;
   text-shadow: none;
 }
+/* A scrim's job is to buy contrast for the caption, so it has to be neutral.
+   This was the brand red at 72%, which is a mid-tone: white text on it cleared
+   the picture underneath but not the red, and the panel read as a banner rather
+   than as a shadow under the words. Black at 78% is what app.css uses for the
+   same job on .split-media, and the brand is already carried by the rule, the
+   headings and the logo. */
 .theme-northeastern.layout-split .split-media:has(.img.cover) .cap {
-  background: linear-gradient(transparent, rgba(155, 12, 36, .72));
+  background: linear-gradient(transparent, rgba(0, 0, 0, .78));
   color: #fff;
 }
 .theme-northeastern.layout-split .split-media .cap-credit {
