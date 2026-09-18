@@ -2288,7 +2288,34 @@ the grid its own fit check uses. The bar now also reports spare capacity —
 "3 of 6 lines used, 3 spare" — since that is the only state where the control
 does anything.
 
-**Still open, in cost order:** push-down on growth (`reflowRows` exists,
-untransplanted); split a region into two; add and remove blocks, which is the
-hard one because a block's kind comes from the slide type and a free block
-would need its own content model.
+**Then built: push-down, Fit to text, and splitting by columns.**
+
+`SF.restackRegions(regions, key, rows)` restacks a block's column group so a
+resize pushes what is below it down instead of dropping one block on top of
+another. Engine 3's rule: each gap is read before anything moves and travels
+with the block below it, so the sum of spans and gaps cannot change behind the
+author's back. Only blocks sharing columns move — a block in the other half of
+a split is beside, not below. A block with `anchorY` is left alone, because it
+answers to its anchor rather than to the stack. Over the sixteenth row is
+allowed and reported ("That is 18 of 16 lines — 2 past the slide"), never
+refused; the row clamp came off `resize` for the same reason the line detector
+replaced `escapes()` — overflowing is a measurement, not a veto.
+
+Typing still does not rearrange the slide, and that is the decision Engine 3
+recorded when its own `reflowRows` returned `false`: a region's `rows` is the
+author's tariff, and rearranging a slide under someone still typing into it is
+worse than telling them it does not fit. What was missing was the bridge.
+**↕ Fit to text** gives the block the lines its words need and pushes the rest
+down — one click, using the number the bar is already showing, and the button
+names it: "↕ Fit to text (6)", disabled when there is nothing to do.
+
+Narrowing a block away from full width now pins it to column 1, so what is
+freed is one contiguous half rather than a sliver on each side. Also Engine 3's
+rule, and the closest the lattice has to splitting a row.
+
+**Still open: add and remove blocks.** Splitting by rows waits on it, and so
+does everything else left blocked, because none of it is really about the
+lattice. A block's kind comes from the slide type and its composition, so a
+free block needs its own content model first: what it is, what it holds, how it
+is keyed for formatting, and what the fit check measures it against. That is a
+decision about the content model, not a control to add to the arrange bar.

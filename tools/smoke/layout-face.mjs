@@ -65,8 +65,23 @@ try {
   checks++;
 
   const bar = () => page.textContent('#arrangeWhat');
-  const gated = () => page.$$eval('#arrangeBar [data-arrange-needs-selection]',
-    (ns) => ns.map((n) => /** @type {HTMLButtonElement|HTMLSelectElement} */ (n).disabled));
+  /* Keyed rather than positional, because the controls do not all answer to a
+     selection the same way: Fit to text stays off for a block that already has
+     the lines its words need, however well it is selected. That asymmetry is
+     the design — a live button that would do nothing is worse than a dead one
+     that says why — so the test reads each control by id. */
+  const gated = () => page.evaluate(() => {
+    const out = {};
+    document.querySelectorAll('#arrangeBar [data-arrange-needs-selection]').forEach((n) => {
+      out[n.id] = /** @type {HTMLButtonElement|HTMLSelectElement} */ (n).disabled;
+    });
+    return out;
+  });
+  const allGated = async () => Object.values(await gated()).every(Boolean);
+  const gatedExcept = async (live) => {
+    const state = await gated();
+    return Object.keys(state).every((id) => state[id] === !live.includes(id));
+  };
   const regionOf = (key) => page.evaluate((k) => {
     const r = SF.Editor.currentSlide()?.design?.regions?.[k];
     return r ? { col: r.col, row: r.row, cols: r.cols, rows: r.rows, anchorX: r.anchorX, anchorY: r.anchorY } : null;
@@ -74,7 +89,7 @@ try {
 
   /* Nothing selected yet, so everything that needs a block is off. */
   assert.match(await bar(), /Click a block/, 'the bar should ask for a block');
-  assert.ok((await gated()).every(Boolean), 'controls needing a block should start disabled');
+  assert.ok(await allGated(), 'controls needing a block should start disabled');
   checks++;
 
   /* 1. A click on the block. Coordinates read immediately before the click:
@@ -97,7 +112,10 @@ try {
   assert.equal(await page.$$eval('#previewBox [data-arrange-selected]', (n) => n.length), 1, 'the click should select one block');
   assert.equal(await page.getAttribute('#previewBox [data-arrange-selected]', 'data-block-key'), key,
     'and it should be the block under the pointer');
-  assert.ok((await gated()).every((d) => d === false), 'a selection should enable the controls');
+  assert.ok(await gatedExcept(['arrangeAnchorX', 'arrangeAnchorY', 'arrangeAlignY',
+    'btnArrangeNarrower', 'btnArrangeWider', 'btnArrangeShorter', 'btnArrangeTaller']),
+    `a selection should enable the controls, leaving Fit to text off for a block that `
+    + `already fits — got ${JSON.stringify(await gated())}`);
   assert.match(await bar(), new RegExp(`^${key} · row ${before.row}, col ${before.col}`),
     'the bar should name the block and where it is');
   checks++;
@@ -147,10 +165,109 @@ try {
   assert.equal((await regionOf(key)).cols, before.cols - 1, 'Shift+ArrowLeft should take a column');
   checks++;
 
-  /* 5. The sizer buttons do the same thing as the keys they mirror. */
+  /* 4b. Taller pushes what is below it down, gap preserved. Without this a
+         resize dropped one block on top of another and the author had to move
+         every one of them by hand — which is what "things do not snap down"
+         meant. Engine 3's rule: each gap travels with the block below it, so
+         the sum of spans and gaps cannot change behind your back. */
+  await page.evaluate(() => {
+    const s = SF.Editor.currentSlide();
+    s.title = 'Short';
+    s.design.regions = { title: { col: 1, row: 1, cols: 11, rows: 2 },
+                         'block-1': { col: 1, row: 4, cols: 11, rows: 4 } };
+    SF.Editor.refreshCanvas();
+    SF.Arrange.afterPaint();
+  });
+  await page.waitForTimeout(600);
+  at = await centreOf('.sf-slot[data-block-key="title"]');
+  await page.mouse.click(at.x, at.y);
+  await page.waitForTimeout(300);
+  await page.click('#btnArrangeTaller');
+  await page.waitForTimeout(500);
+  const pushed = await page.evaluate(() => JSON.parse(JSON.stringify(SF.Editor.currentSlide().design.regions)));
+  assert.equal(pushed.title.rows, 3, 'the block should gain a row');
+  assert.equal(pushed['block-1'].row, 5, 'and the block below should move down one');
+  assert.equal(pushed['block-1'].rows, 4, 'without being resized itself');
+  /* The authored gap of one row between them survives: title ends at 3, the
+     next starts at 5. */
+  assert.equal(pushed['block-1'].row - (pushed.title.row + pushed.title.rows), 1,
+    'the gap the author left should travel with the block below it');
+  checks++;
+
+  /* 4c. Fit to text: the bridge from "I typed a longer heading" to "the slide
+         is arranged again". The tariff still does not grow from paint —
+         rearranging a slide under someone who is typing into it is worse than
+         telling them — but the telling is now one click from the fixing, and
+         the number is the one the bar is already showing. */
+  await page.evaluate(() => {
+    const s = SF.Editor.currentSlide();
+    s.design.regions = { title: { col: 1, row: 1, cols: 11, rows: 2 },
+                         'block-1': { col: 1, row: 3, cols: 11, rows: 4 } };
+    s.title = 'A heading long enough that it certainly cannot be set on one single line of this lattice';
+    SF.Editor.refreshCanvas();
+    SF.Arrange.afterPaint();
+  });
+  await page.waitForTimeout(700);
+  at = await centreOf('.sf-slot[data-block-key="title"]');
+  await page.mouse.click(at.x, at.y);
+  await page.waitForTimeout(400);
+  assert.match(await bar(), /needs 6 lines, has 2/, `the bar should state the shortfall, said "${await bar()}"`);
+  assert.equal(await page.textContent('#btnArrangeFit'), '↕ Fit to text (6)',
+    'and the button should name the number it will use');
+  assert.equal(await page.isDisabled('#btnArrangeFit'), false, 'and be live');
+  await page.click('#btnArrangeFit');
+  await page.waitForTimeout(700);
+  const fitted = await page.evaluate(() => ({
+    regions: JSON.parse(JSON.stringify(SF.Editor.currentSlide().design.regions)),
+    verdicts: [...document.querySelectorAll('#previewBox .sf-slot')].map((n) => n.dataset.fit),
+  }));
+  assert.equal(fitted.regions.title.rows, 6, 'one click should give it the six lines it needs');
+  assert.equal(fitted.regions['block-1'].row, 7, 'and push what is below it down');
+  assert.deepEqual(fitted.verdicts, ['ok', 'ok'], 'and leave nothing overflowing');
+  assert.equal(await page.isDisabled('#btnArrangeFit'), true,
+    'and then have nothing left to do');
+  checks++;
+
+  /* 4d. Narrowing away from full width pins to the first column, so what is
+         freed is one contiguous half rather than a sliver on each side. The
+         closest the lattice has to splitting a row, and Engine 3's rule. */
+  await page.evaluate(() => {
+    const s = SF.Editor.currentSlide();
+    s.title = 'Short';
+    s.design.regions = { title: { col: 1, row: 1, cols: 12, rows: 2 },
+                         'block-1': { col: 1, row: 3, cols: 12, rows: 4 } };
+    SF.Editor.refreshCanvas();
+    SF.Arrange.afterPaint();
+  });
+  await page.waitForTimeout(600);
+  at = await centreOf('.sf-slot[data-block-key="title"]');
+  await page.mouse.click(at.x, at.y);
+  await page.waitForTimeout(300);
+  for (let i = 0; i < 6; i++) { await page.click('#btnArrangeNarrower'); await page.waitForTimeout(120); }
+  await page.waitForTimeout(400);
+  const narrowed = await page.evaluate(() => JSON.parse(JSON.stringify(
+    SF.Editor.currentSlide().design.regions.title)));
+  assert.equal(narrowed.cols, 6, 'six clicks should take twelve columns to six');
+  assert.equal(narrowed.col, 1, 'and pin it to the first, freeing columns 7 to 12 in one piece');
+  checks++;
+
+  /* 5. The sizer buttons do the same thing as the keys they mirror.
+        Re-seeded and re-selected, because the checks above deliberately leave
+        the slide in states of their own. */
+  await page.evaluate((k) => {
+    const s = SF.Editor.currentSlide();
+    s.design.regions = { title: { col: 1, row: 1, cols: 11, rows: 2 } };
+    s.design.regions[k] = { col: 1, row: 3, cols: 6, rows: 4 };
+    SF.Editor.refreshCanvas();
+    SF.Arrange.afterPaint();
+  }, key);
+  await page.waitForTimeout(600);
+  at = await centreOf(`.sf-slot[data-block-key="${key}"]`);
+  await page.mouse.click(at.x, at.y);
+  await page.waitForTimeout(300);
   const widened = (await regionOf(key)).cols;
   await page.click('#btnArrangeWider');
-  await page.waitForTimeout(250);
+  await page.waitForTimeout(300);
   assert.equal((await regionOf(key)).cols, widened + 1, 'Wider should add a column');
   checks++;
 
@@ -276,14 +393,16 @@ try {
     await page.waitForTimeout(300);
     assert.equal(await page.$$eval('#previewBox [data-arrange-selected]', (n) => n.length), 0,
       'a click on empty lattice should deselect');
-    assert.ok((await gated()).every(Boolean), 'and disable the controls again');
+    assert.ok(await allGated(), 'and disable the controls again');
     assert.match(await bar(), /Click a block/, 'and go back to asking for one');
     checks++;
   }
 
   assert.deepEqual(errors, []);
   console.log(`ok · layout face: ${checks} checks · a click selects (words included), a wobble does not move, `
-    + `arrows and sizers write regions, an anchor sticks, text packs to the top, middle or `
+    + `arrows and sizers write regions, taller pushes the rest down and Fit to text closes the `
+    + `gap in one click, narrowing frees one contiguous half, an anchor sticks, text packs to `
+    + `the top, middle or `
     + `bottom of its own rows, the bar speaks SF.latticeFit, `
     + `Theme drops the map and Escape finishes`);
 } finally {

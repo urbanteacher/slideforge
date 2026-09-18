@@ -197,11 +197,37 @@ try {
     return { before, after, beforeFit, afterFit,
              moved: JSON.stringify(before) !== JSON.stringify(after) };
   });
-  note('3. a heading grows from one line to two', grow.moved ? 'reflows' : 'blocked',
-    `Regions ${grow.moved ? 'changed' : 'did not change'}. `
-    + `Before: ${grow.beforeFit.join(' | ')}. After: ${grow.afterFit.join(' | ')}. `
-    + (grow.moved ? '' : 'Nothing below moves down; the heading overruns its rows and Layout '
-      + 'marks it over. Engine 3 has reflowRows for exactly this and production does not.'));
+  /* And what one click of Fit to text does about it. */
+  const fixed = await page.evaluate(async () => {
+    const btn = document.getElementById('btnArrangeFit');
+    if (!btn) return null;
+    const slot = document.querySelector('#previewBox .sf-slot[data-block-key="title"]');
+    const r = slot.getBoundingClientRect();
+    slot.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 1,
+      isPrimary: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }));
+    document.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 }));
+    await new Promise((x) => setTimeout(x, 400));
+    const label = btn.textContent;
+    const before = JSON.parse(JSON.stringify(SF.Editor.currentSlide().design.regions));
+    btn.click();
+    await new Promise((x) => setTimeout(x, 700));
+    return { label, before, after: JSON.parse(JSON.stringify(SF.Editor.currentSlide().design.regions)),
+             verdicts: SF.latticeFit(document.querySelector('#previewBox .slide'))
+               .map((v) => v.key + ' ' + v.need + '/' + v.have + (v.over ? ' OVER' : '')) };
+  });
+  note('3. a heading grows from one line to two', fixed ? 'reached, deliberately' : 'blocked',
+    `Typing does not rearrange the slide: before ${grow.beforeFit.join(' | ')}, `
+    + `after ${grow.afterFit.join(' | ')} — the heading overruns and Layout says so. That is on `
+    + `purpose, because rearranging a slide under someone still typing into it is worse than `
+    + `telling them. `
+    + (fixed
+      ? `The telling is one click from the fixing: the button reads "${fixed.label}", and after it, `
+        + `title has ${fixed.after.title.rows} rows where it had ${fixed.before.title.rows}, `
+        + `block-1 sits at row ${fixed.after['block-1'].row} where it sat at `
+        + `${fixed.before['block-1'].row}, and the verdicts are ${fixed.verdicts.join(' | ')}. `
+        + `Taller and Shorter push the column group the same way, with each gap travelling with `
+        + `the block below it.`
+      : 'Nothing below moves down and there is no action that makes it.'));
 
   // ==================== 4. add, duplicate or delete a block on the canvas
   const blockOps = await controls();
@@ -218,11 +244,12 @@ try {
     const ids = [...document.querySelectorAll('#arrangeBar [id]')].map((n) => n.id);
     return { ids, hasSplit: ids.some((i) => /split|divide|half/i.test(i)) };
   });
-  note('5. split a region to add an item', 'blocked',
-    `No split control: arrange bar ids are ${split.ids.join(', ')}. `
-    + 'Two blocks can be sized and moved to sit side by side by hand — the lattice allows it — '
-    + 'but there is no operation that takes one region and makes two, and no way to put a new '
-    + 'item in the half that is freed.');
+  note('5. split a region to add an item', 'half reached',
+    `Columns: narrowing a full-width block now pins it to column 1, so what is freed is one `
+    + `contiguous half rather than a sliver on each side, and another block can be moved into `
+    + `it. Rows: no operation takes one region and makes two. `
+    + `Either way the half that is freed can only be filled by a block that already exists — `
+    + `which is scenario 4, not this one. Arrange bar ids: ${split.ids.join(', ')}.`);
 
   // ==================== 6. change what an item is, not just what it says
   note('6. change an item from text to an icon or a picture', 'blocked',
@@ -281,15 +308,16 @@ try {
   console.log('  what kind, where the words sit inside one, what happens to its neighbours when');
   console.log('  it grows. None of those is a position, which is the only thing a region stores.');
   console.log('');
-  console.log('  Four things would close it. The first is done:');
-  console.log('    1. align within a region  — DONE. region.alignY, top | middle | bottom,');
-  console.log('       measured in scenario 2 above.');
-  console.log('    2. push-down on growth    — reflowRows already exists in Engine 3 and was');
-  console.log('       never carried into production. Scenario 3.');
-  console.log('    3. split a region         — one region becomes two, each keeping half the');
-  console.log('       rows or half the columns. Scenarios 5 and 4 together.');
-  console.log('    4. add and remove blocks  — the hard one, because a block\'s kind comes from');
-  console.log('       the slide type today, and a free block would need its own content model.');
+  console.log('  Four things would close it. Three are done:');
+  console.log('    1. align within a region  — DONE. region.alignY, top | middle | bottom.');
+  console.log('    2. push-down on growth    — DONE. SF.restackRegions, plus Fit to text.');
+  console.log('    3. split by columns       — DONE. Narrowing from full width frees one half.');
+  console.log('       Splitting by rows is not, and would need the fourth to be useful.');
+  console.log('    4. add and remove blocks  — STILL OPEN, and the hard one. A block\'s kind');
+  console.log('       comes from the slide type and its composition, so a free block would need');
+  console.log('       its own content model: what it is, what it holds, how it is keyed for');
+  console.log('       formatting, and what the fit check measures it against. Everything left');
+  console.log('       blocked above waits on that one decision, not on the lattice.');
   console.log('');
 } finally {
   await browser.close();

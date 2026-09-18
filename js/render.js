@@ -295,6 +295,72 @@
     return true;
   };
 
+  /* ------------------------------------------------------------- push-down
+     Make a block taller and the blocks under it move down, instead of landing
+     on top of each other. Engine 3's rule, carried over: each gap travels with
+     the block below it, so the sum of spans and gaps is unchanged and a resize
+     cannot quietly move the row budget. Over the sixteenth row is allowed and
+     reported, never refused — the line detector was adopted precisely so that
+     overflowing is a number rather than a veto.
+
+     Only the blocks sharing columns with the one that changed. A block beside
+     it, in the other half of a split, is not below it and must not move.
+
+     Deliberately not called from paint. A region's `rows` is the author's
+     tariff and the empty lines under a heading are composition rather than
+     slack, so typing a longer heading reports an overflow and waits: the
+     Layout face says "needs 6 lines, has 2", and Fit to text is one click. An
+     automatic regrow would rearrange a slide while its author was still
+     typing into it. */
+  SF.regionColumnGroup = function (regions, key) {
+    var subject = regions && regions[key];
+    if (!subject) return [];
+    var lo = subject.col, hi = subject.col + subject.cols - 1;
+    return Object.keys(regions).filter(function (k) {
+      var r = regions[k];
+      return r && r.col <= hi && lo <= r.col + r.cols - 1;
+    }).map(function (k) {
+      return { key: k, region: regions[k] };
+    }).sort(function (a, b) {
+      return a.region.row - b.region.row || (a.key < b.key ? -1 : 1);
+    });
+  };
+
+  /* Restack `key`'s column group around whatever `key` now spans. Returns what
+     it cost, so a caller can say "18 of 16 rows" rather than only redrawing. */
+  SF.restackRegions = function (regions, key, rows) {
+    var group = SF.regionColumnGroup(regions, key);
+    if (!group.length) return null;
+    /* Read the gaps before changing anything: a gap is the distance from where
+       the previous block ended to where this one starts, and it belongs to the
+       block below it. */
+    var cursor = 1;
+    group.forEach(function (entry) {
+      entry.gap = Math.max(0, entry.region.row - cursor);
+      cursor = entry.region.row + entry.region.rows;
+    });
+    if (rows != null) regions[key].rows = Math.max(1, Math.round(rows));
+    /* An anchored block answers to its anchor, not to the stack: moving it
+       would contradict the choice the author already made about where it sits. */
+    var row = 1;
+    group.forEach(function (entry) {
+      row += entry.gap;
+      if (entry.region.anchorY) {
+        row = Math.max(row, entry.region.row + entry.region.rows);
+        return;
+      }
+      entry.region.row = row;
+      row += entry.region.rows;
+    });
+    var used = row - 1;
+    return {
+      used: used,
+      budget: LATTICE.rows,
+      over: Math.max(0, used - LATTICE.rows),
+      moved: group.filter(function (e) { return !e.region.anchorY; }).length
+    };
+  };
+
   /* --------------------------------------------------------- what is on top
      Which of two nodes paints over the other, by the CSS painting order rather
      than by a guess. Needed because the answer is not uniform: .slide-art is

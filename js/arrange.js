@@ -255,11 +255,51 @@
     var r = map && map[selected];
     if (!r) return;
     var g = L();
+    var wasCols = r.cols;
+    /* Rows are no longer clamped to the bottom of the grid. The line detector
+       was adopted so that overflowing is a measurement rather than a veto, and
+       clamping here made a block silently refuse to grow at the foot of a
+       slide — which reads as a dead button. restackRegions reports the
+       overrun instead. */
     r.cols = clamp(r.cols + dCols, 1, r.anchorX ? g.cols : g.cols - r.col + 1);
-    r.rows = clamp(r.rows + dRows, 1, r.anchorY ? g.rows : g.rows - r.row + 1);
+    /* Narrowing away from full width pins to the first column, so the half
+       that is freed is the right-hand one and it is contiguous. Keeping the
+       origin instead left a gap on both sides and nothing usable on either.
+       Engine 3's rule, and the closest the lattice has to splitting a row. */
+    if (dCols < 0 && wasCols >= g.cols && r.cols < g.cols && !r.anchorX) r.col = 1;
+    if (dRows) {
+      var cost = SF.restackRegions(map, selected, Math.max(1, r.rows + dRows));
+      if (cost && cost.over) {
+        SF.toast && SF.toast('That is ' + cost.used + ' of ' + cost.budget
+          + ' lines — ' + cost.over + ' past the slide.');
+      }
+    }
     Object.assign(r, SF.anchorRegion(r));
     commit(true);
     afterPaint();
+  }
+
+  /* Give the block the lines its words actually need, and push the rest down.
+     The bridge between "I typed a longer heading" and "the slide is arranged
+     again": the tariff still does not grow from paint, because rearranging a
+     slide under someone who is still typing into it is worse than telling them
+     it does not fit — but the telling is now one click from the fixing, and
+     the number it uses is the one the Layout face is already showing. */
+  function fitToText() {
+    if (!selected) return;
+    var v = verdictFor(selected);
+    if (!v || v.need == null) return;
+    var map = regionsOf(slide());
+    var r = map && map[selected];
+    if (!r) return;
+    if (v.need === r.rows) { SF.toast && SF.toast('Already ' + r.rows + ' lines.'); return; }
+    var was = r.rows;
+    var cost = SF.restackRegions(map, selected, v.need);
+    Object.assign(r, SF.anchorRegion(r));
+    commit(true);
+    afterPaint();
+    SF.toast && SF.toast(was + ' lines to ' + v.need
+      + (cost && cost.over ? ' — the slide is now ' + cost.over + ' lines over' : ''));
   }
 
   /* Drop the whole map rather than write regions that happen to match the
@@ -314,6 +354,18 @@
     if (ay) ay.value = (region && region.anchorY) || '';
     var al = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeAlignY'));
     if (al) al.value = (region && region.alignY) || '';
+    var fitBtn = /** @type {HTMLButtonElement|null} */ (document.getElementById('btnArrangeFit'));
+    if (fitBtn) {
+      var v0 = selected && verdictFor(selected);
+      var need = v0 && v0.need;
+      fitBtn.disabled = !selected || need == null || !region || need === region.rows;
+      fitBtn.textContent = need != null && region && need !== region.rows
+        ? '↕ Fit to text (' + need + ')' : '↕ Fit to text';
+      fitBtn.title = need != null && region && need !== region.rows
+        ? 'Give this block ' + need + ' lines instead of ' + region.rows
+          + ', and push what is below it down'
+        : 'This block already has the lines its words need';
+    }
     var what = document.getElementById('arrangeWhat');
     if (!what) return;
     var over = verdict.filter(function (v) { return v.over; });
@@ -415,6 +467,8 @@
     });
     var reset = document.getElementById('btnArrangeReset');
     if (reset) reset.addEventListener('click', resetArrangement);
+    var fit = document.getElementById('btnArrangeFit');
+    if (fit) fit.addEventListener('click', fitToText);
     ['X','Y'].forEach(function(axis){
       var control = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeAnchor' + axis));
       if (!control) return;
