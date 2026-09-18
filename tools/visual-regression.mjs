@@ -53,7 +53,19 @@ const LAYOUT_CASES = [
   'layout-title', 'layout-section', 'layout-content', 'layout-cards3',
   'layout-cards4', 'layout-cards7', 'layout-keywords', 'layout-quote',
   'layout-table', 'layout-split', 'layout-image-caption', 'layout-gallery',
-  'layout-chart-bar', 'layout-chart-line', 'layout-chart-pie'
+  'layout-chart-bar', 'layout-chart-line', 'layout-chart-pie',
+  /* Added 2026-09-18. The list above covered 11 of 38 slide types, and the
+     September bugs all landed in the other 27: a compare table six rows deep
+     ran 26px past its frame, a beforeafter rendered two empty frames because
+     its images were read from the wrong field, and a split with a cover image
+     cropped a three-part diagram to its middle third while printing white
+     caption text on a red gradient. Each fixture below holds one of those
+     open. Written out rather than borrowed from a lesson, for the reason in
+     the block comment at the top of the layout branch. */
+  'layout-statement', 'layout-keyfact', 'layout-italics', 'layout-links',
+  'layout-journey', 'layout-stats', 'layout-compare', 'layout-compare6',
+  'layout-funnel', 'layout-timeline', 'layout-iceberg', 'layout-spectrum',
+  'layout-sourcecheck', 'layout-beforeafter', 'layout-split-cover'
 ];
 const LAYOUT_THEMES = ['northeastern', 'studio', 'midnight'];
 
@@ -343,7 +355,73 @@ async function run() {
           'layout-chart-line': { type: 'chart', chartKind: 'line', title: 'Line chart with long series names',
             body: 'Year|Boston|Cambridge|Bristol\n1996|41|22|35\n2006|58|25|38\n2016|75|26|38' },
           'layout-chart-pie': { type: 'chart', chartKind: 'pie', title: 'Pie chart',
-            body: 'Continent|Share\nAsia|46\nEurope|21\nAfrica|33' }
+            body: 'Continent|Share\nAsia|46\nEurope|21\nAfrica|33' },
+
+          'layout-statement': { type: 'statement', title: 'A statement that carries the whole slide.',
+            body: 'And a line underneath it that has to wrap, because the pair is what the layout is for.' },
+          'layout-keyfact': { type: 'keyfact', title: 'One fact', subtitle: 'With a qualifier above it',
+            body: 'Friday after each lab,\n12:00' },
+          'layout-italics': { type: 'italics', title: 'A phrase set apart from its explanation.',
+            body: 'The explanation runs underneath at body size and is long enough to wrap onto a second line.' },
+          'layout-links': { type: 'links', title: 'Resources', bullets: [
+            'Course handbook\thttps://example.ac.uk/handbook',
+            'Reading list\thttps://example.ac.uk/reading',
+            'Submission point\thttps://example.ac.uk/canvas'] },
+          'layout-journey': { type: 'journey', title: 'Six stops', subtitle: 'Weeks 1 to 6',
+            bullets: bullets(6, 'Week') },
+          'layout-stats': { type: 'stats', title: 'Three numbers', subtitle: 'With a context line',
+            bullets: ['8%\tof men', '0.5%\tof women', '1 in 12\tin this room'] },
+          'layout-compare': { type: 'compare', title: 'Three rows', subtitle: 'Do\tDon\u2019t',
+            bullets: [
+              'Audience\tKnow what they need\tDo not assume colour reads the same',
+              'Start\tUse a familiar chart\tDo not overload one view',
+              'Labels\tAxes, units, legends\tDo not hide the range'] },
+          /* Six labelled rows is the case that overflowed by 26px. Held open
+             deliberately: the verdict is that it should be split, and a
+             baseline is how we notice if it silently starts "fitting". */
+          'layout-compare6': { type: 'compare', title: 'Six rows — the case that does not fit', subtitle: 'Do\tDon\u2019t',
+            bullets: [
+              'Audience\tKnow their expertise and what they need\tDo not assume colour means the same to everyone',
+              'Starting point\tStart simple, with a familiar chart type\tDo not overload one view with every variable',
+              'Labelling\tLabel axes, units, titles and legends\tDo not hide the context or the relevant range',
+              'Honesty\tShow uncertainty — error bars, intervals\tDo not distort; keep the representation proportional',
+              'Comparison\tUse common baselines and aligned scales\tDo not decorate; minimise non-data ink',
+              'Process\tIterate — test it on someone, then fix it\tDo not ship the first draft'] },
+          'layout-funnel': { type: 'funnel', title: 'An ordered ranking', subtitle: 'Most accurate at the top',
+            bullets: ['Position on a common scale\t100', 'Position, non-aligned\t85',
+              'Length, direction, angle\t70', 'Area\t55', 'Volume, curvature\t40',
+              'Shading, saturation\t28'] },
+          'layout-timeline': { type: 'timeline', title: 'Five events', subtitle: 'Across a term',
+            bullets: ['Week 1\tIntroductions', 'Week 4\tColour', 'Week 7\tReading week',
+              'Week 9\tNetworks', 'Week 11\tMachine learning'] },
+          'layout-iceberg': { type: 'iceberg', title: 'What lies beneath', subtitle: 'What the room sees',
+            bullets: ['Preparation\tthe hours nobody watches', 'Revision\tthe drafts thrown away',
+              'Feedback\tthe conversations in between'] },
+          'layout-spectrum': { type: 'spectrum', title: 'Place them on the line', subtitle: 'Rarely\tConstantly',
+            bullets: ['Email\t20', 'Spreadsheets\t55', 'Notebooks\t85'] },
+          'layout-sourcecheck': { type: 'sourcecheck', title: 'A claim worth checking.',
+            subtitle: 'Where it comes from',
+            bullets: ['Source\tA named book\tWith an edition and a year',
+              'Method\tHow the number was produced\tAnd on whom',
+              'Limit\tWhat it does not cover\tStated plainly'],
+            body: 'The takeaway line that sits under the rows.' },
+          /* Two images and a divider. This rendered as two empty frames for a
+             whole session because the images were written to slide.image
+             instead of slide.exploration, and nothing failed. */
+          'layout-beforeafter': { type: 'beforeafter', title: 'Before and after',
+            exploration: {
+              before: 'assets/lesson/anscombe/anscombe-i.svg',
+              after: 'assets/lesson/anscombe/anscombe-ii.svg',
+              beforeLabel: 'Dataset I', afterLabel: 'Dataset II',
+              alt: 'Two Anscombe scatterplots compared with a divider' } },
+          /* The combination that failed: a cover image crops a wide diagram,
+             and the caption sits on a scrim over it. layout-split above uses
+             contain and no scrim, so neither behaviour was covered. */
+          'layout-split-cover': { type: 'split', title: 'Cover image with a caption scrim',
+            bullets: bullets(2, 'Point'),
+            image: 'assets/brand/nu-london-skyline.png',
+            subtitle: 'A credit line over the picture',
+            design: { capStyle: 'scrim' } }
         }[st];
         rd = window.SF.normalizeDeck({ title: 'Baseline', theme: th, slides: [build] });
         rd.theme = th;

@@ -1,0 +1,99 @@
+# The suite existed long before this file did. 435 unit assertions, 51 smoke
+# scripts and 597 visual baselines, all of which ran only when somebody
+# remembered — which worked, right up until the first busy week. This is the
+# trigger, not the tests.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# A second push to the same branch makes the first run pointless. Cancel it
+# rather than queue behind it.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Deterministic and fast: no browser, no server, no network. If this is red
+  # nothing else is worth running, which is why it is a separate job.
+  check:
+    name: build, types and unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The floor declared in package.json engines, not the newest release.
+      # Testing what we promise to support is the point of declaring it.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.12.0'
+          cache: npm
+
+      - run: npm ci
+
+      # build:check fails if js/model.js is out of date with src/, which is the
+      # one place this repo can silently ship a stale artefact.
+      - run: npm test
+
+  # Renders real slides in a real browser and measures the result. Slower, and
+  # depends on Chromium, so it is split off — a failure here is a different
+  # kind of news from a type error.
+  smoke:
+    name: rendered-slide smokes
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.12.0'
+          cache: npm
+
+      - run: npm ci
+
+      # Chromium only. The smokes measure geometry produced by our own CSS, not
+      # cross-browser behaviour, so Firefox and WebKit would triple the minutes
+      # and tell us nothing we are currently asking.
+      - run: npx playwright install --with-deps chromium
+
+      # Curated rather than `npm run smoke`, which chains 22 and takes long
+      # enough that people start skipping the branch. These five are the ones
+      # that guard the engine's contract:
+      #   fit-check    every library slide still fits its frame
+      #   demo-deck    the 97-slide layout bank, its audit and its budget
+      #   layout-fit   the picker's fit predictions match real renders
+      #   lesson-bank  the library files and clones
+      #   handout      the print path, every image resolved
+      # Measured locally at 8s, 39s, 3s, 1s, 1s.
+      - run: npm run smoke:fit-check
+      - run: npm run smoke:demo-deck
+      - run: npm run smoke:layout-fit
+      - run: npm run smoke:lesson-bank
+      - run: npm run smoke:handout
+
+      - name: upload failure output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-failures
+          path: |
+            tools/baselines/diffs/
+            *.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+# Deliberately not here: npm run visual:check.
+#
+# The 597 baselines in tools/baselines were captured on macOS. Chromium on
+# ubuntu-latest hints and rasterises text differently, so every one of them
+# would fail on the first run for a reason that has nothing to do with the
+# change under test — and a check that is red by default is not a check.
+#
+# Fixing it means regenerating the baselines inside the same container that
+# verifies them, which is the standard practice and is a deliberate,
+# reviewable commit of ~101MB rather than a side effect of turning CI on.
+# Until then visual:check stays a local gate. See §18 of
+# docs/design-system-and-the-canvas.md.
