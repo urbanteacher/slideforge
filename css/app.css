@@ -1,3 +1,4 @@
+@import url('./experiments.css?v=2');
 @import url('./header-footer.css');
 /* ==========================================================================
    SlideForge
@@ -1446,9 +1447,12 @@ html[data-ws="game"] #btnSorter { display: none; }
   margin-top: 4px;
   color: var(--s-fg);
 }
-.deck-viewport.railed .layout-join .join-title { font-size: 36px; }
-.deck-viewport.railed .layout-join .join-qr { width: 210px; height: 210px; }
-.deck-viewport.railed .layout-join .join-pin { font-size: 56px; }
+.deck-viewport.railed .layout-join .join-title,
+#previewBox.railed .layout-join .join-title { font-size: 36px; }
+.deck-viewport.railed .layout-join .join-qr,
+#previewBox.railed .layout-join .join-qr { width: 210px; height: 210px; }
+.deck-viewport.railed .layout-join .join-pin,
+#previewBox.railed .layout-join .join-pin { font-size: 56px; }
 #previewBox.railed .layout-join .join-title { font-size: 36px; }
 #previewBox.railed .layout-join .join-qr { width: 210px; height: 210px; }
 #previewBox.railed .layout-join .join-pin { font-size: 56px; }
@@ -2289,8 +2293,14 @@ html[data-ws="game"] #btnSorter { display: none; }
 .hud button.on { background: rgba(255,255,255,.2); }
 /* Three stops on one button, so the button has to show which one it is on:
    an outline for beside the slide, filled for the whole screen. */
-.hud button[data-state="beside"] { outline: 1.5px solid rgba(255,255,255,.55); outline-offset: -1.5px; }
-.hud button[data-state="full"] { background: #fff; color: #14171d; }
+.hud button[data-state="rail"] { outline: 1.5px solid rgba(255,255,255,.55); outline-offset: -1.5px; }
+/* The fill has to out-specify `.hud button[data-act=rail].on` further down,
+   which carries one class more than a bare state attribute and lands later in
+   the file. Without the longer selector the whole-screen stop painted itself
+   with the same faint highlight as the beside-the-slide stop, so the button
+   showed two of its three states identically. */
+.hud button[data-act=rail].on[data-state="focus"],
+.hud button[data-state="focus"] { background: #fff; color: #14171d; }
 .hud .pos { font-size: 13px; padding: 0 10px; color: #cfd4de; font-variant-numeric: tabular-nums; }
 .hud .sep { width: 1px; height: 18px; background: rgba(255,255,255,.16); margin: 0 4px; }
 
@@ -2587,7 +2597,8 @@ html[data-ws="game"] #btnSorter { display: none; }
    of step with it.
    ========================================================================== */
 
-.deck-viewport.railed { --rail-w: 384px; }
+.deck-viewport.railed,
+#previewBox.railed { --rail-w: 384px; }
 
 .scorerail {
   position: absolute;
@@ -2790,15 +2801,32 @@ html[data-ws="game"] #btnSorter { display: none; }
 
 /* ---- make room for the rail; all offsets derive from --rail-w ---- */
 
-.deck-viewport.railed .slide .pad { padding-right: calc(var(--rail-w) + 54px); }
+.deck-viewport.railed .slide .pad,
+#previewBox.railed .slide .pad { padding-right: calc(var(--rail-w) + 54px); }
 .deck-viewport.railed .layout-image .pad,
-.deck-viewport.railed .layout-video .pad { padding-right: 0; }
+#previewBox.railed .layout-image .pad,
+.deck-viewport.railed .layout-video .pad,
+#previewBox.railed .layout-video .pad { padding-right: 0; }
+/* The framed variant took the picture and its caption out of absolute
+   positioning and back into ordinary flow, so the right: offsets below never
+   reach it. The pad's own padding is the only thing left that can hold the
+   rail's column open — and the rule above has just taken it away. */
+.deck-viewport.railed .layout-image .pad.img-framed,
+#previewBox.railed .layout-image .pad.img-framed {
+  padding-right: calc(var(--rail-w) + 54px);
+}
 .deck-viewport.railed .layout-image .img,
-.deck-viewport.railed .layout-video .img { right: var(--rail-w); }
-.deck-viewport.railed .layout-video .vid { right: var(--rail-w); width: auto; }
+#previewBox.railed .layout-image .img,
+.deck-viewport.railed .layout-video .img,
+#previewBox.railed .layout-video .img { right: var(--rail-w); }
+.deck-viewport.railed .layout-video .vid,
+#previewBox.railed .layout-video .vid { right: var(--rail-w); width: auto; }
 .deck-viewport.railed .layout-image .cap,
-.deck-viewport.railed .layout-video .cap { right: var(--rail-w); padding-right: 46px; }
-.deck-viewport.railed .layout-table .tbl { font-size: .84em; }
+#previewBox.railed .layout-image .cap,
+.deck-viewport.railed .layout-video .cap,
+#previewBox.railed .layout-video .cap { right: var(--rail-w); padding-right: 46px; }
+.deck-viewport.railed .layout-table .tbl,
+#previewBox.railed .layout-table .tbl { font-size: .84em; }
 .deck-viewport.railed .layout-split .pad.split-pad,
 #previewBox.railed .layout-split .pad.split-pad {
   padding-right: 0;
@@ -2809,14 +2837,22 @@ html[data-ws="game"] #btnSorter { display: none; }
 #previewBox.railed .layout-split .split-copy h2 { font-size: 34px; }
 .deck-viewport.railed .layout-split .split-copy li,
 #previewBox.railed .layout-split .split-copy li { font-size: 22px; }
-.deck-viewport.railed .slide .pagenum { right: calc(var(--rail-w) + 34px); }
-.deck-viewport.railed .slide-logo { right: calc(var(--rail-w) + 34px); }
+.deck-viewport.railed .slide .pagenum,
+#previewBox.railed .slide .pagenum { right: calc(var(--rail-w) + 34px); }
+.deck-viewport.railed .slide-logo,
+#previewBox.railed .slide-logo { right: calc(var(--rail-w) + 34px); }
 .deck-viewport.railed .layout-title .slide-logo,
-.deck-viewport.railed .layout-section .slide-logo { right: calc(var(--rail-w) + 44px); }
-.deck-viewport.railed .layout-image .slide-logo { right: calc(var(--rail-w) + 26px); }
-.deck-viewport.railed .layout-quiz.has-clock .slide-logo { right: calc(var(--rail-w) + 140px); }
-.deck-viewport.railed .layout-quiz .clock { right: calc(var(--rail-w) + 38px); }
-.deck-viewport.railed .leaderboard { padding-right: calc(var(--rail-w) + 54px); }
+#previewBox.railed .layout-title .slide-logo,
+.deck-viewport.railed .layout-section .slide-logo,
+#previewBox.railed .layout-section .slide-logo { right: calc(var(--rail-w) + 44px); }
+.deck-viewport.railed .layout-image .slide-logo,
+#previewBox.railed .layout-image .slide-logo { right: calc(var(--rail-w) + 26px); }
+.deck-viewport.railed .layout-quiz.has-clock .slide-logo,
+#previewBox.railed .layout-quiz.has-clock .slide-logo { right: calc(var(--rail-w) + 140px); }
+.deck-viewport.railed .layout-quiz .clock,
+#previewBox.railed .layout-quiz .clock { right: calc(var(--rail-w) + 38px); }
+.deck-viewport.railed .leaderboard,
+#previewBox.railed .leaderboard { padding-right: calc(var(--rail-w) + 54px); }
 
 /* ---- railed question layout ----
    With ~860px of usable width, one full-width column per answer reads far
@@ -2824,20 +2860,31 @@ html[data-ws="game"] #btnSorter { display: none; }
 
 /* Shorthand `padding` here would reset the right padding that clears the
    rail, so the right value is restated explicitly. */
-.deck-viewport.railed .layout-quiz .pad {
+.deck-viewport.railed .layout-quiz .pad,
+#previewBox.railed .layout-quiz .pad {
   padding: 50px calc(var(--rail-w) + 54px) 54px 56px;
 }
-.deck-viewport.railed .layout-quiz .opts { gap: 14px; margin-top: 26px; }
-.deck-viewport.railed .layout-quiz .opts.stack { grid-template-columns: 1fr; }
-.deck-viewport.railed .layout-quiz.has-clock .qhead { padding-right: 104px; }
+.deck-viewport.railed .layout-quiz .opts,
+#previewBox.railed .layout-quiz .opts { gap: 14px; margin-top: 26px; }
+.deck-viewport.railed .layout-quiz .opts.stack,
+#previewBox.railed .layout-quiz .opts.stack { grid-template-columns: 1fr; }
+.deck-viewport.railed .layout-quiz.has-clock .qhead,
+#previewBox.railed .layout-quiz.has-clock .qhead { padding-right: 104px; }
 
-.deck-viewport.railed .layout-results .donut { width: 220px; height: 220px; }
-.deck-viewport.railed .layout-results .score-hero { gap: 36px; }
-.deck-viewport.railed .layout-results .row { font-size: 21px; padding: 11px 15px; }
+.deck-viewport.railed .layout-results .donut,
+#previewBox.railed .layout-results .donut { width: 220px; height: 220px; }
+.deck-viewport.railed .layout-results .score-hero,
+#previewBox.railed .layout-results .score-hero { gap: 36px; }
+.deck-viewport.railed .layout-results .row,
+#previewBox.railed .layout-results .row { font-size: 21px; padding: 11px 15px; }
 .deck-viewport.railed .layout-title h1,
-.deck-viewport.railed .layout-section h1 { font-size: 66px; }
-.deck-viewport.railed .layout-content li { font-size: 29px; }
-.deck-viewport.railed .layout-quote .q { font-size: 40px; }
+#previewBox.railed .layout-title h1,
+.deck-viewport.railed .layout-section h1,
+#previewBox.railed .layout-section h1 { font-size: 66px; }
+.deck-viewport.railed .layout-content li,
+#previewBox.railed .layout-content li { font-size: 29px; }
+.deck-viewport.railed .layout-quote .q,
+#previewBox.railed .layout-quote .q { font-size: 40px; }
 
 
 /* solo (no audience) running tally, shown on quiz and score slides */
@@ -3071,15 +3118,22 @@ html[data-ws="deck"] #railCount { display: none; }
 }
 
 /* railed: the rail takes ~30%, so ease the answer and body down a step */
-.deck-viewport.railed .layout-explain .pad {
+.deck-viewport.railed .layout-explain .pad,
+#previewBox.railed .layout-explain .pad {
   padding: 50px calc(var(--rail-w) + 54px) 50px 56px;
 }
-.deck-viewport.railed .layout-explain .ex-q { font-size: 24px; }
-.deck-viewport.railed .layout-explain .ex-answer { font-size: 32px; padding: 15px 22px; margin-bottom: 26px; }
-.deck-viewport.railed .layout-explain .ex-answer .key { width: 52px; height: 52px; font-size: 26px; }
-.deck-viewport.railed .layout-explain .ex-body[data-len="md"] p { font-size: 29px; }
-.deck-viewport.railed .layout-explain .ex-body[data-len="lg"] p { font-size: 25px; }
-.deck-viewport.railed .layout-explain .ex-body[data-len="xl"] p { font-size: 21px; }
+.deck-viewport.railed .layout-explain .ex-q,
+#previewBox.railed .layout-explain .ex-q { font-size: 24px; }
+.deck-viewport.railed .layout-explain .ex-answer,
+#previewBox.railed .layout-explain .ex-answer { font-size: 32px; padding: 15px 22px; margin-bottom: 26px; }
+.deck-viewport.railed .layout-explain .ex-answer .key,
+#previewBox.railed .layout-explain .ex-answer .key { width: 52px; height: 52px; font-size: 26px; }
+.deck-viewport.railed .layout-explain .ex-body[data-len="md"] p,
+#previewBox.railed .layout-explain .ex-body[data-len="md"] p { font-size: 29px; }
+.deck-viewport.railed .layout-explain .ex-body[data-len="lg"] p,
+#previewBox.railed .layout-explain .ex-body[data-len="lg"] p { font-size: 25px; }
+.deck-viewport.railed .layout-explain .ex-body[data-len="xl"] p,
+#previewBox.railed .layout-explain .ex-body[data-len="xl"] p { font-size: 21px; }
 
 /* ==========================================================================
    10. Inline explanation
@@ -3140,13 +3194,20 @@ html[data-ws="deck"] #railCount { display: none; }
 /* the key badge and tick already scale from --opt-f */
 
 /* with the rail up there is less width, so ease the body down one more step */
-.deck-viewport.railed .layout-quiz.why-open .opt.correct .why { --why-f: 24px; }
-.deck-viewport.railed .layout-quiz.why-open .opt.correct .why[data-len="lg"] { --why-f: 21px; }
-.deck-viewport.railed .layout-quiz.why-open .opt.correct .why[data-len="xl"] { --why-f: 19px; }
-.deck-viewport.railed .layout-quiz.why-open .opt.correct .why[data-len="xs"] { --why-f: 17px; }
-.deck-viewport.railed .layout-quiz.why-open .opt { --opt-f: 29px; }
+.deck-viewport.railed .layout-quiz.why-open .opt.correct .why,
+#previewBox.railed .layout-quiz.why-open .opt.correct .why { --why-f: 24px; }
+.deck-viewport.railed .layout-quiz.why-open .opt.correct .why[data-len="lg"],
+#previewBox.railed .layout-quiz.why-open .opt.correct .why[data-len="lg"] { --why-f: 21px; }
+.deck-viewport.railed .layout-quiz.why-open .opt.correct .why[data-len="xl"],
+#previewBox.railed .layout-quiz.why-open .opt.correct .why[data-len="xl"] { --why-f: 19px; }
+.deck-viewport.railed .layout-quiz.why-open .opt.correct .why[data-len="xs"],
+#previewBox.railed .layout-quiz.why-open .opt.correct .why[data-len="xs"] { --why-f: 17px; }
+.deck-viewport.railed .layout-quiz.why-open .opt,
+#previewBox.railed .layout-quiz.why-open .opt { --opt-f: 29px; }
 .deck-viewport.railed .layout-quiz.why-open .opt.muted,
-.deck-viewport.railed .layout-quiz.why-open .opt.wrong { --opt-f: 21px; padding: 8px 18px; }
+#previewBox.railed .layout-quiz.why-open .opt.muted,
+.deck-viewport.railed .layout-quiz.why-open .opt.wrong,
+#previewBox.railed .layout-quiz.why-open .opt.wrong { --opt-f: 21px; padding: 8px 18px; }
 
 /* Last resort for a very long explanation: drop the wrong answers to give the
    reasoning the whole panel. Only used when shrinking the type is not enough. */
@@ -3181,7 +3242,8 @@ html[data-ws="deck"] #railCount { display: none; }
 /* a URL that fails to load should collapse, not leave a hole */
 .layout-quiz .qmedia.broken { display: none; }
 
-.deck-viewport.railed .layout-quiz .qmedia { height: 180px; margin: 10px 0 4px; }
+.deck-viewport.railed .layout-quiz .qmedia,
+#previewBox.railed .layout-quiz .qmedia { height: 180px; margin: 10px 0 4px; }
 
 /* Once the explanation is open the reasoning matters more than the picture,
    but the picture is often what the reasoning refers to — so shrink it rather
@@ -3202,7 +3264,8 @@ html[data-ws="deck"] #railCount { display: none; }
 /* ---- image first: the picture leads, question in its own space below ---- */
 .layout-quiz.media-first .qmedia { height: 210px; margin: 0 0 14px; }
 .layout-quiz.media-first .qhead { margin-bottom: 4px; }
-.deck-viewport.railed .layout-quiz.media-first .qmedia { height: 168px; }
+.deck-viewport.railed .layout-quiz.media-first .qmedia,
+#previewBox.railed .layout-quiz.media-first .qmedia { height: 168px; }
 
 /* ---- overlay: the image is the slide's top third and carries the question --
    `cover` rather than `contain` here on purpose: the picture has to reach the
@@ -3241,7 +3304,8 @@ html[data-ws="deck"] #railCount { display: none; }
 .layout-quiz.media-overlay .qmedia .qnum { color: #cfe0ff; }
 .layout-quiz.media-overlay.has-clock .qhead { padding-right: 34px; }
 
-.deck-viewport.railed .layout-quiz.media-overlay .qmedia { height: 300px; }
+.deck-viewport.railed .layout-quiz.media-overlay .qmedia,
+#previewBox.railed .layout-quiz.media-overlay .qmedia { height: 300px; }
 
 /* the countdown sits over the picture in overlay mode, so give it a disc to
    stand on or it disappears against a light image. A thick outline rather
@@ -4186,10 +4250,14 @@ html[data-ws="deck"] #railCount { display: none; }
 .layout-race .racetrack:has(.lane:nth-child(5)) .lane-text { font-size: 26px; }
 .layout-race .racetrack:has(.lane:nth-child(5)) .lane { grid-template-columns: 250px 1fr 110px; }
 
-.deck-viewport.railed .layout-race .pad { padding: 48px calc(var(--rail-w) + 48px) 48px 52px; }
-.deck-viewport.railed .layout-race .lane { grid-template-columns: 210px 1fr 100px; gap: 16px; }
-.deck-viewport.railed .layout-race .lane-text { font-size: 26px; }
-.deck-viewport.railed .layout-race .race-title { font-size: 42px; }
+.deck-viewport.railed .layout-race .pad,
+#previewBox.railed .layout-race .pad { padding: 48px calc(var(--rail-w) + 48px) 48px 52px; }
+.deck-viewport.railed .layout-race .lane,
+#previewBox.railed .layout-race .lane { grid-template-columns: 210px 1fr 100px; gap: 16px; }
+.deck-viewport.railed .layout-race .lane-text,
+#previewBox.railed .layout-race .lane-text { font-size: 26px; }
+.deck-viewport.railed .layout-race .race-title,
+#previewBox.railed .layout-race .race-title { font-size: 42px; }
 
 /* ---- race standings strip, on the question slide ----------------------- */
 
@@ -4204,8 +4272,10 @@ html[data-ws="deck"] #railCount { display: none; }
    has to keep clear of the countdown in its corner. */
 .layout-quiz.has-clock .race-strip { padding-right: 112px; }
 .layout-quiz.is-race.has-clock .qhead { padding-right: 0; }
-.deck-viewport.railed .layout-quiz.has-clock .race-strip { padding-right: 104px; }
-.deck-viewport.railed .layout-quiz.is-race.has-clock .qhead { padding-right: 0; }
+.deck-viewport.railed .layout-quiz.has-clock .race-strip,
+#previewBox.railed .layout-quiz.has-clock .race-strip { padding-right: 104px; }
+.deck-viewport.railed .layout-quiz.is-race.has-clock .qhead,
+#previewBox.railed .layout-quiz.is-race.has-clock .qhead { padding-right: 0; }
 .layout-quiz .race-strip .rlane {
   display: grid; grid-template-columns: 176px 1fr 62px;
   align-items: center; gap: 14px;
@@ -4255,8 +4325,10 @@ html[data-ws="deck"] #railCount { display: none; }
 /* the strip disappears once the explanation takes over the slide */
 .layout-quiz.why-open .race-strip { display: none; }
 
-.deck-viewport.railed .layout-quiz .race-strip .rlane { grid-template-columns: 140px 1fr 56px; gap: 11px; }
-.deck-viewport.railed .layout-quiz .race-strip .rname { font-size: 17px; }
+.deck-viewport.railed .layout-quiz .race-strip .rlane,
+#previewBox.railed .layout-quiz .race-strip .rlane { grid-template-columns: 140px 1fr 56px; gap: 11px; }
+.deck-viewport.railed .layout-quiz .race-strip .rname,
+#previewBox.railed .layout-quiz .race-strip .rname { font-size: 17px; }
 
 /* feedback badges in the slide rail */
 .thumb .badge.fb { background: var(--ui-accent); color: #fff; }
@@ -4272,6 +4344,18 @@ html[data-ws="deck"] #railCount { display: none; }
    ========================================================================== */
 
 .fbrail { --cloud-f: 34px; }
+/* The kind is chrome; the question is the thing the back row has to read.
+   They arrived in the same grey with the LABEL the larger of the two, so the
+   prompt read as a caption under a heading rather than as the question being
+   asked. The label steps down and stays dim; the prompt steps up into the
+   theme's own ink, which is the only pair of sizes here anyone reads at 6m. */
+.fbrail .rail-title {
+  font-size: 15px; letter-spacing: .18em; margin-bottom: 10px;
+}
+.fbrail .rail-sub {
+  font-size: 28px; line-height: 1.22; font-weight: 650;
+  letter-spacing: -.01em; color: var(--s-fg); margin-bottom: 22px;
+}
 .fbrail .fb-body {
   flex: 1; min-height: 0;
   display: flex; flex-direction: column; gap: 12px;
@@ -4469,7 +4553,8 @@ html[data-ws="deck"] #railCount { display: none; }
    the width the rail was holding. Applies to every focusable feed, or a
    focused leaderboard/track would sit in the left two-thirds with a gap. */
 .deck-viewport.fb-focus .scorerail { display: none; }
-.deck-viewport.railed .layout-feedback .pad { padding: 54px 78px 44px; }
+.deck-viewport.railed .layout-feedback .pad,
+#previewBox.railed .layout-feedback .pad { padding: 54px 78px 44px; }
 .deck-viewport.fb-focus .leaderboard { padding-right: 90px; }
 .deck-viewport.fb-focus .layout-race .pad { padding: 54px 72px; }
 .deck-viewport.fb-focus .layout-race .lane { grid-template-columns: 300px 1fr 130px; }
@@ -5325,20 +5410,34 @@ html[data-ws="deck"] #railCount { display: none; }
 .slide .journey-handover .journey-copy h3 { font-size: 44px; margin-bottom: 20px; }
 .slide .journey-handover .journey-copy p { font-size: 24px; line-height: 1.6; }
 /* Keep the teaching route readable beside the live room panel. */
-.deck-viewport.railed .layout-journey h2 { font-size: 32px; }
-.deck-viewport.railed .journey-context { font-size: 18px; margin-bottom: 14px; }
-.deck-viewport.railed .journey-copy h3 { font-size: 22px; }
-.deck-viewport.railed .journey-copy p { font-size: 18px; line-height: 1.25; }
-.deck-viewport.railed .journey-takeaway { font-size: 17px; margin-top: 12px; padding-top: 10px; }
-.deck-viewport.railed .journey-handover { gap: 40px; }
-.deck-viewport.railed .journey-handover .journey-copy h3 { font-size: 34px; }
-.deck-viewport.railed .journey-handover .journey-copy p { font-size: 20px; line-height: 1.4; }
-.deck-viewport.railed .journey-handover .journey-stop:not(:last-child)::after { right: -32px; font-size: 28px; }
-.deck-viewport.railed .mindmap-node { padding: 12px; }
-.deck-viewport.railed .mindmap-node strong { font-size: 21px; }
-.deck-viewport.railed .mindmap-node span { font-size: 17px; }
-.deck-viewport.railed .mindmap-centre { min-height: 140px; padding: 12px; }
-.deck-viewport.railed .mindmap-centre h2 { font-size: 28px; }
+.deck-viewport.railed .layout-journey h2,
+#previewBox.railed .layout-journey h2 { font-size: 32px; }
+.deck-viewport.railed .journey-context,
+#previewBox.railed .journey-context { font-size: 18px; margin-bottom: 14px; }
+.deck-viewport.railed .journey-copy h3,
+#previewBox.railed .journey-copy h3 { font-size: 22px; }
+.deck-viewport.railed .journey-copy p,
+#previewBox.railed .journey-copy p { font-size: 18px; line-height: 1.25; }
+.deck-viewport.railed .journey-takeaway,
+#previewBox.railed .journey-takeaway { font-size: 17px; margin-top: 12px; padding-top: 10px; }
+.deck-viewport.railed .journey-handover,
+#previewBox.railed .journey-handover { gap: 40px; }
+.deck-viewport.railed .journey-handover .journey-copy h3,
+#previewBox.railed .journey-handover .journey-copy h3 { font-size: 34px; }
+.deck-viewport.railed .journey-handover .journey-copy p,
+#previewBox.railed .journey-handover .journey-copy p { font-size: 20px; line-height: 1.4; }
+.deck-viewport.railed .journey-handover .journey-stop:not(:last-child)::after,
+#previewBox.railed .journey-handover .journey-stop:not(:last-child)::after { right: -32px; font-size: 28px; }
+.deck-viewport.railed .mindmap-node,
+#previewBox.railed .mindmap-node { padding: 12px; }
+.deck-viewport.railed .mindmap-node strong,
+#previewBox.railed .mindmap-node strong { font-size: 21px; }
+.deck-viewport.railed .mindmap-node span,
+#previewBox.railed .mindmap-node span { font-size: 17px; }
+.deck-viewport.railed .mindmap-centre,
+#previewBox.railed .mindmap-centre { min-height: 140px; padding: 12px; }
+.deck-viewport.railed .mindmap-centre h2,
+#previewBox.railed .mindmap-centre h2 { font-size: 28px; }
 .image-facts-back { position:absolute; inset:0; z-index:8; padding:90px 100px 110px; background:var(--s-bg); color:var(--s-fg); overflow:auto; }
 .image-facts-back[hidden] { display:none; }
 .slide .image-facts-back h2 { font-size:44px; margin-bottom:36px; }
@@ -6188,10 +6287,14 @@ html[data-ws="deck"] #railCount { display: none; }
 }
 
 /* Beside the live room panel everything steps down a notch. */
-.deck-viewport.railed .stat-value { font-size: 48px; }
-.deck-viewport.railed .compare-cell { font-size: 20px; padding: 12px 16px; }
-.deck-viewport.railed .funnel-label { font-size: 20px; }
-.deck-viewport.railed .timeline-title { font-size: 19px; }
+.deck-viewport.railed .stat-value,
+#previewBox.railed .stat-value { font-size: 48px; }
+.deck-viewport.railed .compare-cell,
+#previewBox.railed .compare-cell { font-size: 20px; padding: 12px 16px; }
+.deck-viewport.railed .funnel-label,
+#previewBox.railed .funnel-label { font-size: 20px; }
+.deck-viewport.railed .timeline-title,
+#previewBox.railed .timeline-title { font-size: 19px; }
 
 /* ---- generated cover motion --------------------------------------------- */
 

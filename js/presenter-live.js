@@ -283,7 +283,7 @@ function paintPoll(p) {
     toggle.disabled = !p;
     var next = p && p.presentAs === 'focus' ? 'rail' : 'focus';
     toggle.dataset.next = next;
-    toggle.textContent = next === 'rail' ? 'Split screen' : 'Full screen';
+    toggle.textContent = next === 'rail' ? 'Beside the slide' : 'Full screen';
   }
 }
 

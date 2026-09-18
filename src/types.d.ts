@@ -24,7 +24,7 @@ export type TransitionKey = typeof import('./model.js').TRANSITIONS[number];
 export type DeckSlideType =
   | 'statement' | 'journey' | 'mindmap' | 'introduction' | 'title' | 'section' | 'content' | 'keywords' | 'italics' | 'links'
   | 'split' | 'cards' | 'table' | 'code' | 'image' | 'video' | 'quote' | 'join'
-  | 'chart' | 'gallery' | 'beforeafter' | 'explore' | 'simulation'
+  | 'chart' | 'gallery' | 'beforeafter' | 'explore' | 'simulation' | 'experiment'
   | 'keyfact' | 'orgchart'
   | 'stats' | 'compare' | 'funnel' | 'timeline' | 'iceberg'
   | 'spectrum' | 'sourcecheck' | 'shift' | 'spotfake';
@@ -189,6 +189,7 @@ export interface DesignControl {
 }
 
 export interface Slide {
+  experiment?: {preset?:string; prompt?:string; duration?:number; print?:{changes?:string; constants?:string; takeaway?:string; caveat?:string}; states?:Array<Record<string, unknown>>};
   headerFooter?: HeaderFooterConfig;
   design?: SlideDesign;
   /** The {@link Activity} key this slide was built from, when it was chosen

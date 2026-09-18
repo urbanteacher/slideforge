@@ -1805,17 +1805,24 @@
     var kind = SF.FEEDBACK_KINDS[def.kind] ? def.kind : 'poll';
     var prompt = String(def.prompt || '').trim();
     if (!prompt) return false;
+    /* An unauthored poll opens full screen, because it has no slide of its own
+       to sit beside — that is the only place it differs from a slide's prompt.
+       Resolved here and carried through normalizeFeedback rather than read off
+       `def` afterwards: normalizeFeedback defaults a missing presentAs to
+       'rail', so reading it separately left the feedback object and the prompt
+       holding two different answers for the same question. */
+    var presentAs = def.presentAs === 'rail' ? 'rail' : 'focus';
     var f = Object.assign(SF.makeFeedback(kind), {
       prompt: prompt,
       options: Array.isArray(def.options) ? def.options : [],
       points: def.points,
       lowLabel: def.lowLabel,
       highLabel: def.highLabel,
-      max: def.max
+      max: def.max,
+      presentAs: presentAs
     });
     f = SF.normalizeFeedback(f);
     var view = SF.feedbackViewOpts(f);
-    var presentAs = def.presentAs === 'rail' ? 'rail' : 'focus';
     document.body.classList.add('fb-open');
     Live.prompt = {
       /* Namespaced so it cannot collide with a slide's `<id>:fb`, and unique

@@ -41,14 +41,20 @@
   }
   function pagesFor(deck) {
     var pages = [];
-    deck.slides.forEach(function (s) {
+    deck.slides.forEach(function (s, slideIndex) {
       /* A slide held back from the room is held back from the handout too.
          The alternative — printing what the class never saw — is the more
          surprising of the two, and it is the handout that gets marked
          against. */
       if (s.hidden === true) return;
       if (s.type === 'join' || s.type === 'results' || s.type === 'explain') return;
-      if (s.type === 'image' && String(s.body || '').trim()) {
+      var firstPage=pages.length;
+      if (s.type === 'experiment' && SF.Experiments) {
+        var c=SF.Experiments.config(s),perPage=SF.chartData(s).categories.length>6?1:2;
+        for(var start=0;start<c.states.length;start+=perPage){
+          var p=copy(s);p._teachingPrint={states:c.states.slice(start,start+perPage).map(function(_,i){return start+i;})};pages.push(p);
+        }
+      } else if (s.type === 'image' && String(s.body || '').trim()) {
         pages.push(copy(s, { body: '' }));
         pages.push(textPage(s.title || 'Behind the image', String(s.body).split(/\n/).filter(function (line) { return line.trim(); })));
       } else if (s.type === 'game') {
@@ -97,15 +103,51 @@
            question being asked. */
         pages.push(textPage(s.feedback.prompt, answerLines(s.feedback)));
       }
+      pages.slice(firstPage).forEach(function(p){p._sourceSlide=slideIndex+1;});
     });
     return pages;
+  }
+  var teachingDefaults={
+    polling:{changes:'Poll values, then angle becomes length; the final view introduces all polls.',constants:'Candidate identities; Poll C values stay fixed during pie-to-bar conversion.',caveat:'Illustrative shares, not real election results. Sampling uncertainty is not supplied.'},
+    integrity:{changes:'The axis minimum and visible bar lengths.',constants:'The underlying values and category identities.',caveat:'Truncated bar baselines deliberately exaggerate the comparison.'},
+    clutter:{changes:'Decorative labels and gridline emphasis.',constants:'Values, bar positions and axis scale.',caveat:'Retain ink that explains the data; minimalism is not the objective.'},
+    distortion:{changes:'Plot width, then the visible time range.',constants:'Original observations and the vertical scale.',caveat:'A selected range can change the apparent story.'},
+    channels:{changes:'The visual channel: position, area, hue, shape or length.',constants:'The underlying categories and quantities.',caveat:'Encoding effectiveness depends on the comparison task.'},
+    colour:{changes:'Palette; some states explicitly switch the displayed attribute.',constants:'Region identities. Compare values and series labels before judging a palette.',caveat:'A palette change and a change of attribute are different operations.'},
+    accessibility:{changes:'Colour is removed.',constants:'Values, labels, positions and bar lengths.',caveat:'Greyscale is not a colour-vision-deficiency simulation.'},
+    structures:{changes:'The data model: items, links, a sampled field and boundaries.',constants:'The teaching question: what is an item and how is space or connection represented?',caveat:'These are different synthetic structures, not interchangeable encodings of one dataset.'},
+    types:{changes:'The attribute example and the operations that make sense.',constants:'The classification questions: order, differences, ratios.',caveat:'Numeric-looking identifiers are not necessarily quantities.'},
+    zoom:{changes:'Visible range: overview, selected detail, overview.',constants:'Underlying observations and the vertical scale.',caveat:'A filtered detail must retain a clear route back to the overview.'}
+  };
+  function teachingInfo(s){
+    var c=SF.Experiments.config(s),custom=!!(s.experiment&&s.experiment.states),base=custom?{}:teachingDefaults[c.preset]||{};
+    return Object.assign({changes:'Compare the labelled states and identify the changing visual encoding.',constants:'Follow each category label. Check whether values and scales stay fixed.',takeaway:String(c.states[c.states.length-1].explanation||'Explain which state best supports the question, and why.'),caveat:'Synthetic or measured data should be identified in the source. Transitional frames are not additional observations.'},base,(s.experiment||{}).print||{});
+  }
+  function teachingPage(doc,s){
+    function add(tag,cls,value,parent){var el=doc.createElement(tag);el.className=cls;if(value!=null)el.textContent=value;(parent||page).appendChild(el);return el;}
+    var page=doc.createElement('article');page.className='teaching-sheet';
+    var c=SF.Experiments.config(s),info=teachingInfo(s);
+    add('div','teaching-kicker','VISUAL EXPERIMENT / READ IN NUMBERED ORDER');
+    add('h1','',s.title||'Visual experiment');add('p','teaching-question',c.prompt);
+    var grid=add('div','teaching-states'+(s._teachingPrint.states.length===1?' single':''));
+    s._teachingPrint.states.forEach(function(index){
+      var st=c.states[index],panel=add('section','teaching-state',null,grid);
+      add('h2','',String(index+1).padStart(2,'0')+' / '+(st.label||'State '+(index+1)),panel);
+      var chart=SF.Experiments.staticState(s,index);chart.querySelectorAll('text').forEach(function(t){t.setAttribute('font-size',Math.max(24,Number(t.getAttribute('font-size'))||24));});
+      panel.appendChild(doc.adoptNode(chart));add('p','teaching-observe',st.explanation||'Compare this state with the previous one.',panel);
+    });
+    var facts=add('div','teaching-facts');
+    [['What changes',info.changes],['What stays fixed / check',info.constants],['Key takeaway',info.takeaway]].forEach(function(pair){var box=add('section','',null,facts);add('h3','',pair[0],box);add('p','',pair[1],box);});
+    add('p','teaching-caution','Caution: '+info.caveat);
+    add('p','teaching-source','Source / units: '+(s.chartSource||'Not supplied - add a source and units before distribution.')+(SF.chartData(s).categories.length>12?' Only the first 12 categories are displayed.':''));
+    return page;
   }
   async function open(deck) {
     var preview = window.open('', '_blank');
     if (!preview) { SF.toast('Allow pop-ups to open the student PDF preview.'); return; }
     var doc = preview.document;
     doc.open(); doc.write('<!doctype html><html><head></head><body></body></html>'); doc.close();
-    doc.title = deck.title + ' — student handout';
+    doc.title = deck.title + ' — teaching handout';
     var base = doc.createElement('base'); base.href = document.baseURI; doc.head.appendChild(base);
     var loads = [];
     document.querySelectorAll('link[rel="stylesheet"]').forEach(function (source) {
@@ -113,6 +155,8 @@
       loads.push(new Promise(function (resolve) { link.onload = resolve; link.onerror = resolve; }));
       doc.head.appendChild(link);
     });
+    var teachingCSS=doc.createElement('link');teachingCSS.rel='stylesheet';teachingCSS.href=new URL('css/print-teaching.css?v=1',document.baseURI).href;
+    loads.push(new Promise(function(resolve){teachingCSS.onload=resolve;teachingCSS.onerror=resolve;}));doc.head.appendChild(teachingCSS);
     var css = doc.createElement('style');
     css.textContent = '@page{size:338.6667mm 190.5mm;margin:0}' +
       'html,body{margin:0!important;padding:0!important;height:auto!important;overflow:visible!important;background:#ddd!important}' +
@@ -149,13 +193,14 @@
     toolbar.appendChild(print);
     var hint = doc.createElement('span');
     hint.className = 'pdf-hint';
-    hint.textContent = 'Choose Save as PDF. All reveals are visible; stacks are separate pages. Private notes, live results and the quiz answer key are excluded. If the button does nothing, press ⌘P / Ctrl+P.';
+    hint.textContent = 'Choose Save as PDF. Experiments include numbered states, comparisons and takeaways. Other reveals are visible; private notes, live results and quiz answer keys are excluded. For A4 paper choose landscape and fit to page. Use ⌘P / Ctrl+P if needed.';
     toolbar.appendChild(hint); doc.body.appendChild(toolbar);
     try {
       var pages = pagesFor(deck);
       pages.forEach(function (s, i) {
         var page = doc.createElement('section'); page.className = 'pdf-page';
-        page.appendChild(SF.renderSlide(deck, s, {index:i,total:pages.length,interactive:false}));
+        page.appendChild(s._teachingPrint?teachingPage(doc,s):SF.renderSlide(deck, s, {index:(s._sourceSlide||i+1)-1,total:deck.slides.length,interactive:false}));
+        var footer=doc.createElement('div');footer.className='pdf-page-reference';footer.textContent='Slide '+(s._sourceSlide||'?')+' / '+deck.slides.length+'  ·  PDF '+(i+1)+' / '+pages.length;page.appendChild(footer);
         doc.body.appendChild(page);
       });
       // Also preload background images used by the image and split layouts.
@@ -175,10 +220,11 @@
       await Promise.race([doc.fonts.ready, new Promise(function (resolve) { setTimeout(resolve, 3000); })]);
       print.textContent = 'Print / Save as PDF'; print.disabled = false;
       if (failed || timedOut) hint.textContent = 'Some resources did not load. Check the preview before saving. Choose Save as PDF in the print dialog.';
+      doc.documentElement.dataset.pdfReady=failed||timedOut?'incomplete':'true';
     } catch (err) {
       hint.textContent = 'Could not prepare the handout. Close this preview and try again.';
       console.error('PDF preview', err);
     }
   }
-  SF.Print = { open: open, pagesFor: pagesFor };
+  SF.Print = { open: open, pagesFor: pagesFor, teachingInfo:teachingInfo };
 })();

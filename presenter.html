@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Presenter view — SlideForge</title>
-<link rel="stylesheet" href="css/app.css?v=62">
+<link rel="stylesheet" href="css/app.css?v=64">
 <link rel="stylesheet" href="css/lattice.css?v=1">
 <link rel="stylesheet" href="css/artwork.css?v=1">
 <link rel="stylesheet" href="css/board-common.css">
@@ -173,7 +173,7 @@
     display: grid; place-items: center; background: #000; color: #c8c8c8;
     font-size: 18px; font-weight: 650; letter-spacing: .04em;
   }
-  .box.wall-room-beside { box-shadow: inset -10px 0 0 var(--ui-accent); }
+  .box.wall-room-rail { box-shadow: inset -10px 0 0 var(--ui-accent); }
   .box.wall-join { outline: 2px solid var(--ui-accent); outline-offset: 1px; }
 
   /* Live wall overlays mirrored into "On screen now". */
@@ -356,7 +356,7 @@
         <label for="pollOptions">Answers <span class="hint-inline">one per line</span></label>
         <textarea id="pollOptions" maxlength="400" rows="2" placeholder="Another example&#10;Move on"></textarea>
         <label for="pollWhere">Show</label>
-        <select id="pollWhere"><option value="focus" selected>Full screen</option><option value="rail">Beside slide</option></select>
+        <select id="pollWhere"><option value="focus" selected>Full screen</option><option value="rail">Beside the slide</option></select>
         <div class="quick-actions"><button class="btn primary" id="pollLaunch">▶ Ask room</button></div>
         <p id="pollGuard" role="status"></p>
       </div>
@@ -380,7 +380,7 @@
         <p id="pollState">No poll</p>
         <ul id="pollChoices" class="poll-choices" hidden></ul>
         <output id="pollCount">—</output>
-        <div class="quick-actions"><button class="btn" id="pollQr" disabled>Join code</button><button class="btn" id="pollWhereToggle" disabled>Split screen</button><button class="btn" id="pollEnd" disabled>End poll</button></div>
+        <div class="quick-actions"><button class="btn" id="pollQr" disabled>Join code</button><button class="btn" id="pollWhereToggle" disabled>Beside the slide</button><button class="btn" id="pollEnd" disabled>End poll</button></div>
       </div>
       <div class="quick-card quick-status">
         <h3>On screen</h3>
@@ -503,9 +503,11 @@
 <script src="js/ask.js?v=4"></script>
 <script src="js/share.js?v=1"></script>
 <script src="js/customize.js?v=26"></script>
-<script src="js/explore.js?v=1"></script>
+<script src="js/explore.js?v=2"></script>
+<script src="js/chart-motion.js?v=1"></script>
+<script src="js/experiments.js?v=2"></script>
 <script src="js/callouts.js?v=2"></script>
-<script src="js/render.js?v=62"></script>
+<script src="js/render.js?v=63"></script>
 <script src="js/memory.js"></script>
 <script src="js/bingo.js"></script>
 <script src="js/bowl.js"></script>
@@ -853,10 +855,23 @@
     open: 'Floor: open',
     shut: 'Floor: closed'
   };
+  /* The wall sends the old 'beside' / 'full' tokens so that a desk opened
+     before the rename keeps working. Everything inside this window uses the
+     deck model's own words — 'rail' and 'focus' — so translate on the way in.
+     A wall from before this change sends the same two words, which is why
+     both spellings map. */
+  function roomViewIn(v) {
+    return v === 'beside' || v === 'rail' ? 'rail'
+      : v === 'full' || v === 'focus' ? 'focus'
+      : 'hidden';
+  }
+
+  /* Keyed by 'hidden | rail | focus'. The tip says what the next press does,
+     matching the wall HUD. */
   var ROOM_VIEW_TIP = {
-    hidden: 'Split the screen with the room (S)',
-    beside: 'Put the room on the whole screen (S)',
-    full: 'Hide the room (S)'
+    hidden: 'Put the room beside the slide (S)',
+    rail: 'Put the room full screen (S)',
+    focus: 'Hide the room (S)'
   };
 
   /* Labels and live-gated disables mirror the wall HUD so the desk stays
@@ -901,10 +916,10 @@
 
     var rail = $('btnRail');
     if (rail) {
-      var view = d.roomView || 'hidden';
+      var view = roomViewIn(d.roomView);
       rail.classList.toggle('on', view !== 'hidden');
-      rail.textContent = view === 'beside' ? 'Room: split'
-        : view === 'full' ? 'Room: full screen' : 'Room view';
+      rail.textContent = view === 'rail' ? 'Room: beside the slide'
+        : view === 'focus' ? 'Room: full screen' : 'Room view';
       rail.title = ROOM_VIEW_TIP[view] || ROOM_VIEW_TIP.hidden;
     }
 
@@ -1125,7 +1140,7 @@
       inkMode: d.inkMode || '',
       blank: !!d.blank,
       frozen: !!d.frozen,
-      roomView: d.roomView || 'hidden',
+      roomView: roomViewIn(d.roomView),
       joinCard: !!d.joinCard,
       fullscreen: !!d.fullscreen,
       focusOn: !!d.focusOn,
@@ -1313,7 +1328,7 @@
   function paintWallChrome(box) {
     if (!box || !state) return;
     box.classList.toggle('wall-blank', !!state.blank);
-    box.classList.toggle('wall-room-beside', state.roomView === 'beside');
+    box.classList.toggle('wall-room-rail', state.roomView === 'rail');
     box.classList.toggle('wall-join', !!state.joinCard);
     var strip = box.querySelector('.wall-chrome');
     if (!strip) {
@@ -1331,8 +1346,8 @@
     if (state.blank) chip('wc-blank', 'Blank');
     if (state.frozen) chip('wc-freeze', '❄️ Frozen');
     if (state.joinCard) chip('wc-join', 'Join QR');
-    if (state.roomView === 'beside') chip('wc-room', 'Room: split');
-    if (state.roomView === 'full') chip('wc-room', 'Room: full');
+    if (state.roomView === 'rail') chip('wc-room', 'Room: beside');
+    if (state.roomView === 'focus') chip('wc-room', 'Room: full');
     if (state.focusOn) chip('wc-room', 'Focus on wall');
     if (state.inkOn) chip('wc-ink', state.inkMode === 'spot' ? 'Spotlight' : 'Ink');
     if (state.fullscreen) chip('', 'Full screen');

@@ -23,11 +23,29 @@ function load() {
   context.globalThis = context;
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.join(dir, 'js/model.js'), 'utf8'), context);
+  vm.runInContext(fs.readFileSync(path.join(dir, 'js/experiments.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(dir, 'js/print.js'), 'utf8'), context);
   return context.window.SF;
 }
 
 const plain = (v) => JSON.parse(JSON.stringify(v));
+
+test('experiments print every authored state in order without mutating the deck', () => {
+  const SF=load();const deck=SF.normalizeDeck({title:'Experiment',slides:[{type:'experiment',title:'Polling',experiment:{preset:'polling'},body:SF.Experiments.presets.polling.data,notes:'PRIVATE'}]});
+  const before=JSON.stringify(deck),pages=SF.Print.pagesFor(deck);
+  assert.deepEqual(plain(pages.flatMap(p=>p._teachingPrint.states)),[0,1,2,3,4]);
+  assert.equal(pages.length,3);
+  assert.ok(pages.every(p=>p._sourceSlide===1&&p.notes===''));
+  assert.equal(JSON.stringify(deck),before);
+});
+
+test('custom experiments do not inherit unsupported invariant claims', () => {
+  const SF=load(),s={experiment:{preset:'integrity',states:[{label:'A',kind:'bar',explanation:'Explain the result.'}],print:{changes:'My controlled change'}}};
+  const info=SF.Print.teachingInfo(s);
+  assert.equal(info.changes,'My controlled change');
+  assert.match(info.constants,/Check whether/);
+  assert.equal(info.takeaway,'Explain the result.');
+});
 
 test('a quiz reaches the handout as the question, never the answer', () => {
   const SF = load();

@@ -1431,19 +1431,25 @@
    *
    *   hidden  →  split with the slide  →  over the slide  →  hidden
    *
-   * The middle stop is called "split" everywhere a teacher reads it; the state
-   * string stays 'beside' because it is the value the desk is sent and
-   * compares against, and renaming a live cross-window protocol to reword a
-   * button would break any desk still open from before the change.
+   * The middle stop is called "beside the slide" everywhere a teacher reads
+   * it, and the state string is 'rail' — the deck model's own word for the
+   * same arrangement (feedback.presentAs). The cross-window message is the
+   * one place the old 'beside' / 'full' tokens survive: a desk opened before
+   * this change is still comparing against them, so the wire keeps speaking
+   * the old words and both ends translate at the boundary. See ROOM_VIEW_WIRE.
    *
    * A stop with nothing in it is skipped rather than landed on: with nobody
    * joined and no prompt open there is nothing to put on the whole screen, so
    * the cycle goes straight back to hidden instead of stopping on a "nothing
    * to expand" toast.
    */
+  /* 'rail' and 'focus' are the deck model's own words for these two states
+     (see feedback.presentAs); the panel just adds an off stop in front of
+     them. It used to answer 'beside' and 'full', which meant the same slide
+     arrangement had one name in the saved deck and another in the DOM. */
   Player.roomSidebarState = function () {
-    if (Player._focus) return 'full';
-    if (Player._rail) return 'beside';
+    if (Player._focus) return 'focus';
+    if (Player._rail) return 'rail';
     return 'hidden';
   };
 
@@ -1455,9 +1461,9 @@
 
     /* An explicit close, from somewhere that wants it gone rather than
        cycled — leaving a slide with a prompt on it, mostly. */
-    if (opts && opts.close) state = 'full';
+    if (opts && opts.close) state = 'focus';
 
-    if (state === 'full') {
+    if (state === 'focus') {
       if (Player._focus) {
         if (live) Player.emit('focusToggle', { close: true });
         else toggleSoloFeedback({ close: true });
@@ -1469,7 +1475,7 @@
       return;
     }
 
-    if (state === 'beside') {
+    if (state === 'rail') {
       var canExpand = live
         ? !!(SF.Live.canExpand && SF.Live.canExpand())
         : !!Player._sampleFb;
@@ -1486,7 +1492,7 @@
       return;
     }
 
-    // hidden → beside
+    // hidden → rail
     Player._railWanted = true;
     if (live) {
       Player.emit('sidebarShow', {});
@@ -1535,9 +1541,9 @@
          state is already visible on screen, and what a host wants from a
          tooltip mid-lesson is where the button will take them. */
       var nextTip = state === 'hidden'
-        ? 'Split the screen with the room (S)'
-        : state === 'beside'
-          ? 'Put the room on the whole screen (S)'
+        ? 'Put the room beside the slide (S)'
+        : state === 'rail'
+          ? 'Put the room full screen (S)'
           : 'Hide the room (S)';
       railBtn.title = nextTip;
       railBtn.setAttribute('aria-label', nextTip);
@@ -2493,6 +2499,13 @@
   /* ------------------------------------------------------------ presenter view */
 
   var presenterWin = null;
+  /* The room panel's three states as the desk has always heard them. Inside
+     the app they are 'rail' and 'focus' — the deck model's own words — and
+     this is the single place the older spelling survives, because a desk
+     opened before the rename is still comparing against it. Lives here, at
+     the wire, rather than beside the state it names. */
+  var ROOM_VIEW_WIRE = { hidden: 'hidden', rail: 'beside', focus: 'full' };
+
   var requestedPresenterPanel = null;
   var PRESENTER_BUS = 'slideforge.presenter.v1';
   var presenterBus = null;
@@ -2764,7 +2777,9 @@
         reactions: !(SF.Live && SF.Live.reactions === false),
         phonesBlank: !!(SF.Live && SF.Live.phonesBlank),
         floor: (SF.Live && SF.Live.floor) || 'auto',
-        roomView: Player.roomSidebarState ? Player.roomSidebarState() : 'hidden',
+        /* Legacy tokens on the wire: a desk still open from before the
+           rename compares against these. New desks accept either. */
+        roomView: ROOM_VIEW_WIRE[Player.roomSidebarState ? Player.roomSidebarState() : 'hidden'],
         /* So the desk can show the pen as held, and which tool it is. */
         inkOn: !!(SF.Teaching && SF.Teaching.isOpen && SF.Teaching.isOpen()),
         inkMode: (SF.Teaching && SF.Teaching.mode) ? SF.Teaching.mode() : '',

@@ -2,16 +2,18 @@
 (function () {
   'use strict';
   var SF = window.SF;
-  var kinds = ['beforeafter', 'explore', 'simulation'];
+  var kinds = ['beforeafter', 'explore', 'simulation', 'experiment'];
   function active(slide) { return kinds.includes(slide.type) || (slide.type === 'chart' && slide.exploration && slide.exploration.prediction); }
   function config(slide) { return SF.normalizeExploration(slide.exploration); }
-  function initial(slide) { return { position: 50, spot: -1, input: config(slide).initial, revealed: false }; }
+  function initial(slide) { return { position: 50, spot: -1, input: config(slide).initial, revealed: false, experimentStep: -1 }; }
   function state(player, slide) { return Object.assign(initial(slide), (player.exploreStates || {})[slide.id] || {}); }
   function command(player, action, value) {
     var slide = player.deck && player.deck.slides[player.idx];
     if (!slide || !active(slide) || player.frozen) return;
     var c = config(slide), next = state(player, slide), n = Number(value);
-    if (action === 'reveal' && slide.type === 'chart') next.revealed = value === true;
+    if (action === 'experiment' && slide.type === 'experiment' && SF.Experiments && Number.isInteger(n)) next.experimentStep = Math.max(-1,Math.min(SF.Experiments.config(slide).states.length-1,n));
+    else if (action === 'experimentReplay' && slide.type === 'experiment') next.experimentReplay = (next.experimentReplay || 0) + 1;
+    else if (action === 'reveal' && slide.type === 'chart') next.revealed = value === true;
     else if (action === 'position' && slide.type === 'beforeafter' && Number.isFinite(n)) next.position = Math.max(0, Math.min(100, n));
     else if (action === 'spot' && slide.type === 'explore' && Number.isInteger(n)) next.spot = Math.max(-1, Math.min(c.spots.length - 1, n));
     else if (action === 'input' && slide.type === 'simulation' && Number.isFinite(n)) next.input = Math.max(c.min, Math.min(c.max, n));
@@ -47,6 +49,7 @@
     var s = player.deck && player.deck.slides[player.idx];
     if (!s || !active(s)) return null;
     var v = state(player, s);
+    if (s.type === 'experiment') return v.experimentStep < SF.Experiments.config(s).states.length-1 ? 'comparison' : null;
     if (s.type === 'chart' && !v.revealed) return 'prediction';
     if (s.type === 'explore' && v.spot < config(s).spots.length - 1) return 'hotspot';
     if (s.type === 'beforeafter' && v.position < 100) return 'comparison';
@@ -56,6 +59,11 @@
     var s = player.deck && player.deck.slides[player.idx];
     if (!s || !active(s)) return false;
     var v = state(player, s);
+    if (s.type === 'experiment') {
+      var next=v.experimentStep+direction;
+      if(next>=-1 && next<SF.Experiments.config(s).states.length){command(player,'experiment',next);return true;}
+      return false;
+    }
     if (s.type === 'chart' && v.revealed === (direction < 0)) { command(player, 'reveal', direction > 0); return true; }
     if (s.type === 'explore' && ((direction > 0 && v.spot < config(s).spots.length - 1) || (direction < 0 && v.spot >= 0))) { command(player, 'spot', v.spot + direction); return true; }
     if (s.type === 'beforeafter' && ((direction > 0 && v.position < 100) || (direction < 0 && v.position > 0))) { command(player, 'position', direction > 0 ? 100 : 0); return true; }
@@ -79,6 +87,7 @@
   }
   function render(root, pad, slide, opts) {
     if (!active(slide)) return;
+    if (slide.type === 'experiment' && SF.Experiments) { SF.Experiments.render(root,pad,slide,opts); return; }
     var c = config(slide), view = Object.assign(initial(slide), opts.exploreState || {});
     var enabled = !!(opts.interactive || opts.exploreCommand);
     function send(action, value) { if (opts.exploreCommand) opts.exploreCommand(action, value); }
@@ -152,6 +161,7 @@
     root._exploreRefresh(view);
   }
   function inspector(parent, slide, UI, changed, redraw) {
+    if (slide.type === 'experiment' && SF.Experiments) return SF.Experiments.inspector(parent,slide,UI,changed,redraw);
     if (!kinds.includes(slide.type) && slide.type !== 'chart') return false;
     /* A local copy, not a write-through. This used to be
        `slide.exploration = config(slide)`, which meant that merely selecting a

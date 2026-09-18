@@ -3729,6 +3729,13 @@
       group: "show",
       starters: [{ title: "Before / after", blurb: "Two states compared — the second lands on a press." }]
     },
+    experiment: {
+      label: "Visual experiment",
+      icon: "◉",
+      deck: true,
+      group: "show",
+      starters: [{ title: "Visual experiment", blurb: "Predict, reveal and compare editable visual states.", seed: { title: "Same data, different encodings", experiment: { preset: "polling" }, body: "Candidate	Poll A	Poll B	Poll C\n1	17	20	23\n2	18	20	22\n3	20	19	20\n4	22	21	18\n5	23	20	17" } }]
+    },
     explore: {
       label: "Explore an image",
       icon: "◎",

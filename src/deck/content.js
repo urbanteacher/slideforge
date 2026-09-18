@@ -562,6 +562,8 @@ var SLIDE_TYPES = {
                               seed: { title: 'Code that writes itself', language: 'python', typewrite: true } }] },
   beforeafter: { label: 'Before / after', icon: '◐', deck: true, group: 'show',
                  starters: [{ title: 'Before / after', blurb: 'Two states compared — the second lands on a press.' }] },
+  experiment: { label: 'Visual experiment', icon: '◉', deck: true, group: 'show',
+                 starters: [{ title: 'Visual experiment', blurb: 'Predict, reveal and compare editable visual states.', seed: {title:'Same data, different encodings',experiment:{preset:'polling'},body:'Candidate\tPoll A\tPoll B\tPoll C\n1\t17\t20\t23\n2\t18\t20\t22\n3\t20\t19\t20\n4\t22\t21\t18\n5\t23\t20\t17'} }] },
   explore:     { label: 'Explore an image', icon: '◎', deck: true, group: 'show',
                  starters: [{ title: 'Explore an image', blurb: 'One picture the room examines, with details you reveal.' }] },
   simulation:  { label: 'What if? graph', icon: '↗', deck: true, group: 'show',

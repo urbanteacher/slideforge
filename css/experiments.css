@@ -1,0 +1,22 @@
+.experiment-slide > .pad { display:flex !important; flex-direction:column !important; gap:12px; padding:42px 64px !important; }
+.experiment-slide .pad > h2 { font-size:38px; line-height:1.1; margin:0; }
+.ve-prompt { font-size:23px; line-height:1.3; margin:0; }
+.ve-plot { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
+.ve-plot svg { width:100%; height:100%; overflow:visible; font-family:system-ui; }
+.ve-predict { font-size:32px; max-width:800px; text-align:center; line-height:1.4; }
+.ve-controls { display:flex; flex-wrap:wrap; gap:8px; }
+.ve-controls[hidden] { display:none; }
+.ve-controls button { font:600 17px/1.3 system-ui; padding:8px 12px; border:1px solid currentColor; border-radius:5px; background:transparent; color:inherit; cursor:pointer; }
+.ve-controls button[aria-pressed=true] { background:var(--s-fg,#17251d); color:var(--s-bg,#fff); }
+.ve-controls button:focus-visible { outline:3px solid #0072b2; outline-offset:3px; }
+.ve-explanation { min-height:52px; margin:0; font-size:21px; line-height:1.3; }
+.ve-source { font-size:16px; margin:0; opacity:.8; }
+.ve-controls button:disabled { opacity:.4; cursor:default; }
+
+/* An activity rail takes the right third of the slide. The padding above is
+   !important (it has to beat the base .pad that app.css sets after this file
+   is imported), so the railed rules over there cannot reach it — the room for
+   the rail has to be claimed here, at a higher specificity, or the chart and
+   its prompt run underneath the panel. */
+.deck-viewport.railed .experiment-slide > .pad,
+#previewBox.railed .experiment-slide > .pad { padding-right: calc(var(--rail-w, 384px) + 54px) !important; }

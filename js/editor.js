@@ -1151,7 +1151,7 @@
       return;
     }
 
-    var node = SF.renderSlide(deck, s, slideOpts(sel));
+    var node = SF.renderSlide(deck, s, Object.assign(slideOpts(sel), s.type === 'experiment' ? {interactive:true} : {}));
     box.appendChild(node);
     bindCanvasContent(box,node,s);
     SF.bindCanvasRegions(node,s,function(key){

@@ -78,6 +78,18 @@ test('desk room tools share the HUD control path',()=>{
  assert.equal(typeof state.reactions,'boolean');
 });
 
+// The room panel is 'rail'/'focus' inside the app — the deck model's own words
+// for the same two arrangements — but a desk opened before that rename is still
+// comparing against 'beside'/'full', so the wire keeps speaking the old ones.
+test('the desk is sent the room view in the vocabulary it has always heard',()=>{
+ const b=bridge();
+ b.Player.openPresenter();
+ const sent=view=>{b.Player.roomSidebarState=()=>view;b.Player.syncPresenter();return b.messages[b.messages.length-1].m.roomView;};
+ assert.equal(sent('rail'),'beside');
+ assert.equal(sent('focus'),'full');
+ assert.equal(sent('hidden'),'hidden');
+});
+
 test('live room identity reaches the presenter desk',()=>{
  const b=bridge();
  b.SF.Live.active=true;
