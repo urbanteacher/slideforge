@@ -7,7 +7,12 @@ import harness from '../../tests/harness.js';
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sf-regions-')),port=await harness.freePort();
 const relay=await harness.start(port,dir),browser=await chromium.launch();
 try {
- const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];
+ const page=await browser.newPage({/* Tall on purpose. #inspector shares the stage column's height, so on a
+    1000px-high window the canvas is small enough that this test's drag handle
+    measures 4.9x4.9 CSS pixels and a pointer drag across it stops registering.
+    The height is the cheapest way to keep a canvas-pixel test honest; the
+    column budget itself is worth its own look. */
+ viewport:{width:1500,height:1500}}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto(`http://127.0.0.1:${port}`);await page.waitForFunction(()=>window.SF?.Review&&SF.Editor?.deck());
  // Census the actual Library without changing theme, type or composition.

@@ -49,7 +49,15 @@ fs.writeFileSync(PIXEL, Buffer.from(
   'base64'));
 
 try {
-  const page = await browser.newPage({ viewport: { width: 1700, height: 1050 } });
+  /* Tall on purpose. #inspector shares the stage column's height, so at
+   1700x1050 the canvas measures 160x90 and the theme's shapes overlap each
+   other at every point inside it — nothing can be clicked and the test would
+   be reporting the app's column budget rather than anything about this face.
+   The panel cannot simply be hidden: these faces are toggled from buttons
+   inside it. 1500px of height leaves the canvas usable with the panel open.
+   The column budget is worth its own look; it is not what these checks are
+   for. */
+  const page = await browser.newPage({ viewport: { width: 1700, height: 1500 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(`http://127.0.0.1:${port}/index.html`, { waitUntil: 'networkidle', timeout: 60000 });
@@ -64,6 +72,7 @@ try {
     SF.Editor.openDeck(d.id);
   });
   await page.waitForSelector('#previewBox .slide', { timeout: 20000 });
+
 
   const artOf = () => page.evaluate(() => JSON.parse(JSON.stringify(SF.Editor.currentSlide().art ?? null)));
   /* Keyed rather than positional, because the controls do not all answer to a
@@ -417,6 +426,64 @@ try {
   assert.equal(verdict.back.covered, 0, 'and nothing is reported covered');
   checks++;
 
+  /* 15b. A picture given a region. Free placement stays the default, because
+          decoration that bleeds off the edge of a slide cannot be expressed as
+          a cell range and should not have to be. On the lattice it stops being
+          a layer and becomes a block: the cell decides its size, the blocks
+          around it push away from it, and it cannot occlude anything, because
+          a block is beside content rather than over or under it. */
+  const asBlock = await page.evaluate(async (src) => {
+    const d = SF.makeDeck('picture block');
+    d.theme = 'studio';
+    const s = SF.normalizeSlide({ type: 'content', title: 'A picture in a cell', bullets: ['beside it'] });
+    s.art = { poses: {}, pictures: [{ id: 'p1', src, x: 600, y: 200, w: 400, place: 'lattice', alt: 'a red square' }] };
+    s.design = { regions: { title: { col: 1, row: 1, cols: 7, rows: 2 },
+                            'block-1': { col: 1, row: 3, cols: 7, rows: 3 },
+                            'picture.p1': { col: 8, row: 1, cols: 5, rows: 8 } } };
+    d.slides = [s];
+    const root = SF.renderSlide(d, s, { interactive: false, revealed: 9999, index: 0, total: 1 });
+    const host = document.createElement('div');
+    host.style.cssText = 'position:fixed;left:0;top:0;width:1280px;height:720px;z-index:99999;background:#fff';
+    host.appendChild(root);
+    document.body.appendChild(host);
+    await Promise.all([...host.querySelectorAll('img')].map((i) => i.decode().catch(() => {})));
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const slot = root.querySelector('.sf-slot[data-block-key="picture.p1"]');
+    const img = slot && slot.querySelector('.art-block-img');
+    const sr = slot && slot.getBoundingClientRect();
+    const ir = img && img.getBoundingClientRect();
+    /* data-fit is stamped by SF.latticeFit, which only runs when something asks
+       — the arranging face, or the deck review. Asked here explicitly rather
+       than read off a staged render that nobody has measured. */
+    const verdict = SF.latticeFit(root).find((v) => v.key === 'picture.p1');
+    const out = {
+      slotted: !!slot,
+      region: slot && slot.dataset.region,
+      fit: verdict ? (verdict.over ? 'over' : 'ok') : 'unmeasured',
+      fillsCell: !!(sr && ir) && Math.abs(sr.width - ir.width) < 2 && Math.abs(sr.height - ir.height) < 2,
+      objectFit: img && getComputedStyle(img).objectFit,
+      alt: img && img.alt,
+      freeLayers: root.querySelectorAll('.slide-art-img').length,
+      occludes: SF.artOcclusion(root).length,
+      textRight: sr ? Math.round(root.querySelector('.sf-slot[data-block-key="title"]').getBoundingClientRect().right) : 0,
+      pictureLeft: sr ? Math.round(sr.left) : 0,
+    };
+    host.remove();
+    return out;
+  }, await page.evaluate(() => SF.Editor.currentSlide().art.pictures[0].src));
+  assert.ok(asBlock.slotted, 'a latticed picture should be a lattice slot');
+  assert.equal(asBlock.region, '1,8,8,5', 'placed by its region — row, col, rows, cols');
+  assert.equal(asBlock.fit, 'ok', 'and measured by the fit check like any other block');
+  assert.ok(asBlock.fillsCell, 'the cell should decide its size — that is the point of a region');
+  assert.equal(asBlock.objectFit, 'cover',
+    'filling by default, since a cell range and an aspect ratio rarely agree');
+  assert.equal(asBlock.alt, 'a red square', 'and it is still content, so it keeps its alt text');
+  assert.equal(asBlock.freeLayers, 0, 'and it leaves the free artwork layer entirely');
+  assert.equal(asBlock.occludes, 0, 'a block cannot cover the words: it is beside them');
+  assert.ok(asBlock.pictureLeft >= asBlock.textRight - 40,
+    `and it sits beside the text — text ends ${asBlock.textRight}, picture starts ${asBlock.pictureLeft}`);
+  checks++;
+
   /* 16. How far the face reaches, which is not obvious from its button. A
          theme's decoration belongs to the theme, so the face finds shapes only
          where a theme draws them: title and section slides, in 13 of the 23
@@ -461,7 +528,8 @@ try {
   assert.deepEqual(errors, []);
   console.log(`ok · artwork face: ${checks} checks · a click selects, arrows and −/+ pose a shape, `
     + `Hide is reversible, a placed picture drags and deletes, ↺ Theme keeps your pictures, `
-    + `each item chooses its side of the words and the review flags what is covered · `
+    + `each item chooses its side of the words, a picture can take a region and become a `
+    + `block, and the review flags what is covered · `
     + `theme art reaches ${decorated.length} of `
     + `${await page.evaluate(() => Object.keys(SF.THEMES).length * 9)} theme/type pairs `
     + `— title and section only, in ${themes.size} of `

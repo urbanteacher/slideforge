@@ -160,3 +160,74 @@
   font: 500 20px/1.4 system-ui;
   opacity: .78;
 }
+
+/* ------------------------------------------------- a picture as a block
+   Placed on the lattice rather than by coordinates. The cell decides the
+   size, which is the whole point of giving a picture a region: it takes rows
+   and columns, and the blocks around it push away from it like any other.
+   `order` has no meaning here — a block is beside content, not over or under
+   it — so a latticed picture never occludes anything and artOcclusion does
+   not look at it. */
+.art-block { position: relative; overflow: hidden; min-height: 0; }
+.art-block-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* object-fit is set inline from pic.fit: a cell range and an aspect ratio
+     rarely agree, and the author has to be able to say which one gives. */
+}
+/* A slot holding a picture has to be told its height, or a flex/grid child
+   with a percentage-height image collapses to the image's intrinsic size. */
+.sf-slot > .art-block { height: 100%; }
+.arranging .sf-slot > .art-block { pointer-events: none; }
+
+/* ------------------------------------------------------------- the bar, grouped
+   Thirteen controls in one wrapping row came to seven lines and read as one
+   undifferentiated pile. Grouped by the question each answers — how big, where,
+   and what blocks are on the slide at all — rather than by control type, so the
+   row a control is on is a clue to what it does. */
+.arrange-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  flex: 1 0 100%;
+  min-width: 0;
+}
+.arrange-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 3px 7px 3px 0;
+}
+/* A rule between groups rather than a box around each: three boxes inside a bar
+   that is already inside a panel is one frame too many. */
+.arrange-group + .arrange-group {
+  border-left: 1px solid rgba(12, 51, 84, .14);
+  padding-left: 9px;
+}
+.arrange-group-label {
+  color: #53604f;
+  font: 650 10px/1 system-ui;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: .75;
+}
+/* The groups wrap, they are not forced onto their own lines. Forcing them was
+   measured at 230px of bar in a 404px column, which left the canvas 135px tall
+   and the bar covering the blocks it was meant to arrange — grouping that
+   crushes the thing being grouped is worse than the pile it replaced. When a
+   group does land on its own line the rule moves to its top, because a left
+   rule on a full-width group draws straight across the bar. */
+.arrange-group { flex: 0 1 auto; }
+/* Compact controls, because the Place group is three labelled selects and at
+   the default width they alone wanted three rows. */
+.arrange-group .anchor-control { gap: 3px; font-size: 11px; }
+.arrange-group .anchor-control select { max-width: 104px; padding: 4px; }
+
+/* The floor under the canvas is on .stage-wrap and the yielding is on
+   .canvas-bar, both in app.css — one mechanism for "the toolbar must not eat
+   the slide", not a second one here that would fight it. */

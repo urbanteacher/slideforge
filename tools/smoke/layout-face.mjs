@@ -42,7 +42,15 @@ const browser = await chromium.launch();
 let checks = 0;
 
 try {
-  const page = await browser.newPage({ viewport: { width: 1700, height: 1050 } });
+  /* Tall on purpose. #inspector shares the stage column's height, so at
+   1700x1050 the canvas measures 160x90 and the theme's shapes overlap each
+   other at every point inside it — nothing can be clicked and the test would
+   be reporting the app's column budget rather than anything about this face.
+   The panel cannot simply be hidden: these faces are toggled from buttons
+   inside it. 1500px of height leaves the canvas usable with the panel open.
+   The column budget is worth its own look; it is not what these checks are
+   for. */
+  const page = await browser.newPage({ viewport: { width: 1700, height: 1500 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(`http://127.0.0.1:${port}/index.html`, { waitUntil: 'networkidle', timeout: 60000 });
@@ -55,6 +63,7 @@ try {
     SF.Editor.openDeck(d.id);
   });
   await page.waitForSelector('#previewBox [data-content-key]', { timeout: 20000 });
+
 
   /* Through the button, not the API: the button is what is broken or not. */
   await page.click('#btnArrange');

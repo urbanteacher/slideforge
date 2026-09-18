@@ -349,7 +349,24 @@ html[data-ws="game"] #btnSorter { display: none; }
   padding: 5px 14px;
   border-top: 1px solid var(--ui-line);
   background: var(--ui-panel);
-  flex: none;
+  /* Capped, and shrinkable. `flex: none` made this the one thing in the stage
+     column that could not yield, so .stage-wrap gave up everything instead:
+     measured at 238px of bar against a 96px stage and a 160x90 slide, with the
+     face bars three times taller than the canvas they arrange.
+     A cap here rather than a floor on .stage-wrap, which looks like the obvious
+     fix and is not — #previewBox is sized with 177.778cqh against .stage-wrap
+     as a size container, so pinning its height pins the canvas's: a 240px floor
+     drew the slide *smaller* at 1700x1050 than at 1280x800, the floor having
+     become the ceiling. 9em is about three rows of controls; past that the bar
+     scrolls, which is the right thing to sacrifice.
+     It does not fix the canvas being small in the first place. That is
+     #inspector sharing the stage column's height, which is older and separate:
+     hiding the panel takes the canvas from 160x90 to 980x551. */
+  flex: 0 1 auto;
+  min-height: 2.4em;
+  max-height: 9em;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .canvas-zoom { display: flex; align-items: center; gap: 4px; }
 .canvas-bar > #btnInspector { margin-left: auto; }

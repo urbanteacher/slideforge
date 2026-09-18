@@ -98,9 +98,25 @@
      decides paint order between boxes, not within one. Only the layers that
      have something in them are built: an empty absolutely positioned box over
      every slide is a hit-testing hazard for no reason. */
+  /* Free by coordinates, or a block on the lattice. Free is what a placed
+     picture has always been and stays the default, because decoration that
+     bleeds off the edge of a slide cannot be expressed as a cell range and
+     should not have to be. On the lattice it is a block: it takes rows and
+     columns, other blocks push away from it, and the cell decides its size.
+     `order` has no meaning there — a block is beside content, not over or
+     under it — so the Side control goes quiet for one. */
+  SF.artPlacement = function (pic) {
+    return pic && pic.place === 'lattice' ? 'lattice' : 'free';
+  };
+  SF.artBlockKey = function (id) { return 'picture.' + id; };
+  SF.artBlockId = function (key) {
+    var m = /^picture\.(.+)$/.exec(String(key || ''));
+    return m ? m[1] : null;
+  };
+
   SF.placedArtLayers = function (pictures) {
     var list = Array.isArray(pictures) ? pictures.filter(function (p) {
-      return p && p.src;
+      return p && p.src && SF.artPlacement(p) === 'free';
     }) : [];
     var layers = {};
     list.forEach(function (pic, i) {
@@ -228,7 +244,14 @@
      block has one, so a region survives the text changing; otherwise the class
      the theme gave it, which is what an accent rule or a decorative bar has. */
   function blockKeyOf(node, i) {
-    var key = node.getAttribute && node.getAttribute('data-content-key');
+    if (!node.getAttribute) return 'block-' + i;
+    /* An explicit name first. A content key is the usual one, because a block
+       that holds words is named by the words it holds — but a picture placed on
+       the lattice holds none, and naming it by its class would give every
+       picture on the slide the same region. */
+    var named = node.getAttribute('data-block-key');
+    if (named) return named;
+    var key = node.getAttribute('data-content-key');
     if (key) return key;
     var cls = String(node.className || '').split(/\s+/).filter(Boolean)[0];
     return cls || 'block-' + i;
@@ -337,9 +360,29 @@
 
   SF.renderFreeBlocks = function (root, slide) {
     var list = SF.freeBlocksOf(slide).filter(function (b) { return b && b.id; });
-    if (!list.length) return 0;
+    var pictures = ((slide && slide.art && slide.art.pictures) || []).filter(function (p) {
+      return p && p.src && p.id && SF.artPlacement(p) === 'lattice';
+    });
+    if (!list.length && !pictures.length) return 0;
     var host = SF.latticeHost(root);
     if (!host) return 0;
+    /* Pictures first, so a block added later stacks under them in document
+       order and the first free row a new block finds is below both. */
+    pictures.forEach(function (pic) {
+      var frame = el('div', 'art-block');
+      frame.setAttribute('data-block-key', SF.artBlockKey(pic.id));
+      frame.dataset.artPic = String(pic.id);
+      var img = el('img', 'art-block-img');
+      img.src = pic.src;
+      img.alt = String(pic.alt || '');
+      img.draggable = false;
+      /* Fill or fit, because a cell range and an aspect ratio rarely agree and
+         the author has to be able to say which one gives. */
+      img.style.objectFit = pic.fit === 'contain' ? 'contain' : 'cover';
+      if (pic.hidden) frame.style.display = 'none';
+      frame.appendChild(img);
+      host.appendChild(frame);
+    });
     list.forEach(function (block) {
       var spec = FREE_KINDS[block.kind] || FREE_KINDS.text;
       var key = SF.freeBlockKey(block.id);
@@ -358,7 +401,7 @@
       if (SF.Custom) SF.Custom.paint(node, slide, key, text);
       host.appendChild(node);
     });
-    return list.length;
+    return list.length + pictures.length;
   };
 
   /* ------------------------------------------------------------- push-down

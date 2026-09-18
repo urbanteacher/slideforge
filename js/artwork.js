@@ -60,6 +60,10 @@
 
   /* What a pointer landed on, if it is artwork: either a theme shape (keyed by
      the manifest's class) or a placed picture (keyed by its id). */
+  /* A latticed picture is deliberately not findable here. It is a block, so
+     the Layout face moves and sizes it by cell range and this face would be a
+     second, disagreeing way to place the same thing — which is the fork the
+     whole region model exists to avoid. */
   function targetOf(node) {
     var shape = node.closest && node.closest('.theme-art > *');
     if (shape) return { kind: 'shape', key: shape.getAttribute('data-art-key'), node: shape };
@@ -244,6 +248,43 @@
     }
   }
 
+  /* Free by coordinates, or a block on the lattice. Moving one onto the
+     lattice seeds a region from where it already is, so it does not jump; the
+     x/y/w it had are kept, so moving it back puts it where it was. */
+  function setPlacement(where) {
+    if (!selected || selected.kind !== 'picture') return;
+    var s = slide();
+    var pic = pictureById(s, selected.key);
+    if (!pic) return;
+    var key = SF.artBlockKey(pic.id);
+    var map = (s.design && s.design.regions) || null;
+    if (where === 'lattice') {
+      pic.place = 'lattice';
+      if (!s.design) s.design = {};
+      if (!s.design.regions) s.design.regions = {};
+      map = s.design.regions;
+      if (!map[key]) {
+        /* One lookup, then read from it: box() twice is two lookups and the
+           guard on the first says nothing about the second. */
+        var host = box();
+        var g = SF.latticeGeometry(host && host.querySelector('.slide'));
+        var col = Math.max(1, Math.min(g.cols, Math.round((pic.x || 0) / g.stepX) + 1));
+        var row = Math.max(1, Math.min(g.rows, Math.round((pic.y || 0) / g.stepY) + 1));
+        var cols = Math.max(1, Math.min(g.cols - col + 1, Math.round((pic.w || 360) / g.stepX)));
+        map[key] = { col: col, row: row, cols: cols, rows: Math.max(2, Math.round(cols * 0.6)) };
+      }
+      SF.toast && SF.toast('On the lattice. Use Layout to move and size it.');
+    } else {
+      delete pic.place;
+      /* The region is left in place rather than deleted: moving it back onto
+         the lattice should return it to the cells it had, not start again. */
+      SF.toast && SF.toast('Free again. Drag to move it.');
+    }
+    selected = null;
+    commit(true);
+    afterPaint();
+  }
+
   function toggleHidden() {
     if (!selected) return;
     var pose = readPose(selected);
@@ -356,6 +397,17 @@
          a placed picture has always been in front, a theme shape behind. */
       order.value = SF.artOrder(pose, isShape ? 'back' : 'front');
       order.disabled = !has;
+      order.title = 'Whether this artwork paints behind the words or over them';
+    }
+    var place = /** @type {HTMLSelectElement|null} */ (document.getElementById('artPlace'));
+    if (place) {
+      var pic = has && selected.kind === 'picture' ? pictureById(slide(), selected.key) : null;
+      place.disabled = !pic;
+      place.value = pic ? SF.artPlacement(pic) : 'free';
+      place.title = pic
+        ? 'Free is placed by hand and can bleed off the slide. On the lattice it is a block: '
+          + 'it takes rows and columns and the others push away from it.'
+        : 'Only a picture you placed can move onto the lattice — a theme shape belongs to the theme';
     }
     var del = /** @type {HTMLButtonElement|null} */ (document.getElementById('btnArtDelete'));
     if (del) {
@@ -439,6 +491,11 @@
          fires. */
       var picker = order;
       picker.addEventListener('change', function () { setOrder(picker.value); });
+    }
+    var place = /** @type {HTMLSelectElement|null} */ (document.getElementById('artPlace'));
+    if (place) {
+      var placePicker = place;
+      placePicker.addEventListener('change', function () { setPlacement(placePicker.value); });
     }
     var pick = /** @type {HTMLInputElement|null} */ (document.getElementById('artPicture'));
     if (pick) {

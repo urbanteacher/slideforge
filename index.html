@@ -25,9 +25,9 @@ html:not([data-ready]) #app { visibility: hidden; }
 /* Same cream the studio chrome uses once CSS loads — avoids a dark→light blink. */
 html:not([data-ready]) body { background: #f0f1ed; }
 </style>
-<link rel="stylesheet" href="css/app.css?v=62">
-<link rel="stylesheet" href="css/artwork.css?v=2">
-<link rel="stylesheet" href="css/lattice.css?v=3">
+<link rel="stylesheet" href="css/app.css?v=63">
+<link rel="stylesheet" href="css/artwork.css?v=3">
+<link rel="stylesheet" href="css/lattice.css?v=4">
 <link rel="stylesheet" href="css/board-common.css?v=1">
 <link rel="stylesheet" href="css/memory.css?v=2">
 <link rel="stylesheet" href="css/bingo.css?v=2">
@@ -190,6 +190,12 @@ html:not([data-ready]) body { background: #f0f1ed; }
         <span class="canvas-mode-help">Arrow keys move · Shift moves faster · Esc finishes</span>
         <button class="canvas-bar-btn" id="btnArtSmaller" type="button" data-art-needs-selection title="Smaller">−</button>
         <button class="canvas-bar-btn" id="btnArtBigger" type="button" data-art-needs-selection title="Bigger">+</button>
+        <label class="anchor-control" title="Free is placed by hand and can bleed off the slide. On the lattice it is a block.">Place
+          <select id="artPlace" data-art-needs-selection>
+            <option value="free">Free</option>
+            <option value="lattice">On the lattice</option>
+          </select>
+        </label>
         <label class="anchor-control" title="Whether this artwork paints behind the words or over them">Side
           <select id="artOrder" data-art-needs-selection>
             <option value="back">Behind content</option>
@@ -204,31 +210,47 @@ html:not([data-ready]) body { background: #f0f1ed; }
         <button class="canvas-bar-btn" id="btnArtReset" type="button" title="Drop this slide's artwork changes and follow the theme again">↺ Theme</button>
       </div>
       <div class="arrange-bar" id="arrangeBar" role="group" aria-label="Arrange blocks" hidden>
-        <span class="arrange-what" id="arrangeWhat" aria-live="polite">Click a block</span>
-        <span class="canvas-mode-help">Arrow keys move · Shift + arrows resize · Esc finishes</span>
-        <label class="anchor-control">Horizontal anchor <select id="arrangeAnchorX" data-arrange-needs-selection><option value="">Free</option><option value="left">Left margin</option><option value="center">Centre</option><option value="right">Right margin</option></select></label>
-        <label class="anchor-control">Vertical anchor <select id="arrangeAnchorY" data-arrange-needs-selection><option value="">Free</option><option value="top">Top</option><option value="middle">Middle</option><option value="bottom">Bottom</option></select></label>
-        <label class="anchor-control" title="Where the words sit inside the rows this block was given — not where the block sits on the slide">Text in rows <select id="arrangeAlignY" data-arrange-needs-selection>
-          <option value="">Top of its rows</option>
-          <option value="middle">Centred in its rows</option>
-          <option value="bottom">Bottom of its rows</option>
-        </select></label>
-        <button class="canvas-bar-btn" id="btnArrangeNarrower" type="button" data-arrange-needs-selection title="Narrower (one column)">◀▶</button>
-        <button class="canvas-bar-btn" id="btnArrangeWider" type="button" data-arrange-needs-selection title="Wider (one column)">▶◀</button>
-        <button class="canvas-bar-btn" id="btnArrangeShorter" type="button" data-arrange-needs-selection title="Shorter (one line)">▲▼</button>
-        <button class="canvas-bar-btn" id="btnArrangeTaller" type="button" data-arrange-needs-selection title="Taller (one line)">▼▲</button>
-        <button class="canvas-bar-btn" id="btnArrangeFit" type="button" data-arrange-needs-selection title="Give this block the lines its words need, and push what is below it down">↕ Fit to text</button>
-        <label class="anchor-control" title="Add a block of your own to this slide">Add
-          <select id="arrangeAdd">
-            <option value="">＋ Block…</option>
-            <option value="heading">Heading</option>
-            <option value="text">Text</option>
-            <option value="note">Note</option>
-          </select>
-        </label>
-        <button class="canvas-bar-btn" id="btnArrangeDuplicate" type="button" title="Copy this block, one row below">⧉</button>
-        <button class="canvas-bar-btn" id="btnArrangeRemove" type="button" title="Remove this block from the slide">✕</button>
-        <button class="canvas-bar-btn" id="btnArrangeReset" type="button" title="Drop this slide's arrangement and follow the theme again">↺ Theme</button>
+        <div class="arrange-line">
+          <span class="arrange-what" id="arrangeWhat" aria-live="polite">Click a block</span>
+          <span class="canvas-mode-help">Arrow keys move · Shift + arrows resize · Esc finishes</span>
+        </div>
+        <!-- Three groups, because thirteen controls in one wrapping row came to
+             seven lines and read as one undifferentiated pile. Grouped by the
+             question each answers — how big, where, and what blocks are on the
+             slide at all — rather than by control type, so the row a control is
+             on is a clue to what it does. -->
+        <div class="arrange-group" role="group" aria-label="Size">
+          <span class="arrange-group-label">Size</span>
+          <button class="canvas-bar-btn" id="btnArrangeNarrower" type="button" data-arrange-needs-selection title="Narrower (one column)">◀▶</button>
+          <button class="canvas-bar-btn" id="btnArrangeWider" type="button" data-arrange-needs-selection title="Wider (one column)">▶◀</button>
+          <button class="canvas-bar-btn" id="btnArrangeShorter" type="button" data-arrange-needs-selection title="Shorter (one line)">▲▼</button>
+          <button class="canvas-bar-btn" id="btnArrangeTaller" type="button" data-arrange-needs-selection title="Taller (one line)">▼▲</button>
+          <button class="canvas-bar-btn" id="btnArrangeFit" type="button" data-arrange-needs-selection title="Give this block the lines its words need, and push what is below it down">↕ Fit to text</button>
+        </div>
+        <div class="arrange-group" role="group" aria-label="Place">
+          <span class="arrange-group-label">Place</span>
+          <label class="anchor-control">Across <select id="arrangeAnchorX" data-arrange-needs-selection><option value="">Free</option><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></label>
+          <label class="anchor-control">Down <select id="arrangeAnchorY" data-arrange-needs-selection><option value="">Free</option><option value="top">Top</option><option value="middle">Middle</option><option value="bottom">Bottom</option></select></label>
+          <label class="anchor-control" title="Where the words sit inside the rows this block was given — not where the block sits on the slide">In rows <select id="arrangeAlignY" data-arrange-needs-selection>
+            <option value="">Top</option>
+            <option value="middle">Centred</option>
+            <option value="bottom">Bottom</option>
+          </select></label>
+        </div>
+        <div class="arrange-group" role="group" aria-label="Blocks">
+          <span class="arrange-group-label">Blocks</span>
+          <label class="anchor-control" title="Add a block of your own to this slide">Add
+            <select id="arrangeAdd">
+              <option value="">＋ Block…</option>
+              <option value="heading">Heading</option>
+              <option value="text">Text</option>
+              <option value="note">Note</option>
+            </select>
+          </label>
+          <button class="canvas-bar-btn" id="btnArrangeDuplicate" type="button" title="Copy this block, one row below">⧉</button>
+          <button class="canvas-bar-btn" id="btnArrangeRemove" type="button" title="Remove this block from the slide">✕</button>
+          <button class="canvas-bar-btn" id="btnArrangeReset" type="button" title="Drop this slide's arrangement and follow the theme again">↺ Theme</button>
+        </div>
       </div>
       <button class="canvas-bar-btn wide" id="btnInspector" type="button" title="Hide the Design &amp; Engagement panel (⌘\)" aria-pressed="true">◨ Panel</button>
     </div>
@@ -432,7 +454,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/customize.js?v=26"></script>
 <script src="js/explore.js?v=1"></script>
 <script src="js/callouts.js?v=2"></script>
-<script src="js/render.js?v=62"></script>
+<script src="js/render.js?v=63"></script>
 <script src="js/review.js?v=3"></script>
 <script src="js/memory.js?v=2"></script>
 <script src="js/bingo.js?v=2"></script>
@@ -451,7 +473,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/content-tools.js?v=5"></script>
 <script src="js/slide-clip.js?v=1"></script>
 <script src="js/editor.js?v=60"></script>
-<script src="js/artwork.js?v=3"></script>
+<script src="js/artwork.js?v=4"></script>
 <script src="js/arrange.js?v=4"></script>
 <script src="js/header-footer.js?v=1"></script>
 <script src="js/games.js?v=10"></script>
