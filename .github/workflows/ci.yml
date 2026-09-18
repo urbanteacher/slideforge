@@ -1,4 +1,4 @@
-# The suite existed long before this file did. 435 unit assertions, 42 smoke
+# The suite existed long before this file did. 426 unit assertions, 44 smoke
 # scripts and 597 visual baselines, all of which ran only when somebody
 # remembered — which worked, right up until the first busy week. This is the
 # trigger, not the tests.
@@ -61,17 +61,30 @@ jobs:
 
       # Curated rather than all 42, which take long enough that people start
       # skipping the branch. The set is named `ci` in tools/smoke/run.mjs, so
-      # the same six run here and on a laptop with `npm run smoke:ci`, and the
-      # runner fails loudly if the set names a smoke that no longer exists
-      # rather than quietly running five of six. They guard the engine's
-      # contract:
-      #   fit-check    every library slide still fits its frame
-      #   demo-deck    the 97-slide layout bank, its audit and its budget
-      #   layout-fit   the picker's fit predictions match real renders
-      #   lesson-bank  the library files and clones
-      #   handout      the print path, every image resolved
-      #   canvas-edit  a click on the canvas edits the block it landed on
-      # Measured locally at 8s, 39s, 3s, 1s, 1s, 7s.
+      # the same fourteen run here and on a laptop with `npm run smoke:ci`,
+      # and the runner fails loudly if the set names a smoke that no longer
+      # exists rather than quietly running thirteen of fourteen.
+      #
+      # Nine of them arrived here from `npm test`, where a wrapper test used
+      # to spawn each one and match a line of its output. That put a browser
+      # in the fast check and made a second index of which smokes matter; the
+      # set is the index now. Same coverage, named in one place.
+      #
+      # What the set guards:
+      #   fit-check            every library slide fits its frame
+      #   demo-deck            the 97-slide layout bank, audit and budget
+      #   layout-fit           the picker's predictions match real renders
+      #   layout-face          the lattice: click, move, resize, anchor, reset
+      #   canvas-edit          a click on the canvas edits the block it hit
+      #   lesson-bank          the library files and clones
+      #   handout              the print path, every image resolved
+      #   review-tool          any deck reviewable and fit-checkable
+      #   slide-review         aspect ratios, edge overflow, import isolation
+      #   design-controls      every design control reachable and operable
+      #   campaign-chrome      campaign furniture across five strands
+      #   chrome-region(s)     declared insets, and region coverage
+      #   clipboard-selection  highlighted text keeps the clipboard
+      # Measured locally at 76s in total, of which demo-deck is 39.
       - run: npm run smoke:ci
 
       - name: upload failure output

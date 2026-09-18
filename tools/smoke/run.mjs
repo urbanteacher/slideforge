@@ -32,10 +32,23 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 /* Curated, not complete: the whole suite takes far longer than a push should
    wait, and these are the ones that measure rendered geometry rather than a
-   long activity flow. Anything not named here still runs in `--set all`. */
+   long activity flow. Anything not named here still runs with no arguments.
+
+   Nine of the `ci` names used to be reached a second way, by a unit test in
+   tests/ that spawned the smoke and matched a line of its output. Those
+   wrappers are gone: they put a browser inside `npm test`, which is meant to
+   be the fast check, and they were a second index of which smokes matter,
+   kept in nine separate files. The coverage did not move — it is named here
+   instead, where the other sets are, and the runner fails if any of it goes
+   missing. Measured at 76s for the whole ci set, of which demo-deck is 39. */
 const SETS = {
-  ci: ['fit-check', 'demo-deck', 'layout-fit', 'lesson-bank', 'handout', 'canvas-edit'],
-  canvas: ['canvas-edit', 'demo-deck', 'layout-fit', 'fit-check', 'row-grid'],
+  ci: [
+    'campaign-chrome', 'canvas-edit', 'chrome-region', 'chrome-regions',
+    'clipboard-selection', 'demo-deck', 'design-controls', 'fit-check',
+    'handout', 'layout-face', 'layout-fit', 'lesson-bank', 'review-tool',
+    'slide-review',
+  ],
+  canvas: ['canvas-edit', 'layout-face', 'demo-deck', 'layout-fit', 'fit-check', 'row-grid'],
   review: ['review-tool', 'slide-review', 'fit-check'],
 };
 

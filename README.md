@@ -71,8 +71,8 @@ The committed bundle still runs without installing tools or building first.
 For browser smoke checks, run `npx playwright install chromium`, then:
 
 ```
-npm run smoke:list          # the 42 smokes and the named sets
-npm run smoke:ci            # the six CI runs
+npm run smoke:list          # the 44 smokes and the named sets
+npm run smoke:ci            # the fourteen CI runs (about 75s)
 npm run smoke -- fit-check  # one by name
 npm run smoke               # all of them
 ```
@@ -80,6 +80,11 @@ npm run smoke               # all of them
 They live in `tools/smoke/` and the runner discovers them, so a new file is
 reachable as soon as it is written. Each one starts and stops its own relay;
 set `SF_URL` to point at a server you are already running.
+
+`npm test` is the fast check — build, types and unit assertions, no browser.
+Nine smokes used to run inside it through wrapper tests that spawned them and
+matched a line of output; they are in the `ci` set instead, so which smokes
+matter is recorded in one place rather than in nine files.
 
 See [the modernization notes](docs/codebase-modernization.md) for the engine
 contract, compatibility constraints, and remaining migration work.
