@@ -136,6 +136,17 @@ export interface WordMotionStep {
   arc?: 'settle' | 'bounce' | 'mist';
 }
 export type ChromeSlot = 'header-left' | 'header-center' | 'header-right' | 'footer-left' | 'footer-center' | 'footer-right';
+export interface HeaderFooterItem {
+  kind: 'empty' | 'text' | 'image' | 'logo' | 'number' | 'pages' | 'tagline' | 'title' | 'section';
+  text?: string; src?: string; alt?: string;
+  placement?: 'slot' | 'canvas';
+  anchor?: string;
+}
+export interface HeaderFooterConfig {
+  enabled: boolean;
+  hideOnCover?: boolean;
+  slots: Partial<Record<ChromeSlot, HeaderFooterItem>>;
+}
 export interface SlideDesign {
   chromeLayout?: '' | 'regions';
   identitySlot?: ChromeSlot; logoSlot?: ChromeSlot; contextSlot?: ChromeSlot; closingSlot?: ChromeSlot; numberSlot?: ChromeSlot;
@@ -178,6 +189,7 @@ export interface DesignControl {
 }
 
 export interface Slide {
+  headerFooter?: HeaderFooterConfig;
   design?: SlideDesign;
   /** The {@link Activity} key this slide was built from, when it was chosen
    *  in the activities studio. Only that studio reads these four — to
@@ -373,6 +385,7 @@ export interface BingoBoard {
 
 /** A deck, after `normalizeDeck`. */
 export interface Deck {
+  headerFooter?: HeaderFooterConfig;
   id: string;
   title: string;
   theme: ThemeKey;
@@ -868,6 +881,7 @@ export interface Activity {
  * `src/` itself reads back off the namespace.
  */
 export interface SlideForgeGlobal {
+  HeaderFooterUI?: { refresh(): void; close(): void };
   /**
    * Optional because the namespace is assembled across script tags, not
    * created complete. `js/ask.js` and its siblings run before the model

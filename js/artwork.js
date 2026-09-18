@@ -353,6 +353,7 @@
   }
 
   function setEditing(on) {
+    if (on && SF.HeaderFooterUI) SF.HeaderFooterUI.close();
     if (on && SF.Arrange && SF.Arrange.isArranging()) SF.Arrange.setArranging(false);
     if (cancelDrag) cancelDrag();
     editing = !!on;

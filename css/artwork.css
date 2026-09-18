@@ -25,14 +25,13 @@
    pointer-events:none in their own theme sheets, which is exactly why nothing
    on the canvas could be touched before — so this has to reach the children
    too, not just the layer. */
-.art-editing .theme-art,
 .art-editing .theme-art > *,
-.art-editing .slide-art,
 .art-editing .slide-art-img { pointer-events: auto; }
 
 .art-editing .theme-art > *,
 .art-editing .slide-art-img {
   cursor: grab;
+  touch-action: none;
   outline: 1px dashed rgba(12, 51, 84, .55);
   outline-offset: 3px;
 }
@@ -66,6 +65,7 @@
 .canvas-bar { flex-wrap: wrap; }
 .art-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   flex: 1 0 100%;
@@ -75,12 +75,21 @@
   border-top: 1px solid rgba(12, 51, 84, .14);
 }
 .art-bar[hidden] { display: none; }
+.canvas-mode-help {
+  flex: 1 0 100%;
+  font: 12px/1.4 system-ui;
+  color: #53604f;
+}
+.arrange-bar { flex-wrap: wrap; }
+.arrange-bar .arrange-what { white-space: normal; line-height: 1.4; }
+.arranging .sf-slot { touch-action: none; }
 .art-bar .canvas-bar-btn { white-space: nowrap; }
 .art-what {
   color: #53604f;
   font: 600 11px/1 system-ui;
   letter-spacing: .04em;
-  white-space: nowrap;
+  white-space: normal;
+  line-height: 1.4;
   padding: 0 2px;
 }
 .art-bar .canvas-bar-btn[disabled] { opacity: .4; cursor: not-allowed; }

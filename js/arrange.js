@@ -32,7 +32,7 @@
   var cancelDrag = null;
   var arrangedSlide = null;
 
-  function L() { return SF.LATTICE; }
+  function L() { return SF.latticeGeometry ? SF.latticeGeometry(root()) : SF.LATTICE; }
   function box() { return document.getElementById('previewBox'); }
   function slide() { return SF.Editor && SF.Editor.currentSlide && SF.Editor.currentSlide(); }
   function root() { var b = box(); return b && b.querySelector('.slide'); }
@@ -209,6 +209,7 @@
       var dRow = Math.round((ev.clientY - fromY) / scale / g.stepY);
       if (!dCol && !dRow && !moved) return;
       moved = true;
+      slot.style.transform = '';
       landed = {
         col: clamp(start.col + dCol, 1, g.cols - start.cols + 1),
         row: clamp(start.row + dRow, 1, g.rows - start.rows + 1),
@@ -254,8 +255,9 @@
     var r = map && map[selected];
     if (!r) return;
     var g = L();
-    r.cols = clamp(r.cols + dCols, 1, g.cols - r.col + 1);
-    r.rows = clamp(r.rows + dRows, 1, g.rows - r.row + 1);
+    r.cols = clamp(r.cols + dCols, 1, r.anchorX ? g.cols : g.cols - r.col + 1);
+    r.rows = clamp(r.rows + dRows, 1, r.anchorY ? g.rows : g.rows - r.row + 1);
+    Object.assign(r, SF.anchorRegion(r));
     commit(true);
     afterPaint();
   }
@@ -304,6 +306,12 @@
     bar.querySelectorAll('[data-arrange-needs-selection]').forEach(function (b) {
       /** @type {HTMLButtonElement} */ (b).disabled = !selected;
     });
+    var map = regionsOf(slide());
+    var region = selected && map && map[selected];
+    var ax = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeAnchorX'));
+    var ay = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeAnchorY'));
+    if (ax) ax.value = (region && region.anchorX) || '';
+    if (ay) ay.value = (region && region.anchorY) || '';
     var what = document.getElementById('arrangeWhat');
     if (!what) return;
     var over = verdict.filter(function (v) { return v.over; });
@@ -359,6 +367,7 @@
   }
 
   function setArranging(on) {
+    if (on && SF.HeaderFooterUI) SF.HeaderFooterUI.close();
     if (on && SF.Artwork && SF.Artwork.isEditing()) SF.Artwork.setEditing(false);
     if (cancelDrag) cancelDrag();
     arranging = !!on;
@@ -400,6 +409,20 @@
     });
     var reset = document.getElementById('btnArrangeReset');
     if (reset) reset.addEventListener('click', resetArrangement);
+    ['X','Y'].forEach(function(axis){
+      var control = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeAnchor' + axis));
+      if (!control) return;
+      /* Bound after the guard: the listener closes over it, so the null check
+         above proves nothing about what it holds when the event fires. */
+      var picker = control;
+      picker.addEventListener('change', function () {
+        var map = regionsOf(slide()), r = selected && map && map[selected];
+        if (!r) return;
+        r['anchor' + axis] = picker.value;
+        Object.assign(r,SF.anchorRegion(r));
+        commit(true);afterPaint();
+      });
+    });
     document.addEventListener('keydown', function (e) {
       /* One call, one value: box() twice is two lookups, and the guard on the
          first says nothing about the second. */
@@ -423,6 +446,8 @@
       var dy = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0;
       if (e.shiftKey) { resize(dx, dy); return; }
       var g = L();
+      if(dx)delete r.anchorX;
+      if(dy)delete r.anchorY;
       r.col = clamp(r.col + dx, 1, g.cols - r.cols + 1);
       r.row = clamp(r.row + dy, 1, g.rows - r.rows + 1);
       commit(true);

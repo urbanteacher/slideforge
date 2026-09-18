@@ -1190,6 +1190,7 @@
        the selection ring, the ghost on a hidden shape — has to go back on. */
     if (SF.Artwork) SF.Artwork.afterPaint();
     if (SF.Arrange) SF.Arrange.afterPaint();
+    if (SF.HeaderFooterUI) SF.HeaderFooterUI.refresh();
   }
 
   /* ------------------------------------------------------------ inspector */
@@ -3722,6 +3723,13 @@
         ' · ' + new Date(d.modified).toLocaleString();
     },
     keydown: function (e) {
+      if (e.defaultPrevented) return;
+      // Canvas modes own positioning and deletion, even without a selection.
+      var canvasMode = (SF.Artwork && SF.Artwork.isEditing()) || (SF.Arrange && SF.Arrange.isArranging());
+      if (canvasMode && (/^Arrow/.test(e.key) || ['Delete', 'Backspace', 'j', 'k', 'h', 'H'].includes(e.key))) {
+        e.preventDefault();
+        return;
+      }
       var mod = e.metaKey || e.ctrlKey;
       if (sorterOpen()) { sorterKeys(e); return; }
       if (mod && e.key.toLowerCase() === 'g') { e.preventDefault(); openSorter(); return; }

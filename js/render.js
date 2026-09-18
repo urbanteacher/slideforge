@@ -78,7 +78,7 @@
      so a pose means the same thing in the rail, the editor and the player. */
   SF.placedArtLayer = function (pictures) {
     var list = Array.isArray(pictures) ? pictures.filter(function (p) {
-      return p && p.src && !p.hidden;
+      return p && p.src;
     }) : [];
     if (!list.length) return null;
     var layer = el('div', 'slide-art');
@@ -87,6 +87,7 @@
       img.src = pic.src;
       img.alt = String(pic.alt || '');
       img.setAttribute('data-art-pic', String(pic.id == null ? i : pic.id));
+      if (pic.hidden) img.style.display = 'none';
       img.style.left = (pic.x || 0) + 'px';
       img.style.top = (pic.y || 0) + 'px';
       if (pic.w) img.style.width = pic.w + 'px';
@@ -111,6 +112,88 @@
      renders exactly as before. */
   var LATTICE = { left: 52, top: 88, w: 1176, h: 576, cols: 12, rows: 16, stepX: 101, stepY: 36 };
   SF.LATTICE = LATTICE;
+  SF.anchorRegion = function (region) {
+    var r = Object.assign({}, region);
+    if (r.anchorX === 'left') r.col = 1;
+    if (r.anchorX === 'center') r.col = Math.floor((LATTICE.cols - r.cols) / 2) + 1;
+    if (r.anchorX === 'right') r.col = LATTICE.cols - r.cols + 1;
+    if (r.anchorY === 'top') r.row = 1;
+    if (r.anchorY === 'middle') r.row = Math.floor((LATTICE.rows - r.rows) / 2) + 1;
+    if (r.anchorY === 'bottom') r.row = LATTICE.rows - r.rows + 1;
+    return r;
+  };
+
+  // A complete slide override, or the deck defaults. Absent means legacy chrome.
+  SF.headerFooterConfig = function (deck, slide) {
+    var c = slide.headerFooter || deck.headerFooter;
+    return c && typeof c === 'object' ? c : null;
+  };
+  function renderHeaderFooter(root, deck, slide, opts) {
+    var config = SF.headerFooterConfig(deck, slide);
+    if (!config || opts.chrome === false) return;
+    // Explicitly hidden also replaces legacy numbering and logos.
+    root.classList.add('sf-hf-managed');
+    if (!config.enabled || (config.hideOnCover && (slide.type === 'title' || opts.index === 0))) return;
+    var slots = config.slots || {};
+    var shown = (deck.slides || []).filter(function (s) { return !s.hidden; });
+    var index = shown.indexOf(slide);
+    var number = index < 0 ? Number(opts.index || 0) + 1 : index + 1;
+    var total = index < 0 ? opts.total || shown.length : shown.length;
+    var section = '';
+    (deck.slides || []).slice(0, Math.max(0, (deck.slides || []).indexOf(slide)) + 1).forEach(function (s) {
+      if (s.type === 'section') section = s.title || '';
+    });
+    var layer = el('div', 'sf-furniture');
+    ['header', 'footer'].forEach(function (band) {
+      var row = el('div', 'sf-furniture-row sf-furniture-' + band);
+      var occupied = [];
+      ['left', 'center', 'right'].forEach(function (side, i) {
+        var key = band + '-' + side;
+        var item = slots[key];
+        if (!item || !item.kind || item.kind === 'empty') return;
+        var cell = el('div', 'sf-furniture-cell');
+        cell.dataset.hfSlot = key;
+        cell.dataset.align = side;
+        var text = item.kind === 'number' ? String(number)
+          : item.kind === 'pages' ? number + ' / ' + total
+          : item.kind === 'title' ? deck.title
+          : item.kind === 'section' ? section
+          : item.kind === 'tagline' ? deck.closingNote || deck.org || ''
+          : item.text || '';
+        if (item.kind === 'image' || item.kind === 'logo') {
+          var src = SF.safeMedia(item.kind === 'logo' ? deck.logo : item.src);
+          if (!src) return;
+          var img = el('img'); img.src = src; img.alt = String(item.alt || ''); img.draggable = false;
+          cell.appendChild(img);
+        } else {
+          if (!String(text || '').trim()) return;
+          cell.textContent = String(text).replace(/\n/g, ' ');
+        }
+        if (item.placement === 'canvas') {
+          var anchor = /^(top|middle|bottom)-(left|center|right)$/.test(item.anchor) ? item.anchor : 'middle-center';
+          cell.classList.add('sf-furniture-canvas'); cell.dataset.anchor = anchor;
+          layer.appendChild(cell);
+        } else { occupied.push({node:cell, index:i}); row.appendChild(cell); }
+      });
+      // Only occupied neighbours bound a slot. Empty middle slots release space.
+      occupied.forEach(function (entry, i) {
+        var prev = occupied[i - 1], next = occupied[i + 1];
+        var left = prev ? (prev.index + entry.index) * 25 : 0;
+        var right = next ? (entry.index + next.index) * 25 : 100;
+        if (entry.index === 1) {
+          var radius = Math.min(50 - left, right - 50);
+          left = 50 - radius; right = 50 + radius;
+        }
+        entry.node.style.left = left + '%';
+        entry.node.style.width = (right - left) + '%';
+      });
+      if (occupied.length) {
+        layer.appendChild(row);
+        root.classList.add('sf-has-' + band);
+      }
+    });
+    root.appendChild(layer);
+  }
 
   /* What a content block is called in a region map. The editable key when the
      block has one, so a region survives the text changing; otherwise the class
@@ -125,6 +208,19 @@
 
   SF.latticeHost = function (root) {
     return root.querySelector('.cp-body') || root.querySelector('.pad') || null;
+  };
+  SF.latticeGeometry = function (root) {
+    var g = Object.assign({}, LATTICE);
+    var grid = root && root.querySelector('.sf-lattice');
+    if (!grid) return g;
+    var base = root.getBoundingClientRect(), rect = grid.getBoundingClientRect();
+    var scale = base.width / 1280;
+    if (!scale || !rect.height) return g;
+    g.left = (rect.left - base.left) / scale;
+    g.top = (rect.top - base.top) / scale;
+    g.w = rect.width / scale; g.h = rect.height / scale;
+    g.stepX = (g.w + 36) / g.cols; g.stepY = g.h / g.rows;
+    return g;
   };
 
   /* Wraps each pad child in a cell of the lattice. Blocks the map does not
@@ -142,12 +238,16 @@
     var grid = el('div', 'sf-lattice');
     kids.forEach(function (node, i) {
       var key = blockKeyOf(node, i);
-      var r = regions[key];
+      var r = regions[key] && SF.anchorRegion(regions[key]);
       var slot = el('div', 'sf-slot');
       slot.setAttribute('data-block-key', key);
       if (r) {
         slot.style.gridArea = r.row + ' / ' + r.col + ' / span ' + r.rows + ' / span ' + r.cols;
         slot.setAttribute('data-region', r.row + ',' + r.col + ',' + r.rows + ',' + r.cols);
+        // Half-track offsets keep odd spans truly centred on an even grid.
+        var dx = r.anchorX === 'center' && (LATTICE.cols - r.cols) % 2 ? LATTICE.stepX / 2 : 0;
+        var dy = r.anchorY === 'middle' && (LATTICE.rows - r.rows) % 2 ? 50 / r.rows : 0;
+        if (dx || dy) slot.style.transform = 'translate(' + dx + 'px, ' + dy + '%)';
       }
       slot.appendChild(node);
       grid.appendChild(slot);
@@ -193,6 +293,9 @@
       var parts = (slot.getAttribute('data-region') || '').split(',');
       var have = Number(parts[2]) || Math.max(1, Math.round(slot.clientHeight / LATTICE.stepY));
       var need = SF.linesNeeded(slot);
+      if (need != null && root.classList.contains('sf-hf-managed')) {
+        need = Math.max(1, Math.ceil((slot.firstElementChild.scrollHeight - 1) / SF.latticeGeometry(root).stepY));
+      }
       /* Sideways is not a line question, and nothing else catches it. Measured
          on the content, never on the slot: the arranging face hangs a label off
          the slot in an ::after, and an absolutely positioned pseudo-element
@@ -5164,6 +5267,7 @@
       root.appendChild(logo);
     }
     SF.applyChromeRegions(root, slide, deck);
+    renderHeaderFooter(root, deck, slide, opts);
     if (opts.chrome !== false && opts.total > 1 && opts.index != null) {
       var track = el('div', 'track');
       var i = el('i');
