@@ -1,0 +1,17 @@
+.teaching-sheet{box-sizing:border-box;width:1280px;height:720px;padding:30px 46px 48px;background:#fff;color:#15251e;font-family:Arial,sans-serif;display:flex;flex-direction:column;gap:10px}
+.teaching-sheet *{box-sizing:border-box}
+.teaching-kicker{font-size:12px;font-weight:700;letter-spacing:2px;color:#536650}
+.teaching-sheet h1{margin:0;font-size:30px;line-height:1.1;letter-spacing:-.5px}
+.teaching-question{margin:0;font-size:20px;line-height:1.3}
+.teaching-states{display:grid;grid-template-columns:1fr 1fr;gap:20px;flex:1;min-height:0}
+.teaching-state{padding:14px 16px 10px;border:1px solid #c4cec7;border-radius:8px;display:flex;flex-direction:column;min-width:0;overflow:hidden;background:#fafcf9}
+.teaching-state h2{margin:0;font-size:19px;line-height:1.25;color:#244c3a}
+.teaching-state svg{width:100%;height:210px;flex:1;min-height:0;font-family:Arial,sans-serif;color:#15251e;overflow:visible}
+.teaching-observe{margin:5px 0 0;font-size:16px;line-height:1.35;min-height:64px}
+.teaching-states.single{grid-template-columns:1fr}
+.teaching-states.single svg{max-width:900px;align-self:center}
+.teaching-facts{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:20px;padding-top:12px;border-top:2px solid #506d50}
+.teaching-facts h3{margin:0 0 5px;font-size:13px;text-transform:uppercase;letter-spacing:.7px;color:#3c5c48}
+.teaching-facts p{margin:0;font-size:15px;line-height:1.35}
+.teaching-caution,.teaching-source{margin:0;font-size:12px;line-height:1.3;color:#46524b}
+.pdf-page-reference{position:absolute;bottom:8px;right:18px;z-index:100;font:11px/1.4 Arial,sans-serif;color:#333;background:rgba(255,255,255,.94);padding:3px 7px;border-radius:3px}
