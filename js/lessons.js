@@ -1205,811 +1205,704 @@
       ]
     },
     {
-      key: 'ipdv-vc',
-      title: 'LDSCI6253 Week 2 · Visual Communication',
-      icon: '👁',
-      blurb: 'Week 2: what visual communication is, Tufte on graphical integrity and the lie factor, rules of thumb, data and attribute types, marks and channels, the Cleveland–McGill ranking, colour, luminance and accessibility.',
-      minutes: 90,
-      theme: 'northeastern',
-      libraryGroup: 'nul',
-      kind: 'lecture',
-      org: 'Northeastern University London',
-      logo: 'assets/brand/nu-london-logo.png',
-      logoOn: 'all',
-      logoSize: 'small',
-      games: [
+      "key": "ipdv-vc",
+      "title": "LDSCI6253 Week 2 · Visual Communication",
+      "icon": "👁",
+      "blurb": "A 90-minute lesson with visual experiments, five formative checks and a practical chart critique. Includes teaching notes and the original Week 2 examples.",
+      "minutes": 90,
+      "theme": "northeastern",
+      "libraryGroup": "nul",
+      "kind": "lecture",
+      "org": "Northeastern University London",
+      "logo": "assets/brand/nu-london-logo.png",
+      "logoOn": "all",
+      "logoSize": "small",
+      "games": [
         {
-          ref: 'check-integrity',
-          title: 'Check · Graphical integrity',
-          style: 'choice',
-          settings: { defaultTime: 25, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
-          questions: [
+          "ref": "check-integrity",
+          "title": "Check · Graphical integrity",
+          "style": "choice",
+          "settings": {
+            "defaultTime": 0,
+            "scoreboard": false,
+            "scoreSlide": false,
+            "intro": false,
+            "howTo": false
+          },
+          "questions": [
             {
-              question: "A bar chart's y-axis starts at 90 instead of 0. The real difference between two bars is 4%, but on screen one bar looks three times the other. What is the lie factor?",
-              options: [
-                "About 0.3 — the graphic understates the effect",
-                "About 1.0 — the graphic is honest",
-                "About 3 — the graphic overstates the effect",
-                "It cannot be calculated without the raw data"
+              "question": "Values rise from 100 to 110 (10%). Their displayed bar lengths rise from 10 mm to 30 mm (200%). What is the lie factor?",
+              "options": [
+                "0.05",
+                "1",
+                "3",
+                "20"
               ],
-              correct: 2,
-              explanation: "Lie factor = effect shown ÷ effect in the data. Three times the visual difference for the same 4% gives roughly 3. Tufte wants it close to 1.0, and a truncated baseline is the most common way it stops being."
+              "correct": 3,
+              "explanation": "Lie factor = relative effect in graphic / relative effect in data = 200% / 10% = 20. Use percentage changes from the same reference, not the ratio of final lengths."
             }
           ]
         },
         {
-          ref: 'check-attributes',
-          title: 'Check · Attribute types',
-          style: 'choice',
-          settings: { defaultTime: 25, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
-          questions: [
+          "ref": "check-attributes",
+          "title": "Check · Attribute types",
+          "style": "choice",
+          "settings": {
+            "defaultTime": 0,
+            "scoreboard": false,
+            "scoreSlide": false,
+            "intro": false,
+            "howTo": false
+          },
+          "questions": [
             {
-              question: "T-shirt sizes — S, M, L, XL. What kind of attribute is that?",
-              options: [
+              "question": "T-shirt sizes; S, M, L, XL. What kind of attribute is that?",
+              "options": [
                 "Categorical — the labels are just names",
                 "Ordinal — ordered, but the gaps are not measurable",
                 "Quantitative interval — ordered with equal gaps, no true zero",
                 "Quantitative ratio — ordered with equal gaps and a true zero"
               ],
-              correct: 1,
-              explanation: "There is a real order — M is bigger than S — but L minus M is not a number. That is exactly ordinal: order without arithmetic. Encode it with a sequential ramp or position, never with unordered hues."
+              "correct": 1,
+              "explanation": "There is a real order — M is bigger than S — but L minus M is not a number. That is exactly ordinal: order without arithmetic. Encode it with a sequential ramp or position, never with unordered hues."
             }
           ]
         },
         {
-          ref: 'check-channels',
-          title: 'Check · Marks and channels',
-          style: 'choice',
-          settings: { defaultTime: 25, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
-          questions: [
+          "ref": "check-channels",
+          "title": "Check · Marks and channels",
+          "style": "choice",
+          "settings": {
+            "defaultTime": 0,
+            "scoreboard": false,
+            "scoreSlide": false,
+            "intro": false,
+            "howTo": false
+          },
+          "questions": [
             {
-              question: "You need people to compare quantities as accurately as possible. Which channel should carry the number?",
-              options: [
+              "question": "You need people to compare quantities as accurately as possible. Which channel should carry the number?",
+              "options": [
                 "Area — bubbles scale naturally with the value",
                 "Colour hue — it is the easiest to tell apart",
                 "Position along a common scale",
                 "Angle — pie slices are familiar to everyone"
               ],
-              correct: 2,
-              explanation: "Cleveland and McGill ranked position along a common scale first for accuracy. Area is well down the list, and hue is an identity channel — it says which, not how much."
+              "correct": 2,
+              "explanation": "Cleveland and McGill ranked position along a common scale first for accuracy. Area is well down the list, and hue is an identity channel — it says which, not how much."
             }
           ]
         },
         {
-          ref: 'check-critique',
-          title: 'Check · Critique, not recall',
-          style: 'choice',
-          settings: { defaultTime: 30, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
-          questions: [
+          "ref": "check-critique",
+          "title": "Check · Critique, not recall",
+          "style": "choice",
+          "settings": {
+            "defaultTime": 0,
+            "scoreboard": false,
+            "scoreSlide": false,
+            "intro": false,
+            "howTo": false
+          },
+          "questions": [
             {
-              question: "A classmate says 'you must never truncate a y-axis — Tufte says so.' What is the strongest reply?",
-              options: [
+              "question": "A classmate says 'you must never truncate a y-axis; Tufte says so.' What is the strongest reply?",
+              "options": [
                 "They are right; a truncated axis is always a lie",
                 "They are wrong; axes are a matter of taste",
                 "It depends on the mark: a bar encodes length so its baseline carries meaning, a line encodes position so it need not start at zero",
                 "It only matters if the chart is going to be published"
               ],
-              correct: 2,
-              explanation: "The principle is about the channel, not the chart. Correll, Bertini and Franconeri (CHI 2020) make exactly this distinction — the zero baseline is load-bearing for bars and ratio data, weaker for line charts of interval data. Knowing the mechanism beats quoting the rule."
+              "correct": 2,
+              "explanation": "Bars encode quantity through length from a baseline. Line charts encode positions and trends, so a clearly labelled restricted range can be appropriate. Always consider the question and whether the scale exaggerates the interpretation."
             }
           ]
         },
         {
-          ref: 'check-colour',
-          title: 'Check · Colour schemes',
-          style: 'choice',
-          settings: { defaultTime: 25, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
-          questions: [
+          "ref": "check-colour",
+          "title": "Check · Colour schemes",
+          "style": "choice",
+          "settings": {
+            "defaultTime": 0,
+            "scoreboard": false,
+            "scoreSlide": false,
+            "intro": false,
+            "howTo": false
+          },
+          "questions": [
             {
-              question: "You are mapping profit and loss by region, where zero matters. Which colour scheme?",
-              options: [
+              "question": "You are mapping profit and loss by region, where zero matters. Which colour scheme?",
+              "options": [
                 "Sequential — one hue, light to dark",
                 "Diverging — two hues away from a neutral middle",
                 "Categorical — a distinct hue per region",
                 "Rainbow — the full spectrum covers the range"
               ],
-              correct: 1,
-              explanation: "A meaningful midpoint is the signature of diverging data. Sequential would hide the sign change, categorical would deny the order, and rainbow invents boundaries the data does not have."
+              "correct": 1,
+              "explanation": "A meaningful midpoint is the signature of diverging data. Sequential would hide the sign change, categorical would deny the order, and rainbow invents boundaries the data does not have."
             }
           ]
         }
       ],
-      slides: [
+      "slides": [
         {
-          type: "title",
-          title: "Visual\nCommunication",
-          subtitle: "Week 2 · Lecture 2",
-          notes: "Week 1 asked why we visualise at all. Week 2 is the craft: how a number becomes a mark on a screen, and how that mark can tell the truth or quietly lie. Everything today comes back to one question — can the room read the quantity you meant?",
-          date: "2026-09-21"
+          "type": "image",
+          "title": "Visual Communication",
+          "subtitle": "LDSCI6253 · Week 2 · Monday 21 September 2026",
+          "notes": "0–5 min. Welcome back. Week 1 introduced why we visualise and the What–Why–How framework. Today connects data types to visual choices. Ask: what made one chart from last week memorable? Plan: foundations 10 min, integrity 25 min, data and channels 25 min, colour 15 min, critique and questions 15 min. Allow a short pause around the data-abstraction divider. Cover artwork is illustrative, not empirical evidence.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "date": "2026-09-21",
+          "image": "assets/lesson/ipdv/visual-communication-hero.png",
+          "imageFit": "cover",
+          "design": {
+            "capStyle": "scrim",
+            "capPos": "bottom",
+            "imageMotion": "zoom"
+          }
         },
         {
-          type: "keyfact",
-          title: "Before anything else",
-          subtitle: "Canvas deadline",
-          body: "Friday after each lab,\n12:00",
-          notes: "One fact, on its own, because it is the one students get wrong. Say it, pause, move on — you will say it again at the end of the lab."
+          "type": "content",
+          "title": "This week",
+          "subtitle": "Reading and lab preparation",
+          "body": "",
+          "notes": "Keep housekeeping under one minute. Distinguish worksheet deadlines from assessment deadlines. Chapter 2 is the assigned reading in the supplied Week 2 materials. Chapters 5 and 6 support today’s channel and design discussion.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "bullets": [
+            "Worksheets: Canvas by 12:00 on the Friday after the lab.",
+            "Reading: Munzner, Chapter 2, What: Data Abstraction.",
+            "Start during the lab. Ask for help early and leave time to review."
+          ]
         },
         {
-          type: "cards",
-          title: "Four reminders",
-          design: { cardsMode: "rows" },
-          bullets: [
-            "Don't wait\tThe worksheet is not a Thursday-night job. Start it in the lab while help is in the room.",
-            "Ask early\tWhen you are unsure, ask. An hour stuck alone is an hour you do not get back.",
-            "Time management\tThis module rewards steady work more than a sprint.",
-            "Balance\tTwelve weeks is a long run. Pace it."
-          ],
-          notes: "Equal weight, so equal on the slide. Keep this to ninety seconds — the subject starts on the next slide but one.",
-          progressive: true
-        },
-        {
-          type: "cards",
-          title: "By the end of this lesson you can…",
-          subtitle: "Four things, and the lab will ask you for all of them",
-          design: { cardsMode: "rows" },
-          bullets: [
-            "Name the data\tMaster the three attribute types and what each one allows you to do.",
-            "Apply the rules\tUse design rules of thumb to make a visualisation that works.",
-            "Match the channel\tPut the right visual channel on the right kind of data.",
-            "Critique on evidence\tJudge a visualisation with perceptual principles, not taste."
-          ],
-          notes: "Read these as promises you intend to keep. The fourth is the one that changes how they argue in the lab: 'I don't like it' becomes 'that channel cannot carry that data'.",
-          progressive: true
-        },
-        {
-          type: "sourcecheck",
-          title: "Describe the data before you choose the chart.",
-          subtitle: "This week's reading",
-          bullets: [
-            "Book\tVisualization Analysis and Design\tTamara Munzner",
-            "Chapter\t2 · What: Data Abstraction\tRead before the lab",
-            "The move\tDescribe data independently of what it is about\tSo the same vocabulary works on any dataset",
-            "It asks\tItems, attributes, links, positions?\tAnd: categorical, ordinal or quantitative?",
-            "And then\tWhich attributes are keys, and which are values?\tA key identifies an item; a value is what you measured about it"
-          ],
-          body: "A chart type chosen before the data is described is a guess. Munzner's abstraction is how you stop guessing.",
-          notes: "The point of Chapter 2 is the order of operations. Students reach for a bar chart first and ask what the data is afterwards. Munzner reverses it, and the whole module depends on that reversal.",
-          progressive: true
-        },
-        {
-          type: "section",
-          title: "What visual\ncommunication is",
-          subtitle: "Data, encoding, perception — and the gap between them.",
-          notes: "A short definitional block. Do not linger: the interesting material is graphical integrity, twenty minutes from here."
-        },
-        {
-          type: "italics",
-          title: "Using visual elements to carry information, ideas or a message.",
-          body: "In data visualisation that means three things at once: translating abstract data into something you can see, so that a person can understand it, find something they were not looking for, and decide.",
-          notes: "The definition is deliberately plain. What matters is the next slide — the three parts, because failure in any one of them looks identical from the outside: the room does not get it."
-        },
-        {
-          type: "cards",
-          title: "Three parts, and all three can fail",
-          bullets: [
-            "Data\tThe information you want to communicate. Wrong here and nothing downstream can save it.",
-            "Visual encoding\tHow you represent that data — the marks and the channels you put it on.",
-            "Human perception\tHow a viewer actually reads it, which is not always how you meant it."
-          ],
-          notes: "Ask which of the three they think most projects get wrong. Most rooms say data. It is usually perception — the chart is accurate and still unreadable, which is the whole reason this module exists.",
-          progressive: true
-        },
-        {
-          type: "quote",
-          body: "The greatest value of a picture is when it forces us to notice what we never expected to see.",
-          subtitle: "John W. Tukey",
-          notes: "Tukey invented the box plot and the word 'software'. Note what the sentence does not say — it is not about explaining what you already know. The value is in being surprised, which is why exploratory work matters as much as presentation."
-        },
-        {
-          type: "image",
-          title: "Tecidos de Algodão, 1927",
-          subtitle: "Brazilian cotton textiles · production, factories, capital, imports and tax, on one sheet",
-          image: "assets/lesson/ipdv/tecidos-de-algodao-1927.jpg",
-          imageFit: "contain",
-          notes: "No lecture text on this one — let them look. Ask what they can find in thirty seconds, then ask which encodings are doing the work. Small multiples, a ring for regional share, paired bars for imports. Then the useful question: which of these choices would you keep, and which would you now defend differently after today? Framed 3:2 rather than full bleed because a dense sheet has to be seen whole — a caption over the artwork would cover the very thing they are reading.",
-          design: { imageFrame: "3:2" }
-        },
-        {
-          type: "section",
-          title: "Design criteria",
-          subtitle: "What a visualisation is for, and what it costs.",
-          notes: "From definitions to judgement."
-        },
-        {
-          type: "cards",
-          title: "Three goals, in tension",
-          bullets: [
-            "Effectiveness\tIt conveys the intended information accurately.",
-            "Efficiency\tIt minimises the mental effort needed to read it.",
-            "Aesthetics\tIt is something a person is willing to look at."
-          ],
-          notes: "Order matters. Aesthetics is last because a beautiful chart that misleads is worse than a plain one that does not — but it is on the list, because a chart nobody reads has also failed.",
-          progressive: true
-        },
-        {
-          type: "split",
-          title: "Explain, enlighten, engage",
-          subtitle: "Narrative, visuals and data — and what each pair gives you",
-          bullets: [
-            "Narrative + data, without visuals → you can explain it.",
-            "Visuals + data, without narrative → you can enlighten.",
-            "Narrative + visuals, without data → you can engage, and that is all.",
-            "Only the centre does all three."
-          ],
-          image: "assets/lesson/ipdv/explain-enlighten-engage.png",
-          imageFit: "contain",
-          notes: "The third case is the warning: narrative and visuals with no data is advertising. Students recognise it instantly once named, and it is a fair description of a lot of infographics.",
-          progressive: true,
-          imageSide: "right"
-        },
-        {
-          type: "content",
-          title: "Four questions before you draw anything",
-          bullets: [
-            "What is the message or the story?",
-            "Who is the audience?",
-            "What decision gets made from this?",
-            "Where will it be seen — a talk, a report, a dashboard?"
-          ],
-          notes: "The third is the one that changes designs. 'What decision gets made from this' turns a chart of everything into a chart of the thing that matters. Ask the room for their AE1 answer to it.",
-          progressive: true
-        },
-        {
-          type: "compare",
-          title: "Every design choice is a trade",
-          subtitle: "What you gain\tWhat it costs",
-          bullets: [
-            "Simplicity vs completeness\tFaster to read, one clear message\tDetail is gone, and someone needed it",
-            "Novelty vs familiarity\tAttention, and a shape that fits odd data\tThe room spends effort learning the chart",
-            "Beauty vs clarity\tPeople look, and keep looking\tDecoration can bend the quantity"
-          ],
-          notes: "Nobody escapes these — the skill is choosing on purpose rather than by accident. Push them: which trade is right for a dashboard a nurse reads at 3am? Which for a front page?",
-          progressive: true
-        },
-        {
-          type: "section",
-          title: "Graphical\nintegrity",
-          subtitle: "Tufte's question: does the picture say what the numbers say?",
-          notes: "The spine of the lecture. Everything from here to the rules of thumb is one argument — the graphic is a measurement, and a measurement can be wrong."
-        },
-        {
-          type: "split",
-          title: "Read these, then answer three questions",
-          subtitle: "Local election polling · five candidates · three points in time, A, B and C",
-          bullets: [
-            "In the first poll, is candidate 5 doing better than candidate 3?",
-            "Between A and B, who improved more — candidate 2 or candidate 4?",
-            "Who has the most momentum in the race?"
-          ],
-          image: "assets/lesson/ipdv/polling-three-pies.jpg",
-          imageFit: "contain",
-          notes: "Run this cold, before any theory. Ninety seconds, take answers, and let the room struggle — that is the experiment. Watch how long question three takes and how much hedging you hear. Do not reveal the next slide until someone says the chart is the problem.",
-          progressive: true,
-          imageSide: "right"
-        },
-        {
-          type: "split",
-          title: "Same numbers. Same order. Bars.",
-          subtitle: "Now answer the same three questions",
-          bullets: [
-            "Candidate 5 falls 23 → 20 → 17. Candidate 1 climbs 17 → 20 → 23.",
-            "The momentum question took a minute on pies. It takes a second here.",
-            "Nothing was added. The data never changed — only the channel it was put on."
-          ],
-          image: "assets/lesson/ipdv/polling-three-bars.jpg",
-          imageFit: "contain",
-          notes: "The payoff, and the single most convincing two minutes in the lecture. Angle is the channel a pie uses, and angle is well down the accuracy ranking they meet later today. Position on a common scale is at the top of it. This slide is that ranking, demonstrated before it is stated. The underlying evidence is Simkin & Hastie, 'An Information-Processing Analysis of Graph Perception', JASA (1987): pies are workable for part-whole judgements and poor for exactly the comparison and change-over-time tasks these questions ask. Spence & Lewandowsky (1991) is the partial defence.",
-          progressive: true,
-          imageSide: "right"
-        },
-        {
-          type: "content",
-          title: "Tufte's six principles of graphical integrity",
-          bullets: [
-            "The size of the effect on the page should be proportional to the size of the effect in the data.",
-            "Label clearly and thoroughly. Write explanations on the graph itself.",
-            "Show data variation, not design variation.",
-            "For money over time, use deflated and standardised units.",
-            "Keep the number of information-carrying dimensions at or below the number in the data.",
-            "Do not quote data out of context."
-          ],
-          notes: "The first is the one the lie factor measures, and the one they will break by accident. The fifth is why a 3D pie chart is not a style choice — it adds a dimension the data does not have. Tufte, Visual Display (1983), ch. 2.",
-          progressive: true,
-          buildMode: "dim"
-        },
-        {
-          type: "keyfact",
-          title: "The lie factor",
-          subtitle: "Effect shown in the graphic ÷ effect in the data",
-          body: "Should be\n1.0",
-          notes: "Write the division on the board. Anything far from 1.0 means the picture is a different measurement from the data. A truncated bar axis is the everyday version; the next slide is the famous one."
-        },
-        {
-          type: "keyfact",
-          title: "The New York Times fuel-economy graphic",
-          subtitle: "783 ÷ 53",
-          body: "Lie factor\n14.8",
-          notes: "Tufte's own example. The effect drawn on the page was 783% while the effect in the data was 53% — the graphic overstates it by nearly fifteen times. Say the arithmetic out loud: this is not a matter of taste, it is a number you can compute and check. Tufte, The Visual Display of Quantitative Information (1983), ch. 2; the graphic is the New York Times of 9 August 1978.",
-          progressive: true
-        },
-        {
-          type: "split",
-          title: "Where it usually goes wrong",
-          subtitle: "The bar chart that does not start at zero",
-          bullets: [
-            "A bar says 'how much' by its length.",
-            "Cut the baseline and the length stops matching the quantity.",
-            "The reader is not being careless — they are reading the channel correctly. It is the chart that lied."
-          ],
-          image: "assets/lesson/ipdv/lie-factor-example.jpg",
-          imageFit: "contain",
-          notes: "Important framing: do not blame the audience. Length is the channel a bar uses, so length is what gets read. If the baseline is cut, the chart has broken its own promise. Line charts are different — they encode position, so a truncated axis can be legitimate there.",
-          progressive: true
-        },
-        {
-          type: "cards",
-          title: "Four common violations",
-          design: { cardsMode: "rows" },
-          bullets: [
-            "Truncated axes\tLength or height no longer matches quantity.",
-            "Distorted aspect ratios\tThe same data made to look flat or steep at will.",
-            "Cherry-picked ranges\tThe window chosen so the trend points the desired way.",
-            "3D effects\tA third dimension the data never had, and perspective that shrinks the back.",
-            "Inconsistent scales\tTwo panels side by side on different axes, compared as though they were the same."
-          ],
-          notes: "Ask for the fifth from the room — dual axes usually comes up, and it is a good answer. Every one of these is available by default in Excel, which is the uncomfortable part.",
-          progressive: true
-        },
-        {
-          type: "split",
-          title: "Show data variation, not design variation",
-          subtitle: "Chernoff faces · Facing the Nation",
-          bullets: [
-            "Each facial feature carries a different variable.",
-            "The design varies enormously. The data varies much less.",
-            "We read faces involuntarily — which means the encoding borrows emotional weight the numbers never had."
-          ],
-          image: "assets/lesson/ipdv/chernoff-faces.png",
-          imageFit: "contain",
-          notes: "A genuinely interesting failure rather than a lazy one: Chernoff was exploiting real perceptual machinery. Ask which feature they noticed first — it will not be the one carrying the most important variable, and that is the problem in one observation.",
-          progressive: true,
-          imageSide: "right"
-        },
-        {
-          type: "beforeafter",
-          title: "Cumulative sales always go up",
-          exploration: {
-            before: "assets/lesson/ipdv/iphone-cumulative-apple.jpg",
-            after: "assets/lesson/ipdv/iphone-quarterly-quartz.jpg",
-            beforeLabel: "As Apple showed it",
-            afterLabel: "As Quartz redrew it",
-            alt: "Cumulative iPhone sales as an unlabelled rising curve, against the same period redrawn as quarterly sales with the cumulative line behind it"
+          "type": "content",
+          "title": "What you will practise",
+          "subtitle": "",
+          "design": {
+            "cardsMode": "rows"
           },
-          notes: "Drag the divider live. Nothing in the first chart is fabricated, which is what makes it the better example — a cumulative total is a real number, it just cannot fall, so it cannot show a bad quarter. Ask what question the first chart is built to prevent. Then note the missing y-axis labels: Tufte's second principle, on a stage in front of thousands of people."
-        },
-        {
-          type: "split",
-          title: "The third dimension is not free",
-          subtitle: "Perspective makes the far slice smaller than the near one, at identical values",
-          image: "assets/lesson/ipdv/violations-3d-distortion.jpg",
-          imageFit: "contain",
-          bullets: [
-            "Depth adds an information-carrying dimension the data does not have.",
-            "It also adds occlusion: the front hides the back.",
-            "Nothing is gained. Something is always lost."
+          "bullets": [
+            "Distinguish categorical, ordinal and quantitative attributes.",
+            "Match a visual channel to a comparison task.",
+            "Explain how a chart can distort its data.",
+            "Critique a design using perceptual evidence."
           ],
-          notes: "This is Tufte's fifth principle with a picture attached. If a student protests that it looks better, that is the beauty-versus-clarity trade from earlier — name it, and make them choose.",
-          progressive: true,
-          imageSide: "left"
+          "notes": "Read these as promises you intend to keep. The fourth is the one that changes how they argue in the lab: 'I don't like it' becomes 'that channel cannot carry that data'.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true
         },
         {
-          type: "section",
-          title: "Rules of thumb",
-          subtitle: "Not laws. Defaults you should need a reason to break.",
-          notes: "Tone shift: the integrity block was about not lying. This block is about being read."
-        },
-        {
-          type: "split",
-          title: "Clarity over cleverness",
-          subtitle: "Maximise the data-ink ratio",
-          bullets: [
-            "Every drop of ink should carry information.",
-            "Gridlines, borders, shadows, gradients, clip-art — pay rent or leave.",
-            "Chart junk is not only ugly. It competes with the data for attention."
+          "type": "split",
+          "title": "Reading the data",
+          "subtitle": "",
+          "bullets": [
+            "Chapter 2: What: Data Abstraction",
+            "What are the items, attributes and links?",
+            "Which attributes identify items? Which record values?",
+            "Does the dataset contain spatial structure?"
           ],
-          image: "assets/lesson/ipdv/chart-junk-data-ink.png",
-          imageFit: "contain",
-          notes: "Tufte's data-ink ratio. Worth saying plainly: the default settings of most tools have a poor ratio, so the ordinary act of accepting defaults is already a design decision. Tufte, Visual Display (1983), ch. 4.",
-          progressive: true
+          "body": "",
+          "notes": "Munzner, Visualization Analysis and Design (2014), Chapter 2. Example: a table of stations has station ID as a key, daily hires as a value and coordinates as spatial information. Domain meaning matters, but abstraction helps us reuse design knowledge across domains.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "image": "assets/lesson/ipdv/munzner-cover.jpg",
+          "imageFit": "contain",
+          "design": {
+            "mediaGround": "full"
+          }
         },
         {
-          type: "cards",
-          title: "Consistency, and context",
-          subtitle: "The other two thirds of the rules-of-thumb slide",
-          design: { cardsMode: "rows" },
-          bullets: [
-            "Consistency\tSame encoding for the same kind of data, every time. If blue meant 2024 on slide six, it cannot mean Europe on slide nine. Keep the visual hierarchy stable too.",
-            "Context\tA number alone is not a finding. Give reference points and benchmarks — last year, the target, the average — and annotate the moments that explain a shape."
+          "type": "content",
+          "title": "Data, encoding and perception",
+          "bullets": [
+            "Data: the values and relationships to communicate.",
+            "Encoding: the marks and channels that represent them.",
+            "Perception: how a viewer interprets those marks."
           ],
-          notes: "Consistency is the one that fails across a deck rather than within a slide, so it is invisible while you build and obvious to the room. Context is what turns 'sales were 4.2m' into 'sales were 4.2m against a 5m target' — same number, entirely different slide.",
-          progressive: true
+          "notes": "Visual communication uses visual elements to convey information. In this lesson the aim is understanding, insight and decisions. Ask students for a failure at each stage. Inaccurate data, an unsuitable channel and an unclear legend can each undermine a chart.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true
         },
         {
-          type: "keyfact",
-          title: "Why five to nine",
-          subtitle: "Miller's law — the limit belongs to the reader, not the designer",
-          body: "7 ± 2",
-          notes: "Working memory holds about seven items, give or take two. Past that, telling categories apart becomes the reader's job rather than the chart's. The fix is almost never a better palette — it is fewer categories, or a different question asked of the chart."
+          "type": "quote",
+          "body": "The greatest value of a picture is when it forces us to notice what we never expected to see.",
+          "subtitle": "John W. Tukey",
+          "notes": "Pause on Tukey’s quotation. Ask for an example of a chart that revealed something surprising. Quotation supplied in the original Week 2 lecture.\nSource: adapted from the supplied Week 2 lecture materials."
         },
         {
-          type: "cards",
-          title: "Four defaults worth keeping",
-          bullets: [
-            "7±2\tLimit distinct categories to about five to nine. Past that, distinguishing them becomes the reader's job.",
-            "Get it right in black and white\tIf it only works in colour, it does not work. Colour is the last layer, not the first.",
-            "Overview first, zoom and filter, details on demand\tShneiderman's mantra — the shape of every good interactive.",
-            "Start with standard chart types\tBar, line, scatter. Familiar shapes cost the reader nothing to learn."
-          ],
-          notes: "'Get it right in black and white' is the one to dwell on, because it pre-empts the accessibility block at the end. If the design already works without hue, colour-vision deficiency stops being a special case. Shneiderman's mantra is 'The Eyes Have It', IEEE Symposium on Visual Languages (1996).",
-          progressive: true
-        },
-        {
-          type: "statement",
-          title: "Clarity over cleverness.",
-          body: "If the room has to work out the chart before it can read the data, the chart has taken the attention you needed for the argument.",
-          notes: "A beat. Let it sit, then move into data abstraction."
-        },
-        {
-          type: "section",
-          title: "What: data\nabstraction",
-          subtitle: "Describe the data without mentioning what it is about.",
-          notes: "Munzner Chapter 2 proper. The discipline is to stop saying 'it's sales data' and start saying 'it's a table of items with two quantitative and one categorical attribute'."
-        },
-        {
-          type: "cards",
-          title: "Four dataset types",
-          bullets: [
-            "Tables\tItems and their attributes. A spreadsheet is the everyday case.",
-            "Networks\tNodes and the links between them. Social graphs, trees, hierarchies.",
-            "Fields\tContinuous values sampled over space. Weather, medical imaging.",
-            "Geometry\tShape and position in space. Maps, 3D models."
-          ],
-          notes: "Most of this module lives in tables. Networks arrive in Week 9, fields and geometry in Week 6. Flag that a dataset can sometimes be transformed from one into another — a table of who-emailed-whom is also a network.",
-          progressive: true
-        },
-        {
-          type: "table",
-          title: "Three attribute types — and what each one lets you do",
-          tableHeader: true,
-          body: "Type|Ordered?|Arithmetic?|Example\nCategorical / nominal|No|No|Country, product, gender\nOrdinal|Yes|No|Rankings, S/M/L/XL, education level\nQuantitative · interval|Yes|Differences only|Temperature in °C — no true zero\nQuantitative · ratio|Yes|Yes, including ratios|Height, weight, count — true zero",
-          notes: "Walk the columns, not the rows. 'Ordered?' and 'Arithmetic?' are the two questions that decide everything downstream — which channel is allowed, which colour scheme, whether a mean is even meaningful. 20°C is not twice 10°C; 20kg is twice 10kg. That is the interval/ratio line. Both words are given because students meet both: Munzner says categorical, Stevens says nominal, and they mean the same thing. Dataset types are Munzner ch. 2; the nominal/ordinal/interval/ratio scheme is Stevens, 'On the Theory of Scales of Measurement', Science (1946 — often miscited as 1947).",
-          progressive: true
-        },
-        {
-          type: "split",
-          title: "Categorical needs identity",
-          subtitle: "No order to preserve — so the channel only has to say which",
-          bullets: [
-            "Best channels: hue, shape, spatial grouping.",
-            "Bar charts for counts.",
-            "Pie charts sparingly — two to five slices, no more.",
-            "Dot plots with colour coding, when the bars would be mostly empty ink."
-          ],
-          image: "assets/lesson/ipdv/categorical-channels.jpg",
-          imageFit: "contain",
-          notes: "The pie caveat is worth stating out loud: a pie encodes angle, which is well down the accuracy ranking they met ten minutes ago. Two to five slices, or use a bar. The dot plot is the one students have usually never been shown — worth sketching on the board.",
-          progressive: true,
-          imageSide: "right"
-        },
-        {
-          type: "content",
-          title: "Ordinal needs order",
-          subtitle: "There is a sequence, and the channel has to carry it",
-          bullets: [
-            "Best channels: a sequential palette, a size progression, or position along an axis.",
-            "Diverging bar charts for Likert scales — agree and disagree growing away from a neutral centre.",
-            "Heatmaps with a sequential ramp, never a rainbow.",
-            "Ranked lists, where position does the whole job."
-          ],
-          notes: "Likert is the one they will actually meet in AE1 and in their own survey data. Point out that a diverging bar for Likert is the same reasoning as a diverging colour scheme later in the lecture: a meaningful middle, and two directions away from it.",
-          progressive: true
-        },
-        {
-          type: "beforeafter",
-          title: "Unordered hues, or an ordered ramp?",
-          exploration: {
-            before: "assets/lesson/ipdv/categorical-channels.jpg",
-            after: "assets/lesson/ipdv/ordinal-heatmap-sequential.jpg",
-            beforeLabel: "Categorical · distinct hues",
-            afterLabel: "Ordinal · one hue, light to dark",
-            alt: "Five categorical chart types using distinct unordered hues, against a heatmap using a single sequential blue ramp from light to dark"
+          "type": "image",
+          "title": "Tecidos de Algodão, 1927",
+          "subtitle": "Brazilian cotton textiles · production, factories, capital, imports and tax, on one sheet",
+          "image": "assets/lesson/ipdv/tecidos-de-algodao-1927.jpg",
+          "imageFit": "contain",
+          "notes": "No lecture text on this one — let them look. Ask what they can find in thirty seconds, then ask which encodings are doing the work. Small multiples, a ring for regional share, paired bars for imports. Then the useful question: which of these choices would you keep, and which would you now defend differently after today? Framed 3:2 rather than full bleed because a dense sheet has to be seen whole — a caption over the artwork would cover the very thing they are reading.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "design": {
+            "imageFrame": "3:2"
           },
-          notes: "Flip between them and ask what each palette is claiming. The left says these are different kinds and none is more; the right says more of the same thing, and the direction of more is legible without reading the legend. Put the wrong one on your data and the palette contradicts it — which is the next slide, and it is the most common colour error in student work.",
-          progressive: true
+          "feedback": {
+            "kind": "brainstorm",
+            "prompt": "What can you discover in this graphic in 30 seconds?",
+            "options": [],
+            "max": 2
+          }
         },
         {
-          type: "statement",
-          title: "Never put a continuous colour scale on categorical data.",
-          body: "It implies an order that does not exist — and the reader will believe it, because that is what the channel means.",
-          notes: "The single most common colour error in student work. Say it now; it will reappear in the colour block and again in Week 4."
-        },
-        {
-          type: "section",
-          title: "Marks and\nchannels",
-          subtitle: "The atoms of every visualisation you will ever build.",
-          notes: "If they remember one section of this lecture, it should be this one. Marks are what you draw; channels are how you vary it."
-        },
-        {
-          type: "split",
-          title: "Marks are geometry. Channels are what you vary.",
-          subtitle: "Points, lines, areas — then everything you can do to them",
-          bullets: [
-            "Points (0D) — a location. Scatter plots.",
-            "Lines (1D) — a connection or a trend.",
-            "Areas (2D) — a region, a proportion.",
-            "A channel is any property you change to carry a value: position, length, size, angle, hue, shape, texture."
+          "type": "content",
+          "title": "Design criteria",
+          "bullets": [
+            "Effectiveness: does the viewer reach an accurate understanding?",
+            "Efficiency: how much effort does that take?",
+            "Aesthetics: does the presentation invite attention?"
           ],
-          image: "assets/lesson/ipdv/marks-and-channels.jpg",
-          imageFit: "contain",
-          notes: "Draw the distinction physically: hold up a dot, then ask what you could change about it. Everything they name is a channel. That is the whole vocabulary. Munzner, Visualization Analysis and Design (2014), ch. 5.",
-          progressive: true
+          "notes": "Discuss the trade-offs: simplicity and completeness, novelty and familiarity, beauty and clarity. A familiar chart may serve a time-pressured audience better. Ask which goal matters most for a hospital dashboard versus an exhibition graphic.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true
         },
         {
-          type: "compare",
-          title: "Two families of channel, two different jobs",
-          subtitle: "Magnitude · how much\tIdentity · which one",
-          bullets: [
-            "What it encodes\tOrdered, quantitative values\tCategories with no order",
-            "The channels\tPosition, length, area, volume, angle, luminance\tHue, shape, pattern and texture",
-            "Read as\tMore or less than\tSame or different from",
-            "Gets it wrong when\tThe scale is truncated or non-linear\tThere are too many categories to tell apart"
+          "type": "content",
+          "title": "The design brief",
+          "bullets": [
+            "What should the audience understand?",
+            "Who will read the chart?",
+            "What decision or question will it support?",
+            "Will they see a slide, report or interactive display?"
           ],
-          notes: "This table is the practical takeaway. Quantitative data on an identity channel is unreadable as a quantity; categorical data on a magnitude channel invents an order. Both mistakes appear in the lab.",
-          progressive: true
+          "notes": "The third is the one that changes designs. 'What decision gets made from this' turns a chart of everything into a chart of the thing that matters. Ask the room for their AE1 answer to it.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true
         },
         {
-          type: "split",
-          title: "What each channel is actually good for",
-          subtitle: "Bertin's visual variables, and the four properties",
-          bullets: [
-            "Selective — can you pick one group out at a glance?",
-            "Associative — can you group them together while ignoring the rest?",
-            "Ordered — does it carry a sequence?",
-            "Quantitative — can you read a number off it?",
-            "Only position is all four. Shape is associative and nothing else."
+          "type": "section",
+          "title": "Graphical\nintegrity",
+          "subtitle": "Tufte's question: does the picture say what the numbers say?",
+          "notes": "The spine of the lecture. Everything from here to the rules of thumb is one argument — the graphic is a measurement, and a measurement can be wrong.\nSource: adapted from the supplied Week 2 lecture materials."
+        },
+        {
+          "type": "split",
+          "title": "The polling challenge",
+          "subtitle": "",
+          "bullets": [
+            "At A, is candidate 5 ahead of 3?",
+            "From A to B, who improves more: 2 or 4?",
+            "Who gains across all three polls?"
           ],
-          image: "assets/lesson/ipdv/bertin-visual-variables.jpg",
-          imageFit: "contain",
-          notes: "Bertin got here in 1967, before any of the experiments. Read the bottom row of the figure with them: position earns all four properties, hue earns two, shape earns one. That is the same conclusion as the ranking on the next slide, arrived at by reasoning rather than measurement. Bertin, Semiologie Graphique (1967).",
-          progressive: true,
-          imageSide: "right"
+          "image": "assets/lesson/ipdv/polling-three-pies.jpg",
+          "imageFit": "contain",
+          "notes": "3 min. These are illustrative election polls from the supplied lecture, not a real election dataset. First allow 30 seconds of silent reading, then 60 seconds in pairs. Ask students to state both an answer and confidence. Keep candidates identified by number, not colour alone. Do not reveal the next slide until the class has attempted each comparison.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": false,
+          "imageSide": "right",
+          "design": {
+            "mediaGround": "full",
+            "imageShare": 65
+          }
         },
         {
-          type: "funnel",
-          title: "How accurately people read each channel",
-          subtitle: "Cleveland & McGill's ranking — most accurate at the top",
-          bullets: [
-            "Position along a common scale\t100",
-            "Position along non-aligned scales\t85",
-            "Length, direction, angle\t70",
-            "Area\t55",
-            "Volume, curvature\t40",
-            "Shading, colour saturation\t28"
+          "type": "split",
+          "title": "Aligned bars reveal the differences",
+          "subtitle": "",
+          "bullets": [
+            "At A, candidate 5 leads candidate 3.",
+            "Candidate 2 rises from A to B. Candidate 4 falls.",
+            "Candidate 1 gains across A, B and C."
           ],
-          notes: "Alberto Cairo discusses this hierarchy in The Functional Art, from Cleveland and McGill's 1980s experiments. The numbers here are a visual ordering, not published effect sizes — say so if a student asks. The lesson is the order: put your most important quantity on position, and never on saturation. Cleveland & McGill, 'Graphical Perception', JASA 79:387 (1984), replicated with crowdsourced participants by Heer & Bostock at CHI 2010 with broadly consistent results. The expressiveness and effectiveness principles reach Munzner via Mackinlay, ACM TOG 5:2 (1986).",
-          progressive: true
+          "image": "assets/lesson/ipdv/polling-three-bars.jpg",
+          "imageFit": "contain",
+          "notes": "2 min. Same source data and candidate order as the preceding pies. The scanned figure’s values are approximate, so do not present exact measurements as raw data. Ask which question became easier. Common baselines and lengths support comparisons better than separated angles. The rightmost poll shows candidate 1 ahead and candidate 5 behind.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "imageSide": "right",
+          "design": {
+            "mediaGround": "full",
+            "imageShare": 65
+          }
         },
         {
-          type: "split",
-          title: "The ranking, as Cairo draws it",
-          subtitle: "Same data, six channels, six different degrees of accuracy",
-          image: "assets/lesson/ipdv/cleveland-mcgill-ranking.png",
-          imageFit: "contain",
-          bullets: [
-            "This is a hierarchy of elementary perceptual tasks.",
-            "It is not about taste. It is about how accurately a person can recover a number from a picture.",
-            "Use it as a tie-breaker whenever two chart types would both 'work'."
+          "type": "content",
+          "title": "Graphical integrity",
+          "bullets": [
+            "Keep visual size proportional to the quantity.",
+            "Label the measure, units and relevant events.",
+            "Keep encodings and scales consistent.",
+            "For money over time, consider inflation and standard units.",
+            "Avoid adding visual dimensions that exaggerate values.",
+            "Keep the relevant context."
           ],
-          notes: "Point at where pie charts sit — angle, third band. Then at where bubble charts sit — area, fourth. Neither is banned; both are a choice you should now be able to defend.",
-          progressive: true,
-          imageSide: "left"
+          "notes": "Tufte, The Visual Display of Quantitative Information, Chapter 2. These paraphrase all six principles in the supplied lecture, including its final context principle. Consistent scales matter when panels invite direct comparison. Explain that nominal money can still answer a nominal-money question, so label what the measure means.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "buildMode": "dim"
         },
         {
-          type: "section",
-          title: "Colour and\nluminance",
-          subtitle: "The channel everyone reaches for first, and understands least.",
-          notes: "Week 4 is a whole lecture on colour. Today is the working minimum: pick the right scheme, know that luminance is relative, and design so colour is never load-bearing on its own."
+          "type": "keyfact",
+          "title": "The lie factor",
+          "subtitle": "Relative change in the graphic ÷ relative change in the data",
+          "body": "1.0",
+          "notes": "Use relative changes with the same reference value. Example: data rises from 100 to 110, a 10% increase. A graphic rising from 10 mm to 30 mm shows a 200% increase. Lie factor = 200/10 = 20. A value near 1 preserves the relative effect. The supplied historical fuel-economy example uses 783/53 ≈ 14.8. A zero baseline matters for bar length. A line chart need not start at zero, but its scale and context must remain clear.\nSource: adapted from the supplied Week 2 lecture materials."
         },
         {
-          type: "cards",
-          title: "Three schemes. The data chooses, not you.",
-          bullets: [
-            "Sequential\tOrdered data, low to high. One hue, light to dark.",
-            "Diverging\tData with a meaningful middle. Two hues away from a neutral centre.",
-            "Categorical\tDiscrete groups with no order. Distinct hues at similar saturation and luminance."
+          "type": "game",
+          "gameRef": "check-integrity",
+          "notes": "2 min. Invite an individual answer, then ask for the reason before showing the explanation. Use a show of hands if students are not connected. Revisit the example if answers are split."
+        },
+        {
+          "type": "content",
+          "title": "Common sources of distortion",
+          "design": {
+            "cardsMode": "rows"
+          },
+          "bullets": [
+            "Truncated bar baselines exaggerate length differences.",
+            "Aspect ratio changes how steep a trend appears.",
+            "Selected date ranges can hide the wider pattern.",
+            "3D perspective can obscure or enlarge marks.",
+            "Different panel scales can defeat comparison."
           ],
-          notes: "Make the diagnosis explicit: is it ordered? does zero or an average mean something? If yes to both, diverging. If ordered with no special middle, sequential. If unordered, categorical. Three questions, one answer. The three-scheme taxonomy is Brewer's: Harrower & Brewer, 'ColorBrewer.org', The Cartographic Journal 40:1 (2003).",
-          progressive: true
+          "notes": "Ask students to distinguish a deceptive choice from an appropriate choice for a stated task. Line charts can use a restricted axis with clear labels. For bars, the quantitative channel is length from a baseline.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true
         },
         {
-          type: "split",
-          title: "The same numbers, three different claims",
-          image: "assets/lesson/ipdv/colour-schemes-three.png",
-          imageFit: "contain",
-          bullets: [
-            "Sequential says: more of the same thing.",
-            "Diverging says: two directions from a middle that matters.",
-            "Categorical says: these are different kinds, none is more."
+          "type": "beforeafter",
+          "title": "Cumulative and quarterly sales",
+          "exploration": {
+            "before": "assets/lesson/ipdv/iphone-cumulative-apple.jpg",
+            "after": "assets/lesson/ipdv/iphone-quarterly-quartz.jpg",
+            "beforeLabel": "As Apple showed it",
+            "afterLabel": "As Quartz redrew it",
+            "alt": "Cumulative iPhone sales as an unlabelled rising curve, against the same period redrawn as quarterly sales with the cumulative line behind it"
+          },
+          "notes": "Use the before/after reveal. The supplied Apple graphic shows cumulative iPhone sales. The Quartz comparison adds quarterly sales. Ask: can total sales rise while quarterly sales fall? Yes: positive sales add to the total even when the quarterly rate falls. Cumulative totals can plateau, so avoid saying they always rise. These are historical source images, not current sales figures.\nSource: adapted from the supplied Week 2 lecture materials."
+        },
+        {
+          "type": "split",
+          "title": "Useful ink",
+          "subtitle": "Maximise the data-ink ratio",
+          "bullets": [
+            "Keep marks that explain the data.",
+            "Remove decoration that competes with the comparison.",
+            "Retain useful labels, reference lines and context."
           ],
-          notes: "Each scheme makes a claim about the data's structure. Choosing the wrong one is not a style error — it is a false statement about what the numbers are.",
-          progressive: true,
-          imageSide: "right"
+          "image": "assets/lesson/ipdv/chart-junk-data-ink.png",
+          "imageFit": "contain",
+          "notes": "Tufte’s data-ink principle is a design heuristic. A bare chart is not automatically better. Ask which elements in the source examples help interpretation and which obstruct it. Distinguish memorability from numerical accuracy.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "design": {
+            "mediaGround": "full"
+          }
         },
         {
-          type: "split",
-          title: "Same pixels. Two answers.",
-          subtitle: "The dress, 2015",
-          bullets: [
-            "Some people saw blue and black. Others saw white and gold.",
-            "Identical image, identical screen, different perception.",
-            "Your viewers are not reading the pixels. They are reading pixels plus an assumption about the light."
+          "type": "content",
+          "title": "Rules of thumb, with judgement",
+          "bullets": [
+            "Keep categories distinguishable. There is no universal 7±2 limit.",
+            "Use labels or another channel alongside colour.",
+            "For exploration: overview, zoom and filter, then details.",
+            "Start with a familiar chart suited to the task."
           ],
-          image: "assets/lesson/ipdv/the-dress-2015.jpg",
-          imageFit: "contain",
-          notes: "Take a show of hands — you will get a split in most rooms, and the argument makes the point better than any slide. Then land it: if perception is this unstable for a photograph, a colour legend is not a guarantee of anything. Lafer-Sousa, Hermann & Conway, Current Biology 25:13 (2015) — the warm/cool illumination figure comes from that paper.",
-          progressive: true
+          "notes": "Miller (1956) discusses absolute judgement and immediate memory, not a universal chart-category limit: https://psychclassics.yorku.ca/Miller/ . Visible legends, channel choice and task change what people can distinguish. Shneiderman (1996), The Eyes Have It, proposes overview first, zoom and filter, details on demand. Treat these as starting points to test with users.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true
         },
         {
-          type: "split",
-          title: "We perceive luminance relatively, not absolutely",
-          bullets: [
-            "The eye is more sensitive to luminance than to hue — so put the most important distinction there.",
-            "But the same grey looks lighter or darker depending on what surrounds it.",
-            "So: give reference points, legends and direct labels. Never ask the room to judge a value from a shade alone."
+          "type": "section",
+          "title": "What: data\nabstraction",
+          "subtitle": "Describe the data without mentioning what it is about.",
+          "notes": "Munzner Chapter 2 proper. The discipline is to stop saying 'it's sales data' and start saying 'it's a table of items with two quantitative and one categorical attribute'.\nSource: adapted from the supplied Week 2 lecture materials."
+        },
+        {
+          "type": "content",
+          "title": "Four dataset structures",
+          "bullets": [
+            "Table: items described by attributes.",
+            "Network: nodes connected by links.",
+            "Field: values sampled over space.",
+            "Geometry: spatial shapes and positions."
           ],
-          image: "assets/lesson/ipdv/luminance-contrast.png",
-          imageFit: "contain",
-          notes: "The practical consequence is the last bullet. Heatmaps without direct labels ask for exactly the judgement humans are worst at. Pair the colour with a number. Ware, Information Visualization, ch. 4, on luminance carrying more information than hue.",
-          progressive: true,
-          imageSide: "left"
+          "notes": "Munzner, Chapter 2. Ask pairs to classify station hire records, routes between stations, air temperature across London and borough boundaries. Answers: table, network, field, geometry. One project may combine them. Fields need not be continuous in every mathematical treatment, but continuous phenomena sampled across space are the familiar example here.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true
         },
         {
-          type: "stats",
-          title: "Design for the room you actually have",
-          subtitle: "Colour vision deficiency, in a lecture theatre of this size",
-          bullets: [
-            "8%\tof men",
-            "0.5%\tof women",
-            "1 in 12\tmen in this room, roughly"
+          "type": "table",
+          "title": "Attribute types",
+          "tableHeader": true,
+          "body": "Type\tOrder?\tMeaningful operations\tExample\nNominal\tNo\tSame or different\tStation name\nOrdinal\tYes\tEarlier, later, higher\tLow / medium / high\nInterval\tYes\tDifferences\tTemperature in °C\nRatio\tYes\tDifferences and ratios\tNumber of hires",
+          "notes": "Nominal means categorical with no inherent ordering. Ordinal labels have an order but no guaranteed equal spacing. Interval and ratio are both quantitative. 20°C is 10°C warmer than 10°C, but not twice as hot on an absolute scale. 20 hires is twice 10 hires. Numeric identifiers remain nominal. Source: supplied Week 2 lecture and Munzner Chapter 2.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true
+        },
+        {
+          "type": "game",
+          "gameRef": "check-attributes",
+          "notes": "2 min. Invite an individual answer, then ask for the reason before showing the explanation. Use a show of hands if students are not connected. Revisit the example if answers are split."
+        },
+        {
+          "type": "split",
+          "title": "Categories need distinct identities",
+          "subtitle": "No order to preserve — so the channel only has to say which",
+          "bullets": [
+            "Hue, shape and grouping can distinguish categories.",
+            "Position and length can show each category’s count.",
+            "Pies suit simple part-to-whole questions with few slices."
           ],
-          notes: "Do the arithmetic out loud for the actual headcount. It stops being a statistic and becomes a person in row three. Then give the fix: never let hue be the only channel carrying meaning.",
-          progressive: true
+          "image": "assets/lesson/ipdv/categorical-channels.jpg",
+          "imageFit": "contain",
+          "notes": "The category and its count are different attributes. In a bar chart, the label identifies a category while bar length encodes a quantitative count. Prefer bars when accurate comparisons matter. A small number of pie slices is a practical guideline, not a fixed scientific threshold.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "imageSide": "right",
+          "design": {
+            "mediaGround": "full"
+          }
         },
         {
-          type: "split",
-          title: "The same square, two surrounds",
-          subtitle: "Simultaneous chromatic contrast",
-          bullets: [
-            "The two central squares are identical. They do not look it.",
-            "Colour is judged against its neighbours, not in isolation.",
-            "So a legend swatch and the same colour on a crowded chart are not the same colour to a reader."
+          "type": "content",
+          "title": "Ordered attributes need ordered channels",
+          "subtitle": "There is a sequence, and the channel has to carry it",
+          "bullets": [
+            "Position can communicate rank.",
+            "A sequential lightness scale communicates low to high.",
+            "Likert responses retain their response order.",
+            "Unordered hues alone do not show a sequence."
           ],
-          image: "assets/lesson/ipdv/simultaneous-contrast.jpg",
-          imageFit: "contain",
-          notes: "This is the luminance point extended to hue. It is also the reason a colour key placed far from the data is weaker than a direct label on it — by the time the eye travels back, the surround has changed. Simultaneous contrast goes back to Chevreul (1839); Ware, Information Visualization, is the standard modern treatment.",
-          progressive: true,
-          imageSide: "right"
+          "notes": "S, M, L and XL are ordered but do not imply equal differences. Similarly, agreement levels have order but not automatically equal intervals. Ask students to choose between a rainbow and a sequential heatmap. Explain that sequential schemes may use multiple hues if lightness and perceived ordering remain clear.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true
         },
         {
-          type: "split",
-          title: "The fix is not a colour. It is a second channel.",
-          bullets: [
-            "Always pair colour with shape, pattern, position or a direct label.",
-            "Test with a colourblind simulator before you submit.",
-            "'Get it right in black and white' — the rule from earlier is the same rule as this one."
+          "type": "split",
+          "title": "Marks and channels",
+          "subtitle": "Points, lines, areas — then everything you can do to them",
+          "bullets": [
+            "Marks: points, lines and areas.",
+            "Channels: position, length, hue, shape and other properties.",
+            "A scatterplot uses points and encodes two values by position."
           ],
-          image: "assets/lesson/ipdv/patterns-as-second-channel.png",
-          imageFit: "contain",
-          notes: "Close the loop back to the rules of thumb deliberately. Accessibility is not a separate checklist bolted on at the end; it falls out of a design principle they already agreed to twenty minutes ago.",
-          progressive: true
+          "image": "assets/lesson/ipdv/marks-and-channels.jpg",
+          "imageFit": "contain",
+          "notes": "Ask students to name the mark and channels in the polling bars. Marks are areas (rectangles), length represents support and position identifies a candidate. Source: supplied lecture figure and Munzner Chapter 5. https://www.cs.ubc.ca/~tmm/courses/journ15/slides/journ1.pdf\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "design": {
+            "mediaGround": "full"
+          }
         },
         {
-          type: "compare",
-          title: "Good practice · reaching the reader",
-          subtitle: "Do\tDon't",
-          bullets: [
-            "Audience\tKnow their expertise and what they need\tDon't assume colour means the same to everyone",
-            "Starting point\tStart simple, with a familiar chart type\tDon't overload one view with every variable",
-            "Labelling\tLabel axes, units, titles and legends\tDon't hide the context or the relevant range"
+          "type": "compare",
+          "title": "Magnitude and identity",
+          "subtitle": "Magnitude · how much\tIdentity · which one",
+          "bullets": [
+            "Question\tHow much? Higher or lower?\tWhich category?",
+            "Channels\tPosition, length, area, lightness\tHue, shape, pattern",
+            "Example\tDaily hires on a common scale\tStation type as a distinct symbol"
           ],
-          notes: "First half of the summary. Three rows, not six — six labelled rows do not fit a slide at a readable size, and the fix is to split the content rather than shrink the type. Every row on the left is something from today; every row on the right is a way of breaking it.",
-          progressive: true
+          "notes": "Hue distinguishes identities but has no inherent numerical order. Position can encode identity through grouping as well as magnitude through an ordered scale. Select a channel for the task, not merely the attribute name.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "body": ""
         },
         {
-          type: "compare",
-          title: "Good practice · telling the truth",
-          subtitle: "Do\tDon't",
-          bullets: [
-            "Honesty\tShow uncertainty — error bars, intervals\tDon't distort; keep the representation proportional",
-            "Comparison\tUse common baselines and aligned scales\tDon't decorate; minimise non-data ink",
-            "Process\tIterate — test it on someone, then fix it\tDon't ship the first draft"
+          "type": "split",
+          "title": "Bertin’s visual variables",
+          "subtitle": "Bertin's visual variables, and the four properties",
+          "bullets": [
+            "Selective: can one group stand out?",
+            "Associative: can marks form a group?",
+            "Ordered: can we see a sequence?",
+            "Quantitative: can we judge relative amounts?"
           ],
-          notes: "Second half. If they photograph one slide, it is this one — honesty and comparison are what the whole integrity block was for. End on Process: the first draft is never the one you submit.",
-          progressive: true
+          "image": "assets/lesson/ipdv/bertin-visual-variables.jpg",
+          "imageFit": "contain",
+          "notes": "Use the source matrix to compare channels. Bertin’s taxonomy provides a conceptual vocabulary. Its classifications are not a universal performance guarantee: task, display and how a variable is implemented matter. Source: supplied lecture’s Bertin figure.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "imageSide": "right",
+          "design": {
+            "mediaGround": "full"
+          }
         },
         {
-          type: "section",
-          title: "Where this\nis contested",
-          subtitle: "Outcome four was critique. So critique the lecture.",
-          notes: "The turn that separates a pass from a good mark. Everything so far has been given as rules; the next three slides show that three of them are convention, overreach, or actively disputed in the literature. Students who can do this are doing the module's fourth outcome."
-        },
-        {
-          type: "sourcecheck",
-          title: "7±2 is about remembering a phone number, not reading a legend.",
-          subtitle: "Contested · the rule from earlier",
-          bullets: [
-            "The source\tMiller, 'The Magical Number Seven', 1956\tShort-term memory for items presented one after another",
-            "The leap\tApplied to categories visible all at once\tWhich is not what Miller measured",
-            "The better number\tCowan, 2001, Behavioral and Brain Sciences\tPuts working-memory capacity nearer four chunks",
-            "So\tKeep the habit, drop the authority\tIt is a useful convention, not a finding"
+          "type": "split",
+          "title": "Accuracy depends on the channel",
+          "subtitle": "Same data, six channels, six different degrees of accuracy",
+          "image": "assets/lesson/ipdv/cleveland-mcgill-ranking.png",
+          "imageFit": "contain",
+          "bullets": [
+            "Aligned position usually supports precise comparison.",
+            "Angle and area make close comparisons harder.",
+            "Choose according to the task and test with readers."
           ],
-          body: "A rule can be good advice and bad science at the same time. Say which one you are relying on.",
-          notes: "Students love this one because it licenses scepticism about a number they were told to obey ten minutes earlier. Be explicit that you are not withdrawing the advice — fewer categories really does read better — only the claim that Miller proved it.",
-          progressive: true
+          "notes": "The supplied Cairo figure summarises graphical-perception research. It is an ordinal hierarchy, not numerical accuracy scores. Cleveland and McGill (1984), Graphical Perception, JASA 79(387). Relate it to the pie/bar experiment. Rankings depend on the task and display. No chart type is universally best.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "imageSide": "left",
+          "design": {
+            "mediaGround": "full"
+          }
         },
         {
-          type: "sourcecheck",
-          title: "8% is a population, not a constant.",
-          subtitle: "Contested · the accessibility figure",
-          bullets: [
-            "As stated\t8% of men, 0.5% of women\tHolds for men of Northern European descent",
-            "East Asian populations\troughly 4–5%\tSame condition, different prevalence",
-            "African populations\taround 3%\tThe slide gives one number unqualified",
-            "Why it still matters\tThe design fix does not change\tPair colour with a second channel regardless"
+          "type": "game",
+          "gameRef": "check-channels",
+          "notes": "2 min. Invite an individual answer, then ask for the reason before showing the explanation. Use a show of hands if students are not connected. Revisit the example if answers are split."
+        },
+        {
+          "type": "section",
+          "title": "Colour and\nluminance",
+          "subtitle": "Colour communicates order, identity and contrast.",
+          "notes": "Week 4 is a whole lecture on colour. Today is the working minimum: pick the right scheme, know that luminance is relative, and design so colour is never load-bearing on its own.\nSource: adapted from the supplied Week 2 lecture materials."
+        },
+        {
+          "type": "split",
+          "title": "Colour schemes express structure",
+          "image": "assets/lesson/ipdv/colour-schemes-three.png",
+          "imageFit": "contain",
+          "bullets": [
+            "Sequential: ordered low to high.",
+            "Diverging: departures from a meaningful midpoint.",
+            "Categorical: distinct groups without an order."
           ],
-          body: "Quote the figure with the population attached, or quote the design rule instead — it holds either way.",
-          notes: "A good example of a statistic that is true and misleading at once. It also models the habit the module wants: when you cite a number, cite who it is about. Note the fix is unaffected, so nothing about the practical advice weakens.",
-          progressive: true
+          "notes": "Ask for a scheme for daily hires (sequential), change relative to zero (diverging) and station operator (categorical). A sequential scheme may use more than one hue. Source and palette guidance: https://colorbrewer2.org/learnmore/schemes.html . Source image supplied in Week 2 lecture.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "imageSide": "right",
+          "design": {
+            "mediaGround": "full"
+          }
         },
         {
-          type: "sourcecheck",
-          title: "Chart junk and the zero baseline are both disputed.",
-          subtitle: "Contested · two rules from the middle of this lecture",
-          bullets: [
-            "'Don't decorate'\tBateman et al., 'Useful Junk?', CHI 2010\tHolmes' embellished charts were recalled better after a delay, with no loss of accuracy",
-            "'Always start at zero'\tCorrell, Bertini & Franconeri, 'Truncating the Y-Axis', CHI 2020\tRight for bars and ratio data; weaker for line charts of interval data",
-            "What survives\tThe reasoning, not the commandment\tA bar encodes length, so its baseline is load-bearing. A line encodes position, so it is not"
+          "type": "game",
+          "gameRef": "check-colour",
+          "notes": "2 min. Invite an individual answer, then ask for the reason before showing the explanation. Use a show of hands if students are not connected. Revisit the example if answers are split."
+        },
+        {
+          "type": "split",
+          "title": "What colours do you see?",
+          "subtitle": "The dress, 2015",
+          "bullets": [
+            "Look at the right-hand photograph before discussing.",
+            "Compare your answer with someone nearby.",
+            "What might your visual system assume about the lighting?"
           ],
-          body: "Tufte gave you the principle. The last fifteen years gave you the conditions under which it holds.",
-          notes: "This is the slide that turns the lecture from a set of rules into a field with an argument in it. Tie it back to the bar-versus-line distinction from the lie factor block: that was not a caveat, it was the whole mechanism. Memorability and accuracy are different outcomes, and 'Useful Junk?' measured the first.",
-          progressive: true
+          "image": "assets/lesson/ipdv/the-dress-2015.jpg",
+          "imageFit": "contain",
+          "notes": "3 min. Poll first, then invite explanations. There is no wrong perception to score. Differences in assumed illumination help account for differences in appearance. Witzel et al. (2017): https://pubmed.ncbi.nlm.nih.gov/28146253/ . Use the same projected image for the discussion. Avoid reducing the illusion to a simple brightness rule.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": false,
+          "feedback": {
+            "kind": "poll",
+            "prompt": "What colours do you see in the dress?",
+            "options": [
+              "Blue and black",
+              "White and gold",
+              "Something else / uncertain"
+            ],
+            "max": 1
+          },
+          "design": {
+            "mediaGround": "full"
+          }
         },
         {
-          type: "content",
-          title: "Where all this comes from",
-          subtitle: "Every claim in this lecture has an address",
-          bullets: [
-            "Tufte, The Visual Display of Quantitative Information (1983) — integrity, ch. 2; data-ink, ch. 4",
-            "Munzner, Visualization Analysis and Design (2014) — data, ch. 2; marks and channels, ch. 5",
-            "Cleveland & McGill, Graphical Perception, JASA 79:387 (1984) — replicated Heer & Bostock, CHI 2010",
-            "Bertin, Sémiologie Graphique (1967) — the original taxonomy of visual variables",
-            "Harrower & Brewer, ColorBrewer.org, The Cartographic Journal 40:1 (2003)",
-            "Lafer-Sousa, Hermann & Conway, Current Biology 25:13 (2015) — the dress"
+          "type": "split",
+          "title": "Context changes colour appearance",
+          "bullets": [
+            "The surrounding image influences perceived lightness.",
+            "Illumination assumptions influence perceived colour.",
+            "Legends and direct labels provide reference points."
           ],
-          notes: "Not a slide to read aloud. It is here so the deck can answer 'where is that from?' without you reaching for a reading list, and so students writing AE1 have the citations to hand. Further: Stevens (1946) for the scales, Shneiderman (1996) for the mantra, Mackinlay (1986) for expressiveness and effectiveness, Ware for perception.",
-          progressive: true
+          "image": "assets/lesson/ipdv/luminance-contrast.png",
+          "imageFit": "contain",
+          "notes": "Distinguish luminance (a physical measure) from perceived lightness. Luminance contrast helps reveal structure, but avoid the blanket claim that the eye is always more sensitive to luminance than hue. The supplied image illustrates warm/cool illumination interpretations of the dress. Ask how a map surround might change a viewer’s judgement.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "imageSide": "left",
+          "design": {
+            "mediaGround": "full"
+          }
         },
         {
-          type: "join",
-          title: "Questions",
-          subtitle: "And anything from the reading you want to argue with.",
-          notes: "Leave real time here. The reading is dense and the attribute-type distinctions are where students quietly stay confused. Invite the interval-versus-ratio question if nobody asks it."
+          "type": "split",
+          "title": "Identical colours, different surrounds",
+          "subtitle": "Simultaneous chromatic contrast",
+          "bullets": [
+            "Compare the central squares.",
+            "Their surrounds change their appearance.",
+            "Avoid relying on a shade alone for exact values."
+          ],
+          "image": "assets/lesson/ipdv/simultaneous-contrast.jpg",
+          "imageFit": "contain",
+          "notes": "Source: simultaneous-contrast figure in the supplied lecture. Ask for a prediction before revealing the explanation. The central patches are intended to match in the source demonstration. Projection and ambient light may alter the strength of the effect.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "imageSide": "right",
+          "design": {
+            "mediaGround": "full"
+          }
         },
         {
-          type: "section",
-          title: "Next: Lab 1",
-          subtitle: "Data types, marks and channels — in code.",
-          notes: "The lab turns today into practice: 02_Code_IPDV_DataTypes_Marks_Channels. Remind them of the deadline one last time — Friday after the lab, midday, on Canvas."
+          "type": "split",
+          "title": "Colour needs a second cue",
+          "bullets": [
+            "Pair colour with labels, position, shape or pattern.",
+            "Check contrast at projection size.",
+            "Test with colour-vision simulators and real readers."
+          ],
+          "image": "assets/lesson/ipdv/patterns-as-second-channel.png",
+          "imageFit": "contain",
+          "notes": "The source lecture gives prevalence estimates of 8% and 0.5%. These depend on population and condition, so do not estimate the number of affected students in this room from those figures. The practical design requirement stands without a prevalence claim. A simulator is a useful check, not proof of accessibility.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "design": {
+            "mediaGround": "full"
+          }
+        },
+        {
+          "type": "compare",
+          "title": "A chart critique checklist",
+          "subtitle": "Check\tEvidence to look for",
+          "bullets": [
+            "Meaning\tQuestion, audience, measure and units",
+            "Comparison\tAppropriate channels and comparable scales",
+            "Trust\tContext, source and uncertainty",
+            "Access\tLabels, contrast and cues beyond colour"
+          ],
+          "notes": "Use this checklist in the pair activity. Accept multiple defensible changes, but require a mechanism: which perceptual problem does the change address?\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "body": "Explain which change would most improve the audience’s understanding."
+        },
+        {
+          "type": "split",
+          "title": "Your redesign proposal",
+          "image": "assets/lesson/ipdv/polling-three-pies.jpg",
+          "imageFit": "contain",
+          "bullets": [
+            "Pairs, 3 minutes: choose one comparison.",
+            "Sketch a better visual encoding.",
+            "Explain your choice and one limitation."
+          ],
+          "design": {
+            "imageShare": 65,
+            "mediaGround": "full"
+          },
+          "feedback": {
+            "kind": "brainstorm",
+            "prompt": "What would you change, and why would it help?",
+            "options": [],
+            "max": 2
+          },
+          "notes": "5 min including discussion. Deliberately revisit the opening exercise to assess transfer. A bar chart is reasonable for candidate comparison; a line chart can help track change over A, B and C. Require a stated task, labels and a justification. Do not invent sampling uncertainty absent from the source. Ask what metadata would be needed to assess whether a change is meaningful."
+        },
+        {
+          "type": "game",
+          "gameRef": "check-critique",
+          "notes": "2 min. Final check: ask students to reason from the channel instead of recalling a universal rule. Discuss the explanation, then invite a remaining question."
+        },
+        {
+          "type": "content",
+          "title": "Reading and sources",
+          "subtitle": "",
+          "bullets": [
+            "Munzner: Visualization Analysis and Design, Chapters 2 and 5.",
+            "Tufte: The Visual Display of Quantitative Information.",
+            "Cleveland & McGill: Graphical Perception (1984).",
+            "Bertin: Sémiologie Graphique (1967).",
+            "ColorBrewer: sequential, diverging and qualitative palettes."
+          ],
+          "notes": "Core assigned reading: Munzner Chapter 2. Supporting references and source links appear in the relevant speaker notes. Original examples come from the supplied 01_Lecture_IPDV_2_2.pptx. Colour schemes: https://colorbrewer2.org/learnmore/schemes.html . Miller: https://psychclassics.yorku.ca/Miller/ . Dress: https://pubmed.ncbi.nlm.nih.gov/28146253/ . Munzner slides: https://www.cs.ubc.ca/~tmm/courses/journ15/slides/journ1.pdf\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true
+        },
+        {
+          "type": "section",
+          "title": "Questions",
+          "subtitle": "Which design choice would you now defend differently?",
+          "notes": "Allow 5 min. Invite questions about interval versus ratio and why a line chart can have a restricted scale. If questions arrive through the audience board, review them before moving to the lab.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "feedback": {
+            "kind": "brainstorm",
+            "prompt": "What is still unclear about data types, channels or colour?",
+            "options": [],
+            "max": 2
+          }
+        },
+        {
+          "type": "section",
+          "title": "Next: Lab 1",
+          "subtitle": "Apply the critique checklist to your own chart",
+          "notes": "Close with a concrete task: identify the attributes, choose a comparison and justify the marks and channels. Remind students: worksheets on Canvas by Friday after the lab at 12:00. Follow the existing Lab 1 materials for the dataset and submission details.\nSource: adapted from the supplied Week 2 lecture materials."
         }
       ]
     },
