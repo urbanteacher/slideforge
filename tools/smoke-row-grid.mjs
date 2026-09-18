@@ -5,7 +5,7 @@
  * block edges against candidate body row grids, and reports whether a flush
  * row system would formalise what exists or move content.
  *
- * Also runs SF.Review.check (Look → Review slides & check fit) so boundary
+ * Also runs SF.Review.check (the Review button on the presentation row) so boundary
  * overflow stays visible beside the grid numbers.
  *
  * Usage:

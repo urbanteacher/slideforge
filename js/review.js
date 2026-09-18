@@ -33,7 +33,21 @@
       }
       var scroll=pad.scrollHeight>pad.clientHeight+3||pad.scrollWidth>pad.clientWidth+3;
       var media=Array.from(root.querySelectorAll('img')).filter(function(img){return !img.complete||!img.naturalWidth;}).length;
-      return {fits:!scroll&&!over.length,over:over.slice(0,5),scroll:scroll,unavailableImages:media,width:1280,height:SF.slideHeight(deck)};
+      /* The lattice's verdict, folded in rather than left standing beside it.
+         A latticed block can want more lines than its region granted while
+         still sitting well inside the slide boundary measured above, so the
+         two questions have different answers on the same slide — and a deck
+         audit that says "fits" about a slide the Layout face has outlined in
+         red is worse than no audit. Asked through SF.latticeFit so this and
+         the Layout face run one arithmetic, not two that agree today.
+         Empty on every slide that has never been arranged. */
+      var lattice=SF.latticeFit?SF.latticeFit(root):[];
+      var regions=lattice.filter(function(v){return v.over;}).map(function(v){
+        return {key:v.key,need:v.need,have:v.have,wide:v.wide};
+      });
+      return {fits:!scroll&&!over.length&&!regions.length,over:over.slice(0,5),
+        regions:regions.slice(0,5),slots:lattice.length,
+        scroll:scroll,unavailableImages:media,width:1280,height:SF.slideHeight(deck)};
     }finally{stage.remove();}
   }
   function readDecks(value){
@@ -51,7 +65,7 @@
     checkButton.type='button';load.type='file';load.accept='.json,.sfdeck,.sfbundle';load.setAttribute('aria-label','Review a deck or bundle file');
     var hidden=el('input');hidden.type='checkbox';var hiddenLabel=el('label');hiddenLabel.append(hidden,document.createTextNode(' Include hidden slides'));
     bar.append(checkButton,hiddenLabel,load);dialog.appendChild(bar);
-    dialog.appendChild(el('p','review-note','A snapshot of your slides. Fit checks find content beyond the slide boundary; inspect overlaps, contrast and motion separately in Present. Imported files stay in this review.'));
+    dialog.appendChild(el('p','review-note','A snapshot of your slides. Fit checks find content beyond the slide boundary, and on an arranged slide, blocks wanting more lines than their region gave them \u2014 the same measurement the Layout face makes. Inspect overlaps, contrast and motion separately in Present. Imported files stay in this review.'));
     var status=el('p','review-status');status.setAttribute('role','status');dialog.appendChild(status);
     var grid=el('div','review-grid');dialog.appendChild(grid);
     var viewer=el('section','review-viewer');viewer.hidden=true;
@@ -77,7 +91,17 @@
       try{for(var i=0;i<all.length&&!closed;i++){var item=all[i];status.textContent='Checking '+(i+1)+' / '+all.length;var result=await check(item.d,item.s,item.index);if(closed)break;
         if(!result.fits)bad++;media+=result.unavailableImages;
         var old=item.tile.querySelector('.review-result');if(old)old.remove();
-        item.tile.appendChild(el('span','review-result'+(result.fits?'':' review-failed'),result.fits?'Fits slide boundary':('Needs review: '+(result.over.map(function(o){return o.text+' ('+o.past+'px beyond edge)';}).join('; ')||'content exceeds its area'))));
+        /* Both failures in one sentence, named the way each one is named where
+           it is fixed: a boundary escape by the words that escaped, a region
+           overflow by its block key and the shortfall the Layout face shows. */
+        var why=result.over.map(function(o){return o.text+' ('+o.past+'px beyond edge)';})
+          .concat((result.regions||[]).map(function(r){
+            return r.key+(r.wide&&r.need<=r.have?' (wider than its columns)'
+              :' (needs '+r.need+' lines, has '+r.have+')');
+          }));
+        item.tile.appendChild(el('span','review-result'+(result.fits?'':' review-failed'),
+          result.fits?(result.slots?'Fits slide and regions':'Fits slide boundary')
+            :('Needs review: '+(why.join('; ')||'content exceeds its area'))));
       }if(!closed)status.textContent=all.length+' slides checked · '+bad+' with overflow'+(media?' · '+media+' unavailable images':'');}
       catch(e){status.textContent='Fit check failed: '+said(e);}
       finally{busy=false;checkButton.disabled=false;hidden.disabled=false;load.disabled=false;}

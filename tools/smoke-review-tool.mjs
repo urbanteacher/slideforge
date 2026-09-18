@@ -45,13 +45,10 @@ try {
   await page.waitForFunction(() => SF.Editor.deck()?.slides?.length === 4);
   await page.evaluate(() => SF.Editor.selectSlide(0));
 
-  /* 1. Reached from Look, not from a terminal — the point of the change. */
-  await page.evaluate(() => {
-    const look = [...document.querySelectorAll('button,a,[role=tab]')]
-      .find(b => /^\s*✦?\s*Look\s*$/.test(b.textContent));
-    if (look) look.click();
-  });
-  const button = page.locator('button', { hasText: 'Review slides & check fit' });
+  /* 1. Reached from the presentation row, not from a terminal — the point of
+     the change. It sat in Look until the row existed; a deck-wide audit in a
+     pane that customises one slide was the wrong drawer. */
+  const button = page.locator('.canvas-faces button', { hasText: 'Review' });
   await button.waitFor({ timeout: 10000 });
   checked++;
 

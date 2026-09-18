@@ -1447,6 +1447,21 @@
     var themeBtn = UI.button('◈ Theme', 'ghost', openDeckSettings);
     themeBtn.title = 'Theme, logo, slide shape and numbers — the whole presentation';
     faces.appendChild(themeBtn);
+    /* Review belongs here for the same reason Theme does: it opens every slide
+       in the deck at once, and can review a file someone sent you, so the Look
+       pane's one slide was never its subject. It is not a rival to the Layout
+       face's fit check either — that reads one arranged slide's regions, this
+       reads the whole deck's boundary, and since SF.Review.check now asks
+       SF.latticeFit as well the two cannot disagree about a slide they both
+       measure. */
+    if (SF.Review) {
+      var reviewBtn = UI.button('◱ Review', 'ghost', function () {
+        var deck = SF.Editor && SF.Editor.deck ? SF.Editor.deck() : null;
+        if (deck) SF.Review.open(deck);
+      });
+      reviewBtn.title = 'Every slide at once — check fit and look through the deck';
+      faces.appendChild(reviewBtn);
+    }
     /* Named rather than positional: a mixed [id, label, title, fn, fn] literal
        infers a union of string and two function shapes, and neither function
        is then callable. */

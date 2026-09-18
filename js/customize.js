@@ -758,8 +758,14 @@
         change();
       }),'Dimming keeps earlier points readable instead of hiding them \u2014 useful when the room needs the whole argument in view. Spotlight does that and takes the light off the rest of the slide, which is the other half of what a presenter does with their hand.'));
     }
-    box.appendChild(UI.button('Reset to theme','ghost',function(){s.design={};s.formatting={};change();}));
-    if (SF.Review && currentDeck) box.appendChild(UI.button('Review slides & check fit','ghost',function(){SF.Review.open(currentDeck);}));
+    /* Named its subject. It clears this slide's design and formatting only,
+       and unlabelled next to a deck-wide Theme button it read as a reset of
+       the whole presentation \u2014 which is not an impression to leave on a
+       button that cannot be taken back except by undo. It stays in Look,
+       where the overrides it clears were made.
+       Review moved to the presentation row: it opens every slide in the deck
+       at once, so it answered to this pane's one slide in name only. */
+    box.appendChild(UI.button('Reset this slide to theme','ghost',function(){s.design={};s.formatting={};change();}));
     var guide=document.createElement('a');guide.href='design-guide.html';guide.target='_blank';guide.rel='noopener';guide.textContent='Design controls guide';
     box.appendChild(guide);
     tagControls(box,s,'Look');

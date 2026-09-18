@@ -1133,7 +1133,7 @@ line-density artefact above.
 
 ### The guardrail
 
-`Look → Review slides & check fit` is the reason this is safe to attempt. It
+The deck review and its fit check are the reason this is safe to attempt. It
 measures rendered boxes rather than counting characters, so "this block needs
 five rows and has four" is a number, not an opinion — and it already runs
 across both aspect ratios. A span model without a measured fit check is just
@@ -1946,8 +1946,9 @@ brought back a piece at a time if a narrower version earns its place.
 
 **Kept, because neither is canvas editing:**
 
-- The shared slide review tool and fit checker (`Look → Review slides & check
-  fit`), which measures rendered boxes rather than counting characters.
+- The shared slide review tool and fit checker (**◱ Review** on the
+  presentation row), which measures rendered boxes rather than counting
+  characters.
 - Named chrome regions, and specifically the **corrected** coverage test. The
   revert would have restored the version that manufactured its own
   precondition — building a campaign deck, relabelling its theme and injecting

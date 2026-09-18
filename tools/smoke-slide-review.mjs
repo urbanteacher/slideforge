@@ -22,7 +22,7 @@ try{
  const overflow=await page.evaluate(async()=>{const d=SF.makeDeck('Overflow');const s=SF.normalizeSlide({type:'title',title:'Outside the slide'});d.slides=[s];return SF.Review.check(d,s,0);});
  assert.equal(overflow.fits,false);assert.ok(overflow.over.some(o=>o.text==='Outside the slide'));await style.evaluate(n=>n.remove());
  let before=await page.evaluate(()=>{const d=SF.makeDeck('Review snapshot');d.slides=[SF.normalizeSlide({type:'title',title:'One idea'}),SF.normalizeSlide({type:'content',title:'Hidden notes',hidden:true,bullets:['For the presenter']})];SF.Store.save(d);SF.Editor.openDeck(d.id);return JSON.stringify(SF.Editor.deck());});
- await page.getByRole('tab',{name:/Look/}).click();before=await page.evaluate(()=>JSON.stringify(SF.Editor.deck()));await page.getByRole('button',{name:'Review slides & check fit'}).click();
+ before=await page.evaluate(()=>JSON.stringify(SF.Editor.deck()));await page.locator('.canvas-faces button',{hasText:'Review'}).click();
  assert.equal(await page.locator('.review-tile').count(),1);
  await page.locator('.review-tile').first().click();await page.getByRole('button',{name:'Back to grid'}).click();
  await page.getByLabel('Include hidden slides').check();assert.equal(await page.locator('.review-tile').count(),2);
