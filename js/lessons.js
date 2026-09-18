@@ -1276,6 +1276,25 @@
           ]
         },
         {
+          ref: 'check-critique',
+          title: 'Check · Critique, not recall',
+          style: 'choice',
+          settings: { defaultTime: 30, scoreboard: false, scoreSlide: false, intro: false, howTo: false },
+          questions: [
+            {
+              question: "A classmate says 'you must never truncate a y-axis — Tufte says so.' What is the strongest reply?",
+              options: [
+                "They are right; a truncated axis is always a lie",
+                "They are wrong; axes are a matter of taste",
+                "It depends on the mark: a bar encodes length so its baseline carries meaning, a line encodes position so it need not start at zero",
+                "It only matters if the chart is going to be published"
+              ],
+              correct: 2,
+              explanation: "The principle is about the channel, not the chart. Correll, Bertini and Franconeri (CHI 2020) make exactly this distinction — the zero baseline is load-bearing for bars and ratio data, weaker for line charts of interval data. Knowing the mechanism beats quoting the rule."
+            }
+          ]
+        },
+        {
           ref: 'check-colour',
           title: 'Check · Colour schemes',
           style: 'choice',
@@ -1475,7 +1494,7 @@
             "Nothing was added. The data never changed — only the channel it was put on."
           ],
           image: "assets/lesson/ipdv/polling-three-bars.jpg",
-          notes: "The payoff, and the single most convincing two minutes in the lecture. Angle is the channel a pie uses, and angle is well down the accuracy ranking they meet later today. Position on a common scale is at the top of it. This slide is that ranking, demonstrated before it is stated.",
+          notes: "The payoff, and the single most convincing two minutes in the lecture. Angle is the channel a pie uses, and angle is well down the accuracy ranking they meet later today. Position on a common scale is at the top of it. This slide is that ranking, demonstrated before it is stated. The underlying evidence is Simkin & Hastie, 'An Information-Processing Analysis of Graph Perception', JASA (1987): pies are workable for part-whole judgements and poor for exactly the comparison and change-over-time tasks these questions ask. Spence & Lewandowsky (1991) is the partial defence.",
           progressive: true,
           imageSide: "right"
         },
@@ -1490,7 +1509,7 @@
             "Keep the number of information-carrying dimensions at or below the number in the data.",
             "Do not quote data out of context."
           ],
-          notes: "The first is the one the lie factor measures, and the one they will break by accident. The fifth is why a 3D pie chart is not a style choice — it adds a dimension the data does not have.",
+          notes: "The first is the one the lie factor measures, and the one they will break by accident. The fifth is why a 3D pie chart is not a style choice — it adds a dimension the data does not have. Tufte, Visual Display (1983), ch. 2.",
           progressive: true,
           buildMode: "dim"
         },
@@ -1506,7 +1525,7 @@
           title: "The New York Times fuel-economy graphic",
           subtitle: "783 ÷ 53",
           body: "Lie factor\n14.8",
-          notes: "Tufte's own example. The effect drawn on the page was 783% while the effect in the data was 53% — the graphic overstates it by nearly fifteen times. Say the arithmetic out loud: this is not a matter of taste, it is a number you can compute and check.",
+          notes: "Tufte's own example. The effect drawn on the page was 783% while the effect in the data was 53% — the graphic overstates it by nearly fifteen times. Say the arithmetic out loud: this is not a matter of taste, it is a number you can compute and check. Tufte, The Visual Display of Quantitative Information (1983), ch. 2; the graphic is the New York Times of 9 August 1978.",
           progressive: true
         },
         {
@@ -1592,7 +1611,7 @@
             "Chart junk is not only ugly. It competes with the data for attention."
           ],
           image: "assets/lesson/ipdv/chart-junk-data-ink.png",
-          notes: "Tufte's data-ink ratio. Worth saying plainly: the default settings of most tools have a poor ratio, so the ordinary act of accepting defaults is already a design decision.",
+          notes: "Tufte's data-ink ratio. Worth saying plainly: the default settings of most tools have a poor ratio, so the ordinary act of accepting defaults is already a design decision. Tufte, Visual Display (1983), ch. 4.",
           progressive: true
         },
         {
@@ -1623,7 +1642,7 @@
             "Overview first, zoom and filter, details on demand\tShneiderman's mantra — the shape of every good interactive.",
             "Start with standard chart types\tBar, line, scatter. Familiar shapes cost the reader nothing to learn."
           ],
-          notes: "'Get it right in black and white' is the one to dwell on, because it pre-empts the accessibility block at the end. If the design already works without hue, colour-vision deficiency stops being a special case.",
+          notes: "'Get it right in black and white' is the one to dwell on, because it pre-empts the accessibility block at the end. If the design already works without hue, colour-vision deficiency stops being a special case. Shneiderman's mantra is 'The Eyes Have It', IEEE Symposium on Visual Languages (1996).",
           progressive: true
         },
         {
@@ -1655,7 +1674,7 @@
           title: "Three attribute types — and what each one lets you do",
           tableHeader: true,
           body: "Type|Ordered?|Arithmetic?|Example\nCategorical / nominal|No|No|Country, product, gender\nOrdinal|Yes|No|Rankings, S/M/L/XL, education level\nQuantitative · interval|Yes|Differences only|Temperature in °C — no true zero\nQuantitative · ratio|Yes|Yes, including ratios|Height, weight, count — true zero",
-          notes: "Walk the columns, not the rows. 'Ordered?' and 'Arithmetic?' are the two questions that decide everything downstream — which channel is allowed, which colour scheme, whether a mean is even meaningful. 20°C is not twice 10°C; 20kg is twice 10kg. That is the interval/ratio line. Both words are given because students meet both: Munzner says categorical, Stevens says nominal, and they mean the same thing.",
+          notes: "Walk the columns, not the rows. 'Ordered?' and 'Arithmetic?' are the two questions that decide everything downstream — which channel is allowed, which colour scheme, whether a mean is even meaningful. 20°C is not twice 10°C; 20kg is twice 10kg. That is the interval/ratio line. Both words are given because students meet both: Munzner says categorical, Stevens says nominal, and they mean the same thing. Dataset types are Munzner ch. 2; the nominal/ordinal/interval/ratio scheme is Stevens, 'On the Theory of Scales of Measurement', Science (1946 — often miscited as 1947).",
           progressive: true
         },
         {
@@ -1709,7 +1728,7 @@
             "A channel is any property you change to carry a value: position, length, size, angle, hue, shape, texture."
           ],
           image: "assets/lesson/ipdv/marks-and-channels.jpg",
-          notes: "Draw the distinction physically: hold up a dot, then ask what you could change about it. Everything they name is a channel. That is the whole vocabulary.",
+          notes: "Draw the distinction physically: hold up a dot, then ask what you could change about it. Everything they name is a channel. That is the whole vocabulary. Munzner, Visualization Analysis and Design (2014), ch. 5.",
           progressive: true
         },
         {
@@ -1737,7 +1756,7 @@
             "Only position is all four. Shape is associative and nothing else."
           ],
           image: "assets/lesson/ipdv/bertin-visual-variables.jpg",
-          notes: "Bertin got here in 1967, before any of the experiments. Read the bottom row of the figure with them: position earns all four properties, hue earns two, shape earns one. That is the same conclusion as the ranking on the next slide, arrived at by reasoning rather than measurement.",
+          notes: "Bertin got here in 1967, before any of the experiments. Read the bottom row of the figure with them: position earns all four properties, hue earns two, shape earns one. That is the same conclusion as the ranking on the next slide, arrived at by reasoning rather than measurement. Bertin, Semiologie Graphique (1967).",
           progressive: true,
           imageSide: "right"
         },
@@ -1753,7 +1772,7 @@
             "Volume, curvature\t40",
             "Shading, colour saturation\t28"
           ],
-          notes: "Alberto Cairo discusses this hierarchy in The Functional Art, from Cleveland and McGill's 1980s experiments. The numbers here are a visual ordering, not published effect sizes — say so if a student asks. The lesson is the order: put your most important quantity on position, and never on saturation.",
+          notes: "Alberto Cairo discusses this hierarchy in The Functional Art, from Cleveland and McGill's 1980s experiments. The numbers here are a visual ordering, not published effect sizes — say so if a student asks. The lesson is the order: put your most important quantity on position, and never on saturation. Cleveland & McGill, 'Graphical Perception', JASA 79:387 (1984), replicated with crowdsourced participants by Heer & Bostock at CHI 2010 with broadly consistent results. The expressiveness and effectiveness principles reach Munzner via Mackinlay, ACM TOG 5:2 (1986).",
           progressive: true
         },
         {
@@ -1784,7 +1803,7 @@
             "Diverging\tData with a meaningful middle. Two hues away from a neutral centre.",
             "Categorical\tDiscrete groups with no order. Distinct hues at similar saturation and luminance."
           ],
-          notes: "Make the diagnosis explicit: is it ordered? does zero or an average mean something? If yes to both, diverging. If ordered with no special middle, sequential. If unordered, categorical. Three questions, one answer.",
+          notes: "Make the diagnosis explicit: is it ordered? does zero or an average mean something? If yes to both, diverging. If ordered with no special middle, sequential. If unordered, categorical. Three questions, one answer. The three-scheme taxonomy is Brewer's: Harrower & Brewer, 'ColorBrewer.org', The Cartographic Journal 40:1 (2003).",
           progressive: true
         },
         {
@@ -1810,7 +1829,7 @@
             "Your viewers are not reading the pixels. They are reading pixels plus an assumption about the light."
           ],
           image: "assets/lesson/ipdv/the-dress-2015.jpg",
-          notes: "Take a show of hands — you will get a split in most rooms, and the argument makes the point better than any slide. Then land it: if perception is this unstable for a photograph, a colour legend is not a guarantee of anything.",
+          notes: "Take a show of hands — you will get a split in most rooms, and the argument makes the point better than any slide. Then land it: if perception is this unstable for a photograph, a colour legend is not a guarantee of anything. Lafer-Sousa, Hermann & Conway, Current Biology 25:13 (2015) — the warm/cool illumination figure comes from that paper.",
           progressive: true
         },
         {
@@ -1822,7 +1841,7 @@
             "So: give reference points, legends and direct labels. Never ask the room to judge a value from a shade alone."
           ],
           image: "assets/lesson/ipdv/luminance-contrast.png",
-          notes: "The practical consequence is the last bullet. Heatmaps without direct labels ask for exactly the judgement humans are worst at. Pair the colour with a number.",
+          notes: "The practical consequence is the last bullet. Heatmaps without direct labels ask for exactly the judgement humans are worst at. Pair the colour with a number. Ware, Information Visualization, ch. 4, on luminance carrying more information than hue.",
           progressive: true,
           imageSide: "left"
         },
@@ -1848,7 +1867,7 @@
             "So a legend swatch and the same colour on a crowded chart are not the same colour to a reader."
           ],
           image: "assets/lesson/ipdv/simultaneous-contrast.jpg",
-          notes: "This is the luminance point extended to hue. It is also the reason a colour key placed far from the data is weaker than a direct label on it — by the time the eye travels back, the surround has changed.",
+          notes: "This is the luminance point extended to hue. It is also the reason a colour key placed far from the data is weaker than a direct label on it — by the time the eye travels back, the surround has changed. Simultaneous contrast goes back to Chevreul (1839); Ware, Information Visualization, is the standard modern treatment.",
           progressive: true,
           imageSide: "right"
         },
@@ -1886,6 +1905,68 @@
             "Process\tIterate — test it on someone, then fix it\tDon't ship the first draft"
           ],
           notes: "Second half. If they photograph one slide, it is this one — honesty and comparison are what the whole integrity block was for. End on Process: the first draft is never the one you submit.",
+          progressive: true
+        },
+        {
+          type: "section",
+          title: "Where this\nis contested",
+          subtitle: "Outcome four was critique. So critique the lecture.",
+          notes: "The turn that separates a pass from a good mark. Everything so far has been given as rules; the next three slides show that three of them are convention, overreach, or actively disputed in the literature. Students who can do this are doing the module's fourth outcome."
+        },
+        {
+          type: "sourcecheck",
+          title: "7±2 is about remembering a phone number, not reading a legend.",
+          subtitle: "Contested · the rule from earlier",
+          bullets: [
+            "The source\tMiller, 'The Magical Number Seven', 1956\tShort-term memory for items presented one after another",
+            "The leap\tApplied to categories visible all at once\tWhich is not what Miller measured",
+            "The better number\tCowan, 2001, Behavioral and Brain Sciences\tPuts working-memory capacity nearer four chunks",
+            "So\tKeep the habit, drop the authority\tIt is a useful convention, not a finding"
+          ],
+          body: "A rule can be good advice and bad science at the same time. Say which one you are relying on.",
+          notes: "Students love this one because it licenses scepticism about a number they were told to obey ten minutes earlier. Be explicit that you are not withdrawing the advice — fewer categories really does read better — only the claim that Miller proved it.",
+          progressive: true
+        },
+        {
+          type: "sourcecheck",
+          title: "8% is a population, not a constant.",
+          subtitle: "Contested · the accessibility figure",
+          bullets: [
+            "As stated\t8% of men, 0.5% of women\tHolds for men of Northern European descent",
+            "East Asian populations\troughly 4–5%\tSame condition, different prevalence",
+            "African populations\taround 3%\tThe slide gives one number unqualified",
+            "Why it still matters\tThe design fix does not change\tPair colour with a second channel regardless"
+          ],
+          body: "Quote the figure with the population attached, or quote the design rule instead — it holds either way.",
+          notes: "A good example of a statistic that is true and misleading at once. It also models the habit the module wants: when you cite a number, cite who it is about. Note the fix is unaffected, so nothing about the practical advice weakens.",
+          progressive: true
+        },
+        {
+          type: "sourcecheck",
+          title: "Chart junk and the zero baseline are both disputed.",
+          subtitle: "Contested · two rules from the middle of this lecture",
+          bullets: [
+            "'Don't decorate'\tBateman et al., 'Useful Junk?', CHI 2010\tHolmes' embellished charts were recalled better after a delay, with no loss of accuracy",
+            "'Always start at zero'\tCorrell, Bertini & Franconeri, 'Truncating the Y-Axis', CHI 2020\tRight for bars and ratio data; weaker for line charts of interval data",
+            "What survives\tThe reasoning, not the commandment\tA bar encodes length, so its baseline is load-bearing. A line encodes position, so it is not"
+          ],
+          body: "Tufte gave you the principle. The last fifteen years gave you the conditions under which it holds.",
+          notes: "This is the slide that turns the lecture from a set of rules into a field with an argument in it. Tie it back to the bar-versus-line distinction from the lie factor block: that was not a caveat, it was the whole mechanism. Memorability and accuracy are different outcomes, and 'Useful Junk?' measured the first.",
+          progressive: true
+        },
+        {
+          type: "content",
+          title: "Where all this comes from",
+          subtitle: "Every claim in this lecture has an address",
+          bullets: [
+            "Tufte, The Visual Display of Quantitative Information (1983) — integrity, ch. 2; data-ink, ch. 4",
+            "Munzner, Visualization Analysis and Design (2014) — data, ch. 2; marks and channels, ch. 5",
+            "Cleveland & McGill, Graphical Perception, JASA 79:387 (1984) — replicated Heer & Bostock, CHI 2010",
+            "Bertin, Sémiologie Graphique (1967) — the original taxonomy of visual variables",
+            "Harrower & Brewer, ColorBrewer.org, The Cartographic Journal 40:1 (2003)",
+            "Lafer-Sousa, Hermann & Conway, Current Biology 25:13 (2015) — the dress"
+          ],
+          notes: "Not a slide to read aloud. It is here so the deck can answer 'where is that from?' without you reaching for a reading list, and so students writing AE1 have the citations to hand. Further: Stevens (1946) for the scales, Shneiderman (1996) for the mantra, Mackinlay (1986) for expressiveness and effectiveness, Ware for perception.",
           progressive: true
         },
         {
