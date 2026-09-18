@@ -185,26 +185,6 @@ html:not([data-ready]) body { background: #f0f1ed; }
         </select>
         <button class="canvas-bar-btn" id="btnZoomIn" type="button" title="Zoom in (⌘⌥+)" aria-label="Zoom in">+</button>
       </div>
-      <!-- The art face. A slide's decoration comes from its theme and paints on
-           every slide of the type, so everything here is this slide only. -->
-      <button class="canvas-bar-btn" id="btnArtFlip" type="button" title="Move, size, hide or replace this slide's artwork" aria-pressed="false">◇ Artwork</button>
-      <button class="canvas-bar-btn" id="btnArrange" type="button" title="Move blocks on the 16x12 lattice — stores a region, so the slide still reflows and re-themes" aria-pressed="false">▤ Layout</button>
-      <button class="canvas-bar-btn" id="btnHeaderFooter" type="button" aria-expanded="false" aria-controls="headerFooterPanel">Header &amp; footer</button>
-      <button class="canvas-bar-btn wide" id="btnInspector" type="button" title="Hide the Design &amp; Engagement panel (⌘\)" aria-pressed="true">◨ Panel</button>
-    </div>
-    <div class="notes-strip">
-      <label for="notes" id="notesLabel">Speaker notes — visible in presenter view only</label>
-      <textarea id="notes" placeholder="Notes…" spellcheck="true"></textarea>
-    </div>
-  </div>
-
-  <!-- ------------------------------------------------- inspector column -->
-  <!-- Two panes share the right column. canvasFacePanel holds whichever canvas
-       face is open — artwork, layout, header and footer — and is a sibling of
-       the inspector rather than a child, because drawInspector() clears its own
-       innerHTML on every redraw and would take the open face with it. -->
-  <div class="side-column">
-    <div class="canvas-face-panel" id="canvasFacePanel">
       <div class="art-bar" id="artBar" role="group" aria-label="Slide artwork" hidden>
         <span class="art-what" id="artWhat" aria-live="polite">Click a shape or picture</span>
         <span class="canvas-mode-help">Arrow keys move · Shift moves faster · Esc finishes</span>
@@ -222,16 +202,22 @@ html:not([data-ready]) body { background: #f0f1ed; }
         <span class="canvas-mode-help">Arrow keys move · Shift + arrows resize · Esc finishes</span>
         <label class="anchor-control">Horizontal anchor <select id="arrangeAnchorX" data-arrange-needs-selection><option value="">Free</option><option value="left">Left margin</option><option value="center">Centre</option><option value="right">Right margin</option></select></label>
         <label class="anchor-control">Vertical anchor <select id="arrangeAnchorY" data-arrange-needs-selection><option value="">Free</option><option value="top">Top</option><option value="middle">Middle</option><option value="bottom">Bottom</option></select></label>
-        <button class="canvas-bar-btn" id="btnArrangeFurniture" type="button">Header &amp; footer slots</button>
         <button class="canvas-bar-btn" id="btnArrangeNarrower" type="button" data-arrange-needs-selection title="Narrower (one column)">◀▶</button>
         <button class="canvas-bar-btn" id="btnArrangeWider" type="button" data-arrange-needs-selection title="Wider (one column)">▶◀</button>
         <button class="canvas-bar-btn" id="btnArrangeShorter" type="button" data-arrange-needs-selection title="Shorter (one line)">▲▼</button>
         <button class="canvas-bar-btn" id="btnArrangeTaller" type="button" data-arrange-needs-selection title="Taller (one line)">▼▲</button>
         <button class="canvas-bar-btn" id="btnArrangeReset" type="button" title="Drop this slide's arrangement and follow the theme again">↺ Theme</button>
       </div>
+      <button class="canvas-bar-btn wide" id="btnInspector" type="button" title="Hide the Design &amp; Engagement panel (⌘\)" aria-pressed="true">◨ Panel</button>
     </div>
-    <div class="inspector" id="inspector"></div>
+    <div class="notes-strip">
+      <label for="notes" id="notesLabel">Speaker notes — visible in presenter view only</label>
+      <textarea id="notes" placeholder="Notes…" spellcheck="true"></textarea>
+    </div>
   </div>
+
+  <!-- ---------------------------------------------------------- inspector -->
+  <div class="inspector" id="inspector"></div>
 </div>
 
 <!-- ------------------------------------------------------------ player -->

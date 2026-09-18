@@ -1233,10 +1233,17 @@
       return;
     }
 
+    if (designPane !== 'chrome' && SF.HeaderFooterUI) SF.HeaderFooterUI.close();
     if (designPane === 'customise') {
       SF.Custom.inspector(insp, s, function () { touched(); draw(); }, { bare: true });
     } else if (designPane === 'layout') {
       drawLayoutPicker(insp, s);
+    } else if (designPane === 'chrome') {
+      /* The panel is built once by js/header-footer.js and re-parented here on
+         every draw. innerHTML = '' above detaches its children but does not
+         destroy a node something still holds a reference to, so the fields keep
+         their identity — and their focus — across a redraw. */
+      if (SF.HeaderFooterUI) SF.HeaderFooterUI.mount(insp);
     } else if (designPane === 'transition') {
       insp.appendChild(el('p', 'hint',
         'How this slide arrives on the screen. The words stay as they are.'));
@@ -1417,6 +1424,42 @@
 
   /** Icon tabs under Undo / Theme so look, layout and motion stay off the editing rail. */
   function drawDesignPaneTabs(insp) {
+    /* The three canvas faces, on their own row above the pane switcher. They
+       were in the canvas bar, where they wrapped it to two rows and pushed
+       Panel onto a line of its own; and their controls have no business
+       covering the slide they arrange. Ids are kept because artwork.js and
+       arrange.js look their toggle up by id to relabel it, but the click is
+       wired here — this row is rebuilt on every draw, so a listener bound once
+       at install would be lost with the old node. */
+    var faces = el('div', 'format-tools canvas-faces');
+    faces.setAttribute('role', 'group');
+    faces.setAttribute('aria-label', 'Canvas faces');
+    /* Named rather than positional: a mixed [id, label, title, fn, fn] literal
+       infers a union of string and two function shapes, and neither function
+       is then callable. */
+    [
+      { id: 'btnArtFlip', label: '◇ Artwork',
+        title: "Move, size, hide or replace this slide's artwork",
+        isOn: function () { return !!(SF.Artwork && SF.Artwork.isEditing()); },
+        set: function (on) { if (SF.Artwork) SF.Artwork.setEditing(on); } },
+      { id: 'btnArrange', label: '▦ Layout',
+        title: 'Move blocks on the 16x12 lattice',
+        isOn: function () { return !!(SF.Arrange && SF.Arrange.isArranging()); },
+        set: function (on) { if (SF.Arrange) SF.Arrange.setArranging(on); } },
+      { id: 'btnHeaderFooter', label: '▣ Header & footer',
+        title: 'Header and footer slots',
+        isOn: function () { return designPane === 'chrome'; },
+        set: function (on) { designPane = on ? 'chrome' : 'edit'; drawInspector(); } }
+    ].forEach(function (face) {
+      var on = face.isOn();
+      var b = UI.button(face.label, on ? 'active' : 'ghost', function () { face.set(!on); });
+      b.id = face.id;
+      b.title = face.title;
+      b.setAttribute('aria-pressed', String(on));
+      faces.appendChild(b);
+    });
+    insp.appendChild(faces);
+
     var panes = el('div', 'format-tools design-panes');
     panes.setAttribute('role', 'tablist');
     panes.setAttribute('aria-label', 'Slide tools');

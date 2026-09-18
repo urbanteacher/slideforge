@@ -53,11 +53,14 @@
     input.addEventListener('change', function(){updateItem(name,input.value);});
     fields[name]=input;
   }
+  function mount(host) {
+    if (!panel || !host) return;
+    host.appendChild(panel);
+    open = true;
+    refresh();
+  }
   function refresh() {
     if (!panel) return;
-    panel.hidden=!open;
-    var toggle=document.getElementById('btnHeaderFooter');
-    if(toggle)toggle.setAttribute('aria-expanded',String(open));
     var preview=document.getElementById('previewBox');
     if(preview)preview.classList.toggle('hf-editing',open);
     if (!open || !deck() || !slide()) return;
@@ -103,10 +106,12 @@
     refresh();
   }
   function install() {
-    /* The side column, not the canvas bar: an eighteen-control form under
-       the slide left it 169px tall on a 900px window. */
-    var bar=document.getElementById('canvasFacePanel')||document.querySelector('.canvas-bar');if(!bar)return;
-    panel=node('section','',bar);panel.className='hf-panel';panel.hidden=true;panel.id='headerFooterPanel';
+    /* Built detached and mounted into the inspector's Header pane by
+       drawInspector. Not under the canvas: eighteen controls there left the
+       slide 169px tall on a 900px window. Not stacked above the inspector
+       either — that column is the editor, so this joins its pane row rather
+       than displacing it. */
+    panel=node('section','');panel.className='hf-panel';panel.id='headerFooterPanel';
     panel.setAttribute('aria-label','Header and footer slots');
     var toolbar=node('div','',panel);toolbar.className='hf-toolbar';
     selectField(toolbar,'Apply to','scope',[['deck','Presentation defaults'],['slide','This slide']],function(v){scope=v;refresh();});
@@ -151,7 +156,9 @@
       };reader.onerror=function(){SF.toast('Could not read that image.');};reader.readAsDataURL(file);
     };
     warning=node('p','',panel);warning.className='hf-hint';warning.setAttribute('aria-live','polite');
-    ['btnHeaderFooter','btnArrangeFurniture'].forEach(function(id){var b=document.getElementById(id);if(b)b.onclick=function(){setOpen(!open);};});
+    /* No id wiring: the Header & footer button lives in the inspector's face
+       row and is rebuilt on every draw, so editor.js switches the pane and
+       mount() opens this panel. */
     var preview=document.getElementById('previewBox');
     if(preview)preview.addEventListener('click',function(e){
       if(!open)return;var hit=e.target.closest('[data-hf-slot]');if(!hit)return;
@@ -159,6 +166,12 @@
     });
     document.addEventListener('keydown',function(e){if(open&&e.key==='Escape'&&!e.defaultPrevented){setOpen(false);e.preventDefault();}});
   }
-  SF.HeaderFooterUI={refresh:refresh,close:function(){setOpen(false);}};
+  SF.HeaderFooterUI={
+    refresh:refresh,
+    mount:mount,
+    /* Called on every draw of a different pane, so it has to be cheap and
+       idempotent — only the canvas outlines and the open flag come off. */
+    close:function(){ if(open) setOpen(false); }
+  };
   install();
 })();

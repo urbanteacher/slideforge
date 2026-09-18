@@ -881,7 +881,7 @@ export interface Activity {
  * `src/` itself reads back off the namespace.
  */
 export interface SlideForgeGlobal {
-  HeaderFooterUI?: { refresh(): void; close(): void };
+  HeaderFooterUI?: { refresh(): void; mount(host: HTMLElement): void; close(): void };
   /**
    * Optional because the namespace is assembled across script tags, not
    * created complete. `js/ask.js` and its siblings run before the model

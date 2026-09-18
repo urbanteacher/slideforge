@@ -377,7 +377,7 @@ html[data-ws="game"] #btnSorter { display: none; }
 /* The panel hidden. Specificity (#app + class) beats the plain #app rules in
    the width media queries below, so those do not need their own copy. */
 #app.no-inspector { grid-template-columns: 216px 1fr 0; }
-#app.no-inspector .side-column { display: none; }
+#app.no-inspector .inspector { display: none; }
 
 .notes-strip {
   border-top: 1px solid var(--ui-line);
@@ -397,35 +397,8 @@ html[data-ws="game"] #btnSorter { display: none; }
 
 /* inspector -------------------------------------------------------------- */
 
-/* The right column carries two panes: whichever canvas face is open, above the
-   inspector. Putting the faces here rather than under the canvas is the whole
-   point — an eighteen-control header/footer form in the canvas bar left the
-   slide 169px tall on a 900px window, which is the wrong way round for a tool
-   whose job is arranging that slide. */
-.side-column {
-  grid-area: inspector;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-.canvas-face-panel {
-  flex: 0 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  background: var(--ui-panel);
-  border-left: 1px solid var(--ui-line);
-  border-bottom: 1px solid var(--ui-line);
-  padding: 12px 14px;
-}
-/* No JS toggles this host. It is there when one of the faces inside it is,
-   which keeps the three modules from each having to know about the column. */
-.canvas-face-panel { display: none; }
-.canvas-face-panel:has(> *:not([hidden])) { display: block; max-height: 62%; }
-
 .inspector {
-  flex: 1 1 auto;
-  min-height: 0;
+  grid-area: inspector;
   background: var(--ui-panel);
   border-left: 1px solid var(--ui-line);
   overflow-y: auto;
@@ -6711,3 +6684,10 @@ html[data-ws="deck"] #railCount { display: none; }
 .canvas-region-targets button:is(:hover,:focus-visible,.snap-active) { border-style:solid; border-color:#172d22; outline:3px solid #e4f178; background:#e4f178; }
 .canvas-region-hint { grid-column:1/-1; grid-row:2; align-self:start; justify-self:center; margin-top:8px; padding:10px 16px; background:#172d22; color:#fff; border-radius:8px; font:18px/1.3 system-ui; }
 @media (hover:none) { .canvas-region-handle { opacity:1; } }
+
+/* The three canvas faces, above the pane switcher. Same chip row as
+   .design-panes so the column reads as one control surface rather than two
+   conventions stacked; they were in the canvas bar until 2026-09-18, where
+   they wrapped it to two rows and pushed Panel onto a line of its own. */
+.canvas-faces { flex-wrap: wrap; }
+.canvas-faces .btn { flex: 1 1 auto; }
