@@ -1501,7 +1501,15 @@
         set: function (on) { designPane = on ? 'chrome' : 'edit'; drawInspector(); } }
     ].forEach(function (face) {
       var on = face.isOn();
-      var b = UI.button(face.label, on ? 'active' : 'ghost', function () { face.set(!on); });
+      /* Asked again at click time, not closed over from draw time. The faces
+         set their own state and repaint the canvas, not the rail, so nothing
+         rebuilt this row when one turned on — and a handler holding the `on`
+         it was built with kept calling set(true). ▦ Layout could be turned on
+         and then never off: four clicks, still arranging. Found by
+         tools/smoke/layout-face.mjs, which needed to leave the face. */
+      var b = UI.button(face.label, on ? 'active' : 'ghost', function () {
+        face.set(!face.isOn());
+      });
       b.id = face.id;
       b.title = face.title;
       b.setAttribute('aria-pressed', String(on));

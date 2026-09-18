@@ -279,6 +279,99 @@
     afterPaint();
   }
 
+  /* ------------------------------------------------------------ free blocks
+     Add a block, duplicate one, remove one. The last thing the authoring audit
+     found blocked, and the only one of the four that needed the model to grow
+     rather than the arrange bar: every other block on a slide exists because
+     the layout drew it, so there was nothing to add.
+
+     A free block is placed where there is room rather than at the origin, and
+     it gets a region immediately — without one it would flow at the end of the
+     pad and the author would have to find it. */
+  function freeRows(map, cols) {
+    var g = L();
+    var taken = [];
+    Object.keys(map || {}).forEach(function (k) {
+      var r = map[k];
+      if (!r) return;
+      for (var i = 0; i < r.rows; i++) taken[r.row + i] = true;
+    });
+    for (var row = 1; row <= g.rows; row++) if (!taken[row]) return row;
+    /* Nothing free: under everything, which the fit report will then say is
+       past the slide. Better than silently landing on top of something. */
+    var lowest = 1;
+    Object.keys(map || {}).forEach(function (k) {
+      var r = map[k];
+      if (r) lowest = Math.max(lowest, r.row + r.rows);
+    });
+    return lowest;
+  }
+
+  function addBlock(kind) {
+    var s = slide();
+    if (!s) return;
+    var spec = (SF.FREE_KINDS && SF.FREE_KINDS[kind]) || (SF.FREE_KINDS && SF.FREE_KINDS.text);
+    if (!spec) return;
+    var list = SF.freeBlocksOf(s, true);
+    var id = 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    list.push({ id: id, kind: kind, text: '' });
+    var map = regionsOf(s, true);
+    /* Seed the rest of the slide first when it has never been arranged, or the
+       new block would be the only thing with a region and everything else
+       would keep following the theme. Entering the Layout face already seeds,
+       so this is a safety net rather than the usual path — and seed() measures
+       the current render, which does not yet contain the new block, which is
+       exactly what is wanted here. */
+    if (!Object.keys(map).length) seed();
+    map = regionsOf(s, true);
+    map[SF.freeBlockKey(id)] = {
+      col: 1, row: freeRows(map, spec.cols), cols: spec.cols, rows: spec.rows
+    };
+    selected = SF.freeBlockKey(id);
+    selectedSlide = s;
+    commit(true);
+    afterPaint();
+    SF.toast && SF.toast(spec.label + ' added. Click it to type, drag to move.');
+  }
+
+  function duplicateBlock() {
+    var s = slide();
+    var id = selected && SF.freeBlockId && SF.freeBlockId(selected);
+    if (!s || !id) return;
+    var block = SF.freeBlockById(s, id);
+    var map = regionsOf(s, true);
+    var from = map[selected];
+    if (!block || !from) return;
+    var copyId = 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    SF.freeBlocksOf(s, true).push({ id: copyId, kind: block.kind, text: block.text });
+    /* One row below the original, not on top of it: a copy you cannot see is
+       indistinguishable from a copy that did not happen. */
+    var g = L();
+    map[SF.freeBlockKey(copyId)] = {
+      col: from.col, row: Math.min(g.rows, from.row + from.rows), cols: from.cols, rows: from.rows,
+      alignY: from.alignY
+    };
+    selected = SF.freeBlockKey(copyId);
+    commit(true);
+    afterPaint();
+    SF.toast && SF.toast('Copied, one row below.');
+  }
+
+  function removeBlock() {
+    var s = slide();
+    var id = selected && SF.freeBlockId && SF.freeBlockId(selected);
+    if (!s || !id) return;
+    var key = selected;
+    s.blocks = SF.freeBlocksOf(s).filter(function (b) { return String(b.id) !== String(id); });
+    var map = regionsOf(s);
+    if (map) delete map[key];
+    if (s.formatting) delete s.formatting[key];
+    selected = null;
+    commit(true);
+    afterPaint();
+    SF.toast && SF.toast('Removed.');
+  }
+
   /* Give the block the lines its words actually need, and push the rest down.
      The bridge between "I typed a longer heading" and "the slide is arranged
      again": the tariff still does not grow from paint, because rearranging a
@@ -354,6 +447,20 @@
     if (ay) ay.value = (region && region.anchorY) || '';
     var al = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeAlignY'));
     if (al) al.value = (region && region.alignY) || '';
+    /* Duplicate and Remove answer to a free block, not to any selection: a
+       block the layout drew has no copy on the slide to duplicate and nothing
+       to delete — removing it would mean removing the field it renders, which
+       is the rail's job and a different act. Same asymmetry as ✕ in the art
+       bar, and the title says why rather than the button just being dead. */
+    var isFree = !!(selected && SF.freeBlockId && SF.freeBlockId(selected));
+    [['btnArrangeDuplicate', 'Copy this block, one row below'],
+     ['btnArrangeRemove', 'Remove this block from the slide']].forEach(function (pair) {
+      var b = /** @type {HTMLButtonElement|null} */ (document.getElementById(pair[0]));
+      if (!b) return;
+      b.disabled = !isFree;
+      b.title = isFree ? pair[1]
+        : 'Only a block you added can be copied or removed — this one is part of the layout';
+    });
     var fitBtn = /** @type {HTMLButtonElement|null} */ (document.getElementById('btnArrangeFit'));
     if (fitBtn) {
       var v0 = selected && verdictFor(selected);
@@ -469,6 +576,19 @@
     if (reset) reset.addEventListener('click', resetArrangement);
     var fit = document.getElementById('btnArrangeFit');
     if (fit) fit.addEventListener('click', fitToText);
+    var adder = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeAdd'));
+    if (adder) {
+      var addPicker = adder;
+      addPicker.addEventListener('change', function () {
+        var kind = addPicker.value;
+        addPicker.value = '';
+        if (kind) addBlock(kind);
+      });
+    }
+    var dup = document.getElementById('btnArrangeDuplicate');
+    if (dup) dup.addEventListener('click', duplicateBlock);
+    var kill = document.getElementById('btnArrangeRemove');
+    if (kill) kill.addEventListener('click', removeBlock);
     ['X','Y'].forEach(function(axis){
       var control = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeAnchor' + axis));
       if (!control) return;

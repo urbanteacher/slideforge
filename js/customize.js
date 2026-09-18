@@ -4,7 +4,19 @@
   'use strict';
   var SF = global.SF;
   var color = function (v) { return /^#[0-9a-f]{6}$/i.test(v || '') ? v : ''; };
-  function value(s, key) { return String(key.indexOf('bullets.') === 0 ? s.bullets[Number(key.split('.')[1])] || '' : s[key] || ''); }
+  /* The one reader every part of the marks engine goes through, so a new place
+     for words has to be taught here and nowhere else. storedText below is the
+     same knowledge for the canvas editor; they are kept apart because this one
+     is called on every paint of every block and must stay a single expression.
+     Blocks the author added live in slide.blocks, keyed blocks.<id>. */
+  function value(s, key) {
+    if (key.indexOf('bullets.') === 0) return String(s.bullets[Number(key.split('.')[1])] || '');
+    if (key.indexOf('blocks.') === 0) {
+      var block = SF.freeBlockById && SF.freeBlockById(s, key.slice(7));
+      return String((block && block.text) || '');
+    }
+    return String(s[key] || '');
+  }
   function entry(s, key) {
     var e = s.formatting && s.formatting[key];
     return e && e.text === value(s, key) && Array.isArray(e.marks) ? e : {text:value(s,key), marks:[]};
@@ -318,17 +330,37 @@
     var stored = storedText(s, key);
     if (/\t/.test(stored)) return false;
     var flat = function (v) { return String(v || '').replace(/\s+/g, ' ').trim(); };
+    /* An empty block round-trips trivially and must still be editable — it is
+       added before it is written into, and the placeholder it draws is a CSS
+       pseudo-element rather than text, so there is nothing to compare. */
+    if (!flat(stored) && node.dataset && node.dataset.placeholder) return true;
     return flat(node.textContent) === flat(stored);
   }
 
+  /* Three places a block's words can live: a bullet in the list, a block the
+     author added, or a named field on the slide. The canvas editor, the marks
+     engine and the fit check all index by content key, so this is the one
+     place that has to know which is which. */
   function storedText(s, key) {
     var m = /^bullets\.(\d+)$/.exec(key);
-    return m ? String((s.bullets || [])[Number(m[1])] || '') : String(s[key] || '');
+    if (m) return String((s.bullets || [])[Number(m[1])] || '');
+    var free = SF.freeBlockId && SF.freeBlockId(key);
+    if (free) {
+      var block = SF.freeBlockById(s, free);
+      return String((block && block.text) || '');
+    }
+    return String(s[key] || '');
   }
   function writeText(s, key, v) {
     var m = /^bullets\.(\d+)$/.exec(key);
-    if (m) s.bullets[Number(m[1])] = v;
-    else s[key] = v;
+    if (m) { s.bullets[Number(m[1])] = v; return; }
+    var free = SF.freeBlockId && SF.freeBlockId(key);
+    if (free) {
+      var block = SF.freeBlockById(s, free);
+      if (block) block.text = v;
+      return;
+    }
+    s[key] = v;
   }
 
   var inlineEdit = null;

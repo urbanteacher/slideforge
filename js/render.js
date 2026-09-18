@@ -295,6 +295,72 @@
     return true;
   };
 
+  /* ---------------------------------------------------------- free blocks
+     A block the author added, rather than one a layout produced.
+
+     Every other block on a slide exists because the slide type and its
+     composition drew it: title, subtitle, bullets, the four choices of a
+     ballot. That is why the authoring audit found no way to add one, duplicate
+     one or delete one — there was nothing to add, because a block was not a
+     thing the model had. slide.blocks is that thing, and it is additive in the
+     same way slide.art.pictures is: a slide without any renders exactly as it
+     did, and no layout is touched.
+
+     The key is a content key, deliberately. blockKeyOf prefers
+     data-content-key, so a free block's region lands in design.regions under
+     the same name as everything else, and move, resize, anchors, alignY,
+     push-down and Fit to text all work on it without another line of code.
+     It is also what makes the text editable: the canvas editor and the marks
+     engine both index by content key. */
+  var FREE_KINDS = {
+    heading: { tag: 'h3', cls: 'free-heading', label: 'Heading', rows: 2, cols: 6 },
+    text: { tag: 'p', cls: 'free-text', label: 'Text', rows: 2, cols: 6 },
+    note: { tag: 'div', cls: 'free-note', label: 'Note', rows: 1, cols: 4 }
+  };
+  SF.FREE_KINDS = FREE_KINDS;
+  SF.freeBlockKey = function (id) { return 'blocks.' + id; };
+  SF.freeBlockId = function (key) {
+    var m = /^blocks\.(.+)$/.exec(String(key || ''));
+    return m ? m[1] : null;
+  };
+  SF.freeBlocksOf = function (slide, make) {
+    if (!slide) return [];
+    if (!Array.isArray(slide.blocks)) {
+      if (!make) return [];
+      slide.blocks = [];
+    }
+    return slide.blocks;
+  };
+  SF.freeBlockById = function (slide, id) {
+    return SF.freeBlocksOf(slide).find(function (b) { return String(b.id) === String(id); }) || null;
+  };
+
+  SF.renderFreeBlocks = function (root, slide) {
+    var list = SF.freeBlocksOf(slide).filter(function (b) { return b && b.id; });
+    if (!list.length) return 0;
+    var host = SF.latticeHost(root);
+    if (!host) return 0;
+    list.forEach(function (block) {
+      var spec = FREE_KINDS[block.kind] || FREE_KINDS.text;
+      var key = SF.freeBlockKey(block.id);
+      var node = el(spec.tag, 'free-block ' + spec.cls);
+      node.dataset.contentKey = key;
+      node.dataset.freeBlock = String(block.id);
+      /* Empty is a real state: a block is added before it is written into, and
+         a zero-height box cannot be clicked to write into it. */
+      var text = String(block.text == null ? '' : block.text);
+      if (!text.trim()) node.dataset.placeholder = spec.label;
+      /* The text first, then the marks. SF.Custom.paint only decorates — it
+         returns without touching the node when a block carries no formatting —
+         which is why rich() sets the text before calling it, and why calling
+         paint alone rendered every free block empty. */
+      node.textContent = text;
+      if (SF.Custom) SF.Custom.paint(node, slide, key, text);
+      host.appendChild(node);
+    });
+    return list.length;
+  };
+
   /* ------------------------------------------------------------- push-down
      Make a block taller and the blocks under it move down, instead of landing
      on top of each other. Engine 3's rule, carried over: each gap travels with
@@ -5503,6 +5569,9 @@
     SF.declareBodyRegion(root,slide);
     if (SF.Explore) SF.Explore.render(root, pad, slide, opts);
     if (SF.Custom) SF.Custom.layout(root, slide);
+    /* Blocks the author added, before regions are applied so the lattice
+       places them like any other block. */
+    SF.renderFreeBlocks(root, slide);
     /* Last, once compositions, boards, Explore and Customise have all finished
        shaping the pad: regions are the slide's explicit arrangement, so they
        are applied to whatever those produced rather than racing them. */

@@ -64,6 +64,22 @@ try {
   assert.ok(slots.includes('title'), 'the heading should be a block');
   checks++;
 
+  /* 1b. And the button turns it off again. It did not: the faces row reads
+         each face's state when it is built and the faces repaint the canvas
+         rather than the rail, so a handler closed over the `on` it was built
+         with kept calling set(true). Four clicks, still arranging. Worth its
+         own check because every other check here would pass either way. */
+  const toggles = [];
+  for (let i = 0; i < 4; i++) {
+    await page.click('#btnArrange');
+    await page.waitForTimeout(500);
+    toggles.push(await page.evaluate(() => SF.Arrange.isArranging()));
+  }
+  assert.deepEqual(toggles, [false, true, false, true],
+    `▦ Layout should alternate, got ${JSON.stringify(toggles)}`);
+  await page.waitForSelector('#previewBox.arranging .sf-slot', { timeout: 10000 });
+  checks++;
+
   const bar = () => page.textContent('#arrangeWhat');
   /* Keyed rather than positional, because the controls do not all answer to a
      selection the same way: Fit to text stays off for a block that already has
@@ -345,6 +361,137 @@ try {
   assert.ok(packed.bottom.above > 1, `bottom should actually move it, ${packed.bottom.above} rows down`);
   checks++;
 
+  /* 7c. Blocks the author adds. The last thing the authoring audit found
+         blocked, and the only one that needed the model to grow rather than
+         the arrange bar: every other block on a slide exists because the
+         layout drew it, so there was nothing to add. A free block is keyed
+         blocks.<id>, which is a content key, so it gets a region under the
+         same name as everything else and move, resize, align, push-down and
+         Fit to text all work on it with no new code. These checks prove that
+         claim rather than restating it. */
+  await page.evaluate(() => {
+    const s = SF.Editor.currentSlide();
+    s.title = 'Add a block';
+    s.blocks = [];
+    s.design.regions = { title: { col: 1, row: 1, cols: 11, rows: 2 },
+                         'block-1': { col: 1, row: 3, cols: 11, rows: 4 } };
+    SF.Editor.refreshCanvas();
+    SF.Arrange.afterPaint();
+  });
+  await page.waitForTimeout(600);
+  await page.selectOption('#arrangeAdd', 'text');
+  await page.waitForTimeout(800);
+  const added = await page.evaluate(() => {
+    const s = SF.Editor.currentSlide();
+    const id = s.blocks[0]?.id;
+    return {
+      count: s.blocks.length, kind: s.blocks[0]?.kind, text: s.blocks[0]?.text,
+      key: id ? 'blocks.' + id : null,
+      region: id ? s.design.regions['blocks.' + id] : null,
+      slot: !!document.querySelector('#previewBox .sf-slot[data-block-key="blocks.' + id + '"]'),
+      selected: document.querySelector('#previewBox [data-arrange-selected]')?.dataset.blockKey,
+      placeholder: document.querySelector('#previewBox .free-block')?.dataset.placeholder,
+      adderReset: document.getElementById('arrangeAdd').value,
+    };
+  });
+  assert.equal(added.count, 1, 'the adder should put one block on the slide');
+  assert.equal(added.kind, 'text', 'of the kind that was chosen');
+  assert.equal(added.text, '', 'empty, because it is added before it is written into');
+  assert.equal(added.placeholder, 'Text', 'and drawing a placeholder, or it could not be clicked');
+  assert.ok(added.slot, 'the lattice should place it like any other block');
+  /* Row 7, not row 1: the first free row under everything already there, since
+     a new block that lands on top of the heading looks like a bug. */
+  assert.equal(added.region.row, 7, `placed in the first free row, got ${added.region.row}`);
+  assert.equal(added.selected, added.key, 'and selected, so it can be moved straight away');
+  assert.equal(added.adderReset, '', 'the adder should return to its prompt, not stay on a kind');
+  checks++;
+
+  /* Typing into it, through the same click-to-edit path as any other block.
+     The face has to be off first and be seen to be off: while it is on, a
+     slot's children declare pointer-events:none and the slot itself takes the
+     click, which Playwright reports as the slot intercepting it. */
+  await page.click('#btnArrange');
+  await page.waitForSelector('#previewBox.arranging', { state: 'detached', timeout: 10000 });
+  await page.waitForTimeout(400);
+  await page.click(`#previewBox [data-content-key="${added.key}"]`);
+  await page.waitForTimeout(400);
+  assert.equal(await page.getAttribute(`#previewBox [data-content-key="${added.key}"]`, 'contenteditable'),
+    'plaintext-only', 'an empty free block must still be editable in place');
+  await page.evaluate((k) => {
+    const n = document.querySelector('#previewBox [data-content-key="' + k + '"]');
+    n.textContent = 'Typed into a block I added';
+    n.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    n.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  }, added.key);
+  await page.waitForTimeout(700);
+  assert.equal(await page.evaluate(() => SF.Editor.currentSlide().blocks[0].text),
+    'Typed into a block I added', 'typing should reach slide.blocks');
+  assert.equal(await page.textContent(`#previewBox [data-content-key="${added.key}"]`),
+    'Typed into a block I added', 'and be drawn');
+  /* And on the shared path, which is what the player, print and the review all
+     use. paint() only decorates, so setting the text is the renderer's job —
+     calling paint alone drew every free block empty. */
+  assert.equal(await page.evaluate(() => {
+    const d = SF.Editor.deck(), s = SF.Editor.currentSlide();
+    const n = SF.renderSlide(d, s, { interactive: false, revealed: 9999, index: 0, total: 1 });
+    return n.querySelector('.free-block')?.textContent;
+  }), 'Typed into a block I added', 'and drawn by the shared renderer too');
+  checks++;
+
+  /* Duplicate and remove, and the asymmetry: a block the layout drew has no
+     copy on the slide to duplicate and nothing of its own to delete. */
+  await page.click('#btnArrange');
+  await page.waitForSelector('#previewBox.arranging .sf-slot', { timeout: 10000 });
+  await page.waitForTimeout(400);
+  at = await centreOf(`.sf-slot[data-block-key="${added.key}"]`);
+  await page.mouse.click(at.x, at.y);
+  await page.waitForTimeout(350);
+  await page.click('#btnArrangeDuplicate');
+  await page.waitForTimeout(800);
+  const copied = await page.evaluate(() => {
+    const s = SF.Editor.currentSlide();
+    return { n: s.blocks.length, texts: s.blocks.map((b) => b.text),
+             rows: s.blocks.map((b) => s.design.regions['blocks.' + b.id]?.row),
+             selected: document.querySelector('#previewBox [data-arrange-selected]')?.dataset.blockKey,
+             copyKey: 'blocks.' + s.blocks[1].id };
+  });
+  assert.equal(copied.n, 2, 'duplicate should make a second block');
+  assert.deepEqual(copied.texts, ['Typed into a block I added', 'Typed into a block I added'],
+    'carrying the words');
+  assert.equal(copied.rows[1], copied.rows[0] + 2,
+    `one block-height below the original, not on top of it — got rows ${copied.rows.join(' and ')}`);
+  assert.equal(copied.selected, copied.copyKey, 'and the copy is what is selected');
+  checks++;
+
+  at = await centreOf('.sf-slot[data-block-key="title"]');
+  await page.mouse.click(at.x, at.y);
+  await page.waitForTimeout(350);
+  assert.equal(await page.isDisabled('#btnArrangeDuplicate'), true,
+    'a block the layout drew cannot be duplicated');
+  assert.equal(await page.isDisabled('#btnArrangeRemove'), true, 'nor removed');
+  assert.match(await page.getAttribute('#btnArrangeRemove', 'title'), /part of the layout/,
+    'and the button should say why rather than just being dead');
+  checks++;
+
+  at = await centreOf(`.sf-slot[data-block-key="${copied.copyKey}"]`);
+  await page.mouse.click(at.x, at.y);
+  await page.waitForTimeout(350);
+  await page.click('#btnArrangeRemove');
+  await page.waitForTimeout(800);
+  const removed = await page.evaluate((k) => {
+    const s = SF.Editor.currentSlide();
+    return { n: s.blocks.length, regionGone: !s.design.regions[k],
+             formattingGone: !(s.formatting || {})[k],
+             slots: [...document.querySelectorAll('#previewBox .sf-slot')].map((n) => n.dataset.blockKey),
+             selectionGone: !document.querySelector('#previewBox [data-arrange-selected]') };
+  }, copied.copyKey);
+  assert.equal(removed.n, 1, 'remove should take the block off the slide');
+  assert.equal(removed.regionGone, true, 'and its region with it, not leave an orphan');
+  assert.equal(removed.formattingGone, true, 'and its formatting');
+  assert.ok(!removed.slots.includes(copied.copyKey), 'and stop drawing it');
+  assert.equal(removed.selectionGone, true, 'and leave nothing selected');
+  checks++;
+
   /* 8. Reset drops the map, rather than writing regions that match the theme —
         so a later theme change still moves the slide. */
   await page.click('#btnArrangeReset');
@@ -404,6 +551,7 @@ try {
     + `gap in one click, narrowing frees one contiguous half, an anchor sticks, text packs to `
     + `the top, middle or `
     + `bottom of its own rows, the bar speaks SF.latticeFit, `
+    + `blocks can be added, typed into, duplicated and removed while layout blocks cannot, `
     + `Theme drops the map and Escape finishes`);
 } finally {
   await browser.close();

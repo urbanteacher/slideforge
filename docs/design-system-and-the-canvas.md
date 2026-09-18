@@ -2313,9 +2313,50 @@ Narrowing a block away from full width now pins it to column 1, so what is
 freed is one contiguous half rather than a sliver on each side. Also Engine 3's
 rule, and the closest the lattice has to splitting a row.
 
-**Still open: add and remove blocks.** Splitting by rows waits on it, and so
-does everything else left blocked, because none of it is really about the
-lattice. A block's kind comes from the slide type and its composition, so a
-free block needs its own content model first: what it is, what it holds, how it
-is keyed for formatting, and what the fit check measures it against. That is a
-decision about the content model, not a control to add to the arrange bar.
+**Then built: blocks the author adds.** `slide.blocks` — an array of
+`{ id, kind, text }` where `kind` is `heading`, `text` or `note` — additive in
+the same way `slide.art.pictures` is, so a slide without any renders exactly as
+it did and no layout is touched.
+
+The whole design turns on one choice: **the key is a content key**,
+`blocks.<id>`. `blockKeyOf` prefers `data-content-key`, so a free block's region
+lands in `design.regions` under the same name as everything else, and move,
+resize, anchors, `alignY`, push-down and Fit to text all work on it without a
+line of code of their own. The same key makes it editable, because the canvas
+editor and the marks engine both index by content key. One field on the model
+reached four subsystems by going with their grain instead of around it.
+
+**＋ Block** places a new block in the first free row with a region of its own
+— not at the origin, where it would land on the heading and look like a fault.
+**⧉** copies one a block-height below, and **✕** removes it along with its
+region and its formatting. Both are off for a block the layout drew: that one
+has no copy on the slide to duplicate and nothing of its own to delete, and the
+button's title says so rather than being silently dead.
+
+Two things that had to be right for it to work at all, and were not at first.
+
+`SF.Custom.paint` only *decorates* — it returns without touching the node when a
+block carries no formatting, which is why `rich()` sets the text before calling
+it. Calling `paint` alone drew every free block empty.
+
+`value(s, key)` is the single reader the whole marks engine goes through, and it
+knew only `bullets.N` and `slide[key]`. A new place for words has to be taught
+there and nowhere else; `storedText` in customize.js is the same knowledge for
+the canvas editor, kept separate because `value` is called on every paint of
+every block and has to stay one expression.
+
+**And a live bug the smoke found on the way.** `drawDesignPaneTabs` read each
+face's state when it built the row and closed over it, and the faces repaint the
+canvas rather than the rail — so nothing rebuilt the row when one turned on, and
+the handler kept calling `set(true)`. **▦ Layout and ◇ Artwork could be turned
+on and never off**: four clicks, still arranging. Asked at click time now, and
+pinned by its own check, because every other assertion in that file passed
+either way.
+
+**What is left, narrower than it was.** A layout block's kind is still the
+composition's to decide, and a ballot's four choices are one block — so its
+letters cannot be replaced or moved individually. That is a composition
+question, not a lattice one. A block you added cannot change kind after the
+fact; delete and add. And a picture is still the artwork layer: no region, so
+nothing reflows around it. Giving artwork a region would make it a block, which
+is probably the next thing worth arguing about.

@@ -140,3 +140,23 @@
   padding: 0 2px;
 }
 .arrange-bar .canvas-bar-btn[disabled] { opacity: .4; cursor: not-allowed; }
+
+/* --------------------------------------------------------------- free blocks
+   A block the author added, rather than one the layout drew. It inherits the
+   slide's type from the theme sheet wherever the theme names an element — an
+   h3 in a studio slide already looks like a studio h3 — so only what the theme
+   cannot know is set here: that an empty one still has to be clickable, and
+   that it must not invent margins the slot has already taken responsibility
+   for (.sf-slot > * zeroes them). */
+.free-block { min-height: 1em; }
+.free-block[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  opacity: .38;
+  font-style: italic;
+}
+/* A note is the one kind the themes have no element for, so it gets a size and
+   a colour of its own rather than inheriting a paragraph's. */
+.free-note {
+  font: 500 20px/1.4 system-ui;
+  opacity: .78;
+}

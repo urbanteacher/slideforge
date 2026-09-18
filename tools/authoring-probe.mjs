@@ -230,33 +230,62 @@ try {
       : 'Nothing below moves down and there is no action that makes it.'));
 
   // ==================== 4. add, duplicate or delete a block on the canvas
-  const blockOps = await controls();
-  note('4. add, duplicate or delete a block', 'partly',
-    'Arrange bar offers only: ' + blockOps.arrangeBar.map((s) => s.split(':')[0]).filter(Boolean).join(', ')
-    + '. No add, no duplicate, no delete of a block. '
-    + 'Rail buttons include: ' + blockOps.railButtons.filter((t) => /^[+×]|Add|Remove|Duplicate/.test(t))
-      .join(', ')
-    + ' — so bullets can be added and removed there, per slide type, but a block cannot be '
-    + 'duplicated and a new block of a chosen kind cannot be created at all.');
+  const blocked4 = await page.evaluate(async () => {
+    const adder = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeAdd'));
+    if (!adder) return null;
+    const s = SF.Editor.currentSlide();
+    s.blocks = [];
+    SF.Editor.refreshCanvas();
+    SF.Arrange.afterPaint();
+    await new Promise((x) => setTimeout(x, 500));
+    adder.value = 'note';
+    adder.dispatchEvent(new Event('change'));
+    await new Promise((x) => setTimeout(x, 700));
+    const after = SF.Editor.currentSlide();
+    const id = after.blocks[0] && after.blocks[0].id;
+    const key = id ? 'blocks.' + id : null;
+    const dup = document.getElementById('btnArrangeDuplicate');
+    const rm = document.getElementById('btnArrangeRemove');
+    return {
+      kinds: [...adder.options].map((o) => o.value).filter(Boolean),
+      made: after.blocks.length,
+      key,
+      region: key ? after.design.regions[key] : null,
+      slotted: !!document.querySelector('#previewBox .sf-slot[data-block-key="' + key + '"]'),
+      canDuplicate: dup ? !dup.disabled : null,
+      canRemove: rm ? !rm.disabled : null,
+    };
+  });
+  note('4. add, duplicate or delete a block', blocked4 ? 'reached' : 'blocked',
+    blocked4
+      ? `＋ Block adds one of ${blocked4.kinds.join(', ')}. A note landed at row `
+        + `${blocked4.region.row}, ${blocked4.region.rows} rows by ${blocked4.region.cols} — the `
+        + `first free row, with a region of its own, in a lattice slot keyed ${blocked4.key}. `
+        + `Duplicate ${blocked4.canDuplicate ? 'and' : 'but not'} remove `
+        + `${blocked4.canRemove ? 'are' : 'is'} live for it, and both are off for a block the `
+        + `layout drew: that one has no copy on the slide to duplicate and nothing of its own `
+        + `to delete. Because the key is a content key, move, resize, anchors, alignY, `
+        + `push-down and Fit to text all work on it with no code of their own.`
+      : 'No add, no duplicate, no delete of a block.');
 
   // ============================= 5. split a region to hold two things
   const split = await page.evaluate(() => {
     const ids = [...document.querySelectorAll('#arrangeBar [id]')].map((n) => n.id);
     return { ids, hasSplit: ids.some((i) => /split|divide|half/i.test(i)) };
   });
-  note('5. split a region to add an item', 'half reached',
-    `Columns: narrowing a full-width block now pins it to column 1, so what is freed is one `
-    + `contiguous half rather than a sliver on each side, and another block can be moved into `
-    + `it. Rows: no operation takes one region and makes two. `
-    + `Either way the half that is freed can only be filled by a block that already exists — `
-    + `which is scenario 4, not this one. Arrange bar ids: ${split.ids.join(', ')}.`);
+  note('5. split a region to add an item', 'reached in two moves',
+    `There is still no one operation that takes a region and makes two, but the two moves it `
+    + `needs both exist now: narrowing a full-width block pins it to column 1, so what is freed `
+    + `is one contiguous half, and ＋ Block puts something in it. Shortening a block frees rows `
+    + `the same way. Arrange bar ids: ${split.ids.join(', ')}.`);
 
   // ==================== 6. change what an item is, not just what it says
-  note('6. change an item from text to an icon or a picture', 'blocked',
-    'A block\'s kind comes from the slide type and its composition. The Layout pane changes the '
-    + 'whole slide\'s shape, not one block\'s kind. Artwork can place a picture anywhere, but it '
-    + 'is a free-floating layer with no region, so it does not take a row and nothing reflows '
-    + 'around it.');
+  note('6. change an item from text to an icon or a picture', 'partly',
+    'A layout block\'s kind still comes from the slide type and its composition, and the Layout '
+    + 'pane changes the whole slide\'s shape rather than one block\'s kind. A block you added has '
+    + 'a kind — heading, text or note — but no control to change it after the fact: delete and '
+    + 'add is the path. A picture is still the artwork layer, free-floating with no region, so it '
+    + 'does not take a row and nothing reflows around it.');
 
   // ==================================== 7. from an empty deck: AiAd27 2-6
   const fromScratch = await page.evaluate(() => {
@@ -303,21 +332,28 @@ try {
   console.log('  ' + blocked + ' of ' + found.length + ' blocked.');
   console.log('');
   console.log('THE SHAPE OF THE GAP');
-  console.log('  The lattice arranges blocks a composition has already made. Everything in the');
-  console.log('  list above that is blocked is a question about the blocks themselves — how many,');
-  console.log('  what kind, where the words sit inside one, what happens to its neighbours when');
-  console.log('  it grows. None of those is a position, which is the only thing a region stores.');
+  console.log('  It was five of eight blocked, and every one was a question about the blocks');
+  console.log('  themselves — how many, what kind, where the words sit inside one, what happens');
+  console.log('  to its neighbours when it grows. None of those is a position, which was the');
+  console.log('  only thing a region stored.');
   console.log('');
-  console.log('  Four things would close it. Three are done:');
-  console.log('    1. align within a region  — DONE. region.alignY, top | middle | bottom.');
-  console.log('    2. push-down on growth    — DONE. SF.restackRegions, plus Fit to text.');
-  console.log('    3. split by columns       — DONE. Narrowing from full width frees one half.');
-  console.log('       Splitting by rows is not, and would need the fourth to be useful.');
-  console.log('    4. add and remove blocks  — STILL OPEN, and the hard one. A block\'s kind');
-  console.log('       comes from the slide type and its composition, so a free block would need');
-  console.log('       its own content model: what it is, what it holds, how it is keyed for');
-  console.log('       formatting, and what the fit check measures it against. Everything left');
-  console.log('       blocked above waits on that one decision, not on the lattice.');
+  console.log('  All four are done:');
+  console.log('    1. align within a region  — region.alignY, top | middle | bottom.');
+  console.log('    2. push-down on growth    — SF.restackRegions, plus ↕ Fit to text.');
+  console.log('    3. split                  — narrow or shorten to free a half, then add.');
+  console.log('    4. add and remove blocks  — slide.blocks, keyed blocks.<id>, which is a');
+  console.log('       content key: the lattice, the marks engine, the canvas editor and the');
+  console.log('       fit check all index by content key, so one field on the model reached');
+  console.log('       all four of them without a line of code in any.');
+  console.log('');
+  console.log('  What is left is narrower than it was, and worth saying plainly:');
+  console.log('    · a layout block\'s kind is still the composition\'s to decide, and a ballot\'s');
+  console.log('      four choices are one block, so its letters cannot be replaced or moved');
+  console.log('      individually. That is a composition question, not a lattice one.');
+  console.log('    · a block you added cannot change kind after the fact; delete and add.');
+  console.log('    · a picture is still the artwork layer: no region, so nothing reflows');
+  console.log('      around it. Giving artwork a region would make it a block, which is');
+  console.log('      probably the next thing worth arguing about.');
   console.log('');
 } finally {
   await browser.close();
