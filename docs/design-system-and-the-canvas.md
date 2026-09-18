@@ -1966,6 +1966,144 @@ feature.
 Three tests went with the features they covered: `canvas-split`,
 `canvas-cards`, `artwork` and `artwork-transform`. 432 tests pass.
 
+## 18. The engineering axis: what "scale" costs here
+
+The review so far has argued about what a slide *is*. This section is about
+whether the code around that answer can carry more of it. The brief was "canvas
+is the main engine, with the structure to scale, to industry standard", so the
+measurements below are of structure, not semantics. Taken 2026-09-18.
+
+### What is actually there
+
+| | |
+|---|---|
+| `js/` | **50,242** lines, 43 files — 42 of them IIFEs hanging off a global `SF`, loaded by 38 ordered `<script>` tags |
+| `src/` | **9,136** lines, 49 ES modules — of which the build compiles **one entry point** |
+| `css/` | 11,321 lines, 21 files, 17 ordered `<link>` tags |
+| `tests/` | **11,412** lines, 72 files, 435 assertions, plus **51** smoke scripts |
+| dependencies | **0** runtime, 3 dev |
+| CI | none — no `.github/workflows` |
+
+Two of those numbers are genuinely good and worth defending before criticising
+anything: **zero runtime dependencies**, and a test suite larger than a tenth of
+the product. Neither PPTist nor Polotno has the second. The instinct to check
+behaviour by rendering it and measuring the result — `smoke-fit-check`,
+`smoke-demo-deck`, the design-catalogue test — is this codebase's best habit and
+is the reason the canvas work in this session was caught three separate times by
+its own tooling.
+
+### The bifurcation
+
+`tools/build.mjs` has exactly one entry point, `src/model.js → js/model.js`.
+Everything else in `js/` is authored directly. So the tree contains two
+architectures: 49 ES modules with real imports that get bundled, and 43 IIFEs
+that communicate by mutating a shared global and must be listed in the right
+order in two HTML files. `render.js` is 6,249 lines because a file that cannot
+import cannot be split — the size is a *symptom* of the module boundary, not an
+independent problem, which is why "**`render.js`: entry point or registry?**"
+has been open since 2026-09-14 and is listed in §16 as blocking.
+
+This is the single structural fact that limits scale. Everything below is
+downstream of it.
+
+### The typecheck quarantine
+
+`tsconfig.json` carries a hand-maintained list of 31 `js/` files under the
+comment *"The browser layer is fully brought under the TypeScript checker.
+Every authored browser file is checked."*
+
+That claim is false. Ten authored files, **4,408 lines**, are outside it:
+
+    js/ai.js 1603   js/activities.js 1189   js/arrange.js 378   js/artwork.js 367
+    js/callouts.js 195   js/history.js 190   js/print.js 185
+    js/quick-poll.js 134   js/share.js 104   js/slide-clip.js 63
+
+Adding all ten produces **67 errors** across seven of them, so the list is not
+an oversight — it is a quarantine, and the comment hides it. An allowlist that
+has to be edited by hand will always drift toward whatever passes, because the
+cheapest response to a new error is to leave the file off the list.
+
+**Sixteen of those 67 errors are from this session's canvas work** — thirteen in
+`artwork.js`, three in `arrange.js`, all genuine: `target` dereferenced where it
+can be null inside the drag closure, `disabled` set on `Element` rather than
+`HTMLButtonElement`, a null used as an index. Nobody suppressed them. The files
+were simply never added, and nothing exists that would notice. The canvas is
+being proposed as the main engine while being the least-checked code in the
+tree.
+
+### Release hygiene
+
+`index.html` carries **54** hand-maintained `?v=` cache-busting strings. On
+2026-09-18 two assets were changed without bumping either, and the result was
+not a subtle staleness — it was half an hour of a fix appearing not to work,
+because the browser kept serving the old file while the server served the new
+one. A number a human has to remember to increment is not a cache strategy; a
+content hash emitted by the build is.
+
+### No CI
+
+435 tests and 51 smoke scripts run only when someone remembers. Every
+regression this session was caught by a human choosing to run `npm test` — which
+worked, and is exactly the kind of thing that stops working on the first busy
+week. reveal.js runs its suite on GitHub Actions; this repo has the better suite
+and no trigger.
+
+### What the clones actually teach
+
+The data-model comparison is §13's and stands: PPTist and Polotno model a slide
+as a list of elements with transforms, which forfeits reflow, re-theming, aspect
+export and reading order, and 418 authored slides depend on all four. Nothing
+below revisits that.
+
+On *structure* they are ahead, and unsurprisingly:
+
+- **reveal.js** — Vite, TypeScript, core split under `/js`, a real plugin
+  boundary under `/plugin`, `/test`, and GitHub Actions. Its plugin contract is
+  the interesting part: extension happens through a declared interface rather
+  than by adding a branch to the renderer.
+- **PPTist** — Vue 3 and TypeScript throughout, Vite, ESLint, husky and
+  commitlint. One language, one module system, one build. No test suite.
+
+The lesson is not the framework. It is that both have **one** way to author a
+file, and this tree has two. SlideForge's fixed-DOM contract is a better answer
+to the slide problem than either; it is the delivery mechanism around it that is
+a decade older than the ideas inside it.
+
+### The order this implies
+
+The canvas cannot become the main engine before these, in this order:
+
+1. **Settle arrangement precedence.** §17's note is right that this is the most
+   urgent item: three answers now exist — a composition name, a line budget, a
+   cell range — and `applyRegions` runs after `compositions.apply`, so a region
+   wins silently. That precedence is currently held by a line number. It needs
+   to be a written rule with a test, before anything else is built on it.
+2. **Put the canvas under the typechecker.** Sixteen known errors in new code,
+   and the two newest files invisible. Cheapest item on this list, and the one
+   with a session's worth of evidence behind it.
+3. **Answer `render.js`: entry point or registry?** Until it is a registry, the
+   file cannot shrink and no slide type can be added without editing a
+   6,000-line file. This is the gate on everything structural.
+4. **Extend the build past one entry point**, then delete the allowlist — when
+   every authored file is compiled, "is it checked?" stops being a list someone
+   maintains.
+5. **Content-hash the assets** and retire the 54 hand-kept version numbers.
+6. **Run the suite in CI.** Last only because the suite already exists and is
+   good; it simply needs a trigger.
+
+Steps 3 and 4 are the same project, and step 1 is the only one that must happen
+before more canvas work, because it is the only one whose cost rises with every
+slide authored against the wrong precedence.
+
+### What this section does not claim
+
+It does not claim the IIFE layer is bad code — it is disciplined, documented and
+heavily tested. It claims the layer cannot be subdivided, and that every
+symptom above follows from that. Nor does it propose a framework: the fixed-DOM
+contract is the product, and adopting Vue or React would trade the thing that
+works for the thing that is fashionable. The recommendation is one module
+system and one build, not a rewrite.
+
 ## Appendix — how the figures were produced
 
 - **Editable fields / step nodes / subtitles rendered**: `SF.renderSlide` called
