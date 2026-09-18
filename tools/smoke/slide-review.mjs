@@ -27,7 +27,7 @@ try{
  await page.locator('.review-tile').first().click();await page.getByRole('button',{name:'Back to grid'}).click();
  await page.getByLabel('Include hidden slides').check();assert.equal(await page.locator('.review-tile').count(),2);
  await page.getByRole('button',{name:'Check slide fit',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.review-status').textContent.includes('2 slides checked'));
- assert.match(await page.locator('.review-status').innerText(),/0 with overflow/);
+ assert.match(await page.locator('.review-status').innerText(),/0 need review/);
  const bundle={decks:[{title:'Imported <b>literal</b>',theme:'paper',aspect:'4:3',slides:[{type:'title',title:'Imported idea'}]}]};
  await page.getByLabel('Review a deck or bundle file').setInputFiles({name:'deck.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(bundle))});
  await page.waitForFunction(()=>document.querySelector('.review-head h1').textContent==='Imported <b>literal</b>');

@@ -45,8 +45,23 @@
       var regions=lattice.filter(function(v){return v.over;}).map(function(v){
         return {key:v.key,need:v.need,have:v.have,wide:v.wide};
       });
-      return {fits:!scroll&&!over.length&&!regions.length,over:over.slice(0,5),
-        regions:regions.slice(0,5),slots:lattice.length,
+      /* The third question, and the one nothing in the app asked before: is
+         anything painted on top of the words? The two measures above both ask
+         whether content fits the space it was given, which a heading entirely
+         under a photograph does perfectly. A full-bleed placed picture blanks
+         a slide today — .slide-art is z-index 2 and content is not — and this
+         function used to call that slide sound.
+         Asked through SF.artOcclusion so the review, the art face and any
+         future ordering control run one measurement. It consults real paint
+         order and ignores artwork below the opacity at which words still read
+         through it, which is why the library's 45 slides of theme marks over
+         their own headings are not failures: they draw at 13–50% and, on a
+         section slide, under a .pad carrying z-index 1. Measured across all 32
+         library decks and 563 slides: zero hits. */
+      var covered=SF.artOcclusion?SF.artOcclusion(root):[];
+      return {fits:!scroll&&!over.length&&!regions.length&&!covered.length,
+        over:over.slice(0,5),regions:regions.slice(0,5),covered:covered.slice(0,5),
+        slots:lattice.length,
         scroll:scroll,unavailableImages:media,width:1280,height:SF.slideHeight(deck)};
     }finally{stage.remove();}
   }
@@ -65,7 +80,7 @@
     checkButton.type='button';load.type='file';load.accept='.json,.sfdeck,.sfbundle';load.setAttribute('aria-label','Review a deck or bundle file');
     var hidden=el('input');hidden.type='checkbox';var hiddenLabel=el('label');hiddenLabel.append(hidden,document.createTextNode(' Include hidden slides'));
     bar.append(checkButton,hiddenLabel,load);dialog.appendChild(bar);
-    dialog.appendChild(el('p','review-note','A snapshot of your slides. Fit checks find content beyond the slide boundary, and on an arranged slide, blocks wanting more lines than their region gave them \u2014 the same measurement the Layout face makes. Inspect overlaps, contrast and motion separately in Present. Imported files stay in this review.'));
+    dialog.appendChild(el('p','review-note','A snapshot of your slides. Fit checks find three things: content beyond the slide boundary; on an arranged slide, blocks wanting more lines than their region gave them \u2014 the same measurement the Layout face makes; and words with artwork painted over them. Contrast and motion are still for Present. Imported files stay in this review.'));
     var status=el('p','review-status');status.setAttribute('role','status');dialog.appendChild(status);
     var grid=el('div','review-grid');dialog.appendChild(grid);
     var viewer=el('section','review-viewer');viewer.hidden=true;
@@ -87,9 +102,10 @@
     dialog.addEventListener('keydown',function(e){if(viewer.hidden)return;if(e.key==='ArrowRight'){e.preventDefault();next.click();}if(e.key==='ArrowLeft'){e.preventDefault();prev.click();}});
     hidden.onchange=draw;
     load.onchange=async function(){try{if(!load.files.length)return;decks=readDecks(JSON.parse(await load.files[0].text()));title.querySelector('h1').textContent=decks.length===1?decks[0].title:decks.length+' decks';draw();}catch(e){status.textContent=said(e);}finally{load.value='';}};
-    checkButton.onclick=async function(){if(busy)return;busy=true;checkButton.disabled=true;hidden.disabled=true;load.disabled=true;var bad=0,media=0;
+    checkButton.onclick=async function(){if(busy)return;busy=true;checkButton.disabled=true;hidden.disabled=true;load.disabled=true;var bad=0,media=0,covered=0;
       try{for(var i=0;i<all.length&&!closed;i++){var item=all[i];status.textContent='Checking '+(i+1)+' / '+all.length;var result=await check(item.d,item.s,item.index);if(closed)break;
         if(!result.fits)bad++;media+=result.unavailableImages;
+        if((result.covered||[]).length)covered++;
         var old=item.tile.querySelector('.review-result');if(old)old.remove();
         /* Both failures in one sentence, named the way each one is named where
            it is fixed: a boundary escape by the words that escaped, a region
@@ -98,11 +114,17 @@
           .concat((result.regions||[]).map(function(r){
             return r.key+(r.wide&&r.need<=r.have?' (wider than its columns)'
               :' (needs '+r.need+' lines, has '+r.have+')');
+          }))
+          .concat((result.covered||[]).map(function(c){
+            return c.key+' is '+c.pct+'% under '+c.by;
           }));
         item.tile.appendChild(el('span','review-result'+(result.fits?'':' review-failed'),
-          result.fits?(result.slots?'Fits slide and regions':'Fits slide boundary')
+          result.fits?(result.slots?'Fits slide and regions, nothing over the words'
+              :'Fits slide boundary, nothing over the words')
             :('Needs review: '+(why.join('; ')||'content exceeds its area'))));
-      }if(!closed)status.textContent=all.length+' slides checked · '+bad+' with overflow'+(media?' · '+media+' unavailable images':'');}
+      }if(!closed)status.textContent=all.length+' slides checked · '+bad+' need review'
+        +(covered?' · '+covered+' with words under artwork':'')
+        +(media?' · '+media+' unavailable images':'');}
       catch(e){status.textContent='Fit check failed: '+said(e);}
       finally{busy=false;checkButton.disabled=false;hidden.disabled=false;load.disabled=false;}
     };

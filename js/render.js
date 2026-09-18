@@ -68,6 +68,14 @@
         node.style.transform = 'scale(' + pose.scale + ')';
         node.style.transformOrigin = 'top left';
       }
+      /* A theme shape moves side by side-stepping its own layer, because the
+         layer holds the whole set and only this shape is being brought
+         forward. z-index alone would not do it: .theme-art is z-index auto, so
+         its children sit in the slide's own stacking context, where a content
+         pad carrying z-index 1 is already above them. The rule in
+         artwork.css gives a fronted shape a z-index above that pad. */
+      var side = SF.artOrder(pose, 'back');
+      node.setAttribute('data-art-order', side);
       if (pose.hidden) node.style.display = 'none';
     });
   };
@@ -76,25 +84,45 @@
      absolutely positioned box over every slide is a hit-testing hazard for no
      reason. Coordinates are true slide pixels — callers scale the whole slide,
      so a pose means the same thing in the rail, the editor and the player. */
-  SF.placedArtLayer = function (pictures) {
+  /* 'back' or 'front' of the slide's content, for one artwork item.
+     The defaults are what the app already did, so no existing deck moves: a
+     placed picture has always painted over the words (.slide-art is z-index 2
+     and content is not), and a theme's decoration has always painted under
+     them. Neither was ever a choice; both are now, and both keep their answer
+     when nobody has chosen. */
+  SF.artOrder = function (item, fallback) {
+    return item && item.order === 'back' ? 'back' : item && item.order === 'front' ? 'front' : fallback;
+  };
+
+  /* One layer per side, because the side is a paint-order question and CSS
+     decides paint order between boxes, not within one. Only the layers that
+     have something in them are built: an empty absolutely positioned box over
+     every slide is a hit-testing hazard for no reason. */
+  SF.placedArtLayers = function (pictures) {
     var list = Array.isArray(pictures) ? pictures.filter(function (p) {
       return p && p.src;
     }) : [];
-    if (!list.length) return null;
-    var layer = el('div', 'slide-art');
+    var layers = {};
     list.forEach(function (pic, i) {
+      var side = SF.artOrder(pic, 'front');
+      var layer = layers[side] || (layers[side] = el('div', 'slide-art slide-art-' + side));
+      layer.setAttribute('data-art-order', side);
       var img = el('img', 'slide-art-img');
       img.src = pic.src;
       img.alt = String(pic.alt || '');
       img.setAttribute('data-art-pic', String(pic.id == null ? i : pic.id));
+      img.setAttribute('data-art-order', side);
       if (pic.hidden) img.style.display = 'none';
       img.style.left = (pic.x || 0) + 'px';
       img.style.top = (pic.y || 0) + 'px';
       if (pic.w) img.style.width = pic.w + 'px';
       layer.appendChild(img);
     });
-    return layer;
+    /* Back first, so that within a side the array order still decides which
+       picture is on top — the one ordering the app already had. */
+    return ['back', 'front'].map(function (side) { return layers[side]; }).filter(Boolean);
   };
+
 
   /* ------------------------------------------------------------- the lattice
      A drag manipulates a named region in a grid, never a coordinate. Free-form
@@ -256,6 +284,169 @@
     host.replaceChildren(grid);
     root.classList.add('sf-latticed');
     return true;
+  };
+
+  /* --------------------------------------------------------- what is on top
+     Which of two nodes paints over the other, by the CSS painting order rather
+     than by a guess. Needed because the answer is not uniform: .slide-art is
+     z-index 2 and paints over content everywhere, while .theme-art is
+     z-index auto and lands above a content slide's static .pad but below a
+     section slide's, which carries z-index 1. Assuming either way is how a
+     slide gets called sound while its heading is under a photograph.
+
+     Compared at the two ancestors that are siblings, which is where the
+     painting order is actually decided. Bands follow CSS 2.1 appendix E: a
+     negative z-index below in-flow content, in-flow content below positioned
+     auto/0, and positive z-index above all of it. Document order breaks a tie.
+     Correct for the slide's own layers, which are siblings in one stacking
+     context; a caller that nests new stacking contexts between them would need
+     more than this. */
+  function paintBand(node) {
+    var cs = getComputedStyle(node);
+    if (cs.position === 'static') return [2, 0];
+    var z = cs.zIndex === 'auto' ? null : Number(cs.zIndex);
+    if (z == null || z === 0 || !Number.isFinite(z)) return [3, 0];
+    return z < 0 ? [1, z] : [4, z];
+  }
+
+  /* Does this box confine its descendants' z-index, or do they compete in the
+     context above it? Only the properties this app actually uses on a slide
+     are listed; the list is the reason a theme layer is transparent to the
+     ordering and a picture layer is not. */
+  function isStackingContext(node) {
+    var cs = getComputedStyle(node);
+    if (cs.position === 'fixed' || cs.position === 'sticky') return true;
+    if (cs.position !== 'static' && cs.zIndex !== 'auto') return true;
+    if (parseFloat(cs.opacity) < 1) return true;
+    if (cs.transform !== 'none' || cs.filter !== 'none' || cs.perspective !== 'none') return true;
+    if (cs.isolation === 'isolate' || cs.mixBlendMode !== 'normal') return true;
+    if (/paint|layout|strict|content/.test(cs.contain || '')) return true;
+    return /transform|opacity|filter/.test(cs.willChange || '');
+  }
+
+  /* Which box's z-index actually decides where `node` paints inside the
+     context it shares with something else: the outermost ancestor below `stop`
+     that establishes a stacking context, or the node itself when none does.
+     That second case is the whole mechanism behind bringing one theme shape
+     forward. .theme-art is position:absolute with z-index:auto, so it is not a
+     stacking context and its children's z-index competes directly with the
+     slide's other layers — which is how one shape can rise past a picture
+     while its siblings stay where the theme put them. Comparing the layers
+     instead said a fronted shape was still behind the picture, which is the
+     answer this function gave before it understood that. */
+  function orderDecider(node, stop) {
+    var decider = node;
+    for (var n = node.parentElement; n && n !== stop; n = n.parentElement) {
+      if (isStackingContext(n)) decider = n;
+    }
+    return decider;
+  }
+
+  SF.paintsAbove = function (a, b) {
+    if (!a || !b || a === b) return false;
+    /* An ancestor paints under its own descendant, never over it. */
+    if (a.contains(b)) return false;
+    if (b.contains(a)) return true;
+    var up = function (n) { var out = []; for (; n; n = n.parentElement) out.unshift(n); return out; };
+    var ca = up(a), cb = up(b), i = 0;
+    while (i < ca.length && i < cb.length && ca[i] === cb[i]) i++;
+    var lca = ca[i - 1];
+    if (!lca) return false;
+    var ba = paintBand(orderDecider(a, lca)), bb = paintBand(orderDecider(b, lca));
+    if (ba[0] !== bb[0]) return ba[0] > bb[0];
+    if (ba[1] !== bb[1]) return ba[1] > bb[1];
+    /* Same band and same z-index: document order of the two branches under
+       their common ancestor. */
+    var sibs = Array.prototype.slice.call(lca.children);
+    return sibs.indexOf(ca[i]) > sibs.indexOf(cb[i]);
+  };
+
+  /* Artwork solid enough to hide what is behind it. A theme mark at 13% opacity
+     is decoration the words read straight through; a photograph at full opacity
+     is not. Drawn-but-transparent is the common case in these themes, so the
+     threshold is what keeps the measure from crying wolf on every section
+     slide the library already ships. */
+  var OPAQUE = 0.85;
+  SF.occludingArt = function (root) {
+    if (!root) return [];
+    return Array.prototype.filter.call(
+      root.querySelectorAll('.slide-art-img, .theme-art > *'),
+      function (n) {
+        var cs = getComputedStyle(n);
+        if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+        var o = parseFloat(cs.opacity);
+        return !(Number.isFinite(o) && o < OPAQUE);
+      });
+  };
+
+  /* How much of each text block the artwork above it covers, as a fraction of
+     that block's own painted area. Measured on the text's client rects rather
+     than its element box, because a heading's box is usually wider than the
+     words in it and a rule over the empty half is not a problem.
+
+     Nothing in the app measured this before: every check asks whether content
+     fits its space, none asked whether something is on top of it. A slide whose
+     heading is entirely under a placed picture passed the deck review, the fit
+     check and the lattice, and looked fine to all three. */
+  SF.artOcclusion = function (root, opts) {
+    var out = [];
+    if (!root) return out;
+    var art = SF.occludingArt(root).map(function (n) {
+      return { node: n, rect: n.getBoundingClientRect() };
+    }).filter(function (a) { return a.rect.width > 2 && a.rect.height > 2; });
+    if (!art.length) return out;
+    var floor = (opts && opts.floor) || 0.15;
+    var pad = root.querySelector('.pad') || root;
+    Array.prototype.forEach.call(pad.querySelectorAll('[data-content-key]'), function (block) {
+      var said = (block.textContent || '').trim();
+      if (!said) return;
+      var runs = [];
+      var walk = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+      var t;
+      while ((t = walk.nextNode())) {
+        if (!(t.textContent || '').trim()) continue;
+        var range = document.createRange();
+        range.selectNodeContents(t);
+        Array.prototype.forEach.call(range.getClientRects(), function (r) {
+          if (r.width > 1 && r.height > 1) runs.push(r);
+        });
+      }
+      if (!runs.length) return;
+      /* Only the art that is actually on top of this block, asked once rather
+         than once per text run. */
+      var above = art.filter(function (a) { return SF.paintsAbove(a.node, block); });
+      if (!above.length) return;
+      var area = 0, hidden = 0;
+      /* Collected rather than assigned through the closure: a name mutated
+         inside a callback is not narrowed by the checker afterwards, and the
+         `by ? ... : ...` below became unreachable to it. */
+      var blamed = [];
+      runs.forEach(function (r) {
+        area += r.width * r.height;
+        /* The worst single overlap rather than their union: art rects on one
+           slide rarely overlap each other, and an overcount would only make
+           this louder, which is the wrong direction for a number that will
+           stop an author. */
+        var worst = 0, name = '';
+        above.forEach(function (a) {
+          var w = Math.min(a.rect.right, r.right) - Math.max(a.rect.left, r.left);
+          var h = Math.min(a.rect.bottom, r.bottom) - Math.max(a.rect.top, r.top);
+          if (w <= 0 || h <= 0 || w * h <= worst) return;
+          worst = w * h;
+          name = a.node.getAttribute('data-art-key') || a.node.getAttribute('data-art-pic') || 'artwork';
+        });
+        hidden += worst;
+        if (name) blamed.push(name);
+      });
+      if (!area || hidden / area < floor) return;
+      out.push({
+        key: block.getAttribute('data-content-key'),
+        text: said.slice(0, 100),
+        pct: Math.round((hidden / area) * 1000) / 10,
+        by: blamed[0] || 'artwork'
+      });
+    });
+    return out;
   };
 
   /* ------------------------------------------------------- does it fit?
@@ -5203,8 +5394,18 @@
        carry whatever alt text the author gave them. The layer exists even on a
        slide type the theme does not decorate — placing a picture must not
        depend on the theme happening to paint here. */
-    var placed = SF.placedArtLayer(slide.art && slide.art.pictures);
-    if (placed) root.appendChild(placed);
+    var placedLayers = SF.placedArtLayers(slide.art && slide.art.pictures);
+    placedLayers.forEach(function (layer) { root.appendChild(layer); });
+    /* A picture behind the words needs the words above it, and a content
+       slide's .pad is static — in normal flow, which every positioned box with
+       z-index auto or more paints over. Raising the pad is the only way round
+       that, and it is done for this slide alone, on the slides that ask for
+       it, so no deck that has never placed a backdrop renders any differently.
+       Theme decoration is untouched: it keeps painting exactly where it always
+       did unless the author brings a shape forward by name. */
+    if (placedLayers.some(function (l) { return l.dataset.artOrder === 'back'; })) {
+      root.classList.add('sf-art-behind');
+    }
     /* Which of a theme's decorations a slide shows, as a number a stylesheet
        can switch on. Stamped on every slide rather than only the two
        full-bleed ones, because a theme may want quiet decoration on the

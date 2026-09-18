@@ -2187,12 +2187,47 @@ nothing would say so: `Review.check` calls a fully covered slide sound,
 Every check in the app asks whether content fits its space. None asks whether
 anything is on top of it.
 
-**Recommendation.** If ordering is built, build it as one control with two
-values per artwork item — behind content, in front of content — and add an
-occlusion measure to `SF.Review.check` first, so the deck audit stops calling a
-blanked slide sound. The measure is cheap: the text-run rectangles are already
-walked there for the boundary check, and the artwork rectangles are already
-known. Ordering without it is the reverted stack's mistake in miniature.
+**Recommendation, and what was then built.** One control with two values per
+artwork item — behind content, in front of content — with the occlusion measure
+added to `SF.Review.check` first, so the deck audit stops calling a blanked
+slide sound. Both landed. The probe now reports 0 of 4 intents blocked.
+
+The measure: `SF.artOcclusion(root)` reports, per content block, the percentage
+of its painted text area covered by artwork above it, and `Review.check` folds
+that into `fits` and names it — "title is 100% under blanket". Two things make
+it honest rather than noisy.
+
+- **Paint order is asked, not assumed** — `SF.paintsAbove(a, b)`. The answer is
+  not uniform: `.slide-art` is z-index 2 and paints over content everywhere,
+  while `.theme-art` is z-index auto and lands above a content slide's static
+  `.pad` but below a section slide's, which carries z-index 1.
+- **Opacity is respected.** A theme mark at 13% is decoration the words read
+  through. The threshold is 0.85, which is what keeps the library's 45 slides of
+  theme marks over their own headings out of the report. Measured: 0 hits across
+  32 decks and 563 slides, so the measure could be wired into `fits` without
+  failing a single existing slide.
+
+The ordering: each artwork item carries `order: 'back' | 'front'`, defaulting to
+what it already did — a placed picture in front of the words, a theme shape
+behind them — so no existing deck moves and the 642 visual baselines did not
+budge. Pictures render into `.slide-art-back` (z-index 0) or `.slide-art-front`
+(z-index 2); a fronted theme shape gets z-index 3, above both.
+
+Two implementation notes worth keeping, because each was a wrong answer first.
+
+`.slide-art-back` is z-index 0 with the pad lifted to 1, not a negative
+z-index. `.slide` is `position: relative` with `z-index: auto`, so it
+establishes no stacking context and a negative child would paint behind
+`.slide`'s own background — the backdrop would simply vanish. The pad is lifted
+by `.sf-art-behind`, which the renderer adds only to a slide that actually has a
+picture behind its words, so nothing else in the library is touched.
+
+`SF.paintsAbove` has to flatten through ancestors that are *not* stacking
+contexts. `.theme-art` is `position: absolute; z-index: auto`, so its children's
+z-index competes directly with the slide's other layers — which is exactly how
+one shape rises past a picture while its siblings stay put. Comparing the
+layers instead reported a fronted shape as still behind the picture, which is
+the answer the function gave until it understood that.
 
 Two instrument faults this probe had before it was trustworthy, both worth
 knowing for the next measurement of this kind. `elementFromPoint` skips

@@ -223,6 +223,27 @@
   }
 
   // --------------------------------------------------------------- actions
+  /* Behind the words or in front of them. One control, two values, because
+     those are the only two crossings the fixed stack made impossible — a
+     picture could not go behind the text, a theme shape could not come in
+     front of a picture. Ordering within a layer already worked: two pictures
+     stack in array order.
+
+     Stored on the item, not on the slide, so two pictures on one slide can sit
+     on opposite sides of the text. */
+  function setOrder(side) {
+    if (!selected || (side !== 'back' && side !== 'front')) return;
+    writePose(selected, { order: side });
+    commit(true);
+    afterPaint();
+    /* Said rather than left to be noticed: putting a picture in front of the
+       words is how a slide gets blanked, and the deck review is where that
+       now shows up. */
+    if (side === 'front' && selected && selected.kind === 'picture') {
+      SF.toast && SF.toast('In front of the words. Review slides & check fit will say if it covers them.');
+    }
+  }
+
   function toggleHidden() {
     if (!selected) return;
     var pose = readPose(selected);
@@ -329,6 +350,13 @@
     });
     var hide = document.getElementById('btnArtHide');
     if (hide) hide.textContent = pose.hidden ? '◉ Show' : '◌ Hide';
+    var order = /** @type {HTMLSelectElement|null} */ (document.getElementById('artOrder'));
+    if (order) {
+      /* The default differs by what is selected, and saying so is the point:
+         a placed picture has always been in front, a theme shape behind. */
+      order.value = SF.artOrder(pose, isShape ? 'back' : 'front');
+      order.disabled = !has;
+    }
     var del = /** @type {HTMLButtonElement|null} */ (document.getElementById('btnArtDelete'));
     if (del) {
       del.disabled = !has || isShape;
@@ -404,6 +432,14 @@
     if (smaller) smaller.addEventListener('click', function () { resizeSelected(-40); });
     var reset = document.getElementById('btnArtReset');
     if (reset) reset.addEventListener('click', resetArt);
+    var order = /** @type {HTMLSelectElement|null} */ (document.getElementById('artOrder'));
+    if (order) {
+      /* Bound after the guard, because the listener closes over it and the
+         null check above says nothing about what it holds when the event
+         fires. */
+      var picker = order;
+      picker.addEventListener('change', function () { setOrder(picker.value); });
+    }
     var pick = /** @type {HTMLInputElement|null} */ (document.getElementById('artPicture'));
     if (pick) {
       var input = pick;

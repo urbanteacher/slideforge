@@ -11,8 +11,36 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 2;
 }
+
+/* ------------------------------------------------------------- which side
+   Behind the words or in front of them. Two values, one per artwork item,
+   because those are the only two crossings the fixed stack made impossible:
+   measured with tools/art-order-probe.mjs, a picture could not go behind the
+   text and a theme shape could not come in front of a picture. Ordering
+   *within* a layer already worked — two pictures stack in array order — so
+   nothing here touches that.
+
+   The defaults are what the app already did, so no existing deck moves. */
+
+/* What a placed picture has always done, now said out loud. */
+.slide-art-front { z-index: 2; }
+
+/* Behind them. z-index 0 rather than a negative, with the pad lifted to 1 on
+   the slides that ask: a negative child of .slide would paint behind .slide's
+   own background, because .slide is position:relative with z-index auto and so
+   establishes no stacking context, and the backdrop would simply vanish. The
+   pad is lifted by .sf-art-behind, which the renderer adds only to a slide
+   that actually has a picture behind its words. */
+.slide-art-back { z-index: 0; }
+.slide.sf-art-behind > .pad { position: relative; z-index: 1; }
+
+/* A theme shape brought forward. Above the lifted pad and above a fronted
+   picture, because "bring this mark in front" means in front of everything the
+   author can see. .theme-art is z-index auto and therefore not a stacking
+   context, which is what lets one of its children rise past the pad on its
+   own while its siblings stay put. */
+.theme-art > [data-art-order="front"] { z-index: 3; }
 .slide-art-img {
   position: absolute;
   max-width: none;

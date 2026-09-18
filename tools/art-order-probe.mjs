@@ -131,7 +131,7 @@ try {
       'picture under text',
       (d) => {
         const s = SF.normalizeSlide({ type: 'content', title: 'Behind', bullets: ['one', 'two'] });
-        s.art = { poses: {}, pictures: [{ id: 'bg', src: DOT, x: 0, y: 0, w: 1280, alt: '' }] };
+        s.art = { poses: {}, pictures: [{ id: 'bg', src: DOT, x: 0, y: 0, w: 1280, order: 'back', alt: '' }] };
         return s;
       },
       (root) => {
@@ -173,10 +173,18 @@ try {
       (d) => {
         const s = SF.normalizeSlide({ type: 'title', title: 'Over', subtitle: 'sub' });
         s.art = { poses: {}, pictures: [{ id: 'p', src: DOT, x: 0, y: 0, w: 1280, alt: '' }] };
+        /* The keys come from the theme manifest in manifest order, which is
+           the order applyArtPoses stamps them in. */
+        const spec = SF.THEMES[SF.resolveTheme(d.theme)].art;
+        const probeHost = document.createElement('div');
+        probeHost.innerHTML = spec.html;
+        const first = probeHost.firstElementChild;
+        if (first) s.art.poses[SF.artKeyOf(first, 0)] = { order: 'front' };
         return s;
       },
       (root) => {
-        const shape = root.querySelector('.theme-art > *');
+        const shape = root.querySelector('.theme-art > [data-art-order="front"]')
+          || root.querySelector('.theme-art > *');
         if (!shape) return 'no theme shape';
         shape.setAttribute('data-probe', '');
         const on = paintsOver(root, '[data-probe]', '.slide-art-img');
@@ -251,6 +259,24 @@ try {
       }
     }
 
+    // ------------------- 3b. what the new measure says about the library today
+    /* The same sweep, but through SF.artOcclusion, which asks paint order and
+       opacity rather than geometry alone. The gap between this number and the
+       one above is the difference between "artwork sits over these words" and
+       "these words are actually hidden". */
+    out.occluded = [];
+    for (const key of lessons) {
+      let deck;
+      try { deck = SF.normalizeDeck(SF.buildLesson(key)); } catch (e) { continue; }
+      if (!deck || !Array.isArray(deck.slides)) continue;
+      for (let i = 0; i < deck.slides.length; i++) {
+        const host = await stage(deck, deck.slides[i]);
+        const hits = SF.artOcclusion(host.firstElementChild);
+        host.remove();
+        for (const h of hits) out.occluded.push({ deck: key, slide: i + 1, ...h });
+      }
+    }
+
     // ------------------------------------------------ 4. would anything care?
     /* A slide whose text is completely covered by an opaque picture. Put it
        through each check the app already has and see what each one says. */
@@ -271,6 +297,8 @@ try {
       const fit = await SF.Review.check(d, s, 0);
       out.guards.review = { fits: fit.fits, over: fit.over.length, regions: (fit.regions || []).length };
       out.guards.lattice = SF.latticeFit(host.firstElementChild).filter((v) => v.over).length;
+      out.guards.occlusion = SF.artOcclusion(host.firstElementChild)
+        .map((h) => h.key + ' ' + h.pct + '%').join(', ') || 'says nothing';
       out.guards.textStillMeasurable = [...host.firstElementChild.querySelectorAll('[data-content-key]')]
         .every((n) => n.getBoundingClientRect().height > 0);
       out.guards.hitTestFindsArt = (() => {
@@ -305,11 +333,12 @@ try {
     if (!i.reached) line('      wanted: ' + i.want + '   ·   got: ' + i.got);
   }
   const blocked = report.intents.filter((i) => !i.reached);
-  line('  → ' + blocked.length + ' of ' + report.intents.length + ' blocked, and both'
-    + ' are the same thing: a crossing between the two artwork layers.');
-  line('    Theme decoration is always behind content. A placed picture is always');
-  line('    in front of it — not as an option, as the only behaviour. Ordering');
-  line('    within one layer already works: two pictures stack in array order.');
+  line('  → ' + blocked.length + ' of ' + report.intents.length + ' blocked.');
+  line('    The two that used to be blocked were the same thing: a crossing between');
+  line('    the two artwork layers. Each artwork item now carries order: back | front,');
+  line('    defaulting to what it always did — a picture in front of the words, a theme');
+  line('    shape behind them — so no existing deck moves. Ordering within a layer was');
+  line('    never the problem: two pictures still stack in array order.');
 
   line('');
   line('TEXT ALREADY UNDER ARTWORK, ACROSS THE LIBRARY  ('
@@ -339,6 +368,22 @@ try {
   }
 
   line('');
+  line('AND WHAT THE NEW MEASURE SAYS — SF.artOcclusion, paint order and opacity');
+  if (!report.occluded.length) {
+    line('  0 library slides have text actually hidden by artwork.');
+    line('  → The 45 above are geometric overlap only. Theme marks draw at 13–50%');
+    line('    opacity and, on a section slide, under a .pad that carries z-index 1.');
+    line('    So the measure can fail the review without failing the library.');
+  } else {
+    for (const o of report.occluded.slice(0, 12)) {
+      line('  ' + String(o.pct + '%').padStart(6) + '  ' + o.deck + ' slide ' + o.slide
+        + '  ' + o.key + ' under ' + o.by + '  — "' + o.text.slice(0, 40) + '"');
+    }
+    line('  → ' + report.occluded.length + ' library blocks are actually hidden. These have');
+    line('    to be looked at before occlusion can fail the review.');
+  }
+
+  line('');
   line('WOULD ANY EXISTING CHECK NOTICE A SLIDE COVERED BY ITS OWN ARTWORK?');
   line('  Review.check (deck audit)      ' + (report.guards.review.fits ? 'says it FITS' : 'flags it')
     + '  — ' + report.guards.review.over + ' boundary escapes, '
@@ -349,6 +394,7 @@ try {
     ? 'still measures as laid out, full height' : 'collapses'));
   line('  a pointer at the words         ' + (report.guards.hitTestFindsArt
     ? 'lands on the picture, not the text' : 'still reaches the text'));
+  line('  artOcclusion (new)             ' + report.guards.occlusion);
   line('');
   line('  → Nothing measures occlusion. Every check the app has asks whether');
   line('    content fits its space; none asks whether anything is on top of it.');

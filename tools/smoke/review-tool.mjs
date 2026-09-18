@@ -77,9 +77,9 @@ try {
     null, { timeout: 60000 });
   const verdicts = await dialog.locator('.review-result').allInnerTexts();
   assert.equal(verdicts.length, 3, 'every shown slide gets a verdict');
-  assert.equal(verdicts.filter(v => /Fits slide boundary/.test(v)).length, 2, 'the two good slides must pass');
+  assert.equal(verdicts.filter(v => /Fits slide boundary, nothing over the words/.test(v)).length, 2, 'the two good slides must pass');
   assert.equal(await dialog.locator('.review-failed').count(), 1, 'the overflowing slide must be flagged');
-  assert.match(await dialog.locator('.review-status').innerText(), /3 slides checked · 1 with overflow/);
+  assert.match(await dialog.locator('.review-status').innerText(), /3 slides checked · 1 need review/);
   checked++;
 
   /* 5. Enlarge, navigate, and stop at the ends. */

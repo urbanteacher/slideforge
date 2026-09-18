@@ -312,7 +312,112 @@ try {
     (n) => getComputedStyle(n).pointerEvents), 'none', 'and make the decoration inert again');
   checks++;
 
-  /* 14. How far the face reaches, which is not obvious from its button. A
+  /* 14. Which side of the words. One control, two values, per item.
+         The defaults are what the app already did — a picture in front, a
+         theme shape behind — so the first two assertions are about nothing
+         moving, and the rest are about the two crossings that were impossible
+         before: tools/art-order-probe.mjs measured a picture that could not go
+         behind the text and a theme shape that could not come in front of a
+         picture.
+         Back into the face first: check 13 left it with Escape. */
+  await page.click('#btnArtFlip');
+  await page.waitForSelector('#previewBox.art-editing [data-art-key]', { timeout: 10000 });
+  await page.setInputFiles('#artPicture', PIXEL);
+  await page.waitForFunction(() => (SF.Editor.currentSlide().art?.pictures || []).length === 2, null, { timeout: 15000 });
+  const fresh = (await artOf()).pictures[1];
+  assert.equal(fresh.order, undefined, 'a new picture stores no side until one is chosen');
+  assert.equal(await page.inputValue('#artOrder'), 'front',
+    'and the control shows the default it actually has: in front of the words');
+  assert.equal(await page.$eval(`#previewBox [data-art-pic="${fresh.id}"]`,
+    (n) => n.parentElement.className), 'slide-art slide-art-front',
+    'so it renders in the front layer, exactly as before this control existed');
+  checks++;
+
+  /* A picture behind the words. The backdrop case, and the common intent. */
+  await page.selectOption('#artOrder', 'back');
+  await page.waitForTimeout(500);
+  assert.equal((await artOf()).pictures[1].order, 'back', 'the side is stored on the item');
+  const behind = await page.evaluate((id) => {
+    const root = document.querySelector('#previewBox .slide');
+    const img = root.querySelector('[data-art-pic="' + id + '"]');
+    const text = root.querySelector('[data-content-key]');
+    return {
+      layer: img.parentElement.className,
+      z: getComputedStyle(img.parentElement).zIndex,
+      padLifted: getComputedStyle(root.querySelector('.pad')).zIndex,
+      slideMarked: root.classList.contains('sf-art-behind'),
+      overText: SF.paintsAbove(img, text),
+    };
+  }, fresh.id);
+  assert.equal(behind.layer, 'slide-art slide-art-back', 'it moves to the back layer');
+  assert.equal(behind.overText, false, 'and paints under the words');
+  assert.equal(behind.slideMarked, true, 'the slide is marked, so the pad can be lifted for it alone');
+  assert.equal(behind.padLifted, '1', 'and the pad is lifted — a static pad would stay under it');
+  checks++;
+
+  /* A theme shape in front. The other crossing. */
+  at = await grabPoint(`[data-art-key="${shapeKey}"]`);
+  await page.mouse.click(at.x, at.y);
+  await page.waitForTimeout(250);
+  assert.equal(await page.inputValue('#artOrder'), 'back',
+    'a theme shape shows its own default, which is the other one');
+  await page.selectOption('#artOrder', 'front');
+  await page.waitForTimeout(500);
+  const fronted = await page.evaluate((k) => {
+    const root = document.querySelector('#previewBox .slide');
+    const shape = root.querySelector('[data-art-key="' + k + '"]');
+    const text = root.querySelector('[data-content-key]');
+    const pic = root.querySelector('.slide-art-front .slide-art-img');
+    return {
+      order: shape.getAttribute('data-art-order'),
+      z: getComputedStyle(shape).zIndex,
+      overText: SF.paintsAbove(shape, text),
+      overPicture: pic ? SF.paintsAbove(shape, pic) : null,
+      siblingsStayed: [...root.querySelectorAll('.theme-art > *')]
+        .filter((n) => n.getAttribute('data-art-order') === 'front').length,
+    };
+  }, shapeKey);
+  assert.equal(fronted.order, 'front', 'the shape carries its side into the DOM');
+  assert.equal(fronted.overText, true, 'and paints over the words');
+  assert.equal(fronted.overPicture, true, 'and over a fronted picture, which is what "in front" has to mean');
+  assert.equal(fronted.siblingsStayed, 1,
+    'one shape forward, not the layer — its siblings stay where the theme put them');
+  checks++;
+
+  /* 15. And the review says so. Ordering without this is a way to blank a
+         slide that no check mentions; the measure went in first. */
+  /* On its own deck, not the slide the checks above have been posing and
+     placing on: by now that slide carries three pictures and a fronted theme
+     shape, and the one at 120,120 covers a bullet on purpose. The review
+     flagged it, correctly, which is not what this check is about. */
+  const verdict = await page.evaluate(async (src) => {
+    const d = SF.makeDeck('review');
+    d.theme = 'studio';
+    const s = SF.normalizeSlide({ type: 'content', title: 'Can you read this', bullets: ['no', 'not at all'] });
+    const covering = { id: 'blanket', src, x: 0, y: 0, w: 1280, order: 'front', alt: '' };
+    s.art = { poses: {}, pictures: [covering] };
+    d.slides = [s];
+    const bad = await SF.Review.check(d, s, 0);
+    covering.order = 'back';
+    const good = await SF.Review.check(d, s, 0);
+    return {
+      front: { fits: bad.fits, covered: (bad.covered || []).map((c) => c.key + ' ' + c.pct + '%'),
+               boundary: bad.over.length },
+      back: { fits: good.fits, covered: (good.covered || []).length },
+    };
+  }, await page.evaluate(() => SF.Editor.currentSlide().art.pictures[0].src));
+  assert.equal(verdict.front.fits, false, 'a slide under a full-bleed picture must not pass the review');
+  assert.equal(verdict.front.boundary, 0,
+    'and not because anything overflowed — nothing does, which is why this needed its own measure');
+  assert.ok(verdict.front.covered.length >= 1,
+    `the review should name what is covered, said ${JSON.stringify(verdict.front.covered)}`);
+  assert.ok(verdict.front.covered.every((c) => /100%$/.test(c)),
+    `fully covered blocks should read 100%, got ${JSON.stringify(verdict.front.covered)}`);
+  assert.equal(verdict.back.fits, true, 'the same picture behind the words is fine');
+  assert.equal(verdict.back.covered, 0, 'and nothing is reported covered');
+  checks++;
+
+  /* 16. How far the face reaches, which is not obvious from its button. A
          theme's decoration belongs to the theme, so the face finds shapes only
          where a theme draws them: title and section slides, in 13 of the 23
          themes. On every other slide type — content, split, image, quote,
@@ -355,7 +460,8 @@ try {
 
   assert.deepEqual(errors, []);
   console.log(`ok · artwork face: ${checks} checks · a click selects, arrows and −/+ pose a shape, `
-    + `Hide is reversible, a placed picture drags and deletes, ↺ Theme keeps your pictures · `
+    + `Hide is reversible, a placed picture drags and deletes, ↺ Theme keeps your pictures, `
+    + `each item chooses its side of the words and the review flags what is covered · `
     + `theme art reaches ${decorated.length} of `
     + `${await page.evaluate(() => Object.keys(SF.THEMES).length * 9)} theme/type pairs `
     + `— title and section only, in ${themes.size} of `
