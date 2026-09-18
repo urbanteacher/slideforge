@@ -334,6 +334,62 @@
     SF.toast && SF.toast(spec.label + ' added. Click it to type, drag to move.');
   }
 
+  /* ---------------------------------------------------------------- splits
+     Cut a block's columns at a named proportion and put a new block in what
+     is freed. The thing asked for at the start of all this — "if I want to
+     split 50% left and 50% right that can allow to add new content" — and the
+     reason it waited until last is that the second half of that sentence is
+     the hard half: there was nothing to put in the freed columns until a block
+     was a thing the model had.
+
+     The proportion is of the block's own width, not the slide's, so splitting
+     a half again gives quarters. Rounded to whole columns and clamped so both
+     sides keep at least one: the cell is the unit, and a 20/80 of a 4-column
+     block is 1 and 3 rather than 0.8 and 3.2.
+
+     Columns only. A vertical split is the same idea and a different feature:
+     rows already push down, so cutting a block's rows would have to decide
+     what happens to everything under it, and that decision is not this one. */
+  var SPLITS = [
+    { value: '50', label: '50 · 50' },
+    { value: '40', label: '40 · 60' },
+    { value: '60', label: '60 · 40' },
+    { value: '20', label: '20 · 80' },
+    { value: '80', label: '80 · 20' }
+  ];
+
+  function splitRegion(leftPercent) {
+    if (!selected) return;
+    var s = slide();
+    var map = regionsOf(s, true);
+    var r = map && map[selected];
+    if (!r) return;
+    if (r.cols < 2) {
+      SF.toast && SF.toast('Too narrow to split — one column cannot become two.');
+      return;
+    }
+    var left = clamp(Math.round(r.cols * leftPercent / 100), 1, r.cols - 1);
+    var right = r.cols - left;
+    var id = 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    SF.freeBlocksOf(s, true).push({ id: id, kind: 'text', text: '' });
+    map[SF.freeBlockKey(id)] = {
+      col: r.col + left, row: r.row, cols: right, rows: r.rows, alignY: r.alignY
+    };
+    /* The anchor has to go. anchorRegion recomputes col from it on every
+       render, so an anchored block would snap back across the half just freed
+       and sit on top of the new one — the split would look like it had not
+       happened. Being half as wide as it was, it is no longer the thing the
+       anchor was describing. */
+    delete r.anchorX;
+    r.cols = left;
+    selected = SF.freeBlockKey(id);
+    selectedSlide = s;
+    commit(true);
+    afterPaint();
+    SF.toast && SF.toast('Split ' + left + ' · ' + right
+      + ' columns. Click the new block to type into it.');
+  }
+
   function duplicateBlock() {
     var s = slide();
     var id = selected && SF.freeBlockId && SF.freeBlockId(selected);
@@ -452,6 +508,13 @@
        to delete — removing it would mean removing the field it renders, which
        is the rail's job and a different act. Same asymmetry as ✕ in the art
        bar, and the title says why rather than the button just being dead. */
+    var splitSel = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeSplit'));
+    if (splitSel) {
+      splitSel.disabled = !region || region.cols < 2;
+      splitSel.title = !region ? 'Select a block to split'
+        : region.cols < 2 ? 'One column cannot become two — make it wider first'
+        : 'Cut this block\'s ' + region.cols + ' columns in two and put a new block in the rest';
+    }
     var isFree = !!(selected && SF.freeBlockId && SF.freeBlockId(selected));
     [['btnArrangeDuplicate', 'Copy this block, one row below'],
      ['btnArrangeRemove', 'Remove this block from the slide']].forEach(function (pair) {
@@ -583,6 +646,15 @@
         var kind = addPicker.value;
         addPicker.value = '';
         if (kind) addBlock(kind);
+      });
+    }
+    var splitter = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeSplit'));
+    if (splitter) {
+      var splitPicker = splitter;
+      splitPicker.addEventListener('change', function () {
+        var share = splitPicker.value;
+        splitPicker.value = '';
+        if (share) splitRegion(Number(share));
       });
     }
     var dup = document.getElementById('btnArrangeDuplicate');

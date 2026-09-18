@@ -138,7 +138,8 @@ try {
   assert.equal(await page.getAttribute('#previewBox [data-arrange-selected]', 'data-block-key'), key,
     'and it should be the block under the pointer');
   assert.ok(await gatedExcept(['arrangeAnchorX', 'arrangeAnchorY', 'arrangeAlignY',
-    'btnArrangeNarrower', 'btnArrangeWider', 'btnArrangeShorter', 'btnArrangeTaller']),
+    'arrangeSplit', 'btnArrangeNarrower', 'btnArrangeWider', 'btnArrangeShorter',
+    'btnArrangeTaller']),
     `a selection should enable the controls, leaving Fit to text off for a block that `
     + `already fits — got ${JSON.stringify(await gated())}`);
   assert.match(await bar(), new RegExp(`^${key} · row ${before.row}, col ${before.col}`),
@@ -501,6 +502,95 @@ try {
   assert.equal(removed.selectionGone, true, 'and leave nothing selected');
   checks++;
 
+  /* 7d. Splits. The thing asked for at the very start — "split 50% left and
+         50% right that can allow to add new content" — and the second half of
+         that sentence is why it came last: there was nothing to put in the
+         freed columns until a block was a thing the model had. The proportion
+         is of the block's own width, so splitting a half again gives quarters,
+         and it is rounded to whole columns because the cell is the unit. */
+  const seedSplit = async (cols, extra) => {
+    await page.evaluate(({ c, e }) => {
+      const s = SF.Editor.currentSlide();
+      s.blocks = [];
+      s.title = 'Split me';
+      s.design.regions = { title: { col: 1, row: 1, cols: 12, rows: 2 },
+                           'block-1': Object.assign({ col: 1, row: 3, cols: c, rows: 4 }, e || {}) };
+      SF.Editor.refreshCanvas();
+      SF.Arrange.afterPaint();
+    }, { c: cols, e: extra });
+    await page.waitForTimeout(600);
+    at = await centreOf('.sf-slot[data-block-key="block-1"]');
+    await page.mouse.click(at.x, at.y);
+    await page.waitForTimeout(300);
+  };
+  const shares = () => page.evaluate(() => {
+    const r = SF.Editor.currentSlide().design.regions;
+    const made = Object.keys(r).find((k) => k.startsWith('blocks.'));
+    return { left: r['block-1'].cols, leftCol: r['block-1'].col,
+             right: made ? r[made].cols : null, rightCol: made ? r[made].col : null,
+             key: made, anchored: 'anchorX' in r['block-1'] };
+  });
+
+  for (const [share, want] of [['50', [6, 6]], ['40', [5, 7]], ['60', [7, 5]],
+                               ['20', [2, 10]], ['80', [10, 2]]]) {
+    await seedSplit(12);
+    await page.selectOption('#arrangeSplit', share);
+    await page.waitForTimeout(700);
+    const got = await shares();
+    assert.deepEqual([got.left, got.right], want,
+      `${share}/${100 - Number(share)} of twelve columns should be ${want.join(' + ')}`);
+    assert.equal(got.rightCol, got.leftCol + got.left,
+      'the new block should start where the old one ends, with no gap and no overlap');
+    assert.equal(await page.evaluate(() => document.getElementById('arrangeSplit').value), '',
+      'the picker should return to its prompt, not stay on a share');
+  }
+  checks++;
+
+  /* The new half is a block like any other: selected, typeable, and its own
+     region. */
+  const made = (await shares()).key;
+  assert.equal(await page.evaluate(() =>
+    document.querySelector('#previewBox [data-arrange-selected]')?.dataset.blockKey), made,
+    'the block in the freed columns should be the one selected');
+  await page.click('#btnArrange');
+  await page.waitForSelector('#previewBox.arranging', { state: 'detached', timeout: 10000 });
+  await page.waitForTimeout(400);
+  await page.click(`#previewBox [data-content-key="${made}"]`);
+  await page.waitForTimeout(400);
+  await page.evaluate((k) => {
+    const n = document.querySelector('#previewBox [data-content-key="' + k + '"]');
+    n.textContent = 'The other half';
+    n.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    n.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  }, made);
+  await page.waitForTimeout(600);
+  assert.equal(await page.evaluate(() => SF.Editor.currentSlide().blocks[0].text), 'The other half',
+    'and typing into it should reach the slide');
+  await page.click('#btnArrange');
+  await page.waitForSelector('#previewBox.arranging .sf-slot', { timeout: 10000 });
+  await page.waitForTimeout(400);
+  checks++;
+
+  /* An anchored block loses its anchor when it is cut. anchorRegion recomputes
+     col from the anchor on every render, so a centred block would snap back
+     across the half just freed and sit on top of the new one — the split would
+     look as though it had not happened. */
+  await seedSplit(12, { anchorX: 'center' });
+  await page.selectOption('#arrangeSplit', '50');
+  await page.waitForTimeout(700);
+  const cut = await shares();
+  assert.equal(cut.anchored, false, 'the anchor should go with the width it described');
+  assert.ok(cut.leftCol + cut.left <= cut.rightCol, 'and the two halves must not overlap');
+  checks++;
+
+  /* One column cannot become two, and the control says so rather than failing
+     quietly when pressed. */
+  await seedSplit(1);
+  assert.equal(await page.isDisabled('#arrangeSplit'), true, 'a one-column block cannot be split');
+  assert.match(await page.getAttribute('#arrangeSplit', 'title'), /cannot become two/,
+    'and the control should say why');
+  checks++;
+
   /* 8. Reset drops the map, rather than writing regions that match the theme —
         so a later theme change still moves the slide. */
   await page.click('#btnArrangeReset');
@@ -561,6 +651,7 @@ try {
     + `the top, middle or `
     + `bottom of its own rows, the bar speaks SF.latticeFit, `
     + `blocks can be added, typed into, duplicated and removed while layout blocks cannot, `
+    + `a block splits 50/50, 40/60 or 20/80 with a new block in what is freed, `
     + `Theme drops the map and Escape finishes`);
 } finally {
   await browser.close();
