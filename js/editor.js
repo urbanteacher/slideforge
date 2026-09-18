@@ -1390,6 +1390,10 @@
   }
 
   /** Undo, theme, duplicate and delete — slide chrome, not part of the words. */
+  /* opts.theme is gone: the Theme button moved to drawDesignPaneTabs, which is
+     the row that governs the whole presentation. The parameter stays so the
+     two call sites keep reading the same, and so a future chrome option has
+     somewhere to land. */
   function drawInspectorChrome(insp, opts) {
     opts = opts || {};
     var history = el('div', 'format-tools insp-chrome');
@@ -1401,7 +1405,6 @@
     redo.dataset.history = 'redo';
     history.appendChild(undo);
     history.appendChild(redo);
-    if (opts.theme) history.appendChild(UI.button('Theme', 'ghost', openDeckSettings));
     var copyBtn = UI.button('⎘ Copy', 'ghost', function () { copySlide(); });
     copyBtn.title = 'Copy this slide (⌘C / Ctrl+C) — paste in another deck or browser';
     copyBtn.setAttribute('aria-label', 'Copy this slide');
@@ -1433,7 +1436,17 @@
        at install would be lost with the old node. */
     var faces = el('div', 'format-tools canvas-faces');
     faces.setAttribute('role', 'group');
-    faces.setAttribute('aria-label', 'Canvas faces');
+    faces.setAttribute('aria-label', 'Presentation and canvas tools');
+    /* Theme belongs with these, not with Copy and Delete. It sets the whole
+       presentation, the way header and footer slots do; the row above it is
+       what you do to one slide.
+       No flag needed: this row only draws on the Content tab of a non-game
+       slide, which is exactly where drawInspectorChrome used to pass
+       theme: true. The same sheet is on the top bar as Settings, so the
+       Engagement tab is not left without a way in. */
+    var themeBtn = UI.button('◈ Theme', 'ghost', openDeckSettings);
+    themeBtn.title = 'Theme, logo, slide shape and numbers — the whole presentation';
+    faces.appendChild(themeBtn);
     /* Named rather than positional: a mixed [id, label, title, fn, fn] literal
        infers a union of string and two function shapes, and neither function
        is then callable. */
