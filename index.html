@@ -25,7 +25,7 @@ html:not([data-ready]) #app { visibility: hidden; }
 /* Same cream the studio chrome uses once CSS loads — avoids a dark→light blink. */
 html:not([data-ready]) body { background: #f0f1ed; }
 </style>
-<link rel="stylesheet" href="css/app.css?v=63">
+<link rel="stylesheet" href="css/app.css?v=65">
 <link rel="stylesheet" href="css/artwork.css?v=3">
 <link rel="stylesheet" href="css/lattice.css?v=4">
 <link rel="stylesheet" href="css/board-common.css?v=1">
@@ -33,7 +33,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <link rel="stylesheet" href="css/bingo.css?v=2">
 <link rel="stylesheet" href="css/bowl.css?v=2">
 <link rel="stylesheet" href="css/lowstakes.css?v=2">
-<link rel="stylesheet" href="css/studio.css?v=18">
+<link rel="stylesheet" href="css/studio.css?v=2">
 <link rel="stylesheet" href="css/northeastern.css?v=11">
 <link rel="stylesheet" href="css/ukbt.css?v=16">
 <link rel="stylesheet" href="css/aiad26.css?v=1">
@@ -119,6 +119,22 @@ html:not([data-ready]) body { background: #f0f1ed; }
 
     <span class="bar-break" aria-hidden="true"></span>
 
+    <!-- Build cluster, next to Run. These three used to sit in a band over the
+         canvas, under a heading that said YOUR TEACHING CANVAS and a line of
+         encouragement — 122px of the stage column spent on two static strings
+         and three buttons. The buttons are worth keeping and belong with the
+         other things you do to the whole lesson; the heading was telling you
+         where you already were. Nothing read those labels, so they are gone
+         rather than moved. -->
+    <div class="header-build" role="group" aria-label="Build this lesson">
+      <button class="btn" data-ws="deck" id="btnLibraryOpen" title="Templates, lessons and brand packs — everything saved, in one place">▦ Library</button>
+      <button class="btn" data-ws="deck" id="btnTemplate" title="The demo deck: every layout, chart, activity and live moment, with notes on when to use each one">✧ See the demo</button>
+      <button class="btn" data-ws="game" id="btnDemoGame" title="Rehearse with a SAMPLE class of fake players (boards stay interactive in the preview)">▷ Try demo</button>
+      <button class="btn primary" data-ws="game" id="btnActivitiesGame">＋ Browse quizzes</button>
+      <button class="btn" data-ws="plan" id="btnDemoActivity" title="Showcase this activity in the player without playing the whole lesson">▷ Showcase activity</button>
+      <button class="btn" data-ws="plan" id="btnPlanToDeck" title="Present, rehearse and host live from Lesson studio">▤ Open in Lesson studio</button>
+    </div>
+
     <!-- Run cluster. Same shape in every studio, pinned to the right:
            Lesson:     Teacher Presenter · Rehearse · Host live · Present
            Quiz:                      Host live · Present
@@ -156,14 +172,6 @@ html:not([data-ready]) body { background: #f0f1ed; }
 
   <!-- ---------------------------------------------------------- stage -->
   <div class="stage-area">
-    <div class="studio-toolbar" data-ws="deck"><div><span class="eyebrow">YOUR TEACHING CANVAS</span><strong id="canvasLabel">Make space for a little curiosity.</strong></div><button class="btn" id="btnLibraryOpen" title="Templates, lessons and brand packs — everything saved, in one place">▦ Library</button><button class="btn" id="btnTemplate" title="The demo deck: every layout, chart, activity and live moment, with notes on when to use each one">✧ See the demo</button><button class="btn primary" id="btnActivities" title="Games, quizzes and audience prompts — same catalogue as Engagement">＋ Add activity</button></div>
-    <!-- Quiz studio needs the library too. Without it the only thing on offer
-         here was the six engine styles, and the twenty-two ready formats were
-         unreachable from the studio whose whole job is building them. -->
-    <div class="studio-toolbar" data-ws="game"><div><span class="eyebrow">BUILD A CHECK</span><strong id="quizCanvasLabel">Pick a format, or write your own questions.</strong></div><button class="btn" id="btnDemoGame" title="Rehearse with a SAMPLE class of fake players (boards stay interactive in the preview)">▷ Try demo</button><button class="btn primary" id="btnActivitiesGame">＋ Browse quizzes</button></div>
-    <!-- The activities studio writes into the same deck, so it wears the same
-         toolbar as the other two rather than a shape of its own. -->
-    <div class="studio-toolbar" data-ws="plan"><div><span class="eyebrow">BUILD A LESSON</span><strong id="planCanvasLabel">Pick an activity. It lands in your lesson.</strong></div><button class="btn" id="btnDemoActivity" title="Showcase this activity in the player without playing the whole lesson">▷ Showcase activity</button><button class="btn" id="btnPlanToDeck" title="Present, rehearse and host live from Lesson studio">▤ Open in Lesson studio</button></div>
     <div class="stage-wrap">
       <div id="demoBanner" class="demo-banner" hidden><span id="demoBannerText">Demo uses this format’s engine and How to play. Boards rehearse in the preview; quizzes open a SAMPLE class.</span> <button type="button" id="btnDemoPlayer" class="btn ghost" title="Present this demo in the presentation player">▷ Full presentation demo</button> <button type="button" id="btnDemoReset" class="btn ghost">Reset demo</button></div>
       <div id="previewBox"></div>
@@ -173,6 +181,14 @@ html:not([data-ready]) body { background: #f0f1ed; }
          right, because that panel is the thing the zoom is competing with
          for width. -->
     <div class="canvas-bar">
+      <!-- Adding an activity inserts a slide into this deck at this point, so
+           it belongs to the canvas rather than to the whole presentation — the
+           topbar's Build cluster keeps Library and See the demo, which act on
+           the lesson as a document. It is the same catalogue as the rail's
+           ＋ Activity and the Engagement pane's, all three calling
+           openLibrary('all'); this is the door that sits with the slide you
+           are looking at. -->
+      <button class="btn primary canvas-add" data-ws="deck" id="btnActivities" title="Games, quizzes and audience prompts — inserted into this lesson. Same catalogue as ＋ Activity in the rail.">＋ Add activity</button>
       <div class="canvas-zoom" role="group" aria-label="Canvas zoom">
         <button class="canvas-bar-btn" id="btnZoomOut" type="button" title="Zoom out (⌘⌥−)" aria-label="Zoom out">−</button>
         <select class="canvas-zoom-level" id="zoomLevel" aria-label="Zoom level">
@@ -254,8 +270,17 @@ html:not([data-ready]) body { background: #f0f1ed; }
       </div>
       <button class="canvas-bar-btn wide" id="btnInspector" type="button" title="Hide the Design &amp; Engagement panel (⌘\)" aria-pressed="true">◨ Panel</button>
     </div>
-    <div class="notes-strip">
-      <label for="notes" id="notesLabel">Speaker notes — visible in presenter view only</label>
+    <!-- Folded by default. Open, it is 114px of the stage column on every
+         slide whether or not that slide has notes, and the column is the same
+         one the canvas is competing for. The label is the button now, so the
+         strip costs one row until you want it; the dot next to it says this
+         slide has notes, so folding can never hide writing you cannot see. -->
+    <div class="notes-strip" id="notesStrip" data-open="false">
+      <button class="notes-toggle" id="notesToggle" type="button" aria-expanded="false" aria-controls="notes">
+        <span class="notes-caret" aria-hidden="true">›</span>
+        <span id="notesLabel">Speaker notes — visible in presenter view only</span>
+        <span class="notes-dot" id="notesDot" hidden title="This slide has notes">●</span>
+      </button>
       <textarea id="notes" placeholder="Notes…" spellcheck="true"></textarea>
     </div>
   </div>
@@ -467,9 +492,9 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <script src="js/quick-poll.js?v=1"></script>
 <script src="js/teaching.js?v=3"></script>
 <script src="js/lesson-moments.js?v=2"></script>
-<script src="js/print.js?v=3"></script>
+<script src="js/print.js?v=4"></script>
 <script src="js/history.js?v=3"></script>
-<script src="js/shell.js?v=42"></script>
+<script src="js/shell.js?v=2"></script>
 <script src="js/content-tools.js?v=5"></script>
 <script src="js/slide-clip.js?v=1"></script>
 <script src="js/editor.js?v=60"></script>

@@ -22,7 +22,7 @@
 .wsswitch{border:0;background:#f1f2ee;padding:4px;border-radius:9px}.wsswitch button{color:#747c70;padding:8px 10px;font-size:11px}.wsswitch button.on{background:white;color:#354c2e;border-radius:6px}
 .file-menu{position:relative}.file-menu summary{list-style:none}.file-actions{position:absolute;top:42px;right:0;left:auto;z-index:25;background:white;border:1px solid var(--ui-line);padding:8px;border-radius:12px;display:grid;gap:4px;min-width:205px}.file-actions .btn{text-align:left;background:transparent;border:0}.file-actions .file-sep{display:block;height:1px;background:var(--ui-line);margin:4px 2px}
 .rail-head{height:59px;padding:18px;font-size:10px;font-weight:600}.rail-count{background:#f0f1ec;border-radius:5px;padding:3px 6px}.rail-list{padding:16px 10px;gap:13px}.thumb{padding:5px;border-radius:8px;flex-shrink:0}.qthumb{flex-shrink:0}.thumb .num{font-size:10px;padding-top:8px}.thumb .frame{border-radius:5px;border:1px solid #23321a10}.rail-foot{padding:12px;gap:8px;flex-direction:column;flex-shrink:0}.rail-foot .rail-actions{display:flex;gap:6px}.rail-foot .rail-actions .btn{flex:1;padding:10px 7px}.rail-tx label{font-size:8px;letter-spacing:1px}.rail-tx select{font-size:11px;border-radius:8px;padding:8px;background:#fafbf8;border-color:#e3e7dd}.thumb-tx{font-size:11px;width:16px}.thumb.sel .thumb-tx{color:#526943}
-.stage-area{background:#f0f1ed}.studio-toolbar{padding:22px 27px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #e2e5db}.studio-toolbar>div{flex:1}.eyebrow{display:block;font-size:9px;letter-spacing:1.8px;font-weight:700;color:#7b846f}.studio-toolbar strong{display:block;font-size:15px;letter-spacing:-.3px;font-weight:500;margin-top:7px}.studio-toolbar .btn{font-size:11px}.stage-wrap{padding:36px; background-image:radial-gradient(#84947424 .7px,transparent .7px);background-size:14px 14px;position:relative}
+.stage-area{background:#f0f1ed}.eyebrow{display:block;font-size:9px;letter-spacing:1.8px;font-weight:700;color:#7b846f}.stage-wrap{padding:36px; background-image:radial-gradient(#84947424 .7px,transparent .7px);background-size:14px 14px;position:relative}
 .demo-banner{
   display:flex;align-items:center;gap:12px;flex-wrap:wrap;
   margin:0 0 12px;padding:10px 14px;
@@ -119,8 +119,8 @@
 /* Below a wide desktop the saved state is the dot alone; the words come back
    on hover via the title, and the full label at 1500px and up. */
 @media(max-width:1500px){.topbar .store-state{font-size:0;padding:4px 6px}.topbar .store-state::before{margin-right:0}}
-@media(max-width:1150px){#app{grid-template-columns:170px minmax(300px,1fr) 265px}.brand-tag{display:none}.studio-toolbar{padding:18px;flex-wrap:wrap}.studio-toolbar>div{flex-basis:100%}.stage-wrap{padding:20px}.activity-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:800px){#app{grid-template-columns:115px minmax(0,1fr);grid-template-rows:max-content 480px minmax(280px,1fr);overflow:auto;grid-template-areas:'bar bar' 'rail stage' 'inspector inspector';height:100dvh}.inspector{border-top:1px solid var(--ui-line)}.topbar{padding:9px;gap:6px}.brand{font-size:15px;margin-right:4px}.topbar .switch,.topbar .vsep,#btnPresenter,#btnHistory{display:none}.studio-toolbar strong{font-size:12px}.stage-wrap{padding:12px}.notes-strip{padding:10px}.notes-strip textarea{height:30px}.rail-list{padding:8px 3px}.thumb{gap:3px;padding:2px}.thumb .num{width:10px}.activity-grid{grid-template-columns:repeat(2,1fr)}.activity-modal{padding:20px}.activity-modal h2{font-size:22px}.header-actions{margin-left:0;width:100%;justify-content:flex-end}.header-doc{margin-left:auto}/* The File menu is 205px anchored to the left of a button sitting two
+@media(max-width:1150px){#app{grid-template-columns:170px minmax(300px,1fr) 265px}.brand-tag{display:none}.stage-wrap{padding:20px}.activity-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:800px){#app{grid-template-columns:115px minmax(0,1fr);grid-template-rows:max-content 480px minmax(280px,1fr);overflow:auto;grid-template-areas:'bar bar' 'rail stage' 'inspector inspector';height:100dvh}.inspector{border-top:1px solid var(--ui-line)}.topbar{padding:9px;gap:6px}.brand{font-size:15px;margin-right:4px}.topbar .switch,.topbar .vsep,#btnPresenter,#btnHistory{display:none}.stage-wrap{padding:12px}.notes-strip{padding:10px}.notes-strip textarea{height:30px}.rail-list{padding:8px 3px}.thumb{gap:3px;padding:2px}.thumb .num{width:10px}.activity-grid{grid-template-columns:repeat(2,1fr)}.activity-modal{padding:20px}.activity-modal h2{font-size:22px}.header-actions{margin-left:0;width:100%;justify-content:flex-end}.header-doc{margin-left:auto}/* The File menu is 205px anchored to the left of a button sitting two
    thirds of the way across, so on a phone it ran 25px past the right
    edge and clipped every item in it. Hang it from the right instead. */.file-actions{left:auto;right:0}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
@@ -206,7 +206,7 @@
 
 /* ---------------------------------------------------------- Activities --
    The activities studio writes into the deck, so it wears the deck's chrome:
-   the same .studio-toolbar, the same .thumb rail with real slide previews,
+   the same header build cluster, the same .thumb rail with real slide previews,
    and the same .activity-card grid the library already used. The only rules
    here are the ones that let the catalogue fill the stage, plus a tint per
    kind of activity. Nothing invents a third look. */

@@ -527,8 +527,7 @@
       var host = ensureDemoHost();
       SF.Boards.mount(host, slide, node);
     }
-    var notes = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
-    if (notes) notes.value = q() ? (q().notes || '') : '';
+    SF.setNotes(q() ? q().notes : '');
   }
 
   /* ------------------------------------------------- per-style inspectors */

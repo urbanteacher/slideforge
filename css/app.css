@@ -401,16 +401,49 @@ html[data-ws="game"] #btnSorter { display: none; }
   background: var(--ui-panel);
   padding: 8px 14px 12px;
 }
-.notes-strip label {
+/* Folded, the strip is its own label. Open it cost 114px of the stage column
+   on every slide whether or not that slide had notes, and the column is the
+   one the canvas competes for. */
+.notes-strip[data-open="false"] { padding-bottom: 8px; }
+.notes-strip[data-open="false"] textarea { display: none; }
+.notes-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
   font-size: 11px; text-transform: uppercase; letter-spacing: .07em;
-  color: var(--ui-dim); display: block; margin-bottom: 5px;
+  color: var(--ui-dim);
 }
+.notes-toggle:hover { color: var(--ui-text); }
+.notes-toggle:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+.notes-caret { transition: transform .12s ease; font-size: 13px; line-height: 1; }
+.notes-strip[data-open="true"] .notes-caret { transform: rotate(90deg); }
+/* The dot is the whole reason folding is safe: a slide with notes says so
+   while they are out of sight, so this can never hide writing you cannot see. */
+.notes-dot { color: var(--ui-accent); font-size: 9px; }
+.notes-dot[hidden] { display: none; }
 .notes-strip textarea {
-  width: 100%; height: 54px; resize: vertical;
+  width: 100%; height: 54px; resize: vertical; margin-top: 5px;
   background: var(--ui-bg); border: 1px solid var(--ui-line);
   border-radius: 6px; padding: 7px 9px; font-size: 13px; line-height: 1.5;
 }
 .notes-strip textarea:focus { outline: none; border-color: var(--ui-accent); }
+
+/* Build cluster in the topbar. Sits to the left of the run cluster, which
+   keeps its margin-left:auto, so Build and Run read as "make it" then "show
+   it" along one row instead of one band over the canvas and one in the bar. */
+.header-build { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.header-build .btn { font-size: 11px; white-space: nowrap; }
+
+/* Add activity stays with the canvas: it inserts a slide into this deck at
+   this point, which is not something you do to the presentation as a
+   document. Library and See the demo are, and they went up to the topbar. */
+.canvas-bar .canvas-add { font-size: 11px; white-space: nowrap; flex: none; }
 
 /* inspector -------------------------------------------------------------- */
 

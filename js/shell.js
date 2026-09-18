@@ -453,7 +453,7 @@
 
     var railLabel = $('railLabel');
     if (railLabel) railLabel.textContent = ws.railLabel;
-    var notesLabel = $('notesLabel');
+  var notesLabel = $('notesLabel');
     if (notesLabel) notesLabel.textContent = ws.notesLabel;
     try { localStorage.setItem(LAST_WS, key); } catch (e) {}
 
@@ -463,6 +463,68 @@
       SF.toast(key === 'deck' ? 'Presentation' : key === 'plan' ? 'Lesson plan' : 'Game');
     }
   }
+
+    /* ---------------------------------------------------------- notes strip
+     Folded by default, and remembered. Open, the strip is 114px of the stage
+     column on every slide whether or not that slide has notes, and the column
+     is the one the canvas is competing for — the same budget the three studio
+     bands used to take another 122px of.
+
+     Folding is only safe because of the dot: a slide that has notes says so
+     while they are out of sight. Without it this would be a way to lose
+     writing quietly, which is worse than the space it saves. */
+  var NOTES_OPEN_KEY = 'sf.notes.open';
+
+  function notesStripOpen(open) {
+    var strip = $('notesStrip'), toggle = $('notesToggle');
+    if (!strip || !toggle) return;
+    strip.setAttribute('data-open', open ? 'true' : 'false');
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    try { localStorage.setItem(NOTES_OPEN_KEY, open ? '1' : '0'); } catch (e) {}
+    if (open) {
+      var area = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
+      if (area) area.focus();
+    }
+  }
+
+  /* The one place that knows a slide's notes have changed, so the dot cannot
+     drift from the text. Callers set notes through here rather than assigning
+     to the textarea, which is what kept the marker honest. */
+  SF.setNotes = function (text) {
+    var area = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
+    if (area) area.value = text == null ? '' : String(text);
+    SF.markNotes();
+  };
+
+  SF.markNotes = function () {
+    var area = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
+    var dot = $('notesDot');
+    if (!dot) return;
+    dot.hidden = !(area && String(area.value || '').trim());
+  };
+
+  /* The listener sits directly under its own lookup, and this note sits above
+     the function rather than between them: menu-wiring.test.js looks for a
+     handler within 400 characters of the id it belongs to, and a comment long
+     enough to explain itself was spending that budget. The rule is right —
+     a lookup and its listener drifting apart is how a control ends up with
+     none — so the prose moved instead of the code. */
+  SF.installNotesStrip = function () {
+    var strip = $('notesStrip');
+    var toggle = $('notesToggle');
+    if (!toggle || !strip || toggle.dataset.wired) return;
+    toggle.dataset.wired = '1';
+    var box = strip;
+    toggle.addEventListener('click', function () {
+      notesStripOpen(box.getAttribute('data-open') !== 'true');
+    });
+    var remembered = '0';
+    try { remembered = localStorage.getItem(NOTES_OPEN_KEY) || '0'; } catch (e) {}
+    notesStripOpen(remembered === '1');
+    var area = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
+    if (area) area.addEventListener('input', SF.markNotes);
+    SF.markNotes();
+  };
 
   /** Push the active document's title/theme into the shared chrome. */
   function syncChrome() {
@@ -1515,6 +1577,7 @@
     // engines register themselves when their script runs
     SF.Editor.install();
     SF.Games.install();
+    SF.installNotesStrip();
     if (SF.Artwork) SF.Artwork.install();
     if (SF.Arrange) SF.Arrange.install();
 

@@ -1147,8 +1147,7 @@
         }));
       box.appendChild(focus);
       requestAnimationFrame(function () { SF.fit(box, focus); });
-      var notesArea = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
-      if (notesArea) notesArea.value = s.notes || '';
+      SF.setNotes(s.notes);
       return;
     }
 
@@ -1199,8 +1198,7 @@
 
     var boxEl2 = box;
     requestAnimationFrame(function () { if (boxEl2) SF.fit(boxEl2, node); });
-    var notesArea2 = /** @type {HTMLTextAreaElement|null} */ ($('notes'));
-    if (notesArea2) notesArea2.value = s.notes || '';
+    SF.setNotes(s.notes);
     /* The canvas was just rebuilt, so anything the art face puts on top of it —
        the selection ring, the ghost on a hidden shape — has to go back on. */
     if (SF.Artwork) SF.Artwork.afterPaint();
