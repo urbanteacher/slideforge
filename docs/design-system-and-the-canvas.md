@@ -2146,3 +2146,59 @@ system and one build, not a rewrite.
 - **Dead subtitles**: every slide in `AiAd27/bundles/AiAd27-All-Five.sfbundle.json`
   filtered to the 10 intercepted types, counting non-empty `subtitle` on the
   9 types the renderer never reads.
+
+### 2026-09-18 — artwork ordering, measured before building
+
+`tools/art-order-probe.mjs` renders real slides and reports what ordering would
+buy. Run it with the server up; it asserts nothing.
+
+The stack as it paints, and the asymmetry nobody declared:
+
+| layer | z-index | paints |
+| --- | --- | --- |
+| `.theme-art` children | auto, absolute | **below** content |
+| `.pad` (content) | 1 or static | between |
+| `.slide-art` (placed pictures) | 2 | **above** content |
+
+So a placed picture is in front of the words *always*, not as an option — a
+full-bleed picture blanks a slide today, verified on screen. And theme
+decoration is behind them always. Four authoring intents, attempted with
+today's model:
+
+| intent | today |
+| --- | --- |
+| a picture as a backdrop, behind the words | **blocked** — it goes in front |
+| a picture in front of the words, on purpose | works, and is the only option |
+| two pictures, the second on top | works, by array order |
+| a theme shape in front of a picture | **blocked** |
+
+Two of four, and both are the same thing: a crossing between the two artwork
+layers. Ordering *within* a layer already works. That is the whole benefit —
+not the eleven controls the reverted stack carried (rename, lock, hide, rotate,
+opacity, forward, backward, behind, in front, own shapes, a named list).
+
+The cost is a guardrail that does not exist. Across 32 library decks and 563
+slides, 74 draw artwork and **45 have artwork sitting over their own text** — up
+to 59.7%, six of them over a quarter, almost all section slides where the theme
+draws its marks behind the heading. Harmless while theme art is below content;
+each is a slide that a "bring to front" would blank on the first click. And
+nothing would say so: `Review.check` calls a fully covered slide sound,
+`latticeFit` reports no overflow, and the text still measures at full height.
+Every check in the app asks whether content fits its space. None asks whether
+anything is on top of it.
+
+**Recommendation.** If ordering is built, build it as one control with two
+values per artwork item — behind content, in front of content — and add an
+occlusion measure to `SF.Review.check` first, so the deck audit stops calling a
+blanked slide sound. The measure is cheap: the text-run rectangles are already
+walked there for the boundary check, and the artwork rectangles are already
+known. Ordering without it is the reverted stack's mistake in miniature.
+
+Two instrument faults this probe had before it was trustworthy, both worth
+knowing for the next measurement of this kind. `elementFromPoint` skips
+`pointer-events: none`, which both artwork layers declare outside the art face,
+so an unprepared hit test reported the text on top of a picture demonstrably
+covering it. And `buildLesson` takes a key string: `buildLesson({key})` filters
+by `=== key`, misses, and falls back to `LESSONS[0]`, so the first census
+measured one six-slide deck thirty-two times and reported nothing wrong. The
+probe now refuses a census whose decks are not distinct.
