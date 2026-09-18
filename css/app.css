@@ -6691,3 +6691,14 @@ html[data-ws="deck"] #railCount { display: none; }
    they wrapped it to two rows and pushed Panel onto a line of its own. */
 .canvas-faces { flex-wrap: wrap; }
 .canvas-faces .btn { flex: 1 1 auto; }
+
+/* The canvas text editor, docked over the editor column. It floats on the
+   canvas when it fits there; at a modest window it is larger than the slide it
+   edits, and no position or drag can fix that. See placeCanvasEditForm. */
+.canvas-edit-form.canvas-edit-docked {
+  z-index: 60;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+  box-shadow: -8px 0 24px rgba(12, 51, 84, .10);
+}

@@ -194,6 +194,35 @@
     /* Prefer below the slot; if that clips, sit above or to the side. */
     if (top > maxT) top = Math.max(0, (b.top - h.top) * scaleY - form.offsetHeight - 8);
     if (left > maxL) left = maxL;
+
+    /* Measured 2026-09-18: the form is 390x305 and the canvas at a modest
+       window is 392x221 — 137% of the area it is supposed to float over, and
+       spilling out below it. There is no position that fixes a panel larger
+       than the thing it edits, and the drag handle cannot help either, so it
+       stops being a canvas overlay and docks over the editor column.
+       Fixed against the viewport rather than appended into #inspector, because
+       drawInspector() clears its own innerHTML and a redraw mid-edit would
+       take the form and whatever was being typed into it. */
+    var rail = document.getElementById('inspector');
+    var fits = form.offsetHeight <= host.clientHeight - 8
+      && form.offsetWidth <= host.clientWidth - 8;
+    if (!fits && rail && rail.getClientRects().length) {
+      var r = rail.getBoundingClientRect();
+      document.body.appendChild(form);
+      form.classList.add('canvas-edit-docked');
+      form.style.position = 'fixed';
+      form.style.right = 'auto';
+      form.style.bottom = 'auto';
+      form.style.left = Math.round(r.left) + 'px';
+      form.style.top = Math.round(r.top) + 'px';
+      form.style.width = Math.round(r.width) + 'px';
+      form.style.maxHeight = Math.round(r.height) + 'px';
+      return;
+    }
+    form.classList.remove('canvas-edit-docked');
+    form.style.position = '';
+    form.style.width = '';
+    form.style.maxHeight = '';
     form.style.right = 'auto';
     form.style.bottom = 'auto';
     form.style.left = Math.max(0, Math.min(maxL, left)) + 'px';
@@ -205,6 +234,9 @@
     if (!box || !s || !key) return;
     var host = canvasEditHost(box);
     host.querySelectorAll('.canvas-edit-form').forEach(function (n) { n.remove(); });
+    /* A docked form is parented to the body, so clearing the canvas host alone
+       would leave the previous one open over the rail. */
+    document.querySelectorAll('body > .canvas-edit-form').forEach(function (n) { n.remove(); });
 
     var bulletMatch = /^bullets\.(\d+)$/.exec(key);
     var oldRaw = bulletMatch ? String(s.bullets[Number(bulletMatch[1])] || '') : String(s[key] || '');
