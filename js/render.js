@@ -277,6 +277,15 @@
         var dx = r.anchorX === 'center' && (LATTICE.cols - r.cols) % 2 ? LATTICE.stepX / 2 : 0;
         var dy = r.anchorY === 'middle' && (LATTICE.rows - r.rows) % 2 ? 50 / r.rows : 0;
         if (dx || dy) slot.style.transform = 'translate(' + dx + 'px, ' + dy + '%)';
+        /* Where the words sit inside the rows the region gave them, which is a
+           different question from where the region sits on the slide. A
+           three-row region holding two rows of text can put them in rows 1-2,
+           2-3, or centred, and the vertical anchor above cannot say any of
+           that — it moves the region and keeps the text at its top.
+           Stamped only when it has been chosen, so a slide that has never
+           asked renders exactly as it did before this existed. */
+        if (/^(top|middle|bottom)$/.test(r.alignY || '')) slot.setAttribute('data-align-y', r.alignY);
+        if (/^(left|center|right)$/.test(r.alignX || '')) slot.setAttribute('data-align-x', r.alignX);
       }
       slot.appendChild(node);
       grid.appendChild(slot);

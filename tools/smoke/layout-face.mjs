@@ -182,6 +182,52 @@ try {
     `the bar should say the shortfall, said "${verdict.text}"`);
   checks++;
 
+  /* 7b. Where the words sit inside the rows the region gave them, which is a
+         different question from where the region sits. A three-row region
+         holding two rows of text could not put them in rows 2-3 before this:
+         the vertical anchor moves the region and leaves the text at its top.
+         Measured in rows, on a region with spare ones, because that is the
+         only case where it can show. */
+  await page.evaluate((k) => {
+    const r = SF.Editor.currentSlide().design.regions[k];
+    r.rows = 6;
+    delete r.alignY;
+    SF.Editor.refreshCanvas();
+    SF.Arrange.afterPaint();
+  }, key);
+  await page.waitForTimeout(700);
+  at = await centreOf(`.sf-slot[data-block-key="${key}"]`);
+  await page.mouse.click(at.x, at.y);
+  await page.waitForTimeout(300);
+  assert.match(await bar(), /lines used, \d+ spare/,
+    `the bar should say how many rows are spare, said "${await bar()}"`);
+  const packed = {};
+  for (const side of ['', 'middle', 'bottom']) {
+    await page.selectOption('#arrangeAlignY', side);
+    await page.waitForTimeout(500);
+    packed[side || 'top'] = await page.evaluate((k) => {
+      const slot = document.querySelector('#previewBox .sf-slot[data-block-key="' + k + '"]');
+      const kid = slot.firstElementChild;
+      const a = slot.getBoundingClientRect(), b = kid.getBoundingClientRect();
+      const scale = document.querySelector('#previewBox .slide').getBoundingClientRect().width / 1280;
+      return {
+        above: Math.round((b.top - a.top) / scale / 36 * 10) / 10,
+        below: Math.round((a.bottom - b.bottom) / scale / 36 * 10) / 10,
+        attr: slot.getAttribute('data-align-y'),
+        stored: SF.Editor.currentSlide().design.regions[k].alignY ?? null,
+      };
+    }, key);
+  }
+  assert.equal(packed.top.above, 0, 'top should pack the words against the first row');
+  assert.equal(packed.top.stored, null, 'and store nothing, because it is the default');
+  assert.equal(packed.top.attr, null, 'and stamp nothing, so an untouched slide renders as before');
+  assert.equal(packed.bottom.below, 0, 'bottom should pack them against the last row');
+  assert.equal(packed.bottom.stored, 'bottom', 'and store the side on the region');
+  assert.ok(Math.abs(packed.middle.above - packed.middle.below) < 0.2,
+    `middle should split the spare rows, got ${packed.middle.above} above and ${packed.middle.below} below`);
+  assert.ok(packed.bottom.above > 1, `bottom should actually move it, ${packed.bottom.above} rows down`);
+  checks++;
+
   /* 8. Reset drops the map, rather than writing regions that match the theme —
         so a later theme change still moves the slide. */
   await page.click('#btnArrangeReset');
@@ -237,7 +283,8 @@ try {
 
   assert.deepEqual(errors, []);
   console.log(`ok · layout face: ${checks} checks · a click selects (words included), a wobble does not move, `
-    + `arrows and sizers write regions, an anchor sticks, the bar speaks SF.latticeFit, `
+    + `arrows and sizers write regions, an anchor sticks, text packs to the top, middle or `
+    + `bottom of its own rows, the bar speaks SF.latticeFit, `
     + `Theme drops the map and Escape finishes`);
 } finally {
   await browser.close();

@@ -2237,3 +2237,58 @@ covering it. And `buildLesson` takes a key string: `buildLesson({key})` filters
 by `=== key`, misses, and falls back to `LESSONS[0]`, so the first census
 measured one six-slide deck thirty-two times and reported nothing wrong. The
 probe now refuses a census whose decks are not distinct.
+
+### 2026-09-18 — what the lattice can and cannot author
+
+`tools/authoring-probe.mjs`, `npm run audit:authoring`. Eight scenarios, each
+attempted in the real editor with the real controls. It reports rather than
+asserts: the question is what to build next, and a pass/fail would hide it.
+
+| scenario | verdict |
+| --- | --- |
+| 1. the icon box | **partly** — the four A/B/C/D choices are **one** lattice block |
+| 1b. replace or duplicate an icon | **blocked** |
+| 2. move text inside its own rows | **reached** (built here) |
+| 3. a heading grows one line to two | **blocked** — nothing below moves |
+| 4. add, duplicate or delete a block | **partly** — bullets in the rail only |
+| 5. split a region to add an item | **blocked** |
+| 6. change an item from text to an icon | **blocked** |
+| 7. build AiAd27 slides 2–6 from blank | reached, but not by the lattice |
+
+Three findings worth stating plainly.
+
+**The letters are not content.** On a `ballot` slide the lattice sees three
+blocks: `title`, `cp-choices`, `body`. All four choices, their letters and their
+copy are one block, and the letters carry no `data-content-key` — the
+composition generates them from the bullet index. So "replace A with a symbol"
+is not a content operation at all; it is a change to the composition.
+
+**Nothing pushes down.** A heading grown from one line to two goes from
+`need 2/2` to `need 6/2 OVER`; the block below stays at `4/4`. Engine 3 has
+`reflowRows` for exactly this and it was never carried into production, so the
+Layout face reports the overrun and no one fixes it automatically.
+
+**From blank, the lattice plays no part.** Each AiAd27 slide is a slide type
+plus a named composition — `title`+`poster-art`, `quote`+`voice`,
+`cards`+`ballot`, `statement`+`prompt`, `sourcecheck`+`credits`. The path is:
+add slide, choose type, choose composition, type the words in the rail. The
+lattice can only adjust afterwards, and only by moving and resizing blocks the
+composition already made. That is the honest shape of the gap: everything
+blocked above is a question about the *blocks*, and a region only stores a
+position.
+
+**Built here: align within a region.** `region.alignY` = `top | middle |
+bottom`, offered as **Text in rows** in the arrange bar. On a six-row region
+holding three lines, the words start 0, 1.7 or 3.4 rows down — which is the
+"rows 1–2 or rows 2–3 of the three" case. Stored only when it is not the
+default and stamped only when stored, so the 642 visual baselines did not move.
+Three positions rather than free movement, because the cell is the unit the
+whole lattice is measured against; an arbitrary offset would put a block off
+the grid its own fit check uses. The bar now also reports spare capacity —
+"3 of 6 lines used, 3 spare" — since that is the only state where the control
+does anything.
+
+**Still open, in cost order:** push-down on growth (`reflowRows` exists,
+untransplanted); split a region into two; add and remove blocks, which is the
+hard one because a block's kind comes from the slide type and a free block
+would need its own content model.

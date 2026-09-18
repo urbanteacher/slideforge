@@ -312,6 +312,8 @@
     var ay = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeAnchorY'));
     if (ax) ax.value = (region && region.anchorX) || '';
     if (ay) ay.value = (region && region.anchorY) || '';
+    var al = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeAlignY'));
+    if (al) al.value = (region && region.alignY) || '';
     var what = document.getElementById('arrangeWhat');
     if (!what) return;
     var over = verdict.filter(function (v) { return v.over; });
@@ -325,6 +327,10 @@
       var fit = !v ? ''
         : v.wide && v.need <= v.have ? ' — overflows sideways'
         : v.over ? ' — needs ' + v.need + ' lines, has ' + v.have
+        /* Spare rows are the case where "text in rows" does something, so say
+           how many there are rather than only that it fits. */
+        : v.need != null && v.have > v.need ? ' — ' + v.need + ' of ' + v.have
+            + ' lines used, ' + (v.have - v.need) + ' spare'
         : '';
       what.textContent = selected + where + fit;
       what.dataset.fit = v && v.over ? 'over' : 'ok';
@@ -423,6 +429,24 @@
         commit(true);afterPaint();
       });
     });
+    /* Where the words sit inside the rows the region gave them. A different
+       question from the anchors above, which move the region itself and leave
+       the text at its top — a three-row region holding two rows of text could
+       not put them in rows 2-3, which is the thing the lattice looked like it
+       should already do. Deleted rather than stored when it is the default, so
+       a region that has never chosen carries no key and renders as before. */
+    var align = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeAlignY'));
+    if (align) {
+      var alignPicker = align;
+      alignPicker.addEventListener('change', function () {
+        var map = regionsOf(slide()), r = selected && map && map[selected];
+        if (!r) return;
+        if (alignPicker.value) r.alignY = alignPicker.value;
+        else delete r.alignY;
+        commit(true);
+        afterPaint();
+      });
+    }
     document.addEventListener('keydown', function (e) {
       /* One call, one value: box() twice is two lookups, and the guard on the
          first says nothing about the second. */

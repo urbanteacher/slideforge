@@ -20,6 +20,32 @@
   column-gap: 36px;
 }
 .sf-slot { position: relative; min-width: 0; min-height: 0; }
+
+/* ------------------------------------------- where the words sit in the rows
+   A different question from where the region sits on the slide, which is what
+   the vertical anchor answers. A three-row region holding two rows of text can
+   put them in rows 1-2, rows 2-3, or centred; the anchor moves the whole
+   region and leaves the text at its top.
+
+   Free movement inside a region is deliberately not offered. The cell is the
+   unit here — that is the rule the whole lattice is built on — so the choice
+   is which end of the region the content is packed against, not an arbitrary
+   offset that would put a block off the grid it is measured against.
+
+   Flex only when a side has been chosen, because switching every slot to flex
+   would relayout every latticed slide in the library for the sake of the few
+   that ask. */
+.sf-slot[data-align-y],
+.sf-slot[data-align-x] { display: flex; flex-direction: column; }
+.sf-slot[data-align-y="top"] { justify-content: flex-start; }
+.sf-slot[data-align-y="middle"] { justify-content: center; }
+.sf-slot[data-align-y="bottom"] { justify-content: flex-end; }
+.sf-slot[data-align-x="left"] { align-items: flex-start; }
+.sf-slot[data-align-x="center"] { align-items: center; }
+.sf-slot[data-align-x="right"] { align-items: flex-end; }
+/* A flex column stretches its child by default, which is what a block slot did
+   as a plain box; only a chosen horizontal side should shrink it to its words. */
+.sf-slot[data-align-y]:not([data-align-x]) { align-items: stretch; }
 /* The slot owns the box now, so a block's own margin would be a second,
    invisible spacing system inside a cell that already has a size. */
 .sf-slot > * { margin: 0 !important; max-width: none; box-sizing: border-box; }
