@@ -128,20 +128,25 @@ try {
   await wall.waitForFunction(() => !!(SF.Live && SF.Live.prompt));
 
   for (let i = 0; i < 3; i++) {
-    if ((await desk.locator('#btnRail').innerText()).trim() === 'Room: split') break;
+    if ((await desk.locator('#btnRail').innerText()).trim() === 'Room: beside the slide') break;
     await desk.locator('[data-cmd=rail]').click();
     await desk.waitForTimeout(500);
   }
-  assert.equal((await desk.locator('#btnRail').innerText()).trim(), 'Room: split',
-    'Room view should cycle to the split, which is the state this check is about');
+  assert.equal((await desk.locator('#btnRail').innerText()).trim(), 'Room: beside the slide',
+    'Room view should cycle to the rail, which is the state this check is about');
   await wall.waitForFunction(() => !!SF.Player._rail);
   await desk.waitForSelector('#boxNow .desk-wall-rail');
   assert.ok(await wall.evaluate(() => !!SF.Player._rail), 'the wall really has a rail up');
-  /* The middle room-view stop is called "split" where a teacher reads it. */
-  assert.equal((await desk.locator('#btnRail').innerText()).trim(), 'Room: split',
-    'the desk button names the split');
+  /* The middle room-view stop is named for what a teacher sees, not for the
+     state string behind it. Those two parted company in f0cc5b5: the states
+     became 'rail' and 'focus' — the deck model's own words, translated at the
+     wire by ROOM_VIEW_WIRE — and the label became "beside the slide". This
+     asserted the old wording and was measuring the rename rather than the
+     mirroring it is here for. */
+  assert.equal((await desk.locator('#btnRail').innerText()).trim(), 'Room: beside the slide',
+    'the desk button names the state in the words a teacher reads');
   assert.ok((await desk.evaluate(() => [...document.querySelectorAll('#boxNow .wall-chrome span')]
-    .map((s) => s.textContent))).includes('Room: split'), 'the chip names the split too');
+    .map((s) => s.textContent))).includes('Room: beside'), 'and the chip names it too');
 
   /* Join QR covers the wall from outside #player, which is exactly why it was
      invisible from the desk — it is in no deck and under no viewport. */
