@@ -28,6 +28,9 @@
 
   var arranging = false;
   var selected = null;
+  var selectedSlide = null;
+  var cancelDrag = null;
+  var arrangedSlide = null;
 
   function L() { return SF.LATTICE; }
   function box() { return document.getElementById('previewBox'); }
@@ -174,12 +177,14 @@
       n.removeAttribute('data-arrange-selected');
     });
     selected = slot ? slot.getAttribute('data-block-key') : null;
+    selectedSlide = selected ? slide() : null;
     if (slot) slot.setAttribute('data-arrange-selected', '');
     paintBar();
   }
 
   function beginDrag(e) {
-    if (!arranging) return;
+    if (!arranging || e.button !== 0 || e.isPrimary === false) return;
+    if (cancelDrag) cancelDrag();
     var slot = e.target.closest && e.target.closest('.sf-slot');
     if (!slot) { select(null); return; }
     e.preventDefault();
@@ -214,10 +219,21 @@
       slot.setAttribute('data-span', landed.rows + 'r x ' + landed.cols + 'c');
       drawGuides(landed, key);
     }
-    function up() {
+    function cleanup() {
       document.removeEventListener('pointermove', move);
       document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', cancel);
+      window.removeEventListener('blur', cancel);
+      cancelDrag = null;
       clearGuides();
+    }
+    function cancel() {
+      cleanup();
+      if (SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
+    }
+    function up() {
+      cleanup();
+      if (slide() !== s || !arranging) return;
       if (!moved) return;
       map[key] = landed;
       commit(true);
@@ -225,6 +241,9 @@
     }
     document.addEventListener('pointermove', move);
     document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', cancel);
+    window.addEventListener('blur', cancel);
+    cancelDrag = cancel;
   }
 
   // ----------------------------------------------------------------- actions
@@ -249,8 +268,8 @@
     if (!s || !s.design || !s.design.regions) return;
     delete s.design.regions;
     selected = null;
-    commit(true);
-    afterPaint();
+    commit(false);
+    setArranging(false);
     SF.toast && SF.toast('Arrangement reset — this slide follows its theme again.');
   }
 
@@ -267,7 +286,7 @@
     var rt = root();
     if (!rt || !arranging) return;
     requestAnimationFrame(function () {
-      if (!arranging) return;
+      if (!arranging || rt !== root()) return;
       verdict = SF.latticeFit(rt);
       paintBar();
     });
@@ -310,6 +329,16 @@
   }
 
   function afterPaint() {
+    if (arranging && arrangedSlide !== slide()) {
+      setArranging(false);
+      return;
+    }
+    if (selectedSlide && selectedSlide !== slide()) {
+      selected = null;
+      selectedSlide = null;
+      verdict = [];
+      if (cancelDrag) cancelDrag();
+    }
     var rt = root();
     var b = box();
     if (b) b.classList.toggle('arranging', arranging);
@@ -330,7 +359,10 @@
   }
 
   function setArranging(on) {
+    if (on && SF.Artwork && SF.Artwork.isEditing()) SF.Artwork.setEditing(false);
+    if (cancelDrag) cancelDrag();
     arranging = !!on;
+    arrangedSlide = arranging ? slide() : null;
     if (!arranging) { selected = null; verdict = []; clearGuides(); }
     var toggle = document.getElementById('btnArrange');
     if (toggle) {
@@ -369,10 +401,33 @@
     var reset = document.getElementById('btnArrangeReset');
     if (reset) reset.addEventListener('click', resetArrangement);
     document.addEventListener('keydown', function (e) {
-      if (!arranging || e.key !== 'Escape') return;
+      /* One call, one value: box() twice is two lookups, and the guard on the
+         first says nothing about the second. */
+      var host = box();
+      if (!arranging || (SF.Player && SF.Player.open) || !host || !host.getClientRects().length) return;
+      var from = /** @type {Element|null} */ (e.target);
+      if (from && from.closest && from.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], dialog')) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        setArranging(false);
+        return;
+      }
+      if (!selected || e.metaKey || e.ctrlKey || e.altKey || !/^Arrow(Left|Right|Up|Down)$/.test(e.key)) return;
+      var map = regionsOf(slide());
+      var r = map && map[selected];
+      if (!r) return;
       e.preventDefault();
-      setArranging(false);
-    });
+      e.stopImmediatePropagation();
+      var dx = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      var dy = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0;
+      if (e.shiftKey) { resize(dx, dy); return; }
+      var g = L();
+      r.col = clamp(r.col + dx, 1, g.cols - r.cols + 1);
+      r.row = clamp(r.row + dy, 1, g.rows - r.rows + 1);
+      commit(true);
+      afterPaint();
+    }, true);
     paintBar();
   }
 

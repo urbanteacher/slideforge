@@ -28,6 +28,8 @@
 
   var editing = false;
   var selected = null;
+  var selectedSlide = null;
+  var cancelDrag = null;
 
   function box() { return document.getElementById('previewBox'); }
   function slide() { return SF.Editor && SF.Editor.currentSlide && SF.Editor.currentSlide(); }
@@ -113,6 +115,7 @@
       n.removeAttribute('data-art-selected');
     });
     selected = target;
+    selectedSlide = target ? slide() : null;
     if (target) target.node.setAttribute('data-art-selected', '');
     paintBar();
   }
@@ -130,11 +133,16 @@
         n.style.display = 'block';
       } else n.removeAttribute('data-art-hidden');
     });
+    root.querySelectorAll('[data-art-pic]').forEach(function (n) {
+      var pic = pictureById(s, n.getAttribute('data-art-pic'));
+      n.toggleAttribute('data-art-hidden', !!(pic && pic.hidden));
+    });
   }
 
   // ------------------------------------------------------------------ drag
   function beginDrag(e) {
-    if (!editing) return;
+    if (!editing || e.button !== 0 || e.isPrimary === false) return;
+    if (cancelDrag) cancelDrag();
     var root = box();
     if (!root) return;
     var target = targetOf(e.target);
@@ -146,6 +154,7 @@
        run, so nothing downstream can rely on the null check. This is the thing
        that was picked, and it does not change for the life of the drag. */
     var picked = target;
+    var owner = slide();
     var scale = scaleOf(root);
     var start = originOf(picked, root);
     var fromX = e.clientX;
@@ -168,9 +177,20 @@
       picked.node.dataset.artDragX = String(x);
       picked.node.dataset.artDragY = String(y);
     }
-    function up() {
+    function cleanup() {
       document.removeEventListener('pointermove', move);
       document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', cancel);
+      window.removeEventListener('blur', cancel);
+      cancelDrag = null;
+    }
+    function cancel() {
+      cleanup();
+      if (SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
+    }
+    function up() {
+      cleanup();
+      if (slide() !== owner || !editing) return;
       if (!moved) return;
       writePose(picked, {
         x: Number(picked.node.dataset.artDragX),
@@ -181,6 +201,9 @@
     }
     document.addEventListener('pointermove', move);
     document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', cancel);
+    window.addEventListener('blur', cancel);
+    cancelDrag = cancel;
   }
 
   // --------------------------------------------------------------- actions
@@ -212,7 +235,7 @@
     if (!selected) return;
     var pose = readPose(selected);
     if (selected.kind === 'picture') {
-      var w = Math.max(40, Math.round((pose.w || selected.node.getBoundingClientRect().width) + by));
+      var w = Math.max(40, Math.round((pose.w || selected.node.getBoundingClientRect().width / scaleOf(box())) + by));
       writePose(selected, { w: w });
     } else {
       var scale = Math.max(0.2, Math.round(((pose.scale || 1) + by / 200) * 100) / 100);
@@ -239,25 +262,41 @@
 
   function addPicture(file) {
     if (!file) return;
+    if (!/^image\//.test(file.type)) {
+      SF.toast && SF.toast('Choose an image file.');
+      return;
+    }
+    var owner = slide();
+    if (!owner) return;
     if (file.size > BIG_IMAGE) {
       SF.toast && SF.toast('That image is over 3.5 MB — it may exceed the browser storage limit.');
     }
     var fr = new FileReader();
     fr.onload = function () {
-      var s = slide();
+      // Do not attach a delayed read to a different slide or an old undo snapshot.
+      if (slide() !== owner) {
+        SF.toast && SF.toast('Slide changed. Select the picture again on the intended slide.');
+        return;
+      }
+      var s = owner;
       var art = artOf(s, true);
       if (!art) return;
       /* Placed a little in from the top-left rather than at the origin, so a new
          picture is never hiding under the slide's own edge furniture. */
+      var id = 'pic-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       art.pictures.push({
-        id: 'pic-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        id: id,
         src: String(fr.result),
         x: 120, y: 120, w: 360, alt: ''
       });
       commit(true);
       afterPaint();
+      var host = box();
+      var node = host && host.querySelector('[data-art-pic="' + id + '"]');
+      if (node && editing) select({kind: 'picture', key: id, node: node});
       SF.toast && SF.toast('Picture placed. Drag to move it, − / + to size it.');
     };
+    fr.onerror = function () { SF.toast && SF.toast('Could not read that picture. Please try another file.'); };
     fr.readAsDataURL(file);
   }
 
@@ -295,6 +334,11 @@
   function afterPaint() {
     var root = box();
     if (!root) return;
+    if (selectedSlide && selectedSlide !== slide()) {
+      selected = null;
+      selectedSlide = null;
+      if (cancelDrag) cancelDrag();
+    }
     root.classList.toggle('art-editing', editing);
     if (!editing) { paintBar(); return; }
     markHidden(root);
@@ -309,6 +353,8 @@
   }
 
   function setEditing(on) {
+    if (on && SF.Arrange && SF.Arrange.isArranging()) SF.Arrange.setArranging(false);
+    if (cancelDrag) cancelDrag();
     editing = !!on;
     if (!editing) selected = null;
     var toggle = document.getElementById('btnArtFlip');
@@ -352,15 +398,33 @@
     /* Escape leaves the art face rather than only dropping the selection: it is
        a mode, and a mode needs one obvious way out. */
     document.addEventListener('keydown', function (e) {
-      if (!editing) return;
-      if (e.key === 'Escape') { e.preventDefault(); setEditing(false); }
+      var host = box();
+      if (!editing || (SF.Player && SF.Player.open) || !host || !host.getClientRects().length) return;
+      var from = /** @type {Element|null} */ (e.target);
+      if (from && from.closest && from.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], dialog')) return;
+      if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); setEditing(false); return; }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (selected && /^Arrow(Left|Right|Up|Down)$/.test(e.key)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        var pos = originOf(selected, box());
+        var step = e.shiftKey ? 10 : 1;
+        writePose(selected, {
+          x: pos.x + (e.key === 'ArrowRight' ? step : e.key === 'ArrowLeft' ? -step : 0),
+          y: pos.y + (e.key === 'ArrowDown' ? step : e.key === 'ArrowUp' ? -step : 0)
+        });
+        commit(true);
+        afterPaint();
+        return;
+      }
       if ((e.key === 'Delete' || e.key === 'Backspace') && selected) {
         var tag = document.activeElement && document.activeElement.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA') return;
         e.preventDefault();
+        e.stopImmediatePropagation();
         removeSelected();
       }
-    });
+    }, true);
     paintBar();
   }
 

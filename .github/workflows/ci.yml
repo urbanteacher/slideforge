@@ -85,15 +85,51 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-# Deliberately not here: npm run visual:check.
-#
-# The 597 baselines in tools/baselines were captured on macOS. Chromium on
-# ubuntu-latest hints and rasterises text differently, so every one of them
-# would fail on the first run for a reason that has nothing to do with the
-# change under test — and a check that is red by default is not a check.
-#
-# Fixing it means regenerating the baselines inside the same container that
-# verifies them, which is the standard practice and is a deliberate,
-# reviewable commit of ~101MB rather than a side effect of turning CI on.
-# Until then visual:check stays a local gate. See §18 of
-# docs/design-system-and-the-canvas.md.
+  # 642 screenshots at 1280x720, compared to the pixel. Runs in the Playwright
+  # container rather than on the bare runner so that what verifies a baseline is
+  # the same environment that captured it — the baselines in tools/baselines are
+  # Linux-rendered for exactly this reason, and were regenerated in this image
+  # on 2026-09-18.
+  visual:
+    name: visual regression
+    runs-on: ubuntu-latest
+    needs: check
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+    steps:
+      - uses: actions/checkout@v4
+
+      # A bare playwright image has no Palatino and no Helvetica and resolves
+      # both to WenQuanYi Zen Hei, a CJK face — which renders the Northeastern
+      # display serif as something nobody would recognise. urw-base35 supplies
+      # P052, a Palatino clone, and Palatino is the second entry in the
+      # --nu-display stack, so CI renders a face the CSS itself names.
+      #
+      # Same list as tools/visual-docker.mjs. If one changes, both change.
+      - name: fonts the themes actually ask for
+        run: |
+          apt-get update -qq
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            fonts-urw-base35 fonts-liberation fonts-crosextra-carlito fonts-crosextra-caladea
+          fc-cache -f
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.12.0'
+          cache: npm
+
+      - run: npm ci
+
+      # Measured at 78.6s in this image for all 642.
+      - run: node tools/visual-regression.mjs --check
+
+      # The diff PNGs are the whole point of a failure here — without them the
+      # log says a percentage and nothing about what moved.
+      - name: upload diffs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: tools/baselines/diffs/
+          if-no-files-found: ignore
+          retention-days: 7
