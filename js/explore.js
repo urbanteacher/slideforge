@@ -55,7 +55,7 @@
     if (!s || !active(s)) return null;
     var v = state(player, s);
     if (SF.MotionLab && SF.MotionLab.active(s)) {
-      var mv=SF.MotionLab.state(s,v),mode=s.design.motionScene;
+      var mv=SF.MotionLab.state(s,v),mode=s.motionScene;
       if(['mask','scrub','cause','explode'].includes(mode))return mv.sceneValue<100?'comparison':null;
       if(['draw','annotate'].includes(mode))return mv.sceneStep<SF.MotionLab.items(s).length?'comparison':null;
       return null;
@@ -71,7 +71,7 @@
     if (!s || !active(s)) return false;
     var v = state(player, s);
     if(SF.MotionLab && SF.MotionLab.active(s)) {
-      var mv=SF.MotionLab.state(s,v), mode=s.design.motionScene;
+      var mv=SF.MotionLab.state(s,v), mode=s.motionScene;
       if(['mask','scrub','cause','explode'].includes(mode)) {
         if(direction>0 && mv.sceneValue<100 || direction<0 && mv.sceneValue>0){command(player,'motionValue',mv.sceneValue+direction*25);return true;}
       } else if(['draw','annotate'].includes(mode)) {

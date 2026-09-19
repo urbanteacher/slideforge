@@ -24,7 +24,7 @@ export type TransitionKey = typeof import('./model.js').TRANSITIONS[number];
 export type DeckSlideType =
   | 'statement' | 'journey' | 'mindmap' | 'introduction' | 'title' | 'section' | 'content' | 'keywords' | 'italics' | 'links'
   | 'split' | 'cards' | 'table' | 'code' | 'image' | 'video' | 'quote' | 'join'
-  | 'chart' | 'gallery' | 'beforeafter' | 'explore' | 'simulation' | 'experiment'
+  | 'chart' | 'gallery' | 'beforeafter' | 'explore' | 'simulation' | 'experiment' | 'motion'
   | 'keyfact' | 'orgchart'
   | 'stats' | 'compare' | 'funnel' | 'timeline' | 'iceberg'
   | 'spectrum' | 'sourcecheck' | 'shift' | 'spotfake';
@@ -148,7 +148,6 @@ export interface HeaderFooterConfig {
   slots: Partial<Record<ChromeSlot, HeaderFooterItem>>;
 }
 export interface SlideDesign {
-  motionScene?: string;
   motionLook?: string;
   chromeLayout?: '' | 'regions';
   identitySlot?: ChromeSlot; logoSlot?: ChromeSlot; contextSlot?: ChromeSlot; closingSlot?: ChromeSlot; numberSlot?: ChromeSlot;
@@ -191,6 +190,8 @@ export interface DesignControl {
 }
 
 export interface Slide {
+  /* Which motion specimen this slide is. A slide shape, not a design tweak. */
+  motionScene?: string;
   experiment?: {preset?:string; prompt?:string; duration?:number; print?:{changes?:string; constants?:string; takeaway?:string; caveat?:string}; states?:Array<Record<string, unknown>>};
   headerFooter?: HeaderFooterConfig;
   design?: SlideDesign;

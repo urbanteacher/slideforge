@@ -2,7 +2,9 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 test('motion run state is bounded and does not mutate authored slide or previous state', async()=>{
   const m=await import('../src/render/motion-lab.js');
-  const slide={type:'content',design:{motionScene:'branch'},bullets:['A\tOne','B\tTwo']};
+  /* The scene moved off design and onto the slide when the specimens became
+     their own type in Add slide, rather than a control in the Look pane. */
+  const slide={type:'motion',motionScene:'branch',bullets:['A\tOne','B\tTwo']};
   const before=JSON.stringify(slide), previous=m.state(slide);
   assert.equal(m.active(slide),true);
   assert.equal(m.active({...slide,type:'quiz'}),false);

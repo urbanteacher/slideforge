@@ -37,8 +37,11 @@
     cinema: "Cinematic depth",
     comic: "Comic sequence"
   };
+  function scene(slide) {
+    return slide?.motionScene || slide?.design?.motionScene || "";
+  }
   function active(slide) {
-    return slide?.type === "content" && Object.hasOwn(MOTION_SCENES, slide.design?.motionScene || "");
+    return (slide?.type === "motion" || slide?.type === "content") && Object.hasOwn(MOTION_SCENES, scene(slide));
   }
   function items(slide) {
     return (slide.bullets || []).filter((x) => String(x).trim()).slice(0, 4).map((x) => {
@@ -64,7 +67,7 @@
     return state(slide, { ...previous, [fields[action]]: Number(value) });
   }
   function render(root, pad, slide, opts, safeMedia2) {
-    const mode = slide.design.motionScene;
+    const mode = scene(slide);
     const rows2 = items(slide);
     if (!rows2.length) rows2.push({ label: "Add a point", detail: "Use the slide’s bullet fields. Separate label and explanation with a tab." });
     const enabled = !!opts.exploreCommand;
@@ -901,8 +904,7 @@
 
   // src/design-controls.js
   var DESIGN_CONTROLS = {
-    motionScene: { label: "Motion experiment", pane: "Look", types: ["content"], description: "Try an interactive motion specimen using this slide’s title, points and image." },
-    motionLook: { label: "Experiment style", pane: "Look", types: ["content"], when: "Motion experiment selected", description: "Editorial, layered paper, technical drawing, cinematic depth or comic panels." },
+    motionLook: { label: "Experiment style", pane: "Look", types: ["motion"], when: "Motion experiment selected", description: "Editorial, layered paper, technical drawing, cinematic depth or comic panels." },
     chromeLayout: { label: "Header and footer", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], when: "Structured composition", description: "Use named slots for slide furniture. Theme placement preserves the existing design." },
     logoSlot: { label: "Logo position", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], when: "Structured composition with named regions enabled", description: "Move the deck logo to a named slot. Logo visibility still follows the deck settings." },
     identitySlot: { label: "Theme identity position", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], when: "Structured composition with named regions enabled", description: "Move the theme identity to a named slot, when the theme supplies one." },
@@ -4025,6 +4027,28 @@
       deck: true,
       group: "show",
       starters: [{ title: "Visual experiment", blurb: "Predict, reveal and compare editable visual states.", seed: { title: "Same data, different encodings", experiment: { preset: "polling" }, body: "Candidate	Poll A	Poll B	Poll C\n1	17	20	23\n2	18	20	22\n3	20	19	20\n4	22	21	18\n5	23	20	17" } }]
+    },
+    /* Ten specimens, each its own row in Add slide. They were a Look control
+       once, which put a choice of slide shape in the pane that promises not to
+       change your content — and these demand an image and bring a state machine
+       with them. A shape belongs where the other shapes are chosen. */
+    motion: {
+      label: "Motion experiment",
+      icon: "◈",
+      deck: true,
+      group: "show",
+      starters: [
+        { title: "Mask reveal", blurb: "An image uncovered a piece at a time, under your control.", seed: { title: "Mask reveal", motionScene: "mask", design: { motionLook: "editorial" } } },
+        { title: "Draw-on diagram", blurb: "Strokes that arrive in the order you explain them.", seed: { title: "Draw-on diagram", motionScene: "draw", design: { motionLook: "editorial" } } },
+        { title: "Card to detail", blurb: "A card the room picks, opening into its detail.", seed: { title: "Card to detail", motionScene: "cards", design: { motionLook: "editorial" } } },
+        { title: "Animated annotations", blurb: "Callouts that land on a picture one after another.", seed: { title: "Animated annotations", motionScene: "annotate", design: { motionLook: "editorial" } } },
+        { title: "Scrubbable transformation", blurb: "A slider the room drags between two shapes of the same data.", seed: { title: "Scrubbable transformation", motionScene: "scrub", design: { motionLook: "editorial" } } },
+        { title: "Cause and effect", blurb: "Change one thing, watch what follows from it.", seed: { title: "Cause and effect", motionScene: "cause", design: { motionLook: "editorial" } } },
+        { title: "Branching scenario", blurb: "A choice, and the consequence of having made it.", seed: { title: "Branching scenario", motionScene: "branch", design: { motionLook: "editorial" } } },
+        { title: "Exploded diagram", blurb: "Parts that separate to show how the whole fits together.", seed: { title: "Exploded diagram", motionScene: "explode", design: { motionLook: "editorial" } } },
+        { title: "Focus lens", blurb: "A moving lens that reads one region of a busy image.", seed: { title: "Focus lens", motionScene: "lens", design: { motionLook: "editorial" } } },
+        { title: "Responsive story panels", blurb: "Panels that expand as the story is told through them.", seed: { title: "Responsive story panels", motionScene: "panels", design: { motionLook: "editorial" } } }
+      ]
     },
     explore: {
       label: "Explore an image",

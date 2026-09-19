@@ -564,6 +564,23 @@ var SLIDE_TYPES = {
                  starters: [{ title: 'Before / after', blurb: 'Two states compared — the second lands on a press.' }] },
   experiment: { label: 'Visual experiment', icon: '◉', deck: true, group: 'show',
                  starters: [{ title: 'Visual experiment', blurb: 'Predict, reveal and compare editable visual states.', seed: {title:'Same data, different encodings',experiment:{preset:'polling'},body:'Candidate\tPoll A\tPoll B\tPoll C\n1\t17\t20\t23\n2\t18\t20\t22\n3\t20\t19\t20\n4\t22\t21\t18\n5\t23\t20\t17'} }] },
+  /* Ten specimens, each its own row in Add slide. They were a Look control
+     once, which put a choice of slide shape in the pane that promises not to
+     change your content — and these demand an image and bring a state machine
+     with them. A shape belongs where the other shapes are chosen. */
+  motion:      { label: 'Motion experiment', icon: '◈', deck: true, group: 'show',
+                 starters: [
+                               { title: 'Mask reveal', blurb: 'An image uncovered a piece at a time, under your control.', seed: {title:'Mask reveal',motionScene:'mask',design:{motionLook:'editorial'}} },
+                               { title: 'Draw-on diagram', blurb: 'Strokes that arrive in the order you explain them.', seed: {title:'Draw-on diagram',motionScene:'draw',design:{motionLook:'editorial'}} },
+                               { title: 'Card to detail', blurb: 'A card the room picks, opening into its detail.', seed: {title:'Card to detail',motionScene:'cards',design:{motionLook:'editorial'}} },
+                               { title: 'Animated annotations', blurb: 'Callouts that land on a picture one after another.', seed: {title:'Animated annotations',motionScene:'annotate',design:{motionLook:'editorial'}} },
+                               { title: 'Scrubbable transformation', blurb: 'A slider the room drags between two shapes of the same data.', seed: {title:'Scrubbable transformation',motionScene:'scrub',design:{motionLook:'editorial'}} },
+                               { title: 'Cause and effect', blurb: 'Change one thing, watch what follows from it.', seed: {title:'Cause and effect',motionScene:'cause',design:{motionLook:'editorial'}} },
+                               { title: 'Branching scenario', blurb: 'A choice, and the consequence of having made it.', seed: {title:'Branching scenario',motionScene:'branch',design:{motionLook:'editorial'}} },
+                               { title: 'Exploded diagram', blurb: 'Parts that separate to show how the whole fits together.', seed: {title:'Exploded diagram',motionScene:'explode',design:{motionLook:'editorial'}} },
+                               { title: 'Focus lens', blurb: 'A moving lens that reads one region of a busy image.', seed: {title:'Focus lens',motionScene:'lens',design:{motionLook:'editorial'}} },
+                               { title: 'Responsive story panels', blurb: 'Panels that expand as the story is told through them.', seed: {title:'Responsive story panels',motionScene:'panels',design:{motionLook:'editorial'}} }
+                 ] },
   explore:     { label: 'Explore an image', icon: '◎', deck: true, group: 'show',
                  starters: [{ title: 'Explore an image', blurb: 'One picture the room examines, with details you reveal.' }] },
   simulation:  { label: 'What if? graph', icon: '↗', deck: true, group: 'show',

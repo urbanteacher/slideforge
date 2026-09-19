@@ -10,8 +10,16 @@ export const MOTION_LOOKS = {
   editorial: 'Editorial', paper: 'Layered paper', technical: 'Technical drawing',
   cinema: 'Cinematic depth', comic: 'Comic sequence'
 };
+/* The scene was briefly a design key. Decks saved in those few hours still
+   carry it there, so read both and let the slide's own field win. */
+function scene(slide) {
+  return slide?.motionScene || slide?.design?.motionScene || '';
+}
 export function active(slide) {
-  return slide?.type === 'content' && Object.hasOwn(MOTION_SCENES, slide.design?.motionScene || '');
+  /* 'content' still answers true so decks saved while these were a Look
+     control keep working; 'motion' is where new ones land. */
+  return (slide?.type === 'motion' || slide?.type === 'content')
+    && Object.hasOwn(MOTION_SCENES, scene(slide));
 }
 export function items(slide) {
   return (slide.bullets || []).filter(x => String(x).trim()).slice(0, 4).map(x => {
@@ -35,7 +43,7 @@ export function update(slide, previous, action, value) {
   return state(slide, { ...previous, [fields[action]]: Number(value) });
 }
 export function render(root, pad, slide, opts, safeMedia) {
-  const mode = slide.design.motionScene;
+  const mode = scene(slide);
   const rows = items(slide);
   if (!rows.length) rows.push({ label: 'Add a point', detail: 'Use the slide’s bullet fields. Separate label and explanation with a tab.' });
   const enabled = !!opts.exploreCommand;

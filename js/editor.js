@@ -2772,6 +2772,19 @@
   }
 
   function drawContentFields(insp, s) {
+    /* Which specimen this is, beside the words it uses — the same place a chart
+       slide picks its chart type. It decides what the slide is and what it
+       needs, so it is a content decision, not a Look one. */
+    if (SF.MotionLab && SF.MotionLab.active(s)) {
+      var sceneOpts = Object.entries(SF.MotionLab.MOTION_SCENES)
+        .map(function (e) { return { value: e[0], label: e[1] }; });
+      insp.appendChild(UI.field('Motion experiment', UI.select(sceneOpts,
+        s.motionScene, function (v) {
+          s.motionScene = v;
+          touched(); repaint();
+        }),
+        'Each specimen asks for the slide\u2019s title, points and image in its own way.'));
+    }
     // Additional authored fields exposed by shared structured compositions.
     var composition = SF.slideComposition(deck, s);
     if (composition === 'poster-art' || composition === 'ballot') {

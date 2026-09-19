@@ -827,15 +827,19 @@
       artworkInput.onchange=function(){s.image=SF.safeMedia(artworkInput.value);change();};
       box.appendChild(UI.field('Poster artwork · image URL or asset path',artworkInput));
     }
-    if(s.type==='content' && SF.MotionLab){
-      choose('Motion experiment','motionScene',[['','Standard slide']].concat(Object.entries(SF.MotionLab.MOTION_SCENES)),'');
+    /* active() already answers the type question, for both the motion type
+       and the content slides saved while this was a Look control. */
+    if(SF.MotionLab){
+      /* The specimen itself is chosen in Add slide and changed in Edit, beside
+         the words it uses — it decides what the slide IS. What is left here is
+         the visual treatment over that, which is what this pane is for. */
       if(SF.MotionLab.active(s)){
         choose('Experiment style','motionLook',Object.entries(SF.MotionLab.MOTION_LOOKS),'editorial');
         var sceneImage=document.createElement('input');sceneImage.type='text';sceneImage.value=s.image||'';
         sceneImage.onchange=function(){s.image=SF.safeMedia(sceneImage.value);change();};
         box.appendChild(UI.field('Experiment image · URL or asset path',sceneImage));
         box.appendChild(SF.el('p','hint','Edit points as label, then a tab, then explanation. Up to four points. Present to interact; previews show the complete overview. Scrub uses numeric explanations (1–100).'));
-        if(d.motionScene==='cause'){
+        if(s.motionScene==='cause'){
           var multiplier=document.createElement('input');multiplier.type='number';multiplier.min='-10';multiplier.max='10';multiplier.step='0.1';multiplier.value=String(Number(s.body)||2);
           multiplier.onchange=function(){s.body=multiplier.value;change();};
           box.appendChild(UI.field('Model multiplier · y = ax',multiplier));
