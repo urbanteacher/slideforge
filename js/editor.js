@@ -1341,6 +1341,39 @@
         function (v) { block.chartKind = v; touched(); draw(); }),
         'Grouped by what the chart is for, after the FT\u2019s Visual Vocabulary.'));
     }
+    /* Duplicate and delete belong wherever the item is selected. They lived
+       only on the arrange bar, so removing one thing meant entering the Layout
+       face to do it and leaving again — for an action that has nothing to do
+       with arranging. */
+    var acts = el('div', 'format-tools');
+    acts.appendChild(UI.button('\u29c9 Duplicate', 'ghost', function () {
+      var list = SF.freeBlocksOf(s, true);
+      var copy = Object.assign({}, block, {
+        id: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5)
+      });
+      list.push(copy);
+      if (!s.design) s.design = {};
+      if (!s.design.regions) s.design.regions = {};
+      var regions = s.design.regions;
+      var r = regions[SF.freeBlockKey(block.id)];
+      /* One block-height below, and never past the foot of the grid. */
+      if (r) regions[SF.freeBlockKey(copy.id)] = {
+        col: r.col, row: Math.min(16, r.row + r.rows), cols: r.cols, rows: r.rows
+      };
+      focusedBlockId = copy.id;
+      touched(); draw();
+      SF.toast && SF.toast('Copied below. Drag it anywhere.');
+    }));
+    acts.appendChild(UI.button('\u2715 Delete', 'ghost', function () {
+      var list = SF.freeBlocksOf(s, true);
+      var at = list.indexOf(block);
+      if (at >= 0) list.splice(at, 1);
+      if (s.design && s.design.regions) delete s.design.regions[SF.freeBlockKey(block.id)];
+      focusedBlockId = null;
+      touched(); draw();
+      SF.toast && SF.toast('Item removed. Undo brings it back.');
+    }));
+    insp.appendChild(UI.field('This item', acts));
     insp.appendChild(el('p', 'hint',
       'Move and resize it on the canvas with the arrange bar. Esc deselects and gives the slide\u2019s own fields back.'));
   }

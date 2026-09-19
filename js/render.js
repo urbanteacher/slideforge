@@ -896,9 +896,19 @@
     return null;
   }
 
+  /* Opening punctuation has no business setting the left edge. A title that
+     begins with a quote mark starts its first letter 23px to the right of
+     everything else on the slide at 52px type, which reads as a line that has
+     been nudged rather than as a quotation. The mark hangs into the margin
+     instead, which is what typesetting has always done with it.
+
+     By character, because the answer is the same for every one of them and
+     the alternative is remembering to tag the slides that happen to have one. */
+  var HANGS = /^[“”"‘’'«‹]/;
   function rich(tag, cls, slide, key, text) {
     var n = el(tag, cls, text);
     n.dataset.contentKey=key;
+    if (HANGS.test(String(text == null ? '' : text))) n.classList.add('hangs-open');
     if (SF.Custom) SF.Custom.paint(n, slide, key, text);
     return n;
   }
