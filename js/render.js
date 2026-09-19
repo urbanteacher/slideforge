@@ -43,7 +43,11 @@
      (art-orbit, art-tile, art-dot). Editing the manifest's html can orphan a
      pose; an orphan is ignored rather than applied to the wrong shape. */
   function artKeyOf(node, i) {
-    var cls = String(node.className || '').split(/\s+/).filter(Boolean)[0];
+    /* An SVG element's className is an SVGAnimatedString, so String() on it
+       yields "[object SVGAnimatedString]" and the key became "[object". */
+    var raw = node.className;
+    if (raw && typeof raw === 'object' && 'baseVal' in raw) raw = raw.baseVal;
+    var cls = String(raw || '').split(/\s+/).filter(Boolean)[0];
     return cls || 'art-' + i;
   }
   SF.artKeyOf = artKeyOf;
@@ -270,7 +274,11 @@
     if (named) return named;
     var key = node.getAttribute('data-content-key');
     if (key) return key;
-    var cls = String(node.className || '').split(/\s+/).filter(Boolean)[0];
+    /* An SVG element's className is an SVGAnimatedString, so String() on it
+       yields "[object SVGAnimatedString]" and the key became "[object". */
+    var raw = node.className;
+    if (raw && typeof raw === 'object' && 'baseVal' in raw) raw = raw.baseVal;
+    var cls = String(raw || '').split(/\s+/).filter(Boolean)[0];
     return cls || 'block-' + i;
   }
   SF.blockKeyOf = blockKeyOf;
@@ -352,7 +360,16 @@
      push-down and Fit to text all work on it without another line of code.
      It is also what makes the text editable: the canvas editor and the marks
      engine both index by content key. */
-  /* A kind is a tag, a class, a default footprint — and optionally a `draw`.
+  /* The footprints are measured, not chosen. Across the reference library a
+     heading occupies 10 columns and one row (424 of them), body text 9 by 1
+     (319), a list 10 by 8 (72), a chart 11 by 11 (34). A picture splits in
+     two: 22 are the whole slide and 22 share it at 8 by 11, and an inserted
+     item is the second kind, so that is the number taken.
+
+     Every default here was 6 by 6-ish before, which was nobody's measurement
+     — it made an inserted heading a third the width of every authored one.
+
+     A kind is a tag, a class, a default footprint — and optionally a `draw`.
      Without one the block is its own text, which is what the first three are
      and how every block behaved before. With one, the same `text` field is
      read as something else: lines for bullets, a path for a picture, a table
@@ -360,11 +377,11 @@
      editor, the marks engine, Fit to text and the region machinery keep
      working on all of them without knowing any of this. */
   var FREE_KINDS = {
-    heading: { tag: 'h3', cls: 'free-heading', label: 'Heading', rows: 2, cols: 6, size: 'heading' },
-    text: { tag: 'p', cls: 'free-text', label: 'Text', rows: 2, cols: 6, size: 'body' },
+    heading: { tag: 'h3', cls: 'free-heading', label: 'Heading', rows: 1, cols: 10, size: 'heading' },
+    text: { tag: 'p', cls: 'free-text', label: 'Text', rows: 1, cols: 9, size: 'body' },
     note: { tag: 'div', cls: 'free-note', label: 'Note', rows: 1, cols: 4, size: 'small' },
     bullets: {
-      tag: 'ul', cls: 'free-bullets', label: 'Bullet points', rows: 4, cols: 6,
+      tag: 'ul', cls: 'free-bullets', label: 'Bullet points', rows: 8, cols: 10,
       hint: 'One point per line.',
       draw: function (node, text) {
         text.split('\n').map(function (l) { return l.trim(); }).filter(Boolean)
@@ -372,7 +389,7 @@
       }
     },
     image: {
-      tag: 'div', cls: 'free-image', label: 'Image', rows: 6, cols: 6,
+      tag: 'div', cls: 'free-image', label: 'Image', rows: 11, cols: 8,
       hint: 'A URL, or a path to a file beside index.html.',
       draw: function (node, text, block) {
         var src = SF.safeMedia(text);
@@ -414,7 +431,7 @@
        label TAB value, and cards and tiered bullets already parse it. So this
        is the existing idiom given a block of its own, not a new one. */
     pairs: {
-      tag: 'dl', cls: 'free-pairs', label: 'Label and value list', rows: 5, cols: 6,
+      tag: 'dl', cls: 'free-pairs', label: 'Label and value list', rows: 8, cols: 10,
       hint: 'One per line: the label, a tab, then the value.',
       draw: function (node, text) {
         text.split('\n').map(function (l) { return l.trim(); }).filter(Boolean)
@@ -439,7 +456,7 @@
       }
     },
     chart: {
-      tag: 'div', cls: 'free-chart', label: 'Chart', rows: 6, cols: 6,
+      tag: 'div', cls: 'free-chart', label: 'Chart', rows: 11, cols: 11,
       hint: 'Tab-separated, a heading row then the values.',
       draw: function (node, text, block) {
         /* A synthetic slide, because chartSvgFor asks a slide for its kind and

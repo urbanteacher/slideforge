@@ -171,7 +171,7 @@
     var lastStep=-1,fromStep=-1,replayToken=opts.exploreState&&opts.exploreState.experimentReplay||0;
     var staticView=opts.interactive===false&&!opts.exploreCommand;
     if(staticView && !opts.exploreState)step=c.states.length-1;
-    root.classList.add('experiment-slide','exploration-slide');pad.replaceChildren();node('h2',s.title||'Visual experiment',pad);
+    root.classList.add('experiment-slide','exploration-slide');pad.replaceChildren();node('h2',s.title||'Visual experiment',pad).className='ve-title';
     var prompt=node('p',c.prompt,pad);prompt.className='ve-prompt';
     var plot=node('div','',pad);plot.className='ve-plot';
     var controls=node('div','',pad);controls.className='ve-controls';

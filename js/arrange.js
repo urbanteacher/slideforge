@@ -9,11 +9,9 @@
    the unit, and the guides only report which edges a cell happens to line up
    with once it lands.
 
-   Seeding matters as much as the drag. Entering this face on a slide that has
-   never been arranged reads where the theme has already put each block and
-   writes that as its region, so nothing moves at the moment the lattice comes
-   on. Only once the author drags does the slide actually disagree with its
-   theme. */
+   Seeding applies the selected layout's declared slots. It does not read the
+   rendered slide back into data: layout geometry stays stable as copy, fonts
+   and themes change. */
 (function (global) {
   'use strict';
   var SF = global.SF;
@@ -59,41 +57,15 @@
     return d.regions || null;
   }
 
-  /* Where the theme has already put a block, as a cell range. Rounded to the
-     nearest cell for the origin and up for the span, so seeding never makes a
-     block smaller than the room it is already using. */
-  function measureRegion(node, r, scale) {
-    var g = L();
-    var a = node.getBoundingClientRect();
-    var x = (a.left - r.left) / scale - g.left;
-    var y = (a.top - r.top) / scale - g.top;
-    var col = clamp(Math.round(x / g.stepX) + 1, 1, g.cols);
-    var row = clamp(Math.round(y / g.stepY) + 1, 1, g.rows);
-    var cols = clamp(Math.ceil(a.width / scale / g.stepX), 1, g.cols - col + 1);
-    var rows = clamp(Math.ceil(a.height / scale / g.stepY), 1, g.rows - row + 1);
-    return { col: col, row: row, cols: cols, rows: rows };
-  }
-
-  /* Read the arrangement the theme is already producing and write it down. All
-     blocks at once: placing one and leaving the rest in flow would reflow the
-     ones left behind, so the first drag would appear to move everything. */
+  /* Layout coordinates belong to the layout definition.  This must not infer
+     geometry from a one-off DOM render: changing a font, a theme or a title
+     length would otherwise turn into an unrequested coordinate change. */
   function seed() {
     var s = slide();
-    var rt = root();
-    if (!s || !rt) return false;
-    if (rt.classList.contains('sf-latticed')) return false;
-    var host = SF.latticeHost(rt);
-    if (!host) return false;
-    var kids = Array.prototype.slice.call(host.children).filter(function (n) {
-      return n.nodeType === 1;
-    });
-    if (!kids.length) return false;
-    var scale = scaleOf(rt);
-    var r = rt.getBoundingClientRect();
+    if (!s || !SF.layoutRegionsFor) return false;
     var map = regionsOf(s, true);
-    kids.forEach(function (node, i) {
-      map[SF.blockKeyOf(node, i)] = measureRegion(node, r, scale);
-    });
+    if (Object.keys(map).length) return false;
+    Object.assign(map, SF.layoutRegionsFor(s));
     commit(true);
     return true;
   }
@@ -291,45 +263,25 @@
      A free block is placed where there is room rather than at the origin, and
      it gets a region immediately — without one it would flow at the end of the
      pad and the author would have to find it. */
-  function freeRows(map, cols) {
-    var g = L();
-    var taken = [];
-    Object.keys(map || {}).forEach(function (k) {
-      var r = map[k];
-      if (!r) return;
-      for (var i = 0; i < r.rows; i++) taken[r.row + i] = true;
-    });
-    for (var row = 1; row <= g.rows; row++) if (!taken[row]) return row;
-    /* Nothing free: under everything, which the fit report will then say is
-       past the slide. Better than silently landing on top of something. */
-    var lowest = 1;
-    Object.keys(map || {}).forEach(function (k) {
-      var r = map[k];
-      if (r) lowest = Math.max(lowest, r.row + r.rows);
-    });
-    return lowest;
-  }
-
   function addBlock(kind) {
     var s = slide();
     if (!s) return;
     var spec = (SF.FREE_KINDS && SF.FREE_KINDS[kind]) || (SF.FREE_KINDS && SF.FREE_KINDS.text);
     if (!spec) return;
     var list = SF.freeBlocksOf(s, true);
+    var insertion = SF.insertionRegionFor && SF.insertionRegionFor(s, list.length);
+    if (!insertion) {
+      SF.toast && SF.toast('This layout has no pre-made item slot. Choose a layout with an item rail first.');
+      return;
+    }
     var id = 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
     list.push({ id: id, kind: kind, text: '' });
     var map = regionsOf(s, true);
-    /* Seed the rest of the slide first when it has never been arranged, or the
-       new block would be the only thing with a region and everything else
-       would keep following the theme. Entering the Layout face already seeds,
-       so this is a safety net rather than the usual path — and seed() measures
-       the current render, which does not yet contain the new block, which is
-       exactly what is wanted here. */
+    /* Seed from the chosen layout's slot map. This remains deterministic even
+       when the item is inserted before the author opens the Layout face. */
     if (!Object.keys(map).length) seed();
     map = regionsOf(s, true);
-    map[SF.freeBlockKey(id)] = {
-      col: 1, row: freeRows(map, spec.cols), cols: spec.cols, rows: spec.rows
-    };
+    map[SF.freeBlockKey(id)] = insertion;
     selected = SF.freeBlockKey(id);
     selectedSlide = s;
     commit(true);

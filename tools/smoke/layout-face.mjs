@@ -409,9 +409,11 @@ try {
   assert.equal(added.text, '', 'empty, because it is added before it is written into');
   assert.equal(added.placeholder, 'Text', 'and drawing a placeholder, or it could not be clicked');
   assert.ok(added.slot, 'the lattice should place it like any other block');
-  /* Row 7, not row 1: the first free row under everything already there, since
-     a new block that lands on top of the heading looks like a bug. */
-  assert.equal(added.region.row, 7, `placed in the first free row, got ${added.region.row}`);
+  /* The item rail is part of the Content layout: additions use its declared
+     slot, rather than scanning rendered rows and guessing where a free item
+     would fit. */
+  assert.deepEqual(added.region, { col: 9, row: 4, cols: 4, rows: 2 },
+    `placed in the first declared item slot, got ${JSON.stringify(added.region)}`);
   assert.equal(added.selected, added.key, 'and selected, so it can be moved straight away');
   assert.equal(added.adderReset, '', 'the adder should return to its prompt, not stay on a kind');
   checks++;
