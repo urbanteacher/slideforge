@@ -37,6 +37,28 @@ argument: at the default this file was 800 KB, and at 420 kbps it is 400 with
 nothing visibly lost in a diffuse gradient. Use it on a video slide with Loop,
 Start muted and Play when the slide appears all on, and a caption over it.
 
+## Enhanced silk-light loop
+
+Motion Lab slide 17 now uses `assets/backdrop/ink-silk.mp4` and its matching
+poster. The original ink-drift assets remain available.
+
+The new loop lasts twelve seconds at 24 fps. Independently screen-blended
+light fields, two soft ribbons and a vignette add depth. A smooth darkening
+across the lower third leaves room for captions. Motion follows closed paths
+with integer harmonics, so the animation repeats without a crossfade.
+
+Generate into a dedicated temporary frame directory, then encode:
+
+```sh
+python3 tools/video/backdrop-silk.py /tmp/slideforge-silk-frames assets/backdrop/ink-silk-poster.jpg
+swiftc -O tools/video/frames-to-mp4.swift -o /tmp/slideforge-silk-encoder
+/tmp/slideforge-silk-encoder /tmp/slideforge-silk-frames assets/backdrop/ink-silk.mp4 24 620000
+```
+
+The poster is generated automatically. The target bitrate is 620 kbps;
+actual file size depends on the encoder. Use a fresh factory Motion Lab copy
+to load the updated video on slide 17; existing saved decks keep their assets.
+
 ## Why Swift
 
 There is no `ffmpeg` on the machine this was made on, and matplotlib cannot write

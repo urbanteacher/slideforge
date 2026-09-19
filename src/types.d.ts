@@ -148,6 +148,8 @@ export interface HeaderFooterConfig {
   slots: Partial<Record<ChromeSlot, HeaderFooterItem>>;
 }
 export interface SlideDesign {
+  motionScene?: string;
+  motionLook?: string;
   chromeLayout?: '' | 'regions';
   identitySlot?: ChromeSlot; logoSlot?: ChromeSlot; contextSlot?: ChromeSlot; closingSlot?: ChromeSlot; numberSlot?: ChromeSlot;
   composition?: string;

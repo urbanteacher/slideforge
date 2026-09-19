@@ -7,13 +7,15 @@ Measured, not remembered. The counts below come from the running app:
 **39 slide types**, **20 chart kinds** across 9 families, **16 compositions**,
 **23 themes**, **24 quiz and game styles**, 3 free-block kinds.
 
-Twenty of the sixty are things a **room** does rather than things a tool can
+Sixteen of the sixty are things a **room** does rather than things a tool can
 provide — props, body language, surprise guests, humour, personal stories. They
 are listed at the end rather than counted as gaps, because calling them missing
 features would flatter the list and tell us nothing.
 
-Of the forty that software can answer: **25 we have**, **11 partly**, **4 not at
-all**.
+The rows below cover all 60 ideas exactly once: **27 supported**, **13 partly
+supported**, **4 missing**, and **16 presenter-led**. Supported means the named
+SlideForge workflow is available; it does not mean every Figma implementation
+or template can be imported.
 
 ---
 
@@ -63,7 +65,8 @@ all**.
 | 27 | Start with a table of contents | build one by hand on a `content` or `journey` slide | no agenda type that derives itself from the deck |
 | 28 | End with a concise summary | `closingNote`, the `credits` composition | nothing that gathers the deck's own points |
 | 34 | Digital whiteboard, real-time | teaching ink over the wall, live from the desk | ink is the presenter's; the room cannot draw, and authoring is single-writer |
-| 35 | Level up your screenshots | image frames, focal point, caption treatments | no annotation — arrows, callout boxes, blur |
+| 35 | Level up your screenshots | image frames, focal point, captions, staged numbered image callouts and a focus lens | annotations have fixed anchors; no general arrow placement or blur editor |
+| 57 | Comic book style | Motion Lab comic panels, numbered frames and speech-style detail boxes | an experiment style for content slides; not a complete deck theme |
 | 59 | Switch up your pacing | transitions, progressive builds, rehearsal timing | no per-slide timing plan or pacing report |
 
 ## Not at all
@@ -74,7 +77,6 @@ all**.
 | 25 | Custom illustrations | you place pictures; there is nothing to draw with |
 | 39 | Augmented reality | no |
 | 48 | Set the stage with maps | **the `spatial` chart family is empty.** `reveal-map` is a conceptual map for `iceberg` — labelled risks, not geography. The taxonomy already names what is missing: choropleth, proportional symbol, flow map, contour, cartogram, dot density, heat map |
-| 57 | Comic book style | no theme in that direction |
 
 `48` is the one worth arguing about. The chart taxonomy carries a `missing`
 list for every family — 40-odd named idioms across nine families — and
@@ -84,9 +86,8 @@ that" is the largest single gap on this page.
 
 ## Not a software feature
 
-Twenty ideas are things a presenter does in a room, and no tool supplies them:
-colour psychology (15), relatable examples (20), custom illustrations as a
-craft (25 overlaps above), tailoring to the audience (31), a personal story
+Sixteen ideas depend primarily on the presenter and their content:
+colour psychology (15), relatable examples (20), tailoring to the audience (31), a personal story
 (33), role-play (37), expert tips (38), narrative (40), props (44), audience
 demonstrations (45), multiple senses (46), surprise guests (52), humour (54),
 body language (56), keeping it focused as a discipline (29), classic
@@ -95,3 +96,43 @@ storytelling structure (30), unique photography as a craft (8).
 Two of those the app could *prompt* for without pretending to do them — a deck
 could ask whether it opens with a question and closes with a summary, which is
 (19) and (28), and it already has the layouts for both.
+
+## Motion Lab additions — 2026-09-19
+
+Eight original specimens now follow the existing motion catalogue. They use
+the existing renderer and editable slide fields. This is content coverage;
+none of the missing engine capabilities above has been marked complete.
+
+- [x] Design-section opener with a moving grid.
+- [x] Ink-on-lime poster with a single word reveal.
+- [x] Reversed-colour poster for a controlled visual comparison.
+- [x] Four-beat narrative with earlier points dimmed during builds.
+- [x] Photograph and staged observation prompts.
+- [x] Diagram branches revealed one at a time.
+- [x] Audience poll comparing the experiments.
+- [x] Closing commitment with one practical action.
+
+Open a fresh factory copy using `?lesson=motion-lab`. Existing saved copies are
+not overwritten by library seeding. Copy the new slides into an edited copy
+if you want to keep its changes.
+
+## Remaining extensions after the interactive presets
+
+| Priority | Experiment | Acceptance criterion |
+| --- | --- | --- |
+| 1 | General screenshot annotation | Extend the fixed callout preset with arbitrary arrow placement and blur. |
+| 2 | Border controls | Extend the comic specimen with adjustable border weight and treatment across layouts. |
+| 3 | Agenda and recap | Derive from selected deck sections; update after reorder without rewriting authored text. |
+| 4 | Geographic view | Real boundaries, explicit joins, legend, missing-data treatment and source attribution. |
+| 5 | Reusable palette | Save deck-wide colours with contrast previews and consistent chart semantics. |
+
+AR, collaborative drawing and illustration choreography require separate
+interaction engines. The current examples do not claim to implement them.
+
+## Interactive expansion
+
+Motion Lab now has 59 slides. Slides 45–54 contain the ten working interaction
+presets; slides 55–59 compare the five visual styles. Slide 44 introduces them.
+See [controls and limits](motion-lab-experiments.md). Presets include a mask,
+draw-on connections, expanding cards, image callouts, scrubbing, a linear model,
+local scenario choices, separating panels, a lens, and responsive story panels.

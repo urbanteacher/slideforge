@@ -1,3 +1,4 @@
+import * as MotionLab from './render/motion-lab.js';
 import {declareBodyRegion,measureBodyRegion} from './render/body-region.js';
 import {measureSlideFit,probeLayoutFit,svgScale,FIT_TOLERANCE,LEGIBLE_FLOOR} from './render/fit-check.js';
 import {bindCanvasRegions} from './render/canvas-regions.js';
@@ -1490,6 +1491,7 @@ const { Store, GameStore, LibraryFolders } = createStores({ normalizeDeck, norma
    valid SF until Boards is on it, and splitting the two left a gap where it
    was neither. */
 runtime.SF = Object.assign(runtime.SF || {}, {
+  MotionLab,
   Boards: createBoardRuntime(() => runtime.SF, GAME_STYLES),
   /* The activity catalogue. Data only — studio.js reads target and builds. */
   Activities: { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes },

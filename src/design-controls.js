@@ -2,6 +2,8 @@
  * are shown in the guide and exercised by the browser reachability check. */
 /** @satisfies {Record<keyof import('./types.js').SlideDesign, import('./types.js').DesignControl>} */
 export const DESIGN_CONTROLS = {
+  motionScene: {label:'Motion experiment',pane:'Look',types:['content'],description:'Try an interactive motion specimen using this slide’s title, points and image.'},
+  motionLook: {label:'Experiment style',pane:'Look',types:['content'],when:'Motion experiment selected',description:'Editorial, layered paper, technical drawing, cinematic depth or comic panels.'},
   chromeLayout: {label:'Header and footer',pane:'Look',types:['title','section','statement','quote','content','cards','journey','keyfact','compare','iceberg','sourcecheck','spectrum'],when:'Structured composition',description:'Use named slots for slide furniture. Theme placement preserves the existing design.'},
   logoSlot: {label:'Logo position',pane:'Look',types:['title','section','statement','quote','content','cards','journey','keyfact','compare','iceberg','sourcecheck','spectrum'],when:'Structured composition with named regions enabled',description:'Move the deck logo to a named slot. Logo visibility still follows the deck settings.'},
   identitySlot: {label:'Theme identity position',pane:'Look',types:['title','section','statement','quote','content','cards','journey','keyfact','compare','iceberg','sourcecheck','spectrum'],when:'Structured composition with named regions enabled',description:'Move the theme identity to a named slot, when the theme supplies one.'},

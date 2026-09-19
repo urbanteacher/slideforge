@@ -1,6 +1,294 @@
 /* Generated from src/model.js. Do not edit; run npm run build. */
 "use strict";
 (() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
+  // src/render/motion-lab.js
+  var motion_lab_exports = {};
+  __export(motion_lab_exports, {
+    MOTION_LOOKS: () => MOTION_LOOKS,
+    MOTION_SCENES: () => MOTION_SCENES,
+    active: () => active,
+    items: () => items,
+    render: () => render,
+    state: () => state,
+    update: () => update
+  });
+  var MOTION_SCENES = {
+    mask: "Mask reveal",
+    draw: "Draw-on diagram",
+    cards: "Card to detail",
+    annotate: "Animated annotations",
+    scrub: "Scrubbable transformation",
+    cause: "Cause and effect",
+    branch: "Branching scenario",
+    explode: "Exploded diagram",
+    lens: "Focus lens",
+    panels: "Responsive story panels"
+  };
+  var MOTION_LOOKS = {
+    editorial: "Editorial",
+    paper: "Layered paper",
+    technical: "Technical drawing",
+    cinema: "Cinematic depth",
+    comic: "Comic sequence"
+  };
+  function active(slide) {
+    return slide?.type === "content" && Object.hasOwn(MOTION_SCENES, slide.design?.motionScene || "");
+  }
+  function items(slide) {
+    return (slide.bullets || []).filter((x) => String(x).trim()).slice(0, 4).map((x) => {
+      const [label, ...detail] = String(x).split("	");
+      return { label: label.slice(0, 100), detail: detail.join(" ").slice(0, 350) };
+    });
+  }
+  function state(slide, raw = {}) {
+    const count = Math.max(1, items(slide).length);
+    const clamp = (x, lo, hi, fallback) => Number.isFinite(Number(x)) ? Math.max(lo, Math.min(hi, Number(x))) : fallback;
+    return {
+      sceneStep: Math.round(clamp(raw.sceneStep, 0, count, 0)),
+      sceneChoice: Math.round(clamp(raw.sceneChoice, -1, count - 1, -1)),
+      sceneValue: clamp(raw.sceneValue, 0, 100, 0),
+      sceneX: clamp(raw.sceneX, 0, 100, 50),
+      sceneY: clamp(raw.sceneY, 0, 100, 50)
+    };
+  }
+  function update(slide, previous, action, value) {
+    const fields = { motionStep: "sceneStep", motionChoice: "sceneChoice", motionValue: "sceneValue", motionX: "sceneX", motionY: "sceneY" };
+    if (action === "motionReset") return state(slide);
+    if (!Object.hasOwn(fields, action) || !Number.isFinite(Number(value))) return null;
+    return state(slide, { ...previous, [fields[action]]: Number(value) });
+  }
+  function render(root, pad, slide, opts, safeMedia2) {
+    const mode = slide.design.motionScene;
+    const rows2 = items(slide);
+    if (!rows2.length) rows2.push({ label: "Add a point", detail: "Use the slide’s bullet fields. Separate label and explanation with a tab." });
+    const enabled = !!opts.exploreCommand;
+    let view = state(slide, enabled ? opts.exploreState : { sceneStep: rows2.length, sceneValue: 100 });
+    const el = (tag, cls = "", text2 = "") => {
+      const n = document.createElement(tag);
+      n.className = cls;
+      n.textContent = text2;
+      return n;
+    };
+    const send = (action, value = 0) => {
+      if (enabled) opts.exploreCommand(action, value);
+    };
+    const button = (parent, label, fn) => {
+      const b = el("button", "ml-button", label);
+      b.type = "button";
+      b.disabled = !enabled;
+      b.onclick = fn;
+      parent.append(b);
+      return b;
+    };
+    const range = (parent, label, key, action) => {
+      const wrap = el("label", "ml-range", label), input = document.createElement("input");
+      input.type = "range";
+      input.min = "0";
+      input.max = "100";
+      input.step = "1";
+      input.disabled = !enabled;
+      input.setAttribute("aria-label", label);
+      input.value = String(view[key]);
+      input.oninput = () => send(action, Number(input.value));
+      wrap.append(input);
+      parent.append(wrap);
+      return input;
+    };
+    pad.replaceChildren();
+    root.classList.add("motion-specimen");
+    root.classList.toggle("ml-live", enabled);
+    root.dataset.motionLook = Object.hasOwn(MOTION_LOOKS, slide.design.motionLook || "") ? slide.design.motionLook : "editorial";
+    root.dataset.motionMode = mode;
+    pad.append(el("div", "ml-kicker", MOTION_SCENES[mode]), el("h2", "ml-title", slide.title || MOTION_SCENES[mode]));
+    const stage = el("div", "ml-stage");
+    pad.append(stage);
+    const status = el("p", "ml-status");
+    status.setAttribute("aria-live", enabled ? "polite" : "off");
+    pad.append(status);
+    const controls = el("div", "ml-controls");
+    pad.append(controls);
+    controls.addEventListener("keydown", (e) => e.stopPropagation());
+    stage.addEventListener("keydown", (e) => {
+      if (e.target instanceof HTMLButtonElement || e.target instanceof HTMLInputElement) e.stopPropagation();
+    });
+    const parts = [];
+    let slider2, xSlider, ySlider, photo, lens, detail, svg, markNodes = [], connectorNodes = [];
+    const imageURL = safeMedia2(slide.image || "");
+    function addPhoto() {
+      const img = document.createElement("img");
+      img.className = "ml-photo";
+      img.src = imageURL;
+      img.alt = slide.subtitle || slide.title || "Experiment image";
+      img.draggable = false;
+      img.onerror = () => {
+        img.hidden = true;
+        status.textContent = "Image unavailable — choose an image in Look.";
+      };
+      stage.append(img);
+      return img;
+    }
+    function svgNode(tag, attrs) {
+      const n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, String(v));
+      return n;
+    }
+    if (["mask", "annotate", "lens"].includes(mode)) {
+      if (imageURL) photo = addPhoto();
+      else stage.append(el("p", "ml-empty", "Choose an image in Look to try this effect."));
+      if (mode === "annotate") rows2.forEach((row, i) => {
+        const n = el("div", "ml-annotation");
+        n.style.left = `${10 + i % 2 * 48}%`;
+        n.style.top = `${12 + Math.floor(i / 2) * 44}%`;
+        n.append(el("span", "ml-ring", String(i + 1)), el("strong", "", row.label));
+        stage.append(n);
+        parts.push(n);
+      });
+      if (mode === "lens") {
+        let move2 = function(e) {
+          const r = stage.getBoundingClientRect();
+          send("motionX", (e.clientX - r.left) / r.width * 100);
+          send("motionY", (e.clientY - r.top) / r.height * 100);
+        };
+        var move = move2;
+        lens = el("div", "ml-lens");
+        if (imageURL) lens.style.backgroundImage = `url(${JSON.stringify(imageURL)})`;
+        stage.append(lens);
+        stage.tabIndex = enabled ? 0 : -1;
+        stage.setAttribute("aria-label", "Focus lens. Use the horizontal and vertical sliders below, or drag on the image.");
+        stage.onpointerdown = (e) => {
+          if (!enabled) return;
+          stage.setPointerCapture(e.pointerId);
+          move2(e);
+        };
+        stage.onpointermove = (e) => {
+          if (stage.hasPointerCapture(e.pointerId)) move2(e);
+        };
+        xSlider = range(controls, "Lens horizontal", "sceneX", "motionX");
+        ySlider = range(controls, "Lens vertical", "sceneY", "motionY");
+      }
+    } else if (mode === "scrub" || mode === "draw") {
+      svg = svgNode("svg", { viewBox: "0 0 1000 360", role: "img", "aria-label": mode === "scrub" ? "The same values change from circles to aligned bars." : "Connections appear in sequence." });
+      stage.append(svg);
+      rows2.forEach((row, i) => {
+        if (mode === "draw") {
+          if (i) {
+            const line = svgNode("path", { d: `M ${100 + (i - 1) * 250} 180 L ${100 + i * 250} 180`, stroke: "currentColor", "stroke-width": 4, fill: "none", pathLength: 1 });
+            line.classList.add("ml-connector");
+            svg.append(line);
+            connectorNodes.push(line);
+          }
+          const group = svgNode("g", {});
+          group.classList.add("ml-node");
+          const circle = svgNode("circle", { cx: 100 + i * 250, cy: 180, r: 50, fill: "var(--ml-accent)" });
+          const label = svgNode("text", { x: 100 + i * 250, y: 270, "text-anchor": "middle", fill: "currentColor", "font-size": 22 });
+          label.textContent = row.label;
+          group.append(circle, label);
+          svg.append(group);
+          parts.push(group);
+        } else {
+          const value = Number(row.detail);
+          const number = Number.isFinite(value) && value > 0 ? Math.min(100, value) : 25 * (i + 1);
+          const rect = svgNode("rect", { fill: "var(--ml-accent)" });
+          const label = svgNode("text", { x: 30, y: 60 + i * 80, fill: "currentColor", "font-size": 22 });
+          label.textContent = `${row.label}: ${number}`;
+          svg.append(rect, label);
+          markNodes.push({ rect, number, i });
+        }
+      });
+    } else if (mode === "cause") {
+      const meter = el("div", "ml-meter");
+      detail = el("div", "ml-equation");
+      stage.append(meter, detail);
+      parts.push(meter);
+    } else {
+      stage.classList.add("ml-card-stage");
+      rows2.forEach((row, i) => {
+        const card = el("button", "ml-card");
+        card.type = "button";
+        card.disabled = !enabled;
+        card.append(el("span", "ml-number", String(i + 1).padStart(2, "0")), el("strong", "", row.label), el("span", "ml-detail", row.detail));
+        card.onclick = () => send("motionChoice", view.sceneChoice === i ? -1 : i);
+        stage.append(card);
+        parts.push(card);
+      });
+    }
+    const continuous = ["mask", "scrub", "cause", "explode"].includes(mode);
+    if (continuous) slider2 = range(controls, mode === "cause" ? "Input x" : "Transformation", "sceneValue", "motionValue");
+    const selectable = ["cards", "branch", "panels"].includes(mode);
+    const previous = button(controls, "Previous state", () => send(continuous ? "motionValue" : selectable ? "motionChoice" : "motionStep", continuous ? view.sceneValue - 25 : selectable ? view.sceneChoice - 1 : view.sceneStep - 1));
+    const next = button(controls, "Next state", () => send(continuous ? "motionValue" : selectable ? "motionChoice" : "motionStep", continuous ? view.sceneValue + 25 : selectable ? view.sceneChoice + 1 : view.sceneStep + 1));
+    if (mode === "lens") {
+      previous.hidden = true;
+      next.hidden = true;
+    }
+    button(controls, "Reset / replay", () => send("motionReset"));
+    if (["cards", "branch", "panels", "explode"].includes(mode)) button(controls, "Return to overview", () => send("motionChoice", -1));
+    function refresh(raw) {
+      view = state(slide, raw);
+      const t = view.sceneValue / 100;
+      if (slider2) slider2.value = String(view.sceneValue);
+      if (xSlider) xSlider.value = String(view.sceneX);
+      if (ySlider) ySlider.value = String(view.sceneY);
+      previous.disabled = !enabled || (continuous ? view.sceneValue <= 0 : selectable ? view.sceneChoice < 0 : view.sceneStep <= 0);
+      next.disabled = !enabled || (continuous ? view.sceneValue >= 100 : selectable ? view.sceneChoice >= rows2.length - 1 : view.sceneStep >= rows2.length);
+      root.style.setProperty("--ml-progress", String(t));
+      if (mode === "mask" && photo) photo.style.clipPath = `circle(${t * 75}% at 50% 50%)`;
+      if (mode === "lens" && lens) {
+        lens.style.left = `${view.sceneX}%`;
+        lens.style.top = `${view.sceneY}%`;
+        const width = stage.clientWidth || 1168, height = stage.clientHeight || 420;
+        const naturalW = photo?.naturalWidth || width, naturalH = photo?.naturalHeight || height;
+        const cover = Math.max(width / naturalW, height / naturalH), fullW = naturalW * cover, fullH = naturalH * cover;
+        lens.style.backgroundSize = `${fullW * 2}px ${fullH * 2}px`;
+        lens.style.backgroundPosition = `${110 - (view.sceneX / 100 * width + (fullW - width) / 2) * 2}px ${110 - (view.sceneY / 100 * height + (fullH - height) / 2) * 2}px`;
+      }
+      if (mode === "draw" || mode === "annotate") {
+        parts.forEach((p, i) => p.classList.toggle("ml-revealed", i < view.sceneStep));
+        connectorNodes.forEach((p, i) => p.style.strokeDashoffset = i + 1 < view.sceneStep ? "0" : "1");
+      }
+      if (mode === "scrub") markNodes.forEach(({ rect, number, i }) => {
+        const diameter = 2 * Math.sqrt(number / Math.PI) * 8, width = diameter + (number * 6 - diameter) * t, height = diameter + (36 - diameter) * t;
+        rect.setAttribute("x", String(250));
+        rect.setAttribute("y", String(40 + i * 80 - height / 2));
+        rect.setAttribute("width", String(width));
+        rect.setAttribute("height", String(height));
+        rect.setAttribute("rx", String((1 - t) * diameter / 2));
+      });
+      if (mode === "cause") {
+        const a = Number(slide.body);
+        const factor = Number.isFinite(a) && String(slide.body).trim() ? Math.max(-10, Math.min(10, a)) : 2;
+        const output = Math.round(view.sceneValue * factor * 100) / 100;
+        detail.textContent = `${factor} × ${Math.round(view.sceneValue)} = ${output}`;
+        parts[0].style.transform = `scaleX(${t})`;
+      }
+      if (["cards", "branch", "panels", "explode"].includes(mode)) {
+        stage.classList.toggle("ml-selected", view.sceneChoice >= 0);
+        parts.forEach((p, i) => {
+          const selected2 = view.sceneChoice === i;
+          p.classList.toggle("ml-selected-card", selected2);
+          p.setAttribute("aria-pressed", String(selected2));
+          if (mode === "explode") p.style.transform = `translate(${(i - (rows2.length - 1) / 2) * t * 50}px, ${(i % 2 ? 1 : -1) * t * 65}px) rotate(${(i - (rows2.length - 1) / 2) * t * 5}deg)`;
+        });
+      }
+      const selected = rows2[view.sceneChoice];
+      status.textContent = selected ? `${selected.label} — ${selected.detail}` : mode === "scrub" ? "Illustrative values. Circle area and bar length encode the same quantity; intermediate shapes are transition frames." : mode === "cause" ? "Illustrative linear model: y = ax. Edit the multiplier in the slide body." : mode === "lens" ? "Drag over the image or use the sliders to inspect a detail." : mode === "branch" ? "Choose a response to reveal its authored consequence. Return to overview to try another." : rows2[Math.max(0, view.sceneStep - 1)]?.detail || slide.subtitle || "Use the controls to explore.";
+    }
+    root._exploreRefresh = refresh;
+    refresh(view);
+    if (mode === "lens") {
+      if (photo) photo.onload = () => refresh(view);
+      requestAnimationFrame(() => {
+        if (root.isConnected) refresh(view);
+      });
+    }
+  }
+
   // src/render/body-region.js
   function declareBodyRegion(root, slide) {
     const body = root.querySelector(".cp-body");
@@ -284,15 +572,15 @@
   var slotLabel = (slot) => slot.replace("-", " ").replace("center", "centre");
   function bindCanvasRegions(root, slide, onChange) {
     if (!root.classList.contains("chrome-regions")) return;
-    let overlay = null, active = null;
+    let overlay = null, active2 = null;
     function dismiss(focus = true) {
       overlay?.remove();
       overlay = null;
-      if (active) {
-        active.setAttribute("aria-expanded", "false");
-        if (focus) active.focus();
+      if (active2) {
+        active2.setAttribute("aria-expanded", "false");
+        if (focus) active2.focus();
       }
-      active = null;
+      active2 = null;
     }
     function commit(key, slot) {
       if (chromePositions(slide.design)[key] === slot) {
@@ -304,7 +592,7 @@
     }
     function show(handle, key, keyboard) {
       dismiss(false);
-      active = handle;
+      active2 = handle;
       handle.setAttribute("aria-expanded", "true");
       overlay = document.createElement("div");
       overlay.className = "canvas-region-targets";
@@ -613,6 +901,8 @@
 
   // src/design-controls.js
   var DESIGN_CONTROLS = {
+    motionScene: { label: "Motion experiment", pane: "Look", types: ["content"], description: "Try an interactive motion specimen using this slide’s title, points and image." },
+    motionLook: { label: "Experiment style", pane: "Look", types: ["content"], when: "Motion experiment selected", description: "Editorial, layered paper, technical drawing, cinematic depth or comic panels." },
     chromeLayout: { label: "Header and footer", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], when: "Structured composition", description: "Use named slots for slide furniture. Theme placement preserves the existing design." },
     logoSlot: { label: "Logo position", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], when: "Structured composition with named regions enabled", description: "Move the deck logo to a named slot. Logo visibility still follows the deck settings." },
     identitySlot: { label: "Theme identity position", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], when: "Structured composition with named regions enabled", description: "Move the theme identity to a named slot, when the theme supplies one." },
@@ -742,7 +1032,7 @@
       const board5 = forSlide(slide);
       if (board5) namespace()[board5.runtime]?.mount(host, slide, node);
     }
-    function render(pad, slide, options, root) {
+    function render2(pad, slide, options, root) {
       const board5 = forSlide(slide);
       const engine = board5 && namespace()[board5.runtime];
       if (!engine) return false;
@@ -775,15 +1065,15 @@
       return true;
     }
     function stamp(host, slide, theme) {
-      const state = current(host, slide);
-      return state ? JSON.stringify([slide.id, theme, { ...state, elapsed: 0, remaining: 0 }]) : null;
+      const state2 = current(host, slide);
+      return state2 ? JSON.stringify([slide.id, theme, { ...state2, elapsed: 0, remaining: 0 }]) : null;
     }
     function refreshClock(box2, host, slide) {
       const board5 = forSlide(slide);
-      const state = current(host, slide);
+      const state2 = current(host, slide);
       const clock2 = board5?.clock && box2.querySelector(board5.clock.selector);
-      if (!clock2 || !state) return false;
-      clock2.textContent = board5.clock.text(state, namespace()[board5.runtime]);
+      if (!clock2 || !state2) return false;
+      clock2.textContent = board5.clock.text(state2, namespace()[board5.runtime]);
       return true;
     }
     function restoreFocus(node, slide) {
@@ -799,7 +1089,7 @@
           engine[board5.reportEvent || "onVerdict"] = board5.reportValue ? (value) => report(board5.reportValue(value)) : report;
       }
     }
-    function createSession(key, { player, slide, node, create, render: render2, command: command2, tick, interval = 1e3 }) {
+    function createSession(key, { player, slide, node, create, render: render3, command: command2, tick, interval = 1e3 }) {
       const board5 = definitions().find((board6) => board6.key === key);
       player[board5.states] = player[board5.states] || {};
       if (!player[board5.states][slide.id])
@@ -811,7 +1101,7 @@
         if (player.syncPresenter) player.syncPresenter();
       };
       session.paint = (focus) => {
-        render2(node.querySelector(".pad"), slide, {
+        render3(node.querySelector(".pad"), slide, {
           [board5.state]: player[board5.states][slide.id],
           [board5.command]: command2
         });
@@ -823,8 +1113,8 @@
         const now = clock.now();
         const dt = Math.max(0, (now - last) / 1e3);
         last = now;
-        const state = player[board5.states][slide.id];
-        if (state.paused || player.blank) return;
+        const state2 = player[board5.states][slide.id];
+        if (state2.paused || player.blank) return;
         if (tick(session, dt)) {
           refreshClock(node, player, slide);
           sync();
@@ -848,7 +1138,7 @@
       unmountAll,
       reset,
       mount,
-      render,
+      render: render2,
       snapshot,
       renderOptions,
       command,
@@ -863,9 +1153,9 @@
   // src/activities/presets.js
   var box = (label, value, i) => ({ label, value, type: "area", slide: `bullets.${i}.def` });
   var text = (label, value, slide = "title") => ({ label, value, type: "text", slide });
-  var rows = (items) => items.map(([label, value], i) => box(label, value, i));
-  var page = (title, items, minutes) => ({ title, layout: "keywords", fields: rows(items), minutes });
-  var preset = (items, extra = {}) => ({ layout: "keywords", fields: rows(items), ...extra });
+  var rows = (items2) => items2.map(([label, value], i) => box(label, value, i));
+  var page = (title, items2, minutes) => ({ title, layout: "keywords", fields: rows(items2), minutes });
+  var preset = (items2, extra = {}) => ({ layout: "keywords", fields: rows(items2), ...extra });
   var PRESETS = {
     "clear-objectives-slide": preset([
       ["Learning objectives", "Measure length · Calculate perimeter · Explain your method."],
@@ -5083,8 +5373,8 @@
   function definitionCreate(seconds) {
     return { phase: "reading", seconds: clampDefinitionSeconds(seconds) };
   }
-  function definitionTransition(state, action) {
-    var s = Object.assign({}, state || definitionCreate(30));
+  function definitionTransition(state2, action) {
+    var s = Object.assign({}, state2 || definitionCreate(30));
     if (action === "restart") return definitionCreate(s.seconds);
     if ((action === "ask" || action === "expire") && s.phase === "reading") {
       s.phase = "asking";
@@ -5746,7 +6036,7 @@
     return {
       clock: {
         selector: ".mem-time",
-        text: (state) => state.phase === "study" ? Math.ceil(state.remaining) + "s" : Math.floor(state.elapsed / 60) + ":" + String(Math.floor(state.elapsed % 60)).padStart(2, "0")
+        text: (state2) => state2.phase === "study" ? Math.ceil(state2.remaining) + "s" : Math.floor(state2.elapsed / 60) + ":" + String(Math.floor(state2.elapsed % 60)).padStart(2, "0")
       },
       focusPrimary: ".mem-check button:not(:disabled)",
       focusFallback: ".mem-card:not(:disabled), .mem-actions button:not(:disabled)",
@@ -6797,7 +7087,7 @@
     return {
       clock: {
         selector: ".lsq-time",
-        text: (state, engine) => engine.formatClock(state.phase === "quiz" ? state.remaining : state.elapsed || 0)
+        text: (state2, engine) => engine.formatClock(state2.phase === "quiz" ? state2.remaining : state2.elapsed || 0)
       },
       focusPrimary: ".lsq-actions button:not(:disabled)",
       focusFallback: ".lsq-actions button:not(:disabled)",
@@ -8122,9 +8412,9 @@
         return { folders: [], collapsed: {}, labels: {} };
       }
     }
-    function write(state) {
+    function write(state2) {
       try {
-        storage().setItem(FOLDER_KEY, JSON.stringify(state));
+        storage().setItem(FOLDER_KEY, JSON.stringify(state2));
         return true;
       } catch (error) {
         warn("Could not save library folders:", error);
@@ -8132,13 +8422,13 @@
       }
     }
     function catalog() {
-      const state = read();
+      const state2 = read();
       const seen = /* @__PURE__ */ Object.create(null);
       const out = LIBRARY_GROUPS.map(function(g) {
         seen[g.id] = true;
-        return { id: g.id, label: String(state.labels[g.id] || g.label), builtin: true };
+        return { id: g.id, label: String(state2.labels[g.id] || g.label), builtin: true };
       });
-      state.folders.forEach(function(f) {
+      state2.folders.forEach(function(f) {
         const id = normalizeLibraryGroup(f && f.id, "");
         if (!id || seen[id]) return;
         seen[id] = true;
@@ -8152,27 +8442,27 @@
         return read().collapsed;
       },
       setCollapsed: function(id, on) {
-        const state = read();
-        if (on) state.collapsed[id] = true;
-        else delete state.collapsed[id];
-        write(state);
+        const state2 = read();
+        if (on) state2.collapsed[id] = true;
+        else delete state2.collapsed[id];
+        write(state2);
       },
       rename: function(id, label) {
         const name = String(label || "").trim();
         if (!id || !name) return false;
-        const state = read();
+        const state2 = read();
         if (LIBRARY_GROUPS.some(function(g) {
           return g.id === id;
         })) {
-          state.labels[id] = name;
+          state2.labels[id] = name;
         } else {
-          const row = state.folders.filter(function(f) {
+          const row = state2.folders.filter(function(f) {
             return f.id === id;
           })[0];
           if (row) row.label = name;
-          else state.folders.push({ id, label: name });
+          else state2.folders.push({ id, label: name });
         }
-        return write(state);
+        return write(state2);
       },
       create: function(label) {
         const name = String(label || "").trim();
@@ -8188,22 +8478,22 @@
           id = base + "-" + n;
           n++;
         }
-        const state = read();
-        state.folders.push({ id, label: name });
-        write(state);
+        const state2 = read();
+        state2.folders.push({ id, label: name });
+        write(state2);
         return id;
       },
       remove: function(id) {
         if (!id || LIBRARY_GROUPS.some(function(g) {
           return g.id === id;
         })) return false;
-        const state = read();
-        state.folders = state.folders.filter(function(f) {
+        const state2 = read();
+        state2.folders = state2.folders.filter(function(f) {
           return f.id !== id;
         });
-        delete state.labels[id];
-        delete state.collapsed[id];
-        return write(state);
+        delete state2.labels[id];
+        delete state2.collapsed[id];
+        return write(state2);
       }
     };
   }
@@ -8218,9 +8508,9 @@
           return [];
         }
       }
-      function write(items) {
+      function write(items2) {
         try {
-          storage().setItem(key, JSON.stringify(items));
+          storage().setItem(key, JSON.stringify(items2));
           return true;
         } catch (error) {
           warn("Could not save " + kind + ":", error);
@@ -9646,11 +9936,11 @@
     return "file";
   }
   function readiness(deck, lookupGame) {
-    var items = [];
+    var items2 = [];
     var slides = deck && deck.slides || [];
     var seenExternal = {};
     function add(level, index, title, detail) {
-      items.push({ level, slide: index, title, detail });
+      items2.push({ level, slide: index, title, detail });
     }
     function media(index, label, url, what) {
       var kind = externalMedia(url);
@@ -9724,10 +10014,10 @@
       }
     });
     if (!slides.length) add("stop", null, "The deck", "There are no slides.");
-    var stop = items.filter(function(f) {
+    var stop = items2.filter(function(f) {
       return f.level === "stop";
     }).length;
-    return { stop, check: items.length - stop, items };
+    return { stop, check: items2.length - stop, items: items2 };
   }
   function gameToRunDeck(game) {
     return {
@@ -9812,6 +10102,7 @@
   }
   var { Store, GameStore, LibraryFolders } = createStores({ normalizeDeck, normalizeGame, storage: () => localStorage });
   runtime.SF = Object.assign(runtime.SF || {}, {
+    MotionLab: motion_lab_exports,
     Boards: createBoardRuntime(() => runtime.SF, GAME_STYLES),
     /* The activity catalogue. Data only — studio.js reads target and builds. */
     Activities: { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes },

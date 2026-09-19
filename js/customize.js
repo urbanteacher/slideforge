@@ -827,6 +827,21 @@
       artworkInput.onchange=function(){s.image=SF.safeMedia(artworkInput.value);change();};
       box.appendChild(UI.field('Poster artwork · image URL or asset path',artworkInput));
     }
+    if(s.type==='content' && SF.MotionLab){
+      choose('Motion experiment','motionScene',[['','Standard slide']].concat(Object.entries(SF.MotionLab.MOTION_SCENES)),'');
+      if(SF.MotionLab.active(s)){
+        choose('Experiment style','motionLook',Object.entries(SF.MotionLab.MOTION_LOOKS),'editorial');
+        var sceneImage=document.createElement('input');sceneImage.type='text';sceneImage.value=s.image||'';
+        sceneImage.onchange=function(){s.image=SF.safeMedia(sceneImage.value);change();};
+        box.appendChild(UI.field('Experiment image · URL or asset path',sceneImage));
+        box.appendChild(SF.el('p','hint','Edit points as label, then a tab, then explanation. Up to four points. Present to interact; previews show the complete overview. Scrub uses numeric explanations (1–100).'));
+        if(d.motionScene==='cause'){
+          var multiplier=document.createElement('input');multiplier.type='number';multiplier.min='-10';multiplier.max='10';multiplier.step='0.1';multiplier.value=String(Number(s.body)||2);
+          multiplier.onchange=function(){s.body=multiplier.value;change();};
+          box.appendChild(UI.field('Model multiplier · y = ax',multiplier));
+        }
+      }
+    }
     choose('Text alignment','align',[['left','Left'],['center','Centre'],['right','Right']],'left');
     choose('Text size','size',[
       ['small','Small'],

@@ -7113,7 +7113,7 @@
       "title": "Motion lab — everything that moves, once each",
       "icon": "◈",
       "blurb": "A guided motion catalogue: direct attention, reveal a sequence, preserve context, transform a chart under a prediction, then choose when to stay still. Includes matched speed comparisons and copying guidance.",
-      "minutes": 12,
+      "minutes": 18,
       "theme": "cinematic",
       "libraryGroup": "other",
       "kind": "template",
@@ -7456,10 +7456,10 @@
         },
         {
           "type": "video",
-          "title": "A background video, on a loop",
-          "subtitle": "Eight seconds, 398 KB, generated rather than downloaded",
-          "video": "assets/backdrop/ink-drift.mp4",
-          "videoPoster": "assets/backdrop/ink-drift-poster.jpg",
+          "title": "Light moving through ink",
+          "subtitle": "A quiet, twelve-second seamless loop",
+          "video": "assets/backdrop/ink-silk.mp4",
+          "videoPoster": "assets/backdrop/ink-silk-poster.jpg",
           "videoLoop": true,
           "videoMuted": true,
           "videoAutoplay": true,
@@ -7467,7 +7467,7 @@
             "capStyle": "scrim",
             "logoGround": "dark"
           },
-          "notes": "VIDEO as a backdrop: Loop, Start muted and Play when the slide appears, with the caption over it. Caption style and position are settable on a video slide now, so the text can sit top or bottom, on a gradient, a bar, or nothing.\n\nThe clip loops seamlessly because every motion in it is periodic in the frame count — tools/video/backdrop-frames.py, if you want another one."
+          "notes": "Enhanced silk-light backdrop: twelve seconds, silent, with three independently blended light fields and two soft ribbons. Slow closed paths provide continuous movement; a vignette and quieter lower third leave room for the caption.\n\nLoop, Start muted and Play when the slide appears are enabled. Choose caption style and position in Look. Regenerate using tools/video/backdrop-silk.py and the existing Swift encoder."
         },
         {
           "type": "video",
@@ -7704,6 +7704,70 @@
             "composition": "rail"
           },
           "notes": "Copy an example into your deck, then adjust Look and Motion. Use one dominant movement at a time. Preview the whole sequence, including a still or reduced-motion version."
+        },
+        {
+          "type": "section",
+          "title": "Design experiments",
+          "subtitle": "Motion Lab / Colour, hierarchy, story and participation",
+          "design": { "composition": "editorial", "backdrop": "grid" },
+          "notes": "A new specimen section inspired by the presentation ideas at https://www.figma.com/resource-library/presentation-ideas/. These are original editable SlideForge examples. Use Present to see builds. The checklist in docs/presentation-ideas-checklist.md records remaining gaps."
+        },
+        {
+          "type": "statement",
+          "body": "Make one\nthing matter.",
+          "subtitle": "01 / Ink on lime",
+          "design": { "composition": "poster", "background": "#d7ff62", "textColor": "#172018", "words": "reveal", "wordStagger": "wave" },
+          "notes": "DESIGN: a high-contrast two-colour poster. MOTION: words reveal once, then rest. Change the words, background and text colour in the inspector. Compare with the next slide: identical wording and composition, reversed colours. No new palette editor is implied."
+        },
+        {
+          "type": "statement",
+          "body": "Make one\nthing matter.",
+          "subtitle": "02 / Lime on ink",
+          "transition": "fade",
+          "design": { "composition": "poster", "background": "#172018", "textColor": "#d7ff62", "words": "" },
+          "notes": "MATCHED COMPARISON: the same poster with foreground and background reversed. Pause and ask which suits an opening, a warning or a closing. The second slide stays still so the colour decision is easy to judge."
+        },
+        {
+          "type": "content",
+          "title": "A story in four beats",
+          "bullets": ["We needed a clearer explanation.", "The first design hid the comparison.", "We removed the competing signals.", "Now the audience can choose."],
+          "progressive": true,
+          "buildMode": "dim",
+          "design": { "composition": "rail" },
+          "notes": "STORY REVEAL: Next advances through situation, difficulty, change and consequence. Earlier sentences stay available as context. This is an authored narrative template; replace all four sentences with your own story."
+        },
+        {
+          "type": "split",
+          "title": "Observe before explaining",
+          "image": "assets/lesson/ipdv/qa-london-night-1.jpg",
+          "bullets": ["Where does your eye go first?", "Which contrast guides it there?", "What could a caption add?"],
+          "progressive": true,
+          "design": { "imageShare": 65, "imageStep": "before", "mediaGround": "full" },
+          "notes": "PICTURE FIRST: the photograph provides the evidence; reveal the prompts in sequence. Try moving the picture to the other side and changing its share in Look. The image is an existing local asset. This demonstrates visual sequencing, not screenshot annotation."
+        },
+        {
+          "type": "mindmap",
+          "title": "One idea, three connections",
+          "bullets": ["Notice\tWhat draws attention?", "Explain\tWhat makes the relationship clear?", "Apply\tWhere could this help next?"],
+          "progressive": true,
+          "notes": "DIAGRAM BUILD: reveal one branch per Next. Ask the audience to predict the third branch before showing it. This uses the existing mind-map layout and remains editable; it does not introduce geographic mapping."
+        },
+        {
+          "type": "statement",
+          "body": "Which design\nhelps you think?",
+          "subtitle": "Pause / Ask the room",
+          "design": { "composition": "frame", "words": "fade", "wordStagger": "together" },
+          "feedback": { "kind": "poll", "prompt": "Which experiment would you use first?", "options": ["Colour reversal", "Story reveal", "Picture first", "Branching diagram"], "max": 1 },
+          "notes": "PARTICIPATION: use Rehearse for sample answers or Host live for a real poll. Ask for reasons after the vote. A visual preference is not evidence that one design improves learning."
+        },
+        {
+          "type": "keyfact",
+          "title": "Change one slide",
+          "subtitle": "Your next action",
+          "body": "Choose one experiment and apply it to an explanation you already teach.",
+          "bullets": ["Keep the version that makes the idea clearer."],
+          "design": { "composition": "commitment" },
+          "notes": "CLOSING ACTION: name one specific change and how you will judge it. This is an editable commitment composition. Automatic summaries, agenda generation and a dedicated action component remain separate potential features."
         }
       ],
       "showSlideNumbers": true
@@ -9409,6 +9473,34 @@
      and because makeLesson mints fresh ids, every press of Demo filed another
      copy beside it. So it is built on demand, kept as a single document in a
      folder the Library does not list, and replaced rather than added to. */
+  /* Authored motion specimens: normal content slides with reusable design settings. */
+  var motionLab = LESSONS.find(function (lesson) { return lesson.key === 'motion-lab'; });
+  if (motionLab) {
+    var motionSlides = /** @type {any[]} */ (motionLab.slides);
+    var motionImage = 'assets/lesson/ipdv/qa-london-night-1.jpg';
+    var motionSpecs = [
+      ['mask','A window into the image','Drag Transformation to reveal the photograph through a circular mask.','editorial', ['Reveal\tA moving boundary introduces the image.','Hold\tPause to let the room inspect it.','Explain\tName the detail that matters.']],
+      ['draw','Trace the connection','Press Next to draw each connection and reveal its destination.','technical',['Question\tStart with a question.','Evidence\tConnect the relevant evidence.','Decision\tExplain what follows.']],
+      ['cards','Open an idea, keep its context','Select a card to expand it; return to the overview.','paper',['Observe\tNotice what the audience can see.','Interpret\tExplain what the evidence supports.','Act\tChoose a next step and name its owner.']],
+      ['annotate','Point at the evidence','Press Next to add numbered callouts over the photograph.','technical',['Light\tInspect the bright tower.','Contrast\tCompare illuminated details with the sky.','Reflection\tTrace how light continues across the water.']],
+      ['scrub','From area to aligned length','Drag through the transformation; pause or reverse at any point.','technical',['A\t25','B\t40','C\t60','D\t80']],
+      ['cause','Change the input, inspect the output','Move x. The model uses y = ax; the initial multiplier is 2.','editorial',['Model\tAn illustrative linear relationship, not an empirical forecast.']],
+      ['branch','A source makes a surprising claim','Choose a response, inspect its consequence, then try another path.','comic',['Share immediately\tThe claim travels before anyone checks its basis. What could that cost?','Check the source\tYou find the original evidence and its limitations. What would you verify?','Ask for context\tYou learn what the excerpt left out. Does that change your conclusion?']],
+      ['explode','Separate the system','Drag Transformation to separate the layers. Select a part to inspect it.','paper',['Input\tThe observations entering the system.','Process\tThe rules that transform them.','Output\tThe result that needs interpretation.']],
+      ['lens','Look closer without losing the whole','Drag the lens, or move its horizontal and vertical sliders.','editorial',['Inspect\tChoose a detail, then relate it to the whole image.']],
+      ['panels','Let the story change its shape','Select a panel to give it room; its neighbours retain the context.','cinema',['Before\tThe explanation was hard to follow.','Turning point\tOne comparison made the relationship visible.','After\tThe audience could justify its decision.']]
+    ];
+    motionSlides.push({type:'section',title:'Control the movement',subtitle:'Ten interactive experiments / Present to try them',notes:'These specimens are reusable content slides. Look → Motion experiment selects the behaviour. Edit label and explanation in the points, separated by a tab. The experiment state is transient; the authored content remains unchanged.'});
+    motionSpecs.forEach(function (spec) {
+      motionSlides.push({type:'content',title:spec[1],subtitle:spec[2],bullets:spec[4],body:spec[0]==='cause'?'2':'',image:motionImage,design:{motionScene:spec[0],motionLook:spec[3],composition:'none'},notes:spec[2]+'\n\nUse Present for controls; thumbnails show a settled overview. Reset / replay returns to the starting state. Image callouts use four fixed relative positions. Branching is a local choice-and-consequence exercise; it does not jump to other slides or automatically consume audience votes. Scrub shows synthetic values and explanatory intermediate shapes. Reduced-motion preferences suppress eased travel.'});
+    });
+    Object.entries(SF.MotionLab.MOTION_LOOKS).forEach(function (entry) {
+      motionSlides.push({type:'content',title:entry[1]+' / visual study',subtitle:'The same content, composed with a different visual treatment.',bullets:['Notice\tWhat leads your eye into the slide?','Compare\tWhich detail becomes easier to read?','Choose\tUse this style where it serves the subject.'],design:{motionScene:'panels',motionLook:entry[0],composition:'none'},notes:'Select a panel to expand it. Compare this style with the other four studies. Change Look → Experiment style to reuse the treatment. Comic panels include editable speech-style detail boxes; cinematic depth uses perspective and layered lighting.'});
+    });
+    motionLab.minutes = 25;
+    motionLab.blurb += ' Includes ten interactive motion specimens and five editable visual styles.';
+  }
+
   var DEMO_SOURCE_KEY = 'layout-bank';
   var DEMO_LIBRARY_GROUP = 'sf-demo';
 

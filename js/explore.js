@@ -3,7 +3,7 @@
   'use strict';
   var SF = window.SF;
   var kinds = ['beforeafter', 'explore', 'simulation', 'experiment'];
-  function active(slide) { return kinds.includes(slide.type) || (slide.type === 'chart' && slide.exploration && slide.exploration.prediction); }
+  function active(slide) { return (SF.MotionLab && SF.MotionLab.active(slide)) || kinds.includes(slide.type) || (slide.type === 'chart' && slide.exploration && slide.exploration.prediction); }
   function config(slide) { return SF.normalizeExploration(slide.exploration); }
   function initial(slide) { return { position: 50, spot: -1, input: config(slide).initial, revealed: false, experimentStep: -1 }; }
   function state(player, slide) { return Object.assign(initial(slide), (player.exploreStates || {})[slide.id] || {}); }
@@ -11,7 +11,12 @@
     var slide = player.deck && player.deck.slides[player.idx];
     if (!slide || !active(slide) || player.frozen) return;
     var c = config(slide), next = state(player, slide), n = Number(value);
-    if (action === 'experiment' && slide.type === 'experiment' && SF.Experiments && Number.isInteger(n)) next.experimentStep = Math.max(-1,Math.min(SF.Experiments.config(slide).states.length-1,n));
+    if (SF.MotionLab && SF.MotionLab.active(slide)) {
+      var motionNext = SF.MotionLab.update(slide,next,action,value);
+      if (!motionNext) return;
+      Object.assign(next,motionNext);
+    }
+    else if (action === 'experiment' && slide.type === 'experiment' && SF.Experiments && Number.isInteger(n)) next.experimentStep = Math.max(-1,Math.min(SF.Experiments.config(slide).states.length-1,n));
     else if (action === 'experimentReplay' && slide.type === 'experiment') next.experimentReplay = (next.experimentReplay || 0) + 1;
     else if (action === 'reveal' && slide.type === 'chart') next.revealed = value === true;
     else if (action === 'position' && slide.type === 'beforeafter' && Number.isFinite(n)) next.position = Math.max(0, Math.min(100, n));
@@ -49,6 +54,12 @@
     var s = player.deck && player.deck.slides[player.idx];
     if (!s || !active(s)) return null;
     var v = state(player, s);
+    if (SF.MotionLab && SF.MotionLab.active(s)) {
+      var mv=SF.MotionLab.state(s,v),mode=s.design.motionScene;
+      if(['mask','scrub','cause','explode'].includes(mode))return mv.sceneValue<100?'comparison':null;
+      if(['draw','annotate'].includes(mode))return mv.sceneStep<SF.MotionLab.items(s).length?'comparison':null;
+      return null;
+    }
     if (s.type === 'experiment') return v.experimentStep < SF.Experiments.config(s).states.length-1 ? 'comparison' : null;
     if (s.type === 'chart' && !v.revealed) return 'prediction';
     if (s.type === 'explore' && v.spot < config(s).spots.length - 1) return 'hotspot';
@@ -59,6 +70,15 @@
     var s = player.deck && player.deck.slides[player.idx];
     if (!s || !active(s)) return false;
     var v = state(player, s);
+    if(SF.MotionLab && SF.MotionLab.active(s)) {
+      var mv=SF.MotionLab.state(s,v), mode=s.design.motionScene;
+      if(['mask','scrub','cause','explode'].includes(mode)) {
+        if(direction>0 && mv.sceneValue<100 || direction<0 && mv.sceneValue>0){command(player,'motionValue',mv.sceneValue+direction*25);return true;}
+      } else if(['draw','annotate'].includes(mode)) {
+        if(direction>0 && mv.sceneStep<SF.MotionLab.items(s).length || direction<0 && mv.sceneStep>0){command(player,'motionStep',mv.sceneStep+direction);return true;}
+      }
+      return false;
+    }
     if (s.type === 'experiment') {
       var next=v.experimentStep+direction;
       if(next>=-1 && next<SF.Experiments.config(s).states.length){command(player,'experiment',next);return true;}
@@ -87,6 +107,7 @@
   }
   function render(root, pad, slide, opts) {
     if (!active(slide)) return;
+    if(SF.MotionLab && SF.MotionLab.active(slide)){SF.MotionLab.render(root,pad,slide,opts,SF.safeMedia);return;}
     if (slide.type === 'experiment' && SF.Experiments) { SF.Experiments.render(root,pad,slide,opts); return; }
     var c = config(slide), view = Object.assign(initial(slide), opts.exploreState || {});
     var enabled = !!(opts.interactive || opts.exploreCommand);
