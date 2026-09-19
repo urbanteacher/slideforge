@@ -1221,6 +1221,47 @@
     return (focusedBlockId && s && SF.freeBlockById(s, focusedBlockId)) || null;
   }
 
+  /* Every chart kind, grouped by what the chart is for. A chart block draws
+     through the same renderer a chart slide does — all twenty work, tested one
+     by one — so it offers the same twenty, from the same list. A block that
+     could only be seven of them was a limit in the rail, not in the drawing. */
+  /* Shared by the chart slide's own field and by a chart block's, which offer
+ the same kinds because they draw through the same renderer. */
+  var CHART_LABELS = {
+    bar: 'Bar — compare magnitude',
+    stack: 'Stacked bar — the total, and what makes it up',
+    hbar: 'Horizontal bar — when the names are long',
+    line: 'Line — change over time',
+    area: 'Area — change over time, with the volume under it',
+    pie: 'Pie — parts of one whole',
+    donut: 'Donut — parts of one whole, total in the middle',
+    treemap: 'Treemap — parts of one whole, biggest owns the eye',
+    waffle: 'Waffle — parts of one whole, counted as squares',
+    bullet: 'Bullet — actual against a target',
+    combo: 'Columns + markers — size and a rate together',
+    radar: 'Radar — several variables on one shape (teach with care)',
+    sankey: 'Sankey — where a quantity goes',
+    scatter: 'Scatter — do two things move together',
+    histogram: 'Histogram — the shape of one variable',
+    box: 'Box plot — spread, skew and outliers',
+    pictogram: 'Pictogram — counted in icons, not measured',
+    dumbbell: 'Dumbbell — the gap between two states',
+    matrix: 'Evidence matrix — ratings across conditions',
+    multiples: 'Small multiples — one panel each, same scale'
+  };
+
+  function chartTypeOptions() {
+    var opts = [];
+    (SF.CHART_TAXONOMY || []).forEach(function (cat) {
+      cat.kinds.forEach(function (k) {
+        var home = SF.chartPrimaryCategory(k);
+        if (home && home.key !== cat.key) return;
+        opts.push({ value: k, label: CHART_LABELS[k] || k, group: cat.label });
+      });
+    });
+    return opts;
+  }
+
   function drawBlockInspector(insp, s, block) {
     var spec = (SF.FREE_KINDS || {})[block.kind] || {};
     insp.appendChild(el('h4', 'eyebrow', 'SELECTED ITEM'));
@@ -1295,11 +1336,10 @@
       }
     }
     if (block.kind === 'chart') {
-      insp.appendChild(UI.field('Chart type', UI.select(
-        ['bar', 'hbar', 'stack', 'line', 'area', 'pie', 'donut'].map(function (k) {
-          return { value: k, label: k };
-        }), block.chartKind || 'bar',
-        function (v) { block.chartKind = v; touched(); draw(); })));
+      insp.appendChild(UI.field('Chart type', UI.select(chartTypeOptions(),
+        block.chartKind || 'bar',
+        function (v) { block.chartKind = v; touched(); draw(); }),
+        'Grouped by what the chart is for, after the FT\u2019s Visual Vocabulary.'));
     }
     insp.appendChild(el('p', 'hint',
       'Move and resize it on the canvas with the arrange bar. Esc deselects and gives the slide\u2019s own fields back.'));
@@ -3048,41 +3088,12 @@
 
          The labels stay — a heading says what question the family answers,
          and the option says what that particular chart is for. */
-      var LABELS = {
-        bar: 'Bar — compare magnitude',
-        stack: 'Stacked bar — the total, and what makes it up',
-        hbar: 'Horizontal bar — when the names are long',
-        line: 'Line — change over time',
-        area: 'Area — change over time, with the volume under it',
-        pie: 'Pie — parts of one whole',
-        donut: 'Donut — parts of one whole, total in the middle',
-        treemap: 'Treemap — parts of one whole, biggest owns the eye',
-        waffle: 'Waffle — parts of one whole, counted as squares',
-        bullet: 'Bullet — actual against a target',
-        combo: 'Columns + markers — size and a rate together',
-        radar: 'Radar — several variables on one shape (teach with care)',
-        sankey: 'Sankey — where a quantity goes',
-        scatter: 'Scatter — do two things move together',
-        histogram: 'Histogram — the shape of one variable',
-        box: 'Box plot — spread, skew and outliers',
-        pictogram: 'Pictogram — counted in icons, not measured',
-        dumbbell: 'Dumbbell — the gap between two states',
-        matrix: 'Evidence matrix — ratings across conditions',
-        multiples: 'Small multiples — one panel each, same scale'
-      };
       /* Once each. A <select> cannot hold the poster's cross-listings: two
          options sharing a value are not two choices, and picking the second
          makes the control jump to the first — so "Bar" chosen under Ranking
          would silently relocate to Magnitude. The chooser below keeps the
          cross-listing, where it can be shown without that failure. */
-      var chartOpts = [];
-      (SF.CHART_TAXONOMY || []).forEach(function (cat) {
-        cat.kinds.forEach(function (k) {
-          var home = SF.chartPrimaryCategory(k);
-          if (home && home.key !== cat.key) return;
-          chartOpts.push({ value: k, label: LABELS[k] || k, group: cat.label });
-        });
-      });
+      var chartOpts = chartTypeOptions();
       insp.appendChild(UI.field('Chart type', UI.select(chartOpts,
         s.chartKind, function (v) { s.chartKind = v; touched(); repaint(); }),
         'Grouped by what the chart is for, after the FT\u2019s Visual Vocabulary.'));
@@ -3127,7 +3138,7 @@
                   var also = SF.chartCategories(k)
                     .filter(function (c) { return c.key !== cat.key; })
                     .map(function (c) { return c.label.toLowerCase(); });
-                  return { id: k, title: LABELS[k] || k,
+                  return { id: k, title: CHART_LABELS[k] || k,
                     blurb: (k === s.chartKind ? 'What this slide uses now.' : 'Switch this slide to it.') +
                       (also.length ? '  Also answers ' + also.join(' and ') + '.' : '') };
                 });
@@ -3136,7 +3147,7 @@
               onPick: function (it) {
                 if (!it.id) return;
                 s.chartKind = it.id; touched(); repaint();
-                SF.toast('Now a ' + (LABELS[it.id] || it.id).split(' \u2014 ')[0].toLowerCase() + '.');
+                SF.toast('Now a ' + (CHART_LABELS[it.id] || it.id).split(' \u2014 ')[0].toLowerCase() + '.');
               }
             });
           }
