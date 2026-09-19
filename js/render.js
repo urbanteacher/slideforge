@@ -360,9 +360,9 @@
      editor, the marks engine, Fit to text and the region machinery keep
      working on all of them without knowing any of this. */
   var FREE_KINDS = {
-    heading: { tag: 'h3', cls: 'free-heading', label: 'Heading', rows: 2, cols: 6 },
-    text: { tag: 'p', cls: 'free-text', label: 'Text', rows: 2, cols: 6 },
-    note: { tag: 'div', cls: 'free-note', label: 'Note', rows: 1, cols: 4 },
+    heading: { tag: 'h3', cls: 'free-heading', label: 'Heading', rows: 2, cols: 6, size: 'heading' },
+    text: { tag: 'p', cls: 'free-text', label: 'Text', rows: 2, cols: 6, size: 'body' },
+    note: { tag: 'div', cls: 'free-note', label: 'Note', rows: 1, cols: 4, size: 'small' },
     bullets: {
       tag: 'ul', cls: 'free-bullets', label: 'Bullet points', rows: 4, cols: 6,
       hint: 'One point per line.',
@@ -401,6 +401,8 @@
       }
     }
   };
+  /* The ranks a block can take, largest first. */
+  SF.FREE_SIZES = ['display', 'title', 'heading', 'body', 'small'];
   SF.FREE_KINDS = FREE_KINDS;
   SF.freeBlockKey = function (id) { return 'blocks.' + id; };
   SF.freeBlockId = function (key) {
@@ -447,7 +449,8 @@
     list.forEach(function (block) {
       var spec = FREE_KINDS[block.kind] || FREE_KINDS.text;
       var key = SF.freeBlockKey(block.id);
-      var node = el(spec.tag, 'free-block ' + spec.cls);
+      var size = block.size || spec.size;
+      var node = el(spec.tag, 'free-block ' + spec.cls + (size ? ' free-size-' + size : ''));
       node.dataset.contentKey = key;
       node.dataset.freeBlock = String(block.id);
       /* Empty is a real state: a block is added before it is written into, and
@@ -1441,7 +1444,9 @@
        empty; this one rendered three invisible list items instead, so a fresh
        bullets or cards slide looked like a rendering failure. */
     var anyText = (slide.bullets || []).some(function (b) { return String(b || '').trim(); });
-    if (!anyText) {
+    /* A slide carrying blocks is not empty — it is simply not using its bullet
+       pit, and the prompt for filling that pit was reaching the projector. */
+    if (!anyText && !SF.freeBlocksOf(slide).length) {
       var hint = el('li', 'dim', 'Add points in the inspector');
       ul.appendChild(hint);
       pad.appendChild(ul);
@@ -3750,7 +3755,7 @@
     if (slide.title) copy.appendChild(rich('h2', null, slide, 'title', slide.title));
     var ul = el('ul');
     var lines = (slide.bullets || []).map(function(text,index){return {text:text,index:index};}).filter(function (b) { return String(b.text).trim(); });
-    if (!lines.length) {
+    if (!lines.length && !SF.freeBlocksOf(slide).length) {
       ul.appendChild(el('li', 'dim', 'Add points in the inspector'));
     } else {
       lines.forEach(function (item) {

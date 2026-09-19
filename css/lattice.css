@@ -171,6 +171,19 @@
   opacity: .38;
   font-style: italic;
 }
+/* Type scale for blocks. A block had no rank: a heading block was an h3 at
+   whatever the browser gives it, which is 18px on a 1280px slide where a real
+   title is nearer 96. Without a scale a block can caption something but can
+   never BE the thing on the slide, so a page built only from items came out
+   looking like a form. The names are the slide's ranks, not CSS sizes. */
+.free-size-display { font-size: 96px; line-height: 1.02; font-weight: 700; letter-spacing: -.03em; }
+.free-size-title   { font-size: 64px; line-height: 1.06; font-weight: 700; letter-spacing: -.02em; }
+.free-size-heading { font-size: 40px; line-height: 1.15; font-weight: 650; letter-spacing: -.01em; }
+.free-size-body    { font-size: 24px; line-height: 1.35; }
+.free-size-small   { font-size: 18px; line-height: 1.4; }
+.free-block.free-size-display, .free-block.free-size-title,
+.free-block.free-size-heading { margin: 0; }
+
 /* The drawing kinds. Each one fills the cell it was given rather than sizing
    to its own content, because the author chose the footprint on the lattice
    and the picture or chart is what has to give. */

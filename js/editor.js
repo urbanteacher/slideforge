@@ -1225,6 +1225,14 @@
     area.value = String(block.text == null ? '' : block.text);
     area.onchange = function () { block.text = area.value; touched(); draw(); };
     insp.appendChild(UI.field(spec.label || 'Content', area, spec.hint || ''));
+    /* Rank, not point size: the same words are a title on one slide and a
+       caption on another, and the block should be able to say which. */
+    if (!spec.draw) {
+      insp.appendChild(UI.field('Size', UI.select(
+        (SF.FREE_SIZES || []).map(function (k) { return { value: k, label: k }; }),
+        block.size || spec.size || 'body',
+        function (v) { block.size = v; touched(); draw(); })));
+    }
     if (block.kind === 'image') {
       insp.appendChild(UI.field('Fit', UI.select(
         [{ value: 'cover', label: 'Fill the cell' }, { value: 'contain', label: 'Fit inside it' }],
