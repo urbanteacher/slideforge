@@ -1257,6 +1257,42 @@
         [{ value: 'cover', label: 'Fill the cell' }, { value: 'contain', label: 'Fit inside it' }],
         block.fit === 'contain' ? 'contain' : 'cover',
         function (v) { block.fit = v; touched(); draw(); })));
+      /* The same words an image slide uses for the same three decisions, so a
+         teacher who has framed one picture already knows how to frame this. */
+      insp.appendChild(UI.field('Frame', UI.select(
+        [{ value: '', label: 'Fill the cell' }].concat(
+          (SF.IMAGE_FRAME_KEYS || []).map(function (k) { return { value: k, label: k }; })),
+        block.frame || '',
+        function (v) { block.frame = v; touched(); draw(); }),
+        'The cell says how much room; this says what shape to take in it.'));
+      insp.appendChild(UI.field('Image motion', UI.select(
+        [{ value: '', label: 'Still' },
+         { value: 'zoom', label: 'Slow zoom' },
+         { value: 'travel', label: 'Travel between two points' }],
+        block.imageMotion || '',
+        function (v) { if (v) block.imageMotion = v; else delete block.imageMotion; touched(); draw(); }),
+        'Plays in Present, not on the canvas. Reduced-motion settings are respected.'));
+      if (block.imageMotion) {
+        var focal = [['focalX', 'Focus horizontal'], ['focalY', 'Focus vertical']];
+        if (block.imageMotion === 'travel') {
+          focal = focal.concat([['focalX2', 'Travels to horizontal'], ['focalY2', 'Travels to vertical']]);
+        }
+        focal.forEach(function (pair) {
+          var n = document.createElement('input');
+          n.type = 'number'; n.min = '0'; n.max = '100';
+          n.value = String(block[pair[0]] == null ? 50 : block[pair[0]]);
+          n.onchange = function () {
+            if (Number.isFinite(n.valueAsNumber)) { block[pair[0]] = n.valueAsNumber; touched(); draw(); }
+          };
+          insp.appendChild(UI.field(pair[1], n));
+        });
+        if (block.imageMotion === 'travel') {
+          insp.appendChild(UI.field('How long the move takes', UI.select(
+            [{ value: '12', label: '12 seconds' }, { value: '20', label: '20 seconds' }, { value: '30', label: '30 seconds' }],
+            String(block.imageTravelSecs || 20),
+            function (v) { block.imageTravelSecs = Number(v); touched(); draw(); })));
+        }
+      }
     }
     if (block.kind === 'chart') {
       insp.appendChild(UI.field('Chart type', UI.select(

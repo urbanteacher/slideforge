@@ -1477,13 +1477,17 @@ html[data-ws="game"] #btnSorter { display: none; }
   from { transform: scale(1); }
   to { transform: scale(1.12); }
 }
-#player .layout-image .img.img-motion-zoom {
+/* A picture block animates on the same terms as a picture slide: the rules
+   name both rather than the block growing a copy of the keyframes. */
+#player .layout-image .img.img-motion-zoom,
+#player .free-image-img.img-motion-zoom {
   animation: sf-img-zoom 24s ease-out forwards;
   transform-origin: var(--img-fx, 50%) var(--img-fy, 50%);
   will-change: transform;
 }
 @media (prefers-reduced-motion: reduce) {
-  #player .layout-image .img.img-motion-zoom { animation: none; }
+  #player .layout-image .img.img-motion-zoom,
+  #player .free-image-img.img-motion-zoom { animation: none; }
 }
 
 /* video — the image layout's frame, with a real player in it.
@@ -6658,7 +6662,8 @@ html[data-ws="deck"] #railCount { display: none; }
    not need a JS timer ticking through a lecture.
 
    Easy Ease again: a linear pan across a photograph looks like a machine. */
-#player .layout-image .img.img-motion-travel {
+#player .layout-image .img.img-motion-travel,
+#player .free-image-img.img-motion-travel {
   transform-origin: 0 0;
   animation: sf-img-travel var(--kb-dur, 20s) cubic-bezier(.33, 0, .67, 1) both;
   will-change: transform;
@@ -6670,12 +6675,14 @@ html[data-ws="deck"] #railCount { display: none; }
 /* Still, on the frame the author chose to start on — which is the
    establishing shot, not the destination. */
 @media (prefers-reduced-motion: reduce) {
-  #player .layout-image .img.img-motion-travel {
+  #player .layout-image .img.img-motion-travel,
+  #player .free-image-img.img-motion-travel {
     animation: none;
     transform: var(--kb-from, scale(1.2));
   }
 }
-.pdf-page .img.img-motion-travel { animation: none; transform: var(--kb-from, scale(1.2)); }
+.pdf-page .img.img-motion-travel,
+.pdf-page .free-image-img.img-motion-travel { animation: none; transform: var(--kb-from, scale(1.2)); }
 
 /* ---- chart callouts ----------------------------------------------------- */
 

@@ -377,11 +377,31 @@
       draw: function (node, text, block) {
         var src = SF.safeMedia(text);
         if (!src) return;
-        var img = el('img', 'free-image-img');
+        var travel = travelFrom(block);
+        var motion = travel ? ' img-motion-travel'
+          : block.imageMotion === 'zoom' ? ' img-motion-zoom' : '';
+        var img = el('img', 'free-image-img' + motion);
         img.src = src;
         img.alt = String(block.alt || '');
         img.draggable = false;
         img.style.objectFit = block.fit === 'contain' ? 'contain' : 'cover';
+        /* Frame: the cell says how much room, this says what shape to take in
+           it. Without one the picture simply fills the cell, as before. */
+        if (Object.prototype.hasOwnProperty.call(IMAGE_FRAMES, block.frame || '')) {
+          img.style.aspectRatio = IMAGE_FRAMES[block.frame];
+          img.style.width = 'auto';
+          img.style.height = 'auto';
+          img.style.maxWidth = '100%';
+          img.style.maxHeight = '100%';
+        }
+        var pct = function (v) { var n = Number(v); return (Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 50) + '%'; };
+        img.style.setProperty('--img-fx', pct(block.focalX));
+        img.style.setProperty('--img-fy', pct(block.focalY));
+        if (travel) {
+          img.style.setProperty('--kb-from', travel.from);
+          img.style.setProperty('--kb-to', travel.to);
+          img.style.setProperty('--kb-dur', travel.secs + 's');
+        }
         node.appendChild(img);
       }
     },
@@ -1755,8 +1775,11 @@
     return 'translate(' + tx.toFixed(2) + '%, ' + ty.toFixed(2) + '%) scale(' + s + ')';
   }
 
-  function imageTravel(slide) {
-    var d = slide.design || {};
+  /* The travel maths, given the settings rather than a slide. A picture block
+     carries the same four numbers on itself that an image slide carries in
+     design, and there is no reason for two copies of this. */
+  function travelFrom(d) {
+    d = d || {};
     if (d.imageMotion !== 'travel') return null;
     var num = function (v, fallback) {
       var n = Number(v);
@@ -1773,6 +1796,8 @@
       secs: TRAVEL_SECS[Number(d.imageTravelSecs)] || 20
     };
   }
+  function imageTravel(slide) { return travelFrom((slide || {}).design); }
+
 
   /* How a caption sits on the picture. Scrim is the default and the safest —
      a gradient reads over any image. Bar and plain assume the author has
@@ -1800,6 +1825,8 @@
      is right for a photograph; a chart wants a frame, because a caption bar
      across the bottom of a chart covers the axis labels. */
   var IMAGE_FRAMES = { '16:9': '16 / 9', '4:3': '4 / 3', '3:2': '3 / 2', '1:1': '1 / 1', '4:5': '4 / 5' };
+  /* The inspector offers the same frames to a block as to a slide. */
+  SF.IMAGE_FRAME_KEYS = Object.keys(IMAGE_FRAMES);
 
   function imageFrame(slide) {
     var want = (slide.design || {}).imageFrame;
