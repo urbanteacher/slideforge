@@ -946,6 +946,18 @@
     /* The canvas bar offers the same ＋ Item the arrange bar does, so both
        call this rather than each growing their own copy of it. */
     addBlock: addBlock,
+    /* Select an item from outside — a click on the canvas goes to the rail,
+       and the corner handles have to come with it. Without this the rail said
+       an item was selected while the canvas showed nothing to grab. */
+    selectKey: function (key) {
+      if (!key || String(key).indexOf('blocks.') !== 0) return;
+      selected = key;
+      selectedSlide = slide();
+      afterPaint();
+      /* afterPaint repaints the canvas; the rail has to be told too, or the
+         handles appear on an item whose editor is no longer on screen. */
+      if (SF.Editor && SF.Editor.refreshInspector) SF.Editor.refreshInspector();
+    },
     /* Which block the canvas has selected, so the inspector can edit it. */
     selectedBlock: function () {
       var id = selected ? SF.freeBlockId(selected) : null;

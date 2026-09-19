@@ -601,13 +601,21 @@
   function editCanvasBlock(node, s, key, opts) {
     if (!node || !s || !key) return;
     if (document.querySelector('.arranging, .art-editing')) return;
-    if (inlineEditable(node, s, key)) { beginInlineEdit(node, s, key, opts); return; }
     /* A free block has a rail of its own now — kind, content and whatever else
        the kind needs. Open it and let the rail take the click, rather than
        falling through to the floating form, which is the last resort for
-       content that has nowhere in the rail to go. */
+       content that has nowhere in the rail to go.
+       Before the inline editor, not after: a block that can be typed into
+       returns there and would never have been given corner handles, so the
+       only items you could resize were the ones with no text in them. The
+       handles hang off the .sf-slot and the caret goes in the .free-block
+       inside it, so an item can be typed into and resized at once. */
     var blockId = SF.freeBlockId && SF.freeBlockId(key);
-    if (blockId && SF.Editor && SF.Editor.focusBlock) SF.Editor.focusBlock(blockId);
+    if (blockId && SF.Editor && SF.Editor.focusBlock) {
+      SF.Editor.focusBlock(blockId);
+      if (SF.Arrange && SF.Arrange.selectKey) SF.Arrange.selectKey(key);
+    }
+    if (inlineEditable(node, s, key)) { beginInlineEdit(node, s, key, opts); return; }
     var field = railFieldFor(s, key, blockPart(node));
     if (field) {
       endInlineEdit('save');
@@ -616,6 +624,12 @@
       if (field.select) field.select();
       return;
     }
+    /* A free block has just put its whole inspector in the rail — kind,
+       content, and the fields that kind needs. An image has no plain text
+       field for railFieldFor to match, so the last resort used to fire and
+       stack a floating "Edit slide content" panel over a rail that was
+       already editing the same item. The rail is the editor; stop here. */
+    if (blockId) { endInlineEdit('save'); return; }
     openCanvasEditor(node, s, key, opts);
   }
 

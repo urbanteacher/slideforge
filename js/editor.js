@@ -1374,6 +1374,23 @@
       SF.toast && SF.toast('Item removed. Undo brings it back.');
     }));
     insp.appendChild(UI.field('This item', acts));
+    /* The rail's faces row is drawn by the branch below this one, so selecting
+       an item used to take ▦ Layout off the screen — and Layout is where the
+       slot names, the fit check and the nudges live, none of which the item's
+       own fields replace. Carry it across. One id, because the two branches
+       are exclusive: the block inspector returns before the faces row runs. */
+    var faces = el('div', 'format-tools canvas-faces');
+    faces.setAttribute('role', 'group');
+    faces.setAttribute('aria-label', 'Canvas tools');
+    var arranging = !!(SF.Arrange && SF.Arrange.isArranging());
+    var lay = UI.button('\u25A6 Layout', arranging ? 'active' : 'ghost', function () {
+      if (SF.Arrange) SF.Arrange.setArranging(!SF.Arrange.isArranging());
+    });
+    lay.id = 'btnArrange';
+    lay.title = 'Move blocks on the 16x12 lattice';
+    lay.setAttribute('aria-pressed', String(arranging));
+    faces.appendChild(lay);
+    insp.appendChild(faces);
     insp.appendChild(el('p', 'hint',
       'Drag it to move, or drag a corner to resize. Esc deselects and gives the slide\u2019s own fields back.'));
   }
