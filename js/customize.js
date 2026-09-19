@@ -602,6 +602,12 @@
     if (!node || !s || !key) return;
     if (document.querySelector('.arranging, .art-editing')) return;
     if (inlineEditable(node, s, key)) { beginInlineEdit(node, s, key, opts); return; }
+    /* A free block has a rail of its own now — kind, content and whatever else
+       the kind needs. Open it and let the rail take the click, rather than
+       falling through to the floating form, which is the last resort for
+       content that has nowhere in the rail to go. */
+    var blockId = SF.freeBlockId && SF.freeBlockId(key);
+    if (blockId && SF.Editor && SF.Editor.focusBlock) SF.Editor.focusBlock(blockId);
     var field = railFieldFor(s, key, blockPart(node));
     if (field) {
       endInlineEdit('save');

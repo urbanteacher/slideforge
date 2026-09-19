@@ -1212,6 +1212,15 @@
      block is selected on the canvas, because that is what the author is
      pointing at. The kind decides how its single `text` field is read, so the
      label and the hint come from the registry rather than from a branch here. */
+  /* Which block the canvas last asked to edit. Arrange selection is one way in;
+     clicking a block's words on the canvas is the other, and it must not have
+     to enter the Layout face first. */
+  var focusedBlockId = null;
+  function focusedBlock() {
+    var s = current();
+    return (focusedBlockId && s && SF.freeBlockById(s, focusedBlockId)) || null;
+  }
+
   function drawBlockInspector(insp, s, block) {
     var spec = (SF.FREE_KINDS || {})[block.kind] || {};
     insp.appendChild(el('h4', 'eyebrow', 'SELECTED ITEM'));
@@ -1221,6 +1230,7 @@
         return { value: k, label: SF.FREE_KINDS[k].label || k };
       }), block.kind, function (v) { block.kind = v; touched(); draw(); })));
     var area = document.createElement('textarea');
+    area.dataset.contentKey = SF.freeBlockKey(block.id);
     area.rows = spec.draw ? 5 : 3;
     area.value = String(block.text == null ? '' : block.text);
     area.onchange = function () { block.text = area.value; touched(); draw(); };
@@ -1256,7 +1266,7 @@
     insp.innerHTML = '';
     var s = current();
     if (!s) { delete insp.dataset.slide; return; }
-    var picked = SF.Arrange && SF.Arrange.selectedBlock && SF.Arrange.selectedBlock();
+    var picked = (SF.Arrange && SF.Arrange.selectedBlock && SF.Arrange.selectedBlock()) || focusedBlock();
     if (picked) { insp.dataset.slide = s.id; drawBlockInspector(insp, s, picked); return; }
     /* Which slide's fields these are. A canvas click hands a composite block
        to the rail field that owns it, and the fields are keyed by content key
@@ -4120,6 +4130,9 @@
     install: install,
     /** Redraw the rail — the canvas calls this when the selection changes. */
     refreshInspector: drawInspector,
+    /** Put the rail on one block, because the canvas was clicked on it. */
+    focusBlock: function (id) { focusedBlockId = id || null; drawInspector(); },
+    clearBlockFocus: function () { if (focusedBlockId) { focusedBlockId = null; drawInspector(); } },
     addSlide: addSlide,
     insertStarter: insertStarter,
     commitActivityChange: touched,
