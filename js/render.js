@@ -385,6 +385,39 @@
         node.appendChild(img);
       }
     },
+    /* Reverse-engineered from the slide types rather than invented. Keywords,
+       stat tiles, timeline entries, links and compare rows each carry their
+       own private classes — kw-term/kw-def, stat-value/stat-label,
+       timeline-date/timeline-title — and share none of them, but they are all
+       the same shape: a label and the thing it names, repeated. 777 of the
+       1223 authored bullets in the library already write that shape as
+       label TAB value, and cards and tiered bullets already parse it. So this
+       is the existing idiom given a block of its own, not a new one. */
+    pairs: {
+      tag: 'dl', cls: 'free-pairs', label: 'Label and value list', rows: 5, cols: 6,
+      hint: 'One per line: the label, a tab, then the value.',
+      draw: function (node, text) {
+        text.split('\n').map(function (l) { return l.trim(); }).filter(Boolean)
+          .forEach(function (line) {
+            var at = line.indexOf('\t');
+            var term = at < 0 ? line : line.slice(0, at);
+            var def = at < 0 ? '' : line.slice(at + 1).trim();
+            node.appendChild(el('dt', 'free-pair-term', term));
+            if (def) node.appendChild(el('dd', 'free-pair-def', def));
+          });
+      }
+    },
+    quote: {
+      tag: 'figure', cls: 'free-quote', label: 'Quote', rows: 4, cols: 8,
+      hint: 'The words, a tab, then who said them.',
+      draw: function (node, text) {
+        var at = text.indexOf('\t');
+        var words = at < 0 ? text : text.slice(0, at);
+        var who = at < 0 ? '' : text.slice(at + 1).trim();
+        node.appendChild(el('blockquote', 'free-quote-words', words.trim()));
+        if (who) node.appendChild(el('figcaption', 'free-quote-attrib', who));
+      }
+    },
     chart: {
       tag: 'div', cls: 'free-chart', label: 'Chart', rows: 6, cols: 6,
       hint: 'Tab-separated, a heading row then the values.',
