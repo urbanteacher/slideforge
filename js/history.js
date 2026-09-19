@@ -31,7 +31,16 @@
      "before …" ones still fire immediately. */
   var QUIET_DELAY = 90 * 1000;
   var QUIET_MIN_GAP = 4 * 60 * 1000;
+  /* A ceiling as well as a floor. The quiet timer restarts on every change, so
+     an hour of steady work — a change at least every 90 seconds — never goes
+     quiet and never snapshots, which excluded exactly the session most likely
+     to want a way back. After this long since the run's first change, take one
+     without waiting for a pause. */
+  var BUSY_CEILING = 5 * 60 * 1000;
   var quietTimer = null;
+  /** When the current unbroken run of edits began, per document. */
+  /** @type {Record<string, number>} */
+  var runStartedAt = Object.create(null);
   /** @type {any} */
   var quietDoc = null;
   /** @type {Record<string, number>} */
@@ -149,14 +158,26 @@
   function noteChange(doc) {
     if (!doc || !doc.id || !ready()) return;
     quietDoc = doc;
+    var now = Date.now();
+    if (!runStartedAt[doc.id]) runStartedAt[doc.id] = now;
+    /* Been going long enough without a pause: take one now rather than keep
+       waiting for a quiet that steady work never reaches. */
+    if (now - runStartedAt[doc.id] >= BUSY_CEILING) {
+      if (quietTimer) { clearTimeout(quietTimer); quietTimer = null; }
+      runStartedAt[doc.id] = now;
+      lastQuietAt[doc.id] = now;
+      snapshot(doc, 'While editing');
+      return;
+    }
     if (quietTimer) clearTimeout(quietTimer);
     quietTimer = setTimeout(function () {
       quietTimer = null;
       var d = quietDoc;
       if (!d || !d.id) return;
-      var now = Date.now();
-      if (lastQuietAt[d.id] && now - lastQuietAt[d.id] < QUIET_MIN_GAP) return;
-      lastQuietAt[d.id] = now;
+      var at = Date.now();
+      if (lastQuietAt[d.id] && at - lastQuietAt[d.id] < QUIET_MIN_GAP) return;
+      lastQuietAt[d.id] = at;
+      runStartedAt[d.id] = 0;
       snapshot(d, 'While editing');
     }, QUIET_DELAY);
   }

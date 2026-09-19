@@ -1415,10 +1415,17 @@
             wide: true,
             empty: 'No earlier versions yet. Keep a restore point before a rewrite, or wait — edits keep a quiet copy after a pause.',
             items: function () {
+              /* This list is never empty — the Keep row is always in it — so the
+                 `empty` line above cannot speak for us. Without a word here an
+                 author who has been editing for an hour sees one button and no
+                 versions, and reads it as "nothing was saved". Say what the
+                 rules are instead. */
               var items = [{
                 id: 'keep',
                 title: 'Keep a restore point now',
-                blurb: 'Snapshot this version. Use it before a big rewrite.'
+                blurb: rows.length
+                  ? 'Snapshot this version. Use it before a big rewrite.'
+                  : 'Snapshot this version. None have been taken yet: a copy is kept once editing has been quiet for 90 seconds, or every 5 minutes of steady work. Your slides themselves are saved as you type — this is only the way back.'
               }];
               rows.forEach(function (r) {
                 items.push({ id: String(r.id), title: r.label + ' · ' + when(r.at),
