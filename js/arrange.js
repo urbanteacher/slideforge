@@ -158,12 +158,21 @@
   }
 
   function beginDrag(e) {
-    if (!arranging || e.button !== 0 || e.isPrimary === false) return;
-    if (cancelDrag) cancelDrag();
+    if (e.button !== 0 || e.isPrimary === false) return;
     var slot = e.target.closest && e.target.closest('.sf-slot');
+    /* Outside the Layout face an item you added is still draggable — it is
+       yours, and going into a mode to nudge it is a detour. The slide's own
+       parts are not: moving those is what the Layout face is for. */
+    var freeItem = !arranging && slot &&
+      String(slot.getAttribute('data-block-key') || '').indexOf('blocks.') === 0;
+    if (!arranging && !freeItem) return;
+    if (cancelDrag) cancelDrag();
     if (!slot) { select(null); return; }
-    e.preventDefault();
-    select(slot);
+    /* A press on an item outside Layout might be the start of a drag or might
+       be a click to type into it. Claiming it now would break the second, so
+       the default is left alone until the pointer has actually travelled a
+       cell, and the click is suppressed then instead. */
+    if (!freeItem) { e.preventDefault(); select(slot); }
     var rt = root();
     var s = slide();
     var map = regionsOf(s, true);
@@ -183,6 +192,15 @@
       var dCol = Math.round((ev.clientX - fromX) / scale / g.stepX);
       var dRow = Math.round((ev.clientY - fromY) / scale / g.stepY);
       if (!dCol && !dRow && !moved) return;
+      if (!moved && freeItem) {
+        /* It is a drag after all: take the item now, and stop the press from
+           also landing as a click that opens the text editor. */
+        select(slot);
+        slot.addEventListener('click', function once(ev) {
+          ev.stopPropagation(); ev.preventDefault();
+          slot.removeEventListener('click', once, true);
+        }, true);
+      }
       moved = true;
       slot.style.transform = '';
       landed = {
@@ -209,7 +227,7 @@
     }
     function up() {
       cleanup();
-      if (slide() !== s || !arranging) return;
+      if (slide() !== s || (!arranging && !freeItem)) return;
       if (!moved) return;
       map[key] = landed;
       commit(true);
