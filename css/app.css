@@ -445,6 +445,14 @@ html[data-ws="game"] #btnSorter { display: none; }
    this point, which is not something you do to the presentation as a
    document. Library and See the demo are, and they went up to the topbar. */
 .canvas-bar .canvas-add { font-size: 11px; white-space: nowrap; flex: none; }
+/* ＋ Item is a label wrapping a select so it reads as a button and behaves as
+   a picker: the select covers the label and carries the click, which is the
+   same trick the arrange bar's anchor controls use. */
+.canvas-bar .canvas-add-item { position: relative; display: inline-flex; align-items: center; cursor: pointer; }
+.canvas-bar .canvas-add-item select {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer; border: 0; padding: 0;
+}
 
 /* inspector -------------------------------------------------------------- */
 

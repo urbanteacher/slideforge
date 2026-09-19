@@ -189,6 +189,11 @@ html:not([data-ready]) body { background: #f0f1ed; }
            openLibrary('all'); this is the door that sits with the slide you
            are looking at. -->
       <button class="btn primary canvas-add" data-ws="deck" id="btnActivities" title="Games, quizzes and audience prompts — inserted into this lesson. Same catalogue as ＋ Activity in the rail.">＋ Add activity</button>
+      <label class="btn canvas-add canvas-add-item" data-ws="deck" title="Put one thing on this slide — a heading, some text, a picture, a chart. The slide itself stays as it is.">＋ Item
+        <select id="canvasAddItem" aria-label="Add an item to this slide">
+          <option value="">＋ Item…</option>
+        </select>
+      </label>
       <div class="canvas-zoom" role="group" aria-label="Canvas zoom">
         <button class="canvas-bar-btn" id="btnZoomOut" type="button" title="Zoom out (⌘⌥−)" aria-label="Zoom out">−</button>
         <select class="canvas-zoom-level" id="zoomLevel" aria-label="Zoom level">
@@ -278,9 +283,6 @@ html:not([data-ready]) body { background: #f0f1ed; }
           <label class="anchor-control" title="Add a block of your own to this slide">Add
             <select id="arrangeAdd">
               <option value="">＋ Block…</option>
-              <option value="heading">Heading</option>
-              <option value="text">Text</option>
-              <option value="note">Note</option>
             </select>
           </label>
           <button class="canvas-bar-btn" id="btnArrangeDuplicate" type="button" title="Copy this block, one row below">⧉</button>

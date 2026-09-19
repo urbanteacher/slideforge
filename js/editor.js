@@ -1208,12 +1208,48 @@
 
   /* ------------------------------------------------------------ inspector */
 
+  /* The rail for one block. Shown instead of the slide's own fields while a
+     block is selected on the canvas, because that is what the author is
+     pointing at. The kind decides how its single `text` field is read, so the
+     label and the hint come from the registry rather than from a branch here. */
+  function drawBlockInspector(insp, s, block) {
+    var spec = (SF.FREE_KINDS || {})[block.kind] || {};
+    insp.appendChild(el('h4', 'eyebrow', 'SELECTED ITEM'));
+    insp.appendChild(el('h4', 'insp-title', spec.label || block.kind));
+    insp.appendChild(UI.field('Kind', UI.select(
+      Object.keys(SF.FREE_KINDS || {}).map(function (k) {
+        return { value: k, label: SF.FREE_KINDS[k].label || k };
+      }), block.kind, function (v) { block.kind = v; touched(); draw(); })));
+    var area = document.createElement('textarea');
+    area.rows = spec.draw ? 5 : 3;
+    area.value = String(block.text == null ? '' : block.text);
+    area.onchange = function () { block.text = area.value; touched(); draw(); };
+    insp.appendChild(UI.field(spec.label || 'Content', area, spec.hint || ''));
+    if (block.kind === 'image') {
+      insp.appendChild(UI.field('Fit', UI.select(
+        [{ value: 'cover', label: 'Fill the cell' }, { value: 'contain', label: 'Fit inside it' }],
+        block.fit === 'contain' ? 'contain' : 'cover',
+        function (v) { block.fit = v; touched(); draw(); })));
+    }
+    if (block.kind === 'chart') {
+      insp.appendChild(UI.field('Chart type', UI.select(
+        ['bar', 'hbar', 'stack', 'line', 'area', 'pie', 'donut'].map(function (k) {
+          return { value: k, label: k };
+        }), block.chartKind || 'bar',
+        function (v) { block.chartKind = v; touched(); draw(); })));
+    }
+    insp.appendChild(el('p', 'hint',
+      'Move and resize it on the canvas with the arrange bar. Esc deselects and gives the slide\u2019s own fields back.'));
+  }
+
   function drawInspector() {
     var insp = $('inspector');
     if (!insp) return;
     insp.innerHTML = '';
     var s = current();
     if (!s) { delete insp.dataset.slide; return; }
+    var picked = SF.Arrange && SF.Arrange.selectedBlock && SF.Arrange.selectedBlock();
+    if (picked) { insp.dataset.slide = s.id; drawBlockInspector(insp, s, picked); return; }
     /* Which slide's fields these are. A canvas click hands a composite block
        to the rail field that owns it, and the fields are keyed by content key
        alone — bullets.0 exists on every slide that has a bullet. Without this
@@ -4074,6 +4110,8 @@
 
   SF.Editor = {
     install: install,
+    /** Redraw the rail — the canvas calls this when the selection changes. */
+    refreshInspector: drawInspector,
     addSlide: addSlide,
     insertStarter: insertStarter,
     commitActivityChange: touched,

@@ -180,6 +180,9 @@
     selectedSlide = selected ? slide() : null;
     if (slot) slot.setAttribute('data-arrange-selected', '');
     paintBar();
+    /* The rail follows the selection: click a block and the inspector becomes
+       that block's editor rather than staying on the whole slide. */
+    if (SF.Editor && SF.Editor.refreshInspector) SF.Editor.refreshInspector();
   }
 
   function beginDrag(e) {
@@ -718,15 +721,31 @@
     if (fit) fit.addEventListener('click', fitToText);
     var centre = document.getElementById('btnArrangeCentre');
     if (centre) centre.addEventListener('click', centreInGrid);
-    var adder = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeAdd'));
-    if (adder) {
-      var addPicker = adder;
-      addPicker.addEventListener('change', function () {
-        var kind = addPicker.value;
-        addPicker.value = '';
+    /* Both pickers are filled from FREE_KINDS rather than from markup, so a
+       new kind appears in the arrange bar and on the canvas bar at once and
+       the two can never offer different sets. */
+    function wireAdder(id) {
+      var found = /** @type {HTMLSelectElement|null} */ (document.getElementById(id));
+      if (!found) return;
+      /* Narrowed once, so the listener below does not re-widen it. */
+      var picker = found;
+      var keep = picker.options[0];
+      picker.innerHTML = '';
+      if (keep) picker.appendChild(keep);
+      Object.keys(SF.FREE_KINDS || {}).forEach(function (kind) {
+        var opt = document.createElement('option');
+        opt.value = kind;
+        opt.textContent = SF.FREE_KINDS[kind].label || kind;
+        picker.appendChild(opt);
+      });
+      picker.addEventListener('change', function () {
+        var kind = picker.value;
+        picker.value = '';
         if (kind) addBlock(kind);
       });
     }
+    wireAdder('arrangeAdd');
+    wireAdder('canvasAddItem');
     var splitter = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeSplit'));
     if (splitter) {
       var splitPicker = splitter;
@@ -810,6 +829,15 @@
   SF.Arrange = {
     install: install,
     afterPaint: afterPaint,
+    /* The canvas bar offers the same ＋ Item the arrange bar does, so both
+       call this rather than each growing their own copy of it. */
+    addBlock: addBlock,
+    /* Which block the canvas has selected, so the inspector can edit it. */
+    selectedBlock: function () {
+      var id = selected ? SF.freeBlockId(selected) : null;
+      var s = id ? slide() : null;
+      return (s && SF.freeBlockById(s, id)) || null;
+    },
     isArranging: function () { return arranging; },
     setArranging: setArranging
   };

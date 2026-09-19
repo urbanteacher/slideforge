@@ -352,10 +352,54 @@
      push-down and Fit to text all work on it without another line of code.
      It is also what makes the text editable: the canvas editor and the marks
      engine both index by content key. */
+  /* A kind is a tag, a class, a default footprint — and optionally a `draw`.
+     Without one the block is its own text, which is what the first three are
+     and how every block behaved before. With one, the same `text` field is
+     read as something else: lines for bullets, a path for a picture, a table
+     for a chart. One field, interpreted per kind, is what lets the canvas
+     editor, the marks engine, Fit to text and the region machinery keep
+     working on all of them without knowing any of this. */
   var FREE_KINDS = {
     heading: { tag: 'h3', cls: 'free-heading', label: 'Heading', rows: 2, cols: 6 },
     text: { tag: 'p', cls: 'free-text', label: 'Text', rows: 2, cols: 6 },
-    note: { tag: 'div', cls: 'free-note', label: 'Note', rows: 1, cols: 4 }
+    note: { tag: 'div', cls: 'free-note', label: 'Note', rows: 1, cols: 4 },
+    bullets: {
+      tag: 'ul', cls: 'free-bullets', label: 'Bullet points', rows: 4, cols: 6,
+      hint: 'One point per line.',
+      draw: function (node, text) {
+        text.split('\n').map(function (l) { return l.trim(); }).filter(Boolean)
+          .forEach(function (line) { node.appendChild(el('li', null, line)); });
+      }
+    },
+    image: {
+      tag: 'div', cls: 'free-image', label: 'Image', rows: 6, cols: 6,
+      hint: 'A URL, or a path to a file beside index.html.',
+      draw: function (node, text, block) {
+        var src = SF.safeMedia(text);
+        if (!src) return;
+        var img = el('img', 'free-image-img');
+        img.src = src;
+        img.alt = String(block.alt || '');
+        img.draggable = false;
+        img.style.objectFit = block.fit === 'contain' ? 'contain' : 'cover';
+        node.appendChild(img);
+      }
+    },
+    chart: {
+      tag: 'div', cls: 'free-chart', label: 'Chart', rows: 6, cols: 6,
+      hint: 'Tab-separated, a heading row then the values.',
+      draw: function (node, text, block) {
+        /* A synthetic slide, because chartSvgFor asks a slide for its kind and
+           its table and nothing else. Reusing it is the whole point: a block
+           chart is the same chart, not a second implementation of one. */
+        var stand = { chartKind: block.chartKind || 'bar', body: text, design: {} };
+        var data = SF.chartData(stand);
+        if (!data.categories.length) return;
+        node.appendChild(SF.chartSvgFor(stand.chartKind, data, stand, function (si, ci) {
+          return data.series.length > 1 ? si : ci;
+        }));
+      }
+    }
   };
   SF.FREE_KINDS = FREE_KINDS;
   SF.freeBlockKey = function (id) { return 'blocks.' + id; };
@@ -410,6 +454,14 @@
          a zero-height box cannot be clicked to write into it. */
       var text = String(block.text == null ? '' : block.text);
       if (!text.trim()) node.dataset.placeholder = spec.label;
+      /* A drawing kind reads the same text as something other than prose, and
+         takes itself out of the text-editing path by saying so. */
+      if (spec.draw) {
+        node.dataset.blockKind = block.kind;
+        if (text.trim()) spec.draw(node, text, block);
+        host.appendChild(node);
+        return;
+      }
       /* The text first, then the marks. SF.Custom.paint only decorates — it
          returns without touching the node when a block carries no formatting —
          which is why rich() sets the text before calling it, and why calling
@@ -3259,6 +3311,33 @@
     return svg;
   }
 
+  /* One place that turns a kind and a table into a chart. This lived inline
+     inside layoutChart, which meant a chart could only ever be a whole slide.
+     A block that wants one asks here instead. */
+  function chartSvgFor(kind, data, slide, stepOf) {
+    return kind === 'multiples' ? multiplesChart(data, slide)
+            : kind === 'dumbbell' ? dumbbellChart(data, slide)
+            : kind === 'matrix' ? matrixChart(slide)
+            : kind === 'sankey' ? sankeyChart(slide)
+            : kind === 'radar' ? radarChart(data, slide)
+            : kind === 'scatter' ? scatterChart(slide)
+            : kind === 'histogram' ? histogramChart(slide)
+            : kind === 'box' ? boxChart(slide)
+            : kind === 'pictogram' ? pictogramChart(data, slide)
+            : kind === 'treemap' ? treemapChart(data, slide)
+            : kind === 'bullet' ? bulletChart(data, slide)
+            : kind === 'combo' ? comboChart(data, slide)
+            : kind === 'waffle' ? waffleChart(data, slide)
+            : kind === 'line' ? lineChart(data, slide, false)
+            : kind === 'area' ? lineChart(data, slide, true)
+            : kind === 'pie' ? pieChart(data, slide, false)
+            : kind === 'donut' ? pieChart(data, slide, true)
+            : kind === 'stack' ? stackedBar(data, slide, slide.progressive ? stepOf : null)
+            : kind === 'hbar' ? horizontalBar(data, slide)
+            : barChart(data, slide, slide.progressive ? stepOf : null);
+  }
+  SF.chartSvgFor = chartSvgFor;
+
   function layoutChart(slide, pad) {
     if (slide.exploration && slide.exploration.prediction) slide = Object.assign({}, slide, { progressive: false });
     if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
@@ -3318,26 +3397,7 @@
       wrap.dataset.focus = String(Number(design.chartFocus));
     }
     var stepOf = function (si, ci) { return data.series.length > 1 ? si : ci; };
-    var svg = kind === 'multiples' ? multiplesChart(data, slide)
-            : kind === 'dumbbell' ? dumbbellChart(data, slide)
-            : kind === 'matrix' ? matrixChart(slide)
-            : kind === 'sankey' ? sankeyChart(slide)
-            : kind === 'radar' ? radarChart(data, slide)
-            : kind === 'scatter' ? scatterChart(slide)
-            : kind === 'histogram' ? histogramChart(slide)
-            : kind === 'box' ? boxChart(slide)
-            : kind === 'pictogram' ? pictogramChart(data, slide)
-            : kind === 'treemap' ? treemapChart(data, slide)
-            : kind === 'bullet' ? bulletChart(data, slide)
-            : kind === 'combo' ? comboChart(data, slide)
-            : kind === 'waffle' ? waffleChart(data, slide)
-            : kind === 'line' ? lineChart(data, slide, false)
-            : kind === 'area' ? lineChart(data, slide, true)
-            : kind === 'pie' ? pieChart(data, slide, false)
-            : kind === 'donut' ? pieChart(data, slide, true)
-            : kind === 'stack' ? stackedBar(data, slide, slide.progressive ? stepOf : null)
-            : kind === 'hbar' ? horizontalBar(data, slide)
-            : barChart(data, slide, slide.progressive ? stepOf : null);
+    var svg = chartSvgFor(kind, data, slide, stepOf);
 
     /* The build marks whole series (or whole categories) rather than each
        mark, so a press lands one comparable thing at a time. */
