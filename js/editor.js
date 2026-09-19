@@ -1229,12 +1229,17 @@
       Object.keys(SF.FREE_KINDS || {}).map(function (k) {
         return { value: k, label: SF.FREE_KINDS[k].label || k };
       }), block.kind, function (v) { block.kind = v; touched(); draw(); })));
-    var area = document.createElement('textarea');
-    area.dataset.contentKey = SF.freeBlockKey(block.id);
-    area.rows = spec.draw ? 5 : 3;
-    area.value = String(block.text == null ? '' : block.text);
-    area.onchange = function () { block.text = area.value; touched(); draw(); };
-    insp.appendChild(UI.field(spec.label || 'Content', area, spec.hint || ''));
+    /* The picture kind gets a picker below instead of a box to type a path in. */
+    var area = block.kind === 'image' ? null : document.createElement('textarea');
+    if (area) area.dataset.contentKey = SF.freeBlockKey(block.id);
+    if (area) {
+      /* Narrowed once, so the handler below does not re-widen it. */
+      var field = area;
+      field.rows = spec.draw ? 5 : 3;
+      field.value = String(block.text == null ? '' : block.text);
+      field.onchange = function () { block.text = field.value; touched(); draw(); };
+      insp.appendChild(UI.field(spec.label || 'Content', field, spec.hint || ''));
+    }
     /* Rank, not point size: the same words are a title on one slide and a
        caption on another, and the block should be able to say which. */
     if (!spec.draw) {
@@ -1244,6 +1249,10 @@
         function (v) { block.size = v; touched(); draw(); })));
     }
     if (block.kind === 'image') {
+      insp.appendChild(UI.field('Picture', imagePickerField(
+        function () { return block.text || ''; },
+        function (v) { block.text = v; touched(); draw(); },
+        { label: 'Picture for this block' }), spec.hint));
       insp.appendChild(UI.field('Fit', UI.select(
         [{ value: 'cover', label: 'Fill the cell' }, { value: 'contain', label: 'Fit inside it' }],
         block.fit === 'contain' ? 'contain' : 'cover',
@@ -2583,6 +2592,40 @@
 
   /* URL box + file picker + clear for one card's picture. Writes into
      s.images[i], which the renderer already reads. */
+  /* One picture field: type a path, or choose a file and carry it inside the
+     deck as a data URL. The same three controls were written out four times in
+     this file already — card pictures, the image slide, the poster, the split
+     — each with its own copy of the reader and the size warning. New callers
+     ask for it here instead of growing a fifth.
+
+     `get` and `set` rather than a slide and a key, because the value lives
+     somewhere different every time: s.images[i], s.image, a block's text. */
+  function imagePickerField(get, set, opts) {
+    opts = opts || {};
+    var box = el('div', 'card-pic-field');
+    var url = UI.text(get() || '', function (v) { set(String(v).trim()); }, opts.placeholder || 'Image URL or asset path');
+    url.setAttribute('aria-label', opts.label || 'Image URL or asset path');
+    box.appendChild(url);
+    var pick = el('input');
+    pick.type = 'file';
+    pick.accept = 'image/*';
+    pick.setAttribute('aria-label', opts.fileLabel || 'Choose an image file');
+    pick.addEventListener('change', function () {
+      var f = pick.files && pick.files[0];
+      if (!f) return;
+      /* The deck carries the bytes, and the library is localStorage, so a big
+         picture is the thing most likely to fill it. Warn rather than refuse:
+         it is the author's deck and their storage. */
+      if (f.size > 3.5 * 1024 * 1024) SF.toast('That image is over 3.5 MB — it may exceed the browser storage limit.');
+      var fr = new FileReader();
+      fr.onload = function () { set(String(fr.result)); };
+      fr.readAsDataURL(f);
+    });
+    box.appendChild(pick);
+    if (get()) box.appendChild(UI.button('Remove image', 'ghost', function () { set(''); }));
+    return box;
+  }
+
   function cardImageField(s, i, redraw) {
     if (!Array.isArray(s.images)) s.images = [];
     var box = el('div', 'card-pic-field');
@@ -4130,6 +4173,8 @@
     install: install,
     /** Redraw the rail — the canvas calls this when the selection changes. */
     refreshInspector: drawInspector,
+    /** One picture field — path, file picker, remove — for any caller. */
+    imagePickerField: imagePickerField,
     /** Put the rail on one block, because the canvas was clicked on it. */
     focusBlock: function (id) { focusedBlockId = id || null; drawInspector(); },
     clearBlockFocus: function () { if (focusedBlockId) { focusedBlockId = null; drawInspector(); } },

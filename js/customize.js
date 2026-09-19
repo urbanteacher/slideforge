@@ -841,9 +841,19 @@
          the visual treatment over that, which is what this pane is for. */
       if(SF.MotionLab.active(s)){
         choose('Experiment style','motionLook',Object.entries(SF.MotionLab.MOTION_LOOKS),'editorial');
-        var sceneImage=document.createElement('input');sceneImage.type='text';sceneImage.value=s.image||'';
-        sceneImage.onchange=function(){s.image=SF.safeMedia(sceneImage.value);change();};
-        box.appendChild(UI.field('Experiment image · URL or asset path',sceneImage));
+        /* The same picture field the image block uses, rather than a box you
+           have to already know a path to type into. The slide says "choose an
+           image" and now there is something to choose with. */
+        if(SF.Editor&&SF.Editor.imagePickerField){
+          box.appendChild(UI.field('Experiment image',SF.Editor.imagePickerField(
+            function(){return s.image||'';},
+            function(v){s.image=v?SF.safeMedia(v):'';change();},
+            {label:'Experiment image'})));
+        }else{
+          var sceneImage=document.createElement('input');sceneImage.type='text';sceneImage.value=s.image||'';
+          sceneImage.onchange=function(){s.image=SF.safeMedia(sceneImage.value);change();};
+          box.appendChild(UI.field('Experiment image · URL or asset path',sceneImage));
+        }
         box.appendChild(SF.el('p','hint','Edit points as label, then a tab, then explanation. Up to four points. Present to interact; previews show the complete overview. Scrub uses numeric explanations (1–100).'));
         if(s.motionScene==='cause'){
           var multiplier=document.createElement('input');multiplier.type='number';multiplier.min='-10';multiplier.max='10';multiplier.step='0.1';multiplier.value=String(Number(s.body)||2);

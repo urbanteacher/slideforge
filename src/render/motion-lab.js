@@ -58,7 +58,12 @@ export function render(root, pad, slide, opts, safeMedia) {
     input.oninput = () => send(action, Number(input.value)); wrap.append(input); parent.append(wrap); return input;
   };
   pad.replaceChildren(); root.classList.add('motion-specimen'); root.classList.toggle('ml-live', enabled);
-  root.dataset.motionLook = Object.hasOwn(MOTION_LOOKS, slide.design.motionLook || '') ? slide.design.motionLook : 'editorial';
+  /* A motion slide can reach here without a design object at all now that it
+     is a type in its own right rather than always arriving through a starter
+     that sets one. The look has a default; not having been given one is not
+     a reason to throw out of the renderer. */
+  const look = (slide.design || {}).motionLook || '';
+  root.dataset.motionLook = Object.hasOwn(MOTION_LOOKS, look) ? look : 'editorial';
   root.dataset.motionMode = mode;
   pad.append(el('div', 'ml-kicker', MOTION_SCENES[mode]), el('h2', 'ml-title', slide.title || MOTION_SCENES[mode]));
   const stage = el('div', 'ml-stage'); pad.append(stage);

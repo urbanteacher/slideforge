@@ -106,7 +106,8 @@
     pad.replaceChildren();
     root.classList.add("motion-specimen");
     root.classList.toggle("ml-live", enabled);
-    root.dataset.motionLook = Object.hasOwn(MOTION_LOOKS, slide.design.motionLook || "") ? slide.design.motionLook : "editorial";
+    const look = (slide.design || {}).motionLook || "";
+    root.dataset.motionLook = Object.hasOwn(MOTION_LOOKS, look) ? look : "editorial";
     root.dataset.motionMode = mode;
     pad.append(el("div", "ml-kicker", MOTION_SCENES[mode]), el("h2", "ml-title", slide.title || MOTION_SCENES[mode]));
     const stage = el("div", "ml-stage");
