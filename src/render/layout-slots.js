@@ -257,16 +257,23 @@ export function layoutRegionsFor(slide) {
  * where it puts its list, a picture where it puts its picture. The layout
  * already declares all three.
  *
- * First match wins, so the order is the preference. */
+ * First match wins, so the order is the preference — and a composition's own
+ * slot comes before the shared chrome. Without that ordering an item aimed at
+ * a composition's eyebrow took the generic subtitle instead, because both are
+ * on the slide and the generic one was listed first. */
 const KIND_SLOTS = {
-  heading: ['title', 'cp-heading', 'ml-title', 've-title'],
-  text: ['subtitle', 'cp-eyebrow', 'journey-context', 've-prompt', 'body'],
-  bullets: ['block-0', 'split-copy', 'cp-choices', 'cp-rules', 'kw-list', 'ln-list'],
-  pairs: ['kw-list', 'ln-list', 'stats-grid', 'tbl', 'claim-rows', 'block-0'],
-  image: ['img', 'split-media', 'cp-art', 'gallery-stage', 'ml-stage'],
+  heading: ['cp-heading', 'cp-title-copy', 'ml-title', 've-title', 'title'],
+  text: ['cp-eyebrow', 'cp-discussion', 'cp-prompt', 'cp-pledge', 'journey-context',
+         've-prompt', 'subtitle', 'body'],
+  bullets: ['cp-choices', 'cp-rules', 'cp-action', 'block-0', 'split-copy',
+            'kw-list', 'ln-list'],
+  pairs: ['cp-comparison', 'cp-lanes', 'cp-action', 'kw-list', 'ln-list',
+          'stats-grid', 'tbl', 'claim-rows', 'block-0'],
+  image: ['cp-art', 'cp-map', 'img', 'split-media', 'gallery-stage', 'ml-stage'],
   chart: ['chart-wrap', 'explore-graph', 've-plot', 'block-0'],
-  quote: ['q', 'cp-quote-mark', 'cp-scenario', 'body'],
-  note: ['info-takeaway', 'journey-takeaway', 'cp-footer', 'chart-source', 've-source']
+  quote: ['q', 'cp-scenario', 'body'],
+  note: ['cp-credits', 'cp-closing-line', 'info-takeaway', 'journey-takeaway',
+         'chart-source', 've-source', 'cp-footer']
 };
 
 /* Return a declared inserter: the layout's own slot for this kind of item if

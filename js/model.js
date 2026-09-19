@@ -1159,14 +1159,49 @@
     return clone(template.slots || template);
   }
   var KIND_SLOTS = {
-    heading: ["title", "cp-heading", "ml-title", "ve-title"],
-    text: ["subtitle", "cp-eyebrow", "journey-context", "ve-prompt", "body"],
-    bullets: ["block-0", "split-copy", "cp-choices", "cp-rules", "kw-list", "ln-list"],
-    pairs: ["kw-list", "ln-list", "stats-grid", "tbl", "claim-rows", "block-0"],
-    image: ["img", "split-media", "cp-art", "gallery-stage", "ml-stage"],
+    heading: ["cp-heading", "cp-title-copy", "ml-title", "ve-title", "title"],
+    text: [
+      "cp-eyebrow",
+      "cp-discussion",
+      "cp-prompt",
+      "cp-pledge",
+      "journey-context",
+      "ve-prompt",
+      "subtitle",
+      "body"
+    ],
+    bullets: [
+      "cp-choices",
+      "cp-rules",
+      "cp-action",
+      "block-0",
+      "split-copy",
+      "kw-list",
+      "ln-list"
+    ],
+    pairs: [
+      "cp-comparison",
+      "cp-lanes",
+      "cp-action",
+      "kw-list",
+      "ln-list",
+      "stats-grid",
+      "tbl",
+      "claim-rows",
+      "block-0"
+    ],
+    image: ["cp-art", "cp-map", "img", "split-media", "gallery-stage", "ml-stage"],
     chart: ["chart-wrap", "explore-graph", "ve-plot", "block-0"],
-    quote: ["q", "cp-quote-mark", "cp-scenario", "body"],
-    note: ["info-takeaway", "journey-takeaway", "cp-footer", "chart-source", "ve-source"]
+    quote: ["q", "cp-scenario", "body"],
+    note: [
+      "cp-credits",
+      "cp-closing-line",
+      "info-takeaway",
+      "journey-takeaway",
+      "chart-source",
+      "ve-source",
+      "cp-footer"
+    ]
   };
   function insertionRegionFor(slide, index = 0, kind = "", taken = []) {
     const wanted = KIND_SLOTS[kind] || [];

@@ -3041,9 +3041,16 @@
         stats:    ['Stats · label, value, note', 'Three to six. The value is set large — "92%", "£1.2m", "3 of 5". Ring and bar styles read the leading number.'],
         compare:  ['Rows · left, right, optional label', 'Each row is one point of comparison. Add a row label when the rows need naming ("Cost", "Speed").'],
         funnel:   ['Stages · name, value, note', 'Top to bottom. Numeric values set the band widths; without numbers the bands narrow evenly.'],
-        timeline: ['Events · date, event, detail', 'Up to eight. Dates can be years, terms or "Week 3" — they are labels, not parsed.']
+        timeline: ['Events · date, event, detail', 'Up to eight. Dates can be years, terms or "Week 3" — they are labels, not parsed.'],
+        iceberg:  ['Layers · label, value, note', 'Top to bottom: what the room already sees first, then what sits underneath it.'],
+        spectrum: ['Positions · label, value, note', 'Left to right along the spectrum. Name both ends before the points between them.'],
+        sourcecheck: ['Checks · label, value, note', 'One row per thing worth verifying about the claim above.'],
+        shift:    ['Stages · label, value, note', 'Then, now and next — the same story at three points, in that order.']
       };
-      var hint = INFO_HINTS[s.type];
+      /* Every INFO_LAYOUTS type reaches here, and four of the eight had no
+         entry: opening an iceberg, spectrum, sourcecheck or shift slide threw
+         on hint[0] and took the whole inspector with it. */
+      var hint = INFO_HINTS[s.type] || ['Rows · label, value, note', 'One row per point.'];
       insp.appendChild(UI.field('Heading',
         richField(s, 'title', 'text', function (v) { s.title = v; touched(); repaint(); })));
       if (s.type === 'compare') {
