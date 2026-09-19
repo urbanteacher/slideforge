@@ -1158,10 +1158,29 @@
     const template = composition || (TYPES[slide && slide.type] || { slots: FULL });
     return clone(template.slots || template);
   }
-  function insertionRegionFor(slide, index = 0) {
+  var KIND_SLOTS = {
+    heading: ["title", "cp-heading", "ml-title", "ve-title"],
+    text: ["subtitle", "cp-eyebrow", "journey-context", "ve-prompt", "body"],
+    bullets: ["block-0", "split-copy", "cp-choices", "cp-rules", "kw-list", "ln-list"],
+    pairs: ["kw-list", "ln-list", "stats-grid", "tbl", "claim-rows", "block-0"],
+    image: ["img", "split-media", "cp-art", "gallery-stage", "ml-stage"],
+    chart: ["chart-wrap", "explore-graph", "ve-plot", "block-0"],
+    quote: ["q", "cp-quote-mark", "cp-scenario", "body"],
+    note: ["info-takeaway", "journey-takeaway", "cp-footer", "chart-source", "ve-source"]
+  };
+  function insertionRegionFor(slide, index = 0, kind = "", taken = []) {
+    const wanted = KIND_SLOTS[kind] || [];
+    const busy = Array.isArray(taken) ? taken.filter(Boolean) : [];
+    const clear = (r) => !busy.some((b) => r.col < b.col + b.cols && b.col < r.col + r.cols && r.row < b.row + b.rows && b.row < r.row + r.rows);
+    if (wanted.length) {
+      const slots = layoutRegionsFor(slide);
+      for (const key of wanted) {
+        if (slots[key] && clear(slots[key])) return { ...slots[key] };
+      }
+    }
     const template = TYPES[slide && slide.type];
-    const slots = template && template.inserts;
-    const found = Array.isArray(slots) ? slots[index] : null;
+    const rail = template && template.inserts;
+    const found = Array.isArray(rail) ? rail[index] : null;
     return found ? { ...found } : null;
   }
   var LAYOUT_SLOT_TEMPLATES = TYPES;

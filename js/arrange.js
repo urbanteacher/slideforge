@@ -282,7 +282,11 @@
      narrower than one cell, the wanted region is handed back unchanged and the
      fit report is left to say it does not fit. */
   function makeRoom(map, want) {
-    var keys = Object.keys(map || {});
+    /* Only what is actually placed counts as in the way. The map also holds
+       the layout's own reserved regions — a title slot on a slide with no
+       title — and treating those as occupied halved every item that was
+       correctly aimed at one, which is the opposite of snapping into place. */
+    var keys = Object.keys(map || {}).filter(function (k) { return k.indexOf('blocks.') === 0; });
     var clash = keys.filter(function (k) { return map[k] && overlaps(map[k], want); });
     if (!clash.length) return want;
     clash.sort(function (a, b) {
@@ -315,7 +319,14 @@
     map = regionsOf(s, true);
     /* The layout's own slot if it advertises one, otherwise the size the
        corpus says this kind of item is — and then room made for it. */
-    var want = (SF.insertionRegionFor && SF.insertionRegionFor(s, list.length)) ||
+    /* The layout's own slot for this kind of item, if it has a free one —
+       a heading to where it puts its title, a list to where it puts its list.
+       Failing that the generic rail, and failing that the size the corpus
+       says this kind of item is. */
+    var placedBlocks = Object.keys(map)
+      .filter(function (k) { return k.indexOf('blocks.') === 0; })
+      .map(function (k) { return map[k]; });
+    var want = (SF.insertionRegionFor && SF.insertionRegionFor(s, list.length, kind, placedBlocks)) ||
       { col: 1, row: 1, cols: spec.cols, rows: spec.rows };
     var before = Object.keys(map).length;
     var placed = makeRoom(map, want);

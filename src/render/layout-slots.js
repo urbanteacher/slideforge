@@ -248,13 +248,49 @@ export function layoutRegionsFor(slide) {
   return clone(template.slots || template);
 }
 
-/* Return only a declared inserter.  There is intentionally no "find a free
- * row" fallback: a layout either advertises a slot for the item or it does not.
- */
-export function insertionRegionFor(slide, index = 0) {
+/* Which of a layout's own slots an item of each kind belongs in.
+ *
+ * Without this an inserted heading went wherever the generic rail pointed,
+ * which is why rebuilding a layout out of items produced nothing like the
+ * layout: every item landed in the same two bands at the bottom regardless of
+ * what it was. A heading belongs where that layout puts its title, a list
+ * where it puts its list, a picture where it puts its picture. The layout
+ * already declares all three.
+ *
+ * First match wins, so the order is the preference. */
+const KIND_SLOTS = {
+  heading: ['title', 'cp-heading', 'ml-title', 've-title'],
+  text: ['subtitle', 'cp-eyebrow', 'journey-context', 've-prompt', 'body'],
+  bullets: ['block-0', 'split-copy', 'cp-choices', 'cp-rules', 'kw-list', 'ln-list'],
+  pairs: ['kw-list', 'ln-list', 'stats-grid', 'tbl', 'claim-rows', 'block-0'],
+  image: ['img', 'split-media', 'cp-art', 'gallery-stage', 'ml-stage'],
+  chart: ['chart-wrap', 'explore-graph', 've-plot', 'block-0'],
+  quote: ['q', 'cp-quote-mark', 'cp-scenario', 'body'],
+  note: ['info-takeaway', 'journey-takeaway', 'cp-footer', 'chart-source', 've-source']
+};
+
+/* Return a declared inserter: the layout's own slot for this kind of item if
+ * it has one and nothing is sitting in it, otherwise the generic rail. There
+ * is intentionally no "find a free row" fallback — a layout either advertises
+ * somewhere for the item or it does not, and the caller makes room instead. */
+export function insertionRegionFor(slide, index = 0, kind = '', taken = []) {
+  const wanted = KIND_SLOTS[kind] || [];
+  /* Occupied means something is sitting there, not that the layout reserves
+     the name. A slide being built out of items has a title slot and no title
+     in it, and the first heading belongs in that slot. */
+  const busy = Array.isArray(taken) ? taken.filter(Boolean) : [];
+  const clear = (r) => !busy.some((b) =>
+    r.col < b.col + b.cols && b.col < r.col + r.cols &&
+    r.row < b.row + b.rows && b.row < r.row + r.rows);
+  if (wanted.length) {
+    const slots = layoutRegionsFor(slide);
+    for (const key of wanted) {
+      if (slots[key] && clear(slots[key])) return { ...slots[key] };
+    }
+  }
   const template = TYPES[slide && slide.type];
-  const slots = template && template.inserts;
-  const found = Array.isArray(slots) ? slots[index] : null;
+  const rail = template && template.inserts;
+  const found = Array.isArray(rail) ? rail[index] : null;
   return found ? { ...found } : null;
 }
 
