@@ -519,9 +519,12 @@
     list.forEach(function (block) {
       var spec = FREE_KINDS[block.kind] || FREE_KINDS.text;
       var key = SF.freeBlockKey(block.id);
+      /* A slot the layout named beats the kind's own default rank. */
+      var AS_SIZE = { title: 'slot-title', subtitle: 'slot-subtitle', body: 'slot-body' };
       var size = block.size || spec.size;
       var node = el(spec.tag, 'free-block ' + spec.cls + (size ? ' free-size-' + size : ''));
       node.dataset.contentKey = key;
+      if (block.as) node.dataset.as = String(block.as);
       node.dataset.freeBlock = String(block.id);
       /* Empty is a real state: a block is added before it is written into, and
          a zero-height box cannot be clicked to write into it. */

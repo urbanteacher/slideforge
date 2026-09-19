@@ -184,6 +184,18 @@
 .free-block.free-size-display, .free-block.free-size-title,
 .free-block.free-size-heading { margin: 0; }
 
+/* An item sitting in one of the layout's named slots is drawn as that slot,
+   not as a generic block. The numbers are the reference deck's own: across
+   the 97 layout-bank slides a title is 52px at weight 650 (47 of 88 of them),
+   a subtitle 26px, body copy 21px. The family needs no help — a block is
+   inside .slide and already inherits the theme's --s-font, which is why the
+   serif themes come out serif without being told. */
+.free-block[data-as="title"] {
+  font-size: 52px; line-height: 1.12; font-weight: 650; letter-spacing: -.015em;
+}
+.free-block[data-as="subtitle"] { font-size: 26px; line-height: 1.3; font-weight: 400; }
+.free-block[data-as="body"] { font-size: 21px; line-height: 1.4; font-weight: 400; }
+
 /* The drawing kinds. Each one fills the cell it was given rather than sizing
    to its own content, because the author chose the footprint on the lattice
    and the picture or chart is what has to give. */

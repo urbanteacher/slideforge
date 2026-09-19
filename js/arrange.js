@@ -329,8 +329,15 @@
     var want = (SF.insertionRegionFor && SF.insertionRegionFor(s, list.length, kind, placedBlocks)) ||
       { col: 1, row: 1, cols: spec.cols, rows: spec.rows };
     var before = Object.keys(map).length;
-    var placed = makeRoom(map, want);
-    list.push({ id: id, kind: kind, text: '' });
+    /* design.regions is a coordinate map; the slot name travels on the block,
+       not in it. */
+    var placed = makeRoom(map, { col: want.col, row: want.row, cols: want.cols, rows: want.rows });
+    /* Which of the layout's slots this item took, so it can be drawn as that
+       slot rather than as a generic block: an item in the title slot should
+       read as the title, not as a heading that happens to sit up there. */
+    var took = { id: id, kind: kind, text: '' };
+    if (want && want.slot) took.as = want.slot;
+    list.push(took);
     map[SF.freeBlockKey(id)] = placed;
     var shared = before === Object.keys(map).length;
     selected = SF.freeBlockKey(id);

@@ -285,7 +285,7 @@ export function insertionRegionFor(slide, index = 0, kind = '', taken = []) {
   if (wanted.length) {
     const slots = layoutRegionsFor(slide);
     for (const key of wanted) {
-      if (slots[key] && clear(slots[key])) return { ...slots[key] };
+      if (slots[key] && clear(slots[key])) return { ...slots[key], slot: key };
     }
   }
   const template = TYPES[slide && slide.type];
