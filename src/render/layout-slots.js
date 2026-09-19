@@ -39,10 +39,13 @@ const TEACHING = {
   'block-1': region(1, 4, 11, 4),
   'block-2': region(1, 4, 11, 4)
 };
+/* Below the copy, not beside it. The rail used to start at column 9 while the
+   copy blocks span columns 1 to 11, so the first inserted item landed on top
+   of the bullets it was meant to sit near. The copy occupies rows 4 to 7 and
+   the rest of the grid is empty, which is where an item can actually go. */
 const TEACHING_INSERTS = [
-  region(9, 4, 4, 2),
-  region(9, 8, 4, 3),
-  region(9, 12, 4, 3)
+  region(1, 9, 12, 4),
+  region(1, 13, 12, 4)
 ];
 
 const FULL = {

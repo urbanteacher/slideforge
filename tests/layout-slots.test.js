@@ -24,7 +24,10 @@ test('the layout slot catalogue is declarative and uses stable slots', async () 
   const slots = await import('../src/render/layout-slots.js');
   const content = slots.layoutRegionsFor({ type: 'content' });
   assert.deepEqual(content.title, { col: 1, row: 1, cols: 12, rows: 2 });
-  assert.deepEqual(slots.insertionRegionFor({ type: 'content' }, 1), { col: 9, row: 8, cols: 4, rows: 3 });
+  /* The rail sits below the copy, not beside it: the copy blocks span columns
+     1 to 11, so a rail starting at column 9 overlapped the bullets an item was
+     meant to sit near. */
+  assert.deepEqual(slots.insertionRegionFor({ type: 'content' }, 1), { col: 1, row: 13, cols: 12, rows: 4 });
   assert.equal(slots.insertionRegionFor({ type: 'title' }, 0), null,
     'a layout without an item rail must not invent a free coordinate');
 

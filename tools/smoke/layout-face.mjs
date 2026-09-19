@@ -411,8 +411,10 @@ try {
   assert.ok(added.slot, 'the lattice should place it like any other block');
   /* The item rail is part of the Content layout: additions use its declared
      slot, rather than scanning rendered rows and guessing where a free item
-     would fit. */
-  assert.deepEqual(added.region, { col: 9, row: 4, cols: 4, rows: 2 },
+     would fit. The rail sits below the copy — it used to start at column 9
+     while the copy spans columns 1 to 11, so the first item landed on the
+     bullets it was meant to sit near. */
+  assert.deepEqual(added.region, { col: 1, row: 9, cols: 12, rows: 4 },
     `placed in the first declared item slot, got ${JSON.stringify(added.region)}`);
   assert.equal(added.selected, added.key, 'and selected, so it can be moved straight away');
   assert.equal(added.adderReset, '', 'the adder should return to its prompt, not stay on a kind');
@@ -464,14 +466,18 @@ try {
     const s = SF.Editor.currentSlide();
     return { n: s.blocks.length, texts: s.blocks.map((b) => b.text),
              rows: s.blocks.map((b) => s.design.regions['blocks.' + b.id]?.row),
+             heights: s.blocks.map((b) => s.design.regions['blocks.' + b.id]?.rows),
              selected: document.querySelector('#previewBox [data-arrange-selected]')?.dataset.blockKey,
              copyKey: 'blocks.' + s.blocks[1].id };
   });
   assert.equal(copied.n, 2, 'duplicate should make a second block');
   assert.deepEqual(copied.texts, ['Typed into a block I added', 'Typed into a block I added'],
     'carrying the words');
-  assert.equal(copied.rows[1], copied.rows[0] + 2,
-    `one block-height below the original, not on top of it — got rows ${copied.rows.join(' and ')}`);
+  /* One block-height below, whatever that height is — the number used to be
+     written in as 2, which was the rail's height at the time rather than a
+     fact about duplicating. */
+  assert.equal(copied.rows[1], copied.rows[0] + copied.heights[0],
+    `one block-height below the original, not on top of it — got rows ${copied.rows.join(' and ')} for a ${copied.heights[0]}-row block`);
   assert.equal(copied.selected, copied.copyKey, 'and the copy is what is selected');
   checks++;
 

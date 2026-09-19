@@ -263,30 +263,72 @@
      A free block is placed where there is room rather than at the origin, and
      it gets a region immediately — without one it would flow at the end of the
      pad and the author would have to find it. */
+  function overlaps(a, b) {
+    return a.col < b.col + b.cols && b.col < a.col + a.cols &&
+           a.row < b.row + b.rows && b.row < a.row + a.rows;
+  }
+
+  /* Make room rather than refuse.
+
+     An item arriving where something already sits used to be turned away, and
+     before that it was dropped underneath everything and off the slide. Both
+     are worse than the obvious thing: halve what is there and take the half
+     that frees. The occupant is cut along its longer side — a wide block
+     becomes two columns, a tall one two rows — so the newcomer arrives beside
+     it rather than on top of it, and neither ends up a sliver.
+
+     Returns the region the new item should take, and shrinks the occupant in
+     `map` as a side effect. If nothing can be halved without leaving a strip
+     narrower than one cell, the wanted region is handed back unchanged and the
+     fit report is left to say it does not fit. */
+  function makeRoom(map, want) {
+    var keys = Object.keys(map || {});
+    var clash = keys.filter(function (k) { return map[k] && overlaps(map[k], want); });
+    if (!clash.length) return want;
+    clash.sort(function (a, b) {
+      return (map[b].cols * map[b].rows) - (map[a].cols * map[a].rows);
+    });
+    var key = clash[0], r = map[key];
+    if (r.cols >= r.rows) {
+      var keep = Math.floor(r.cols / 2);
+      if (keep < 1 || r.cols - keep < 1) return want;
+      map[key] = { col: r.col, row: r.row, cols: keep, rows: r.rows };
+      return { col: r.col + keep, row: r.row, cols: r.cols - keep, rows: r.rows };
+    }
+    var keepRows = Math.floor(r.rows / 2);
+    if (keepRows < 1 || r.rows - keepRows < 1) return want;
+    map[key] = { col: r.col, row: r.row, cols: r.cols, rows: keepRows };
+    return { col: r.col, row: r.row + keepRows, cols: r.cols, rows: r.rows - keepRows };
+  }
+
   function addBlock(kind) {
     var s = slide();
     if (!s) return;
     var spec = (SF.FREE_KINDS && SF.FREE_KINDS[kind]) || (SF.FREE_KINDS && SF.FREE_KINDS.text);
     if (!spec) return;
     var list = SF.freeBlocksOf(s, true);
-    var insertion = SF.insertionRegionFor && SF.insertionRegionFor(s, list.length);
-    if (!insertion) {
-      SF.toast && SF.toast('This layout has no pre-made item slot. Choose a layout with an item rail first.');
-      return;
-    }
     var id = 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-    list.push({ id: id, kind: kind, text: '' });
     var map = regionsOf(s, true);
     /* Seed from the chosen layout's slot map. This remains deterministic even
        when the item is inserted before the author opens the Layout face. */
     if (!Object.keys(map).length) seed();
     map = regionsOf(s, true);
-    map[SF.freeBlockKey(id)] = insertion;
+    /* The layout's own slot if it advertises one, otherwise the size the
+       corpus says this kind of item is — and then room made for it. */
+    var want = (SF.insertionRegionFor && SF.insertionRegionFor(s, list.length)) ||
+      { col: 1, row: 1, cols: spec.cols, rows: spec.rows };
+    var before = Object.keys(map).length;
+    var placed = makeRoom(map, want);
+    list.push({ id: id, kind: kind, text: '' });
+    map[SF.freeBlockKey(id)] = placed;
+    var shared = before === Object.keys(map).length;
     selected = SF.freeBlockKey(id);
     selectedSlide = s;
     commit(true);
     afterPaint();
-    SF.toast && SF.toast(spec.label + ' added. Click it to type, drag to move.');
+    SF.toast && SF.toast(spec.label + (shared
+      ? ' added beside what was there — both now take half the space.'
+      : ' added. Click it to type, drag to move.'));
   }
 
   /* Put everything on the slide in the middle of the grid.

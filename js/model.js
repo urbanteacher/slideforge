@@ -926,9 +926,8 @@
     "block-2": region(1, 4, 11, 4)
   };
   var TEACHING_INSERTS = [
-    region(9, 4, 4, 2),
-    region(9, 8, 4, 3),
-    region(9, 12, 4, 3)
+    region(1, 9, 12, 4),
+    region(1, 13, 12, 4)
   ];
   var FULL = {
     title: region(1, 1, 12, 2),
