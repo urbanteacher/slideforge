@@ -187,7 +187,11 @@
 /* The drawing kinds. Each one fills the cell it was given rather than sizing
    to its own content, because the author chose the footprint on the lattice
    and the picture or chart is what has to give. */
-.free-block[data-block-kind] { display: block; min-height: 0; }
+/* A drawing block fills the cell it was given. Without a definite height the
+   chart inside took its own 1180x430 aspect instead — 106px tall in a 98px
+   cell — and spilled over whatever was beneath it. The cell decides; the
+   drawing scales into it. */
+.free-block[data-block-kind] { display: block; min-height: 0; height: 100%; overflow: hidden; }
 .free-bullets { margin: 0; padding-left: 1.1em; }
 .free-bullets li { margin: 0 0 .35em; }
 .free-image { overflow: hidden; border-radius: 3px; }
@@ -198,8 +202,11 @@
 .free-quote-words { margin: 0; font-weight: 600; }
 .free-quote-attrib { font-size: .6em; opacity: .7; }
 .free-image-img { display: block; width: 100%; height: 100%; }
+/* meet, not slice: a chart squeezed out of its proportions is a chart that
+   lies about its own lengths, so it letterboxes inside the cell rather than
+   stretching to fill it. */
 .free-chart { display: flex; align-items: center; justify-content: center; }
-.free-chart .chart-svg { width: 100%; height: 100%; }
+.free-chart .chart-svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
 
 /* A note is the one kind the themes have no element for, so it gets a size and
    a colour of its own rather than inheriting a paragraph's. */
