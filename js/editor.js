@@ -1375,7 +1375,7 @@
     }));
     insp.appendChild(UI.field('This item', acts));
     insp.appendChild(el('p', 'hint',
-      'Move and resize it on the canvas with the arrange bar. Esc deselects and gives the slide\u2019s own fields back.'));
+      'Drag it to move, or drag a corner to resize. Esc deselects and gives the slide\u2019s own fields back.'));
   }
 
   function drawInspector() {

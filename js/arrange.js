@@ -157,8 +157,90 @@
     if (SF.Editor && SF.Editor.refreshInspector) SF.Editor.refreshInspector();
   }
 
+  /* Corner handles on the selected item.
+
+     Dragging a corner is the obvious way to resize a thing, and until now the
+     only ways were four buttons on the arrange bar and Shift with an arrow
+     key — both of which mean knowing the arrange bar exists. The handles sit
+     on the selected item only, so an unselected slide is not covered in
+     furniture, and on items rather than on the slide's own parts for the same
+     reason dragging is: the layout owns those. */
+  var CORNERS = ['nw', 'ne', 'sw', 'se'];
+  function paintHandles(rt) {
+    if (!rt) return;
+    rt.querySelectorAll('.sf-handle').forEach(function (n) { n.remove(); });
+    if (!selected || String(selected).indexOf('blocks.') !== 0) return;
+    var slot = rt.querySelector('[data-block-key="' + selected + '"]');
+    if (!slot) return;
+    CORNERS.forEach(function (corner) {
+      var h = document.createElement('span');
+      h.className = 'sf-handle sf-handle-' + corner;
+      h.dataset.corner = corner;
+      h.setAttribute('aria-hidden', 'true');
+      slot.appendChild(h);
+    });
+  }
+
+  function beginResize(e) {
+    var h = e.target.closest && e.target.closest('.sf-handle');
+    if (!h || e.button !== 0 || e.isPrimary === false) return;
+    var slot = h.closest('.sf-slot');
+    var key = slot && slot.getAttribute('data-block-key');
+    var s = slide();
+    var map = regionsOf(s, true);
+    var start = key && map[key];
+    if (!start) return;
+    e.preventDefault();
+    /* Both listeners are on the canvas box, and stopPropagation does nothing
+       to a sibling on the same element — so a corner press would also have
+       started a move. */
+    e.stopImmediatePropagation();
+    var corner = h.dataset.corner;
+    var g = L();
+    var scale = scaleOf(root());
+    var fromX = e.clientX, fromY = e.clientY;
+    var landed = start, moved = false;
+
+    function move(ev) {
+      var dCol = Math.round((ev.clientX - fromX) / scale / g.stepX);
+      var dRow = Math.round((ev.clientY - fromY) / scale / g.stepY);
+      if (!dCol && !dRow && !moved) return;
+      moved = true;
+      /* West and north corners move the origin as well as the size, so the
+         opposite edge stays where the author put it. */
+      var west = corner === 'nw' || corner === 'sw';
+      var north = corner === 'nw' || corner === 'ne';
+      var col = start.col, row = start.row, cols = start.cols, rows = start.rows;
+      if (west) { col = clamp(start.col + dCol, 1, start.col + start.cols - 1); cols = start.col + start.cols - col; }
+      else { cols = clamp(start.cols + dCol, 1, g.cols - start.col + 1); }
+      if (north) { row = clamp(start.row + dRow, 1, start.row + start.rows - 1); rows = start.row + start.rows - row; }
+      else { rows = Math.max(1, start.rows + dRow); }
+      landed = { col: col, row: row, cols: cols, rows: rows };
+      slot.style.gridArea = landed.row + ' / ' + landed.col + ' / span ' + landed.rows + ' / span ' + landed.cols;
+      slot.setAttribute('data-span', landed.rows + 'r x ' + landed.cols + 'c');
+      drawGuides(landed, key);
+    }
+    function cleanup() {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', cleanup);
+      clearGuides();
+    }
+    function up() {
+      cleanup();
+      if (slide() !== s || !moved) return;
+      map[key] = landed;
+      commit(true);
+      afterPaint();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', cleanup);
+  }
+
   function beginDrag(e) {
     if (e.button !== 0 || e.isPrimary === false) return;
+    if (e.target.closest && e.target.closest('.sf-handle')) return;
     var slot = e.target.closest && e.target.closest('.sf-slot');
     /* Outside the Layout face an item you added is still draggable — it is
        yours, and going into a mode to nudge it is a detour. The slide's own
@@ -688,6 +770,7 @@
     var rt = root();
     var b = box();
     if (b) b.classList.toggle('arranging', arranging);
+    paintHandles(rt);
     if (!rt || !arranging) { paintBar(); return; }
     var s = slide();
     var map = regionsOf(s);
@@ -729,6 +812,7 @@
     if (installed) return;
     installed = true;
     var b = box();
+    if (b) b.addEventListener('pointerdown', beginResize);
     if (b) b.addEventListener('pointerdown', beginDrag);
     var flip = document.getElementById('btnArrange');
     if (flip) flip.addEventListener('click', function () { setArranging(!arranging); });
