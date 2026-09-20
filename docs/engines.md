@@ -9,6 +9,83 @@ This is that measurement, the method for redoing it, and the conclusion it
 points at — which is the same one `docs/render-split.md` and
 `docs/block-capabilities.md` arrive at from different directions.
 
+## 0. The app already declares its engines — read this first
+
+This document originally grouped files by what they seemed to be about and
+called the groups engines. That was working from the outside in, and it missed
+that **the app states its own decomposition in two places**, neither of which
+is a file listing.
+
+`index.html` carries a workspace switch and a row of run modes:
+
+```html
+<button data-go="deck">▤ Lesson studio</button>
+<button data-go="game">◈ Quiz studio</button>
+<button data-go="plan">◇ Activities</button>
+
+<button data-ws="deck"      id="btnPresenter">Teacher Presenter</button>
+<button data-ws="deck"      id="btnRehearse">▷ Rehearse</button>
+<button data-ws="deck game" id="btnLive">◉ Host live</button>
+<button data-ws="deck"      id="btnPresent">▶ Present</button>
+<button data-ws="game"      id="btnPlay">▶ Present</button>
+<button data-ws="plan"      id="btnPresentPlan">▶ Present</button>
+```
+
+And `js/shell.js:8` states the contract in its own words:
+
+> An engine registers itself with `SF.Shell.register(ws)` and implements:
+> `key`, `railLabel`, `notesLabel`, `doc()`, `setDoc(d)`, `blank()`,
+> `newDoc()` *(optional)*, `store`, `draw()`, `onTitle(v)`, `onTheme(v)`,
+> `play()`, `settings()`, `fileSuffix`
+
+So the engine layer is not hypothetical and does not need designing. It exists,
+it is documented, and **three engines implement it**: `js/editor.js` (deck),
+`js/games.js` (game), `js/activities.js` (plan). Checked against the
+fourteen members: game implements all fourteen, deck and plan implement
+thirteen and skip `newDoc`, which the contract marks optional and only a game
+needs. **All three honour it.**
+
+The shell honours its half too: 43 calls into engines go through `active.*`,
+the contract, against 11 that reach around it.
+
+### What is missing is a contract for the run modes
+
+| Button | Wired in | Should be |
+| --- | --- | --- |
+| `btnPresent` (deck) | `js/editor.js:4258` | `active.play()` |
+| `btnPlay` (game) | `js/games.js:2144` | `active.play()` |
+| `btnPresentPlan` (plan) | `js/activities.js:1118` | `active.play()` |
+| `btnPresenter` | `js/editor.js` | a contract member |
+| `btnRehearse` | `js/editor.js` | a contract member |
+| `btnLive` | `js/shell.js` | already in the right place |
+
+**The seam already exists and the buttons bypass it.** `js/shell.js:1667`
+routes ⌘↵ through `active.play()` — the contract — while the three buttons
+labelled ▶ Present are wired three separate times inside three engines. One
+act, two routes, and the documented one is used only by the keyboard.
+
+Teacher Presenter and Rehearse are deck-only today, which is why they sit in
+`js/editor.js`; that is defensible and still leaves them as run modes living
+inside an authoring engine. Host live is the only one already in the shell,
+and the only one scoped to two studios.
+
+### And one engine reaches into another
+
+`js/shell.js` opens by saying the engines do not know about each other.
+Measured:
+
+| Engine | → shell | → other engines |
+| --- | ---: | --- |
+| deck | 44 | `Arrange` 13, `Player` 12, `Games` 3, `Live` 3, `Activities` 2 |
+| game | 21 | `Player` 7, `Editor` 2, `Live` 1 |
+| **plan** | 31 | **`Editor` 35**, `Player` 5, `Games` 1 |
+
+`js/activities.js` calls into `SF.Editor` thirty-five times. Its own header
+explains why — *"There is one lesson, and this studio writes into it"* — and
+that is the right intention with no contract to carry it. Writing into the
+lesson is a thing the shell could expose; reaching into another engine's
+internals is not.
+
 ## 1. The argument
 
 An engine is not a folder. It is a body of code with a boundary you can state:
@@ -177,6 +254,13 @@ named facades instead; it needs no ownership map.
 
 ## 6. Change log
 
+- **2026-09-21** — §0 added, and it corrects the framing of everything below
+  it. The first version of this document grouped files by subject and called
+  the groups engines, without noticing that `index.html` declares three
+  studios and six run modes, and that `js/shell.js:8` documents a fourteen-
+  member engine contract which all three studios honour. The measurements in
+  §2 onwards stand and are useful, but they describe bodies of code rather
+  than the engine layer the app already has. Read §0 first.
 - **2026-09-21** — Every figure re-derived with `wc -l` and `grep -o | wc -l`,
   the method §5 documents. The first pass counted `split('\n').length`, which
   is one greater per file than `wc -l` and made four totals disagree with the
