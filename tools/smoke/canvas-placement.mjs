@@ -221,12 +221,71 @@ try {
     JSON.stringify(railSeed.on.regions) + '\n  rail off ' + JSON.stringify(railSeed.off.regions));
   checks++;
 
+  /* 7. A slide nobody has touched must not open Layout already failing.
+        Red on a default means the grid is wrong, not the slide. The declared
+        rows were a tariff written by hand and the decks outgrew it — the
+        bullet list is declared four rows where the layout bank's own slides
+        need a median of eight, and chart-wrap eleven where all twenty need
+        twelve — so 79 of 251 blocks across the 97 reference slides opened
+        red before anyone edited anything.
+
+        Driven through the face itself rather than by working the seeding
+        arithmetic out again here: a check that reimplements what it is
+        checking agrees with itself and nothing else. The first version of
+        this did exactly that and reported 39 where the real path gives 17.
+        A slice of the deck, because each slide costs a real repaint. */
+  await page.evaluate(() => {
+    const d = SF.buildLesson('layout-bank');
+    d.title = 'Reference deck';
+    SF.Store.save(d);
+    SF.Editor.openDeck(d.id);
+  });
+  await page.waitForTimeout(1500);
+  const defaults = await page.evaluate(async () => {
+    const deck = SF.Editor.deck();
+    let blocks = 0;
+    const red = [];
+    for (let i = 0; i < 24; i++) {
+      const s = deck.slides[i];
+      if (s.design) delete s.design.regions;
+      SF.Editor.selectSlide(s.id);
+      SF.Editor.refreshCanvas();
+      await new Promise((r) => setTimeout(r, 340));
+      SF.Arrange.setArranging(true);
+      await new Promise((r) => setTimeout(r, 420));
+      document.querySelectorAll('#previewBox .sf-slot').forEach((n) => {
+        blocks++;
+        if (n.getAttribute('data-fit') === 'over') {
+          red.push(s.type + ' slide ' + (i + 1) + ' ' + n.dataset.blockKey +
+            ': needs ' + n.getAttribute('data-need') + ' in ' + n.getAttribute('data-region'));
+        }
+      });
+      SF.Arrange.setArranging(false);
+      await new Promise((r) => setTimeout(r, 200));
+    }
+    return { blocks, red };
+  });
+  assert.ok(defaults.blocks > 40, 'the slice must really have been measured, got ' + defaults.blocks + ' blocks');
+  /* A ceiling rather than zero. Driven through a real browser the whole
+     deck now comes out clean — 0 red across 97 slides and 317 blocks, from
+     79 of 251 — but under Playwright at this viewport a couple of blocks
+     still measure a line over, and a check that is exactly at the observed
+     value is a check that fails on a font hinting difference. The number to
+     defend is the order of magnitude: it was 79, and anything near that
+     means the tariffs have drifted back. */
+  assert.ok(defaults.red.length <= 6,
+    defaults.red.length + ' of ' + defaults.blocks +
+    ' blocks open Layout already failing on a deck nobody has edited:\n  ' +
+    defaults.red.join('\n  '));
+  checks++;
+
   assert.deepEqual(errors, [], 'no page errors');
   console.log('ok · canvas placement: ' + checks + ' checks · a drop, a corner resize, the arrow keys and an ' +
     'insert all go through one rule, so none of them can leave two blocks sharing a cell; a resize still ' +
     'grows through its neighbour, which is how a layout gets built; and the grid is flush to the body between ' +
     'a composition\u2019s header and footer rather than running off the bottom of the slide, and a slide seeds ' +
-    'the same regions whether or not a poll rail is docked beside it');
+    'the same regions whether or not a poll rail is docked beside it, and reference slides open Layout with ' +
+    defaults.red.length + ' of ' + defaults.blocks + ' blocks already failing rather than the 79-in-251 they did');
 } finally {
   await browser?.close();
   relay.kill();

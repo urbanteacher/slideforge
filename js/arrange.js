@@ -117,18 +117,20 @@
       var y = (b.top - rb.top) / scale - g.top;
       var col = clamp(Math.round(x / stepX) + 1, 1, g.cols);
       var row = clamp(Math.round(y / stepY) + 1, 1, g.rows);
-      /* Position to the nearest cell, size rounded up. A block measured at
-         5.6 rows and rounded to 6 is fine; rounded to the nearest it would be
-         6 too, but one measured at 6.4 would become 6 and the words would no
-         longer fit the region they were just measured in — the fit check says
-         so the moment the face opens. Up, with a hair of tolerance so a block
-         that lands a rounding error above a whole row does not claim the next
-         one. */
-      var upto = function (v) { return Math.max(1, Math.ceil(v - 0.06)); };
+      /* Position to the nearest cell; height through the same arithmetic the
+         fit check uses, so the two cannot disagree about the block they are
+         both looking at. They did: this rounded a hair under a whole row and
+         SF.linesFor rounds a pixel under one, so a block was seeded a row
+         shorter than the check then asked for and opened red on a slide
+         nobody had touched — seven of them across the first two dozen
+         reference slides. Two places answering "how many rows do these words
+         need" is one place too many. */
+      var rows = SF.linesFor ? SF.linesFor(b.height / scale)
+        : Math.max(1, Math.ceil(b.height / scale / stepY));
       out[blockKeyOfNode(n, i)] = {
         col: col, row: row,
-        cols: clamp(upto(b.width / scale / stepX), 1, g.cols - col + 1),
-        rows: clamp(upto(b.height / scale / stepY), 1, g.rows - row + 1)
+        cols: clamp(Math.max(1, Math.ceil(b.width / scale / stepX - 0.06)), 1, g.cols - col + 1),
+        rows: clamp(rows, 1, g.rows - row + 1)
       };
     });
     stage.remove();
@@ -158,9 +160,68 @@
        of slack a nudge needs. */
     var composed = !!(s.design && s.design.composition) ||
       !!(SF.slideComposition && SF.Editor && SF.Editor.deck && SF.slideComposition(SF.Editor.deck(), s));
-    Object.assign(map, SF.layoutRegionsFor(s), composed ? (measuredRegions() || {}) : {});
+    var declared = SF.layoutRegionsFor(s);
+    var measured = measuredRegions() || {};
+    Object.assign(map, declared);
+    Object.keys(measured).forEach(function (k) {
+      if (composed || !declared[k]) { map[k] = measured[k]; return; }
+      /* A plain type keeps its declared columns and takes its measured rows.
+
+         The columns are a decision — where the copy column ends, which side
+         the media sits on, how much slack a nudge has — and every reference
+         slide was placed against them. The rows were a tariff written by
+         hand, and the decks outgrew it: the bullet list is declared four rows
+         and the layout bank's own slides need a median of eight and as many
+         as fourteen; chart-wrap is declared eleven and needs twelve on all
+         twenty of them. So 79 of 251 blocks opened Layout already red on a
+         deck nobody had touched, which says the grid is wrong rather than
+         the slide. Height is a fact about the words, so it is measured. */
+      map[k] = { col: declared[k].col, cols: declared[k].cols,
+                 row: measured[k].row, rows: measured[k].rows };
+      if (declared[k].anchorX) map[k].anchorX = declared[k].anchorX;
+      if (declared[k].anchorY) map[k].anchorY = declared[k].anchorY;
+      if (declared[k].alignY) map[k].alignY = declared[k].alignY;
+    });
+    growToFit(s, map);
     commit(true);
     return true;
+  }
+
+  /* Give each block the lines its words actually need, once it is in the
+     columns it will be drawn in.
+
+     Measuring the clean render gets the height the block has at its natural
+     width, and that is not the height it will have in the slot: a title
+     measured across the pad and then given eight columns wraps taller. Seven
+     blocks in the first two dozen reference slides opened red for exactly
+     that reason — not a rounding error, a different question. The only
+     authority on whether words fit a region is the check the face already
+     uses, so the seed asks it, off-screen, and grows whatever comes up short
+     before the author ever sees it.
+
+     Never shrinks: empty lines under a heading are composition rather than
+     slack, which is the rule the tariff has always followed. */
+  function growToFit(s, map) {
+    var deck = SF.Editor && SF.Editor.deck && SF.Editor.deck();
+    if (!deck || !SF.renderSlide || !SF.latticeFit) return;
+    var was = s.design && s.design.regions;
+    var stage = document.createElement('div');
+    stage.style.cssText = 'position:fixed;left:-20000px;top:0;width:1280px;height:720px;pointer-events:none';
+    document.body.appendChild(stage);
+    try {
+      if (!s.design) s.design = {};
+      s.design.regions = map;
+      var rt = SF.renderSlide(deck, s, { index: 0, total: 1, interactive: false });
+      stage.appendChild(rt);
+      SF.latticeFit(rt).forEach(function (f) {
+        var r = map[f.key];
+        if (!r || f.need == null || f.need <= r.rows) return;
+        r.rows = Math.min(f.need, L().rows - r.row + 1);
+      });
+    } catch (e) { /* a slide that cannot be rendered twice keeps its seed */ }
+    stage.remove();
+    if (was === undefined && s.design) delete s.design.regions;
+    else if (s.design) s.design.regions = was;
   }
 
   // ------------------------------------------------------------------ guides
