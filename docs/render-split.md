@@ -218,7 +218,7 @@ checkout's server unless you pass `SF_URL`.
 | 2 | `src/render/words.js` | 324 lines | **DONE 2026-09-20.** One coherent cluster; 16 names, all but one already public |
 | 3 | `src/render/live.js` | 920 lines | **DONE 2026-09-20.** Session furniture, not slide layout |
 | 4 | `src/render/quiz.js` | 1,007 lines | **DONE 2026-09-20.** `layoutQuiz` alone was 670 lines |
-| 5 | `render-regions.js` | ~950 lines | ~40 of the 93 SF names live here (§4.1) — the largest contract, moved last once the pattern is settled |
+| 5 | `src/render/…` | ~1,100 lines | **NOT STARTED — blocked, see below.** ~40 of the 93 SF names; and it is not one band |
 
 ### Step 0 — the surface probe — **DONE 2026-09-20**
 
@@ -364,7 +364,37 @@ chrome on/off — identical over 110KB of DOM once the randomly minted
 `data-slide-id` is normalised out. That attribute is why a first run showed 120
 of 124 "differing"; it is nondeterminism in the check, not in the renderer.
 
-### Step 5 — the move
+### Step 5 — regions — **NOT STARTED**
+
+**Blocked on 2026-09-20, deliberately.** A second agent works this same tree
+(see the parallel-agent notes), and its uncommitted edits to `js/render.js` sit
+at lines 574–840 — `FREE_KINDS` and `renderFreeBlocks`, squarely inside this
+band. Moving it would relocate the exact code being edited into another file
+and leave those working-tree changes pointing at lines that no longer exist.
+The other four steps were committable around that work because their bands were
+nowhere near it. This one is not. **Wait until that work lands.**
+
+**It is also not one band, which the earlier plan got wrong.** A census of the
+current head of the file:
+
+| Lines | What | Verdict |
+| --- | --- | --- |
+| 20–44 | `themedRoot`, `el` | primitives — stay |
+| 45–160 | placed art: `artKeyOf`, `applyArtPoses`, `artOrder`, `artPlacement`, `artBlockKey`/`Id`, `placedArtLayers` | own module, 7 SF names |
+| 161–174 | `LATTICE`, `anchorRegion` | with regions |
+| 175–266 | `headerFooterConfig`, `renderHeaderFooter` | chrome, not regions — stay |
+| 267–944 | block keys, lattice geometry, placement, hidden blocks, `applyRegions`, `FREE_KINDS`, free blocks, restacking | the real regions module |
+| 945–1152 | paint order, occlusion, `linesFor`/`latticeFit` | with regions |
+| 1153–1197 | `slideJumpTarget`, `jumpToSlide` | navigation, unrelated — stay |
+
+So step 5 is really **two** modules — placed art, and regions/lattice/blocks —
+with header/footer chrome and slide navigation staying put. Splitting it that
+way also keeps each commit under the size of the ones already done.
+
+Do the placed-art module first: 7 names against roughly 30, and it is the part
+furthest from the other agent's work.
+
+
 
 Each step is mechanically the same:
 
@@ -381,6 +411,15 @@ Each step is mechanically the same:
 
 Do not batch two bands into one commit, however tempting steps 2 and 3 look
 together.
+
+### Where the split stands
+
+| | |
+| --- | --- |
+| `js/render.js` | **3,596 lines**, from 7,215 when this began |
+| Steps done | 0–4 of 6 |
+| Remaining | step 5, blocked — see above |
+| Guard | `npm run audit:render-surface` — 93 names, 36 layouts, green |
 
 ## 6. Resuming after a failure
 
@@ -440,6 +479,10 @@ document is stale — fix §7 as part of the step that corrects it.
 - **2026-09-20** — Route decided: `src/render/` ES modules, not plain scripts
   (§3.1). `index.html` already has 33 hand-versioned script tags and adding
   five more would have worsened the problem being fixed.
+- **2026-09-20** — Step 5 **not started**, blocked on the other agent's
+  uncommitted edits inside the band. Also re-censused: it is two modules, not
+  one, and two things in the line range (header/footer chrome, slide
+  navigation) do not belong in either.
 - **2026-09-20** — Step 4 done. `src/render/quiz.js`; `js/render.js` 4,591 →
   **3,596 lines**. Two findings: the `SF.registerLayout` conversion this step
   was meant to introduce is **not needed** on the ESM route (§4.3), and the
