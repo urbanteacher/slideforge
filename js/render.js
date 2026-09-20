@@ -272,6 +272,15 @@
        picture on the slide the same region. */
     var named = node.getAttribute('data-block-key');
     if (named) return named;
+    /* The key this block had while every block was still in the pad. Written
+       by dropHiddenBlocks before it removes any, because the two shapes of
+       layout block that have no name of their own are numbered by position
+       and would otherwise be renumbered by the ones above them going away.
+       A name of its own rather than data-block-key, which applyRegions puts
+       on the slot wrapping this node — one key on two elements makes every
+       lookup ambiguous. */
+    var kept = node.getAttribute('data-lattice-key');
+    if (kept) return kept;
     var key = node.getAttribute('data-content-key');
     if (key) return key;
     /* An SVG element's className is an SVGAnimatedString, so String() on it
@@ -298,6 +307,53 @@
     g.w = rect.width / scale; g.h = rect.height / scale;
     g.stepX = (g.w + 36) / g.cols; g.stepY = g.h / g.rows;
     return g;
+  };
+
+  /* Which layout blocks this slide has been told not to draw.
+     A block the layout drew is not a thing sitting on the slide — it is the
+     slide's type rendering a field, and four different shapes of thing at
+     that: one that owns a content key (title, subtitle, body), one that is a
+     container of them (a bullet list, a stats grid), one that is pure
+     decoration with no content at all (an accent bar, the date), and one that
+     is an opaque structure built from typed arrays with no keys exposed
+     (compare, cards, the org chart, a mind map). There is no single field to
+     empty, so "delete this block" cannot mean "clear its words" without a
+     hand-written map per type, with the opaque ones needing bespoke code each.
+
+     Not drawing it needs none of that, and it is the same idea as the hidden
+     flag artwork pictures have carried all along. It is also recoverable: a
+     mis-click costs a keystroke rather than a teacher's title. */
+  SF.hiddenBlocksOf = function (slide) {
+    var list = slide && slide.design && slide.design.hidden;
+    return Array.isArray(list) ? list.filter(Boolean).map(String) : [];
+  };
+  SF.isBlockHidden = function (slide, key) {
+    return !!key && SF.hiddenBlocksOf(slide).indexOf(String(key)) >= 0;
+  };
+  /* Takes the hidden ones out of the pad before anything measures or places
+     what is left. Ahead of applyRegions rather than inside it, because a slide
+     with no region map never reaches applyRegions and would otherwise go on
+     drawing a block it was told to drop. */
+  SF.dropHiddenBlocks = function (root, slide) {
+    var hidden = SF.hiddenBlocksOf(slide);
+    if (!hidden.length) return 0;
+    var host = SF.latticeHost(root);
+    if (!host) return 0;
+    var kids = Array.prototype.slice.call(host.children).filter(function (n) { return n.nodeType === 1; });
+    /* Stamp every key before removing any. Two of the four shapes of layout
+       block have no name of their own and fall back to their position in the
+       pad — so hiding the title renumbered the bullet list under it from
+       block-1 to block-0, and the region map, still keyed block-1, stopped
+       describing it. Writing the key each block had while all of them were
+       present makes it survive the ones above it going away. */
+    kids.forEach(function (node, i) {
+      if (node.setAttribute) node.setAttribute('data-lattice-key', String(blockKeyOf(node, i)));
+    });
+    var gone = 0;
+    kids.forEach(function (node) {
+      if (hidden.indexOf(String(blockKeyOf(node, 0))) >= 0) { node.remove(); gone++; }
+    });
+    return gone;
   };
 
   /* Wraps each pad child in a cell of the lattice. Blocks the map does not
@@ -515,6 +571,44 @@
     if (slide.design && slide.design.regions) delete slide.design.regions[key];
     if (slide.formatting) delete slide.formatting[key];
     return true;
+  };
+
+  /* Everything on the canvas can go now, which is what "delete everything"
+     has to mean for the slide to end up blank. The two kinds of block go in
+     the two ways they can: an item the author added is removed outright,
+     because the slide is where it lives; a block the layout drew is hidden,
+     because the slide's type is where it lives and the words belong to a
+     field the rail still edits.
+
+     One entry point for both, so a caller never has to know which kind it is
+     holding — that knowledge is what split deleting into four truths before. */
+  SF.canDeleteBlock = function (slide, key) {
+    if (!slide || !key) return false;
+    if (SF.canRemoveBlock(slide, key)) return true;
+    return !SF.freeBlockId(key) && !SF.isBlockHidden(slide, key);
+  };
+  SF.deleteBlock = function (slide, key) {
+    if (!SF.canDeleteBlock(slide, key)) return null;
+    if (SF.canRemoveBlock(slide, key)) {
+      SF.removeFreeBlock(slide, key);
+      return 'item';
+    }
+    if (!slide.design) slide.design = {};
+    if (!Array.isArray(slide.design.hidden)) slide.design.hidden = [];
+    slide.design.hidden.push(String(key));
+    return 'layout';
+  };
+  /* The way back. Without it hiding is a trap rather than an edit. */
+  SF.restoreBlock = function (slide, key) {
+    if (!SF.isBlockHidden(slide, key)) return false;
+    slide.design.hidden = SF.hiddenBlocksOf(slide).filter(function (k) { return k !== String(key); });
+    if (!slide.design.hidden.length) delete slide.design.hidden;
+    return true;
+  };
+  SF.restoreAllBlocks = function (slide) {
+    var n = SF.hiddenBlocksOf(slide).length;
+    if (n && slide.design) delete slide.design.hidden;
+    return n;
   };
 
   SF.renderFreeBlocks = function (root, slide) {
@@ -5650,7 +5744,14 @@
     else finish();
   }
 
+  /* Draws nothing. The pad is left empty for renderFreeBlocks to fill, which
+     is the whole point of the type — without an entry here the dispatcher
+     falls through to layoutContent and a blank slide comes out wearing a
+     title and a bullet list. */
+  function layoutBlank() {}
+
   var LAYOUTS = {
+    blank: layoutBlank,
     stats: layoutStats,
     compare: layoutCompare,
     funnel: layoutFunnel,
@@ -5813,6 +5914,9 @@
     /* Blocks the author added, before regions are applied so the lattice
        places them like any other block. */
     SF.renderFreeBlocks(root, slide);
+    /* Before regions, so a hidden block is gone by the time the lattice reads
+       the pad and cannot take a cell with it. */
+    SF.dropHiddenBlocks(root, slide);
     /* Last, once compositions, boards, Explore and Customise have all finished
        shaping the pad: regions are the slide's explicit arrangement, so they
        are applied to whatever those produced rather than racing them. */

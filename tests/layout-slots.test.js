@@ -41,6 +41,19 @@ test('every authorable layout and every AI Awareness composition declares coordi
   for (const type of SF.DECK_TYPES) {
     const slide = SF.makeSlide(type);
     assert.equal(SF.hasLayoutTemplate(slide), true, type + ' must own a layout template');
+    /* The rule is that every block a layout draws has declared coordinates.
+       Blank draws none — it is an empty canvas an author puts items on — so
+       the rule is vacuous for it rather than broken. It still has to own a
+       template above, because that is what gives its items somewhere to land:
+       the check below holds it to an insert rail, which for every other type
+       is optional. */
+    if (type === 'blank') {
+      assert.equal(Object.keys(SF.layoutRegionsFor(slide)).length, 0,
+        'blank draws nothing, so it declares no slots');
+      assert.ok(SF.insertionRegionFor(slide, 0, 'text'),
+        'blank must say where the first item goes, having no slot to fall back on');
+      continue;
+    }
     assert.ok(Object.keys(SF.layoutRegionsFor(slide)).length, type + ' must declare at least one slot');
   }
   for (const composition of ['poster-art', 'voice', 'ballot', 'prompt', 'rules', 'commitment', 'comparison', 'reveal-map', 'credits', 'lanes']) {

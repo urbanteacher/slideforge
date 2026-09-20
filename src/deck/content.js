@@ -528,6 +528,15 @@ var SLIDE_TYPES = {
   statement:   { label: 'Statement', icon: '❝', deck: true, group: 'introduce',
                  starters: [{ title: 'Statement', blurb: 'One line, bold and as big as it fits. An opening thought, a provocation, a rule to remember.',
                               seed: { body: 'Every chart is a choice', subtitle: '' } }] },
+  /* An empty canvas. Every other type here is a shape the slide is poured
+     into; this one is the absence of a shape, so an author can place items
+     wherever the layouts taught the inserters to put them rather than filling
+     in someone else's fields. It is also where a slide ends up once every
+     block has been taken off it — deleting everything has to leave something,
+     and a slide still claiming to be Bullets with no bullets on it is a shape
+     pretending to be empty. */
+  blank:       { label: 'Blank', icon: '▢', deck: true, group: 'introduce',
+                 starters: [{ title: 'Blank canvas', blurb: 'Nothing on it. Add items and put them where you want them.' }] },
   content:     { label: 'Bullets', icon: '•', deck: true, pits: 8, group: 'explain',
                  starters: [
                    { title: 'Title + content', blurb: 'Classic teaching slide — heading, then bullet pits.',

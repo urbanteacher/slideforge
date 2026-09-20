@@ -485,10 +485,51 @@ try {
   await page.mouse.click(at.x, at.y);
   await page.waitForTimeout(350);
   assert.equal(await page.isDisabled('#btnArrangeDuplicate'), true,
-    'a block the layout drew cannot be duplicated');
-  assert.equal(await page.isDisabled('#btnArrangeRemove'), true, 'nor removed');
-  assert.match(await page.getAttribute('#btnArrangeRemove', 'title'), /part of the layout/,
-    'and the button should say why rather than just being dead');
+    'a block the layout drew cannot be duplicated — there is no copy of it on the slide to make a second of');
+  /* It can be taken off, though, which is a different act from removing an
+     item: the block stops being drawn and its words stay on the slide for the
+     rail to go on editing. Everything on the canvas has to be able to come off
+     it, or "delete everything" stops short of the layout and the slide can
+     never be got back to blank. */
+  assert.equal(await page.isDisabled('#btnArrangeRemove'), false,
+    'but it can be taken off the slide');
+  /* A dead control still has to say why it is dead — that was the point of
+     this check and it now belongs to Duplicate, the one that stays off for a
+     block the layout drew. Remove is alive, so its title says what taking the
+     block off will do instead. Both read while the block is selected: with
+     nothing selected the bar says so instead, which is a different message. */
+  assert.match(await page.getAttribute('#btnArrangeDuplicate', 'title'), /part of the layout/,
+    'the control that is dead should say why rather than just being dead');
+  assert.match(await page.getAttribute('#btnArrangeRemove', 'title'), /words are kept/,
+    'and the live one should say what it does, because taking off is not deleting');
+  const beforeOff = await page.evaluate(() => ({
+    title: SF.Editor.currentSlide().title,
+    drawn: !!document.querySelector('#previewBox .sf-slot[data-block-key="title"]')
+  }));
+  await page.click('#btnArrangeRemove');
+  await page.waitForTimeout(700);
+  const afterOff = await page.evaluate(() => ({
+    title: SF.Editor.currentSlide().title,
+    hidden: SF.hiddenBlocksOf(SF.Editor.currentSlide()),
+    drawn: !!document.querySelector('#previewBox .sf-slot[data-block-key="title"]'),
+    restoreOffered: !document.getElementById('btnArrangeRestore').hidden
+  }));
+  assert.equal(beforeOff.drawn, true, 'the title was on the slide to begin with');
+  assert.equal(afterOff.drawn, false, 'and is not drawn once taken off');
+  assert.deepEqual(afterOff.hidden, ['title'], 'the slide records which block it dropped');
+  assert.equal(afterOff.title, beforeOff.title, 'and keeps the words, which the rail still edits');
+  assert.equal(afterOff.restoreOffered, true, 'with a way back, or hiding is a trap rather than an edit');
+  await page.click('#btnArrangeRestore');
+  await page.waitForTimeout(700);
+  const back = await page.evaluate(() => ({
+    drawn: !!document.querySelector('#previewBox .sf-slot[data-block-key="title"]'),
+    hidden: SF.hiddenBlocksOf(SF.Editor.currentSlide()).length,
+    restoreOffered: !document.getElementById('btnArrangeRestore').hidden
+  }));
+  assert.equal(back.drawn, true, 'Bring back draws it again');
+  assert.equal(back.hidden, 0, 'and clears the record');
+  assert.equal(back.restoreOffered, false, 'and takes itself off the bar');
+
   checks++;
 
   at = await centreOf(`.sf-slot[data-block-key="${copied.copyKey}"]`);
@@ -823,7 +864,7 @@ try {
     + `gap in one click, narrowing frees one contiguous half, an anchor sticks, text packs to `
     + `the top, middle or `
     + `bottom of its own rows, the bar speaks SF.latticeFit, `
-    + `blocks can be added, typed into, duplicated and removed while layout blocks cannot, `
+    + `blocks can be added, typed into, duplicated and removed while a layout block cannot be duplicated but can be taken off and brought back, `
     + `everything centres down the grid without losing the left edge, `
     + `a block splits 50/50, 40/60 or 20/80 either way with a new block in what is freed `
     + `and nothing else moving, `

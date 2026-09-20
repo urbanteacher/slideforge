@@ -287,6 +287,9 @@ html:not([data-ready]) body { background: #f0f1ed; }
           </label>
           <button class="canvas-bar-btn" id="btnArrangeDuplicate" type="button" title="Copy this block, one row below">⧉</button>
           <button class="canvas-bar-btn" id="btnArrangeRemove" type="button" title="Remove this block from the slide">✕</button>
+          <!-- Only shown when this slide has blocks taken off it. Hiding with
+               no way back is a trap, not an edit. -->
+          <button class="canvas-bar-btn" id="btnArrangeRestore" type="button" hidden title="Bring back the layout blocks taken off this slide">↩ Bring back</button>
           <button class="canvas-bar-btn" id="btnArrangeReset" type="button" title="Drop this slide's arrangement and follow the theme again">↺ Theme</button>
         </div>
       </div>

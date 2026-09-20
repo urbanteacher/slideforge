@@ -13,7 +13,10 @@
  * handled: select a picture, press Delete, lose the slide.
  *
  * So the checks are about agreement rather than about any one path:
- *   - one predicate says what can go, and a block the layout drew cannot
+ *   - two predicates, each answering its own question: canRemoveBlock for
+ *     "is this an item the slide owns", canDeleteBlock for "can this come off
+ *     the canvas", which everything can — an item is removed outright, a
+ *     layout block is taken off and keeps its words
  *   - all three paths leave byte-identical slide state
  *   - all three clear both selections, rail and canvas
  *   - Delete means the item when one is selected and the slide when none is,
@@ -106,8 +109,28 @@ try {
       noSlide: SF.canRemoveBlock(null, 'blocks.pic')
     };
   });
+  /* canRemoveBlock is still the narrow question — is this an item the slide
+     owns, which can be taken off it outright. A layout block is not, and
+     answering false is what stops it being spliced out of a list it was never
+     in. It is not the question "can this come off the canvas". */
   assert.deepEqual(verdicts, { freeBlock: true, layoutBlock: false, unknownId: false, notAKey: false, noSlide: false },
     'one predicate must answer for every key: ' + JSON.stringify(verdicts));
+  const canDelete = await page.evaluate(() => {
+    const s = SF.Editor.deck().slides[0];
+    return {
+      freeBlock: SF.canDeleteBlock(s, 'blocks.pic'),
+      layoutBlock: SF.canDeleteBlock(s, 'title'),
+      alreadyOff: (SF.deleteBlock(s, 'title'), SF.canDeleteBlock(s, 'title')),
+      notAKey: SF.canDeleteBlock(s, ''),
+      noSlide: SF.canDeleteBlock(null, 'title')
+    };
+  });
+  /* canDeleteBlock is the wider one the canvas asks, and it says yes to both
+     kinds — and no to a block already taken off, so a second Delete cannot
+     record it twice. */
+  assert.deepEqual(canDelete,
+    { freeBlock: true, layoutBlock: true, alreadyOff: false, notAKey: false, noSlide: false },
+    'everything on the canvas can come off it, once: ' + JSON.stringify(canDelete));
   checks++;
 
   /* 2. Three paths, one outcome. Each runs on the same fixture and the
@@ -207,13 +230,55 @@ try {
     removeDisabled: document.getElementById('btnArrangeRemove').disabled
   }));
   assert.equal(heldTitle.selected, 'title', 'the layout block must really be selected for this to mean anything');
-  assert.equal(heldTitle.removeDisabled, true, 'and the Remove button must say it cannot go');
+  assert.equal(heldTitle.removeDisabled, false, 'and it can be taken off the slide');
   await page.keyboard.press('Delete');
   await page.waitForTimeout(600);
-  const survived = await snapshot();
-  assert.equal(survived.slides, 2, 'Delete on a layout block must not delete the slide it belongs to');
-  assert.equal(survived.title, 'Subject', 'nor empty it');
-  assert.deepEqual(survived.blocks, ['pic', 'keep'], 'nor take the items with it');
+  const survived = await page.evaluate(() => {
+    const s = SF.Editor.currentSlide();
+    return {
+      slides: SF.Editor.deck().slides.length,
+      title: s.title,
+      hidden: SF.hiddenBlocksOf(s),
+      drawn: !!document.querySelector('#previewBox .sf-slot[data-block-key="title"]'),
+      blocks: SF.freeBlocksOf(s).map((b) => b.id)
+    };
+  });
+  /* Taken off, not deleted, and the difference is the whole point: the block
+     stops being drawn, the words stay for the rail to edit, and the slide it
+     belonged to is still there. Delete used to take that slide instead. */
+  assert.equal(survived.drawn, false, 'Delete takes a layout block off the slide');
+  assert.deepEqual(survived.hidden, ['title'], 'and records which one');
+  assert.equal(survived.title, 'Subject', 'without emptying the field it draws');
+  assert.equal(survived.slides, 2, 'and without deleting the slide it belongs to');
+  assert.deepEqual(survived.blocks, ['pic', 'keep'], 'nor taking the items with it');
+  checks++;
+
+  /* 5b. Which means the canvas can be cleared completely — the thing the
+         refusal used to prevent. Everything off, nothing left drawn, the
+         slide still there to build on, and a way back for what was hidden. */
+  const cleared = await page.evaluate(() => {
+    const s = SF.Editor.currentSlide();
+    const keys = Array.from(document.querySelectorAll('#previewBox .sf-slot'))
+      .map((n) => n.dataset.blockKey).filter(Boolean);
+    const kinds = keys.map((k) => SF.deleteBlock(s, k));
+    SF.Editor.refreshCanvas();
+    return { keys, kinds };
+  });
+  await page.waitForTimeout(700);
+  const empty = await page.evaluate(() => ({
+    drawn: document.querySelectorAll('#previewBox .sf-slot').length,
+    slides: SF.Editor.deck().slides.length,
+    title: SF.Editor.currentSlide().title,
+    items: SF.freeBlocksOf(SF.Editor.currentSlide()).length,
+    canBringBack: SF.hiddenBlocksOf(SF.Editor.currentSlide()).length
+  }));
+  assert.ok(cleared.keys.length, 'there must be something on the canvas to clear');
+  assert.equal(empty.drawn, 0,
+    'every block on the canvas must be able to come off it, got ' + empty.drawn + ' left from ' + JSON.stringify(cleared.keys));
+  assert.equal(empty.slides, 2, 'clearing a slide is not deleting it');
+  assert.equal(empty.items, 0, 'the items are gone for real');
+  assert.equal(empty.title, 'Subject', 'the layout words are kept');
+  assert.ok(empty.canBringBack > 0, 'and what was hidden can be brought back');
   checks++;
 
   /* 6. An item selected on the canvas with the Layout face closed: Escape
@@ -233,9 +298,10 @@ try {
   checks++;
 
   assert.deepEqual(errors, [], 'no page errors');
-  console.log('ok · delete truth: ' + checks + ' checks · one predicate refuses what the layout drew, ' +
-    'the rail button, the Layout bar and the Delete key leave byte-identical slides and clear both selections, ' +
-    'Delete means the slide only when nothing is selected and never under a layout block, and Escape drops a selection made outside the Layout face');
+  console.log('ok · delete truth: ' + checks + ' checks · an item is removed outright and a layout block is ' +
+    'taken off with its words kept, so the whole canvas can be cleared and brought back; the rail button, the ' +
+    'Layout bar and the Delete key leave byte-identical slides and clear both selections; Delete means the slide ' +
+    'only when nothing is selected, and Escape drops a selection made outside the Layout face');
 } finally {
   await browser?.close();
   relay.kill();

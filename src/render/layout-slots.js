@@ -164,6 +164,13 @@ const TYPES = {
     title: region(1, 1, 12, 2), subtitle: region(1, 3, 12, 1),
     'org-chart': region(1, 5, 12, 10), empty: region(1, 5, 12, 8)
   } },
+  /* No slots, because nothing is drawn. The inserts are where an item goes
+     when it is added without being dropped anywhere in particular: the same
+     reading column the teaching layouts use, so the first item on a blank
+     slide lands where a title would have been rather than in a corner. */
+  blank: { slots: {}, inserts: [
+    region(1, 1, 12, 2), region(1, 4, 11, 4), region(1, 9, 11, 4), region(1, 13, 11, 3)
+  ] },
   split: { slots: {
     'split-copy': region(1, 2, 6, 12),
     'split-media': region(8, 2, 5, 12),

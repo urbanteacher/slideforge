@@ -1033,6 +1033,16 @@
       "org-chart": region(1, 5, 12, 10),
       empty: region(1, 5, 12, 8)
     } },
+    /* No slots, because nothing is drawn. The inserts are where an item goes
+       when it is added without being dropped anywhere in particular: the same
+       reading column the teaching layouts use, so the first item on a blank
+       slide lands where a title would have been rather than in a corner. */
+    blank: { slots: {}, inserts: [
+      region(1, 1, 12, 2),
+      region(1, 4, 11, 4),
+      region(1, 9, 11, 4),
+      region(1, 13, 11, 3)
+    ] },
     split: { slots: {
       "split-copy": region(1, 2, 6, 12),
       "split-media": region(8, 2, 5, 12),
@@ -4213,6 +4223,20 @@
         blurb: "One line, bold and as big as it fits. An opening thought, a provocation, a rule to remember.",
         seed: { body: "Every chart is a choice", subtitle: "" }
       }]
+    },
+    /* An empty canvas. Every other type here is a shape the slide is poured
+       into; this one is the absence of a shape, so an author can place items
+       wherever the layouts taught the inserters to put them rather than filling
+       in someone else's fields. It is also where a slide ends up once every
+       block has been taken off it — deleting everything has to leave something,
+       and a slide still claiming to be Bullets with no bullets on it is a shape
+       pretending to be empty. */
+    blank: {
+      label: "Blank",
+      icon: "▢",
+      deck: true,
+      group: "introduce",
+      starters: [{ title: "Blank canvas", blurb: "Nothing on it. Add items and put them where you want them." }]
     },
     content: {
       label: "Bullets",

@@ -626,13 +626,16 @@
      tell "I dealt with this" from "pass it on to the slide". */
   function removeBlock() {
     var s = slide();
-    if (!s || !SF.removeFreeBlock(s, selected)) return false;
+    var what = s && SF.deleteBlock(s, selected);
+    if (!what) return false;
     selected = null;
     /* Both selections, not just this one. */
     syncRail();
     commit(true);
     afterPaint();
-    SF.toast && SF.toast('Item removed. Undo brings it back.');
+    SF.toast && SF.toast(what === 'item'
+      ? 'Item removed. Undo brings it back.'
+      : 'Taken off this slide. Its words are kept — Undo, or Bring back in Layout.');
     return true;
   }
 
@@ -730,14 +733,37 @@
          reads the same. */
     }
     var isFree = !!(selected && SF.freeBlockId && SF.freeBlockId(selected));
-    [['btnArrangeDuplicate', 'Copy this block, one row below'],
-     ['btnArrangeRemove', 'Remove this block from the slide']].forEach(function (pair) {
-      var b = /** @type {HTMLButtonElement|null} */ (document.getElementById(pair[0]));
-      if (!b) return;
-      b.disabled = !isFree;
-      b.title = isFree ? pair[1]
-        : 'Only a block you added can be copied or removed — this one is part of the layout';
-    });
+    var dup = /** @type {HTMLButtonElement|null} */ (document.getElementById('btnArrangeDuplicate'));
+    if (dup) {
+      /* Duplicate still answers to a free block only: a block the layout drew
+         has no copy on the slide to make a second of. */
+      dup.disabled = !isFree;
+      dup.title = isFree ? 'Copy this block, one row below'
+        : 'Only a block you added can be copied — this one is part of the layout';
+    }
+    var kill = /** @type {HTMLButtonElement|null} */ (document.getElementById('btnArrangeRemove'));
+    if (kill) {
+      /* Remove answers to both kinds now. Everything on the canvas can come
+         off it, which is what leaves a slide blank to build on. */
+      var can = !!(selected && SF.canDeleteBlock(slide(), selected));
+      kill.disabled = !can;
+      kill.title = !selected ? 'Select a block to take off the slide'
+        : isFree ? 'Remove this item from the slide'
+        : 'Take this off the slide. Its words are kept and the rail still edits them.';
+    }
+    /* The way back from a block taken off the slide. Hidden entirely when
+       there is nothing to bring back, so it is not a dead control on every
+       slide — and counted, because "one" and "all of them" are different
+       decisions and the button should say which it is offering. */
+    var back = /** @type {HTMLButtonElement|null} */ (document.getElementById('btnArrangeRestore'));
+    if (back) {
+      var off = SF.hiddenBlocksOf(slide()).length;
+      back.hidden = !off;
+      back.textContent = off > 1 ? '↩ Bring back ' + off : '↩ Bring back';
+      back.title = off === 1
+        ? 'Bring back the block taken off this slide'
+        : 'Bring back the ' + off + ' blocks taken off this slide';
+    }
     var fitBtn = /** @type {HTMLButtonElement|null} */ (document.getElementById('btnArrangeFit'));
     if (fitBtn) {
       var v0 = selected && verdictFor(selected);
@@ -903,6 +929,16 @@
     if (dup) dup.addEventListener('click', duplicateBlock);
     var kill = document.getElementById('btnArrangeRemove');
     if (kill) kill.addEventListener('click', removeBlock);
+    var back = document.getElementById('btnArrangeRestore');
+    if (back) back.addEventListener('click', function () {
+      var s = slide();
+      var n = s && SF.restoreAllBlocks(s);
+      if (!n) return;
+      commit(true);
+      if (SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
+      afterPaint();
+      SF.toast && SF.toast(n === 1 ? 'Block brought back.' : n + ' blocks brought back.');
+    });
     ['X','Y'].forEach(function(axis){
       var control = /** @type {HTMLSelectElement|null} */ (document.getElementById('arrangeAnchor' + axis));
       if (!control) return;
@@ -968,7 +1004,7 @@
            version of what was asked for. */
         e.stopImmediatePropagation();
         if (!removeBlock()) {
-          SF.toast && SF.toast('This one is part of the layout — edit it in the rail, or delete the slide.');
+          SF.toast && SF.toast('Nothing to delete here.');
         }
         return;
       }
