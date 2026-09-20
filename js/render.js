@@ -778,10 +778,29 @@
     list.forEach(function (block) {
       var spec = FREE_KINDS[block.kind] || FREE_KINDS.text;
       var key = SF.freeBlockKey(block.id);
-      /* A slot the layout named beats the kind's own default rank. */
-      var AS_SIZE = { title: 'slot-title', subtitle: 'slot-subtitle', body: 'slot-body' };
+      /* An item that took one of the layout's named slots is drawn with that
+         slot's own element, so the theme styles it the way it styles the slot.
+         Both rules that size a real title are on the tag — `.slide h2` at 52px
+         and then `.theme-studio h2` at 55 — so an h3 carrying a class could
+         never match either, and the size had to be written down a second time
+         in lattice.css to approximate them. A frozen corpus average is the
+         wrong answer for a value each theme sets: it came out 52 where the
+         studio theme's own title is 55, and would be wrong differently for
+         every other theme. Being the element gets all of it for free,
+         including the family, the weight and the colour. */
+      /* A composition renames the band it draws the subtitle in — the same
+         content key comes out as .cp-eyebrow rather than .sub, and is styled
+         quite differently for it: 18px bold reversed against the poster,
+         where an uncomposed subtitle is 27px regular and dim. So the class
+         follows the slide, not just the slot name. */
+      var composed = !!(root.getAttribute && root.getAttribute('data-composition')) ||
+        !!root.querySelector('[data-composition]');
+      var AS_TAG = { title: ['h2', ''], subtitle: ['div', composed ? 'cp-eyebrow' : 'sub'] };
+      var asSlot = block.as && AS_TAG[block.as];
       var size = block.size || spec.size;
-      var node = el(spec.tag, 'free-block ' + spec.cls + (size ? ' free-size-' + size : ''));
+      var node = asSlot
+        ? el(asSlot[0], 'free-block ' + spec.cls + (asSlot[1] ? ' ' + asSlot[1] : ''))
+        : el(spec.tag, 'free-block ' + spec.cls + (size ? ' free-size-' + size : ''));
       node.dataset.contentKey = key;
       if (block.as) node.dataset.as = String(block.as);
       node.dataset.freeBlock = String(block.id);

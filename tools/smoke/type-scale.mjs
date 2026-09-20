@@ -77,6 +77,47 @@ try {
       { id: 'slotted', kind: 'text', size: 'display', as: 'title', text: 'display rank, title slot' }
     ]);
 
+    /* An item that takes one of the layout's named slots must be drawn the
+       way that theme draws the slot — not approximately, exactly. The sizes
+       used to be written down in lattice.css as a corpus average: 52px for a
+       title, which is right for 15 of the 23 themes and wrong for the rest,
+       and 26px for a subtitle, which was right for none of them. Comparing
+       against each theme's own rendering is the only check that can tell the
+       difference, because an average looks correct until you ask a theme. */
+    const slotsMatchTheme = [];
+    for (const theme of Object.keys(SF.THEMES || {})) {
+      const d = SF.makeDeck('probe');
+      d.theme = theme;
+      const look = (node) => {
+        if (!node) return null;
+        const c = getComputedStyle(node);
+        return c.fontSize + '/' + c.fontWeight + '/' + c.color + '/' + c.fontFamily.split(',')[0];
+      };
+      const pair = (real, withItem, key, id) => {
+        const a = SF.renderSlide(d, SF.normalizeSlide(real), { index: 0, total: 1 });
+        stage.append(a);
+        const want = look(a.querySelector('[data-content-key="' + key + '"]'));
+        a.remove();
+        const b = SF.renderSlide(d, SF.normalizeSlide(withItem), { index: 0, total: 1 });
+        stage.append(b);
+        const got = look(b.querySelector('[data-free-block="' + id + '"]'));
+        b.remove();
+        return { theme, slot: key, want, got, match: !!want && want === got };
+      };
+      slotsMatchTheme.push(pair(
+        { type: 'content', title: 'A title', bullets: ['One point.'] },
+        { type: 'content', title: '', bullets: [],
+          blocks: [{ id: 'x', kind: 'heading', as: 'title', text: 'A title' }],
+          design: { regions: { 'blocks.x': { col: 1, row: 1, cols: 12, rows: 2 } } } },
+        'title', 'x'));
+      slotsMatchTheme.push(pair(
+        { type: 'title', title: 'T', subtitle: 'A short bridge.' },
+        { type: 'title', title: 'T', subtitle: '',
+          blocks: [{ id: 'y', kind: 'text', as: 'subtitle', text: 'A short bridge.' }],
+          design: { regions: { 'blocks.y': { col: 1, row: 4, cols: 12, rows: 1 } } } },
+        'subtitle', 'y'));
+    }
+
     /* And on the corpus: whatever a theme does to the numbers, a title may
        never come out the same size as the subtitle or the body beside it. */
     const themes = Object.keys(SF.THEMES || {});
@@ -102,7 +143,7 @@ try {
       }
     }
     stage.remove();
-    return { order: SF.FREE_SIZES.slice(), ranks, kinds, slots, override, themes: themes.length, pairs, clashes };
+    return { order: SF.FREE_SIZES.slice(), ranks, kinds, slots, override, slotsMatchTheme, themes: themes.length, pairs, clashes };
   });
 
   const seq = report.order;
@@ -141,6 +182,14 @@ try {
     report.override.plain.px + 'px unslotted)');
   checks++;
 
+  const slotMisses = report.slotsMatchTheme.filter((r) => !r.match);
+  assert.deepEqual(slotMisses, [],
+    'an item in a named slot must be drawn exactly as that theme draws the slot:\n  ' +
+    slotMisses.map((r) => r.theme + ' ' + r.slot + ': theme ' + r.want + ', item ' + r.got).join('\n  '));
+  assert.ok(report.slotsMatchTheme.length >= 40,
+    'both slots must be checked against every theme, got ' + report.slotsMatchTheme.length);
+  checks++;
+
   assert.ok(report.themes >= 20, 'every theme must be swept, got ' + report.themes);
   assert.ok(report.pairs > 300,
     'the corpus sweep must actually find titles beside other copy, got ' + report.pairs + ' pairs');
@@ -151,8 +200,10 @@ try {
   console.log('ok · type scale: ' + checks + ' checks · ' + seq.length + ' ranks are ' +
     seq.length + ' falling sizes (' + sizes.join('/') + 'px), a heading item outranks a text item ' +
     k.heading.px + '/' + k.text.px + 'px, the named slots fall ' +
-    [s.title.px, s.subtitle.px, s.body.px].join('/') + 'px and beat a block own rank, and across ' +
-    report.themes + ' themes no title matched the copy beside it in ' + report.pairs + ' pairs');
+    [s.title.px, s.subtitle.px, s.body.px].join('/') + 'px and beat a block own rank, an item in a named ' +
+    'slot is drawn exactly as its theme draws that slot across ' + report.slotsMatchTheme.length +
+    ' comparisons, and across ' + report.themes + ' themes no title matched the copy beside it in ' +
+    report.pairs + ' pairs');
 } finally {
   await browser?.close();
   relay.kill();
