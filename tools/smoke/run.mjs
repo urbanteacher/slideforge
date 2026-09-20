@@ -45,7 +45,7 @@ const SETS = {
   ci: [
     'artwork-face', 'campaign-chrome', 'canvas-edit', 'chrome-region',
     'chrome-regions', 'clipboard-selection', 'demo-deck', 'design-controls',
-    'desk-overlay', 'exports', 'fit-check', 'handout', 'layout-face',
+    'delete-truth', 'desk-overlay', 'exports', 'fit-check', 'handout', 'layout-face',
     'layout-fit', 'lesson-bank', 'live-quiz', 'mindmap', 'refresh',
     'review-tool', 'share', 'slide-review', 'type-scale',
   ],
@@ -58,7 +58,7 @@ const SETS = {
   deck: ['refresh', 'cold-start', 'exports', 'share', 'live-quiz', 'lesson-bank'],
   /* The three faces of a slide — content, artwork, layout — and the measures
      they answer to. What to run after touching the canvas. */
-  canvas: ['canvas-edit', 'artwork-face', 'layout-face', 'demo-deck', 'layout-fit', 'fit-check', 'row-grid', 'type-scale'],
+  canvas: ['canvas-edit', 'artwork-face', 'layout-face', 'demo-deck', 'layout-fit', 'fit-check', 'row-grid', 'type-scale', 'delete-truth'],
   review: ['review-tool', 'slide-review', 'fit-check'],
 };
 

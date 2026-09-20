@@ -1364,12 +1364,14 @@
       touched(); draw();
       SF.toast && SF.toast('Copied below. Drag it anywhere.');
     }));
+    /* The same act as the Layout bar's ✕ and the Delete key, through the one
+       function that knows what a block leaves behind. This used to be its own
+       implementation and forgot the formatting, which then sat on the slide
+       keyed to an id nothing rendered. */
     acts.appendChild(UI.button('\u2715 Delete', 'ghost', function () {
-      var list = SF.freeBlocksOf(s, true);
-      var at = list.indexOf(block);
-      if (at >= 0) list.splice(at, 1);
-      if (s.design && s.design.regions) delete s.design.regions[SF.freeBlockKey(block.id)];
+      if (!SF.removeFreeBlock(s, SF.freeBlockKey(block.id))) return;
       focusedBlockId = null;
+      if (SF.Arrange && SF.Arrange.deselect) SF.Arrange.deselect();
       touched(); draw();
       SF.toast && SF.toast('Item removed. Undo brings it back.');
     }));

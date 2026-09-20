@@ -599,19 +599,41 @@
     SF.toast && SF.toast('Copied, one row below.');
   }
 
+  /* The rail draws whichever block the canvas is holding — drawInspector asks
+     SF.Arrange.selectedBlock() before it asks its own focus. So a change to
+     the canvas selection is a change to the rail, and the rail has to be told
+     or it goes on drawing the fields of a block that is no longer selected,
+     or no longer there. clearBlockFocus alone was not enough: selecting a
+     slot inside the Layout face never sets the rail's own focus, so it had
+     nothing to clear and nothing redrew. */
+  function syncRail() {
+    if (!SF.Editor) return;
+    if (SF.Editor.clearBlockFocus) SF.Editor.clearBlockFocus();
+    if (SF.Editor.refreshInspector) SF.Editor.refreshInspector();
+  }
+
+  /* Drop the selection on both sides. Called from here on Escape, and from
+     the rail when it deletes the block the canvas is holding. */
+  function deselect() {
+    if (!selected) return;
+    selected = null;
+    selectedSlide = null;
+    afterPaint();
+    syncRail();
+  }
+
+  /* @returns {boolean} whether anything was removed, so a key handler can
+     tell "I dealt with this" from "pass it on to the slide". */
   function removeBlock() {
     var s = slide();
-    var id = selected && SF.freeBlockId && SF.freeBlockId(selected);
-    if (!s || !id) return;
-    var key = selected;
-    s.blocks = SF.freeBlocksOf(s).filter(function (b) { return String(b.id) !== String(id); });
-    var map = regionsOf(s);
-    if (map) delete map[key];
-    if (s.formatting) delete s.formatting[key];
+    if (!s || !SF.removeFreeBlock(s, selected)) return false;
     selected = null;
+    /* Both selections, not just this one. */
+    syncRail();
     commit(true);
     afterPaint();
-    SF.toast && SF.toast('Removed.');
+    SF.toast && SF.toast('Item removed. Undo brings it back.');
+    return true;
   }
 
   /* Give the block the lines its words actually need, and push the rest down.
@@ -793,6 +815,7 @@
     if (cancelDrag) cancelDrag();
     arranging = !!on;
     arrangedSlide = arranging ? slide() : null;
+    var hadSelection = !!selected;
     if (!arranging) { selected = null; verdict = []; clearGuides(); }
     var toggle = document.getElementById('btnArrange');
     if (toggle) {
@@ -804,6 +827,11 @@
        the grid and the handles on. */
     if (arranging && !seed() && SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
     else if (!arranging && SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
+    /* Leaving the face drops the selection, and the rail draws whichever block
+       the canvas is holding — so it has to be told, or it keeps the item's
+       fields up for an item nothing is selecting any more. refreshCanvas
+       redraws the thumbnails and the preview, not the inspector. */
+    if (!arranging && hadSelection) syncRail();
     afterPaint();
   }
 
@@ -911,13 +939,37 @@
       /* One call, one value: box() twice is two lookups, and the guard on the
          first says nothing about the second. */
       var host = box();
-      if (!arranging || (SF.Player && SF.Player.open) || !host || !host.getClientRects().length) return;
+      /* An item can be selected on the canvas without the Layout face being
+         open, so a selection is reason enough to be here. It did not used to
+         be: outside Layout this handler returned, Escape did nothing although
+         the rail's own hint promised it deselected, and Delete fell through
+         to the deck, where it deleted the whole slide out from under a
+         selected item. */
+      if ((!arranging && !selected) || (SF.Player && SF.Player.open) ||
+          !host || !host.getClientRects().length) return;
       var from = /** @type {Element|null} */ (e.target);
       if (from && from.closest && from.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], dialog')) return;
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopImmediatePropagation();
-        setArranging(false);
+        /* Inside the face Escape leaves it, which already drops the
+           selection — that is long-standing and tested. Outside it there was
+           nothing to leave and Escape did nothing at all, while the rail's
+           own hint said it gave the slide's fields back. Now it does. */
+        if (arranging) setArranging(false);
+        else deselect();
+        return;
+      }
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (!selected) return;
+        e.preventDefault();
+        /* Handled either way. Falling through with a layout block selected
+           would delete the slide it belongs to, which is not a smaller
+           version of what was asked for. */
+        e.stopImmediatePropagation();
+        if (!removeBlock()) {
+          SF.toast && SF.toast('This one is part of the layout — edit it in the rail, or delete the slide.');
+        }
         return;
       }
       if (!selected || e.metaKey || e.ctrlKey || e.altKey || !/^Arrow(Left|Right|Up|Down)$/.test(e.key)) return;
@@ -958,6 +1010,14 @@
          handles appear on an item whose editor is no longer on screen. */
       if (SF.Editor && SF.Editor.refreshInspector) SF.Editor.refreshInspector();
     },
+    /* Drop the canvas selection — the rail calls this when it deletes the
+       block, so the handles do not outlive it. */
+    deselect: deselect,
+    /* Delete the selected item, if the selection is one that can go.
+       @returns {boolean} whether it did. */
+    removeSelected: removeBlock,
+    /* Whether an item is selected on the canvas at all, Layout or not. */
+    hasSelection: function () { return !!selected; },
     /* Which block the canvas has selected, so the inspector can edit it. */
     selectedBlock: function () {
       var id = selected ? SF.freeBlockId(selected) : null;

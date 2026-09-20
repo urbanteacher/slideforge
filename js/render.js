@@ -490,6 +490,32 @@
   SF.freeBlockById = function (slide, id) {
     return SF.freeBlocksOf(slide).find(function (b) { return String(b.id) === String(id); }) || null;
   };
+  /* One answer to "can this come off the slide", and one act that takes it
+     off. Deleting had four truths and they disagreed. The Layout bar's ✕ and
+     the rail's ✕ Delete were two implementations of the same act: the bar
+     dropped the block's formatting, the rail left it behind as an orphan
+     keyed to an id nothing rendered any more. Each cleared its own selection
+     and not the other's, so deleting from the rail left corner handles on the
+     canvas and deleting from the bar left the rail editing a block that was
+     gone. And the Delete key meant a third thing — the whole slide — even
+     with an item visibly selected and handled.
+
+     A block the layout drew is not deletable here and never was: removing it
+     would mean removing the field it renders, which is the rail's job and a
+     different act. That asymmetry is the one thing the old paths agreed on,
+     so it is what this predicate says. */
+  SF.canRemoveBlock = function (slide, key) {
+    var id = SF.freeBlockId(key);
+    return !!(slide && id && SF.freeBlockById(slide, id));
+  };
+  SF.removeFreeBlock = function (slide, key) {
+    if (!SF.canRemoveBlock(slide, key)) return false;
+    var id = SF.freeBlockId(key);
+    slide.blocks = SF.freeBlocksOf(slide).filter(function (b) { return String(b.id) !== String(id); });
+    if (slide.design && slide.design.regions) delete slide.design.regions[key];
+    if (slide.formatting) delete slide.formatting[key];
+    return true;
+  };
 
   SF.renderFreeBlocks = function (root, slide) {
     var list = SF.freeBlocksOf(slide).filter(function (b) { return b && b.id; });
