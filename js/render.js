@@ -4119,7 +4119,12 @@
     var side = slide.imageSide === 'left' ? 'left' : 'right';
     pad.classList.add('split-pad', 'image-' + side);
 
-    var copy = el('div', 'split-copy');
+    /* Points or prose. A list of separate claims wants a marker on each line;
+       a paragraph that happens to sit beside a picture does not, and the
+       hanging indent a marker needs pushes every line of it off the edge it
+       should be flush with. */
+    var copy = el('div', 'split-copy' +
+      ((slide.design || {}).copyStyle === 'prose' ? ' split-copy-prose' : ''));
     if (slide.title) copy.appendChild(rich('h2', null, slide, 'title', slide.title));
     var ul = el('ul');
     var lines = (slide.bullets || []).map(function(text,index){return {text:text,index:index};}).filter(function (b) { return String(b.text).trim(); });

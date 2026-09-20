@@ -1417,7 +1417,9 @@
           "type": "quote",
           "body": "The greatest value of a picture is when it forces us to notice what we never expected to see.",
           "subtitle": "John W. Tukey",
-          "notes": "Pause on Tukey’s quotation. Ask for an example of a chart that revealed something surprising. Quotation supplied in the original Week 2 lecture.\nSource: adapted from the supplied Week 2 lecture materials."
+          "image": "assets/lesson/ipdv/tukey-portrait.jpg",
+          "imageFit": "cover",
+          "notes": "Pause on Tukey’s quotation. Ask for an example of a chart that revealed something surprising. Quotation supplied in the original Week 2 lecture. Portrait is the one from the original Week 2 deck, cropped away from the baked-in quote text so the words are the theme’s, not the picture’s.\nSource: adapted from the supplied Week 2 lecture materials."
         },
         {
           "type": "image",
@@ -1452,6 +1454,19 @@
           "chartSource": "Synthetic teaching examples, not observed research data."
         },
         {
+          "type": "split",
+          "title": "What a good chart has to do",
+          "subtitle": "The three primary goals",
+          "bullets": [
+            "Effectiveness — it conveys the information you intended, accurately.",
+            "Efficiency — it costs the reader as little effort as possible.",
+            "Aesthetics — it looks considered, and belongs where it is published."
+          ],
+          "imageFit": "contain",
+          "progressive": true,
+          "notes": "The three primary goals from the supplied Week 2 deck. Say that they are ranked: an efficient, handsome chart of the wrong quantity is still a failure. Efficiency is the one students under-weight, because they read their own chart fluently — they already know what it says.\nSource: adapted from the supplied Week 2 lecture materials."
+        },
+        {
           "type": "content",
           "title": "The design brief",
           "bullets": [
@@ -1464,10 +1479,42 @@
           "progressive": true
         },
         {
+          "type": "split",
+          "title": "Three trade-offs you cannot avoid",
+          "subtitle": "Dials the design brief sets",
+          "bullets": [
+            "Simplicity vs completeness — cut until the message is clear; the next cut takes the evidence.",
+            "Novelty vs familiarity — a new idiom buys attention and spends comprehension.",
+            "Beauty vs clarity — when the two disagree, the reader’s answer decides."
+          ],
+          "imageFit": "contain",
+          "progressive": true,
+          "notes": "Trade-offs, not rules: each one is a dial that the design brief sets, which is why the brief comes first. Ask the room which dial their own coursework chart has set wrongly, and what it was bought with.\nSource: adapted from the supplied Week 2 lecture materials."
+        },
+        {
           "type": "section",
           "title": "Graphical\nintegrity",
           "subtitle": "Tufte's question: does the picture say what the numbers say?",
           "notes": "The spine of the lecture. Everything from here to the rules of thumb is one argument — the graphic is a measurement, and a measurement can be wrong.\nSource: adapted from the supplied Week 2 lecture materials."
+        },
+        {
+          "type": "split",
+          "title": "Tufte’s six principles of graphical integrity",
+          "bullets": [
+            "Proportion — size on the page matches the quantity.",
+            "Labelling — label thoroughly; explain on the graphic itself.",
+            "Data, not design — show data variation, not design variation.",
+            "Standardised units — for money over time, deflate before plotting.",
+            "No spare dimensions — never more dimensions than the data has.",
+            "Context — do not quote data out of context."
+          ],
+          "image": "assets/lesson/ipdv/polling-three-pies.jpg",
+          "imageFit": "contain",
+          "design": {
+            "mediaGround": "full"
+          },
+          "progressive": true,
+          "notes": "Tufte, The Visual Display of Quantitative Information. The rows are shortened to fit; his wording is: (1) the representation of numbers, as physically measured on the surface of the graphic itself, should be directly proportional to the numerical quantities represented; (2) clear, detailed and thorough labelling should be used to defeat graphical distortion and ambiguity — write out explanations of the data on the graphic itself, label important events in the data; (3) show data variation, not design variation; (4) in time-series displays of money, deflated and standardised units of monetary measurement are nearly always better than nominal units; (5) the number of information-carrying (variable) dimensions depicted should not exceed the number of dimensions in the data; (6) graphics must not quote data out of context.\n\nThe supplied Week 2 deck announces six and prints five, because the last two are run together in one paragraph; they are separated here. Principles 1 and 5 are the ones the lie factor and the 3D examples test later in this section. Principle 4 is the one nobody applies until they plot a decade of prices.\nSource: adapted from the supplied Week 2 lecture materials (01_Lecture_IPDV_2_2, slide 10)."
         },
         {
           "type": "experiment",
@@ -2114,18 +2161,11 @@
       ],
       "slides": [
         {
-          "type": "image",
+          "type": "title",
           "title": "Visual Communication",
-          "subtitle": "LDSCI6253 · Week 2 · Monday 21 September 2026",
-          "notes": "0–5 min. Welcome back. Week 1 introduced why we visualise and the What–Why–How framework. Today connects data types to visual choices. Ask: what made one chart from last week memorable? Plan: foundations 10 min, integrity 25 min, data and channels 25 min, colour 15 min, critique and questions 15 min. Allow a short pause around the data-abstraction divider. Cover artwork is illustrative, not empirical evidence.\nSource: adapted from the supplied Week 2 lecture materials.",
-          "date": "2026-09-21",
-          "image": "assets/lesson/ipdv/visual-communication-hero.png",
-          "imageFit": "cover",
-          "design": {
-            "capStyle": "scrim",
-            "capPos": "bottom",
-            "imageMotion": "zoom"
-          }
+          "subtitle": "LDSCI6253 · Week 2",
+          "notes": "0–5 min. Welcome back. Week 1 introduced why we visualise and the What–Why–How framework. Today connects data types to visual choices. Ask: what made one chart from last week memorable? Plan: foundations 10 min, integrity 25 min, data and channels 25 min, colour 15 min, critique and questions 15 min. Allow a short pause around the data-abstraction divider. The cover is the Northeastern title layout, so the date is the layout’s own stamp and the subtitle does not repeat it.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "date": "2026-09-21"
         },
         {
           "type": "content",
@@ -2185,7 +2225,9 @@
           "type": "quote",
           "body": "The greatest value of a picture is when it forces us to notice what we never expected to see.",
           "subtitle": "John W. Tukey",
-          "notes": "Pause on Tukey’s quotation. Ask for an example of a chart that revealed something surprising. Quotation supplied in the original Week 2 lecture.\nSource: adapted from the supplied Week 2 lecture materials."
+          "image": "assets/lesson/ipdv/tukey-portrait.jpg",
+          "imageFit": "cover",
+          "notes": "Pause on Tukey’s quotation. Ask for an example of a chart that revealed something surprising. Quotation supplied in the original Week 2 lecture. Portrait is the one from the original Week 2 deck, cropped away from the baked-in quote text so the words are the theme’s, not the picture’s.\nSource: adapted from the supplied Week 2 lecture materials."
         },
         {
           "type": "image",
@@ -2220,6 +2262,19 @@
           "chartSource": "Synthetic teaching examples, not observed research data."
         },
         {
+          "type": "split",
+          "title": "What a good chart has to do",
+          "subtitle": "The three primary goals",
+          "bullets": [
+            "Effectiveness — it conveys the information you intended, accurately.",
+            "Efficiency — it costs the reader as little effort as possible.",
+            "Aesthetics — it looks considered, and belongs where it is published."
+          ],
+          "imageFit": "contain",
+          "progressive": true,
+          "notes": "The three primary goals from the supplied Week 2 deck. Say that they are ranked: an efficient, handsome chart of the wrong quantity is still a failure. Efficiency is the one students under-weight, because they read their own chart fluently — they already know what it says.\nSource: adapted from the supplied Week 2 lecture materials."
+        },
+        {
           "type": "content",
           "title": "The design brief",
           "bullets": [
@@ -2230,6 +2285,19 @@
           ],
           "notes": "The third is the one that changes designs. 'What decision gets made from this' turns a chart of everything into a chart of the thing that matters. Ask the room for their AE1 answer to it.\nSource: adapted from the supplied Week 2 lecture materials.",
           "progressive": true
+        },
+        {
+          "type": "split",
+          "title": "Three trade-offs you cannot avoid",
+          "subtitle": "Dials the design brief sets",
+          "bullets": [
+            "Simplicity vs completeness — cut until the message is clear; the next cut takes the evidence.",
+            "Novelty vs familiarity — a new idiom buys attention and spends comprehension.",
+            "Beauty vs clarity — when the two disagree, the reader’s answer decides."
+          ],
+          "imageFit": "contain",
+          "progressive": true,
+          "notes": "Trade-offs, not rules: each one is a dial that the design brief sets, which is why the brief comes first. Ask the room which dial their own coursework chart has set wrongly, and what it was bought with.\nSource: adapted from the supplied Week 2 lecture materials."
         },
         {
           "type": "image",
@@ -2252,6 +2320,25 @@
           "title": "Graphical\nintegrity",
           "subtitle": "Tufte's question: does the picture say what the numbers say?",
           "notes": "The spine of the lecture. Everything from here to the rules of thumb is one argument — the graphic is a measurement, and a measurement can be wrong.\nSource: adapted from the supplied Week 2 lecture materials."
+        },
+        {
+          "type": "split",
+          "title": "Tufte’s six principles of graphical integrity",
+          "bullets": [
+            "Proportion — size on the page matches the quantity.",
+            "Labelling — label thoroughly; explain on the graphic itself.",
+            "Data, not design — show data variation, not design variation.",
+            "Standardised units — for money over time, deflate before plotting.",
+            "No spare dimensions — never more dimensions than the data has.",
+            "Context — do not quote data out of context."
+          ],
+          "image": "assets/lesson/ipdv/polling-three-pies.jpg",
+          "imageFit": "contain",
+          "design": {
+            "mediaGround": "full"
+          },
+          "progressive": true,
+          "notes": "Tufte, The Visual Display of Quantitative Information. The rows are shortened to fit; his wording is: (1) the representation of numbers, as physically measured on the surface of the graphic itself, should be directly proportional to the numerical quantities represented; (2) clear, detailed and thorough labelling should be used to defeat graphical distortion and ambiguity — write out explanations of the data on the graphic itself, label important events in the data; (3) show data variation, not design variation; (4) in time-series displays of money, deflated and standardised units of monetary measurement are nearly always better than nominal units; (5) the number of information-carrying (variable) dimensions depicted should not exceed the number of dimensions in the data; (6) graphics must not quote data out of context.\n\nThe supplied Week 2 deck announces six and prints five, because the last two are run together in one paragraph; they are separated here. Principles 1 and 5 are the ones the lie factor and the 3D examples test later in this section. Principle 4 is the one nobody applies until they plot a decade of prices.\nSource: adapted from the supplied Week 2 lecture materials (01_Lecture_IPDV_2_2, slide 10)."
         },
         {
           "type": "experiment",
@@ -3336,7 +3423,9 @@
           "type": "quote",
           "body": "The greatest value of a picture is when it forces us to notice what we never expected to see.",
           "subtitle": "John W. Tukey",
-          "notes": "Pause on Tukey’s quotation. Ask for an example of a chart that revealed something surprising. Quotation supplied in the original Week 2 lecture.\nSource: adapted from the supplied Week 2 lecture materials."
+          "image": "assets/lesson/ipdv/tukey-portrait.jpg",
+          "imageFit": "cover",
+          "notes": "Pause on Tukey’s quotation. Ask for an example of a chart that revealed something surprising. Quotation supplied in the original Week 2 lecture. Portrait is the one from the original Week 2 deck, cropped away from the baked-in quote text so the words are the theme’s, not the picture’s.\nSource: adapted from the supplied Week 2 lecture materials."
         },
         {
           "type": "image",
@@ -3367,6 +3456,19 @@
           "progressive": true
         },
         {
+          "type": "split",
+          "title": "What a good chart has to do",
+          "subtitle": "The three primary goals",
+          "bullets": [
+            "Effectiveness — it conveys the information you intended, accurately.",
+            "Efficiency — it costs the reader as little effort as possible.",
+            "Aesthetics — it looks considered, and belongs where it is published."
+          ],
+          "imageFit": "contain",
+          "progressive": true,
+          "notes": "The three primary goals from the supplied Week 2 deck. Say that they are ranked: an efficient, handsome chart of the wrong quantity is still a failure. Efficiency is the one students under-weight, because they read their own chart fluently — they already know what it says.\nSource: adapted from the supplied Week 2 lecture materials."
+        },
+        {
           "type": "content",
           "title": "The design brief",
           "bullets": [
@@ -3379,10 +3481,42 @@
           "progressive": true
         },
         {
+          "type": "split",
+          "title": "Three trade-offs you cannot avoid",
+          "subtitle": "Dials the design brief sets",
+          "bullets": [
+            "Simplicity vs completeness — cut until the message is clear; the next cut takes the evidence.",
+            "Novelty vs familiarity — a new idiom buys attention and spends comprehension.",
+            "Beauty vs clarity — when the two disagree, the reader’s answer decides."
+          ],
+          "imageFit": "contain",
+          "progressive": true,
+          "notes": "Trade-offs, not rules: each one is a dial that the design brief sets, which is why the brief comes first. Ask the room which dial their own coursework chart has set wrongly, and what it was bought with.\nSource: adapted from the supplied Week 2 lecture materials."
+        },
+        {
           "type": "section",
           "title": "Graphical\nintegrity",
           "subtitle": "Tufte's question: does the picture say what the numbers say?",
           "notes": "The spine of the lecture. Everything from here to the rules of thumb is one argument — the graphic is a measurement, and a measurement can be wrong.\nSource: adapted from the supplied Week 2 lecture materials."
+        },
+        {
+          "type": "split",
+          "title": "Tufte’s six principles of graphical integrity",
+          "bullets": [
+            "Proportion — size on the page matches the quantity.",
+            "Labelling — label thoroughly; explain on the graphic itself.",
+            "Data, not design — show data variation, not design variation.",
+            "Standardised units — for money over time, deflate before plotting.",
+            "No spare dimensions — never more dimensions than the data has.",
+            "Context — do not quote data out of context."
+          ],
+          "image": "assets/lesson/ipdv/polling-three-pies.jpg",
+          "imageFit": "contain",
+          "design": {
+            "mediaGround": "full"
+          },
+          "progressive": true,
+          "notes": "Tufte, The Visual Display of Quantitative Information. The rows are shortened to fit; his wording is: (1) the representation of numbers, as physically measured on the surface of the graphic itself, should be directly proportional to the numerical quantities represented; (2) clear, detailed and thorough labelling should be used to defeat graphical distortion and ambiguity — write out explanations of the data on the graphic itself, label important events in the data; (3) show data variation, not design variation; (4) in time-series displays of money, deflated and standardised units of monetary measurement are nearly always better than nominal units; (5) the number of information-carrying (variable) dimensions depicted should not exceed the number of dimensions in the data; (6) graphics must not quote data out of context.\n\nThe supplied Week 2 deck announces six and prints five, because the last two are run together in one paragraph; they are separated here. Principles 1 and 5 are the ones the lie factor and the 3D examples test later in this section. Principle 4 is the one nobody applies until they plot a decade of prices.\nSource: adapted from the supplied Week 2 lecture materials (01_Lecture_IPDV_2_2, slide 10)."
         },
         {
           "type": "split",

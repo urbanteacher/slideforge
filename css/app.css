@@ -2199,6 +2199,14 @@ html[data-ws="game"] #btnSorter { display: none; }
   font-style: italic;
 }
 .layout-split .split-copy li.dim::before { background: var(--s-dim); opacity: .45; }
+/* Prose · Look → Text style. The marker and its 34px hanging indent are what
+   make a paragraph beside a picture read as one very long bullet; without
+   them the text sits flush to the same edge as the heading above it. Closer
+   line gap too: consecutive paragraphs of one thought, not separate claims. */
+.layout-split .split-copy-prose ul { gap: 14px; }
+.layout-split .split-copy-prose li { padding-left: 0; }
+.layout-split .split-copy-prose li::before { content: none; }
+.layout-split .split-copy-prose li.tier-2 { margin-left: 0; }
 .layout-split .split-media {
   flex: 1 1 50%;
   min-width: 0;

@@ -1247,6 +1247,7 @@
     placement: { label: "Image placement", pane: "Look", types: ["split"], description: "Place the picture left, right, above or below the text. Left/right also updates the image-side field." },
     imageShare: { label: "Image share", pane: "Look", types: ["split"], description: "Give the picture 35%, 50% or 65% of the split." },
     mediaGround: { label: "Picture mount", pane: "Look", types: ["split"], description: "Mount the picture on a card or extend it to the edges." },
+    copyStyle: { label: "Text style", pane: "Look", types: ["split"], description: "A marker on every line, or flush prose for a paragraph beside the picture." },
     imageStep: { label: "Image arrives", pane: "Look", types: ["split"], description: "Show the picture with the slide, before the points or after them." },
     cardsMode: { label: "Cards layout", pane: "Look", types: ["cards"], description: "Choose a grid, full-width rows, a stack or picture cards. Selecting one returns to the original cards layout. Stack enables progressive builds." },
     cardPics: { label: "Picture shape", pane: "Look", types: ["cards"], when: "Picture cards selected or card images supplied", description: "Crop to portrait covers or contain landscape plates." },

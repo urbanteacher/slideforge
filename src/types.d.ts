@@ -158,6 +158,7 @@ export interface SlideDesign {
   placement?: 'side' | 'top' | 'bottom';
   imageShare?: 35 | 50 | 65;
   mediaGround?: 'card' | 'full';
+  copyStyle?: 'points' | 'prose';
   imageStep?: 'none' | 'before' | 'after';
   cardsMode?: 'grid' | 'rows' | 'stack' | 'pictures';
   cardPics?: 'covers' | 'plates';

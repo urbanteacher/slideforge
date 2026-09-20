@@ -4153,9 +4153,37 @@
     if (SF.seedLibrary) SF.seedLibrary();
 
     if (requestedLesson && SF.Studio && SF.Studio.makeLesson) {
-      loaded = SF.Studio.makeLesson(requestedLesson);
+      /* Reopen the copy already in the Library rather than minting another.
+         The link is how a lesson gets bookmarked and shared, so it is followed
+         over and over — and makeLesson mints fresh ids, so every follow used to
+         leave one more copy the Library does not list, with the author's edits
+         stranded in whichever of them they happened to be editing that day.
+
+         Store.list() is sorted by modified, so the first match is the one most
+         recently worked on: after a pile of duplicates already exists, that is
+         the one with the work in it.
+
+         Taking a clean build is still available and still deliberate — File →
+         reload from this version, which says out loud that the previous copy
+         stays in the Library. The Demo button is unchanged too: it goes
+         through useLesson, not through here. */
+      var mine = SF.Store.list().filter(function (d) {
+        return d && d.sourceKey === requestedLesson;
+      })[0] || null;
+      loaded = mine || SF.Studio.makeLesson(requestedLesson);
+      /* buildLesson stamps sourceKey only on the Library seed packs and the
+         demo, so the galleries and the motion lab arrived anonymous and the
+         lookup above could never match one — they were the packs duplicating
+         hardest. Stamp what this document was built from, and the next follow
+         of the same link finds it. Nothing else reads sourceKey for a key that
+         is not a seed: seedLibrary walks LIBRARY_SEED_KEYS, keepOneDemoCopy
+         wants the demo's own folder, and File → reload matches on title. */
+      if (loaded && !loaded.sourceKey) loaded.sourceKey = requestedLesson;
+      /* Saved either way: a new build has to be filed, and re-opening an old
+         one has to become the last-opened document, or a later reload with no
+         ?lesson= would land back on whatever was open before. */
       SF.Store.save(loaded, { force: true });
-      if (SF.keepOneDemoCopy) SF.keepOneDemoCopy(loaded);
+      if (!mine && SF.keepOneDemoCopy) SF.keepOneDemoCopy(loaded);
       try {
         if (window.history && window.history.replaceState) {
           var cleanUrl = window.location.pathname + (window.location.hash || '');

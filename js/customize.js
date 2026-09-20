@@ -899,6 +899,10 @@
         ['card','On a card — for photographs and plates'],
         ['full','Edge to edge — for charts already on white']
       ],'card');
+      choose('Text style','copyStyle',[
+        ['points','Points — a marker on every line'],
+        ['prose','Prose — flush, no markers']
+      ],'points');
       choose('Image arrives','imageStep',[
         ['none','With the slide'],
         ['before','On a press, before the points'],
