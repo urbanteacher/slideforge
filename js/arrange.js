@@ -324,6 +324,11 @@
     if (!rt) return;
     rt.querySelectorAll('.sf-handle').forEach(function (n) { n.remove(); });
     if (!selected || String(selected).indexOf('blocks.') !== 0) return;
+    /* And the kind has to allow it. All eight do today, so this changes
+       nothing now and stops a ninth arriving with handles it cannot use. */
+    var held = SF.Arrange && SF.Arrange.selectedBlock && SF.Arrange.selectedBlock();
+    var kind = held && SF.FREE_KINDS && SF.FREE_KINDS[held.kind];
+    if (kind && kind.resizes === false) return;
     var slot = rt.querySelector('[data-block-key="' + selected + '"]');
     if (!slot) return;
     CORNERS.forEach(function (corner) {
@@ -986,9 +991,13 @@
     var isFree = !!(selected && SF.freeBlockId && SF.freeBlockId(selected));
     var dup = /** @type {HTMLButtonElement|null} */ (document.getElementById('btnArrangeDuplicate'));
     if (dup) {
-      /* Duplicate still answers to a free block only: a block the layout drew
-         has no copy on the slide to make a second of. */
-      dup.disabled = !isFree;
+      /* Duplicate answers to two things: it must be an item the slide owns —
+         a block the layout drew has no copy on the slide to make a second of
+         — and the kind must allow it. The second used to be nobody's
+         question; the key prefix was doing both jobs. */
+      var held = SF.Arrange.selectedBlock && SF.Arrange.selectedBlock();
+      var kindOf = held && SF.FREE_KINDS && SF.FREE_KINDS[held.kind];
+      dup.disabled = !isFree || (kindOf ? kindOf.duplicates === false : false);
       dup.title = isFree ? 'Copy this block, one row below'
         : 'Only a block you added can be copied — this one is part of the layout';
     }

@@ -334,6 +334,18 @@
        added before it is written into, and the placeholder it draws is a CSS
        pseudo-element rather than text, so there is nothing to compare. */
     if (!flat(stored) && node.dataset && node.dataset.placeholder) return true;
+    /* A kind the author added answers for itself. This used to be inferred:
+       render the block, then call it editable if its drawn text happened to
+       round-trip to its stored text. That works, and it works by accident —
+       a chart is excluded because its TSV does not look like its axes, not
+       because anything decided a chart is not prose. Asking the kind makes
+       the same answer a declaration, and puts it somewhere a ninth kind has
+       to fill in. Layout blocks are not in the table and keep the round-trip
+       test below, which is why this is additive. */
+    var id = SF.freeBlockId && SF.freeBlockId(key);
+    var block = id && SF.freeBlockById(s, id);
+    var spec = block && SF.FREE_KINDS && SF.FREE_KINDS[block.kind];
+    if (spec && spec.edits !== undefined) return spec.edits === 'inline';
     return flat(node.textContent) === flat(stored);
   }
 

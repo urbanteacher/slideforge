@@ -138,10 +138,15 @@ Then:
 3. **The Duplicate gate** reads `kind.duplicates` rather than re-deriving the
    key prefix. The `blocks.` prefix stays as the answer to "is this an item",
    which is a different question and a correct use of it.
-4. **js/editor.js:1279,1286** read `kind.edits` rather than `spec.draw`,
-   so the Size field and the rail box size stop depending on a rendering
-   property.
-5. **The comment on `data-block-kind`** is corrected to say what it does.
+4. **The comment on `data-block-kind`** is corrected to say what it does.
+
+Not moved, having looked properly: **js/editor.js:1279 and 1286** gate the
+rail box height and the Size field on `spec.draw`, and both are right to.
+The Size field is the prose rank — display through small — which a kind that
+renders its own markup has no use for, and the taller rail box is about how
+much text a kind typically holds. Both are questions about rendering, not
+about capability, and the scope was wrong to list them. The mistake they were
+making was using `draw` to mean "not typed into", and that reading is gone.
 
 ## What this does not cover
 
@@ -197,13 +202,29 @@ docs/theme-contract-governance.md.
 
 ## Size
 
-Five call sites, eight table entries, one new unit test. Smaller than the
-`js/render.js` split, and it removes a class of bug that split would not
-touch — `render.js` could be cut into six files with all four capability
-mechanisms intact.
+Five call sites, eight table entries, one new unit test.
+
+It is orthogonal to the split in docs/render-split.md, not a rival to it.
+That work is four of six steps done and has taken `js/render.js` from 7,215
+lines to 3,488, which is a real improvement to a file nobody could read — and
+it moves every one of the four capability mechanisms intact, because moving
+lines is not the same as deciding who answers a question. The two are worth
+doing in either order.
+
+They do touch the same file, and that is worth saying plainly rather than
+leaving for whoever hits it: `FREE_KINDS` sits inside the regions band, which
+is that document's step 5. Its §5 records step 5 as blocked on this work. The
+declarations here are additive — eight entries and a comment — so the band can
+move with them in place; what cannot happen is both edits being in flight in
+`js/render.js` at the same time without one of us knowing.
 
 ## Change log
 
+- 2026-09-20 — built. Three of the five listed moves landed; the fourth was
+  wrong and is recorded above as not-moved. All eight kinds behave exactly as
+  they did, verified kind by kind through the canvas, including the empty
+  `bullets` edge the risk section names. A governance test holds the table to
+  being complete.
 - 2026-09-20 — written, after the delete/handles/duplicate fixes made the
   pattern visible. Nothing implemented. The behaviour table is measured
   through the canvas, not read off the source: it is what turned up `quote`
