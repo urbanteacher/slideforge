@@ -233,7 +233,14 @@ try {
         arithmetic out again here: a check that reimplements what it is
         checking agrees with itself and nothing else. The first version of
         this did exactly that and reported 39 where the real path gives 17.
-        A slice of the deck, because each slide costs a real repaint. */
+        A short slice of the deck, because each slide costs a real repaint
+        and this check was the most expensive thing in the suite: building
+        the 97-slide bank in the page and repainting two dozen of them tipped
+        the run over often enough to close the browser out from under
+        whatever ran next. It passed alone every time, which is the shape of
+        a resource problem rather than a logic one. Twelve slides still
+        catches a tariff that has drifted; the full sweep belongs in a tool,
+        not in a smoke. */
   await page.evaluate(() => {
     const d = SF.buildLesson('layout-bank');
     d.title = 'Reference deck';
@@ -245,7 +252,7 @@ try {
     const deck = SF.Editor.deck();
     let blocks = 0;
     const red = [];
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < 12; i++) {
       const s = deck.slides[i];
       if (s.design) delete s.design.regions;
       SF.Editor.selectSlide(s.id);
@@ -265,7 +272,7 @@ try {
     }
     return { blocks, red };
   });
-  assert.ok(defaults.blocks > 40, 'the slice must really have been measured, got ' + defaults.blocks + ' blocks');
+  assert.ok(defaults.blocks > 20, 'the slice must really have been measured, got ' + defaults.blocks + ' blocks');
   /* A ceiling rather than zero. Driven through a real browser the whole
      deck now comes out clean — 0 red across 97 slides and 317 blocks, from
      79 of 251 — but under Playwright at this viewport a couple of blocks
