@@ -2273,6 +2273,154 @@
     return { chartKey, chartTable, chartSvgFor, svgEl };
   }
 
+  // src/render/words.js
+  function createWordRenderer(helpers) {
+    const { el } = helpers;
+    function statementBand(text2) {
+      var n = String(text2 || "").trim().length;
+      return n <= 24 ? "xs" : n <= 48 ? "sm" : n <= 90 ? "md" : n <= 170 ? "lg" : "xl";
+    }
+    function statementWordSize(word) {
+      return Math.min(320, Math.floor(1088 / (0.58 * Math.max(1, word.length))));
+    }
+    var WORD_EFFECTS = ["rise", "fade", "reveal"];
+    var WORD_SPAN_MS = 900;
+    var WORD_ARCS = {
+      settle: { on: "sf-word-plan", loop: "sf-cycle-plan" },
+      bounce: { on: "sf-word-plan-bounce", loop: "sf-cycle-plan" },
+      mist: { on: "sf-word-plan-mist", loop: "sf-cycle-mist" }
+    };
+    var LETTER_CAP = 30;
+    var WORD_SPEEDS = {
+      gentle: { dur: 1300, cycle: 13e3, span: 1.8, lift: "0.85em" },
+      medium: { dur: 700, cycle: 7e3, span: 1, lift: "0.55em" },
+      quick: { dur: 320, cycle: 3600, span: 0.45, lift: "0.34em" }
+    };
+    var WORD_STAGGERS = { together: 0, wave: 1, one: 2.5 };
+    var WORD_FROMS = {
+      first: function(i, last) {
+        return last ? i / last : 0;
+      },
+      last: function(i, last) {
+        return last ? 1 - i / last : 0;
+      },
+      /* Distance from the middle, normalised so the centre word is 0 and both
+         ends are 1. An even number of words has no middle word, so the two
+         nearest it share the first beat — which is what "from the centre"
+         means when there is no centre. */
+      center: function(i, last) {
+        if (!last) return 0;
+        var middle = last / 2;
+        return Math.abs(i - middle) / middle;
+      }
+    };
+    function wordFrom(slide) {
+      var want = String((slide.design || {}).wordFrom || "").trim();
+      return Object.prototype.hasOwnProperty.call(WORD_FROMS, want) ? want : "first";
+    }
+    function wordSpeed(slide) {
+      var want = String((slide.design || {}).wordSpeed || "").trim();
+      return WORD_SPEEDS[want] ? want : "medium";
+    }
+    function wordStagger(slide) {
+      var want = String((slide.design || {}).wordStagger || "").trim();
+      return Object.prototype.hasOwnProperty.call(WORD_STAGGERS, want) ? want : "wave";
+    }
+    function wrapWords(node, opts) {
+      var texts = [];
+      (function walk(n) {
+        for (var i = 0; i < n.childNodes.length; i++) {
+          var kid = n.childNodes[i];
+          if (kid.nodeType === 3) {
+            if (String(kid.nodeValue).trim()) texts.push(kid);
+          } else if (kid.nodeType === 1) walk(kid);
+        }
+      })(node);
+      var letters = !!(opts && opts.unit === "letter");
+      var said = texts.map(function(t) {
+        return String(t.nodeValue);
+      }).join("").trim();
+      var total = 0;
+      texts.forEach(function(text2) {
+        String(text2.nodeValue).split(/(\s+)/).forEach(function(part) {
+          if (part.trim()) total += letters ? part.length : 1;
+        });
+      });
+      if (!total || total > (letters ? LETTER_CAP : 40)) return 0;
+      var stretch = opts && Number.isFinite(opts.stretch) ? opts.stretch : 1;
+      var order2 = WORD_FROMS[opts && opts.from || "first"] || WORD_FROMS.first;
+      var span = Math.min(WORD_SPAN_MS * 3, Math.max(240, total * (letters ? 48 : 130))) * stretch;
+      var seen = 0;
+      texts.forEach(function(text2) {
+        var frag = document.createDocumentFragment();
+        String(text2.nodeValue).split(/(\s+)/).forEach(function(part) {
+          if (!part) return;
+          if (!part.trim()) {
+            frag.appendChild(document.createTextNode(part));
+            return;
+          }
+          var host = letters ? el("span", "wword") : frag;
+          if (letters) host.setAttribute("aria-hidden", "true");
+          (letters ? part.split("") : [part]).forEach(function(piece) {
+            var at = order2(seen, total - 1);
+            var delay = Math.round((1 - Math.pow(1 - at, 2.2)) * span);
+            var w = el("span", "w");
+            w.style.setProperty("--i", String(seen));
+            w.style.setProperty("--d", delay + "ms");
+            w.textContent = piece;
+            host.appendChild(w);
+            seen++;
+          });
+          if (letters) frag.appendChild(host);
+        });
+        if (text2.parentNode) text2.parentNode.replaceChild(frag, text2);
+      });
+      if (letters && seen) {
+        node.insertBefore(el("span", "sr-only", said), node.firstChild);
+      }
+      return seen;
+    }
+    function wordPlanUnit(slide) {
+      var plan = (slide && slide.design || {}).wordPlan;
+      return plan && plan.unit === "letter" ? "letter" : "word";
+    }
+    function wordPlan(slide, said, count) {
+      var plan = (slide.design || {}).wordPlan;
+      if (!plan || !Array.isArray(plan.words) || !plan.words.length) return null;
+      if (String(plan.text || "").trim() !== String(said || "").trim()) return null;
+      if (plan.words.length !== count) return null;
+      var num = function(v, lo, hi, fallback) {
+        if (v === null || v === void 0 || v === "") return fallback;
+        var n = Number(v);
+        return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : fallback;
+      };
+      return plan.words.map(function(w) {
+        var step = w && typeof w === "object" ? w : {};
+        var arc = WORD_ARCS[step.arc] ? step.arc : "settle";
+        return {
+          arc,
+          keys: WORD_ARCS[arc],
+          /* em rather than px: a word set at 320px and one at 44px should not
+             travel the same distance. */
+          dx: num(step.dx, -3, 3, 0).toFixed(2) + "em",
+          dy: num(step.dy, -3, 3, 0).toFixed(2) + "em",
+          rot: num(step.rot, -30, 30, 0).toFixed(1) + "deg",
+          scale: num(step.scale, 0.4, 1.8, 1),
+          blur: num(step.blur, 0, 14, 0).toFixed(1) + "px",
+          delay: Math.round(num(step.delay, 0, 3e3, 0))
+        };
+      });
+    }
+    function wordEffect(slide) {
+      var want = String((slide.design || {}).words || "").trim();
+      return WORD_EFFECTS.indexOf(want) >= 0 ? want : "";
+    }
+    function wordsLoop(slide) {
+      return !!(slide.design && slide.design.wordsLoop) && !!wordEffect(slide);
+    }
+    return { LETTER_CAP, WORD_ARCS, WORD_EFFECTS, WORD_FROMS, WORD_SPEEDS, WORD_STAGGERS, statementBand, statementWordSize, wordEffect, wordFrom, wordPlan, wordPlanUnit, wordSpeed, wordStagger, wordsLoop, wrapWords };
+  }
+
   // src/render/layout-slots.js
   var region = (col, row, cols, rows2, extra = {}) => ({ col, row, cols, rows: rows2, ...extra });
   var clone = (value) => Object.fromEntries(Object.entries(value || {}).map(([key, value2]) => [key, { ...value2 }]));
@@ -11855,6 +12003,7 @@
     resolveTheme,
     createCompositionRenderer,
     createChartRenderer,
+    createWordRenderer,
     bindCanvasRegions,
     declareBodyRegion,
     measureBodyRegion,

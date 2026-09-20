@@ -5,6 +5,7 @@ import {bindCanvasRegions} from './render/canvas-regions.js';
 import { CHROME_SLOTS, chromePositions, setChromeSlot, supportsChromeRegions, applyChromeRegions } from './render/regions.js';
 import { createCompositionRenderer } from './render/compositions.js';
 import { createChartRenderer } from './render/charts.js';
+import { createWordRenderer } from './render/words.js';
 import { hasLayoutTemplate, layoutRegionsFor, insertionRegionFor, LAYOUT_SLOT_TEMPLATES } from './render/layout-slots.js';
 import { DESIGN_CONTROLS, designApplies } from './design-controls.js';
 import { THEMES, themeGround, DEFAULT_THEME, resolveTheme } from './themes.js';
@@ -1506,7 +1507,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   slideHeight: slideHeight,
   THEMES: THEMES,
   DEFAULT_THEME, resolveTheme,
-  createCompositionRenderer, createChartRenderer, bindCanvasRegions, declareBodyRegion, measureBodyRegion,
+  createCompositionRenderer, createChartRenderer, createWordRenderer, bindCanvasRegions, declareBodyRegion, measureBodyRegion,
   hasLayoutTemplate, layoutRegionsFor, insertionRegionFor, LAYOUT_SLOT_TEMPLATES,
   measureSlideFit, probeLayoutFit, svgScale, FIT_TOLERANCE, LEGIBLE_FLOOR,
   CHROME_SLOTS, chromePositions, setChromeSlot, supportsChromeRegions, applyChromeRegions,

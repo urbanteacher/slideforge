@@ -218,7 +218,7 @@ checkout's server unless you pass `SF_URL`.
 | --- | --- | --- | --- |
 | 0 | Surface probe | nothing | Build the guard before moving anything |
 | 1 | `src/render/charts.js` | 1,453 lines | **DONE 2026-09-20.** One export, one outbound dep — the narrowest contract of the six |
-| 2 | `render-words.js` | ~380 lines | One coherent cluster; 15 of the 47 exports, so it proves the export-splitting rule |
+| 2 | `src/render/words.js` | 324 lines | **DONE 2026-09-20.** One coherent cluster; 16 names, all but one already public |
 | 3 | `render-live.js` | ~860 lines | Session furniture, not slide layout; 17 exports |
 | 4 | `render-quiz.js` | ~1,100 lines | First user of `SF.registerLayout`; proves the registry across files |
 | 5 | `render-regions.js` | ~950 lines | ~40 of the 93 SF names live here (§4.1) — the largest contract, moved last once the pattern is settled |
@@ -284,7 +284,33 @@ one, and the SVG is **byte-identical** for all 20. The unit suite does not
 cover this — it tests `chartData`, which is model code — so passing tests alone
 would not have been evidence.
 
-### Steps 2–5 — the move
+### Step 2 — word motion — **DONE 2026-09-20**
+
+`src/render/words.js`, 324 lines. `js/render.js` **5,795 → 5,491**.
+
+**This band did not shrink its contract, and that is worth being honest
+about.** Seventeen names live there and sixteen leave; only `WORD_SPAN_MS` is
+private. Word motion is configured from the Motion pane in `js/customize.js`,
+so it was already almost entirely public. The gain here is locating the whole
+motion system in one findable file, not encapsulation. Do not expect every band
+to behave like charts did.
+
+It needs nothing from the model, so the factory takes helpers alone:
+
+```js
+export function createWordRenderer(helpers) { const {el} = helpers; … }
+```
+
+That is a deliberate difference from `createChartRenderer(SF, helpers)` — an
+unused `SF` parameter would be noise. Match the band, not the previous step.
+
+Verified the same way as step 1, and the checking matters more than it looks:
+978 cases were rendered before and after — every combination of effect ×
+direction × speed × stagger × arc × unit across statement and title slides,
+plus `wrapWords` called directly — and all 978 are identical. `wordPlan` also
+has genuine unit coverage in `tests/word-plan.test.js`, which charts did not.
+
+### Steps 3–5 — the move
 
 Each step is mechanically the same:
 
@@ -360,6 +386,10 @@ document is stale — fix §7 as part of the step that corrects it.
 - **2026-09-20** — Route decided: `src/render/` ES modules, not plain scripts
   (§3.1). `index.html` already has 33 hand-versioned script tags and adding
   five more would have worsened the problem being fixed.
+- **2026-09-20** — Step 2 done. `src/render/words.js`; `js/render.js` 5,795 →
+  **5,491 lines**. Contract unchanged at 16 public names — this band was
+  already public, so the gain was findability, not encapsulation. 978 rendered
+  motion combinations identical before and after.
 - **2026-09-20** — Step 1 done. `src/render/charts.js`; `js/render.js` 7,247 →
   **5,795 lines**. Contract shrank from 31 names to 4. SVG output proven
   byte-identical across all 20 chart kinds before and after.
