@@ -149,9 +149,9 @@ Note `clockFace` (line 1211) and `ring` (1216) sit inside the word band's line
 range but are primitives. They stay in `render.js`. Boundaries are by
 responsibility, not by line number.
 
-### 4.3 The registry
+### 4.3 The registry — not needed after all
 
-[`js/render.js`](../js/render.js) already dispatches through a registry:
+`js/render.js` dispatches through a table:
 
 ```js
 var LAYOUTS = { blank: layoutBlank, stats: layoutStats, /* … 36 entries */ };
@@ -159,28 +159,25 @@ var LAYOUTS = { blank: layoutBlank, stats: layoutStats, /* … 36 entries */ };
 (LAYOUTS[slide.type] || layoutContent)(slide, pad, opts, root);
 ```
 
-This is the seam, and it already exists — the split does not have to invent it.
-One change is needed to make it work across files: `LAYOUTS` is an object
-literal closing over local function declarations, so a layout in another file
-cannot get into it. Replace it with a registry populated by each owner:
+The plan originally called for converting this into a registry
+(`SF.registerLayout(type, fn)`), because on the plain-script route a layout in
+another file could not get into an object literal closing over local function
+declarations.
 
-```js
-SF.registerLayout = function (type, fn) { LAYOUTS[type] = fn; };
-```
+**The ESM route removed that problem, so the conversion was never made.** A
+moved layout comes back out of its factory and is unpacked into a local `var`
+in `js/render.js`, so the literal still closes over a local name exactly as
+before. Step 4 moved five layouts this way and `LAYOUTS` is untouched.
 
-and in `js/render-quiz.js`:
+Keep it that way unless something actually needs it. A registry that nothing
+registers into from outside is indirection for its own sake, and the single
+dispatch point is easier to read than a table assembled from five places.
 
-```js
-SF.registerLayout('quiz', layoutQuiz);
-```
-
-Registration happens at script-evaluation time, so a layout's file must load
-before the first `renderSlide` call, not before `render.js` itself.
-
-**A layout that fails to register does not throw.** `LAYOUTS[slide.type] ||
-layoutContent` silently falls back, so a dropped registration shows up as a
-quiz slide rendering as a bullet list — visibly wrong, but not an error. The
-smoke run in §5 is what catches this; do not rely on the console.
+**The silent-failure warning still stands, whichever form it takes.** A layout
+missing from `LAYOUTS` does not throw: `LAYOUTS[slide.type] || layoutContent`
+falls back, so a quiz slide renders as a bullet list with a clean console. The
+probe's static scan reads both the literal and any `registerLayout` calls, so
+it catches this either way.
 
 ### 4.4 Load order
 
@@ -220,7 +217,7 @@ checkout's server unless you pass `SF_URL`.
 | 1 | `src/render/charts.js` | 1,453 lines | **DONE 2026-09-20.** One export, one outbound dep — the narrowest contract of the six |
 | 2 | `src/render/words.js` | 324 lines | **DONE 2026-09-20.** One coherent cluster; 16 names, all but one already public |
 | 3 | `src/render/live.js` | 920 lines | **DONE 2026-09-20.** Session furniture, not slide layout |
-| 4 | `render-quiz.js` | ~1,100 lines | First user of `SF.registerLayout`; proves the registry across files |
+| 4 | `src/render/quiz.js` | 1,007 lines | **DONE 2026-09-20.** `layoutQuiz` alone was 670 lines |
 | 5 | `render-regions.js` | ~950 lines | ~40 of the 93 SF names live here (§4.1) — the largest contract, moved last once the pattern is settled |
 
 ### Step 0 — the surface probe — **DONE 2026-09-20**
@@ -338,7 +335,36 @@ themes, race track, boss bar, word wall, study cards, feedback rails, question
 cards, the join line in each open/roomy state, the paint functions, and every
 feedback kind — all identical, none threw.
 
-### Steps 4–5 — the move
+### Step 4 — quizzes and games — **DONE 2026-09-20**
+
+`src/render/quiz.js`, 1,007 lines. `js/render.js` **4,591 → 3,596**.
+
+Five layouts and their scaffolding: the question and answer grid, results,
+explain, the game stage, the join screen. `layoutQuiz` alone was 670 lines.
+Twelve names in, seven out.
+
+**No registry was needed** — see §4.3. This was planned as the step that
+introduced `SF.registerLayout`, and on the ESM route it turned out to be a pure
+move like the others.
+
+**The live seam had to move.** `src/render/quiz.js` needs `tint`, which comes
+out of `src/render/live.js`, and the live factory call sat *below* the quiz
+code at line 4522 — so `tint` would have been captured as `undefined`. The live
+seam was relocated above the quiz seam. Its own dependencies (`el`,
+`themedRoot`) are hoisted function declarations, so it runs correctly anywhere.
+
+> **Rule for the remaining step.** A factory call must execute before anything
+> that captures its results into another factory call. Function declarations
+> hoist and are safe; a `var` unpacked from a seam is not. When in doubt, put
+> the seam higher.
+
+Verified: 124 slides rendered before and after — quiz, results, explain, game
+and join, each across timed/untimed, progressive/not, three reveal steps and
+chrome on/off — identical over 110KB of DOM once the randomly minted
+`data-slide-id` is normalised out. That attribute is why a first run showed 120
+of 124 "differing"; it is nondeterminism in the check, not in the renderer.
+
+### Step 5 — the move
 
 Each step is mechanically the same:
 
@@ -414,6 +440,11 @@ document is stale — fix §7 as part of the step that corrects it.
 - **2026-09-20** — Route decided: `src/render/` ES modules, not plain scripts
   (§3.1). `index.html` already has 33 hand-versioned script tags and adding
   five more would have worsened the problem being fixed.
+- **2026-09-20** — Step 4 done. `src/render/quiz.js`; `js/render.js` 4,591 →
+  **3,596 lines**. Two findings: the `SF.registerLayout` conversion this step
+  was meant to introduce is **not needed** on the ESM route (§4.3), and the
+  census method in the appendix was missing bare identifier references, which
+  is how `LETTERS` was overlooked until `tsc` failed.
 - **2026-09-20** — Step 3 done. `src/render/live.js`; `js/render.js` 5,491 →
   **4,591 lines**. 34 names in, 16 out. First non-verbatim line of the split: a
   `global.SF` reference that only a module would reject, found by `tsc`.
@@ -449,9 +480,14 @@ sed -n "$(grep -n 'Object.assign(global.SF' js/render.js | cut -d: -f1),\$p" js/
 ```
 
 **Cross-band dependency surfaces (§4.2).** Build a map of name → definition
-line from the grep above, assign each line to a band, then for every
-`name(` call site compare the caller's band to the callee's. Pairs where they
-differ are the boundary. Rerun this before each step — a band's surface can
-change as earlier steps move code out from under it.
+line from the grep above, assign each line to a band, then compare the band of
+each reference to the band of its definition. Pairs where they differ are the
+boundary. Rerun before each step — a band's surface changes as earlier steps
+move code out from under it.
+
+> **Match bare identifiers, not just `name(`.** The first version of this
+> census looked only for call sites, and so missed `LETTERS` — a constant the
+> quiz band reads and never calls. `tsc` caught it, but only after the code had
+> moved. Constants, regexes and lookup tables are all referenced this way.
 
 **External consumers.** For any name, `grep -rl "SF\.<name>\b" js/ --exclude=render.js`.
