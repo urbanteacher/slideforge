@@ -2275,17 +2275,6 @@
         {
           "type": "content",
           "bullets": [
-            "Worksheets: Canvas by 12:00 on the Friday after the lab.",
-            "Reading: Munzner, Chapter 2, What: Data Abstraction.",
-            "Start during the lab. Ask for help early and leave time to review."
-          ],
-          "notes": "Keep housekeeping under one minute. Distinguish worksheet deadlines from assessment deadlines. Chapter 2 is the assigned reading in the supplied Week 2 materials. Chapters 5 and 6 support today’s channel and design discussion.\nSource: adapted from the supplied Week 2 lecture materials.",
-          "subtitle": "Reading and lab preparation",
-          "title": "This week"
-        },
-        {
-          "type": "content",
-          "bullets": [
             "Distinguish categorical, ordinal and quantitative attributes.",
             "Match a visual channel to a comparison task.",
             "Explain how a chart can distort its data.",
@@ -2310,6 +2299,17 @@
           "notes": "Munzner, Visualization Analysis and Design (2014), Chapter 2. Example: a table of stations has station ID as a key, daily hires as a value and coordinates as spatial information. Domain meaning matters, but abstraction helps us reuse design knowledge across domains.\nSource: adapted from the supplied Week 2 lecture materials.\nShow the full-size reference first. Use Flip to facts for the explanation, then return to the image for discussion.",
           "progressive": false,
           "title": "Reading the data"
+        },
+        {
+          "type": "content",
+          "bullets": [
+            "Worksheets: Canvas by 12:00 on the Friday after the lab.",
+            "Reading: Munzner, Chapter 2, What: Data Abstraction.",
+            "Start during the lab. Ask for help early and leave time to review."
+          ],
+          "notes": "Keep housekeeping under one minute. Distinguish worksheet deadlines from assessment deadlines. Chapter 2 is the assigned reading in the supplied Week 2 materials. Chapters 5 and 6 support today’s channel and design discussion.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "subtitle": "Reading and lab preparation",
+          "title": "This week"
         },
         {
           "type": "quote",
@@ -2348,19 +2348,6 @@
           "title": "Data, encoding and perception"
         },
         {
-          "type": "experiment",
-          "body": "Day\tHires\nMon\t42\nTue\t58\nWed\t47\nThu\t70\nFri\t64",
-          "chartSource": "Synthetic teaching examples, not observed research data.",
-          "experiment": {
-            "preset": "clutter",
-            "prompt": "Which version helps you answer accurately, quickly and comfortably?",
-            "duration": 1600
-          },
-          "notes": "Predict first, then advance one state at a time. Replay change retraces the previous transformation. Ask students to name the changing visual channel and the data that stays fixed.\nCluttered: Heavy gridlines and decorative labels compete with the data.\nRemove decoration: Watch the decorative labels disappear. The values, bar positions and scale have not changed. What still competes for attention?\nClear comparison: Same values and scale. Direct labels and a quiet baseline remain because they support the comparison.",
-          "progressive": false,
-          "title": "Design criteria"
-        },
-        {
           "type": "keywords",
           "bullets": [
             "Effectiveness\tIt conveys the information you intended, accurately.",
@@ -2382,6 +2369,39 @@
           "notes": "The third is the one that changes designs. 'What decision gets made from this' turns a chart of everything into a chart of the thing that matters. Ask the room for their AE1 answer to it.\nSource: adapted from the supplied Week 2 lecture materials.",
           "progressive": true,
           "title": "The design brief"
+        },
+        {
+          "type": "experiment",
+          "body": "Day\tHires\nMon\t42\nTue\t58\nWed\t47\nThu\t70\nFri\t64",
+          "chartSource": "Synthetic teaching examples, not observed research data.",
+          "experiment": {
+            "preset": "clutter",
+            "prompt": "Which version helps you answer accurately, quickly and comfortably?",
+            "duration": 1600
+          },
+          "notes": "Predict first, then advance one state at a time. Replay change retraces the previous transformation. Ask students to name the changing visual channel and the data that stays fixed.\nCluttered: Heavy gridlines and decorative labels compete with the data.\nRemove decoration: Watch the decorative labels disappear. The values, bar positions and scale have not changed. What still competes for attention?\nClear comparison: Same values and scale. Direct labels and a quiet baseline remain because they support the comparison.",
+          "progressive": false,
+          "title": "Design criteria"
+        },
+        {
+          "type": "experiment",
+          "body": "Candidate\tPoll A\tPoll B\tPoll C\n1\t17\t20\t23\n2\t18\t20\t22\n3\t20\t19\t20\n4\t22\t21\t18\n5\t23\t20\t17",
+          "chartSource": "Synthetic classroom examples — not observed research data.",
+          "experiment": {
+            "preset": "polling",
+            "prompt": "Pairs: which encoding best answers “who gained most”, and what is still missing?",
+            "duration": 1600
+          },
+          "feedback": {
+            "kind": "brainstorm",
+            "prompt": "What would you change, and why would it help?",
+            "options": [],
+            "max": 2,
+            "presentAs": "rail"
+          },
+          "notes": "Predict → observe → explain → transfer. Ask for a prediction before revealing the first state. Advance one state at a time; use Replay change to follow the transformation again. Ask: what changed, what stayed fixed, and which task does this help?\nPoll A: Compare candidates 5 and 3. How confident are you?\nPoll B: Which candidates improved? Comparing separate angles requires memory.\nPoll C: Now consider the trend across all three polls.\nSame poll, lengths: Watch each coloured slice become a bar. The Poll C values stay unchanged: only the encoding changes from angle to aligned length.\nAll polls together: Now introduce all three polls; colour identifies the poll. Candidate 1 gains 6 percentage points from A to C. Candidate 2 gains 4. All bars share zero.",
+          "progressive": false,
+          "title": "Your redesign proposal"
         },
         {
           "type": "keywords",
@@ -2443,23 +2463,91 @@
           "title": "The polling challenge"
         },
         {
-          "type": "experiment",
-          "body": "Candidate\tPoll A\tPoll B\tPoll C\n1\t17\t20\t23\n2\t18\t20\t22\n3\t20\t19\t20\n4\t22\t21\t18\n5\t23\t20\t17",
-          "chartSource": "Synthetic classroom examples — not observed research data.",
-          "experiment": {
-            "preset": "polling",
-            "prompt": "Pairs: which encoding best answers “who gained most”, and what is still missing?",
-            "duration": 1600
+          "type": "split",
+          "bullets": [
+            "Let's say that these represent the polling from a local election with five candidates, at three different points A, B and C during the campaign:",
+            "In the first poll, is candidate 5 doing better than candidate 3?",
+            "Who did better between time A and time B, candidate 2 or candidate 4?",
+            "Who has the most momentum in the race?"
+          ],
+          "design": {
+            "imageShare": 65,
+            "mediaGround": "full",
+            "copyStyle": "prose"
           },
-          "feedback": {
-            "kind": "brainstorm",
-            "prompt": "What would you change, and why would it help?",
-            "options": [],
-            "max": 2,
-            "presentAs": "rail"
+          "image": "assets/lesson/ipdv/polling-three-pies.jpg",
+          "imageFit": "contain",
+          "notes": "Shown after the transformation. This is the figure the animated states replace — use it to name the published convention once students have made and tested their own prediction.\n5 min including discussion. Deliberately revisit the opening exercise to assess transfer. A bar chart is reasonable for candidate comparison; a line chart can help track change over A, B and C. Require a stated task, labels and a justification. Do not invent sampling uncertainty absent from the source. Ask what metadata would be needed to assess whether a change is meaningful.",
+          "title": "Your redesign proposal"
+        },
+        {
+          "type": "explore",
+          "bullets": [
+            "Pairs, 3 minutes: choose one comparison.",
+            "Sketch a better visual encoding.",
+            "Explain your choice and one limitation."
+          ],
+          "design": {
+            "imageShare": 65,
+            "mediaGround": "full"
           },
-          "notes": "Predict → observe → explain → transfer. Ask for a prediction before revealing the first state. Advance one state at a time; use Replay change to follow the transformation again. Ask: what changed, what stayed fixed, and which task does this help?\nPoll A: Compare candidates 5 and 3. How confident are you?\nPoll B: Which candidates improved? Comparing separate angles requires memory.\nPoll C: Now consider the trend across all three polls.\nSame poll, lengths: Watch each coloured slice become a bar. The Poll C values stay unchanged: only the encoding changes from angle to aligned length.\nAll polls together: Now introduce all three polls; colour identifies the poll. Candidate 1 gains 6 percentage points from A to C. Candidate 2 gains 4. All bars share zero.",
-          "progressive": false,
+          "exploration": {
+            "before": "",
+            "after": "",
+            "beforeLabel": "Before",
+            "afterLabel": "After",
+            "alt": "Three bar charts — polls A, B and C. Five candidates in each, all drawn on the same scale from 0 to 25.",
+            "spots": [
+              {
+                "x": 50,
+                "y": 8,
+                "zoom": 1.3,
+                "title": "Three polls, the same five candidates",
+                "body": "A, B and C are the same election at three moments. Candidates 1 to 5 keep their colour and their left-to-right position in every panel, so the eye can follow one candidate across time. Poll A: 17, 18, 20, 22, 23. Poll B: 20, 20, 19, 21, 20. Poll C: 23, 22, 20, 18, 17."
+              },
+              {
+                "x": 2.5,
+                "y": 45,
+                "zoom": 3,
+                "title": "One scale, shared by all three",
+                "body": "Every panel runs 0 to 25 from the same zero baseline. That is what the pie charts could not give you: length here is proportional to the count, and lengths in different panels mean the same thing. Tufte’s first principle, doing its work."
+              },
+              {
+                "x": 21.5,
+                "y": 52,
+                "zoom": 2.4,
+                "title": "Poll A — is candidate 5 ahead of candidate 3?",
+                "body": "Yes. Candidate 5 is on 23, candidate 3 on 20 — a three-point lead you can see as a difference in bar length. In the pie you were comparing two angles that did not share an edge, which is why nobody could answer it with confidence."
+              },
+              {
+                "x": 52.6,
+                "y": 52,
+                "zoom": 2.2,
+                "title": "A to B — candidate 2 or candidate 4?",
+                "body": "Candidate 2 did better. They go 18 to 20, a two-point gain, while candidate 4 goes 22 to 21 and slips by one. Reading the same slot in two panels makes this a comparison of position rather than an act of memory."
+              },
+              {
+                "x": 87,
+                "y": 52,
+                "zoom": 2.2,
+                "title": "Poll C — who has the momentum?",
+                "body": "Candidate 1. Across the three polls they go 17, 20, 23 — six points gained — while candidate 5 runs 23, 20, 17 the other way. Poll C is the mirror image of Poll A, and the reversal is visible as a shape rather than recalled from numbers."
+              }
+            ],
+            "model": "linear",
+            "min": 0,
+            "max": 10,
+            "initial": 0,
+            "a": 2,
+            "b": 0,
+            "inputLabel": "Input",
+            "outputLabel": "Output",
+            "prediction": false,
+            "prompt": "What pattern do you predict?"
+          },
+          "image": "assets/lesson/ipdv/polling-three-bars-figure.jpg",
+          "imageFit": "contain",
+          "notes": "Shown after the transformation. This is the figure the animated states replace — use it to name the published convention once students have made and tested their own prediction.\n5 min including discussion. Deliberately revisit the opening exercise to assess transfer. A bar chart is reasonable for candidate comparison; a line chart can help track change over A, B and C. Require a stated task, labels and a justification. Do not invent sampling uncertainty absent from the source. Ask what metadata would be needed to assess whether a change is meaningful.\n\nPoll data behind the figure (same numbers as the pies): candidate 1 — 17, 20, 23; candidate 2 — 18, 20, 22; candidate 3 — 20, 19, 20; candidate 4 — 22, 21, 18; candidate 5 — 23, 20, 17. The numbered hotspots carry the labelling and the answers; press Whole image to come back out.",
           "title": "Your redesign proposal"
         },
         {
@@ -2491,11 +2579,6 @@
         {
           "type": "keyfact",
           "body": "1.0",
-          "bullets": [
-            "",
-            "",
-            ""
-          ],
           "notes": "Use relative changes with the same reference value. Example: data rises from 100 to 110, a 10% increase. A graphic rising from 10 mm to 30 mm shows a 200% increase. Lie factor = 200/10 = 20. A value near 1 preserves the relative effect. The supplied historical fuel-economy example uses 783/53 ≈ 14.8. A zero baseline matters for bar length. A line chart need not start at zero, but its scale and context must remain clear.\nSource: adapted from the supplied Week 2 lecture materials.",
           "subtitle": "Relative change in the graphic ÷ relative change in the data",
           "title": "The lie factor"
@@ -2541,6 +2624,20 @@
           "progressive": false,
           "subtitle": "The ✗ / ✓ pair the lecture uses for the baseline rule",
           "title": "Truncated axis, and the same data from zero"
+        },
+        {
+          "type": "compare",
+          "body": "Explain which change would most improve the audience’s understanding.",
+          "bullets": [
+            "Meaning\tQuestion, audience, measure and units",
+            "Comparison\tAppropriate channels and comparable scales",
+            "Trust\tContext, source and uncertainty",
+            "Access\tLabels, contrast and cues beyond colour"
+          ],
+          "notes": "Use this checklist in the pair activity. Accept multiple defensible changes, but require a mechanism: which perceptual problem does the change address?\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "subtitle": "Check\tEvidence to look for",
+          "title": "A chart critique checklist"
         },
         {
           "type": "game",
@@ -2612,21 +2709,6 @@
           "title": "Cumulative and quarterly sales"
         },
         {
-          "type": "experiment",
-          "body": "Day\tHires\nMon\t42\nTue\t58\nWed\t47\nThu\t70\nFri\t64",
-          "chartSource": "Synthetic teaching examples, not observed research data.",
-          "experiment": {
-            "preset": "clutter",
-            "prompt": "What gets your attention before you can compare the values?",
-            "duration": 1600
-          },
-          "imageFit": "contain",
-          "notes": "Predict first, then advance one state at a time. Replay change retraces the previous transformation. Ask students to name the changing visual channel and the data that stays fixed.\nCluttered: Heavy gridlines and decorative labels compete with the data.\nRemove decoration: Watch the decorative labels disappear. The values, bar positions and scale have not changed. What still competes for attention?\nClear comparison: Same values and scale. Direct labels and a quiet baseline remain because they support the comparison.",
-          "progressive": false,
-          "subtitle": "Maximise the data-ink ratio",
-          "title": "Useful ink"
-        },
-        {
           "type": "split",
           "bullets": [
             "Keep marks that explain the data.",
@@ -2636,12 +2718,58 @@
           "design": {
             "mediaGround": "full"
           },
+          "formatting": {
+            "title": {
+              "text": "Design Principles and Rules of Thumb ",
+              "marks": []
+            }
+          },
           "image": "assets/lesson/ipdv/chart-junk-data-ink.png",
           "imageFit": "contain",
           "notes": "Shown after the transformation. This is the figure the animated states replace — use it to name the published convention once students have made and tested their own prediction.\nTufte’s data-ink principle is a design heuristic. A bare chart is not automatically better. Ask which elements in the source examples help interpretation and which obstruct it. Distinguish memorability from numerical accuracy.\nSource: adapted from the supplied Week 2 lecture materials.",
           "progressive": true,
           "subtitle": "Maximise the data-ink ratio",
-          "title": "Useful ink"
+          "title": "Design Principles and Rules of Thumb "
+        },
+        {
+          "type": "content",
+          "bullets": [
+            "7±2 Rule: Limit distinct categories to 5-9 for easy distinction",
+            "Get It Right in Black and White: Design should work without colour first",
+            "Overview First, Zoom and Filter, Details on Demand (Shneiderman's Mantra)",
+            "Start with Standard Chart Types: Bar, line, scatter plots are familiar"
+          ],
+          "design": {
+            "mediaGround": "full"
+          },
+          "formatting": {
+            "title": {
+              "text": "Design Principles and Rules of Thumb ",
+              "marks": []
+            },
+            "bullets.0": {
+              "text": "7±2 Rule: Limit distinct categories to 5-9 for easy distinction",
+              "marks": []
+            },
+            "bullets.1": {
+              "text": "Get It Right in Black and White: Design should work without colour first",
+              "marks": []
+            },
+            "bullets.2": {
+              "text": "Overview First, Zoom and Filter, Details on Demand (Shneiderman's Mantra)",
+              "marks": []
+            },
+            "bullets.3": {
+              "text": "Start with Standard Chart Types: Bar, line, scatter plots are familiar",
+              "marks": []
+            }
+          },
+          "image": "assets/lesson/ipdv/chart-junk-data-ink.png",
+          "imageFit": "contain",
+          "notes": "Shown after the transformation. This is the figure the animated states replace — use it to name the published convention once students have made and tested their own prediction.\nTufte’s data-ink principle is a design heuristic. A bare chart is not automatically better. Ask which elements in the source examples help interpretation and which obstruct it. Distinguish memorability from numerical accuracy.\nSource: adapted from the supplied Week 2 lecture materials.",
+          "progressive": true,
+          "subtitle": "Maximise the data-ink ratio",
+          "title": "Design Principles and Rules of Thumb "
         },
         {
           "type": "image",
@@ -3175,20 +3303,6 @@
           "notes": "Predict first, then advance one state at a time. Replay change retraces the previous transformation. Ask students to name the changing visual channel and the data that stays fixed.\nColour and labels: Every group has a direct label as well as a colour.\nWithout colour: Position and labels preserve meaning in greyscale. This demonstration is not a colour-vision-deficiency simulation.",
           "progressive": false,
           "title": "Colour needs a second cue"
-        },
-        {
-          "type": "compare",
-          "body": "Explain which change would most improve the audience’s understanding.",
-          "bullets": [
-            "Meaning\tQuestion, audience, measure and units",
-            "Comparison\tAppropriate channels and comparable scales",
-            "Trust\tContext, source and uncertainty",
-            "Access\tLabels, contrast and cues beyond colour"
-          ],
-          "notes": "Use this checklist in the pair activity. Accept multiple defensible changes, but require a mechanism: which perceptual problem does the change address?\nSource: adapted from the supplied Week 2 lecture materials.",
-          "progressive": true,
-          "subtitle": "Check\tEvidence to look for",
-          "title": "A chart critique checklist"
         },
         {
           "type": "game",
