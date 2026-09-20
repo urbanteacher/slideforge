@@ -20,7 +20,8 @@
     "typecheck:probe": "node tools/type-probe.mjs",
     "audit:stacks": "node tools/stack-audit.mjs",
     "audit:art-order": "node tools/art-order-probe.mjs",
-    "audit:authoring": "node tools/authoring-probe.mjs"
+    "audit:authoring": "node tools/authoring-probe.mjs",
+    "audit:render-surface": "node tools/render-surface-probe.mjs"
   },
   "devDependencies": {
     "esbuild": "0.28.2",
