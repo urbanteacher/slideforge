@@ -18,23 +18,34 @@ It is also the fastest-growing file in the project: **3,233 lines in September
 2025, 7,215 now** — +123% in a year, while the split was deferred waiting on a
 build decision that §3 shows is not actually needed.
 
-## 2. The target
+## 2. The result
 
-| Location | Responsibility |
-| --- | --- |
-| `js/render.js` | Primitives (`el`, `themedRoot`, `rich`, `ring`, `clockFace`), the ~25 static layouts, the `LAYOUTS` registry, `renderSlide`, `fit` |
-| `js/render-charts.js` | 19 chart builders, `svgEl`, `chartKey`, `chartTable`, `chartSvgFor` |
-| `js/render-words.js` | Word and letter animation: the `WORD_*` tables, `wordPlan`, `wrapWords`, `statementBand` |
-| `js/render-regions.js` | The lattice, block keys, region application, stacking and paint order |
-| `js/render-live.js` | Score rails, race track, boss bar, feedback rails, join line |
-| `js/render-quiz.js` | `layoutQuiz`, `layoutResults`, `layoutExplain`, `layoutGame`, `layoutJoin` |
+Done, 2026-09-20. `js/render.js` went from **7,215 lines to 2,581** — a 64%
+reduction — across six commits, each one verified before the next began.
 
-Expected result: no file over ~2,100 lines, and `render.js` becomes a file
-about rendering a slide rather than a file about everything.
+| Location | Responsibility | Lines |
+| --- | --- | --- |
+| `js/render.js` | Primitives, the ~25 static layouts, the `LAYOUTS` table, `renderSlide`, `fit`, header/footer chrome, slide navigation | 2,581 |
+| `src/render/lattice.js` | The lattice: block keys, geometry, region placement, hidden and free blocks, restacking, paint order, occlusion, fit | 915 |
+| `src/render/charts.js` | 19 chart builders and the dispatcher | 1,453 |
+| `src/render/quiz.js` | Quiz, results, explain, game and join layouts | 1,007 |
+| `src/render/live.js` | Score rails, race track, boss bar, feedback rails, join line | 920 |
+| `src/render/words.js` | Per-word and per-letter motion | 324 |
+| `src/render/art.js` | Placed pictures and theme-shape poses | 113 |
 
-Band boundaries are stated as line ranges in §5, but **those line numbers are
-from the pre-split file and go stale the moment the first commit lands.** Use
-the method in the appendix to re-derive them, never the numbers alone.
+Nothing in `index.html` changed but two `?v=` numbers: every module went
+through `src/model.js` and the existing esbuild bundle, so the page still loads
+the same 33 script tags it did before.
+
+### What is left in `js/render.js`
+
+Primitives (`el`, `themedRoot`, `rich`, `ring`, `clockFace`, `asStep`), the
+~25 static layouts, the `LAYOUTS` table and `renderSlide`, `fit` and
+`letterbox`, header/footer chrome, and slide navigation.
+
+**If it grows again, the next seam is the static layouts** — roughly 25 of
+them, already uniform in shape `(slide, pad)`, already dispatched through one
+table. That is the same clean seam charts had, and the same method applies.
 
 ## 3. What this does *not* require
 
@@ -219,7 +230,7 @@ checkout's server unless you pass `SF_URL`.
 | 3 | `src/render/live.js` | 920 lines | **DONE 2026-09-20.** Session furniture, not slide layout |
 | 4 | `src/render/quiz.js` | 1,007 lines | **DONE 2026-09-20.** `layoutQuiz` alone was 670 lines |
 | 5a | `src/render/art.js` | 113 lines | **DONE 2026-09-20.** Placed pictures and theme poses; 7 SF names |
-| 5b | `src/render/regions.js`* | ~1,000 lines | **BLOCKED** — the other agent is editing inside this band |
+| 5b | `src/render/lattice.js` | 915 lines | **DONE 2026-09-20.** 34 SF names — the largest contract of the split |
 
 ### Step 0 — the surface probe — **DONE 2026-09-20**
 
@@ -397,92 +408,107 @@ Identical throughout.
 regions — header and footer slots (§3.2). The lattice/block regions want a
 different filename; `lattice.js` is the honest one.
 
-### Step 5b — regions — **NOT STARTED**
+### Step 5b — the lattice — **DONE 2026-09-20**
 
-**Blocked on 2026-09-20, deliberately.** A second agent works this same tree
-(see the parallel-agent notes), and its uncommitted edits to `js/render.js` sit
-at lines 574–840 — `FREE_KINDS` and `renderFreeBlocks`, squarely inside this
-band. Moving it would relocate the exact code being edited into another file
-and leave those working-tree changes pointing at lines that no longer exist.
-The other four steps were committable around that work because their bands were
-nowhere near it. This one is not. **Wait until that work lands.**
+`src/render/lattice.js`, 915 lines. `js/render.js` **3,488 → 2,581**. The last
+of the split.
 
-**It is also not one band, which the earlier plan got wrong.** A census of the
-file before 5a was taken out:
+Block keys and lattice geometry, region overlap and placement, hidden and free
+blocks and the kinds they come in, restacking, paint order and occlusion, and
+whether what a slot holds actually fits. **34 SF names** — the largest contract
+of the six — and seven locals, of which only `LATTICE` is read back, by the
+header and footer that sit on the same grid.
 
-| Lines | What | Verdict |
-| --- | --- | --- |
-| 20–44 | `themedRoot`, `el` | primitives — stay |
-| 45–160 | placed art | **done — step 5a** |
-| 161–174 | `LATTICE`, `anchorRegion` | with regions |
-| 175–266 | `headerFooterConfig`, `renderHeaderFooter` | chrome, not regions — stay |
-| 267–944 | block keys, lattice geometry, placement, hidden blocks, `applyRegions`, `FREE_KINDS`, free blocks, restacking | the real regions module |
-| 945–1152 | paint order, occlusion, `linesFor`/`latticeFit` | with regions |
-| 1153–1197 | `slideJumpTarget`, `jumpToSlide` | navigation, unrelated — stay |
+It installs rather than returns, for the same reason `art.js` does: the body is
+34 `SF.x = …` statements.
 
-So step 5 was really **two** modules. Placed art went first (5a) because it is
-7 names against roughly 30 and sits furthest from the other agent's work. What
-remains for 5b is the lattice, block keys, placement, hidden and free blocks,
-`applyRegions`, restacking, paint order, occlusion and `latticeFit`.
+**The band was not contiguous**, which the plan had not noticed. Chrome
+(`headerFooterConfig`, `renderHeaderFooter`) sits in the middle of it and slide
+navigation (`slideJumpTarget`, `jumpToSlide`) just after; neither belongs to
+the lattice, so two ranges were lifted and those two stayed.
 
+**`IMAGE_FRAMES` had to move up.** A free block can hold a picture, so the band
+reads image frames — but the constant was declared 1,700 lines *below* the
+seam, where it would have been captured as `undefined`. The image layouts that
+stay behind use it too, so it could not simply travel with the band. Lifting
+the one-line table to the top of the file was the smallest fix. This is the
+mirror of the `tint` problem in step 4: there the seam was too low, here the
+dependency was.
 
+Verified: 148 cases, 40KB — every anchor combination, overlap and placement
+across occupancy and fixed sets, block-key round trips, the hidden/free block
+bookkeeping including the mutating operations, and whole slides across six
+layouts with and without regions, blocks and placed art, plus the measurement
+paths run against nodes actually in the document. Identical, nothing thrown.
 
-Each step is mechanically the same:
+A first pass reported four cases throwing on both sides — `occupied` and
+`fixed` are arrays and I had passed objects. Identical-but-throwing is not
+coverage; the arguments were corrected and the cases re-run.
 
-1. Create the new file with the same IIFE header and `'use strict'`.
-2. Cut the band's functions across verbatim. **Verbatim** — no tidying, no
-   renaming, no "while I'm here". A move commit that also changes behaviour is
-   unreviewable and unbisectable.
-3. Add the file's own `Object.assign(global.SF, {…})` for the names it owns,
-   and delete those names from `render.js`'s assign.
-4. For internal-only names crossing the new boundary (§4.2), export them on
-   `SF` too and note them in §7 as surface that was widened deliberately.
-5. Add the `<script>` tag; bump `render.js`'s `?v=`.
-6. Run the three verification commands plus the probe. Commit.
+### The incident, and what it means for a shared tree
 
-Do not batch two bands into one commit, however tempting steps 2 and 3 look
-together.
+**HEAD was broken for one commit, and it was this split that broke it.**
+
+`ccf0e3e` was the other agent's commit. It took `js/render.js` — which at that
+moment held *my* uncommitted lattice extraction, 889 lines deleted — without
+`src/render/lattice.js`, which was still untracked, and without the
+`src/model.js` wiring. The result was a renderer calling
+`SF.installLatticeRenderer` and nothing defining it: every page load threw
+before a slide was drawn. `fcb181f` repaired it by adding the three files.
+
+The `--only` discipline in the parallel-agent notes protects *your* commit from
+*their* working tree. **It does nothing in the other direction.** An untracked
+file is invisible to their `git add`; a half-applied refactor in a tracked file
+is not. So:
+
+> Commit a new module **before** the edit that calls it, or in the same commit
+> — never leave a seam pointing at an untracked file. The window between the
+> two is a window where anyone else's commit breaks the build.
+
+The equivalence check also had to be re-based. Comparing the working tree
+against HEAD would have measured their `FREE_KINDS` change as if it were mine;
+the comparison was done `d9092f6` against `d9092f6`-plus-the-move instead, so
+only my change was in it. Their work rode into `lattice.js` untouched and their
+own tests pass against it there.
 
 ### Where the split stands
 
 | | |
 | --- | --- |
-| `js/render.js` | **3,488 lines**, from 7,215 when this began |
-| Steps done | 0–4, and 5a |
-| Remaining | step 5b only — blocked, see above |
+| `js/render.js` | **2,581 lines**, from 7,215 when this began — a 64% reduction |
+| Steps done | **all of them** |
+| Remaining | nothing — see "What is left in js/render.js" |
 | Guard | `npm run audit:render-surface` — 93 names, 36 layouts, green |
 
-## 6. Resuming after a failure
+## 6. Resuming, or checking it still holds
 
-If you are picking this up mid-way and do not know how far it got:
+The split is finished, so this section is now about keeping it that way rather
+than picking it up part-done.
 
 ```bash
-ls js/render-*.js                               # which bands have moved
-wc -l js/render.js                              # 7215 = nothing started
-git log --oneline -15 -- js/render.js index.html  # what landed
-grep -n "registerLayout" js/render.js            # registry converted yet?
-npm run audit:render-surface                     # does step 0 exist, is it green
-git status                                       # a half-finished step 
+npm run audit:render-surface     # 93 SF names, 36 layouts — the contract
+npm test                         # build:check, tsc, 442 tests
+wc -l js/render.js src/render/*.js
 ```
 
-Read the result like this:
+The probe is the thing to run after any change to the renderer. It fails in
+both directions, so it catches a name going missing *and* a new one being added
+— which is how a module quietly grows a public surface again.
 
-- **`render.js` is 7,215 lines and no `render-*.js` exist** — nothing has
-  started. Begin at step 0.
-- **Some `render-*.js` exist, working tree clean, probe green** — the last
-  listed step finished. Continue with the next one in the §5 table.
-- **Working tree dirty** — a step was interrupted. Do not try to finish it from
-  the diff. `git checkout -- .` back to the last commit and redo that step from
-  the top; each step is small enough that restarting is cheaper than
-  reconstructing intent.
-- **Probe red on a clean tree** — a step was committed broken. Revert that
-  commit rather than patching forward; the invariant in §4.1 is the thing being
-  protected and a green baseline matters more than progress.
-- **Probe green but a slide renders as bullets** — a layout lost its
-  registration. See the warning in §4.3.
+**If you add a renderer module,** follow the shape of the six that exist:
 
-If `docs/render-split.md` and the code disagree, the code is right and this
-document is stale — fix §7 as part of the step that corrects it.
+- `create*(SF, helpers)` returns its names; `js/render.js` unpacks them.
+- `install*(SF, helpers)` writes onto `SF` itself. Use it only when the band's
+  body already *is* `SF.x = …` assignments, so the move stays verbatim.
+- Import it in `src/model.js` and re-export it. No script tag.
+- Commit the module **with or before** the seam that calls it — see the
+  incident section.
+- Re-record the probe baseline with `--update` only for a deliberate surface
+  change, and log it in §7.
+
+**If a slide renders as a bullet list**, a layout lost its registration.
+`LAYOUTS[slide.type] || layoutContent` falls back silently — nothing throws and
+the console is clean. The probe's static scan is what catches it.
 
 ## 7. Change log
 
@@ -514,10 +540,13 @@ document is stale — fix §7 as part of the step that corrects it.
   **3,488 lines**. Introduced the `install*` factory shape for a band whose
   body is `SF.x =` assignments, so the move stayed verbatim. Census method
   corrected again: strip comments before matching identifiers.
-- **2026-09-20** — Step 5b **not started**, blocked on the other agent's
-  uncommitted edits inside the band. Also re-censused: it is two modules, not
-  one, and two things in the line range (header/footer chrome, slide
-  navigation) do not belong in either.
+- **2026-09-20** — Step 5b done, and the split is complete. `src/render/lattice.js`;
+  `js/render.js` 3,488 → **2,581 lines**, 7,215 at the start. The band was not
+  contiguous and `IMAGE_FRAMES` had to be lifted above the seam.
+- **2026-09-20** — **HEAD was broken for one commit** by this work: another
+  agent committed `js/render.js` mid-extraction while the module it called was
+  still untracked. Repaired in `fcb181f`. The rule drawn from it is in the
+  incident section — never leave a seam pointing at an untracked file.
 - **2026-09-20** — Step 4 done. `src/render/quiz.js`; `js/render.js` 4,591 →
   **3,596 lines**. Two findings: the `SF.registerLayout` conversion this step
   was meant to introduce is **not needed** on the ESM route (§4.3), and the
