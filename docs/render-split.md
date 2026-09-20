@@ -218,7 +218,8 @@ checkout's server unless you pass `SF_URL`.
 | 2 | `src/render/words.js` | 324 lines | **DONE 2026-09-20.** One coherent cluster; 16 names, all but one already public |
 | 3 | `src/render/live.js` | 920 lines | **DONE 2026-09-20.** Session furniture, not slide layout |
 | 4 | `src/render/quiz.js` | 1,007 lines | **DONE 2026-09-20.** `layoutQuiz` alone was 670 lines |
-| 5 | `src/render/…` | ~1,100 lines | **NOT STARTED — blocked, see below.** ~40 of the 93 SF names; and it is not one band |
+| 5a | `src/render/art.js` | 113 lines | **DONE 2026-09-20.** Placed pictures and theme poses; 7 SF names |
+| 5b | `src/render/regions.js`* | ~1,000 lines | **BLOCKED** — the other agent is editing inside this band |
 
 ### Step 0 — the surface probe — **DONE 2026-09-20**
 
@@ -364,7 +365,39 @@ chrome on/off — identical over 110KB of DOM once the randomly minted
 `data-slide-id` is normalised out. That attribute is why a first run showed 120
 of 124 "differing"; it is nondeterminism in the check, not in the renderer.
 
-### Step 5 — regions — **NOT STARTED**
+### Step 5a — placed art — **DONE 2026-09-20**
+
+`src/render/art.js`, 113 lines. `js/render.js` **3,562 → 3,488**. Seven `SF`
+names: `artKeyOf`, `applyArtPoses`, `artOrder`, `artPlacement`, `artBlockKey`,
+`artBlockId`, `placedArtLayers`.
+
+Small, but it establishes a second factory shape, and the naming carries it:
+
+> **`create*` is pure** — it returns its names and `js/render.js` unpacks them.
+> **`install*` writes onto `SF` itself.** Read the prefix as the contract.
+
+This band is the only one so far whose body *is* `SF.x = …` assignments — seven
+of them and one local. A `create*` factory would have meant rewriting every one
+of those statements into declarations and a return, which would have been the
+first non-mechanical edit in a refactor whose whole discipline is that code
+moves unchanged. `installArtRenderer(SF, {el})` keeps it verbatim.
+
+The cost is honest: those seven `SF.x =` lines are no longer greppable in
+`js/render.js`, and grepping `^  SF\.` there is how this document's first
+census found them (§4.1). The seam comment names the file so the trail does not
+go cold.
+
+Verified: 102 cases before and after, 41KB — every branch of the five pure
+functions including null and malformed input, `artKeyOf` against both a div and
+the SVG `className` case it guards, layers across side and placement, poses
+applied to every theme that has art, and whole slides across every theme.
+Identical throughout.
+
+**Note for step 5b: `src/render/regions.js` already exists** and is *chrome*
+regions — header and footer slots (§3.2). The lattice/block regions want a
+different filename; `lattice.js` is the honest one.
+
+### Step 5b — regions — **NOT STARTED**
 
 **Blocked on 2026-09-20, deliberately.** A second agent works this same tree
 (see the parallel-agent notes), and its uncommitted edits to `js/render.js` sit
@@ -375,24 +408,22 @@ The other four steps were committable around that work because their bands were
 nowhere near it. This one is not. **Wait until that work lands.**
 
 **It is also not one band, which the earlier plan got wrong.** A census of the
-current head of the file:
+file before 5a was taken out:
 
 | Lines | What | Verdict |
 | --- | --- | --- |
 | 20–44 | `themedRoot`, `el` | primitives — stay |
-| 45–160 | placed art: `artKeyOf`, `applyArtPoses`, `artOrder`, `artPlacement`, `artBlockKey`/`Id`, `placedArtLayers` | own module, 7 SF names |
+| 45–160 | placed art | **done — step 5a** |
 | 161–174 | `LATTICE`, `anchorRegion` | with regions |
 | 175–266 | `headerFooterConfig`, `renderHeaderFooter` | chrome, not regions — stay |
 | 267–944 | block keys, lattice geometry, placement, hidden blocks, `applyRegions`, `FREE_KINDS`, free blocks, restacking | the real regions module |
 | 945–1152 | paint order, occlusion, `linesFor`/`latticeFit` | with regions |
 | 1153–1197 | `slideJumpTarget`, `jumpToSlide` | navigation, unrelated — stay |
 
-So step 5 is really **two** modules — placed art, and regions/lattice/blocks —
-with header/footer chrome and slide navigation staying put. Splitting it that
-way also keeps each commit under the size of the ones already done.
-
-Do the placed-art module first: 7 names against roughly 30, and it is the part
-furthest from the other agent's work.
+So step 5 was really **two** modules. Placed art went first (5a) because it is
+7 names against roughly 30 and sits furthest from the other agent's work. What
+remains for 5b is the lattice, block keys, placement, hidden and free blocks,
+`applyRegions`, restacking, paint order, occlusion and `latticeFit`.
 
 
 
@@ -416,9 +447,9 @@ together.
 
 | | |
 | --- | --- |
-| `js/render.js` | **3,596 lines**, from 7,215 when this began |
-| Steps done | 0–4 of 6 |
-| Remaining | step 5, blocked — see above |
+| `js/render.js` | **3,488 lines**, from 7,215 when this began |
+| Steps done | 0–4, and 5a |
+| Remaining | step 5b only — blocked, see above |
 | Guard | `npm run audit:render-surface` — 93 names, 36 layouts, green |
 
 ## 6. Resuming after a failure
@@ -479,7 +510,11 @@ document is stale — fix §7 as part of the step that corrects it.
 - **2026-09-20** — Route decided: `src/render/` ES modules, not plain scripts
   (§3.1). `index.html` already has 33 hand-versioned script tags and adding
   five more would have worsened the problem being fixed.
-- **2026-09-20** — Step 5 **not started**, blocked on the other agent's
+- **2026-09-20** — Step 5a done. `src/render/art.js`; `js/render.js` 3,562 →
+  **3,488 lines**. Introduced the `install*` factory shape for a band whose
+  body is `SF.x =` assignments, so the move stayed verbatim. Census method
+  corrected again: strip comments before matching identifiers.
+- **2026-09-20** — Step 5b **not started**, blocked on the other agent's
   uncommitted edits inside the band. Also re-censused: it is two modules, not
   one, and two things in the line range (header/footer chrome, slide
   navigation) do not belong in either.
@@ -527,6 +562,10 @@ line from the grep above, assign each line to a band, then compare the band of
 each reference to the band of its definition. Pairs where they differ are the
 boundary. Rerun before each step — a band's surface changes as earlier steps
 move code out from under it.
+
+> **Strip comments first.** The corrected census reported the art band
+> depending on `words`; the only occurrence was the word "words" in a prose
+> comment. Match code, not commentary.
 
 > **Match bare identifiers, not just `name(`.** The first version of this
 > census looked only for call sites, and so missed `LETTERS` — a constant the

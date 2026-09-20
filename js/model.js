@@ -4066,6 +4066,77 @@
     return { layoutExplain, layoutGame, layoutJoin, layoutQuiz, layoutResults, quizPresent, sampleJoinInfo };
   }
 
+  // src/render/art.js
+  function installArtRenderer(SF, helpers) {
+    const { el } = helpers;
+    function artKeyOf(node, i) {
+      var raw = node.className;
+      if (raw && typeof raw === "object" && "baseVal" in raw) raw = raw.baseVal;
+      var cls = String(raw || "").split(/\s+/).filter(Boolean)[0];
+      return cls || "art-" + i;
+    }
+    SF.artKeyOf = artKeyOf;
+    SF.applyArtPoses = function(layer, poses) {
+      if (!layer) return;
+      Array.prototype.forEach.call(layer.children, function(node, i) {
+        var key = artKeyOf(node, i);
+        node.setAttribute("data-art-key", key);
+        var pose = poses && poses[key];
+        if (!pose) return;
+        if (pose.x != null && pose.y != null) {
+          node.style.left = pose.x + "px";
+          node.style.top = pose.y + "px";
+          node.style.right = "auto";
+          node.style.bottom = "auto";
+        }
+        if (pose.scale != null) {
+          node.style.transform = "scale(" + pose.scale + ")";
+          node.style.transformOrigin = "top left";
+        }
+        var side = SF.artOrder(pose, "back");
+        node.setAttribute("data-art-order", side);
+        if (pose.hidden) node.style.display = "none";
+      });
+    };
+    SF.artOrder = function(item, fallback) {
+      return item && item.order === "back" ? "back" : item && item.order === "front" ? "front" : fallback;
+    };
+    SF.artPlacement = function(pic) {
+      return pic && pic.place === "lattice" ? "lattice" : "free";
+    };
+    SF.artBlockKey = function(id) {
+      return "picture." + id;
+    };
+    SF.artBlockId = function(key) {
+      var m = /^picture\.(.+)$/.exec(String(key || ""));
+      return m ? m[1] : null;
+    };
+    SF.placedArtLayers = function(pictures) {
+      var list = Array.isArray(pictures) ? pictures.filter(function(p) {
+        return p && p.src && SF.artPlacement(p) === "free";
+      }) : [];
+      var layers = {};
+      list.forEach(function(pic, i) {
+        var side = SF.artOrder(pic, "front");
+        var layer = layers[side] || (layers[side] = el("div", "slide-art slide-art-" + side));
+        layer.setAttribute("data-art-order", side);
+        var img = el("img", "slide-art-img");
+        img.src = pic.src;
+        img.alt = String(pic.alt || "");
+        img.setAttribute("data-art-pic", String(pic.id == null ? i : pic.id));
+        img.setAttribute("data-art-order", side);
+        if (pic.hidden) img.style.display = "none";
+        img.style.left = (pic.x || 0) + "px";
+        img.style.top = (pic.y || 0) + "px";
+        if (pic.w) img.style.width = pic.w + "px";
+        layer.appendChild(img);
+      });
+      return ["back", "front"].map(function(side) {
+        return layers[side];
+      }).filter(Boolean);
+    };
+  }
+
   // src/render/layout-slots.js
   var region = (col, row, cols, rows2, extra = {}) => ({ col, row, cols, rows: rows2, ...extra });
   var clone = (value) => Object.fromEntries(Object.entries(value || {}).map(([key, value2]) => [key, { ...value2 }]));
@@ -13651,6 +13722,7 @@
     createWordRenderer,
     createLiveRenderer,
     createQuizRenderer,
+    installArtRenderer,
     bindCanvasRegions,
     declareBodyRegion,
     measureBodyRegion,
