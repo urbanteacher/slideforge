@@ -382,3 +382,32 @@ test('Saved lists checks on the parent lesson only', () => {
   const other = b.slides.find((s) => s.type === 'game');
   if (other) assert.ok(!ids.includes(other.gameId), 'another lesson’s check is not Saved here');
 });
+
+/* Teacher notes are read off a screen mid-lesson, and they are written in
+   paragraphs — PURPOSE, THE FRAME, LIKELY RESPONSES, TONE, SEND, EXTENSION,
+   SOURCE. The five AI Awareness Day 2027 packs had those breaks written as
+   "\\n" in the source, which is a backslash and an n rather than a line
+   break, so every one of them arrived as a single wall of text with 57
+   visible \n between the sections. Nothing failed: the notes were present,
+   the deck built, the tests passed, and the only way to find it was to read
+   what a teacher would read. presenter.html sets white-space: pre-wrap on
+   .notes, so a real break lands as a break and this stays worth holding. */
+test('teacher notes break into paragraphs rather than showing their escapes', () => {
+  const SF = load();
+  const offenders = [];
+  let withBreaks = 0;
+  SF.LESSONS.forEach((lesson) => {
+    const deck = SF.buildLesson(lesson.key);
+    deck.slides.forEach((slide, i) => {
+      const notes = String(slide.notes || '');
+      if (!notes) return;
+      const literal = (notes.match(/\\n/g) || []).length;
+      if (literal) offenders.push(lesson.key + ' slide ' + (i + 1) + ': ' + literal + ' literal \\n');
+      if (/\n/.test(notes)) withBreaks++;
+    });
+  });
+  assert.deepEqual(offenders, [], 'notes must carry real line breaks:\n  ' + offenders.join('\n  '));
+  /* A floor, so this cannot start passing because the notes went away. */
+  assert.ok(withBreaks > 100,
+    'the sweep must actually find multi-paragraph notes, got ' + withBreaks);
+});
