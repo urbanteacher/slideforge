@@ -229,9 +229,25 @@
     function up() {
       cleanup();
       if (slide() !== s || !moved) return;
-      map[key] = landed;
+      /* The same rule as a move: this block gets the size asked for, and
+         whatever it grows over is pushed to the nearest free place. Stopping
+         at the neighbour's edge was tried first and made the canvas unusable —
+         building a layout means growing one block through where another
+         currently sits. */
+      var settled = settle(key, landed);
+      if (!settled) {
+        if (SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
+        SF.toast && SF.toast('No room to grow it that far.');
+        return;
+      }
+      var shoved = Object.keys(settled).filter(function (k) {
+        return k !== key && map[k] && (map[k].col !== settled[k].col || map[k].row !== settled[k].row);
+      }).length;
+      applySettled(map, settled);
       commit(true);
       afterPaint();
+      if (shoved) SF.toast && SF.toast(shoved === 1 ? 'Resized. The item in the way shifted over.'
+        : 'Resized. ' + shoved + ' items shifted over.');
     }
     document.addEventListener('pointermove', move);
     document.addEventListener('pointerup', up);
@@ -311,9 +327,23 @@
       cleanup();
       if (slide() !== s || (!arranging && !freeItem)) return;
       if (!moved) return;
-      map[key] = landed;
+      /* Where it was dropped, or the nearest free place if that was on top of
+         something. Two blocks in one cell is not a smaller version of what was
+         asked for — it is unreadable, and nothing downstream reports it. */
+      var settled = settle(key, landed);
+      if (!settled) {
+        if (SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
+        SF.toast && SF.toast('No room there — something that cannot move is in the way.');
+        return;
+      }
+      var shoved = Object.keys(settled).filter(function (k) {
+        return k !== key && map[k] && (map[k].col !== settled[k].col || map[k].row !== settled[k].row);
+      }).length;
+      applySettled(map, settled);
       commit(true);
       afterPaint();
+      if (shoved) SF.toast && SF.toast(shoved === 1 ? 'Moved. The item in the way shifted over.'
+        : 'Moved. ' + shoved + ' items shifted over.');
     }
     document.addEventListener('pointermove', move);
     document.addEventListener('pointerup', up);
@@ -363,9 +393,68 @@
      A free block is placed where there is room rather than at the origin, and
      it gets a region immediately — without one it would flow at the end of the
      pad and the author would have to find it. */
-  function overlaps(a, b) {
-    return a.col < b.col + b.cols && b.col < a.col + a.cols &&
-           a.row < b.row + b.rows && b.row < a.row + a.rows;
+  var overlaps = function (a, b) { return SF.regionsOverlap(a, b); };
+
+  /* What is actually holding cells on this slide, read off the canvas rather
+     than out of the region map.
+
+     The map is a poor witness: it also carries slots the layout reserved but
+     is not drawing — a title region on a slide with no title — and it carries
+     nothing for a block that has been taken off. Counting those as occupied
+     pushed items away from exactly the slots they were aimed at. The rendered
+     lattice has no such problem, because a slot is in it precisely when it is
+     on the slide, which is also the only sense in which something can be in
+     the way. It counts pictures as well, which the two old call sites both
+     missed by filtering keys to `blocks.` — an inserted item would land on a
+     picture and neither path noticed. */
+  function occupants(exceptKey) {
+    var rt = root();
+    var map = regionsOf(slide());
+    if (!rt || !map) return [];
+    return Array.prototype.slice.call(rt.querySelectorAll('.sf-slot[data-block-key]'))
+      .map(function (n) { return n.getAttribute('data-block-key'); })
+      .filter(function (k) { return k && k !== exceptKey && map[k]; })
+      .map(function (k) { return map[k]; });
+  }
+
+  /* Which drawn blocks may not be pushed out of the way: everything that is
+     not an item the author added. A block the layout drew belongs to the
+     slide's type — taking it off the slide is the way past it — and a picture
+     belongs to the decorative plane, which is freeform by design. */
+  function immovable() {
+    var rt = root();
+    if (!rt) return [];
+    return Array.prototype.slice.call(rt.querySelectorAll('.sf-slot[data-block-key]'))
+      .map(function (n) { return n.getAttribute('data-block-key'); })
+      .filter(function (k) { return k && k.indexOf('blocks.') !== 0; });
+  }
+
+  /* The one placement call. Every path that moves or resizes something goes
+     through here, so there is one answer to "may this go there" instead of
+     the four that disagreed. Returns the new map or null if it cannot be done.
+     Only what is drawn takes part: the region map also names slots the layout
+     reserved but is not showing, and those are not in anyone's way. */
+  function settle(key, want) {
+    var rt = root();
+    var map = regionsOf(slide());
+    if (!rt || !map) return null;
+    var drawn = {};
+    Array.prototype.slice.call(rt.querySelectorAll('.sf-slot[data-block-key]'))
+      .forEach(function (n) {
+        var k = n.getAttribute('data-block-key');
+        if (k && map[k]) drawn[k] = map[k];
+      });
+    if (!drawn[key]) drawn[key] = map[key] || want;
+    return SF.resolvePlacement(drawn, key, want, L(), immovable());
+  }
+
+  /* Write a resolved map back, so every mover applies it the same way. */
+  function applySettled(map, settled) {
+    Object.keys(settled).forEach(function (k) {
+      if (!map[k]) return;
+      map[k].col = settled[k].col; map[k].row = settled[k].row;
+      map[k].cols = settled[k].cols; map[k].rows = settled[k].rows;
+    });
   }
 
   /* Make room rather than refuse.
@@ -386,7 +475,13 @@
        the layout's own reserved regions — a title slot on a slide with no
        title — and treating those as occupied halved every item that was
        correctly aimed at one, which is the opposite of snapping into place. */
-    var keys = Object.keys(map || {}).filter(function (k) { return k.indexOf('blocks.') === 0; });
+    var drawn = occupants(null);
+    var keys = Object.keys(map || {}).filter(function (k) {
+      /* Halving only ever cuts an item: a block the layout drew is not the
+         author's to shrink, and a picture belongs to the decorative plane. */
+      return k.indexOf('blocks.') === 0 &&
+        drawn.some(function (r) { return r === map[k]; });
+    });
     var clash = keys.filter(function (k) { return map[k] && overlaps(map[k], want); });
     if (!clash.length) return want;
     clash.sort(function (a, b) {
@@ -423,9 +518,11 @@
        a heading to where it puts its title, a list to where it puts its list.
        Failing that the generic rail, and failing that the size the corpus
        says this kind of item is. */
-    var placedBlocks = Object.keys(map)
-      .filter(function (k) { return k.indexOf('blocks.') === 0; })
-      .map(function (k) { return map[k]; });
+    /* What is on the slide, not what the map happens to name. This used to
+       filter to `blocks.` and so an item could be inserted straight on top of
+       a picture — the one kind of occupant neither of the two old placement
+       paths counted. */
+    var placedBlocks = occupants(null);
     var want = (SF.insertionRegionFor && SF.insertionRegionFor(s, list.length, kind, placedBlocks)) ||
       { col: 1, row: 1, cols: spec.cols, rows: spec.rows };
     var before = Object.keys(map).length;
@@ -1018,10 +1115,17 @@
       var dy = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0;
       if (e.shiftKey) { resize(dx, dy); return; }
       var g = L();
+      /* A nudge is a small move and answers to the same rule as a big one. */
+      var want = {
+        col: clamp(r.col + dx, 1, g.cols - r.cols + 1),
+        row: clamp(r.row + dy, 1, g.rows - r.rows + 1),
+        cols: r.cols, rows: r.rows
+      };
+      var settled = settle(selected, want);
+      if (!settled) { SF.toast && SF.toast('Something that cannot move is in the way.'); return; }
       if(dx)delete r.anchorX;
       if(dy)delete r.anchorY;
-      r.col = clamp(r.col + dx, 1, g.cols - r.cols + 1);
-      r.row = clamp(r.row + dy, 1, g.rows - r.rows + 1);
+      applySettled(map, settled);
       commit(true);
       afterPaint();
     }, true);

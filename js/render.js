@@ -309,6 +309,145 @@
     return g;
   };
 
+  /* ------------------------------------------------------- placement
+     One answer to "may this go here", for every path that moves something.
+
+     There were four. Adding an item looked for a free declared slot and then
+     halved whatever was still in the way; dragging clamped to the grid and
+     overlapped freely; resizing did the same; the arrow keys did the same
+     again. So the canvas protected you when you inserted and abandoned you
+     the moment you touched what you had inserted, and nothing anywhere could
+     even tell you two blocks were on top of each other — latticeFit measures
+     whether a block's own words fit its own rows, so it reported "2 spare"
+     on a heading lying across its neighbour.
+
+     The libraries that solve this for a living agree on the shape of the
+     answer. gridstack removed its `float: boolean` in v14 for a named mode —
+     top, float, list, compact — and not one of the four lets two widgets
+     share a cell; even "no gravity" pushes on collision. react-grid-layout
+     names the two cases outright: allowOverlap for "layered dashboards,
+     free-form layouts", preventCollision for "fixed grids, slot-based
+     layouts". Overlap is always a declared mode and never an accident.
+
+     This canvas has both cases and already knows it: the design doc says
+     "freeform remains the right model for a decorative plane, and the wrong
+     one for content", and tools/stack-audit.mjs measures 30 of 30 slide
+     types as vertical stacks. So content snaps and artwork floats, and the
+     mode says which rather than the call site deciding. */
+  SF.regionsOverlap = function (a, b) {
+    return !!a && !!b &&
+      a.col < b.col + b.cols && b.col < a.col + a.cols &&
+      a.row < b.row + b.rows && b.row < a.row + a.rows;
+  };
+  /* Every pair of regions sharing a cell. The canvas had no way to ask. */
+  SF.overlapsIn = function (regions) {
+    var keys = Object.keys(regions || {});
+    var out = [];
+    keys.forEach(function (a, i) {
+      keys.slice(i + 1).forEach(function (b) {
+        if (SF.regionsOverlap(regions[a], regions[b])) out.push([a, b]);
+      });
+    });
+    return out;
+  };
+  /* The nearest place `want` fits without sharing a cell with anything in
+     `occupied`, searched outward from where it was asked for. Nearest rather
+     than pushing the occupant aside: the items on these slides are placed
+     against slots the layouts declared, so moving the thing being dragged
+     keeps every other decision the author already made — and a push has to
+     decide what happens when the pushed block reaches the edge, which is a
+     cascade this grid is too small to absorb.
+
+     Returns null when the slide is too full to hold it anywhere, so a caller
+     can refuse rather than invent a position. Pure: the grid and the
+     occupancy come in as arguments, so it is testable without a page. */
+  SF.freePlacement = function (want, occupied, grid) {
+    if (!want) return null;
+    var cols = (grid && grid.cols) || 12;
+    var rows = (grid && grid.rows) || 16;
+    var busy = (occupied || []).filter(Boolean);
+    var clear = function (r) {
+      return !busy.some(function (b) { return SF.regionsOverlap(r, b); });
+    };
+    if (want.col >= 1 && want.row >= 1 &&
+        want.col + want.cols - 1 <= cols && want.row + want.rows - 1 <= rows &&
+        clear(want)) return { ...want };
+    var best = null, bestD = Infinity;
+    for (var row = 1; row + want.rows - 1 <= rows; row++) {
+      for (var col = 1; col + want.cols - 1 <= cols; col++) {
+        var here = { col: col, row: row, cols: want.cols, rows: want.rows };
+        if (!clear(here)) continue;
+        /* Rows weigh more than columns: these layouts are stacks, so sliding
+           along a row reads as the same place and dropping down a row does
+           not. */
+        var d = Math.abs(col - want.col) + Math.abs(row - want.row) * 1.35;
+        if (d < bestD) { bestD = d; best = here; }
+      }
+    }
+    return best ? { ...best, moved: true } : null;
+  };
+
+  /* The whole move, including what it displaces.
+
+     One rule for dragging, resizing and nudging alike: the block you are
+     moving gets exactly what you asked for, anything it lands on is pushed to
+     the nearest free place, and if something cannot be placed the move is
+     refused whole rather than half-applied.
+
+     The first version of this stopped a block at its neighbour's edge instead.
+     That reads well and is wrong: building a layout means growing one block
+     through where another currently sits, and refusing it meant a slide could
+     no longer be arranged at all — recreating `split` got a copy column 4 rows
+     tall instead of 12. Both gridstack and react-grid-layout push for this
+     reason, and neither offers a stop-at-the-edge mode.
+
+     `pinned` is the block being moved; `fixed` are keys that may not be
+     pushed — a block the layout drew is not an item's to shove, and a picture
+     belongs to the decorative plane, which has its own rules. They are
+     obstacles, and a move that cannot clear them is refused. Taking a layout
+     block off the slide is the way past one.
+
+     @returns {object|null} a new region map, or null when it cannot be done */
+  SF.resolvePlacement = function (regions, key, want, grid, fixed) {
+    if (!regions || !key || !want) return null;
+    var cols = (grid && grid.cols) || 12;
+    var rows = (grid && grid.rows) || 16;
+    if (want.col < 1 || want.row < 1 ||
+        want.col + want.cols - 1 > cols || want.row + want.rows - 1 > rows) return null;
+    var immovable = {};
+    (fixed || []).forEach(function (k) { immovable[k] = true; });
+    var next = {};
+    Object.keys(regions).forEach(function (k) { next[k] = { ...regions[k] }; });
+    next[key] = { col: want.col, row: want.row, cols: want.cols, rows: want.rows };
+    /* Relaxation rather than a cascade written by hand: shift whatever is
+       overlapping to its nearest free place and look again. Each pass places
+       one block, so the grid's own size bounds the work. */
+    var settled = Object.keys(next).length + 4;
+    for (var pass = 0; pass < settled; pass++) {
+      /** @type {string[]} */
+      var clash = [];
+      Object.keys(next).forEach(function (a) {
+        if (clash.length) return;
+        Object.keys(next).forEach(function (b) {
+          if (clash.length || a === b) return;
+          if (SF.regionsOverlap(next[a], next[b])) clash = [a, b];
+        });
+      });
+      if (!clash.length) return next;
+      /* Whichever of the pair may move; the pinned block never does, so a
+         clash between it and an immovable one is unresolvable. */
+      var shove = clash.filter(function (k) { return k !== key && !immovable[k]; })[0];
+      if (!shove) return null;
+      var others = Object.keys(next)
+        .filter(function (k) { return k !== shove; })
+        .map(function (k) { return next[k]; });
+      var spot = SF.freePlacement(next[shove], others, { cols: cols, rows: rows });
+      if (!spot) return null;
+      next[shove] = { col: spot.col, row: spot.row, cols: spot.cols, rows: spot.rows };
+    }
+    return null;
+  };
+
   /* Which layout blocks this slide has been told not to draw.
      A block the layout drew is not a thing sitting on the slide — it is the
      slide's type rendering a field, and four different shapes of thing at
