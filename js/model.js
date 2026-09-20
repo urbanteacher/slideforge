@@ -4137,6 +4137,654 @@
     };
   }
 
+  // src/render/lattice.js
+  function installLatticeRenderer(SF, helpers) {
+    const { el, IMAGE_FRAMES, travelFrom } = helpers;
+    var LATTICE = { left: 52, top: 88, w: 1176, h: 576, cols: 12, rows: 16, stepX: 101, stepY: 36 };
+    SF.LATTICE = LATTICE;
+    SF.anchorRegion = function(region2) {
+      var r = Object.assign({}, region2);
+      if (r.anchorX === "left") r.col = 1;
+      if (r.anchorX === "center") r.col = Math.floor((LATTICE.cols - r.cols) / 2) + 1;
+      if (r.anchorX === "right") r.col = LATTICE.cols - r.cols + 1;
+      if (r.anchorY === "top") r.row = 1;
+      if (r.anchorY === "middle") r.row = Math.floor((LATTICE.rows - r.rows) / 2) + 1;
+      if (r.anchorY === "bottom") r.row = LATTICE.rows - r.rows + 1;
+      return r;
+    };
+    function blockKeyOf(node, i) {
+      if (!node.getAttribute) return "block-" + i;
+      var named = node.getAttribute("data-block-key");
+      if (named) return named;
+      var kept = node.getAttribute("data-lattice-key");
+      if (kept) return kept;
+      var key = node.getAttribute("data-content-key");
+      if (key) return key;
+      var raw = node.className;
+      if (raw && typeof raw === "object" && "baseVal" in raw) raw = raw.baseVal;
+      var cls = String(raw || "").split(/\s+/).filter(Boolean)[0];
+      return cls || "block-" + i;
+    }
+    SF.blockKeyOf = blockKeyOf;
+    SF.latticeHost = function(root) {
+      return root.querySelector(".cp-body") || root.querySelector(".pad") || null;
+    };
+    SF.latticeGeometry = function(root) {
+      var g = Object.assign({}, LATTICE);
+      var grid = root && root.querySelector(".sf-lattice");
+      if (!grid) return g;
+      var base = root.getBoundingClientRect(), rect = grid.getBoundingClientRect();
+      var scale = base.width / 1280;
+      if (!scale || !rect.height) return g;
+      g.left = (rect.left - base.left) / scale;
+      g.top = (rect.top - base.top) / scale;
+      g.w = rect.width / scale;
+      g.h = rect.height / scale;
+      g.stepX = (g.w + 36) / g.cols;
+      g.stepY = g.h / g.rows;
+      return g;
+    };
+    SF.regionsOverlap = function(a, b) {
+      return !!a && !!b && a.col < b.col + b.cols && b.col < a.col + a.cols && a.row < b.row + b.rows && b.row < a.row + a.rows;
+    };
+    SF.overlapsIn = function(regions) {
+      var keys = Object.keys(regions || {});
+      var out = [];
+      keys.forEach(function(a, i) {
+        keys.slice(i + 1).forEach(function(b) {
+          if (SF.regionsOverlap(regions[a], regions[b])) out.push([a, b]);
+        });
+      });
+      return out;
+    };
+    SF.freePlacement = function(want, occupied, grid) {
+      if (!want) return null;
+      var cols = grid && grid.cols || 12;
+      var rows2 = grid && grid.rows || 16;
+      var busy = (occupied || []).filter(Boolean);
+      var clear = function(r) {
+        return !busy.some(function(b) {
+          return SF.regionsOverlap(r, b);
+        });
+      };
+      if (want.col >= 1 && want.row >= 1 && want.col + want.cols - 1 <= cols && want.row + want.rows - 1 <= rows2 && clear(want)) return { ...want };
+      var best = null, bestD = Infinity;
+      for (var row = 1; row + want.rows - 1 <= rows2; row++) {
+        for (var col = 1; col + want.cols - 1 <= cols; col++) {
+          var here = { col, row, cols: want.cols, rows: want.rows };
+          if (!clear(here)) continue;
+          var d = Math.abs(col - want.col) + Math.abs(row - want.row) * 1.35;
+          if (d < bestD) {
+            bestD = d;
+            best = here;
+          }
+        }
+      }
+      return best ? { ...best, moved: true } : null;
+    };
+    SF.resolvePlacement = function(regions, key, want, grid, fixed) {
+      if (!regions || !key || !want) return null;
+      var cols = grid && grid.cols || 12;
+      var rows2 = grid && grid.rows || 16;
+      if (want.col < 1 || want.row < 1 || want.col + want.cols - 1 > cols || want.row + want.rows - 1 > rows2) return null;
+      var immovable = {};
+      (fixed || []).forEach(function(k) {
+        immovable[k] = true;
+      });
+      var next = {};
+      Object.keys(regions).forEach(function(k) {
+        next[k] = { ...regions[k] };
+      });
+      next[key] = { col: want.col, row: want.row, cols: want.cols, rows: want.rows };
+      var settled = Object.keys(next).length + 4;
+      for (var pass = 0; pass < settled; pass++) {
+        var clash = [];
+        Object.keys(next).forEach(function(a) {
+          if (clash.length) return;
+          Object.keys(next).forEach(function(b) {
+            if (clash.length || a === b) return;
+            if (SF.regionsOverlap(next[a], next[b])) clash = [a, b];
+          });
+        });
+        if (!clash.length) return next;
+        var shove = clash.filter(function(k) {
+          return k !== key && !immovable[k];
+        })[0];
+        if (!shove) return null;
+        var others = Object.keys(next).filter(function(k) {
+          return k !== shove;
+        }).map(function(k) {
+          return next[k];
+        });
+        var spot = SF.freePlacement(next[shove], others, { cols, rows: rows2 });
+        if (!spot) return null;
+        next[shove] = { col: spot.col, row: spot.row, cols: spot.cols, rows: spot.rows };
+      }
+      return null;
+    };
+    SF.hiddenBlocksOf = function(slide) {
+      var list = slide && slide.design && slide.design.hidden;
+      return Array.isArray(list) ? list.filter(Boolean).map(String) : [];
+    };
+    SF.isBlockHidden = function(slide, key) {
+      return !!key && SF.hiddenBlocksOf(slide).indexOf(String(key)) >= 0;
+    };
+    SF.dropHiddenBlocks = function(root, slide) {
+      var hidden = SF.hiddenBlocksOf(slide);
+      if (!hidden.length) return 0;
+      var host = SF.latticeHost(root);
+      if (!host) return 0;
+      var kids = Array.prototype.slice.call(host.children).filter(function(n) {
+        return n.nodeType === 1;
+      });
+      kids.forEach(function(node, i) {
+        if (node.setAttribute) node.setAttribute("data-lattice-key", String(blockKeyOf(node, i)));
+      });
+      var gone = 0;
+      kids.forEach(function(node) {
+        if (hidden.indexOf(String(blockKeyOf(node, 0))) >= 0) {
+          node.remove();
+          gone++;
+        }
+      });
+      return gone;
+    };
+    SF.applyRegions = function(root, slide) {
+      var regions = slide && slide.design && slide.design.regions;
+      if (!regions || !Object.keys(regions).length) return false;
+      var host = SF.latticeHost(root);
+      if (!host) return false;
+      var kids = Array.prototype.slice.call(host.children).filter(function(n) {
+        return n.nodeType === 1;
+      });
+      if (!kids.length) return false;
+      var grid = el("div", "sf-lattice");
+      kids.forEach(function(node, i) {
+        var key = blockKeyOf(node, i);
+        var r = regions[key] && SF.anchorRegion(regions[key]);
+        var slot = el("div", "sf-slot");
+        slot.setAttribute("data-block-key", key);
+        if (r) {
+          slot.style.gridArea = r.row + " / " + r.col + " / span " + r.rows + " / span " + r.cols;
+          slot.setAttribute("data-region", r.row + "," + r.col + "," + r.rows + "," + r.cols);
+          var dx = r.anchorX === "center" && (LATTICE.cols - r.cols) % 2 ? LATTICE.stepX / 2 : 0;
+          var dy = r.anchorY === "middle" && (LATTICE.rows - r.rows) % 2 ? 50 / r.rows : 0;
+          if (dx || dy) slot.style.transform = "translate(" + dx + "px, " + dy + "%)";
+          if (/^(top|middle|bottom)$/.test(r.alignY || "")) slot.setAttribute("data-align-y", r.alignY);
+          if (/^(left|center|right)$/.test(r.alignX || "")) slot.setAttribute("data-align-x", r.alignX);
+        }
+        slot.appendChild(node);
+        grid.appendChild(slot);
+      });
+      host.replaceChildren(grid);
+      root.classList.add("sf-latticed");
+      return true;
+    };
+    var FREE_KINDS = {
+      heading: {
+        tag: "h3",
+        cls: "free-heading",
+        label: "Heading",
+        rows: 1,
+        cols: 10,
+        size: "heading",
+        edits: "inline",
+        resizes: true,
+        duplicates: true
+      },
+      text: {
+        tag: "p",
+        cls: "free-text",
+        label: "Text",
+        rows: 1,
+        cols: 9,
+        size: "body",
+        edits: "inline",
+        resizes: true,
+        duplicates: true
+      },
+      note: {
+        tag: "div",
+        cls: "free-note",
+        label: "Note",
+        rows: 1,
+        cols: 4,
+        size: "small",
+        edits: "inline",
+        resizes: true,
+        duplicates: true
+      },
+      bullets: {
+        tag: "ul",
+        cls: "free-bullets",
+        label: "Bullet points",
+        rows: 8,
+        cols: 10,
+        edits: "rail",
+        resizes: true,
+        duplicates: true,
+        hint: "One point per line.",
+        draw: function(node, text2) {
+          text2.split("\n").map(function(l) {
+            return l.trim();
+          }).filter(Boolean).forEach(function(line) {
+            node.appendChild(el("li", null, line));
+          });
+        }
+      },
+      image: {
+        tag: "div",
+        cls: "free-image",
+        label: "Image",
+        rows: 11,
+        cols: 8,
+        edits: false,
+        resizes: true,
+        duplicates: true,
+        hint: "A URL, or a path to a file beside index.html.",
+        draw: function(node, text2, block) {
+          var src = SF.safeMedia(text2);
+          if (!src) return;
+          var travel = travelFrom(block);
+          var motion = travel ? " img-motion-travel" : block.imageMotion === "zoom" ? " img-motion-zoom" : "";
+          var img = el("img", "free-image-img" + motion);
+          img.src = src;
+          img.alt = String(block.alt || "");
+          img.draggable = false;
+          img.style.objectFit = block.fit === "contain" ? "contain" : "cover";
+          if (Object.prototype.hasOwnProperty.call(IMAGE_FRAMES, block.frame || "")) {
+            img.style.aspectRatio = IMAGE_FRAMES[block.frame];
+            img.style.width = "auto";
+            img.style.height = "auto";
+            img.style.maxWidth = "100%";
+            img.style.maxHeight = "100%";
+          }
+          var pct = function(v) {
+            var n = Number(v);
+            return (Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 50) + "%";
+          };
+          img.style.setProperty("--img-fx", pct(block.focalX));
+          img.style.setProperty("--img-fy", pct(block.focalY));
+          if (travel) {
+            img.style.setProperty("--kb-from", travel.from);
+            img.style.setProperty("--kb-to", travel.to);
+            img.style.setProperty("--kb-dur", travel.secs + "s");
+          }
+          node.appendChild(img);
+        }
+      },
+      /* Reverse-engineered from the slide types rather than invented. Keywords,
+         stat tiles, timeline entries, links and compare rows each carry their
+         own private classes — kw-term/kw-def, stat-value/stat-label,
+         timeline-date/timeline-title — and share none of them, but they are all
+         the same shape: a label and the thing it names, repeated. 777 of the
+         1223 authored bullets in the library already write that shape as
+         label TAB value, and cards and tiered bullets already parse it. So this
+         is the existing idiom given a block of its own, not a new one. */
+      pairs: {
+        tag: "dl",
+        cls: "free-pairs",
+        label: "Label and value list",
+        rows: 8,
+        cols: 10,
+        edits: "rail",
+        resizes: true,
+        duplicates: true,
+        hint: "One per line: the label, a tab, then the value.",
+        draw: function(node, text2) {
+          text2.split("\n").map(function(l) {
+            return l.trim();
+          }).filter(Boolean).forEach(function(line) {
+            var at = line.indexOf("	");
+            var term = at < 0 ? line : line.slice(0, at);
+            var def = at < 0 ? "" : line.slice(at + 1).trim();
+            node.appendChild(el("dt", "free-pair-term", term));
+            if (def) node.appendChild(el("dd", "free-pair-def", def));
+          });
+        }
+      },
+      quote: {
+        tag: "figure",
+        cls: "free-quote",
+        label: "Quote",
+        rows: 4,
+        cols: 8,
+        edits: "inline",
+        resizes: true,
+        duplicates: true,
+        hint: "The words, a tab, then who said them.",
+        draw: function(node, text2) {
+          var at = text2.indexOf("	");
+          var words = at < 0 ? text2 : text2.slice(0, at);
+          var who = at < 0 ? "" : text2.slice(at + 1).trim();
+          node.appendChild(el("blockquote", "free-quote-words", words.trim()));
+          if (who) node.appendChild(el("figcaption", "free-quote-attrib", who));
+        }
+      },
+      chart: {
+        tag: "div",
+        cls: "free-chart",
+        label: "Chart",
+        rows: 11,
+        cols: 11,
+        edits: "rail",
+        resizes: true,
+        duplicates: true,
+        hint: "Tab-separated, a heading row then the values.",
+        draw: function(node, text2, block) {
+          var stand = { chartKind: block.chartKind || "bar", body: text2, design: {} };
+          var data = SF.chartData(stand);
+          if (!data.categories.length) return;
+          node.appendChild(SF.chartSvgFor(stand.chartKind, data, stand, function(si, ci) {
+            return data.series.length > 1 ? si : ci;
+          }));
+        }
+      }
+    };
+    SF.FREE_SIZES = ["display", "title", "heading", "body", "small"];
+    SF.FREE_KINDS = FREE_KINDS;
+    SF.freeBlockKey = function(id) {
+      return "blocks." + id;
+    };
+    SF.freeBlockId = function(key) {
+      var m = /^blocks\.(.+)$/.exec(String(key || ""));
+      return m ? m[1] : null;
+    };
+    SF.freeBlocksOf = function(slide, make) {
+      if (!slide) return [];
+      if (!Array.isArray(slide.blocks)) {
+        if (!make) return [];
+        slide.blocks = [];
+      }
+      return slide.blocks;
+    };
+    SF.freeBlockById = function(slide, id) {
+      return SF.freeBlocksOf(slide).find(function(b) {
+        return String(b.id) === String(id);
+      }) || null;
+    };
+    SF.canRemoveBlock = function(slide, key) {
+      var id = SF.freeBlockId(key);
+      return !!(slide && id && SF.freeBlockById(slide, id));
+    };
+    SF.removeFreeBlock = function(slide, key) {
+      if (!SF.canRemoveBlock(slide, key)) return false;
+      var id = SF.freeBlockId(key);
+      slide.blocks = SF.freeBlocksOf(slide).filter(function(b) {
+        return String(b.id) !== String(id);
+      });
+      if (slide.design && slide.design.regions) delete slide.design.regions[key];
+      if (slide.formatting) delete slide.formatting[key];
+      return true;
+    };
+    SF.canDeleteBlock = function(slide, key) {
+      if (!slide || !key) return false;
+      if (SF.canRemoveBlock(slide, key)) return true;
+      return !SF.freeBlockId(key) && !SF.isBlockHidden(slide, key);
+    };
+    SF.deleteBlock = function(slide, key) {
+      if (!SF.canDeleteBlock(slide, key)) return null;
+      if (SF.canRemoveBlock(slide, key)) {
+        SF.removeFreeBlock(slide, key);
+        return "item";
+      }
+      if (!slide.design) slide.design = {};
+      if (!Array.isArray(slide.design.hidden)) slide.design.hidden = [];
+      slide.design.hidden.push(String(key));
+      return "layout";
+    };
+    SF.restoreBlock = function(slide, key) {
+      if (!SF.isBlockHidden(slide, key)) return false;
+      slide.design.hidden = SF.hiddenBlocksOf(slide).filter(function(k) {
+        return k !== String(key);
+      });
+      if (!slide.design.hidden.length) delete slide.design.hidden;
+      return true;
+    };
+    SF.restoreAllBlocks = function(slide) {
+      var n = SF.hiddenBlocksOf(slide).length;
+      if (n && slide.design) delete slide.design.hidden;
+      return n;
+    };
+    SF.renderFreeBlocks = function(root, slide) {
+      var list = SF.freeBlocksOf(slide).filter(function(b) {
+        return b && b.id;
+      });
+      var pictures = (slide && slide.art && slide.art.pictures || []).filter(function(p) {
+        return p && p.src && p.id && SF.artPlacement(p) === "lattice";
+      });
+      if (!list.length && !pictures.length) return 0;
+      var host = SF.latticeHost(root);
+      if (!host) return 0;
+      pictures.forEach(function(pic) {
+        var frame = el("div", "art-block");
+        frame.setAttribute("data-block-key", SF.artBlockKey(pic.id));
+        frame.dataset.artPic = String(pic.id);
+        var img = el("img", "art-block-img");
+        img.src = pic.src;
+        img.alt = String(pic.alt || "");
+        img.draggable = false;
+        img.style.objectFit = pic.fit === "contain" ? "contain" : "cover";
+        if (pic.hidden) frame.style.display = "none";
+        frame.appendChild(img);
+        host.appendChild(frame);
+      });
+      list.forEach(function(block) {
+        var spec = FREE_KINDS[block.kind] || FREE_KINDS.text;
+        var key = SF.freeBlockKey(block.id);
+        var composed = !!(root.getAttribute && root.getAttribute("data-composition")) || !!root.querySelector("[data-composition]");
+        var AS_TAG = { title: ["h2", ""], subtitle: ["div", composed ? "cp-eyebrow" : "sub"] };
+        var asSlot = block.as && AS_TAG[block.as];
+        var size = block.size || spec.size;
+        var node = asSlot ? el(asSlot[0], "free-block " + spec.cls + (asSlot[1] ? " " + asSlot[1] : "")) : el(spec.tag, "free-block " + spec.cls + (size ? " free-size-" + size : ""));
+        node.dataset.contentKey = key;
+        if (block.as) node.dataset.as = String(block.as);
+        node.dataset.freeBlock = String(block.id);
+        var text2 = String(block.text == null ? "" : block.text);
+        if (!text2.trim()) node.dataset.placeholder = spec.label;
+        if (spec.draw) {
+          node.dataset.blockKind = block.kind;
+          if (text2.trim()) spec.draw(node, text2, block);
+          host.appendChild(node);
+          return;
+        }
+        node.textContent = text2;
+        if (SF.Custom) SF.Custom.paint(node, slide, key, text2);
+        host.appendChild(node);
+      });
+      return list.length + pictures.length;
+    };
+    SF.regionColumnGroup = function(regions, key) {
+      var subject = regions && regions[key];
+      if (!subject) return [];
+      var lo = subject.col, hi = subject.col + subject.cols - 1;
+      return Object.keys(regions).filter(function(k) {
+        var r = regions[k];
+        return r && r.col <= hi && lo <= r.col + r.cols - 1;
+      }).map(function(k) {
+        return { key: k, region: regions[k] };
+      }).sort(function(a, b) {
+        return a.region.row - b.region.row || (a.key < b.key ? -1 : 1);
+      });
+    };
+    SF.restackRegions = function(regions, key, rows2) {
+      var group = SF.regionColumnGroup(regions, key);
+      if (!group.length) return null;
+      var cursor = 1;
+      group.forEach(function(entry) {
+        entry.gap = Math.max(0, entry.region.row - cursor);
+        cursor = entry.region.row + entry.region.rows;
+      });
+      if (rows2 != null) regions[key].rows = Math.max(1, Math.round(rows2));
+      var row = 1;
+      group.forEach(function(entry) {
+        row += entry.gap;
+        if (entry.region.anchorY) {
+          row = Math.max(row, entry.region.row + entry.region.rows);
+          return;
+        }
+        entry.region.row = row;
+        row += entry.region.rows;
+      });
+      var used = row - 1;
+      return {
+        used,
+        budget: LATTICE.rows,
+        over: Math.max(0, used - LATTICE.rows),
+        moved: group.filter(function(e) {
+          return !e.region.anchorY;
+        }).length
+      };
+    };
+    function paintBand(node) {
+      var cs = getComputedStyle(node);
+      if (cs.position === "static") return [2, 0];
+      var z = cs.zIndex === "auto" ? null : Number(cs.zIndex);
+      if (z == null || z === 0 || !Number.isFinite(z)) return [3, 0];
+      return z < 0 ? [1, z] : [4, z];
+    }
+    function isStackingContext(node) {
+      var cs = getComputedStyle(node);
+      if (cs.position === "fixed" || cs.position === "sticky") return true;
+      if (cs.position !== "static" && cs.zIndex !== "auto") return true;
+      if (parseFloat(cs.opacity) < 1) return true;
+      if (cs.transform !== "none" || cs.filter !== "none" || cs.perspective !== "none") return true;
+      if (cs.isolation === "isolate" || cs.mixBlendMode !== "normal") return true;
+      if (/paint|layout|strict|content/.test(cs.contain || "")) return true;
+      return /transform|opacity|filter/.test(cs.willChange || "");
+    }
+    function orderDecider(node, stop) {
+      var decider = node;
+      for (var n = node.parentElement; n && n !== stop; n = n.parentElement) {
+        if (isStackingContext(n)) decider = n;
+      }
+      return decider;
+    }
+    SF.paintsAbove = function(a, b) {
+      if (!a || !b || a === b) return false;
+      if (a.contains(b)) return false;
+      if (b.contains(a)) return true;
+      var up = function(n) {
+        var out = [];
+        for (; n; n = n.parentElement) out.unshift(n);
+        return out;
+      };
+      var ca = up(a), cb = up(b), i = 0;
+      while (i < ca.length && i < cb.length && ca[i] === cb[i]) i++;
+      var lca = ca[i - 1];
+      if (!lca) return false;
+      var ba = paintBand(orderDecider(a, lca)), bb = paintBand(orderDecider(b, lca));
+      if (ba[0] !== bb[0]) return ba[0] > bb[0];
+      if (ba[1] !== bb[1]) return ba[1] > bb[1];
+      var sibs = Array.prototype.slice.call(lca.children);
+      return sibs.indexOf(ca[i]) > sibs.indexOf(cb[i]);
+    };
+    var OPAQUE = 0.85;
+    SF.occludingArt = function(root) {
+      if (!root) return [];
+      return Array.prototype.filter.call(
+        root.querySelectorAll(".slide-art-img, .theme-art > *"),
+        function(n) {
+          var cs = getComputedStyle(n);
+          if (cs.display === "none" || cs.visibility === "hidden") return false;
+          var o = parseFloat(cs.opacity);
+          return !(Number.isFinite(o) && o < OPAQUE);
+        }
+      );
+    };
+    SF.artOcclusion = function(root, opts) {
+      var out = [];
+      if (!root) return out;
+      var art = SF.occludingArt(root).map(function(n) {
+        return { node: n, rect: n.getBoundingClientRect() };
+      }).filter(function(a) {
+        return a.rect.width > 2 && a.rect.height > 2;
+      });
+      if (!art.length) return out;
+      var floor = opts && opts.floor || 0.15;
+      var pad = root.querySelector(".pad") || root;
+      Array.prototype.forEach.call(pad.querySelectorAll("[data-content-key]"), function(block) {
+        var said = (block.textContent || "").trim();
+        if (!said) return;
+        var runs = [];
+        var walk = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+        var t;
+        while (t = walk.nextNode()) {
+          if (!(t.textContent || "").trim()) continue;
+          var range = document.createRange();
+          range.selectNodeContents(t);
+          Array.prototype.forEach.call(range.getClientRects(), function(r) {
+            if (r.width > 1 && r.height > 1) runs.push(r);
+          });
+        }
+        if (!runs.length) return;
+        var above = art.filter(function(a) {
+          return SF.paintsAbove(a.node, block);
+        });
+        if (!above.length) return;
+        var area = 0, hidden = 0;
+        var blamed = [];
+        runs.forEach(function(r) {
+          area += r.width * r.height;
+          var worst = 0, name = "";
+          above.forEach(function(a) {
+            var w = Math.min(a.rect.right, r.right) - Math.max(a.rect.left, r.left);
+            var h = Math.min(a.rect.bottom, r.bottom) - Math.max(a.rect.top, r.top);
+            if (w <= 0 || h <= 0 || w * h <= worst) return;
+            worst = w * h;
+            name = a.node.getAttribute("data-art-key") || a.node.getAttribute("data-art-pic") || "artwork";
+          });
+          hidden += worst;
+          if (name) blamed.push(name);
+        });
+        if (!area || hidden / area < floor) return;
+        out.push({
+          key: block.getAttribute("data-content-key"),
+          text: said.slice(0, 100),
+          pct: Math.round(hidden / area * 1e3) / 10,
+          by: blamed[0] || "artwork"
+        });
+      });
+      return out;
+    };
+    SF.linesFor = function(px) {
+      var tol = SF.FIT_TOLERANCE == null ? 1 : SF.FIT_TOLERANCE;
+      return Math.max(1, Math.ceil((px - tol) / LATTICE.stepY));
+    };
+    SF.linesNeeded = function(slot) {
+      var node = slot.firstElementChild;
+      if (!node) return null;
+      var pos = getComputedStyle(node).position;
+      if (pos === "absolute" || pos === "fixed") return null;
+      return SF.linesFor(node.scrollHeight);
+    };
+    SF.latticeFit = function(root) {
+      var out = [];
+      if (!root) return out;
+      root.querySelectorAll(".sf-slot").forEach(function(slot) {
+        var parts = (slot.getAttribute("data-region") || "").split(",");
+        var have = Number(parts[2]) || Math.max(1, Math.round(slot.clientHeight / LATTICE.stepY));
+        var need = SF.linesNeeded(slot);
+        if (need != null && root.classList.contains("sf-hf-managed")) {
+          need = Math.max(1, Math.ceil((slot.firstElementChild.scrollHeight - 1) / SF.latticeGeometry(root).stepY));
+        }
+        var node = slot.firstElementChild;
+        var wide = need != null && !!node && node.scrollWidth > slot.clientWidth + 1;
+        var over = need != null && (need > have || wide);
+        slot.setAttribute("data-fit", over ? "over" : "ok");
+        if (need != null) slot.setAttribute("data-need", String(need));
+        out.push({
+          key: slot.getAttribute("data-block-key"),
+          need,
+          have,
+          wide,
+          over
+        });
+      });
+      return out;
+    };
+  }
+
   // src/render/layout-slots.js
   var region = (col, row, cols, rows2, extra = {}) => ({ col, row, cols, rows: rows2, ...extra });
   var clone = (value) => Object.fromEntries(Object.entries(value || {}).map(([key, value2]) => [key, { ...value2 }]));
@@ -13723,6 +14371,7 @@
     createLiveRenderer,
     createQuizRenderer,
     installArtRenderer,
+    installLatticeRenderer,
     bindCanvasRegions,
     declareBodyRegion,
     measureBodyRegion,
