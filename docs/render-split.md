@@ -81,8 +81,14 @@ A reasonable hybrid: charts (step 1) as an ESM module in `src/render/`, since
 it has a one-name contract and is the natural test of the harder route; fall
 back to plain scripts for the rest if that proves painful.
 
-**Do not take the route decision silently.** Whichever is chosen, record it
-here in §7 before step 1, because every later step follows it.
+**DECIDED 2026-09-20: the `src/render/` ESM route.** `index.html` already
+carries 33 script tags with hand-bumped `?v=` numbers; adding five more would
+have made one hygiene problem worse in the course of fixing another. Step 1
+took this route and it worked out — see §7.
+
+The plain-script fallback in this table stays documented because a later band
+may not convert as cleanly as charts did. If one doesn't, take the fallback for
+that band and say so in §7 rather than forcing it.
 
 ### 3.2 Two different things called "regions"
 
@@ -211,7 +217,7 @@ checkout's server unless you pass `SF_URL`.
 | # | Commit | Moves | Why this order |
 | --- | --- | --- | --- |
 | 0 | Surface probe | nothing | Build the guard before moving anything |
-| 1 | `render-charts.js` | ~1,450 lines | One export, one outbound dep — the narrowest contract of the six, so the safest proof of the approach |
+| 1 | `src/render/charts.js` | 1,453 lines | **DONE 2026-09-20.** One export, one outbound dep — the narrowest contract of the six |
 | 2 | `render-words.js` | ~380 lines | One coherent cluster; 15 of the 47 exports, so it proves the export-splitting rule |
 | 3 | `render-live.js` | ~860 lines | Session furniture, not slide layout; 17 exports |
 | 4 | `render-quiz.js` | ~1,100 lines | First user of `SF.registerLayout`; proves the registry across files |
@@ -247,7 +253,38 @@ and `js/experiments.js` through `SF.Explore.render` inside `renderSlide`, not
 through `LAYOUTS`. The probe prints them as information, not as a failure. Do
 not "fix" them by adding layouts.
 
-### Steps 1–5 — the move
+### Step 1 — charts — **DONE 2026-09-20**
+
+`src/render/charts.js`, 1,453 lines out of `js/render.js`, which went from
+**7,247 to 5,795 lines**. Wired in through `src/model.js` beside
+`createCompositionRenderer`; no new script tag.
+
+The shape, which the remaining bands should copy:
+
+```js
+export function createChartRenderer(SF, helpers) {
+  const {el} = helpers;
+  /* … 31 names, moved verbatim … */
+  return {chartKey, chartTable, chartSvgFor, svgEl};
+}
+```
+
+`el` is injected because it is the browser renderer's DOM helper and stays
+there. Everything else the charts need is model code — `chartValues`,
+`histogramBins`, `parseTable` and six more — reached through the injected `SF`,
+so not one `SF.x` call site had to change.
+
+**31 names went in, 4 came out.** The other 27 were never used outside and are
+now genuinely private. That is the part worth repeating for the other bands:
+the point is not that the lines moved, it is that the contract shrank.
+
+Verified as a *pure* move, not merely a working one: every one of the 20 chart
+kinds was rendered in a real browser against the pre-move file and the current
+one, and the SVG is **byte-identical** for all 20. The unit suite does not
+cover this — it tests `chartData`, which is model code — so passing tests alone
+would not have been evidence.
+
+### Steps 2–5 — the move
 
 Each step is mechanically the same:
 
@@ -320,6 +357,12 @@ document is stale — fix §7 as part of the step that corrects it.
   - Consequence of the first: ~40 of the 93 names are region/block/art
     functions, so the regions band has the largest contract of the six. It was
     already scheduled last for a different reason; now there is a measured one.
+- **2026-09-20** — Route decided: `src/render/` ES modules, not plain scripts
+  (§3.1). `index.html` already has 33 hand-versioned script tags and adding
+  five more would have worsened the problem being fixed.
+- **2026-09-20** — Step 1 done. `src/render/charts.js`; `js/render.js` 7,247 →
+  **5,795 lines**. Contract shrank from 31 names to 4. SVG output proven
+  byte-identical across all 20 chart kinds before and after.
 - Deliberately not done: moving the renderer to `src/` behind esbuild, or to ES
   modules. Both are real, both are out of scope here, and treating the first as
   a prerequisite is what let the file double in a year (§3).
