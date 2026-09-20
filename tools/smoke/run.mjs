@@ -25,8 +25,10 @@
  */
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import harness from '../../tests/harness.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -114,10 +116,40 @@ if (setAt >= 0) {
   chosen = asked.length ? asked : names;
 }
 
+/* Most smokes start their own server through tests/harness.js and are
+   self-contained. Fourteen do not: they read a base URL and default it to
+   port 8787, which is the dev server a person starts by hand. When that is
+   up the suite reads 49/49; when it is not, those fourteen die in four
+   tenths of a second with a raw Playwright stack trace and no hint that a
+   missing server is the reason. The same suite, two answers, depending on
+   something outside it.
+
+   So the runner starts one, always, and points them at it. Always rather
+   than only-when-8787-is-down, because a run that behaves differently
+   depending on what else is running on the machine is the thing being fixed;
+   a smoke should not be able to tell whether you happen to be developing at
+   the time. Three env names because the fourteen ask in three different ways
+   — SF_URL, SF_BASE_URL and SLIDEFORGE_URL — which is its own small mess and
+   worth collapsing separately. An explicitly set name is left alone, so
+   pointing the suite at a deployed build still works. */
+const port = await harness.freePort();
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sf-smoke-run-'));
+const relay = await harness.start(port, dir);
+const base = 'http://127.0.0.1:' + port;
+for (const name of ['SF_URL', 'SF_BASE_URL', 'SLIDEFORGE_URL']) {
+  if (!process.env[name]) process.env[name] = base;
+}
+console.log('serving the app at ' + base + ' for smokes that need one');
+
 const results = [];
-for (const name of chosen) {
-  console.log('\n── ' + name + ' (' + (results.length + 1) + '/' + chosen.length + ')');
-  results.push(await run(name));
+try {
+  for (const name of chosen) {
+    console.log('\n── ' + name + ' (' + (results.length + 1) + '/' + chosen.length + ')');
+    results.push(await run(name));
+  }
+} finally {
+  relay.kill();
+  fs.rmSync(dir, { recursive: true, force: true });
 }
 
 const failed = results.filter((r) => r.code !== 0);
