@@ -60,12 +60,84 @@
   /* Layout coordinates belong to the layout definition.  This must not infer
      geometry from a one-off DOM render: changing a font, a theme or a title
      length would otherwise turn into an unrequested coordinate change. */
+  /* Where the blocks on this slide actually are, in cells.
+
+     Read off the rendered slide before it is latticed, which is the only
+     witness that agrees with what the author is looking at. A composition
+     lays its slide out in CSS — flex, gaps, centred columns — and the region
+     map declared for it is a description of that written down separately.
+     The two had drifted: across the ten AI Awareness compositions, 27 blocks
+     sat somewhere other than where their declared region put them, so opening
+     the Layout face re-placed them and the slide visibly changed under the
+     author. On `prompt` the one-row gap between the eyebrow and the question
+     closed to nothing and the question overflowed its box.
+
+     Measuring instead of reading the table makes "opening Layout moves
+     nothing" true by construction, for every composition, every slide type
+     and every theme, with no second copy of the numbers to keep in step. */
+  function measuredRegions() {
+    var rt = root();
+    var host = rt && SF.latticeHost(rt);
+    if (!rt || !host || host.querySelector('.sf-lattice')) return null;
+    var rb = rt.getBoundingClientRect();
+    if (!rb.width || !rb.height) return null;
+    /* In the slide's own coordinates, not the host's. The lattice always
+       occupies the same 1176x576 of the slide whatever box the composition
+       drew its body in — `ballot` centres its body in 790px, and measuring
+       against that made every child read as twelve columns wide. */
+    var g = SF.LATTICE;
+    var scale = rb.width / 1280;
+    var stepX = g.w / g.cols, stepY = g.h / g.rows;
+    var out = {};
+    Array.prototype.slice.call(host.children).forEach(function (n, i) {
+      if (n.nodeType !== 1) return;
+      var b = n.getBoundingClientRect();
+      if (!b.height || !b.width) return;
+      var x = (b.left - rb.left) / scale - g.left;
+      var y = (b.top - rb.top) / scale - g.top;
+      var col = clamp(Math.round(x / stepX) + 1, 1, g.cols);
+      var row = clamp(Math.round(y / stepY) + 1, 1, g.rows);
+      /* Position to the nearest cell, size rounded up. A block measured at
+         5.6 rows and rounded to 6 is fine; rounded to the nearest it would be
+         6 too, but one measured at 6.4 would become 6 and the words would no
+         longer fit the region they were just measured in — the fit check says
+         so the moment the face opens. Up, with a hair of tolerance so a block
+         that lands a rounding error above a whole row does not claim the next
+         one. */
+      var upto = function (v) { return Math.max(1, Math.ceil(v - 0.06)); };
+      out[blockKeyOfNode(n, i)] = {
+        col: col, row: row,
+        cols: clamp(upto(b.width / scale / stepX), 1, g.cols - col + 1),
+        rows: clamp(upto(b.height / scale / stepY), 1, g.rows - row + 1)
+      };
+    });
+    return Object.keys(out).length ? out : null;
+  }
+
+  function blockKeyOfNode(n, i) {
+    return SF.blockKeyOf ? SF.blockKeyOf(n, i) : 'block-' + i;
+  }
+
   function seed() {
     var s = slide();
     if (!s || !SF.layoutRegionsFor) return false;
     var map = regionsOf(s, true);
     if (Object.keys(map).length) return false;
-    Object.assign(map, SF.layoutRegionsFor(s));
+    /* The declared map first, so slots the layout reserves but is not drawing
+       keep their coordinates for an item to snap into later.
+
+       Then, on a composition slide only, what is actually on the slide. The
+       declared regions for the plain slide types are the ones every reference
+       slide was measured against and they are right; a composition is laid
+       out by its own CSS and the table describing it had drifted — 27 blocks
+       across the ten of them sat somewhere other than where it said, so
+       opening Layout re-placed them. Measuring everywhere was tried and costs
+       more than it pays: the bullets on a content slide really do fill all
+       twelve columns, and taking the declared eleven away removed the column
+       of slack a nudge needs. */
+    var composed = !!(s.design && s.design.composition) ||
+      !!(SF.slideComposition && SF.Editor && SF.Editor.deck && SF.slideComposition(SF.Editor.deck(), s));
+    Object.assign(map, SF.layoutRegionsFor(s), composed ? (measuredRegions() || {}) : {});
     commit(true);
     return true;
   }
