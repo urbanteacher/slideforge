@@ -19,6 +19,24 @@
   grid-template-rows: repeat(16, 36px);
   column-gap: 36px;
 }
+/* A composition draws its own body between its header and its footer, and
+   .cp-body is that region: already 52 in from the left and 88 down from the
+   top, and already the height left over between the two. It is also
+   position:relative, so it — not .pad — is what an absolutely positioned
+   lattice is measured from, and the inset above was applied a second time.
+   The grid started at 104,176 instead of 52,88 and ended at 752 on a slide
+   720 tall, which put its last rows under the footer and off the bottom of
+   the slide. Flush to the body it sits in, the way the header/footer face
+   already does it. Fractional tracks rather than 36px ones, because the
+   height between a header and a footer is whatever those two leave. */
+.cp-body > .sf-lattice {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: repeat(16, minmax(0, 1fr));
+}
 .sf-slot { position: relative; min-width: 0; min-height: 0; }
 
 /* ------------------------------------------- where the words sit in the rows

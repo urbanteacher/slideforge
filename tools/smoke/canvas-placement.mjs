@@ -126,10 +126,61 @@ try {
   checks++;
 
   await page.evaluate(() => SF.Arrange.setArranging(false));
+
+  /* 5. And the grid itself has to sit where the slide's body is.
+        .sf-lattice is positioned absolutely at left 52 / top 88, which is
+        measured from .pad — but a composition's .cp-body is position:relative
+        and already sits at exactly 52,88, so inside one the inset was applied
+        twice. The grid started at 104,176 and ran to 752 on a slide 720 tall:
+        its last rows were under the footer and off the bottom of the slide,
+        which is what "Layout pushes content off the screen" looked like.
+        A uniform shift has no spread, so the drift measurements never saw
+        this — only looking at it did. */
+  await page.evaluate(() => {
+    const d = SF.makeDeck('Lattice box');
+    d.theme = 'aiad27-future';
+    d.slides = [SF.normalizeSlide({ type: 'compare', title: 'Strengthening, or replacing?',
+      bullets: ['You draft\tIt drafts', 'You decide\tIt decides'],
+      design: { composition: 'comparison' } })];
+    SF.Store.save(d);
+    SF.Editor.openDeck(d.id);
+  });
+  await page.waitForSelector('#previewBox .cp-body', { timeout: 20000 });
+  await page.waitForTimeout(500);
+  await page.click('#btnArrange');
+  await page.waitForSelector('#previewBox.arranging .sf-slot', { timeout: 10000 });
+  await page.waitForTimeout(400);
+  const boxes = await page.evaluate(() => {
+    const root = document.querySelector('#previewBox .slide');
+    const rb = root.getBoundingClientRect();
+    const scale = rb.width / 1280;
+    const at = (el) => {
+      const b = el.getBoundingClientRect();
+      return { top: Math.round((b.top - rb.top) / scale), left: Math.round((b.left - rb.left) / scale),
+               bottom: Math.round((b.bottom - rb.top) / scale) };
+    };
+    const body = root.querySelector('.cp-body');
+    const lat = root.querySelector('.sf-lattice');
+    const foot = root.querySelector('.cp-footer');
+    const lowest = Array.from(root.querySelectorAll('.cp-body .sf-slot'))
+      .map((n) => at(n).bottom).sort((a, b) => b - a)[0];
+    return { body: at(body), lattice: lat ? at(lat) : null, footerTop: foot ? at(foot).top : null, lowest };
+  });
+  assert.ok(boxes.lattice, 'the composition slide must be latticed for this to mean anything');
+  assert.deepEqual(boxes.lattice, boxes.body,
+    'the grid must be flush to the body between the header and the footer:\n  body    ' +
+    JSON.stringify(boxes.body) + '\n  lattice ' + JSON.stringify(boxes.lattice));
+  assert.ok(boxes.lowest <= boxes.footerTop,
+    'no slot may reach under the footer — lowest ' + boxes.lowest + ', footer at ' + boxes.footerTop);
+  assert.ok(boxes.lattice.bottom <= 720, 'and none of the grid may fall off the slide');
+  await page.evaluate(() => SF.Arrange.setArranging(false));
+  checks++;
+
   assert.deepEqual(errors, [], 'no page errors');
   console.log('ok · canvas placement: ' + checks + ' checks · a drop, a corner resize, the arrow keys and an ' +
-    'insert all go through one rule, so none of them can leave two blocks sharing a cell — and a resize still ' +
-    'grows through its neighbour, which is how a layout gets built');
+    'insert all go through one rule, so none of them can leave two blocks sharing a cell; a resize still ' +
+    'grows through its neighbour, which is how a layout gets built; and the grid is flush to the body between ' +
+    'a composition\u2019s header and footer rather than running off the bottom of the slide');
 } finally {
   await browser?.close();
   relay.kill();
