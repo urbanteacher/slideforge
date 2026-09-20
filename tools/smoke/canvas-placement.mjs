@@ -176,11 +176,57 @@ try {
   await page.evaluate(() => SF.Arrange.setArranging(false));
   checks++;
 
+  /* 6. And seeding must not depend on what is docked beside the canvas.
+        A slide with a poll attached renders with 438px of right padding to
+        make room for the rail, so its body is nine columns wide rather than
+        twelve. Seeding measured the canvas, wrote nine-column regions, and
+        the slide kept them after the rail closed — squeezed into two thirds
+        of itself for good. The arrangement is a fact about the slide, so it
+        is measured from a clean render of the slide alone. */
+  const railSeed = await page.evaluate(async () => {
+    const make = () => {
+      const d = SF.makeDeck('Rail seeding');
+      d.theme = 'aiad27-future';
+      d.slides = [SF.normalizeSlide({ type: 'cards', title: 'What would you struggle with most?',
+        bullets: ['Starting from nothing\tThe blank page.', 'Explaining my reasoning\tSaying why.'],
+        design: { composition: 'ballot' } })];
+      SF.Store.save(d);
+      return d;
+    };
+    const seedOf = async (withRail) => {
+      const d = make();
+      SF.Editor.openDeck(d.id);
+      await new Promise((r) => setTimeout(r, 1200));
+      /* Through the editor, so the canvas rails the way it does for an
+         author who attaches a poll — setting the field by hand does not. */
+      if (withRail) { SF.Editor.attachFeedback('poll'); await new Promise((r) => setTimeout(r, 900)); }
+      SF.Arrange.setArranging(true);
+      await new Promise((r) => setTimeout(r, 900));
+      const regions = JSON.parse(JSON.stringify(SF.Editor.currentSlide().design.regions || {}));
+      SF.Arrange.setArranging(false);
+      await new Promise((r) => setTimeout(r, 300));
+      const pad = document.querySelector('#previewBox .pad');
+      return { regions, padRight: pad ? getComputedStyle(pad).paddingRight : null };
+    };
+    const off = await seedOf(false);
+    const on = await seedOf(true);
+    return { off, on };
+  });
+  assert.ok(Object.keys(railSeed.on.regions).length, 'the railed slide must have been seeded');
+  assert.notEqual(railSeed.on.padRight, railSeed.off.padRight,
+    'the rail must actually be changing the canvas, or this check proves nothing — got ' +
+    railSeed.on.padRight + ' both ways');
+  assert.deepEqual(railSeed.on.regions, railSeed.off.regions,
+    'the same slide must seed the same regions with a rail open and closed:\n  rail on  ' +
+    JSON.stringify(railSeed.on.regions) + '\n  rail off ' + JSON.stringify(railSeed.off.regions));
+  checks++;
+
   assert.deepEqual(errors, [], 'no page errors');
   console.log('ok · canvas placement: ' + checks + ' checks · a drop, a corner resize, the arrow keys and an ' +
     'insert all go through one rule, so none of them can leave two blocks sharing a cell; a resize still ' +
     'grows through its neighbour, which is how a layout gets built; and the grid is flush to the body between ' +
-    'a composition\u2019s header and footer rather than running off the bottom of the slide');
+    'a composition\u2019s header and footer rather than running off the bottom of the slide, and a slide seeds ' +
+    'the same regions whether or not a poll rail is docked beside it');
 } finally {
   await browser?.close();
   relay.kill();

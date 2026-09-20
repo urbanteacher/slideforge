@@ -76,11 +76,31 @@
      nothing" true by construction, for every composition, every slide type
      and every theme, with no second copy of the numbers to keep in step. */
   function measuredRegions() {
-    var rt = root();
-    var host = rt && SF.latticeHost(rt);
-    if (!rt || !host || host.querySelector('.sf-lattice')) return null;
+    var s = slide();
+    var deck = SF.Editor && SF.Editor.deck && SF.Editor.deck();
+    if (!s || !deck || !SF.renderSlide) return null;
+    /* A clean render of this slide at its true size, off to the side —
+       never the canvas the author is looking at.
+
+       The canvas is whatever state the editor is in. With a poll docked
+       beside it the pad carries 438px of right padding, so the body is nine
+       columns wide instead of twelve; measuring there wrote nine-column
+       regions and the slide kept them after the rail closed, squeezed into
+       two thirds of itself for good. The zoom, the panel and the notes strip
+       are all the same hazard. A slide's arrangement is a fact about the
+       slide, so it is measured from the slide alone. */
+    var stage = document.createElement('div');
+    stage.style.cssText = 'position:fixed;left:-20000px;top:0;width:1280px;height:720px;pointer-events:none';
+    document.body.appendChild(stage);
+    var rt, host;
+    try {
+      rt = SF.renderSlide(deck, s, { index: 0, total: 1, interactive: false });
+      stage.appendChild(rt);
+      host = SF.latticeHost(rt);
+    } catch (e) { host = null; }
+    if (!rt || !host || host.querySelector('.sf-lattice')) { stage.remove(); return null; }
     var rb = rt.getBoundingClientRect();
-    if (!rb.width || !rb.height) return null;
+    if (!rb.width || !rb.height) { stage.remove(); return null; }
     /* In the slide's own coordinates, not the host's. The lattice always
        occupies the same 1176x576 of the slide whatever box the composition
        drew its body in — `ballot` centres its body in 790px, and measuring
@@ -111,6 +131,7 @@
         rows: clamp(upto(b.height / scale / stepY), 1, g.rows - row + 1)
       };
     });
+    stage.remove();
     return Object.keys(out).length ? out : null;
   }
 
