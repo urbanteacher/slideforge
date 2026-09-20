@@ -2421,6 +2421,720 @@
     return { LETTER_CAP, WORD_ARCS, WORD_EFFECTS, WORD_FROMS, WORD_SPEEDS, WORD_STAGGERS, statementBand, statementWordSize, wordEffect, wordFrom, wordPlan, wordPlanUnit, wordSpeed, wordStagger, wordsLoop, wrapWords };
   }
 
+  // src/render/live.js
+  function createLiveRenderer(SF, helpers) {
+    const { el, themedRoot } = helpers;
+    function questionCard(deck, item) {
+      var node = themedRoot("slide", deck, "layout-question", "question");
+      var pad = el("div", "pad");
+      pad.appendChild(el("div", "qc-label", "From the room"));
+      pad.appendChild(el("div", "qc-text", item.text || ""));
+      var foot = el("div", "qc-foot");
+      if (item.name) foot.appendChild(el("span", "qc-who", item.name));
+      if (item.votes > 1) {
+        foot.appendChild(el("span", "qc-votes", "▲ " + item.votes + " also asked this"));
+      }
+      pad.appendChild(foot);
+      node.appendChild(pad);
+      return node;
+    }
+    function feedbackFocus(deck, digest, opts) {
+      opts = opts || {};
+      var node = themedRoot("slide", deck, "layout-feedback", "feedback");
+      var pad = el("div", "pad");
+      if (opts.join && opts.join.pin) {
+        var jl = el("div", "joinline fk-join");
+        pad.appendChild(jl);
+        paintJoinLine(jl, opts.join);
+      }
+      var head = el("div", "fk-head");
+      head.appendChild(el("div", "fk-kind", opts.title || "Feedback"));
+      if (opts.subtitle) head.appendChild(el("div", "fk-prompt", opts.subtitle));
+      pad.appendChild(head);
+      var body = el("div", "fk-body");
+      body.dataset.kind = digest && digest.kind || "";
+      if (!digest || !digest.kind) {
+        body.appendChild(el("div", "fk-empty", "Waiting for the room"));
+      } else if (digest.kind === "poll") {
+        focusPoll(body, digest, opts);
+      } else if (digest.kind === "scale") {
+        focusScale(body, digest, opts);
+      } else if (digest.kind === "wordcloud") {
+        focusCloud(body, digest);
+      } else {
+        focusBrainstorm(body, digest);
+      }
+      pad.appendChild(body);
+      var foot = el("div", "fk-foot");
+      foot.appendChild(el("span", null, opts.footnote || ""));
+      if (opts.sample) foot.appendChild(el("span", "fk-tag", "SAMPLE"));
+      else foot.appendChild(el("span", "fk-hint", "E or S to close"));
+      pad.appendChild(foot);
+      node.appendChild(pad);
+      return node;
+    }
+    function focusPoll(body, digest, opts) {
+      var counts = digest.counts || [];
+      var labels = opts.options || [];
+      var max = Math.max(1, Math.max.apply(null, counts.concat([1])));
+      var total = digest.total || 0;
+      var lead = counts.indexOf(Math.max.apply(null, counts.concat([0])));
+      counts.forEach(function(n, i) {
+        var row = el("div", "fk-poll" + (total && i === lead && n > 0 ? " lead" : ""));
+        row.appendChild(el("div", "fk-plabel", labels[i] || "Option " + (i + 1)));
+        var bar = el("div", "fk-pbar");
+        var fill = el("i");
+        fill.style.width = n / max * 100 + "%";
+        bar.appendChild(fill);
+        row.appendChild(bar);
+        var num = el("div", "fk-pnum");
+        num.appendChild(el("span", "fk-pn", String(n)));
+        num.appendChild(el("span", "fk-ppct", total ? Math.round(n / total * 100) + "%" : "0%"));
+        row.appendChild(num);
+        body.appendChild(row);
+      });
+    }
+    function focusCloud(body, digest) {
+      var words = digest.words || [];
+      if (!words.length) {
+        body.appendChild(el("div", "fk-empty", "No words yet"));
+        return;
+      }
+      var cloud = el("div", "fk-cloud");
+      var top = words[0].n;
+      words.slice(0, 32).forEach(function(w) {
+        var scale = 0.34 + 0.66 * (w.n / top);
+        var chip = el("span", "fk-word", w.text);
+        chip.style.fontSize = "calc(var(--fk-cloud) * " + scale.toFixed(2) + ")";
+        if (w.n > 1) chip.appendChild(el("sup", null, String(w.n)));
+        cloud.appendChild(chip);
+      });
+      body.appendChild(cloud);
+    }
+    function focusBrainstorm(body, digest) {
+      var items2 = digest.items || [];
+      if (!items2.length) {
+        body.appendChild(el("div", "fk-empty", "Nothing yet"));
+        return;
+      }
+      var grid = el("div", "fk-cards");
+      grid.dataset.cols = items2.length > 6 ? "3" : "2";
+      items2.slice(0, 9).forEach(function(it) {
+        var card = el("div", "fk-card");
+        card.appendChild(el("div", "fk-ctext", it.text));
+        if (it.name) card.appendChild(el("div", "fk-cwho", it.name));
+        grid.appendChild(card);
+      });
+      body.appendChild(grid);
+      if (items2.length > 9) {
+        body.appendChild(el("div", "fk-more", "+ " + (items2.length - 9) + " more not shown"));
+      }
+    }
+    function feedbackViewOpts(f) {
+      var kind = f && f.kind ? SF.FEEDBACK_KINDS[f.kind] : null;
+      return {
+        title: kind ? kind.label : "Feedback",
+        subtitle: f.prompt,
+        /* A scale's points are generated from how many the author chose; what
+           they name is the two ends. */
+        options: f.kind === "scale" ? SF.scaleLabels(f) : f.options || [],
+        ends: f.kind === "scale" ? { low: f.lowLabel, high: f.highLabel } : null
+      };
+    }
+    function sampleFeedbackDigest2(f) {
+      if (!f || !f.kind) return null;
+      if (f.kind === "poll") {
+        var live = f.options.filter(function(o) {
+          return String(o).trim();
+        });
+        var weights = [7, 11, 4, 2, 5, 1];
+        var counts = live.map(function(_, i) {
+          return weights[i % weights.length];
+        });
+        var total = counts.reduce(function(a, b) {
+          return a + b;
+        }, 0);
+        return { kind: "poll", counts, total, answered: total, players: total, sample: true };
+      }
+      if (f.kind === "scale") {
+        var shape = {
+          3: [2, 5, 9],
+          4: [2, 3, 7, 5],
+          5: [1, 2, 4, 7, 3],
+          6: [1, 2, 3, 6, 4, 2],
+          7: [1, 1, 2, 4, 6, 3, 1]
+        };
+        var bars = shape[f.points] || shape[5];
+        var seen = bars.reduce(function(a, b) {
+          return a + b;
+        }, 0);
+        return {
+          kind: "scale",
+          counts: bars,
+          total: seen,
+          answered: seen,
+          players: seen + 3,
+          sample: true
+        };
+      }
+      if (f.kind === "wordcloud") {
+        return {
+          kind: "wordcloud",
+          words: [
+            { text: "useful", n: 6 },
+            { text: "tricky", n: 4 },
+            { text: "clear", n: 3 },
+            { text: "fast", n: 2 },
+            { text: "dense", n: 2 },
+            { text: "new", n: 1 },
+            { text: "daunting", n: 1 },
+            { text: "fair", n: 1 }
+          ],
+          total: 20,
+          unique: 8,
+          answered: 14,
+          players: 18,
+          sample: true
+        };
+      }
+      return {
+        kind: "brainstorm",
+        items: [
+          { name: "Ana", text: "More worked examples in the seminars" },
+          { name: "Ben", text: "A past paper walkthrough before the deadline" },
+          { name: "Priya", text: "Share the slides the night before" },
+          { name: "Tom", text: "Shorter reading list, more depth on each" }
+        ],
+        total: 4,
+        answered: 4,
+        players: 18,
+        sample: true
+      };
+    }
+    function feedbackRail(deck) {
+      var root = themedRoot("scorerail fbrail", deck);
+      root.appendChild(el("div", "rail-title", "Feedback"));
+      root.appendChild(el("div", "rail-sub", ""));
+      root.appendChild(el("div", "rail-news"));
+      root.appendChild(el("div", "rail-join"));
+      root.appendChild(el("div", "fb-body"));
+      var foot = el("div", "foot");
+      foot.appendChild(el("div", "joinline"));
+      foot.appendChild(el("div", "notes", ""));
+      root.appendChild(foot);
+      return root;
+    }
+    function paintFeedbackRail(rail, digest, opts) {
+      opts = opts || {};
+      rail.querySelector(".rail-title").textContent = opts.title || "Feedback";
+      rail.querySelector(".rail-sub").textContent = opts.subtitle || "";
+      rail.querySelector(".foot .notes").textContent = opts.footnote || "";
+      paintJoinLine(rail.querySelector(".joinline"), opts.join);
+      var busy = feedbackDigestBusy(digest);
+      var joining = !!(opts.join && opts.join.pin);
+      var slot = ensureRailJoin(rail);
+      paintRailJoin(slot, opts.join, !busy);
+      var body = rail.querySelector(".fb-body");
+      body.textContent = "";
+      rail.dataset.kind = digest && digest.kind || "";
+      if (!busy) {
+        if (opts.roster && opts.roster.length) paintFbRoster(body, opts.roster);
+        else if (!joining) {
+          body.appendChild(el("div", "empty-rail", opts.emptyText || "Waiting for the room"));
+        }
+        return;
+      }
+      if (digest.kind === "poll") return paintPoll(body, digest, opts);
+      if (digest.kind === "scale") return paintScale(body, digest, opts);
+      if (digest.kind === "wordcloud") return paintCloud(body, digest, opts);
+      return paintBrainstorm(body, digest);
+    }
+    function ensureRailJoin(rail) {
+      var body = rail.querySelector(".fb-body");
+      var join = rail.querySelector(".rail-join");
+      if (!join) {
+        join = el("div", "rail-join");
+        if (body) rail.insertBefore(join, body);
+        else rail.appendChild(join);
+        return join;
+      }
+      if (body && join.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_PRECEDING) {
+        rail.insertBefore(join, body);
+      }
+      return join;
+    }
+    function feedbackDigestBusy(digest) {
+      if (!digest || !digest.kind) return false;
+      if (Number(digest.total) > 0 || Number(digest.answered) > 0) return true;
+      if (digest.words && digest.words.length) return true;
+      if (digest.items && digest.items.length) return true;
+      if (digest.counts && digest.counts.some(function(n) {
+        return Number(n) > 0;
+      })) return true;
+      return false;
+    }
+    function paintFbRoster(body, roster) {
+      body.appendChild(el(
+        "div",
+        "fb-roster-lbl",
+        roster.length === 1 ? "1 person in" : roster.length + " people in"
+      ));
+      roster.slice(0, 12).forEach(function(p) {
+        body.appendChild(el("div", "fb-who-in", p.name || "Player"));
+      });
+      if (roster.length > 12) {
+        body.appendChild(el("div", "fb-who-more", "+" + (roster.length - 12) + " more"));
+      }
+    }
+    function paintPoll(body, digest, opts) {
+      var counts = digest.counts || [];
+      var labels = opts.options || [];
+      var max = Math.max(1, Math.max.apply(null, counts.concat([1])));
+      var total = digest.total || 0;
+      if (!total) {
+        var joining = !!(opts.join && opts.join.pin);
+        if (!joining) body.appendChild(el("div", "empty-rail", "No votes yet"));
+        return;
+      }
+      counts.forEach(function(n, i) {
+        var row = el("div", "pollrow");
+        var head = el("div", "pollhead");
+        head.appendChild(el("span", "plabel", labels[i] || "Option " + (i + 1)));
+        head.appendChild(el("span", "pn", String(n)));
+        row.appendChild(head);
+        var bar = el("div", "pbar");
+        var fill = el("i");
+        fill.style.width = n / max * 100 + "%";
+        bar.appendChild(fill);
+        row.appendChild(bar);
+        row.appendChild(el("div", "ppct", total ? Math.round(n / total * 100) + "%" : "0%"));
+        body.appendChild(row);
+      });
+    }
+    function scaleStats(counts) {
+      var total = 0, sum = 0;
+      counts.forEach(function(n, i) {
+        total += n;
+        sum += n * (i + 1);
+      });
+      if (!total) return { total: 0, mean: 0, split: false };
+      var mean = sum / total;
+      var edges = (counts[0] || 0) + (counts[counts.length - 1] || 0);
+      var middle = total - edges;
+      return { total, mean, split: counts.length > 2 && edges > middle };
+    }
+    function scaleChart(counts, opts, cls) {
+      var stats = scaleStats(counts);
+      var max = Math.max(1, Math.max.apply(null, counts.concat([1])));
+      var wrap = el("div", cls);
+      var cols = el("div", cls + "-cols");
+      counts.forEach(function(n, i) {
+        var col = el("div", cls + "-col");
+        var bar = el("div", cls + "-bar");
+        var fill = el("i");
+        fill.style.height = n / max * 100 + "%";
+        bar.appendChild(fill);
+        col.appendChild(el("div", cls + "-n", n ? String(n) : ""));
+        col.appendChild(bar);
+        col.appendChild(el("div", cls + "-p", String(i + 1)));
+        cols.appendChild(col);
+      });
+      wrap.appendChild(cols);
+      var ends = opts.ends || {};
+      var foot = el("div", cls + "-ends");
+      foot.appendChild(el("span", null, ends.low || ""));
+      foot.appendChild(el("span", null, ends.high || ""));
+      wrap.appendChild(foot);
+      var read = el("div", cls + "-read");
+      if (stats.total) {
+        read.appendChild(el("strong", null, stats.mean.toFixed(1)));
+        read.appendChild(el("span", null, " average of " + stats.total));
+        if (stats.split) read.appendChild(el("span", cls + "-split", "ROOM IS SPLIT"));
+      }
+      wrap.appendChild(read);
+      return wrap;
+    }
+    function paintScale(body, digest, opts) {
+      if (!digest.total) {
+        var joining = !!(opts && opts.join && opts.join.pin);
+        if (!joining) body.appendChild(el("div", "empty-rail", "Nobody has placed themselves yet"));
+        return;
+      }
+      body.appendChild(scaleChart(digest.counts || [], opts, "sc"));
+    }
+    function focusScale(body, digest, opts) {
+      body.appendChild(scaleChart(digest.counts || [], opts, "fksc"));
+    }
+    function paintCloud(body, digest, opts) {
+      var words = digest.words || [];
+      if (!words.length) {
+        var joining = !!(opts && opts.join && opts.join.pin);
+        if (!joining) body.appendChild(el("div", "empty-rail", "No words yet"));
+        return;
+      }
+      var cloud = el("div", "cloud");
+      var top = words[0].n;
+      words.slice(0, 24).forEach(function(w) {
+        var scale = 0.5 + 0.5 * (w.n / top);
+        var chip = el("span", "word", w.text);
+        chip.style.fontSize = "calc(var(--cloud-f) * " + scale.toFixed(2) + ")";
+        if (w.n > 1) chip.appendChild(el("sup", null, String(w.n)));
+        cloud.appendChild(chip);
+      });
+      body.appendChild(cloud);
+    }
+    function paintBrainstorm(body, digest) {
+      var items2 = digest.items || [];
+      if (!items2.length) {
+        body.appendChild(el("div", "empty-rail", "Nothing yet"));
+        return;
+      }
+      items2.slice(0, 8).forEach(function(it) {
+        var card = el("div", "fbcard");
+        card.appendChild(el("div", "fbtext", it.text));
+        if (it.name) card.appendChild(el("div", "fbwho", it.name));
+        body.appendChild(card);
+      });
+      if (items2.length > 8) {
+        body.appendChild(el("div", "more", "+ " + (items2.length - 8) + " more"));
+      }
+    }
+    function tint(hex, alpha) {
+      var m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(String(hex || ""));
+      if (!m) return "rgba(255,255,255,.18)";
+      return "rgba(" + parseInt(m[1], 16) + "," + parseInt(m[2], 16) + "," + parseInt(m[3], 16) + "," + alpha + ")";
+    }
+    function raceTrack(deck, lanes, opts) {
+      opts = opts || {};
+      var len = Math.max(1, opts.length || 5);
+      var node = themedRoot("slide", deck, "layout-race", "race");
+      var pad = el("div", "pad");
+      pad.appendChild(el("div", "race-title", opts.title || "The race"));
+      if (opts.note) pad.appendChild(el("div", "race-note", opts.note));
+      var board5 = el("div", "racetrack");
+      board5.style.setProperty("--steps", String(len));
+      lanes.forEach(function(lane) {
+        var row = el("div", "lane" + (lane.moved ? " moved" : "") + ((opts.winners || []).indexOf(lane.key) > -1 ? " won" : ""));
+        var colour = lane.color || "var(--s-accent)";
+        row.style.setProperty("--lane-color", colour);
+        row.style.setProperty("--lane-tint", tint(lane.color, 0.34));
+        var label = el("div", "lane-name");
+        var dot = el("span", "lane-dot");
+        dot.style.background = colour;
+        label.appendChild(dot);
+        label.appendChild(el("span", "lane-text", lane.name));
+        row.appendChild(label);
+        var rail = el("div", "lane-rail");
+        for (var i = 1; i <= len; i++) {
+          var cell = el("div", "step" + (i === len ? " finish" : ""));
+          if (i <= lane.pos) cell.classList.add("done");
+          rail.appendChild(cell);
+        }
+        var runner = el("div", "runner", lane.pos >= len ? "🏆" : "🏇");
+        runner.style.left = (lane.pos <= 0 ? 0 : (lane.pos - 0.5) / len * 100) + "%";
+        rail.appendChild(runner);
+        row.appendChild(rail);
+        row.appendChild(el("div", "lane-pos", lane.pos + " / " + len));
+        board5.appendChild(row);
+      });
+      pad.appendChild(board5);
+      node.appendChild(pad);
+      return node;
+    }
+    function bossBar(deck, opts) {
+      opts = opts || {};
+      var max = Math.max(1, Number(opts.max) || 1);
+      var hp = Math.max(0, Math.min(max, Number(opts.hp) || 0));
+      var pct = Math.round(hp / max * 100);
+      var node = themedRoot("slide", deck, "layout-boss" + (opts.hit ? " boss-hit" : "") + (hp <= 0 ? " boss-down" : ""), "boss");
+      var pad = el("div", "pad");
+      pad.appendChild(el("div", "boss-title", opts.title || "Boss battle"));
+      if (opts.note) pad.appendChild(el("div", "boss-note", opts.note));
+      var meter = el("div", "boss-meter");
+      var fill = el("div", "boss-fill");
+      fill.style.width = pct + "%";
+      meter.appendChild(fill);
+      pad.appendChild(meter);
+      pad.appendChild(el("div", "boss-hp", hp + " / " + max + " HP"));
+      node.appendChild(pad);
+      return node;
+    }
+    function wordRevealWall(deck, opts) {
+      opts = opts || {};
+      var node = themedRoot("slide", deck, "layout-wordreveal", "wordreveal");
+      var pad = el("div", "pad");
+      pad.appendChild(el("div", "wr-title", "Word reveal"));
+      if (opts.hint) pad.appendChild(el("div", "wr-hint", opts.hint));
+      pad.appendChild(el("div", "wr-mask", opts.mask || ""));
+      pad.appendChild(el(
+        "div",
+        "wr-meta",
+        (opts.shown || 0) + " / " + (opts.total || 0) + " letters"
+      ));
+      node.appendChild(pad);
+      return node;
+    }
+    function studyCards(deck, opts) {
+      opts = opts || {};
+      var node = themedRoot("slide", deck, "layout-study", "study");
+      var pad = el("div", "pad");
+      pad.appendChild(el("div", "study-term", opts.term || ""));
+      if (opts.definition) pad.appendChild(el("div", "study-def", opts.definition));
+      if (opts.seconds > 0) {
+        pad.appendChild(el(
+          "div",
+          "study-note",
+          opts.hideAfter ? "Study · " + opts.seconds + "s then hide" : "Keywords stay visible"
+        ));
+      }
+      node.appendChild(pad);
+      return node;
+    }
+    function scoreRail(deck) {
+      var root = themedRoot("scorerail", deck);
+      root.appendChild(el("div", "rail-title", "The room"));
+      root.appendChild(el("div", "rail-sub", ""));
+      root.appendChild(el("div", "rail-news"));
+      root.appendChild(el("div", "rows"));
+      root.appendChild(el("div", "rail-join"));
+      var foot = el("div", "foot");
+      foot.appendChild(el("div", "joinline"));
+      foot.appendChild(el("div", "notes", ""));
+      root.appendChild(foot);
+      return root;
+    }
+    var RAIL_INK = ["--s-fg", "--s-dim", "--s-rule", "--s-card", "--s-accent", "--s-accent-2", "--s-scrim"];
+    function railSurface(rail, slideEl) {
+      if (!rail || !slideEl) return;
+      var cs = getComputedStyle(slideEl);
+      var img = cs.backgroundImage;
+      rail.style.backgroundColor = cs.backgroundColor;
+      rail.style.backgroundImage = img.indexOf("url(") === -1 ? img : "none";
+      RAIL_INK.forEach(function(token) {
+        var value = cs.getPropertyValue(token).trim();
+        if (value) rail.style.setProperty(token, value);
+        else rail.style.removeProperty(token);
+      });
+      if (slideEl.dataset.ground) rail.dataset.ground = slideEl.dataset.ground;
+    }
+    function paintRailJoin(node, join, roomy) {
+      if (!node) return;
+      var live = !!(join && join.pin);
+      node.classList.toggle("on", !!live);
+      node.classList.toggle("big", !!live && roomy);
+      var rail = node.closest ? node.closest(".scorerail") : null;
+      if (rail) rail.classList.toggle("joining-big", !!live && roomy);
+      if (!live) {
+        node.textContent = "";
+        node.dataset.for = "";
+        return;
+      }
+      var open = join.open !== false;
+      var link = join.link || join.url || "";
+      var waiting = open ? 0 : Math.max(0, Number(join.waiting) || 0);
+      var key = link + "|" + (roomy ? "big" : "small") + "|" + (open ? "open" : "shut") + "|" + waiting;
+      if (node.dataset.for === key && node.childElementCount) return;
+      node.dataset.for = key;
+      node.textContent = "";
+      if (link && SF.qrSvg) {
+        var code = el("div", "rj-qr");
+        try {
+          code.innerHTML = SF.qrSvg(link, { quiet: 4, title: "Join at " + link });
+          node.appendChild(code);
+        } catch (e) {
+        }
+      }
+      var side = el("div", "rj-side");
+      side.appendChild(el(
+        "div",
+        "rj-lbl" + (open ? "" : " shut"),
+        open ? roomy ? "Point a camera here" : "Still joining?" : roomy ? "Scan to join the next round" : "Joining next round"
+      ));
+      side.appendChild(el("div", "rj-pin", join.pin));
+      if (roomy) side.appendChild(el("div", "rj-url", join.url || ""));
+      if (waiting) {
+        side.appendChild(el(
+          "div",
+          "rj-wait",
+          waiting + (waiting === 1 ? " person is" : " people are") + " in the queue"
+        ));
+      }
+      node.appendChild(side);
+    }
+    var RAIL_MAX_ROWS = 10;
+    function nameScale(name) {
+      var longest = String(name).split(/\s+/).reduce(function(m, w) {
+        return Math.max(m, w.length);
+      }, 0);
+      if (longest <= 6) return 1;
+      if (longest <= 9) return 0.86;
+      if (longest <= 12) return 0.74;
+      return 0.62;
+    }
+    function railDensity(n) {
+      if (n <= 2) return "xl";
+      if (n <= 4) return "lg";
+      if (n <= 6) return "md";
+      if (n <= 8) return "sm";
+      return "xs";
+    }
+    function paintScoreRail(rail, rows2, opts) {
+      opts = opts || {};
+      var sub = rail.querySelector(".rail-sub");
+      if (sub) sub.textContent = opts.subtitle || "";
+      var legend = rail.querySelector(".rail-legend");
+      if (!legend) {
+        var newLegend = el("div", "rail-legend");
+        var rowsBox = rail.querySelector(".rows");
+        if (rowsBox && rowsBox.parentNode) {
+          rowsBox.parentNode.insertBefore(newLegend, rowsBox);
+        }
+        legend = newLegend;
+      }
+      if (legend) {
+        legend.replaceChildren();
+        legend.appendChild(el("span", "lg-learn", "ACCURACY · ANSWERED"));
+        legend.appendChild(el("span", "lg-score", String(opts.scoreLabel || "Game points").toUpperCase()));
+        legend.hidden = !rows2.length;
+      }
+      var footNotes = rail.querySelector(".foot .notes");
+      if (footNotes) footNotes.textContent = opts.footnote || "";
+      var joinLine = rail.querySelector(".joinline");
+      if (joinLine) paintJoinLine(joinLine, opts.join);
+      var railJoin = rail.querySelector(".rail-join");
+      if (railJoin) paintRailJoin(railJoin, opts.join, !rows2.length);
+      var box2 = rail.querySelector(".rows");
+      if (!box2) return;
+      if (!rows2.length) {
+        rail.dataset.density = "lg";
+        box2.innerHTML = "";
+        var joining = !!(opts.join && opts.join.pin);
+        if (!joining) {
+          box2.appendChild(el("div", "empty-rail", opts.emptyText || "Nobody has joined yet."));
+        }
+        return;
+      }
+      var shown = rows2.slice(0, RAIL_MAX_ROWS);
+      var hidden = rows2.length - shown.length;
+      rail.dataset.density = railDensity(shown.length + (hidden ? 1 : 0));
+      var roomForMembers = ["xl", "lg", "md"].indexOf(rail.dataset.density) !== -1;
+      var existing = {};
+      Array.prototype.forEach.call(box2.children, function(n) {
+        if (n.dataset.key) existing[n.dataset.key] = n;
+      });
+      var order2 = [];
+      shown.forEach(function(r, i) {
+        var node = existing[r.key];
+        if (!node) {
+          node = el("div", "srow");
+          node.dataset.key = r.key;
+          node.appendChild(el("div", "rk", ""));
+          var who = el("div", "who");
+          who.appendChild(el("div", "nm", ""));
+          node.appendChild(who);
+          who.appendChild(el("div", "learn", ""));
+          node.appendChild(el("div", "sc", ""));
+        }
+        delete existing[r.key];
+        node.querySelector(".rk").textContent = String(i + 1);
+        var nm = node.querySelector(".nm");
+        nm.textContent = r.name;
+        nm.style.fontSize = "calc(var(--nm-f) * " + nameScale(r.name) + ")";
+        var who = node.querySelector(".who");
+        var mem = who.querySelector(".mem");
+        if (r.members != null && roomForMembers) {
+          if (!mem) {
+            mem = el("div", "mem", "");
+            who.appendChild(mem);
+          }
+          mem.textContent = r.members === 1 ? "1 player" : r.members + " players";
+        } else if (mem) {
+          mem.remove();
+        }
+        var learn = node.querySelector(".learn");
+        if (learn) {
+          var asked = r.asked || 0;
+          if (!asked) {
+            learn.textContent = "";
+            learn.className = "learn";
+          } else {
+            var acc = typeof r.accuracy === "number" ? r.accuracy : null;
+            learn.textContent = (acc == null ? "—" : acc + "%") + " · " + (r.answered || 0) + "/" + asked;
+            var struggling = asked >= 3 && (acc != null && acc < 50 || (r.answered || 0) * 2 < asked);
+            learn.className = "learn" + (struggling ? " needs" : "");
+            if (struggling) learn.textContent += " · needs support";
+          }
+        }
+        var sc = node.querySelector(".sc");
+        sc.textContent = String(r.score);
+        sc.title = opts.scoreLabel || "Game points";
+        sc.setAttribute("aria-label", (opts.scoreLabel || "Game points") + ": " + r.score);
+        node.style.borderLeftColor = r.color || "";
+        node.classList.toggle("lead", i === 0 && r.score > 0);
+        if (r.gained) {
+          node.classList.remove("gain");
+          void node.offsetWidth;
+          node.classList.add("gain");
+        }
+        order2.push(node);
+      });
+      Object.keys(existing).forEach(function(k) {
+        existing[k].remove();
+      });
+      var moreEl = box2.querySelector(".more");
+      if (hidden > 0) {
+        var more = moreEl || el("div", "more", "");
+        more.textContent = "+ " + hidden + " more";
+        order2.push(more);
+      } else if (moreEl) {
+        moreEl.remove();
+      }
+      for (var oi = 0; oi < order2.length; oi++) {
+        if (order2[oi]) box2.appendChild(order2[oi]);
+      }
+    }
+    function paintJoinLine(node, join) {
+      if (!join || !join.pin) {
+        node.textContent = "";
+        node.style.display = "none";
+        return;
+      }
+      node.style.display = "";
+      node.textContent = "";
+      node.classList.toggle("shut", join.open === false);
+      if (join.open === false) {
+        node.appendChild(el("span", "jl-lbl", "CLOSED"));
+        node.appendChild(el(
+          "span",
+          "jl-url",
+          join.waiting ? join.waiting + " waiting for next round" : "joining reopens next round"
+        ));
+        return;
+      }
+      node.appendChild(el("span", "jl-lbl", "JOIN"));
+      node.appendChild(el("span", "jl-url", join.url || ""));
+      node.appendChild(el("span", "jl-pin", join.pin));
+      if (node.classList.contains("fk-join")) {
+        node.title = "Click or press J for full-screen QR code";
+        node.style.cursor = "pointer";
+        var qrHint = el("span", "jl-qr-hint", "⛶ QR (J)");
+        node.appendChild(qrHint);
+        node.onclick = function() {
+          if (SF && SF.Player && SF.Player.control) {
+            SF.Player.control("join");
+          }
+        };
+      }
+    }
+    function soloScore(deck) {
+      var root = themedRoot("soloscore", deck);
+      root.appendChild(el("span", "lbl", "Score"));
+      root.appendChild(el("span", "val", "0 / 0"));
+      return root;
+    }
+    return { bossBar, feedbackFocus, feedbackRail, feedbackViewOpts, paintFeedbackRail, paintRailJoin, paintScoreRail, questionCard, raceTrack, railSurface, sampleFeedbackDigest: sampleFeedbackDigest2, scoreRail, soloScore, studyCards, tint, wordRevealWall };
+  }
+
   // src/render/layout-slots.js
   var region = (col, row, cols, rows2, extra = {}) => ({ col, row, cols, rows: rows2, ...extra });
   var clone = (value) => Object.fromEntries(Object.entries(value || {}).map(([key, value2]) => [key, { ...value2 }]));
@@ -12004,6 +12718,7 @@
     createCompositionRenderer,
     createChartRenderer,
     createWordRenderer,
+    createLiveRenderer,
     bindCanvasRegions,
     declareBodyRegion,
     measureBodyRegion,

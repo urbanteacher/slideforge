@@ -219,7 +219,7 @@ checkout's server unless you pass `SF_URL`.
 | 0 | Surface probe | nothing | Build the guard before moving anything |
 | 1 | `src/render/charts.js` | 1,453 lines | **DONE 2026-09-20.** One export, one outbound dep — the narrowest contract of the six |
 | 2 | `src/render/words.js` | 324 lines | **DONE 2026-09-20.** One coherent cluster; 16 names, all but one already public |
-| 3 | `render-live.js` | ~860 lines | Session furniture, not slide layout; 17 exports |
+| 3 | `src/render/live.js` | 920 lines | **DONE 2026-09-20.** Session furniture, not slide layout |
 | 4 | `render-quiz.js` | ~1,100 lines | First user of `SF.registerLayout`; proves the registry across files |
 | 5 | `render-regions.js` | ~950 lines | ~40 of the 93 SF names live here (§4.1) — the largest contract, moved last once the pattern is settled |
 
@@ -310,7 +310,35 @@ direction × speed × stagger × arc × unit across statement and title slides,
 plus `wrapWords` called directly — and all 978 are identical. `wordPlan` also
 has genuine unit coverage in `tests/word-plan.test.js`, which charts did not.
 
-### Steps 3–5 — the move
+### Step 3 — live session furniture — **DONE 2026-09-20**
+
+`src/render/live.js`, 920 lines. `js/render.js` **5,491 → 4,591**.
+
+Score rails, race track, boss bar, word-reveal wall, study cards, feedback
+rails and their focus views, the join line. None of it lays out a slide.
+
+**34 names in, 16 out — eighteen stop being reachable**, the largest reduction
+in the split so far. Fifteen of the sixteen are public `SF` names the player and
+relay call; `tint` is the exception, used only by layouts still in
+`js/render.js`.
+
+`el` and `themedRoot` are injected. Everything else goes through `SF` at call
+time — including `SF.Player`, which is defined by a script that loads *after*
+`js/render.js`. Reading it through the live `SF` rather than capturing it at
+module scope is what keeps that ordering from mattering.
+
+**One line was not a verbatim move, and `tsc` is what caught it.** The join
+line's QR handler read `global.SF` — `global` being the parameter of the IIFE
+in `js/render.js`, which does not exist in a module. It now reads the injected
+`SF`, the same object. Expect more of these as the remaining bands move; the
+typecheck step of `npm test` finds them, so do not skip it.
+
+Verified: 31 components rendered before and after — score rails across two
+themes, race track, boss bar, word wall, study cards, feedback rails, question
+cards, the join line in each open/roomy state, the paint functions, and every
+feedback kind — all identical, none threw.
+
+### Steps 4–5 — the move
 
 Each step is mechanically the same:
 
@@ -386,6 +414,9 @@ document is stale — fix §7 as part of the step that corrects it.
 - **2026-09-20** — Route decided: `src/render/` ES modules, not plain scripts
   (§3.1). `index.html` already has 33 hand-versioned script tags and adding
   five more would have worsened the problem being fixed.
+- **2026-09-20** — Step 3 done. `src/render/live.js`; `js/render.js` 5,491 →
+  **4,591 lines**. 34 names in, 16 out. First non-verbatim line of the split: a
+  `global.SF` reference that only a module would reject, found by `tsc`.
 - **2026-09-20** — Step 2 done. `src/render/words.js`; `js/render.js` 5,795 →
   **5,491 lines**. Contract unchanged at 16 public names — this band was
   already public, so the gain was findability, not encapsulation. 978 rendered
