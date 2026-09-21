@@ -12,10 +12,22 @@
    Seeding applies the selected layout's declared slots. It does not read the
    rendered slide back into data: layout geometry stays stable as copy, fonts
    and themes change. */
-(function (global) {
-  'use strict';
-  var SF = global.SF;
-  if (!SF) return;
+
+/* Moved out of js/arrange.js and under the editor, where the measurements put
+ * it. It calls SF.Editor forty-seven times and almost nothing else: it is not
+ * part of the canvas, it is the authoring engine's hands on the canvas. Making
+ * that explicit takes the canvas layer's editor coupling from 66 references to
+ * 16 without rewriting a line of either.
+ *
+ * It installs rather than returns: the file's whole public surface is the one
+ * `SF.Arrange = {…}` at the bottom, exactly as it was. js/editor.js calls this,
+ * which is the architectural statement — the editor owns its own canvas tools.
+ *
+ * Nothing here runs at install time but function declarations and that final
+ * assignment, so installing earlier than the old script tag did is strictly
+ * more available, never less.
+ */
+export function installArrange(SF) {
 
   var SLIDE_W = 1280;
   var SLIDE_H = 720;
@@ -1330,4 +1342,4 @@
     isArranging: function () { return arranging; },
     setArranging: setArranging
   };
-})(window);
+}

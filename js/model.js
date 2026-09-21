@@ -6699,6 +6699,1026 @@
     return { drawContentFields };
   }
 
+  // src/editor/arrange.js
+  function installArrange(SF) {
+    var SLIDE_W2 = 1280;
+    var SLIDE_H2 = 720;
+    var GUIDE_NEAR = 6;
+    var arranging = false;
+    var selected = null;
+    var selectedSlide = null;
+    var cancelDrag = null;
+    var arrangedSlide = null;
+    function L() {
+      return SF.latticeGeometry ? SF.latticeGeometry(root()) : SF.LATTICE;
+    }
+    function box2() {
+      return document.getElementById("previewBox");
+    }
+    function slide() {
+      return SF.Editor && SF.Editor.currentSlide && SF.Editor.currentSlide();
+    }
+    function root() {
+      var b = box2();
+      return b && b.querySelector(".slide");
+    }
+    function commit(repaint) {
+      if (SF.Editor && SF.Editor.commitActivityChange) SF.Editor.commitActivityChange();
+      if (repaint && SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
+    }
+    function clamp(v, lo, hi) {
+      return Math.max(lo, Math.min(hi, v));
+    }
+    function scaleOf(node) {
+      var w = node.getBoundingClientRect().width;
+      return w > 0 ? w / SLIDE_W2 : 1;
+    }
+    function regionsOf(s, make) {
+      if (!s) return null;
+      var d = s.design || (make ? s.design = {} : null);
+      if (!d) return null;
+      if (!d.regions && make) d.regions = {};
+      return d.regions || null;
+    }
+    function measuredRegions() {
+      var s = slide();
+      var deck = SF.Editor && SF.Editor.deck && SF.Editor.deck();
+      if (!s || !deck || !SF.renderSlide) return null;
+      var stage = document.createElement("div");
+      stage.style.cssText = "position:fixed;left:-20000px;top:0;width:1280px;height:720px;pointer-events:none";
+      document.body.appendChild(stage);
+      var rt, host;
+      try {
+        rt = SF.renderSlide(deck, s, { index: 0, total: 1, interactive: false });
+        stage.appendChild(rt);
+        host = SF.latticeHost(rt);
+      } catch (e) {
+        host = null;
+      }
+      if (!rt || !host || host.querySelector(".sf-lattice")) {
+        stage.remove();
+        return null;
+      }
+      var rb = rt.getBoundingClientRect();
+      if (!rb.width || !rb.height) {
+        stage.remove();
+        return null;
+      }
+      var g = SF.LATTICE;
+      var scale = rb.width / 1280;
+      var stepX = g.w / g.cols, stepY = g.h / g.rows;
+      var out = {};
+      Array.prototype.slice.call(host.children).forEach(function(n, i) {
+        if (n.nodeType !== 1) return;
+        var b = n.getBoundingClientRect();
+        if (!b.height || !b.width) return;
+        var x = (b.left - rb.left) / scale - g.left;
+        var y = (b.top - rb.top) / scale - g.top;
+        var col = clamp(Math.round(x / stepX) + 1, 1, g.cols);
+        var row = clamp(Math.round(y / stepY) + 1, 1, g.rows);
+        var rows2 = SF.linesFor ? SF.linesFor(b.height / scale) : Math.max(1, Math.ceil(b.height / scale / stepY));
+        out[blockKeyOfNode(n, i)] = {
+          col,
+          row,
+          cols: clamp(Math.max(1, Math.ceil(b.width / scale / stepX - 0.06)), 1, g.cols - col + 1),
+          rows: clamp(rows2, 1, g.rows - row + 1)
+        };
+      });
+      stage.remove();
+      return Object.keys(out).length ? out : null;
+    }
+    function blockKeyOfNode(n, i) {
+      return SF.blockKeyOf ? SF.blockKeyOf(n, i) : "block-" + i;
+    }
+    function seed() {
+      var s = slide();
+      if (!s || !SF.layoutRegionsFor) return false;
+      var map = regionsOf(s, true);
+      if (Object.keys(map).length) return false;
+      var composed = !!(s.design && s.design.composition) || !!(SF.slideComposition && SF.Editor && SF.Editor.deck && SF.slideComposition(SF.Editor.deck(), s));
+      var declared = SF.layoutRegionsFor(s);
+      var measured = measuredRegions() || {};
+      Object.assign(map, declared);
+      Object.keys(measured).forEach(function(k) {
+        if (composed || !declared[k]) {
+          map[k] = measured[k];
+          return;
+        }
+        map[k] = {
+          col: declared[k].col,
+          cols: declared[k].cols,
+          row: measured[k].row,
+          rows: measured[k].rows
+        };
+        if (declared[k].anchorX) map[k].anchorX = declared[k].anchorX;
+        if (declared[k].anchorY) map[k].anchorY = declared[k].anchorY;
+        if (declared[k].alignY) map[k].alignY = declared[k].alignY;
+      });
+      growToFit(s, map);
+      commit(true);
+      return true;
+    }
+    function growToFit(s, map) {
+      var deck = SF.Editor && SF.Editor.deck && SF.Editor.deck();
+      if (!deck || !SF.renderSlide || !SF.latticeFit) return;
+      var was = s.design && s.design.regions;
+      var stage = document.createElement("div");
+      stage.style.cssText = "position:fixed;left:-20000px;top:0;width:1280px;height:720px;pointer-events:none";
+      document.body.appendChild(stage);
+      try {
+        if (!s.design) s.design = {};
+        s.design.regions = map;
+        var rt = SF.renderSlide(deck, s, { index: 0, total: 1, interactive: false });
+        stage.appendChild(rt);
+        SF.latticeFit(rt).forEach(function(f) {
+          var r = map[f.key];
+          if (!r || f.need == null || f.need <= r.rows) return;
+          r.rows = Math.min(f.need, L().rows - r.row + 1);
+        });
+      } catch (e) {
+      }
+      stage.remove();
+      if (was === void 0 && s.design) delete s.design.regions;
+      else if (s.design) s.design.regions = was;
+    }
+    function guideLayer(rt) {
+      var layer = rt.querySelector(".sf-guides");
+      if (!layer) {
+        layer = document.createElement("div");
+        layer.className = "sf-guides";
+        rt.appendChild(layer);
+      }
+      return layer;
+    }
+    function clearGuides() {
+      var rt = root();
+      var layer = rt && rt.querySelector(".sf-guides");
+      if (layer) layer.remove();
+    }
+    function guideLines(exceptKey) {
+      var g = L();
+      var xs = [0, SLIDE_W2 / 2, SLIDE_W2, g.left, g.left + g.w];
+      var ys = [0, SLIDE_H2 / 2, SLIDE_H2, g.top, g.top + g.h];
+      var kinds = { x: {}, y: {} };
+      xs.forEach(function(v) {
+        kinds.x[v] = "edge";
+      });
+      ys.forEach(function(v) {
+        kinds.y[v] = "edge";
+      });
+      var s = slide();
+      var map = regionsOf(s);
+      if (map) {
+        Object.keys(map).forEach(function(k) {
+          if (k === exceptKey) return;
+          var r = map[k];
+          var x1 = g.left + (r.col - 1) * g.stepX;
+          var x2 = x1 + r.cols * g.stepX - (g.stepX - 65);
+          var y1 = g.top + (r.row - 1) * g.stepY;
+          var y2 = y1 + r.rows * g.stepY;
+          [x1, x2].forEach(function(v) {
+            xs.push(v);
+            if (!kinds.x[v]) kinds.x[v] = "block";
+          });
+          [y1, y2].forEach(function(v) {
+            ys.push(v);
+            if (!kinds.y[v]) kinds.y[v] = "block";
+          });
+        });
+      }
+      return { xs, ys, kinds };
+    }
+    function drawGuides(region2, key) {
+      var rt = root();
+      if (!rt) return;
+      var g = L();
+      var layer = guideLayer(rt);
+      layer.replaceChildren();
+      var lines = guideLines(key);
+      var x1 = g.left + (region2.col - 1) * g.stepX;
+      var x2 = x1 + region2.cols * g.stepX - (g.stepX - 65);
+      var y1 = g.top + (region2.row - 1) * g.stepY;
+      var y2 = y1 + region2.rows * g.stepY;
+      function mark(axis, mine, pool) {
+        mine.forEach(function(v) {
+          pool.forEach(function(t) {
+            if (Math.abs(v - t) > GUIDE_NEAR) return;
+            var line = document.createElement("div");
+            line.className = "sf-guide";
+            line.setAttribute("data-axis", axis);
+            line.setAttribute("data-kind", lines.kinds[axis][t] || "block");
+            line.style[axis === "x" ? "left" : "top"] = t + "px";
+            layer.appendChild(line);
+          });
+        });
+      }
+      mark("x", [x1, x2], lines.xs);
+      mark("y", [y1, y2], lines.ys);
+    }
+    function select(slot) {
+      var rt = root();
+      if (rt) rt.querySelectorAll("[data-arrange-selected]").forEach(function(n) {
+        n.removeAttribute("data-arrange-selected");
+      });
+      selected = slot ? slot.getAttribute("data-block-key") : null;
+      selectedSlide = selected ? slide() : null;
+      if (slot) slot.setAttribute("data-arrange-selected", "");
+      paintBar();
+      if (SF.Editor && SF.Editor.refreshInspector) SF.Editor.refreshInspector();
+    }
+    var CORNERS = ["nw", "ne", "sw", "se"];
+    function paintHandles(rt) {
+      if (!rt) return;
+      rt.querySelectorAll(".sf-handle").forEach(function(n) {
+        n.remove();
+      });
+      if (!selected || String(selected).indexOf("blocks.") !== 0) return;
+      var held = SF.Arrange && SF.Arrange.selectedBlock && SF.Arrange.selectedBlock();
+      var kind = held && SF.FREE_KINDS && SF.FREE_KINDS[held.kind];
+      if (kind && kind.resizes === false) return;
+      var slot = rt.querySelector('[data-block-key="' + selected + '"]');
+      if (!slot) return;
+      CORNERS.forEach(function(corner) {
+        var h = document.createElement("span");
+        h.className = "sf-handle sf-handle-" + corner;
+        h.dataset.corner = corner;
+        h.setAttribute("aria-hidden", "true");
+        slot.appendChild(h);
+      });
+    }
+    function beginResize(e) {
+      var h = e.target.closest && e.target.closest(".sf-handle");
+      if (!h || e.button !== 0 || e.isPrimary === false) return;
+      var slot = h.closest(".sf-slot");
+      var key = slot && slot.getAttribute("data-block-key");
+      var s = slide();
+      var map = regionsOf(s, true);
+      var start = key && map[key];
+      if (!start) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      var corner = h.dataset.corner;
+      var g = L();
+      var scale = scaleOf(root());
+      var fromX = e.clientX, fromY = e.clientY;
+      var landed = start, moved = false;
+      function move(ev) {
+        var dCol = Math.round((ev.clientX - fromX) / scale / g.stepX);
+        var dRow = Math.round((ev.clientY - fromY) / scale / g.stepY);
+        if (!dCol && !dRow && !moved) return;
+        moved = true;
+        var west = corner === "nw" || corner === "sw";
+        var north = corner === "nw" || corner === "ne";
+        var col = start.col, row = start.row, cols = start.cols, rows2 = start.rows;
+        if (west) {
+          col = clamp(start.col + dCol, 1, start.col + start.cols - 1);
+          cols = start.col + start.cols - col;
+        } else {
+          cols = clamp(start.cols + dCol, 1, g.cols - start.col + 1);
+        }
+        if (north) {
+          row = clamp(start.row + dRow, 1, start.row + start.rows - 1);
+          rows2 = start.row + start.rows - row;
+        } else {
+          rows2 = Math.max(1, start.rows + dRow);
+        }
+        landed = { col, row, cols, rows: rows2 };
+        slot.style.gridArea = landed.row + " / " + landed.col + " / span " + landed.rows + " / span " + landed.cols;
+        slot.setAttribute("data-span", landed.rows + "r x " + landed.cols + "c");
+        drawGuides(landed, key);
+      }
+      function cleanup() {
+        document.removeEventListener("pointermove", move);
+        document.removeEventListener("pointerup", up);
+        document.removeEventListener("pointercancel", cleanup);
+        clearGuides();
+      }
+      function up() {
+        cleanup();
+        if (slide() !== s || !moved) return;
+        var settled = settle(key, landed);
+        if (!settled) {
+          if (SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
+          SF.toast && SF.toast("No room to grow it that far.");
+          return;
+        }
+        var shoved = Object.keys(settled).filter(function(k) {
+          return k !== key && map[k] && (map[k].col !== settled[k].col || map[k].row !== settled[k].row);
+        }).length;
+        applySettled(map, settled);
+        commit(true);
+        afterPaint();
+        if (shoved) SF.toast && SF.toast(shoved === 1 ? "Resized. The item in the way shifted over." : "Resized. " + shoved + " items shifted over.");
+      }
+      document.addEventListener("pointermove", move);
+      document.addEventListener("pointerup", up);
+      document.addEventListener("pointercancel", cleanup);
+    }
+    function beginDrag(e) {
+      if (e.button !== 0 || e.isPrimary === false) return;
+      if (e.target.closest && e.target.closest(".sf-handle")) return;
+      var slot = e.target.closest && e.target.closest(".sf-slot");
+      var freeItem = !arranging && slot && String(slot.getAttribute("data-block-key") || "").indexOf("blocks.") === 0;
+      if (!arranging && !freeItem) return;
+      if (cancelDrag) cancelDrag();
+      if (!slot) {
+        select(null);
+        return;
+      }
+      if (!freeItem) {
+        e.preventDefault();
+        select(slot);
+      }
+      var rt = root();
+      var s = slide();
+      var map = regionsOf(s, true);
+      var key = slot.getAttribute("data-block-key");
+      var start = map[key];
+      if (!start) return;
+      var g = L();
+      var scale = scaleOf(rt);
+      var fromX = e.clientX;
+      var fromY = e.clientY;
+      var landed = start;
+      var moved = false;
+      function move(ev) {
+        var dCol = Math.round((ev.clientX - fromX) / scale / g.stepX);
+        var dRow = Math.round((ev.clientY - fromY) / scale / g.stepY);
+        if (!dCol && !dRow && !moved) return;
+        if (!moved && freeItem) {
+          select(slot);
+          slot.addEventListener("click", function once(ev2) {
+            ev2.stopPropagation();
+            ev2.preventDefault();
+            slot.removeEventListener("click", once, true);
+          }, true);
+        }
+        moved = true;
+        slot.style.transform = "";
+        landed = {
+          col: clamp(start.col + dCol, 1, g.cols - start.cols + 1),
+          row: clamp(start.row + dRow, 1, g.rows - start.rows + 1),
+          cols: start.cols,
+          rows: start.rows
+        };
+        slot.style.gridArea = landed.row + " / " + landed.col + " / span " + landed.rows + " / span " + landed.cols;
+        slot.setAttribute("data-span", landed.rows + "r x " + landed.cols + "c");
+        drawGuides(landed, key);
+      }
+      function cleanup() {
+        document.removeEventListener("pointermove", move);
+        document.removeEventListener("pointerup", up);
+        document.removeEventListener("pointercancel", cancel);
+        window.removeEventListener("blur", cancel);
+        cancelDrag = null;
+        clearGuides();
+      }
+      function cancel() {
+        cleanup();
+        if (SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
+      }
+      function up() {
+        cleanup();
+        if (slide() !== s || !arranging && !freeItem) return;
+        if (!moved) return;
+        var settled = settle(key, landed);
+        if (!settled) {
+          if (SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
+          SF.toast && SF.toast("No room there — something that cannot move is in the way.");
+          return;
+        }
+        var shoved = Object.keys(settled).filter(function(k) {
+          return k !== key && map[k] && (map[k].col !== settled[k].col || map[k].row !== settled[k].row);
+        }).length;
+        applySettled(map, settled);
+        commit(true);
+        afterPaint();
+        if (shoved) SF.toast && SF.toast(shoved === 1 ? "Moved. The item in the way shifted over." : "Moved. " + shoved + " items shifted over.");
+      }
+      document.addEventListener("pointermove", move);
+      document.addEventListener("pointerup", up);
+      document.addEventListener("pointercancel", cancel);
+      window.addEventListener("blur", cancel);
+      cancelDrag = cancel;
+    }
+    function resize(dCols, dRows) {
+      if (!selected) return;
+      var s = slide();
+      var map = regionsOf(s);
+      var r = map && map[selected];
+      if (!r) return;
+      var g = L();
+      var wasCols = r.cols;
+      r.cols = clamp(r.cols + dCols, 1, r.anchorX ? g.cols : g.cols - r.col + 1);
+      if (dCols < 0 && wasCols >= g.cols && r.cols < g.cols && !r.anchorX) r.col = 1;
+      if (dRows) {
+        var cost = SF.restackRegions(map, selected, Math.max(1, r.rows + dRows));
+        if (cost && cost.over) {
+          SF.toast && SF.toast("That is " + cost.used + " of " + cost.budget + " lines — " + cost.over + " past the slide.");
+        }
+      }
+      Object.assign(r, SF.anchorRegion(r));
+      commit(true);
+      afterPaint();
+    }
+    var overlaps = function(a, b) {
+      return SF.regionsOverlap(a, b);
+    };
+    function occupants(exceptKey) {
+      var rt = root();
+      var map = regionsOf(slide());
+      if (!rt || !map) return [];
+      return Array.prototype.slice.call(rt.querySelectorAll(".sf-slot[data-block-key]")).map(function(n) {
+        return n.getAttribute("data-block-key");
+      }).filter(function(k) {
+        return k && k !== exceptKey && map[k];
+      }).map(function(k) {
+        return map[k];
+      });
+    }
+    function immovable() {
+      var rt = root();
+      if (!rt) return [];
+      return Array.prototype.slice.call(rt.querySelectorAll(".sf-slot[data-block-key]")).map(function(n) {
+        return n.getAttribute("data-block-key");
+      }).filter(function(k) {
+        return k && k.indexOf("blocks.") !== 0;
+      });
+    }
+    function settle(key, want) {
+      var rt = root();
+      var map = regionsOf(slide());
+      if (!rt || !map) return null;
+      var drawn = {};
+      Array.prototype.slice.call(rt.querySelectorAll(".sf-slot[data-block-key]")).forEach(function(n) {
+        var k = n.getAttribute("data-block-key");
+        if (k && map[k]) drawn[k] = map[k];
+      });
+      if (!drawn[key]) drawn[key] = map[key] || want;
+      return SF.resolvePlacement(drawn, key, want, L(), immovable());
+    }
+    function applySettled(map, settled) {
+      Object.keys(settled).forEach(function(k) {
+        if (!map[k]) return;
+        map[k].col = settled[k].col;
+        map[k].row = settled[k].row;
+        map[k].cols = settled[k].cols;
+        map[k].rows = settled[k].rows;
+      });
+    }
+    function makeRoom(map, want) {
+      var drawn = occupants(null);
+      var keys = Object.keys(map || {}).filter(function(k) {
+        return k.indexOf("blocks.") === 0 && drawn.some(function(r2) {
+          return r2 === map[k];
+        });
+      });
+      var clash = keys.filter(function(k) {
+        return map[k] && overlaps(map[k], want);
+      });
+      if (!clash.length) return want;
+      clash.sort(function(a, b) {
+        return map[b].cols * map[b].rows - map[a].cols * map[a].rows;
+      });
+      var key = clash[0], r = map[key];
+      if (r.cols >= r.rows) {
+        var keep = Math.floor(r.cols / 2);
+        if (keep < 1 || r.cols - keep < 1) return want;
+        map[key] = { col: r.col, row: r.row, cols: keep, rows: r.rows };
+        return { col: r.col + keep, row: r.row, cols: r.cols - keep, rows: r.rows };
+      }
+      var keepRows = Math.floor(r.rows / 2);
+      if (keepRows < 1 || r.rows - keepRows < 1) return want;
+      map[key] = { col: r.col, row: r.row, cols: r.cols, rows: keepRows };
+      return { col: r.col, row: r.row + keepRows, cols: r.cols, rows: r.rows - keepRows };
+    }
+    function addBlock(kind) {
+      var s = slide();
+      if (!s) return;
+      var spec = SF.FREE_KINDS && SF.FREE_KINDS[kind] || SF.FREE_KINDS && SF.FREE_KINDS.text;
+      if (!spec) return;
+      var list = SF.freeBlocksOf(s, true);
+      var id = "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      var map = regionsOf(s, true);
+      if (!Object.keys(map).length) seed();
+      map = regionsOf(s, true);
+      var placedBlocks = occupants(null);
+      var want = SF.insertionRegionFor && SF.insertionRegionFor(s, list.length, kind, placedBlocks) || { col: 1, row: 1, cols: spec.cols, rows: spec.rows };
+      var before = Object.keys(map).length;
+      var placed = makeRoom(map, { col: want.col, row: want.row, cols: want.cols, rows: want.rows });
+      var took = { id, kind, text: "" };
+      if (want && want.slot) took.as = want.slot;
+      list.push(took);
+      map[SF.freeBlockKey(id)] = placed;
+      var shared = before === Object.keys(map).length;
+      selected = SF.freeBlockKey(id);
+      selectedSlide = s;
+      commit(true);
+      afterPaint();
+      SF.toast && SF.toast(spec.label + (shared ? " added beside what was there — both now take half the space." : " added. Click it to type, drag to move."));
+    }
+    function centreInGrid() {
+      var s = slide();
+      var map = regionsOf(s);
+      var keys = map ? Object.keys(map).filter(function(k) {
+        return map[k];
+      }) : [];
+      if (!keys.length) return;
+      var g = L();
+      var minRow = Infinity, maxRow = -Infinity;
+      keys.forEach(function(k) {
+        var r = map[k];
+        minRow = Math.min(minRow, r.row);
+        maxRow = Math.max(maxRow, r.row + r.rows - 1);
+      });
+      var usedRows = maxRow - minRow + 1;
+      var wantRow = clamp(Math.floor((g.rows - usedRows) / 2) + 1, 1, Math.max(1, g.rows - usedRows + 1));
+      var dRow = wantRow - minRow;
+      if (!dRow) {
+        SF.toast && SF.toast("Already centred in the grid.");
+        return;
+      }
+      keys.forEach(function(k) {
+        var r = map[k];
+        if (!r.anchorY) r.row += dRow;
+      });
+      commit(true);
+      afterPaint();
+      SF.toast && SF.toast("Centred — " + usedRows + " of " + g.rows + " lines used, " + (g.rows - usedRows) + " split above and below.");
+    }
+    var SPLITS = [
+      { value: "50", label: "50 · 50" },
+      { value: "40", label: "40 · 60" },
+      { value: "60", label: "60 · 40" },
+      { value: "20", label: "20 · 80" },
+      { value: "80", label: "80 · 20" }
+    ];
+    function splitRegion(axis, firstPercent) {
+      if (!selected) return;
+      var s = slide();
+      var map = regionsOf(s, true);
+      var r = map && map[selected];
+      if (!r) return;
+      var down = axis === "row";
+      var span = down ? r.rows : r.cols;
+      if (span < 2) {
+        SF.toast && SF.toast(down ? "Too short to split — one line cannot become two." : "Too narrow to split — one column cannot become two.");
+        return;
+      }
+      var first = clamp(Math.round(span * firstPercent / 100), 1, span - 1);
+      var second = span - first;
+      var id = "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      SF.freeBlocksOf(s, true).push({ id, kind: "text", text: "" });
+      map[SF.freeBlockKey(id)] = down ? { col: r.col, row: r.row + first, cols: r.cols, rows: second } : { col: r.col + first, row: r.row, cols: second, rows: r.rows, alignY: r.alignY };
+      if (down) delete r.anchorY;
+      else delete r.anchorX;
+      if (down) delete r.alignY;
+      if (down) r.rows = first;
+      else r.cols = first;
+      selected = SF.freeBlockKey(id);
+      selectedSlide = s;
+      commit(true);
+      afterPaint();
+      SF.toast && SF.toast("Split " + first + " · " + second + (down ? " lines" : " columns") + ". Click the new block to type into it.");
+    }
+    function duplicateBlock() {
+      var s = slide();
+      var id = selected && SF.freeBlockId && SF.freeBlockId(selected);
+      if (!s || !id) return;
+      var block = SF.freeBlockById(s, id);
+      var map = regionsOf(s, true);
+      var from = map[selected];
+      if (!block || !from) return;
+      var copyId = "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      SF.freeBlocksOf(s, true).push({ id: copyId, kind: block.kind, text: block.text });
+      var g = L();
+      map[SF.freeBlockKey(copyId)] = {
+        col: from.col,
+        row: Math.min(g.rows, from.row + from.rows),
+        cols: from.cols,
+        rows: from.rows,
+        alignY: from.alignY
+      };
+      selected = SF.freeBlockKey(copyId);
+      commit(true);
+      afterPaint();
+      SF.toast && SF.toast("Copied, one row below.");
+    }
+    function syncRail() {
+      if (!SF.Editor) return;
+      if (SF.Editor.clearBlockFocus) SF.Editor.clearBlockFocus();
+      if (SF.Editor.refreshInspector) SF.Editor.refreshInspector();
+    }
+    function deselect() {
+      if (!selected) return;
+      selected = null;
+      selectedSlide = null;
+      afterPaint();
+      syncRail();
+    }
+    function removeBlock() {
+      var s = slide();
+      var what = s && SF.deleteBlock(s, selected);
+      if (!what) return false;
+      selected = null;
+      syncRail();
+      commit(true);
+      afterPaint();
+      SF.toast && SF.toast(what === "item" ? "Item removed. Undo brings it back." : "Taken off this slide. Its words are kept — Undo, or Bring back in Layout.");
+      return true;
+    }
+    function fitToText() {
+      if (!selected) return;
+      var v = verdictFor(selected);
+      if (!v || v.need == null) return;
+      var map = regionsOf(slide());
+      var r = map && map[selected];
+      if (!r) return;
+      if (v.need === r.rows) {
+        SF.toast && SF.toast("Already " + r.rows + " lines.");
+        return;
+      }
+      var was = r.rows;
+      var cost = SF.restackRegions(map, selected, v.need);
+      Object.assign(r, SF.anchorRegion(r));
+      commit(true);
+      afterPaint();
+      SF.toast && SF.toast(was + " lines to " + v.need + (cost && cost.over ? " — the slide is now " + cost.over + " lines over" : ""));
+    }
+    function resetArrangement() {
+      var s = slide();
+      if (!s || !s.design || !s.design.regions) return;
+      delete s.design.regions;
+      selected = null;
+      commit(false);
+      setArranging(false);
+      SF.toast && SF.toast("Arrangement reset — this slide follows its theme again.");
+    }
+    var verdict = [];
+    function measure() {
+      var rt = root();
+      if (!rt || !arranging) return;
+      requestAnimationFrame(function() {
+        if (!arranging || rt !== root()) return;
+        verdict = SF.latticeFit(rt);
+        paintBar();
+      });
+    }
+    function verdictFor(key) {
+      return verdict.find(function(v) {
+        return v.key === key;
+      }) || null;
+    }
+    function paintBar() {
+      var bar = document.getElementById("arrangeBar");
+      if (!bar) return;
+      bar.hidden = !arranging;
+      bar.querySelectorAll("[data-arrange-needs-selection]").forEach(function(b) {
+        b.disabled = !selected;
+      });
+      var map = regionsOf(slide());
+      var region2 = selected && map && map[selected];
+      var ax = (
+        /** @type {HTMLSelectElement|null} */
+        document.getElementById("arrangeAnchorX")
+      );
+      var ay = (
+        /** @type {HTMLSelectElement|null} */
+        document.getElementById("arrangeAnchorY")
+      );
+      if (ax) ax.value = region2 && region2.anchorX || "";
+      if (ay) ay.value = region2 && region2.anchorY || "";
+      var al = (
+        /** @type {HTMLSelectElement|null} */
+        document.getElementById("arrangeAlignY")
+      );
+      if (al) al.value = region2 && region2.alignY || "";
+      var splitSel = (
+        /** @type {HTMLSelectElement|null} */
+        document.getElementById("arrangeSplit")
+      );
+      if (splitSel) {
+        var canCut = !!region2 && (region2.cols > 1 || region2.rows > 1);
+        splitSel.disabled = !canCut;
+        splitSel.title = !region2 ? "Select a block to split" : !canCut ? "A single cell cannot become two — make it wider or taller first" : "Cut this block's " + region2.cols + " columns or " + region2.rows + " lines in two, and put a new block in the rest";
+      }
+      var isFree = !!(selected && SF.freeBlockId && SF.freeBlockId(selected));
+      var dup = (
+        /** @type {HTMLButtonElement|null} */
+        document.getElementById("btnArrangeDuplicate")
+      );
+      if (dup) {
+        var held = SF.Arrange.selectedBlock && SF.Arrange.selectedBlock();
+        var kindOf = held && SF.FREE_KINDS && SF.FREE_KINDS[held.kind];
+        dup.disabled = !isFree || (kindOf ? kindOf.duplicates === false : false);
+        dup.title = isFree ? "Copy this block, one row below" : "Only a block you added can be copied — this one is part of the layout";
+      }
+      var kill = (
+        /** @type {HTMLButtonElement|null} */
+        document.getElementById("btnArrangeRemove")
+      );
+      if (kill) {
+        var can = !!(selected && SF.canDeleteBlock(slide(), selected));
+        kill.disabled = !can;
+        kill.title = !selected ? "Select a block to take off the slide" : isFree ? "Remove this item from the slide" : "Take this off the slide. Its words are kept and the rail still edits them.";
+      }
+      var back = (
+        /** @type {HTMLButtonElement|null} */
+        document.getElementById("btnArrangeRestore")
+      );
+      if (back) {
+        var off = SF.hiddenBlocksOf(slide()).length;
+        back.hidden = !off;
+        back.textContent = off > 1 ? "↩ Bring back " + off : "↩ Bring back";
+        back.title = off === 1 ? "Bring back the block taken off this slide" : "Bring back the " + off + " blocks taken off this slide";
+      }
+      var fitBtn = (
+        /** @type {HTMLButtonElement|null} */
+        document.getElementById("btnArrangeFit")
+      );
+      if (fitBtn) {
+        var v0 = selected && verdictFor(selected);
+        var need = v0 && v0.need;
+        fitBtn.disabled = !selected || need == null || !region2 || need === region2.rows;
+        fitBtn.textContent = need != null && region2 && need !== region2.rows ? "↕ Fit to text (" + need + ")" : "↕ Fit to text";
+        fitBtn.title = need != null && region2 && need !== region2.rows ? "Give this block " + need + " lines instead of " + region2.rows + ", and push what is below it down" : "This block already has the lines its words need";
+      }
+      var what = document.getElementById("arrangeWhat");
+      if (!what) return;
+      var over = verdict.filter(function(v2) {
+        return v2.over;
+      });
+      if (selected) {
+        var s = slide();
+        var r = regionsOf(s) && regionsOf(s)[selected];
+        var v = verdictFor(selected);
+        var where = r ? " · row " + r.row + ", col " + r.col + " · " + r.rows + "r x " + r.cols + "c" : "";
+        var fit = !v ? "" : v.wide && v.need <= v.have ? " — overflows sideways" : v.over ? " — needs " + v.need + " lines, has " + v.have : v.need != null && v.have > v.need ? " — " + v.need + " of " + v.have + " lines used, " + (v.have - v.need) + " spare" : "";
+        what.textContent = selected + where + fit;
+        what.dataset.fit = v && v.over ? "over" : "ok";
+        return;
+      }
+      what.textContent = !verdict.length ? "Click a block" : over.length ? over.length + (over.length === 1 ? " block does not fit" : " blocks do not fit") : "Click a block · all " + verdict.length + " fit";
+      what.dataset.fit = over.length ? "over" : "ok";
+    }
+    function afterPaint() {
+      if (arranging && arrangedSlide !== slide()) {
+        setArranging(false);
+        return;
+      }
+      if (selectedSlide && selectedSlide !== slide()) {
+        selected = null;
+        selectedSlide = null;
+        verdict = [];
+        if (cancelDrag) cancelDrag();
+      }
+      var rt = root();
+      var b = box2();
+      if (b) b.classList.toggle("arranging", arranging);
+      paintHandles(rt);
+      if (!rt || !arranging) {
+        paintBar();
+        return;
+      }
+      var s = slide();
+      var map = regionsOf(s);
+      rt.querySelectorAll(".sf-slot").forEach(function(slot) {
+        var key = slot.getAttribute("data-block-key");
+        if (!key) return;
+        var r = map && map[key];
+        if (r) slot.setAttribute("data-span", r.rows + "r x " + r.cols + "c");
+        if (key === selected) slot.setAttribute("data-arrange-selected", "");
+      });
+      paintBar();
+      measure();
+    }
+    function setArranging(on) {
+      if (on && SF.HeaderFooterUI) SF.HeaderFooterUI.close();
+      if (on && SF.Artwork && SF.Artwork.isEditing()) SF.Artwork.setEditing(false);
+      if (cancelDrag) cancelDrag();
+      arranging = !!on;
+      arrangedSlide = arranging ? slide() : null;
+      var hadSelection = !!selected;
+      if (!arranging) {
+        selected = null;
+        verdict = [];
+        clearGuides();
+      }
+      var toggle = document.getElementById("btnArrange");
+      if (toggle) {
+        toggle.setAttribute("aria-pressed", String(arranging));
+        toggle.textContent = arranging ? "▦ Layout" : "▤ Layout";
+      }
+      if (arranging && !seed() && SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
+      else if (!arranging && SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
+      if (!arranging && hadSelection) syncRail();
+      afterPaint();
+    }
+    var installed = false;
+    function install() {
+      if (installed) return;
+      installed = true;
+      var b = box2();
+      if (b) b.addEventListener("pointerdown", beginResize);
+      if (b) b.addEventListener("pointerdown", beginDrag);
+      var flip = document.getElementById("btnArrange");
+      if (flip) flip.addEventListener("click", function() {
+        setArranging(!arranging);
+      });
+      var sizers = [
+        { id: "btnArrangeWider", cols: 1, rows: 0 },
+        { id: "btnArrangeNarrower", cols: -1, rows: 0 },
+        { id: "btnArrangeTaller", cols: 0, rows: 1 },
+        { id: "btnArrangeShorter", cols: 0, rows: -1 }
+      ];
+      sizers.forEach(function(sizer) {
+        var el = document.getElementById(sizer.id);
+        if (el) el.addEventListener("click", function() {
+          resize(sizer.cols, sizer.rows);
+        });
+      });
+      var reset = document.getElementById("btnArrangeReset");
+      if (reset) reset.addEventListener("click", resetArrangement);
+      var fit = document.getElementById("btnArrangeFit");
+      if (fit) fit.addEventListener("click", fitToText);
+      var centre = document.getElementById("btnArrangeCentre");
+      if (centre) centre.addEventListener("click", centreInGrid);
+      function wireAdder(id) {
+        var found = (
+          /** @type {HTMLSelectElement|null} */
+          document.getElementById(id)
+        );
+        if (!found) return;
+        var picker = found;
+        var keep = picker.options[0];
+        picker.innerHTML = "";
+        if (keep) picker.appendChild(keep);
+        Object.keys(SF.FREE_KINDS || {}).forEach(function(kind) {
+          var opt = document.createElement("option");
+          opt.value = kind;
+          opt.textContent = SF.FREE_KINDS[kind].label || kind;
+          picker.appendChild(opt);
+        });
+        picker.addEventListener("change", function() {
+          var kind = picker.value;
+          picker.value = "";
+          if (kind) addBlock(kind);
+        });
+      }
+      wireAdder("arrangeAdd");
+      wireAdder("canvasAddItem");
+      var splitter = (
+        /** @type {HTMLSelectElement|null} */
+        document.getElementById("arrangeSplit")
+      );
+      if (splitter) {
+        var splitPicker = splitter;
+        splitPicker.addEventListener("change", function() {
+          var choice3 = String(splitPicker.value || "").split(":");
+          splitPicker.value = "";
+          if (choice3.length === 2) splitRegion(choice3[0], Number(choice3[1]));
+        });
+      }
+      var dup = document.getElementById("btnArrangeDuplicate");
+      if (dup) dup.addEventListener("click", duplicateBlock);
+      var kill = document.getElementById("btnArrangeRemove");
+      if (kill) kill.addEventListener("click", removeBlock);
+      var back = document.getElementById("btnArrangeRestore");
+      if (back) back.addEventListener("click", function() {
+        var s = slide();
+        var n = s && SF.restoreAllBlocks(s);
+        if (!n) return;
+        commit(true);
+        if (SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
+        afterPaint();
+        SF.toast && SF.toast(n === 1 ? "Block brought back." : n + " blocks brought back.");
+      });
+      ["X", "Y"].forEach(function(axis) {
+        var control = (
+          /** @type {HTMLSelectElement|null} */
+          document.getElementById("arrangeAnchor" + axis)
+        );
+        if (!control) return;
+        var picker = control;
+        picker.addEventListener("change", function() {
+          var map = regionsOf(slide()), r = selected && map && map[selected];
+          if (!r) return;
+          r["anchor" + axis] = picker.value;
+          Object.assign(r, SF.anchorRegion(r));
+          commit(true);
+          afterPaint();
+        });
+      });
+      var align = (
+        /** @type {HTMLSelectElement|null} */
+        document.getElementById("arrangeAlignY")
+      );
+      if (align) {
+        var alignPicker = align;
+        alignPicker.addEventListener("change", function() {
+          var map = regionsOf(slide()), r = selected && map && map[selected];
+          if (!r) return;
+          if (alignPicker.value) r.alignY = alignPicker.value;
+          else delete r.alignY;
+          commit(true);
+          afterPaint();
+        });
+      }
+      document.addEventListener("keydown", function(e) {
+        var host = box2();
+        if (!arranging && !selected || SF.Player && SF.Player.open || !host || !host.getClientRects().length) return;
+        var from = (
+          /** @type {Element|null} */
+          e.target
+        );
+        if (from && from.closest && from.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], dialog')) return;
+        if (e.key === "Escape") {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          if (arranging) setArranging(false);
+          else deselect();
+          return;
+        }
+        if (e.key === "Delete" || e.key === "Backspace") {
+          if (!selected) return;
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          if (!removeBlock()) {
+            SF.toast && SF.toast("Nothing to delete here.");
+          }
+          return;
+        }
+        if (!selected || e.metaKey || e.ctrlKey || e.altKey || !/^Arrow(Left|Right|Up|Down)$/.test(e.key)) return;
+        var map = regionsOf(slide());
+        var r = map && map[selected];
+        if (!r) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        var dx = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+        var dy = e.key === "ArrowDown" ? 1 : e.key === "ArrowUp" ? -1 : 0;
+        if (e.shiftKey) {
+          resize(dx, dy);
+          return;
+        }
+        var g = L();
+        var want = {
+          col: clamp(r.col + dx, 1, g.cols - r.cols + 1),
+          row: clamp(r.row + dy, 1, g.rows - r.rows + 1),
+          cols: r.cols,
+          rows: r.rows
+        };
+        var settled = settle(selected, want);
+        if (!settled) {
+          SF.toast && SF.toast("Something that cannot move is in the way.");
+          return;
+        }
+        if (dx) delete r.anchorX;
+        if (dy) delete r.anchorY;
+        applySettled(map, settled);
+        commit(true);
+        afterPaint();
+      }, true);
+      paintBar();
+    }
+    SF.Arrange = {
+      install,
+      afterPaint,
+      /* The canvas bar offers the same ＋ Item the arrange bar does, so both
+         call this rather than each growing their own copy of it. */
+      addBlock,
+      /* Select an item from outside — a click on the canvas goes to the rail,
+         and the corner handles have to come with it. Without this the rail said
+         an item was selected while the canvas showed nothing to grab. */
+      selectKey: function(key) {
+        if (!key || String(key).indexOf("blocks.") !== 0) return;
+        selected = key;
+        selectedSlide = slide();
+        afterPaint();
+        if (SF.Editor && SF.Editor.refreshInspector) SF.Editor.refreshInspector();
+      },
+      /* Drop the canvas selection — the rail calls this when it deletes the
+         block, so the handles do not outlive it. */
+      deselect,
+      /* Delete the selected item, if the selection is one that can go.
+         @returns {boolean} whether it did. */
+      removeSelected: removeBlock,
+      /* Whether an item is selected on the canvas at all, Layout or not. */
+      hasSelection: function() {
+        return !!selected;
+      },
+      /* Which block the canvas has selected, so the inspector can edit it. */
+      selectedBlock: function() {
+        var id = selected ? SF.freeBlockId(selected) : null;
+        var s = id ? slide() : null;
+        return s && SF.freeBlockById(s, id) || null;
+      },
+      isArranging: function() {
+        return arranging;
+      },
+      setArranging
+    };
+  }
+
   // src/render/layout-slots.js
   var region = (col, row, cols, rows2, extra = {}) => ({ col, row, cols, rows: rows2, ...extra });
   var clone = (value) => Object.fromEntries(Object.entries(value || {}).map(([key, value2]) => [key, { ...value2 }]));
@@ -16326,6 +17346,7 @@
     createPresenterWindow,
     createDeckSettings,
     createContentFields,
+    installArrange,
     bindCanvasRegions,
     declareBodyRegion,
     measureBodyRegion,

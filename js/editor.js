@@ -9,6 +9,10 @@
 
   /** @type {import("../src/types.js").SlideForgeGlobal} */
   var SF = global.SF;
+  /* The editor's hands on the canvas — dragging, selecting, placing a block on
+     the lattice. It lives in src/editor/arrange.js and is installed here
+     because it belongs to this engine, not to the canvas it manipulates. */
+  SF.installArrange(SF);
   var el = SF.el;
   var $ = function (id) { return document.getElementById(id); };
   var UI;
