@@ -116,7 +116,9 @@ test('the statement layout is registered as a deck layout, in Introduce', () => 
 });
 
 test('the editor edits a statement, and does not call its own text hidden', () => {
-  const editor = fs.readFileSync(require.resolve('../js/editor.js'), 'utf8');
+  /* The inspector's per-type content fields moved to src/editor/content-fields.js
+     when js/editor.js was split; these two assertions follow them there. */
+  const editor = fs.readFileSync(require.resolve('../src/editor/content-fields.js'), 'utf8');
   /* Registered for the picker and the renderer is not enough: with no fields
      of its own, the inspector offered a Heading the layout does not draw and
      announced the statement's own line as "extra text not shown". */
