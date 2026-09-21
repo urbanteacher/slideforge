@@ -43,3 +43,5 @@ tmp/
 # Scratch probes left at the root by one-off investigations. Underscore-first
 # so they sort together and are obviously not part of the app.
 _*.mjs
+
+/test-results/

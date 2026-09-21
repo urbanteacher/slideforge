@@ -7719,6 +7719,240 @@
     };
   }
 
+  // src/editor/panes.js
+  function createPanes(SF, helpers) {
+    const {
+      el,
+      touched,
+      draw,
+      drawInspector,
+      drawRail,
+      repaint,
+      drawLayoutPicker,
+      drawUnusedOnLayout
+    } = helpers;
+    function drawMotion(insp, s) {
+      var UI = helpers.UI();
+      insp.appendChild(el(
+        "p",
+        "hint",
+        "How this slide arrives on the screen. The words stay as they are."
+      ));
+      insp.appendChild(UI.field("Transition in", UI.select(
+        SF.TRANSITIONS.map(function(t) {
+          return { value: t, label: t[0].toUpperCase() + t.slice(1) };
+        }),
+        s.transition,
+        function(v) {
+          s.transition = v;
+          touched();
+          drawRail();
+          drawInspector();
+        }
+      )));
+      if (s.transition === "morph") {
+        insp.appendChild(el(
+          "p",
+          "hint",
+          "Morph carries one thing across the cut instead of dissolving the slide: the same picture, the same chart table, or the same heading text as the slide before this one. With nothing shared — or in a browser without view transitions, or when less motion has been asked for — it is a fade."
+        ));
+      }
+      if (s.type === "statement") {
+        var d = s.design || (s.design = {});
+        insp.appendChild(UI.field("Words arrive", UI.select([
+          { value: "", label: "All at once" },
+          { value: "rise", label: "Rise — up from below, one at a time" },
+          { value: "fade", label: "Fade — in place, one at a time" },
+          { value: "reveal", label: "Reveal — wiped up, one at a time" }
+        ], String(d.words || ""), function(v) {
+          if (v) d.words = v;
+          else delete d.words;
+          touched();
+          repaint();
+          drawRail();
+          drawInspector();
+        }), "Plays when the slide arrives in the show — eased, with a little motion blur. Held still for anyone who asked for less motion."));
+        if (d.words) {
+          insp.appendChild(UI.field("Speed", UI.select([
+            { value: "gentle", label: "Gentle — slower, and holds longer" },
+            { value: "medium", label: "Medium" },
+            { value: "quick", label: "Quick" }
+          ], String(d.wordSpeed || "medium"), function(v) {
+            if (v && v !== "medium") d.wordSpeed = v;
+            else delete d.wordSpeed;
+            touched();
+            repaint();
+          }), "Moves the whole thing together — each word, the wave between them, and the hold if they leave again."));
+          insp.appendChild(UI.field("Spacing", UI.select([
+            { value: "together", label: "Together — the line arrives as one" },
+            { value: "wave", label: "Wave — eased, a little apart" },
+            { value: "one", label: "One at a time — the widest spread" }
+          ], String(d.wordStagger || "wave"), function(v) {
+            if (v && v !== "wave") d.wordStagger = v;
+            else delete d.wordStagger;
+            touched();
+            repaint();
+            drawInspector();
+          }), "How far apart the words are. The wave is always eased — it starts quickly and slows as it finishes."));
+          if ((d.wordStagger || "wave") !== "together") {
+            insp.appendChild(UI.field("Direction", UI.select([
+              { value: "first", label: "From the first word" },
+              { value: "last", label: "From the last word" },
+              { value: "center", label: "From the centre — outwards to both ends" }
+            ], String(d.wordFrom || "first"), function(v) {
+              if (v && v !== "first") d.wordFrom = v;
+              else delete d.wordFrom;
+              touched();
+              repaint();
+            }), "Which end the wave starts from. From the centre sends it outwards both ways at once; with an even number of words the middle two share the first beat."));
+          }
+          var planBox = el("div", "word-plan");
+          var plan = d.wordPlan;
+          var planFresh = plan && String(plan.text || "").trim() === String(s.body || "").trim();
+          var planSummary = function() {
+            var n = (plan.words || []).length;
+            var arcs = [];
+            (plan.words || []).forEach(function(w) {
+              var a = w && w.arc || "settle";
+              if (arcs.indexOf(a) < 0) arcs.push(a);
+            });
+            return n + " " + (plan.unit === "letter" ? "letter" : "word") + (n === 1 ? "" : "s") + " placed, landing " + arcs.join(" and ") + ".";
+          };
+          var planStatus = el(
+            "p",
+            "hint",
+            planFresh ? "✨ Choreographed" + (plan.note ? ": " + plan.note : "") + " — " + planSummary() : plan ? "The choreography was written for different words. Ask again, or clear it." : "Per-word coordinates: where each word comes from, how it turns, when, and how it lands — settling, bouncing, or condensing out of mist. Ask for letter by letter and it works in letters."
+          );
+          var brief = UI.text("", function() {
+          });
+          brief.placeholder = "Optional: bounce in, out of smoke, one letter at a time…";
+          var ask = UI.button("✨ Choreograph these words", "primary", function() {
+            if (!SF.AI || !SF.AI.generateWordMotion) {
+              planStatus.textContent = "The AI engine is not loaded in this build.";
+              return;
+            }
+            ask.disabled = true;
+            planStatus.textContent = "✨ Placing the words…";
+            Promise.resolve(SF.AI.generateWordMotion(s.body, { mood: brief.value })).then(function(res) {
+              if (!res || res.error) {
+                planStatus.textContent = res && res.error || "Nothing came back.";
+                return;
+              }
+              d.wordPlan = {
+                text: String(s.body || "").trim(),
+                note: res.note,
+                unit: res.unit === "letter" ? "letter" : "word",
+                words: res.words
+              };
+              if (!d.words) d.words = "rise";
+              touched();
+              repaint();
+              drawInspector();
+            }).catch(function() {
+              planStatus.textContent = "Could not write a choreography just now.";
+            }).finally(function() {
+              ask.disabled = false;
+            });
+          });
+          planBox.appendChild(brief);
+          planBox.appendChild(ask);
+          if (plan) {
+            planBox.appendChild(UI.button("Clear choreography", "ghost", function() {
+              delete d.wordPlan;
+              touched();
+              repaint();
+              drawInspector();
+            }));
+          }
+          planBox.appendChild(planStatus);
+          insp.appendChild(UI.field("AI choreography", planBox));
+          insp.appendChild(UI.field("And leave again", UI.select([
+            { value: "", label: "No — they arrive and stay" },
+            { value: "loop", label: "Yes — in, hold, out, round again" }
+          ], d.wordsLoop ? "loop" : "", function(v) {
+            if (v) d.wordsLoop = true;
+            else delete d.wordsLoop;
+            touched();
+            repaint();
+            drawRail();
+          }), "For a cover on screen while the room fills. Four seconds of the six are the hold, so the line is readable every time round."));
+        }
+      }
+    }
+    var PANES = [
+      {
+        key: "edit",
+        icon: "✎",
+        label: "Edit",
+        tab: true,
+        title: "Edit the words on this slide",
+        draw: function(insp, s) {
+          helpers.drawContentFields()(insp, s);
+          drawUnusedOnLayout(insp, s);
+        }
+      },
+      {
+        key: "customise",
+        icon: "✦",
+        label: "Look",
+        tab: true,
+        title: "Customise this slide",
+        draw: function(insp, s) {
+          SF.Custom.inspector(insp, s, function() {
+            touched();
+            draw();
+          }, { bare: true });
+        }
+      },
+      {
+        key: "layout",
+        icon: "▦",
+        label: "Layout",
+        tab: true,
+        title: "Choose a different layout",
+        draw: function(insp, s) {
+          drawLayoutPicker(insp, s);
+        }
+      },
+      {
+        key: "transition",
+        icon: "↝",
+        label: "Motion",
+        tab: true,
+        title: "How this slide arrives",
+        draw: drawMotion,
+        /* Ran after the chain in js/editor.js, guarded on the same key. */
+        after: function(insp, s) {
+          SF.Custom.tagControls(insp, s, "Motion");
+        }
+      },
+      /* Opened by the face row, not the tab strip. The panel is built once by
+         js/header-footer.js and re-parented on every draw, so it keeps focus. */
+      {
+        key: "chrome",
+        tab: false,
+        draw: function(insp) {
+          if (SF.HeaderFooterUI) SF.HeaderFooterUI.mount(insp);
+        }
+      }
+    ];
+    function paneFor(key) {
+      for (var i = 0; i < PANES.length; i++) if (PANES[i].key === key) return PANES[i];
+      return PANES[0];
+    }
+    function drawPane(insp, s, key) {
+      var pane = paneFor(key);
+      pane.draw(insp, s);
+      if (pane.after) pane.after(insp, s);
+    }
+    function tabs() {
+      return PANES.filter(function(p) {
+        return p.tab;
+      });
+    }
+    return { PANES, paneFor, drawPane, tabs };
+  }
+
   // src/render/layout-slots.js
   var region = (col, row, cols, rows2, extra = {}) => ({ col, row, cols, rows: rows2, ...extra });
   var clone = (value) => Object.fromEntries(Object.entries(value || {}).map(([key, value2]) => [key, { ...value2 }]));
@@ -17432,6 +17666,7 @@
     createDeckSettings,
     createContentFields,
     installArrange,
+    createPanes,
     bindCanvasRegions,
     declareBodyRegion,
     measureBodyRegion,
