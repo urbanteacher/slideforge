@@ -237,6 +237,7 @@
     border-bottom-width: 2px; border-radius: 4px; padding: 1px 6px;
   }
   .waiting-card .tip { margin: 16px 0 0; font-size: 12px; color: var(--ui-dim); line-height: 1.45; }
+  .waiting-card .wait-out { margin: 16px 0 0; }
 
   /* Moderation lives here and only here. The host's main window is normally
      the projected one, so a pending question must never be rendered there. */
@@ -299,6 +300,11 @@
       <li>Once linked, invite the room from this desk: <strong>PIN</strong>, <strong>Join QR</strong>, and <strong>Share</strong> are on the foot bar — you do not need Esc for that.</li>
     </ol>
     <p class="tip" id="waitHint">Pressing D here asks the wall to send the lesson. It does not start the show — Start on Host live does that.</p>
+    <!-- The way out. Every step above assumes a wall window is still there to
+         answer; when it is not — the pop-up replaced the editor instead of
+         opening beside it, or the teacher closed that window — this card was
+         a dead end with no control on it at all. -->
+    <p class="wait-out"><button type="button" id="waitBack" class="btn">Back to the editor</button></p>
   </div>
 </div>
 
@@ -1463,6 +1469,28 @@
   cmd('hello');
   setTimeout(function () { cmd('hello'); }, 800);
   setTimeout(function () { cmd('hello'); }, 2000);
+
+  /* The way back. Nothing on this card used to do anything: every instruction
+     on it is addressed to a *different* window, so a desk that arrived without
+     one — the pop-up landed in this tab instead of beside it, or the wall was
+     closed — stranded the teacher with a page they could not leave.
+
+     Prefer the window that opened this one, because that is the show; only
+     load the editor here when there is no such window to go back to. */
+  var waitBack = $('waitBack');
+  if (waitBack) waitBack.onclick = function () {
+    var opener = null;
+    try { opener = window.opener && !window.opener.closed ? window.opener : null; } catch (e) { opener = null; }
+    if (opener) {
+      try { opener.focus(); } catch (e) {}
+      try { window.close(); } catch (e) {}
+      /* close() is refused for a window the script did not open, so say what
+         happened rather than leaving the click looking dead. */
+      waitBack.textContent = 'The editor is in the other window';
+      return;
+    }
+    location.href = 'index.html';
+  };
 
   if (!window.opener || window.opener.closed) {
     $('waitTitle').textContent = 'Connect this desk to the show';
