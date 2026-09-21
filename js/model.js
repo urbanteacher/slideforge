@@ -5363,11 +5363,18 @@
             Player.close();
           }
           break;
+        /* B and . blank the wall; Shift+B blanks the phones. Two screens, two
+           blanks, and one case for the letter — a switch cannot hold two
+           `case 'B'`, because the first one wins and the second is dead code.
+           It did: Shift+B blanked the wall and the phones could not be blanked
+           at all. Caps Lock sends 'B' with shiftKey false, so the wall is the
+           default rather than the shifted branch. */
         case "b":
         case "B":
         case ".":
           e.preventDefault();
-          Player.control("blank");
+          if (e.shiftKey) Player.emit("blankPhonesToggle", {});
+          else Player.control("blank");
           break;
         case "f":
         case "F":
@@ -5405,13 +5412,6 @@
         case "T":
           e.preventDefault();
           Player.emit("reactionsToggle", {});
-          break;
-        /* Shift+B, next to B for the wall. Two screens, two blanks. */
-        case "B":
-          if (e.shiftKey) {
-            e.preventDefault();
-            Player.emit("blankPhonesToggle", {});
-          }
           break;
         case "H":
           if (e.shiftKey) {

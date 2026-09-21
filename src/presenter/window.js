@@ -587,7 +587,17 @@ export function createPresenterWindow(SF, helpers) {
           Player.close();
         }
         break;
-      case 'b': case 'B': case '.': e.preventDefault(); Player.control('blank'); break;
+      /* B and . blank the wall; Shift+B blanks the phones. Two screens, two
+         blanks, and one case for the letter — a switch cannot hold two
+         `case 'B'`, because the first one wins and the second is dead code.
+         It did: Shift+B blanked the wall and the phones could not be blanked
+         at all. Caps Lock sends 'B' with shiftKey false, so the wall is the
+         default rather than the shifted branch. */
+      case 'b': case 'B': case '.':
+        e.preventDefault();
+        if (e.shiftKey) Player.emit('blankPhonesToggle', {});
+        else Player.control('blank');
+        break;
       case 'f': case 'F': e.preventDefault(); Player.control('full'); break;
       case 'r': case 'R': e.preventDefault(); Player.resetScores(); break;
       case 'd': case 'D': e.preventDefault(); Player.control('presenter'); break;
@@ -606,8 +616,6 @@ export function createPresenterWindow(SF, helpers) {
       /* T for thumbs. A live control rather than a setting, because switching
          reactions off matters in the moment they are being abused. */
       case 't': case 'T': e.preventDefault(); Player.emit('reactionsToggle', {}); break;
-      /* Shift+B, next to B for the wall. Two screens, two blanks. */
-      case 'B': if (e.shiftKey) { e.preventDefault(); Player.emit('blankPhonesToggle', {}); } break;
       case 'H': if (e.shiftKey) { e.preventDefault(); Player.emit('floorCycle', {}); } break;
       case 'w': case 'W': e.preventDefault(); Player.control('who'); break;
       /* I opens the pen, not P — P is already Previous, and a pen that also
