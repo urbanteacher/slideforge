@@ -27,14 +27,20 @@ bypass it.
 | To change… | Follow |
 | --- | --- |
 | How a slide looks or behaves | `slide.design` → `js/customize.js` (inspector) → `layoutX` in `js/render.js` → CSS under `#player` |
+| Where a block sits on the slide | `src/render/lattice.js` — `SF.LATTICE` and `design.regions` |
 | The deck or game schema | `src/model.js`, then `npm run build` — `js/model.js` is generated and `npm test` fails if it drifts |
 | Presenting: builds, transitions, navigation | `js/player.js` |
 | The live room and phones | `js/live.js`, `server/server.js` |
-| A game's rules or scoring | `src/games/` |
+| A game's rules or scoring | `src/games/` — one file per style |
+| The activity catalogue | `src/activities/catalogue.js` — recipes, never engine |
 | Lesson content | `js/lessons.js` — content, never engine |
 
 The image slow-zoom (`design.imageMotion` → `.img-motion-zoom`) is the worked
 example: one design field, one layout branch, one CSS rule.
+
+Anything you add under `src/` reaches the browser through `js/model.js`, which
+is the only build output — see [Developing the model](#developing-the-model)
+before assuming the name still means what it says.
 
 ## Where your work lives — read this before believing the screen
 
@@ -59,10 +65,33 @@ Full caveats in [Known limits](#known-limits).
 
 ## Developing the model
 
-The model source lives in `src/`: game definitions and scoring in `src/games/`,
-starter content in `src/samples/`, and persistence in `src/storage.js`.
-`js/model.js` is the generated compatibility bundle used by existing pages.
-Edit the source, then run `npm run build`; include both source and bundle changes.
+The source lives in `src/`. Edit it, run `npm run build`, and commit both the
+source and the bundle.
+
+`src/` is no longer only the model — it is everything that has been moved to
+modules so far:
+
+| Directory | What's in it |
+| --- | --- |
+| `src/games/` | one file per game style: rules, scoring, authoring hooks |
+| `src/boards/` | the four board games, plus the shared lifecycle `SF.Boards` |
+| `src/render/` | charts, quiz faces, the lattice, layout slots, compositions |
+| `src/editor/` | arrange, the inspector's content fields, deck settings |
+| `src/deck/` | deck content helpers, Markdown, feedback |
+| `src/activities/` | the activity catalogue and presets |
+| `src/presenter/` | the presenter window |
+| `src/samples/` | starter content |
+| `src/model.js` | both document types and the game→slides compiler |
+| `src/storage.js`, `src/themes.js`, `src/types.d.ts` | persistence, themes, the type contract |
+
+**`js/model.js` is more than the model.** `tools/build.mjs` has a single entry
+point — `src/model.js` — and a single output, so every module in that table
+ships through one bundle whatever layer it belongs to. `src/render/charts.js`
+reaches the renderer as `SF.createChartRenderer`, which `js/render.js` calls;
+`src/presenter/window.js` reaches `presenter.html` the same way. The bundle is
+the largest file in the repo and it is the only route from an ES module into a
+page that loads classic scripts and must still run from `file://`. Read the
+name as *the bundle*, not *the schema* — the schema is `src/model.js` itself.
 
 Use Node 22.12 or newer and `npm ci` to install development tools. `npm test`
 checks that the bundle matches its source and runs the full test suite.
@@ -71,8 +100,8 @@ The committed bundle still runs without installing tools or building first.
 For browser smoke checks, run `npx playwright install chromium`, then:
 
 ```
-npm run smoke:list          # the 45 smokes and the named sets
-npm run smoke:ci            # the fifteen CI runs (about 85s)
+npm run smoke:list          # the 49 smokes and the named sets
+npm run smoke:ci            # the 24 CI runs (about 200s)
 npm run smoke -- fit-check  # one by name
 npm run smoke               # all of them
 ```
@@ -87,7 +116,9 @@ matched a line of output; they are in the `ci` set instead, so which smokes
 matter is recorded in one place rather than in nine files.
 
 See [the modernization notes](docs/codebase-modernization.md) for the engine
-contract, compatibility constraints, and remaining migration work.
+contract and the compatibility constraints, and [the render split](docs/render-split.md)
+for how `js/render.js` was broken into `src/render/` and where the next seam is.
+Both record work already done; the modernization notes list no open boundaries.
 
 ## Customise and teach
 
@@ -260,20 +291,28 @@ shared question.
 
 ---
 
-## The two engines
+## The three engines
 
-Switch with the toggle in the top-left, or `⌘E` / `Ctrl-E`.
+Three workspaces share one shell, picked from the switch in the top-left:
+**▤ Lesson studio**, **◈ Quiz studio** and **◇ Activities**. `⌘E` / `Ctrl-E`
+flips between the first two.
 
-| | Presentation | Game |
-| --- | --- | --- |
-| Holds | slides | settings + questions |
-| Rail shows | slides | questions |
-| Run button | ▶ Present | ▶ Play game |
-| Saved as | `.sfdeck.json` | `.sfgame.json` |
+| | Lesson studio | Quiz studio | Activities |
+| --- | --- | --- | --- |
+| `key` | `deck` | `game` | `plan` |
+| Holds | slides | settings + questions | a lesson's activities |
+| Rail shows | slides | questions | activities |
+| Run button | ▶ Present | ▶ Play game | ▶ Present |
+| Saved as | `.sfdeck.json` | `.sfgame.json` | `.sfdeck.json` — the same deck |
 
-Neither knows about the other's internals. Questions exist **only** in games —
-there is no quiz slide type to author in a presentation, which is what keeps the
-two jobs from tangling.
+Each registers itself with `SF.Shell.register(ws)`; the members an engine must
+supply, and the optional ones, are documented at the top of `js/shell.js`.
+
+Lesson studio and Quiz studio know nothing of each other's internals. Questions
+exist **only** in games — there is no quiz slide type to author in a
+presentation, which is what keeps the two jobs from tangling. Activities is the
+deliberate exception: it is a second view over a presentation rather than a
+third document type, so it delegates to the deck engine and shares its store.
 
 ### Presentation
 
@@ -1523,16 +1562,24 @@ a private draft for review.
 
 ## Files
 
+`index.html` loads around forty classic scripts from `js/`. These are the ones
+worth knowing by name; the rest are one feature each and the filename says which.
+
 | File | What it does |
 | --- | --- |
-| `index.html` | The shared shell both engines render into |
+| `index.html` | The shared shell all three engines render into |
 | `js/shell.js` | Chrome, workspace switching, file I/O, shared inspector widgets |
-| `js/editor.js` | Presentation engine |
-| `js/games.js` | Game engine |
-| `js/model.js` | Both document types, storage, and the game→slides compiler |
+| `js/editor.js` | Lesson studio — the presentation engine |
+| `js/games.js` | Quiz studio — the game engine |
+| `js/activities.js` | Activities — the lesson-plan engine, a second view over a deck |
+| `js/model.js` | **Generated.** Everything under `src/`, bundled — see [Developing the model](#developing-the-model) |
 | `js/render.js` | Slide DOM at 1280×720, plus the score rail |
 | `js/player.js` | The runtime: navigation, transitions, answers, scoring |
 | `js/live.js` | Host side of live play |
+| `js/customize.js` | The per-slide design inspector, and the safe formatting renderer |
+| `js/studio.js` | Lesson-design tools — the demo, library and starter pickers |
+| `js/lessons.js` | The lessons the app ships — content, never engine |
+| `js/ai.js` | Diagnostic questions and live polling, with an offline keyless mode |
 | `presenter.html` | Presenter view |
 | `join.html` | What the audience opens on their phones |
 | `server/server.js` | Static file server + live relay |

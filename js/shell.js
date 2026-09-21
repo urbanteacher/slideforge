@@ -6,20 +6,26 @@
    and forwards each action to whichever engine is active.
 
    An engine registers itself with SF.Shell.register(ws) and implements:
-     key            'deck' | 'game'
+     key            'deck' | 'game' | 'plan'
      railLabel      heading above the rail
      notesLabel     label under the stage
+     settingsLabel  label on the document-wide settings button
      doc()          the document being edited
      setDoc(d)      adopt a document
      blank()        a fresh empty document
-     newDoc()       optional: handle New itself (a game picks its style first)
      store          { list, get, save, remove }
      draw()         repaint rail + preview + inspector + rail footer
+     describe(d)    one line about a document, for the Library
      onTitle(v)     title changed
      onTheme(v)     theme changed
      play()         run it
      settings()     open the document-wide settings sheet
      fileSuffix     extension used by Export
+   and may implement:
+     newDoc()       handle New itself (a game picks its style first)
+     flush()        commit any in-progress edit before the shell reads doc()
+     keydown(e)     first refusal on a key the shell would otherwise handle
+     hostLive()     start a live session from this workspace
 */
 (function (global) {
   'use strict';
