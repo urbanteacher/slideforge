@@ -133,7 +133,13 @@
 
   color: var(--s-fg);
   background: var(--s-bg);
-  position: relative;
+  /* No `position` here. This block is deliberately unscoped so that anything
+     wearing the theme gets the tokens — and the score rail and the solo score
+     wear it as well as the slide. All three declare `position: absolute`
+     themselves, so a `relative` at this specificity beat two of them: the rail
+     lost `right: 0` and fell back to its static place in the middle of the
+     slide. The slide never needed it, being absolutely positioned already.
+     Anything genuinely about slide layout goes on `.slide.theme-ukbt` below. */
 }
 
 .theme-ukbt {

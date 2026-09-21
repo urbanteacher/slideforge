@@ -529,9 +529,18 @@
     box.classList.remove('is-slide-preview', 'railed');
     var row = current();
     if (row) {
+      /* A slide again: the shell may pin 16:9 as it does everywhere else. */
+      box.classList.remove('canvas-free');
+      if (SF.Shell.sizeCanvas) SF.Shell.sizeCanvas();
       paintSlidePreview(box, row.slide);
       return;
     }
+    /* The catalogue is a scrolling panel, not a slide. Say so before drawing
+       it, and ask the shell to re-measure — otherwise the box keeps the
+       inline width and height left over from the last slide and the
+       catalogue is letterboxed into it. */
+    box.classList.add('canvas-free');
+    if (SF.Shell.sizeCanvas) SF.Shell.sizeCanvas();
     drawCatalogue(box);
   }
 

@@ -4365,14 +4365,12 @@ html[data-ws="deck"] #railCount { display: none; }
   padding-bottom: 18px;
   border-bottom: 2px solid var(--s-rule);
 }
-/* The strip now leads the slide, so it is the strip — not the question — that
-   has to keep clear of the countdown in its corner. */
-.layout-quiz.has-clock .race-strip { padding-right: 112px; }
-.layout-quiz.is-race.has-clock .qhead { padding-right: 0; }
-.deck-viewport.railed .layout-quiz.has-clock .race-strip,
-#previewBox.railed .layout-quiz.has-clock .race-strip { padding-right: 104px; }
-.deck-viewport.railed .layout-quiz.is-race.has-clock .qhead,
-#previewBox.railed .layout-quiz.is-race.has-clock .qhead { padding-right: 0; }
+/* The countdown sits in the top-right corner, so whatever is level with it has
+   to keep clear. On a race that is the question: the pad is built qhead first
+   and the strip second, so the strip starts below the clock and cannot reach
+   it. These rules used to say the opposite — clearance on the strip, none on
+   the question — and the heading ran under the dial. The race now inherits the
+   ordinary `.layout-quiz.has-clock .qhead` clearance like every other style. */
 .layout-quiz .race-strip .rlane {
   display: grid; grid-template-columns: 176px 1fr 62px;
   align-items: center; gap: 14px;

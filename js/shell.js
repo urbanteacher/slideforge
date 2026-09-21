@@ -83,6 +83,18 @@
     var wrap = document.querySelector('.stage-wrap');
     var box = $('previewBox');
     if (!wrap || !box) return;
+    /* An engine may put something on the canvas that is not a slide — the
+       activity catalogue is a scrolling panel, not a 1280x720 picture — and
+       says so with this class. Pinning that to 16:9 letterboxed it to a third
+       of the stage with ten thousand pixels of content scrolling inside, and
+       the stylesheet could never win the argument, because what is pinned
+       here is inline. Hand the box back to the stylesheet instead. */
+    if (box.classList.contains('canvas-free')) {
+      box.style.removeProperty('max-width');
+      box.style.removeProperty('width');
+      box.style.removeProperty('height');
+      return;
+    }
     var w = Math.round(fitWidth(wrap) * zoom);
     box.style.maxWidth = 'none';
     box.style.width = w + 'px';
@@ -443,6 +455,20 @@
 
     if (active && active.flush) active.flush();   // commit edits in flight
     active = ws;
+
+    /* Back to the default: the canvas holds a slide unless the engine taking
+       over says otherwise. This describes what is on the canvas right now, so
+       it cannot outlive the engine that put it there — left set, it would
+       stop the shell pinning geometry in a studio that needs it. */
+    var canvas = $('previewBox');
+    if (canvas && canvas.classList.contains('canvas-free')) {
+      canvas.classList.remove('canvas-free');
+      /* And pin it again. The engine that just left had the inline width and
+         height cleared on its behalf; leaving them off puts the canvas back on
+         `width:100%` plus `aspect-ratio`, which is the circular pair sizeCanvas
+         exists to escape. */
+      sizeCanvas();
+    }
 
     document.body.classList.toggle('ws-deck', key === 'deck');
     document.body.classList.toggle('ws-game', key === 'game');
@@ -1705,6 +1731,9 @@
     openModal: openModal,
     shareLesson: shareLesson,
     lessonDoc: lessonDoc,
+    /* Re-measure the canvas after an engine changes what is on it. Geometry
+       is the shell's; what the canvas holds is the engine's. */
+    sizeCanvas: sizeCanvas,
     current: function () { return active; },
     UI: UI
   };
