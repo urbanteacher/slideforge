@@ -126,24 +126,65 @@ its 32 calls into `SF.Editor` say so plainly. Filing them together because
 both are "layout" is the same mistake `docs/render-split.md` §3.2 warns about
 with the two unrelated things called "regions".
 
-### Teacher presenter — an engine nobody named
+### Teacher presenter — an engine with a folder and no more to move
 
 | File | Lines | Reaches |
 | --- | ---: | --- |
-| `js/player.js` | 3,128 | `Live` 87, `Teaching` 18, `Explore` 5, `Shell` 4 |
-| `js/live.js` | 2,424 | `Player` 198, `Shell` 2 |
+| `js/player.js` | 2,536 | `Live` 43, `Teaching` 5, `Explore` 3, `Shell` 2 |
+| `js/live.js` | 2,431 | `Player` 198, `Shell` 2 |
+| `src/presenter/window.js` | 655 | `Live` 44, `Teaching` 13, `Explore` 2, `Shell` 2 |
 | `js/manual.js` | 556 | nothing |
 | `js/teaching.js` | 255 | `Explore` 1 |
 | `js/lesson-moments.js` | 66 | nothing |
 
-6,429 lines. The `Player`↔`Live` traffic — 285 calls — is *internal*: those two
-files are the engine talking to itself, which is cohesion rather than coupling.
+6,499 lines. The `Player`↔`Live` traffic — 285 calls, now 43 + 44 + 198 across
+`player.js`, `window.js` and `live.js` — is *internal*: the engine talking to
+itself, which is cohesion rather than coupling. So are the 18 into
+`SF.Teaching`, which is also its own.
 Everything genuinely outside it comes to **twelve calls**, six into `SF.Shell`
-and six into `SF.Explore`.
+and six into `SF.Explore`, unchanged from the first measurement.
 
-**It never calls `SF.Editor` once.** That is the boundary, and it already
-holds. The engine exists; it is spread across five files and four HTML
-documents with no name on it.
+**It never calls `SF.Editor` once.** That is the boundary, and it holds.
+
+#### What was done, and what was deliberately not
+
+`src/presenter/window.js` is the teacher's second screen and its command bus,
+taken out of `js/player.js` on 2026-09-21: 17 names in, 4 out. The counts above
+show the split conserved every outside call exactly — `player.js` reached
+`Live` 87 times before, and 43 + 44 after.
+
+**The rest stays in `js/`, and that is a decision rather than a pause.**
+
+An earlier note in this document said the remaining files *could not* be filed
+because they register with each other at load: `js/teaching.js` captures
+`P = SF.Player` as it runs, and `js/lesson-moments.js` calls `P.on(…)`. The
+observation is right; the conclusion was too strong. They cannot be installed
+from the model bundle, which evaluates before `SF.Player` exists — but
+`js/player.js` assigns `SF.Player` at its last line and could install them
+immediately after, which is exactly the pattern `js/editor.js` uses for its
+four subsystems in `src/editor/`.
+
+So it is possible. It is not worth it:
+
+- `js/player.js` and `js/live.js` are the engine, not subsystems of it. Moving
+  them is ~5,000 lines of the most stateful code in the app — the code that
+  runs a live lecture — in exchange for a folder name.
+- `js/live.js` has no internal seam. Measured three ways on 2026-09-21:
+  by its own section headers, by state cluster, and by scanning every cut
+  point in the file. Every cut crosses at least 13 names; every mid-file cut
+  crosses 23 to 40. See `docs/render-split.md`.
+- What remains genuinely movable is `js/teaching.js` and
+  `js/lesson-moments.js` — **321 lines and two script tags**. That is a
+  smaller return than any move made during the split, and each move costs a
+  full smoke cycle.
+- `js/manual.js`, `js/presenter-live.js` and `js/presenter-activities.js` are
+  single-page files whose load-time work is attaching listeners to their own
+  document. There is nothing to gain by bundling them.
+
+**The boundary is what makes this an engine, not the folder.** Zero calls into
+`SF.Editor` across every file above is the fact worth protecting; where the
+files sit is not. If someone adds that call, the engine stops being one —
+and no amount of filing would have prevented it.
 
 ### Activities — not an engine, and one file is why
 
@@ -254,6 +295,14 @@ named facades instead; it needs no ownership map.
 
 ## 6. Change log
 
+- **2026-09-21** — §2's presenter section rewritten to current state. The
+  second screen and its command bus moved to `src/presenter/window.js`; the
+  figures are re-derived and the split is shown to conserve every outside call.
+  The claim that the remaining files *cannot* be filed is corrected: they can,
+  by installing from `js/player.js` after it assigns `SF.Player`, the way
+  `js/editor.js` installs `src/editor/`. They are not being filed because the
+  movable remainder is 321 lines, not because it is impossible. The twelve
+  outside calls and the zero into `SF.Editor` are unchanged.
 - **2026-09-21** — §0 added, and it corrects the framing of everything below
   it. The first version of this document grouped files by subject and called
   the groups engines, without noticing that `index.html` declares three
