@@ -23,7 +23,9 @@ function load() {
   context.globalThis = context;
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.join(dir, 'js/model.js'), 'utf8'), context);
-  vm.runInContext(fs.readFileSync(path.join(dir, 'js/experiments.js'), 'utf8'), context);
+  /* experiments moved into the render engine and ships in the bundle;
+     pages install it, so this does the same. */
+  context.window.SF.installExperiments(context.window.SF);
   vm.runInContext(fs.readFileSync(path.join(dir, 'js/print.js'), 'utf8'), context);
   return context.window.SF;
 }

@@ -6,6 +6,8 @@ import { CHROME_SLOTS, chromePositions, setChromeSlot, supportsChromeRegions, ap
 import { createActivityFields } from './activities/fields.js';
 import { createCompositionRenderer } from './render/compositions.js';
 import { createChartRenderer } from './render/charts.js';
+import { installExplore } from './render/explore.js';
+import { installExperiments } from './render/experiments.js';
 import { createWordRenderer } from './render/words.js';
 import { createLiveRenderer } from './render/live.js';
 import { createQuizRenderer } from './render/quiz.js';
@@ -1526,7 +1528,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   slideHeight: slideHeight,
   THEMES: THEMES,
   DEFAULT_THEME, resolveTheme,
-  createActivityFields, createCompositionRenderer, createChartRenderer, createWordRenderer, createLiveRenderer, createQuizRenderer, installArtRenderer, installLatticeRenderer, createPresenterWindow, createDeckSettings, createContentFields, installArrange, createPanes, installHeaderFooterUI, installArtwork, installCustom, bindCanvasRegions, declareBodyRegion, measureBodyRegion,
+  createActivityFields, createCompositionRenderer, createChartRenderer, createWordRenderer, createLiveRenderer, createQuizRenderer, installArtRenderer, installLatticeRenderer, createPresenterWindow, createDeckSettings, createContentFields, installArrange, createPanes, installHeaderFooterUI, installArtwork, installCustom, installExplore, installExperiments, bindCanvasRegions, declareBodyRegion, measureBodyRegion,
   hasLayoutTemplate, layoutRegionsFor, insertionRegionFor, LAYOUT_SLOT_TEMPLATES,
   measureSlideFit, probeLayoutFit, svgScale, FIT_TOLERANCE, LEGIBLE_FLOOR,
   CHROME_SLOTS, chromePositions, setChromeSlot, supportsChromeRegions, applyChromeRegions,

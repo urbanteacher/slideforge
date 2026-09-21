@@ -5,7 +5,10 @@ const vm = require('node:vm'), fs = require('node:fs');
 function runtime() {
   const scope = { console }; scope.window = scope;
   vm.createContext(scope);
-  for (const name of ['model', 'explore']) vm.runInContext(fs.readFileSync(require.resolve('../js/' + name + '.js'), 'utf8'), scope);
+  /* explore moved into the render engine and ships in the bundle; pages
+     install it, so this does the same. */
+  for (const name of ['model']) vm.runInContext(fs.readFileSync(require.resolve('../js/' + name + '.js'), 'utf8'), scope);
+  scope.SF.installExplore(scope.SF);
   return scope.SF;
 }
 test('exploration settings survive save normalization and reject unsafe image schemes', () => {

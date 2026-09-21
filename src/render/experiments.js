@@ -1,8 +1,15 @@
 /* Visual teaching experiments: authored states, one editable dataset, no runtime
    state written into the deck. Explore carries state to the presenter window. */
-(function () {
-  'use strict';
-  var SF = window.SF;
+
+/* Moved out of js/experiments.js into the render engine. The authored presets
+ * behind the Visual experiment slide type, driven by src/render/explore.js.
+ *
+ * It was never in the tsconfig browser list, so this puts it under the
+ * typechecker for the first time.
+ *
+ * Installed by src/model.js; nothing here runs at install.
+ */
+export function installExperiments(SF) {
   var presets = {
     polling:{label:'Polling: pies to bars',prompt:'Which candidate gains most across the polls?',data:'Candidate\tPoll A\tPoll B\tPoll C\n1\t17\t20\t23\n2\t18\t20\t22\n3\t20\t19\t20\n4\t22\t21\t18\n5\t23\t20\t17',states:[
       {label:'Poll A',kind:'pie',series:0,explanation:'Compare candidates 5 and 3. How confident are you?'},
@@ -67,7 +74,9 @@
     for(var i=0;i<64;i++){
       if(kind==='circle'){var angle=-Math.PI/2+i/64*Math.PI*2;points.push([a.cx+a.r*Math.cos(angle),a.cy+a.r*Math.sin(angle)]);}
       else if(kind==='sector'){
-        var angle=a.start+(a.end-a.start)*Math.max(0,Math.min(1,(i-8)/47)),radius=i<8?a.r*i/8:i>55?a.r*(64-i)/9:a.r;
+        /* Same name as the circle branch above, which tsc infers as number;
+           the cast agrees with it and changes nothing at runtime. */
+        var angle=/** @type {number} */(a.start+(a.end-a.start)*Math.max(0,Math.min(1,(i-8)/47))),radius=i<8?a.r*i/8:i>55?a.r*(64-i)/9:a.r;
         points.push([a.cx+radius*Math.cos(angle),a.cy+radius*Math.sin(angle)]);
       }else{var p=i/64*vertices.length,j=Math.floor(p),t=p-j,u=vertices[j],v=vertices[(j+1)%vertices.length];points.push([u[0]+(v[0]-u[0])*t,u[1]+(v[1]-u[1])*t]);}
     }
@@ -239,6 +248,6 @@
     parent.appendChild(node('p','Present: Next reveals each state; Previous steps back. Up to 12 categories and 4 grouped series display. Edit explanations when changing data. Field and geometry are illustrative examples. Changing the experiment resets its data and states.'));
     return true;
   }
-  function staticState(s,index){var host=document.createElement('div'),c=config(s),st=c.states[index];draw(host,s,c,st);if(st.hideValues){host.querySelectorAll('[data-motion^="value:"]').forEach(function(el){el.remove();});host.querySelector('title').textContent=st.label+' — estimate before reading the reveal.';}return host.firstElementChild;}
+  function staticState(s,index){var host=document.createElement('div'),c=config(s),st=c.states[index];draw(host,s,c,st);if(st.hideValues){host.querySelectorAll('[data-motion^="value:"]').forEach(function(el){el.remove();});/** @type {Element} */(host.querySelector('title')).textContent=st.label+' — estimate before reading the reveal.';}return host.firstElementChild;}
   SF.Experiments={config:config,render:render,inspector:inspector,presets:presets,staticState:staticState};
-})();
+}

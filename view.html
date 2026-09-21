@@ -67,7 +67,7 @@
 <div class="share-msg" id="shareMsg"><h1>Opening the lesson…</h1><p>Fetching a read-only copy.</p></div>
 
 <script src="js/qr.js?v=2"></script>
-<script src="js/model.js?v=47"></script>
+<script src="js/model.js?v=48"></script>
 <script src="js/playbook.js?v=2"></script>
 <script src="js/ask.js?v=4"></script>
 <script src="js/lessons.js?v=56"></script>
@@ -77,9 +77,16 @@
    SF.Custom.paint and SF.Custom.layout to draw an authored slide. */
 SF.installCustom(SF);
 </script>
-<script src="js/explore.js?v=2"></script>
 <script src="js/chart-motion.js?v=1"></script>
-<script src="js/experiments.js?v=2"></script>
+<script>
+/* explore and experiments moved to src/render/ and ship inside js/model.js.
+   Installed per page rather than by the bundle: js/render.js draws these
+   slide types through `if (SF.Explore)`, so installing everywhere would
+   switch the hook on for pages that never loaded these scripts —
+   modular-canvas/preview.html is one, and its layout budget noticed. */
+SF.installExperiments(SF);
+SF.installExplore(SF);
+</script>
 <script src="js/callouts.js?v=2"></script>
 <script src="js/render.js?v=64"></script>
 <script src="js/demo.js?v=3"></script>

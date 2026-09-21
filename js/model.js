@@ -2326,6 +2326,983 @@
     return { chartKey, chartTable, chartSvgFor, svgEl };
   }
 
+  // src/render/explore.js
+  function installExplore(SF) {
+    var kinds = ["beforeafter", "explore", "simulation", "experiment"];
+    function active2(slide) {
+      return SF.MotionLab && SF.MotionLab.active(slide) || kinds.includes(slide.type) || slide.type === "chart" && slide.exploration && slide.exploration.prediction;
+    }
+    function config(slide) {
+      return SF.normalizeExploration(slide.exploration);
+    }
+    function initial(slide) {
+      return { position: 50, spot: -1, input: config(slide).initial, revealed: false, experimentStep: -1 };
+    }
+    function state2(player, slide) {
+      return Object.assign(initial(slide), (player.exploreStates || {})[slide.id] || {});
+    }
+    function command(player, action, value) {
+      var slide = player.deck && player.deck.slides[player.idx];
+      if (!slide || !active2(slide) || player.frozen) return;
+      var c = config(slide), next = state2(player, slide), n = Number(value);
+      if (SF.MotionLab && SF.MotionLab.active(slide)) {
+        var motionNext = SF.MotionLab.update(slide, next, action, value);
+        if (!motionNext) return;
+        Object.assign(next, motionNext);
+      } else if (action === "experiment" && slide.type === "experiment" && SF.Experiments && Number.isInteger(n)) next.experimentStep = Math.max(-1, Math.min(SF.Experiments.config(slide).states.length - 1, n));
+      else if (action === "experimentReplay" && slide.type === "experiment") next.experimentReplay = (next.experimentReplay || 0) + 1;
+      else if (action === "reveal" && slide.type === "chart") next.revealed = value === true;
+      else if (action === "position" && slide.type === "beforeafter" && Number.isFinite(n)) next.position = Math.max(0, Math.min(100, n));
+      else if (action === "spot" && slide.type === "explore" && Number.isInteger(n)) next.spot = Math.max(-1, Math.min(c.spots.length - 1, n));
+      else if (action === "input" && slide.type === "simulation" && Number.isFinite(n)) next.input = Math.max(c.min, Math.min(c.max, n));
+      else return;
+      player.exploreStates = player.exploreStates || {};
+      player.exploreStates[slide.id] = next;
+      if (player._current && player._current._exploreRefresh) player._current._exploreRefresh(next);
+      queueSync(player);
+    }
+    var raf = typeof window !== "undefined" && window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : null;
+    var syncQueued = false;
+    function queueSync(player) {
+      if (!raf) {
+        player.syncPresenter();
+        return;
+      }
+      if (syncQueued) return;
+      syncQueued = true;
+      raf(function() {
+        syncQueued = false;
+        player.syncPresenter();
+      });
+    }
+    function nextAction(player) {
+      var s = player.deck && player.deck.slides[player.idx];
+      if (!s || !active2(s)) return null;
+      var v = state2(player, s);
+      if (SF.MotionLab && SF.MotionLab.active(s)) {
+        var mv = SF.MotionLab.state(s, v), mode = s.motionScene;
+        if (["mask", "scrub", "cause", "explode"].includes(mode)) return mv.sceneValue < 100 ? "comparison" : null;
+        if (["draw", "annotate"].includes(mode)) return mv.sceneStep < SF.MotionLab.items(s).length ? "comparison" : null;
+        return null;
+      }
+      if (s.type === "experiment") return v.experimentStep < SF.Experiments.config(s).states.length - 1 ? "comparison" : null;
+      if (s.type === "chart" && !v.revealed) return "prediction";
+      if (s.type === "explore" && v.spot < config(s).spots.length - 1) return "hotspot";
+      if (s.type === "beforeafter" && v.position < 100) return "comparison";
+      return null;
+    }
+    function step(player, direction) {
+      var s = player.deck && player.deck.slides[player.idx];
+      if (!s || !active2(s)) return false;
+      var v = state2(player, s);
+      if (SF.MotionLab && SF.MotionLab.active(s)) {
+        var mv = SF.MotionLab.state(s, v), mode = s.motionScene;
+        if (["mask", "scrub", "cause", "explode"].includes(mode)) {
+          if (direction > 0 && mv.sceneValue < 100 || direction < 0 && mv.sceneValue > 0) {
+            command(player, "motionValue", mv.sceneValue + direction * 25);
+            return true;
+          }
+        } else if (["draw", "annotate"].includes(mode)) {
+          if (direction > 0 && mv.sceneStep < SF.MotionLab.items(s).length || direction < 0 && mv.sceneStep > 0) {
+            command(player, "motionStep", mv.sceneStep + direction);
+            return true;
+          }
+        }
+        return false;
+      }
+      if (s.type === "experiment") {
+        var next = v.experimentStep + direction;
+        if (next >= -1 && next < SF.Experiments.config(s).states.length) {
+          command(player, "experiment", next);
+          return true;
+        }
+        return false;
+      }
+      if (s.type === "chart" && v.revealed === direction < 0) {
+        command(player, "reveal", direction > 0);
+        return true;
+      }
+      if (s.type === "explore" && (direction > 0 && v.spot < config(s).spots.length - 1 || direction < 0 && v.spot >= 0)) {
+        command(player, "spot", v.spot + direction);
+        return true;
+      }
+      if (s.type === "beforeafter" && (direction > 0 && v.position < 100 || direction < 0 && v.position > 0)) {
+        command(player, "position", direction > 0 ? 100 : 0);
+        return true;
+      }
+      return false;
+    }
+    function node(tag, className, text2) {
+      var n = document.createElement(tag);
+      if (className) n.className = className;
+      if (text2 != null) n.textContent = text2;
+      return n;
+    }
+    function svg(tag, attrs) {
+      var n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      Object.keys(attrs || {}).forEach(function(k) {
+        n.setAttribute(k, attrs[k]);
+      });
+      return n;
+    }
+    function photo(url, alt) {
+      var image = node("img", "explore-image");
+      image.src = SF.safeMedia(url);
+      image.alt = alt;
+      image.draggable = false;
+      image.onerror = function() {
+        image.hidden = true;
+        var host = image.parentElement;
+        if (host) host.appendChild(node("p", "explore-empty", "Choose an image in Design & content."));
+      };
+      return image;
+    }
+    function render2(root, pad, slide, opts) {
+      if (!active2(slide)) return;
+      if (SF.MotionLab && SF.MotionLab.active(slide)) {
+        SF.MotionLab.render(root, pad, slide, opts, SF.safeMedia);
+        return;
+      }
+      if (slide.type === "experiment" && SF.Experiments) {
+        SF.Experiments.render(root, pad, slide, opts);
+        return;
+      }
+      var c = config(slide), view = Object.assign(initial(slide), opts.exploreState || {});
+      var enabled = !!(opts.interactive || opts.exploreCommand);
+      function send(action, value) {
+        if (opts.exploreCommand) opts.exploreCommand(action, value);
+      }
+      function button(parent, text2, action) {
+        var b = node("button", "explore-button", text2);
+        b.type = "button";
+        b.disabled = !enabled;
+        b.onclick = action;
+        parent.appendChild(b);
+        return b;
+      }
+      function range(parent, label, min, max, value, action) {
+        var wrap = node("label", "explore-range"), text2 = node("span", null, label);
+        var input2 = node("input");
+        input2.type = "range";
+        input2.min = String(min);
+        input2.max = String(max);
+        input2.step = String((max - min) / 100);
+        input2.value = String(value);
+        input2.disabled = !enabled;
+        input2.setAttribute("aria-label", label);
+        input2.oninput = function() {
+          send(action, Number(input2.value));
+        };
+        wrap.append(text2, input2);
+        parent.appendChild(wrap);
+        return input2;
+      }
+      root.classList.add("exploration-slide");
+      if (slide.type === "chart") {
+        var result = node("div", "explore-chart-result");
+        Array.from(pad.children).forEach(function(child) {
+          if (child.tagName !== "H2") result.appendChild(child);
+        });
+        var cover = node("div", "explore-predict");
+        cover.append(node("span", "explore-eyebrow", "PREDICT FIRST"), node("h3", null, c.prompt), node("p", null, slide.feedback ? "Commit to a prediction. Discuss your reasoning, then compare with the data." : "Think, discuss, then compare your prediction with the data."));
+        button(cover, "Reveal the chart", function() {
+          send("reveal", true);
+        });
+        pad.append(cover, result);
+        var again = button(pad, "Hide data · predict again", function() {
+          send("reveal", false);
+        });
+        root._exploreRefresh = function(next) {
+          view = Object.assign(view, next);
+          result.hidden = !view.revealed;
+          cover.hidden = view.revealed;
+          again.hidden = !view.revealed;
+          result.classList.toggle("explore-revealed", view.revealed);
+        };
+      } else {
+        pad.replaceChildren();
+        pad.appendChild(node("h2", null, slide.title || SF.SLIDE_TYPES[slide.type].label));
+        if (slide.type === "beforeafter") {
+          var frame = node("div", "explore-compare");
+          frame.appendChild(photo(c.before, c.beforeLabel + ": " + c.alt));
+          var after = node("div", "explore-after");
+          after.appendChild(photo(c.after, c.afterLabel + ": " + c.alt));
+          frame.appendChild(after);
+          var divider = node("div", "explore-divider");
+          frame.appendChild(divider);
+          var beforeLabel = node("span", "explore-before-label", c.beforeLabel), afterLabel = node("span", "explore-after-label", c.afterLabel);
+          frame.append(beforeLabel, afterLabel);
+          if (enabled) {
+            let drag2 = function(event) {
+              var rect = frame.getBoundingClientRect();
+              send("position", 100 - (event.clientX - rect.left) / rect.width * 100);
+            };
+            var drag = drag2;
+            frame.style.touchAction = "none";
+            frame.onpointerdown = function(event) {
+              frame.setPointerCapture(event.pointerId);
+              drag2(event);
+            };
+            frame.onpointermove = function(event) {
+              if (frame.hasPointerCapture(event.pointerId)) drag2(event);
+            };
+            frame.onpointerup = frame.onpointercancel = function(event) {
+              if (frame.hasPointerCapture(event.pointerId)) frame.releasePointerCapture(event.pointerId);
+            };
+          }
+          pad.appendChild(frame);
+          var slider2 = range(pad, "Reveal after image", 0, 100, view.position, "position");
+          var actions = node("div", "explore-actions");
+          button(actions, c.beforeLabel, function() {
+            send("position", 0);
+          });
+          button(actions, "Compare", function() {
+            send("position", 50);
+          });
+          button(actions, c.afterLabel, function() {
+            send("position", 100);
+          });
+          pad.appendChild(actions);
+          root._exploreRefresh = function(next) {
+            view = Object.assign(view, next);
+            after.style.clipPath = "inset(0 0 0 " + (100 - view.position) + "%)";
+            divider.style.left = 100 - view.position + "%";
+            slider2.value = String(view.position);
+            beforeLabel.hidden = view.position === 100;
+            afterLabel.hidden = view.position === 0;
+          };
+        } else if (slide.type === "explore") {
+          var scene2 = node("div", "explore-scene"), moving = node("div", "explore-moving"), mainImage = photo(slide.image, c.alt);
+          moving.appendChild(mainImage);
+          scene2.appendChild(moving);
+          pad.appendChild(scene2);
+          var caption = node("div", "explore-caption");
+          caption.setAttribute("aria-live", "polite");
+          pad.appendChild(caption);
+          var spots = c.spots.map(function(spot, i) {
+            var b = button(moving, String(i + 1), function() {
+              send("spot", i);
+            });
+            b.className = "explore-hotspot";
+            b.style.left = spot.x + "%";
+            b.style.top = spot.y + "%";
+            b.setAttribute("aria-label", spot.title);
+            return b;
+          });
+          button(pad, "Whole image", function() {
+            send("spot", -1);
+          });
+          root._exploreRefresh = function(next) {
+            view = Object.assign(view, next);
+            var spot = c.spots[view.spot];
+            var width = scene2.clientWidth || 1160, height = scene2.clientHeight || 360;
+            var iw = mainImage.naturalWidth || width, ih = mainImage.naturalHeight || height;
+            var scale = Math.min(width / iw, height / ih), imageWidth = iw * scale, imageHeight = ih * scale;
+            function point(p) {
+              return { x: ((width - imageWidth) / 2 + p.x / 100 * imageWidth) / width * 100, y: ((height - imageHeight) / 2 + p.y / 100 * imageHeight) / height * 100 };
+            }
+            var target = spot ? point(spot) : { x: 50, y: 50 };
+            moving.style.transformOrigin = "0 0";
+            moving.style.transform = spot ? "translate(" + (50 - target.x * spot.zoom) + "%," + (50 - target.y * spot.zoom) + "%) scale(" + spot.zoom + ")" : "translate(0,0) scale(1)";
+            caption.replaceChildren(node("strong", null, spot ? spot.title : "Explore the image"), node("p", null, spot ? spot.body : c.spots.length ? "Choose a numbered detail, or use Next to explore in order." : "Add image details in Design & content."));
+            spots.forEach(function(b, i) {
+              var p = point(c.spots[i]);
+              b.style.left = p.x + "%";
+              b.style.top = p.y + "%";
+              b.setAttribute("aria-pressed", String(i === view.spot));
+              b.style.transform = "translate(-50%,-50%) scale(" + 1 / (spot ? spot.zoom : 1) + ")";
+            });
+          };
+          mainImage.onload = function() {
+            root._exploreRefresh(view);
+          };
+          requestAnimationFrame(function() {
+            root._exploreRefresh(view);
+          });
+        } else {
+          let X2 = function(x) {
+            return 90 + (x - c.min) / (c.max - c.min) * 830;
+          }, Y2 = function(y) {
+            return 290 - (y - low) / (high - low) * 250;
+          };
+          var X = X2, Y = Y2;
+          var graph = svg("svg", { viewBox: "0 0 1000 360", class: "explore-graph", role: "img" });
+          var values = SF.explorationCurve(c, 100);
+          var low = Math.min(0, ...values.map(function(p) {
+            return p[1];
+          })), high = Math.max(1, ...values.map(function(p) {
+            return p[1];
+          }));
+          graph.append(svg("path", { d: "M90 30 V290 H930", fill: "none", stroke: "currentColor", "stroke-width": 2 }));
+          [[90, 325, String(c.min)], [900, 325, String(c.max)], [15, 45, String(Math.round(high))], [15, 292, String(Math.round(low))]].forEach(function(a) {
+            var t = svg("text", { x: a[0], y: a[1], fill: "currentColor", "font-size": 20 });
+            t.textContent = String(a[2]);
+            graph.appendChild(t);
+          });
+          graph.appendChild(svg("path", { d: values.map(function(p, i) {
+            return (i ? "L" : "M") + X2(p[0]) + " " + Y2(p[1]);
+          }).join(" "), fill: "none", stroke: "var(--accent,#1d6b45)", "stroke-width": 5 }));
+          var marker = svg("circle", { r: 10, fill: "var(--accent,#1d6b45)", stroke: "currentColor", "stroke-width": 2 });
+          graph.appendChild(marker);
+          pad.appendChild(graph);
+          var reading = node("output", "explore-reading");
+          reading.setAttribute("aria-live", "polite");
+          pad.appendChild(reading);
+          var input = range(pad, c.inputLabel, c.min, c.max, view.input, "input");
+          pad.appendChild(node("p", "explore-formula", c.outputLabel + " = " + c.a + " × " + c.inputLabel + (c.model === "quadratic" ? "²" : "") + " + " + c.b));
+          button(pad, "Reset input", function() {
+            send("input", c.initial);
+          });
+          root._exploreRefresh = function(next) {
+            view = Object.assign(view, next);
+            var output = SF.explorationValue(c, view.input);
+            marker.setAttribute("cx", String(X2(view.input)));
+            marker.setAttribute("cy", String(Y2(output)));
+            input.value = String(view.input);
+            reading.textContent = c.inputLabel + ": " + Number(view.input.toFixed(2)) + " → " + c.outputLabel + ": " + Number(output.toFixed(2));
+            graph.setAttribute("aria-label", reading.textContent);
+          };
+        }
+      }
+      root._exploreRefresh(view);
+    }
+    function inspector(parent, slide, UI, changed, redraw) {
+      if (slide.type === "experiment" && SF.Experiments) return SF.Experiments.inspector(parent, slide, UI, changed, redraw);
+      if (!kinds.includes(slide.type) && slide.type !== "chart") return false;
+      var c = config(slide);
+      function commit(then) {
+        slide.exploration = c;
+        (then || changed)();
+      }
+      function text2(label, key, object) {
+        var o = object || c;
+        parent.appendChild(UI.field(label, UI.text(o[key] || "", function(v) {
+          if (key === "prompt" && slide.feedback && slide.feedback.prompt === o[key]) slide.feedback.prompt = v;
+          o[key] = v;
+          commit();
+        })));
+      }
+      function number(label, key, object) {
+        var o = object || c;
+        var input = node("input");
+        input.type = "number";
+        input.value = String(o[key]);
+        input.oninput = function() {
+          if (Number.isFinite(input.valueAsNumber)) {
+            o[key] = input.valueAsNumber;
+            commit();
+          }
+        };
+        input.onchange = function() {
+          Object.assign(c, SF.normalizeExploration(c));
+          commit(redraw);
+        };
+        parent.appendChild(UI.field(label, input));
+      }
+      function image(label, key, object) {
+        var o = object || c;
+        text2(label + " URL", key, o);
+        var file = node("input");
+        file.type = "file";
+        file.accept = "image/*";
+        file.setAttribute("aria-label", "Upload " + label);
+        file.onchange = function() {
+          var f = file.files && file.files[0];
+          if (!f) return;
+          if (f.size > 3.5 * 1024 * 1024) {
+            SF.toast("Choose an image smaller than 3.5 MB.");
+            return;
+          }
+          var reader = new FileReader();
+          reader.onload = function() {
+            o[key] = String(reader.result);
+            commit(redraw);
+          };
+          reader.readAsDataURL(f);
+        };
+        parent.appendChild(UI.field("Upload " + label, file));
+        if (String(o[key] || "").trim()) {
+          parent.appendChild(UI.button("Remove " + label.toLowerCase(), "ghost", function() {
+            o[key] = "";
+            commit(redraw);
+          }));
+        }
+      }
+      if (slide.type === "chart") {
+        parent.appendChild(UI.check("Predict before revealing the chart", c.prediction, function(v) {
+          c.prediction = v;
+          commit(redraw);
+        }));
+        if (c.prediction) {
+          text2("Prediction question", "prompt");
+          parent.appendChild(UI.check("Collect predictions on learner devices", !!slide.feedback, function(v) {
+            slide.feedback = v ? Object.assign(SF.makeFeedback("poll"), { prompt: c.prompt, options: ["Increasing", "Staying similar", "Decreasing"] }) : null;
+            redraw();
+          }));
+          parent.appendChild(node("p", "hint", "Next reveals the whole chart. Edit response choices in Engagement. Results stay beside the data."));
+        }
+        return false;
+      }
+      text2("Title", "title", slide);
+      if (slide.type === "beforeafter") {
+        image("Before image", "before");
+        image("After image", "after");
+        text2("Before label", "beforeLabel");
+        text2("After label", "afterLabel");
+        text2("Image description", "alt");
+      }
+      if (slide.type === "explore") {
+        image("Main image", "image", slide);
+        text2("Image description", "alt");
+        c.spots.forEach(function(spot, i) {
+          parent.appendChild(node("h4", null, "Detail " + (i + 1)));
+          text2("Detail title", "title", spot);
+          text2("Explanation", "body", spot);
+          number("Horizontal position (%)", "x", spot);
+          number("Vertical position (%)", "y", spot);
+          number("Zoom (1–4)", "zoom", spot);
+          parent.appendChild(UI.button("Remove detail", "ghost", function() {
+            c.spots.splice(i, 1);
+            commit(redraw);
+          }));
+        });
+        if (c.spots.length < 8) parent.appendChild(UI.button("Add image detail", "", function() {
+          c.spots.push({ x: 50, y: 50, zoom: 2, title: "New detail", body: "What should learners notice?" });
+          commit(redraw);
+        }));
+        parent.appendChild(node("p", "hint", "Positions are percentages of the image. Next visits details in order; Previous steps back."));
+      }
+      if (slide.type === "simulation") {
+        parent.appendChild(UI.field("Relationship", UI.select([{ value: "linear", label: "Linear: y = ax + b" }, { value: "quadratic", label: "Quadratic: y = ax² + b" }], c.model, function(v) {
+          c.model = v;
+          commit();
+        })));
+        text2("Input label", "inputLabel");
+        text2("Output label", "outputLabel");
+        number("Minimum input", "min");
+        number("Maximum input", "max");
+        number("Starting input", "initial");
+        number("Multiplier (a)", "a");
+        number("Offset (b)", "b");
+        parent.appendChild(node("p", "hint", "Present to drag the input and explore the graph. Input range is bounded to −1000…1000; multiplier to −100…100."));
+      }
+      return true;
+    }
+    SF.Explore = { ownsSteps: active2, render: render2, inspector, command, step, nextAction };
+  }
+
+  // src/render/experiments.js
+  function installExperiments(SF) {
+    var presets = {
+      polling: { label: "Polling: pies to bars", prompt: "Which candidate gains most across the polls?", data: "Candidate	Poll A	Poll B	Poll C\n1	17	20	23\n2	18	20	22\n3	20	19	20\n4	22	21	18\n5	23	20	17", states: [
+        { label: "Poll A", kind: "pie", series: 0, explanation: "Compare candidates 5 and 3. How confident are you?" },
+        { label: "Poll B", kind: "pie", series: 1, explanation: "Which candidates improved? Comparing separate angles requires memory." },
+        { label: "Poll C", kind: "pie", series: 2, explanation: "Now consider the trend across all three polls." },
+        { label: "Same poll, lengths", kind: "bar", series: 2, categorical: true, explanation: "Watch each coloured slice become a bar. The Poll C values stay unchanged: only the encoding changes from angle to aligned length." },
+        { label: "All polls together", kind: "bar", all: true, series: 2, explanation: "Now introduce all three polls; colour identifies the poll. Candidate 1 gains 6 percentage points from A to C. Candidate 2 gains 4. All bars share zero." }
+      ] },
+      integrity: { label: "Integrity: change the baseline", prompt: "The values stay at 100 and 110. How much bigger does the second bar look?", data: "Group	Value\nA	100\nB	110", states: [
+        { label: "Zero baseline", kind: "bar", baseline: 0, explanation: "110 is 10% greater than 100. Bar lengths preserve that comparison." },
+        { label: "Baseline at 90", kind: "bar", baseline: 90, explanation: "DELIBERATE DISTORTION: visible lengths are 10 and 20. A 10% data increase appears as a 100% length increase. Lie factor = 10." },
+        { label: "Baseline at 95", kind: "bar", baseline: 95, explanation: "DELIBERATE DISTORTION: visible lengths are 5 and 15. The graphic shows a 200% increase. Lie factor = 20." },
+        { label: "Restore context", kind: "bar", baseline: 0, explanation: "A bar encodes length. Restoring zero restores the relationship between length and quantity." }
+      ] },
+      clutter: { label: "Clutter: clean up a chart", prompt: "What gets your attention before you can compare the values?", data: "Day	Hires\nMon	42\nTue	58\nWed	47\nThu	70\nFri	64", states: [
+        { label: "Cluttered", kind: "bar", clutter: true, explanation: "Heavy gridlines and decorative labels compete with the data." },
+        { label: "Remove decoration", kind: "bar", heavyGrid: true, explanation: "Watch the decorative labels disappear. The values, bar positions and scale have not changed. What still competes for attention?" },
+        { label: "Clear comparison", kind: "bar", explanation: "Same values and scale. Direct labels and a quiet baseline remain because they support the comparison." }
+      ] },
+      distortion: { label: "Distortion: shape and range", prompt: "Can the same observations appear to tell different stories?", data: "Period	Value\n1	30\n2	42\n3	38\n4	55\n5	44\n6	48", states: [
+        { label: "Complete series", kind: "line", explanation: "The whole six-period series shows fluctuations and an overall increase." },
+        { label: "Compressed width", kind: "line", narrow: true, explanation: "The values and scale are unchanged. A narrow plot makes the slopes look steeper." },
+        { label: "Selected ending", kind: "line", start: 3, explanation: "DELIBERATELY SELECTED RANGE: periods 4–6 suggest decline. The earlier observations provide different context." }
+      ] },
+      channels: { label: "Marks and channels", prompt: "Which encoding makes close quantities easiest to compare?", data: "Item	Value\nA	20\nB	24\nC	38\nD	42", states: [
+        { label: "Position", kind: "dot", explanation: "Points share a vertical scale. Compare their positions." },
+        { label: "Area", kind: "bubbles", explanation: "Circle AREA represents value, so radius scales with the square root. Close comparisons become harder." },
+        { label: "Hue only", kind: "hue", explanation: "Hue identifies categories but has no inherent numerical order. Labels are doing the quantitative work here." },
+        { label: "Shape", kind: "shape", explanation: "Different symbols identify categories. Their shapes do not encode the numeric values." },
+        { label: "Length", kind: "bar", explanation: "Bars encode the same quantities by length from a shared zero baseline." }
+      ] },
+      colour: { label: "Colour schemes", prompt: "Which palette expresses the structure of each attribute?", data: "Region	Count	Change\nNorth	20	-12\nEast	45	-4\nSouth	70	5\nWest	95	16", states: [
+        { label: "Categorical", kind: "tiles", palette: "categorical", explanation: "Different regions have different identities. The hues imply no order." },
+        { label: "Sequential counts", kind: "tiles", palette: "sequential", explanation: "Light to dark follows increasing counts. Values remain directly labelled." },
+        { label: "Change in one ramp", kind: "tiles", palette: "sequential", series: 1, explanation: "Switch attribute from counts to signed change. A single light-to-dark ramp orders values but does not emphasise zero. Predict how two colour directions could help." },
+        { label: "Diverging change", kind: "tiles", palette: "diverging", series: 1, explanation: "Blue and orange depart from a neutral zero midpoint. Negative and positive changes remain labelled." }
+      ] },
+      accessibility: { label: "Colour plus a second cue", prompt: "Can you still identify each group when the colour disappears?", data: "Group	Value\nNorth	20\nEast	24\nSouth	38\nWest	42", states: [
+        { label: "Colour and labels", kind: "bar", categorical: true, explanation: "Every group has a direct label as well as a colour." },
+        { label: "Without colour", kind: "bar", mono: true, explanation: "Position and labels preserve meaning in greyscale. This demonstration is not a colour-vision-deficiency simulation." }
+      ] },
+      structures: { label: "Dataset structures", prompt: "What is an item, a link, a field or a spatial boundary?", data: "Station	Hires\nA	20\nB	35\nC	60\nD	80", states: [
+        { label: "Table", kind: "table", explanation: "Each row is an item. Station is an identifier and hires is an attribute." },
+        { label: "Network", kind: "network", explanation: "Nodes represent stations; lines represent hypothetical connections. Links need their own data." },
+        { label: "Field", kind: "field", explanation: "A synthetic temperature field sampled across space. Each location has a value, rather than a named station." },
+        { label: "Geometry", kind: "geometry", explanation: "Illustrative region boundaries describe shape and position. These are not real borough boundaries." }
+      ] },
+      types: { label: "Attribute classification", prompt: "Do the values have order, meaningful differences, or meaningful ratios?", data: "Example	Value\nStation ID	0", states: [
+        { label: "Nominal", kind: "classification", example: "Station 12 • Station 7 • Station 3", explanation: "Numbers can be names. Station 12 is not four times Station 3." },
+        { label: "Ordinal", kind: "classification", example: "Low  ·  Medium  ·  High", explanation: "Order is meaningful. Equal gaps are not guaranteed." },
+        { label: "Interval", kind: "classification", example: "10°C  ·  20°C  ·  30°C", explanation: "Equal temperature differences are meaningful. 20°C is not twice as hot as 10°C on an absolute scale." },
+        { label: "Ratio", kind: "classification", example: "10 hires  ·  20 hires  ·  30 hires", explanation: "Zero means no hires. Twenty hires is twice ten hires." }
+      ] },
+      zoom: { label: "Chart overview and detail", prompt: "What changes when we focus on part of the series?", data: "Day	Hires\nMon	20\nTue	38\nWed	32\nThu	70\nFri	64\nSat	90", states: [
+        { label: "Overview", kind: "line", explanation: "Start with the complete series." },
+        { label: "Focus on Thu–Sat", kind: "line", start: 3, explanation: "This is a filtered detail, not missing data. The visible range is labelled and the vertical scale stays fixed." },
+        { label: "Return to overview", kind: "line", explanation: "Restore the whole series to judge the detail in context." }
+      ] }
+    };
+    function config(s) {
+      var raw = s.experiment || {}, key = Object.prototype.hasOwnProperty.call(presets, raw.preset) ? raw.preset : "polling", preset2 = presets[key];
+      var states = Array.isArray(raw.states) ? raw.states.filter(function(x) {
+        return x && typeof x === "object" && !Array.isArray(x);
+      }) : [];
+      return { prompt: String(raw.prompt || preset2.prompt), states: (states.length ? states : preset2.states).slice(0, 8), preset: key, duration: Math.max(200, Math.min(4e3, Number(raw.duration) || 1600)) };
+    }
+    function node(tag, text2, parent) {
+      var n = document.createElement(tag);
+      if (text2 != null) n.textContent = text2;
+      if (parent) parent.appendChild(n);
+      return n;
+    }
+    function svg(tag, attrs, parent, text2) {
+      var n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      Object.keys(attrs || {}).forEach(function(k) {
+        n.setAttribute(k, attrs[k]);
+      });
+      if (text2 != null) n.textContent = text2;
+      if (parent) parent.appendChild(n);
+      return n;
+    }
+    function mark(parent, key, kind, a) {
+      var points = [], vertices;
+      if (kind === "rect") vertices = [[a.x, a.y], [a.x + a.width, a.y], [a.x + a.width, a.y + a.height], [a.x, a.y + a.height]];
+      if (kind === "polygon") vertices = a.vertices;
+      for (var i = 0; i < 64; i++) {
+        if (kind === "circle") {
+          var angle = -Math.PI / 2 + i / 64 * Math.PI * 2;
+          points.push([a.cx + a.r * Math.cos(angle), a.cy + a.r * Math.sin(angle)]);
+        } else if (kind === "sector") {
+          var angle = (
+            /** @type {number} */
+            a.start + (a.end - a.start) * Math.max(0, Math.min(1, (i - 8) / 47))
+          ), radius = i < 8 ? a.r * i / 8 : i > 55 ? a.r * (64 - i) / 9 : a.r;
+          points.push([a.cx + radius * Math.cos(angle), a.cy + radius * Math.sin(angle)]);
+        } else {
+          var p = i / 64 * vertices.length, j = Math.floor(p), t = p - j, u = vertices[j], v = vertices[(j + 1) % vertices.length];
+          points.push([u[0] + (v[0] - u[0]) * t, u[1] + (v[1] - u[1]) * t]);
+        }
+      }
+      return svg("polygon", { "data-motion": key, points: points.map(function(p2) {
+        return p2.join(",");
+      }).join(" "), fill: a.fill, stroke: a.stroke || "none", "stroke-width": a.stroke ? 2 : 0 }, parent);
+    }
+    var colours = ["#0072b2", "#d55e00", "#009e73", "#cc79a7", "#8a6500", "#5b4ba8"];
+    function draw(host, s, c, state2) {
+      var data = SF.chartData(s), series = data.series;
+      var current = series[Math.max(0, Math.min(series.length - 1, Number(state2.series) || 0))];
+      var rows2 = data.categories.slice(0, 12).map(function(name, i) {
+        return { name, index: i, value: current && current.values[i] };
+      }).filter(function(r) {
+        return Number.isFinite(r.value);
+      });
+      var chart = svg("svg", { viewBox: "0 0 1000 370", role: "img", "aria-label": state2.label || "Visual experiment" }, host);
+      svg("title", {}, chart, (state2.label || "Experiment") + ": " + rows2.map(function(r) {
+        return r.name + " " + r.value;
+      }).join(", "));
+      var ink = "currentColor";
+      function text2(x, y2, value2, size, anchor, key) {
+        var attrs = { x, y: y2, fill: ink, "font-size": size || 22, "text-anchor": anchor || "start" };
+        if (key) attrs["data-motion"] = key;
+        if (typeof value2 === "number") attrs["data-number"] = "true";
+        return svg("text", attrs, chart, String(value2));
+      }
+      function colour(i) {
+        return state2.mono ? "#636363" : colours[i % colours.length];
+      }
+      if (state2.kind === "classification") {
+        text2(500, 150, state2.example || "", 36, "middle");
+        text2(500, 220, state2.label, 26, "middle");
+        return;
+      }
+      if (!rows2.length) {
+        text2(500, 180, "Add a table with category labels and numeric values.", 24, "middle");
+        return;
+      }
+      var max = Math.max(1, ...series.flatMap(function(a) {
+        return a.values.filter(Number.isFinite);
+      }));
+      var min = Math.min(0, ...state2.all ? series.flatMap(function(a) {
+        return a.values.filter(Number.isFinite);
+      }) : rows2.map(function(r) {
+        return r.value;
+      }));
+      var baseline = Number.isFinite(Number(state2.baseline)) ? Number(state2.baseline) : min;
+      if (baseline >= max) baseline = min;
+      var top = 50, bottom = 300, left = 100, right = 930;
+      if (state2.narrow) {
+        left = 350;
+        right = 650;
+      }
+      function y(v) {
+        return bottom - (v - baseline) / (max - baseline) * (bottom - top);
+      }
+      if (state2.kind === "pie") {
+        var sum = rows2.reduce(function(a, r) {
+          return a + Math.max(0, r.value);
+        }, 0), angle = -Math.PI / 2;
+        if (!sum || rows2.some(function(r) {
+          return r.value < 0;
+        })) {
+          text2(500, 180, "A pie needs positive parts of a whole.", 24, "middle");
+          return;
+        }
+        rows2.forEach(function(r, i) {
+          var end = angle + r.value / sum * Math.PI * 2, cx = 350, cy = 175, rad = 145;
+          mark(chart, "mark:" + r.index, "sector", { cx, cy, r: rad, start: angle, end, fill: colour(i), stroke: "white" });
+          text2(570, 65 + i * 32, r.name, 21, "start", "category:" + r.index);
+          text2(760, 65 + i * 32, r.value, 21, "middle", "value:" + r.index);
+          angle = end;
+        });
+        text2(350, 355, current.name, 22, "middle");
+        return;
+      }
+      if (state2.kind === "table") {
+        text2(180, 40, "Station", 24);
+        text2(620, 40, current.name, 24);
+        var rowHeight = Math.min(55, 270 / rows2.length);
+        rows2.forEach(function(r, i) {
+          text2(180, 80 + i * rowHeight, r.name, 20, "start", "category:" + r.index);
+          text2(620, 80 + i * rowHeight, r.value, 20, "middle", "value:" + r.index);
+        });
+        return;
+      }
+      if (state2.kind === "network") {
+        var locations = rows2.map(function(r, i) {
+          var a = i / rows2.length * Math.PI * 2;
+          return { x: 500 + 330 * Math.cos(a), y: 175 + 115 * Math.sin(a) };
+        });
+        locations.forEach(function(p, i) {
+          if (!i) return;
+          var prev = locations[i - 1];
+          svg("line", { x1: prev.x, y1: prev.y, x2: p.x, y2: p.y, stroke: ink, "stroke-width": 3 }, chart);
+        });
+        rows2.forEach(function(r, i) {
+          var p = locations[i];
+          mark(chart, "mark:" + r.index, "circle", { cx: p.x, cy: p.y, r: 24, fill: colour(i) });
+          text2(p.x, p.y + 45, r.name, 20, "middle", "category:" + r.index);
+        });
+        return;
+      }
+      if (state2.kind === "geometry") {
+        ["100,70 390,50 430,170 120,190", "390,50 790,80 870,220 430,170", "120,190 430,170 480,320 150,290", "430,170 870,220 800,330 480,320"].forEach(function(p, i) {
+          svg("polygon", { points: p, fill: colour(i), "fill-opacity": 0.22, stroke: ink, "stroke-width": 3 }, chart);
+        });
+        text2(500, 360, "Illustrative boundaries; no measured quantity encoded", 19, "middle");
+        return;
+      }
+      if (state2.kind === "field") {
+        for (var yy = 0; yy < 6; yy++) for (var xx = 0; xx < 12; xx++) {
+          var temp = 10 + xx + yy;
+          svg("rect", { x: 100 + xx * 65, y: 20 + yy * 46, width: 64, height: 45, fill: "hsl(205,65%," + (93 - (temp - 10) * 3.5) + "%)" }, chart);
+          text2(132 + xx * 65, 49 + yy * 46, temp, 16, "middle");
+        }
+        text2(500, 340, "Synthetic temperature samples (°C) across space", 22, "middle");
+        return;
+      }
+      if (["tiles", "bubbles", "hue", "shape"].includes(state2.kind)) {
+        var abs = Math.max(1, ...rows2.map(function(r) {
+          return Math.abs(r.value);
+        }));
+        rows2.forEach(function(r, i) {
+          var x = 90 + (i + 0.5) * 820 / rows2.length, fill = colour(i);
+          if (state2.palette === "sequential") fill = "hsl(205,65%," + (92 - (r.value - min) / (max - min) * 60) + "%)";
+          if (state2.palette === "diverging") fill = "hsl(" + (r.value < 0 ? 210 : 28) + ",70%," + (95 - Math.abs(r.value) / abs * 55) + "%)";
+          if (state2.kind === "bubbles") mark(chart, "mark:" + r.index, "circle", { cx: x, cy: 150, r: Math.sqrt(Math.max(0, r.value) / max) * Math.min(85, 340 / rows2.length), fill });
+          else if (state2.kind === "hue") mark(chart, "mark:" + r.index, "circle", { cx: x, cy: 150, r: Math.min(55, 340 / rows2.length), fill });
+          else if (state2.kind === "shape") {
+            var radius = Math.min(45, 300 / rows2.length);
+            if (i % 4 === 0) mark(chart, "mark:" + r.index, "circle", { cx: x, cy: 150, r: radius, fill });
+            else if (i % 4 === 1) mark(chart, "mark:" + r.index, "rect", { x: x - radius, y: 150 - radius, width: radius * 2, height: radius * 2, fill });
+            else mark(chart, "mark:" + r.index, "polygon", { vertices: i % 4 === 2 ? [[x, 150 - radius], [x - radius, 150 + radius], [x + radius, 150 + radius]] : [[x, 150 - radius], [x + radius, 150], [x, 150 + radius], [x - radius, 150]], fill });
+          } else {
+            var tileWidth = Math.min(130, 720 / rows2.length);
+            mark(chart, "mark:" + r.index, "rect", { x: x - tileWidth / 2, y: 80, width: tileWidth, height: 140, fill });
+          }
+          text2(x, 270, r.name, 21, "middle", "category:" + r.index);
+          text2(x, 305, r.value, 24, "middle", "value:" + r.index);
+        });
+        text2(500, 360, state2.palette === "diverging" ? "Blue: negative · neutral: zero · orange: positive" : current.name, 19, "middle");
+        return;
+      }
+      var start = Math.min(rows2.length - 1, Math.max(0, Math.floor(Number(state2.start) || 0)));
+      var shown = rows2.slice(start);
+      for (var tick = 0; tick <= 4; tick++) {
+        var value = baseline + (max - baseline) * tick / 4, py = y(value);
+        svg("line", { "data-motion": "grid:" + tick, x1: left, y1: py, x2: right, y2: py, stroke: ink, "stroke-opacity": state2.clutter || state2.heavyGrid ? 0.7 : 0.15, "stroke-width": state2.clutter || state2.heavyGrid ? 3 : 1 }, chart);
+        text2(left - 12, py + 6, Math.round(value * 10) / 10, 18, "end", "tick:" + tick);
+      }
+      text2(left, 25, current.name, 19);
+      var points = [];
+      shown.forEach(function(r, i) {
+        var x = left + (i + 0.5) * (right - left) / shown.length;
+        if (state2.kind === "line" || state2.kind === "dot") {
+          points.push({ x, y: y(r.value), id: r.index });
+          mark(chart, "mark:" + r.index, "circle", { cx: x, cy: y(r.value), r: 7, fill: colour(state2.kind === "dot" ? r.index : 0) });
+          text2(x, y(r.value) - 15, r.value, 19, "middle", "value:" + r.index);
+        } else {
+          var ss = state2.all ? series.slice(0, 4) : [current], space = (right - left) / shown.length * 0.7, w = space / ss.length;
+          ss.forEach(function(a, j) {
+            var v = a.values[r.index];
+            if (!Number.isFinite(v)) return;
+            if (v < baseline) {
+              text2(x, 280, "Below axis", 15, "middle");
+              return;
+            }
+            var zero = y(Math.max(0, baseline));
+            var suffix = state2.all && j !== (Number(state2.series) || 0) ? ":series" + j : "";
+            mark(chart, "mark:" + r.index + suffix, "rect", { x: x - space / 2 + j * w, y: Math.min(y(v), zero), width: Math.max(2, w - 4), height: Math.abs(zero - y(v)), fill: colour(state2.all ? j : state2.categorical || c.preset === "channels" ? r.index : 0) });
+            text2(x - space / 2 + j * w + w / 2, y(v) - 9, v, 17, "middle", "value:" + r.index + suffix);
+          });
+        }
+        text2(x, 330, r.name, 19, "middle", "category:" + r.index);
+        if (state2.clutter) text2(x, 65, "★ WOW ★", 18, "middle", "clutter:" + r.index);
+      });
+      if (state2.kind === "line") points.forEach(function(p, i) {
+        if (!i) return;
+        var q = points[i - 1];
+        svg("line", { "data-motion": "connection:" + q.id + ":" + p.id, x1: q.x, y1: q.y, x2: p.x, y2: p.y, stroke: colour(0), "stroke-width": 3 }, chart);
+      });
+      if (state2.all) series.slice(0, 4).forEach(function(a, i) {
+        svg("rect", { x: 220 + i * 200, y: 349, width: 15, height: 15, fill: colour(i) }, chart);
+        text2(245 + i * 200, 363, a.name, 18);
+      });
+      else text2(500, 364, start ? "Visible range: " + shown[0].name + "–" + shown[shown.length - 1].name + " (filtered from " + rows2.length + " observations)" : "Baseline: " + baseline, 18, "middle");
+    }
+    function render2(root, pad, s, opts) {
+      var c = config(s), step = opts.exploreState && Number.isInteger(opts.exploreState.experimentStep) ? opts.exploreState.experimentStep : -1;
+      var lastStep = -1, fromStep = -1, replayToken = opts.exploreState && opts.exploreState.experimentReplay || 0;
+      var staticView = opts.interactive === false && !opts.exploreCommand;
+      if (staticView && !opts.exploreState) step = c.states.length - 1;
+      root.classList.add("experiment-slide", "exploration-slide");
+      pad.replaceChildren();
+      node("h2", s.title || "Visual experiment", pad).className = "ve-title";
+      var prompt = node("p", c.prompt, pad);
+      prompt.className = "ve-prompt";
+      var plot = node("div", "", pad);
+      plot.className = "ve-plot";
+      var controls = node("div", "", pad);
+      controls.className = "ve-controls";
+      if (staticView) controls.hidden = true;
+      var explanation = node("p", "", pad);
+      explanation.className = "ve-explanation";
+      explanation.setAttribute("aria-live", "polite");
+      var source = node("p", s.chartSource || "Illustrative teaching data", pad);
+      source.className = "ve-source";
+      if (SF.chartData(s).categories.length > 12) source.textContent += " Showing the first 12 categories only.";
+      function send(n) {
+        if (opts.exploreCommand) opts.exploreCommand("experiment", n);
+        else {
+          step = n;
+          paint();
+        }
+      }
+      var predict = node("button", "Predict first", controls);
+      predict.type = "button";
+      predict.onclick = function() {
+        send(-1);
+      };
+      var buttons = c.states.map(function(st, i) {
+        var b = node("button", st.label || "State " + (i + 1), controls);
+        b.type = "button";
+        b.onclick = function() {
+          send(i);
+        };
+        return b;
+      });
+      var replay = node("button", "↻ Replay change", controls);
+      replay.type = "button";
+      replay.onclick = function() {
+        if (opts.exploreCommand) opts.exploreCommand("experimentReplay", 0);
+        else paint(true);
+      };
+      function picture(n) {
+        var buffer = document.createElement("div"), st = c.states[n];
+        draw(buffer, s, c, st);
+        if (st.hideValues) {
+          buffer.querySelectorAll('[data-motion^="value:"]').forEach(function(el) {
+            el.remove();
+          });
+          var title = buffer.querySelector("title");
+          if (title) title.textContent = st.label + " — estimate the quantities before revealing the labels.";
+        }
+        return buffer.firstElementChild;
+      }
+      function paint(replaying) {
+        step = Math.max(-1, Math.min(c.states.length - 1, step));
+        if (!replaying && step !== lastStep) {
+          fromStep = lastStep;
+          lastStep = step;
+        }
+        predict.setAttribute("aria-pressed", String(step < 0));
+        buttons.forEach(function(b, i) {
+          b.setAttribute("aria-pressed", String(i === step));
+        });
+        replay.disabled = step < 0 || fromStep < 0;
+        if (step < 0) {
+          if (SF.ChartMotion) SF.ChartMotion.cancel(plot);
+          plot.replaceChildren();
+          var wait = node("p", "Make a prediction. Explain your reasoning, then reveal the first state.", plot);
+          wait.className = "ve-predict";
+          explanation.textContent = "";
+        } else {
+          var st = c.states[step], target = picture(step);
+          if (SF.ChartMotion) {
+            if (replaying && fromStep >= 0) SF.ChartMotion.transition(plot, picture(fromStep), { instant: true });
+            SF.ChartMotion.transition(plot, target, { duration: c.duration, instant: staticView });
+          } else plot.replaceChildren(target);
+          explanation.textContent = String(st.explanation || "");
+        }
+      }
+      root._exploreRefresh = function(next) {
+        var n = Number.isInteger(next.experimentStep) ? next.experimentStep : -1, token = next.experimentReplay || 0;
+        if (n === step && token === replayToken) return;
+        var replaying = n === step && token !== replayToken;
+        step = n;
+        replayToken = token;
+        paint(replaying);
+      };
+      paint();
+    }
+    function inspector(parent, s, UI, changed, redraw) {
+      var c = config(s);
+      parent.appendChild(UI.field("Experiment", UI.select(Object.keys(presets).map(function(k) {
+        return { value: k, label: presets[k].label };
+      }), c.preset, function(v) {
+        s.experiment = { preset: v };
+        s.body = presets[v].data;
+        s.chartSource = "Illustrative teaching data";
+        redraw();
+      })));
+      parent.appendChild(UI.field("Title", UI.text(s.title || "", function(v) {
+        s.title = v;
+        changed();
+      })));
+      parent.appendChild(UI.field("Prediction prompt", UI.text(c.prompt, function(v) {
+        s.experiment = Object.assign({}, s.experiment, { prompt: v });
+        changed();
+      })));
+      parent.appendChild(UI.field("Transformation pace", UI.select([{ value: "800", label: "Quick — 0.8 seconds" }, { value: "1600", label: "Teaching — 1.6 seconds" }, { value: "3000", label: "Slow observation — 3 seconds" }], String(c.duration), function(v) {
+        s.experiment = Object.assign({}, s.experiment, { duration: Number(v) });
+        changed();
+      })));
+      var table = node("textarea");
+      table.rows = 7;
+      table.value = s.body || presets[c.preset].data;
+      table.setAttribute("aria-label", "Experiment dataset");
+      table.onchange = function() {
+        s.body = table.value;
+        changed();
+      };
+      parent.appendChild(UI.field("Data: tab-separated headings and values", table));
+      parent.appendChild(UI.field("Data source / units", UI.text(s.chartSource || "", function(v) {
+        s.chartSource = v;
+        changed();
+      })));
+      ["changes", "constants", "takeaway", "caveat"].forEach(function(key) {
+        var labels = { changes: "PDF: what changes", constants: "PDF: what stays fixed", takeaway: "PDF: key takeaway", caveat: "PDF: limitations / caution" };
+        parent.appendChild(UI.field(labels[key], UI.text(((s.experiment || {}).print || {})[key] || "", function(v) {
+          s.experiment = Object.assign({}, s.experiment, { print: Object.assign({}, (s.experiment || {}).print, { [key]: v }) });
+          changed();
+        })));
+      });
+      c.states.forEach(function(st, i) {
+        function save(key, v) {
+          var states = c.states.map(function(x) {
+            return Object.assign({}, x);
+          });
+          states[i][key] = v;
+          c.states = states;
+          s.experiment = Object.assign({}, s.experiment, { states });
+          changed();
+        }
+        parent.appendChild(UI.field("State " + (i + 1) + " label", UI.text(st.label || "", function(v) {
+          save("label", v);
+        })));
+        parent.appendChild(UI.field("Explanation", UI.text(st.explanation || "", function(v) {
+          save("explanation", v);
+        })));
+        parent.appendChild(UI.check("Hide values for an estimation challenge", !!st.hideValues, function(v) {
+          save("hideValues", v);
+        }));
+        parent.appendChild(UI.field("Visual", UI.select(["bar", "pie", "line", "dot", "bubbles", "hue", "shape", "tiles", "table", "network", "field", "geometry", "classification"].map(function(k) {
+          return { value: k, label: k };
+        }), st.kind || "bar", function(v) {
+          save("kind", v);
+        })));
+        var choices = SF.chartData(s).series.map(function(a, j) {
+          return { value: String(j), label: a.name };
+        });
+        if (choices.length) parent.appendChild(UI.field("Data series", UI.select(choices, String(st.series || 0), function(v) {
+          save("series", Number(v));
+        })));
+        if (st.kind === "tiles") parent.appendChild(UI.field("Palette", UI.select(["categorical", "sequential", "diverging"].map(function(k) {
+          return { value: k, label: k };
+        }), st.palette || "categorical", function(v) {
+          save("palette", v);
+        })));
+        if (st.kind === "bar") {
+          parent.appendChild(UI.check("Compare all series", !!st.all, function(v) {
+            save("all", v);
+          }));
+          parent.appendChild(UI.check("Show deliberate clutter", !!st.clutter, function(v) {
+            save("clutter", v);
+          }));
+          parent.appendChild(UI.check("Greyscale", !!st.mono, function(v) {
+            save("mono", v);
+          }));
+        }
+        if (["bar", "line", "dot"].includes(st.kind)) {
+          var base = node("input");
+          base.type = "number";
+          base.value = String(st.baseline || 0);
+          base.onchange = function() {
+            if (Number.isFinite(base.valueAsNumber)) save("baseline", base.valueAsNumber);
+          };
+          parent.appendChild(UI.field("Axis minimum", base));
+        }
+        parent.appendChild(UI.button("Remove state " + (i + 1), "ghost", function() {
+          if (c.states.length < 2) {
+            SF.toast("Keep at least one state.");
+            return;
+          }
+          s.experiment = Object.assign({}, s.experiment, { states: c.states.filter(function(_, j) {
+            return j !== i;
+          }) });
+          redraw();
+        }));
+      });
+      if (c.states.length < 8) parent.appendChild(UI.button("Add visual state", "", function() {
+        s.experiment = Object.assign({}, s.experiment, { states: c.states.concat([{ label: "New state", kind: "bar", explanation: "" }]) });
+        redraw();
+      }));
+      parent.appendChild(node("p", "Present: Next reveals each state; Previous steps back. Up to 12 categories and 4 grouped series display. Edit explanations when changing data. Field and geometry are illustrative examples. Changing the experiment resets its data and states."));
+      return true;
+    }
+    function staticState(s, index) {
+      var host = document.createElement("div"), c = config(s), st = c.states[index];
+      draw(host, s, c, st);
+      if (st.hideValues) {
+        host.querySelectorAll('[data-motion^="value:"]').forEach(function(el) {
+          el.remove();
+        });
+        host.querySelector("title").textContent = st.label + " — estimate before reading the reveal.";
+      }
+      return host.firstElementChild;
+    }
+    SF.Experiments = { config, render: render2, inspector, presets, staticState };
+  }
+
   // src/render/words.js
   function createWordRenderer(helpers) {
     const { el } = helpers;
@@ -21066,6 +22043,8 @@
     installHeaderFooterUI,
     installArtwork,
     installCustom,
+    installExplore,
+    installExperiments,
     bindCanvasRegions,
     declareBodyRegion,
     measureBodyRegion,

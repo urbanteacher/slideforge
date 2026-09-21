@@ -1,7 +1,21 @@
 /* Four teaching interactions, with authored configuration separate from run state. */
-(function () {
-  'use strict';
-  var SF = window.SF;
+
+/* Moved out of js/explore.js into the render engine, where it belongs: this is
+ * the renderer for five slide types — before/after, visual experiment, motion,
+ * explore an image, and what-if graph. js/render.js has always called it, at
+ * the same point it calls the boards runtime, so it was a layout provider
+ * living outside the layer that calls it.
+ *
+ * They are ordinary slide types: declared in src/deck/content.js with
+ * `deck: true`, offered in the picker, and carrying their own design controls.
+ * They render through this hook rather than the LAYOUTS table because they own
+ * their run state, not because they are unfinished. The surface probe lists
+ * them as "no layout registered" for that reason and it is not a defect.
+ *
+ * Installed by src/model.js: every page that renders a slide already loads the
+ * bundle, and nothing here runs at install but declarations.
+ */
+export function installExplore(SF) {
   var kinds = ['beforeafter', 'explore', 'simulation', 'experiment'];
   function active(slide) { return (SF.MotionLab && SF.MotionLab.active(slide)) || kinds.includes(slide.type) || (slide.type === 'chart' && slide.exploration && slide.exploration.prediction); }
   function config(slide) { return SF.normalizeExploration(slide.exploration); }
@@ -248,4 +262,4 @@
     return true;
   }
   SF.Explore = { ownsSteps: active, render: render, inspector: inspector, command: command, step: step, nextAction: nextAction };
-})();
+}
