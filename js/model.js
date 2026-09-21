@@ -10173,6 +10173,10 @@
     };
   }
   var emoji = {
+    /* No generic Question field in the editor. Declared here rather than
+       named in a list inside js/games.js, where nine styles were spelled
+       out to answer a question each of them can answer about itself. */
+    showsQuestion: false,
     key: "emoji",
     label: "Emoji guess",
     icon: "☺",
@@ -10317,6 +10321,10 @@
     return s;
   }
   var definition = {
+    /* No generic Question field in the editor. Declared here rather than
+       named in a list inside js/games.js, where nine styles were spelled
+       out to answer a question each of them can answer about itself. */
+    showsQuestion: false,
     defaults: {
       "defaultTime": 30,
       "defaultPoints": 1,
@@ -10444,6 +10452,10 @@
 
   // src/games/compare.js
   var compare = {
+    /* No generic Question field in the editor. Declared here rather than
+       named in a list inside js/games.js, where nine styles were spelled
+       out to answer a question each of them can answer about itself. */
+    showsQuestion: false,
     defaults: {
       "scoreboard": false,
       "defaultTime": 0,
@@ -10578,6 +10590,10 @@
 
   // src/games/oddone.js
   var oddone = {
+    /* No generic Question field in the editor. Declared here rather than
+       named in a list inside js/games.js, where nine styles were spelled
+       out to answer a question each of them can answer about itself. */
+    showsQuestion: false,
     defaults: {
       "scoreboard": false,
       "defaultTime": 0,
@@ -11176,6 +11192,10 @@
 
   // src/games/headsup.js
   var headsup = {
+    /* No generic Question field in the editor. Declared here rather than
+       named in a list inside js/games.js, where nine styles were spelled
+       out to answer a question each of them can answer about itself. */
+    showsQuestion: false,
     defaults: {
       "defaultTime": 60,
       "defaultPoints": 1,
@@ -11238,6 +11258,10 @@
     return 0;
   }
   var spinexplain = {
+    /* No generic Question field in the editor. Declared here rather than
+       named in a list inside js/games.js, where nine styles were spelled
+       out to answer a question each of them can answer about itself. */
+    showsQuestion: false,
     defaults: {
       "defaultPoints": 2,
       "confidence": false
@@ -11294,6 +11318,10 @@
 
   // src/games/connection.js
   var connection = {
+    /* No generic Question field in the editor. Declared here rather than
+       named in a list inside js/games.js, where nine styles were spelled
+       out to answer a question each of them can answer about itself. */
+    showsQuestion: false,
     defaults: {
       "defaultTime": 0,
       "defaultPoints": 1,
@@ -11379,6 +11407,10 @@
     return CHAIN_TIMES.indexOf(n) > -1 ? n : 45;
   }
   var conceptchain = {
+    /* No generic Question field in the editor. Declared here rather than
+       named in a list inside js/games.js, where nine styles were spelled
+       out to answer a question each of them can answer about itself. */
+    showsQuestion: false,
     defaults: {
       "defaultTime": 45,
       "defaultPoints": 1,
@@ -11449,6 +11481,10 @@
 
   // src/games/randomchallenge.js
   var randomchallenge = {
+    /* No generic Question field in the editor. Declared here rather than
+       named in a list inside js/games.js, where nine styles were spelled
+       out to answer a question each of them can answer about itself. */
+    showsQuestion: false,
     defaults: {
       "scoreboard": false,
       "defaultTime": 0,

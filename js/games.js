@@ -248,12 +248,18 @@
   }
   /* Being a board and having per-item question text are different things. A
      bowl cell asks a real question, so it keeps the generic Question field
-     that the pair and term boards have no use for. */
+     that the pair and term boards have no use for.
+
+     The style answers; if it has not said, its board engine does; otherwise
+     yes. This used to name nine styles in two conditions above a third line
+     that asked the style — both forms in one function, with the right one
+     already written. A twenty-fifth style now answers for itself rather than
+     being forgotten by a list it was never added to. */
   function showsQuestionField() {
-    if (['headsup', 'spinexplain', 'connection', 'randomchallenge'].indexOf(game.style) !== -1) return false;
-    if (game.style === 'definition' || game.style === 'emoji' || game.style === 'oddone' ||
-        game.style === 'compare' || game.style === 'conceptchain') return false;
-    return !isBoard() || SF.gameStyle(game.style).boardEngine.showsQuestion;
+    var style = SF.gameStyle(game.style);
+    if (style.showsQuestion !== undefined) return style.showsQuestion;
+    if (style.boardEngine) return style.boardEngine.showsQuestion;
+    return true;
   }
 
   function asSlide(i, overrideGame) {

@@ -629,6 +629,12 @@ export interface GameEngine<Q extends Question = Question> {
   board?(game: Game): string | null;
   /** Present when this style compiles to a board instead of question slides. */
   boardEngine?: BoardEngine;
+  /** Whether the editor offers the generic Question field for this style.
+   *  Omitted means yes, unless the style is a board, in which case its
+   *  {@link BoardEngine.showsQuestion} answers. Declared here so a style says
+   *  it for itself: js/games.js used to name nine of them in a list, which a
+   *  new style joins only if somebody remembers it exists. */
+  showsQuestion?: boolean;
 }
 
 /* ---------------------------------------------------------------- boards --*/

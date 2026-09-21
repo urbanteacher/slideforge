@@ -3,6 +3,10 @@
 /* Heads Up — host Correct / Pass. Audit: Correct +1, Pass 0. */
 /** @type {import("../types.js").GameEngine<import("../types.js").QuestionWith<'accept'|'answer'>>} */
 const headsup = {
+  /* No generic Question field in the editor. Declared here rather than
+     named in a list inside js/games.js, where nine styles were spelled
+     out to answer a question each of them can answer about itself. */
+  showsQuestion: false,
   defaults: {
     "defaultTime": 60,
     "defaultPoints": 1,

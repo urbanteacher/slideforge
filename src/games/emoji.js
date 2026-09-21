@@ -60,6 +60,10 @@ function emojiHelp(slide) {
 
 /** @type {import("../types.js").GameEngine<import("../types.js").QuestionWith<'accept'|'clues'|'hint'|'difficulty'>>} */
 const emoji = {
+  /* No generic Question field in the editor. Declared here rather than
+     named in a list inside js/games.js, where nine styles were spelled
+     out to answer a question each of them can answer about itself. */
+  showsQuestion: false,
   key: 'emoji',
   label: 'Emoji guess',
   icon: '\u263a',

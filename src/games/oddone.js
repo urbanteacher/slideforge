@@ -6,6 +6,10 @@ import starters from "../samples/oddone.json" with { type: "json" };
    score. Justification is the lesson. */
 /** @type {import("../types.js").GameEngine<import("../types.js").QuestionWith<'options'|'correct'>>} */
 const oddone = {
+  /* No generic Question field in the editor. Declared here rather than
+     named in a list inside js/games.js, where nine styles were spelled
+     out to answer a question each of them can answer about itself. */
+  showsQuestion: false,
   defaults: {
     "scoreboard": false,
     "defaultTime": 0,
