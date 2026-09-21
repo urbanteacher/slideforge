@@ -710,6 +710,59 @@
     });
   }
 
+  // src/activities/fields.js
+  var KEYWORD_HALF = /^(bullets\.\d+)\.(term|def)$/;
+  function createActivityFields(SF) {
+    function read(slide, path) {
+      const half = String(path).match(KEYWORD_HALF);
+      if (half) {
+        const line = SF.parseKeywordLine(read(slide, half[1]) || "");
+        return half[2] === "term" ? line.term : line.def;
+      }
+      return String(path).split(".").reduce(function(at, key) {
+        return at == null ? void 0 : at[key];
+      }, slide);
+    }
+    function write(slide, path, value) {
+      const half = String(path).match(KEYWORD_HALF);
+      if (half) {
+        const line = SF.parseKeywordLine(read(slide, half[1]) || "");
+        write(slide, half[1], half[2] === "term" ? SF.formatKeywordLine(value, line.def) : SF.formatKeywordLine(line.term, value));
+        return;
+      }
+      const parts = String(path).split(".");
+      const last = parts.pop();
+      if (last === void 0) return;
+      const at = parts.reduce(function(node, key) {
+        return node[key];
+      }, slide);
+      if (Array.isArray(at)) {
+        const i = Number(last);
+        while (at.length <= i) at.push("");
+        at[i] = value;
+      } else {
+        at[last] = value;
+      }
+    }
+    function applyFields(a, slide) {
+      const fields = a && a.fields || [];
+      if (fields.some(function(f) {
+        return /^bullets\./.test(f.slide);
+      })) slide.bullets = [];
+      fields.forEach(function(f) {
+        const half = String(f.slide).match(KEYWORD_HALF);
+        if (half && half[2] === "def") write(slide, half[1] + ".term", f.label);
+        if (f.value !== void 0) write(slide, f.slide, f.type === "minutes" ? Number(f.value) * 60 : f.value);
+      });
+    }
+    function steps(a) {
+      return a.blurb + "\n\n" + a.steps.map(function(step, i) {
+        return i + 1 + ". " + step;
+      }).join("\n") + (a.materials ? "\n\nMaterials (source):\n" + a.materials.join(" · ") : "") + (a.teacherNotes ? "\n\nTeacher guidance / example answers (draft):\n" + a.teacherNotes : "") + (a.mappingReason ? "\n\nImplementation note:\n" + a.mappingReason : "");
+    }
+    return { read, write, applyFields, steps };
+  }
+
   // src/render/compositions.js
   function createCompositionRenderer(SF, helpers) {
     const { el, rich, asStep, layoutQuote, layoutStatement, appendSlideDate } = helpers;
@@ -14998,6 +15051,7 @@
     THEMES,
     DEFAULT_THEME,
     resolveTheme,
+    createActivityFields,
     createCompositionRenderer,
     createChartRenderer,
     createWordRenderer,

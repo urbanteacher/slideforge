@@ -135,73 +135,21 @@
 
   /* ------------------------------------------------------- activity fields */
 
-  /* A keywords bullet is one string holding a label and its text either side
-     of a tab, so `bullets.0` alone would make a teacher type the tab. These
-     two paths address the halves: `bullets.0.term` and `bullets.0.def`. */
-  var KEYWORD_HALF = /^(bullets\.\d+)\.(term|def)$/;
-
-  /** Read a dotted path off a slide: `title`, `bullets.0`, `bullets.0.def`. */
-  function read(slide, path) {
-    var half = path.match(KEYWORD_HALF);
-    if (half) {
-      var line = SF.parseKeywordLine(read(slide, half[1]) || '');
-      return half[2] === 'term' ? line.term : line.def;
-    }
-    return path.split('.').reduce(function (at, key) {
-      return at == null ? undefined : at[key];
-    }, slide);
-  }
-
-  /** Write one, growing the array if the path points past its end — a layout
-   *  with two pits has to accept a third question without losing it. */
-  function write(slide, path, value) {
-    var half = path.match(KEYWORD_HALF);
-    if (half) {
-      var line = SF.parseKeywordLine(read(slide, half[1]) || '');
-      write(slide, half[1], half[2] === 'term'
-        ? SF.formatKeywordLine(value, line.def)
-        : SF.formatKeywordLine(line.term, value));
-      return;
-    }
-    var parts = path.split('.');
-    var last = parts.pop();
-    var at = parts.reduce(function (node, key) { return node[key]; }, slide);
-    if (Array.isArray(at)) {
-      var i = Number(last);
-      while (at.length <= i) at.push('');
-      at[i] = value;
-    } else {
-      at[last] = value;
-    }
-  }
-
-  /** The field defaults, written onto a slide as it is created. A worked
-   *  example to overwrite beats an empty pit and a guess about what goes in
-   *  it — the same argument the game presets already make. */
-  function applyFields(a, slide) {
-    var fields = a.fields || [];
-    /* An activity that names its bullets owns all of them. The layout's own
-       placeholders are dropped first, or Hook & Predict's two questions
-       arrive followed by a stray "Third point" that nobody asked for. */
-    if (fields.some(function (f) { return /^bullets\./.test(f.slide); })) slide.bullets = [];
-    fields.forEach(function (f) {
-      /* On a keywords box the field's own label is the box's label, so the
-         catalogue says it once. The teacher edits the content; the label is
-         what the activity calls that box. */
-      var half = f.slide.match(KEYWORD_HALF);
-      if (half && half[2] === 'def') write(slide, half[1] + '.term', f.label);
-      if (f.value !== undefined) write(slide, f.slide, f.type === 'minutes' ? Number(f.value) * 60 : f.value);
-    });
-  }
-
-  function steps(a) {
-    return a.blurb + '\n\n' + a.steps.map(function (step, i) {
-      return (i + 1) + '. ' + step;
-    }).join('\n') + (a.materials ? '\n\nMaterials (source):\n' + a.materials.join(' · ') : '') +
-      (a.teacherNotes ? '\n\nTeacher guidance / example answers (draft):\n' + a.teacherNotes : '') +
-      (a.mappingReason ? '\n\nImplementation note:\n' + a.mappingReason : '');
-  }
-
+  /* Reading and writing an activity onto a slide is the one part of this file
+     that is not authoring UI — no DOM, nothing about rails or panes — and it
+     was the one band that reached nothing outside itself. It lives with the
+     catalogue and the presets now, which together are what an activity *is*:
+     src/activities/. See docs/engines.md. Unpacked into the same four local
+     names so not one call site below had to change. */
+  /* `fields`, not `activityFields`: the inspector band already declares a
+     function of that name, and a `var` of the same name in the same scope
+     quietly replaces the hoisted declaration at load time. The inspector then
+     called an object. Nothing threw until a pane was opened. */
+  var fields = SF.createActivityFields(SF);
+  var read = fields.read;
+  var write = fields.write;
+  var applyFields = fields.applyFields;
+  var steps = fields.steps;
   /* ---------------------------------------------------------------- rail */
 
   /** The deck slides that were chosen here, with the position each holds in
