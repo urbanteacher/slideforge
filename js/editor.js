@@ -2170,6 +2170,14 @@
   /* ------------------------------------------------------------ running */
 
   function runDeck() {
+    /* Building a run deck means a show is starting, and every path that starts
+       one comes through here — Present, Rehearse, Host live, and the two in
+       install. The sorter is a fixed overlay at z-index 210 against the
+       player's 100, so leaving it open put a grid of every slide in the deck
+       on top of the show: the lesson ran underneath, unseen, and what the room
+       saw was seventy thumbnails. It has behaved this way since the sorter was
+       added; nothing closed it because nothing owned that question. */
+    railParts.closeSorter();
     var run = SF.buildRunDeck(deck, function (id) { return SF.GameStore.get(id); });
     if (run.missingGames.length) {
       SF.toast('Missing game: ' + run.missingGames.join(', '));

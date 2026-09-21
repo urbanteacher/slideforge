@@ -795,7 +795,7 @@ export function createRail(SF, helpers) {
   function resetPlacing() { placing = null; placeAt = null; }
 
   return {
-    focusThumb, beginPlacing, movePlaceTo, commitPlacing, cancelPlacing, toggleHidden, drawRail, select, nudge, sendTo, sorterOpen, openSorter, pick, sorterKeys, drawFoot,
+    focusThumb, beginPlacing, movePlaceTo, commitPlacing, cancelPlacing, toggleHidden, drawRail, select, nudge, sendTo, sorterOpen, openSorter, closeSorter, pick, sorterKeys, drawFoot,
     isPlacing, placeTarget, resetPlacing
   };
 }

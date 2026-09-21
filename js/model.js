@@ -9687,6 +9687,7 @@
       sendTo,
       sorterOpen,
       openSorter,
+      closeSorter,
       pick,
       sorterKeys,
       drawFoot,
