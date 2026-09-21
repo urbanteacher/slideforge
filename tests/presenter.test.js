@@ -1,8 +1,18 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 // Exercise the real window bridge in isolation: no browser or live classroom required.
+/* The presenter bridge lives in src/presenter/window.js and ships inside the
+   generated js/model.js bundle. This used to run a *text slice* of
+   js/player.js, cut between two literal comment markers; moving the code out
+   of that file emptied the slice and every test here failed at once. It now
+   calls the factory, which is both more honest and no longer sensitive to
+   where the source happens to sit.
+
+   One context, not two: the factory body runs inside the bundle, so the
+   window, document, location and screen it touches have to be the ones the
+   bundle was evaluated in. */
 function bridge(){
- const messages=[],listeners={},timers=[];
+ const messages=[],listeners={},docListeners={},timers=[];
  const presenter={closed:false,focus(){this.focused=true;},postMessage(m,origin){messages.push({m,origin});},close(){this.closed=true;}};
  const Player={deck:{slides:[{id:'q',type:'quiz'}]},idx:0,answers:{},started:1,next(){this.advanced=true;},prev(){},goTo(){},toggleBlank(){},toggleFreeze(){this.freezeToggled=true;},close(){},emit(){},
   control(action){
@@ -14,12 +24,27 @@ function bridge(){
    else if(action==='exit')this.close();
   }};
  const SF={Live:{teacherWorkspaceUrl:()=> 'manual.html#'+'a'.repeat(32),nextAction:()=> 'reveal'},questionTimeLimit:()=>0};
- vm.runInNewContext(fs.readFileSync(require.resolve('../js/model.js'),'utf8'),{window:{SF},console});
- const scope={Player,SF,window:{open:(url,name,features)=>{presenter.url=url;presenter.features=features;return presenter;},addEventListener:(name,fn)=>listeners[name]=fn},location:{origin:'http://localhost:8787'},toast(){},setTimeout:fn=>timers.push(fn)};
- const source=fs.readFileSync(require.resolve('../js/player.js'),'utf8');
- vm.runInNewContext(source.slice(source.indexOf('  var presenterWin = null;'),source.indexOf('  /* ------------------------------------------------------------ keyboard */')),scope);
- return {Player,SF,presenter,messages,listeners,timers};
+ const ctx={
+  SF,console,
+  window:{SF,open:(url,name,features)=>{presenter.url=url;presenter.features=features;return presenter;},
+          addEventListener:(name,fn)=>{listeners[name]=fn;}},
+  location:{origin:'http://localhost:8787'},
+  screen:{availLeft:0,availTop:0,availWidth:1920,availHeight:1080,width:1920,height:1080},
+  document:{addEventListener:(name,fn)=>{docListeners[name]=fn;},getElementById:()=>null,
+            querySelector:()=>null,querySelectorAll:()=>[]},
+  setTimeout:fn=>{timers.push(fn);return timers.length;},clearTimeout(){},
+  BroadcastChannel:undefined
+ };
+ ctx.globalThis=ctx;
+ vm.createContext(ctx);
+ vm.runInContext(fs.readFileSync(require.resolve('../js/model.js'),'utf8'),ctx);
+ /* The three nodes js/player.js owns. This bridge has no DOM, so they stay
+    null — the tests here are about the message bus, not the wall mirror. */
+ const els={viewport:()=>null,hud:()=>null,cheats:()=>null};
+ SF.createPresenterWindow(SF,{Player,els,showHud(){},toast(){},toggleSoloFeedback(){}});
+ return {Player,SF,presenter,messages,listeners,docListeners,timers};
 }
+
 test('presenter receives the shared teacher workspace and a requested panel only once',()=>{
  const b=bridge();b.Player.openPresenter('tools');assert.equal(b.Player.hasPresenter(),true);b.timers.shift()();
  assert.equal(b.messages[0].m.teacherUrl,'manual.html#'+'a'.repeat(32));assert.equal(b.messages[0].m.requestedPanel,'tools');assert.equal(b.messages[0].origin,'http://localhost:8787');
@@ -125,7 +150,10 @@ test('share prep and watch stay on the wall; dialogs live on the desk',()=>{
 });
 
 test('share helper and desk Share button are wired for on-desk dialogs',()=>{
- const player=fs.readFileSync(require.resolve('../js/player.js'),'utf8');
+ /* The presenter command handler moved to src/presenter/window.js; these two
+    assertions follow it there rather than to js/player.js, which no longer
+    carries the bus. */
+ const bus=fs.readFileSync(require.resolve('../src/presenter/window.js'),'utf8');
  const shell=fs.readFileSync(require.resolve('../js/shell.js'),'utf8');
  const share=fs.readFileSync(require.resolve('../js/share.js'),'utf8');
  const html=fs.readFileSync(require.resolve('../presenter.html'),'utf8');
@@ -133,8 +161,8 @@ test('share helper and desk Share button are wired for on-desk dialogs',()=>{
  assert.match(share,/SF\.shareLessonDoc\s*=\s*shareLessonDoc/);
  assert.match(shell,/SF\.shareLessonDoc/);
  assert.match(shell,/function lessonDoc/);
- assert.match(player,/d\.cmd === 'sharePrep'/);
- assert.match(player,/d\.cmd === 'shareWatch'/);
+ assert.match(bus,/d\.cmd === 'sharePrep'/);
+ assert.match(bus,/d\.cmd === 'shareWatch'/);
  assert.match(html,/id="btnShareDesk"/);
  assert.match(html,/shareFromDesk|openShareOnDesk/);
  assert.match(html,/js\/share\.js/);
