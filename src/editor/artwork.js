@@ -15,10 +15,22 @@
    Coordinates are true slide pixels (1280x720). The canvas is a scaled render
    of that, so a drag has to be divided by the scale on the way in; storing
    screen pixels would move the artwork every time the zoom changed. */
-(function (global) {
-  'use strict';
-  var SF = global.SF;
-  if (!SF) return;
+
+/* Moved out of js/artwork.js and under the editor, the third file filed with
+ * the engine that owns it. It calls SF.Editor fifteen times and is one of the
+ * three canvas faces — Artwork, Arrange, Header & footer — that share an
+ * isOn/set contract in the inspector's face row. All three now live here.
+ *
+ * It installs rather than returns: the public surface is the single SF.Artwork
+ * assignment at the bottom, unchanged.
+ *
+ * Nothing runs at load. SF.Artwork.install() is a method the shell calls from
+ * init(), after every script has run, and it keeps doing exactly that — this
+ * factory only defines the object. That is the difference from
+ * src/editor/header-footer.js, which did build its panel at load and had to be
+ * made lazy when it moved.
+ */
+export function installArtwork(SF) {
 
   var SLIDE_W = 1280;
   /* Big enough to be worth warning about, matching the editor's existing image
@@ -545,4 +557,4 @@
     isEditing: function () { return editing; },
     setEditing: setEditing
   };
-})(window);
+}

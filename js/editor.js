@@ -19,6 +19,10 @@
      mounts it into the Header & footer pane. */
   SF.installHeaderFooterUI(SF);
 
+  /* The third canvas face. Defining it here is all this does; the shell calls
+     SF.Artwork.install() from init(), once every script has run. */
+  SF.installArtwork(SF);
+
   var el = SF.el;
   /* The four inspector tabs and the Header & footer panel. UI and
      drawContentFields are accessors: the shell assigns UI after this runs, and

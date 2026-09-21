@@ -67,7 +67,6 @@
     "js/games.js",
     "js/manual.js",
     "js/live.js",
-    "js/player.js",
-    "js/artwork.js"
+    "js/player.js"
   ]
 }
