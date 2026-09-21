@@ -1128,6 +1128,13 @@
     if (!card) return;
     if (!Live.active) { card.classList.remove('on'); return; }
     if (opts && opts.close) { card.classList.remove('on'); }
+    /* Asked for, not flipped. A caller that wants the card up — launching an
+       activity the room has to answer — must not take it down again because
+       the teacher already had it open. */
+    else if (opts && opts.open) {
+      paintJoinCard();
+      card.classList.add('on');
+    }
     else if (card.classList.contains('on')) {
       card.classList.remove('on');
     } else {

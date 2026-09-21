@@ -15,6 +15,9 @@ function setup() {
   SF.Player = {
     open: true, deck: run, idx: 0, started: 123, answers: { previous: 2 }, spontaneous: null,
     goTo(i) { this.idx = i; }, syncPresenter() {},
+    /* The real Player always has this; the stub did not, which is why adding
+       a single emit to the launch path broke two tests that were not about it. */
+    emit() {},
     openSpontaneous(session) {
       this.spontaneous = {
         id: session.id, title: session.title, slides: session.slides, index: 0, game: session.game || null
@@ -206,4 +209,48 @@ test('impromptu AI quiz overlays the wall and keeps the lesson untouched', async
   assert.equal(SF.Player.deck.slides.map(s => s.id).join(), original.join());
   assert.ok(SF.Player.spontaneous);
   assert.equal(SF.Player.spontaneous.slides[0].type, 'quiz');
+});
+
+/* Launching put the activity on the wall and said "End or Esc to return",
+   with no PIN, link or QR anywhere in the flow — a teacher drafting a quiz
+   mid-lesson had to know to press J on the wall. */
+function hosted() {
+  const ctx = setup();
+  ctx.emitted = [];
+  ctx.SF.Player.emit = (name, payload) => ctx.emitted.push({ name, payload });
+  ctx.SF.Live = { active: true };
+  return ctx;
+}
+
+test('launching an activity the room answers puts the join code up', async () => {
+  const ctx = hosted();
+  const draft = await create(ctx.api, 'game', 'choice');
+  const res = await ctx.api.handle({ action: 'launch', draft });
+  const join = ctx.emitted.filter(e => e.name === 'joinToggle');
+  assert.equal(join.length, 1, 'the join card is asked for exactly once');
+  /* Field by field: the payload is built inside the vm context, so its
+     prototype is not this realm's and deepStrictEqual rejects it. */
+  assert.equal(join[0].payload.open, true,
+    'asked for, not toggled — a teacher who already had it open must not have it closed');
+  assert.equal(join[0].payload.close, undefined);
+  assert.match(res.message, /join code/);
+});
+
+test('a quiet activity, and a room that is not hosted, leave the card alone', async () => {
+  /* Nothing to join: no game and no learner responses. */
+  const quiet = hosted();
+  const slideDraft = await create(quiet.api, 'activity', quiet.api.catalogue().activities[0].key);
+  if (!slideDraft.game && !(slideDraft.slides || []).some(s => s.feedback && s.feedback.enabled !== false)) {
+    await quiet.api.handle({ action: 'launch', draft: slideDraft });
+    assert.equal(quiet.emitted.filter(e => e.name === 'joinToggle').length, 0);
+  }
+
+  /* No room: the card has no PIN to show, and toggleJoinCard refuses to open
+     without one, so asking would be a no-op dressed up as an answer. */
+  const solo = hosted();
+  solo.SF.Live = { active: false };
+  const gameDraft = await create(solo.api, 'game', 'choice');
+  const res = await solo.api.handle({ action: 'launch', draft: gameDraft });
+  assert.equal(solo.emitted.filter(e => e.name === 'joinToggle').length, 0);
+  assert.doesNotMatch(res.message, /join code/);
 });

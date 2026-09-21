@@ -211,9 +211,23 @@
     if (run.slides.length !== before || player.idx !== lessonIdx) {
       throw new Error('Spontaneous show must not change the lesson.');
     }
+    /* An activity the room has to answer needs a way in, and until now this
+       path offered none: it put the thing on the wall and said "End or Esc to
+       return", with no PIN, no link and no QR anywhere in the flow. A teacher
+       drafting a quiz mid-lesson had to know to press J on the wall.
+
+       Only when a room is actually hosted — the card has no PIN to show
+       otherwise, and toggleJoinCard refuses to open without one. */
+    var wantsAnswers = !!ready.item.game || ready.slides.some(function (s) {
+      return s.feedback && s.feedback.enabled !== false;
+    });
+    var roomLive = !!(SF.Live && SF.Live.active);
+    if (wantsAnswers && roomLive) player.emit('joinToggle', { open: true });
     player.syncPresenter();
     return {
-      message: 'On the wall now. End (or Esc) to return to the lesson — nothing was added to the presentation.',
+      message: wantsAnswers && roomLive
+        ? 'On the wall now, with the join code up. End (or Esc) to return to the lesson — nothing was added to the presentation.'
+        : 'On the wall now. End (or Esc) to return to the lesson — nothing was added to the presentation.',
       inserted: false,
       showing: true
     };
