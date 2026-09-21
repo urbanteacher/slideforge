@@ -1118,7 +1118,7 @@ export function installArrange(SF) {
     var toggle = document.getElementById('btnArrange');
     if (toggle) {
       toggle.setAttribute('aria-pressed', String(arranging));
-      toggle.textContent = arranging ? '▦ Layout' : '▤ Layout';
+      toggle.textContent = arranging ? '▦ Arrange' : '▤ Arrange';
     }
     /* Seeding repaints on its own; when it finds the slide already latticed
        there is nothing to write and the canvas still has to be redrawn to put

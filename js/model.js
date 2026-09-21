@@ -7507,7 +7507,7 @@
       var toggle = document.getElementById("btnArrange");
       if (toggle) {
         toggle.setAttribute("aria-pressed", String(arranging));
-        toggle.textContent = arranging ? "▦ Layout" : "▤ Layout";
+        toggle.textContent = arranging ? "▦ Arrange" : "▤ Arrange";
       }
       if (arranging && !seed() && SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
       else if (!arranging && SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
@@ -7904,9 +7904,11 @@
           }, { bare: true });
         }
       },
+      /* \u25A5, not \u25A6: \u25A6 belongs to Arrange in the face row above, which
+         edits the lattice this glyph depicts. */
       {
         key: "layout",
-        icon: "▦",
+        icon: "▥",
         label: "Layout",
         tab: true,
         title: "Choose a different layout",

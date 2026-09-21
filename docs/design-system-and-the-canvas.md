@@ -2349,7 +2349,8 @@ every block and has to stay one expression.
 face's state when it built the row and closed over it, and the faces repaint the
 canvas rather than the rail — so nothing rebuilt the row when one turned on, and
 the handler kept calling `set(true)`. **▦ Layout and ◇ Artwork could be turned
-on and never off**: four clicks, still arranging. Asked at click time now, and
+on and never off** (that button is now labelled ▦ Arrange; it was renamed on
+2026-09-21 because a second ▦ Layout sat four rows below it in the same panel): four clicks, still arranging. Asked at click time now, and
 pinned by its own check, because every other assertion in that file passed
 either way.
 

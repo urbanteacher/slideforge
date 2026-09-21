@@ -1397,7 +1397,7 @@
     }));
     insp.appendChild(UI.field('This item', acts));
     /* The rail's faces row is drawn by the branch below this one, so selecting
-       an item used to take ▦ Layout off the screen — and Layout is where the
+       an item used to take ▦ Arrange off the screen — and Arrange is where the
        slot names, the fit check and the nudges live, none of which the item's
        own fields replace. Carry it across. One id, because the two branches
        are exclusive: the block inspector returns before the faces row runs. */
@@ -1548,8 +1548,14 @@
         title: "Move, size, hide or replace this slide's artwork",
         isOn: function () { return !!(SF.Artwork && SF.Artwork.isEditing()); },
         set: function (on) { if (SF.Artwork) SF.Artwork.setEditing(on); } },
-      { id: 'btnArrange', label: '▦ Layout',
-        title: 'Move blocks on the 16x12 lattice',
+      /* "Arrange", not "Layout". There were two ▦ Layout buttons in this one
+         panel, four rows apart: this one toggles block arranging on the
+         lattice, the tab below picks a slide layout. Same glyph, same word,
+         different jobs. This is the one that moves, and Arrange is what the
+         code has always called it — SF.Arrange, isArranging, btnArrange,
+         src/editor/arrange.js — so the panel now says what the code says. */
+      { id: 'btnArrange', label: '▦ Arrange',
+        title: 'Move and size blocks on the slide grid',
         isOn: function () { return !!(SF.Arrange && SF.Arrange.isArranging()); },
         set: function (on) { if (SF.Arrange) SF.Arrange.setArranging(on); } },
       { id: 'btnHeaderFooter', label: '▣ Header & footer',
@@ -1561,7 +1567,7 @@
       /* Asked again at click time, not closed over from draw time. The faces
          set their own state and repaint the canvas, not the rail, so nothing
          rebuilt this row when one turned on — and a handler holding the `on`
-         it was built with kept calling set(true). ▦ Layout could be turned on
+         it was built with kept calling set(true). ▦ Arrange could be turned on
          and then never off: four clicks, still arranging. Found by
          tools/smoke/layout-face.mjs, which needed to leave the face. */
       var b = UI.button(face.label, on ? 'active' : 'ghost', function () {

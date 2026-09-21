@@ -178,7 +178,9 @@ export function createPanes(SF, helpers) {
       draw: function (insp, s) {
         SF.Custom.inspector(insp, s, function () { touched(); draw(); }, { bare: true });
       } },
-    { key: 'layout', icon: '\u25A6', label: 'Layout', tab: true,
+    /* \u25A5, not \u25A6: \u25A6 belongs to Arrange in the face row above, which
+       edits the lattice this glyph depicts. */
+    { key: 'layout', icon: '\u25A5', label: 'Layout', tab: true,
       title: 'Choose a different layout',
       draw: function (insp, s) { drawLayoutPicker(insp, s); } },
     { key: 'transition', icon: '\u219D', label: 'Motion', tab: true,

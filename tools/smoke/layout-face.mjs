@@ -3,7 +3,7 @@
  *
  * The lattice had no end-to-end check. layout-fit.mjs measures the layout
  * *picker's* predictions and demo-deck.mjs measures the concept lab; between
- * them they never once clicked the ▦ Layout button in the real editor. So
+ * them they never once clicked the ▦ Arrange button in the real editor. So
  * "click a block and nothing happens" had no test that could tell you whether
  * that was true, and neither did "the bar says all 2 fit while a block is
  * outlined in red".
@@ -85,7 +85,7 @@ try {
     toggles.push(await page.evaluate(() => SF.Arrange.isArranging()));
   }
   assert.deepEqual(toggles, [false, true, false, true],
-    `▦ Layout should alternate, got ${JSON.stringify(toggles)}`);
+    `▦ Arrange should alternate, got ${JSON.stringify(toggles)}`);
   await page.waitForSelector('#previewBox.arranging .sf-slot', { timeout: 10000 });
   checks++;
 
