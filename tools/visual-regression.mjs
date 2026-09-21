@@ -456,7 +456,20 @@ async function run() {
         document.body.appendChild(stage);
       }
       stage.innerHTML = '';
-      const node = window.SF.renderSlide(rd, slide, { interactive: false });
+      /* A race only renders as a race when it is given lanes: layoutQuiz gates
+         `is-race` and the whole strip on opts.lanes. Without them this captured
+         an ordinary quiz wearing the race style, which is how a heading that ran
+         underneath the countdown passed 642 baselines without one of them
+         noticing. Fixed names and positions, because a baseline cannot move. */
+      const renderOpts = { interactive: false };
+      if (st === 'race') {
+        renderOpts.lanes = [
+          { name: 'Red', at: 3 }, { name: 'Blue', at: 2 },
+          { name: 'Green', at: 1 }, { name: 'Yellow', at: 0 }
+        ];
+        renderOpts.trackLength = 5;
+      }
+      const node = window.SF.renderSlide(rd, slide, renderOpts);
       node.style.position = 'relative';
       stage.appendChild(node);
 
