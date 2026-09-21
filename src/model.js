@@ -18,6 +18,7 @@ import { createDeckSettings } from './editor/deck-settings.js';
 import { createContentFields } from './editor/content-fields.js';
 import { installArrange } from './editor/arrange.js';
 import { createPanes } from './editor/panes.js';
+import { createRail } from './editor/rail.js';
 import { installHeaderFooterUI } from './editor/header-footer.js';
 import { installArtwork } from './editor/artwork.js';
 import { installCustom } from './editor/customize.js';
@@ -1528,7 +1529,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   slideHeight: slideHeight,
   THEMES: THEMES,
   DEFAULT_THEME, resolveTheme,
-  createActivityFields, createCompositionRenderer, createChartRenderer, createWordRenderer, createLiveRenderer, createQuizRenderer, installArtRenderer, installLatticeRenderer, createPresenterWindow, createDeckSettings, createContentFields, installArrange, createPanes, installHeaderFooterUI, installArtwork, installCustom, installExplore, installExperiments, bindCanvasRegions, declareBodyRegion, measureBodyRegion,
+  createActivityFields, createCompositionRenderer, createChartRenderer, createWordRenderer, createLiveRenderer, createQuizRenderer, installArtRenderer, installLatticeRenderer, createPresenterWindow, createDeckSettings, createContentFields, installArrange, createPanes, createRail, installHeaderFooterUI, installArtwork, installCustom, installExplore, installExperiments, bindCanvasRegions, declareBodyRegion, measureBodyRegion,
   hasLayoutTemplate, layoutRegionsFor, insertionRegionFor, LAYOUT_SLOT_TEMPLATES,
   measureSlideFit, probeLayoutFit, svgScale, FIT_TOLERANCE, LEGIBLE_FLOOR,
   CHROME_SLOTS, chromePositions, setChromeSlot, supportsChromeRegions, applyChromeRegions,

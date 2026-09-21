@@ -8932,6 +8932,768 @@
     return { PANES, paneFor, drawPane, tabs };
   }
 
+  // src/editor/rail.js
+  function createRail(SF, helpers) {
+    const {
+      el,
+      $,
+      touched,
+      draw,
+      current,
+      drawInspector,
+      addSlide,
+      restoreHistory,
+      gameFor,
+      slideOpts,
+      openActivityLibrary,
+      setSel
+    } = helpers;
+    var dragFrom = null;
+    var placing = null;
+    var placeAt = null;
+    var caretAt = null;
+    function reorder(indices, at) {
+      var deck = helpers.deck();
+      var picked2 = indices.slice().sort(function(a, b) {
+        return a - b;
+      });
+      if (!picked2.length) return -1;
+      at = Math.max(0, Math.min(deck.slides.length, at));
+      var taken = {};
+      picked2.forEach(function(i2) {
+        taken[i2] = true;
+      });
+      var moved = picked2.map(function(i2) {
+        return deck.slides[i2];
+      });
+      var next = [], landed = -1;
+      for (var i = 0; i <= deck.slides.length; i++) {
+        if (i === at) {
+          landed = next.length;
+          next = next.concat(moved);
+        }
+        if (i < deck.slides.length && !taken[i]) next.push(deck.slides[i]);
+      }
+      if (next.length !== deck.slides.length) return -1;
+      var same = next.every(function(slide, i2) {
+        return slide === deck.slides[i2];
+      });
+      if (same) return -1;
+      deck.slides.length = 0;
+      for (var n = 0; n < next.length; n++) deck.slides.push(next[n]);
+      return landed;
+    }
+    function moveSlide(from, at) {
+      var deck = helpers.deck();
+      if (from == null || at == null || !deck.slides[from]) return false;
+      var landed = reorder([from], at);
+      if (landed < 0) return false;
+      setSel(landed);
+      return true;
+    }
+    function slotFor(row, clientY) {
+      var i = Number(row.dataset.i);
+      var box2 = row.getBoundingClientRect();
+      return clientY < box2.top + box2.height / 2 ? i : i + 1;
+    }
+    function showCaret(at) {
+      var rail = $("railList");
+      if (!rail) return null;
+      if (at === caretAt) return at == null ? null : (
+        /** @type {HTMLElement|null} */
+        rail.querySelector(".rail-slot.at")
+      );
+      caretAt = at;
+      var was = rail.querySelectorAll(".rail-slot.at");
+      for (var i = 0; i < was.length; i++) was[i].classList.remove("at");
+      var slot = (
+        /** @type {HTMLElement|null} */
+        at == null ? null : rail.querySelector('.rail-slot[data-at="' + at + '"]')
+      );
+      if (slot) slot.classList.add("at");
+      return slot;
+    }
+    function focusThumb(i) {
+      var rail = $("railList");
+      var row = (
+        /** @type {HTMLElement|null} */
+        rail && rail.querySelector('.thumb[data-i="' + i + '"]')
+      );
+      if (!row) return;
+      row.focus();
+      row.scrollIntoView({ block: "nearest" });
+    }
+    function beginPlacing(i) {
+      var deck = helpers.deck();
+      if (!deck.slides[i] || placing != null) return;
+      setSel(i);
+      placing = i;
+      placeAt = i;
+      draw();
+      var slot = showCaret(placeAt);
+      if (slot) slot.focus();
+    }
+    function movePlaceTo(at) {
+      var deck = helpers.deck();
+      if (placing == null) return;
+      placeAt = Math.max(0, Math.min(deck.slides.length, at));
+      var slot = showCaret(placeAt);
+      if (slot) {
+        slot.focus();
+        slot.scrollIntoView({ block: "nearest" });
+      }
+      drawPlacingBar();
+    }
+    function commitPlacing(at) {
+      var sel = helpers.sel();
+      if (placing == null) return;
+      var from = placing;
+      var to = at == null ? placeAt : at;
+      placing = null;
+      placeAt = null;
+      caretAt = null;
+      if (moveSlide(from, to)) touched();
+      draw();
+      focusThumb(sel);
+    }
+    function cancelPlacing() {
+      var sel = helpers.sel();
+      if (placing == null) return;
+      placing = null;
+      placeAt = null;
+      caretAt = null;
+      draw();
+      focusThumb(sel);
+    }
+    function drawPlacingBar() {
+      var deck = helpers.deck();
+      var UI = helpers.UI();
+      var rail = $("railList");
+      var host = rail && rail.parentNode;
+      if (!rail || !host) return;
+      var found = host.querySelector(".rail-placing");
+      if (placing == null) {
+        if (found) host.removeChild(found);
+        return;
+      }
+      var bar = (
+        /** @type {HTMLElement} */
+        found || el("div", "rail-placing")
+      );
+      if (!found) host.insertBefore(bar, rail);
+      bar.innerHTML = "";
+      var s = deck.slides[placing];
+      var lands = placeAt > placing ? placeAt : placeAt + 1;
+      bar.appendChild(el("strong", null, "Carrying slide " + (placing + 1) + " → lands at " + lands));
+      bar.appendChild(el("span", "rail-placing-what", s.title || SF.SLIDE_TYPES[s.type].label));
+      bar.appendChild(el(
+        "span",
+        "rail-placing-hint",
+        "↑ ↓ Home End to choose a place · Enter to drop it · Esc to cancel"
+      ));
+      bar.appendChild(UI.button("Cancel", "ghost", cancelPlacing));
+    }
+    var scroller = { y: null, raf: 0 };
+    function autoScroll() {
+      scroller.raf = 0;
+      var rail = $("railList");
+      if (!rail || scroller.y == null) return;
+      var box2 = rail.getBoundingClientRect();
+      var margin = 56, top = 0;
+      if (scroller.y < box2.top + margin) top = (scroller.y - box2.top - margin) / margin;
+      else if (scroller.y > box2.bottom - margin) top = (scroller.y - box2.bottom + margin) / margin;
+      if (top) rail.scrollTop += Math.max(-1, Math.min(1, top)) * 18;
+      scroller.raf = requestAnimationFrame(autoScroll);
+    }
+    function endDrag() {
+      dragFrom = null;
+      scroller.y = null;
+      if (scroller.raf) cancelAnimationFrame(scroller.raf);
+      scroller.raf = 0;
+      showCaret(placing == null ? null : placeAt);
+      var rail = $("railList");
+      if (rail) rail.classList.remove("dragging");
+    }
+    function dropAt(at) {
+      var sel = helpers.sel();
+      var from = dragFrom;
+      endDrag();
+      if (!moveSlide(from, at)) return;
+      touched();
+      draw();
+      focusThumb(sel);
+    }
+    function wireDrag(row) {
+      row.addEventListener("dragstart", function(e) {
+        dragFrom = Number(row.dataset.i);
+        e.dataTransfer.effectAllowed = "move";
+        try {
+          e.dataTransfer.setData("text/plain", String(dragFrom));
+        } catch (err) {
+        }
+        var rail = $("railList");
+        if (rail) rail.classList.add("dragging");
+      });
+      row.addEventListener("dragend", endDrag);
+      row.addEventListener("dragover", function(e) {
+        if (dragFrom == null) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        showCaret(slotFor(row, e.clientY));
+      });
+      row.addEventListener("drop", function(e) {
+        if (dragFrom == null) return;
+        e.preventDefault();
+        dropAt(slotFor(row, e.clientY));
+      });
+    }
+    function railSlot(at) {
+      var deck = helpers.deck();
+      var slot = el("div", "rail-slot");
+      slot.dataset.at = String(at);
+      if (placing != null) {
+        slot.tabIndex = 0;
+        slot.setAttribute("role", "button");
+        slot.setAttribute("aria-label", at >= deck.slides.length ? "Drop after the last slide" : "Drop before slide " + (at + 1));
+        slot.onclick = function(e) {
+          e.stopPropagation();
+          commitPlacing(at);
+        };
+        slot.onfocus = function() {
+          placeAt = at;
+          showCaret(at);
+          drawPlacingBar();
+        };
+      }
+      slot.addEventListener("dragover", function(e) {
+        if (dragFrom == null) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        showCaret(at);
+      });
+      slot.addEventListener("drop", function(e) {
+        if (dragFrom == null) return;
+        e.preventDefault();
+        dropAt(at);
+      });
+      return slot;
+    }
+    function toggleHidden(i) {
+      var deck = helpers.deck();
+      var s = deck.slides[i];
+      if (!s) return;
+      if (s.hidden === true) delete s.hidden;
+      else s.hidden = true;
+      touched();
+      draw();
+      SF.toast(s.hidden === true ? '"' + (s.title || SF.SLIDE_TYPES[s.type].label) + '" is hidden from the show. It stays in the deck.' : '"' + (s.title || SF.SLIDE_TYPES[s.type].label) + '" is back in the show.');
+    }
+    function drawRail() {
+      var deck = helpers.deck();
+      var sel = helpers.sel();
+      var UI = helpers.UI();
+      var rail = $("railList");
+      if (!rail) return;
+      if (placing != null && !deck.slides[placing]) {
+        placing = null;
+        placeAt = null;
+      }
+      rail.innerHTML = "";
+      rail.classList.toggle("placing", placing != null);
+      caretAt = null;
+      var count = $("railCount");
+      var go = (
+        /** @type {HTMLInputElement|null} */
+        $("railGo")
+      );
+      var total = $("railTotal");
+      var off = deck.slides.filter(function(x) {
+        return x.hidden === true;
+      }).length;
+      var n = deck.slides.length;
+      if (go && go !== document.activeElement) {
+        go.max = String(Math.max(1, n));
+        go.value = String(sel + 1);
+      }
+      if (total) total.textContent = String(n);
+      if (count) {
+        count.textContent = off ? n - off + " of " + n : String(n);
+        count.title = off ? off + " slide" + (off === 1 ? "" : "s") + " hidden from the show" : "";
+      }
+      drawSorterButton();
+      rail.ondragover = function(e) {
+        if (dragFrom == null) return;
+        e.preventDefault();
+        scroller.y = e.clientY;
+        if (!scroller.raf) scroller.raf = requestAnimationFrame(autoScroll);
+      };
+      var list = (
+        /** @type {HTMLElement} */
+        rail
+      );
+      list.appendChild(railSlot(0));
+      deck.slides.forEach(function(s, i) {
+        var row = el("div", "thumb" + (i === sel ? " sel" : "") + (i === placing ? " carried" : "") + (s.hidden === true ? " hidden-slide" : ""));
+        row.draggable = true;
+        row.tabIndex = 0;
+        row.setAttribute("role", "button");
+        row.setAttribute("aria-label", "Slide " + (i + 1) + ": " + (s.title || SF.SLIDE_TYPES[s.type].label) + (s.hidden === true ? " — hidden from the show" : ""));
+        row.setAttribute("aria-current", i === sel ? "true" : "false");
+        row.onkeydown = function(e) {
+          if (e.target !== row) return;
+          if (e.key !== "Enter" && e.key !== " ") return;
+          e.preventDefault();
+          e.stopPropagation();
+          if (placing != null) commitPlacing(slotFor(row, row.getBoundingClientRect().top));
+          else select(i);
+        };
+        row.dataset.i = String(i);
+        var gutter = el("div", "thumb-gutter");
+        gutter.appendChild(el("div", "num", String(i + 1)));
+        var grip = UI.button("⠿", "thumb-grip", function(e) {
+          e.stopPropagation();
+          beginPlacing(i);
+        });
+        grip.title = "Pick this slide up to move it (⌘X). Drag to nudge it a place or two.";
+        grip.setAttribute("aria-label", "Move slide " + (i + 1));
+        gutter.appendChild(grip);
+        var eye = UI.button(s.hidden === true ? "⦸" : "👁", "thumb-hide", function(e) {
+          e.stopPropagation();
+          toggleHidden(i);
+        });
+        eye.title = s.hidden === true ? "Hidden from the show — click to put it back (H)" : "Hide from the show, keeping it in the deck (H)";
+        eye.setAttribute("aria-label", (s.hidden === true ? "Show" : "Hide") + " slide " + (i + 1));
+        eye.setAttribute("aria-pressed", String(s.hidden === true));
+        gutter.appendChild(eye);
+        row.appendChild(gutter);
+        var body = el("div", "thumb-body");
+        var frame = el("div", "frame");
+        if (s.type === "game") {
+          var g = gameFor(s);
+          frame.appendChild(el("div", "badge quiz", g ? "GAME" : "MISSING"));
+        } else if (s.feedback && s.feedback.kind) {
+          var live = SF.slideFeedback(s);
+          frame.appendChild(el(
+            "div",
+            "badge fb" + (live ? "" : " warn"),
+            SF.FEEDBACK_KINDS[s.feedback.kind].icon + (live ? "" : " !")
+          ));
+        }
+        var act = s.activity && SF.Activities && SF.Activities.activity(s.activity);
+        if (act) {
+          var ph = SF.Activities.PHASES.find(function(p) {
+            return p.key === act.phase;
+          });
+          var mark = el(
+            "div",
+            "badge act" + (act.target === "moment" ? " timed" : ""),
+            (ph ? ph.label : "Activity").toUpperCase()
+          );
+          mark.title = act.title + (act.minutes ? " · about " + act.minutes + " min" : "");
+          frame.appendChild(mark);
+        }
+        body.appendChild(frame);
+        var node = SF.renderSlide(deck, s, Object.assign(slideOpts(i), { chrome: false }));
+        frame.appendChild(node);
+        row.appendChild(body);
+        var tx = s.transition || "fade";
+        var txIcon = { none: "—", fade: "◌", push: "→", zoom: "⊕", wipe: "▭" }[tx] || "◌";
+        var txLabel = tx === "none" ? "None" : tx.charAt(0).toUpperCase() + tx.slice(1);
+        var txMark = el("span", "thumb-tx", txIcon);
+        txMark.title = "Transition: " + txLabel;
+        txMark.setAttribute("aria-label", "Transition " + txLabel);
+        row.appendChild(txMark);
+        row.onclick = function(e) {
+          if (placing != null) commitPlacing(slotFor(row, e.clientY));
+          else select(i);
+        };
+        wireDrag(row);
+        list.appendChild(row);
+        list.appendChild(railSlot(i + 1));
+        requestAnimationFrame(function() {
+          SF.fit(frame, node);
+        });
+      });
+      drawPlacingBar();
+      if (placing != null) showCaret(placeAt);
+    }
+    function drawSorterButton() {
+      var deck = helpers.deck();
+      var btn = $("btnSorter");
+      if (!btn) return;
+      btn.title = "Block view — the whole deck at once, to rearrange it (⌘G)";
+      btn.setAttribute("aria-label", "Block view of all slides");
+      btn.onclick = openSorter;
+    }
+    function select(i) {
+      var deck = helpers.deck();
+      setSel(Math.max(0, Math.min(deck.slides.length - 1, i)));
+      draw();
+    }
+    function nudge(delta) {
+      var sel = helpers.sel();
+      if (!moveSlide(sel, sel + (delta > 0 ? delta + 1 : delta))) return;
+      touched();
+      draw();
+      focusThumb(sel);
+    }
+    function sendTo(at) {
+      var deck = helpers.deck();
+      var sel = helpers.sel();
+      if (!moveSlide(sel, at)) return;
+      touched();
+      draw();
+      focusThumb(sel);
+    }
+    var sorter = null;
+    var picked = [];
+    var anchor = 0;
+    var sorterDrag = false;
+    var sorterAt = null;
+    function sorterOpen() {
+      return !!sorter;
+    }
+    function openSorter() {
+      var sel = helpers.sel();
+      if (sorter) return;
+      picked = [sel];
+      anchor = sel;
+      sorter = el("div", "sorter");
+      document.body.appendChild(sorter);
+      document.body.classList.add("sorter-on");
+      drawSorter();
+      var tile = sorter.querySelector(".sorter-tile.sel");
+      if (tile) {
+        tile.focus();
+        tile.scrollIntoView({ block: "center" });
+      }
+    }
+    function closeSorter() {
+      var sel = helpers.sel();
+      if (!sorter) return;
+      sorter.remove();
+      sorter = null;
+      sorterDrag = false;
+      sorterAt = null;
+      document.body.classList.remove("sorter-on");
+      draw();
+      focusThumb(sel);
+    }
+    function pick(i, e) {
+      if (e && e.shiftKey) {
+        var lo = Math.min(anchor, i), hi = Math.max(anchor, i);
+        picked = [];
+        for (var n = lo; n <= hi; n++) picked.push(n);
+      } else if (e && (e.metaKey || e.ctrlKey)) {
+        var at = picked.indexOf(i);
+        if (at < 0) picked.push(i);
+        else if (picked.length > 1) picked.splice(at, 1);
+        anchor = i;
+      } else {
+        picked = [i];
+        anchor = i;
+      }
+      setSel(i);
+      drawSorter();
+    }
+    function sorterSlotFor(tile, clientX) {
+      var i = Number(tile.dataset.i);
+      var box2 = tile.getBoundingClientRect();
+      return clientX < box2.left + box2.width / 2 ? i : i + 1;
+    }
+    function showSorterCaret(at) {
+      if (!sorter) return;
+      sorterAt = at;
+      var bar = (
+        /** @type {HTMLElement|null} */
+        sorter.querySelector(".sorter-caret")
+      );
+      if (!bar) return;
+      if (at == null) {
+        bar.hidden = true;
+        return;
+      }
+      var tiles = sorter.querySelectorAll(".sorter-tile");
+      var last = at >= tiles.length;
+      var tile = (
+        /** @type {HTMLElement|null} */
+        tiles[last ? tiles.length - 1 : at]
+      );
+      if (!tile) {
+        bar.hidden = true;
+        return;
+      }
+      bar.hidden = false;
+      bar.style.top = tile.offsetTop + "px";
+      bar.style.height = tile.offsetHeight + "px";
+      bar.style.left = (last ? tile.offsetLeft + tile.offsetWidth + 5 : tile.offsetLeft - 7) + "px";
+    }
+    function sorterDrop(at) {
+      var count = picked.length;
+      var landed = reorder(picked, at);
+      sorterDrag = false;
+      showSorterCaret(null);
+      if (landed < 0) return;
+      picked = [];
+      for (var n = 0; n < count; n++) picked.push(landed + n);
+      setSel(landed);
+      anchor = landed;
+      touched();
+      drawSorter();
+      var tile = sorter && sorter.querySelector(".sorter-tile.sel");
+      if (tile) tile.focus();
+    }
+    function drawSorter() {
+      var deck = helpers.deck();
+      var sel = helpers.sel();
+      var UI = helpers.UI();
+      if (!sorter) return;
+      picked = picked.filter(function(i) {
+        return deck.slides[i];
+      });
+      if (!picked.length) picked = [Math.min(sel, deck.slides.length - 1)];
+      sorter.innerHTML = "";
+      var head = el("div", "sorter-head");
+      head.appendChild(el("strong", null, "Slide sorter"));
+      head.appendChild(el(
+        "span",
+        "sorter-count",
+        deck.slides.length + " slides" + (picked.length > 1 ? " · " + picked.length + " selected" : "")
+      ));
+      head.appendChild(el(
+        "span",
+        "sorter-hint",
+        "Drag to move · shift-click for a run · ⌘-click to add · ↵ to edit · esc to close"
+      ));
+      head.appendChild(UI.button("Done", "primary", closeSorter));
+      sorter.appendChild(head);
+      var grid = el("div", "sorter-grid");
+      var bar = el("div", "sorter-caret");
+      bar.hidden = true;
+      grid.appendChild(bar);
+      deck.slides.forEach(function(s, i) {
+        var on = picked.indexOf(i) >= 0;
+        var tile = el("div", "sorter-tile" + (on ? " sel" : ""));
+        tile.dataset.i = String(i);
+        tile.draggable = true;
+        tile.tabIndex = 0;
+        tile.setAttribute("role", "button");
+        tile.setAttribute("aria-label", "Slide " + (i + 1) + ": " + (s.title || SF.SLIDE_TYPES[s.type].label));
+        tile.setAttribute("aria-pressed", on ? "true" : "false");
+        var frame = el("div", "frame");
+        var node = SF.renderSlide(deck, s, Object.assign(slideOpts(i), { chrome: false }));
+        frame.appendChild(node);
+        tile.appendChild(frame);
+        var foot = el("div", "sorter-foot");
+        foot.appendChild(el("span", "sorter-num", String(i + 1)));
+        foot.appendChild(el("span", "sorter-title", oneLine(s.title) || SF.SLIDE_TYPES[s.type].label));
+        tile.appendChild(foot);
+        tile.onclick = function(e) {
+          pick(i, e);
+        };
+        tile.ondblclick = function() {
+          setSel(i);
+          closeSorter();
+        };
+        tile.addEventListener("dragstart", function(e) {
+          if (picked.indexOf(i) < 0) {
+            picked = [i];
+            anchor = i;
+            drawSorter();
+          }
+          sorterDrag = true;
+          e.dataTransfer.effectAllowed = "move";
+          try {
+            e.dataTransfer.setData("text/plain", String(i));
+          } catch (err) {
+          }
+        });
+        tile.addEventListener("dragend", function() {
+          sorterDrag = false;
+          showSorterCaret(null);
+        });
+        tile.addEventListener("dragover", function(e) {
+          if (!sorterDrag) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          showSorterCaret(sorterSlotFor(tile, e.clientX));
+        });
+        tile.addEventListener("drop", function(e) {
+          if (!sorterDrag) return;
+          e.preventDefault();
+          sorterDrop(sorterSlotFor(tile, e.clientX));
+        });
+        grid.appendChild(tile);
+        requestAnimationFrame(function() {
+          SF.fit(frame, node);
+        });
+      });
+      grid.addEventListener("dragover", function(e) {
+        if (!sorterDrag || e.target !== grid) return;
+        e.preventDefault();
+        showSorterCaret(deck.slides.length);
+      });
+      grid.addEventListener("drop", function(e) {
+        if (!sorterDrag || e.target !== grid) return;
+        e.preventDefault();
+        sorterDrop(deck.slides.length);
+      });
+      sorter.appendChild(grid);
+    }
+    function oneLine(text2) {
+      return String(text2 || "").replace(/\s+/g, " ").trim();
+    }
+    function sorterColumns() {
+      if (!sorter) return 1;
+      var tiles = sorter.querySelectorAll(".sorter-tile");
+      if (tiles.length < 2) return 1;
+      var top = (
+        /** @type {HTMLElement} */
+        tiles[0].offsetTop
+      ), n = 0;
+      for (var i = 0; i < tiles.length; i++) {
+        if (
+          /** @type {HTMLElement} */
+          tiles[i].offsetTop !== top
+        ) break;
+        n++;
+      }
+      return Math.max(1, n);
+    }
+    function sorterKeys(e) {
+      var deck = helpers.deck();
+      var sel = helpers.sel();
+      var mod = e.metaKey || e.ctrlKey;
+      var last = deck.slides.length - 1;
+      var step = null;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeSorter();
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        closeSorter();
+        return;
+      }
+      if (mod && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        picked = deck.slides.map(function(s, i) {
+          return i;
+        });
+        drawSorter();
+        return;
+      }
+      if (mod && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        restoreHistory(e.shiftKey);
+        drawSorter();
+        return;
+      }
+      if (e.key === "ArrowRight") step = sel + 1;
+      else if (e.key === "ArrowLeft") step = sel - 1;
+      else if (e.key === "ArrowDown") step = sel + sorterColumns();
+      else if (e.key === "ArrowUp") step = sel - sorterColumns();
+      else if (e.key === "Home") step = 0;
+      else if (e.key === "End") step = last;
+      if (step == null) return;
+      e.preventDefault();
+      var to = Math.max(0, Math.min(last, step));
+      if (e.altKey) {
+        var at = to > sel ? to + 1 : to;
+        var landed = reorder(picked, at);
+        if (landed < 0) return;
+        var count = picked.length;
+        picked = [];
+        for (var n = 0; n < count; n++) picked.push(landed + n);
+        setSel(landed);
+        anchor = landed;
+        touched();
+        drawSorter();
+      } else {
+        pick(to, e.shiftKey ? { shiftKey: true } : null);
+      }
+      var tile = sorter && sorter.querySelector(".sorter-tile.sel");
+      if (tile) {
+        tile.focus();
+        tile.scrollIntoView({ block: "nearest" });
+      }
+    }
+    function drawFoot() {
+      var UI = helpers.UI();
+      var foot = $("railFoot");
+      if (!foot) return;
+      foot.innerHTML = "";
+      var s = current();
+      if (s) {
+        var txWrap = el("div", "rail-tx");
+        var lab = el("label", null, "Transition in");
+        var txSel = UI.select(
+          SF.TRANSITIONS.map(function(t) {
+            return { value: t, label: t[0].toUpperCase() + t.slice(1) };
+          }),
+          s.transition,
+          function(v) {
+            s.transition = v;
+            touched();
+            drawRail();
+            drawInspector();
+          }
+        );
+        if (!txSel.id) txSel.id = "rail-tx-" + SF.uid();
+        lab.htmlFor = txSel.id;
+        txWrap.appendChild(lab);
+        txWrap.appendChild(txSel);
+        txWrap.addEventListener("click", function(e) {
+          e.stopPropagation();
+        });
+        foot.appendChild(txWrap);
+      }
+      var actions = el("div", "rail-actions");
+      var addSlideBtn = UI.button("+ Slide", "primary", function() {
+        if (SF.Studio && SF.Studio.openStarters) SF.Studio.openStarters();
+        else addSlide("content");
+      });
+      addSlideBtn.title = "Insert a slide starter, then pick a layout";
+      actions.appendChild(addSlideBtn);
+      var ins = UI.button("+ Activity", null, openActivityLibrary);
+      ins.id = "railAddActivity";
+      ins.title = "Add a game or activity — same catalogue as ＋ Add activity";
+      actions.appendChild(ins);
+      foot.appendChild(actions);
+    }
+    function isPlacing() {
+      return placing != null;
+    }
+    function placeTarget() {
+      return placeAt;
+    }
+    function resetPlacing() {
+      placing = null;
+      placeAt = null;
+    }
+    return {
+      focusThumb,
+      beginPlacing,
+      movePlaceTo,
+      commitPlacing,
+      cancelPlacing,
+      toggleHidden,
+      drawRail,
+      select,
+      nudge,
+      sendTo,
+      sorterOpen,
+      openSorter,
+      pick,
+      sorterKeys,
+      drawFoot,
+      isPlacing,
+      placeTarget,
+      resetPlacing
+    };
+  }
+
   // src/editor/header-footer.js
   function installHeaderFooterUI(SF) {
     var open = false, scope = "deck", selected = "header-left";
@@ -22040,6 +22802,7 @@
     createContentFields,
     installArrange,
     createPanes,
+    createRail,
     installHeaderFooterUI,
     installArtwork,
     installCustom,

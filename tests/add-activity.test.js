@@ -10,6 +10,9 @@ const ROOT = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const editor = fs.readFileSync(path.join(ROOT, 'js', 'editor.js'), 'utf8');
 const studio = fs.readFileSync(path.join(ROOT, 'js', 'studio.js'), 'utf8');
+/* The rail's own door moved with the rail — src/editor/rail.js. The shared
+   opener it calls, openActivityLibrary, is still the editor's. */
+const rail = fs.readFileSync(path.join(ROOT, 'src', 'editor', 'rail.js'), 'utf8');
 
 test('canvas Add activity, Engagement and the rail share the activity library', () => {
   assert.match(html, /id="btnActivities"[^>]*>＋ Add activity/,
@@ -22,9 +25,9 @@ test('canvas Add activity, Engagement and the rail share the activity library', 
     'Engagement / the rail are not calling the same library as the canvas');
   assert.match(editor, /id = 'inspAddActivity'/,
     'Engagement does not offer ＋ Add activity');
-  assert.match(editor, /id = 'railAddActivity'/,
+  assert.match(rail, /id = 'railAddActivity'/,
     'the rail still has a separate + Game picker');
-  assert.match(editor, /UI\.button\('\+ Activity', null, openActivityLibrary\)/,
+  assert.match(rail, /UI\.button\('\+ Activity', null, openActivityLibrary\)/,
     'the rail is not using the shared opener');
 });
 
