@@ -544,15 +544,29 @@
     /* A redraw must not throw away a walk in progress — the desk syncs, the
        ink bar opens, a repaint happens, and the chart would snap back out. */
     if (SF.Callouts) SF.Callouts.restore(Player, slide, node);
-    node.addEventListener('animationend', function () {
+    /* The entry transition is still running when the first fit pass happens,
+       and dropping the transition classes can nudge the layout. Re-fit once
+       the slide has settled so the chosen type size is the final one.
+ 
+       Settling cannot hang off the entering box's own animationend alone. A
+       fade now animates the slide's children rather than the box, so the event
+       arrives by bubbling; `transition: none` animates nothing at all and the
+       event never arrives. Same shape as the outgoing slide's removal above:
+       whichever of the two comes first wins, and it runs once. */
+    var settled = false;
+    var settle = function () {
+      if (settled) return;
+      settled = true;
       node.classList.remove('entering', 'tr-' + tr);
       node.style.position = 'absolute';
       if (viewport) SF.fit(viewport, node);
-      /* The entry transition is still running when the first fit pass happens,
-         and dropping the transition classes can nudge the layout. Re-fit once
-         the slide has settled so the chosen type size is the final one. */
       if (slide.type === 'quiz') fitQuizSlide(node);
-    }, { once: true });
+    };
+    if (tr === 'none') settle();
+    else {
+      node.addEventListener('animationend', settle, { once: true });
+      setTimeout(settle, 700);
+    }
 
     if (hudPos) {
       hudPos.textContent = wall.spontaneous

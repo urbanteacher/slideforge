@@ -2350,6 +2350,7 @@ html[data-ws="game"] #btnSorter { display: none; }
 @keyframes sf-push-in-r  { from { transform: scale(var(--sf-scale)) translateX(-100%) } to { transform: scale(var(--sf-scale)) translateX(0) } }
 @keyframes sf-push-out-r { from { transform: scale(var(--sf-scale)) translateX(0) }     to { transform: scale(var(--sf-scale)) translateX(100%) } }
 @keyframes sf-zoom-in   { from { transform: scale(calc(var(--sf-scale) * 1.12)); opacity: 0 } to { transform: scale(var(--sf-scale)); opacity: 1 } }
+@keyframes sf-zoom-in-box { from { transform: scale(calc(var(--sf-scale) * 1.12)) } to { transform: scale(var(--sf-scale)) } }
 @keyframes sf-zoom-out  { from { opacity: 1 } to { opacity: 0 } }
 @keyframes sf-wipe-in   { from { clip-path: inset(0 0 0 100%) } to { clip-path: inset(0 0 0 0) } }
 
@@ -2363,6 +2364,38 @@ html[data-ws="game"] #btnSorter { display: none; }
 .tr-zoom.leaving   { animation: sf-zoom-out .3s ease both; }
 .tr-wipe.entering  { animation: sf-wipe-in .42s cubic-bezier(.4,0,.2,1) both; }
 .tr-wipe.leaving   { animation: sf-fade-out .42s ease both; }
+
+/* Fade and zoom: a transition, not a double exposure.
+ 
+   Opacity on the .slide box crossfades the pair, and a crossfade cannot help
+   showing both slides: while the incoming slide sits at .5 the outgoing one is
+   visible straight through it, so a dark full-bleed section panel ghosts across
+   the light slide that follows it and reads as a flash of the wrong content.
+ 
+   The box paints the slide's own opaque background and every piece of content
+   sits in a transparent child, so fading the children instead covers the
+   outgoing slide from the first frame and still dissolves the content up. No
+   ghost, and no dip through the viewport's black either — which is what fading
+   out and then in would have cost.
+ 
+   Zoom is the same fault and the same cure, split: the travel has to stay on
+   the box, because that is the zoom, so only the opacity half moves to the
+   children. Anchored at transform-origin 0 0 and starting at 1.12, the box is
+   larger than the slide beneath it for the whole animation and never uncovers
+   it — so the zoom no longer arrives see-through.
+ 
+   Both outgoing slides keep their fade-out. Nothing of either is seen under an
+   opaque background, but that animationend is what takes it out of the DOM.
+ 
+   Overlays keep the box animation: a leaderboard or a race track dropping over
+   a slide is meant to crossfade with the slide it covers.
+ 
+   Push and wipe never had the fault — they move or clip whole opaque slides,
+   so every pixel is only ever showing one of them. */
+.deck-viewport .slide.tr-fade.entering:not([data-overlay])     { animation: none; }
+.deck-viewport .slide.tr-fade.entering:not([data-overlay]) > * { animation: sf-fade-in .34s ease both; }
+.deck-viewport .slide.tr-zoom.entering:not([data-overlay])     { animation: sf-zoom-in-box .4s cubic-bezier(.3,0,.2,1) both; }
+.deck-viewport .slide.tr-zoom.entering:not([data-overlay]) > * { animation: sf-fade-in .4s cubic-bezier(.3,0,.2,1) both; }
 
 /* player HUD */
 .hud {
