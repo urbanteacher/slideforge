@@ -8,10 +8,11 @@
    The loop is the one the original game ran: read a question, let the clock
    run, reveal, then mark. A hit takes damage equal to the question's
    difficulty; a miss and a timeout both take none. */
-(function (global) {
-  'use strict';
-  /** @type {import("../src/types.js").SlideForgeGlobal} */
-  var SF = global.SF = global.SF || {};
+
+/* Moved out of js/boss.js and into the boards engine — see the note in
+ * src/boards/runtimes/bingo.js. Installed by src/model.js, not by a page.
+ */
+export function installBoss(SF) {
 
   /**
    * A fresh fight.
@@ -236,4 +237,4 @@
     turn: turn, current: current, isMarked: isMarked, damageNow: damageNow,
     defeated: defeated, verdict: verdict, standings: standings, stage: stage,
     forDeck: forDeck, command: command, clear: clear };
-})(typeof window !== 'undefined' ? window : globalThis);
+}

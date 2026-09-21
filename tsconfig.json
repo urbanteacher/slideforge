@@ -37,17 +37,11 @@
     // Adding a file here is cheap when it passes. The real fix is to stop
     // keeping the list by hand, which needs the build to cover more than one
     // entry point.
-    "js/bingo.js",
-    "js/boss.js",
-    "js/bowl.js",
     "js/content-tools.js",
     "js/demo.js",
     "js/emoji-clues.js",
     "js/learner-state.js",
     "js/lessons.js",
-    "js/lowstakes.js",
-    "js/memory.js",
-    "js/race.js",
     "js/adapt.js",
     "js/ask.js",
     "js/lesson-moments.js",

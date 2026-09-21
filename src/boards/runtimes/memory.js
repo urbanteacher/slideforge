@@ -1,8 +1,20 @@
 /* SlideForge memory boards. Authored pairs stay in games; this disposable
    state belongs to one presentation run. No learner can award a claim. */
-(function (global) {
-  'use strict';
-  var SF = global.SF;
+
+/* Moved out of js/memory.js and into the boards engine, where the rest of it
+ * already lived: src/boards/ holds board compilation and authoring hooks,
+ * src/games/ the question mechanics. This is the third layer — the board as
+ * the room actually sees it, drawn and driven in the browser.
+ *
+ * Installed by src/model.js rather than by a page, because the engine is the
+ * model's: SF.Boards is built there and resolves SF.Memory lazily by name.
+ * The comment on createBoardRuntime said runtimes are looked up when used
+ * "because browser script tags load them after the model bundle" — there are
+ * no script tags now, and the lookup works either way.
+ *
+ * Nothing here runs at install but declarations and the SF.Memory assignment.
+ */
+export function installMemory(SF) {
   var active = null;
   function create(board) {
     return { phase: 'ready', selected: -1, revealed: false, turn: 0,
@@ -214,4 +226,4 @@
   }
   SF.Memory = { onVerdict: null, create: create, transition: transition, scores: scores, winner: winner,
     render: render, mount: mount, unmount: unmount, command: command };
-})(typeof window === 'undefined' ? globalThis : window);
+}

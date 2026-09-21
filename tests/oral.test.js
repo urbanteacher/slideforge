@@ -31,7 +31,7 @@ function sandbox() {
   context.globalThis = context;
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.join(dir, 'js/model.js'), 'utf8'), context);
-  vm.runInContext(fs.readFileSync(path.join(dir, 'js/memory.js'), 'utf8'), context);
+  /* js/memory.js moved into the boards engine; js/model.js installs it. */
   return { SF: context.window.SF, stub: context.window.__stub };
 }
 

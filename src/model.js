@@ -19,6 +19,12 @@ import { createPanes } from './editor/panes.js';
 import { installHeaderFooterUI } from './editor/header-footer.js';
 import { installArtwork } from './editor/artwork.js';
 import { installCustom } from './editor/customize.js';
+import { installBingo } from './boards/runtimes/bingo.js';
+import { installBowl } from './boards/runtimes/bowl.js';
+import { installMemory } from './boards/runtimes/memory.js';
+import { installLowStakes } from './boards/runtimes/lowstakes.js';
+import { installBoss } from './boards/runtimes/boss.js';
+import { installRace } from './boards/runtimes/race.js';
 import { hasLayoutTemplate, layoutRegionsFor, insertionRegionFor, LAYOUT_SLOT_TEMPLATES } from './render/layout-slots.js';
 import { DESIGN_CONTROLS, designApplies } from './design-controls.js';
 import { THEMES, themeGround, DEFAULT_THEME, resolveTheme } from './themes.js';
@@ -1655,5 +1661,13 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   LIBRARY_GROUPS: LIBRARY_GROUPS,
   LibraryFolders: LibraryFolders
 });
+
+/* The six board runtimes. They are the engine's own, so the model installs
+   them rather than each page doing it: SF.Boards resolves them lazily by name
+   and every page that draws a board already loads this bundle. Nothing in them
+   runs but declarations and one SF assignment each. */
+for (const install of [installBingo, installBowl, installMemory, installLowStakes, installBoss, installRace]) {
+  install(runtime.SF);
+}
 
 export { DEFAULT_THEME, resolveTheme, DESIGN_CONTROLS, designApplies, COMPOSITIONS, compositionOptions, slideComposition, SLIDE_W, SLIDE_H, ASPECTS, parsePerson, orgTree, CHART_TAXONOMY, chartCategories, chartPrimaryCategory, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, themeGround, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, INFO_LAYOUTS, parseInfoLine, formatInfoLine, infoNumber, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, unusedDraft, libraryGroupFromTheme, normalizeLibraryGroup, LIBRARY_GROUPS, LibraryFolders, GAME_FORMAT_PRESETS, getShowcaseGame };

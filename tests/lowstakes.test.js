@@ -10,7 +10,8 @@ function load() {
   const ctx = { window: {}, console, setInterval, clearInterval, Date, Math };
   ctx.globalThis = ctx;
   vm.createContext(ctx);
-  for (const file of ['model', 'lowstakes']) {
+  /* js/lowstakes.js moved into the boards engine; the bundle installs it. */
+  for (const file of ['model']) {
     vm.runInContext(fs.readFileSync(path.join(dir, 'js/' + file + '.js'), 'utf8'), ctx);
   }
   const SF = ctx.window.SF;

@@ -1,9 +1,21 @@
 /* SlideForge quiz bowl boards. The categories, values and answers are authored
    in the game; which cells are spent and who has what belongs to one
    presentation run. Only the teacher awards a cell. */
-(function (global) {
-  'use strict';
-  var SF = global.SF;
+
+/* Moved out of js/bowl.js and into the boards engine, where the rest of it
+ * already lived: src/boards/ holds board compilation and authoring hooks,
+ * src/games/ the question mechanics. This is the third layer — the board as
+ * the room actually sees it, drawn and driven in the browser.
+ *
+ * Installed by src/model.js rather than by a page, because the engine is the
+ * model's: SF.Boards is built there and resolves SF.Bowl lazily by name.
+ * The comment on createBoardRuntime said runtimes are looked up when used
+ * "because browser script tags load them after the model bundle" — there are
+ * no script tags now, and the lookup works either way.
+ *
+ * Nothing here runs at install but declarations and the SF.Bowl assignment.
+ */
+export function installBowl(SF) {
   var active = null;
 
   function create(board) {
@@ -274,4 +286,4 @@
   SF.Bowl = { onVerdict: null, create: create, transition: transition,
     pending: pending, spent: spent, scores: scores, winner: winner, leaders: leaders,
     render: render, mount: mount, unmount: unmount, command: command };
-})(typeof window === 'undefined' ? globalThis : window);
+}

@@ -4,10 +4,11 @@
    race that was not being hosted drew its teams at the starting gate and left
    them there for the whole game — every lane 0/5, however the room answered.
    Live still owns the phone-scored race; this owns the one the teacher runs. */
-(function (global) {
-  'use strict';
-  /** @type {import("../src/types.js").SlideForgeGlobal} */
-  var SF = global.SF = global.SF || {};
+
+/* Moved out of js/race.js and into the boards engine — see the note in
+ * src/boards/runtimes/bingo.js. Installed by src/model.js, not by a page.
+ */
+export function installRace(SF) {
 
   function clampLength(n) {
     return Math.max(3, Math.min(12, Number(n) || 5));
@@ -119,4 +120,4 @@
   SF.Race = { create: create, advance: advance, back: back, reset: reset,
     standings: standings, finished: finished, winner: winner,
     forDeck: forDeck, command: command, clear: clear };
-})(typeof window !== 'undefined' ? window : globalThis);
+}

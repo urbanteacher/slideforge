@@ -26,7 +26,9 @@ function load() {
   const context = { window: {}, console, setInterval, clearInterval, Date, Math };
   context.globalThis = context;
   vm.createContext(context);
-  for (const f of ['js/model.js', 'js/bowl.js']) {
+  /* The board runtimes moved into the boards engine and ship inside
+     js/model.js, which installs them; loading the bundle is enough. */
+  for (const f of ['js/model.js']) {
     vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), context);
   }
   const SF = context.window.SF;

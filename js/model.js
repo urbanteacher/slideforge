@@ -9985,6 +9985,1370 @@
     SF.Custom = { tagControls, removeBullet, bind, editCanvasBlock, endInlineEdit, inlineEditable, openCanvasEditor, enableCanvasEditDrag, placeCanvasEditForm, canvasEditHost, paint, layout, inspector, rebase, apply, entry };
   }
 
+  // src/boards/runtimes/bingo.js
+  function installBingo(SF) {
+    var active2 = null;
+    function deal(board5) {
+      var size = Math.max(2, Math.min(4, Number(board5.gridSize) || 3));
+      var need = size * size;
+      var seen = {}, distinct = [];
+      board5.pool.forEach(function(pair) {
+        var key = String(pair.term || "").trim().toLowerCase();
+        if (!key || seen[key]) return;
+        seen[key] = 1;
+        distinct.push(pair);
+      });
+      return board5.participants.map(function() {
+        var bag = distinct.slice(), cells = [];
+        while (cells.length < need && bag.length) {
+          var pick = bag.splice(Math.floor(Math.random() * bag.length), 1)[0];
+          cells.push({ id: pick.id, term: pick.term, state: "open" });
+        }
+        while (cells.length < need) cells.push({ id: null, term: "", state: "open" });
+        return cells;
+      });
+    }
+    function create(board5) {
+      return {
+        phase: "ready",
+        cards: deal(board5),
+        called: [],
+        current: -1,
+        revealed: false,
+        winners: [],
+        elapsed: 0,
+        paused: false
+      };
+    }
+    function hasLine(cells, size) {
+      return SF.bingoHasLine(cells.map(function(c) {
+        return c.state === "claimed";
+      }), size);
+    }
+    function square(state2, board5, team) {
+      if (state2.current < 0) return -1;
+      var term = board5.pool[state2.current].term;
+      var cells = state2.cards[team] || [];
+      for (var i = 0; i < cells.length; i++) {
+        if (cells[i].term === term) return i;
+      }
+      return -1;
+    }
+    function blocked(state2, board5, team) {
+      if (state2.current < 0) return "Call a definition first";
+      if (state2.winners.indexOf(team) > -1) return "Already has a line";
+      var i = square(state2, board5, team);
+      if (i < 0) return "Not on this card";
+      if (state2.cards[team][i].state === "claimed") return "Already claimed";
+      if (state2.cards[team][i].state === "missed") return "Missed earlier";
+      return null;
+    }
+    function transition(board5, state2, action, arg) {
+      var size = Math.max(2, Math.min(4, Number(board5.gridSize) || 3));
+      var s = Object.assign({}, state2, {
+        called: state2.called.slice(),
+        winners: state2.winners.slice(),
+        cards: state2.cards.map(function(cells) {
+          return cells.map(function(c) {
+            return Object.assign({}, c);
+          });
+        })
+      });
+      if (action === "restart") return create(board5);
+      if (action === "start" && s.phase === "ready") {
+        s.phase = "calling";
+      } else if (action === "pause" && s.phase === "calling") {
+        s.paused = !s.paused;
+      } else if (action === "call" && s.phase === "calling" && !s.paused) {
+        if (s.winners.length) {
+          s.phase = "complete";
+          return s;
+        }
+        var left = [];
+        for (var i = 0; i < board5.pool.length; i++) {
+          if (s.called.indexOf(i) === -1) left.push(i);
+        }
+        if (!left.length) {
+          s.phase = "complete";
+          return s;
+        }
+        s.current = left[Math.floor(Math.random() * left.length)];
+        s.called.push(s.current);
+        s.revealed = false;
+      } else if (action === "reveal" && s.current > -1 && !s.paused) {
+        s.revealed = true;
+      } else if ((action === "claim" || action === "miss") && s.phase === "calling" && s.revealed && !s.paused && Number.isInteger(arg) && !blocked(s, board5, arg)) {
+        var cell = square(s, board5, arg);
+        s.cards[arg][cell].state = action === "claim" ? "claimed" : "missed";
+        if (action === "claim" && hasLine(s.cards[arg], size) && s.winners.indexOf(arg) === -1) {
+          s.winners.push(arg);
+        }
+      }
+      return s;
+    }
+    function scores(board5, s) {
+      return board5.participants.map(function(name, i) {
+        return { name, score: (s.cards[i] || []).filter(function(c) {
+          return c.state === "claimed";
+        }).length, won: s.winners.indexOf(i) > -1 };
+      });
+    }
+    function winner(board5, s) {
+      if (!s.winners.length) return "No line yet.";
+      var names = s.winners.map(function(i) {
+        return board5.participants[i];
+      });
+      if (board5.participants.length === 1) return "Bingo — the card is complete.";
+      return names.length === 1 ? names[0] + " has a line." : "A shared line: " + names.join(" & ");
+    }
+    function render2(pad, slide, opts) {
+      opts = opts || {};
+      var b = slide.bingoBoard, s = opts.bingoState || create(b);
+      var command2 = opts.bingoCommand;
+      var size = Math.max(2, Math.min(4, Number(b.gridSize) || 3));
+      var el = SF.el;
+      pad.replaceChildren();
+      var seenTerms = {}, unique = 0;
+      b.pool.forEach(function(pair) {
+        var key = String(pair.term || "").trim().toLowerCase();
+        if (key && !seenTerms[key]) {
+          seenTerms[key] = 1;
+          unique++;
+        }
+      });
+      var shortBy = Math.max(0, size * size - unique);
+      function button(text2, action, cls, arg) {
+        var node = el("button", "bingo-button " + (cls || ""), text2);
+        node.type = "button";
+        node.disabled = !command2;
+        node.dataset.bingoAction = action;
+        if (arg != null) node.dataset.bingoArg = String(arg);
+        if (command2) node.onclick = function() {
+          command2(action, arg);
+        };
+        return node;
+      }
+      var head = el("header", "bingo-head");
+      var identity = el("div");
+      identity.appendChild(el("div", "bingo-eyebrow", "BINGO / " + size + "×" + size + " · " + b.pool.length + " TERMS"));
+      identity.appendChild(el("h2", "bingo-name", slide.title));
+      head.appendChild(identity);
+      var count = el("div", "bingo-count");
+      count.appendChild(el("span", null, s.phase === "ready" ? "READY" : s.phase === "complete" ? "BINGO" : "CALLING"));
+      count.appendChild(el("strong", null, s.called.length + " / " + b.pool.length));
+      head.appendChild(count);
+      pad.appendChild(head);
+      var call = el("div", "bingo-call" + (s.current > -1 ? " on" : ""));
+      if (s.current > -1) {
+        call.appendChild(el("div", "bingo-eyebrow", s.revealed ? "THE TERM WAS" : "WHICH TERM IS THIS?"));
+        call.appendChild(el("p", "bingo-def", b.pool[s.current].definition));
+        if (s.revealed) call.appendChild(el("strong", "bingo-term", b.pool[s.current].term));
+      } else {
+        call.appendChild(el("div", "bingo-eyebrow", s.phase === "complete" ? "FINISHED" : "NOTHING CALLED YET"));
+        call.appendChild(el("p", "bingo-def", s.phase === "complete" ? winner(b, s) : "Call a definition. If it is on their card, a team says what the term means to claim the square."));
+      }
+      pad.appendChild(call);
+      var cards = el("div", "bingo-cards");
+      var across = b.participants.length <= 3 ? b.participants.length : b.participants.length === 4 ? 2 : 3;
+      cards.classList.add("across-" + across);
+      cards.classList.toggle("many", b.participants.length > 3);
+      b.participants.forEach(function(name, team) {
+        var box2 = el("section", "bingo-card" + (s.winners.indexOf(team) > -1 ? " won" : ""));
+        var caption = el("div", "bingo-card-head");
+        caption.appendChild(el("strong", null, name));
+        if (command2 && s.phase === "calling") {
+          var verdicts = el("div", "bingo-verdicts");
+          if (s.current > -1 && !s.revealed) {
+            verdicts.appendChild(el("span", "bingo-why", "Waiting on an answer"));
+          } else {
+            var why = blocked(s, b, team);
+            if (why) {
+              verdicts.appendChild(el("span", "bingo-why", why));
+            } else {
+              verdicts.appendChild(button("✓ Claim", "claim", "primary", team));
+              verdicts.appendChild(button("✗ Missed", "miss", "", team));
+            }
+          }
+          caption.appendChild(verdicts);
+        }
+        caption.appendChild(el("span", "bingo-tick", s.winners.indexOf(team) > -1 ? "LINE" : (s.cards[team] || []).filter(function(c) {
+          return c.state === "claimed";
+        }).length + " / " + size * size));
+        box2.appendChild(caption);
+        var grid = el("div", "bingo-grid");
+        grid.style.gridTemplateColumns = "repeat(" + size + ", minmax(0, 1fr))";
+        var live = s.current > -1 && !s.revealed ? -1 : square(s, b, team);
+        (s.cards[team] || []).forEach(function(cell, i) {
+          var sq = el(
+            "div",
+            "bingo-square is-" + cell.state + (cell.term ? "" : " is-gap") + (i === live && cell.state === "open" ? " calling" : "") + /* "Mitochondrion" in a sixteenth of a shared card broke across two
+               lines as "Mitochondri / on". Smaller reads better than split. */
+            ((cell.term || "").length > 11 ? " long" : ""),
+            cell.term || "needs a term"
+          );
+          grid.appendChild(sq);
+        });
+        box2.appendChild(grid);
+        cards.appendChild(box2);
+      });
+      pad.appendChild(cards);
+      var foot = el("div", "bingo-foot");
+      var status = el("div", "bingo-status");
+      status.setAttribute("aria-live", "polite");
+      status.appendChild(el("strong", null, s.paused ? "Paused." : s.phase === "ready" ? "Every team has a different card." : s.phase === "complete" ? winner(b, s) : s.current < 0 ? "Call the next definition." : s.revealed ? "Who claimed “" + b.pool[s.current].term + "”?" : "Read it out. Reveal the term once they have answered."));
+      status.appendChild(el("span", shortBy ? "bingo-short" : null, shortBy ? "A " + size + "×" + size + " card needs " + size * size + " different terms and there " + (unique === 1 ? "is" : "are") + " " + unique + " — add " + shortBy + " more, or choose a smaller card size in Game settings" : s.phase === "complete" ? s.called.length + " of " + b.pool.length + " terms called" : "A row, column or diagonal wins · no points · each term is called once"));
+      foot.appendChild(status);
+      var actions = el("div", "bingo-actions");
+      if (s.phase === "ready") actions.appendChild(button("Deal and start →", "start", "primary"));
+      if (s.phase === "calling") {
+        if (s.current > -1 && !s.revealed) actions.appendChild(button("Reveal the term", "reveal", "primary"));
+        var more = s.called.length < b.pool.length;
+        var nextLabel = s.current < 0 ? "Call a definition →" : "Call the next →";
+        if (!more) {
+          nextLabel = s.winners.length ? "Finish — bingo" : "Finish — no line";
+        } else if (s.winners.length) {
+          nextLabel = "Finish — bingo";
+        }
+        var next = button(
+          nextLabel,
+          "call",
+          s.revealed || s.current < 0 || s.winners.length || !more ? "primary" : ""
+        );
+        actions.appendChild(next);
+        actions.appendChild(button(s.paused ? "Resume" : "Pause", "pause"));
+      }
+      if (s.phase === "complete") actions.appendChild(button("Deal a new card", "restart", "primary"));
+      foot.appendChild(actions);
+      pad.appendChild(foot);
+      if (s.phase === "complete") {
+        var tally = el("div", "bingo-tally");
+        scores(b, s).forEach(function(row) {
+          tally.appendChild(el(
+            "span",
+            row.won ? "won" : null,
+            row.name + " · " + row.score + (row.won ? " · LINE" : "")
+          ));
+        });
+        foot.appendChild(tally);
+      }
+    }
+    function command(action, arg) {
+      if (!active2) return;
+      var board5 = active2.slide.bingoBoard;
+      var before = active2.player.bingoStates[active2.slide.id];
+      var after = transition(board5, before, action, arg);
+      active2.player.bingoStates[active2.slide.id] = after;
+      if ((action === "claim" || action === "miss") && before.current > -1 && Number.isInteger(arg) && after.cards[arg] && SF.Bingo.onVerdict) {
+        var cell = square(before, board5, arg);
+        var changed = cell > -1 && before.cards[arg][cell].state !== after.cards[arg][cell].state;
+        if (changed) SF.Bingo.onVerdict({
+          slideId: active2.slide.id,
+          title: active2.slide.title,
+          kind: "bingo",
+          set: 1,
+          card: cell,
+          term: board5.pool[before.current].term,
+          participant: board5.participants.length > 1 ? board5.participants[arg] : null,
+          right: action === "claim"
+        });
+      }
+      active2.paint(true);
+    }
+    function mount(player, slide, node) {
+      unmount();
+      var session = SF.Boards.createSession("bingo", {
+        player,
+        slide,
+        node,
+        create,
+        render: render2,
+        command,
+        interval: 1e3,
+        tick: function(session2, dt) {
+          var s = player.bingoStates[slide.id];
+          if (s.phase !== "calling") return;
+          s.elapsed += dt;
+        }
+      });
+      active2 = session;
+      session.start();
+    }
+    function unmount() {
+      if (!active2) return;
+      active2.stop();
+      active2 = null;
+    }
+    SF.Bingo = {
+      onVerdict: null,
+      create,
+      transition,
+      deal,
+      scores,
+      winner,
+      blocked,
+      square,
+      render: render2,
+      mount,
+      unmount,
+      command
+    };
+  }
+
+  // src/boards/runtimes/bowl.js
+  function installBowl(SF) {
+    var active2 = null;
+    function create(board5) {
+      return {
+        phase: "ready",
+        /* How many of each cell's questions have been used, by cell index. A
+           cell with two questions in it can be chosen twice. */
+        used: board5.cells.map(function() {
+          return 0;
+        }),
+        cell: -1,
+        // the cell being asked, or -1 between questions
+        revealed: false,
+        // has the answer been shown
+        scores: board5.participants.map(function() {
+          return 0;
+        }),
+        asked: 0,
+        awarded: 0,
+        elapsed: 0,
+        paused: false
+      };
+    }
+    function pending(board5, state2, index) {
+      var cell = board5.cells[index];
+      if (!cell) return null;
+      return cell.questions[state2.used[index]] || null;
+    }
+    function spent(board5, state2) {
+      return board5.cells.every(function(cell, i) {
+        return state2.used[i] >= cell.questions.length;
+      });
+    }
+    function leaders(board5, state2) {
+      var top = Math.max.apply(null, state2.scores.concat([0]));
+      return state2.scores.reduce(function(out, score, i) {
+        if (score === top && top > 0) out.push(i);
+        return out;
+      }, []);
+    }
+    function reached(board5, state2) {
+      return state2.scores.some(function(score) {
+        return score >= board5.target;
+      });
+    }
+    function transition(board5, state2, action, arg) {
+      var s = Object.assign({}, state2, {
+        used: state2.used.slice(),
+        scores: state2.scores.slice()
+      });
+      if (action === "restart") return create(board5);
+      if (action === "start" && s.phase === "ready") {
+        s.phase = "picking";
+      } else if (action === "pause" && (s.phase === "picking" || s.phase === "asking")) {
+        s.paused = !s.paused;
+      } else if (action === "pick" && s.phase === "picking" && !s.paused && Number.isInteger(arg) && pending(board5, s, arg)) {
+        s.cell = arg;
+        s.revealed = false;
+        s.phase = "asking";
+        s.asked++;
+      } else if (action === "reveal" && s.phase === "asking" && !s.paused) {
+        s.revealed = true;
+      } else if ((action === "award" || action === "noScore") && s.phase === "asking" && s.revealed && !s.paused && s.cell > -1) {
+        var cell = board5.cells[s.cell];
+        if (action === "award") {
+          if (!Number.isInteger(arg) || arg < 0 || arg >= s.scores.length) return state2;
+          s.scores[arg] += cell.value;
+          s.awarded++;
+        }
+        s.used[s.cell]++;
+        s.cell = -1;
+        s.revealed = false;
+        s.phase = spent(board5, s) || reached(board5, s) ? "complete" : "picking";
+      }
+      return s;
+    }
+    function scores(board5, s) {
+      return board5.participants.map(function(name, i) {
+        return { name, score: s.scores[i] || 0 };
+      });
+    }
+    function winner(board5, s) {
+      var top = leaders(board5, s);
+      if (!top.length) return "Nobody scored.";
+      var names = top.map(function(i) {
+        return board5.participants[i];
+      });
+      if (board5.participants.length === 1) {
+        return s.scores[0] >= board5.target ? "Target reached — " + s.scores[0] + " points." : "The board is empty on " + s.scores[0] + " of " + board5.target + ".";
+      }
+      return names.length === 1 ? names[0] + " wins on " + s.scores[top[0]] + "." : "A tie on " + s.scores[top[0]] + ": " + names.join(" & ");
+    }
+    function render2(pad, slide, opts) {
+      opts = opts || {};
+      var b = slide.bowlBoard, s = opts.bowlState || create(b);
+      var command2 = opts.bowlCommand;
+      var el = SF.el;
+      pad.replaceChildren();
+      function button(text3, action, cls, arg) {
+        var node = el("button", "bowl-button " + (cls || ""), text3);
+        node.type = "button";
+        node.disabled = !command2;
+        node.dataset.bowlAction = action;
+        if (arg != null) node.dataset.bowlArg = String(arg);
+        if (command2) node.onclick = function() {
+          command2(action, arg);
+        };
+        return node;
+      }
+      var head = el("header", "bowl-head");
+      var identity = el("div");
+      identity.appendChild(el("div", "bowl-eyebrow", "QUIZ BOWL / FIRST TO " + b.target));
+      identity.appendChild(el("h2", "bowl-name", slide.title));
+      head.appendChild(identity);
+      var count = el("div", "bowl-count");
+      count.appendChild(el("span", null, s.phase === "ready" ? "READY" : s.phase === "complete" ? "FINISHED" : s.phase === "asking" ? "ON A CELL" : "CHOOSE"));
+      var left = b.cells.reduce(function(n, cell, i) {
+        return n + Math.max(0, cell.questions.length - s.used[i]);
+      }, 0);
+      count.appendChild(el("strong", null, left + " left"));
+      head.appendChild(count);
+      pad.appendChild(head);
+      if (s.phase === "asking" && s.cell > -1) {
+        var q = pending(b, s, s.cell);
+        var cellNow = b.cells[s.cell];
+        var ask = el("div", "bowl-ask");
+        ask.appendChild(el("div", "bowl-eyebrow", cellNow.category.toUpperCase() + " · " + cellNow.value));
+        var text2 = q ? q.question : "";
+        var qEl = el("p", "bowl-question", text2);
+        qEl.dataset.len = text2.length > 150 ? "xl" : text2.length > 80 ? "lg" : "md";
+        ask.appendChild(qEl);
+        if (s.revealed) {
+          var reveal = el("div", "bowl-answer");
+          reveal.appendChild(el("span", "bowl-eyebrow", "THE ANSWER"));
+          reveal.appendChild(el("strong", null, q ? q.answer : ""));
+          ask.appendChild(reveal);
+        } else {
+          ask.appendChild(el("p", "bowl-hint", "Take an answer from the room, then reveal."));
+        }
+        pad.appendChild(ask);
+      } else {
+        var grid = el("div", "bowl-grid");
+        grid.style.gridTemplateColumns = "repeat(" + Math.max(1, b.categories.length) + ", minmax(0, 1fr))";
+        b.categories.forEach(function(name) {
+          grid.appendChild(el("div", "bowl-category", name));
+        });
+        b.cells.forEach(function(cell, i) {
+          var waiting = Math.max(0, cell.questions.length - s.used[i]);
+          if (!waiting) {
+            grid.appendChild(el("div", "bowl-cell is-spent", "·"));
+            return;
+          }
+          var node = button(String(cell.value), "pick", "bowl-cell", i);
+          node.classList.remove("bowl-button");
+          node.classList.add("bowl-cell");
+          node.disabled = !command2 || s.phase !== "picking" || s.paused;
+          node.setAttribute("aria-label", cell.category + ", " + cell.value + " points");
+          if (waiting > 1) node.appendChild(el("span", "bowl-stack", "×" + waiting));
+          grid.appendChild(node);
+        });
+        pad.appendChild(grid);
+      }
+      var tally = el("div", "bowl-tally");
+      tally.classList.toggle("many", b.participants.length > 3);
+      scores(b, s).forEach(function(row, i) {
+        var box2 = el("section", "bowl-team" + (s.phase === "complete" && leaders(b, s).indexOf(i) > -1 ? " won" : ""));
+        var line = el("div", "bowl-team-head");
+        line.appendChild(el("strong", null, row.name));
+        line.appendChild(el("span", "bowl-score", String(row.score)));
+        box2.appendChild(line);
+        if (command2 && s.phase === "asking" && s.revealed) {
+          box2.appendChild(button("+ " + b.cells[s.cell].value, "award", "primary", i));
+        }
+        tally.appendChild(box2);
+      });
+      pad.appendChild(tally);
+      var foot = el("div", "bowl-foot");
+      var status = el("div", "bowl-status");
+      status.setAttribute("aria-live", "polite");
+      status.appendChild(el("strong", null, s.paused ? "Paused." : s.phase === "ready" ? "Pick a category and a value to begin." : s.phase === "complete" ? winner(b, s) : s.phase === "asking" ? s.revealed ? "Who answered it?" : "Read it out and take an answer." : "Choose an unused cell."));
+      status.appendChild(el("span", null, s.phase === "complete" ? s.asked + " cells opened · " + s.awarded + " awarded" : "Correct scores the cell value · a cell is spent either way · first to " + b.target));
+      foot.appendChild(status);
+      var actions = el("div", "bowl-actions");
+      if (s.phase === "ready") actions.appendChild(button("Open the board →", "start", "primary"));
+      if (s.phase === "asking") {
+        if (!s.revealed) actions.appendChild(button("Reveal the answer", "reveal", "primary"));
+        else actions.appendChild(button("Nobody scored", "noScore"));
+      }
+      if (s.phase === "picking" || s.phase === "asking") {
+        actions.appendChild(button(s.paused ? "Resume" : "Pause", "pause"));
+      }
+      if (s.phase === "complete") actions.appendChild(button("Play this board again", "restart", "primary"));
+      foot.appendChild(actions);
+      pad.appendChild(foot);
+    }
+    function command(action, arg) {
+      if (!active2) return;
+      var board5 = active2.slide.bowlBoard;
+      var before = active2.player.bowlStates[active2.slide.id];
+      var after = transition(board5, before, action, arg);
+      active2.player.bowlStates[active2.slide.id] = after;
+      if ((action === "award" || action === "noScore") && before.cell > -1 && after.cell === -1 && SF.Bowl.onVerdict) {
+        var cell = board5.cells[before.cell];
+        var q = pending(board5, before, before.cell);
+        SF.Bowl.onVerdict({
+          slideId: active2.slide.id,
+          title: active2.slide.title,
+          kind: "bowl",
+          set: 1,
+          card: before.cell,
+          term: cell.category + " " + cell.value + " — " + (q ? q.question : ""),
+          participant: action === "award" && board5.participants.length > 1 ? board5.participants[arg] : null,
+          right: action === "award",
+          value: action === "award" ? cell.value : 0
+        });
+      }
+      active2.paint(true);
+    }
+    function mount(player, slide, node) {
+      unmount();
+      var session = SF.Boards.createSession("bowl", {
+        player,
+        slide,
+        node,
+        create,
+        render: render2,
+        command,
+        interval: 1e3,
+        tick: function(session2, dt) {
+          var s = player.bowlStates[slide.id];
+          if (s.phase === "ready" || s.phase === "complete") return;
+          s.elapsed += dt;
+        }
+      });
+      active2 = session;
+      session.start();
+    }
+    function unmount() {
+      if (!active2) return;
+      active2.stop();
+      active2 = null;
+    }
+    SF.Bowl = {
+      onVerdict: null,
+      create,
+      transition,
+      pending,
+      spent,
+      scores,
+      winner,
+      leaders,
+      render: render2,
+      mount,
+      unmount,
+      command
+    };
+  }
+
+  // src/boards/runtimes/memory.js
+  function installMemory(SF) {
+    var active2 = null;
+    function create(board5) {
+      return {
+        phase: "ready",
+        selected: -1,
+        revealed: false,
+        turn: 0,
+        owners: board5.pairs.map(function() {
+          return null;
+        }),
+        remaining: board5.studySeconds,
+        paused: false,
+        elapsed: 0,
+        attempts: 0
+      };
+    }
+    function transition(board5, state2, action, card) {
+      var s = Object.assign({}, state2, { owners: state2.owners.slice() });
+      if (action === "restart") return create(board5);
+      if (action === "start" && s.phase === "ready") {
+        s.phase = board5.kind === "knowledgeflip" || !s.remaining ? "recall" : "study";
+      } else if (action === "hide" && s.phase === "study") {
+        s.phase = "recall";
+        s.remaining = 0;
+        s.paused = false;
+      } else if (action === "pause" && (s.phase === "study" || s.phase === "recall")) {
+        s.paused = !s.paused;
+      } else if (action === "select" && s.phase === "recall" && !s.paused && s.selected === -1 && Number.isInteger(card) && card >= 0 && card < s.owners.length && s.owners[card] === null) {
+        s.selected = card;
+        s.revealed = false;
+      } else if (action === "reveal" && s.phase === "recall" && !s.paused && s.selected !== -1) {
+        s.revealed = true;
+      } else if ((action === "claim" || action === "pass") && s.phase === "recall" && !s.paused && s.selected !== -1 && (action === "pass" || s.revealed)) {
+        if (action === "claim") s.owners[s.selected] = s.turn;
+        s.attempts++;
+        s.selected = -1;
+        s.revealed = false;
+        s.turn = (s.turn + 1) % Math.max(1, board5.participants.length);
+        if (s.owners.every(function(owner) {
+          return owner !== null;
+        })) s.phase = "complete";
+      }
+      return s;
+    }
+    function scores(board5, s) {
+      return board5.participants.map(function(name, i) {
+        return { name, score: s.owners.filter(function(owner) {
+          return owner === i;
+        }).length };
+      });
+    }
+    function winner(board5, s) {
+      var rows2 = scores(board5, s), max = Math.max.apply(null, rows2.map(function(r) {
+        return r.score;
+      }));
+      var names = rows2.filter(function(r) {
+        return r.score === max;
+      }).map(function(r) {
+        return r.name;
+      });
+      if (rows2.length === 1) return "Every pair remembered.";
+      return names.length === 1 ? names[0] + " wins this set." : "Shared win: " + names.join(" & ");
+    }
+    function render2(pad, slide, opts) {
+      opts = opts || {};
+      var b = slide.memoryBoard, s = opts.memoryState || create(b), preview = !opts.memoryState;
+      var command2 = opts.memoryCommand;
+      var el = SF.el;
+      pad.replaceChildren();
+      function button(text2, action, cls, card) {
+        var node = el("button", "mem-button " + (cls || ""), text2);
+        node.type = "button";
+        node.disabled = !command2;
+        node.dataset.memoryAction = action;
+        if (card != null) node.dataset.memoryCard = String(card);
+        if (command2) node.onclick = function() {
+          command2(action, card);
+        };
+        return node;
+      }
+      var head = el("header", "mem-header");
+      var titles = { memorymatch: "MEMORY MATCH", memoryflip: "MEMORY FLIP", knowledgeflip: "KNOWLEDGE FLIP" };
+      var identity = el("div");
+      identity.appendChild(el("div", "mem-eyebrow", titles[b.kind] + " / SET " + b.set + " OF " + b.sets));
+      identity.appendChild(el("h2", "mem-title", slide.title));
+      head.appendChild(identity);
+      var clock = el("div", "mem-clock");
+      clock.appendChild(el("span", null, s.phase === "ready" ? "READY" : s.phase === "study" ? "STUDY" : s.phase === "complete" ? "FINISHED" : "RECALL"));
+      clock.appendChild(el("strong", "mem-time", s.phase === "study" ? Math.ceil(s.remaining) + "s" : Math.floor(s.elapsed / 60) + ":" + String(Math.floor(s.elapsed % 60)).padStart(2, "0")));
+      head.appendChild(clock);
+      pad.appendChild(head);
+      var progress = el("div", "mem-progress");
+      ["1 · Study", "2 · Recall", "3 · Collect"].forEach(function(label, i) {
+        if (b.kind === "knowledgeflip" && i === 0) label = "1 · Choose";
+        var current = s.phase === "ready" || s.phase === "study" ? 0 : s.phase === "complete" ? 2 : 1;
+        progress.appendChild(el("span", i <= current ? "on" : "", label));
+      });
+      progress.appendChild(el("strong", null, s.owners.filter(function(o) {
+        return o !== null;
+      }).length + " / " + b.pairs.length + " collected"));
+      pad.appendChild(progress);
+      var allVisible = preview || s.phase === "study" || s.phase === "complete";
+      if (b.kind === "knowledgeflip") allVisible = s.phase === "complete";
+      var grid = el("div", "mem-grid");
+      grid.classList.toggle("mem-grid-small", b.pairs.length <= 4);
+      grid.classList.toggle("mem-grid-knowledge", b.kind === "knowledgeflip");
+      b.pairs.forEach(function(pair, i) {
+        var owned = s.owners[i] !== null, selected = s.selected === i;
+        var face = allVisible || owned || selected || b.kind === "knowledgeflip";
+        var card = button("", "select", "mem-card" + (face ? " face-up" : " face-down") + (owned ? " collected" : "") + (selected ? " selected" : "") + (b.kind === "knowledgeflip" ? " knowledge" : ""), i);
+        card.classList.toggle("dense", pair.term.length > 35 || pair.definition.length > 150);
+        card.disabled = !command2 || s.phase !== "recall" || s.paused || owned || s.selected !== -1;
+        card.setAttribute("aria-label", face ? pair.term + (owned ? ", collected" : "") : "Choose card " + (i + 1));
+        card.appendChild(el("span", "mem-card-number", String(i + 1).padStart(2, "0")));
+        if (face) {
+          card.appendChild(el("strong", "mem-term", pair.term));
+          if (allVisible) card.appendChild(el("span", "mem-definition", pair.definition));
+          else if (owned) card.appendChild(el("span", "mem-owner", "✓ " + b.participants[s.owners[i]]));
+          else card.appendChild(el(
+            "span",
+            "mem-card-prompt",
+            selected ? "Explain it aloud" : "Choose & explain"
+          ));
+        } else {
+          card.appendChild(el("span", "mem-symbol", "✳"));
+          card.appendChild(el("span", "mem-card-prompt", "What do you remember?"));
+        }
+        grid.appendChild(card);
+      });
+      pad.appendChild(grid);
+      var bottom = el("div", "mem-bottom");
+      var status = el("div", "mem-status");
+      status.setAttribute("aria-live", "polite");
+      var caption = s.paused ? "Paused. Take a moment." : s.phase === "ready" ? b.kind === "knowledgeflip" ? "Keywords stay on the board. Choose one, explain it, then collect the card." : "Ready? Study the whole set, then recall from the hidden cards." : s.phase === "study" ? "Make a connection between each term and its meaning." : s.phase === "complete" ? winner(b, s) : s.selected < 0 ? b.participants[s.turn] + " — choose a keyword." : b.participants[s.turn] + " — explain “" + b.pairs[s.selected].term + "”.";
+      status.appendChild(el("strong", null, caption));
+      status.appendChild(el("span", null, s.phase === "complete" ? s.attempts + " attempts · " + b.pairs.length + " cards collected" : b.kind === "knowledgeflip" ? b.participants.length > 1 ? "No study timer · 1 point per claim · turns rotate · misses can be retried" : "No study timer · explain aloud · teacher checks · misses can be retried" : b.participants.length > 1 ? "1 point per claim · turns rotate after a claim or pass · misses can be retried" : "One class collection · explain aloud · teacher checks · misses can be retried"));
+      bottom.appendChild(status);
+      var actions = el("div", "mem-actions");
+      if (s.phase === "ready") actions.appendChild(button(b.kind === "knowledgeflip" ? "Open the board →" : "Start studying →", "start", "primary"));
+      if (s.phase === "study") actions.appendChild(button("Ready to recall →", "hide", "primary"));
+      if (s.phase === "study" || s.phase === "recall") actions.appendChild(button(s.paused ? "Resume" : "Pause", "pause"));
+      if (s.phase === "complete") actions.appendChild(button("Play this set again", "restart", "primary"));
+      if (s.selected !== -1 && s.phase === "recall" && !s.paused) {
+        var check = el("div", "mem-check");
+        check.setAttribute("role", "group");
+        check.setAttribute("aria-label", "Check this claim");
+        check.appendChild(el(
+          "div",
+          "mem-eyebrow",
+          b.kind === "knowledgeflip" ? "EXPLAIN FIRST · THEN CHECK" : "SAY IT FIRST · THEN CHECK"
+        ));
+        check.appendChild(el("h3", null, b.pairs[s.selected].term));
+        check.appendChild(el("p", null, s.revealed ? b.pairs[s.selected].definition : "Explain the meaning before revealing the definition."));
+        var verdicts = el("div", "mem-actions");
+        if (!s.revealed) verdicts.appendChild(button("Reveal definition", "reveal", "primary"));
+        else verdicts.appendChild(button("✓ Claim card · +1", "claim", "primary"));
+        verdicts.appendChild(button(s.revealed ? "Try again next turn" : "Pass this turn", "pass"));
+        check.appendChild(verdicts);
+        pad.appendChild(check);
+      }
+      bottom.appendChild(actions);
+      pad.appendChild(bottom);
+      if (s.phase === "complete") {
+        var tally = el("div", "mem-tally");
+        scores(b, s).forEach(function(row) {
+          tally.appendChild(el("span", null, row.name + " · " + row.score));
+        });
+        bottom.appendChild(tally);
+      }
+    }
+    function command(action, card) {
+      if (!active2) return;
+      active2.tick();
+      var board5 = active2.slide.memoryBoard;
+      var before = active2.player.memoryStates[active2.slide.id];
+      var after = transition(board5, before, action, card);
+      active2.player.memoryStates[active2.slide.id] = after;
+      if ((action === "claim" || action === "pass") && before.selected !== -1 && after.selected === -1 && SF.Memory.onVerdict) {
+        var pair = board5.pairs[before.selected];
+        SF.Memory.onVerdict({
+          slideId: active2.slide.id,
+          title: active2.slide.title,
+          kind: board5.kind,
+          set: board5.set,
+          card: before.selected,
+          term: pair.term,
+          participant: board5.participants.length > 1 ? board5.participants[before.turn] : null,
+          right: action === "claim"
+        });
+      }
+      active2.paint(true);
+    }
+    function mount(player, slide, node) {
+      unmount();
+      var session = SF.Boards.createSession("memory", {
+        player,
+        slide,
+        node,
+        create,
+        render: render2,
+        command,
+        interval: 1e3,
+        tick: function(session2, dt) {
+          var s = player.memoryStates[slide.id];
+          if (s.phase === "study") {
+            s.remaining = Math.max(0, s.remaining - dt);
+            if (!s.remaining) {
+              player.memoryStates[slide.id] = transition(slide.memoryBoard, s, "hide");
+              session2.paint(false);
+              return;
+            }
+          } else if (s.phase === "recall") s.elapsed += dt;
+          else return;
+          return true;
+        }
+      });
+      active2 = session;
+      session.start();
+    }
+    function unmount() {
+      if (!active2) return;
+      active2.stop();
+      active2 = null;
+    }
+    SF.Memory = {
+      onVerdict: null,
+      create,
+      transition,
+      scores,
+      winner,
+      render: render2,
+      mount,
+      unmount,
+      command
+    };
+  }
+
+  // src/boards/runtimes/lowstakes.js
+  function installLowStakes(SF) {
+    var active2 = null;
+    function create(board5) {
+      return {
+        phase: "ready",
+        remaining: Math.max(0, Number(board5.timeLimit) || 0),
+        paused: false,
+        elapsed: 0
+      };
+    }
+    function transition(board5, state2, action) {
+      var s = Object.assign({}, state2);
+      if (action === "restart") return create(board5);
+      if (action === "start" && s.phase === "ready") {
+        s.phase = "quiz";
+        s.remaining = Math.max(0, Number(board5.timeLimit) || 0);
+        s.paused = false;
+        s.elapsed = 0;
+      } else if (action === "pause" && s.phase === "quiz") {
+        s.paused = !s.paused;
+      } else if (action === "reveal" && (s.phase === "quiz" || s.phase === "ready")) {
+        s.phase = "answers";
+        s.paused = false;
+        s.remaining = 0;
+      } else if (action === "finish" && s.phase === "answers") {
+        s.phase = "complete";
+      } else if (action === "expire" && s.phase === "quiz") {
+        s.phase = "answers";
+        s.paused = false;
+        s.remaining = 0;
+      }
+      return s;
+    }
+    function formatClock(seconds) {
+      var n = Math.max(0, Math.ceil(seconds));
+      var m = Math.floor(n / 60);
+      var s = n % 60;
+      return m + ":" + String(s).padStart(2, "0");
+    }
+    function render2(pad, slide, opts) {
+      opts = opts || {};
+      var b = slide.lowstakesBoard;
+      var s = opts.lowstakesState || create(b);
+      var preview = !opts.lowstakesState;
+      var command2 = opts.lowstakesCommand;
+      var el = SF.el;
+      pad.replaceChildren();
+      ["phase-ready", "phase-quiz", "phase-answers", "phase-complete", "is-paused", "is-preview"].forEach(function(c) {
+        pad.classList.remove(c);
+      });
+      pad.classList.add("phase-" + s.phase);
+      if (s.paused) pad.classList.add("is-paused");
+      if (preview) pad.classList.add("is-preview");
+      function button(text2, action, cls) {
+        var node = el("button", "lsq-button " + (cls || ""), text2);
+        node.type = "button";
+        node.disabled = !command2;
+        node.dataset.lowstakesAction = action;
+        if (command2) node.onclick = function() {
+          command2(action);
+        };
+        return node;
+      }
+      var head = el("header", "lsq-header");
+      var identity = el("div");
+      identity.appendChild(el("div", "lsq-eyebrow", "LOW-STAKES QUIZ · NO NOTES — RETRIEVAL"));
+      identity.appendChild(el("h2", "lsq-title", slide.title));
+      head.appendChild(identity);
+      var clock = el("div", "lsq-clock");
+      var clockLabel = s.phase === "ready" ? "READY" : s.phase === "quiz" ? s.paused ? "PAUSED" : "QUIZ" : s.phase === "answers" ? "REVEAL" : "DONE";
+      clock.appendChild(el("span", null, clockLabel));
+      clock.appendChild(el(
+        "strong",
+        "lsq-time",
+        s.phase === "quiz" ? formatClock(s.remaining) : s.phase === "ready" ? formatClock(b.timeLimit) : formatClock(s.elapsed)
+      ));
+      head.appendChild(clock);
+      pad.appendChild(head);
+      var progress = el("div", "lsq-progress");
+      ["1 · Ready", "2 · Write", "3 · Reveal"].forEach(function(label, i) {
+        var current = s.phase === "ready" ? 0 : s.phase === "quiz" ? 1 : 2;
+        progress.appendChild(el("span", i <= current ? "on" : "", label));
+      });
+      progress.appendChild(el(
+        "strong",
+        null,
+        b.items.filter(function(item) {
+          return !item.gap;
+        }).length + " ready · no scoreboard"
+      ));
+      pad.appendChild(progress);
+      var showAnswers = preview || s.phase === "answers" || s.phase === "complete";
+      var readyCount = b.items.filter(function(item) {
+        return !item.gap;
+      }).length;
+      var list = el("ol", "lsq-list" + (showAnswers ? " revealed" : ""));
+      b.items.forEach(function(item, i) {
+        var row = el("li", "lsq-item" + (item.gap ? " is-gap" : ""));
+        row.appendChild(el("span", "lsq-num", String(i + 1).padStart(2, "0")));
+        var body = el("div", "lsq-body");
+        if (item.gap === "question") {
+          body.appendChild(el("p", "lsq-gap", "Needs a question"));
+          body.appendChild(el("p", "lsq-prompt", "Fill this row in Quiz studio before you play"));
+        } else if (item.gap === "answer") {
+          body.appendChild(el("p", "lsq-question", item.question));
+          body.appendChild(el("p", "lsq-gap", "Needs an answer for the reveal"));
+        } else {
+          body.appendChild(el("p", "lsq-question", item.question));
+          if (showAnswers) {
+            body.appendChild(el("p", "lsq-answer", item.answer));
+          } else {
+            body.appendChild(el("p", "lsq-prompt", "Write your answer on paper · no notes"));
+          }
+        }
+        row.appendChild(body);
+        list.appendChild(row);
+      });
+      if (!b.items.length) {
+        var empty = el("li", "lsq-item is-gap");
+        empty.appendChild(el("span", "lsq-num", "—"));
+        var emptyBody = el("div", "lsq-body");
+        emptyBody.appendChild(el("p", "lsq-gap", "Needs questions"));
+        emptyBody.appendChild(el("p", "lsq-prompt", "Add at least three question–answer pairs in Quiz studio"));
+        empty.appendChild(emptyBody);
+        list.appendChild(empty);
+      }
+      pad.appendChild(list);
+      var bottom = el("div", "lsq-bottom");
+      var status = el("div", "lsq-status");
+      status.setAttribute("aria-live", "polite");
+      var caption = s.paused ? "Paused. Resume when the room is ready." : s.phase === "ready" ? "Questions stay on the board. Answers stay hidden until time is up." : s.phase === "quiz" ? "Retrieval in progress — no notes, no phones scoring this round." : s.phase === "answers" ? "Discuss answers together before moving on." : "Retrieval complete. Replay resets the clock.";
+      status.appendChild(el("strong", null, caption));
+      status.appendChild(el(
+        "span",
+        null,
+        readyCount + " of " + b.items.length + " ready · " + formatClock(b.timeLimit) + " quiz · paper answers · no points"
+      ));
+      bottom.appendChild(status);
+      var actions = el("div", "lsq-actions");
+      if (s.phase === "ready") {
+        actions.appendChild(button("Start the quiz →", "start", "primary"));
+        actions.appendChild(button("Reveal answers now", "reveal"));
+      }
+      if (s.phase === "quiz") {
+        actions.appendChild(button(s.paused ? "Resume" : "Pause", "pause"));
+        actions.appendChild(button("Reveal answers →", "reveal", "primary"));
+      }
+      if (s.phase === "answers") {
+        actions.appendChild(button("Finish", "finish", "primary"));
+        actions.appendChild(button("Play again", "restart"));
+      }
+      if (s.phase === "complete") {
+        actions.appendChild(button("Play this quiz again", "restart", "primary"));
+      }
+      bottom.appendChild(actions);
+      pad.appendChild(bottom);
+    }
+    function command(action) {
+      if (!active2) return;
+      active2.tick();
+      var board5 = active2.slide.lowstakesBoard;
+      var before = active2.player.lowstakesStates[active2.slide.id];
+      var after = transition(board5, before, action);
+      active2.player.lowstakesStates[active2.slide.id] = after;
+      if (action === "reveal" || action === "expire") {
+        if (SF.LowStakes.onReveal) {
+          SF.LowStakes.onReveal({
+            slideId: active2.slide.id,
+            title: active2.slide.title,
+            count: board5.items.filter(function(item) {
+              return !item.gap;
+            }).length,
+            early: action === "reveal" && before.phase === "quiz" && before.remaining > 0
+          });
+        }
+      }
+      active2.paint(true);
+    }
+    function mount(player, slide, node) {
+      unmount();
+      var session = SF.Boards.createSession("lowstakes", {
+        player,
+        slide,
+        node,
+        create,
+        render: render2,
+        command,
+        interval: 250,
+        tick: function(session2, dt) {
+          var s = player.lowstakesStates[slide.id];
+          if (s.phase === "quiz") {
+            s.remaining = Math.max(0, s.remaining - dt);
+            s.elapsed += dt;
+            if (!s.remaining) {
+              player.lowstakesStates[slide.id] = transition(slide.lowstakesBoard, s, "expire");
+              if (SF.LowStakes.onReveal) {
+                SF.LowStakes.onReveal({
+                  slideId: slide.id,
+                  title: slide.title,
+                  count: slide.lowstakesBoard.items.filter(function(item) {
+                    return !item.gap;
+                  }).length,
+                  early: false
+                });
+              }
+              session2.paint(false);
+              return;
+            }
+          } else {
+            return;
+          }
+          return true;
+        }
+      });
+      active2 = session;
+      session.start();
+    }
+    function unmount() {
+      if (!active2) return;
+      active2.stop();
+      active2 = null;
+    }
+    SF.LowStakes = {
+      create,
+      transition,
+      render: render2,
+      mount,
+      unmount,
+      command,
+      formatClock,
+      onReveal: null
+    };
+  }
+
+  // src/boards/runtimes/boss.js
+  function installBoss(SF) {
+    function create(questions, participants, seconds) {
+      var qs = (questions || []).map(function(q, i) {
+        return {
+          id: q.id || "q" + i,
+          damage: Math.max(0, Number(q.bossDamage) || SF.bossDamage(q.difficulty) || 0),
+          difficulty: q.difficulty || "medium",
+          /* A question with nothing to ask is still a square on the board — it
+             is named as missing rather than quietly skipped. */
+          ready: !!(String(q.question || "").trim() && (q.options || []).length)
+        };
+      });
+      var max = Math.max(1, qs.reduce(function(n, q) {
+        return n + q.damage;
+      }, 0));
+      return {
+        phase: "ready",
+        questions: qs,
+        participants: (participants || ["The class"]).slice(),
+        seconds: Math.max(0, Number(seconds) || 0),
+        index: 0,
+        hp: max,
+        max,
+        revealed: false,
+        expired: false,
+        hits: 0,
+        misses: 0,
+        timeouts: 0,
+        marked: [],
+        remaining: Math.max(0, Number(seconds) || 0),
+        dealt: {},
+        log: []
+      };
+    }
+    function turn(s) {
+      if (!s.participants.length) return 0;
+      return s.index % s.participants.length;
+    }
+    function current(s) {
+      return s.questions[s.index] || null;
+    }
+    function isMarked(s) {
+      var q = current(s);
+      return !!(q && (s.marked || []).indexOf(q.id) > -1);
+    }
+    function damageNow(s) {
+      var q = current(s);
+      return q ? q.damage : 0;
+    }
+    function copy(s) {
+      return Object.assign({}, s, {
+        marked: (s.marked || []).slice(),
+        dealt: Object.assign({}, s.dealt),
+        log: s.log.slice(),
+        questions: s.questions.slice(),
+        participants: s.participants.slice()
+      });
+    }
+    function advance(s) {
+      s.marked = (s.marked || []).concat([s.questions[s.index].id]);
+      s.revealed = false;
+      s.expired = false;
+      s.remaining = s.seconds;
+      if (s.hp <= 0) s.phase = "complete";
+      else if (s.marked.length >= s.questions.length) s.phase = "complete";
+      else s.phase = "asking";
+      return s;
+    }
+    function transition(state2, action, arg) {
+      var s = copy(state2);
+      if (action === "restart") return create(state2.questions.map(function(q) {
+        return {
+          id: q.id,
+          bossDamage: q.damage,
+          difficulty: q.difficulty,
+          question: q.ready ? "x" : "",
+          options: q.ready ? [1] : []
+        };
+      }), state2.participants, state2.seconds);
+      if (action === "start" && s.phase === "ready") {
+        s.phase = "asking";
+        s.remaining = s.seconds;
+      } else if (isMarked(s) && (action === "tick" || action === "expire" || action === "reveal" || action === "hit" || action === "miss")) {
+        return s;
+      } else if (action === "tick" && s.phase === "asking" && s.seconds > 0) {
+        s.remaining = Math.max(0, s.remaining - Math.max(0, Number(arg) || 0));
+        if (s.remaining <= 0) {
+          s.phase = "marking";
+          s.revealed = true;
+          s.expired = true;
+        }
+      } else if (action === "expire" && s.phase === "asking") {
+        s.remaining = 0;
+        s.phase = "marking";
+        s.revealed = true;
+        s.expired = true;
+      } else if (action === "reveal" && s.phase === "asking") {
+        s.phase = "marking";
+        s.revealed = true;
+        s.expired = false;
+      } else if (action === "hit" && s.phase === "marking" && !s.expired) {
+        var who = s.participants[turn(s)] || "The class";
+        var dmg = damageNow(s);
+        s.hp = Math.max(0, s.hp - dmg);
+        s.hits++;
+        s.dealt[who] = (s.dealt[who] || 0) + dmg;
+        s.log.push({ index: s.index, who, damage: dmg, hit: true, expired: false });
+        advance(s);
+      } else if (action === "miss" && s.phase === "marking") {
+        var missedBy = s.participants[turn(s)] || "The class";
+        s.misses++;
+        if (s.expired) s.timeouts++;
+        s.log.push({ index: s.index, who: missedBy, damage: 0, hit: false, expired: s.expired });
+        advance(s);
+      }
+      return s;
+    }
+    function defeated(s) {
+      return s.hp <= 0;
+    }
+    function verdict(s) {
+      if (s.phase !== "complete") return "";
+      if (s.hp <= 0) return "The boss is defeated.";
+      return "The boss survived on " + s.hp + " of " + s.max + " HP.";
+    }
+    function standings(s) {
+      return s.participants.map(function(name) {
+        return { name, damage: s.dealt[name] || 0 };
+      }).sort(function(a, b) {
+        return b.damage - a.damage;
+      });
+    }
+    function stage(s) {
+      if (s.hp <= 0) return "defeated";
+      if (s.hp <= s.max * 0.34) return "weak";
+      if (s.hp <= s.max * 0.67) return "hurt";
+      return "full";
+    }
+    var fights = {};
+    function forDeck(deck, questions, participants, seconds) {
+      if (!deck) return null;
+      var key = deck.presenterGameId || deck.id || "deck";
+      if (!questions || !questions.length) return fights[key] || null;
+      var fight = fights[key];
+      if (!fight || fight.questions.length !== questions.length) {
+        fight = fights[key] = create(questions, participants, seconds);
+      }
+      return fight;
+    }
+    function command(deck, action, arg) {
+      var key = deck && (deck.presenterGameId || deck.id || "deck");
+      if (!key || !fights[key]) return null;
+      var before = fights[key];
+      var after = transition(before, action, arg);
+      fights[key] = after;
+      if ((action === "hit" || action === "miss") && after.log.length > before.log.length && SF.Boss.onVerdict) {
+        var entry = after.log[after.log.length - 1];
+        SF.Boss.onVerdict({
+          slideId: (deck.presenterGameId || deck.id || "deck") + ":boss",
+          title: deck.title || "Boss battle",
+          kind: "boss",
+          set: 1,
+          card: entry.index,
+          term: "Q" + (entry.index + 1) + " · " + before.questions[entry.index].difficulty + (entry.expired ? " · out of time" : ""),
+          participant: after.participants.length > 1 ? entry.who : null,
+          right: entry.hit,
+          value: entry.damage
+        });
+      }
+      return after;
+    }
+    function focus(deck, index) {
+      var key = deck && (deck.presenterGameId || deck.id || "deck");
+      var f = key && fights[key];
+      if (!f || !Number.isInteger(index) || index === f.index) return f || null;
+      if (index < 0 || index >= f.questions.length) return f;
+      var q = f.questions[index];
+      var done = !!(q && (f.marked || []).indexOf(q.id) > -1);
+      fights[key] = Object.assign({}, f, {
+        index,
+        /* A different unmarked question is a fresh ask. A marked one stays
+           read-only — reveal/hit/miss are ignored and the UI hides them. */
+        revealed: done,
+        expired: false,
+        remaining: f.seconds,
+        phase: f.phase === "complete" ? "complete" : "asking"
+      });
+      return fights[key];
+    }
+    function clear() {
+      fights = {};
+    }
+    SF.Boss = {
+      onVerdict: null,
+      create,
+      transition,
+      focus,
+      turn,
+      current,
+      isMarked,
+      damageNow,
+      defeated,
+      verdict,
+      standings,
+      stage,
+      forDeck,
+      command,
+      clear
+    };
+  }
+
+  // src/boards/runtimes/race.js
+  function installRace(SF) {
+    function clampLength(n) {
+      return Math.max(3, Math.min(12, Number(n) || 5));
+    }
+    function create(field, length) {
+      return {
+        pos: {},
+        winners: [],
+        moved: [],
+        length: clampLength(length),
+        field: (field || []).map(function(l) {
+          return { key: l.key, name: l.name, color: l.color };
+        })
+      };
+    }
+    function advance(state2, key) {
+      var s = Object.assign({}, state2, {
+        pos: Object.assign({}, state2.pos),
+        winners: state2.winners.slice(),
+        moved: []
+      });
+      if (!s.field.some(function(l) {
+        return l.key === key;
+      })) return state2;
+      var at = s.pos[key] || 0;
+      if (at >= s.length) return s;
+      s.pos[key] = at + 1;
+      s.moved = [key];
+      if (s.pos[key] >= s.length && s.winners.indexOf(key) === -1) s.winners.push(key);
+      return s;
+    }
+    function back(state2, key) {
+      var s = Object.assign({}, state2, {
+        pos: Object.assign({}, state2.pos),
+        winners: state2.winners.filter(function(k) {
+          return k !== key;
+        }),
+        moved: []
+      });
+      s.pos[key] = Math.max(0, (s.pos[key] || 0) - 1);
+      return s;
+    }
+    function reset(state2) {
+      return create(state2.field, state2.length);
+    }
+    function standings(state2) {
+      return state2.field.map(function(l) {
+        return {
+          key: l.key,
+          name: l.name,
+          color: l.color,
+          pos: state2.pos[l.key] || 0,
+          moved: state2.moved.indexOf(l.key) > -1,
+          won: state2.winners.indexOf(l.key) > -1
+        };
+      });
+    }
+    function finished(state2) {
+      return state2.winners.length > 0;
+    }
+    function winner(state2) {
+      if (!state2.winners.length) return "";
+      var names = state2.winners.map(function(k) {
+        var lane = state2.field.filter(function(l) {
+          return l.key === k;
+        })[0];
+        return lane ? lane.name : k;
+      });
+      return names.length === 1 ? names[0] + " is home." : "A dead heat: " + names.join(" & ");
+    }
+    var tracks = {};
+    function forDeck(deck, field) {
+      if (!deck || !field || !field.length) return null;
+      var key = deck.presenterGameId || deck.id || "deck";
+      var track = tracks[key];
+      var sameField = track && track.field.length === field.length && track.field.every(function(l, i) {
+        return l.key === field[i].key;
+      });
+      if (!sameField || track.length !== clampLength(deck.trackLength)) {
+        track = tracks[key] = create(field, deck.trackLength);
+      }
+      return track;
+    }
+    function command(deck, action, key) {
+      var track = deck && tracks[deck.presenterGameId || deck.id || "deck"];
+      if (!track) return null;
+      if (action === "advance") track = advance(track, key);
+      else if (action === "back") track = back(track, key);
+      else if (action === "reset") track = reset(track);
+      tracks[deck.presenterGameId || deck.id || "deck"] = track;
+      return track;
+    }
+    function clear() {
+      tracks = {};
+    }
+    SF.Race = {
+      create,
+      advance,
+      back,
+      reset,
+      standings,
+      finished,
+      winner,
+      forDeck,
+      command,
+      clear
+    };
+  }
+
   // src/render/layout-slots.js
   var region = (col, row, cols, rows2, extra = {}) => ({ col, row, cols, rows: rows2, ...extra });
   var clone = (value) => Object.fromEntries(Object.entries(value || {}).map(([key, value2]) => [key, { ...value2 }]));
@@ -19852,4 +21216,7 @@
     LIBRARY_GROUPS,
     LibraryFolders
   });
+  for (const install of [installBingo, installBowl, installMemory, installLowStakes, installBoss, installRace]) {
+    install(runtime.SF);
+  }
 })();

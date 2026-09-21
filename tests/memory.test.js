@@ -6,7 +6,8 @@ const fs = require('node:fs');
 function load() {
   const ctx = { window: {}, console };
   vm.createContext(ctx);
-  for (const file of ['model', 'memory']) vm.runInContext(fs.readFileSync(require.resolve('../js/' + file + '.js'), 'utf8'), ctx);
+  /* js/memory.js moved into the boards engine; the bundle installs it. */
+  for (const file of ['model']) vm.runInContext(fs.readFileSync(require.resolve('../js/' + file + '.js'), 'utf8'), ctx);
   return ctx.window.SF;
 }
 test('memory games compile complete boards, retain pairs and never send claim quizzes', () => {
