@@ -1,7 +1,22 @@
 /* Six alignment anchors. Defaults belong to the deck; overrides to one slide. */
-(function () {
-  'use strict';
-  var SF = window.SF;
+
+/* Moved out of js/header-footer.js and under the editor. It calls SF.Editor
+ * fourteen times and nothing else outside itself: it is authoring UI, not a
+ * peer of the editor, and it was wearing its own facade only because it was
+ * its own script.
+ *
+ * It installs rather than returns — the whole public surface is the single
+ * SF.HeaderFooterUI assignment at the bottom, unchanged.
+ *
+ * install() runs at the end, as it always did. It builds the panel *detached*
+ * and every SF.* it touches is inside a handler, so running earlier than the
+ * old script tag did cannot reach for a subsystem that has not loaded yet.
+ * drawInspector mounts the panel into the Header & footer pane later.
+ *
+ * This file was not in the tsconfig browser list, so moving it under src/ puts
+ * it beneath the typechecker for the first time.
+ */
+export function installHeaderFooterUI(SF) {
   var open = false, scope = 'deck', selected = 'header-left';
   var panel, fields = {}, warning;
   function deck() { return SF.Editor && SF.Editor.deck(); }
@@ -54,7 +69,18 @@
     fields[name]=input;
   }
   function mount(host) {
-    if (!panel || !host) return;
+    if (!host) return;
+    /* Built on first open, not at load. It used to be built eagerly at the
+       bottom of this file, which was harmless while this was its own script
+       tag: nothing but the browser ever loaded it. Under src/ the editor
+       installs it, and three test sandboxes load js/editor.js with a document
+       stub that has getElementById and nothing else — so building a panel at
+       install time threw on document.createElement before a single assertion
+       ran. Nothing observes the panel before it is mounted, and the
+       previewBox listener install() attaches begins `if (!open) return`, so
+       deferring construction to here changes nothing that can be seen. */
+    if (!panel) install();
+    if (!panel) return;
     host.appendChild(panel);
     open = true;
     refresh();
@@ -79,8 +105,8 @@
     if(document.activeElement!==fields.tagline)fields.tagline.value=deck().closingNote||'';
     if(fields.date&&document.activeElement!==fields.date)fields.date.value=slide().date||'';
     fields.anchor.parentElement.hidden=item.placement!=='canvas';
-    panel.querySelectorAll('[data-hf-choice]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.hfChoice===selected));});
-    if(preview)preview.querySelectorAll('[data-hf-slot]').forEach(function(n){n.toggleAttribute('data-hf-selected',n.dataset.hfSlot===selected);});
+    panel.querySelectorAll('[data-hf-choice]').forEach(function(el){var b=/** @type {HTMLElement} */(el);b.setAttribute('aria-pressed',String(b.dataset.hfChoice===selected));});
+    if(preview)preview.querySelectorAll('[data-hf-slot]').forEach(function(el){var n=/** @type {HTMLElement} */(el);n.toggleAttribute('data-hf-selected',n.dataset.hfSlot===selected);});
     var inherited=scope==='slide'&&!slide().headerFooter;
     warning.textContent=inherited?'Following presentation defaults. Your next edit creates a slide override.':
       scope==='deck'&&slide().headerFooter?'This slide has its own override. Choose This slide and Restore defaults to follow the presentation.':
@@ -188,8 +214,14 @@
        mount() opens this panel. */
     var preview=document.getElementById('previewBox');
     if(preview)preview.addEventListener('click',function(e){
-      if(!open)return;var hit=e.target.closest('[data-hf-slot]');if(!hit)return;
-      selected=hit.dataset.hfSlot;refresh();
+      if(!open)return;
+      /* e.target is EventTarget; only an Element can be inside a slot. */
+      var from=/** @type {Element|null} */(e.target);
+      var hit=from&&from.closest?from.closest('[data-hf-slot]'):null;if(!hit)return;
+      /* hit matched [data-hf-slot], so the attribute is there; the cast says
+         so without the `|| selected` fallback, which would have changed what
+         an empty slot name does. */
+      selected=/** @type {string} */(/** @type {HTMLElement} */(hit).dataset.hfSlot);refresh();
     });
     document.addEventListener('keydown',function(e){if(open&&e.key==='Escape'&&!e.defaultPrevented){setOpen(false);e.preventDefault();}});
   }
@@ -200,5 +232,4 @@
        idempotent — only the canvas outlines and the open flag come off. */
     close:function(){ if(open) setOpen(false); }
   };
-  install();
-})();
+}

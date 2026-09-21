@@ -14,6 +14,11 @@
      because it belongs to this engine, not to the canvas it manipulates. */
   SF.installArrange(SF);
 
+  /* The header and footer slot panel — also authoring UI, also installed by
+     the engine that owns it. It builds its panel detached; drawInspector
+     mounts it into the Header & footer pane. */
+  SF.installHeaderFooterUI(SF);
+
   var el = SF.el;
   /* The four inspector tabs and the Header & footer panel. UI and
      drawContentFields are accessors: the shell assigns UI after this runs, and
