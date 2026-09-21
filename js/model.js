@@ -12569,6 +12569,10 @@
     return s;
   }
   var definition = {
+    /* The most of these a teacher can add. Declared here rather than
+       spelled out twice in js/games.js, where five styles were named in
+       two identical twenty-line blocks. */
+    maxQuestions: 20,
     /* No generic Question field in the editor. Declared here rather than
        named in a list inside js/games.js, where nine styles were spelled
        out to answer a question each of them can answer about itself. */
@@ -12700,6 +12704,15 @@
 
   // src/games/compare.js
   var compare = {
+    /* No Explanation field in the editor. js/games.js worked this out from
+       whether the style had a board engine, with bowl named as the board
+       that does take one and two more named as the non-boards that do
+       not. Declared, the board question stops being a proxy for it. */
+    showsExplanation: false,
+    /* The most of these a teacher can add. Declared here rather than
+       spelled out twice in js/games.js, where five styles were named in
+       two identical twenty-line blocks. */
+    maxQuestions: 10,
     /* No generic Question field in the editor. Declared here rather than
        named in a list inside js/games.js, where nine styles were spelled
        out to answer a question each of them can answer about itself. */
@@ -12838,6 +12851,10 @@
 
   // src/games/oddone.js
   var oddone = {
+    /* The most of these a teacher can add. Declared here rather than
+       spelled out twice in js/games.js, where five styles were named in
+       two identical twenty-line blocks. */
+    maxQuestions: 10,
     /* No generic Question field in the editor. Declared here rather than
        named in a list inside js/games.js, where nine styles were spelled
        out to answer a question each of them can answer about itself. */
@@ -13310,6 +13327,16 @@
   }
   var board = createMemoryBoard();
   var memoryflip = {
+    /* No Explanation field in the editor. js/games.js worked this out from
+       whether the style had a board engine, with bowl named as the board
+       that does take one and two more named as the non-boards that do
+       not. Declared, the board question stops being a proxy for it. */
+    showsExplanation: false,
+    /* Studied as two-sided pairs before they are claimed, which is what
+       knowledgeflip is not — its keywords stand alone. js/games.js asked
+       this twice by naming both styles: once to build the pair bank for
+       the board, once to word the time hint. */
+    studyPairs: true,
     boardEngine: board,
     defaults: {
       "scoreboard": false,
@@ -13349,6 +13376,16 @@
     }
   };
   var memorymatch = {
+    /* No Explanation field in the editor. js/games.js worked this out from
+       whether the style had a board engine, with bowl named as the board
+       that does take one and two more named as the non-boards that do
+       not. Declared, the board question stops being a proxy for it. */
+    showsExplanation: false,
+    /* Studied as two-sided pairs before they are claimed, which is what
+       knowledgeflip is not — its keywords stand alone. js/games.js asked
+       this twice by naming both styles: once to build the pair bank for
+       the board, once to word the time hint. */
+    studyPairs: true,
     boardEngine: board,
     defaults: {
       "mode": "teams",
@@ -13395,6 +13432,11 @@
     }
   };
   var knowledgeflip = {
+    /* No Explanation field in the editor. js/games.js worked this out from
+       whether the style had a board engine, with bowl named as the board
+       that does take one and two more named as the non-boards that do
+       not. Declared, the board question stops being a proxy for it. */
+    showsExplanation: false,
     boardEngine: board,
     defaults: {
       "scoreboard": false,
@@ -13440,6 +13482,10 @@
 
   // src/games/headsup.js
   var headsup = {
+    /* What its per-question countdown is called. These four styles time
+       something other than a question, and js/games.js listed all four
+       to find them and then named three of them again to label them. */
+    timeLabel: "Time per term",
     /* No generic Question field in the editor. Declared here rather than
        named in a list inside js/games.js, where nine styles were spelled
        out to answer a question each of them can answer about itself. */
@@ -13506,6 +13552,10 @@
     return 0;
   }
   var spinexplain = {
+    /* What its per-question countdown is called. These four styles time
+       something other than a question, and js/games.js listed all four
+       to find them and then named three of them again to label them. */
+    timeLabel: "Time per explanation",
     /* No generic Question field in the editor. Declared here rather than
        named in a list inside js/games.js, where nine styles were spelled
        out to answer a question each of them can answer about itself. */
@@ -13566,6 +13616,10 @@
 
   // src/games/connection.js
   var connection = {
+    /* What its per-question countdown is called. These four styles time
+       something other than a question, and js/games.js listed all four
+       to find them and then named three of them again to label them. */
+    timeLabel: "Time per challenge",
     /* No generic Question field in the editor. Declared here rather than
        named in a list inside js/games.js, where nine styles were spelled
        out to answer a question each of them can answer about itself. */
@@ -13655,6 +13709,15 @@
     return CHAIN_TIMES.indexOf(n) > -1 ? n : 45;
   }
   var conceptchain = {
+    /* No Explanation field in the editor. js/games.js worked this out from
+       whether the style had a board engine, with bowl named as the board
+       that does take one and two more named as the non-boards that do
+       not. Declared, the board question stops being a proxy for it. */
+    showsExplanation: false,
+    /* The most of these a teacher can add. Declared here rather than
+       spelled out twice in js/games.js, where five styles were named in
+       two identical twenty-line blocks. */
+    maxQuestions: 10,
     /* No generic Question field in the editor. Declared here rather than
        named in a list inside js/games.js, where nine styles were spelled
        out to answer a question each of them can answer about itself. */
@@ -13729,6 +13792,10 @@
 
   // src/games/randomchallenge.js
   var randomchallenge = {
+    /* What its per-question countdown is called. These four styles time
+       something other than a question, and js/games.js listed all four
+       to find them and then named three of them again to label them. */
+    timeLabel: "Time per challenge",
     /* No generic Question field in the editor. Declared here rather than
        named in a list inside js/games.js, where nine styles were spelled
        out to answer a question each of them can answer about itself. */
@@ -14101,6 +14168,11 @@
   }
   var board2 = createBingoBoard();
   var bingo = {
+    /* No Explanation field in the editor. js/games.js worked this out from
+       whether the style had a board engine, with bowl named as the board
+       that does take one and two more named as the non-boards that do
+       not. Declared, the board question stops being a proxy for it. */
+    showsExplanation: false,
     boardEngine: board2,
     /* Twelve pairs, because a 3×3 card needs nine different terms and a pool
          the same size as the card deals every team an identical one.
@@ -14375,6 +14447,19 @@
   }
   var board3 = createLowstakesBoard({ clampLowstakesSeconds });
   var lowstakes = {
+    /* No Explanation field in the editor. js/games.js decided this by asking
+       whether the style had a board engine, with bowl named as the board
+       that does take one and two more named as the non-boards that do
+       not. Declared, the board question stops being a proxy for it. */
+    showsExplanation: false,
+    /* The most of these a teacher can add. Declared here rather than
+       spelled out twice in js/games.js, where five styles were named in
+       two identical twenty-line blocks. */
+    maxQuestions: 10,
+    /* One countdown for the whole quiz rather than one per question, which
+       is why the rail shows "180s quiz" instead of a per-question timer.
+       js/games.js named the style to decide that. */
+    timesWholeGame: true,
     boardEngine: board3,
     defaults: {
       "scoreboard": false,

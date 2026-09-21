@@ -32,6 +32,11 @@ const board = createBingoBoard();
 
 /** @type {import("../types.js").GameEngine<import("../types.js").QuestionWith<'term'|'definition'|'gridSize'>>} */
 const bingo = {
+  /* No Explanation field in the editor. js/games.js worked this out from
+     whether the style had a board engine, with bowl named as the board
+     that does take one and two more named as the non-boards that do
+     not. Declared, the board question stops being a proxy for it. */
+  showsExplanation: false,
   boardEngine: board,
   /* Twelve pairs, because a 3×3 card needs nine different terms and a pool
      the same size as the card deals every team an identical one.

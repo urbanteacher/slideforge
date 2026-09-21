@@ -37,6 +37,16 @@ const board = createMemoryBoard();
 
 /** @type {import("../types.js").GameEngine} */
 const memoryflip = {
+  /* No Explanation field in the editor. js/games.js worked this out from
+     whether the style had a board engine, with bowl named as the board
+     that does take one and two more named as the non-boards that do
+     not. Declared, the board question stops being a proxy for it. */
+  showsExplanation: false,
+  /* Studied as two-sided pairs before they are claimed, which is what
+     knowledgeflip is not — its keywords stand alone. js/games.js asked
+     this twice by naming both styles: once to build the pair bank for
+     the board, once to word the time hint. */
+  studyPairs: true,
   boardEngine: board,
   defaults: {
     "scoreboard": false,
@@ -74,6 +84,16 @@ const memoryflip = {
 
 /** @type {import("../types.js").GameEngine} */
 const memorymatch = {
+  /* No Explanation field in the editor. js/games.js worked this out from
+     whether the style had a board engine, with bowl named as the board
+     that does take one and two more named as the non-boards that do
+     not. Declared, the board question stops being a proxy for it. */
+  showsExplanation: false,
+  /* Studied as two-sided pairs before they are claimed, which is what
+     knowledgeflip is not — its keywords stand alone. js/games.js asked
+     this twice by naming both styles: once to build the pair bank for
+     the board, once to word the time hint. */
+  studyPairs: true,
   boardEngine: board,
   defaults: {
     "mode": "teams",
@@ -120,6 +140,11 @@ const memorymatch = {
 
 /** @type {import("../types.js").GameEngine} */
 const knowledgeflip = {
+  /* No Explanation field in the editor. js/games.js worked this out from
+     whether the style had a board engine, with bowl named as the board
+     that does take one and two more named as the non-boards that do
+     not. Declared, the board question stops being a proxy for it. */
+  showsExplanation: false,
   boardEngine: board,
   defaults: {
     "scoreboard": false,

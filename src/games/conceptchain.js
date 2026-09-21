@@ -12,6 +12,15 @@ function clampChainSeconds(n) {
 
 /** @type {import("../types.js").GameEngine<import("../types.js").QuestionWith<'term'|'prompt'>>} */
 const conceptchain = {
+  /* No Explanation field in the editor. js/games.js worked this out from
+     whether the style had a board engine, with bowl named as the board
+     that does take one and two more named as the non-boards that do
+     not. Declared, the board question stops being a proxy for it. */
+  showsExplanation: false,
+  /* The most of these a teacher can add. Declared here rather than
+     spelled out twice in js/games.js, where five styles were named in
+     two identical twenty-line blocks. */
+  maxQuestions: 10,
   /* No generic Question field in the editor. Declared here rather than
      named in a list inside js/games.js, where nine styles were spelled
      out to answer a question each of them can answer about itself. */

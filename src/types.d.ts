@@ -635,6 +635,28 @@ export interface GameEngine<Q extends Question = Question> {
    *  it for itself: js/games.js used to name nine of them in a list, which a
    *  new style joins only if somebody remembers it exists. */
   showsQuestion?: boolean;
+  /** The most questions this style accepts. Omitted means no ceiling. The
+   *  message shown at the limit is built from {@link GameEngine.label} and
+   *  the Playbook's own word for one item, so the toast and the button that
+   *  adds one cannot drift apart — they had: the button said "+ Passage" and
+   *  the toast said "at most 20 challenges". */
+  maxQuestions?: number;
+  /** Whether this style studies two-sided pairs before they are claimed.
+   *  True for memory flip and memory match; knowledge flip shares their
+   *  `claim` mechanic but its keywords stand alone, which is why the mechanic
+   *  cannot answer this. */
+  studyPairs?: boolean;
+  /** Whether the editor offers the Explanation field. Omitted means yes.
+   *  Worked out from `boardEngine` before, with bowl named as the board that
+   *  takes one anyway — being a board and having something to explain are
+   *  different questions. */
+  showsExplanation?: boolean;
+  /** What this style's per-question countdown is called, when it times
+   *  something other than a question. Omitted means the generic wording. */
+  timeLabel?: string;
+  /** Whether one countdown covers the whole game rather than each question.
+   *  The rail shows the game's time instead of a per-question timer. */
+  timesWholeGame?: boolean;
 }
 
 /* ---------------------------------------------------------------- boards --*/

@@ -62,6 +62,24 @@
   var activeDemoGame = null;
 
   function q() { return game.questions[sel]; }
+  /* The ceiling on how many a style takes, and the sentence shown at it.
+
+     This was two identical twenty-line blocks naming five styles, one above
+     Add and one above Duplicate. The number is the style's now, and the
+     wording is built from the style's own label and the Playbook's word for
+     one item — the same word the + button uses. That last part fixes a drift
+     rather than only shortening the code: the button read "+ Passage" while
+     the toast read "at most 20 challenges". */
+  function atQuestionLimit() {
+    var style = SF.gameStyle(game.style);
+    var cap = style.maxQuestions;
+    if (!cap || game.questions.length < cap) return false;
+    var one = String(setupUX().item || 'question').toLowerCase();
+    var many = /s$/.test(one) ? one : one + 's';
+    SF.toast(style.label + ' can have at most ' + cap + ' ' + many);
+    return true;
+  }
+
   function setupUX() { return SF.Playbook ? SF.Playbook.setupForGame(game) : { item: 'Question', prompt: 'Question', guidance: '', participation: '', timing: 'question' }; }
   function fixedPoints() { return ['speed', 'boss', 'race', 'order', 'wordreveal', 'headsup', 'spinexplain', 'connection', 'randomchallenge'].indexOf(game.style) !== -1; }
 
@@ -303,7 +321,7 @@
       /* What to say about a question is the style's business — a typed one has
          no options to count, and this used to reach for them regardless. */
       meta.appendChild(el('span', null, style.summary(question)));
-      if (game.style === 'lowstakes') {
+      if (SF.gameStyle(game.style).timesWholeGame) {
         meta.appendChild(el('span', null, (game.settings.defaultTime || 180) + 's quiz'));
       } else {
         meta.appendChild(el('span', null,
@@ -515,7 +533,7 @@
       }) : null,
       trackLength: g.settings.trackLength,
       /* Memory Match board: every pair in the set as face-down tiles. */
-      pairBank: (g.style === 'memorymatch' || g.style === 'memoryflip')
+      pairBank: SF.gameStyle(g.style).studyPairs
         ? g.questions.map(function (qq, qi) {
             return {
               term: qq.term || qq.question || '',
@@ -1078,8 +1096,10 @@
     styleEditor(game.style)(insp, question);
 
     /* Keep explanation with the answers — not buried under image / timing. */
-    if ((!isBoard() || game.style === 'bowl') &&
-        game.style !== 'compare' && game.style !== 'conceptchain') {
+    /* The style says whether it has anything to explain. This read the board
+       flag and then named bowl as the board that takes one anyway, and two
+       non-boards that do not — three names for one question. */
+    if (SF.gameStyle(game.style).showsExplanation !== false) {
       insp.appendChild(UI.field('Explanation — shown after the answer is revealed',
         UI.area(question.explanation, function (v) {
           question.explanation = v; touched(); drawRail();
@@ -1127,7 +1147,7 @@
     /* Per-question countdown and points. */
 
     var timeRow = el('div', 'setrow');
-    var claimStudy = game.style === 'memoryflip' || game.style === 'memorymatch';
+    var claimStudy = !!SF.gameStyle(game.style).studyPairs;
     var timeHint = claimStudy
       ? 'Study time above is the countdown on the slide. Points default to +1 per claim.'
       : SF.gameStyle(game.style).mechanic === 'speed'
@@ -1625,9 +1645,12 @@
         return;
       }
 
-      if (['headsup', 'spinexplain', 'connection', 'randomchallenge'].indexOf(game.style) !== -1) {
+      /* A style that times something other than a question says what to call
+         it, which is also how we know it is one of these. Four styles were
+         listed to find them and three named again to label them. */
+      if (SF.gameStyle(game.style).timeLabel) {
         bodyEl.appendChild(el('p', 'game-setup-cue', setupUX().guidance));
-        bodyEl.appendChild(UI.field(game.style === 'headsup' ? 'Time per term' : game.style === 'spinexplain' ? 'Time per explanation' : 'Time per challenge',
+        bodyEl.appendChild(UI.field(SF.gameStyle(game.style).timeLabel,
           UI.num(st.defaultTime, function (v) {
             st.defaultTime = Math.max(0, Math.min(300, v || 0));
             touched(); drawRail(); drawPreview();
@@ -1886,26 +1909,7 @@
       SF.toast('Complete your existing questions before adding more (maximum 2 incomplete allowed)');
       return;
     }
-    if (game.style === 'lowstakes' && game.questions.length >= 10) {
-      SF.toast('Low-stakes quiz can have at most 10 questions');
-      return;
-    }
-    if (game.style === 'definition' && game.questions.length >= 20) {
-      SF.toast('Definition Challenge can have at most 20 challenges');
-      return;
-    }
-    if (game.style === 'oddone' && game.questions.length >= 10) {
-      SF.toast('Odd One Out can have at most 10 sets');
-      return;
-    }
-    if (game.style === 'compare' && game.questions.length >= 10) {
-      SF.toast('Compare & Contrast can have at most 10 comparisons');
-      return;
-    }
-    if (game.style === 'conceptchain' && game.questions.length >= 10) {
-      SF.toast('Concept Chain can have at most 10 starting concepts');
-      return;
-    }
+    if (atQuestionLimit()) return;
     var fresh = SF.makeQuestion(game.style);
     fresh.question = '';
     if (game.style === 'definition') fresh.passage = '';
@@ -1941,26 +1945,7 @@
       SF.toast('Complete your existing questions before adding more (maximum 2 incomplete allowed)');
       return;
     }
-    if (game.style === 'lowstakes' && game.questions.length >= 10) {
-      SF.toast('Low-stakes quiz can have at most 10 questions');
-      return;
-    }
-    if (game.style === 'definition' && game.questions.length >= 20) {
-      SF.toast('Definition Challenge can have at most 20 challenges');
-      return;
-    }
-    if (game.style === 'oddone' && game.questions.length >= 10) {
-      SF.toast('Odd One Out can have at most 10 sets');
-      return;
-    }
-    if (game.style === 'compare' && game.questions.length >= 10) {
-      SF.toast('Compare & Contrast can have at most 10 comparisons');
-      return;
-    }
-    if (game.style === 'conceptchain' && game.questions.length >= 10) {
-      SF.toast('Concept Chain can have at most 10 starting concepts');
-      return;
-    }
+    if (atQuestionLimit()) return;
     var copy = SF.normalizeQuestion(JSON.parse(JSON.stringify(q())), game.style);
     copy.id = SF.uid();
     game.questions.splice(sel + 1, 0, copy);

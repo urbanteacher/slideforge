@@ -88,3 +88,67 @@ test('a board without its own answer defers to its board engine', () => {
       key + "'s board engine must answer");
   }
 });
+
+/* The members added while pulling enumerations out of js/games.js. Each one
+   replaced a list of style names with a question the style answers. Recorded
+   the same way: the resolved answer for every style, taken from the
+   enumerating version before it was removed. */
+
+const EXPLANATION_HIDDEN = ['bingo', 'compare', 'conceptchain', 'knowledgeflip',
+  'lowstakes', 'memoryflip', 'memorymatch'];
+
+test('the Explanation field is hidden by declaration, not by being a board', () => {
+  const SF = load();
+  const styles = SF.GAME_STYLES;
+  const hidden = Object.keys(styles).filter((k) => styles[k].showsExplanation === false);
+  assert.deepEqual(hidden.sort(), EXPLANATION_HIDDEN,
+    'this was `(!isBoard() || style === "bowl") && style !== "compare" && style !== "conceptchain"`');
+  /* bowl is the point: a board that takes an Explanation anyway, which is why
+     having a board engine could never answer this on its own. */
+  assert.ok(styles.bowl.boardEngine, 'bowl is a board');
+  assert.notEqual(styles.bowl.showsExplanation, false, 'and still takes an Explanation');
+});
+
+test('a style that times something other than a question names it', () => {
+  const SF = load();
+  const styles = SF.GAME_STYLES;
+  const labelled = {};
+  for (const k of Object.keys(styles)) if (styles[k].timeLabel) labelled[k] = styles[k].timeLabel;
+  assert.deepEqual(labelled, {
+    headsup: 'Time per term',
+    spinexplain: 'Time per explanation',
+    connection: 'Time per challenge',
+    randomchallenge: 'Time per challenge'
+  }, 'four styles were listed to find them and three named again to label them');
+});
+
+test('a question ceiling belongs to the style', () => {
+  const SF = load();
+  const styles = SF.GAME_STYLES;
+  const caps = {};
+  for (const k of Object.keys(styles)) if (styles[k].maxQuestions) caps[k] = styles[k].maxQuestions;
+  assert.deepEqual(caps, {
+    lowstakes: 10, definition: 20, oddone: 10, compare: 10, conceptchain: 10
+  }, 'these were two identical twenty-line blocks, above Add and above Duplicate');
+});
+
+test('studying pairs is not the same as the claim mechanic', () => {
+  const SF = load();
+  const styles = SF.GAME_STYLES;
+  const pairs = Object.keys(styles).filter((k) => styles[k].studyPairs).sort();
+  assert.deepEqual(pairs, ['memoryflip', 'memorymatch']);
+  /* knowledgeflip shares `claim` and must stay out: its keywords stand alone,
+     so the mechanic cannot answer this and the styles had to be named. */
+  assert.equal(styles.knowledgeflip.mechanic, 'claim');
+  assert.notEqual(styles.knowledgeflip.studyPairs, true);
+});
+
+test('one style times the whole game, not each question', () => {
+  const SF = load();
+  const styles = SF.GAME_STYLES;
+  const whole = Object.keys(styles).filter((k) => styles[k].timesWholeGame).sort();
+  assert.deepEqual(whole, ['lowstakes'], 'the rail named lowstakes to show "180s quiz"');
+  /* The other timed styles count down per question, so the rail must keep
+     showing their per-question timer rather than the game total. */
+  assert.notEqual(styles.headsup.timesWholeGame, true);
+});
