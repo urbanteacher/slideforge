@@ -8703,11 +8703,13 @@
       touched,
       draw,
       drawInspector,
-      drawRail,
       repaint,
       drawLayoutPicker,
       drawUnusedOnLayout
     } = helpers;
+    const drawRail = function() {
+      return helpers.drawRail.apply(null, arguments);
+    };
     function drawMotion(insp, s) {
       var UI = helpers.UI();
       insp.appendChild(el(

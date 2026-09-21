@@ -39,10 +39,15 @@
      threw "el is not a function" while the other three were fine. */
   var paneSet = SF.createPanes(SF, {
     el: el, touched: touched, draw: draw, drawInspector: drawInspector,
-    drawRail: drawRail, repaint: repaint,
+    repaint: repaint,
     drawLayoutPicker: drawLayoutPicker, drawUnusedOnLayout: drawUnusedOnLayout,
     UI: function () { return UI; },
-    drawContentFields: function () { return drawContentFields; }
+    drawContentFields: function () { return drawContentFields; },
+    /* An accessor, not a value: drawRail became a var assigned from
+       src/editor/rail.js further down this file, so capturing it here
+       captures undefined. The Motion pane's handlers call it, so the
+       whole change handler threw and the pane never redrew. */
+    drawRail: function () { return drawRail.apply(null, arguments); }
   });
   var $ = function (id) { return document.getElementById(id); };
   var UI;

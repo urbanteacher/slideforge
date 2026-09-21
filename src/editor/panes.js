@@ -21,8 +21,10 @@
  * lines below this. Everything else is a function declaration that never moves.
  */
 export function createPanes(SF, helpers) {
-  const {el, touched, draw, drawInspector, drawRail, repaint,
+  const {el, touched, draw, drawInspector, repaint,
          drawLayoutPicker, drawUnusedOnLayout} = helpers;
+  /* Forwarded, not captured — see the note at the seam in js/editor.js. */
+  const drawRail = function () { return helpers.drawRail.apply(null, arguments); };
 
   /* Was the `else if (designPane === 'transition')` arm of drawInspector. */
   function drawMotion(insp, s) {
