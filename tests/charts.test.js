@@ -144,7 +144,7 @@ test('the series legend is an allowlist, not a growing exclusion list', () => {
 
 test('a chart with more rows than it can draw says so', async () => {
   const { TABLE_MAX_ROWS, chartData } = await import('../src/deck/content.js');
-  const customize = fs.readFileSync(path.join(__dirname, '..', 'js', 'customize.js'), 'utf8');
+  const customize = fs.readFileSync(path.join(__dirname, '..', 'src', 'editor', 'customize.js'), 'utf8');
 
   /* The cap is real and silent: chartData reads through parseTable, which
      stops at TABLE_MAX_ROWS including the header. */

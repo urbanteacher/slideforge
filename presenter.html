@@ -504,11 +504,16 @@
 
 <div id="toast"></div>
 
-<script src="js/model.js?v=34"></script>
+<script src="js/model.js?v=47"></script>
 <script src="js/qr.js?v=2"></script>
 <script src="js/ask.js?v=4"></script>
 <script src="js/share.js?v=1"></script>
-<script src="js/customize.js?v=26"></script>
+<script>
+/* customize moved to src/editor/customize.js and ships inside js/model.js.
+   This page has no editor to install it, so it does so itself — it needs
+   SF.Custom.paint and SF.Custom.layout to draw an authored slide. */
+SF.installCustom(SF);
+</script>
 <script src="js/explore.js?v=2"></script>
 <script src="js/chart-motion.js?v=1"></script>
 <script src="js/experiments.js?v=2"></script>

@@ -23,6 +23,11 @@
      SF.Artwork.install() from init(), once every script has run. */
   SF.installArtwork(SF);
 
+  /* The Look pane and editing a block in place on the canvas. Defined here at
+     editor load; js/render.js and src/render/lattice.js reach it at render
+     time, which is the inversion noted in that file's header. */
+  SF.installCustom(SF);
+
   var el = SF.el;
   /* The four inspector tabs and the Header & footer panel. UI and
      drawContentFields are accessors: the shell assigns UI after this runs, and

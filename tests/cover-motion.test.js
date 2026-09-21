@@ -68,7 +68,7 @@ test('the stylesheet paints every name the renderer will accept', () => {
 });
 
 test('the display sizes are named, and every one of them has a scale', () => {
-  const src = fs.readFileSync(require.resolve('../js/customize.js'), 'utf8');
+  const src = fs.readFileSync(require.resolve('../src/editor/customize.js'), 'utf8');
   /* The control and the maths are in different places in the same file, and
      an option with no scale behind it silently means "theme default" — which
      is exactly what "make it huge" used to do. */

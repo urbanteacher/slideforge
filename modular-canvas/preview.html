@@ -89,7 +89,12 @@
 <script src="js/model.js"></script>
 <script src="js/lessons.js"></script>
 <script src="js/render.js"></script>
-<script src="js/customize.js"></script>
+<script>
+/* customize moved to src/editor/customize.js and ships inside js/model.js.
+   This page has no editor to install it, so it does so itself — it needs
+   SF.Custom.paint and SF.Custom.layout to draw an authored slide. */
+SF.installCustom(SF);
+</script>
 <script src="js/review.js"></script>
 <script type="module" src="modular-canvas/demo-deck.js"></script>
 </body>

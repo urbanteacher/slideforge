@@ -1,8 +1,29 @@
 /* Formatting stays separate from plain lesson text: phones and exports never
    receive HTML, and all slide surfaces share the same safe DOM renderer. */
-(function (global) {
-  'use strict';
-  var SF = global.SF;
+
+/* Moved out of js/customize.js and under the editor, the fourth file filed
+ * with the engine that owns it. Of 1,187 lines, 353 are the Look pane and
+ * about 330 more are editing a block in place on the canvas; that is what this
+ * is.
+ *
+ * It installs rather than returns: the public surface is the single SF.Custom
+ * assignment at the bottom, sixteen names, unchanged. Nothing runs at load.
+ *
+ * KNOWN RESIDUE — the canvas calls into here, four times. js/render.js uses
+ * SF.Custom.paint and SF.Custom.layout, and src/render/lattice.js uses paint
+ * twice. Those two functions apply slide.design to a rendered slide, which is
+ * rendering work sitting in an editor file, and filing this here makes the
+ * inversion visible rather than creating it.
+ *
+ * It was left rather than fixed because it does not separate cleanly: paint
+ * and layout are only 106 lines, but they share `color`, `entry` and `value`
+ * with five functions on the editor side. Splitting them out means either
+ * duplicating those helpers, pointing the new module back at this one — the
+ * same inversion with more files — or carving out a third shared module for a
+ * hundred lines. Worth doing only as its own piece of work, with those
+ * helpers as the subject.
+ */
+export function installCustom(SF) {
   var color = function (v) { return /^#[0-9a-f]{6}$/i.test(v || '') ? v : ''; };
   /* The one reader every part of the marks engine goes through, so a new place
      for words has to be taught here and nowhere else. storedText below is the
@@ -1184,4 +1205,4 @@
     });
   }
   SF.Custom={tagControls:tagControls,removeBullet:removeBullet,bind:bind,editCanvasBlock:editCanvasBlock,endInlineEdit:endInlineEdit,inlineEditable:inlineEditable,openCanvasEditor:openCanvasEditor,enableCanvasEditDrag:enableCanvasEditDrag,placeCanvasEditForm:placeCanvasEditForm,canvasEditHost:canvasEditHost,paint:paint,layout:layout,inspector:inspector,rebase:rebase,apply:apply,entry:entry};
-})(window);
+}
