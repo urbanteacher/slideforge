@@ -128,7 +128,7 @@
       const img = document.createElement("img");
       img.className = "ml-photo";
       img.src = imageURL;
-      img.alt = slide.subtitle || slide.title || "Experiment image";
+      img.alt = slide.subtitle || slide.title || "Scene image";
       img.draggable = false;
       img.onerror = () => {
         img.hidden = true;
@@ -2906,8 +2906,8 @@
       }).filter(function(r) {
         return Number.isFinite(r.value);
       });
-      var chart = svg("svg", { viewBox: "0 0 1000 370", role: "img", "aria-label": state2.label || "Visual experiment" }, host);
-      svg("title", {}, chart, (state2.label || "Experiment") + ": " + rows2.map(function(r) {
+      var chart = svg("svg", { viewBox: "0 0 1000 370", role: "img", "aria-label": state2.label || "Predict and compare" }, host);
+      svg("title", {}, chart, (state2.label || "Chart") + ": " + rows2.map(function(r) {
         return r.name + " " + r.value;
       }).join(", "));
       var ink = "currentColor";
@@ -3086,7 +3086,7 @@
       if (staticView && !opts.exploreState) step = c.states.length - 1;
       root.classList.add("experiment-slide", "exploration-slide");
       pad.replaceChildren();
-      node("h2", s.title || "Visual experiment", pad).className = "ve-title";
+      node("h2", s.title || "Predict and compare", pad).className = "ve-title";
       var prompt = node("p", c.prompt, pad);
       prompt.className = "ve-prompt";
       var plot = node("div", "", pad);
@@ -3176,7 +3176,7 @@
     }
     function inspector(parent, s, UI, changed, redraw) {
       var c = config(s);
-      parent.appendChild(UI.field("Experiment", UI.select(Object.keys(presets).map(function(k) {
+      parent.appendChild(UI.field("Demonstration", UI.select(Object.keys(presets).map(function(k) {
         return { value: k, label: presets[k].label };
       }), c.preset, function(v) {
         s.experiment = { preset: v };
@@ -3199,7 +3199,7 @@
       var table = node("textarea");
       table.rows = 7;
       table.value = s.body || presets[c.preset].data;
-      table.setAttribute("aria-label", "Experiment dataset");
+      table.setAttribute("aria-label", "Dataset");
       table.onchange = function() {
         s.body = table.value;
         changed();
@@ -11316,7 +11316,8 @@
       }
       var d = s.design || (s.design = {});
       function choose(label, key, opts2, fallback) {
-        box2.appendChild(UI.field(label, UI.select(opts2.map(function(x) {
+        var meta = SF.DESIGN_CONTROLS && SF.DESIGN_CONTROLS[key];
+        box2.appendChild(UI.field(meta && meta.label || label, UI.select(opts2.map(function(x) {
           return { value: String(x[0]), label: x[1] };
         }), String(d[key] || fallback), function(v) {
           d[key] = key === "imageShare" || key === "capFade" ? Number(v) : v;
@@ -11364,9 +11365,9 @@
       }
       if (SF.MotionLab) {
         if (SF.MotionLab.active(s)) {
-          choose("Experiment style", "motionLook", Object.entries(SF.MotionLab.MOTION_LOOKS), "editorial");
+          choose("Scene style", "motionLook", Object.entries(SF.MotionLab.MOTION_LOOKS), "editorial");
           if (SF.Editor && SF.Editor.imagePickerField) {
-            box2.appendChild(UI.field("Experiment image", SF.Editor.imagePickerField(
+            box2.appendChild(UI.field("Scene image", SF.Editor.imagePickerField(
               function() {
                 return s.image || "";
               },
@@ -11374,7 +11375,7 @@
                 s.image = v ? SF.safeMedia(v) : "";
                 change();
               },
-              { label: "Experiment image" }
+              { label: "Scene image" }
             )));
           } else {
             var sceneImage = document.createElement("input");
@@ -11384,7 +11385,7 @@
               s.image = SF.safeMedia(sceneImage.value);
               change();
             };
-            box2.appendChild(UI.field("Experiment image · URL or asset path", sceneImage));
+            box2.appendChild(UI.field("Scene image · URL or asset path", sceneImage));
           }
           box2.appendChild(SF.el("p", "hint", "Edit points as label, then a tab, then explanation. Up to four points. Present to interact; previews show the complete overview. Scrub uses numeric explanations (1–100)."));
           if (s.motionScene === "cause") {
@@ -13417,7 +13418,7 @@
 
   // src/design-controls.js
   var DESIGN_CONTROLS = {
-    motionLook: { label: "Experiment style", pane: "Look", types: ["motion"], when: "Motion experiment selected", description: "Editorial, layered paper, technical drawing, cinematic depth or comic panels." },
+    motionLook: { label: "Scene style", pane: "Look", types: ["motion"], when: "Animated explainer selected", description: "Editorial, layered paper, technical drawing, cinematic depth or comic panels." },
     chromeLayout: { label: "Header and footer", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], when: "Structured composition", description: "Use named slots for slide furniture. Theme placement preserves the existing design." },
     logoSlot: { label: "Logo position", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], when: "Structured composition with named regions enabled", description: "Move the deck logo to a named slot. Logo visibility still follows the deck settings." },
     identitySlot: { label: "Theme identity position", pane: "Look", types: ["title", "section", "statement", "quote", "content", "cards", "journey", "keyfact", "compare", "iceberg", "sourcecheck", "spectrum"], when: "Structured composition with named regions enabled", description: "Move the theme identity to a named slot, when the theme supplies one." },
@@ -16550,18 +16551,18 @@
       starters: [{ title: "Before / after", blurb: "Two states compared — the second lands on a press." }]
     },
     experiment: {
-      label: "Visual experiment",
+      label: "Predict and compare",
       icon: "◉",
       deck: true,
       group: "show",
-      starters: [{ title: "Visual experiment", blurb: "Predict, reveal and compare editable visual states.", seed: { title: "Same data, different encodings", experiment: { preset: "polling" }, body: "Candidate	Poll A	Poll B	Poll C\n1	17	20	23\n2	18	20	22\n3	20	19	20\n4	22	21	18\n5	23	20	17" } }]
+      starters: [{ title: "Predict and compare", blurb: "Predict, reveal and compare editable visual states.", seed: { title: "Same data, different encodings", experiment: { preset: "polling" }, body: "Candidate	Poll A	Poll B	Poll C\n1	17	20	23\n2	18	20	22\n3	20	19	20\n4	22	21	18\n5	23	20	17" } }]
     },
     /* Ten specimens, each its own row in Add slide. They were a Look control
        once, which put a choice of slide shape in the pane that promises not to
        change your content — and these demand an image and bring a state machine
        with them. A shape belongs where the other shapes are chosen. */
     motion: {
-      label: "Motion experiment",
+      label: "Animated explainer",
       icon: "◈",
       deck: true,
       group: "show",

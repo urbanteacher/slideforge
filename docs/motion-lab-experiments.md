@@ -3,7 +3,7 @@
 Open a fresh factory copy with `?lesson=motion-lab`. Existing saved copies are
 preserved. The new interactive section follows the eight design examples.
 
-On any content slide, select **Look → Motion experiment** and **Experiment
+On any content slide, select **Look → Animated explainer** and **Scene
 style**. Labels and explanations use the existing points, separated by a tab.
 Up to four points are displayed. Image specimens use the image path in Look.
 Present activates controls; static views show a settled overview.

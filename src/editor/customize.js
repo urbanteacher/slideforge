@@ -853,7 +853,14 @@ export function installCustom(SF) {
       var summary=document.createElement('summary'); summary.textContent='Customise this slide'; box.appendChild(summary);
     }
     var d=s.design || (s.design={});
-    function choose(label,key,opts,fallback){box.appendChild(UI.field(label,UI.select(opts.map(function(x){return {value:String(x[0]),label:x[1]};}),String(d[key]||fallback),function(v){d[key]=(key==='imageShare'||key==='capFade')?Number(v):v;change();})));}
+    /* SF.Custom.tagControls joins DESIGN_CONTROLS to rendered fields by
+       matching the label text, so the label here and the one in
+       src/design-controls.js are the same key written twice. Renaming one and
+       not the other makes the control unreachable — not missing, not broken,
+       just untaggable — and only tools/smoke/design-controls.mjs notices.
+       The registry wins when it knows the key; the argument stays as the
+       fallback for anything it does not. */
+    function choose(label,key,opts,fallback){var meta=SF.DESIGN_CONTROLS&&SF.DESIGN_CONTROLS[key];box.appendChild(UI.field((meta&&meta.label)||label,UI.select(opts.map(function(x){return {value:String(x[0]),label:x[1]};}),String(d[key]||fallback),function(v){d[key]=(key==='imageShare'||key==='capFade')?Number(v):v;change();})));}
     var currentDeck = SF.Editor && SF.Editor.deck ? SF.Editor.deck() : null;
     var compositions = SF.compositionOptions ? SF.compositionOptions(s, currentDeck && currentDeck.theme) : [];
     if (compositions.length) {
@@ -887,19 +894,19 @@ export function installCustom(SF) {
          the words it uses — it decides what the slide IS. What is left here is
          the visual treatment over that, which is what this pane is for. */
       if(SF.MotionLab.active(s)){
-        choose('Experiment style','motionLook',Object.entries(SF.MotionLab.MOTION_LOOKS),'editorial');
+        choose('Scene style','motionLook',Object.entries(SF.MotionLab.MOTION_LOOKS),'editorial');
         /* The same picture field the image block uses, rather than a box you
            have to already know a path to type into. The slide says "choose an
            image" and now there is something to choose with. */
         if(SF.Editor&&SF.Editor.imagePickerField){
-          box.appendChild(UI.field('Experiment image',SF.Editor.imagePickerField(
+          box.appendChild(UI.field('Scene image',SF.Editor.imagePickerField(
             function(){return s.image||'';},
             function(v){s.image=v?SF.safeMedia(v):'';change();},
-            {label:'Experiment image'})));
+            {label:'Scene image'})));
         }else{
           var sceneImage=document.createElement('input');sceneImage.type='text';sceneImage.value=s.image||'';
           sceneImage.onchange=function(){s.image=SF.safeMedia(sceneImage.value);change();};
-          box.appendChild(UI.field('Experiment image · URL or asset path',sceneImage));
+          box.appendChild(UI.field('Scene image · URL or asset path',sceneImage));
         }
         box.appendChild(SF.el('p','hint','Edit points as label, then a tab, then explanation. Up to four points. Present to interact; previews show the complete overview. Scrub uses numeric explanations (1–100).'));
         if(s.motionScene==='cause'){

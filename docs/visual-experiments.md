@@ -1,6 +1,9 @@
-# Visual experiments
+# Predict and compare
 
-Choose **Add slide → Visual experiment**. In Design & content choose a preset,
+*Called "Visual experiment" until 2026-09-21; renamed because it is a
+feature, not a trial.*
+
+Choose **Add slide → Predict and compare**. In Design & content choose a preset,
 edit its tab-separated dataset, and author the prediction prompt and state
 explanations. You can change a state's visual, change its axis minimum, remove
 states or add a state. Selecting a different preset replaces its data and states.

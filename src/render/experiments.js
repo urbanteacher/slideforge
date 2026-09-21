@@ -87,8 +87,8 @@ export function installExperiments(SF) {
     var data=SF.chartData(s), series=data.series;
     var current=series[Math.max(0,Math.min(series.length-1,Number(state.series)||0))];
     var rows=data.categories.slice(0,12).map(function(name,i){return {name:name,index:i,value:current&&current.values[i]};}).filter(function(r){return Number.isFinite(r.value);});
-    var chart=svg('svg',{viewBox:'0 0 1000 370',role:'img','aria-label':state.label||'Visual experiment'},host);
-    svg('title',{},chart,(state.label||'Experiment')+': '+rows.map(function(r){return r.name+' '+r.value;}).join(', '));
+    var chart=svg('svg',{viewBox:'0 0 1000 370',role:'img','aria-label':state.label||'Predict and compare'},host);
+    svg('title',{},chart,(state.label||'Chart')+': '+rows.map(function(r){return r.name+' '+r.value;}).join(', '));
     var ink='currentColor';
     function text(x,y,value,size,anchor,key){var attrs={x:x,y:y,fill:ink,'font-size':size||22,'text-anchor':anchor||'start'};if(key)attrs['data-motion']=key;if(typeof value==='number')attrs['data-number']='true';return svg('text',attrs,chart,String(value));}
     function colour(i){return state.mono?'#636363':colours[i%colours.length];}
@@ -180,7 +180,7 @@ export function installExperiments(SF) {
     var lastStep=-1,fromStep=-1,replayToken=opts.exploreState&&opts.exploreState.experimentReplay||0;
     var staticView=opts.interactive===false&&!opts.exploreCommand;
     if(staticView && !opts.exploreState)step=c.states.length-1;
-    root.classList.add('experiment-slide','exploration-slide');pad.replaceChildren();node('h2',s.title||'Visual experiment',pad).className='ve-title';
+    root.classList.add('experiment-slide','exploration-slide');pad.replaceChildren();node('h2',s.title||'Predict and compare',pad).className='ve-title';
     var prompt=node('p',c.prompt,pad);prompt.className='ve-prompt';
     var plot=node('div','',pad);plot.className='ve-plot';
     var controls=node('div','',pad);controls.className='ve-controls';
@@ -212,13 +212,13 @@ export function installExperiments(SF) {
   }
   function inspector(parent,s,UI,changed,redraw){
     var c=config(s);
-    parent.appendChild(UI.field('Experiment',UI.select(Object.keys(presets).map(function(k){return {value:k,label:presets[k].label};}),c.preset,function(v){
+    parent.appendChild(UI.field('Demonstration',UI.select(Object.keys(presets).map(function(k){return {value:k,label:presets[k].label};}),c.preset,function(v){
       s.experiment={preset:v};s.body=presets[v].data;s.chartSource='Illustrative teaching data';redraw();
     })));
     parent.appendChild(UI.field('Title',UI.text(s.title||'',function(v){s.title=v;changed();})));
     parent.appendChild(UI.field('Prediction prompt',UI.text(c.prompt,function(v){s.experiment=Object.assign({},s.experiment,{prompt:v});changed();})));
     parent.appendChild(UI.field('Transformation pace',UI.select([{value:'800',label:'Quick — 0.8 seconds'},{value:'1600',label:'Teaching — 1.6 seconds'},{value:'3000',label:'Slow observation — 3 seconds'}],String(c.duration),function(v){s.experiment=Object.assign({},s.experiment,{duration:Number(v)});changed();})));
-    var table=node('textarea');table.rows=7;table.value=s.body||presets[c.preset].data;table.setAttribute('aria-label','Experiment dataset');
+    var table=node('textarea');table.rows=7;table.value=s.body||presets[c.preset].data;table.setAttribute('aria-label','Dataset');
     table.onchange=function(){s.body=table.value;changed();};parent.appendChild(UI.field('Data: tab-separated headings and values',table));
     parent.appendChild(UI.field('Data source / units',UI.text(s.chartSource||'',function(v){s.chartSource=v;changed();})));
     ['changes','constants','takeaway','caveat'].forEach(function(key){

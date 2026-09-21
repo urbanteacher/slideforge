@@ -571,13 +571,13 @@ var SLIDE_TYPES = {
                               seed: { title: 'Code that writes itself', language: 'python', typewrite: true } }] },
   beforeafter: { label: 'Before / after', icon: '◐', deck: true, group: 'show',
                  starters: [{ title: 'Before / after', blurb: 'Two states compared — the second lands on a press.' }] },
-  experiment: { label: 'Visual experiment', icon: '◉', deck: true, group: 'show',
-                 starters: [{ title: 'Visual experiment', blurb: 'Predict, reveal and compare editable visual states.', seed: {title:'Same data, different encodings',experiment:{preset:'polling'},body:'Candidate\tPoll A\tPoll B\tPoll C\n1\t17\t20\t23\n2\t18\t20\t22\n3\t20\t19\t20\n4\t22\t21\t18\n5\t23\t20\t17'} }] },
+  experiment: { label: 'Predict and compare', icon: '◉', deck: true, group: 'show',
+                 starters: [{ title: 'Predict and compare', blurb: 'Predict, reveal and compare editable visual states.', seed: {title:'Same data, different encodings',experiment:{preset:'polling'},body:'Candidate\tPoll A\tPoll B\tPoll C\n1\t17\t20\t23\n2\t18\t20\t22\n3\t20\t19\t20\n4\t22\t21\t18\n5\t23\t20\t17'} }] },
   /* Ten specimens, each its own row in Add slide. They were a Look control
      once, which put a choice of slide shape in the pane that promises not to
      change your content — and these demand an image and bring a state machine
      with them. A shape belongs where the other shapes are chosen. */
-  motion:      { label: 'Motion experiment', icon: '◈', deck: true, group: 'show',
+  motion:      { label: 'Animated explainer', icon: '◈', deck: true, group: 'show',
                  starters: [
                                { title: 'Mask reveal', blurb: 'An image uncovered a piece at a time, under your control.', seed: {title:'Mask reveal',motionScene:'mask',design:{motionLook:'editorial'}} },
                                { title: 'Draw-on diagram', blurb: 'Strokes that arrive in the order you explain them.', seed: {title:'Draw-on diagram',motionScene:'draw',design:{motionLook:'editorial'}} },

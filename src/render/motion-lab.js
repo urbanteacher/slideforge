@@ -76,7 +76,7 @@ export function render(root, pad, slide, opts, safeMedia) {
   const imageURL = safeMedia(slide.image || '');
   function addPhoto() {
     const img = document.createElement('img'); img.className = 'ml-photo'; img.src = imageURL;
-    img.alt = slide.subtitle || slide.title || 'Experiment image'; img.draggable = false;
+    img.alt = slide.subtitle || slide.title || 'Scene image'; img.draggable = false;
     img.onerror = () => { img.hidden = true; status.textContent = 'Image unavailable — choose an image in Look.'; };
     stage.append(img); return img;
   }
