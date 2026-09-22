@@ -2446,7 +2446,8 @@
           ],
           "notes": "Tufte, The Visual Display of Quantitative Information. The rows are shortened to fit; his wording is: (1) the representation of numbers, as physically measured on the surface of the graphic itself, should be directly proportional to the numerical quantities represented; (2) clear, detailed and thorough labelling should be used to defeat graphical distortion and ambiguity — write out explanations of the data on the graphic itself, label important events in the data; (3) show data variation, not design variation; (4) in time-series displays of money, deflated and standardised units of monetary measurement are nearly always better than nominal units; (5) the number of information-carrying (variable) dimensions depicted should not exceed the number of dimensions in the data; (6) graphics must not quote data out of context.\n\nThe supplied Week 2 deck announces six and prints five, because the last two are run together in one paragraph; they are separated here. Principles 1 and 5 are the ones the lie factor and the 3D examples test later in this section. Principle 4 is the one nobody applies until they plot a decade of prices.\nSource: adapted from the supplied Week 2 lecture materials (01_Lecture_IPDV_2_2, slide 10).",
           "progressive": true,
-          "title": "Tufte’s six principles of graphical integrity"
+          "title": "Tufte’s six principles of graphical integrity",
+          "transition": "none"
         },
         {
           "type": "experiment",
@@ -2849,7 +2850,8 @@
           "notes": "The lecture’s own summary of the first attribute type. Eye colour, phone make, mode of transport: labels, not amounts. Ask what a mean of these would even mean.\nSource: figure from the supplied Week 2 lecture deck (01_Lecture_IPDV_2_2).",
           "progressive": false,
           "subtitle": "Categories with no order to preserve",
-          "title": "Nominal data"
+          "title": "Nominal data",
+          "transition": "none"
         },
         {
           "type": "image",
@@ -3191,7 +3193,8 @@
           "imageFit": "contain",
           "notes": "Shown after the transformation. This is the figure the animated states replace — use it to name the published convention once students have made and tested their own prediction.\nAsk for a scheme for daily hires (sequential), change relative to zero (diverging) and station operator (categorical). A sequential scheme may use more than one hue. Source and palette guidance: https://colorbrewer2.org/learnmore/schemes.html . Source image supplied in Week 2 lecture.\nSource: adapted from the supplied Week 2 lecture materials.",
           "progressive": true,
-          "title": "Colour schemes express structure"
+          "title": "Colour schemes express structure",
+          "transition": "none"
         },
         {
           "type": "experiment",
