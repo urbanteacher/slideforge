@@ -38,7 +38,7 @@ order.
 
 | ID | Item | Size | Status |
 |---|---|---|---|
-| GA-11 – GA-28 | **Games to a premium standard**: waves 0–2 (GA-01–10, GA-29–30) are done. Wave 3's four conversions are done too (GA-11–14). Next: wave 4, the proposal queue and Concept Chain's map. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | To do |
+| GA-15 – GA-28 | **Games to a premium standard**: waves 0–3 and 5 are done; 4, 6 and 7 mostly (GA-01–14, 18, 20, 21, 23, 25, 26, 29, 30). **Next, as planned:** GA-15–17, the no-device work skipped alongside wave 3 (tally entry, team rows, saved class lists). Then GA-28 solo practice. **Open:** GA-19 branching map, GA-22 hint cost and Definition on stages, GA-27 self-pacing, GA-24 Race/Boss crowd layout. None of the waves since GA-29 has been viewed on screen except Fill, Beat the Clock and Compare. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | In progress |
 | AC-09 – AC-17 | **Activities to a premium standard**: waves 0–2 (AC-01–08) are done: one clock, the desk's live stage, ten routines on stages, and the room's output landing (spotlight and hide, the written count, close and held results). Next: wave 3, the family redesigns on the kit, and room declarations (AC-16). Full table under [the activities build list](#23-september-2026-activities-to-a-premium-standard-the-build-list). | S–L | To do |
 | RP-01 | Rehearse with a class of 30 (and 120) | S | To do |
 | RP-02 | Lecture-scale defaults (100+): standings off, distribution on | S | To do |

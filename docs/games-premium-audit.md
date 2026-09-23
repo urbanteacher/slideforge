@@ -69,8 +69,8 @@ tests are in the table. The tier follows from the row.
 | Memory Maze | — | — | — | — | — | — | — | — | — | Disabled; out of scope |
 
 **Totals:**
-- 0 fully premium; Spot the Error is near-premium.
-- 24 solid.
+- 0 fully premium; 8 near premium (Spot the Error, Ranking, Beat the Clock, T/F Showdown, Predict, Fill the gaps, Odd One Out, Compare & Contrast).
+- 24 solid, counting the seven near-premium ones listed as solid in the table.
 - 1 thin.
 - 0 broken by wrong-result scoring.
 - 1 disabled.
@@ -142,11 +142,26 @@ Each of these would otherwise be written three or four times.
 | # | Missing component | Why once | Used by | Size |
 |---|---|---|---|---|
 | **N1 · done** | **Verdict recipient**: the desk marks *who* spoke (a player, a team, or "the room") before Correct/Accept | Prevents one spoken explanation crediting the whole class. Bowl already awards its board cells to a team. | Heads Up, Spin & Explain, Connection, Concept Chain, Random Challenge | M |
-| **N2** | **The draw**: take an unused item from a pool at random, with an animation on the wall, "N left", and no repeats until reshuffle | Four games promise randomness and follow authored order. | Spin & Explain, Random Challenge, Question Cube, Heads Up; later the Bingo caller | M |
-| **N3** | **Proposal queue**: phones send a proposal; the desk approves, dismisses or spotlights; approved items land on the wall | The Q&A moderation queue already does this for questions. Generalise it rather than write another. | Connection Maker, Concept Chain, Odd One Out rules, Compare points | M |
-| **N4** | **Round clock**: one clock for a run of items, not per question | Stages (K6) already has a clock with +30s. A one-stage round is the same thing. | Beat the Clock, Heads Up, Low-Stakes | S |
-| **N5** | **Line reveal**: the room's answers placed on a number line or timeline against the true value | The slider's number line and stacked placings exist (`quiz-line`). Lift them into a reveal. | Time Traveler, Predict (numeric), Slider | S |
-| **N6** | **Sort input**: drag items into two or three bins on the phone, with per-bin heat on the reveal | New input kind, like `tap` was. It also serves card-sort activities later. | Compare & Contrast; activities: concept card sort, alike/different | L |
+| **N2 · done** | **The draw** (`DRAW_STYLES` in `compileGame`; `drawNo`/`drawTotal`): take an unused item from a pool at random, with an animation on the wall, "N left", and no repeats until reshuffle | Four games promise randomness and follow authored order. | Spin & Explain, Random Challenge, Question Cube, Heads Up; later the Bingo caller | M |
+| **N3 · done** | **Proposal queue** (`openProposals`, `useProposal`, the desk list; `quiet` prompts draw chain and bridge proposals on the slide): phones send a proposal; the desk approves, dismisses or spotlights; approved items land on the wall | The Q&A moderation queue already does this for questions. Generalise it rather than write another. | Connection Maker, Concept Chain, Odd One Out rules, Compare points | M |
+| **N4 · done** | **Round clock** (`js/rounds.js`: Heads Up and Beat the Clock): one clock for a run of items, not per question | Stages (K6) already has a clock with +30s. A one-stage round is the same thing. | Beat the Clock, Heads Up, Low-Stakes | S |
+| **N5 · existed** | **Line reveal** (`showPlacedValues`; first reused by Time Traveler): the room's answers placed on a number line or timeline against the true value | The slider's number line and stacked placings exist (`quiz-line`). Lift them into a reveal. | Time Traveler, Predict (numeric), Slider | S |
+| **N6 · done** | **Sort input** (`sort`: tap a column per statement, not drag): drag items into two or three bins on the phone, with per-bin heat on the reveal | New input kind, like `tap` was. It also serves card-sort activities later. | Compare & Contrast; activities: concept card sort, alike/different | L |
+
+### Built during the rebuild — reuse these too
+
+The waves added shared pieces the kit above did not list. Each exists once;
+a new game should reach for it rather than write its own.
+
+| # | Component | Where | What it gives |
+|---|---|---|---|
+| K18 | **Passage inputs**: `fill` (a word-bank index per gap) and `sort` (a column per item) | `src/games/fill.js`, `src/games/compare.js`; relay validation; `lockedMessage` | Array answers the relay checks like an order; teacher entry records them by key |
+| K19 | **Unmarked votes** (`unmarked`) | relay reveal, `sendReveal` | A pick that is never right or wrong, never counted in accuracy (Odd One Out) |
+| K20 | **Mid-question moments**: `showdown` (split plus one switch) and `closeAnswers` (lock before reveal) | relay, `js/live.js` gate | A question with a beat between voting and the answer (T/F Showdown, Predict) |
+| K21 | **Round runtime** | `js/rounds.js` | One clock, auto-advance, "Time!", skip the rest; counts, never names but a guesser |
+| K22 | **Desk mirror** (`data-desk`) | `Player.gameControls`, `pressGameControl` | Any wall control appears on the desk with one attribute |
+| K23 | **Per-phone spoken messages** (`spokenFanout`) | relay | A spoken item told to each phone in its own terms (Heads Up's term, hidden from the guesser) |
+| K24 | **Shaped proposal boxes** (`shape: 'link' | 'bridge'`, `quiet`) | relay prompt, `join.html`, `paintProposalGhosts` | A proposal box framed like what it proposes, its replies drawn on the slide; honours the desk's hide |
 
 ## 4. Redesigns, game by game
 
@@ -280,14 +295,14 @@ answered. Show the letters dripping on the phone too (P5), and make
 |---|---|---|---|
 | **0** | **Done 23 Sep.** Word Reveal per-answer scoring; Bowl game-level target; delete the `js/studio.js` preset copy. Teacher entry records `order` and `tap`, and shows the relay's refusal (E1, E2). | Wrong or lost results today; small fixes | S |
 | **1** | **Done 23 Sep.** N1 verdict recipient in teacher entry, spoken phone job cards, and `plays` declarations with a contract test and library badges. | Fixed unfair spoken scoring and made P9 checkable | M |
-| **2** | **N2 draw** and **N4 round clock** | Unblock Spin, Random, Question Cube and Heads Up | M |
-| **3** | Fill the gaps; Odd One Out vote-then-defend; Predict commit-then-watch; T/F hold-or-fold | The thin-to-premium conversions that are mostly kit | M each |
-| **4** | **N3 proposal queue**; Concept Chain map and Connection Maker | The discussion games' phone jobs | M |
-| **5** | **N5 line reveal**; Time Traveler | | M |
-| **6** | Desk parity sweep (K11) across Race, Boss, Definition, boards; Emoji hint; Ranking heat | P6 across the catalogue | S each |
-| **7** | **N6 sort input**; Compare & Contrast; self-paced Beat the Clock | The two large new mechanics | L |
-| **with 3** | **Tally entry (E3)**, team rows (E5), saved class lists (E6) | Rooms with no devices, done at the speed of a show of hands | M |
-| **after 7** | **Solo practice (E8)** | One learner, alone, at their own pace | M |
+| **2** | **Done 23 Sep.** N2 draw and N4 round clock | Unblock Spin, Random, Question Cube and Heads Up | M |
+| **3** | **Done 23 Sep.** Fill the gaps; Odd One Out vote-then-defend; Predict commit-then-watch; T/F hold-or-fold | The thin-to-premium conversions that are mostly kit | M each |
+| **4** | **Mostly done.** N3 proposal queue; Concept Chain and Connection proposals shaped and drawn on the slide. *Open: several links per term, a branching map (GA-19)* | The discussion games' phone jobs | M |
+| **5** | **Done 23 Sep.** N5 line reveal; Time Traveler on one growing timeline, wall and phone | | M |
+| **6** | **Mostly done.** Desk parity (`data-desk`), Emoji hint as a step, Ranking heat. *Open: the hint's point cost, Definition on stages (GA-22)* | P6 across the catalogue | S each |
+| **7** | **Mostly done.** N6 sort input; Compare & Contrast sort; Beat the Clock as one round. *Open: per-phone self-pacing (GA-27)* | The two large new mechanics | L |
+| **with 3** | **Not done — skipped.** Tally entry (E3), team rows (E5), saved class lists (E6): planned alongside wave 3 and passed over. Next. | Rooms with no devices, done at the speed of a show of hands | M |
+| **after 7** | **Not done.** Solo practice (E8) | One learner, alone, at their own pace | M |
 
 At the end of wave 3, the count would be roughly six premium and none
 broken. At the end of wave 7, all 26 enabled formats would pass the bar.
@@ -416,6 +431,17 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — The doc checked against the work.**
+  - **Section 5 was stale:** waves 2–7 were done, or mostly done, and
+    unmarked. Each wave now says what is done and what is open.
+  - **One row was skipped outright:** tally entry, team rows and saved class
+    lists ("with 3"). It is marked so and comes next.
+  - **The "build once" components** now say where they live.
+  - **Seven more shared pieces built along the way** are listed (K18–K24),
+    so the next game reuses them.
+  - **Conflict with the activities work, fixed:** the chain and bridge
+    branches drawn on the slide ignored the desk's hide (activities N12). A
+    hidden proposal now leaves the wall there too.
 - **23 September 2026 — Six square pegs, rounded.** Places where a game
   had been fitted into generic pieces, and what each one does now:
   1. **Question Cube** said "Complete / Skip" (Random Challenge's words). It
