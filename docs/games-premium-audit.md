@@ -57,7 +57,7 @@ tests are in the table. The tier follows from the row.
 | True/False Showdown | `truefalse` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: vote → the room's split on wall and phones → one switch each → reveal of before against after and how many switched |
 | Predict the Outcome | `choice` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: commit with confidence → lock (the room's split, not the answer) → watch → reveal; a sure, right prediction earns half again. Open: the private written prediction (K8) |
 | Fill in the Blanks | `fill` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | Solid, near premium: *Fill the gaps* — up to four [gaps], a shuffled word bank with lures tapped into slots, the right word landing in each at the reveal with what the room put there, the hardest gap and its lure named; partial marks; teacher entry by key |
-| Time Traveler | `type` | ✗ | ◐ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: typed recall, no time |
+| Time Traveler | `slider` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid: *Place it in time* — phones drag the event to a year; the reveal shows every pin and the true year; one line for the game, carrying every earlier event, so the timeline grows |
 | Odd One Out | `oddone` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | n/a | ✓ | Solid, near premium: phones vote; the split is held, then drawn as heat across the four tiles, with a line inviting the next most popular pick to defend its rule. Never marked. Open: the written rule as an anonymous idea (K9) |
 | Compare & Contrast | `compare` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | n/a | ◐ | Thin on phones: they sit idle |
 | Heads Up | `headsup` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ✓ | ◐ | Solid: one round clock, drawn terms, a verdict moves straight on, "Time!" with the guesser's count. Open: clue-givers' phones could show the term |
@@ -70,8 +70,8 @@ tests are in the table. The tier follows from the row.
 
 **Totals:**
 - 0 fully premium; Spot the Error is near-premium.
-- 19 solid.
-- 6 thin.
+- 20 solid.
+- 5 thin.
 - 0 broken by wrong-result scoring.
 - 1 disabled.
 
@@ -416,6 +416,19 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — Time Traveler: place it in time (GA-20).**
+  - **It now runs on the slider engine** on a year scale. Phones drag the
+    named event to a year, and the reveal is the slider's own: every pin
+    against the true year.
+  - **One line for the whole game.** It spans every event, and each round's
+    line carries the events already placed (above and below the line, year
+    and label), so the timeline grows across the game.
+  - **Old typed games heal:** the year comes out of the clue (it would give
+    the answer away) into the target, and the clue moves to the reveal. The
+    format remap now keeps a slider's line and a fill's lures.
+  - **N5, the line reveal**, turned out to exist already
+    (`showPlacedValues`); this is its first reuse.
+  - **Tests:** `npm test` 500/500.
 - **23 September 2026 — The proposal queue (N3, GA-18, part of GA-19).**
   - **Proposals from the phones.** While a Concept Chain or Connection Maker
     item is up, the phones get an idea box ("Propose a link from 'energy'
