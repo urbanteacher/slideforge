@@ -84,8 +84,8 @@ coordinating rather than starting cold.
 | UX-50 | ~~Number + Enter to jump while presenting~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | UX-51 | ~~`O` overview grid while presenting~~ [→](ux-backlog.md) | M | **Done** 23 Sep |
 | UX-52 | ~~Pacing timer in the presenter view~~ [→](ux-backlog.md) | S–M | **Done** 23 Sep |
-| UX-61 | Lock all phones, now or on a countdown [→](ux-backlog.md) | M | To do · P2 · shared files |
-| UX-62 | Show the teacher who has left the tab [→](ux-backlog.md) | M | To do · P2 · shared files |
+| UX-61 | ~~Lock all phones, now or on a countdown~~ [→](ux-backlog.md) | M | **Done** 23 Sep |
+| UX-62 | ~~Show the teacher who has left the tab~~ [→](ux-backlog.md) | M | **Done** 23 Sep · presenter only |
 | UX-64 | Student-paced mode with its own code [→](ux-backlog.md) | L | Needs a decision · P2 |
 | UX-71 | ~~Raise editor type under 12px~~ [→](ux-backlog.md) | S–M | **Done** 23 Sep |
 | UX-72 | Keyboard-only pass [→](ux-backlog.md) | M | Partly done · scripted audit clean |

@@ -51,8 +51,8 @@ what was removed.
 | UX-53 | `W` for a white screen | P3 | S | **Clash** · `W` is already "Who answered what"; pick another key |
 | **Phase 7 — the room** |||||
 | UX-60 | Hide the answer bars until the reveal | P1 | M | **Done** 23 Sep · a game setting; one line in live.js |
-| UX-61 | Lock all phones, now or on a countdown | P2 | M | To do · shared files |
-| UX-62 | Show the teacher who has left the tab | P2 | M | To do · shared files |
+| UX-61 | Lock all phones, now or on a countdown | P2 | M | **Done** 23 Sep · now already existed (Blank phones); the countdown is new |
+| UX-62 | Show the teacher who has left the tab | P2 | M | **Done** 23 Sep · presenter view only, never the wall |
 | UX-63 | Lobby before the start, with optional generated nicknames | P3 | M | Needs a decision |
 | UX-64 | Student-paced mode with its own code | P2 | L | Needs a decision |
 | UX-65 | Per-student takeaway: the slides plus that student's answers | P3 | M–L | Needs a decision |
@@ -732,6 +732,35 @@ Three read-only reviews, running in parallel, covered:
     { display: none }`. Checked by measuring drawn rows, not the attribute.
   - Checked: fold hides exactly its rows; ⌘K to a slide inside unfolds it; a
     three-slide section moved past a 21-slide one intact; undo restores.
+
+## 23 September 2026: UX-61 and UX-62, the live room
+
+- **UX-61.** Locking every phone *now* already existed as **Blank phones**
+  (Shift+B, the show's ⋯ menu, the presenter view), kept as room state so a
+  phone that rejoins arrives dark. What was missing was the countdown:
+  - **Blank in 10s** in the presenter view and the show's ⋯ menu. The host
+    sends `blankSoon` and every phone shows "Phones down in 10 — finish your
+    thought", counting; when it ends the host blanks the phones.
+  - Pressing it again cancels (`blankSoon` 0 clears the banner). Blanking by
+    hand overtakes a running countdown.
+  - The relay accepts `blankSoon` only from the host, clamped to 60 seconds.
+- **UX-62.** The phone reports `away` when the page is hidden (another app,
+  another tab, the screen off) and when it comes back, only on a change, and
+  again on rejoin. The relay records it and puts it in the roster, which only
+  the host receives. The presenter view shows "2 away", with the names on
+  hover. **The wall's lobby does not show it**: naming who has looked away in
+  front of the class is a different thing from telling the teacher.
+- **Tests.** `tests/away-and-countdown.test.js` runs the real relay with a host
+  and two phones: away reaches the host and no other phone; the countdown
+  reaches every phone, 0 cancels, 600 is clamped to 60, and a phone cannot
+  start one.
+- **Not checked in the browser.** Starting the room from the lobby opens the
+  presenter view, which the browser tool used here can only do by replacing the
+  host's tab, which ends the room. The protocol is proven by the relay test; the
+  banner and the "away" chip were not seen drawn.
+- **Shared files.** `js/live.js`, `join.html` and `server/server.js` are also
+  worked on by the other agent. The changes are additive: new message types
+  and one new roster field.
 
 ## Log
 
