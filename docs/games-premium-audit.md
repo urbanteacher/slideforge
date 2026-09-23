@@ -285,14 +285,58 @@ answered. Show the letters dripping on the phone too (P5), and make
 At the end of wave 3, the count would be roughly six premium and none
 broken. At the end of wave 7, all 26 enabled formats would pass the bar.
 
-## 6. What this audit does not decide
+## 6. Decided
 
-- **Whether spoken formats score at all.** N1 makes the scores fair. Some
-  teachers would rather Heads Up and Spin & Explain had no points, like
-  Random Challenge. Proposed: a per-game "count only" switch, off by
-  default.
-- **Named praise.** Heads Up's "Ana's round: 7" names a person on the wall.
-  It is praise and the teacher chooses who goes up, but it is the one
-  exception to P4. Proposed: allowed for spoken rounds, never for
-  accuracy.
-- **Memory Maze.** It stays disabled. No spatial board engine is planned.
+Decided on 23 September from user experience and logic, at the user's
+request. These are now part of the bar.
+
+### Spoken formats score by team, and count in individual play
+
+**The rule:**
+- **Teams on:** an accepted explanation scores for the speaker's **team**.
+  Before Correct or Accept, the desk's recipient control (N1) defaults to the
+  team of the student last picked.
+- **Individual play:** a spoken format **counts**; it does not score. The
+  wall shows the room's total ("7 explanations accepted"), and nobody's
+  points move.
+- **An override** in Game settings, "Score spoken answers", turns individual
+  points on for a teacher who wants them. It is off by default.
+- **Heads Up** is a round, not a ledger. Its result is the round's count
+  ("7 in 60 seconds"), whatever the mode. **Quiz Bowl** is a points game by
+  name and always scores, to the recipient.
+
+**Why:**
+- **Fairness is solved by N1; motivation is not.** Speaking is the part of
+  a lesson where confidence varies most. An individual leaderboard for it
+  rewards the students who already talk and ranks the ones who don't.
+- **A team score keeps the stakes and spreads the risk.** Your explanation
+  helps your side, and a weak one costs nobody a place.
+- **Counting in individual play keeps the one thing worth celebrating:**
+  how much explaining the room did.
+- **It matches what exists.** Random Challenge already counts, and Bowl
+  already scores cell values.
+
+### The wall may name someone only for something they chose to do and did well
+
+**The rule:**
+- **A name may appear on the wall with a positive outcome of a public act
+  the student took on:** the Heads Up guesser's round ("Ana's round: 7"),
+  an accepted explanation credited to them, the room pane's biggest climb.
+- **A name never appears with:** a wrong answer, a Pass, a rejected
+  explanation, accuracy, or a place below the top five.
+- **When the outcome is not a success, the wall states it without the
+  name:** "Round over: 2", "Not quite, anyone else?".
+
+**Why:**
+- **Recognition motivates when it is earned and chosen.** The guesser stood
+  up; naming their seven is applause.
+- **Naming a failure has the opposite effect**, and falls on the students a
+  teacher is trying hardest to bring in.
+- **It keeps P4 intact:** the room sees itself, and a person is seen only
+  when they stepped forward and it went well.
+- **One rule covers the cases that exist:** Heads Up, spoken credits, the
+  climb.
+
+### Memory Maze
+
+It stays disabled. No spatial board engine is planned.
