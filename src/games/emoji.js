@@ -69,7 +69,7 @@ const emoji = {
   plays: ROOM_PLAY.typed,
   label: 'Emoji guess',
   icon: '\u263a',
-  blurb: 'Decode a concept from symbols. Release the letter pattern, then a hint, as the room gets stuck.',
+  blurb: 'Decode a concept from symbols. Release the letter pattern, then a hint, as the room gets stuck. Answers after the hint score half.',
   mechanic: 'points',
   input: 'text',
   minOptions: 0,

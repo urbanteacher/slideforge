@@ -4354,6 +4354,23 @@ html[data-ws="deck"] #railCount { display: none; }
   margin-bottom: 8px;
   min-height: 0;
 }
+/* Read · 0:30 → Recall: the two stages, the current one lit. */
+.layout-quiz.present-definition .def-track {
+  display: flex; align-items: center; gap: 10px; align-self: flex-start;
+}
+.layout-quiz.present-definition .dt-stop {
+  padding: 6px 14px; border-radius: 999px; font-size: 15px; font-weight: 700;
+  border: 2px solid var(--s-rule); color: var(--s-dim);
+}
+.layout-quiz.present-definition .dt-stop.on {
+  border-color: var(--s-accent); color: var(--s-fg);
+  background: color-mix(in srgb, var(--s-accent) 16%, var(--s-card));
+}
+.layout-quiz.present-definition .dt-stop.done { opacity: .6; }
+.layout-quiz.present-definition .dt-arrow {
+  width: 28px; height: 3px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--s-accent), transparent);
+}
 .layout-quiz.present-definition .definition-eyebrow {
   font-size: 13px;
   font-weight: 800;

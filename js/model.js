@@ -5040,6 +5040,15 @@
         var defPhase = opts.definitionPhase || "reading";
         var def = el("div", "stage-hero definition-stage phase-" + defPhase);
         def.appendChild(el("div", "stage-atmosphere", ""));
+        var track = el("div", "def-track");
+        track.appendChild(el(
+          "span",
+          "dt-stop" + (defPhase === "reading" ? " on" : " done"),
+          "Read" + (slide.timeLimit ? " · " + SF.clockFace(slide.timeLimit) : "")
+        ));
+        track.appendChild(el("span", "dt-arrow", ""));
+        track.appendChild(el("span", "dt-stop" + (defPhase === "reading" ? "" : " on"), "Recall"));
+        def.appendChild(track);
         if (defPhase === "reading") {
           def.appendChild(el("div", "definition-eyebrow", "READING · NO NOTES"));
           def.appendChild(el(
@@ -6466,6 +6475,8 @@
           needsHand: SF.Live && SF.Live.needsHand ? SF.Live.needsHand() : [],
           /* The stage of a staged activity, so the desk can offer more time. */
           stage: Player.stage || null,
+          /* Definition Challenge's reading stage, which also takes +30s. */
+          reading: Player.readingLeft ? Player.readingLeft() : null,
           /* The game's wall controls, offered on the desk (data-desk). */
           gameControls: Player.gameControls ? Player.gameControls() : [],
           floor: SF.Live && SF.Live.floor || "auto",
@@ -6691,7 +6702,7 @@
         showHud();
         return;
       }
-      if ((k === "+" || k === "=") && SF.Stages && SF.Stages.active) {
+      if ((k === "+" || k === "=") && (SF.Stages && SF.Stages.active || Player.readingLeft && Player.readingLeft())) {
         e.preventDefault();
         Player.control("stageMore");
         showHud();
@@ -18768,7 +18779,7 @@
     plays: ROOM_PLAY.typed,
     label: "Emoji guess",
     icon: "☺",
-    blurb: "Decode a concept from symbols. Release the letter pattern, then a hint, as the room gets stuck.",
+    blurb: "Decode a concept from symbols. Release the letter pattern, then a hint, as the room gets stuck. Answers after the hint score half.",
     mechanic: "points",
     input: "text",
     minOptions: 0,

@@ -789,6 +789,14 @@ export function createQuizRenderer(SF, helpers) {
       var defPhase = opts.definitionPhase || 'reading';
       var def = el('div', 'stage-hero definition-stage phase-' + defPhase);
       def.appendChild(el('div', 'stage-atmosphere', ''));
+      /* Two stages, Read then Recall, drawn the way an activity's stages
+         are: where the room is, and what comes next. */
+      var track = el('div', 'def-track');
+      track.appendChild(el('span', 'dt-stop' + (defPhase === 'reading' ? ' on' : ' done'),
+        'Read' + (slide.timeLimit ? ' \u00b7 ' + SF.clockFace(slide.timeLimit) : '')));
+      track.appendChild(el('span', 'dt-arrow', ''));
+      track.appendChild(el('span', 'dt-stop' + (defPhase === 'reading' ? '' : ' on'), 'Recall'));
+      def.appendChild(track);
       if (defPhase === 'reading') {
         def.appendChild(el('div', 'definition-eyebrow', 'READING · NO NOTES'));
         def.appendChild(el('p', 'definition-passage',

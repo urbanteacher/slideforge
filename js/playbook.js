@@ -607,8 +607,8 @@
   Object.assign(BOOK['emoji-guess'], {
     judgement: 'auto', demo: 'class', players: 'Learners type an accepted concept name.',
     phases: 'emoji clue → optional support → type → reveal',
-    scoring: 'Accepted answers use the game’s points settings.',
-    howToPlay: ['Decode the emoji clues.', 'Type the concept. When the room is stuck the teacher releases the letter pattern, then the hint.', 'Reveal the accepted answer and explain how each clue fits.']
+    scoring: 'Accepted answers use the game’s points settings. Live, an answer given after the hint went up scores half.',
+    howToPlay: ['Decode the emoji clues.', 'Type the concept. When the room is stuck the teacher releases the letter pattern, then the hint. Answers after the hint score half.', 'Reveal the accepted answer and explain how each clue fits.']
   });
   Object.assign(BOOK['spin-explain'], {
     phases: 'shuffled draw → explanation → teacher verdict → next',

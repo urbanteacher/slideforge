@@ -99,10 +99,11 @@ test('marking is the typed engine`s, and a hint does not change the score', () =
   assert.equal(SF.markResponse(s, 'aerobic respiration'), true, 'a second spelling');
   assert.equal(SF.markResponse(s, 'respration'), true, 'a typo, since typos are allowed');
   assert.equal(SF.markResponse(s, 'photosynthesis'), false);
-  /* Word Reveal scores by how much was still hidden. Emoji guess does not:
-     the source game is one point either way, and inventing a penalty for
-     asking for the hint would discourage the thing the hint is for. So the
-     points are the game's, identical across all three help levels. */
+  /* The difficulty does not change the points: they are the game's,
+     identical across all three help levels. The hint's cost is live and
+     about time (the test below): no learner asks for it, the teacher
+     releases it for the room, so nothing discourages asking. What it costs
+     is the answers that waited for it. */
   const points = (level) => compiled(SF, { difficulty: level, hint: 'Releasing energy' }).points;
   assert.equal(points('easy'), points('hard'));
   assert.equal(points('medium'), points('hard'));
@@ -165,4 +166,31 @@ test('emoji clue layout tiles graphemes the wall and phone share', () => {
   assert.ok(layout.pieces.length >= 4);
   assert.equal(SF.emojiClueLayout('photosynthesis').tiled, false,
     'lettered clues stay a single line');
+});
+
+test('live, an answer given after the hint went up scores half; one before it keeps its points', async t => {
+  const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
+  const { freePort, start, connect, stop, reveal } = require('./harness');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sf-emoji-hint-'));
+  const port = await freePort(), relay = await start(port, dir), sockets = [];
+  t.after(async () => { await stop(relay); sockets.forEach(s => s.socket.close()); fs.rmSync(dir, { recursive: true, force: true }); });
+  const host = await connect(port); sockets.push(host);
+  host.send({ t: 'host', title: 'Emoji', mode: 'individual' }); const room = await host.next('hosted');
+  const ada = await connect(port), ben = await connect(port); sockets.push(ada, ben);
+  ada.send({ t: 'join', pin: room.pin, name: 'Ada' }); ben.send({ t: 'join', pin: room.pin, name: 'Ben' });
+  await ada.next('joined'); await ben.next('joined');
+  await host.until('players', m => m.list.length === 2);
+  host.send({ t: 'begin' });
+  host.send({ t: 'question', id: 'e1', style: 'emoji', input: 'text', question: '🌱☀️', points: 1000, timeLimit: 0 });
+  await ada.next('question'); await ben.next('question');
+  ada.send({ t: 'answer', text: 'photosynthesis' });
+  await host.until('tally', m => (m.answers || []).length === 1);
+  host.send({ t: 'hintOut', id: 'e1' });
+  assert.ok(await ben.next('hintOut'), 'a phone still thinking hears the hint is up');
+  ben.send({ t: 'answer', text: 'photosynthesis' });
+  await reveal(host, { id: 'e1', correct: -1, answer: 'photosynthesis' }, () => true, 2);
+  const a = await ada.next('result'), b = await ben.next('result');
+  assert.equal(a.gained, 1000); assert.equal(a.hinted, false);
+  assert.equal(b.gained, 500); assert.equal(b.hinted, true);
+  assert.equal(ada.has('hintOut'), false, 'a phone that has answered is not told');
 });

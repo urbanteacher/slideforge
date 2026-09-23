@@ -1354,13 +1354,23 @@
         $('rVerdict').textContent = !m.answered ? 'Too slow!' : (m.right ? 'Correct!' : 'Not this time');
         $('rVerdict').className = 'verdict ' + (m.right ? 'right' : 'wrong');
         /* A lost bet (Predict: sure and wrong) is said as what it was. */
-        $('rGain').textContent = m.gained > 0 ? '+' + m.gained + ' points'
+        $('rGain').textContent = m.gained > 0 ? '+' + m.gained + ' points' + (m.hinted ? ' \u00b7 half, after the hint' : '')
           : m.gained < 0 ? '\u2212' + (-m.gained) + ' points \u00b7 you were sure'
           : (m.answered ? 'No points' : 'No answer registered');
         $('rScore').textContent = m.score;
         $('rRank').textContent = formatStanding(m);
         paintWhy(m);
         show('scResult');
+        break;
+
+      case 'hintOut':
+        /* Emoji Guess: the hint is on the board, so an answer now is worth
+           half. Said over the question, not instead of it. */
+        $('creditNote').textContent = 'The hint is up — an answer now scores half';
+        $('creditNote').classList.remove('mine');
+        $('creditNote').hidden = false;
+        clearTimeout(creditTimer);
+        creditTimer = setTimeout(function () { $('creditNote').hidden = true; }, 5000);
         break;
 
       case 'credit':

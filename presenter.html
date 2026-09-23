@@ -1129,8 +1129,8 @@ SF.installExplore(SF);
     paintAsk(d.ask);
     var more = $('btnStageMore');
     if (more) {
-      more.hidden = !d.stage;
-      more.textContent = d.stage ? '+30s ' + d.stage.name : '+30s';
+      more.hidden = !d.stage && !d.reading;
+      more.textContent = d.stage ? '+30s ' + d.stage.name : d.reading ? '+30s to read' : '+30s';
     }
     var needs = $('roomNeeds');
     if (needs) {

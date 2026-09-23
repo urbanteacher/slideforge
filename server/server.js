@@ -1932,6 +1932,10 @@ ws.attach(server, (sock, req) => {
             }
             p.correctCount++;
           }
+          /* Emoji Guess: an answer given after the hint went up scores half. */
+          p.lastHinted = !!(room.question.hintAt && gained > 0 && !p.manual &&
+            p.answeredAt >= room.question.hintAt);
+          if (p.lastHinted) gained = Math.round(gained / 2);
           p.score = Math.max(0, p.score + gained);
           p.lastGain = gained;
           p.lastRight = spoken || room.question.unmarked ? null : marks.get(String(p.id)) === true;
@@ -1990,6 +1994,7 @@ ws.attach(server, (sock, req) => {
             right: p.lastRight,
             answered: p.answer != null,
             gained: p.lastGain,
+            hinted: !!p.lastHinted,
             score: p.score,
             /* Their own running tally. Both halves are already kept for the
                report; a learner wants them more than the raw points, which
@@ -2040,6 +2045,19 @@ ws.attach(server, (sock, req) => {
           scores:[...room.players.values()].map(p => ({id:p.id,score:p.score}))});
         pushPlayers(room);
         pushTally(room);
+
+      } else if (m.t === 'hintOut') {
+        /* Emoji Guess: the teacher released the hint on the wall. An answer
+           from a phone after this moment scores half. Teacher-entered rows
+           are exempt: they are typed in after the fact, whenever they were
+           said. */
+        if (!room.question || room.phase !== 'question' || m.id !== room.question.id ||
+            room.question.hintAt) return;
+        room.question.hintAt = Date.now();
+        record(room, 'hintOut', {attempt: room.question.attempt});
+        for (const p of room.players.values()) {
+          if (p.sock && p.sock.open && p.answer == null) p.sock.json({t: 'hintOut'});
+        }
 
       } else if (m.t === 'oralCredit') {
         /* Concept Chain is a map: each link the teacher accepts is a branch,

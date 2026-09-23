@@ -319,6 +319,8 @@ export function createPresenterWindow(SF, helpers) {
         needsHand: SF.Live && SF.Live.needsHand ? SF.Live.needsHand() : [],
         /* The stage of a staged activity, so the desk can offer more time. */
         stage: Player.stage || null,
+        /* Definition Challenge's reading stage, which also takes +30s. */
+        reading: Player.readingLeft ? Player.readingLeft() : null,
         /* The game's wall controls, offered on the desk (data-desk). */
         gameControls: Player.gameControls ? Player.gameControls() : [],
         floor: (SF.Live && SF.Live.floor) || 'auto',
@@ -573,7 +575,7 @@ export function createPresenterWindow(SF, helpers) {
     }
 
     /* More time for the stage of a staged activity (Think-Pair-Share). */
-    if ((k === '+' || k === '=') && SF.Stages && SF.Stages.active) {
+    if ((k === '+' || k === '=') && ((SF.Stages && SF.Stages.active) || (Player.readingLeft && Player.readingLeft()))) {
       e.preventDefault();
       Player.control('stageMore');
       showHud();

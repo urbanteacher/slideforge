@@ -2672,8 +2672,23 @@
   SF.Player.on('step',function(){
     if(!Live.active)return;
     var s = SF.Player.wallSlide ? SF.Player.wallSlide() : (SF.Player.deck && SF.Player.deck.slides[SF.Player.idx]);
-    if(s){sendSlideContext(s);syncManual();}
+    if(s){hintOut(s);sendSlideContext(s);syncManual();}
   });
+  /* Emoji Guess: the hint is the last help the teacher releases, for the
+     whole room at once, so the cost falls on the answers given after it went
+     up — they score half (games audit, section 6). Answers that decoded the
+     symbols alone keep their points. Once out, it stays out. */
+  Live.hintOut = {};
+  function hintOut(s) {
+    if (s.style !== 'emoji' || Live.revealed[s.id] || Live.hintOut[s.id]) return;
+    var node = SF.Player._current;
+    var hint = node && node.querySelector('.emoji-help-hint');
+    if (!hint || hint.classList.contains('step-hidden')) return;
+    Live.hintOut[s.id] = true;
+    send({ t: 'hintOut', id: s.id });
+    var label = hint.querySelector('.emoji-help-label');
+    if (label) label.textContent = 'HINT \u00b7 ANSWERS NOW SCORE HALF';
+  }
   /* A stage moving, or getting more time, is news for the phones even when
      the build step has not changed — and the stage is worked out after the
      step, so this is the send that carries it. */

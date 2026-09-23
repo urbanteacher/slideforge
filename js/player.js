@@ -201,7 +201,10 @@
     blankPhones: function () { Player.emit('blankPhonesToggle', {}); },
     blankPhonesSoon: function () { Player.emit('blankPhonesSoon', {}); },
     /* Thirty seconds more for the stage the room is in — see js/stages.js. */
-    stageMore: function () { if (SF.Stages) SF.Stages.extend(30); },
+    stageMore: function () {
+      if (SF.Stages && SF.Stages.extend(30)) return;
+      if (Player.extendReading) Player.extendReading(30);
+    },
     floor: function () { Player.emit('floorCycle', {}); },
     reset: function () { Player.resetScores(); },
     /* Named answers live on the private screen. Opening presenter view if it
@@ -1359,6 +1362,31 @@
     Player.emit('definitionAsk', { slide: slide });
   };
 
+  /* Definition Challenge runs as two stages, Read then Recall (GA-22): the
+     wall draws the track, Next or Ask moves on, and the reading clock takes
+     thirty seconds more from + or the desk, like a stage of an activity. */
+  function readingClock() {
+    var slide = Player.deck && Player.deck.slides[Player.idx];
+    var run = Player._clock;
+    if (!slide || slide.style !== 'definition' || definitionState(slide).phase !== 'reading') return null;
+    return run && run.slideId === slide.id ? run : null;
+  }
+  /** Seconds of reading left, for the desk; null when nobody is reading. */
+  Player.readingLeft = function () {
+    var run = readingClock();
+    return run ? { left: Math.max(0, Math.round((run.endAt - Date.now()) / 1000)), seconds: run.total } : null;
+  };
+  Player.extendReading = function (seconds) {
+    var run = readingClock();
+    if (!run) return false;
+    seconds = Number(seconds) || 30;
+    run.endAt += seconds * 1000;
+    run.total += seconds;
+    toast('+' + seconds + 's to read');
+    syncPresenter();
+    return true;
+  };
+
   Player.definitionPhase = function (slide) {
     if (!slide || slide.style !== 'definition') return null;
     return definitionState(slide).phase;
@@ -1384,13 +1412,14 @@
     var ringEl = clock.querySelector('.ring');
     var numEl = clock.querySelector('.n');
     if (!ringEl || !numEl) return;
-    var total = slide.timeLimit;
     var dash = Number(ringEl.getAttribute('stroke-dasharray'));
-    var endAt = Date.now() + total * 1000;
+    /* Kept where extendReading can reach it: Definition's reading clock can
+       be given more time. */
+    var run = Player._clock = { slideId: slide.id, total: slide.timeLimit, endAt: Date.now() + slide.timeLimit * 1000 };
 
     Player._timer = setInterval(function () {
-      var left = Math.max(0, endAt - Date.now()) / 1000;
-      var frac = left / total;
+      var left = Math.max(0, run.endAt - Date.now()) / 1000;
+      var frac = left / run.total;
       ringEl.setAttribute('stroke-dashoffset', String(dash * (1 - frac)));
       numEl.textContent = String(Math.ceil(left));
       clock.classList.toggle('hurry', left <= 5);
@@ -1454,6 +1483,7 @@
 
   function stopTimer() {
     if (Player._timer) { clearInterval(Player._timer); Player._timer = null; }
+    Player._clock = null;
   }
 
   /* ------------------------------------------------------------ score rail */
