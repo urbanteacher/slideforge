@@ -284,3 +284,29 @@ test('a quiz bowl round is tallied in points, not in cells', async (t) => {
   /* And a value a host never sent stays zero rather than becoming NaN. */
   assert.equal(round.verdicts[2].value, 0);
 });
+
+test('a phone hears who a spoken credit went to: its own, its team, never another name', async t => {
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sf-spoken-credit-'));
+  const port=await freePort(), relay=await start(port,dir), sockets=[];
+  t.after(async()=>{await stop(relay);sockets.forEach(s=>s.socket.close());fs.rmSync(dir,{recursive:true,force:true});});
+  const host=await connect(port);sockets.push(host);
+  host.send({t:'host',title:'Explain',mode:'teams',teams:['Red','Blue']});const room=await host.next('hosted');
+  const ada=await connect(port),ari=await connect(port),ben=await connect(port);sockets.push(ada,ari,ben);
+  ada.send({t:'join',pin:room.pin,name:'Ada',team:0});ari.send({t:'join',pin:room.pin,name:'Ari',team:0});
+  ben.send({t:'join',pin:room.pin,name:'Ben',team:1});
+  await ada.next('joined');await ari.next('joined');await ben.next('joined');
+  const roster=await host.until('players',m=>m.list.length===3);
+  const adaId=roster.list.find(p=>p.name==='Ada').id;
+  host.send({t:'begin'});host.send({t:'round',gameId:'spoken-game'});
+  host.send({t:'question',id:'spoken-1',gameId:'spoken-game',style:'connection',spoken:true,
+    question:'Connect these',options:['Accept','Reject'],input:'choice'});
+  const tally=await host.until('tally',m=>m.id==='spoken-1');
+  host.send({t:'reveal',id:'spoken-1',rev:tally.rev,marks:[],correct:0,spoken:{recipient:{type:'player',id:adaId}}});
+  const [a,b,c]=[await ada.until('result',()=>true),await ari.until('result',()=>true),await ben.until('result',()=>true)];
+  assert.equal(a.oralYou,true,'the speaker hears it was theirs');
+  assert.equal(b.oralYou,false);
+  assert.equal(b.oralTeam,'Red','a teammate hears the team');
+  assert.equal(c.oralTeam,'Red','the other team hears whose point it was');
+  assert.equal(a.oralPoints,1);
+  assert.ok(!JSON.stringify(c).includes('Ada'),'no other student is named to a phone');
+});

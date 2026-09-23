@@ -63,7 +63,27 @@ body{background:#f5f6f2;color:#24372c;font:14px/1.5 system-ui,sans-serif}*{box-s
 .g-none{background:#f5f6f2}
 .pulse-guidance{color:#3b5632}
 .live-room-gate p,.in-room-empty,.notice{color:#53624c}
-.manual-entry .tap-entry-choice{min-height:32px;padding:4px 8px}
 .manual-entry button[data-order][aria-pressed="true"],.manual-entry .tap-entry-choice[aria-pressed="true"]{background:#36513a;color:#fff}
-.spoken-controls{display:grid;gap:8px;margin:12px 0 18px;padding:16px;border:1px solid #c9d4c8;border-radius:12px;background:#fff}
-.spoken-controls label{font-weight:700}.spoken-controls select{width:100%}.spoken-controls .notice{margin:0}
+.spoken-controls{display:grid;gap:10px;margin:12px 0 18px;padding:16px;border:1px solid #c9d4c8;border-radius:12px;background:#fff;transition:border-color .2s,box-shadow .2s}
+.spoken-controls .notice{margin:0}
+/* A held verdict is the one thing on this screen that is waiting on you. */
+.spoken-controls.waiting{border-color:#b5651d;box-shadow:0 0 0 3px #fde4d6}
+.sp-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sp-now{font-size:17px;color:#6b7768;font-weight:600}.sp-now.set{color:#1d2419}
+.sp-clear{margin-left:auto;min-height:28px;padding:2px 10px;font-size:13px}
+.sp-pending{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;border-radius:10px;background:#fdf0e1;color:#7a3d0c}
+.sp-pending button{min-height:30px;padding:3px 12px}
+.sp-teams{display:flex;gap:8px;flex-wrap:wrap}.sp-teams[hidden]{display:none}
+.sp-team{flex:1 1 0;min-width:90px;min-height:48px;font-size:16px;font-weight:700}
+.sp-find{display:flex;gap:8px}.sp-find input{flex:1;min-width:0;font-size:16px}
+.sp-chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.sp-chips[hidden]{display:none}
+.sp-label{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#6b7768;margin-right:2px}
+.sp-chip{min-height:34px;padding:4px 12px;border-radius:999px;font-size:15px}
+.sp-chip-team{margin-left:6px;font-size:12px;opacity:.7}
+.sp-team.on,.sp-chip.on{background:#36513a;color:#fff;border-color:#36513a}
+.sp-more{font-size:13px;color:#6b7768}
+/* Spot the Error without phones: one passage for the whole register. */
+.tap-passage{margin:0 0 14px;padding:14px;border:1px solid #c9d4c8;border-radius:12px;background:#fff}.tap-passage[hidden]{display:none}
+.tap-lead{margin:0 0 8px;font-size:14px;color:#6b7768}
+.tap-words{display:flex;flex-wrap:wrap;gap:6px}
+.tap-word{min-height:36px;padding:4px 10px;font-size:17px}

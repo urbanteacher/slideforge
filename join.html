@@ -1202,12 +1202,20 @@
         header(true);
         stopTick();
         if (m.spoken) {
-          $('waitIcon').textContent = m.oralAccepted ? '✓' : '↪';
-          $('waitTitle').textContent = (m.oralCount || 0) +
+          /* Said to this phone in its own terms: your answer, your team's
+             point, or simply the room's count. */
+          var tally = (m.oralCount || 0) +
             (context && context.style === 'headsup' ? ' in this round' : ' accepted so far');
-          $('waitLead').textContent = m.oralAccepted
-            ? 'The teacher accepted that spoken answer. Watch for the next turn.'
-            : 'Watch for the next turn.';
+          var mine = m.oralYou;
+          var ours = !mine && m.oralTeam && me.teamName && m.oralTeam === me.teamName;
+          $('waitIcon').textContent = mine ? '★' : m.oralAccepted ? '✓' : '↪';
+          $('waitTitle').textContent = mine ? 'Yours was accepted'
+            : ours ? 'A point for your team'
+            : m.oralAccepted ? (m.oralTeam ? 'Accepted for ' + m.oralTeam : 'Accepted')
+            : 'Next turn';
+          $('waitLead').textContent = (mine && m.gained ? '+' + m.gained + ' · ' : '') +
+            (m.oralTeam && m.oralPoints && !mine ? m.oralTeam + ' +' + m.oralPoints + ' · ' : '') +
+            tally + '. Watch for the next turn.';
           show('scWait');
           break;
         }

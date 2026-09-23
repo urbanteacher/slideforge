@@ -1802,6 +1802,12 @@ ws.attach(server, (sock, req) => {
             spoken,
             oralCount,
             oralAccepted: !!accepted,
+            /* Who the credit went to, as this phone may hear it: "yours",
+               or the team's name. Never another student's name. */
+            oralYou: !!(spoken && accepted && eligibleSpeaker === p),
+            oralTeam: spoken && accepted && recipientTeam != null && room.teams[recipientTeam] != null
+              ? String(room.teams[recipientTeam].name || room.teams[recipientTeam]).slice(0, 40) : '',
+            oralPoints: spoken && accepted && recipientTeam != null ? oralPoints : 0,
             right: p.lastRight,
             answered: p.answer != null,
             gained: p.lastGain,

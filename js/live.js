@@ -74,6 +74,10 @@
     var slide = SF.Player.open && SF.Player.deck.slides[SF.Player.idx];
     var state={type:'sf-manual-state',active:!!Live.pin,showing:!!(SF.Player&&SF.Player.open),live:!!Live.active,view:manualView,report:lastReport,players:Live.players,teams:Live.teams,mode:Live.mode,pin:Live.pin||null,
       recipient:Live.selectedRecipient,
+      pendingVerdict:Live.pendingVerdict&&slide&&Live.pendingVerdict.slideId===slide.id
+        ?{choice:Live.pendingVerdict.choice,label:(slide.options||[])[Live.pendingVerdict.choice]||''}:null,
+      recentSpeakers:Live.recentSpeakers,
+      lastCredit:Live.lastCredit&&slide&&Live.lastCredit.slideId===slide.id?Live.lastCredit:null,
       oralCount:slide ? (Live.oralCounts[slide.gameId] || 0) : 0,
       question:slide && slide.type==='quiz' ? {id:slide.id,question:slide.question,input:slide.input || 'choice',options:slide.options,spoken:isSpokenSlide(slide),scoreSpoken:slide.scoreSpoken===true,style:slide.style,range:slide.input==='number'?{min:slide.min,max:slide.max,step:slide.step,unit:slide.unit||''}:null,revealed:!!Live.revealed[slide.id]} : null,
       answers:(Live.snapshot.answers || []).map(function(a){
@@ -351,8 +355,23 @@
       else if(picked.type==='team' && Live.mode==='teams' && Live.teams[Number(picked.id)])
         Live.selectedRecipient={type:'team',id:Number(picked.id)};
       else Live.selectedRecipient={type:'room'};
+      /* Choosing the speaker is what completes a held verdict. */
+      var held=Live.pendingVerdict, now=SF.Player.deck&&SF.Player.deck.slides[SF.Player.idx];
+      if(held&&now&&now.id===held.slideId&&Live.selectedRecipient.type!=='room'&&!Live.revealed[now.id]){
+        commitVerdict(now,held.choice);
+        return;
+      }
       syncManual();
     }
+    else if(data.action==='verdictRoom') {
+      /* "Count it for the room": the held verdict lands with no points. */
+      var hold=Live.pendingVerdict, cur=SF.Player.deck&&SF.Player.deck.slides[SF.Player.idx];
+      if(hold&&cur&&cur.id===hold.slideId&&!Live.revealed[cur.id]){
+        Live.selectedRecipient={type:'room'};
+        commitVerdict(cur,hold.choice);
+      }
+    }
+    else if(data.action==='verdictCancel') { Live.pendingVerdict=null; syncManual(); }
     else if(data.action==='reveal') { revealNow(); syncManual(); }
     else if(data.action==='revealWith') { revealWith(data.choice); }
     else if(data.action==='report') send({t:'report'});
@@ -370,11 +389,114 @@
      and the marking agree, and the saved game is untouched: buildRunDeck
      compiles a question into a fresh slide object, so this run holds its own
      copy. */
+  /* ---------------------------------------------- spoken verdicts
+
+     One path, whichever button the teacher pressed: the verdict pads on the
+     wall, the same pads mirrored on the desk, or Live answers. It used to be
+     two paths with two rules. Live answers refused a scoring verdict until a
+     speaker was chosen; the wall accepted it and, in a teams game, quietly
+     credited nobody.
+
+     The order follows the lesson. The teacher judges as the student finishes
+     speaking, then says who it was. A scoring verdict with no speaker chosen
+     is held, not refused ("Correct — who spoke?"), and the choice of speaker
+     completes it. The speaker is chosen per item and cleared after it, so
+     the last student's name can never be credited for the next student's
+     answer. Heads Up is the exception: its guesser owns the whole round. */
+
+  /** Would this verdict put points somewhere, so it needs to know where? */
+  function verdictScores(s, choice) {
+    if (!isSpokenSlide(s) || s.style === 'headsup' || s.style === 'randomchallenge') return false;
+    var accepted = choice === 0 || (s.style === 'spinexplain' && choice === 1);
+    return accepted && (Live.mode === 'teams' || s.scoreSpoken === true);
+  }
+
+  Live.pendingVerdict = null;
+  Live.recentSpeakers = [];
+  Live.lastCredit = null;
+
+  function recipientName(r) {
+    if (!r || r.type === 'room') return '';
+    if (r.type === 'team') return (Live.teams[r.id] && (Live.teams[r.id].name || Live.teams[r.id])) || '';
+    var p = (Live.players || []).find(function (x) { return x.id === r.id; });
+    return p ? p.name : '';
+  }
+
+  /* What the wall and the desk say when a verdict lands. A success may name
+     who earned it, because they stepped forward and it went well; a Pass or
+     a Reject names nobody (games audit, section 6). */
+  function creditFor(s, choice) {
+    var accepted = choice === 0 || (s.style === 'spinexplain' && choice === 1);
+    if (!accepted) return { accepted: false, line: '' };
+    var r = Live.selectedRecipient || { type: 'room' };
+    var pts = s.style === 'spinexplain' && choice === 0 ? 2 : 1;
+    var scores = verdictScores(s, choice);
+    var who = '';
+    if (Live.mode === 'teams') {
+      if (r.type === 'team') who = recipientName(r);
+      else if (r.type === 'player') {
+        var p = (Live.players || []).find(function (x) { return x.id === r.id; });
+        var team = p && p.team != null ? Live.teams[p.team] : null;
+        who = team ? (team.name || team) : '';
+      }
+    } else if (r.type === 'player') {
+      who = recipientName(r);
+    }
+    return {
+      accepted: true,
+      who: who,
+      points: scores && who ? pts : 0,
+      line: who ? (scores ? who + ' +' + pts : who) : ''
+    };
+  }
+
+  function noteSpeaker(r) {
+    if (!r || r.type !== 'player') return;
+    Live.recentSpeakers = [r.id].concat(Live.recentSpeakers.filter(function (id) { return id !== r.id; })).slice(0, 5);
+  }
+
+  /** Hold a scoring verdict until the teacher says who spoke. */
+  function holdVerdict(s, choice) {
+    Live.pendingVerdict = { slideId: s.id, choice: choice };
+    syncManual();
+    if (SF.Player.syncPresenter) SF.Player.syncPresenter();
+    SF.toast((s.options && s.options[choice] ? s.options[choice] : 'Verdict') +
+      ' — who spoke? Choose them in Live answers to award it.');
+  }
+
+  /** The verdict itself, once it is known where any points go. */
+  function commitVerdict(s, choice) {
+    Live.pendingVerdict = null;
+    Live.spokenVerdicts[s.id] = choice;
+    Live.lastCredit = Object.assign({ slideId: s.id }, creditFor(s, choice));
+    noteSpeaker(Live.selectedRecipient);
+    s.correct = choice;
+    revealNow();
+    /* Cleared after the reveal has carried it to the relay. */
+    if (s.style !== 'headsup') Live.selectedRecipient = { type: 'room' };
+    /* An accepted link grows the chain, which is drawn from the slide. */
+    if ((s.style === 'conceptchain' || s.conceptChain) && choice === 0) SF.Player.goTo(SF.Player.idx, 0);
+    syncManual();
+  }
+
+  /** Every spoken verdict comes through here. */
+  function spokenVerdict(s, choice) {
+    if (verdictScores(s, choice) && (!Live.selectedRecipient || Live.selectedRecipient.type === 'room')) {
+      holdVerdict(s, choice);
+      return;
+    }
+    commitVerdict(s, choice);
+  }
+
   function revealWith(choice){
     var s = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
     if(!s || s.type!=='quiz' || Live.revealed[s.id]) return;
+    if(isSpokenSlide(s) && Number.isInteger(choice) && choice>=0 && choice<(s.options||[]).length &&
+       !((s.style === 'conceptchain' || s.conceptChain) && SF.Player.tryAcceptChain && !SF.Player.tryAcceptChain(s, choice))){
+      spokenVerdict(s, choice);
+      return;
+    }
     if(s.input==='choice' && Number.isInteger(choice) && choice>=0 && choice<(s.options||[]).length){
-      if(isSpokenSlide(s)) Live.spokenVerdicts[s.id]=choice;
       /* Concept Chain: Accept needs a typed link; Reject clears the draft. */
       if ((s.style === 'conceptchain' || s.conceptChain) &&
           SF.Player.tryAcceptChain && !SF.Player.tryAcceptChain(s, choice)) {
@@ -1502,9 +1624,8 @@
     SF.Player.on('slide', onSlide);
     SF.Player.on('answer', function (e) {
       if (!Live.active || !e || !isSpokenSlide(e.slide)) return;
-      Live.spokenVerdicts[e.slide.id] = e.choice;
-      e.slide.correct = e.choice;
-      revealNow();
+      /* The wall's verdict pads take the same path as Live answers. */
+      spokenVerdict(e.slide, e.choice);
     });
     SF.Player.on('timeup', function () {
       if (Live.players.some(function(p){return p.manual;})) return;
@@ -2028,11 +2149,24 @@
       chip.setAttribute('aria-live', 'polite');
       (node.querySelector('.pad') || node).appendChild(chip);
     }
-    chip.textContent = s.style === 'headsup'
-      ? count + ' in 60 seconds'
+    /* Heads Up is one guesser's round, and saying whose is the applause. */
+    var guesser = s.style === 'headsup' ? recipientName(Live.selectedRecipient) : '';
+    var tally = s.style === 'headsup'
+      ? (guesser ? guesser + '\u2019s round: ' + count : count + ' this round')
       : s.style === 'randomchallenge'
         ? count + ' challenges completed'
         : count + ' explanations accepted';
+    chip.textContent = '';
+    var credit = Live.lastCredit && Live.lastCredit.slideId === s.id ? Live.lastCredit : null;
+    if (credit && credit.accepted) {
+      /* The moment it lands: who earned it, then the running count. */
+      var line = el('span', 'oc-credit', '\u2713 ' + (credit.line || 'Accepted'));
+      chip.appendChild(line);
+      chip.classList.remove('oc-pop');
+      void chip.offsetWidth;
+      chip.classList.add('oc-pop');
+    }
+    chip.appendChild(el('span', 'oc-tally', tally));
   }
 
   function sendIdle(s) {
@@ -2153,6 +2287,9 @@
   function onSlide(e) {
     if (!Live.active) return;
     var s = e.slide;
+    /* A held verdict belongs to the item it was given on. */
+    if (Live.pendingVerdict && (!s || Live.pendingVerdict.slideId !== s.id)) Live.pendingVerdict = null;
+    if (s && s.style !== 'headsup' && isSpokenSlide(s)) Live.selectedRecipient = { type: 'room' };
     if (isSpokenSlide(s)) paintOralCount();
 
     /* Feedback takes the rail while its slide is up; the scoreboard resumes

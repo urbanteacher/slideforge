@@ -134,22 +134,16 @@ function drawRevealRow(q){
  row.dataset.q=q.id;
  row.textContent='';
  var lead=document.createElement('p');lead.className='reveal-lead';
- lead.textContent=q.spoken?'Choose who spoke, then mark the spoken answer.':
+ lead.textContent=q.spoken?'Mark the answer as they finish. If it scores, you’ll be asked who spoke.':
   'Press the correct answer to reveal it and score the room.';
  row.appendChild(lead);
  (q.options||[]).forEach(function(text,i){
   var b=document.createElement('button');
   b.className='reveal-opt';
   b.textContent=String.fromCharCode(65+i)+' · '+text;
-  b.onclick=function(){
-   var scoring=q.spoken&&q.style!=='headsup'&&q.style!=='randomchallenge'&&
-    (state.mode==='teams'||q.scoreSpoken)&&
-    (i===0||(q.style==='spinexplain'&&i===1));
-   if(scoring&&(!state.recipient||state.recipient.type==='room')){
-    $('error').textContent='Choose who spoke or their team before awarding points.';return;
-   }
-   $('error').textContent='';send('revealWith',{choice:i});
-  };
+  /* No refusal here: a scoring verdict with nobody chosen is held by the
+     host until the teacher says who spoke (see paintSpokenControls). */
+  b.onclick=function(){$('error').textContent='';send('revealWith',{choice:i});};
   row.appendChild(b);
  });
 }
@@ -209,7 +203,8 @@ function recordCurrent(choice){
  if(q.spoken)return false;
  var row=enteredRows()[cursor];if(!row)return false;
  if(q.input==='order')return chooseOrderItem(q,row,choice);
- if(q.input!=='choice'&&q.input!=='tap')return false;
+ /* A letter is not a word: a tap is recorded by clicking the passage. */
+ if(q.input!=='choice')return false;
  if(choice<0||choice>=(q.options||[]).length)return false;
  sendRowAnswer(q,row,{choice:choice});
  moveCursor(1);
@@ -331,34 +326,132 @@ if($('startLiveRoom')) $('startLiveRoom').onclick=function(){
  $('error').textContent='';
 };
 
+/* Who spoke, for the spoken formats.
+
+   The teacher is watching the student, not this screen, so choosing has to
+   take one glance and one click: the teams as big buttons, the last few
+   speakers as chips, the rest by typing the first letters, and "Pick for me"
+   for cold-calling, which prefers someone who has not spoken yet. A scoring
+   verdict given before anyone was chosen waits here ("Correct is waiting")
+   and choosing completes it. The choice lasts one item and is then cleared,
+   except in Heads Up, where the guesser owns the round. */
+var spQuery='', spFocusFor='';
+function chooseSpeaker(r){spQuery='';var f=$('spSearch');if(f)f.value='';send('recipient',{recipient:r});}
 function paintSpokenControls(q){
- var box=$('spokenControls'),select=$('spokenRecipient');
- if(!box||!select)return;
+ var box=$('spokenControls');
+ if(!box)return;
  box.hidden=!q||!q.spoken;
- if(box.hidden)return;
- var selected=state.recipient||{type:'room'};
- var value=selected.type==='room'?'room':selected.type+':'+selected.id;
- select.textContent='';
- function option(key,label){var o=document.createElement('option');o.value=key;o.textContent=label;select.appendChild(o);}
- option('room','The room · count only');
- if(state.mode==='teams') (state.teams||[]).forEach(function(t,i){
-  option('team:'+i,(t.name||t)+' · team');
+ if(box.hidden){spFocusFor='';return;}
+ var sel=state.recipient||{type:'room'};
+ var teams=state.mode==='teams'?(state.teams||[]):[];
+ function teamName(i){var t=teams[i];return t?(t.name||t):'';}
+ var people=(state.players||[]).filter(function(p){return p.manual||p.connected!==false;});
+ var byId={};people.forEach(function(p){byId[p.id]=p;});
+
+ var now=sel.type==='team'&&teams[sel.id]?teamName(sel.id)+' · team'
+  :sel.type==='player'&&byId[sel.id]?byId[sel.id].name+(teams.length&&byId[sel.id].team!=null?' · '+teamName(byId[sel.id].team):'')
+  :'';
+ $('spNow').textContent=now||(q.style==='headsup'?'Choose this round’s guesser':'Nobody yet · counts for the room');
+ $('spNow').classList.toggle('set',!!now);
+ $('spClear').hidden=!now;
+ $('spClear').onclick=function(){chooseSpeaker({type:'room'});};
+
+ var pend=state.pendingVerdict;
+ $('spPending').hidden=!pend;
+ box.classList.toggle('waiting',!!pend);
+ if(pend){
+  $('spPendingText').textContent=(pend.label||'The verdict')+' is waiting.';
+  /* Straight to the name box, once per held verdict. */
+  var key=q.id+':'+pend.choice;
+  if(spFocusFor!==key){spFocusFor=key;setTimeout(function(){var f=$('spSearch');if(f)f.focus();},0);}
+ }else spFocusFor='';
+ $('spRoom').onclick=function(){send('verdictRoom');};
+
+ function chip(p){
+  var on=sel.type==='player'&&sel.id===p.id;
+  var b=button(p.name,function(){chooseSpeaker({type:'player',id:p.id});});
+  b.className='sp-chip'+(on?' on':'');b.setAttribute('aria-pressed',String(on));
+  if(teams.length&&p.team!=null){var t=document.createElement('span');t.className='sp-chip-team';t.textContent=teamName(p.team);b.appendChild(t);}
+  return b;
+ }
+
+ var tb=$('spTeams');tb.textContent='';tb.hidden=!teams.length;
+ teams.forEach(function(_,i){
+  var on=sel.type==='team'&&sel.id===i;
+  var b=button(teamName(i),function(){chooseSpeaker({type:'team',id:i});});
+  b.className='sp-team'+(on?' on':'');b.setAttribute('aria-pressed',String(on));tb.appendChild(b);
  });
- (state.players||[]).forEach(function(p){
-  option('player:'+p.id,p.name+(state.mode==='teams'&&p.team!=null&&state.teams[p.team]
-    ?' · '+(state.teams[p.team].name||state.teams[p.team]):''));
+
+ var qy=spQuery.trim().toLowerCase();
+ var recent=(state.recentSpeakers||[]).map(function(id){return byId[id];}).filter(Boolean);
+ var rb=$('spRecent');rb.textContent='';rb.hidden=!recent.length||!!qy;
+ if(recent.length&&!qy){
+  var lbl=document.createElement('span');lbl.className='sp-label';lbl.textContent='Recent';rb.appendChild(lbl);
+  recent.forEach(function(p){rb.appendChild(chip(p));});
+ }
+
+ var match=people.filter(function(p){
+  if(!qy)return true;
+  var n=String(p.name||'').toLowerCase();
+  return n.indexOf(qy)===0||n.split(/\s+/).some(function(w){return w.indexOf(qy)===0;});
  });
- select.value=value;
- if(select.value!==value)select.value='room';
- select.onchange=function(){
-  var parts=select.value.split(':');
-  send('recipient',{recipient:parts[0]==='room'?{type:'room'}:{type:parts[0],id:Number(parts[1])}});
+ /* Everyone, when a room is small enough to scan; a handful, and the search,
+    when it is not. */
+ var limit=qy?12:people.length<=16?16:8;
+ var pb=$('spPeople');pb.textContent='';
+ match.slice(0,limit).forEach(function(p){pb.appendChild(chip(p));});
+ function note(text){var m=document.createElement('span');m.className='sp-more';m.textContent=text;pb.appendChild(m);}
+ if(match.length>limit)note('+'+(match.length-limit)+' more · type to narrow');
+ if(qy&&!match.length)note('Nobody in the room starts with “'+spQuery.trim()+'”.');
+
+ var search=$('spSearch');
+ search.oninput=function(){spQuery=search.value;render();};
+ search.onkeydown=function(e){
+  if(e.key==='Enter'&&match[0]){e.preventDefault();chooseSpeaker({type:'player',id:match[0].id});}
+  if(e.key==='Escape'){spQuery='';search.value='';render();}
  };
- $('spokenScoringNote').textContent=q.style==='headsup'
-  ?(state.oralCount||0)+' correct in this round · count only.'
-  :state.mode==='teams'?'Accepted answers score only for the selected team.'
-  :q.scoreSpoken?'Accepted answers score only for the selected speaker.'
-  :'Accepted answers add to the room count. Individual points are off in Game settings.';
+ $('spPick').onclick=function(){
+  /* Cold-call fairly: someone who has not spoken recently, if there is one. */
+  var recentIds=state.recentSpeakers||[];
+  var pool=people.filter(function(p){return recentIds.indexOf(p.id)<0;});
+  if(!pool.length)pool=people;
+  if(!pool.length)return;
+  chooseSpeaker({type:'player',id:pool[Math.floor(Math.random()*pool.length)].id});
+ };
+
+ var credit=state.lastCredit;
+ $('spokenScoringNote').textContent=
+  (credit&&credit.accepted?'✓ Last: '+(credit.line||'accepted for the room')+'. ':'')+
+  (q.style==='headsup'?(state.oralCount||0)+' correct in this round · count only.'
+  :teams.length?'An accepted answer scores for the chosen team.'
+  :q.scoreSpoken?'An accepted answer scores for the chosen speaker.'
+  :'Accepted answers add to the room count. Individual points are off in Game settings.');
+}
+
+/* Spot the Error without phones: one passage for the whole register rather
+   than a copy of it in every row. Click the word the learner points at; it
+   records for the highlighted row and moves down. */
+function paintTapPassage(q){
+ var box=$('tapPassage');
+ if(!box)return;
+ var entered=(state.players||[]).some(function(p){return p.manual;});
+ var show=!!q&&q.input==='tap'&&!q.spoken&&!q.revealed&&entered;
+ box.hidden=!show;
+ if(!show){box.textContent='';box.dataset.q='';return;}
+ if(box.dataset.q===q.id)return;
+ box.dataset.q=q.id;box.textContent='';
+ var lead=document.createElement('p');lead.className='tap-lead';
+ lead.textContent='Click the word the highlighted learner points at. It records and moves down.';
+ box.appendChild(lead);
+ var words=document.createElement('div');words.className='tap-words';
+ (q.options||[]).forEach(function(w,i){
+  var b=button(w,function(){
+   var row=enteredRows()[cursor];if(!row)return;
+   sendRowAnswer(q,row,{choice:i});moveCursor(1);
+  });
+  b.className='tap-word';words.appendChild(b);
+ });
+ box.appendChild(words);
 }
 
 function render(){
@@ -372,6 +465,7 @@ function render(){
     because those are the rows that need doing something to. */
  var q=state.question, key=q?q.id:'', all=(state.players||[]).slice();
  paintSpokenControls(q);
+ paintTapPassage(q);
  var entered=all.filter(function(p){return p.manual;});
  var onPhones=all.filter(function(p){return !p.manual;});
  var people=entered.concat(onPhones);
@@ -466,9 +560,10 @@ function render(){
    if(q&&p.manual){
     function answer(data){sendRowAnswer(q,row,data);}
     if(q.spoken){ /* The teacher marks the spoken verdict above. */ }
-    else if(q.input==='choice'||q.input==='tap') (q.options||[]).forEach(function(text,i){
-     var b=button((q.input==='choice'?String.fromCharCode(65+i)+' · ':'')+text,function(){answer({choice:i});if(q.input==='tap')moveCursor(1);});
-     b.dataset.choice=i;if(q.input==='tap')b.className='tap-entry-choice';row.appendChild(b);
+    else if(q.input==='tap'){ /* Recorded from the one passage above the register. */ }
+    else if(q.input==='choice') (q.options||[]).forEach(function(text,i){
+     var b=button(String.fromCharCode(65+i)+' · '+text,function(){answer({choice:i});});
+     b.dataset.choice=i;row.appendChild(b);
     });
     else if(q.input==='order') (q.options||[]).forEach(function(text,i){
      var b=button(String.fromCharCode(65+i)+' · '+text,function(){chooseOrderItem(q,row,i);});
