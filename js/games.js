@@ -704,6 +704,41 @@
 
   /* Horse race, Beat the Clock and Boss Battle author like multiple choice —
      the difference is the room mechanic. Boss also has a difficulty per hit. */
+  /* Spot the Error: the sentence, the words in it that are wrong, and what
+     they should say. Below them, the sentence as the room will see it on their
+     phones — a word to a button — with the marked words lit, so a typo in the
+     "wrong words" field shows up here rather than as a question nobody can
+     get right. */
+  STYLE_EDITORS.spot = function (insp, question) {
+    var preview = el('div', 'spot-author-preview');
+    function paintPreview() {
+      preview.replaceChildren();
+      var words = SF.spotWords ? SF.spotWords(question.question) : [];
+      var span = SF.spotSpan ? SF.spotSpan(question.question, question.error) : null;
+      words.forEach(function (w, i) {
+        preview.appendChild(el('span', 'spot-author-word' +
+          (span && i >= span.from && i <= span.to ? ' on' : ''), w));
+      });
+      var note = !words.length ? 'Write the sentence above.'
+        : !String(question.error || '').trim() ? 'Now type the wrong word(s) — they light up here when they match.'
+        : !span ? '“' + String(question.error).trim() + '” is not in the sentence word for word — check the spelling.'
+        : words.length > (SF.SPOT_MAX_WORDS || 80) ? words.length + ' words is a lot for a phone — aim for one or two sentences.'
+        : words.length + ' words · the room taps one of them.';
+      preview.appendChild(el('div', 'spot-author-note' + (span ? '' : ' warn'), note));
+    }
+    insp.appendChild(UI.field('Sentence — with one mistake in it', UI.area(question.question || '', function (v) {
+      question.question = v; touched(); paintPreview(); drawRail();
+    }, 3), 'Write it as a confident, plausible claim. The error should be one a learner could really make.'));
+    insp.appendChild(UI.field('The wrong word or words, exactly as written', UI.text(question.error || '', function (v) {
+      question.error = v.slice(0, 120); touched(); paintPreview(); drawRail();
+    }, 'mitochondria')));
+    insp.appendChild(UI.field('What it should say', UI.text(question.fix || '', function (v) {
+      question.fix = v.slice(0, 120); touched();
+    }, 'chloroplasts'), 'Slides in beside the struck-out words at the reveal.'));
+    paintPreview();
+    insp.appendChild(UI.field('On the phones', preview));
+  };
+
   STYLE_EDITORS.race = STYLE_EDITORS.choice;
   STYLE_EDITORS.speed = STYLE_EDITORS.choice;
   STYLE_EDITORS.boss = function (insp, question) {

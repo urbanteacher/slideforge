@@ -853,9 +853,19 @@ function questionTimeLimit(slide, teacherEntry) {
   return teacherEntry ? 0 : Math.max(0, Number(slide.timeLimit) || 0);
 }
 
+/* What the presenter view prints as the answer. Only a choice question has
+   an answer that is "letter — option"; every other shape said something
+   false in that form: Ranking printed "A — First", as if one item were the
+   answer; Compare printed "? — "; and the spoken formats printed a verdict
+   ("A — Correct"), which is the teacher's call, not an answer. */
+var TEACHER_CALL = ['headsup', 'spinexplain', 'connection', 'randomchallenge', 'conceptchain'];
 function correctAnswerLabel(slide) {
-  if(slide.input==='text'||slide.input==='number') return String(slide.answer || '');
-  return ('ABCDEF'[slide.correct] || '?')+' — '+((slide.options||[])[slide.correct] || '');
+  if(slide.input==='text'||slide.input==='number'||slide.input==='tap') return String(slide.answer || '');
+  if(slide.input==='order') return (slide.options||[]).join(' → ');
+  if(TEACHER_CALL.indexOf(slide.style) > -1) return 'Your call — mark it as they answer';
+  var opt=(slide.options||[])[slide.correct];
+  if(!Number.isInteger(slide.correct) || slide.correct<0 || opt==null) return '';
+  return ('ABCDEF'[slide.correct] || '?')+' — '+opt;
 }
 
 

@@ -361,3 +361,98 @@
   .game-stage.present-spin .spin-concept { animation: game-reveal .25s .6s ease-out both; }
 }
 @keyframes spin-draw { from { rotate: -675deg; } to { rotate: 0deg; } }
+
+/* ------------------------------------------------------------ spot the error
+   src/render/quiz.js (input 'tap'). The passage is the stage: a word to a
+   cell, each with a tally column that draws as a heat bar under the word once
+   the reveal opens the tally. Theme tokens throughout, so it wears the deck. */
+.layout-quiz.is-spot .spot-passage {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  column-gap: .28em; row-gap: .62em;
+  margin-top: 34px; padding-bottom: 28px;
+  font-weight: 700; letter-spacing: -.01em; line-height: 1.12;
+  font-size: 58px;
+}
+.layout-quiz.is-spot .spot-passage[data-len="medium"] { font-size: 44px; }
+.layout-quiz.is-spot .spot-passage[data-len="long"] { font-size: 32px; row-gap: .7em; }
+/* Undo the option card: here an option is a word in running text. */
+.layout-quiz.is-spot .spot-passage .opt.spot-cell {
+  display: inline-block; position: relative; overflow: visible;
+  background: none; border: 0; border-radius: 6px; padding: 0 .06em; min-height: 0;
+  font: inherit; font-size: inherit; line-height: inherit; color: inherit;
+  transition: color .3s, background .3s;
+}
+.layout-quiz.is-spot .spot-passage .opt.spot-cell:hover:not(.locked) {
+  transform: none; background: color-mix(in srgb, var(--s-accent, #c8102e) 12%, transparent);
+}
+/* The reveal must not dim the sentence: every word is still part of it. */
+.layout-quiz.is-spot .spot-passage .opt.muted,
+.layout-quiz.is-spot .spot-passage .opt.picked { opacity: 1; background: none; }
+.layout-quiz.is-spot .spot-passage .opt.correct { background: none; border: 0; }
+
+/* The heat bar and its count, under the word. Held back until the tally is
+   opened, which for a spot question is the reveal. */
+.layout-quiz.is-spot .spot-cell .col {
+  position: absolute; left: .06em; right: .06em; top: calc(100% + .1em);
+  height: 0; pointer-events: none;
+}
+.layout-quiz.is-spot .spot-cell .col .bar {
+  display: block; height: 0 !important; border-radius: 4px;
+  /* Heat reads as heat on every theme: amber for where the room went, green
+     for the error itself. A theme's second accent is a slate on some decks. */
+  background: var(--spot-heat, #d98e04);
+  transition: height .5s cubic-bezier(.2,.8,.2,1), opacity .5s;
+}
+.layout-quiz.is-spot .spot-passage.on .spot-cell .col .bar {
+  height: .16em !important; opacity: max(.3, var(--share, 0));
+}
+/* A word nobody tapped has no bar at all, not a faint one. */
+.layout-quiz.is-spot .spot-passage.on .spot-cell .col:has(.cnt:empty) .bar { opacity: 0; }
+.layout-quiz.is-spot .spot-cell .col .cnt {
+  display: block; margin-top: .08em; text-align: center;
+  font-size: 15px; font-weight: 800; line-height: 1; color: var(--spot-heat, #d98e04);
+  opacity: 0; transition: opacity .4s .3s;
+}
+.layout-quiz.is-spot .spot-passage.on .spot-cell .col .cnt { opacity: 1; }
+.layout-quiz.is-spot .spot-passage.on .spot-cell.in-error .col .bar { background: var(--s-good, #2f7d4f); }
+.layout-quiz.is-spot .spot-passage.on .spot-cell.in-error .col .cnt { color: var(--s-good, #2f7d4f); }
+
+/* The error, struck; its correction, beside it. Both wait for the reveal,
+   which marks the first wrong word .correct in live and solo play alike. */
+.layout-quiz.is-spot .spot-fix { display: none; }
+.layout-quiz.is-spot .spot-passage:has(.opt.correct) .in-error .spot-text {
+  color: var(--s-bad, #c8102e);
+  text-decoration: line-through; text-decoration-thickness: .09em;
+}
+.layout-quiz.is-spot .spot-passage:has(.opt.correct) .spot-fix {
+  display: inline-block; align-self: baseline;
+  padding: 0 .22em; border-radius: .18em;
+  background: color-mix(in srgb, var(--s-good, #2f7d4f) 16%, transparent);
+  color: var(--s-good, #2f7d4f);
+  animation: spot-fix-in .5s cubic-bezier(.2,.8,.2,1) both .25s;
+}
+@keyframes spot-fix-in { from { opacity: 0; transform: translateY(.3em); } }
+@media (prefers-reduced-motion: reduce) { .layout-quiz.is-spot .spot-passage:has(.opt.correct) .spot-fix { animation: none; } }
+/* A tap on the wrong word, in solo play: underlined, not coloured, so the
+   struck error stays the loudest thing. */
+.layout-quiz.is-spot .spot-passage .opt.wrong .spot-text {
+  text-decoration: underline wavy var(--s-bad, #c8102e); text-underline-offset: .18em;
+}
+
+.layout-quiz.is-spot .spot-verdict:empty { display: none; }
+.layout-quiz.is-spot .spot-verdict {
+  margin-top: 26px; font-size: 26px; line-height: 1.35;
+}
+.layout-quiz.is-spot .spot-verdict b { color: var(--s-good, #2f7d4f); }
+.layout-quiz.is-spot .spot-why .why { display: none; }
+.layout-quiz.is-spot.why-open .spot-why .why,
+.layout-quiz.why-open .spot-why .why {
+  display: block; margin-top: 18px; font-size: 26px; line-height: 1.4; opacity: .85;
+}
+/* The passage borrows the tally's class so the tally code finds its bars, and
+   must not borrow its box: the generic .tally is a zero-height strip that
+   opens to 74px, which would fold the sentence away. */
+.layout-quiz.is-spot .spot-passage.tally,
+.layout-quiz.is-spot .spot-passage.tally.on { height: auto; overflow: visible; }
+.layout-quiz.is-spot .spot-passage.tally .col { display: block; flex: none; gap: 0; }
+.layout-quiz.is-spot .spot-passage.tally .bar { width: auto; min-height: 0; }

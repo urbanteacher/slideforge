@@ -42,6 +42,7 @@ import sampleDeck from "./samples/deck.json" with { type: "json" };
 import { uid } from "./core/identity.js";
 import { makeQuestion, makeGame, starterGame } from "./games/factories.js";
 import { gameStyle, GAME_STYLES, markResponse, answerLabel } from "./games/registry.js";
+import { spotWords, spotSpan, SPOT_MAX_WORDS } from './games/spot.js';
 import { formatStyle, isSpecialStyle, FORMATS, INPUTS, FORMAT_STYLE, CORE_STYLES, SPECIAL_STYLES, gameFormat } from "./games/catalogue.js";
 import { clampDefinitionSeconds, splitDefinitionPassage, definitionCreate, definitionTransition, DEFINITION_TIMES } from "./games/definition.js";
 import { clampChainSeconds, CHAIN_TIMES } from "./games/conceptchain.js";
@@ -1735,6 +1736,9 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   fillQuestionSlide: fillQuestionSlide,
   buildRunDeck: buildRunDeck,
   runIndexOf: runIndexOf,
+  spotWords: spotWords,
+  spotSpan: spotSpan,
+  SPOT_MAX_WORDS: SPOT_MAX_WORDS,
   showNumber: showNumber,
   gameToRunDeck: gameToRunDeck,
   migrateDeckQuizzes: migrateDeckQuizzes,

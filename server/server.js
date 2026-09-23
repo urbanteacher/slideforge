@@ -855,7 +855,9 @@ function answersFor(room) {
 
 function pushTally(room) {
   if (!room.host || !room.question) return;
-  const choosing = room.question.input === 'choice';
+  /* A tap question is a choice among its words: counted the same way, and
+     the count per word is the heat map its reveal draws. */
+  const choosing = room.question.input === 'choice' || room.question.input === 'tap';
   const eligible = room.question.eligible;
   const counts = new Array(room.question.options.length).fill(0);
   let answered = 0;
@@ -1503,7 +1505,7 @@ ws.attach(server, (sock, req) => {
           else { if(!Number.isInteger(m.choice) || m.choice<0 || m.choice>=q.options.length) return; response=m.choice; }
         }
         p.answer=response; p.sure=null; p.answeredAt=Date.now(); room.answerRev++;
-        record(room,'manualAnswer',{attempt:q.attempt,playerId:p.id,input:q.input,choice:q.input==='choice'?response:null,text:q.input==='text'?response:null,value:q.input==='number'?response:null,clear:!!m.clear,sure:null,source:'teacher',elapsedMs:null});
+        record(room,'manualAnswer',{attempt:q.attempt,playerId:p.id,input:q.input,choice:(q.input==='choice'||q.input==='tap')?response:null,text:q.input==='text'?response:null,value:q.input==='number'?response:null,clear:!!m.clear,sure:null,source:'teacher',elapsedMs:null});
         pushTally(room); return;
       }
 
@@ -1533,8 +1535,10 @@ ws.attach(server, (sock, req) => {
            value on a line. Only the first has options at all — that is what
            makes the others recall rather than recognition — so the option
            count is checked for that kind alone. */
-        const input = ['text', 'number', 'order'].includes(m.input) ? m.input : 'choice';
+        const input = ['text', 'number', 'order', 'tap'].includes(m.input) ? m.input : 'choice';
         if (input === 'choice' && (!Array.isArray(m.options) || m.options.length < 2 || m.options.length > 6)) return;
+        /* Spot the Error: the options are the words of the passage. */
+        if (input === 'tap' && (!Array.isArray(m.options) || m.options.length < 2 || m.options.length > 80)) return;
         if (input === 'order' && (!Array.isArray(m.options) || m.options.length < 3 || m.options.length > 8)) return;
         if (room.question && room.question.id === String(m.id || '') && room.phase === 'question') return;
         room.asked++;
@@ -1547,7 +1551,7 @@ ws.attach(server, (sock, req) => {
           question: String(m.question || '').slice(0,2000),
           bloom: ['Remember','Understand','Apply','Analyze','Evaluate','Create'].includes(m.bloom) ? m.bloom : '',
           sourceSlideId: String(m.sourceSlideId || '').slice(0,160),
-          options: (input === 'choice' || input === 'order') && Array.isArray(m.options) ? m.options.map(o => String(o).slice(0,2000)) : [],
+          options: (input === 'choice' || input === 'order' || input === 'tap') && Array.isArray(m.options) ? m.options.map(o => String(o).slice(0,2000)) : [],
           /* What a wrong option means, by the same index as `options`.
              Carried into the journal so the report can name a misconception
              the room actually walked into, and never sent to a phone — see
@@ -2374,7 +2378,7 @@ ws.attach(server, (sock, req) => {
       room.answerRev++;
       record(room, 'answer', {attempt:room.question.attempt, playerId:me.id,
         input: room.question.input,
-        choice: room.question.input === 'choice' ? response : null,
+        choice: room.question.input === 'choice' || room.question.input === 'tap' ? response : null,
         text: room.question.input === 'text' ? response : null,
         value: room.question.input === 'number' ? response : null,
         /* Its own field, not squeezed into `choice`. The report reads these

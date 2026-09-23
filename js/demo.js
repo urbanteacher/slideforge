@@ -105,6 +105,20 @@
       if (Math.random() < 0.65 && accept[0]) return String(accept[0]);
       return ['not sure', '…', 'pass', '???'][Math.floor(Math.random() * 4)];
     }
+    if (slide.input === 'tap' && Array.isArray(slide.options) && slide.options.length) {
+      /* Most find the error; the rest cluster on one or two tempting words,
+         as a real room does, so a rehearsal's heat map has a second bar worth
+         talking about rather than an even smear. */
+      var from = typeof slide.errorFrom === 'number' ? slide.errorFrom : Number(slide.correct) || 0;
+      var to = typeof slide.errorTo === 'number' ? slide.errorTo : from;
+      if (Math.random() < 0.6) return from + Math.floor(Math.random() * (to - from + 1));
+      var lure = slide.options.map(function (w, i) { return { i: i, len: String(w).length }; })
+        .filter(function (x) { return x.i < from || x.i > to; })
+        .sort(function (a, b) { return b.len - a.len; });
+      if (!lure.length) return from;
+      var pick = Math.random() < 0.7 ? lure[0] : lure[Math.floor(Math.random() * Math.min(4, lure.length))];
+      return pick.i;
+    }
     if (slide.input === 'order' && Array.isArray(slide.options)) {
       var order = slide.options.map(function (_, i) { return i; });
       if (Math.random() < 0.55) return order.slice();
@@ -146,7 +160,7 @@
     players.forEach(function (p) {
       if (p.choice == null || p.slideId !== slide.id) return;
       answered++;
-      if (slide.input === 'choice' && Number.isInteger(p.choice) && counts[p.choice] != null) {
+      if ((slide.input === 'choice' || slide.input === 'tap') && Number.isInteger(p.choice) && counts[p.choice] != null) {
         counts[p.choice]++;
       }
     });
@@ -156,7 +170,7 @@
   function paintProgress(slide) {
     if (!host || !slide || slide.type !== 'quiz') return;
     var t = tallyFrom(slide);
-    if (slide.input === 'choice') host.setTally(t.counts, { answered: t.answered, total: t.total });
+    if (slide.input === 'choice' || slide.input === 'tap') host.setTally(t.counts, { answered: t.answered, total: t.total });
     else host.setTally([], { answered: t.answered, total: t.total });
     paintRail();
   }
@@ -188,6 +202,8 @@
         node.classList.add('why-open');
         if (host.scheduleFit) host.scheduleFit(node);
       }
+      /* A held tally (Spot the Error) waited for this moment. */
+      if (host.releaseTally) host.releaseTally();
       if (host.openTally) host.openTally(node);
       else {
         var bar = node.querySelector('.tally');

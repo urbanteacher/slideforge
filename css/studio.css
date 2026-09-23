@@ -287,3 +287,10 @@ html[data-ws="plan"] .rail-foot .rail-actions .btn{flex:1}
 /* The starters' first card: games and activities (UX-23). No preview slide to
    draw, so a mark stands in the frame's place. */
 .starter-activity .starter-activity-mark{aspect-ratio:16/9;display:grid;place-items:center;font-size:40px;border-radius:8px;background:var(--ui-accent-soft);color:var(--ui-accent);margin-bottom:8px}
+
+/* Spot the Error authoring preview (js/games.js STYLE_EDITORS.spot). */
+.spot-author-preview{display:flex;flex-wrap:wrap;gap:4px;padding:8px;border:1px solid var(--ui-line);border-radius:8px;background:var(--ui-panel-2)}
+.spot-author-word{font-size:12px;padding:3px 6px;border-radius:6px;background:var(--ui-panel);border:1px solid var(--ui-line)}
+.spot-author-word.on{background:#c8102e;color:#fff;border-color:#c8102e}
+.spot-author-note{flex-basis:100%;font-size:12px;color:var(--ui-dim);margin-top:4px}
+.spot-author-note.warn{color:#b5651d}

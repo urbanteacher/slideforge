@@ -899,6 +899,12 @@
           question: 'What is the molecule an enzyme acts on called?', answer: 'The substrate' }
       ] }
   };
+  /* This table duplicates src/games/presets.js and has drifted from it. Until
+     it is folded into the model's, formats whose engine has been rebuilt take
+     the model's entry, or the library would keep building the old one —
+     Spot the Error would still come out as multiple choice. */
+  var modelPresets = SF.GAME_FORMAT_PRESETS || {};
+  ['spot-the-error'].forEach(function (k) { if (modelPresets[k]) presets[k] = modelPresets[k]; });
   /* Expose presets on SF so other modules and Try demo can access all starter banks. */
   SF.GAME_FORMAT_PRESETS = presets;
 

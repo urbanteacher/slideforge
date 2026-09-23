@@ -2267,7 +2267,9 @@
       rev: Live.snapshot.rev,
       marks: marksFor(s),
       correct: open ? -1 : s.correct,
-      answer: open ? (s.answer || '') : (s.options[s.correct] || ''),
+      /* A spot question's answer is the wrong words and their correction,
+         not whichever single word the span starts on. */
+      answer: open || s.input === 'tap' ? (s.answer || '') : (s.options[s.correct] || ''),
       explanation: s.explanation || ''
     };
     if (mechanic === 'speed') msg.gains = speedGains(s);

@@ -1646,6 +1646,57 @@
       paintOrder();
     }
 
+    /* Spot the Error: the passage, a word to a button. Nothing marks where to
+       look — the only way to answer is to read it. A tap chooses, another tap
+       elsewhere changes it, and Lock in sends it. */
+    if (m.input === 'tap') {
+      pad.style.display = '';
+      pad.className = 'pad spot-pad';
+      var chosen = -1;
+      var words = document.createElement('div');
+      words.className = 'spot-words';
+      var lock = document.createElement('button');
+      lock.type = 'button';
+      lock.className = 'spot-lock';
+      lock.disabled = true;
+      lock.textContent = 'Tap the word that is wrong';
+      (m.options || []).forEach(function (word, i) {
+        var w = document.createElement('button');
+        w.type = 'button';
+        w.className = 'spot-word';
+        w.textContent = word;
+        w.addEventListener('click', function () {
+          if (pad.dataset.locked) return;
+          chosen = i;
+          Array.prototype.forEach.call(words.children, function (b, k) { b.classList.toggle('on', k === i); });
+          lock.disabled = false;
+          lock.textContent = 'Lock in "' + String(word).replace(/[,.;:!?]+$/, '') + '"';
+          if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
+        });
+        words.appendChild(w);
+      });
+      lock.addEventListener('click', function () {
+        if (chosen < 0 || pad.dataset.locked || !ws || ws.readyState !== 1) return;
+        pad.dataset.locked = '1';
+        ws.send(JSON.stringify({ t: 'answer', choice: chosen }));
+        words.classList.add('locked');
+        lock.disabled = true;
+        lock.textContent = 'Locked in — watch the screen';
+        $('qTime').textContent = 'Locked in';
+        $('qTime').classList.remove('hurry');
+        if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
+      });
+      pad.appendChild(words);
+      pad.appendChild(lock);
+      $('questionText').textContent = 'There is one error. Tap it.';
+      $('qNum').textContent = questionLabel(m);
+      show('scQuestion');
+      if (m.timeLimit > 0) startTick(m.timeLimit);
+      else { $('qTime').textContent = ''; $('qBar').style.width = '100%'; }
+      if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
+      return;
+    }
+
     if (placing) {
       var r = m.range || {};
       numUnit = String(r.unit || '');

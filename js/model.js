@@ -2579,14 +2579,14 @@
           var caption = node("div", "explore-caption");
           caption.setAttribute("aria-live", "polite");
           pad.appendChild(caption);
-          var spots = c.spots.map(function(spot, i) {
+          var spots = c.spots.map(function(spot2, i) {
             var b = button(moving, String(i + 1), function() {
               send("spot", i);
             });
             b.className = "explore-hotspot";
-            b.style.left = spot.x + "%";
-            b.style.top = spot.y + "%";
-            b.setAttribute("aria-label", spot.title);
+            b.style.left = spot2.x + "%";
+            b.style.top = spot2.y + "%";
+            b.setAttribute("aria-label", spot2.title);
             return b;
           });
           button(pad, "Whole image", function() {
@@ -2594,23 +2594,23 @@
           });
           root._exploreRefresh = function(next) {
             view = Object.assign(view, next);
-            var spot = c.spots[view.spot];
+            var spot2 = c.spots[view.spot];
             var width = scene2.clientWidth || 1160, height = scene2.clientHeight || 360;
             var iw = mainImage.naturalWidth || width, ih = mainImage.naturalHeight || height;
             var scale = Math.min(width / iw, height / ih), imageWidth = iw * scale, imageHeight = ih * scale;
             function point(p) {
               return { x: ((width - imageWidth) / 2 + p.x / 100 * imageWidth) / width * 100, y: ((height - imageHeight) / 2 + p.y / 100 * imageHeight) / height * 100 };
             }
-            var target = spot ? point(spot) : { x: 50, y: 50 };
+            var target = spot2 ? point(spot2) : { x: 50, y: 50 };
             moving.style.transformOrigin = "0 0";
-            moving.style.transform = spot ? "translate(" + (50 - target.x * spot.zoom) + "%," + (50 - target.y * spot.zoom) + "%) scale(" + spot.zoom + ")" : "translate(0,0) scale(1)";
-            caption.replaceChildren(node("strong", null, spot ? spot.title : "Explore the image"), node("p", null, spot ? spot.body : c.spots.length ? "Choose a numbered detail, or use Next to explore in order." : "Add image details in Design & content."));
+            moving.style.transform = spot2 ? "translate(" + (50 - target.x * spot2.zoom) + "%," + (50 - target.y * spot2.zoom) + "%) scale(" + spot2.zoom + ")" : "translate(0,0) scale(1)";
+            caption.replaceChildren(node("strong", null, spot2 ? spot2.title : "Explore the image"), node("p", null, spot2 ? spot2.body : c.spots.length ? "Choose a numbered detail, or use Next to explore in order." : "Add image details in Design & content."));
             spots.forEach(function(b, i) {
               var p = point(c.spots[i]);
               b.style.left = p.x + "%";
               b.style.top = p.y + "%";
               b.setAttribute("aria-pressed", String(i === view.spot));
-              b.style.transform = "translate(-50%,-50%) scale(" + 1 / (spot ? spot.zoom : 1) + ")";
+              b.style.transform = "translate(-50%,-50%) scale(" + 1 / (spot2 ? spot2.zoom : 1) + ")";
             });
           };
           mainImage.onload = function() {
@@ -2754,13 +2754,13 @@
       if (slide.type === "explore") {
         image("Main image", "image", slide);
         text2("Image description", "alt");
-        c.spots.forEach(function(spot, i) {
+        c.spots.forEach(function(spot2, i) {
           parent.appendChild(node("h4", null, "Detail " + (i + 1)));
-          text2("Detail title", "title", spot);
-          text2("Explanation", "body", spot);
-          number("Horizontal position (%)", "x", spot);
-          number("Vertical position (%)", "y", spot);
-          number("Zoom (1–4)", "zoom", spot);
+          text2("Detail title", "title", spot2);
+          text2("Explanation", "body", spot2);
+          number("Horizontal position (%)", "x", spot2);
+          number("Vertical position (%)", "y", spot2);
+          number("Zoom (1–4)", "zoom", spot2);
           parent.appendChild(UI.button("Remove detail", "ghost", function() {
             c.spots.splice(i, 1);
             commit(redraw);
@@ -4943,6 +4943,41 @@
         return;
       }
       if (present === "compare") return;
+      if (slide.input === "tap") {
+        pad.parentNode.classList.add("is-spot");
+        var from = typeof slide.errorFrom === "number" ? slide.errorFrom : Number(slide.correct) || 0;
+        var to = typeof slide.errorTo === "number" ? slide.errorTo : from;
+        var passage = el("div", "spot-passage tally");
+        passage.dataset.errorFrom = String(from);
+        passage.dataset.errorTo = String(to);
+        var nWords = (slide.options || []).length;
+        passage.dataset.len = nWords <= 16 ? "short" : nWords <= 36 ? "medium" : "long";
+        (slide.options || []).forEach(function(word, i) {
+          var w = el("button", "opt spot-cell" + (i >= from && i <= to ? " in-error" : ""));
+          w.type = "button";
+          w.dataset.choice = String(i);
+          if (!opts.interactive) w.classList.add("locked");
+          if (opts.revealed && i === from) w.classList.add("correct");
+          w.appendChild(el("span", "spot-text", word));
+          var col = el("span", "col");
+          var bar2 = el("span", "bar");
+          bar2.style.height = "0px";
+          col.appendChild(bar2);
+          col.appendChild(el("span", "cnt", ""));
+          w.appendChild(col);
+          passage.appendChild(w);
+          if (i === to && slide.fix) passage.appendChild(el("span", "spot-fix", slide.fix));
+        });
+        pad.appendChild(passage);
+        pad.appendChild(el("div", "spot-verdict", ""));
+        if (inlineWhy) {
+          var sw = el("div", "spot-why");
+          sw.appendChild(whyBox());
+          pad.appendChild(sw);
+        }
+        pad.appendChild(el("div", "answered-count", ""));
+        return;
+      }
       if (slide.input === "order") {
         pad.parentNode.classList.add("is-order");
         var showing = (slide.options || []).map(function(text2, i) {
@@ -5295,9 +5330,9 @@
         }).map(function(k) {
           return next[k];
         });
-        var spot = SF.freePlacement(next[shove], others, { cols, rows: rows2 });
-        if (!spot) return null;
-        next[shove] = { col: spot.col, row: spot.row, cols: spot.cols, rows: spot.rows };
+        var spot2 = SF.freePlacement(next[shove], others, { cols, rows: rows2 });
+        if (!spot2) return null;
+        next[shove] = { col: spot2.col, row: spot2.row, cols: spot2.cols, rows: spot2.rows };
       }
       return null;
     };
@@ -17216,9 +17251,14 @@
   function questionTimeLimit(slide, teacherEntry) {
     return teacherEntry ? 0 : Math.max(0, Number(slide.timeLimit) || 0);
   }
+  var TEACHER_CALL = ["headsup", "spinexplain", "connection", "randomchallenge", "conceptchain"];
   function correctAnswerLabel(slide) {
-    if (slide.input === "text" || slide.input === "number") return String(slide.answer || "");
-    return ("ABCDEF"[slide.correct] || "?") + " — " + ((slide.options || [])[slide.correct] || "");
+    if (slide.input === "text" || slide.input === "number" || slide.input === "tap") return String(slide.answer || "");
+    if (slide.input === "order") return (slide.options || []).join(" → ");
+    if (TEACHER_CALL.indexOf(slide.style) > -1) return "Your call — mark it as they answer";
+    var opt = (slide.options || [])[slide.correct];
+    if (!Number.isInteger(slide.correct) || slide.correct < 0 || opt == null) return "";
+    return ("ABCDEF"[slide.correct] || "?") + " — " + opt;
   }
 
   // src/deck/feedback.js
@@ -20525,6 +20565,102 @@
     }
   };
 
+  // src/games/spot.js
+  function spotWords(passage) {
+    return String(passage || "").split(/\s+/).map(function(w) {
+      return w.trim();
+    }).filter(Boolean);
+  }
+  function bare(word) {
+    return String(word || "").toLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "");
+  }
+  function spotSpan(passage, error) {
+    var words = spotWords(passage).map(bare);
+    var want = spotWords(error).map(bare).filter(Boolean);
+    if (!want.length) return null;
+    for (var i = 0; i + want.length <= words.length; i++) {
+      var hit = true;
+      for (var k = 0; k < want.length; k++) {
+        if (words[i + k] !== want[k]) {
+          hit = false;
+          break;
+        }
+      }
+      if (hit) return { from: i, to: i + want.length - 1 };
+    }
+    return null;
+  }
+  var SPOT_MAX_WORDS = 80;
+  var spot = {
+    defaults: {
+      "defaultPoints": 1e3
+    },
+    key: "spot",
+    label: "Spot the error",
+    icon: "⌖",
+    blurb: "A sentence with one mistake in it. The room taps the wrong word; the reveal shows where everyone looked.",
+    mechanic: "points",
+    input: "tap",
+    /* The passage is written in the spot editor's own Sentence field. */
+    showsQuestion: false,
+    /* Its options are the passage's words, which the author never edits as a
+       list — these bound the engine's generic option controls, not the words. */
+    minOptions: 0,
+    maxOptions: 0,
+    make: function() {
+      return {
+        question: "Photosynthesis happens in the mitochondria, uses carbon dioxide and water, and releases oxygen.",
+        error: "mitochondria",
+        fix: "chloroplasts",
+        explanation: "Mitochondria carry out respiration. Photosynthesis happens in the chloroplasts."
+      };
+    },
+    normalize: function(q) {
+      q.error = String(q.error || "").slice(0, 120);
+      q.fix = String(q.fix || "").slice(0, 120);
+      delete q.options;
+      delete q.correct;
+      return q;
+    },
+    problems: function(q, n) {
+      var words = spotWords(q.question);
+      if (!words.length) return "Q" + n + " has no sentence to search";
+      if (words.length > SPOT_MAX_WORDS) return "Q" + n + " is " + words.length + " words — keep it under " + SPOT_MAX_WORDS + " so it fits a phone";
+      if (!String(q.error || "").trim()) return "Q" + n + " has no wrong words marked";
+      if (!spotSpan(q.question, q.error)) return "Q" + n + ': "' + String(q.error).trim() + '" is not in the sentence, word for word';
+      return null;
+    },
+    compile: function(q, settings, s) {
+      var words = spotWords(q.question).slice(0, SPOT_MAX_WORDS);
+      var span = spotSpan(q.question, q.error) || { from: 0, to: 0 };
+      s.question = q.question;
+      s.options = words;
+      s.correct = span.from;
+      s.errorFrom = span.from;
+      s.errorTo = span.to;
+      s.fix = q.fix || "";
+      var wrong = words.slice(span.from, span.to + 1).join(" ").replace(/[,.;:!?)"'\u201d\u2019]+$/u, "");
+      s.answer = wrong + (q.fix ? " → " + q.fix : "");
+      s.holdResults = true;
+      s.headPrompt = "There is one error in this sentence. Find it.";
+    },
+    /* A tap anywhere inside the error's words is a find. */
+    mark: function(s, response) {
+      var i = Number(response);
+      if (!Number.isInteger(i)) return false;
+      var from = typeof s.errorFrom === "number" ? s.errorFrom : Number(s.correct) || 0;
+      var to = typeof s.errorTo === "number" ? s.errorTo : from;
+      return i >= from && i <= to;
+    },
+    summary: function(q) {
+      var e = String(q.error || "").trim();
+      return e ? 'find "' + e + '"' : "no error marked";
+    },
+    describe: function(s, response) {
+      return (s.options || [])[Number(response)] || "";
+    }
+  };
+
   // src/games/registry.js
   function markResponse(slide, response) {
     var style = gameStyle(slide.style);
@@ -20539,7 +20675,7 @@
   function gameStyle(key) {
     return GAME_STYLES[key] || GAME_STYLES.choice;
   }
-  var GAME_STYLES = { choice: choice2, truefalse, race, speed, boss, slider, type, order, emoji, definition, compare, oddone, wordreveal, memoryflip, memorymatch, knowledgeflip, headsup, spinexplain, connection, conceptchain, randomchallenge, bingo, lowstakes, bowl };
+  var GAME_STYLES = { choice: choice2, truefalse, race, speed, boss, slider, type, order, emoji, definition, compare, oddone, wordreveal, memoryflip, memorymatch, knowledgeflip, headsup, spinexplain, connection, conceptchain, randomchallenge, bingo, lowstakes, bowl, spot };
 
   // src/deck/markdown.js
   function renderMarkdown(deck, lookupGame = (
@@ -21097,8 +21233,7 @@
     },
     "spot-the-error": {
       label: "Spot the error",
-      answersLabel: "Candidate phrases — mark the wrong one",
-      answersHint: 'Quote the phrases from the sentence in the question, and include a "nothing is wrong" option so agreeing is a choice too.'
+      answersHint: "One sentence, one mistake. The room taps the wrong word on their phones; nothing on the wall points at it."
     },
     "odd-one-out": {
       label: "Odd one out",
@@ -21222,7 +21357,8 @@
     "fill-in-the-blanks": "type",
     "heads-up": "headsup",
     "spin-explain": "spinexplain",
-    "spot-the-error": "choice",
+    /* Its own engine since 23 Sep 2026: tap the wrong word, not pick a phrase. */
+    "spot-the-error": "spot",
     "ranking": "order",
     "odd-one-out": "oddone",
     "predict-outcome": "choice",
@@ -21255,7 +21391,8 @@
     "emoji",
     "definition",
     "oddone",
-    "compare"
+    "compare",
+    "spot"
   ];
   function formatStyle(formatKey) {
     var s = FORMAT_STYLE[formatKey];
@@ -21264,7 +21401,7 @@
   function isSpecialStyle(styleKey) {
     return SPECIAL_STYLES.indexOf(styleKey) > -1;
   }
-  var INPUTS = ["choice", "text", "number", "order"];
+  var INPUTS = ["choice", "text", "number", "order", "tap"];
 
   // src/storage.js
   function unusedDraft(doc) {
@@ -21582,11 +21719,14 @@
       ]
     },
     "spot-the-error": {
-      style: "choice",
+      style: "spot",
       title: "Spot the error",
-      settings: { scoreboard: true, scoreSlide: false, defaultTime: 0 },
+      settings: { scoreboard: true, scoreSlide: false, defaultTime: 30 },
       seeds: [
-        { question: 'Which part of this is wrong?\n\n"Photosynthesis happens in the mitochondria, uses carbon dioxide and water, and releases oxygen."', options: ["happens in the mitochondria", "uses carbon dioxide and water", "releases oxygen", "nothing is wrong"], correct: 0, explanation: "Chloroplasts, not mitochondria. Mitochondria carry out respiration." }
+        { question: "Photosynthesis happens in the mitochondria, uses carbon dioxide and water, and releases oxygen.", error: "mitochondria", fix: "chloroplasts", explanation: "Mitochondria carry out respiration. Photosynthesis happens in the chloroplasts." },
+        { question: "Sound travels fastest through a vacuum, because there are no particles in the way.", error: "fastest", fix: "not at all", explanation: "Sound is a vibration passed between particles. With no particles, there is nothing to carry it." },
+        { question: "The median of 2, 3, 3, 8 and 14 is 6, because it is the middle value once they are in order.", error: "6", fix: "3", explanation: "In order the middle value is 3. Six is the mean, which a single large value pulls upward." },
+        { question: "In 1066 William the Conqueror won the Battle of Hastings and was crowned King of Scotland.", error: "Scotland", fix: "England", explanation: "He was crowned King of England on Christmas Day 1066; Scotland kept its own crown." }
       ]
     },
     "odd-one-out": {
@@ -23244,6 +23384,9 @@
     fillQuestionSlide,
     buildRunDeck,
     runIndexOf,
+    spotWords,
+    spotSpan,
+    SPOT_MAX_WORDS,
     showNumber,
     gameToRunDeck,
     migrateDeckQuizzes,

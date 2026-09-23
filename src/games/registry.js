@@ -20,6 +20,7 @@ import { randomchallenge } from "./randomchallenge.js";
 import { bingo } from "./bingo.js";
 import { lowstakes } from "./lowstakes.js";
 import { bowl } from "./bowl.js";
+import { spot } from "./spot.js";
 
 /**
  * Mark a response against a compiled question slide.
@@ -56,6 +57,6 @@ function answerLabel(slide, response) {
 function gameStyle(key) {
   return GAME_STYLES[key] || GAME_STYLES.choice;
 }
-const GAME_STYLES = { choice, truefalse, race, speed, boss, slider, type, order, emoji, definition, compare, oddone, wordreveal, memoryflip, memorymatch, knowledgeflip, headsup, spinexplain, connection, conceptchain, randomchallenge, bingo, lowstakes, bowl };
+const GAME_STYLES = { choice, truefalse, race, speed, boss, slider, type, order, emoji, definition, compare, oddone, wordreveal, memoryflip, memorymatch, knowledgeflip, headsup, spinexplain, connection, conceptchain, randomchallenge, bingo, lowstakes, bowl, spot };
 
 export { markResponse, answerLabel, gameStyle, GAME_STYLES };

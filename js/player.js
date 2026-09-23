@@ -319,13 +319,22 @@
     return quizSlides(deck).indexOf(slide) + 1;
   }
 
+  /* Right, by the style's own marking where an index is not the whole story:
+     a spot question's error can run to several words, and a tap on any of
+     them is a find. */
+  function isRight(s, a) {
+    if (a == null) return false;
+    if (s.input === 'tap' && SF.markResponse) return SF.markResponse(s, a);
+    return a === s.correct;
+  }
+
   function marksFor(deck, answers) {
     return quizSlides(deck).map(function (s) {
       var a = answers[s.id];
       return {
         question: s.question,
         answered: a != null,
-        correct: a != null && a === s.correct
+        correct: isRight(s, a)
       };
     }).filter(function (m) { return m.answered; });
   }
@@ -848,6 +857,7 @@
         var tick = b.querySelector('.tick');
         if (tick) tick.textContent = i === slide.correct ? 'odd one' : '';
       } else if (typed || i === slide.correct) b.classList.add('correct');
+      else if (i === choice && slide.input === 'tap' && isRight(slide, choice)) b.classList.add('picked');
       else if (i === choice) b.classList.add('wrong');
       else b.classList.add('muted');
     });
@@ -1213,7 +1223,7 @@
     Player.emit('answer', {
       slide: slide,
       choice: choice,
-      correct: choice === slide.correct
+      correct: isRight(slide, choice)
     });
     syncPresenter();
   }
@@ -1993,7 +2003,14 @@
   function tallyHeld(node) {
     var id = node && node.dataset ? node.dataset.slideId : '';
     var s = id && Player.deck && Player.deck.slides.find(function (x) { return x.id === id; });
-    return !!(s && s.holdResults && !(SF.Live && SF.Live.revealed && SF.Live.revealed[s.id]));
+    /* Not a slide of this deck — a spontaneous one, or no slide at all — has
+       nothing held back. */
+    if (!s || !s.holdResults) return false;
+    /* Revealed by the live room, or by the player itself — solo play and a
+       rehearsal both reveal by recording an answer. */
+    var revealed = !!(SF.Live && SF.Live.revealed && SF.Live.revealed[s.id]) ||
+      (Player.answers && Player.answers[s.id] != null);
+    return !revealed;
   }
   /* Called at the reveal: draw the bars a held question has been keeping. */
   Player.releaseTally = function () {
@@ -2097,11 +2114,42 @@
     if (tallyHeld(node)) return;
     openTally(node);
     var max = Math.max(1, Math.max.apply(null, counts));
+    var spotting = tally.classList.contains('spot-passage');
     Array.prototype.forEach.call(tally.querySelectorAll('.col'), function (col, i) {
       var n = counts[i] || 0;
       col.querySelector('.bar').style.height = Math.round((n / max) * 52) + 'px';
-      col.querySelector('.cnt').textContent = String(n);
+      /* Its share of the busiest column, for layouts that draw heat rather
+         than height — Spot the Error's bar under each word. */
+      col.style.setProperty('--share', String(n / max));
+      /* Under a passage a "0" beneath every untouched word is noise; the
+         words nobody chose say so by having no bar at all. */
+      col.querySelector('.cnt').textContent = spotting && !n ? '' : String(n);
     });
+    if (spotting) spotVerdict(node, tally, counts);
+  }
+
+  /* The one sentence a spot reveal needs: how many found it, and where the
+     most popular wrong tap landed — that second bar is the misconception worth
+     thirty seconds, and it is named without naming anyone. */
+  function spotVerdict(node, tally, counts) {
+    var box = node.querySelector('.spot-verdict');
+    if (!box) return;
+    var from = Number(tally.dataset.errorFrom) || 0;
+    var to = Number(tally.dataset.errorTo);
+    if (!isFinite(to)) to = from;
+    var found = 0, wrong = -1, wrongN = 0;
+    counts.forEach(function (n, i) {
+      n = n || 0;
+      if (i >= from && i <= to) found += n;
+      else if (n > wrongN) { wrongN = n; wrong = i; }
+    });
+    var cells = tally.querySelectorAll('.spot-cell .spot-text');
+    var word = wrong >= 0 && cells[wrong] ? String(cells[wrong].textContent).replace(/[,.;:!?]+$/, '') : '';
+    box.textContent = '';
+    var b = document.createElement('b');
+    b.textContent = found === 1 ? '1 found it.' : found + ' found it.';
+    box.appendChild(b);
+    if (word && wrongN) box.appendChild(document.createTextNode(' ' + wrongN + ' went for \u201c' + word + '\u201d.'));
   }
 
   /** Build the leaderboard slide. */

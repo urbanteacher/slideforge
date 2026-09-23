@@ -34,7 +34,7 @@ export type DeckSlideType =
 export type SlideType = DeckSlideType | 'game' | 'quiz' | 'explain' | 'results';
 
 /** How the room answers a compiled question (`INPUTS`). */
-export type InputKind = 'choice' | 'text' | 'number' | 'order';
+export type InputKind = 'choice' | 'text' | 'number' | 'order' | 'tap';
 
 /** What a game does with a correct answer. `points` is the default; the rest
  *  drive a bespoke board or scoreboard. */
@@ -48,7 +48,7 @@ export type GameStyleKey =
   | 'order' | 'emoji' | 'definition' | 'compare' | 'oddone' | 'wordreveal'
   | 'memoryflip' | 'memorymatch' | 'knowledgeflip' | 'headsup' | 'spinexplain'
   | 'connection' | 'conceptchain' | 'randomchallenge' | 'bingo' | 'lowstakes'
-  | 'bowl';
+  | 'bowl' | 'spot';
 
 /** Where a question's reasoning is shown once the answer is revealed. */
 export type ExplainStyle = 'inline' | 'slide' | 'both';
@@ -306,6 +306,10 @@ export interface Slide {
   hideAnswerUntilReveal?: boolean;
   /** The room's answer bars stay hidden on the wall until the reveal. */
   holdResults?: boolean;
+  /** Spot the Error: the words (by index into options) that are wrong, and what they should be. */
+  errorFrom?: number;
+  errorTo?: number;
+  fix?: string;
   /** Which deck slide this was expanded from, set by `buildRunDeck`. */
   sourceSlideId?: string;
   /** Typed answer key, and the spellings that count. */

@@ -283,17 +283,18 @@
     },
     'spot-the-error': {
       title: 'Spot the Error',
-      aim: 'Find the mistake; explain the repair.',
+      aim: 'Find the mistake by reading for it; see where the room looked; repair it.',
       judgement: 'auto',
       demo: 'class',
-      phases: 'select phrase → check → explain → next',
-      timer: 'None (or short think time in presets).',
-      players: 'Teams or individuals.',
-      scoring: '+1 for the wrong phrase · else 0.',
+      phases: 'read → tap the wrong word → reveal where the room tapped → repair → next',
+      timer: 'A short clock per sentence (30 s in the preset).',
+      players: 'Individuals, on their phones.',
+      scoring: 'Points for a tap anywhere inside the wrong words.',
       howToPlay: [
-        'Read the sentence and the candidate phrases.',
-        'Choose the mistaken part.',
-        'Reveal the repair and the reasoning.'
+        'The sentence fills the screen. There are no options to pick from.',
+        'Everyone taps the word they think is wrong on their phone, and can change their mind before locking in.',
+        'The reveal shows a bar under every word for how many tapped it, strikes out the error and slides in the correction.',
+        'Talk about the second-tallest bar: that is the misconception in the room.'
       ]
     },
     'ranking': {
@@ -629,7 +630,7 @@
     howToPlay: ['Read the sentence and its gap.', 'Type the missing word.', 'Reveal the answer and explain why it fits.'],
     note: 'This is the typed, single-gap version. A word bank and separate reveals for multiple gaps are not available.'
   });
-  Object.assign(BOOK['spot-the-error'], { scoring: 'Correct candidate phrase earns the configured points.' });
+  Object.assign(BOOK['spot-the-error'], { scoring: 'A tap inside the wrong words earns the configured points.' });
   Object.assign(BOOK['predict-outcome'], { scoring: 'Uses the configured points, with a speed bonus when timed.' });
   Object.assign(BOOK['time-traveler'], {
     players: 'Individuals or teams type their answers.', scoring: 'Accepted event names earn the configured points.',
@@ -668,7 +669,7 @@
     'fill-in-the-blanks': ['Sentence', 'Sentence with a gap', 'Use one gap per sentence in this typed-answer version. Add the missing word and accepted variants.', 'Typed cloze activity', 'question'],
     'heads-up': ['Term', 'Term to describe', 'Use describable terms. Position the guesser facing away from the projected term.', 'Class gives spoken clues', 'question'],
     'spin-explain': ['Concept', 'Concept to explain', 'Choose concepts that invite explanation, with a hint that supports rather than gives the answer.', 'Teacher judges explanations', 'question'],
-    'spot-the-error': ['Sentence', 'Sentence containing the error', 'Include the full sentence. Use exact phrases as answer choices and explain the correction.', 'Learners select a candidate phrase', 'question'],
+    'spot-the-error': ['Sentence', 'Sentence containing the error', 'Write one plausible sentence with one mistake. Mark the wrong words exactly as written, and give the correction.', 'Learners tap the wrong word', 'question'],
     'ranking': ['Set', 'Ordering instruction', 'State the ordering criterion. Enter 3–8 distinct items in the correct order; play shuffles them.', 'Learners reorder and submit', 'question'],
     'odd-one-out': ['Set', 'Items to compare', 'Prepare four comparable items and a defensible reason. Welcome alternative rules in discussion.', 'Class discusses; no score', 'none'],
     'compare-contrast': ['Comparison', 'Items to compare', 'Choose two comparable ideas. Prepare similarities and differences separately for the reveal.', 'Class discusses; no score', 'none'],

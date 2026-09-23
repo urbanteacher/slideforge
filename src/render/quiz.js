@@ -833,6 +833,54 @@ export function createQuizRenderer(SF, helpers) {
        the answer on the screen while everyone is still deciding. The display
        shuffle is derived from the slide id, so it is the same on every repaint
        and the same on a rejoin, without being the answer. */
+    /* Spot the Error: the passage is the stage, a word to a cell. No options
+       and no letters — the only way to answer is to read it. Each word carries
+       a tally column, so the per-word counts the relay already keeps draw as
+       a heat bar under the word at the reveal; the tally is held back until
+       then (slide.holdResults), or the tallest bar would point at the answer.
+       The words that are wrong are marked in-error now and struck through by
+       CSS once the reveal marks the first of them correct; the correction sits
+       beside them, hidden until the same moment. */
+    if (slide.input === 'tap') {
+      pad.parentNode.classList.add('is-spot');
+      var from = typeof slide.errorFrom === 'number' ? slide.errorFrom : Number(slide.correct) || 0;
+      var to = typeof slide.errorTo === 'number' ? slide.errorTo : from;
+      var passage = el('div', 'spot-passage tally');
+      passage.dataset.errorFrom = String(from);
+      passage.dataset.errorTo = String(to);
+      /* Type steps down with length: a one-line claim is read from the back of
+         the room; a paragraph has to fit the slide. */
+      var nWords = (slide.options || []).length;
+      passage.dataset.len = nWords <= 16 ? 'short' : nWords <= 36 ? 'medium' : 'long';
+      (slide.options || []).forEach(function (word, i) {
+        var w = el('button', 'opt spot-cell' + (i >= from && i <= to ? ' in-error' : ''));
+        w.type = 'button';
+        w.dataset.choice = String(i);
+        if (!opts.interactive) w.classList.add('locked');
+        if (opts.revealed && i === from) w.classList.add('correct');
+        w.appendChild(el('span', 'spot-text', word));
+        var col = el('span', 'col');
+        var bar = el('span', 'bar');
+        bar.style.height = '0px';
+        col.appendChild(bar);
+        col.appendChild(el('span', 'cnt', ''));
+        w.appendChild(col);
+        passage.appendChild(w);
+        if (i === to && slide.fix) passage.appendChild(el('span', 'spot-fix', slide.fix));
+      });
+      pad.appendChild(passage);
+      /* Where the room went, then why: the verdict is the moment, the reason
+         is what it is for. */
+      pad.appendChild(el('div', 'spot-verdict', ''));
+      if (inlineWhy) {
+        var sw = el('div', 'spot-why');
+        sw.appendChild(whyBox());
+        pad.appendChild(sw);
+      }
+      pad.appendChild(el('div', 'answered-count', ''));
+      return;
+    }
+
     if (slide.input === 'order') {
       pad.parentNode.classList.add('is-order');
       var showing = (slide.options || []).map(function (text, i) { return { i: i, text: text }; });

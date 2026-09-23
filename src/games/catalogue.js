@@ -23,8 +23,7 @@ var FORMATS = {
     answersLabel: 'Possible outcomes — mark the likely one',
     answersHint: 'Three futures reads better than four. The value is in committing before you know.' },
   'spot-the-error': { label: 'Spot the error',
-    answersLabel: 'Candidate phrases — mark the wrong one',
-    answersHint: 'Quote the phrases from the sentence in the question, and include a "nothing is wrong" option so agreeing is a choice too.' },
+    answersHint: 'One sentence, one mistake. The room taps the wrong word on their phones; nothing on the wall points at it.' },
   'odd-one-out': { label: 'Odd one out',
     answersLabel: 'The four items — mark the prepared odd one',
     answersHint: 'Four equal tiles for discussion. The marked odd one and explanation are for the reveal — accept other defensible rules.' },
@@ -107,7 +106,8 @@ var FORMAT_STYLE = {
   'fill-in-the-blanks': 'type',
   'heads-up': 'headsup',
   'spin-explain': 'spinexplain',
-  'spot-the-error': 'choice',
+  /* Its own engine since 23 Sep 2026: tap the wrong word, not pick a phrase. */
+  'spot-the-error': 'spot',
   'ranking': 'order',
   'odd-one-out': 'oddone',
   'predict-outcome': 'choice',
@@ -131,7 +131,7 @@ var SPECIAL_STYLES = [
   'truefalse', 'race', 'speed', 'boss', 'wordreveal',
   'memoryflip', 'memorymatch', 'knowledgeflip',
   'headsup', 'spinexplain', 'connection', 'conceptchain',
-  'randomchallenge', 'bingo', 'bowl', 'lowstakes', 'emoji', 'definition', 'oddone', 'compare'
+  'randomchallenge', 'bingo', 'bowl', 'lowstakes', 'emoji', 'definition', 'oddone', 'compare', 'spot'
 ];
 
 function formatStyle(formatKey) {
@@ -143,6 +143,6 @@ function isSpecialStyle(styleKey) {
   return SPECIAL_STYLES.indexOf(styleKey) > -1;
 }
 
-var INPUTS = ['choice', 'text', 'number', 'order'];
+var INPUTS = ['choice', 'text', 'number', 'order', 'tap'];
 
 export { FORMATS, gameFormat, FORMAT_STYLE, CORE_STYLES, SPECIAL_STYLES, formatStyle, isSpecialStyle, INPUTS };

@@ -88,11 +88,14 @@ const GAME_FORMAT_PRESETS = {
     ]
   },
   'spot-the-error': {
-    style: 'choice',
+    style: 'spot',
     title: 'Spot the error',
-    settings: { scoreboard: true, scoreSlide: false, defaultTime: 0 },
+    settings: { scoreboard: true, scoreSlide: false, defaultTime: 30 },
     seeds: [
-      { question: 'Which part of this is wrong?\n\n"Photosynthesis happens in the mitochondria, uses carbon dioxide and water, and releases oxygen."', options: ['happens in the mitochondria', 'uses carbon dioxide and water', 'releases oxygen', 'nothing is wrong'], correct: 0, explanation: 'Chloroplasts, not mitochondria. Mitochondria carry out respiration.' }
+      { question: 'Photosynthesis happens in the mitochondria, uses carbon dioxide and water, and releases oxygen.', error: 'mitochondria', fix: 'chloroplasts', explanation: 'Mitochondria carry out respiration. Photosynthesis happens in the chloroplasts.' },
+      { question: 'Sound travels fastest through a vacuum, because there are no particles in the way.', error: 'fastest', fix: 'not at all', explanation: 'Sound is a vibration passed between particles. With no particles, there is nothing to carry it.' },
+      { question: 'The median of 2, 3, 3, 8 and 14 is 6, because it is the middle value once they are in order.', error: '6', fix: '3', explanation: 'In order the middle value is 3. Six is the mean, which a single large value pulls upward.' },
+      { question: 'In 1066 William the Conqueror won the Battle of Hastings and was crowned King of Scotland.', error: 'Scotland', fix: 'England', explanation: 'He was crowned King of England on Christmas Day 1066; Scotland kept its own crown.' }
     ]
   },
   'odd-one-out': {
