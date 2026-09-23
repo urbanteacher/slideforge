@@ -60,18 +60,18 @@ tests are in the table. The tier follows from the row.
 | Time Traveler | `type` | ✗ | ◐ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: typed recall, no time |
 | Odd One Out | `oddone` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | n/a | ◐ | Thin on phones: they sit idle |
 | Compare & Contrast | `compare` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | n/a | ◐ | Thin on phones: they sit idle |
-| Heads Up | `headsup` | ◐ | ✓ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: a counted round now has a chosen speaker; the 60-second round remains |
-| Spin & Explain | `spinexplain` | ✗ | ◐ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: selected-team credit is fair; the spinner is still missing |
+| Heads Up | `headsup` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ✓ | ◐ | Solid: one round clock, drawn terms, a verdict moves straight on, "Time!" with the guesser's count. Open: clue-givers' phones could show the term |
+| Spin & Explain | `spinexplain` | ◐ | ✓ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: *corrected* — it was always drawn at random, with a spin room and "N left"; the audit misread it. Open: the wheel lands on the concept, and a reveal beyond the verdict |
 | Connection Maker | `connection` | ◐ | ◐ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: selected-team credit is fair; no map grows |
 | Concept Chain | `conceptchain` | ✓ | ✓ | ◐ | ✓ | ✗ | ✗ | ✓ | ◐ | Solid: selected-team credit is fair; the link is still typed on the wall |
-| Random Challenge | `randomchallenge` | ✗ | ◐ | ✗ | ✓ | ✗ | ◐ | ◐ | ◐ | Thin: not random |
+| Random Challenge | `randomchallenge` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | ◐ | ◐ | Thin: now a real deck — drawn fresh each run, cards left behind it, a flip per draw. Only the count is revealed |
 | Question Cube | brainstorm prompt | ✗ | ✗ | ✗ | ✓ | ◐ | ◐ | n/a | ◐ | Thin: no cube, no pool |
 | Memory Maze | — | — | — | — | — | — | — | — | — | Disabled; out of scope |
 
 **Totals:**
 - 0 fully premium; Spot the Error is near-premium.
-- 13 solid.
-- 12 thin.
+- 14 solid.
+- 11 thin.
 - 0 broken by wrong-result scoring.
 - 1 disabled.
 
@@ -416,6 +416,24 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — Wave 2 (GA-09, GA-10, part of GA-25).**
+  - **The draw is one mechanism** (`DRAW_STYLES` in `compileGame`). Spin &
+    Explain, Random Challenge and Heads Up play in a fresh order every run,
+    with no repeats, and every item carries `drawNo` / `drawTotal`. Spin had
+    always shuffled (the audit said authored order, wrongly).
+  - **Random Challenge is a deck:** "Card 3", the cards still to come behind
+    it, "9 cards left in the deck", and a flip on each draw.
+  - **Heads Up is a round** (`js/rounds.js`):
+    - one clock for the whole pile (the game's time, 60 s if unset);
+    - a verdict from the wall or the desk moves straight to the next term;
+    - at time, "Time!" with the count and the guesser's name;
+    - Next then skips the terms nobody reached.
+
+    It counts and does not score. The term that was up closes through the
+    existing `timeup` path, now allowed through when teacher-entered rows
+    are in the room.
+  - **Tests:** a compile test covers draw order, pile numbering and the
+    round. `npm test` 489/489. Not viewed in a browser.
 - **23 September 2026 — UX pass on wave 1 (GA-29).** The fair scoring was
   right, but the flow around it had five problems, now fixed:
   1. **One verdict path.** The wall's verdict pads used to skip the speaker
