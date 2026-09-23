@@ -1117,6 +1117,104 @@ function pushQA(room) {
   }
 }
 
+/* Beat the Clock, self-paced (games audit, GA-27). The host hands over the
+   whole run and its answer key; each phone works through it at its own pace
+   against one round clock, and the relay marks each tap as it lands. This
+   is the one place the relay marks: the questions are multiple choice, where
+   right is an index, so there is nothing for the host's marking rules to
+   add, and a round trip per tap would be the lag the game is against.
+   Scoring is src/games/speed.js roundSpeedPoints: 10 for a right answer plus
+   up to 10 for speed, timed from when this phone saw it; wrong −5. */
+function sprintPoints(right, elapsedSec) {
+  if (!right) return -5;
+  return 10 + Math.max(0, 10 - Math.floor(Math.max(0, elapsedSec)));
+}
+
+function sprintState(sprint, p) {
+  let st = sprint.players.get(p.id);
+  if (!st) { st = {i: 0, shownAt: Date.now(), right: 0, wrong: 0, gained: 0}; sprint.players.set(p.id, st); }
+  return st;
+}
+
+function sprintQuestion(sprint, st) {
+  const q = sprint.questions[st.i];
+  if (!q) return null;
+  return {n: st.i + 1, of: sprint.questions.length, question: q.question, options: q.options,
+    left: Math.max(0, Math.round((sprint.endsAt - Date.now()) / 1000))};
+}
+
+function sendSprintQuestion(room, p) {
+  const sprint = room.sprint;
+  if (!sprint || !p.sock || !p.sock.open) return;
+  const st = sprintState(sprint, p);
+  st.shownAt = Date.now();
+  const q = sprintQuestion(sprint, st);
+  if (q) p.sock.json(Object.assign({t: 'sprintQ', id: sprint.id}, q));
+  else p.sock.json({t: 'sprintDone', right: st.right, answered: st.right + st.wrong, score: p.score});
+}
+
+function sprintProgress(room) {
+  const sprint = room.sprint;
+  if (!sprint || !room.host || !room.host.open) return;
+  let answers = 0, right = 0, finished = 0;
+  for (const st of sprint.players.values()) {
+    answers += st.right + st.wrong; right += st.right;
+    if (st.i >= sprint.questions.length) finished++;
+  }
+  room.host.json({t: 'sprintProgress', id: sprint.id, answers, right, finished,
+    playing: [...room.players.values()].filter(p => !p.manual).length, of: sprint.questions.length});
+}
+
+function closeSprint(room) {
+  const sprint = room.sprint;
+  if (!sprint) return;
+  clearTimeout(sprint.timer);
+  room.sprint = null;
+  room.phase = 'idle';
+  /* Each question's heat: how many reached it, how many got it wrong, and
+     the wrong answer most of them chose. The hardest is the reveal. */
+  const questions = sprint.questions.map((q, i) => {
+    const h = sprint.heat[i];
+    let lure = -1;
+    h.picks.forEach((n, k) => { if (k !== q.correct && n > 0 && (lure < 0 || n > h.picks[lure])) lure = k; });
+    return {id: q.id, answered: h.answered, wrong: h.wrong,
+      lure: lure >= 0 ? q.options[lure] : '', lureN: lure >= 0 ? h.picks[lure] : 0};
+  });
+  let answers = 0, right = 0;
+  for (const p of room.players.values()) {
+    const st = sprint.players.get(p.id);
+    if (!st) continue;
+    answers += st.right + st.wrong; right += st.right;
+    p.correctCount += st.right;
+    p.askedCount = (p.askedCount || 0) + st.right + st.wrong;
+    p.answeredCount = (p.answeredCount || 0) + st.right + st.wrong;
+    p.lastGain = st.gained;
+  }
+  /* A team scores its members' average, as a question does, so team size
+     does not decide it. */
+  if (room.mode === 'teams') {
+    room.teams.forEach((_, ti) => {
+      const members = [...room.players.values()].filter(p => p.team === ti && !p.manual);
+      if (!members.length) { room.teamGain[ti] = false; return; }
+      const avg = members.reduce((n, p) => n + ((sprint.players.get(p.id) || {}).gained || 0), 0) / members.length;
+      room.teamScores[ti] = Math.max(0, room.teamScores[ti] + avg);
+      room.teamGain[ti] = avg > 0;
+    });
+  }
+  if (room.host && room.host.open) room.host.json({t: 'sprintResult', id: sprint.id, gameId: sprint.gameId,
+    answers, right, questions});
+  for (const p of room.players.values()) {
+    if (!p.sock || !p.sock.open) continue;
+    const st = sprint.players.get(p.id) || {right: 0, wrong: 0, gained: 0};
+    const r = rank(room, p.id);
+    p.sock.json({t: 'sprintOver', right: st.right, answered: st.right + st.wrong, gained: st.gained,
+      score: p.score, rank: r.rank, of: r.of, tied: r.tied, label: r.label, team: teamStanding(room, p)});
+  }
+  record(room, 'sprintEnd', {gameId: sprint.gameId, answers, right, questions,
+    scores: [...room.players.values()].map(p => ({id: p.id, score: p.score}))});
+  pushPlayers(room);
+}
+
 function rank(room, playerId) {
   const list = playerList(room);
   const i = list.findIndex((p) => p.id === playerId);
@@ -2046,6 +2144,30 @@ ws.attach(server, (sock, req) => {
         pushPlayers(room);
         pushTally(room);
 
+      } else if (m.t === 'sprint') {
+        /* Beat the Clock, self-paced: the whole run at once (see sprintPoints). */
+        const qs = (Array.isArray(m.questions) ? m.questions : []).slice(0, 60).map(q => ({
+          id: String(q && q.id || '').slice(0, 80),
+          question: String(q && q.question || '').slice(0, 500),
+          options: (Array.isArray(q && q.options) ? q.options : []).map(o => String(o).slice(0, 200)).slice(0, 6),
+          correct: Number(q && q.correct)
+        })).filter(q => q.options.length >= 2 && Number.isInteger(q.correct) && q.correct >= 0 && q.correct < q.options.length);
+        const seconds = Math.max(10, Math.min(600, Number(m.seconds) || 90));
+        if (!qs.length) return;
+        if (room.sprint) closeSprint(room);
+        room.question = null;
+        room.phase = 'sprint';
+        room.sprint = {id: String(m.id || '').slice(0, 80), gameId: String(m.gameId || '').slice(0, 80),
+          questions: qs, endsAt: Date.now() + seconds * 1000, players: new Map(),
+          heat: qs.map(q => ({answered: 0, wrong: 0, picks: q.options.map(() => 0)})), timer: null};
+        room.sprint.timer = setTimeout(() => { if (rooms.has(room.pin)) closeSprint(room); }, seconds * 1000);
+        record(room, 'sprint', {gameId: room.sprint.gameId, seconds, questions: qs.length});
+        for (const p of room.players.values()) if (!p.manual) sendSprintQuestion(room, p);
+        sprintProgress(room);
+
+      } else if (m.t === 'sprintEnd') {
+        closeSprint(room);
+
       } else if (m.t === 'raceLanes') {
         /* A race's lanes, from the host: each phone is told its own (its
            team's, in teams) and its place, so the wall can show only the
@@ -2695,6 +2817,30 @@ ws.attach(server, (sock, req) => {
       }
       record(room, 'reply', {attempt:p.attempt,playerId:me.id,values:room.replies.get(me.id).slice()});
       pushFeedback(room);
+      return;
+    }
+
+    if (role === 'player' && m.t === 'sprintA') {
+      const sprint = room && room.sprint;
+      if (!sprint || Date.now() > sprint.endsAt) return;
+      const st = sprintState(sprint, me);
+      const q = sprint.questions[st.i];
+      if (!q || !Number.isInteger(m.choice) || m.choice < 0 || m.choice >= q.options.length) return;
+      const right = m.choice === q.correct;
+      const pts = sprintPoints(right, (Date.now() - st.shownAt) / 1000);
+      const before = me.score;
+      me.score = Math.max(0, me.score + pts);
+      st.gained += me.score - before;
+      if (right) st.right++; else st.wrong++;
+      const h = sprint.heat[st.i];
+      h.answered++; if (!right) h.wrong++; h.picks[m.choice]++;
+      st.i++;
+      st.shownAt = Date.now();
+      const next = sprintQuestion(sprint, st);
+      me.sock.json({t: 'sprintMark', id: sprint.id, right, answer: q.options[q.correct],
+        gained: me.score - before, score: me.score, right_n: st.right, next: next,
+        done: !next ? {right: st.right, answered: st.right + st.wrong} : null});
+      sprintProgress(room);
       return;
     }
 

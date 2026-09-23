@@ -3572,6 +3572,34 @@ html[data-ws="deck"] #railCount { display: none; }
 .layout-race .lane.pack .lane-pos { font-size: 18px; }
 .layout-race .race-yours { font-size: 20px; color: var(--s-dim); text-align: center; margin-top: 6px; }
 
+/* Beat the Clock, self-paced: the wall is the clock and the room's progress
+   (js/live.js paintSprint), over the first question, which it hides. */
+.sprint-board {
+  position: absolute; inset: 0; z-index: 30;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  padding: 60px 80px; text-align: center;
+  background: var(--s-bg, #111); color: var(--s-fg);
+}
+.sprint-board .spb-kicker { font-size: 18px; font-weight: 800; letter-spacing: .16em; color: var(--s-accent); }
+.sprint-board .spb-clock { font-size: 150px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.sprint-board.hurry .spb-clock { color: #e0533a; }
+.sprint-board.over .spb-clock { font-size: 110px; }
+.sprint-board .spb-bar { width: min(760px, 90%); height: 18px; border-radius: 999px; background: var(--s-card); border: 2px solid var(--s-rule); overflow: hidden; }
+.sprint-board .spb-bar i { display: block; height: 100%; width: 0; background: var(--s-accent); transition: width .4s ease; }
+.sprint-board .spb-stats { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sprint-board .spb-sub { font-size: 20px; color: var(--s-dim); }
+.sprint-board .spb-result:empty { display: none; }
+.sprint-board .spb-result { display: flex; flex-direction: column; gap: 8px; max-width: 900px; margin-top: 6px; }
+.sprint-board .spb-hard-label { font-size: 15px; font-weight: 800; letter-spacing: .14em; color: var(--s-dim); text-transform: uppercase; }
+.sprint-board .spb-hard-q { font-size: 34px; font-weight: 720; }
+.sprint-board .spb-hard-a { font-size: 26px; font-weight: 700; color: var(--s-accent); }
+.sprint-board .spb-hard-n { font-size: 22px; }
+.sprint-board .spb-next { font-size: 16px; color: var(--s-dim); margin-top: 6px; }
+.sprint-board .spb-stop {
+  font: inherit; font-size: 16px; font-weight: 700; padding: 10px 20px; border-radius: 12px;
+  border: 2px solid var(--s-rule); background: var(--s-card); color: var(--s-fg); cursor: pointer;
+}
+.sprint-board .spb-stop[hidden] { display: none; }
 .layout-boss .pad { justify-content: center; padding: 72px 80px; gap: 22px; }
 .layout-boss .boss-title { font-size: 48px; font-weight: 750; letter-spacing: -.02em; }
 .layout-boss .boss-note { font-size: 22px; color: var(--s-muted, #9aa3b5); }

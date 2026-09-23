@@ -99,6 +99,12 @@
 
   P.on('slide', function (e) {
     var s = e && e.slide;
+    /* Live Beat the Clock with every learner on a phone is a sprint, run
+       per phone by the relay (js/live.js); this wall-paced round stays out. */
+    if (s && SF.Live && SF.Live.sprintFor && SF.Live.sprintFor(s)) {
+      stop(); clearTimeout(paceTimer); round = null;
+      return;
+    }
     if (!isHeads(s)) {
       if (round && (!s || s.gameId !== round.gameId)) { stop(); round = null; }
       return;

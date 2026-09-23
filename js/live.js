@@ -1251,6 +1251,22 @@
         Live.players = m.list || [];
         break;
 
+      case 'sprintProgress':
+        if (Live.sprint && m.id === Live.sprint.id) { Live.sprint.progress = m; paintSprint(); }
+        break;
+
+      case 'sprintResult':
+        if (Live.sprint && m.id === Live.sprint.id) {
+          Live.sprint.result = m;
+          Live.sprint.over = true;
+          clearInterval(Live.sprint.timer);
+          Live.sprint.slides.forEach(function (x) { Live.revealed[x.id] = true; });
+          paintSprint();
+          paintRail();
+          syncManual();
+        }
+        break;
+
       case 'oralCount':
         Live.oralCounts[m.gameId] = Number(m.count) || 0;
         paintOralCount();
@@ -1869,6 +1885,150 @@
     }, moment || {}));
   }
 
+  /* ------------------------------------- Beat the Clock, self-paced (GA-27)
+
+     Live, with every learner on a phone, the run is a sprint: the relay
+     holds the questions and marks each tap, and every phone works through
+     them at its own pace against one clock. The wall shows the clock and
+     the room's progress, never a question, because the phone is the stage.
+     At time it reveals the room's hardest question. With a no-device row in
+     the room the wall-paced round (js/rounds.js) runs instead: an answer
+     typed in by the teacher cannot keep its own pace. */
+  Live.sprint = null;
+  Live.sprintDone = {};
+  function sprintSlide(s) {
+    return !!(s && s.type === 'quiz' && s.style === 'speed' && s.roundSeconds > 0 && s.input !== 'text' &&
+      Live.active && !SF.Player.spontaneous && !Live.players.some(function (p) { return p.manual; }));
+  }
+  /** Whether this slide belongs to a sprint, so the wall-paced round stays out of it. */
+  Live.sprintFor = function (s) {
+    if (!s || !Live.active) return false;
+    return !!((Live.sprint && s.gameId === Live.sprint.gameId) || Live.sprintDone[s.gameId]) || sprintSlide(s);
+  };
+  function sprintRun(s) {
+    var list = [], last = -1;
+    SF.Player.deck.slides.forEach(function (x, i) {
+      if (x.type === 'quiz' && x.gameId === s.gameId && x.style === 'speed') { list.push(x); last = i; }
+    });
+    return { list: list, after: last + 1 };
+  }
+  function startSprint(s) {
+    var run = sprintRun(s);
+    Live.sprint = { id: s.gameId + ':' + Date.now(), gameId: s.gameId, total: s.roundSeconds,
+      endsAt: Date.now() + s.roundSeconds * 1000, after: run.after, slides: run.list,
+      progress: null, result: null, over: false, stopAsked: 0, timer: null };
+    send({ t: 'sprint', id: Live.sprint.id, gameId: s.gameId, seconds: s.roundSeconds,
+      questions: run.list.map(function (x) {
+        return { id: x.id, question: x.question, options: x.options, correct: x.correct };
+      }) });
+    Live.sprint.timer = setInterval(paintSprint, 250);
+  }
+  function onSprintSlide(s) {
+    if (Live.sprintDone[s.gameId] && !Live.sprint) { sendIdle(s); return; }
+    if (!Live.sprint) startSprint(s);
+    else sendIdle(s);
+    paintSprint();
+  }
+  function stopSprint() {
+    if (!Live.sprint || Live.sprint.over) return;
+    Live.sprint.over = true;
+    send({ t: 'sprintEnd' });
+    paintSprint();
+  }
+  function leaveSprint() {
+    if (!Live.sprint) return;
+    if (!Live.sprint.over) send({ t: 'sprintEnd' });
+    clearInterval(Live.sprint.timer);
+    Live.sprintDone[Live.sprint.gameId] = true;
+    Live.sprint.slides.forEach(function (x) { Live.revealed[x.id] = true; });
+    Live.sprint = null;
+  }
+  /* Next during the sprint stops the clock (twice, so a stray press cannot);
+     after it, Next goes past the run's questions. */
+  function sprintNext() {
+    var sp = Live.sprint;
+    if (!sp.over) {
+      if (Date.now() - sp.stopAsked < 3000) { stopSprint(); return true; }
+      sp.stopAsked = Date.now();
+      SF.toast('Press Next again to stop the clock');
+      return true;
+    }
+    var after = sp.after;
+    leaveSprint();
+    if (after < SF.Player.deck.slides.length) SF.Player.goTo(after, 1);
+    else SF.toast('That was the last slide');
+    return true;
+  }
+  function sprintHardest(result) {
+    var best = null;
+    (result.questions || []).forEach(function (q) {
+      if (!q.wrong) return;
+      if (!best || q.wrong > best.wrong || (q.wrong === best.wrong && q.wrong / q.answered > best.wrong / best.answered)) best = q;
+    });
+    return best;
+  }
+  function paintSprint() {
+    var sp = Live.sprint;
+    var node = SF.Player._current;
+    var cur = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
+    if (!sp || !node || !cur || cur.gameId !== sp.gameId) return;
+    var board = node.querySelector('.sprint-board');
+    if (!board) {
+      board = el('div', 'sprint-board');
+      board.appendChild(el('div', 'spb-kicker', 'AGAINST THE CLOCK'));
+      board.appendChild(el('div', 'spb-clock', ''));
+      var bar = el('div', 'spb-bar');
+      bar.appendChild(el('i', '', ''));
+      board.appendChild(bar);
+      board.appendChild(el('div', 'spb-stats', ''));
+      board.appendChild(el('div', 'spb-sub', 'The questions are on your phones. Go at your own pace.'));
+      board.appendChild(el('div', 'spb-result', ''));
+      var stop = /** @type {HTMLButtonElement} */ (el('button', 'spb-stop', 'Stop the clock'));
+      stop.type = 'button';
+      stop.dataset.desk = 'sprint:stop';
+      stop.onclick = function () { stopSprint(); };
+      board.appendChild(stop);
+      node.appendChild(board);
+    }
+    var part = function (sel) { return /** @type {HTMLElement} */ (board.querySelector(sel)); };
+    var left = sp.over ? 0 : Math.max(0, (sp.endsAt - Date.now()) / 1000);
+    if (!left && !sp.over) sp.over = true;
+    var secs = Math.ceil(left);
+    part('.spb-clock').textContent = sp.over ? 'Time!' : Math.floor(secs / 60) + ':' + ('0' + secs % 60).slice(-2);
+    board.classList.toggle('hurry', !sp.over && left <= 10);
+    board.classList.toggle('over', sp.over);
+    var pr = sp.progress || { answers: 0, right: 0, finished: 0, playing: Live.players.length, of: sp.slides.length };
+    var res = sp.result;
+    var answers = res ? res.answers : pr.answers, right = res ? res.right : pr.right;
+    var possible = Math.max(1, (pr.playing || 1) * (pr.of || sp.slides.length));
+    part('.spb-bar i').style.width = Math.min(100, answers / possible * 100) + '%';
+    part('.spb-stats').textContent = answers + (answers === 1 ? ' answer' : ' answers') + ' in' +
+      (answers ? ' · ' + Math.round(right / answers * 100) + '% right' : '') +
+      (pr.finished ? ' · ' + pr.finished + ' of ' + (pr.playing || 0) + ' finished' : '');
+    var stopBtn = /** @type {HTMLButtonElement} */ (board.querySelector('.spb-stop'));
+    stopBtn.hidden = sp.over;
+    stopBtn.disabled = sp.over;
+    var out = part('.spb-result');
+    out.textContent = '';
+    if (res) {
+      part('.spb-sub').textContent = right + (right === 1 ? ' right answer' : ' right answers') + ', as a room';
+      var hard = sprintHardest(res);
+      var slide = hard && sp.slides.find(function (x) { return x.id === hard.id; });
+      if (slide) {
+        out.appendChild(el('div', 'spb-hard-label', 'The hardest'));
+        out.appendChild(el('div', 'spb-hard-q', slide.question || ''));
+        out.appendChild(el('div', 'spb-hard-a', '✓ ' + ((slide.options || [])[slide.correct] || '')));
+        out.appendChild(el('div', 'spb-hard-n', hard.wrong + ' of ' + hard.answered + ' got it wrong' +
+          (hard.lure ? ' · most of them chose “' + hard.lure + '”' : '')));
+      } else {
+        out.appendChild(el('div', 'spb-hard-n', 'Nobody got one wrong. A clean run.'));
+      }
+      out.appendChild(el('div', 'spb-next', 'Next → to move on'));
+    } else if (sp.over) {
+      part('.spb-sub').textContent = 'Counting the answers…';
+    }
+  }
+
   /** Speed gains for the relay — one row per answered player. */
   function speedGains(slide) {
     /* In a round, speed is measured from the question's own appearance. */
@@ -2286,6 +2446,7 @@
 
   function gate(slide) {
     if (!Live.active || !slide || slide.type !== 'quiz') return false;
+    if (Live.sprint && slide.gameId === Live.sprint.gameId) return sprintNext();
     if (Live.revealed[slide.id]) return false;
     /* Reading phase: Next asks the recall question rather than revealing. */
     if (slide.style === 'definition' && SF.Player.definitionPhase &&
@@ -2931,6 +3092,11 @@
       return; // Oral / paper boards: never send learner claim buttons.
     }
 
+    if (Live.sprint && (!s || s.gameId !== Live.sprint.gameId)) leaveSprint();
+    if (s.type === 'quiz' && (Live.sprint && s.gameId === Live.sprint.gameId || sprintSlide(s) || Live.sprintDone[s.gameId])) {
+      onSprintSlide(s);
+      return;
+    }
     if (s.type === 'quiz') {
       if (Live.revealed[s.id]) {
         // revisiting an already-scored question: just show the room's numbers

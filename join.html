@@ -1030,6 +1030,87 @@
     box.hidden = false;
   }
 
+  /* Beat the Clock, self-paced (GA-27). The relay sends one question at a
+     time to this phone alone and marks each tap as it lands; a right answer
+     flashes and the next arrives, a wrong one shows the right answer for a
+     moment first. The clock is the room's: seconds left, counted here. */
+  var sprint = null, sprintClock = null;
+  function stopSprintClock() { if (sprintClock) { clearInterval(sprintClock); sprintClock = null; } }
+  function paintSprintClock() {
+    if (!sprint) return;
+    var left = Math.max(0, Math.ceil((sprint.endsAt - Date.now()) / 1000));
+    $('qTime').textContent = Math.floor(left / 60) + ':' + ('0' + (left % 60)).slice(-2);
+    $('qTime').classList.toggle('hurry', left <= 10);
+    $('qBar').style.width = (sprint.total ? Math.min(100, left / sprint.total * 100) : 0) + '%';
+  }
+  function sprintAsk(m) {
+    if (!sprint || sprint.id !== m.id) sprint = { id: m.id, total: Number(m.left) || 0, endsAt: 0, right: 0 };
+    sprint.endsAt = Date.now() + (Number(m.left) || 0) * 1000;
+    sprint.busy = false;
+    stopTick();
+    ['qClues', 'qMission', 'qShowdown', 'qWhy'].forEach(function (id) { if ($(id)) $(id).hidden = true; });
+    ['qTypeWrap', 'qNumWrap', 'qOrderWrap'].forEach(function (id) { if ($(id)) $(id).style.display = 'none'; });
+    hideSure();
+    $('qStyle').hidden = false;
+    $('qStyle').textContent = 'AGAINST THE CLOCK \u00b7 ' + sprint.right + ' RIGHT';
+    $('questionText').textContent = m.question || '';
+    var pad = $('qPad');
+    pad.innerHTML = '';
+    delete pad.dataset.locked;
+    pad.style.display = '';
+    var count = (m.options || []).length;
+    pad.className = 'pad' + (count > 4 ? '' : (count <= 2 ? ' one' : ''));
+    (m.options || []).forEach(function (text, i) {
+      var b = document.createElement('button');
+      b.className = 'pick keyed';
+      b.type = 'button';
+      var g = document.createElement('span'); g.className = 'key'; g.textContent = LETTERS[i];
+      var l = document.createElement('span'); l.className = 'l'; l.textContent = text;
+      b.appendChild(g); b.appendChild(l);
+      b.addEventListener('click', function () {
+        if (!sprint || sprint.busy || !ws || ws.readyState !== 1) return;
+        sprint.busy = true;
+        sprint.picked = i;
+        pad.dataset.locked = '1';
+        ws.send(JSON.stringify({ t: 'sprintA', choice: i }));
+        if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
+      });
+      pad.appendChild(b);
+    });
+    $('qNum').textContent = 'Question ' + m.n + ' of ' + m.of;
+    stopSprintClock();
+    paintSprintClock();
+    sprintClock = setInterval(paintSprintClock, 250);
+    show('scQuestion');
+  }
+  function sprintMarked(m) {
+    if (!sprint) return;
+    me.score = m.score;
+    header(true);
+    if (m.right) sprint.right++;
+    var pad = $('qPad');
+    Array.prototype.forEach.call(pad.children, function (b, i) {
+      var label = b.querySelector('.l');
+      var isAnswer = label && label.textContent === m.answer;
+      if (i === sprint.picked) b.classList.add(m.right ? 'sprint-right' : 'sprint-wrong');
+      else if (isAnswer && !m.right) b.classList.add('sprint-answer');
+      else b.classList.add('dim');
+    });
+    $('qStyle').textContent = (m.right ? '\u2713 +' + m.gained : '\u2717 ' + (m.gained < 0 ? '\u2212' + (-m.gained) : '0')) +
+      ' \u00b7 ' + sprint.right + ' RIGHT';
+    setTimeout(function () {
+      if (!sprint) return;
+      if (m.next) sprintAsk(Object.assign({ id: sprint.id }, m.next));
+      else sprintFinished(m.done || { right: sprint.right });
+    }, m.right ? 450 : 1100);
+  }
+  function sprintFinished(m) {
+    $('waitIcon').textContent = '\u2713';
+    $('waitTitle').textContent = 'All done \u2014 ' + (m.right || 0) + ' right';
+    $('waitLead').textContent = 'That was every question. Wait for the clock, then look up.';
+    show('scWait');
+  }
+
   function header(on) {
     $('hdr').style.display = on ? 'flex' : 'none';
     $('askBtn').style.display = on && floorOpen ? '' : 'none';
@@ -1394,6 +1475,37 @@
 
       case 'lane':
         paintLane(m);
+        break;
+
+      /* Beat the Clock, self-paced: this phone's own stream of questions
+         against the room's one clock. */
+      case 'sprintQ':
+        sprintAsk(m);
+        break;
+
+      case 'sprintMark':
+        sprintMarked(m);
+        break;
+
+      case 'sprintDone':
+        sprintFinished(m);
+        break;
+
+      case 'sprintOver':
+        stopSprintClock();
+        sprint = null;
+        me.score = m.score;
+        header(true);
+        $('rLane').hidden = true;
+        $('rNote').hidden = true;
+        $('rWhy').style.display = 'none';
+        $('rVerdict').textContent = 'Time!';
+        $('rVerdict').className = 'verdict right';
+        $('rGain').textContent = m.right + ' right of ' + m.answered +
+          (m.gained > 0 ? ' \u00b7 +' + m.gained + ' points' : '');
+        $('rScore').textContent = m.score;
+        $('rRank').textContent = formatStanding(m);
+        show('scResult');
         break;
 
       case 'hintOut':

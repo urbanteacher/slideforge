@@ -143,6 +143,9 @@ function project(session, active = false) {
         });
         (d.scores || []).forEach(s => { if (person(s.id)) person(s.id).score = s.score; });
       }
+    } else if (e.type === 'sprintEnd') {
+      /* Beat the Clock, self-paced: the run's scores. */
+      (d.scores || []).forEach(s => { if (person(s.id)) person(s.id).score = s.score; });
     } else if (e.type === 'oralCredit') {
       /* A Concept Chain link credited while its term stayed open. */
       (d.scores || []).forEach(s => { if (person(s.id)) person(s.id).score = s.score; });

@@ -189,6 +189,10 @@ body.phones-blank{overflow:hidden}
   animation:creditIn .35s cubic-bezier(.3,0,.2,1)}
 #creditNote.mine{background:#2f6b3a}
 #creditNote[hidden]{display:none}
+/* Beat the Clock, self-paced: each tap marked as it lands (join.html sprintMarked). */
+.pick.sprint-right{background:#2f6b3a;color:#fff;border-color:#2f6b3a}
+.pick.sprint-wrong{background:#9b3b2c;color:#fff;border-color:#9b3b2c}
+.pick.sprint-answer{border-color:#2f6b3a;box-shadow:0 0 0 3px rgba(47,107,58,.35)}
 /* A race: the phone's own lane (join.html paintLane). */
 .r-lane{margin-top:14px;width:100%;max-width:340px}
 .r-lane[hidden]{display:none}
