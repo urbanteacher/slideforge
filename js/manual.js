@@ -92,6 +92,7 @@ if($('teamRows'))$('teamRows').onclick=function(){
 /* Tally entry. A room answering on paper or by hands is counted per option
    and the counts join the wall's bars and reveal as phone answers do.
    Nobody is named and nobody is scored. */
+/** @type {{id: string, counts: number[]}} */
 var handDraft={id:'',counts:[]};
 function paintHandTally(q){
  var box=$('handTally');if(!box)return;
