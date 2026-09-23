@@ -2543,7 +2543,9 @@
     if (!stage) return;
     var box = stage.querySelector('.proposal-ghosts');
     if (!box) { box = el('div', 'proposal-ghosts'); stage.appendChild(box); }
-    var items = (Live.digest && Live.digest.items) || [];
+    /* The wall's copy: an idea the desk hid is not drawn here either. */
+    var shown = shownDigest();
+    var items = (shown && shown.items) || [];
     var onTable = Live.proposalOnTable ? Live.proposalOnTable.text : '';
     box.textContent = '';
     items.slice(0, 5).forEach(function (it) {
