@@ -7309,3 +7309,48 @@ dialog.palette::backdrop { background: rgba(20, 26, 18, .32); }
 .slide.activity-stages .step-live .sp-live { font-size: 24px; font-weight: 700; }
 .slide.activity-stages .stage-panel.time-up .sp-live::before { content: '\23F1  '; }
 @keyframes sf-stage-in { from { opacity: 0; transform: translateY(14px); } }
+
+/* ==========================================================================
+   The room's output, landed (activities audit N12–N14)
+
+   The spotlighted idea: one card at the foot of the slide, in the theme's
+   ink on its ground, without its author. It stays up for the rest of the
+   slide, so Share's best idea is still there for Connect.
+   ========================================================================== */
+.slide > .idea-spotlight {
+  position: absolute; left: 64px; right: 64px; bottom: 34px; z-index: 6;
+  display: flex; align-items: baseline; gap: 16px;
+  padding: 16px 26px; border-radius: 16px;
+  background: var(--s-fg); color: var(--s-bg);
+  box-shadow: 0 10px 30px rgba(0,0,0,.18);
+  animation: sf-spot-in .45s cubic-bezier(.3,0,.2,1);
+}
+.deck-viewport.railed .slide > .idea-spotlight,
+#previewBox.railed .slide > .idea-spotlight { right: calc(var(--rail-w) + 54px); }
+.slide > .idea-spotlight .is-label {
+  flex: none; font-size: 15px; font-weight: 800; letter-spacing: .14em;
+  text-transform: uppercase; opacity: .75;
+}
+.slide > .idea-spotlight .is-text {
+  font-size: 30px; line-height: 1.25; font-weight: 700;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+/* The live stage gives the card its foot of the slide. */
+.slide.activity-stages.has-idea-spotlight .stage-panel.step-live { padding-bottom: 170px; }
+@keyframes sf-spot-in { from { opacity: 0; transform: translateY(18px); } }
+
+/* A note stage's count: "19 of 26 have written something". */
+.slide.activity-stages .sp-count:empty { display: none; }
+.slide.activity-stages .step-live .sp-count { font-size: 24px; font-weight: 650; color: var(--s-dim); }
+
+/* A held poll or scale: how many are in, and that the split is kept back. */
+.fbrail .fb-held,
+.layout-feedback .fk-held {
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px;
+}
+.fbrail .fb-held-n { font-size: 88px; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; }
+.fbrail .fb-held-line { font-size: 24px; font-weight: 650; }
+.fbrail .fb-held-note { font-size: 18px; line-height: 1.35; color: var(--s-dim); margin-top: 14px; max-width: 18em; }
+.layout-feedback .fk-held-n { font-size: 160px; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; }
+.layout-feedback .fk-held-line { font-size: 36px; font-weight: 650; }
+.layout-feedback .fk-held-note { font-size: 26px; color: var(--s-dim); margin-top: 18px; }

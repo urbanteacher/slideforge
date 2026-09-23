@@ -115,6 +115,11 @@ function normalizeFeedback(raw) {
     f.highLabel = String(raw.highLabel == null ? 'Completely' : raw.highLabel).slice(0, 40);
     f.max = 1;             // one position each — a scale is where you stand
   }
+  /* Held: the wall shows how many have answered, not the split, until the
+     teacher shows it. For a self-assessment, where live bars anchor the
+     room: the fifth student sees four "Got it"s and taps "Got it". Only a
+     poll or a scale has a split to hold. */
+  if ((f.kind === 'poll' || f.kind === 'scale') && raw.hold === true) f.hold = true;
   return f;
 }
 

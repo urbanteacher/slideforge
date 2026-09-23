@@ -262,6 +262,9 @@ export function createPresenterWindow(SF, helpers) {
             }
           : null,
         roomPulse: SF.Live && SF.Live.presenterPulse ? SF.Live.presenterPulse() : null,
+        /* What the room is sending on this slide, with the teacher's handles
+           on it: spotlight, hide, close, show a held split, the written count. */
+        ask: SF.Live && SF.Live.askState ? SF.Live.askState() : null,
         deck: Player.spontaneous
           ? Object.assign({}, deck, { slides: Player.spontaneous.slides, title: Player.spontaneous.title || deck.title })
           : deck,
@@ -383,6 +386,7 @@ export function createPresenterWindow(SF, helpers) {
     else if (SF.Boards && SF.Boards.command && SF.Boards.command(d.cmd, d.action, d.card)) {}
     else if (d.cmd === 'moment' && Player.momentCommand) Player.momentCommand(d);
     else if (d.cmd === 'quickPoll') Player.quickPoll(d);
+    else if (d.cmd === 'ask' && SF.Live && SF.Live.askCommand) SF.Live.askCommand(d);
     else if (d.cmd === 'explore' && SF.Explore) SF.Explore.command(Player,d.action,d.value);
     else if (d.cmd === 'quizGen') Player.quizGen(d);
     else if (d.cmd === 'activity' && SF.LiveActivities) {

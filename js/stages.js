@@ -97,7 +97,8 @@
       kind: 'brainstorm',
       prompt: st.text || 'Send your strongest idea',
       presentAs: 'rail',
-      max: 1
+      max: 1,
+      origin: 'stage'
     });
     shareId = L.prompt ? L.prompt.id : null;
   }
@@ -141,6 +142,7 @@
       paintClock(all, all);
     }
     syncShare(st);
+    paintWritten(SF.Live && SF.Live.written);
     publish();
   }
 
@@ -199,8 +201,22 @@
     return true;
   }
 
+  /* How many have written something during a note stage: "19 of 26 have
+     written something". A count from the relay; the notes never leave the
+     phones. */
+  function paintWritten(w) {
+    var st = stages[current];
+    var panel = panelFor(current);
+    var box = panel && panel.querySelector('.sp-count');
+    if (!box) return;
+    var slide = P._currentSlide;
+    var here = !!(w && st && st.job === 'note' && slide && w.slideId === slide.id && w.stage === st.i && w.of);
+    box.textContent = here ? w.n + ' of ' + w.of + ' have written something' : '';
+  }
+
   SF.Stages = {
     extend: extend,
+    paintWritten: paintWritten,
     isStaged: isStaged,
     get active() { return !!node; }
   };

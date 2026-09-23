@@ -71,7 +71,9 @@ export function createLiveRenderer(SF, helpers) {
     var body = el('div', 'fk-body');
     body.dataset.kind = (digest && digest.kind) || '';
 
-    if (!digest || !digest.kind) {
+    if (opts.held) {
+      body.appendChild(heldNote(digest, 'fk-held'));
+    } else if (!digest || !digest.kind) {
       body.appendChild(el('div', 'fk-empty', 'Waiting for the room'));
     } else if (digest.kind === 'poll') {
       focusPoll(body, digest, opts);
@@ -248,6 +250,16 @@ export function createLiveRenderer(SF, helpers) {
     return root;
   }
 
+  /** A held prompt's body: the count, and that the answers are kept back. */
+  function heldNote(digest, cls) {
+    var box = el('div', cls);
+    var answered = digest ? Number(digest.answered) || 0 : 0;
+    box.appendChild(el('div', cls + '-n', String(answered)));
+    box.appendChild(el('div', cls + '-line', answered === 1 ? 'answer in' : 'answers in'));
+    box.appendChild(el('div', cls + '-note', 'Hidden until your teacher shows them. Answer for yourself.'));
+    return box;
+  }
+
   function paintFeedbackRail(rail, digest, opts) {
     opts = opts || {};
     rail.querySelector('.rail-title').textContent = opts.title || 'Feedback';
@@ -267,6 +279,13 @@ export function createLiveRenderer(SF, helpers) {
     body.textContent = '';
     body.classList.remove('tight', 'tighter');
     rail.dataset.kind = (digest && digest.kind) || '';
+
+    /* Held: how many have answered is on the wall (the meter above), and
+       the split is not. The desk shows it when the teacher is ready. */
+    if (opts.held) {
+      body.appendChild(heldNote(digest, 'fb-held'));
+      return;
+    }
 
     if (!busy) {
       if (opts.roster && opts.roster.length) paintFbRoster(body, opts.roster);

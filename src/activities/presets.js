@@ -211,7 +211,7 @@ const PRESETS = {
     ['Mostly understand', 'Solve one example, then check the step you are least sure about.'],
     ['Getting there', 'Use the worked example with a partner. Explain each step.'],
     ['Need help', 'Bring your first uncertain step to the teacher. Start with a labelled sketch.']
-  ], { feedback: { prompt: 'Which corner best describes your understanding?', options: ['Got it', 'Mostly understand', 'Getting there', 'Need help'] }, answer: 'Choose a corner or indicate a choice from your seat. Use 2 min to choose, 6 min for the task and 4 min for teacher support.' }),
+  ], { feedback: { prompt: 'Which corner best describes your understanding?', options: ['Got it', 'Mostly understand', 'Getting there', 'Need help'], hold: true }, answer: 'Choose a corner or indicate a choice from your seat. Use 2 min to choose, 6 min for the task and 4 min for teacher support.' }),
   'learning-log-entry': preset([
     ['New learning', 'What’s one new thing?'], ['Connections', 'How does this connect?'],
     ['Challenges', 'What was difficult?'], ['Strategies', 'What helped me learn?'], ['Next steps', 'What do I want to work on?']
@@ -249,7 +249,7 @@ const PRESETS = {
   'reflection-ladder': preset([
     ['Choose your level', '1: Need help → 3: Can practise with support → 5: Can teach others.'],
     ['Explain', 'I’m here because…'], ['Plan', 'To move up I need to…'], ['Share', 'Tell a partner one specific action you will take next.']
-  ], { feedback: { prompt: 'Where are you on the learning ladder?', points: 5, lowLabel: 'Need help', highLabel: 'Can teach others' } })
+  ], { feedback: { prompt: 'Where are you on the learning ladder?', points: 5, lowLabel: 'Need help', highLabel: 'Can teach others', hold: true } })
 };
 
 /* These visual treatments reuse the same label/value data. They change the

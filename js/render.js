@@ -662,6 +662,8 @@
       panel.appendChild(rich('div', 'sp-prompt', slide, 'bullets.' + st.row, st.text || ' '));
       /* Filled while the stage runs: time up, and how many ideas are in. */
       panel.appendChild(el('div', 'sp-live'));
+      /* A note stage's count: how many have written something. */
+      if (st.job === 'note') panel.appendChild(el('div', 'sp-count'));
       /* A worked answer belongs to the last stage, where the teacher draws
          the threads together. A draft stays off the wall as everywhere. */
       if (answer && k === stages.length - 1) panel.appendChild(answer);

@@ -117,6 +117,24 @@
   .pv-away[hidden] { display: none; }
   .pv-needs { color: #8a3b12; background: #fde4d6; }
   .pv-game { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+  .desk-ask { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border: 1px solid var(--ui-line); border-radius: 10px; background: var(--ui-panel); color: var(--ui-text); }
+  .desk-ask[hidden] { display: none; }
+  .da-head { display: flex; align-items: baseline; gap: 10px; }
+  .da-title { flex: 1; min-width: 0; font-size: 13px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .da-count { font-size: 12px; color: var(--ui-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .da-spot { margin: 0; font-size: 12px; color: var(--ui-dim); }
+  .da-spot[hidden] { display: none; }
+  .da-spot b { color: var(--ui-text); font-weight: 650; }
+  .da-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .da-actions:empty { display: none; }
+  .da-ideas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow: auto; }
+  .da-ideas:empty { display: none; }
+  .da-ideas li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.35; padding: 5px 0; border-top: 1px solid var(--ui-line); }
+  .da-ideas li.hidden .da-text { opacity: .45; text-decoration: line-through; }
+  .da-ideas li.spot .da-text { font-weight: 700; }
+  .da-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .da-who { color: var(--ui-dim); font-size: 11px; display: block; }
+  .da-ideas .btn { padding: 3px 8px; font-size: 12px; }
   .pv-game[hidden] { display: none; }
   .pv-room-id {
     display: none;
@@ -455,6 +473,14 @@
       <div class="quick-card"><h3>Slide responses</h3><div id="slideFeedback"></div></div>
     </section>
     <section id="slidePane" class="desk-pane">
+      <!-- What the room is sending on this slide, and the teacher's handles
+           on it. Names are here and never on the wall. -->
+      <div class="desk-ask" id="deskAsk" hidden>
+        <div class="da-head"><span class="da-title" id="deskAskTitle"></span><span class="da-count" id="deskAskCount" aria-live="polite"></span></div>
+        <p class="da-spot" id="deskAskSpot" hidden></p>
+        <div class="da-actions" id="deskAskActions"></div>
+        <ol class="da-ideas" id="deskAskIdeas"></ol>
+      </div>
       <div class="cap">Next</div>
       <div class="box" id="boxNext"></div>
       <div class="cap">Notes</div>
@@ -619,6 +645,66 @@ SF.installExplore(SF);
      whichever way it arrives. */
   function cmd(c, extra) {
     deskSend(Object.assign({ type: 'sf-presenter-cmd', cmd: c }, extra || {}));
+  }
+
+  /* The room's answers on this slide: how many, the written count during a
+     note stage, and for ideas, Spotlight and Hide. Rebuilt only when what
+     it shows changes, so a button is never pulled out from under a click. */
+  function paintAsk(a) {
+    var box = $('deskAsk');
+    if (!box) return;
+    var sig = JSON.stringify(a || null);
+    if (box.dataset.sig === sig) return;
+    box.dataset.sig = sig;
+    box.hidden = !a;
+    if (!a) return;
+    var kinds = { poll: 'Poll', scale: 'Scale', wordcloud: 'Word cloud', brainstorm: 'Ideas' };
+    $('deskAskTitle').textContent = a.prompt
+      ? (kinds[a.kind] || 'Responses') + ' \u00b7 ' + a.prompt
+      : a.written ? 'Private notes' : 'On the wall';
+    $('deskAskCount').textContent = a.written
+      ? a.written.n + ' of ' + a.written.of + ' have written something'
+      : a.prompt && a.players ? a.answered + ' of ' + a.players + ' answered' : '';
+    var spot = $('deskAskSpot');
+    spot.hidden = !a.spotlight;
+    spot.textContent = '';
+    if (a.spotlight) {
+      spot.appendChild(document.createTextNode('Spotlight on the wall: '));
+      spot.appendChild(document.createElement('b')).textContent = '\u201c' + a.spotlight + '\u201d';
+    }
+    var actions = $('deskAskActions');
+    actions.textContent = '';
+    function button(label, action, extra, title) {
+      var b = document.createElement('button');
+      b.className = 'btn';
+      b.textContent = label;
+      if (title) b.title = title;
+      b.onclick = function () { cmd('ask', Object.assign({ action: action }, extra || {})); };
+      return b;
+    }
+    if (a.held) actions.appendChild(button('Show results', 'show', null, 'Put the split on the wall. Until now the room has seen only how many answered.'));
+    else if (a.holds) actions.appendChild(document.createElement('span')).textContent = 'Results on the wall';
+    if (a.spotlight) actions.appendChild(button('Take down', 'unspot', null, 'Take the spotlighted idea off the wall'));
+    if (a.prompt) actions.appendChild(button(a.custom ? 'Close the idea box' : 'Close', 'close', null, 'Stop collecting on this slide'));
+    var list = $('deskAskIdeas');
+    list.textContent = '';
+    (a.ideas || []).forEach(function (it) {
+      var li = document.createElement('li');
+      if (it.hidden) li.className = 'hidden';
+      if (it.spot) li.className = 'spot';
+      var t = document.createElement('span');
+      t.className = 'da-text';
+      t.textContent = it.text;
+      if (it.name) t.appendChild(document.createElement('span')).className = 'da-who';
+      if (it.name) t.lastChild.textContent = it.name + ' \u00b7 only you see this';
+      li.appendChild(t);
+      if (!it.hidden) li.appendChild(it.spot
+        ? button('In the spotlight', 'unspot', null, 'Take it down')
+        : button('Spotlight', 'spot', { key: it.key }, 'Put this idea on the wall, without a name'));
+      li.appendChild(button(it.hidden ? 'Show' : 'Hide', it.hidden ? 'unhide' : 'hide', { key: it.key },
+        it.hidden ? 'Put it back on the wall' : 'Take it off the wall. It stays in the report.'));
+      list.appendChild(li);
+    });
   }
 
   var deskBus = null;
@@ -1033,6 +1119,7 @@ SF.installExplore(SF);
       }
       gc.hidden = !list.length;
     }
+    paintAsk(d.ask);
     var more = $('btnStageMore');
     if (more) {
       more.hidden = !d.stage;
