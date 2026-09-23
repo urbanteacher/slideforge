@@ -38,7 +38,7 @@ order.
 
 | ID | Item | Size | Status |
 |---|---|---|---|
-| GA-15 – GA-28 | **Games to a premium standard**: waves 0–6 are done; 7 mostly (GA-01–14, 18–26, 29, 30). GA-15–17 (the no-device work skipped alongside wave 3) and GA-28 solo practice are done. **Every planned wave is now built or mostly built;** what remains is the open list below. **Open:** GA-19's drawn bridges (Connection Maker), GA-27 self-pacing. None of the waves since GA-29 has been viewed on screen except Fill, Beat the Clock and Compare. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | In progress |
+| GA-15 – GA-28 | **Games to a premium standard**: waves 0–7 are done (GA-01–27, 29, 30). GA-15–17 (the no-device work skipped alongside wave 3) and GA-28 solo practice are done. **Every planned wave is now built or mostly built;** what remains is the open list below. **Open:** GA-19's drawn bridges (Connection Maker). None of the waves since GA-29 has been viewed on screen except Fill, Beat the Clock and Compare. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | In progress |
 | AC-13 – AC-17 | **Activities to a premium standard**: waves 0–3 (AC-01–12, AC-16) are done, and so are the Question Cube and Card Sort hand-overs (parts of AC-14 and AC-15). The Battle stays a slide (Mark, 23 Sep). Deferred: tally entry for polls and scales (AC-13, Mark's decision; the reasoning is in the audit's section 6). Open: Stations need a rotation-aware clock; Word Splash needs custom sort columns; Connect Four as a board. Full table under [the activities build list](#23-september-2026-activities-to-a-premium-standard-the-build-list). | S–L | To do |
 | RP-04 | The desk's "need a hand" chip, seen drawn | S | To check |
 | TPS-03 | Smoke-test and view Think-Pair-Share on the wall and a phone | S | To check · not seen drawn |
@@ -1129,7 +1129,7 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | GA-30 | 1 | Spoken team credit on the game's points scale, so it registers in a lesson that mixes quiz and spoken games | S | **Done** 23 Sep · 1,000 per accept, half with a hint |
 | GA-25 | 2–6 | On the draw and round clock: Spin & Explain spinner, Random Challenge deck, Question Cube roll plus stages, Heads Up 60-second round | S–M each | **Done** 23 Sep · Heads Up round, deck, cube roll, the wheel lands |
 | GA-26 | 7 | **Sort input (N6)**; Compare & Contrast → *Sort it* | L | **Done** 23 Sep · `sort` input, relay tested, seen on screen |
-| GA-27 | 7 | Beat the Clock → self-paced *Against the clock* (relay self-paced mode) | L | Mostly done · one round clock, flowing questions, round scoring; per-phone self-pacing open |
+| GA-27 | 7 | Beat the Clock → self-paced *Against the clock* (relay self-paced mode) | L | Done · live, each phone runs its own stream against one clock, marked by the relay; the wall shows progress and the hardest question. Wall-paced with no-device rows. Not tested or viewed |
 | GA-28 | after 7 | **Solo practice** on the share link (E8) | M | **Done** 23 Sep · Share → Practice; solo-playable games only |
 
 **Carried from today's other work:**
@@ -1302,6 +1302,11 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
   slide is held by id. CA-53: own-key lookups. CA-54: one `SF.cssUrl`.
   UX-53: comma is the white screen. #7 was already done; its row was
   stale. 528/528 before the last merge.
+- **23 Sep 2026.** GA-27 is done. Live Beat the Clock is a sprint: each
+  phone runs its own stream against one clock, marked by the relay as it
+  taps (the one place the relay marks; games audit, section 6). The wall
+  shows the clock and the room's progress, then the hardest question. Not
+  tested or viewed, at Mark's request.
 - **23 Sep 2026.** GA-24 is done. A race past eight lanes shows the
   leading five and the pack, and each phone its own lane and place (a new
   `raceLanes` message). Each Boss reveal is a moment: the damage, the

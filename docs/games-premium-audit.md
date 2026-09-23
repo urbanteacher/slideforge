@@ -53,7 +53,7 @@ tests are in the table. The tier follows from the row.
 | Definition Challenge | `definition` | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: two stages, Read · 0:30 → Recall, drawn on the wall; Next or Ask (wall and desk) moves on, and the reading clock takes +30s from + or the desk |
 | Word Reveal | `wordreveal` | ✓ | ✓ | ◐ | ✓ | ◐ | ◐ | ✓ | ◐ | Solid: per-answer scoring fixed; reveal polish remains |
 | Emoji Guess | `emoji` | ✓ | ✓ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid: the heading says "Decode the symbols"; the hint is the last help the teacher releases, after the letter pattern, and an answer given after it went up scores half |
-| Beat the Clock | `speed` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: *Against the clock* — one round clock on wall and phones; each question reveals as the room answers (or after 15 s) and moves on; right answers score 10 + up to 10 for speed; "Time!" shows the room's right answers and skips the rest |
+| Beat the Clock | `speed` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid, near premium: *Against the clock* — live, each phone runs its own stream against one clock, marked as it taps; the wall shows only the clock and the room's progress, then the hardest question and its most-chosen wrong answer. With a no-device row it plays wall-paced (one clock, each question revealed as the room answers). Open: the rehearsal class does not sprint |
 | True/False Showdown | `truefalse` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: vote → the room's split on wall and phones → one switch each → reveal of before against after and how many switched |
 | Predict the Outcome | `choice` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: commit with confidence → lock (the room's split, not the answer) → watch → reveal; a sure, right prediction earns half again. Open: the private written prediction (K8) |
 | Fill in the Blanks | `fill` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | Solid, near premium: *Fill the gaps* — up to four [gaps], a shuffled word bank with lures tapped into slots, the right word landing in each at the reveal with what the room put there, the hardest gap and its lure named; partial marks; teacher entry by key |
@@ -300,7 +300,7 @@ answered. Show the letters dripping on the phone too (P5), and make
 | **4** | **Done 23 Sep.** N3 proposal queue; Concept Chain and Connection proposals shaped and drawn on the slide; Concept Chain as a branching map with a credit per link (GA-19). *Connection Maker's bridges as drawn lines stay open, under GA-19's second half* | The discussion games' phone jobs | M |
 | **5** | **Done 23 Sep.** N5 line reveal; Time Traveler on one growing timeline, wall and phone | | M |
 | **6** | **Done 23 Sep.** Desk parity (`data-desk`), Emoji hint as a step that costs half, Ranking heat, Definition as Read → Recall stages (GA-21–23) | P6 across the catalogue | S each |
-| **7** | **Mostly done.** N6 sort input; Compare & Contrast sort; Beat the Clock as one round. *Open: per-phone self-pacing (GA-27)* | The two large new mechanics | L |
+| **7** | **Done 23 Sep.** N6 sort input; Compare & Contrast sort; Beat the Clock as one round, self-paced per phone (GA-26, GA-27) | The two large new mechanics | L |
 | **with 3** | **Done 23 Sep (late).** Tally entry (E3), team rows (E5), saved class lists (E6): skipped alongside wave 3, then built. | Rooms with no devices, done at the speed of a show of hands | M |
 | **after 7** | **Done 23 Sep.** Solo practice (E8): a share link's Practice mode | One learner, alone, at their own pace | M |
 
@@ -376,6 +376,20 @@ phones and not the wall, and a neighbour's phone gives it away for free.
 The earlier worry, that a cost discourages asking for help, does not apply,
 because the learner never asks. The teacher decides when the room needs it.
 
+### In a sprint, the relay marks
+
+Everywhere else the host marks and the relay only records, because what an
+answer means (a typed spelling, a ranking) is the host's business. Beat the
+Clock's sprint is the exception: the host hands the relay the answer key
+with the questions, and the relay marks each tap as it lands.
+- **Why:** each phone runs its own stream. A round trip to the host per tap
+  would put a lag in the one game that is against the clock, and the host
+  would be marking thirty streams at once.
+- **Why it is safe:** the questions are multiple choice, so right is an
+  index match. There is nothing for the host's marking rules to add.
+- **The key never reaches a phone.** Each phone gets its next question and,
+  after it taps, whether it was right and the right answer.
+
 ### Memory Maze
 
 It stays disabled. No spatial board engine is planned.
@@ -447,6 +461,29 @@ for (E1). Both are implemented for Spot the Error; its desk heat-map preview
 still leaves P6 partial.
 
 ## Change log
+
+- **23 September 2026 — Beat the Clock is self-paced (GA-27).**
+  - **Live, with every learner on a phone, the run is a sprint.** The host
+    sends the relay every question and the answer key (`sprint`). Each
+    phone gets its own next question (`sprintQ`), taps, is marked at once
+    (`sprintMark`: 10 plus up to 10 for speed from when that phone saw it,
+    wrong −5), and the next arrives. A phone that finishes waits for the
+    clock. At time the relay closes the run (`sprintResult`, `sprintOver`):
+    scores, a team's members' average in teams, and each question's heat.
+  - **The wall is the clock and the room's progress**, never a question:
+    "312 answers in · 71% right · 8 of 24 finished". At time it reveals the
+    hardest question (by wrong answers), its answer, and the wrong answer
+    most of them chose.
+  - **Control:** Next twice, or "Stop the clock" (on the desk through
+    `data-desk`), ends it early. Next afterwards goes past the run's
+    questions. Leaving the run ends it.
+  - **With a no-device row, or not live,** the wall-paced round
+    (`js/rounds.js`) runs as before.
+  - **The relay marks here, and only here.** Decision and reason in
+    section 6.
+  - **Open:** the rehearsal class does not sprint, and a phone that joins
+    mid-run waits for the next game.
+  - **Not tested or viewed**, at the user's request.
 
 - **23 September 2026 — Race and Boss for a big room (GA-24).**
   - **Horse Race:** past eight lanes (K10's `CROWD_AT`), the wall draws the
