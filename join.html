@@ -428,6 +428,11 @@
     <h1 id="fbPrompt">…</h1>
     <div class="pad" id="fbPad" style="display:none"></div>
     <div id="fbTextWrap" style="width:100%;max-width:340px;display:none">
+      <!-- A chain link: from the term, to the next idea, then why. -->
+      <div id="fbLinkRow" class="fb-link" hidden>
+        <span class="fb-from" id="fbFrom"></span><span class="fb-arrow">→</span>
+        <input id="fbLinkTo" type="text" maxlength="60" placeholder="the next idea" autocomplete="off">
+      </div>
       <input id="fbText" type="text" maxlength="160" placeholder="Type your answer" autocomplete="off">
       <button class="go" id="fbSend" style="margin-top:12px">Send</button>
       <div class="lead" id="fbQuota" style="margin-top:10px;font-size:13px"></div>
@@ -805,8 +810,20 @@
     wroteSaid = { key: key, yes: yes };
     ws.send(JSON.stringify({ t: 'wrote', slideId: m.slideId, stage: st.i, yes: yes }));
   }
-  function stageNoteKey(m) { return 'slideforge.note.' + (m.sessionId || '') + '.' + m.slideId; }
-  function readNote(m) { try { return localStorage.getItem(stageNoteKey(m)) || ''; } catch (_) { return ''; } }
+  /* One note per note stage: a Learning Log's five prompts, or Notice then
+     Wonder, are five notes, not one. The first note stage keeps the key it
+     has always had, so a note written before this still comes back. A talk
+     or send stage shows the latest note written on this slide. */
+  function stageNoteKey(m, i) {
+    return 'slideforge.note.' + (m.sessionId || '') + '.' + m.slideId + (i ? '.' + i : '');
+  }
+  function lastNoteKey(m) { return stageNoteKey(m, 0) + '.last'; }
+  function readNote(m, i) { try { return localStorage.getItem(stageNoteKey(m, i)) || ''; } catch (_) { return ''; } }
+  function latestNote(m) {
+    var at = 0;
+    try { at = Number(localStorage.getItem(lastNoteKey(m))) || 0; } catch (_) { at = 0; }
+    return readNote(m, at);
+  }
   function clockText(secs) {
     var whole = Math.max(0, Math.ceil(secs));
     return Math.floor(whole / 60) + ':' + String(whole % 60).padStart(2, '0');
@@ -837,11 +854,14 @@
     $('stageBrief').textContent = st.brief || '';
     $('stagePrompt').textContent = job === 'down' ? '' : (st.text || '');
 
-    var mine = readNote(m);
+    var mine = job === 'note' ? readNote(m, st.i) : latestNote(m);
     var area = /** @type {HTMLTextAreaElement} */ ($('stageNote'));
     $('stageNoteWrap').hidden = job !== 'note';
     if (job === 'note') {
-      if (document.activeElement !== area) area.value = mine;
+      /* A new note stage is a new note, even if the box still has focus. */
+      var noteAt = m.slideId + ':' + st.i;
+      if (area.dataset.at !== noteAt || document.activeElement !== area) area.value = mine;
+      area.dataset.at = noteAt;
       /* A note carried over from before (a rejoin, a return to the stage)
          counts as written straight away. */
       if (wroteSaid.key !== m.slideId + ':' + st.i) wroteSaid = { key: '', yes: false };
@@ -849,7 +869,10 @@
       area.oninput = function () {
         /* Kept on this device and nowhere else. The room is told only that
            something is written, so the teacher knows whether to wait. */
-        try { localStorage.setItem(stageNoteKey(m), area.value); } catch (_) { /* this visit only */ }
+        try {
+          localStorage.setItem(stageNoteKey(m, st.i), area.value);
+          localStorage.setItem(lastNoteKey(m), String(st.i));
+        } catch (_) { /* this visit only */ }
         sayWrote(m, st, area.value);
       };
     }
@@ -1709,7 +1732,7 @@
   var prompt = null;
 
   function openPrompt(m) {
-    prompt = { kind: m.kind, options: m.options || [], max: m.max || 1, used: 0 };
+    prompt = { kind: m.kind, options: m.options || [], max: m.max || 1, used: 0, shape: m.shape || '' };
     $('fbKind').textContent = m.kind === 'poll' ? 'Poll'
       : m.kind === 'scale' ? 'Where do you sit?'
       : m.kind === 'wordcloud' ? 'One word' : 'Your idea';
@@ -1759,6 +1782,14 @@
       $('fbText').value = '';
       $('fbText').maxLength = m.kind === 'wordcloud' ? 40 : 160;
       $('fbText').placeholder = m.kind === 'wordcloud' ? 'One word' : 'Type your idea';
+      /* A proposal shaped like what it proposes. A chain link names the next
+         idea and why; a bridge says why the two connect. */
+      var linking = m.shape === 'link';
+      $('fbLinkRow').hidden = !linking;
+      $('fbFrom').textContent = m.from || '';
+      $('fbLinkTo').value = '';
+      if (linking) $('fbText').placeholder = 'because…';
+      if (m.shape === 'bridge') $('fbText').placeholder = (m.from ? m.from + ' are connected because…' : 'They connect because…');
       $('fbSend').disabled = false;
       updateQuota();
     }
@@ -1800,6 +1831,12 @@
     if (!ws || ws.readyState !== 1 || !prompt) return;
     var v = $('fbText').value.trim();
     if (!v) { $('fbErr').textContent = 'Type something first.'; return; }
+    if (prompt.shape === 'link') {
+      var to = $('fbLinkTo').value.trim();
+      if (!to) { $('fbErr').textContent = 'Name the next idea first.'; return; }
+      v = to + ' — because ' + v;
+      $('fbLinkTo').value = '';
+    }
     if (prompt.used >= prompt.max) return;
     $('fbErr').textContent = '';
     ws.send(JSON.stringify({ t: 'reply', text: v }));

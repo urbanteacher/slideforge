@@ -1234,7 +1234,9 @@ function promptMessage(room) {
     prompt: room.prompt.prompt,
     options: room.prompt.options,
     ends: room.prompt.ends,
-    max: room.prompt.max
+    max: room.prompt.max,
+    shape: room.prompt.shape || undefined,
+    from: room.prompt.from || undefined
   };
 }
 
@@ -2034,7 +2036,11 @@ ws.attach(server, (sock, req) => {
             low: String((m.ends && m.ends.low) || '').slice(0, 40),
             high: String((m.ends && m.ends.high) || '').slice(0, 40)
           } : null,
-          max: Math.max(1, Math.min(5, Number(m.max) || 1))
+          max: Math.max(1, Math.min(5, Number(m.max) || 1)),
+          /* The shape of a proposal box (Concept Chain 'link', Connection
+             'bridge') and what it starts from, for the phone to frame it. */
+          shape: ['link', 'bridge'].includes(m.shape) ? m.shape : '',
+          from: String(m.from || '').slice(0, 80)
         };
         room.replies = new Map();
         record(room, 'prompt', {...room.prompt});

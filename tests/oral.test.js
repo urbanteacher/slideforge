@@ -355,3 +355,20 @@ test('Heads Up: the clue-givers’ phones get the term, the guesser’s never do
   assert.equal(a1.term,undefined,'the guesser never gets the term');
   assert.equal(b1.term,'Photosynthesis');
 });
+
+test('a chain proposal box reaches the phones shaped as a link from its term', async t => {
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sf-link-shape-'));
+  const port=await freePort(), relay=await start(port,dir), sockets=[];
+  t.after(async()=>{await stop(relay);sockets.forEach(s=>s.socket.close());fs.rmSync(dir,{recursive:true,force:true});});
+  const host=await connect(port);sockets.push(host);
+  host.send({t:'host',title:'Chain',mode:'individual'});const room=await host.next('hosted');
+  const ada=await connect(port);sockets.push(ada);
+  ada.send({t:'join',pin:room.pin,name:'Ada'});await ada.next('joined');
+  host.send({t:'begin'});
+  host.send({t:'prompt',id:'quick:2',kind:'brainstorm',prompt:'Propose a link',max:2,shape:'link',from:'energy'});
+  const p=await ada.next('prompt');
+  assert.equal(p.shape,'link');assert.equal(p.from,'energy');
+  host.send({t:'prompt',id:'quick:3',kind:'brainstorm',prompt:'x',max:1,shape:'anything-else'});
+  const q=await ada.next('prompt');
+  assert.equal(q.shape,undefined,'only the shapes a phone can draw');
+});

@@ -393,6 +393,7 @@
       if((here.style==='conceptchain'||here.conceptChain)&&SF.Player.chainCommand) SF.Player.chainCommand('pending',said);
       Live.proposalOnTable={slideId:here.id,text:said};
       paintProposalOnWall(here);
+      paintProposalGhosts();
       syncManual();
     }
     else if(data.action==='reveal') { revealNow(); syncManual(); }
@@ -463,7 +464,14 @@
     if (!Live.active || !s || Live.revealed[s.id]) return;
     if (!proposalSlide(s)) return;
     if (Live.prompt) return;                      // something else is asking the room
-    if (!startCustomPrompt({ kind: 'brainstorm', prompt: proposalText(s), presentAs: 'rail', max: 2, origin: 'proposals' })) return;
+    var chain = s.style === 'conceptchain' || s.conceptChain;
+    var bridge = s.style === 'connection';
+    if (!startCustomPrompt({ kind: 'brainstorm', prompt: proposalText(s), presentAs: 'rail', max: 2, origin: 'proposals',
+      /* Chain and bridge proposals are shaped like what they propose, and
+         grow on the slide as unnamed branches. Compare's points use the pane. */
+      shape: chain ? 'link' : bridge ? 'bridge' : '',
+      from: chain ? String(s.term || s.question || '') : bridge ? (s.itemA || 'A') + ' and ' + (s.itemB || 'B') : '',
+      quiet: chain || bridge })) return;
     Live.proposalPrompt = Live.prompt ? Live.prompt.id : null;
   }
   /* Odd One Out's defence: once the split and the prepared rule are out,
@@ -2290,6 +2298,8 @@
   /** Paint the rail from the last digest we were sent. */
   function paintFeedbackPanel() {
     if (!Live.active || !Live.prompt) return;
+    /* A quiet prompt's replies are drawn on the slide, not in the pane. */
+    if (Live.prompt.quiet) { paintProposalGhosts(); return; }
     if (SF.Player._railWanted === false) return;
     var opts = feedbackOpts();
     /* Keep the focus view live while it is open — the whole point of putting
@@ -2401,7 +2411,13 @@
          nothing for the teacher's own quick poll, which has its own card. */
       origin: def.origin ? String(def.origin) : '',
       /* The stage a Share-style box belongs to, which names its spotlight. */
-      stage: def.stage ? String(def.stage).slice(0, 60) : ''
+      stage: def.stage ? String(def.stage).slice(0, 60) : '',
+      /* A proposal box's shape and what it starts from (Concept Chain,
+         Connection Maker). Quiet: its replies grow on the slide itself, so
+         the side pane keeps the standings. */
+      shape: def.shape || '',
+      from: def.from || '',
+      quiet: !!def.quiet
     };
     Live.digest = null;
     if (Live.active) {
@@ -2409,8 +2425,11 @@
     } else if (SF.sampleFeedbackDigest) {
       Live.digest = SF.sampleFeedbackDigest(Live.prompt);
     }
-    paintFeedbackPanel();
-    applyFeedbackPresentAs(presentAs);
+    if (Live.prompt.quiet) paintProposalGhosts();
+    else {
+      paintFeedbackPanel();
+      applyFeedbackPresentAs(presentAs);
+    }
     if (SF.Player.syncPresenter) SF.Player.syncPresenter();
     return true;
   }
@@ -2513,6 +2532,25 @@
       headPrompt = String(s.headPrompt);
     }
     return { style: style, role: role, participation: participation, headPrompt: headPrompt };
+  }
+
+  /* Proposals as faint branches on the chain or under the pair: the newest
+     few, without names. The room sees its ideas land where they would go. */
+  function paintProposalGhosts() {
+    var node = SF.Player._current;
+    if (!node || !Live.prompt || !Live.prompt.quiet) return;
+    var stage = node.querySelector('.chain-stage, .connection-stage');
+    if (!stage) return;
+    var box = stage.querySelector('.proposal-ghosts');
+    if (!box) { box = el('div', 'proposal-ghosts'); stage.appendChild(box); }
+    var items = (Live.digest && Live.digest.items) || [];
+    var onTable = Live.proposalOnTable ? Live.proposalOnTable.text : '';
+    box.textContent = '';
+    items.slice(0, 5).forEach(function (it) {
+      box.appendChild(el('span', 'pg-branch' + (it.text === onTable ? ' on-table' : ''), it.text));
+    });
+    if (items.length > 5) box.appendChild(el('span', 'pg-more', '+' + (items.length - 5) + ' more on the desk'));
+    box.hidden = !items.length;
   }
 
   /* The proposal the teacher is weighing, on the wall, without its author. */

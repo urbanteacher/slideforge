@@ -254,3 +254,10 @@ body.phones-blank{overflow:hidden}
 .q-why[hidden]{display:none}
 .q-why textarea{font:inherit;font-size:16px;border:1px solid #cfd9c2;border-radius:12px;padding:10px;min-height:80px;color:#1d2419}
 .r-note{margin-top:12px;font-style:italic}
+
+/* A chain link on the phone: the term, an arrow, the next idea. */
+.fb-link{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.fb-link[hidden]{display:none}
+.fb-from{font-weight:800;white-space:nowrap}
+.fb-arrow{font-weight:800;color:#748366}
+.fb-link input{flex:1;min-width:0}
