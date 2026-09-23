@@ -69,3 +69,17 @@ test('authored durations support the full 120-minute inspector range without cha
  const h=authoredMomentHost();h.enter({...h.slide,timeLimit:7200});assert.equal(h.P.lessonMoment().seconds,7200);
  h.P.momentCommand({action:'extend'});assert.equal(h.P.lessonMoment().seconds,7200);
 });
+
+test('a timed activity slide keeps one clock: the banner stands aside for its ring',()=>{
+ const made=[];
+ const fake=hasClock=>({querySelector:sel=>sel==='.slide-clock'?(hasClock?{}:null):null,appendChild:n=>made.push(n)});
+ const doc={createElement:()=>({classList:{toggle(){}},appendChild(){},set textContent(v){}})};
+ const g=global;const prev=g.document;g.document=doc;
+ try{
+  const s=M.transition(null,{action:'start',kind:'timer',seconds:300,activitySlideId:'a1'},0);
+  M.paint(fake(true),s);assert.equal(made.length,0,'the slide draws its own clock');
+  M.paint(fake(false),s);assert.equal(made.length,1,'no ring: the banner is the clock');
+  const manual=M.transition(null,{action:'start',kind:'timer',seconds:60},0);
+  M.paint(fake(true),manual);assert.equal(made.length,2,'a teacher\'s own timer still shows');
+ }finally{g.document=prev;}
+});

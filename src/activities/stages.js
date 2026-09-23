@@ -31,6 +31,13 @@ const STAGE_JOBS = {
     phone: 'Send your pair’s strongest idea. No name goes with it.',
     icon: '↑'
   },
+  /* A stretch of making or solving. The phone's job is to stay out of the
+     way, with one quiet way to say "I'm stuck" that only the desk sees. */
+  work: {
+    wall: 'Work on the task',
+    phone: 'Work on the task. Stuck? Tell the teacher. Only they see it.',
+    icon: '✍'
+  },
   down: {
     wall: 'Phones down',
     phone: 'Phones down. Eyes on the board.',
@@ -38,33 +45,70 @@ const STAGE_JOBS = {
   }
 };
 
-/* Read in order, so a stage with both kinds of word is the talking kind:
+/* A talk stage that is not a pair: a jigsaw's groups, a seminar's circle.
+   "Turn to your partner" would send a group of four looking for one. */
+const GROUP_TALK = {
+  wall: 'Talk in your group',
+  phone: 'Talk it through with your group.'
+};
+
+/* Read in order, so a stage with both kinds of word is the earlier kind.
    "Share with partner" is two people comparing notes. "Pairs share best
    ideas" is not — the pairs are reporting out — which is why the talk words
-   match "pair" and not "pairs". */
+   match "pair" and not "pairs". "You do alone" is independent practice, so
+   it is work before "alone" can make it a note. */
 /** @type {[string, RegExp][]} */
 const JOB_WORDS = [
+  ['work', /\b(you do alone|independent(ly)? practi[cs]e|on your own)\b/i],
   ['note', /\b(think|alone|jot|individual|reflect|silent|write)\b/i],
-  ['talk', /\b(pair|partner|compare|discuss|square|talk|group|argue)\b/i],
+  ['talk', /\b(pair|partner|compare|discuss|square|talk|group|argue|together|circle|switch|expert|home|return|teach(es|ing)?)\b/i],
   ['send', /\b(share|report|send|feed ?back|post|contribute)\b/i],
+  ['work', /\b(plan|planning|create|creating|design|solve|solving|build|draft|refine|investigate|research|rotate|rotation|round|station|practi[cs]e|self-assess\w*|apply|attempt)\b/i],
   ['down', /\b(connect|synthes|summar|debrief|teacher|plenary|close|link)\w*/i]
 ];
 
-/** @param {string} label @returns {'note'|'talk'|'send'|'down'} */
+/** @param {string} label @returns {'note'|'talk'|'send'|'work'|'down'} */
 function stageJob(label) {
   const text = String(label || '');
   for (const [job, re] of JOB_WORDS) if (re.test(text)) return /** @type {any} */ (job);
   return 'down';
 }
 
+const PAIR_WORDS = /\b(pair|partner)\b/i;
+const GROUP_WORDS = /\b(group|square|circle|expert|home|team|table)\b/i;
+
+/**
+ * Which talk stages are for more than two. A label that says so decides
+ * ("Pair", "Expert groups"); one that doesn't ("Switch", "Together",
+ * "Discuss and draw") takes the routine's word for it. Teach Someone's
+ * Switch is still two partners; a seminar's Switch is still the circle. A
+ * routine that names neither is a group, the commoner case.
+ * @param {string[]} names
+ */
+function groupTalk(names) {
+  const talk = names.map((n) => stageJob(n) === 'talk');
+  const pair = names.map((n, i) => talk[i] && PAIR_WORDS.test(n));
+  const group = names.map((n, i) => talk[i] && !pair[i] && GROUP_WORDS.test(n));
+  const pairs = pair.some(Boolean) && !group.some(Boolean);
+  return names.map((n, i) => talk[i] && (group[i] || (!pair[i] && !pairs)));
+}
+
+/** The words a stage puts on the wall and the phone, and its icon.
+ *  @param {{job: string, group?: boolean}} st */
+function stageCopy(st) {
+  const base = STAGE_JOBS[/** @type {keyof typeof STAGE_JOBS} */ (st.job)] || STAGE_JOBS.down;
+  return st.job === 'talk' && st.group ? { ...base, ...GROUP_TALK } : base;
+}
+
 /**
  * "Think · 1 min" → { name: 'Think', seconds: 60 }. A label with no time in it
- * is a stage with no clock of its own.
+ * is a stage with no clock of its own. "Rotate · every 4 min" is four
+ * minutes: the source writes rotations that way.
  * @param {string} term
  */
 function parseStageLabel(term) {
   const text = String(term || '').trim();
-  const m = /^(.*?)\s*[·•|:\-–—(]\s*(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?|m)\b\)?\s*$/i.exec(text);
+  const m = /^(.*?)\s*[·•|:\-–—(]\s*(?:every\s+|about\s+|~\s*)?(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?|m)\b\)?\s*$/i.exec(text);
   if (!m) return { name: text, seconds: 0 };
   const n = Number(m[2]);
   const secs = /^s/i.test(m[3]) ? n : n * 60;
@@ -72,20 +116,55 @@ function parseStageLabel(term) {
 }
 
 /**
+ * The rows of an activity slide, split into its brief and its stages.
+ *
+ * A leading row with no time, followed by at least two that have one, is the
+ * brief: the problem, the seminar's question, the carousel's stations. It is
+ * what the stages are *about*, so it stays on the wall through every one of
+ * them instead of being a stage the room walks past. Think-Pair-Share's first
+ * row is timed, so it has no brief.
+ * @param {{bullets?: string[]}} slide
+ * @param {(line: string) => {term: string, def: string}} parseLine
+ */
+function stagedRows(slide, parseLine) {
+  const rows = (slide && slide.bullets || [])
+    .map((line, row) => ({ ...parseLine(line), row }))
+    .filter((p) => p.term || p.def);
+  const labels = rows.map((p) => parseStageLabel(p.term));
+  const timedAfter = labels.slice(1).filter((l) => l.seconds > 0).length;
+  const hasBrief = rows.length > 2 && labels[0].seconds === 0 && timedAfter >= 2;
+  const brief = hasBrief ? { row: rows[0].row, name: labels[0].name, text: rows[0].def || '' } : null;
+  const staged = rows.slice(hasBrief ? 1 : 0, (hasBrief ? 1 : 0) + 8);
+  const names = staged.map((p) => parseStageLabel(p.term).name);
+  const groups = groupTalk(names);
+  const stages = staged.map((p, i) => {
+    const label = parseStageLabel(p.term);
+    return {
+      i, row: p.row, name: label.name, seconds: label.seconds, text: p.def || '',
+      job: stageJob(label.name), group: groups[i]
+    };
+  });
+  return { brief, stages };
+}
+
+/**
  * The stages of an activity slide, in order.
  * @param {{bullets?: string[]}} slide
  * @param {(line: string) => {term: string, def: string}} parseLine the deck's keyword-line parser
- * @returns {{i: number, name: string, seconds: number, text: string, job: 'note'|'talk'|'send'|'down'}[]}
+ * @returns {{i: number, row: number, name: string, seconds: number, text: string, job: 'note'|'talk'|'send'|'work'|'down', group: boolean}[]}
  */
 function activityStages(slide, parseLine) {
-  return (slide && slide.bullets || [])
-    .map(parseLine)
-    .filter((p) => p.term || p.def)
-    .slice(0, 8)
-    .map((p, i) => {
-      const label = parseStageLabel(p.term);
-      return { i, name: label.name, seconds: label.seconds, text: p.def || '', job: stageJob(label.name) };
-    });
+  return /** @type {any} */ (stagedRows(slide, parseLine).stages);
 }
 
-export { STAGE_JOBS, stageJob, parseStageLabel, activityStages };
+/**
+ * The brief that stays up through every stage, or null.
+ * @param {{bullets?: string[]}} slide
+ * @param {(line: string) => {term: string, def: string}} parseLine
+ * @returns {{row: number, name: string, text: string} | null}
+ */
+function activityBrief(slide, parseLine) {
+  return stagedRows(slide, parseLine).brief;
+}
+
+export { STAGE_JOBS, stageJob, stageCopy, parseStageLabel, activityStages, activityBrief };

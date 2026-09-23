@@ -1388,19 +1388,41 @@
     var total = slide.timeLimit;
     var dash = Number(ringEl.getAttribute('stroke-dasharray'));
     var endAt = Date.now() + total * 1000;
+    var followed = false;
 
     Player._timer = setInterval(function () {
+      /* A timed moment is also a lesson moment, which the desk pauses,
+         extends and clears. The ring used to keep its own time beside it, so
+         one press on the desk put two different times on the wall. While the
+         moment for this slide runs, the ring reads its time and nothing else. */
+      var moment = Player.lessonMoment && Player.lessonMoment();
+      var mine = moment && moment.activitySlideId === slide.id && SF.LessonMoments;
+      if (mine) {
+        followed = true;
+        var now = SF.LessonMoments.remaining(moment, Date.now());
+        endAt = Date.now() + now * 1000;
+        if (now > total) total = now;
+        clock.classList.toggle('paused', !!moment.paused);
+      } else if (followed) {
+        /* Cleared from the desk: the countdown is gone from the wall too. */
+        stopTimer();
+        clock.hidden = true;
+        return;
+      }
       var left = Math.max(0, endAt - Date.now()) / 1000;
       ringEl.setAttribute('stroke-dashoffset', String(dash * (1 - left / total)));
       numEl.textContent = SF.clockFace(left);
       clock.classList.toggle('hurry', left <= 60);
-      if (left <= 0) {
-        stopTimer();
-        clock.classList.add('done');
+      var over = left <= 0;
+      if (over && !clock.classList.contains('done')) {
         /* Time up turns the card: the attempt is over, so the answer is what
            the room should be looking at. The teacher can turn it back. */
         if (node.querySelector('.flip')) node.classList.add('flipped');
       }
+      clock.classList.toggle('done', over);
+      /* A desk moment can still be given another minute after time is up,
+         so the ring keeps listening while it follows one. */
+      if (over && !mine) stopTimer();
     }, 250);
   }
 

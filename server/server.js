@@ -960,7 +960,7 @@ function feedbackDigest(room) {
 /**
  * The stage of a staged activity, as the phones are allowed to see it — or
  * null. The host's own object is never forwarded: only these fields, each
- * bounded, and the job only from the four the phones know how to draw.
+ * bounded, and the job only from the five the phones know how to draw.
  */
 /* See the spoken verdict in the reveal handler. */
 const SPOKEN_POINTS = 1000;
@@ -972,8 +972,10 @@ function cleanStage(st) {
     i: clamp(st.i, 7),
     of: clamp(st.of, 8),
     name: String(st.name || '').slice(0, 60),
-    job: ['note', 'talk', 'send', 'down'].includes(st.job) ? st.job : 'down',
+    job: ['note', 'talk', 'send', 'work', 'down'].includes(st.job) ? st.job : 'down',
+    group: st.group === true,
     text: String(st.text || '').slice(0, 400),
+    brief: String(st.brief || '').slice(0, 400),
     seconds: clamp(st.seconds, 3600),
     left: clamp(st.left, 3600),
     next: String(st.next || '').slice(0, 60)

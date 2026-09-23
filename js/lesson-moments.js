@@ -20,7 +20,11 @@ function transition(s,a,now){
 function format(n){return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');}
 function paint(root,s){
  var box=root.querySelector('.lesson-live-overlay');
- if(!s){if(box)box.remove();return;}
+ // A timed activity slide draws its own clock, and the player makes that ring
+ // follow this moment. A banner as well would be a second clock saying the
+ // same thing, and on the desk preview (which does not tick) a different one.
+ var own=!!(s&&s.activitySlideId&&root.querySelector('.slide-clock'));
+ if(!s||own){if(box)box.remove();return;}
  if(!box){box=document.createElement('div');box.className='lesson-live-overlay';root.appendChild(box);}
  box.classList.toggle('is-break',s.kind==='break');box.textContent='';
  var title=document.createElement('strong');title.textContent=s.title;box.appendChild(title);

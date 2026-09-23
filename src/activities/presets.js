@@ -255,19 +255,22 @@ const PRESETS = {
 /* These visual treatments reuse the same label/value data. They change the
  * reading order and emphasis, not the task or its required number of boxes. */
 const PRESENTATIONS = {
-  /* Think-Pair-Share runs as timed stages: the track, a clock per stage, a
-     private note on the phone for Think and an anonymous idea for Share. See
-     activities/stages.js. The rest of the staged routines can be switched to
-     it in the slide's Visual structure. */
-  stages: ['think-pair-share'],
-  steps: ['do-now-bell-ringer', 'jigsaw-expert-groups',
-    'think-pair-square-share', 'jigsaw-collaboration', 'peer-teaching-carousel',
-    'socratic-seminar', 'strategic-wait-time-questioning', 'whiteboards-on-walls',
-    'teach-someone', 'daily-review-routine', 'dialogue-chain-discussion'],
-  panels: ['i-do-we-do-you-do', 'differentiated-practice-menu',
+  /* Timed stages: the track, a clock per stage and a job for the phones (see
+     activities/stages.js). An activity is staged when at least two of its
+     rows carry a time: a routine the room moves through together. A leading
+     untimed row (the seminar's question, the problem) is the brief, and
+     stays up through every stage. A list the room needs to see whole — Do
+     Now's three tasks, a menu, the teacher's own pauses — is not staged. */
+  stages: ['think-pair-share', 'think-pair-square-share', 'jigsaw-expert-groups',
+    'jigsaw-collaboration', 'peer-teaching-carousel', 'socratic-seminar',
+    'teach-someone', 'whiteboards-on-walls', 'i-do-we-do-you-do',
+    'design-and-create-task'],
+  steps: ['do-now-bell-ringer', 'strategic-wait-time-questioning',
+    'daily-review-routine', 'dialogue-chain-discussion'],
+  panels: ['differentiated-practice-menu',
     'structured-reflection-protocol', 'reflection-ladder'],
   brief: ['hook-objectives', 'worked-example-analysis', 'error-analysis',
-    'problem-based-learning', 'design-and-create-task', 'benefits-vs-limitations-battle',
+    'problem-based-learning', 'benefits-vs-limitations-battle',
     'flipped-instruction', 'guided-inquiry-investigation']
 };
 for (const [view, keys] of Object.entries(PRESENTATIONS)) {

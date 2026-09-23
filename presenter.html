@@ -1334,6 +1334,12 @@ SF.installExplore(SF);
       marks: slide.type === 'results' ? marks() : null
     });
     box.appendChild(node);
+    /* A staged activity, drawn where the room is: the stage on the wall, or
+       for the slide coming up, its introduction. */
+    if (slide.activity && slide.type === 'keywords' && slide.activityPresentation === 'stages' && SF.lightStages) {
+      var stageCount = SF.activityStages(slide).length;
+      SF.lightStages(node, index === state.index ? Math.min(stageCount, state.revealStep || 0) - 1 : -1, true);
+    }
     if (restoreMemoryFocus) {
       SF.Boards.restoreFocus(node, slide);
     }

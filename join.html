@@ -365,6 +365,7 @@
          stage's job. The note never leaves this phone. -->
     <article class="stage-card" id="stageCard" hidden>
       <div class="stage-top"><span class="learner-eyebrow" id="stageEyebrow"></span><span class="stage-clock" id="stageClock"></span></div>
+      <p class="stage-brief" id="stageBrief" hidden></p>
       <p class="stage-prompt" id="stagePrompt"></p>
       <label class="stage-note" id="stageNoteWrap" hidden>
         <span>Only you can see this. It stays on this phone.</span>
@@ -775,13 +776,15 @@
   /* ------------------------------------------------ staged activities */
 
   /* What each stage asks of this phone. The wall's half is in
-     src/activities/stages.js; this is the same four, in the phone's words. */
+     src/activities/stages.js; this is the same five, in the phone's words. */
   var STAGE_PHONE = {
     note: { icon: '✎', lead: 'Write a private note. Only you can see it.' },
     talk: { icon: '💬', lead: 'Turn to your partner. Compare what you each wrote.' },
     send: { icon: '↑', lead: 'Send your pair’s strongest idea. No name goes with it.' },
+    work: { icon: '✍', lead: 'Work on the task. Stuck? Tap Need help. Only your teacher sees it.' },
     down: { icon: '👀', lead: 'Phones down. Eyes on the board.' }
   };
+  var GROUP_TALK_LEAD = 'Talk it through with your group.';
   var stageTick = null;
   function stageNoteKey(m) { return 'slideforge.note.' + (m.sessionId || '') + '.' + m.slideId; }
   function readNote(m) { try { return localStorage.getItem(stageNoteKey(m)) || ''; } catch (_) { return ''; } }
@@ -808,7 +811,11 @@
     $('stageEyebrow').textContent = 'STAGE ' + (st.i + 1) + ' OF ' + st.of + ' \u00b7 ' + String(st.name || '').toUpperCase();
     $('waitIcon').textContent = STAGE_PHONE[job].icon;
     $('waitTitle').textContent = st.name || 'Look up';
-    $('waitLead').textContent = STAGE_PHONE[job].lead;
+    $('waitLead').textContent = job === 'talk' && st.group ? GROUP_TALK_LEAD : STAGE_PHONE[job].lead;
+    /* The brief (the problem, the question) is what the stage is about, so
+       it rides along on every stage the phone is not told to put down. */
+    $('stageBrief').hidden = job === 'down' || !st.brief;
+    $('stageBrief').textContent = st.brief || '';
     $('stagePrompt').textContent = job === 'down' ? '' : (st.text || '');
 
     var mine = readNote(m);
@@ -875,10 +882,12 @@
   }
   function updateContentActions() {
     /* Not during a staged activity: each stage has its own job, and "Got
-       it" is not one of them. */
-    var available = context && context.activity === 'content' && flow.main === 'scWait' && !context.stage;
+       it" is not one of them. The exception is a work stage, whose job
+       includes a quiet way to say you are stuck. */
+    var working = !!(context && context.stage && context.stage.job === 'work');
+    var available = context && context.activity === 'content' && flow.main === 'scWait' && (!context.stage || working);
     $('contentActions').hidden = !available;
-    $('gotItBtn').hidden = !reactionsOn || !floorOpen;
+    $('gotItBtn').hidden = !reactionsOn || !floorOpen || working;
     $('gotItBtn').disabled = !!(context && acknowledged[context.slideId]);
     $('gotItBtn').querySelector('span').textContent = context && acknowledged[context.slideId] ? 'Got it ✓' : 'Got it';
     $('helpHereBtn').setAttribute('aria-pressed', paceKind === 'lost' ? 'true' : 'false');

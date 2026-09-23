@@ -628,6 +628,18 @@
     });
     pad.appendChild(track);
 
+    /* The brief: what every stage is about (the problem, the seminar's
+       question, the stations). Above the stage, on every stage. */
+    var brief = SF.activityBrief(slide);
+    if (brief) {
+      var pinned = el('div', 'stage-brief');
+      pinned.dataset.contentKey = 'bullets.' + brief.row;
+      pinned.appendChild(el('span', 'sb-name', brief.name));
+      pinned.appendChild(rich('div', 'sb-text', slide, 'bullets.' + brief.row, brief.text || ' '));
+      pad.appendChild(pinned);
+      root && root.classList.add('has-stage-brief');
+    }
+
     var intro = el('div', 'stage-intro');
     if (slide.title) intro.appendChild(rich('h2', null, slide, 'title', slide.title));
     intro.appendChild(el('p', 'si-lead', stages.length + (stages.length === 1 ? ' stage' : ' stages') +
@@ -640,13 +652,14 @@
       var panel = el('div', 'stage-panel step job-' + st.job);
       panel.dataset.step = String(st.i + 1);
       panel.dataset.i = String(st.i);
-      panel.dataset.contentKey = 'bullets.' + st.i;
+      panel.dataset.contentKey = 'bullets.' + st.row;
+      var copy = SF.stageCopy(st);
       var head = el('div', 'sp-head');
-      head.appendChild(el('span', 'sp-icon', SF.STAGE_JOBS[st.job].icon));
+      head.appendChild(el('span', 'sp-icon', copy.icon));
       head.appendChild(el('span', 'sp-name', st.name));
-      head.appendChild(el('span', 'sp-job', SF.STAGE_JOBS[st.job].wall));
+      head.appendChild(el('span', 'sp-job', copy.wall));
       panel.appendChild(head);
-      panel.appendChild(rich('div', 'sp-prompt', slide, 'bullets.' + st.i, st.text || ' '));
+      panel.appendChild(rich('div', 'sp-prompt', slide, 'bullets.' + st.row, st.text || ' '));
       /* Filled while the stage runs: time up, and how many ideas are in. */
       panel.appendChild(el('div', 'sp-live'));
       /* A worked answer belongs to the last stage, where the teacher draws
@@ -665,6 +678,30 @@
     (root || pad).appendChild(clock);
     if (root) root.classList.add('has-clock');
   }
+
+  /**
+   * Light a drawn staged slide at stage i (-1 is the introduction): the
+   * track's chips, and — with `panels` — the stage panels' build classes,
+   * for a copy of the slide that has no build running. The wall's panels
+   * are the build's own (js/teaching.js); the presenter's preview is drawn
+   * fresh on every sync, and without this it listed every stage while the
+   * room saw one.
+   */
+  SF.lightStages = function (node, i, panels) {
+    if (!node) return;
+    node.dataset.stage = i < 0 ? 'intro' : String(i);
+    Array.prototype.forEach.call(node.querySelectorAll('.stage-chip'), function (chip) {
+      var at = Number(chip.dataset.i);
+      chip.classList.toggle('lit', at === i);
+      chip.classList.toggle('done', at < i);
+    });
+    if (!panels) return;
+    Array.prototype.forEach.call(node.querySelectorAll('.stage-panel'), function (panel) {
+      var at = Number(panel.dataset.i);
+      panel.classList.toggle('step-hidden', at > i);
+      panel.classList.toggle('step-live', at === i);
+    });
+  };
 
   function layoutKeywords(slide, pad, opts, root) {
     if (slide.activity && slide.activityPresentation === 'stages') return layoutStages(slide, pad, opts, root);

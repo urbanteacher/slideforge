@@ -89,6 +89,10 @@ try {
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => SF.Player && SF.Player.open === false);
   assert.equal(await page.locator('#btnDemoActivity').isDisabled(), false);
+  /* One clock per timed moment. A staged routine runs a clock per stage and
+     starts no lesson moment; any other timed moment starts one, and the
+     slide's ring follows it (pause, +1 min, clear) instead of keeping its
+     own time beside a banner. */
   const timerChecks = await page.evaluate(() => {
     const results = [];
     for (const a of SF.Activities.ACTIVITIES.filter(a => a.target === 'moment')) {
@@ -97,9 +101,16 @@ try {
       const next = SF.makeSlide('content'); next.transition = 'none';
       const run = SF.buildRunDeck({ ...SF.makeDeck('Timer check'), slides: [slide, next] });
       SF.Player.start(run, 0, { fullscreen: false });
+      const staged = SF.Stages.isStaged(SF.Player.deck.slides[0]);
       const initial = SF.Player.lessonMoment();
+      const banner = !!document.querySelector('#player .lesson-live-overlay');
+      const rings = document.querySelectorAll('#player .slide-clock').length;
+      if (staged) {
+        results.push({ key: a.key, staged, noMoment: initial === null, noBanner: !banner, oneClock: rings === 1 });
+        SF.Player.close();
+        continue;
+      }
       const started = initial && initial.seconds === slide.timeLimit && initial.activitySlideId === slide.id;
-      const visible = !!document.querySelector('#player .lesson-live-overlay');
       SF.Player.momentCommand({ action: 'pause' });
       const paused = SF.Player.lessonMoment().seconds;
       SF.Player.goTo(0);
@@ -111,12 +122,33 @@ try {
       SF.Player.goTo(1);
       const cleared = SF.Player.lessonMoment() === null;
       SF.Player.close();
-      results.push({ key: a.key, started, visible, preserved, extended, resumed, cleared });
+      results.push({ key: a.key, staged, started, noBanner: !banner, oneClock: rings === 1, preserved, extended, resumed, cleared });
     }
     return results;
   });
   assert.equal(timerChecks.length, 10);
-  for (const check of timerChecks) assert.ok(Object.entries(check).every(([key, value]) => key === 'key' || value === true), JSON.stringify(check));
+  assert.equal(timerChecks.filter(c => c.staged).length, 8, 'eight of the ten moments are staged routines');
+  for (const check of timerChecks) assert.ok(Object.entries(check).every(([key, value]) => key === 'key' || key === 'staged' || value === true), JSON.stringify(check));
+  /* The ring follows the desk: paused from the desk, it holds and says so. */
+  const ringFollows = await page.evaluate(async () => {
+    const a = SF.Activities.activity('do-now-bell-ringer');
+    const slide = SF.Activities.makeSlides(a)[0]; slide.transition = 'none';
+    SF.Player.start(SF.buildRunDeck({ ...SF.makeDeck('Ring'), slides: [slide] }), 0, { fullscreen: false });
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    await wait(400);
+    SF.Player.momentCommand({ action: 'pause' });
+    await wait(400);
+    const clock = document.querySelector('#player .slide-clock');
+    const pausedShown = clock.classList.contains('paused');
+    const face = clock.querySelector('.n').textContent;
+    const want = SF.clockFace(SF.Player.lessonMoment().seconds);
+    SF.Player.momentCommand({ action: 'clear' });
+    await wait(400);
+    const hidden = clock.hidden;
+    SF.Player.close();
+    return { pausedShown, agrees: face === want, hidden };
+  });
+  assert.deepEqual(ringFollows, { pausedShown: true, agrees: true, hidden: true });
   const results = await page.evaluate(() => {
     const host = document.createElement('div');
     host.style.cssText = 'position:fixed;inset:0;background:white;z-index:99999;width:1280px;height:720px';

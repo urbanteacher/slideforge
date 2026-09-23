@@ -14502,26 +14502,31 @@
     ], { feedback: { prompt: "Where are you on the learning ladder?", points: 5, lowLabel: "Need help", highLabel: "Can teach others" } })
   };
   var PRESENTATIONS = {
-    /* Think-Pair-Share runs as timed stages: the track, a clock per stage, a
-       private note on the phone for Think and an anonymous idea for Share. See
-       activities/stages.js. The rest of the staged routines can be switched to
-       it in the slide's Visual structure. */
-    stages: ["think-pair-share"],
-    steps: [
-      "do-now-bell-ringer",
-      "jigsaw-expert-groups",
+    /* Timed stages: the track, a clock per stage and a job for the phones (see
+       activities/stages.js). An activity is staged when at least two of its
+       rows carry a time: a routine the room moves through together. A leading
+       untimed row (the seminar's question, the problem) is the brief, and
+       stays up through every stage. A list the room needs to see whole — Do
+       Now's three tasks, a menu, the teacher's own pauses — is not staged. */
+    stages: [
+      "think-pair-share",
       "think-pair-square-share",
+      "jigsaw-expert-groups",
       "jigsaw-collaboration",
       "peer-teaching-carousel",
       "socratic-seminar",
-      "strategic-wait-time-questioning",
-      "whiteboards-on-walls",
       "teach-someone",
+      "whiteboards-on-walls",
+      "i-do-we-do-you-do",
+      "design-and-create-task"
+    ],
+    steps: [
+      "do-now-bell-ringer",
+      "strategic-wait-time-questioning",
       "daily-review-routine",
       "dialogue-chain-discussion"
     ],
     panels: [
-      "i-do-we-do-you-do",
       "differentiated-practice-menu",
       "structured-reflection-protocol",
       "reflection-ladder"
@@ -14531,7 +14536,6 @@
       "worked-example-analysis",
       "error-analysis",
       "problem-based-learning",
-      "design-and-create-task",
       "benefits-vs-limitations-battle",
       "flipped-instruction",
       "guided-inquiry-investigation"
@@ -16577,16 +16581,29 @@
       phone: "Send your pair’s strongest idea. No name goes with it.",
       icon: "↑"
     },
+    /* A stretch of making or solving. The phone's job is to stay out of the
+       way, with one quiet way to say "I'm stuck" that only the desk sees. */
+    work: {
+      wall: "Work on the task",
+      phone: "Work on the task. Stuck? Tell the teacher. Only they see it.",
+      icon: "✍"
+    },
     down: {
       wall: "Phones down",
       phone: "Phones down. Eyes on the board.",
       icon: "👀"
     }
   };
+  var GROUP_TALK = {
+    wall: "Talk in your group",
+    phone: "Talk it through with your group."
+  };
   var JOB_WORDS = [
+    ["work", /\b(you do alone|independent(ly)? practi[cs]e|on your own)\b/i],
     ["note", /\b(think|alone|jot|individual|reflect|silent|write)\b/i],
-    ["talk", /\b(pair|partner|compare|discuss|square|talk|group|argue)\b/i],
+    ["talk", /\b(pair|partner|compare|discuss|square|talk|group|argue|together|circle|switch|expert|home|return|teach(es|ing)?)\b/i],
     ["send", /\b(share|report|send|feed ?back|post|contribute)\b/i],
+    ["work", /\b(plan|planning|create|creating|design|solve|solving|build|draft|refine|investigate|research|rotate|rotation|round|station|practi[cs]e|self-assess\w*|apply|attempt)\b/i],
     ["down", /\b(connect|synthes|summar|debrief|teacher|plenary|close|link)\w*/i]
   ];
   function stageJob(label) {
@@ -16597,19 +16614,61 @@
     );
     return "down";
   }
+  var PAIR_WORDS = /\b(pair|partner)\b/i;
+  var GROUP_WORDS = /\b(group|square|circle|expert|home|team|table)\b/i;
+  function groupTalk(names) {
+    const talk = names.map((n) => stageJob(n) === "talk");
+    const pair = names.map((n, i) => talk[i] && PAIR_WORDS.test(n));
+    const group = names.map((n, i) => talk[i] && !pair[i] && GROUP_WORDS.test(n));
+    const pairs = pair.some(Boolean) && !group.some(Boolean);
+    return names.map((n, i) => talk[i] && (group[i] || !pair[i] && !pairs));
+  }
+  function stageCopy(st) {
+    const base = STAGE_JOBS[
+      /** @type {keyof typeof STAGE_JOBS} */
+      st.job
+    ] || STAGE_JOBS.down;
+    return st.job === "talk" && st.group ? { ...base, ...GROUP_TALK } : base;
+  }
   function parseStageLabel(term) {
     const text2 = String(term || "").trim();
-    const m = /^(.*?)\s*[·•|:\-–—(]\s*(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?|m)\b\)?\s*$/i.exec(text2);
+    const m = /^(.*?)\s*[·•|:\-–—(]\s*(?:every\s+|about\s+|~\s*)?(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?|m)\b\)?\s*$/i.exec(text2);
     if (!m) return { name: text2, seconds: 0 };
     const n = Number(m[2]);
     const secs = /^s/i.test(m[3]) ? n : n * 60;
     return { name: m[1].trim() || text2, seconds: Math.max(0, Math.min(3600, Math.round(secs))) };
   }
-  function activityStages(slide, parseLine) {
-    return (slide && slide.bullets || []).map(parseLine).filter((p) => p.term || p.def).slice(0, 8).map((p, i) => {
+  function stagedRows(slide, parseLine) {
+    const rows2 = (slide && slide.bullets || []).map((line, row) => ({ ...parseLine(line), row })).filter((p) => p.term || p.def);
+    const labels = rows2.map((p) => parseStageLabel(p.term));
+    const timedAfter = labels.slice(1).filter((l) => l.seconds > 0).length;
+    const hasBrief = rows2.length > 2 && labels[0].seconds === 0 && timedAfter >= 2;
+    const brief = hasBrief ? { row: rows2[0].row, name: labels[0].name, text: rows2[0].def || "" } : null;
+    const staged = rows2.slice(hasBrief ? 1 : 0, (hasBrief ? 1 : 0) + 8);
+    const names = staged.map((p) => parseStageLabel(p.term).name);
+    const groups = groupTalk(names);
+    const stages = staged.map((p, i) => {
       const label = parseStageLabel(p.term);
-      return { i, name: label.name, seconds: label.seconds, text: p.def || "", job: stageJob(label.name) };
+      return {
+        i,
+        row: p.row,
+        name: label.name,
+        seconds: label.seconds,
+        text: p.def || "",
+        job: stageJob(label.name),
+        group: groups[i]
+      };
     });
+    return { brief, stages };
+  }
+  function activityStages(slide, parseLine) {
+    return (
+      /** @type {any} */
+      stagedRows(slide, parseLine).stages
+    );
+  }
+  function activityBrief(slide, parseLine) {
+    return stagedRows(slide, parseLine).brief;
   }
 
   // src/deck/content.js
@@ -24018,6 +24077,11 @@
     activityStages: function(slide) {
       return activityStages(slide, parseKeywordLine);
     },
+    /* Its leading untimed row, which stays up through every stage, or null. */
+    activityBrief: function(slide) {
+      return activityBrief(slide, parseKeywordLine);
+    },
+    stageCopy,
     STAGE_JOBS,
     stageJob,
     parseStageLabel,

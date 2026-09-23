@@ -18,6 +18,7 @@
 
   var node = null;        // the staged slide on the wall
   var stages = [];
+  var brief = null;       // the row that stays up through every stage
   var current = -1;       // -1 is the introduction, before the first press
   var timer = null;
   var total = 0;          // seconds this stage was given, extensions included
@@ -110,7 +111,9 @@
       of: stages.length,
       name: st.name,
       job: st.job,
+      group: !!st.group,
       text: st.text,
+      brief: brief ? brief.text : '',
       seconds: total,
       /* Seconds left rather than a deadline: the phone's clock is not the
          host's, and a phone a minute fast would call time early. */
@@ -123,12 +126,7 @@
 
   function enter(i) {
     current = i;
-    node.dataset.stage = i < 0 ? 'intro' : String(i);
-    Array.prototype.forEach.call(node.querySelectorAll('.stage-chip'), function (chip) {
-      var at = Number(chip.dataset.i);
-      chip.classList.toggle('lit', at === i);
-      chip.classList.toggle('done', at < i);
-    });
+    SF.lightStages(node, i);
     Array.prototype.forEach.call(node.querySelectorAll('.stage-panel'), function (panel) {
       panel.classList.remove('time-up');
     });
@@ -152,6 +150,7 @@
     var had = !!node || !!P.stage;
     node = null;
     stages = [];
+    brief = null;
     current = -1;
     P.stage = null;
     if (had) P.emit('stage', null);
@@ -169,6 +168,7 @@
       if (node) teardown();
       node = here;
       stages = SF.activityStages(slide);
+      brief = SF.activityBrief(slide);
       current = -2;          // nothing entered yet, not even the introduction
     }
     if (i === current) return;
