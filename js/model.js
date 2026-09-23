@@ -14361,14 +14361,6 @@
       page("Find the missing length", [["Deep dive", "A rectangle has perimeter 34 cm and width 6 cm. Find its length."], ["Think aloud", "Two widths use 12 cm. The two lengths share the remaining 22 cm."], ["Explain", "Why do we divide the remaining length by two?"]], 10),
       page("Apply and check", [["Core", "Find the length when perimeter is 42 cm and width is 8 cm."], ["Support", "Draw and label all four sides before calculating."], ["Challenge", "Find three rectangles with perimeter 42 cm. Which has the largest area?"]], 12)
     ], answer: "Review: 16 units. Deep dive: 11 cm. Core: 13 cm. With whole-number sides, 10 × 11 has the greatest area for perimeter 42 cm." },
-    "question-cube-six-question-types": preset([
-      ["Define", "What is perimeter?"],
-      ["Compare", "How is it different from area?"],
-      ["Why", "Why must all side lengths use the same unit?"],
-      ["Example", "Give a real-world example of using perimeter."],
-      ["What if", "What would happen if every side length doubled?"],
-      ["Benefits / limits", "What can perimeter tell us about a garden? What can it not tell us?"]
-    ], { fieldsTitle: "Six ways to question perimeter", feedback: { prompt: "Name your question type, then give your answer and reasoning.", max: 5 } }),
     "worked-example-analysis": preset([
       ["Completed example", "Rectangle 7 cm × 3 cm → 7 + 3 + 7 + 3 → 20 cm."],
       ["Identify the steps", "What happened? Why? Explain the unit and each number in the sum."],
@@ -14386,13 +14378,6 @@
       ["Station 2 · Apply", "A noticeboard is 90 cm by 60 cm. How much edging does it need?"],
       ["Station 3 · Create", "Design a rectangle with perimeter 40 cm. Find a second possible design."]
     ], { layout: "cards", answer: "Apply: 300 cm. Create: e.g. 12 × 8 cm and 11 × 9 cm. Allow 3 minutes per station and 1 minute to share." }),
-    "concept-card-sort": preset([
-      ["Cards 1–4", "Fence length · Floor covering · Picture-frame edging · Carpet needed"],
-      ["Cards 5–8", "Garden boundary · Paint for a wall · Ribbon around a box · Lawn turf"],
-      ["Cards 9–12", "Track boundary · Tabletop covering · Window trim · Tile coverage"],
-      ["Sort and justify", "Cut these into 12 cards. Group them by what is measured. Name your categories."],
-      ["Compare", "Visit another group. Which organisation is most useful? Why?"]
-    ], { target: "slide", reason: "Ranking enforces one linear order and at most eight items. The source requires 12–15 cards in student-chosen categories; use physical cards with the full bank on screen.", answer: "One defensible sort is boundary length versus surface area: cards 1,3,5,7,9,11 versus 2,4,6,8,10,12. Accept other justified organisations." }),
     "strategic-wait-time-questioning": preset([
       ["Question", "Can a shape have a larger perimeter but a smaller area than another shape?"],
       ["Think", "Wait 3–5 seconds. Prepare a reason before anyone is called on."],
@@ -14670,6 +14655,60 @@
       mc("A 6 cm × 4 cm rectangle has perimeter… Explain your choice before the reveal.", ["10 cm", "24 cm", "20 cm", "20 cm²"], 2, "A adds two sides only. B calculates area. C correctly adds all four sides. D has the right number with an area unit. Ask each group to explain before reteaching."),
       mc("A 7 cm × 3 cm rectangle has perimeter… What changed in your method?", ["21 cm", "20 cm²", "10 cm", "20 cm"], 3, "21 calculates area; 20 cm² uses the wrong unit; 10 omits two sides; 20 cm is correct. Use this second question to check the correction.")
     ], 0, { confidence: true }), answer: "Take explanations before revealing. Use Q1 to diagnose, spend 2 minutes addressing the observed misconception, then use Q2 as the check." },
+    /* The Question Cube activity was a brainstorm beside a slide. The Question
+       Cube game rolls a face from those not yet asked, and a chosen speaker
+       answers it aloud, so the activity hands over to the game with its own
+       six questions as faces. Quiz studio's AI writes a cube as exactly these
+       six faces (AI_SPECS['question-cube']), so "Write it" keeps its stems. */
+    "question-cube-six-question-types": {
+      target: "game",
+      style: "randomchallenge",
+      reason: "A cube of six question types is a roll, not a list. The Question Cube game rolls a face from those not yet asked, and a chosen speaker answers it aloud.",
+      game: { format: "question-cube", settings: { scoreboard: false, scoreSlide: false, defaultTime: 0, confidence: false }, seeds: [
+        { category: "Define", challenge: "What is perimeter?" },
+        { category: "Compare", challenge: "How is perimeter different from area?" },
+        { category: "Why", challenge: "Why must all side lengths use the same unit?" },
+        { category: "Example", challenge: "Give a real-world example of using perimeter." },
+        { category: "What if", challenge: "What would happen if every side length doubled?" },
+        { category: "Benefits and limits", challenge: "What can perimeter tell us about a garden? What can it not tell us?" }
+      ] },
+      answer: "Doubling every side doubles the perimeter. Perimeter says how much fencing a garden needs, not how much ground it covers."
+    },
+    /* Twelve cards sorted by what they measure, on the sort input: three
+       rounds of four, each with one card for the middle column. The relay
+       takes up to ten statements a round, and the AI writes four to eight. */
+    "concept-card-sort": {
+      target: "game",
+      style: "compare",
+      reason: "The cards were cut out and sorted on the desk, with nothing to show how the room sorted. The sort input puts every card in a column on the phones, and the reveal names the card the room misfiled most.",
+      game: bank([
+        {
+          question: "What does each measure: the boundary, the surface, or both?",
+          itemA: "Perimeter",
+          itemB: "Area",
+          statements: "A: Fence length\nB: Floor covering\nA: Picture-frame edging\nB: Carpet needed\nBoth: Needs a unit stated with the number",
+          similarities: "Both are measurements of a flat shape, and both need a unit.",
+          differences: "Perimeter is the length around; area is the surface inside."
+        },
+        {
+          question: "Sort the next four, and the card that belongs to both.",
+          itemA: "Perimeter",
+          itemB: "Area",
+          statements: "A: Garden boundary\nB: Paint for a wall\nA: Ribbon around a box\nB: Lawn turf\nBoth: Changes when the shape is stretched",
+          similarities: "Stretching a shape changes both.",
+          differences: "Perimeter is in cm or m; area in cm² or m²."
+        },
+        {
+          question: "The last four. Which surprised you?",
+          itemA: "Perimeter",
+          itemB: "Area",
+          statements: "A: Track boundary\nB: Tabletop covering\nA: Window trim\nB: Tile coverage\nBoth: Can be found for a rectangle from its length and width",
+          similarities: "A rectangle’s length and width give both.",
+          differences: "Perimeter adds the sides; area multiplies them."
+        }
+      ], 0),
+      answer: "Boundary length (perimeter): cards 1, 3, 5, 7, 9, 11. Surface (area): 2, 4, 6, 8, 10, 12. The source also asks students to name their own categories: after the sort, ask for a different organisation and its rule."
+    },
     "recap-quiz-game": { game: bank(choice, 40, { scoreboard: true, scoreSlide: true, defaultPoints: 1e3 }), answer: "Quick-Fire is the selected source option: six 40-second questions fill 4 minutes, followed by 2 minutes discussing common errors." }
   };
 
@@ -16587,6 +16626,7 @@
       delete a.style;
       if (p.target !== "feedback" && !p.feedbackKind) delete a.feedbackKind;
     }
+    if (p.style) a.style = p.style;
     if (p.layout) a.layout = p.layout;
     if (p.feedbackKind) a.feedbackKind = p.feedbackKind;
     a.feedbackPreset = p.feedback;

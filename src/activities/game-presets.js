@@ -58,6 +58,39 @@ const GAME_PRESETS = {
     mc('A 6 cm × 4 cm rectangle has perimeter… Explain your choice before the reveal.', ['10 cm', '24 cm', '20 cm', '20 cm²'], 2, 'A adds two sides only. B calculates area. C correctly adds all four sides. D has the right number with an area unit. Ask each group to explain before reteaching.'),
     mc('A 7 cm × 3 cm rectangle has perimeter… What changed in your method?', ['21 cm', '20 cm²', '10 cm', '20 cm'], 3, '21 calculates area; 20 cm² uses the wrong unit; 10 omits two sides; 20 cm is correct. Use this second question to check the correction.')
   ], 0, { confidence: true }), answer: 'Take explanations before revealing. Use Q1 to diagnose, spend 2 minutes addressing the observed misconception, then use Q2 as the check.' },
+  /* The Question Cube activity was a brainstorm beside a slide. The Question
+     Cube game rolls a face from those not yet asked, and a chosen speaker
+     answers it aloud, so the activity hands over to the game with its own
+     six questions as faces. Quiz studio's AI writes a cube as exactly these
+     six faces (AI_SPECS['question-cube']), so "Write it" keeps its stems. */
+  'question-cube-six-question-types': { target: 'game', style: 'randomchallenge',
+    reason: 'A cube of six question types is a roll, not a list. The Question Cube game rolls a face from those not yet asked, and a chosen speaker answers it aloud.',
+    game: { format: 'question-cube', settings: { scoreboard: false, scoreSlide: false, defaultTime: 0, confidence: false }, seeds: [
+      { category: 'Define', challenge: 'What is perimeter?' },
+      { category: 'Compare', challenge: 'How is perimeter different from area?' },
+      { category: 'Why', challenge: 'Why must all side lengths use the same unit?' },
+      { category: 'Example', challenge: 'Give a real-world example of using perimeter.' },
+      { category: 'What if', challenge: 'What would happen if every side length doubled?' },
+      { category: 'Benefits and limits', challenge: 'What can perimeter tell us about a garden? What can it not tell us?' }
+    ] },
+    answer: 'Doubling every side doubles the perimeter. Perimeter says how much fencing a garden needs, not how much ground it covers.' },
+  /* Twelve cards sorted by what they measure, on the sort input: three
+     rounds of four, each with one card for the middle column. The relay
+     takes up to ten statements a round, and the AI writes four to eight. */
+  'concept-card-sort': { target: 'game', style: 'compare',
+    reason: 'The cards were cut out and sorted on the desk, with nothing to show how the room sorted. The sort input puts every card in a column on the phones, and the reveal names the card the room misfiled most.',
+    game: bank([
+      { question: 'What does each measure: the boundary, the surface, or both?', itemA: 'Perimeter', itemB: 'Area',
+        statements: 'A: Fence length\nB: Floor covering\nA: Picture-frame edging\nB: Carpet needed\nBoth: Needs a unit stated with the number',
+        similarities: 'Both are measurements of a flat shape, and both need a unit.', differences: 'Perimeter is the length around; area is the surface inside.' },
+      { question: 'Sort the next four, and the card that belongs to both.', itemA: 'Perimeter', itemB: 'Area',
+        statements: 'A: Garden boundary\nB: Paint for a wall\nA: Ribbon around a box\nB: Lawn turf\nBoth: Changes when the shape is stretched',
+        similarities: 'Stretching a shape changes both.', differences: 'Perimeter is in cm or m; area in cm² or m².' },
+      { question: 'The last four. Which surprised you?', itemA: 'Perimeter', itemB: 'Area',
+        statements: 'A: Track boundary\nB: Tabletop covering\nA: Window trim\nB: Tile coverage\nBoth: Can be found for a rectangle from its length and width',
+        similarities: 'A rectangle\u2019s length and width give both.', differences: 'Perimeter adds the sides; area multiplies them.' }
+    ], 0),
+    answer: 'Boundary length (perimeter): cards 1, 3, 5, 7, 9, 11. Surface (area): 2, 4, 6, 8, 10, 12. The source also asks students to name their own categories: after the sort, ask for a different organisation and its rule.' },
   'recap-quiz-game': { game: bank(choice, 40, { scoreboard: true, scoreSlide: true, defaultPoints: 1000 }), answer: 'Quick-Fire is the selected source option: six 40-second questions fill 4 minutes, followed by 2 minutes discussing common errors.' }
 };
 export { GAME_PRESETS };

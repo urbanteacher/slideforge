@@ -80,12 +80,6 @@ const PRESETS = {
     page('Find the missing length', [['Deep dive', 'A rectangle has perimeter 34 cm and width 6 cm. Find its length.'], ['Think aloud', 'Two widths use 12 cm. The two lengths share the remaining 22 cm.'], ['Explain', 'Why do we divide the remaining length by two?']], 10),
     page('Apply and check', [['Core', 'Find the length when perimeter is 42 cm and width is 8 cm.'], ['Support', 'Draw and label all four sides before calculating.'], ['Challenge', 'Find three rectangles with perimeter 42 cm. Which has the largest area?']], 12)
   ], answer: 'Review: 16 units. Deep dive: 11 cm. Core: 13 cm. With whole-number sides, 10 × 11 has the greatest area for perimeter 42 cm.' },
-  'question-cube-six-question-types': preset([
-    ['Define', 'What is perimeter?'], ['Compare', 'How is it different from area?'],
-    ['Why', 'Why must all side lengths use the same unit?'], ['Example', 'Give a real-world example of using perimeter.'],
-    ['What if', 'What would happen if every side length doubled?'],
-    ['Benefits / limits', 'What can perimeter tell us about a garden? What can it not tell us?']
-  ], { fieldsTitle: 'Six ways to question perimeter', feedback: { prompt: 'Name your question type, then give your answer and reasoning.', max: 5 } }),
   'worked-example-analysis': preset([
     ['Completed example', 'Rectangle 7 cm × 3 cm → 7 + 3 + 7 + 3 → 20 cm.'],
     ['Identify the steps', 'What happened? Why? Explain the unit and each number in the sum.'],
@@ -103,13 +97,6 @@ const PRESETS = {
     ['Station 2 · Apply', 'A noticeboard is 90 cm by 60 cm. How much edging does it need?'],
     ['Station 3 · Create', 'Design a rectangle with perimeter 40 cm. Find a second possible design.']
   ], { layout: 'cards', answer: 'Apply: 300 cm. Create: e.g. 12 × 8 cm and 11 × 9 cm. Allow 3 minutes per station and 1 minute to share.' }),
-  'concept-card-sort': preset([
-    ['Cards 1–4', 'Fence length · Floor covering · Picture-frame edging · Carpet needed'],
-    ['Cards 5–8', 'Garden boundary · Paint for a wall · Ribbon around a box · Lawn turf'],
-    ['Cards 9–12', 'Track boundary · Tabletop covering · Window trim · Tile coverage'],
-    ['Sort and justify', 'Cut these into 12 cards. Group them by what is measured. Name your categories.'],
-    ['Compare', 'Visit another group. Which organisation is most useful? Why?']
-  ], { target: 'slide', reason: 'Ranking enforces one linear order and at most eight items. The source requires 12–15 cards in student-chosen categories; use physical cards with the full bank on screen.', answer: 'One defensible sort is boundary length versus surface area: cards 1,3,5,7,9,11 versus 2,4,6,8,10,12. Accept other justified organisations.' }),
   'strategic-wait-time-questioning': preset([
     ['Question', 'Can a shape have a larger perimeter but a smaller area than another shape?'],
     ['Think', 'Wait 3–5 seconds. Prepare a reason before anyone is called on.'],

@@ -541,15 +541,35 @@ test('AI can write the main quiz formats, not only multiple choice', () => {
   });
 });
 
-test('question-cube guardrail asks for the six Rosenshine stems', async () => {
-  const mod = activityAi({ f0: 'x', f1: 'y' });
-  await mod.AI.generateActivityContent(activity('question-cube-six-question-types'), {
-    topic: 'Photosynthesis'
-  });
-  const sent = mod.calls.find((c) => /generate$/.test(c.url)).body;
-  assert.match(sent.system, /Define/);
-  assert.match(sent.system, /What-if/);
-  assert.match(sent.system, /Teach before you test/);
+/* The Question Cube and the Card Sort hand over to games (activities audit,
+   AC-14 and AC-15), so what writes them is Quiz studio's AI, and the
+   guardrail travels with the game: six Rosenshine faces for the cube,
+   tagged statements for the sort. These hold the hand-over to that. */
+function gameFor(key) {
+  const SF = loadEngines();
+  const a = SF.Activities.activity(key);
+  const g = SF.makeGame(a.title, a.style);
+  if (a.gamePreset && a.gamePreset.format) g.format = a.gamePreset.format;
+  return { a, g };
+}
+
+test('the Question Cube activity is written as the game\'s six faces', () => {
+  const { AI } = activityAi({});
+  const { a, g } = gameFor('question-cube-six-question-types');
+  assert.equal(a.target, 'game');
+  assert.equal(g.format, 'question-cube');
+  assert.equal(AI.gameSpecFor(g), AI.gameSpec('question-cube'), 'the cube shape, not a generic challenge');
+  assert.deepEqual(a.gamePreset.seeds.map((f) => f.category),
+    ['Define', 'Compare', 'Why', 'Example', 'What if', 'Benefits and limits']);
+});
+
+test('the Card Sort is written as a sort, with tagged statements', () => {
+  const { AI } = activityAi({});
+  const { a, g } = gameFor('concept-card-sort');
+  assert.equal(a.style, 'compare');
+  const spec = AI.gameSpecFor(g);
+  assert.equal(spec, AI.gameSpec('compare'));
+  assert.match(JSON.stringify(spec.row) + spec.rules, /Both: /, 'the model is asked for statements to sort');
 });
 
 test('the material box must hold the material, not a note about it', async () => {
@@ -582,12 +602,11 @@ test('the material box must hold the material, not a note about it', async () =>
 
 test('the guardrail for the activity is the one sent to the model', async () => {
   const mod = activityAi({ f0: 'x', f1: 'y' });
-  await mod.AI.generateActivityContent(activity('concept-card-sort'), { topic: 'States of matter' });
+  await mod.AI.generateActivityContent(activity('worked-example-analysis'), { topic: 'States of matter' });
   const sent = mod.calls.find((c) => /generate$/.test(c.url)).body;
-  assert.match(sent.system, /categories by name/);
-  assert.match(sent.system, /debatable/);
+  assert.match(sent.system, /written out in full in the first box/);
   /* And the boxes are named in the brief, because the catalogue knows them. */
-  assert.match(sent.user, /Concept Card Sort/);
+  assert.match(sent.user, /Worked Example Analysis/);
   assert.match(sent.user, /f0 = /);
 });
 

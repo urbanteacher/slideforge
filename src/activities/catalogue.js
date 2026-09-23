@@ -758,6 +758,8 @@ for (const a of ACTIVITIES) {
   a.mappingReason = p.reason;
   a.teacherNotes = p.answer || '';
   if (p.target) { a.target = p.target; delete a.style; if (p.target !== 'feedback' && !p.feedbackKind) delete a.feedbackKind; }
+  /* A remap onto a game names its engine. */
+  if (p.style) a.style = p.style;
   if (p.layout) a.layout = p.layout;
   if (p.feedbackKind) a.feedbackKind = p.feedbackKind;
   a.feedbackPreset = p.feedback;

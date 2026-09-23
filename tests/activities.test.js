@@ -30,8 +30,10 @@ test('most of a lesson is not a quiz', async () => {
   const by = ACTIVITIES.reduce((n, a) => ((n[a.target] = (n[a.target] || 0) + 1), n), {});
   /* Three incompatible game mappings now provide classroom materials. Hook &
      Predict and Preview Next Lesson collect from the phones; the Connection
-     Hunt runs as timed stages (activities audit, wave 3). */
-  assert.deepEqual(by, { slide: 21, game: 10, moment: 11, feedback: 10, 'slide-arc': 2 });
+     Hunt runs as timed stages (activities audit, wave 3). The Question Cube
+     activity hands over to the Question Cube game, and the Concept Card Sort
+     is a sort (AC-14, AC-15). */
+  assert.deepEqual(by, { slide: 20, game: 12, moment: 11, feedback: 9, 'slide-arc': 2 });
   /* The shape is the point. A catalogue that drifted towards games would be
      describing a different product, so this fails if games ever lead. */
   assert.ok(by.game < by.slide, 'games should not outnumber slides');
@@ -432,4 +434,32 @@ test('every activity declares its rooms, with a reason for each', () => {
   assert.equal(by('plus-minus-interesting').entry.status, 'partial', 'its ideas are sent from the phones');
   assert.equal(by('learning-log-entry').entry.status, 'yes', 'private notes need no entry');
   assert.equal(by('clear-objectives-slide').solo.status, 'yes');
+});
+
+/* Two activities hand over to games that do what they are named for (AC-14,
+   AC-15): the Question Cube rolls a face, and the Card Sort is sorted on the
+   phones. Each compiles as its engine expects. */
+test('the Question Cube and the Card Sort compile as their games', () => {
+  const vm = require('node:vm');
+  const c = { window: {}, console, localStorage: { getItem: () => null, setItem() {}, removeItem() {} } };
+  vm.createContext(c);
+  vm.runInContext(require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'js', 'model.js'), 'utf8'), c);
+  const SF = c.window.SF;
+  const build = (key) => {
+    const a = SF.Activities.activity(key);
+    const g = SF.makeGame(a.title, a.style);
+    g.format = a.gamePreset.format || g.format;
+    Object.assign(g.settings, a.gamePreset.settings || {});
+    g.questions = a.gamePreset.seeds.map((f) => SF.normalizeQuestion(Object.assign(SF.makeQuestion(a.style), f), a.style));
+    return SF.compileGame(g, { intro: false, scoreSlide: false }).filter((s) => s.type === 'quiz');
+  };
+  assert.equal(build('question-cube-six-question-types').length, 6, 'six faces');
+  const sort = build('concept-card-sort');
+  assert.equal(sort.length, 3, 'three rounds');
+  for (const s of sort) {
+    assert.equal(s.input, 'sort');
+    assert.equal(s.options.length, 5, 'four cards and one for both');
+    assert.deepEqual(Array.from(s.sortBins), ['Perimeter only', 'Both', 'Area only']);
+    assert.equal(Array.from(s.sortAnswers).filter((b) => b === 1).length, 1);
+  }
 });
