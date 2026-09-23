@@ -39,13 +39,11 @@ order.
 | ID | Item | Size | Status |
 |---|---|---|---|
 | GA-11 – GA-28 | **Games to a premium standard**: waves 0–2 (GA-01–10, GA-29–30) are done. Wave 3's four conversions are done too (GA-11–14). Next: wave 4, the proposal queue and Concept Chain's map. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | To do |
-| AC-06 – AC-17 | **Activities to a premium standard**: waves 0 and 1 (AC-01–05) are done: one clock, the desk's live stage, and ten routines on stages. Next: wave 2, where the room's output lands (spotlight, the written count, prompt controls). Full table under [the activities build list](#23-september-2026-activities-to-a-premium-standard-the-build-list). | S–L | To do |
+| AC-09 – AC-17 | **Activities to a premium standard**: waves 0–2 (AC-01–08) are done: one clock, the desk's live stage, ten routines on stages, and the room's output landing (spotlight and hide, the written count, close and held results). Next: wave 3, the family redesigns on the kit, and room declarations (AC-16). Full table under [the activities build list](#23-september-2026-activities-to-a-premium-standard-the-build-list). | S–L | To do |
 | RP-01 | Rehearse with a class of 30 (and 120) | S | To do |
 | RP-02 | Lecture-scale defaults (100+): standings off, distribution on | S | To do |
 | RP-03 | A packed, centred word cloud with stable positions | M | To do |
 | RP-04 | The desk's "need a hand" chip, seen drawn | S | To check |
-| TPS-01 | Spotlight one idea during Share (now AC-06, for every idea box) | S | To do |
-| TPS-02 | "19 of 26 have written something" during Think (now AC-07) | S | To do |
 | TPS-03 | Smoke-test and view Think-Pair-Share on the wall and a phone | S | To check · not seen drawn |
 | TPS-04 | Offer the stages view to existing lessons' staged routines (all ten since AC-05; only new inserts get it now) | S | To do |
 | #7 | Gate ✋ and ? to junction points | S | To do |
@@ -1152,8 +1150,8 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | RP-02 | Lecture-scale defaults (100+): standings off, distribution on | room pane | S | To do |
 | RP-03 | A packed, centred word cloud with stable positions | room pane | M | To do |
 | RP-04 | The desk's "need a hand" chip, seen drawn | room pane | S | To check |
-| TPS-01 | Spotlight one idea during Share | [game-activity-redesign.md](game-activity-redesign.md) | S | To do |
-| TPS-02 | "19 of 26 have written something" during Think (a count only; the note stays private) | TPS | S | To do |
+| TPS-01 | Spotlight one idea during Share | [game-activity-redesign.md](game-activity-redesign.md) | S | **Done** 23 Sep as AC-06, for every idea box |
+| TPS-02 | "19 of 26 have written something" during Think (a count only; the note stays private) | TPS | S | **Done** 23 Sep as AC-07 |
 | TPS-03 | Smoke-test and view Think-Pair-Share on the wall and a phone | TPS | S | To check · not seen drawn |
 | TPS-04 | Existing lessons' staged routines offered the stages view (ten routines since AC-05) | TPS | S | To do |
 
@@ -1172,9 +1170,9 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
 | AC-03 | 1 | **Pinned brief (N9)**: a leading untimed row stays up on wall and phone through every stage | S | **Done** 23 Sep · seen on the wall |
 | AC-04 | 1 | **Work job (N10)** with Need help on the phone; **group talk (N11)**; "every 4 min" parses | S | **Done** 23 Sep · relay tested |
 | AC-05 | 1 | Stages by default for Square, both Jigsaws, Carousel, Socratic, Teach Someone, Whiteboards, I Do/We Do/You Do, Design and Create | S | **Done** 23 Sep · fit measured in 23 themes |
-| AC-06 | 2 | **Spotlight and hide on any idea box (N12)**, from the desk; absorbs TPS-01 | S–M | To do |
-| AC-07 | 2 | **The written count (N13)** during a note stage, never the text; absorbs TPS-02 | S | To do |
-| AC-08 | 2 | **Prompt controls on the desk (N14)**: close an authored prompt; self-assessment held, then revealed (audit §6) | M | To do |
+| AC-06 | 2 | **Spotlight and hide on any idea box (N12)**, from the desk; absorbs TPS-01 | S–M | **Done** 23 Sep · browser smoke with two phones |
+| AC-07 | 2 | **The written count (N13)** during a note stage, never the text; absorbs TPS-02 | S | **Done** 23 Sep · relay tested; the host never holds the words |
+| AC-08 | 2 | **Prompt controls on the desk (N14)**: close an authored prompt; self-assessment held, then revealed (audit §6) | M | **Done** 23 Sep · `feedback.hold`; the rehearsal still shows sample bars |
 | AC-09 | 3 | Hook and Predict on stages: a private prediction, the image pinned | S | To do |
 | AC-10 | 3 | Real-World Connection Hunt as three send stages (room, home, community) | S | To do |
 | AC-11 | 3 | Plus / Minus / Interesting as three send stages filling its columns | S | To do |
@@ -1304,6 +1302,13 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** Activities wave 2 (AC-06–08, closing TPS-01 and TPS-02).
+  A desk block beside the notes spotlights or hides any idea. The
+  spotlight goes on the wall without a name and stays for the slide. A
+  note stage's phones report only that they have written ("1 of 2 have
+  written something"). The desk closes an authored prompt, and the two
+  self-assessments are held until Show results. 513/513; a new
+  `room-output` smoke drives a host and two phones.
 - **23 Sep 2026.** GA-26: Compare & Contrast is a sort (a new `sort` input).
   Statements go into A only, Both or B only; the reveal names the one most
   misfiled. Seen on screen. 513/513.

@@ -53,8 +53,8 @@ Rows that are stages ("Pair · 3 min"). These are the ones the stages view was b
 
 | Activity | Today | A1 | A2 | A3 | A4 | A5 | A6 | A7 | A8 | Tier |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **Think-Pair-Share** | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ◐ | Near-premium: no spotlight yet (N12) |
-| Think-Pair-Square-Share | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ◐ | Solid, near premium: Square is group talk |
+| **Think-Pair-Share** | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | Near-premium: A1–A7 pass. Open: the rehearsal has no spotlight; rooms (A9) |
+| Think-Pair-Square-Share | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | Near-premium: as Think-Pair-Share, with Square as group talk |
 | Jigsaw (expert groups) | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✗ | ◐ | Solid: three group-talk stages; nothing lands (the guide is on paper) |
 | Jigsaw (collaboration) | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✗ | ◐ | Solid: as the expert-groups Jigsaw |
 | Peer-Teaching Carousel | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✗ | ◐ | Solid: the stations pinned as the brief; rotations are work |
@@ -76,19 +76,24 @@ An audience prompt on a labelled-rows slide.
 | Knowledge Activation Web | word cloud | ◐ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: a cloud, not a web; the notes say so |
 | Question Cube (six types) | brainstorm | ◐ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: the Question Cube *game* now rolls; this is the same idea without the roll |
 | Real-World Connection Hunt | brainstorm | ◐ | ◐ | ✗ | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: three timed hunts (room, home, community) under one clock |
-| Muddiest Point | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Solid-: nothing picks the point to fix |
-| Exit Ticket | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Solid-: named on the desk and in the report, which is right |
-| Exit Ticket 3-2-1 | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Solid-: three answers in one box |
-| Structured Reflection | poll · panels | ✓ | ✓ | n/a | ✓ | ◐ | ◐ | ✗ | ◐ | Solid-: live bars; the room anchors on the leader |
-| Reflection Ladder | scale · panels | ✓ | ✓ | n/a | ✓ | ◐ | ◐ | ✗ | ◐ | Solid-: live column chart; "teacher notes who needs support" has nowhere to happen |
+| Muddiest Point | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ✓ | ✓ | ◐ | Solid-: the desk spotlights the point to fix |
+| Exit Ticket | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ✓ | ◐ | ◐ | Solid-: named on the desk and in the report, which is right |
+| Exit Ticket 3-2-1 | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ✓ | ◐ | ◐ | Solid-: three answers in one box |
+| Structured Reflection | poll · panels | ✓ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ | ◐ | Solid, near premium: held, so the wall shows how many are in until the desk shows the split |
+| Reflection Ladder | scale · panels | ✓ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ | ◐ | Solid, near premium: held, then the column chart; who needs support is the desk's |
 
-For all nine:
-- **A6:** an authored prompt has no close control on the desk. It ends when
-  the slide moves. Its only desk surface is the read-only Pulse list.
-- **A7:** there is no reveal, no spotlight and no hide. Results update live,
-  then vanish.
-- **A5 ◐** on the two self-assessments: live bars mean the fifth student
-  sees where the first four went.
+For all nine, before wave 2:
+- **A6:** an authored prompt had no close control on the desk. It ended
+  when the slide moved, and its only desk surface was the read-only Pulse
+  list.
+- **A7:** there was no reveal, no spotlight and no hide. Results updated
+  live, then vanished.
+- **A5 ◐** on the two self-assessments: live bars meant the fifth student
+  saw where the first four went.
+
+Wave 2 added a close control for all nine and spotlight and hide for the
+brainstorms, and holds the two self-assessments. The word clouds' A6 stays
+◐: they can be closed, but single words cannot be spotlighted or hidden.
 
 ### Teacher-led slides
 
@@ -138,7 +143,7 @@ A long piece of work, with the brief on the wall.
 | Visual Summary | cards | ◐ | ◐ | ✗ | ✗ | ✓ | ✓ | n/a | ◐ | Thin: making, then sharing, under one clock |
 
 **Totals, after waves 0 and 1:**
-- 0 premium; Think-Pair-Share is near-premium.
+- 0 premium. 4 near-premium after wave 2: Think-Pair-Share, Think-Pair-Square-Share and the two self-assessments.
 - 0 broken. There were 9, every timed moment not on stages, and the one clock (N7) fixed them all.
 - 25 solid or solid-minus, up from 17.
 - 18 thin. Do Now and Wait Time moved from broken to thin; I Do, We Do, You Do moved to solid.
@@ -174,9 +179,9 @@ Numbered after the games' N1–N6, because some are shared.
 | **N9 · done** | **Pinned brief**: a leading row with no time stays on the wall through every stage | The problem, question or scenario must not vanish when the work starts | Socratic, Whiteboards, Carousel, Design and Create, PBL, Wait Time | S |
 | **N10 · done** | **A work job**: "Work on the task", with a quiet *I'm stuck* that reaches the desk as a need-a-hand | Long tasks have no phone job; the pace signal already exists | Design, PBL, Carousel, Stations, I Do/You Do | S |
 | **N11 · done** | **Group talk**: a talk stage that is not a pair says "Talk in your group", on the wall and the phone | "Turn to your partner" is wrong for a jigsaw or a seminar | Jigsaw ×2, Square, Socratic, Carousel | S |
-| **N12** | **Spotlight and hide on any idea box**: N3's "Use this" for every brainstorm, including a stage's Share | TPS-01; the thing Muddiest Point, Share and PMI all need | every brainstorm | S–M |
-| **N13** | **The written count**: "19 of 26 have written something" during a private stage. The phone sends *that* it wrote, never *what* | TPS-02; the one number a teacher needs during silent work | Think, Predict, Learning Log | S |
-| **N14** | **Prompt controls on the desk**: close now; hold, then reveal, for a poll or scale | A6 and A7 for all nine collect-from-the-room activities | polls, scales, clouds, brainstorms | M |
+| **N12 · done** | **Spotlight and hide on any idea box**: N3's "Use this" for every brainstorm, including a stage's Share | TPS-01; the thing Muddiest Point, Share and PMI all need | every brainstorm | S–M |
+| **N13 · done** | **The written count**: "19 of 26 have written something" during a private stage. The phone sends *that* it wrote, never *what* | TPS-02; the one number a teacher needs during silent work | Think, Predict, Learning Log | S |
+| **N14 · done** | **Prompt controls on the desk**: close now; hold, then reveal, for a poll or scale | A6 and A7 for all nine collect-from-the-room activities | polls, scales, clouds, brainstorms | M |
 | E3 | **Tally entry** (games GA-15) | Hands up and paper feed the same bars | polls and scales | M |
 | N6 | **Sort input** (games GA-26) | Cards into bins on the phone | Card Sort, PMI, Compare | L |
 
@@ -298,7 +303,7 @@ Slides by design: A3 and A7 are not their job.
 |---|---|---|---|
 | **0** | **Done 23 Sep.** N7 one clock; N8 the desk shows the live stage | The wall says two things today; the desk shows the wrong thing | S |
 | **1** | **Done 23 Sep.** N9 pinned brief, N10 work, N11 group talk; the parser reads "every 4 min"; stages by default for the seven staged routines, I Do/We Do/You Do and Design and Create | The flagship's shape spread to where it fits: nine activities from thin or broken to solid | S–M |
-| **2** | **N12 spotlight and hide; N13 the written count; N14 prompt controls** (close, hold, reveal) | The room's output lands; closes TPS-01 and TPS-02 | M |
+| **2** | **Done 23 Sep.** N12 spotlight and hide; N13 the written count; N14 prompt controls (close, hold, reveal) | The room's output lands; closes TPS-01 and TPS-02 | M |
 | **3** | Family redesigns that are mostly kit: Hook and Predict, Connection Hunt, PMI, Learning Log, Ground Rules, Preview, Visual Summary, Scenario Analysis | Each is a preset change on stages plus N12 | S each |
 | **with GA-15** | **E3 tally entry** for polls and scales | Rooms with no devices | M |
 | **4** | Benefits vs Limitations with team credit; Stations on a round clock; Question Cube activity → game | Needs games kit N1 and N4 | S–M |
@@ -402,6 +407,40 @@ This is already the rule in `js/stages.js`, and it stays.
 
 ## Change log
 
+- **23 September 2026 — Wave 2 (AC-06 to AC-08).** What the room sends
+  now lands.
+  - **The desk block.** Beside the notes on the presenter's main pane:
+    - the prompt and how many have answered (or, in a note stage, how many
+      have written something);
+    - Show results for a held prompt, and Close;
+    - each idea with its author ("only you see this"), with Spotlight and
+      Hide.
+
+    It shows for a slide's own prompt and a Share stage's idea box, not
+    for the teacher's quick poll, which has its own card.
+  - **Spotlight (N12).** The idea goes on the wall at the foot of the slide
+    without a name, and stays for the rest of the slide, so Share's idea
+    is there for Connect. Hide takes an idea off the wall, and out of the
+    spotlight if it was there. Both work on the host's copy of the
+    digest, so the report keeps everything.
+  - **The written count (N13).** A note-stage phone sends `wrote` (yes or
+    no, once it has two words or ten characters), never the text. The
+    relay counts phones only and tells the host alone, and never
+    journals it. A new note stage starts at nought.
+  - **Prompt controls (N14).**
+    - Close ends an authored prompt for the rest of the visit; a redraw
+      does not reopen it, but coming back to the slide does.
+    - A poll or scale can be `hold`; the two self-assessments are. While
+      held, the wall's rail and full-screen view show the count and "Hidden
+      until your teacher shows them".
+  - **Tests:** `npm test` 513/513, with `tests/room-output.test.js` (the
+    relay count, `hold`). The new smoke scenario `room-output` drives a host
+    and two phones through Think, Share and a held poll. Seen in the
+    browser: the spotlight at Share and at Connect, the held rail, and the
+    desk block with the live stage beside it. That also confirms the
+    wave 1 desk preview.
+  - **Open:** the rehearsal still shows sample bars for a held prompt and
+    has no spotlight; single words in a cloud cannot be spotlighted.
 - **23 September 2026 — Waves 0 and 1 (AC-01 to AC-05).**
   - **One clock (N7).** A timed moment's ring now reads the desk's moment:
     Pause holds it (dimmed), +1 min adds to it, Clear takes it off the wall.
