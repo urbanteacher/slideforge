@@ -1380,9 +1380,24 @@
   };
 
   /** Push the current standings into the always-on rail. */
+  /* A lecture (RP-02): above sixty people, even a top five is a public
+     ranking of strangers, so the standings stay off the wall until the
+     teacher brings the room view in with S. The slide's own answer bars are
+     the room's picture of itself. Teams are not strangers, and a team
+     table stays. */
+  var LECTURE_SIZE = 60;
+  function lectureRoom() {
+    return Live.mode !== 'teams' && (Live.players || []).length > LECTURE_SIZE;
+  }
+  Live.lectureRoom = lectureRoom;
+
   function paintRail() {
     if (!Live.active || !Live.deck.quiz.scoreboard) return;
     if (SF.Player._railWanted === false) return;
+    if (lectureRoom() && !SF.Player._railChosen) {
+      if (SF.Player._railMode === 'scores') SF.Player.disableRail();
+      return;
+    }
 
     var racing = Live.mechanic === 'race';
 

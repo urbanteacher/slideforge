@@ -1718,6 +1718,9 @@
 
     // hidden → rail
     Player._railWanted = true;
+    /* Asked for by hand: a lecture's standings, off by default, come back
+       when the teacher brings the room view in (RP-02). */
+    Player._railChosen = true;
     if (live) {
       Player.emit('sidebarShow', {});
       syncHudRoomButtons();
@@ -2939,6 +2942,7 @@
     Player._focus = false;
     Player._sampleFb = null;
     Player._railWanted = true;
+    Player._railChosen = false;
     if (!opts.keepAnswers) Player.answers = {};
     if (viewport) {
       viewport.innerHTML = '';
@@ -2972,7 +2976,7 @@
       pill.appendChild(exitBtn);
       root.appendChild(pill);
     }
-    if (opts.demo && SF.Demo) SF.Demo.attach(Player, { mode: opts.demoMode || 'class', auto: !!opts.demoAuto });
+    if (opts.demo && SF.Demo) SF.Demo.attach(Player, { mode: opts.demoMode || 'class', auto: !!opts.demoAuto, size: opts.demoSize || 0 });
   };
 
   Player.close = function () {

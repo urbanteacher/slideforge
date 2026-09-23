@@ -3,7 +3,14 @@
 (function (global) {
   'use strict';
   var SF = global.SF;
-  var NAMES = ['Ana', 'Ben', 'Priya', 'Tom', 'Maya', 'Leo', 'Sam', 'Jordan', 'Nina', 'Omar'];
+  var NAMES = ['Ana', 'Ben', 'Priya', 'Tom', 'Maya', 'Leo', 'Sam', 'Jordan', 'Nina', 'Omar',
+    'Chloe', 'Kwame', 'Sofia', 'Luca', 'Aisha', 'Ethan', 'Zara', 'Noah', 'Mei', 'Adam',
+    'Freya', 'Ravi', 'Isla', 'Tariq', 'Grace', 'Oscar', 'Lina', 'Jack', 'Amara', 'Finn',
+    'Hana', 'Kai', 'Ruby', 'Dev', 'Elif', 'Max', 'Nadia', 'Theo', 'Yusuf', 'Ella'];
+  /* The class sizes a rehearsal can be (RP-01): a small group, a class, a
+     lecture. The room pane is laid out for all three, and a rehearsal of 6
+     never shows the top five and the pack, or what 120 looks like. */
+  var SIZES = [8, 30, 120];
   var timers = [];
   var active = false;
   var players = [];
@@ -22,6 +29,12 @@
     var out = [];
     while (out.length < n && bag.length) {
       out.push(bag.splice(Math.floor(Math.random() * bag.length), 1)[0]);
+    }
+    /* Past forty, a surname initial keeps every name different, as a real
+       register would: "Ana K.", "Ana M.". */
+    var initials = 'ABCDEFGHJKLMNPRSTW';
+    for (var k = 0; out.length < n; k++) {
+      out.push(NAMES[k % NAMES.length] + ' ' + initials[Math.floor(k / NAMES.length) % initials.length] + '.');
     }
     return out;
   }
@@ -51,6 +64,14 @@
 
   function paintRail() {
     if (!host || !host.open) return;
+    /* A rehearsed lecture keeps the live rule (RP-02): above sixty, no
+       standings on the wall unless the teacher brings the room view in. */
+    var teamsOn = players.some(function (p) { return p.teamIndex != null; });
+    if (players.length > 60 && !teamsOn && !host._railChosen) {
+      if (host._railMode === 'scores' && host.disableRail) host.disableRail();
+      host.railNote && host.railNote('A lecture: standings stay off the wall. S shows them.');
+      return;
+    }
     var rows = players.map(function (p, i) {
       return {
         key: 'demo-' + i,
@@ -482,7 +503,8 @@
     host = player;
     active = true;
     var teams = (host.deck && host.deck.quiz && host.deck.quiz.teams) || [];
-    players = pickNames(6 + Math.floor(Math.random() * 3)).map(function (name, i) {
+    var size = SIZES.indexOf(Number(opts.size)) >= 0 ? Number(opts.size) : 6 + Math.floor(Math.random() * 3);
+    players = pickNames(size).map(function (name, i) {
       var tIdx = teams.length ? (i % teams.length) : null;
       return {
         name: name,
@@ -534,6 +556,7 @@
       demo: true,
       demoMode: demoMode,
       demoAuto: !!opts.auto,
+      demoSize: opts.size || 0,
       keepAnswers: false
     });
   }
@@ -543,6 +566,7 @@
     attach: attach,
     detach: detach,
     setMode: setMode,
+    SIZES: SIZES,
     get active() { return active; },
     players: function () { return players.slice(); }
   };

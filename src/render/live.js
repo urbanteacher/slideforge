@@ -121,6 +121,31 @@ export function createLiveRenderer(SF, helpers) {
     });
   }
 
+  /* A cloud whose words stay where they are (RP-03). The relay sends the
+     words most common first, and drawing them in that order meant every new
+     vote could reshuffle the cloud under the room's eyes. The most common
+     are still the ones shown, but they are laid out in the order each was
+     first seen, so a new word lands at the end and nothing already up moves;
+     it only grows. Each word's colour comes from the word, not its place, so
+     it keeps it too. Kept per prompt. */
+  var cloudSeen = { id: null, order: {}, next: 0 };
+  function cloudKey(w) { return String(w.text || '').toLowerCase(); }
+  function cloudWords(digest, limit) {
+    var id = digest.id || null;
+    if (cloudSeen.id !== id) cloudSeen = { id: id, order: {}, next: 0 };
+    var shown = (digest.words || []).slice(0, limit);
+    shown.forEach(function (w) {
+      var k = cloudKey(w);
+      if (!Object.prototype.hasOwnProperty.call(cloudSeen.order, k)) cloudSeen.order[k] = cloudSeen.next++;
+    });
+    return shown.slice().sort(function (a, b) { return cloudSeen.order[cloudKey(a)] - cloudSeen.order[cloudKey(b)]; });
+  }
+  function cloudTone(w) {
+    var k = cloudKey(w), h = 0;
+    for (var i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0;
+    return 'tone-' + (h % 3);
+  }
+
   function focusCloud(body, digest) {
     var words = digest.words || [];
     if (!words.length) { body.appendChild(el('div', 'fk-empty', 'No words yet')); return; }
@@ -128,9 +153,9 @@ export function createLiveRenderer(SF, helpers) {
     var top = words[0].n;
     /* A wider size range than the rail can afford — this is the version worth
        actually looking at. */
-    words.slice(0, 32).forEach(function (w) {
+    cloudWords(digest, 32).forEach(function (w) {
       var scale = 0.34 + 0.66 * (w.n / top);
-      var chip = el('span', 'fk-word', w.text);
+      var chip = el('span', 'fk-word ' + cloudTone(w), w.text);
       chip.style.fontSize = 'calc(var(--fk-cloud) * ' + scale.toFixed(2) + ')';
       if (w.n > 1) chip.appendChild(el('sup', null, String(w.n)));
       cloud.appendChild(chip);
@@ -346,8 +371,17 @@ export function createLiveRenderer(SF, helpers) {
       return;
     }
     if (kind === 'wordcloud') {
+      /* The rarest word goes first, wherever it sits: the words are in the
+         order they were first seen now, so the last one is the newest, not
+         the least said. */
       var cloud = /** @type {HTMLElement|null} */ (body.querySelector('.cloud'));
-      if (cloud) fitByDropping(cloud, '.word', 3);
+      if (!cloud || !cloud.clientHeight) return;
+      var chips = Array.prototype.slice.call(cloud.querySelectorAll('.word'));
+      while (chips.length > 3 && overflowing(cloud)) {
+        var rarest = chips.reduce(function (min, c) { return Number(c.dataset.n) < Number(min.dataset.n) ? c : min; }, chips[chips.length - 1]);
+        rarest.remove();
+        chips.splice(chips.indexOf(rarest), 1);
+      }
       return;
     }
     if (kind === 'brainstorm') {
@@ -512,11 +546,12 @@ export function createLiveRenderer(SF, helpers) {
     }
     var cloud = el('div', 'cloud');
     var top = words[0].n;
-    words.slice(0, 24).forEach(function (w) {
+    cloudWords(digest, 24).forEach(function (w) {
       /* Size by share of the most common word, floored so a single mention is
          still readable rather than vanishing. */
       var scale = 0.5 + 0.5 * (w.n / top);
-      var chip = el('span', 'word', w.text);
+      var chip = el('span', 'word ' + cloudTone(w), w.text);
+      chip.dataset.n = String(w.n);
       chip.style.fontSize = 'calc(var(--cloud-f) * ' + scale.toFixed(2) + ')';
       if (w.n > 1) chip.appendChild(el('sup', null, String(w.n)));
       cloud.appendChild(chip);

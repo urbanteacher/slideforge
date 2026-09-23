@@ -3526,6 +3526,27 @@
         body.appendChild(row);
       });
     }
+    var cloudSeen = { id: null, order: {}, next: 0 };
+    function cloudKey(w) {
+      return String(w.text || "").toLowerCase();
+    }
+    function cloudWords(digest, limit) {
+      var id = digest.id || null;
+      if (cloudSeen.id !== id) cloudSeen = { id, order: {}, next: 0 };
+      var shown = (digest.words || []).slice(0, limit);
+      shown.forEach(function(w) {
+        var k = cloudKey(w);
+        if (!Object.prototype.hasOwnProperty.call(cloudSeen.order, k)) cloudSeen.order[k] = cloudSeen.next++;
+      });
+      return shown.slice().sort(function(a, b) {
+        return cloudSeen.order[cloudKey(a)] - cloudSeen.order[cloudKey(b)];
+      });
+    }
+    function cloudTone(w) {
+      var k = cloudKey(w), h = 0;
+      for (var i = 0; i < k.length; i++) h = h * 31 + k.charCodeAt(i) >>> 0;
+      return "tone-" + h % 3;
+    }
     function focusCloud(body, digest) {
       var words = digest.words || [];
       if (!words.length) {
@@ -3534,9 +3555,9 @@
       }
       var cloud = el("div", "fk-cloud");
       var top = words[0].n;
-      words.slice(0, 32).forEach(function(w) {
+      cloudWords(digest, 32).forEach(function(w) {
         var scale = 0.34 + 0.66 * (w.n / top);
-        var chip = el("span", "fk-word", w.text);
+        var chip = el("span", "fk-word " + cloudTone(w), w.text);
         chip.style.fontSize = "calc(var(--fk-cloud) * " + scale.toFixed(2) + ")";
         if (w.n > 1) chip.appendChild(el("sup", null, String(w.n)));
         cloud.appendChild(chip);
@@ -3736,7 +3757,15 @@
           /** @type {HTMLElement|null} */
           body.querySelector(".cloud")
         );
-        if (cloud) fitByDropping(cloud, ".word", 3);
+        if (!cloud || !cloud.clientHeight) return;
+        var chips = Array.prototype.slice.call(cloud.querySelectorAll(".word"));
+        while (chips.length > 3 && overflowing(cloud)) {
+          var rarest = chips.reduce(function(min, c) {
+            return Number(c.dataset.n) < Number(min.dataset.n) ? c : min;
+          }, chips[chips.length - 1]);
+          rarest.remove();
+          chips.splice(chips.indexOf(rarest), 1);
+        }
         return;
       }
       if (kind === "brainstorm") {
@@ -3882,9 +3911,10 @@
       }
       var cloud = el("div", "cloud");
       var top = words[0].n;
-      words.slice(0, 24).forEach(function(w) {
+      cloudWords(digest, 24).forEach(function(w) {
         var scale = 0.5 + 0.5 * (w.n / top);
-        var chip = el("span", "word", w.text);
+        var chip = el("span", "word " + cloudTone(w), w.text);
+        chip.dataset.n = String(w.n);
         chip.style.fontSize = "calc(var(--cloud-f) * " + scale.toFixed(2) + ")";
         if (w.n > 1) chip.appendChild(el("sup", null, String(w.n)));
         cloud.appendChild(chip);

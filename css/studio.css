@@ -307,3 +307,9 @@ html[data-ws="plan"] .rail-foot .rail-actions .btn{flex:1}
 
 /* An older staged-routine slide, offered the stages (TPS-04). */
 .stage-offer{margin:0 0 20px;padding:12px 14px;border-radius:8px;background:#eff4e9;border:1px solid #d7e6cd}.stage-offer .hint{margin:0 0 10px;font-size:11px}
+
+/* The panel field whose words are being typed on the slide (UX-31). */
+#inspector .editing-on-slide{outline:2px solid #9cae8c;outline-offset:1px;background:#f6f9f1}
+
+/* Rehearse with a class of 8, 30 or 120 (RP-01). */
+.present-sizes{display:flex;align-items:center;gap:4px;padding:2px 10px 6px 26px}.present-sizes .btn{flex-direction:row;padding:4px 10px;border:1px solid var(--ui-line);border-radius:999px;font-variant-numeric:tabular-nums}

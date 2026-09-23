@@ -488,9 +488,20 @@
         if(e.target instanceof Element && e.target.closest('a'))return;
         e.preventDefault();e.stopPropagation();
         if (!SF.Custom || !SF.Custom.editCanvasBlock) return;
+        /* One text, two places to type it (UX-31): while the words are being
+           edited on the slide, the panel field holding the same words is lit,
+           so it reads as the same text rather than a copy. */
+        var linked = function (on) {
+          var sel = '#inspector [data-content-key="' + (window.CSS && CSS.escape ? CSS.escape(key) : key) + '"]';
+          Array.prototype.forEach.call(document.querySelectorAll(sel), function (f) {
+            f.classList.toggle('editing-on-slide', on);
+            if (on) f.title = 'The same words you are typing on the slide'; else f.removeAttribute('title');
+          });
+        };
+        linked(true);
         SF.Custom.editCanvasBlock(target, s, key, {
-          onSave: function () { touched(); draw(); },
-          onCancel: function () { touched(); repaint(); },
+          onSave: function () { linked(false); touched(); draw(); },
+          onCancel: function () { linked(false); touched(); repaint(); },
           onInput: storeSoon
         });
       };
@@ -2267,7 +2278,14 @@
      Not fullscreen, because a dry run is something you watch while still
      holding the editor in your head — and it leaves Esc meaning "stop
      rehearsing" rather than "leave fullscreen". */
-  function rehearse() {
+  /* size: a sample class of 8, 30 or 120 (RP-01), remembered on this
+     computer; unset keeps the small group of six to eight. */
+  function rehearse(size) {
+    size = Number(size) || 0;
+    try {
+      if (size) localStorage.setItem('slideforge.rehearseSize', String(size));
+      else size = Number(localStorage.getItem('slideforge.rehearseSize')) || 0;
+    } catch (e) {}
     SF.Store.save(deck);
     var run = runDeck();
     if (!run.slides.length) {
@@ -2283,7 +2301,8 @@
       startIndex: runIndexFor(run),
       /* Let the room follow the lesson: scored questions get answers, spoken
          formats get a speaker, discussion formats get neither. */
-      auto: true
+      auto: true,
+      size: size
     });
   }
 
@@ -2809,7 +2828,10 @@
     var btnPresent = $('btnPresent');
     if (btnPresent) btnPresent.onclick = present;
     var btnRehearse = $('btnRehearse');
-    if (btnRehearse) btnRehearse.onclick = rehearse;
+    if (btnRehearse) btnRehearse.onclick = function () { rehearse(); };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-rehearse-size]'), function (b) {
+      b.onclick = function () { rehearse(Number(b.getAttribute('data-rehearse-size'))); };
+    });
     var btnPresenter = $('btnPresenter');
     if (btnPresenter) {
       btnPresenter.onclick = function () {

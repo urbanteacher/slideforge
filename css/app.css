@@ -4669,7 +4669,9 @@ html[data-ws="deck"] #railCount { display: none; }
 
 /* ---- word cloud ---- */
 .fbrail .cloud {
-  display: flex; flex-wrap: wrap; align-content: center;
+  /* Centred both ways, words sitting on a shared middle line: a cloud, not
+     a paragraph (RP-03). */
+  display: flex; flex-wrap: wrap; align-content: center; justify-content: center; align-items: center;
   gap: 6px 14px; line-height: 1.1;
   flex: 1; min-height: 0; overflow: hidden;
 }
@@ -4677,8 +4679,9 @@ html[data-ws="deck"] #railCount { display: none; }
   font-weight: 650; letter-spacing: -.01em;
   color: var(--s-fg);
 }
-.fbrail .cloud .word:nth-child(3n+2) { color: var(--s-accent); }
-.fbrail .cloud .word:nth-child(3n+3) { color: var(--s-accent-2); }
+/* The colour follows the word, so it keeps it as the cloud grows. */
+.fbrail .cloud .word.tone-1 { color: var(--s-accent); }
+.fbrail .cloud .word.tone-2 { color: var(--s-accent-2); }
 .fbrail .cloud .word sup {
   font-size: .5em; font-weight: 500; color: var(--s-dim);
   margin-left: 2px; vertical-align: super;
@@ -4771,9 +4774,8 @@ html[data-ws="deck"] #railCount { display: none; }
   line-height: 1.02; text-align: center;
 }
 .layout-feedback .fk-word { font-weight: 700; letter-spacing: -.02em; color: var(--s-fg); }
-.layout-feedback .fk-word:nth-child(4n+2) { color: var(--s-accent); }
-.layout-feedback .fk-word:nth-child(4n+3) { color: var(--s-accent-2); }
-.layout-feedback .fk-word:nth-child(4n+4) { color: var(--s-dim); }
+.layout-feedback .fk-word.tone-1 { color: var(--s-accent); }
+.layout-feedback .fk-word.tone-2 { color: var(--s-accent-2); }
 .layout-feedback .fk-word sup {
   font-size: .32em; font-weight: 500; color: var(--s-dim);
   margin-left: 4px; vertical-align: super;
