@@ -76,19 +76,19 @@ coordinating rather than starting cold.
 | CA-50 | ~~Opening a deck deleted in another tab crashes~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | CA-51 | ~~Window resize redraws mid-edit~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | CA-52 | ~~Fallback edit panel writes with no history~~ [→](ux-backlog.md) | M | **Done** 23 Sep |
-| UX-12 | One word for the right panel ("inspector" vs "Design & content") [→](ux-backlog.md) | S | To do · P2 |
-| UX-22 | One route to deck settings, not three [→](ux-backlog.md) | S | To do · P2 |
+| UX-12 | ~~One word for the right panel~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
+| UX-22 | ~~One route to deck settings~~ [→](ux-backlog.md) | S | **Done** 23 Sep · two left, by design |
 | UX-23 | One insert route, not four [→](ux-backlog.md) | M | To do · P2 |
 | UX-30 | ~~Outline editable blocks on hover~~ [→](ux-backlog.md) | S | **Withdrawn** · already there |
 | UX-40 | Sections in the rail and the sorter [→](ux-backlog.md) | M–L | To do · P2 |
-| UX-50 | Number + Enter to jump while presenting [→](ux-backlog.md) | S | To do · P2 · after UX-04 |
-| UX-51 | `O` overview grid while presenting [→](ux-backlog.md) | M | To do · P2 |
-| UX-52 | Pacing timer in the presenter view [→](ux-backlog.md) | S–M | To do · P2 |
+| UX-50 | ~~Number + Enter to jump while presenting~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
+| UX-51 | ~~`O` overview grid while presenting~~ [→](ux-backlog.md) | M | **Done** 23 Sep |
+| UX-52 | ~~Pacing timer in the presenter view~~ [→](ux-backlog.md) | S–M | **Done** 23 Sep |
 | UX-61 | Lock all phones, now or on a countdown [→](ux-backlog.md) | M | To do · P2 · shared files |
 | UX-62 | Show the teacher who has left the tab [→](ux-backlog.md) | M | To do · P2 · shared files |
 | UX-64 | Student-paced mode with its own code [→](ux-backlog.md) | L | Needs a decision · P2 |
-| UX-71 | Raise editor type under 12px [→](ux-backlog.md) | S–M | To do · P2 |
-| UX-72 | Keyboard-only pass (after UX-02) [→](ux-backlog.md) | M | To do · P2 |
+| UX-71 | ~~Raise editor type under 12px~~ [→](ux-backlog.md) | S–M | **Done** 23 Sep |
+| UX-72 | Keyboard-only pass [→](ux-backlog.md) | M | Partly done · scripted audit clean |
 | CA-43 | Undo button works while a slide is being carried [→](ux-backlog.md) | S | To confirm · P3 |
 | CA-53 | `wordSpeed: "constructor"` writes `undefinedms` into CSS [→](ux-backlog.md) | S | To do · P3 |
 | CA-54 | `pic.src`, `deck.logo` and CSS `url()` skip `safeMedia` [→](ux-backlog.md) | S | To do · P3 |

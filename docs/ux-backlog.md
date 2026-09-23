@@ -32,11 +32,11 @@ what was removed.
 | **Phase 2 — finding commands** |||||
 | UX-10 | Command palette (⌘K) | P1 | M | **Done** 23 Sep |
 | UX-11 | `?` shortcut sheet in the editor and the show | P1 | S | **Done** 23 Sep · `?` already worked in the show; the editor now has it, with its own keys |
-| UX-12 | Use one word for the right-hand panel everywhere | P2 | S | Partly done · render hints now say "Design & content" |
+| UX-12 | Use one word for the right-hand panel everywhere | P2 | S | **Done** 23 Sep · interface text; lesson notes in `lessons.js` still say inspector |
 | **Phase 3 — fewer controls** |||||
 | UX-20 | Move the panel's 6 slide actions into a right-click menu | P1 | M | **Done** 23 Sep · 4 moved; Undo/Redo stay |
 | UX-21 | One **Present ▾** split button instead of four | P1 | S | **Done** 23 Sep · Host live stays separate |
-| UX-22 | One route to deck settings, not three | P2 | S | To do |
+| UX-22 | One route to deck settings, not three | P2 | S | **Done** 23 Sep · rail ⚙ removed; header Settings and panel Theme stay |
 | UX-23 | One route to insert things, not four | P2 | M | To do |
 | UX-24 | Say where the work is saved in words, not with a dot | P1 | S | **Done** 23 Sep · words down to 1080px (measured), a labelled dot below |
 | **Phase 4 — editing on the slide** |||||
@@ -45,9 +45,9 @@ what was removed.
 | **Phase 5 — deck structure** |||||
 | UX-40 | Sections in the rail and the sorter | P2 | M–L | To do |
 | **Phase 6 — presenting** |||||
-| UX-50 | Type a number and press Enter to jump | P2 | S | To do |
-| UX-51 | `O` overview grid while presenting | P2 | M | To do |
-| UX-52 | Pacing timer in the presenter view | P2 | S–M | To do |
+| UX-50 | Type a number and press Enter to jump | P2 | S | **Done** 23 Sep |
+| UX-51 | `O` overview grid while presenting | P2 | M | **Done** 23 Sep |
+| UX-52 | Pacing timer in the presenter view | P2 | S–M | **Done** 23 Sep · planned length + pace colour on the existing clock |
 | UX-53 | `W` for a white screen | P3 | S | **Clash** · `W` is already "Who answered what"; pick another key |
 | **Phase 7 — the room** |||||
 | UX-60 | Hide the answer bars until the reveal | P1 | M | **Done** 23 Sep · a game setting; one line in live.js |
@@ -58,8 +58,8 @@ what was removed.
 | UX-65 | Per-student takeaway: the slides plus that student's answers | P3 | M–L | Needs a decision |
 | **Phase 8 — accessibility** |||||
 | UX-70 | Give icon-only controls an `aria-label`, not just a `title` | P1 | S–M | **Done** 23 Sep |
-| UX-71 | Raise type under 12px in the editor | P2 | S–M | To do |
-| UX-72 | Keyboard-only pass through every modal and panel | P2 | M | To do |
+| UX-71 | Raise type under 12px in the editor | P2 | S–M | **Done** 23 Sep · reading text to 12px, labels to a 10px floor |
+| UX-72 | Keyboard-only pass through every modal and panel | P2 | M | Partly done · scripted audit clean; a hands-on pass still needs a person |
 
 ### Open decisions — not mine to make
 
@@ -672,6 +672,37 @@ Three read-only reviews, running in parallel, covered:
   fitter has the same timing and is not done yet.
 - **UX-30, withdrawn.** The hover outline exists: `.canvas-editable:hover` in
   `css/app.css`. The deep dive's claim was wrong.
+
+## 23 September 2026: P2, second batch
+
+- **UX-50.** In the show, digits build a slide number ("Go to slide 12 — press
+  Enter"), and Enter goes there. Escape or a 2.5-second pause clears it, and
+  Backspace edits it. The number is the wall's. On an unanswered question in
+  solo mode a digit still answers, unless a number is already being typed.
+  The first version failed in the browser: after clicking Present the focus
+  stays on that button, and Enter on a focused button is left to the button.
+  A typed number now takes Enter first. Checked: 12, Enter lands on 12 / 109.
+- **UX-51.** `O` opens every slide of the show as a grid, numbered as the wall
+  numbers them. Arrows move, Enter or a click goes, and `O` or Escape closes.
+  It closes whenever the show closes. Checked: 109 tiles, focus on the current
+  slide, a pick jumps.
+- **UX-52.** The presenter view's elapsed clock gains a planned length (15 min
+  to 2 hours, kept per lesson). With one set it reads "12:30 / 50:00" and is
+  green on pace, red when more than 8% behind and blue when more than 8% ahead,
+  measured as progress through the slides against progress through the time.
+- **UX-22.** The rail's bare ⚙ is gone. The header's Settings and the panel's
+  Theme, beside the design tools, remain; ⌘K also finds it.
+- **UX-12.** Interface text says *Design & content*. The demo lessons' own
+  notes in `js/lessons.js` still say "inspector"; that is lesson content, and
+  saved copies would not change anyway.
+- **UX-71.** Editor chrome only, nothing inside `.slide`: reading text (field
+  labels, hints, panel tabs, library rows) to 12px, and badges and tags from
+  7–9px to a floor of 10px. Checked at 1440 × 900: no clipped text, nothing
+  visible under 10px.
+- **UX-72, scripted half.** On the editor screen all 355 visible controls have
+  an accessible name, none rely on `title` alone, and no clickable element is
+  out of Tab's reach. Working every sheet with only a keyboard still needs a
+  person.
 
 ## Log
 
