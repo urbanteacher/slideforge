@@ -1873,7 +1873,32 @@
 
     /* Size first, draw second: Fit is a share of the stage, so the box has to
        be its new width before the slide is scaled into it. */
-    window.addEventListener('resize', function () { sizeCanvas(); active.draw(); });
+    /* A redraw rebuilds the canvas and the panel, and so throws away whatever
+       is being typed into: the block on the slide, or a panel field that
+       saves on change. On a phone the keyboard opening is itself a resize, so
+       tapping a field could wipe it. While someone is typing, the canvas is
+       sized at once and the redraw waits until the focus has left. */
+    var drawWhenFree = false;
+    function typingNow() {
+      var a = /** @type {HTMLElement|null} */ (document.activeElement);
+      if (!a || a === document.body) return false;
+      return a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable ||
+        (a.tagName === 'INPUT' && /^(text|search|url|email|tel|number|)$/.test(/** @type {HTMLInputElement} */ (a).type || ''));
+    }
+    window.addEventListener('resize', function () {
+      sizeCanvas();
+      if (typingNow()) { drawWhenFree = true; return; }
+      active.draw();
+    });
+    document.addEventListener('focusout', function () {
+      if (!drawWhenFree) return;
+      setTimeout(function () {
+        if (!drawWhenFree || typingNow()) return;
+        drawWhenFree = false;
+        sizeCanvas();
+        active.draw();
+      }, 0);
+    });
     /* Deliberately a flush, not a save: every edit is already persisted by the
        engines' debounce, and an unconditional write at unload can clobber
        newer data with an idle in-memory copy. */

@@ -701,9 +701,27 @@ export function installCustom(SF) {
     openCanvasEditor(node, s, key, opts);
   }
 
+  /* The fallback form writes the words into the slide as they are typed, and
+     lives until Save or Cancel. Anything that redraws the canvas first — a
+     slide change, an undo, a resize — used to remove it without either,
+     leaving the half-edited text (on a keywords slide, reformatted as
+     "term — def") on the slide with no Undo step, or, when it was docked to
+     the body, leaving it open over a different slide. The editor now closes
+     it before every redraw, keeping the words as Escape and Done do. */
+  var openForm = null;
+  /** @returns {boolean} true if a form was open and its words were kept */
+  function endCanvasEditor() {
+    if (!openForm) return false;
+    var f = openForm;
+    openForm = null;
+    f.keep();
+    return true;
+  }
+
   function openCanvasEditor(box, s, key, opts) {
     opts = opts || {};
     if (!box || !s || !key) return;
+    endCanvasEditor();
     var host = canvasEditHost(box);
     host.querySelectorAll('.canvas-edit-form').forEach(function (n) { n.remove(); });
     /* A docked form is parented to the body, so clearing the canvas host alone
@@ -775,7 +793,7 @@ export function installCustom(SF) {
     save.type = 'button';
     save.className = 'btn primary';
     save.textContent = 'Save content';
-    save.onclick = function () {
+    function keep() {
       var next = area.value;
       if (keywordFriendly) {
         var edited = SF.parseKeywordLine(next);
@@ -785,6 +803,10 @@ export function installCustom(SF) {
       if (bulletMatch) s.bullets[Number(bulletMatch[1])] = next;
       else s[key] = next;
       form.remove();
+    }
+    save.onclick = function () {
+      openForm = null;
+      keep();
       if (opts.onSave) opts.onSave();
     };
     form.appendChild(save);
@@ -794,6 +816,7 @@ export function installCustom(SF) {
     cancel.className = 'btn ghost';
     cancel.textContent = 'Cancel';
     cancel.onclick = function () {
+      openForm = null;
       restore();
       form.remove();
       if (opts.onCancel) opts.onCancel();
@@ -806,6 +829,7 @@ export function installCustom(SF) {
        491x304 panel. That is how a form two thirds larger than the canvas came
        to be told it fitted, and then drew outside it. */
     host.appendChild(form);
+    openForm = { keep: keep };
     area.focus();
     area.setSelectionRange(area.value.length, area.value.length);
     placeCanvasEditForm(form, box, host);
@@ -1246,5 +1270,5 @@ export function installCustom(SF) {
       if(key) label.parentElement.dataset.designKey=key;
     });
   }
-  SF.Custom={tagControls:tagControls,removeBullet:removeBullet,bind:bind,editCanvasBlock:editCanvasBlock,endInlineEdit:endInlineEdit,inlineEditable:inlineEditable,openCanvasEditor:openCanvasEditor,enableCanvasEditDrag:enableCanvasEditDrag,placeCanvasEditForm:placeCanvasEditForm,canvasEditHost:canvasEditHost,paint:paint,layout:layout,inspector:inspector,rebase:rebase,apply:apply,entry:entry};
+  SF.Custom={tagControls:tagControls,removeBullet:removeBullet,bind:bind,editCanvasBlock:editCanvasBlock,endInlineEdit:endInlineEdit,endCanvasEditor:endCanvasEditor,inlineEditable:inlineEditable,openCanvasEditor:openCanvasEditor,enableCanvasEditDrag:enableCanvasEditDrag,placeCanvasEditForm:placeCanvasEditForm,canvasEditHost:canvasEditHost,paint:paint,layout:layout,inspector:inspector,rebase:rebase,apply:apply,entry:entry};
 }

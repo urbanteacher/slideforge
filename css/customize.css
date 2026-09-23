@@ -103,6 +103,12 @@
 .slide[data-composition] .pad { position:relative; z-index:1; padding:86px 88px; align-items:stretch; text-align:left; }
 .slide[data-composition] > .theme-art { display:none; }
 .slide[data-composition] .pad > .accent-bar { display:none; }
+/* The same bar once the lattice has re-parented it into a slot: the child
+   selector above stopped matching, so a composed slide with a region map got
+   its accent bar back, auto-placed in the first free cell. The slot goes with
+   it, so it cannot hold a cell; the bare rule is for a browser without :has. */
+.slide[data-composition] .sf-slot:has(> .accent-bar:only-child) { display:none; }
+.slide[data-composition] .sf-slot > .accent-bar { display:none; }
 .slide[data-composition] :is(h1,.statement,.q) { font-size:var(--composition-display); line-height:1.04; letter-spacing:-.035em; max-width:none; font-style:normal; text-wrap:balance; }
 .slide[data-composition] :is(.sub,.statement-credit,.attrib) { font-size:var(--composition-column-heading,27px); line-height:1.35; letter-spacing:0; text-transform:none; max-width:800px; margin-top:30px; }
 .slide[data-composition] .q { border:0; padding:0; }

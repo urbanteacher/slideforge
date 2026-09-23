@@ -7805,6 +7805,11 @@
         if (declared[k].anchorY) map[k].anchorY = declared[k].anchorY;
         if (declared[k].alignY) map[k].alignY = declared[k].alignY;
       });
+      if (composed && Object.keys(measured).length) {
+        Object.keys(map).forEach(function(k) {
+          if (k.indexOf("cp-") === 0 && !measured[k]) delete map[k];
+        });
+      }
       growToFit(s, map);
       commit(true);
       return true;
@@ -7981,8 +7986,14 @@
       function cleanup() {
         document.removeEventListener("pointermove", move);
         document.removeEventListener("pointerup", up);
-        document.removeEventListener("pointercancel", cleanup);
+        document.removeEventListener("pointercancel", cancel);
+        window.removeEventListener("blur", cancel);
+        if (cancelDrag === cancel) cancelDrag = null;
         clearGuides();
+      }
+      function cancel() {
+        cleanup();
+        if (moved && SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
       }
       function up() {
         cleanup();
@@ -8001,9 +8012,12 @@
         afterPaint();
         if (shoved) SF.toast && SF.toast(shoved === 1 ? "Resized. The item in the way shifted over." : "Resized. " + shoved + " items shifted over.");
       }
+      if (cancelDrag) cancelDrag();
       document.addEventListener("pointermove", move);
       document.addEventListener("pointerup", up);
-      document.addEventListener("pointercancel", cleanup);
+      document.addEventListener("pointercancel", cancel);
+      window.addEventListener("blur", cancel);
+      cancelDrag = cancel;
     }
     function beginDrag(e) {
       if (e.button !== 0 || e.isPrimary === false) return;
@@ -8453,12 +8467,18 @@
       what.textContent = !verdict.length ? "Click a block" : over.length ? over.length + (over.length === 1 ? " block does not fit" : " blocks do not fit") : "Click a block · all " + verdict.length + " fit";
       what.dataset.fit = over.length ? "over" : "ok";
     }
+    function sameSlide(a, b) {
+      return !!(a && b && a.id === b.id);
+    }
     function afterPaint() {
-      if (arranging && arrangedSlide !== slide()) {
+      var now = slide();
+      if (arranging && !sameSlide(arrangedSlide, now)) {
         setArranging(false);
         return;
       }
-      if (selectedSlide && selectedSlide !== slide()) {
+      if (arranging) arrangedSlide = now;
+      if (selectedSlide && sameSlide(selectedSlide, now)) selectedSlide = now;
+      if (selectedSlide && !sameSlide(selectedSlide, now)) {
         selected = null;
         selectedSlide = null;
         verdict = [];
@@ -9618,7 +9638,11 @@
       e.preventDefault();
       var to = Math.max(0, Math.min(last, step));
       if (e.altKey) {
-        var at = to > sel ? to + 1 : to;
+        var group = picked.length ? picked : [sel];
+        var lo = Math.min.apply(null, group), hi = Math.max.apply(null, group);
+        var cols = sorterColumns();
+        var at = e.key === "ArrowRight" ? hi + 2 : e.key === "ArrowLeft" ? lo - 1 : e.key === "ArrowDown" ? hi + cols + 1 : e.key === "ArrowUp" ? lo - cols : e.key === "Home" ? 0 : last + 1;
+        if (!picked.length) picked = [sel];
         var landed = reorder(picked, at);
         if (landed < 0) return;
         var count = picked.length;
@@ -10364,7 +10388,9 @@
     function afterPaint() {
       var root = box2();
       if (!root) return;
-      if (selectedSlide && selectedSlide !== slide()) {
+      var now = slide();
+      if (selectedSlide && now && selectedSlide.id === now.id) selectedSlide = now;
+      if (selectedSlide && !(now && selectedSlide.id === now.id)) {
         selected = null;
         selectedSlide = null;
         if (cancelDrag) cancelDrag();
@@ -11176,9 +11202,18 @@
       }
       openCanvasEditor(node, s, key, opts);
     }
+    var openForm = null;
+    function endCanvasEditor() {
+      if (!openForm) return false;
+      var f = openForm;
+      openForm = null;
+      f.keep();
+      return true;
+    }
     function openCanvasEditor(box2, s, key, opts) {
       opts = opts || {};
       if (!box2 || !s || !key) return;
+      endCanvasEditor();
       var host = canvasEditHost(box2);
       host.querySelectorAll(".canvas-edit-form").forEach(function(n) {
         n.remove();
@@ -11242,7 +11277,7 @@
       save2.type = "button";
       save2.className = "btn primary";
       save2.textContent = "Save content";
-      save2.onclick = function() {
+      function keep() {
         var next = area.value;
         if (keywordFriendly) {
           var edited = SF.parseKeywordLine(next);
@@ -11252,6 +11287,10 @@
         if (bulletMatch) s.bullets[Number(bulletMatch[1])] = next;
         else s[key] = next;
         form.remove();
+      }
+      save2.onclick = function() {
+        openForm = null;
+        keep();
         if (opts.onSave) opts.onSave();
       };
       form.appendChild(save2);
@@ -11260,12 +11299,14 @@
       cancel.className = "btn ghost";
       cancel.textContent = "Cancel";
       cancel.onclick = function() {
+        openForm = null;
         restore();
         form.remove();
         if (opts.onCancel) opts.onCancel();
       };
       form.appendChild(cancel);
       host.appendChild(form);
+      openForm = { keep };
       area.focus();
       area.setSelectionRange(area.value.length, area.value.length);
       placeCanvasEditForm(form, box2, host);
@@ -11756,7 +11797,7 @@
         if (key) label.parentElement.dataset.designKey = key;
       });
     }
-    SF.Custom = { tagControls, removeBullet, bind, editCanvasBlock, endInlineEdit, inlineEditable, openCanvasEditor, enableCanvasEditDrag, placeCanvasEditForm, canvasEditHost, paint, layout, inspector, rebase, apply, entry };
+    SF.Custom = { tagControls, removeBullet, bind, editCanvasBlock, endInlineEdit, endCanvasEditor, inlineEditable, openCanvasEditor, enableCanvasEditDrag, placeCanvasEditForm, canvasEditHost, paint, layout, inspector, rebase, apply, entry };
   }
 
   // src/boards/runtimes/bingo.js

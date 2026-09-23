@@ -201,6 +201,18 @@ export function installArrange(SF) {
       if (declared[k].anchorY) map[k].anchorY = declared[k].anchorY;
       if (declared[k].alignY) map[k].alignY = declared[k].alignY;
     });
+    /* A composition's slot table names some bands by class — cp-heading,
+       cp-prompt, cp-source — that the renderer stamps with a content key
+       instead, so no block ever answers to them. Declared and never drawn,
+       they sat in the map as occupied cells nobody could see or clear, and
+       an inserted item was kept out of them. On a composed slide what was
+       measured is what is there; a cp- name nothing answers to goes. A plain
+       type keeps its reserved slots, which are there to be snapped into. */
+    if (composed && Object.keys(measured).length) {
+      Object.keys(map).forEach(function (k) {
+        if (k.indexOf('cp-') === 0 && !measured[k]) delete map[k];
+      });
+    }
     growToFit(s, map);
     commit(true);
     return true;
@@ -401,8 +413,19 @@ export function installArrange(SF) {
     function cleanup() {
       document.removeEventListener('pointermove', move);
       document.removeEventListener('pointerup', up);
-      document.removeEventListener('pointercancel', cleanup);
+      document.removeEventListener('pointercancel', cancel);
+      window.removeEventListener('blur', cancel);
+      if (cancelDrag === cancel) cancelDrag = null;
       clearGuides();
+    }
+    /* Abandon the resize: nothing is committed, and the canvas is redrawn so
+       the slot drops the size it was being dragged to. A resize used to
+       register neither this nor a blur, as a move does — so leaving Layout,
+       switching windows or losing the pointerup left it running, and the
+       next pointerup anywhere applied it. */
+    function cancel() {
+      cleanup();
+      if (moved && SF.Editor && SF.Editor.refreshCanvas) SF.Editor.refreshCanvas();
     }
     function up() {
       cleanup();
@@ -427,9 +450,12 @@ export function installArrange(SF) {
       if (shoved) SF.toast && SF.toast(shoved === 1 ? 'Resized. The item in the way shifted over.'
         : 'Resized. ' + shoved + ' items shifted over.');
     }
+    if (cancelDrag) cancelDrag();
     document.addEventListener('pointermove', move);
     document.addEventListener('pointerup', up);
-    document.addEventListener('pointercancel', cleanup);
+    document.addEventListener('pointercancel', cancel);
+    window.addEventListener('blur', cancel);
+    cancelDrag = cancel;
   }
 
   function beginDrag(e) {
@@ -1089,12 +1115,21 @@ export function installArrange(SF) {
     what.dataset.fit = over.length ? 'over' : 'ok';
   }
 
+  /* The same slide, by id. Undo and redo rebuild the deck from JSON, so every
+     slide is a new object afterwards; comparing objects read that as "the
+     slide changed" and closed the Layout face on every Cmd+Z, dropping the
+     selection with it. */
+  function sameSlide(a, b) { return !!(a && b && a.id === b.id); }
+
   function afterPaint() {
-    if (arranging && arrangedSlide !== slide()) {
+    var now = slide();
+    if (arranging && !sameSlide(arrangedSlide, now)) {
       setArranging(false);
       return;
     }
-    if (selectedSlide && selectedSlide !== slide()) {
+    if (arranging) arrangedSlide = now;
+    if (selectedSlide && sameSlide(selectedSlide, now)) selectedSlide = now;
+    if (selectedSlide && !sameSlide(selectedSlide, now)) {
       selected = null;
       selectedSlide = null;
       verdict = [];

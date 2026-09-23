@@ -728,7 +728,21 @@ export function createRail(SF, helpers) {
     /* Alt turns the arrows from "look at that one" into "put it there", which
        is how a sorter stays usable without a mouse. */
     if (e.altKey) {
-      var at = to > sel ? to + 1 : to;
+      /* A group steps from its edge, not from the slide in focus. The target
+         was worked out from `sel`, which a move sets to the group's first
+         slide — so the second Alt+→ aimed inside the group itself, reorder
+         saw nothing change, and a run of three moved once and then never
+         again. Right lands one past the slide after the group; left one
+         before the slide ahead of it. */
+      var group = picked.length ? picked : [sel];
+      var lo = Math.min.apply(null, group), hi = Math.max.apply(null, group);
+      var cols = sorterColumns();
+      var at = e.key === 'ArrowRight' ? hi + 2
+        : e.key === 'ArrowLeft' ? lo - 1
+        : e.key === 'ArrowDown' ? hi + cols + 1
+        : e.key === 'ArrowUp' ? lo - cols
+        : e.key === 'Home' ? 0 : last + 1;
+      if (!picked.length) picked = [sel];
       var landed = reorder(picked, at);
       if (landed < 0) return;
       var count = picked.length;

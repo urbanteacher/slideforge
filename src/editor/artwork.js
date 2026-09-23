@@ -450,7 +450,11 @@ export function installArtwork(SF) {
   function afterPaint() {
     var root = box();
     if (!root) return;
-    if (selectedSlide && selectedSlide !== slide()) {
+    /* By id, as in arrange.js: after an undo the slide is a new object and
+       the same slide, and the selection should survive it. */
+    var now = slide();
+    if (selectedSlide && now && selectedSlide.id === now.id) selectedSlide = now;
+    if (selectedSlide && !(now && selectedSlide.id === now.id)) {
       selected = null;
       selectedSlide = null;
       if (cancelDrag) cancelDrag();

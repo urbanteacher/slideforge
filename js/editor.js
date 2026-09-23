@@ -1022,6 +1022,20 @@
          measurement below reads painted geometry. */
       requestAnimationFrame(function () { markLayoutFit(box); });
     });
+    /* Measured in fallback fonts the first time the picker opens after a
+       page load, the badges could say "may not fit" about a layout that fits
+       once the real faces arrive. Measure again when they have. */
+    var fonts = /** @type {any} */ (document).fonts;
+    if (fonts && fonts.status !== 'loaded' && fonts.ready) {
+      fonts.ready.then(function () {
+        if (!box.isConnected) return;
+        box.querySelectorAll('.variant-frame').forEach(function (frame) {
+          var node = frame.firstElementChild;
+          if (node) SF.fit(frame, node);
+        });
+        requestAnimationFrame(function () { if (box.isConnected) markLayoutFit(box); });
+      });
+    }
   }
 
   /**
@@ -2281,7 +2295,12 @@
   /* ------------------------------------------------------------ workspace */
 
   function repaint() { drawPreview(); drawRail(); }
-  function draw() { rememberSelection(); if(historyId!==deck.id) remember(); drawRail(); drawFoot(); drawPreview(); drawInspector(); }
+  function draw() {
+    /* An open fallback form would be torn down by the redraw; keep its words
+       and record them as an edit first. */
+    if (SF.Custom && SF.Custom.endCanvasEditor && SF.Custom.endCanvasEditor()) touched();
+    rememberSelection(); if(historyId!==deck.id) remember(); drawRail(); drawFoot(); drawPreview(); drawInspector();
+  }
 
   /* ---------------------------------------------------------- slide menu */
 
