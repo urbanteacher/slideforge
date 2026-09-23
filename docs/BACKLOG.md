@@ -1122,7 +1122,7 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | GA-10 | 2 | **Round clock (N4)**: one clock for a run of items, on the stages clock | S | **Done** 23 Sep for Heads Up (`js/rounds.js`); Beat the Clock's use is GA-27 |
 | GA-11 | 3 | Fill in the Blanks → *Fill the gaps*: a word bank tapped into slots, heat per gap | M | To do |
 | GA-12 | 3 | Odd One Out → *Vote, then defend*: tap the odd one, write the rule, vote heat on the reveal | M | **Done** 23 Sep · vote, held heat, defend line, unmarked; the written rule is open |
-| GA-13 | 3 | Predict the Outcome → *Commit, then watch*: on stages, private prediction, confidence-weighted | M | To do |
+| GA-13 | 3 | Predict the Outcome → *Commit, then watch*: on stages, private prediction, confidence-weighted | M | **Done** 23 Sep · lock, watch, confidence-weighted; the written prediction is open |
 | GA-14 | 3 | True/False → *Hold or fold*: split shown half-way, one switch | S–M | **Done** 23 Sep · relay tested, not viewed |
 | GA-15 | 3 | **Tally entry** for paper and hands up: counts per option feed the heat reveal; nobody scored (E3) | M | To do |
 | GA-16 | 3 | One-click team rows for teams without devices (E5) | S | To do |
@@ -1273,6 +1273,9 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** GA-13: Predict the Outcome commits, locks (with the
+  room's split showing), watches, then reveals; confidence weighs the score.
+  493/493.
 - **23 Sep 2026.** GA-14: True/False Showdown is hold-or-fold. The room's
   split shows on Next (or half-time); each phone may switch once; the reveal
   shows before against after and the switch count. 492/492.

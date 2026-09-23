@@ -55,7 +55,7 @@ tests are in the table. The tier follows from the row.
 | Emoji Guess | `emoji` | ◐ | ✓ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, but the hint is shown from the start, which the blurb contradicts |
 | Beat the Clock | `speed` | ◐ | ◐ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Thin: the clock restarts per question, so there is no clock to beat |
 | True/False Showdown | `truefalse` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: vote → the room's split on wall and phones → one switch each → reveal of before against after and how many switched |
-| Predict the Outcome | `choice` | ✗ | ◐ | ◐ | ✓ | ◐ | ◐ | ✓ | ◐ | Thin: plain multiple choice |
+| Predict the Outcome | `choice` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: commit with confidence → lock (the room's split, not the answer) → watch → reveal; a sure, right prediction earns half again. Open: the private written prediction (K8) |
 | Fill in the Blanks | `type` | ◐ | ◐ | ✗ | ✓ | ◐ | ◐ | ✓ | ◐ | Thin: one typed gap, no gap reveal |
 | Time Traveler | `type` | ✗ | ◐ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: typed recall, no time |
 | Odd One Out | `oddone` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | n/a | ✓ | Solid, near premium: phones vote; the split is held, then drawn as heat across the four tiles, with a line inviting the next most popular pick to defend its rule. Never marked. Open: the written rule as an anonymous idea (K9) |
@@ -70,8 +70,8 @@ tests are in the table. The tier follows from the row.
 
 **Totals:**
 - 0 fully premium; Spot the Error is near-premium.
-- 16 solid.
-- 9 thin.
+- 17 solid.
+- 8 thin.
 - 0 broken by wrong-result scoring.
 - 1 disabled.
 
@@ -416,6 +416,19 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — Predict the Outcome: commit, then watch (GA-13).**
+  - **Phones commit** a prediction and how sure they are.
+  - **The first Next locks** the predictions (the relay's new
+    `closeAnswers`) and shows the room its split, never the answer. The wall
+    says "Predictions are locked. Watch what happens", and the phones go quiet
+    with "Look up".
+  - **The teacher shows the outcome**, then Next reveals it.
+  - **Scoring:** a right prediction scores the question's points, and half as
+    much again if the learner said they were sure. A wrong one scores
+    nothing, however sure.
+  - **Never auto-reveals.**
+  - **Tests:** relay test for the lock and the refused late answer. `npm test`
+    493/493.
 - **23 September 2026 — True/False Showdown: hold or fold (GA-14).**
   - **The Showdown format** (not plain True or False) votes, then shows the
     room its own split on the wall and on every phone. It shows on the
