@@ -42,8 +42,8 @@ tests are in the table. The tier follows from the row.
 |---|---|---|---|---|---|---|---|---|---|---|
 | **Spot the Error** | `spot` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | Near-premium: P9 is declared; the desk still has no heat-map preview |
 | Ranking Challenge | `order` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: the reveal puts the rows in order, fills each with how many of the room put it there, and names the pair most swapped |
-| Horse Race | `race` | ✓ | ✓ | ◐ | ◐ | ◐ | ✓ | ✓ | ◐ | Solid: the teacher-run lanes are on the desk too (data-desk) |
-| Boss Battle | `boss` | ✓ | ✓ | ◐ | ✓ | ◐ | ✓ | ✓ | ◐ | Solid: Reveal, Hit and Miss are on the desk too (data-desk) |
+| Horse Race | `race` | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: the teacher-run lanes are on the desk too (data-desk); past eight lanes the wall shows the leading five and "the pack" as counts per step, and each phone shows its own lane and place |
+| Boss Battle | `boss` | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | ◐ | Solid: Reveal, Hit and Miss are on the desk too (data-desk); each reveal is a moment: the boss reacts, the damage lands as a number and a chunk off the bar, and the room's accuracy is the attack |
 | Memory Flip | `memoryflip` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ◐ | ✓ | Solid (board) |
 | Memory Match | `memorymatch` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ◐ | ✓ | Solid (board) |
 | Knowledge Flip | `knowledgeflip` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ◐ | ✓ | Solid (board) |
@@ -447,6 +447,21 @@ for (E1). Both are implemented for Spot the Error; its desk heat-map preview
 still leaves P6 partial.
 
 ## Change log
+
+- **23 September 2026 — Race and Boss for a big room (GA-24).**
+  - **Horse Race:** past eight lanes (K10's `CROWD_AT`), the wall draws the
+    leading five and "the pack": one lane that counts how many stand on each
+    step, and how many are still at the start. It says "Your lane is on your
+    phone". Lanes past eighth used to be cut without a trace.
+  - **Each phone's lane:** a new host message, `raceLanes`, which the relay
+    turns into one `lane` per phone (its team's lane in teams), with its
+    place ("joint 4th of 27"). The phone draws it under its result.
+  - **Boss Battle:** the live reveal shows the boss recoiling (or shrugging
+    off a miss), the damage as a number, the chunk knocked off the health
+    bar, and the room's accuracy as the attack: "18 of 24 right (75%)", or
+    in teams "3 of 4 teams agreed on the right answer".
+  - **Fixed on the way:** an individual race said "3 teams move up".
+  - **Not tested or viewed**, at the user's request.
 
 - **23 September 2026 — Emoji's hint cost and Definition's stages (GA-22).**
   - **Emoji Guess:** when the teacher releases the hint step, the host tells

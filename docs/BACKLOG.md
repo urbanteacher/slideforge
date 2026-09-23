@@ -38,7 +38,7 @@ order.
 
 | ID | Item | Size | Status |
 |---|---|---|---|
-| GA-15 – GA-28 | **Games to a premium standard**: waves 0–6 are done; 7 mostly (GA-01–14, 18–23, 25, 26, 29, 30). GA-15–17 (the no-device work skipped alongside wave 3) and GA-28 solo practice are done. **Every planned wave is now built or mostly built;** what remains is the open list below. **Open:** GA-19's drawn bridges (Connection Maker), GA-27 self-pacing, GA-24 Race/Boss crowd layout. None of the waves since GA-29 has been viewed on screen except Fill, Beat the Clock and Compare. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | In progress |
+| GA-15 – GA-28 | **Games to a premium standard**: waves 0–6 are done; 7 mostly (GA-01–14, 18–26, 29, 30). GA-15–17 (the no-device work skipped alongside wave 3) and GA-28 solo practice are done. **Every planned wave is now built or mostly built;** what remains is the open list below. **Open:** GA-19's drawn bridges (Connection Maker), GA-27 self-pacing. None of the waves since GA-29 has been viewed on screen except Fill, Beat the Clock and Compare. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | In progress |
 | AC-13 – AC-17 | **Activities to a premium standard**: waves 0–3 (AC-01–12, AC-16) are done, and so are the Question Cube and Card Sort hand-overs (parts of AC-14 and AC-15). The Battle stays a slide (Mark, 23 Sep). Deferred: tally entry for polls and scales (AC-13, Mark's decision; the reasoning is in the audit's section 6). Open: Stations need a rotation-aware clock; Word Splash needs custom sort columns; Connect Four as a board. Full table under [the activities build list](#23-september-2026-activities-to-a-premium-standard-the-build-list). | S–L | To do |
 | RP-01 | Rehearse with a class of 30 (and 120) | S | To do |
 | RP-02 | Lecture-scale defaults (100+): standings off, distribution on | S | To do |
@@ -1128,7 +1128,7 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | GA-21 | 6 | Desk parity: Horse Race lanes, Boss Hit/Miss, Definition Ask, every board control on the desk | S each | **Done** 23 Sep · generic `data-desk` mirror |
 | GA-22 | 6 | Emoji hint released as a step, costing points; Definition rebuilt on stages | S | Done · the hint is a released step, and answers after it score half; Definition is Read → Recall with +30s on the desk |
 | GA-23 | 6 | Ranking reveal as a heat per slot | S | **Done** 23 Sep · with the live reveal-order bug fixed |
-| GA-24 | 6 | Horse Race and Boss use the room pane's top-five layout; Boss gets a reveal per hit | S | To do |
+| GA-24 | 6 | Horse Race and Boss use the room pane's top-five layout; Boss gets a reveal per hit | S | Done · the leading five and the pack, each phone's own lane; Boss's reveal is a moment. Not tested or viewed |
 | GA-29 | 1 | UX pass on spoken verdicts: one path from wall and desk, a held verdict until the speaker is chosen, the speaker cleared per item, a speaker picker (teams, recent, type-ahead, Pick for me), the credit shown on the wall and phones; one shared passage for Spot entry | M | **Done** 23 Sep · relay tested, not viewed |
 | GA-30 | 1 | Spoken team credit on the game's points scale, so it registers in a lesson that mixes quiz and spoken games | S | **Done** 23 Sep · 1,000 per accept, half with a hint |
 | GA-25 | 2–6 | On the draw and round clock: Spin & Explain spinner, Random Challenge deck, Question Cube roll plus stages, Heads Up 60-second round | S–M each | **Done** 23 Sep · Heads Up round, deck, cube roll, the wheel lands |
@@ -1301,6 +1301,11 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
   slide is held by id. CA-53: own-key lookups. CA-54: one `SF.cssUrl`.
   UX-53: comma is the white screen. #7 was already done; its row was
   stale. 528/528 before the last merge.
+- **23 Sep 2026.** GA-24 is done. A race past eight lanes shows the
+  leading five and the pack, and each phone its own lane and place (a new
+  `raceLanes` message). Each Boss reveal is a moment: the damage, the
+  chunk off the bar, and the room's accuracy as the attack. Not tested or
+  viewed, at Mark's request.
 - **23 Sep 2026.** GA-22 is done. Emoji Guess: an answer given after the
   teacher released the hint scores half (decision in the games audit,
   section 6). Definition Challenge: a Read → Recall track, and +30s for the
