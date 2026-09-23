@@ -2717,6 +2717,11 @@
     }
     if (s.showdown) msg.showdown = true;
     if (s.predict) msg.predict = true;
+    /* Time Traveler: the phone draws the same growing timeline as the wall. */
+    if (s.format === 'time-traveler' && s.input === 'number') {
+      msg.timeTravel = true;
+      msg.timeline = (s.timeline || []).slice();
+    }
     /* Compare & Contrast sort: the three columns, named for the two items. */
     if (s.input === 'sort') msg.bins = (s.sortBins || []).slice();
     /* A round's phones count down the round, not the question. */

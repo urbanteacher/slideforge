@@ -183,3 +183,23 @@ test('a prediction goes out as one, and its bet arrives with the pick', async t 
   const tally = await host.until('tally', m => m.answered === 1);
   assert.equal(tally.answers[0].sure, true, 'the bet is placed with the pick');
 });
+
+test('a Time Traveler question carries its timeline to the phones', async t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sf-timeline-'));
+  const port = await freePort();
+  const server = await start(port, dir);
+  const sockets = [];
+  t.after(async () => { await stop(server); sockets.forEach(x => x.socket.close()); fs.rmSync(dir, { recursive: true, force: true }); });
+  const host = await connect(port); sockets.push(host);
+  host.send({ t: 'host', title: 'Time', mode: 'individual' });
+  const room = await host.next('hosted');
+  const ada = await connect(port); sockets.push(ada);
+  ada.send({ t: 'join', pin: room.pin, name: 'Ada' }); await ada.next('joined');
+  host.send({ t: 'begin' });
+  host.send({ t: 'question', id: 't1', question: 'Place it in time: the Moon landing', input: 'number',
+    range: { min: 1500, max: 2020, step: 1 }, timeLimit: 0, points: 1000, timeTravel: true,
+    timeline: [{ label: 'the Great Fire of London', year: 1666 }, { label: 'bad', year: 'x' }] });
+  const q = await ada.next('question');
+  assert.equal(q.timeTravel, true);
+  assert.deepEqual(q.timeline.map(e => e.year), [1666], 'only real years');
+});

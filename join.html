@@ -467,6 +467,8 @@
     <div id="qNumWrap" style="display:none">
       <div class="lead" id="qNumLead">Slide to your answer</div>
       <div class="numreadout" id="qNumValue">0</div>
+      <!-- Time Traveler: the game's timeline, with the events already placed. -->
+      <div class="q-timeline" id="qTimeline" hidden></div>
       <input id="qRange" type="range" min="0" max="100" step="1" value="50">
       <div class="numends"><span id="qNumLo">0</span><span id="qNumHi">100</span></div>
       <button class="go" id="qNumSend" style="margin-top:16px">Send</button>
@@ -2158,7 +2160,24 @@
       wrapN.classList.remove('locked');
       delete wrapN.dataset.locked;
       $('qNumMine').style.display = 'none';
-      $('qNumLead').textContent = 'Slide to your answer';
+      $('qNumLead').textContent = m.timeTravel ? 'Drag it to the year you think' : 'Slide to your answer';
+      /* Time Traveler: the same line the wall draws — the events already
+         placed pinned along it, so this one is placed among them. */
+      var tl = $('qTimeline');
+      tl.textContent = '';
+      tl.hidden = !m.timeTravel;
+      if (m.timeTravel) {
+        var span = (Number(range.max) - Number(range.min)) || 1;
+        (m.timeline || []).forEach(function (e, k) {
+          var pin = document.createElement('div');
+          pin.className = 'tl-pin' + (k % 2 ? ' low' : '');
+          pin.style.left = Math.max(0, Math.min(100, (e.year - Number(range.min)) * 100 / span)) + '%';
+          var y = document.createElement('b'); y.textContent = String(e.year);
+          var l = document.createElement('span'); l.textContent = e.label;
+          pin.appendChild(y); pin.appendChild(l);
+          tl.appendChild(pin);
+        });
+      }
       $('qNumLo').textContent = withUnit(range.min);
       $('qNumHi').textContent = withUnit(range.max);
       drawNumValue();
