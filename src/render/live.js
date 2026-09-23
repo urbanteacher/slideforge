@@ -144,9 +144,9 @@ export function createLiveRenderer(SF, helpers) {
        screen at once stops being readable from the back. */
     grid.dataset.cols = items.length > 6 ? '3' : '2';
     items.slice(0, 9).forEach(function (it) {
+      /* Anonymous on the wall, as the rail is — see paintBrainstorm. */
       var card = el('div', 'fk-card');
       card.appendChild(el('div', 'fk-ctext', it.text));
-      if (it.name) card.appendChild(el('div', 'fk-cwho', it.name));
       grid.appendChild(card);
     });
     body.appendChild(grid);
@@ -261,8 +261,11 @@ export function createLiveRenderer(SF, helpers) {
     /* Roomy while nothing has come back — same idea as the empty scoreboard. */
     paintRailJoin(slot, opts.join, !busy);
 
+    paintFbMeter(rail, digest);
+
     var body = rail.querySelector('.fb-body');
     body.textContent = '';
+    body.classList.remove('tight', 'tighter');
     rail.dataset.kind = (digest && digest.kind) || '';
 
     if (!busy) {
@@ -273,10 +276,73 @@ export function createLiveRenderer(SF, helpers) {
       return;
     }
 
-    if (digest.kind === 'poll') return paintPoll(body, digest, opts);
-    if (digest.kind === 'scale') return paintScale(body, digest, opts);
-    if (digest.kind === 'wordcloud') return paintCloud(body, digest, opts);
-    return paintBrainstorm(body, digest);
+    if (digest.kind === 'poll') paintPoll(body, digest, opts);
+    else if (digest.kind === 'scale') paintScale(body, digest, opts);
+    else if (digest.kind === 'wordcloud') paintCloud(body, digest, opts);
+    else paintBrainstorm(body, digest);
+    fitFeedback(body, digest.kind);
+  }
+
+  /**
+   * How much of the room has answered, at the top, in the ink of the prompt.
+   *
+   * The live number a teacher is waiting on — "do I give them longer?" — was
+   * a 15px grey footnote under everything else. For a big room it is also the
+   * only honest summary: 180 of 240 is a fact about a lecture theatre, where
+   * a list of names is not.
+   */
+  function paintFbMeter(rail, digest) {
+    var meter = rail.querySelector('.fb-meter');
+    var players = digest ? Number(digest.players) || 0 : 0;
+    var answered = digest ? Math.min(players, Number(digest.answered) || 0) : 0;
+    if (!players) { if (meter) meter.remove(); return; }
+    if (!meter) {
+      meter = el('div', 'fb-meter');
+      var sub = rail.querySelector('.rail-sub');
+      if (sub && sub.parentNode) sub.parentNode.insertBefore(meter, sub.nextSibling);
+      else rail.appendChild(meter);
+    }
+    meter.textContent = '';
+    var line = el('div', 'fbm-line');
+    line.appendChild(el('strong', 'fbm-n', String(answered)));
+    line.appendChild(el('span', 'fbm-of', ' of ' + players + ' answered'));
+    if (answered === players) line.appendChild(el('span', 'fbm-all', 'Everyone'));
+    meter.appendChild(line);
+    var bar = el('div', 'fbm-bar');
+    var fill = el('i');
+    fill.style.width = Math.round((answered / players) * 100) + '%';
+    bar.appendChild(fill);
+    meter.appendChild(bar);
+  }
+
+  /* Nothing in the feedback rail is drawn cut in half, whatever the room
+     sends: a poll tightens, a cloud loses its rarest words, a brainstorm its
+     oldest cards, and each says how many it is not showing. */
+  function fitFeedback(body, kind) {
+    if (!body.clientHeight) return;
+    var over = function () { return overflowing(body); };
+    if (kind === 'poll') {
+      if (over()) body.classList.add('tight');
+      if (over()) body.classList.add('tighter');
+      return;
+    }
+    if (kind === 'wordcloud') {
+      var cloud = /** @type {HTMLElement|null} */ (body.querySelector('.cloud'));
+      if (cloud) fitByDropping(cloud, '.word', 3);
+      return;
+    }
+    if (kind === 'brainstorm') {
+      var more = body.querySelector('.more');
+      var total = Number(body.dataset.total) || 0;
+      if (!more && over()) { more = el('div', 'more', ''); body.appendChild(more); }
+      fitByDropping(body, '.fbcard', 1, function () {
+        var left = body.querySelectorAll('.fbcard').length;
+        if (more) {
+          more.textContent = '+ ' + (total - left) + ' more';
+          body.appendChild(more);
+        }
+      });
+    }
   }
 
   /** Make sure the join panel exists and sits above the body. */
@@ -308,14 +374,19 @@ export function createLiveRenderer(SF, helpers) {
 
   /** Names of people who joined — shown until responses start landing. */
   function paintFbRoster(body, roster) {
+    /* A room of thirty is a count, not a column of names. The names are
+       worth it while a handful are arriving — seeing your own land is how
+       you know you are in. */
+    if (roster.length > 12) {
+      body.appendChild(el('div', 'fb-room-n', String(roster.length)));
+      body.appendChild(el('div', 'fb-room-lbl', 'in the room, waiting for the first answer'));
+      return;
+    }
     body.appendChild(el('div', 'fb-roster-lbl',
       roster.length === 1 ? '1 person in' : roster.length + ' people in'));
-    roster.slice(0, 12).forEach(function (p) {
+    roster.forEach(function (p) {
       body.appendChild(el('div', 'fb-who-in', p.name || 'Player'));
     });
-    if (roster.length > 12) {
-      body.appendChild(el('div', 'fb-who-more', '+' + (roster.length - 12) + ' more'));
-    }
   }
 
   function paintPoll(body, digest, opts) {
@@ -440,14 +511,19 @@ export function createLiveRenderer(SF, helpers) {
       body.appendChild(el('div', 'empty-rail', 'Nothing yet'));
       return;
     }
+    /* Newest first and without names. An idea on the wall is the room's,
+       not a person's: a named card is the one the room judges its author
+       by, and a student who knows that writes the safe thing. The teacher
+       sees who wrote what under Live answers on the desk. */
+    var total = Math.max(items.length, Number(digest.total) || 0);
+    body.dataset.total = String(total);
     items.slice(0, 8).forEach(function (it) {
       var card = el('div', 'fbcard');
       card.appendChild(el('div', 'fbtext', it.text));
-      if (it.name) card.appendChild(el('div', 'fbwho', it.name));
       body.appendChild(card);
     });
-    if (items.length > 8) {
-      body.appendChild(el('div', 'more', '+ ' + (items.length - 8) + ' more'));
+    if (total > 8) {
+      body.appendChild(el('div', 'more', '+ ' + (total - 8) + ' more'));
     }
   }
 
@@ -668,6 +744,10 @@ export function createLiveRenderer(SF, helpers) {
        printing the PIN twice, once over the other. */
     var rail = node.closest ? node.closest('.scorerail') : null;
     if (rail) rail.classList.toggle('joining-big', !!live && roomy);
+    /* The small panel says it too — the QR and the PIN, 30px — so the footer
+       line printing the same PIN again at 25px under it was the rail telling
+       the room one thing twice in its bottom quarter. */
+    if (rail) rail.classList.toggle('has-join', !!live);
     if (!live) { node.textContent = ''; node.dataset.for = ''; return; }
 
     var open = join.open !== false;
@@ -721,6 +801,60 @@ export function createLiveRenderer(SF, helpers) {
      tail is collapsed into a "+N more" line instead. */
   var RAIL_MAX_ROWS = 10;
 
+  /* Past this many entries the board stops being a list of everyone and
+     becomes a top five and the pack. A class of thirty ranked on the wall is
+     thirty names at a size nobody can read, and the bottom ten of it is a
+     public ranking of who is struggling. Every phone already says its own
+     place ("Place 12 of 32"), so the wall does not have to. */
+  var CROWD_AT = 8;
+  var CROWD_TOP = 5;
+  /* Beside a slide that is not asking anything, the rail is a strip: the
+     podium, the count, the way in. The slide gets the width back. */
+  var SLIM_TOP = 3;
+
+  /** @param {HTMLElement} box */
+  function overflowing(box) {
+    /* Measured with animations held. scrollHeight includes transforms, so a
+       row mid-way through its score pop, or the climb sliding in, reads as
+       overflow and costs the board a row it had room for. Adding up the
+       children's offsetHeight instead avoids that and is wrong another way:
+       each is rounded, and four shrunk rows over-count by the 2px that
+       decide whether a fifth fits. */
+    box.classList.add('sf-measuring');
+    var over = box.scrollHeight > box.clientHeight + 1;
+    box.classList.remove('sf-measuring');
+    return over;
+  }
+
+  /**
+   * Take items off the end of a box until it stops overflowing.
+   *
+   * The counts above are the most a rail will try; whether they fit depends on
+   * the theme's font, how long the names are and whether the join panel or a
+   * note is taking space. A row cut in half reads as broken, so the last
+   * resort is measuring. Returns how many were taken off.
+   *
+   * @param {HTMLElement} box      the clipping box
+   * @param {string} selector      the removable items, in order
+   * @param {number} keep          never go below this many
+   * @param {function(number)=} onDrop  told the running total after each drop
+   */
+  function fitByDropping(box, selector, keep, onDrop) {
+    /* Not laid out — hidden behind a focus view, or not in the document —
+       measures as zero and would lose everything. */
+    if (!box || !box.clientHeight) return 0;
+    var dropped = 0;
+    var items = box.querySelectorAll(selector);
+    var n = items.length;
+    while (n > keep && overflowing(box)) {
+      items[n - 1].remove();
+      n--;
+      dropped++;
+      if (onDrop) onDrop(dropped);
+    }
+    return dropped;
+  }
+
   /* A name wraps at spaces, so what decides whether it fits is its longest
      single word. Shrink only as far as that word demands — "Blue" stays full
      size while "The Quizzinators" steps down rather than truncating. */
@@ -732,6 +866,23 @@ export function createLiveRenderer(SF, helpers) {
     if (longest <= 9) return 0.86;
     if (longest <= 12) return 0.74;
     return 0.62;
+  }
+
+  /**
+   * A person's name as the wall prints it.
+   *
+   * "Tom Okonkwo-Bright" fits a rail row only at 62% of the row's type size,
+   * which from the back of a room is not a name at all. A class knows its
+   * Toms apart by the surname's initial, so a full name that would have to
+   * shrink is printed as "Tom O." instead. Team names are left alone — "The
+   * Quizzinators" is one name, not a first name and a surname.
+   */
+  function wallName(name, people) {
+    var text = String(name || '');
+    if (!people || nameScale(text) >= 0.86) return text;
+    var parts = text.trim().split(/\s+/);
+    if (parts.length < 2) return text;
+    return parts[0] + ' ' + parts[parts.length - 1].charAt(0).toUpperCase() + '.';
   }
 
   /* Row size is driven by the number of entries: a two-team board reads huge,
@@ -765,9 +916,12 @@ export function createLiveRenderer(SF, helpers) {
       }
       legend = newLegend;
     }
+    /* Only what the column is. How each person is doing — their accuracy,
+       and whether they need a hand — used to sit under their name here, on
+       the projector, for the whole room to read. That is the teacher's to
+       know and it lives on the desk (see Live.needsHand). */
     if (legend) {
       legend.replaceChildren();
-      legend.appendChild(el('span', 'lg-learn', 'ACCURACY · ANSWERED'));
       legend.appendChild(el('span', 'lg-score', String(opts.scoreLabel || 'Game points').toUpperCase()));
       legend.hidden = !rows.length;
     }
@@ -797,9 +951,21 @@ export function createLiveRenderer(SF, helpers) {
       return;
     }
 
-    var shown = rows.slice(0, RAIL_MAX_ROWS);
+    /* Kept for a repaint that only changes the rail's size — the strip and
+       the full rail are the same standings at two widths. */
+    /** @type {any} */ (rail)._last = { rows: rows, opts: opts };
+
+    var slim = rail.dataset.size === 'slim';
+    var crowd = rows.length > CROWD_AT;
+    rail.classList.toggle('crowd', crowd && !slim);
+    var limit = slim ? SLIM_TOP : crowd ? CROWD_TOP : RAIL_MAX_ROWS;
+    var shown = rows.slice(0, limit);
     var hidden = rows.length - shown.length;
-    rail.dataset.density = railDensity(shown.length + (hidden ? 1 : 0));
+    var climb = crowd && !slim ? biggestClimb(rail, rows, shown.length) : null;
+    /* A big room's pack line is two lines and its climb a third, so they
+       count as rows when choosing how big the rows can be. */
+    rail.dataset.density = slim ? 'slim'
+      : railDensity(shown.length + (hidden ? (crowd ? 2 : 1) : 0) + (climb ? 1 : 0));
 
     /* The member count only earns its line while the rows are tall enough for
        a second line of text. */
@@ -820,20 +986,16 @@ export function createLiveRenderer(SF, helpers) {
         var who = el('div', 'who');
         who.appendChild(el('div', 'nm', ''));
         node.appendChild(who);
-        /* Learning first, then winning. The rail used to carry one number per
-           row and call it the score — points in one game, an average in
-           another, steps along a track in a third — so the thing a teacher
-           most needs mid-lesson (who is struggling) was the one thing it
-           could not say. */
-        who.appendChild(el('div', 'learn', ''));
         node.appendChild(el('div', 'sc', ''));
       }
       delete existing[r.key];
 
       node.querySelector('.rk').textContent = String(i + 1);
       var nm = node.querySelector('.nm');
-      nm.textContent = r.name;
-      nm.style.fontSize = 'calc(var(--nm-f) * ' + nameScale(r.name) + ')';
+      var shownName = wallName(r.name, opts.people);
+      nm.textContent = shownName;
+      nm.title = r.name;
+      nm.style.fontSize = 'calc(var(--nm-f) * ' + nameScale(shownName) + ')';
 
       /* Members sit on their own line rather than trailing the name, which is
          what made long team names collide with the score. */
@@ -846,28 +1008,9 @@ export function createLiveRenderer(SF, helpers) {
         mem.remove();
       }
 
-      /* Accuracy · answered, and a flag when they need a hand. Absent until
-         something has been revealed — a row of 0% before the first reveal
-         reads as failure rather than as "not asked yet". */
+      /* A shell built before the accuracy line moved to the desk. */
       var learn = node.querySelector('.learn');
-      if (learn) {
-        var asked = r.asked || 0;
-        if (!asked) {
-          learn.textContent = '';
-          learn.className = 'learn';
-        } else {
-          var acc = typeof r.accuracy === 'number' ? r.accuracy : null;
-          learn.textContent = (acc == null ? '—' : acc + '%') +
-            ' · ' + (r.answered || 0) + '/' + asked;
-          /* Needs support is a judgement about a person, so it waits until
-             there is enough to judge on: under half right across at least
-             three, or silent through most of them. */
-          var struggling = asked >= 3 &&
-            ((acc != null && acc < 50) || (r.answered || 0) * 2 < asked);
-          learn.className = 'learn' + (struggling ? ' needs' : '');
-          if (struggling) learn.textContent += ' · needs support';
-        }
-      }
+      if (learn) learn.remove();
       var sc = node.querySelector('.sc');
       sc.textContent = String(r.score);
       /* Labelled, so nobody reads distance or an average as a mark. */
@@ -890,17 +1033,90 @@ export function createLiveRenderer(SF, helpers) {
     Object.keys(existing).forEach(function (k) { existing[k].remove(); });
 
     var moreEl = box.querySelector('.more');
+    var more = null;
     if (hidden > 0) {
-      var more = moreEl || el('div', 'more', '');
-      more.textContent = '+ ' + hidden + ' more';
+      more = moreEl || el('div', 'more', '');
       order.push(more);
     } else if (moreEl) {
       moreEl.remove();
+    }
+    var tellMore = function (n) {
+      if (!more) return;
+      more.textContent = '';
+      /* The pack is not a list: how many, and where each of them can find
+         their own place. */
+      more.appendChild(el('span', 'more-n', '+ ' + n + ' more'));
+      if (crowd && !slim) more.appendChild(el('span', 'more-where', 'Your place is on your phone'));
+    };
+    tellMore(hidden);
+
+    /* Somebody from the pack moving up is the one piece of news a board of
+       thirty has for the people not on it. Named, because it is good news. */
+    var oldClimb = box.querySelector('.climb');
+    /** @type {HTMLElement|null} */
+    var climbEl = null;
+    if (climb) {
+      climbEl = /** @type {HTMLElement} */ (oldClimb || el('div', 'climb', ''));
+      climbEl.textContent = '';
+      climbEl.appendChild(el('span', 'cl-up', '\u25b2 ' + climb.by));
+      climbEl.appendChild(el('span', 'cl-nm', wallName(climb.name, opts.people)));
+      climbEl.appendChild(el('span', 'cl-lbl', 'biggest climb'));
+      order.push(climbEl);
+    } else if (oldClimb) {
+      oldClimb.remove();
     }
 
     for (var oi = 0; oi < order.length; oi++) {
       if (order[oi]) box.appendChild(order[oi]);
     }
+
+    /* Whatever the counts said, nothing is drawn cut in half. */
+    var list = box;
+    if (!more && list.clientHeight && overflowing(list)) {
+      more = el('div', 'more', '');
+      list.appendChild(more);
+      tellMore(0);
+    }
+    fitByDropping(list, '.srow', 1, function (dropped) {
+      tellMore(hidden + dropped);
+      /* The pack line and the climb sit after the rows, so they have to be
+         put back at the end each time a row comes off. */
+      if (more) list.appendChild(more);
+      if (climbEl) list.appendChild(climbEl);
+    });
+  }
+
+  /**
+   * The largest move up the board since the order last changed, among those
+   * the rail is not already showing.
+   *
+   * Compared against the previous distinct order rather than the previous
+   * paint: the rail repaints on every roster push, and a climb has to stay
+   * up until the next reveal moves the board again.
+   *
+   * @param {HTMLElement} rail
+   * @param {Array} rows   in board order
+   * @param {number} shown how many the rail names at the top
+   */
+  function biggestClimb(rail, rows, shown) {
+    var store = /** @type {any} */ (rail);
+    var now = {};
+    rows.forEach(function (r, i) { now[r.key] = i; });
+    var sig = rows.map(function (r) { return r.key; }).join('|');
+    if (store._rankSig === sig) return store._climb || null;
+    var before = store._ranks;
+    store._ranks = now;
+    store._rankSig = sig;
+    store._climb = null;
+    if (!before) return null;
+    var best = null;
+    rows.forEach(function (r, i) {
+      if (i < shown || !(r.key in before)) return;
+      var by = before[r.key] - i;
+      if (by >= 2 && (!best || by > best.by)) best = { name: r.name, by: by };
+    });
+    store._climb = best;
+    return best;
   }
 
   /* The PIN stays on screen for the whole game so anyone arriving late can

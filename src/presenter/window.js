@@ -311,6 +311,9 @@ export function createPresenterWindow(SF, helpers) {
         away: SF.Live && SF.Live.active ? (SF.Live.players || []).filter(function (p) {
           return p.away && p.connected !== false;
         }).map(function (p) { return p.name; }) : [],
+        /* Who is struggling, for this screen only — it used to be printed
+           under their name on the wall. See Live.needsHand. */
+        needsHand: SF.Live && SF.Live.needsHand ? SF.Live.needsHand() : [],
         floor: (SF.Live && SF.Live.floor) || 'auto',
         /* Legacy tokens on the wire: a desk still open from before the
            rename compares against these. New desks accept either. */

@@ -916,6 +916,30 @@
     fresh.forEach(function (p) { SF.Player.railNote(p.name + ' joined'); });
   }
 
+  /**
+   * Who needs a hand, for the desk and nowhere else.
+   *
+   * This was a line under each name on the wall rail — "38% · 3/8 · needs
+   * support" — which is a judgement about a person, printed on the projector
+   * for their classmates to read. It is the teacher's, so it travels with the
+   * desk state beside the away chip and the wall shows only the game.
+   *
+   * The rule is unchanged: it waits until there is enough to judge on —
+   * under half right across at least three, or silent through most of them.
+   * Individual play only; a team's average is not a person to go and help.
+   */
+  Live.needsHand = function () {
+    if (!Live.active || Live.mode === 'teams') return [];
+    return (Live.rows || []).filter(function (r) {
+      var asked = r.asked || 0;
+      if (asked < 3) return false;
+      var acc = typeof r.accuracy === 'number' ? r.accuracy : null;
+      return (acc != null && acc < 50) || (r.answered || 0) * 2 < asked;
+    }).map(function (r) {
+      return { name: r.name, accuracy: r.accuracy, answered: r.answered || 0, asked: r.asked || 0 };
+    });
+  };
+
   /** Push the current standings into the always-on rail. */
   function paintRail() {
     if (!Live.active || !Live.deck.quiz.scoreboard) return;
@@ -959,6 +983,9 @@
       scoreLabel: racing ? 'Distance'
         : Live.mechanic === 'boss' ? 'Damage'
         : (Live.mode === 'teams' ? 'Team points' : 'Game points'),
+      /* People, not teams: the rail may shorten a long full name to a
+         first name and an initial, which it must never do to a team. */
+      people: Live.mode !== 'teams',
       footnote: racing
         ? 'A team moves when most of it picks right'
         : (Live.mode === 'teams' ? 'Points are an average per player' : ''),

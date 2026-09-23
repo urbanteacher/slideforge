@@ -115,6 +115,7 @@
   .pv-room[hidden] { display: none; }
   .pv-away { font-size: 12px; font-weight: 600; color: #b5651d; background: #fdf0e1; border-radius: 999px; padding: 3px 9px; cursor: help; }
   .pv-away[hidden] { display: none; }
+  .pv-needs { color: #8a3b12; background: #fde4d6; }
   .pv-room-id {
     display: none;
     align-items: baseline;
@@ -485,6 +486,8 @@
         </div>
         <!-- Private: phones showing something other than the lesson. -->
         <span class="pv-away" id="roomAway" hidden></span>
+        <!-- Private: who is under half right, or mostly silent. Was on the wall. -->
+        <span class="pv-away pv-needs" id="roomNeeds" hidden></span>
         <button class="btn" data-cmd="join" id="btnJoin" title="Show join QR and PIN on the wall (J)">Join QR</button>
         <button class="btn" id="btnShareDesk" title="Share a read-only or follow-along link">Share</button>
         <button class="btn" data-cmd="ink" title="Draw and spotlight on the wall (I)">Ink</button>
@@ -1005,6 +1008,18 @@ SF.installExplore(SF);
       away.textContent = who.length + ' away';
       away.title = who.length
         ? 'Showing something other than the lesson: ' + who.join(', ') + '. Only you can see this.'
+        : '';
+    }
+    var needs = $('roomNeeds');
+    if (needs) {
+      var list = (d.needsHand || []);
+      needs.hidden = !live || !list.length;
+      needs.textContent = list.length === 1 ? '1 needs a hand' : list.length + ' need a hand';
+      needs.title = list.length
+        ? list.map(function (r) {
+            return r.name + ' \u2014 ' + (r.accuracy == null ? '\u2014' : r.accuracy + '%') +
+              ', answered ' + r.answered + ' of ' + r.asked;
+          }).join('\n') + '\nOnly you can see this.'
         : '';
     }
     var phones = $('btnBlankPhones');

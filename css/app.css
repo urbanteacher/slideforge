@@ -2642,6 +2642,10 @@ html[data-ws="game"] #btnSorter { display: none; }
 .lb-row .who { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-row .pts { font-variant-numeric: tabular-nums; font-weight: 750; flex: none; }
 .lb-row.top1 { background: linear-gradient(90deg, rgba(255,199,90,.28), var(--s-card)); }
+/* A big room: the six tighten to leave a line for everyone else. */
+.slide .pad.leaderboard:has(.lb-more) { padding-top: 50px; padding-bottom: 40px; }
+.leaderboard:has(.lb-more) .lb-row { font-size: 34px; padding: 15px 26px; margin-bottom: 10px; }
+.lb-more { font-size: 22px; color: var(--s-dim); text-align: center; padding-top: 8px; }
 
 /* live lobby panel (host side, shown over the deck) */
 #lobby {
@@ -4505,9 +4509,46 @@ html[data-ws="deck"] #railCount { display: none; }
   overflow: hidden;
   padding-top: 4px;
   /* Poll bars and the scale used to stack under the title. The cloud already
-     fills this slot and sits in the middle — same treatment for the rest. */
-  justify-content: center;
+     fills this slot and sits in the middle — same treatment for the rest.
+     Safe, so a body taller than its slot is cut at the bottom (and then
+     fitted, see fitFeedback) rather than losing its first row under the
+     join panel. */
+  justify-content: safe center;
 }
+
+/* ---- how much of the room has answered ---- */
+.fbrail .fb-meter { flex: none; margin: -10px 0 18px; }
+.fbrail .fbm-line {
+  display: flex; align-items: baseline; gap: 6px;
+  font-size: 17px; color: var(--s-dim);
+}
+.fbrail .fbm-n {
+  font-size: 30px; font-weight: 800; color: var(--s-fg);
+  font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+}
+.fbrail .fbm-all {
+  margin-left: auto; align-self: center;
+  font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--s-fg); background: var(--s-card); border: 1px solid var(--s-rule);
+  border-radius: 999px; padding: 3px 10px;
+}
+.fbrail .fbm-bar {
+  height: 8px; margin-top: 6px; border-radius: 999px;
+  background: var(--s-card); border: 1px solid var(--s-rule); overflow: hidden;
+}
+.fbrail .fbm-bar > i {
+  display: block; height: 100%; background: var(--s-accent);
+  transition: width .5s cubic-bezier(.3,0,.2,1);
+}
+
+/* A poll that does not fit steps down, measured — see fitFeedback. */
+.fbrail .fb-body.tight { gap: 7px; }
+.fbrail .fb-body.tight .plabel { font-size: 18px; -webkit-line-clamp: 1; }
+.fbrail .fb-body.tight .pn { font-size: 20px; }
+.fbrail .fb-body.tight .pbar { height: 10px; }
+.fbrail .fb-body.tighter .ppct { display: none; }
+.fbrail .fb-body.tighter .plabel { font-size: 16px; }
+.fbrail .fb-body > .more { flex: none; text-align: center; font-size: 16px; color: var(--s-dim); }
 .fbrail .fb-roster-lbl {
   font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
   color: var(--s-dim); margin-bottom: 2px;
@@ -4517,6 +4558,11 @@ html[data-ws="deck"] #railCount { display: none; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .fbrail .fb-who-more { font-size: 15px; color: var(--s-dim); }
+.fbrail .fb-room-n {
+  font-size: 88px; font-weight: 800; line-height: 1; text-align: center;
+  letter-spacing: -.03em; font-variant-numeric: tabular-nums;
+}
+.fbrail .fb-room-lbl { font-size: 18px; color: var(--s-dim); text-align: center; line-height: 1.35; }
 
 /* ---- poll ---- */
 .fbrail .pollrow { display: flex; flex-direction: column; gap: 6px; }
@@ -4698,7 +4744,10 @@ html[data-ws="deck"] #railCount { display: none; }
 .deck-viewport.fb-focus .scorerail { display: none; }
 .deck-viewport.railed .layout-feedback .pad,
 #previewBox.railed .layout-feedback .pad { padding: 54px 78px 44px; }
-.deck-viewport.fb-focus .leaderboard { padding-right: 90px; }
+/* Specific enough to beat the rail's own offset (.railed .slide .pad): the
+   rail is hidden while the standings have the screen, and the offset left
+   the right third of the wall empty beside them. */
+.deck-viewport.fb-focus .slide .pad.leaderboard { padding-right: 90px; }
 .deck-viewport.fb-focus .layout-race .pad { padding: 54px 72px; }
 .deck-viewport.fb-focus .layout-race .lane { grid-template-columns: 300px 1fr 130px; }
 .deck-viewport.fb-focus .layout-race .lane-text { font-size: 31px; }
@@ -5367,37 +5416,72 @@ html[data-ws="deck"] #railCount { display: none; }
 }
 .layout-quiz.present-boss .boss-gap { color: var(--s-accent); font-weight: 600; }
 
-/* The rail says two things and labels both: how they are doing, and where
-   they are in the game. They are not the same number and never were. */
+/* The rail labels its one column. How each person is doing is not on the
+   wall at all — accuracy and "needs a hand" are the teacher's, on the desk. */
 .scorerail .rail-legend {
-  display: flex; justify-content: space-between; gap: 8px;
-  padding: 0 10px 4px; font-size: 9px; letter-spacing: .1em;
-  color: var(--s-dim); opacity: .8;
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 0 10px 5px; font-size: 12px; letter-spacing: .12em;
+  color: var(--s-dim);
 }
 .scorerail .rail-legend[hidden] { display: none; }
-.scorerail .srow .learn {
-  font-size: 11px; color: var(--s-dim);
-  font-variant-numeric: tabular-nums; line-height: 1.3;
-}
-.scorerail .srow .learn.needs { color: var(--s-accent); font-weight: 650; }
-.scorerail[data-density="sm"] .srow .learn,
-.scorerail[data-density="xs"] .srow .learn { display: none; }
 
-/* The rail says two things and labels both: how they are doing, and where
-   they are in the game. They are not the same number and never were. */
-.scorerail .rail-legend {
-  display: flex; justify-content: space-between; gap: 8px;
-  padding: 0 10px 4px; font-size: 9px; letter-spacing: .1em;
-  color: var(--s-dim); opacity: .8;
+/* Held still for the moment a box is measured — see overflowing(). */
+.sf-measuring, .sf-measuring * { animation: none !important; transition: none !important; }
+
+/* ---- one way in ---- */
+/* The join panel already shows the PIN; the footer line would repeat it. */
+.scorerail.has-join .joinline { display: none; }
+
+/* ---- a big room: the top five and the pack ---- */
+.scorerail .more { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.scorerail .more-n { font-weight: 700; color: var(--s-fg); }
+.scorerail.crowd .more { padding-top: 8px; border-top: 1px dashed var(--s-rule); }
+.scorerail.crowd .more-n { font-size: 20px; }
+.scorerail .more-where { font-size: 15px; color: var(--s-dim); }
+.scorerail .climb {
+  flex: none; align-self: center;
+  display: flex; align-items: baseline; gap: 9px;
+  padding: 8px 16px; border-radius: 999px;
+  background: rgba(52,201,138,.16);
+  font-size: 18px; line-height: 1.2; max-width: 100%;
+  animation: sf-climb-in .6s cubic-bezier(.3,0,.2,1);
 }
-.scorerail .rail-legend[hidden] { display: none; }
-.scorerail .srow .learn {
-  font-size: 11px; color: var(--s-dim);
-  font-variant-numeric: tabular-nums; line-height: 1.3;
+.scorerail .cl-up { font-weight: 800; color: #1f9d6b; font-variant-numeric: tabular-nums; }
+.scorerail[data-ground="dark"] .cl-up { color: #45d69b; }
+.scorerail .cl-nm { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scorerail .cl-lbl { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--s-dim); white-space: nowrap; }
+@keyframes sf-climb-in { from { transform: translateY(8px); opacity: 0; } }
+
+/* ---- the strip: beside a slide that is not asking anything ----
+   The standings are not what the room is looking at while the teacher
+   explains, and a 384px board beside an objectives slide took a third of
+   the wall to say it. The strip keeps the podium, the count and the way
+   in, and gives the slide 150px back. The width is animated so the slide
+   eases across rather than jumping when a question arrives. */
+@property --rail-w { syntax: '<length>'; inherits: true; initial-value: 384px; }
+.deck-viewport { transition: --rail-w .45s cubic-bezier(.3,0,.2,1); }
+.deck-viewport.railed.rail-slim { --rail-w: 232px; }
+.scorerail[data-size="slim"] { padding: 26px 14px 18px; }
+.scorerail[data-density="slim"] { --nm-f: 21px; --sc-f: 17px; --rk-f: 15px; --row-py: 10px; --row-px: 11px; --row-gap: 8px; --row-r: 10px; --row-max: 80px; }
+.scorerail[data-size="slim"] .rail-title { font-size: 15px; }
+.scorerail[data-size="slim"] .rail-sub { font-size: 15px; margin-bottom: 14px; }
+.scorerail[data-size="slim"] .rail-legend,
+.scorerail[data-size="slim"] .foot .notes { display: none; }
+.scorerail[data-size="slim"] .rows { justify-content: flex-start; }
+.scorerail[data-size="slim"] .srow {
+  display: grid; grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 9px; row-gap: 1px; align-items: center;
+  border-left-width: 6px;
 }
-.scorerail .srow .learn.needs { color: var(--s-accent); font-weight: 650; }
-.scorerail[data-density="sm"] .srow .learn,
-.scorerail[data-density="xs"] .srow .learn { display: none; }
+.scorerail[data-size="slim"] .srow .rk { grid-row: span 2; }
+.scorerail[data-size="slim"] .srow .nm { -webkit-line-clamp: 1; overflow-wrap: normal; word-break: break-all; }
+.scorerail[data-size="slim"] .srow .sc { font-weight: 650; color: var(--s-dim); }
+.scorerail[data-size="slim"] .more { font-size: 16px; padding-top: 6px; }
+.scorerail[data-size="slim"] .rail-join.on { flex-direction: column; gap: 8px; text-align: center; }
+.scorerail[data-size="slim"] .rj-qr { width: 132px; }
+.scorerail[data-size="slim"] .rj-lbl { font-size: 11px; }
+.scorerail[data-size="slim"] .rj-pin { font-size: 26px; }
+
 
 /* Activity briefs have named stages, not vocabulary definitions. Preserve
    sentence case and give six short rows room within the 1280 × 720 canvas. */

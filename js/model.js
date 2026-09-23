@@ -3552,7 +3552,6 @@
       items2.slice(0, 9).forEach(function(it) {
         var card = el("div", "fk-card");
         card.appendChild(el("div", "fk-ctext", it.text));
-        if (it.name) card.appendChild(el("div", "fk-cwho", it.name));
         grid.appendChild(card);
       });
       body.appendChild(grid);
@@ -3664,8 +3663,10 @@
       var joining = !!(opts.join && opts.join.pin);
       var slot = ensureRailJoin(rail);
       paintRailJoin(slot, opts.join, !busy);
+      paintFbMeter(rail, digest);
       var body = rail.querySelector(".fb-body");
       body.textContent = "";
+      body.classList.remove("tight", "tighter");
       rail.dataset.kind = digest && digest.kind || "";
       if (!busy) {
         if (opts.roster && opts.roster.length) paintFbRoster(body, opts.roster);
@@ -3674,10 +3675,71 @@
         }
         return;
       }
-      if (digest.kind === "poll") return paintPoll(body, digest, opts);
-      if (digest.kind === "scale") return paintScale(body, digest, opts);
-      if (digest.kind === "wordcloud") return paintCloud(body, digest, opts);
-      return paintBrainstorm(body, digest);
+      if (digest.kind === "poll") paintPoll(body, digest, opts);
+      else if (digest.kind === "scale") paintScale(body, digest, opts);
+      else if (digest.kind === "wordcloud") paintCloud(body, digest, opts);
+      else paintBrainstorm(body, digest);
+      fitFeedback(body, digest.kind);
+    }
+    function paintFbMeter(rail, digest) {
+      var meter = rail.querySelector(".fb-meter");
+      var players = digest ? Number(digest.players) || 0 : 0;
+      var answered = digest ? Math.min(players, Number(digest.answered) || 0) : 0;
+      if (!players) {
+        if (meter) meter.remove();
+        return;
+      }
+      if (!meter) {
+        meter = el("div", "fb-meter");
+        var sub = rail.querySelector(".rail-sub");
+        if (sub && sub.parentNode) sub.parentNode.insertBefore(meter, sub.nextSibling);
+        else rail.appendChild(meter);
+      }
+      meter.textContent = "";
+      var line = el("div", "fbm-line");
+      line.appendChild(el("strong", "fbm-n", String(answered)));
+      line.appendChild(el("span", "fbm-of", " of " + players + " answered"));
+      if (answered === players) line.appendChild(el("span", "fbm-all", "Everyone"));
+      meter.appendChild(line);
+      var bar = el("div", "fbm-bar");
+      var fill = el("i");
+      fill.style.width = Math.round(answered / players * 100) + "%";
+      bar.appendChild(fill);
+      meter.appendChild(bar);
+    }
+    function fitFeedback(body, kind) {
+      if (!body.clientHeight) return;
+      var over = function() {
+        return overflowing(body);
+      };
+      if (kind === "poll") {
+        if (over()) body.classList.add("tight");
+        if (over()) body.classList.add("tighter");
+        return;
+      }
+      if (kind === "wordcloud") {
+        var cloud = (
+          /** @type {HTMLElement|null} */
+          body.querySelector(".cloud")
+        );
+        if (cloud) fitByDropping(cloud, ".word", 3);
+        return;
+      }
+      if (kind === "brainstorm") {
+        var more = body.querySelector(".more");
+        var total = Number(body.dataset.total) || 0;
+        if (!more && over()) {
+          more = el("div", "more", "");
+          body.appendChild(more);
+        }
+        fitByDropping(body, ".fbcard", 1, function() {
+          var left = body.querySelectorAll(".fbcard").length;
+          if (more) {
+            more.textContent = "+ " + (total - left) + " more";
+            body.appendChild(more);
+          }
+        });
+      }
     }
     function ensureRailJoin(rail) {
       var body = rail.querySelector(".fb-body");
@@ -3704,17 +3766,19 @@
       return false;
     }
     function paintFbRoster(body, roster) {
+      if (roster.length > 12) {
+        body.appendChild(el("div", "fb-room-n", String(roster.length)));
+        body.appendChild(el("div", "fb-room-lbl", "in the room, waiting for the first answer"));
+        return;
+      }
       body.appendChild(el(
         "div",
         "fb-roster-lbl",
         roster.length === 1 ? "1 person in" : roster.length + " people in"
       ));
-      roster.slice(0, 12).forEach(function(p) {
+      roster.forEach(function(p) {
         body.appendChild(el("div", "fb-who-in", p.name || "Player"));
       });
-      if (roster.length > 12) {
-        body.appendChild(el("div", "fb-who-more", "+" + (roster.length - 12) + " more"));
-      }
     }
     function paintPoll(body, digest, opts) {
       var counts = digest.counts || [];
@@ -3819,14 +3883,15 @@
         body.appendChild(el("div", "empty-rail", "Nothing yet"));
         return;
       }
+      var total = Math.max(items2.length, Number(digest.total) || 0);
+      body.dataset.total = String(total);
       items2.slice(0, 8).forEach(function(it) {
         var card = el("div", "fbcard");
         card.appendChild(el("div", "fbtext", it.text));
-        if (it.name) card.appendChild(el("div", "fbwho", it.name));
         body.appendChild(card);
       });
-      if (items2.length > 8) {
-        body.appendChild(el("div", "more", "+ " + (items2.length - 8) + " more"));
+      if (total > 8) {
+        body.appendChild(el("div", "more", "+ " + (total - 8) + " more"));
       }
     }
     function tint(hex, alpha) {
@@ -3954,6 +4019,7 @@
       node.classList.toggle("big", !!live && roomy);
       var rail = node.closest ? node.closest(".scorerail") : null;
       if (rail) rail.classList.toggle("joining-big", !!live && roomy);
+      if (rail) rail.classList.toggle("has-join", !!live);
       if (!live) {
         node.textContent = "";
         node.dataset.for = "";
@@ -3992,6 +4058,28 @@
       node.appendChild(side);
     }
     var RAIL_MAX_ROWS = 10;
+    var CROWD_AT = 8;
+    var CROWD_TOP = 5;
+    var SLIM_TOP = 3;
+    function overflowing(box2) {
+      box2.classList.add("sf-measuring");
+      var over = box2.scrollHeight > box2.clientHeight + 1;
+      box2.classList.remove("sf-measuring");
+      return over;
+    }
+    function fitByDropping(box2, selector, keep, onDrop) {
+      if (!box2 || !box2.clientHeight) return 0;
+      var dropped = 0;
+      var items2 = box2.querySelectorAll(selector);
+      var n = items2.length;
+      while (n > keep && overflowing(box2)) {
+        items2[n - 1].remove();
+        n--;
+        dropped++;
+        if (onDrop) onDrop(dropped);
+      }
+      return dropped;
+    }
     function nameScale(name) {
       var longest = String(name).split(/\s+/).reduce(function(m, w) {
         return Math.max(m, w.length);
@@ -4000,6 +4088,13 @@
       if (longest <= 9) return 0.86;
       if (longest <= 12) return 0.74;
       return 0.62;
+    }
+    function wallName(name, people) {
+      var text2 = String(name || "");
+      if (!people || nameScale(text2) >= 0.86) return text2;
+      var parts = text2.trim().split(/\s+/);
+      if (parts.length < 2) return text2;
+      return parts[0] + " " + parts[parts.length - 1].charAt(0).toUpperCase() + ".";
     }
     function railDensity(n) {
       if (n <= 2) return "xl";
@@ -4023,7 +4118,6 @@
       }
       if (legend) {
         legend.replaceChildren();
-        legend.appendChild(el("span", "lg-learn", "ACCURACY · ANSWERED"));
         legend.appendChild(el("span", "lg-score", String(opts.scoreLabel || "Game points").toUpperCase()));
         legend.hidden = !rows2.length;
       }
@@ -4044,9 +4138,15 @@
         }
         return;
       }
-      var shown = rows2.slice(0, RAIL_MAX_ROWS);
+      rail._last = { rows: rows2, opts };
+      var slim = rail.dataset.size === "slim";
+      var crowd = rows2.length > CROWD_AT;
+      rail.classList.toggle("crowd", crowd && !slim);
+      var limit = slim ? SLIM_TOP : crowd ? CROWD_TOP : RAIL_MAX_ROWS;
+      var shown = rows2.slice(0, limit);
       var hidden = rows2.length - shown.length;
-      rail.dataset.density = railDensity(shown.length + (hidden ? 1 : 0));
+      var climb = crowd && !slim ? biggestClimb(rail, rows2, shown.length) : null;
+      rail.dataset.density = slim ? "slim" : railDensity(shown.length + (hidden ? crowd ? 2 : 1 : 0) + (climb ? 1 : 0));
       var roomForMembers = ["xl", "lg", "md"].indexOf(rail.dataset.density) !== -1;
       var existing = {};
       Array.prototype.forEach.call(box2.children, function(n) {
@@ -4062,14 +4162,15 @@
           var who = el("div", "who");
           who.appendChild(el("div", "nm", ""));
           node.appendChild(who);
-          who.appendChild(el("div", "learn", ""));
           node.appendChild(el("div", "sc", ""));
         }
         delete existing[r.key];
         node.querySelector(".rk").textContent = String(i + 1);
         var nm = node.querySelector(".nm");
-        nm.textContent = r.name;
-        nm.style.fontSize = "calc(var(--nm-f) * " + nameScale(r.name) + ")";
+        var shownName = wallName(r.name, opts.people);
+        nm.textContent = shownName;
+        nm.title = r.name;
+        nm.style.fontSize = "calc(var(--nm-f) * " + nameScale(shownName) + ")";
         var who = node.querySelector(".who");
         var mem = who.querySelector(".mem");
         if (r.members != null && roomForMembers) {
@@ -4082,19 +4183,7 @@
           mem.remove();
         }
         var learn = node.querySelector(".learn");
-        if (learn) {
-          var asked = r.asked || 0;
-          if (!asked) {
-            learn.textContent = "";
-            learn.className = "learn";
-          } else {
-            var acc = typeof r.accuracy === "number" ? r.accuracy : null;
-            learn.textContent = (acc == null ? "—" : acc + "%") + " · " + (r.answered || 0) + "/" + asked;
-            var struggling = asked >= 3 && (acc != null && acc < 50 || (r.answered || 0) * 2 < asked);
-            learn.className = "learn" + (struggling ? " needs" : "");
-            if (struggling) learn.textContent += " · needs support";
-          }
-        }
+        if (learn) learn.remove();
         var sc = node.querySelector(".sc");
         sc.textContent = String(r.score);
         sc.title = opts.scoreLabel || "Game points";
@@ -4112,16 +4201,74 @@
         existing[k].remove();
       });
       var moreEl = box2.querySelector(".more");
+      var more = null;
       if (hidden > 0) {
-        var more = moreEl || el("div", "more", "");
-        more.textContent = "+ " + hidden + " more";
+        more = moreEl || el("div", "more", "");
         order2.push(more);
       } else if (moreEl) {
         moreEl.remove();
       }
+      var tellMore = function(n) {
+        if (!more) return;
+        more.textContent = "";
+        more.appendChild(el("span", "more-n", "+ " + n + " more"));
+        if (crowd && !slim) more.appendChild(el("span", "more-where", "Your place is on your phone"));
+      };
+      tellMore(hidden);
+      var oldClimb = box2.querySelector(".climb");
+      var climbEl = null;
+      if (climb) {
+        climbEl = /** @type {HTMLElement} */
+        oldClimb || el("div", "climb", "");
+        climbEl.textContent = "";
+        climbEl.appendChild(el("span", "cl-up", "▲ " + climb.by));
+        climbEl.appendChild(el("span", "cl-nm", wallName(climb.name, opts.people)));
+        climbEl.appendChild(el("span", "cl-lbl", "biggest climb"));
+        order2.push(climbEl);
+      } else if (oldClimb) {
+        oldClimb.remove();
+      }
       for (var oi = 0; oi < order2.length; oi++) {
         if (order2[oi]) box2.appendChild(order2[oi]);
       }
+      var list = box2;
+      if (!more && list.clientHeight && overflowing(list)) {
+        more = el("div", "more", "");
+        list.appendChild(more);
+        tellMore(0);
+      }
+      fitByDropping(list, ".srow", 1, function(dropped) {
+        tellMore(hidden + dropped);
+        if (more) list.appendChild(more);
+        if (climbEl) list.appendChild(climbEl);
+      });
+    }
+    function biggestClimb(rail, rows2, shown) {
+      var store = (
+        /** @type {any} */
+        rail
+      );
+      var now = {};
+      rows2.forEach(function(r, i) {
+        now[r.key] = i;
+      });
+      var sig = rows2.map(function(r) {
+        return r.key;
+      }).join("|");
+      if (store._rankSig === sig) return store._climb || null;
+      var before = store._ranks;
+      store._ranks = now;
+      store._rankSig = sig;
+      store._climb = null;
+      if (!before) return null;
+      var best = null;
+      rows2.forEach(function(r, i) {
+        if (i < shown || !(r.key in before)) return;
+        var by = before[r.key] - i;
+        if (by >= 2 && (!best || by > best.by)) best = { name: r.name, by };
+      });
+      store._climb = best;
+      return best;
     }
     function paintJoinLine(node, join) {
       if (!join || !join.pin) {
@@ -6118,6 +6265,9 @@
           }).map(function(p) {
             return p.name;
           }) : [],
+          /* Who is struggling, for this screen only — it used to be printed
+             under their name on the wall. See Live.needsHand. */
+          needsHand: SF.Live && SF.Live.needsHand ? SF.Live.needsHand() : [],
           floor: SF.Live && SF.Live.floor || "auto",
           /* Legacy tokens on the wire: a desk still open from before the
              rename compares against these. New desks accept either. */

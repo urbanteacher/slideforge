@@ -669,8 +669,13 @@
     }
 
     /* The rail persists across slides, so its surface has to follow the one
-       that just arrived. */
+       that just arrived — and its width, which depends on what the slide is
+       asking of the room. */
     SF.railSurface(Player._rail, node);
+    if (Player._rail && railSize()) {
+      var held = /** @type {any} */ (Player._rail)._last;
+      if (held) SF.paintScoreRail(Player._rail, held.rows, held.opts);
+    }
     syncMedia(slide, node);
     syncHudRoomButtons();
     Player.emit('slide', { slide: slide, index: wall.index, node: node, spontaneous: wall.spontaneous });
@@ -1432,6 +1437,7 @@
       Player._railMode = mode;
       if (viewport) viewport.appendChild(Player._rail);
     }
+    if (mode === 'feedback' && viewport) viewport.classList.remove('rail-slim');
     if (viewport) viewport.classList.add('railed');
     SF.railSurface(Player._rail, Player._current);
     /* A fresh shell has an empty news box; anything still within its few
@@ -1498,8 +1504,49 @@
 
   Player.setScoreboard = function (rows, opts) {
     Player.enableRail(null, 'scores');
+    railSize(rows || []);
     SF.paintScoreRail(Player._rail, rows || [], opts || {});
   };
+
+  /**
+   * The strip or the full rail, from what the slide on the wall is doing.
+   *
+   * Full beside a question and its results, and while nobody is in yet (the
+   * join panel needs the room). A strip beside everything else: the
+   * standings are not what the room is reading while the teacher explains,
+   * and the slide gets the width back. Feedback never slims — its prompt is
+   * the slide's own.
+   *
+   * Returns true when the size changed, so a caller holding the last
+   * standings can repaint them at the new width.
+   *
+   * @param {Array=} rows the standings about to be painted, if known
+   */
+  function railSize(rows) {
+    var rail = Player._rail;
+    if (!rail || !viewport) return false;
+    var slide = Player._currentSlide || (Player.deck && Player.deck.slides[Player.idx]);
+    var last = /** @type {any} */ (rail)._last;
+    var n = rows ? rows.length : (last && last.rows ? last.rows.length : 0);
+    var asking = !!slide && (slide.type === 'quiz' || slide.type === 'results');
+    var slim = Player._railMode === 'scores' && n > 0 && !asking;
+    var was = rail.dataset.size === 'slim';
+    rail.dataset.size = slim ? 'slim' : '';
+    viewport.classList.toggle('rail-slim', slim);
+    if (was === slim) return false;
+    /* The slide's padding follows --rail-w; anything measured against the
+       old width is measured again once the width has eased across — the
+       rail's own rows included, which were fitted to a narrower strip. */
+    setTimeout(function () {
+      relayout();
+      var held = /** @type {any} */ (rail)._last;
+      if (held && Player._rail === rail && Player._railMode === 'scores') {
+        SF.paintScoreRail(rail, held.rows, held.opts);
+      }
+    }, 480);
+    return true;
+  }
+  Player.railSize = railSize;
 
   /** Show the room's responses to the prompt on the current slide. */
   Player.setFeedback = function (digest, opts) {
@@ -1510,7 +1557,7 @@
   Player.disableRail = function () {
     if (Player._rail) { Player._rail.remove(); Player._rail = null; Player._railMode = null; }
     if (!root) return;
-    if (viewport) viewport.classList.remove('railed');
+    if (viewport) viewport.classList.remove('railed', 'rail-slim');
     syncHudRoomButtons();
     relayout();
   };
@@ -2178,6 +2225,13 @@
       row.appendChild(el('div', 'pts', String(p.score)));
       pad.appendChild(row);
     });
+    /* The six are the podium, not the class. Everyone else's place is on
+       their own phone, and saying so is what stops the other twenty-six
+       reading the board as a list they did not make. */
+    if (players.length > top.length) {
+      pad.appendChild(el('div', 'lb-more',
+        '+ ' + (players.length - top.length) + ' more \u00b7 your place is on your phone'));
+    }
     node.appendChild(pad);
     return node;
   };
@@ -2565,7 +2619,7 @@
     if (!opts.keepAnswers) Player.answers = {};
     if (viewport) {
       viewport.innerHTML = '';
-      viewport.classList.remove('railed');
+      viewport.classList.remove('railed', 'rail-slim');
     }
     if (root) {
       root.classList.add('on');
@@ -2627,7 +2681,7 @@
     closeOverview();
     if (viewport) {
       viewport.innerHTML = '';
-      viewport.classList.remove('railed');
+      viewport.classList.remove('railed', 'rail-slim');
       viewport.classList.remove('soloed');
       viewport.classList.remove('fb-focus');
     }
