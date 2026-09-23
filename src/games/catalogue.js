@@ -45,7 +45,7 @@ var FORMATS = {
   'fill-in-the-blanks': { label: 'Fill in the blanks',
     answersHint: 'Write the passage with each missing word in [square brackets], up to four, and add a few lures. Phones tap a word into each gap.' },
   'time-traveler': { label: 'Time traveler',
-    answersHint: 'A clue and a date in the question; the event is the answer.' },
+    answersHint: 'Name the event; the year is the answer. Phones place it on a timeline, and each round adds it to the line.' },
   'ranking': { label: 'Ranking challenge',
     answersHint: 'Part marks: each item in the right place scores. Full set is 10 points.' },
   'word-reveal': { label: 'Word reveal',
@@ -112,7 +112,8 @@ var FORMAT_STYLE = {
   'ranking': 'order',
   'odd-one-out': 'oddone',
   'predict-outcome': 'choice',
-  'time-traveler': 'type',
+  /* A slider on a year scale since 23 Sep 2026: place the event in time. */
+  'time-traveler': 'slider',
   'connection-maker': 'connection',
   'random-challenge': 'randomchallenge',
   'concept-chain': 'conceptchain',

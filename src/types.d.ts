@@ -377,6 +377,8 @@ export interface Slide {
   /** Fill the gaps: the text around each gap, and each gap's word-bank index. */
   fillParts?: string[];
   gapAnswers?: number[];
+  /** Time Traveler: the events already placed in this game, on this line. */
+  timeline?: { label: string, year: number }[];
   /** Predict the Outcome: lock, watch, then reveal; confidence weighs the score. */
   predict?: boolean;
   spinTotal?: number;

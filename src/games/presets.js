@@ -160,11 +160,13 @@ const GAME_FORMAT_PRESETS = {
     ]
   },
   'time-traveler': {
-    style: 'type',
+    style: 'slider',
     title: 'Time traveler',
-    settings: { scoreboard: true, scoreSlide: true, defaultTime: 60 },
+    settings: { scoreboard: true, scoreSlide: true, defaultTime: 30 },
     seeds: [
-      { question: '1928 — a researcher returns from holiday to a contaminated petri dish and notices bacteria around mould have died. What was discovered?', accept: ['penicillin'], explanation: 'Alexander Fleming discovered penicillin in 1928.' }
+      { question: 'Place it in time: the Great Fire of London', min: 1500, max: 1900, step: 1, target: 1666, tolerance: 15, unit: '', explanation: 'September 1666. It burned for four days and destroyed most of the medieval city.' },
+      { question: 'Place it in time: Fleming notices mould killing bacteria (penicillin)', min: 1800, max: 2000, step: 1, target: 1928, tolerance: 8, unit: '', explanation: '1928. Mass production only came in the 1940s.' },
+      { question: 'Place it in time: the first Moon landing', min: 1900, max: 2020, step: 1, target: 1969, tolerance: 4, unit: '', explanation: 'July 1969, Apollo 11.' }
     ]
   },
   'word-reveal': {

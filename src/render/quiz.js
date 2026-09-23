@@ -164,6 +164,20 @@ export function createQuizRenderer(SF, helpers) {
     line.appendChild(el('div', 'nl-band'));
     line.appendChild(el('div', 'nl-marks'));
     line.appendChild(el('div', 'nl-target'));
+    /* Time Traveler: the events already placed this game stay on the line,
+       so each round's answer lands among the ones before it. */
+    if (slide.timeline && slide.timeline.length) {
+      var past = el('div', 'nl-past');
+      var span = (Number(slide.max) - Number(slide.min)) || 1;
+      slide.timeline.forEach(function (e, k) {
+        var pin = el('div', 'nl-past-pin' + (k % 2 ? ' low' : ''));
+        pin.style.left = Math.max(0, Math.min(100, (e.year - slide.min) * 100 / span)) + '%';
+        pin.appendChild(el('span', 'npp-year', String(e.year)));
+        pin.appendChild(el('span', 'npp-label', e.label));
+        past.appendChild(pin);
+      });
+      line.appendChild(past);
+    }
     wrap.appendChild(line);
     var ends = el('div', 'nl-ends');
     ends.appendChild(el('span', null, SF.formatValue(slide.min, slide.unit)));

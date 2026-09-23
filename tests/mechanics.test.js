@@ -419,3 +419,20 @@ test('drawn formats play in a fresh order and know their place in the pile; Head
     assert.ok(seen.size > 1, style + ' is not played in one fixed order');
   }
 });
+
+test('Time Traveler places events on one growing timeline, and an old typed game heals', () => {
+  const SF = loadModel();
+  const old = SF.normalizeGame({ style: 'type', format: 'time-traveler', title: 'T',
+    questions: [{ question: '1928 — mould kills bacteria. What was discovered?', accept: ['penicillin'] }] });
+  assert.equal(old.style, 'slider');
+  const q = old.questions[0];
+  assert.equal(q.question, 'Place it in time: penicillin', 'the event is named; the year is the answer');
+  assert.equal(q.target, 1928);
+  assert.ok(q.min <= 1928 && q.max >= 1928);
+  assert.match(q.explanation, /1928/, 'the old clue moves to the reveal');
+  const g = SF.normalizeGame({ style: 'slider', format: 'time-traveler', title: 'T',
+    questions: SF.GAME_FORMAT_PRESETS['time-traveler'].seeds });
+  const items = SF.compileGame(g).filter(s => s.type === 'quiz');
+  assert.ok(items.every(s => s.min === items[0].min && s.max === items[0].max), 'one line for the game');
+  assert.deepEqual(Array.from(items, s => s.timeline.length), [0, 1, 2], 'each round adds its event');
+});

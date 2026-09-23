@@ -4444,6 +4444,18 @@
       line.appendChild(el("div", "nl-band"));
       line.appendChild(el("div", "nl-marks"));
       line.appendChild(el("div", "nl-target"));
+      if (slide.timeline && slide.timeline.length) {
+        var past = el("div", "nl-past");
+        var span = Number(slide.max) - Number(slide.min) || 1;
+        slide.timeline.forEach(function(e, k) {
+          var pin = el("div", "nl-past-pin" + (k % 2 ? " low" : ""));
+          pin.style.left = Math.max(0, Math.min(100, (e.year - slide.min) * 100 / span)) + "%";
+          pin.appendChild(el("span", "npp-year", String(e.year)));
+          pin.appendChild(el("span", "npp-label", e.label));
+          past.appendChild(pin);
+        });
+        line.appendChild(past);
+      }
       wrap.appendChild(line);
       var ends = el("div", "nl-ends");
       ends.appendChild(el("span", null, SF.formatValue(slide.min, slide.unit)));
@@ -21817,7 +21829,7 @@
     },
     "time-traveler": {
       label: "Time traveler",
-      answersHint: "A clue and a date in the question; the event is the answer."
+      answersHint: "Name the event; the year is the answer. Phones place it on a timeline, and each round adds it to the line."
     },
     "ranking": {
       label: "Ranking challenge",
@@ -21905,7 +21917,8 @@
     "ranking": "order",
     "odd-one-out": "oddone",
     "predict-outcome": "choice",
-    "time-traveler": "type",
+    /* A slider on a year scale since 23 Sep 2026: place the event in time. */
+    "time-traveler": "slider",
     "connection-maker": "connection",
     "random-challenge": "randomchallenge",
     "concept-chain": "conceptchain",
@@ -22335,11 +22348,13 @@
       ]
     },
     "time-traveler": {
-      style: "type",
+      style: "slider",
       title: "Time traveler",
-      settings: { scoreboard: true, scoreSlide: true, defaultTime: 60 },
+      settings: { scoreboard: true, scoreSlide: true, defaultTime: 30 },
       seeds: [
-        { question: "1928 — a researcher returns from holiday to a contaminated petri dish and notices bacteria around mould have died. What was discovered?", accept: ["penicillin"], explanation: "Alexander Fleming discovered penicillin in 1928." }
+        { question: "Place it in time: the Great Fire of London", min: 1500, max: 1900, step: 1, target: 1666, tolerance: 15, unit: "", explanation: "September 1666. It burned for four days and destroyed most of the medieval city." },
+        { question: "Place it in time: Fleming notices mould killing bacteria (penicillin)", min: 1800, max: 2e3, step: 1, target: 1928, tolerance: 8, unit: "", explanation: "1928. Mass production only came in the 1940s." },
+        { question: "Place it in time: the first Moon landing", min: 1900, max: 2020, step: 1, target: 1969, tolerance: 4, unit: "", explanation: "July 1969, Apollo 11." }
       ]
     },
     "word-reveal": {
@@ -23278,6 +23293,9 @@
       settings.bowlTarget = oldFirst && oldFirst.targetScore;
     }
     g.settings = normalizeGameSettings(settings);
+    if (format === "time-traveler" && style === "slider" && rawStyle === "type" && Array.isArray(raw.questions)) {
+      raw = Object.assign({}, raw, { questions: raw.questions.map(healTimeTraveler) });
+    }
     g.questions = (Array.isArray(raw.questions) ? raw.questions : []).map(function(q) {
       if (!remapped) return normalizeQuestion(q, style);
       var fresh = makeQuestion(style);
@@ -23304,7 +23322,16 @@
         "category",
         "term",
         "prompt",
-        "definition"
+        "definition",
+        /* A slider's line and a fill's lures, for the formats that heal into
+           them (Time Traveler, Fill the gaps). */
+        "min",
+        "max",
+        "step",
+        "target",
+        "tolerance",
+        "unit",
+        "lures"
       ].forEach(function(k) {
         if (q && q[k] != null && q[k] !== "") fresh[k] = q[k];
       });
@@ -23409,6 +23436,27 @@
     "bloom",
     "voteOnly"
   ];
+  function healTimeTraveler(q) {
+    if (!q || typeof q !== "object" || q.target != null) return q;
+    var clue = String(q.question || "");
+    var year = /\b(\d{3,4})\b/.exec(clue);
+    var event = String(Array.isArray(q.accept) && q.accept[0] || q.answer || "").trim();
+    if (!year || !event) return q;
+    var y = Number(year[1]);
+    var min = Math.floor(y / 100) * 100 - 100;
+    return {
+      question: "Place it in time: " + event,
+      min,
+      max: min + 300,
+      step: 1,
+      target: y,
+      tolerance: 10,
+      unit: "",
+      explanation: [clue, q.explanation].filter(function(x) {
+        return String(x || "").trim();
+      }).join(" ")
+    };
+  }
   var DRAW_STYLES = ["spinexplain", "randomchallenge", "headsup"];
   function compileGame(game, opts = {}) {
     opts = opts || {};
@@ -23443,6 +23491,14 @@
     if (engine.boardEngine) return out.concat(engine.boardEngine.compile(game, { makeSlide }));
     var playQuestions = game.questions.slice();
     var drawn = DRAW_STYLES.indexOf(game.style) >= 0;
+    var travelSpan = { min: Infinity, max: -Infinity };
+    if (game.format === "time-traveler") {
+      playQuestions.forEach(function(q) {
+        if (Number.isFinite(Number(q.min))) travelSpan.min = Math.min(travelSpan.min, Number(q.min));
+        if (Number.isFinite(Number(q.max))) travelSpan.max = Math.max(travelSpan.max, Number(q.max));
+      });
+      if (!(travelSpan.max > travelSpan.min)) travelSpan = { min: 0, max: 100 };
+    }
     if (drawn) {
       for (var draw = playQuestions.length - 1; draw > 0; draw--) {
         var pick = Math.floor(Math.random() * (draw + 1));
@@ -23478,6 +23534,18 @@
         s.spinDraw = i + 1;
         s.spinTotal = playQuestions.length;
         s.headPrompt = "Spin & explain";
+      }
+      if (game.format === "time-traveler" && s.input === "number") {
+        s.min = travelSpan.min;
+        s.max = travelSpan.max;
+        s.timeline = playQuestions.slice(0, i).map(function(prev) {
+          return {
+            label: String(prev.question || "").replace(/^Place it in time:\s*/i, "").slice(0, 60),
+            year: Number(prev.target)
+          };
+        }).filter(function(e) {
+          return Number.isFinite(e.year) && e.year >= Number(s.min) && e.year <= Number(s.max);
+        });
       }
       if (game.style === "headsup") {
         s.roundSeconds = Number(st.defaultTime) > 0 ? Math.min(600, Number(st.defaultTime)) : 60;

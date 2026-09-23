@@ -956,6 +956,13 @@ function normalizeGame(raw) {
     settings.bowlTarget = oldFirst && oldFirst.targetScore;
   }
   g.settings = normalizeGameSettings(settings);
+  /* An older Time Traveler was a typed answer: a clue with the year in it,
+     and the event to name. Now the event is named and the year is what the
+     room places, so the year comes out of the clue (which would give it
+     away) into the target, and the clue moves to the reveal. */
+  if (format === 'time-traveler' && style === 'slider' && rawStyle === 'type' && Array.isArray(raw.questions)) {
+    raw = Object.assign({}, raw, { questions: raw.questions.map(healTimeTraveler) });
+  }
   /* Every question is normalised against the game's style, which is what
      makes converting a game between styles safe. */
   g.questions = (Array.isArray(raw.questions) ? raw.questions : [])
@@ -968,7 +975,10 @@ function normalizeGame(raw) {
         'notes', 'bloom', 'source', 'timeLimit', 'points', 'voteOnly',
         'passage', 'accept', 'allowTypos',
         'itemA', 'itemB', 'similarities', 'differences', 'category',
-        'term', 'prompt', 'definition'].forEach(function (k) {
+        'term', 'prompt', 'definition',
+        /* A slider's line and a fill's lures, for the formats that heal into
+           them (Time Traveler, Fill the gaps). */
+        'min', 'max', 'step', 'target', 'tolerance', 'unit', 'lures'].forEach(function (k) {
         if (q && q[k] != null && q[k] !== '') fresh[k] = q[k];
       });
       if (q && q.id) fresh.id = q.id;
@@ -1113,6 +1123,22 @@ var QUESTION_SLIDE_FIELDS = [
  * @param {{theme?: string, intro?: boolean, scoreSlide?: boolean, label?: string}} [opts]
  * @returns {Slide[]} slides the player can run
  */
+/** A typed Time Traveler question as a slider on a year scale. */
+function healTimeTraveler(q) {
+  if (!q || typeof q !== 'object' || q.target != null) return q;
+  var clue = String(q.question || '');
+  var year = /\b(\d{3,4})\b/.exec(clue);
+  var event = String((Array.isArray(q.accept) && q.accept[0]) || q.answer || '').trim();
+  if (!year || !event) return q;
+  var y = Number(year[1]);
+  var min = Math.floor(y / 100) * 100 - 100;
+  return {
+    question: 'Place it in time: ' + event,
+    min: min, max: min + 300, step: 1, target: y, tolerance: 10, unit: '',
+    explanation: [clue, q.explanation].filter(function (x) { return String(x || '').trim(); }).join(' ')
+  };
+}
+
 /* Styles whose items are drawn at random each run — see compileGame. */
 var DRAW_STYLES = ['spinexplain', 'randomchallenge', 'headsup'];
 
@@ -1170,6 +1196,15 @@ function compileGame(game, opts = {}) {
      ("Card 3 · 9 left"). Whole questions are shuffled, so an explanation
      stays with its item; the authored order and the IDs are untouched. */
   var drawn = DRAW_STYLES.indexOf(game.style) >= 0;
+  /* Time Traveler's line spans every event in the game. */
+  var travelSpan = { min: Infinity, max: -Infinity };
+  if (game.format === 'time-traveler') {
+    playQuestions.forEach(function (q) {
+      if (Number.isFinite(Number(q.min))) travelSpan.min = Math.min(travelSpan.min, Number(q.min));
+      if (Number.isFinite(Number(q.max))) travelSpan.max = Math.max(travelSpan.max, Number(q.max));
+    });
+    if (!(travelSpan.max > travelSpan.min)) travelSpan = { min: 0, max: 100 };
+  }
   if (drawn) {
     for (var draw = playQuestions.length - 1; draw > 0; draw--) {
       var pick = Math.floor(Math.random() * (draw + 1));
@@ -1205,6 +1240,19 @@ function compileGame(game, opts = {}) {
       s.holdResults = true;
     }
     if (game.style === 'spinexplain') { s.spinDraw = i + 1; s.spinTotal = playQuestions.length; s.headPrompt = 'Spin & explain'; }
+    /* Time Traveler: each round's line carries the events already placed,
+       so the timeline grows across the game — the travel. */
+    if (game.format === 'time-traveler' && s.input === 'number') {
+      /* One line for the whole game, wide enough for every event on it. */
+      s.min = travelSpan.min;
+      s.max = travelSpan.max;
+      s.timeline = playQuestions.slice(0, i).map(function (prev) {
+        return {
+          label: String(prev.question || '').replace(/^Place it in time:\s*/i, '').slice(0, 60),
+          year: Number(prev.target)
+        };
+      }).filter(function (e) { return Number.isFinite(e.year) && e.year >= Number(s.min) && e.year <= Number(s.max); });
+    }
     /* Heads Up is a round, not a run of timed terms: one clock for the
        whole pile, set by the game's time. A term has no clock of its own. */
     if (game.style === 'headsup') {

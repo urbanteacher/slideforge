@@ -655,3 +655,19 @@
 }
 .layout-quiz .proposal-on-table .pot-label { font-size: 14px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; opacity: .75; white-space: nowrap; }
 .layout-quiz .proposal-on-table .pot-text { font-size: 26px; font-weight: 700; }
+
+/* ---- Time Traveler: the timeline grows across the game ---- */
+.layout-quiz .numberline .nl-line { position: relative; }
+.layout-quiz .numberline .nl-past { position: absolute; inset: 0; pointer-events: none; }
+.layout-quiz .numberline .nl-past-pin {
+  position: absolute; bottom: 100%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding-bottom: 10px; max-width: 180px; text-align: center;
+  font-size: 14px; line-height: 1.2; color: var(--s-dim);
+}
+.layout-quiz .numberline .nl-past-pin::after {
+  content: ''; position: absolute; bottom: 0; left: 50%; width: 2px; height: 10px; background: var(--s-dim);
+}
+.layout-quiz .numberline .nl-past-pin.low { bottom: auto; top: 100%; padding: 10px 0 0; }
+.layout-quiz .numberline .nl-past-pin.low::after { bottom: auto; top: 0; }
+.layout-quiz .numberline .npp-year { font-weight: 800; color: var(--s-fg); font-variant-numeric: tabular-nums; }

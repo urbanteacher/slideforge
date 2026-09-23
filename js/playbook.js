@@ -360,17 +360,17 @@
     },
     'time-traveler': {
       title: 'Time Traveler',
-      aim: 'Chronology / sequenced recall from a year or clue.',
+      aim: 'Chronology: where does this belong in time, and next to what?',
       judgement: 'auto',
       demo: 'class',
-      phases: 'show clue → type event → next',
-      timer: 'Per event 30–120s (default 60).',
-      players: 'Teams or individuals rotate.',
-      scoring: 'Exact event name +1 · timeout 0.',
+      phases: 'the event → place it on the timeline → reveal every pin and the year → the line grows',
+      timer: 'Per event (default 30s).',
+      players: 'Every phone places the event on a year line.',
+      scoring: 'Within the tolerance scores the points. The closer the room, the tighter the cluster of pins.',
       howToPlay: [
-        'A year or clue appears.',
-        'Name the event from memory.',
-        'Correct answers grow a timeline on screen.'
+        'An event is named. Each phone drags it to the year they think.',
+        'The reveal shows every pin on the wall’s timeline and the true year.',
+        'The next event arrives on the same line, with every earlier event already on it: the timeline grows across the game.'
       ]
     },
     'connection-maker': {
