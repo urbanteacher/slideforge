@@ -4496,7 +4496,7 @@
     function quizPresent(slide) {
       var f = slide.format || "";
       if (f === "emoji-guess") return "emoji";
-      if (f === "fill-in-the-blanks") return "blanks";
+      if (f === "fill-in-the-blanks" && slide.input !== "fill") return "blanks";
       if (f === "odd-one-out") return "oddone";
       if (f === "compare-contrast") return "compare";
       if (f === "spot-the-error") return "spoterror";

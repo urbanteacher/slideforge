@@ -619,6 +619,10 @@
 }
 .layout-quiz.is-fill .fill-passage[data-len="medium"] { font-size: 38px; }
 .layout-quiz.is-fill .fill-passage[data-len="long"] { font-size: 30px; line-height: 1.75; }
+/* Revealed, each gap carries a line of counts beneath it: the lines open
+   up so the counts sit between them, not over the next line's words. */
+.layout-quiz.is-fill.fill-revealed .fill-passage { line-height: 2.5; }
+.layout-quiz.is-fill.fill-revealed .fill-passage[data-len="long"] { line-height: 2.6; }
 .layout-quiz.is-fill .fill-gap {
   position: relative; display: inline-flex; align-items: baseline; gap: 8px;
   min-width: 5.5em; padding: 0 .35em; margin: 0 .12em;

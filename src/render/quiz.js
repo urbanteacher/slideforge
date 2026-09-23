@@ -238,7 +238,8 @@ export function createQuizRenderer(SF, helpers) {
        but must not look the same on the wall. */
     var f = slide.format || '';
     if (f === 'emoji-guess') return 'emoji';
-    if (f === 'fill-in-the-blanks') return 'blanks';
+    /* The old typed cloze stage; Fill the gaps draws its own passage. */
+    if (f === 'fill-in-the-blanks' && slide.input !== 'fill') return 'blanks';
     if (f === 'odd-one-out') return 'oddone';
     if (f === 'compare-contrast') return 'compare';
     if (f === 'spot-the-error') return 'spoterror';
