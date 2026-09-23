@@ -45,6 +45,14 @@ const ROOM_PLAY = Object.freeze({
     entry: support('yes', 'The teacher reveals and marks paper answers.'),
     solo: support('partial', 'A solo paper run still needs a checked workflow.')
   }),
+  /* A vote with no right answer to be marked against: the room's split is
+     the point (Odd One Out). */
+  vote: Object.freeze({
+    phones: support('yes', 'Each learner taps their pick; nobody is marked.'),
+    teams: support('yes', 'Teams can vote together, then defend their pick.'),
+    entry: support('yes', 'The teacher records each learner’s pick by key.'),
+    solo: support('no', 'The format depends on discussion with others.')
+  }),
   discussion: Object.freeze({
     phones: support('no', 'This discussion currently has no phone answer step.'),
     teams: support('yes', 'Teams can discuss before the reveal.'),

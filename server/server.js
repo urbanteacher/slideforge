@@ -1634,6 +1634,8 @@ ws.attach(server, (sock, req) => {
           /* Peer instruction: collected, never resolved. Carried only so the
              journal can say the reveal was withheld on purpose. */
           voteOnly: m.voteOnly === true,
+          /* A pick, not an answer: not marked, not counted in accuracy. */
+          unmarked: m.unmarked === true,
           // the host knows where this question sits in the deck; fall back to
           // a running count if an older client doesn't send it
           index: Number(m.n) > 0 ? Number(m.n) : room.asked,
@@ -1698,7 +1700,8 @@ ws.attach(server, (sock, req) => {
         const unmarked = [...room.players.values()].filter(
           (p) => p.answer != null && !marks.has(String(p.id)) &&
                  (!room.question.eligible || room.question.eligible.has(p.id)));
-        if (unmarked.length) {
+        /* A vote that is not marked (Odd One Out) has no verdicts to wait for. */
+        if (unmarked.length && !room.question.unmarked) {
           if (room.host) {
             room.host.json({ t: 'markStale', id: room.question.id,
               rev: room.answerRev, answers: answersFor(room) });
@@ -1748,7 +1751,7 @@ ws.attach(server, (sock, req) => {
              rather than of understanding — and which says nothing at all about
              the learner who answered three of nine. */
           const wasAsked = !room.question.eligible || room.question.eligible.has(p.id);
-          if (wasAsked && !spoken) {
+          if (wasAsked && !spoken && !room.question.unmarked) {
             p.askedCount = (p.askedCount || 0) + 1;
             if (p.answer != null) p.answeredCount = (p.answeredCount || 0) + 1;
           }
@@ -1771,7 +1774,7 @@ ws.attach(server, (sock, req) => {
           }
           p.score = Math.max(0, p.score + gained);
           p.lastGain = gained;
-          p.lastRight = spoken ? null : marks.get(String(p.id)) === true;
+          p.lastRight = spoken || room.question.unmarked ? null : marks.get(String(p.id)) === true;
         }
 
         /* Each question contributes its own per-team average. Summing those
@@ -1809,6 +1812,10 @@ ws.attach(server, (sock, req) => {
           p.sock.json({
             t: 'result',
             spoken,
+            unmarked: room.question.unmarked === true,
+            /* What this phone picked, for a vote that has no right answer. */
+            picked: room.question.unmarked && Number.isInteger(p.answer)
+              ? String(room.question.options[p.answer] || '').slice(0, 200) : '',
             oralCount,
             oralAccepted: !!accepted,
             /* Who the credit went to, as this phone may hear it: "yours",

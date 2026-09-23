@@ -5234,18 +5234,33 @@
           line2.appendChild(el("span", "tick", i === slide.correct ? "✓" : "✗"));
         }
         b.appendChild(line2);
+        if (present === "oddone") {
+          var col = el("span", "col");
+          col.appendChild(el("span", "bar"));
+          col.appendChild(el("span", "cnt", ""));
+          b.appendChild(col);
+        }
         if (inlineWhy && i === slide.correct) b.appendChild(whyBox());
         wrap.appendChild(b);
       });
-      pad.appendChild(wrap);
-      if (present === "oddone" && !opts.revealed) {
-        pad.appendChild(el(
-          "p",
-          "oddone-discuss",
-          "Discuss: which does not belong, and what is the rule? Reveal when you are ready."
-        ));
+      if (present === "oddone") {
+        wrap.classList.add("tally", "odd-heat");
+        wrap.dataset.correct = String(slide.correct);
       }
-      if (present === "oddone") return;
+      pad.appendChild(wrap);
+      if (present === "oddone") {
+        if (!opts.revealed) {
+          pad.appendChild(el(
+            "p",
+            "oddone-discuss",
+            "Which one does not belong? Vote on your phone, and have your rule ready."
+          ));
+        }
+        pad.appendChild(el("p", "odd-verdict", ""));
+        if (slide.explanation && !inlineWhy) pad.appendChild(whyBox());
+        pad.appendChild(el("div", "answered-count", ""));
+        return;
+      }
       var tally = el("div", "tally");
       opts_.forEach(function(_, i) {
         var col = el("div", "col" + (i === slide.correct ? " right" : ""));
@@ -17716,6 +17731,14 @@
       entry: support("yes", "The teacher reveals and marks paper answers."),
       solo: support("partial", "A solo paper run still needs a checked workflow.")
     }),
+    /* A vote with no right answer to be marked against: the room's split is
+       the point (Odd One Out). */
+    vote: Object.freeze({
+      phones: support("yes", "Each learner taps their pick; nobody is marked."),
+      teams: support("yes", "Teams can vote together, then defend their pick."),
+      entry: support("yes", "The teacher records each learner’s pick by key."),
+      solo: support("no", "The format depends on discussion with others.")
+    }),
     discussion: Object.freeze({
       phones: support("no", "This discussion currently has no phone answer step."),
       teams: support("yes", "Teams can discuss before the reveal."),
@@ -18819,10 +18842,10 @@
     },
     starters: oddone_default,
     key: "oddone",
-    plays: ROOM_PLAY.discussion,
+    plays: ROOM_PLAY.vote,
     label: "Odd one out",
     icon: "◇",
-    blurb: "Four equal items. Discuss which does not belong and why — then reveal the prepared rationale. No score.",
+    blurb: "Four equal items. Phones vote for the odd one; the reveal shows the room’s split, the prepared rule, and invites other picks to defend theirs. No score.",
     mechanic: "points",
     input: "choice",
     minOptions: 4,
@@ -18883,9 +18906,10 @@
       }).slice(0, 4);
       s.correct = Math.max(0, Math.min(3, Number(q.correct) || 0));
       s.points = 0;
-      s.voteOnly = true;
       s.hideAnswerUntilReveal = true;
       s.oddoneDiscuss = true;
+      s.holdResults = true;
+      s.unmarked = true;
       s.timeLimit = 0;
     },
     mark: function(s, response) {
@@ -23143,10 +23167,12 @@
     if (styleKey === "oddone") {
       s.points = 0;
       s.timeLimit = 0;
-      s.voteOnly = true;
+      s.voteOnly = false;
       s.confidence = false;
       s.hideAnswerUntilReveal = true;
       s.oddoneDiscuss = true;
+      s.holdResults = true;
+      s.unmarked = true;
     }
     if (styleKey === "compare") {
       s.points = 0;

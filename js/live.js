@@ -2112,7 +2112,7 @@
     } else if (s.style === 'oddone' || s.oddoneDiscuss) {
       role = 'discuss';
       headPrompt = 'Odd one out';
-      participation = 'Discuss with the room. Do not tap an answer — the teacher reveals the odd one.';
+      participation = 'Tap the one you think is the odd one out, and be ready to say your rule.';
     } else if (s.style === 'compare' || s.compareDiscuss) {
       role = 'discuss';
       headPrompt = 'Compare & contrast';
@@ -2247,6 +2247,7 @@
       /* Journalled so the report knows an unrevealed check was meant to be
          unrevealed, rather than reading as a loop somebody forgot to close. */
       voteOnly: s.voteOnly === true,
+      unmarked: s.unmarked === true,
       sourceSlideId: s.sourceSlideId || s.id,
       /* Neither a typed nor a slider question sends options — there are
          none. The phones switch control on `input` alone, and a slider
@@ -2350,9 +2351,9 @@
         sendIdle(s);
         return;
       }
-      /* Odd One Out / Compare & Contrast: wall-led discuss — phones wait. */
-      if (s.style === 'oddone' || s.oddoneDiscuss ||
-          s.style === 'compare' || s.compareDiscuss) {
+      /* Compare & Contrast: wall-led discuss — phones wait. Odd One Out
+         votes on the phones, so it is sent as a question. */
+      if (s.style === 'compare' || s.compareDiscuss) {
         sendIdle(s);
         return;
       }
@@ -2477,7 +2478,8 @@
       t: 'reveal',
       id: s.id,
       rev: Live.snapshot.rev,
-      marks: marksFor(s),
+      /* A pick is not an answer: nobody is marked (Odd One Out). */
+      marks: s.unmarked ? [] : marksFor(s),
       correct: open ? -1 : s.correct,
       /* A spot question's answer is the wrong words and their correction,
          not whichever single word the span starts on. */
@@ -2522,6 +2524,9 @@
     /* A vote-only question never resolves itself. The split is the point and
        the answer belongs to the question after the discussion. */
     if (s.voteOnly) return;
+    /* Odd One Out waits for the teacher: the discussion comes before the
+       reveal, however quickly the room votes. */
+    if (s.style === 'oddone' || s.oddoneDiscuss) return;
     var pending = s.confidence !== false ? (m.answered || 0) - (m.sured || 0) : 0;
     if (pending <= 0) {
       if (Live._sureTimer) { clearTimeout(Live._sureTimer); Live._sureTimer = null; }

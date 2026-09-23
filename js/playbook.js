@@ -316,15 +316,16 @@
       title: 'Odd One Out',
       aim: 'Categorisation — justify the classification rule.',
       judgement: 'discuss',
-      demo: 'discuss',
-      phases: 'discuss four items → reveal → next',
-      timer: 'None.',
-      players: 'Class discussion — phones stay idle.',
-      scoring: 'None — the justification is the lesson.',
+      /* A rehearsal class votes, so the reveal has a split to show. */
+      demo: 'class',
+      phases: 'vote on phones → reveal the split and the rule → defend other picks → next',
+      timer: 'None. The teacher reveals when the room has voted and talked.',
+      players: 'Every phone votes; nobody is marked right or wrong.',
+      scoring: 'None — the justification is the lesson, and a pick never counts against accuracy.',
       howToPlay: [
-        'Four equal items appear on the wall.',
-        'Argue which is the odd one and why.',
-        'Reveal the prepared rationale; accept other defensible rules.'
+        'Four equal items appear on the wall. Each learner taps the odd one on their phone.',
+        'The votes stay hidden. Next reveals the room’s split across the tiles, the prepared odd one and its reason.',
+        'The next most popular pick is invited to defend its rule — accept any rule that holds.'
       ]
     },
     'compare-contrast': {

@@ -2165,6 +2165,7 @@
     openTally(node);
     var max = Math.max(1, Math.max.apply(null, counts));
     var spotting = tally.classList.contains('spot-passage');
+    var odd = tally.classList.contains('odd-heat');
     Array.prototype.forEach.call(tally.querySelectorAll('.col'), function (col, i) {
       var n = counts[i] || 0;
       col.querySelector('.bar').style.height = Math.round((n / max) * 52) + 'px';
@@ -2173,9 +2174,36 @@
       col.style.setProperty('--share', String(n / max));
       /* Under a passage a "0" beneath every untouched word is noise; the
          words nobody chose say so by having no bar at all. */
-      col.querySelector('.cnt').textContent = spotting && !n ? '' : String(n);
+      col.querySelector('.cnt').textContent = (spotting || odd) && !n ? '' : String(n);
     });
     if (spotting) spotVerdict(node, tally, counts);
+    if (odd) oddVerdict(node, tally, counts);
+  }
+
+  /* Odd One Out's reveal sentence. There is a prepared odd one, but the
+     room's own split is the lesson: how many saw the prepared rule, and which
+     other pick drew the most votes — named as a challenge to defend, never as
+     a mistake. */
+  function oddVerdict(node, tally, counts) {
+    var box = node.querySelector('.odd-verdict');
+    if (!box) return;
+    var prepared = Number(tally.dataset.correct) || 0;
+    var names = Array.prototype.map.call(tally.querySelectorAll('.opt .txt'), function (t) {
+      return String(t.textContent || '').trim();
+    });
+    var total = counts.reduce(function (a, n) { return a + (n || 0); }, 0);
+    box.textContent = '';
+    if (!total) { box.textContent = 'Nobody voted. Which rule would you argue for?'; return; }
+    var other = -1, otherN = 0;
+    counts.forEach(function (n, i) { if (i !== prepared && (n || 0) > otherN) { otherN = n; other = i; } });
+    var agreed = counts[prepared] || 0;
+    var b = document.createElement('b');
+    b.textContent = agreed + ' of ' + total + ' picked ' + (names[prepared] || 'the prepared one') + '.';
+    box.appendChild(b);
+    if (other >= 0 && otherN) {
+      box.appendChild(document.createTextNode(' ' + otherN + ' picked ' + names[other] +
+        ': what rule makes it the odd one out?'));
+    }
   }
 
   /* The one sentence a spot reveal needs: how many found it, and where the

@@ -370,6 +370,8 @@ export interface Slide {
   drawTotal?: number;
   /** Heads Up: the length of the round the term belongs to. */
   roundSeconds?: number;
+  /** A vote that is not marked right or wrong (Odd One Out). */
+  unmarked?: boolean;
   spinTotal?: number;
   headPrompt?: string;
 

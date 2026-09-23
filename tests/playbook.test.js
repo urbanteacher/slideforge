@@ -64,9 +64,9 @@ test('demo kind routes boards vs class vs judge vs discuss', () => {
   assert.equal(SF.Playbook.demoKind({ format: 'low-stakes-quiz', style: 'lowstakes' }), 'paper');
   assert.equal(SF.Playbook.demoKind({ format: 'beat-the-clock', style: 'speed' }), 'class');
   assert.equal(SF.Playbook.demoKind({ format: 'spin-explain', style: 'spinexplain' }), 'judge');
-  assert.equal(SF.Playbook.demoKind({ format: 'odd-one-out', style: 'choice' }), 'discuss');
-  assert.equal(SF.Playbook.demoKind({ format: 'odd-one-out', style: 'oddone' }), 'discuss');
-  assert.equal(SF.Playbook.demoKind({ style: 'oddone' }), 'discuss');
+  assert.equal(SF.Playbook.demoKind({ format: 'odd-one-out', style: 'choice' }), 'class'); // it votes now
+  assert.equal(SF.Playbook.demoKind({ format: 'odd-one-out', style: 'oddone' }), 'class'); // it votes now
+  assert.equal(SF.Playbook.demoKind({ style: 'oddone' }), 'class'); // it votes now
   assert.equal(SF.Playbook.demoKind({ format: 'compare-contrast', style: 'choice' }), 'discuss');
   assert.equal(SF.Playbook.demoKind({ format: 'compare-contrast', style: 'compare' }), 'discuss');
   assert.equal(SF.Playbook.demoKind({ style: 'compare' }), 'discuss');

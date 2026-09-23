@@ -1056,14 +1056,18 @@ function fillQuestionSlide(q, styleKey, settings, s) {
   s.explainStyle = settings.explainStyle;
   s.confidence = settings.confidence !== false;
   s.scoreSpoken = settings.scoreSpoken === true;
-  /* Discuss contract — never reopen as a scored phone quiz. */
+  /* Odd One Out is a vote that is never scored or marked: no points, no
+     clock, no confidence question. Next reveals the split (it is not
+     voteOnly, which never reveals). See games/oddone.js. */
   if (styleKey === 'oddone') {
     s.points = 0;
     s.timeLimit = 0;
-    s.voteOnly = true;
+    s.voteOnly = false;
     s.confidence = false;
     s.hideAnswerUntilReveal = true;
     s.oddoneDiscuss = true;
+    s.holdResults = true;
+    s.unmarked = true;
   }
   if (styleKey === 'compare') {
     s.points = 0;

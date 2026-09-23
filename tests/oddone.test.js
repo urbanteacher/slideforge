@@ -4,6 +4,8 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
+const { freePort, start, connect, stop } = require('./harness');
 
 function load() {
   const ctx = { window: {}, console };
@@ -33,7 +35,7 @@ test('makeGame seeds four discuss sets with scoreboard off', () => {
   assert.ok(game.questions.every((q) => String(q.explanation).trim()));
 });
 
-test('compile is discuss-only: idle contract flags, no points or timer', () => {
+test('compile is a vote: held until the reveal, unmarked, no points or timer', () => {
   const SF = load();
   const game = SF.makeGame('Odd ones', 'oddone');
   const original = JSON.stringify(game);
@@ -45,7 +47,9 @@ test('compile is discuss-only: idle contract flags, no points or timer', () => {
     assert.equal(s.input, 'choice');
     assert.equal(s.points, 0);
     assert.equal(s.timeLimit, 0);
-    assert.equal(s.voteOnly, true);
+    assert.equal(s.voteOnly, false, 'Next reveals the split; it is not a vote that never resolves');
+    assert.equal(s.holdResults, true, 'the split waits for the reveal');
+    assert.equal(s.unmarked, true, 'a pick is not an answer');
     assert.equal(s.oddoneDiscuss, true);
     assert.equal(s.hideAnswerUntilReveal, true);
     assert.equal(s.options.length, 4);
@@ -96,4 +100,33 @@ test('problems require four distinct items and an explanation', () => {
   assert.equal(style.problems({
     options: ['A', 'B', 'C', 'D'], correct: 1, explanation: 'B is odd'
   }, 1), null);
+});
+
+test('the relay takes the vote, marks nobody and tells each phone what it picked', async t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sf-oddone-'));
+  const port = await freePort();
+  const server = await start(port, dir);
+  const sockets = [];
+  t.after(async () => { await stop(server); sockets.forEach(s => s.socket.close()); fs.rmSync(dir, { recursive: true, force: true }); });
+  const host = await connect(port); sockets.push(host);
+  host.send({ t: 'host', title: 'Odd', mode: 'individual' });
+  const room = await host.next('hosted');
+  const ada = await connect(port), ben = await connect(port); sockets.push(ada, ben);
+  ada.send({ t: 'join', pin: room.pin, name: 'Ada' }); ben.send({ t: 'join', pin: room.pin, name: 'Ben' });
+  await ada.next('joined'); await ben.next('joined');
+  host.send({ t: 'begin' });
+  host.send({ t: 'question', id: 'odd1', question: 'Which is the odd one out?', input: 'choice',
+    options: ['Iron', 'Copper', 'Oxygen', 'Zinc'], unmarked: true, points: 0, timeLimit: 0 });
+  await ada.next('question'); await ben.next('question');
+  ada.send({ t: 'answer', choice: 2 });
+  ben.send({ t: 'answer', choice: 3 });
+  const tally = await host.until('tally', m => m.answered === 2);
+  host.send({ t: 'reveal', id: 'odd1', rev: tally.rev, marks: [], correct: 2, answer: 'Oxygen', explanation: 'A non-metal.' });
+  const a = await ada.until('result', () => true), b = await ben.until('result', () => true);
+  assert.equal(a.unmarked, true);
+  assert.equal(a.picked, 'Oxygen');
+  assert.equal(b.picked, 'Zinc', 'the other pick is reported, not judged');
+  assert.equal(a.right, null); assert.equal(b.right, null);
+  assert.equal(b.asked, 0, 'a vote does not count as a question asked');
+  assert.equal(b.score, 0);
 });

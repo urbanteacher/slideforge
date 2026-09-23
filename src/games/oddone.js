@@ -2,9 +2,17 @@ import { ROOM_PLAY } from "./rooms.js";
 import starters from "../samples/oddone.json" with { type: "json" };
 /* SlideForge — games/oddone. Edit source here; npm run build updates js/model.js. */
 
-/* Odd One Out — four equal items; discuss the rule; reveal the prepared
-   odd one. Quiz-shaped discuss format: phones stay idle; no competitive
-   score. Justification is the lesson. */
+/* Odd One Out — vote, then defend.
+
+   Four equal items. Every phone taps the one it thinks does not belong; the
+   wall counts the votes and keeps them hidden. The reveal shows the room's
+   split across the four tiles, then the prepared odd one and its reason,
+   then an invitation to the next most popular pick to defend its rule —
+   because there is usually more than one defensible answer, and a
+   discussion that starts from the room's own split starts from something.
+
+   Nobody is marked: a pick that disagrees with the prepared one is not wrong,
+   and it never counts against a learner's accuracy (`unmarked`). No score. */
 /** @type {import("../types.js").GameEngine<import("../types.js").QuestionWith<'options'|'correct'>>} */
 const oddone = {
   /* The most of these a teacher can add. Declared here rather than
@@ -24,10 +32,10 @@ const oddone = {
   },
   starters,
   key: 'oddone',
-  plays: ROOM_PLAY.discussion,
+  plays: ROOM_PLAY.vote,
   label: 'Odd one out',
   icon: '\u25c7',
-  blurb: 'Four equal items. Discuss which does not belong and why — then reveal the prepared rationale. No score.',
+  blurb: 'Four equal items. Phones vote for the odd one; the reveal shows the room’s split, the prepared rule, and invites other picks to defend theirs. No score.',
   mechanic: 'points',
   input: 'choice',
   minOptions: 4,
@@ -84,9 +92,13 @@ const oddone = {
     s.options = q.options.map(function (o) { return String(o).trim(); }).slice(0, 4);
     s.correct = Math.max(0, Math.min(3, Number(q.correct) || 0));
     s.points = 0;
-    s.voteOnly = true;
     s.hideAnswerUntilReveal = true;
     s.oddoneDiscuss = true;
+    /* The votes stay off the wall until the reveal, or the tallest tile
+       would end the discussion before it started. */
+    s.holdResults = true;
+    /* A pick, not an answer: nothing is marked right or wrong. */
+    s.unmarked = true;
     s.timeLimit = 0;
   },
   mark: function (s, response) {

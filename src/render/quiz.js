@@ -1024,18 +1024,35 @@ export function createQuizRenderer(SF, helpers) {
       }
       b.appendChild(line);
 
+      /* Odd One Out: each tile carries its own share of the vote, held until
+         the reveal (holdResults), drawn as heat along its foot. */
+      if (present === 'oddone') {
+        var col = el('span', 'col');
+        col.appendChild(el('span', 'bar'));
+        col.appendChild(el('span', 'cnt', ''));
+        b.appendChild(col);
+      }
       if (inlineWhy && i === slide.correct) b.appendChild(whyBox());
       wrap.appendChild(b);
     });
+    if (present === 'oddone') {
+      wrap.classList.add('tally', 'odd-heat');
+      wrap.dataset.correct = String(slide.correct);
+    }
     pad.appendChild(wrap);
 
-    if (present === 'oddone' && !opts.revealed) {
-      pad.appendChild(el('p', 'oddone-discuss',
-        'Discuss: which does not belong, and what is the rule? Reveal when you are ready.'));
+    if (present === 'oddone') {
+      if (!opts.revealed) {
+        pad.appendChild(el('p', 'oddone-discuss',
+          'Which one does not belong? Vote on your phone, and have your rule ready.'));
+      }
+      /* The reveal's sentence: the room's split against the prepared rule,
+         and the next most popular pick invited to defend itself. */
+      pad.appendChild(el('p', 'odd-verdict', ''));
+      if (slide.explanation && !inlineWhy) pad.appendChild(whyBox());
+      pad.appendChild(el('div', 'answered-count', ''));
+      return;
     }
-
-    /* No vote tally for discuss-only Odd One Out. */
-    if (present === 'oddone') return;
 
     var tally = el('div', 'tally');
     opts_.forEach(function (_, i) {

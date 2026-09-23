@@ -539,3 +539,34 @@
 .layout-quiz.present-headsup .round-over .ro-who { font-size: 34px; font-weight: 700; }
 .layout-quiz.present-headsup .round-over .ro-next { font-size: 18px; color: var(--s-dim); }
 @keyframes sf-round-over { from { opacity: 0; transform: scale(1.04); } }
+
+/* ---- Odd One Out: vote, then defend ----
+   The four tiles are the heat map. Held until the reveal, each tile then
+   fills along its foot with its share of the vote, and the count sits in the
+   corner. The prepared odd one is marked; the others are not muted, because
+   a defensible other pick is not a wrong answer. */
+/* The generic tally is a strip of columns under the options; here the
+   options are the tally, so none of its box rules apply. */
+.layout-quiz.present-oddone .opts.odd-grid.tally,
+.layout-quiz.present-oddone .opts.odd-grid.tally.on {
+  height: auto; overflow: visible; align-items: stretch;
+}
+.layout-quiz .odd-heat .opt { position: relative; overflow: hidden; }
+.layout-quiz .odd-heat .opt .col {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 100%;
+  display: block; pointer-events: none;
+}
+.layout-quiz .odd-heat .opt .col .bar {
+  position: absolute; left: 0; bottom: 0; width: 100%; height: 100% !important;
+  background: color-mix(in srgb, var(--s-accent) 22%, transparent);
+  transform-origin: left center; transform: scaleX(var(--share, 0));
+  transition: transform .6s cubic-bezier(.3,0,.2,1);
+}
+.layout-quiz .odd-heat .opt .col .cnt {
+  position: absolute; right: 16px; top: 12px;
+  font-size: 30px; font-weight: 850; font-variant-numeric: tabular-nums;
+}
+.layout-quiz .odd-heat .opt .opt-line { position: relative; z-index: 1; }
+.layout-quiz .odd-heat .opt.muted { opacity: 1; }
+.layout-quiz .odd-verdict { font-size: 26px; line-height: 1.35; margin: 18px 0 0; text-align: center; }
+.layout-quiz .odd-verdict:empty { display: none; }

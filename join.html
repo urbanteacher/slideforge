@@ -1201,6 +1201,18 @@
         if (m.asked != null) { me.correct = m.correct || 0; me.asked = m.asked; }
         header(true);
         stopTick();
+        if (m.unmarked) {
+          /* A vote with no wrong answer: what you picked, what the prepared
+             one was, and — if they differ — that yours can still be right. */
+          var same = m.picked && m.answer && m.picked === m.answer;
+          $('waitIcon').textContent = same ? '✓' : m.picked ? '◇' : '·';
+          $('waitTitle').textContent = m.answer ? 'The prepared odd one: ' + m.answer : 'Revealed';
+          $('waitLead').textContent = !m.picked ? 'Listen to the reasons — which rule convinces you?'
+            : same ? 'You picked it too. What rule did you use?'
+            : 'You picked ' + m.picked + '. Is there a rule that makes it the odd one? Be ready to defend it.';
+          show('scWait');
+          break;
+        }
         if (m.spoken) {
           /* Said to this phone in its own terms: your answer, your team's
              point, or simply the room's count. */
