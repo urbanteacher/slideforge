@@ -873,6 +873,13 @@ function pushTally(room) {
     if (typeof p.sure === 'boolean') sured++;
     if (choosing && p.answer >= 0 && p.answer < counts.length) counts[p.answer]++;
   }
+  /* Tally entry: a show of hands or a pile of paper, counted by the teacher
+     without names. It joins the bars and the answered count; nobody is
+     scored for it. */
+  const hands = room.question.handCounts;
+  if (choosing && Array.isArray(hands)) {
+    hands.forEach((n, i) => { if (i < counts.length) { counts[i] += n; answered += n; total += n; } });
+  }
   room.host.json({
     t: 'tally',
     id: room.question.id,
@@ -1764,6 +1771,18 @@ ws.attach(server, (sock, req) => {
         }
         if (room.question.spoken) spokenFanout(room);
         else broadcast(room, questionMessage(room));
+        pushTally(room);
+
+      } else if (m.t === 'manualTally') {
+        /* The teacher's count per option for learners answering on paper or
+           by hands. Replaces the last count for this question; it never
+           touches a player, a mark or a score. */
+        const q = room.question;
+        if (!q || room.phase !== 'question' || room.answersClosed || q.input !== 'choice' ||
+            (m.id && m.id !== q.id) || !Array.isArray(m.counts) || m.counts.length !== q.options.length) return;
+        const counts = m.counts.map(n => Math.max(0, Math.min(500, Math.round(Number(n) || 0))));
+        q.handCounts = counts.some(n => n > 0) ? counts : null;
+        record(room, 'manualTally', { attempt: q.attempt, counts });
         pushTally(room);
 
       } else if (m.t === 'guesser') {

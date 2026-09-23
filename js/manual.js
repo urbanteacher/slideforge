@@ -51,6 +51,76 @@ $('add').onclick=function(){
 };
 $('reveal').onclick=function(){send('reveal');};
 
+/* Saved classes. Typing thirty names every lesson is why teacher entry goes
+   unused, so a list is kept per class — in this computer's storage and
+   nowhere else — and loaded back into the box in one click. */
+var CLASS_STORE='sf-class-lists';
+function classLists(){try{return JSON.parse(localStorage.getItem(CLASS_STORE)||'{}')||{};}catch(e){return {};}}
+function paintClassLists(){
+ var sel=$('classSaved');if(!sel)return;
+ var lists=classLists(),names=Object.keys(lists).sort();
+ sel.textContent='';
+ if(!names.length){var none=document.createElement('option');none.value='';none.textContent='No saved classes yet';sel.appendChild(none);}
+ names.forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n+' · '+lists[n].split('\n').filter(Boolean).length+' names';sel.appendChild(o);});
+ $('classLoad').disabled=!names.length;
+}
+if($('classSave'))$('classSave').onclick=function(){
+ var name=$('className').value.trim(),text=$('names').value.trim();
+ if(!name||!text){$('classNote').textContent='Type the names above and a class name, then save.';return;}
+ var lists=classLists();lists[name]=text;
+ try{localStorage.setItem(CLASS_STORE,JSON.stringify(lists));$('classNote').textContent='Saved '+name+' on this computer.';}
+ catch(e){$('classNote').textContent='This browser would not save it. Keep a copy of the names.';}
+ paintClassLists();
+};
+if($('classLoad'))$('classLoad').onclick=function(){
+ var lists=classLists(),name=$('classSaved').value;
+ if(!lists[name])return;
+ $('names').value=lists[name];saveDraft();
+ $('classNote').textContent='Loaded '+name+'. Press Add to put them in the room.';
+};
+paintClassLists();
+
+/* Teams without devices: one shared row per team, answered for the team. */
+if($('teamRows'))$('teamRows').onclick=function(){
+ (state.teams||[]).forEach(function(t,i){
+  var label=(t.name||t)+' · shared';
+  if((state.players||[]).some(function(p){return p.name===label;}))return;
+  setTimeout(function(){send('add',{names:[label],team:i});},i*120);
+ });
+};
+
+/* Tally entry. A room answering on paper or by hands is counted per option
+   and the counts join the wall's bars and reveal as phone answers do.
+   Nobody is named and nobody is scored. */
+var handDraft={id:'',counts:[]};
+function paintHandTally(q){
+ var box=$('handTally');if(!box)return;
+ var show=!!q&&q.input==='choice'&&!q.spoken&&!q.revealed&&(q.options||[]).length>0;
+ box.hidden=!show;
+ if(!show){box.textContent='';box.dataset.q='';return;}
+ if(handDraft.id!==q.id)handDraft={id:q.id,counts:(state.handCounts||(q.options||[]).map(function(){return 0;})).slice()};
+ if(box.dataset.q===q.id&&box.childElementCount)return;
+ box.dataset.q=q.id;box.textContent='';
+ var head=document.createElement('p');head.className='hand-lead';
+ head.textContent='Hands up or paper? Count each answer, then add it to the room. No names, no scores.';
+ box.appendChild(head);
+ (q.options||[]).forEach(function(text,i){
+  var row=document.createElement('div');row.className='hand-row';
+  var label=document.createElement('span');label.className='hand-label';label.textContent=String.fromCharCode(65+i)+' · '+text;row.appendChild(label);
+  var n=document.createElement('input');n.type='number';n.min='0';n.max='500';n.value=String(handDraft.counts[i]||0);n.className='hand-n';
+  n.setAttribute('aria-label','How many chose '+text);
+  n.oninput=function(){handDraft.counts[i]=Math.max(0,Math.round(Number(n.value)||0));};
+  row.appendChild(button('−',function(){handDraft.counts[i]=Math.max(0,(handDraft.counts[i]||0)-1);n.value=String(handDraft.counts[i]);}));
+  row.appendChild(n);
+  row.appendChild(button('+',function(){handDraft.counts[i]=(handDraft.counts[i]||0)+1;n.value=String(handDraft.counts[i]);}));
+  box.appendChild(row);
+ });
+ var go=button('Add to the room’s tally',function(){send('tally',{counts:handDraft.counts.slice()});});
+ go.className='hand-send';box.appendChild(go);
+ var note=document.createElement('p');note.className='notice hand-note';box.appendChild(note);
+ note.textContent=state.handCounts?'Counted so far: '+state.handCounts.map(function(c,i){return String.fromCharCode(65+i)+' '+c;}).join(' · '):'';
+}
+
 function editName(p){
  SF.askText({title:'Name for this learner',value:p.name||'',
   placeholder:'Their name'},function(next){
@@ -497,6 +567,8 @@ function render(){
  paintSpokenControls(q);
  paintProposals();
  paintTapPassage(q);
+ paintHandTally(q);
+ if($('teamRows'))$('teamRows').hidden=state.mode!=='teams'||!(state.teams||[]).length;
  var entered=all.filter(function(p){return p.manual;});
  var onPhones=all.filter(function(p){return !p.manual;});
  var people=entered.concat(onPhones);

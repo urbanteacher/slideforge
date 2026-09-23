@@ -97,3 +97,26 @@ test('teacher entry records ordered and tapped answers and explains refusals', a
  assert.deepEqual(r.checks[0].responses[0].order,[2,0,3,1]);
  assert.equal(r.checks[1].responses[0].choice,1);
 });
+
+test('tally entry: a show of hands joins the bars and the count, and scores nobody', async t => {
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sf-hands-'));
+  const port=await freePort(), relay=await start(port,dir), sockets=[];
+  t.after(async()=>{await stop(relay);sockets.forEach(s=>s.socket.close());fs.rmSync(dir,{recursive:true,force:true});});
+  const host=await connect(port);sockets.push(host);
+  host.send({t:'host',title:'Hands',mode:'individual'});const room=await host.next('hosted');
+  const ada=await connect(port);sockets.push(ada);
+  ada.send({t:'join',pin:room.pin,name:'Ada'});await ada.next('joined');
+  host.send({t:'begin'});
+  host.send({t:'question',id:'h1',question:'Which?',input:'choice',options:['A','B'],timeLimit:0,points:1000});
+  await ada.next('question');
+  ada.send({t:'answer',choice:0});
+  await host.until('tally',m=>m.answered===1);
+  host.send({t:'manualTally',id:'h1',counts:[3,5]});
+  const tally=await host.until('tally',m=>m.answered===9);
+  assert.deepEqual(Array.from(tally.counts),[4,5],'the hands join the phone answers');
+  assert.equal(tally.total,9);
+  assert.equal(tally.answers.length,1,'only real people are marked');
+  host.send({t:'manualTally',id:'h1',counts:[1,1]});
+  const again=await host.until('tally',m=>m.answered===3);
+  assert.deepEqual(Array.from(again.counts),[2,1],'a new count replaces the old one');
+});

@@ -94,3 +94,14 @@ body{background:#f5f6f2;color:#24372c;font:14px/1.5 system-ui,sans-serif}*{box-s
 .sp-proposal-text{font-size:15px;line-height:1.35}
 .sp-proposal-who{font-size:13px;color:#6b7768}
 .sp-on-table{margin:0;padding:8px 10px;border-radius:10px;background:#36513a;color:#fff;font-weight:650}
+
+/* Tally entry, saved classes, team rows. */
+.hand-tally{margin:0 0 14px;padding:14px;border:1px solid #c9d4c8;border-radius:12px;background:#fff;display:grid;gap:8px}
+.hand-tally[hidden]{display:none}
+.hand-lead{margin:0;font-size:14px;color:#6b7768}
+.hand-row{display:grid;grid-template-columns:1fr auto 70px auto;gap:6px;align-items:center}
+.hand-label{font-weight:600}
+.hand-n{width:70px;text-align:center;font-size:16px}
+.hand-send{justify-self:start}
+.class-lists{display:grid;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid #e3e9dd}
+.class-row{display:flex;gap:6px}.class-row select,.class-row input{flex:1;min-width:0}

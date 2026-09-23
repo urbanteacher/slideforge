@@ -44,7 +44,14 @@
 </div>
 <label for="rosterSearch">Find</label><input id="rosterSearch" type="search" placeholder="Search by name…">
 <div id="classRoster" class="in-room-panel"></div>
-<details id="addNames"><summary>Add names</summary><label for="names">One per line</label><textarea id="names" placeholder="One name per line"></textarea><label for="team" id="teamLabel">Team</label><select id="team"></select><p id="teamNote">For a shared team answer, add one representative for that team.</p><button id="add">Add</button><p id="addWhy" class="add-why" hidden></p></details>
+<details id="addNames"><summary>Add names</summary><label for="names">One per line</label><textarea id="names" placeholder="One name per line"></textarea><label for="team" id="teamLabel">Team</label><select id="team"></select><p id="teamNote">For a shared team answer, add one representative for that team.</p><button id="add">Add</button><p id="addWhy" class="add-why" hidden></p>
+<!-- Saved classes: names kept on this computer only, never sent anywhere. -->
+<div class="class-lists"><label for="classSaved">Saved classes</label>
+<div class="class-row"><select id="classSaved"></select><button type="button" id="classLoad">Load names</button></div>
+<div class="class-row"><input id="className" placeholder="Class name, e.g. 9B" maxlength="30"><button type="button" id="classSave">Save these names</button></div>
+<p class="notice" id="classNote">Kept on this computer only.</p></div>
+<button type="button" id="teamRows" hidden>Add one shared row for each team</button>
+</details>
 <p class="notice">Edit, kick or delete anyone already in the room. Reveal stays under your control.</p>
 </section>
 <section id="markPane">
@@ -63,6 +70,8 @@
 <!-- Proposals from the phones: Concept Chain, Connection Maker, Compare. -->
 <div id="spProposals" class="sp-proposals" hidden></div>
 <div id="tapPassage" class="tap-passage" hidden></div>
+<!-- Tally entry: a show of hands or paper answers, counted without names. -->
+<div id="handTally" class="hand-tally" hidden></div>
 <h2 id="question">Waiting for a question</h2><div id="entries"></div><div id="revealRow" class="reveal-row" hidden></div><button id="reveal" hidden>Reveal and score</button>
 </section>
 <section id="questionsPane" hidden></section>

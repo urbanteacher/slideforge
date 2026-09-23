@@ -77,6 +77,7 @@
       pendingVerdict:Live.pendingVerdict&&slide&&Live.pendingVerdict.slideId===slide.id
         ?{choice:Live.pendingVerdict.choice,label:(slide.options||[])[Live.pendingVerdict.choice]||''}:null,
       recentSpeakers:Live.recentSpeakers,
+      handCounts:Live.handCounts&&slide&&Live.handCounts.slideId===slide.id?Live.handCounts.counts:null,
       proposals:proposals(),
       onTable:Live.proposalOnTable&&slide&&Live.proposalOnTable.slideId===slide.id?Live.proposalOnTable.text:'',
       lastCredit:Live.lastCredit&&slide&&Live.lastCredit.slideId===slide.id?Live.lastCredit:null,
@@ -379,6 +380,15 @@
       }
     }
     else if(data.action==='verdictCancel') { Live.pendingVerdict=null; syncManual(); }
+    else if(data.action==='tally') {
+      /* Tally entry: counts per option for a room answering on paper. */
+      var qs=SF.Player.deck&&SF.Player.deck.slides[SF.Player.idx];
+      if(qs&&qs.type==='quiz'&&!Live.revealed[qs.id]&&Array.isArray(data.counts)){
+        send({t:'manualTally',id:qs.id,counts:data.counts});
+        Live.handCounts={slideId:qs.id,counts:data.counts.slice()};
+        syncManual();
+      }
+    }
     else if(data.action==='useProposal') {
       /* A proposal becomes the one on the table: its author is the speaker,
          and in Concept Chain its words are the link Accept will add. */
