@@ -1302,6 +1302,10 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** The game AI now writes Compare's sort statements and
+  Question Cube's six faces, which unblocks activities AC-14 and AC-15 on the
+  activities side. The starter's statements no longer leak into AI
+  comparisons. 523/523.
 - **23 Sep 2026.** GA-28: Share → Practice carries the solo-playable games
   for one learner. Games that need a room become a card that says so. The
   share smoke scenario passes. 521/521.

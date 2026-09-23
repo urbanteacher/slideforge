@@ -431,6 +431,20 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — The game AI writes the rebuilt shapes.**
+  - **Why:** the activities work asked for it. The Question Cube activity and
+    the Concept Card Sort were reverted, because handing them to their games
+    would lose their "Write it" guardrails.
+  - **Compare & Contrast:** Quiz studio's AI now writes `statements` tagged
+    Both:/A:/B: (four to eight, at least one of each) as well as the reveal
+    summaries.
+  - **Question Cube:** the AI writes exactly six faces, one of each of
+    Rosenshine's types, looked up by format before engine
+    (`AI_SPECS['question-cube']`, `gameSpecFor`).
+  - **A leak fixed on the way:** AI questions are built on the style's
+    starter, whose photosynthesis statements would have come along under
+    any two items.
+  - **Tests:** `tests/ai-game-shapes.test.js`. `npm test` 523/523.
 - **23 September 2026 — Solo practice (E8, GA-28).**
   - **Share has a third choice, *Practice*.** The copy carries every game
     whose `plays.solo` is `yes` (`SF.practiceDoc`), and the viewer plays
