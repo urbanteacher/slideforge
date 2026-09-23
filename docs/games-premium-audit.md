@@ -65,13 +65,13 @@ tests are in the table. The tier follows from the row.
 | Connection Maker | `connection` | ◐ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: phones propose the bridge, the teacher puts one on the table and credits its author. Open: approved bridges drawn as labelled lines |
 | Concept Chain | `conceptchain` | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: phones propose links (anonymous on the wall, named on the desk); Use this puts one on the table and makes its author the speaker; Accept grows the chain and credits them. Open: several links per term, a branching map |
 | Random Challenge | `randomchallenge` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | ◐ | ◐ | Thin: now a real deck — drawn fresh each run, cards left behind it, a flip per draw. Only the count is revealed |
-| Question Cube | brainstorm prompt | ✗ | ✗ | ✗ | ✓ | ◐ | ◐ | n/a | ◐ | Thin: no cube, no pool |
+| Question Cube | `randomchallenge` | ✓ | ✓ | ◐ | ✓ | ◐ | ✓ | ✓ | ◐ | Solid: a real roll — six faces (Define, Compare, Why, Example, What if, Benefits and limits) drawn fresh each run, each with its colour and question, "N faces left"; a chosen speaker answers aloud; counted |
 | Memory Maze | — | — | — | — | — | — | — | — | — | Disabled; out of scope |
 
 **Totals:**
 - 0 fully premium; Spot the Error is near-premium.
-- 20 solid.
-- 5 thin.
+- 21 solid.
+- 4 thin.
 - 0 broken by wrong-result scoring.
 - 1 disabled.
 
@@ -416,6 +416,18 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — Question Cube rolls (GA-25, in part).**
+  - **It was a discussion prompt beside a slide.** It is now a game on the
+    Random Challenge engine: drawn fresh each run with no repeats, spoken,
+    with a chosen speaker, and counted.
+  - **The wall** shows the face that came up, landing with a tumble, in its
+    own colour so the room learns the six types by sight. Its question sits
+    beneath, then "N faces left". The preset is six faces on one topic.
+  - **Also refreshed:** the setup lines for nine formats that still
+    described the old games (Fill in the Blanks, Time Traveler, Odd One
+    Out, True/False, Predict, Heads Up, Connection, Concept Chain, Question
+    Cube).
+  - **Tests:** `npm test` 501/501.
 - **23 September 2026 — Desk parity (GA-21) and Emoji's hint (GA-22, in part).**
   - **One mechanism, not three special cases.** A control a game draws on
     the projected wall carries `data-desk`: Boss's Reveal, Hit and Miss, a
