@@ -75,7 +75,7 @@ An audience prompt on a labelled-rows slide.
 | Word Splash | word cloud | ◐ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: the source's confidence marking is on paper; the cloud asks something else |
 | Knowledge Activation Web | word cloud | ◐ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: a cloud, not a web; the notes say so |
 | Question Cube (six types) | brainstorm | ◐ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: the Question Cube *game* now rolls; this is the same idea without the roll |
-| Real-World Connection Hunt | brainstorm | ◐ | ◐ | ✗ | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: three timed hunts (room, home, community) under one clock |
+| Real-World Connection Hunt | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | Near-premium: a stage, a clock, a box and a spotlight per place |
 | Muddiest Point | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ✓ | ✓ | ◐ | Solid-: the desk spotlights the point to fix |
 | Exit Ticket | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ✓ | ◐ | ◐ | Solid-: named on the desk and in the report, which is right |
 | Exit Ticket 3-2-1 | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ✓ | ◐ | ◐ | Solid-: three answers in one box |
@@ -104,9 +104,9 @@ The teacher talks; the phones get the "On the screen" card with Got it / Need he
 | Clear Objectives | rows | ◐ | ◐ | n/a | ◐ | ✓ | ✓ | n/a | ✓ | Solid (a slide by design) |
 | Hook + Objectives | brief | ✓ | ✓ | n/a | ◐ | ✓ | ✓ | n/a | ✓ | Solid |
 | Connection Slide | rows | ◐ | ◐ | n/a | ◐ | ✓ | ✓ | n/a | ✓ | Solid |
-| Preview Next Lesson | rows | ◐ | ◐ | n/a | ◐ | ✓ | ✓ | ✗ | ✓ | Solid: the closing question collects nothing |
-| Hook and Predict | split | ◐ | ✓ | n/a | ✗ | ✓ | ✓ | ✗ | ◐ | Thin: a prediction the phones never make |
-| Establish Talk Ground Rules | rows | ✗ | ◐ | n/a | ✗ | ✓ | ✓ | ✗ | ◐ | Thin: five rows; the rules the room drafts are never collected |
+| Preview Next Lesson | rows · idea box | ◐ | ◐ | n/a | ✓ | ✓ | ✓ | ◐ | ✓ | Solid: every phone sends a prediction, kept for next lesson's start |
+| Hook and Predict | split · idea box | ◐ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: the picture stays; the room's wonders arrive and one is spotlighted |
+| Establish Talk Ground Rules | stages | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | Near-premium: the drafted rules arrive as cards; the kept ones are spotlighted |
 
 ### Modelled instruction
 
@@ -130,7 +130,7 @@ A long piece of work, with the brief on the wall.
 | Differentiated Practice Menu | panels | ✓ | ✓ | n/a | ◐ | ✓ | ✓ | ✓ | ◐ | Solid: the menu is the thing |
 | Quick Practice Stations | cards | ✓ | ✓ | ✗ | ◐ | ✓ | ◐ | ✓ | ◐ | Solid-: rotations are timed in the notes, not on the wall |
 | Concept Card Sort | rows | ◐ | ◐ | n/a | ✗ | ✓ | ✓ | ✓ | ◐ | Thin: the sort is on paper; waits for the sort input (N6) |
-| Scenario Analysis | rows | ◐ | ◐ | n/a | ◐ | ✓ | ✓ | ✓ | ◐ | Thin: three scenarios and two questions as five equal rows |
+| Scenario Analysis | stages | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | Near-premium: the three scenarios pinned; two group-talk stages; predictions come back |
 | Benefits vs Limitations Battle | brief | ✓ | ✓ | n/a | ✗ | ✓ | ◐ | ✗ | ◐ | Thin: a battle with a scoring rule and no score |
 | Connect Four (concepts) | table | ✓ | ✓ | n/a | ✗ | ✓ | ◐ | ✗ | ◐ | Thin: the grid is drawn; claims are on paper |
 
@@ -138,15 +138,22 @@ A long piece of work, with the brief on the wall.
 
 | Activity | Today | A1 | A2 | A3 | A4 | A5 | A6 | A7 | A8 | Tier |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Learning Log Entry | rows | ◐ | ◐ | n/a | ✗ | ✓ | ✓ | n/a | ◐ | Thin: five prompts; the phones could hold the log |
-| Plus / Minus / Interesting | cards | ✓ | ✓ | n/a | ✗ | ✓ | ✓ | ✗ | ◐ | Thin: three columns the room never fills |
-| Visual Summary | cards | ◐ | ◐ | ✗ | ✗ | ✓ | ✓ | n/a | ◐ | Thin: making, then sharing, under one clock |
+| Learning Log Entry | stages | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | n/a | ◐ | Solid: five private notes, one prompt at a time, untimed; the desk sees a count |
+| Plus / Minus / Interesting | stages | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | Near-premium: a box per column; the three spotlights stand together at the look back |
+| Visual Summary | stages | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | n/a | ◐ | Solid: the formats pinned; make (work), then share with a partner |
 
-**Totals, after waves 0 and 1:**
-- 0 premium. 4 near-premium after wave 2: Think-Pair-Share, Think-Pair-Square-Share and the two self-assessments.
+**Totals, after wave 3:**
+- 0 premium. What holds back the nearest is A8's rehearsal and A9's teacher entry (§7).
+- 8 near-premium:
+  - Think-Pair-Share and Think-Pair-Square-Share;
+  - the Connection Hunt;
+  - the two self-assessments;
+  - Ground Rules, Scenario Analysis and PMI.
+- 25 solid or solid-minus.
+- 11 thin: Do Now, Wait Time, Daily Review, Dialogue Chain, the two word
+  clouds, the Question Cube activity, Concept Development, Card Sort, the
+  Battle and Connect Four.
 - 0 broken. There were 9, every timed moment not on stages, and the one clock (N7) fixed them all.
-- 25 solid or solid-minus, up from 17.
-- 18 thin. Do Now and Wait Time moved from broken to thin; I Do, We Do, You Do moved to solid.
 - The Question Cube game supersedes the Question Cube activity (see §4).
 
 ## 3. The shared kit
@@ -251,10 +258,12 @@ several rows.
 ### Teacher-led slides
 
 Slides by design: A3 and A7 are not their job.
-- **Hook and Predict:**
-  - A stages run: Hook (phones down), Predict (private note, K8), Reveal
-    (phones down), with the image still pinned.
-  - The Predict *game* is the scored version; this is the unscored one.
+- **Hook and Predict** (decided differently in wave 3):
+  - It stays a split slide. The picture is the hook, and a staged slide has
+    no place for one.
+  - It collects "What do you wonder?" beside the picture, anonymously, and
+    the teacher spotlights the question the lesson will answer.
+  - The Predict *game* is the scored, committed version.
 - **Preview Next Lesson:** the closing question becomes a one-line idea box.
   Its answers are the next lesson's starter.
 - **Ground Rules:** the "our ground rules" row becomes a Share stage. The
@@ -304,15 +313,19 @@ Slides by design: A3 and A7 are not their job.
 | **0** | **Done 23 Sep.** N7 one clock; N8 the desk shows the live stage | The wall says two things today; the desk shows the wrong thing | S |
 | **1** | **Done 23 Sep.** N9 pinned brief, N10 work, N11 group talk; the parser reads "every 4 min"; stages by default for the seven staged routines, I Do/We Do/You Do and Design and Create | The flagship's shape spread to where it fits: nine activities from thin or broken to solid | S–M |
 | **2** | **Done 23 Sep.** N12 spotlight and hide; N13 the written count; N14 prompt controls (close, hold, reveal) | The room's output lands; closes TPS-01 and TPS-02 | M |
-| **3** | Family redesigns that are mostly kit: Hook and Predict, Connection Hunt, PMI, Learning Log, Ground Rules, Preview, Visual Summary, Scenario Analysis | Each is a preset change on stages plus N12 | S each |
+| **3** | **Done 23 Sep.** Family redesigns on the kit (Hook and Predict, Connection Hunt, PMI, Learning Log, Ground Rules, Preview, Visual Summary, Scenario Analysis) and room declarations (AC-16) | Each is a preset change on stages plus N12 | S each |
 | **with GA-15** | **E3 tally entry** for polls and scales | Rooms with no devices | M |
 | **4** | Benefits vs Limitations with team credit; Stations on a round clock; Question Cube activity → game | Needs games kit N1 and N4 | S–M |
 | **after GA-26** | Concept Card Sort, Word Splash confidence on N6 | The sort input | L |
 | **later** | Connect Four as a board | | L |
 
-At the end of wave 1, the broken count would be zero and nine activities
-would be solid. At the end of wave 3, most would be near-premium; what
-holds them back is A9, which waits on tally entry.
+At the end of wave 1 the broken count was zero, as planned. At the end of
+wave 3 there are 8 near-premium, fewer than "most". Two things hold them
+back:
+- A8's rehearsal: the rehearsal has no spotlight, and shows sample bars
+  for a held prompt.
+- A9's teacher entry: a room without phones cannot put an idea or a vote
+  in (tally entry, AC-13).
 
 ## 6. Decided
 
@@ -401,11 +414,52 @@ This is already the rule in `js/stages.js`, and it stays.
 - E3 tally entry, so a show of hands fills a poll or scale.
 - A typed idea from teacher entry, so a paper Exit Ticket can reach the
   desk list.
-- Each activity declaring its rooms, the way game styles do with `plays`
-  (games E7). That is a field on the catalogue entry, shown as the library's
-  badges, with a catalogue test.
+- ~~Each activity declaring its rooms~~ **done in wave 3 (AC-16).**
+  - Every activity has `plays`, derived from its shape in
+    `src/activities/rooms.js`. The profiles are a staged routine, one with an
+    idea box, a prompt, a slide, and a checklist moment. A game borrows its
+    engine's.
+  - The library shows these as badges, through the one `SF.roomBadges`
+    both libraries use.
+  - The catalogue test holds every activity to four statuses with reasons.
+    A prompt says `entry: no` until tally entry exists.
 
 ## Change log
+
+- **23 September 2026 — Wave 3 (AC-09 to AC-12, AC-16).**
+  - **Kit.**
+    - A stage label may declare its job at its end, "At home · 3 min
+      [send]". It beats the inferred words, which read "home" as a jigsaw's
+      home group. The tag is stripped wherever a label is shown: the wall,
+      the chips, the inspector, and the non-stage layouts.
+    - Each send stage opens its own idea box.
+    - Up to three spotlights stand on a slide, side by side, each named for
+      the stage it was sent in. A spotlight's id is its box plus its idea,
+      because the relay numbers ideas per box.
+    - A phone keeps a private note per note stage. The first note stage keeps
+      its old key, and a talk stage shows back the latest note.
+  - **Presets.**
+    - Ground Rules: Think, Pair, Share, Agree.
+    - The Connection Hunt: now a moment, with three place stages and a
+      closing note.
+    - Scenario Analysis: the three scenarios pinned as one brief, two talk
+      stages and a report back.
+    - The Learning Log: five untimed note stages.
+    - PMI: three send stages and a look back.
+    - Visual Summary: the formats pinned, then create and share with a
+      partner.
+    - Preview Next Lesson: its closing question is an idea box.
+    - Hook & Predict keeps its split slide and collects wonders. This changes
+      §4's plan; the reason is there.
+  - **Rooms (AC-16):** see §7.
+  - **Tests:** `npm test` 519/519. The stage table now pins sixteen routines,
+    and declared jobs have a test. The `room-output` smoke adds PMI: three
+    boxes, one spotlight from each, and the three labelled cards at Look
+    back. Seen in the browser: PMI's look back, and the badges on all 54
+    activity cards and on the format library's 30 game cards.
+  - **Committed in pieces.** The `js/live.js` and `join.html` halves went in
+    with the other agent's `53f5c3c` and `275ad28`, which committed those
+    files whole.
 
 - **23 September 2026 — Wave 2 (AC-06 to AC-08).** What the room sends
   now lands.

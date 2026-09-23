@@ -39,7 +39,7 @@ order.
 | ID | Item | Size | Status |
 |---|---|---|---|
 | GA-15 – GA-28 | **Games to a premium standard**: waves 0–3 and 5 are done; 4, 6 and 7 mostly (GA-01–14, 18, 20, 21, 23, 25, 26, 29, 30). **Next, as planned:** GA-15–17, the no-device work skipped alongside wave 3 (tally entry, team rows, saved class lists). Then GA-28 solo practice. **Open:** GA-19 branching map, GA-22 hint cost and Definition on stages, GA-27 self-pacing, GA-24 Race/Boss crowd layout. None of the waves since GA-29 has been viewed on screen except Fill, Beat the Clock and Compare. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | In progress |
-| AC-09 – AC-17 | **Activities to a premium standard**: waves 0–2 (AC-01–08) are done: one clock, the desk's live stage, ten routines on stages, and the room's output landing (spotlight and hide, the written count, close and held results). Next: wave 3, the family redesigns on the kit, and room declarations (AC-16). Full table under [the activities build list](#23-september-2026-activities-to-a-premium-standard-the-build-list). | S–L | To do |
+| AC-13 – AC-17 | **Activities to a premium standard**: waves 0–3 (AC-01–12, AC-16) are done. Sixteen routines run on stages; the room's output lands; every activity declares its rooms. Next: tally entry for rooms without phones (AC-13, with GA-15), then the contests (AC-14). Full table under [the activities build list](#23-september-2026-activities-to-a-premium-standard-the-build-list). | S–L | To do |
 | RP-01 | Rehearse with a class of 30 (and 120) | S | To do |
 | RP-02 | Lecture-scale defaults (100+): standings off, distribution on | S | To do |
 | RP-03 | A packed, centred word cloud with stable positions | M | To do |
@@ -1173,14 +1173,14 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
 | AC-06 | 2 | **Spotlight and hide on any idea box (N12)**, from the desk; absorbs TPS-01 | S–M | **Done** 23 Sep · browser smoke with two phones |
 | AC-07 | 2 | **The written count (N13)** during a note stage, never the text; absorbs TPS-02 | S | **Done** 23 Sep · relay tested; the host never holds the words |
 | AC-08 | 2 | **Prompt controls on the desk (N14)**: close an authored prompt; self-assessment held, then revealed (audit §6) | M | **Done** 23 Sep · `feedback.hold`; the rehearsal still shows sample bars |
-| AC-09 | 3 | Hook and Predict on stages: a private prediction, the image pinned | S | To do |
-| AC-10 | 3 | Real-World Connection Hunt as three send stages (room, home, community) | S | To do |
-| AC-11 | 3 | Plus / Minus / Interesting as three send stages filling its columns | S | To do |
-| AC-12 | 3 | Learning Log as private note stages; Visual Summary, Ground Rules, Preview and Scenario Analysis on the kit | S each | To do |
+| AC-09 | 3 | Hook and Predict on stages: a private prediction, the image pinned | S | **Done** 23 Sep, differently · keeps its split slide (the picture is the hook) and collects "What do you wonder?" to spotlight |
+| AC-10 | 3 | Real-World Connection Hunt as three send stages (room, home, community) | S | **Done** 23 Sep · now a moment; a box and a spotlight per place |
+| AC-11 | 3 | Plus / Minus / Interesting as three send stages filling its columns | S | **Done** 23 Sep · three spotlights side by side at the look back; browser smoke |
+| AC-12 | 3 | Learning Log as private note stages; Visual Summary, Ground Rules, Preview and Scenario Analysis on the kit | S each | **Done** 23 Sep · a note per note stage on the phone; declared jobs (`[send]`) in labels |
 | AC-13 | with GA-15 | Tally entry for polls and scales, and a typed idea from teacher entry (A9) | M | To do |
 | AC-14 | 4 | Benefits vs Limitations with team credit (games N1); Stations on a round clock; the Question Cube activity points to the game | S–M | To do |
 | AC-15 | after GA-26 | Concept Card Sort and Word Splash confidence on the sort input | L | To do |
-| AC-16 | 3 | Each activity declares its rooms (`plays`), shown in the library, with a catalogue test | S | To do |
+| AC-16 | 3 | Each activity declares its rooms (`plays`), shown in the library, with a catalogue test | S | **Done** 23 Sep · derived from shape (`activities/rooms.js`); one `SF.roomBadges` for both libraries |
 | AC-17 | later | Connect Four as a board | L | To do |
 
 ## Log
@@ -1302,6 +1302,17 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** Activities wave 3 (AC-09–12, AC-16).
+  - A stage label may declare its job (`[send]`). Each send stage has its
+    own idea box, and up to three spotlights stand on a slide, each named
+    for its stage.
+  - A phone keeps a private note per note stage.
+  - Seven activities moved onto the kit: Ground Rules, the Connection Hunt,
+    Scenario Analysis, the Learning Log, PMI, Visual Summary, and Preview
+    (a prediction box). Hook & Predict keeps its picture and collects
+    wonders.
+  - Every activity declares its rooms, shown as badges.
+  - 519/519; `room-output` smoke adds PMI.
 - **23 Sep 2026.** Six square pegs fixed, where games were fitted into
   generic pieces:
   - Question Cube's verdict words;
