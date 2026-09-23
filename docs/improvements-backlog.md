@@ -78,9 +78,9 @@ coordinating rather than starting cold.
 | CA-52 | ~~Fallback edit panel writes with no history~~ [→](ux-backlog.md) | M | **Done** 23 Sep |
 | UX-12 | ~~One word for the right panel~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | UX-22 | ~~One route to deck settings~~ [→](ux-backlog.md) | S | **Done** 23 Sep · two left, by design |
-| UX-23 | One insert route, not four [→](ux-backlog.md) | M | To do · P2 |
+| UX-23 | ~~One insert route, not four~~ [→](ux-backlog.md) | M | **Done** 23 Sep |
 | UX-30 | ~~Outline editable blocks on hover~~ [→](ux-backlog.md) | S | **Withdrawn** · already there |
-| UX-40 | Sections in the rail and the sorter [→](ux-backlog.md) | M–L | To do · P2 |
+| UX-40 | ~~Sections in the rail and the sorter~~ [→](ux-backlog.md) | M–L | **Done** 23 Sep |
 | UX-50 | ~~Number + Enter to jump while presenting~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | UX-51 | ~~`O` overview grid while presenting~~ [→](ux-backlog.md) | M | **Done** 23 Sep |
 | UX-52 | ~~Pacing timer in the presenter view~~ [→](ux-backlog.md) | S–M | **Done** 23 Sep |

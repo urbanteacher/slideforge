@@ -37,13 +37,13 @@ what was removed.
 | UX-20 | Move the panel's 6 slide actions into a right-click menu | P1 | M | **Done** 23 Sep · 4 moved; Undo/Redo stay |
 | UX-21 | One **Present ▾** split button instead of four | P1 | S | **Done** 23 Sep · Host live stays separate |
 | UX-22 | One route to deck settings, not three | P2 | S | **Done** 23 Sep · rail ⚙ removed; header Settings and panel Theme stay |
-| UX-23 | One route to insert things, not four | P2 | M | To do |
+| UX-23 | One route to insert things, not four | P2 | M | **Done** 23 Sep · the rail has one + Slide; activities are its first card |
 | UX-24 | Say where the work is saved in words, not with a dot | P1 | S | **Done** 23 Sep · words down to 1080px (measured), a labelled dot below |
 | **Phase 4 — editing on the slide** |||||
 | UX-30 | Outline editable blocks on hover | P2 | S | **Withdrawn** · it exists: `.canvas-editable:hover` draws a dashed outline |
 | UX-31 | Make it clear the panel field and the slide are one text | P3 | S | To do |
 | **Phase 5 — deck structure** |||||
-| UX-40 | Sections in the rail and the sorter | P2 | M–L | To do |
+| UX-40 | Sections in the rail and the sorter | P2 | M–L | **Done** 23 Sep · from section slides, no new field |
 | **Phase 6 — presenting** |||||
 | UX-50 | Type a number and press Enter to jump | P2 | S | **Done** 23 Sep |
 | UX-51 | `O` overview grid while presenting | P2 | M | **Done** 23 Sep |
@@ -703,6 +703,35 @@ Three read-only reviews, running in parallel, covered:
   an accessible name, none rely on `title` alone, and no clickable element is
   out of Tab's reach. Working every sheet with only a keyboard still needs a
   person.
+
+## 23 September 2026: UX-23 and UX-40
+
+- **UX-23.** Of the four insert buttons, only one duplicated another: the
+  rail's "+ Activity" opened the same catalogue as the canvas bar's green
+  **＋ Add activity**. An existing test (`tests/add-activity.test.js`) had made
+  several doors to *one* catalogue a deliberate choice, so the fix removes the
+  least prominent door, not the idea. The rail now has one **+ Slide**, whose
+  starters open with a **A game or activity** card leading to the same
+  catalogue. The rail adds slides; the canvas bar adds activities and **＋ Item**
+  to this slide; Engagement keeps its own. The test and the `add-activity`
+  smoke follow the new route.
+- **UX-40.** A section is a section slide and everything up to the next one,
+  so no field was added to the deck. In the rail each section slide gets a
+  fold toggle naming how many slides it holds, and a folded row says "N slides
+  folded". Fold state is this tab's view, not part of the lesson, so it lives in
+  `sessionStorage`. A selection inside a folded section opens it, so the
+  arrows, find and ⌘K never land on an invisible row. The slide menu on a
+  section slide offers **Fold / Show this section** and **Move this section
+  up / down**, which carries the whole block past the neighbouring section.
+  In the sorter a section tile carries a "Section · N slides" tag and an accent
+  edge; a header row across the grid would have shifted every tile after it,
+  and the sorter's arrow keys count by column.
+  - Caught in the browser: the first version set `hidden` on folded rows and
+    they stayed drawn, because `.thumb` has its own `display` and an author
+    rule beats the `[hidden]` style. It now uses `.rail .thumb[hidden]
+    { display: none }`. Checked by measuring drawn rows, not the attribute.
+  - Checked: fold hides exactly its rows; ⌘K to a slide inside unfolds it; a
+    three-slide section moved past a 21-slide one intact; undo restores.
 
 ## Log
 
