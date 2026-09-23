@@ -15572,78 +15572,2479 @@
     }
   };
 
-  // src/games/rooms.js
+  // src/activities/catalogue.js
+  var PHASES = [
+    { key: "starter-slide", label: "Starter Slide", icon: "▤", blurb: "Put the destination on the wall before anything else." },
+    { key: "starter-activity", label: "Starter Activity", icon: "◎", blurb: "Settle the room and pull back what they already know." },
+    { key: "activation", label: "Activation", icon: "✦", blurb: "Surface prior thinking, including the wrong kind." },
+    { key: "construction", label: "Construction", icon: "◧", blurb: "Build the idea: model it, name its edges." },
+    { key: "mini-activity", label: "Mini Activity", icon: "⚡", blurb: "A short go at it while the modelling is still warm." },
+    { key: "main-activity", label: "Main Activity", icon: "▣", blurb: "The long piece of work the lesson is for." },
+    { key: "collaboration", label: "Collaboration", icon: "▦", blurb: "Make them say it out loud to somebody." },
+    { key: "mini-quiz", label: "Mini Quiz", icon: "?", blurb: "Find out who has it, while there is time to act." },
+    { key: "reflection", label: "Reflection", icon: "↺", blurb: "What stuck, what did not, and what to do about it." },
+    { key: "plenary", label: "Plenary", icon: "⚑", blurb: "Close it, and point at what comes next." },
+    { key: "activity-plenary", label: "Activity Plenary", icon: "⚐", blurb: "Close on the work rather than on the clock." }
+  ];
+  var ACTIVITIES = [
+    {
+      key: "clear-objectives-slide",
+      icon: "▤",
+      title: "Clear Objectives Slide",
+      blurb: "Display learning objectives, success criteria, and key words",
+      phase: "starter-slide",
+      minutes: 2,
+      target: "slide",
+      layout: "keywords",
+      steps: [
+        "Display slide with: Title, Learning Objectives (3), Success Criteria (I can...), Key Words",
+        "Teacher reads objectives aloud",
+        "Get started with active learning"
+      ]
+    },
+    {
+      key: "hook-objectives",
+      icon: "▤",
+      title: "Hook + Objectives",
+      blurb: "Engaging stimulus + big question + today's activities",
+      phase: "starter-slide",
+      minutes: 2,
+      target: "slide",
+      layout: "split",
+      steps: [
+        "Show engaging image/video/question",
+        "Present Big Question that will be answered",
+        "Show: Today we will... (3 activities)",
+        "Show: By the end you'll be able to..."
+      ]
+    },
+    {
+      key: "connection-slide",
+      icon: "▤",
+      title: "Connection Slide",
+      blurb: "Last lesson → Today → Next lesson + Why it matters",
+      phase: "starter-slide",
+      minutes: 2,
+      target: "slide",
+      /* keywords, not the doc's cards. Each of the five steps names a box and
+         what goes in it, and keywords is the layout that draws a label beside
+         its text; cards draws five unlabelled tiles three-wide, so two wrap and
+         none says which is which. The doc's own note reads "Yesterday → Today →
+         Tomorrow" — three boxes — the shape it was written for before the
+         source grew to five. */
+      layout: "keywords",
+      steps: [
+        "Show: Last Lesson (brief recap)",
+        "Show: Today (what we're learning)",
+        "Show: Next Lesson (where we're going)",
+        "Show: Why This Matters (real-world connection)",
+        "Show: What You'll Do (3 activities)"
+      ],
+      /* One box per step. The labels are the steps' own, so all a teacher fills
+         in is the content. */
+      fields: [
+        {
+          label: "Last lesson",
+          type: "text",
+          slide: "bullets.0.def",
+          value: "A one-line recap of where we got to.",
+          hint: "Brief. They were there — a hook back, not a re-teach."
+        },
+        {
+          label: "Today",
+          type: "text",
+          slide: "bullets.1.def",
+          value: "What we are learning today."
+        },
+        {
+          label: "Next lesson",
+          type: "text",
+          slide: "bullets.2.def",
+          value: "Where this is going."
+        },
+        {
+          label: "Why this matters",
+          type: "text",
+          slide: "bullets.3.def",
+          value: "Where this shows up outside the room.",
+          hint: "The real-world connection — the part they actually remember."
+        },
+        {
+          label: "What you will do",
+          type: "area",
+          slide: "bullets.4.def",
+          value: "Measure · Draw to scale · Check a partner",
+          hint: "The three activities on one line. Separate them how you like."
+        }
+      ]
+    },
+    {
+      key: "quick-retrieval-quiz",
+      icon: "◎",
+      title: "Quick Retrieval Quiz",
+      blurb: "Answer 3-5 questions from memory to recall prior learning",
+      phase: "starter-activity",
+      minutes: 7,
+      target: "game",
+      style: "lowstakes",
+      steps: [
+        "Students answer 3-5 recall questions individually",
+        "Pair check answers (2 mins)",
+        "Whole class review and discussion (3 mins)",
+        "Link to today's objective"
+      ]
+    },
+    {
+      key: "think-pair-share",
+      icon: "◎",
+      title: "Think-Pair-Share",
+      blurb: "Individual thinking → Partner discussion → Share out",
+      phase: "starter-activity",
+      minutes: 7,
+      target: "moment",
+      steps: [
+        "Think alone (1 min) - jot down ideas about [topic]",
+        "Share with partner (2 mins) - compare notes",
+        "Pairs share best ideas (3 mins) - class discussion",
+        "Teacher synthesizes (1 min) - connect to today's goal"
+      ]
+    },
+    {
+      key: "hook-and-predict",
+      icon: "◎",
+      title: "Hook & Predict",
+      blurb: "Present intriguing stimulus and ask 'What do you notice? What do you wonder?'",
+      phase: "starter-activity",
+      minutes: 7,
+      target: "slide",
+      layout: "split",
+      steps: [
+        "Show attention-grabbing stimulus (30 secs)",
+        "Students write 2 things they notice (1 min)",
+        "Students write 1 thing they wonder (1 min)",
+        "Share out observations and questions (3 mins)",
+        "Link to today's learning objective (1 min)"
+      ],
+      /* The two questions are the activity — the blurb states them verbatim —
+         so they arrive written rather than as empty pits. The stimulus is the
+         teacher's, because only they know what the lesson is about. */
+      fields: [
+        {
+          label: "The stimulus",
+          type: "text",
+          slide: "title",
+          value: "What is going on here?",
+          hint: "The line above the image. Keep it short — the picture is doing the work."
+        },
+        {
+          label: "Question 1",
+          type: "text",
+          slide: "bullets.0",
+          value: "What do you notice?",
+          hint: "Observation. Answerable by anyone looking at it."
+        },
+        {
+          label: "Question 2",
+          type: "text",
+          slide: "bullets.1",
+          value: "What do you wonder?",
+          hint: "Curiosity. This is the one that opens the lesson."
+        },
+        {
+          label: "Timer",
+          type: "minutes",
+          slide: "timeLimit",
+          value: 7,
+          hint: "Shown on the wall while they look. The five steps add up to this."
+        }
+      ]
+    },
+    {
+      key: "word-splash",
+      icon: "◎",
+      title: "Word Splash",
+      blurb: "Connect key vocabulary to prior knowledge through self-assessment",
+      phase: "starter-activity",
+      minutes: 7,
+      target: "feedback",
+      feedbackKind: "wordcloud",
+      steps: [
+        "Display 5-8 key terms for today's lesson",
+        "Students circle terms they know well",
+        "Underline terms they've heard but unsure",
+        "Leave blank terms they don't know",
+        "Partner discussion (2 mins): Explain circled terms",
+        "Class creates working definitions (3 mins)",
+        "Self-assess confidence: 🟢🟡🔴"
+      ]
+    },
+    {
+      key: "daily-review-routine",
+      icon: "◎",
+      title: "Daily Review Routine",
+      blurb: "Check homework, address common errors, reteach concepts - daily routine for retention",
+      phase: "starter-activity",
+      minutes: 8,
+      target: "slide",
+      layout: "cards",
+      steps: [
+        "Quick homework check (2 mins) - scan for completion, spot common issues",
+        "Address common errors (3 mins) - whole class discussion of 2-3 frequent mistakes",
+        "Guided practice (3 mins) - reteach tricky concept with worked example",
+        "Link to today's lesson (30 secs) - 'Today we'll build on this by...'"
+      ]
+    },
+    {
+      key: "establish-talk-ground-rules",
+      icon: "◎",
+      title: "Establish Talk Ground Rules",
+      blurb: "Co-create class ground rules for quality dialogue and oracy (use at start of year/unit)",
+      phase: "starter-activity",
+      minutes: 10,
+      target: "slide",
+      layout: "keywords",
+      steps: [
+        "Ask: 'What makes group discussions go well?' (2 mins) - brainstorm ideas",
+        "Ask: 'What makes them go badly?' (2 mins) - identify problems",
+        "Students pair-discuss and share ideas (3 mins) - synthesize thinking",
+        "Co-create list of 5-7 ground rules together (2 mins) - write on chart paper",
+        "Display rules prominently in classroom (1 min)",
+        "Note: Revisit these before each oracy activity throughout year"
+      ]
+    },
+    {
+      key: "do-now-bell-ringer",
+      icon: "✦",
+      title: "Do Now / Bell Ringer",
+      blurb: "Silent individual work on board when students enter",
+      phase: "activation",
+      minutes: 8,
+      target: "moment",
+      steps: [
+        "On board: 3 questions (recall from last lesson, connection, preview)",
+        "Silent individual work (5 mins)",
+        "Quick pair check (2 mins)",
+        "Whole class review (3 mins)",
+        "Link to today's objective"
+      ]
+    },
+    {
+      key: "knowledge-activation-web",
+      icon: "✦",
+      title: "Knowledge Activation Web",
+      blurb: "Build a web of connected ideas on the board",
+      phase: "activation",
+      minutes: 7,
+      target: "feedback",
+      feedbackKind: "wordcloud",
+      steps: [
+        "Write topic in center of board (1 min)",
+        "Students call out anything they know (3 mins)",
+        "Teacher writes and draws connecting lines",
+        "Look for patterns and gaps (2 mins)",
+        "Set today's learning goal (1 min)"
+      ]
+    },
+    {
+      key: "pre-assessment-quickfire",
+      icon: "✦",
+      title: "Pre-Assessment Quickfire",
+      blurb: "Thumbs up/down/sideways for 8-10 true/false statements",
+      phase: "activation",
+      minutes: 8,
+      target: "game",
+      style: "truefalse",
+      steps: [
+        "Teacher reads 8-10 statements",
+        "Students show: 👍 True / 👎 False / 👉 Unsure",
+        "Teacher notes misconceptions",
+        "Clarify key terms",
+        "Set learning goals based on gaps"
+      ]
+    },
+    {
+      key: "i-do-we-do-you-do",
+      icon: "◧",
+      title: "I Do, We Do, You Do",
+      blurb: "Gradual release: Teacher models → Guided practice → Independent practice",
+      phase: "construction",
+      minutes: 20,
+      target: "slide",
+      layout: "cards",
+      steps: [
+        "I DO (5 mins): Teacher models with think-aloud",
+        "WE DO (8 mins): Class solves together, teacher guides",
+        "YOU DO Together (5 mins): Partner practice with support",
+        "YOU DO Alone (7 mins): Independent practice, quick check"
+      ]
+    },
+    {
+      key: "concept-development",
+      icon: "◧",
+      title: "Concept Development",
+      blurb: "Build understanding: Show → Explain → Examples/Non-Examples → Apply",
+      phase: "construction",
+      minutes: 20,
+      target: "slide",
+      layout: "keywords",
+      steps: [
+        "SHOW: Present concept with clear example (3 mins)",
+        "EXPLAIN: Break down - what, why, how (5 mins)",
+        "EXAMPLES & NON-EXAMPLES: Identify features (5 mins)",
+        "GUIDED APPLICATION: Apply concept (7 mins)",
+        "INDEPENDENT PRACTICE: Create own examples (5 mins)"
+      ]
+    },
+    {
+      key: "flipped-instruction",
+      icon: "◧",
+      title: "Flipped Instruction",
+      blurb: "Deepen understanding after home learning (Review → Deep Dive → Application)",
+      phase: "construction",
+      minutes: 25,
+      target: "slide-arc",
+      steps: [
+        "Home Learning Review (3 mins): Poll understanding, address questions",
+        "Deep Dive (10 mins): Focus on hardest parts, work complex examples",
+        "Application Practice (12 mins): Apply to challenging problems, differentiated support"
+      ]
+    },
+    {
+      key: "question-cube-six-question-types",
+      icon: "◧",
+      title: "Question Cube - Six Question Types",
+      blurb: "Deep questioning using Rosenshine's six question templates: Define, Compare, Why, Example, What If, Benefits/Limits",
+      phase: "construction",
+      minutes: 20,
+      target: "feedback",
+      feedbackKind: "brainstorm",
+      steps: [
+        "Present topic/concept (e.g., 'Photosynthesis') (1 min)",
+        "Explain the 6 question types (2 mins):",
+        "🔵 DEFINE: What is [concept]?",
+        "🟢 COMPARE: How is it different from [related concept]?",
+        "🟡 WHY: Why is [concept] important/how does it work?",
+        "🟣 EXAMPLE: Give a real-world example",
+        "🔴 WHAT IF: What would happen if...?",
+        "🟠 BENEFITS/LIMITS: What conditions are needed? What are the limitations?",
+        "Round 1 (12 mins): Teacher or student picks question type, student answers (30s thinking, 30s response), rotate through all 6 types with 2-3 students per type",
+        "Round 2 (optional): Students generate their own questions for each type",
+        "Debrief (5 mins): Which questions were hardest? Which helped you understand most?"
+      ]
+    },
+    {
+      key: "worked-example-analysis",
+      icon: "⚡",
+      title: "Worked Example Analysis",
+      blurb: "Analyze a completed example together to understand the process",
+      phase: "mini-activity",
+      minutes: 10,
+      target: "slide",
+      layout: "split",
+      steps: [
+        "Display completed example (1 min)",
+        "Students identify each step (3 mins) - What happened? Why?",
+        "Pairs create a 'recipe' for solving similar problems (3 mins)",
+        "Test recipe on new problem (3 mins)",
+        "Compare approaches (2 mins)"
+      ]
+    },
+    {
+      key: "error-analysis",
+      icon: "⚡",
+      title: "Error Analysis",
+      blurb: "Find and fix mistakes in sample work to identify misconceptions",
+      phase: "mini-activity",
+      minutes: 10,
+      target: "game",
+      style: "oddone",
+      steps: [
+        "Show work with 3-4 deliberate errors (1 min)",
+        "Individual: Spot the errors (3 mins)",
+        "Pairs: Discuss and correct errors (3 mins)",
+        "Share: What were the errors? (2 mins)",
+        "Reflect: Why might someone make these mistakes? (1 min)"
+      ]
+    },
+    {
+      key: "quick-practice-stations",
+      icon: "⚡",
+      title: "Quick Practice Stations",
+      blurb: "Rotate through 3 quick tasks: Recall, Apply, Create",
+      phase: "mini-activity",
+      minutes: 10,
+      target: "slide",
+      layout: "cards",
+      steps: [
+        "Station 1: Recall task (3 mins)",
+        "Station 2: Apply task (3 mins)",
+        "Station 3: Create task (3 mins)",
+        "Brief share out (1 min)"
+      ]
+    },
+    {
+      key: "concept-card-sort",
+      icon: "⚡",
+      title: "Concept Card Sort",
+      blurb: "Organize information into categories to understand relationships",
+      phase: "mini-activity",
+      minutes: 10,
+      target: "game",
+      style: "order",
+      steps: [
+        "Give each group 12-15 cards with terms/images/examples (1 min)",
+        "Sort into categories (4 mins) - choose or create categories",
+        "Groups walk around to see others' sorts (2 mins)",
+        "Discuss: Different ways to organize (2 mins)",
+        "Reflect: Which organization is most useful? Why? (1 min)"
+      ]
+    },
+    {
+      key: "interleaving-mixed-practice",
+      icon: "⚡",
+      title: "Interleaving Mixed Practice",
+      blurb: "Mix problems from today AND previous weeks for long-term retention (spaced learning)",
+      phase: "mini-activity",
+      minutes: 15,
+      target: "game",
+      style: "choice",
+      steps: [
+        "Present 10 problems: 6 from today's topic, 4 from previous weeks (1 min)",
+        "Students solve independently (8 mins) - mix of old and new",
+        "Pair-check answers (3 mins) - discuss strategies used",
+        "Whole class: 'How did previous learning help today?' (3 mins)",
+        "Reflect: Which problems were harder - new or old? Why?"
+      ]
+    },
+    {
+      key: "strategic-wait-time-questioning",
+      icon: "⚡",
+      title: "Strategic Wait Time Questioning",
+      blurb: "Questioning with explicit 3-5 second wait time for deeper thinking and participation",
+      phase: "mini-activity",
+      minutes: 10,
+      target: "moment",
+      steps: [
+        "Pose question to whole class clearly",
+        "⏱️ WAIT 3-5 seconds (no hands up yet) - give thinking time",
+        "Call on student randomly (use name sticks/cards)",
+        "⏱️ WAIT 3 seconds for student to formulate answer",
+        "Student responds",
+        "⏱️ WAIT 2 seconds before responding or asking follow-up",
+        "Repeat 5-7 times with different students (10 mins total)",
+        "Note: Increased wait time = better answers + more participation"
+      ]
+    },
+    {
+      key: "guided-inquiry-investigation",
+      icon: "▣",
+      title: "Guided Inquiry Investigation",
+      blurb: "Students discover concepts through structured exploration (Explore → Explain → Elaborate → Share)",
+      phase: "main-activity",
+      minutes: 30,
+      target: "slide-arc",
+      steps: [
+        "EXPLORE (10 mins): Investigate stimulus - What patterns? What happens when you change X?",
+        "EXPLAIN (8 mins): Develop explanation - Why? What's the rule?",
+        "ELABORATE (7 mins): Apply to new situation - Use understanding to solve problems",
+        "SHARE & REFINE (5 mins): Present findings and build shared understanding"
+      ]
+    },
+    {
+      key: "jigsaw-expert-groups",
+      icon: "▣",
+      title: "Jigsaw Expert Groups",
+      blurb: "Students become experts and teach peers (Home → Expert → Home)",
+      phase: "main-activity",
+      minutes: 29,
+      target: "moment",
+      steps: [
+        "Home Groups (5 mins): Groups of 4, assign each person a sub-topic",
+        "Expert Groups (12 mins): All 1s together, become experts, create teaching plan",
+        "Home Groups Return (12 mins): Each expert teaches their part (3 mins each), create complete picture"
+      ]
+    },
+    {
+      key: "problem-based-learning",
+      icon: "▣",
+      title: "Problem-Based Learning",
+      blurb: "Solve authentic, complex problem through structured inquiry",
+      phase: "main-activity",
+      minutes: 35,
+      target: "slide",
+      layout: "split",
+      steps: [
+        "Present Problem: Real-world scenario (3 mins)",
+        "What do we KNOW? List given information (5 mins)",
+        "What do we NEED to know? Identify gaps (5 mins)",
+        "Research & Plan: Find information, develop strategy (10 mins)",
+        "Solve: Implement solution, show working (10 mins)",
+        "Present & Justify: Share solution and reasoning (7 mins)"
+      ]
+    },
+    {
+      key: "differentiated-practice-menu",
+      icon: "▣",
+      title: "Differentiated Practice Menu",
+      blurb: "Must-do task plus choice board (Consolidate/Apply/Extend)",
+      phase: "main-activity",
+      minutes: 25,
+      target: "slide",
+      layout: "cards",
+      steps: [
+        "Must Do: Core practice task - everyone (10 mins)",
+        "Choose Your Challenge (15 mins):",
+        "🟢 Consolidate: Easier version with scaffolding",
+        "🟡 Apply: Standard problem-solving",
+        "🔴 Extend: Complex multi-step challenge"
+      ]
+    },
+    {
+      key: "design-and-create-task",
+      icon: "▣",
+      title: "Design & Create Task",
+      blurb: "Create something that demonstrates understanding (poster/model/presentation/video)",
+      phase: "main-activity",
+      minutes: 35,
+      target: "slide",
+      layout: "cards",
+      steps: [
+        "Brief: Design/create [product] that shows understanding (2 mins)",
+        "Planning: Sketch ideas, gather resources (5 mins)",
+        "Creating: Make your product (20 mins)",
+        "Self-assessment: Check against criteria (3 mins)",
+        "Gallery walk: View and learn from others (5 mins)"
+      ]
+    },
+    {
+      key: "think-pair-square-share",
+      icon: "▦",
+      title: "Think-Pair-Square-Share",
+      blurb: "Progressive sharing: Individual → Pair → Group of 4 → Class",
+      phase: "collaboration",
+      minutes: 13,
+      target: "moment",
+      steps: [
+        "THINK (2 mins): Individual reflection",
+        "PAIR (3 mins): Share with partner",
+        "SQUARE (4 mins): Join another pair, synthesize",
+        "SHARE (4 mins): Groups present to class"
+      ]
+    },
+    {
+      key: "jigsaw-collaboration",
+      icon: "▦",
+      title: "Jigsaw Collaboration",
+      blurb: "Home groups → Expert groups → Return to teach (see Main Activity for full version)",
+      phase: "collaboration",
+      minutes: 20,
+      target: "moment",
+      steps: [
+        "Home groups split (2 mins)",
+        "Expert groups learn one piece (10 mins)",
+        "Return to home groups to teach (8 mins)"
+      ]
+    },
+    {
+      key: "peer-teaching-carousel",
+      icon: "▦",
+      title: "Peer Teaching Carousel",
+      blurb: "Rotate through stations, adding to and building on previous groups' work",
+      phase: "collaboration",
+      minutes: 20,
+      target: "moment",
+      steps: [
+        "Setup: 4-5 stations with different tasks",
+        "Groups rotate every 4 minutes",
+        "At each station: Read previous work, add thinking, correct errors",
+        "Final Round (5 mins): Return to starting station, review, synthesize",
+        "Present to class"
+      ]
+    },
+    {
+      key: "socratic-seminar",
+      icon: "▦",
+      title: "Socratic Seminar (Simple)",
+      blurb: "Student-led discussion: Inner circle discusses, outer circle observes",
+      phase: "collaboration",
+      minutes: 20,
+      target: "moment",
+      steps: [
+        "Round 1 (8 mins): Inner circle discusses prompt with evidence",
+        "Round 2 (8 mins): Switch circles, new discussion",
+        "Debrief (4 mins): What strong arguments? What was convincing?"
+      ]
+    },
+    {
+      key: "dialogue-chain-discussion",
+      icon: "▦",
+      title: "Dialogue Chain Discussion",
+      blurb: "Structured student-led discussion where each student builds on previous responses using academic connectors",
+      phase: "collaboration",
+      minutes: 15,
+      target: "slide",
+      layout: "cards",
+      steps: [
+        "Present discussion question to class (1 min)",
+        "Student 1: Gives initial answer (30 seconds)",
+        "Student 2: 'I agree/disagree because...' OR 'Building on that idea...' (30 seconds)",
+        "Student 3: Continues chain using academic language (30 seconds)",
+        "Continue for 8-10 students (10 mins)",
+        "Teacher synthesizes key insights (2 mins)"
+      ]
+    },
+    {
+      key: "real-world-connection-hunt",
+      icon: "▦",
+      title: "Real-World Connection Hunt",
+      blurb: "Students identify real-world examples of concepts in their classroom, school, home, and community",
+      phase: "collaboration",
+      minutes: 15,
+      target: "feedback",
+      feedbackKind: "brainstorm",
+      steps: [
+        "Present concept (e.g., 'Friction' or 'Democracy') (2 mins)",
+        "Challenge 1 (3 mins): Find examples in THIS ROOM",
+        "Challenge 2 (3 mins): Think of examples AT HOME",
+        "Challenge 3 (3 mins): Identify examples IN YOUR COMMUNITY",
+        "Share out (3 mins): Students explain their connections",
+        "Reflect (1 min): 'Why does this concept matter in real life?'"
+      ]
+    },
+    {
+      key: "explanation-champion-challenge",
+      icon: "▦",
+      title: "Explanation Champion Challenge",
+      blurb: "Students explain concepts without using banned words, forcing deeper articulation of understanding",
+      phase: "collaboration",
+      minutes: 15,
+      target: "game",
+      style: "headsup",
+      steps: [
+        "Display concept word (e.g., 'Photosynthesis') (1 min)",
+        "Show 4-5 BANNED WORDS students can't use (e.g., 'sunlight', 'oxygen', 'plants') (1 min)",
+        "Think time (2 mins): Students plan their explanation",
+        "Volunteer explains to class (60 seconds)",
+        "Class votes: Clear (2 pts), Okay (1 pt), Unclear (0 pts)",
+        "Repeat with 3-4 more students and concepts (8 mins)",
+        "Debrief (2 mins): What made explanations clear?"
+      ]
+    },
+    {
+      key: "compare-and-contrast-venn-activity",
+      icon: "▦",
+      title: "Compare & Contrast Venn Activity",
+      blurb: "Visual comparison of two concepts using Venn diagram, focusing on similarities and differences",
+      phase: "collaboration",
+      minutes: 15,
+      target: "game",
+      style: "compare",
+      steps: [
+        "Present two concepts (e.g., 'Photosynthesis' vs 'Respiration') (1 min)",
+        "Individual thinking (3 mins): List characteristics of each",
+        "Pair work (5 mins): Create Venn diagram together",
+        "Gallery walk (4 mins): View other pairs' work",
+        "Class synthesis (2 mins): What patterns? What connections?"
+      ]
+    },
+    {
+      key: "benefits-vs-limitations-battle",
+      icon: "▦",
+      title: "Benefits vs Limitations Battle",
+      blurb: "Two teams take turns stating benefits and limitations of a concept, practicing balanced analysis",
+      phase: "collaboration",
+      minutes: 15,
+      target: "slide",
+      layout: "split",
+      steps: [
+        "Present topic (e.g., 'Renewable Energy' or 'Social Media') (1 min)",
+        "Team setup: Benefits Team vs Limitations Team (1 min)",
+        "30-second think time before each round",
+        "Teams alternate stating points (10 mins)",
+        "Scoring: Valid point = 1 point, Repeat = no points",
+        "Switch sides and continue (optional)",
+        "Debrief (2 mins): Balanced view discussion"
+      ]
+    },
+    {
+      key: "scenario-analysis-discussion",
+      icon: "▦",
+      title: "Scenario Analysis Discussion",
+      blurb: "Analyze real-world scenarios to identify concepts, explain applications, and predict outcomes",
+      phase: "collaboration",
+      minutes: 18,
+      target: "slide",
+      layout: "split",
+      steps: [
+        "Present concept (e.g., 'Supply and Demand') (2 mins)",
+        "Show 3 scenarios (e.g., concert tickets, crop harvest, iPhone release) (3 mins)",
+        "Question 1 (4 mins): Which scenarios show the concept? (All/Some/One)",
+        "Question 2 (4 mins): Pick one and explain HOW",
+        "Question 3 (3 mins): Predict what happens next",
+        "Question 4 (2 mins): Compare - which is most extreme?"
+      ]
+    },
+    {
+      key: "whiteboards-on-walls",
+      icon: "▦",
+      title: "Whiteboards on Walls",
+      blurb: "Students discuss and write thinking on wall whiteboards - visible thinking and peer learning (Franklin Sixth Form approach)",
+      phase: "collaboration",
+      minutes: 12,
+      target: "moment",
+      steps: [
+        "Students move to wall whiteboards in pairs/groups (30 secs)",
+        "Teacher poses problem/question (30 secs)",
+        "Groups discuss and write their thinking on whiteboards (5 mins)",
+        "Gallery walk - observe and learn from other groups' work (3 mins)",
+        "Return to own board and refine thinking based on what you saw (2 mins)",
+        "Whole class debrief of key ideas and strongest arguments (1 min)",
+        "Note: Arrive early to start, revisit at lesson end for consolidation"
+      ]
+    },
+    {
+      key: "connect-four-concept-edition",
+      icon: "▦",
+      title: "Connect Four - Concept Edition",
+      blurb: "Competitive matching game where students connect related concepts (definitions/terms, causes/effects, questions/answers)",
+      phase: "collaboration",
+      minutes: 20,
+      target: "game",
+      style: "conceptchain",
+      steps: [
+        "MODE A - Match Pairs (20 mins):",
+        "Setup (2 mins): Create 4x4 grid with paired cards (definitions/terms, causes/effects, questions/answers, benefits/limitations)",
+        "Teams take turns (15 mins): Claim two cards that match and explain the connection",
+        "If correct: Cards disappear, team scores a connection",
+        "If incorrect: Cards stay, next team's turn",
+        "Win condition: First team to make 4 valid connections wins",
+        "Debrief (3 mins): Discuss strongest connections and misconceptions",
+        "MODE B - Category Conquest (Alternative):",
+        "Setup: 4 columns, 4 rows of questions (Define, Compare, Example, Why)",
+        "Students answer questions to 'claim' spaces",
+        "First to get 4 in a row (vertical, horizontal, diagonal) wins"
+      ]
+    },
+    {
+      key: "multiple-choice-quiz",
+      icon: "?",
+      title: "Multiple Choice Quiz",
+      blurb: "5-8 multiple choice questions with immediate feedback",
+      phase: "mini-quiz",
+      minutes: 6,
+      target: "game",
+      style: "choice",
+      steps: [
+        "Present 5-8 multiple choice questions",
+        "Students respond (paper/whiteboard/digital/fingers)",
+        "Show correct answer after each (30-45 secs per question)",
+        "Quick explanation if needed",
+        "Move on - don't dwell"
+      ]
+    },
+    {
+      key: "true-false-rapid-fire",
+      icon: "?",
+      title: "True/False Rapid Fire",
+      blurb: "10-12 true/false statements with thumbs up/down/sideways",
+      phase: "mini-quiz",
+      minutes: 5,
+      target: "game",
+      style: "truefalse",
+      steps: [
+        "Teacher reads 10-12 true/false statements",
+        "Students show: 👍 True / 👎 False / 👉 Unsure",
+        "Statements mix easy, challenging, and misconceptions",
+        "Tally scores, address misconceptions"
+      ]
+    },
+    {
+      key: "short-answer-check",
+      icon: "?",
+      title: "Short Answer Check",
+      blurb: "3-5 short answer questions, pair mark with answer key",
+      phase: "mini-quiz",
+      minutes: 8,
+      target: "game",
+      style: "type",
+      steps: [
+        "Students write answers to 3-5 questions (4 mins)",
+        "Swap with partner (1 min)",
+        "Mark using answer key (2 mins)",
+        "Discuss any disagreements (1 min)",
+        "Self-assess: ___ / 5"
+      ]
+    },
+    {
+      key: "diagnostic-question",
+      icon: "?",
+      title: "Diagnostic Question",
+      blurb: "1-2 carefully designed questions that reveal thinking and misconceptions",
+      phase: "mini-quiz",
+      minutes: 7,
+      target: "game",
+      style: "choice",
+      steps: [
+        "Present 1-2 diagnostic questions (3 mins)",
+        "Students answer with explanation",
+        "Teacher analyzes common answers (2 mins)",
+        "Address misconception immediately (2 mins)",
+        "Group students by need if necessary"
+      ]
+    },
+    {
+      key: "structured-reflection-protocol",
+      icon: "↺",
+      title: "Structured Reflection Protocol (Four-Corner)",
+      blurb: "Students move to corners based on confidence level",
+      phase: "reflection",
+      minutes: 12,
+      target: "feedback",
+      feedbackKind: "poll",
+      steps: [
+        "Explain corners: Got it / Mostly understand / Getting there / Need help",
+        "Students move to their corner (2 mins)",
+        "Each corner completes specific task (6 mins)",
+        "Teacher visits each corner, addresses needs (4 mins)"
+      ]
+    },
+    {
+      key: "learning-log-entry",
+      icon: "↺",
+      title: "Learning Log Entry",
+      blurb: "Structured journal: New Learning / Connections / Challenges / Strategies / Next Steps",
+      phase: "reflection",
+      minutes: 10,
+      target: "slide",
+      layout: "content",
+      steps: [
+        "Students complete structured reflection (8 mins):",
+        "1. NEW LEARNING: What's one new thing?",
+        "2. CONNECTIONS: How does this connect?",
+        "3. CHALLENGES: What was difficult?",
+        "4. STRATEGIES: What helped me learn?",
+        "5. NEXT STEPS: What do I want to work on?",
+        "Optional: Share one insight with partner (2 mins)"
+      ]
+    },
+    {
+      key: "muddiest-point",
+      icon: "↺",
+      title: "Muddiest Point",
+      blurb: "Identify what's unclear, teacher addresses top confusions",
+      phase: "reflection",
+      minutes: 13,
+      target: "feedback",
+      feedbackKind: "brainstorm",
+      steps: [
+        "Individual (3 mins): Write 'The muddiest point for me is...' on sticky note",
+        "Teacher collects & groups (2 mins): Sort by common themes",
+        "Address Top 3 (8 mins): Clear up biggest confusions with student explanations"
+      ]
+    },
+    {
+      key: "plus-minus-interesting",
+      icon: "↺",
+      title: "Plus-Minus-Interesting (PMI)",
+      blurb: "Edward de Bono thinking: What worked (+) / What was challenging (−) / What surprised (?)",
+      phase: "reflection",
+      minutes: 10,
+      target: "slide",
+      layout: "cards",
+      steps: [
+        "Individual Reflection (5 mins):",
+        "PLUS: What worked well?",
+        "MINUS: What was challenging?",
+        "INTERESTING: What surprised me?",
+        "Share (5 mins): Pairs compare, class discusses themes"
+      ]
+    },
+    {
+      key: "exit-ticket",
+      icon: "⚑",
+      title: "Exit Ticket (Plenary)",
+      blurb: "Quick written reflection before leaving (same as Activity Plenary #4)",
+      phase: "plenary",
+      minutes: 5,
+      target: "feedback",
+      feedbackKind: "poll",
+      steps: [
+        "Choose format: 3-2-1 / Traffic Light / What-So What-Now What",
+        "Students write responses (3 mins)",
+        "Submit on way out",
+        "Teacher reviews for planning"
+      ]
+    },
+    {
+      key: "preview-next-lesson",
+      icon: "⚑",
+      title: "Preview Next Lesson",
+      blurb: "Recap today, preview tomorrow, set preparation task",
+      phase: "plenary",
+      minutes: 7,
+      target: "slide",
+      layout: "section",
+      steps: [
+        "Today We Learned (2 mins): Quick recap",
+        "Next Lesson We Will (2 mins): Preview and connect",
+        "Preparation Task (1 min): Quick homework/prep",
+        "Closing Question (2 mins): Leave them thinking"
+      ]
+    },
+    {
+      key: "exit-ticket-2",
+      icon: "⚐",
+      title: "Exit Ticket",
+      blurb: "Quick written reflection: 3-2-1 or Traffic Light or What-So What-Now What",
+      phase: "activity-plenary",
+      minutes: 5,
+      target: "feedback",
+      feedbackKind: "poll",
+      steps: [
+        "Choose format: 3-2-1 / Traffic Light / What-So What-Now What",
+        "Students write individual responses (3 mins)",
+        "Submit on way out",
+        "Teacher reviews for next lesson planning"
+      ]
+    },
+    {
+      key: "recap-quiz-game",
+      icon: "⚐",
+      title: "Recap Quiz Game",
+      blurb: "Fun, competitive review (Quiz-Quiz-Trade / Stand Up If / Quick-Fire)",
+      phase: "activity-plenary",
+      minutes: 6,
+      target: "game",
+      style: "speed",
+      steps: [
+        "Choose format (Quiz-Quiz-Trade / Stand Up If / Quick-Fire)",
+        "Play game with review questions (4 mins)",
+        "Celebrate correct answers",
+        "Address common errors (2 mins)"
+      ]
+    },
+    {
+      key: "teach-someone",
+      icon: "⚐",
+      title: "Teach Someone",
+      blurb: "Explain today's learning to a partner",
+      phase: "activity-plenary",
+      minutes: 8,
+      target: "moment",
+      steps: [
+        "Partner A teaches (2 mins): Today I learned...",
+        "Partner B asks 2 questions (1 min)",
+        "Switch roles (3 mins)",
+        "Together: What would we tell someone who missed today? (2 mins)"
+      ]
+    },
+    {
+      key: "visual-summary",
+      icon: "⚐",
+      title: "Visual Summary",
+      blurb: "Create visual showing learning (Mind Map / Comic Strip / Sketch Note / One-Pager)",
+      phase: "activity-plenary",
+      minutes: 8,
+      target: "slide",
+      layout: "cards",
+      steps: [
+        "Choose visual format (Mind Map / Comic Strip / Sketch Note / One-Pager)",
+        "Create visual summary (6 mins)",
+        "Optional: Share with partner (2 mins)"
+      ]
+    },
+    {
+      key: "reflection-ladder",
+      icon: "⚐",
+      title: "Reflection Ladder",
+      blurb: "Self-assess learning journey from 'need help' to 'can teach others'",
+      phase: "activity-plenary",
+      minutes: 9,
+      target: "feedback",
+      feedbackKind: "scale",
+      steps: [
+        "Show ladder: Bottom (need help) → Top (can teach others)",
+        "Students draw themselves on their level (1 min)",
+        "Write: 'I'm here because...' (2 mins)",
+        "Write: 'To move up I need to...' (2 mins)",
+        "Share with partner (2 mins)",
+        "Teacher notes who needs support (2 mins)"
+      ]
+    }
+  ];
+  for (const a of ACTIVITIES) {
+    const source = source_meta_default[a.title];
+    if (!source) throw new Error("Missing source record: " + a.title);
+    a.materials = source.materials.slice();
+    a.sourceFile = source.sourceFile;
+    const p = PRESETS[a.key] || GAME_PRESETS[a.key];
+    if (!p) continue;
+    a.originalMapping = { target: a.target, layout: a.layout, style: a.style, feedbackKind: a.feedbackKind };
+    a.mappingReason = p.reason;
+    a.teacherNotes = p.answer || "";
+    if (p.target) {
+      a.target = p.target;
+      delete a.style;
+      if (p.target !== "feedback" && !p.feedbackKind) delete a.feedbackKind;
+    }
+    if (p.layout) a.layout = p.layout;
+    if (p.feedbackKind) a.feedbackKind = p.feedbackKind;
+    a.feedbackPreset = p.feedback;
+    a.gamePreset = p.game;
+    a.pages = p.pages;
+    a.presentation = p.presentation;
+    if (p.pages) {
+      a.pages = p.pages.map((part) => ({ ...part, fields: [
+        text("Heading", part.title),
+        ...part.fields,
+        { label: "Timer", type: "minutes", slide: "timeLimit", value: part.minutes }
+      ] }));
+    } else if (p.fields) {
+      a.fields = [
+        text("Heading", p.fieldsTitle || a.title),
+        ...p.fields,
+        {
+          label: "Timer",
+          type: "minutes",
+          slide: "timeLimit",
+          value: p.timer || a.minutes,
+          hint: a.target === "moment" ? "Starts automatically when presented. Set 0 to leave it untimed." : "Minutes for this activity. Adjust to suit your class."
+        }
+      ];
+    }
+  }
+  function activity(key) {
+    return ACTIVITIES.find((a) => a.key === key) || null;
+  }
+  function activitiesInPhase(phase) {
+    return ACTIVITIES.filter((a) => a.phase === phase && a.enabled !== false);
+  }
+  function phaseCounts() {
+    return Object.fromEntries(PHASES.map((p) => [p.key, activitiesInPhase(p.key).length]));
+  }
+  function totalMinutes(keys) {
+    return keys.reduce((sum, key) => sum + ((activity(key) || {}).minutes || 0), 0);
+  }
+
+  // src/activities/stages.js
+  var STAGE_JOBS = {
+    note: {
+      wall: "Silent thinking",
+      phone: "Write a private note. Only you can see it.",
+      icon: "✎"
+    },
+    talk: {
+      wall: "Turn to your partner",
+      phone: "Your note, to compare with your partner’s.",
+      icon: "💬"
+    },
+    send: {
+      wall: "Ideas arrive here, without names",
+      phone: "Send your pair’s strongest idea. No name goes with it.",
+      icon: "↑"
+    },
+    /* A stretch of making or solving. The phone's job is to stay out of the
+       way, with one quiet way to say "I'm stuck" that only the desk sees. */
+    work: {
+      wall: "Work on the task",
+      phone: "Work on the task. Stuck? Tell the teacher. Only they see it.",
+      icon: "✍"
+    },
+    down: {
+      wall: "Phones down",
+      phone: "Phones down. Eyes on the board.",
+      icon: "👀"
+    }
+  };
+  var GROUP_TALK = {
+    wall: "Talk in your group",
+    phone: "Talk it through with your group."
+  };
+  var JOB_WORDS = [
+    ["work", /\b(you do alone|independent(ly)? practi[cs]e|on your own)\b/i],
+    ["note", /\b(think|alone|jot|individual|reflect|silent|write)\b/i],
+    ["talk", /\b(pair|partner|compare|discuss|square|talk|group|argue|together|circle|switch|expert|home|return|teach(es|ing)?)\b/i],
+    ["send", /\b(share|report|send|feed ?back|post|contribute)\b/i],
+    ["work", /\b(plan|planning|create|creating|design|solve|solving|build|draft|refine|investigate|research|rotate|rotation|round|station|practi[cs]e|self-assess\w*|apply|attempt)\b/i],
+    ["down", /\b(connect|synthes|summar|debrief|teacher|plenary|close|link)\w*/i]
+  ];
+  function stageJob(label) {
+    const text2 = String(label || "");
+    for (const [job, re] of JOB_WORDS) if (re.test(text2)) return (
+      /** @type {any} */
+      job
+    );
+    return "down";
+  }
+  var PAIR_WORDS = /\b(pair|partner)\b/i;
+  var GROUP_WORDS = /\b(group|square|circle|expert|home|team|table)\b/i;
+  function groupTalk(names, jobs) {
+    const talk = names.map((n, i) => (jobs ? jobs[i] : stageJob(n)) === "talk");
+    const pair = names.map((n, i) => talk[i] && PAIR_WORDS.test(n));
+    const group = names.map((n, i) => talk[i] && !pair[i] && GROUP_WORDS.test(n));
+    const pairs = pair.some(Boolean) && !group.some(Boolean);
+    return names.map((n, i) => talk[i] && (group[i] || !pair[i] && !pairs));
+  }
+  function stageCopy(st) {
+    const base = STAGE_JOBS[
+      /** @type {keyof typeof STAGE_JOBS} */
+      st.job
+    ] || STAGE_JOBS.down;
+    return st.job === "talk" && st.group ? { ...base, ...GROUP_TALK } : base;
+  }
+  var DECLARED_JOB = /\s*\[(note|talk|send|work|down)\]\s*$/i;
+  function stripDeclaredJob(term) {
+    return String(term == null ? "" : term).replace(DECLARED_JOB, "");
+  }
+  function declaredJob(term) {
+    const m = DECLARED_JOB.exec(String(term || ""));
+    return m ? m[1].toLowerCase() : "";
+  }
+  function parseStageLabel(term) {
+    const text2 = String(term || "").replace(DECLARED_JOB, "").trim();
+    const m = /^(.*?)\s*[·•|:\-–—(]\s*(?:every\s+|about\s+|~\s*)?(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?|m)\b\)?\s*$/i.exec(text2);
+    if (!m) return { name: text2, seconds: 0 };
+    const n = Number(m[2]);
+    const secs = /^s/i.test(m[3]) ? n : n * 60;
+    return { name: m[1].trim() || text2, seconds: Math.max(0, Math.min(3600, Math.round(secs))) };
+  }
+  function stagedRows(slide, parseLine) {
+    const rows2 = (slide && slide.bullets || []).map((line, row) => ({ ...parseLine(line), row })).filter((p) => p.term || p.def);
+    const labels = rows2.map((p) => parseStageLabel(p.term));
+    const timedAfter = labels.slice(1).filter((l) => l.seconds > 0).length;
+    const hasBrief = rows2.length > 2 && labels[0].seconds === 0 && timedAfter >= 2;
+    const brief = hasBrief ? { row: rows2[0].row, name: labels[0].name, text: rows2[0].def || "" } : null;
+    const staged = rows2.slice(hasBrief ? 1 : 0, (hasBrief ? 1 : 0) + 8);
+    const names = staged.map((p) => parseStageLabel(p.term).name);
+    const jobs = staged.map((p, i) => (
+      /** @type {any} */
+      declaredJob(p.term) || stageJob(names[i])
+    ));
+    const groups = groupTalk(names, jobs);
+    const stages = staged.map((p, i) => {
+      const label = parseStageLabel(p.term);
+      return {
+        i,
+        row: p.row,
+        name: label.name,
+        seconds: label.seconds,
+        text: p.def || "",
+        job: jobs[i],
+        group: groups[i]
+      };
+    });
+    return { brief, stages };
+  }
+  function activityStages(slide, parseLine) {
+    return (
+      /** @type {any} */
+      stagedRows(slide, parseLine).stages
+    );
+  }
+  function activityBrief(slide, parseLine) {
+    return stagedRows(slide, parseLine).brief;
+  }
+
+  // src/activities/rooms.js
   var support = (status, reason) => Object.freeze({ status, reason });
+  var ACTIVITY_ROOMS = Object.freeze({
+    /* A staged routine whose phones write, talk or work, and send nothing. */
+    staged: Object.freeze({
+      phones: support("yes", "Each stage gives the phone a job, or tells it to go down."),
+      teams: support("yes", "The routine is the grouping: pairs and groups work where they sit."),
+      entry: support("yes", "The wall carries every stage; phones are an extra, not a need."),
+      solo: support("partial", "The stages run in a solo present, without a partner to talk to.")
+    }),
+    /* A staged routine with an idea box: without phones the ideas are said. */
+    stagedSend: Object.freeze({
+      phones: support("yes", "Each stage gives the phone a job; ideas arrive on the wall without names."),
+      teams: support("yes", "The routine is the grouping; a group can send one idea from one phone."),
+      entry: support("partial", "The stages run from the wall, but spoken ideas cannot be entered into the idea box."),
+      solo: support("partial", "The stages run in a solo present; there is no room to share with.")
+    }),
+    /* A prompt on a slide: a poll, scale, word cloud or idea box. */
+    collect: Object.freeze({
+      phones: support("yes", "Each learner answers on their phone."),
+      teams: support("partial", "One phone per group works, but the count is per phone."),
+      entry: support("no", "The teacher cannot yet record a poll, scale or idea for a room without phones."),
+      solo: support("no", "It collects from a room.")
+    }),
+    /* A slide the teacher leads from: objectives, a brief, a task. */
+    slide: Object.freeze({
+      phones: support("partial", "Phones show the slide, with a quiet Need help."),
+      teams: support("yes", "Groups work from the wall."),
+      entry: support("yes", "The teacher leads from the wall; no phones are needed."),
+      solo: support("yes", "It reads as a slide.")
+    }),
+    /* A timed routine that stays a checklist: Do Now, Wait Time. */
+    moment: Object.freeze({
+      phones: support("partial", "Phones show what is on the wall, with a quiet Need help."),
+      teams: support("yes", "Groups work from the wall."),
+      entry: support("yes", "The wall and its one clock carry it; no phones are needed."),
+      solo: support("partial", "The clock runs in a solo present; the routine assumes a room.")
+    })
+  });
+  function rowJobs(a) {
+    return (a.fields || []).filter((f) => /^bullets\.\d+\.def$/.test(f.slide || "")).map((f) => declaredJob(f.label) || stageJob(parseStageLabel(f.label).name));
+  }
+  function activityPlays(a, styleOf) {
+    if (a.target === "game") {
+      const style = a.style && styleOf ? styleOf(a.style) : null;
+      if (style && style.plays) return style.plays;
+    }
+    if (a.target === "feedback") return ACTIVITY_ROOMS.collect;
+    if (a.presentation === "stages") {
+      return rowJobs(a).includes("send") ? ACTIVITY_ROOMS.stagedSend : ACTIVITY_ROOMS.staged;
+    }
+    if (a.target === "moment") return ACTIVITY_ROOMS.moment;
+    return ACTIVITY_ROOMS.slide;
+  }
+
+  // src/deck/content.js
+  var TABLE_MAX_COLS = 6;
+  var TABLE_MAX_ROWS = 12;
+  function parseTable(text2) {
+    var lines = String(text2 == null ? "" : text2).split(/\r?\n/).filter(function(l) {
+      return l.trim();
+    }).slice(0, TABLE_MAX_ROWS);
+    var rows2 = lines.map(function(line) {
+      var cells = line.indexOf("	") !== -1 ? line.split("	") : line.split("|");
+      return cells.map(function(c) {
+        return c.trim();
+      }).slice(0, TABLE_MAX_COLS);
+    });
+    var cols = rows2.reduce(function(n, r) {
+      return Math.max(n, r.length);
+    }, 0);
+    rows2.forEach(function(r) {
+      while (r.length < cols) r.push("");
+    });
+    return rows2;
+  }
+  function chartData(slide) {
+    var rows2 = parseTable(slide && slide.body);
+    if (rows2.length < 2) return { categories: [], series: [] };
+    var head = rows2[0], body = rows2.slice(1);
+    var names = head.slice(1).filter(function(h) {
+      return String(h).trim();
+    });
+    var categories = body.map(function(r) {
+      return String(r[0] || "").trim();
+    });
+    var series = names.map(function(name, i) {
+      return {
+        name: String(name).trim(),
+        values: body.map(function(r) {
+          var raw = String(r[i + 1] == null ? "" : r[i + 1]).replace(/[,\s%£$€]/g, "");
+          if (!raw) return null;
+          var n = Number(raw);
+          return Number.isFinite(n) ? n : null;
+        })
+      };
+    });
+    return { categories, series };
+  }
+  var SERIES_LEGEND_KINDS = {
+    bar: 1,
+    stack: 1,
+    hbar: 1,
+    line: 1,
+    area: 1,
+    combo: 1,
+    radar: 1,
+    bullet: 1,
+    scatter: 1,
+    /* A dumbbell is two named series drawn as two coloured dots and nothing
+       else. Without the key, which end is which is only in a tooltip, and a
+       tooltip is not available to a room looking at a projector. */
+    dumbbell: 1
+  };
+  function chartUsesSeriesLegend(kind, seriesCount) {
+    return (seriesCount == null ? 2 : seriesCount) > 1 && !!SERIES_LEGEND_KINDS[kind];
+  }
+  var DATA_MAX_COLS = 200;
+  var DATA_MAX_ROWS = 200;
+  function dataRows(text2) {
+    return String(text2 == null ? "" : text2).split(/\r?\n/).filter(function(l) {
+      return l.trim();
+    }).slice(0, DATA_MAX_ROWS).map(function(line) {
+      var cells = line.indexOf("	") !== -1 ? line.split("	") : line.split("|");
+      return cells.map(function(c) {
+        return c.trim();
+      }).slice(0, DATA_MAX_COLS);
+    });
+  }
+  function chartNumber(cell) {
+    var raw = String(cell == null ? "" : cell).replace(/[,\s%£$€]/g, "");
+    if (!raw) return null;
+    var n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  }
+  function chartPoints(slide) {
+    var rows2 = dataRows(slide && slide.body);
+    if (rows2.length < 2) return { series: [], xLabel: "", yLabel: "", labelled: false };
+    var head = rows2[0], body = rows2.slice(1);
+    var labelled = body.length > 0 && chartNumber(body[0][0]) == null;
+    var xCol = labelled ? 1 : 0;
+    var names = head.slice(xCol + 1).filter(function(h) {
+      return String(h).trim();
+    });
+    var series = names.map(function(name, i) {
+      var pts = [];
+      body.forEach(function(r) {
+        var x = chartNumber(r[xCol]), y = chartNumber(r[xCol + 1 + i]);
+        if (x != null && y != null) {
+          pts.push({ x, y, label: labelled ? String(r[0] || "").trim() : "" });
+        }
+      });
+      return { name: String(name).trim(), points: pts };
+    });
+    return {
+      series,
+      xLabel: String(head[xCol] || "").trim(),
+      yLabel: names.length === 1 ? names[0] : "",
+      labelled
+    };
+  }
+  function chartGroups(slide) {
+    var rows2 = dataRows(slide && slide.body);
+    if (!rows2.length) return [];
+    var body = rows2.length > 1 && chartNumber(rows2[0][1]) == null ? rows2.slice(1) : rows2;
+    return body.map(function(r) {
+      var vals = r.slice(1).map(chartNumber).filter(function(v) {
+        return v != null;
+      });
+      vals.sort(function(a, b) {
+        return a - b;
+      });
+      return { name: String(r[0] || "").trim(), values: vals };
+    }).filter(function(g) {
+      return g.values.length;
+    });
+  }
+  function fiveNumber(sorted) {
+    if (!sorted.length) return null;
+    function q(p) {
+      var pos = (sorted.length - 1) * p, lo = Math.floor(pos), hi = Math.ceil(pos);
+      return lo === hi ? sorted[lo] : sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
+    }
+    var q1 = q(0.25), med = q(0.5), q3 = q(0.75), iqr = q3 - q1;
+    var loFence = q1 - 1.5 * iqr, hiFence = q3 + 1.5 * iqr;
+    var inside = sorted.filter(function(v) {
+      return v >= loFence && v <= hiFence;
+    });
+    return {
+      min: inside.length ? inside[0] : sorted[0],
+      q1,
+      median: med,
+      q3,
+      max: inside.length ? inside[inside.length - 1] : sorted[sorted.length - 1],
+      outliers: sorted.filter(function(v) {
+        return v < loFence || v > hiFence;
+      }),
+      n: sorted.length
+    };
+  }
+  function chartFlows(slide) {
+    var rows2 = dataRows(slide && slide.body);
+    var links = [];
+    rows2.forEach(function(r) {
+      var from = String(r[0] || "").trim(), to = String(r[1] || "").trim();
+      var v = chartNumber(r[2]);
+      if (!from || !to || v == null || v <= 0) return;
+      links.push({ from, to, value: v });
+    });
+    if (!links.length) return { nodes: [], links: [], layers: 0 };
+    var names = [];
+    links.forEach(function(l) {
+      if (names.indexOf(l.from) < 0) names.push(l.from);
+      if (names.indexOf(l.to) < 0) names.push(l.to);
+    });
+    var nodes = names.map(function(n) {
+      return { name: n, depth: 0, in: 0, out: 0, total: 0, x: 0, y: 0, h: 0, inAt: 0, outAt: 0 };
+    });
+    var byName = {};
+    nodes.forEach(function(n, i) {
+      byName[n.name] = i;
+    });
+    for (var pass = 0; pass < nodes.length; pass++) {
+      var moved = false;
+      links.forEach(function(l) {
+        var a = nodes[byName[l.from]], b = nodes[byName[l.to]];
+        if (b.depth < a.depth + 1) {
+          b.depth = a.depth + 1;
+          moved = true;
+        }
+      });
+      if (!moved) break;
+    }
+    links.forEach(function(l) {
+      nodes[byName[l.from]].out += l.value;
+      nodes[byName[l.to]].in += l.value;
+    });
+    nodes.forEach(function(n) {
+      n.total = Math.max(n.in, n.out);
+    });
+    var layers = nodes.reduce(function(m, n) {
+      return Math.max(m, n.depth);
+    }, 0) + 1;
+    return { nodes, links, layers, index: byName };
+  }
+  function chartValues(slide) {
+    var rows2 = dataRows(slide && slide.body);
+    var out = [];
+    rows2.forEach(function(r) {
+      r.forEach(function(c) {
+        var n = chartNumber(c);
+        if (n != null) out.push(n);
+      });
+    });
+    return out.sort(function(a, b) {
+      return a - b;
+    });
+  }
+  function histogramBins(values, want) {
+    if (!values.length) return [];
+    var lo = values[0], hi = values[values.length - 1];
+    if (hi === lo) return [{ from: lo, to: lo, count: values.length }];
+    var n = want || Math.max(5, Math.min(14, Math.ceil(Math.log2(values.length) + 1)));
+    var width = (hi - lo) / n, bins = [];
+    for (var i = 0; i < n; i++) bins.push({ from: lo + i * width, to: lo + (i + 1) * width, count: 0 });
+    values.forEach(function(v) {
+      var idx = Math.min(n - 1, Math.floor((v - lo) / width));
+      bins[idx].count++;
+    });
+    return bins;
+  }
+  function parsePerson(line) {
+    var raw = String(line == null ? "" : line);
+    var cells = (raw.indexOf("	") !== -1 ? raw.split("	") : raw.split("|")).map(function(c) {
+      return c.trim();
+    });
+    return { name: cells[0] || "", role: cells[1] || "", boss: cells[2] || "", photo: safeMedia(cells[3] || "") };
+  }
+  function orgTree(lines) {
+    var warnings = [];
+    var seen = {};
+    var people = [];
+    (lines || []).map(parsePerson).forEach(function(p) {
+      if (!p.name) return;
+      var key = p.name.toLowerCase();
+      if (seen[key]) {
+        warnings.push("Two people are both named “" + p.name + "”. Only the first is kept.");
+        return;
+      }
+      seen[key] = 1;
+      people.push(p);
+    });
+    var byName = {};
+    people.forEach(function(p) {
+      byName[p.name.toLowerCase()] = p;
+      p.reports = [];
+    });
+    var roots = [];
+    people.forEach(function(p) {
+      if (!p.boss) {
+        roots.push(p);
+        return;
+      }
+      if (p.boss.toLowerCase() === p.name.toLowerCase()) {
+        warnings.push("“" + p.name + "” reports to themselves — drawn as top-level.");
+        roots.push(p);
+        return;
+      }
+      var boss2 = byName[p.boss.toLowerCase()];
+      if (!boss2) {
+        warnings.push("“" + p.boss + "” is not on this slide — “" + p.name + "” is drawn as top-level.");
+        roots.push(p);
+        return;
+      }
+      boss2.reports.push(p);
+    });
+    if (!roots.length && people.length) {
+      warnings.push("Everyone reports in a loop — drawn as a flat team with no connectors.");
+      people.forEach(function(p) {
+        p.reports = [];
+      });
+      roots = people.slice();
+    }
+    var attached = {};
+    function mark(p) {
+      var k = p.name.toLowerCase();
+      if (attached[k]) return;
+      attached[k] = 1;
+      (p.reports || []).forEach(mark);
+    }
+    roots.forEach(mark);
+    var orphans = people.filter(function(p) {
+      return !attached[p.name.toLowerCase()];
+    });
+    if (orphans.length) {
+      warnings.push(orphans.length === 1 ? "“" + orphans[0].name + "” sits in a reporting loop and was not under any head — drawn as top-level." : orphans.length + " people sit in a reporting loop off the main tree — drawn as top-level.");
+      orphans.forEach(function(p) {
+        p.reports = [];
+        roots.push(p);
+      });
+    }
+    function depth(p, visiting, d) {
+      if (d > people.length) return d;
+      var k = p.name.toLowerCase();
+      if (visiting[k]) return d;
+      visiting[k] = 1;
+      var max = d;
+      (p.reports || []).forEach(function(c) {
+        max = Math.max(max, depth(c, visiting, d + 1));
+      });
+      delete visiting[k];
+      return max;
+    }
+    var levels = roots.reduce(function(m, r) {
+      return Math.max(m, depth(r, {}, 1));
+    }, 0);
+    return { roots, people, levels, warnings };
+  }
+  function parseKeywordLine(line) {
+    var s = String(line == null ? "" : line);
+    var tab = s.indexOf("	");
+    if (tab !== -1) {
+      return { term: s.slice(0, tab).trim(), def: s.slice(tab + 1).trim() };
+    }
+    var m = s.match(/^(.+?)\s*[—–:\-|]\s+(.+)$/);
+    if (m) return { term: m[1].trim(), def: m[2].trim() };
+    return { term: s.trim(), def: "" };
+  }
+  function formatKeywordLine(term, def) {
+    return String(term || "").trim() + "	" + String(def || "").trim();
+  }
+  function parseInfoLine(line) {
+    var s = String(line == null ? "" : line).trim();
+    var parts = s.indexOf("	") !== -1 ? s.split("	") : s.split("|");
+    parts = parts.map(function(p) {
+      return p.trim();
+    });
+    if (parts.length > 3) parts = [parts[0], parts[1], parts.slice(2).join(" · ")];
+    return { label: parts[0] || "", value: parts[1] || "", note: parts[2] || "" };
+  }
+  function formatInfoLine(label, value, note) {
+    return [label, value, note].map(function(p) {
+      return String(p || "").trim();
+    }).join("	").replace(/\t+$/, "");
+  }
+  function infoNumber(value) {
+    var m = String(value || "").replace(/,/g, "").match(/-?\d+(\.\d+)?/);
+    return m ? parseFloat(m[0]) : NaN;
+  }
+  function safeHref(url) {
+    var u = String(url || "").trim();
+    if (!u) return "";
+    if (/^https?:\/\//i.test(u)) return u;
+    if (/^\/\//.test(u)) return "https:" + u;
+    if (u.charAt(0) === "/" && u.indexOf("..") < 0 && /^\/[A-Za-z0-9._~/-]*(\?[A-Za-z0-9._~/\-=&%+]*)?(#[A-Za-z0-9._~/-]*)?$/.test(u)) return u;
+    if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}([\/?#][^\s]*)?$/i.test(u)) return "https://" + u;
+    return "";
+  }
+  function safeMedia(url) {
+    var u = String(url == null ? "" : url).replace(/[\u0000-\u001f\u007f]/g, "").trim();
+    if (!u) return "";
+    if (/^data:/i.test(u)) return /^data:(image|video|audio)\//i.test(u) ? u : "";
+    if (/^[a-z][a-z0-9+.-]*:/i.test(u)) {
+      return /^(https?|file|blob):/i.test(u) ? u : "";
+    }
+    return u;
+  }
+  var SLIDE_TYPES = {
+    journey: {
+      label: "Journey / handover",
+      icon: "↝",
+      deck: true,
+      pits: 6,
+      group: "explain",
+      starters: [{ title: "Journey / handover", blurb: "Connect milestones, course topics or stages of a project." }]
+    },
+    orgchart: {
+      label: "People & structure",
+      icon: "⛬",
+      deck: true,
+      pits: 12,
+      group: "explain",
+      starters: [{ title: "Team or org chart", blurb: "Who reports to whom, with headshots. Also draws a flat team as one row." }]
+    },
+    mindmap: {
+      label: "Mind map",
+      icon: "✣",
+      deck: true,
+      pits: 6,
+      group: "explain",
+      starters: [{ title: "Mind map", blurb: "One central idea, connected branches, revealed as you teach." }]
+    },
+    introduction: {
+      label: "Lecturer introduction",
+      icon: "◎",
+      deck: true,
+      group: "introduce",
+      starters: [{ title: "Lecturer introduction", blurb: "Headshot, name, job title and a short introduction." }]
+    },
+    title: {
+      label: "Title",
+      icon: "T",
+      deck: true,
+      group: "introduce",
+      starters: [{
+        title: "Opening title",
+        blurb: "Big title at the top. Subtitle underneath.",
+        seed: { title: "Lesson title", subtitle: "Your name" }
+      }]
+    },
+    section: {
+      label: "Section",
+      icon: "S",
+      deck: true,
+      group: "introduce",
+      starters: [{
+        title: "Section break",
+        blurb: "A clean pause between parts of the lesson.",
+        seed: { title: "Next idea", subtitle: "A short bridge into what follows." }
+      }]
+    },
+    /* One line, as big as it fits, in the middle of the slide.
+       
+       Title is a lesson's front door and Section is a divider — both carry an
+       accent bar, an eyebrow and a subtitle, and both are sized for a sentence.
+       Neither is the slide a teacher wants for a thought: six words, bold,
+       centred, nothing else on it. That was being faked with a Section and the
+       text-size control, which caps at the size the divider was designed for. */
+    statement: {
+      label: "Statement",
+      icon: "❝",
+      deck: true,
+      group: "introduce",
+      starters: [{
+        title: "Statement",
+        blurb: "One line, bold and as big as it fits. An opening thought, a provocation, a rule to remember.",
+        seed: { body: "Every chart is a choice", subtitle: "" }
+      }]
+    },
+    /* An empty canvas. Every other type here is a shape the slide is poured
+       into; this one is the absence of a shape, so an author can place items
+       wherever the layouts taught the inserters to put them rather than filling
+       in someone else's fields. It is also where a slide ends up once every
+       block has been taken off it — deleting everything has to leave something,
+       and a slide still claiming to be Bullets with no bullets on it is a shape
+       pretending to be empty. */
+    blank: {
+      label: "Blank",
+      icon: "▢",
+      deck: true,
+      group: "introduce",
+      starters: [{ title: "Blank canvas", blurb: "Nothing on it. Add items and put them where you want them." }]
+    },
+    content: {
+      label: "Bullets",
+      icon: "•",
+      deck: true,
+      pits: 8,
+      group: "explain",
+      starters: [
+        {
+          title: "Title + content",
+          blurb: "Classic teaching slide — heading, then bullet pits.",
+          seed: { title: "Slide title", bullets: ["", "", ""] }
+        },
+        {
+          title: "Steps",
+          blurb: "Title plus four numbered teaching steps.",
+          seed: { title: "How it works", bullets: ["Step one", "Step two", "Step three", "Step four"] }
+        }
+      ]
+    },
+    keyfact: {
+      label: "Key fact",
+      icon: "!",
+      deck: true,
+      pits: 4,
+      group: "explain",
+      starters: [{
+        title: "Key fact",
+        blurb: "One number or rule set large, with the detail beneath it.",
+        seed: {
+          title: "The thing they must leave with",
+          subtitle: "What the fact is",
+          body: "The fact, in a few words",
+          bullets: ["", "", ""]
+        }
+      }]
+    },
+    keywords: {
+      label: "Keywords",
+      icon: "K",
+      deck: true,
+      pits: 8,
+      group: "explain",
+      starters: [{
+        title: "Keywords",
+        blurb: "Bold keyword + lowercase definition — vocabulary pits.",
+        seed: { title: "Key vocabulary", bullets: ["	", "	", "	"] }
+      }]
+    },
+    italics: {
+      label: "Phrase + explanation",
+      icon: "I",
+      deck: true,
+      pits: 8,
+      group: "explain",
+      starters: [{
+        title: "Italics",
+        blurb: "Italic phrase + plain explanation — emphasis pits.",
+        seed: { title: "Phrases to notice", bullets: ["	", "	", "	"] }
+      }]
+    },
+    links: {
+      label: "Links",
+      icon: "↗",
+      deck: true,
+      pits: 8,
+      group: "show",
+      starters: [{
+        title: "Hyperlinks",
+        blurb: "Label + URL — clickable further reading.",
+        seed: { title: "Further reading", bullets: ["	", "	", "	"] }
+      }]
+    },
+    split: {
+      label: "Image + text",
+      icon: "◫",
+      deck: true,
+      pits: 5,
+      group: "show",
+      starters: [{
+        title: "Dual coding",
+        blurb: "Half text, half image — say it and show it.",
+        seed: { title: "Say it. Show it.", bullets: ["", "", ""] }
+      }]
+    },
+    cards: {
+      label: "Cards",
+      icon: "▦",
+      deck: true,
+      pits: 6,
+      group: "explain",
+      starters: [{
+        title: "Three cards",
+        blurb: "Three idea pits side by side.",
+        seed: { title: "Three ideas to hold onto.", bullets: ["", "", ""] }
+      }]
+    },
+    table: {
+      label: "Table",
+      icon: "⊞",
+      deck: true,
+      group: "explain",
+      starters: [{
+        title: "Table",
+        blurb: "Rows and columns — for when the exact value matters.",
+        seed: { title: "Side by side" }
+      }]
+    },
+    code: {
+      label: "Code",
+      icon: "</>",
+      deck: true,
+      group: "explain",
+      starters: [{
+        title: "Python / code typing",
+        blurb: "Source that types itself on the wall — live-coding feel without sharing an IDE.",
+        seed: { title: "Code that writes itself", language: "python", typewrite: true }
+      }]
+    },
+    beforeafter: {
+      label: "Before / after",
+      icon: "◐",
+      deck: true,
+      group: "show",
+      starters: [{ title: "Before / after", blurb: "Two states compared — the second lands on a press." }]
+    },
+    experiment: {
+      label: "Predict and compare",
+      icon: "◉",
+      deck: true,
+      group: "show",
+      starters: [{ title: "Predict and compare", blurb: "Predict, reveal and compare editable visual states.", seed: { title: "Same data, different encodings", experiment: { preset: "polling" }, body: "Candidate	Poll A	Poll B	Poll C\n1	17	20	23\n2	18	20	22\n3	20	19	20\n4	22	21	18\n5	23	20	17" } }]
+    },
+    /* Ten specimens, each its own row in Add slide. They were a Look control
+       once, which put a choice of slide shape in the pane that promises not to
+       change your content — and these demand an image and bring a state machine
+       with them. A shape belongs where the other shapes are chosen. */
+    motion: {
+      label: "Animated explainer",
+      icon: "◈",
+      deck: true,
+      group: "show",
+      starters: [
+        { title: "Mask reveal", blurb: "An image uncovered a piece at a time, under your control.", seed: { title: "Mask reveal", motionScene: "mask", design: { motionLook: "editorial" } } },
+        { title: "Draw-on diagram", blurb: "Strokes that arrive in the order you explain them.", seed: { title: "Draw-on diagram", motionScene: "draw", design: { motionLook: "editorial" } } },
+        { title: "Card to detail", blurb: "A card the room picks, opening into its detail.", seed: { title: "Card to detail", motionScene: "cards", design: { motionLook: "editorial" } } },
+        { title: "Animated annotations", blurb: "Callouts that land on a picture one after another.", seed: { title: "Animated annotations", motionScene: "annotate", design: { motionLook: "editorial" } } },
+        { title: "Scrubbable transformation", blurb: "A slider the room drags between two shapes of the same data.", seed: { title: "Scrubbable transformation", motionScene: "scrub", design: { motionLook: "editorial" } } },
+        { title: "Cause and effect", blurb: "Change one thing, watch what follows from it.", seed: { title: "Cause and effect", motionScene: "cause", design: { motionLook: "editorial" } } },
+        { title: "Branching scenario", blurb: "A choice, and the consequence of having made it.", seed: { title: "Branching scenario", motionScene: "branch", design: { motionLook: "editorial" } } },
+        { title: "Exploded diagram", blurb: "Parts that separate to show how the whole fits together.", seed: { title: "Exploded diagram", motionScene: "explode", design: { motionLook: "editorial" } } },
+        { title: "Focus lens", blurb: "A moving lens that reads one region of a busy image.", seed: { title: "Focus lens", motionScene: "lens", design: { motionLook: "editorial" } } },
+        { title: "Responsive story panels", blurb: "Panels that expand as the story is told through them.", seed: { title: "Responsive story panels", motionScene: "panels", design: { motionLook: "editorial" } } }
+      ]
+    },
+    explore: {
+      label: "Explore an image",
+      icon: "◎",
+      deck: true,
+      group: "show",
+      starters: [{ title: "Explore an image", blurb: "One picture the room examines, with details you reveal." }]
+    },
+    simulation: {
+      label: "What if? graph",
+      icon: "↗",
+      deck: true,
+      group: "show",
+      starters: [{ title: "What if? graph", blurb: "A slider bound to a model — move it and the curve answers." }]
+    },
+    chart: {
+      label: "Chart",
+      icon: "▥",
+      deck: true,
+      group: "explain",
+      starters: [{
+        title: "Chart",
+        blurb: "Bar, line or pie drawn from a range you paste in.",
+        seed: {
+          title: "What the numbers show",
+          chartKind: "bar",
+          body: "Day|Students\nMon|12\nTue|19\nWed|15"
+        }
+      }]
+    },
+    image: {
+      label: "Image",
+      icon: "▣",
+      deck: true,
+      group: "show",
+      starters: [{
+        title: "Full-bleed image",
+        blurb: "One dominant image with a caption.",
+        seed: { title: "Caption" }
+      }]
+    },
+    gallery: {
+      label: "Image stack",
+      icon: "▤",
+      deck: true,
+      group: "show",
+      starters: [{
+        title: "Image stack",
+        blurb: "Several pictures, revealed one press at a time.",
+        seed: { title: "One at a time" }
+      }]
+    },
+    video: {
+      label: "Video",
+      icon: "▶",
+      deck: true,
+      group: "show",
+      starters: [{
+        title: "Video",
+        blurb: "A clip from YouTube, Vimeo or a file beside the deck.",
+        seed: { title: "Watch this" }
+      }]
+    },
+    quote: {
+      label: "Quote",
+      icon: "“",
+      deck: true,
+      group: "introduce",
+      starters: [{
+        title: "Quote",
+        blurb: "A line the room can sit with.",
+        seed: {
+          body: "Replace this with the line you want the room to sit with.",
+          subtitle: "Attribution"
+        }
+      }]
+    },
+    /* Infographic shapes. Each is still a bullet layout under the hood — a pit
+       per element, revealed on Next — so they inherit reorder, bulk paste,
+       spread-across-slides and the presenter excerpt for free. */
+    stats: {
+      label: "Stat tiles",
+      icon: "％",
+      deck: true,
+      pits: 6,
+      group: "infographic",
+      starters: [{
+        title: "Stat tiles",
+        blurb: "Three to six big numbers, each with a label and a note.",
+        seed: { title: "The numbers that matter", bullets: ["Label	Value	Note", "		", "		"] }
+      }]
+    },
+    compare: {
+      label: "Versus",
+      icon: "⇄",
+      deck: true,
+      pits: 6,
+      group: "infographic",
+      starters: [{
+        title: "Versus",
+        blurb: "Two columns compared row by row — before/after, A/B, myth/fact.",
+        seed: { title: "Side by side", subtitle: "Option A | Option B", bullets: ["	", "	", "	"] }
+      }]
+    },
+    funnel: {
+      label: "Funnel",
+      icon: "▽",
+      deck: true,
+      pits: 6,
+      group: "infographic",
+      starters: [{
+        title: "Funnel",
+        blurb: "Stages that narrow — applicants to offers, awareness to action.",
+        seed: { title: "Where the numbers thin out", bullets: ["Stage	Value	Note", "		", "		", "		"] }
+      }]
+    },
+    timeline: {
+      label: "Timeline",
+      icon: "⟶",
+      deck: true,
+      pits: 8,
+      group: "infographic",
+      starters: [{
+        title: "Timeline",
+        blurb: "Dated events along a track — a history, a plan, a term.",
+        seed: { title: "How we got here", bullets: ["Date	Event	Detail", "		", "		", "		"] }
+      }]
+    },
+    /* What you see, and what is under it.
+    
+         The other infographics all lay their parts out side by side, which says
+         "these are comparable". A great many things a school teaches are the
+         opposite shape: one small visible fact sitting on a mass that is bigger
+         than it and deliberately out of view. The cost of a t-shirt. What a
+         headline leaves out. What one question to a chatbot actually spends.
+    
+         Above the waterline goes the subtitle — the thing everyone already sees.
+         Below it the pits widen as they deepen, so the shape argues before the
+         words do, and they reveal one at a time so a class meets the mass at the
+         speed the teacher sets rather than all at once. */
+    iceberg: {
+      label: "What lies beneath",
+      icon: "◭",
+      deck: true,
+      pits: 6,
+      group: "infographic",
+      starters: [{
+        title: "What lies beneath",
+        blurb: "One visible thing, and the mass underneath it — hidden costs, what a headline leaves out.",
+        seed: {
+          title: "The hidden costs",
+          subtitle: "What you see",
+          bullets: ["What it costs	Value	Note", "		", "		"]
+        }
+      }]
+    },
+    /* A continuum with named ends, and things placed along it.
+    
+       A compare slide asks "which of these two", and a stat tile asks "how big".
+       Neither asks the question a class argues about best: where does this sit
+       between two extremes, and does everyone agree? The pits carry a position
+       rather than a magnitude, so two items 4 points apart are 4 points apart on
+       the line — which is the whole claim the slide is making. */
+    spectrum: {
+      label: "Spectrum",
+      icon: "⇹",
+      deck: true,
+      pits: 6,
+      group: "infographic",
+      starters: [{
+        title: "Spectrum",
+        blurb: "One end to the other, with things placed along it — never/always, cheap/costly, safe/risky.",
+        seed: {
+          title: "Where does each one sit?",
+          subtitle: "Never worth it | Always worth it",
+          bullets: ["Something	20	Why it sits there", "	50	", "	85	"]
+        }
+      }]
+    },
+    /* A claim, and what is actually behind it.
+    
+       The move every media-literacy lesson teaches and no layout supported: put
+       the assertion up, then take it apart by provenance — who said it, when,
+       what it is based on, and what it does not say. The last row is the one
+       that matters and the one an author will skip, so the seed names it. */
+    sourcecheck: {
+      label: "Claim & source",
+      icon: "⌕",
+      deck: true,
+      pits: 6,
+      group: "infographic",
+      starters: [{
+        title: "Claim & source",
+        blurb: "A claim, then who said it, when, on what basis, and what it leaves out.",
+        seed: {
+          title: '"The claim, quoted as it was made"',
+          bullets: ["Who	The source", "When	The date", "Basis	What it rests on", "Gap	What it does not say"]
+        }
+      }]
+    },
+    /* One quantity, across three or four moments.
+    
+       A timeline puts events on a track and says when. This says how much, and
+       prints the change between each pair — which is the number every reader is
+       computing anyway and usually getting wrong. 500,000 to 8 million is not
+       "a rise", it is sixteenfold, and the slide should say so. */
+    shift: {
+      label: "Then / now / next",
+      icon: "⇗",
+      deck: true,
+      pits: 4,
+      group: "infographic",
+      starters: [{
+        title: "Then / now / next",
+        blurb: "One quantity across three moments, with the change between them worked out.",
+        seed: { title: "How fast this moved", bullets: ["Then	100	Where it started", "Now	400	Where it is", "Next		Where it goes"] }
+      }]
+    },
+    /* Two images, one of them not real.
+    
+       beforeafter is one image changing; this is two competing, and the room has
+       to commit to one before the tells appear. That commitment is the entire
+       pedagogy — a class shown the answer first learns that deepfakes are
+       detectable, and a class made to guess first learns that they are not. */
+    spotfake: {
+      label: "Spot the fake",
+      icon: "◐",
+      deck: true,
+      pits: 6,
+      group: "show",
+      starters: [{
+        title: "Spot the fake",
+        blurb: "Two images side by side. The room votes, then the tells are named one at a time.",
+        seed: {
+          title: "Which one is real?",
+          subtitle: "A | B",
+          correct: 0,
+          bullets: ["The first tell", "The second tell", "The third tell"]
+        }
+      }]
+    },
+    join: { label: "Join QR & PIN", icon: "⌗", deck: true },
+    game: { label: "Game", icon: "◈" },
+    quiz: { label: "Quiz", icon: "?" },
+    explain: { label: "Explanation", icon: "💡" },
+    results: { label: "Score", icon: "⚑" }
+  };
+  var LAYOUT_GROUPS = [
+    ["introduce", "Introduce"],
+    ["explain", "Explain & organise"],
+    ["show", "Show & explore"],
+    ["infographic", "Infographic"]
+  ];
+  var INFO_LAYOUTS = ["stats", "compare", "funnel", "timeline", "iceberg", "spectrum", "sourcecheck", "shift"];
+  function layoutKeys(test) {
+    return Object.keys(SLIDE_TYPES).filter(function(k) {
+      return test(SLIDE_TYPES[k]);
+    });
+  }
+  var DECK_TYPES = layoutKeys(function(t) {
+    return t.deck;
+  });
+  var BULLET_LAYOUTS = layoutKeys(function(t) {
+    return t.pits > 0;
+  });
+  function prepareLayout(slide, type2) {
+    if (DECK_TYPES.indexOf(type2) < 0) return slide;
+    slide.type = type2;
+    if (!Array.isArray(slide.bullets)) slide.bullets = [];
+    if (BULLET_LAYOUTS.indexOf(type2) >= 0 && !slide.bullets.length) slide.bullets = ["", "", ""];
+    if (BULLET_LAYOUTS.indexOf(type2) < 0 && slide.bullets.every(function(b) {
+      return !String(b).trim();
+    })) slide.bullets = [];
+    if (type2 === "table" && !String(slide.body || "").trim()) slide.body = "Term | What it means\nFirst | \nSecond | ";
+    if (type2 === "code") {
+      if (slide.code == null) slide.code = String(slide.body || "");
+      if (!String(slide.language || "").trim()) slide.language = "python";
+      if (!slide.codeReveal) slide.codeReveal = "type";
+      if (slide.typewrite == null) slide.typewrite = true;
+      if (!Number.isFinite(Number(slide.typeSpeed)) || Number(slide.typeSpeed) <= 0) slide.typeSpeed = 55;
+      if (!String(slide.code || "").trim()) {
+        slide.code = 'import pandas as pd\n\ndf = pd.read_csv("attendance.csv")\nby_week = df["week"].value_counts().sort_index()\nprint(by_week.head())\n';
+      }
+    }
+    return slide;
+  }
+  function pasteTarget(slide) {
+    if (!slide || !slide.type) return null;
+    var type2 = String(slide.type);
+    if (type2 === "gallery") return { field: "layer", become: "gallery" };
+    if (["image", "split", "introduction", "keyfact", "quote"].indexOf(type2) >= 0) {
+      return { field: "image", become: type2 };
+    }
+    var lines = (slide.bullets || []).filter(function(b) {
+      return String(b).trim();
+    }).length;
+    if (lines && BULLET_LAYOUTS.indexOf(type2) >= 0) return { field: "image", become: "split" };
+    if (["title", "section", "content", "cards", "keywords", "italics"].indexOf(type2) >= 0) {
+      return { field: "image", become: "image" };
+    }
+    return null;
+  }
+  function imagePlacement(slide) {
+    var p = slide.design && slide.design.placement;
+    return p === "top" || p === "bottom" ? p : slide.imageSide === "left" ? "left" : "right";
+  }
+  function setImagePlacement(slide, placement) {
+    if (!["left", "right", "top", "bottom"].includes(placement)) return;
+    if (!slide.design || typeof slide.design !== "object") slide.design = {};
+    slide.design.placement = placement === "top" || placement === "bottom" ? placement : "side";
+    if (placement === "left" || placement === "right") slide.imageSide = placement;
+  }
+  function swapImagePlacement(slide) {
+    setImagePlacement(slide, { left: "right", right: "left", top: "bottom", bottom: "top" }[imagePlacement(slide)]);
+  }
+  function slideSteps(slide) {
+    if (slide.type === "table") {
+      var rows2 = parseTable(slide.body), start = slide.tableHeader !== false && rows2.length > 1 ? 1 : 0;
+      return rows2.slice(start).map(function(r) {
+        return r.join(" · ");
+      });
+    }
+    if (slide.type === "quote") {
+      return String(slide.body || "").split(/\n/).map(function(l) {
+        return l.trim();
+      }).filter(Boolean);
+    }
+    if (slide.type === "explain") {
+      return String(slide.body || "").split(/\n{2,}/).map(function(l) {
+        return l.trim();
+      }).filter(Boolean);
+    }
+    if (slide.type === "chart") {
+      var cd = chartData(slide);
+      if (!cd.series.length) return [];
+      if (cd.series.length > 1) return cd.series.map(function(x) {
+        return x.name;
+      });
+      return cd.categories.slice();
+    }
+    if (slide.type === "gallery") {
+      return (slide.layers || []).filter(function(l) {
+        return l && l.image;
+      }).map(function(l, i) {
+        return String(l.caption || "").trim() || "Image " + (i + 1);
+      });
+    }
+    if (slide.type === "code") {
+      return String(slide.code || slide.body || "").split(/\n/).filter(function(l) {
+        return l.length;
+      });
+    }
+    if (["journey", "mindmap", "content", "cards", "split", "keywords", "italics"].concat(INFO_LAYOUTS).indexOf(slide.type) < 0) return [];
+    return (slide.bullets || []).filter(function(b) {
+      return String(b).trim();
+    }).map(function(b) {
+      if (INFO_LAYOUTS.indexOf(slide.type) >= 0) {
+        var q = parseInfoLine(b);
+        return [q.label, q.value, q.note].filter(Boolean).join(" · ");
+      }
+      if (slide.type === "journey" || slide.type === "mindmap" || slide.type === "keywords" || slide.type === "italics") {
+        var p = parseKeywordLine(b);
+        return [p.term, p.def].filter(Boolean).join(" — ");
+      }
+      return String(b).replace(/^(\s{2,}|\t|- )+/, "").trim();
+    });
+  }
+  function slideExcerpt(slide, revealed) {
+    if (slide.type === "chart" && slide.exploration && slide.exploration.prediction) return slide.exploration.prompt;
+    if (["beforeafter", "explore", "simulation"].includes(slide.type)) return slide.title || "";
+    if (slide.type === "quiz") return slide.question || "";
+    if (slide.type === "code") {
+      var src = String(slide.code || slide.body || "");
+      if (slide.typewrite !== false && Number.isFinite(revealed)) return src.slice(0, Math.max(0, revealed));
+      return src;
+    }
+    var steps = slideSteps(slide);
+    if (steps.length || ["content", "cards", "split", "keywords", "italics", "table", "quote", "explain"].includes(slide.type)) {
+      var n = slide.progressive === true && Number.isFinite(revealed) ? Math.max(0, revealed) : steps.length;
+      var visible = steps.slice(0, n);
+      if (slide.type === "table") {
+        var rows2 = parseTable(slide.body);
+        if (slide.tableHeader !== false && rows2.length > 1) visible.unshift(rows2[0].join(" · "));
+      }
+      return visible.join("\n");
+    }
+    if (slide.type === "links") return (slide.bullets || []).map(function(b) {
+      var p = parseKeywordLine(b);
+      return [p.term, p.def].filter(Boolean).join(" — ");
+    }).join("\n");
+    if (slide.type === "title" || slide.type === "section") return slide.subtitle || "";
+    return "";
+  }
+  function questionTimeLimit(slide, teacherEntry) {
+    return teacherEntry ? 0 : Math.max(0, Number(slide.timeLimit) || 0);
+  }
+  var TEACHER_CALL = ["headsup", "spinexplain", "connection", "randomchallenge", "conceptchain"];
+  function correctAnswerLabel(slide) {
+    if (slide.input === "text" || slide.input === "number" || slide.input === "tap" || slide.input === "fill") return String(slide.answer || "");
+    if (slide.input === "order") return (slide.options || []).join(" → ");
+    if (TEACHER_CALL.indexOf(slide.style) > -1) return "Your call — mark it as they answer";
+    var opt = (slide.options || [])[slide.correct];
+    if (!Number.isInteger(slide.correct) || slide.correct < 0 || opt == null) return "";
+    return ("ABCDEF"[slide.correct] || "?") + " — " + opt;
+  }
+
+  // src/deck/feedback.js
+  var FEEDBACK_KINDS = {
+    poll: {
+      key: "poll",
+      label: "Poll",
+      icon: "▤",
+      blurb: "Fixed options. Results appear as bars in the rail.",
+      needsOptions: true
+    },
+    wordcloud: {
+      key: "wordcloud",
+      label: "Word cloud",
+      icon: "❋",
+      blurb: "A word or short phrase each. Repeats grow larger.",
+      needsOptions: false
+    },
+    brainstorm: {
+      key: "brainstorm",
+      label: "Brainstorm",
+      icon: "✎",
+      blurb: "Longer contributions, listed newest first with names.",
+      needsOptions: false
+    },
+    /* A scale is a poll over a fixed run of points, so on the wire it is one:
+       the room picks an index and the relay counts indices, unchanged. What
+       makes it a scale is that the points are ordered, which is why it gets a
+       mean and a distribution rather than a set of independent bars. */
+    scale: {
+      key: "scale",
+      label: "Scale",
+      icon: "≋",
+      blurb: "One end to the other. Shows the spread and the average.",
+      needsOptions: false,
+      graded: true
+    }
+  };
+  var SCALE_POINTS = [3, 4, 5, 6, 7];
+  function scaleLabels(f) {
+    var n = Math.max(3, Math.min(7, Number(f.points) || 5));
+    var out = [];
+    for (var i = 0; i < n; i++) out.push(String(i + 1));
+    return out;
+  }
+  function isFeedbackKind(value) {
+    return typeof value === "string" && Object.prototype.hasOwnProperty.call(FEEDBACK_KINDS, value);
+  }
+  function makeFeedback(kind) {
+    var f = {
+      kind: isFeedbackKind(kind) ? kind : "poll",
+      prompt: "",
+      options: kind === "poll" || !kind ? ["Yes", "No", "Not sure"] : [],
+      max: 1,
+      // submissions allowed per person
+      presentAs: "rail"
+      // 'rail' beside the slide · 'focus' full screen when presenting
+    };
+    if (f.kind === "scale") {
+      f.points = 5;
+      f.lowLabel = "Not at all";
+      f.highLabel = "Completely";
+    }
+    return f;
+  }
+  function normalizeFeedback(raw) {
+    if (!raw || !raw.kind || !FEEDBACK_KINDS[raw.kind]) return null;
+    var f = {
+      kind: raw.kind,
+      prompt: String(raw.prompt || ""),
+      options: (
+        /** @type {string[]} */
+        []
+      ),
+      max: Math.max(1, Math.min(5, Number(raw.max) || 1)),
+      presentAs: raw.presentAs === "focus" ? "focus" : "rail"
+    };
+    if (FEEDBACK_KINDS[f.kind].needsOptions) {
+      f.options = (Array.isArray(raw.options) ? raw.options : []).map(function(o) {
+        return String(o == null ? "" : o);
+      }).slice(0, 6);
+      while (f.options.length < 2) f.options.push("");
+      f.max = 1;
+    }
+    if (f.kind === "scale") {
+      f.points = SCALE_POINTS.indexOf(Number(raw.points)) > -1 ? Number(raw.points) : 5;
+      f.lowLabel = String(raw.lowLabel == null ? "Not at all" : raw.lowLabel).slice(0, 40);
+      f.highLabel = String(raw.highLabel == null ? "Completely" : raw.highLabel).slice(0, 40);
+      f.max = 1;
+    }
+    if ((f.kind === "poll" || f.kind === "scale") && raw.hold === true) f.hold = true;
+    return f;
+  }
+  function slideFeedback(slide) {
+    var f = slide && slide.feedback;
+    if (!f || !f.kind) return null;
+    if (!String(f.prompt || "").trim()) return null;
+    if (FEEDBACK_KINDS[f.kind].needsOptions && f.options.filter(function(o) {
+      return String(o).trim();
+    }).length < 2) {
+      return null;
+    }
+    if (f.kind === "scale" && !(String(f.lowLabel || "").trim() && String(f.highLabel || "").trim())) {
+      return null;
+    }
+    return f;
+  }
+  function sampleFeedbackDigest(f) {
+    if (!f || !f.kind) return null;
+    if (f.kind === "poll") {
+      var live = (f.options || []).filter(function(o) {
+        return String(o).trim();
+      });
+      var weights = [7, 11, 4, 2, 5, 1];
+      var counts = live.map(function(_, i) {
+        return weights[i % weights.length];
+      });
+      var total = counts.reduce(function(a, b) {
+        return a + b;
+      }, 0);
+      return { kind: "poll", counts, total, answered: total, players: total, sample: true };
+    }
+    if (f.kind === "scale") {
+      var shape = {
+        3: [2, 5, 9],
+        4: [2, 3, 7, 5],
+        5: [1, 2, 4, 7, 3],
+        6: [1, 2, 3, 6, 4, 2],
+        7: [1, 1, 2, 4, 6, 3, 1]
+      };
+      var bars = shape[f.points || 5] || shape[5];
+      var seen = bars.reduce(function(a, b) {
+        return a + b;
+      }, 0);
+      return {
+        kind: "scale",
+        counts: bars,
+        total: seen,
+        answered: seen,
+        players: seen + 3,
+        sample: true
+      };
+    }
+    if (f.kind === "wordcloud") {
+      return {
+        kind: "wordcloud",
+        words: [
+          { text: "useful", n: 6 },
+          { text: "tricky", n: 4 },
+          { text: "clear", n: 3 },
+          { text: "fast", n: 2 },
+          { text: "dense", n: 2 },
+          { text: "new", n: 1 },
+          { text: "daunting", n: 1 },
+          { text: "fair", n: 1 }
+        ],
+        total: 20,
+        unique: 8,
+        answered: 14,
+        players: 18,
+        sample: true
+      };
+    }
+    return {
+      kind: "brainstorm",
+      items: [
+        { name: "Ana", text: "More worked examples in the seminars" },
+        { name: "Ben", text: "A past paper walkthrough before the deadline" },
+        { name: "Priya", text: "Share the slides the night before" },
+        { name: "Tom", text: "Shorter reading list, more depth on each" }
+      ],
+      total: 4,
+      answered: 4,
+      players: 18,
+      sample: true
+    };
+  }
+
+  // src/games/rooms.js
+  var support2 = (status, reason) => Object.freeze({ status, reason });
   var ROOM_PLAY = Object.freeze({
     quiz: Object.freeze({
-      phones: support("yes", "Each learner answers on their phone."),
-      teams: support("yes", "Phone answers feed the chosen team."),
-      entry: support("yes", "The teacher records a choice for each learner."),
-      solo: support("yes", "The wall accepts the learner’s choice.")
+      phones: support2("yes", "Each learner answers on their phone."),
+      teams: support2("yes", "Phone answers feed the chosen team."),
+      entry: support2("yes", "The teacher records a choice for each learner."),
+      solo: support2("yes", "The wall accepts the learner’s choice.")
     }),
     typed: Object.freeze({
-      phones: support("yes", "Each learner types or places an answer on their phone."),
-      teams: support("yes", "Answers feed the chosen team."),
-      entry: support("yes", "The teacher records each answer by name."),
-      solo: support("partial", "The wall’s non-choice controls need a solo rehearsal.")
+      phones: support2("yes", "Each learner types or places an answer on their phone."),
+      teams: support2("yes", "Answers feed the chosen team."),
+      entry: support2("yes", "The teacher records each answer by name."),
+      solo: support2("partial", "The wall’s non-choice controls need a solo rehearsal.")
     }),
     order: Object.freeze({
-      phones: support("yes", "Each learner orders the items on their phone."),
-      teams: support("yes", "Orders feed the chosen team."),
-      entry: support("yes", "The teacher enters each order as a key sequence."),
-      solo: support("partial", "The wall’s order control needs a solo rehearsal.")
+      phones: support2("yes", "Each learner orders the items on their phone."),
+      teams: support2("yes", "Orders feed the chosen team."),
+      entry: support2("yes", "The teacher enters each order as a key sequence."),
+      solo: support2("partial", "The wall’s order control needs a solo rehearsal.")
     }),
     spot: Object.freeze({
-      phones: support("yes", "Each learner taps a word in the passage."),
-      teams: support("yes", "Finds feed the chosen team."),
-      entry: support("yes", "The teacher taps the word the learner points at."),
-      solo: support("yes", "The wall accepts a tap on the passage.")
+      phones: support2("yes", "Each learner taps a word in the passage."),
+      teams: support2("yes", "Finds feed the chosen team."),
+      entry: support2("yes", "The teacher taps the word the learner points at."),
+      solo: support2("yes", "The wall accepts a tap on the passage.")
     }),
     spoken: Object.freeze({
-      phones: support("partial", "Phones show a listen-and-watch job card."),
-      teams: support("yes", "The teacher credits the selected speaker’s team."),
-      entry: support("yes", "The teacher selects a recipient and marks the verdict."),
-      solo: support("no", "A teacher and a room are needed for the spoken verdict.")
+      phones: support2("partial", "Phones show a listen-and-watch job card."),
+      teams: support2("yes", "The teacher credits the selected speaker’s team."),
+      entry: support2("yes", "The teacher selects a recipient and marks the verdict."),
+      solo: support2("no", "A teacher and a room are needed for the spoken verdict.")
     }),
     board: Object.freeze({
-      phones: support("no", "This board is operated by the teacher; phones do not answer."),
-      teams: support("yes", "The teacher runs the board for teams."),
-      entry: support("yes", "The teacher operates the board without learner phones."),
-      solo: support("no", "The board needs a teacher to run it.")
+      phones: support2("no", "This board is operated by the teacher; phones do not answer."),
+      teams: support2("yes", "The teacher runs the board for teams."),
+      entry: support2("yes", "The teacher operates the board without learner phones."),
+      solo: support2("no", "The board needs a teacher to run it.")
     }),
     paper: Object.freeze({
-      phones: support("no", "This is a paper quiz."),
-      teams: support("yes", "Teams can discuss and submit paper answers."),
-      entry: support("yes", "The teacher reveals and marks paper answers."),
-      solo: support("partial", "A solo paper run still needs a checked workflow.")
+      phones: support2("no", "This is a paper quiz."),
+      teams: support2("yes", "Teams can discuss and submit paper answers."),
+      entry: support2("yes", "The teacher reveals and marks paper answers."),
+      solo: support2("partial", "A solo paper run still needs a checked workflow.")
     }),
     /* Statements sorted into A only, Both, B only (Compare & Contrast). */
     sort: Object.freeze({
-      phones: support("yes", "Each learner sorts every statement on their phone."),
-      teams: support("yes", "Each statement sorted right earns its share for the team."),
-      entry: support("yes", "The teacher records a column for each statement, in order, by key."),
-      solo: support("no", "The sorting is done on the phones.")
+      phones: support2("yes", "Each learner sorts every statement on their phone."),
+      teams: support2("yes", "Each statement sorted right earns its share for the team."),
+      entry: support2("yes", "The teacher records a column for each statement, in order, by key."),
+      solo: support2("no", "The sorting is done on the phones.")
     }),
     /* A passage with gaps and a word bank (Fill the gaps). */
     fill: Object.freeze({
-      phones: support("yes", "Each learner taps a word from the bank into each gap."),
-      teams: support("yes", "Each gap that is right earns its share for the team."),
-      entry: support("yes", "The teacher picks a word for each gap, in order, by key."),
-      solo: support("no", "The word bank is on the phones; the wall shows the passage.")
+      phones: support2("yes", "Each learner taps a word from the bank into each gap."),
+      teams: support2("yes", "Each gap that is right earns its share for the team."),
+      entry: support2("yes", "The teacher picks a word for each gap, in order, by key."),
+      solo: support2("no", "The word bank is on the phones; the wall shows the passage.")
     }),
     /* A vote with no right answer to be marked against: the room's split is
        the point (Odd One Out). */
     vote: Object.freeze({
-      phones: support("yes", "Each learner taps their pick; nobody is marked."),
-      teams: support("yes", "Teams can vote together, then defend their pick."),
-      entry: support("yes", "The teacher records each learner’s pick by key."),
-      solo: support("no", "The format depends on discussion with others.")
+      phones: support2("yes", "Each learner taps their pick; nobody is marked."),
+      teams: support2("yes", "Teams can vote together, then defend their pick."),
+      entry: support2("yes", "The teacher records each learner’s pick by key."),
+      solo: support2("no", "The format depends on discussion with others.")
     }),
     discussion: Object.freeze({
-      phones: support("no", "This discussion currently has no phone answer step."),
-      teams: support("yes", "Teams can discuss before the reveal."),
-      entry: support("yes", "The teacher runs the discussion and reveal."),
-      solo: support("no", "The format depends on discussion with others.")
+      phones: support2("no", "This discussion currently has no phone answer step."),
+      teams: support2("yes", "Teams can discuss before the reveal."),
+      entry: support2("yes", "The teacher runs the discussion and reveal."),
+      solo: support2("no", "The format depends on discussion with others.")
     })
   });
 
@@ -19125,2413 +21526,6 @@
   }
   var GAME_STYLES = { choice: choice2, truefalse, race, speed, boss, slider, type, order, emoji, definition, compare, oddone, wordreveal, memoryflip, memorymatch, knowledgeflip, headsup, spinexplain, connection, conceptchain, randomchallenge, bingo, lowstakes, bowl, spot, fill };
 
-  // src/activities/stages.js
-  var STAGE_JOBS = {
-    note: {
-      wall: "Silent thinking",
-      phone: "Write a private note. Only you can see it.",
-      icon: "✎"
-    },
-    talk: {
-      wall: "Turn to your partner",
-      phone: "Your note, to compare with your partner’s.",
-      icon: "💬"
-    },
-    send: {
-      wall: "Ideas arrive here, without names",
-      phone: "Send your pair’s strongest idea. No name goes with it.",
-      icon: "↑"
-    },
-    /* A stretch of making or solving. The phone's job is to stay out of the
-       way, with one quiet way to say "I'm stuck" that only the desk sees. */
-    work: {
-      wall: "Work on the task",
-      phone: "Work on the task. Stuck? Tell the teacher. Only they see it.",
-      icon: "✍"
-    },
-    down: {
-      wall: "Phones down",
-      phone: "Phones down. Eyes on the board.",
-      icon: "👀"
-    }
-  };
-  var GROUP_TALK = {
-    wall: "Talk in your group",
-    phone: "Talk it through with your group."
-  };
-  var JOB_WORDS = [
-    ["work", /\b(you do alone|independent(ly)? practi[cs]e|on your own)\b/i],
-    ["note", /\b(think|alone|jot|individual|reflect|silent|write)\b/i],
-    ["talk", /\b(pair|partner|compare|discuss|square|talk|group|argue|together|circle|switch|expert|home|return|teach(es|ing)?)\b/i],
-    ["send", /\b(share|report|send|feed ?back|post|contribute)\b/i],
-    ["work", /\b(plan|planning|create|creating|design|solve|solving|build|draft|refine|investigate|research|rotate|rotation|round|station|practi[cs]e|self-assess\w*|apply|attempt)\b/i],
-    ["down", /\b(connect|synthes|summar|debrief|teacher|plenary|close|link)\w*/i]
-  ];
-  function stageJob(label) {
-    const text2 = String(label || "");
-    for (const [job, re] of JOB_WORDS) if (re.test(text2)) return (
-      /** @type {any} */
-      job
-    );
-    return "down";
-  }
-  var PAIR_WORDS = /\b(pair|partner)\b/i;
-  var GROUP_WORDS = /\b(group|square|circle|expert|home|team|table)\b/i;
-  function groupTalk(names, jobs) {
-    const talk = names.map((n, i) => (jobs ? jobs[i] : stageJob(n)) === "talk");
-    const pair = names.map((n, i) => talk[i] && PAIR_WORDS.test(n));
-    const group = names.map((n, i) => talk[i] && !pair[i] && GROUP_WORDS.test(n));
-    const pairs = pair.some(Boolean) && !group.some(Boolean);
-    return names.map((n, i) => talk[i] && (group[i] || !pair[i] && !pairs));
-  }
-  function stageCopy(st) {
-    const base = STAGE_JOBS[
-      /** @type {keyof typeof STAGE_JOBS} */
-      st.job
-    ] || STAGE_JOBS.down;
-    return st.job === "talk" && st.group ? { ...base, ...GROUP_TALK } : base;
-  }
-  var DECLARED_JOB = /\s*\[(note|talk|send|work|down)\]\s*$/i;
-  function stripDeclaredJob(term) {
-    return String(term == null ? "" : term).replace(DECLARED_JOB, "");
-  }
-  function declaredJob(term) {
-    const m = DECLARED_JOB.exec(String(term || ""));
-    return m ? m[1].toLowerCase() : "";
-  }
-  function parseStageLabel(term) {
-    const text2 = String(term || "").replace(DECLARED_JOB, "").trim();
-    const m = /^(.*?)\s*[·•|:\-–—(]\s*(?:every\s+|about\s+|~\s*)?(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?|m)\b\)?\s*$/i.exec(text2);
-    if (!m) return { name: text2, seconds: 0 };
-    const n = Number(m[2]);
-    const secs = /^s/i.test(m[3]) ? n : n * 60;
-    return { name: m[1].trim() || text2, seconds: Math.max(0, Math.min(3600, Math.round(secs))) };
-  }
-  function stagedRows(slide, parseLine) {
-    const rows2 = (slide && slide.bullets || []).map((line, row) => ({ ...parseLine(line), row })).filter((p) => p.term || p.def);
-    const labels = rows2.map((p) => parseStageLabel(p.term));
-    const timedAfter = labels.slice(1).filter((l) => l.seconds > 0).length;
-    const hasBrief = rows2.length > 2 && labels[0].seconds === 0 && timedAfter >= 2;
-    const brief = hasBrief ? { row: rows2[0].row, name: labels[0].name, text: rows2[0].def || "" } : null;
-    const staged = rows2.slice(hasBrief ? 1 : 0, (hasBrief ? 1 : 0) + 8);
-    const names = staged.map((p) => parseStageLabel(p.term).name);
-    const jobs = staged.map((p, i) => (
-      /** @type {any} */
-      declaredJob(p.term) || stageJob(names[i])
-    ));
-    const groups = groupTalk(names, jobs);
-    const stages = staged.map((p, i) => {
-      const label = parseStageLabel(p.term);
-      return {
-        i,
-        row: p.row,
-        name: label.name,
-        seconds: label.seconds,
-        text: p.def || "",
-        job: jobs[i],
-        group: groups[i]
-      };
-    });
-    return { brief, stages };
-  }
-  function activityStages(slide, parseLine) {
-    return (
-      /** @type {any} */
-      stagedRows(slide, parseLine).stages
-    );
-  }
-  function activityBrief(slide, parseLine) {
-    return stagedRows(slide, parseLine).brief;
-  }
-
-  // src/activities/rooms.js
-  var support2 = (status, reason) => Object.freeze({ status, reason });
-  var ACTIVITY_ROOMS = Object.freeze({
-    /* A staged routine whose phones write, talk or work, and send nothing. */
-    staged: Object.freeze({
-      phones: support2("yes", "Each stage gives the phone a job, or tells it to go down."),
-      teams: support2("yes", "The routine is the grouping: pairs and groups work where they sit."),
-      entry: support2("yes", "The wall carries every stage; phones are an extra, not a need."),
-      solo: support2("partial", "The stages run in a solo present, without a partner to talk to.")
-    }),
-    /* A staged routine with an idea box: without phones the ideas are said. */
-    stagedSend: Object.freeze({
-      phones: support2("yes", "Each stage gives the phone a job; ideas arrive on the wall without names."),
-      teams: support2("yes", "The routine is the grouping; a group can send one idea from one phone."),
-      entry: support2("partial", "The stages run from the wall, but spoken ideas cannot be entered into the idea box."),
-      solo: support2("partial", "The stages run in a solo present; there is no room to share with.")
-    }),
-    /* A prompt on a slide: a poll, scale, word cloud or idea box. */
-    collect: Object.freeze({
-      phones: support2("yes", "Each learner answers on their phone."),
-      teams: support2("partial", "One phone per group works, but the count is per phone."),
-      entry: support2("no", "The teacher cannot yet record a poll, scale or idea for a room without phones."),
-      solo: support2("no", "It collects from a room.")
-    }),
-    /* A slide the teacher leads from: objectives, a brief, a task. */
-    slide: Object.freeze({
-      phones: support2("partial", "Phones show the slide, with a quiet Need help."),
-      teams: support2("yes", "Groups work from the wall."),
-      entry: support2("yes", "The teacher leads from the wall; no phones are needed."),
-      solo: support2("yes", "It reads as a slide.")
-    }),
-    /* A timed routine that stays a checklist: Do Now, Wait Time. */
-    moment: Object.freeze({
-      phones: support2("partial", "Phones show what is on the wall, with a quiet Need help."),
-      teams: support2("yes", "Groups work from the wall."),
-      entry: support2("yes", "The wall and its one clock carry it; no phones are needed."),
-      solo: support2("partial", "The clock runs in a solo present; the routine assumes a room.")
-    })
-  });
-  function rowJobs(a) {
-    return (a.fields || []).filter((f) => /^bullets\.\d+\.def$/.test(f.slide || "")).map((f) => declaredJob(f.label) || stageJob(parseStageLabel(f.label).name));
-  }
-  function activityPlays(a, styleOf) {
-    if (a.target === "game") {
-      const style = a.style && styleOf ? styleOf(a.style) : null;
-      if (style && style.plays) return style.plays;
-    }
-    if (a.target === "feedback") return ACTIVITY_ROOMS.collect;
-    if (a.presentation === "stages") {
-      return rowJobs(a).includes("send") ? ACTIVITY_ROOMS.stagedSend : ACTIVITY_ROOMS.staged;
-    }
-    if (a.target === "moment") return ACTIVITY_ROOMS.moment;
-    return ACTIVITY_ROOMS.slide;
-  }
-
-  // src/activities/catalogue.js
-  var PHASES = [
-    { key: "starter-slide", label: "Starter Slide", icon: "▤", blurb: "Put the destination on the wall before anything else." },
-    { key: "starter-activity", label: "Starter Activity", icon: "◎", blurb: "Settle the room and pull back what they already know." },
-    { key: "activation", label: "Activation", icon: "✦", blurb: "Surface prior thinking, including the wrong kind." },
-    { key: "construction", label: "Construction", icon: "◧", blurb: "Build the idea: model it, name its edges." },
-    { key: "mini-activity", label: "Mini Activity", icon: "⚡", blurb: "A short go at it while the modelling is still warm." },
-    { key: "main-activity", label: "Main Activity", icon: "▣", blurb: "The long piece of work the lesson is for." },
-    { key: "collaboration", label: "Collaboration", icon: "▦", blurb: "Make them say it out loud to somebody." },
-    { key: "mini-quiz", label: "Mini Quiz", icon: "?", blurb: "Find out who has it, while there is time to act." },
-    { key: "reflection", label: "Reflection", icon: "↺", blurb: "What stuck, what did not, and what to do about it." },
-    { key: "plenary", label: "Plenary", icon: "⚑", blurb: "Close it, and point at what comes next." },
-    { key: "activity-plenary", label: "Activity Plenary", icon: "⚐", blurb: "Close on the work rather than on the clock." }
-  ];
-  var ACTIVITIES = [
-    {
-      key: "clear-objectives-slide",
-      icon: "▤",
-      title: "Clear Objectives Slide",
-      blurb: "Display learning objectives, success criteria, and key words",
-      phase: "starter-slide",
-      minutes: 2,
-      target: "slide",
-      layout: "keywords",
-      steps: [
-        "Display slide with: Title, Learning Objectives (3), Success Criteria (I can...), Key Words",
-        "Teacher reads objectives aloud",
-        "Get started with active learning"
-      ]
-    },
-    {
-      key: "hook-objectives",
-      icon: "▤",
-      title: "Hook + Objectives",
-      blurb: "Engaging stimulus + big question + today's activities",
-      phase: "starter-slide",
-      minutes: 2,
-      target: "slide",
-      layout: "split",
-      steps: [
-        "Show engaging image/video/question",
-        "Present Big Question that will be answered",
-        "Show: Today we will... (3 activities)",
-        "Show: By the end you'll be able to..."
-      ]
-    },
-    {
-      key: "connection-slide",
-      icon: "▤",
-      title: "Connection Slide",
-      blurb: "Last lesson → Today → Next lesson + Why it matters",
-      phase: "starter-slide",
-      minutes: 2,
-      target: "slide",
-      /* keywords, not the doc's cards. Each of the five steps names a box and
-         what goes in it, and keywords is the layout that draws a label beside
-         its text; cards draws five unlabelled tiles three-wide, so two wrap and
-         none says which is which. The doc's own note reads "Yesterday → Today →
-         Tomorrow" — three boxes — the shape it was written for before the
-         source grew to five. */
-      layout: "keywords",
-      steps: [
-        "Show: Last Lesson (brief recap)",
-        "Show: Today (what we're learning)",
-        "Show: Next Lesson (where we're going)",
-        "Show: Why This Matters (real-world connection)",
-        "Show: What You'll Do (3 activities)"
-      ],
-      /* One box per step. The labels are the steps' own, so all a teacher fills
-         in is the content. */
-      fields: [
-        {
-          label: "Last lesson",
-          type: "text",
-          slide: "bullets.0.def",
-          value: "A one-line recap of where we got to.",
-          hint: "Brief. They were there — a hook back, not a re-teach."
-        },
-        {
-          label: "Today",
-          type: "text",
-          slide: "bullets.1.def",
-          value: "What we are learning today."
-        },
-        {
-          label: "Next lesson",
-          type: "text",
-          slide: "bullets.2.def",
-          value: "Where this is going."
-        },
-        {
-          label: "Why this matters",
-          type: "text",
-          slide: "bullets.3.def",
-          value: "Where this shows up outside the room.",
-          hint: "The real-world connection — the part they actually remember."
-        },
-        {
-          label: "What you will do",
-          type: "area",
-          slide: "bullets.4.def",
-          value: "Measure · Draw to scale · Check a partner",
-          hint: "The three activities on one line. Separate them how you like."
-        }
-      ]
-    },
-    {
-      key: "quick-retrieval-quiz",
-      icon: "◎",
-      title: "Quick Retrieval Quiz",
-      blurb: "Answer 3-5 questions from memory to recall prior learning",
-      phase: "starter-activity",
-      minutes: 7,
-      target: "game",
-      style: "lowstakes",
-      steps: [
-        "Students answer 3-5 recall questions individually",
-        "Pair check answers (2 mins)",
-        "Whole class review and discussion (3 mins)",
-        "Link to today's objective"
-      ]
-    },
-    {
-      key: "think-pair-share",
-      icon: "◎",
-      title: "Think-Pair-Share",
-      blurb: "Individual thinking → Partner discussion → Share out",
-      phase: "starter-activity",
-      minutes: 7,
-      target: "moment",
-      steps: [
-        "Think alone (1 min) - jot down ideas about [topic]",
-        "Share with partner (2 mins) - compare notes",
-        "Pairs share best ideas (3 mins) - class discussion",
-        "Teacher synthesizes (1 min) - connect to today's goal"
-      ]
-    },
-    {
-      key: "hook-and-predict",
-      icon: "◎",
-      title: "Hook & Predict",
-      blurb: "Present intriguing stimulus and ask 'What do you notice? What do you wonder?'",
-      phase: "starter-activity",
-      minutes: 7,
-      target: "slide",
-      layout: "split",
-      steps: [
-        "Show attention-grabbing stimulus (30 secs)",
-        "Students write 2 things they notice (1 min)",
-        "Students write 1 thing they wonder (1 min)",
-        "Share out observations and questions (3 mins)",
-        "Link to today's learning objective (1 min)"
-      ],
-      /* The two questions are the activity — the blurb states them verbatim —
-         so they arrive written rather than as empty pits. The stimulus is the
-         teacher's, because only they know what the lesson is about. */
-      fields: [
-        {
-          label: "The stimulus",
-          type: "text",
-          slide: "title",
-          value: "What is going on here?",
-          hint: "The line above the image. Keep it short — the picture is doing the work."
-        },
-        {
-          label: "Question 1",
-          type: "text",
-          slide: "bullets.0",
-          value: "What do you notice?",
-          hint: "Observation. Answerable by anyone looking at it."
-        },
-        {
-          label: "Question 2",
-          type: "text",
-          slide: "bullets.1",
-          value: "What do you wonder?",
-          hint: "Curiosity. This is the one that opens the lesson."
-        },
-        {
-          label: "Timer",
-          type: "minutes",
-          slide: "timeLimit",
-          value: 7,
-          hint: "Shown on the wall while they look. The five steps add up to this."
-        }
-      ]
-    },
-    {
-      key: "word-splash",
-      icon: "◎",
-      title: "Word Splash",
-      blurb: "Connect key vocabulary to prior knowledge through self-assessment",
-      phase: "starter-activity",
-      minutes: 7,
-      target: "feedback",
-      feedbackKind: "wordcloud",
-      steps: [
-        "Display 5-8 key terms for today's lesson",
-        "Students circle terms they know well",
-        "Underline terms they've heard but unsure",
-        "Leave blank terms they don't know",
-        "Partner discussion (2 mins): Explain circled terms",
-        "Class creates working definitions (3 mins)",
-        "Self-assess confidence: 🟢🟡🔴"
-      ]
-    },
-    {
-      key: "daily-review-routine",
-      icon: "◎",
-      title: "Daily Review Routine",
-      blurb: "Check homework, address common errors, reteach concepts - daily routine for retention",
-      phase: "starter-activity",
-      minutes: 8,
-      target: "slide",
-      layout: "cards",
-      steps: [
-        "Quick homework check (2 mins) - scan for completion, spot common issues",
-        "Address common errors (3 mins) - whole class discussion of 2-3 frequent mistakes",
-        "Guided practice (3 mins) - reteach tricky concept with worked example",
-        "Link to today's lesson (30 secs) - 'Today we'll build on this by...'"
-      ]
-    },
-    {
-      key: "establish-talk-ground-rules",
-      icon: "◎",
-      title: "Establish Talk Ground Rules",
-      blurb: "Co-create class ground rules for quality dialogue and oracy (use at start of year/unit)",
-      phase: "starter-activity",
-      minutes: 10,
-      target: "slide",
-      layout: "keywords",
-      steps: [
-        "Ask: 'What makes group discussions go well?' (2 mins) - brainstorm ideas",
-        "Ask: 'What makes them go badly?' (2 mins) - identify problems",
-        "Students pair-discuss and share ideas (3 mins) - synthesize thinking",
-        "Co-create list of 5-7 ground rules together (2 mins) - write on chart paper",
-        "Display rules prominently in classroom (1 min)",
-        "Note: Revisit these before each oracy activity throughout year"
-      ]
-    },
-    {
-      key: "do-now-bell-ringer",
-      icon: "✦",
-      title: "Do Now / Bell Ringer",
-      blurb: "Silent individual work on board when students enter",
-      phase: "activation",
-      minutes: 8,
-      target: "moment",
-      steps: [
-        "On board: 3 questions (recall from last lesson, connection, preview)",
-        "Silent individual work (5 mins)",
-        "Quick pair check (2 mins)",
-        "Whole class review (3 mins)",
-        "Link to today's objective"
-      ]
-    },
-    {
-      key: "knowledge-activation-web",
-      icon: "✦",
-      title: "Knowledge Activation Web",
-      blurb: "Build a web of connected ideas on the board",
-      phase: "activation",
-      minutes: 7,
-      target: "feedback",
-      feedbackKind: "wordcloud",
-      steps: [
-        "Write topic in center of board (1 min)",
-        "Students call out anything they know (3 mins)",
-        "Teacher writes and draws connecting lines",
-        "Look for patterns and gaps (2 mins)",
-        "Set today's learning goal (1 min)"
-      ]
-    },
-    {
-      key: "pre-assessment-quickfire",
-      icon: "✦",
-      title: "Pre-Assessment Quickfire",
-      blurb: "Thumbs up/down/sideways for 8-10 true/false statements",
-      phase: "activation",
-      minutes: 8,
-      target: "game",
-      style: "truefalse",
-      steps: [
-        "Teacher reads 8-10 statements",
-        "Students show: 👍 True / 👎 False / 👉 Unsure",
-        "Teacher notes misconceptions",
-        "Clarify key terms",
-        "Set learning goals based on gaps"
-      ]
-    },
-    {
-      key: "i-do-we-do-you-do",
-      icon: "◧",
-      title: "I Do, We Do, You Do",
-      blurb: "Gradual release: Teacher models → Guided practice → Independent practice",
-      phase: "construction",
-      minutes: 20,
-      target: "slide",
-      layout: "cards",
-      steps: [
-        "I DO (5 mins): Teacher models with think-aloud",
-        "WE DO (8 mins): Class solves together, teacher guides",
-        "YOU DO Together (5 mins): Partner practice with support",
-        "YOU DO Alone (7 mins): Independent practice, quick check"
-      ]
-    },
-    {
-      key: "concept-development",
-      icon: "◧",
-      title: "Concept Development",
-      blurb: "Build understanding: Show → Explain → Examples/Non-Examples → Apply",
-      phase: "construction",
-      minutes: 20,
-      target: "slide",
-      layout: "keywords",
-      steps: [
-        "SHOW: Present concept with clear example (3 mins)",
-        "EXPLAIN: Break down - what, why, how (5 mins)",
-        "EXAMPLES & NON-EXAMPLES: Identify features (5 mins)",
-        "GUIDED APPLICATION: Apply concept (7 mins)",
-        "INDEPENDENT PRACTICE: Create own examples (5 mins)"
-      ]
-    },
-    {
-      key: "flipped-instruction",
-      icon: "◧",
-      title: "Flipped Instruction",
-      blurb: "Deepen understanding after home learning (Review → Deep Dive → Application)",
-      phase: "construction",
-      minutes: 25,
-      target: "slide-arc",
-      steps: [
-        "Home Learning Review (3 mins): Poll understanding, address questions",
-        "Deep Dive (10 mins): Focus on hardest parts, work complex examples",
-        "Application Practice (12 mins): Apply to challenging problems, differentiated support"
-      ]
-    },
-    {
-      key: "question-cube-six-question-types",
-      icon: "◧",
-      title: "Question Cube - Six Question Types",
-      blurb: "Deep questioning using Rosenshine's six question templates: Define, Compare, Why, Example, What If, Benefits/Limits",
-      phase: "construction",
-      minutes: 20,
-      target: "feedback",
-      feedbackKind: "brainstorm",
-      steps: [
-        "Present topic/concept (e.g., 'Photosynthesis') (1 min)",
-        "Explain the 6 question types (2 mins):",
-        "🔵 DEFINE: What is [concept]?",
-        "🟢 COMPARE: How is it different from [related concept]?",
-        "🟡 WHY: Why is [concept] important/how does it work?",
-        "🟣 EXAMPLE: Give a real-world example",
-        "🔴 WHAT IF: What would happen if...?",
-        "🟠 BENEFITS/LIMITS: What conditions are needed? What are the limitations?",
-        "Round 1 (12 mins): Teacher or student picks question type, student answers (30s thinking, 30s response), rotate through all 6 types with 2-3 students per type",
-        "Round 2 (optional): Students generate their own questions for each type",
-        "Debrief (5 mins): Which questions were hardest? Which helped you understand most?"
-      ]
-    },
-    {
-      key: "worked-example-analysis",
-      icon: "⚡",
-      title: "Worked Example Analysis",
-      blurb: "Analyze a completed example together to understand the process",
-      phase: "mini-activity",
-      minutes: 10,
-      target: "slide",
-      layout: "split",
-      steps: [
-        "Display completed example (1 min)",
-        "Students identify each step (3 mins) - What happened? Why?",
-        "Pairs create a 'recipe' for solving similar problems (3 mins)",
-        "Test recipe on new problem (3 mins)",
-        "Compare approaches (2 mins)"
-      ]
-    },
-    {
-      key: "error-analysis",
-      icon: "⚡",
-      title: "Error Analysis",
-      blurb: "Find and fix mistakes in sample work to identify misconceptions",
-      phase: "mini-activity",
-      minutes: 10,
-      target: "game",
-      style: "oddone",
-      steps: [
-        "Show work with 3-4 deliberate errors (1 min)",
-        "Individual: Spot the errors (3 mins)",
-        "Pairs: Discuss and correct errors (3 mins)",
-        "Share: What were the errors? (2 mins)",
-        "Reflect: Why might someone make these mistakes? (1 min)"
-      ]
-    },
-    {
-      key: "quick-practice-stations",
-      icon: "⚡",
-      title: "Quick Practice Stations",
-      blurb: "Rotate through 3 quick tasks: Recall, Apply, Create",
-      phase: "mini-activity",
-      minutes: 10,
-      target: "slide",
-      layout: "cards",
-      steps: [
-        "Station 1: Recall task (3 mins)",
-        "Station 2: Apply task (3 mins)",
-        "Station 3: Create task (3 mins)",
-        "Brief share out (1 min)"
-      ]
-    },
-    {
-      key: "concept-card-sort",
-      icon: "⚡",
-      title: "Concept Card Sort",
-      blurb: "Organize information into categories to understand relationships",
-      phase: "mini-activity",
-      minutes: 10,
-      target: "game",
-      style: "order",
-      steps: [
-        "Give each group 12-15 cards with terms/images/examples (1 min)",
-        "Sort into categories (4 mins) - choose or create categories",
-        "Groups walk around to see others' sorts (2 mins)",
-        "Discuss: Different ways to organize (2 mins)",
-        "Reflect: Which organization is most useful? Why? (1 min)"
-      ]
-    },
-    {
-      key: "interleaving-mixed-practice",
-      icon: "⚡",
-      title: "Interleaving Mixed Practice",
-      blurb: "Mix problems from today AND previous weeks for long-term retention (spaced learning)",
-      phase: "mini-activity",
-      minutes: 15,
-      target: "game",
-      style: "choice",
-      steps: [
-        "Present 10 problems: 6 from today's topic, 4 from previous weeks (1 min)",
-        "Students solve independently (8 mins) - mix of old and new",
-        "Pair-check answers (3 mins) - discuss strategies used",
-        "Whole class: 'How did previous learning help today?' (3 mins)",
-        "Reflect: Which problems were harder - new or old? Why?"
-      ]
-    },
-    {
-      key: "strategic-wait-time-questioning",
-      icon: "⚡",
-      title: "Strategic Wait Time Questioning",
-      blurb: "Questioning with explicit 3-5 second wait time for deeper thinking and participation",
-      phase: "mini-activity",
-      minutes: 10,
-      target: "moment",
-      steps: [
-        "Pose question to whole class clearly",
-        "⏱️ WAIT 3-5 seconds (no hands up yet) - give thinking time",
-        "Call on student randomly (use name sticks/cards)",
-        "⏱️ WAIT 3 seconds for student to formulate answer",
-        "Student responds",
-        "⏱️ WAIT 2 seconds before responding or asking follow-up",
-        "Repeat 5-7 times with different students (10 mins total)",
-        "Note: Increased wait time = better answers + more participation"
-      ]
-    },
-    {
-      key: "guided-inquiry-investigation",
-      icon: "▣",
-      title: "Guided Inquiry Investigation",
-      blurb: "Students discover concepts through structured exploration (Explore → Explain → Elaborate → Share)",
-      phase: "main-activity",
-      minutes: 30,
-      target: "slide-arc",
-      steps: [
-        "EXPLORE (10 mins): Investigate stimulus - What patterns? What happens when you change X?",
-        "EXPLAIN (8 mins): Develop explanation - Why? What's the rule?",
-        "ELABORATE (7 mins): Apply to new situation - Use understanding to solve problems",
-        "SHARE & REFINE (5 mins): Present findings and build shared understanding"
-      ]
-    },
-    {
-      key: "jigsaw-expert-groups",
-      icon: "▣",
-      title: "Jigsaw Expert Groups",
-      blurb: "Students become experts and teach peers (Home → Expert → Home)",
-      phase: "main-activity",
-      minutes: 29,
-      target: "moment",
-      steps: [
-        "Home Groups (5 mins): Groups of 4, assign each person a sub-topic",
-        "Expert Groups (12 mins): All 1s together, become experts, create teaching plan",
-        "Home Groups Return (12 mins): Each expert teaches their part (3 mins each), create complete picture"
-      ]
-    },
-    {
-      key: "problem-based-learning",
-      icon: "▣",
-      title: "Problem-Based Learning",
-      blurb: "Solve authentic, complex problem through structured inquiry",
-      phase: "main-activity",
-      minutes: 35,
-      target: "slide",
-      layout: "split",
-      steps: [
-        "Present Problem: Real-world scenario (3 mins)",
-        "What do we KNOW? List given information (5 mins)",
-        "What do we NEED to know? Identify gaps (5 mins)",
-        "Research & Plan: Find information, develop strategy (10 mins)",
-        "Solve: Implement solution, show working (10 mins)",
-        "Present & Justify: Share solution and reasoning (7 mins)"
-      ]
-    },
-    {
-      key: "differentiated-practice-menu",
-      icon: "▣",
-      title: "Differentiated Practice Menu",
-      blurb: "Must-do task plus choice board (Consolidate/Apply/Extend)",
-      phase: "main-activity",
-      minutes: 25,
-      target: "slide",
-      layout: "cards",
-      steps: [
-        "Must Do: Core practice task - everyone (10 mins)",
-        "Choose Your Challenge (15 mins):",
-        "🟢 Consolidate: Easier version with scaffolding",
-        "🟡 Apply: Standard problem-solving",
-        "🔴 Extend: Complex multi-step challenge"
-      ]
-    },
-    {
-      key: "design-and-create-task",
-      icon: "▣",
-      title: "Design & Create Task",
-      blurb: "Create something that demonstrates understanding (poster/model/presentation/video)",
-      phase: "main-activity",
-      minutes: 35,
-      target: "slide",
-      layout: "cards",
-      steps: [
-        "Brief: Design/create [product] that shows understanding (2 mins)",
-        "Planning: Sketch ideas, gather resources (5 mins)",
-        "Creating: Make your product (20 mins)",
-        "Self-assessment: Check against criteria (3 mins)",
-        "Gallery walk: View and learn from others (5 mins)"
-      ]
-    },
-    {
-      key: "think-pair-square-share",
-      icon: "▦",
-      title: "Think-Pair-Square-Share",
-      blurb: "Progressive sharing: Individual → Pair → Group of 4 → Class",
-      phase: "collaboration",
-      minutes: 13,
-      target: "moment",
-      steps: [
-        "THINK (2 mins): Individual reflection",
-        "PAIR (3 mins): Share with partner",
-        "SQUARE (4 mins): Join another pair, synthesize",
-        "SHARE (4 mins): Groups present to class"
-      ]
-    },
-    {
-      key: "jigsaw-collaboration",
-      icon: "▦",
-      title: "Jigsaw Collaboration",
-      blurb: "Home groups → Expert groups → Return to teach (see Main Activity for full version)",
-      phase: "collaboration",
-      minutes: 20,
-      target: "moment",
-      steps: [
-        "Home groups split (2 mins)",
-        "Expert groups learn one piece (10 mins)",
-        "Return to home groups to teach (8 mins)"
-      ]
-    },
-    {
-      key: "peer-teaching-carousel",
-      icon: "▦",
-      title: "Peer Teaching Carousel",
-      blurb: "Rotate through stations, adding to and building on previous groups' work",
-      phase: "collaboration",
-      minutes: 20,
-      target: "moment",
-      steps: [
-        "Setup: 4-5 stations with different tasks",
-        "Groups rotate every 4 minutes",
-        "At each station: Read previous work, add thinking, correct errors",
-        "Final Round (5 mins): Return to starting station, review, synthesize",
-        "Present to class"
-      ]
-    },
-    {
-      key: "socratic-seminar",
-      icon: "▦",
-      title: "Socratic Seminar (Simple)",
-      blurb: "Student-led discussion: Inner circle discusses, outer circle observes",
-      phase: "collaboration",
-      minutes: 20,
-      target: "moment",
-      steps: [
-        "Round 1 (8 mins): Inner circle discusses prompt with evidence",
-        "Round 2 (8 mins): Switch circles, new discussion",
-        "Debrief (4 mins): What strong arguments? What was convincing?"
-      ]
-    },
-    {
-      key: "dialogue-chain-discussion",
-      icon: "▦",
-      title: "Dialogue Chain Discussion",
-      blurb: "Structured student-led discussion where each student builds on previous responses using academic connectors",
-      phase: "collaboration",
-      minutes: 15,
-      target: "slide",
-      layout: "cards",
-      steps: [
-        "Present discussion question to class (1 min)",
-        "Student 1: Gives initial answer (30 seconds)",
-        "Student 2: 'I agree/disagree because...' OR 'Building on that idea...' (30 seconds)",
-        "Student 3: Continues chain using academic language (30 seconds)",
-        "Continue for 8-10 students (10 mins)",
-        "Teacher synthesizes key insights (2 mins)"
-      ]
-    },
-    {
-      key: "real-world-connection-hunt",
-      icon: "▦",
-      title: "Real-World Connection Hunt",
-      blurb: "Students identify real-world examples of concepts in their classroom, school, home, and community",
-      phase: "collaboration",
-      minutes: 15,
-      target: "feedback",
-      feedbackKind: "brainstorm",
-      steps: [
-        "Present concept (e.g., 'Friction' or 'Democracy') (2 mins)",
-        "Challenge 1 (3 mins): Find examples in THIS ROOM",
-        "Challenge 2 (3 mins): Think of examples AT HOME",
-        "Challenge 3 (3 mins): Identify examples IN YOUR COMMUNITY",
-        "Share out (3 mins): Students explain their connections",
-        "Reflect (1 min): 'Why does this concept matter in real life?'"
-      ]
-    },
-    {
-      key: "explanation-champion-challenge",
-      icon: "▦",
-      title: "Explanation Champion Challenge",
-      blurb: "Students explain concepts without using banned words, forcing deeper articulation of understanding",
-      phase: "collaboration",
-      minutes: 15,
-      target: "game",
-      style: "headsup",
-      steps: [
-        "Display concept word (e.g., 'Photosynthesis') (1 min)",
-        "Show 4-5 BANNED WORDS students can't use (e.g., 'sunlight', 'oxygen', 'plants') (1 min)",
-        "Think time (2 mins): Students plan their explanation",
-        "Volunteer explains to class (60 seconds)",
-        "Class votes: Clear (2 pts), Okay (1 pt), Unclear (0 pts)",
-        "Repeat with 3-4 more students and concepts (8 mins)",
-        "Debrief (2 mins): What made explanations clear?"
-      ]
-    },
-    {
-      key: "compare-and-contrast-venn-activity",
-      icon: "▦",
-      title: "Compare & Contrast Venn Activity",
-      blurb: "Visual comparison of two concepts using Venn diagram, focusing on similarities and differences",
-      phase: "collaboration",
-      minutes: 15,
-      target: "game",
-      style: "compare",
-      steps: [
-        "Present two concepts (e.g., 'Photosynthesis' vs 'Respiration') (1 min)",
-        "Individual thinking (3 mins): List characteristics of each",
-        "Pair work (5 mins): Create Venn diagram together",
-        "Gallery walk (4 mins): View other pairs' work",
-        "Class synthesis (2 mins): What patterns? What connections?"
-      ]
-    },
-    {
-      key: "benefits-vs-limitations-battle",
-      icon: "▦",
-      title: "Benefits vs Limitations Battle",
-      blurb: "Two teams take turns stating benefits and limitations of a concept, practicing balanced analysis",
-      phase: "collaboration",
-      minutes: 15,
-      target: "slide",
-      layout: "split",
-      steps: [
-        "Present topic (e.g., 'Renewable Energy' or 'Social Media') (1 min)",
-        "Team setup: Benefits Team vs Limitations Team (1 min)",
-        "30-second think time before each round",
-        "Teams alternate stating points (10 mins)",
-        "Scoring: Valid point = 1 point, Repeat = no points",
-        "Switch sides and continue (optional)",
-        "Debrief (2 mins): Balanced view discussion"
-      ]
-    },
-    {
-      key: "scenario-analysis-discussion",
-      icon: "▦",
-      title: "Scenario Analysis Discussion",
-      blurb: "Analyze real-world scenarios to identify concepts, explain applications, and predict outcomes",
-      phase: "collaboration",
-      minutes: 18,
-      target: "slide",
-      layout: "split",
-      steps: [
-        "Present concept (e.g., 'Supply and Demand') (2 mins)",
-        "Show 3 scenarios (e.g., concert tickets, crop harvest, iPhone release) (3 mins)",
-        "Question 1 (4 mins): Which scenarios show the concept? (All/Some/One)",
-        "Question 2 (4 mins): Pick one and explain HOW",
-        "Question 3 (3 mins): Predict what happens next",
-        "Question 4 (2 mins): Compare - which is most extreme?"
-      ]
-    },
-    {
-      key: "whiteboards-on-walls",
-      icon: "▦",
-      title: "Whiteboards on Walls",
-      blurb: "Students discuss and write thinking on wall whiteboards - visible thinking and peer learning (Franklin Sixth Form approach)",
-      phase: "collaboration",
-      minutes: 12,
-      target: "moment",
-      steps: [
-        "Students move to wall whiteboards in pairs/groups (30 secs)",
-        "Teacher poses problem/question (30 secs)",
-        "Groups discuss and write their thinking on whiteboards (5 mins)",
-        "Gallery walk - observe and learn from other groups' work (3 mins)",
-        "Return to own board and refine thinking based on what you saw (2 mins)",
-        "Whole class debrief of key ideas and strongest arguments (1 min)",
-        "Note: Arrive early to start, revisit at lesson end for consolidation"
-      ]
-    },
-    {
-      key: "connect-four-concept-edition",
-      icon: "▦",
-      title: "Connect Four - Concept Edition",
-      blurb: "Competitive matching game where students connect related concepts (definitions/terms, causes/effects, questions/answers)",
-      phase: "collaboration",
-      minutes: 20,
-      target: "game",
-      style: "conceptchain",
-      steps: [
-        "MODE A - Match Pairs (20 mins):",
-        "Setup (2 mins): Create 4x4 grid with paired cards (definitions/terms, causes/effects, questions/answers, benefits/limitations)",
-        "Teams take turns (15 mins): Claim two cards that match and explain the connection",
-        "If correct: Cards disappear, team scores a connection",
-        "If incorrect: Cards stay, next team's turn",
-        "Win condition: First team to make 4 valid connections wins",
-        "Debrief (3 mins): Discuss strongest connections and misconceptions",
-        "MODE B - Category Conquest (Alternative):",
-        "Setup: 4 columns, 4 rows of questions (Define, Compare, Example, Why)",
-        "Students answer questions to 'claim' spaces",
-        "First to get 4 in a row (vertical, horizontal, diagonal) wins"
-      ]
-    },
-    {
-      key: "multiple-choice-quiz",
-      icon: "?",
-      title: "Multiple Choice Quiz",
-      blurb: "5-8 multiple choice questions with immediate feedback",
-      phase: "mini-quiz",
-      minutes: 6,
-      target: "game",
-      style: "choice",
-      steps: [
-        "Present 5-8 multiple choice questions",
-        "Students respond (paper/whiteboard/digital/fingers)",
-        "Show correct answer after each (30-45 secs per question)",
-        "Quick explanation if needed",
-        "Move on - don't dwell"
-      ]
-    },
-    {
-      key: "true-false-rapid-fire",
-      icon: "?",
-      title: "True/False Rapid Fire",
-      blurb: "10-12 true/false statements with thumbs up/down/sideways",
-      phase: "mini-quiz",
-      minutes: 5,
-      target: "game",
-      style: "truefalse",
-      steps: [
-        "Teacher reads 10-12 true/false statements",
-        "Students show: 👍 True / 👎 False / 👉 Unsure",
-        "Statements mix easy, challenging, and misconceptions",
-        "Tally scores, address misconceptions"
-      ]
-    },
-    {
-      key: "short-answer-check",
-      icon: "?",
-      title: "Short Answer Check",
-      blurb: "3-5 short answer questions, pair mark with answer key",
-      phase: "mini-quiz",
-      minutes: 8,
-      target: "game",
-      style: "type",
-      steps: [
-        "Students write answers to 3-5 questions (4 mins)",
-        "Swap with partner (1 min)",
-        "Mark using answer key (2 mins)",
-        "Discuss any disagreements (1 min)",
-        "Self-assess: ___ / 5"
-      ]
-    },
-    {
-      key: "diagnostic-question",
-      icon: "?",
-      title: "Diagnostic Question",
-      blurb: "1-2 carefully designed questions that reveal thinking and misconceptions",
-      phase: "mini-quiz",
-      minutes: 7,
-      target: "game",
-      style: "choice",
-      steps: [
-        "Present 1-2 diagnostic questions (3 mins)",
-        "Students answer with explanation",
-        "Teacher analyzes common answers (2 mins)",
-        "Address misconception immediately (2 mins)",
-        "Group students by need if necessary"
-      ]
-    },
-    {
-      key: "structured-reflection-protocol",
-      icon: "↺",
-      title: "Structured Reflection Protocol (Four-Corner)",
-      blurb: "Students move to corners based on confidence level",
-      phase: "reflection",
-      minutes: 12,
-      target: "feedback",
-      feedbackKind: "poll",
-      steps: [
-        "Explain corners: Got it / Mostly understand / Getting there / Need help",
-        "Students move to their corner (2 mins)",
-        "Each corner completes specific task (6 mins)",
-        "Teacher visits each corner, addresses needs (4 mins)"
-      ]
-    },
-    {
-      key: "learning-log-entry",
-      icon: "↺",
-      title: "Learning Log Entry",
-      blurb: "Structured journal: New Learning / Connections / Challenges / Strategies / Next Steps",
-      phase: "reflection",
-      minutes: 10,
-      target: "slide",
-      layout: "content",
-      steps: [
-        "Students complete structured reflection (8 mins):",
-        "1. NEW LEARNING: What's one new thing?",
-        "2. CONNECTIONS: How does this connect?",
-        "3. CHALLENGES: What was difficult?",
-        "4. STRATEGIES: What helped me learn?",
-        "5. NEXT STEPS: What do I want to work on?",
-        "Optional: Share one insight with partner (2 mins)"
-      ]
-    },
-    {
-      key: "muddiest-point",
-      icon: "↺",
-      title: "Muddiest Point",
-      blurb: "Identify what's unclear, teacher addresses top confusions",
-      phase: "reflection",
-      minutes: 13,
-      target: "feedback",
-      feedbackKind: "brainstorm",
-      steps: [
-        "Individual (3 mins): Write 'The muddiest point for me is...' on sticky note",
-        "Teacher collects & groups (2 mins): Sort by common themes",
-        "Address Top 3 (8 mins): Clear up biggest confusions with student explanations"
-      ]
-    },
-    {
-      key: "plus-minus-interesting",
-      icon: "↺",
-      title: "Plus-Minus-Interesting (PMI)",
-      blurb: "Edward de Bono thinking: What worked (+) / What was challenging (−) / What surprised (?)",
-      phase: "reflection",
-      minutes: 10,
-      target: "slide",
-      layout: "cards",
-      steps: [
-        "Individual Reflection (5 mins):",
-        "PLUS: What worked well?",
-        "MINUS: What was challenging?",
-        "INTERESTING: What surprised me?",
-        "Share (5 mins): Pairs compare, class discusses themes"
-      ]
-    },
-    {
-      key: "exit-ticket",
-      icon: "⚑",
-      title: "Exit Ticket (Plenary)",
-      blurb: "Quick written reflection before leaving (same as Activity Plenary #4)",
-      phase: "plenary",
-      minutes: 5,
-      target: "feedback",
-      feedbackKind: "poll",
-      steps: [
-        "Choose format: 3-2-1 / Traffic Light / What-So What-Now What",
-        "Students write responses (3 mins)",
-        "Submit on way out",
-        "Teacher reviews for planning"
-      ]
-    },
-    {
-      key: "preview-next-lesson",
-      icon: "⚑",
-      title: "Preview Next Lesson",
-      blurb: "Recap today, preview tomorrow, set preparation task",
-      phase: "plenary",
-      minutes: 7,
-      target: "slide",
-      layout: "section",
-      steps: [
-        "Today We Learned (2 mins): Quick recap",
-        "Next Lesson We Will (2 mins): Preview and connect",
-        "Preparation Task (1 min): Quick homework/prep",
-        "Closing Question (2 mins): Leave them thinking"
-      ]
-    },
-    {
-      key: "exit-ticket-2",
-      icon: "⚐",
-      title: "Exit Ticket",
-      blurb: "Quick written reflection: 3-2-1 or Traffic Light or What-So What-Now What",
-      phase: "activity-plenary",
-      minutes: 5,
-      target: "feedback",
-      feedbackKind: "poll",
-      steps: [
-        "Choose format: 3-2-1 / Traffic Light / What-So What-Now What",
-        "Students write individual responses (3 mins)",
-        "Submit on way out",
-        "Teacher reviews for next lesson planning"
-      ]
-    },
-    {
-      key: "recap-quiz-game",
-      icon: "⚐",
-      title: "Recap Quiz Game",
-      blurb: "Fun, competitive review (Quiz-Quiz-Trade / Stand Up If / Quick-Fire)",
-      phase: "activity-plenary",
-      minutes: 6,
-      target: "game",
-      style: "speed",
-      steps: [
-        "Choose format (Quiz-Quiz-Trade / Stand Up If / Quick-Fire)",
-        "Play game with review questions (4 mins)",
-        "Celebrate correct answers",
-        "Address common errors (2 mins)"
-      ]
-    },
-    {
-      key: "teach-someone",
-      icon: "⚐",
-      title: "Teach Someone",
-      blurb: "Explain today's learning to a partner",
-      phase: "activity-plenary",
-      minutes: 8,
-      target: "moment",
-      steps: [
-        "Partner A teaches (2 mins): Today I learned...",
-        "Partner B asks 2 questions (1 min)",
-        "Switch roles (3 mins)",
-        "Together: What would we tell someone who missed today? (2 mins)"
-      ]
-    },
-    {
-      key: "visual-summary",
-      icon: "⚐",
-      title: "Visual Summary",
-      blurb: "Create visual showing learning (Mind Map / Comic Strip / Sketch Note / One-Pager)",
-      phase: "activity-plenary",
-      minutes: 8,
-      target: "slide",
-      layout: "cards",
-      steps: [
-        "Choose visual format (Mind Map / Comic Strip / Sketch Note / One-Pager)",
-        "Create visual summary (6 mins)",
-        "Optional: Share with partner (2 mins)"
-      ]
-    },
-    {
-      key: "reflection-ladder",
-      icon: "⚐",
-      title: "Reflection Ladder",
-      blurb: "Self-assess learning journey from 'need help' to 'can teach others'",
-      phase: "activity-plenary",
-      minutes: 9,
-      target: "feedback",
-      feedbackKind: "scale",
-      steps: [
-        "Show ladder: Bottom (need help) → Top (can teach others)",
-        "Students draw themselves on their level (1 min)",
-        "Write: 'I'm here because...' (2 mins)",
-        "Write: 'To move up I need to...' (2 mins)",
-        "Share with partner (2 mins)",
-        "Teacher notes who needs support (2 mins)"
-      ]
-    }
-  ];
-  for (const a of ACTIVITIES) {
-    const source = source_meta_default[a.title];
-    if (!source) throw new Error("Missing source record: " + a.title);
-    a.materials = source.materials.slice();
-    a.sourceFile = source.sourceFile;
-    const p = PRESETS[a.key] || GAME_PRESETS[a.key];
-    if (!p) continue;
-    a.originalMapping = { target: a.target, layout: a.layout, style: a.style, feedbackKind: a.feedbackKind };
-    a.mappingReason = p.reason;
-    a.teacherNotes = p.answer || "";
-    if (p.target) {
-      a.target = p.target;
-      delete a.style;
-      if (p.target !== "feedback" && !p.feedbackKind) delete a.feedbackKind;
-    }
-    if (p.layout) a.layout = p.layout;
-    if (p.feedbackKind) a.feedbackKind = p.feedbackKind;
-    a.feedbackPreset = p.feedback;
-    a.gamePreset = p.game;
-    a.pages = p.pages;
-    a.presentation = p.presentation;
-    if (p.pages) {
-      a.pages = p.pages.map((part) => ({ ...part, fields: [
-        text("Heading", part.title),
-        ...part.fields,
-        { label: "Timer", type: "minutes", slide: "timeLimit", value: part.minutes }
-      ] }));
-    } else if (p.fields) {
-      a.fields = [
-        text("Heading", p.fieldsTitle || a.title),
-        ...p.fields,
-        {
-          label: "Timer",
-          type: "minutes",
-          slide: "timeLimit",
-          value: p.timer || a.minutes,
-          hint: a.target === "moment" ? "Starts automatically when presented. Set 0 to leave it untimed." : "Minutes for this activity. Adjust to suit your class."
-        }
-      ];
-    }
-  }
-  for (const a of ACTIVITIES) {
-    a.plays = activityPlays(a, (style) => (
-      /** @type {any} */
-      GAME_STYLES[style] || null
-    ));
-  }
-  function activity(key) {
-    return ACTIVITIES.find((a) => a.key === key) || null;
-  }
-  function activitiesInPhase(phase) {
-    return ACTIVITIES.filter((a) => a.phase === phase && a.enabled !== false);
-  }
-  function phaseCounts() {
-    return Object.fromEntries(PHASES.map((p) => [p.key, activitiesInPhase(p.key).length]));
-  }
-  function totalMinutes(keys) {
-    return keys.reduce((sum, key) => sum + ((activity(key) || {}).minutes || 0), 0);
-  }
-
-  // src/deck/content.js
-  var TABLE_MAX_COLS = 6;
-  var TABLE_MAX_ROWS = 12;
-  function parseTable(text2) {
-    var lines = String(text2 == null ? "" : text2).split(/\r?\n/).filter(function(l) {
-      return l.trim();
-    }).slice(0, TABLE_MAX_ROWS);
-    var rows2 = lines.map(function(line) {
-      var cells = line.indexOf("	") !== -1 ? line.split("	") : line.split("|");
-      return cells.map(function(c) {
-        return c.trim();
-      }).slice(0, TABLE_MAX_COLS);
-    });
-    var cols = rows2.reduce(function(n, r) {
-      return Math.max(n, r.length);
-    }, 0);
-    rows2.forEach(function(r) {
-      while (r.length < cols) r.push("");
-    });
-    return rows2;
-  }
-  function chartData(slide) {
-    var rows2 = parseTable(slide && slide.body);
-    if (rows2.length < 2) return { categories: [], series: [] };
-    var head = rows2[0], body = rows2.slice(1);
-    var names = head.slice(1).filter(function(h) {
-      return String(h).trim();
-    });
-    var categories = body.map(function(r) {
-      return String(r[0] || "").trim();
-    });
-    var series = names.map(function(name, i) {
-      return {
-        name: String(name).trim(),
-        values: body.map(function(r) {
-          var raw = String(r[i + 1] == null ? "" : r[i + 1]).replace(/[,\s%£$€]/g, "");
-          if (!raw) return null;
-          var n = Number(raw);
-          return Number.isFinite(n) ? n : null;
-        })
-      };
-    });
-    return { categories, series };
-  }
-  var SERIES_LEGEND_KINDS = {
-    bar: 1,
-    stack: 1,
-    hbar: 1,
-    line: 1,
-    area: 1,
-    combo: 1,
-    radar: 1,
-    bullet: 1,
-    scatter: 1,
-    /* A dumbbell is two named series drawn as two coloured dots and nothing
-       else. Without the key, which end is which is only in a tooltip, and a
-       tooltip is not available to a room looking at a projector. */
-    dumbbell: 1
-  };
-  function chartUsesSeriesLegend(kind, seriesCount) {
-    return (seriesCount == null ? 2 : seriesCount) > 1 && !!SERIES_LEGEND_KINDS[kind];
-  }
-  var DATA_MAX_COLS = 200;
-  var DATA_MAX_ROWS = 200;
-  function dataRows(text2) {
-    return String(text2 == null ? "" : text2).split(/\r?\n/).filter(function(l) {
-      return l.trim();
-    }).slice(0, DATA_MAX_ROWS).map(function(line) {
-      var cells = line.indexOf("	") !== -1 ? line.split("	") : line.split("|");
-      return cells.map(function(c) {
-        return c.trim();
-      }).slice(0, DATA_MAX_COLS);
-    });
-  }
-  function chartNumber(cell) {
-    var raw = String(cell == null ? "" : cell).replace(/[,\s%£$€]/g, "");
-    if (!raw) return null;
-    var n = Number(raw);
-    return Number.isFinite(n) ? n : null;
-  }
-  function chartPoints(slide) {
-    var rows2 = dataRows(slide && slide.body);
-    if (rows2.length < 2) return { series: [], xLabel: "", yLabel: "", labelled: false };
-    var head = rows2[0], body = rows2.slice(1);
-    var labelled = body.length > 0 && chartNumber(body[0][0]) == null;
-    var xCol = labelled ? 1 : 0;
-    var names = head.slice(xCol + 1).filter(function(h) {
-      return String(h).trim();
-    });
-    var series = names.map(function(name, i) {
-      var pts = [];
-      body.forEach(function(r) {
-        var x = chartNumber(r[xCol]), y = chartNumber(r[xCol + 1 + i]);
-        if (x != null && y != null) {
-          pts.push({ x, y, label: labelled ? String(r[0] || "").trim() : "" });
-        }
-      });
-      return { name: String(name).trim(), points: pts };
-    });
-    return {
-      series,
-      xLabel: String(head[xCol] || "").trim(),
-      yLabel: names.length === 1 ? names[0] : "",
-      labelled
-    };
-  }
-  function chartGroups(slide) {
-    var rows2 = dataRows(slide && slide.body);
-    if (!rows2.length) return [];
-    var body = rows2.length > 1 && chartNumber(rows2[0][1]) == null ? rows2.slice(1) : rows2;
-    return body.map(function(r) {
-      var vals = r.slice(1).map(chartNumber).filter(function(v) {
-        return v != null;
-      });
-      vals.sort(function(a, b) {
-        return a - b;
-      });
-      return { name: String(r[0] || "").trim(), values: vals };
-    }).filter(function(g) {
-      return g.values.length;
-    });
-  }
-  function fiveNumber(sorted) {
-    if (!sorted.length) return null;
-    function q(p) {
-      var pos = (sorted.length - 1) * p, lo = Math.floor(pos), hi = Math.ceil(pos);
-      return lo === hi ? sorted[lo] : sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
-    }
-    var q1 = q(0.25), med = q(0.5), q3 = q(0.75), iqr = q3 - q1;
-    var loFence = q1 - 1.5 * iqr, hiFence = q3 + 1.5 * iqr;
-    var inside = sorted.filter(function(v) {
-      return v >= loFence && v <= hiFence;
-    });
-    return {
-      min: inside.length ? inside[0] : sorted[0],
-      q1,
-      median: med,
-      q3,
-      max: inside.length ? inside[inside.length - 1] : sorted[sorted.length - 1],
-      outliers: sorted.filter(function(v) {
-        return v < loFence || v > hiFence;
-      }),
-      n: sorted.length
-    };
-  }
-  function chartFlows(slide) {
-    var rows2 = dataRows(slide && slide.body);
-    var links = [];
-    rows2.forEach(function(r) {
-      var from = String(r[0] || "").trim(), to = String(r[1] || "").trim();
-      var v = chartNumber(r[2]);
-      if (!from || !to || v == null || v <= 0) return;
-      links.push({ from, to, value: v });
-    });
-    if (!links.length) return { nodes: [], links: [], layers: 0 };
-    var names = [];
-    links.forEach(function(l) {
-      if (names.indexOf(l.from) < 0) names.push(l.from);
-      if (names.indexOf(l.to) < 0) names.push(l.to);
-    });
-    var nodes = names.map(function(n) {
-      return { name: n, depth: 0, in: 0, out: 0, total: 0, x: 0, y: 0, h: 0, inAt: 0, outAt: 0 };
-    });
-    var byName = {};
-    nodes.forEach(function(n, i) {
-      byName[n.name] = i;
-    });
-    for (var pass = 0; pass < nodes.length; pass++) {
-      var moved = false;
-      links.forEach(function(l) {
-        var a = nodes[byName[l.from]], b = nodes[byName[l.to]];
-        if (b.depth < a.depth + 1) {
-          b.depth = a.depth + 1;
-          moved = true;
-        }
-      });
-      if (!moved) break;
-    }
-    links.forEach(function(l) {
-      nodes[byName[l.from]].out += l.value;
-      nodes[byName[l.to]].in += l.value;
-    });
-    nodes.forEach(function(n) {
-      n.total = Math.max(n.in, n.out);
-    });
-    var layers = nodes.reduce(function(m, n) {
-      return Math.max(m, n.depth);
-    }, 0) + 1;
-    return { nodes, links, layers, index: byName };
-  }
-  function chartValues(slide) {
-    var rows2 = dataRows(slide && slide.body);
-    var out = [];
-    rows2.forEach(function(r) {
-      r.forEach(function(c) {
-        var n = chartNumber(c);
-        if (n != null) out.push(n);
-      });
-    });
-    return out.sort(function(a, b) {
-      return a - b;
-    });
-  }
-  function histogramBins(values, want) {
-    if (!values.length) return [];
-    var lo = values[0], hi = values[values.length - 1];
-    if (hi === lo) return [{ from: lo, to: lo, count: values.length }];
-    var n = want || Math.max(5, Math.min(14, Math.ceil(Math.log2(values.length) + 1)));
-    var width = (hi - lo) / n, bins = [];
-    for (var i = 0; i < n; i++) bins.push({ from: lo + i * width, to: lo + (i + 1) * width, count: 0 });
-    values.forEach(function(v) {
-      var idx = Math.min(n - 1, Math.floor((v - lo) / width));
-      bins[idx].count++;
-    });
-    return bins;
-  }
-  function parsePerson(line) {
-    var raw = String(line == null ? "" : line);
-    var cells = (raw.indexOf("	") !== -1 ? raw.split("	") : raw.split("|")).map(function(c) {
-      return c.trim();
-    });
-    return { name: cells[0] || "", role: cells[1] || "", boss: cells[2] || "", photo: safeMedia(cells[3] || "") };
-  }
-  function orgTree(lines) {
-    var warnings = [];
-    var seen = {};
-    var people = [];
-    (lines || []).map(parsePerson).forEach(function(p) {
-      if (!p.name) return;
-      var key = p.name.toLowerCase();
-      if (seen[key]) {
-        warnings.push("Two people are both named “" + p.name + "”. Only the first is kept.");
-        return;
-      }
-      seen[key] = 1;
-      people.push(p);
-    });
-    var byName = {};
-    people.forEach(function(p) {
-      byName[p.name.toLowerCase()] = p;
-      p.reports = [];
-    });
-    var roots = [];
-    people.forEach(function(p) {
-      if (!p.boss) {
-        roots.push(p);
-        return;
-      }
-      if (p.boss.toLowerCase() === p.name.toLowerCase()) {
-        warnings.push("“" + p.name + "” reports to themselves — drawn as top-level.");
-        roots.push(p);
-        return;
-      }
-      var boss2 = byName[p.boss.toLowerCase()];
-      if (!boss2) {
-        warnings.push("“" + p.boss + "” is not on this slide — “" + p.name + "” is drawn as top-level.");
-        roots.push(p);
-        return;
-      }
-      boss2.reports.push(p);
-    });
-    if (!roots.length && people.length) {
-      warnings.push("Everyone reports in a loop — drawn as a flat team with no connectors.");
-      people.forEach(function(p) {
-        p.reports = [];
-      });
-      roots = people.slice();
-    }
-    var attached = {};
-    function mark(p) {
-      var k = p.name.toLowerCase();
-      if (attached[k]) return;
-      attached[k] = 1;
-      (p.reports || []).forEach(mark);
-    }
-    roots.forEach(mark);
-    var orphans = people.filter(function(p) {
-      return !attached[p.name.toLowerCase()];
-    });
-    if (orphans.length) {
-      warnings.push(orphans.length === 1 ? "“" + orphans[0].name + "” sits in a reporting loop and was not under any head — drawn as top-level." : orphans.length + " people sit in a reporting loop off the main tree — drawn as top-level.");
-      orphans.forEach(function(p) {
-        p.reports = [];
-        roots.push(p);
-      });
-    }
-    function depth(p, visiting, d) {
-      if (d > people.length) return d;
-      var k = p.name.toLowerCase();
-      if (visiting[k]) return d;
-      visiting[k] = 1;
-      var max = d;
-      (p.reports || []).forEach(function(c) {
-        max = Math.max(max, depth(c, visiting, d + 1));
-      });
-      delete visiting[k];
-      return max;
-    }
-    var levels = roots.reduce(function(m, r) {
-      return Math.max(m, depth(r, {}, 1));
-    }, 0);
-    return { roots, people, levels, warnings };
-  }
-  function parseKeywordLine(line) {
-    var s = String(line == null ? "" : line);
-    var tab = s.indexOf("	");
-    if (tab !== -1) {
-      return { term: s.slice(0, tab).trim(), def: s.slice(tab + 1).trim() };
-    }
-    var m = s.match(/^(.+?)\s*[—–:\-|]\s+(.+)$/);
-    if (m) return { term: m[1].trim(), def: m[2].trim() };
-    return { term: s.trim(), def: "" };
-  }
-  function formatKeywordLine(term, def) {
-    return String(term || "").trim() + "	" + String(def || "").trim();
-  }
-  function parseInfoLine(line) {
-    var s = String(line == null ? "" : line).trim();
-    var parts = s.indexOf("	") !== -1 ? s.split("	") : s.split("|");
-    parts = parts.map(function(p) {
-      return p.trim();
-    });
-    if (parts.length > 3) parts = [parts[0], parts[1], parts.slice(2).join(" · ")];
-    return { label: parts[0] || "", value: parts[1] || "", note: parts[2] || "" };
-  }
-  function formatInfoLine(label, value, note) {
-    return [label, value, note].map(function(p) {
-      return String(p || "").trim();
-    }).join("	").replace(/\t+$/, "");
-  }
-  function infoNumber(value) {
-    var m = String(value || "").replace(/,/g, "").match(/-?\d+(\.\d+)?/);
-    return m ? parseFloat(m[0]) : NaN;
-  }
-  function safeHref(url) {
-    var u = String(url || "").trim();
-    if (!u) return "";
-    if (/^https?:\/\//i.test(u)) return u;
-    if (/^\/\//.test(u)) return "https:" + u;
-    if (u.charAt(0) === "/" && u.indexOf("..") < 0 && /^\/[A-Za-z0-9._~/-]*(\?[A-Za-z0-9._~/\-=&%+]*)?(#[A-Za-z0-9._~/-]*)?$/.test(u)) return u;
-    if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}([\/?#][^\s]*)?$/i.test(u)) return "https://" + u;
-    return "";
-  }
-  function safeMedia(url) {
-    var u = String(url == null ? "" : url).replace(/[\u0000-\u001f\u007f]/g, "").trim();
-    if (!u) return "";
-    if (/^data:/i.test(u)) return /^data:(image|video|audio)\//i.test(u) ? u : "";
-    if (/^[a-z][a-z0-9+.-]*:/i.test(u)) {
-      return /^(https?|file|blob):/i.test(u) ? u : "";
-    }
-    return u;
-  }
-  var SLIDE_TYPES = {
-    journey: {
-      label: "Journey / handover",
-      icon: "↝",
-      deck: true,
-      pits: 6,
-      group: "explain",
-      starters: [{ title: "Journey / handover", blurb: "Connect milestones, course topics or stages of a project." }]
-    },
-    orgchart: {
-      label: "People & structure",
-      icon: "⛬",
-      deck: true,
-      pits: 12,
-      group: "explain",
-      starters: [{ title: "Team or org chart", blurb: "Who reports to whom, with headshots. Also draws a flat team as one row." }]
-    },
-    mindmap: {
-      label: "Mind map",
-      icon: "✣",
-      deck: true,
-      pits: 6,
-      group: "explain",
-      starters: [{ title: "Mind map", blurb: "One central idea, connected branches, revealed as you teach." }]
-    },
-    introduction: {
-      label: "Lecturer introduction",
-      icon: "◎",
-      deck: true,
-      group: "introduce",
-      starters: [{ title: "Lecturer introduction", blurb: "Headshot, name, job title and a short introduction." }]
-    },
-    title: {
-      label: "Title",
-      icon: "T",
-      deck: true,
-      group: "introduce",
-      starters: [{
-        title: "Opening title",
-        blurb: "Big title at the top. Subtitle underneath.",
-        seed: { title: "Lesson title", subtitle: "Your name" }
-      }]
-    },
-    section: {
-      label: "Section",
-      icon: "S",
-      deck: true,
-      group: "introduce",
-      starters: [{
-        title: "Section break",
-        blurb: "A clean pause between parts of the lesson.",
-        seed: { title: "Next idea", subtitle: "A short bridge into what follows." }
-      }]
-    },
-    /* One line, as big as it fits, in the middle of the slide.
-       
-       Title is a lesson's front door and Section is a divider — both carry an
-       accent bar, an eyebrow and a subtitle, and both are sized for a sentence.
-       Neither is the slide a teacher wants for a thought: six words, bold,
-       centred, nothing else on it. That was being faked with a Section and the
-       text-size control, which caps at the size the divider was designed for. */
-    statement: {
-      label: "Statement",
-      icon: "❝",
-      deck: true,
-      group: "introduce",
-      starters: [{
-        title: "Statement",
-        blurb: "One line, bold and as big as it fits. An opening thought, a provocation, a rule to remember.",
-        seed: { body: "Every chart is a choice", subtitle: "" }
-      }]
-    },
-    /* An empty canvas. Every other type here is a shape the slide is poured
-       into; this one is the absence of a shape, so an author can place items
-       wherever the layouts taught the inserters to put them rather than filling
-       in someone else's fields. It is also where a slide ends up once every
-       block has been taken off it — deleting everything has to leave something,
-       and a slide still claiming to be Bullets with no bullets on it is a shape
-       pretending to be empty. */
-    blank: {
-      label: "Blank",
-      icon: "▢",
-      deck: true,
-      group: "introduce",
-      starters: [{ title: "Blank canvas", blurb: "Nothing on it. Add items and put them where you want them." }]
-    },
-    content: {
-      label: "Bullets",
-      icon: "•",
-      deck: true,
-      pits: 8,
-      group: "explain",
-      starters: [
-        {
-          title: "Title + content",
-          blurb: "Classic teaching slide — heading, then bullet pits.",
-          seed: { title: "Slide title", bullets: ["", "", ""] }
-        },
-        {
-          title: "Steps",
-          blurb: "Title plus four numbered teaching steps.",
-          seed: { title: "How it works", bullets: ["Step one", "Step two", "Step three", "Step four"] }
-        }
-      ]
-    },
-    keyfact: {
-      label: "Key fact",
-      icon: "!",
-      deck: true,
-      pits: 4,
-      group: "explain",
-      starters: [{
-        title: "Key fact",
-        blurb: "One number or rule set large, with the detail beneath it.",
-        seed: {
-          title: "The thing they must leave with",
-          subtitle: "What the fact is",
-          body: "The fact, in a few words",
-          bullets: ["", "", ""]
-        }
-      }]
-    },
-    keywords: {
-      label: "Keywords",
-      icon: "K",
-      deck: true,
-      pits: 8,
-      group: "explain",
-      starters: [{
-        title: "Keywords",
-        blurb: "Bold keyword + lowercase definition — vocabulary pits.",
-        seed: { title: "Key vocabulary", bullets: ["	", "	", "	"] }
-      }]
-    },
-    italics: {
-      label: "Phrase + explanation",
-      icon: "I",
-      deck: true,
-      pits: 8,
-      group: "explain",
-      starters: [{
-        title: "Italics",
-        blurb: "Italic phrase + plain explanation — emphasis pits.",
-        seed: { title: "Phrases to notice", bullets: ["	", "	", "	"] }
-      }]
-    },
-    links: {
-      label: "Links",
-      icon: "↗",
-      deck: true,
-      pits: 8,
-      group: "show",
-      starters: [{
-        title: "Hyperlinks",
-        blurb: "Label + URL — clickable further reading.",
-        seed: { title: "Further reading", bullets: ["	", "	", "	"] }
-      }]
-    },
-    split: {
-      label: "Image + text",
-      icon: "◫",
-      deck: true,
-      pits: 5,
-      group: "show",
-      starters: [{
-        title: "Dual coding",
-        blurb: "Half text, half image — say it and show it.",
-        seed: { title: "Say it. Show it.", bullets: ["", "", ""] }
-      }]
-    },
-    cards: {
-      label: "Cards",
-      icon: "▦",
-      deck: true,
-      pits: 6,
-      group: "explain",
-      starters: [{
-        title: "Three cards",
-        blurb: "Three idea pits side by side.",
-        seed: { title: "Three ideas to hold onto.", bullets: ["", "", ""] }
-      }]
-    },
-    table: {
-      label: "Table",
-      icon: "⊞",
-      deck: true,
-      group: "explain",
-      starters: [{
-        title: "Table",
-        blurb: "Rows and columns — for when the exact value matters.",
-        seed: { title: "Side by side" }
-      }]
-    },
-    code: {
-      label: "Code",
-      icon: "</>",
-      deck: true,
-      group: "explain",
-      starters: [{
-        title: "Python / code typing",
-        blurb: "Source that types itself on the wall — live-coding feel without sharing an IDE.",
-        seed: { title: "Code that writes itself", language: "python", typewrite: true }
-      }]
-    },
-    beforeafter: {
-      label: "Before / after",
-      icon: "◐",
-      deck: true,
-      group: "show",
-      starters: [{ title: "Before / after", blurb: "Two states compared — the second lands on a press." }]
-    },
-    experiment: {
-      label: "Predict and compare",
-      icon: "◉",
-      deck: true,
-      group: "show",
-      starters: [{ title: "Predict and compare", blurb: "Predict, reveal and compare editable visual states.", seed: { title: "Same data, different encodings", experiment: { preset: "polling" }, body: "Candidate	Poll A	Poll B	Poll C\n1	17	20	23\n2	18	20	22\n3	20	19	20\n4	22	21	18\n5	23	20	17" } }]
-    },
-    /* Ten specimens, each its own row in Add slide. They were a Look control
-       once, which put a choice of slide shape in the pane that promises not to
-       change your content — and these demand an image and bring a state machine
-       with them. A shape belongs where the other shapes are chosen. */
-    motion: {
-      label: "Animated explainer",
-      icon: "◈",
-      deck: true,
-      group: "show",
-      starters: [
-        { title: "Mask reveal", blurb: "An image uncovered a piece at a time, under your control.", seed: { title: "Mask reveal", motionScene: "mask", design: { motionLook: "editorial" } } },
-        { title: "Draw-on diagram", blurb: "Strokes that arrive in the order you explain them.", seed: { title: "Draw-on diagram", motionScene: "draw", design: { motionLook: "editorial" } } },
-        { title: "Card to detail", blurb: "A card the room picks, opening into its detail.", seed: { title: "Card to detail", motionScene: "cards", design: { motionLook: "editorial" } } },
-        { title: "Animated annotations", blurb: "Callouts that land on a picture one after another.", seed: { title: "Animated annotations", motionScene: "annotate", design: { motionLook: "editorial" } } },
-        { title: "Scrubbable transformation", blurb: "A slider the room drags between two shapes of the same data.", seed: { title: "Scrubbable transformation", motionScene: "scrub", design: { motionLook: "editorial" } } },
-        { title: "Cause and effect", blurb: "Change one thing, watch what follows from it.", seed: { title: "Cause and effect", motionScene: "cause", design: { motionLook: "editorial" } } },
-        { title: "Branching scenario", blurb: "A choice, and the consequence of having made it.", seed: { title: "Branching scenario", motionScene: "branch", design: { motionLook: "editorial" } } },
-        { title: "Exploded diagram", blurb: "Parts that separate to show how the whole fits together.", seed: { title: "Exploded diagram", motionScene: "explode", design: { motionLook: "editorial" } } },
-        { title: "Focus lens", blurb: "A moving lens that reads one region of a busy image.", seed: { title: "Focus lens", motionScene: "lens", design: { motionLook: "editorial" } } },
-        { title: "Responsive story panels", blurb: "Panels that expand as the story is told through them.", seed: { title: "Responsive story panels", motionScene: "panels", design: { motionLook: "editorial" } } }
-      ]
-    },
-    explore: {
-      label: "Explore an image",
-      icon: "◎",
-      deck: true,
-      group: "show",
-      starters: [{ title: "Explore an image", blurb: "One picture the room examines, with details you reveal." }]
-    },
-    simulation: {
-      label: "What if? graph",
-      icon: "↗",
-      deck: true,
-      group: "show",
-      starters: [{ title: "What if? graph", blurb: "A slider bound to a model — move it and the curve answers." }]
-    },
-    chart: {
-      label: "Chart",
-      icon: "▥",
-      deck: true,
-      group: "explain",
-      starters: [{
-        title: "Chart",
-        blurb: "Bar, line or pie drawn from a range you paste in.",
-        seed: {
-          title: "What the numbers show",
-          chartKind: "bar",
-          body: "Day|Students\nMon|12\nTue|19\nWed|15"
-        }
-      }]
-    },
-    image: {
-      label: "Image",
-      icon: "▣",
-      deck: true,
-      group: "show",
-      starters: [{
-        title: "Full-bleed image",
-        blurb: "One dominant image with a caption.",
-        seed: { title: "Caption" }
-      }]
-    },
-    gallery: {
-      label: "Image stack",
-      icon: "▤",
-      deck: true,
-      group: "show",
-      starters: [{
-        title: "Image stack",
-        blurb: "Several pictures, revealed one press at a time.",
-        seed: { title: "One at a time" }
-      }]
-    },
-    video: {
-      label: "Video",
-      icon: "▶",
-      deck: true,
-      group: "show",
-      starters: [{
-        title: "Video",
-        blurb: "A clip from YouTube, Vimeo or a file beside the deck.",
-        seed: { title: "Watch this" }
-      }]
-    },
-    quote: {
-      label: "Quote",
-      icon: "“",
-      deck: true,
-      group: "introduce",
-      starters: [{
-        title: "Quote",
-        blurb: "A line the room can sit with.",
-        seed: {
-          body: "Replace this with the line you want the room to sit with.",
-          subtitle: "Attribution"
-        }
-      }]
-    },
-    /* Infographic shapes. Each is still a bullet layout under the hood — a pit
-       per element, revealed on Next — so they inherit reorder, bulk paste,
-       spread-across-slides and the presenter excerpt for free. */
-    stats: {
-      label: "Stat tiles",
-      icon: "％",
-      deck: true,
-      pits: 6,
-      group: "infographic",
-      starters: [{
-        title: "Stat tiles",
-        blurb: "Three to six big numbers, each with a label and a note.",
-        seed: { title: "The numbers that matter", bullets: ["Label	Value	Note", "		", "		"] }
-      }]
-    },
-    compare: {
-      label: "Versus",
-      icon: "⇄",
-      deck: true,
-      pits: 6,
-      group: "infographic",
-      starters: [{
-        title: "Versus",
-        blurb: "Two columns compared row by row — before/after, A/B, myth/fact.",
-        seed: { title: "Side by side", subtitle: "Option A | Option B", bullets: ["	", "	", "	"] }
-      }]
-    },
-    funnel: {
-      label: "Funnel",
-      icon: "▽",
-      deck: true,
-      pits: 6,
-      group: "infographic",
-      starters: [{
-        title: "Funnel",
-        blurb: "Stages that narrow — applicants to offers, awareness to action.",
-        seed: { title: "Where the numbers thin out", bullets: ["Stage	Value	Note", "		", "		", "		"] }
-      }]
-    },
-    timeline: {
-      label: "Timeline",
-      icon: "⟶",
-      deck: true,
-      pits: 8,
-      group: "infographic",
-      starters: [{
-        title: "Timeline",
-        blurb: "Dated events along a track — a history, a plan, a term.",
-        seed: { title: "How we got here", bullets: ["Date	Event	Detail", "		", "		", "		"] }
-      }]
-    },
-    /* What you see, and what is under it.
-    
-         The other infographics all lay their parts out side by side, which says
-         "these are comparable". A great many things a school teaches are the
-         opposite shape: one small visible fact sitting on a mass that is bigger
-         than it and deliberately out of view. The cost of a t-shirt. What a
-         headline leaves out. What one question to a chatbot actually spends.
-    
-         Above the waterline goes the subtitle — the thing everyone already sees.
-         Below it the pits widen as they deepen, so the shape argues before the
-         words do, and they reveal one at a time so a class meets the mass at the
-         speed the teacher sets rather than all at once. */
-    iceberg: {
-      label: "What lies beneath",
-      icon: "◭",
-      deck: true,
-      pits: 6,
-      group: "infographic",
-      starters: [{
-        title: "What lies beneath",
-        blurb: "One visible thing, and the mass underneath it — hidden costs, what a headline leaves out.",
-        seed: {
-          title: "The hidden costs",
-          subtitle: "What you see",
-          bullets: ["What it costs	Value	Note", "		", "		"]
-        }
-      }]
-    },
-    /* A continuum with named ends, and things placed along it.
-    
-       A compare slide asks "which of these two", and a stat tile asks "how big".
-       Neither asks the question a class argues about best: where does this sit
-       between two extremes, and does everyone agree? The pits carry a position
-       rather than a magnitude, so two items 4 points apart are 4 points apart on
-       the line — which is the whole claim the slide is making. */
-    spectrum: {
-      label: "Spectrum",
-      icon: "⇹",
-      deck: true,
-      pits: 6,
-      group: "infographic",
-      starters: [{
-        title: "Spectrum",
-        blurb: "One end to the other, with things placed along it — never/always, cheap/costly, safe/risky.",
-        seed: {
-          title: "Where does each one sit?",
-          subtitle: "Never worth it | Always worth it",
-          bullets: ["Something	20	Why it sits there", "	50	", "	85	"]
-        }
-      }]
-    },
-    /* A claim, and what is actually behind it.
-    
-       The move every media-literacy lesson teaches and no layout supported: put
-       the assertion up, then take it apart by provenance — who said it, when,
-       what it is based on, and what it does not say. The last row is the one
-       that matters and the one an author will skip, so the seed names it. */
-    sourcecheck: {
-      label: "Claim & source",
-      icon: "⌕",
-      deck: true,
-      pits: 6,
-      group: "infographic",
-      starters: [{
-        title: "Claim & source",
-        blurb: "A claim, then who said it, when, on what basis, and what it leaves out.",
-        seed: {
-          title: '"The claim, quoted as it was made"',
-          bullets: ["Who	The source", "When	The date", "Basis	What it rests on", "Gap	What it does not say"]
-        }
-      }]
-    },
-    /* One quantity, across three or four moments.
-    
-       A timeline puts events on a track and says when. This says how much, and
-       prints the change between each pair — which is the number every reader is
-       computing anyway and usually getting wrong. 500,000 to 8 million is not
-       "a rise", it is sixteenfold, and the slide should say so. */
-    shift: {
-      label: "Then / now / next",
-      icon: "⇗",
-      deck: true,
-      pits: 4,
-      group: "infographic",
-      starters: [{
-        title: "Then / now / next",
-        blurb: "One quantity across three moments, with the change between them worked out.",
-        seed: { title: "How fast this moved", bullets: ["Then	100	Where it started", "Now	400	Where it is", "Next		Where it goes"] }
-      }]
-    },
-    /* Two images, one of them not real.
-    
-       beforeafter is one image changing; this is two competing, and the room has
-       to commit to one before the tells appear. That commitment is the entire
-       pedagogy — a class shown the answer first learns that deepfakes are
-       detectable, and a class made to guess first learns that they are not. */
-    spotfake: {
-      label: "Spot the fake",
-      icon: "◐",
-      deck: true,
-      pits: 6,
-      group: "show",
-      starters: [{
-        title: "Spot the fake",
-        blurb: "Two images side by side. The room votes, then the tells are named one at a time.",
-        seed: {
-          title: "Which one is real?",
-          subtitle: "A | B",
-          correct: 0,
-          bullets: ["The first tell", "The second tell", "The third tell"]
-        }
-      }]
-    },
-    join: { label: "Join QR & PIN", icon: "⌗", deck: true },
-    game: { label: "Game", icon: "◈" },
-    quiz: { label: "Quiz", icon: "?" },
-    explain: { label: "Explanation", icon: "💡" },
-    results: { label: "Score", icon: "⚑" }
-  };
-  var LAYOUT_GROUPS = [
-    ["introduce", "Introduce"],
-    ["explain", "Explain & organise"],
-    ["show", "Show & explore"],
-    ["infographic", "Infographic"]
-  ];
-  var INFO_LAYOUTS = ["stats", "compare", "funnel", "timeline", "iceberg", "spectrum", "sourcecheck", "shift"];
-  function layoutKeys(test) {
-    return Object.keys(SLIDE_TYPES).filter(function(k) {
-      return test(SLIDE_TYPES[k]);
-    });
-  }
-  var DECK_TYPES = layoutKeys(function(t) {
-    return t.deck;
-  });
-  var BULLET_LAYOUTS = layoutKeys(function(t) {
-    return t.pits > 0;
-  });
-  function prepareLayout(slide, type2) {
-    if (DECK_TYPES.indexOf(type2) < 0) return slide;
-    slide.type = type2;
-    if (!Array.isArray(slide.bullets)) slide.bullets = [];
-    if (BULLET_LAYOUTS.indexOf(type2) >= 0 && !slide.bullets.length) slide.bullets = ["", "", ""];
-    if (BULLET_LAYOUTS.indexOf(type2) < 0 && slide.bullets.every(function(b) {
-      return !String(b).trim();
-    })) slide.bullets = [];
-    if (type2 === "table" && !String(slide.body || "").trim()) slide.body = "Term | What it means\nFirst | \nSecond | ";
-    if (type2 === "code") {
-      if (slide.code == null) slide.code = String(slide.body || "");
-      if (!String(slide.language || "").trim()) slide.language = "python";
-      if (!slide.codeReveal) slide.codeReveal = "type";
-      if (slide.typewrite == null) slide.typewrite = true;
-      if (!Number.isFinite(Number(slide.typeSpeed)) || Number(slide.typeSpeed) <= 0) slide.typeSpeed = 55;
-      if (!String(slide.code || "").trim()) {
-        slide.code = 'import pandas as pd\n\ndf = pd.read_csv("attendance.csv")\nby_week = df["week"].value_counts().sort_index()\nprint(by_week.head())\n';
-      }
-    }
-    return slide;
-  }
-  function pasteTarget(slide) {
-    if (!slide || !slide.type) return null;
-    var type2 = String(slide.type);
-    if (type2 === "gallery") return { field: "layer", become: "gallery" };
-    if (["image", "split", "introduction", "keyfact", "quote"].indexOf(type2) >= 0) {
-      return { field: "image", become: type2 };
-    }
-    var lines = (slide.bullets || []).filter(function(b) {
-      return String(b).trim();
-    }).length;
-    if (lines && BULLET_LAYOUTS.indexOf(type2) >= 0) return { field: "image", become: "split" };
-    if (["title", "section", "content", "cards", "keywords", "italics"].indexOf(type2) >= 0) {
-      return { field: "image", become: "image" };
-    }
-    return null;
-  }
-  function imagePlacement(slide) {
-    var p = slide.design && slide.design.placement;
-    return p === "top" || p === "bottom" ? p : slide.imageSide === "left" ? "left" : "right";
-  }
-  function setImagePlacement(slide, placement) {
-    if (!["left", "right", "top", "bottom"].includes(placement)) return;
-    if (!slide.design || typeof slide.design !== "object") slide.design = {};
-    slide.design.placement = placement === "top" || placement === "bottom" ? placement : "side";
-    if (placement === "left" || placement === "right") slide.imageSide = placement;
-  }
-  function swapImagePlacement(slide) {
-    setImagePlacement(slide, { left: "right", right: "left", top: "bottom", bottom: "top" }[imagePlacement(slide)]);
-  }
-  function slideSteps(slide) {
-    if (slide.type === "table") {
-      var rows2 = parseTable(slide.body), start = slide.tableHeader !== false && rows2.length > 1 ? 1 : 0;
-      return rows2.slice(start).map(function(r) {
-        return r.join(" · ");
-      });
-    }
-    if (slide.type === "quote") {
-      return String(slide.body || "").split(/\n/).map(function(l) {
-        return l.trim();
-      }).filter(Boolean);
-    }
-    if (slide.type === "explain") {
-      return String(slide.body || "").split(/\n{2,}/).map(function(l) {
-        return l.trim();
-      }).filter(Boolean);
-    }
-    if (slide.type === "chart") {
-      var cd = chartData(slide);
-      if (!cd.series.length) return [];
-      if (cd.series.length > 1) return cd.series.map(function(x) {
-        return x.name;
-      });
-      return cd.categories.slice();
-    }
-    if (slide.type === "gallery") {
-      return (slide.layers || []).filter(function(l) {
-        return l && l.image;
-      }).map(function(l, i) {
-        return String(l.caption || "").trim() || "Image " + (i + 1);
-      });
-    }
-    if (slide.type === "code") {
-      return String(slide.code || slide.body || "").split(/\n/).filter(function(l) {
-        return l.length;
-      });
-    }
-    if (["journey", "mindmap", "content", "cards", "split", "keywords", "italics"].concat(INFO_LAYOUTS).indexOf(slide.type) < 0) return [];
-    return (slide.bullets || []).filter(function(b) {
-      return String(b).trim();
-    }).map(function(b) {
-      if (INFO_LAYOUTS.indexOf(slide.type) >= 0) {
-        var q = parseInfoLine(b);
-        return [q.label, q.value, q.note].filter(Boolean).join(" · ");
-      }
-      if (slide.type === "journey" || slide.type === "mindmap" || slide.type === "keywords" || slide.type === "italics") {
-        var p = parseKeywordLine(b);
-        return [p.term, p.def].filter(Boolean).join(" — ");
-      }
-      return String(b).replace(/^(\s{2,}|\t|- )+/, "").trim();
-    });
-  }
-  function slideExcerpt(slide, revealed) {
-    if (slide.type === "chart" && slide.exploration && slide.exploration.prediction) return slide.exploration.prompt;
-    if (["beforeafter", "explore", "simulation"].includes(slide.type)) return slide.title || "";
-    if (slide.type === "quiz") return slide.question || "";
-    if (slide.type === "code") {
-      var src = String(slide.code || slide.body || "");
-      if (slide.typewrite !== false && Number.isFinite(revealed)) return src.slice(0, Math.max(0, revealed));
-      return src;
-    }
-    var steps = slideSteps(slide);
-    if (steps.length || ["content", "cards", "split", "keywords", "italics", "table", "quote", "explain"].includes(slide.type)) {
-      var n = slide.progressive === true && Number.isFinite(revealed) ? Math.max(0, revealed) : steps.length;
-      var visible = steps.slice(0, n);
-      if (slide.type === "table") {
-        var rows2 = parseTable(slide.body);
-        if (slide.tableHeader !== false && rows2.length > 1) visible.unshift(rows2[0].join(" · "));
-      }
-      return visible.join("\n");
-    }
-    if (slide.type === "links") return (slide.bullets || []).map(function(b) {
-      var p = parseKeywordLine(b);
-      return [p.term, p.def].filter(Boolean).join(" — ");
-    }).join("\n");
-    if (slide.type === "title" || slide.type === "section") return slide.subtitle || "";
-    return "";
-  }
-  function questionTimeLimit(slide, teacherEntry) {
-    return teacherEntry ? 0 : Math.max(0, Number(slide.timeLimit) || 0);
-  }
-  var TEACHER_CALL = ["headsup", "spinexplain", "connection", "randomchallenge", "conceptchain"];
-  function correctAnswerLabel(slide) {
-    if (slide.input === "text" || slide.input === "number" || slide.input === "tap" || slide.input === "fill") return String(slide.answer || "");
-    if (slide.input === "order") return (slide.options || []).join(" → ");
-    if (TEACHER_CALL.indexOf(slide.style) > -1) return "Your call — mark it as they answer";
-    var opt = (slide.options || [])[slide.correct];
-    if (!Number.isInteger(slide.correct) || slide.correct < 0 || opt == null) return "";
-    return ("ABCDEF"[slide.correct] || "?") + " — " + opt;
-  }
-
-  // src/deck/feedback.js
-  var FEEDBACK_KINDS = {
-    poll: {
-      key: "poll",
-      label: "Poll",
-      icon: "▤",
-      blurb: "Fixed options. Results appear as bars in the rail.",
-      needsOptions: true
-    },
-    wordcloud: {
-      key: "wordcloud",
-      label: "Word cloud",
-      icon: "❋",
-      blurb: "A word or short phrase each. Repeats grow larger.",
-      needsOptions: false
-    },
-    brainstorm: {
-      key: "brainstorm",
-      label: "Brainstorm",
-      icon: "✎",
-      blurb: "Longer contributions, listed newest first with names.",
-      needsOptions: false
-    },
-    /* A scale is a poll over a fixed run of points, so on the wire it is one:
-       the room picks an index and the relay counts indices, unchanged. What
-       makes it a scale is that the points are ordered, which is why it gets a
-       mean and a distribution rather than a set of independent bars. */
-    scale: {
-      key: "scale",
-      label: "Scale",
-      icon: "≋",
-      blurb: "One end to the other. Shows the spread and the average.",
-      needsOptions: false,
-      graded: true
-    }
-  };
-  var SCALE_POINTS = [3, 4, 5, 6, 7];
-  function scaleLabels(f) {
-    var n = Math.max(3, Math.min(7, Number(f.points) || 5));
-    var out = [];
-    for (var i = 0; i < n; i++) out.push(String(i + 1));
-    return out;
-  }
-  function isFeedbackKind(value) {
-    return typeof value === "string" && Object.prototype.hasOwnProperty.call(FEEDBACK_KINDS, value);
-  }
-  function makeFeedback(kind) {
-    var f = {
-      kind: isFeedbackKind(kind) ? kind : "poll",
-      prompt: "",
-      options: kind === "poll" || !kind ? ["Yes", "No", "Not sure"] : [],
-      max: 1,
-      // submissions allowed per person
-      presentAs: "rail"
-      // 'rail' beside the slide · 'focus' full screen when presenting
-    };
-    if (f.kind === "scale") {
-      f.points = 5;
-      f.lowLabel = "Not at all";
-      f.highLabel = "Completely";
-    }
-    return f;
-  }
-  function normalizeFeedback(raw) {
-    if (!raw || !raw.kind || !FEEDBACK_KINDS[raw.kind]) return null;
-    var f = {
-      kind: raw.kind,
-      prompt: String(raw.prompt || ""),
-      options: (
-        /** @type {string[]} */
-        []
-      ),
-      max: Math.max(1, Math.min(5, Number(raw.max) || 1)),
-      presentAs: raw.presentAs === "focus" ? "focus" : "rail"
-    };
-    if (FEEDBACK_KINDS[f.kind].needsOptions) {
-      f.options = (Array.isArray(raw.options) ? raw.options : []).map(function(o) {
-        return String(o == null ? "" : o);
-      }).slice(0, 6);
-      while (f.options.length < 2) f.options.push("");
-      f.max = 1;
-    }
-    if (f.kind === "scale") {
-      f.points = SCALE_POINTS.indexOf(Number(raw.points)) > -1 ? Number(raw.points) : 5;
-      f.lowLabel = String(raw.lowLabel == null ? "Not at all" : raw.lowLabel).slice(0, 40);
-      f.highLabel = String(raw.highLabel == null ? "Completely" : raw.highLabel).slice(0, 40);
-      f.max = 1;
-    }
-    if ((f.kind === "poll" || f.kind === "scale") && raw.hold === true) f.hold = true;
-    return f;
-  }
-  function slideFeedback(slide) {
-    var f = slide && slide.feedback;
-    if (!f || !f.kind) return null;
-    if (!String(f.prompt || "").trim()) return null;
-    if (FEEDBACK_KINDS[f.kind].needsOptions && f.options.filter(function(o) {
-      return String(o).trim();
-    }).length < 2) {
-      return null;
-    }
-    if (f.kind === "scale" && !(String(f.lowLabel || "").trim() && String(f.highLabel || "").trim())) {
-      return null;
-    }
-    return f;
-  }
-  function sampleFeedbackDigest(f) {
-    if (!f || !f.kind) return null;
-    if (f.kind === "poll") {
-      var live = (f.options || []).filter(function(o) {
-        return String(o).trim();
-      });
-      var weights = [7, 11, 4, 2, 5, 1];
-      var counts = live.map(function(_, i) {
-        return weights[i % weights.length];
-      });
-      var total = counts.reduce(function(a, b) {
-        return a + b;
-      }, 0);
-      return { kind: "poll", counts, total, answered: total, players: total, sample: true };
-    }
-    if (f.kind === "scale") {
-      var shape = {
-        3: [2, 5, 9],
-        4: [2, 3, 7, 5],
-        5: [1, 2, 4, 7, 3],
-        6: [1, 2, 3, 6, 4, 2],
-        7: [1, 1, 2, 4, 6, 3, 1]
-      };
-      var bars = shape[f.points || 5] || shape[5];
-      var seen = bars.reduce(function(a, b) {
-        return a + b;
-      }, 0);
-      return {
-        kind: "scale",
-        counts: bars,
-        total: seen,
-        answered: seen,
-        players: seen + 3,
-        sample: true
-      };
-    }
-    if (f.kind === "wordcloud") {
-      return {
-        kind: "wordcloud",
-        words: [
-          { text: "useful", n: 6 },
-          { text: "tricky", n: 4 },
-          { text: "clear", n: 3 },
-          { text: "fast", n: 2 },
-          { text: "dense", n: 2 },
-          { text: "new", n: 1 },
-          { text: "daunting", n: 1 },
-          { text: "fair", n: 1 }
-        ],
-        total: 20,
-        unique: 8,
-        answered: 14,
-        players: 18,
-        sample: true
-      };
-    }
-    return {
-      kind: "brainstorm",
-      items: [
-        { name: "Ana", text: "More worked examples in the seminars" },
-        { name: "Ben", text: "A past paper walkthrough before the deadline" },
-        { name: "Priya", text: "Share the slides the night before" },
-        { name: "Tom", text: "Shorter reading list, more depth on each" }
-      ],
-      total: 4,
-      answered: 4,
-      players: 18,
-      sample: true
-    };
-  }
-
   // src/deck/markdown.js
   function renderMarkdown(deck, lookupGame = (
     /** @type {(id: string) => any} */
@@ -22927,6 +22921,10 @@
   }
 
   // src/model.js
+  for (const a of ACTIVITIES) a.plays = activityPlays(a, (style) => (
+    /** @type {any} */
+    GAME_STYLES[style] || null
+  ));
   var runtime = window;
   var SLIDE_W = 1280;
   var SLIDE_H = 720;

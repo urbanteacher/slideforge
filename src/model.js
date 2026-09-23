@@ -35,6 +35,7 @@ import { normalizeExploration, explorationValue, explorationCurve } from './deck
 import { createBoardRuntime } from "./boards/runtime.js";
 import { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes } from "./activities/catalogue.js";
 import { STAGE_JOBS, stageJob, stripDeclaredJob, stageCopy, parseStageLabel, activityStages, activityBrief } from "./activities/stages.js";
+import { activityPlays } from "./activities/rooms.js";
 import { parsePerson, orgTree, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, SLIDE_TYPES, LAYOUT_GROUPS, INFO_LAYOUTS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, parseInfoLine, formatInfoLine, infoNumber, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
 import { FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest } from "./deck/feedback.js";
 import { renderMarkdown, parseMarkdownDeck } from "./deck/markdown.js";
@@ -62,6 +63,11 @@ import { claimPoints } from "./games/scoring.js";
 import { bingoHasLine } from "./games/bingo.js";
 import { speedPoints, roundSpeedPoints, SPEED_PACE } from "./games/speed.js";
 import { GAME_FORMAT_PRESETS, getShowcaseGame } from "./games/presets.js";
+
+/* Which rooms each activity works in, from its final shape; a game borrows
+   its engine's (activities/rooms.js). Here rather than in the catalogue,
+   which does not know the engines. */
+for (const a of ACTIVITIES) a.plays = activityPlays(a, (style) => /** @type {any} */ (GAME_STYLES)[style] || null);
 
 /**
  * Shapes these functions promise. Declared in `src/types.d.ts`; nothing is

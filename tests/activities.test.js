@@ -407,9 +407,15 @@ test('activity inspector keeps How to run, with its steps, behind the Rules tab'
    the way each game style does. Derived from its shape, so a new activity
    gets an answer without anyone writing one; this holds the answers to the
    shapes they came from, and to the truth about today. */
-test('every activity declares its rooms, with a reason for each', async () => {
-  const { ACTIVITIES } = await import('../src/activities/catalogue.js');
-  const { GAME_STYLES } = await import('../src/games/registry.js');
+test('every activity declares its rooms, with a reason for each', () => {
+  /* Read from the built model, where the rooms are attached. */
+  const vm = require('node:vm');
+  const c = { window: {}, console, localStorage: { getItem: () => null, setItem() {}, removeItem() {} } };
+  vm.createContext(c);
+  vm.runInContext(require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'js', 'model.js'), 'utf8'), c);
+  const SF = c.window.SF;
+  const ACTIVITIES = SF.Activities.ACTIVITIES;
+  const GAME_STYLES = { get: (s) => SF.gameStyle(s) };
   for (const a of ACTIVITIES) {
     assert.ok(a.plays, a.key + ' declares no rooms');
     for (const room of ['phones', 'teams', 'entry', 'solo']) {
@@ -417,7 +423,7 @@ test('every activity declares its rooms, with a reason for each', async () => {
       assert.ok(s && ['yes', 'partial', 'no'].includes(s.status), a.key + ' ' + room);
       assert.ok(String(s.reason || '').length > 10, a.key + ' ' + room + ' has no reason');
     }
-    if (a.target === 'game') assert.equal(a.plays, GAME_STYLES[a.style].plays, a.key + ' borrows its engine\'s');
+    if (a.target === 'game') assert.equal(a.plays, GAME_STYLES.get(a.style).plays, a.key + ' borrows its engine\'s');
     /* A prompt the teacher cannot enter for a room without phones says so. */
     if (a.target === 'feedback') assert.equal(a.plays.entry.status, 'no', a.key);
     if (a.presentation === 'stages') assert.equal(a.plays.phones.status, 'yes', a.key + ' gives phones a job');

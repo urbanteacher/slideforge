@@ -1,8 +1,6 @@
 import { PRESETS, text } from "./presets.js";
 import { GAME_PRESETS } from "./game-presets.js";
 import sourceMeta from "./source-meta.json" with { type: "json" };
-import { GAME_STYLES } from "../games/registry.js";
-import { activityPlays } from "./rooms.js";
 
 /*
  * The activity catalogue: the 54 activities, as the source records them.
@@ -776,11 +774,6 @@ for (const a of ACTIVITIES) {
       { label: 'Timer', type: 'minutes', slide: 'timeLimit', value: p.timer || a.minutes,
         hint: a.target === 'moment' ? 'Starts automatically when presented. Set 0 to leave it untimed.' : 'Minutes for this activity. Adjust to suit your class.' }];
   }
-}
-
-/* Which rooms each one works in, from its final shape (see rooms.js). */
-for (const a of ACTIVITIES) {
-  a.plays = activityPlays(a, (style) => /** @type {any} */ (GAME_STYLES)[style] || null);
 }
 
 /** @param {string} key @returns {Activity | null} */
