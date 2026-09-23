@@ -87,3 +87,10 @@ body{background:#f5f6f2;color:#24372c;font:14px/1.5 system-ui,sans-serif}*{box-s
 .tap-lead{margin:0 0 8px;font-size:14px;color:#6b7768}
 .tap-words{display:flex;flex-wrap:wrap;gap:6px}
 .tap-word{min-height:36px;padding:4px 10px;font-size:17px}
+
+/* Proposals from the phones: named on the desk, anonymous on the wall. */
+.sp-proposals{display:grid;gap:6px}.sp-proposals[hidden]{display:none}
+.sp-proposal{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;background:#f3f6ee}
+.sp-proposal-text{font-size:15px;line-height:1.35}
+.sp-proposal-who{font-size:13px;color:#6b7768}
+.sp-on-table{margin:0;padding:8px 10px;border-radius:10px;background:#36513a;color:#fff;font-weight:650}

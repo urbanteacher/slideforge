@@ -77,6 +77,8 @@
       pendingVerdict:Live.pendingVerdict&&slide&&Live.pendingVerdict.slideId===slide.id
         ?{choice:Live.pendingVerdict.choice,label:(slide.options||[])[Live.pendingVerdict.choice]||''}:null,
       recentSpeakers:Live.recentSpeakers,
+      proposals:proposals(),
+      onTable:Live.proposalOnTable&&slide&&Live.proposalOnTable.slideId===slide.id?Live.proposalOnTable.text:'',
       lastCredit:Live.lastCredit&&slide&&Live.lastCredit.slideId===slide.id?Live.lastCredit:null,
       oralCount:slide ? (Live.oralCounts[slide.gameId] || 0) : 0,
       question:slide && slide.type==='quiz' ? {id:slide.id,question:slide.question,input:slide.input || 'choice',options:slide.options,gaps:slide.input==='fill'?(slide.gapAnswers||[]).length:0,spoken:isSpokenSlide(slide),scoreSpoken:slide.scoreSpoken===true,style:slide.style,range:slide.input==='number'?{min:slide.min,max:slide.max,step:slide.step,unit:slide.unit||''}:null,revealed:!!Live.revealed[slide.id]} : null,
@@ -372,6 +374,19 @@
       }
     }
     else if(data.action==='verdictCancel') { Live.pendingVerdict=null; syncManual(); }
+    else if(data.action==='useProposal') {
+      /* A proposal becomes the one on the table: its author is the speaker,
+         and in Concept Chain its words are the link Accept will add. */
+      var here=SF.Player.deck&&SF.Player.deck.slides[SF.Player.idx];
+      if(!here||!isSpokenSlide(here)||Live.revealed[here.id]) return;
+      var pid=Number(data.pid);
+      if(Live.players.some(function(p){return p.id===pid;})) Live.selectedRecipient={type:'player',id:pid};
+      var said=String(data.text||'').slice(0,160);
+      if((here.style==='conceptchain'||here.conceptChain)&&SF.Player.chainCommand) SF.Player.chainCommand('pending',said);
+      Live.proposalOnTable={slideId:here.id,text:said};
+      paintProposalOnWall(here);
+      syncManual();
+    }
     else if(data.action==='reveal') { revealNow(); syncManual(); }
     else if(data.action==='revealWith') { revealWith(data.choice); }
     else if(data.action==='report') send({t:'report'});
@@ -414,6 +429,37 @@
   Live.pendingVerdict = null;
   Live.recentSpeakers = [];
   Live.lastCredit = null;
+
+  /* ---------------------------------------------- proposals (N3)
+
+     Concept Chain and Connection Maker take proposals from the phones. While
+     an item is up, an anonymous idea box beside the slide collects them —
+     the room sees them arrive, without names. The desk lists them with
+     their authors; "Use this" makes a proposal the link on the table and its
+     author the speaker, so Accept grows the chain and credits them. */
+  Live.proposalPrompt = null;
+  function proposalText(s) {
+    if (s.style === 'connection') {
+      return 'How are \u201c' + (s.itemA || 'A') + '\u201d and \u201c' + (s.itemB || 'B') + '\u201d connected?';
+    }
+    return 'Propose a link from \u201c' + (s.term || s.question || 'this') + '\u201d: what does it connect to, and why?';
+  }
+  function openProposals(s) {
+    if (!Live.active || !s || Live.revealed[s.id]) return;
+    if (!(s.style === 'conceptchain' || s.conceptChain || s.style === 'connection')) return;
+    if (Live.prompt) return;                      // something else is asking the room
+    if (!startCustomPrompt({ kind: 'brainstorm', prompt: proposalText(s), presentAs: 'rail', max: 2 })) return;
+    Live.proposalPrompt = Live.prompt ? Live.prompt.id : null;
+  }
+  function closeProposals() {
+    if (Live.proposalPrompt && Live.prompt && Live.prompt.id === Live.proposalPrompt) endCustomPrompt();
+    Live.proposalPrompt = null;
+  }
+  function proposals() {
+    if (!Live.proposalPrompt || !Live.prompt || Live.prompt.id !== Live.proposalPrompt) return [];
+    var items = (Live.digest && Live.digest.items) || [];
+    return items.slice(0, 12).map(function (it) { return { pid: it.pid, name: it.name, text: it.text }; });
+  }
 
   function recipientName(r) {
     if (!r || r.type === 'room') return '';
@@ -480,6 +526,7 @@
     syncManual();
     /* Heads Up moves straight on to the next term (js/rounds.js). */
     SF.Player.emit('spokenVerdict', { slide: s, choice: choice });
+    closeProposals();
   }
 
   /** Every spoken verdict comes through here. */
@@ -1021,6 +1068,8 @@
         Live.digest = m;
         paintFeedbackPanel();
         SF.Player.syncPresenter();
+        /* Proposals are listed on the desk as they arrive. */
+        if (Live.proposalPrompt === m.id) syncManual();
         break;
 
       case 'error':
@@ -2191,7 +2240,7 @@
     } else if (s.style === 'conceptchain' || s.conceptChain) {
       role = 'discuss';
       headPrompt = 'Concept chain';
-      participation = 'Listen and watch. Propose a link aloud when called on; the teacher records the verdict.';
+      participation = 'Send a link on your phone when the idea box opens, or propose it aloud. The teacher chooses which to weigh.';
     } else if (isSpokenSlide(s)) {
       role = 'discuss';
       headPrompt = s.style === 'headsup' ? 'Heads up' :
@@ -2211,6 +2260,22 @@
       headPrompt = String(s.headPrompt);
     }
     return { style: style, role: role, participation: participation, headPrompt: headPrompt };
+  }
+
+  /* The proposal the teacher is weighing, on the wall, without its author. */
+  function paintProposalOnWall(s) {
+    var node = SF.Player._current;
+    if (!node || !s) return;
+    var said = Live.proposalOnTable && Live.proposalOnTable.slideId === s.id ? Live.proposalOnTable.text : '';
+    var box = node.querySelector('.proposal-on-table');
+    if (!said) { if (box) box.remove(); return; }
+    if (!box) {
+      box = el('div', 'proposal-on-table');
+      (node.querySelector('.pad') || node).appendChild(box);
+    }
+    box.textContent = '';
+    box.appendChild(el('span', 'pot-label', 'On the table'));
+    box.appendChild(el('span', 'pot-text', '\u201c' + said + '\u201d'));
   }
 
   function paintOralCount() {
@@ -2412,6 +2477,15 @@
     if (Live.pendingVerdict && (!s || Live.pendingVerdict.slideId !== s.id)) Live.pendingVerdict = null;
     if (s && s.style !== 'headsup' && isSpokenSlide(s)) Live.selectedRecipient = { type: 'room' };
     if (isSpokenSlide(s)) paintOralCount();
+    /* Proposals belong to the item they were made for. */
+    if (Live.proposalOnTable && (!s || Live.proposalOnTable.slideId !== s.id)) Live.proposalOnTable = null;
+    if (Live.proposalPrompt) closeProposals();
+    if (s && (s.style === 'conceptchain' || s.conceptChain || s.style === 'connection') && !Live.revealed[s.id]) {
+      setTimeout(function () {
+        var now = SF.Player.wallSlide ? SF.Player.wallSlide() : (SF.Player.deck && SF.Player.deck.slides[SF.Player.idx]);
+        if (now && now.id === s.id) openProposals(s);
+      }, 0);
+    }
 
     /* Feedback takes the rail while its slide is up; the scoreboard resumes
        on any slide that has no prompt. */

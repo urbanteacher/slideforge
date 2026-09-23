@@ -948,7 +948,9 @@ function feedbackDigest(room) {
   for (const [id, list] of all) {
     const who = room.players.get(id);
     list.forEach((text, i) => {
-      items.push({ name: who ? who.name : '', text: String(text), seq: (id * 10) + i });
+      /* The id goes to the host only (this digest is never broadcast), so
+         the desk can credit a proposal's author — Concept Chain, Connection. */
+      items.push({ name: who ? who.name : '', pid: id, text: String(text), seq: (id * 10) + i });
     });
   }
   items.sort((a, b) => b.seq - a.seq);

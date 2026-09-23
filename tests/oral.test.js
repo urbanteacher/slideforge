@@ -310,3 +310,24 @@ test('a phone hears who a spoken credit went to: its own, its team, never anothe
   assert.equal(a.oralPoints,1000,'on the quiz scale');
   assert.ok(!JSON.stringify(c).includes('Ada'),'no other student is named to a phone');
 });
+
+test('a proposal reaches the host with its author, and no phone learns who wrote it', async t => {
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sf-proposals-'));
+  const port=await freePort(), relay=await start(port,dir), sockets=[];
+  t.after(async()=>{await stop(relay);sockets.forEach(s=>s.socket.close());fs.rmSync(dir,{recursive:true,force:true});});
+  const host=await connect(port);sockets.push(host);
+  host.send({t:'host',title:'Chain',mode:'individual'});const room=await host.next('hosted');
+  const ada=await connect(port),ben=await connect(port);sockets.push(ada,ben);
+  ada.send({t:'join',pin:room.pin,name:'Ada'});ben.send({t:'join',pin:room.pin,name:'Ben'});
+  await ada.next('joined');await ben.next('joined');
+  const roster=await host.until('players',m=>m.list.length===2);
+  const adaId=roster.list.find(p=>p.name==='Ada').id;
+  host.send({t:'begin'});
+  host.send({t:'prompt',id:'quick:1',kind:'brainstorm',prompt:'Propose a link from “energy”',max:2});
+  await ada.next('prompt');await ben.next('prompt');
+  ada.send({t:'reply',text:'Energy connects to food chains because producers store it'});
+  const digest=await host.until('responses',m=>m.items&&m.items.length===1);
+  assert.equal(digest.items[0].pid,adaId,'the desk can credit the author');
+  assert.equal(digest.items[0].name,'Ada');
+  assert.equal(ben.has('responses'),false,'the digest is the host’s alone');
+});

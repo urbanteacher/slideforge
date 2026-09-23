@@ -645,3 +645,13 @@
 .layout-quiz.is-fill .fill-verdict { margin-top: 40px; font-size: 24px; }
 .layout-quiz.is-fill .fill-verdict:empty { display: none; }
 @keyframes sf-fill-land { from { transform: translateY(-24px); opacity: 0; } }
+
+/* The proposal the teacher is weighing (Concept Chain, Connection Maker). */
+.layout-quiz .proposal-on-table {
+  position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 3;
+  display: flex; align-items: baseline; gap: 12px; max-width: 80%;
+  padding: 12px 22px; border-radius: 16px; background: var(--s-fg); color: var(--s-bg);
+  animation: sf-lock-in .45s cubic-bezier(.3,0,.2,1);
+}
+.layout-quiz .proposal-on-table .pot-label { font-size: 14px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; opacity: .75; white-space: nowrap; }
+.layout-quiz .proposal-on-table .pot-text { font-size: 26px; font-weight: 700; }

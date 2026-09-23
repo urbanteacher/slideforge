@@ -383,9 +383,9 @@
       players: 'Class; teacher Accepts for +1.',
       scoring: 'Accept credits the speaker’s team one question’s worth · decline nothing. Individual play counts.',
       howToPlay: [
-        'Two concept tiles appear.',
-        'A learner explains the connection aloud.',
-        'Teacher accepts a strong bridge or asks for another.'
+        'Two concept tiles appear. Phones send the bridge they see; the room sees them arrive, without names.',
+        'Use this on the desk puts one on the table and makes its author the speaker, who explains it aloud.',
+        'Accept a strong bridge (credited to the speaker’s team) or ask for another.'
       ]
     },
     'question-cube': {
@@ -428,9 +428,9 @@
       players: 'Teams or individual; teacher Accepts.',
       scoring: 'An accepted link credits the speaker’s team one question’s worth · timeout nothing. Individual play counts.',
       howToPlay: [
-        'Start from the given concept.',
-        'Propose the next link and justify it aloud.',
-        'Host types the link and Accepts; the chain grows on the wall.'
+        'Start from the given concept. Phones send proposed links; they appear beside the slide without names.',
+        'On the desk, Use this puts a proposal on the table and makes its author the speaker. They justify it aloud.',
+        'Accept grows the chain on the wall and credits the speaker’s team; Reject asks for another.'
       ]
     },
     /* Bare engines (blank quiz studio) */
