@@ -20,9 +20,9 @@ the "typed layouts, not a canvas" rule:
    several of them the same action more than once.
 2. **Keyboard behaviour that surprises people from other tools.** Escape threw
    away typing and didn't close the settings sheets (both fixed 23 September).
-3. **Nothing to help people find commands.** There's no command palette and no
-   easy way into the shortcut sheet from the editor, so the good shortcuts
-   that do exist stay hidden.
+3. **Nothing to help people find commands.** There was no command palette and
+   no easy way into the shortcut sheet from the editor, so the good shortcuts
+   stayed hidden. Both exist as of 23 September: ⌘K and `?`.
 
 ## 2. Bugs found on the way (reproduced)
 
@@ -34,8 +34,9 @@ the "typed layouts, not a canvas" rule:
 | B4 | **Two slide numbers.** The rail says `2 / 98`; the show and the slide footer say `2 / 110`. Games expand into extra show steps, so from slide 79 on the two numbers disagree. | rail vs `Player` numbering | "Go to slide 85" means different slides in the editor and on the wall. |
 | B5 | *(observed, not traced)* After clicking into a heading and pressing Escape with no change, **Undo lights up**. | `onCancel: touched()` in `js/editor.js:439` | This adds an Undo step for nothing: the next Cmd+Z appears to do nothing. |
 
-**Status, 23 September:** B1, B2, B3 and B5 are fixed. B4 waits on a decision
-(UX-04 in [ux-backlog.md](ux-backlog.md)).
+**Status, 23 September:** all five are fixed. B4 went the way a rule already in
+`js/render.js` points: the number on a slide is the room's number, games counted
+as their steps, in the editor and on the wall alike.
 
 B1 and B2 are the ones to fix first. They are small, and together they make up
 most of the "this feels off" reaction that people from other tools will have.

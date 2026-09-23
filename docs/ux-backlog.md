@@ -26,19 +26,19 @@ what was removed.
 | UX-01 | Escape discards text typed on the slide | P0 | S | **Done** 23 Sep |
 | UX-02 | Modals ignore Escape, have no focus trap and no dialog role | P0 | S–M | **Done** 23 Sep · `.modal` sheets only; the `<dialog>` half was a false positive |
 | UX-03 | Editor hint "Add points in the inspector" reaches the projector | P0 | S | **Done** 23 Sep · with CA-30 |
-| UX-04 | Rail and show number slides differently (98 vs 110) | P1 | S–M | To do |
+| UX-04 | Rail and show number slides differently (98 vs 110) | P1 | S–M | **Done** 23 Sep · the room's number, per the existing rule in render.js |
 | UX-05 | Empty edit + Escape adds an Undo step that does nothing | P1 | S | **Done** 23 Sep · cause found: cancel created an empty `formatting` table |
 | UX-06 | Clicking the fading HUD advances the slide | P1 | S | **Done** 23 Sep · a 250ms race, see notes |
 | **Phase 2 — finding commands** |||||
-| UX-10 | Command palette (⌘K) | P1 | M | To do |
+| UX-10 | Command palette (⌘K) | P1 | M | **Done** 23 Sep |
 | UX-11 | `?` shortcut sheet in the editor and the show | P1 | S | **Done** 23 Sep · `?` already worked in the show; the editor now has it, with its own keys |
 | UX-12 | Use one word for the right-hand panel everywhere | P2 | S | Partly done · render hints now say "Design & content" |
 | **Phase 3 — fewer controls** |||||
-| UX-20 | Move the panel's 6 slide actions into a right-click menu | P1 | M | To do |
-| UX-21 | One **Present ▾** split button instead of four | P1 | S | To do |
+| UX-20 | Move the panel's 6 slide actions into a right-click menu | P1 | M | **Done** 23 Sep · 4 moved; Undo/Redo stay |
+| UX-21 | One **Present ▾** split button instead of four | P1 | S | **Done** 23 Sep · Host live stays separate |
 | UX-22 | One route to deck settings, not three | P2 | S | To do |
 | UX-23 | One route to insert things, not four | P2 | M | To do |
-| UX-24 | Say where the work is saved in words, not with a dot | P1 | S | Partly done · words at ≥1500px, click exports everywhere; below 1500px still a dot (needs UX-20/21) |
+| UX-24 | Say where the work is saved in words, not with a dot | P1 | S | **Done** 23 Sep · words down to 1080px (measured), a labelled dot below |
 | **Phase 4 — editing on the slide** |||||
 | UX-30 | Outline editable blocks on hover | P2 | S | To do |
 | UX-31 | Make it clear the panel field and the slide are one text | P3 | S | To do |
@@ -50,14 +50,14 @@ what was removed.
 | UX-52 | Pacing timer in the presenter view | P2 | S–M | To do |
 | UX-53 | `W` for a white screen | P3 | S | **Clash** · `W` is already "Who answered what"; pick another key |
 | **Phase 7 — the room** |||||
-| UX-60 | Hide the answer bars until the reveal | P1 | M | To do · shared files |
+| UX-60 | Hide the answer bars until the reveal | P1 | M | **Done** 23 Sep · a game setting; one line in live.js |
 | UX-61 | Lock all phones, now or on a countdown | P2 | M | To do · shared files |
 | UX-62 | Show the teacher who has left the tab | P2 | M | To do · shared files |
 | UX-63 | Lobby before the start, with optional generated nicknames | P3 | M | Needs a decision |
 | UX-64 | Student-paced mode with its own code | P2 | L | Needs a decision |
 | UX-65 | Per-student takeaway: the slides plus that student's answers | P3 | M–L | Needs a decision |
 | **Phase 8 — accessibility** |||||
-| UX-70 | Give icon-only controls an `aria-label`, not just a `title` | P1 | S–M | Partly done · the 13 in `index.html`; buttons built in JS not yet audited |
+| UX-70 | Give icon-only controls an `aria-label`, not just a `title` | P1 | S–M | **Done** 23 Sep |
 | UX-71 | Raise type under 12px in the editor | P2 | S–M | To do |
 | UX-72 | Keyboard-only pass through every modal and panel | P2 | M | To do |
 
@@ -73,8 +73,9 @@ what was removed.
    [improvements-backlog #11](improvements-backlog.md).
 3. **UX-65 takeaways.** A takeaway stores one student's answers alongside the
    deck. Where does it live, and for how long?
-4. **UX-04 numbering.** Which number is the true one: the authored slide, or
-   the step in the show? See the options under UX-04.
+4. ~~**UX-04 numbering.**~~ Settled by a rule already in `js/render.js`: "the
+   room's count is the true one". Revisit only if you want rail numbers and
+   slide numbers to be the same thing.
 
 ---
 
@@ -380,7 +381,7 @@ Three read-only reviews, running in parallel, covered:
 | CA-11 | The same game embedded twice (⌘D or re-insert) arrives already answered and revealed, and the reports merge the two runs | live | P1 | S–M | **Done** 23 Sep · slide ids; reports still group by game |
 | **The canvas core** ||||||
 | CA-20 | Regions are never bounds-checked; blocks past row 16 or col 12 go off the slide or collapse to one cell | lattice | P1 | S | **Done** 23 Sep · invalid values only; past row 16 is by design |
-| CA-21 | Composition and regions measure in different frames, so blocks jump when Layout opens on a composed slide | lattice × compositions | P1 | M–L | Plausible |
+| CA-21 | Composition and regions measure in different frames, so blocks jump when Layout opens on a composed slide | lattice × compositions | P1 | M–L | **Not reproduced** · measured on six composed slides, see notes |
 | CA-22 | `layout-slots.js` resolves the composition differently from the renderer, which leaves slots that are never drawn but still block placement | lattice × compositions | P1 | S | **Done** 23 Sep |
 | CA-23 | The composition slot tables use keys that never match a block (`cp-heading`, `cp-prompt` and others) | lattice × compositions | P2 | S | Confirmed |
 | CA-24 | Regions bring back the accent bar that compositions hide (`.pad >` selector) | lattice × CSS | P2 | S | Confirmed |
@@ -590,6 +591,58 @@ Three read-only reviews, running in parallel, covered:
   "Close — Settings" and so on. Buttons built in JavaScript are not audited yet.
 
 **Suites:** `npm test` 465/465, `visual:check` 642/642, smoke 50/50.
+
+## 23 September 2026: P1 completed
+
+- **UX-10: command palette, ⌘K.** `js/palette.js` owns no actions. The editor
+  lists its own through `commands()`, each calling the function its button or
+  shortcut calls. The shell adds header and File-menu actions by clicking the
+  real button, and offers one only if that button exists, is enabled and
+  belongs to the current studio. Ranked by subsequence with word starts
+  weighted; a bare number offers "Go to slide N"; slides are searchable by
+  title. It's a native `<dialog>`, so Escape and focus come free. Four tests on
+  the ranking; checked in the browser: open, type "block", Enter opens the block
+  view.
+- **UX-21: Present ▾.** Present is the main button; Teacher Presenter and
+  Rehearse moved into its menu with their ids kept. Host live stays its own
+  button, because the room is the product. The menu closes on a choice, an
+  outside click or Escape. The `rehearse` smoke now opens the menu first, as a
+  person would.
+- **UX-20: slide menu.** Right-click a slide in the rail or the canvas, or press
+  Shift+F10 or the menu key on a focused row. Copy, Paste, Duplicate and Delete
+  left the panel for it, replaced by one **⋯ Slide** button that opens the same
+  menu, because a tablet has no right-click. **Undo and Redo stay** in the
+  panel: Google keeps them on its toolbar, and the smokes drive them. Text being
+  typed into keeps the browser's own menu.
+- **UX-24.** Measured the header at 1024, 1100, 1180, 1200, 1280 and 1440px with
+  a long folder chip: the words fit down to 1100 and wrap at 1024. The dot-only
+  breakpoint moved from 1500px to 1080px.
+- **UX-70.** The one JavaScript-built icon button without a label (a poll
+  option's ×) has one; the rest already had them.
+- **UX-04, decided.** `js/render.js` already said, about hidden slides, "the
+  room's count is the true one, so the editor is made to agree with it". I had
+  recommended the opposite without having read that. New `SF.showNumber` counts
+  a game as the steps it plays as, with step counts cached per game version, so
+  the editor footer and the wall agree. Checked: 82 / 109 on the editor, the wall
+  and the HUD for the same slide. Rail row numbers are unchanged; `slide:12`
+  links use them.
+- **UX-60.** New game setting, **Hide the room's answers until the reveal**,
+  stamped on each compiled question as `holdResults`. The wall keeps "N of M
+  answered" and holds the bars; `Player.releaseTally()` draws them at the
+  reveal. One line in `js/live.js`. Off by default, so existing games play as
+  before. Checked in the browser with an in-memory game: held bars stayed off
+  and appeared at the reveal, live bars behaved as before.
+- **CA-21, not reproduced.** Tested on six composed slides, including the
+  `ballot` the review named: on each, recorded every block's position, turned
+  Arrange on, and measured the jump. The old code and a body-frame version gave
+  identical numbers: 0px sideways and 0px in width on `ballot`, 18px vertically,
+  which is snapping to half a row; 36–55px on the others, which is snapping to
+  98px columns. The frame mismatch is real in the code but moves nothing
+  measurable, so the change was reverted rather than shipped. Related and still
+  open: the fit check counts 36px rows even where a composition's body has
+  shorter ones.
+
+**Suites:** `npm test` 471/471.
 
 ## Log
 

@@ -52,21 +52,21 @@ coordinating rather than starting cold.
 | CA-08 | ~~Undo keeps a whole-deck copy per keystroke (60 max)~~ [→](ux-backlog.md) | M | **Done** 23 Sep |
 | CA-11 | ~~Same game embedded twice arrives answered and revealed~~ [→](ux-backlog.md) | S–M | **Done** 23 Sep |
 | CA-20 | ~~Regions never bounds-checked~~ [→](ux-backlog.md) | S | **Done** 23 Sep · invalid values only |
-| CA-21 | Composition and regions measure in different frames; blocks jump [→](ux-backlog.md) | M–L | To confirm · P1 |
+| CA-21 | Composition and regions measure in different frames [→](ux-backlog.md) | M–L | Not reproduced · measured |
 | CA-22 | ~~`layout-slots.js` resolves the composition differently from the renderer~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | CA-25 | ~~Artwork drags at the wrong speed on 4:3 and 16:10 decks~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | CA-40 | ~~⌘B/I/U do nothing when typing on the slide~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | CA-41 | ~~Enter that confirms an IME candidate ends the edit~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
-| UX-04 | Rail and show number slides differently (98 vs 110) [→](ux-backlog.md) | S–M | To do · P1 · needs a decision |
+| UX-04 | ~~Rail and show number slides differently~~ [→](ux-backlog.md) | S–M | **Done** 23 Sep · the room's number |
 | UX-05 | ~~Empty edit + Escape adds an Undo step that does nothing~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | UX-06 | ~~Clicking the fading HUD advances the slide~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
-| UX-10 | Command palette (⌘K) [→](ux-backlog.md) | M | To do · P1 |
+| UX-10 | ~~Command palette (⌘K)~~ [→](ux-backlog.md) | M | **Done** 23 Sep |
 | UX-11 | ~~`?` should open the shortcut sheet in the editor~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
-| UX-20 | Move the panel's 6 slide actions into a right-click menu [→](ux-backlog.md) | M | To do · P1 · after UX-10 |
-| UX-21 | One Present ▾ split button instead of four [→](ux-backlog.md) | S | To do · P1 |
-| UX-24 | Say "Saved in this browser" in words, not a dot [→](ux-backlog.md) | S | Partly done · a dot below 1500px |
-| UX-60 | Hide the answer bars until the reveal [→](ux-backlog.md) | M | To do · P1 · shared files |
-| UX-70 | `aria-label` on icon-only controls [→](ux-backlog.md) | S–M | Partly done · `index.html`; JS-built buttons next |
+| UX-20 | ~~Slide actions into a right-click menu~~ [→](ux-backlog.md) | M | **Done** 23 Sep · Undo/Redo stay |
+| UX-21 | ~~One Present ▾ split button~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
+| UX-24 | ~~Say "Saved in this browser" in words~~ [→](ux-backlog.md) | S | **Done** 23 Sep · dot below 1080px |
+| UX-60 | ~~Hide the answer bars until the reveal~~ [→](ux-backlog.md) | M | **Done** 23 Sep |
+| UX-70 | ~~`aria-label` on icon-only controls~~ [→](ux-backlog.md) | S–M | **Done** 23 Sep |
 | CA-23 | Composition slot keys never match a block [→](ux-backlog.md) | S | To do · P2 |
 | CA-24 | Regions bring back the accent bar that compositions hide [→](ux-backlog.md) | S | To do · P2 |
 | CA-26 | Undo or redo closes Layout and Artwork [→](ux-backlog.md) | S | To do · P2 |
@@ -105,11 +105,11 @@ coordinating rather than starting cold.
 | 15 | Quiz timer: 20s runs on the learner's device; a slow look-up loses the question |
 | 16 | Keywords dim fades term and definition together; term-stays-bright is a different rule |
 | 17 | Anscombe plot styling — plain, or matched to a textbook's rendering |
-| UX-04 | Slide numbering: the authored slide (game steps as `78.3`) or the show step? Recommend the authored slide |
+| UX-04 | ~~Slide numbering~~ — settled by render.js's existing rule: the room's count |
 | UX-64 | Student-paced (homework) mode at all? Depends on sessions surviving a deploy |
 | UX-63 | Real names in the room — is that ever a problem? Same question as #11 |
 | UX-65 | Takeaways store one student's answers — where, and for how long? |
-| CA-21 | One owner per slide for placement: do regions turn off the composition body, or do compositions declare lattice slots? Decide before adding compositions |
+| CA-21 | One owner per slide for placement — not reproduced in measurement; revisit only if a composition is seen to jump |
 
 ---
 
