@@ -36,7 +36,7 @@ order.
 
 | ID | Item | Size | Status |
 |---|---|---|---|
-| GA-01 – GA-28 | **Games to a premium standard**: 28 items in eight waves. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). **Start with wave 0:** GA-01 Word Reveal per-answer scoring · GA-02 Bowl per-cell value · GA-03 delete the preset copy in `js/studio.js` · GA-04 teacher entry records order and tap · GA-05 refused entries say so | S–L | To do |
+| GA-09 – GA-28 | **Games to a premium standard**: Waves 0–1 (GA-01–08) are done. Next: the draw and round clock, then mechanic-specific rebuilds. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | To do |
 | RP-01 | Rehearse with a class of 30 (and 120) | S | To do |
 | RP-02 | Lecture-scale defaults (100+): standings off, distribution on | S | To do |
 | RP-03 | A packed, centred word cloud with stable positions | M | To do |
@@ -1110,14 +1110,14 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 
 | ID | Wave | Item | Size | Status |
 |---|---|---|---|---|
-| GA-01 | 0 | Word Reveal scores each answer by the letters showing when *it* arrived, not at the reveal | S | To do · verified bug |
-| GA-02 | 0 | Quiz Bowl takes each cell's own value, not Q1's | S | To do |
-| GA-03 | 0 | Delete the second copy of the game presets in `js/studio.js` | S | To do |
-| GA-04 | 0 | Teacher entry records a Ranking order (key sequence) and a Spot the Error tap (click the word) (E1) | S | To do · verified bug |
-| GA-05 | 0 | A refused teacher entry says so (`manualError`), instead of being dropped (E2) | S | To do · verified bug |
-| GA-06 | 1 | **Verdict recipient (N1)** in teacher entry, fed by the name picker (E4). Spoken formats score the speaker's team, and count in individual play (audit §6) | M | To do · fixes four broken games |
-| GA-07 | 1 | Spoken-format phones get a "Listen and watch" job card, not verdict pads | S | To do |
-| GA-08 | 1 | Each style declares its rooms, `plays: {phones, teams, entry, solo}`; library badges; the contract test enforces it (E7) | S | To do |
+| GA-01 | 0 | Word Reveal scores each answer by the letters showing when *it* arrived, not at the reveal | S | **Done** 23 Sep · relay timestamp |
+| GA-02 | 0 | Quiz Bowl stores the target in game settings, while each cell keeps its own point value | S | **Done** 23 Sep · old saves migrate |
+| GA-03 | 0 | Delete the second copy of the game presets in `js/studio.js` | S | **Done** 23 Sep |
+| GA-04 | 0 | Teacher entry records a Ranking order (key sequence) and a Spot the Error tap (click the word) (E1) | S | **Done** 23 Sep · relay tested |
+| GA-05 | 0 | A refused teacher entry says so (`manualError`), instead of being dropped (E2) | S | **Done** 23 Sep · row-level error |
+| GA-06 | 1 | **Verdict recipient (N1)** in teacher entry, fed by the name picker (E4). Spoken formats score the speaker's team, and count in individual play (audit §6) | M | **Done** 23 Sep · selected speaker/team and relay tested |
+| GA-07 | 1 | Spoken-format phones get a "Listen and watch" job card, not verdict pads | S | **Done** 23 Sep |
+| GA-08 | 1 | Each style declares its rooms, `plays: {phones, teams, entry, solo}`; library badges; the contract test enforces it (E7) | S | **Done** 23 Sep · 25 styles covered |
 | GA-09 | 2 | **The draw (N2)**: a random unused pick from a pool, animated, "N left" | M | To do |
 | GA-10 | 2 | **Round clock (N4)**: one clock for a run of items, on the stages clock | S | To do |
 | GA-11 | 3 | Fill in the Blanks → *Fill the gaps*: a word bank tapped into slots, heat per gap | M | To do |
@@ -1271,6 +1271,18 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** GA-06–08 (wave 1) completed. Spoken verdicts now
+  credit a selected team only; individual play counts accepted explanations
+  unless the teacher explicitly enables scoring. Spoken phones receive a
+  listen/watch card, and every game style declares phone, team, teacher-entry
+  and solo support shown in the format library. The room contract has a test.
+  `npm test`: 487/487 passing; the live server was restarted.
+- **23 Sep 2026.** GA-01–05 (wave 0) completed. Word Reveal scores each
+  answer at its relay timestamp; Bowl's target is a game setting with legacy
+  saves migrated; Studio reads the model's single preset bank. Teacher entry
+  now records Ranking permutations and Spot word taps, and rejected entries
+  show a row-level reason. `npm test`: 484/484 passing. The local server was
+  restarted after its relay changed.
 - **22 Sep 2026.** Backlog created from the [UX deep dive](ux-deep-dive.md).
   UX-01 to UX-04 were reproduced in the browser. UX-05 and UX-06 were seen
   once and not traced.

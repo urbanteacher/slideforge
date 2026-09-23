@@ -31,7 +31,7 @@ A style is one file in `src/games/`. It is registered in nine places:
 4. `presets.js`;
 5. `types.d.ts`;
 6. the `src/model.js` export;
-7. the preset deferral in `js/studio.js`;
+7. the activity catalogue card in `js/studio.js` (the starter bank itself stays in `presets.js`);
 8. `tests/game-style-contract.test.js`;
 9. `js/playbook.js`.
 

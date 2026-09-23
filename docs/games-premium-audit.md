@@ -1,6 +1,6 @@
 # Games to a premium standard: audit, redesigns and the shared kit — 23 September 2026
 
-Two things now meet a high standard: one game (**Spot the Error**) and one
+Two things set the high standard: one game (**Spot the Error**) and one
 activity (**Think-Pair-Share**). This audit measures all 27 game formats
 against the standard those two set. It says what each game needs, and
 which existing components it can be rebuilt from, so no game reinvents
@@ -26,20 +26,21 @@ From the two flagships. A game is premium when it passes all nine. (P9 was added
 | **P5** | **The phone does the verb** | Tap, drag, place or type: the same shape as the wall. | Spot's tap-the-word; TPS stage jobs. |
 | **P6** | **The teacher drives from the desk** | Every control the game needs exists in the presenter view, not only on the projected wall. | TPS +30s on the desk; stage moves on Next. |
 | **P7** | **Fair, legible scoring** | Points reach the person who earned them, for the thing they did. Counts and accuracy are never confused with points. | Spot: points on a find, no speed bonus; the pane labels its column. |
-| **P9** | **Plays in every room** | The game states how it runs with individual phones, with teams, with learners who have no device, and for one learner alone. Teacher entry can record every kind of answer it asks for. | See section 7. Spot fails this today: teacher entry cannot record a tap. |
+| **P9** | **Plays in every room** | The game states how it runs with individual phones, with teams, with learners who have no device, and for one learner alone. Teacher entry can record every kind of answer it asks for. | See section 7. Spot records a tap in teacher entry and declares its room support. |
 | **P8** | **Authored and rehearsed safely** | The editor shows what the phones will get and `problems()` catches mistakes. The rehearsal class behaves like a real one, lures included. It is tested through the relay harness. | Spot's editor preview, lure-seeking demo class and relay test. |
 
 ## 2. The scorecard
 
-✓ passes · ◐ partly · ✗ fails. The tier follows from the row.
-- **Premium:** all eight.
+✓ passes · ◐ partly · ✗ fails. P9 is covered in section 7; the other eight
+tests are in the table. The tier follows from the row.
+- **Premium:** all nine.
 - **Solid:** P1–P3 pass.
 - **Thin:** P1 fails.
 - **Broken:** P7 fails in a way that gives wrong results.
 
 | Format | Engine | P1 | P2 | P3 | P4 | P5 | P6 | P7 | P8 | Tier |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **Spot the Error** | `spot` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | **Premium** except P9 (teacher entry can't record a tap yet, E1); the desk has no heat-map preview |
+| **Spot the Error** | `spot` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | Near-premium: P9 is declared; the desk still has no heat-map preview |
 | Ranking Challenge | `order` | ✓ | ◐ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid |
 | Horse Race | `race` | ✓ | ✓ | ◐ | ◐ | ◐ | ✗ | ✓ | ◐ | Solid, but lanes are wall-only |
 | Boss Battle | `boss` | ✓ | ✓ | ◐ | ✓ | ◐ | ✗ | ✓ | ◐ | Solid, but Hit/Miss is wall-only |
@@ -47,10 +48,10 @@ From the two flagships. A game is premium when it passes all nine. (P9 was added
 | Memory Match | `memorymatch` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ◐ | ✓ | Solid (board) |
 | Knowledge Flip | `knowledgeflip` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ◐ | ✓ | Solid (board) |
 | Bingo | `bingo` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ✓ | ✓ | Solid (board) |
-| Quiz Bowl | `bowl` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | ✗ | ◐ | **Broken**: target from Q1 only; a verdict pays everyone |
+| Quiz Bowl | `bowl` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | ✓ | ◐ | Solid: a board-cell award goes to one team; the game-level target is fixed |
 | Low-Stakes Quiz | `lowstakes` | ✓ | ✓ | ✓ | ✓ | n/a (paper) | ◐ | ✓ | ✓ | Solid (paper by design) |
 | Definition Challenge | `definition` | ✓ | ✓ | ◐ | ✓ | ✓ | ✗ | ✓ | ◐ | Solid, but "Ask" is wall-only |
-| Word Reveal | `wordreveal` | ✓ | ✓ | ◐ | ✓ | ◐ | ◐ | ✗ | ◐ | **Broken**: everyone scores by the letters showing at the reveal |
+| Word Reveal | `wordreveal` | ✓ | ✓ | ◐ | ✓ | ◐ | ◐ | ✓ | ◐ | Solid: per-answer scoring fixed; reveal polish remains |
 | Emoji Guess | `emoji` | ◐ | ✓ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, but the hint is shown from the start, which the blurb contradicts |
 | Beat the Clock | `speed` | ◐ | ◐ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Thin: the clock restarts per question, so there is no clock to beat |
 | True/False Showdown | `truefalse` | ◐ | ◐ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Thin: a two-option quiz, no showdown |
@@ -59,44 +60,45 @@ From the two flagships. A game is premium when it passes all nine. (P9 was added
 | Time Traveler | `type` | ✗ | ◐ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: typed recall, no time |
 | Odd One Out | `oddone` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | n/a | ◐ | Thin on phones: they sit idle |
 | Compare & Contrast | `compare` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | n/a | ◐ | Thin on phones: they sit idle |
-| Heads Up | `headsup` | ◐ | ✓ | ✗ | ✓ | ✗ | ◐ | ✗ | ◐ | **Broken**: one Correct pays the whole room; phones get verdict pads |
-| Spin & Explain | `spinexplain` | ✗ | ◐ | ✗ | ✓ | ✗ | ◐ | ✗ | ◐ | **Broken**: no spin (authored order); a verdict pays everyone |
-| Connection Maker | `connection` | ◐ | ◐ | ✗ | ✓ | ✗ | ◐ | ✗ | ◐ | **Broken**: Accept pays everyone; no map grows |
-| Concept Chain | `conceptchain` | ✓ | ✓ | ◐ | ✓ | ✗ | ✗ | ✗ | ◐ | **Broken**: one link per start term; the link is typed on the wall; Accept pays everyone |
+| Heads Up | `headsup` | ◐ | ✓ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: a counted round now has a chosen speaker; the 60-second round remains |
+| Spin & Explain | `spinexplain` | ✗ | ◐ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: selected-team credit is fair; the spinner is still missing |
+| Connection Maker | `connection` | ◐ | ◐ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: selected-team credit is fair; no map grows |
+| Concept Chain | `conceptchain` | ✓ | ✓ | ◐ | ✓ | ✗ | ✗ | ✓ | ◐ | Solid: selected-team credit is fair; the link is still typed on the wall |
 | Random Challenge | `randomchallenge` | ✗ | ◐ | ✗ | ✓ | ✗ | ◐ | ◐ | ◐ | Thin: not random |
 | Question Cube | brainstorm prompt | ✗ | ✗ | ✗ | ✓ | ◐ | ◐ | n/a | ◐ | Thin: no cube, no pool |
 | Memory Maze | — | — | — | — | — | — | — | — | — | Disabled; out of scope |
 
 **Totals:**
-- 1 premium.
-- 10 solid.
-- 9 thin.
-- 6 broken.
+- 0 fully premium; Spot the Error is near-premium.
+- 13 solid.
+- 12 thin.
+- 0 broken by wrong-result scoring.
 - 1 disabled.
 
-Four of the six broken games fail for one reason: a host verdict pays the
-whole room. Word Reveal scores at the wrong moment, and Bowl has both
-problems. They come first (section 5).
+The wrong-result scoring cases are fixed. That does not make the spoken games
+premium: their missing draws, clocks and proposal mechanics are separate work
+in waves 2–4. Bowl's board already awarded each cell to one selected team;
+its game-level target was the actual missing setting.
 
 ### Verified in code for this audit
 
-- **A host verdict pays everyone.** `js/live.js` `hostVerdictGains` gives
-  every player in `Live.players` the same points, and `judgeGains` routes
-  Heads Up, Spin & Explain, Connection, Concept Chain, Bowl and the claim
-  formats through it. One student explains well and all thirty score.
-- **Word Reveal scores by the reveal, not the answer.** `wordRevealGains`
-  reads `Live.dripShown` once, when marking. Guessing early earns what
-  guessing late earns, which defeats the game.
+- **Spoken verdicts have a recipient.** `js/live.js` sends the selected
+  speaker or team with the verdict. The relay credits that team alone;
+  individual play counts accepted explanations unless *Score spoken answers*
+  is enabled. Heads Up and Random Challenge remain count-only. Spoken phones
+  get a listen/watch card rather than verdict pads. Bowl is a board-cell award,
+  not part of this spoken verdict path.
+- **Word Reveal is now scored at answer time.** The relay's `elapsedMs` for
+  each response determines its letter count and points. The host's reveal
+  position is only a fallback for entries without a timestamp.
 
 The other defects in the table come from the 23 September inventory and
 were not re-checked for this audit:
-- Bowl's target comes from Q1 only.
 - Concept Chain allows one link per start term.
 - The Emoji hint is on from the start.
 - `dripInterval: 4`.
 - Boss Hit/Miss, the race lanes, the chain input and Definition's "Ask" are
   all wall-only.
-- `js/studio.js` keeps a second copy of the game presets.
 
 ## 3. The shared kit: what exists, and who can use it
 
@@ -129,7 +131,7 @@ Built for the flagships and the room pane. **Reuse before you write.**
 4. `presets.js`;
 5. `types.d.ts`;
 6. the `src/model.js` export;
-7. the `js/studio.js` preset deferral;
+7. the activity catalogue card in `js/studio.js` (the starter bank stays in `presets.js`);
 8. `tests/game-style-contract.test.js`;
 9. the playbook.
 
@@ -139,7 +141,7 @@ Each of these would otherwise be written three or four times.
 
 | # | Missing component | Why once | Used by | Size |
 |---|---|---|---|---|
-| **N1** | **Verdict recipient**: the desk marks *who* spoke (a player, a team, or "the room") before Correct/Accept | This is the single cause of four broken games. Built on the roster the desk already has. | Heads Up, Spin & Explain, Connection, Concept Chain, Random Challenge, Bowl | M |
+| **N1 · done** | **Verdict recipient**: the desk marks *who* spoke (a player, a team, or "the room") before Correct/Accept | Prevents one spoken explanation crediting the whole class. Bowl already awards its board cells to a team. | Heads Up, Spin & Explain, Connection, Concept Chain, Random Challenge | M |
 | **N2** | **The draw**: take an unused item from a pool at random, with an animation on the wall, "N left", and no repeats until reshuffle | Four games promise randomness and follow authored order. | Spin & Explain, Random Challenge, Question Cube, Heads Up; later the Bingo caller | M |
 | **N3** | **Proposal queue**: phones send a proposal; the desk approves, dismisses or spotlights; approved items land on the wall | The Q&A moderation queue already does this for questions. Generalise it rather than write another. | Connection Maker, Concept Chain, Odd One Out rules, Compare points | M |
 | **N4** | **Round clock**: one clock for a run of items, not per question | Stages (K6) already has a clock with +30s. A one-stage round is the same thing. | Beat the Clock, Heads Up, Low-Stakes | S |
@@ -154,10 +156,12 @@ kit it reuses and the size (S < a day, M a few days, L a week or more).
 ### Scoring fairness: fix before anything else
 
 **Heads Up · Spin & Explain · Connection Maker · Concept Chain · Random
-Challenge · Quiz Bowl.** Build **N1**, and send spoken-format phones a "Listen
-and watch" job card (K7) instead of verdict pads.
+Challenge.** **N1 is done:** teacher entry selects a recipient; the relay
+credits one team or counts the explanation; spoken phones get a listen/watch
+job card. Draws, clocks and maps remain below.
 
-**Quiz Bowl** also takes each cell's own value rather than Q1's. S after N1.
+**Quiz Bowl** already awarded board cells to one team, at each cell's own
+value. Its separate game-level finish target is now stored and migrated.
 
 **Word Reveal** records `dripShown` per answer as it arrives (the relay
 already timestamps answers). Each phone gets 100, 75 or 50 for how early *it*
@@ -274,8 +278,8 @@ answered. Show the letters dripping on the phone too (P5), and make
 
 | Wave | What | Why first | Size |
 |---|---|---|---|
-| **0** | Word Reveal per-answer scoring; Bowl per-cell target; delete the `js/studio.js` preset copy. **Teacher entry records `order` and `tap`, and shows the relay's refusal instead of dropping it (E1, E2).** | Wrong or lost results today; small fixes | S |
-| **1** | **N1 verdict recipient**, built into teacher entry and fed by its name picker (E4), and a spoken-format phone job card. **The `plays` declaration and its contract test (E7).** | Fixes four broken games at once, and makes P9 checkable | M |
+| **0** | **Done 23 Sep.** Word Reveal per-answer scoring; Bowl game-level target; delete the `js/studio.js` preset copy. Teacher entry records `order` and `tap`, and shows the relay's refusal (E1, E2). | Wrong or lost results today; small fixes | S |
+| **1** | **Done 23 Sep.** N1 verdict recipient in teacher entry, spoken phone job cards, and `plays` declarations with a contract test and library badges. | Fixed unfair spoken scoring and made P9 checkable | M |
 | **2** | **N2 draw** and **N4 round clock** | Unblock Spin, Random, Question Cube and Heads Up | M |
 | **3** | Fill the gaps; Odd One Out vote-then-defend; Predict commit-then-watch; T/F hold-or-fold | The thin-to-premium conversions that are mostly kit | M each |
 | **4** | **N3 proposal queue**; Concept Chain map and Connection Maker | The discussion games' phone jobs | M |
@@ -365,17 +369,17 @@ supports.
 | **Desk tools** | A name picker that doesn't repeat until reset and leaves out disconnected devices; a private timer; lesson notes. | `manual.html` toolkit |
 | **One learner, alone** | Present without a room: a quiz slide is answered by clicking on the wall, and a small "3 / 5" score keeps count. A share link's browse view renders the same slides. *Not checked here: whether every input kind (order, typed, tap) is answerable solo.* | `player.js` `wireQuiz`, `updateSolo` |
 
-### Where it stops
+### Gaps found, and what remains
 
 | # | Gap | Evidence | Effect |
 |---|---|---|---|
-| **G1** | **Teacher entry cannot record a Ranking order or a Spot the Error tap.** A non-choice question gets a text box. For `order` and `tap` the relay expects an index or an order, and **silently ignores** the typed text. | `manual.js` render: anything not choice gets a text or number input; `server.js` `manualAnswer` accepts only text, number or an integer choice | A learner without a phone cannot play two formats, including the flagship, and the teacher isn't told |
-| **G2** | **Invalid entries fail silently.** Every refusal path in `manualAnswer` after the first few ends in a bare `return`. | `server.js` `manualAnswer` | The teacher believes an answer was recorded |
+| **G1 · fixed** | Teacher entry used to drop Ranking orders and Spot taps. It now records order key sequences and clickable passage words through the relay. | `manual.js`, `server.js`, `tests/manual.test.js` | No-device learners can play both formats |
+| **G2 · fixed** | Invalid `manualAnswer` requests now return `manualError` with the row and question IDs. | `server.js`, `live.js`, `manual.js` | The affected row explains what was refused |
 | **G3** | **Thirty paper answers means thirty rows per question.** The roll call is fast per row, but there is no way to record a show of hands or mini-whiteboards as a count. | `manual.js` roll call | No-device rooms are slow, so teachers skip the check |
-| **G4** | **Spoken verdicts pay everyone in every mode**, entered rows included. | `live.js` `hostVerdictGains` | See section 2 |
+| **G4 · fixed** | Spoken verdicts now credit a selected team, or count in individual play. An individual scoring override is off by default. | `live.js`, `server.js`, `tests/oral.test.js` | A whole room no longer scores for one speaker |
 | **G5** | **A team sharing one answer** needs the teacher to add "one representative" by hand; nothing makes that a team row. | `manual.html` team note | Team games without phones are fiddly to set up |
 | **G6** | **Entered names are retyped every lesson.** The names draft is kept for the tab session only. | `manual.js` `saveDraft` (sessionStorage) | Friction on the most common no-device setup |
-| **G7** | **No game says which rooms it supports.** A teacher finds out mid-lesson that Ranking can't be entered, or that a board leaves the phones idle. | style contract has `input`, nothing about rooms | Surprises during the lesson |
+| **G7 · fixed** | Every style declares phone, team, teacher-entry and solo support with a reason; the format library shows badges. | `src/games/rooms.js`, style contract test | A teacher can see room fit before inserting |
 
 ### What each game supports today
 
@@ -386,10 +390,10 @@ friction · ✗ does not · — not meaningful.
 |---|---|---|---|---|
 | Choice quizzes: `choice` (Predict, Question Cube), `truefalse` (T/F Showdown), `speed`, `boss`, `race` | ✓ | ✓ | ✓ roll call by key | ✓ |
 | Typed or number: `type` (Fill in the Blanks, Time Traveler), `definition`, `emoji`, `wordreveal`, `slider` | ✓ | ✓ | ◐ one typed answer per row | ◐ not checked |
-| `order` (Ranking) | ✓ | ✓ | ✗ G1 | ◐ not checked |
-| `spot` (Spot the Error) | ✓ | ✓ | ✗ G1 | ✓ tap the wall |
+| `order` (Ranking) | ✓ | ✓ | ✓ key sequence | ◐ not checked |
+| `spot` (Spot the Error) | ✓ | ✓ | ✓ tap the word | ✓ tap the wall |
 | Boards: `memoryflip`, `memorymatch`, `knowledgeflip`, `bingo`, `bowl`, `lowstakes` | phones idle by design | ✓ (Match rotates teams; Bingo cards per team) | ✓ the teacher runs the board | — (Low-Stakes on paper: ✓) |
-| Spoken: `headsup`, `spinexplain`, `connection`, `conceptchain`, `randomchallenge` | phones idle, or get verdict pads | ✗ G4 | ✓ nothing to enter but the verdict | — |
+| Spoken: `headsup`, `spinexplain`, `connection`, `conceptchain`, `randomchallenge` | ◐ listen/watch card | ✓ selected speaker's team | ✓ select recipient and verdict | — |
 | Discussion: `oddone`, `compare` | phones idle | ✓ | ✓ | — |
 
 ### The redesign: teacher entry as the engine for every room
@@ -407,5 +411,23 @@ friction · ✗ does not · — not meaningful.
 
 **The rule this adds to the bar (P9):** a game is not premium until it
 declares its rooms (E7) and teacher entry can record every answer it asks
-for (E1). Spot the Error drops to *premium except P9* until E1 lands.
+for (E1). Both are implemented for Spot the Error; its desk heat-map preview
+still leaves P6 partial.
 
+## Change log
+
+- **23 September 2026 — Wave 1 implemented (GA-06–08).** Selected-recipient
+  spoken verdicts now credit one team, or count without points in individual
+  play unless the teacher opts in. Spoken phones receive job cards. All 25
+  game styles declare room support, shown as badges in the format library and
+  enforced by the style-contract test. The audit corrects its earlier Bowl
+  claim: the board already awarded each cell to one team. `npm test` passed
+  487/487. Draw, round clock and game-specific rebuilds remain open.
+- **23 September 2026 — Wave 0 implemented (GA-01–05).** Word Reveal uses
+  per-answer relay timing; Bowl's target moved to game settings with old-save
+  migration, leaving cell point values independent. Studio now reads the
+  model's single starter bank. Teacher entry records Ranking permutations and
+  Spot word taps; the relay explains invalid entries on the affected row.
+  `npm test` passed 484/484. The live server was restarted after the relay
+  change. Verdict recipients, room declarations and the remaining premium
+  work are still open in [BACKLOG.md](BACKLOG.md).
