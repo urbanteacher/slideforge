@@ -39,7 +39,7 @@ From the two flagships. A game is premium when it passes all nine. (P9 was added
 
 | Format | Engine | P1 | P2 | P3 | P4 | P5 | P6 | P7 | P8 | Tier |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **Spot the Error** | `spot` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | **Premium** (desk has no heat-map preview) |
+| **Spot the Error** | `spot` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | **Premium** except P9 (teacher entry can't record a tap yet, E1); the desk has no heat-map preview |
 | Ranking Challenge | `order` | ✓ | ◐ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid |
 | Horse Race | `race` | ✓ | ✓ | ◐ | ◐ | ◐ | ✗ | ✓ | ◐ | Solid, but lanes are wall-only |
 | Boss Battle | `boss` | ✓ | ✓ | ◐ | ✓ | ◐ | ✗ | ✓ | ◐ | Solid, but Hit/Miss is wall-only |
