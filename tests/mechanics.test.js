@@ -446,6 +446,8 @@ test('Question Cube rolls six faces in a fresh order, each knowing its type', ()
   const faces = SF.compileGame(g).filter(s => s.type === 'quiz');
   assert.equal(faces.length, 6);
   assert.deepEqual(Array.from(faces, s => s.drawNo), [1, 2, 3, 4, 5, 6]);
+  assert.ok(faces.every(s => s.options[0] === 'Answered' && s.options[1] === 'Pass'),
+    'a rolled question is answered, not completed like a challenge');
   assert.deepEqual(Array.from(faces, s => s.category).sort(),
     ['Benefits and limits', 'Compare', 'Define', 'Example', 'Why', 'What if'].sort());
 });

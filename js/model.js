@@ -23752,6 +23752,11 @@
         s.drawNo = i + 1;
         s.drawTotal = playQuestions.length;
       }
+      if (game.format === "question-cube" && game.style === "randomchallenge") {
+        s.options = ["Answered", "Pass"];
+        s.answer = "Answered";
+        s.headPrompt = "Question cube";
+      }
       if (game.format === "predict-outcome" && s.input === "choice") {
         s.predict = true;
         s.holdResults = true;

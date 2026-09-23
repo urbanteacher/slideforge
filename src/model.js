@@ -1229,6 +1229,13 @@ function compileGame(game, opts = {}) {
     s.gameTitle = game.title;
     s.questionNumber = i + 1;
     if (drawn) { s.drawNo = i + 1; s.drawTotal = playQuestions.length; }
+    /* Question Cube runs on Random Challenge's engine, whose verdicts are a
+       challenge's — Complete or Skip. A rolled question is answered. */
+    if (game.format === 'question-cube' && game.style === 'randomchallenge') {
+      s.options = ['Answered', 'Pass'];
+      s.answer = 'Answered';
+      s.headPrompt = 'Question cube';
+    }
     /* True/False Showdown — "hold or fold". The room votes; the teacher (or
        half the clock) shows the room its split; each phone may switch once;
        the reveal shows before against after. The plain True or False format
