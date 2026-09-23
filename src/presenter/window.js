@@ -316,6 +316,8 @@ export function createPresenterWindow(SF, helpers) {
         needsHand: SF.Live && SF.Live.needsHand ? SF.Live.needsHand() : [],
         /* The stage of a staged activity, so the desk can offer more time. */
         stage: Player.stage || null,
+        /* The game's wall controls, offered on the desk (data-desk). */
+        gameControls: Player.gameControls ? Player.gameControls() : [],
         floor: (SF.Live && SF.Live.floor) || 'auto',
         /* Legacy tokens on the wire: a desk still open from before the
            rename compares against these. New desks accept either. */
@@ -391,6 +393,7 @@ export function createPresenterWindow(SF, helpers) {
       });
     }
     else if (d.cmd === 'qa') Player.emit('qaCommand', d);
+    else if (d.cmd === 'gameControl' && Player.pressGameControl) Player.pressGameControl(String(d.id || ''));
     else if (d.cmd === 'sharePrep') {
       var doc = null;
       try {

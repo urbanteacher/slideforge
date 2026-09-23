@@ -4476,6 +4476,8 @@
           row.onclick = function(e) {
             command(lane.key, e.shiftKey ? "back" : "advance");
           };
+          row.dataset.desk = "lane:" + lane.key;
+          row.dataset.deskLabel = "Move " + lane.name + " on";
         }
         row.style.setProperty("--lane-color", lane.color || "var(--s-accent)");
         row.style.setProperty("--lane-tint", tint(lane.color, 0.32));
@@ -4910,6 +4912,7 @@
           let bossBtn2 = function(text2, action, cls) {
             var b = el("button", "boss-button " + (cls || ""), text2);
             b.type = "button";
+            b.dataset.desk = "boss:" + action;
             b.onclick = function() {
               opts.bossCommand(action);
             };
@@ -4957,7 +4960,8 @@
         nudge.appendChild(el("span", "emoji-thinking", "Name the clues. Find the connection. Make your guess."));
         nudge.appendChild(el("span", "emoji-solved", "Can you explain how each clue fits?"));
         em.appendChild(nudge);
-        var pattern = SF.emojiHelp ? SF.emojiHelp(slide).pattern : "step";
+        var help = SF.emojiHelp ? SF.emojiHelp(slide) : { pattern: "step", hint: "" };
+        var pattern = help.pattern;
         if (pattern !== "none") {
           var blanks = el("div", "emoji-help emoji-help-blanks" + (pattern === "step" ? " step" : ""));
           blanks.dataset.step = "1";
@@ -4968,6 +4972,13 @@
             SF.wordRevealMask(slide.answer || "", 0)
           ));
           em.appendChild(blanks);
+        }
+        if (help.hint) {
+          var hintStep = el("div", "emoji-help emoji-help-hint step");
+          hintStep.dataset.step = "2";
+          hintStep.appendChild(el("span", "emoji-help-label", "HINT"));
+          hintStep.appendChild(el("strong", "emoji-hint-text", help.hint));
+          em.appendChild(hintStep);
         }
         pad.appendChild(em);
       } else if (present === "definition") {
@@ -4991,6 +5002,7 @@
           if (opts.definitionCommand) {
             var askBtn = el("button", "definition-ask", "Ask now — hide the passage");
             askBtn.type = "button";
+            askBtn.dataset.desk = "definition:ask";
             askBtn.onclick = function() {
               opts.definitionCommand("ask");
             };
@@ -5031,13 +5043,9 @@
         ));
       }
       var title = typeof slide.headPrompt === "string" ? slide.headPrompt : slide.question || " ";
-      var emojiHint = present === "emoji" && SF.emojiHelp ? SF.emojiHelp(slide).hint : "";
       var defReading = present === "definition" && (opts.definitionPhase || "reading") === "reading";
-      if (emojiHint) {
-        var hintRow = el("div", "q qhint");
-        hintRow.appendChild(el("span", "qhint-label", "HINT"));
-        hintRow.appendChild(el("strong", null, emojiHint));
-        head.appendChild(hintRow);
+      if (present === "emoji") {
+        head.appendChild(el("div", "q q-ask", "Decode the symbols. What is it?"));
       } else if (defReading) {
         head.appendChild(el(
           "div",
@@ -6372,6 +6380,8 @@
           needsHand: SF.Live && SF.Live.needsHand ? SF.Live.needsHand() : [],
           /* The stage of a staged activity, so the desk can offer more time. */
           stage: Player.stage || null,
+          /* The game's wall controls, offered on the desk (data-desk). */
+          gameControls: Player.gameControls ? Player.gameControls() : [],
           floor: SF.Live && SF.Live.floor || "auto",
           /* Legacy tokens on the wire: a desk still open from before the
              rename compares against these. New desks accept either. */
@@ -6432,6 +6442,7 @@
           postPresenter({ type: "sf-activity-result", requestId: d.requestId, error: error.message || "Could not complete this activity action." }, sourceWin);
         });
       } else if (d.cmd === "qa") Player.emit("qaCommand", d);
+      else if (d.cmd === "gameControl" && Player.pressGameControl) Player.pressGameControl(String(d.id || ""));
       else if (d.cmd === "sharePrep") {
         var doc = null;
         try {

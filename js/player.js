@@ -2356,6 +2356,36 @@
   }
 
   /** Build the leaderboard slide. */
+  /**
+   * The game's own controls on the wall, as the presenter view offers them.
+   *
+   * A control a game draws on the projected slide — Boss's Hit and Miss, a
+   * teacher-run race's lanes, Definition's Ask — carries data-desk. The desk
+   * lists whatever the current slide has and presses the same button, so a
+   * control can never exist on the wall and be missing from the desk, and a
+   * new one needs nothing but the attribute.
+   */
+  Player.gameControls = function () {
+    var node = Player._current;
+    if (!node) return [];
+    return Array.prototype.filter.call(node.querySelectorAll('[data-desk]'), function (b) {
+      return !b.disabled;
+    }).map(function (b) {
+      return { id: b.dataset.desk, label: String(b.dataset.deskLabel || b.textContent || '').trim().slice(0, 60) };
+    });
+  };
+  Player.pressGameControl = function (id) {
+    var node = Player._current;
+    if (!node || !id) return false;
+    var target = Array.prototype.find.call(node.querySelectorAll('[data-desk]'), function (b) {
+      return b.dataset.desk === id;
+    });
+    if (!target || target.disabled) return false;
+    target.click();
+    syncPresenter();
+    return true;
+  };
+
   Player.leaderboardSlide = function (players, title) {
     var deck = Player.deck;
     if (!deck) return el('div', 'slide');

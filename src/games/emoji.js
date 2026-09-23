@@ -40,13 +40,13 @@ function emojiClueLayout(text) {
 var EMOJI_LEVELS = ['easy', 'medium', 'hard'];
 
 /**
- * The help a puzzle carries: the hint, which is its heading, and what the
- * letter pattern does.
+ * The help a puzzle carries: the letter pattern and the hint.
  *
- * The hint is on every puzzle at every difficulty — it is the title line, and
- * a puzzle whose title line is blank is a slide with a bare "Q2" on it. What
- * the difficulty decides is the letter pattern: easy shows it from the start,
- * medium makes the teacher release it, and hard does without it.
+ * The difficulty decides the letter pattern: easy shows it from the start,
+ * medium makes the teacher release it, hard does without it. The hint, when
+ * there is one, is always the last thing released — it used to be the title
+ * line, and a good hint all but names the answer. The title now says what to
+ * do ("Decode the symbols"), so no puzzle has a bare "Q2" heading.
  *
  * @param {object} slide compiled emoji slide
  * @returns {{hint: string, pattern: 'shown'|'step'|'none'}}

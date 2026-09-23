@@ -207,6 +207,8 @@ export function createQuizRenderer(SF, helpers) {
         row.onclick = function (e) {
           command(lane.key, e.shiftKey ? 'back' : 'advance');
         };
+        row.dataset.desk = 'lane:' + lane.key;
+        row.dataset.deskLabel = 'Move ' + lane.name + ' on';
       }
       row.style.setProperty('--lane-color', lane.color || 'var(--s-accent)');
       row.style.setProperty('--lane-tint', tint(lane.color, 0.32));
@@ -647,6 +649,8 @@ export function createQuizRenderer(SF, helpers) {
         function bossBtn(text, action, cls) {
           var b = el('button', 'boss-button ' + (cls || ''), text);
           b.type = 'button';
+          /* data-desk: the presenter view offers this control too. */
+          b.dataset.desk = 'boss:' + action;
           b.onclick = function () { opts.bossCommand(action); };
           return b;
         }
@@ -701,7 +705,8 @@ export function createQuizRenderer(SF, helpers) {
          clues — it is about the answer's shape, so it reads as part of the
          puzzle. The hint is framing and goes up in the title row instead, so
          the stage stays two things rather than a column of three panels. */
-      var pattern = SF.emojiHelp ? SF.emojiHelp(slide).pattern : 'step';
+      var help = SF.emojiHelp ? SF.emojiHelp(slide) : { pattern: 'step', hint: '' };
+      var pattern = help.pattern;
       if (pattern !== 'none') {
         var blanks = el('div', 'emoji-help emoji-help-blanks' +
           (pattern === 'step' ? ' step' : ''));
@@ -710,6 +715,17 @@ export function createQuizRenderer(SF, helpers) {
         blanks.appendChild(el('strong', 'emoji-blanks',
           SF.wordRevealMask(slide.answer || '', 0)));
         em.appendChild(blanks);
+      }
+      /* The hint is the last help, released by the teacher when the room is
+         stuck. It used to be the heading from the start, and a good hint all
+         but names the answer — "How a plant makes its own food" — so the
+         symbols were never decoded. */
+      if (help.hint) {
+        var hintStep = el('div', 'emoji-help emoji-help-hint step');
+        hintStep.dataset.step = '2';
+        hintStep.appendChild(el('span', 'emoji-help-label', 'HINT'));
+        hintStep.appendChild(el('strong', 'emoji-hint-text', help.hint));
+        em.appendChild(hintStep);
       }
       pad.appendChild(em);
     } else if (present === 'definition') {
@@ -727,6 +743,7 @@ export function createQuizRenderer(SF, helpers) {
         if (opts.definitionCommand) {
           var askBtn = el('button', 'definition-ask', 'Ask now — hide the passage');
           askBtn.type = 'button';
+          askBtn.dataset.desk = 'definition:ask';
           askBtn.onclick = function () { opts.definitionCommand('ask'); };
           def.appendChild(askBtn);
         } else {
@@ -764,14 +781,12 @@ export function createQuizRenderer(SF, helpers) {
        at twice the size. */
     var title = typeof slide.headPrompt === 'string'
       ? slide.headPrompt : (slide.question || ' ');
-    var emojiHint = present === 'emoji' && SF.emojiHelp ? SF.emojiHelp(slide).hint : '';
     var defReading = present === 'definition' &&
       (opts.definitionPhase || 'reading') === 'reading';
-    if (emojiHint) {
-      var hintRow = el('div', 'q qhint');
-      hintRow.appendChild(el('span', 'qhint-label', 'HINT'));
-      hintRow.appendChild(el('strong', null, emojiHint));
-      head.appendChild(hintRow);
+    /* Emoji Guess: the heading says what to do; the hint is a step on the
+       stage (above), not a title that gives the puzzle away. */
+    if (present === 'emoji') {
+      head.appendChild(el('div', 'q q-ask', 'Decode the symbols. What is it?'));
     } else if (defReading) {
       head.appendChild(el('div', 'q q-ask',
         'Read carefully. The passage will clear for the recall question.'));

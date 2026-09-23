@@ -116,6 +116,8 @@
   .pv-away { font-size: 12px; font-weight: 600; color: #b5651d; background: #fdf0e1; border-radius: 999px; padding: 3px 9px; cursor: help; }
   .pv-away[hidden] { display: none; }
   .pv-needs { color: #8a3b12; background: #fde4d6; }
+  .pv-game { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+  .pv-game[hidden] { display: none; }
   .pv-room-id {
     display: none;
     align-items: baseline;
@@ -477,6 +479,8 @@
       <button class="btn primary" data-cmd="next">Next ›</button>
       <!-- A staged activity's stage: thirty seconds more (+ on the wall). -->
       <button class="btn" data-cmd="stageMore" id="btnStageMore" hidden title="Thirty seconds more for this stage (+)">+30s</button>
+      <!-- The game's own controls on the wall (Boss Hit/Miss, race lanes, Ask). -->
+      <span class="pv-game" id="gameControls" hidden></span>
       <button class="btn" data-cmd="blank" id="btnBlank" title="Blank the projector (B)">Blank</button>
       <button class="btn" data-cmd="freeze" id="btnFreeze" title="Freeze audience screen for digression (Z)">❄️ Freeze</button>
       <button class="btn" data-cmd="who" aria-pressed="false" aria-controls="teacherWorkspace"
@@ -1011,6 +1015,23 @@ SF.installExplore(SF);
       away.title = who.length
         ? 'Showing something other than the lesson: ' + who.join(', ') + '. Only you can see this.'
         : '';
+    }
+    var gc = $('gameControls');
+    if (gc) {
+      var list = d.gameControls || [];
+      var sig = list.map(function (c) { return c.id + '=' + c.label; }).join('|');
+      if (gc.dataset.sig !== sig) {
+        gc.dataset.sig = sig;
+        gc.textContent = '';
+        list.forEach(function (c) {
+          var b = document.createElement('button');
+          b.className = 'btn';
+          b.textContent = c.label;
+          b.onclick = function () { cmd('gameControl', { id: c.id }); };
+          gc.appendChild(b);
+        });
+      }
+      gc.hidden = !list.length;
     }
     var more = $('btnStageMore');
     if (more) {
