@@ -1140,7 +1140,7 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | GA-29 | 1 | UX pass on spoken verdicts: one path from wall and desk, a held verdict until the speaker is chosen, the speaker cleared per item, a speaker picker (teams, recent, type-ahead, Pick for me), the credit shown on the wall and phones; one shared passage for Spot entry | M | **Done** 23 Sep · relay tested, not viewed |
 | GA-30 | 1 | Spoken team credit on the game's points scale, so it registers in a lesson that mixes quiz and spoken games | S | **Done** 23 Sep · 1,000 per accept, half with a hint |
 | GA-25 | 2–6 | On the draw and round clock: Spin & Explain spinner, Random Challenge deck, Question Cube roll plus stages, Heads Up 60-second round | S–M each | **Done** 23 Sep · Heads Up round, deck, cube roll, the wheel lands |
-| GA-26 | 7 | **Sort input (N6)**; Compare & Contrast → *Sort it* | L | To do |
+| GA-26 | 7 | **Sort input (N6)**; Compare & Contrast → *Sort it* | L | **Done** 23 Sep · `sort` input, relay tested, seen on screen |
 | GA-27 | 7 | Beat the Clock → self-paced *Against the clock* (relay self-paced mode) | L | Mostly done · one round clock, flowing questions, round scoring; per-phone self-pacing open |
 | GA-28 | after 7 | **Solo practice** on the share link (E8) | M | To do |
 
@@ -1304,6 +1304,9 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** GA-26: Compare & Contrast is a sort (a new `sort` input).
+  Statements go into A only, Both or B only; the reveal names the one most
+  misfiled. Seen on screen. 513/513.
 - **23 Sep 2026.** The activities audit is written
   ([activities-premium-audit.md](activities-premium-audit.md)) and waves 0–1
   are done (AC-01–05). Timed moments keep one clock that the desk drives.

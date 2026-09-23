@@ -59,7 +59,7 @@ tests are in the table. The tier follows from the row.
 | Fill in the Blanks | `fill` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | Solid, near premium: *Fill the gaps* — up to four [gaps], a shuffled word bank with lures tapped into slots, the right word landing in each at the reveal with what the room put there, the hardest gap and its lure named; partial marks; teacher entry by key |
 | Time Traveler | `slider` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid: *Place it in time* — phones drag the event to a year; the reveal shows every pin and the true year; one line for the game, carrying every earlier event, so the timeline grows |
 | Odd One Out | `oddone` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | n/a | ✓ | Solid, near premium: phones vote; the split is held, then drawn as heat across the four tiles, with a line inviting the next most popular pick to defend its rule. Never marked. Open: the written rule as an anonymous idea (K9) |
-| Compare & Contrast | `compare` | ✓ | ✓ | ◐ | ✓ | ◐ | ✓ | n/a | ◐ | Solid: phones send one way the two are alike or differ (anonymous beside the slide, named on the desk); the teacher puts one on the table; the reveal compares the prepared points with the room's. Open: the sort-into-bins input (GA-26) |
+| Compare & Contrast | `compare` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | n/a | ✓ | Solid, near premium: *Sort it* — tagged statements sorted on phones into A only / Both / B only; the reveal lands each in its column with how the room sorted it and names the one the room misfiled most. Untagged comparisons still play as the discussion |
 | Heads Up | `headsup` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ✓ | ◐ | Solid: one round clock, drawn terms, a verdict moves straight on, "Time!" with the guesser's count. Open: clue-givers' phones could show the term |
 | Spin & Explain | `spinexplain` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | ✓ | ◐ | Solid: the wheel spins and lands (a different sector each draw) before the concept arrives; drawn fresh each run with "N left"; the verdict credits a chosen speaker |
 | Connection Maker | `connection` | ◐ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: phones propose the bridge, the teacher puts one on the table and credits its author. Open: approved bridges drawn as labelled lines |
@@ -416,6 +416,21 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — Compare & Contrast: sort it (GA-26, N6).**
+  - **A new phone input, `sort`:** one column (A only, Both, B only) per
+    statement. The relay validates it; teacher entry records it by key; the
+    rehearsal class files one item's trait under Both, as a real room does.
+  - **Authoring:** statements tagged Both:, A: or B:, one per line. The
+    editor counts them per column as they are written.
+  - **The wall** shows three columns named for the two items, with the
+    statements in a pile. At the reveal each lands in its column with "4 ✓ ·
+    2 Both" and one line: "The one to talk about: 'stores energy in
+    glucose'. 3 put it under Both."
+  - **Old comparisons** without statements still play as the discussion
+    with the idea box.
+  - **Screen check found a bug:** an early "discussion" return drew nothing
+    but the heading. Fixed.
+  - **Tests:** `npm test` 513/513.
 - **23 September 2026 — Beat the Clock: against the clock (GA-27, without
   self-pacing).**
   - **One clock for the whole run:** the game's time, 1–3 minutes, 90 s if
