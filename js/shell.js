@@ -834,6 +834,76 @@
     return !!(cheats && cheats.classList.contains('on'));
   }
 
+  /* ------------------------------------------------------ command palette */
+
+  /* Header and File-menu actions, run by clicking the control itself, so the
+     palette can only offer what the page offers: a button that is missing,
+     hidden, disabled or belongs to another studio is not listed. The
+     workspace adds its own through commands(). */
+  var BUTTON_COMMANDS = [
+    ['btnNew', 'New lesson…', 'File', 'create blank start'],
+    ['btnReadyMade', 'Open from the Library…', 'File', 'templates lessons brand packs saved'],
+    ['btnOpen', 'Open a saved quiz…', 'File', 'games'],
+    ['btnSave', 'Save to the Library…', 'File', 'keep file folder', 'S'],
+    ['btnExport', 'Export a file you can keep', 'File', 'download backup copy json'],
+    ['btnImport', 'Import a file…', 'File', 'upload load open'],
+    ['btnLectureReady', 'Lecture setup…', 'File', 'wake server reports join address'],
+    ['btnHistory', 'Version history…', 'File', 'restore earlier undo'],
+    ['btnSettings', 'Settings…', 'Lesson', 'theme logo numbers'],
+    ['btnShareTop', 'Share a read-only link…', 'File', 'send copy url'],
+    ['btnLibraryOpen', 'Library', 'File', 'templates lessons'],
+    ['btnTemplate', 'Open the demo deck', 'Help', 'every layout example'],
+    ['btnPresenter', 'Teacher Presenter (notes on your screen)', 'Present', 'pop out speaker view notes'],
+    ['btnZoomIn', 'Zoom in', 'View', 'bigger', null, '⌥='],
+    ['btnZoomOut', 'Zoom out', 'View', 'smaller', null, '⌥−'],
+    ['btnInspector', 'Show or hide the right panel', 'View', 'inspector design content engagement', '\\']
+  ];
+
+  function usable(node) {
+    if (!node || node.hidden || /** @type {HTMLButtonElement} */ (node).disabled) return false;
+    var owner = node.closest('[data-ws]');
+    if (owner && active) {
+      var list = String(owner.getAttribute('data-ws') || '').split(/\s+/);
+      if (list.indexOf(active.key) < 0) return false;
+    }
+    /* Inside a closed <details> (the File menu) a button has no box, and that
+       is still a button the page offers; anywhere else, no box means hidden. */
+    return !!(node.getClientRects().length || node.closest('details'));
+  }
+
+  function shellCommands() {
+    var mac = /Mac|iP(hone|ad)/.test(navigator.platform || '');
+    var cmd = mac ? '⌘' : 'Ctrl+';
+    /** @type {any[]} */
+    var out = [];
+    BUTTON_COMMANDS.forEach(function (b) {
+      var node = $(b[0]);
+      if (!usable(node)) return;
+      var keys = b[4] ? cmd + b[4] : (b[5] ? (b[5].charAt(0) === '⌥' ? (mac ? '⌘' : 'Ctrl+') + b[5] : b[5]) : '');
+      out.push({ id: 'shell.' + b[0], label: b[1], group: b[2], words: b[3], keys: keys,
+        run: function () { var n = $(b[0]); if (n) n.click(); } });
+    });
+    out.push({ id: 'view.fit', label: 'Zoom to fit', group: 'View', keys: cmd + '⌥0', run: function () { setZoom(1); } });
+    Object.keys(workspaces).forEach(function (key) {
+      if (active && key === active.key) return;
+      var tab = document.querySelector('[data-go="' + key + '"]');
+      if (!tab) return;
+      out.push({ id: 'studio.' + key, label: 'Switch to ' + String(tab.textContent || key).replace(/^[^A-Za-z]+/, '').trim(),
+        group: 'Studio', keys: key === 'game' || key === 'deck' ? cmd + 'E' : '', run: function () { activate(key); } });
+    });
+    out.push({ id: 'help.keys', label: 'Keyboard shortcuts', group: 'Help', keys: '?', words: 'help keys list',
+      run: showShortcuts });
+    return out;
+  }
+
+  function openPalette() {
+    if (!SF.Palette || !active) return;
+    SF.Palette.open(function (query) {
+      var own = active && active.commands ? active.commands(query) : [];
+      return own.concat(shellCommands());
+    });
+  }
+
   function openSaved() {
     if (!active) return;
     if (active.flush) active.flush();
@@ -1512,6 +1582,26 @@
       };
     }
 
+    /* Present ▾: choosing an item, clicking elsewhere or Escape closes it.
+       The items' own click handlers are wired where they always were. */
+    var presentMore = /** @type {HTMLDetailsElement|null} */ (document.querySelector('.present-more'));
+    if (presentMore) {
+      var pm = presentMore;
+      pm.addEventListener('click', function (e) {
+        var t = /** @type {Element|null} */ (e.target);
+        if (t && t.closest && t.closest('.present-menu button')) pm.open = false;
+      });
+      document.addEventListener('pointerdown', function (e) {
+        if (pm.open && !pm.contains(/** @type {Node} */ (e.target))) pm.open = false;
+      });
+      pm.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && pm.open) {
+          e.preventDefault(); e.stopPropagation(); pm.open = false;
+          var sum = pm.querySelector('summary'); if (sum) sum.focus();
+        }
+      });
+    }
+
     var storeBtn = $('storeState');
     if (storeBtn) {
       setStored('stored');
@@ -1823,6 +1913,8 @@
       })();
 
       if (mod && e.key === 's') { e.preventDefault(); save(); return; }
+      /* Everywhere, even in a text field, as ⌘S is: it is how you find things. */
+      if (mod && !e.altKey && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); openPalette(); return; }
       if (mod && e.key === 'Enter') { e.preventDefault(); active.play(); return; }
       if (mod && e.key === 'e') {
         e.preventDefault();
@@ -1865,6 +1957,7 @@
        is the shell's; what the canvas holds is the engine's. */
     sizeCanvas: sizeCanvas,
     current: function () { return active; },
+    openPalette: openPalette,
     UI: UI
   };
 })(window);

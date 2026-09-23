@@ -907,6 +907,7 @@ function normalizeGameSettings(raw) {
   g.musicVolume = Math.max(0, Math.min(100,
     g.musicVolume == null ? 55 : Number(g.musicVolume) || 0));
   g.confidence = g.confidence !== false;
+  g.resultsOnReveal = g.resultsOnReveal === true;
   return g;
 }
 
@@ -1028,6 +1029,9 @@ function fillQuestionSlide(q, styleKey, settings, s) {
     s.timeLimit = q.timeLimit == null ? settings.defaultTime : q.timeLimit;
   }
   s.points = q.points == null ? settings.defaultPoints : q.points;
+  /* The room's bars wait for the reveal, so nobody answers by following the
+     tallest one. Off by default — live bars are how every game has played. */
+  if (settings.resultsOnReveal === true) s.holdResults = true;
   if (style.mechanic === 'boss' || q.difficulty) {
     s.difficulty = BOSS_LEVELS.indexOf(q.difficulty) > -1 ? q.difficulty : 'medium';
     s.bossDamage = bossDamage(s.difficulty);
@@ -1199,6 +1203,45 @@ function compileGame(game, opts = {}) {
  * player only ever sees plain slides. Returns a throwaway deck; the stored
  * one is untouched.
  */
+/* The number the room sees on a slide: its place among the slides the show
+   plays, with each game counted as every step it expands into, and the total
+   the show will reach. render.js already chose the room's count over the
+   editor's rows for hidden slides — "the room's count is the true one" — but
+   counted a game as one slide, so from the first game on, the canvas footer
+   in the editor said 79 / 98 where the wall said 90 / 110 for the same slide.
+   A run deck has no game slides left, so there this is the plain count.
+   Step counts are cached per game version: the rail renders every row. */
+var gameStepCache = new Map();
+/**
+ * @param {Deck} deck
+ * @param {Slide} slide
+ * @param {(id: string) => Game | null} [lookupGame]
+ * @returns {{ place: number, total: number }|null}  place is 1-based; null if the slide is not shown
+ */
+function showNumber(deck, slide, lookupGame) {
+  var place = 0, total = 0, games = 0;
+  (deck.slides || []).forEach(function (s) {
+    if (s.hidden === true) return;
+    var steps = 1;
+    if (s.type === 'game') {
+      var game = lookupGame ? lookupGame(s.gameId) : null;
+      if (game) {
+        var key = game.id + ':' + (game.modified || 0) + ':' + (deck.theme || '');
+        if (!gameStepCache.has(key)) {
+          if (gameStepCache.size > 200) gameStepCache.clear();
+          gameStepCache.set(key, compileGame(game, { theme: deck.theme }).length);
+        }
+        steps = gameStepCache.get(key);
+        games++;
+      }
+    }
+    if (s === slide) place = total + 1;
+    total += steps;
+  });
+  if (deck.finalScores && games) total += 1;
+  return place ? { place: place, total: total } : null;
+}
+
 /* Where authored slide i lands in a run deck. Asked of the run deck itself,
    by id, rather than re-counted from the authored list: a count has to repeat
    every rule buildRunDeck applies, and it did not — hidden slides were counted
@@ -1692,6 +1735,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   fillQuestionSlide: fillQuestionSlide,
   buildRunDeck: buildRunDeck,
   runIndexOf: runIndexOf,
+  showNumber: showNumber,
   gameToRunDeck: gameToRunDeck,
   migrateDeckQuizzes: migrateDeckQuizzes,
   Store: Store,
@@ -1711,4 +1755,4 @@ for (const install of [installBingo, installBowl, installMemory, installLowStake
   install(runtime.SF);
 }
 
-export { DEFAULT_THEME, resolveTheme, DESIGN_CONTROLS, designApplies, COMPOSITIONS, compositionOptions, slideComposition, SLIDE_W, SLIDE_H, ASPECTS, parsePerson, orgTree, CHART_TAXONOMY, chartCategories, chartPrimaryCategory, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, themeGround, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, INFO_LAYOUTS, parseInfoLine, formatInfoLine, infoNumber, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, runIndexOf, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, unusedDraft, libraryGroupFromTheme, normalizeLibraryGroup, LIBRARY_GROUPS, LibraryFolders, GAME_FORMAT_PRESETS, getShowcaseGame };
+export { DEFAULT_THEME, resolveTheme, DESIGN_CONTROLS, designApplies, COMPOSITIONS, compositionOptions, slideComposition, SLIDE_W, SLIDE_H, ASPECTS, parsePerson, orgTree, CHART_TAXONOMY, chartCategories, chartPrimaryCategory, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, themeGround, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, INFO_LAYOUTS, parseInfoLine, formatInfoLine, infoNumber, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, runIndexOf, showNumber, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, unusedDraft, libraryGroupFromTheme, normalizeLibraryGroup, LIBRARY_GROUPS, LibraryFolders, GAME_FORMAT_PRESETS, getShowcaseGame };

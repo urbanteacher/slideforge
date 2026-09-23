@@ -304,6 +304,8 @@ export interface Slide {
   /** Ask how sure they were. Never scored. */
   confidence?: boolean;
   hideAnswerUntilReveal?: boolean;
+  /** The room's answer bars stay hidden on the wall until the reveal. */
+  holdResults?: boolean;
   /** Which deck slide this was expanded from, set by `buildRunDeck`. */
   sourceSlideId?: string;
   /** Typed answer key, and the spellings that count. */
@@ -528,6 +530,8 @@ export interface GameSettings {
   /** Horse race only: steps to the finish line. */
   trackLength: number;
   confidence: boolean;
+  /** Keep the room's answer bars off the wall until the reveal. */
+  resultsOnReveal: boolean;
   /** Referenced, not embedded, and played on the projector only. */
   music: string;
   musicVolume: number;

@@ -136,14 +136,24 @@ html:not([data-ready]) body { background: #f0f1ed; }
     </div>
 
     <!-- Run cluster. Same shape in every studio, pinned to the right:
-           Lesson:     Teacher Presenter · Rehearse · Host live · Present
-           Quiz:                      Host live · Present
-           Activities:                       Present -->
+           Lesson:     Host live · Present ▾ (Teacher Presenter, Rehearse)
+           Quiz:       Host live · Present
+           Activities:             Present
+         Four buttons started a lesson; Google and Figma have one split
+         button. Host live stays on its own because the room is the product.
+         The two in the menu keep their ids, so everything that wires them
+         still finds them. -->
     <div class="header-actions" role="group" aria-label="Run this lesson">
-      <button class="btn" data-ws="deck" id="btnPresenter" title="Pop out presenter view: notes, next slide and controls on your screen — not the projector (D)">Teacher Presenter</button>
-      <button class="btn" data-ws="deck" id="btnRehearse" title="Practice the whole lesson with a SAMPLE class. No live room, no phones.">▷ Rehearse</button>
       <button class="btn live" data-ws="deck game" id="btnLive" title="Run live with phones in the room">◉ Host live</button>
-      <button class="btn primary" data-ws="deck" id="btnPresent" title="Slideshow on the wall / projector (⌘↵)">▶ Present</button>
+      <span class="present-split" data-ws="deck">
+      <button class="btn primary" id="btnPresent" title="Slideshow on the wall / projector (⌘↵)">▶ Present</button>
+      <details class="present-more"><summary class="btn primary" aria-label="More ways to present" title="More ways to present">▾</summary>
+        <div class="present-menu" role="menu" aria-label="More ways to present">
+          <button class="btn" role="menuitem" id="btnPresenter" title="Pop out presenter view: notes, next slide and controls on your screen — not the projector (D)">Teacher Presenter <span class="present-hint">notes on your screen</span></button>
+          <button class="btn" role="menuitem" id="btnRehearse" title="Practice the whole lesson with a SAMPLE class. No live room, no phones.">▷ Rehearse <span class="present-hint">with a sample class</span></button>
+        </div>
+      </details>
+      </span>
       <button class="btn primary" data-ws="game" id="btnPlay" title="Put this quiz on the projector (⌘↵)">▶ Present</button>
       <button class="btn primary" data-ws="plan" id="btnPresentPlan" title="Present the whole lesson on the projector (⌘↵ showcases just this activity)">▶ Present</button>
     </div>
@@ -379,6 +389,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
       <tr><td><kbd>⌘</kbd>+<kbd>\</kbd> · <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>=</kbd> <kbd>−</kbd> <kbd>0</kbd></td><td>Hide the right panel · zoom in, out, fit</td></tr>
       <tr><td><kbd>⌘</kbd>+<kbd>S</kbd> · <kbd>⌘</kbd>+<kbd>E</kbd></td><td>Save to the Library · switch to Quiz studio</td></tr>
       <tr><td><kbd>⌘</kbd>+<kbd>Enter</kbd> or <kbd>F5</kbd></td><td>Present from this slide</td></tr>
+      <tr><td><kbd>⌘</kbd>+<kbd>K</kbd></td><td>Find any command, or a slide by number or title</td></tr>
       <tr><td><kbd>?</kbd> · <kbd>Esc</kbd></td><td>Show this list · close it</td></tr>
     </table>
     </div>
@@ -540,7 +551,8 @@ SF.installExplore(SF);
 <script src="js/lesson-moments.js?v=2"></script>
 <script src="js/print.js?v=4"></script>
 <script src="js/history.js?v=3"></script>
-<script src="js/shell.js?v=2"></script>
+<script src="js/shell.js?v=3"></script>
+<script src="js/palette.js?v=1"></script>
 <script src="js/content-tools.js?v=5"></script>
 <script src="js/slide-clip.js?v=1"></script>
 <script src="js/editor.js?v=66"></script>

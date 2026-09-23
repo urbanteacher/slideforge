@@ -9253,6 +9253,7 @@
         var row = el("div", "thumb" + (i === sel ? " sel" : "") + (i === placing ? " carried" : "") + (s.hidden === true ? " hidden-slide" : ""));
         row.draggable = true;
         row.tabIndex = 0;
+        row.dataset.index = String(i);
         row.setAttribute("role", "button");
         row.setAttribute("aria-label", "Slide " + (i + 1) + ": " + (s.title || SF.SLIDE_TYPES[s.type].label) + (s.hidden === true ? " — hidden from the show" : ""));
         row.setAttribute("aria-current", i === sel ? "true" : "false");
@@ -20852,6 +20853,7 @@
         /* Ask each player how sure they were, after their answer is in. Never
            scored — it tells the teacher which wrong answers were confident. */
         confidence: true,
+        resultsOnReveal: false,
         /* A bed under the thinking time. Referenced, not embedded, for the
            same reason as video — and it plays on the projector only. Sending
            it to the phones would be twenty speakers a beat apart. */
@@ -22353,6 +22355,7 @@
       g.musicVolume == null ? 55 : Number(g.musicVolume) || 0
     ));
     g.confidence = g.confidence !== false;
+    g.resultsOnReveal = g.resultsOnReveal === true;
     return g;
   }
   function normalizeGame(raw) {
@@ -22447,6 +22450,7 @@
       s.timeLimit = q.timeLimit == null ? settings.defaultTime : q.timeLimit;
     }
     s.points = q.points == null ? settings.defaultPoints : q.points;
+    if (settings.resultsOnReveal === true) s.holdResults = true;
     if (style.mechanic === "boss" || q.difficulty) {
       s.difficulty = BOSS_LEVELS.indexOf(q.difficulty) > -1 ? q.difficulty : "medium";
       s.bossDamage = bossDamage(s.difficulty);
@@ -22582,6 +22586,30 @@
       out.push(res);
     }
     return out;
+  }
+  var gameStepCache = /* @__PURE__ */ new Map();
+  function showNumber(deck, slide, lookupGame) {
+    var place = 0, total = 0, games = 0;
+    (deck.slides || []).forEach(function(s) {
+      if (s.hidden === true) return;
+      var steps = 1;
+      if (s.type === "game") {
+        var game = lookupGame ? lookupGame(s.gameId) : null;
+        if (game) {
+          var key = game.id + ":" + (game.modified || 0) + ":" + (deck.theme || "");
+          if (!gameStepCache.has(key)) {
+            if (gameStepCache.size > 200) gameStepCache.clear();
+            gameStepCache.set(key, compileGame(game, { theme: deck.theme }).length);
+          }
+          steps = gameStepCache.get(key);
+          games++;
+        }
+      }
+      if (s === slide) place = total + 1;
+      total += steps;
+    });
+    if (deck.finalScores && games) total += 1;
+    return place ? { place, total } : null;
   }
   function runIndexOf(deck, run, i) {
     function at(k2) {
@@ -23009,6 +23037,7 @@
     fillQuestionSlide,
     buildRunDeck,
     runIndexOf,
+    showNumber,
     gameToRunDeck,
     migrateDeckQuizzes,
     Store,

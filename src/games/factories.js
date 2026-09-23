@@ -89,6 +89,7 @@ function makeGame(title, style) {
       /* Ask each player how sure they were, after their answer is in. Never
          scored — it tells the teacher which wrong answers were confident. */
       confidence: true,
+      resultsOnReveal: false,
       /* A bed under the thinking time. Referenced, not embedded, for the
          same reason as video — and it plays on the projector only. Sending
          it to the phones would be twenty speakers a beat apart. */

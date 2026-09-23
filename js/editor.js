@@ -840,23 +840,18 @@
     redo.dataset.history = 'redo';
     history.appendChild(undo);
     history.appendChild(redo);
-    var copyBtn = UI.button('⎘ Copy', 'ghost', function () { copySlide(); });
-    copyBtn.title = 'Copy this slide (⌘C / Ctrl+C) — paste in another deck or browser';
-    copyBtn.setAttribute('aria-label', 'Copy this slide');
-    history.appendChild(copyBtn);
-    var pasteBtn = UI.button('⎘ Paste', 'ghost', function () { pasteSlideButton(); });
-    pasteBtn.title = 'Paste a copied slide after this one (⌘V / Ctrl+V)';
-    pasteBtn.setAttribute('aria-label', 'Paste slide');
-    history.appendChild(pasteBtn);
-    var dup = UI.button('⧉ Duplicate', 'ghost', duplicate);
-    dup.title = 'Duplicate this slide in this deck (⌘D / Ctrl+D)';
-    dup.setAttribute('aria-label', 'Duplicate this slide');
-    history.appendChild(dup);
-    var del = UI.button('✕ Delete', 'ghost', removeSlide);
-    del.title = 'Delete this slide';
-    del.setAttribute('aria-label', 'Delete this slide');
-    del.disabled = deck.slides.length === 1;
-    history.appendChild(del);
+    /* Copy, Paste, Duplicate and Delete act on the slide, not on what is
+       being edited, and all four already had shortcuts. They live in the
+       slide menu now — right-click a slide or the canvas — and this one
+       button opens the same menu, because a tablet has no right-click. */
+    var more = UI.button('⋯ Slide', 'ghost', function () {
+      var r = more.getBoundingClientRect();
+      openSlideMenu(r.left, r.bottom + 4, sel, more);
+    });
+    more.title = 'Copy, paste, duplicate, hide or delete this slide — also on right-click';
+    more.setAttribute('aria-label', 'Slide actions');
+    more.setAttribute('aria-haspopup', 'menu');
+    history.appendChild(more);
     insp.appendChild(history);
   }
 
@@ -1983,6 +1978,7 @@
       }, 'Option ' + (i + 1)));
       var kill = el('button', 'kill', '×');
       kill.title = 'Remove';
+      kill.setAttribute('aria-label', 'Remove option ' + (i + 1));
       kill.onclick = function () {
         if (f.options.length <= 2) { SF.toast('A poll needs at least two options'); return; }
         f.options.splice(i, 1);
@@ -2287,6 +2283,186 @@
   function repaint() { drawPreview(); drawRail(); }
   function draw() { rememberSelection(); if(historyId!==deck.id) remember(); drawRail(); drawFoot(); drawPreview(); drawInspector(); }
 
+  /* ---------------------------------------------------------- slide menu */
+
+  /* What you can do to one slide, where you point at it: right-click a row in
+     the rail or the canvas, the ⋯ Slide button, or Shift+F10 / the menu key
+     on a focused row. The same functions as the shortcuts and the palette. */
+  var slideMenu = null;
+  function closeSlideMenu(refocus) {
+    if (!slideMenu) return;
+    var m = slideMenu;
+    slideMenu = null;
+    document.removeEventListener('pointerdown', m.away, true);
+    window.removeEventListener('blur', m.gone);
+    window.removeEventListener('resize', m.gone);
+    document.removeEventListener('scroll', m.gone, true);
+    m.node.remove();
+    if (refocus && m.from && m.from.isConnected && m.from.focus) m.from.focus();
+  }
+  /**
+   * @param {number} x @param {number} y @param {number} index
+   * @param {HTMLElement|null} [from]  focus goes back here when it closes
+   */
+  function openSlideMenu(x, y, index, from) {
+    closeSlideMenu(false);
+    if (!deck || !deck.slides[index]) return;
+    if (index !== sel) select(index);
+    var s = deck.slides[index];
+    var n = deck.slides.length;
+    var mac = /Mac|iP(hone|ad)/.test(navigator.platform || '');
+    var cmd = mac ? '⌘' : 'Ctrl+', opt = mac ? '⌥' : 'Alt+';
+    var items = [
+      ['Duplicate', cmd + 'D', duplicate, true],
+      ['Copy', cmd + 'C', copySlide, true],
+      ['Paste after this slide', cmd + 'V', pasteSlideButton, true],
+      null,
+      [s.hidden ? 'Show in the show' : 'Hide from the show', 'H', function () { toggleHidden(sel); }, true],
+      ['Move up', opt + '↑', function () { nudge(-1); }, index > 0],
+      ['Move down', opt + '↓', function () { nudge(1); }, index < n - 1],
+      null,
+      ['Present from here', cmd + '↵', present, true],
+      null,
+      ['Delete', 'Delete', removeSlide, n > 1]
+    ];
+    var node = el('div', 'slide-menu');
+    node.setAttribute('role', 'menu');
+    node.setAttribute('aria-label', 'Slide ' + (index + 1));
+    items.forEach(function (it) {
+      if (!it) { node.appendChild(el('div', 'slide-menu-sep')); return; }
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('role', 'menuitem');
+      b.className = 'slide-menu-item' + (it[0] === 'Delete' ? ' danger' : '');
+      b.disabled = !it[3];
+      b.appendChild(el('span', null, String(it[0])));
+      b.appendChild(el('kbd', null, String(it[1])));
+      var run = /** @type {function(): void} */ (it[2]);
+      b.onclick = function () { closeSlideMenu(false); run(); };
+      node.appendChild(b);
+    });
+    node.addEventListener('keydown', function (e) {
+      var list = Array.prototype.filter.call(node.querySelectorAll('button'), function (b) { return !b.disabled; });
+      var at = list.indexOf(document.activeElement);
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeSlideMenu(true); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); list[(at + 1) % list.length].focus(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); list[(at - 1 + list.length) % list.length].focus(); }
+      else if (e.key === 'Tab') { e.preventDefault(); closeSlideMenu(true); }
+      /* The menu owns the keyboard while it is open: nothing reaches the deck. */
+      e.stopPropagation();
+    });
+    document.body.appendChild(node);
+    var w = node.offsetWidth, h = node.offsetHeight;
+    node.style.left = Math.round(Math.max(8, Math.min(window.innerWidth - w - 8, x))) + 'px';
+    node.style.top = Math.round(Math.max(8, Math.min(window.innerHeight - h - 8, y))) + 'px';
+    var m = {
+      node: node, from: from || null,
+      away: function (e) { if (!node.contains(e.target)) closeSlideMenu(false); },
+      gone: function () { closeSlideMenu(false); }
+    };
+    slideMenu = m;
+    document.addEventListener('pointerdown', m.away, true);
+    window.addEventListener('blur', m.gone);
+    window.addEventListener('resize', m.gone);
+    document.addEventListener('scroll', m.gone, true);
+    var first = node.querySelector('button:not(:disabled)');
+    if (first) /** @type {HTMLElement} */ (first).focus();
+  }
+  function onSlideContextMenu(e) {
+    if (SF.Player && SF.Player.open) return;
+    var t = /** @type {Element|null} */ (e.target);
+    if (!t || !t.closest) return;
+    /* Words being typed into keep the browser's own menu — spelling, paste. */
+    if (t.closest('input, textarea, [contenteditable="true"], [contenteditable="plaintext-only"]')) return;
+    var row = /** @type {HTMLElement|null} */ (t.closest('.rail .thumb[data-index]'));
+    var onCanvas = !row && t.closest('#previewBox');
+    if (!row && !onCanvas) return;
+    /* Arrange and Artwork are working on the slide's parts; leave them be. */
+    if (onCanvas && ((SF.Arrange && SF.Arrange.isArranging()) || (SF.Artwork && SF.Artwork.isEditing()))) return;
+    e.preventDefault();
+    openSlideMenu(e.clientX, e.clientY, row ? Number(row.dataset.index) : sel, row);
+  }
+
+  /* ------------------------------------------------------------ commands */
+
+  /* What the command palette can do in this studio. Every entry calls the
+     function its button or shortcut calls, never a copy of it, and `keys`
+     names the shortcut that already exists — the palette is how people find
+     the keys, not a third way of doing the thing. Asked afresh on every
+     keystroke, so enabled() and the slide list are always current.
+     @param {string} query */
+  function commands(query) {
+    var n = deck ? deck.slides.length : 0;
+    var here = current();
+    var mac = /Mac|iP(hone|ad)/.test(navigator.platform || '');
+    var cmd = mac ? '⌘' : 'Ctrl+', opt = mac ? '⌥' : 'Alt+';
+    /** @type {any[]} */
+    var list = [
+      { id: 'slide.new', label: 'New slide…', group: 'Slide', words: 'add insert starter layout',
+        run: function () { if (SF.Studio && SF.Studio.openStarters) SF.Studio.openStarters(); else addSlide('content'); } },
+      { id: 'slide.activity', label: 'Add a game or activity…', group: 'Slide', words: 'quiz poll insert catalogue',
+        run: openActivityLibrary },
+      { id: 'slide.duplicate', label: 'Duplicate this slide', group: 'Slide', keys: cmd + 'D', words: 'copy clone',
+        run: duplicate },
+      { id: 'slide.copy', label: 'Copy this slide', group: 'Slide', keys: cmd + 'C', run: copySlide },
+      { id: 'slide.paste', label: 'Paste a copied slide', group: 'Slide', keys: cmd + 'V', run: pasteSlideButton },
+      { id: 'slide.hide', label: here && here.hidden ? 'Show this slide in the show' : 'Hide this slide from the show',
+        group: 'Slide', keys: 'H', words: 'skip hidden', run: function () { toggleHidden(sel); } },
+      { id: 'slide.up', label: 'Move this slide up', group: 'Slide', keys: opt + '↑',
+        enabled: function () { return sel > 0; }, run: function () { nudge(-1); } },
+      { id: 'slide.down', label: 'Move this slide down', group: 'Slide', keys: opt + '↓',
+        enabled: function () { return sel < n - 1; }, run: function () { nudge(1); } },
+      { id: 'slide.first', label: 'Move this slide to the start', group: 'Slide', keys: opt + 'Home',
+        enabled: function () { return sel > 0; }, run: function () { sendTo(0); } },
+      { id: 'slide.last', label: 'Move this slide to the end', group: 'Slide', keys: opt + 'End',
+        enabled: function () { return sel < n - 1; }, run: function () { sendTo(n); } },
+      { id: 'slide.carry', label: 'Pick this slide up to put it somewhere else', group: 'Slide', keys: cmd + 'X',
+        words: 'cut move place', run: function () { beginPlacing(sel); } },
+      { id: 'slide.delete', label: 'Delete this slide', group: 'Slide', keys: 'Delete', words: 'remove',
+        enabled: function () { return n > 1; }, run: removeSlide },
+      { id: 'edit.undo', label: 'Undo', group: 'Edit', keys: cmd + 'Z',
+        enabled: function () { return past.length > 0; }, run: function () { restoreHistory(false); } },
+      { id: 'edit.redo', label: 'Redo', group: 'Edit', keys: (mac ? '⇧⌘' : 'Ctrl+Shift+') + 'Z',
+        enabled: function () { return future.length > 0; }, run: function () { restoreHistory(true); } },
+      { id: 'deck.sorter', label: 'Every slide at once (block view)', group: 'Lesson', keys: cmd + 'G',
+        words: 'grid sorter overview reorder', run: openSorter },
+      { id: 'deck.find', label: 'Find in this lesson…', group: 'Lesson', keys: cmd + 'F', words: 'search text',
+        run: findInDeck },
+      { id: 'deck.review', label: 'Review every slide for fit', group: 'Lesson', words: 'check overflow',
+        enabled: function () { return !!SF.Review; }, run: function () { SF.Review.open(deck); } },
+      { id: 'deck.theme', label: 'Theme, logo and slide shape…', group: 'Lesson', words: 'settings colours brand aspect numbers',
+        run: openDeckSettings },
+      { id: 'canvas.artwork', label: 'Move or resize this slide’s artwork', group: 'Canvas', words: 'picture shape image',
+        enabled: function () { return !!SF.Artwork; }, run: function () { SF.Artwork.setEditing(!SF.Artwork.isEditing()); } },
+      { id: 'canvas.arrange', label: 'Arrange blocks on the slide grid', group: 'Canvas', words: 'layout move size lattice',
+        enabled: function () { return !!SF.Arrange; }, run: function () { SF.Arrange.setArranging(!SF.Arrange.isArranging()); } },
+      { id: 'show.present', label: 'Present from this slide', group: 'Present', keys: cmd + '↵', words: 'slideshow projector play start',
+        run: present },
+      { id: 'show.rehearse', label: 'Rehearse with a sample class', group: 'Present', words: 'practice dry run demo',
+        run: rehearse },
+      { id: 'show.live', label: 'Host live with phones', group: 'Present', words: 'room join pin class',
+        run: hostLive }
+    ];
+    /* Slides, by number or by title. A bare number goes straight to it. */
+    var q = String(query || '').trim();
+    var num = /^\d+$/.test(q) ? parseInt(q, 10) : 0;
+    if (num >= 1 && num <= n) {
+      list.unshift({ id: 'goto.' + num, label: 'Go to slide ' + num + ' — ' + slideName(deck.slides[num - 1]),
+        group: 'Go to', run: function () { select(num - 1); focusThumb(num - 1); } });
+    }
+    if (q && !num) {
+      deck.slides.forEach(function (s, i) {
+        list.push({ id: 'goto.' + (i + 1), label: (i + 1) + ' · ' + slideName(s), group: 'Go to',
+          run: function () { select(i); focusThumb(i); } });
+      });
+    }
+    return list;
+  }
+  function slideName(s) {
+    var t = String((s && (s.title || s.question || s.gameTitle)) || '').replace(/\s+/g, ' ').trim();
+    return t || (s ? s.type : '');
+  }
+
   var ws = {
     key: 'deck',
     railLabel: 'Slides',
@@ -2303,6 +2479,7 @@
     play: present,
     hostLive: hostLive,
     settings: openDeckSettings,
+    commands: commands,
     onTitle: function (v) { deck.title = v || 'Untitled presentation'; touched(); },
     onTheme: function (v) { deck.theme = v; touched(); draw(); },
     describe: function (d) {
@@ -2438,6 +2615,17 @@
     /* Capture, so it is noted before the field's own handler records the
        change. */
     document.addEventListener('input', noteTyping, true);
+    document.addEventListener('contextmenu', onSlideContextMenu);
+    /* The keyboard's way to the same menu, on a focused row in the rail. */
+    document.addEventListener('keydown', function (e) {
+      if (!(e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10'))) return;
+      var row = /** @type {HTMLElement|null} */ (document.activeElement && document.activeElement.closest &&
+        document.activeElement.closest('.rail .thumb[data-index]'));
+      if (!row) return;
+      e.preventDefault();
+      var r = row.getBoundingClientRect();
+      openSlideMenu(r.right - 12, r.top + 12, Number(row.dataset.index), row);
+    });
     /* On the document, because the slide being pasted onto is the selected
        one wherever the focus happens to be — and the handler bows out on
        its own when the focus is somewhere a paste means something else. */

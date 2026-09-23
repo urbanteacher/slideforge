@@ -56,10 +56,11 @@
     root.classList.add('sf-hf-managed');
     if (!config.enabled || (config.hideOnCover && (slide.type === 'title' || opts.index === 0))) return;
     var slots = config.slots || {};
-    var shown = (deck.slides || []).filter(function (s) { return !s.hidden; });
-    var index = shown.indexOf(slide);
-    var number = index < 0 ? Number(opts.index || 0) + 1 : index + 1;
-    var total = index < 0 ? opts.total || shown.length : shown.length;
+    /* The room's number, games counted as the steps they play as — the same
+       rule as the plain page number in renderSlide. */
+    var at = SF.showNumber(deck, slide, function (id) { return SF.GameStore ? SF.GameStore.get(id) : null; });
+    var number = at ? at.place : Number(opts.index || 0) + 1;
+    var total = at ? at.total : opts.total || (deck.slides || []).length;
     var section = '';
     (deck.slides || []).slice(0, Math.max(0, (deck.slides || []).indexOf(slide)) + 1).forEach(function (s) {
       if (s.type === 'section') section = s.title || '';
@@ -2382,11 +2383,12 @@
          the hidden ones by the time it renders. The room's count is the true
          one, so the editor is made to agree with it rather than the reverse.
          Same reasoning as deckShowsLogo and the first shown slide. */
-      var shown = (deck.slides || []).filter(function (x) { return !x.hidden; });
-      var place = shown.indexOf(slide);
-      var num = el('div', 'pagenum', place < 0
-        ? (opts.index + 1) + ' / ' + opts.total
-        : (place + 1) + ' / ' + shown.length);
+      /* Games count as the steps they play as, so the editor's footer and
+         the wall say the same number for the same slide. */
+      var at = SF.showNumber(deck, slide, function (id) { return SF.GameStore ? SF.GameStore.get(id) : null; });
+      var num = el('div', 'pagenum', at
+        ? at.place + ' / ' + at.total
+        : (opts.index + 1) + ' / ' + opts.total);
       /* A composition with a closing rule takes the number onto it, rather
          than having the number guess where that rule is. Everything else
          keeps the corner it has always had. */

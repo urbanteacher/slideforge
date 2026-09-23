@@ -7006,3 +7006,53 @@ html[data-ws="deck"] #railCount { display: none; }
   box-sizing: border-box;
   box-shadow: -8px 0 24px rgba(12, 51, 84, .10);
 }
+
+/* ------------------------------------------------------------ palette
+   js/palette.js. A native <dialog>, so Escape, the backdrop and keeping
+   focus inside come from the browser. */
+dialog.palette {
+  width: min(620px, calc(100vw - 32px)); max-height: min(70vh, 560px);
+  margin: 12vh auto auto; padding: 0; border: 1px solid var(--ui-line, #d9ddd2);
+  border-radius: 14px; background: var(--ui-panel, #fff); color: var(--ui-text, #20251b);
+  box-shadow: 0 24px 60px rgba(20, 26, 18, .28); overflow: hidden;
+  display: none; flex-direction: column;
+}
+dialog.palette[open] { display: flex; }
+dialog.palette::backdrop { background: rgba(20, 26, 18, .32); }
+.palette-field {
+  font: inherit; font-size: 16px; padding: 16px 18px; border: 0;
+  border-bottom: 1px solid var(--ui-line, #e3e6de); outline: none; background: transparent; color: inherit;
+}
+.palette-list { list-style: none; margin: 0; padding: 6px; overflow-y: auto; flex: 1; }
+.palette-list li {
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px;
+  cursor: pointer; font-size: 14px;
+}
+.palette-list li.on { background: var(--ui-accent-soft, #e6eedb); }
+.palette-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.palette-group { font-size: 12px; color: var(--ui-dim, #6b7263); }
+.palette-list kbd {
+  font-family: ui-monospace, monospace; font-size: 12px; color: var(--ui-dim, #6b7263);
+  border: 1px solid var(--ui-line, #d9ddd2); border-radius: 5px; padding: 1px 6px;
+}
+.palette-note { margin: 0; padding: 8px 18px; font-size: 12px; color: var(--ui-dim, #6b7263);
+  border-top: 1px solid var(--ui-line, #e3e6de); }
+
+/* ------------------------------------------------------------ slide menu
+   js/editor.js openSlideMenu: right-click a slide, or ⋯ Slide in the panel. */
+.slide-menu {
+  position: fixed; z-index: 400; min-width: 230px; padding: 5px;
+  background: var(--ui-panel, #fff); color: var(--ui-text, #20251b);
+  border: 1px solid var(--ui-line, #e4e5df); border-radius: 10px;
+  box-shadow: 0 14px 36px rgba(20, 26, 18, .2); display: grid; gap: 1px;
+}
+.slide-menu-item {
+  display: flex; align-items: center; gap: 16px; justify-content: space-between;
+  font: inherit; font-size: 13px; text-align: left; padding: 7px 10px;
+  border: 0; border-radius: 6px; background: transparent; color: inherit; cursor: pointer;
+}
+.slide-menu-item:hover:not(:disabled), .slide-menu-item:focus-visible { background: var(--ui-accent-soft, #edf2e8); outline: none; }
+.slide-menu-item:disabled { opacity: .4; cursor: default; }
+.slide-menu-item.danger { color: var(--ui-bad, #c44650); }
+.slide-menu-item kbd { font-family: ui-monospace, monospace; font-size: 11px; color: var(--ui-dim, #72796e); }
+.slide-menu-sep { height: 1px; background: var(--ui-line, #e4e5df); margin: 4px 6px; }

@@ -1919,6 +1919,15 @@
     node.classList.add('typed-out');
     Player.scheduleFit(node);
   };
+  function tallyHeld(node) {
+    var id = node && node.dataset ? node.dataset.slideId : '';
+    var s = id && Player.deck && Player.deck.slides.find(function (x) { return x.id === id; });
+    return !!(s && s.holdResults && !(SF.Live && SF.Live.revealed && SF.Live.revealed[s.id]));
+  }
+  /* Called at the reveal: draw the bars a held question has been keeping. */
+  Player.releaseTally = function () {
+    if (Player._current && Player._liveTally) applyTally(Player._current, Player._liveTally, Player._liveProgress);
+  };
   Player.clearTally = function () {
     Player._liveTally = null;
     if (Player._current) {
@@ -2012,6 +2021,9 @@
     if (answered) answered.textContent = said;
     var tally = node.querySelector('.tally');
     if (!tally) return;
+    /* A question set to show results on reveal keeps its bars off the wall
+       until then; the count of who has answered still moves. */
+    if (tallyHeld(node)) return;
     openTally(node);
     var max = Math.max(1, Math.max.apply(null, counts));
     Array.prototype.forEach.call(tally.querySelectorAll('.col'), function (col, i) {

@@ -2290,6 +2290,7 @@
     sendReveal(s);
     if (s.input === 'text') SF.Player.showTypedAnswers(typedGroups(s));
     if (s.input === 'number') SF.Player.showPlacedValues(placedValues(s));
+    if (SF.Player.releaseTally) SF.Player.releaseTally();
     // paint the right answer on the projected slide even though the host
     // never clicked anything
     if (SF.Player.answers[s.id] == null) SF.Player.answers[s.id] = -1;

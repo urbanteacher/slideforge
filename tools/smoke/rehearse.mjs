@@ -40,6 +40,8 @@ try {
     SF.Editor.workspace.draw();
   });
 
+  /* Rehearse lives under Present ▾ now. */
+  await page.locator('.present-more summary').click();
   await page.locator('#btnRehearse').click();
   await page.waitForFunction(() => SF.Player.open && SF.Demo.active);
   assert.equal(await page.evaluate(() => !!document.fullscreenElement), false,

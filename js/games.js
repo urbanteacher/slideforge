@@ -1804,6 +1804,12 @@
           box.appendChild(UI.check('Ask how sure they were', st.confidence !== false, function (v) {
             st.confidence = v; touched(); draw2();
           }));
+          box.appendChild(UI.check('Hide the room\u2019s answers until the reveal', st.resultsOnReveal === true, function (v) {
+            st.resultsOnReveal = v; touched(); draw2();
+          }));
+          box.appendChild(el('div', 'hint',
+            'The wall shows how many have answered, not what they chose, until you reveal — ' +
+            'so nobody answers by following the tallest bar.'));
           box.appendChild(el('div', 'hint',
             'One extra tap on the phone, after their answer is already locked in ' +
             'so it costs them no time. It never changes the score — what it ' +

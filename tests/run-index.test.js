@@ -98,3 +98,33 @@ test('the same game embedded twice gets its own slide ids the second time', () =
     'the first appearance keeps its stable ids');
   assert.equal(run.slides[SF.runIndexOf(deck, run, 2)].sourceSlideId, second.id, 'Present from the second finds it');
 });
+
+/* The number on a slide is the room's number. render.js counted games as one
+   slide, so after the first game the editor's footer and the wall disagreed. */
+test('a slide shows the number it will have on the wall, games counted as their steps', () => {
+  const SF = load();
+  const game = twoQuestionGame(SF);
+  const deck = SF.makeDeck();
+  const g = Object.assign(SF.makeSlide('game'), { gameId: game.id });
+  deck.slides = [slide(SF, 'A'), g, slide(SF, 'Hidden', { hidden: true }), slide(SF, 'After')];
+  const look = id => SF.GameStore.get(id);
+  const run = SF.buildRunDeck(deck, look);
+  const after = deck.slides[3];
+  const inEditor = SF.showNumber(deck, after, look);
+  const onWall = SF.showNumber(run, run.slides[SF.runIndexOf(deck, run, 3)], look);
+  assert.deepEqual({ ...inEditor }, { ...onWall });
+  assert.equal(inEditor.total, run.slides.length);
+  assert.equal(SF.showNumber(deck, deck.slides[2], look), null, 'a hidden slide has no number in the show');
+});
+
+/* UX-60: a game can keep the room's bars off the wall until the reveal. */
+test('hold results reaches every compiled question, and is off unless asked for', () => {
+  const SF = load();
+  const game = twoQuestionGame(SF);
+  const quizzes = g => SF.compileGame(g).filter(s => s.type === 'quiz');
+  assert.equal(SF.normalizeGame(game).settings.resultsOnReveal, false);
+  assert.ok(quizzes(game).every(s => !s.holdResults), 'live bars by default');
+  game.settings.resultsOnReveal = true;
+  const held = SF.normalizeGame(game);
+  assert.ok(quizzes(held).length === 2 && quizzes(held).every(s => s.holdResults === true));
+});

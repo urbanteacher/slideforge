@@ -348,6 +348,8 @@ export function createRail(SF, helpers) {
         (s.hidden === true ? ' hidden-slide' : ''));
       row.draggable = true;
       row.tabIndex = 0;
+      /* Which slide a right-click on this row is about (js/editor.js slide menu). */
+      row.dataset.index = String(i);
       row.setAttribute('role', 'button');
       row.setAttribute('aria-label', 'Slide ' + (i + 1) + ': ' + (s.title || SF.SLIDE_TYPES[s.type].label) +
         (s.hidden === true ? ' — hidden from the show' : ''));

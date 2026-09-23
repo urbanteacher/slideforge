@@ -56,6 +56,7 @@
     "js/live-activities.js",
     "js/presenter-activities.js",
     "js/shell.js",
+    "js/palette.js",
     "js/games.js",
     "js/manual.js",
     "js/live.js",
