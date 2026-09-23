@@ -324,7 +324,7 @@
       howToPlay: [
         'Four equal items appear on the wall. Each learner taps the odd one on their phone.',
         'The votes stay hidden. Next reveals the room’s split across the tiles, the prepared odd one and its reason.',
-        'The next most popular pick is invited to defend its rule — accept any rule that holds.'
+        'Then every phone can defend a pick with its rule. The rules arrive beside the slide without names; put the best on the table from the desk — accept any rule that holds.'
       ]
     },
     'compare-contrast': {

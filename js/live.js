@@ -383,7 +383,7 @@
       /* A proposal becomes the one on the table: its author is the speaker,
          and in Concept Chain its words are the link Accept will add. */
       var here=SF.Player.deck&&SF.Player.deck.slides[SF.Player.idx];
-      if(!here||!proposalSlide(here)) return;
+      if(!here||!(proposalSlide(here)||here.style==='oddone'||here.oddoneDiscuss)) return;
       var spokenHere=isSpokenSlide(here)&&!Live.revealed[here.id];
       var pid=Number(data.pid);
       /* In a spoken format the author becomes the speaker; Compare has no
@@ -466,6 +466,16 @@
     if (!startCustomPrompt({ kind: 'brainstorm', prompt: proposalText(s), presentAs: 'rail', max: 2, origin: 'proposals' })) return;
     Live.proposalPrompt = Live.prompt ? Live.prompt.id : null;
   }
+  /* Odd One Out's defence: once the split and the prepared rule are out,
+     the phones get a box to defend a pick — any pick — with its rule. It
+     opens after the reveal so it never interrupts the vote. */
+  function openDefence(s) {
+    if (!Live.active || !s || !(s.style === 'oddone' || s.oddoneDiscuss) || Live.prompt) return;
+    if (!startCustomPrompt({ kind: 'brainstorm', presentAs: 'rail', max: 1,
+      prompt: 'Defend a pick: which one, and what rule makes it the odd one out?' })) return;
+    Live.proposalPrompt = Live.prompt ? Live.prompt.id : null;
+  }
+
   function closeProposals() {
     if (Live.proposalPrompt && Live.prompt && Live.prompt.id === Live.proposalPrompt) endCustomPrompt();
     Live.proposalPrompt = null;
@@ -479,19 +489,28 @@
   /* ---------------------------------------------- the room's output (N12–N14)
 
      What the room sends has to land somewhere. From the desk the teacher
-     can put one idea in the spotlight (on the wall, without its author, for
-     the rest of the slide, so Share's best idea is still up for Connect),
-     hide one the room should not dwell on, close a prompt, and show a held
+     can put an idea in the spotlight (on the wall, without its author, for
+     the rest of the slide, so Share's best idea is still up for Connect).
+     Up to three stay up at once, each named for the stage it was sent in,
+     so Plus, Minus and Interesting end the slide side by side. The teacher
+     can also
+     hide an idea the room should not dwell on, close a prompt, and show a held
      self-assessment when the room has answered. The wall's copy of the
      ideas is the digest with the hidden ones taken out; the relay's is
      untouched, so the report still has everything. */
   Live.hiddenIdeas = { promptId: null, keys: {} };
-  Live.spotlight = null;        // { slideId, key, text }
+  Live.spotlights = [];         // [{ slideId, sid, label, text }], three at most per slide
   Live.shownPrompt = null;      // the held prompt the teacher has shown
   Live.closedPrompt = null;     // the authored prompt closed for this visit
   Live.written = null;          // { slideId, stage, n, of }
 
   function ideaKey(it) { return String(it.seq != null ? it.seq : it.pid + ':' + it.text); }
+  /* A spotlight's id is its box and its idea: the relay numbers ideas per
+     box, so the first idea in two boxes has the same key. */
+  function spotId(promptId, key) { return String(promptId) + '|' + String(key); }
+  function slideSpots(slide) {
+    return slide ? Live.spotlights.filter(function (x) { return x.slideId === slide.id; }) : [];
+  }
   function hiddenKeys() {
     return Live.prompt && Live.hiddenIdeas.promptId === Live.prompt.id ? Live.hiddenIdeas.keys : {};
   }
@@ -519,8 +538,8 @@
     /* The teacher's quick poll has its own card, and proposals are listed
        under Live answers with "Use this". */
     var mine = p && (!p.custom || p.origin === 'stage');
-    var spot = Live.spotlight && slide && Live.spotlight.slideId === slide.id ? Live.spotlight.text : '';
-    if (!mine && !written && !spot) return null;
+    var spots = slideSpots(slide);
+    if (!mine && !written && !spots.length) return null;
     var d = Live.digest || {};
     var hidden = hiddenKeys();
     return {
@@ -534,10 +553,11 @@
       players: mine ? (d.players || (Live.players || []).length) : 0,
       ideas: mine && d.items ? d.items.slice(0, 20).map(function (it) {
         var key = ideaKey(it);
+        var sid = spotId(p.id, key);
         return { key: key, text: it.text, name: it.name || '', hidden: !!hidden[key],
-          spot: !!(Live.spotlight && Live.spotlight.key === key && Live.spotlight.slideId === (slide && slide.id)) };
+          spot: spots.some(function (x) { return x.sid === sid; }) };
       }) : [],
-      spotlight: spot,
+      spotlights: spots.map(function (x) { return { sid: x.sid, label: x.label, text: x.text }; }),
       written: written
     };
   };
@@ -563,20 +583,31 @@
         if (Live.deck && Live.deck.quiz && Live.deck.quiz.scoreboard && Live.rows.length) paintRail();
         else SF.Player.disableRail();
       }
-    } else if (d.action === 'spot' && slide) {
+    } else if (d.action === 'spot' && slide && p) {
       var it = find();
       if (!it) return false;
-      Live.spotlight = { slideId: slide.id, key: ideaKey(it), text: String(it.text).slice(0, 160) };
+      var sid = spotId(p.id, ideaKey(it));
+      if (!slideSpots(slide).some(function (x) { return x.sid === sid; })) {
+        Live.spotlights.push({ slideId: slide.id, sid: sid, label: p.stage || 'Spotlight',
+          text: String(it.text).slice(0, 160) });
+        /* Three at most: a fourth takes the place of the oldest. */
+        var mineNow = slideSpots(slide);
+        if (mineNow.length > 3) Live.spotlights.splice(Live.spotlights.indexOf(mineNow[0]), 1);
+      }
       paintSpotlight(slide);
     } else if (d.action === 'unspot') {
-      Live.spotlight = null;
+      /* One spotlight by its id, or, from an idea's row, that idea's. */
+      var gone = d.sid ? String(d.sid) : (p && d.key != null ? spotId(p.id, d.key) : '');
+      Live.spotlights = Live.spotlights.filter(function (x) { return gone ? x.sid !== gone : x.slideId !== (slide && slide.id); });
       paintSpotlight(slide);
     } else if ((d.action === 'hide' || d.action === 'unhide') && p) {
       if (Live.hiddenIdeas.promptId !== p.id) Live.hiddenIdeas = { promptId: p.id, keys: {} };
       if (d.action === 'hide') {
         Live.hiddenIdeas.keys[String(d.key)] = true;
         /* A hidden idea cannot stay in the spotlight. */
-        if (Live.spotlight && Live.spotlight.key === String(d.key)) { Live.spotlight = null; paintSpotlight(slide); }
+        var hid = spotId(p.id, d.key);
+        Live.spotlights = Live.spotlights.filter(function (x) { return x.sid !== hid; });
+        paintSpotlight(slide);
       } else delete Live.hiddenIdeas.keys[String(d.key)];
       paintFeedbackPanel();
     } else return false;
@@ -584,22 +615,28 @@
     return true;
   };
 
-  /* The spotlighted idea, on the wall, without its author. */
+  /* The spotlighted ideas, on the wall, without their authors: one card
+     each, side by side, named for the stage each came from. */
   function paintSpotlight(s) {
     var node = SF.Player._current;
     if (!node) return;
-    var said = Live.spotlight && s && Live.spotlight.slideId === s.id ? Live.spotlight.text : '';
-    var box = node.querySelector('.idea-spotlight');
-    node.classList.toggle('has-idea-spotlight', !!said);
-    if (!said) { if (box) box.remove(); return; }
+    var spots = slideSpots(s);
+    var box = node.querySelector('.idea-spotlights');
+    node.classList.toggle('has-idea-spotlight', !!spots.length);
+    if (!spots.length) { if (box) box.remove(); return; }
     if (!box) {
-      box = el('div', 'idea-spotlight');
+      box = el('div', 'idea-spotlights');
       box.setAttribute('aria-live', 'polite');
       node.appendChild(box);
     }
+    box.dataset.count = String(spots.length);
     box.textContent = '';
-    box.appendChild(el('span', 'is-label', 'Spotlight'));
-    box.appendChild(el('span', 'is-text', '\u201c' + said + '\u201d'));
+    spots.forEach(function (x) {
+      var card = el('div', 'idea-spotlight');
+      card.appendChild(el('span', 'is-label', x.label));
+      card.appendChild(el('span', 'is-text', '\u201c' + x.text + '\u201d'));
+      box.appendChild(card);
+    });
   }
 
   function recipientName(r) {
@@ -2362,7 +2399,9 @@
       custom: true,
       /* Who opened it: 'stage' (a Share stage's idea box), 'proposals', or
          nothing for the teacher's own quick poll, which has its own card. */
-      origin: def.origin ? String(def.origin) : ''
+      origin: def.origin ? String(def.origin) : '',
+      /* The stage a Share-style box belongs to, which names its spotlight. */
+      stage: def.stage ? String(def.stage).slice(0, 60) : ''
     };
     Live.digest = null;
     if (Live.active) {
@@ -2704,7 +2743,7 @@
     /* Proposals belong to the item they were made for, and so does the
        spotlight; a redraw of the same slide puts it back. */
     if (Live.proposalOnTable && (!s || Live.proposalOnTable.slideId !== s.id)) Live.proposalOnTable = null;
-    if (Live.spotlight && (!s || Live.spotlight.slideId !== s.id)) Live.spotlight = null;
+    Live.spotlights = Live.spotlights.filter(function (x) { return s && x.slideId === s.id; });
     if (Live.written && (!s || Live.written.slideId !== s.id)) Live.written = null;
     paintSpotlight(s);
     if (Live.proposalPrompt) closeProposals();
@@ -2991,6 +3030,7 @@
     if (s.input === 'number') SF.Player.showPlacedValues(placedValues(s));
     if (s.input === 'fill' && SF.Player.showFillReveal) SF.Player.showFillReveal(fillGroups(s));
     if (s.input === 'sort' && SF.Player.showSortReveal) SF.Player.showSortReveal(sortGroups(s));
+    if (s.style === 'oddone' || s.oddoneDiscuss) setTimeout(function () { openDefence(s); }, 0);
     if (SF.Player.releaseTally) SF.Player.releaseTally();
     clearTimeout(Live._splitTimer);
     if (s.showdown && Live.showdown && Live.showdown.id === s.id && SF.Player.setShowdown) {
