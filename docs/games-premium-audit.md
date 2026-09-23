@@ -416,6 +416,34 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — Six square pegs, rounded.** Places where a game
+  had been fitted into generic pieces, and what each one does now:
+  1. **Question Cube** said "Complete / Skip" (Random Challenge's words). It
+     now says **Answered / Pass**.
+  2. **Heads Up** phones all said "listen and watch". Now, once a guesser is
+     chosen, every clue-giver's phone **shows the term** and the guesser's
+     says "face away". Nobody gets the term before a guesser is chosen. The
+     relay tells each phone its own version (`spokenFanout`, the `guesser`
+     message).
+  3. **Predict** asked "how sure?" on a generic sheet after locking. The
+     **bet is now placed with the pick** (I'm sure ×1.5/−½, Just a hunch
+     ×1/0). A private "why" is kept on the phone and shown back with the
+     result.
+  4. **Odd One Out's defence** was only a line on the wall. After the reveal
+     **every phone can defend a pick** with its rule; the rules arrive
+     unnamed and the desk can put one on the table.
+  5. **Concept Chain and Connection Maker** used the generic idea box, shown
+     in the side pane. The phone now proposes **"energy → [next idea]
+     because …"** or "A and B are connected because …". Proposals **grow on
+     the chain or under the pair** as faint unnamed branches (the one on
+     the table drawn solid), and the pane keeps the standings (a `quiet`
+     prompt).
+  6. **Time Traveler's phone** was a bare slider. It now **draws the game's
+     timeline** with every earlier event pinned, the same line as the wall.
+
+  Relay tests for each. `node --test` 518/518; the full `npm test` build
+  check was blocked by another agent's uncommitted `src/activities` work.
+  None of these were viewed on screen.
 - **23 September 2026 — Compare & Contrast: sort it (GA-26, N6).**
   - **A new phone input, `sort`:** one column (A only, Both, B only) per
     statement. The relay validates it; teacher entry records it by key; the

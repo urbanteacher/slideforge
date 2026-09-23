@@ -1302,6 +1302,17 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** Six square pegs fixed, where games were fitted into
+  generic pieces:
+  - Question Cube's verdict words;
+  - Heads Up clue-givers see the term (the guesser never does);
+  - Predict's bet is placed with the pick, plus a private why;
+  - Odd One Out's phones defend a pick;
+  - Chain and Connection proposals are shaped like links and grow on the
+    slide;
+  - Time Traveler's phone draws the timeline.
+
+  518/518. Not viewed.
 - **23 Sep 2026.** Activities wave 2 (AC-06–08, closing TPS-01 and TPS-02).
   A desk block beside the notes spotlights or hides any idea. The
   spotlight goes on the wall without a name and stays for the slide. A
