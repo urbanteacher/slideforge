@@ -426,6 +426,35 @@ This is already the rule in `js/stages.js`, and it stays.
 
 ## Change log
 
+- **23 September 2026 — AC-14 and AC-15 tried, and reverted.**
+  - **What was tried:**
+    - the Question Cube activity handing over to the Question Cube game,
+      seeded with its six questions;
+    - the Concept Card Sort as a Compare & Contrast sort (Perimeter or
+      Area, three rounds of four cards and one for Both);
+    - Quick Practice Stations on stages, a clock per rotation.
+
+    All three compiled, and the catalogue and stage tests passed.
+  - **Why reverted:** two AI tests failed, and they were right. Each of these
+    activities has a "Write it" guardrail in `js/ai.js`:
+    - the six Rosenshine stems for the cube;
+    - named categories and twelve to twenty items for the sort;
+    - a real task in each station's box, "not rotation instructions alone".
+
+    Handing the first two to games moves their writing to Quiz studio's AI.
+    That AI has no Question Cube shape, and its `compare` shape writes no
+    statements to sort. The stations rows were rotation instructions, which
+    their own guardrail forbids. Stages were also the wrong model: groups
+    are at different stations at the same time.
+  - **What unblocks each:**
+    - the game AI learning the `question-cube` faces and `compare`
+      statements (games-side, `js/ai.js`);
+    - a clock that knows a rotation (every group moves, the stations stay);
+    - custom sort columns, for Word Splash's confidence.
+  - **Open decision:** the Benefits vs Limitations **Battle** scoring by team
+    needs a new spoken game style, and all nine of a style's registrations.
+    That is larger than §5's "S–M", and it is Mark's call.
+
 - **23 September 2026 — Wave 3 (AC-09 to AC-12, AC-16).**
   - **Kit.**
     - A stage label may declare its job at its end, "At home · 3 min
