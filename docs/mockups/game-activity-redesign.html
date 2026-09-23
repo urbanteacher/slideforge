@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Redesign mockup — Spot the Error and Think-Pair-Share</title>
+<style>
+  :root { --ink:#1d2330; --dim:#6b7280; --paper:#faf8f4; --navy:#16213e; --red:#c8102e; --green:#2f7d4f; --amber:#d98e04; --line:#e3e0d8; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, 'Avenir Next', 'Segoe UI', sans-serif; background: #eceae4; color: var(--ink); }
+  header { padding: 28px 40px 8px; }
+  header h1 { margin: 0 0 6px; font-size: 26px; }
+  header p { margin: 0; color: var(--dim); max-width: 900px; line-height: 1.5; }
+  section { padding: 18px 40px 30px; }
+  section > h2 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin: 18px 0 12px; }
+  .row { display: flex; gap: 22px; align-items: flex-start; flex-wrap: wrap; }
+  .cap { font-size: 13px; color: var(--dim); margin: 8px 2px 0; max-width: 640px; line-height: 1.45; }
+  .cap b { color: var(--ink); }
+
+  /* the wall, 16:9 */
+  .wall { width: 640px; aspect-ratio: 16/9; background: var(--paper); border-radius: 6px; position: relative; overflow: hidden;
+          box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+  .wall.dark { background: var(--navy); color: #fff; }
+  .tag { position: absolute; top: 14px; left: 18px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--red); }
+  .wall.dark .tag { color: #ff8fa0; }
+  .ring { position: absolute; top: 12px; right: 16px; width: 46px; height: 46px; border-radius: 50%;
+          border: 4px solid var(--red); display: grid; place-items: center; font-weight: 700; font-size: 13px; background: #fff; color: var(--ink); }
+  .count { position: absolute; bottom: 12px; right: 18px; font-size: 12px; color: var(--dim); }
+  .wall.dark .count { color: #c9d1e6; }
+
+  /* Spot the Error */
+  .passage { position: absolute; left: 44px; right: 44px; top: 70px; font-size: 25px; line-height: 1.75; font-weight: 600; }
+  .w { display: inline-block; padding: 0 3px; border-radius: 4px; position: relative; }
+  .heat .w::after { content: ''; position: absolute; left: 2px; right: 2px; bottom: -8px; height: 6px; border-radius: 3px; background: var(--amber); opacity: var(--h, 0); }
+  .heat .w .n { position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: var(--amber); }
+  .err { color: var(--red); text-decoration: line-through; text-decoration-thickness: 3px; }
+  .fix { display: inline-block; background: #e3f3e8; color: var(--green); border-radius: 5px; padding: 0 6px; margin-left: 4px; font-weight: 700; }
+  .banner { position: absolute; left: 44px; right: 44px; bottom: 34px; font-size: 14px; line-height: 1.45; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  .banner b { color: var(--red); }
+
+  /* Think-Pair-Share */
+  .stages { position: absolute; top: 16px; left: 18px; right: 80px; display: flex; gap: 6px; }
+  .stage { flex: 1; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 7px 8px; border-radius: 6px; background: rgba(255,255,255,.08); color: #9aa6c4; }
+  .stage.done { color: #6f7ea3; text-decoration: line-through; }
+  .stage.now { background: #fff; color: var(--navy); }
+  .stage small { display: block; font-weight: 500; letter-spacing: 0; text-transform: none; font-size: 10px; opacity: .8; }
+  .prompt { position: absolute; left: 44px; right: 44px; top: 86px; font-size: 30px; line-height: 1.25; font-weight: 700; }
+  .cue { position: absolute; left: 44px; top: 205px; font-size: 15px; color: #c9d1e6; display: flex; gap: 10px; align-items: center; }
+  .cue .dot { width: 10px; height: 10px; border-radius: 50%; background: #7fd49b; }
+  .wall.dark .ring { background: var(--navy); color: #fff; border-color: #7fd49b; }
+  .ideas { position: absolute; left: 44px; right: 44px; top: 150px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .idea { background: rgba(255,255,255,.08); border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.35; color: #dfe5f3; }
+  .idea.pick { background: #fff; color: var(--navy); font-size: 15px; font-weight: 600; grid-column: span 3; box-shadow: 0 0 0 3px #7fd49b; }
+
+  /* phone */
+  .phone { width: 190px; height: 360px; background: #111; border-radius: 26px; padding: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+  .scr { width: 100%; height: 100%; background: #fff; border-radius: 18px; padding: 14px 12px; font-size: 12px; position: relative; overflow: hidden; }
+  .scr .k { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); font-weight: 700; }
+  .scr .q { font-size: 13px; font-weight: 700; margin: 6px 0 10px; line-height: 1.3; }
+  .tap { display: inline-block; padding: 3px 5px; margin: 2px 1px; border-radius: 6px; background: #f1f0ec; font-size: 12px; }
+  .tap.on { background: var(--red); color: #fff; }
+  .btn { position: absolute; left: 12px; right: 12px; bottom: 14px; background: var(--navy); color: #fff; border-radius: 10px; padding: 10px; text-align: center; font-weight: 700; font-size: 12px; }
+  .note { border: 1px solid var(--line); border-radius: 10px; padding: 8px; min-height: 120px; font-size: 12px; color: var(--ink); line-height: 1.4; }
+  .private { font-size: 10px; color: var(--green); margin-top: 6px; }
+
+  .before { opacity: .9; }
+  .vs { font-size: 12px; font-weight: 700; color: var(--dim); align-self: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Games that do what they say, and activities that look like what they are</h1>
+  <p>Mockup for two transformations. Top of each: what the wall shows today. Below: what it would show, in the moments that matter, beside what a phone shows at the same time. Static drawings, not the app.</p>
+</header>
+
+<!-- ======================================================= SPOT THE ERROR -->
+<section>
+  <h2>Game · Spot the Error — today</h2>
+  <div class="row before">
+    <div>
+      <div class="wall">
+        <div class="tag">Q1</div><div class="ring">15</div>
+        <div style="position:absolute;left:44px;right:80px;top:40px;font-size:20px;font-weight:700;line-height:1.3">Which part of this is wrong? "Photosynthesis happens in the mitochondria, uses carbon dioxide and water, and releases oxygen."</div>
+        <div style="position:absolute;left:44px;right:44px;top:170px;display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:15px">
+          <div style="border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff">A · happens in the mitochondria</div>
+          <div style="border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff">B · uses carbon dioxide and water</div>
+          <div style="border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff">C · releases oxygen</div>
+          <div style="border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff">D · nothing is wrong</div>
+        </div>
+      </div>
+      <p class="cap"><b>The name promises spotting; the screen does it for you.</b> The options cut the sentence into its three suspect phrases, so nobody reads it looking for an error — they pick a letter.</p>
+    </div>
+  </div>
+
+  <h2>Spot the Error — redesigned · while the room hunts</h2>
+  <div class="row">
+    <div>
+      <div class="wall">
+        <div class="tag">Spot the error · 1 of 5</div><div class="ring">0:24</div>
+        <div class="passage">
+          <span class="w">Photosynthesis</span> <span class="w">happens</span> <span class="w">in</span> <span class="w">the</span> <span class="w">mitochondria,</span> <span class="w">uses</span> <span class="w">carbon</span> <span class="w">dioxide</span> <span class="w">and</span> <span class="w">water,</span> <span class="w">and</span> <span class="w">releases</span> <span class="w">oxygen.</span>
+        </div>
+        <div class="banner">There is <b>one</b> error in this sentence. Find it on your phone — tap the word that is wrong.</div>
+        <div class="count">19 of 26 have tapped</div>
+      </div>
+      <p class="cap"><b>The sentence is the whole screen.</b> No options, no letters — the only way to answer is to read it. The count moves as taps come in; <i>where</i> they tapped stays hidden until the reveal.</p>
+    </div>
+    <div class="phone"><div class="scr">
+      <div class="k">Tap the error</div>
+      <div class="q">One word or phrase is wrong.</div>
+      <span class="tap">Photosynthesis</span><span class="tap">happens</span><span class="tap">in</span><span class="tap">the</span><span class="tap on">mitochondria,</span><span class="tap">uses</span><span class="tap">carbon</span><span class="tap">dioxide</span><span class="tap">and</span><span class="tap">water,</span><span class="tap">and</span><span class="tap">releases</span><span class="tap">oxygen.</span>
+      <div class="btn">Lock in "mitochondria"</div>
+    </div></div>
+  </div>
+
+  <h2>Spot the Error — redesigned · the reveal</h2>
+  <div class="row">
+    <div>
+      <div class="wall">
+        <div class="tag">Where the room looked</div>
+        <div class="passage heat">
+          <span class="w" style="--h:.1">Photosynthesis<span class="n">1</span></span> <span class="w">happens</span> <span class="w">in</span> <span class="w">the</span> <span class="w" style="--h:.95"><span class="err">mitochondria,</span><span class="n">14</span></span><span class="fix">chloroplasts</span> <span class="w">uses</span> <span class="w" style="--h:.3">carbon<span class="n">3</span></span> <span class="w">dioxide</span> <span class="w">and</span> <span class="w">water,</span> <span class="w">and</span> <span class="w" style="--h:.6">releases<span class="n">8</span></span> <span class="w">oxygen.</span>
+        </div>
+        <div class="banner"><b>14 found it.</b> 8 went for "releases oxygen" — but it does. Mitochondria do respiration; photosynthesis happens in the chloroplasts.</div>
+      </div>
+      <p class="cap"><b>The reveal is the lesson.</b> A heat bar under every word shows where the room's taps landed, then the error is struck through and the correction slides in. The second-tallest bar is a misconception with a name, on the screen, and nobody was singled out to find it.</p>
+    </div>
+    <div class="phone"><div class="scr">
+      <div class="k">Result</div>
+      <div class="q" style="color:var(--green)">You found it · +100</div>
+      <div style="font-size:12px;line-height:1.45">"mitochondria" should be <b>chloroplasts</b>.<br><br>You were one of 14 who spotted it first time.</div>
+      <div class="btn" style="background:#f1f0ec;color:var(--ink)">Next one is coming…</div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ===================================================== THINK-PAIR-SHARE -->
+<section>
+  <h2>Activity · Think-Pair-Share — today</h2>
+  <div class="row before">
+    <div>
+      <div class="wall">
+        <div class="ring">7:00</div>
+        <div style="position:absolute;left:44px;top:60px;font-size:22px;font-weight:700">Think-Pair-Share</div>
+        <div style="position:absolute;left:44px;right:44px;top:104px;font-size:13px;line-height:2.1">
+          <b>01 Think · 1 min</b> — Can two shapes have the same perimeter but different areas?<br>
+          <b>02 Pair · 2 min</b> — Compare sketches. Find an example you both think works.<br>
+          <b>03 Share · 3 min</b> — Show your strongest example and explain how you checked it.<br>
+          <b>04 Connect · 1 min</b> — What does this tell us about area and perimeter?
+        </div>
+      </div>
+      <p class="cap"><b>Four instructions and one seven-minute clock.</b> Nothing says which stage the room is in, the question is a line of small print, and the phones sit idle. It reads like a glossary slide — and 42 of the 54 activities are drawn this way.</p>
+    </div>
+  </div>
+
+  <h2>Think-Pair-Share — redesigned · Think</h2>
+  <div class="row">
+    <div>
+      <div class="wall dark">
+        <div class="stages"><div class="stage now">Think<small>alone · 1:00</small></div><div class="stage">Pair<small>2:00</small></div><div class="stage">Share<small>3:00</small></div><div class="stage">Connect<small>1:00</small></div></div>
+        <div class="ring">0:42</div>
+        <div class="prompt">Can two shapes have the same perimeter but different areas?</div>
+        <div class="cue"><span class="dot"></span> Silent thinking. Sketch or jot one idea — on paper or your phone.</div>
+        <div class="count">19 of 26 have written something</div>
+      </div>
+      <p class="cap"><b>The stage is the screen.</b> A track across the top says where the room is and what comes next; the question is the biggest thing on it; each stage has its own clock. The teacher moves the stages on, or they move themselves.</p>
+    </div>
+    <div class="phone"><div class="scr">
+      <div class="k">Think · alone</div>
+      <div class="q">Same perimeter, different area?</div>
+      <div class="note">A 4×4 square and a 2×6 rectangle — both 16 round the edge…</div>
+      <div class="private">🔒 Only you can see this</div>
+      <div class="btn" style="background:#f1f0ec;color:var(--ink)">Saved — pair up at 0:00</div>
+    </div></div>
+  </div>
+
+  <h2>Think-Pair-Share — redesigned · Share</h2>
+  <div class="row">
+    <div>
+      <div class="wall dark">
+        <div class="stages"><div class="stage done">Think</div><div class="stage done">Pair</div><div class="stage now">Share<small>3:00</small></div><div class="stage">Connect<small>1:00</small></div></div>
+        <div class="ring">2:10</div>
+        <div class="prompt" style="font-size:18px;top:70px;color:#c9d1e6">Same perimeter, different areas?</div>
+        <div class="ideas">
+          <div class="idea pick">A 4×4 square and a 2×6 rectangle: both perimeter 16, areas 16 and 12.</div>
+          <div class="idea">A long thin rectangle has almost no area</div>
+          <div class="idea">1×7 and 4×4 — checked by counting squares</div>
+          <div class="idea">Circles win? Not sure how to check</div>
+        </div>
+        <div class="count">11 pairs have sent an idea · anonymous</div>
+      </div>
+      <p class="cap"><b>The room's thinking arrives on the wall, anonymously.</b> Each pair sends its best idea; the teacher, from the presenter view, puts one in the spotlight to talk through. Nobody is picked on, and every pair's idea was seen by the teacher.</p>
+    </div>
+    <div class="phone"><div class="scr">
+      <div class="k">Share · as a pair</div>
+      <div class="q">Send your pair's strongest example.</div>
+      <div class="note">A 4×4 square and a 2×6 rectangle: both perimeter 16, areas 16 and 12.</div>
+      <div class="private">Goes to your teacher without your name</div>
+      <div class="btn">Send</div>
+    </div></div>
+  </div>
+</section>
+</body>
+</html>
