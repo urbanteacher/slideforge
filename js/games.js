@@ -318,6 +318,16 @@
 
       var meta = el('div', 'qmeta');
       var style = SF.gameStyle(game.style);
+      /* What is missing leads, in words: "incomplete" said something was
+         wrong and left the teacher to open the question to find out what.
+         The reason's first clause; the whole of it on hover. */
+      var bad = style.problems(question, i + 1);
+      if (bad) {
+        var reason = String(bad).replace(/^Q\d+\s*/, '').split(' \u2014 ')[0];
+        var warn = el('span', 'warn', '\u26a0 ' + reason.charAt(0).toUpperCase() + reason.slice(1));
+        warn.title = String(bad);
+        meta.appendChild(warn);
+      }
       /* What to say about a question is the style's business — a typed one has
          no options to count, and this used to reach for them regardless. */
       meta.appendChild(el('span', null, style.summary(question)));
@@ -328,8 +338,6 @@
           effTime(question) ? effTime(question) + 's' : 'no timer'));
       }
       if (question.voteOnly) meta.appendChild(el('span', 'why', '\u25cb vote only'));
-      var bad = style.problems(question, i + 1);
-      if (bad) meta.appendChild(el('span', 'warn', 'incomplete'));
       if (String(question.image || '').trim()) {
         meta.appendChild(el('span', 'pic', '▣ image'));
       }

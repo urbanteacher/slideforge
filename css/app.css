@@ -3206,8 +3206,22 @@ html[data-ws="deck"] #railCount { display: none; }
   font-size: 12px; line-height: 1.35; color: var(--ui-text);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.qthumb .qmeta { font-size: 10px; color: var(--ui-dim); margin-top: 4px; display: flex; gap: 7px; }
-.qthumb .qmeta .warn { color: var(--ui-warn); }
+/* Short facts that wrap as whole chips. Unwrapped, a narrow rail squeezed
+   each into a column and broke it word by word, and the last ran off the card. */
+.qthumb .qmeta {
+  font-size: 10px; color: var(--ui-dim); margin-top: 4px;
+  display: flex; flex-wrap: wrap; gap: 3px 8px; min-width: 0;
+}
+.qthumb .qmeta > span { white-space: nowrap; }
+/* What is missing: a chip of its own on the first line, cut short rather
+   than overflowing, the whole reason on hover. */
+.qthumb .qmeta .warn {
+  flex-basis: 100%; max-width: max-content; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis;
+  color: var(--ui-warn); font-weight: 600;
+  padding: 1px 7px; border-radius: 999px;
+  background: color-mix(in srgb, var(--ui-warn) 14%, transparent);
+}
 .qthumb .qmeta .why { color: var(--ui-good); }
 .qthumb .qmeta .pic { color: var(--ui-accent); }
 
