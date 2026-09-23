@@ -45,22 +45,16 @@ order.
 | RP-03 | A packed, centred word cloud with stable positions | M | To do |
 | RP-04 | The desk's "need a hand" chip, seen drawn | S | To check |
 | TPS-03 | Smoke-test and view Think-Pair-Share on the wall and a phone | S | To check · not seen drawn |
-| TPS-04 | Offer the stages view to existing lessons' staged routines (all ten since AC-05; only new inserts get it now) | S | To do |
-| #7 | Gate ✋ and ? to junction points | S | To do |
 | #8 | Learner theming: the deck theme has no route to the phone | M | Deferred · shared files |
 | #10 | Lesson-level standings, teacher-controlled | M | Deferred · shared files |
 | #11 | Coda: exit ticket penultimate, wrap last | M–L | Deferred · needs a privacy decision |
 | UX-31 | Show that the panel field and the slide are one text | S | To do · P3 |
-| UX-53 | A white-screen key (not `W`, which is "Who answered what") | S | To do · P3 |
 | UX-63 | Lobby with optional generated nicknames | M | Needs a decision · P3 |
 | UX-64 | Student-paced mode with its own code (see also GA-28, solo practice) | L | Needs a decision · P2 |
 | UX-65 | Per-student takeaway | M–L | Needs a decision · P3 |
 | UX-72 | Keyboard-only pass through every modal and panel | M | Partly done · a hands-on pass needs a person |
 | CA-05 | First click after typing on the slide is swallowed | S–M | Not reproduced |
 | CA-21 | Composition and regions measure in different frames | M–L | Not reproduced · measured |
-| CA-43 | The Undo button works while a slide is being carried | S | To confirm · P3 |
-| CA-53 | `wordSpeed: "constructor"` writes `undefinedms` into CSS | S | To do · P3 |
-| CA-54 | `pic.src`, `deck.logo` and CSS `url()` skip `safeMedia` | S | To do · P3 |
 
 ## Open decisions
 
@@ -115,7 +109,7 @@ Decided (kept for the record):
 | UX-50 | Type a number and press Enter to jump | P2 | S | **Done** 23 Sep |
 | UX-51 | `O` overview grid while presenting | P2 | M | **Done** 23 Sep |
 | UX-52 | Pacing timer in the presenter view | P2 | S–M | **Done** 23 Sep · planned length + pace colour on the existing clock |
-| UX-53 | `W` for a white screen | P3 | S | **Clash** · `W` is already "Who answered what"; pick another key |
+| UX-53 | `W` for a white screen | P3 | S | **Done** 23 Sep · comma, as in PowerPoint; a White button on the desk |
 | **Phase 7 — the room** |||||
 | UX-60 | Hide the answer bars until the reveal | P1 | M | **Done** 23 Sep · a game setting; one line in live.js |
 | UX-61 | Lock all phones, now or on a countdown | P2 | M | **Done** 23 Sep · now already existed (Blank phones); the countdown is new |
@@ -138,7 +132,7 @@ Decided (kept for the record):
 | 4 | Inspector mutates the slide mid-render | M | **Done** — smaller than graded |
 | 5 | `explorationValue` re-normalises per call, 101× per graph | S | **Done** — 1.8× on the curve |
 | 6 | Blank the phones from the HUD | S–M | **Done** — `Shift+B` / room menu |
-| 7 | Gate ✋ and ? to junction points | S | To do |
+| 7 | Gate ✋ and ? to junction points | S | **Done** — the room's floor (13 Sep); the row was stale. `server.js` refuses a question on a shut floor; Got it and ? follow it; `tests/qa.test.js` |
 | 8 | Learner theming — deck theme has no route to the phone | M | Deferred · shared files |
 | 9 | Progress + tally on the phone | S | **Done** — "Question 3 of 4", "2 / 3" |
 | 10 | Lesson-level standings, teacher-controlled | M | Deferred · shared files |
@@ -194,14 +188,14 @@ Three read-only reviews, running in parallel, covered:
 | CA-40 | ⌘B, ⌘I and ⌘U do nothing when typing on the slide (the key is blocked and nothing is applied) | inline edit | P1 | S | **Done** 23 Sep |
 | CA-41 | Enter that confirms an IME candidate ends the edit (no `isComposing` check) | inline edit | P1 | S | **Done** 23 Sep · not browser-tested |
 | CA-42 | In the sorter, Alt+→ moves a multi-slide group only once | rail | P2 | S | **Done** 23 Sep |
-| CA-43 | The Undo button still works while a slide is being carried; placing then uses an out-of-date index | rail | P3 | S | Plausible |
+| CA-43 | The Undo button still works while a slide is being carried; placing then uses an out-of-date index | rail | P3 | S | **Done** 23 Sep · the carried slide is held by id |
 | CA-55 | **New:** one keystroke on the canvas flattened a multi-line heading to one line | inline edit | P1 | S | **Done** 23 Sep |
 | **Smaller** ||||||
 | CA-50 | Opening a deck that another tab has just deleted crashes (`setDoc(null)`) | shell | P2 | S | **Done** 23 Sep · with CA-06 |
 | CA-51 | Resizing the window (including the Android keyboard opening) redraws mid-edit and loses panel fields that save on `onchange` | shell | P2 | S | **Done** 23 Sep |
 | CA-52 | The fallback edit panel writes into the slide with no history and survives slide changes and undo | inline edit | P2 | M | **Done** 23 Sep |
-| CA-53 | `wordSpeed: "constructor"` writes `undefinedms` into CSS (the lookup doesn't use `hasOwnProperty`) | words | P3 | S | Confirmed |
-| CA-54 | `pic.src`, `deck.logo` and CSS `url()` values skip `safeMedia` (hygiene, not an exploit) | render | P3 | S | Confirmed |
+| CA-53 | `wordSpeed: "constructor"` writes `undefinedms` into CSS (the lookup doesn't use `hasOwnProperty`) | words | P3 | S | **Done** 23 Sep · own keys only, the word arcs too |
+| CA-54 | `pic.src`, `deck.logo` and CSS `url()` values skip `safeMedia` (hygiene, not an exploit) | render | P3 | S | **Done** 23 Sep · one `SF.cssUrl`; it also fixes `&quot;`, which CSS never read |
 
 **Checked and clean:**
 - No XSS: `safeHref` blocks `javascript:`, text goes in through `textContent`, and `innerHTML` only ever writes static strings.
@@ -1153,7 +1147,7 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | TPS-01 | Spotlight one idea during Share | [game-activity-redesign.md](game-activity-redesign.md) | S | **Done** 23 Sep as AC-06, for every idea box |
 | TPS-02 | "19 of 26 have written something" during Think (a count only; the note stays private) | TPS | S | **Done** 23 Sep as AC-07 |
 | TPS-03 | Smoke-test and view Think-Pair-Share on the wall and a phone | TPS | S | To check · not seen drawn |
-| TPS-04 | Existing lessons' staged routines offered the stages view (ten routines since AC-05) | TPS | S | To do |
+| TPS-04 | Existing lessons' staged routines offered the stages view (ten routines since AC-05) | TPS | S | **Done** 23 Sep · offered in the inspector, never switched |
 
 ### 23 September 2026: activities to a premium standard, the build list
 
@@ -1302,6 +1296,11 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** Small items from the backlog. TPS-04: older staged-
+  routine slides are offered stages in the inspector. CA-43: a carried
+  slide is held by id. CA-53: own-key lookups. CA-54: one `SF.cssUrl`.
+  UX-53: comma is the white screen. #7 was already done; its row was
+  stale. 528/528 before the last merge.
 - **23 Sep 2026.** GA-22 is done. Emoji Guess: an answer given after the
   teacher released the hint scores half (decision in the games audit,
   section 6). Definition Challenge: a Read → Recall track, and +30s for the
