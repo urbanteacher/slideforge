@@ -883,6 +883,10 @@ function pushTally(room) {
        collect the answer and throw away whether they meant it. */
     sured,
     total,
+    /* Showdown: the split as it stood when it was shown, and how many
+       phones have since changed their mind. */
+    split: room.question.split || null,
+    switched: room.question.switched || 0,
     waiting: room.players.size - total,
     allIn: total > 0 && answered === total,
     manual: [...room.players.values()].some(p => p.manual),
@@ -1636,6 +1640,11 @@ ws.attach(server, (sock, req) => {
           voteOnly: m.voteOnly === true,
           /* A pick, not an answer: not marked, not counted in accuracy. */
           unmarked: m.unmarked === true,
+          /* True/False Showdown: the split is shown mid-question and each
+             phone may switch once (see 'showdown' below). */
+          showdown: m.showdown === true && input === 'choice',
+          split: null,
+          switched: 0,
           // the host knows where this question sits in the deck; fall back to
           // a running count if an older client doesn't send it
           index: Number(m.n) > 0 ? Number(m.n) : room.asked,
@@ -1665,8 +1674,30 @@ ws.attach(server, (sock, req) => {
           p.sure = null;
           p.answeredAt = 0;
           p.lastGain = 0;
+          p.switched = false;
         }
         broadcast(room, questionMessage(room));
+        pushTally(room);
+
+      } else if (m.t === 'showdown') {
+        /* Show the room its own split, mid-question, and open one switch per
+           phone. Counted here from the answers themselves, so the number on
+           every phone is the relay's and nobody's guess. */
+        const q = room.question;
+        if (!q || room.phase !== 'question' || !q.showdown || q.split || room.answersClosed ||
+            (m.id && m.id !== q.id)) return;
+        const counts = new Array(q.options.length).fill(0);
+        for (const p of room.players.values()) {
+          if (q.eligible && !q.eligible.has(p.id)) continue;
+          if (Number.isInteger(p.answer) && p.answer >= 0 && p.answer < counts.length) counts[p.answer]++;
+        }
+        q.split = counts;
+        record(room, 'showdown', { attempt: q.attempt, counts });
+        for (const p of room.players.values()) {
+          if (p.sock && p.sock.open && (!q.eligible || q.eligible.has(p.id))) {
+            p.sock.json({ t: 'showdown', id: q.id, counts, options: q.options, mine: p.answer });
+          }
+        }
         pushTally(room);
 
       } else if (m.t === 'reveal') {
@@ -1813,6 +1844,9 @@ ws.attach(server, (sock, req) => {
             t: 'result',
             spoken,
             unmarked: room.question.unmarked === true,
+            /* Showdown: whether this phone changed its mind after the split. */
+            switched: !!p.switched,
+            split: room.question.split || null,
             /* What this phone picked, for a vote that has no right answer. */
             picked: room.question.unmarked && Number.isInteger(p.answer)
               ? String(room.question.options[p.answer] || '').slice(0, 200) : '',
@@ -2445,6 +2479,20 @@ ws.attach(server, (sock, req) => {
       if (room.question.spoken) return;
       if (room.question.timeLimit && Date.now() - room.askedAt > room.question.timeLimit * 1000) return;
       if (room.answersClosed) return;                      // the host is revealing
+      /* The one exception to one answer per question: once a showdown's
+         split is on the wall, each phone may change its mind, once. */
+      if (me.answer != null && room.question.split && m.switch === true && !me.switched &&
+          Number.isInteger(m.choice) && m.choice >= 0 && m.choice < room.question.options.length &&
+          m.choice !== me.answer) {
+        me.answer = m.choice;
+        me.switched = true;
+        room.question.switched = (room.question.switched || 0) + 1;
+        room.answerRev++;
+        record(room, 'switch', { attempt: room.question.attempt, playerId: me.id, choice: m.choice });
+        sock.json({ t: 'switched', choice: m.choice });
+        pushTally(room);
+        return;
+      }
       if (me.answer != null) return;                       // one answer per question
       /* Held as the raw response: an option index, or the text they typed.
          The relay stores it without interpreting it — every read of it is

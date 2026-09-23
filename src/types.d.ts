@@ -372,6 +372,8 @@ export interface Slide {
   roundSeconds?: number;
   /** A vote that is not marked right or wrong (Odd One Out). */
   unmarked?: boolean;
+  /** True/False Showdown: a mid-question split and one switch per phone. */
+  showdown?: boolean;
   spinTotal?: number;
   headPrompt?: string;
 

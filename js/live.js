@@ -946,6 +946,10 @@
       case 'tally':
         Live.snapshot = { rev: m.rev || 0, answers: m.answers || [] };
         SF.Player.setTally(m.counts || [], { answered: m.answered, total: m.total });
+        if (m.split) {
+          Live.showdown = { id: m.id, split: m.split, counts: m.counts || [], switched: m.switched || 0 };
+          if (SF.Player.setShowdown) SF.Player.setShowdown(Live.showdown);
+        }
         /* Marked here and kept here: the split between confident and hesitant
            answers is for presenter view, not the wall. Marking before the
            reveal is safe because the verdicts never leave this window until
@@ -1842,6 +1846,7 @@
     /* Odd One Out / Compare & Contrast: Next reveals after discuss. */
     if (s.style === 'oddone' || s.oddoneDiscuss ||
         s.style === 'compare' || s.compareDiscuss) return 'reveal';
+    if (s.showdown && !Live.splitShown[s.id]) return 'split';
     if (s.voteOnly) return 'hold';
     return 'reveal';
   };
@@ -1850,6 +1855,7 @@
     ask: 'Ask now — hide the passage',
     reveal: 'Show the answer',
     hold: 'Move on \u2014 no answer shown',
+    split: 'Show the split \u2014 one switch each',
     advance: 'Next slide'
   };
 
@@ -1880,6 +1886,15 @@
        advance — holding the answer back and then spending it on the way out
        of the slide would be the same leak by a slower route. */
     if (slide.voteOnly) return false;
+    /* Showdown: the first press shows the room its split; the next reveals. */
+    if (slide.showdown && !Live.splitShown[slide.id]) {
+      if (Date.now() - Live._askedAt < GRACE_MS) {
+        SF.toast('Give them a moment to vote \u2014 press again to show the split');
+        return true;
+      }
+      showSplit(slide);
+      return true;
+    }
     if (Date.now() - Live._askedAt < GRACE_MS) {
       /* Swallowed, but no longer in silence. The grace stops a double press
          revealing the instant the question lands; a press that appears to do
@@ -2283,7 +2298,34 @@
       msg.clues = String(s.clues || s.question || '').slice(0, 80);
       /* question stays the clues for the journal; headPrompt is the mission. */
     }
+    if (s.showdown) msg.showdown = true;
     send(msg);
+    /* A timed showdown shows its own split half-way through the clock. */
+    clearTimeout(Live._splitTimer);
+    if (s.showdown && msg.timeLimit > 0) {
+      Live._splitTimer = setTimeout(function () {
+        var now = SF.Player.wallSlide ? SF.Player.wallSlide() : (SF.Player.deck && SF.Player.deck.slides[SF.Player.idx]);
+        if (now && now.id === s.id) showSplit(s);
+      }, msg.timeLimit * 500);
+    }
+  }
+
+  /* ---------------------------------------------- True/False Showdown
+
+     "Hold or fold". The room votes; then the room is shown its own split,
+     anonymously, on the wall and on every phone, and each phone may change
+     its mind once. The reveal shows where the room stood against where it
+     ended up. Next shows the split first; a timed question shows it half-way
+     through its clock. */
+  Live.splitShown = {};
+  Live.showdown = null;
+  function showSplit(s) {
+    if (!Live.active || !s || !s.showdown || Live.splitShown[s.id] || Live.revealed[s.id]) return;
+    Live.splitShown[s.id] = true;
+    clearTimeout(Live._splitTimer);
+    send({ t: 'showdown', id: s.id });
+    SF.toast('The split is up — every phone may switch once.');
+    if (SF.Player.syncPresenter) SF.Player.syncPresenter();
   }
 
   function sendDefinitionOrQuestion(s) {
@@ -2527,6 +2569,8 @@
     /* Odd One Out waits for the teacher: the discussion comes before the
        reveal, however quickly the room votes. */
     if (s.style === 'oddone' || s.oddoneDiscuss) return;
+    /* A showdown is the teacher's to reveal: the split, then the switch. */
+    if (s.showdown) return;
     var pending = s.confidence !== false ? (m.answered || 0) - (m.sured || 0) : 0;
     if (pending <= 0) {
       if (Live._sureTimer) { clearTimeout(Live._sureTimer); Live._sureTimer = null; }
@@ -2558,6 +2602,10 @@
     if (s.input === 'text') SF.Player.showTypedAnswers(typedGroups(s));
     if (s.input === 'number') SF.Player.showPlacedValues(placedValues(s));
     if (SF.Player.releaseTally) SF.Player.releaseTally();
+    clearTimeout(Live._splitTimer);
+    if (s.showdown && Live.showdown && Live.showdown.id === s.id && SF.Player.setShowdown) {
+      SF.Player.setShowdown(Object.assign({}, Live.showdown, { revealed: true, correct: s.correct }));
+    }
     // paint the right answer on the projected slide even though the host
     // never clicked anything
     if (SF.Player.answers[s.id] == null) SF.Player.answers[s.id] = -1;

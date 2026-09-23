@@ -5261,6 +5261,22 @@
         pad.appendChild(el("div", "answered-count", ""));
         return;
       }
+      if (slide.showdown) {
+        var sd = el("div", "showdown");
+        sd.setAttribute("aria-live", "polite");
+        var sdBar = el("div", "sd-bar");
+        opts_.forEach(function(text2, i) {
+          var seg = el("div", "sd-seg sd-" + i);
+          seg.dataset.i = String(i);
+          seg.appendChild(el("span", "sd-label", text2));
+          seg.appendChild(el("span", "sd-pct", ""));
+          sdBar.appendChild(seg);
+        });
+        sdBar.appendChild(el("span", "sd-was"));
+        sd.appendChild(sdBar);
+        sd.appendChild(el("p", "sd-note", "Votes are in when you are ready. Next shows the room its split."));
+        pad.appendChild(sd);
+      }
       var tally = el("div", "tally");
       opts_.forEach(function(_, i) {
         var col = el("div", "col" + (i === slide.correct ? " right" : ""));
@@ -23265,6 +23281,10 @@
       if (drawn) {
         s.drawNo = i + 1;
         s.drawTotal = playQuestions.length;
+      }
+      if (game.style === "truefalse" && game.format === "true-false") {
+        s.showdown = true;
+        s.holdResults = true;
       }
       if (game.style === "spinexplain") {
         s.spinDraw = i + 1;

@@ -1054,6 +1054,26 @@ export function createQuizRenderer(SF, helpers) {
       return;
     }
 
+    /* True/False Showdown: the room's split, one bar across the two pads.
+       Hidden until the teacher shows it; then it follows the room as phones
+       switch, with a marker left where the room stood when it was shown. */
+    if (slide.showdown) {
+      var sd = el('div', 'showdown');
+      sd.setAttribute('aria-live', 'polite');
+      var sdBar = el('div', 'sd-bar');
+      opts_.forEach(function (text, i) {
+        var seg = el('div', 'sd-seg sd-' + i);
+        seg.dataset.i = String(i);
+        seg.appendChild(el('span', 'sd-label', text));
+        seg.appendChild(el('span', 'sd-pct', ''));
+        sdBar.appendChild(seg);
+      });
+      sdBar.appendChild(el('span', 'sd-was'));
+      sd.appendChild(sdBar);
+      sd.appendChild(el('p', 'sd-note', 'Votes are in when you are ready. Next shows the room its split.'));
+      pad.appendChild(sd);
+    }
+
     var tally = el('div', 'tally');
     opts_.forEach(function (_, i) {
       var col = el('div', 'col' + (i === slide.correct ? ' right' : ''));

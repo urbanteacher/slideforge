@@ -16,19 +16,18 @@
   var BOOK = {
     'true-false': {
       title: 'True/False Showdown',
-      aim: 'Fast retrieval; check misconceptions under time pressure.',
+      aim: 'Commit, see the room, then hold your nerve or change your mind — the misconception shows itself in the switch.',
       judgement: 'auto',
       demo: 'class',
-      phases: 'setup → play (per question) → end',
-      timer: 'Per question 10–30s (default 15). Timeout scores 0.',
-      players: 'Teams (≤2) or individuals rotate.',
-      scoring: '+1 correct · 0 wrong/timeout · streak is display only.',
+      phases: 'vote → the split → one switch → reveal',
+      timer: 'Optional. A timed statement shows its split half-way through the clock.',
+      players: 'Individuals or teams; every phone votes and may switch once.',
+      scoring: 'The final answer is marked. Switching is free; the reveal counts who switched, never who.',
       howToPlay: [
-        'A statement appears with a short countdown.',
-        'Learners lock True or False.',
-        'Reveal the answer and the explanation.',
-        'Teacher advances to the next statement.',
-        'Highest score at the end wins (ties OK).'
+        'A statement appears. Every phone votes True or False.',
+        'Next shows the room its own split, on the wall and on every phone.',
+        'Each learner may switch once, or hold.',
+        'Next reveals the answer: where the room stood at the split, where it ended, and how many changed their minds.'
       ]
     },
     'low-stakes-quiz': {

@@ -2180,6 +2180,52 @@
     if (odd) oddVerdict(node, tally, counts);
   }
 
+  /**
+   * True/False Showdown on the wall: the room's split across one bar.
+   *
+   * The bar follows the current votes, so the room can watch itself move as
+   * phones switch; a thin marker stays where the room stood when the split
+   * was shown. At the reveal the right side is lit and one sentence says
+   * what changed. Anonymous throughout: shares and a count, never a name.
+   *
+   * @param {{split: number[], counts: number[], switched: number, revealed?: boolean, correct?: number}} st
+   */
+  Player.setShowdown = function (st) {
+    var node = Player._current;
+    var box = node && node.querySelector('.showdown');
+    if (!box || !st || !st.split) return;
+    var counts = st.counts && st.counts.length ? st.counts : st.split;
+    var total = counts.reduce(function (a, n) { return a + (n || 0); }, 0);
+    var was = st.split.reduce(function (a, n) { return a + (n || 0); }, 0);
+    box.classList.add('on');
+    box.classList.toggle('revealed', !!st.revealed);
+    var pct = function (n, of) { return of ? Math.round((n || 0) * 100 / of) : 0; };
+    Array.prototype.forEach.call(box.querySelectorAll('.sd-seg'), function (seg) {
+      var i = Number(seg.dataset.i);
+      var share = total ? (counts[i] || 0) / total : 1 / counts.length;
+      seg.style.flexGrow = String(Math.max(0.0001, share));
+      seg.querySelector('.sd-pct').textContent = pct(counts[i], total) + '%';
+      seg.classList.toggle('right', !!st.revealed && i === st.correct);
+    });
+    /* Where the first option's share stood at the split. */
+    var mark = /** @type {HTMLElement|null} */ (box.querySelector('.sd-was'));
+    if (mark) mark.style.left = (was ? (st.split[0] || 0) * 100 / was : 50) + '%';
+    var note = box.querySelector('.sd-note');
+    if (!note) return;
+    var labels = Array.prototype.map.call(box.querySelectorAll('.sd-label'), function (l) { return l.textContent; });
+    var switched = st.switched || 0;
+    if (!st.revealed) {
+      note.textContent = 'The room: ' + pct(st.split[0], was) + '% ' + labels[0] + ' \u00b7 ' +
+        pct(st.split[1], was) + '% ' + labels[1] + '. Switch once on your phone, or hold.' +
+        (switched ? ' ' + switched + (switched === 1 ? ' has' : ' have') + ' switched.' : '');
+      return;
+    }
+    var right = typeof st.correct === 'number' ? st.correct : 0;
+    var before = pct(st.split[right], was), after = pct(counts[right], total);
+    note.textContent = labels[right] + ': ' + before + '% at the split, ' + after + '% at the end. ' +
+      (switched ? switched + (switched === 1 ? ' changed their mind.' : ' changed their minds.') : 'Everyone held.');
+  };
+
   /* Odd One Out's reveal sentence. There is a prepared odd one, but the
      room's own split is the lesson: how many saw the prepared rule, and which
      other pick drew the most votes — named as a challenge to defend, never as

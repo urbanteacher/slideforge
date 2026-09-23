@@ -447,6 +447,12 @@
     <h1 id="questionText"></h1>
     <div class="bar"><i id="qBar"></i></div>
     <div class="pad" id="qPad"></div>
+    <!-- True/False Showdown: the room's split, and one switch. -->
+    <div class="q-showdown" id="qShowdown" hidden>
+      <p class="sd-room" id="sdRoom"></p>
+      <button type="button" class="sd-switch" id="sdSwitch" hidden></button>
+      <p class="quiet-note" id="sdNote"></p>
+    </div>
     <div id="qNumWrap" style="display:none">
       <div class="lead" id="qNumLead">Slide to your answer</div>
       <div class="numreadout" id="qNumValue">0</div>
@@ -1137,6 +1143,19 @@
         askQuestion(m);
         break;
 
+      case 'showdown':
+        showdown(m);
+        break;
+
+      case 'switched':
+        /* The one switch is spent: the new answer is final. */
+        var sdPad = $('qPad');
+        Array.prototype.forEach.call(sdPad.children, function (b) { b.classList.remove('mine', 'dim'); });
+        lockPad(m.choice);
+        $('sdSwitch').hidden = true;
+        $('sdNote').textContent = 'Switched. That is your final answer.';
+        break;
+
       case 'spoken':
         stopTick();
         applyParticipation(m);
@@ -1732,6 +1751,9 @@
 
   function askQuestion(m) {
     paintQuestionChrome(m);
+    /* A showdown panel belongs to the question that opened it. */
+    $('qShowdown').hidden = true;
+    $('sdNote').textContent = '';
     if (!(m.style === 'emoji' || m.clueMode === 'emoji')) {
       $('questionText').textContent = m.question || (context && context.title) || 'Look at the question on the screen';
     }
@@ -2009,6 +2031,35 @@
       : 'Answer sent';
     $('qTime').textContent = 'Locked in';
     $('qTime').classList.remove('hurry');
+  }
+
+  /* The room's split, on this phone, and the one switch it may make. The
+     split is shares only: nobody's name, nobody's answer. */
+  function showdown(m) {
+    var box = $('qShowdown');
+    var counts = m.counts || [];
+    var total = counts.reduce(function (a, n) { return a + (n || 0); }, 0);
+    var opts = m.options || [];
+    box.hidden = false;
+    $('sdRoom').textContent = 'The room: ' + opts.map(function (o, i) {
+      return (total ? Math.round((counts[i] || 0) * 100 / total) : 0) + '% ' + o;
+    }).join(' \u00b7 ');
+    var mine = Number.isInteger(m.mine) ? m.mine : null;
+    var btn = $('sdSwitch');
+    if (mine == null) {
+      btn.hidden = true;
+      $('sdNote').textContent = 'You have not answered yet — you still can.';
+      return;
+    }
+    var other = mine === 0 ? 1 : 0;
+    btn.hidden = false;
+    btn.textContent = 'Switch to ' + (opts[other] || 'the other') + ' — once';
+    $('sdNote').textContent = 'Or hold with ' + (opts[mine] || 'your answer') + '.';
+    btn.onclick = function () {
+      btn.disabled = true;
+      if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'answer', choice: other, switch: true }));
+    };
+    btn.disabled = false;
   }
 
   function lockPad(choice) {

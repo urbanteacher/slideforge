@@ -570,3 +570,29 @@
 .layout-quiz .odd-heat .opt.muted { opacity: 1; }
 .layout-quiz .odd-verdict { font-size: 26px; line-height: 1.35; margin: 18px 0 0; text-align: center; }
 .layout-quiz .odd-verdict:empty { display: none; }
+
+/* ---- True/False Showdown: hold or fold ---- */
+.layout-quiz .showdown { display: none; margin: 22px auto 0; width: min(900px, 100%); }
+.layout-quiz .showdown.on { display: block; animation: sf-sd-in .45s cubic-bezier(.3,0,.2,1); }
+.layout-quiz .showdown .sd-bar {
+  position: relative; display: flex; height: 64px; border-radius: 16px; overflow: hidden;
+  border: 2px solid var(--s-rule); background: var(--s-card);
+}
+.layout-quiz .showdown .sd-seg {
+  flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 0 18px; transition: flex-grow .6s cubic-bezier(.3,0,.2,1), background .3s;
+  font-size: 22px; font-weight: 750; white-space: nowrap; overflow: hidden;
+}
+.layout-quiz .showdown .sd-0 { background: color-mix(in srgb, var(--s-accent) 30%, transparent); }
+.layout-quiz .showdown .sd-1 { background: color-mix(in srgb, var(--s-fg) 10%, transparent); }
+.layout-quiz .showdown .sd-pct { font-size: 28px; font-weight: 850; font-variant-numeric: tabular-nums; }
+.layout-quiz .showdown .sd-seg.right { background: rgba(52, 201, 138, .38); }
+.layout-quiz .showdown .sd-was {
+  position: absolute; top: -6px; bottom: -6px; width: 3px; margin-left: -1.5px;
+  background: var(--s-fg); opacity: .55; border-radius: 2px; transition: left .3s;
+}
+.layout-quiz .showdown .sd-note { margin: 12px 0 0; font-size: 21px; text-align: center; color: var(--s-dim); }
+.layout-quiz .showdown.revealed .sd-note { color: var(--s-fg); font-weight: 650; }
+@keyframes sf-sd-in { from { opacity: 0; transform: translateY(10px); } }
+/* The split bar is the tally here; the column strip would say it twice. */
+.layout-quiz:has(.showdown) .tally { display: none; }

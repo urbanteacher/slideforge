@@ -214,3 +214,9 @@ body.phones-blank{overflow:hidden}
 .stage-echo p{margin:6px 0 0;font-size:16px;line-height:1.45;white-space:pre-line}
 .stage-card[data-job="down"]{text-align:center}
 .stage-card .quiet-note:empty{display:none}
+
+/* True/False Showdown on the phone: the room's split, and one switch. */
+.q-showdown{margin:14px 0 0;padding:14px;border-radius:14px;background:#f3f6ee;text-align:center}
+.q-showdown[hidden]{display:none}
+.sd-room{margin:0 0 10px;font-size:18px;font-weight:700}
+.sd-switch{width:100%;min-height:54px;font-size:18px;font-weight:800;border-radius:12px}

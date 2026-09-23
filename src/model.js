@@ -1187,6 +1187,14 @@ function compileGame(game, opts = {}) {
     s.gameTitle = game.title;
     s.questionNumber = i + 1;
     if (drawn) { s.drawNo = i + 1; s.drawTotal = playQuestions.length; }
+    /* True/False Showdown — "hold or fold". The room votes; the teacher (or
+       half the clock) shows the room its split; each phone may switch once;
+       the reveal shows before against after. The plain True or False format
+       stays a plain two-option question. */
+    if (game.style === 'truefalse' && game.format === 'true-false') {
+      s.showdown = true;
+      s.holdResults = true;
+    }
     if (game.style === 'spinexplain') { s.spinDraw = i + 1; s.spinTotal = playQuestions.length; s.headPrompt = 'Spin & explain'; }
     /* Heads Up is a round, not a run of timed terms: one clock for the
        whole pile, set by the game's time. A term has no clock of its own. */
