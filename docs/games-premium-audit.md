@@ -41,7 +41,7 @@ tests are in the table. The tier follows from the row.
 | Format | Engine | P1 | P2 | P3 | P4 | P5 | P6 | P7 | P8 | Tier |
 |---|---|---|---|---|---|---|---|---|---|---|
 | **Spot the Error** | `spot` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | Near-premium: P9 is declared; the desk still has no heat-map preview |
-| Ranking Challenge | `order` | ✓ | ◐ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid |
+| Ranking Challenge | `order` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: the reveal puts the rows in order, fills each with how many of the room put it there, and names the pair most swapped |
 | Horse Race | `race` | ✓ | ✓ | ◐ | ◐ | ◐ | ✗ | ✓ | ◐ | Solid, but lanes are wall-only |
 | Boss Battle | `boss` | ✓ | ✓ | ◐ | ✓ | ◐ | ✗ | ✓ | ◐ | Solid, but Hit/Miss is wall-only |
 | Memory Flip | `memoryflip` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ◐ | ✓ | Solid (board) |
@@ -416,6 +416,17 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — Ranking's reveal (GA-23), and a live bug.**
+  - **The bug:** the live reveal never showed the right order. The rows were
+    drawn shuffled, and because a ranking has no single right option, the
+    reveal pass muted every row and left them where they were.
+  - **The fix:** the reveal now moves the rows into order and numbers them,
+    fills each with its share of the room ("18 of 26 here"), and names the
+    pair most often swapped ("7 swapped 3 and 4 (Norman conquest and English
+    Civil War)"). The rehearsal does the same.
+  - **Also:** Spin & Explain's verdict strip still said "Clear · 2 points";
+    it now says what the points are.
+  - **Tests:** `npm test` 500/500.
 - **23 September 2026 — Time Traveler: place it in time (GA-20).**
   - **It now runs on the slider engine** on a year scale. Phones drag the
     named event to a year, and the reveal is the slider's own: every pin

@@ -1132,7 +1132,7 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | GA-20 | 5 | **Line reveal (N5)**; Time Traveler → *Place it in time* on a growing timeline | M | **Done** 23 Sep · on the slider engine, growing timeline, legacy heal |
 | GA-21 | 6 | Desk parity: Horse Race lanes, Boss Hit/Miss, Definition Ask, every board control on the desk | S each | To do |
 | GA-22 | 6 | Emoji hint released as a step, costing points; Definition rebuilt on stages | S | To do |
-| GA-23 | 6 | Ranking reveal as a heat per slot | S | To do |
+| GA-23 | 6 | Ranking reveal as a heat per slot | S | **Done** 23 Sep · with the live reveal-order bug fixed |
 | GA-24 | 6 | Horse Race and Boss use the room pane's top-five layout; Boss gets a reveal per hit | S | To do |
 | GA-29 | 1 | UX pass on spoken verdicts: one path from wall and desk, a held verdict until the speaker is chosen, the speaker cleared per item, a speaker picker (teams, recent, type-ahead, Pick for me), the credit shown on the wall and phones; one shared passage for Spot entry | M | **Done** 23 Sep · relay tested, not viewed |
 | GA-30 | 1 | Spoken team credit on the game's points scale, so it registers in a lesson that mixes quiz and spoken games | S | **Done** 23 Sep · 1,000 per accept, half with a hint |
@@ -1273,6 +1273,9 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** GA-23: Ranking's reveal orders the rows (they used to
+  stay shuffled and muted), shows the slot heat and names the commonest
+  swap. 500/500.
 - **23 Sep 2026.** GA-20: Time Traveler places events on one growing
   timeline (the slider engine on a year scale). Old typed games heal.
   500/500.
