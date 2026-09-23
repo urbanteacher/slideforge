@@ -433,7 +433,9 @@ function paintProposals(){
   var row=document.createElement('div');row.className='sp-proposal';
   var said=document.createElement('span');said.className='sp-proposal-text';said.textContent=it.text;row.appendChild(said);
   var by=document.createElement('span');by.className='sp-proposal-who';by.textContent=it.name||'';row.appendChild(by);
-  row.appendChild(button('Use this',function(){send('useProposal',{pid:it.pid,text:it.text});}));
+  /* In a chain, one already accepted is a branch on the map, not a candidate. */
+  if(it.used){var on=document.createElement('span');on.className='sp-proposal-used';on.textContent='✓ On the map';row.appendChild(on);}
+  else row.appendChild(button('Use this',function(){send('useProposal',{pid:it.pid,text:it.text});}));
   pp.appendChild(row);
  });
 }

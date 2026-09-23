@@ -372,3 +372,64 @@ test('a chain proposal box reaches the phones shaped as a link from its term', a
   const q=await ada.next('prompt');
   assert.equal(q.shape,undefined,'only the shapes a phone can draw');
 });
+
+test('Concept Chain credits each accepted link while the term stays open, and the idea box survives', async t => {
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sf-chain-map-'));
+  const port=await freePort(), relay=await start(port,dir), sockets=[];
+  t.after(async()=>{await stop(relay);sockets.forEach(s=>s.socket.close());fs.rmSync(dir,{recursive:true,force:true});});
+  const host=await connect(port);sockets.push(host);
+  host.send({t:'host',title:'Chain',mode:'teams',teams:['Red','Blue']});const room=await host.next('hosted');
+  const ada=await connect(port),ben=await connect(port);sockets.push(ada,ben);
+  ada.send({t:'join',pin:room.pin,name:'Ada',team:0});ben.send({t:'join',pin:room.pin,name:'Ben',team:1});
+  await ada.next('joined');await ben.next('joined');
+  const roster=await host.until('players',m=>m.list.length===2);
+  const adaP=roster.list.find(p=>p.name==='Ada'), benP=roster.list.find(p=>p.name==='Ben');
+  host.send({t:'begin'});host.send({t:'round',gameId:'chain'});
+  /* The phones are on the idea box; the relay has no question for the term. */
+  host.send({t:'idle',style:'conceptchain',role:'discuss'});
+  host.send({t:'prompt',id:'quick:9',kind:'brainstorm',prompt:'Propose a link',max:2,shape:'link',from:'energy'});
+  await ada.next('prompt');await ben.next('prompt');
+  ada.send({t:'reply',text:'energy → heat, because friction'});
+  await host.until('responses',m=>m.items&&m.items.length===1);
+  host.send({t:'oralCredit',id:'c1',gameId:'chain',style:'conceptchain',recipient:{type:'player',id:adaP.id}});
+  const first=await host.next('oralCount');
+  assert.equal(first.count,1);
+  const toAda=await ada.next('credit'), toBen=await ben.next('credit');
+  assert.equal(toAda.oralYou,true);assert.equal(toBen.oralYou,false);
+  assert.equal(toBen.oralTeam,toAda.oralTeam,'the other phone hears the team, never the name');
+  assert.equal(JSON.stringify(toBen).includes('Ada'),false);
+  /* A second link from the same term, to the other team. */
+  host.send({t:'oralCredit',id:'c1',gameId:'chain',style:'conceptchain',recipient:{type:'player',id:benP.id}});
+  assert.equal((await host.next('oralCount')).count,2);
+  await host.until('players',m=>m.rows&&m.rows.every(r=>r.score===1000));
+  /* The idea box is still open: a reply still lands. */
+  ben.send({t:'reply',text:'energy → light'});
+  await host.until('responses',m=>m.items&&m.items.length===2);
+  /* Only Concept Chain may credit this way. */
+  host.send({t:'oralCredit',id:'x',gameId:'chain',style:'connection',recipient:{type:'player',id:adaP.id}});
+  host.send({t:'oralCredit',id:'c2',gameId:'chain',style:'conceptchain',recipient:{type:'room'}});
+  assert.equal((await host.next('oralCount')).count,3,'the connection credit was ignored; a room credit counts but pays nobody');
+  const r=await report(host);
+  assert.equal(r.attendance.find(p=>p.name==='Ada').score,0,'team credit is not divided among members');
+});
+
+test('Concept Chain in individual play pays the speaker only when speaker points are on, and the report keeps it', async t => {
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sf-chain-solo-'));
+  const port=await freePort(), relay=await start(port,dir), sockets=[];
+  t.after(async()=>{await stop(relay);sockets.forEach(s=>s.socket.close());fs.rmSync(dir,{recursive:true,force:true});});
+  const host=await connect(port);sockets.push(host);
+  host.send({t:'host',title:'Chain',mode:'individual'});const room=await host.next('hosted');
+  const ada=await connect(port);sockets.push(ada);
+  ada.send({t:'join',pin:room.pin,name:'Ada'});await ada.next('joined');
+  const roster=await host.until('players',m=>m.list.length===1);
+  const id=roster.list[0].id;
+  host.send({t:'begin'});host.send({t:'round',gameId:'chain'});
+  host.send({t:'oralCredit',id:'c1',gameId:'chain',style:'conceptchain',recipient:{type:'player',id}});
+  const counted=await ada.next('credit');
+  assert.equal(counted.oralYou,true);assert.equal(counted.gained,0);assert.equal(counted.score,0);
+  host.send({t:'oralCredit',id:'c1',gameId:'chain',style:'conceptchain',recipient:{type:'player',id},scoreSpoken:true});
+  const paid=await ada.next('credit');
+  assert.equal(paid.gained,1000);assert.equal(paid.score,1000);assert.equal(paid.oralCount,2);
+  const r=await report(host);
+  assert.equal(r.attendance.find(p=>p.name==='Ada').score,1000);
+});

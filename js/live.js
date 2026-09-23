@@ -501,7 +501,13 @@
   function proposals() {
     if (!Live.proposalPrompt || !Live.prompt || Live.prompt.id !== Live.proposalPrompt) return [];
     var items = (Live.digest && Live.digest.items) || [];
-    return items.slice(0, 12).map(function (it) { return { pid: it.pid, name: it.name, text: it.text }; });
+    /* In a chain, a proposal already on the map says so, so it is not used twice. */
+    var s = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
+    var mapped = (s && (s.style === 'conceptchain' || s.conceptChain) ? SF.Player.chainLinks || [] : [])
+      .filter(function (l) { return l.slideId === s.id; }).map(function (l) { return l.link; });
+    return items.slice(0, 12).map(function (it) {
+      return { pid: it.pid, name: it.name, text: it.text, used: mapped.indexOf(String(it.text || '').slice(0, 160)) >= 0 };
+    });
   }
 
   /* ---------------------------------------------- the room's output (N12–N14)
@@ -710,6 +716,7 @@
   /** The verdict itself, once it is known where any points go. */
   function commitVerdict(s, choice) {
     Live.pendingVerdict = null;
+    if (s.style === 'conceptchain' || s.conceptChain) { chainVerdict(s, choice); return; }
     Live.spokenVerdicts[s.id] = choice;
     Live.lastCredit = Object.assign({ slideId: s.id }, creditFor(s, choice));
     noteSpeaker(Live.selectedRecipient);
@@ -717,12 +724,34 @@
     revealNow();
     /* Cleared after the reveal has carried it to the relay. */
     if (s.style !== 'headsup') Live.selectedRecipient = { type: 'room' };
-    /* An accepted link grows the chain, which is drawn from the slide. */
-    if ((s.style === 'conceptchain' || s.conceptChain) && choice === 0) SF.Player.goTo(SF.Player.idx, 0);
     syncManual();
     /* Heads Up moves straight on to the next term (js/rounds.js). */
     SF.Player.emit('spokenVerdict', { slide: s, choice: choice });
     closeProposals();
+  }
+
+  /* Concept Chain is a map (GA-19): an accepted link is one branch off the
+     term, credited as it lands, and the term stays open for the next. The
+     relay pays it (oralCredit), since the phones are on the idea box rather
+     than a question. Reject puts the proposal down and names nobody. Next or
+     the clock closes the term. The map is redrawn in place: a redraw of the
+     slide would close the idea box and lose what the room has sent. */
+  function chainVerdict(s, choice) {
+    if (choice === 0) {
+      Live.lastCredit = Object.assign({ slideId: s.id }, creditFor(s, choice));
+      noteSpeaker(Live.selectedRecipient);
+      send({ t: 'oralCredit', id: s.id, gameId: s.gameId || '', style: 'conceptchain',
+        recipient: Live.selectedRecipient || { type: 'room' }, scoreSpoken: s.scoreSpoken === true });
+    } else {
+      SF.toast('Put down. Weigh another, or Next to close the term.');
+    }
+    Live.selectedRecipient = { type: 'room' };
+    Live.proposalOnTable = null;
+    paintProposalOnWall(s);
+    if (SF.Player.paintChain) SF.Player.paintChain(s);
+    paintProposalGhosts();
+    syncManual();
+    if (SF.Player.syncPresenter) SF.Player.syncPresenter();
   }
 
   /** Every spoken verdict comes through here. */
@@ -1990,11 +2019,9 @@
       if (!(e && e.round) && Live.players.some(function(p){return p.manual;})) return;
       var s = SF.Player.wallSlide ? SF.Player.wallSlide()
         : (SF.Player.deck && SF.Player.deck.slides[SF.Player.idx]);
-      /* Concept Chain timeout = skip (Reject), not an accidental Accept. */
-      if (s && (s.style === 'conceptchain' || s.conceptChain)) {
-        s.correct = 1;
-        SF.Player.chainPending = '';
-      }
+      /* Concept Chain: the clock closes the term; a link still being typed
+         is not an Accept. */
+      if (s && (s.style === 'conceptchain' || s.conceptChain)) SF.Player.chainPending = '';
       revealNow();
     });
     SF.Player.on('definitionAsk', function (e) {
@@ -3071,11 +3098,16 @@
     var s = SF.Player.wallSlide ? SF.Player.wallSlide()
       : (SF.Player.deck && SF.Player.deck.slides[SF.Player.idx]);
     if (!s || s.type !== 'quiz' || Live.revealed[s.id]) return;
+    var chain = s.style === 'conceptchain' || s.conceptChain;
     if (isSpokenSlide(s) && Live.spokenVerdicts[s.id] == null) {
       /* Next or a timeout closes the item without inventing an accepted
-         explanation. Only an explicit teacher verdict can count or score. */
-      s.correct = (s.options || []).length - 1;
+         explanation. Only an explicit teacher verdict can count or score.
+         A chain's term was credited link by link, so it closes as Accept if
+         it grew and as Reject if it did not. */
+      s.correct = chain && SF.Player.chainBranches && SF.Player.chainBranches(s) > 0
+        ? 0 : (s.options || []).length - 1;
     }
+    if (chain) closeProposals();
     Live.revealed[s.id] = true;
     stopDrip();
     /* The reasoning reaches the phones at the same moment they learn whether

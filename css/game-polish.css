@@ -105,8 +105,7 @@
   border-bottom: 4px solid var(--s-accent);
   background: color-mix(in srgb, var(--s-accent) 10%, var(--s-card));
 }
-.game-stage .chain-node { box-shadow: 0 4px 0 color-mix(in srgb, var(--s-fg) 10%, transparent); }
-.game-stage .chain-node.ghost { box-shadow: none; }
+.game-stage .cm-term { box-shadow: 0 4px 0 color-mix(in srgb, var(--s-fg) 10%, transparent); }
 .game-stage .compare-panels.on { animation: game-reveal .24s ease-out both; }
 
 /* Performance rounds get a stage; backgrounds never compete with the words. */

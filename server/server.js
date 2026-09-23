@@ -2041,6 +2041,42 @@ ws.attach(server, (sock, req) => {
         pushPlayers(room);
         pushTally(room);
 
+      } else if (m.t === 'oralCredit') {
+        /* Concept Chain is a map: each link the teacher accepts is a branch,
+           credited as it lands, and the term stays open for the next one.
+           The phones are on the idea box, not a question, so there is no
+           reveal to carry it. It is paid here on the reveal's scale, against
+           the relay's own roster and teams. */
+        if (m.style !== 'conceptchain') return;
+        const gameId = String(m.gameId || '').slice(0, 80);
+        const slideId = String(m.id || '').slice(0, 80);
+        const recipient = m.recipient && typeof m.recipient === 'object' ? m.recipient : null;
+        const speaker = recipient && recipient.type === 'player'
+          ? room.players.get(Number(recipient.id)) || null : null;
+        const team = recipient && recipient.type === 'team' &&
+          Number.isInteger(recipient.id) && recipient.id >= 0 && recipient.id < room.teams.length
+          ? recipient.id : speaker && Number.isInteger(speaker.team) ? speaker.team : null;
+        const teamPoints = room.mode === 'teams' && team != null ? SPOKEN_POINTS : 0;
+        const paid = room.mode === 'individual' && m.scoreSpoken === true && speaker ? SPOKEN_POINTS : 0;
+        if (teamPoints) room.teamScores[team] += teamPoints;
+        if (paid) speaker.score += paid;
+        const count = (room.oralCounts.get(gameId) || 0) + 1;
+        room.oralCounts.set(gameId, count);
+        if (room.host && room.host.open) room.host.json({t:'oralCount', gameId, slideId,
+          kind:'conceptchain', count, accepted:true});
+        const teamName = team != null && room.teams[team] != null
+          ? String(room.teams[team].name || room.teams[team]).slice(0, 40) : '';
+        for (const p of room.players.values()) {
+          if (!p.sock || !p.sock.open) continue;
+          /* The same words as a spoken result: yours, or the team's name. */
+          p.sock.json({t:'credit', oralYou: speaker === p, oralTeam: teamName,
+            oralPoints: teamPoints, gained: speaker === p ? paid : 0, score: p.score, oralCount: count});
+        }
+        record(room, 'oralCredit', {slideId, gameId, count,
+          recipient: speaker ? speaker.name : teamName || null, points: teamPoints || paid,
+          scores:[...room.players.values()].map(p => ({id:p.id,score:p.score}))});
+        pushPlayers(room);
+
       } else if (m.t === 'prompt') {
         /* Opening a prompt clears the previous one's replies: they belong to
            the slide that asked, not to the session. */

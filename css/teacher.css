@@ -93,6 +93,7 @@ body{background:#f5f6f2;color:#24372c;font:14px/1.5 system-ui,sans-serif}*{box-s
 .sp-proposal{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;background:#f3f6ee}
 .sp-proposal-text{font-size:15px;line-height:1.35}
 .sp-proposal-who{font-size:13px;color:#6b7768}
+.sp-proposal-used{font-size:13px;font-weight:600;color:#2f6b3a;white-space:nowrap}
 .sp-on-table{margin:0;padding:8px 10px;border-radius:10px;background:#36513a;color:#fff;font-weight:650}
 
 /* Tally entry, saved classes, team rows. */

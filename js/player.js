@@ -1218,15 +1218,20 @@
 
   function answer(slide, choice) {
     if (Player.answers[slide.id] != null) return;   // one shot
-    if ((slide.style === 'conceptchain' || slide.conceptChain) &&
-        !tryAcceptChain(slide, choice)) return;
+    if (slide.style === 'conceptchain' || slide.conceptChain) {
+      /* Concept Chain is a map: Accept adds a branch and Reject puts the
+         proposal down, and either way the term stays open for the next
+         link. Next or the clock closes it. Live, the verdict goes on to the
+         desk's path (credit, speaker) through the same event. */
+      if (!tryAcceptChain(slide, choice)) return;
+      if (!(SF.Live && SF.Live.active)) paintChain(slide);
+      Player.emit('answer', { slide: slide, choice: choice, correct: choice === 0, open: true });
+      syncPresenter();
+      return;
+    }
     Player.answers[slide.id] = choice;
     stopTimer();
     if (Player._current) paintAnswer(Player._current, slide, choice);
-    /* After Accept, re-render so the grown chain is on the wall. */
-    if ((slide.style === 'conceptchain' || slide.conceptChain) && choice === 0) {
-      renderCurrent(0);
-    }
     updateSolo();
     Player.emit('answer', {
       slide: slide,
@@ -1249,12 +1254,33 @@
     }
     Player.chainLinks = Player.chainLinks || [];
     Player.chainLinks.push({
+      slideId: slide.id,
       term: String(slide.term || slide.question || '').trim(),
       link: link.slice(0, 160)
     });
     Player.chainPending = '';
     return true;
   }
+
+  /** How many links the map has from this term. */
+  Player.chainBranches = function (slide) {
+    return (Player.chainLinks || []).filter(function (l) { return slide && l.slideId === slide.id; }).length;
+  };
+
+  /* The map, redrawn where it stands. Re-rendering the slide would announce
+     a new slide, and live that closes the idea box the links come from. */
+  function paintChain(slide) {
+    var node = Player._current;
+    var old = node && node.querySelector('.chain-map');
+    if (!old || !SF.chainMap) return;
+    var cur = Player.wallSlide ? Player.wallSlide() : Player.deck && Player.deck.slides[Player.idx];
+    if (!cur || cur.id !== slide.id) return;
+    old.replaceWith(SF.chainMap(slide, Player.chainLinks || [], Player.chainPending || '', true));
+    var inp = /** @type {HTMLInputElement|null} */ (node.querySelector('.chain-link-input'));
+    if (inp) inp.value = Player.chainPending || '';
+    scheduleFit(node);
+  }
+  Player.paintChain = paintChain;
 
   Player.chainCommand = function (action, value) {
     if (action === 'pending') {

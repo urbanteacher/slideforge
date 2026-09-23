@@ -183,6 +183,13 @@ body.phones-blank{overflow:hidden}
   padding:12px 16px;border-radius:12px;text-align:center;font-size:13px;
   background:#3b3320;color:#f3e6c8;border:1px solid #6a5a34}
 #hostAwayNote[hidden]{display:none}
+/* A Concept Chain link accepted (join.html 'credit'): over the idea box, not instead of it. */
+#creditNote{position:fixed;left:12px;right:12px;top:12px;z-index:160;padding:12px 16px;border-radius:12px;
+  text-align:center;font-size:15px;font-weight:600;background:#20251b;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.25);
+  animation:creditIn .35s cubic-bezier(.3,0,.2,1)}
+#creditNote.mine{background:#2f6b3a}
+#creditNote[hidden]{display:none}
+@keyframes creditIn{from{transform:translateY(-8px);opacity:0}}
 
 /* The warning before the phones go dark (join.html setBlankSoon). */
 #blankSoon{position:fixed;left:12px;right:12px;top:12px;z-index:190;padding:12px 16px;border-radius:12px;

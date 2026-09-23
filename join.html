@@ -522,6 +522,9 @@
 
 </main>
 
+<!-- A Concept Chain link accepted while its term stays open: said over
+     whatever the phone is showing, so the idea box stays where it is. -->
+<div id="creditNote" hidden role="status" aria-live="polite"></div>
 <div id="hostAwayNote" hidden role="status">Waiting for your teacher’s screen — stay here, nothing is lost.</div>
 <!-- The teacher's "phones down in 10": a warning before the veil, so a
      sentence being typed can be finished. -->
@@ -722,7 +725,7 @@
      tells the teacher nothing. So these leave rather than grey out — and if
      the learner is mid-question when the floor closes, the panel closes with
      it rather than stranding them in a form that will be refused. */
-  var floorOpen = false, hostAwayTimer = null;
+  var floorOpen = false, hostAwayTimer = null, creditTimer = null;
   function setFloor(on) {
     floorOpen = !!on;
     header(true);
@@ -1358,6 +1361,22 @@
         $('rRank').textContent = formatStanding(m);
         paintWhy(m);
         show('scResult');
+        break;
+
+      case 'credit':
+        /* Concept Chain: a link accepted while the term stays open. The same
+           words as a spoken result, as a banner rather than a screen. */
+        me.score = m.score;
+        header(true);
+        var mineC = m.oralYou;
+        var oursC = !mineC && m.oralTeam && me.teamName && m.oralTeam === me.teamName;
+        $('creditNote').textContent = mineC ? '★ Your link is on the map' + (m.gained ? ' · +' + m.gained : '')
+          : oursC ? '✓ A link for your team' + (m.oralPoints ? ' · +' + m.oralPoints : '')
+          : '✓ A link is on the map' + (m.oralTeam ? ' for ' + m.oralTeam : '');
+        $('creditNote').classList.toggle('mine', !!(mineC || oursC));
+        $('creditNote').hidden = false;
+        clearTimeout(creditTimer);
+        creditTimer = setTimeout(function () { $('creditNote').hidden = true; }, 4000);
         break;
 
       case 'finish':

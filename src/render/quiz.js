@@ -340,6 +340,48 @@ export function createQuizRenderer(SF, helpers) {
     return tiles;
   }
 
+  /* Concept Chain as a map (GA-19). Each term the game has reached, in
+     order, with the links accepted from it branching off to the right. The
+     term that is up is the large one, with a dashed branch for the link
+     being weighed. Earlier terms shrink, and past three only the latest
+     show, so a ten-term game still fits the wall. Links carry the item they
+     were accepted on (slideId), so a term that comes up twice is two rows. */
+  var MAP_PAST_ROWS = 3, MAP_PAST_BRANCHES = 3, MAP_NOW_BRANCHES = 6;
+  function chainMap(slide, links, pending, open) {
+    var rows = [];
+    var byKey = {};
+    links.forEach(function (l) {
+      var key = l.slideId || 'term:' + l.term;
+      if (!byKey[key]) { byKey[key] = { term: l.term, links: [], now: key === slide.id }; rows.push(byKey[key]); }
+      byKey[key].links.push(l.link);
+    });
+    if (!byKey[slide.id]) rows.push({ term: slide.term || slide.question || '', links: [], now: true });
+    var map = el('div', 'chain-map');
+    var at = rows.findIndex(function (r) { return r.now; });
+    var hidden = Math.max(0, at - MAP_PAST_ROWS);
+    if (hidden) map.appendChild(el('div', 'cm-earlier', '+' + hidden + (hidden === 1 ? ' earlier term' : ' earlier terms')));
+    rows.slice(hidden).forEach(function (r) {
+      var row = el('div', 'cm-row ' + (r.now ? 'now' : 'past'));
+      row.appendChild(el('div', 'cm-term', r.term));
+      var branches = el('div', 'cm-branches');
+      var cap = r.now ? MAP_NOW_BRANCHES : MAP_PAST_BRANCHES;
+      /* The newest links are the ones the room is talking about. */
+      var from = Math.max(0, r.links.length - cap);
+      if (from) branches.appendChild(el('div', 'cm-more', '+' + from + ' more'));
+      r.links.slice(from).forEach(function (text, j, list) {
+        branches.appendChild(el('div', 'cm-branch' + (r.now && j === list.length - 1 ? ' fresh' : ''), text));
+      });
+      if (r.now && open) {
+        branches.appendChild(el('div', 'cm-branch ghost', String(pending || '').trim() || 'next link'));
+      }
+      if (!branches.childNodes.length) row.classList.add('bare');
+      row.appendChild(branches);
+      map.appendChild(row);
+    });
+    return map;
+  }
+  SF.chainMap = chainMap;
+
   function layoutQuiz(slide, pad, opts) {
     var present = quizPresent(slide);
     pad.parentNode.classList.add('present-' + present);
@@ -547,24 +589,9 @@ export function createQuizRenderer(SF, helpers) {
       cmp.appendChild(panels);
       pad.appendChild(cmp);
     } else if (present === 'chain') {
-      var links = (opts.chainLinks || []).slice();
       var chain = el('div', 'stage-hero chain-stage');
       chain.appendChild(el('div', 'stage-atmosphere', ''));
-      var steps = el('div', 'chain-steps');
-      links.forEach(function (step) {
-        steps.appendChild(el('div', 'chain-node done', step.term || ''));
-        steps.appendChild(el('div', 'chain-arrow', ''));
-        steps.appendChild(el('div', 'chain-node link', step.link || ''));
-        steps.appendChild(el('div', 'chain-arrow', ''));
-      });
-      steps.appendChild(el('div', 'chain-node seed', slide.term || slide.question || ''));
-      if (!opts.revealed) {
-        steps.appendChild(el('div', 'chain-arrow', ''));
-        var pendingLabel = String(opts.chainPending || '').trim();
-        steps.appendChild(el('div', 'chain-node ghost',
-          pendingLabel || 'next link'));
-      }
-      chain.appendChild(steps);
+      chain.appendChild(chainMap(slide, opts.chainLinks || [], opts.chainPending || '', !opts.revealed));
       if (slide.prompt) {
         chain.appendChild(el('div', 'stage-note chain-prompt', slide.prompt));
       }
@@ -578,13 +605,14 @@ export function createQuizRenderer(SF, helpers) {
         inp.setAttribute('aria-label', 'Proposed chain link');
         inp.addEventListener('input', function () {
           opts.chainCommand('pending', inp.value);
-          var ghost = steps.querySelector('.chain-node.ghost');
+          /* Looked up each time: Accept redraws the map in place. */
+          var ghost = chain.querySelector('.cm-branch.ghost');
           if (ghost) ghost.textContent = String(inp.value || '').trim() || 'next link';
         });
         inp.addEventListener('click', function (e) { e.stopPropagation(); });
         wrap.appendChild(inp);
         wrap.appendChild(el('p', 'chain-capture-hint',
-          'Accept grows the chain (+1). Reject or timeout skips.'));
+          'Accept adds a branch and keeps the term open for another. Next closes it.'));
         chain.appendChild(wrap);
       }
       pad.appendChild(chain);
