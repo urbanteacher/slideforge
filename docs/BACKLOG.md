@@ -1306,6 +1306,9 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
   slide is held by id. CA-53: own-key lookups. CA-54: one `SF.cssUrl`.
   UX-53: comma is the white screen. #7 was already done; its row was
   stale. 528/528 before the last merge.
+- **23 Sep 2026.** Docs only: the games audit's kit gains K25–K29 from
+  GA-19–27, and AGENTS.md notes the relay-marking exception and the render
+  surface probe.
 - **23 Sep 2026.** GA-27 is done. Live Beat the Clock is a sprint: each
   phone runs its own stream against one clock, marked by the relay as it
   taps (the one place the relay marks; games audit, section 6). The wall

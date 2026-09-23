@@ -16,6 +16,7 @@ For any AI agent (Claude, Cursor, Codex) and for people.
 - Then run `npm test`. It checks the build is current, runs the typecheck, then runs the tests. The relay tests use `tests/harness.js` (a real server and real sockets).
 - `npm run visual:check` runs the visual baselines (Docker). It measures whatever is running on port 8787, so from a worktree pass `SF_URL`.
 - `node tools/smoke/run.mjs [scenario…]` runs the browser smoke scenarios.
+- `npm run audit:render-surface` fails when a name is added to `SF` from the renderer. If the addition is deliberate, re-record with `--update` and note it in `docs/render-split.md` §7.
 - After changing `server/server.js`, restart the local server; it does not reload.
 
 ## Committing
@@ -41,7 +42,9 @@ A style is one file in `src/games/`. It is registered in these places:
 10. `js/ai.js` `AI_SPECS`, so Quiz studio can write it. Keyed by style, or by format for a format with its own shape (Question Cube). `toQuestion` must set every field the style's starter (`make()`) fills, or the starter's content comes along with the AI's;
 11. `js/demo.js`, so a rehearsal class answers it the way a real room would.
 
-Reuse the shared kit in the games audit (section 3, K1–K24) before writing anything new.
+Reuse the shared kit in the games audit (section 3, K1–K29) before writing anything new.
+
+The host marks answers and the relay records them. The one exception is Beat the Clock's self-paced sprint (K29), where the relay marks multiple-choice taps from a key the host hands it; the games audit, section 6, says why. Don't extend it to typed or ordered answers.
 
 ## Changing an activity
 

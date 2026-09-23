@@ -70,6 +70,7 @@ tests are in the table. The tier follows from the row.
 
 **Totals:**
 - 0 fully premium; 8 near premium (Spot the Error, Ranking, Beat the Clock, T/F Showdown, Predict, Fill the gaps, Odd One Out, Compare & Contrast).
+- Every build wave (0–7) is done. The one open build item is Connection Maker's bridges drawn as lines (GA-19). What stops the near-premium games being premium is mostly P8: rehearsal classes, and viewing on screen, which the late waves have not had.
 - 24 solid, counting the seven near-premium ones listed as solid in the table.
 - 1 thin.
 - 0 broken by wrong-result scoring.
@@ -162,6 +163,11 @@ a new game should reach for it rather than write its own.
 | K22 | **Desk mirror** (`data-desk`) | `Player.gameControls`, `pressGameControl` | Any wall control appears on the desk with one attribute |
 | K23 | **Per-phone spoken messages** (`spokenFanout`) | relay | A spoken item told to each phone in its own terms (Heads Up's term, hidden from the guesser) |
 | K24 | **Shaped proposal boxes** (`shape: 'link' | 'bridge'`, `quiet`) | relay prompt, `join.html`, `paintProposalGhosts` | A proposal box framed like what it proposes, its replies drawn on the slide; honours the desk's hide |
+| K25 | **Credit without a question** (`oralCredit`) | relay, `js/live.js` `chainVerdict`, the phone's `credit` banner | A spoken credit paid while the item stays open, when the phones are on an idea box and the relay has no question (Concept Chain's map) |
+| K26 | **Redraw in place** (`SF.chainMap`, `Player.paintChain`) | `src/render/quiz.js`, `js/player.js` | Change what a live slide shows without announcing a new slide, which would close its idea box |
+| K27 | **A moment that changes the points** (`hintOut`) | relay, `js/live.js` step listener | The teacher's release of help is timed on the relay; answers after it score less, and the phones are told (Emoji's hint) |
+| K28 | **Each phone's own standing** (`raceLanes` → `lane`) | relay, `join.html` `paintLane` | The wall shows the leaders and the pack; each phone draws its own lane and place |
+| K29 | **Self-paced run** (`sprint`, `sprintQ`, `sprintA`, `sprintMark`, `sprintResult`) | relay, `js/live.js` `paintSprint`, `join.html` | Every phone works through a run at its own pace against one clock, marked by the relay (multiple choice only; section 6); the wall shows progress, then the hardest question |
 
 ## 4. Redesigns, game by game
 
@@ -461,6 +467,12 @@ for (E1). Both are implemented for Spot the Error; its desk heat-map preview
 still leaves P6 partial.
 
 ## Change log
+
+- **23 September 2026 — The kit records what GA-19–27 built.** K25–K29
+  added to section 3: credit without a question, redraw in place, a moment
+  that changes the points, each phone's own standing, and the self-paced
+  run. The totals now say every wave is done and what still stands between
+  the near-premium games and premium.
 
 - **23 September 2026 — Beat the Clock is self-paced (GA-27).**
   - **Live, with every learner on a phone, the run is a sprint.** The host
