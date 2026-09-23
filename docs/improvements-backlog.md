@@ -45,25 +45,26 @@ coordinating rather than starting cold.
 | UX-01 | ~~Escape discards text typed on the slide~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | UX-02 | ~~Modals ignore Escape, no focus trap, no dialog role~~ [→](ux-backlog.md) | S–M | **Done** 23 Sep · also fixed: Delete reached the deck through Settings |
 | UX-03 | ~~Editor hint on the projector (bullets)~~ [→](ux-backlog.md) | S | **Done** 23 Sep · with CA-30 |
-| CA-05 | First click after typing on the slide is swallowed [→](ux-backlog.md) | S–M | To confirm · P1 |
-| CA-06 | Deleting the open deck in File → Open: the next keystroke writes it back [→](ux-backlog.md) | S | To do · P1 |
-| CA-07 | A copied slide stays in localStorage for good, images included [→](ux-backlog.md) | S | To do · P1 |
-| CA-08 | Undo keeps a whole-deck copy per keystroke (60 max) [→](ux-backlog.md) | M | To do · P1 |
+| CA-05 | First click after typing on the slide is swallowed [→](ux-backlog.md) | S–M | Not reproduced |
+| CA-55 | ~~One keystroke on the canvas flattened a multi-line heading~~ [→](ux-backlog.md) | S | **Done** 23 Sep · new |
+| CA-06 | ~~Deleting the open deck in File → Open: the next keystroke writes it back~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
+| CA-07 | ~~A copied slide stays in localStorage for good, images included~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
+| CA-08 | ~~Undo keeps a whole-deck copy per keystroke (60 max)~~ [→](ux-backlog.md) | M | **Done** 23 Sep |
 | CA-11 | Same game embedded twice arrives answered and revealed [→](ux-backlog.md) | S–M | To do · P1 · shared files |
-| CA-20 | Regions never bounds-checked; blocks go off the slide [→](ux-backlog.md) | S | To do · P1 |
+| CA-20 | ~~Regions never bounds-checked~~ [→](ux-backlog.md) | S | **Done** 23 Sep · invalid values only |
 | CA-21 | Composition and regions measure in different frames; blocks jump [→](ux-backlog.md) | M–L | To confirm · P1 |
-| CA-22 | `layout-slots.js` resolves the composition differently from the renderer [→](ux-backlog.md) | S | To do · P1 |
-| CA-25 | Artwork drags at the wrong speed on 4:3 and 16:10 decks [→](ux-backlog.md) | S | To do · P1 |
+| CA-22 | ~~`layout-slots.js` resolves the composition differently from the renderer~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
+| CA-25 | ~~Artwork drags at the wrong speed on 4:3 and 16:10 decks~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | CA-40 | ~~⌘B/I/U do nothing when typing on the slide~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | CA-41 | ~~Enter that confirms an IME candidate ends the edit~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | UX-04 | Rail and show number slides differently (98 vs 110) [→](ux-backlog.md) | S–M | To do · P1 · needs a decision |
 | UX-05 | ~~Empty edit + Escape adds an Undo step that does nothing~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
-| UX-06 | Clicking the fading HUD advances the slide [→](ux-backlog.md) | S | To confirm · P1 |
+| UX-06 | ~~Clicking the fading HUD advances the slide~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | UX-10 | Command palette (⌘K) [→](ux-backlog.md) | M | To do · P1 |
-| UX-11 | `?` should open the shortcut sheet that already exists (Settings → ? Shortcuts) [→](ux-backlog.md) | S | To do · P1 · corrected |
+| UX-11 | ~~`?` should open the shortcut sheet in the editor~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | UX-20 | Move the panel's 6 slide actions into a right-click menu [→](ux-backlog.md) | M | To do · P1 · after UX-10 |
 | UX-21 | One Present ▾ split button instead of four [→](ux-backlog.md) | S | To do · P1 |
-| UX-24 | Say "Saved in this browser" in words, not a dot [→](ux-backlog.md) | S | To do · P1 |
+| UX-24 | Say "Saved in this browser" in words, not a dot [→](ux-backlog.md) | S | Partly done · a dot below 1500px |
 | UX-60 | Hide the answer bars until the reveal [→](ux-backlog.md) | M | To do · P1 · shared files |
 | UX-70 | `aria-label` on icon-only controls [→](ux-backlog.md) | S–M | To do · P1 |
 | CA-23 | Composition slot keys never match a block [→](ux-backlog.md) | S | To do · P2 |
@@ -72,7 +73,7 @@ coordinating rather than starting cold.
 | CA-27 | A resize drag can be left running [→](ux-backlog.md) | S | To confirm · P2 |
 | CA-28 | Fit badges measure before web fonts load [→](ux-backlog.md) | S | To confirm · P2 |
 | CA-42 | In the sorter, Alt+→ moves a group only once [→](ux-backlog.md) | S | To do · P2 |
-| CA-50 | Opening a deck deleted in another tab crashes [→](ux-backlog.md) | S | To do · P2 |
+| CA-50 | ~~Opening a deck deleted in another tab crashes~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | CA-51 | Window resize (Android keyboard) redraws mid-edit [→](ux-backlog.md) | S | To confirm · P2 |
 | CA-52 | Fallback edit panel writes with no history and survives undo [→](ux-backlog.md) | M | To do · P2 |
 | UX-12 | One word for the right panel ("inspector" vs "Design & content") [→](ux-backlog.md) | S | To do · P2 |
@@ -92,7 +93,7 @@ coordinating rather than starting cold.
 | CA-53 | `wordSpeed: "constructor"` writes `undefinedms` into CSS [→](ux-backlog.md) | S | To do · P3 |
 | CA-54 | `pic.src`, `deck.logo` and CSS `url()` skip `safeMedia` [→](ux-backlog.md) | S | To do · P3 |
 | UX-31 | Show that the panel field and the slide are one text [→](ux-backlog.md) | S | To do · P3 |
-| UX-53 | `W` for a white screen [→](ux-backlog.md) | S | To do · P3 |
+| UX-53 | White screen — not `W`, which is "Who answered what" [→](ux-backlog.md) | S | To do · P3 |
 | UX-63 | Lobby with optional generated nicknames [→](ux-backlog.md) | M | Needs a decision · P3 |
 | UX-65 | Per-student takeaway [→](ux-backlog.md) | M–L | Needs a decision · P3 |
 

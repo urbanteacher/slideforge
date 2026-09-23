@@ -28,17 +28,17 @@ what was removed.
 | UX-03 | Editor hint "Add points in the inspector" reaches the projector | P0 | S | **Done** 23 Sep · with CA-30 |
 | UX-04 | Rail and show number slides differently (98 vs 110) | P1 | S–M | To do |
 | UX-05 | Empty edit + Escape adds an Undo step that does nothing | P1 | S | **Done** 23 Sep · cause found: cancel created an empty `formatting` table |
-| UX-06 | Clicking the fading HUD advances the slide | P1 | S | To confirm |
+| UX-06 | Clicking the fading HUD advances the slide | P1 | S | **Done** 23 Sep · a 250ms race, see notes |
 | **Phase 2 — finding commands** |||||
 | UX-10 | Command palette (⌘K) | P1 | M | To do |
-| UX-11 | `?` shortcut sheet in the editor and the show | P1 | S | **Corrected** · a sheet exists (Settings → ? Shortcuts, and the player's help); the gap is that `?` doesn't open it |
+| UX-11 | `?` shortcut sheet in the editor and the show | P1 | S | **Done** 23 Sep · `?` already worked in the show; the editor now has it, with its own keys |
 | UX-12 | Use one word for the right-hand panel everywhere | P2 | S | Partly done · render hints now say "Design & content" |
 | **Phase 3 — fewer controls** |||||
 | UX-20 | Move the panel's 6 slide actions into a right-click menu | P1 | M | To do |
 | UX-21 | One **Present ▾** split button instead of four | P1 | S | To do |
 | UX-22 | One route to deck settings, not three | P2 | S | To do |
 | UX-23 | One route to insert things, not four | P2 | M | To do |
-| UX-24 | Say where the work is saved in words, not with a dot | P1 | S | To do |
+| UX-24 | Say where the work is saved in words, not with a dot | P1 | S | Partly done · words at ≥1500px, click exports everywhere; below 1500px still a dot (needs UX-20/21) |
 | **Phase 4 — editing on the slide** |||||
 | UX-30 | Outline editable blocks on hover | P2 | S | To do |
 | UX-31 | Make it clear the panel field and the slide are one text | P3 | S | To do |
@@ -48,7 +48,7 @@ what was removed.
 | UX-50 | Type a number and press Enter to jump | P2 | S | To do |
 | UX-51 | `O` overview grid while presenting | P2 | M | To do |
 | UX-52 | Pacing timer in the presenter view | P2 | S–M | To do |
-| UX-53 | `W` for a white screen | P3 | S | To do |
+| UX-53 | `W` for a white screen | P3 | S | **Clash** · `W` is already "Who answered what"; pick another key |
 | **Phase 7 — the room** |||||
 | UX-60 | Hide the answer bars until the reveal | P1 | M | To do · shared files |
 | UX-61 | Lock all phones, now or on a countdown | P2 | M | To do · shared files |
@@ -371,20 +371,20 @@ Three read-only reviews, running in parallel, covered:
 | CA-02 | Two tabs on one deck overwrite each other; nothing listens for `storage` events | storage | P0 | M | **Done** 23 Sep · one unexplained failure, see notes |
 | CA-03 | Drag-selecting text in an added block moves the block, and the edit is lost | canvas edit | P0 | S | **Done** 23 Sep · not browser-tested |
 | CA-04 | Text typed on the slide is not saved until the edit ends; closing the tab loses it | canvas edit | P0 | S | **Done** 23 Sep |
-| CA-05 | The first click after typing on the slide is swallowed by the redraw | canvas edit | P1 | S–M | Plausible |
-| CA-06 | Deleting the open deck in File → Open: the next keystroke writes it back | storage | P1 | S | Confirmed |
-| CA-07 | Copying a slide leaves the whole slide, images included, in localStorage for good, which feeds CA-01 | storage | P1 | S | Confirmed |
-| CA-08 | Undo stores a full copy of the deck for every keystroke (60 max): one sentence pushes a deletion out of reach, and a 5 MB deck uses about 300 MB | history | P1 | M | Confirmed |
+| CA-05 | The first click after typing on the slide is swallowed by the redraw | canvas edit | P1 | S–M | **Not reproduced** in Chrome, left alone |
+| CA-06 | Deleting the open deck in File → Open: the next keystroke writes it back | storage | P1 | S | **Done** 23 Sep |
+| CA-07 | Copying a slide leaves the whole slide, images included, in localStorage for good, which feeds CA-01 | storage | P1 | S | **Done** 23 Sep |
+| CA-08 | Undo stores a full copy of the deck for every keystroke (60 max): one sentence pushes a deletion out of reach, and a 5 MB deck uses about 300 MB | history | P1 | M | **Done** 23 Sep |
 | **Wrong slide or answer** ||||||
 | CA-10 | Present, Rehearse and Presenter start on the wrong slide when a hidden slide is above the selection | run index | P0 | S | **Done** 23 Sep · `tests/run-index.test.js` |
 | CA-11 | The same game embedded twice (⌘D or re-insert) arrives already answered and revealed, and the reports merge the two runs | live | P1 | S–M | Confirmed |
 | **The canvas core** ||||||
-| CA-20 | Regions are never bounds-checked; blocks past row 16 or col 12 go off the slide or collapse to one cell | lattice | P1 | S | Confirmed ✓ |
+| CA-20 | Regions are never bounds-checked; blocks past row 16 or col 12 go off the slide or collapse to one cell | lattice | P1 | S | **Done** 23 Sep · invalid values only; past row 16 is by design |
 | CA-21 | Composition and regions measure in different frames, so blocks jump when Layout opens on a composed slide | lattice × compositions | P1 | M–L | Plausible |
-| CA-22 | `layout-slots.js` resolves the composition differently from the renderer, which leaves slots that are never drawn but still block placement | lattice × compositions | P1 | S | Confirmed |
+| CA-22 | `layout-slots.js` resolves the composition differently from the renderer, which leaves slots that are never drawn but still block placement | lattice × compositions | P1 | S | **Done** 23 Sep |
 | CA-23 | The composition slot tables use keys that never match a block (`cp-heading`, `cp-prompt` and others) | lattice × compositions | P2 | S | Confirmed |
 | CA-24 | Regions bring back the accent bar that compositions hide (`.pad >` selector) | lattice × CSS | P2 | S | Confirmed |
-| CA-25 | Artwork drags at the wrong speed on 4:3 and 16:10 decks (scale is taken from the box, not `.slide`) | artwork | P1 | S | Confirmed |
+| CA-25 | Artwork drags at the wrong speed on 4:3 and 16:10 decks (scale is taken from the box, not `.slide`) | artwork | P1 | S | **Done** 23 Sep · measured: 0.75× on 4:3 |
 | CA-26 | Undo or redo closes Layout and Artwork (slides are compared by object, not by id) | arrange | P2 | S | Confirmed |
 | CA-27 | A resize drag can be left running (no blur or cancel handling, unlike move) | arrange | P2 | S | Plausible |
 | CA-28 | Fit badges and the text-size fitter measure before web fonts load | fit-check | P2 | S | Plausible |
@@ -395,8 +395,9 @@ Three read-only reviews, running in parallel, covered:
 | CA-41 | Enter that confirms an IME candidate ends the edit (no `isComposing` check) | inline edit | P1 | S | **Done** 23 Sep · not browser-tested |
 | CA-42 | In the sorter, Alt+→ moves a multi-slide group only once | rail | P2 | S | Confirmed |
 | CA-43 | The Undo button still works while a slide is being carried; placing then uses an out-of-date index | rail | P3 | S | Plausible |
+| CA-55 | **New:** one keystroke on the canvas flattened a multi-line heading to one line | inline edit | P1 | S | "+D+" |
 | **Smaller** ||||||
-| CA-50 | Opening a deck that another tab has just deleted crashes (`setDoc(null)`) | shell | P2 | S | Confirmed |
+| CA-50 | Opening a deck that another tab has just deleted crashes (`setDoc(null)`) | shell | P2 | S | **Done** 23 Sep · with CA-06 |
 | CA-51 | Resizing the window (including the Android keyboard opening) redraws mid-edit and loses panel fields that save on `onchange` | shell | P2 | S | Plausible |
 | CA-52 | The fallback edit panel writes into the slide with no history and survives slide changes and undo | inline edit | P2 | M | Confirmed |
 | CA-53 | `wordSpeed: "constructor"` writes `undefinedms` into CSS (the lookup doesn't use `hasOwnProperty`) | words | P3 | S | Confirmed |
@@ -519,6 +520,56 @@ Three read-only reviews, running in parallel, covered:
     for this, and treat it as not proven fixed.
 
 **Suites:** `npm test` 461/461 (457 + 4 new). `visual:check` 642/642.
+
+## 23 September 2026: the P1 pass, part one
+
+- **CA-06 and CA-50.** File → Open deletes through `removeDocs()`: it cancels the
+  pending save and moves to another document if the open one was deleted,
+  matching what the Library already did. Both workspaces gained
+  `cancelPendingSave`. Picking a record another tab has deleted now shows a
+  toast instead of crashing.
+- **CA-07.** A copied slide over 100 KB stays in this tab (in memory and
+  `sessionStorage`); smaller ones still go to `localStorage`, so another tab
+  can paste them. An oversized copy left by the old code is removed on load.
+  Two tests.
+- **CA-08.**
+  - A burst of text edits less than a second apart is one Undo step. A change
+    to the slide list is always its own step, and never opens a burst for what
+    follows.
+  - The history is capped at 40M characters as well as 60 steps.
+  - Checked in the browser: five keystrokes, one Undo. A duplicate plus typing
+    100ms later is two steps. My first version merged them; the check caught it.
+- **CA-20.** `anchorRegion` makes spans whole cells, at least one, and no wider
+  than 12 columns. The bottom edge is deliberately left alone: past row 16 is
+  allowed and reported by `restackRegions`, and clamping it would hide that.
+- **CA-22.** The slot functions take the resolved composition, and Arrange
+  passes `SF.slideComposition(deck, slide)`. One test covers a composition set
+  only by the theme and a stale key.
+- **CA-25.** `scaleOf` measures `.slide`. On a 4:3 deck the box scale was 0.669
+  against a real 0.5, so shapes moved at 0.748× the pointer.
+- **CA-55 (new).** The inline editor replaced every newline with a space, so one
+  keystroke in a two-line heading flattened it for good. Headings now keep
+  their line breaks (Shift+Enter adds one); bullets stay one line. Checked in
+  the browser.
+- **CA-05: not reproduced.** One click on another slide while editing both
+  saved the edit and selected the slide. Code left alone.
+- **UX-06.** The HUD dropped `pointer-events` the moment it began a 250ms fade,
+  so a click on a still-visible button fell through and advanced the slide.
+  It now hides with `visibility`, which flips only once the fade is over.
+  `customize.css` redefined the transition and had to carry the delay too.
+  Every key in the show calls `showHud()`, so Tab still reaches the bar.
+- **UX-11.**
+  - `?` in the show already opened the sheet; my first test used a key
+    combination the tool didn't deliver.
+  - The editor now opens the same sheet with `?`, with an **Editing keys**
+    section listing only keys read from the handlers. Escape or `?` closes it,
+    and nothing else reaches the deck while it's open.
+  - Settings' "? Shortcuts" now closes Settings through its real close button.
+  - The card fits narrow windows (at 436px it had run off the right edge).
+- **UX-24, partly.** The status is a button reading **Saved in this browser**,
+  and clicking it exports, as the README always said it did. Below 1500px it is
+  still a dot, now clickable and labelled. Words at every width need the header
+  space UX-20 and UX-21 would free.
 
 ## Log
 
