@@ -793,6 +793,57 @@ for Connect. It also has +30s on the wall and the desk. The details are in
 It is covered by unit and relay tests. It was **not** smoke-tested or viewed
 in the browser.
 
+## 23 September 2026: games to a premium standard, the build list
+
+From [games-premium-audit.md](games-premium-audit.md): all 27 formats graded
+against a nine-point bar (P1–P9). Today there is 1 premium, 10 solid, 9 thin,
+6 broken and 1 disabled. The audit also lists the shared kit to rebuild
+from (K1–K17). Items are in build order; the wave is the audit's.
+
+| ID | Wave | Item | Size | Status |
+|---|---|---|---|---|
+| GA-01 | 0 | Word Reveal scores each answer by the letters showing when *it* arrived, not at the reveal | S | To do · verified bug |
+| GA-02 | 0 | Quiz Bowl takes each cell's own value, not Q1's | S | To do |
+| GA-03 | 0 | Delete the second copy of the game presets in `js/studio.js` | S | To do |
+| GA-04 | 0 | Teacher entry records a Ranking order (key sequence) and a Spot the Error tap (click the word) (E1) | S | To do · verified bug |
+| GA-05 | 0 | A refused teacher entry says so (`manualError`), instead of being dropped (E2) | S | To do · verified bug |
+| GA-06 | 1 | **Verdict recipient (N1)** in teacher entry, fed by the name picker (E4). Spoken formats score the speaker's team, and count in individual play (audit §6) | M | To do · fixes four broken games |
+| GA-07 | 1 | Spoken-format phones get a "Listen and watch" job card, not verdict pads | S | To do |
+| GA-08 | 1 | Each style declares its rooms, `plays: {phones, teams, entry, solo}`; library badges; the contract test enforces it (E7) | S | To do |
+| GA-09 | 2 | **The draw (N2)**: a random unused pick from a pool, animated, "N left" | M | To do |
+| GA-10 | 2 | **Round clock (N4)**: one clock for a run of items, on the stages clock | S | To do |
+| GA-11 | 3 | Fill in the Blanks → *Fill the gaps*: a word bank tapped into slots, heat per gap | M | To do |
+| GA-12 | 3 | Odd One Out → *Vote, then defend*: tap the odd one, write the rule, vote heat on the reveal | M | To do |
+| GA-13 | 3 | Predict the Outcome → *Commit, then watch*: on stages, private prediction, confidence-weighted | M | To do |
+| GA-14 | 3 | True/False → *Hold or fold*: split shown half-way, one switch | S–M | To do |
+| GA-15 | 3 | **Tally entry** for paper and hands up: counts per option feed the heat reveal; nobody scored (E3) | M | To do |
+| GA-16 | 3 | One-click team rows for teams without devices (E5) | S | To do |
+| GA-17 | 3 | Saved class lists for teacher entry, kept on this computer only (E6) | S | To do |
+| GA-18 | 4 | **Proposal queue (N3)**, generalised from Q&A moderation | M | To do |
+| GA-19 | 4 | Concept Chain as a branching map of phone proposals; Connection Maker as its two-ended preset | M | To do |
+| GA-20 | 5 | **Line reveal (N5)**; Time Traveler → *Place it in time* on a growing timeline | M | To do |
+| GA-21 | 6 | Desk parity: Horse Race lanes, Boss Hit/Miss, Definition Ask, every board control on the desk | S each | To do |
+| GA-22 | 6 | Emoji hint released as a step, costing points; Definition rebuilt on stages | S | To do |
+| GA-23 | 6 | Ranking reveal as a heat per slot | S | To do |
+| GA-24 | 6 | Horse Race and Boss use the room pane's top-five layout; Boss gets a reveal per hit | S | To do |
+| GA-25 | 2–6 | On the draw and round clock: Spin & Explain spinner, Random Challenge deck, Question Cube roll plus stages, Heads Up 60-second round | S–M each | To do · after GA-06, 09, 10 |
+| GA-26 | 7 | **Sort input (N6)**; Compare & Contrast → *Sort it* | L | To do |
+| GA-27 | 7 | Beat the Clock → self-paced *Against the clock* (relay self-paced mode) | L | To do |
+| GA-28 | after 7 | **Solo practice** on the share link (E8) | M | To do |
+
+**Carried from today's other work:**
+
+| ID | Item | From | Size | Status |
+|---|---|---|---|---|
+| RP-01 | Rehearse with a class of 30 (and 120): a class-size choice on the rehearsal | [room-pane-redesign.md](room-pane-redesign.md) | S | To do |
+| RP-02 | Lecture-scale defaults (100+): standings off, distribution on | room pane | S | To do |
+| RP-03 | A packed, centred word cloud with stable positions | room pane | M | To do |
+| RP-04 | The desk's "need a hand" chip, seen drawn | room pane | S | To check |
+| TPS-01 | Spotlight one idea during Share | [game-activity-redesign.md](game-activity-redesign.md) | S | To do |
+| TPS-02 | "19 of 26 have written something" during Think (a count only; the note stays private) | TPS | S | To do |
+| TPS-03 | Smoke-test and view Think-Pair-Share on the wall and a phone | TPS | S | To check · not seen drawn |
+| TPS-04 | Existing lessons' Think-Pair-Share slides offered the stages view | TPS | S | To do |
+
 ## Log
 
 - **22 Sep 2026.** Backlog created from the [UX deep dive](ux-deep-dive.md).

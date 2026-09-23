@@ -35,6 +35,7 @@ coordinating rather than starting cold.
 | 18 | ~~"Add image detail" does nothing~~ | — | **Retracted** · it works; my probe clicked the wrong button |
 | 19 | **A host refresh destroyed the live room** | M | **Done** — 90s grace + reconnect |
 | 20 | Refresh loses the presentation, the student's seat, the selected slide | M | To do — B, C, D |
+| GA | **Games to a premium standard**: 28 items (GA-01–28), plus the room pane and Think-Pair-Share follow-ups (RP-, TPS-). Detail in [ux-backlog.md](ux-backlog.md) and [games-premium-audit.md](games-premium-audit.md) | S–L | To do · wave 0 first |
 | | **From the 22 Sep UX review and code audit** — detail in [ux-backlog.md](ux-backlog.md); IDs kept so the two files match | | |
 | CA-01 | ~~Storage quota errors swallowed; the header still says "Saved"~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | CA-02 | ~~Two tabs on one deck overwrite each other~~ [→](ux-backlog.md) | M | **Done** 23 Sep · one unexplained failure |
