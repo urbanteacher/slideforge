@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/randomchallenge. Edit source here; npm run build updates js/model.js. */
 
 /** @type {import("../types.js").GameEngine} */
@@ -18,6 +19,7 @@ const randomchallenge = {
     "confidence": false
   },
   key: 'randomchallenge',
+  plays: ROOM_PLAY.spoken,
   label: 'Random challenge',
   icon: '✦',
   blurb: 'Draw a challenge; host marks Complete. Count only — no competitive score.',

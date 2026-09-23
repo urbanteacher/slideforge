@@ -510,8 +510,9 @@ export interface Question {
   studySeconds?: number;
   gridSize?: number;
   rotateClaims?: boolean;
+  /** Legacy bowl saves; migrated into `settings.bowlTarget` on load. */
   targetScore?: number;
-  /** Bowl / low-stakes carry a slice of game settings on question one. */
+  /** Low-stakes carries a slice of game settings on question one. */
   mode?: 'individual' | 'teams';
   teams?: Team[];
   scoreboard?: boolean;
@@ -533,7 +534,11 @@ export interface GameSettings {
   explainStyle: ExplainStyle;
   /** Horse race only: steps to the finish line. */
   trackLength: number;
+  /** Quiz Bowl: score needed to finish the board. */
+  bowlTarget?: number;
   confidence: boolean;
+  /** Spoken games count in individual play unless this is enabled. */
+  scoreSpoken?: boolean;
   /** Keep the room's answer bars off the wall until the reveal. */
   resultsOnReveal: boolean;
   /** Referenced, not embedded, and played on the projector only. */
@@ -541,6 +546,14 @@ export interface GameSettings {
   musicVolume: number;
   /** Engines may add their own through `defaults`. */
   [setting: string]: unknown;
+}
+
+export type RoomSupportLevel = 'yes' | 'partial' | 'no';
+export interface RoomSupport {
+  phones: { status: RoomSupportLevel; reason: string };
+  teams: { status: RoomSupportLevel; reason: string };
+  entry: { status: RoomSupportLevel; reason: string };
+  solo: { status: RoomSupportLevel; reason: string };
 }
 
 /** A game, after `normalizeGame`. */
@@ -596,6 +609,8 @@ export interface GameEngine<Q extends Question = Question> {
   blurb: string;
   mechanic: Mechanic;
   input: InputKind;
+  /** How the format works with phones, teams, teacher entry and solo play. */
+  plays: RoomSupport;
   minOptions: number;
   maxOptions: number;
   /** Options the style owns rather than the author, e.g. True/False. */

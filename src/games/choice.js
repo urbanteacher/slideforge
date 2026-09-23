@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/choice. Edit source here; npm run build updates js/model.js. */
 
 /* Core choice schemas. Presets import these hooks instead of copying them. */
@@ -5,7 +6,8 @@
 /** @type {Record<string, import("../types.js").GameEngine<import("../types.js").QuestionWith<'options'|'correct'>>>} */
 const coreStyles = {
   choice: {
-    key: 'choice',
+  key: 'choice',
+  plays: ROOM_PLAY.quiz,
     label: 'Multiple choice',
     icon: '?',
     blurb: 'Two to six answers, one of them correct.',
@@ -99,7 +101,8 @@ const coreStyles = {
   },
 
   truefalse: {
-    key: 'truefalse',
+  key: 'truefalse',
+  plays: ROOM_PLAY.quiz,
     label: 'True or false',
     icon: '½',
     blurb: 'A statement the room marks true or false.',

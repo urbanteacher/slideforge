@@ -66,3 +66,34 @@ test('the host can rename, kick and delete people in the room', async t => {
  assert.equal(r.attendance.find(p=>p.id===sam).leftReason,'removed');
  assert.equal(r.attendance.find(p=>p.id===phoneId).leftReason,'kicked');
 });
+
+test('teacher entry records ordered and tapped answers and explains refusals', async t => {
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sf-manual-inputs-')),port=await freePort(),child=await start(port,dir),sockets=[];
+ t.after(async()=>{await stop(child);sockets.forEach(s=>s.socket.close());fs.rmSync(dir,{recursive:true,force:true});});
+ const host=await connect(port);sockets.push(host);
+ host.send({t:'host',title:'Input kinds',mode:'individual'});await host.next('hosted');
+ host.send({t:'manualAdd',names:['Alex']});
+ const alex=(await host.until('players',m=>m.list.length===1)).list[0].id;
+ host.send({t:'begin'});
+ host.send({t:'question',id:'order-1',input:'order',question:'Put these in order',options:['A','B','C','D'],timeLimit:0});
+ await host.until('tally',m=>m.id==='order-1');
+ host.send({t:'manualAnswer',id:'order-1',playerId:alex,order:[0,1,1,3]});
+ const badOrder=await host.next('manualError');
+ assert.equal(badOrder.playerId,alex);assert.equal(badOrder.id,'order-1');
+ assert.match(badOrder.message,/every item once/i);
+ host.send({t:'manualAnswer',id:'order-1',playerId:alex,order:[2,0,3,1]});
+ const ordered=await host.until('tally',m=>m.answers.some(a=>a.id===alex&&Array.isArray(a.response)));
+ assert.deepEqual(ordered.answers.find(a=>a.id===alex).response,[2,0,3,1]);
+ await reveal(host,{id:'order-1',correct:-1},a=>Array.isArray(a.response),null,ordered);
+ host.send({t:'question',id:'tap-1',input:'tap',question:'Tap the error',options:['The','wrong','word'],timeLimit:0});
+ await host.until('tally',m=>m.id==='tap-1');
+ host.send({t:'manualAnswer',id:'tap-1',playerId:alex,choice:7});
+ const badTap=await host.next('manualError');
+ assert.equal(badTap.playerId,alex);assert.match(badTap.message,/available option/i);
+ host.send({t:'manualAnswer',id:'tap-1',playerId:alex,choice:1});
+ const tapped=await host.until('tally',m=>m.answers.some(a=>a.id===alex&&a.response===1));
+ assert.equal(tapped.answers.find(a=>a.id===alex).response,1);
+ const r=await report(host);
+ assert.deepEqual(r.checks[0].responses[0].order,[2,0,3,1]);
+ assert.equal(r.checks[1].responses[0].choice,1);
+});

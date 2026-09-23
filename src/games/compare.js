@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 import starters from "../samples/compare.json" with { type: "json" };
 /* SlideForge — games/compare. Edit source here; npm run build updates js/model.js. */
 
@@ -27,6 +28,7 @@ const compare = {
   },
   starters,
   key: 'compare',
+  plays: ROOM_PLAY.discussion,
   label: 'Compare & contrast',
   icon: '\u21c4',
   blurb: 'Two items side by side. Discuss similarities and differences — then reveal the prepared points. No score.',

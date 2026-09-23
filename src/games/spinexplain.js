@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/spinexplain. Edit source here; npm run build updates js/model.js. */
 
 /* Spin & Explain — Clear +2, hint +1, reject 0. */
@@ -22,6 +23,7 @@ const spinexplain = {
     "confidence": false
   },
   key: 'spinexplain',
+  plays: ROOM_PLAY.spoken,
   label: 'Spin & explain',
   icon: '◉',
   blurb: 'Spin a concept; explain it aloud. Host scores Clear, With hint, or Reject.',

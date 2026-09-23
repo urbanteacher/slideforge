@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/boss. Edit source here; npm run build updates js/model.js. */
 import { choice } from "./choice.js";
 import rawStarters from "../samples/boss.json" with { type: "json" };
@@ -42,6 +43,7 @@ const boss = {
     "confidence": false
   },
   key: 'boss',
+  plays: ROOM_PLAY.quiz,
   label: 'Boss battle',
   icon: '▲',
   blurb: 'Multiple choice against a shared boss. Correct hits deal damage; bring HP to zero before the questions run out.',

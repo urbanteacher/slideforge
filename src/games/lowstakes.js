@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 import { createLowstakesBoard } from "../boards/lowstakes.js";
 import starters from "../samples/lowstakes.json" with { type: "json" };
 /* SlideForge — games/lowstakes. Edit source here; npm run build updates js/model.js. */
@@ -41,6 +42,7 @@ const lowstakes = {
   },
   starters,
   key: 'lowstakes',
+  plays: ROOM_PLAY.paper,
   label: 'Low-stakes quiz',
   icon: '◎',
   blurb: 'Timed retrieval on paper. When time is up, answers are revealed for discussion — no scoreboard.',

@@ -172,6 +172,14 @@ test('word reveal scores 100 / 75 / 50 by fraction revealed', () => {
   assert.equal(quiz.input, 'text');
   assert.ok(quiz.word);
   assert.ok(SF.markResponse(quiz, quiz.accept[0]));
+  const answers = [
+    { id: 'early', response: quiz.accept[0], elapsedMs: 0 },
+    { id: 'late', response: quiz.accept[0], elapsedMs: 120000 },
+    { id: 'wrong', response: 'chlorophyll', elapsedMs: 0 }
+  ];
+  assert.deepEqual(JSON.parse(JSON.stringify(SF.wordRevealGains(quiz, answers, 99))), [
+    ['early', 100], ['late', 50], ['wrong', 0]
+  ], 'the later reveal cannot raise or lower another learner’s score');
 });
 
 test('ranking / order points are round(10 × orderScore)', () => {

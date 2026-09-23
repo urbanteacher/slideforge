@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/speed. Edit source here; npm run build updates js/model.js. */
 import { choice } from "./choice.js";
 
@@ -11,6 +12,7 @@ const speed = {
     "confidence": false
   },
   key: 'speed',
+  plays: ROOM_PLAY.quiz,
   label: 'Beat the clock',
   icon: '◷',
   blurb: 'Multiple choice against the countdown. Faster correct answers score more; wrong answers cost points.',

@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/wordreveal. Edit source here; npm run build updates js/model.js. */
 import { markTyped } from "./marking.js";
 
@@ -41,6 +42,28 @@ function wordRevealLetterCount(word) {
   return String(word || '').replace(/\s/g, '').length;
 }
 
+/** The number of letters visible when this particular answer reached the relay. */
+function wordRevealShownAt(slide, elapsedMs) {
+  var total = wordRevealLetterCount(slide.word || slide.answer || '');
+  var fraction = slide.preReveal != null
+    ? Number(slide.preReveal) : wordRevealPreFraction(slide.difficulty);
+  var initial = Math.round(total * Math.max(0, Math.min(1, fraction || 0)));
+  var interval = Math.max(3, Number(slide.dripInterval) || 5) * 1000;
+  return Math.min(total, initial + Math.floor(Math.max(0, Number(elapsedMs) || 0) / interval));
+}
+
+/** Score each answer at its own timestamp, never at the host's reveal time. */
+function wordRevealGains(slide, answers, currentShown) {
+  var total = wordRevealLetterCount(slide.word || slide.answer || '');
+  return (answers || []).map(function (answer) {
+    var shown = answer.elapsedMs == null
+      ? Math.max(0, Number(currentShown) || 0)
+      : wordRevealShownAt(slide, answer.elapsedMs);
+    var points = wordRevealPoints(total ? shown / total : 1);
+    return [answer.id, wordreveal.mark(slide, answer.response) ? points : 0];
+  });
+}
+
 /** @type {import("../types.js").GameEngine<import("../types.js").QuestionWith<'accept'|'word'>>} */
 const wordreveal = {
   defaults: {
@@ -49,6 +72,7 @@ const wordreveal = {
     "confidence": false
   },
   key: 'wordreveal',
+  plays: ROOM_PLAY.typed,
   label: 'Word reveal',
   icon: '…',
   blurb: 'Guess the word as letters drip in. Earlier guesses score more.',
@@ -132,4 +156,4 @@ const wordreveal = {
   }
 };
 
-export { WR_LEVELS, WR_DRIP, wordRevealPreFraction, wordRevealPoints, wordRevealMask, wordRevealLetterCount, wordreveal };
+export { WR_LEVELS, WR_DRIP, wordRevealPreFraction, wordRevealPoints, wordRevealMask, wordRevealLetterCount, wordRevealShownAt, wordRevealGains, wordreveal };

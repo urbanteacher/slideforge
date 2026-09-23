@@ -279,17 +279,17 @@ const GAME_FORMAT_PRESETS = {
   'quiz-bowl': {
     style: 'bowl',
     title: 'Quiz bowl',
-    settings: { scoreboard: false, scoreSlide: false, defaultTime: 0, confidence: false, mode: 'teams' },
+    settings: { scoreboard: false, scoreSlide: false, defaultTime: 0, confidence: false, mode: 'teams', bowlTarget: 1000 },
     seeds: [
-      { category: 'Cells', pointValue: 100, targetScore: 1000, question: 'What is the jelly inside a cell called?', answer: 'Cytoplasm' },
-      { category: 'Cells', pointValue: 200, targetScore: 1000, question: 'What molecule carries genetic information?', answer: 'DNA' },
-      { category: 'Cells', pointValue: 300, targetScore: 1000, question: 'Which organelle releases energy in respiration?', answer: 'The mitochondrion' },
-      { category: 'Transport', pointValue: 100, targetScore: 1000, question: 'Which way do particles move in diffusion?', answer: 'From high to low concentration' },
-      { category: 'Transport', pointValue: 200, targetScore: 1000, question: 'What is the movement of water across a partially permeable membrane?', answer: 'Osmosis' },
-      { category: 'Transport', pointValue: 300, targetScore: 1000, question: 'Which kind of transport needs energy from respiration?', answer: 'Active transport' },
-      { category: 'Enzymes', pointValue: 100, targetScore: 1000, question: 'What kind of molecule is an enzyme?', answer: 'A protein' },
-      { category: 'Enzymes', pointValue: 200, targetScore: 1000, question: 'What happens to an enzyme above its optimum temperature?', answer: 'It denatures' },
-      { category: 'Enzymes', pointValue: 300, targetScore: 1000, question: 'What is the molecule an enzyme acts on called?', answer: 'The substrate' }
+      { category: 'Cells', pointValue: 100, question: 'What is the jelly inside a cell called?', answer: 'Cytoplasm' },
+      { category: 'Cells', pointValue: 200, question: 'What molecule carries genetic information?', answer: 'DNA' },
+      { category: 'Cells', pointValue: 300, question: 'Which organelle releases energy in respiration?', answer: 'The mitochondrion' },
+      { category: 'Transport', pointValue: 100, question: 'Which way do particles move in diffusion?', answer: 'From high to low concentration' },
+      { category: 'Transport', pointValue: 200, question: 'What is the movement of water across a partially permeable membrane?', answer: 'Osmosis' },
+      { category: 'Transport', pointValue: 300, question: 'Which kind of transport needs energy from respiration?', answer: 'Active transport' },
+      { category: 'Enzymes', pointValue: 100, question: 'What kind of molecule is an enzyme?', answer: 'A protein' },
+      { category: 'Enzymes', pointValue: 200, question: 'What happens to an enzyme above its optimum temperature?', answer: 'It denatures' },
+      { category: 'Enzymes', pointValue: 300, question: 'What is the molecule an enzyme acts on called?', answer: 'The substrate' }
     ]
   },
   'slider': {

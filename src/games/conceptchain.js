@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 import starters from "../samples/conceptchain.json" with { type: "json" };
 /* SlideForge — games/conceptchain. Edit source here; npm run build updates js/model.js. */
 
@@ -32,6 +33,7 @@ const conceptchain = {
   },
   starters,
   key: 'conceptchain',
+  plays: ROOM_PLAY.spoken,
   label: 'Concept chain',
   icon: '⛓',
   blurb: 'Start from a term; add a justified link. Host Accepts to grow the chain (+1).',

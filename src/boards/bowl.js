@@ -3,6 +3,10 @@
  * @returns {import("../types.js").BoardEngine}
  */
 export function createBowlBoard({ bowlGrid }) {
+  function target(game) {
+    return Number(game.settings && game.settings.bowlTarget) || 1000;
+  }
+
   function compile(game, { makeSlide }) {
     const st = game.settings;
     const out = [];
@@ -26,7 +30,7 @@ export function createBowlBoard({ bowlGrid }) {
       categories: grid.categories,
       values: grid.values,
       cells: grid.cells,
-      target: Number(game.questions[0].targetScore) || 1000,
+      target: target(game),
       participants:
         st.mode === 'teams'
           ? st.teams.slice(0, 6).map(function (t, i) {
@@ -46,7 +50,7 @@ export function createBowlBoard({ bowlGrid }) {
       (bg.categories.length === 1 ? ' category · ' : ' categories · ') +
       game.questions.length +
       ' cells · first to ' +
-      (Number(game.questions[0].targetScore) || 1000);
+      target(game);
 
     intro.notes =
       'Pick an unused cell, hear the answer, then reveal and award it. The board ends when it empties or a team reaches the target.';
@@ -56,7 +60,7 @@ export function createBowlBoard({ bowlGrid }) {
     var total = game.questions.reduce(function (n, q) {
       return n + (q.pointValue || 0);
     }, 0);
-    var target = Number(game.questions[0] && game.questions[0].targetScore) || 1000;
+    var targetScore = target(game);
     var shape =
       grid.categories.length +
       (grid.categories.length === 1 ? ' category · ' : ' categories · ') +
@@ -64,10 +68,10 @@ export function createBowlBoard({ bowlGrid }) {
       (game.questions.length === 1 ? ' cell · ' : ' cells · ') +
       total +
       ' points on the board';
-    if (total < target) {
-      return shape + ' — less than the ' + target + ' target, so the board will empty first';
+    if (total < targetScore) {
+      return shape + ' — less than the ' + targetScore + ' target, so the board will empty first';
     }
-    return shape + ' · the board ends when someone reaches ' + target;
+    return shape + ' · the board ends when someone reaches ' + targetScore;
   }
   function authorQuestion(insp, question, context) {
     const { UI, touched, drawRail } = context;
@@ -117,7 +121,7 @@ export function createBowlBoard({ bowlGrid }) {
          countdown, no per-question points beyond the cell's own value, and
          nothing for a phone to vote on. */
     insp.appendChild(
-      boardSettingLink('Target score', String(Number(question.targetScore) || 1000))
+      boardSettingLink('Target score', String(target(game)))
     );
     insp.appendChild(el('p', 'hint', bowlNote(game, SF)));
     insp.appendChild(
@@ -199,11 +203,9 @@ export function createBowlBoard({ bowlGrid }) {
           (SF.BOWL_TARGETS || [500, 1000, 1500, 2000]).map(function (n) {
             return { value: String(n), label: String(n) };
           }),
-          String(game.questions[0].targetScore || 1000),
+          String(target(game)),
           function (v) {
-            game.questions.forEach(function (cell) {
-              cell.targetScore = Number(v);
-            });
+            st.bowlTarget = Number(v);
             touched();
             draw2();
             drawPreview();

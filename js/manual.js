@@ -134,13 +134,22 @@ function drawRevealRow(q){
  row.dataset.q=q.id;
  row.textContent='';
  var lead=document.createElement('p');lead.className='reveal-lead';
- lead.textContent='Press the correct answer to reveal it and score the room.';
+ lead.textContent=q.spoken?'Choose who spoke, then mark the spoken answer.':
+  'Press the correct answer to reveal it and score the room.';
  row.appendChild(lead);
  (q.options||[]).forEach(function(text,i){
   var b=document.createElement('button');
   b.className='reveal-opt';
   b.textContent=String.fromCharCode(65+i)+' · '+text;
-  b.onclick=function(){send('revealWith',{choice:i});};
+  b.onclick=function(){
+   var scoring=q.spoken&&q.style!=='headsup'&&q.style!=='randomchallenge'&&
+    (state.mode==='teams'||q.scoreSpoken)&&
+    (i===0||(q.style==='spinexplain'&&i===1));
+   if(scoring&&(!state.recipient||state.recipient.type==='room')){
+    $('error').textContent='Choose who spoke or their team before awarding points.';return;
+   }
+   $('error').textContent='';send('revealWith',{choice:i});
+  };
   row.appendChild(b);
  });
 }
@@ -155,6 +164,24 @@ function drawRevealRow(q){
    themselves and are skipped — landing on one would stall the run with no
    key that does anything. */
 var cursor=0;
+var orderDraft={},answerErrors={};
+
+function sendRowAnswer(q,row,data){
+ var id=Number(row.dataset.id);
+ delete answerErrors[id];
+ send('answer',{answer:Object.assign({id:q.id,playerId:id},data)});
+}
+
+function chooseOrderItem(q,row,index){
+ var id=Number(row.dataset.id),n=(q.options||[]).length;
+ if(index<0||index>=n)return false;
+ var draft=orderDraft[id]||[];
+ if(draft.indexOf(index)>=0)return false;
+ draft=draft.concat(index);orderDraft[id]=draft;
+ if(draft.length===n){sendRowAnswer(q,row,{order:draft.slice()});moveCursor(1);}
+ render();
+ return true;
+}
 
 function enteredRows(){
  return /** @type {HTMLElement[]} */ (Array.from(document.querySelectorAll('.manual-entry:not(.on-phone)')));
@@ -179,10 +206,12 @@ function moveCursor(by){cursor+=by;markCurrent();
 
 function recordCurrent(choice){
  var q=state.question;if(!q||q.revealed)return false;
+ if(q.spoken)return false;
  var row=enteredRows()[cursor];if(!row)return false;
- if(q.input!=='choice')return false;
+ if(q.input==='order')return chooseOrderItem(q,row,choice);
+ if(q.input!=='choice'&&q.input!=='tap')return false;
  if(choice<0||choice>=(q.options||[]).length)return false;
- send('answer',{answer:{id:q.id,playerId:Number(row.dataset.id),choice:choice}});
+ sendRowAnswer(q,row,{choice:choice});
  moveCursor(1);
  return true;
 }
@@ -201,11 +230,15 @@ document.addEventListener('keydown',function(e){
  if(k==='Backspace'){
   e.preventDefault();
   var q=state.question,row=enteredRows()[cursor];
-  if(q&&!q.revealed&&row)send('answer',{answer:{id:q.id,playerId:Number(row.dataset.id),clear:true}});
+  if(q&&!q.revealed&&row){
+   var id=Number(row.dataset.id),draft=orderDraft[id];
+   if(q.input==='order'&&draft&&draft.length){draft.pop();render();}
+   else sendRowAnswer(q,row,{clear:true});
+  }
   return;
  }
- var letter=/^[a-fA-F]$/.test(k)?k.toUpperCase().charCodeAt(0)-65:null;
- var digit=/^[1-6]$/.test(k)?Number(k)-1:null;
+ var letter=/^[a-hA-H]$/.test(k)?k.toUpperCase().charCodeAt(0)-65:null;
+ var digit=/^[1-8]$/.test(k)?Number(k)-1:null;
  var choice=letter!=null?letter:digit;
  if(choice!=null&&recordCurrent(choice))e.preventDefault();
 });
@@ -298,6 +331,36 @@ if($('startLiveRoom')) $('startLiveRoom').onclick=function(){
  $('error').textContent='';
 };
 
+function paintSpokenControls(q){
+ var box=$('spokenControls'),select=$('spokenRecipient');
+ if(!box||!select)return;
+ box.hidden=!q||!q.spoken;
+ if(box.hidden)return;
+ var selected=state.recipient||{type:'room'};
+ var value=selected.type==='room'?'room':selected.type+':'+selected.id;
+ select.textContent='';
+ function option(key,label){var o=document.createElement('option');o.value=key;o.textContent=label;select.appendChild(o);}
+ option('room','The room · count only');
+ if(state.mode==='teams') (state.teams||[]).forEach(function(t,i){
+  option('team:'+i,(t.name||t)+' · team');
+ });
+ (state.players||[]).forEach(function(p){
+  option('player:'+p.id,p.name+(state.mode==='teams'&&p.team!=null&&state.teams[p.team]
+    ?' · '+(state.teams[p.team].name||state.teams[p.team]):''));
+ });
+ select.value=value;
+ if(select.value!==value)select.value='room';
+ select.onchange=function(){
+  var parts=select.value.split(':');
+  send('recipient',{recipient:parts[0]==='room'?{type:'room'}:{type:parts[0],id:Number(parts[1])}});
+ };
+ $('spokenScoringNote').textContent=q.style==='headsup'
+  ?(state.oralCount||0)+' correct in this round · count only.'
+  :state.mode==='teams'?'Accepted answers score only for the selected team.'
+  :q.scoreSpoken?'Accepted answers score only for the selected speaker.'
+  :'Accepted answers add to the room count. Individual points are off in Game settings.';
+}
+
 function render(){
  applyPanes();
  paintPulse();
@@ -308,6 +371,7 @@ function render(){
     their own and there is nothing to record. Entered names come first,
     because those are the rows that need doing something to. */
  var q=state.question, key=q?q.id:'', all=(state.players||[]).slice();
+ paintSpokenControls(q);
  var entered=all.filter(function(p){return p.manual;});
  var onPhones=all.filter(function(p){return !p.manual;});
  var people=entered.concat(onPhones);
@@ -339,7 +403,7 @@ function render(){
   : 'This slide has no check — advance to a quiz slide to record answers';
  $('question').textContent=heading;
  var roll=$('rollcall');
- if(roll) roll.hidden=!q;
+ if(roll) roll.hidden=!q||!!q.spoken;
  /* A disabled button that says nothing is indistinguishable from a broken
     one — "what is the point of this button, it does nothing" is the exact
     report it earns. Every reason it cannot be pressed is now written next to
@@ -387,7 +451,7 @@ function render(){
     question, not on the signature: the roster changes when a phone joins
     mid-question, and that must not move the teacher's place. */
  var questionChanged=lastQ!==key;
- if(questionChanged){lastQ=key;cursor=0;}
+ if(questionChanged){lastQ=key;cursor=0;orderDraft={};answerErrors={};}
  sig=key+'|'+people.map(function(p){return p.id;}).join(',');
  if(lastKey!==sig){
   var typed={};
@@ -400,10 +464,18 @@ function render(){
    if(!p.manual){var tag=document.createElement('span');tag.className='source-tag';tag.textContent='on a phone';row.appendChild(tag);}
    addRosterActions(row,p);
    if(q&&p.manual){
-    function answer(data){send('answer',{answer:Object.assign({id:q.id,playerId:p.id},data)});}
-    if(q.input==='choice') (q.options||[]).forEach(function(text,i){var b=button(String.fromCharCode(65+i)+' · '+text,function(){answer({choice:i});});b.dataset.choice=i;row.appendChild(b);});
+    function answer(data){sendRowAnswer(q,row,data);}
+    if(q.spoken){ /* The teacher marks the spoken verdict above. */ }
+    else if(q.input==='choice'||q.input==='tap') (q.options||[]).forEach(function(text,i){
+     var b=button((q.input==='choice'?String.fromCharCode(65+i)+' · ':'')+text,function(){answer({choice:i});if(q.input==='tap')moveCursor(1);});
+     b.dataset.choice=i;if(q.input==='tap')b.className='tap-entry-choice';row.appendChild(b);
+    });
+    else if(q.input==='order') (q.options||[]).forEach(function(text,i){
+     var b=button(String.fromCharCode(65+i)+' · '+text,function(){chooseOrderItem(q,row,i);});
+     b.dataset.order=i;row.appendChild(b);
+    });
     else {var input=document.createElement('input');input.type=q.input==='number'?'number':'text';input.setAttribute('aria-label','Answer for '+p.name);row.appendChild(input);row.appendChild(button('Record',function(){if(input.value.trim()) answer(q.input==='number'?{value:Number(input.value)}:{text:input.value});}));}
-    row.appendChild(button('Clear answer',function(){answer({clear:true});}));
+    if(!q.spoken)row.appendChild(button('Clear answer',function(){delete orderDraft[p.id];answer({clear:true});render();}));
    }
    var status=document.createElement('span');status.className='answer-status';row.appendChild(status);$('entries').appendChild(row);
    if(typed[p.id]){var keep=row.querySelector('input');if(keep)keep.value=typed[p.id];}
@@ -415,17 +487,27 @@ function render(){
     one, and printing it under "Ready for the next question" reads as an
     answer to a question nobody asked — and reads it as a raw index, because
     the letters come from the question that is no longer there. */
- var said=a?(q&&q.input==='choice'?String.fromCharCode(65+a.response):a.response):null;
+ var said=a?(q&&q.input==='choice'?String.fromCharCode(65+a.response)
+  :q&&q.input==='tap'?q.options[a.response]
+  :q&&q.input==='order'&&Array.isArray(a.response)?a.response.map(function(i){return String.fromCharCode(65+i);}).join(' → ')
+  :a.response):null;
  /* Right and wrong arrive only once the reveal has happened — the host sends
     null until then — so this cannot show a verdict early. */
  var verdict=a&&a.right!=null?(a.right?' \u2713 right':' \u2717 wrong'):'';
  row.classList.toggle('is-right',!!(a&&a.right===true));
  row.classList.toggle('is-wrong',!!(a&&a.right===false));
- row.querySelector('.answer-status').textContent=!q?''
+ var draft=q&&q.input==='order'&&orderDraft[Number(row.dataset.id)];
+ row.querySelector('.answer-status').textContent=answerErrors[Number(row.dataset.id)]
+  ?'Not recorded: '+answerErrors[Number(row.dataset.id)]
+  :draft&&draft.length&&draft.length<(q.options||[]).length
+  ?'Order so far: '+draft.map(function(i){return String.fromCharCode(65+i)+' · '+q.options[i];}).join(' → ')+' · choose '+((q.options||[]).length-draft.length)+' more'
+  :!q?''
   :a?(entered_?'Recorded: ':'Answered ')+said+verdict
+  :q&&q.spoken?'Listen and watch — teacher marks the verdict above'
   :(entered_?'No answer recorded':'Waiting');row.querySelectorAll('button').forEach(function(b){
   if(b.classList.contains('roster-act')){b.disabled=!state.active;return;}
   b.disabled=!state.active||!q||q.revealed;if(b.dataset.choice!=null)b.setAttribute('aria-pressed',String(!!a&&a.response===Number(b.dataset.choice)));
+  if(b.dataset.order!=null)b.setAttribute('aria-pressed',String(!!draft&&draft.indexOf(Number(b.dataset.order))>=0));
  });});
 }
 // Private classroom utilities never send notes or picker results to learners.
@@ -436,12 +518,16 @@ function paintPulse(){
  var people=state.players||[],q=state.question;
  var answers=q?(state.answers||[]).filter(function(a){return people.some(function(p){return p.id===a.id;});}):[];
  var missing=Math.max(0,people.length-answers.length);
- [['In the room',people.length],['Answered',q?answers.length+' / '+people.length:'—'],['Not yet answered',q?missing:'—']].forEach(function(x){
+ var stats=q&&q.spoken
+  ?[['In the room',people.length],['Accepted this round',state.oralCount||0],['Verdict','Teacher marks']]
+  :[['In the room',people.length],['Answered',q?answers.length+' / '+people.length:'—'],['Not yet answered',q?missing:'—']];
+ stats.forEach(function(x){
   var card=document.createElement('div');card.className='pulse-stat';
   card.appendChild(document.createElement('strong')).textContent=x[1];
   card.appendChild(document.createElement('span')).textContent=x[0];box.appendChild(card);
  });
  var advice=!state.active?'Start a live room to connect the class. Phones are optional — teacher entry works for paper and whiteboards.'
+  :q&&q.spoken?'Choose who spoke, then mark the answer. Phones listen and watch.'
   :!q?'Add your learners, then open a quiz slide to gather evidence.'
   :!q.revealed?(missing?'Give the room thinking time. '+missing+' learner'+(missing===1?' has':'s have')+' no recorded answer yet.':'All responses are in. Reveal when you are ready.')
   :'No responses were recorded for this question.';
@@ -498,6 +584,7 @@ $('pickName').onclick=function(){
   ? left+' remaining in this round.'
   : 'Everyone has had a turn. Reset the round to go again.';
  if(!left)$('pickName').disabled=true;
+ send('recipient',{recipient:{type:'player',id:p.id}});
  spinTo(p,pool);
 };
 $('resetPicker').onclick=function(){
@@ -530,7 +617,12 @@ function receive(data){
  if(data.type==='sf-manual-state'){
   if((data.players||[]).length>(state.players||[]).length) $('error').textContent='';
   state=data;render();markCurrent();
- } else if(data.type==='sf-manual-error') $('error').textContent=data.message;
+ } else if(data.type==='sf-manual-error'){
+  if(data.playerId!=null&&state.question&&data.id===state.question.id){
+   answerErrors[Number(data.playerId)]=data.message;
+   render();
+  }else $('error').textContent=data.message;
+ }
 }
 window.addEventListener('message',function(e){if(!channel && e.source===window.opener&&e.origin===location.origin)receive(e.data);});
 function listen(){if(channel)channel.onmessage=function(e){receive(e.data);};}

@@ -1137,6 +1137,12 @@
         askQuestion(m);
         break;
 
+      case 'spoken':
+        stopTick();
+        applyParticipation(m);
+        show('scWait');
+        break;
+
       case 'locked':
         if (Array.isArray(m.order)) lockOrder(m.order);
         else if (typeof m.text === 'string') lockTyped(m.text);
@@ -1195,6 +1201,16 @@
         if (m.asked != null) { me.correct = m.correct || 0; me.asked = m.asked; }
         header(true);
         stopTick();
+        if (m.spoken) {
+          $('waitIcon').textContent = m.oralAccepted ? '✓' : '↪';
+          $('waitTitle').textContent = (m.oralCount || 0) +
+            (context && context.style === 'headsup' ? ' in this round' : ' accepted so far');
+          $('waitLead').textContent = m.oralAccepted
+            ? 'The teacher accepted that spoken answer. Watch for the next turn.'
+            : 'Watch for the next turn.';
+          show('scWait');
+          break;
+        }
         $('rVerdict').textContent = !m.answered ? 'Too slow!' : (m.right ? 'Correct!' : 'Not this time');
         $('rVerdict').className = 'verdict ' + (m.right ? 'right' : 'wrong');
         $('rGain').textContent = m.gained ? '+' + m.gained + ' points' : (m.answered ? 'No points' : 'No answer registered');

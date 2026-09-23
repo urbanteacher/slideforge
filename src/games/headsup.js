@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/headsup. Edit source here; npm run build updates js/model.js. */
 
 /* Heads Up — host Correct / Pass. Audit: Correct +1, Pass 0. */
@@ -17,6 +18,7 @@ const headsup = {
     "confidence": false
   },
   key: 'headsup',
+  plays: ROOM_PLAY.spoken,
   label: 'Heads up',
   icon: '↑',
   blurb: 'Describe the term; peers retrieve it. Host marks Correct or Pass.',

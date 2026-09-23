@@ -149,7 +149,7 @@ test('board authoring hooks edit the selected question and apply settings to the
   for (const [key, label, value, field] of [
     ['memorymatch', 'Study time for the whole board (seconds)', 17, 'studySeconds'],
     ['bingo', 'Card size', '4', 'gridSize'],
-    ['bowl', 'Target score', '1500', 'targetScore'],
+    ['bowl', 'Target score', '1500', 'bowlTarget'],
     ['lowstakes', 'Quiz time limit', '240', null]
   ]) {
     const game = makeGame('Board', key);
@@ -178,7 +178,11 @@ test('board authoring hooks edit the selected question and apply settings to the
     board.authorInspector(element(), game.questions[0], context);
     board.authorSettings(element(), context);
     fields.find(item => item.label === label).input.change(value);
-    if (field) assert.ok(game.questions.every(question => question[field] === Number(value)), key);
+    if (field === 'bowlTarget') {
+      assert.equal(game.settings.bowlTarget, Number(value));
+      assert.ok(game.questions.every(question => question.targetScore == null), key);
+    }
+    else if (field) assert.ok(game.questions.every(question => question[field] === Number(value)), key);
     else assert.equal(game.settings.defaultTime, Number(value));
   }
 });

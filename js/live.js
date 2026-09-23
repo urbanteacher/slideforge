@@ -30,6 +30,9 @@
     waiting: 0,
     roundNo: 0,
     roundGame: null,
+    selectedRecipient: {type:'room'},
+    spokenVerdicts: {},
+    oralCounts: {},
     /* Horse race: steps taken per lane key, and who has crossed the line. */
     mechanic: 'points',
     trackLength: 5,
@@ -63,11 +66,16 @@
   Live.presenterPulse=function(){var slide=SF.Player.deck&&SF.Player.deck.slides[SF.Player.idx];return {active:!!Live.active,reactions:slide&&reactionSlide===slide.id?reactionCounts:{},bookmarks:slide&&bookmarkState&&bookmarkState.slideId===slide.id?bookmarkState.count:0,feedback:Live.prompt?Live.digest:null,prompt:Live.prompt};};
 
   var manualWindow = null, manualChannel=null, manualKey=null, manualView='roster', lastReport=null;
+  function isSpokenSlide(s) {
+    return !!s && ['headsup','spinexplain','connection','conceptchain','randomchallenge'].indexOf(s.style) >= 0;
+  }
   function syncManual() {
     if((!manualWindow || manualWindow.closed) && !manualChannel) return;
     var slide = SF.Player.open && SF.Player.deck.slides[SF.Player.idx];
     var state={type:'sf-manual-state',active:!!Live.pin,showing:!!(SF.Player&&SF.Player.open),live:!!Live.active,view:manualView,report:lastReport,players:Live.players,teams:Live.teams,mode:Live.mode,pin:Live.pin||null,
-      question:slide && slide.type==='quiz' ? {id:slide.id,question:slide.question,input:slide.input || 'choice',options:slide.options,range:slide.input==='number'?{min:slide.min,max:slide.max,step:slide.step,unit:slide.unit||''}:null,revealed:!!Live.revealed[slide.id]} : null,
+      recipient:Live.selectedRecipient,
+      oralCount:slide ? (Live.oralCounts[slide.gameId] || 0) : 0,
+      question:slide && slide.type==='quiz' ? {id:slide.id,question:slide.question,input:slide.input || 'choice',options:slide.options,spoken:isSpokenSlide(slide),scoreSpoken:slide.scoreSpoken===true,style:slide.style,range:slide.input==='number'?{min:slide.min,max:slide.max,step:slide.step,unit:slide.unit||''}:null,revealed:!!Live.revealed[slide.id]} : null,
       answers:(Live.snapshot.answers || []).map(function(a){
         /* Marked here, where the answer key is, and only after the reveal.
            Before that the teacher window has no business knowing — it is the
@@ -336,6 +344,15 @@
     else if(data.action==='kick') send({t:'manualRemove',playerId:data.playerId,mode:'kick'});
     else if(data.action==='delete') send({t:'manualRemove',playerId:data.playerId,mode:'delete'});
     else if(data.action==='answer') send(Object.assign({},data.answer,{t:'manualAnswer'}));
+    else if(data.action==='recipient') {
+      var picked=data.recipient || {};
+      if(picked.type==='player' && Live.players.some(function(p){return p.id===Number(picked.id);}))
+        Live.selectedRecipient={type:'player',id:Number(picked.id)};
+      else if(picked.type==='team' && Live.mode==='teams' && Live.teams[Number(picked.id)])
+        Live.selectedRecipient={type:'team',id:Number(picked.id)};
+      else Live.selectedRecipient={type:'room'};
+      syncManual();
+    }
     else if(data.action==='reveal') { revealNow(); syncManual(); }
     else if(data.action==='revealWith') { revealWith(data.choice); }
     else if(data.action==='report') send({t:'report'});
@@ -357,6 +374,7 @@
     var s = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
     if(!s || s.type!=='quiz' || Live.revealed[s.id]) return;
     if(s.input==='choice' && Number.isInteger(choice) && choice>=0 && choice<(s.options||[]).length){
+      if(isSpokenSlide(s)) Live.spokenVerdicts[s.id]=choice;
       /* Concept Chain: Accept needs a typed link; Reject clears the draft. */
       if ((s.style === 'conceptchain' || s.conceptChain) &&
           SF.Player.tryAcceptChain && !SF.Player.tryAcceptChain(s, choice)) {
@@ -774,6 +792,8 @@
         SF.Player.waiting = Live.waiting;
         Live.roundNo = m.round || 0;
         Live.players = m.list || [];
+        if(Live.selectedRecipient.type==='player'&&!Live.players.some(function(p){return p.id===Live.selectedRecipient.id;}))
+          Live.selectedRecipient={type:'room'};
         Live.rows = m.rows || [];
         Live.counts = m.counts || null;
         if (m.mode) Live.mode = m.mode;
@@ -794,8 +814,9 @@
         break;
 
       case 'manualError':
-        if(manualWindow && !manualWindow.closed) manualWindow.postMessage({type:'sf-manual-error',message:m.message},location.origin);
-        if(manualChannel) manualChannel.postMessage({type:'sf-manual-error',message:m.message});
+        var entryError={type:'sf-manual-error',message:m.message,playerId:m.playerId,id:m.id};
+        if(manualWindow && !manualWindow.closed) manualWindow.postMessage(entryError,location.origin);
+        if(manualChannel) manualChannel.postMessage(entryError);
         break;
       case 'tally':
         Live.snapshot = { rev: m.rev || 0, answers: m.answers || [] };
@@ -827,6 +848,12 @@
 
       case 'scores':
         Live.players = m.list || [];
+        break;
+
+      case 'oralCount':
+        Live.oralCounts[m.gameId] = Number(m.count) || 0;
+        paintOralCount();
+        syncManual();
         break;
 
       case 'teamAnswers':
@@ -1413,43 +1440,11 @@
     });
   }
 
-  /** Word Reveal: 100/75/50 by letters shown when scored; wrong = 0. */
-  function wordRevealGains(slide) {
-    var total = SF.wordRevealLetterCount(slide.word || slide.answer || '');
-    var frac = total ? Live.dripShown / total : 1;
-    var pts = SF.wordRevealPoints(frac);
-    return (Live.snapshot.answers || []).map(function (a) {
-      return [a.id, SF.markResponse(slide, a.response) ? pts : 0];
-    });
-  }
-
   /** Claim / Heads Up / Accept: +1 when the host verdict is the winning option. */
   function claimGains(slide) {
     return (Live.snapshot.answers || []).map(function (a) {
       return [a.id, SF.markResponse(slide, a.response) ? SF.claimPoints(true) : 0];
     });
-  }
-
-  /** Host-judged oral rounds: award the verdict points to everyone in the room. */
-  function hostVerdictGains(points) {
-    var pts = Math.max(0, Number(points) || 0);
-    return (Live.players || []).map(function (p) {
-      return [p.id, pts];
-    });
-  }
-
-  function judgeGains(slide) {
-    var kind = slide.judgeKind || slide.style;
-    var c = slide.correct;
-    if (kind === 'spinexplain') return hostVerdictGains(SF.spinExplainPoints(c));
-    if (kind === 'bowl') return hostVerdictGains(c === 0 ? (slide.pointValue || slide.points || 0) : 0);
-    if (kind === 'count' || kind === 'bingo') return hostVerdictGains(0);
-    /* headsup / accept / claim-style choice: Correct/Accept/Claimed index 0 → +1 */
-    return hostVerdictGains(c === 0 ? 1 : 0);
-  }
-
-  function bowlGains(slide) {
-    return judgeGains(slide);
   }
 
   function stopDrip() {
@@ -1505,6 +1500,12 @@
     if (wired) return;
     wired = true;
     SF.Player.on('slide', onSlide);
+    SF.Player.on('answer', function (e) {
+      if (!Live.active || !e || !isSpokenSlide(e.slide)) return;
+      Live.spokenVerdicts[e.slide.id] = e.choice;
+      e.slide.correct = e.choice;
+      revealNow();
+    });
     SF.Player.on('timeup', function () {
       if (Live.players.some(function(p){return p.manual;})) return;
       var s = SF.Player.wallSlide ? SF.Player.wallSlide()
@@ -1993,7 +1994,13 @@
     } else if (s.style === 'conceptchain' || s.conceptChain) {
       role = 'discuss';
       headPrompt = 'Concept chain';
-      participation = 'Propose a link aloud. The teacher types and accepts — nothing to tap here.';
+      participation = 'Listen and watch. Propose a link aloud when called on; the teacher records the verdict.';
+    } else if (isSpokenSlide(s)) {
+      role = 'discuss';
+      headPrompt = s.style === 'headsup' ? 'Heads up' :
+        s.style === 'spinexplain' ? 'Spin & explain' :
+        s.style === 'connection' ? 'Connection maker' : 'Random challenge';
+      participation = 'Listen and watch. Be ready to explain aloud; the teacher records the verdict.';
     } else if (s.style === 'definition' && SF.Player.definitionPhase &&
         SF.Player.definitionPhase(s) === 'reading') {
       role = 'watch';
@@ -2007,6 +2014,25 @@
       headPrompt = String(s.headPrompt);
     }
     return { style: style, role: role, participation: participation, headPrompt: headPrompt };
+  }
+
+  function paintOralCount() {
+    var s = SF.Player.wallSlide ? SF.Player.wallSlide() :
+      (SF.Player.deck && SF.Player.deck.slides[SF.Player.idx]);
+    var node = SF.Player._current;
+    if (!isSpokenSlide(s) || !node) return;
+    var count = Live.oralCounts[s.gameId] || 0;
+    var chip = node.querySelector('.oral-count');
+    if (!chip) {
+      chip = el('div', 'oral-count');
+      chip.setAttribute('aria-live', 'polite');
+      (node.querySelector('.pad') || node).appendChild(chip);
+    }
+    chip.textContent = s.style === 'headsup'
+      ? count + ' in 60 seconds'
+      : s.style === 'randomchallenge'
+        ? count + ' challenges completed'
+        : count + ' explanations accepted';
   }
 
   function sendIdle(s) {
@@ -2087,6 +2113,10 @@
          none. The phones switch control on `input` alone, and a slider
          needs the line it slides along. The target never leaves the host. */
       input: s.input || 'choice',
+      spoken: isSpokenSlide(s),
+      gameId: s.gameId || '',
+      scoreSpoken: s.scoreSpoken === true,
+      participation: companion.participation,
       confidence: s.confidence !== false,
       range: s.input === 'number'
         ? { min: s.min, max: s.max, step: s.step, unit: s.unit || '' }
@@ -2123,6 +2153,7 @@
   function onSlide(e) {
     if (!Live.active) return;
     var s = e.slide;
+    if (isSpokenSlide(s)) paintOralCount();
 
     /* Feedback takes the rail while its slide is up; the scoreboard resumes
        on any slide that has no prompt. */
@@ -2133,6 +2164,7 @@
        held in the waiting room is brought in before the first question. */
     if (s.gameId && s.gameId !== Live.roundGame) {
       Live.roundGame = s.gameId;
+      Live.selectedRecipient = {type:'room'};
       /* New game block — start a fresh chain for Concept Chain. */
       if (SF.Player.chainCommand) SF.Player.chainCommand('clear');
       send({ t: 'round', gameId: s.gameId });
@@ -2312,11 +2344,18 @@
     };
     if (mechanic === 'speed') msg.gains = speedGains(s);
     if (mechanic === 'boss') msg.gains = bossGains(s);
-    if (mechanic === 'wordreveal') msg.gains = wordRevealGains(s);
+    if (mechanic === 'wordreveal') {
+      msg.gains = SF.wordRevealGains(s, Live.snapshot.answers, Live.dripShown);
+    }
     if (s.input === 'order') msg.gains = orderGains(s);
     if (mechanic === 'claim') msg.gains = claimGains(s);
-    if (mechanic === 'judge' || mechanic === 'count') msg.gains = judgeGains(s);
-    if (mechanic === 'bowl') msg.gains = bowlGains(s);
+    if (isSpokenSlide(s)) {
+      /* The relay resolves one named recipient against its own roster and
+         team list. No client-supplied gain may pay the whole room. */
+      msg.gains = [];
+      msg.spoken = {recipient:Live.selectedRecipient};
+    }
+    if (mechanic === 'bowl') msg.gains = []; // The board owns its cell awards.
     send(msg);
   }
 
@@ -2359,6 +2398,11 @@
     var s = SF.Player.wallSlide ? SF.Player.wallSlide()
       : (SF.Player.deck && SF.Player.deck.slides[SF.Player.idx]);
     if (!s || s.type !== 'quiz' || Live.revealed[s.id]) return;
+    if (isSpokenSlide(s) && Live.spokenVerdicts[s.id] == null) {
+      /* Next or a timeout closes the item without inventing an accepted
+         explanation. Only an explicit teacher verdict can count or score. */
+      s.correct = (s.options || []).length - 1;
+    }
     Live.revealed[s.id] = true;
     stopDrip();
     /* The reasoning reaches the phones at the same moment they learn whether

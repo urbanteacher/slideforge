@@ -456,3 +456,9 @@
 .layout-quiz.is-spot .spot-passage.tally.on { height: auto; overflow: visible; }
 .layout-quiz.is-spot .spot-passage.tally .col { display: block; flex: none; gap: 0; }
 .layout-quiz.is-spot .spot-passage.tally .bar { width: auto; min-height: 0; }
+.layout-quiz .oral-count {
+  position: absolute; right: 34px; bottom: 20px; z-index: 3;
+  padding: 8px 16px; border-radius: 999px;
+  background: rgba(16, 27, 29, .86); color: #fff;
+  font-size: 18px; font-weight: 700; letter-spacing: .02em;
+}

@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/slider. Edit source here; npm run build updates js/model.js. */
 import { formatValue, withUnit } from "./marking.js";
 
@@ -8,6 +9,7 @@ import { formatValue, withUnit } from "./marking.js";
 /** @type {import("../types.js").GameEngine<import("../types.js").QuestionWith<'min'|'max'|'target'|'tolerance'|'step'|'unit'>>} */
 const slider = {
   key: 'slider',
+  plays: ROOM_PLAY.typed,
   label: 'Slider',
   icon: '↔',
   blurb: 'Estimate a value on a line. Near enough counts.',

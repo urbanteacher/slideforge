@@ -131,6 +131,7 @@ function project(session, active = false) {
       const q = checks.find(q => q.attempt === d.attempt);
       if (q && !q.revealedAt) {
         q.revealedAt = e.at; q.correct = d.correct; q.explanation = d.explanation;
+        if (d.spoken) q.spoken = d.spoken;
         if (d.answer != null) q.answer = d.answer;
         /* Right and wrong come from the host's verdicts. A typed answer has no
            correct index to compare against, so re-deriving it here would both

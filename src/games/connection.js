@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/connection. Edit source here; npm run build updates js/model.js. */
 
 /** @type {import("../types.js").GameEngine<import("../types.js").QuestionWith<'itemA'|'itemB'>>} */
@@ -16,6 +17,7 @@ const connection = {
     "confidence": false
   },
   key: 'connection',
+  plays: ROOM_PLAY.spoken,
   label: 'Connection maker',
   icon: '⚭',
   blurb: 'Pick two ideas and explain the bridge. Host Accepts for +1.',

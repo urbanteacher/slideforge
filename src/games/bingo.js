@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 import { createBingoBoard } from "../boards/bingo.js";
 /* SlideForge — games/bingo. Edit source here; npm run build updates js/model.js. */
 import { normalizePairQuestion, pairProblems } from "./memory.js";
@@ -55,6 +56,7 @@ const bingo = {
     "confidence": false
   },
   key: 'bingo',
+  plays: ROOM_PLAY.board,
   label: 'Bingo',
   icon: '▣',
   blurb: 'Every team gets a different card. Call a definition; the team holding that term explains it to claim the square. A line wins — no points.',

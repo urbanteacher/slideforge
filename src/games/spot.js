@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/spot. Edit source here; npm run build updates js/model.js. */
 
 /* Spot the Error, as its name says.
@@ -58,6 +59,7 @@ const spot = {
     "defaultPoints": 1000
   },
   key: 'spot',
+  plays: ROOM_PLAY.spot,
   label: 'Spot the error',
   icon: '⌖',
   blurb: 'A sentence with one mistake in it. The room taps the wrong word; the reveal shows where everyone looked.',

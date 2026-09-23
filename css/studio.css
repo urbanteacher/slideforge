@@ -294,3 +294,8 @@ html[data-ws="plan"] .rail-foot .rail-actions .btn{flex:1}
 .spot-author-word.on{background:#c8102e;color:#fff;border-color:#c8102e}
 .spot-author-note{flex-basis:100%;font-size:12px;color:var(--ui-dim);margin-top:4px}
 .spot-author-note.warn{color:#b5651d}
+
+/* A format's room contract, readable before a teacher inserts it. */
+.room-badges{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 10px}
+.room-badge{font-size:10px;line-height:1.2;padding:4px 7px;border-radius:999px;background:#e9f2e4;color:#426337;border:1px solid #d7e6cd}
+.room-badge.partial{background:#f4f0e6;color:#806732;border-color:#e8dfcb}

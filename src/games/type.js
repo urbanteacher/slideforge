@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/type. Edit source here; npm run build updates js/model.js. */
 import { markTyped } from "./marking.js";
 
@@ -7,6 +8,7 @@ import { markTyped } from "./marking.js";
 /** @type {import("../types.js").GameEngine<import("../types.js").QuestionWith<'accept'|'answer'>>} */
 const type = {
   key: 'type',
+  plays: ROOM_PLAY.typed,
   label: 'Type answer',
   icon: 'Aa',
   blurb: 'No options to choose from — the room types the answer from memory.',

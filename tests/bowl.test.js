@@ -146,6 +146,24 @@ test('reaching the target ends the board with the rest of it unused', () => {
   assert.equal(after.cell, -1);
 });
 
+test('the target belongs to the game and survives reordering its cells', () => {
+  const { SF } = load();
+  const g = game(SF, ['Cells', 'Transport'], [100, 200]);
+  g.settings.bowlTarget = 500;
+  g.questions[0].targetScore = 2000; // stale value from an older save
+  assert.equal(boardOf(SF, g).target, 500);
+  g.questions.reverse();
+  assert.equal(boardOf(SF, g).target, 500);
+
+  const legacy = JSON.parse(JSON.stringify(g));
+  delete legacy.settings.bowlTarget;
+  legacy.questions[0].targetScore = 1500;
+  const migrated = SF.normalizeGame(legacy);
+  assert.equal(migrated.settings.bowlTarget, 1500);
+  assert.equal(boardOf(SF, migrated).target, 1500);
+  assert.equal(migrated.questions.some(q => 'targetScore' in q), false);
+});
+
 test('a tie is named rather than resolved', () => {
   const { SF } = load();
   const b = boardOf(SF, game(SF, ['Cells'], [100, 200]));

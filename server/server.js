@@ -1141,6 +1141,11 @@ function learnerContext(room) {
 /** Fan-out shape for an open question, including companion skin fields. */
 function questionMessage(room, timeLimit) {
   const q = room.question;
+  if (q.spoken) return {
+    t: 'spoken', style: q.style, role: 'discuss',
+    headPrompt: q.headPrompt || q.question,
+    participation: q.participation || 'Listen and watch. Be ready to explain aloud.'
+  };
   const msg = {
     t: 'question',
     n: q.index,
@@ -1342,6 +1347,7 @@ ws.attach(server, (sock, req) => {
         joinOpen: true,
         roundNo: 0,
         roundGame: null,
+        oralCounts: new Map(),
         /* Team scores accumulate per question rather than being recomputed
            from the current roster, so a player joining later can never dilute
            questions they were not present for. */
@@ -1502,30 +1508,51 @@ ws.attach(server, (sock, req) => {
       }
       if (m.t === 'manualAnswer') {
         const p=room.players.get(Number(m.playerId)), q=room.question;
+        const refuse = message => sock.json({t:'manualError',message,
+          playerId:Number(m.playerId),id:String(m.id || '')});
         if (!p || !p.manual) {
-          sock.json({t:'manualError',message:'That name is not a teacher-entered row. Phone answers stay on the phone.'});
+          refuse('That name is not a teacher-entered row. Phone answers stay on the phone.');
           return;
         }
         if (!q || room.phase !== 'question' || m.id !== q.id) {
-          sock.json({t:'manualError',message:'No open question to record against. Wait until the quiz slide is up.'});
+          refuse('No open question to record against. Wait until the quiz slide is up.');
           return;
         }
         if (room.answersClosed) {
-          sock.json({t:'manualError',message:'This question is already revealed. Move on, then record the next one.'});
+          refuse('This question is already revealed. Move on, then record the next one.');
           return;
         }
+        if (q.spoken) { refuse('Use the teacher verdict and recipient control for this spoken answer.'); return; }
         if (!q.eligible.has(p.id)) {
-          sock.json({t:'manualError',message:'That learner was not in the room when this question opened.'});
+          refuse('That learner was not in the room when this question opened.');
           return;
         }
         let response=null;
         if (!m.clear) {
-          if(q.input==='text') { response=String(m.text || '').trim().slice(0,120); if(!response) return; }
-          else if(q.input==='number') { if(typeof m.value!=='number' || !Number.isFinite(m.value) || Math.abs(m.value)>1e12) return; response=m.value; }
-          else { if(!Number.isInteger(m.choice) || m.choice<0 || m.choice>=q.options.length) return; response=m.choice; }
+          if(q.input==='text') {
+            response=String(m.text || '').trim().slice(0,120);
+            if(!response) { refuse('Type an answer before recording it.'); return; }
+          } else if(q.input==='number') {
+            if(typeof m.value!=='number' || !Number.isFinite(m.value) || Math.abs(m.value)>1e12) {
+              refuse('Enter a valid number before recording it.'); return;
+            }
+            response=m.value;
+          } else if(q.input==='order') {
+            const n=q.options.length;
+            if(!Array.isArray(m.order) || m.order.length!==n ||
+              new Set(m.order).size!==n || m.order.some(v=>!Number.isInteger(v)||v<0||v>=n)) {
+              refuse('Choose every item once to record an order.'); return;
+            }
+            response=m.order.slice();
+          } else if(q.input==='choice'||q.input==='tap') {
+            if(!Number.isInteger(m.choice) || m.choice<0 || m.choice>=q.options.length) {
+              refuse('Choose an available option before recording it.'); return;
+            }
+            response=m.choice;
+          } else { refuse('This answer type cannot be recorded here.'); return; }
         }
         p.answer=response; p.sure=null; p.answeredAt=Date.now(); room.answerRev++;
-        record(room,'manualAnswer',{attempt:q.attempt,playerId:p.id,input:q.input,choice:(q.input==='choice'||q.input==='tap')?response:null,text:q.input==='text'?response:null,value:q.input==='number'?response:null,clear:!!m.clear,sure:null,source:'teacher',elapsedMs:null});
+        record(room,'manualAnswer',{attempt:q.attempt,playerId:p.id,input:q.input,choice:(q.input==='choice'||q.input==='tap')?response:null,text:q.input==='text'?response:null,value:q.input==='number'?response:null,order:q.input==='order'?response:null,clear:!!m.clear,sure:null,source:'teacher',elapsedMs:null});
         pushTally(room); return;
       }
 
@@ -1536,6 +1563,7 @@ ws.attach(server, (sock, req) => {
            anyone held back is pulled in before the first question goes out. */
         room.roundGame = String(m.gameId || '');
         room.roundNo++;
+        room.oralCounts.set(room.roundGame, 0);
         room.joinOpen = true;
         admitWaiting(room);
         broadcast(room, { t: 'roundOpen', n: room.roundNo });
@@ -1556,6 +1584,7 @@ ws.attach(server, (sock, req) => {
            makes the others recall rather than recognition — so the option
            count is checked for that kind alone. */
         const input = ['text', 'number', 'order', 'tap'].includes(m.input) ? m.input : 'choice';
+        const spoken = m.spoken === true && ['headsup','spinexplain','connection','conceptchain','randomchallenge'].includes(m.style);
         if (input === 'choice' && (!Array.isArray(m.options) || m.options.length < 2 || m.options.length > 6)) return;
         /* Spot the Error: the options are the words of the passage. */
         if (input === 'tap' && (!Array.isArray(m.options) || m.options.length < 2 || m.options.length > 80)) return;
@@ -1568,6 +1597,10 @@ ws.attach(server, (sock, req) => {
           id: String(m.id || '').slice(0,160),
           attempt: crypto.randomUUID(),
           input,
+          spoken,
+          gameId: String(m.gameId || room.roundGame || '').slice(0,160),
+          scoreSpoken: m.scoreSpoken === true,
+          participation: spoken ? String(m.participation || '').slice(0,240) : '',
           question: String(m.question || '').slice(0,2000),
           bloom: ['Remember','Understand','Apply','Analyze','Evaluate','Create'].includes(m.bloom) ? m.bloom : '',
           sourceSlideId: String(m.sourceSlideId || '').slice(0,160),
@@ -1684,6 +1717,20 @@ ws.attach(server, (sock, req) => {
             }
           }
         }
+        const spoken = room.question.spoken;
+        const accepted = spoken && (room.question.style === 'spinexplain'
+          ? correctIndex === 0 || correctIndex === 1 : correctIndex === 0);
+        const oralPoints = !accepted || ['headsup','randomchallenge'].includes(room.question.style)
+          ? 0 : room.question.style === 'spinexplain' && correctIndex === 0 ? 2 : 1;
+        const recipient = spoken && m.spoken && typeof m.spoken === 'object' ? m.spoken.recipient : null;
+        const recipientPlayer = recipient && recipient.type === 'player'
+          ? room.players.get(Number(recipient.id)) : null;
+        const eligibleSpeaker = recipientPlayer && room.question.eligible.has(recipientPlayer.id)
+          ? recipientPlayer : null;
+        const recipientTeam = recipient && recipient.type === 'team' &&
+          Number.isInteger(recipient.id) && recipient.id >= 0 && recipient.id < room.teams.length
+          ? recipient.id : eligibleSpeaker && Number.isInteger(eligibleSpeaker.team)
+            ? eligibleSpeaker.team : null;
         room.phase = 'revealed';
         for (const p of room.players.values()) {
           /* How much of the lesson this learner was actually asked, and how
@@ -1692,12 +1739,15 @@ ws.attach(server, (sock, req) => {
              rather than of understanding — and which says nothing at all about
              the learner who answered three of nine. */
           const wasAsked = !room.question.eligible || room.question.eligible.has(p.id);
-          if (wasAsked) {
+          if (wasAsked && !spoken) {
             p.askedCount = (p.askedCount || 0) + 1;
             if (p.answer != null) p.answeredCount = (p.answeredCount || 0) + 1;
           }
           let gained = 0;
-          if (gainMap.has(String(p.id))) {
+          if (spoken) {
+            gained = room.mode === 'individual' && room.question.scoreSpoken &&
+              room.question.style !== 'headsup' && eligibleSpeaker === p ? oralPoints : 0;
+          } else if (gainMap.has(String(p.id))) {
             gained = gainMap.get(String(p.id));
             if (marks.get(String(p.id)) === true) p.correctCount++;
           } else if (marks.get(String(p.id)) === true) {
@@ -1712,13 +1762,19 @@ ws.attach(server, (sock, req) => {
           }
           p.score = Math.max(0, p.score + gained);
           p.lastGain = gained;
-          p.lastRight = marks.get(String(p.id)) === true;
+          p.lastRight = spoken ? null : marks.get(String(p.id)) === true;
         }
 
         /* Each question contributes its own per-team average. Summing those
            averages is what makes team size irrelevant and makes the score
            immune to who joins later. */
-        if (room.mode === 'teams') {
+        if (room.mode === 'teams' && spoken) {
+          room.teamGain = room.teams.map(() => false);
+          if (oralPoints && recipientTeam != null) {
+            room.teamScores[recipientTeam] += oralPoints;
+            room.teamGain[recipientTeam] = true;
+          }
+        } else if (room.mode === 'teams') {
           const elig = room.question.eligible;
           room.teams.forEach((_, ti) => {
             const members = [...room.players.values()].filter(
@@ -1730,11 +1786,22 @@ ws.attach(server, (sock, req) => {
             room.teamGain[ti] = avg > 0;
           });
         }
+        let oralCount = null;
+        if (spoken) {
+          const gameId = room.question.gameId;
+          oralCount = (room.oralCounts.get(gameId) || 0) + (accepted ? 1 : 0);
+          room.oralCounts.set(gameId, oralCount);
+          if (room.host && room.host.open) room.host.json({t:'oralCount',gameId,
+            slideId:room.question.id,kind:room.question.style,count:oralCount,accepted});
+        }
         for (const p of room.players.values()) {
           if (!p.sock || !p.sock.open) continue;
           const r = rank(room, p.id);
           p.sock.json({
             t: 'result',
+            spoken,
+            oralCount,
+            oralAccepted: !!accepted,
             right: p.lastRight,
             answered: p.answer != null,
             gained: p.lastGain,
@@ -1777,6 +1844,11 @@ ws.attach(server, (sock, req) => {
 
         record(room, 'reveal', {attempt:room.question.attempt, correct: correctIndex,
           answer: answerText, explanation: why,
+          spoken: spoken ? {accepted:!!accepted,count:oralCount,
+            recipient: eligibleSpeaker ? eligibleSpeaker.name :
+              recipientTeam != null ? room.teams[recipientTeam] : null,
+            points:room.mode === 'teams' && recipientTeam != null ? oralPoints :
+              room.mode === 'individual' && room.question.scoreSpoken && eligibleSpeaker ? oralPoints : 0} : null,
           /* The verdicts, not the correct index: for a typed question the
              index means nothing, and the report has to say who was right. */
           marks: [...room.players.values()].filter(p => marks.has(String(p.id))).map(p => [p.id, marks.get(String(p.id)) === true]),
@@ -2348,6 +2420,7 @@ ws.attach(server, (sock, req) => {
 
     if (role === 'player' && m.t === 'answer') {
       if (!room || !rooms.has(room.pin) || room.phase !== 'question' || !room.question || !room.question.eligible.has(me.id)) return;
+      if (room.question.spoken) return;
       if (room.question.timeLimit && Date.now() - room.askedAt > room.question.timeLimit * 1000) return;
       if (room.answersClosed) return;                      // the host is revealing
       if (me.answer != null) return;                       // one answer per question

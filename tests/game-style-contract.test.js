@@ -64,6 +64,21 @@ test('every style resolves the Question field the way the list used to', () => {
   assert.deepEqual(got, EXPECTED);
 });
 
+test('every game declares what each kind of room can do', () => {
+  const SF = load();
+  for (const [key, style] of Object.entries(SF.GAME_STYLES)) {
+    assert.ok(style.plays, key + ' has no room contract');
+    assert.deepEqual(Object.keys(style.plays).sort(), ['entry', 'phones', 'solo', 'teams']);
+    for (const [room, support] of Object.entries(style.plays)) {
+      assert.ok(['yes', 'partial', 'no'].includes(support.status), key + ' has invalid ' + room + ' support');
+      assert.ok(typeof support.reason === 'string' && support.reason.trim(), key + ' needs a reason for ' + room);
+    }
+    if (style.input !== 'none') {
+      assert.equal(style.plays.entry.status, 'yes', key + ' takes an answer but teacher entry cannot record it');
+    }
+  }
+});
+
 test('the ten that hide it say so themselves', () => {
   const SF = load();
   const styles = SF.GAME_STYLES;

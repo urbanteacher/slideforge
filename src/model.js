@@ -53,7 +53,7 @@ import { clampLowstakesSeconds } from "./games/lowstakes.js";
 import { createStores, unusedDraft, libraryGroupFromTheme, normalizeLibraryGroup, LIBRARY_GROUPS } from "./storage.js";
 import { markTyped, normalizeAnswer, formatValue } from "./games/marking.js";
 import { orderScore, orderPoints } from "./games/order.js";
-import { wordRevealPoints, wordRevealPreFraction, wordRevealMask, wordRevealLetterCount, WR_LEVELS } from "./games/wordreveal.js";
+import { wordRevealPoints, wordRevealPreFraction, wordRevealMask, wordRevealLetterCount, wordRevealShownAt, wordRevealGains, WR_LEVELS } from "./games/wordreveal.js";
 import { emojiHelp, emojiCluePieces, emojiClueLayout, EMOJI_LEVELS } from "./games/emoji.js";
 import { spinExplainPoints } from "./games/spinexplain.js";
 import { claimPoints } from "./games/scoring.js";
@@ -909,7 +909,12 @@ function normalizeGameSettings(raw) {
   g.musicVolume = Math.max(0, Math.min(100,
     g.musicVolume == null ? 55 : Number(g.musicVolume) || 0));
   g.confidence = g.confidence !== false;
+  g.scoreSpoken = g.scoreSpoken === true;
   g.resultsOnReveal = g.resultsOnReveal === true;
+  if (g.bowlTarget != null) {
+    var target = Number(g.bowlTarget);
+    g.bowlTarget = BOWL_TARGETS.indexOf(target) > -1 ? target : 1000;
+  }
   return g;
 }
 
@@ -942,7 +947,14 @@ function normalizeGame(raw) {
   g.theme = resolveTheme(g.theme);
   g.libraryGroup = normalizeLibraryGroup(raw.libraryGroup, g.theme);
   g.sourceDeckId = String(raw.sourceDeckId || '').slice(0, 80);
-  g.settings = normalizeGameSettings(raw.settings);
+  var settings = Object.assign({}, raw.settings || {});
+  if (style === 'bowl' && settings.bowlTarget == null) {
+    /* Older bowls stored this game-wide choice on question one. Migrate it
+       before normalising questions, which now discard that legacy field. */
+    var oldFirst = Array.isArray(raw.questions) && raw.questions[0];
+    settings.bowlTarget = oldFirst && oldFirst.targetScore;
+  }
+  g.settings = normalizeGameSettings(settings);
   /* Every question is normalised against the game's style, which is what
      makes converting a game between styles safe. */
   g.questions = (Array.isArray(raw.questions) ? raw.questions : [])
@@ -1043,6 +1055,7 @@ function fillQuestionSlide(q, styleKey, settings, s) {
   });
   s.explainStyle = settings.explainStyle;
   s.confidence = settings.confidence !== false;
+  s.scoreSpoken = settings.scoreSpoken === true;
   /* Discuss contract — never reopen as a scored phone quiz. */
   if (styleKey === 'oddone') {
     s.points = 0;
@@ -1723,6 +1736,8 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   CHAIN_TIMES: CHAIN_TIMES,
   EMOJI_LEVELS: EMOJI_LEVELS,
   wordRevealLetterCount: wordRevealLetterCount,
+  wordRevealShownAt: wordRevealShownAt,
+  wordRevealGains: wordRevealGains,
   spinExplainPoints: spinExplainPoints,
   claimPoints: claimPoints,
   bingoHasLine: bingoHasLine,

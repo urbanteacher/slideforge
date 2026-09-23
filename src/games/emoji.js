@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/emoji. Edit source here; npm run build updates js/model.js. */
 import { markTyped } from "./marking.js";
 import { type } from "./type.js";
@@ -65,6 +66,7 @@ const emoji = {
      out to answer a question each of them can answer about itself. */
   showsQuestion: false,
   key: 'emoji',
+  plays: ROOM_PLAY.typed,
   label: 'Emoji guess',
   icon: '\u263a',
   blurb: 'Decode a concept from symbols. Release the letter pattern, then a hint, as the room gets stuck.',

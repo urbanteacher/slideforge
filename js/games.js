@@ -1532,6 +1532,26 @@
     if (!body) return;
     var bodyEl = body;
     var st = game.settings;
+    function appendSpokenSettings(){
+      bodyEl.appendChild(UI.field('Play as', UI.segmented([
+        {value:'individual',label:'Individuals'},
+        {value:'teams',label:'Teams'}
+      ],st.mode,function(v){
+        st.mode=v;
+        if(v==='teams'&&st.teams.length<2)st.teams=SF.makeGame().settings.teams.slice(0,2);
+        touched();draw2();drawPreview();
+      }),st.mode==='teams'?'The teacher selects the speaker or team before a verdict. One accepted explanation credits that team.':'Spoken answers add to the room count. Individual points are optional.'));
+      if(st.mode==='teams')bodyEl.appendChild(UI.field('Team names — one per line',
+        UI.area(st.teams.map(function(t){return t.name;}).join('\n'),function(v){
+          var names=v.split('\n').map(function(n){return n.trim().slice(0,20);}).filter(Boolean).slice(0,6);
+          if(names.length>=2){st.teams=names.map(function(name){return {name:name};});touched();drawPreview();}
+        },4),'Two to six teams.'));
+      if(game.style!=='headsup'&&game.style!=='randomchallenge')bodyEl.appendChild(UI.field('Score spoken answers',
+        UI.check('Award individual points to the selected speaker',st.scoreSpoken===true,function(v){
+          st.scoreSpoken=v;touched();drawPreview();
+        }),st.mode==='teams'?'Team points already go to the selected team. This option applies only in individual play.':'Off by default: the room sees its accepted-answer count, without ranking speakers.'));
+      bodyEl.appendChild(el('p','hint','During the game, choose who spoke in Live answers on the desk. Correct or Accept credits that recipient; Pass or Reject scores nothing.'));
+    }
     /* One sheet serves both engines now, so whoever opens it says so. */
     var title = $('settingsTitle');
     if (title) title.textContent = 'Game settings';
@@ -1676,7 +1696,8 @@
         }), 'Per link. Timeout skips without scoring or growing the chain.'));
         bodyEl.appendChild(el('p', 'hint',
           'Use 3–10 starting concepts. Type the spoken link, Accept (+1) to grow ' +
-          'the chain on the wall. Phones stay idle.'));
+          'the chain on the wall. Phones listen and watch.'));
+        appendSpokenSettings();
         return;
       }
 
@@ -1692,7 +1713,7 @@
           }, 0, 300), '0 leaves the activity untimed. A question override takes precedence.'));
         var oralBook = SF.Playbook ? SF.Playbook.forGame(game) : null;
         if (oralBook && oralBook.scoring) bodyEl.appendChild(el('p', 'hint', oralBook.scoring));
-        bodyEl.appendChild(el('p', 'hint', 'This is a teacher-led spoken activity. The current verdict applies to the class; there is no individual or team recipient selector.'));
+        appendSpokenSettings();
         if (oralBook && oralBook.note) bodyEl.appendChild(el('p', 'hint', oralBook.note));
         return;
       }

@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/order. Edit source here; npm run build updates js/model.js. */
 
 /* Ranking. The answer is an order, not a pick \u2014 the first shape in this
@@ -14,6 +15,7 @@ const order = {
     "defaultPoints": 10
   },
   key: 'order',
+  plays: ROOM_PLAY.order,
   label: 'Ranking',
   icon: '\u2195',
   blurb: 'Put items in the right order. Part marks for the ones placed correctly.',

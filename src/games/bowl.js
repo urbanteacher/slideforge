@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 import { createBowlBoard } from "../boards/bowl.js";
 import starters from "../samples/bowl.json" with { type: "json" };
 /* SlideForge — games/bowl. Edit source here; npm run build updates js/model.js. */
@@ -53,9 +54,11 @@ const bowl = {
   boardEngine: board,
   defaults: {
     "defaultTime": 0,
-    "confidence": false
+    "confidence": false,
+    "bowlTarget": 1000
   },
   key: 'bowl',
+  plays: ROOM_PLAY.board,
   label: 'Quiz bowl',
   icon: '▦',
   blurb: 'A category and value board. Pick an unused cell, answer aloud, and the teacher awards the cell value.',
@@ -77,7 +80,6 @@ const bowl = {
       question: 'What molecule carries genetic information?',
       category: 'Cells',
       pointValue: 200,
-      targetScore: 1000,
       answer: 'DNA'
     };
   },
@@ -86,8 +88,9 @@ const bowl = {
     q.answer = String(q.answer == null ? '' : q.answer).slice(0, 120);
     var v = Number(q.pointValue);
     q.pointValue = BOWL_VALUES.indexOf(v) > -1 ? v : 200;
-    var t = Number(q.targetScore);
-    q.targetScore = BOWL_TARGETS.indexOf(t) > -1 ? t : 1000;
+    /* Older saves carried the board target on every question. The loader
+       promotes that setting once; new cells own only their point value. */
+    delete q.targetScore;
     if (!String(q.question || '').trim()) q.question = 'Bowl question';
     /* The old shape gave the phones a Correct/Wrong vote to press. The
        teacher awards a cell; nobody else can. */

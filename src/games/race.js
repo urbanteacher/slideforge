@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/race. Edit source here; npm run build updates js/model.js. */
 import { choice } from "./choice.js";
 
@@ -8,6 +9,7 @@ import { choice } from "./choice.js";
 /** @type {import("../types.js").GameEngine<import("../types.js").QuestionWith<'options'|'correct'>>} */
 const race = {
   key: 'race',
+  plays: ROOM_PLAY.quiz,
   label: 'Horse race',
   icon: '🏇',
   blurb: 'Multiple choice, but every right answer moves your team a step along the track. First past the post wins.',

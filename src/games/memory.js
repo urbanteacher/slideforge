@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 import { createMemoryBoard } from "../boards/memory.js";
 import starters from "../samples/memory.json" with { type: "json" };
 /* SlideForge — games/memory. Edit source here; npm run build updates js/model.js. */
@@ -57,6 +58,7 @@ const memoryflip = {
   },
   starters,
   key: 'memoryflip',
+  plays: ROOM_PLAY.board,
   label: 'Memory flip',
   icon: '🂠',
   blurb: 'Study term↔definition pairs, then claim them. Host marks each claim.',
@@ -105,6 +107,7 @@ const memorymatch = {
   },
   starters,
   key: 'memorymatch',
+  plays: ROOM_PLAY.board,
   label: 'Memory match',
   icon: '⧉',
   blurb: 'Study the whole board, choose a hidden card and explain its meaning. Claim it for your team, or pass and retry.',
@@ -155,6 +158,7 @@ const knowledgeflip = {
   },
   starters,
   key: 'knowledgeflip',
+  plays: ROOM_PLAY.board,
   label: 'Knowledge flip',
   icon: '↺',
   blurb: 'Keywords stay on the board. Choose one, explain aloud, then claim. No study timer.',

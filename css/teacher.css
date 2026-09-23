@@ -63,4 +63,7 @@ body{background:#f5f6f2;color:#24372c;font:14px/1.5 system-ui,sans-serif}*{box-s
 .g-none{background:#f5f6f2}
 .pulse-guidance{color:#3b5632}
 .live-room-gate p,.in-room-empty,.notice{color:#53624c}
-
+.manual-entry .tap-entry-choice{min-height:32px;padding:4px 8px}
+.manual-entry button[data-order][aria-pressed="true"],.manual-entry .tap-entry-choice[aria-pressed="true"]{background:#36513a;color:#fff}
+.spoken-controls{display:grid;gap:8px;margin:12px 0 18px;padding:16px;border:1px solid #c9d4c8;border-radius:12px;background:#fff}
+.spoken-controls label{font-weight:700}.spoken-controls select{width:100%}.spoken-controls .notice{margin:0}

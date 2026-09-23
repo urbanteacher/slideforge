@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 import starters from "../samples/definition.json" with { type: "json" };
 /* SlideForge — games/definition. Edit source here; npm run build updates js/model.js. */
 import { markTyped } from "./marking.js";
@@ -66,6 +67,7 @@ const definition = {
   },
   starters,
   key: 'definition',
+  plays: ROOM_PLAY.typed,
   label: 'Definition challenge',
   icon: '\u00b6',
   blurb: 'Read a short passage, then answer from memory once it clears.',

@@ -1,3 +1,4 @@
+import { ROOM_PLAY } from "./rooms.js";
 import starters from "../samples/oddone.json" with { type: "json" };
 /* SlideForge — games/oddone. Edit source here; npm run build updates js/model.js. */
 
@@ -23,6 +24,7 @@ const oddone = {
   },
   starters,
   key: 'oddone',
+  plays: ROOM_PLAY.discussion,
   label: 'Odd one out',
   icon: '\u25c7',
   blurb: 'Four equal items. Discuss which does not belong and why — then reveal the prepared rationale. No score.',

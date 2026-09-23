@@ -17650,10 +17650,64 @@
     };
   }
 
+  // src/games/rooms.js
+  var support = (status, reason) => Object.freeze({ status, reason });
+  var ROOM_PLAY = Object.freeze({
+    quiz: Object.freeze({
+      phones: support("yes", "Each learner answers on their phone."),
+      teams: support("yes", "Phone answers feed the chosen team."),
+      entry: support("yes", "The teacher records a choice for each learner."),
+      solo: support("yes", "The wall accepts the learner’s choice.")
+    }),
+    typed: Object.freeze({
+      phones: support("yes", "Each learner types or places an answer on their phone."),
+      teams: support("yes", "Answers feed the chosen team."),
+      entry: support("yes", "The teacher records each answer by name."),
+      solo: support("partial", "The wall’s non-choice controls need a solo rehearsal.")
+    }),
+    order: Object.freeze({
+      phones: support("yes", "Each learner orders the items on their phone."),
+      teams: support("yes", "Orders feed the chosen team."),
+      entry: support("yes", "The teacher enters each order as a key sequence."),
+      solo: support("partial", "The wall’s order control needs a solo rehearsal.")
+    }),
+    spot: Object.freeze({
+      phones: support("yes", "Each learner taps a word in the passage."),
+      teams: support("yes", "Finds feed the chosen team."),
+      entry: support("yes", "The teacher taps the word the learner points at."),
+      solo: support("yes", "The wall accepts a tap on the passage.")
+    }),
+    spoken: Object.freeze({
+      phones: support("partial", "Phones show a listen-and-watch job card."),
+      teams: support("yes", "The teacher credits the selected speaker’s team."),
+      entry: support("yes", "The teacher selects a recipient and marks the verdict."),
+      solo: support("no", "A teacher and a room are needed for the spoken verdict.")
+    }),
+    board: Object.freeze({
+      phones: support("no", "This board is operated by the teacher; phones do not answer."),
+      teams: support("yes", "The teacher runs the board for teams."),
+      entry: support("yes", "The teacher operates the board without learner phones."),
+      solo: support("no", "The board needs a teacher to run it.")
+    }),
+    paper: Object.freeze({
+      phones: support("no", "This is a paper quiz."),
+      teams: support("yes", "Teams can discuss and submit paper answers."),
+      entry: support("yes", "The teacher reveals and marks paper answers."),
+      solo: support("partial", "A solo paper run still needs a checked workflow.")
+    }),
+    discussion: Object.freeze({
+      phones: support("no", "This discussion currently has no phone answer step."),
+      teams: support("yes", "Teams can discuss before the reveal."),
+      entry: support("yes", "The teacher runs the discussion and reveal."),
+      solo: support("no", "The format depends on discussion with others.")
+    })
+  });
+
   // src/games/choice.js
   var coreStyles = {
     choice: {
       key: "choice",
+      plays: ROOM_PLAY.quiz,
       label: "Multiple choice",
       icon: "?",
       blurb: "Two to six answers, one of them correct.",
@@ -17727,6 +17781,7 @@
     },
     truefalse: {
       key: "truefalse",
+      plays: ROOM_PLAY.quiz,
       label: "True or false",
       icon: "½",
       blurb: "A statement the room marks true or false.",
@@ -17770,6 +17825,7 @@
   // src/games/race.js
   var race = {
     key: "race",
+    plays: ROOM_PLAY.quiz,
     label: "Horse race",
     icon: "🏇",
     blurb: "Multiple choice, but every right answer moves your team a step along the track. First past the post wins.",
@@ -17806,6 +17862,7 @@
       "confidence": false
     },
     key: "speed",
+    plays: ROOM_PLAY.quiz,
     label: "Beat the clock",
     icon: "◷",
     blurb: "Multiple choice against the countdown. Faster correct answers score more; wrong answers cost points.",
@@ -17907,6 +17964,7 @@
       "confidence": false
     },
     key: "boss",
+    plays: ROOM_PLAY.quiz,
     label: "Boss battle",
     icon: "▲",
     blurb: "Multiple choice against a shared boss. Correct hits deal damage; bring HP to zero before the questions run out.",
@@ -18029,6 +18087,7 @@
   // src/games/slider.js
   var slider = {
     key: "slider",
+    plays: ROOM_PLAY.typed,
     label: "Slider",
     icon: "↔",
     blurb: "Estimate a value on a line. Near enough counts.",
@@ -18101,6 +18160,7 @@
   // src/games/type.js
   var type = {
     key: "type",
+    plays: ROOM_PLAY.typed,
     label: "Type answer",
     icon: "Aa",
     blurb: "No options to choose from — the room types the answer from memory.",
@@ -18176,6 +18236,7 @@
       "defaultPoints": 10
     },
     key: "order",
+    plays: ROOM_PLAY.order,
     label: "Ranking",
     icon: "↕",
     blurb: "Put items in the right order. Part marks for the ones placed correctly.",
@@ -18292,6 +18353,7 @@
        out to answer a question each of them can answer about itself. */
     showsQuestion: false,
     key: "emoji",
+    plays: ROOM_PLAY.typed,
     label: "Emoji guess",
     icon: "☺",
     blurb: "Decode a concept from symbols. Release the letter pattern, then a hint, as the room gets stuck.",
@@ -18450,6 +18512,7 @@
     },
     starters: definition_default,
     key: "definition",
+    plays: ROOM_PLAY.typed,
     label: "Definition challenge",
     icon: "¶",
     blurb: "Read a short passage, then answer from memory once it clears.",
@@ -18592,6 +18655,7 @@
     },
     starters: compare_default,
     key: "compare",
+    plays: ROOM_PLAY.discussion,
     label: "Compare & contrast",
     icon: "⇄",
     blurb: "Two items side by side. Discuss similarities and differences — then reveal the prepared points. No score.",
@@ -18734,6 +18798,7 @@
     },
     starters: oddone_default,
     key: "oddone",
+    plays: ROOM_PLAY.discussion,
     label: "Odd one out",
     icon: "◇",
     blurb: "Four equal items. Discuss which does not belong and why — then reveal the prepared rationale. No score.",
@@ -18842,6 +18907,21 @@
   function wordRevealLetterCount(word) {
     return String(word || "").replace(/\s/g, "").length;
   }
+  function wordRevealShownAt(slide, elapsedMs) {
+    var total = wordRevealLetterCount(slide.word || slide.answer || "");
+    var fraction = slide.preReveal != null ? Number(slide.preReveal) : wordRevealPreFraction(slide.difficulty);
+    var initial = Math.round(total * Math.max(0, Math.min(1, fraction || 0)));
+    var interval = Math.max(3, Number(slide.dripInterval) || 5) * 1e3;
+    return Math.min(total, initial + Math.floor(Math.max(0, Number(elapsedMs) || 0) / interval));
+  }
+  function wordRevealGains(slide, answers, currentShown) {
+    var total = wordRevealLetterCount(slide.word || slide.answer || "");
+    return (answers || []).map(function(answer) {
+      var shown = answer.elapsedMs == null ? Math.max(0, Number(currentShown) || 0) : wordRevealShownAt(slide, answer.elapsedMs);
+      var points = wordRevealPoints(total ? shown / total : 1);
+      return [answer.id, wordreveal.mark(slide, answer.response) ? points : 0];
+    });
+  }
   var wordreveal = {
     defaults: {
       "defaultTime": 0,
@@ -18849,6 +18929,7 @@
       "confidence": false
     },
     key: "wordreveal",
+    plays: ROOM_PLAY.typed,
     label: "Word reveal",
     icon: "…",
     blurb: "Guess the word as letters drip in. Earlier guesses score more.",
@@ -19213,6 +19294,7 @@
     },
     starters: memory_default,
     key: "memoryflip",
+    plays: ROOM_PLAY.board,
     label: "Memory flip",
     icon: "🂠",
     blurb: "Study term↔definition pairs, then claim them. Host marks each claim.",
@@ -19263,6 +19345,7 @@
     },
     starters: memory_default,
     key: "memorymatch",
+    plays: ROOM_PLAY.board,
     label: "Memory match",
     icon: "⧉",
     blurb: "Study the whole board, choose a hidden card and explain its meaning. Claim it for your team, or pass and retry.",
@@ -19313,6 +19396,7 @@
     },
     starters: memory_default,
     key: "knowledgeflip",
+    plays: ROOM_PLAY.board,
     label: "Knowledge flip",
     icon: "↺",
     blurb: "Keywords stay on the board. Choose one, explain aloud, then claim. No study timer.",
@@ -19362,6 +19446,7 @@
       "confidence": false
     },
     key: "headsup",
+    plays: ROOM_PLAY.spoken,
     label: "Heads up",
     icon: "↑",
     blurb: "Describe the term; peers retrieve it. Host marks Correct or Pass.",
@@ -19431,6 +19516,7 @@
       "confidence": false
     },
     key: "spinexplain",
+    plays: ROOM_PLAY.spoken,
     label: "Spin & explain",
     icon: "◉",
     blurb: "Spin a concept; explain it aloud. Host scores Clear, With hint, or Reject.",
@@ -19496,6 +19582,7 @@
       "confidence": false
     },
     key: "connection",
+    plays: ROOM_PLAY.spoken,
     label: "Connection maker",
     icon: "⚭",
     blurb: "Pick two ideas and explain the bridge. Host Accepts for +1.",
@@ -19595,6 +19682,7 @@
     },
     starters: conceptchain_default,
     key: "conceptchain",
+    plays: ROOM_PLAY.spoken,
     label: "Concept chain",
     icon: "⛓",
     blurb: "Start from a term; add a justified link. Host Accepts to grow the chain (+1).",
@@ -19674,6 +19762,7 @@
       "confidence": false
     },
     key: "randomchallenge",
+    plays: ROOM_PLAY.spoken,
     label: "Random challenge",
     icon: "✦",
     blurb: "Draw a challenge; host marks Complete. Count only — no competitive score.",
@@ -20057,6 +20146,7 @@
       "confidence": false
     },
     key: "bingo",
+    plays: ROOM_PLAY.board,
     label: "Bingo",
     icon: "▣",
     blurb: "Every team gets a different card. Call a definition; the team holding that term explains it to claim the square. A line wins — no points.",
@@ -20336,6 +20426,7 @@
     },
     starters: lowstakes_default,
     key: "lowstakes",
+    plays: ROOM_PLAY.paper,
     label: "Low-stakes quiz",
     icon: "◎",
     blurb: "Timed retrieval on paper. When time is up, answers are revealed for discussion — no scoreboard.",
@@ -20397,6 +20488,9 @@
 
   // src/boards/bowl.js
   function createBowlBoard({ bowlGrid: bowlGrid2 }) {
+    function target(game) {
+      return Number(game.settings && game.settings.bowlTarget) || 1e3;
+    }
     function compile(game, { makeSlide: makeSlide2 }) {
       const st = game.settings;
       const out = [];
@@ -20416,7 +20510,7 @@
         categories: grid.categories,
         values: grid.values,
         cells: grid.cells,
-        target: Number(game.questions[0].targetScore) || 1e3,
+        target: target(game),
         participants: st.mode === "teams" ? st.teams.slice(0, 6).map(function(t, i) {
           return String(t.name || "").trim() || "Team " + (i + 1);
         }) : ["The class"]
@@ -20427,7 +20521,7 @@
     function decorateIntro(intro, game) {
       const st = game.settings;
       var bg = bowlGrid2(game.questions);
-      intro.subtitle = bg.categories.length + (bg.categories.length === 1 ? " category · " : " categories · ") + game.questions.length + " cells · first to " + (Number(game.questions[0].targetScore) || 1e3);
+      intro.subtitle = bg.categories.length + (bg.categories.length === 1 ? " category · " : " categories · ") + game.questions.length + " cells · first to " + target(game);
       intro.notes = "Pick an unused cell, hear the answer, then reveal and award it. The board ends when it empties or a team reaches the target.";
     }
     function bowlNote(game, SF) {
@@ -20435,12 +20529,12 @@
       var total = game.questions.reduce(function(n, q) {
         return n + (q.pointValue || 0);
       }, 0);
-      var target = Number(game.questions[0] && game.questions[0].targetScore) || 1e3;
+      var targetScore = target(game);
       var shape = grid.categories.length + (grid.categories.length === 1 ? " category · " : " categories · ") + game.questions.length + (game.questions.length === 1 ? " cell · " : " cells · ") + total + " points on the board";
-      if (total < target) {
-        return shape + " — less than the " + target + " target, so the board will empty first";
+      if (total < targetScore) {
+        return shape + " — less than the " + targetScore + " target, so the board will empty first";
       }
-      return shape + " · the board ends when someone reaches " + target;
+      return shape + " · the board ends when someone reaches " + targetScore;
     }
     function authorQuestion(insp, question, context) {
       const { UI, touched, drawRail } = context;
@@ -20484,7 +20578,7 @@
     function authorInspector(insp, question, context) {
       const { SF, el, game, boardSettingLink, questionOps } = context;
       insp.appendChild(
-        boardSettingLink("Target score", String(Number(question.targetScore) || 1e3))
+        boardSettingLink("Target score", String(target(game)))
       );
       insp.appendChild(el("p", "hint", bowlNote(game, SF)));
       insp.appendChild(
@@ -20552,11 +20646,9 @@
             (SF.BOWL_TARGETS || [500, 1e3, 1500, 2e3]).map(function(n) {
               return { value: String(n), label: String(n) };
             }),
-            String(game.questions[0].targetScore || 1e3),
+            String(target(game)),
             function(v) {
-              game.questions.forEach(function(cell) {
-                cell.targetScore = Number(v);
-              });
+              st.bowlTarget = Number(v);
               touched();
               draw2();
               drawPreview();
@@ -20600,63 +20692,54 @@
     {
       category: "Cells",
       pointValue: 100,
-      targetScore: 1e3,
       question: "What is the jelly inside a cell called?",
       answer: "Cytoplasm"
     },
     {
       category: "Cells",
       pointValue: 200,
-      targetScore: 1e3,
       question: "What molecule carries genetic information?",
       answer: "DNA"
     },
     {
       category: "Cells",
       pointValue: 300,
-      targetScore: 1e3,
       question: "Which organelle releases energy in respiration?",
       answer: "The mitochondrion"
     },
     {
       category: "Transport",
       pointValue: 100,
-      targetScore: 1e3,
       question: "Which way do particles move in diffusion?",
       answer: "From high to low concentration"
     },
     {
       category: "Transport",
       pointValue: 200,
-      targetScore: 1e3,
       question: "What is the movement of water across a partially permeable membrane?",
       answer: "Osmosis"
     },
     {
       category: "Transport",
       pointValue: 300,
-      targetScore: 1e3,
       question: "Which kind of transport needs energy from respiration?",
       answer: "Active transport"
     },
     {
       category: "Enzymes",
       pointValue: 100,
-      targetScore: 1e3,
       question: "What kind of molecule is an enzyme?",
       answer: "A protein"
     },
     {
       category: "Enzymes",
       pointValue: 200,
-      targetScore: 1e3,
       question: "What happens to an enzyme above its optimum temperature?",
       answer: "It denatures"
     },
     {
       category: "Enzymes",
       pointValue: 300,
-      targetScore: 1e3,
       question: "What is the molecule an enzyme acts on called?",
       answer: "The substrate"
     }
@@ -20703,9 +20786,11 @@
     boardEngine: board4,
     defaults: {
       "defaultTime": 0,
-      "confidence": false
+      "confidence": false,
+      "bowlTarget": 1e3
     },
     key: "bowl",
+    plays: ROOM_PLAY.board,
     label: "Quiz bowl",
     icon: "▦",
     blurb: "A category and value board. Pick an unused cell, answer aloud, and the teacher awards the cell value.",
@@ -20727,7 +20812,6 @@
         question: "What molecule carries genetic information?",
         category: "Cells",
         pointValue: 200,
-        targetScore: 1e3,
         answer: "DNA"
       };
     },
@@ -20736,8 +20820,7 @@
       q.answer = String(q.answer == null ? "" : q.answer).slice(0, 120);
       var v = Number(q.pointValue);
       q.pointValue = BOWL_VALUES.indexOf(v) > -1 ? v : 200;
-      var t = Number(q.targetScore);
-      q.targetScore = BOWL_TARGETS.indexOf(t) > -1 ? t : 1e3;
+      delete q.targetScore;
       if (!String(q.question || "").trim()) q.question = "Bowl question";
       delete q.options;
       delete q.correct;
@@ -20810,6 +20893,7 @@
       "defaultPoints": 1e3
     },
     key: "spot",
+    plays: ROOM_PLAY.spot,
     label: "Spot the error",
     icon: "⌖",
     blurb: "A sentence with one mistake in it. The room taps the wrong word; the reveal shows where everyone looked.",
@@ -21410,6 +21494,9 @@
         /* Ask each player how sure they were, after their answer is in. Never
            scored — it tells the teacher which wrong answers were confident. */
         confidence: true,
+        /* Spoken answers count by default in individual play. Teachers may
+           opt into points for the selected speaker. */
+        scoreSpoken: false,
         resultsOnReveal: false,
         /* A bed under the thinking time. Referenced, not embedded, for the
            same reason as video — and it plays on the projector only. Sending
@@ -22124,17 +22211,17 @@
     "quiz-bowl": {
       style: "bowl",
       title: "Quiz bowl",
-      settings: { scoreboard: false, scoreSlide: false, defaultTime: 0, confidence: false, mode: "teams" },
+      settings: { scoreboard: false, scoreSlide: false, defaultTime: 0, confidence: false, mode: "teams", bowlTarget: 1e3 },
       seeds: [
-        { category: "Cells", pointValue: 100, targetScore: 1e3, question: "What is the jelly inside a cell called?", answer: "Cytoplasm" },
-        { category: "Cells", pointValue: 200, targetScore: 1e3, question: "What molecule carries genetic information?", answer: "DNA" },
-        { category: "Cells", pointValue: 300, targetScore: 1e3, question: "Which organelle releases energy in respiration?", answer: "The mitochondrion" },
-        { category: "Transport", pointValue: 100, targetScore: 1e3, question: "Which way do particles move in diffusion?", answer: "From high to low concentration" },
-        { category: "Transport", pointValue: 200, targetScore: 1e3, question: "What is the movement of water across a partially permeable membrane?", answer: "Osmosis" },
-        { category: "Transport", pointValue: 300, targetScore: 1e3, question: "Which kind of transport needs energy from respiration?", answer: "Active transport" },
-        { category: "Enzymes", pointValue: 100, targetScore: 1e3, question: "What kind of molecule is an enzyme?", answer: "A protein" },
-        { category: "Enzymes", pointValue: 200, targetScore: 1e3, question: "What happens to an enzyme above its optimum temperature?", answer: "It denatures" },
-        { category: "Enzymes", pointValue: 300, targetScore: 1e3, question: "What is the molecule an enzyme acts on called?", answer: "The substrate" }
+        { category: "Cells", pointValue: 100, question: "What is the jelly inside a cell called?", answer: "Cytoplasm" },
+        { category: "Cells", pointValue: 200, question: "What molecule carries genetic information?", answer: "DNA" },
+        { category: "Cells", pointValue: 300, question: "Which organelle releases energy in respiration?", answer: "The mitochondrion" },
+        { category: "Transport", pointValue: 100, question: "Which way do particles move in diffusion?", answer: "From high to low concentration" },
+        { category: "Transport", pointValue: 200, question: "What is the movement of water across a partially permeable membrane?", answer: "Osmosis" },
+        { category: "Transport", pointValue: 300, question: "Which kind of transport needs energy from respiration?", answer: "Active transport" },
+        { category: "Enzymes", pointValue: 100, question: "What kind of molecule is an enzyme?", answer: "A protein" },
+        { category: "Enzymes", pointValue: 200, question: "What happens to an enzyme above its optimum temperature?", answer: "It denatures" },
+        { category: "Enzymes", pointValue: 300, question: "What is the molecule an enzyme acts on called?", answer: "The substrate" }
       ]
     },
     "slider": {
@@ -22916,7 +23003,12 @@
       g.musicVolume == null ? 55 : Number(g.musicVolume) || 0
     ));
     g.confidence = g.confidence !== false;
+    g.scoreSpoken = g.scoreSpoken === true;
     g.resultsOnReveal = g.resultsOnReveal === true;
+    if (g.bowlTarget != null) {
+      var target = Number(g.bowlTarget);
+      g.bowlTarget = BOWL_TARGETS.indexOf(target) > -1 ? target : 1e3;
+    }
     return g;
   }
   function normalizeGame(raw) {
@@ -22936,7 +23028,12 @@
     g.theme = resolveTheme(g.theme);
     g.libraryGroup = normalizeLibraryGroup(raw.libraryGroup, g.theme);
     g.sourceDeckId = String(raw.sourceDeckId || "").slice(0, 80);
-    g.settings = normalizeGameSettings(raw.settings);
+    var settings = Object.assign({}, raw.settings || {});
+    if (style === "bowl" && settings.bowlTarget == null) {
+      var oldFirst = Array.isArray(raw.questions) && raw.questions[0];
+      settings.bowlTarget = oldFirst && oldFirst.targetScore;
+    }
+    g.settings = normalizeGameSettings(settings);
     g.questions = (Array.isArray(raw.questions) ? raw.questions : []).map(function(q) {
       if (!remapped) return normalizeQuestion(q, style);
       var fresh = makeQuestion(style);
@@ -23021,6 +23118,7 @@
     });
     s.explainStyle = settings.explainStyle;
     s.confidence = settings.confidence !== false;
+    s.scoreSpoken = settings.scoreSpoken === true;
     if (styleKey === "oddone") {
       s.points = 0;
       s.timeLimit = 0;
@@ -23586,6 +23684,8 @@
     CHAIN_TIMES,
     EMOJI_LEVELS,
     wordRevealLetterCount,
+    wordRevealShownAt,
+    wordRevealGains,
     spinExplainPoints,
     claimPoints,
     bingoHasLine,

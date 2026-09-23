@@ -21,6 +21,66 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { freePort, start, connect, stop, report } = require('./harness');
 
+test('spoken verdict credits one team, never everyone in the room', async t => {
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sf-spoken-team-'));
+  const port=await freePort(), relay=await start(port,dir), sockets=[];
+  t.after(async()=>{await stop(relay);sockets.forEach(s=>s.socket.close());fs.rmSync(dir,{recursive:true,force:true});});
+  const host=await connect(port);sockets.push(host);
+  host.send({t:'host',title:'Connections',mode:'teams',teams:['Red','Blue']});await host.next('hosted');
+  host.send({t:'manualAdd',names:['Ada','Ari'],team:0});
+  host.send({t:'manualAdd',names:['Ben'],team:1});
+  const roster=await host.until('players',m=>m.list.length===3);
+  const ada=roster.list.find(p=>p.name==='Ada').id;
+  host.send({t:'begin'});host.send({t:'round',gameId:'connections'});
+  host.send({t:'question',id:'spoken-1',gameId:'connections',style:'connection',spoken:true,
+    question:'Connect these',options:['Accept','Reject'],input:'choice',scoreSpoken:false});
+  const tally=await host.until('tally',m=>m.id==='spoken-1');
+  host.send({t:'reveal',id:'spoken-1',rev:tally.rev,marks:[],correct:0,
+    spoken:{recipient:{type:'player',id:ada}}});
+  const count=await host.next('oralCount');
+  assert.equal(count.count,1);
+  const scored=await host.until('players',m=>m.rows&&m.rows.some(r=>r.name==='Red'&&r.score===1));
+  assert.equal(scored.rows.find(r=>r.name==='Blue').score,0);
+  assert.ok(scored.list.every(p=>p.score===0),'team credit is not divided among its members');
+  const r=await report(host);
+  assert.deepEqual(r.checks[0].spoken,{accepted:true,count:1,recipient:'Ada',points:1});
+});
+
+test('spoken phones get a job card; individual play counts unless the teacher opts into speaker points', async t => {
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sf-spoken-individual-'));
+  const port=await freePort(), relay=await start(port,dir), sockets=[];
+  t.after(async()=>{await stop(relay);sockets.forEach(s=>s.socket.close());fs.rmSync(dir,{recursive:true,force:true});});
+  const host=await connect(port);sockets.push(host);
+  host.send({t:'host',title:'Explain',mode:'individual'});const room=await host.next('hosted');
+  const ada=await connect(port),ben=await connect(port);sockets.push(ada,ben);
+  ada.send({t:'join',pin:room.pin,name:'Ada'});ben.send({t:'join',pin:room.pin,name:'Ben'});
+  await ada.next('joined');await ben.next('joined');
+  const roster=await host.until('players',m=>m.list.length===2);
+  const adaId=roster.list.find(p=>p.name==='Ada').id;
+  host.send({t:'begin'});host.send({t:'round',gameId:'spoken-game'});
+  async function verdict(id,style,correct,scoreSpoken){
+    host.send({t:'question',id,gameId:'spoken-game',style,spoken:true,question:'Explain aloud',
+      options:style==='spinexplain'?['Clear','With hint','Reject']:['Accept','Reject'],
+      input:'choice',scoreSpoken,participation:'Listen and watch.'});
+    const job=await ada.next('spoken');await ben.next('spoken');
+    assert.equal(job.participation,'Listen and watch.');
+    assert.equal(job.options,undefined,'no verdict pads reach learners');
+    const tally=await host.until('tally',m=>m.id===id);
+    ada.send({t:'answer',choice:0});
+    host.send({t:'reveal',id,rev:tally.rev,marks:[],correct,
+      spoken:{recipient:{type:'player',id:adaId}}});
+    const result=await ada.next('result');await ben.next('result');
+    assert.equal(result.spoken,true);assert.equal(ada.has('locked'),false);
+    return result;
+  }
+  const counted=await verdict('spoken-1','connection',0,false);
+  assert.equal(counted.oralCount,1);assert.equal(counted.score,0);
+  const scored=await verdict('spoken-2','spinexplain',0,true);
+  assert.equal(scored.oralCount,2);assert.equal(scored.score,2);
+  const heads=await verdict('spoken-3','headsup',0,true);
+  assert.equal(heads.oralCount,3);assert.equal(heads.score,2,'Heads Up remains a round count');
+});
+
 function sandbox() {
   const dir = path.resolve(__dirname, '..');
   const context = { window: {}, console, setInterval, clearInterval, Date };
