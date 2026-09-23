@@ -448,6 +448,11 @@
     <h1 id="questionText"></h1>
     <div class="bar"><i id="qBar"></i></div>
     <div class="pad" id="qPad"></div>
+    <!-- Predict the Outcome: why you think so, for your eyes only. -->
+    <label class="q-why" id="qWhy" hidden>
+      <span>Why do you think so? Only you can see this.</span>
+      <textarea id="qWhyText" rows="3" maxlength="400" placeholder="Because…"></textarea>
+    </label>
     <!-- True/False Showdown: the room's split, and one switch. -->
     <div class="q-showdown" id="qShowdown" hidden>
       <p class="sd-room" id="sdRoom"></p>
@@ -490,6 +495,7 @@
     <div class="gain" id="rGain"></div>
     <div class="big" id="rScore">0</div>
     <div class="pill" id="rRank"></div>
+    <p class="quiet-note r-note" id="rNote" hidden></p>
     <div class="why" id="rWhy" style="display:none">
       <div class="why-answer" id="rWhyAnswer"></div>
       <div class="why-body" id="rWhyBody"></div>
@@ -1282,6 +1288,11 @@
         if (m.asked != null) { me.correct = m.correct || 0; me.asked = m.asked; }
         header(true);
         stopTick();
+        /* Predict: the reasoning written before the outcome, back beside it. */
+        var mineNote = '';
+        if (predicting) { try { mineNote = localStorage.getItem(predictKey) || ''; } catch (_) {} }
+        $('rNote').hidden = !mineNote;
+        $('rNote').textContent = mineNote ? 'You predicted because: “' + mineNote + '”' : '';
         if (m.unmarked) {
           /* A vote with no wrong answer: what you picked, what the prepared
              one was, and — if they differ — that yours can still be right. */
@@ -1841,6 +1852,12 @@
       $('questionText').textContent = m.question || (context && context.title) || 'Look at the question on the screen';
     }
     askConfidence = m.confidence === true;
+    /* A prediction's confidence is its bet, placed with the pick. */
+    predicting = m.predict === true;
+    if (predicting) askConfidence = false;
+    predictKey = 'slideforge.predict.' + ((context && context.sessionId) || '') + '.' +
+      ((context && context.slideId) || '') + '.' + (m.n || 0);
+    $('qWhy').hidden = true;
     hideSure();
     var count = Math.max(2, Math.min(6, m.count || 4));
     var pad = $('qPad');
@@ -2163,11 +2180,49 @@
     if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
   }
 
+  /* Predict the Outcome: "sure" is a bet, so it is placed with the pick,
+     not asked afterwards. Tapping an outcome opens the two stakes in its
+     place; one tap sends both. */
+  var predicting = false, predictKey = '';
+  function offerBet(pad, i) {
+    var old = pad.querySelector('.bet-row');
+    if (old) old.remove();
+    Array.prototype.forEach.call(pad.children, function (b, k) { b.classList.toggle('mine', k === i); });
+    var row = document.createElement('div');
+    row.className = 'bet-row';
+    [['I’m sure', true, 'Right ×1.5 · wrong −½'], ['Just a hunch', false, 'Right ×1 · wrong 0']].forEach(function (opt) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'bet ' + (opt[1] ? 'sure' : 'hunch');
+      b.appendChild(document.createTextNode(opt[0]));
+      var small = document.createElement('small');
+      small.textContent = opt[2];
+      b.appendChild(small);
+      b.onclick = function (e) {
+        e.stopPropagation();
+        if (pad.dataset.locked || !ws || ws.readyState !== 1) return;
+        pad.dataset.locked = '1';
+        ws.send(JSON.stringify({ t: 'answer', choice: i, sure: opt[1] }));
+        row.remove();
+        lockPad(i);
+        /* The reasoning stays on this phone and comes back at the reveal. */
+        $('qWhy').hidden = false;
+        var area = /** @type {HTMLTextAreaElement} */ ($('qWhyText'));
+        try { area.value = localStorage.getItem(predictKey) || ''; } catch (_) { area.value = ''; }
+        area.oninput = function () { try { localStorage.setItem(predictKey, area.value); } catch (_) {} };
+      };
+      row.appendChild(b);
+    });
+    var at = pad.children[i];
+    if (at && at.nextSibling) pad.insertBefore(row, at.nextSibling); else pad.appendChild(row);
+  }
+
   function pickHandler(i) {
     return function () {
       if (!ws || ws.readyState !== 1) return;
       var pad = $('qPad');
       if (pad.dataset.locked) return;
+      if (predicting) { offerBet(pad, i); return; }
       pad.dataset.locked = '1';
       ws.send(JSON.stringify({ t: 'answer', choice: i }));
       lockPad(i);

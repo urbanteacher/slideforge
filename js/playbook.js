@@ -352,7 +352,7 @@
       players: 'Every phone commits; the room sees its own split before the outcome.',
       scoring: '“Sure” is a bet: right and sure ×1.5, right and unsure ×1, wrong and unsure 0, wrong and sure −½ (a score never goes below zero).',
       howToPlay: [
-        'Read the scenario. Each learner picks the outcome they expect and says how sure they are.',
+        'Read the scenario. Each learner taps the outcome they expect and places the bet with it — “I’m sure” or “Just a hunch” — then writes why, privately.',
         'Next locks the predictions and shows the room’s split — the answer stays hidden.',
         'Show what happens: the demonstration, the video, the experiment.',
         'Next reveals the outcome, then explain the causal chain.'

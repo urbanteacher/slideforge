@@ -1201,6 +1201,7 @@ function questionMessage(room, timeLimit, player) {
   if (q.clues) msg.clues = q.clues;
   if (q.input === 'fill') { msg.fillParts = q.fillParts; msg.gaps = q.gaps; }
   if (q.input === 'sort') msg.bins = q.bins;
+  if (q.predict) msg.predict = true;
   if (q.roundLeft) {
     /* Less whatever has passed since, for a phone that rejoins mid-question. */
     msg.roundLeft = Math.max(0, Math.round(q.roundLeft - (Date.now() - room.askedAt) / 1000));
@@ -1711,6 +1712,8 @@ ws.attach(server, (sock, req) => {
           /* True/False Showdown: the split is shown mid-question and each
              phone may switch once (see 'showdown' below). */
           showdown: m.showdown === true && input === 'choice',
+          /* Predict the Outcome: the phone asks for the bet on the pad itself. */
+          predict: m.predict === true && input === 'choice',
           /* A round (Beat the Clock): seconds left in the whole run when this
              question went out, so a phone counts down the round. */
           roundLeft: Math.max(0, Math.min(600, Math.round(Number(m.roundLeft) || 0))),

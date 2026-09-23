@@ -2639,6 +2639,7 @@
       /* question stays the clues for the journal; headPrompt is the mission. */
     }
     if (s.showdown) msg.showdown = true;
+    if (s.predict) msg.predict = true;
     /* Compare & Contrast sort: the three columns, named for the two items. */
     if (s.input === 'sort') msg.bins = (s.sortBins || []).slice();
     /* A round's phones count down the round, not the question. */
