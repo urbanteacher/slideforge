@@ -58,7 +58,7 @@ tests are in the table. The tier follows from the row.
 | Predict the Outcome | `choice` | ✗ | ◐ | ◐ | ✓ | ◐ | ◐ | ✓ | ◐ | Thin: plain multiple choice |
 | Fill in the Blanks | `type` | ◐ | ◐ | ✗ | ✓ | ◐ | ◐ | ✓ | ◐ | Thin: one typed gap, no gap reveal |
 | Time Traveler | `type` | ✗ | ◐ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: typed recall, no time |
-| Odd One Out | `oddone` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | n/a | ◐ | Thin on phones: they sit idle |
+| Odd One Out | `oddone` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | n/a | ✓ | Solid, near premium: phones vote; the split is held, then drawn as heat across the four tiles, with a line inviting the next most popular pick to defend its rule. Never marked. Open: the written rule as an anonymous idea (K9) |
 | Compare & Contrast | `compare` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | n/a | ◐ | Thin on phones: they sit idle |
 | Heads Up | `headsup` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ✓ | ◐ | Solid: one round clock, drawn terms, a verdict moves straight on, "Time!" with the guesser's count. Open: clue-givers' phones could show the term |
 | Spin & Explain | `spinexplain` | ◐ | ✓ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: *corrected* — it was always drawn at random, with a spin room and "N left"; the audit misread it. Open: the wheel lands on the concept, and a reveal beyond the verdict |
@@ -70,8 +70,8 @@ tests are in the table. The tier follows from the row.
 
 **Totals:**
 - 0 fully premium; Spot the Error is near-premium.
-- 14 solid.
-- 11 thin.
+- 15 solid.
+- 10 thin.
 - 0 broken by wrong-result scoring.
 - 1 disabled.
 
@@ -416,6 +416,21 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — Odd One Out: vote, then defend (GA-12).**
+  - **The phones vote.** It used to send phones an idle card. The vote is
+    held on the wall until the teacher reveals, and never auto-reveals, so
+    the talk comes first.
+  - **The reveal** draws each tile's share of the vote as heat along its
+    foot, marks the prepared odd one without muting the others, and adds one
+    line: "14 of 26 picked Oxygen. 7 picked Zinc: what rule makes it the odd
+    one out?"
+  - **A pick is `unmarked`.** The host sends no marks, the relay reveals
+    without waiting for any, and the vote never counts as a question asked,
+    so a defensible other pick cannot pull a learner towards "needs a hand".
+    Phones hear what they picked and are invited to defend it.
+  - **Room support** is a new `vote` profile, and the rehearsal class votes.
+  - **Tests:** `npm test` 490/490, with a relay test for the unmarked vote.
+    The written rule as an anonymous idea is still to do.
 - **23 September 2026 — Wave 2 (GA-09, GA-10, part of GA-25).**
   - **The draw is one mechanism** (`DRAW_STYLES` in `compileGame`). Spin &
     Explain, Random Challenge and Heads Up play in a fresh order every run,

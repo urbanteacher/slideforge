@@ -1121,7 +1121,7 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | GA-09 | 2 | **The draw (N2)**: a random unused pick from a pool, animated, "N left" | M | **Done** 23 Sep · `DRAW_STYLES`, `drawNo`/`drawTotal` |
 | GA-10 | 2 | **Round clock (N4)**: one clock for a run of items, on the stages clock | S | **Done** 23 Sep for Heads Up (`js/rounds.js`); Beat the Clock's use is GA-27 |
 | GA-11 | 3 | Fill in the Blanks → *Fill the gaps*: a word bank tapped into slots, heat per gap | M | To do |
-| GA-12 | 3 | Odd One Out → *Vote, then defend*: tap the odd one, write the rule, vote heat on the reveal | M | To do |
+| GA-12 | 3 | Odd One Out → *Vote, then defend*: tap the odd one, write the rule, vote heat on the reveal | M | **Done** 23 Sep · vote, held heat, defend line, unmarked; the written rule is open |
 | GA-13 | 3 | Predict the Outcome → *Commit, then watch*: on stages, private prediction, confidence-weighted | M | To do |
 | GA-14 | 3 | True/False → *Hold or fold*: split shown half-way, one switch | S–M | To do |
 | GA-15 | 3 | **Tally entry** for paper and hands up: counts per option feed the heat reveal; nobody scored (E3) | M | To do |
@@ -1273,6 +1273,10 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** GA-12: Odd One Out is a vote. Phones tap their pick; the
+  split is held, then drawn as heat on the tiles with a line inviting the
+  next pick to defend its rule. Votes are `unmarked`, so they never touch
+  accuracy. 490/490.
 - **23 Sep 2026.** Wave 2: GA-09 (the draw) and GA-10 (the round clock) are
   done, and GA-25 in part. Random Challenge is a deck; Heads Up is a timed
   round that auto-advances and ends on "Time!". The audit's claim that Spin &
