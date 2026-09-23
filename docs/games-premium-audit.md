@@ -42,17 +42,17 @@ tests are in the table. The tier follows from the row.
 |---|---|---|---|---|---|---|---|---|---|---|
 | **Spot the Error** | `spot` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | Near-premium: P9 is declared; the desk still has no heat-map preview |
 | Ranking Challenge | `order` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: the reveal puts the rows in order, fills each with how many of the room put it there, and names the pair most swapped |
-| Horse Race | `race` | ✓ | ✓ | ◐ | ◐ | ◐ | ✗ | ✓ | ◐ | Solid, but lanes are wall-only |
-| Boss Battle | `boss` | ✓ | ✓ | ◐ | ✓ | ◐ | ✗ | ✓ | ◐ | Solid, but Hit/Miss is wall-only |
+| Horse Race | `race` | ✓ | ✓ | ◐ | ◐ | ◐ | ✓ | ✓ | ◐ | Solid: the teacher-run lanes are on the desk too (data-desk) |
+| Boss Battle | `boss` | ✓ | ✓ | ◐ | ✓ | ◐ | ✓ | ✓ | ◐ | Solid: Reveal, Hit and Miss are on the desk too (data-desk) |
 | Memory Flip | `memoryflip` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ◐ | ✓ | Solid (board) |
 | Memory Match | `memorymatch` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ◐ | ✓ | Solid (board) |
 | Knowledge Flip | `knowledgeflip` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ◐ | ✓ | Solid (board) |
 | Bingo | `bingo` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ✓ | ✓ | Solid (board) |
 | Quiz Bowl | `bowl` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | ✓ | ◐ | Solid: a board-cell award goes to one team; the game-level target is fixed |
 | Low-Stakes Quiz | `lowstakes` | ✓ | ✓ | ✓ | ✓ | n/a (paper) | ◐ | ✓ | ✓ | Solid (paper by design) |
-| Definition Challenge | `definition` | ✓ | ✓ | ◐ | ✓ | ✓ | ✗ | ✓ | ◐ | Solid, but "Ask" is wall-only |
+| Definition Challenge | `definition` | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: "Ask now" is on the desk too (data-desk) |
 | Word Reveal | `wordreveal` | ✓ | ✓ | ◐ | ✓ | ◐ | ◐ | ✓ | ◐ | Solid: per-answer scoring fixed; reveal polish remains |
-| Emoji Guess | `emoji` | ◐ | ✓ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, but the hint is shown from the start, which the blurb contradicts |
+| Emoji Guess | `emoji` | ✓ | ✓ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid: the heading says "Decode the symbols"; the hint is the last help the teacher releases, after the letter pattern |
 | Beat the Clock | `speed` | ◐ | ◐ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Thin: the clock restarts per question, so there is no clock to beat |
 | True/False Showdown | `truefalse` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: vote → the room's split on wall and phones → one switch each → reveal of before against after and how many switched |
 | Predict the Outcome | `choice` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: commit with confidence → lock (the room's split, not the answer) → watch → reveal; a sure, right prediction earns half again. Open: the private written prediction (K8) |
@@ -416,6 +416,21 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — Desk parity (GA-21) and Emoji's hint (GA-22, in part).**
+  - **One mechanism, not three special cases.** A control a game draws on
+    the projected wall carries `data-desk`: Boss's Reveal, Hit and Miss, a
+    teacher-run race's lanes, Definition's Ask.
+  - **The presenter view lists** whatever the current slide has as buttons
+    beside Next, and pressing one presses the wall's own control
+    (`Player.gameControls` and `pressGameControl`). A new wall control
+    reaches the desk with nothing but the attribute.
+  - **Emoji Guess:** the heading is now "Decode the symbols. What is it?" and
+    the hint is the last step the teacher releases, after the letter
+    pattern. As the heading from the start, a good hint all but named the
+    answer.
+  - **Tests:** `npm test` 500/500.
+  - **Still open:** a hint that costs points, and Definition on the stages
+    runtime.
 - **23 September 2026 — Ranking's reveal (GA-23), and a live bug.**
   - **The bug:** the live reveal never showed the right order. The rows were
     drawn shuffled, and because a ranking has no single right option, the
