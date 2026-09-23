@@ -301,7 +301,7 @@ answered. Show the letters dripping on the phone too (P5), and make
 | **5** | **Done 23 Sep.** N5 line reveal; Time Traveler on one growing timeline, wall and phone | | M |
 | **6** | **Mostly done.** Desk parity (`data-desk`), Emoji hint as a step, Ranking heat. *Open: the hint's point cost, Definition on stages (GA-22)* | P6 across the catalogue | S each |
 | **7** | **Mostly done.** N6 sort input; Compare & Contrast sort; Beat the Clock as one round. *Open: per-phone self-pacing (GA-27)* | The two large new mechanics | L |
-| **with 3** | **Not done — skipped.** Tally entry (E3), team rows (E5), saved class lists (E6): planned alongside wave 3 and passed over. Next. | Rooms with no devices, done at the speed of a show of hands | M |
+| **with 3** | **Done 23 Sep (late).** Tally entry (E3), team rows (E5), saved class lists (E6): skipped alongside wave 3, then built. | Rooms with no devices, done at the speed of a show of hands | M |
 | **after 7** | **Not done.** Solo practice (E8) | One learner, alone, at their own pace | M |
 
 At the end of wave 3, the count would be roughly six premium and none
@@ -431,6 +431,19 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — The skipped row: rooms without devices (E3, E5,
+  E6).**
+  - **Tally entry:** for a choice question, the desk takes a count per
+    option ("A 12 · B 7") with − and + buttons. "Add to the room's tally"
+    sends it (the relay's `manualTally`). It joins the wall's bars, heat and
+    answered count exactly as phone answers do, replaces any earlier count,
+    and never touches a player, a mark or a score.
+  - **Team rows:** in a teams room, one click adds "Red · shared" (and so on)
+    for every team.
+  - **Saved classes:** the names box saves under a class name in this
+    computer's storage only, and loads back in one click.
+  - **Tests:** relay test for the tally. `node --test` 520/520. Not viewed on
+    screen.
 - **23 September 2026 — The doc checked against the work.**
   - **Section 5 was stale:** waves 2–7 were done, or mostly done, and
     unmarked. Each wave now says what is done and what is open.

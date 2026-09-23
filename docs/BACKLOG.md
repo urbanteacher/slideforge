@@ -38,7 +38,7 @@ order.
 
 | ID | Item | Size | Status |
 |---|---|---|---|
-| GA-15 – GA-28 | **Games to a premium standard**: waves 0–3 and 5 are done; 4, 6 and 7 mostly (GA-01–14, 18, 20, 21, 23, 25, 26, 29, 30). **Next, as planned:** GA-15–17, the no-device work skipped alongside wave 3 (tally entry, team rows, saved class lists). Then GA-28 solo practice. **Open:** GA-19 branching map, GA-22 hint cost and Definition on stages, GA-27 self-pacing, GA-24 Race/Boss crowd layout. None of the waves since GA-29 has been viewed on screen except Fill, Beat the Clock and Compare. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | In progress |
+| GA-15 – GA-28 | **Games to a premium standard**: waves 0–3 and 5 are done; 4, 6 and 7 mostly (GA-01–14, 18, 20, 21, 23, 25, 26, 29, 30). GA-15–17 (the no-device work skipped alongside wave 3) are now done. **Next, as planned:** GA-28 solo practice. **Open:** GA-19 branching map, GA-22 hint cost and Definition on stages, GA-27 self-pacing, GA-24 Race/Boss crowd layout. None of the waves since GA-29 has been viewed on screen except Fill, Beat the Clock and Compare. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | In progress |
 | AC-13 – AC-17 | **Activities to a premium standard**: waves 0–3 (AC-01–12, AC-16) are done. Sixteen routines run on stages; the room's output lands; every activity declares its rooms. Next: tally entry for rooms without phones (AC-13, with GA-15), then the contests (AC-14). Full table under [the activities build list](#23-september-2026-activities-to-a-premium-standard-the-build-list). | S–L | To do |
 | RP-01 | Rehearse with a class of 30 (and 120) | S | To do |
 | RP-02 | Lecture-scale defaults (100+): standings off, distribution on | S | To do |
@@ -1125,9 +1125,9 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | GA-12 | 3 | Odd One Out → *Vote, then defend*: tap the odd one, write the rule, vote heat on the reveal | M | **Done** 23 Sep · vote, held heat, defend line, unmarked; the written rule is open |
 | GA-13 | 3 | Predict the Outcome → *Commit, then watch*: on stages, private prediction, confidence-weighted | M | **Done** 23 Sep · lock, watch, confidence-weighted; the written prediction is open |
 | GA-14 | 3 | True/False → *Hold or fold*: split shown half-way, one switch | S–M | **Done** 23 Sep · relay tested, not viewed |
-| GA-15 | 3 | **Tally entry** for paper and hands up: counts per option feed the heat reveal; nobody scored (E3) | M | To do |
-| GA-16 | 3 | One-click team rows for teams without devices (E5) | S | To do |
-| GA-17 | 3 | Saved class lists for teacher entry, kept on this computer only (E6) | S | To do |
+| GA-15 | 3 | **Tally entry** for paper and hands up: counts per option feed the heat reveal; nobody scored (E3) | M | **Done** 23 Sep · `manualTally`, relay tested |
+| GA-16 | 3 | One-click team rows for teams without devices (E5) | S | **Done** 23 Sep |
+| GA-17 | 3 | Saved class lists for teacher entry, kept on this computer only (E6) | S | **Done** 23 Sep · this computer only |
 | GA-18 | 4 | **Proposal queue (N3)**, generalised from Q&A moderation | M | **Done** 23 Sep · brainstorm prompt + desk list + Use this; relay tested |
 | GA-19 | 4 | Concept Chain as a branching map of phone proposals; Connection Maker as its two-ended preset | M | Partly done · phone proposals for both; the branching map and drawn bridges are open |
 | GA-20 | 5 | **Line reveal (N5)**; Time Traveler → *Place it in time* on a growing timeline | M | **Done** 23 Sep · on the slider engine, growing timeline, legacy heal |
@@ -1302,6 +1302,9 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** GA-15–17, skipped alongside wave 3, are done: tally entry
+  (counts per option join the wall's bars, with no names and no scores),
+  one-click team rows, and saved class lists kept on this computer. 520/520.
 - **23 Sep 2026.** Activities wave 3 (AC-09–12, AC-16).
   - A stage label may declare its job (`[send]`). Each send stage has its
     own idea box, and up to three spotlights stand on a slide, each named
