@@ -331,3 +331,27 @@ test('a proposal reaches the host with its author, and no phone learns who wrote
   assert.equal(digest.items[0].name,'Ada');
   assert.equal(ben.has('responses'),false,'the digest is the host’s alone');
 });
+
+test('Heads Up: the clue-givers’ phones get the term, the guesser’s never does', async t => {
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'sf-heads-term-'));
+  const port=await freePort(), relay=await start(port,dir), sockets=[];
+  t.after(async()=>{await stop(relay);sockets.forEach(s=>s.socket.close());fs.rmSync(dir,{recursive:true,force:true});});
+  const host=await connect(port);sockets.push(host);
+  host.send({t:'host',title:'Heads',mode:'individual'});const room=await host.next('hosted');
+  const ada=await connect(port),ben=await connect(port);sockets.push(ada,ben);
+  ada.send({t:'join',pin:room.pin,name:'Ada'});ben.send({t:'join',pin:room.pin,name:'Ben'});
+  await ada.next('joined');await ben.next('joined');
+  const roster=await host.until('players',m=>m.list.length===2);
+  const adaId=roster.list.find(p=>p.name==='Ada').id;
+  host.send({t:'begin'});host.send({t:'round',gameId:'heads'});
+  host.send({t:'question',id:'h1',gameId:'heads',style:'headsup',spoken:true,question:'Photosynthesis',
+    options:['Correct','Pass'],input:'choice',term:'Photosynthesis'});
+  const a0=await ada.next('spoken'), b0=await ben.next('spoken');
+  assert.equal(a0.headsWaiting,true);assert.equal(a0.term,undefined,'nobody sees it before a guesser is chosen');
+  assert.equal(b0.term,undefined);
+  host.send({t:'guesser',id:adaId});
+  const a1=await ada.next('spoken'), b1=await ben.next('spoken');
+  assert.equal(a1.youGuess,true);
+  assert.equal(a1.term,undefined,'the guesser never gets the term');
+  assert.equal(b1.term,'Photosynthesis');
+});

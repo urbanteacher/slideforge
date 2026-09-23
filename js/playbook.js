@@ -260,7 +260,7 @@
       players: 'Clue-givers + guesser; host marks.',
       scoring: 'A round count: how many the guesser gets. No points.',
       howToPlay: [
-        'Choose the guesser in Live answers; they stand with their back to the wall while the class describes the term.',
+        'Choose the guesser in Live answers. Every other phone then shows the term; the guesser’s says “You’re guessing — face away”.',
         'Correct or Pass moves straight to the next term, drawn in a fresh order each run.',
         'One clock for the round. At time, the wall shows the guesser’s count; Next moves on.'
       ]

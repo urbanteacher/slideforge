@@ -1198,6 +1198,21 @@
       case 'spoken':
         stopTick();
         applyParticipation(m);
+        /* Heads Up: the clue-givers hold the term; the guesser holds nothing. */
+        $('waitTitle').classList.toggle('heads-term', !!m.term);
+        if (m.youGuess) {
+          $('waitIcon').textContent = '🙈';
+          $('waitTitle').textContent = 'You’re guessing';
+          $('waitLead').textContent = 'Face away from the wall and put your phone down. Listen to the clues.';
+        } else if (m.term) {
+          $('waitIcon').textContent = '🗣';
+          $('waitTitle').textContent = m.term;
+          $('waitLead').textContent = 'Describe it for the guesser — don’t say it, or any part of it.';
+        } else if (m.headsWaiting) {
+          $('waitIcon').textContent = '⏳';
+          $('waitTitle').textContent = 'Heads Up';
+          $('waitLead').textContent = 'Your teacher is choosing the guesser. The term appears here when they have.';
+        }
         show('scWait');
         break;
 

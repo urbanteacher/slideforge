@@ -357,6 +357,11 @@
       else if(picked.type==='team' && Live.mode==='teams' && Live.teams[Number(picked.id)])
         Live.selectedRecipient={type:'team',id:Number(picked.id)};
       else Live.selectedRecipient={type:'room'};
+      /* Heads Up: the guesser is the speaker, and their phone must lose the term. */
+      var headsNow=SF.Player.deck&&SF.Player.deck.slides[SF.Player.idx];
+      if(headsNow&&headsNow.style==='headsup'&&!Live.revealed[headsNow.id]){
+        send({t:'guesser',id:Live.selectedRecipient.type==='player'?Live.selectedRecipient.id:null});
+      }
       /* Choosing the speaker is what completes a held verdict. */
       var held=Live.pendingVerdict, now=SF.Player.deck&&SF.Player.deck.slides[SF.Player.idx];
       if(held&&now&&now.id===held.slideId&&Live.selectedRecipient.type!=='room'&&!Live.revealed[now.id]){
@@ -2599,6 +2604,11 @@
          needs the line it slides along. The target never leaves the host. */
       input: s.input || 'choice',
       spoken: isSpokenSlide(s),
+      /* Heads Up: the term goes to the clue-givers' phones; the relay keeps
+         it from the guesser. */
+      term: s.style === 'headsup' ? String(s.term || s.question || '') : undefined,
+      guesser: s.style === 'headsup' && Live.selectedRecipient && Live.selectedRecipient.type === 'player'
+        ? Live.selectedRecipient.id : undefined,
       gameId: s.gameId || '',
       scoreSpoken: s.scoreSpoken === true,
       participation: companion.participation,

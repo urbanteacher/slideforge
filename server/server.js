@@ -1165,13 +1165,24 @@ function learnerContext(room) {
 }
 
 /** Fan-out shape for an open question, including companion skin fields. */
-function questionMessage(room, timeLimit) {
+function questionMessage(room, timeLimit, player) {
   const q = room.question;
-  if (q.spoken) return {
-    t: 'spoken', style: q.style, role: 'discuss',
-    headPrompt: q.headPrompt || q.question,
-    participation: q.participation || 'Listen and watch. Be ready to explain aloud.'
-  };
+  if (q.spoken) {
+    const spoken = {
+      t: 'spoken', style: q.style, role: 'discuss',
+      headPrompt: q.headPrompt || q.question,
+      participation: q.participation || 'Listen and watch. Be ready to explain aloud.'
+    };
+    /* Heads Up: the clue-givers see the term; the guesser must not. Until the
+       teacher has chosen a guesser nobody gets it, or the guesser-to-be would
+       read it off their own phone. */
+    if (q.style === 'headsup' && q.term) {
+      if (q.guesser == null) spoken.headsWaiting = true;
+      else if (player && player.id === q.guesser) spoken.youGuess = true;
+      else spoken.term = q.term;
+    }
+    return spoken;
+  }
   const msg = {
     t: 'question',
     n: q.index,
@@ -1703,6 +1714,9 @@ ws.attach(server, (sock, req) => {
           /* A round (Beat the Clock): seconds left in the whole run when this
              question went out, so a phone counts down the round. */
           roundLeft: Math.max(0, Math.min(600, Math.round(Number(m.roundLeft) || 0))),
+          /* Heads Up: the term for the clue-givers' phones, and who is guessing. */
+          term: spoken && m.style === 'headsup' ? String(m.term || '').slice(0, 80) : '',
+          guesser: spoken && Number.isInteger(m.guesser) ? m.guesser : null,
           split: null,
           switched: 0,
           // the host knows where this question sits in the deck; fall back to
@@ -1736,8 +1750,18 @@ ws.attach(server, (sock, req) => {
           p.lastGain = 0;
           p.switched = false;
         }
-        broadcast(room, questionMessage(room));
+        if (room.question.spoken) spokenFanout(room);
+        else broadcast(room, questionMessage(room));
         pushTally(room);
+
+      } else if (m.t === 'guesser') {
+        /* Heads Up: the teacher chose (or changed) the guesser. Every phone is
+           told again — the new guesser loses the term, the old one gains it. */
+        const q = room.question;
+        if (!q || room.phase !== 'question' || !q.spoken || q.style !== 'headsup') return;
+        const id = Number(m.id);
+        q.guesser = Number.isInteger(id) && room.players.has(id) ? id : null;
+        spokenFanout(room);
 
       } else if (m.t === 'closeAnswers') {
         /* Predict the Outcome: the predictions are locked before the answer
@@ -2271,7 +2295,7 @@ ws.attach(server, (sock, req) => {
             if (room.phase === 'question' && room.question && room.question.eligible.has(me.id)) {
               const remaining = room.question.timeLimit ? Math.max(0, room.question.timeLimit - (Date.now() - room.askedAt) / 1000) : 0;
               if (!room.question.timeLimit || remaining > 0) {
-                sock.json(questionMessage(room, remaining));
+                sock.json(questionMessage(room, remaining, me));
                 /* Every input, not just scalars: a rejoining phone with a
                    Ranking answer used to be told it was a single choice. */
                 if (me.answer != null) sock.json(lockedMessage(room.question, me.answer));
@@ -2702,6 +2726,15 @@ ws.attach(server, (sock, req) => {
     }
   });
 });
+
+/** A spoken question, told to each phone in its own terms (Heads Up). */
+function spokenFanout(room) {
+  for (const p of room.players.values()) {
+    if (p.sock && p.sock.open && (!room.question.eligible || room.question.eligible.has(p.id))) {
+      p.sock.json(questionMessage(room, null, p));
+    }
+  }
+}
 
 function broadcast(room, msg) {
   for (const p of room.players.values()) {
