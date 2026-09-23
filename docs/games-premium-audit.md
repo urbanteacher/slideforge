@@ -54,7 +54,7 @@ tests are in the table. The tier follows from the row.
 | Word Reveal | `wordreveal` | ✓ | ✓ | ◐ | ✓ | ◐ | ◐ | ✓ | ◐ | Solid: per-answer scoring fixed; reveal polish remains |
 | Emoji Guess | `emoji` | ◐ | ✓ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, but the hint is shown from the start, which the blurb contradicts |
 | Beat the Clock | `speed` | ◐ | ◐ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Thin: the clock restarts per question, so there is no clock to beat |
-| True/False Showdown | `truefalse` | ◐ | ◐ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Thin: a two-option quiz, no showdown |
+| True/False Showdown | `truefalse` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: vote → the room's split on wall and phones → one switch each → reveal of before against after and how many switched |
 | Predict the Outcome | `choice` | ✗ | ◐ | ◐ | ✓ | ◐ | ◐ | ✓ | ◐ | Thin: plain multiple choice |
 | Fill in the Blanks | `type` | ◐ | ◐ | ✗ | ✓ | ◐ | ◐ | ✓ | ◐ | Thin: one typed gap, no gap reveal |
 | Time Traveler | `type` | ✗ | ◐ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: typed recall, no time |
@@ -70,8 +70,8 @@ tests are in the table. The tier follows from the row.
 
 **Totals:**
 - 0 fully premium; Spot the Error is near-premium.
-- 15 solid.
-- 10 thin.
+- 16 solid.
+- 9 thin.
 - 0 broken by wrong-result scoring.
 - 1 disabled.
 
@@ -416,6 +416,18 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — True/False Showdown: hold or fold (GA-14).**
+  - **The Showdown format** (not plain True or False) votes, then shows the
+    room its own split on the wall and on every phone. It shows on the
+    teacher's Next, or half-way through a timed clock.
+  - **Each phone may switch once.** The relay's `showdown` message fixes the
+    split, and the one switch is the only exception to one answer per
+    question. The wall's bar follows the room as it moves, with a marker
+    where it stood.
+  - **The reveal** lights the right side and says "False: 38% at the split,
+    62% at the end. 5 changed their minds." The final answer is what's
+    marked. It never auto-reveals, and phones never learn who switched.
+  - **Tests:** relay test in `tests/showdown.test.js`. `npm test` 492/492.
 - **23 September 2026 — Odd One Out: vote, then defend (GA-12).**
   - **The phones vote.** It used to send phones an idle card. The vote is
     held on the wall until the teacher reveals, and never auto-reveals, so
