@@ -1127,8 +1127,8 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | GA-15 | 3 | **Tally entry** for paper and hands up: counts per option feed the heat reveal; nobody scored (E3) | M | To do |
 | GA-16 | 3 | One-click team rows for teams without devices (E5) | S | To do |
 | GA-17 | 3 | Saved class lists for teacher entry, kept on this computer only (E6) | S | To do |
-| GA-18 | 4 | **Proposal queue (N3)**, generalised from Q&A moderation | M | To do |
-| GA-19 | 4 | Concept Chain as a branching map of phone proposals; Connection Maker as its two-ended preset | M | To do |
+| GA-18 | 4 | **Proposal queue (N3)**, generalised from Q&A moderation | M | **Done** 23 Sep · brainstorm prompt + desk list + Use this; relay tested |
+| GA-19 | 4 | Concept Chain as a branching map of phone proposals; Connection Maker as its two-ended preset | M | Partly done · phone proposals for both; the branching map and drawn bridges are open |
 | GA-20 | 5 | **Line reveal (N5)**; Time Traveler → *Place it in time* on a growing timeline | M | To do |
 | GA-21 | 6 | Desk parity: Horse Race lanes, Boss Hit/Miss, Definition Ask, every board control on the desk | S each | To do |
 | GA-22 | 6 | Emoji hint released as a step, costing points; Definition rebuilt on stages | S | To do |
@@ -1273,6 +1273,9 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** GA-18: the proposal queue. Concept Chain and Connection
+  Maker take proposals from phones (anonymous on the wall, named on the
+  desk). Use this credits the author. GA-19 is partly done. 499/499.
 - **23 Sep 2026.** GA-11: Fill the gaps. There is a new `fill` style and
   input: passage [gaps], a word bank with lures, a per-gap reveal and
   partial marks. Teacher entry works by key. A rejoining Ranking answer is

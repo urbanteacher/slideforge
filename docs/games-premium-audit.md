@@ -62,16 +62,16 @@ tests are in the table. The tier follows from the row.
 | Compare & Contrast | `compare` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | n/a | ◐ | Thin on phones: they sit idle |
 | Heads Up | `headsup` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ✓ | ◐ | Solid: one round clock, drawn terms, a verdict moves straight on, "Time!" with the guesser's count. Open: clue-givers' phones could show the term |
 | Spin & Explain | `spinexplain` | ◐ | ✓ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: *corrected* — it was always drawn at random, with a spin room and "N left"; the audit misread it. Open: the wheel lands on the concept, and a reveal beyond the verdict |
-| Connection Maker | `connection` | ◐ | ◐ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: selected-team credit is fair; no map grows |
-| Concept Chain | `conceptchain` | ✓ | ✓ | ◐ | ✓ | ✗ | ✗ | ✓ | ◐ | Solid: selected-team credit is fair; the link is still typed on the wall |
+| Connection Maker | `connection` | ◐ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: phones propose the bridge, the teacher puts one on the table and credits its author. Open: approved bridges drawn as labelled lines |
+| Concept Chain | `conceptchain` | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: phones propose links (anonymous on the wall, named on the desk); Use this puts one on the table and makes its author the speaker; Accept grows the chain and credits them. Open: several links per term, a branching map |
 | Random Challenge | `randomchallenge` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | ◐ | ◐ | Thin: now a real deck — drawn fresh each run, cards left behind it, a flip per draw. Only the count is revealed |
 | Question Cube | brainstorm prompt | ✗ | ✗ | ✗ | ✓ | ◐ | ◐ | n/a | ◐ | Thin: no cube, no pool |
 | Memory Maze | — | — | — | — | — | — | — | — | — | Disabled; out of scope |
 
 **Totals:**
 - 0 fully premium; Spot the Error is near-premium.
-- 18 solid.
-- 7 thin.
+- 19 solid.
+- 6 thin.
 - 0 broken by wrong-result scoring.
 - 1 disabled.
 
@@ -416,6 +416,21 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — The proposal queue (N3, GA-18, part of GA-19).**
+  - **Proposals from the phones.** While a Concept Chain or Connection Maker
+    item is up, the phones get an idea box ("Propose a link from 'energy'
+    ..."). Proposals arrive beside the slide without names, and on the desk
+    with them.
+  - **Use this** puts one "on the table" on the wall (still unnamed), makes
+    its author the speaker, and in a chain makes its words the link.
+  - **Accept** then grows the chain and credits the speaker's team, through
+    the same held-verdict path as every spoken verdict.
+  - **Reused, not rebuilt:** the brainstorm prompt, the anonymous room-pane
+    cards, and the verdict recipient. The relay's host-only digest now
+    carries each author's id.
+  - **Tests:** relay test for attribution. `npm test` 499/499.
+  - **Still open:** several links per start term and a branching map
+    (GA-19), and Connection Maker's bridges drawn as lines.
 - **23 September 2026 — Fill the gaps (GA-11).**
   - **A new style, `fill`**, with its own phone input. The answer is one
     word-bank index per gap, repeats allowed; the relay checks it like an
