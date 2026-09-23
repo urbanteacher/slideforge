@@ -57,7 +57,7 @@ what was removed.
 | UX-64 | Student-paced mode with its own code | P2 | L | Needs a decision |
 | UX-65 | Per-student takeaway: the slides plus that student's answers | P3 | M–L | Needs a decision |
 | **Phase 8 — accessibility** |||||
-| UX-70 | Give icon-only controls an `aria-label`, not just a `title` | P1 | S–M | To do |
+| UX-70 | Give icon-only controls an `aria-label`, not just a `title` | P1 | S–M | Partly done · the 13 in `index.html`; buttons built in JS not yet audited |
 | UX-71 | Raise type under 12px in the editor | P2 | S–M | To do |
 | UX-72 | Keyboard-only pass through every modal and panel | P2 | M | To do |
 
@@ -377,7 +377,7 @@ Three read-only reviews, running in parallel, covered:
 | CA-08 | Undo stores a full copy of the deck for every keystroke (60 max): one sentence pushes a deletion out of reach, and a 5 MB deck uses about 300 MB | history | P1 | M | **Done** 23 Sep |
 | **Wrong slide or answer** ||||||
 | CA-10 | Present, Rehearse and Presenter start on the wrong slide when a hidden slide is above the selection | run index | P0 | S | **Done** 23 Sep · `tests/run-index.test.js` |
-| CA-11 | The same game embedded twice (⌘D or re-insert) arrives already answered and revealed, and the reports merge the two runs | live | P1 | S–M | Confirmed |
+| CA-11 | The same game embedded twice (⌘D or re-insert) arrives already answered and revealed, and the reports merge the two runs | live | P1 | S–M | **Done** 23 Sep · slide ids; reports still group by game |
 | **The canvas core** ||||||
 | CA-20 | Regions are never bounds-checked; blocks past row 16 or col 12 go off the slide or collapse to one cell | lattice | P1 | S | **Done** 23 Sep · invalid values only; past row 16 is by design |
 | CA-21 | Composition and regions measure in different frames, so blocks jump when Layout opens on a composed slide | lattice × compositions | P1 | M–L | Plausible |
@@ -570,6 +570,26 @@ Three read-only reviews, running in parallel, covered:
   and clicking it exports, as the README always said it did. Below 1500px it is
   still a dot, now clickable and labelled. Words at every width need the header
   space UX-20 and UX-21 would free.
+
+## 23 September 2026: the P1 pass, part two
+
+- **CA-08, corrected.** The first version joined any change that kept the slide
+  list into a burst, and the `chrome-regions` smoke caught it: moving the logo
+  between header slots right after another edit made one Undo take back both.
+  Only typing joins a burst now, meaning a change recorded while a text field's
+  `input` event is being handled (noted by a capture listener). Anything else,
+  and any handler that runs later than its event, is its own step, as before.
+  Typing still coalesces: re-checked in the browser.
+- **CA-11.** `buildRunDeck` qualifies the compiled ids of a game's second and
+  later appearances with the embedding slide (`…@<slideId>`); the first keeps
+  its stable ids. The only code that reads compiled ids (`demo.js`, `:howto`)
+  still matches. Reports that group by `gameId` still put the two rounds
+  together; that is a reporting decision, not an id collision. One test.
+- **UX-70, part one.** All 13 icon-only buttons in `index.html` have an
+  `aria-label`: the nine with a `title` use it, and the four ✕ on the sheets say
+  "Close — Settings" and so on. Buttons built in JavaScript are not audited yet.
+
+**Suites:** `npm test` 465/465, `visual:check` 642/642, smoke 50/50.
 
 ## Log
 

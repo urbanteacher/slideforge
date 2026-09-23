@@ -18,20 +18,24 @@ the "typed layouts, not a canvas" rule:
 
 1. **Too much chrome.** About 30 controls surround the slide before you touch it,
    several of them the same action more than once.
-2. **Keyboard behaviour that surprises people from other tools.** Escape throws
-   away typing and doesn't close dialogs.
+2. **Keyboard behaviour that surprises people from other tools.** Escape threw
+   away typing and didn't close the settings sheets (both fixed 23 September).
 3. **Nothing to help people find commands.** There's no command palette and no
-   `?` shortcut sheet, so the good shortcuts that do exist stay hidden.
+   easy way into the shortcut sheet from the editor, so the good shortcuts
+   that do exist stay hidden.
 
 ## 2. Bugs found on the way (reproduced)
 
 | # | What happens | Where | Why it matters |
 |---|---|---|---|
 | B1 | **Escape discards text typed on the slide.** Click a heading, type, press Escape → the heading reverts. | `src/editor/customize.js:578` → `endInlineEdit('cancel')` | In Google Slides, Figma, Keynote and PowerPoint, Escape *keeps* the edit and leaves the box selected. Anyone coming from those tools will lose work. |
-| B2 | **Escape does not close the Slide starters or Library modals.** The first time, my next click landed on a starter card and inserted a slide. | `js/shell.js:342` `openModal` — no key handler, no focus trap, no `aria-modal` | Every `.modal` opened through `openModal` behaves like this. The sorter, header/footer and artwork modes all handle Escape correctly, so the app contradicts itself. |
+| B2 | **Escape does not close the `.modal` sheets** (Settings, Write questions, Ask the room, Open), and the deck's shortcuts run through them: with Settings open, Delete on its focused ✕ deleted the selected slide behind it. | `js/shell.js` `openModal`: no key handler, no focus handling, no `aria-modal` | The sorter, header/footer and artwork modes all handle Escape correctly, so the app contradicts itself. The Slide starters and Library are native `<dialog>`s and were never affected. |
 | B3 | **An editor hint reaches the projector.** An empty bullets slide presents *"Add points in the inspector"* full-screen. | `js/render.js:527`, `:1393` | The comment at `:524` fixed this for slides that carry blocks, but not for a slide that is simply empty. The word "inspector" also appears nowhere else in the UI; the panel is called *Design & content*. |
 | B4 | **Two slide numbers.** The rail says `2 / 98`; the show and the slide footer say `2 / 110`. Games expand into extra show steps, so from slide 79 on the two numbers disagree. | rail vs `Player` numbering | "Go to slide 85" means different slides in the editor and on the wall. |
 | B5 | *(observed, not traced)* After clicking into a heading and pressing Escape with no change, **Undo lights up**. | `onCancel: touched()` in `js/editor.js:439` | This adds an Undo step for nothing: the next Cmd+Z appears to do nothing. |
+
+**Status, 23 September:** B1, B2, B3 and B5 are fixed. B4 waits on a decision
+(UX-04 in [ux-backlog.md](ux-backlog.md)).
 
 B1 and B2 are the ones to fix first. They are small, and together they make up
 most of the "this feels off" reaction that people from other tools will have.
@@ -76,7 +80,7 @@ The *Slide starters* modal (a picture gallery with a one-line purpose for each
 starter) is better than Google's layout dropdown. It teaches you what each
 starter is for, much like Pitch's layout library. The gaps:
 
-- The modal can't be dismissed with Escape (B2).
+- Several insert routes open a window; the `.modal` ones couldn't be closed with Escape (B2).
 - Google's March 2025 sidebar and Figma's bottom toolbar keep "insert" in **one
   place that stays open**. SlideForge has four insert buttons across two areas
   (`+ Slide`, `+ Activity`, `+ Add activity`, `+ Item`), and each one opens a
@@ -109,10 +113,10 @@ This matches Google and beats Figma on the keyboard.
 
 | Pattern | Who | SlideForge |
 |---|---|---|
-| `?` shows every shortcut | reveal.js, Slidev | `?` does nothing. Shortcuts appear only in tooltips. |
+| `?` shows every shortcut | reveal.js, Slidev | Works in the show. In the editor the sheet was only behind Settings → ? Shortcuts, and it listed no editing keys. |
 | Type a number + Enter to jump | Google, reveal.js | Not found in the show. |
 | `O`/`G` overview grid while presenting | reveal.js, Slidev | Not found in the show. |
-| `W` white screen, `L` laser pointer | Google | `B` blank screen and `I` spotlight cover most of this. |
+| `W` white screen, `L` laser pointer | Google | `B` blank screen and `I` spotlight cover most of this. `W` is taken ("Who answered what"). |
 | Pacing timer (green / red / blue) | reveal.js speaker view | Worth adding to the presenter pop-out. |
 | Presenter view at its own URL, synced | Slidev `/presenter`, Figma | Already has a pop-out window. |
 
@@ -215,3 +219,13 @@ Mentimeter: [pace](https://www.mentimeter.com/blog/menti-news/live-presentation-
 Nearpod: [student-paced](https://nearpod.zendesk.com/hc/en-us/articles/360047531911) ·
 Pear Deck: [dashboard](https://help.peardeck.com/en/the-teacher-dashboard) ·
 Kahoot: [assign](https://support.kahoot.com/hc/en-us/articles/360039411334)
+
+## Corrections
+
+- **23 September.** B2 first said the Slide starters and Library windows ignore
+  Escape. They are native `<dialog>`s and close normally: the browser tool used
+  for the walkthrough can't deliver Escape or clicks to a native modal dialog,
+  and a bare test `<dialog>` failed the same way. What was true is in the table
+  now: the `.modal` sheets, which also let Delete reach the deck behind them.
+- **23 September.** §3.5 first said `?` does nothing in the show. It opens the
+  shortcut sheet; the key combination used in the test never arrived.

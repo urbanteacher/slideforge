@@ -50,7 +50,7 @@ coordinating rather than starting cold.
 | CA-06 | ~~Deleting the open deck in File → Open: the next keystroke writes it back~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | CA-07 | ~~A copied slide stays in localStorage for good, images included~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | CA-08 | ~~Undo keeps a whole-deck copy per keystroke (60 max)~~ [→](ux-backlog.md) | M | **Done** 23 Sep |
-| CA-11 | Same game embedded twice arrives answered and revealed [→](ux-backlog.md) | S–M | To do · P1 · shared files |
+| CA-11 | ~~Same game embedded twice arrives answered and revealed~~ [→](ux-backlog.md) | S–M | **Done** 23 Sep |
 | CA-20 | ~~Regions never bounds-checked~~ [→](ux-backlog.md) | S | **Done** 23 Sep · invalid values only |
 | CA-21 | Composition and regions measure in different frames; blocks jump [→](ux-backlog.md) | M–L | To confirm · P1 |
 | CA-22 | ~~`layout-slots.js` resolves the composition differently from the renderer~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
@@ -66,7 +66,7 @@ coordinating rather than starting cold.
 | UX-21 | One Present ▾ split button instead of four [→](ux-backlog.md) | S | To do · P1 |
 | UX-24 | Say "Saved in this browser" in words, not a dot [→](ux-backlog.md) | S | Partly done · a dot below 1500px |
 | UX-60 | Hide the answer bars until the reveal [→](ux-backlog.md) | M | To do · P1 · shared files |
-| UX-70 | `aria-label` on icon-only controls [→](ux-backlog.md) | S–M | To do · P1 |
+| UX-70 | `aria-label` on icon-only controls [→](ux-backlog.md) | S–M | Partly done · `index.html`; JS-built buttons next |
 | CA-23 | Composition slot keys never match a block [→](ux-backlog.md) | S | To do · P2 |
 | CA-24 | Regions bring back the accent bar that compositions hide [→](ux-backlog.md) | S | To do · P2 |
 | CA-26 | Undo or redo closes Layout and Artwork [→](ux-backlog.md) | S | To do · P2 |
