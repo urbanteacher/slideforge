@@ -173,7 +173,8 @@ html:not([data-ready]) body { background: #f0f1ed; }
           <span id="railTotal"></span>
         </label>
         <button class="rail-cog" data-ws="deck" id="btnSorter" type="button" title="Block view — the whole deck at once, to rearrange it (⌘G)" aria-label="Block view of all slides">▦</button>
-        <button class="rail-cog" id="btnRailSettings" type="button" title="Theme, logo, slide numbers — how this lesson looks" aria-label="Settings">⚙</button>
+        <!-- A third way into the same settings sheet was a bare ⚙ here. The
+             header's Settings and the panel's Theme remain, and ⌘K finds it. -->
       </div>
     </div>
     <div class="rail-list" id="railList"></div>
@@ -398,6 +399,8 @@ html:not([data-ready]) body { background: #f0f1ed; }
       <tr><td><kbd>→</kbd> <kbd>space</kbd> <kbd>PgDn</kbd></td><td>Next slide</td></tr>
       <tr><td><kbd>←</kbd> <kbd>PgUp</kbd></td><td>Previous slide</td></tr>
       <tr><td><kbd>Home</kbd> <kbd>End</kbd></td><td>First / last slide</td></tr>
+      <tr><td><kbd>1</kbd><kbd>2</kbd>… then <kbd>Enter</kbd></td><td>Go to that slide</td></tr>
+      <tr><td><kbd>O</kbd></td><td>Every slide at once — click one to go there</td></tr>
       <tr><td><kbd>A</kbd>–<kbd>F</kbd> or <kbd>1</kbd>–<kbd>6</kbd></td><td>Answer in solo presentation mode; live learners answer on their devices or through teacher entry</td></tr>
       <tr><td><kbd>R</kbd></td><td>Clear answers and score again</td></tr>
       <tr><td><kbd>I</kbd></td><td>Draw on the slide · <kbd>Z</kbd> undoes · <kbd>X</kbd> clears it</td></tr>

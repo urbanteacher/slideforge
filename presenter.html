@@ -31,6 +31,10 @@
     grid-area: bar; display: flex; align-items: center; gap: 14px;
   }
   .pv-bar .clock { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .pv-bar .clock.pace-on { color: #4f9e62; }
+  .pv-bar .clock.pace-behind { color: #d0453f; }
+  .pv-bar .clock.pace-ahead { color: #4a7fd1; }
+  .pv-bar .pv-pace { font: inherit; font-size: 12px; padding: 3px 6px; border-radius: 6px; }
   .pv-bar .wall { color: var(--ui-dim); font-size: 14px; font-variant-numeric: tabular-nums; }
   .pv-bar .pos { color: var(--ui-dim); font-size: 14px; font-variant-numeric: tabular-nums; }
 
@@ -312,6 +316,14 @@
   <div class="pv-bar">
     <div class="pv-identity"><strong>Teacher Presenter</strong><span>Private presenter workspace</span></div>
     <div class="clock" id="elapsed">0:00</div>
+    <!-- Pacing, as in reveal.js's speaker view: with a planned length the
+         clock says whether the slides are keeping up with the time. -->
+    <select id="plannedLength" class="pv-pace" aria-label="Planned lesson length" title="Planned length — the clock turns red when you are behind, blue when ahead">
+      <option value="">No plan</option>
+      <option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option>
+      <option value="50">50 min</option><option value="60">60 min</option><option value="75">75 min</option>
+      <option value="90">90 min</option><option value="120">2 hours</option>
+    </select>
     <div class="wall" id="wall">—</div>
     <div class="spacer" style="flex:1"></div>
     <div class="pos" id="pos">—</div>
@@ -1463,11 +1475,41 @@ SF.installExplore(SF);
     });
   }
 
+  /* The planned length, kept per lesson in this browser. */
+  function paceKey() { return 'slideforge.plannedMinutes.' + ((state && state.deck && state.deck.id) || 'any'); }
+  var plannedSel = /** @type {HTMLSelectElement|null} */ ($('plannedLength'));
+  if (plannedSel) plannedSel.onchange = function () {
+    try { localStorage.setItem(paceKey(), plannedSel.value); } catch (e) {}
+  };
+  var pacedDeck = null;
+  function clockText(secs) {
+    var mm = Math.floor(secs / 60), ss = secs % 60;
+    return mm + ':' + String(ss).padStart(2, '0');
+  }
+
   setInterval(function () {
+    var clock = $('elapsed');
+    if (plannedSel && state && state.deck && pacedDeck !== state.deck.id) {
+      pacedDeck = state.deck.id;
+      try { plannedSel.value = localStorage.getItem(paceKey()) || ''; } catch (e) {}
+    }
     if (timerBase != null) {
       var secs = Math.floor((Date.now() - timerBase) / 1000);
-      var mm = Math.floor(secs / 60), ss = secs % 60;
-      $('elapsed').textContent = mm + ':' + String(ss).padStart(2, '0');
+      var planned = plannedSel ? Number(plannedSel.value) || 0 : 0;
+      clock.textContent = clockText(secs) + (planned ? ' / ' + clockText(planned * 60) : '');
+      clock.classList.remove('pace-on', 'pace-behind', 'pace-ahead');
+      if (planned && state && state.deck && state.deck.slides.length > 1) {
+        /* How far through the slides against how far through the time. */
+        var through = state.index / (state.deck.slides.length - 1);
+        var spent = Math.min(1, secs / (planned * 60));
+        var lead = through - spent;
+        var pace = lead < -0.08 ? 'behind' : lead > 0.08 ? 'ahead' : 'on';
+        clock.classList.add('pace-' + pace);
+        clock.title = pace === 'behind' ? 'Behind the plan — speed up'
+          : pace === 'ahead' ? 'Ahead of the plan — there is time to slow down' : 'On pace';
+      } else {
+        clock.title = 'Time since the show started';
+      }
     }
     $('wall').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }, 500);

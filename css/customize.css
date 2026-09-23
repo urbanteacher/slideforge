@@ -480,3 +480,20 @@
   box-sizing: border-box;
 }
 .canvas-inline-tools .canvas-inline-done { font-weight: 650; }
+
+/* ------------------------------------------------------------ legible type
+   UX-71, 23 Sep 2026. The editor had 90-odd rules under 12px, down to 7px, in
+   an app used on a laptop across a desk. Two tiers, on editor chrome only —
+   nothing inside .slide, which is typeset at 1280px and scaled:
+   what you read while working goes to 12px; the badges and tags that label
+   things in tight spaces come up to a floor of 10px. Selectors match the
+   originals so they win by order, not by weight. */
+.field>label, #inspector .hint, .hint, .inspector-tabs .btn, .insp-title,
+#inspector .insp-chrome .btn, #inspector .design-panes .btn,
+.sorter-hint, .sorter-title, .rail-placing .rail-placing-hint,
+.library-row-info span, .activity-description, .activity-modal footer,
+.notes-toggle, .engage-link { font-size: 12px; }
+.thumb .badge, .rail-tx label, .field-tip, .activity-tag, .brand-tag, .eyebrow,
+.notes-strip label, .adapt-thin, .adapt-plan-label, .qo-bloom, .qo-open,
+.g-unrevealed, .g-src, .scorerail .rail-legend,
+html[data-ws="plan"] .act-legend .activity-icon { font-size: 10px; }

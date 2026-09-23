@@ -501,11 +501,34 @@ export function createPresenterWindow(SF, helpers) {
 
   /* ------------------------------------------------------------ keyboard */
 
+  /* Type a slide number and press Enter, as in Google Slides and reveal.js.
+     The number is the one on the wall: the show's deck is the run deck, so a
+     slide's number is its place in it. */
+  var jumpDigits = '';
+  var jumpTimer = null;
+  function clearJump() { jumpDigits = ''; clearTimeout(jumpTimer); jumpTimer = null; }
+  function goToTyped() {
+    var n = parseInt(jumpDigits, 10);
+    clearJump();
+    var count = Player.deck ? Player.deck.slides.length : 0;
+    if (n >= 1 && n <= count) Player.goTo(n - 1, n - 1 >= Player.idx ? 1 : -1);
+    else toast('There is no slide ' + n + ' — this show has ' + count);
+    showHud();
+  }
+
   document.addEventListener('keydown', function (e) {
     if (!Player.open) return;
     var target = /** @type {Element | null} */ (e.target);
     var k = e.key;
     if ((target && target.closest('input,textarea,select,[contenteditable=true]')) || e.metaKey || e.ctrlKey || (e.altKey && k !== 'f' && k !== 'F')) return;
+    /* A slide number being typed takes Enter even on a focused button: after
+       clicking Present the focus is still on it, and that Enter was left to
+       the button, so "12, Enter" did nothing. */
+    if (k === 'Enter' && jumpDigits && !Player.shareMode && Player.deck) {
+      e.preventDefault();
+      goToTyped();
+      return;
+    }
     if ((target && target.closest('button,a')) && (k==='Enter'||k===' ')) return;
 
     /* Shared view: arrows / space / click only. Esc must not blank the page. */
@@ -539,6 +562,35 @@ export function createPresenterWindow(SF, helpers) {
       var moreBtn = els.hud() && els.hud().querySelector('[data-act=more]');
       if (moreBtn) moreBtn.setAttribute('aria-expanded','false');
       return;
+    }
+
+    if (!Player.shareMode && !Player.spontaneous && Player.deck) {
+      if (/^[0-9]$/.test(k)) {
+        var onWall = Player.wallSlide();
+        /* A digit on an unanswered question answers it in solo mode, as it
+           always has — unless a number is already being typed, so "12" can
+           still be reached from a question slide. */
+        var answering = !jumpDigits && /^[1-6]$/.test(k) && !(SF.Live && SF.Live.active) &&
+          onWall && onWall.type === 'quiz' && Player.answers[onWall.id] == null;
+        if (!answering && (jumpDigits || k !== '0')) {
+          e.preventDefault();
+          jumpDigits = (jumpDigits + k).slice(0, 4);
+          clearTimeout(jumpTimer);
+          jumpTimer = setTimeout(clearJump, 2500);
+          toast('Go to slide ' + jumpDigits + ' — press Enter');
+          return;
+        }
+      } else if (k === 'Escape' && jumpDigits) {
+        e.preventDefault();
+        clearJump();
+        return;
+      } else if (k === 'Backspace' && jumpDigits) {
+        e.preventDefault();
+        jumpDigits = jumpDigits.slice(0, -1);
+        if (jumpDigits) toast('Go to slide ' + jumpDigits + ' — press Enter');
+        else clearJump();
+        return;
+      }
     }
 
     if (els.cheats() && els.cheats().classList.contains('on') && k !== '?' && k !== '/') {
@@ -637,6 +689,7 @@ export function createPresenterWindow(SF, helpers) {
         e.preventDefault();
         if (SF.Teaching) SF.Teaching.clear();
         break;
+      case 'o': case 'O': e.preventDefault(); if (Player.toggleOverview) Player.toggleOverview(); break;
       case '?': case '/': e.preventDefault(); if (els.cheats()) els.cheats().classList.toggle('on'); break;
       default:
         if (!(SF.Live && SF.Live.active) && /^[1-6]$/.test(k)) { e.preventDefault(); Player.answer(Number(k) - 1); }

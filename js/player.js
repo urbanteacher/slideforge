@@ -238,6 +238,76 @@
   }
   Player.showHud = showHud;
 
+  /* ------------------------------------------------------------ overview */
+
+  /* O: every slide of the show at once, to jump anywhere — reveal.js and
+     Slidev both have it, and a 110-step lecture needs it more than they do.
+     Numbered as the wall numbers them. Click or Enter to go, arrows to move,
+     O or Escape to close. Drawn on the presenter's screen and the wall alike,
+     because in a one-screen room they are the same screen; it is a moment's
+     navigation, not something the room is meant to study. */
+  var overview = null;
+  function closeOverview() {
+    if (!overview) return;
+    overview.remove();
+    overview = null;
+  }
+  Player.toggleOverview = function () {
+    if (overview) { closeOverview(); return; }
+    var deck = Player.deck;
+    if (!deck || !root || Player.spontaneous) return;
+    var box = el('div', 'show-overview');
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-label', 'All slides');
+    var grid = el('div', 'show-overview-grid');
+    grid.setAttribute('role', 'listbox');
+    var tiles = [];
+    deck.slides.forEach(function (s, i) {
+      var tile = el('button', 'show-overview-tile' + (i === Player.idx ? ' here' : ''));
+      tile.type = 'button';
+      tile.setAttribute('role', 'option');
+      tile.setAttribute('aria-selected', String(i === Player.idx));
+      tile.setAttribute('aria-label', 'Slide ' + (i + 1) + (s.title ? ': ' + s.title : ''));
+      var frame = el('div', 'show-overview-frame');
+      try {
+        frame.appendChild(SF.renderSlide(deck, s, { index: i, total: deck.slides.length, chrome: false, interactive: false }));
+      } catch (err) { /* a slide that cannot draw still gets its number */ }
+      tile.appendChild(frame);
+      tile.appendChild(el('span', 'show-overview-num', String(i + 1)));
+      tile.onclick = function () { closeOverview(); Player.goTo(i, i >= Player.idx ? 1 : -1); };
+      grid.appendChild(tile);
+      tiles.push(tile);
+    });
+    box.appendChild(grid);
+    box.addEventListener('keydown', function (e) {
+      var at = tiles.indexOf(/** @type {any} */ (document.activeElement));
+      var cols = Math.max(1, Math.round(grid.clientWidth / ((tiles[0] && tiles[0].offsetWidth) || 1)));
+      var to = -1;
+      if (e.key === 'ArrowRight') to = at + 1;
+      else if (e.key === 'ArrowLeft') to = at - 1;
+      else if (e.key === 'ArrowDown') to = at + cols;
+      else if (e.key === 'ArrowUp') to = at - cols;
+      else if (e.key === 'Home') to = 0;
+      else if (e.key === 'End') to = tiles.length - 1;
+      else if (e.key === 'Escape' || e.key === 'o' || e.key === 'O') { e.preventDefault(); e.stopPropagation(); closeOverview(); return; }
+      else if (e.key === 'Enter' || e.key === ' ') return; // the tile's own click
+      else { e.stopPropagation(); return; }
+      e.preventDefault(); e.stopPropagation();
+      to = Math.max(0, Math.min(tiles.length - 1, to));
+      tiles[to].focus();
+      tiles[to].scrollIntoView({ block: 'nearest' });
+    });
+    root.appendChild(box);
+    overview = box;
+    tiles.forEach(function (t) {
+      var frame = /** @type {HTMLElement} */ (t.firstElementChild);
+      var node = frame && /** @type {HTMLElement} */ (frame.firstElementChild);
+      if (node && SF.fit) SF.fit(frame, node);
+    });
+    var here = tiles[Player.idx] || tiles[0];
+    if (here) { here.focus(); here.scrollIntoView({ block: 'center' }); }
+  };
+
   /* ------------------------------------------------------------ quiz maths */
 
   function quizSlides(deck) {
@@ -2505,6 +2575,7 @@
     if (moreBtn) moreBtn.setAttribute('aria-expanded', 'false');
     if (root) root.classList.remove('on');
     if (cheats) cheats.classList.remove('on', 'for-editor');
+    closeOverview();
     if (viewport) {
       viewport.innerHTML = '';
       viewport.classList.remove('railed');

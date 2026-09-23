@@ -7056,3 +7056,29 @@ dialog.palette::backdrop { background: rgba(20, 26, 18, .32); }
 .slide-menu-item.danger { color: var(--ui-bad, #c44650); }
 .slide-menu-item kbd { font-family: ui-monospace, monospace; font-size: 11px; color: var(--ui-dim, #72796e); }
 .slide-menu-sep { height: 1px; background: var(--ui-line, #e4e5df); margin: 4px 6px; }
+
+/* ------------------------------------------------------------ show overview
+   js/player.js Player.toggleOverview — O while presenting. */
+.show-overview {
+  position: absolute; inset: 0; z-index: 115; overflow-y: auto;
+  background: rgba(10, 12, 14, .94); padding: 28px;
+}
+.show-overview-grid {
+  display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.show-overview-tile {
+  position: relative; display: block; padding: 0; border: 2px solid transparent;
+  border-radius: 8px; background: transparent; cursor: pointer; text-align: left;
+}
+.show-overview-tile:focus-visible, .show-overview-tile:hover { border-color: #e4f0ab; outline: none; }
+.show-overview-tile.here { border-color: #7fa35d; }
+.show-overview-frame {
+  position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 6px;
+  background: #1a1d23; pointer-events: none;
+}
+/* SF.fit sets the scale and position inline, as it does for the layout picker. */
+.show-overview-frame > .slide { transform-origin: 0 0; }
+.show-overview-num {
+  position: absolute; left: 8px; bottom: 8px; font: 600 12px/1 ui-monospace, monospace;
+  color: #fff; background: rgba(0, 0, 0, .55); padding: 3px 6px; border-radius: 4px;
+}
