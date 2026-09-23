@@ -7192,3 +7192,87 @@ dialog.palette::backdrop { background: rgba(20, 26, 18, .32); }
   font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
   color: #fff; background: var(--ui-accent, #526943); padding: 1px 6px; border-radius: 4px;
 }
+
+/* A timed slide's clock moves out from under the room pane, as a quiz's does.
+   It used to sit at right: 46px whatever was beside the slide, so with the
+   pane open the countdown was drawn behind the standings. */
+.deck-viewport.railed .slide > .clock.slide-clock,
+#previewBox.railed .slide > .clock.slide-clock { right: calc(var(--rail-w) + 38px); }
+
+/* ==========================================================================
+   Timed stages (Think-Pair-Share). The layout is layoutStages in
+   js/render.js; js/stages.js lights the track and runs the clock.
+
+   Drawn for authoring, with no build running, the stages are a list: every
+   prompt is there to edit. On the wall each stage is a build step, and only
+   the live one is shown, as the largest thing on the screen. Before the
+   first press the wall shows the routine: its name and how long it takes.
+   ========================================================================== */
+.slide.activity-stages .pad { display: flex; flex-direction: column; justify-content: flex-start; gap: 20px; }
+.slide.activity-stages .stage-track {
+  list-style: none; margin: 0; padding: 0 112px 0 0;
+  display: flex; gap: 10px; flex: none;
+}
+.slide.activity-stages .stage-chip {
+  flex: 1 1 0; min-width: 0;
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 12px 16px; border-radius: 12px;
+  background: var(--s-card); border: 1px solid var(--s-rule);
+  color: var(--s-dim); font-size: 20px; line-height: 1.2;
+  transition: background .35s, color .35s, transform .35s, opacity .35s;
+}
+.slide.activity-stages .sc-n { font-weight: 800; font-variant-numeric: tabular-nums; }
+.slide.activity-stages .sc-name { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slide.activity-stages .sc-min { font-size: 16px; font-variant-numeric: tabular-nums; }
+/* Lit in the theme's own ink on its own ground: the one pair of colours
+   every theme guarantees contrast for. */
+.slide.activity-stages .stage-chip.lit {
+  background: var(--s-fg); color: var(--s-bg); border-color: var(--s-fg);
+  transform: translateY(-2px);
+}
+.slide.activity-stages .stage-chip.done { color: var(--s-fg); opacity: .55; }
+.slide.activity-stages .stage-chip.done .sc-n { font-size: 0; }
+.slide.activity-stages .stage-chip.done .sc-n::after { content: '\2713'; font-size: 20px; }
+
+.slide.activity-stages .stage-intro { display: none; flex: 1; flex-direction: column; justify-content: center; }
+.slide.activity-stages .stage-intro h2 { font-size: 64px; line-height: 1.08; margin: 0; }
+.slide.activity-stages .si-lead { font-size: 30px; color: var(--s-dim); margin: 16px 0 0; }
+.slide.activity-stages .si-next {
+  font-size: 18px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--s-dim); margin: 30px 0 0;
+}
+
+.slide.activity-stages .stage-panel {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 10px 0; border-bottom: 1px solid var(--s-rule);
+}
+.slide.activity-stages .sp-head { display: flex; align-items: baseline; gap: 12px; }
+.slide.activity-stages .sp-icon { font-size: 22px; }
+.slide.activity-stages .sp-name { font-size: 26px; font-weight: 750; }
+.slide.activity-stages .sp-job {
+  font-size: 15px; letter-spacing: .1em; text-transform: uppercase; color: var(--s-dim);
+}
+.slide.activity-stages .sp-prompt { font-size: 22px; line-height: 1.35; }
+.slide.activity-stages .sp-live:empty { display: none; }
+.slide.activity-stages .stage-clock[hidden] { display: none; }
+
+/* On the wall: the introduction before the first press, then one stage. */
+.slide.activity-stages .stage-panel.step-hidden { display: none; }
+.slide.activity-stages:has(.stage-panel.step-hidden):not(:has(.stage-panel.step-live)) .stage-intro { display: flex; }
+.slide.activity-stages:has(.stage-panel.step-live) .stage-panel:not(.step-live) { display: none; }
+.slide.activity-stages .stage-panel.step-live {
+  flex: 1; min-height: 0; justify-content: center; gap: 22px;
+  border: 0; padding: 0 0 24px;
+  animation: sf-stage-in .5s cubic-bezier(.3,0,.2,1);
+}
+.slide.activity-stages .step-live .sp-icon { font-size: 30px; }
+.slide.activity-stages .step-live .sp-name { font-size: 34px; }
+.slide.activity-stages .step-live .sp-job { font-size: 19px; }
+.slide.activity-stages .step-live .sp-prompt {
+  font-size: 54px; line-height: 1.14; font-weight: 650; letter-spacing: -.02em;
+}
+/* Beside the room pane (the Share stage's ideas), a size that still fits. */
+.deck-viewport.railed .slide.activity-stages .step-live .sp-prompt { font-size: 42px; }
+.slide.activity-stages .step-live .sp-live { font-size: 24px; font-weight: 700; }
+.slide.activity-stages .stage-panel.time-up .sp-live::before { content: '\23F1  '; }
+@keyframes sf-stage-in { from { opacity: 0; transform: translateY(14px); } }

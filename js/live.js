@@ -2032,13 +2032,24 @@
       style: companion.style,
       role: companion.role,
       participation: companion.participation,
-      headPrompt: companion.headPrompt
+      headPrompt: companion.headPrompt,
+      /* Which stage of a staged activity the room is in, and what it asks of
+         the phones — see js/stages.js. Null everywhere else. */
+      stage: SF.Player.stage && SF.Stages && SF.Stages.active ? SF.Player.stage : null
     });
   }
   SF.Player.on('step',function(){
     if(!Live.active)return;
     var s = SF.Player.wallSlide ? SF.Player.wallSlide() : (SF.Player.deck && SF.Player.deck.slides[SF.Player.idx]);
     if(s){sendSlideContext(s);syncManual();}
+  });
+  /* A stage moving, or getting more time, is news for the phones even when
+     the build step has not changed — and the stage is worked out after the
+     step, so this is the send that carries it. */
+  SF.Player.on('stage',function(){
+    if(!Live.active)return;
+    var s = SF.Player.wallSlide ? SF.Player.wallSlide() : (SF.Player.deck && SF.Player.deck.slides[SF.Player.idx]);
+    if(s)sendSlideContext(s);
   });
 
   /* Land on a question with teacher-entered learners in the room and the

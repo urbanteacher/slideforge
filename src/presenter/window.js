@@ -314,6 +314,8 @@ export function createPresenterWindow(SF, helpers) {
         /* Who is struggling, for this screen only — it used to be printed
            under their name on the wall. See Live.needsHand. */
         needsHand: SF.Live && SF.Live.needsHand ? SF.Live.needsHand() : [],
+        /* The stage of a staged activity, so the desk can offer more time. */
+        stage: Player.stage || null,
         floor: (SF.Live && SF.Live.floor) || 'auto',
         /* Legacy tokens on the wire: a desk still open from before the
            rename compares against these. New desks accept either. */
@@ -559,6 +561,14 @@ export function createPresenterWindow(SF, helpers) {
     if ((k === 'f' || k === 'F') && e.altKey) {
       e.preventDefault();
       Player.control('freeze');
+      showHud();
+      return;
+    }
+
+    /* More time for the stage of a staged activity (Think-Pair-Share). */
+    if ((k === '+' || k === '=') && SF.Stages && SF.Stages.active) {
+      e.preventDefault();
+      Player.control('stageMore');
       showHud();
       return;
     }

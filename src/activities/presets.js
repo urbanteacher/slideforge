@@ -255,7 +255,12 @@ const PRESETS = {
 /* These visual treatments reuse the same label/value data. They change the
  * reading order and emphasis, not the task or its required number of boxes. */
 const PRESENTATIONS = {
-  steps: ['think-pair-share', 'do-now-bell-ringer', 'jigsaw-expert-groups',
+  /* Think-Pair-Share runs as timed stages: the track, a clock per stage, a
+     private note on the phone for Think and an anonymous idea for Share. See
+     activities/stages.js. The rest of the staged routines can be switched to
+     it in the slide's Visual structure. */
+  stages: ['think-pair-share'],
+  steps: ['do-now-bell-ringer', 'jigsaw-expert-groups',
     'think-pair-square-share', 'jigsaw-collaboration', 'peer-teaching-carousel',
     'socratic-seminar', 'strategic-wait-time-questioning', 'whiteboards-on-walls',
     'teach-someone', 'daily-review-routine', 'dialogue-chain-discussion'],

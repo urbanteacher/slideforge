@@ -197,3 +197,20 @@ body.phones-blank{overflow:hidden}
 .spot-words.locked .spot-word:not(.on){opacity:.45}
 .spot-lock{font:inherit;font-weight:700;font-size:16px;padding:14px;border-radius:12px;border:0;background:#1d2330;color:#fff}
 .spot-lock:disabled{background:#d9d7d0;color:#6b6b66}
+
+/* A staged activity: the stage, its clock, and the stage's job. */
+.stage-card{width:100%;background:#fff;border:1px solid #dbe5ce;border-radius:17px;text-align:left;padding:20px;margin:15px 0 4px}
+.stage-card[hidden]{display:none}
+.stage-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.stage-clock{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;color:#2f3a26}
+.stage-clock.up{color:#b5651d}
+.stage-prompt{font-size:19px;line-height:1.4;margin:0 0 14px;white-space:pre-line}
+.stage-prompt:empty{display:none}
+.stage-note{display:flex;flex-direction:column;gap:6px;font-size:13px;color:#748366}
+.stage-note[hidden]{display:none}
+.stage-note textarea{width:100%;box-sizing:border-box;font:inherit;font-size:17px;line-height:1.4;color:#1d2419;border:1px solid #cfd9c2;border-radius:12px;padding:12px;resize:vertical;min-height:110px}
+.stage-echo{background:#f3f6ee;border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.stage-echo[hidden]{display:none}
+.stage-echo p{margin:6px 0 0;font-size:16px;line-height:1.45;white-space:pre-line}
+.stage-card[data-job="down"]{text-align:center}
+.stage-card .quiet-note:empty{display:none}

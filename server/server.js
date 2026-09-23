@@ -951,6 +951,26 @@ function feedbackDigest(room) {
   return { kind: 'brainstorm', items: items.slice(0, 40), total: items.length };
 }
 
+/**
+ * The stage of a staged activity, as the phones are allowed to see it — or
+ * null. The host's own object is never forwarded: only these fields, each
+ * bounded, and the job only from the four the phones know how to draw.
+ */
+function cleanStage(st) {
+  if (!st || typeof st !== 'object') return null;
+  const clamp = (v, hi) => Math.max(0, Math.min(hi, Math.round(Number(v) || 0)));
+  return {
+    i: clamp(st.i, 7),
+    of: clamp(st.of, 8),
+    name: String(st.name || '').slice(0, 60),
+    job: ['note', 'talk', 'send', 'down'].includes(st.job) ? st.job : 'down',
+    text: String(st.text || '').slice(0, 400),
+    seconds: clamp(st.seconds, 3600),
+    left: clamp(st.left, 3600),
+    next: String(st.next || '').slice(0, 60)
+  };
+}
+
 function pushFeedback(room) {
   if (!room.host || !room.prompt) return;
   room.host.json(Object.assign({
@@ -1875,7 +1895,8 @@ ws.attach(server, (sock, req) => {
           style: String(m.style || '').slice(0, 40),
           role: ['watch','discuss','paper','wait'].includes(m.role) ? m.role : '',
           participation: String(m.participation || '').slice(0, 240),
-          headPrompt: String(m.headPrompt || '').slice(0, 200)
+          headPrompt: String(m.headPrompt || '').slice(0, 200),
+          stage: cleanStage(m.stage)
         };
         if (moved && room.prompt) {
           room.prompt = null;

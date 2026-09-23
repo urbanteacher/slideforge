@@ -50,7 +50,11 @@ function enter(slide){
  if(changed&&moment&&moment.activitySlideId&&moment.activitySlideId!==slide.id)P.momentCommand({action:'clear'});
  var catalogue=global.SF.Activities;
  var activity=catalogue&&catalogue.activity(slide.activity);
- if(changed&&activity&&activity.target==='moment'&&slide.type!=='quiz'&&slide.type!=='game'&&Number(slide.timeLimit)>0){
+ /* Not for a staged activity: it has a clock per stage on the slide itself
+    (js/stages.js), and a second, whole-activity banner would be two clocks
+    telling the room two different things. */
+ var staged=global.SF.Stages&&global.SF.Stages.isStaged(slide);
+ if(changed&&!staged&&activity&&activity.target==='moment'&&slide.type!=='quiz'&&slide.type!=='game'&&Number(slide.timeLimit)>0){
   P.momentCommand({action:'start',kind:'timer',title:slide.title||activity.title,seconds:Number(slide.timeLimit),activitySlideId:slide.id});
  }
  var live=global.SF.Live;

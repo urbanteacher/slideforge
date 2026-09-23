@@ -475,6 +475,8 @@
     <div class="pv-foot-row" role="group" aria-label="Show controls">
       <button class="btn" data-cmd="prev">‹ Previous</button>
       <button class="btn primary" data-cmd="next">Next ›</button>
+      <!-- A staged activity's stage: thirty seconds more (+ on the wall). -->
+      <button class="btn" data-cmd="stageMore" id="btnStageMore" hidden title="Thirty seconds more for this stage (+)">+30s</button>
       <button class="btn" data-cmd="blank" id="btnBlank" title="Blank the projector (B)">Blank</button>
       <button class="btn" data-cmd="freeze" id="btnFreeze" title="Freeze audience screen for digression (Z)">❄️ Freeze</button>
       <button class="btn" data-cmd="who" aria-pressed="false" aria-controls="teacherWorkspace"
@@ -1009,6 +1011,11 @@ SF.installExplore(SF);
       away.title = who.length
         ? 'Showing something other than the lesson: ' + who.join(', ') + '. Only you can see this.'
         : '';
+    }
+    var more = $('btnStageMore');
+    if (more) {
+      more.hidden = !d.stage;
+      more.textContent = d.stage ? '+30s ' + d.stage.name : '+30s';
     }
     var needs = $('roomNeeds');
     if (needs) {

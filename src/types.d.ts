@@ -205,7 +205,7 @@ export interface Slide {
   activityInstance?: string;
   /** Position within that group, 0-based. */
   activityPage?: number;
-  activityPresentation?: 'rows' | 'steps' | 'panels' | 'brief';
+  activityPresentation?: 'rows' | 'steps' | 'panels' | 'brief' | 'stages';
   id: string;
   type: SlideType;
   title: string;

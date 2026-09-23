@@ -6268,6 +6268,8 @@
           /* Who is struggling, for this screen only — it used to be printed
              under their name on the wall. See Live.needsHand. */
           needsHand: SF.Live && SF.Live.needsHand ? SF.Live.needsHand() : [],
+          /* The stage of a staged activity, so the desk can offer more time. */
+          stage: Player.stage || null,
           floor: SF.Live && SF.Live.floor || "auto",
           /* Legacy tokens on the wire: a desk still open from before the
              rename compares against these. New desks accept either. */
@@ -6486,6 +6488,12 @@
       if ((k === "f" || k === "F") && e.altKey) {
         e.preventDefault();
         Player.control("freeze");
+        showHud();
+        return;
+      }
+      if ((k === "+" || k === "=") && SF.Stages && SF.Stages.active) {
+        e.preventDefault();
+        Player.control("stageMore");
         showHud();
         return;
       }
@@ -14360,8 +14368,12 @@
     ], { feedback: { prompt: "Where are you on the learning ladder?", points: 5, lowLabel: "Need help", highLabel: "Can teach others" } })
   };
   var PRESENTATIONS = {
+    /* Think-Pair-Share runs as timed stages: the track, a clock per stage, a
+       private note on the phone for Think and an anonymous idea for Share. See
+       activities/stages.js. The rest of the staged routines can be switched to
+       it in the slide's Visual structure. */
+    stages: ["think-pair-share"],
     steps: [
-      "think-pair-share",
       "do-now-bell-ringer",
       "jigsaw-expert-groups",
       "think-pair-square-share",
@@ -16412,6 +16424,58 @@
   }
   function totalMinutes(keys) {
     return keys.reduce((sum, key) => sum + ((activity(key) || {}).minutes || 0), 0);
+  }
+
+  // src/activities/stages.js
+  var STAGE_JOBS = {
+    note: {
+      wall: "Silent thinking",
+      phone: "Write a private note. Only you can see it.",
+      icon: "✎"
+    },
+    talk: {
+      wall: "Turn to your partner",
+      phone: "Your note, to compare with your partner’s.",
+      icon: "💬"
+    },
+    send: {
+      wall: "Ideas arrive here, without names",
+      phone: "Send your pair’s strongest idea. No name goes with it.",
+      icon: "↑"
+    },
+    down: {
+      wall: "Phones down",
+      phone: "Phones down. Eyes on the board.",
+      icon: "👀"
+    }
+  };
+  var JOB_WORDS = [
+    ["note", /\b(think|alone|jot|individual|reflect|silent|write)\b/i],
+    ["talk", /\b(pair|partner|compare|discuss|square|talk|group|argue)\b/i],
+    ["send", /\b(share|report|send|feed ?back|post|contribute)\b/i],
+    ["down", /\b(connect|synthes|summar|debrief|teacher|plenary|close|link)\w*/i]
+  ];
+  function stageJob(label) {
+    const text2 = String(label || "");
+    for (const [job, re] of JOB_WORDS) if (re.test(text2)) return (
+      /** @type {any} */
+      job
+    );
+    return "down";
+  }
+  function parseStageLabel(term) {
+    const text2 = String(term || "").trim();
+    const m = /^(.*?)\s*[·•|:\-–—(]\s*(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?|m)\b\)?\s*$/i.exec(text2);
+    if (!m) return { name: text2, seconds: 0 };
+    const n = Number(m[2]);
+    const secs = /^s/i.test(m[3]) ? n : n * 60;
+    return { name: m[1].trim() || text2, seconds: Math.max(0, Math.min(3600, Math.round(secs))) };
+  }
+  function activityStages(slide, parseLine) {
+    return (slide && slide.bullets || []).map(parseLine).filter((p) => p.term || p.def).slice(0, 8).map((p, i) => {
+      const label = parseStageLabel(p.term);
+      return { i, name: label.name, seconds: label.seconds, text: p.def || "", job: stageJob(label.name) };
+    });
   }
 
   // src/deck/content.js
@@ -23460,6 +23524,13 @@
     safeMedia,
     parseKeywordLine,
     formatKeywordLine,
+    /* An activity slide's rows as stages: name, seconds, prompt, phone job. */
+    activityStages: function(slide) {
+      return activityStages(slide, parseKeywordLine);
+    },
+    STAGE_JOBS,
+    stageJob,
+    parseStageLabel,
     safeHref,
     deckToMarkdown,
     markdownToDeck,

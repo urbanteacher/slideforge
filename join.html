@@ -361,6 +361,21 @@
       <div class="lesson-card-top"><span class="learner-eyebrow">ON THE SCREEN</span><span aria-hidden="true">✳</span></div>
       <h2 id="contentTitle"></h2><p id="contentText"></p>
     </article>
+    <!-- A staged activity (Think-Pair-Share): which stage, its clock, and the
+         stage's job. The note never leaves this phone. -->
+    <article class="stage-card" id="stageCard" hidden>
+      <div class="stage-top"><span class="learner-eyebrow" id="stageEyebrow"></span><span class="stage-clock" id="stageClock"></span></div>
+      <p class="stage-prompt" id="stagePrompt"></p>
+      <label class="stage-note" id="stageNoteWrap" hidden>
+        <span>Only you can see this. It stays on this phone.</span>
+        <textarea id="stageNote" rows="4" maxlength="600" placeholder="Your thinking…"></textarea>
+      </label>
+      <div class="stage-echo" id="stageEcho" hidden>
+        <span class="learner-eyebrow">YOUR NOTE</span>
+        <p id="stageEchoText"></p>
+      </div>
+      <p class="quiet-note" id="stageHint"></p>
+    </article>
     <div id="contentActions" hidden>
       <div class="understanding-row">
         <button id="gotItBtn" type="button">👍 <span>Got it</span></button>
@@ -751,8 +766,82 @@
     updateContentActions();
   }
   function backToActivity() { show(flow.back()); }
+  /* ------------------------------------------------ staged activities */
+
+  /* What each stage asks of this phone. The wall's half is in
+     src/activities/stages.js; this is the same four, in the phone's words. */
+  var STAGE_PHONE = {
+    note: { icon: '✎', lead: 'Write a private note. Only you can see it.' },
+    talk: { icon: '💬', lead: 'Turn to your partner. Compare what you each wrote.' },
+    send: { icon: '↑', lead: 'Send your pair’s strongest idea. No name goes with it.' },
+    down: { icon: '👀', lead: 'Phones down. Eyes on the board.' }
+  };
+  var stageTick = null;
+  function stageNoteKey(m) { return 'slideforge.note.' + (m.sessionId || '') + '.' + m.slideId; }
+  function readNote(m) { try { return localStorage.getItem(stageNoteKey(m)) || ''; } catch (_) { return ''; } }
+  function clockText(secs) {
+    var whole = Math.max(0, Math.ceil(secs));
+    return Math.floor(whole / 60) + ':' + String(whole % 60).padStart(2, '0');
+  }
+
+  /**
+   * Draw the stage the room is in, or take the card down. Returns whether
+   * there is a stage, so the generic "look up" copy can stand aside.
+   */
+  function paintStage(m) {
+    var card = $('stageCard');
+    var st = m && m.stage;
+    if (stageTick) { clearInterval(stageTick); stageTick = null; }
+    if (!st) { card.hidden = true; return false; }
+    var job = STAGE_PHONE[st.job] ? st.job : 'down';
+    card.hidden = false;
+    card.dataset.job = job;
+    /* The stage is what is on the screen; the slide's excerpt would only
+       repeat the list of stages. */
+    $('lessonCard').hidden = true;
+    $('stageEyebrow').textContent = 'STAGE ' + (st.i + 1) + ' OF ' + st.of + ' \u00b7 ' + String(st.name || '').toUpperCase();
+    $('waitIcon').textContent = STAGE_PHONE[job].icon;
+    $('waitTitle').textContent = st.name || 'Look up';
+    $('waitLead').textContent = STAGE_PHONE[job].lead;
+    $('stagePrompt').textContent = job === 'down' ? '' : (st.text || '');
+
+    var mine = readNote(m);
+    var area = /** @type {HTMLTextAreaElement} */ ($('stageNote'));
+    $('stageNoteWrap').hidden = job !== 'note';
+    if (job === 'note') {
+      if (document.activeElement !== area) area.value = mine;
+      area.oninput = function () {
+        /* Kept on this device and nowhere else: not sent, not counted. */
+        try { localStorage.setItem(stageNoteKey(m), area.value); } catch (_) { /* this visit only */ }
+      };
+    }
+    var echo = job === 'talk' || job === 'send';
+    $('stageEcho').hidden = !echo;
+    $('stageEchoText').textContent = mine || 'You didn’t write one. That’s fine: listen first, then add to theirs.';
+    $('stageHint').textContent = job === 'send' ? 'Your idea box opens here.' : st.next ? 'Next: ' + st.next : '';
+
+    var clock = $('stageClock');
+    if (!st.seconds) { clock.textContent = ''; return true; }
+    var ends = Date.now() + (Number(st.left) || 0) * 1000;
+    var draw = function () {
+      var left = (ends - Date.now()) / 1000;
+      clock.textContent = left > 0 ? clockText(left) : 'Time';
+      clock.classList.toggle('up', left <= 0);
+      if (left <= 0 && stageTick) { clearInterval(stageTick); stageTick = null; }
+    };
+    draw();
+    stageTick = setInterval(draw, 1000);
+    return true;
+  }
+
   function updateContext(m) {
     if (context && context.slideId !== m.slideId) signalled(null);
+    /* A prompt the room is answering outlives a build step on the same
+       slide — the relay only ends one when the slide moves. A step used to
+       send this phone back to the wait screen mid-answer, which a staged
+       activity does on purpose: Share opens the idea box, then says so. */
+    var answering = !!(context && context.slideId === m.slideId && prompt &&
+      $('scPrompt').classList.contains('on'));
     context = m;
     if (m.reacted) acknowledged[m.slideId] = true;
     var key = 'slideforge.saved.' + m.sessionId;
@@ -773,11 +862,15 @@
     if (applyParticipation(m)) {
       /* Style-specific watch/discuss/paper copy wins over the generic wait. */
     }
+    paintStage(m);
+    if (answering) return;
     if (m.activity === 'content' || m.activity === 'moment') show('scWait');
     else show(flow.main);
   }
   function updateContentActions() {
-    var available = context && context.activity === 'content' && flow.main === 'scWait';
+    /* Not during a staged activity: each stage has its own job, and "Got
+       it" is not one of them. */
+    var available = context && context.activity === 'content' && flow.main === 'scWait' && !context.stage;
     $('contentActions').hidden = !available;
     $('gotItBtn').hidden = !reactionsOn || !floorOpen;
     $('gotItBtn').disabled = !!(context && acknowledged[context.slideId]);
@@ -1027,6 +1120,7 @@
         break;
 
       case 'promptEnd':
+        prompt = null;
         if ($('scPrompt').classList.contains('on')) {
           $('waitIcon').textContent = '✓';
           $('waitTitle').textContent = 'Thanks';

@@ -601,7 +601,73 @@
   }
 
   /* Bold keyword + lowercase definition — glossary / dual-coding of terms. */
-  function layoutKeywords(slide, pad) {
+  /**
+   * An activity as its stages: a track across the top with the current stage
+   * lit, that stage's prompt as the largest thing on the wall, and a clock for
+   * that stage alone. See src/activities/stages.js.
+   *
+   * Every stage is a build step, so Next walks the room through them and the
+   * presenter view, the phones and the clock all follow the one press. Before
+   * the first press the wall shows the routine: its name, its stages and how
+   * long it takes. The track is lit by js/stages.js as the steps move; drawn
+   * for authoring, with no build running, every stage's prompt is listed.
+   */
+  function layoutStages(slide, pad, opts, root) {
+    var stages = SF.activityStages(slide);
+    var total = stages.reduce(function (sum, st) { return sum + st.seconds; }, 0);
+
+    var track = el('ol', 'stage-track');
+    track.setAttribute('aria-label', 'Stages');
+    stages.forEach(function (st) {
+      var chip = el('li', 'stage-chip job-' + st.job);
+      chip.dataset.i = String(st.i);
+      chip.appendChild(el('span', 'sc-n', String(st.i + 1)));
+      chip.appendChild(el('span', 'sc-name', st.name));
+      if (st.seconds) chip.appendChild(el('span', 'sc-min', clockFace(st.seconds)));
+      track.appendChild(chip);
+    });
+    pad.appendChild(track);
+
+    var intro = el('div', 'stage-intro');
+    if (slide.title) intro.appendChild(rich('h2', null, slide, 'title', slide.title));
+    intro.appendChild(el('p', 'si-lead', stages.length + (stages.length === 1 ? ' stage' : ' stages') +
+      (total ? ' \u00b7 ' + Math.round(total / 60) + ' min' : '')));
+    if (stages.length) intro.appendChild(el('p', 'si-next', 'First: ' + stages[0].name));
+    pad.appendChild(intro);
+
+    var answer = modelAnswerBox(slide);
+    stages.forEach(function (st, k) {
+      var panel = el('div', 'stage-panel step job-' + st.job);
+      panel.dataset.step = String(st.i + 1);
+      panel.dataset.i = String(st.i);
+      panel.dataset.contentKey = 'bullets.' + st.i;
+      var head = el('div', 'sp-head');
+      head.appendChild(el('span', 'sp-icon', SF.STAGE_JOBS[st.job].icon));
+      head.appendChild(el('span', 'sp-name', st.name));
+      head.appendChild(el('span', 'sp-job', SF.STAGE_JOBS[st.job].wall));
+      panel.appendChild(head);
+      panel.appendChild(rich('div', 'sp-prompt', slide, 'bullets.' + st.i, st.text || ' '));
+      /* Filled while the stage runs: time up, and how many ideas are in. */
+      panel.appendChild(el('div', 'sp-live'));
+      /* A worked answer belongs to the last stage, where the teacher draws
+         the threads together. A draft stays off the wall as everywhere. */
+      if (answer && k === stages.length - 1) panel.appendChild(answer);
+      pad.appendChild(panel);
+    });
+
+    /* One clock, reset per stage by the player. Named as the slide clock so
+       it sits where every timed slide's clock sits, and so the generic
+       whole-activity clock is not drawn as well. */
+    var clock = el('div', 'clock slide-clock stage-clock');
+    clock.appendChild(ring(84, 8, 1));
+    clock.appendChild(el('div', 'n', clockFace(stages.length && stages[0].seconds ? stages[0].seconds : total)));
+    clock.setAttribute('aria-hidden', 'true');
+    (root || pad).appendChild(clock);
+    if (root) root.classList.add('has-clock');
+  }
+
+  function layoutKeywords(slide, pad, opts, root) {
+    if (slide.activity && slide.activityPresentation === 'stages') return layoutStages(slide, pad, opts, root);
     var title = slide.title ? rich('h2', null, slide, 'title', slide.title) : null;
     var list = el('div', 'kw-list');
     var rows = (slide.bullets || []).map(SF.parseKeywordLine)
@@ -2282,7 +2348,7 @@
     if (slide.activity) {
       root.classList.add('activity-slide');
       var view = slide.activityPresentation;
-      if (slide.type === 'keywords' && ['steps', 'panels', 'brief'].indexOf(view) >= 0 &&
+      if (slide.type === 'keywords' && ['steps', 'panels', 'brief', 'stages'].indexOf(view) >= 0 &&
           (view !== 'panels' || slide.bullets.length === 4)) root.classList.add('activity-' + view);
     }
     if (slide.type === 'quiz' || (SF.Boards && SF.Boards.forSlide(slide))) {

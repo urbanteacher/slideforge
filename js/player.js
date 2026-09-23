@@ -200,6 +200,8 @@
     reactions: function () { Player.emit('reactionsToggle', {}); },
     blankPhones: function () { Player.emit('blankPhonesToggle', {}); },
     blankPhonesSoon: function () { Player.emit('blankPhonesSoon', {}); },
+    /* Thirty seconds more for the stage the room is in — see js/stages.js. */
+    stageMore: function () { if (SF.Stages) SF.Stages.extend(30); },
     floor: function () { Player.emit('floorCycle', {}); },
     reset: function () { Player.resetScores(); },
     /* Named answers live on the private screen. Opening presenter view if it
@@ -664,7 +666,8 @@
     if (slide.type === 'quiz') {
       wireQuiz(node, slide);
       scheduleQuizFit(node);
-    } else if (slide.timeLimit > 0) {
+    } else if (slide.timeLimit > 0 && !(SF.Stages && SF.Stages.isStaged(slide))) {
+      /* A staged activity has a clock per stage, run by js/stages.js. */
       startSlideTimer(node, slide);
     }
 

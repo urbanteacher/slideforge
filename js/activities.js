@@ -703,6 +703,9 @@
         var views = [
           { value: 'rows', label: 'Labelled rows' },
           { value: 'steps', label: 'Numbered steps' },
+          /* Any routine whose rows are stages ("Think · 1 min") can run as
+             one: a track, a clock per stage, and a job for the phones. */
+          { value: 'stages', label: 'Timed stages, with phones' },
           { value: 'brief', label: 'Opening brief' }
         ];
         if (slide.bullets.length === 4) views.push({ value: 'panels', label: 'Four panels' });
