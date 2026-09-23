@@ -115,7 +115,7 @@ export function createQuizRenderer(SF, helpers) {
       }
     } else {
       card.appendChild(el('div', 'gc-facts',
-        'Pick a game in the inspector, or this slide is skipped.'));
+        'Pick a game in Design & content, or this slide is skipped.'));
     }
 
     pad.appendChild(card);

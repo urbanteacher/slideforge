@@ -339,18 +339,75 @@
 
   /* ------------------------------------------------------------ modals */
 
+  /* The .modal sheets are divs, not <dialog>s, so nothing about being a
+     dialog came for free: Escape did nothing, focus stayed on the page behind,
+     and the deck's own shortcuts kept working through them — Delete on a
+     focused ✕ removed the selected slide from under Settings. This supplies
+     what showModal() gives the native ones: a dialog role, focus moved in and
+     handed back, Tab kept inside, and Escape to close. */
+  var FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), ' +
+    'textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
   function openModal(id, onClose) {
     var m = $(id);
     if (!m) return function () {};
     var modalEl = m;
+    var opener = /** @type {HTMLElement|null} */ (document.activeElement);
+    var shut = false;
     modalEl.classList.add('on');
+    modalEl.setAttribute('role', 'dialog');
+    modalEl.setAttribute('aria-modal', 'true');
+    var heading = modalEl.querySelector('h2, h3');
+    if (heading) {
+      if (!heading.id) heading.id = id + 'Heading';
+      modalEl.setAttribute('aria-labelledby', heading.id);
+    }
+    function focusables() {
+      return Array.prototype.filter.call(modalEl.querySelectorAll(FOCUSABLE), function (n) {
+        return n.getClientRects().length > 0;
+      });
+    }
     var close = function () {
+      if (shut) return;
+      shut = true;
       modalEl.classList.remove('on');
+      modalEl.onkeydown = null;
       if (onClose) onClose();
+      /* Back to whatever opened it, unless the close itself moved focus on
+         purpose — onClose opening something else, say. */
+      if (opener && opener.isConnected && typeof opener.focus === 'function' &&
+          (!document.activeElement || document.activeElement === document.body ||
+           modalEl.contains(document.activeElement))) {
+        opener.focus();
+      }
     };
     var closeBtn = /** @type {HTMLElement|null} */ (modalEl.querySelector('[data-close]'));
     if (closeBtn) closeBtn.onclick = close;
     modalEl.onclick = function (e) { if (e.target === modalEl) close(); };
+    modalEl.onkeydown = function (e) {
+      if (e.key === 'Escape') {
+        /* A field that uses Escape itself — an open <select>, a search box
+           that clears — has already said so. */
+        if (e.defaultPrevented) return;
+        e.preventDefault();
+        e.stopPropagation();
+        close();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      var list = focusables();
+      if (!list.length) { e.preventDefault(); return; }
+      var first = list[0], last = list[list.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    /* After the caller has filled the body, which it usually does next. */
+    setTimeout(function () {
+      if (shut || modalEl.contains(document.activeElement)) return;
+      var list = focusables();
+      var target = list.find(function (n) { return !n.hasAttribute('data-close'); }) || list[0];
+      if (target) target.focus();
+    }, 0);
     return close;
   }
 
@@ -597,7 +654,8 @@
       if (!quiet) SF.toast('Nothing to save');
       return;
     }
-    active.store.save(active.doc(), force ? { force: true } : undefined);
+    var ok = active.store.save(active.doc(), force ? { force: true } : undefined);
+    if (ok === false) { setStored('failed'); return; }
     active._dirty = false;
     if (quiet) return;
     if (active.key !== 'deck') {
@@ -708,10 +766,25 @@
   var storedTimer = null;
 
   function setStored(state) {
+    var was = storedState;
     storedState = state;
     var el2 = $('storeState');
     if (!el2) return;
     clearTimeout(storedTimer);
+    if (state === 'failed') {
+      /* The browser refused the write — almost always because its storage is
+         full. This used to be logged and nothing else: the header went on
+         saying Saved, and every edit after that point was lost at reload.
+         It stays up until a write succeeds, and says what to do. */
+      el2.textContent = 'Not saved';
+      el2.className = 'store-state is-failed';
+      el2.title = 'This browser would not store your latest changes — its storage is probably full. ' +
+        'File → Export file now to keep a copy, then delete lessons you no longer need from the Library.';
+      if (was !== 'failed') {
+        SF.toast('Not saved — this browser\u2019s storage is full. Use File → Export file to keep a copy.');
+      }
+      return;
+    }
     if (state === 'saving') {
       el2.textContent = 'Saving…';
       el2.className = 'store-state is-saving';
@@ -1673,7 +1746,7 @@
     });
 
     document.addEventListener('keydown', function (e) {
-      if (SF.Player.open || document.querySelector('dialog[open]')) return;
+      if (SF.Player.open || document.querySelector('dialog[open], .modal.on')) return;
       var target = /** @type {HTMLElement|null} */ (e.target);
       var t = target ? target.tagName : '';
       var typing = t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT' ||
@@ -1724,7 +1797,9 @@
     openSaved: openSaved,
     touch: touch,
     /* Engines call this when a debounced write has actually landed. */
-    stored: function () { setStored('stored'); },
+    /* Pass the store's answer: false means the write was refused, and the
+       header has to say so rather than claim it landed. */
+    stored: function (ok) { setStored(ok === false ? 'failed' : 'stored'); },
     syncChrome: syncChrome,
     picker: picker,
     themePicker: themePicker,

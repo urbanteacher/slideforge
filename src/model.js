@@ -1199,6 +1199,34 @@ function compileGame(game, opts = {}) {
  * player only ever sees plain slides. Returns a throwaway deck; the stored
  * one is untouched.
  */
+/* Where authored slide i lands in a run deck. Asked of the run deck itself,
+   by id, rather than re-counted from the authored list: a count has to repeat
+   every rule buildRunDeck applies, and it did not — hidden slides were counted
+   here and dropped there, so a hidden slide above the selection started the
+   show one slide late, and a hidden game started it a whole game late.
+   A hidden selection starts at the next slide the room would see, and failing
+   that the last one before it. */
+/**
+ * @param {Deck} deck
+ * @param {RunDeck} run
+ * @param {number} i
+ * @returns {number}
+ */
+function runIndexOf(deck, run, i) {
+  function at(k) {
+    var s = deck.slides[k];
+    if (!s || s.hidden === true) return -1;
+    for (var r = 0; r < run.slides.length; r++) {
+      var rs = run.slides[r];
+      if (rs.id === s.id || rs.sourceSlideId === s.id) return r;
+    }
+    return -1;
+  }
+  for (var k = i; k < deck.slides.length; k++) { var f = at(k); if (f >= 0) return f; }
+  for (var b = i - 1; b >= 0; b--) { var p = at(b); if (p >= 0) return p; }
+  return 0;
+}
+
 /**
  * @param {Deck} deck
  * @param {(id: string) => Game | null} lookupGame
@@ -1654,6 +1682,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   QUESTION_SLIDE_FIELDS: QUESTION_SLIDE_FIELDS,
   fillQuestionSlide: fillQuestionSlide,
   buildRunDeck: buildRunDeck,
+  runIndexOf: runIndexOf,
   gameToRunDeck: gameToRunDeck,
   migrateDeckQuizzes: migrateDeckQuizzes,
   Store: Store,
@@ -1673,4 +1702,4 @@ for (const install of [installBingo, installBowl, installMemory, installLowStake
   install(runtime.SF);
 }
 
-export { DEFAULT_THEME, resolveTheme, DESIGN_CONTROLS, designApplies, COMPOSITIONS, compositionOptions, slideComposition, SLIDE_W, SLIDE_H, ASPECTS, parsePerson, orgTree, CHART_TAXONOMY, chartCategories, chartPrimaryCategory, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, themeGround, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, INFO_LAYOUTS, parseInfoLine, formatInfoLine, infoNumber, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, unusedDraft, libraryGroupFromTheme, normalizeLibraryGroup, LIBRARY_GROUPS, LibraryFolders, GAME_FORMAT_PRESETS, getShowcaseGame };
+export { DEFAULT_THEME, resolveTheme, DESIGN_CONTROLS, designApplies, COMPOSITIONS, compositionOptions, slideComposition, SLIDE_W, SLIDE_H, ASPECTS, parsePerson, orgTree, CHART_TAXONOMY, chartCategories, chartPrimaryCategory, slideHeight, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, THEMES, themeGround, TRANSITIONS, GALLERY_MAX, LAYOUT_GROUPS, INFO_LAYOUTS, parseInfoLine, formatInfoLine, infoNumber, chartData, TEAM_COLORS, MAX_TEAMS, teamColor, makeQuizConfig, normalizeQuizConfig, SLIDE_TYPES, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, parseKeywordLine, formatKeywordLine, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel, makeSlide, makeDeck, starterDeck, normalizeSlide, normalizeDeck, deckShowsLogo, normalizeQuestion, normalizeGameSettings, normalizeGame, fillQuestionSlide, QUESTION_SLIDE_FIELDS, compileGame, buildRunDeck, runIndexOf, externalMedia, readiness, gameToRunDeck, migrateDeckQuizzes, FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest, deckToMarkdown, Store, GameStore, unusedDraft, libraryGroupFromTheme, normalizeLibraryGroup, LIBRARY_GROUPS, LibraryFolders, GAME_FORMAT_PRESETS, getShowcaseGame };

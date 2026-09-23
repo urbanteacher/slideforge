@@ -4261,7 +4261,7 @@
         card.appendChild(el(
           "div",
           "gc-facts",
-          "Pick a game in the inspector, or this slide is skipped."
+          "Pick a game in Design & content, or this slide is skipped."
         ));
       }
       pad.appendChild(card);
@@ -7994,6 +7994,7 @@
     function beginDrag(e) {
       if (e.button !== 0 || e.isPrimary === false) return;
       if (e.target.closest && e.target.closest(".sf-handle")) return;
+      if (e.target.isContentEditable) return;
       var slot = e.target.closest && e.target.closest(".sf-slot");
       var freeItem = !arranging && slot && String(slot.getAttribute("data-block-key") || "").indexOf("blocks.") === 0;
       if (!arranging && !freeItem) return;
@@ -10883,7 +10884,7 @@
     }
     var inlineEdit = null;
     var releaseTools = null;
-    function inlineTools(node, s, key, repaint) {
+    function inlineTools(node, s, key, repaint, hooks) {
       var bar = document.createElement("div");
       bar.className = "format-tools canvas-inline-tools";
       bar.setAttribute("role", "toolbar");
@@ -10924,6 +10925,10 @@
         selectFlat(node, a, b);
         held = [a, b];
       }
+      if (hooks) hooks.format = function(kind) {
+        capture();
+        format(kind, true);
+      };
       [
         ["B", "Bold", "bold"],
         ["I", "Italic", "italic"],
@@ -11013,9 +11018,12 @@
       if (open.watch) open.watch.disconnect();
       if (how === "cancel") {
         writeText(open.slide, open.key, open.was);
-        if (!open.slide.formatting) open.slide.formatting = {};
-        if (open.wasEntry) open.slide.formatting[open.key] = open.wasEntry;
-        else delete open.slide.formatting[open.key];
+        if (open.wasEntry) {
+          if (!open.slide.formatting) open.slide.formatting = {};
+          open.slide.formatting[open.key] = open.wasEntry;
+        } else if (open.slide.formatting) {
+          delete open.slide.formatting[open.key];
+        }
         if (open.onCancel) open.onCancel();
         return;
       }
@@ -11036,7 +11044,10 @@
         wasEntry: s.formatting && s.formatting[key] ? JSON.parse(JSON.stringify(s.formatting[key])) : null,
         wasDraggable: !!node.draggable,
         onSave: opts.onSave,
-        onCancel: opts.onCancel
+        onCancel: opts.onCancel,
+        onInput: opts.onInput,
+        /** @type {null|function(string):void} */
+        format: null
       };
       inlineEdit = open;
       node.draggable = false;
@@ -11048,7 +11059,7 @@
         paint(node, s, key, storedText(s, key));
         selectFlat(node, here[0], here[1]);
       }
-      open.bar = inlineTools(node, s, key, repaint);
+      open.bar = inlineTools(node, s, key, repaint, open);
       open.follow = function() {
         placeInlineTools(open.bar, node);
       };
@@ -11065,19 +11076,22 @@
         var next = node.innerText.replace(/[\t\r\n]+/g, " ");
         rebase(s, key, storedText(s, key), next);
         writeText(s, key, next);
+        if (open.onInput) open.onInput();
         open.follow();
       });
       node.addEventListener("keydown", function(e) {
         if (inlineEdit !== open) return;
         e.stopPropagation();
+        if (e.isComposing || e.keyCode === 229) return;
         var k = e.key.toLowerCase();
-        if ((e.metaKey || e.ctrlKey) && ["b", "i", "u"].includes(k)) {
+        if ((e.metaKey || e.ctrlKey) && !e.altKey && ["b", "i", "u"].includes(k)) {
           e.preventDefault();
+          if (open.format) open.format(k === "b" ? "bold" : k === "i" ? "italic" : "underline");
           return;
         }
         if (e.key === "Escape") {
           e.preventDefault();
-          endInlineEdit("cancel");
+          endInlineEdit("save");
           return;
         }
         if (e.key === "Enter" && !e.shiftKey) {
@@ -22552,6 +22566,26 @@
     }
     return out;
   }
+  function runIndexOf(deck, run, i) {
+    function at(k2) {
+      var s = deck.slides[k2];
+      if (!s || s.hidden === true) return -1;
+      for (var r = 0; r < run.slides.length; r++) {
+        var rs = run.slides[r];
+        if (rs.id === s.id || rs.sourceSlideId === s.id) return r;
+      }
+      return -1;
+    }
+    for (var k = i; k < deck.slides.length; k++) {
+      var f = at(k);
+      if (f >= 0) return f;
+    }
+    for (var b = i - 1; b >= 0; b--) {
+      var p = at(b);
+      if (p >= 0) return p;
+    }
+    return 0;
+  }
   function buildRunDeck(deck, lookupGame) {
     const run = (
       /** @type {RunDeck} */
@@ -22952,6 +22986,7 @@
     QUESTION_SLIDE_FIELDS,
     fillQuestionSlide,
     buildRunDeck,
+    runIndexOf,
     gameToRunDeck,
     migrateDeckQuizzes,
     Store,

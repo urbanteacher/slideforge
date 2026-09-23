@@ -233,8 +233,8 @@
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       saveTimer = null;
-      SF.GameStore.save(game);
-      if (SF.Shell.stored) SF.Shell.stored();
+      var ok = SF.GameStore.save(game);
+      if (SF.Shell.stored) SF.Shell.stored(ok);
     }, 600);
   }
 
@@ -245,8 +245,8 @@
     if (!saveTimer) return;
     clearTimeout(saveTimer);
     saveTimer = null;
-    SF.GameStore.save(game);
-    if (SF.Shell.stored) SF.Shell.stored();
+    var ok = SF.GameStore.save(game);
+    if (SF.Shell.stored) SF.Shell.stored(ok);
   }
 
   /* Effective values, once the game defaults are applied. */

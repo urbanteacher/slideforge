@@ -133,7 +133,8 @@ try {
       `${where}: the bar should stay on screen`);
     checks++;
 
-    /* 3. Typing reaches the slide; Escape puts it back. */
+    /* 3. Typing reaches the slide; Escape keeps it, as the Done button says
+          and as every other slide editor does; Undo takes the edit back. */
     await page.evaluate(() => {
       const n = [...document.querySelectorAll('#previewBox [data-content-key]')].find((x) => x.dataset.contentKey === 'bullets.0');
       n.textContent = 'Typed straight in';
@@ -146,10 +147,14 @@ try {
       n.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     });
     await page.waitForTimeout(400);
-    assert.equal(await page.evaluate(() => SF.Editor.currentSlide().bullets[0]), 'First line',
-      `${where}: Escape should restore the text it found`);
+    assert.equal(await page.evaluate(() => SF.Editor.currentSlide().bullets[0]), 'Typed straight in',
+      `${where}: Escape should keep what was typed`);
     assert.equal(await page.evaluate(() => !!document.querySelector('.canvas-inline-tools')), false,
       `${where}: the bar should go with the edit`);
+    await page.evaluate(() => document.querySelector('[data-history=undo]').click());
+    await page.waitForTimeout(200);
+    assert.equal(await page.evaluate(() => SF.Editor.currentSlide().bullets[0]), 'First line',
+      `${where}: one Undo should take the whole edit back`);
     checks++;
 
     /* 4. Bold lands on the words that were selected, not on the block, and is

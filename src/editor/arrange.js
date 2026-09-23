@@ -428,6 +428,12 @@ export function installArrange(SF) {
   function beginDrag(e) {
     if (e.button !== 0 || e.isPrimary === false) return;
     if (e.target.closest && e.target.closest('.sf-handle')) return;
+    /* A press inside words that are being typed into is a caret or a
+       selection, never a move. Without this, drag-selecting a phrase in an
+       added block to bold it travelled a cell, took the block, and the
+       redraw at drop threw the edit away with it. The handles are outside
+       the text, so resizing while typing still works. */
+    if (e.target.isContentEditable) return;
     var slot = e.target.closest && e.target.closest('.sf-slot');
     /* Outside the Layout face an item you added is still draggable — it is
        yours, and going into a mode to nudge it is a detour. The slide's own

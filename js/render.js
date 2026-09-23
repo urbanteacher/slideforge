@@ -491,7 +491,7 @@
     if (slide.subtitle) pad.appendChild(rich('div', 'sub', slide, 'subtitle', slide.subtitle));
     var tree = SF.orgTree(slide.bullets || []);
     if (!tree.people.length) {
-      var e = el('div', 'empty');
+      var e = el('div', 'empty authoring-hint');
       e.appendChild(el('div', null, '\u26ec'));
       e.appendChild(el('div', null, 'One person per line: Name | Role | Reports to | photo'));
       pad.appendChild(e);
@@ -524,7 +524,7 @@
     /* A slide carrying blocks is not empty — it is simply not using its bullet
        pit, and the prompt for filling that pit was reaching the projector. */
     if (!anyText && !SF.freeBlocksOf(slide).length) {
-      var hint = el('li', 'dim', 'Add points in the inspector');
+      var hint = el('li', 'dim authoring-hint', 'Add points in Design & content');
       ul.appendChild(hint);
       pad.appendChild(ul);
       return;
@@ -587,7 +587,7 @@
       if (src || pictureCards) {
         var pic = el('div', 'card-pic' + (src ? '' : ' card-pic-empty'));
         if (src) pic.style.backgroundImage = 'url("' + String(src).replace(/"/g, '&quot;') + '")';
-        else pic.appendChild(el('span', null, 'Add an image'));
+        else pic.appendChild(el('span', 'authoring-hint', 'Add an image'));
         pic.setAttribute('aria-hidden', 'true');
         var copy = el('div', 'card-copy');
         while (li.firstChild) copy.appendChild(li.firstChild);
@@ -724,9 +724,9 @@
           a.addEventListener('click', function (e) { e.stopPropagation(); });
           row.appendChild(a);
         } else if (p.def) {
-          row.appendChild(el('div', 'ln-url bad', p.def + ' — needs http(s)'));
+          row.appendChild(el('div', 'ln-url bad authoring-hint', p.def + ' — needs http(s)'));
         } else {
-          row.appendChild(el('div', 'ln-url', 'Add a URL'));
+          row.appendChild(el('div', 'ln-url authoring-hint', 'Add a URL'));
         }
         list.appendChild(row);
       });
@@ -918,9 +918,9 @@
         pad.appendChild(box);
       }
     } else {
-      var e = el('div', 'empty');
+      var e = el('div', 'empty authoring-hint');
       e.appendChild(el('div', null, '▣'));
-      e.appendChild(el('div', null, 'Paste an image URL or drop a file in the inspector'));
+      e.appendChild(el('div', null, 'Paste an image URL or drop a file in Design & content'));
       pad.appendChild(e);
     }
   }
@@ -938,9 +938,9 @@
     if (slide.title && !bleed) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
     var layers = (slide.layers || []).filter(function (l) { return l && l.image; });
     if (!layers.length) {
-      var e = el('div', 'empty');
+      var e = el('div', 'empty authoring-hint');
       e.appendChild(el('div', null, '\u25a4'));
-      e.appendChild(el('div', null, 'Add pictures in the inspector — each one gets its own moment'));
+      e.appendChild(el('div', null, 'Add pictures in Design & content — each one gets its own moment'));
       pad.appendChild(e);
       return;
     }
@@ -990,7 +990,7 @@
               : k0 === 'radar' ? (data.categories.length < 3 || !data.series.length)
               : (!data.series.length || !data.categories.length);
     if (empty) {
-      var e = el('div', 'empty');
+      var e = el('div', 'empty authoring-hint');
       e.appendChild(el('div', null, '▥'));
       /* The empty state has to teach the shape this idiom wants, or the
          author pastes a table that is right for a bar chart and is told
@@ -1103,7 +1103,7 @@
     if (slide.title) pad.appendChild(rich('h2', null, slide, 'title', slide.title));
     var rows = SF.parseTable(slide.body);
     if (!rows.length) {
-      var e = el('div', 'empty');
+      var e = el('div', 'empty authoring-hint');
       e.appendChild(el('div', null, '\u229e'));
       e.appendChild(el('div', null, 'Paste rows from a spreadsheet, or type them separated by |'));
       pad.appendChild(e);
@@ -1281,9 +1281,9 @@
     var fit = slide.imageFit === 'contain' ? 'contain' : 'cover';
 
     if (!slide.video) {
-      var e = el('div', 'empty');
+      var e = el('div', 'empty authoring-hint');
       e.appendChild(el('div', null, '\u25b6'));
-      e.appendChild(el('div', null, 'Paste a video URL or a path in the inspector'));
+      e.appendChild(el('div', null, 'Paste a video URL or a path in Design & content'));
       pad.appendChild(e);
       return;
     }
@@ -1390,7 +1390,7 @@
     var ul = el('ul');
     var lines = (slide.bullets || []).map(function(text,index){return {text:text,index:index};}).filter(function (b) { return String(b.text).trim(); });
     if (!lines.length && !SF.freeBlocksOf(slide).length) {
-      ul.appendChild(el('li', 'dim', 'Add points in the inspector'));
+      ul.appendChild(el('li', 'dim authoring-hint', 'Add points in Design & content'));
     } else {
       lines.forEach(function (item) {
         var line=item.text;
@@ -1427,7 +1427,7 @@
         media.appendChild(credit);
       }
     } else {
-      var empty = el('div', 'split-empty');
+      var empty = el('div', 'split-empty authoring-hint');
       empty.appendChild(el('div', null, '▣'));
       empty.appendChild(el('div', null, 'Add an image'));
       media.appendChild(empty);
@@ -1510,7 +1510,7 @@
     if (slide.subtitle) pad.appendChild(rich('div', contextCls, slide, 'subtitle', slide.subtitle));
   }
   function infoEmpty(pad, what) {
-    pad.appendChild(el('p', 'dim info-empty', 'Add ' + what + ' in the inspector'));
+    pad.appendChild(el('p', 'dim info-empty authoring-hint', 'Add ' + what + ' in Design & content'));
   }
   /* Progress needs a number and a ceiling. The ceiling is the largest value on
      the slide unless the value already reads as a percentage, when 100 wins —
@@ -1807,7 +1807,7 @@
       var fig = el('figure', 'fake-side');
       var shot = el('div', 'fake-shot' + (src ? '' : ' fake-shot-empty'));
       if (src) shot.style.backgroundImage = 'url("' + String(src).replace(/"/g, '&quot;') + '")';
-      else shot.appendChild(el('span', null, 'Add image ' + labels[i]));
+      else shot.appendChild(el('span', 'authoring-hint', 'Add image ' + labels[i]));
       fig.appendChild(shot);
       fig.appendChild(el('figcaption', 'fake-name', labels[i]));
       /* The verdict rides on the panel rather than in a line underneath, so
@@ -2272,6 +2272,11 @@
     opts = opts || {};
     var root = themedRoot('slide', deck, 'layout-' + slide.type, slide.type);
     root.dataset.slideId = slide.id;
+    /* Prompts that tell the author what to fill in carry .authoring-hint, and
+       the stylesheet shows them only on a slide drawn for authoring. Opt-in
+       rather than opt-out: the projector, the share view, the presenter desk
+       and anything added later get a clean slide without having to ask. */
+    if (opts.authoring) root.dataset.authoring = '1';
     stampAspect(root, deck);
     if (slide.activity) {
       root.classList.add('activity-slide');

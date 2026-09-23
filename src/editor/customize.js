@@ -407,7 +407,7 @@ export function installCustom(SF) {
      to the viewport and parented to the body, because #previewBox clips its
      overflow and drawInspector() empties the rail, and a toolbar that is
      inside either one disappears mid-edit. */
-  function inlineTools(node, s, key, repaint) {
+  function inlineTools(node, s, key, repaint, hooks) {
     var bar = document.createElement('div');
     bar.className = 'format-tools canvas-inline-tools';
     bar.setAttribute('role', 'toolbar');
@@ -437,6 +437,10 @@ export function installCustom(SF) {
       selectFlat(node, a, b);
       held = [a, b];
     }
+    /* The keyboard formats through the same path as the buttons, so Cmd+B on
+       the canvas does what the B button does. It used to swallow the key and
+       do nothing, while the same shortcut worked in the rail's fields. */
+    if (hooks) hooks.format = function (kind) { capture(); format(kind, true); };
 
     [['B', 'Bold', 'bold'], ['I', 'Italic', 'italic'], ['U', 'Underline', 'underline'],
      ['▰', 'Highlight', 'highlight'], ['Clear', 'Clear formatting', 'clear']].forEach(function (item) {
@@ -507,9 +511,15 @@ export function installCustom(SF) {
     if (open.watch) open.watch.disconnect();
     if (how === 'cancel') {
       writeText(open.slide, open.key, open.was);
-      if (!open.slide.formatting) open.slide.formatting = {};
-      if (open.wasEntry) open.slide.formatting[open.key] = open.wasEntry;
-      else delete open.slide.formatting[open.key];
+      /* Put formatting back exactly as it was — including not having any.
+         Creating an empty table here changed the deck, so an edit that
+         changed nothing still left an Undo step that did nothing. */
+      if (open.wasEntry) {
+        if (!open.slide.formatting) open.slide.formatting = {};
+        open.slide.formatting[open.key] = open.wasEntry;
+      } else if (open.slide.formatting) {
+        delete open.slide.formatting[open.key];
+      }
       if (open.onCancel) open.onCancel();
       return;
     }
@@ -525,7 +535,9 @@ export function installCustom(SF) {
       was: storedText(s, key),
       wasEntry: s.formatting && s.formatting[key] ? JSON.parse(JSON.stringify(s.formatting[key])) : null,
       wasDraggable: !!node.draggable,
-      onSave: opts.onSave, onCancel: opts.onCancel
+      onSave: opts.onSave, onCancel: opts.onCancel, onInput: opts.onInput,
+      /** @type {null|function(string):void} */
+      format: null
     };
     inlineEdit = open;
     /* draggable wins over a caret in every browser, and bullets are draggable
@@ -542,7 +554,7 @@ export function installCustom(SF) {
       selectFlat(node, here[0], here[1]);
     }
 
-    open.bar = inlineTools(node, s, key, repaint);
+    open.bar = inlineTools(node, s, key, repaint, open);
     open.follow = function () { placeInlineTools(open.bar, node); };
     window.addEventListener('scroll', open.follow, true);
     window.addEventListener('resize', open.follow);
@@ -564,6 +576,11 @@ export function installCustom(SF) {
       var next = node.innerText.replace(/[\t\r\n]+/g, ' ');
       rebase(s, key, storedText(s, key), next);
       writeText(s, key, next);
+      /* The words are on the slide from the first keystroke, but nothing was
+         going to store them until the edit ended — close the tab mid-sentence
+         and the sentence was gone. onInput schedules the write without a
+         redraw, which would take the caret away. */
+      if (open.onInput) open.onInput();
       /* No repaint here: rebuilding the spans on every keystroke would move
          the caret out from under the person typing. Marks land on the slide
          and are drawn when the edit finishes, or immediately when a format
@@ -573,9 +590,19 @@ export function installCustom(SF) {
     node.addEventListener('keydown', function (e) {
       if (inlineEdit !== open) return;
       e.stopPropagation();
+      /* An input method is still choosing characters: its Enter picks a
+         candidate and its Escape abandons one, and neither is ours. */
+      if (e.isComposing || e.keyCode === 229) return;
       var k = e.key.toLowerCase();
-      if ((e.metaKey || e.ctrlKey) && ['b', 'i', 'u'].includes(k)) { e.preventDefault(); return; }
-      if (e.key === 'Escape') { e.preventDefault(); endInlineEdit('cancel'); return; }
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && ['b', 'i', 'u'].includes(k)) {
+        e.preventDefault();
+        if (open.format) open.format(k === 'b' ? 'bold' : k === 'i' ? 'italic' : 'underline');
+        return;
+      }
+      /* Escape keeps the words, as it does in every other slide editor and as
+         the Done button promises. It used to cancel, silently throwing away
+         whatever had been typed; Cmd+Z is how an edit is taken back. */
+      if (e.key === 'Escape') { e.preventDefault(); endInlineEdit('save'); return; }
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); endInlineEdit('save'); }
     });
     node.addEventListener('blur', function () {

@@ -97,8 +97,22 @@
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       saveTimer = null;
-      SF.Store.save(deck);
-      if (SF.Shell.stored) SF.Shell.stored();
+      var ok = SF.Store.save(deck);
+      if (SF.Shell.stored) SF.Shell.stored(ok);
+    }, 600);
+  }
+
+  /* Store the deck soon, without recording an Undo step or redrawing. For
+     words being typed on the canvas: they are already on the slide, and the
+     edit's own save records one Undo step for the whole edit when it ends.
+     Until then this keeps a closed tab from losing them, because flush() at
+     unload only writes when a save is pending. */
+  function storeSoon() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      saveTimer = null;
+      var ok = SF.Store.save(deck);
+      if (SF.Shell.stored) SF.Shell.stored(ok);
     }, 600);
   }
 
@@ -109,8 +123,8 @@
     if (!saveTimer) return;
     clearTimeout(saveTimer);
     saveTimer = null;
-    SF.Store.save(deck);
-    if (SF.Shell.stored) SF.Shell.stored();
+    var ok = SF.Store.save(deck);
+    if (SF.Shell.stored) SF.Shell.stored(ok);
   }
 
   /* Drop a pending autosave without writing. Used when the open document is
@@ -132,6 +146,7 @@
       index: i,
       total: deck.slides.length,
       interactive: false,
+      authoring: true,
       game: s.type === 'game' ? gameFor(s) : null,
       join: s.type === 'join' ? SF.sampleJoinInfo() : null
     };
@@ -305,7 +320,7 @@
 
   function pasteOnDocument(e) {
     if (SF.Player && SF.Player.open) return;
-    if (document.querySelector('dialog[open]')) return;
+    if (document.querySelector('dialog[open], .modal.on')) return;
     var t = /** @type {HTMLElement|null} */ (e.target);
     var tag = t ? t.tagName : '';
     if (tag === 'INPUT' || tag === 'TEXTAREA' || (t && t.isContentEditable)) return;
@@ -438,7 +453,8 @@
         if (!SF.Custom || !SF.Custom.editCanvasBlock) return;
         SF.Custom.editCanvasBlock(target, s, key, {
           onSave: function () { touched(); draw(); },
-          onCancel: function () { touched(); repaint(); }
+          onCancel: function () { touched(); repaint(); },
+          onInput: storeSoon
         });
       };
       if(/^bullets\.\d+$/.test(key)){
@@ -955,7 +971,7 @@
         b.setAttribute('aria-pressed', String(s.type === type));
         var frame = el('div', 'variant-frame');
         var trial = SF.prepareLayout(SF.normalizeSlide(JSON.parse(JSON.stringify(s))), type);
-        var node = SF.renderSlide(deck, trial, { index: sel, total: deck.slides.length, chrome: false });
+        var node = SF.renderSlide(deck, trial, { index: sel, total: deck.slides.length, chrome: false, authoring: true });
         frame.appendChild(node);
         b.appendChild(frame);
         b.appendChild(el('span', null, SF.SLIDE_TYPES[type].label));
@@ -1178,7 +1194,7 @@
          the switch will not deliver. The copy is thrown away either way. */
       var trial = SF.prepareLayout(SF.normalizeSlide(JSON.parse(JSON.stringify(s))), type);
       var frame = el('div', 'variant-frame');
-      var node = SF.renderSlide(deck, trial, { index: sel, total: deck.slides.length, chrome: false });
+      var node = SF.renderSlide(deck, trial, { index: sel, total: deck.slides.length, chrome: false, authoring: true });
       frame.appendChild(node);
       SF.fit(frame, node);
       card.appendChild(frame);
@@ -2185,21 +2201,15 @@
     return run;
   }
 
-  /** Where the current slide lands once games have been expanded. */
-  function runIndexFor(i) {
-    var n = 0;
-    for (var k = 0; k < i; k++) {
-      var s = deck.slides[k];
-      if (s.type !== 'game') { n++; continue; }
-      var g = SF.GameStore.get(s.gameId);
-      n += g ? SF.compileGame(g).length : 1;
-    }
-    return n;
+  /** Where the selected slide lands in the show. See SF.runIndexOf. */
+  function runIndexFor(run) {
+    return SF.runIndexOf(deck, run, sel);
   }
 
   function present() {
     SF.Store.save(deck);
-    SF.Player.start(runDeck(), runIndexFor(sel));
+    var run = runDeck();
+    SF.Player.start(run, runIndexFor(run));
   }
 
   /* The same run deck Present builds, with a sample room attached. Quiz
@@ -2218,12 +2228,12 @@
       return;
     }
     if (!SF.Demo) {
-      SF.Player.start(run, runIndexFor(sel), { fullscreen: false });
+      SF.Player.start(run, runIndexFor(run), { fullscreen: false });
       return;
     }
     SF.Demo.start(run, {
       fullscreen: false,
-      startIndex: runIndexFor(sel),
+      startIndex: runIndexFor(run),
       /* Let the room follow the lesson: scored questions get answers, spoken
          formats get a speaker, discussion formats get neither. */
       auto: true
@@ -2315,9 +2325,76 @@
     }
   };
 
+  /* ------------------------------------------------------ other tabs */
+
+  /* Every save writes this tab's whole copy of the deck. Two tabs open on one
+     lesson therefore took turns erasing each other: twenty minutes of work in
+     one was replaced wholesale by a single keystroke in the other, and the
+     stale tab did not even need a keystroke — switching lessons re-saves the
+     deck being left. The browser tells every other tab when storage changes;
+     nothing was listening.
+
+     A tab with nothing unsaved simply takes the newer copy. A tab with work
+     in flight is asked, because either answer throws something away and the
+     person is the only one who knows which. */
+  var askingAboutOtherTab = false;
+  function sameDeck(a, b) {
+    function bare(d) { var c = Object.assign({}, d); delete c.modified; return JSON.stringify(c); }
+    return bare(a) === bare(b);
+  }
+  function busyHere() {
+    return !!saveTimer || !!document.querySelector('.canvas-inline-tools') ||
+      !!(SF.Arrange && SF.Arrange.isArranging && SF.Arrange.isArranging()) ||
+      !!(SF.Artwork && SF.Artwork.isEditing && SF.Artwork.isEditing());
+  }
+  function adoptFromOtherTab(theirs) {
+    var at = deck.slides[sel] && deck.slides[sel].id;
+    deck = theirs;
+    var i = deck.slides.findIndex(function (s) { return s.id === at; });
+    sel = i >= 0 ? i : Math.min(sel, deck.slides.length - 1);
+    /* An Undo step, so the version this tab had is one Cmd+Z away. */
+    remember();
+    SF.Shell.syncChrome();
+    draw();
+  }
+  function onOtherTab(e) {
+    if (e.key !== 'slideforge.decks.v1' || !deck || !e.newValue) return;
+    if (SF.Shell.current && SF.Shell.current() && SF.Shell.current().key !== 'deck') return;
+    var theirs = SF.Store.get(deck.id);
+    if (!theirs || sameDeck(theirs, deck)) return;
+    if (!busyHere()) {
+      adoptFromOtherTab(theirs);
+      SF.toast('Updated with changes made in another tab');
+      return;
+    }
+    if (askingAboutOtherTab) return;
+    askingAboutOtherTab = true;
+    /* Hold this tab's save while the question is open, or it would answer
+       for them 600ms from now. */
+    cancelPendingSave();
+    SF.ask({
+      title: 'This lesson was changed in another tab',
+      detail: 'This tab has edits that are not in that version. Load the other tab\u2019s version ' +
+        '(Undo brings this tab\u2019s back), or keep this one and replace the other tab\u2019s changes.',
+      confirm: 'Load the other version',
+      cancel: 'Keep this tab\u2019s version',
+      danger: false
+    }, function () {
+      askingAboutOtherTab = false;
+      if (SF.Custom && SF.Custom.endInlineEdit) SF.Custom.endInlineEdit('cancel');
+      var latest = SF.Store.get(deck.id);
+      if (latest) adoptFromOtherTab(latest);
+    }, function () {
+      askingAboutOtherTab = false;
+      var ok = SF.Store.save(deck);
+      if (SF.Shell.stored) SF.Shell.stored(ok);
+    });
+  }
+
   function install() {
     UI = SF.Shell.UI;
     SF.Shell.register(ws);
+    window.addEventListener('storage', onOtherTab);
     /* On the document, because the slide being pasted onto is the selected
        one wherever the focus happens to be — and the handler bows out on
        its own when the focus is somewhere a paste means something else. */
@@ -2483,7 +2560,7 @@
            of the pop-out. */
         var desk = SF.Player.openPresenter();
         if (!desk) return;
-        if (!SF.Player.open) SF.Player.start(runDeck(), runIndexFor(sel), { fullscreen: false });
+        if (!SF.Player.open) { var run = runDeck(); SF.Player.start(run, runIndexFor(run), { fullscreen: false }); }
         if (SF.Player.syncPresenter) SF.Player.syncPresenter();
       };
     }

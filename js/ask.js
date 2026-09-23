@@ -9,7 +9,7 @@
   'use strict';
   /** @type {import("../src/types.js").SlideForgeGlobal} */
   var SF = global.SF = global.SF || {};
-  var box = null, onYes = null, lastFocus = null;
+  var box = null, onYes = null, onNo = null, lastFocus = null;
 
   function build() {
     box = document.createElement('dialog');
@@ -31,11 +31,12 @@
     yes.onclick = function () { box.close('yes'); };
     box.addEventListener('close', function () {
       var value = field.hidden ? undefined : field.value;
-      var go = box.returnValue === 'yes' && onYes;
-      var fn = onYes;
+      var yes = box.returnValue === 'yes';
+      var fn = yes ? onYes : onNo;
       onYes = null;
+      onNo = null;
       if (lastFocus && lastFocus.focus) lastFocus.focus();
-      if (go) fn(value);
+      if (fn) fn(value);
     });
     /* Enter confirms from the field, the way it would in a browser prompt. */
     field.addEventListener('keydown', function (e) {
@@ -51,14 +52,16 @@
   /**
    * Ask before doing something that cannot be undone.
    *
-   * @param {object} o  { title, detail, confirm, danger, value, placeholder, qr }
+   * @param {object} o  { title, detail, confirm, cancel, danger, value, placeholder, qr }
    * @param {function} yes  run only if they confirm
+   * @param {function} [no]  run if they decline, by button, Escape or backdrop
    */
-  function ask(o, yes) {
+  function ask(o, yes, no) {
     o = o || {};
     if (!box) build();
     lastFocus = document.activeElement;
     onYes = yes;
+    onNo = no || null;
     box.querySelector('#askTitle').textContent = o.title || 'Are you sure?';
     var detail = box.querySelector('#askDetail');
     detail.textContent = o.detail || '';
@@ -87,6 +90,8 @@
     }
     var go = box.querySelector('#askYes');
     go.textContent = o.confirm || 'Confirm';
+    /* Named when declining is itself a choice, not a retreat. */
+    box.querySelector('#askNo').textContent = o.cancel || 'Cancel';
     go.classList.toggle('danger', o.danger !== false);
     box.returnValue = 'no';
     box.showModal();

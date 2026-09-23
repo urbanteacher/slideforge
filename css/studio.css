@@ -119,6 +119,8 @@
 /* Below a wide desktop the saved state is the dot alone; the words come back
    on hover via the title, and the full label at 1500px and up. */
 @media(max-width:1500px){.topbar .store-state{font-size:0;padding:4px 6px}.topbar .store-state::before{margin-right:0}}
+/* A dot is enough to say Saved; it is not enough to say Not saved. */
+@media(max-width:1500px){.topbar .store-state.is-failed{font-size:12px;padding:4px 9px}.topbar .store-state.is-failed::before{margin-right:6px}}
 @media(max-width:1150px){#app{grid-template-columns:170px minmax(300px,1fr) 265px}.brand-tag{display:none}.stage-wrap{padding:20px}.activity-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:800px){#app{grid-template-columns:115px minmax(0,1fr);grid-template-rows:max-content 480px minmax(280px,1fr);overflow:auto;grid-template-areas:'bar bar' 'rail stage' 'inspector inspector';height:100dvh}.inspector{border-top:1px solid var(--ui-line)}.topbar{padding:9px;gap:6px}.brand{font-size:15px;margin-right:4px}.topbar .switch,.topbar .vsep,#btnPresenter,#btnHistory{display:none}.stage-wrap{padding:12px}.notes-strip{padding:10px}.notes-strip textarea{height:30px}.rail-list{padding:8px 3px}.thumb{gap:3px;padding:2px}.thumb .num{width:10px}.activity-grid{grid-template-columns:repeat(2,1fr)}.activity-modal{padding:20px}.activity-modal h2{font-size:22px}.header-actions{margin-left:0;width:100%;justify-content:flex-end}.header-doc{margin-left:auto}/* The File menu is 205px anchored to the left of a button sitting two
    thirds of the way across, so on a phone it ran 25px past the right

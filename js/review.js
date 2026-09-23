@@ -10,7 +10,7 @@
   function settle(promise){var timer;return Promise.race([promise,new Promise(function(resolve){timer=setTimeout(resolve,5000);})]).finally(function(){clearTimeout(timer);});}
   async function check(deck,slide,index){
     var stage=el('div','slide-fit-stage');stage.setAttribute('aria-hidden','true');
-    var root=SF.renderSlide(deck,slide,{interactive:false,revealed:9999,index:index,total:deck.slides.length});
+    var root=SF.renderSlide(deck,slide,{interactive:false,authoring:true,revealed:9999,index:index,total:deck.slides.length});
     stage.style.height=SF.slideHeight(deck)+'px';stage.appendChild(root);document.body.appendChild(stage);
     try{
       await settle(document.fonts.ready);
@@ -90,7 +90,7 @@
     var observer=new ResizeObserver(function(entries){entries.forEach(function(entry){
       var n=/** @type {HTMLElement|null} */(entry.target.querySelector('.slide'));
       if(n)n.style.transform='scale('+entry.target.clientWidth/1280+')';});});
-    function render(target,d,s,i){target.style.aspectRatio='1280 / '+SF.slideHeight(d);target.style.setProperty('--review-ratio',String(1280/SF.slideHeight(d)));target.replaceChildren(SF.renderSlide(d,s,{interactive:false,revealed:9999,index:i,total:d.slides.length}));observer.observe(target);}
+    function render(target,d,s,i){target.style.aspectRatio='1280 / '+SF.slideHeight(d);target.style.setProperty('--review-ratio',String(1280/SF.slideHeight(d)));target.replaceChildren(SF.renderSlide(d,s,{interactive:false,authoring:true,revealed:9999,index:i,total:d.slides.length}));observer.observe(target);}
     function draw(){dialog.classList.remove('review-detail');observer.disconnect();all=[];grid.replaceChildren();viewer.hidden=true;grid.hidden=false;bar.hidden=false;
       decks.forEach(function(d){d.slides.forEach(function(s,i){if(s.hidden&&!hidden.checked)return;var item={d:d,s:s,index:i},n=all.length;all.push(item);
         var tile=el('button','review-tile');tile.type='button';var thumb=el('span','review-thumb');thumb.inert=true;thumb.setAttribute('aria-hidden','true');render(thumb,d,s,i);

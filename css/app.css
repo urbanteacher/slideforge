@@ -1717,6 +1717,11 @@ html[data-ws="game"] #btnSorter { display: none; }
 .split-media .cap-plain { background: none; text-shadow: 0 2px 14px rgba(0,0,0,.85); }
 .split-media .cap-none { display: none; }
 .split-media .cap-credit { margin: 0; font-size: 15px; }
+/* Prompts for the author — "Add points…", an empty picture frame, a link
+   that needs http(s). Hidden, not removed, on anything not drawn for
+   authoring, so the projector keeps exactly the layout the editor showed. */
+.slide:not([data-authoring]) .authoring-hint { visibility: hidden; }
+
 .layout-video .empty,
 .layout-image .empty {
   position: absolute; inset: 0; display: grid; place-items: center; align-content: center;
@@ -5634,7 +5639,10 @@ html[data-ws="deck"] #railCount { display: none; }
 .store-state.is-saving::before { background: var(--ui-dim); animation: store-pulse 1s ease-in-out infinite; }
 @keyframes store-pulse { 0%, 100% { opacity: .3 } 50% { opacity: 1 } }
 @media (prefers-reduced-motion: reduce) { .store-state.is-saving::before { animation: none } }
-@media (max-width: 900px) { .store-state { display: none } }
+/* Failure is the one state that must be seen, on any width. */
+.store-state.is-failed { color: #a4262c; font-weight: 600; pointer-events: auto; cursor: help; }
+.store-state.is-failed::before { background: #c4314b; }
+@media (max-width: 900px) { .store-state:not(.is-failed) { display: none } }
 
 /* A slide kept in the deck and out of the show. Dimmed rather than hidden:
    the rail is where its author goes looking for it, so it has to stay
