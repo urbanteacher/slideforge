@@ -38,6 +38,8 @@ const randomchallenge = {
   },
   normalize: function (q) {
     q.challenge = String(q.challenge == null ? q.question : q.challenge).slice(0, 280);
+    /* A face label, for Question Cube (Define, Compare, Why ...). */
+    q.category = String(q.category == null ? '' : q.category).slice(0, 40);
     q.question = q.challenge || q.question || 'Challenge';
     q.options = ['Complete', 'Skip'];
     q.correct = 0;
@@ -50,6 +52,7 @@ const randomchallenge = {
   compile: function (q, st, s) {
     s.question = q.challenge || q.question;
     s.challenge = q.challenge || q.question;
+    s.category = q.category || '';
     s.options = ['Complete', 'Skip'];
     s.correct = 0;
     s.answer = 'Complete';

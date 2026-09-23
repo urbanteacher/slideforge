@@ -688,3 +688,30 @@
   transform: scaleX(var(--share, 0));
   background: color-mix(in srgb, #34c98a 22%, transparent);
 }
+
+/* ---- Question Cube: roll a face ---- */
+.layout-quiz.present-cube .cube-stage {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; text-align: center;
+}
+.layout-quiz.present-cube .cube-face {
+  --face: #4c7bd9;
+  width: 190px; height: 190px; border-radius: 34px;
+  display: grid; place-content: center; gap: 6px;
+  background: var(--face); color: #fff;
+  box-shadow: 0 14px 0 color-mix(in srgb, var(--face) 60%, #000), 0 22px 40px rgba(0,0,0,.18);
+  animation: sf-cube-roll .8s cubic-bezier(.3,0,.2,1);
+}
+.layout-quiz.present-cube .cube-face[data-face="1"] { --face: #2f9e6e; }
+.layout-quiz.present-cube .cube-face[data-face="2"] { --face: #d9a404; }
+.layout-quiz.present-cube .cube-face[data-face="3"] { --face: #8a5cd1; }
+.layout-quiz.present-cube .cube-face[data-face="4"] { --face: #d9534f; }
+.layout-quiz.present-cube .cube-face[data-face="5"] { --face: #e07b2a; }
+.layout-quiz.present-cube .cube-pips { font-size: 64px; line-height: 1; }
+.layout-quiz.present-cube .cube-type { font-size: 22px; font-weight: 850; letter-spacing: .06em; text-transform: uppercase; }
+.layout-quiz.present-cube .cube-question { max-width: 880px; font-size: 44px; font-weight: 700; line-height: 1.22; text-wrap: balance; }
+.layout-quiz.present-cube .challenge-left { font-size: 18px; font-weight: 650; color: var(--s-dim); }
+@keyframes sf-cube-roll {
+  0% { transform: translateY(-60px) rotate(-200deg) scale(.7); opacity: 0; }
+  60% { transform: translateY(8px) rotate(12deg) scale(1.04); opacity: 1; }
+  100% { transform: none; }
+}

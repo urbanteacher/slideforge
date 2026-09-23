@@ -251,6 +251,19 @@ const GAME_FORMAT_PRESETS = {
       { term: 'System', prompt: 'Organs cooperating — how does this reach the organism?' }
     ]
   },
+  'question-cube': {
+    style: 'randomchallenge',
+    title: 'Question cube',
+    settings: { scoreboard: false, scoreSlide: false, defaultTime: 0, confidence: false },
+    seeds: [
+      { category: 'Define', challenge: 'What is photosynthesis? Say it in one sentence.' },
+      { category: 'Compare', challenge: 'How is photosynthesis different from respiration?' },
+      { category: 'Why', challenge: 'Why does a plant need light to make its food?' },
+      { category: 'Example', challenge: 'Give a real example of photosynthesis mattering outside a plant.' },
+      { category: 'What if', challenge: 'What would happen to a pond if the light were halved?' },
+      { category: 'Benefits and limits', challenge: 'What can photosynthesis not explain about how a plant grows?' }
+    ]
+  },
   'random-challenge': {
     style: 'randomchallenge',
     title: 'Random challenge',

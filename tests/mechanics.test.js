@@ -436,3 +436,16 @@ test('Time Traveler places events on one growing timeline, and an old typed game
   assert.ok(items.every(s => s.min === items[0].min && s.max === items[0].max), 'one line for the game');
   assert.deepEqual(Array.from(items, s => s.timeline.length), [0, 1, 2], 'each round adds its event');
 });
+
+test('Question Cube rolls six faces in a fresh order, each knowing its type', () => {
+  const SF = loadModel();
+  const preset = SF.GAME_FORMAT_PRESETS['question-cube'];
+  assert.equal(preset.style, 'randomchallenge');
+  const g = SF.normalizeGame({ style: 'randomchallenge', format: 'question-cube', title: 'Cube',
+    questions: preset.seeds });
+  const faces = SF.compileGame(g).filter(s => s.type === 'quiz');
+  assert.equal(faces.length, 6);
+  assert.deepEqual(Array.from(faces, s => s.drawNo), [1, 2, 3, 4, 5, 6]);
+  assert.deepEqual(Array.from(faces, s => s.category).sort(),
+    ['Benefits and limits', 'Compare', 'Define', 'Example', 'Why', 'What if'].sort());
+});

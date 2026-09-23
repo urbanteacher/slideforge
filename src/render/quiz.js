@@ -243,6 +243,7 @@ export function createQuizRenderer(SF, helpers) {
     /* The old typed cloze stage; Fill the gaps draws its own passage. */
     if (f === 'fill-in-the-blanks' && slide.input !== 'fill') return 'blanks';
     if (f === 'odd-one-out') return 'oddone';
+    if (f === 'question-cube') return 'cube';
     if (f === 'compare-contrast') return 'compare';
     if (f === 'spot-the-error') return 'spoterror';
     if (f === 'predict-outcome') return 'predict';
@@ -580,6 +581,27 @@ export function createQuizRenderer(SF, helpers) {
         chain.appendChild(wrap);
       }
       pad.appendChild(chain);
+    } else if (present === 'cube') {
+      /* Question Cube: the face that came up, its question, and how many
+         faces are left. Each face has its own colour so the room learns the
+         six types by sight; the cube lands with a tumble, which is the roll. */
+      var FACES = ['define', 'compare', 'why', 'example', 'what if', 'benefits and limits'];
+      var face = String(slide.category || '').trim();
+      var faceNo = FACES.indexOf(face.toLowerCase());
+      var cube = el('div', 'stage-hero cube-stage');
+      cube.appendChild(el('div', 'stage-atmosphere', ''));
+      var die = el('div', 'cube-face');
+      die.dataset.face = String(faceNo >= 0 ? faceNo : (slide.drawNo || 1) % 6);
+      die.appendChild(el('div', 'cube-pips', ['\u2680', '\u2681', '\u2682', '\u2683', '\u2684', '\u2685'][faceNo >= 0 ? faceNo : 0]));
+      die.appendChild(el('div', 'cube-type', face || 'Question'));
+      cube.appendChild(die);
+      cube.appendChild(el('div', 'cube-question', slide.challenge || slide.question || ''));
+      if (slide.drawTotal) {
+        var facesLeft = slide.drawTotal - slide.drawNo;
+        cube.appendChild(el('div', 'challenge-left', facesLeft
+          ? facesLeft + (facesLeft === 1 ? ' face left' : ' faces left') : 'Last face'));
+      }
+      pad.appendChild(cube);
     } else if (present === 'challenge') {
       var ch = el('div', 'stage-hero challenge-stage');
       ch.appendChild(el('div', 'stage-atmosphere', ''));

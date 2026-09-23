@@ -603,11 +603,11 @@
   /* Starter banks live in the model, alongside their format definitions. */
   var presets = SF.GAME_FORMAT_PRESETS || {};
 
-  /* Discussion formats — no competitive score. Copy says so on the card. */
-  var feedbackPresets = {
-    'question-cube': { kind: 'brainstorm', title: 'Question cube',
-      prompt: 'What question would you ask about this? No score — open the discussion.' }
-  };
+  /* Discussion formats inserted as a prompt beside a slide. Question Cube
+     was one until it became a game (23 Sep 2026); none are left, but the
+     insert path still reads this map. */
+  /** @type {Record<string, any>} */
+  var feedbackPresets = {};
 
 
   /* [id, icon, title, blurb, kind, enabled] — Memory Maze stays out of scope. */
@@ -644,7 +644,7 @@
     ['predict-outcome','→','Predict the Outcome','Choose what happens next, and why.','check',true],
     ['time-traveler','☽','Time Traveler','Recall events from year or clue.','check',true],
     ['connection-maker','⚭','Connection Maker','Link two ideas; explain the bridge.','check',true],
-    ['question-cube','⚀','Question Cube · discussion prompt','Add a discussion prompt beside your slide. Cube rolling is not available yet.','feedback',true],
+    ['question-cube','⚀','Question Cube','Roll a face — Define, Compare, Why, Example, What if, Benefits — and answer it aloud.','check',true],
     ['random-challenge','✦','Random Challenge','Draw varied open challenges. Count only — no scoreboard.','check',true],
     ['concept-chain','⛓','Concept Chain','Grow a justified chain. Type the link, Accept — it appears on the wall.','check',true]
   ];
@@ -769,7 +769,7 @@
             SF.toast(a[2] + ' added. Customize it in the right panel.');
           }
         } else {
-          var fp = feedbackPresets[a[0]];
+          var fp = feedbackPresets[String(a[0])];
           SF.Editor.attachFeedback(fp ? fp.kind : a[0], fp);
           /* The feedback branch's own toast. It used to share an
              unconditional one below, which also fired after the two above and

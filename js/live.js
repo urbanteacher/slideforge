@@ -2317,7 +2317,7 @@
     var tally = s.style === 'headsup'
       ? (guesser ? guesser + '\u2019s round: ' + count : count + ' this round')
       : s.style === 'randomchallenge'
-        ? count + ' challenges completed'
+        ? count + (s.format === 'question-cube' ? ' answered' : ' challenges completed')
         : count + ' explanations accepted';
     chip.textContent = '';
     var credit = Live.lastCredit && Live.lastCredit.slideId === s.id ? Live.lastCredit : null;

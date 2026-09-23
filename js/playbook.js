@@ -639,10 +639,15 @@
     note: 'The current version does not build an interactive timeline.'
   });
   Object.assign(BOOK['question-cube'], {
-    title: 'Question Cube · discussion prompt', phases: 'prompt → responses → discussion',
-    scoring: 'None.',
-    howToPlay: ['Add the prompt beside a teaching slide.', 'Invite written responses.', 'Discuss the ideas with the class.'],
-    note: 'Cube rolling and a pool of unused prompts are not available in this version.'
+    title: 'Question Cube', phases: 'roll a face → think → answer aloud → the teacher marks → roll again',
+    judgement: 'judge', demo: 'judge',
+    scoring: 'Counts accepted answers (with teams, credits the speaker’s team).',
+    howToPlay: [
+      'Next rolls the cube: a fresh face each time — Define, Compare, Why, Example, What if, Benefits and limits — and its question for today’s topic.',
+      'Choose who answers in Live answers (Pick for me cold-calls fairly). They answer aloud.',
+      'Mark it; the count grows. The faces left are shown; no face repeats until the cube is spent.'
+    ],
+    note: ''
   });
   Object.assign(BOOK['random-challenge'], {
     phases: 'prepared challenge → complete/pass → next', timer: 'Optional countdown per challenge.',
@@ -653,7 +658,7 @@
   /* Authoring language belongs to the activity, not its underlying input type.
      Recommendations guide setup; they never trim an existing lesson. */
   var SETUP = {
-    'true-false': ['Statement', 'Statement to judge', 'Write one unambiguous claim and explain the misconception in the reveal.', 'Learners vote true or false', 'question'],
+    'true-false': ['Statement', 'Statement to judge', 'Write one unambiguous claim and explain the misconception in the reveal. The room sees its split and may switch once.', 'Learners vote, see the split, hold or switch', 'question'],
     'low-stakes-quiz': ['Question', 'Recall question', 'Prepare 3–10 short question-and-answer pairs for one readable worksheet.', 'Class writes on paper', 'board'],
     'quiz-bowl': ['Cell', 'Question behind this cell', 'Group questions into up to six categories. Set a value and a private answer for each cell.', 'Teacher awards spoken answers', 'board'],
     'beat-the-clock': ['Question', 'Quick-fire question', 'Keep prompts and choices short enough to read under pressure. Add a varied question pool.', 'Learners choose an answer', 'question'],
@@ -667,19 +672,19 @@
     'definition-challenge': ['Passage', 'Recall question', 'Keep the passage short. Ask something that requires remembering it after it disappears.', 'Read first, then type from memory', 'board'],
     'emoji-guess': ['Puzzle', 'Emoji clues', 'Make each symbol contribute to the answer. Add accepted spellings and a useful optional hint.', 'Learners type the concept', 'question'],
     'word-reveal': ['Word', 'Clue or question', 'Use a recognisable term, a meaningful hint and accepted spellings. Set letter pace per word.', 'Learners guess as letters appear', 'none'],
-    'fill-in-the-blanks': ['Sentence', 'Sentence with a gap', 'Use one gap per sentence in this typed-answer version. Add the missing word and accepted variants.', 'Typed cloze activity', 'question'],
-    'heads-up': ['Term', 'Term to describe', 'Use describable terms. Position the guesser facing away from the projected term.', 'Class gives spoken clues', 'question'],
+    'fill-in-the-blanks': ['Passage', 'Passage with [gaps]', 'Put each missing word in [square brackets], up to four, and add lures that tempt. Phones tap a word into each gap.', 'Learners fill gaps from a word bank', 'question'],
+    'heads-up': ['Term', 'Term to describe', 'Use describable terms. Choose the guesser in Live answers; one clock runs for the whole round.', 'Class gives spoken clues against the clock', 'question'],
     'spin-explain': ['Concept', 'Concept to explain', 'Choose concepts that invite explanation, with a hint that supports rather than gives the answer.', 'Teacher judges explanations', 'question'],
     'spot-the-error': ['Sentence', 'Sentence containing the error', 'Write one plausible sentence with one mistake. Mark the wrong words exactly as written, and give the correction.', 'Learners tap the wrong word', 'question'],
     'ranking': ['Set', 'Ordering instruction', 'State the ordering criterion. Enter 3–8 distinct items in the correct order; play shuffles them.', 'Learners reorder and submit', 'question'],
-    'odd-one-out': ['Set', 'Items to compare', 'Prepare four comparable items and a defensible reason. Welcome alternative rules in discussion.', 'Class discusses; no score', 'none'],
+    'odd-one-out': ['Set', 'Items to compare', 'Prepare four comparable items and a defensible reason. Phones vote; the reveal invites other picks to defend their rule.', 'Learners vote, then defend', 'question'],
     'compare-contrast': ['Comparison', 'Items to compare', 'Choose two comparable ideas. Prepare similarities and differences separately for the reveal.', 'Class discusses; no score', 'none'],
-    'predict-outcome': ['Scenario', 'Scenario and prediction question', 'Give enough context to reason from. Offer three plausible outcomes and explain the cause.', 'Learners choose an outcome', 'question'],
-    'time-traveler': ['Event', 'Date and event clue', 'Include the year and a revealing clue without naming the event. List accepted event names.', 'Learners type an event name', 'question'],
-    'connection-maker': ['Connection', 'Connection prompt', 'Choose two ideas with a meaningful bridge. Put acceptable reasoning in the explanation.', 'Teacher judges a spoken connection', 'question'],
-    'question-cube': ['Prompt', 'Discussion prompt', 'This version adds an open discussion prompt beside a slide; it does not roll a cube.', 'Open written discussion', 'none'],
+    'predict-outcome': ['Scenario', 'Scenario and prediction question', 'Give enough context to reason from. Offer three plausible outcomes. Lock the predictions, show what happens, then reveal.', 'Learners commit and say how sure', 'question'],
+    'time-traveler': ['Event', 'Event to place in time', 'Name the event; set its year as the target and a sensible tolerance. Each round adds the event to one timeline.', 'Learners place the event on a timeline', 'question'],
+    'connection-maker': ['Connection', 'Connection prompt', 'Choose two ideas with a meaningful bridge. Phones propose bridges; you put one on the table and credit its author.', 'Phones propose; teacher accepts', 'question'],
+    'question-cube': ['Face', 'Question for this face', 'Six faces — Define, Compare, Why, Example, What if, Benefits and limits — each a question on today’s topic. The cube rolls a fresh face each time.', 'Roll a face; answer aloud', 'question'],
     'random-challenge': ['Challenge', 'Challenge to complete', 'Give a clear task and a visible success criterion. Keep preparation practical for the room.', 'Teacher records completion', 'question'],
-    'concept-chain': ['Starting concept', 'Starting concept', 'Pick a concept with several possible links. Give the class a clear connection rule.', 'Class proposes; teacher accepts', 'board']
+    'concept-chain': ['Starting concept', 'Starting concept', 'Pick a concept with several possible links. Phones propose links; you put one on the table and Accept it.', 'Phones propose; teacher accepts', 'board']
   };
   function setupForKey(key) {
     var row = SETUP[key] || SETUP[STYLE_BOOK[key]];

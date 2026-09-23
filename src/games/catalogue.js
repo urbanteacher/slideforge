@@ -73,7 +73,7 @@ var FORMATS = {
   'compare-contrast': { label: 'Compare & contrast',
     answersHint: 'Two equal items for discussion. Similarities and differences are for the reveal — no score.' },
   'question-cube': { label: 'Question cube',
-    answersHint: 'Roll a prompt; open class discussion. No score.' }
+    answersHint: 'One question per face — Define, Compare, Why, Example, What if, Benefits and limits. The cube rolls a fresh face each time; answers are spoken.' }
 };
 
 function gameFormat(key) { return FORMATS[key] || null; }
@@ -119,7 +119,8 @@ var FORMAT_STYLE = {
   'concept-chain': 'conceptchain',
   'bingo': 'bingo',
   'compare-contrast': 'compare',
-  'question-cube': 'choice'
+  /* A drawn deck of six faces since 23 Sep 2026 (the Random Challenge engine). */
+  'question-cube': 'randomchallenge'
 };
 
 /** Engines offered when a game has no catalogue format (blank quiz).

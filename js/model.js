@@ -4500,6 +4500,7 @@
       if (f === "emoji-guess") return "emoji";
       if (f === "fill-in-the-blanks" && slide.input !== "fill") return "blanks";
       if (f === "odd-one-out") return "oddone";
+      if (f === "question-cube") return "cube";
       if (f === "compare-contrast") return "compare";
       if (f === "spot-the-error") return "spoterror";
       if (f === "predict-outcome") return "predict";
@@ -4846,6 +4847,23 @@
           chain.appendChild(wrap);
         }
         pad.appendChild(chain);
+      } else if (present === "cube") {
+        var FACES = ["define", "compare", "why", "example", "what if", "benefits and limits"];
+        var face = String(slide.category || "").trim();
+        var faceNo = FACES.indexOf(face.toLowerCase());
+        var cube = el("div", "stage-hero cube-stage");
+        cube.appendChild(el("div", "stage-atmosphere", ""));
+        var die = el("div", "cube-face");
+        die.dataset.face = String(faceNo >= 0 ? faceNo : (slide.drawNo || 1) % 6);
+        die.appendChild(el("div", "cube-pips", ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"][faceNo >= 0 ? faceNo : 0]));
+        die.appendChild(el("div", "cube-type", face || "Question"));
+        cube.appendChild(die);
+        cube.appendChild(el("div", "cube-question", slide.challenge || slide.question || ""));
+        if (slide.drawTotal) {
+          var facesLeft = slide.drawTotal - slide.drawNo;
+          cube.appendChild(el("div", "challenge-left", facesLeft ? facesLeft + (facesLeft === 1 ? " face left" : " faces left") : "Last face"));
+        }
+        pad.appendChild(cube);
       } else if (present === "challenge") {
         var ch = el("div", "stage-hero challenge-stage");
         ch.appendChild(el("div", "stage-atmosphere", ""));
@@ -19910,6 +19928,7 @@
     },
     normalize: function(q) {
       q.challenge = String(q.challenge == null ? q.question : q.challenge).slice(0, 280);
+      q.category = String(q.category == null ? "" : q.category).slice(0, 40);
       q.question = q.challenge || q.question || "Challenge";
       q.options = ["Complete", "Skip"];
       q.correct = 0;
@@ -19922,6 +19941,7 @@
     compile: function(q, st, s) {
       s.question = q.challenge || q.question;
       s.challenge = q.challenge || q.question;
+      s.category = q.category || "";
       s.options = ["Complete", "Skip"];
       s.correct = 0;
       s.answer = "Complete";
@@ -21896,7 +21916,7 @@
     },
     "question-cube": {
       label: "Question cube",
-      answersHint: "Roll a prompt; open class discussion. No score."
+      answersHint: "One question per face — Define, Compare, Why, Example, What if, Benefits and limits. The cube rolls a fresh face each time; answers are spoken."
     }
   };
   function gameFormat(key) {
@@ -21935,7 +21955,8 @@
     "concept-chain": "conceptchain",
     "bingo": "bingo",
     "compare-contrast": "compare",
-    "question-cube": "choice"
+    /* A drawn deck of six faces since 23 Sep 2026 (the Random Challenge engine). */
+    "question-cube": "randomchallenge"
   };
   var CORE_STYLES = ["choice", "type", "slider", "order"];
   var SPECIAL_STYLES = [
@@ -22448,6 +22469,19 @@
         { term: "Tissue", prompt: "Groups of similar cells — how does this link onward?" },
         { term: "Organ", prompt: "Tissues working together — what comes after?" },
         { term: "System", prompt: "Organs cooperating — how does this reach the organism?" }
+      ]
+    },
+    "question-cube": {
+      style: "randomchallenge",
+      title: "Question cube",
+      settings: { scoreboard: false, scoreSlide: false, defaultTime: 0, confidence: false },
+      seeds: [
+        { category: "Define", challenge: "What is photosynthesis? Say it in one sentence." },
+        { category: "Compare", challenge: "How is photosynthesis different from respiration?" },
+        { category: "Why", challenge: "Why does a plant need light to make its food?" },
+        { category: "Example", challenge: "Give a real example of photosynthesis mattering outside a plant." },
+        { category: "What if", challenge: "What would happen to a pond if the light were halved?" },
+        { category: "Benefits and limits", challenge: "What can photosynthesis not explain about how a plant grows?" }
       ]
     },
     "random-challenge": {
