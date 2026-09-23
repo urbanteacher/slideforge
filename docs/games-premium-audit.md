@@ -56,7 +56,7 @@ tests are in the table. The tier follows from the row.
 | Beat the Clock | `speed` | ◐ | ◐ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Thin: the clock restarts per question, so there is no clock to beat |
 | True/False Showdown | `truefalse` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: vote → the room's split on wall and phones → one switch each → reveal of before against after and how many switched |
 | Predict the Outcome | `choice` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: commit with confidence → lock (the room's split, not the answer) → watch → reveal; a sure, right prediction earns half again. Open: the private written prediction (K8) |
-| Fill in the Blanks | `type` | ◐ | ◐ | ✗ | ✓ | ◐ | ◐ | ✓ | ◐ | Thin: one typed gap, no gap reveal |
+| Fill in the Blanks | `fill` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | Solid, near premium: *Fill the gaps* — up to four [gaps], a shuffled word bank with lures tapped into slots, the right word landing in each at the reveal with what the room put there, the hardest gap and its lure named; partial marks; teacher entry by key |
 | Time Traveler | `type` | ✗ | ◐ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: typed recall, no time |
 | Odd One Out | `oddone` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | n/a | ✓ | Solid, near premium: phones vote; the split is held, then drawn as heat across the four tiles, with a line inviting the next most popular pick to defend its rule. Never marked. Open: the written rule as an anonymous idea (K9) |
 | Compare & Contrast | `compare` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | n/a | ◐ | Thin on phones: they sit idle |
@@ -70,8 +70,8 @@ tests are in the table. The tier follows from the row.
 
 **Totals:**
 - 0 fully premium; Spot the Error is near-premium.
-- 17 solid.
-- 8 thin.
+- 18 solid.
+- 7 thin.
 - 0 broken by wrong-result scoring.
 - 1 disabled.
 
@@ -416,6 +416,25 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — Fill the gaps (GA-11).**
+  - **A new style, `fill`**, with its own phone input. The answer is one
+    word-bank index per gap, repeats allowed; the relay checks it like an
+    order.
+  - **Authoring:** one passage with the missing words in [brackets] (up to
+    four), plus lures. The editor previews the phone. Old ______ games
+    heal, and start with no borrowed lures.
+  - **Phones** tap words into numbered slots.
+  - **The wall** shows the passage large, with the bank quietly under it. At
+    the reveal the right word lands in each slot, with "12 ✓ · 6 diffusion"
+    beneath it and "Gap 2 was the hardest. 6 put 'diffusion' there."
+  - **Scoring:** each right gap earns its share of the points.
+  - **Rooms:** teacher entry picks a word per gap by key. The rehearsal class
+    is drawn to a shared lure.
+  - **Fixed on the way:** a phone rejoining with a Ranking answer was told it
+    was a single choice. Every input now echoes through one
+    `lockedMessage`.
+  - **Tests:** `tests/fill.test.js`. `npm test` 498/498. Not viewed in a
+    browser.
 - **23 September 2026 — Predict the Outcome: commit, then watch (GA-13).**
   - **Phones commit** a prediction and how sure they are.
   - **The first Next locks** the predictions (the relay's new
