@@ -2046,6 +2046,25 @@ ws.attach(server, (sock, req) => {
         pushPlayers(room);
         pushTally(room);
 
+      } else if (m.t === 'raceLanes') {
+        /* A race's lanes, from the host: each phone is told its own (its
+           team's, in teams) and its place, so the wall can show only the
+           leaders in a big room. */
+        const len = Math.max(1, Math.min(50, Number(m.length) || 5));
+        const rows = (Array.isArray(m.rows) ? m.rows : []).slice(0, 500)
+          .filter(r => Array.isArray(r) && typeof r[0] === 'string')
+          .map(r => [r[0].slice(0, 20), Math.max(0, Math.min(len, Number(r[1]) || 0))]);
+        for (const p of room.players.values()) {
+          if (!p.sock || !p.sock.open) continue;
+          const key = room.mode === 'teams' && Number.isInteger(p.team) ? 't' + p.team : 'p' + p.id;
+          const mine = rows.find(r => r[0] === key);
+          if (!mine) continue;
+          const ahead = rows.filter(r => r[1] > mine[1]).length;
+          const level = rows.filter(r => r[1] === mine[1]).length;
+          p.sock.json({t: 'lane', pos: mine[1], length: len, place: ahead + 1, tied: level > 1,
+            of: rows.length, team: key[0] === 't'});
+        }
+
       } else if (m.t === 'hintOut') {
         /* Emoji Guess: the teacher released the hint on the wall. An answer
            from a phone after this moment scores half. Teacher-entered rows

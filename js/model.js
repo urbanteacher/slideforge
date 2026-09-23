@@ -3922,6 +3922,9 @@
       if (opts.note) pad.appendChild(el("div", "race-note", opts.note));
       var board5 = el("div", "racetrack");
       board5.style.setProperty("--steps", String(len));
+      var crowd = lanes.length > CROWD_AT;
+      var pack = crowd ? lanes.slice(CROWD_TOP) : [];
+      if (crowd) lanes = lanes.slice(0, CROWD_TOP);
       lanes.forEach(function(lane) {
         var row = el("div", "lane" + (lane.moved ? " moved" : "") + ((opts.winners || []).indexOf(lane.key) > -1 ? " won" : ""));
         var colour = lane.color || "var(--s-accent)";
@@ -3946,7 +3949,36 @@
         row.appendChild(el("div", "lane-pos", lane.pos + " / " + len));
         board5.appendChild(row);
       });
+      if (pack.length) {
+        var packRow = el("div", "lane pack" + (pack.some(function(l) {
+          return l.moved;
+        }) ? " moved" : ""));
+        var packLabel = el("div", "lane-name");
+        packLabel.appendChild(el("span", "lane-text", "The pack"));
+        packLabel.appendChild(el("span", "lane-sub", pack.length + " more"));
+        packRow.appendChild(packLabel);
+        var packRail = el("div", "lane-rail");
+        var here = [];
+        for (var k = 0; k <= len; k++) here.push(0);
+        pack.forEach(function(l) {
+          here[Math.max(0, Math.min(len, l.pos))]++;
+        });
+        var most = Math.max.apply(null, here) || 1;
+        for (var j = 1; j <= len; j++) {
+          var c = el("div", "step" + (j === len ? " finish" : "") + (here[j] ? " held" : ""));
+          c.style.setProperty("--share", String(here[j] / most));
+          if (here[j]) c.appendChild(el("span", "pack-n", String(here[j])));
+          packRail.appendChild(c);
+        }
+        packRow.appendChild(packRail);
+        var moved = pack.filter(function(l) {
+          return l.moved;
+        }).length;
+        packRow.appendChild(el("div", "lane-pos", here[0] ? here[0] + " at the start" : moved ? "▲ " + moved : ""));
+        board5.appendChild(packRow);
+      }
       pad.appendChild(board5);
+      if (crowd) pad.appendChild(el("div", "race-yours", "Your lane is on your phone"));
       node.appendChild(pad);
       return node;
     }
@@ -3955,11 +3987,23 @@
       var max = Math.max(1, Number(opts.max) || 1);
       var hp = Math.max(0, Math.min(max, Number(opts.hp) || 0));
       var pct = Math.round(hp / max * 100);
-      var node = themedRoot("slide", deck, "layout-boss" + (opts.hit ? " boss-hit" : "") + (hp <= 0 ? " boss-down" : ""), "boss");
+      var node = themedRoot("slide", deck, "layout-boss" + (opts.hit ? " boss-hit" : " boss-miss") + (hp <= 0 ? " boss-down" : ""), "boss");
       var pad = el("div", "pad");
       pad.appendChild(el("div", "boss-title", opts.title || "Boss battle"));
+      var face = el("div", "boss-face");
+      face.appendChild(el("span", "boss-glyph", hp <= 0 ? "☠" : "▲"));
+      face.appendChild(el("span", "boss-dmg", opts.hit && opts.damage ? "−" + opts.damage : opts.hit ? "" : "MISS"));
+      pad.appendChild(face);
+      if (opts.attack) pad.appendChild(el("div", "boss-attack", opts.attack));
       if (opts.note) pad.appendChild(el("div", "boss-note", opts.note));
       var meter = el("div", "boss-meter");
+      var prev = Math.max(hp, Math.min(max, Number(opts.prevHp) || hp));
+      if (prev > hp) {
+        var chip = el("div", "boss-chip");
+        chip.style.left = pct + "%";
+        chip.style.width = Math.round((prev - hp) / max * 100) + "%";
+        meter.appendChild(chip);
+      }
       var fill2 = el("div", "boss-fill");
       fill2.style.width = pct + "%";
       meter.appendChild(fill2);

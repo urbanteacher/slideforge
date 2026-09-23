@@ -1721,7 +1721,15 @@
       });
     }
     lanes.sort(function (a, b) { return b.pos - a.pos; });
-    return lanes.slice(0, 8);      // more than eight lanes stops being readable
+    /* All of them: past eight the track draws the leaders and the pack. */
+    return lanes;
+  }
+
+  /* Each phone's own lane, so a big race can show only its leaders on the
+     wall. The relay sends each phone its lane and place. */
+  function sendLanes(lanes) {
+    send({ t: 'raceLanes', length: Live.trackLength,
+      rows: lanes.map(function (l) { return [l.key, l.pos]; }) });
   }
 
   function showTrack(movedKeys) {
@@ -1729,14 +1737,16 @@
     lanes.forEach(function (l) { l.moved = (movedKeys || []).indexOf(l.key) > -1; });
 
     var done = Live.winners.length > 0;
+    var n = movedKeys ? movedKeys.length : 0;
+    var who = Live.mode === 'teams' ? (n === 1 ? ' team moves up' : ' teams move up')
+      : (n === 1 ? ' runner moves up' : ' runners move up');
+    sendLanes(lanes);
     SF.Player.showRaceTrack(lanes, {
       length: Live.trackLength,
       title: done ? 'Photo finish!' : 'The race',
       note: done
         ? winnerNote()
-        : (movedKeys && movedKeys.length
-            ? movedKeys.length + (movedKeys.length === 1 ? ' team moves up' : ' teams move up')
-            : 'Nobody moved — nothing scored that round'),
+        : (n ? n + who : 'Nobody moved — nothing scored that round'),
       winners: Live.winners
     });
   }
@@ -1761,6 +1771,7 @@
     var s = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
     var damage = (s && s.bossDamage) || SF.bossDamage(s && s.difficulty) || 2;
     var hit = bossRoomHit(m);
+    var prevHp = Live.bossHp;
     var note;
     if (hit && Live.bossHp > 0) {
       Live.bossHp = Math.max(0, Live.bossHp - damage);
@@ -1785,7 +1796,27 @@
       value: hit ? damage : 0
     });
     paintRail();
-    showBoss(note, hit);
+    showBoss(note, hit, { damage: hit && prevHp > 0 ? Math.min(damage, prevHp) : 0, prevHp: prevHp, attack: bossAttack(m) });
+  }
+
+  /* The room's accuracy, said as the attack: a count, never a name. */
+  function bossAttack(m) {
+    var correct = Number(m.correct);
+    if (Live.mode === 'teams') {
+      var rows = (m.counts || []).filter(function (row) {
+        return (row || []).reduce(function (a, b) { return a + b; }, 0) > 0;
+      });
+      var agreed = rows.filter(function (row) {
+        var best = Math.max.apply(null, row);
+        return row[correct] === best && row.filter(function (x) { return x === best; }).length === 1;
+      }).length;
+      return rows.length ? 'The attack: ' + agreed + ' of ' + rows.length + ' teams agreed on the right answer' : '';
+    }
+    var answers = Live.snapshot.answers || [];
+    var right = answers.filter(function (a) { return Number(a.response) === correct; }).length;
+    return answers.length
+      ? 'The attack: ' + right + ' of ' + answers.length + ' right (' + Math.round(right / answers.length * 100) + '%)'
+      : '';
   }
 
   function bossRoomHit(m) {
@@ -1812,15 +1843,15 @@
     return total > 0 && rights * 2 > total;
   }
 
-  function showBoss(note, hit) {
+  function showBoss(note, hit, moment) {
     if (!SF.Player.showBossBar) return;
-    SF.Player.showBossBar({
+    SF.Player.showBossBar(Object.assign({
       hp: Live.bossHp,
       max: Live.bossMax,
       title: Live.bossHp <= 0 ? 'Boss defeated!' : 'Boss battle',
       note: note,
       hit: !!hit
-    });
+    }, moment || {}));
   }
 
   /** Speed gains for the relay — one row per answered player. */

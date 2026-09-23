@@ -502,6 +502,8 @@
     <div class="gain" id="rGain"></div>
     <div class="big" id="rScore">0</div>
     <div class="pill" id="rRank"></div>
+    <!-- A race: this phone's own lane (the wall shows only the leaders in a big room). -->
+    <div class="r-lane" id="rLane" hidden></div>
     <p class="quiet-note r-note" id="rNote" hidden></p>
     <div class="why" id="rWhy" style="display:none">
       <div class="why-answer" id="rWhyAnswer"></div>
@@ -1002,6 +1004,32 @@
     return 'Question ' + n + (m.total > 0 ? ' of ' + m.total : '');
   }
 
+  /* A race: the phone's own lane, the same steps as the wall's, and its
+     place ("4th of 27", or "joint 4th"). */
+  function paintLane(m) {
+    var box = $('rLane');
+    var len = Math.max(1, Number(m.length) || 5);
+    var pos = Math.max(0, Math.min(len, Number(m.pos) || 0));
+    box.textContent = '';
+    var label = document.createElement('div');
+    label.className = 'rl-label';
+    var n = Number(m.place) || 1;
+    var th = n % 100 >= 11 && n % 100 <= 13 ? 'th' : ({1: 'st', 2: 'nd', 3: 'rd'})[n % 10] || 'th';
+    label.textContent = (m.team ? 'Your team\u2019s lane' : 'Your lane') + ' \u00b7 ' + pos + ' / ' + len +
+      ' \u00b7 ' + (m.tied ? 'joint ' : '') + n + th + ' of ' + (Number(m.of) || 1);
+    box.appendChild(label);
+    var rail = document.createElement('div');
+    rail.className = 'rl-rail';
+    for (var i = 1; i <= len; i++) {
+      var cell = document.createElement('span');
+      cell.className = 'rl-step' + (i <= pos ? ' done' : '') + (i === len ? ' finish' : '');
+      if (i === pos) cell.textContent = pos >= len ? '\ud83c\udfc6' : '\ud83c\udfc7';
+      rail.appendChild(cell);
+    }
+    box.appendChild(rail);
+    box.hidden = false;
+  }
+
   function header(on) {
     $('hdr').style.display = on ? 'flex' : 'none';
     $('askBtn').style.display = on && floorOpen ? '' : 'none';
@@ -1312,6 +1340,7 @@
         break;
 
       case 'result':
+        $('rLane').hidden = true;
         me.score = m.score;
         if (m.asked != null) { me.correct = m.correct || 0; me.asked = m.asked; }
         header(true);
@@ -1361,6 +1390,10 @@
         $('rRank').textContent = formatStanding(m);
         paintWhy(m);
         show('scResult');
+        break;
+
+      case 'lane':
+        paintLane(m);
         break;
 
       case 'hintOut':

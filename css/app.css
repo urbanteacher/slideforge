@@ -3561,6 +3561,16 @@ html[data-ws="deck"] #railCount { display: none; }
 }
 .layout-race .lane.won .lane-text { color: var(--s-accent-2); }
 .layout-race .lane.won .lane-pos { color: var(--s-accent-2); }
+/* The pack: everyone past the leading five, as counts on the steps. */
+.layout-race .lane.pack .lane-text { color: var(--s-dim); }
+.layout-race .lane.pack .lane-sub { display: block; font-size: 16px; color: var(--s-dim); font-weight: 600; }
+.layout-race .lane.pack .step.held {
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--s-accent) calc(var(--share, 0) * 45%), var(--s-card));
+}
+.layout-race .lane.pack .pack-n { font-size: 22px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.layout-race .lane.pack .lane-pos { font-size: 18px; }
+.layout-race .race-yours { font-size: 20px; color: var(--s-dim); text-align: center; margin-top: 6px; }
 
 .layout-boss .pad { justify-content: center; padding: 72px 80px; gap: 22px; }
 .layout-boss .boss-title { font-size: 48px; font-weight: 750; letter-spacing: -.02em; }
@@ -3577,6 +3587,24 @@ html[data-ws="deck"] #railCount { display: none; }
 .layout-boss.boss-down .boss-fill { background: linear-gradient(90deg, #3d8b5a, #6bc48a); }
 .layout-boss.boss-hit .boss-meter { animation: sf-boss-hit .35s ease; }
 .layout-boss .boss-hp { font-size: 28px; font-variant-numeric: tabular-nums; font-weight: 650; }
+/* The reveal as a moment: the boss reacts and the damage lands. */
+.layout-boss .boss-face { display: flex; align-items: center; gap: 22px; }
+.layout-boss .boss-face .boss-glyph { font-size: 96px; line-height: 1; color: var(--s-accent); }
+.layout-boss .boss-dmg { font-size: 72px; font-weight: 800; font-variant-numeric: tabular-nums; color: #e0533a; }
+.layout-boss.boss-miss .boss-dmg { font-size: 44px; letter-spacing: .12em; color: var(--s-dim); }
+.layout-boss .boss-attack { font-size: 26px; font-weight: 650; }
+.layout-boss .boss-meter { position: relative; }
+.layout-boss .boss-fill { position: relative; z-index: 1; }
+.layout-boss .boss-chip {
+  position: absolute; top: 0; bottom: 0; background: #f4d27a; border-radius: 0 999px 999px 0;
+}
+#player .layout-boss.boss-hit .boss-face .boss-glyph { animation: sf-boss-recoil .5s ease; }
+#player .layout-boss.boss-hit .boss-dmg { animation: sf-boss-dmg .9s cubic-bezier(.3,0,.2,1); }
+#player .layout-boss.boss-miss .boss-face .boss-glyph { animation: sf-boss-bob 1.2s ease-in-out 2; }
+#player .layout-boss .boss-chip { animation: sf-boss-chip 1.4s ease .5s forwards; }
+@keyframes sf-boss-recoil { 30% { transform: translateX(-14px) rotate(-8deg); } 60% { transform: translateX(8px) rotate(4deg); } }
+@keyframes sf-boss-dmg { from { transform: translateY(24px) scale(.6); opacity: 0; } 40% { transform: translateY(-6px) scale(1.15); opacity: 1; } }
+@keyframes sf-boss-chip { to { opacity: 0; } }
 
 .layout-wordreveal .pad { justify-content: center; padding: 64px 72px; gap: 20px; text-align: center; }
 .layout-wordreveal .wr-title { font-size: 28px; font-weight: 650; letter-spacing: -.01em; color: var(--s-muted, #9aa3b5); }
