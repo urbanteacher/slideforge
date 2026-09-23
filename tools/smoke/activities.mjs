@@ -126,8 +126,9 @@ try {
     }
     return results;
   });
-  assert.equal(timerChecks.length, 10);
-  assert.equal(timerChecks.filter(c => c.staged).length, 8, 'eight of the ten moments are staged routines');
+  /* Eleven since the Connection Hunt became a moment (activities wave 3). */
+  assert.equal(timerChecks.length, 11);
+  assert.equal(timerChecks.filter(c => c.staged).length, 9, 'nine of the eleven moments are staged routines');
   for (const check of timerChecks) assert.ok(Object.entries(check).every(([key, value]) => key === 'key' || key === 'staged' || value === true), JSON.stringify(check));
   /* The ring follows the desk: paused from the desk, it holds and says so. */
   const ringFollows = await page.evaluate(async () => {
@@ -188,5 +189,5 @@ try {
     }
   });
   await page.screenshot({ path: '/tmp/slideforge-activity-review.png', fullPage: true });
-  console.log('54 inserts, sequence editing/duplication/removal, 10 player countdowns and ' + results.renders + ' slide renders passed.');
+  console.log('54 inserts, sequence editing/duplication/removal, ' + timerChecks.length + ' player countdowns and ' + results.renders + ' slide renders passed.');
 } finally { await browser.close(); }
