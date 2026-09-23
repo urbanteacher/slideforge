@@ -805,7 +805,7 @@
     insp.appendChild(UI.field('Hint (optional)', UI.text(question.hint || '', function (v) {
       question.hint = v.slice(0, 120); touched();
     }),
-      'Host marks Correct (+1) or Pass in Teaching tools / on reveal.'));
+      'Mark Correct or Pass on the wall or in Live answers. The round counts the guesser’s correct answers.'));
   };
 
   STYLE_EDITORS.spinexplain = function (insp, question) {
@@ -817,7 +817,7 @@
     insp.appendChild(UI.field('Hint (optional)', UI.text(question.hint || '', function (v) {
       question.hint = v.slice(0, 120); touched();
     }),
-      'Clear +2 · with hint +1 · reject 0. Press the verdict to score.'));
+      'Clear: one question’s worth · with a hint: half · reject: nothing. Say who spoke in Live answers.'));
   };
 
   STYLE_EDITORS.connection = function (insp, question) {
@@ -827,7 +827,7 @@
     insp.appendChild(UI.field('Second idea', UI.text(question.itemB || '', function (v) {
       question.itemB = v.slice(0, 80); question.question = 'Connect ' + (question.itemA || '') + ' and ' + question.itemB; touched(); repaint();
     })));
-    insp.appendChild(el('p', 'hint', 'Host Accepts a spoken bridge for +1.'));
+    insp.appendChild(el('p', 'hint', 'Accept a spoken bridge to credit the speaker’s team.'));
   };
 
   STYLE_EDITORS.conceptchain = function (insp, question) {
@@ -842,7 +842,7 @@
       'Shown under the seed on the wall while the class proposes a link.'));
     insp.appendChild(el('p', 'hint',
       'Use 3–10 starting concepts. Type the spoken link on the wall, then Accept ' +
-      'to grow the chain (+1). Reject or timeout skips.'));
+      'to grow the chain and credit the speaker’s team. Reject or timeout skips.'));
   };
 
   STYLE_EDITORS.randomchallenge = function (insp, question) {
@@ -1695,7 +1695,7 @@
           touched(); draw2(); drawPreview(); drawRail();
         }), 'Per link. Timeout skips without scoring or growing the chain.'));
         bodyEl.appendChild(el('p', 'hint',
-          'Use 3–10 starting concepts. Type the spoken link, Accept (+1) to grow ' +
+          'Use 3–10 starting concepts. Type the spoken link, Accept to grow ' +
           'the chain on the wall. Phones listen and watch.'));
         appendSpokenSettings();
         return;

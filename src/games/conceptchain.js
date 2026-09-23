@@ -36,7 +36,7 @@ const conceptchain = {
   plays: ROOM_PLAY.spoken,
   label: 'Concept chain',
   icon: '⛓',
-  blurb: 'Start from a term; add a justified link. Host Accepts to grow the chain (+1).',
+  blurb: 'Start from a term; add a justified link. Host Accepts to grow the chain and credit the speaker’s team.',
   mechanic: 'judge',
   input: 'choice',
   minOptions: 2,

@@ -956,6 +956,9 @@ function feedbackDigest(room) {
  * null. The host's own object is never forwarded: only these fields, each
  * bounded, and the job only from the four the phones know how to draw.
  */
+/* See the spoken verdict in the reveal handler. */
+const SPOKEN_POINTS = 1000;
+
 function cleanStage(st) {
   if (!st || typeof st !== 'object') return null;
   const clamp = (v, hi) => Math.max(0, Math.min(hi, Math.round(Number(v) || 0)));
@@ -1720,8 +1723,14 @@ ws.attach(server, (sock, req) => {
         const spoken = room.question.spoken;
         const accepted = spoken && (room.question.style === 'spinexplain'
           ? correctIndex === 0 || correctIndex === 1 : correctIndex === 0);
+        /* An accepted explanation is worth what a whole team answering one
+           question right is worth: the quiz scale, not 1 or 2. Team scores
+           are one ledger across the lesson, and a spoken credit of 1 beside
+           quiz averages of up to 1,000 never registered. "With a hint" in
+           Spin & Explain is half. Heads Up and Random Challenge count only. */
         const oralPoints = !accepted || ['headsup','randomchallenge'].includes(room.question.style)
-          ? 0 : room.question.style === 'spinexplain' && correctIndex === 0 ? 2 : 1;
+          ? 0 : room.question.style === 'spinexplain' && correctIndex === 1
+            ? SPOKEN_POINTS / 2 : SPOKEN_POINTS;
         const recipient = spoken && m.spoken && typeof m.spoken === 'object' ? m.spoken.recipient : null;
         const recipientPlayer = recipient && recipient.type === 'player'
           ? room.players.get(Number(recipient.id)) : null;

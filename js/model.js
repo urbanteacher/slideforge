@@ -19585,7 +19585,7 @@
     plays: ROOM_PLAY.spoken,
     label: "Connection maker",
     icon: "⚭",
-    blurb: "Pick two ideas and explain the bridge. Host Accepts for +1.",
+    blurb: "Pick two ideas and explain the bridge. Accept credits the speaker’s team.",
     mechanic: "judge",
     input: "choice",
     minOptions: 2,
@@ -19685,7 +19685,7 @@
     plays: ROOM_PLAY.spoken,
     label: "Concept chain",
     icon: "⛓",
-    blurb: "Start from a term; add a justified link. Host Accepts to grow the chain (+1).",
+    blurb: "Start from a term; add a justified link. Host Accepts to grow the chain and credit the speaker’s team.",
     mechanic: "judge",
     input: "choice",
     minOptions: 2,
@@ -21600,19 +21600,19 @@
     },
     "heads-up": {
       label: "Heads up",
-      answersHint: "Describe the term without saying it. Host marks Correct (+1) or Pass."
+      answersHint: "Describe the term without saying it. Mark Correct or Pass; the round counts how many the guesser gets."
     },
     "spin-explain": {
       label: "Spin & explain",
-      answersHint: "Clear explanation +2, with a hint +1, reject 0."
+      answersHint: "Clear explanation scores one question’s worth for the speaker’s team; with a hint, half; reject, nothing. Individual play counts unless you switch scoring on."
     },
     "connection-maker": {
       label: "Connection maker",
-      answersHint: "Two ideas and a spoken bridge. Host Accepts for +1."
+      answersHint: "Two ideas and a spoken bridge. Accept credits the speaker’s team; individual play counts."
     },
     "concept-chain": {
       label: "Concept chain",
-      answersHint: "Grow a justified chain from each start term. Type the spoken link, then Accept (+1) — the chain grows on the wall."
+      answersHint: "Grow a justified chain from each start term. Type the spoken link, then Accept — the chain grows on the wall and the speaker’s team is credited."
     },
     "quiz-bowl": {
       label: "Quiz bowl",

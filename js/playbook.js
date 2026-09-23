@@ -259,7 +259,7 @@
       phases: 'timed round → correct/pass → end',
       timer: 'Round 30–120s (default 60).',
       players: 'Clue-givers + guesser; host marks.',
-      scoring: 'Correct +1 · Pass 0.',
+      scoring: 'A round count: how many the guesser gets. No points.',
       howToPlay: [
         'One learner cannot see the term; others describe it.',
         'Host marks Correct or Pass.',
@@ -274,7 +274,7 @@
       phases: 'spin → explain → judge → next turn',
       timer: 'Per turn 15–60s (default 20).',
       players: 'Teams or individual; teacher-judged.',
-      scoring: 'Clear +2 · with hint +1 · reject/timeout 0.',
+      scoring: 'Teams: clear credits the speaker’s team one question’s worth, with a hint half, reject or timeout nothing. Individual play counts accepted explanations unless scoring is switched on.',
       howToPlay: [
         'Spin to draw an unused concept.',
         'The learner explains it aloud (hint optional).',
@@ -380,7 +380,7 @@
       phases: 'two ideas → explain → teacher accept',
       timer: 'None.',
       players: 'Class; teacher Accepts for +1.',
-      scoring: 'Accept +1 · decline 0.',
+      scoring: 'Accept credits the speaker’s team one question’s worth · decline nothing. Individual play counts.',
       howToPlay: [
         'Two concept tiles appear.',
         'A learner explains the connection aloud.',
@@ -425,7 +425,7 @@
       phases: 'start term → add link → accept → grow',
       timer: 'Per link 30–90s (default 45).',
       players: 'Teams or individual; teacher Accepts.',
-      scoring: 'Accepted link +1 · timeout 0.',
+      scoring: 'An accepted link credits the speaker’s team one question’s worth · timeout nothing. Individual play counts.',
       howToPlay: [
         'Start from the given concept.',
         'Propose the next link and justify it aloud.',

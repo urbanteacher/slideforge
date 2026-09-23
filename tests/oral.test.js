@@ -39,11 +39,11 @@ test('spoken verdict credits one team, never everyone in the room', async t => {
     spoken:{recipient:{type:'player',id:ada}}});
   const count=await host.next('oralCount');
   assert.equal(count.count,1);
-  const scored=await host.until('players',m=>m.rows&&m.rows.some(r=>r.name==='Red'&&r.score===1));
+  const scored=await host.until('players',m=>m.rows&&m.rows.some(r=>r.name==='Red'&&r.score===1000));
   assert.equal(scored.rows.find(r=>r.name==='Blue').score,0);
   assert.ok(scored.list.every(p=>p.score===0),'team credit is not divided among its members');
   const r=await report(host);
-  assert.deepEqual(r.checks[0].spoken,{accepted:true,count:1,recipient:'Ada',points:1});
+  assert.deepEqual(r.checks[0].spoken,{accepted:true,count:1,recipient:'Ada',points:1000});
 });
 
 test('spoken phones get a job card; individual play counts unless the teacher opts into speaker points', async t => {
@@ -76,9 +76,9 @@ test('spoken phones get a job card; individual play counts unless the teacher op
   const counted=await verdict('spoken-1','connection',0,false);
   assert.equal(counted.oralCount,1);assert.equal(counted.score,0);
   const scored=await verdict('spoken-2','spinexplain',0,true);
-  assert.equal(scored.oralCount,2);assert.equal(scored.score,2);
+  assert.equal(scored.oralCount,2);assert.equal(scored.score,1000);
   const heads=await verdict('spoken-3','headsup',0,true);
-  assert.equal(heads.oralCount,3);assert.equal(heads.score,2,'Heads Up remains a round count');
+  assert.equal(heads.oralCount,3);assert.equal(heads.score,1000,'Heads Up remains a round count');
 });
 
 function sandbox() {
@@ -307,6 +307,6 @@ test('a phone hears who a spoken credit went to: its own, its team, never anothe
   assert.equal(b.oralYou,false);
   assert.equal(b.oralTeam,'Red','a teammate hears the team');
   assert.equal(c.oralTeam,'Red','the other team hears whose point it was');
-  assert.equal(a.oralPoints,1);
+  assert.equal(a.oralPoints,1000,'on the quiz scale');
   assert.ok(!JSON.stringify(c).includes('Ada'),'no other student is named to a phone');
 });

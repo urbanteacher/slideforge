@@ -20,7 +20,7 @@ const connection = {
   plays: ROOM_PLAY.spoken,
   label: 'Connection maker',
   icon: '⚭',
-  blurb: 'Pick two ideas and explain the bridge. Host Accepts for +1.',
+  blurb: 'Pick two ideas and explain the bridge. Accept credits the speaker’s team.',
   mechanic: 'judge',
   input: 'choice',
   minOptions: 2,

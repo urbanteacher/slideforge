@@ -429,7 +429,8 @@
     var accepted = choice === 0 || (s.style === 'spinexplain' && choice === 1);
     if (!accepted) return { accepted: false, line: '' };
     var r = Live.selectedRecipient || { type: 'room' };
-    var pts = s.style === 'spinexplain' && choice === 0 ? 2 : 1;
+    /* The relay's scale (SPOKEN_POINTS): one question's worth; a hint halves it. */
+    var pts = s.style === 'spinexplain' && choice === 1 ? 500 : 1000;
     var scores = verdictScores(s, choice);
     var who = '';
     if (Live.mode === 'teams') {
