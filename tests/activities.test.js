@@ -402,3 +402,28 @@ test('activity inspector keeps How to run, with its steps, behind the Rules tab'
   assert.ok(gameSummary.children[0].textContent.includes('How to play — ' + gameAct.title));
 });
 
+
+/* Each activity says which rooms it works in (activities audit A9, AC-16),
+   the way each game style does. Derived from its shape, so a new activity
+   gets an answer without anyone writing one; this holds the answers to the
+   shapes they came from, and to the truth about today. */
+test('every activity declares its rooms, with a reason for each', async () => {
+  const { ACTIVITIES } = await import('../src/activities/catalogue.js');
+  const { GAME_STYLES } = await import('../src/games/registry.js');
+  for (const a of ACTIVITIES) {
+    assert.ok(a.plays, a.key + ' declares no rooms');
+    for (const room of ['phones', 'teams', 'entry', 'solo']) {
+      const s = a.plays[room];
+      assert.ok(s && ['yes', 'partial', 'no'].includes(s.status), a.key + ' ' + room);
+      assert.ok(String(s.reason || '').length > 10, a.key + ' ' + room + ' has no reason');
+    }
+    if (a.target === 'game') assert.equal(a.plays, GAME_STYLES[a.style].plays, a.key + ' borrows its engine\'s');
+    /* A prompt the teacher cannot enter for a room without phones says so. */
+    if (a.target === 'feedback') assert.equal(a.plays.entry.status, 'no', a.key);
+    if (a.presentation === 'stages') assert.equal(a.plays.phones.status, 'yes', a.key + ' gives phones a job');
+  }
+  const by = (key) => ACTIVITIES.find((a) => a.key === key).plays;
+  assert.equal(by('plus-minus-interesting').entry.status, 'partial', 'its ideas are sent from the phones');
+  assert.equal(by('learning-log-entry').entry.status, 'yes', 'private notes need no entry');
+  assert.equal(by('clear-objectives-slide').solo.status, 'yes');
+});

@@ -944,7 +944,9 @@ export interface Activity {
   sourceFile?: string;
   teacherNotes?: string;
   mappingReason?: string;
-  presentation?: 'rows' | 'steps' | 'panels' | 'brief';
+  presentation?: 'rows' | 'steps' | 'panels' | 'brief' | 'stages';
+  /** Which rooms it works in, derived from its shape (activities/rooms.js). */
+  plays?: RoomSupport;
   originalMapping?: { target: ActivityTarget; layout?: string; style?: string; feedbackKind?: string };
   feedbackPreset?: Partial<Feedback>;
   gamePreset?: { seeds: any[]; settings: Record<string, any> };

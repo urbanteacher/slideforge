@@ -554,6 +554,24 @@
     return (a.materials || []).filter(function (m) { return PHYSICAL.test(m); });
   }
 
+  /* Which rooms a format or an activity works in, as the library's badges:
+     "No phones needed", "Teams", "Solo", "Phones". A room it does not work
+     in has no badge; one it works in with friction says "limited". The
+     reason is the badge's title. Shared by both libraries. */
+  SF.roomBadges = function (plays) {
+    if (!plays) return null;
+    var badges = el('span', 'room-badges');
+    [['entry', 'No phones needed'], ['teams', 'Teams'], ['solo', 'Solo'], ['phones', 'Phones']].forEach(function (item) {
+      var support = plays[item[0]];
+      if (!support || support.status === 'no') return;
+      var badge = el('span', 'room-badge' + (support.status === 'partial' ? ' partial' : ''),
+        item[1] + (support.status === 'partial' ? ' · limited' : ''));
+      badge.title = support.reason;
+      badges.appendChild(badge);
+    });
+    return badges;
+  };
+
   function card(a) {
     var b = el('button', 'activity-card act-' + a.target);
     b.appendChild(el('span', 'activity-icon', a.icon));
@@ -564,6 +582,8 @@
       : a.target === 'game' ? 'A GAME IN THIS LESSON'
       : a.target === 'slide-arc' ? 'A RUN OF SLIDES'
       : 'A SLIDE IN THIS LESSON';
+    var rooms = SF.roomBadges(a.plays);
+    if (rooms) b.appendChild(rooms);
     b.appendChild(el('span', 'activity-tag', a.minutes + ' MIN · ' + tag + '  ↗'));
     var kit = physicalKit(a);
     if (kit.length) {

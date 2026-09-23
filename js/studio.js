@@ -717,18 +717,8 @@
       else if (book && book.howToPlay && book.howToPlay[0]) b.appendChild(el('span', 'activity-howto', book.howToPlay[0]));
       if (a[5] && a[4] === 'check') {
         var style = SF.gameStyle((SF.formatStyle && SF.formatStyle(a[0])) || a[0]);
-        var plays = style && style.plays;
-        if (plays) {
-          var badges = el('span', 'room-badges');
-          [['entry', 'No phones needed'], ['teams', 'Teams'], ['solo', 'Solo'], ['phones', 'Phones']].forEach(function (item) {
-            var support = plays[item[0]];
-            if (!support || support.status === 'no') return;
-            var badge = el('span', 'room-badge' + (support.status === 'partial' ? ' partial' : ''), item[1] + (support.status === 'partial' ? ' · limited' : ''));
-            badge.title = support.reason;
-            badges.appendChild(badge);
-          });
-          b.appendChild(badges);
-        }
+        var badges = SF.roomBadges(style && style.plays);
+        if (badges) b.appendChild(badges);
       }
       b.appendChild(el('span','activity-tag',a[5] ? (a[4] === 'check' ? 'BETWEEN SLIDES  ↗' : 'BESIDE YOUR SLIDE  ↗') : 'PLANNED FORMAT'));
       /* Planned cards stay disabled — never call insert with an unimplemented style id. */
