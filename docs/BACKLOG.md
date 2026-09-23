@@ -38,7 +38,7 @@ order.
 
 | ID | Item | Size | Status |
 |---|---|---|---|
-| GA-15 – GA-28 | **Games to a premium standard**: waves 0–3 and 5 are done; 4, 6 and 7 mostly (GA-01–14, 18, 20, 21, 23, 25, 26, 29, 30). GA-15–17 (the no-device work skipped alongside wave 3) are now done. **Next, as planned:** GA-28 solo practice. **Open:** GA-19 branching map, GA-22 hint cost and Definition on stages, GA-27 self-pacing, GA-24 Race/Boss crowd layout. None of the waves since GA-29 has been viewed on screen except Fill, Beat the Clock and Compare. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | In progress |
+| GA-15 – GA-28 | **Games to a premium standard**: waves 0–3 and 5 are done; 4, 6 and 7 mostly (GA-01–14, 18, 20, 21, 23, 25, 26, 29, 30). GA-15–17 (the no-device work skipped alongside wave 3) and GA-28 solo practice are done. **Every planned wave is now built or mostly built;** what remains is the open list below. **Open:** GA-19 branching map, GA-22 hint cost and Definition on stages, GA-27 self-pacing, GA-24 Race/Boss crowd layout. None of the waves since GA-29 has been viewed on screen except Fill, Beat the Clock and Compare. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | In progress |
 | AC-13 – AC-17 | **Activities to a premium standard**: waves 0–3 (AC-01–12, AC-16) are done. Sixteen routines run on stages; the room's output lands; every activity declares its rooms. Next: the contests and the Question Cube hand-over (AC-14), then Card Sort and Word Splash on the sort input, now built (AC-15). Tally entry (AC-13) is built once, on the games side, as GA-15. Full table under [the activities build list](#23-september-2026-activities-to-a-premium-standard-the-build-list). | S–L | To do |
 | RP-01 | Rehearse with a class of 30 (and 120) | S | To do |
 | RP-02 | Lecture-scale defaults (100+): standings off, distribution on | S | To do |
@@ -1140,7 +1140,7 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | GA-25 | 2–6 | On the draw and round clock: Spin & Explain spinner, Random Challenge deck, Question Cube roll plus stages, Heads Up 60-second round | S–M each | **Done** 23 Sep · Heads Up round, deck, cube roll, the wheel lands |
 | GA-26 | 7 | **Sort input (N6)**; Compare & Contrast → *Sort it* | L | **Done** 23 Sep · `sort` input, relay tested, seen on screen |
 | GA-27 | 7 | Beat the Clock → self-paced *Against the clock* (relay self-paced mode) | L | Mostly done · one round clock, flowing questions, round scoring; per-phone self-pacing open |
-| GA-28 | after 7 | **Solo practice** on the share link (E8) | M | To do |
+| GA-28 | after 7 | **Solo practice** on the share link (E8) | M | **Done** 23 Sep · Share → Practice; solo-playable games only |
 
 **Carried from today's other work:**
 
@@ -1302,6 +1302,9 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** GA-28: Share → Practice carries the solo-playable games
+  for one learner. Games that need a room become a card that says so. The
+  share smoke scenario passes. 521/521.
 - **23 Sep 2026.** GA-15–17, skipped alongside wave 3, are done: tally entry
   (counts per option join the wall's bars, with no names and no scores),
   one-click team rows, and saved class lists kept on this computer. 520/520.

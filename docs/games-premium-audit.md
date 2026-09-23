@@ -302,7 +302,7 @@ answered. Show the letters dripping on the phone too (P5), and make
 | **6** | **Mostly done.** Desk parity (`data-desk`), Emoji hint as a step, Ranking heat. *Open: the hint's point cost, Definition on stages (GA-22)* | P6 across the catalogue | S each |
 | **7** | **Mostly done.** N6 sort input; Compare & Contrast sort; Beat the Clock as one round. *Open: per-phone self-pacing (GA-27)* | The two large new mechanics | L |
 | **with 3** | **Done 23 Sep (late).** Tally entry (E3), team rows (E5), saved class lists (E6): skipped alongside wave 3, then built. | Rooms with no devices, done at the speed of a show of hands | M |
-| **after 7** | **Not done.** Solo practice (E8) | One learner, alone, at their own pace | M |
+| **after 7** | **Done 23 Sep.** Solo practice (E8): a share link's Practice mode | One learner, alone, at their own pace | M |
 
 At the end of wave 3, the count would be roughly six premium and none
 broken. At the end of wave 7, all 26 enabled formats would pass the bar.
@@ -431,6 +431,17 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — Solo practice (E8, GA-28).**
+  - **Share has a third choice, *Practice*.** The copy carries every game
+    whose `plays.solo` is `yes` (`SF.practiceDoc`), and the viewer plays
+    them for one learner: answer on the slide, see the answer and the reason,
+    with the score kept on their device.
+  - **A game that needs a room** (spoken, boards, sorts and gaps answered on
+    phones) becomes a card: "Played together in class — this one needs a
+    room."
+  - **Read and follow links** still carry no games.
+  - **Tests:** a test for the practice copy, and the `share` smoke scenario.
+    `npm test` 521/521. The practice viewer itself was not viewed on screen.
 - **23 September 2026 — The skipped row: rooms without devices (E3, E5,
   E6).**
   - **Tally entry:** for a choice question, the desk takes a count per
