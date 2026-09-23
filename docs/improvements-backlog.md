@@ -67,19 +67,19 @@ coordinating rather than starting cold.
 | UX-24 | ~~Say "Saved in this browser" in words~~ [→](ux-backlog.md) | S | **Done** 23 Sep · dot below 1080px |
 | UX-60 | ~~Hide the answer bars until the reveal~~ [→](ux-backlog.md) | M | **Done** 23 Sep |
 | UX-70 | ~~`aria-label` on icon-only controls~~ [→](ux-backlog.md) | S–M | **Done** 23 Sep |
-| CA-23 | Composition slot keys never match a block [→](ux-backlog.md) | S | To do · P2 |
-| CA-24 | Regions bring back the accent bar that compositions hide [→](ux-backlog.md) | S | To do · P2 |
-| CA-26 | Undo or redo closes Layout and Artwork [→](ux-backlog.md) | S | To do · P2 |
-| CA-27 | A resize drag can be left running [→](ux-backlog.md) | S | To confirm · P2 |
-| CA-28 | Fit badges measure before web fonts load [→](ux-backlog.md) | S | To confirm · P2 |
-| CA-42 | In the sorter, Alt+→ moves a group only once [→](ux-backlog.md) | S | To do · P2 |
+| CA-23 | ~~Composition slot keys never match a block~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
+| CA-24 | ~~Regions bring back the accent bar~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
+| CA-26 | ~~Undo or redo closes Layout and Artwork~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
+| CA-27 | ~~A resize drag can be left running~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
+| CA-28 | Fit badges measure before web fonts load [→](ux-backlog.md) | S | **Done** 23 Sep · picker; size fitter left |
+| CA-42 | ~~In the sorter, Alt+→ moves a group only once~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
 | CA-50 | ~~Opening a deck deleted in another tab crashes~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
-| CA-51 | Window resize (Android keyboard) redraws mid-edit [→](ux-backlog.md) | S | To confirm · P2 |
-| CA-52 | Fallback edit panel writes with no history and survives undo [→](ux-backlog.md) | M | To do · P2 |
+| CA-51 | ~~Window resize redraws mid-edit~~ [→](ux-backlog.md) | S | **Done** 23 Sep |
+| CA-52 | ~~Fallback edit panel writes with no history~~ [→](ux-backlog.md) | M | **Done** 23 Sep |
 | UX-12 | One word for the right panel ("inspector" vs "Design & content") [→](ux-backlog.md) | S | To do · P2 |
 | UX-22 | One route to deck settings, not three [→](ux-backlog.md) | S | To do · P2 |
 | UX-23 | One insert route, not four [→](ux-backlog.md) | M | To do · P2 |
-| UX-30 | Outline editable blocks on hover [→](ux-backlog.md) | S | To do · P2 |
+| UX-30 | ~~Outline editable blocks on hover~~ [→](ux-backlog.md) | S | **Withdrawn** · already there |
 | UX-40 | Sections in the rail and the sorter [→](ux-backlog.md) | M–L | To do · P2 |
 | UX-50 | Number + Enter to jump while presenting [→](ux-backlog.md) | S | To do · P2 · after UX-04 |
 | UX-51 | `O` overview grid while presenting [→](ux-backlog.md) | M | To do · P2 |

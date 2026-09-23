@@ -67,9 +67,8 @@ Clicking a text block puts the caret there and brings up a small format bar
 This matches Google Slides, and it is honest about typed layouts. The weak
 points:
 
-- **Nothing on the slide shows it can be edited until you click.** Figma and
-  Google draw a hover outline on text boxes. `canvas-editable` gets a `title`
-  tooltip but no visible outline.
+- **Hover outline:** there is one, a dashed outline from `.canvas-editable:hover`
+  (this bullet first said there wasn't; see Corrections).
 - **Escape** (B1).
 - **Two places to edit the same words.** You can edit on the slide or in the
   panel's field. Google makes the slide the only place. SlideForge could keep
@@ -230,3 +229,6 @@ Kahoot: [assign](https://support.kahoot.com/hc/en-us/articles/360039411334)
   now: the `.modal` sheets, which also let Delete reach the deck behind them.
 - **23 September.** §3.5 first said `?` does nothing in the show. It opens the
   shortcut sheet; the key combination used in the test never arrived.
+- **23 September.** §3.2 said nothing shows a block can be edited until you
+  click. `css/app.css` draws a dashed outline on hover; the walkthrough never
+  hovered long enough to see it.

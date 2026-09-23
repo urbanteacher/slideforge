@@ -40,7 +40,7 @@ what was removed.
 | UX-23 | One route to insert things, not four | P2 | M | To do |
 | UX-24 | Say where the work is saved in words, not with a dot | P1 | S | **Done** 23 Sep · words down to 1080px (measured), a labelled dot below |
 | **Phase 4 — editing on the slide** |||||
-| UX-30 | Outline editable blocks on hover | P2 | S | To do |
+| UX-30 | Outline editable blocks on hover | P2 | S | **Withdrawn** · it exists: `.canvas-editable:hover` draws a dashed outline |
 | UX-31 | Make it clear the panel field and the slide are one text | P3 | S | To do |
 | **Phase 5 — deck structure** |||||
 | UX-40 | Sections in the rail and the sorter | P2 | M–L | To do |
@@ -383,24 +383,24 @@ Three read-only reviews, running in parallel, covered:
 | CA-20 | Regions are never bounds-checked; blocks past row 16 or col 12 go off the slide or collapse to one cell | lattice | P1 | S | **Done** 23 Sep · invalid values only; past row 16 is by design |
 | CA-21 | Composition and regions measure in different frames, so blocks jump when Layout opens on a composed slide | lattice × compositions | P1 | M–L | **Not reproduced** · measured on six composed slides, see notes |
 | CA-22 | `layout-slots.js` resolves the composition differently from the renderer, which leaves slots that are never drawn but still block placement | lattice × compositions | P1 | S | **Done** 23 Sep |
-| CA-23 | The composition slot tables use keys that never match a block (`cp-heading`, `cp-prompt` and others) | lattice × compositions | P2 | S | Confirmed |
-| CA-24 | Regions bring back the accent bar that compositions hide (`.pad >` selector) | lattice × CSS | P2 | S | Confirmed |
+| CA-23 | The composition slot tables use keys that never match a block (`cp-heading`, `cp-prompt` and others) | lattice × compositions | P2 | S | **Done** 23 Sep · phantom slots dropped at seed |
+| CA-24 | Regions bring back the accent bar that compositions hide (`.pad >` selector) | lattice × CSS | P2 | S | **Done** 23 Sep |
 | CA-25 | Artwork drags at the wrong speed on 4:3 and 16:10 decks (scale is taken from the box, not `.slide`) | artwork | P1 | S | **Done** 23 Sep · measured: 0.75× on 4:3 |
-| CA-26 | Undo or redo closes Layout and Artwork (slides are compared by object, not by id) | arrange | P2 | S | Confirmed |
-| CA-27 | A resize drag can be left running (no blur or cancel handling, unlike move) | arrange | P2 | S | Plausible |
-| CA-28 | Fit badges and the text-size fitter measure before web fonts load | fit-check | P2 | S | Plausible |
+| CA-26 | Undo or redo closes Layout and Artwork (slides are compared by object, not by id) | arrange | P2 | S | **Done** 23 Sep |
+| CA-27 | A resize drag can be left running (no blur or cancel handling, unlike move) | arrange | P2 | S | **Done** 23 Sep |
+| CA-28 | Fit badges and the text-size fitter measure before web fonts load | fit-check | P2 | S | **Done** 23 Sep · picker badges; the size fitter not yet |
 | **Editor text on the projector** (widens UX-03) ||||||
 | CA-30 | `infoEmpty` shows "Add … in the inspector" on 8 layouts; there are also image, video and URL prompts, the "needs http(s)" warning, and empty free-block labels | render | P0 | S | **Done** 23 Sep |
 | **Keyboard** ||||||
 | CA-40 | ⌘B, ⌘I and ⌘U do nothing when typing on the slide (the key is blocked and nothing is applied) | inline edit | P1 | S | **Done** 23 Sep |
 | CA-41 | Enter that confirms an IME candidate ends the edit (no `isComposing` check) | inline edit | P1 | S | **Done** 23 Sep · not browser-tested |
-| CA-42 | In the sorter, Alt+→ moves a multi-slide group only once | rail | P2 | S | Confirmed |
+| CA-42 | In the sorter, Alt+→ moves a multi-slide group only once | rail | P2 | S | **Done** 23 Sep |
 | CA-43 | The Undo button still works while a slide is being carried; placing then uses an out-of-date index | rail | P3 | S | Plausible |
 | CA-55 | **New:** one keystroke on the canvas flattened a multi-line heading to one line | inline edit | P1 | S | "+D+" |
 | **Smaller** ||||||
 | CA-50 | Opening a deck that another tab has just deleted crashes (`setDoc(null)`) | shell | P2 | S | **Done** 23 Sep · with CA-06 |
-| CA-51 | Resizing the window (including the Android keyboard opening) redraws mid-edit and loses panel fields that save on `onchange` | shell | P2 | S | Plausible |
-| CA-52 | The fallback edit panel writes into the slide with no history and survives slide changes and undo | inline edit | P2 | M | Confirmed |
+| CA-51 | Resizing the window (including the Android keyboard opening) redraws mid-edit and loses panel fields that save on `onchange` | shell | P2 | S | **Done** 23 Sep |
+| CA-52 | The fallback edit panel writes into the slide with no history and survives slide changes and undo | inline edit | P2 | M | **Done** 23 Sep |
 | CA-53 | `wordSpeed: "constructor"` writes `undefinedms` into CSS (the lookup doesn't use `hasOwnProperty`) | words | P3 | S | Confirmed |
 | CA-54 | `pic.src`, `deck.logo` and CSS `url()` values skip `safeMedia` (hygiene, not an exploit) | render | P3 | S | Confirmed |
 
@@ -643,6 +643,35 @@ Three read-only reviews, running in parallel, covered:
   shorter ones.
 
 **Suites:** `npm test` 471/471.
+
+## 23 September 2026: P2, first batch
+
+- **CA-26.** Arrange and Artwork compare slides by id, and refresh their
+  reference after an undo, which rebuilds every slide as a new object. Checked:
+  Layout stays open through Cmd+Z.
+- **CA-42.** A group moves from its edge: right lands one past the slide after
+  it, left one before the slide ahead. Checked in the sorter: 1,2,3 → 2,3,4 →
+  3,4,5 → 4,5,6, and back. Single slides move exactly as before.
+- **CA-27.** A resize registers a cancel and a window-blur handler, as a move
+  does; cancelling redraws, so a half-resized slot is not left on screen.
+- **CA-24.** Once the lattice re-parents the accent bar into a slot, the hide
+  rule's child selector stopped matching. The slot holding it is now hidden
+  (`:has()`, with a bare-selector fallback).
+- **CA-23.** The slot tables name some bands by class (`cp-heading`,
+  `cp-prompt`) that the renderer stamps with a content key, and only rendering
+  says which. So Arrange's seed, which renders, drops any `cp-` name that no
+  rendered block answers to. Those were occupied cells nobody could see or clear.
+- **CA-51.** A window resize while someone is typing sizes the canvas at once
+  and holds the redraw until focus leaves. On a phone the keyboard opening is a
+  resize.
+- **CA-52.** The fallback edit form registers itself, and the editor's `draw()`
+  closes it first, keeping the words and recording the edit, as Escape and Done
+  now do. Before, a redraw removed it with neither Save nor Cancel.
+- **CA-28.** The layout picker's fit badges measure again once
+  `document.fonts.ready` resolves, if the fonts had not loaded. The text-size
+  fitter has the same timing and is not done yet.
+- **UX-30, withdrawn.** The hover outline exists: `.canvas-editable:hover` in
+  `css/app.css`. The deep dive's claim was wrong.
 
 ## Log
 
