@@ -1569,15 +1569,19 @@
     });
   }
 
-  /* Predict the Outcome: a right prediction scores the question's points,
-     and half as much again if the learner said they were sure. A wrong one
-     scores nothing, however sure — being wrong costs nothing, being right
-     and knowing it is what earns the bonus. */
+  /* Predict the Outcome: "sure" is a bet, so it has to be able to lose.
+     Right and sure: half as much again. Right and unsure: the points. Wrong
+     and unsure: nothing. Wrong and sure: half the points off (a score never
+     goes below zero). With no cost to being sure and wrong, every phone
+     would tap "sure" and the answer would mean nothing — which is why the
+     relay never scores confidence anywhere else. */
   function predictGains(slide) {
     var pts = Number(slide.points) || 0;
     return (Live.snapshot.answers || []).map(function (a) {
-      if (!SF.markResponse(slide, a.response)) return [a.id, 0];
-      return [a.id, a.sure === true ? Math.round(pts * 1.5) : pts];
+      var right = SF.markResponse(slide, a.response);
+      var sure = a.sure === true;
+      if (right) return [a.id, sure ? Math.round(pts * 1.5) : pts];
+      return [a.id, sure ? -Math.round(pts * 0.5) : 0];
     });
   }
 

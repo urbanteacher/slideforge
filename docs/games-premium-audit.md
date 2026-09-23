@@ -423,9 +423,11 @@ still leaves P6 partial.
     says "Predictions are locked. Watch what happens", and the phones go quiet
     with "Look up".
   - **The teacher shows the outcome**, then Next reveals it.
-  - **Scoring:** a right prediction scores the question's points, and half as
-    much again if the learner said they were sure. A wrong one scores
-    nothing, however sure.
+  - **Scoring:** "sure" is a bet. Right and sure ×1.5, right and unsure ×1,
+    wrong and unsure 0, wrong and sure −½ (never below zero). The first
+    version had no cost to being sure and wrong, so every phone would have
+    tapped "sure". That is the reason the relay never scores confidence
+    anywhere else.
   - **Never auto-reveals.**
   - **Tests:** relay test for the lock and the refused late answer. `npm test`
     493/493.

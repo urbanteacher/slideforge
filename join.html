@@ -1262,7 +1262,10 @@
         }
         $('rVerdict').textContent = !m.answered ? 'Too slow!' : (m.right ? 'Correct!' : 'Not this time');
         $('rVerdict').className = 'verdict ' + (m.right ? 'right' : 'wrong');
-        $('rGain').textContent = m.gained ? '+' + m.gained + ' points' : (m.answered ? 'No points' : 'No answer registered');
+        /* A lost bet (Predict: sure and wrong) is said as what it was. */
+        $('rGain').textContent = m.gained > 0 ? '+' + m.gained + ' points'
+          : m.gained < 0 ? '\u2212' + (-m.gained) + ' points \u00b7 you were sure'
+          : (m.answered ? 'No points' : 'No answer registered');
         $('rScore').textContent = m.score;
         $('rRank').textContent = formatStanding(m);
         paintWhy(m);

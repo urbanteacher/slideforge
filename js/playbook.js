@@ -350,7 +350,7 @@
       phases: 'commit a prediction and how sure → lock → watch what happens → reveal',
       timer: 'Thinking 20–60s (default 30).',
       players: 'Every phone commits; the room sees its own split before the outcome.',
-      scoring: 'A right prediction scores the question’s points; half as much again if you were sure. Wrong scores nothing, however sure.',
+      scoring: '“Sure” is a bet: right and sure ×1.5, right and unsure ×1, wrong and unsure 0, wrong and sure −½ (a score never goes below zero).',
       howToPlay: [
         'Read the scenario. Each learner picks the outcome they expect and says how sure they are.',
         'Next locks the predictions and shows the room’s split — the answer stays hidden.',
@@ -632,7 +632,7 @@
     note: 'This is the typed, single-gap version. A word bank and separate reveals for multiple gaps are not available.'
   });
   Object.assign(BOOK['spot-the-error'], { scoring: 'A tap inside the wrong words earns the configured points.' });
-  Object.assign(BOOK['predict-outcome'], { scoring: 'A right prediction scores the configured points, and half as much again when the learner said they were sure.' });
+  Object.assign(BOOK['predict-outcome'], { scoring: '“Sure” is a bet: right and sure ×1.5, right and unsure ×1, wrong and unsure 0, wrong and sure −½ of the points (never below zero).' });
   Object.assign(BOOK['time-traveler'], {
     players: 'Individuals or teams type their answers.', scoring: 'Accepted event names earn the configured points.',
     howToPlay: ['Read the date and clue.', 'Type the event name from memory.', 'Reveal the accepted event and discuss its context.'],

@@ -121,3 +121,26 @@ test('Predict the Outcome locks before it reveals: the phones are told, and a la
   assert.equal(ra.gained, 1500, 'a sure, right prediction earns half again');
   assert.equal(rb.answered, false, 'the late answer never landed');
 });
+
+test('a sure, wrong prediction costs half the points, and a score never goes below zero', async t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sf-predict-bet-'));
+  const port = await freePort();
+  const server = await start(port, dir);
+  const sockets = [];
+  t.after(async () => { await stop(server); sockets.forEach(x => x.socket.close()); fs.rmSync(dir, { recursive: true, force: true }); });
+  const host = await connect(port); sockets.push(host);
+  host.send({ t: 'host', title: 'Bet', mode: 'individual' });
+  const room = await host.next('hosted');
+  const ada = await connect(port); sockets.push(ada);
+  ada.send({ t: 'join', pin: room.pin, name: 'Ada' }); await ada.next('joined');
+  host.send({ t: 'begin' });
+  host.send({ t: 'question', id: 'b1', question: 'Q', input: 'choice', options: ['A', 'B'], timeLimit: 0, points: 1000 });
+  await ada.next('question');
+  ada.send({ t: 'answer', choice: 0, sure: true });
+  const tally = await host.until('tally', m => m.answered === 1);
+  host.send({ t: 'reveal', id: 'b1', rev: tally.rev, marks: [[tally.answers[0].id, false]],
+    gains: [[tally.answers[0].id, -500]], correct: 1, answer: 'B' });
+  const r = await ada.until('result', () => true);
+  assert.equal(r.gained, -500);
+  assert.equal(r.score, 0, 'floored at zero');
+});
