@@ -7,8 +7,9 @@ the 44 activities in the catalogue that are not games against the standard it
 set. It says what each needs, and which existing components it can be rebuilt
 from. The other 10 catalogue entries are games, and the games audit covers them.
 
-It was read in code, not in a browser. File references are to `src/`, `js/`,
-`join.html` and `server/server.js`.
+It was graded in code. What waves 0–3 built was also run in a browser: the
+`activities` and `room-output` smoke scenarios drive a host and two phones.
+File references are to `src/`, `js/`, `join.html` and `server/server.js`.
 
 ## 1. The premium bar
 
@@ -189,8 +190,20 @@ Numbered after the games' N1–N6, because some are shared.
 | **N12 · done** | **Spotlight and hide on any idea box**: N3's "Use this" for every brainstorm, including a stage's Share | TPS-01; the thing Muddiest Point, Share and PMI all need | every brainstorm | S–M |
 | **N13 · done** | **The written count**: "19 of 26 have written something" during a private stage. The phone sends *that* it wrote, never *what* | TPS-02; the one number a teacher needs during silent work | Think, Predict, Learning Log | S |
 | **N14 · done** | **Prompt controls on the desk**: close now; hold, then reveal, for a poll or scale | A6 and A7 for all nine collect-from-the-room activities | polls, scales, clouds, brainstorms | M |
-| E3 | **Tally entry** (games GA-15) | Hands up and paper feed the same bars | polls and scales | M |
-| N6 | **Sort input** (games GA-26) | Cards into bins on the phone | Card Sort, PMI, Compare | L |
+| E3 · built for games | **Tally entry** (games GA-15) | Hands up and paper feed the same bars | polls and scales (AC-13: not yet extended to them) | M |
+| N6 · built for games | **Sort input** (games GA-26): a column per item, the columns fixed as A only / Both / B only | Cards into bins on the phone | Card Sort (blocked, see §4), Compare | L |
+
+### Built in wave 3: reuse these too
+
+| # | Component | Where | What it gives |
+|---|---|---|---|
+| AK1 | **A declared job** in a row's label, `[note]` `[talk]` `[send]` `[work]` `[down]`, at the end: "At home · 3 min [send]" | `declaredJob`, `stripDeclaredJob` in `src/activities/stages.js` | Beats the inferred words; stripped wherever a label is shown |
+| AK2 | **A box per send stage** | `syncShare` in `js/stages.js` | Plus, then Minus, or a hunt's three places collect separately |
+| AK3 | **Several spotlights per slide**, three at most, each named for its stage | `Live.spotlights`, `paintSpotlight` in `js/live.js`; the desk block | PMI's three columns side by side; a spotlight's id is its box plus its idea |
+| AK4 | **A private note per note stage** | `stageNoteKey`, `latestNote` in `join.html` | A Learning Log's five prompts are five notes; a talk stage shows back the latest |
+| AK5 | **The live stage, drawn anywhere** | `SF.lightStages` in `js/render.js` | The desk's preview at the room's stage |
+| AK6 | **Activity rooms** | `activityPlays` in `src/activities/rooms.js`, attached in `src/model.js` | Each activity's `plays`, derived from its shape |
+| AK7 | **Room badges** | `SF.roomBadges` in `js/activities.js` | One badge row for both libraries |
 
 ## 4. Redesigns, family by family
 
@@ -249,11 +262,17 @@ several rows.
   - "Who needs support" is the desk's need-a-hand list, never the wall.
   - Its "I'm here because…" becomes a private note (K8).
 - **Word Splash** keeps its cloud. It is honest that the confidence
-  marking is on paper, and the notes already say so. A per-term confidence
-  input waits for N6.
+  marking is on paper, and the notes already say so. *Blocked:* a
+  per-term confidence sort needs columns other than N6's A only / Both /
+  B only.
 - **Question Cube (activity)** is superseded by the Question Cube game.
-  - Its card in the catalogue should point to the game.
-  - Its six authored questions become the game's six faces.
+  - Its card in the catalogue should point to the game, with its six
+    authored questions as the game's six faces.
+  - *Unblocked, not yet redone:* the hand-over was built and reverted,
+    because Quiz studio's AI had no Question Cube shape and the activity's
+    "Write it" guardrail (the six Rosenshine stems) would have been lost.
+  - Since `de69598` the game AI writes exactly the six faces, looked up by
+    the game's format. The remap can be redone.
 
 ### Teacher-led slides
 
@@ -268,7 +287,7 @@ Slides by design: A3 and A7 are not their job.
   Its answers are the next lesson's starter.
 - **Ground Rules:** the "our ground rules" row becomes a Share stage. The
   room's drafted rules arrive as cards, and the teacher spotlights the five
-  to keep.
+  to keep. *Built with three:* a slide holds three spotlights (AK3).
 
 ### Modelled instruction and tasks
 
@@ -282,17 +301,30 @@ Slides by design: A3 and A7 are not their job.
   - The brief stays on the wall.
   - Planning, Creating and Self-assessment are work; Gallery walk is down.
   - PBL's rows need their times written in.
-- **Quick Practice Stations:** a round clock (games N4) per rotation. S
-  after stages.
+- **Quick Practice Stations:** a round clock (games N4) per rotation.
+  - *Blocked:* this was built on stages and reverted.
+  - Groups are at different stations at the same time, so the wall cannot
+    name one station.
+  - Its "Write it" guardrail wants a real task in each station's box.
+  - It needs a clock that knows a rotation: every group moves, and the
+    stations stay put.
 - **Scenario Analysis:** the three scenarios pinned, the two questions as
   talk stages.
 - **Benefits vs Limitations Battle:**
   - Two teams, and a valid new point credits a team through the spoken
     verdict (games N1).
-  - Its name is a contest, so it scores (§6). M.
+  - Its name is a contest, so it scores (§6).
+  - The spoken verdict exists only for game styles. So this is a new
+    spoken style, with all nine registrations: L, not M. *Open decision.*
 - **Connect Four:** a board (K12) where a team claims a cell and the teacher
   accepts. L; after the boards work.
-- **Concept Card Sort:** waits for N6.
+- **Concept Card Sort:** on N6, as a Compare sort (Perimeter or Area).
+  - *Unblocked, not yet redone:* built and reverted, because Quiz studio's
+    `compare` AI wrote no statements.
+  - Since `de69598` it writes four to eight tagged statements, at least one
+    per column. It asks for fewer items than the activity's own guardrail
+    (twelve to twenty). A remap should take the cards across three rounds,
+    as the reverted version did.
 
 ### Written reflection
 
@@ -315,8 +347,8 @@ Slides by design: A3 and A7 are not their job.
 | **2** | **Done 23 Sep.** N12 spotlight and hide; N13 the written count; N14 prompt controls (close, hold, reveal) | The room's output lands; closes TPS-01 and TPS-02 | M |
 | **3** | **Done 23 Sep.** Family redesigns on the kit (Hook and Predict, Connection Hunt, PMI, Learning Log, Ground Rules, Preview, Visual Summary, Scenario Analysis) and room declarations (AC-16) | Each is a preset change on stages plus N12 | S each |
 | **with GA-15** | **E3 tally entry** for polls and scales | Rooms with no devices | M |
-| **4** | Benefits vs Limitations with team credit; Stations on a round clock; Question Cube activity → game | Needs games kit N1 and N4 | S–M |
-| **after GA-26** | Concept Card Sort, Word Splash confidence on N6 | The sort input | L |
+| **4** | Question Cube activity → game: **unblocked** by `de69598`, to redo. Still blocked: Benefits vs Limitations (a new spoken style: a decision) and Stations (a rotation-aware clock) | Tried 23 Sep; see §4 and the change log | S–L |
+| **after GA-26** | Concept Card Sort: **unblocked** by `de69598`, to redo. Still blocked: Word Splash confidence (custom sort columns) | N6 is built | L |
 | **later** | Connect Four as a board | | L |
 
 At the end of wave 1 the broken count was zero, as planned. At the end of
@@ -425,6 +457,13 @@ This is already the rule in `js/stages.js`, and it stays.
     A prompt says `entry: no` until tally entry exists.
 
 ## Change log
+
+- **23 September 2026 — The body brought up to date.**
+  - The wave 3 kit is in §3 (AK1–AK7), not only in this log.
+  - §4 and §5 now say which plans are blocked or unblocked. The game AI's
+    new cube and compare shapes (`de69598`, games side) unblock the Question
+    Cube and Card Sort remaps; they have not been redone.
+  - The introduction says what was seen in a browser.
 
 - **23 September 2026 — AC-14 and AC-15 tried, and reverted.**
   - **What was tried:**

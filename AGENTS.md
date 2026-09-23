@@ -22,6 +22,7 @@ For any AI agent (Claude, Cursor, Codex) and for people.
 
 - **More than one agent works in this tree.** Commit only the paths you changed: `git commit --only <paths>`. Never `git add -A`, and leave files you didn't create alone.
 - Keep code and docs in separate commits.
+- **`--only` commits whole files.** If another agent has uncommitted edits in a file you also changed (often `js/live.js`, `join.html` or `server/server.js`), committing it takes their hunks too. Run `git diff <file>` first. If it has hunks that are not yours, test yours alone in a clean worktree at HEAD and stage that file. Check `git log -1` just before, because HEAD may have moved.
 - **Check a test file exists before writing it.** `cat > tests/x.test.js` over an existing file silently deletes its tests. Append, or edit.
 - `deploy-render` is the deployed branch. Push only when asked, and only as a fast-forward.
 
@@ -41,6 +42,17 @@ A style is one file in `src/games/`. It is registered in these places:
 11. `js/demo.js`, so a rehearsal class answers it the way a real room would.
 
 Reuse the shared kit in the games audit (section 3, K1–K24) before writing anything new.
+
+## Changing an activity
+
+The 54 activities are in `src/activities/`.
+- `catalogue.js` holds the source records unchanged. Starter copy and any remap (a new target, layout or engine) go in `presets.js` or `game-presets.js`, with a `reason`.
+- An activity runs as timed stages (`PRESENTATIONS.stages` in `presets.js`) when at least two of its rows carry a time ("Pair · 3 min"), or when a stage-only feature is the point: a private note, or an idea box per stage.
+  - A leading untimed row is the brief, pinned through every stage.
+  - A row's job is read from its words. End the label with `[note]`, `[talk]`, `[send]`, `[work]` or `[down]` to declare it instead.
+- Before remapping an activity onto a game, check its "Write it" guardrail in `js/ai.js`. The game's `AI_SPECS` entry must write the same shape, or the remap loses it.
+- Which rooms an activity works in (`plays`) is derived in `rooms.js`, so nothing is written per activity.
+- `tests/stages.test.js` pins every staged routine's stages and jobs, and `tests/activities.test.js` pins the targets and rooms. `node tools/smoke/run.mjs activities room-output` runs them in a browser.
 
 ## Adding a phone input kind
 
