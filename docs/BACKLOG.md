@@ -1136,7 +1136,7 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | GA-24 | 6 | Horse Race and Boss use the room pane's top-five layout; Boss gets a reveal per hit | S | To do |
 | GA-29 | 1 | UX pass on spoken verdicts: one path from wall and desk, a held verdict until the speaker is chosen, the speaker cleared per item, a speaker picker (teams, recent, type-ahead, Pick for me), the credit shown on the wall and phones; one shared passage for Spot entry | M | **Done** 23 Sep · relay tested, not viewed |
 | GA-30 | 1 | Spoken team credit on the game's points scale, so it registers in a lesson that mixes quiz and spoken games | S | **Done** 23 Sep · 1,000 per accept, half with a hint |
-| GA-25 | 2–6 | On the draw and round clock: Spin & Explain spinner, Random Challenge deck, Question Cube roll plus stages, Heads Up 60-second round | S–M each | Mostly done · Heads Up round, Random Challenge deck, Question Cube roll; Spin's wheel landing open |
+| GA-25 | 2–6 | On the draw and round clock: Spin & Explain spinner, Random Challenge deck, Question Cube roll plus stages, Heads Up 60-second round | S–M each | **Done** 23 Sep · Heads Up round, deck, cube roll, the wheel lands |
 | GA-26 | 7 | **Sort input (N6)**; Compare & Contrast → *Sort it* | L | To do |
 | GA-27 | 7 | Beat the Clock → self-paced *Against the clock* (relay self-paced mode) | L | To do |
 | GA-28 | after 7 | **Solo practice** on the share link (E8) | M | To do |
@@ -1273,6 +1273,10 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** GA-25 is done: Spin & Explain's wheel spins and lands
+  before the concept. Compare & Contrast phones send points through the idea
+  box (an interim for GA-26). Entrance animations run in the show only.
+  501/501.
 - **23 Sep 2026.** Question Cube is a real roll: six faces on the Random
   Challenge engine, with face colours and "N faces left". Nine stale setup
   lines are refreshed. 501/501.

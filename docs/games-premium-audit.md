@@ -59,9 +59,9 @@ tests are in the table. The tier follows from the row.
 | Fill in the Blanks | `fill` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | Solid, near premium: *Fill the gaps* — up to four [gaps], a shuffled word bank with lures tapped into slots, the right word landing in each at the reveal with what the room put there, the hardest gap and its lure named; partial marks; teacher entry by key |
 | Time Traveler | `slider` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid: *Place it in time* — phones drag the event to a year; the reveal shows every pin and the true year; one line for the game, carrying every earlier event, so the timeline grows |
 | Odd One Out | `oddone` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | n/a | ✓ | Solid, near premium: phones vote; the split is held, then drawn as heat across the four tiles, with a line inviting the next most popular pick to defend its rule. Never marked. Open: the written rule as an anonymous idea (K9) |
-| Compare & Contrast | `compare` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | n/a | ◐ | Thin on phones: they sit idle |
+| Compare & Contrast | `compare` | ✓ | ✓ | ◐ | ✓ | ◐ | ✓ | n/a | ◐ | Solid: phones send one way the two are alike or differ (anonymous beside the slide, named on the desk); the teacher puts one on the table; the reveal compares the prepared points with the room's. Open: the sort-into-bins input (GA-26) |
 | Heads Up | `headsup` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ✓ | ◐ | Solid: one round clock, drawn terms, a verdict moves straight on, "Time!" with the guesser's count. Open: clue-givers' phones could show the term |
-| Spin & Explain | `spinexplain` | ◐ | ✓ | ✗ | ✓ | ✗ | ◐ | ✓ | ◐ | Thin: *corrected* — it was always drawn at random, with a spin room and "N left"; the audit misread it. Open: the wheel lands on the concept, and a reveal beyond the verdict |
+| Spin & Explain | `spinexplain` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | ✓ | ◐ | Solid: the wheel spins and lands (a different sector each draw) before the concept arrives; drawn fresh each run with "N left"; the verdict credits a chosen speaker |
 | Connection Maker | `connection` | ◐ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: phones propose the bridge, the teacher puts one on the table and credits its author. Open: approved bridges drawn as labelled lines |
 | Concept Chain | `conceptchain` | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: phones propose links (anonymous on the wall, named on the desk); Use this puts one on the table and makes its author the speaker; Accept grows the chain and credits them. Open: several links per term, a branching map |
 | Random Challenge | `randomchallenge` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | ◐ | ◐ | Thin: now a real deck — drawn fresh each run, cards left behind it, a flip per draw. Only the count is revealed |
@@ -70,8 +70,8 @@ tests are in the table. The tier follows from the row.
 
 **Totals:**
 - 0 fully premium; Spot the Error is near-premium.
-- 21 solid.
-- 4 thin.
+- 23 solid.
+- 2 thin.
 - 0 broken by wrong-result scoring.
 - 1 disabled.
 
@@ -416,6 +416,18 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — Spin lands; Compare's phones have a job.**
+  - **Spin & Explain:** the wheel spins for two seconds and comes to rest on
+    a sector of its own, different each draw. Then the concept slides in.
+    It runs in the show only, so the editor, thumbnails and baselines see it
+    at rest. The deck, Heads Up and cube entrances are scoped the same way.
+  - **Compare & Contrast:** phones send "one way they are alike or differ",
+    through the same idea box as the proposal queue: anonymous beside the
+    slide, named on the desk, and "Use this" puts a point on the table. The
+    proposal list is now its own block on the desk, not part of the spoken
+    controls.
+  - **Tests:** `npm test` 501/501. The sort-into-bins input (GA-26) is still
+    the premium version of Compare.
 - **23 September 2026 — Question Cube rolls (GA-25, in part).**
   - **It was a discussion prompt beside a slide.** It is now a game on the
     Random Challenge engine: drawn fresh each run with no repeats, spoken,
