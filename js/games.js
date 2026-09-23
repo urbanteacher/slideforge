@@ -739,6 +739,42 @@
     insp.appendChild(UI.field('On the phones', preview));
   };
 
+  /* Fill the gaps: one passage with the missing words in [brackets], and a
+     list of lures. The preview is the phone: the passage with numbered
+     slots, and the bank as the room will get it. */
+  STYLE_EDITORS.fill = function (insp, question) {
+    var preview = el('div', 'spot-author-preview fill-author-preview');
+    function paintPreview() {
+      preview.replaceChildren();
+      var split = SF.fillParts ? SF.fillParts(question.question) : { parts: [question.question || ''], gaps: [] };
+      var line = el('div', 'fill-author-line');
+      split.parts.forEach(function (text, i) {
+        if (text) line.appendChild(document.createTextNode(text));
+        if (i < split.gaps.length) line.appendChild(el('span', 'fill-author-gap', String(i + 1)));
+      });
+      preview.appendChild(line);
+      var lures = String(question.lures || '').split(/[,\n]/).map(function (w) { return w.trim(); }).filter(Boolean);
+      var bank = el('div', 'fill-author-bank');
+      split.gaps.concat(lures).forEach(function (w, i) {
+        bank.appendChild(el('span', 'spot-author-word' + (i < split.gaps.length ? ' on' : ''), w));
+      });
+      preview.appendChild(bank);
+      var problem = SF.gameStyle('fill').problems(question, 1);
+      preview.appendChild(el('div', 'spot-author-note' + (problem ? ' warn' : ''), problem
+        ? problem.replace(/^Q1:? ?/, '')
+        : split.gaps.length + (split.gaps.length === 1 ? ' gap' : ' gaps') + ' · ' +
+          (split.gaps.length + lures.length) + ' words in the bank, shuffled on the phones.'));
+    }
+    insp.appendChild(UI.field('Passage — each missing word in [square brackets]', UI.area(question.question || '', function (v) {
+      question.question = v; touched(); paintPreview(); drawRail();
+    }, 4), 'Up to four gaps. The words in brackets are the answers.'));
+    insp.appendChild(UI.field('Lures — words that could tempt, separated by commas', UI.text(question.lures || '', function (v) {
+      question.lures = v.slice(0, 300); touched(); paintPreview();
+    }, 'diffusion, glucose, cell wall'), 'The misconceptions worth finding. The reveal shows which one the room chose.'));
+    paintPreview();
+    insp.appendChild(UI.field('On the phones', preview));
+  };
+
   STYLE_EDITORS.race = STYLE_EDITORS.choice;
   STYLE_EDITORS.speed = STYLE_EDITORS.choice;
   STYLE_EDITORS.boss = function (insp, question) {

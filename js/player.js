@@ -2183,6 +2183,49 @@
   }
 
   /**
+   * Fill the gaps, revealed: the right word lands in each slot, and under it
+   * what the room put there — the right word's count first, then the lure
+   * most chosen. One sentence names the hardest gap and its commonest lure.
+   * Counts only; nobody is named.
+   *
+   * @param {{right: number, word: string, words: {i: number, text: string, n: number, right: boolean}[]}[]} gaps
+   */
+  Player.showFillReveal = function (gaps) {
+    var node = Player._current;
+    if (!node) return;
+    node.classList.add('fill-revealed');
+    var hardest = -1, hardestShare = 2, lure = '', lureN = 0;
+    Array.prototype.forEach.call(node.querySelectorAll('.fill-gap'), function (slot) {
+      var g = gaps[Number(slot.dataset.i)];
+      if (!g) return;
+      var word = slot.querySelector('.fg-word');
+      if (word) word.textContent = g.word;
+      var total = g.words.reduce(function (a, w) { return a + w.n; }, 0);
+      var right = g.words.filter(function (w) { return w.right; })[0];
+      var wrong = g.words.filter(function (w) { return !w.right; })[0];
+      var heat = slot.querySelector('.fg-heat');
+      if (heat) {
+        heat.textContent = '';
+        heat.appendChild(el('b', null, (right ? right.n : 0) + ' \u2713'));
+        if (wrong) heat.appendChild(document.createTextNode(' \u00b7 ' + wrong.n + ' ' + wrong.text));
+      }
+      var share = total ? (right ? right.n : 0) / total : 1;
+      if (total && share < hardestShare) {
+        hardestShare = share; hardest = Number(slot.dataset.i);
+        lure = wrong ? wrong.text : ''; lureN = wrong ? wrong.n : 0;
+      }
+    });
+    var box = node.querySelector('.fill-verdict');
+    if (!box) return;
+    box.textContent = '';
+    if (hardest < 0) return;
+    var b = document.createElement('b');
+    b.textContent = 'Gap ' + (hardest + 1) + ' was the hardest.';
+    box.appendChild(b);
+    if (lure && lureN) box.appendChild(document.createTextNode(' ' + lureN + ' put \u201c' + lure + '\u201d there.'));
+  };
+
+  /**
    * True/False Showdown on the wall: the room's split across one bar.
    *
    * The bar follows the current votes, so the room can watch itself move as

@@ -43,7 +43,7 @@ var FORMATS = {
   'emoji-guess': { label: 'Emoji guess',
     answersHint: 'The symbols go in the question. Accept the spellings a learner will actually type.' },
   'fill-in-the-blanks': { label: 'Fill in the blanks',
-    answersHint: 'Write the sentence with ______ where the word goes.' },
+    answersHint: 'Write the passage with each missing word in [square brackets], up to four, and add a few lures. Phones tap a word into each gap.' },
   'time-traveler': { label: 'Time traveler',
     answersHint: 'A clue and a date in the question; the event is the answer.' },
   'ranking': { label: 'Ranking challenge',
@@ -103,7 +103,8 @@ var FORMAT_STYLE = {
   'definition-challenge': 'definition',
   'emoji-guess': 'emoji',
   'word-reveal': 'wordreveal',
-  'fill-in-the-blanks': 'type',
+  /* Its own engine since 23 Sep 2026: a word bank tapped into gaps. */
+  'fill-in-the-blanks': 'fill',
   'heads-up': 'headsup',
   'spin-explain': 'spinexplain',
   /* Its own engine since 23 Sep 2026: tap the wrong word, not pick a phrase. */
@@ -131,7 +132,7 @@ var SPECIAL_STYLES = [
   'truefalse', 'race', 'speed', 'boss', 'wordreveal',
   'memoryflip', 'memorymatch', 'knowledgeflip',
   'headsup', 'spinexplain', 'connection', 'conceptchain',
-  'randomchallenge', 'bingo', 'bowl', 'lowstakes', 'emoji', 'definition', 'oddone', 'compare', 'spot'
+  'randomchallenge', 'bingo', 'bowl', 'lowstakes', 'emoji', 'definition', 'oddone', 'compare', 'spot', 'fill'
 ];
 
 function formatStyle(formatKey) {
@@ -143,6 +144,6 @@ function isSpecialStyle(styleKey) {
   return SPECIAL_STYLES.indexOf(styleKey) > -1;
 }
 
-var INPUTS = ['choice', 'text', 'number', 'order', 'tap'];
+var INPUTS = ['choice', 'text', 'number', 'order', 'tap', 'fill'];
 
 export { FORMATS, gameFormat, FORMAT_STYLE, CORE_STYLES, SPECIAL_STYLES, formatStyle, isSpecialStyle, INPUTS };

@@ -3015,19 +3015,19 @@
           return Math.abs(r.value);
         }));
         rows2.forEach(function(r, i) {
-          var x = 90 + (i + 0.5) * 820 / rows2.length, fill = colour(i);
-          if (state2.palette === "sequential") fill = "hsl(205,65%," + (92 - (r.value - min) / (max - min) * 60) + "%)";
-          if (state2.palette === "diverging") fill = "hsl(" + (r.value < 0 ? 210 : 28) + ",70%," + (95 - Math.abs(r.value) / abs * 55) + "%)";
-          if (state2.kind === "bubbles") mark(chart, "mark:" + r.index, "circle", { cx: x, cy: 150, r: Math.sqrt(Math.max(0, r.value) / max) * Math.min(85, 340 / rows2.length), fill });
-          else if (state2.kind === "hue") mark(chart, "mark:" + r.index, "circle", { cx: x, cy: 150, r: Math.min(55, 340 / rows2.length), fill });
+          var x = 90 + (i + 0.5) * 820 / rows2.length, fill2 = colour(i);
+          if (state2.palette === "sequential") fill2 = "hsl(205,65%," + (92 - (r.value - min) / (max - min) * 60) + "%)";
+          if (state2.palette === "diverging") fill2 = "hsl(" + (r.value < 0 ? 210 : 28) + ",70%," + (95 - Math.abs(r.value) / abs * 55) + "%)";
+          if (state2.kind === "bubbles") mark(chart, "mark:" + r.index, "circle", { cx: x, cy: 150, r: Math.sqrt(Math.max(0, r.value) / max) * Math.min(85, 340 / rows2.length), fill: fill2 });
+          else if (state2.kind === "hue") mark(chart, "mark:" + r.index, "circle", { cx: x, cy: 150, r: Math.min(55, 340 / rows2.length), fill: fill2 });
           else if (state2.kind === "shape") {
             var radius = Math.min(45, 300 / rows2.length);
-            if (i % 4 === 0) mark(chart, "mark:" + r.index, "circle", { cx: x, cy: 150, r: radius, fill });
-            else if (i % 4 === 1) mark(chart, "mark:" + r.index, "rect", { x: x - radius, y: 150 - radius, width: radius * 2, height: radius * 2, fill });
-            else mark(chart, "mark:" + r.index, "polygon", { vertices: i % 4 === 2 ? [[x, 150 - radius], [x - radius, 150 + radius], [x + radius, 150 + radius]] : [[x, 150 - radius], [x + radius, 150], [x, 150 + radius], [x - radius, 150]], fill });
+            if (i % 4 === 0) mark(chart, "mark:" + r.index, "circle", { cx: x, cy: 150, r: radius, fill: fill2 });
+            else if (i % 4 === 1) mark(chart, "mark:" + r.index, "rect", { x: x - radius, y: 150 - radius, width: radius * 2, height: radius * 2, fill: fill2 });
+            else mark(chart, "mark:" + r.index, "polygon", { vertices: i % 4 === 2 ? [[x, 150 - radius], [x - radius, 150 + radius], [x + radius, 150 + radius]] : [[x, 150 - radius], [x + radius, 150], [x, 150 + radius], [x - radius, 150]], fill: fill2 });
           } else {
             var tileWidth = Math.min(130, 720 / rows2.length);
-            mark(chart, "mark:" + r.index, "rect", { x: x - tileWidth / 2, y: 80, width: tileWidth, height: 140, fill });
+            mark(chart, "mark:" + r.index, "rect", { x: x - tileWidth / 2, y: 80, width: tileWidth, height: 140, fill: fill2 });
           }
           text2(x, 270, r.name, 21, "middle", "category:" + r.index);
           text2(x, 305, r.value, 24, "middle", "value:" + r.index);
@@ -3513,9 +3513,9 @@
         var row = el("div", "fk-poll" + (total && i === lead && n > 0 ? " lead" : ""));
         row.appendChild(el("div", "fk-plabel", labels[i] || "Option " + (i + 1)));
         var bar = el("div", "fk-pbar");
-        var fill = el("i");
-        fill.style.width = n / max * 100 + "%";
-        bar.appendChild(fill);
+        var fill2 = el("i");
+        fill2.style.width = n / max * 100 + "%";
+        bar.appendChild(fill2);
         row.appendChild(bar);
         var num = el("div", "fk-pnum");
         num.appendChild(el("span", "fk-pn", String(n)));
@@ -3702,9 +3702,9 @@
       if (answered === players) line.appendChild(el("span", "fbm-all", "Everyone"));
       meter.appendChild(line);
       var bar = el("div", "fbm-bar");
-      var fill = el("i");
-      fill.style.width = Math.round(answered / players * 100) + "%";
-      bar.appendChild(fill);
+      var fill2 = el("i");
+      fill2.style.width = Math.round(answered / players * 100) + "%";
+      bar.appendChild(fill2);
       meter.appendChild(bar);
     }
     function fitFeedback(body, kind) {
@@ -3797,9 +3797,9 @@
         head.appendChild(el("span", "pn", String(n)));
         row.appendChild(head);
         var bar = el("div", "pbar");
-        var fill = el("i");
-        fill.style.width = n / max * 100 + "%";
-        bar.appendChild(fill);
+        var fill2 = el("i");
+        fill2.style.width = n / max * 100 + "%";
+        bar.appendChild(fill2);
         row.appendChild(bar);
         row.appendChild(el("div", "ppct", total ? Math.round(n / total * 100) + "%" : "0%"));
         body.appendChild(row);
@@ -3825,9 +3825,9 @@
       counts.forEach(function(n, i) {
         var col = el("div", cls + "-col");
         var bar = el("div", cls + "-bar");
-        var fill = el("i");
-        fill.style.height = n / max * 100 + "%";
-        bar.appendChild(fill);
+        var fill2 = el("i");
+        fill2.style.height = n / max * 100 + "%";
+        bar.appendChild(fill2);
         col.appendChild(el("div", cls + "-n", n ? String(n) : ""));
         col.appendChild(bar);
         col.appendChild(el("div", cls + "-p", String(i + 1)));
@@ -3946,9 +3946,9 @@
       pad.appendChild(el("div", "boss-title", opts.title || "Boss battle"));
       if (opts.note) pad.appendChild(el("div", "boss-note", opts.note));
       var meter = el("div", "boss-meter");
-      var fill = el("div", "boss-fill");
-      fill.style.width = pct + "%";
-      meter.appendChild(fill);
+      var fill2 = el("div", "boss-fill");
+      fill2.style.width = pct + "%";
+      meter.appendChild(fill2);
       pad.appendChild(meter);
       pad.appendChild(el("div", "boss-hp", hp + " / " + max + " HP"));
       node.appendChild(pad);
@@ -4469,9 +4469,9 @@
         row.style.setProperty("--lane-tint", tint(lane.color, 0.32));
         row.appendChild(el("div", "rname", lane.name));
         var rail = el("div", "rrail");
-        var fill = el("div", "rfill");
-        fill.style.width = Math.min(lane.pos, len) / len * 100 + "%";
-        rail.appendChild(fill);
+        var fill2 = el("div", "rfill");
+        fill2.style.width = Math.min(lane.pos, len) / len * 100 + "%";
+        rail.appendChild(fill2);
         var mark = el("div", "rmark", lane.pos >= len ? "🏆" : "🏇");
         mark.style.left = (lane.pos <= 0 ? 0 : (lane.pos - 0.5) / len * 100) + "%";
         rail.appendChild(mark);
@@ -4875,9 +4875,9 @@
         if (fight) {
           var hp = el("div", "boss-hp");
           var bar = el("div", "boss-hp-rail");
-          var fill = el("div", "boss-hp-fill");
-          fill.style.width = Math.round(fight.hp / Math.max(1, fight.max) * 100) + "%";
-          bar.appendChild(fill);
+          var fill2 = el("div", "boss-hp-fill");
+          fill2.style.width = Math.round(fight.hp / Math.max(1, fight.max) * 100) + "%";
+          bar.appendChild(fill2);
           hp.appendChild(bar);
           hp.appendChild(el("div", "boss-hp-n", fight.hp + " / " + fight.max + " HP"));
           boss2.appendChild(hp);
@@ -5111,6 +5111,38 @@
         return;
       }
       if (present === "compare") return;
+      if (slide.input === "fill") {
+        pad.parentNode.classList.add("is-fill");
+        var parts = slide.fillParts || [slide.question || ""];
+        var gapsAt = slide.gapAnswers || [];
+        var passageF = el("div", "fill-passage");
+        passageF.dataset.len = String(slide.question || "").length <= 90 ? "short" : String(slide.question || "").length <= 200 ? "medium" : "long";
+        parts.forEach(function(text2, i) {
+          if (text2) passageF.appendChild(el("span", "fill-text", text2));
+          if (i < parts.length - 1) {
+            var slot = el("span", "fill-gap");
+            slot.dataset.i = String(i);
+            slot.appendChild(el("span", "fg-n", String(i + 1)));
+            slot.appendChild(el("span", "fg-word", opts.revealed ? (slide.options || [])[gapsAt[i]] || "" : ""));
+            slot.appendChild(el("span", "fg-heat", ""));
+            passageF.appendChild(slot);
+          }
+        });
+        pad.appendChild(passageF);
+        var bankF = el("div", "fill-bank");
+        (slide.options || []).forEach(function(w) {
+          bankF.appendChild(el("span", "fb-word", w));
+        });
+        pad.appendChild(bankF);
+        pad.appendChild(el("div", "fill-verdict", ""));
+        if (inlineWhy) {
+          var fw = el("div", "spot-why");
+          fw.appendChild(whyBox());
+          pad.appendChild(fw);
+        }
+        pad.appendChild(el("div", "answered-count", ""));
+        return;
+      }
       if (slide.input === "tap") {
         pad.parentNode.classList.add("is-spot");
         var from = typeof slide.errorFrom === "number" ? slide.errorFrom : Number(slide.correct) || 0;
@@ -17525,7 +17557,7 @@
   }
   var TEACHER_CALL = ["headsup", "spinexplain", "connection", "randomchallenge", "conceptchain"];
   function correctAnswerLabel(slide) {
-    if (slide.input === "text" || slide.input === "number" || slide.input === "tap") return String(slide.answer || "");
+    if (slide.input === "text" || slide.input === "number" || slide.input === "tap" || slide.input === "fill") return String(slide.answer || "");
     if (slide.input === "order") return (slide.options || []).join(" → ");
     if (TEACHER_CALL.indexOf(slide.style) > -1) return "Your call — mark it as they answer";
     var opt = (slide.options || [])[slide.correct];
@@ -17752,6 +17784,13 @@
       teams: support("yes", "Teams can discuss and submit paper answers."),
       entry: support("yes", "The teacher reveals and marks paper answers."),
       solo: support("partial", "A solo paper run still needs a checked workflow.")
+    }),
+    /* A passage with gaps and a word bank (Fill the gaps). */
+    fill: Object.freeze({
+      phones: support("yes", "Each learner taps a word from the bank into each gap."),
+      teams: support("yes", "Each gap that is right earns its share for the team."),
+      entry: support("yes", "The teacher picks a word for each gap, in order, by key."),
+      solo: support("no", "The word bank is on the phones; the wall shows the passage.")
     }),
     /* A vote with no right answer to be marked against: the room's split is
        the point (Odd One Out). */
@@ -21026,6 +21065,141 @@
     }
   };
 
+  // src/games/fill.js
+  var FILL_MAX_GAPS = 4;
+  var FILL_MAX_BANK = 12;
+  function fillParts(passage) {
+    var text2 = String(passage || "");
+    var parts = [];
+    var gaps = [];
+    var re = /\[([^\]\n]{1,60})\]/g;
+    var at = 0;
+    var m;
+    while (m = re.exec(text2)) {
+      parts.push(text2.slice(at, m.index));
+      gaps.push(m[1].trim());
+      at = m.index + m[0].length;
+    }
+    parts.push(text2.slice(at));
+    return { parts, gaps };
+  }
+  function lureList(raw) {
+    var list = Array.isArray(raw) ? raw : String(raw || "").split(/[,\n]/);
+    return list.map(function(w) {
+      return String(w).trim();
+    }).filter(Boolean);
+  }
+  function fillScore(s, response) {
+    var want = s.gapAnswers || [];
+    if (!Array.isArray(response) || response.length !== want.length || !want.length) return 0;
+    var right = 0;
+    for (var i = 0; i < want.length; i++) if (response[i] === want[i]) right++;
+    return right / want.length;
+  }
+  var fill = {
+    defaults: {
+      "defaultPoints": 1e3,
+      "defaultTime": 0,
+      "confidence": false
+    },
+    key: "fill",
+    plays: ROOM_PLAY.fill,
+    label: "Fill the gaps",
+    icon: "▭",
+    blurb: "A passage with gaps and a word bank with lures. Phones tap a word into each gap; the reveal shows, gap by gap, what the room chose.",
+    mechanic: "points",
+    input: "fill",
+    /* The passage is written in the fill editor's own field. */
+    showsQuestion: false,
+    /* Its options are the word bank, built from the gaps and the lures. */
+    minOptions: 0,
+    maxOptions: 0,
+    make: function() {
+      return {
+        question: "Water moves into a cell by [osmosis], from where there is more [water] to where there is less, across a partially permeable [membrane].",
+        lures: "diffusion, glucose, cell wall",
+        explanation: "Osmosis is the diffusion of water, across a partially permeable membrane."
+      };
+    },
+    normalize: function(q) {
+      var text2 = String(q.question || "");
+      var converted = false;
+      if (text2.indexOf("[") < 0 && /_{3,}/.test(text2)) {
+        var accepted = Array.isArray(q.accept) && q.accept[0] ? q.accept[0] : q.answer;
+        if (String(accepted || "").trim()) {
+          text2 = text2.replace(/_{3,}/, "[" + String(accepted).trim() + "]");
+          converted = true;
+        }
+      }
+      q.question = text2.slice(0, 600);
+      var lures = lureList(q.lures).slice(0, FILL_MAX_BANK).join(", ");
+      if (converted && lures === lureList(fill.make().lures).join(", ")) lures = "";
+      q.lures = lures;
+      delete q.options;
+      delete q.correct;
+      return q;
+    },
+    problems: function(q, n) {
+      var split = fillParts(q.question);
+      if (!split.gaps.length) return "Q" + n + " has no gaps — put each missing word in [square brackets]";
+      if (split.gaps.length > FILL_MAX_GAPS) return "Q" + n + " has " + split.gaps.length + " gaps — keep it to " + FILL_MAX_GAPS;
+      if (split.gaps.some(function(g) {
+        return !g;
+      })) return "Q" + n + " has an empty [ ]";
+      var bank2 = {};
+      split.gaps.concat(lureList(q.lures)).forEach(function(w) {
+        bank2[w.toLowerCase()] = 1;
+      });
+      if (Object.keys(bank2).length > FILL_MAX_BANK) return "Q" + n + " has more than " + FILL_MAX_BANK + " words in its bank";
+      if (Object.keys(bank2).length < 2) return "Q" + n + " needs a lure, or there is nothing to choose between";
+      return null;
+    },
+    compile: function(q, settings, s) {
+      var split = fillParts(q.question);
+      var seen = {};
+      var bank2 = [];
+      split.gaps.concat(lureList(q.lures)).forEach(function(w) {
+        var k = w.toLowerCase();
+        if (!seen[k] && bank2.length < FILL_MAX_BANK) {
+          seen[k] = 1;
+          bank2.push(w);
+        }
+      });
+      for (var i = bank2.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = bank2[i];
+        bank2[i] = bank2[j];
+        bank2[j] = t;
+      }
+      var lower = bank2.map(function(w) {
+        return w.toLowerCase();
+      });
+      s.question = split.parts.join("_____");
+      s.fillParts = split.parts;
+      s.options = bank2;
+      s.gapAnswers = split.gaps.map(function(g) {
+        return lower.indexOf(g.toLowerCase());
+      });
+      s.answer = split.gaps.join(" · ");
+      s.correct = -1;
+      s.holdResults = true;
+      s.headPrompt = split.gaps.length === 1 ? "Fill the gap" : "Fill the " + split.gaps.length + " gaps";
+    },
+    /* Right when every gap is; partial credit is in the points (fillScore). */
+    mark: function(s, response) {
+      return fillScore(s, response) === 1;
+    },
+    summary: function(q) {
+      var n = fillParts(q.question).gaps.length;
+      return n === 1 ? "1 gap" : n + " gaps";
+    },
+    describe: function(s, response) {
+      return Array.isArray(response) ? response.map(function(i) {
+        return (s.options || [])[i] || "?";
+      }).join(" · ") : "";
+    }
+  };
+
   // src/games/registry.js
   function markResponse(slide, response) {
     var style = gameStyle(slide.style);
@@ -21040,7 +21214,7 @@
   function gameStyle(key) {
     return GAME_STYLES[key] || GAME_STYLES.choice;
   }
-  var GAME_STYLES = { choice: choice2, truefalse, race, speed, boss, slider, type, order, emoji, definition, compare, oddone, wordreveal, memoryflip, memorymatch, knowledgeflip, headsup, spinexplain, connection, conceptchain, randomchallenge, bingo, lowstakes, bowl, spot };
+  var GAME_STYLES = { choice: choice2, truefalse, race, speed, boss, slider, type, order, emoji, definition, compare, oddone, wordreveal, memoryflip, memorymatch, knowledgeflip, headsup, spinexplain, connection, conceptchain, randomchallenge, bingo, lowstakes, bowl, spot, fill };
 
   // src/deck/markdown.js
   function renderMarkdown(deck, lookupGame = (
@@ -21639,7 +21813,7 @@
     },
     "fill-in-the-blanks": {
       label: "Fill in the blanks",
-      answersHint: "Write the sentence with ______ where the word goes."
+      answersHint: "Write the passage with each missing word in [square brackets], up to four, and add a few lures. Phones tap a word into each gap."
     },
     "time-traveler": {
       label: "Time traveler",
@@ -21722,7 +21896,8 @@
     "definition-challenge": "definition",
     "emoji-guess": "emoji",
     "word-reveal": "wordreveal",
-    "fill-in-the-blanks": "type",
+    /* Its own engine since 23 Sep 2026: a word bank tapped into gaps. */
+    "fill-in-the-blanks": "fill",
     "heads-up": "headsup",
     "spin-explain": "spinexplain",
     /* Its own engine since 23 Sep 2026: tap the wrong word, not pick a phrase. */
@@ -21760,7 +21935,8 @@
     "definition",
     "oddone",
     "compare",
-    "spot"
+    "spot",
+    "fill"
   ];
   function formatStyle(formatKey) {
     var s = FORMAT_STYLE[formatKey];
@@ -21769,7 +21945,7 @@
   function isSpecialStyle(styleKey) {
     return SPECIAL_STYLES.indexOf(styleKey) > -1;
   }
-  var INPUTS = ["choice", "text", "number", "order", "tap"];
+  var INPUTS = ["choice", "text", "number", "order", "tap", "fill"];
 
   // src/storage.js
   function unusedDraft(doc) {
@@ -22140,12 +22316,13 @@
       ]
     },
     "fill-in-the-blanks": {
-      style: "type",
-      title: "Fill in the blanks",
-      settings: { scoreboard: false, scoreSlide: false, defaultTime: 0 },
+      style: "fill",
+      title: "Fill the gaps",
+      settings: { scoreboard: true, scoreSlide: true, defaultTime: 0 },
       seeds: [
-        { question: "Water moves into a cell by ______, from where there is more water to where there is less.", accept: ["osmosis"], explanation: "Diffusion of water specifically, across a partially permeable membrane." },
-        { question: "The organelle where protein synthesis occurs is the ______.", accept: ["ribosome", "ribosomes"], explanation: "Ribosomes assemble amino acids into proteins." }
+        { question: "Water moves into a cell by [osmosis], from where there is more water to where there is less, across a partially permeable [membrane].", lures: "diffusion, active transport, cell wall", explanation: "Osmosis is the diffusion of water across a partially permeable membrane." },
+        { question: "Proteins are made on [ribosomes], using instructions copied from [DNA] in the nucleus.", lures: "mitochondria, glucose, chloroplasts", explanation: "mRNA carries the code from DNA to the ribosomes, which assemble amino acids." },
+        { question: "Plants make glucose by [photosynthesis], which needs light, water and [carbon dioxide].", lures: "respiration, oxygen, nitrogen", explanation: "Oxygen is produced by photosynthesis, not used by it." }
       ]
     },
     "ranking": {
@@ -23796,6 +23973,9 @@
     spotWords,
     spotSpan,
     SPOT_MAX_WORDS,
+    fillParts,
+    fillScore,
+    FILL_MAX_GAPS,
     showNumber,
     gameToRunDeck,
     migrateDeckQuizzes,

@@ -79,7 +79,7 @@
       recentSpeakers:Live.recentSpeakers,
       lastCredit:Live.lastCredit&&slide&&Live.lastCredit.slideId===slide.id?Live.lastCredit:null,
       oralCount:slide ? (Live.oralCounts[slide.gameId] || 0) : 0,
-      question:slide && slide.type==='quiz' ? {id:slide.id,question:slide.question,input:slide.input || 'choice',options:slide.options,spoken:isSpokenSlide(slide),scoreSpoken:slide.scoreSpoken===true,style:slide.style,range:slide.input==='number'?{min:slide.min,max:slide.max,step:slide.step,unit:slide.unit||''}:null,revealed:!!Live.revealed[slide.id]} : null,
+      question:slide && slide.type==='quiz' ? {id:slide.id,question:slide.question,input:slide.input || 'choice',options:slide.options,gaps:slide.input==='fill'?(slide.gapAnswers||[]).length:0,spoken:isSpokenSlide(slide),scoreSpoken:slide.scoreSpoken===true,style:slide.style,range:slide.input==='number'?{min:slide.min,max:slide.max,step:slide.step,unit:slide.unit||''}:null,revealed:!!Live.revealed[slide.id]} : null,
       answers:(Live.snapshot.answers || []).map(function(a){
         /* Marked here, where the answer key is, and only after the reveal.
            Before that the teacher window has no business knowing — it is the
@@ -1562,6 +1562,35 @@
     });
   }
 
+  /** Fill the gaps: each gap that is right earns its share of the points. */
+  function fillGains(slide) {
+    var pts = Number(slide.points) || 0;
+    return (Live.snapshot.answers || []).map(function (a) {
+      return [a.id, Math.round(pts * SF.fillScore(slide, a.response))];
+    });
+  }
+
+  /* What the room put in each gap, most popular first: the reveal's picture.
+     [{ right, words: [{ i, text, n, right }] }] per gap. */
+  function fillGroups(slide) {
+    var gaps = (slide.gapAnswers || []).map(function (want) {
+      return { right: want, counts: {} };
+    });
+    (Live.snapshot.answers || []).forEach(function (a) {
+      if (!Array.isArray(a.response)) return;
+      a.response.forEach(function (i, g) {
+        if (gaps[g]) gaps[g].counts[i] = (gaps[g].counts[i] || 0) + 1;
+      });
+    });
+    return gaps.map(function (g) {
+      var words = Object.keys(g.counts).map(function (k) {
+        var i = Number(k);
+        return { i: i, text: (slide.options || [])[i] || '', n: g.counts[k], right: i === g.right };
+      }).sort(function (x, y) { return y.n - x.n; });
+      return { right: g.right, word: (slide.options || [])[g.right] || '', words: words };
+    });
+  }
+
   /** Ranking: round(10 × orderScore) for every answered player. */
   function orderGains(slide) {
     return (Live.snapshot.answers || []).map(function (a) {
@@ -2326,6 +2355,9 @@
       /* question stays the clues for the journal; headPrompt is the mission. */
     }
     if (s.showdown) msg.showdown = true;
+    /* Fill the gaps: the text around the gaps, for the phone to draw. The
+       word bank rides in options; which word goes where never leaves here. */
+    if (s.input === 'fill') msg.fillParts = (s.fillParts || []).slice();
     send(msg);
     /* A timed showdown shows its own split half-way through the clock. */
     clearTimeout(Live._splitTimer);
@@ -2566,7 +2598,7 @@
       correct: open ? -1 : s.correct,
       /* A spot question's answer is the wrong words and their correction,
          not whichever single word the span starts on. */
-      answer: open || s.input === 'tap' ? (s.answer || '') : (s.options[s.correct] || ''),
+      answer: open || s.input === 'tap' || s.input === 'fill' ? (s.answer || '') : (s.options[s.correct] || ''),
       explanation: s.explanation || ''
     };
     if (mechanic === 'speed') msg.gains = speedGains(s);
@@ -2576,6 +2608,7 @@
       msg.gains = SF.wordRevealGains(s, Live.snapshot.answers, Live.dripShown);
     }
     if (s.input === 'order') msg.gains = orderGains(s);
+    if (s.input === 'fill') msg.gains = fillGains(s);
     if (mechanic === 'claim') msg.gains = claimGains(s);
     if (isSpokenSlide(s)) {
       /* The relay resolves one named recipient against its own roster and
@@ -2645,6 +2678,7 @@
     sendReveal(s);
     if (s.input === 'text') SF.Player.showTypedAnswers(typedGroups(s));
     if (s.input === 'number') SF.Player.showPlacedValues(placedValues(s));
+    if (s.input === 'fill' && SF.Player.showFillReveal) SF.Player.showFillReveal(fillGroups(s));
     if (SF.Player.releaseTally) SF.Player.releaseTally();
     clearTimeout(Live._splitTimer);
     if (s.showdown && Live.showdown && Live.showdown.id === s.id && SF.Player.setShowdown) {

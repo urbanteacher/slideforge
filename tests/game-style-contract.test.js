@@ -51,7 +51,9 @@ const EXPECTED = {
   randomchallenge: false, slider: true, speed: true, spinexplain: false,
   truefalse: true, type: true, wordreveal: true,
   /* 23 Sep 2026: the passage has its own Sentence field in the spot editor. */
-  spot: false
+  spot: false,
+  /* 23 Sep 2026: the passage with [gaps] has its own field in the fill editor. */
+  fill: false
 };
 
 test('every style resolves the Question field the way the list used to', () => {
@@ -79,13 +81,13 @@ test('every game declares what each kind of room can do', () => {
   }
 });
 
-test('the ten that hide it say so themselves', () => {
+test('the eleven that hide it say so themselves', () => {
   const SF = load();
   const styles = SF.GAME_STYLES;
   const declared = Object.keys(styles).filter((k) => styles[k].showsQuestion !== undefined);
   assert.deepEqual(declared.sort(),
     ['compare', 'conceptchain', 'connection', 'definition', 'emoji',
-     'headsup', 'oddone', 'randomchallenge', 'spinexplain', 'spot'],
+     'fill', 'headsup', 'oddone', 'randomchallenge', 'spinexplain', 'spot'],
     'the styles that hide the Question field must declare it, not be listed elsewhere');
   for (const key of declared) {
     assert.equal(styles[key].showsQuestion, false,

@@ -868,6 +868,42 @@ export function createQuizRenderer(SF, helpers) {
        The words that are wrong are marked in-error now and struck through by
        CSS once the reveal marks the first of them correct; the correction sits
        beside them, hidden until the same moment. */
+    /* Fill the gaps: the passage is the stage, each gap a slot. The word
+       bank is on the phones, and quietly under the passage here so the room
+       can read along. At the reveal the right word lands in each slot and
+       js/player.js lists what the room put there (showFillReveal). */
+    if (slide.input === 'fill') {
+      pad.parentNode.classList.add('is-fill');
+      var parts = slide.fillParts || [slide.question || ''];
+      var gapsAt = slide.gapAnswers || [];
+      var passageF = el('div', 'fill-passage');
+      passageF.dataset.len = String(slide.question || '').length <= 90 ? 'short'
+        : String(slide.question || '').length <= 200 ? 'medium' : 'long';
+      parts.forEach(function (text, i) {
+        if (text) passageF.appendChild(el('span', 'fill-text', text));
+        if (i < parts.length - 1) {
+          var slot = el('span', 'fill-gap');
+          slot.dataset.i = String(i);
+          slot.appendChild(el('span', 'fg-n', String(i + 1)));
+          slot.appendChild(el('span', 'fg-word', opts.revealed ? ((slide.options || [])[gapsAt[i]] || '') : ''));
+          slot.appendChild(el('span', 'fg-heat', ''));
+          passageF.appendChild(slot);
+        }
+      });
+      pad.appendChild(passageF);
+      var bankF = el('div', 'fill-bank');
+      (slide.options || []).forEach(function (w) { bankF.appendChild(el('span', 'fb-word', w)); });
+      pad.appendChild(bankF);
+      pad.appendChild(el('div', 'fill-verdict', ''));
+      if (inlineWhy) {
+        var fw = el('div', 'spot-why');
+        fw.appendChild(whyBox());
+        pad.appendChild(fw);
+      }
+      pad.appendChild(el('div', 'answered-count', ''));
+      return;
+    }
+
     if (slide.input === 'tap') {
       pad.parentNode.classList.add('is-spot');
       var from = typeof slide.errorFrom === 'number' ? slide.errorFrom : Number(slide.correct) || 0;

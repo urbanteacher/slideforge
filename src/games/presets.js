@@ -141,12 +141,13 @@ const GAME_FORMAT_PRESETS = {
     ]
   },
   'fill-in-the-blanks': {
-    style: 'type',
-    title: 'Fill in the blanks',
-    settings: { scoreboard: false, scoreSlide: false, defaultTime: 0 },
+    style: 'fill',
+    title: 'Fill the gaps',
+    settings: { scoreboard: true, scoreSlide: true, defaultTime: 0 },
     seeds: [
-      { question: 'Water moves into a cell by ______, from where there is more water to where there is less.', accept: ['osmosis'], explanation: 'Diffusion of water specifically, across a partially permeable membrane.' },
-      { question: 'The organelle where protein synthesis occurs is the ______.', accept: ['ribosome', 'ribosomes'], explanation: 'Ribosomes assemble amino acids into proteins.' }
+      { question: 'Water moves into a cell by [osmosis], from where there is more water to where there is less, across a partially permeable [membrane].', lures: 'diffusion, active transport, cell wall', explanation: 'Osmosis is the diffusion of water across a partially permeable membrane.' },
+      { question: 'Proteins are made on [ribosomes], using instructions copied from [DNA] in the nucleus.', lures: 'mitochondria, glucose, chloroplasts', explanation: 'mRNA carries the code from DNA to the ribosomes, which assemble amino acids.' },
+      { question: 'Plants make glucose by [photosynthesis], which needs light, water and [carbon dioxide].', lures: 'respiration, oxygen, nitrogen', explanation: 'Oxygen is produced by photosynthesis, not used by it.' }
     ]
   },
   'ranking': {

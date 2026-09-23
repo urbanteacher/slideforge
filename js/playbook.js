@@ -236,18 +236,18 @@
       ]
     },
     'fill-in-the-blanks': {
-      title: 'Fill in the Blanks',
-      aim: 'Cloze comprehension; vocabulary in context.',
-      judgement: 'discuss',
-      demo: 'discuss',
-      phases: 'reveal blanks → discuss → next',
-      timer: 'None.',
-      players: 'Class discussion — no competitive score.',
-      scoring: 'None.',
+      title: 'Fill the Gaps',
+      aim: 'Vocabulary in context — and the lure the room reaches for is the misconception.',
+      judgement: 'auto',
+      demo: 'class',
+      phases: 'passage with gaps → phones tap words from the bank → reveal gap by gap',
+      timer: 'None by default.',
+      players: 'Every phone fills every gap; the teacher can enter a learner’s words by key.',
+      scoring: 'Each gap that is right earns its share of the points.',
       howToPlay: [
-        'A sentence with gaps appears.',
-        'Discuss what belongs in each blank before revealing.',
-        'Optional word bank can support the room.'
+        'A passage with up to four gaps appears. Each phone gets the word bank: the right words and a few lures, shuffled.',
+        'Tap a word into each gap, then lock in. The room’s choices stay hidden.',
+        'The reveal drops the right word into each gap and shows what the room put there. The hardest gap and its commonest lure are named.'
       ]
     },
     'heads-up': {

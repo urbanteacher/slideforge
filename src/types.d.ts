@@ -34,7 +34,7 @@ export type DeckSlideType =
 export type SlideType = DeckSlideType | 'game' | 'quiz' | 'explain' | 'results';
 
 /** How the room answers a compiled question (`INPUTS`). */
-export type InputKind = 'choice' | 'text' | 'number' | 'order' | 'tap';
+export type InputKind = 'choice' | 'text' | 'number' | 'order' | 'tap' | 'fill';
 
 /** What a game does with a correct answer. `points` is the default; the rest
  *  drive a bespoke board or scoreboard. */
@@ -48,7 +48,7 @@ export type GameStyleKey =
   | 'order' | 'emoji' | 'definition' | 'compare' | 'oddone' | 'wordreveal'
   | 'memoryflip' | 'memorymatch' | 'knowledgeflip' | 'headsup' | 'spinexplain'
   | 'connection' | 'conceptchain' | 'randomchallenge' | 'bingo' | 'lowstakes'
-  | 'bowl' | 'spot';
+  | 'bowl' | 'spot' | 'fill';
 
 /** Where a question's reasoning is shown once the answer is revealed. */
 export type ExplainStyle = 'inline' | 'slide' | 'both';
@@ -374,6 +374,9 @@ export interface Slide {
   unmarked?: boolean;
   /** True/False Showdown: a mid-question split and one switch per phone. */
   showdown?: boolean;
+  /** Fill the gaps: the text around each gap, and each gap's word-bank index. */
+  fillParts?: string[];
+  gapAnswers?: number[];
   /** Predict the Outcome: lock, watch, then reveal; confidence weighs the score. */
   predict?: boolean;
   spinTotal?: number;

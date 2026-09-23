@@ -45,6 +45,13 @@ const ROOM_PLAY = Object.freeze({
     entry: support('yes', 'The teacher reveals and marks paper answers.'),
     solo: support('partial', 'A solo paper run still needs a checked workflow.')
   }),
+  /* A passage with gaps and a word bank (Fill the gaps). */
+  fill: Object.freeze({
+    phones: support('yes', 'Each learner taps a word from the bank into each gap.'),
+    teams: support('yes', 'Each gap that is right earns its share for the team.'),
+    entry: support('yes', 'The teacher picks a word for each gap, in order, by key.'),
+    solo: support('no', 'The word bank is on the phones; the wall shows the passage.')
+  }),
   /* A vote with no right answer to be marked against: the room's split is
      the point (Odd One Out). */
   vote: Object.freeze({

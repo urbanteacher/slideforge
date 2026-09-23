@@ -105,6 +105,17 @@
       if (Math.random() < 0.65 && accept[0]) return String(accept[0]);
       return ['not sure', '…', 'pass', '???'][Math.floor(Math.random() * 4)];
     }
+    if (slide.input === 'fill' && Array.isArray(slide.gapAnswers) && slide.options && slide.options.length) {
+      /* Each gap mostly right; a wrong one goes to the same tempting lure
+         across the class, so the rehearsal reveal has a misconception to show. */
+      return slide.gapAnswers.map(function (want, g) {
+        if (Math.random() < 0.7) return want;
+        var lures = slide.options.map(function (_, i) { return i; })
+          .filter(function (i) { return slide.gapAnswers.indexOf(i) < 0; });
+        if (!lures.length) return want;
+        return Math.random() < 0.7 ? lures[g % lures.length] : lures[Math.floor(Math.random() * lures.length)];
+      });
+    }
     if (slide.input === 'tap' && Array.isArray(slide.options) && slide.options.length) {
       /* Most find the error; the rest cluster on one or two tempting words,
          as a real room does, so a rehearsal's heat map has a second bar worth
@@ -201,6 +212,22 @@
         if (host.flattenOverlay) host.flattenOverlay(node);
         node.classList.add('why-open');
         if (host.scheduleFit) host.scheduleFit(node);
+      }
+      if (slide.input === 'fill' && host.showFillReveal) {
+        var perGap = (slide.gapAnswers || []).map(function (want) { return { right: want, counts: {} }; });
+        players.forEach(function (p) {
+          if (p.slideId !== slide.id || !Array.isArray(p.choice)) return;
+          p.choice.forEach(function (i, g) { if (perGap[g]) perGap[g].counts[i] = (perGap[g].counts[i] || 0) + 1; });
+        });
+        host.showFillReveal(perGap.map(function (g) {
+          return {
+            right: g.right,
+            word: slide.options[g.right] || '',
+            words: Object.keys(g.counts).map(function (k) {
+              return { i: Number(k), text: slide.options[Number(k)] || '', n: g.counts[k], right: Number(k) === g.right };
+            }).sort(function (x, y) { return y.n - x.n; })
+          };
+        }));
       }
       /* A held tally (Spot the Error) waited for this moment. */
       if (host.releaseTally) host.releaseTally();

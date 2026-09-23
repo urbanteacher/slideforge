@@ -1173,7 +1173,11 @@
         break;
 
       case 'locked':
-        if (Array.isArray(m.order)) lockOrder(m.order);
+        if (Array.isArray(m.fill)) {
+          if ($('qPad')._fillLock) $('qPad')._fillLock(m.fill);
+          $('qTime').textContent = 'Locked in';
+        }
+        else if (Array.isArray(m.order)) lockOrder(m.order);
         else if (typeof m.text === 'string') lockTyped(m.text);
         else if (typeof m.value === 'number') lockPlaced(m.value);
         else lockPad(m.choice);
@@ -1809,6 +1813,91 @@
       $('qOrderMine').style.display = 'none';
       $('qOrderSend').disabled = false;
       paintOrder();
+    }
+
+    /* Fill the gaps: the passage with a numbered slot per gap, and the word
+       bank under it. Tap a word and it fills the highlighted slot, then the
+       highlight moves to the next empty one; tap a filled slot to redo it.
+       A word may go in more than one gap. Lock in when every gap is full. */
+    if (m.input === 'fill') {
+      pad.style.display = '';
+      pad.className = 'pad fill-pad';
+      pad.textContent = '';
+      $('questionText').textContent = 'Tap a word into each gap.';
+      var parts = m.fillParts || [];
+      var gapN = Math.max(1, parts.length - 1);
+      var picks = [];
+      for (var gi = 0; gi < gapN; gi++) picks.push(null);
+      var active = 0;
+      var slots = [];
+      var sentence = document.createElement('p');
+      sentence.className = 'fill-sentence';
+      parts.forEach(function (text, i) {
+        if (text) sentence.appendChild(document.createTextNode(text));
+        if (i < gapN) {
+          var slot = document.createElement('button');
+          slot.type = 'button';
+          slot.className = 'fill-slot';
+          slot.onclick = function () {
+            if (pad.dataset.locked) return;
+            active = i; picks[i] = null; paintFill();
+          };
+          slots.push(slot);
+          sentence.appendChild(slot);
+        }
+      });
+      var bankEl = document.createElement('div');
+      bankEl.className = 'fill-words';
+      (m.options || []).forEach(function (word, wi) {
+        var chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'fill-word';
+        chip.textContent = word;
+        chip.onclick = function () {
+          if (pad.dataset.locked) return;
+          picks[active] = wi;
+          var next = picks.indexOf(null);
+          if (next >= 0) active = next;
+          paintFill();
+        };
+        bankEl.appendChild(chip);
+      });
+      var lockFillBtn = document.createElement('button');
+      lockFillBtn.type = 'button';
+      lockFillBtn.className = 'fill-lock';
+      lockFillBtn.onclick = function () {
+        if (pad.dataset.locked || picks.indexOf(null) >= 0) return;
+        lockFillBtn.disabled = true;
+        if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'answer', fill: picks.slice() }));
+      };
+      function paintFill() {
+        var locked = !!pad.dataset.locked;
+        slots.forEach(function (b, i) {
+          b.textContent = picks[i] != null ? (m.options || [])[picks[i]] : String(i + 1);
+          b.classList.toggle('filled', picks[i] != null);
+          b.classList.toggle('active', !locked && i === active);
+        });
+        var missing = picks.indexOf(null) >= 0;
+        lockFillBtn.disabled = locked || missing;
+        lockFillBtn.textContent = locked ? 'Locked in' : missing ? 'Fill every gap' : 'Lock in';
+      }
+      /* The relay's echo, on locking or on rejoining mid-question. */
+      pad._fillLock = function (arr) {
+        if (Array.isArray(arr)) arr.forEach(function (v, i) { if (i < picks.length) picks[i] = v; });
+        pad.dataset.locked = '1';
+        pad.classList.add('locked');
+        paintFill();
+      };
+      pad.appendChild(sentence);
+      pad.appendChild(bankEl);
+      pad.appendChild(lockFillBtn);
+      paintFill();
+      $('qNum').textContent = questionLabel(m);
+      show('scQuestion');
+      if (m.timeLimit > 0) startTick(m.timeLimit);
+      else { $('qTime').textContent = ''; $('qBar').style.width = '100%'; }
+      if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
+      return;
     }
 
     /* Spot the Error: the passage, a word to a button. Nothing marks where to

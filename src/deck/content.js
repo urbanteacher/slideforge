@@ -860,7 +860,7 @@ function questionTimeLimit(slide, teacherEntry) {
    ("A — Correct"), which is the teacher's call, not an answer. */
 var TEACHER_CALL = ['headsup', 'spinexplain', 'connection', 'randomchallenge', 'conceptchain'];
 function correctAnswerLabel(slide) {
-  if(slide.input==='text'||slide.input==='number'||slide.input==='tap') return String(slide.answer || '');
+  if(slide.input==='text'||slide.input==='number'||slide.input==='tap'||slide.input==='fill') return String(slide.answer || '');
   if(slide.input==='order') return (slide.options||[]).join(' → ');
   if(TEACHER_CALL.indexOf(slide.style) > -1) return 'Your call — mark it as they answer';
   var opt=(slide.options||[])[slide.correct];

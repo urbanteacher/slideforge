@@ -220,3 +220,14 @@ body.phones-blank{overflow:hidden}
 .q-showdown[hidden]{display:none}
 .sd-room{margin:0 0 10px;font-size:18px;font-weight:700}
 .sd-switch{width:100%;min-height:54px;font-size:18px;font-weight:800;border-radius:12px}
+
+/* Fill the gaps on the phone: the passage with slots, the bank, Lock in. */
+.fill-pad{display:flex;flex-direction:column;gap:14px}
+.fill-sentence{margin:0;font-size:19px;line-height:2.1;text-align:left}
+.fill-slot{display:inline-block;min-width:74px;margin:0 3px;padding:2px 10px;border:0;border-bottom:3px solid #9fb18d;border-radius:8px 8px 0 0;background:#f3f6ee;font:inherit;font-weight:700;color:#6b7768}
+.fill-slot.filled{color:#1d2419;background:#e4ecd8}
+.fill-slot.active{border-bottom-color:#36513a;box-shadow:0 0 0 2px #36513a inset}
+.fill-words{display:flex;flex-wrap:wrap;gap:8px}
+.fill-word{min-height:44px;padding:6px 14px;border-radius:999px;font-size:17px;font-weight:650}
+.fill-lock{min-height:54px;font-size:18px;font-weight:800;border-radius:12px}
+.fill-pad.locked .fill-word{opacity:.45}

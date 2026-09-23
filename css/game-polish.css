@@ -609,3 +609,39 @@
 /* Locked: the options can no longer be chosen, and look it. */
 .layout-quiz.predict-locked .opt { cursor: default; }
 @keyframes sf-lock-in { from { transform: scale(.94); opacity: 0; } }
+
+/* ---- Fill the gaps ----
+   The passage is the stage; each gap is a numbered slot. At the reveal the
+   right word lands in it and, beneath, what the room put there. */
+.layout-quiz.is-fill .fill-passage {
+  font-size: 46px; line-height: 1.7; font-weight: 600; letter-spacing: -.01em;
+  text-wrap: pretty; margin-top: 10px;
+}
+.layout-quiz.is-fill .fill-passage[data-len="medium"] { font-size: 38px; }
+.layout-quiz.is-fill .fill-passage[data-len="long"] { font-size: 30px; line-height: 1.75; }
+.layout-quiz.is-fill .fill-gap {
+  position: relative; display: inline-flex; align-items: baseline; gap: 8px;
+  min-width: 5.5em; padding: 0 .35em; margin: 0 .12em;
+  border-bottom: 4px solid var(--s-accent); vertical-align: baseline;
+}
+.layout-quiz.is-fill .fill-gap .fg-n {
+  font-size: .42em; font-weight: 800; color: var(--s-dim); align-self: flex-start; margin-top: .3em;
+}
+.layout-quiz.is-fill .fill-gap .fg-word { font-weight: 800; }
+.layout-quiz.is-fill.fill-revealed .fill-gap .fg-word { animation: sf-fill-land .5s cubic-bezier(.3,0,.2,1); color: #1f9d6b; }
+.layout-quiz.is-fill .fill-gap .fg-heat {
+  position: absolute; left: 0; top: 100%; margin-top: 6px; white-space: nowrap;
+  font-size: 17px; line-height: 1.2; font-weight: 600; color: var(--s-dim);
+}
+.layout-quiz.is-fill .fill-gap .fg-heat b { color: var(--s-fg); }
+.layout-quiz.is-fill .fill-bank {
+  display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px;
+}
+.layout-quiz.is-fill .fill-bank .fb-word {
+  padding: 6px 14px; border-radius: 999px; border: 1px solid var(--s-rule);
+  background: var(--s-card); font-size: 20px; font-weight: 650; color: var(--s-dim);
+}
+.layout-quiz.is-fill.fill-revealed .fill-bank { display: none; }
+.layout-quiz.is-fill .fill-verdict { margin-top: 40px; font-size: 24px; }
+.layout-quiz.is-fill .fill-verdict:empty { display: none; }
+@keyframes sf-fill-land { from { transform: translateY(-24px); opacity: 0; } }

@@ -1169,7 +1169,17 @@ function questionMessage(room, timeLimit) {
   if (q.headPrompt) msg.headPrompt = q.headPrompt;
   if (q.clueMode) msg.clueMode = q.clueMode;
   if (q.clues) msg.clues = q.clues;
+  if (q.input === 'fill') { msg.fillParts = q.fillParts; msg.gaps = q.gaps; }
   return msg;
+}
+
+/** What a phone is told its locked answer was, whatever the input. */
+function lockedMessage(q, answer) {
+  return q.input === 'text' ? { t: 'locked', text: answer }
+    : q.input === 'number' ? { t: 'locked', value: answer }
+    : q.input === 'order' ? { t: 'locked', order: answer }
+    : q.input === 'fill' ? { t: 'locked', fill: answer }
+    : { t: 'locked', choice: answer };
 }
 
 function sendContext(room, sock) {
@@ -1551,6 +1561,12 @@ ws.attach(server, (sock, req) => {
               refuse('Choose every item once to record an order.'); return;
             }
             response=m.order.slice();
+          } else if(q.input==='fill') {
+            const n=q.options.length;
+            if(!Array.isArray(m.fill) || m.fill.length!==q.gaps || m.fill.some(v=>!Number.isInteger(v)||v<0||v>=n)) {
+              refuse('Choose a word for every gap to record it.'); return;
+            }
+            response=m.fill.slice();
           } else if(q.input==='choice'||q.input==='tap') {
             if(!Number.isInteger(m.choice) || m.choice<0 || m.choice>=q.options.length) {
               refuse('Choose an available option before recording it.'); return;
@@ -1559,7 +1575,7 @@ ws.attach(server, (sock, req) => {
           } else { refuse('This answer type cannot be recorded here.'); return; }
         }
         p.answer=response; p.sure=null; p.answeredAt=Date.now(); room.answerRev++;
-        record(room,'manualAnswer',{attempt:q.attempt,playerId:p.id,input:q.input,choice:(q.input==='choice'||q.input==='tap')?response:null,text:q.input==='text'?response:null,value:q.input==='number'?response:null,order:q.input==='order'?response:null,clear:!!m.clear,sure:null,source:'teacher',elapsedMs:null});
+        record(room,'manualAnswer',{attempt:q.attempt,playerId:p.id,input:q.input,choice:(q.input==='choice'||q.input==='tap')?response:null,text:q.input==='text'?response:null,value:q.input==='number'?response:null,order:q.input==='order'?response:null,fill:q.input==='fill'?response:null,clear:!!m.clear,sure:null,source:'teacher',elapsedMs:null});
         pushTally(room); return;
       }
 
@@ -1590,11 +1606,16 @@ ws.attach(server, (sock, req) => {
            value on a line. Only the first has options at all — that is what
            makes the others recall rather than recognition — so the option
            count is checked for that kind alone. */
-        const input = ['text', 'number', 'order', 'tap'].includes(m.input) ? m.input : 'choice';
+        const input = ['text', 'number', 'order', 'tap', 'fill'].includes(m.input) ? m.input : 'choice';
         const spoken = m.spoken === true && ['headsup','spinexplain','connection','conceptchain','randomchallenge'].includes(m.style);
         if (input === 'choice' && (!Array.isArray(m.options) || m.options.length < 2 || m.options.length > 6)) return;
         /* Spot the Error: the options are the words of the passage. */
         if (input === 'tap' && (!Array.isArray(m.options) || m.options.length < 2 || m.options.length > 80)) return;
+        /* Fill the gaps: a word bank of 2–12, and 1–4 gaps with the text
+           around them (one more part than there are gaps). */
+        const fillGaps = input === 'fill' && Array.isArray(m.fillParts) ? m.fillParts.length - 1 : 0;
+        if (input === 'fill' && (!Array.isArray(m.options) || m.options.length < 2 || m.options.length > 12 ||
+            fillGaps < 1 || fillGaps > 4)) return;
         if (input === 'order' && (!Array.isArray(m.options) || m.options.length < 3 || m.options.length > 8)) return;
         if (room.question && room.question.id === String(m.id || '') && room.phase === 'question') return;
         room.asked++;
@@ -1611,7 +1632,9 @@ ws.attach(server, (sock, req) => {
           question: String(m.question || '').slice(0,2000),
           bloom: ['Remember','Understand','Apply','Analyze','Evaluate','Create'].includes(m.bloom) ? m.bloom : '',
           sourceSlideId: String(m.sourceSlideId || '').slice(0,160),
-          options: (input === 'choice' || input === 'order' || input === 'tap') && Array.isArray(m.options) ? m.options.map(o => String(o).slice(0,2000)) : [],
+          options: (input === 'choice' || input === 'order' || input === 'tap' || input === 'fill') && Array.isArray(m.options) ? m.options.map(o => String(o).slice(0,2000)) : [],
+          fillParts: input === 'fill' ? m.fillParts.slice(0, 5).map(t => String(t == null ? '' : t).slice(0, 400)) : null,
+          gaps: fillGaps,
           /* What a wrong option means, by the same index as `options`.
              Carried into the journal so the report can name a misconception
              the room actually walked into, and never sent to a phone — see
@@ -2206,11 +2229,9 @@ ws.attach(server, (sock, req) => {
               const remaining = room.question.timeLimit ? Math.max(0, room.question.timeLimit - (Date.now() - room.askedAt) / 1000) : 0;
               if (!room.question.timeLimit || remaining > 0) {
                 sock.json(questionMessage(room, remaining));
-                if (me.answer != null) {
-                  sock.json(room.question.input === 'text' ? {t:'locked',text:me.answer}
-                    : room.question.input === 'number' ? {t:'locked',value:me.answer}
-                    : {t:'locked',choice:me.answer});
-                }
+                /* Every input, not just scalars: a rejoining phone with a
+                   Ranking answer used to be told it was a single choice. */
+                if (me.answer != null) sock.json(lockedMessage(room.question, me.answer));
               }
             } else if (room.prompt) {
               sock.json(promptMessage(room));
@@ -2526,6 +2547,13 @@ ws.attach(server, (sock, req) => {
         if (typeof m.value !== 'number' || !Number.isFinite(m.value) ||
             Math.abs(m.value) > 1e12) return;
         response = m.value;
+      } else if (room.question.input === 'fill') {
+        /* One word-bank index per gap. A word may fill two gaps, so repeats
+           are allowed; anything out of range is not. */
+        const n = room.question.options.length;
+        if (!Array.isArray(m.fill) || m.fill.length !== room.question.gaps ||
+            m.fill.some(v => !Number.isInteger(v) || v < 0 || v >= n)) return;
+        response = m.fill.slice();
       } else if (room.question.input === 'order') {
         /* A permutation of the options and nothing else. Checked here rather
            than trusted, because every later reader — marking, the tally, the
@@ -2563,12 +2591,10 @@ ws.attach(server, (sock, req) => {
            by input kind, and an array in a field every other reader treats
            as an index would be a silent corruption rather than an error. */
         order: room.question.input === 'order' ? response : null,
+        fill: room.question.input === 'fill' ? response : null,
         sure: me.sure,
         elapsedMs:me.answeredAt-room.askedAt});
-      sock.json(room.question.input === 'text' ? { t: 'locked', text: response }
-        : room.question.input === 'number' ? { t: 'locked', value: response }
-        : room.question.input === 'order' ? { t: 'locked', order: response }
-        : { t: 'locked', choice: response });
+      sock.json(lockedMessage(room.question, response));
       pushTally(room);
       return;
     }
