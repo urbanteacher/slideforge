@@ -7082,3 +7082,29 @@ dialog.palette::backdrop { background: rgba(20, 26, 18, .32); }
   position: absolute; left: 8px; bottom: 8px; font: 600 12px/1 ui-monospace, monospace;
   color: #fff; background: rgba(0, 0, 0, .55); padding: 3px 6px; border-radius: 4px;
 }
+
+/* ------------------------------------------------------------ sections
+   src/editor/rail.js — a section slide and everything to the next one. */
+/* [hidden] alone is not enough: .thumb sets its own display, and an author
+   display rule beats the browser's [hidden] style, so a folded row stayed
+   drawn while reporting itself hidden. */
+.rail .thumb[hidden] { display: none !important; }
+.thumb.section-row { border-top: 2px solid var(--ui-accent, #526943); margin-top: 6px; }
+.thumb.section-row:first-child { margin-top: 0; }
+.thumb-fold {
+  display: block; margin-top: 4px; padding: 0 4px; border: 0; background: transparent;
+  color: var(--ui-dim, #72796e); font-size: 12px; line-height: 1.2; cursor: pointer; border-radius: 4px;
+}
+.thumb-fold:hover, .thumb-fold:focus-visible { color: var(--ui-text, #252b26); background: var(--ui-accent-soft, #edf2e8); }
+.thumb.section-folded { position: relative; }
+.thumb.section-folded::after {
+  content: attr(data-folded); position: absolute; right: 8px; bottom: 4px;
+  font-size: 10px; color: var(--ui-dim, #72796e); background: var(--ui-panel, #fff);
+  padding: 0 4px; border-radius: 4px;
+}
+.sorter-tile.sorter-section { position: relative; box-shadow: inset 4px 0 0 var(--ui-accent, #526943); }
+.sorter-tile.sorter-section::before {
+  content: attr(data-section); position: absolute; top: -9px; left: 8px; z-index: 1;
+  font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  color: #fff; background: var(--ui-accent, #526943); padding: 1px 6px; border-radius: 4px;
+}

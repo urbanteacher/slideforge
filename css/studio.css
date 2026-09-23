@@ -283,3 +283,7 @@ html[data-ws="plan"] .rail-foot .rail-actions .btn{flex:1}
 .present-menu .btn{text-align:left;background:transparent;border:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px}
 .present-menu .btn:hover,.present-menu .btn:focus-visible{background:var(--ui-accent-soft)}
 .present-hint{font-size:11px;color:var(--ui-dim);font-weight:400}
+
+/* The starters' first card: games and activities (UX-23). No preview slide to
+   draw, so a mark stands in the frame's place. */
+.starter-activity .starter-activity-mark{aspect-ratio:16/9;display:grid;place-items:center;font-size:40px;border-radius:8px;background:var(--ui-accent-soft);color:var(--ui-accent);margin-bottom:8px}

@@ -25,10 +25,11 @@ test('canvas Add activity, Engagement and the rail share the activity library', 
     'Engagement / the rail are not calling the same library as the canvas');
   assert.match(editor, /id = 'inspAddActivity'/,
     'Engagement does not offer ＋ Add activity');
-  assert.match(rail, /id = 'railAddActivity'/,
-    'the rail still has a separate + Game picker');
-  assert.match(rail, /UI\.button\('\+ Activity', null, openActivityLibrary\)/,
-    'the rail is not using the shared opener');
+  /* The rail's door is the first card of its + Slide starters (UX-23). */
+  assert.doesNotMatch(rail, /'\+ Activity'/, 'the rail carries a second button for the same catalogue');
+  assert.match(studio, /act\.id = 'starterActivity'/, 'the starters do not offer games and activities');
+  assert.match(studio, /act\.onclick = function \(\) \{\s*if \(modal\) modal\.close\(\);\s*openLibrary\('all'\);/,
+    'the starters card is not opening the full catalogue');
 });
 
 test('the activity library has filters beyond check vs feedback', () => {

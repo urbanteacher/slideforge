@@ -112,6 +112,78 @@ export function createRail(SF, helpers) {
     return slot;
   }
 
+  /* ---------------------------------------------------------- sections
+
+     A section is a section slide and everything up to the next one. No field
+     in the deck says so, and none is needed: the section-break slides a
+     lecture already has are the structure. Folding one is how this person is
+     looking at the lesson, not a fact about the lesson, so it lives in this
+     tab and never in the deck. */
+  var folds = { deck: '', ids: /** @type {Record<string, boolean>} */ ({}) };
+  function foldsFor(deck) {
+    if (folds.deck !== deck.id) {
+      folds.deck = deck.id;
+      folds.ids = {};
+      try { folds.ids = JSON.parse(sessionStorage.getItem('slideforge.folds.' + deck.id) || '{}') || {}; } catch (e) {}
+    }
+    return folds.ids;
+  }
+  function saveFolds(deck) {
+    try { sessionStorage.setItem('slideforge.folds.' + deck.id, JSON.stringify(folds.ids)); } catch (e) {}
+  }
+  /** Index of the section slide that slide i sits under, or -1. */
+  function sectionOf(deck, i) {
+    for (var k = i; k >= 0; k--) if (deck.slides[k] && deck.slides[k].type === 'section') return k;
+    return -1;
+  }
+  /** How many slides follow section slide i before the next section. */
+  function sectionLength(deck, i) {
+    var n = 0;
+    for (var k = i + 1; k < deck.slides.length && deck.slides[k].type !== 'section'; k++) n++;
+    return n;
+  }
+  function toggleFold(i) {
+    var deck = helpers.deck();
+    var s = deck.slides[i];
+    if (!s || s.type !== 'section') return;
+    var ids = foldsFor(deck);
+    if (ids[s.id]) delete ids[s.id]; else ids[s.id] = true;
+    saveFolds(deck);
+    /* Folding away the slide in hand would leave the selection invisible. */
+    var sel = helpers.sel();
+    if (ids[s.id] && sel > i && sectionOf(deck, sel) === i) setSel(i);
+    draw();
+    focusThumb(i);
+  }
+
+  /* Move section slide i and everything in it past the neighbouring section —
+     the whole of it, not one slide — which is what reordering a lecture is. */
+  function moveSection(i, dir) {
+    var deck = helpers.deck();
+    var s = deck.slides[i];
+    if (!s || s.type !== 'section') return false;
+    var len = sectionLength(deck, i);
+    var block = [];
+    for (var k = i; k <= i + len; k++) block.push(k);
+    var at;
+    if (dir < 0) {
+      if (i === 0) return false;
+      var prev = sectionOf(deck, i - 1);
+      at = prev < 0 ? 0 : prev;
+    } else {
+      var next = i + len + 1;
+      if (next >= deck.slides.length) return false;
+      at = deck.slides[next].type === 'section' ? next + sectionLength(deck, next) + 1 : next + 1;
+    }
+    var landed = reorder(block, at);
+    if (landed < 0) return false;
+    setSel(landed);
+    touched();
+    draw();
+    focusThumb(landed);
+    return true;
+  }
+
   function focusThumb(i) {
     var rail = $('railList');
     var row = /** @type {HTMLElement|null} */ (
@@ -329,6 +401,16 @@ export function createRail(SF, helpers) {
     }
     drawSorterButton();
 
+    /* A selection inside a folded section opens it: the arrow keys, find and
+       the palette can all land there, and a selected row nobody can see is a
+       selection nobody can use. */
+    var foldIds = foldsFor(deck);
+    var home = sectionOf(deck, sel);
+    if (home >= 0 && home !== sel && foldIds[deck.slides[home].id]) {
+      delete foldIds[deck.slides[home].id];
+      saveFolds(deck);
+    }
+
     /* The rail scrolls itself towards the pointer during a drag; it listens on
        the list rather than on each row so the margins still work when the
        pointer is between two slides. Assigned, not added, because the rail is
@@ -365,9 +447,31 @@ export function createRail(SF, helpers) {
         else select(i);
       };
       row.dataset.i = String(i);
+      var owner = sectionOf(deck, i);
+      if (owner >= 0 && owner !== i && foldIds[deck.slides[owner].id]) row.hidden = true;
 
       var gutter = el('div', 'thumb-gutter');
       gutter.appendChild(el('div', 'num', String(i + 1)));
+      if (s.type === 'section') {
+        var inside = sectionLength(deck, i);
+        var shut = !!foldIds[s.id];
+        row.classList.add('section-row');
+        if (shut) {
+          row.classList.add('section-folded');
+          row.dataset.folded = inside + ' slide' + (inside === 1 ? '' : 's') + ' folded';
+        }
+        if (inside) {
+          var fold = UI.button(shut ? '▸' : '▾', 'thumb-fold', function (e) {
+            e.stopPropagation();
+            toggleFold(i);
+          });
+          fold.setAttribute('aria-expanded', String(!shut));
+          var what = (s.title || 'this section').replace(/\s+/g, ' ');
+          fold.setAttribute('aria-label', (shut ? 'Show ' : 'Fold ') + inside + ' slide' + (inside === 1 ? '' : 's') + ' in ' + what);
+          fold.title = shut ? 'Show the ' + inside + ' slides in this section' : 'Fold this section away (' + inside + ' slides)';
+          gutter.appendChild(fold);
+        }
+      }
       var grip = UI.button('⠿', 'thumb-grip', function (e) {
         e.stopPropagation();
         beginPlacing(i);
@@ -630,6 +734,14 @@ export function createRail(SF, helpers) {
       tile.setAttribute('role', 'button');
       tile.setAttribute('aria-label', 'Slide ' + (i + 1) + ': ' + (s.title || SF.SLIDE_TYPES[s.type].label));
       tile.setAttribute('aria-pressed', on ? 'true' : 'false');
+      /* Where a section starts, said on the tile itself. A header row across
+         the grid would read better and would also move every tile after it,
+         which the arrow keys count by column; a mark on the tile moves
+         nothing. */
+      if (s.type === 'section') {
+        tile.classList.add('sorter-section');
+        tile.setAttribute('data-section', 'Section · ' + (sectionLength(deck, i) + 1) + ' slides');
+      }
 
       var frame = el('div', 'frame');
       var node = SF.renderSlide(deck, s, Object.assign(slideOpts(i), { chrome: false }));
@@ -796,10 +908,11 @@ export function createRail(SF, helpers) {
     });
     addSlideBtn.title = 'Insert a slide starter, then pick a layout';
     actions.appendChild(addSlideBtn);
-    var ins = UI.button('+ Activity', null, openActivityLibrary);
-    ins.id = 'railAddActivity';
-    ins.title = 'Add a game or activity — same catalogue as ＋ Add activity';
-    actions.appendChild(ins);
+    /* One way to add a slide from here. Games and activities are the first
+       card in the starters it opens, so the rail no longer needs a second
+       button for the same catalogue — the canvas bar's ＋ Add activity and
+       Engagement still open it directly. */
+    addSlideBtn.title = 'Add a slide — a layout, or a game or activity';
     foot.appendChild(actions);
   }
 
@@ -812,6 +925,15 @@ export function createRail(SF, helpers) {
 
   return {
     focusThumb, beginPlacing, movePlaceTo, commitPlacing, cancelPlacing, toggleHidden, drawRail, select, nudge, sendTo, sorterOpen, openSorter, closeSorter, pick, sorterKeys, drawFoot,
-    isPlacing, placeTarget, resetPlacing
+    isPlacing, placeTarget, resetPlacing,
+    /* Sections, for the slide menu and the sorter. */
+    sectionOf: function (i) { return sectionOf(helpers.deck(), i); },
+    sectionLength: function (i) { return sectionLength(helpers.deck(), i); },
+    toggleFold: toggleFold,
+    moveSection: moveSection,
+    isFolded: function (i) {
+      var deck = helpers.deck(), s = deck.slides[i];
+      return !!(s && s.type === 'section' && foldsFor(deck)[s.id]);
+    }
   };
 }

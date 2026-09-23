@@ -550,6 +550,22 @@
     body.appendChild(el('p', 'library-note', 'Pick a shape to insert after the selected slide. You can change Layout any time in the right panel.'));
     var grid = el('div', 'activity-grid starters-grid');
     var fits = [];
+    /* Games and activities are slides too, so the one "+ Slide" in the rail
+       offers them first rather than the rail carrying a second button for the
+       same catalogue. It opens the library everything else opens. */
+    var act = el('button', 'activity-card check starter-card starter-activity');
+    act.type = 'button';
+    act.id = 'starterActivity';
+    act.appendChild(el('div', 'starter-activity-mark', '◇'));
+    act.appendChild(el('strong', 'starter-title', 'A game or activity'));
+    act.appendChild(el('span', 'activity-description',
+      'Quizzes, polls, word games, discussion — the room answers from their phones.'));
+    act.appendChild(el('span', 'activity-tag', 'OPEN CATALOGUE  ↗'));
+    act.onclick = function () {
+      if (modal) modal.close();
+      openLibrary('all');
+    };
+    grid.appendChild(act);
     starters.forEach(function (st) {
       var b = el('button', 'activity-card check starter-card');
       b.type = 'button';

@@ -51,7 +51,9 @@ try {
   await libraryOpen(page);
   await closeLibrary(page);
 
-  await page.locator('#railAddActivity').click();
+  /* The rail's way in is now the first card of + Slide (UX-23). */
+  await page.locator('.rail-actions button', { hasText: '+ Slide' }).click();
+  await page.locator('#starterActivity').click();
   await libraryOpen(page);
 
   const tabs = page.locator('#activityModal .library-tabs');

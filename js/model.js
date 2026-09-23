@@ -9099,6 +9099,74 @@
       if (slot) slot.classList.add("at");
       return slot;
     }
+    var folds = { deck: "", ids: (
+      /** @type {Record<string, boolean>} */
+      {}
+    ) };
+    function foldsFor(deck) {
+      if (folds.deck !== deck.id) {
+        folds.deck = deck.id;
+        folds.ids = {};
+        try {
+          folds.ids = JSON.parse(sessionStorage.getItem("slideforge.folds." + deck.id) || "{}") || {};
+        } catch (e) {
+        }
+      }
+      return folds.ids;
+    }
+    function saveFolds(deck) {
+      try {
+        sessionStorage.setItem("slideforge.folds." + deck.id, JSON.stringify(folds.ids));
+      } catch (e) {
+      }
+    }
+    function sectionOf(deck, i) {
+      for (var k = i; k >= 0; k--) if (deck.slides[k] && deck.slides[k].type === "section") return k;
+      return -1;
+    }
+    function sectionLength(deck, i) {
+      var n = 0;
+      for (var k = i + 1; k < deck.slides.length && deck.slides[k].type !== "section"; k++) n++;
+      return n;
+    }
+    function toggleFold(i) {
+      var deck = helpers.deck();
+      var s = deck.slides[i];
+      if (!s || s.type !== "section") return;
+      var ids = foldsFor(deck);
+      if (ids[s.id]) delete ids[s.id];
+      else ids[s.id] = true;
+      saveFolds(deck);
+      var sel = helpers.sel();
+      if (ids[s.id] && sel > i && sectionOf(deck, sel) === i) setSel(i);
+      draw();
+      focusThumb(i);
+    }
+    function moveSection(i, dir) {
+      var deck = helpers.deck();
+      var s = deck.slides[i];
+      if (!s || s.type !== "section") return false;
+      var len = sectionLength(deck, i);
+      var block = [];
+      for (var k = i; k <= i + len; k++) block.push(k);
+      var at;
+      if (dir < 0) {
+        if (i === 0) return false;
+        var prev = sectionOf(deck, i - 1);
+        at = prev < 0 ? 0 : prev;
+      } else {
+        var next = i + len + 1;
+        if (next >= deck.slides.length) return false;
+        at = deck.slides[next].type === "section" ? next + sectionLength(deck, next) + 1 : next + 1;
+      }
+      var landed = reorder(block, at);
+      if (landed < 0) return false;
+      setSel(landed);
+      touched();
+      draw();
+      focusThumb(landed);
+      return true;
+    }
     function focusThumb(i) {
       var rail = $("railList");
       var row = (
@@ -9307,6 +9375,12 @@
         count.title = off ? off + " slide" + (off === 1 ? "" : "s") + " hidden from the show" : "";
       }
       drawSorterButton();
+      var foldIds = foldsFor(deck);
+      var home = sectionOf(deck, sel);
+      if (home >= 0 && home !== sel && foldIds[deck.slides[home].id]) {
+        delete foldIds[deck.slides[home].id];
+        saveFolds(deck);
+      }
       rail.ondragover = function(e) {
         if (dragFrom == null) return;
         e.preventDefault();
@@ -9335,8 +9409,30 @@
           else select(i);
         };
         row.dataset.i = String(i);
+        var owner = sectionOf(deck, i);
+        if (owner >= 0 && owner !== i && foldIds[deck.slides[owner].id]) row.hidden = true;
         var gutter = el("div", "thumb-gutter");
         gutter.appendChild(el("div", "num", String(i + 1)));
+        if (s.type === "section") {
+          var inside = sectionLength(deck, i);
+          var shut = !!foldIds[s.id];
+          row.classList.add("section-row");
+          if (shut) {
+            row.classList.add("section-folded");
+            row.dataset.folded = inside + " slide" + (inside === 1 ? "" : "s") + " folded";
+          }
+          if (inside) {
+            var fold = UI.button(shut ? "▸" : "▾", "thumb-fold", function(e) {
+              e.stopPropagation();
+              toggleFold(i);
+            });
+            fold.setAttribute("aria-expanded", String(!shut));
+            var what = (s.title || "this section").replace(/\s+/g, " ");
+            fold.setAttribute("aria-label", (shut ? "Show " : "Fold ") + inside + " slide" + (inside === 1 ? "" : "s") + " in " + what);
+            fold.title = shut ? "Show the " + inside + " slides in this section" : "Fold this section away (" + inside + " slides)";
+            gutter.appendChild(fold);
+          }
+        }
         var grip = UI.button("⠿", "thumb-grip", function(e) {
           e.stopPropagation();
           beginPlacing(i);
@@ -9567,6 +9663,10 @@
         tile.setAttribute("role", "button");
         tile.setAttribute("aria-label", "Slide " + (i + 1) + ": " + (s.title || SF.SLIDE_TYPES[s.type].label));
         tile.setAttribute("aria-pressed", on ? "true" : "false");
+        if (s.type === "section") {
+          tile.classList.add("sorter-section");
+          tile.setAttribute("data-section", "Section · " + (sectionLength(deck, i) + 1) + " slides");
+        }
         var frame = el("div", "frame");
         var node = SF.renderSlide(deck, s, Object.assign(slideOpts(i), { chrome: false }));
         frame.appendChild(node);
@@ -9747,10 +9847,7 @@
       });
       addSlideBtn.title = "Insert a slide starter, then pick a layout";
       actions.appendChild(addSlideBtn);
-      var ins = UI.button("+ Activity", null, openActivityLibrary);
-      ins.id = "railAddActivity";
-      ins.title = "Add a game or activity — same catalogue as ＋ Add activity";
-      actions.appendChild(ins);
+      addSlideBtn.title = "Add a slide — a layout, or a game or activity";
       foot.appendChild(actions);
     }
     function isPlacing() {
@@ -9782,7 +9879,20 @@
       drawFoot,
       isPlacing,
       placeTarget,
-      resetPlacing
+      resetPlacing,
+      /* Sections, for the slide menu and the sorter. */
+      sectionOf: function(i) {
+        return sectionOf(helpers.deck(), i);
+      },
+      sectionLength: function(i) {
+        return sectionLength(helpers.deck(), i);
+      },
+      toggleFold,
+      moveSection,
+      isFolded: function(i) {
+        var deck = helpers.deck(), s = deck.slides[i];
+        return !!(s && s.type === "section" && foldsFor(deck)[s.id]);
+      }
     };
   }
 

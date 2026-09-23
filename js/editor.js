@@ -2331,6 +2331,14 @@
     var n = deck.slides.length;
     var mac = /Mac|iP(hone|ad)/.test(navigator.platform || '');
     var cmd = mac ? '⌘' : 'Ctrl+', opt = mac ? '⌥' : 'Alt+';
+    var isSection = s.type === 'section' && railParts.sectionLength(index) > 0;
+    var sectionItems = isSection ? [
+      null,
+      [railParts.isFolded(index) ? 'Show this section' : 'Fold this section', '', function () { railParts.toggleFold(index); }, true],
+      ['Move this section up', '', function () { railParts.moveSection(index, -1); }, index > 0],
+      ['Move this section down', '', function () { railParts.moveSection(index, 1); },
+        index + railParts.sectionLength(index) < n - 1]
+    ] : [];
     var items = [
       ['Duplicate', cmd + 'D', duplicate, true],
       ['Copy', cmd + 'C', copySlide, true],
@@ -2338,12 +2346,13 @@
       null,
       [s.hidden ? 'Show in the show' : 'Hide from the show', 'H', function () { toggleHidden(sel); }, true],
       ['Move up', opt + '↑', function () { nudge(-1); }, index > 0],
-      ['Move down', opt + '↓', function () { nudge(1); }, index < n - 1],
+      ['Move down', opt + '↓', function () { nudge(1); }, index < n - 1]
+    ].concat(sectionItems, [
       null,
       ['Present from here', cmd + '↵', present, true],
       null,
       ['Delete', 'Delete', removeSlide, n > 1]
-    ];
+    ]);
     var node = el('div', 'slide-menu');
     node.setAttribute('role', 'menu');
     node.setAttribute('aria-label', 'Slide ' + (index + 1));

@@ -41,6 +41,10 @@ try {
   await presenter.locator('[data-cmd=next]').click(); await page.waitForFunction(() => SF.Player.idx === 2);
   await presenter.locator('#boxNow input[type=range]').press('End');
   await page.waitForFunction(() => SF.Player.exploreStates[SF.Player.deck.slides[2].id]?.input === 10);
+  /* The desk redraws from the sync message, a moment after the wall's state
+     changes; read it once it has, rather than in the same tick (this raced
+     once in seven full runs on 23 Sep 2026). */
+  await presenter.locator('#boxNow .explore-reading', { hasText: 'Output: 20' }).waitFor({ timeout: 4000 });
   assert.match(await presenter.locator('#boxNow .explore-reading').innerText(), /Output: 20/);
   await page.waitForFunction(() => !document.querySelector('.slide.leaving') && SF.Player._current.getAnimations({subtree:true}).every(a=>a.playState !== 'running'));
   await page.screenshot({path:'/tmp/sf-exploration-slider.png'});
