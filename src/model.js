@@ -1259,8 +1259,17 @@ function buildRunDeck(deck, lookupGame) {
       run.slides.push(gone);
       return;
     }
+    /* The same game embedded a second time — Cmd+D on its slide, or picked
+       again from the catalogue — compiled to the same slide ids as the first,
+       and answers, reveals and live results are all keyed by slide id: the
+       second round arrived already answered and already revealed. The first
+       appearance keeps its ids, which are stable across runs; each later one
+       is qualified by the slide that embeds it. */
+    var gameId = game.id;
+    var again = run.games.some(function (g) { return g.id === gameId; });
     run.games.push(game);
     compileGame(game, { theme: deck.theme }).forEach(function (cs) {
+      if (again) cs.id = cs.id + '@' + s.id;
       cs.sourceSlideId = s.id;
       cs.bloom = cs.bloom || s.bloom || '';
       run.slides.push(cs);

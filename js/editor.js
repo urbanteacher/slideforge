@@ -64,11 +64,21 @@
      always starts a step of its own, so it cannot be folded into the typing
      either side of it. */
   var BURST_MS = 1000, HISTORY_CHARS = 40 * 1024 * 1024;
-  /* checkpointShape is the slide list the checkpoint had; a change that keeps
-     it is an edit to what is on the slides. Only such an edit joins a burst,
-     and only a burst of such edits — so a duplicate followed at once by
-     typing is two steps, not one. */
-  var burstAt = 0, checkpointShape = '';
+  /* Only typing joins a burst: a change made while a text field's input event
+     is being handled. Keeping the same slide list is not enough — moving the
+     logo between header slots keeps it, and folding that into the edit before
+     it made one Undo take back both. Anything else, and any handler that runs
+     later than its input event, is a step of its own, which is how every
+     change was recorded before. A change to the slide list never joins, even
+     from a text field. */
+  var burstAt = 0, checkpointShape = '', typingAt = 0;
+  function noteTyping(e) {
+    var t = /** @type {HTMLElement|null} */ (e.target);
+    if (!t) return;
+    var text = t.tagName === 'TEXTAREA' || t.isContentEditable ||
+      (t.tagName === 'INPUT' && /^(text|search|url|email|tel|)$/.test(/** @type {HTMLInputElement} */ (t).type || ''));
+    if (text) typingAt = Date.now();
+  }
   function shapeOf(d) { return d.slides.map(function (s) { return s.id; }).join(','); }
   function breakBurst() { burstAt = 0; }
   function remember() {
@@ -77,7 +87,7 @@
     var now=JSON.stringify(deck);
     var shape=shapeOf(deck);
     if(!restoring && checkpoint && now!==checkpoint){
-      var at=Date.now(), textOnly=shape===checkpointShape;
+      var at=Date.now(), textOnly=shape===checkpointShape && at-typingAt<50;
       var sameBurst=textOnly && burstAt && at-burstAt<BURST_MS && past.length;
       if(!sameBurst){
         past.push(checkpoint);
@@ -85,7 +95,7 @@
         while(past.length>60 || (past.length>1 && total>HISTORY_CHARS)){total-=past.shift().length;}
       }
       future=[];
-      /* A structural step never opens a burst for what follows it. */
+      /* Only typing opens a burst for what follows it. */
       burstAt=textOnly?at:0;
     }
     checkpoint=now;checkpointShape=shape;
@@ -2425,6 +2435,9 @@
     UI = SF.Shell.UI;
     SF.Shell.register(ws);
     window.addEventListener('storage', onOtherTab);
+    /* Capture, so it is noted before the field's own handler records the
+       change. */
+    document.addEventListener('input', noteTyping, true);
     /* On the document, because the slide being pasted onto is the selected
        one wherever the focus happens to be — and the handler bows out on
        its own when the focus is somewhere a paste means something else. */

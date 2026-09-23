@@ -209,8 +209,8 @@ html:not([data-ready]) body { background: #f0f1ed; }
       <div class="art-bar" id="artBar" role="group" aria-label="Slide artwork" hidden>
         <span class="art-what" id="artWhat" aria-live="polite">Click a shape or picture</span>
         <span class="canvas-mode-help">Arrow keys move · Shift moves faster · Esc finishes</span>
-        <button class="canvas-bar-btn" id="btnArtSmaller" type="button" data-art-needs-selection title="Smaller">−</button>
-        <button class="canvas-bar-btn" id="btnArtBigger" type="button" data-art-needs-selection title="Bigger">+</button>
+        <button class="canvas-bar-btn" id="btnArtSmaller" type="button" data-art-needs-selection title="Smaller" aria-label="Smaller">−</button>
+        <button class="canvas-bar-btn" id="btnArtBigger" type="button" data-art-needs-selection title="Bigger" aria-label="Bigger">+</button>
         <label class="anchor-control" title="Free is placed by hand and can bleed off the slide. On the lattice it is a block.">Place
           <select id="artPlace" data-art-needs-selection>
             <option value="free">Free</option>
@@ -224,7 +224,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
           </select>
         </label>
         <button class="canvas-bar-btn" id="btnArtHide" type="button" data-art-needs-selection title="Hide on this slide">◌ Hide</button>
-        <button class="canvas-bar-btn" id="btnArtDelete" type="button" data-art-needs-selection title="Remove this picture from the slide">✕</button>
+        <button class="canvas-bar-btn" id="btnArtDelete" type="button" data-art-needs-selection title="Remove this picture from the slide" aria-label="Remove this picture from the slide">✕</button>
         <label class="canvas-bar-btn art-pick" title="Place your own picture on this slide">＋ Picture
           <input type="file" id="artPicture" accept="image/*" aria-label="Place a picture on this slide">
         </label>
@@ -242,10 +242,10 @@ html:not([data-ready]) body { background: #f0f1ed; }
              on is a clue to what it does. -->
         <div class="arrange-group" role="group" aria-label="Size">
           <span class="arrange-group-label">Size</span>
-          <button class="canvas-bar-btn" id="btnArrangeNarrower" type="button" data-arrange-needs-selection title="Narrower (one column)">◀▶</button>
-          <button class="canvas-bar-btn" id="btnArrangeWider" type="button" data-arrange-needs-selection title="Wider (one column)">▶◀</button>
-          <button class="canvas-bar-btn" id="btnArrangeShorter" type="button" data-arrange-needs-selection title="Shorter (one line)">▲▼</button>
-          <button class="canvas-bar-btn" id="btnArrangeTaller" type="button" data-arrange-needs-selection title="Taller (one line)">▼▲</button>
+          <button class="canvas-bar-btn" id="btnArrangeNarrower" type="button" data-arrange-needs-selection title="Narrower (one column)" aria-label="Narrower (one column)">◀▶</button>
+          <button class="canvas-bar-btn" id="btnArrangeWider" type="button" data-arrange-needs-selection title="Wider (one column)" aria-label="Wider (one column)">▶◀</button>
+          <button class="canvas-bar-btn" id="btnArrangeShorter" type="button" data-arrange-needs-selection title="Shorter (one line)" aria-label="Shorter (one line)">▲▼</button>
+          <button class="canvas-bar-btn" id="btnArrangeTaller" type="button" data-arrange-needs-selection title="Taller (one line)" aria-label="Taller (one line)">▼▲</button>
           <button class="canvas-bar-btn" id="btnArrangeFit" type="button" data-arrange-needs-selection title="Give this block the lines its words need, and push what is below it down">↕ Fit to text</button>
         </div>
         <div class="arrange-group" role="group" aria-label="Place">
@@ -285,8 +285,8 @@ html:not([data-ready]) body { background: #f0f1ed; }
               <option value="">＋ Block…</option>
             </select>
           </label>
-          <button class="canvas-bar-btn" id="btnArrangeDuplicate" type="button" title="Copy this block, one row below">⧉</button>
-          <button class="canvas-bar-btn" id="btnArrangeRemove" type="button" title="Remove this block from the slide">✕</button>
+          <button class="canvas-bar-btn" id="btnArrangeDuplicate" type="button" title="Copy this block, one row below" aria-label="Copy this block, one row below">⧉</button>
+          <button class="canvas-bar-btn" id="btnArrangeRemove" type="button" title="Remove this block from the slide" aria-label="Remove this block from the slide">✕</button>
           <!-- Only shown when this slide has blocks taken off it. Hiding with
                no way back is a trap, not an edit. -->
           <button class="canvas-bar-btn" id="btnArrangeRestore" type="button" hidden title="Bring back the layout blocks taken off this slide">↩ Bring back</button>
@@ -448,7 +448,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
     <header><h3 id="settingsTitle">Settings</h3>
       <span class="sheet-tools">
         <button class="btn ghost" id="btnHelp" title="Keyboard shortcuts">? Shortcuts</button>
-        <button class="btn ghost" data-close>✕</button>
+        <button class="btn ghost" data-close aria-label="Close — Settings">✕</button>
       </span></header>
     <div class="body" id="settingsBody"></div>
   </div>
@@ -458,14 +458,14 @@ html:not([data-ready]) body { background: #f0f1ed; }
      presenter desk has the same controls; this is the other door to them. -->
 <div class="modal" id="quizGenModal">
   <div class="sheet">
-    <header><h3>Write questions</h3><button class="btn ghost" data-close>✕</button></header>
+    <header><h3>Write questions</h3><button class="btn ghost" data-close aria-label="Close — Write questions">✕</button></header>
     <div class="body" id="quizGenBody"></div>
   </div>
 </div>
 
 <div class="modal" id="quickPollModal">
   <div class="sheet">
-    <header><h3>Ask the room</h3><button class="btn ghost" data-close>✕</button></header>
+    <header><h3>Ask the room</h3><button class="btn ghost" data-close aria-label="Close — Ask the room">✕</button></header>
     <div class="body" id="quickPollBody"></div>
   </div>
 </div>
@@ -475,7 +475,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
     <header>
       <h3 id="pickerTitle">Open</h3>
       <span class="sheet-tools" id="pickerTools"></span>
-      <button class="btn ghost" data-close>✕</button>
+      <button class="btn ghost" data-close aria-label="Close">✕</button>
     </header>
     <div class="body" id="pickerBody"></div>
   </div>

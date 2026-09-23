@@ -22627,8 +22627,13 @@
         run.slides.push(gone);
         return;
       }
+      var gameId = game.id;
+      var again = run.games.some(function(g) {
+        return g.id === gameId;
+      });
       run.games.push(game);
       compileGame(game, { theme: deck.theme }).forEach(function(cs) {
+        if (again) cs.id = cs.id + "@" + s.id;
         cs.sourceSlideId = s.id;
         cs.bloom = cs.bloom || s.bloom || "";
         run.slides.push(cs);
