@@ -1710,7 +1710,9 @@
           UI.num(st.defaultTime, function (v) {
             st.defaultTime = Math.max(0, Math.min(300, v || 0));
             touched(); drawRail(); drawPreview();
-          }, 0, 300), '0 leaves the activity untimed. A question override takes precedence.'));
+          }, 0, 300), game.style === 'headsup'
+            ? 'Seconds for the whole round (0 means 60). Terms are drawn in a fresh order, and each verdict moves straight to the next.'
+            : '0 leaves the activity untimed. A question override takes precedence.'));
         var oralBook = SF.Playbook ? SF.Playbook.forGame(game) : null;
         if (oralBook && oralBook.scoring) bodyEl.appendChild(el('p', 'hint', oralBook.scoring));
         appendSpokenSettings();

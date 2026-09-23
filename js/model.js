@@ -4710,6 +4710,19 @@
         if (slide.category) oracy.appendChild(el("div", "stage-kicker", slide.category));
         oracy.appendChild(el("div", "oracy-term", slide.term || slide.question || ""));
         if (slide.hint) oracy.appendChild(el("div", "stage-note", slide.hint));
+        if (slide.roundSeconds) {
+          var round = el("div", "round-clock");
+          round.setAttribute("aria-hidden", "true");
+          round.appendChild(el("span", "rc-n", SF.clockFace ? SF.clockFace(slide.roundSeconds) : String(slide.roundSeconds)));
+          var track = el("span", "rc-track");
+          track.appendChild(el("span", "rc-fill"));
+          round.appendChild(track);
+          round.appendChild(el("span", "rc-count", ""));
+          oracy.appendChild(round);
+        }
+        if (slide.drawTotal) {
+          oracy.appendChild(el("div", "heads-pile", "Term " + slide.drawNo + " of " + slide.drawTotal));
+        }
         pad.appendChild(oracy);
       } else if (present === "connection") {
         var pair = el("div", "stage-hero connection-stage");
@@ -4822,9 +4835,17 @@
       } else if (present === "challenge") {
         var ch = el("div", "stage-hero challenge-stage");
         ch.appendChild(el("div", "stage-atmosphere", ""));
+        var left = slide.drawTotal ? slide.drawTotal - slide.drawNo : 0;
+        var deckEl = el("div", "challenge-deck");
+        deckEl.dataset.left = String(Math.min(3, left));
         var poster = el("div", "challenge-poster");
+        if (slide.drawTotal) poster.appendChild(el("div", "challenge-card-no", "Card " + slide.drawNo));
         poster.appendChild(el("div", "challenge-body", slide.challenge || slide.question || ""));
-        ch.appendChild(poster);
+        deckEl.appendChild(poster);
+        ch.appendChild(deckEl);
+        if (slide.drawTotal) {
+          ch.appendChild(el("div", "challenge-left", left ? left + (left === 1 ? " card left" : " cards left") + " in the deck" : "Last card"));
+        }
         pad.appendChild(ch);
       } else if (present === "bowl") {
         var bowl2 = el("div", "stage-hero bowl-stage");
@@ -19435,7 +19456,7 @@
     /* What its per-question countdown is called. These four styles time
        something other than a question, and js/games.js listed all four
        to find them and then named three of them again to label them. */
-    timeLabel: "Time per term",
+    timeLabel: "Round length",
     /* No generic Question field in the editor. Declared here rather than
        named in a list inside js/games.js, where nine styles were spelled
        out to answer a question each of them can answer about itself. */
@@ -19449,7 +19470,7 @@
     plays: ROOM_PLAY.spoken,
     label: "Heads up",
     icon: "↑",
-    blurb: "Describe the term; peers retrieve it. Host marks Correct or Pass.",
+    blurb: "One guesser, one round clock. The class describes the term; Correct or Pass moves straight to the next. How many can they get?",
     mechanic: "judge",
     input: "choice",
     minOptions: 2,
@@ -23163,6 +23184,7 @@
     "bloom",
     "voteOnly"
   ];
+  var DRAW_STYLES = ["spinexplain", "randomchallenge", "headsup"];
   function compileGame(game, opts = {}) {
     opts = opts || {};
     var st = game.settings;
@@ -23195,7 +23217,8 @@
     }
     if (engine.boardEngine) return out.concat(engine.boardEngine.compile(game, { makeSlide }));
     var playQuestions = game.questions.slice();
-    if (game.style === "spinexplain") {
+    var drawn = DRAW_STYLES.indexOf(game.style) >= 0;
+    if (drawn) {
       for (var draw = playQuestions.length - 1; draw > 0; draw--) {
         var pick = Math.floor(Math.random() * (draw + 1));
         var swap = playQuestions[draw];
@@ -23213,10 +23236,18 @@
       s.gameId = game.id;
       s.gameTitle = game.title;
       s.questionNumber = i + 1;
+      if (drawn) {
+        s.drawNo = i + 1;
+        s.drawTotal = playQuestions.length;
+      }
       if (game.style === "spinexplain") {
         s.spinDraw = i + 1;
         s.spinTotal = playQuestions.length;
         s.headPrompt = "Spin & explain";
+      }
+      if (game.style === "headsup") {
+        s.roundSeconds = Number(st.defaultTime) > 0 ? Math.min(600, Number(st.defaultTime)) : 60;
+        s.timeLimit = 0;
       }
       out.push(s);
       if (String(q.explanation || "").trim() && (st.explainStyle === "slide" || st.explainStyle === "both")) {

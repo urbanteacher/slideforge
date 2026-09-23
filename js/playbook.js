@@ -261,9 +261,9 @@
       players: 'Clue-givers + guesser; host marks.',
       scoring: 'A round count: how many the guesser gets. No points.',
       howToPlay: [
-        'One learner cannot see the term; others describe it.',
-        'Host marks Correct or Pass.',
-        'Round ends when the clock or the term list runs out.'
+        'Choose the guesser in Live answers; they stand with their back to the wall while the class describes the term.',
+        'Correct or Pass moves straight to the next term, drawn in a fresh order each run.',
+        'One clock for the round. At time, the wall shows the guesser’s count; Next moves on.'
       ]
     },
     'spin-explain': {

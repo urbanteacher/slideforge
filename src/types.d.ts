@@ -365,6 +365,11 @@ export interface Slide {
 
   /** Spin and explain. */
   spinDraw?: number;
+  /** A drawn format's place in the pile (see DRAW_STYLES). */
+  drawNo?: number;
+  drawTotal?: number;
+  /** Heads Up: the length of the round the term belongs to. */
+  roundSeconds?: number;
   spinTotal?: number;
   headPrompt?: string;
 

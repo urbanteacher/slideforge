@@ -395,3 +395,27 @@ test('misconception labels stay tied to the option they were written for', () =>
   choice.compile(plain, {}, ps);
   assert.equal(ps.misconceptions, undefined);
 });
+
+test('drawn formats play in a fresh order and know their place in the pile; Heads Up is one round', () => {
+  const SF = loadModel();
+  for (const style of ['spinexplain', 'randomchallenge', 'headsup']) {
+    const g = SF.normalizeGame(SF.makeGame('Draw', style));
+    g.questions = Array.from({ length: 8 }, (_, i) => SF.normalizeQuestion(
+      style === 'randomchallenge' ? { challenge: 'Challenge ' + i } : { term: 'Term ' + i }, style));
+    g.settings.defaultTime = 45;
+    const seen = new Set();
+    for (let run = 0; run < 12; run++) {
+      const items = SF.compileGame(g).filter(s => s.type === 'quiz');
+      assert.equal(items.length, 8);
+      assert.deepEqual(Array.from(items, s => s.drawNo), [1, 2, 3, 4, 5, 6, 7, 8]);
+      assert.ok(items.every(s => s.drawTotal === 8));
+      assert.equal(new Set(items.map(s => s.id)).size, 8, 'no repeats in a pile');
+      seen.add(items.map(s => s.id).join('|'));
+      if (style === 'headsup') {
+        assert.ok(items.every(s => s.roundSeconds === 45 && s.timeLimit === 0),
+          'the round is timed, not each term');
+      }
+    }
+    assert.ok(seen.size > 1, style + ' is not played in one fixed order');
+  }
+});

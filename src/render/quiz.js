@@ -456,6 +456,21 @@ export function createQuizRenderer(SF, helpers) {
       if (slide.category) oracy.appendChild(el('div', 'stage-kicker', slide.category));
       oracy.appendChild(el('div', 'oracy-term', slide.term || slide.question || ''));
       if (slide.hint) oracy.appendChild(el('div', 'stage-note', slide.hint));
+      /* The round, not the term, is what is timed. js/rounds.js runs this
+         clock across the whole pile and ends the round when it runs out. */
+      if (slide.roundSeconds) {
+        var round = el('div', 'round-clock');
+        round.setAttribute('aria-hidden', 'true');
+        round.appendChild(el('span', 'rc-n', SF.clockFace ? SF.clockFace(slide.roundSeconds) : String(slide.roundSeconds)));
+        var track = el('span', 'rc-track');
+        track.appendChild(el('span', 'rc-fill'));
+        round.appendChild(track);
+        round.appendChild(el('span', 'rc-count', ''));
+        oracy.appendChild(round);
+      }
+      if (slide.drawTotal) {
+        oracy.appendChild(el('div', 'heads-pile', 'Term ' + slide.drawNo + ' of ' + slide.drawTotal));
+      }
       pad.appendChild(oracy);
     } else if (present === 'connection') {
       var pair = el('div', 'stage-hero connection-stage');
@@ -551,9 +566,21 @@ export function createQuizRenderer(SF, helpers) {
     } else if (present === 'challenge') {
       var ch = el('div', 'stage-hero challenge-stage');
       ch.appendChild(el('div', 'stage-atmosphere', ''));
+      /* A card drawn from a deck: the cards still to come sit behind it,
+         fewer each draw, so the room can see how much is left. */
+      var left = slide.drawTotal ? slide.drawTotal - slide.drawNo : 0;
+      var deckEl = el('div', 'challenge-deck');
+      deckEl.dataset.left = String(Math.min(3, left));
       var poster = el('div', 'challenge-poster');
+      if (slide.drawTotal) poster.appendChild(el('div', 'challenge-card-no', 'Card ' + slide.drawNo));
       poster.appendChild(el('div', 'challenge-body', slide.challenge || slide.question || ''));
-      ch.appendChild(poster);
+      deckEl.appendChild(poster);
+      ch.appendChild(deckEl);
+      if (slide.drawTotal) {
+        ch.appendChild(el('div', 'challenge-left', left
+          ? left + (left === 1 ? ' card left' : ' cards left') + ' in the deck'
+          : 'Last card'));
+      }
       pad.appendChild(ch);
     } else if (present === 'bowl') {
       var bowl = el('div', 'stage-hero bowl-stage');

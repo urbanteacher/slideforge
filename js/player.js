@@ -2426,6 +2426,8 @@
     /* After the build, before the deck: a chart's callouts are the last steps
        inside the slide, so the bars arrive first and are then walked. */
     if (!Player.frozen && SF.Callouts && SF.Callouts.step(Player, 1)) return;
+    /* A Heads Up round whose time is up skips the terms nobody reached. */
+    if (!Player.frozen && SF.Rounds && SF.Rounds.step(Player, 1)) return;
     if (!Player.deck) return;
     if (Player.spontaneous) {
       var curS = Player.wallSlide();

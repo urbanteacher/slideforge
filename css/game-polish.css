@@ -469,3 +469,73 @@
 .layout-quiz .oral-count .oc-tally { font-size: 17px; font-weight: 600; opacity: .85; }
 .layout-quiz .oral-count.oc-pop { animation: sf-oc-pop .7s cubic-bezier(.3,0,.2,1); }
 @keyframes sf-oc-pop { 0% { transform: scale(.9); opacity: .4; } 45% { transform: scale(1.06); opacity: 1; } 100% { transform: scale(1); } }
+
+/* ---- The draw: Random Challenge as a deck (see DRAW_STYLES) ----
+   The cards still to come sit behind the one drawn, up to three, fewer each
+   draw. Each new card lands with a short flip, which is the draw itself. */
+.layout-quiz.present-challenge .challenge-deck {
+  position: relative; z-index: 1; width: min(820px, 94%);
+  display: grid; justify-items: center;
+}
+.layout-quiz.present-challenge .challenge-deck .challenge-poster { width: 100%; animation: sf-draw-card .55s cubic-bezier(.3,0,.2,1); }
+.layout-quiz.present-challenge .challenge-deck::before,
+.layout-quiz.present-challenge .challenge-deck::after {
+  content: ''; position: absolute; inset: 0; border-radius: 14px;
+  background: var(--s-card); border: 3px solid var(--s-rule);
+  z-index: -1; opacity: 0;
+}
+.layout-quiz.present-challenge .challenge-deck:not([data-left="0"])::before { opacity: 1; transform: translate(10px, 10px) rotate(1.2deg); }
+.layout-quiz.present-challenge .challenge-deck[data-left="2"]::after,
+.layout-quiz.present-challenge .challenge-deck[data-left="3"]::after { opacity: 1; transform: translate(20px, 20px) rotate(2.4deg); }
+.layout-quiz.present-challenge .challenge-card-no {
+  font-size: 15px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--s-dim);
+}
+.layout-quiz.present-challenge .challenge-left {
+  position: relative; z-index: 1; margin-top: 30px;
+  font-size: 18px; font-weight: 650; color: var(--s-dim);
+}
+@keyframes sf-draw-card {
+  from { transform: perspective(900px) rotateY(-70deg) translateX(-40px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* ---- Heads Up: one clock for the round (js/rounds.js) ---- */
+.layout-quiz.present-headsup .round-clock {
+  position: absolute; top: 34px; right: 40px; z-index: 3;
+  display: grid; grid-template-columns: auto 180px; grid-template-rows: auto auto;
+  column-gap: 14px; row-gap: 4px; align-items: center;
+}
+.layout-quiz.present-headsup .round-clock .rc-n {
+  grid-row: span 2; font-size: 44px; font-weight: 800; font-variant-numeric: tabular-nums;
+}
+.layout-quiz.present-headsup .round-clock .rc-track {
+  height: 10px; border-radius: 999px; overflow: hidden;
+  background: var(--s-card); border: 1px solid var(--s-rule);
+}
+.layout-quiz.present-headsup .round-clock .rc-fill {
+  display: block; height: 100%; width: 100%; background: var(--s-accent);
+  transform-origin: left center; transition: transform .25s linear;
+}
+.layout-quiz.present-headsup .round-clock .rc-count { font-size: 17px; font-weight: 700; color: var(--s-dim); }
+.layout-quiz.present-headsup .round-clock.hurry .rc-n,
+.layout-quiz.present-headsup .round-clock.hurry .rc-fill { color: #ff5f6d; background: #ff5f6d; }
+.layout-quiz.present-headsup .round-clock.hurry .rc-n { background: none; }
+.layout-quiz.present-headsup .heads-pile {
+  position: absolute; left: 40px; bottom: 26px; z-index: 3;
+  font-size: 16px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--s-dim);
+}
+/* A new term lands fast: that rhythm is the game. */
+.layout-quiz.present-headsup .oracy-term { animation: sf-term-in .28s cubic-bezier(.3,0,.2,1); }
+@keyframes sf-term-in { from { transform: translateY(18px) scale(.97); opacity: 0; } }
+/* Time: the round's result takes the stage. */
+.layout-quiz.present-headsup .round-over {
+  position: absolute; inset: 0; z-index: 6;
+  display: grid; place-content: center; text-align: center; gap: 14px;
+  background: color-mix(in srgb, var(--s-bg) 92%, transparent);
+  animation: sf-round-over .5s cubic-bezier(.3,0,.2,1);
+}
+.layout-quiz.present-headsup .round-over .ro-kicker { font-size: 26px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--s-accent); }
+.layout-quiz.present-headsup .round-over .ro-count { font-size: 150px; font-weight: 850; line-height: 1; font-variant-numeric: tabular-nums; }
+.layout-quiz.present-headsup .round-over .ro-who { font-size: 34px; font-weight: 700; }
+.layout-quiz.present-headsup .round-over .ro-next { font-size: 18px; color: var(--s-dim); }
+@keyframes sf-round-over { from { opacity: 0; transform: scale(1.04); } }

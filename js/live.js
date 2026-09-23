@@ -478,6 +478,8 @@
     /* An accepted link grows the chain, which is drawn from the slide. */
     if ((s.style === 'conceptchain' || s.conceptChain) && choice === 0) SF.Player.goTo(SF.Player.idx, 0);
     syncManual();
+    /* Heads Up moves straight on to the next term (js/rounds.js). */
+    SF.Player.emit('spokenVerdict', { slide: s, choice: choice });
   }
 
   /** Every spoken verdict comes through here. */
@@ -1628,8 +1630,10 @@
       /* The wall's verdict pads take the same path as Live answers. */
       spokenVerdict(e.slide, e.choice);
     });
-    SF.Player.on('timeup', function () {
-      if (Live.players.some(function(p){return p.manual;})) return;
+    SF.Player.on('timeup', function (e) {
+      /* Teacher-entered rows may still be being recorded — except when a
+         Heads Up round ends, where there is nothing to record. */
+      if (!(e && e.round) && Live.players.some(function(p){return p.manual;})) return;
       var s = SF.Player.wallSlide ? SF.Player.wallSlide()
         : (SF.Player.deck && SF.Player.deck.slides[SF.Player.idx]);
       /* Concept Chain timeout = skip (Reject), not an accidental Accept. */

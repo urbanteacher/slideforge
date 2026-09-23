@@ -132,7 +132,7 @@ test('a style that times something other than a question names it', () => {
   const labelled = {};
   for (const k of Object.keys(styles)) if (styles[k].timeLabel) labelled[k] = styles[k].timeLabel;
   assert.deepEqual(labelled, {
-    headsup: 'Time per term',
+    headsup: 'Round length',
     spinexplain: 'Time per explanation',
     connection: 'Time per challenge',
     randomchallenge: 'Time per challenge'

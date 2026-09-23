@@ -1108,6 +1108,9 @@ var QUESTION_SLIDE_FIELDS = [
  * @param {{theme?: string, intro?: boolean, scoreSlide?: boolean, label?: string}} [opts]
  * @returns {Slide[]} slides the player can run
  */
+/* Styles whose items are drawn at random each run — see compileGame. */
+var DRAW_STYLES = ['spinexplain', 'randomchallenge', 'headsup'];
+
 function compileGame(game, opts = {}) {
   opts = opts || {};
   var st = game.settings;
@@ -1156,9 +1159,13 @@ function compileGame(game, opts = {}) {
   if (engine.boardEngine) return out.concat(engine.boardEngine.compile(game, { makeSlide }));
 
   var playQuestions = game.questions.slice();
-  if (game.style === 'spinexplain') {
-    /* Shuffle whole questions before compiling so explanations follow their
-       concept. Authored order and IDs remain untouched. */
+  /* The draw. A format whose name promises chance — a spin, a random
+     challenge, a pile of Heads Up terms — plays its items in a fresh order
+     every run, with no repeats, and each item knows its place in the pile
+     ("Card 3 · 9 left"). Whole questions are shuffled, so an explanation
+     stays with its item; the authored order and the IDs are untouched. */
+  var drawn = DRAW_STYLES.indexOf(game.style) >= 0;
+  if (drawn) {
     for (var draw = playQuestions.length - 1; draw > 0; draw--) {
       var pick = Math.floor(Math.random() * (draw + 1));
       var swap = playQuestions[draw];
@@ -1175,7 +1182,14 @@ function compileGame(game, opts = {}) {
     s.gameId = game.id;
     s.gameTitle = game.title;
     s.questionNumber = i + 1;
+    if (drawn) { s.drawNo = i + 1; s.drawTotal = playQuestions.length; }
     if (game.style === 'spinexplain') { s.spinDraw = i + 1; s.spinTotal = playQuestions.length; s.headPrompt = 'Spin & explain'; }
+    /* Heads Up is a round, not a run of timed terms: one clock for the
+       whole pile, set by the game's time. A term has no clock of its own. */
+    if (game.style === 'headsup') {
+      s.roundSeconds = Number(st.defaultTime) > 0 ? Math.min(600, Number(st.defaultTime)) : 60;
+      s.timeLimit = 0;
+    }
     out.push(s);
 
     /* A dedicated slide only when asked for. On 'inline' the reasoning

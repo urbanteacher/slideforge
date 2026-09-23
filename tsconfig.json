@@ -46,6 +46,7 @@
     "js/ask.js",
     "js/lesson-moments.js",
     "js/stages.js",
+    "js/rounds.js",
     "js/playbook.js",
     "js/reports.js",
     "js/teaching.js",

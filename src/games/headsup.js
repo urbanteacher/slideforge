@@ -1,13 +1,16 @@
 import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/headsup. Edit source here; npm run build updates js/model.js. */
 
-/* Heads Up — host Correct / Pass. Audit: Correct +1, Pass 0. */
+/* Heads Up — one guesser, one round clock, as many terms as they can get.
+   The terms are drawn in a fresh order each run (DRAW_STYLES), a verdict
+   moves straight on to the next term, and the round ends when its clock does
+   (js/rounds.js). It counts; it does not score. */
 /** @type {import("../types.js").GameEngine<import("../types.js").QuestionWith<'accept'|'answer'>>} */
 const headsup = {
   /* What its per-question countdown is called. These four styles time
      something other than a question, and js/games.js listed all four
      to find them and then named three of them again to label them. */
-  timeLabel: "Time per term",
+  timeLabel: "Round length",
   /* No generic Question field in the editor. Declared here rather than
      named in a list inside js/games.js, where nine styles were spelled
      out to answer a question each of them can answer about itself. */
@@ -21,7 +24,7 @@ const headsup = {
   plays: ROOM_PLAY.spoken,
   label: 'Heads up',
   icon: '↑',
-  blurb: 'Describe the term; peers retrieve it. Host marks Correct or Pass.',
+  blurb: 'One guesser, one round clock. The class describes the term; Correct or Pass moves straight to the next. How many can they get?',
   mechanic: 'judge',
   input: 'choice',
   minOptions: 2,
