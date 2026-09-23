@@ -36,7 +36,7 @@ import { createBoardRuntime } from "./boards/runtime.js";
 import { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes } from "./activities/catalogue.js";
 import { STAGE_JOBS, stageJob, stripDeclaredJob, stageCopy, parseStageLabel, activityStages, activityBrief } from "./activities/stages.js";
 import { activityPlays } from "./activities/rooms.js";
-import { parsePerson, orgTree, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, SLIDE_TYPES, LAYOUT_GROUPS, INFO_LAYOUTS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, parseInfoLine, formatInfoLine, infoNumber, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
+import { parsePerson, orgTree, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, SLIDE_TYPES, LAYOUT_GROUPS, INFO_LAYOUTS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, parseInfoLine, formatInfoLine, infoNumber, safeHref, safeMedia, cssUrl, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
 import { FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest } from "./deck/feedback.js";
 import { renderMarkdown, parseMarkdownDeck } from "./deck/markdown.js";
 import sampleDeck from "./samples/deck.json" with { type: "json" };
@@ -1817,6 +1817,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   parseTable: parseTable,
   readiness: readiness,
   safeMedia: safeMedia,
+  cssUrl: cssUrl,
   parseKeywordLine: parseKeywordLine,
   formatKeywordLine: formatKeywordLine,
   /* An activity slide's rows as stages: name, seconds, prompt, phone job. */

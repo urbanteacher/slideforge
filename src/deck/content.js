@@ -486,6 +486,18 @@ function safeMedia(url) {
   return u;                       // relative path, next to the deck
 }
 
+/**
+ * A media URL as a CSS background: screened by safeMedia, then escaped for a
+ * CSS string. '' when the URL is refused, which leaves no background at all.
+ * It replaces a dozen hand-written `url("…")`s that skipped the screen and
+ * escaped quotes as `&quot;`, an HTML entity CSS never reads (CA-54).
+ * @param {unknown} url
+ */
+function cssUrl(url) {
+  var u = safeMedia(url);
+  return u ? 'url("' + u.replace(/[\\"]/g, '\\$&') + '")' : '';
+}
+
 /* One declaration per layout, and every list in the app derives from it.
 
    There used to be five: SLIDE_TYPES for the label, DECK_TYPES for whether you
@@ -869,4 +881,4 @@ function correctAnswerLabel(slide) {
 }
 
 
-export { parsePerson, orgTree, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, chartNumber, SLIDE_TYPES, LAYOUT_GROUPS, INFO_LAYOUTS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, parseInfoLine, formatInfoLine, infoNumber, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };
+export { parsePerson, orgTree, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, chartNumber, SLIDE_TYPES, LAYOUT_GROUPS, INFO_LAYOUTS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, parseInfoLine, formatInfoLine, infoNumber, safeHref, safeMedia, cssUrl, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel };

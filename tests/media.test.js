@@ -206,3 +206,18 @@ test('the server serves byte ranges, which is what makes a video seekable', asyn
   assert.equal(junk.status, 200);
   assert.equal(junk.headers.get('content-length'), '4096');
 });
+
+/* CA-54: every picture drawn as a CSS background goes through one helper,
+   which screens the URL and escapes it for a CSS string. The hand-written
+   versions skipped the screen and escaped a quote as &quot;, which CSS reads
+   literally. */
+test('a background image is screened and escaped for CSS', () => {
+  const SF = loadModel();
+  assert.equal(SF.cssUrl('media/cell.png'), 'url("media/cell.png")');
+  assert.equal(SF.cssUrl('javascript:alert(1)'), '', 'a refused URL draws nothing');
+  assert.equal(SF.cssUrl('data:text/html,<b>x</b>'), '', 'only image, video or audio data');
+  assert.equal(SF.cssUrl(''), '');
+  assert.equal(SF.cssUrl('a"b.png'), 'url("a\\"b.png")', 'a quote is escaped the CSS way');
+  assert.equal(SF.cssUrl('a\\b.png'), 'url("a\\\\b.png")');
+  assert.match(SF.cssUrl('data:image/png;base64,iVBOR'), /^url\("data:image\/png/);
+});

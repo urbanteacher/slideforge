@@ -303,6 +303,7 @@ export function createPresenterWindow(SF, helpers) {
         frozen: !!Player.frozen,
         /* Desk mirrors HUD labels — blank wall, room rail, live toggles. */
         blank: !!Player.blank,
+        blankWhite: !!Player.blankWhite,
         live: !!(SF.Live && SF.Live.active),
         /* Desk chrome shows the PIN without forcing Join QR on the wall. */
         pin: (SF.Live && SF.Live.pin) || null,
@@ -677,6 +678,9 @@ export function createPresenterWindow(SF, helpers) {
         if (e.shiftKey) Player.emit('blankPhonesToggle', {});
         else Player.control('blank');
         break;
+      /* Comma for a white screen, as in PowerPoint. W would be Google's, but
+         W is "who answered what" here (UX-53). */
+      case ',': e.preventDefault(); Player.control('white'); break;
       case 'f': case 'F': e.preventDefault(); Player.control('full'); break;
       case 'r': case 'R': e.preventDefault(); Player.resetScores(); break;
       case 'd': case 'D': e.preventDefault(); Player.control('presenter'); break;

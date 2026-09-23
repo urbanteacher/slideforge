@@ -509,6 +509,7 @@
       <!-- The game's own controls on the wall (Boss Hit/Miss, race lanes, Ask). -->
       <span class="pv-game" id="gameControls" hidden></span>
       <button class="btn" data-cmd="blank" id="btnBlank" title="Blank the projector (B)">Blank</button>
+      <button class="btn" data-cmd="white" id="btnWhite" title="White screen on the projector, for the board (,)">White</button>
       <button class="btn" data-cmd="freeze" id="btnFreeze" title="Freeze audience screen for digression (Z)">❄️ Freeze</button>
       <button class="btn" data-cmd="who" aria-pressed="false" aria-controls="teacherWorkspace"
               title="Open live responses and teacher entry here (W)">Live answers</button>
@@ -1041,10 +1042,16 @@ SF.installExplore(SF);
     }
 
     var blankBtn = $('btnBlank');
+    var black = !!d.blank && !d.blankWhite, white = !!d.blank && !!d.blankWhite;
     if (blankBtn) {
-      blankBtn.classList.toggle('on', !!d.blank);
-      blankBtn.textContent = d.blank ? 'Unblank' : 'Blank';
-      blankBtn.title = d.blank ? 'Unblank the projector (B)' : 'Blank the projector (B)';
+      blankBtn.classList.toggle('on', black);
+      blankBtn.textContent = black ? 'Unblank' : 'Blank';
+      blankBtn.title = black ? 'Unblank the projector (B)' : 'Blank the projector (B)';
+    }
+    var whiteBtn = $('btnWhite');
+    if (whiteBtn) {
+      whiteBtn.classList.toggle('on', white);
+      whiteBtn.textContent = white ? 'Show slide' : 'White';
     }
 
     var rail = $('btnRail');
@@ -1375,6 +1382,7 @@ SF.installExplore(SF);
     else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); cmd('prev'); }
     else if ((e.key === 'b' || e.key === 'B') && e.shiftKey) { e.preventDefault(); cmd('blankPhones'); }
     else if (e.key === 'b' || e.key === 'B') { e.preventDefault(); cmd('blank'); }
+    else if (e.key === ',') { e.preventDefault(); cmd('white'); }
     else if ((e.key === 'h' || e.key === 'H') && e.shiftKey) { e.preventDefault(); cmd('floor'); }
     else if (e.key === 'z' || e.key === 'Z') { e.preventDefault(); cmd('freeze'); }
     else if (e.key === 's' || e.key === 'S') { e.preventDefault(); cmd('rail'); }

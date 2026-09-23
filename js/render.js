@@ -455,7 +455,7 @@
     card.setAttribute('aria-label', p.name + (p.role ? ', ' + p.role : ''));
     if (p.photo) {
       var ph = el('div', 'org-photo');
-      ph.style.backgroundImage = 'url("' + String(p.photo).replace(/"/g, '&quot;') + '")';
+      ph.style.backgroundImage = SF.cssUrl(p.photo);
       ph.setAttribute('role', 'img');
       ph.setAttribute('aria-label', p.name);
       card.appendChild(ph);
@@ -587,7 +587,7 @@
       var src = pics[item.index];
       if (src || pictureCards) {
         var pic = el('div', 'card-pic' + (src ? '' : ' card-pic-empty'));
-        if (src) pic.style.backgroundImage = 'url("' + String(src).replace(/"/g, '&quot;') + '")';
+        if (src) pic.style.backgroundImage = SF.cssUrl(src);
         else pic.appendChild(el('span', 'authoring-hint', 'Add an image'));
         pic.setAttribute('aria-hidden', 'true');
         var copy = el('div', 'card-copy');
@@ -981,7 +981,7 @@
         img.style.setProperty('--kb-to', travel.to);
         img.style.setProperty('--kb-dur', travel.secs + 's');
       }
-      img.style.backgroundImage = 'url("' + String(slide.image).replace(/"/g, '&quot;') + '")';
+      img.style.backgroundImage = SF.cssUrl(slide.image);
       /* An image slide has nothing to build but the image, so Build on Next
          here means one thing: the room gets asked before it gets shown. */
       asStep(img, slide);
@@ -1055,7 +1055,7 @@
     layers.forEach(function (layer) {
       var fig = asStep(el('figure', 'fig'), slide);
       var img = el('div', 'img ' + (slide.imageFit === 'contain' ? 'contain' : 'cover'));
-      img.style.backgroundImage = 'url("' + String(layer.image).replace(/"/g, '&quot;') + '")';
+      img.style.backgroundImage = SF.cssUrl(layer.image);
       fig.appendChild(img);
       if (layer.caption || layer.source) {
         var cap = el('figcaption', 'fig-cap ' + capClass(slide));
@@ -1398,7 +1398,7 @@
       var still = el('div', 'img ' + fit);
       var railStill = videoStill(slide);
       if (railStill) {
-        still.style.backgroundImage = 'url("' + railStill.replace(/"/g, '&quot;') + '")';
+        still.style.backgroundImage = SF.cssUrl(railStill);
       } else {
         still.classList.add('vid-blank');
       }
@@ -1416,7 +1416,7 @@
       var mute = el('div', 'img ' + fit + ' vid-embed-still');
       var poster = videoStill(slide);
       if (poster) {
-        mute.style.backgroundImage = 'url("' + poster.replace(/"/g, '&quot;') + '")';
+        mute.style.backgroundImage = SF.cssUrl(poster);
       } else {
         mute.classList.add('vid-blank');
       }
@@ -1516,7 +1516,7 @@
       ((slide.design || {}).mediaGround === 'full' ? ' split-media-full' : ''));
     if (slide.image) {
       var img = el('div', 'img ' + (slide.imageFit === 'contain' ? 'contain' : 'cover'));
-      img.style.backgroundImage = 'url("' + String(slide.image).replace(/"/g, '&quot;') + '")';
+      img.style.backgroundImage = SF.cssUrl(slide.image);
       media.appendChild(img);
       /* The picture can take a press of its own: show it first and let the
          points annotate it, or hold it back and let the room predict before
@@ -1912,7 +1912,7 @@
     srcs.forEach(function (src, i) {
       var fig = el('figure', 'fake-side');
       var shot = el('div', 'fake-shot' + (src ? '' : ' fake-shot-empty'));
-      if (src) shot.style.backgroundImage = 'url("' + String(src).replace(/"/g, '&quot;') + '")';
+      if (src) shot.style.backgroundImage = SF.cssUrl(src);
       else shot.appendChild(el('span', 'authoring-hint', 'Add image ' + labels[i]));
       fig.appendChild(shot);
       fig.appendChild(el('figcaption', 'fake-name', labels[i]));
@@ -2509,7 +2509,7 @@
       var logoScale={small:36,medium:52,large:72}[deck.logoSize || 'medium'] || 52;
       logo.style.height=logoScale+'px';
       var img = document.createElement('img');
-      img.src = deck.logo;
+      img.src = SF.safeMedia(deck.logo);
       img.alt = '';
       img.draggable = false;
       logo.appendChild(img);

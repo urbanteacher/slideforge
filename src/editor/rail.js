@@ -42,6 +42,7 @@ export function createRail(SF, helpers) {
 
   var dragFrom = null;   /* index being dragged, or null */
   var placing = null;    /* index being carried by ⌘X, or null */
+  var placingId = null;  /* ...and the slide's id, which survives an Undo */
   var placeAt = null;    /* slot the carried slide would land in */
   var caretAt = null;    /* slot the caret is currently drawn in */
 
@@ -200,6 +201,7 @@ export function createRail(SF, helpers) {
     if (!deck.slides[i] || placing != null) return;
     setSel(i);
     placing = i;
+    placingId = deck.slides[i].id;
     placeAt = i;
     draw();
     var slot = showCaret(placeAt);
@@ -215,12 +217,26 @@ export function createRail(SF, helpers) {
     drawPlacingBar();
   }
 
+  /* The carried slide is found again by id. Undo and Redo still work while a
+     slide is in hand, and either can move it or take it away; an index kept
+     from the pick-up then dropped the wrong slide (CA-43). */
+  function resolvePlacing() {
+    if (placing == null) return;
+    var slides = helpers.deck().slides;
+    var at = -1;
+    for (var k = 0; k < slides.length; k++) if (slides[k].id === placingId) { at = k; break; }
+    if (at < 0) { placing = null; placingId = null; placeAt = null; caretAt = null; return; }
+    placing = at;
+    placeAt = Math.max(0, Math.min(slides.length, placeAt == null ? at : placeAt));
+  }
+
   function commitPlacing(at) {
     var sel = helpers.sel();
-    if (placing == null) return;
+    resolvePlacing();
+    if (placing == null) { draw(); return; }
     var from = placing;
     var to = at == null ? placeAt : at;
-    placing = null; placeAt = null; caretAt = null;
+    placing = null; placingId = null; placeAt = null; caretAt = null;
     if (moveSlide(from, to)) touched();
     draw();
     focusThumb(sel);
@@ -229,7 +245,7 @@ export function createRail(SF, helpers) {
   function cancelPlacing() {
     var sel = helpers.sel();
     if (placing == null) return;
-    placing = null; placeAt = null; caretAt = null;
+    placing = null; placingId = null; placeAt = null; caretAt = null;
     draw();
     focusThumb(sel);
   }
@@ -380,7 +396,8 @@ export function createRail(SF, helpers) {
     var UI = helpers.UI();
     var rail = $('railList');
     if (!rail) return;
-    if (placing != null && !deck.slides[placing]) { placing = null; placeAt = null; }
+    /* After an Undo or Redo the carried slide may have moved, or gone. */
+    resolvePlacing();
     rail.innerHTML = '';
     rail.classList.toggle('placing', placing != null);
     caretAt = null;
@@ -921,7 +938,7 @@ export function createRail(SF, helpers) {
      now, so the carry state has one owner. */
   function isPlacing() { return placing != null; }
   function placeTarget() { return placeAt; }
-  function resetPlacing() { placing = null; placeAt = null; }
+  function resetPlacing() { placing = null; placingId = null; placeAt = null; }
 
   return {
     focusThumb, beginPlacing, movePlaceTo, commitPlacing, cancelPlacing, toggleHidden, drawRail, select, nudge, sendTo, sorterOpen, openSorter, closeSorter, pick, sorterKeys, drawFoot,

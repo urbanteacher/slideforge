@@ -304,3 +304,6 @@ html[data-ws="plan"] .rail-foot .rail-actions .btn{flex:1}
 .fill-author-line{line-height:2;margin-bottom:8px}
 .fill-author-gap{display:inline-block;min-width:34px;margin:0 3px;padding:0 6px;border-bottom:2px solid currentColor;text-align:center;font-weight:700;opacity:.7}
 .fill-author-bank{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+
+/* An older staged-routine slide, offered the stages (TPS-04). */
+.stage-offer{margin:0 0 20px;padding:12px 14px;border-radius:8px;background:#eff4e9;border:1px solid #d7e6cd}.stage-offer .hint{margin:0 0 10px;font-size:11px}

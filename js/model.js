@@ -3350,7 +3350,7 @@
     }
     function wordSpeed(slide) {
       var want = String((slide.design || {}).wordSpeed || "").trim();
-      return WORD_SPEEDS[want] ? want : "medium";
+      return Object.prototype.hasOwnProperty.call(WORD_SPEEDS, want) ? want : "medium";
     }
     function wordStagger(slide) {
       var want = String((slide.design || {}).wordStagger || "").trim();
@@ -3426,7 +3426,7 @@
       };
       return plan.words.map(function(w) {
         var step = w && typeof w === "object" ? w : {};
-        var arc = WORD_ARCS[step.arc] ? step.arc : "settle";
+        var arc = Object.prototype.hasOwnProperty.call(WORD_ARCS, step.arc) ? step.arc : "settle";
         return {
           arc,
           keys: WORD_ARCS[arc],
@@ -5535,7 +5535,7 @@
         var layer = layers[side] || (layers[side] = el("div", "slide-art slide-art-" + side));
         layer.setAttribute("data-art-order", side);
         var img = el("img", "slide-art-img");
-        img.src = pic.src;
+        img.src = SF.safeMedia(pic.src);
         img.alt = String(pic.alt || "");
         img.setAttribute("data-art-pic", String(pic.id == null ? i : pic.id));
         img.setAttribute("data-art-order", side);
@@ -5984,7 +5984,7 @@
         frame.setAttribute("data-block-key", SF.artBlockKey(pic.id));
         frame.dataset.artPic = String(pic.id);
         var img = el("img", "art-block-img");
-        img.src = pic.src;
+        img.src = SF.safeMedia(pic.src);
         img.alt = String(pic.alt || "");
         img.draggable = false;
         img.style.objectFit = pic.fit === "contain" ? "contain" : "cover";
@@ -6457,6 +6457,7 @@
           frozen: !!Player.frozen,
           /* Desk mirrors HUD labels — blank wall, room rail, live toggles. */
           blank: !!Player.blank,
+          blankWhite: !!Player.blankWhite,
           live: !!(SF.Live && SF.Live.active),
           /* Desk chrome shows the PIN without forcing Join QR on the wall. */
           pin: SF.Live && SF.Live.pin || null,
@@ -6816,6 +6817,12 @@
           e.preventDefault();
           if (e.shiftKey) Player.emit("blankPhonesToggle", {});
           else Player.control("blank");
+          break;
+        /* Comma for a white screen, as in PowerPoint. W would be Google's, but
+           W is "who answered what" here (UX-53). */
+        case ",":
+          e.preventDefault();
+          Player.control("white");
           break;
         case "f":
         case "F":
@@ -9447,6 +9454,7 @@
     } = helpers;
     var dragFrom = null;
     var placing = null;
+    var placingId = null;
     var placeAt = null;
     var caretAt = null;
     function reorder(indices, at) {
@@ -9593,6 +9601,7 @@
       if (!deck.slides[i] || placing != null) return;
       setSel(i);
       placing = i;
+      placingId = deck.slides[i].id;
       placeAt = i;
       draw();
       var slot = showCaret(placeAt);
@@ -9609,12 +9618,35 @@
       }
       drawPlacingBar();
     }
+    function resolvePlacing() {
+      if (placing == null) return;
+      var slides = helpers.deck().slides;
+      var at = -1;
+      for (var k = 0; k < slides.length; k++) if (slides[k].id === placingId) {
+        at = k;
+        break;
+      }
+      if (at < 0) {
+        placing = null;
+        placingId = null;
+        placeAt = null;
+        caretAt = null;
+        return;
+      }
+      placing = at;
+      placeAt = Math.max(0, Math.min(slides.length, placeAt == null ? at : placeAt));
+    }
     function commitPlacing(at) {
       var sel = helpers.sel();
-      if (placing == null) return;
+      resolvePlacing();
+      if (placing == null) {
+        draw();
+        return;
+      }
       var from = placing;
       var to = at == null ? placeAt : at;
       placing = null;
+      placingId = null;
       placeAt = null;
       caretAt = null;
       if (moveSlide(from, to)) touched();
@@ -9625,6 +9657,7 @@
       var sel = helpers.sel();
       if (placing == null) return;
       placing = null;
+      placingId = null;
       placeAt = null;
       caretAt = null;
       draw();
@@ -9759,10 +9792,7 @@
       var UI = helpers.UI();
       var rail = $("railList");
       if (!rail) return;
-      if (placing != null && !deck.slides[placing]) {
-        placing = null;
-        placeAt = null;
-      }
+      resolvePlacing();
       rail.innerHTML = "";
       rail.classList.toggle("placing", placing != null);
       caretAt = null;
@@ -10269,6 +10299,7 @@
     }
     function resetPlacing() {
       placing = null;
+      placingId = null;
       placeAt = null;
     }
     return {
@@ -17223,6 +17254,10 @@
       return /^(https?|file|blob):/i.test(u) ? u : "";
     }
     return u;
+  }
+  function cssUrl(url) {
+    var u = safeMedia(url);
+    return u ? 'url("' + u.replace(/[\\"]/g, "\\$&") + '")' : "";
   }
   var SLIDE_TYPES = {
     journey: {
@@ -24377,6 +24412,7 @@
     parseTable,
     readiness,
     safeMedia,
+    cssUrl,
     parseKeywordLine,
     formatKeywordLine,
     /* An activity slide's rows as stages: name, seconds, prompt, phone job. */

@@ -605,7 +605,7 @@ export function installLatticeRenderer(SF, helpers) {
       frame.setAttribute('data-block-key', SF.artBlockKey(pic.id));
       frame.dataset.artPic = String(pic.id);
       var img = el('img', 'art-block-img');
-      img.src = pic.src;
+      img.src = SF.safeMedia(pic.src);
       img.alt = String(pic.alt || '');
       img.draggable = false;
       /* Fill or fit, because a cell range and an aspect ratio rarely agree and

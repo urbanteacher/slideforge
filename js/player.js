@@ -216,7 +216,8 @@
       setTimeout(function () { if (presenter.win() && !presenter.win().closed) { try { presenter.win().postMessage({ type: 'sf-presenter-cmd', cmd: 'who' }, '*'); } catch (e) {} } }, 400);
     },
     ink: function () { if (SF.Teaching) SF.Teaching.toggleBar(); },
-    blank: function () { Player.toggleBlank(); }, full: function () { Player.toggleFullscreen(); },
+    blank: function () { Player.toggleBlank(); }, white: function () { Player.toggleBlank('white'); },
+    full: function () { Player.toggleFullscreen(); },
     help: function () { if (cheats) cheats.classList.toggle('on'); }, exit: function () { Player.close(); },
     presenter: function () { Player.openPresenter(); }, teacher: function () { if (SF.Live) SF.Live.openManual(); }
   };
@@ -2847,9 +2848,20 @@
     syncPresenter();
   };
 
-  Player.toggleBlank = function () {
+  /* colour 'white' is the white screen (comma, as in PowerPoint: UX-53).
+     A white screen is a blank like the black one — the same media pause, the
+     same way back — only lit, for writing on a whiteboard under the
+     projector. Pressing the other key while blank switches colour rather
+     than coming back. */
+  Player.toggleBlank = function (colour) {
+    var white = colour === 'white';
+    var switching = Player.blank && white !== !!Player.blankWhite;
+    Player.blankWhite = white;
+    if (root) root.classList.toggle('blank-white', white);
+    if (switching) { syncHudRoomButtons(); return; }
     Player.blank = !Player.blank;
     if (root) root.classList.toggle('blank', Player.blank);
+    if (!Player.blank && root) { root.classList.remove('blank-white'); Player.blankWhite = false; }
     syncHudRoomButtons();
     /* B is how a teacher takes the room's attention off the screen, and a
        soundtrack playing to a black projector defeats that.
@@ -2909,6 +2921,7 @@
     rememberRun = !opts.demo && !opts.share;
     Player.forgetRun();
     Player.blank = false;
+    Player.blankWhite = false;
     Player.frozen = false;
     Player._frozenSlideIdx = null;
     var oldFreezePill = document.getElementById('playerFreezePill');
@@ -2933,7 +2946,7 @@
     }
     if (root) {
       root.classList.add('on');
-      root.classList.remove('blank');
+      root.classList.remove('blank', 'blank-white');
     }
     if (viewport) SF.letterbox(viewport);
     renderCurrent(1);

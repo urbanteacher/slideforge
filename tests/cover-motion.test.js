@@ -227,6 +227,10 @@ test('speed and spacing are the two controls, and they compose', () => {
   assert.equal(SF.wordSpeed({}), 'medium');
   assert.equal(SF.wordSpeed({ design: { wordSpeed: 'GENTLE' } }), 'medium');
   assert.equal(SF.wordSpeed({ design: { wordSpeed: 'gentle' } }), 'gentle');
+  /* A name every object has is not a speed (CA-53: it wrote undefinedms). */
+  for (const inherited of ['constructor', 'toString', '__proto__', 'hasOwnProperty']) {
+    assert.equal(SF.wordSpeed({ design: { wordSpeed: inherited } }), 'medium', inherited);
+  }
   assert.equal(SF.wordStagger({}), 'wave');
   assert.equal(SF.wordStagger({ design: { wordStagger: 'sideways' } }), 'wave');
   assert.equal(SF.wordStagger({ design: { wordStagger: 'together' } }), 'together');

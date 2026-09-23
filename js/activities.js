@@ -719,6 +719,22 @@
       if (picked.pages && content.length) {
         insp.appendChild(el('h4', null, 'Slide ' + ((slide.activityPage || 0) + 1)));
       }
+      /* A lesson saved before its routine ran as stages keeps the look it
+         was saved with. It is offered the stages, not switched to them: the
+         teacher may have taught it that way on purpose. The stages come
+         from this slide's own rows. */
+      if (slide.type === 'keywords' && picked.presentation === 'stages' &&
+          slide.activityPresentation !== 'stages') {
+        var offer = el('div', 'stage-offer');
+        offer.appendChild(el('p', 'hint', picked.title + ' now runs as timed stages: a track on the wall, ' +
+          'a clock per stage, and a job for every phone. This slide was made before that.'));
+        offer.appendChild(SF.Shell.UI.button('Run it as timed stages', 'primary', function () {
+          slide.activityPresentation = 'stages';
+          commitLive();
+          draw();
+        }));
+        insp.appendChild(offer);
+      }
       if (slide.type === 'keywords') {
         var views = [
           { value: 'rows', label: 'Labelled rows' },

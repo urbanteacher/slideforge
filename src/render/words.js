@@ -158,7 +158,9 @@ export function createWordRenderer(helpers) {
   /** The speed record a slide asks for. Medium unless it says otherwise. */
   function wordSpeed(slide) {
     var want = String((slide.design || {}).wordSpeed || '').trim();
-    return WORD_SPEEDS[want] ? want : 'medium';
+    /* Own keys only: "constructor" is on every object, and wrote
+       `undefinedms` into the slide's CSS (CA-53). */
+    return Object.prototype.hasOwnProperty.call(WORD_SPEEDS, want) ? want : 'medium';
   }
 
   /** How far apart the words are: together, an eased wave, or one at a time. */
@@ -303,7 +305,7 @@ export function createWordRenderer(helpers) {
       var step = w && typeof w === 'object' ? w : {};
       /* An arc the stylesheet does not have is a word that never animates, so
          anything unrecognised settles. */
-      var arc = WORD_ARCS[step.arc] ? step.arc : 'settle';
+      var arc = Object.prototype.hasOwnProperty.call(WORD_ARCS, step.arc) ? step.arc : 'settle';
       return {
         arc: arc,
         keys: WORD_ARCS[arc],

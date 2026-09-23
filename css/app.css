@@ -2336,6 +2336,8 @@ html[data-ws="game"] #btnSorter { display: none; }
 }
 #player.on { display: grid; }
 #player.blank .deck-viewport { visibility: hidden; }
+/* The white screen: the same blank, lit (comma). */
+#player.blank.blank-white { background: #fff; }
 
 .deck-viewport { position: relative; overflow: hidden; background: #000; }
 .deck-viewport .slide { transform-origin: 0 0; }

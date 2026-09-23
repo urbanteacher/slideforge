@@ -111,7 +111,7 @@ export function installArtRenderer(SF, helpers) {
       var layer = layers[side] || (layers[side] = el('div', 'slide-art slide-art-' + side));
       layer.setAttribute('data-art-order', side);
       var img = el('img', 'slide-art-img');
-      img.src = pic.src;
+      img.src = SF.safeMedia(pic.src);
       img.alt = String(pic.alt || '');
       img.setAttribute('data-art-pic', String(pic.id == null ? i : pic.id));
       img.setAttribute('data-art-order', side);
