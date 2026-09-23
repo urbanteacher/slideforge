@@ -15,7 +15,7 @@ experiences.
 
 ## 1. The premium bar
 
-From the two flagships. A game is premium when it passes all eight.
+From the two flagships. A game is premium when it passes all nine. (P9 was added after the first draft; see section 7.)
 
 | # | Test | What it means | Where it was proven |
 |---|---|---|---|
@@ -26,6 +26,7 @@ From the two flagships. A game is premium when it passes all eight.
 | **P5** | **The phone does the verb** | Tap, drag, place or type: the same shape as the wall. | Spot's tap-the-word; TPS stage jobs. |
 | **P6** | **The teacher drives from the desk** | Every control the game needs exists in the presenter view, not only on the projected wall. | TPS +30s on the desk; stage moves on Next. |
 | **P7** | **Fair, legible scoring** | Points reach the person who earned them, for the thing they did. Counts and accuracy are never confused with points. | Spot: points on a find, no speed bonus; the pane labels its column. |
+| **P9** | **Plays in every room** | The game states how it runs with individual phones, with teams, with learners who have no device, and for one learner alone. Teacher entry can record every kind of answer it asks for. | See section 7. Spot fails this today: teacher entry cannot record a tap. |
 | **P8** | **Authored and rehearsed safely** | The editor shows what the phones will get and `problems()` catches mistakes. The rehearsal class behaves like a real one, lures included. It is tested through the relay harness. | Spot's editor preview, lure-seeking demo class and relay test. |
 
 ## 2. The scorecard
@@ -273,14 +274,16 @@ answered. Show the letters dripping on the phone too (P5), and make
 
 | Wave | What | Why first | Size |
 |---|---|---|---|
-| **0** | Word Reveal per-answer scoring; Bowl per-cell target; delete the `js/studio.js` preset copy | Wrong results today; small fixes | S |
-| **1** | **N1 verdict recipient**, and a spoken-format phone job card | Fixes four broken games at once | M |
+| **0** | Word Reveal per-answer scoring; Bowl per-cell target; delete the `js/studio.js` preset copy. **Teacher entry records `order` and `tap`, and shows the relay's refusal instead of dropping it (E1, E2).** | Wrong or lost results today; small fixes | S |
+| **1** | **N1 verdict recipient**, built into teacher entry and fed by its name picker (E4), and a spoken-format phone job card. **The `plays` declaration and its contract test (E7).** | Fixes four broken games at once, and makes P9 checkable | M |
 | **2** | **N2 draw** and **N4 round clock** | Unblock Spin, Random, Question Cube and Heads Up | M |
 | **3** | Fill the gaps; Odd One Out vote-then-defend; Predict commit-then-watch; T/F hold-or-fold | The thin-to-premium conversions that are mostly kit | M each |
 | **4** | **N3 proposal queue**; Concept Chain map and Connection Maker | The discussion games' phone jobs | M |
 | **5** | **N5 line reveal**; Time Traveler | | M |
 | **6** | Desk parity sweep (K11) across Race, Boss, Definition, boards; Emoji hint; Ranking heat | P6 across the catalogue | S each |
 | **7** | **N6 sort input**; Compare & Contrast; self-paced Beat the Clock | The two large new mechanics | L |
+| **with 3** | **Tally entry (E3)**, team rows (E5), saved class lists (E6) | Rooms with no devices, done at the speed of a show of hands | M |
+| **after 7** | **Solo practice (E8)** | One learner, alone, at their own pace | M |
 
 At the end of wave 3, the count would be roughly six premium and none
 broken. At the end of wave 7, all 26 enabled formats would pass the bar.
@@ -340,3 +343,69 @@ request. These are now part of the bar.
 ### Memory Maze
 
 It stays disabled. No spatial board engine is planned.
+
+## 7. Who is playing: one learner, teams, and learners with no device
+
+A game has to work in the room it lands in. That might be thirty phones,
+four teams sharing four phones, a class where half the phones are flat, or
+one learner revising at home. The part that makes most of this work is
+**teacher entry**: `manual.html` and `js/manual.js`, opened as *Live
+answers* on the desk or in its own window. This section says what it does
+today, where it stops, and how each game should declare the rooms it
+supports.
+
+### What exists (read in code)
+
+| Room | How it works now | Where |
+|---|---|---|
+| **Individual, on phones** | The default. Each phone answers; the relay marks, scores and ranks, and each phone is told its own place. | `server.js`, `join.html` |
+| **Teams** | The host chooses teams in the lobby (two or more); each phone picks its team on joining. **A team's score is the sum of its per-question averages**, so team size doesn't matter and one phone per team is as fair as six. The race moves a lane on its members' majority (`teamAnswers`). | `server.js` reveal (averages), `live.js` race |
+| **No device** | Teacher entry adds names (one per line, optionally on a team) as rows the relay marks like phones (`manualAdd`, `manual: true`). A question's roll call goes down the register by keyboard: **A–F or 1–6 records and moves on, Space skips, Backspace clears**. Text and number answers are typed per row. Rows can be renamed, moved between teams or removed. A timed question stops counting down while entered rows are in the room, so a teacher is never racing the clock. | `manual.js`, `server.js` `manualAdd` / `manualAnswer`, `questionTimeLimit` |
+| **Mixed** | Phone rows and entered rows sit in one list. Phone rows are tagged "on a phone" and skipped by the roll call. | `manual.js` |
+| **Desk tools** | A name picker that doesn't repeat until reset and leaves out disconnected devices; a private timer; lesson notes. | `manual.html` toolkit |
+| **One learner, alone** | Present without a room: a quiz slide is answered by clicking on the wall, and a small "3 / 5" score keeps count. A share link's browse view renders the same slides. *Not checked here: whether every input kind (order, typed, tap) is answerable solo.* | `player.js` `wireQuiz`, `updateSolo` |
+
+### Where it stops
+
+| # | Gap | Evidence | Effect |
+|---|---|---|---|
+| **G1** | **Teacher entry cannot record a Ranking order or a Spot the Error tap.** A non-choice question gets a text box. For `order` and `tap` the relay expects an index or an order, and **silently ignores** the typed text. | `manual.js` render: anything not choice gets a text or number input; `server.js` `manualAnswer` accepts only text, number or an integer choice | A learner without a phone cannot play two formats, including the flagship, and the teacher isn't told |
+| **G2** | **Invalid entries fail silently.** Every refusal path in `manualAnswer` after the first few ends in a bare `return`. | `server.js` `manualAnswer` | The teacher believes an answer was recorded |
+| **G3** | **Thirty paper answers means thirty rows per question.** The roll call is fast per row, but there is no way to record a show of hands or mini-whiteboards as a count. | `manual.js` roll call | No-device rooms are slow, so teachers skip the check |
+| **G4** | **Spoken verdicts pay everyone in every mode**, entered rows included. | `live.js` `hostVerdictGains` | See section 2 |
+| **G5** | **A team sharing one answer** needs the teacher to add "one representative" by hand; nothing makes that a team row. | `manual.html` team note | Team games without phones are fiddly to set up |
+| **G6** | **Entered names are retyped every lesson.** The names draft is kept for the tab session only. | `manual.js` `saveDraft` (sessionStorage) | Friction on the most common no-device setup |
+| **G7** | **No game says which rooms it supports.** A teacher finds out mid-lesson that Ranking can't be entered, or that a board leaves the phones idle. | style contract has `input`, nothing about rooms | Surprises during the lesson |
+
+### What each game supports today
+
+Derived from each engine's input and mechanic. ✓ works · ◐ works with
+friction · ✗ does not · — not meaningful.
+
+| Engines | Phones | Teams | No device (teacher entry) | One learner alone |
+|---|---|---|---|---|
+| Choice quizzes: `choice` (Predict, Question Cube), `truefalse` (T/F Showdown), `speed`, `boss`, `race` | ✓ | ✓ | ✓ roll call by key | ✓ |
+| Typed or number: `type` (Fill in the Blanks, Time Traveler), `definition`, `emoji`, `wordreveal`, `slider` | ✓ | ✓ | ◐ one typed answer per row | ◐ not checked |
+| `order` (Ranking) | ✓ | ✓ | ✗ G1 | ◐ not checked |
+| `spot` (Spot the Error) | ✓ | ✓ | ✗ G1 | ✓ tap the wall |
+| Boards: `memoryflip`, `memorymatch`, `knowledgeflip`, `bingo`, `bowl`, `lowstakes` | phones idle by design | ✓ (Match rotates teams; Bingo cards per team) | ✓ the teacher runs the board | — (Low-Stakes on paper: ✓) |
+| Spoken: `headsup`, `spinexplain`, `connection`, `conceptchain`, `randomchallenge` | phones idle, or get verdict pads | ✗ G4 | ✓ nothing to enter but the verdict | — |
+| Discussion: `oddone`, `compare` | phones idle | ✓ | ✓ | — |
+
+### The redesign: teacher entry as the engine for every room
+
+| # | Change | Reuses | Size |
+|---|---|---|---|
+| **E1** | **Record every input kind.** For `order`, the row takes the order as keys (B D A C, shown as the items as they're pressed), with Backspace to undo one. For `tap`, the row shows the passage's words as small buttons: click the word the learner points at. The same keyboard roll call carries on to the next row after each. | the choice roll call; Spot's word list (`s.options`) | S |
+| **E2** | **Say when an entry is refused.** Every `manualAnswer` refusal sends `manualError`, and the row shows it. | the existing `manualError` message | S |
+| **E3** | **Tally entry.** For a room answering on paper or a show of hands: the teacher records counts per option ("A 12 · B 7 · C 3") instead of names. The counts feed the wall's tally, heat map and verdict line exactly as phone answers do, and nobody is scored. Offered automatically when there are more than about eight entered rows. | K3 held results, K4 heat reveal, the relay's `tally` | M |
+| **E4** | **The verdict recipient lives here** (N1). In a spoken format the desk shows the roster and the name picker. *Pick* makes the picked name the recipient; Correct or Accept then credits them, or their team (section 6). | the name picker; the roster rows | part of N1 |
+| **E5** | **Team rows.** In a teams room, one click adds "Team Red · shared answer" rows for every team without devices. They are marked on the roll call like any row, and averaged like any member. | `manualAdd` with `team` | S |
+| **E6** | **Saved class lists.** Entered names are kept per class on this computer (localStorage, never sent anywhere), offered at the next lesson, and pasted in from a register in one go. | `saveDraft` → localStorage | S |
+| **E7** | **Each style declares its rooms.** A `plays` field on the style contract, `{ phones, teams, entry, solo }`, each `'yes'`, `'partial'` or `'no'` with a one-line reason. The library shows it as badges ("Works without phones"). The style-contract test fails when a style that takes an input has no entry path. | K1 style contract, `tests/game-style-contract.test.js` | S |
+| **E8** | **Solo practice.** A share link in *Practice* mode runs a game for one learner at their own pace: answer, see the reveal and the reason, move on, with the score at the end. It is offered for styles that declare `solo: 'yes'`; spoken and board formats say plainly that they need a room. | share link browse mode, `wireQuiz`, `updateSolo`, K5 | M |
+
+**The rule this adds to the bar (P9):** a game is not premium until it
+declares its rooms (E7) and teacher entry can record every answer it asks
+for (E1). Spot the Error drops to *premium except P9* until E1 lands.
+
