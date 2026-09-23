@@ -125,6 +125,7 @@
   .da-spot { margin: 0; font-size: 12px; color: var(--ui-dim); }
   .da-spot[hidden] { display: none; }
   .da-spot b { color: var(--ui-text); font-weight: 650; }
+  .da-spot .da-down { padding: 2px 7px; font-size: 11px; margin: 2px 0; }
   .da-actions { display: flex; gap: 6px; flex-wrap: wrap; }
   .da-actions:empty { display: none; }
   .da-ideas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow: auto; }
@@ -666,12 +667,19 @@ SF.installExplore(SF);
       ? a.written.n + ' of ' + a.written.of + ' have written something'
       : a.prompt && a.players ? a.answered + ' of ' + a.players + ' answered' : '';
     var spot = $('deskAskSpot');
-    spot.hidden = !a.spotlight;
+    var spots = a.spotlights || [];
+    spot.hidden = !spots.length;
     spot.textContent = '';
-    if (a.spotlight) {
-      spot.appendChild(document.createTextNode('Spotlight on the wall: '));
-      spot.appendChild(document.createElement('b')).textContent = '\u201c' + a.spotlight + '\u201d';
-    }
+    spots.forEach(function (x, i) {
+      if (i) spot.appendChild(document.createElement('br'));
+      spot.appendChild(document.createTextNode((x.label === 'Spotlight' ? 'On the wall' : x.label) + ': '));
+      spot.appendChild(document.createElement('b')).textContent = '\u201c' + x.text + '\u201d ';
+      var down = document.createElement('button');
+      down.className = 'btn da-down';
+      down.textContent = 'Take down';
+      down.onclick = function () { cmd('ask', { action: 'unspot', sid: x.sid }); };
+      spot.appendChild(down);
+    });
     var actions = $('deskAskActions');
     actions.textContent = '';
     function button(label, action, extra, title) {
@@ -684,7 +692,6 @@ SF.installExplore(SF);
     }
     if (a.held) actions.appendChild(button('Show results', 'show', null, 'Put the split on the wall. Until now the room has seen only how many answered.'));
     else if (a.holds) actions.appendChild(document.createElement('span')).textContent = 'Results on the wall';
-    if (a.spotlight) actions.appendChild(button('Take down', 'unspot', null, 'Take the spotlighted idea off the wall'));
     if (a.prompt) actions.appendChild(button(a.custom ? 'Close the idea box' : 'Close', 'close', null, 'Stop collecting on this slide'));
     var list = $('deskAskIdeas');
     list.textContent = '';
@@ -699,7 +706,7 @@ SF.installExplore(SF);
       if (it.name) t.lastChild.textContent = it.name + ' \u00b7 only you see this';
       li.appendChild(t);
       if (!it.hidden) li.appendChild(it.spot
-        ? button('In the spotlight', 'unspot', null, 'Take it down')
+        ? button('In the spotlight', 'unspot', { key: it.key }, 'Take it down')
         : button('Spotlight', 'spot', { key: it.key }, 'Put this idea on the wall, without a name'));
       li.appendChild(button(it.hidden ? 'Show' : 'Hide', it.hidden ? 'unhide' : 'hide', { key: it.key },
         it.hidden ? 'Put it back on the wall' : 'Take it off the wall. It stays in the report.'));

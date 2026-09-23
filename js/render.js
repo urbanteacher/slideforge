@@ -722,7 +722,7 @@
         /* Same canvas-edit path as title and bullet lists — double-click the
            panel to rewrite the label and the line under it. */
         row.dataset.contentKey = 'bullets.' + i;
-        row.appendChild(rich('strong', 'kw-term', slide, 'bullets.' + i, p.term || ' '));
+        row.appendChild(rich('strong', 'kw-term', slide, 'bullets.' + i, (slide.activity ? SF.stripDeclaredJob(p.term) : p.term) || ' '));
         row.appendChild(rich('span', 'kw-def', slide, 'bullets.' + i, p.def || ' '));
         list.appendChild(row);
       });

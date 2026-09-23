@@ -28,12 +28,17 @@ const PRESETS = {
     ['Today’s link', 'Today we’ll build on this by finding missing side lengths.']
   ], { reason: 'Four stages overflow the three-card row; labelled rows preserve the sequence.', answer: 'Practice answer: 20 cm. Bring the actual homework answer key and replace the example errors with those observed.' }),
   'establish-talk-ground-rules': preset([
-    ['What makes group discussions go well?', 'Think of a time you felt heard. What did the group do?'],
-    ['What makes them go badly?', 'Describe a behaviour that stops people contributing.'],
-    ['Pair discussion', 'Turn each problem into a positive rule. Choose your two most useful.'],
-    ['Our ground rules', 'Draft to negotiate: listen fully; invite voices; give reasons; question ideas; build on answers.'],
-    ['Display and revisit', 'Agree 5–7 rules together. Which rule will we practise first?']
-  ]),
+    ['Think · 2 min', 'What makes a group discussion go well, and what makes it go badly? Note one of each.'],
+    ['Pair · 3 min', 'Turn each problem into a positive rule. Choose your two most useful.'],
+    ['Share · 3 min', 'Send your pair’s most useful rule, written as something we do.'],
+    ['Agree · 2 min', 'Agree 5–7 rules together. Which rule will we practise first?']
+  ], { reason: 'The source drafts the rules in pairs and agrees them as a class. As stages, the drafts arrive from the phones as anonymous cards and the teacher spotlights the ones to keep.', timer: 10, answer: 'Rules to negotiate towards: listen fully; invite quiet voices; give reasons; question ideas, not people; build on answers. Display the agreed list and revisit it.' }),
+  /* Stays a split slide: the picture is the hook, and a staged slide has no
+     place for one. What the room wonders arrives as ideas beside it, and the
+     teacher spotlights the question that opens the lesson. */
+  'hook-and-predict': { target: 'feedback', feedbackKind: 'brainstorm',
+    feedback: { prompt: 'What do you wonder? One question about what you can see.', max: 1 },
+    reason: 'The notice-and-wonder questions were asked aloud and answered on paper. The wondering now comes from every phone, anonymously, and the teacher spotlights the question the lesson will answer.' },
   'think-pair-share': preset([
     ['Think · 1 min', 'Can two shapes have the same perimeter but different areas? Sketch an idea.'],
     ['Pair · 2 min', 'Compare sketches. Find an example you both think works.'],
@@ -175,11 +180,11 @@ const PRESETS = {
   ], { reason: 'A question and distinct sentence stems need labels; the source includes more than three contributions.', answer: 'Example: 2 × 6 and 3 × 4 both have area 12; perimeters are 16 and 14. Invite 8–10 speakers; allow each 30 seconds.' }),
   'real-world-connection-hunt': preset([
     ['Concept', 'Perimeter: the distance around a shape.'],
-    ['In this room · 3 min', 'Find an object where its boundary length matters.'],
-    ['At home · 3 min', 'Think of something that needs edging, trim or a border.'],
-    ['In our community · 3 min', 'Find a use for fencing or boundary measurement.'],
+    ['In this room · 3 min [send]', 'Find an object here where its boundary length matters. Send it, and why.'],
+    ['At home · 3 min [send]', 'Think of something at home that needs edging, trim or a border.'],
+    ['In our community · 3 min [send]', 'Find a use for fencing or boundary measurement near here.'],
     ['Reflect', 'Why does this concept matter in real life?']
-  ], { feedback: { prompt: 'Name the place, your example and why perimeter matters there.', max: 3 } }),
+  ], { target: 'moment', reason: 'Three timed hunts under one clock, with one box for every find, lost where each find was made. As stages, each place has its own clock and its own idea box, and the teacher spotlights the best find from each.' }),
   'benefits-vs-limitations-battle': preset([
     ['Topic', 'Should every school replace part of its playground with a garden?'],
     ['Benefits team', 'Give a benefit and explain who would gain from it.'],
@@ -188,12 +193,11 @@ const PRESETS = {
     ['Balanced view', 'What conditions would make the proposal work well?']
   ], { reason: 'Split is a text/image layout, not two equal text teams; labelled rows make both roles and scoring visible.' }),
   'scenario-analysis-discussion': preset([
-    ['Scenario 1', 'A concert sells out quickly. More people want tickets than there are seats.'],
-    ['Scenario 2', 'A large harvest puts many more apples on sale while demand stays steady.'],
-    ['Scenario 3', 'A new phone attracts many buyers, but the first delivery is small.'],
-    ['Identify and explain', 'Which scenarios show supply and demand? Pick one and explain how.'],
-    ['Predict and compare', 'What might happen next? Which effect could be strongest? State your assumptions.']
-  ], { fieldsTitle: 'Supply and demand: three scenarios', reason: 'The source explicitly asks for three scenarios and four guiding questions; a split image slot cannot hold them.', answer: 'All three illustrate supply and demand. Other things equal, scarce concert tickets or phones create upward price pressure; an apple surplus creates downward pressure. No strongest case can be established without quantities and market rules.' }),
+    ['Three scenarios', '① A concert sells out quickly: more people want tickets than there are seats. ② A large harvest puts many more apples on sale while demand stays steady. ③ A new phone attracts many buyers, but the first delivery is small.'],
+    ['Identify and explain · 6 min [talk]', 'Which scenarios show supply and demand? Pick one and explain how.'],
+    ['Predict and compare · 6 min', 'What might happen next? Which effect could be strongest? State your assumptions.'],
+    ['Report back · 4 min', 'Send your group’s strongest prediction, and the assumption it rests on.']
+  ], { fieldsTitle: 'Supply and demand: three scenarios', timer: 18, reason: 'The source asks for three scenarios and guiding questions; a split image slot cannot hold them. As stages the three scenarios stay pinned while the groups work through the questions, and the predictions come back as cards.', answer: 'All three illustrate supply and demand. Other things equal, scarce concert tickets or phones create upward price pressure; an apple surplus creates downward pressure. No strongest case can be established without quantities and market rules.' }),
   'whiteboards-on-walls': preset([
     ['Problem', 'Find three rectangles with perimeter 24 units. Which has the greatest area?'],
     ['Discuss and draw · 5 min', 'Show dimensions, calculations and your reasoning on the board.'],
@@ -213,16 +217,18 @@ const PRESETS = {
     ['Need help', 'Bring your first uncertain step to the teacher. Start with a labelled sketch.']
   ], { feedback: { prompt: 'Which corner best describes your understanding?', options: ['Got it', 'Mostly understand', 'Getting there', 'Need help'], hold: true }, answer: 'Choose a corner or indicate a choice from your seat. Use 2 min to choose, 6 min for the task and 4 min for teacher support.' }),
   'learning-log-entry': preset([
-    ['New learning', 'What’s one new thing?'], ['Connections', 'How does this connect?'],
-    ['Challenges', 'What was difficult?'], ['Strategies', 'What helped me learn?'], ['Next steps', 'What do I want to work on?']
-  ], { reason: 'Five named reflection prompts need visible labels; a generic content list loses those response categories.' }),
+    ['New learning [note]', 'What’s one new thing?'], ['Connections [note]', 'How does this connect?'],
+    ['Challenges [note]', 'What was difficult?'], ['Strategies [note]', 'What helped me learn?'], ['Next steps [note]', 'What do I want to work on?']
+  ], { reason: 'Five named reflection prompts need visible labels. As stages, each is a private note on the phone, one prompt at a time; the teacher sees only how many have written something.' }),
   'muddiest-point': preset([
     ['Write · 3 min', 'The muddiest point for me is…'], ['Be specific', 'Name the step or idea. Explain where your understanding breaks down.'],
     ['Listen and revisit', 'After the class explanations, write what is clearer and what still needs work.']
   ], { feedback: { prompt: 'The muddiest point for me is…', max: 1 } }),
   'plus-minus-interesting': preset([
-    ['Plus', 'What worked well?'], ['Minus', 'What was challenging?'], ['Interesting', 'What surprised me?']
-  ], { layout: 'cards' }),
+    ['Plus · 2 min [send]', 'What worked well?'], ['Minus · 2 min [send]', 'What was challenging?'],
+    ['Interesting · 2 min [send]', 'What surprised me?'],
+    ['Look back · 3 min', 'One from each column: what do they tell us about next time?']
+  ], { reason: 'Three columns the room never filled. As stages, each column is an idea box; the teacher spotlights one from each, and the three stand side by side for the look back.', timer: 9 }),
   'exit-ticket': preset([
     ['What?', 'What did you learn today? Include one example.'], ['So what?', 'Why does this learning matter?'], ['Now what?', 'What will you practise or ask about next?']
   ], { feedbackKind: 'brainstorm', reason: 'Choose the source’s What–So What–Now What format. Written reflections need free text; a poll cannot collect them.', feedback: { prompt: 'What did you learn? Why does it matter? What is your next step?', max: 1 } }),
@@ -231,7 +237,7 @@ const PRESETS = {
     ['Next lesson we will', 'Investigate how changing a shape affects its area.'],
     ['Preparation task', 'Sketch a rectangular object at home. Estimate its length and width.'],
     ['Closing question', 'If every side length doubles, does the area double too?']
-  ], { reason: 'Section only renders a title and subtitle. Four explicit source boxes require labelled rows.', answer: 'For similar shapes, doubling lengths multiplies area by four. Invite predictions; use them to open the next lesson.' }),
+  ], { reason: 'Section only renders a title and subtitle. Four explicit source boxes require labelled rows. The closing question collects a prediction from every phone, so next lesson opens on the room\'s own answers.', target: 'feedback', feedbackKind: 'brainstorm', feedback: { prompt: 'If every side length doubles, does the area double too? Your prediction, and why.', max: 1 }, answer: 'For similar shapes, doubling lengths multiplies area by four. The predictions are in the session report; open the next lesson with them.' }),
   'exit-ticket-2': preset([
     ['3 ideas', 'Write three things you learned from the activity.'], ['2 connections', 'Explain two links to something you already knew.'], ['1 question', 'Ask one question you still want answered.']
   ], { feedbackKind: 'brainstorm', reason: 'Choose the source’s 3–2–1 format; one written submission preserves all three responses, unlike a fixed poll.', feedback: { prompt: 'Share 3 things learned, 2 connections and 1 remaining question.', max: 1 } }),
@@ -244,8 +250,8 @@ const PRESETS = {
   'visual-summary': preset([
     ['Choose a format', 'Mind Map · Comic Strip · Sketch Note · One-Pager'],
     ['Create · 6 min', 'Show the key ideas using words, images and connections. Include an example.'],
-    ['Share · 2 min', 'Ask a partner to explain your visual. What could you make clearer?']
-  ], { layout: 'cards' }),
+    ['Share with a partner · 2 min', 'Ask a partner to explain your visual. What could you make clearer?']
+  ], { reason: 'Making, then sharing, under one clock. As stages, the formats stay pinned, making is a work stage with its own clock, and sharing is partner talk.' }),
   'reflection-ladder': preset([
     ['Choose your level', '1: Need help → 3: Can practise with support → 5: Can teach others.'],
     ['Explain', 'I’m here because…'], ['Plan', 'To move up I need to…'], ['Share', 'Tell a partner one specific action you will take next.']
@@ -264,7 +270,12 @@ const PRESENTATIONS = {
   stages: ['think-pair-share', 'think-pair-square-share', 'jigsaw-expert-groups',
     'jigsaw-collaboration', 'peer-teaching-carousel', 'socratic-seminar',
     'teach-someone', 'whiteboards-on-walls', 'i-do-we-do-you-do',
-    'design-and-create-task'],
+    'design-and-create-task',
+    /* And where a stage-only feature is the point: a private note per
+       prompt, or an idea box per column or place. */
+    'establish-talk-ground-rules', 'real-world-connection-hunt',
+    'scenario-analysis-discussion', 'learning-log-entry',
+    'plus-minus-interesting', 'visual-summary'],
   steps: ['do-now-bell-ringer', 'strategic-wait-time-questioning',
     'daily-review-routine', 'dialogue-chain-discussion'],
   panels: ['differentiated-practice-menu',

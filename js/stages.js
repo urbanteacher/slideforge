@@ -24,6 +24,7 @@
   var total = 0;          // seconds this stage was given, extensions included
   var endsAt = 0;
   var shareId = null;     // the idea box this runtime opened, if any
+  var shareStage = -1;    // the stage it was opened for
 
   function isStaged(slide) {
     return !!(slide && slide.activity && slide.type === 'keywords' &&
@@ -84,12 +85,19 @@
     var L = SF.Live;
     if (shareId && L && L.prompt && L.prompt.id === shareId && L.endCustomPrompt) L.endCustomPrompt();
     shareId = null;
+    shareStage = -1;
   }
 
   function syncShare(st) {
     var L = SF.Live;
     if (!st || st.job !== 'send' || !L || !L.active || !L.startCustomPrompt) { closeShare(); return; }
-    if (shareId && L.prompt && L.prompt.id === shareId) return;
+    /* One box per stage. A hunt's three places, or Plus then Minus, are
+       three boxes: the ideas arrive sorted by the stage they were sent in,
+       and each stage's spotlight is its own. */
+    if (shareId && L.prompt && L.prompt.id === shareId) {
+      if (shareStage === st.i) return;
+      closeShare();
+    }
     /* Something else is already asking the room — a quick poll the teacher
        opened by hand. Theirs wins; the stage says where the ideas would be. */
     if (L.prompt && !shareId) return;
@@ -98,9 +106,11 @@
       prompt: st.text || 'Send your strongest idea',
       presentAs: 'rail',
       max: 1,
-      origin: 'stage'
+      origin: 'stage',
+      stage: st.name
     });
     shareId = L.prompt ? L.prompt.id : null;
+    shareStage = shareId ? st.i : -1;
   }
 
   /* ------------------------------------------------------ the stages */

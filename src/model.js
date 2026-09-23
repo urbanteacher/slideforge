@@ -34,7 +34,7 @@ import { THEMES, themeGround, DEFAULT_THEME, resolveTheme } from './themes.js';
 import { normalizeExploration, explorationValue, explorationCurve } from './deck/exploration.js';
 import { createBoardRuntime } from "./boards/runtime.js";
 import { PHASES, ACTIVITIES, activity, activitiesInPhase, phaseCounts, totalMinutes } from "./activities/catalogue.js";
-import { STAGE_JOBS, stageJob, stageCopy, parseStageLabel, activityStages, activityBrief } from "./activities/stages.js";
+import { STAGE_JOBS, stageJob, stripDeclaredJob, stageCopy, parseStageLabel, activityStages, activityBrief } from "./activities/stages.js";
 import { parsePerson, orgTree, chartUsesSeriesLegend, chartFlows, chartPoints, chartGroups, fiveNumber, chartValues, histogramBins, SLIDE_TYPES, LAYOUT_GROUPS, INFO_LAYOUTS, DECK_TYPES, TABLE_MAX_COLS, TABLE_MAX_ROWS, parseTable, chartData, parseKeywordLine, formatKeywordLine, parseInfoLine, formatInfoLine, infoNumber, safeHref, safeMedia, BULLET_LAYOUTS, prepareLayout, pasteTarget, imagePlacement, setImagePlacement, swapImagePlacement, slideSteps, slideExcerpt, questionTimeLimit, correctAnswerLabel } from "./deck/content.js";
 import { FEEDBACK_KINDS, SCALE_POINTS, scaleLabels, makeFeedback, normalizeFeedback, slideFeedback, sampleFeedbackDigest } from "./deck/feedback.js";
 import { renderMarkdown, parseMarkdownDeck } from "./deck/markdown.js";
@@ -1784,6 +1784,8 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   /* Its leading untimed row, which stays up through every stage, or null. */
   activityBrief: function (slide) { return activityBrief(slide, parseKeywordLine); },
   stageCopy: stageCopy,
+  /* "At home · 3 min [send]" as it is shown: the job is for the phones. */
+  stripDeclaredJob: stripDeclaredJob,
   STAGE_JOBS: STAGE_JOBS,
   stageJob: stageJob,
   parseStageLabel: parseStageLabel,

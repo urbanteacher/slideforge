@@ -28,8 +28,10 @@ test('the catalogue is the 54, split across the eleven phases as the source has 
 test('most of a lesson is not a quiz', async () => {
   const { ACTIVITIES } = await import('../src/activities/catalogue.js');
   const by = ACTIVITIES.reduce((n, a) => ((n[a.target] = (n[a.target] || 0) + 1), n), {});
-  /* Three incompatible game mappings now provide classroom materials. */
-  assert.deepEqual(by, { slide: 23, game: 10, moment: 10, feedback: 9, 'slide-arc': 2 });
+  /* Three incompatible game mappings now provide classroom materials. Hook &
+     Predict and Preview Next Lesson collect from the phones; the Connection
+     Hunt runs as timed stages (activities audit, wave 3). */
+  assert.deepEqual(by, { slide: 21, game: 10, moment: 11, feedback: 10, 'slide-arc': 2 });
   /* The shape is the point. A catalogue that drifted towards games would be
      describing a different product, so this fails if games ever lead. */
   assert.ok(by.game < by.slide, 'games should not outnumber slides');

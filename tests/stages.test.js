@@ -63,6 +63,21 @@ test('work stages, and talk in pairs or in groups', () => {
   assert.equal(SF.stageCopy({ job: 'work' }).wall, 'Work on the task');
 });
 
+test('a label can declare its job, which beats the words and never reaches the wall', () => {
+  const SF = load();
+  assert.equal(SF.stageJob('At home'), 'talk', 'the words alone read a home group');
+  const slide = SF.makeSlide('keywords');
+  slide.activity = 'real-world-connection-hunt';
+  slide.bullets = [SF.formatKeywordLine('At home · 3 min [send]', 'Find an edge.'),
+    SF.formatKeywordLine('Wrap up [down]', 'Why does it matter?')];
+  const stages = SF.activityStages(slide);
+  assert.deepEqual(Array.from(stages, s => s.name), ['At home', 'Wrap up']);
+  assert.deepEqual(Array.from(stages, s => s.job), ['send', 'down']);
+  assert.equal(stages[0].seconds, 180);
+  assert.equal(SF.stripDeclaredJob('At home · 3 min [send]'), 'At home · 3 min');
+  assert.equal(SF.stripDeclaredJob('Pair · 2 min'), 'Pair · 2 min');
+});
+
 test('a leading untimed row is the brief, and stays out of the stages', () => {
   const SF = load();
   const slide = SF.makeSlide('keywords');
@@ -95,7 +110,13 @@ const STAGED = {
   'teach-someone': ['Partner A talk', 'Partner B talk', 'Switch talk', 'Together talk'],
   'whiteboards-on-walls': ['Discuss and draw group', 'Gallery walk down', 'Refine work', 'Debrief down'],
   'i-do-we-do-you-do': ['I do down', 'We do down', 'You do together group', 'You do alone work'],
-  'design-and-create-task': ['Planning work', 'Creating work', 'Self-assessment work', 'Gallery walk down']
+  'design-and-create-task': ['Planning work', 'Creating work', 'Self-assessment work', 'Gallery walk down'],
+  'establish-talk-ground-rules': ['Think note', 'Pair talk', 'Share send', 'Agree down'],
+  'real-world-connection-hunt': ['In this room send', 'At home send', 'In our community send', 'Reflect note'],
+  'scenario-analysis-discussion': ['Identify and explain group', 'Predict and compare group', 'Report back send'],
+  'learning-log-entry': ['New learning note', 'Connections note', 'Challenges note', 'Strategies note', 'Next steps note'],
+  'plus-minus-interesting': ['Plus send', 'Minus send', 'Interesting send', 'Look back down'],
+  'visual-summary': ['Create work', 'Share with a partner talk']
 };
 
 test('every staged routine arrives as stages, with jobs that fit it', () => {

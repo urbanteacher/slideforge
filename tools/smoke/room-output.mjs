@@ -116,6 +116,31 @@ try {
   assert.equal(await host.evaluate(() => SF.Live.prompt), null);
   console.log('✓ Held: the count, not the split, until Show results; Close stays closed on a redraw');
 
+  /* Plus / Minus / Interesting: one box per stage, one spotlight from each,
+     and the three side by side for the look back. */
+  await host.evaluate(() => {
+    const pmi = SF.Activities.makeSlides(SF.Activities.activity('plus-minus-interesting'))[0];
+    pmi.transition = 'none';
+    SF.Player.deck.slides.push(pmi);
+    SF.Player.goTo(SF.Player.deck.slides.length - 1);
+  });
+  for (const [n, idea] of [[1, 'The garden plan'], [2, 'Units got mixed up'], [3, 'Squares win on area']]) {
+    await host.evaluate(() => SF.Player.next());
+    await host.waitForFunction(n => SF.Player.stage && SF.Player.stage.i === n - 1 && SF.Live.prompt && SF.Live.prompt.origin === 'stage', n);
+    await phones[0].waitForSelector('#scPrompt.on');
+    await phones[0].locator('#fbText').fill(idea);
+    await phones[0].locator('#fbSend').click();
+    await host.waitForFunction(t => (SF.Live.askState().ideas || []).some(it => it.text === t), idea);
+    const key = await host.evaluate(t => SF.Live.askState().ideas.find(it => it.text === t).key, idea);
+    await host.evaluate(k => SF.Live.askCommand({ action: 'spot', key: k }), key);
+  }
+  await host.evaluate(() => SF.Player.next());
+  await host.waitForFunction(() => SF.Player.stage && SF.Player.stage.name === 'Look back');
+  const labels = await host.evaluate(() => [...document.querySelectorAll('#player .idea-spotlight .is-label')].map(e => e.textContent));
+  assert.deepEqual(labels, ['Plus', 'Minus', 'Interesting'], 'one spotlight from each column, named for it');
+  if (shots) { await host.mouse.move(800, 200); await host.waitForTimeout(1500); await host.screenshot({ path: path.join(shots, 'pmi-look-back.png') }); }
+  console.log('✓ PMI: a box per column, and the three spotlights side by side at the look back');
+
   assert.deepEqual(errors, []);
 } finally {
   await browser.close();

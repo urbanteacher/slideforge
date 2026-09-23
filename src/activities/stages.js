@@ -84,9 +84,10 @@ const GROUP_WORDS = /\b(group|square|circle|expert|home|team|table)\b/i;
  * Switch is still two partners; a seminar's Switch is still the circle. A
  * routine that names neither is a group, the commoner case.
  * @param {string[]} names
+ * @param {string[]} [jobs] each stage's job, when some were declared
  */
-function groupTalk(names) {
-  const talk = names.map((n) => stageJob(n) === 'talk');
+function groupTalk(names, jobs) {
+  const talk = names.map((n, i) => (jobs ? jobs[i] : stageJob(n)) === 'talk');
   const pair = names.map((n, i) => talk[i] && PAIR_WORDS.test(n));
   const group = names.map((n, i) => talk[i] && !pair[i] && GROUP_WORDS.test(n));
   const pairs = pair.some(Boolean) && !group.some(Boolean);
@@ -100,14 +101,30 @@ function stageCopy(st) {
   return st.job === 'talk' && st.group ? { ...base, ...GROUP_TALK } : base;
 }
 
+/* A job written into the label, in brackets at the end: "At home · 3 min
+   [send]". It beats the words, which cannot tell a hunt at home from a
+   jigsaw's home group. It never reaches the wall. */
+const DECLARED_JOB = /\s*\[(note|talk|send|work|down)\]\s*$/i;
+
+/** A label as a room reads it: without its declared job. @param {string} term */
+function stripDeclaredJob(term) {
+  return String(term == null ? '' : term).replace(DECLARED_JOB, '');
+}
+
+/** The job a label declares, or ''. @param {string} term */
+function declaredJob(term) {
+  const m = DECLARED_JOB.exec(String(term || ''));
+  return m ? m[1].toLowerCase() : '';
+}
+
 /**
  * "Think · 1 min" → { name: 'Think', seconds: 60 }. A label with no time in it
  * is a stage with no clock of its own. "Rotate · every 4 min" is four
- * minutes: the source writes rotations that way.
+ * minutes: the source writes rotations that way. A declared job is taken off.
  * @param {string} term
  */
 function parseStageLabel(term) {
-  const text = String(term || '').trim();
+  const text = String(term || '').replace(DECLARED_JOB, '').trim();
   const m = /^(.*?)\s*[·•|:\-–—(]\s*(?:every\s+|about\s+|~\s*)?(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?|m)\b\)?\s*$/i.exec(text);
   if (!m) return { name: text, seconds: 0 };
   const n = Number(m[2]);
@@ -136,12 +153,13 @@ function stagedRows(slide, parseLine) {
   const brief = hasBrief ? { row: rows[0].row, name: labels[0].name, text: rows[0].def || '' } : null;
   const staged = rows.slice(hasBrief ? 1 : 0, (hasBrief ? 1 : 0) + 8);
   const names = staged.map((p) => parseStageLabel(p.term).name);
-  const groups = groupTalk(names);
+  const jobs = staged.map((p, i) => /** @type {any} */ (declaredJob(p.term) || stageJob(names[i])));
+  const groups = groupTalk(names, jobs);
   const stages = staged.map((p, i) => {
     const label = parseStageLabel(p.term);
     return {
       i, row: p.row, name: label.name, seconds: label.seconds, text: p.def || '',
-      job: stageJob(label.name), group: groups[i]
+      job: jobs[i], group: groups[i]
     };
   });
   return { brief, stages };
@@ -167,4 +185,4 @@ function activityBrief(slide, parseLine) {
   return stagedRows(slide, parseLine).brief;
 }
 
-export { STAGE_JOBS, stageJob, stageCopy, parseStageLabel, activityStages, activityBrief };
+export { STAGE_JOBS, stageJob, declaredJob, stripDeclaredJob, stageCopy, parseStageLabel, activityStages, activityBrief };

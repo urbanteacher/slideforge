@@ -7317,24 +7317,32 @@ dialog.palette::backdrop { background: rgba(20, 26, 18, .32); }
    ink on its ground, without its author. It stays up for the rest of the
    slide, so Share's best idea is still there for Connect.
    ========================================================================== */
-.slide > .idea-spotlight {
+.slide > .idea-spotlights {
   position: absolute; left: 64px; right: 64px; bottom: 34px; z-index: 6;
+  display: flex; gap: 14px; align-items: stretch;
+}
+.deck-viewport.railed .slide > .idea-spotlights,
+#previewBox.railed .slide > .idea-spotlights { right: calc(var(--rail-w) + 54px); }
+.slide > .idea-spotlights .idea-spotlight {
+  flex: 1 1 0; min-width: 0;
   display: flex; align-items: baseline; gap: 16px;
   padding: 16px 26px; border-radius: 16px;
   background: var(--s-fg); color: var(--s-bg);
   box-shadow: 0 10px 30px rgba(0,0,0,.18);
   animation: sf-spot-in .45s cubic-bezier(.3,0,.2,1);
 }
-.deck-viewport.railed .slide > .idea-spotlight,
-#previewBox.railed .slide > .idea-spotlight { right: calc(var(--rail-w) + 54px); }
-.slide > .idea-spotlight .is-label {
+.slide > .idea-spotlights .is-label {
   flex: none; font-size: 15px; font-weight: 800; letter-spacing: .14em;
   text-transform: uppercase; opacity: .75;
 }
-.slide > .idea-spotlight .is-text {
+.slide > .idea-spotlights .is-text {
   font-size: 30px; line-height: 1.25; font-weight: 700;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
+/* Two or three side by side (Plus, Minus, Interesting): the label above
+   the idea, and the idea smaller, so each card still holds a sentence. */
+.slide > .idea-spotlights:not([data-count="1"]) .idea-spotlight { flex-direction: column; gap: 6px; padding: 14px 20px; }
+.slide > .idea-spotlights:not([data-count="1"]) .is-text { font-size: 22px; -webkit-line-clamp: 4; }
 /* The live stage gives the card its foot of the slide. */
 .slide.activity-stages.has-idea-spotlight .stage-panel.step-live { padding-bottom: 170px; }
 @keyframes sf-spot-in { from { opacity: 0; transform: translateY(18px); } }

@@ -723,7 +723,7 @@
           : SF.Shell.UI.text(String(now == null ? '' : now), function (v) {
               write(slide, f.slide, v); commitLive();
             });
-        insp.appendChild(SF.Shell.UI.field(f.label, input, f.hint));
+        insp.appendChild(SF.Shell.UI.field(SF.stripDeclaredJob(f.label), input, f.hint));
       });
     });
     insp.appendChild(el('p', 'hint', 'Starter copy is an editable draft. Replace examples to match your lesson.'));
