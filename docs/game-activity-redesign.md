@@ -128,3 +128,46 @@ That is roughly ten of the 42 activities that currently look like glossaries.
 The live-room parts (phone inputs, relay messages) touch `join.html`,
 `js/live.js` and `server/server.js`, which the other agent also works in, so
 each step lands as its own small commit.
+
+## Built — 23 September 2026
+
+**Spot the Error** shipped as designed, except for two errors per passage
+(one error per sentence for now). Scoring is points without a speed bonus.
+
+**Think-Pair-Share** runs on a new `activityPresentation: 'stages'`:
+
+- **The stages are the rows the activity already stores.** "Think · 1 min"
+  gives a name, a length and a phone job, all read from the label
+  (`src/activities/stages.js`). Think → a private note; Pair or partner →
+  talk; Share → send; anything else → phones down. Any staged routine can
+  switch to it under the slide's *Visual structure* ("Timed stages, with
+  phones"). Only Think-Pair-Share defaults to it.
+- **Wall** (`layoutStages` in `js/render.js`, `js/stages.js`). A track across
+  the top: the current stage lit in the theme's ink, past stages ticked. The
+  live stage's prompt is the largest thing on the slide, and its clock runs
+  for that stage alone. Before the first press, the wall shows the routine's
+  name and length. Time up says "Time. Next: Pair" and never advances by
+  itself. The whole-activity clock and the moments banner stand aside, so
+  there is one clock, not two.
+- **Stages are build steps.** Next, the presenter view and the phones follow
+  one press. **+30s**: the `+` key on the wall, or the desk button "+30s
+  Think".
+- **Phones** (`join.html`): the stage, its own clock (sent as seconds left,
+  since phone clocks differ), and the job.
+  - **Think** is a private note saved on the phone only; it is never sent or
+    counted.
+  - **Pair** shows the note back to compare with a partner.
+  - **Share** opens an anonymous one-idea brainstorm beside the slide. It
+    closes when the stage ends.
+  - **Connect** is "phones down".
+- **Relay.** `stage` is a new field in the room's `at` context, cleaned field
+  by field (`cleanStage`). A build step no longer sends a phone back to the
+  wait screen while it is answering a prompt on the same slide.
+- **Fixed on the way:** a timed slide's clock no longer sits under the room
+  pane.
+- **Tests:** `tests/stages.test.js` covers the parser, the jobs, the preset,
+  and the relay's cleaning.
+- **Not run:** the smoke suite, and not seen in the browser (low credits, by
+  request). Still to do: spotlighting one idea, and a count of how many have
+  written something during Think.
+

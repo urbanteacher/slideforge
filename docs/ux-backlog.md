@@ -783,6 +783,16 @@ now are in [room-pane-redesign.md](room-pane-redesign.md). In short:
 - **Open:** rehearsing a class of 30, lecture-scale defaults, and a packed word
   cloud.
 
+## 23 September 2026: Think-Pair-Share as timed stages
+
+A new `stages` presentation for activity slides. Think-Pair-Share now has a
+stage track, a clock per stage and a job for the phones: a private note for
+Think, the note back for Pair, an anonymous idea for Share and "phones down"
+for Connect. It also has +30s on the wall and the desk. The details are in
+[game-activity-redesign.md](game-activity-redesign.md#built--23-september-2026).
+It is covered by unit and relay tests. It was **not** smoke-tested or viewed
+in the browser.
+
 ## Log
 
 - **22 Sep 2026.** Backlog created from the [UX deep dive](ux-deep-dive.md).
