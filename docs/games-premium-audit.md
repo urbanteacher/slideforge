@@ -87,8 +87,8 @@ problems. They come first (section 5).
   reads `Live.dripShown` once, when marking. Guessing early earns what
   guessing late earns, which defeats the game.
 
-The other defects in the table come from the 23 September inventory. They
-are re-read in code, not re-run:
+The other defects in the table come from the 23 September inventory and
+were not re-checked for this audit:
 - Bowl's target comes from Q1 only.
 - Concept Chain allows one link per start term.
 - The Emoji hint is on from the start.
