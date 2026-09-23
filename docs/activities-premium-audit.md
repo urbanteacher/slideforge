@@ -76,7 +76,7 @@ An audience prompt on a labelled-rows slide.
 | Knowledge Activation Web | word cloud | ◐ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: a cloud, not a web; the notes say so |
 | Question Cube (six types) | brainstorm | ◐ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: the Question Cube *game* now rolls; this is the same idea without the roll |
 | Real-World Connection Hunt | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | Near-premium: a stage, a clock, a box and a spotlight per place |
-| Muddiest Point | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ✓ | ✓ | ◐ | Solid-: the desk spotlights the point to fix |
+| Muddiest Point | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ✓ | ◐ | ◐ | Solid-: the desk spotlights the point to fix. The wall says "Spotlight", not §4's "We'll fix this one" |
 | Exit Ticket | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ✓ | ◐ | ◐ | Solid-: named on the desk and in the report, which is right |
 | Exit Ticket 3-2-1 | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ✓ | ◐ | ◐ | Solid-: three answers in one box |
 | Structured Reflection | poll · panels | ✓ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ | ◐ | Solid, near premium: held, so the wall shows how many are in until the desk shows the split |
@@ -106,7 +106,7 @@ The teacher talks; the phones get the "On the screen" card with Got it / Need he
 | Connection Slide | rows | ◐ | ◐ | n/a | ◐ | ✓ | ✓ | n/a | ✓ | Solid |
 | Preview Next Lesson | rows · idea box | ◐ | ◐ | n/a | ✓ | ✓ | ✓ | ◐ | ✓ | Solid: every phone sends a prediction, kept for next lesson's start |
 | Hook and Predict | split · idea box | ◐ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: the picture stays; the room's wonders arrive and one is spotlighted |
-| Establish Talk Ground Rules | stages | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | Near-premium: the drafted rules arrive as cards; the kept ones are spotlighted |
+| Establish Talk Ground Rules | stages | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | Solid, near premium: the drafted rules arrive as cards. Only three can be spotlighted, and §4 planned five |
 
 ### Modelled instruction
 
@@ -144,12 +144,12 @@ A long piece of work, with the brief on the wall.
 
 **Totals, after wave 3:**
 - 0 premium. What holds back the nearest is A8's rehearsal and A9's teacher entry (§7).
-- 8 near-premium:
+- 7 near-premium:
   - Think-Pair-Share and Think-Pair-Square-Share;
   - the Connection Hunt;
   - the two self-assessments;
-  - Ground Rules, Scenario Analysis and PMI.
-- 25 solid or solid-minus.
+  - Scenario Analysis and PMI.
+- 26 solid or solid-minus.
 - 11 thin: Do Now, Wait Time, Daily Review, Dialogue Chain, the two word
   clouds, the Question Cube activity, Concept Development, Card Sort, the
   Battle and Connect Four.
@@ -457,6 +457,15 @@ This is already the rule in `js/stages.js`, and it stays.
     boxes, one spotlight from each, and the three labelled cards at Look
     back. Seen in the browser: PMI's look back, and the badges on all 54
     activity cards and on the format library's 30 game cards.
+  - **Where the build left §4's plan.** Hook & Predict is recorded in §4.
+    The others were not decided, only built, and are open for review:
+    - Ground Rules spotlights at most three rules; the plan said five.
+    - The Hunt's closing Reflect is a private note; the plan said phones
+      down.
+    - Scenario Analysis has a third stage, Report back, that the plan did
+      not have.
+    - Muddiest Point's spotlight is labelled "Spotlight", not "We'll fix
+      this one".
   - **Committed in pieces.** The `js/live.js` and `join.html` halves went in
     with the other agent's `53f5c3c` and `275ad28`, which committed those
     files whole.
