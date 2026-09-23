@@ -1002,16 +1002,26 @@
     },
 
     compare: {
-      family: 'Compare and contrast',
-      row: '{"itemA":"...","itemB":"...","similarities":"...","differences":"...","question":"..."}',
-      required: ['itemA', 'itemB', 'similarities', 'differences'],
-      rules: 'Two genuinely different concepts. Similarities and differences are ' +
-        'full sentences a teacher can reveal after discussion — not one-word labels. ' +
-        'Name each concept clearly before comparing.',
+      family: 'Compare and contrast (sort it)',
+      row: '{"itemA":"...","itemB":"...","statements":["Both: ...","A: ...","B: ..."],"similarities":"...","differences":"...","question":"..."}',
+      required: ['itemA', 'itemB', 'statements'],
+      /* The room sorts the statements into A only, Both and B only, so they
+         are the game; the prose is the reveal's summary. */
+      rules: 'Two genuinely different concepts; name each clearly. "statements" ' +
+        'is four to eight short factual claims, each starting exactly "Both: ", ' +
+        '"A: " (true of the first only) or "B: " (true of the second only), with ' +
+        'at least one of each. Every claim must be true of exactly the column it ' +
+        'is tagged with. Similarities and differences are one-sentence summaries ' +
+        'for the reveal.',
       toQuestion: function (row) {
+        var lines = Array.isArray(row.statements) ? row.statements
+          : String(row.statements || '').split('\n');
         return {
           itemA: String(row.itemA || '').trim(),
           itemB: String(row.itemB || '').trim(),
+          /* Always set, so the starter's photosynthesis statements can never
+             ride along under a different pair of items. */
+          statements: lines.map(function (l) { return String(l).trim(); }).filter(Boolean).join('\n'),
           similarities: String(row.similarities || '').trim(),
           differences: String(row.differences || '').trim(),
           question: String(row.question || 'Compare these two — how are they alike, and how do they differ?').trim(),
@@ -1184,6 +1194,29 @@
   /* Scored multiple-choice engines share the choice brief. */
   ['race', 'speed', 'boss'].forEach(function (k) { AI_SPECS[k] = AI_SPECS.choice; });
 
+  /* Question Cube is a format on Random Challenge's engine: six faces, one
+     of each of Rosenshine's question types, each a question on the topic.
+     Keyed by format, and looked up before the style. */
+  var CUBE_FACES = ['Define', 'Compare', 'Why', 'Example', 'What if', 'Benefits and limits'];
+  AI_SPECS['question-cube'] = {
+    family: 'Question cube (six question types)',
+    row: '{"category":"Define","challenge":"What is ...? Say it in one sentence."}',
+    required: ['category', 'challenge'],
+    count: 6,
+    rules: 'Exactly six entries, one for each face, in this order: ' + CUBE_FACES.join(', ') +
+      '. "category" is the face name exactly. "challenge" is one question of that type ' +
+      'about the topic, answerable aloud in under a minute — Define asks what it is, ' +
+      'Compare sets it against a related idea, Why asks for a reason or mechanism, ' +
+      'Example asks for a real case, What if changes a condition, Benefits and limits ' +
+      'asks what it explains and what it does not.',
+    toQuestion: function (row) {
+      var face = String(row.category || '').trim();
+      var match = CUBE_FACES.filter(function (f) { return f.toLowerCase() === face.toLowerCase(); })[0];
+      var c = String(row.challenge || row.question || '').trim();
+      return { category: match || face, challenge: c, question: c, explanation: '', options: ['Complete', 'Skip'], correct: 0 };
+    }
+  };
+
   /* ------------------------------------------------ questions for a game */
 
   /**
@@ -1210,7 +1243,8 @@
     var engine = SF.gameStyle(game.style);
     if (!engine) return { error: 'Unknown game style.' };
 
-    var spec = AI_SPECS[game.style];
+    /* A format with its own shape (Question Cube) comes before its engine's. */
+    var spec = (game.format && AI_SPECS[game.format]) || AI_SPECS[game.style];
     if (!spec) {
       return { error: (engine.label || 'This format') + ' is not written by AI yet. Browse quizzes has a starter bank for it.' };
     }
@@ -1226,7 +1260,7 @@
 
     var topic = String(opts.topic || game.title || '').trim();
     if (!topic) return { error: 'Give it a topic to write about.' };
-    var want = Math.max(1, Math.min(6, Number(opts.count) || 4));
+    var want = spec.count || Math.max(1, Math.min(6, Number(opts.count) || 4));
 
     var fixed = Array.isArray(engine.fixedOptions) && engine.fixedOptions.length
       ? engine.fixedOptions : null;
@@ -1591,7 +1625,9 @@
     extractSlideTerms: extractSlideTerms,
     generateWordMotion: generateWordMotion,
     /* Exposed for tests and future studio UI that lists AI-writable formats. */
-    gameSpec: function (style) { return AI_SPECS[style] || null; }
+    gameSpec: function (style) { return AI_SPECS[style] || null; },
+    /** The spec a game is written with: its format's, else its engine's. */
+    gameSpecFor: function (game) { return (game && ((game.format && AI_SPECS[game.format]) || AI_SPECS[game.style])) || null; }
   };
 
   SF.AI = AI;
