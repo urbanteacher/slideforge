@@ -1,0 +1,434 @@
+# Activities to a premium standard: audit, redesigns and the shared kit — 23 September 2026
+
+The second audit promised by [games-premium-audit.md](games-premium-audit.md).
+One activity sets the standard: **Think-Pair-Share** on timed stages
+([game-activity-redesign.md](game-activity-redesign.md)). This audit measures
+the 44 activities in the catalogue that are not games against the standard it
+set. It says what each needs, and which existing components it can be rebuilt
+from. The other 10 catalogue entries are games, and the games audit covers them.
+
+It was read in code, not in a browser. File references are to `src/`, `js/`,
+`join.html` and `server/server.js`.
+
+## 1. The premium bar
+
+From Think-Pair-Share and the five activity principles in the redesign doc,
+plus the three games tests (P4, P6, P9) that hold for any room. An activity is
+premium when it passes all nine.
+
+| # | Test | What it means | Where it was proven |
+|---|---|---|---|
+| **A1** | **The routine is recognisable** | The wall's shape says which routine this is before anyone reads it. | TPS: the track of four stages. |
+| **A2** | **The wall is a stage** | The live prompt or task is the biggest thing on the wall. Steps, guidance and answers are on the desk. | TPS: the live stage's prompt at 54px; guidance in the notes. |
+| **A3** | **The wall says where the room is** | The current stage is lit, each stage has its own clock, and there is one clock, never two. | TPS: the lit chip; one `.stage-clock` per stage. |
+| **A4** | **The phone has a job, or is told to go down** | Each stage gives a phone something to do (write, talk, send, work), or says "phones down". | TPS: `paintStage` note · talk · send · down. |
+| **A5** | **The room sees itself, never one person** | What the room sends is anonymous on the wall and named only on the desk. Private thinking never leaves the phone. | TPS: the Think note stays in `localStorage`; Share is anonymous. |
+| **A6** | **The teacher drives from the desk** | Advance, add time, close, spotlight: all in the presenter view. The desk preview shows what the wall shows. | TPS: +30s on the desk; stages move on Next. |
+| **A7** | **What the room makes lands somewhere** | The routine closes on its output: an idea spotlighted, a self-assessment revealed, a model answer turned over. It does not vanish when the slide moves. | The flip card's model answer; TPS's answer on the last stage. |
+| **A8** | **Authored and rehearsed safely** | The editor shows the stages and each phone job. The rehearsal fills the room's output. It is tested. | `tests/stages.test.js`; the rehearsal's sample ideas. |
+| **A9** | **Plays in every room** | It says how it runs with phones, in groups, with no devices, and for one learner. Teacher entry records whatever it collects. | Not yet met by any activity; see section 7. |
+
+Games' P7 (fair scoring) is folded into section 6: activities do not score,
+except the two whose name is a contest.
+
+## 2. The scorecard
+
+✓ passes · ◐ partly · ✗ fails · n/a not meaningful. A9 is in section 7.
+
+- **Premium:** all nine.
+- **Solid:** A1–A3 pass.
+- **Thin:** A1 fails. The activity looks like a glossary.
+- **Broken:** the wall tells the room two different things.
+
+"Broken" was concrete (fixed by N7 in wave 0). A timed moment that was not staged drew the slide's
+ring clock *and* the moments banner. They were separate timers
+(`startSlideTimer` in `js/player.js`, `js/lesson-moments.js`), and the desk's
+Pause and +1 min moved only the banner. After one press, the wall showed two
+times. At zero, the ring turned the model-answer card while the banner still
+had a minute to go.
+
+### Staged talk routines
+
+Rows that are stages ("Pair · 3 min"). These are the ones the stages view was built for.
+
+| Activity | Today | A1 | A2 | A3 | A4 | A5 | A6 | A7 | A8 | Tier |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **Think-Pair-Share** | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ◐ | Near-premium: no spotlight yet (N12) |
+| Think-Pair-Square-Share | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ◐ | Solid, near premium: Square is group talk |
+| Jigsaw (expert groups) | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✗ | ◐ | Solid: three group-talk stages; nothing lands (the guide is on paper) |
+| Jigsaw (collaboration) | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✗ | ◐ | Solid: as the expert-groups Jigsaw |
+| Peer-Teaching Carousel | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✗ | ◐ | Solid: the stations pinned as the brief; rotations are work |
+| Socratic Seminar | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✗ | ◐ | Solid: the prompt pinned through both circles |
+| Teach Someone | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✗ | ◐ | Solid: four partner stages |
+| Whiteboards on Walls | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ◐ | Solid: the problem pinned; draw, walk, refine, debrief |
+| Do Now / Bell Ringer | moment · steps | ✗ | ◐ | ◐ | ◐ | ✓ | ✓ | ◐ | ◐ | Thin: one clock the desk drives; three untimed tasks, a checklist, not stages |
+| Strategic Wait Time | moment · steps | ✗ | ◐ | ◐ | ✗ | ✓ | ✓ | ✗ | ◐ | Thin: one clock; its pauses are seconds, run by the teacher |
+| Daily Review Routine | slide · steps | ✗ | ◐ | n/a | ◐ | ✓ | ✓ | ◐ | ◐ | Thin |
+| Dialogue Chain | slide · steps | ✗ | ◐ | n/a | ◐ | ✓ | ✓ | ✗ | ◐ | Thin: sentence stems as rows |
+
+### Collect from the room
+
+An audience prompt on a labelled-rows slide.
+
+| Activity | Prompt | A1 | A2 | A3 | A4 | A5 | A6 | A7 | A8 | Tier |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Word Splash | word cloud | ◐ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: the source's confidence marking is on paper; the cloud asks something else |
+| Knowledge Activation Web | word cloud | ◐ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: a cloud, not a web; the notes say so |
+| Question Cube (six types) | brainstorm | ◐ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: the Question Cube *game* now rolls; this is the same idea without the roll |
+| Real-World Connection Hunt | brainstorm | ◐ | ◐ | ✗ | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: three timed hunts (room, home, community) under one clock |
+| Muddiest Point | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Solid-: nothing picks the point to fix |
+| Exit Ticket | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Solid-: named on the desk and in the report, which is right |
+| Exit Ticket 3-2-1 | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Solid-: three answers in one box |
+| Structured Reflection | poll · panels | ✓ | ✓ | n/a | ✓ | ◐ | ◐ | ✗ | ◐ | Solid-: live bars; the room anchors on the leader |
+| Reflection Ladder | scale · panels | ✓ | ✓ | n/a | ✓ | ◐ | ◐ | ✗ | ◐ | Solid-: live column chart; "teacher notes who needs support" has nowhere to happen |
+
+For all nine:
+- **A6:** an authored prompt has no close control on the desk. It ends when
+  the slide moves. Its only desk surface is the read-only Pulse list.
+- **A7:** there is no reveal, no spotlight and no hide. Results update live,
+  then vanish.
+- **A5 ◐** on the two self-assessments: live bars mean the fifth student
+  sees where the first four went.
+
+### Teacher-led slides
+
+The teacher talks; the phones get the "On the screen" card with Got it / Need help.
+
+| Activity | Today | A1 | A2 | A3 | A4 | A5 | A6 | A7 | A8 | Tier |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Clear Objectives | rows | ◐ | ◐ | n/a | ◐ | ✓ | ✓ | n/a | ✓ | Solid (a slide by design) |
+| Hook + Objectives | brief | ✓ | ✓ | n/a | ◐ | ✓ | ✓ | n/a | ✓ | Solid |
+| Connection Slide | rows | ◐ | ◐ | n/a | ◐ | ✓ | ✓ | n/a | ✓ | Solid |
+| Preview Next Lesson | rows | ◐ | ◐ | n/a | ◐ | ✓ | ✓ | ✗ | ✓ | Solid: the closing question collects nothing |
+| Hook and Predict | split | ◐ | ✓ | n/a | ✗ | ✓ | ✓ | ✗ | ◐ | Thin: a prediction the phones never make |
+| Establish Talk Ground Rules | rows | ✗ | ◐ | n/a | ✗ | ✓ | ✓ | ✗ | ◐ | Thin: five rows; the rules the room drafts are never collected |
+
+### Modelled instruction
+
+| Activity | Today | A1 | A2 | A3 | A4 | A5 | A6 | A7 | A8 | Tier |
+|---|---|---|---|---|---|---|---|---|---|---|
+| I Do, We Do, You Do | stages | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid: four phases, each with its clock; You do alone is work |
+| Concept Development | rows | ✗ | ◐ | ✗ | ◐ | ✓ | ◐ | ✓ | ◐ | Thin: five phases, untimed, one clock |
+| Worked Example Analysis | brief | ✓ | ✓ | ✗ | ◐ | ✓ | ◐ | ✓ | ◐ | Solid-: the example is the brief, as it should be |
+| Flipped Instruction | 3-slide arc · brief | ✓ | ✓ | ◐ | ◐ | ✓ | ✓ | ✓ | ◐ | Solid: a clock per page; no "part 2 of 3" |
+| Guided Inquiry | 4-slide arc · brief | ✓ | ✓ | ◐ | ◐ | ✓ | ✓ | ✓ | ◐ | Solid: as Flipped |
+
+### Tasks
+
+A long piece of work, with the brief on the wall.
+
+| Activity | Today | A1 | A2 | A3 | A4 | A5 | A6 | A7 | A8 | Tier |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Problem-Based Learning | brief | ✓ | ✓ | ✗ | ◐ | ✓ | ◐ | ✓ | ◐ | Solid-: six stages, 40 min, one clock |
+| Design and Create | stages | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid: the brief pinned; plan, create and self-assess are work |
+| Error Analysis | brief | ✓ | ✓ | n/a | ◐ | ✓ | ✓ | ✓ | ◐ | Solid |
+| Differentiated Practice Menu | panels | ✓ | ✓ | n/a | ◐ | ✓ | ✓ | ✓ | ◐ | Solid: the menu is the thing |
+| Quick Practice Stations | cards | ✓ | ✓ | ✗ | ◐ | ✓ | ◐ | ✓ | ◐ | Solid-: rotations are timed in the notes, not on the wall |
+| Concept Card Sort | rows | ◐ | ◐ | n/a | ✗ | ✓ | ✓ | ✓ | ◐ | Thin: the sort is on paper; waits for the sort input (N6) |
+| Scenario Analysis | rows | ◐ | ◐ | n/a | ◐ | ✓ | ✓ | ✓ | ◐ | Thin: three scenarios and two questions as five equal rows |
+| Benefits vs Limitations Battle | brief | ✓ | ✓ | n/a | ✗ | ✓ | ◐ | ✗ | ◐ | Thin: a battle with a scoring rule and no score |
+| Connect Four (concepts) | table | ✓ | ✓ | n/a | ✗ | ✓ | ◐ | ✗ | ◐ | Thin: the grid is drawn; claims are on paper |
+
+### Written reflection
+
+| Activity | Today | A1 | A2 | A3 | A4 | A5 | A6 | A7 | A8 | Tier |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Learning Log Entry | rows | ◐ | ◐ | n/a | ✗ | ✓ | ✓ | n/a | ◐ | Thin: five prompts; the phones could hold the log |
+| Plus / Minus / Interesting | cards | ✓ | ✓ | n/a | ✗ | ✓ | ✓ | ✗ | ◐ | Thin: three columns the room never fills |
+| Visual Summary | cards | ◐ | ◐ | ✗ | ✗ | ✓ | ✓ | n/a | ◐ | Thin: making, then sharing, under one clock |
+
+**Totals, after waves 0 and 1:**
+- 0 premium; Think-Pair-Share is near-premium.
+- 0 broken. There were 9, every timed moment not on stages, and the one clock (N7) fixed them all.
+- 25 solid or solid-minus, up from 17.
+- 18 thin. Do Now and Wait Time moved from broken to thin; I Do, We Do, You Do moved to solid.
+- The Question Cube game supersedes the Question Cube activity (see §4).
+
+## 3. The shared kit
+
+**Reuse before you write.** The games kit (games audit §3, K1–K17) serves
+activities too. These are the parts that matter here.
+
+| # | Component | Where | What it gives activities |
+|---|---|---|---|
+| K6 | **Stages runtime** | `src/activities/stages.js`, `js/stages.js`, `layoutStages` in `js/render.js` | Track, a clock per stage, +30s on the wall and desk, advance on Next, the stage on the phones. Parsed from the rows the activity already stores |
+| K7 | **Phone job cards** | `paintStage` in `join.html`; `cleanStage` in the relay | note · talk · send · down |
+| K8 | **Private phone note** | `slideforge.note.<session>.<slide>` | Think, Predict, a learning log |
+| K9 | **Anonymous idea box** | `Live.startCustomPrompt({presentAs: 'rail'})` | Share, a hunt, a rule, PMI's columns |
+| N3 | **Proposal queue** | `openProposals`, `useProposal` in `js/live.js`; the desk list in `js/manual.js` | Named on the desk, anonymous on the wall; "Use this" puts one on the table. Today it serves three games only (`proposalSlide`) |
+| — | **Flip card** | `modelAnswer` / `modelAnswerDraft`; the ⇄ button | The worked answer, turned over by the teacher or at time |
+| — | **Lesson moments** | `js/lesson-moments.js`; the desk's On screen card | Pause, +1 min, Clear from the desk |
+| — | **Pace signals** | Need help on the phone's content card → the desk's "need a hand" | A quiet "I'm stuck" during work that the room never sees |
+| K10 | **Room pane** | `src/render/live.js` | Poll bars, scale columns with the mean and "room is split", idea cards, word cloud |
+| K11 | **Desk plumbing** | `data-desk`, `Player.gameControls` | Any wall control becomes a desk button |
+| K16 | **Relay harness** | `tests/harness.js` | Real server, real sockets |
+
+### Build once, before the activities that need them
+
+Numbered after the games' N1–N6, because some are shared.
+
+| # | Component | Why once | Used by | Size |
+|---|---|---|---|---|
+| **N7 · done** | **One clock**: a timed moment's ring follows the desk's Pause, +1 min and Clear; the banner stands aside on the wall | The nine broken moments. One fix, not nine | every timed moment | S |
+| **N8 · done** | **The desk shows the live stage**: the presenter's preview is drawn at the room's stage, not as the full list | A6 for every staged routine | all staged | S |
+| **N9 · done** | **Pinned brief**: a leading row with no time stays on the wall through every stage | The problem, question or scenario must not vanish when the work starts | Socratic, Whiteboards, Carousel, Design and Create, PBL, Wait Time | S |
+| **N10 · done** | **A work job**: "Work on the task", with a quiet *I'm stuck* that reaches the desk as a need-a-hand | Long tasks have no phone job; the pace signal already exists | Design, PBL, Carousel, Stations, I Do/You Do | S |
+| **N11 · done** | **Group talk**: a talk stage that is not a pair says "Talk in your group", on the wall and the phone | "Turn to your partner" is wrong for a jigsaw or a seminar | Jigsaw ×2, Square, Socratic, Carousel | S |
+| **N12** | **Spotlight and hide on any idea box**: N3's "Use this" for every brainstorm, including a stage's Share | TPS-01; the thing Muddiest Point, Share and PMI all need | every brainstorm | S–M |
+| **N13** | **The written count**: "19 of 26 have written something" during a private stage. The phone sends *that* it wrote, never *what* | TPS-02; the one number a teacher needs during silent work | Think, Predict, Learning Log | S |
+| **N14** | **Prompt controls on the desk**: close now; hold, then reveal, for a poll or scale | A6 and A7 for all nine collect-from-the-room activities | polls, scales, clouds, brainstorms | M |
+| E3 | **Tally entry** (games GA-15) | Hands up and paper feed the same bars | polls and scales | M |
+| N6 | **Sort input** (games GA-26) | Cards into bins on the phone | Card Sort, PMI, Compare | L |
+
+## 4. Redesigns, family by family
+
+S < a day, M a few days, L a week or more.
+
+### Staged talk routines: stages, everywhere they fit
+
+The redesign doc said it: "Once it exists, it spreads for free." It did not,
+because only Think-Pair-Share defaults to stages and the parser misses
+several rows.
+
+- **Default to stages** when at least two rows carry a time:
+  - Think-Pair-Square-Share
+  - both Jigsaws
+  - Peer-Teaching Carousel
+  - Socratic Seminar
+  - Teach Someone
+  - Whiteboards on Walls
+
+  N7 is then moot for them: stages already stand the banner aside.
+- **Parse what the source wrote:** "Rotate · every 4 min" is four minutes.
+- **Pinned brief (N9):**
+  - the Socratic prompt stays up through both circles;
+  - the Whiteboards problem through the gallery walk;
+  - the Carousel's four stations through every rotation.
+- **Jobs that fit the routine (N10, N11):**
+  - Jigsaw's home and expert groups talk *in groups*;
+  - Teach Someone's partners talk in pairs;
+  - the Seminar's circles are phones down;
+  - a Carousel rotation is work.
+- **Stay as they are:**
+  - **Do Now** is three untimed tasks, a checklist the room works down.
+  - **Strategic Wait Time** is the teacher's pauses in seconds: a desk
+    tool, not a wall routine.
+
+  Both are wall checklists, so they only need N7's one clock.
+- **Daily Review and Dialogue Chain** are teacher-paced slides. They stay
+  numbered steps, and the phones get the on-screen card.
+
+### Collect from the room: the output lands
+
+- **N14 on all nine:**
+  - the desk can close the prompt;
+  - the two self-assessments are held and revealed by the teacher (§6).
+- **N12:**
+  - Muddiest Point: the teacher spotlights the point to fix, and the wall
+    says "We'll fix this one".
+  - Exit Tickets: the teacher reads them on the desk, as now.
+- **Real-World Connection Hunt → stages:**
+  - Room · 3, Home · 3, Community · 3, each a send stage.
+  - One idea box per stage, so the cards arrive sorted by where they were
+    found.
+  - Reflect is phones down.
+- **Reflection Ladder:**
+  - Held, then revealed as the column chart.
+  - "Who needs support" is the desk's need-a-hand list, never the wall.
+  - Its "I'm here because…" becomes a private note (K8).
+- **Word Splash** keeps its cloud. It is honest that the confidence
+  marking is on paper, and the notes already say so. A per-term confidence
+  input waits for N6.
+- **Question Cube (activity)** is superseded by the Question Cube game.
+  - Its card in the catalogue should point to the game.
+  - Its six authored questions become the game's six faces.
+
+### Teacher-led slides
+
+Slides by design: A3 and A7 are not their job.
+- **Hook and Predict:**
+  - A stages run: Hook (phones down), Predict (private note, K8), Reveal
+    (phones down), with the image still pinned.
+  - The Predict *game* is the scored version; this is the unscored one.
+- **Preview Next Lesson:** the closing question becomes a one-line idea box.
+  Its answers are the next lesson's starter.
+- **Ground Rules:** the "our ground rules" row becomes a Share stage. The
+  room's drafted rules arrive as cards, and the teacher spotlights the five
+  to keep.
+
+### Modelled instruction and tasks
+
+- **I Do, We Do, You Do → stages:**
+  - I do and We do are phones down.
+  - You do together is talk.
+  - You do alone is work (N10).
+  - Each has its own clock, so the 25-minute block stops being one ring.
+- **Design and Create, Problem-Based Learning → stages with a pinned brief
+  (N9):**
+  - The brief stays on the wall.
+  - Planning, Creating and Self-assessment are work; Gallery walk is down.
+  - PBL's rows need their times written in.
+- **Quick Practice Stations:** a round clock (games N4) per rotation. S
+  after stages.
+- **Scenario Analysis:** the three scenarios pinned, the two questions as
+  talk stages.
+- **Benefits vs Limitations Battle:**
+  - Two teams, and a valid new point credits a team through the spoken
+    verdict (games N1).
+  - Its name is a contest, so it scores (§6). M.
+- **Connect Four:** a board (K12) where a team claims a cell and the teacher
+  accepts. L; after the boards work.
+- **Concept Card Sort:** waits for N6.
+
+### Written reflection
+
+- **Learning Log:** five private note stages (K8), untimed.
+  - The phone keeps the log.
+  - The desk gets the count of how many have written (N13), never the words.
+- **Plus / Minus / Interesting:**
+  - three send stages;
+  - the wall's three cards fill with the room's anonymous ideas, one column
+    each;
+  - the teacher spotlights one per column.
+- **Visual Summary:** stages: Create · 6 (work), Share · 2 (talk).
+
+## 5. The order to build in
+
+| Wave | What | Why first | Size |
+|---|---|---|---|
+| **0** | **Done 23 Sep.** N7 one clock; N8 the desk shows the live stage | The wall says two things today; the desk shows the wrong thing | S |
+| **1** | **Done 23 Sep.** N9 pinned brief, N10 work, N11 group talk; the parser reads "every 4 min"; stages by default for the seven staged routines, I Do/We Do/You Do and Design and Create | The flagship's shape spread to where it fits: nine activities from thin or broken to solid | S–M |
+| **2** | **N12 spotlight and hide; N13 the written count; N14 prompt controls** (close, hold, reveal) | The room's output lands; closes TPS-01 and TPS-02 | M |
+| **3** | Family redesigns that are mostly kit: Hook and Predict, Connection Hunt, PMI, Learning Log, Ground Rules, Preview, Visual Summary, Scenario Analysis | Each is a preset change on stages plus N12 | S each |
+| **with GA-15** | **E3 tally entry** for polls and scales | Rooms with no devices | M |
+| **4** | Benefits vs Limitations with team credit; Stations on a round clock; Question Cube activity → game | Needs games kit N1 and N4 | S–M |
+| **after GA-26** | Concept Card Sort, Word Splash confidence on N6 | The sort input | L |
+| **later** | Connect Four as a board | | L |
+
+At the end of wave 1, the broken count would be zero and nine activities
+would be solid. At the end of wave 3, most would be near-premium; what
+holds them back is A9, which waits on tally entry.
+
+## 6. Decided
+
+Decided on 23 September from user experience and logic, as the games audit
+was.
+
+### A private note is never sent. Only *that* someone wrote is counted.
+
+**The rule:** during a note stage, the phone tells the relay that it has
+written something (a yes, once there are a few words), never the text.
+- The wall and the desk show the room's count: "19 of 26 have written
+  something".
+- Nobody is named, not even on the desk.
+
+**Why:**
+- Students write more honestly when "Only you can see this" is true, and
+  it stays true.
+- The teacher still gets the one thing they need during silent thinking:
+  whether to wait.
+- A count is safe on the wall (P4). A named list of who has *not* written
+  would name a failure, which the games audit's §6 rules out.
+
+### Self-assessment is held until the teacher shows it
+
+**The rule:**
+- A poll or scale in the Reflection phase collects hidden: the wall shows
+  "14 of 26 have answered", not the bars.
+- The teacher reveals the bars from the desk.
+- Names are on the desk, never the wall.
+- Other polls stay live, as now.
+
+**Why:**
+- Live bars anchor: the fifth student sees four "Got it"s and taps
+  "Got it".
+- The point of a self-assessment is the honest answer, and it is the one
+  place where seeing the room first changes what you say.
+- The desk is where "who needs support" belongs (P4); the room pane already
+  moved "needs a hand" there.
+
+### Activities do not score, except the two named as contests
+
+**The rule:**
+- No activity puts points on the standings.
+- Two do: Benefits vs Limitations **Battle** and Connect Four. Their name
+  promises a contest, so they score by team through the games' spoken
+  verdict.
+
+**Why:**
+- Games are where the room competes. An activity is where it thinks, talks
+  and makes, and a leaderboard there rewards speed and confidence over the
+  work.
+- The exception follows the games' first test: the name is the mechanic.
+
+### Which activities become stages
+
+**The rule:** an activity is staged when at least two of its rows carry a
+time, or when a stage-only feature is its point (a private note, one idea
+box per stage).
+
+Everything else stays a slide in its own presentation:
+- a checklist (Do Now),
+- the teacher's own pacing (Wait Time, Dialogue Chain),
+- a menu (Differentiated Practice),
+- or a slide by design (Objectives).
+
+**Why:**
+- The stages view shows one row at a time. That is right for a routine the
+  room moves through together.
+- It is wrong for a list the room needs to see whole: objectives, a menu,
+  three Do Now tasks worked in any order.
+
+### A stage's clock never advances the slide
+
+This is already the rule in `js/stages.js`, and it stays.
+
+## 7. Who is in the room
+
+| Room | Staged routines | Collect from the room | Teacher-led, tasks, reflection |
+|---|---|---|---|
+| **Phones** | ✓ | ✓ | ◐ the on-screen card and Need help |
+| **Groups or teams** | ✓: the routine is the grouping | ◐ one phone per group works, but the count is per phone | ✓ |
+| **No devices** | ✓: the wall carries it, and the phone job is extra | ✗: teacher entry cannot record a poll, scale or idea (no `manualAnswer` path for feedback) | ✓ |
+| **One learner, alone** | ◐: the stages run in a solo present, with no phone | ✗ | ✓ as slides |
+
+**A9 needs:**
+- E3 tally entry, so a show of hands fills a poll or scale.
+- A typed idea from teacher entry, so a paper Exit Ticket can reach the
+  desk list.
+- Each activity declaring its rooms, the way game styles do with `plays`
+  (games E7). That is a field on the catalogue entry, shown as the library's
+  badges, with a catalogue test.
+
+## Change log
+
+- **23 September 2026 — Waves 0 and 1 (AC-01 to AC-05).**
+  - **One clock (N7).** A timed moment's ring now reads the desk's moment:
+    Pause holds it (dimmed), +1 min adds to it, Clear takes it off the wall.
+    The banner stands aside wherever a slide draws its own clock. Nine
+    moments were broken by this; none are now.
+  - **The desk shows the live stage (N8).** `SF.lightStages` draws the
+    presenter's preview at the room's stage, and the next-slide preview at
+    its introduction. It used to list every stage.
+  - **Stages spread.** Nine more routines default to stages, by the rule in
+    §6: Think-Pair-Square-Share, both Jigsaws, the Carousel, the Seminar,
+    Teach Someone, Whiteboards, I Do/We Do/You Do and Design and Create.
+    Do Now, Wait Time, Daily Review and Dialogue Chain stay numbered steps.
+  - **Pinned brief (N9).** A leading untimed row with two or more timed rows
+    after it stays up on the wall and on the phone through every stage.
+  - **Work (N10) and group talk (N11).** A fifth job, `work`, keeps the
+    phone's Need help and hides Got it. A talk stage is a group unless the
+    routine is in pairs; an ambiguous label ("Switch", "Together") takes the
+    routine's word for it. "Rotate · every 4 min" parses. The relay passes
+    `work`, `brief` and `group`.
+  - **Fit.** A stages rule was outranked by the activity slide's centred
+    pad, so a long authoring list pushed the track off the top. It is now
+    top-aligned, and the authoring list is set smaller. All ten staged
+    activities were measured to fit, in 23 themes and at every stage.
+  - **Tests:** `npm test` 508/508; the activities, add-activity and
+    audience-feedback smoke scenarios pass. A test pins every staged
+    routine's stages and jobs. Seen in the browser: the Seminar's first
+    stage on the wall. The desk and a phone were not opened.
+- **23 September 2026 — Audit written.** 44 activities graded against A1–A9;
+  the kit, N7–N14, the waves and four decisions. Read in code; not seen in a
+  browser.

@@ -4,7 +4,7 @@ The one list of what is open, what is done and why, for people and for AI
 agents. It merges the two backlogs that used to sit side by side: the 13
 September learner and live-room review (items #1–20) and the 22 September UX
 review and code audit (UX-, CA-). It also carries the 23 September games build
-list (GA-, RP-, TPS-).
+list (GA-, RP-, TPS-) and the activities build list (AC-).
 
 **For agents:**
 - Read **Open now** first. It is the whole of the remaining work.
@@ -13,6 +13,7 @@ list (GA-, RP-, TPS-).
 - Open a new item with the next free ID in its series.
 - The *why* behind an item lives in its analysis doc, linked from the row:
   - [games-premium-audit.md](games-premium-audit.md)
+  - [activities-premium-audit.md](activities-premium-audit.md)
   - [room-pane-redesign.md](room-pane-redesign.md)
   - [game-activity-redesign.md](game-activity-redesign.md)
   - [ux-deep-dive.md](ux-deep-dive.md)
@@ -24,6 +25,7 @@ list (GA-, RP-, TPS-).
 - **UX-** · the UX review
 - **CA-** · the code audit
 - **GA-** · games to a premium standard
+- **AC-** · activities to a premium standard
 - **RP-** · the room pane
 - **TPS-** · Think-Pair-Share
 
@@ -37,14 +39,15 @@ order.
 | ID | Item | Size | Status |
 |---|---|---|---|
 | GA-11 – GA-28 | **Games to a premium standard**: waves 0–2 (GA-01–10, GA-29–30) are done. Wave 3's four conversions are done too (GA-11–14). Next: wave 4, the proposal queue and Concept Chain's map. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | To do |
+| AC-06 – AC-17 | **Activities to a premium standard**: waves 0 and 1 (AC-01–05) are done: one clock, the desk's live stage, and ten routines on stages. Next: wave 2, where the room's output lands (spotlight, the written count, prompt controls). Full table under [the activities build list](#23-september-2026-activities-to-a-premium-standard-the-build-list). | S–L | To do |
 | RP-01 | Rehearse with a class of 30 (and 120) | S | To do |
 | RP-02 | Lecture-scale defaults (100+): standings off, distribution on | S | To do |
 | RP-03 | A packed, centred word cloud with stable positions | M | To do |
 | RP-04 | The desk's "need a hand" chip, seen drawn | S | To check |
-| TPS-01 | Spotlight one idea during Share | S | To do |
-| TPS-02 | "19 of 26 have written something" during Think (a count only) | S | To do |
+| TPS-01 | Spotlight one idea during Share (now AC-06, for every idea box) | S | To do |
+| TPS-02 | "19 of 26 have written something" during Think (now AC-07) | S | To do |
 | TPS-03 | Smoke-test and view Think-Pair-Share on the wall and a phone | S | To check · not seen drawn |
-| TPS-04 | Offer the stages view to existing lessons' Think-Pair-Share slides | S | To do |
+| TPS-04 | Offer the stages view to existing lessons' staged routines (all ten since AC-05; only new inserts get it now) | S | To do |
 | #7 | Gate ✋ and ? to junction points | S | To do |
 | #8 | Learner theming: the deck theme has no route to the phone | M | Deferred · shared files |
 | #10 | Lesson-level standings, teacher-controlled | M | Deferred · shared files |
@@ -1152,7 +1155,35 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | TPS-01 | Spotlight one idea during Share | [game-activity-redesign.md](game-activity-redesign.md) | S | To do |
 | TPS-02 | "19 of 26 have written something" during Think (a count only; the note stays private) | TPS | S | To do |
 | TPS-03 | Smoke-test and view Think-Pair-Share on the wall and a phone | TPS | S | To check · not seen drawn |
-| TPS-04 | Existing lessons' Think-Pair-Share slides offered the stages view | TPS | S | To do |
+| TPS-04 | Existing lessons' staged routines offered the stages view (ten routines since AC-05) | TPS | S | To do |
+
+### 23 September 2026: activities to a premium standard, the build list
+
+From [activities-premium-audit.md](activities-premium-audit.md): the 44
+activities that are not games, graded against a nine-point bar (A1–A9). At
+the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
+9 broken: every timed moment not on stages drew two clocks. After waves 0 and
+1, 0 are broken and 25 solid. The kit continues the games' numbering (N7–N14).
+
+| ID | Wave | Item | Size | Status |
+|---|---|---|---|---|
+| AC-01 | 0 | **One clock (N7)**: a timed moment's ring follows the desk's Pause, +1 min and Clear; the banner stands aside | S | **Done** 23 Sep · smoke-tested |
+| AC-02 | 0 | **The desk shows the live stage (N8)**, not the full list | S | **Done** 23 Sep · `SF.lightStages`; the desk not opened |
+| AC-03 | 1 | **Pinned brief (N9)**: a leading untimed row stays up on wall and phone through every stage | S | **Done** 23 Sep · seen on the wall |
+| AC-04 | 1 | **Work job (N10)** with Need help on the phone; **group talk (N11)**; "every 4 min" parses | S | **Done** 23 Sep · relay tested |
+| AC-05 | 1 | Stages by default for Square, both Jigsaws, Carousel, Socratic, Teach Someone, Whiteboards, I Do/We Do/You Do, Design and Create | S | **Done** 23 Sep · fit measured in 23 themes |
+| AC-06 | 2 | **Spotlight and hide on any idea box (N12)**, from the desk; absorbs TPS-01 | S–M | To do |
+| AC-07 | 2 | **The written count (N13)** during a note stage, never the text; absorbs TPS-02 | S | To do |
+| AC-08 | 2 | **Prompt controls on the desk (N14)**: close an authored prompt; self-assessment held, then revealed (audit §6) | M | To do |
+| AC-09 | 3 | Hook and Predict on stages: a private prediction, the image pinned | S | To do |
+| AC-10 | 3 | Real-World Connection Hunt as three send stages (room, home, community) | S | To do |
+| AC-11 | 3 | Plus / Minus / Interesting as three send stages filling its columns | S | To do |
+| AC-12 | 3 | Learning Log as private note stages; Visual Summary, Ground Rules, Preview and Scenario Analysis on the kit | S each | To do |
+| AC-13 | with GA-15 | Tally entry for polls and scales, and a typed idea from teacher entry (A9) | M | To do |
+| AC-14 | 4 | Benefits vs Limitations with team credit (games N1); Stations on a round clock; the Question Cube activity points to the game | S–M | To do |
+| AC-15 | after GA-26 | Concept Card Sort and Word Splash confidence on the sort input | L | To do |
+| AC-16 | 3 | Each activity declares its rooms (`plays`), shown in the library, with a catalogue test | S | To do |
+| AC-17 | later | Connect Four as a board | L | To do |
 
 ## Log
 
@@ -1273,6 +1304,11 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** The activities audit is written
+  ([activities-premium-audit.md](activities-premium-audit.md)) and waves 0–1
+  are done (AC-01–05). Timed moments keep one clock that the desk drives.
+  The desk shows the live stage. Ten routines run as stages, with a pinned
+  brief, a work job and group talk. 508/508; activity smoke passes.
 - **23 Sep 2026.** GA-27 (most of it): Beat the Clock is one round. The
   questions flow as the room answers, speed is scored per question, and
   "Time!" shows the room's total. Stale playbook overrides removed. 503/503.
