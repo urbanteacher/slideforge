@@ -38,7 +38,7 @@ order.
 
 | ID | Item | Size | Status |
 |---|---|---|---|
-| GA-15 – GA-28 | **Games to a premium standard**: waves 0–5 are done; 6 and 7 mostly (GA-01–14, 18–21, 23, 25, 26, 29, 30). GA-15–17 (the no-device work skipped alongside wave 3) and GA-28 solo practice are done. **Every planned wave is now built or mostly built;** what remains is the open list below. **Open:** GA-19's drawn bridges (Connection Maker), GA-22 hint cost and Definition on stages, GA-27 self-pacing, GA-24 Race/Boss crowd layout. None of the waves since GA-29 has been viewed on screen except Fill, Beat the Clock and Compare. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | In progress |
+| GA-15 – GA-28 | **Games to a premium standard**: waves 0–6 are done; 7 mostly (GA-01–14, 18–23, 25, 26, 29, 30). GA-15–17 (the no-device work skipped alongside wave 3) and GA-28 solo practice are done. **Every planned wave is now built or mostly built;** what remains is the open list below. **Open:** GA-19's drawn bridges (Connection Maker), GA-27 self-pacing, GA-24 Race/Boss crowd layout. None of the waves since GA-29 has been viewed on screen except Fill, Beat the Clock and Compare. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | In progress |
 | AC-13 – AC-17 | **Activities to a premium standard**: waves 0–3 (AC-01–12, AC-16) are done, and so are the Question Cube and Card Sort hand-overs (parts of AC-14 and AC-15). The Battle stays a slide (Mark, 23 Sep). Deferred: tally entry for polls and scales (AC-13, Mark's decision; the reasoning is in the audit's section 6). Open: Stations need a rotation-aware clock; Word Splash needs custom sort columns; Connect Four as a board. Full table under [the activities build list](#23-september-2026-activities-to-a-premium-standard-the-build-list). | S–L | To do |
 | RP-01 | Rehearse with a class of 30 (and 120) | S | To do |
 | RP-02 | Lecture-scale defaults (100+): standings off, distribution on | S | To do |
@@ -1132,7 +1132,7 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | GA-19 | 4 | Concept Chain as a branching map of phone proposals; Connection Maker as its two-ended preset | M | Mostly done · phone proposals for both; Concept Chain is a branching map with a credit per link. Connection Maker's drawn bridges are open |
 | GA-20 | 5 | **Line reveal (N5)**; Time Traveler → *Place it in time* on a growing timeline | M | **Done** 23 Sep · on the slider engine, growing timeline, legacy heal |
 | GA-21 | 6 | Desk parity: Horse Race lanes, Boss Hit/Miss, Definition Ask, every board control on the desk | S each | **Done** 23 Sep · generic `data-desk` mirror |
-| GA-22 | 6 | Emoji hint released as a step, costing points; Definition rebuilt on stages | S | Partly done · Emoji hint is a released step; its point cost and Definition on stages are open |
+| GA-22 | 6 | Emoji hint released as a step, costing points; Definition rebuilt on stages | S | Done · the hint is a released step, and answers after it score half; Definition is Read → Recall with +30s on the desk |
 | GA-23 | 6 | Ranking reveal as a heat per slot | S | **Done** 23 Sep · with the live reveal-order bug fixed |
 | GA-24 | 6 | Horse Race and Boss use the room pane's top-five layout; Boss gets a reveal per hit | S | To do |
 | GA-29 | 1 | UX pass on spoken verdicts: one path from wall and desk, a held verdict until the speaker is chosen, the speaker cleared per item, a speaker picker (teams, recent, type-ahead, Pick for me), the credit shown on the wall and phones; one shared passage for Spot entry | M | **Done** 23 Sep · relay tested, not viewed |
@@ -1302,6 +1302,11 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** GA-22 is done. Emoji Guess: an answer given after the
+  teacher released the hint scores half (decision in the games audit,
+  section 6). Definition Challenge: a Read → Recall track, and +30s for the
+  reading from + or the desk. `npm test` 528/528 from a clean worktree.
+  Not viewed.
 - **23 Sep 2026.** GA-19: Concept Chain is a branching map. Each Accept adds
   a branch off the term and is credited as it lands (a new `oralCredit`
   message); the term stays open until Next or the clock. This also fixed a

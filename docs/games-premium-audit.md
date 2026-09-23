@@ -50,9 +50,9 @@ tests are in the table. The tier follows from the row.
 | Bingo | `bingo` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ✓ | ✓ | Solid (board) |
 | Quiz Bowl | `bowl` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | ✓ | ◐ | Solid: a board-cell award goes to one team; the game-level target is fixed |
 | Low-Stakes Quiz | `lowstakes` | ✓ | ✓ | ✓ | ✓ | n/a (paper) | ◐ | ✓ | ✓ | Solid (paper by design) |
-| Definition Challenge | `definition` | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: "Ask now" is on the desk too (data-desk) |
+| Definition Challenge | `definition` | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: two stages, Read · 0:30 → Recall, drawn on the wall; Next or Ask (wall and desk) moves on, and the reading clock takes +30s from + or the desk |
 | Word Reveal | `wordreveal` | ✓ | ✓ | ◐ | ✓ | ◐ | ◐ | ✓ | ◐ | Solid: per-answer scoring fixed; reveal polish remains |
-| Emoji Guess | `emoji` | ✓ | ✓ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid: the heading says "Decode the symbols"; the hint is the last help the teacher releases, after the letter pattern |
+| Emoji Guess | `emoji` | ✓ | ✓ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid: the heading says "Decode the symbols"; the hint is the last help the teacher releases, after the letter pattern, and an answer given after it went up scores half |
 | Beat the Clock | `speed` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: *Against the clock* — one round clock on wall and phones; each question reveals as the room answers (or after 15 s) and moves on; right answers score 10 + up to 10 for speed; "Time!" shows the room's right answers and skips the rest |
 | True/False Showdown | `truefalse` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: vote → the room's split on wall and phones → one switch each → reveal of before against after and how many switched |
 | Predict the Outcome | `choice` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: commit with confidence → lock (the room's split, not the answer) → watch → reveal; a sure, right prediction earns half again. Open: the private written prediction (K8) |
@@ -95,7 +95,7 @@ its game-level target was the actual missing setting.
 The other defects in the table come from the 23 September inventory and
 were not re-checked for this audit:
 - Concept Chain allows one link per start term. *(Fixed: GA-19, the map.)*
-- The Emoji hint is on from the start.
+- The Emoji hint is on from the start. *(Fixed: GA-22, a released step that costs half.)*
 - `dripInterval: 4`.
 - Boss Hit/Miss, the race lanes, the chain input and Definition's "Ask" are
   all wall-only.
@@ -271,8 +271,8 @@ answered. Show the letters dripping on the phone too (P5), and make
     teacher chooses who goes up).
   - M after N1, N2 and N4.
 - **Emoji Guess.** Release the hint as a step (the emoji stepper pattern
-  exists) rather than as the heading. A phone that asks for the hint scores
-  less. S.
+  exists) rather than as the heading. An answer given after the hint went up
+  scores less: half (section 6). S.
 - **Definition Challenge.** Rebuild its read-then-recall on stages (K6):
   Read · 0:30 → Recall. That puts the clock and advance on the desk (P6),
   and "Ask" becomes Next. S.
@@ -299,7 +299,7 @@ answered. Show the letters dripping on the phone too (P5), and make
 | **3** | **Done 23 Sep.** Fill the gaps; Odd One Out vote-then-defend; Predict commit-then-watch; T/F hold-or-fold | The thin-to-premium conversions that are mostly kit | M each |
 | **4** | **Done 23 Sep.** N3 proposal queue; Concept Chain and Connection proposals shaped and drawn on the slide; Concept Chain as a branching map with a credit per link (GA-19). *Connection Maker's bridges as drawn lines stay open, under GA-19's second half* | The discussion games' phone jobs | M |
 | **5** | **Done 23 Sep.** N5 line reveal; Time Traveler on one growing timeline, wall and phone | | M |
-| **6** | **Mostly done.** Desk parity (`data-desk`), Emoji hint as a step, Ranking heat. *Open: the hint's point cost, Definition on stages (GA-22)* | P6 across the catalogue | S each |
+| **6** | **Done 23 Sep.** Desk parity (`data-desk`), Emoji hint as a step that costs half, Ranking heat, Definition as Read → Recall stages (GA-21–23) | P6 across the catalogue | S each |
 | **7** | **Mostly done.** N6 sort input; Compare & Contrast sort; Beat the Clock as one round. *Open: per-phone self-pacing (GA-27)* | The two large new mechanics | L |
 | **with 3** | **Done 23 Sep (late).** Tally entry (E3), team rows (E5), saved class lists (E6): skipped alongside wave 3, then built. | Rooms with no devices, done at the speed of a show of hands | M |
 | **after 7** | **Done 23 Sep.** Solo practice (E8): a share link's Practice mode | One learner, alone, at their own pace | M |
@@ -358,6 +358,23 @@ request. These are now part of the bar.
   when they stepped forward and it went well.
 - **One rule covers the cases that exist:** Heads Up, spoken credits, the
   climb.
+
+### Emoji's hint costs the answers that waited for it
+
+Section 4 said "a phone that asks for the hint scores less". No phone asks:
+since GA-22's first half, the teacher releases the hint on the wall for the
+whole room. So the rule is:
+- **An answer given after the hint went up scores half.** Answers given
+  before it keep their points, whenever the reveal comes.
+- **Teacher-entered rows are exempt.** They are typed in after the fact, so
+  their time says nothing about when they were said.
+- **The room is told.** The wall's label reads "Hint · answers now score
+  half", phones still thinking hear it, and a halved result says so.
+
+Why not a per-phone "show hint" button: the hint would then be on some
+phones and not the wall, and a neighbour's phone gives it away for free.
+The earlier worry, that a cost discourages asking for help, does not apply,
+because the learner never asks. The teacher decides when the room needs it.
 
 ### Memory Maze
 
@@ -430,6 +447,23 @@ for (E1). Both are implemented for Spot the Error; its desk heat-map preview
 still leaves P6 partial.
 
 ## Change log
+
+- **23 September 2026 — Emoji's hint cost and Definition's stages (GA-22).**
+  - **Emoji Guess:** when the teacher releases the hint step, the host tells
+    the relay (`hintOut`). An answer from a phone after that moment scores
+    half; teacher-entered rows are exempt. Phones still thinking get a
+    banner, the wall's label says so, and a halved result reads "half, after
+    the hint". The decision and its reason are in section 6.
+  - **Definition Challenge:** a Read · 0:30 → Recall track on the wall, in
+    the stages' style. The reading clock takes +30s from + or the desk's
+    +30s button ("+30s to read"), through the same control as an
+    activity's stage. Next and Ask already moved it on (GA-21).
+  - **Not rebuilt on `js/stages.js` itself:** that runtime draws and times
+    an activity's keyword slide. Definition keeps its own two-phase state and
+    borrows the stages' track, clock extension and desk button.
+  - **Tests:** a relay test for the hint cost. `npm test` 528/528, built in
+    a clean worktree because another session has uncommitted `src/` work.
+    Not viewed on screen.
 
 - **23 September 2026 — Concept Chain is a branching map (GA-19).**
   - **The map.** Each term the game has reached is a row, with the links
