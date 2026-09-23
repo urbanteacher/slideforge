@@ -213,6 +213,21 @@
         node.classList.add('why-open');
         if (host.scheduleFit) host.scheduleFit(node);
       }
+      if (slide.input === 'order' && host.showOrderReveal) {
+        var n = (slide.options || []).length;
+        var here = new Array(n).fill(0), swaps = {}, total = 0;
+        players.forEach(function (p) {
+          if (p.slideId !== slide.id || !Array.isArray(p.choice) || p.choice.length !== n) return;
+          total++;
+          p.choice.forEach(function (item, place) { if (item === place) here[place]++; });
+          for (var a = 0; a < n; a++) for (var b = a + 1; b < n; b++) {
+            if (p.choice[a] === b && p.choice[b] === a) swaps[a + ':' + b] = (swaps[a + ':' + b] || 0) + 1;
+          }
+        });
+        var best = null;
+        Object.keys(swaps).forEach(function (k) { if (!best || swaps[k] > best.n) best = { pair: k.split(':').map(Number), n: swaps[k] }; });
+        host.showOrderReveal({ here: here, total: total, swap: best });
+      }
       if (slide.input === 'fill' && host.showFillReveal) {
         var perGap = (slide.gapAnswers || []).map(function (want) { return { right: want, counts: {} }; });
         players.forEach(function (p) {

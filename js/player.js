@@ -2183,6 +2183,40 @@
   }
 
   /**
+   * Ranking, revealed: the rows move into the right order and are numbered,
+   * each says how many of the room put it in its place, and one sentence
+   * names the pair the room swapped most. Counts only.
+   *
+   * @param {{here: number[], total: number, swap: {pair: number[], n: number} | null}} st
+   */
+  Player.showOrderReveal = function (st) {
+    var node = Player._current;
+    var list = node && node.querySelector('.opts.ordered');
+    if (!list || !st) return;
+    var rows = Array.prototype.slice.call(list.querySelectorAll('.opt'));
+    rows.sort(function (a, b) { return Number(a.dataset.choice) - Number(b.dataset.choice); });
+    rows.forEach(function (row) {
+      var place = Number(row.dataset.choice);
+      row.classList.remove('muted');
+      row.classList.add('correct', 'locked');
+      var key = row.querySelector('.key');
+      if (key) key.textContent = String(place + 1);
+      var heat = row.querySelector('.ord-here') || el('span', 'ord-here', '');
+      var n = st.here[place] || 0;
+      heat.textContent = st.total ? n + ' of ' + st.total + ' here' : '';
+      row.style.setProperty('--share', String(st.total ? n / st.total : 0));
+      (row.querySelector('.opt-line') || row).appendChild(heat);
+      list.appendChild(row);
+    });
+    var names = rows.map(function (r) { var t = r.querySelector('.txt'); return t ? t.textContent : ''; });
+    var box = node.querySelector('.typedcount');
+    if (box && st.swap && st.swap.n) {
+      box.textContent = st.swap.n + ' swapped ' + (st.swap.pair[0] + 1) + ' and ' + (st.swap.pair[1] + 1) +
+        ' (' + names[st.swap.pair[0]] + ' and ' + names[st.swap.pair[1]] + ').';
+    }
+  };
+
+  /**
    * Fill the gaps, revealed: the right word lands in each slot, and under it
    * what the room put there — the right word's count first, then the lure
    * most chosen. One sentence names the hardest gap and its commonest lure.

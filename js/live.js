@@ -1611,6 +1611,28 @@
     });
   }
 
+  /* Ranking at the reveal: for each place, how many put the right item
+     there; and the pair the room swapped most often — "most of you swapped
+     3 and 4" is the lesson. Items are authored in the right order, so item
+     i belongs in place i. */
+  function orderSlots(slide) {
+    var n = (slide.options || []).length;
+    var here = new Array(n).fill(0);
+    var swaps = {};
+    var total = 0;
+    (Live.snapshot.answers || []).forEach(function (a) {
+      if (!Array.isArray(a.response) || a.response.length !== n) return;
+      total++;
+      a.response.forEach(function (item, place) { if (item === place) here[place]++; });
+      for (var p = 0; p < n; p++) for (var q = p + 1; q < n; q++) {
+        if (a.response[p] === q && a.response[q] === p) swaps[p + ':' + q] = (swaps[p + ':' + q] || 0) + 1;
+      }
+    });
+    var best = null;
+    Object.keys(swaps).forEach(function (k) { if (!best || swaps[k] > best.n) best = { pair: k.split(':').map(Number), n: swaps[k] }; });
+    return { here: here, total: total, swap: best };
+  }
+
   /** Fill the gaps: each gap that is right earns its share of the points. */
   function fillGains(slide) {
     var pts = Number(slide.points) || 0;
@@ -2788,6 +2810,10 @@
         var panels = node.querySelector('.compare-panels');
         if (panels) panels.classList.add('on');
       }
+      /* Ranking: the rows were drawn shuffled and a ranking has no single
+         right option, so the pass above muted every row and left them out
+         of order. Put them in order, and show the room's slots. */
+      if (s.input === 'order' && SF.Player.showOrderReveal) SF.Player.showOrderReveal(orderSlots(s));
       if (node.classList.contains('has-why')) {
         SF.Player.flattenOverlay(node);
         node.classList.add('why-open');

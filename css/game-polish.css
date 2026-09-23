@@ -671,3 +671,16 @@
 .layout-quiz .numberline .nl-past-pin.low { bottom: auto; top: 100%; padding: 10px 0 0; }
 .layout-quiz .numberline .nl-past-pin.low::after { bottom: auto; top: 0; }
 .layout-quiz .numberline .npp-year { font-weight: 800; color: var(--s-fg); font-variant-numeric: tabular-nums; }
+
+/* ---- Ranking, revealed: how many put each item in its place ---- */
+.layout-quiz.is-order .ordered .opt { position: relative; overflow: hidden; }
+.layout-quiz.is-order .ordered .opt .ord-here {
+  margin-left: auto; padding-left: 16px; white-space: nowrap;
+  font-size: 18px; font-weight: 750; color: var(--s-dim); position: relative; z-index: 1;
+}
+.layout-quiz.is-order .ordered .opt .opt-line { position: relative; z-index: 1; display: flex; align-items: center; width: 100%; }
+.layout-quiz.is-order .ordered .opt:has(.ord-here)::before {
+  content: ''; position: absolute; inset: 0; transform-origin: left center;
+  transform: scaleX(var(--share, 0));
+  background: color-mix(in srgb, #34c98a 22%, transparent);
+}

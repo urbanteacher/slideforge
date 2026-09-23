@@ -4549,7 +4549,7 @@
         return String(o).trim();
       });
       var wrap = el("div", "opts judge-strip");
-      wrap.appendChild(el("div", "judge-caption", slide.style === "spinexplain" ? "Clear · 2 points / With hint · 1 / Try again · 0" : "Host marks the claim"));
+      wrap.appendChild(el("div", "judge-caption", slide.style === "spinexplain" ? "Clear · a question’s worth / With a hint · half / Try again · nothing" : "Host marks the claim"));
       opts_.forEach(function(text2, i) {
         var yes = i === slide.correct;
         var b = el("button", "opt judge " + (yes ? "yes" : "skip"));
