@@ -53,7 +53,7 @@ tests are in the table. The tier follows from the row.
 | Definition Challenge | `definition` | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: "Ask now" is on the desk too (data-desk) |
 | Word Reveal | `wordreveal` | ✓ | ✓ | ◐ | ✓ | ◐ | ◐ | ✓ | ◐ | Solid: per-answer scoring fixed; reveal polish remains |
 | Emoji Guess | `emoji` | ✓ | ✓ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid: the heading says "Decode the symbols"; the hint is the last help the teacher releases, after the letter pattern |
-| Beat the Clock | `speed` | ◐ | ◐ | ◐ | ✓ | ✓ | ◐ | ✓ | ◐ | Thin: the clock restarts per question, so there is no clock to beat |
+| Beat the Clock | `speed` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: *Against the clock* — one round clock on wall and phones; each question reveals as the room answers (or after 15 s) and moves on; right answers score 10 + up to 10 for speed; "Time!" shows the room's right answers and skips the rest |
 | True/False Showdown | `truefalse` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: vote → the room's split on wall and phones → one switch each → reveal of before against after and how many switched |
 | Predict the Outcome | `choice` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ◐ | Solid, near premium: commit with confidence → lock (the room's split, not the answer) → watch → reveal; a sure, right prediction earns half again. Open: the private written prediction (K8) |
 | Fill in the Blanks | `fill` | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | Solid, near premium: *Fill the gaps* — up to four [gaps], a shuffled word bank with lures tapped into slots, the right word landing in each at the reveal with what the room put there, the hardest gap and its lure named; partial marks; teacher entry by key |
@@ -70,8 +70,8 @@ tests are in the table. The tier follows from the row.
 
 **Totals:**
 - 0 fully premium; Spot the Error is near-premium.
-- 23 solid.
-- 2 thin.
+- 24 solid.
+- 1 thin.
 - 0 broken by wrong-result scoring.
 - 1 disabled.
 
@@ -416,6 +416,27 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — Beat the Clock: against the clock (GA-27, without
+  self-pacing).**
+  - **One clock for the whole run:** the game's time, 1–3 minutes, 90 s if
+    unset. No question has a countdown of its own. The clock shows on the
+    wall, clear of the room pane and the question, and each phone's question
+    label counts it down.
+  - **Questions keep moving.** Each reveals as soon as the room has
+    answered, or closes itself after 15 seconds, shows the answer for a
+    beat, and the next arrives.
+  - **At time,** "Time!" shows the room's right answers, and Next skips the
+    questions nobody reached. This is Heads Up's round runtime
+    (`js/rounds.js`), generalised.
+  - **Scoring:** a right answer earns 10, plus up to 10 for speed timed from
+    the question's own appearance; a wrong one costs 5.
+  - **Playbook:** the overrides that described the old games (Beat the
+    Clock, Heads Up, Fill, Time Traveler, Random Challenge) were hiding the
+    new descriptions and are rewritten or removed.
+  - **Tests:** round and relay tests. `npm test` 503/503. Viewed on screen,
+    which found the clock under the pane and over the question; both fixed.
+  - **Still open:** truly self-paced play, where each phone runs its own
+    stream.
 - **23 September 2026 — Spin lands; Compare's phones have a job.**
   - **Spin & Explain:** the wheel spins for two seconds and comes to rest on
     a sector of its own, different each draw. Then the concept slides in.

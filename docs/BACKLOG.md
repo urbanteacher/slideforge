@@ -1138,7 +1138,7 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | GA-30 | 1 | Spoken team credit on the game's points scale, so it registers in a lesson that mixes quiz and spoken games | S | **Done** 23 Sep · 1,000 per accept, half with a hint |
 | GA-25 | 2–6 | On the draw and round clock: Spin & Explain spinner, Random Challenge deck, Question Cube roll plus stages, Heads Up 60-second round | S–M each | **Done** 23 Sep · Heads Up round, deck, cube roll, the wheel lands |
 | GA-26 | 7 | **Sort input (N6)**; Compare & Contrast → *Sort it* | L | To do |
-| GA-27 | 7 | Beat the Clock → self-paced *Against the clock* (relay self-paced mode) | L | To do |
+| GA-27 | 7 | Beat the Clock → self-paced *Against the clock* (relay self-paced mode) | L | Mostly done · one round clock, flowing questions, round scoring; per-phone self-pacing open |
 | GA-28 | after 7 | **Solo practice** on the share link (E8) | M | To do |
 
 **Carried from today's other work:**
@@ -1273,6 +1273,9 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** GA-27 (most of it): Beat the Clock is one round. The
+  questions flow as the room answers, speed is scored per question, and
+  "Time!" shows the room's total. Stale playbook overrides removed. 503/503.
 - **23 Sep 2026.** GA-25 is done: Spin & Explain's wheel spins and lands
   before the concept. Compare & Contrast phones send points through the idea
   box (an interim for GA-26). Entrance animations run in the show only.
