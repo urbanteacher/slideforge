@@ -75,7 +75,7 @@ An audience prompt on a labelled-rows slide.
 |---|---|---|---|---|---|---|---|---|---|---|
 | Word Splash | word cloud | ◐ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: the source's confidence marking is on paper; the cloud asks something else |
 | Knowledge Activation Web | word cloud | ◐ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: a cloud, not a web; the notes say so |
-| Question Cube (six types) | brainstorm | ◐ | ◐ | n/a | ✓ | ✓ | ◐ | ✗ | ◐ | Thin: the Question Cube *game* now rolls; this is the same idea without the roll |
+| Question Cube (six types) | game · Question Cube | ✓ | ✓ | ◐ | ◐ | ✓ | ✓ | ◐ | ◐ | Solid: hands over to the Question Cube game, its six questions as faces; graded as that game (games audit) |
 | Real-World Connection Hunt | moment · stages | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | Near-premium: a stage, a clock, a box and a spotlight per place |
 | Muddiest Point | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ✓ | ◐ | ◐ | Solid-: the desk spotlights the point to fix. The wall says "Spotlight", not §4's "We'll fix this one" |
 | Exit Ticket | brainstorm | ✓ | ◐ | n/a | ✓ | ✓ | ✓ | ◐ | ◐ | Solid-: named on the desk and in the report, which is right |
@@ -130,9 +130,9 @@ A long piece of work, with the brief on the wall.
 | Error Analysis | brief | ✓ | ✓ | n/a | ◐ | ✓ | ✓ | ✓ | ◐ | Solid |
 | Differentiated Practice Menu | panels | ✓ | ✓ | n/a | ◐ | ✓ | ✓ | ✓ | ◐ | Solid: the menu is the thing |
 | Quick Practice Stations | cards | ✓ | ✓ | ✗ | ◐ | ✓ | ◐ | ✓ | ◐ | Solid-: rotations are timed in the notes, not on the wall |
-| Concept Card Sort | rows | ◐ | ◐ | n/a | ✗ | ✓ | ✓ | ✓ | ◐ | Thin: the sort is on paper; waits for the sort input (N6) |
+| Concept Card Sort | game · Compare sort | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | Near-premium: every card sorted on the phones, Perimeter, Area or both; the reveal names the card most misfiled |
 | Scenario Analysis | stages | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | Near-premium: the three scenarios pinned; two group-talk stages; predictions come back |
-| Benefits vs Limitations Battle | brief | ✓ | ✓ | n/a | ✗ | ✓ | ◐ | ✗ | ◐ | Thin: a battle with a scoring rule and no score |
+| Benefits vs Limitations Battle | brief | ✓ | ✓ | n/a | ✗ | ✓ | ◐ | ✗ | ◐ | Thin, by decision: it stays a slide, and its scoring rule is kept on the board (§6) |
 | Connect Four (concepts) | table | ✓ | ✓ | n/a | ✗ | ✓ | ◐ | ✗ | ◐ | Thin: the grid is drawn; claims are on paper |
 
 ### Written reflection
@@ -143,17 +143,16 @@ A long piece of work, with the brief on the wall.
 | Plus / Minus / Interesting | stages | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | Near-premium: a box per column; the three spotlights stand together at the look back |
 | Visual Summary | stages | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | n/a | ◐ | Solid: the formats pinned; make (work), then share with a partner |
 
-**Totals, after wave 3:**
+**Totals, after wave 3 and the two hand-overs:**
 - 0 premium. What holds back the nearest is A8's rehearsal and A9's teacher entry (§7).
-- 7 near-premium:
+- 8 near-premium:
   - Think-Pair-Share and Think-Pair-Square-Share;
   - the Connection Hunt;
   - the two self-assessments;
-  - Scenario Analysis and PMI.
-- 26 solid or solid-minus.
-- 11 thin: Do Now, Wait Time, Daily Review, Dialogue Chain, the two word
-  clouds, the Question Cube activity, Concept Development, Card Sort, the
-  Battle and Connect Four.
+  - Scenario Analysis, PMI and the Concept Card Sort.
+- 27 solid or solid-minus.
+- 9 thin: Do Now, Wait Time, Daily Review, Dialogue Chain, the two word
+  clouds, Concept Development, the Battle and Connect Four.
 - 0 broken. There were 9, every timed moment not on stages, and the one clock (N7) fixed them all.
 - The Question Cube game supersedes the Question Cube activity (see §4).
 
@@ -266,13 +265,13 @@ several rows.
   per-term confidence sort needs columns other than N6's A only / Both /
   B only.
 - **Question Cube (activity)** is superseded by the Question Cube game.
-  - Its card in the catalogue should point to the game, with its six
-    authored questions as the game's six faces.
-  - *Unblocked, not yet redone:* the hand-over was built and reverted,
-    because Quiz studio's AI had no Question Cube shape and the activity's
-    "Write it" guardrail (the six Rosenshine stems) would have been lost.
-  - Since `de69598` the game AI writes exactly the six faces, looked up by
-    the game's format. The remap can be redone.
+  - **Done 23 Sep.** Choosing it inserts the Question Cube game, with its
+    six authored questions as the game's six faces.
+  - The first attempt was reverted: Quiz studio's AI had no Question Cube
+    shape, and the activity's "Write it" guardrail (the six Rosenshine stems)
+    would have been lost.
+  - Since `de69598` the game AI writes exactly the six faces, so the
+    guardrail travels with the game.
 
 ### Teacher-led slides
 
@@ -310,21 +309,22 @@ Slides by design: A3 and A7 are not their job.
     stations stay put.
 - **Scenario Analysis:** the three scenarios pinned, the two questions as
   talk stages.
-- **Benefits vs Limitations Battle:**
-  - Two teams, and a valid new point credits a team through the spoken
-    verdict (games N1).
-  - Its name is a contest, so it scores (§6).
-  - The spoken verdict exists only for game styles. So this is a new
-    spoken style, with all nine registrations: L, not M. *Open decision.*
+- **Benefits vs Limitations Battle:** stays a slide, by decision (§6).
+  - Team credit would need a new spoken game style, with all nine
+    registrations.
+  - Its scoring rule ("valid new point: 1") stays on the slide, for the
+    board.
 - **Connect Four:** a board (K12) where a team claims a cell and the teacher
   accepts. L; after the boards work.
-- **Concept Card Sort:** on N6, as a Compare sort (Perimeter or Area).
-  - *Unblocked, not yet redone:* built and reverted, because Quiz studio's
-    `compare` AI wrote no statements.
-  - Since `de69598` it writes four to eight tagged statements, at least one
-    per column. It asks for fewer items than the activity's own guardrail
-    (twelve to twenty). A remap should take the cards across three rounds,
-    as the reverted version did.
+- **Concept Card Sort:** **Done 23 Sep**, on N6 as a Compare sort
+  (Perimeter or Area).
+  - The twelve cards are three rounds of four, each round with one card for
+    Both.
+  - The first attempt was reverted: Quiz studio's `compare` AI wrote no
+    statements. Since `de69598` it writes four to eight tagged statements a
+    round.
+  - The source's student-chosen categories are kept as a question for after
+    the sort (in the teacher notes).
 
 ### Written reflection
 
@@ -347,8 +347,8 @@ Slides by design: A3 and A7 are not their job.
 | **2** | **Done 23 Sep.** N12 spotlight and hide; N13 the written count; N14 prompt controls (close, hold, reveal) | The room's output lands; closes TPS-01 and TPS-02 | M |
 | **3** | **Done 23 Sep.** Family redesigns on the kit (Hook and Predict, Connection Hunt, PMI, Learning Log, Ground Rules, Preview, Visual Summary, Scenario Analysis) and room declarations (AC-16) | Each is a preset change on stages plus N12 | S each |
 | **with GA-15** | **E3 tally entry** for polls and scales | Rooms with no devices | M |
-| **4** | Question Cube activity → game: **unblocked** by `de69598`, to redo. Still blocked: Benefits vs Limitations (a new spoken style: a decision) and Stations (a rotation-aware clock) | Tried 23 Sep; see §4 and the change log | S–L |
-| **after GA-26** | Concept Card Sort: **unblocked** by `de69598`, to redo. Still blocked: Word Splash confidence (custom sort columns) | N6 is built | L |
+| **4** | **Question Cube activity → game: done 23 Sep.** The Battle stays a slide (decided). Stations: blocked on a rotation-aware clock | See §4 | S–L |
+| **after GA-26** | **Concept Card Sort: done 23 Sep.** Word Splash confidence: blocked on custom sort columns | N6 is built | L |
 | **later** | Connect Four as a board | | L |
 
 At the end of wave 1 the broken count was zero, as planned. At the end of
@@ -397,13 +397,14 @@ written something (a yes, once there are a few words), never the text.
 - The desk is where "who needs support" belongs (P4); the room pane already
   moved "needs a hand" there.
 
-### Activities do not score, except the two named as contests
+### Activities do not score, except a contest built as a game
 
 **The rule:**
 - No activity puts points on the standings.
-- Two do: Benefits vs Limitations **Battle** and Connect Four. Their name
-  promises a contest, so they score by team through the games' spoken
-  verdict.
+- The Benefits vs Limitations **Battle** stays a slide. It keeps its
+  scoring rule for the board, and puts nothing on the standings. Decided by
+  Mark on 23 September 2026: team credit would need a new spoken game style.
+- Connect Four would score by team if it is built as a board (§4, later).
 
 **Why:**
 - Games are where the room competes. An activity is where it thinks, talks
@@ -457,6 +458,22 @@ This is already the rule in `js/stages.js`, and it stays.
     A prompt says `entry: no` until tally entry exists.
 
 ## Change log
+
+- **23 September 2026 — The Question Cube and Card Sort hand-overs, redone.**
+  - They were redone after `de69598` taught the game AI both shapes.
+  - **Question Cube** inserts the Question Cube game (`randomchallenge`,
+    format `question-cube`), its six perimeter questions as faces.
+  - **The Card Sort** inserts a Compare & Contrast sort: three rounds of
+    four cards, plus one for Both, Perimeter or Area.
+  - A preset that remaps onto a game now names its engine (`style`).
+  - **Tests:** `npm test` 525/525. The two AI guardrail tests now check that
+    each activity is written by its game's shape. The slide-guardrail test
+    moved to Worked Example Analysis, which still writes on the slide. A
+    compile test checks six faces, and three rounds of five cards each.
+  - Seen in the browser: both inserted from the catalogue, the cube rolling
+    "Why", and the sort board with its five cards.
+  - **Decided (Mark):** the Battle stays a slide (§6).
+  - Stations and Word Splash stay blocked.
 
 - **23 September 2026 — The body brought up to date.**
   - The wave 3 kit is in §3 (AK1–AK7), not only in this log.
