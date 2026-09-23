@@ -337,9 +337,9 @@
       players: 'Class discussion — phones stay idle.',
       scoring: 'None — prepared points guide the reveal.',
       howToPlay: [
-        'Two equal items appear side by side.',
-        'Argue how they are alike and how they differ.',
-        'Reveal the prepared similarities and differences.'
+        'Two items appear side by side. Phones send one way they are alike or differ — the room sees the points arrive, without names.',
+        'Put the strongest on the table from the desk and discuss it.',
+        'Reveal the prepared similarities and differences, and compare them with the room’s.'
       ]
     },
     'predict-outcome': {

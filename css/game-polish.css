@@ -477,7 +477,8 @@
   position: relative; z-index: 1; width: min(820px, 94%);
   display: grid; justify-items: center;
 }
-.layout-quiz.present-challenge .challenge-deck .challenge-poster { width: 100%; animation: sf-draw-card .55s cubic-bezier(.3,0,.2,1); }
+.layout-quiz.present-challenge .challenge-deck .challenge-poster { width: 100%; }
+#player .layout-quiz.present-challenge .challenge-deck .challenge-poster { animation: sf-draw-card .55s cubic-bezier(.3,0,.2,1); }
 .layout-quiz.present-challenge .challenge-deck::before,
 .layout-quiz.present-challenge .challenge-deck::after {
   content: ''; position: absolute; inset: 0; border-radius: 14px;
@@ -525,7 +526,7 @@
   font-size: 16px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--s-dim);
 }
 /* A new term lands fast: that rhythm is the game. */
-.layout-quiz.present-headsup .oracy-term { animation: sf-term-in .28s cubic-bezier(.3,0,.2,1); }
+#player .layout-quiz.present-headsup .oracy-term { animation: sf-term-in .28s cubic-bezier(.3,0,.2,1); }
 @keyframes sf-term-in { from { transform: translateY(18px) scale(.97); opacity: 0; } }
 /* Time: the round's result takes the stage. */
 .layout-quiz.present-headsup .round-over {
@@ -699,8 +700,8 @@
   display: grid; place-content: center; gap: 6px;
   background: var(--face); color: #fff;
   box-shadow: 0 14px 0 color-mix(in srgb, var(--face) 60%, #000), 0 22px 40px rgba(0,0,0,.18);
-  animation: sf-cube-roll .8s cubic-bezier(.3,0,.2,1);
 }
+#player .layout-quiz.present-cube .cube-face { animation: sf-cube-roll .8s cubic-bezier(.3,0,.2,1); }
 .layout-quiz.present-cube .cube-face[data-face="1"] { --face: #2f9e6e; }
 .layout-quiz.present-cube .cube-face[data-face="2"] { --face: #d9a404; }
 .layout-quiz.present-cube .cube-face[data-face="3"] { --face: #8a5cd1; }
@@ -714,4 +715,18 @@
   0% { transform: translateY(-60px) rotate(-200deg) scale(.7); opacity: 0; }
   60% { transform: translateY(8px) rotate(12deg) scale(1.04); opacity: 1; }
   100% { transform: none; }
+}
+
+/* ---- Spin & Explain: the wheel spins, lands, and then the concept ----
+   In the show only: the editor, thumbnails and baselines see it at rest. */
+#player .game-stage.present-spin .spin-disc {
+  transform: rotate(var(--land, 0deg));
+  animation: sf-spin-land 2.2s cubic-bezier(.12,.72,.18,1) both;
+}
+#player .game-stage.present-spin .spin-challenge { animation: sf-spin-reveal .5s cubic-bezier(.3,0,.2,1) 1.9s both; }
+@keyframes sf-spin-land { from { transform: rotate(0deg); } to { transform: rotate(var(--land, 0deg)); } }
+@keyframes sf-spin-reveal { from { opacity: 0; transform: translateX(30px) scale(.96); } }
+@media (prefers-reduced-motion: reduce) {
+  #player .game-stage.present-spin .spin-disc,
+  #player .game-stage.present-spin .spin-challenge { animation: none; }
 }

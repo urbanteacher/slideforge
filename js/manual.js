@@ -341,6 +341,29 @@ if($('startLiveRoom')) $('startLiveRoom').onclick=function(){
    except in Heads Up, where the guesser owns the round. */
 var spQuery='', spFocusFor='';
 function chooseSpeaker(r){spQuery='';var f=$('spSearch');if(f)f.value='';send('recipient',{recipient:r});}
+/* Proposals from the phones (Concept Chain, Connection Maker, Compare &
+   Contrast): named here, anonymous on the wall. "Use this" puts one on the
+   table; in a spoken format its author becomes the speaker and, in a chain,
+   its words the link Accept will add. */
+function paintProposals(){
+ var pp=$('spProposals');if(!pp)return;
+ var props=state.proposals||[];
+ pp.textContent='';pp.hidden=!props.length&&!state.onTable;
+ if(state.onTable){
+  var table=document.createElement('p');table.className='sp-on-table';
+  table.textContent='On the table: “'+state.onTable+'”';pp.appendChild(table);
+ }
+ if(!props.length)return;
+ var ph=document.createElement('span');ph.className='sp-label';ph.textContent='From the room';pp.appendChild(ph);
+ props.forEach(function(it){
+  var row=document.createElement('div');row.className='sp-proposal';
+  var said=document.createElement('span');said.className='sp-proposal-text';said.textContent=it.text;row.appendChild(said);
+  var by=document.createElement('span');by.className='sp-proposal-who';by.textContent=it.name||'';row.appendChild(by);
+  row.appendChild(button('Use this',function(){send('useProposal',{pid:it.pid,text:it.text});}));
+  pp.appendChild(row);
+ });
+}
+
 function paintSpokenControls(q){
  var box=$('spokenControls');
  if(!box)return;
@@ -385,26 +408,6 @@ function paintSpokenControls(q){
   var b=button(teamName(i),function(){chooseSpeaker({type:'team',id:i});});
   b.className='sp-team'+(on?' on':'');b.setAttribute('aria-pressed',String(on));tb.appendChild(b);
  });
-
- /* Proposals from the phones (Concept Chain, Connection Maker): named here,
-    anonymous on the wall. "Use this" makes its author the speaker and, in a
-    chain, its words the link Accept will add. */
- var props=state.proposals||[];
- var pp=$('spProposals');pp.textContent='';pp.hidden=!props.length&&!state.onTable;
- if(state.onTable){
-  var table=document.createElement('p');table.className='sp-on-table';
-  table.textContent='On the table: “'+state.onTable+'”';pp.appendChild(table);
- }
- if(props.length){
-  var ph=document.createElement('span');ph.className='sp-label';ph.textContent='From the room';pp.appendChild(ph);
-  props.forEach(function(it){
-   var row=document.createElement('div');row.className='sp-proposal';
-   var said=document.createElement('span');said.className='sp-proposal-text';said.textContent=it.text;row.appendChild(said);
-   var by=document.createElement('span');by.className='sp-proposal-who';by.textContent=it.name||'';row.appendChild(by);
-   row.appendChild(button('Use this',function(){send('useProposal',{pid:it.pid,text:it.text});}));
-   pp.appendChild(row);
-  });
- }
 
  var qy=spQuery.trim().toLowerCase();
  var recent=(state.recentSpeakers||[]).map(function(id){return byId[id];}).filter(Boolean);
@@ -489,6 +492,7 @@ function render(){
     because those are the rows that need doing something to. */
  var q=state.question, key=q?q.id:'', all=(state.players||[]).slice();
  paintSpokenControls(q);
+ paintProposals();
  paintTapPassage(q);
  var entered=all.filter(function(p){return p.manual;});
  var onPhones=all.filter(function(p){return !p.manual;});

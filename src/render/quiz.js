@@ -434,6 +434,9 @@ export function createQuizRenderer(SF, helpers) {
       var dial = el('div', 'spin-dial');
       dial.setAttribute('aria-hidden', 'true');
       var wheel = el('div', 'spin-disc');
+      /* Where the wheel comes to rest: four full turns and a sector of its
+         own, different for each draw, so every spin looks like a spin. */
+      wheel.style.setProperty('--land', ((4 * 360) + ((slide.drawNo || 1) * 137) % 360) + 'deg');
       for (var segment = 0; segment < 8; segment++) {
         var mark = el('span', 'spin-segment', ['✦', '◎', '✳', '◇'][segment % 4]);
         mark.style.setProperty('--sector', segment);

@@ -378,9 +378,12 @@
       /* A proposal becomes the one on the table: its author is the speaker,
          and in Concept Chain its words are the link Accept will add. */
       var here=SF.Player.deck&&SF.Player.deck.slides[SF.Player.idx];
-      if(!here||!isSpokenSlide(here)||Live.revealed[here.id]) return;
+      if(!here||!proposalSlide(here)) return;
+      var spokenHere=isSpokenSlide(here)&&!Live.revealed[here.id];
       var pid=Number(data.pid);
-      if(Live.players.some(function(p){return p.id===pid;})) Live.selectedRecipient={type:'player',id:pid};
+      /* In a spoken format the author becomes the speaker; Compare has no
+         verdict, so the point just goes on the table. */
+      if(spokenHere&&Live.players.some(function(p){return p.id===pid;})) Live.selectedRecipient={type:'player',id:pid};
       var said=String(data.text||'').slice(0,160);
       if((here.style==='conceptchain'||here.conceptChain)&&SF.Player.chainCommand) SF.Player.chainCommand('pending',said);
       Live.proposalOnTable={slideId:here.id,text:said};
@@ -438,7 +441,14 @@
      their authors; "Use this" makes a proposal the link on the table and its
      author the speaker, so Accept grows the chain and credits them. */
   Live.proposalPrompt = null;
+  function proposalSlide(s) {
+    return !!s && (s.style === 'conceptchain' || s.conceptChain || s.style === 'connection' ||
+      s.style === 'compare' || s.compareDiscuss);
+  }
   function proposalText(s) {
+    if (s.style === 'compare' || s.compareDiscuss) {
+      return 'One way \u201c' + (s.itemA || 'A') + '\u201d and \u201c' + (s.itemB || 'B') + '\u201d are alike, or differ. Say which.';
+    }
     if (s.style === 'connection') {
       return 'How are \u201c' + (s.itemA || 'A') + '\u201d and \u201c' + (s.itemB || 'B') + '\u201d connected?';
     }
@@ -446,7 +456,7 @@
   }
   function openProposals(s) {
     if (!Live.active || !s || Live.revealed[s.id]) return;
-    if (!(s.style === 'conceptchain' || s.conceptChain || s.style === 'connection')) return;
+    if (!proposalSlide(s)) return;
     if (Live.prompt) return;                      // something else is asking the room
     if (!startCustomPrompt({ kind: 'brainstorm', prompt: proposalText(s), presentAs: 'rail', max: 2 })) return;
     Live.proposalPrompt = Live.prompt ? Live.prompt.id : null;
@@ -2258,7 +2268,7 @@
     } else if (s.style === 'compare' || s.compareDiscuss) {
       role = 'discuss';
       headPrompt = 'Compare & contrast';
-      participation = 'Discuss similarities and differences. Do not tap an answer on your phone.';
+      participation = 'Send one way they are alike or differ when the idea box opens, then discuss.';
     } else if (s.style === 'conceptchain' || s.conceptChain) {
       role = 'discuss';
       headPrompt = 'Concept chain';
@@ -2502,7 +2512,7 @@
     /* Proposals belong to the item they were made for. */
     if (Live.proposalOnTable && (!s || Live.proposalOnTable.slideId !== s.id)) Live.proposalOnTable = null;
     if (Live.proposalPrompt) closeProposals();
-    if (s && (s.style === 'conceptchain' || s.conceptChain || s.style === 'connection') && !Live.revealed[s.id]) {
+    if (proposalSlide(s) && !Live.revealed[s.id]) {
       setTimeout(function () {
         var now = SF.Player.wallSlide ? SF.Player.wallSlide() : (SF.Player.deck && SF.Player.deck.slides[SF.Player.idx]);
         if (now && now.id === s.id) openProposals(s);
