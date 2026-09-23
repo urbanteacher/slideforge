@@ -23952,6 +23952,29 @@
     }
     return 0;
   }
+  function practiceDoc(deck, lookupGame) {
+    var copy = JSON.parse(JSON.stringify(deck));
+    var games = {};
+    var skipped = [];
+    copy.slides = copy.slides.map(function(s) {
+      if (s.type !== "game") return s;
+      var game = lookupGame(s.gameId);
+      var style = game ? GAME_STYLES[game.style] : null;
+      var solo = style && style.plays && style.plays.solo;
+      if (game && solo && solo.status === "yes") {
+        games[s.gameId] = game;
+        return s;
+      }
+      var title = game && game.title || s.gameTitle || "A game";
+      skipped.push(title);
+      var note = makeSlide("section");
+      note.title = title;
+      note.subtitle = "Played together in class — this one needs a room.";
+      return note;
+    });
+    copy.practice = { games, skipped };
+    return copy;
+  }
   function buildRunDeck(deck, lookupGame) {
     const run = (
       /** @type {RunDeck} */
@@ -24380,6 +24403,7 @@
     spotSpan,
     SPOT_MAX_WORDS,
     fillParts,
+    practiceDoc,
     sortStatements,
     sortScore,
     fillScore,

@@ -32,6 +32,8 @@
         'edit it and it is not listed anywhere — but a link that escapes is a lesson that ' +
         'escaped. Games are not carried across; the slides are. You get a key that withdraws it.',
       options: [
+        { value: 'practice', label: 'Practice: the games, for one learner',
+          detail: 'The slides and every game that can be played alone: they answer, see the answer and why, and keep a score on their own device. Games that need a room — spoken, boards, sorts on phones — say so instead.' },
         { value: 'read', label: 'A link to read at their own pace',
           detail: 'They open it whenever they like and page through it themselves. Works whether or not you are presenting.' },
         { value: 'follow', label: 'A screen that follows you live',
@@ -46,7 +48,10 @@
       toast('Uploading a copy…');
       fetch('/api/share', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ doc: doc })
+        /* Practice carries the solo-playable games inside the copy. */
+        body: JSON.stringify({ doc: choice === 'practice' && SF.practiceDoc
+          ? SF.practiceDoc(doc, function (id) { return SF.GameStore ? SF.GameStore.get(id) : null; })
+          : doc })
       }).then(function (r) {
         return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; });
       }).then(function (j) {

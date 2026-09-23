@@ -1399,6 +1399,40 @@ function runIndexOf(deck, run, i) {
  * @param {(id: string) => Game | null} lookupGame
  * @returns {RunDeck}
  */
+/**
+ * A copy of a lesson for one learner practising alone (a share link's
+ * Practice mode, E8). Games that can be played solo travel inside it, whole;
+ * a game that needs a room — spoken, a board, a discussion, or one answered
+ * on phones — is replaced by a card that says so, rather than a slide that
+ * silently does nothing.
+ *
+ * @param {Deck} deck
+ * @param {function(string): (Game|null)} lookupGame
+ */
+function practiceDoc(deck, lookupGame) {
+  var copy = JSON.parse(JSON.stringify(deck));
+  var games = {};
+  var skipped = [];
+  copy.slides = copy.slides.map(function (s) {
+    if (s.type !== 'game') return s;
+    var game = lookupGame(s.gameId);
+    var style = game ? GAME_STYLES[game.style] : null;
+    var solo = style && style.plays && style.plays.solo;
+    if (game && solo && solo.status === 'yes') {
+      games[s.gameId] = game;
+      return s;
+    }
+    var title = (game && game.title) || s.gameTitle || 'A game';
+    skipped.push(title);
+    var note = makeSlide('section');
+    note.title = title;
+    note.subtitle = 'Played together in class — this one needs a room.';
+    return note;
+  });
+  copy.practice = { games: games, skipped: skipped };
+  return copy;
+}
+
 function buildRunDeck(deck, lookupGame) {
   /* A RunDeck is a Deck plus what the room needs to play it — the games that
      were expanded, the mechanic, the music. Built by widening a copy, so the
@@ -1877,6 +1911,7 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   spotSpan: spotSpan,
   SPOT_MAX_WORDS: SPOT_MAX_WORDS,
   fillParts: fillParts,
+  practiceDoc: practiceDoc,
   sortStatements: sortStatements,
   sortScore: sortScore,
   fillScore: fillScore,

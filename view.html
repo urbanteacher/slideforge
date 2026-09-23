@@ -122,11 +122,18 @@ SF.installExplore(SF);
   fetch('/api/share/' + id, { cache: 'no-store' })
     .then(function (r) { return r.ok ? r.json() : r.json().then(function (e) { throw new Error(e.error || 'Not found'); }); })
     .then(function (data) {
+      /* Practice mode carries its solo-playable games inside the copy; read
+         and follow links carry none. Read before normalising, which keeps
+         only a deck's own fields. */
+      var practice = data.doc && data.doc.practice && data.doc.practice.games ? data.doc.practice : null;
       var deck = SF.normalizeDeck(data.doc);
-      /* Games are not carried into a share: they are separate documents and
-         the live room they belong to is not running. The slide that embedded
-         one says so rather than failing. */
-      var run = SF.buildRunDeck(deck, function () { return null; });
+      /* Games are not carried into a read link: they are separate documents
+         and the live room they belong to is not running. The slide that
+         embedded one says so rather than failing. */
+      var run = SF.buildRunDeck(deck, function (id) {
+        return practice && practice.games[id] ? SF.normalizeGame(practice.games[id]) : null;
+      });
+      if (practice) document.body.classList.add('share-practice');
       msg.style.display = 'none';
       SF.Player.start(run, 0, { fullscreen: false, share: true });
       var bar = document.createElement('div');
@@ -144,8 +151,12 @@ SF.installExplore(SF);
          else. A watcher is not a player: it is never counted in the room, has
          no name, answers nothing, and appears in no report. */
       if (!follow) {
-        bar.innerHTML = '<span><b>' + esc(deck.title || 'Shared lesson') +
-          '</b> · read only</span><span>Click the slide or use ← →</span>';
+        bar.innerHTML = practice
+          ? '<span><b>' + esc(deck.title || 'Shared lesson') + '</b> · practice' +
+            (run.games && run.games.length ? ' · ' + run.games.length + (run.games.length === 1 ? ' game' : ' games') : '') +
+            '</span><span>Answer on the slide · your score stays on this device · ← →</span>'
+          : '<span><b>' + esc(deck.title || 'Shared lesson') +
+            '</b> · read only</span><span>Click the slide or use ← →</span>';
         return;
       }
       document.body.classList.add('share-follow');

@@ -466,3 +466,25 @@ test('Beat the Clock is one round: no question clock, a pace, and speed from eac
   assert.equal(SF.roundSpeedPoints(true, 30), 10, 'slow but right still earns 10');
   assert.equal(SF.roundSpeedPoints(false, 1), -5);
 });
+
+test('a practice copy carries the games one learner can play, and says which need a room', () => {
+  const SF = loadModel();
+  const quiz = SF.normalizeGame(SF.makeGame('Quick check', 'choice'));
+  const heads = SF.normalizeGame(SF.makeGame('Heads up', 'headsup'));
+  const deck = SF.normalizeDeck({ title: 'L', slides: [
+    { type: 'title', title: 'Lesson' },
+    { type: 'game', gameId: quiz.id, gameTitle: quiz.title },
+    { type: 'game', gameId: heads.id, gameTitle: heads.title }
+  ] });
+  const store = { [quiz.id]: quiz, [heads.id]: heads };
+  const doc = SF.practiceDoc(deck, (id) => store[id] || null);
+  assert.ok(doc.practice.games[quiz.id], 'a quiz travels whole');
+  assert.equal(doc.practice.games[heads.id], undefined, 'a spoken game does not');
+  assert.deepEqual(Array.from(doc.practice.skipped), ['Heads up']);
+  const note = doc.slides[2];
+  assert.equal(note.type, 'section');
+  assert.match(note.subtitle, /needs a room/);
+  const run = SF.buildRunDeck(SF.normalizeDeck(doc), (id) => doc.practice.games[id] ? SF.normalizeGame(doc.practice.games[id]) : null);
+  assert.ok(run.slides.some((s) => s.type === 'quiz'), 'the quiz plays in the viewer');
+  assert.equal(deck.slides[1].type, 'game', 'the lesson itself is untouched');
+});
