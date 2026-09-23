@@ -416,6 +416,31 @@ still leaves P6 partial.
 
 ## Change log
 
+- **23 September 2026 — UX pass on wave 1 (GA-29).** The fair scoring was
+  right, but the flow around it had five problems, now fixed:
+  1. **One verdict path.** The wall's verdict pads used to skip the speaker
+     check; in a teams game they credited nobody, silently.
+  2. **Judge first, say who second.** A scoring verdict given with nobody
+     chosen is *held* ("Correct is waiting"). Choosing the speaker completes
+     it, and "Count it for the room" is the way out.
+  3. **The speaker lasts one item.** They used to stay selected until the
+     game changed, so the next student's answer could be credited to the last
+     one. The exception is Heads Up, whose guesser owns the round.
+  4. **A speaker picker, not a 30-name dropdown.** Teams as big buttons, the
+     last five speakers as chips, type-ahead with Enter, and *Pick for me*,
+     which prefers someone who has not spoken recently.
+  5. **The credit is seen.**
+     - The wall shows it large ("✓ Red +1", "✓ Ana +2" when individual
+       scoring is on, "Ana's round: 7" in Heads Up) above the room's count.
+     - Phones hear "Yours was accepted", "A point for your team" or "Accepted
+       for Red", and never another student's name.
+
+  Spot the Error entry is now one shared passage above the register, not a
+  copy in every row (about 1,500 buttons for 30 learners). The A–H keys no
+  longer record words 1–8. Relay test added: `npm test` 488/488. Not viewed
+  in a browser. Still open: spoken team points (1–2) share a scale with quiz
+  team averages (up to 1,000), so in a mixed lesson the credit barely
+  registers (GA-30).
 - **23 September 2026 — Wave 1 implemented (GA-06–08).** Selected-recipient
   spoken verdicts now credit one team, or count without points in individual
   play unless the teacher opts in. Spoken phones receive job cards. All 25
