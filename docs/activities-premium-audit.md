@@ -412,6 +412,31 @@ written something (a yes, once there are a few words), never the text.
   work.
 - The exception follows the games' first test: the name is the mechanic.
 
+### Tally entry for polls and scales is deferred
+
+**The rule:** AC-13 is left open and not built. Decided by Mark on 23
+September 2026. In a room without phones, a poll or scale on the wall stays
+empty, and the teacher reads the room by hands, as now.
+
+**Why:**
+- **Two activities would use it:** Structured Reflection and the
+  Reflection Ladder. The other seven prompt activities collect words and
+  ideas, which a count cannot fill. The teacher's own polls on ordinary
+  slides would gain too.
+- **Nothing breaks without it.** The loss is the bars on the wall and the
+  record in the report, not the activity.
+- **For the two self-assessments it works against the hold.** They are held
+  so that nobody answers by looking at the room (see above). A show of hands
+  is public, and brings the anchoring back. Paper slips counted afterwards
+  would not, and are the case worth building for.
+- **It crosses files another agent is working in:** the relay,
+  `js/live.js` and teacher entry.
+
+**What would change it:** teaching often in rooms where most learners have
+no device, and wanting those self-assessments on record. The pieces exist:
+tally entry for quiz questions (GA-15, `handCounts` in the relay) extends to
+`feedbackDigest`'s poll and scale counts.
+
 ### Which activities become stages
 
 **The rule:** an activity is staged when at least two of its rows carry a
@@ -444,7 +469,9 @@ This is already the rule in `js/stages.js`, and it stays.
 | **One learner, alone** | ◐: the stages run in a solo present, with no phone | ✗ | ✓ as slides |
 
 **A9 needs:**
-- E3 tally entry, so a show of hands fills a poll or scale.
+- E3 tally entry, so a show of hands fills a poll or scale. *Deferred by
+  decision (§6):* it is built for quiz questions (GA-15), not for polls and
+  scales.
 - A typed idea from teacher entry, so a paper Exit Ticket can reach the
   desk list.
 - ~~Each activity declaring its rooms~~ **done in wave 3 (AC-16).**
@@ -458,6 +485,11 @@ This is already the rule in `js/stages.js`, and it stays.
     A prompt says `entry: no` until tally entry exists.
 
 ## Change log
+
+- **23 September 2026 — Tally entry for polls and scales deferred (AC-13).**
+  Mark's decision, with the reasoning in §6: two activities would use it,
+  nothing breaks without it, and a show of hands undoes the self-assessments'
+  hold.
 
 - **23 September 2026 — The Question Cube and Card Sort hand-overs, redone.**
   - They were redone after `de69598` taught the game AI both shapes.
