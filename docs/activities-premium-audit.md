@@ -144,7 +144,7 @@ A long piece of work, with the brief on the wall.
 | Visual Summary | stages | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | n/a | ◐ | Solid: the formats pinned; make (work), then share with a partner |
 
 **Totals, after wave 3 and the two hand-overs:**
-- 0 premium. What holds back the nearest is A8's rehearsal and A9's teacher entry (§7).
+- 0 premium. What holds back the nearest is A8's rehearsal (no spotlight; a held prompt shows sample bars) and A9's teacher entry, deferred for polls and scales (§6, §7).
 - 8 near-premium:
   - Think-Pair-Share and Think-Pair-Square-Share;
   - the Connection Hunt;
@@ -189,7 +189,7 @@ Numbered after the games' N1–N6, because some are shared.
 | **N12 · done** | **Spotlight and hide on any idea box**: N3's "Use this" for every brainstorm, including a stage's Share | TPS-01; the thing Muddiest Point, Share and PMI all need | every brainstorm | S–M |
 | **N13 · done** | **The written count**: "19 of 26 have written something" during a private stage. The phone sends *that* it wrote, never *what* | TPS-02; the one number a teacher needs during silent work | Think, Predict, Learning Log | S |
 | **N14 · done** | **Prompt controls on the desk**: close now; hold, then reveal, for a poll or scale | A6 and A7 for all nine collect-from-the-room activities | polls, scales, clouds, brainstorms | M |
-| E3 · built for games | **Tally entry** (games GA-15) | Hands up and paper feed the same bars | polls and scales (AC-13: not yet extended to them) | M |
+| E3 · built for games | **Tally entry** (games GA-15) | Hands up and paper feed the same bars | quiz questions only; polls and scales deferred (AC-13, §6) | M |
 | N6 · built for games | **Sort input** (games GA-26): a column per item, the columns fixed as A only / Both / B only | Cards into bins on the phone | Card Sort (blocked, see §4), Compare | L |
 
 ### Built in wave 3: reuse these too
@@ -485,6 +485,15 @@ This is already the rule in `js/stages.js`, and it stays.
     A prompt says `entry: no` until tally entry exists.
 
 ## Change log
+
+- **23 September 2026 — TPS-04, and the rehearsal's class sizes.**
+  - **TPS-04:** a slide saved before its routine ran as stages is offered
+    them in the inspector ("Run it as timed stages"). It is never switched
+    for the teacher.
+  - **RP-01:** a rehearsal can be a class of 8, 30 or 120. That narrows A8's
+    rehearsal gap: a big room can now be rehearsed. The gap left is the
+    rehearsal's spotlight, and a held prompt that shows its sample bars.
+  - Deployed in `6888921`. `npm test` 529/529. Not seen in a browser.
 
 - **23 September 2026 — Tally entry for polls and scales deferred (AC-13).**
   Mark's decision, with the reasoning in §6: two activities would use it,

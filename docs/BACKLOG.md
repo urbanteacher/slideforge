@@ -1292,11 +1292,15 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** Deployed `6888921` to `deploy-render`: the small
+  backlog items, RP-01–03 and UX-31. `npm test` passed 529/529 on that commit
+  in a clean worktree. None of RP-01–03, UX-31 or TPS-04 has been seen in a
+  browser.
 - **23 Sep 2026.** RP-01, RP-02, RP-03 and UX-31 built. Rehearse with a
   class of 8, 30 or 120; a lecture (over 60) keeps the standings off the
   wall until S; the word cloud keeps its words where they are; the panel
-  field lights while its words are typed on the slide. Not tested or seen
-  in a browser, by request.
+  field lights while its words are typed on the slide. Not seen in a
+  browser; `npm test` passed once deployed (next entry up).
 - **23 Sep 2026.** Small items from the backlog. TPS-04: older staged-
   routine slides are offered stages in the inspector. CA-43: a carried
   slide is held by id. CA-53: own-key lookups. CA-54: one `SF.cssUrl`.
