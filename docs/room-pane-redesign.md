@@ -77,17 +77,18 @@ correctly.)
 
 ## Still open
 
-- **Rehearsing a big room.** The rehearsal class is six to eight sample
-  players, so a teacher never sees the top-five layout before the real
-  lesson. It needs a class-size choice (8 / 30 / 120) on the rehearsal.
-- **Lecture scale (100+).** The layouts hold, since they no longer depend on
-  the count. But above about 60, even the top five is a public ranking of
-  strangers. A lecture may want the standings off by default and the
-  distribution instead.
-- **Word cloud layout.** The cloud fits, but it is still a ranked line of
-  words wrapped left to right, and its colour comes from each word's position.
-  A packed, centred cloud with stable positions (words that don't jump when a
-  new one lands) is the next step.
+- **Built 23 September, not yet seen in a browser:**
+  - **Rehearsing a big room (RP-01).** Present ▾ offers a sample class of
+    8, 30 or 120, remembered on this computer.
+  - **Lecture scale (RP-02).** Above 60 people, and not in teams, the
+    standings stay off the wall until the teacher brings the room view in
+    with S. The slide's answer bars are the room's picture of itself. A
+    rehearsed lecture follows the same rule.
+  - **Word cloud (RP-03).** The most common words are laid out in the order
+    each was first seen, centred, so nothing already up moves when a new
+    word lands. Each word's colour comes from the word, not its place.
+    It is not a spiral packing; that is still open if the centred wrap
+    looks too even.
 - **Not seen drawn:** the desk's "need a hand" chip. Its rule was checked
   against sample rows in the page. The chip follows the away chip's markup,
   which was not drawn either (see UX-62).

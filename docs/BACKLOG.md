@@ -40,15 +40,11 @@ order.
 |---|---|---|---|
 | GA-15 – GA-28 | **Games to a premium standard**: waves 0–6 are done; 7 mostly (GA-01–14, 18–26, 29, 30). GA-15–17 (the no-device work skipped alongside wave 3) and GA-28 solo practice are done. **Every planned wave is now built or mostly built;** what remains is the open list below. **Open:** GA-19's drawn bridges (Connection Maker), GA-27 self-pacing. None of the waves since GA-29 has been viewed on screen except Fill, Beat the Clock and Compare. Full table under [the games build list](#23-september-2026-games-to-a-premium-standard-the-build-list). | S–L | In progress |
 | AC-13 – AC-17 | **Activities to a premium standard**: waves 0–3 (AC-01–12, AC-16) are done, and so are the Question Cube and Card Sort hand-overs (parts of AC-14 and AC-15). The Battle stays a slide (Mark, 23 Sep). Deferred: tally entry for polls and scales (AC-13, Mark's decision; the reasoning is in the audit's section 6). Open: Stations need a rotation-aware clock; Word Splash needs custom sort columns; Connect Four as a board. Full table under [the activities build list](#23-september-2026-activities-to-a-premium-standard-the-build-list). | S–L | To do |
-| RP-01 | Rehearse with a class of 30 (and 120) | S | To do |
-| RP-02 | Lecture-scale defaults (100+): standings off, distribution on | S | To do |
-| RP-03 | A packed, centred word cloud with stable positions | M | To do |
 | RP-04 | The desk's "need a hand" chip, seen drawn | S | To check |
 | TPS-03 | Smoke-test and view Think-Pair-Share on the wall and a phone | S | To check · not seen drawn |
 | #8 | Learner theming: the deck theme has no route to the phone | M | Deferred · shared files |
 | #10 | Lesson-level standings, teacher-controlled | M | Deferred · shared files |
 | #11 | Coda: exit ticket penultimate, wrap last | M–L | Deferred · needs a privacy decision |
-| UX-31 | Show that the panel field and the slide are one text | S | To do · P3 |
 | UX-63 | Lobby with optional generated nicknames | M | Needs a decision · P3 |
 | UX-64 | Student-paced mode with its own code (see also GA-28, solo practice) | L | Needs a decision · P2 |
 | UX-65 | Per-student takeaway | M–L | Needs a decision · P3 |
@@ -102,7 +98,7 @@ Decided (kept for the record):
 | UX-24 | Say where the work is saved in words, not with a dot | P1 | S | **Done** 23 Sep · words down to 1080px (measured), a labelled dot below |
 | **Phase 4 — editing on the slide** |||||
 | UX-30 | Outline editable blocks on hover | P2 | S | **Withdrawn** · it exists: `.canvas-editable:hover` draws a dashed outline |
-| UX-31 | Make it clear the panel field and the slide are one text | P3 | S | To do |
+| UX-31 | Make it clear the panel field and the slide are one text | P3 | S | **Done** 23 Sep · the panel field is outlined while its words are typed on the slide; not run in a browser |
 | **Phase 5 — deck structure** |||||
 | UX-40 | Sections in the rail and the sorter | P2 | M–L | **Done** 23 Sep · from section slides, no new field |
 | **Phase 6 — presenting** |||||
@@ -1140,9 +1136,9 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 
 | ID | Item | From | Size | Status |
 |---|---|---|---|---|
-| RP-01 | Rehearse with a class of 30 (and 120): a class-size choice on the rehearsal | [room-pane-redesign.md](room-pane-redesign.md) | S | To do |
-| RP-02 | Lecture-scale defaults (100+): standings off, distribution on | room pane | S | To do |
-| RP-03 | A packed, centred word cloud with stable positions | room pane | M | To do |
+| RP-01 | Rehearse with a class of 30 (and 120): a class-size choice on the rehearsal | [room-pane-redesign.md](room-pane-redesign.md) | S | **Done** 23 Sep · Present ▾ → Class of 8 / 30 / 120; not run in a browser |
+| RP-02 | Lecture-scale defaults (100+): standings off, distribution on | room pane | S | **Done** 23 Sep · above 60 (not teams), standings off until S; not run in a browser |
+| RP-03 | A packed, centred word cloud with stable positions | room pane | M | **Done** 23 Sep · first-seen order, centred, colour per word; not a spiral packing; not run in a browser |
 | RP-04 | The desk's "need a hand" chip, seen drawn | room pane | S | To check |
 | TPS-01 | Spotlight one idea during Share | [game-activity-redesign.md](game-activity-redesign.md) | S | **Done** 23 Sep as AC-06, for every idea box |
 | TPS-02 | "19 of 26 have written something" during Think (a count only; the note stays private) | TPS | S | **Done** 23 Sep as AC-07 |
@@ -1296,6 +1292,11 @@ the audit there were 0 premium (Think-Pair-Share near), 17 solid, 17 thin and
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** RP-01, RP-02, RP-03 and UX-31 built. Rehearse with a
+  class of 8, 30 or 120; a lecture (over 60) keeps the standings off the
+  wall until S; the word cloud keeps its words where they are; the panel
+  field lights while its words are typed on the slide. Not tested or seen
+  in a browser, by request.
 - **23 Sep 2026.** Small items from the backlog. TPS-04: older staged-
   routine slides are offered stages in the inspector. CA-43: a carried
   slide is held by id. CA-53: own-key lookups. CA-54: one `SF.cssUrl`.
