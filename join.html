@@ -488,6 +488,9 @@
 </main>
 
 <div id="hostAwayNote" hidden role="status">Waiting for your teacher’s screen — stay here, nothing is lost.</div>
+<!-- The teacher's "phones down in 10": a warning before the veil, so a
+     sentence being typed can be finished. -->
+<div id="blankSoon" hidden role="status" aria-live="assertive"></div>
 <div id="blankVeil" hidden aria-live="assertive">
   <div class="veil-inner">
     <div class="veil-mark">✋</div>
@@ -700,7 +703,38 @@
     if (!veil) return;
     veil.hidden = !on;
     document.body.classList.toggle('phones-blank', !!on);
+    if (on) setBlankSoon(0);
   }
+
+  var blankSoonTick = null;
+  function setBlankSoon(seconds) {
+    var bar = $('blankSoon');
+    clearInterval(blankSoonTick);
+    blankSoonTick = null;
+    if (!bar) return;
+    if (!seconds) { bar.hidden = true; return; }
+    var until = Date.now() + seconds * 1000;
+    function paint() {
+      var left = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+      bar.textContent = 'Phones down in ' + left + ' — finish your thought';
+      if (!left) { clearInterval(blankSoonTick); blankSoonTick = null; }
+    }
+    bar.hidden = false;
+    paint();
+    blankSoonTick = setInterval(paint, 250);
+  }
+
+  /* Tell the teacher, and only the teacher, when this phone is showing
+     something other than the lesson. Sent on a change, not on a timer, and
+     again on rejoin so a reconnect does not leave a stale "away". */
+  var sentAway = null;
+  function reportAway() {
+    var away = document.visibilityState === 'hidden';
+    if (away === sentAway || !ws || ws.readyState !== 1 || !me || !me.name) return;
+    sentAway = away;
+    try { ws.send(JSON.stringify({ t: 'away', away: away })); } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', reportAway);
 
   function show(id) {
     if (['scAsk','scPace','scSaved'].includes(id) && !flow.panel) panelActivity = (context && context.slideId) + ':' + flow.main;
@@ -914,6 +948,8 @@
         me.teamName = m.teamName || null;
         setBlank(m.phonesBlank === true);
         setFloor(m.floor === true);
+        sentAway = null;
+        reportAway();
         header(true);
         $('foot').textContent = m.title || 'SlideForge · Your lesson companion';
         $('holdWho').textContent = me.teamName
@@ -934,6 +970,8 @@
         me.teamName = m.teamName || null;
         setBlank(m.phonesBlank === true);
         setFloor(m.floor === true);
+        sentAway = null;
+        reportAway();
         showReactBar(m.reactions !== false);
         header(true);
         $('waitIcon').textContent = '✓';
@@ -1041,6 +1079,10 @@
 
       case 'blankPhones':
         setBlank(m.on === true);
+        break;
+
+      case 'blankSoon':
+        setBlankSoon(Number(m.seconds) || 0);
         break;
 
       case 'reactions':

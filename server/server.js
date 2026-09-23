@@ -716,6 +716,10 @@ function playerList(room) {
       name: p.name,
       score: p.score,
       connected: !!(p.sock && p.sock.open),
+      /* The phone says it is showing something else (another app, another
+         tab, the screen off). For the host's own screen only — the wall's
+         lobby does not show it. */
+      away: !!(p.away && p.sock && p.sock.open),
       manual: p.manual === true,
       team: p.team,
       correct: p.correctCount || 0     // an individual race's position
@@ -1822,6 +1826,15 @@ ws.attach(server, (sock, req) => {
         broadcast(room, { t: 'floor', open: floorIsOpen(room), mode: room.floor });
         log('room ' + room.pin + ' floor ' + room.floor);
 
+      } else if (m.t === 'blankSoon') {
+        /* A warning before the phones go dark: "phones down in 10". The host
+           runs the clock and sends blankPhones when it ends; this only tells
+           the phones, so a student can finish the sentence they are typing.
+           seconds 0 takes the warning back. */
+        const secs = Math.max(0, Math.min(60, Math.round(Number(m.seconds) || 0)));
+        broadcast(room, { t: 'blankSoon', seconds: secs });
+        log('room ' + room.pin + (secs ? ' phones blank in ' + secs + 's' : ' blank countdown cancelled'));
+
       } else if (m.t === 'blankPhones') {
         room.phonesBlank = m.on === true;
         broadcast(room, { t: 'blankPhones', on: room.phonesBlank });
@@ -2224,6 +2237,17 @@ ws.attach(server, (sock, req) => {
          room feeling present, and metering it would change what it is. */
       if (room.host && room.host.open) room.host.json({ t: 'reaction', kind: m.kind });
       sock.json({ t: 'reacted', kind: m.kind, slideId:room.at.slideId });
+      return;
+    }
+
+    /* The phone went to the background or came back. Recorded, not
+       broadcast: it reaches the host in the roster and nobody else. */
+    if (role === 'player' && m.t === 'away') {
+      if (!room || !rooms.has(room.pin) || !room.players.has(me.id)) return;
+      const away = m.away === true;
+      if (!!me.away === away) return;
+      me.away = away;
+      pushPlayers(room);
       return;
     }
 

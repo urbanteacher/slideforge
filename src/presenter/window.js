@@ -306,6 +306,11 @@ export function createPresenterWindow(SF, helpers) {
         joinUrl: (SF.Live && SF.Live.joinUrl) || '',
         reactions: !(SF.Live && SF.Live.reactions === false),
         phonesBlank: !!(SF.Live && SF.Live.phonesBlank),
+        blankSoonAt: SF.Live && SF.Live.blankSoonAt || 0,
+        /* Who has put the lesson in the background, for this screen only. */
+        away: SF.Live && SF.Live.active ? (SF.Live.players || []).filter(function (p) {
+          return p.away && p.connected !== false;
+        }).map(function (p) { return p.name; }) : [],
         floor: (SF.Live && SF.Live.floor) || 'auto',
         /* Legacy tokens on the wire: a desk still open from before the
            rename compares against these. New desks accept either. */

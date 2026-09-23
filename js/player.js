@@ -165,7 +165,7 @@
     var live = !!(SF.Live && SF.Live.active);
     var slide = Player.deck && Player.deck.slides[Player.idx];
     if (action === 'teacher' || action === 'join' || action === 'reactions'
-        || action === 'blankPhones' || action === 'floor') return live;
+        || action === 'blankPhones' || action === 'blankPhonesSoon' || action === 'floor') return live;
     if (action === 'who') return live && !!slide && slide.type === 'quiz';
     return true;
   }
@@ -199,6 +199,7 @@
     freeze: function () { Player.toggleFreeze(); },
     reactions: function () { Player.emit('reactionsToggle', {}); },
     blankPhones: function () { Player.emit('blankPhonesToggle', {}); },
+    blankPhonesSoon: function () { Player.emit('blankPhonesSoon', {}); },
     floor: function () { Player.emit('floorCycle', {}); },
     reset: function () { Player.resetScores(); },
     /* Named answers live on the private screen. Opening presenter view if it

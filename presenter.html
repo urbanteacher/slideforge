@@ -113,6 +113,8 @@
     flex-wrap: wrap;
   }
   .pv-room[hidden] { display: none; }
+  .pv-away { font-size: 12px; font-weight: 600; color: #b5651d; background: #fdf0e1; border-radius: 999px; padding: 3px 9px; cursor: help; }
+  .pv-away[hidden] { display: none; }
   .pv-room-id {
     display: none;
     align-items: baseline;
@@ -481,6 +483,8 @@
           <span>PIN</span><span class="pin" id="roomPin">····</span>
           <span class="host" id="roomHost"></span>
         </div>
+        <!-- Private: phones showing something other than the lesson. -->
+        <span class="pv-away" id="roomAway" hidden></span>
         <button class="btn" data-cmd="join" id="btnJoin" title="Show join QR and PIN on the wall (J)">Join QR</button>
         <button class="btn" id="btnShareDesk" title="Share a read-only or follow-along link">Share</button>
         <button class="btn" data-cmd="ink" title="Draw and spotlight on the wall (I)">Ink</button>
@@ -503,6 +507,7 @@
         <button class="btn" id="footBreak" title="5-minute break overlay on the wall">Break</button>
         <button class="btn" data-cmd="reactions" id="btnReactions" title="Turn audience reactions on or off (T)">Reactions: On</button>
         <button class="btn" data-cmd="blankPhones" id="btnBlankPhones" title="Blank every learner phone (Shift+B)">Blank phones</button>
+        <button class="btn" data-cmd="blankPhonesSoon" id="btnBlankSoon" title="Phones go dark in 10 seconds — the room is warned first. Press again to cancel.">Blank in 10s</button>
         <button class="btn" data-cmd="floor" id="btnFloor" title="Who may speak (Shift+H)">Floor: follows the lesson</button>
         <button class="btn" data-cmd="reset" title="Clear answers and score again (R)">Reset scores</button>
         <button class="btn" data-cmd="help" title="Keyboard shortcuts on the wall (?)">Keyboard shortcuts</button>
@@ -905,8 +910,8 @@ SF.installExplore(SF);
   function syncRoomTools(d) {
     var live = !!d.live;
     roomLive = live;
-    ['join', 'reactions', 'blankPhones', 'floor'].forEach(function (id) {
-      var map = { join: 'btnJoin', reactions: 'btnReactions', blankPhones: 'btnBlankPhones', floor: 'btnFloor' };
+    ['join', 'reactions', 'blankPhones', 'blankPhonesSoon', 'floor'].forEach(function (id) {
+      var map = { join: 'btnJoin', reactions: 'btnReactions', blankPhones: 'btnBlankPhones', blankPhonesSoon: 'btnBlankSoon', floor: 'btnFloor' };
       var el = $(map[id]);
       if (el) el.disabled = !live;
     });
@@ -986,6 +991,22 @@ SF.installExplore(SF);
       rx.title = rxOn ? 'Turn audience reactions off (T)' : 'Turn audience reactions on (T)';
     }
 
+    var soon = $('btnBlankSoon');
+    if (soon) {
+      var counting = !!d.blankSoonAt;
+      soon.classList.toggle('on', counting);
+      soon.textContent = counting ? 'Cancel countdown' : 'Blank in 10s';
+      soon.disabled = !live || !!d.phonesBlank;
+    }
+    var away = $('roomAway');
+    if (away) {
+      var who = (d.away || []);
+      away.hidden = !live || !who.length;
+      away.textContent = who.length + ' away';
+      away.title = who.length
+        ? 'Showing something other than the lesson: ' + who.join(', ') + '. Only you can see this.'
+        : '';
+    }
     var phones = $('btnBlankPhones');
     if (phones) {
       phones.classList.toggle('on', !!d.phonesBlank);

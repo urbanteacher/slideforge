@@ -1505,6 +1505,7 @@
     SF.Player.on('qaCommand', moderate);
     SF.Player.on('reactionsToggle', toggleReactions);
     SF.Player.on('blankPhonesToggle', toggleBlankPhones);
+    SF.Player.on('blankPhonesSoon', function () { blankPhonesSoon(10); });
     SF.Player.on('floorCycle', cycleFloor);
   }
 
@@ -1599,11 +1600,46 @@
      Blank (B): they are two screens and a teacher wants them independently —
      a digression with the slide still up, or a slide up with nothing in the
      room's hands. Named "Blank phones" everywhere for the same reason. */
+  /* Blank on a countdown: the phones are told "phones down in 10" and go dark
+     when it ends, as Pear Deck's timed lock does — a room mid-sentence gets to
+     finish it. Pressed again, or overtaken by blanking by hand, it is off. */
+  var blankSoonTimer = null;
+  Live.blankSoonAt = 0;
+  function cancelBlankSoon(tellPhones) {
+    if (!blankSoonTimer) return;
+    clearTimeout(blankSoonTimer);
+    blankSoonTimer = null;
+    Live.blankSoonAt = 0;
+    if (tellPhones) send({ t: 'blankSoon', seconds: 0 });
+    if (SF.Player.syncPresenter) SF.Player.syncPresenter();
+  }
+  function blankPhonesSoon(seconds) {
+    if (!Live.active) {
+      SF.toast('Blanking phones needs a live room — start Host live first.');
+      return;
+    }
+    if (blankSoonTimer) { cancelBlankSoon(true); SF.toast('Countdown cancelled — phones stay on'); return; }
+    if (Live.phonesBlank) { SF.toast('Phones are already blank'); return; }
+    var secs = Math.max(3, Math.min(60, Math.round(Number(seconds) || 10)));
+    send({ t: 'blankSoon', seconds: secs });
+    Live.blankSoonAt = Date.now() + secs * 1000;
+    blankSoonTimer = setTimeout(function () {
+      blankSoonTimer = null;
+      Live.blankSoonAt = 0;
+      if (Live.active && !Live.phonesBlank) toggleBlankPhones();
+    }, secs * 1000);
+    SF.toast('Phones go dark in ' + secs + ' seconds');
+    if (SF.Player.syncPresenter) SF.Player.syncPresenter();
+  }
+  Live.blankPhonesSoon = blankPhonesSoon;
+
   function toggleBlankPhones() {
     if (!Live.active) {
       SF.toast('Blanking phones needs a live room — start Host live first.');
       return;
     }
+    /* By hand, now: any countdown in flight is overtaken. */
+    cancelBlankSoon(false);
     Live.phonesBlank = !Live.phonesBlank;
     send({ t: 'blankPhones', on: Live.phonesBlank });
     SF.toast(Live.phonesBlank
