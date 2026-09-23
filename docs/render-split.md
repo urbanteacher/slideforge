@@ -562,6 +562,12 @@ the console is clean. The probe's static scan is what catches it.
 - **2026-09-20** — Step 1 done. `src/render/charts.js`; `js/render.js` 7,247 →
   **5,795 lines**. Contract shrank from 31 names to 4. SVG output proven
   byte-identical across all 20 chart kinds before and after.
+- **2026-09-23** — Two names added, deliberately; baseline re-recorded.
+  `SF.chainMap` (`src/render/quiz.js`) draws Concept Chain's branching map,
+  so the wall can redraw it in place without announcing a new slide (games
+  audit, GA-19). `SF.lightStages` (`js/render.js`, used by `js/stages.js`)
+  came in with the activities session's staged routines and had not been
+  recorded.
 - Deliberately not done: moving the renderer to `src/` behind esbuild, or to ES
   modules. Both are real, both are out of scope here, and treating the first as
   a prerequisite is what let the file double in a year (§3).

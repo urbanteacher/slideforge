@@ -63,7 +63,7 @@ tests are in the table. The tier follows from the row.
 | Heads Up | `headsup` | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ✓ | ◐ | Solid: one round clock, drawn terms, a verdict moves straight on, "Time!" with the guesser's count. Open: clue-givers' phones could show the term |
 | Spin & Explain | `spinexplain` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | ✓ | ◐ | Solid: the wheel spins and lands (a different sector each draw) before the concept arrives; drawn fresh each run with "N left"; the verdict credits a chosen speaker |
 | Connection Maker | `connection` | ◐ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: phones propose the bridge, the teacher puts one on the table and credits its author. Open: approved bridges drawn as labelled lines |
-| Concept Chain | `conceptchain` | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: phones propose links (anonymous on the wall, named on the desk); Use this puts one on the table and makes its author the speaker; Accept grows the chain and credits them. Open: several links per term, a branching map |
+| Concept Chain | `conceptchain` | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ◐ | Solid: a branching map — each term with the links accepted from it; phones propose (anonymous on the wall, named on the desk); Use this puts one on the table and makes its author the speaker; each Accept adds a branch and is credited as it lands, and the term stays open until Next or the clock. Open: the rehearsal class never proposes a link (P8) |
 | Random Challenge | `randomchallenge` | ✓ | ✓ | ◐ | ✓ | ✗ | ◐ | ◐ | ◐ | Thin: now a real deck — drawn fresh each run, cards left behind it, a flip per draw. Only the count is revealed |
 | Question Cube | `randomchallenge` | ✓ | ✓ | ◐ | ✓ | ◐ | ✓ | ✓ | ◐ | Solid: a real roll — six faces (Define, Compare, Why, Example, What if, Benefits and limits) drawn fresh each run, each with its colour and question, "N faces left"; a chosen speaker answers aloud; counted |
 | Memory Maze | — | — | — | — | — | — | — | — | — | Disabled; out of scope |
@@ -94,7 +94,7 @@ its game-level target was the actual missing setting.
 
 The other defects in the table come from the 23 September inventory and
 were not re-checked for this audit:
-- Concept Chain allows one link per start term.
+- Concept Chain allows one link per start term. *(Fixed: GA-19, the map.)*
 - The Emoji hint is on from the start.
 - `dripInterval: 4`.
 - Boss Hit/Miss, the race lanes, the chain input and Definition's "Ask" are
@@ -297,7 +297,7 @@ answered. Show the letters dripping on the phone too (P5), and make
 | **1** | **Done 23 Sep.** N1 verdict recipient in teacher entry, spoken phone job cards, and `plays` declarations with a contract test and library badges. | Fixed unfair spoken scoring and made P9 checkable | M |
 | **2** | **Done 23 Sep.** N2 draw and N4 round clock | Unblock Spin, Random, Question Cube and Heads Up | M |
 | **3** | **Done 23 Sep.** Fill the gaps; Odd One Out vote-then-defend; Predict commit-then-watch; T/F hold-or-fold | The thin-to-premium conversions that are mostly kit | M each |
-| **4** | **Mostly done.** N3 proposal queue; Concept Chain and Connection proposals shaped and drawn on the slide. *Open: several links per term, a branching map (GA-19)* | The discussion games' phone jobs | M |
+| **4** | **Done 23 Sep.** N3 proposal queue; Concept Chain and Connection proposals shaped and drawn on the slide; Concept Chain as a branching map with a credit per link (GA-19). *Connection Maker's bridges as drawn lines stay open, under GA-19's second half* | The discussion games' phone jobs | M |
 | **5** | **Done 23 Sep.** N5 line reveal; Time Traveler on one growing timeline, wall and phone | | M |
 | **6** | **Mostly done.** Desk parity (`data-desk`), Emoji hint as a step, Ranking heat. *Open: the hint's point cost, Definition on stages (GA-22)* | P6 across the catalogue | S each |
 | **7** | **Mostly done.** N6 sort input; Compare & Contrast sort; Beat the Clock as one round. *Open: per-phone self-pacing (GA-27)* | The two large new mechanics | L |
@@ -430,6 +430,34 @@ for (E1). Both are implemented for Spot the Error; its desk heat-map preview
 still leaves P6 partial.
 
 ## Change log
+
+- **23 September 2026 — Concept Chain is a branching map (GA-19).**
+  - **The map.** Each term the game has reached is a row, with the links
+    accepted from it branching off to the right. The term that is up is the
+    large one, with a dashed branch for the link being weighed. Earlier
+    terms shrink; past three only the latest show ("+2 earlier terms"), so a
+    ten-term game fits the wall.
+  - **Several links per term.** Accept adds a branch and keeps the term open
+    for the next link; Reject puts the proposal down and names nobody. Next
+    or the clock closes the term, as Accept if it grew and Reject if not.
+    The desk marks a proposal already on the map ("✓ On the map").
+  - **Redrawn in place** (`SF.chainMap`, `Player.paintChain`). Re-rendering
+    the slide would announce a new slide, and live that closes the idea box
+    and loses what the room has sent.
+  - **A credit per link.** A new host message, `oralCredit`, is paid by the
+    relay on the reveal's scale: to the speaker's team, or to the speaker in
+    individual play when speaker points are on. The phones hear a banner
+    over the idea box ("★ Your link is on the map", or the team's name,
+    never another student's).
+  - **Correction: P7 was wrong for Concept Chain.** The chain's phones are
+    on the idea box (`idle`), so the relay had no question, and it dropped
+    the reveal that carried an Accept's credit. The wall showed "+1000"; the
+    scores never moved. The row's ✓ is now true.
+  - **Tests:** two relay tests (team credit twice from one term with the
+    idea box still open; individual play with and without speaker points,
+    and the report). `npm test` 527/527. Not viewed on screen.
+  - **Still open:** Connection Maker's bridges drawn as labelled lines, and
+    a rehearsal class that proposes links.
 
 - **23 September 2026 — The game AI writes the rebuilt shapes.**
   - **Why:** the activities work asked for it. The Question Cube activity and
