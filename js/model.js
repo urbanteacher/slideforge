@@ -4438,6 +4438,16 @@
       pad.appendChild(body);
       if (slide.subtitle) pad.appendChild(el("div", "ex-source", slide.subtitle));
     }
+    function roundClockEl(slide) {
+      var round = el("div", "round-clock");
+      round.setAttribute("aria-hidden", "true");
+      round.appendChild(el("span", "rc-n", SF.clockFace ? SF.clockFace(slide.roundSeconds) : String(slide.roundSeconds)));
+      var track = el("span", "rc-track");
+      track.appendChild(el("span", "rc-fill"));
+      round.appendChild(track);
+      round.appendChild(el("span", "rc-count", ""));
+      return round;
+    }
     function numberLine(slide) {
       var wrap = el("div", "numberline");
       var line = el("div", "nl-line");
@@ -4726,16 +4736,7 @@
         if (slide.category) oracy.appendChild(el("div", "stage-kicker", slide.category));
         oracy.appendChild(el("div", "oracy-term", slide.term || slide.question || ""));
         if (slide.hint) oracy.appendChild(el("div", "stage-note", slide.hint));
-        if (slide.roundSeconds) {
-          var round = el("div", "round-clock");
-          round.setAttribute("aria-hidden", "true");
-          round.appendChild(el("span", "rc-n", SF.clockFace ? SF.clockFace(slide.roundSeconds) : String(slide.roundSeconds)));
-          var track = el("span", "rc-track");
-          track.appendChild(el("span", "rc-fill"));
-          round.appendChild(track);
-          round.appendChild(el("span", "rc-count", ""));
-          oracy.appendChild(round);
-        }
+        if (slide.roundSeconds) oracy.appendChild(roundClockEl(slide));
         if (slide.drawTotal) {
           oracy.appendChild(el("div", "heads-pile", "Term " + slide.drawNo + " of " + slide.drawTotal));
         }
@@ -5332,6 +5333,7 @@
         pad.appendChild(el("div", "answered-count", ""));
         return;
       }
+      if (slide.roundSeconds && slide.style === "speed") pad.appendChild(roundClockEl(slide));
       if (slide.predict && !opts.revealed) {
         var pn = el("p", "predict-note");
         pn.appendChild(el("span", "pn-commit", "Commit to a prediction on your phone — and say how sure you are."));
@@ -18012,7 +18014,7 @@
     plays: ROOM_PLAY.quiz,
     label: "Beat the clock",
     icon: "◷",
-    blurb: "Multiple choice against the countdown. Faster correct answers score more; wrong answers cost points.",
+    blurb: "One clock for the whole run. Questions keep coming as the room answers; faster right answers score more, wrong ones cost. How many can the room get right before time?",
     mechanic: "speed",
     input: "choice",
     minOptions: 2,
@@ -18043,6 +18045,12 @@
     if (right) return 10 + Math.floor(Math.max(0, Number(remainingSec) || 0) / 10);
     return -5;
   }
+  function roundSpeedPoints(right, elapsedSec) {
+    if (!right) return -5;
+    var t = Math.max(0, Number(elapsedSec) || 0);
+    return 10 + Math.max(0, 10 - Math.floor(t));
+  }
+  var SPEED_PACE = 15;
 
   // src/samples/boss.json
   var boss_default = [
@@ -23597,6 +23605,11 @@
         s.roundSeconds = Number(st.defaultTime) > 0 ? Math.min(600, Number(st.defaultTime)) : 60;
         s.timeLimit = 0;
       }
+      if (game.style === "speed") {
+        s.roundSeconds = Number(st.defaultTime) > 0 ? Math.max(30, Math.min(600, Number(st.defaultTime))) : 90;
+        s.timeLimit = 0;
+        s.paceSeconds = SPEED_PACE;
+      }
       out.push(s);
       if (String(q.explanation || "").trim() && (st.explainStyle === "slide" || st.explainStyle === "both")) {
         var why = makeSlide("explain");
@@ -24073,6 +24086,8 @@
     bossDamage,
     bossMaxHp,
     speedPoints,
+    roundSpeedPoints,
+    SPEED_PACE,
     BOSS_LEVELS,
     WR_LEVELS,
     BOWL_VALUES,

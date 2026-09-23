@@ -501,26 +501,26 @@
 }
 
 /* ---- Heads Up: one clock for the round (js/rounds.js) ---- */
-.layout-quiz.present-headsup .round-clock {
+.layout-quiz .round-clock {
   position: absolute; top: 34px; right: 40px; z-index: 3;
   display: grid; grid-template-columns: auto 180px; grid-template-rows: auto auto;
   column-gap: 14px; row-gap: 4px; align-items: center;
 }
-.layout-quiz.present-headsup .round-clock .rc-n {
+.layout-quiz .round-clock .rc-n {
   grid-row: span 2; font-size: 44px; font-weight: 800; font-variant-numeric: tabular-nums;
 }
-.layout-quiz.present-headsup .round-clock .rc-track {
+.layout-quiz .round-clock .rc-track {
   height: 10px; border-radius: 999px; overflow: hidden;
   background: var(--s-card); border: 1px solid var(--s-rule);
 }
-.layout-quiz.present-headsup .round-clock .rc-fill {
+.layout-quiz .round-clock .rc-fill {
   display: block; height: 100%; width: 100%; background: var(--s-accent);
   transform-origin: left center; transition: transform .25s linear;
 }
-.layout-quiz.present-headsup .round-clock .rc-count { font-size: 17px; font-weight: 700; color: var(--s-dim); }
-.layout-quiz.present-headsup .round-clock.hurry .rc-n,
-.layout-quiz.present-headsup .round-clock.hurry .rc-fill { color: #ff5f6d; background: #ff5f6d; }
-.layout-quiz.present-headsup .round-clock.hurry .rc-n { background: none; }
+.layout-quiz .round-clock .rc-count { font-size: 17px; font-weight: 700; color: var(--s-dim); }
+.layout-quiz .round-clock.hurry .rc-n,
+.layout-quiz .round-clock.hurry .rc-fill { color: #ff5f6d; background: #ff5f6d; }
+.layout-quiz .round-clock.hurry .rc-n { background: none; }
 .layout-quiz.present-headsup .heads-pile {
   position: absolute; left: 40px; bottom: 26px; z-index: 3;
   font-size: 16px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--s-dim);
@@ -529,16 +529,16 @@
 #player .layout-quiz.present-headsup .oracy-term { animation: sf-term-in .28s cubic-bezier(.3,0,.2,1); }
 @keyframes sf-term-in { from { transform: translateY(18px) scale(.97); opacity: 0; } }
 /* Time: the round's result takes the stage. */
-.layout-quiz.present-headsup .round-over {
+.layout-quiz .round-over {
   position: absolute; inset: 0; z-index: 6;
   display: grid; place-content: center; text-align: center; gap: 14px;
   background: color-mix(in srgb, var(--s-bg) 92%, transparent);
   animation: sf-round-over .5s cubic-bezier(.3,0,.2,1);
 }
-.layout-quiz.present-headsup .round-over .ro-kicker { font-size: 26px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--s-accent); }
-.layout-quiz.present-headsup .round-over .ro-count { font-size: 150px; font-weight: 850; line-height: 1; font-variant-numeric: tabular-nums; }
-.layout-quiz.present-headsup .round-over .ro-who { font-size: 34px; font-weight: 700; }
-.layout-quiz.present-headsup .round-over .ro-next { font-size: 18px; color: var(--s-dim); }
+.layout-quiz .round-over .ro-kicker { font-size: 26px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--s-accent); }
+.layout-quiz .round-over .ro-count { font-size: 150px; font-weight: 850; line-height: 1; font-variant-numeric: tabular-nums; }
+.layout-quiz .round-over .ro-who { font-size: 34px; font-weight: 700; }
+.layout-quiz .round-over .ro-next { font-size: 18px; color: var(--s-dim); }
 @keyframes sf-round-over { from { opacity: 0; transform: scale(1.04); } }
 
 /* ---- Odd One Out: vote, then defend ----
@@ -730,3 +730,9 @@
   #player .game-stage.present-spin .spin-disc,
   #player .game-stage.present-spin .spin-challenge { animation: none; }
 }
+/* A round's clock clears the room pane, as every slide clock does. */
+.deck-viewport.railed .layout-quiz .round-clock,
+#previewBox.railed .layout-quiz .round-clock { right: calc(var(--rail-w) + 40px); }
+/* The question heading leaves the round clock its corner. */
+.layout-quiz:has(> .pad > .round-clock) .qhead { padding-right: 250px; }
+.layout-quiz .pad > .round-clock { grid-template-columns: auto 120px; top: 30px; }

@@ -1230,7 +1230,8 @@
         : ('Leave either blank to use the game default (' +
           (game.settings.defaultTime || 'no timer') + ', ' +
           game.settings.defaultPoints + ' points). 0 seconds means no countdown.');
-    if (!claimStudy && setupUX().timing === 'question') {
+    /* Beat the Clock times the round, not the question. */
+    if (!claimStudy && setupUX().timing === 'question' && SF.gameStyle(game.style).mechanic !== 'speed') {
       timeRow.appendChild(UI.field('Countdown',
         UI.num(question.timeLimit, function (v) {
           question.timeLimit = v; touched(); drawPreview(); drawRail();
@@ -1811,20 +1812,20 @@
       }
 
       if (SF.gameStyle(game.style).mechanic === 'speed') {
-        /* Old Beat the Clock: 30 / 60 / 90 / 120 presets. */
-        if ([30, 60, 90, 120].indexOf(Number(st.defaultTime)) < 0) st.defaultTime = 60;
+        /* Beat the Clock is a round: this is the clock for the whole run. */
+        if ([60, 90, 120, 180].indexOf(Number(st.defaultTime)) < 0) st.defaultTime = 90;
         st.defaultPoints = 0;
         st.confidence = false;
-        bodyEl.appendChild(UI.field('Question countdown', UI.segmented([
-          { value: '30', icon: '30', label: '30s' },
-          { value: '60', icon: '60', label: '60s' },
-          { value: '90', icon: '90', label: '90s' },
-          { value: '120', icon: '120', label: '120s' }
+        bodyEl.appendChild(UI.field('Round length', UI.segmented([
+          { value: '60', icon: '60', label: '1 min' },
+          { value: '90', icon: '90', label: '1½ min' },
+          { value: '120', icon: '120', label: '2 min' },
+          { value: '180', icon: '180', label: '3 min' }
         ], String(st.defaultTime), function (v) {
           st.defaultTime = Number(v);
           touched(); draw2(); drawRail(); drawPreview();
         }),
-          'Correct answers earn 10 + floor(remaining seconds ÷ 10). Wrong answers cost 5, with a score floor of zero.'));
+          'One clock for the whole run. Questions move on as the room answers (or after 15 seconds). A right answer earns 10, plus up to 10 for speed; a wrong one costs 5, never below zero. Add plenty of questions — the clock, not the list, should end the game.'));
       } else if (game.style === 'truefalse') {
         /* Short retrieval clocks — never the Beat the Clock 30/60/90/120 set. */
         var tfTimes = [0, 10, 15, 20, 30];

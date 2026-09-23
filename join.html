@@ -1141,6 +1141,7 @@
 
       case 'question':
         askQuestion(m);
+        roundTick(m);
         break;
 
       case 'showdown':
@@ -1765,6 +1766,24 @@
   }
 
   /* ---------------------------------------------------------- question */
+
+  /* Beat the Clock: the phone counts down the round, not the question, in
+     the question's label ("Question 4 · 0:42 left"). */
+  var roundTimer = null;
+  function roundTick(m) {
+    if (roundTimer) { clearInterval(roundTimer); roundTimer = null; }
+    if (!m || !(m.roundLeft > 0)) return;
+    var label = $('qNum');
+    var base = label.textContent;
+    var ends = Date.now() + m.roundLeft * 1000;
+    var draw = function () {
+      var left = Math.max(0, Math.ceil((ends - Date.now()) / 1000));
+      label.textContent = base + ' \u00b7 ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') + ' left';
+      if (!left && roundTimer) { clearInterval(roundTimer); roundTimer = null; }
+    };
+    draw();
+    roundTimer = setInterval(draw, 1000);
+  }
 
   function askQuestion(m) {
     paintQuestionChrome(m);

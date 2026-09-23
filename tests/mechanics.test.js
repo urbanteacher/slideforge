@@ -449,3 +449,18 @@ test('Question Cube rolls six faces in a fresh order, each knowing its type', ()
   assert.deepEqual(Array.from(faces, s => s.category).sort(),
     ['Benefits and limits', 'Compare', 'Define', 'Example', 'Why', 'What if'].sort());
 });
+
+test('Beat the Clock is one round: no question clock, a pace, and speed from each question', () => {
+  const SF = loadModel();
+  const g = SF.normalizeGame(SF.makeGame('Beat', 'speed'));
+  g.settings.defaultTime = 120;
+  const items = SF.compileGame(g).filter(s => s.type === 'quiz');
+  assert.ok(items.length > 0);
+  assert.ok(items.every(s => s.roundSeconds === 120 && s.timeLimit === 0 && s.paceSeconds === SF.SPEED_PACE));
+  g.settings.defaultTime = 0;
+  assert.equal(SF.compileGame(g).find(s => s.type === 'quiz').roundSeconds, 90, 'unset means 90 seconds');
+  assert.equal(SF.roundSpeedPoints(true, 0.4), 20, 'instant: 10 + 10');
+  assert.equal(SF.roundSpeedPoints(true, 4.2), 16);
+  assert.equal(SF.roundSpeedPoints(true, 30), 10, 'slow but right still earns 10');
+  assert.equal(SF.roundSpeedPoints(false, 1), -5);
+});

@@ -156,6 +156,19 @@ export function createQuizRenderer(SF, helpers) {
     if (slide.subtitle) pad.appendChild(el('div', 'ex-source', slide.subtitle));
   }
 
+  /* A round's clock (Beat the Clock, Heads Up): js/rounds.js runs it across
+     the whole pile. Drawn here so both formats share one markup. */
+  function roundClockEl(slide) {
+    var round = el('div', 'round-clock');
+    round.setAttribute('aria-hidden', 'true');
+    round.appendChild(el('span', 'rc-n', SF.clockFace ? SF.clockFace(slide.roundSeconds) : String(slide.roundSeconds)));
+    var track = el('span', 'rc-track');
+    track.appendChild(el('span', 'rc-fill'));
+    round.appendChild(track);
+    round.appendChild(el('span', 'rc-count', ''));
+    return round;
+  }
+
   /* An empty line with its ends labelled. The room's placings and the band
      that counts are added at reveal by Player.showPlacedValues(). */
   function numberLine(slide) {
@@ -479,16 +492,7 @@ export function createQuizRenderer(SF, helpers) {
       if (slide.hint) oracy.appendChild(el('div', 'stage-note', slide.hint));
       /* The round, not the term, is what is timed. js/rounds.js runs this
          clock across the whole pile and ends the round when it runs out. */
-      if (slide.roundSeconds) {
-        var round = el('div', 'round-clock');
-        round.setAttribute('aria-hidden', 'true');
-        round.appendChild(el('span', 'rc-n', SF.clockFace ? SF.clockFace(slide.roundSeconds) : String(slide.roundSeconds)));
-        var track = el('span', 'rc-track');
-        track.appendChild(el('span', 'rc-fill'));
-        round.appendChild(track);
-        round.appendChild(el('span', 'rc-count', ''));
-        oracy.appendChild(round);
-      }
+      if (slide.roundSeconds) oracy.appendChild(roundClockEl(slide));
       if (slide.drawTotal) {
         oracy.appendChild(el('div', 'heads-pile', 'Term ' + slide.drawNo + ' of ' + slide.drawTotal));
       }
@@ -1144,6 +1148,10 @@ export function createQuizRenderer(SF, helpers) {
       pad.appendChild(el('div', 'answered-count', ''));
       return;
     }
+
+    /* Beat the Clock: the round's clock, top right, where a question's own
+       countdown would otherwise be. */
+    if (slide.roundSeconds && slide.style === 'speed') pad.appendChild(roundClockEl(slide));
 
     /* Predict the Outcome: what the room is being asked to do, in two
        beats — commit, then watch. The host marks the slide predict-locked. */

@@ -1,4 +1,10 @@
-/* Heads Up rounds — the runtime half of src/games/headsup.js.
+/* Rounds — Heads Up (src/games/headsup.js) and Beat the Clock
+ * (src/games/speed.js): one clock for a whole run of items.
+ *
+ * Beat the Clock takes the same shape: each question reveals as soon as the
+ * room has answered (or after its pace), shows the answer for a beat, and
+ * moves on; the round's count is right answers across the room, never a
+ * name.
  *
  * Heads Up used to be a run of separately timed terms, each waiting for the
  * teacher to press Next: the opposite of the game. Now it is a round:
@@ -19,15 +25,17 @@
   var P = SF.Player;
   if (!P) return;
 
-  /** @type {{gameId: string, total: number, endsAt: number, count: number, over: boolean, timer: any} | null} */
+  /** @type {{gameId: string, kind: string, total: number, endsAt: number, count: number, over: boolean, timer: any} | null} */
   var round = null;
+  var paceTimer = null;
   /* How long a verdict stays on screen before the next term: long enough to
      see the tick, short enough to keep the pace. */
   var NEXT_AFTER = 650;
 
   function isHeads(s) {
-    return !!(s && s.type === 'quiz' && s.style === 'headsup' && s.roundSeconds > 0);
+    return !!(s && s.type === 'quiz' && (s.style === 'headsup' || s.style === 'speed') && s.roundSeconds > 0);
   }
+  function isSpeed(s) { return !!(s && s.style === 'speed'); }
 
   function stop() {
     if (round && round.timer) { clearInterval(round.timer); round.timer = null; }
@@ -47,12 +55,15 @@
     box.setAttribute('role', 'status');
     box.appendChild(SF.el('div', 'ro-kicker', 'Time!'));
     box.appendChild(SF.el('div', 'ro-count', String(round.count)));
-    var who = guesser();
+    var who = round.kind === 'headsup' ? guesser() : '';
     /* Named, because a round is something the guesser stood up for and the
-       number is applause (games audit, section 6). */
+       number is applause (games audit, section 6). Beat the Clock's count
+       is the room's. */
     box.appendChild(SF.el('div', 'ro-who', who
       ? who + '’s round'
-      : round.count === 1 ? 'term in the round' : 'terms in the round'));
+      : round.kind === 'speed'
+        ? (round.count === 1 ? 'right answer, as a room' : 'right answers, as a room')
+        : round.count === 1 ? 'term in the round' : 'terms in the round'));
     box.appendChild(SF.el('div', 'ro-next', 'Next → to move on'));
     var stage = node.querySelector('.pad') || node;
     stage.appendChild(box);
@@ -70,7 +81,7 @@
       if (fill) fill.style.transform = 'scaleX(' + (round.total ? left / round.total : 0) + ')';
       clock.classList.toggle('hurry', left > 0 && left <= 10);
       var c = clock.querySelector('.rc-count');
-      if (c) c.textContent = round.count + ' correct';
+      if (c) c.textContent = round.count + (round.kind === 'speed' ? ' right' : ' correct');
     }
     if (round.over) showOver(node);
   }
@@ -94,12 +105,42 @@
     }
     if (!round || round.gameId !== s.gameId) {
       stop();
-      round = { gameId: s.gameId, total: s.roundSeconds, endsAt: Date.now() + s.roundSeconds * 1000,
+      round = { gameId: s.gameId, kind: s.style, total: s.roundSeconds, endsAt: Date.now() + s.roundSeconds * 1000,
         count: 0, over: false, timer: null };
       round.timer = setInterval(tick, 250);
     }
     paint();
+    pace(s);
   });
+
+  /* Beat the Clock: a question that has waited its pace closes itself — the
+     clock is the room's, and one slow phone must not stall it. Live only;
+     the live 'timeup' path closes it with no answer invented. */
+  function pace(s) {
+    clearTimeout(paceTimer);
+    if (!isSpeed(s) || !s.paceSeconds || !(SF.Live && SF.Live.active)) return;
+    paceTimer = setTimeout(function () {
+      var cur = P._currentSlide;
+      if (!round || round.over || !cur || cur.id !== s.id) return;
+      if (SF.Live.revealed && SF.Live.revealed[s.id]) return;
+      P.emit('timeup', { slide: s });
+    }, s.paceSeconds * 1000);
+  }
+
+  /* Beat the Clock: a reveal adds the room's right answers to the round and
+     moves on after a beat. */
+  function counted(s, right) {
+    if (!round || round.over || !isSpeed(s) || s.gameId !== round.gameId) return;
+    clearTimeout(paceTimer);
+    round.count += Math.max(0, Number(right) || 0);
+    paint();
+    setTimeout(function () {
+      if (!round || round.over) return;
+      var cur = P._currentSlide;
+      if (cur && cur.id === s.id) P.next();
+    }, 1500);
+  }
+  P.on('roundReveal', function (e) { if (e) counted(e.slide, e.right); });
 
   function verdict(s, choice) {
     if (!round || round.over || !isHeads(s) || s.gameId !== round.gameId) return;
@@ -117,9 +158,11 @@
   P.on('spokenVerdict', function (e) { if (e) verdict(e.slide, e.choice); });
   P.on('answer', function (e) {
     if (SF.Live && SF.Live.active) return;
-    if (e) verdict(e.slide, e.choice);
+    if (!e) return;
+    if (isSpeed(e.slide)) counted(e.slide, e.correct ? 1 : 0);
+    else verdict(e.slide, e.choice);
   });
-  P.on('close', function () { stop(); round = null; });
+  P.on('close', function () { stop(); clearTimeout(paceTimer); round = null; });
 
   /**
    * Next, once time is up: past the terms nobody reached, to whatever comes
@@ -132,7 +175,8 @@
     if (!isHeads(s) || s.gameId !== round.gameId) return false;
     var slides = player.deck.slides;
     var i = player.idx + 1;
-    while (i < slides.length && slides[i].gameId === round.gameId && slides[i].style === 'headsup') i++;
+    while (i < slides.length && slides[i].gameId === round.gameId && slides[i].style === round.kind &&
+      slides[i].type === 'quiz') i++;
     if (i >= slides.length || i === player.idx + 1) return false;
     player.goTo(i, 1);
     return true;
@@ -140,6 +184,10 @@
 
   SF.Rounds = {
     step: step,
-    get active() { return !!round && !round.over; }
+    get active() { return !!round && !round.over; },
+    /** Seconds left in the round, for the phones; 0 when there is none. */
+    left: function () {
+      return round && !round.over ? Math.max(0, Math.round((round.endsAt - Date.now()) / 1000)) : 0;
+    }
   };
 })();

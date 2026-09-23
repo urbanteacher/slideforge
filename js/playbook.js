@@ -68,15 +68,15 @@
       aim: 'Speeded multiple-choice fluency under one round clock.',
       judgement: 'auto',
       demo: 'class',
-      phases: 'setup → play → end',
-      timer: 'Round countdown 30–120s (default 60). Ends at 0.',
-      players: 'Teams ≤6 or individual; rotate every question.',
-      scoring: 'Correct: 10 + floor(remaining÷10) · wrong −5 (floor 0).',
+      phases: 'one round clock → questions flow as the room answers → Time! → scores',
+      timer: 'One clock for the whole run, 1–3 minutes (default 1½). A question closes itself after 15 seconds.',
+      players: 'Individuals or teams; every phone answers every question.',
+      scoring: 'Right: 10, plus up to 10 for speed (a point off per second) · wrong −5 (never below zero).',
       howToPlay: [
-        'One shared round clock runs for the whole sprint.',
-        'Answer each multiple-choice item as it appears.',
-        'Faster correct answers score more; wrong answers cost points.',
-        'Round ends when time hits zero or questions run out.'
+        'One clock runs for the whole run, on the wall and on every phone.',
+        'Each question moves on the moment the room has answered — the answer shows for a beat, then the next arrives.',
+        'Faster right answers score more; wrong ones cost.',
+        'At time the wall shows how many right answers the room got; Next skips the questions nobody reached.'
       ]
     },
     'boss-battle': {
@@ -597,7 +597,9 @@
     compare: 'compare-contrast'
   };
 
-  /* Describe the implemented SlideForge flow, not promises from the source catalogue. */
+  /* Describe the implemented SlideForge flow, not promises from the source
+     catalogue. Overrides here win over the entries above, so one that goes
+     stale hides a rebuilt game's own description — keep them in step. */
   Object.assign(BOOK['true-false'], {
     players: 'Individuals or teams answer together.',
     scoring: 'Uses the points and countdown chosen in Game settings.'
@@ -606,38 +608,15 @@
     judgement: 'auto', demo: 'class', players: 'Learners type an accepted concept name.',
     phases: 'emoji clue → optional support → type → reveal',
     scoring: 'Accepted answers use the game’s points settings.',
-    howToPlay: ['Read the emoji clues.', 'Type the concept; the teacher can release the letter pattern or a hint.', 'Reveal the accepted answer and discuss the clues.']
-  });
-  Object.assign(BOOK['beat-the-clock'], {
-    timer: 'Current version: a countdown for each question.',
-    phases: 'timed question → feedback → next question',
-    howToPlay: ['Answer each short question before its countdown ends.', 'Correct answers earn a time bonus; wrong answers cost 5.', 'Review the result, then advance to the next question.'],
-    note: 'A continuous countdown across the whole question pool is not implemented yet.'
-  });
-  Object.assign(BOOK['heads-up'], {
-    timer: 'Current version: countdown for each term.',
-    howToPlay: ['The guesser faces away from the term on screen.', 'Classmates describe it without saying the term.', 'Teacher marks Correct or Pass, then advances.'],
-    note: 'Keep the guesser’s phone out of view. A continuous whole-round timer is not implemented yet.'
+    howToPlay: ['Decode the emoji clues.', 'Type the concept. When the room is stuck the teacher releases the letter pattern, then the hint.', 'Reveal the accepted answer and explain how each clue fits.']
   });
   Object.assign(BOOK['spin-explain'], {
     phases: 'shuffled draw → explanation → teacher verdict → next',
     howToPlay: ['Advance to draw the next concept from the shuffled deck.', 'Explain its meaning, give an example and make a connection. Open the hint if needed.', 'Teacher marks Clear, With hint or Reject.'],
     note: 'Concepts are shuffled when the game is compiled for play, without repeats. Each draw has its own countdown; going back revisits the same draw.'
   });
-  Object.assign(BOOK['fill-in-the-blanks'], {
-    judgement: 'auto', demo: 'class', phases: 'sentence → typed answer → reveal',
-    players: 'Learners type the missing word.', timer: 'Optional question countdown.',
-    scoring: 'Uses the game’s points settings.',
-    howToPlay: ['Read the sentence and its gap.', 'Type the missing word.', 'Reveal the answer and explain why it fits.'],
-    note: 'This is the typed, single-gap version. A word bank and separate reveals for multiple gaps are not available.'
-  });
   Object.assign(BOOK['spot-the-error'], { scoring: 'A tap inside the wrong words earns the configured points.' });
   Object.assign(BOOK['predict-outcome'], { scoring: '“Sure” is a bet: right and sure ×1.5, right and unsure ×1, wrong and unsure 0, wrong and sure −½ of the points (never below zero).' });
-  Object.assign(BOOK['time-traveler'], {
-    players: 'Individuals or teams type their answers.', scoring: 'Accepted event names earn the configured points.',
-    howToPlay: ['Read the date and clue.', 'Type the event name from memory.', 'Reveal the accepted event and discuss its context.'],
-    note: 'The current version does not build an interactive timeline.'
-  });
   Object.assign(BOOK['question-cube'], {
     title: 'Question Cube', phases: 'roll a face → think → answer aloud → the teacher marks → roll again',
     judgement: 'judge', demo: 'judge',
@@ -650,9 +629,10 @@
     note: ''
   });
   Object.assign(BOOK['random-challenge'], {
-    phases: 'prepared challenge → complete/pass → next', timer: 'Optional countdown per challenge.',
-    howToPlay: ['Show the next prepared challenge.', 'Give the class time to attempt it.', 'Teacher marks Complete or Pass, then advances.'],
-    note: 'The current version follows the authored order rather than shuffling a deck.'
+    phases: 'draw a card → attempt it → teacher marks Complete or Pass → draw again',
+    timer: 'Optional countdown per challenge.',
+    howToPlay: ['Next draws a card from the deck — shuffled fresh each run, no repeats, the cards left shown behind it.', 'Choose who takes it in Live answers; they attempt it.', 'Mark Complete or Pass; the count of completed challenges grows.'],
+    note: ''
   });
 
   /* Authoring language belongs to the activity, not its underlying input type.

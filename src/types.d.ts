@@ -370,6 +370,8 @@ export interface Slide {
   drawTotal?: number;
   /** Heads Up: the length of the round the term belongs to. */
   roundSeconds?: number;
+  /** Beat the Clock: how long a question waits before closing itself. */
+  paceSeconds?: number;
   /** A vote that is not marked right or wrong (Odd One Out). */
   unmarked?: boolean;
   /** True/False Showdown: a mid-question split and one switch per phone. */

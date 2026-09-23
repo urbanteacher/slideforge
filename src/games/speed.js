@@ -2,8 +2,18 @@ import { ROOM_PLAY } from "./rooms.js";
 /* SlideForge — games/speed. Edit source here; npm run build updates js/model.js. */
 import { choice } from "./choice.js";
 
-/* Beat the Clock — same questions as multiple choice; scoring is time-aware.
-   Audit: correct = 10 + floor(remaining/10), wrong = −5 (score never below 0). */
+/* Beat the Clock — against the clock.
+
+   It used to restart a countdown on every question, so there was no clock
+   to beat. Now one clock runs for the whole run (the game's time, 90 s if
+   unset), the questions keep coming — each one reveals the moment everyone
+   has answered, shows the answer for a beat and moves on, or closes itself
+   after PACE seconds — and at time the room's total of right answers takes
+   the stage (js/rounds.js). The questions nobody reached are skipped.
+
+   Scoring is still speed: a right answer earns 10 and up to 10 more for
+   how fast it came after its question appeared; a wrong one costs 5 (a
+   score never goes below zero). */
 /** @type {import("../types.js").GameEngine<import("../types.js").QuestionWith<'options'|'correct'>>} */
 const speed = {
   defaults: {
@@ -15,7 +25,7 @@ const speed = {
   plays: ROOM_PLAY.quiz,
   label: 'Beat the clock',
   icon: '◷',
-  blurb: 'Multiple choice against the countdown. Faster correct answers score more; wrong answers cost points.',
+  blurb: 'One clock for the whole run. Questions keep coming as the room answers; faster right answers score more, wrong ones cost. How many can the room get right before time?',
   mechanic: 'speed',
   input: 'choice',
   minOptions: 2,
@@ -40,4 +50,16 @@ function speedPoints(right, remainingSec) {
   return -5;
 }
 
-export { speed, speedPoints };
+/** Beat the Clock in a round: 10 for a right answer, plus up to 10 for
+    speed — a second off per second after the question appeared. Wrong −5. */
+function roundSpeedPoints(right, elapsedSec) {
+  if (!right) return -5;
+  var t = Math.max(0, Number(elapsedSec) || 0);
+  return 10 + Math.max(0, 10 - Math.floor(t));
+}
+
+/* How long a round question waits for the slowest phone before it closes
+   itself: the clock is the room's, and one learner should not stall it. */
+var SPEED_PACE = 15;
+
+export { speed, speedPoints, roundSpeedPoints, SPEED_PACE };

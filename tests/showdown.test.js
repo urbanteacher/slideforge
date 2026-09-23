@@ -144,3 +144,21 @@ test('a sure, wrong prediction costs half the points, and a score never goes bel
   assert.equal(r.gained, -500);
   assert.equal(r.score, 0, 'floored at zero');
 });
+
+test('a round question carries the round’s time left to the phones', async t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sf-round-'));
+  const port = await freePort();
+  const server = await start(port, dir);
+  const sockets = [];
+  t.after(async () => { await stop(server); sockets.forEach(x => x.socket.close()); fs.rmSync(dir, { recursive: true, force: true }); });
+  const host = await connect(port); sockets.push(host);
+  host.send({ t: 'host', title: 'Round', mode: 'individual' });
+  const room = await host.next('hosted');
+  const ada = await connect(port); sockets.push(ada);
+  ada.send({ t: 'join', pin: room.pin, name: 'Ada' }); await ada.next('joined');
+  host.send({ t: 'begin' });
+  host.send({ t: 'question', id: 'r1', question: 'Q', input: 'choice', options: ['A', 'B'], timeLimit: 0, points: 0, roundLeft: 73 });
+  const q = await ada.next('question');
+  assert.ok(q.roundLeft >= 72 && q.roundLeft <= 73);
+  assert.equal(q.timeLimit, 0, 'no clock of its own');
+});

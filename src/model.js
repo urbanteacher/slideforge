@@ -59,7 +59,7 @@ import { emojiHelp, emojiCluePieces, emojiClueLayout, EMOJI_LEVELS } from "./gam
 import { spinExplainPoints } from "./games/spinexplain.js";
 import { claimPoints } from "./games/scoring.js";
 import { bingoHasLine } from "./games/bingo.js";
-import { speedPoints } from "./games/speed.js";
+import { speedPoints, roundSpeedPoints, SPEED_PACE } from "./games/speed.js";
 import { GAME_FORMAT_PRESETS, getShowcaseGame } from "./games/presets.js";
 
 /**
@@ -1259,6 +1259,13 @@ function compileGame(game, opts = {}) {
       s.roundSeconds = Number(st.defaultTime) > 0 ? Math.min(600, Number(st.defaultTime)) : 60;
       s.timeLimit = 0;
     }
+    /* Beat the Clock is a round too: the game's time is the round's, and
+       no question has a countdown of its own. See games/speed.js. */
+    if (game.style === 'speed') {
+      s.roundSeconds = Number(st.defaultTime) > 0 ? Math.max(30, Math.min(600, Number(st.defaultTime))) : 90;
+      s.timeLimit = 0;
+      s.paceSeconds = SPEED_PACE;
+    }
     out.push(s);
 
     /* A dedicated slide only when asked for. On 'inline' the reasoning
@@ -1829,6 +1836,8 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   bossDamage: bossDamage,
   bossMaxHp: bossMaxHp,
   speedPoints: speedPoints,
+  roundSpeedPoints: roundSpeedPoints,
+  SPEED_PACE: SPEED_PACE,
   BOSS_LEVELS: BOSS_LEVELS,
   WR_LEVELS: WR_LEVELS,
   BOWL_VALUES: BOWL_VALUES,

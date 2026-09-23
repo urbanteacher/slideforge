@@ -1172,6 +1172,10 @@ function questionMessage(room, timeLimit) {
   if (q.clueMode) msg.clueMode = q.clueMode;
   if (q.clues) msg.clues = q.clues;
   if (q.input === 'fill') { msg.fillParts = q.fillParts; msg.gaps = q.gaps; }
+  if (q.roundLeft) {
+    /* Less whatever has passed since, for a phone that rejoins mid-question. */
+    msg.roundLeft = Math.max(0, Math.round(q.roundLeft - (Date.now() - room.askedAt) / 1000));
+  }
   return msg;
 }
 
@@ -1668,6 +1672,9 @@ ws.attach(server, (sock, req) => {
           /* True/False Showdown: the split is shown mid-question and each
              phone may switch once (see 'showdown' below). */
           showdown: m.showdown === true && input === 'choice',
+          /* A round (Beat the Clock): seconds left in the whole run when this
+             question went out, so a phone counts down the round. */
+          roundLeft: Math.max(0, Math.min(600, Math.round(Number(m.roundLeft) || 0))),
           split: null,
           switched: 0,
           // the host knows where this question sits in the deck; fall back to

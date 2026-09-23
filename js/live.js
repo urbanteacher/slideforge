@@ -1601,6 +1601,15 @@
 
   /** Speed gains for the relay — one row per answered player. */
   function speedGains(slide) {
+    /* In a round, speed is measured from the question's own appearance. */
+    if (slide.roundSeconds) {
+      return (Live.snapshot.answers || []).map(function (a) {
+        var right = SF.markResponse(slide, a.response);
+        var elapsed = typeof a.elapsedMs === 'number' ? a.elapsedMs / 1000
+          : Live._askedAt ? (Date.now() - Live._askedAt) / 1000 : 0;
+        return [a.id, SF.roundSpeedPoints(right, elapsed)];
+      });
+    }
     var limit = Number(slide.timeLimit) || 0;
     return (Live.snapshot.answers || []).map(function (a) {
       var right = SF.markResponse(slide, a.response);
@@ -2452,6 +2461,8 @@
       /* question stays the clues for the journal; headPrompt is the mission. */
     }
     if (s.showdown) msg.showdown = true;
+    /* A round's phones count down the round, not the question. */
+    if (s.roundSeconds && SF.Rounds && SF.Rounds.left) msg.roundLeft = SF.Rounds.left() || s.roundSeconds;
     /* Fill the gaps: the text around the gaps, for the phone to draw. The
        word bank rides in options; which word goes where never leaves here. */
     if (s.input === 'fill') msg.fillParts = (s.fillParts || []).slice();
@@ -2708,6 +2719,12 @@
       explanation: s.explanation || ''
     };
     if (mechanic === 'speed') msg.gains = speedGains(s);
+    /* Beat the Clock in a round: the room's right answers go to the round's
+       count, which then moves on (js/rounds.js). */
+    if (mechanic === 'speed' && s.roundSeconds) {
+      var right = msg.marks.filter(function (m) { return m[1] === true; }).length;
+      setTimeout(function () { SF.Player.emit('roundReveal', { slide: s, right: right }); }, 0);
+    }
     if (s.predict) msg.gains = predictGains(s);
     if (mechanic === 'boss') msg.gains = bossGains(s);
     if (mechanic === 'wordreveal') {
