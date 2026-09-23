@@ -790,10 +790,48 @@
       el2.className = 'store-state is-saving';
       storedTimer = setTimeout(function () { setStored('stored'); }, 900);
     } else {
-      el2.textContent = 'Saved';
+      /* Where, not just whether: a browser's copy is lost with the browser,
+         and "Saved" alone let people believe it was somewhere safer. */
+      el2.textContent = 'Saved in this browser';
       el2.className = 'store-state';
     }
-    el2.title = 'Autosaved in this browser. The Library folder next to the title is where the file sits.';
+    el2.title = 'Saved in this browser only — click to export a copy you can keep. ' +
+      'The Library folder next to the title is where it sits here.';
+    el2.setAttribute('aria-label', el2.textContent + ' — export a copy');
+  }
+
+  /* Delete from the store, and if the open document is among them, let go of
+     it. Removing the record alone left it open in the editor: its pending
+     autosave, or the next keystroke, or Present (which saves first) wrote it
+     straight back into the Library. The Library in studio.js already did this;
+     File → Open did not. */
+  function removeDocs(ws, ids) {
+    var open = ws.doc() && ids.indexOf(ws.doc().id) >= 0;
+    if (open && ws.cancelPendingSave) ws.cancelPendingSave();
+    ids.forEach(function (id) { ws.store.remove(id); });
+    if (!open) return;
+    var next = ws.store.list()[0];
+    ws.setDoc(next || ws.blank());
+    ws._dirty = false;
+    syncChrome();
+    ws.draw();
+  }
+
+  /* The shortcut sheet, opened from the editor: its editing half as well as
+     the slideshow keys. It was reachable only as a button inside Settings,
+     and it listed none of the editor's own keys. */
+  function showShortcuts() {
+    var cheats = $('cheats');
+    if (!cheats) return;
+    cheats.classList.add('for-editor', 'on');
+  }
+  function hideShortcuts() {
+    var cheats = $('cheats');
+    if (cheats) cheats.classList.remove('on', 'for-editor');
+  }
+  function shortcutsOpen() {
+    var cheats = $('cheats');
+    return !!(cheats && cheats.classList.contains('on'));
   }
 
   function openSaved() {
@@ -811,7 +849,11 @@
       empty: scoped ? scoped.empty : (ws.key === 'game' ? 'No saved quizzes yet.' : 'Nothing saved yet.'),
       describe: ws.describe,
       onPick: function (it) {
-        ws.setDoc(ws.store.get(it.id));
+        /* The list was read when the picker opened; another tab can have
+           deleted the record since, and setDoc(null) took the editor down. */
+        var picked = ws.store.get(it.id);
+        if (!picked) { SF.toast('“' + it.title + '” is no longer saved here — it was deleted, perhaps in another tab.'); return; }
+        ws.setDoc(picked);
         ws._dirty = false;
         syncChrome();
         ws.draw();
@@ -822,7 +864,7 @@
         SF.ask({ title: 'Delete “' + it.title + '”?',
           detail: 'This cannot be undone.',
           confirm: 'Delete', danger: true }, function () {
-            ws.store.remove(it.id);
+            removeDocs(ws, [it.id]);
             done();
           });
       },
@@ -834,7 +876,7 @@
           confirm: n === 1 ? 'Delete' : 'Delete ' + n,
           danger: true
         }, function () {
-          ids.forEach(function (id) { ws.store.remove(id); });
+          removeDocs(ws, ids);
           done();
         });
       }
@@ -1287,11 +1329,12 @@
     if (btnHelp) {
       btnHelp.onclick = function () {
         /* Lives in the Settings sheet; step out of it so the shortcut card
-           is not read against a second dimmed layer. */
-        var settings = $('settingsModal');
-        if (settings) settings.classList.remove('on');
-        var cheats = $('cheats');
-        if (cheats) cheats.classList.add('on');
+           is not read against a second dimmed layer — through its own close
+           button, so focus and Settings' onClose are handled as they would
+           be for any other close. */
+        var settingsClose = /** @type {HTMLElement|null} */ (document.querySelector('#settingsModal.on [data-close]'));
+        if (settingsClose) settingsClose.click();
+        showShortcuts();
       };
     }
 
@@ -1470,7 +1513,12 @@
     }
 
     var storeBtn = $('storeState');
-    if (storeBtn) setStored('stored');
+    if (storeBtn) {
+      setStored('stored');
+      /* The README has always said this: click it to export a copy you can
+         keep. It was a span with pointer-events: none. */
+      storeBtn.onclick = function () { exportDoc(); };
+    }
 
     var docFolder = $('docFolder');
     if (docFolder) {
@@ -1747,6 +1795,12 @@
 
     document.addEventListener('keydown', function (e) {
       if (SF.Player.open || document.querySelector('dialog[open], .modal.on')) return;
+      /* The sheet is over everything: Escape or ? takes it away, and nothing
+         else reaches the deck behind it. */
+      if (shortcutsOpen()) {
+        if (e.key === 'Escape' || e.key === '?') { e.preventDefault(); hideShortcuts(); }
+        return;
+      }
       var target = /** @type {HTMLElement|null} */ (e.target);
       var t = target ? target.tagName : '';
       var typing = t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT' ||
@@ -1783,6 +1837,7 @@
       if (mod && e.altKey && e.code === 'Digit0') { e.preventDefault(); setZoom(1); return; }
 
       if (typing) return;
+      if (e.key === '?' && !mod) { e.preventDefault(); showShortcuts(); return; }
       if (highlighted && mod && !e.altKey && (e.key === 'c' || e.key === 'x' ||
           e.key === 'C' || e.key === 'X')) return;
       if (active.keydown) active.keydown(e);

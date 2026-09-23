@@ -2410,10 +2410,14 @@ html[data-ws="game"] #btnSorter { display: none; }
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 999px; padding: 5px 8px;
   backdrop-filter: blur(12px);
-  opacity: 0; transition: opacity .25s; pointer-events: none;
+  /* Hidden by visibility, which flips only when the fade has finished, not by
+     pointer-events, which flipped the moment it began: for the quarter-second
+     the bar was still on screen, a click on ⋯ fell through to the slide and
+     advanced it. */
+  opacity: 0; visibility: hidden; transition: opacity .25s, visibility 0s linear .25s;
   z-index: 110; color: #fff;
 }
-.hud.show { opacity: 1; pointer-events: auto; }
+.hud.show { opacity: 1; visibility: visible; transition: opacity .25s; }
 .hud button {
   background: transparent; border: 0; color: #fff; cursor: pointer;
   width: 34px; height: 30px; border-radius: 999px; font-size: 14px;
@@ -2446,9 +2450,15 @@ html[data-ws="game"] #btnSorter { display: none; }
   display: none; place-items: center; color: #fff;
 }
 #cheats.on { display: grid; }
+/* The editing half only when the sheet was opened from the editor; in the
+   show it is a list of keys that do nothing there. */
+#cheats .editing-keys { display: none; }
+#cheats.for-editor .editing-keys { display: block; margin-bottom: 22px; }
+#cheats.for-editor .card { max-height: calc(100vh - 40px); overflow-y: auto; }
 #cheats .card {
   background: #1a1d23; border: 1px solid #2f343d; border-radius: 12px;
-  padding: 26px 30px; min-width: 420px;
+  padding: 26px 30px; min-width: min(420px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px); box-sizing: border-box;
 }
 #cheats h3 { margin: 0 0 16px; font-size: 15px; text-transform: uppercase; letter-spacing: .08em; color: #9aa1ad; }
 #cheats table { border-collapse: collapse; font-size: 14px; }
@@ -5622,9 +5632,11 @@ html[data-ws="deck"] #railCount { display: none; }
   border: 0;
   background: transparent;
   white-space: nowrap;
-  cursor: default;
-  pointer-events: none;
+  cursor: pointer;
+  font: inherit; font-size: 12px;
+  border-radius: 999px;
 }
+.store-state:hover, .store-state:focus-visible { background: rgba(0,0,0,.05); }
 .store-state::before {
   content: '';
   display: inline-block;
@@ -5634,13 +5646,13 @@ html[data-ws="deck"] #railCount { display: none; }
   background: #729458;
   vertical-align: 1px;
 }
-.store-state:hover { color: var(--ui-dim); }
+.store-state:hover { color: var(--ui-text); }
 .store-state.is-saving { color: var(--ui-text); }
 .store-state.is-saving::before { background: var(--ui-dim); animation: store-pulse 1s ease-in-out infinite; }
 @keyframes store-pulse { 0%, 100% { opacity: .3 } 50% { opacity: 1 } }
 @media (prefers-reduced-motion: reduce) { .store-state.is-saving::before { animation: none } }
 /* Failure is the one state that must be seen, on any width. */
-.store-state.is-failed { color: #a4262c; font-weight: 600; pointer-events: auto; cursor: help; }
+.store-state.is-failed { color: #a4262c; font-weight: 600; }
 .store-state.is-failed::before { background: #c4314b; }
 @media (max-width: 900px) { .store-state:not(.is-failed) { display: none } }
 

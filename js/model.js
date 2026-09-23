@@ -5174,6 +5174,15 @@
     SF.LATTICE = LATTICE;
     SF.anchorRegion = function(region2) {
       var r = Object.assign({}, region2);
+      function cells(v, lo, hi) {
+        var n = Math.round(Number(v));
+        if (!isFinite(n)) n = lo;
+        return Math.max(lo, Math.min(hi, n));
+      }
+      r.cols = cells(r.cols, 1, LATTICE.cols);
+      r.col = cells(r.col, 1, LATTICE.cols - r.cols + 1);
+      r.rows = cells(r.rows, 1, Infinity);
+      r.row = cells(r.row, 1, Infinity);
       if (r.anchorX === "left") r.col = 1;
       if (r.anchorX === "center") r.col = Math.floor((LATTICE.cols - r.cols) / 2) + 1;
       if (r.anchorX === "right") r.col = LATTICE.cols - r.cols + 1;
@@ -7767,13 +7776,18 @@
     function blockKeyOfNode(n, i) {
       return SF.blockKeyOf ? SF.blockKeyOf(n, i) : "block-" + i;
     }
+    function resolvedComposition(s) {
+      var d = SF.Editor && SF.Editor.deck && SF.Editor.deck();
+      return d && SF.slideComposition ? SF.slideComposition(d, s) : void 0;
+    }
     function seed() {
       var s = slide();
       if (!s || !SF.layoutRegionsFor) return false;
       var map = regionsOf(s, true);
       if (Object.keys(map).length) return false;
-      var composed = !!(s.design && s.design.composition) || !!(SF.slideComposition && SF.Editor && SF.Editor.deck && SF.slideComposition(SF.Editor.deck(), s));
-      var declared = SF.layoutRegionsFor(s);
+      var resolved = resolvedComposition(s);
+      var composed = !!(s.design && s.design.composition) || !!resolved;
+      var declared = SF.layoutRegionsFor(s, resolved);
       var measured = measuredRegions() || {};
       Object.assign(map, declared);
       Object.keys(measured).forEach(function(k) {
@@ -8181,7 +8195,7 @@
       if (!Object.keys(map).length) seed();
       map = regionsOf(s, true);
       var placedBlocks = occupants(null);
-      var want = SF.insertionRegionFor && SF.insertionRegionFor(s, list.length, kind, placedBlocks) || { col: 1, row: 1, cols: spec.cols, rows: spec.rows };
+      var want = SF.insertionRegionFor && SF.insertionRegionFor(s, list.length, kind, placedBlocks, resolvedComposition(s)) || { col: 1, row: 1, cols: spec.cols, rows: spec.rows };
       var before = Object.keys(map).length;
       var placed = makeRoom(map, { col: want.col, row: want.row, cols: want.cols, rows: want.rows });
       var took = { id, kind, text: "" };
@@ -10046,7 +10060,8 @@
       return s.art || null;
     }
     function scaleOf(root) {
-      var w = root.getBoundingClientRect().width;
+      var node = root && root.matches && root.matches(".slide") ? root : root && root.querySelector && root.querySelector(".slide") || root;
+      var w = node ? node.getBoundingClientRect().width : 0;
       return w > 0 ? w / SLIDE_W2 : 1;
     }
     function targetOf(node) {
@@ -11053,7 +11068,7 @@
       node.draggable = false;
       node.contentEditable = "plaintext-only";
       node.setAttribute("role", "textbox");
-      node.setAttribute("aria-multiline", "false");
+      node.setAttribute("aria-multiline", /^bullets\.\d+$/.test(key) ? "false" : "true");
       function repaint() {
         var here = flatRange(node);
         paint(node, s, key, storedText(s, key));
@@ -11073,7 +11088,8 @@
       }
       node.addEventListener("input", function() {
         if (inlineEdit !== open) return;
-        var next = node.innerText.replace(/[\t\r\n]+/g, " ");
+        var raw = node.innerText.replace(/\r/g, "");
+        var next = /^bullets\.\d+$/.test(key) ? raw.replace(/[\t\n]+/g, " ") : raw.replace(/\t/g, " ").replace(/\n+$/, "");
         rebase(s, key, storedText(s, key), next);
         writeText(s, key, next);
         if (open.onInput) open.onInput();
@@ -13359,16 +13375,17 @@
     } },
     join: { slots: { "join-stage": region(1, 2, 12, 13) } }
   };
-  function compositionKey(slide) {
+  function compositionKey(slide, resolved) {
+    if (typeof resolved === "string") return resolved;
     const design = slide && typeof slide.design === "object" ? slide.design : {};
     return typeof design.composition === "string" ? design.composition : "";
   }
-  function hasLayoutTemplate(slide) {
-    return !!(COMPOSITION_SLOTS[compositionKey(slide)] || TYPES[slide && slide.type]);
+  function hasLayoutTemplate(slide, composition) {
+    return !!(COMPOSITION_SLOTS[compositionKey(slide, composition)] || TYPES[slide && slide.type]);
   }
-  function layoutRegionsFor(slide) {
-    const composition = COMPOSITION_SLOTS[compositionKey(slide)];
-    const template = composition || (TYPES[slide && slide.type] || { slots: FULL });
+  function layoutRegionsFor(slide, composition) {
+    const cp = COMPOSITION_SLOTS[compositionKey(slide, composition)];
+    const template = cp || (TYPES[slide && slide.type] || { slots: FULL });
     return clone(template.slots || template);
   }
   var KIND_SLOTS = {
@@ -13416,12 +13433,12 @@
       "cp-footer"
     ]
   };
-  function insertionRegionFor(slide, index = 0, kind = "", taken = []) {
+  function insertionRegionFor(slide, index = 0, kind = "", taken = [], composition) {
     const wanted = KIND_SLOTS[kind] || [];
     const busy = Array.isArray(taken) ? taken.filter(Boolean) : [];
     const clear = (r) => !busy.some((b) => r.col < b.col + b.cols && b.col < r.col + r.cols && r.row < b.row + b.rows && b.row < r.row + r.rows);
     if (wanted.length) {
-      const slots = layoutRegionsFor(slide);
+      const slots = layoutRegionsFor(slide, composition);
       for (const key of wanted) {
         if (slots[key] && clear(slots[key])) return { ...slots[key], slot: key };
       }

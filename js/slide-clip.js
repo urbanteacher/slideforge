@@ -35,14 +35,34 @@
     }
   }
 
+  /* The fallback lived in localStorage for good, and a slide carrying a
+     pasted screenshot is megabytes — taken out of the same few megabytes
+     every saved lesson has to fit in, so copying one slide could be what
+     made the next autosave fail. A small copy still goes there, so another
+     tab can paste it; a large one stays in this tab, in memory and in
+     sessionStorage, which has a quota of its own. */
+  var SHARED_MAX = 100 * 1024;
+  var held = null;
+
   function stash(text) {
+    var t = String(text || '');
+    held = t;
+    try {
+      if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(KEY, t);
+    } catch (e) {}
     try {
       if (typeof localStorage === 'undefined') return;
-      localStorage.setItem(KEY, String(text || ''));
+      if (t.length <= SHARED_MAX) localStorage.setItem(KEY, t);
+      else localStorage.removeItem(KEY);
     } catch (e) {}
   }
 
   function recall() {
+    if (held) return held;
+    try {
+      var mine = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(KEY) : null;
+      if (mine) return mine;
+    } catch (e) {}
     try {
       if (typeof localStorage === 'undefined') return null;
       return localStorage.getItem(KEY);
@@ -50,6 +70,15 @@
       return null;
     }
   }
+
+  /* Give back the space an oversized copy from before this change is still
+     holding. */
+  try {
+    if (typeof localStorage !== 'undefined') {
+      var left = localStorage.getItem(KEY);
+      if (left && left.length > SHARED_MAX) localStorage.removeItem(KEY);
+    }
+  } catch (e) {}
 
   SF.SlideClip = {
     KEY: KEY,

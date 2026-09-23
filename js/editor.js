@@ -56,18 +56,45 @@
   var sel = 0;
   var saveTimer = null;
   var historyId=null, past=[], future=[], checkpoint=null, restoring=false;
+  /* Undo kept a whole copy of the deck per keystroke, sixty deep: typing one
+     sentence pushed a slide deletion out of reach, and a deck carrying
+     screenshots held hundreds of megabytes of copies. A burst of edits to the
+     same slides — typing — is now one step, and the history is capped by size
+     as well as by count. A change to which slides there are, or their order,
+     always starts a step of its own, so it cannot be folded into the typing
+     either side of it. */
+  var BURST_MS = 1000, HISTORY_CHARS = 40 * 1024 * 1024;
+  /* checkpointShape is the slide list the checkpoint had; a change that keeps
+     it is an edit to what is on the slides. Only such an edit joins a burst,
+     and only a burst of such edits — so a duplicate followed at once by
+     typing is two steps, not one. */
+  var burstAt = 0, checkpointShape = '';
+  function shapeOf(d) { return d.slides.map(function (s) { return s.id; }).join(','); }
+  function breakBurst() { burstAt = 0; }
   function remember() {
     if (!deck) return;
-    if(historyId!==deck.id){historyId=deck.id;past=[];future=[];checkpoint=JSON.stringify(deck);return;}
+    if(historyId!==deck.id){historyId=deck.id;past=[];future=[];checkpoint=JSON.stringify(deck);checkpointShape=shapeOf(deck);breakBurst();return;}
     var now=JSON.stringify(deck);
-    if(!restoring && checkpoint && now!==checkpoint){past.push(checkpoint);if(past.length>60)past.shift();future=[];}
-    checkpoint=now;
+    var shape=shapeOf(deck);
+    if(!restoring && checkpoint && now!==checkpoint){
+      var at=Date.now(), textOnly=shape===checkpointShape;
+      var sameBurst=textOnly && burstAt && at-burstAt<BURST_MS && past.length;
+      if(!sameBurst){
+        past.push(checkpoint);
+        var total=past.reduce(function(n,p){return n+p.length;},0);
+        while(past.length>60 || (past.length>1 && total>HISTORY_CHARS)){total-=past.shift().length;}
+      }
+      future=[];
+      /* A structural step never opens a burst for what follows it. */
+      burstAt=textOnly?at:0;
+    }
+    checkpoint=now;checkpointShape=shape;
   }
   function restoreHistory(redo) {
     var from=redo?future:past,to=redo?past:future;
     if(!from.length)return;
-    clearTimeout(saveTimer);saveTimer=null;
-    to.push(JSON.stringify(deck));deck=JSON.parse(from.pop());checkpoint=JSON.stringify(deck);
+    clearTimeout(saveTimer);saveTimer=null;breakBurst();
+    to.push(JSON.stringify(deck));deck=JSON.parse(from.pop());checkpoint=JSON.stringify(deck);checkpointShape=shapeOf(deck);
     sel=Math.min(sel,deck.slides.length-1);restoring=true;touched();restoring=false;
     SF.Shell.syncChrome();draw();
   }
@@ -2262,6 +2289,7 @@
     blank: function () { return SF.makeDeck('Untitled presentation'); },
     draw: draw,
     flush: flush,
+    cancelPendingSave: cancelPendingSave,
     play: present,
     hostLive: hostLive,
     settings: openDeckSettings,
@@ -2352,7 +2380,9 @@
     deck = theirs;
     var i = deck.slides.findIndex(function (s) { return s.id === at; });
     sel = i >= 0 ? i : Math.min(sel, deck.slides.length - 1);
-    /* An Undo step, so the version this tab had is one Cmd+Z away. */
+    /* An Undo step of its own, so the version this tab had is one Cmd+Z
+       away and not folded into typing that happened just before. */
+    breakBurst();
     remember();
     SF.Shell.syncChrome();
     draw();

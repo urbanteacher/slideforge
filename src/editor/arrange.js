@@ -153,6 +153,13 @@ export function installArrange(SF) {
     return SF.blockKeyOf ? SF.blockKeyOf(n, i) : 'block-' + i;
   }
 
+  /* The composition the renderer is actually drawing, or undefined when there
+     is no deck to ask — layout-slots then falls back to reading the slide. */
+  function resolvedComposition(s) {
+    var d = SF.Editor && SF.Editor.deck && SF.Editor.deck();
+    return d && SF.slideComposition ? SF.slideComposition(d, s) : undefined;
+  }
+
   function seed() {
     var s = slide();
     if (!s || !SF.layoutRegionsFor) return false;
@@ -170,9 +177,9 @@ export function installArrange(SF) {
        more than it pays: the bullets on a content slide really do fill all
        twelve columns, and taking the declared eleven away removed the column
        of slack a nudge needs. */
-    var composed = !!(s.design && s.design.composition) ||
-      !!(SF.slideComposition && SF.Editor && SF.Editor.deck && SF.slideComposition(SF.Editor.deck(), s));
-    var declared = SF.layoutRegionsFor(s);
+    var resolved = resolvedComposition(s);
+    var composed = !!(s.design && s.design.composition) || !!resolved;
+    var declared = SF.layoutRegionsFor(s, resolved);
     var measured = measuredRegions() || {};
     Object.assign(map, declared);
     Object.keys(measured).forEach(function (k) {
@@ -700,7 +707,7 @@ export function installArrange(SF) {
        a picture — the one kind of occupant neither of the two old placement
        paths counted. */
     var placedBlocks = occupants(null);
-    var want = (SF.insertionRegionFor && SF.insertionRegionFor(s, list.length, kind, placedBlocks)) ||
+    var want = (SF.insertionRegionFor && SF.insertionRegionFor(s, list.length, kind, placedBlocks, resolvedComposition(s))) ||
       { col: 1, row: 1, cols: spec.cols, rows: spec.rows };
     var before = Object.keys(map).length;
     /* design.regions is a coordinate map; the slot name travels on the block,

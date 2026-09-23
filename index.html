@@ -83,7 +83,7 @@ html:not([data-ready]) body { background: #f0f1ed; }
     </div>
 
     <!-- Autosave pulse only. Where the file lives is the folder chip and File → Library. -->
-    <span class="store-state" id="storeState" role="status" aria-live="polite">Saved</span>
+    <button type="button" class="store-state" id="storeState" aria-live="polite">Saved in this browser</button>
 
     <!-- Two rows, both right-aligned on the action side. Row 1: document
          (brand, studio, title, saved) then File · History · Settings · Share.
@@ -363,6 +363,25 @@ html:not([data-ready]) body { background: #f0f1ed; }
 <!-- ------------------------------------------------------------ shortcuts -->
 <div id="cheats">
   <div class="card">
+    <!-- Every key here is bound in js/editor.js or js/shell.js; shown only
+         when the sheet is opened from the editor. -->
+    <div class="editing-keys">
+    <h3>Editing keys</h3>
+    <table>
+      <tr><td><kbd>↑</kbd> <kbd>↓</kbd> or <kbd>J</kbd> <kbd>K</kbd></td><td>Previous / next slide</td></tr>
+      <tr><td><kbd>⌥</kbd>+<kbd>↑</kbd> <kbd>↓</kbd> · <kbd>⌥</kbd>+<kbd>Home</kbd> <kbd>End</kbd></td><td>Move the slide up or down · to the start or end</td></tr>
+      <tr><td><kbd>⌘</kbd>+<kbd>X</kbd>, then <kbd>↑</kbd> <kbd>↓</kbd> and <kbd>Enter</kbd></td><td>Pick the slide up and put it down somewhere else</td></tr>
+      <tr><td><kbd>⌘</kbd>+<kbd>C</kbd> · <kbd>⌘</kbd>+<kbd>V</kbd> · <kbd>⌘</kbd>+<kbd>D</kbd></td><td>Copy · paste · duplicate the slide</td></tr>
+      <tr><td><kbd>H</kbd> · <kbd>Delete</kbd></td><td>Hide the slide from the show · delete it</td></tr>
+      <tr><td><kbd>⌘</kbd>+<kbd>Z</kbd> · <kbd>⇧</kbd>+<kbd>⌘</kbd>+<kbd>Z</kbd></td><td>Undo · redo</td></tr>
+      <tr><td><kbd>⌘</kbd>+<kbd>G</kbd> · <kbd>⌘</kbd>+<kbd>F</kbd></td><td>Every slide at once · find in the lesson</td></tr>
+      <tr><td>Click words on the slide</td><td>Type in place · <kbd>⌘</kbd>+<kbd>B</kbd> <kbd>I</kbd> <kbd>U</kbd> format · <kbd>⇧</kbd>+<kbd>Enter</kbd> new line · <kbd>Enter</kbd> or <kbd>Esc</kbd> done</td></tr>
+      <tr><td><kbd>⌘</kbd>+<kbd>\</kbd> · <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>=</kbd> <kbd>−</kbd> <kbd>0</kbd></td><td>Hide the right panel · zoom in, out, fit</td></tr>
+      <tr><td><kbd>⌘</kbd>+<kbd>S</kbd> · <kbd>⌘</kbd>+<kbd>E</kbd></td><td>Save to the Library · switch to Quiz studio</td></tr>
+      <tr><td><kbd>⌘</kbd>+<kbd>Enter</kbd> or <kbd>F5</kbd></td><td>Present from this slide</td></tr>
+      <tr><td><kbd>?</kbd> · <kbd>Esc</kbd></td><td>Show this list · close it</td></tr>
+    </table>
+    </div>
     <h3>Slideshow keys</h3>
     <table>
       <tr><td><kbd>→</kbd> <kbd>space</kbd> <kbd>PgDn</kbd></td><td>Next slide</td></tr>

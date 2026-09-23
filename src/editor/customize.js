@@ -546,7 +546,7 @@ export function installCustom(SF) {
     node.draggable = false;
     node.contentEditable = 'plaintext-only';
     node.setAttribute('role', 'textbox');
-    node.setAttribute('aria-multiline', 'false');
+    node.setAttribute('aria-multiline', /^bullets\.\d+$/.test(key) ? 'false' : 'true');
 
     function repaint() {
       var here = flatRange(node);
@@ -573,7 +573,15 @@ export function installCustom(SF) {
 
     node.addEventListener('input', function () {
       if (inlineEdit !== open) return;
-      var next = node.innerText.replace(/[\t\r\n]+/g, ' ');
+      /* A heading keeps its line breaks. Every newline used to become a
+         space, so one keystroke in a two-line title ("A theme is / a
+         starting point.") flattened it for good. A bullet is one line by
+         definition and still is. Shift+Enter is how a break is typed; the
+         trailing newline a browser can leave behind is not the author's. */
+      var raw = node.innerText.replace(/\r/g, '');
+      var next = /^bullets\.\d+$/.test(key)
+        ? raw.replace(/[\t\n]+/g, ' ')
+        : raw.replace(/\t/g, ' ').replace(/\n+$/, '');
       rebase(s, key, storedText(s, key), next);
       writeText(s, key, next);
       /* The words are on the slide from the first keystroke, but nothing was

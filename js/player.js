@@ -148,7 +148,7 @@
       });
     });
     if (cheats) {
-      cheats.onclick = function () { cheats.classList.remove('on'); };
+      cheats.onclick = function () { cheats.classList.remove('on', 'for-editor'); };
     }
 
     window.addEventListener('resize', relayout);
@@ -2492,7 +2492,7 @@
     var moreBtn = hud && hud.querySelector('[data-act=more]');
     if (moreBtn) moreBtn.setAttribute('aria-expanded', 'false');
     if (root) root.classList.remove('on');
-    if (cheats) cheats.classList.remove('on');
+    if (cheats) cheats.classList.remove('on', 'for-editor');
     if (viewport) {
       viewport.innerHTML = '';
       viewport.classList.remove('railed');

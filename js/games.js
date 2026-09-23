@@ -2076,6 +2076,9 @@
     },
     draw: draw,
     flush: flush,
+    /* Drop a pending autosave without writing, for a game about to be
+       deleted — the timer would otherwise put it straight back. */
+    cancelPendingSave: function () { clearTimeout(saveTimer); saveTimer = null; },
     play: play,
     hostLive: hostLive,
     settings: openSettings,

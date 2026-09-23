@@ -240,18 +240,26 @@ const TYPES = {
   join: { slots: { 'join-stage': region(1, 2, 12, 13) } }
 };
 
-function compositionKey(slide) {
+/* Which composition's slots to use. Pass the one the renderer resolved —
+ * SF.slideComposition(deck, slide), which applies the theme's default for the
+ * type and drops a stored key the type no longer offers. Read raw, a slide
+ * composed only by its theme got the plain type's slots, and a stale key left
+ * on a slide whose type had changed got slots for a composition that was not
+ * being drawn — which then sat in design.regions as obstacles nobody could
+ * see. The raw read stays as the fallback for callers without a deck. */
+function compositionKey(slide, resolved) {
+  if (typeof resolved === 'string') return resolved;
   const design = slide && typeof slide.design === 'object' ? slide.design : {};
   return typeof design.composition === 'string' ? design.composition : '';
 }
 
-export function hasLayoutTemplate(slide) {
-  return !!(COMPOSITION_SLOTS[compositionKey(slide)] || TYPES[slide && slide.type]);
+export function hasLayoutTemplate(slide, composition) {
+  return !!(COMPOSITION_SLOTS[compositionKey(slide, composition)] || TYPES[slide && slide.type]);
 }
 
-export function layoutRegionsFor(slide) {
-  const composition = COMPOSITION_SLOTS[compositionKey(slide)];
-  const template = composition || (TYPES[slide && slide.type] || { slots: FULL });
+export function layoutRegionsFor(slide, composition) {
+  const cp = COMPOSITION_SLOTS[compositionKey(slide, composition)];
+  const template = cp || (TYPES[slide && slide.type] || { slots: FULL });
   return clone(template.slots || template);
 }
 
@@ -287,7 +295,7 @@ const KIND_SLOTS = {
  * it has one and nothing is sitting in it, otherwise the generic rail. There
  * is intentionally no "find a free row" fallback — a layout either advertises
  * somewhere for the item or it does not, and the caller makes room instead. */
-export function insertionRegionFor(slide, index = 0, kind = '', taken = []) {
+export function insertionRegionFor(slide, index = 0, kind = '', taken = [], composition) {
   const wanted = KIND_SLOTS[kind] || [];
   /* Occupied means something is sitting there, not that the layout reserves
      the name. A slide being built out of items has a title slot and no title
@@ -297,7 +305,7 @@ export function insertionRegionFor(slide, index = 0, kind = '', taken = []) {
     r.col < b.col + b.cols && b.col < r.col + r.cols &&
     r.row < b.row + b.rows && b.row < r.row + r.rows);
   if (wanted.length) {
-    const slots = layoutRegionsFor(slide);
+    const slots = layoutRegionsFor(slide, composition);
     for (const key of wanted) {
       if (slots[key] && clear(slots[key])) return { ...slots[key], slot: key };
     }

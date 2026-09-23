@@ -65,8 +65,16 @@ export function installArtwork(SF) {
   /* The rendered slide is scaled to fit the canvas; a drag arrives in screen
      pixels and has to be stored in slide pixels or the same pose would mean a
      different place at every zoom level. */
+  /* Screen pixels per slide pixel, measured on the slide rather than the box
+     around it. The box is always 16:9 and the slide is fitted inside it by
+     the smaller of the two ratios, so on a 4:3 or 16:10 deck the box is wider
+     than the slide: a shape then moved about three-quarters of the way the
+     pointer did on 4:3, and nine-tenths on 16:10. Arrange already measured
+     .slide; this measured #previewBox. */
   function scaleOf(root) {
-    var w = root.getBoundingClientRect().width;
+    var node = root && root.matches && root.matches('.slide') ? root
+      : (root && root.querySelector && root.querySelector('.slide')) || root;
+    var w = node ? node.getBoundingClientRect().width : 0;
     return w > 0 ? w / SLIDE_W : 1;
   }
 

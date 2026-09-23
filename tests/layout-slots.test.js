@@ -61,3 +61,26 @@ test('every authorable layout and every AI Awareness composition declares coordi
     assert.ok(Object.keys(regions).length, composition + ' must declare its own slots');
   }
 });
+
+/* The slot table has to describe the composition the renderer draws. It used
+   to read design.composition raw: a cards slide composed only by its theme's
+   default got the plain cards slots, and a stale key the type no longer
+   offers still got that composition's slots. */
+test('slots follow the composition the renderer resolves, not the raw key', async () => {
+  const slots = await import('../src/render/layout-slots.js');
+  const SF = loadModel();
+  const deck = SF.makeDeck('Default composition');
+  deck.theme = 'aiad27-safe';
+  const cards = SF.makeSlide('cards');
+  const resolved = SF.slideComposition(deck, cards);
+  assert.equal(resolved, 'ballot', 'the theme composes cards as a ballot');
+  const plain = slots.layoutRegionsFor(cards);
+  const drawn = slots.layoutRegionsFor(cards, resolved);
+  assert.notDeepEqual(drawn, plain, 'the drawn composition has its own slots');
+
+  const stale = Object.assign(SF.makeSlide('content'), { design: { composition: 'ballot' } });
+  const none = SF.slideComposition(SF.makeDeck('x'), stale);
+  assert.equal(none, '', 'content cannot be a ballot');
+  assert.deepEqual(slots.layoutRegionsFor(stale, none), slots.layoutRegionsFor({ type: 'content' }),
+    'a stale key gets the plain type slots once resolved');
+});

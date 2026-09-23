@@ -44,6 +44,23 @@ export function installLatticeRenderer(SF, helpers) {
   SF.LATTICE = LATTICE;
   SF.anchorRegion = function (region) {
     var r = Object.assign({}, region);
+    /* Whole cells, at least one of each, and no wider than the lattice. A
+       region wider than twelve columns anchored to a col of zero or less, and
+       a missing span wrote `span undefined`; either makes the whole gridArea
+       invalid, so the browser dropped it and the block fell into a single
+       auto-placed cell — no error, just a block in the wrong place at the
+       wrong size. The bottom edge is deliberately not clamped: running past
+       row 16 is allowed and reported (restackRegions' `over`), and clamping
+       it here would hide the overflow the author is being told about. */
+    function cells(v, lo, hi) {
+      var n = Math.round(Number(v));
+      if (!isFinite(n)) n = lo;
+      return Math.max(lo, Math.min(hi, n));
+    }
+    r.cols = cells(r.cols, 1, LATTICE.cols);
+    r.col = cells(r.col, 1, LATTICE.cols - r.cols + 1);
+    r.rows = cells(r.rows, 1, Infinity);
+    r.row = cells(r.row, 1, Infinity);
     if (r.anchorX === 'left') r.col = 1;
     if (r.anchorX === 'center') r.col = Math.floor((LATTICE.cols - r.cols) / 2) + 1;
     if (r.anchorX === 'right') r.col = LATTICE.cols - r.cols + 1;
