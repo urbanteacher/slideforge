@@ -1054,6 +1054,15 @@ export function createQuizRenderer(SF, helpers) {
       return;
     }
 
+    /* Predict the Outcome: what the room is being asked to do, in two
+       beats — commit, then watch. The host marks the slide predict-locked. */
+    if (slide.predict && !opts.revealed) {
+      var pn = el('p', 'predict-note');
+      pn.appendChild(el('span', 'pn-commit', 'Commit to a prediction on your phone — and say how sure you are.'));
+      pn.appendChild(el('span', 'pn-watch', 'Predictions are locked. Watch what happens.'));
+      pad.appendChild(pn);
+    }
+
     /* True/False Showdown: the room's split, one bar across the two pads.
        Hidden until the teacher shows it; then it follows the room as phones
        switch, with a marker left where the room stood when it was shown. */

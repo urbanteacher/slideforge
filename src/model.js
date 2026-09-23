@@ -1191,6 +1191,14 @@ function compileGame(game, opts = {}) {
        half the clock) shows the room its split; each phone may switch once;
        the reveal shows before against after. The plain True or False format
        stays a plain two-option question. */
+    /* Predict the Outcome — commit, then watch. Predictions are locked and
+       the room's split shown before the outcome; the teacher then shows
+       what happens, and only then the answer. How sure you were counts. */
+    if (game.format === 'predict-outcome' && s.input === 'choice') {
+      s.predict = true;
+      s.holdResults = true;
+      s.confidence = true;
+    }
     if (game.style === 'truefalse' && game.format === 'true-false') {
       s.showdown = true;
       s.holdResults = true;

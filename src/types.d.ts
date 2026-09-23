@@ -374,6 +374,8 @@ export interface Slide {
   unmarked?: boolean;
   /** True/False Showdown: a mid-question split and one switch per phone. */
   showdown?: boolean;
+  /** Predict the Outcome: lock, watch, then reveal; confidence weighs the score. */
+  predict?: boolean;
   spinTotal?: number;
   headPrompt?: string;
 

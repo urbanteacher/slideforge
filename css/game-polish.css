@@ -596,3 +596,16 @@
 @keyframes sf-sd-in { from { opacity: 0; transform: translateY(10px); } }
 /* The split bar is the tally here; the column strip would say it twice. */
 .layout-quiz:has(.showdown) .tally { display: none; }
+
+/* ---- Predict the Outcome: commit, then watch ---- */
+.layout-quiz .predict-note { margin: 18px 0 0; font-size: 22px; text-align: center; color: var(--s-dim); }
+.layout-quiz .predict-note .pn-watch { display: none; }
+.layout-quiz.predict-locked .predict-note .pn-commit { display: none; }
+.layout-quiz.predict-locked .predict-note .pn-watch {
+  display: inline-block; padding: 10px 22px; border-radius: 999px;
+  background: var(--s-fg); color: var(--s-bg); font-weight: 750;
+  animation: sf-lock-in .45s cubic-bezier(.3,0,.2,1);
+}
+/* Locked: the options can no longer be chosen, and look it. */
+.layout-quiz.predict-locked .opt { cursor: default; }
+@keyframes sf-lock-in { from { transform: scale(.94); opacity: 0; } }

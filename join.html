@@ -1147,6 +1147,16 @@
         showdown(m);
         break;
 
+      case 'answersClosed':
+        /* Predict the Outcome: committed. The phone goes quiet so the room
+           looks up for what happens next. */
+        stopTick();
+        $('waitIcon').textContent = '👀';
+        $('waitTitle').textContent = m.answered ? 'Prediction locked' : 'Predictions are locked';
+        $('waitLead').textContent = 'Look up and watch what happens. The answer comes next.';
+        show('scWait');
+        break;
+
       case 'switched':
         /* The one switch is spent: the new answer is final. */
         var sdPad = $('qPad');

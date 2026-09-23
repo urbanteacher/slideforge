@@ -1526,7 +1526,7 @@ ws.attach(server, (sock, req) => {
           return;
         }
         if (room.answersClosed) {
-          refuse('This question is already revealed. Move on, then record the next one.');
+          refuse('Answers are closed for this question. Move on, then record the next one.');
           return;
         }
         if (q.spoken) { refuse('Use the teacher verdict and recipient control for this spoken answer.'); return; }
@@ -1678,6 +1678,20 @@ ws.attach(server, (sock, req) => {
         }
         broadcast(room, questionMessage(room));
         pushTally(room);
+
+      } else if (m.t === 'closeAnswers') {
+        /* Predict the Outcome: the predictions are locked before the answer
+           is shown, so the room watches what happens having committed. The
+           reveal follows later, from the same closed state. */
+        const q = room.question;
+        if (!q || room.phase !== 'question' || room.answersClosed || (m.id && m.id !== q.id)) return;
+        room.answersClosed = true;
+        record(room, 'closeAnswers', { attempt: q.attempt });
+        for (const p of room.players.values()) {
+          if (p.sock && p.sock.open && (!q.eligible || q.eligible.has(p.id))) {
+            p.sock.json({ t: 'answersClosed', id: q.id, answered: p.answer != null });
+          }
+        }
 
       } else if (m.t === 'showdown') {
         /* Show the room its own split, mid-question, and open one switch per

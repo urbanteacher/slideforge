@@ -82,3 +82,42 @@ test('the split reaches every phone, each may switch once, and the reveal says w
   assert.equal(results[1].switched, false);
   assert.equal(results[1].right, false);
 });
+
+test('Predict the Outcome locks before it reveals: the phones are told, and a late answer is refused', async t => {
+  const SF = load();
+  const g = SF.normalizeGame(SF.makeGame('Predict', 'choice'));
+  g.format = 'predict-outcome';
+  const s = SF.compileGame(g).find(x => x.type === 'quiz');
+  assert.equal(s.predict, true);
+  assert.equal(s.holdResults, true);
+  assert.equal(s.confidence, true, 'how sure you were counts');
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sf-predict-'));
+  const port = await freePort();
+  const server = await start(port, dir);
+  const sockets = [];
+  t.after(async () => { await stop(server); sockets.forEach(x => x.socket.close()); fs.rmSync(dir, { recursive: true, force: true }); });
+  const host = await connect(port); sockets.push(host);
+  host.send({ t: 'host', title: 'Predict', mode: 'individual' });
+  const room = await host.next('hosted');
+  const ada = await connect(port), ben = await connect(port); sockets.push(ada, ben);
+  ada.send({ t: 'join', pin: room.pin, name: 'Ada' }); ben.send({ t: 'join', pin: room.pin, name: 'Ben' });
+  await ada.next('joined'); await ben.next('joined');
+  host.send({ t: 'begin' });
+  host.send({ t: 'question', id: 'p1', question: 'What happens to the balloon?', input: 'choice',
+    options: ['It shrinks', 'It grows', 'Nothing'], timeLimit: 0, points: 1000 });
+  await ada.next('question'); await ben.next('question');
+  ada.send({ t: 'answer', choice: 1 });
+  const tally = await host.until('tally', m => m.answered === 1);
+  host.send({ t: 'closeAnswers', id: 'p1' });
+  const a = await ada.until('answersClosed', () => true);
+  const b = await ben.until('answersClosed', () => true);
+  assert.equal(a.answered, true);
+  assert.equal(b.answered, false);
+  ben.send({ t: 'answer', choice: 0 });                       // too late: no tally follows
+  host.send({ t: 'reveal', id: 'p1', rev: tally.rev, marks: [[tally.answers[0].id, true]],
+    gains: [[tally.answers[0].id, 1500]], correct: 1, answer: 'It grows' });
+  const ra = await ada.until('result', () => true), rb = await ben.until('result', () => true);
+  assert.equal(ra.gained, 1500, 'a sure, right prediction earns half again');
+  assert.equal(rb.answered, false, 'the late answer never landed');
+});

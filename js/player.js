@@ -2058,6 +2058,8 @@
     if (!s || !s.holdResults) return false;
     /* Revealed by the live room, or by the player itself — solo play and a
        rehearsal both reveal by recording an answer. */
+    /* A locked prediction shows the room's split before the answer. */
+    if (s.predict && SF.Live && SF.Live.locked && SF.Live.locked[s.id]) return false;
     var revealed = !!(SF.Live && SF.Live.revealed && SF.Live.revealed[s.id]) ||
       (Player.answers && Player.answers[s.id] != null);
     return !revealed;

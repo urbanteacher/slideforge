@@ -1569,6 +1569,18 @@
     });
   }
 
+  /* Predict the Outcome: a right prediction scores the question's points,
+     and half as much again if the learner said they were sure. A wrong one
+     scores nothing, however sure — being wrong costs nothing, being right
+     and knowing it is what earns the bonus. */
+  function predictGains(slide) {
+    var pts = Number(slide.points) || 0;
+    return (Live.snapshot.answers || []).map(function (a) {
+      if (!SF.markResponse(slide, a.response)) return [a.id, 0];
+      return [a.id, a.sure === true ? Math.round(pts * 1.5) : pts];
+    });
+  }
+
   /** Claim / Heads Up / Accept: +1 when the host verdict is the winning option. */
   function claimGains(slide) {
     return (Live.snapshot.answers || []).map(function (a) {
@@ -1847,6 +1859,7 @@
     if (s.style === 'oddone' || s.oddoneDiscuss ||
         s.style === 'compare' || s.compareDiscuss) return 'reveal';
     if (s.showdown && !Live.splitShown[s.id]) return 'split';
+    if (s.predict && !Live.locked[s.id]) return 'lock';
     if (s.voteOnly) return 'hold';
     return 'reveal';
   };
@@ -1856,6 +1869,7 @@
     reveal: 'Show the answer',
     hold: 'Move on \u2014 no answer shown',
     split: 'Show the split \u2014 one switch each',
+    lock: 'Lock the predictions \u2014 then show what happens',
     advance: 'Next slide'
   };
 
@@ -1886,6 +1900,15 @@
        advance — holding the answer back and then spending it on the way out
        of the slide would be the same leak by a slower route. */
     if (slide.voteOnly) return false;
+    /* Predict: the first press locks the predictions; the next reveals. */
+    if (slide.predict && !Live.locked[slide.id]) {
+      if (Date.now() - Live._askedAt < GRACE_MS) {
+        SF.toast('Give them a moment to commit \u2014 press again to lock');
+        return true;
+      }
+      lockPredictions(slide);
+      return true;
+    }
     /* Showdown: the first press shows the room its split; the next reveals. */
     if (slide.showdown && !Live.splitShown[slide.id]) {
       if (Date.now() - Live._askedAt < GRACE_MS) {
@@ -2318,6 +2341,19 @@
      ended up. Next shows the split first; a timed question shows it half-way
      through its clock. */
   Live.splitShown = {};
+  /* Predict the Outcome: slides whose predictions are locked. */
+  Live.locked = {};
+  function lockPredictions(s) {
+    if (!Live.active || !s || !s.predict || Live.locked[s.id] || Live.revealed[s.id]) return;
+    Live.locked[s.id] = true;
+    send({ t: 'closeAnswers', id: s.id });
+    /* The split is public now, the answer is not: the room has committed. */
+    if (SF.Player._current) SF.Player._current.classList.add('predict-locked');
+    if (SF.Player.releaseTally) SF.Player.releaseTally();
+    SF.toast('Predictions locked. Show what happens, then Next reveals.');
+    if (SF.Player.syncPresenter) SF.Player.syncPresenter();
+  }
+  Live.lockPredictions = lockPredictions;
   Live.showdown = null;
   function showSplit(s) {
     if (!Live.active || !s || !s.showdown || Live.splitShown[s.id] || Live.revealed[s.id]) return;
@@ -2335,6 +2371,7 @@
   function onSlide(e) {
     if (!Live.active) return;
     var s = e.slide;
+    if (s && s.predict && Live.locked[s.id] && e.node) e.node.classList.add('predict-locked');
     /* A held verdict belongs to the item it was given on. */
     if (Live.pendingVerdict && (!s || Live.pendingVerdict.slideId !== s.id)) Live.pendingVerdict = null;
     if (s && s.style !== 'headsup' && isSpokenSlide(s)) Live.selectedRecipient = { type: 'room' };
@@ -2529,6 +2566,7 @@
       explanation: s.explanation || ''
     };
     if (mechanic === 'speed') msg.gains = speedGains(s);
+    if (s.predict) msg.gains = predictGains(s);
     if (mechanic === 'boss') msg.gains = bossGains(s);
     if (mechanic === 'wordreveal') {
       msg.gains = SF.wordRevealGains(s, Live.snapshot.answers, Live.dripShown);
@@ -2571,6 +2609,8 @@
     if (s.style === 'oddone' || s.oddoneDiscuss) return;
     /* A showdown is the teacher's to reveal: the split, then the switch. */
     if (s.showdown) return;
+    /* A prediction is locked and watched before it is revealed. */
+    if (s.predict) return;
     var pending = s.confidence !== false ? (m.answered || 0) - (m.sured || 0) : 0;
     if (pending <= 0) {
       if (Live._sureTimer) { clearTimeout(Live._sureTimer); Live._sureTimer = null; }

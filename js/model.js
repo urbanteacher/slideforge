@@ -5261,6 +5261,12 @@
         pad.appendChild(el("div", "answered-count", ""));
         return;
       }
+      if (slide.predict && !opts.revealed) {
+        var pn = el("p", "predict-note");
+        pn.appendChild(el("span", "pn-commit", "Commit to a prediction on your phone — and say how sure you are."));
+        pn.appendChild(el("span", "pn-watch", "Predictions are locked. Watch what happens."));
+        pad.appendChild(pn);
+      }
       if (slide.showdown) {
         var sd = el("div", "showdown");
         sd.setAttribute("aria-live", "polite");
@@ -23281,6 +23287,11 @@
       if (drawn) {
         s.drawNo = i + 1;
         s.drawTotal = playQuestions.length;
+      }
+      if (game.format === "predict-outcome" && s.input === "choice") {
+        s.predict = true;
+        s.holdResults = true;
+        s.confidence = true;
       }
       if (game.style === "truefalse" && game.format === "true-false") {
         s.showdown = true;
