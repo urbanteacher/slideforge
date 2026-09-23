@@ -1135,7 +1135,7 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 | GA-23 | 6 | Ranking reveal as a heat per slot | S | To do |
 | GA-24 | 6 | Horse Race and Boss use the room pane's top-five layout; Boss gets a reveal per hit | S | To do |
 | GA-29 | 1 | UX pass on spoken verdicts: one path from wall and desk, a held verdict until the speaker is chosen, the speaker cleared per item, a speaker picker (teams, recent, type-ahead, Pick for me), the credit shown on the wall and phones; one shared passage for Spot entry | M | **Done** 23 Sep · relay tested, not viewed |
-| GA-30 | 1 | Spoken team credit on the game's points scale, so it registers in a lesson that mixes quiz and spoken games | S | To do |
+| GA-30 | 1 | Spoken team credit on the game's points scale, so it registers in a lesson that mixes quiz and spoken games | S | **Done** 23 Sep · 1,000 per accept, half with a hint |
 | GA-25 | 2–6 | On the draw and round clock: Spin & Explain spinner, Random Challenge deck, Question Cube roll plus stages, Heads Up 60-second round | S–M each | To do · after GA-06, 09, 10 |
 | GA-26 | 7 | **Sort input (N6)**; Compare & Contrast → *Sort it* | L | To do |
 | GA-27 | 7 | Beat the Clock → self-paced *Against the clock* (relay self-paced mode) | L | To do |
@@ -1273,6 +1273,10 @@ from (K1–K17). Items are in build order; the wave is the audit's.
 
 ### 22 September onwards · the UX review, code audit and games
 
+- **23 Sep 2026.** GA-30: an accepted spoken answer is worth one quiz
+  question to the speaker's team (`SPOKEN_POINTS` 1,000; with a hint, 500),
+  so it registers beside quiz averages in one lesson's standings. The +1/+2
+  copy is updated in the catalogue, the editor and the playbook. 488/488.
 - **23 Sep 2026.** GA-29: a UX pass on wave 1. There is one verdict path
   (wall pads included). A scoring verdict is held until the speaker is
   chosen. The speaker is cleared per item, except in Heads Up. The dropdown

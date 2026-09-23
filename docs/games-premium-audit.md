@@ -441,6 +441,9 @@ still leaves P6 partial.
   in a browser. Still open: spoken team points (1–2) share a scale with quiz
   team averages (up to 1,000), so in a mixed lesson the credit barely
   registers (GA-30).
+- **23 September 2026 — GA-30.** Spoken credit is on the quiz scale: an
+  accepted explanation is worth one question (1,000) to the speaker's team,
+  or half with a hint. §6's rule is unchanged; only the unit is.
 - **23 September 2026 — Wave 1 implemented (GA-06–08).** Selected-recipient
   spoken verdicts now credit one team, or count without points in individual
   play unless the teacher opts in. Spoken phones receive job cards. All 25
