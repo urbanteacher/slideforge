@@ -762,6 +762,27 @@ Three read-only reviews, running in parallel, covered:
   worked on by the other agent. The changes are additive: new message types
   and one new roster field.
 
+## 23 September 2026: the room pane, for a real class
+
+Drawn with 32 students, the pane beside the slide judged people on the
+projector ("needs support" under their names), cut rows and poll options in
+half, signed brainstorm ideas, printed the PIN twice, and took a third of the
+wall beside slides that asked nothing. The findings and the rules it follows
+now are in [room-pane-redesign.md](room-pane-redesign.md). In short:
+
+- **Accuracy and "needs a hand" move to the desk** ("3 need a hand" beside the
+  away chip). Ideas are anonymous on the wall.
+- **Above 8, the top five and the pack**: "+ 27 more · Your place is on your
+  phone", and the pack's biggest climb named after a reveal. The full-screen
+  standings use the whole width and carry the same line.
+- **Fitted by measurement**, so nothing is drawn cut in half. One PIN. Long
+  full names become "Tom O.".
+- **A 232px strip beside slides that ask nothing.** The pane is full width
+  beside questions, results and prompts.
+- **The answered count leads** the feedback pane.
+- **Open:** rehearsing a class of 30, lecture-scale defaults, and a packed word
+  cloud.
+
 ## Log
 
 - **22 Sep 2026.** Backlog created from the [UX deep dive](ux-deep-dive.md).
