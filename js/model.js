@@ -3483,7 +3483,9 @@
       pad.appendChild(head);
       var body = el("div", "fk-body");
       body.dataset.kind = digest && digest.kind || "";
-      if (!digest || !digest.kind) {
+      if (opts.held) {
+        body.appendChild(heldNote(digest, "fk-held"));
+      } else if (!digest || !digest.kind) {
         body.appendChild(el("div", "fk-empty", "Waiting for the room"));
       } else if (digest.kind === "poll") {
         focusPoll(body, digest, opts);
@@ -3653,6 +3655,14 @@
       root.appendChild(foot);
       return root;
     }
+    function heldNote(digest, cls) {
+      var box2 = el("div", cls);
+      var answered = digest ? Number(digest.answered) || 0 : 0;
+      box2.appendChild(el("div", cls + "-n", String(answered)));
+      box2.appendChild(el("div", cls + "-line", answered === 1 ? "answer in" : "answers in"));
+      box2.appendChild(el("div", cls + "-note", "Hidden until your teacher shows them. Answer for yourself."));
+      return box2;
+    }
     function paintFeedbackRail(rail, digest, opts) {
       opts = opts || {};
       rail.querySelector(".rail-title").textContent = opts.title || "Feedback";
@@ -3668,6 +3678,10 @@
       body.textContent = "";
       body.classList.remove("tight", "tighter");
       rail.dataset.kind = digest && digest.kind || "";
+      if (opts.held) {
+        body.appendChild(heldNote(digest, "fb-held"));
+        return;
+      }
       if (!busy) {
         if (opts.roster && opts.roster.length) paintFbRoster(body, opts.roster);
         else if (!joining) {
@@ -4757,7 +4771,7 @@
         pair.appendChild(row);
         pair.appendChild(el("div", "stage-note", "Explain the bridge aloud"));
         pad.appendChild(pair);
-      } else if (present === "compare") {
+      } else if (present === "compare" && !slide.compareSort) {
         var cmp = el("div", "stage-hero compare-stage");
         cmp.appendChild(el("div", "stage-atmosphere", ""));
         if (slide.category) {
@@ -5150,7 +5164,34 @@
         appendJudgeStrip(pad, slide, opts, inlineWhy, whyBox);
         return;
       }
-      if (present === "compare") return;
+      if (present === "compare" && !slide.compareSort) return;
+      if (slide.input === "sort") {
+        pad.parentNode.classList.add("is-sort");
+        var bins = slide.sortBins || ["A only", "Both", "B only"];
+        var board5 = el("div", "sort-board");
+        bins.forEach(function(name, b) {
+          var col = el("div", "sort-col sort-col-" + b);
+          col.dataset.bin = String(b);
+          col.appendChild(el("div", "sort-col-head", name));
+          board5.appendChild(col);
+        });
+        pad.appendChild(board5);
+        var pile = el("div", "sort-pile");
+        (slide.options || []).forEach(function(text2, i) {
+          var card = el("div", "sort-card");
+          card.dataset.i = String(i);
+          card.appendChild(el("span", "sc-text", text2));
+          card.appendChild(el("span", "sc-heat", ""));
+          if (opts.revealed) {
+            var home = board5.querySelector(".sort-col-" + ((slide.sortAnswers || [])[i] || 0));
+            if (home) home.appendChild(card);
+          } else pile.appendChild(card);
+        });
+        if (!opts.revealed) pad.appendChild(pile);
+        pad.appendChild(el("div", "sort-verdict", ""));
+        pad.appendChild(el("div", "answered-count", ""));
+        return;
+      }
       if (slide.input === "fill") {
         pad.parentNode.classList.add("is-fill");
         var parts = slide.fillParts || [slide.question || ""];
@@ -6347,6 +6388,9 @@
             live: !!SF.Live.active
           } : null,
           roomPulse: SF.Live && SF.Live.presenterPulse ? SF.Live.presenterPulse() : null,
+          /* What the room is sending on this slide, with the teacher's handles
+             on it: spotlight, hide, close, show a held split, the written count. */
+          ask: SF.Live && SF.Live.askState ? SF.Live.askState() : null,
           deck: Player.spontaneous ? Object.assign({}, deck, { slides: Player.spontaneous.slides, title: Player.spontaneous.title || deck.title }) : deck,
           index: Player.spontaneous ? Player.spontaneous.index : Player.idx,
           lessonIndex: Player.idx,
@@ -6452,6 +6496,7 @@
       } else if (SF.Boards && SF.Boards.command && SF.Boards.command(d.cmd, d.action, d.card)) {
       } else if (d.cmd === "moment" && Player.momentCommand) Player.momentCommand(d);
       else if (d.cmd === "quickPoll") Player.quickPoll(d);
+      else if (d.cmd === "ask" && SF.Live && SF.Live.askCommand) SF.Live.askCommand(d);
       else if (d.cmd === "explore" && SF.Explore) SF.Explore.command(Player, d.action, d.value);
       else if (d.cmd === "quizGen") Player.quizGen(d);
       else if (d.cmd === "activity" && SF.LiveActivities) {
@@ -14449,7 +14494,7 @@
       ["Mostly understand", "Solve one example, then check the step you are least sure about."],
       ["Getting there", "Use the worked example with a partner. Explain each step."],
       ["Need help", "Bring your first uncertain step to the teacher. Start with a labelled sketch."]
-    ], { feedback: { prompt: "Which corner best describes your understanding?", options: ["Got it", "Mostly understand", "Getting there", "Need help"] }, answer: "Choose a corner or indicate a choice from your seat. Use 2 min to choose, 6 min for the task and 4 min for teacher support." }),
+    ], { feedback: { prompt: "Which corner best describes your understanding?", options: ["Got it", "Mostly understand", "Getting there", "Need help"], hold: true }, answer: "Choose a corner or indicate a choice from your seat. Use 2 min to choose, 6 min for the task and 4 min for teacher support." }),
     "learning-log-entry": preset([
       ["New learning", "What’s one new thing?"],
       ["Connections", "How does this connect?"],
@@ -14499,7 +14544,7 @@
       ["Explain", "I’m here because…"],
       ["Plan", "To move up I need to…"],
       ["Share", "Tell a partner one specific action you will take next."]
-    ], { feedback: { prompt: "Where are you on the learning ladder?", points: 5, lowLabel: "Need help", highLabel: "Can teach others" } })
+    ], { feedback: { prompt: "Where are you on the learning ladder?", points: 5, lowLabel: "Need help", highLabel: "Can teach others", hold: true } })
   };
   var PRESENTATIONS = {
     /* Timed stages: the track, a clock per stage and a job for the phones (see
@@ -17756,6 +17801,7 @@
       f.highLabel = String(raw.highLabel == null ? "Completely" : raw.highLabel).slice(0, 40);
       f.max = 1;
     }
+    if ((f.kind === "poll" || f.kind === "scale") && raw.hold === true) f.hold = true;
     return f;
   }
   function slideFeedback(slide) {
@@ -17887,6 +17933,13 @@
       teams: support("yes", "Teams can discuss and submit paper answers."),
       entry: support("yes", "The teacher reveals and marks paper answers."),
       solo: support("partial", "A solo paper run still needs a checked workflow.")
+    }),
+    /* Statements sorted into A only, Both, B only (Compare & Contrast). */
+    sort: Object.freeze({
+      phones: support("yes", "Each learner sorts every statement on their phone."),
+      teams: support("yes", "Each statement sorted right earns its share for the team."),
+      entry: support("yes", "The teacher records a column for each statement, in order, by key."),
+      solo: support("no", "The sorting is done on the phones.")
     }),
     /* A passage with gaps and a word bank (Fill the gaps). */
     fill: Object.freeze({
@@ -18820,32 +18873,59 @@
       itemB: "Respiration",
       similarities: "Both involve energy and gases moving in living cells.",
       differences: "Photosynthesis stores energy in glucose; respiration releases it.",
-      category: "Science"
+      category: "Science",
+      statements: "Both: happens in living cells\nBoth: involves carbon dioxide and oxygen\nA: stores energy in glucose\nA: needs light\nB: releases energy from glucose\nB: happens all the time, day and night"
     },
     {
       itemA: "RAM",
       itemB: "SSD",
       similarities: "Both store data the computer uses.",
       differences: "RAM is volatile and fast for working memory; an SSD keeps files when power is off.",
-      category: "ICT"
+      category: "ICT",
+      statements: "Both: stores data the computer uses\nA: loses its contents when the power goes off\nA: is where running programs are held\nB: keeps files when the power is off\nB: is slower to read than working memory"
     },
     {
       itemA: "Democracy",
       itemB: "Dictatorship",
       similarities: "Both are ways a state can be governed.",
       differences: "In a democracy power is shared through voting; in a dictatorship one person or clique holds it.",
-      category: "History"
+      category: "History",
+      statements: "Both: is a way a state can be governed\nBoth: makes laws\nA: shares power through voting\nA: lets people criticise the government openly\nB: puts power in one person or a small group"
     },
     {
       itemA: "Metaphor",
       itemB: "Simile",
       similarities: "Both compare one thing to another in writing.",
       differences: "A simile uses like or as; a metaphor says something is something else.",
-      category: "Literature"
+      category: "Literature",
+      statements: 'Both: compares two things\nBoth: is a figure of speech\nA: says one thing is another\nB: uses "like" or "as"'
     }
   ];
 
   // src/games/compare.js
+  var SORT_MAX = 10;
+  function sortStatements(raw) {
+    return String(raw || "").split("\n").map(function(line) {
+      var m = /^\s*(both|a|b)\s*[:\-–—]\s*(.+)$/i.exec(line);
+      if (!m) return null;
+      var tag = m[1].toLowerCase();
+      return { text: m[2].trim().slice(0, 160), bin: tag === "a" ? 0 : tag === "both" ? 1 : 2 };
+    }).filter(function(x) {
+      return !!(x && x.text);
+    }).slice(0, SORT_MAX).map(function(x) {
+      return (
+        /** @type {{text: string, bin: number}} */
+        x
+      );
+    });
+  }
+  function sortScore(s, response) {
+    var want = s.sortAnswers || [];
+    if (!Array.isArray(response) || response.length !== want.length || !want.length) return 0;
+    var right = 0;
+    for (var i = 0; i < want.length; i++) if (response[i] === want[i]) right++;
+    return right / want.length;
+  }
   var compare = {
     /* No Explanation field in the editor. js/games.js worked this out from
        whether the style had a board engine, with bowl named as the board
@@ -18869,10 +18949,10 @@
     },
     starters: compare_default,
     key: "compare",
-    plays: ROOM_PLAY.discussion,
+    plays: ROOM_PLAY.sort,
     label: "Compare & contrast",
     icon: "⇄",
-    blurb: "Two items side by side. Discuss similarities and differences — then reveal the prepared points. No score.",
+    blurb: "Two items and a set of statements. Phones sort each into A only, Both or B only; the reveal lands each in its column with how the room sorted it.",
     mechanic: "points",
     input: "choice",
     minOptions: 0,
@@ -18885,6 +18965,7 @@
         itemB: "Respiration",
         similarities: "Both involve energy and gases moving in living cells.",
         differences: "Photosynthesis stores energy in glucose; respiration releases it.",
+        statements: "Both: happens in living cells\nBoth: involves carbon dioxide and oxygen\nA: stores energy in glucose\nA: needs light\nB: releases energy from glucose\nB: happens day and night",
         category: "",
         options: [],
         correct: -1
@@ -18896,6 +18977,7 @@
       q.similarities = String(q.similarities == null ? "" : q.similarities).slice(0, 600);
       q.differences = String(q.differences == null ? "" : q.differences).slice(0, 600);
       q.category = String(q.category == null ? "" : q.category).slice(0, 40);
+      q.statements = String(q.statements == null ? "" : q.statements).slice(0, 2e3);
       if (!String(q.question || "").trim()) {
         q.question = "Compare these two — how are they alike, and how do they differ?";
       }
@@ -18911,6 +18993,11 @@
       if (String(q.itemA).trim().toLowerCase() === String(q.itemB).trim().toLowerCase()) {
         return "Q" + n + " needs two different items";
       }
+      var sorted = sortStatements(q.statements);
+      if (String(q.statements || "").trim() && sorted.length < 2) {
+        return "Q" + n + " needs at least two statements, each starting Both:, A: or B:";
+      }
+      if (sorted.length >= 2) return null;
       if (!String(q.similarities || "").trim()) {
         return "Q" + n + " needs similarities for the reveal";
       }
@@ -18940,9 +19027,37 @@
       s.hideAnswerUntilReveal = true;
       s.compareDiscuss = true;
       s.timeLimit = 0;
+      var sorted = sortStatements(q.statements);
+      if (sorted.length >= 2) {
+        for (var i = sorted.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var t = sorted[i];
+          sorted[i] = sorted[j];
+          sorted[j] = t;
+        }
+        s.input = "sort";
+        s.compareSort = true;
+        s.compareDiscuss = false;
+        s.voteOnly = false;
+        s.options = sorted.map(function(x) {
+          return x.text;
+        });
+        s.sortAnswers = sorted.map(function(x) {
+          return x.bin;
+        });
+        var bins = [(s.itemA || "A") + " only", "Both", (s.itemB || "B") + " only"];
+        s.sortBins = bins;
+        s.holdResults = true;
+        s.headPrompt = "Sort each statement: " + (s.itemA || "A") + ", " + (s.itemB || "B") + ", or both?";
+        s.answer = sorted.map(function(x) {
+          return x.text + " → " + bins[x.bin];
+        }).join(" · ");
+      }
     },
-    mark: function() {
-      return false;
+    /* A sort is right when every statement is in its column; partial credit
+       is in the points (sortScore). A discussion is never marked. */
+    mark: function(s, response) {
+      return !!s.compareSort && sortScore(s, response) === 1;
     },
     summary: function(q) {
       return (q.itemA || "?") + " · " + (q.itemB || "?");
@@ -22058,7 +22173,7 @@
   function isSpecialStyle(styleKey) {
     return SPECIAL_STYLES.indexOf(styleKey) > -1;
   }
-  var INPUTS = ["choice", "text", "number", "order", "tap", "fill"];
+  var INPUTS = ["choice", "text", "number", "order", "tap", "fill", "sort"];
 
   // src/storage.js
   function unusedDraft(doc) {
@@ -23516,17 +23631,20 @@
     if (styleKey === "compare") {
       s.points = 0;
       s.timeLimit = 0;
-      s.voteOnly = true;
       s.confidence = false;
       s.hideAnswerUntilReveal = true;
-      s.compareDiscuss = true;
       s.itemA = String(q.itemA || "").trim();
       s.itemB = String(q.itemB || "").trim();
       s.similarities = String(q.similarities || "").trim();
       s.differences = String(q.differences || "").trim();
       s.category = String(q.category || "").trim();
-      s.options = [];
-      s.correct = -1;
+      if (s.compareSort) s.input = "sort";
+      if (!s.compareSort) {
+        s.voteOnly = true;
+        s.compareDiscuss = true;
+        s.options = [];
+        s.correct = -1;
+      }
     }
     if (styleKey === "conceptchain") {
       s.conceptChain = true;
@@ -24167,6 +24285,8 @@
     spotSpan,
     SPOT_MAX_WORDS,
     fillParts,
+    sortStatements,
+    sortScore,
     fillScore,
     FILL_MAX_GAPS,
     showNumber,

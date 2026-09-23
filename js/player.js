@@ -2239,6 +2239,50 @@
   };
 
   /**
+   * Compare sort, revealed: every statement moves into its column, carrying
+   * how the room sorted it ("18 ✓ · 6 Both"), and the statement most often
+   * put in the wrong column is named. Counts only.
+   *
+   * @param {{right: number, counts: number[]}[]} groups
+   */
+  Player.showSortReveal = function (groups) {
+    var node = Player._current;
+    if (!node) return;
+    var bins = Array.prototype.map.call(node.querySelectorAll('.sort-col-head'), function (h) { return h.textContent; });
+    var worst = -1, worstShare = 2, worstBin = 0, worstN = 0;
+    Array.prototype.forEach.call(node.querySelectorAll('.sort-card'), function (card) {
+      var i = Number(card.dataset.i);
+      var g = groups[i];
+      if (!g) return;
+      var home = node.querySelector('.sort-col-' + g.right);
+      if (home) home.appendChild(card);
+      card.classList.add('landed');
+      var total = g.counts.reduce(function (a, n) { return a + n; }, 0);
+      var wrongBin = -1, wrongN = 0;
+      g.counts.forEach(function (n, b) { if (b !== g.right && n > wrongN) { wrongN = n; wrongBin = b; } });
+      var heat = card.querySelector('.sc-heat');
+      if (heat) {
+        heat.textContent = '';
+        heat.appendChild(el('b', null, g.counts[g.right] + ' \u2713'));
+        if (wrongN) heat.appendChild(document.createTextNode(' \u00b7 ' + wrongN + ' ' + (bins[wrongBin] || '')));
+      }
+      var share = total ? g.counts[g.right] / total : 1;
+      if (total && share < worstShare) { worstShare = share; worst = i; worstBin = wrongBin; worstN = wrongN; }
+    });
+    var pile = node.querySelector('.sort-pile');
+    if (pile) pile.remove();
+    node.classList.add('sort-revealed');
+    var box = node.querySelector('.sort-verdict');
+    if (!box || worst < 0 || !worstN) return;
+    var text = node.querySelector('.sort-card[data-i="' + worst + '"] .sc-text');
+    box.textContent = '';
+    var b = document.createElement('b');
+    b.textContent = 'The one to talk about: \u201c' + (text ? text.textContent : '') + '\u201d.';
+    box.appendChild(b);
+    box.appendChild(document.createTextNode(' ' + worstN + ' put it under ' + (bins[worstBin] || 'another column') + '.'));
+  };
+
+  /**
    * Fill the gaps, revealed: the right word lands in each slot, and under it
    * what the room put there — the right word's count first, then the lure
    * most chosen. One sentence names the hardest gap and its commonest lure.

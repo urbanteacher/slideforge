@@ -4,27 +4,31 @@
     "itemB": "Respiration",
     "similarities": "Both involve energy and gases moving in living cells.",
     "differences": "Photosynthesis stores energy in glucose; respiration releases it.",
-    "category": "Science"
+    "category": "Science",
+    "statements": "Both: happens in living cells\nBoth: involves carbon dioxide and oxygen\nA: stores energy in glucose\nA: needs light\nB: releases energy from glucose\nB: happens all the time, day and night"
   },
   {
     "itemA": "RAM",
     "itemB": "SSD",
     "similarities": "Both store data the computer uses.",
     "differences": "RAM is volatile and fast for working memory; an SSD keeps files when power is off.",
-    "category": "ICT"
+    "category": "ICT",
+    "statements": "Both: stores data the computer uses\nA: loses its contents when the power goes off\nA: is where running programs are held\nB: keeps files when the power is off\nB: is slower to read than working memory"
   },
   {
     "itemA": "Democracy",
     "itemB": "Dictatorship",
     "similarities": "Both are ways a state can be governed.",
     "differences": "In a democracy power is shared through voting; in a dictatorship one person or clique holds it.",
-    "category": "History"
+    "category": "History",
+    "statements": "Both: is a way a state can be governed\nBoth: makes laws\nA: shares power through voting\nA: lets people criticise the government openly\nB: puts power in one person or a small group"
   },
   {
     "itemA": "Metaphor",
     "itemB": "Simile",
     "similarities": "Both compare one thing to another in writing.",
     "differences": "A simile uses like or as; a metaphor says something is something else.",
-    "category": "Literature"
+    "category": "Literature",
+    "statements": "Both: compares two things\nBoth: is a figure of speech\nA: says one thing is another\nB: uses \"like\" or \"as\""
   }
 ]

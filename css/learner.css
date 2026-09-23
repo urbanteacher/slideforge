@@ -233,3 +233,11 @@ body.phones-blank{overflow:hidden}
 .fill-word{min-height:44px;padding:6px 14px;border-radius:999px;font-size:17px;font-weight:650}
 .fill-lock{min-height:54px;font-size:18px;font-weight:800;border-radius:12px}
 .fill-pad.locked .fill-word{opacity:.45}
+
+/* Compare sort on the phone: a card per statement, three columns under it. */
+.sort-pad{display:flex;flex-direction:column;gap:12px}
+.sort-item{padding:12px;border-radius:14px;background:#f3f6ee;text-align:left}
+.sort-text{margin:0 0 10px;font-size:17px;line-height:1.4;font-weight:600}
+.sort-bins{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.sort-bin{min-height:44px;padding:4px 6px;border-radius:10px;font-size:14px;font-weight:700;line-height:1.2}
+.sort-bin.on{background:#36513a;color:#fff;border-color:#36513a}

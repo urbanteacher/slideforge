@@ -34,7 +34,7 @@ export type DeckSlideType =
 export type SlideType = DeckSlideType | 'game' | 'quiz' | 'explain' | 'results';
 
 /** How the room answers a compiled question (`INPUTS`). */
-export type InputKind = 'choice' | 'text' | 'number' | 'order' | 'tap' | 'fill';
+export type InputKind = 'choice' | 'text' | 'number' | 'order' | 'tap' | 'fill' | 'sort';
 
 /** What a game does with a correct answer. `points` is the default; the rest
  *  drive a bespoke board or scoreboard. */
@@ -97,6 +97,8 @@ export interface Feedback {
   lowLabel?: string;
   /** Scale only. */
   highLabel?: string;
+  /** Poll or scale only: the split stays off the wall until the teacher shows it. */
+  hold?: boolean;
 }
 
 /* ------------------------------------------------------------------ deck --*/
@@ -379,6 +381,10 @@ export interface Slide {
   /** Fill the gaps: the text around each gap, and each gap's word-bank index. */
   fillParts?: string[];
   gapAnswers?: number[];
+  /** Compare & Contrast sort: each statement's column, and the columns' names. */
+  compareSort?: boolean;
+  sortAnswers?: number[];
+  sortBins?: string[];
   /** Time Traveler: the events already placed in this game, on this line. */
   timeline?: { label: string, year: number }[];
   /** Predict the Outcome: lock, watch, then reveal; confidence weighs the score. */
@@ -513,6 +519,8 @@ export interface Question {
   pointValue?: number;
   itemA?: string;
   itemB?: string;
+  /** Compare & Contrast: tagged statements to sort, one per line. */
+  statements?: string;
   similarities?: string;
   differences?: string;
   category?: string;

@@ -368,7 +368,7 @@
       <p class="stage-brief" id="stageBrief" hidden></p>
       <p class="stage-prompt" id="stagePrompt"></p>
       <label class="stage-note" id="stageNoteWrap" hidden>
-        <span>Only you can see this. It stays on this phone.</span>
+        <span>Only you can see this. It stays on this phone. Your teacher sees only how many have written something.</span>
         <textarea id="stageNote" rows="4" maxlength="600" placeholder="Your thinking…"></textarea>
       </label>
       <div class="stage-echo" id="stageEcho" hidden>
@@ -786,6 +786,19 @@
   };
   var GROUP_TALK_LEAD = 'Talk it through with your group.';
   var stageTick = null;
+  /* Whether this phone has told the room it has written something, for the
+     stage it was told in. Yes once there are a few words; no if they are
+     all taken out again. Only that: the words themselves never leave. */
+  var wroteSaid = { key: '', yes: false };
+  function sayWrote(m, st, text) {
+    var words = String(text || '').trim();
+    var yes = words.length >= 10 || words.split(/\s+/).filter(Boolean).length >= 2;
+    var key = m.slideId + ':' + st.i;
+    if (wroteSaid.key === key && wroteSaid.yes === yes) return;
+    if (!ws || ws.readyState !== 1) return;
+    wroteSaid = { key: key, yes: yes };
+    ws.send(JSON.stringify({ t: 'wrote', slideId: m.slideId, stage: st.i, yes: yes }));
+  }
   function stageNoteKey(m) { return 'slideforge.note.' + (m.sessionId || '') + '.' + m.slideId; }
   function readNote(m) { try { return localStorage.getItem(stageNoteKey(m)) || ''; } catch (_) { return ''; } }
   function clockText(secs) {
@@ -823,9 +836,15 @@
     $('stageNoteWrap').hidden = job !== 'note';
     if (job === 'note') {
       if (document.activeElement !== area) area.value = mine;
+      /* A note carried over from before (a rejoin, a return to the stage)
+         counts as written straight away. */
+      if (wroteSaid.key !== m.slideId + ':' + st.i) wroteSaid = { key: '', yes: false };
+      if (mine) sayWrote(m, st, mine);
       area.oninput = function () {
-        /* Kept on this device and nowhere else: not sent, not counted. */
+        /* Kept on this device and nowhere else. The room is told only that
+           something is written, so the teacher knows whether to wait. */
         try { localStorage.setItem(stageNoteKey(m), area.value); } catch (_) { /* this visit only */ }
+        sayWrote(m, st, area.value);
       };
     }
     var echo = job === 'talk' || job === 'send';
@@ -1183,7 +1202,11 @@
         break;
 
       case 'locked':
-        if (Array.isArray(m.fill)) {
+        if (Array.isArray(m.sort)) {
+          if ($('qPad')._sortLock) $('qPad')._sortLock(m.sort);
+          $('qTime').textContent = 'Locked in';
+        }
+        else if (Array.isArray(m.fill)) {
           if ($('qPad')._fillLock) $('qPad')._fillLock(m.fill);
           $('qTime').textContent = 'Locked in';
         }
@@ -1841,6 +1864,78 @@
       $('qOrderMine').style.display = 'none';
       $('qOrderSend').disabled = false;
       paintOrder();
+    }
+
+    /* Compare & Contrast, sorted: each statement a card with the three
+       columns under it — A only, Both, B only. Tap one per statement; tap
+       another to change it. Lock in when every statement has a column. */
+    if (m.input === 'sort') {
+      pad.style.display = '';
+      pad.className = 'pad sort-pad';
+      pad.textContent = '';
+      $('questionText').textContent = 'Sort each statement.';
+      var sortBins = m.bins && m.bins.length === 3 ? m.bins : ['A only', 'Both', 'B only'];
+      var sortPicks = (m.options || []).map(function () { return null; });
+      var sortRows = [];
+      (m.options || []).forEach(function (text, i) {
+        var card = document.createElement('div');
+        card.className = 'sort-item';
+        var said = document.createElement('p');
+        said.className = 'sort-text';
+        said.textContent = text;
+        card.appendChild(said);
+        var row = document.createElement('div');
+        row.className = 'sort-bins';
+        sortBins.forEach(function (name, b) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'sort-bin sort-bin-' + b;
+          btn.textContent = name;
+          btn.onclick = function () {
+            if (pad.dataset.locked) return;
+            sortPicks[i] = b;
+            paintSort();
+          };
+          row.appendChild(btn);
+        });
+        card.appendChild(row);
+        sortRows.push(row);
+        pad.appendChild(card);
+      });
+      var lockSortBtn = document.createElement('button');
+      lockSortBtn.type = 'button';
+      lockSortBtn.className = 'fill-lock';
+      lockSortBtn.onclick = function () {
+        if (pad.dataset.locked || sortPicks.indexOf(null) >= 0) return;
+        lockSortBtn.disabled = true;
+        if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'answer', sort: sortPicks.slice() }));
+      };
+      function paintSort() {
+        var locked = !!pad.dataset.locked;
+        sortRows.forEach(function (row, i) {
+          Array.prototype.forEach.call(row.children, function (btn, b) {
+            btn.classList.toggle('on', sortPicks[i] === b);
+            btn.disabled = locked;
+          });
+        });
+        var left = sortPicks.filter(function (p) { return p == null; }).length;
+        lockSortBtn.disabled = locked || left > 0;
+        lockSortBtn.textContent = locked ? 'Locked in' : left ? left + ' still to sort' : 'Lock in';
+      }
+      pad._sortLock = function (arr) {
+        if (Array.isArray(arr)) arr.forEach(function (v, i) { if (i < sortPicks.length) sortPicks[i] = v; });
+        pad.dataset.locked = '1';
+        pad.classList.add('locked');
+        paintSort();
+      };
+      pad.appendChild(lockSortBtn);
+      paintSort();
+      $('qNum').textContent = questionLabel(m);
+      show('scQuestion');
+      if (m.timeLimit > 0) startTick(m.timeLimit);
+      else { $('qTime').textContent = ''; $('qBar').style.width = '100%'; }
+      if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
+      return;
     }
 
     /* Fill the gaps: the passage with a numbered slot per gap, and the word

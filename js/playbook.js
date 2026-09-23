@@ -337,9 +337,9 @@
       players: 'Class discussion — phones stay idle.',
       scoring: 'None — prepared points guide the reveal.',
       howToPlay: [
-        'Two items appear side by side. Phones send one way they are alike or differ — the room sees the points arrive, without names.',
-        'Put the strongest on the table from the desk and discuss it.',
-        'Reveal the prepared similarities and differences, and compare them with the room’s.'
+        'Two items appear with three columns: A only, Both, B only. Each phone sorts every statement.',
+        'The sorting stays hidden. Next reveals it: each statement lands in its column with how the room sorted it.',
+        'The statement the room misfiled most is named — start the discussion there.'
       ]
     },
     'predict-outcome': {
@@ -658,7 +658,7 @@
     'spot-the-error': ['Sentence', 'Sentence containing the error', 'Write one plausible sentence with one mistake. Mark the wrong words exactly as written, and give the correction.', 'Learners tap the wrong word', 'question'],
     'ranking': ['Set', 'Ordering instruction', 'State the ordering criterion. Enter 3–8 distinct items in the correct order; play shuffles them.', 'Learners reorder and submit', 'question'],
     'odd-one-out': ['Set', 'Items to compare', 'Prepare four comparable items and a defensible reason. Phones vote; the reveal invites other picks to defend their rule.', 'Learners vote, then defend', 'question'],
-    'compare-contrast': ['Comparison', 'Items to compare', 'Choose two comparable ideas. Prepare similarities and differences separately for the reveal.', 'Class discusses; no score', 'none'],
+    'compare-contrast': ['Comparison', 'Items and statements to sort', 'Choose two comparable ideas and write statements tagged Both:, A: or B:. Phones sort them; the reveal lands each in its column.', 'Learners sort statements', 'question'],
     'predict-outcome': ['Scenario', 'Scenario and prediction question', 'Give enough context to reason from. Offer three plausible outcomes. Lock the predictions, show what happens, then reveal.', 'Learners commit and say how sure', 'question'],
     'time-traveler': ['Event', 'Event to place in time', 'Name the event; set its year as the target and a sensible tolerance. Each round adds the event to one timeline.', 'Learners place the event on a timeline', 'question'],
     'connection-maker': ['Connection', 'Connection prompt', 'Choose two ideas with a meaningful bridge. Phones propose bridges; you put one on the table and credit its author.', 'Phones propose; teacher accepts', 'question'],

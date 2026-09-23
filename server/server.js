@@ -982,6 +982,21 @@ function cleanStage(st) {
   };
 }
 
+/**
+ * How many phones have written something in the note stage the room is in.
+ * A count and nothing else: the notes stay on the phones, and this is never
+ * journalled or sent to another phone (activities audit §6). Rows the
+ * teacher entered have no phone to write on, so they are not counted in.
+ */
+function pushWrote(room) {
+  const st = room.at && room.at.stage;
+  if (!room.host || !room.host.open || !st || st.job !== 'note') return;
+  const key = room.at.slideId + ':' + st.i;
+  const ids = room.wrote && room.wrote.key === key ? room.wrote.ids : new Set();
+  const of = [...room.players.values()].filter((p) => !p.manual).length;
+  room.host.json({ t: 'wrote', slideId: room.at.slideId, stage: st.i, n: Math.min(ids.size, of), of });
+}
+
 function pushFeedback(room) {
   if (!room.host || !room.prompt) return;
   room.host.json(Object.assign({
@@ -1174,6 +1189,7 @@ function questionMessage(room, timeLimit) {
   if (q.clueMode) msg.clueMode = q.clueMode;
   if (q.clues) msg.clues = q.clues;
   if (q.input === 'fill') { msg.fillParts = q.fillParts; msg.gaps = q.gaps; }
+  if (q.input === 'sort') msg.bins = q.bins;
   if (q.roundLeft) {
     /* Less whatever has passed since, for a phone that rejoins mid-question. */
     msg.roundLeft = Math.max(0, Math.round(q.roundLeft - (Date.now() - room.askedAt) / 1000));
@@ -1187,6 +1203,7 @@ function lockedMessage(q, answer) {
     : q.input === 'number' ? { t: 'locked', value: answer }
     : q.input === 'order' ? { t: 'locked', order: answer }
     : q.input === 'fill' ? { t: 'locked', fill: answer }
+    : q.input === 'sort' ? { t: 'locked', sort: answer }
     : { t: 'locked', choice: answer };
 }
 
@@ -1569,6 +1586,11 @@ ws.attach(server, (sock, req) => {
               refuse('Choose every item once to record an order.'); return;
             }
             response=m.order.slice();
+          } else if(q.input==='sort') {
+            if(!Array.isArray(m.sort) || m.sort.length!==q.options.length || m.sort.some(v=>!Number.isInteger(v)||v<0||v>2)) {
+              refuse('Choose a column for every statement to record it.'); return;
+            }
+            response=m.sort.slice();
           } else if(q.input==='fill') {
             const n=q.options.length;
             if(!Array.isArray(m.fill) || m.fill.length!==q.gaps || m.fill.some(v=>!Number.isInteger(v)||v<0||v>=n)) {
@@ -1583,7 +1605,7 @@ ws.attach(server, (sock, req) => {
           } else { refuse('This answer type cannot be recorded here.'); return; }
         }
         p.answer=response; p.sure=null; p.answeredAt=Date.now(); room.answerRev++;
-        record(room,'manualAnswer',{attempt:q.attempt,playerId:p.id,input:q.input,choice:(q.input==='choice'||q.input==='tap')?response:null,text:q.input==='text'?response:null,value:q.input==='number'?response:null,order:q.input==='order'?response:null,fill:q.input==='fill'?response:null,clear:!!m.clear,sure:null,source:'teacher',elapsedMs:null});
+        record(room,'manualAnswer',{attempt:q.attempt,playerId:p.id,input:q.input,choice:(q.input==='choice'||q.input==='tap')?response:null,text:q.input==='text'?response:null,value:q.input==='number'?response:null,order:q.input==='order'?response:null,fill:q.input==='fill'?response:null,sort:q.input==='sort'?response:null,clear:!!m.clear,sure:null,source:'teacher',elapsedMs:null});
         pushTally(room); return;
       }
 
@@ -1614,7 +1636,7 @@ ws.attach(server, (sock, req) => {
            value on a line. Only the first has options at all — that is what
            makes the others recall rather than recognition — so the option
            count is checked for that kind alone. */
-        const input = ['text', 'number', 'order', 'tap', 'fill'].includes(m.input) ? m.input : 'choice';
+        const input = ['text', 'number', 'order', 'tap', 'fill', 'sort'].includes(m.input) ? m.input : 'choice';
         const spoken = m.spoken === true && ['headsup','spinexplain','connection','conceptchain','randomchallenge'].includes(m.style);
         if (input === 'choice' && (!Array.isArray(m.options) || m.options.length < 2 || m.options.length > 6)) return;
         /* Spot the Error: the options are the words of the passage. */
@@ -1624,6 +1646,9 @@ ws.attach(server, (sock, req) => {
         const fillGaps = input === 'fill' && Array.isArray(m.fillParts) ? m.fillParts.length - 1 : 0;
         if (input === 'fill' && (!Array.isArray(m.options) || m.options.length < 2 || m.options.length > 12 ||
             fillGaps < 1 || fillGaps > 4)) return;
+        /* Compare & Contrast sort: 2–10 statements, three named columns. */
+        if (input === 'sort' && (!Array.isArray(m.options) || m.options.length < 2 || m.options.length > 10 ||
+            !Array.isArray(m.bins) || m.bins.length !== 3)) return;
         if (input === 'order' && (!Array.isArray(m.options) || m.options.length < 3 || m.options.length > 8)) return;
         if (room.question && room.question.id === String(m.id || '') && room.phase === 'question') return;
         room.asked++;
@@ -1640,7 +1665,8 @@ ws.attach(server, (sock, req) => {
           question: String(m.question || '').slice(0,2000),
           bloom: ['Remember','Understand','Apply','Analyze','Evaluate','Create'].includes(m.bloom) ? m.bloom : '',
           sourceSlideId: String(m.sourceSlideId || '').slice(0,160),
-          options: (input === 'choice' || input === 'order' || input === 'tap' || input === 'fill') && Array.isArray(m.options) ? m.options.map(o => String(o).slice(0,2000)) : [],
+          options: (input === 'choice' || input === 'order' || input === 'tap' || input === 'fill' || input === 'sort') && Array.isArray(m.options) ? m.options.map(o => String(o).slice(0,2000)) : [],
+          bins: input === 'sort' ? m.bins.map(b => String(b == null ? '' : b).slice(0, 60)) : null,
           fillParts: input === 'fill' ? m.fillParts.slice(0, 5).map(t => String(t == null ? '' : t).slice(0, 400)) : null,
           gaps: fillGaps,
           /* What a wrong option means, by the same index as `options`.
@@ -2086,6 +2112,12 @@ ws.attach(server, (sock, req) => {
           admitWaiting(room);
           pushPlayers(room);
         }
+        /* A new note stage starts its count at nought, on the wall too. */
+        const st = room.at.stage;
+        if (st && st.job === 'note') {
+          const key = room.at.slideId + ':' + st.i;
+          if (!room.wrote || room.wrote.key !== key) { room.wrote = { key, ids: new Set() }; pushWrote(room); }
+        }
         room.lastAt = learnerContext(room);
         broadcast(room, room.lastAt);
         /* Moving between a content slide and a check changes who may speak, so
@@ -2480,6 +2512,20 @@ ws.attach(server, (sock, req) => {
       return;
     }
 
+    /* "I have written something" during a note stage: yes or no, never the
+       words. Only for the stage the room is in, so a late message from the
+       last stage cannot count towards this one. */
+    if (role === 'player' && m.t === 'wrote') {
+      if (!room || !rooms.has(room.pin) || !room.players.has(me.id)) return;
+      const st = room.at.stage;
+      if (!st || st.job !== 'note' || String(m.slideId || '') !== room.at.slideId || Number(m.stage) !== st.i) return;
+      const key = room.at.slideId + ':' + st.i;
+      if (!room.wrote || room.wrote.key !== key) room.wrote = { key, ids: new Set() };
+      if (m.yes === true) room.wrote.ids.add(me.id); else room.wrote.ids.delete(me.id);
+      pushWrote(room);
+      return;
+    }
+
     if (role === 'player' && m.t === 'qaVote') {
       if (!room) return;
       const item = room.qa.get(Number(m.id));
@@ -2558,6 +2604,11 @@ ws.attach(server, (sock, req) => {
         if (typeof m.value !== 'number' || !Number.isFinite(m.value) ||
             Math.abs(m.value) > 1e12) return;
         response = m.value;
+      } else if (room.question.input === 'sort') {
+        /* One column (0 A only, 1 Both, 2 B only) per statement, in order. */
+        if (!Array.isArray(m.sort) || m.sort.length !== room.question.options.length ||
+            m.sort.some(v => !Number.isInteger(v) || v < 0 || v > 2)) return;
+        response = m.sort.slice();
       } else if (room.question.input === 'fill') {
         /* One word-bank index per gap. A word may fill two gaps, so repeats
            are allowed; anything out of range is not. */
@@ -2603,6 +2654,7 @@ ws.attach(server, (sock, req) => {
            as an index would be a silent corruption rather than an error. */
         order: room.question.input === 'order' ? response : null,
         fill: room.question.input === 'fill' ? response : null,
+        sort: room.question.input === 'sort' ? response : null,
         sure: me.sure,
         elapsedMs:me.answeredAt-room.askedAt});
       sock.json(lockedMessage(room.question, response));

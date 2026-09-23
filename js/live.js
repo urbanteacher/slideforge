@@ -81,7 +81,7 @@
       onTable:Live.proposalOnTable&&slide&&Live.proposalOnTable.slideId===slide.id?Live.proposalOnTable.text:'',
       lastCredit:Live.lastCredit&&slide&&Live.lastCredit.slideId===slide.id?Live.lastCredit:null,
       oralCount:slide ? (Live.oralCounts[slide.gameId] || 0) : 0,
-      question:slide && slide.type==='quiz' ? {id:slide.id,question:slide.question,input:slide.input || 'choice',options:slide.options,gaps:slide.input==='fill'?(slide.gapAnswers||[]).length:0,spoken:isSpokenSlide(slide),scoreSpoken:slide.scoreSpoken===true,style:slide.style,range:slide.input==='number'?{min:slide.min,max:slide.max,step:slide.step,unit:slide.unit||''}:null,revealed:!!Live.revealed[slide.id]} : null,
+      question:slide && slide.type==='quiz' ? {id:slide.id,question:slide.question,input:slide.input || 'choice',options:slide.options,gaps:slide.input==='fill'?(slide.gapAnswers||[]).length:0,bins:slide.input==='sort'?(slide.sortBins||[]):null,spoken:isSpokenSlide(slide),scoreSpoken:slide.scoreSpoken===true,style:slide.style,range:slide.input==='number'?{min:slide.min,max:slide.max,step:slide.step,unit:slide.unit||''}:null,revealed:!!Live.revealed[slide.id]} : null,
       answers:(Live.snapshot.answers || []).map(function(a){
         /* Marked here, where the answer key is, and only after the reveal.
            Before that the teacher window has no business knowing — it is the
@@ -443,7 +443,7 @@
   Live.proposalPrompt = null;
   function proposalSlide(s) {
     return !!s && (s.style === 'conceptchain' || s.conceptChain || s.style === 'connection' ||
-      s.style === 'compare' || s.compareDiscuss);
+      ((s.style === 'compare' || s.compareDiscuss) && !s.compareSort));
   }
   function proposalText(s) {
     if (s.style === 'compare' || s.compareDiscuss) {
@@ -458,7 +458,7 @@
     if (!Live.active || !s || Live.revealed[s.id]) return;
     if (!proposalSlide(s)) return;
     if (Live.prompt) return;                      // something else is asking the room
-    if (!startCustomPrompt({ kind: 'brainstorm', prompt: proposalText(s), presentAs: 'rail', max: 2 })) return;
+    if (!startCustomPrompt({ kind: 'brainstorm', prompt: proposalText(s), presentAs: 'rail', max: 2, origin: 'proposals' })) return;
     Live.proposalPrompt = Live.prompt ? Live.prompt.id : null;
   }
   function closeProposals() {
@@ -469,6 +469,132 @@
     if (!Live.proposalPrompt || !Live.prompt || Live.prompt.id !== Live.proposalPrompt) return [];
     var items = (Live.digest && Live.digest.items) || [];
     return items.slice(0, 12).map(function (it) { return { pid: it.pid, name: it.name, text: it.text }; });
+  }
+
+  /* ---------------------------------------------- the room's output (N12–N14)
+
+     What the room sends has to land somewhere. From the desk the teacher
+     can put one idea in the spotlight (on the wall, without its author, for
+     the rest of the slide, so Share's best idea is still up for Connect),
+     hide one the room should not dwell on, close a prompt, and show a held
+     self-assessment when the room has answered. The wall's copy of the
+     ideas is the digest with the hidden ones taken out; the relay's is
+     untouched, so the report still has everything. */
+  Live.hiddenIdeas = { promptId: null, keys: {} };
+  Live.spotlight = null;        // { slideId, key, text }
+  Live.shownPrompt = null;      // the held prompt the teacher has shown
+  Live.closedPrompt = null;     // the authored prompt closed for this visit
+  Live.written = null;          // { slideId, stage, n, of }
+
+  function ideaKey(it) { return String(it.seq != null ? it.seq : it.pid + ':' + it.text); }
+  function hiddenKeys() {
+    return Live.prompt && Live.hiddenIdeas.promptId === Live.prompt.id ? Live.hiddenIdeas.keys : {};
+  }
+  function isHeld() {
+    return !!(Live.prompt && Live.prompt.hold && Live.shownPrompt !== Live.prompt.id);
+  }
+  /** The digest as the wall may draw it: without the ideas the desk hid. */
+  function shownDigest() {
+    var d = Live.digest;
+    if (!d || !d.items) return d;
+    var hidden = hiddenKeys();
+    var items = d.items.filter(function (it) { return !hidden[ideaKey(it)]; });
+    if (items.length === d.items.length) return d;
+    return Object.assign({}, d, { items: items, total: Math.max(items.length, (Number(d.total) || 0) - (d.items.length - items.length)) });
+  }
+
+  /** What the desk's "The room's answers" block shows. Null when nothing is
+   *  being collected that it looks after. */
+  Live.askState = function () {
+    var slide = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
+    var written = Live.written && slide && Live.written.slideId === slide.id &&
+      SF.Player.stage && SF.Player.stage.job === 'note' && SF.Player.stage.i === Live.written.stage
+      ? { n: Live.written.n, of: Live.written.of } : null;
+    var p = Live.prompt;
+    /* The teacher's quick poll has its own card, and proposals are listed
+       under Live answers with "Use this". */
+    var mine = p && (!p.custom || p.origin === 'stage');
+    var spot = Live.spotlight && slide && Live.spotlight.slideId === slide.id ? Live.spotlight.text : '';
+    if (!mine && !written && !spot) return null;
+    var d = Live.digest || {};
+    var hidden = hiddenKeys();
+    return {
+      live: !!Live.active,
+      prompt: mine ? p.prompt : '',
+      kind: mine ? p.kind : '',
+      custom: !!(mine && p.custom),
+      held: mine ? isHeld() : false,
+      holds: !!(mine && p.hold),
+      answered: mine ? (d.answered || 0) : 0,
+      players: mine ? (d.players || (Live.players || []).length) : 0,
+      ideas: mine && d.items ? d.items.slice(0, 20).map(function (it) {
+        var key = ideaKey(it);
+        return { key: key, text: it.text, name: it.name || '', hidden: !!hidden[key],
+          spot: !!(Live.spotlight && Live.spotlight.key === key && Live.spotlight.slideId === (slide && slide.id)) };
+      }) : [],
+      spotlight: spot,
+      written: written
+    };
+  };
+
+  /** A desk command for the room's output. */
+  Live.askCommand = function (d) {
+    d = d || {};
+    var slide = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
+    var p = Live.prompt;
+    var find = function () {
+      var items = (Live.digest && Live.digest.items) || [];
+      return items.filter(function (it) { return ideaKey(it) === String(d.key); })[0] || null;
+    };
+    if (d.action === 'show' && p && p.hold) {
+      Live.shownPrompt = p.id;
+      paintFeedbackPanel();
+    } else if (d.action === 'close' && p) {
+      if (p.custom) endCustomPrompt();
+      else {
+        Live.closedPrompt = p.id;
+        if (slide) syncPrompt(slide);
+        /* The rail goes back to what a slide that asks nothing shows. */
+        if (Live.deck && Live.deck.quiz && Live.deck.quiz.scoreboard && Live.rows.length) paintRail();
+        else SF.Player.disableRail();
+      }
+    } else if (d.action === 'spot' && slide) {
+      var it = find();
+      if (!it) return false;
+      Live.spotlight = { slideId: slide.id, key: ideaKey(it), text: String(it.text).slice(0, 160) };
+      paintSpotlight(slide);
+    } else if (d.action === 'unspot') {
+      Live.spotlight = null;
+      paintSpotlight(slide);
+    } else if ((d.action === 'hide' || d.action === 'unhide') && p) {
+      if (Live.hiddenIdeas.promptId !== p.id) Live.hiddenIdeas = { promptId: p.id, keys: {} };
+      if (d.action === 'hide') {
+        Live.hiddenIdeas.keys[String(d.key)] = true;
+        /* A hidden idea cannot stay in the spotlight. */
+        if (Live.spotlight && Live.spotlight.key === String(d.key)) { Live.spotlight = null; paintSpotlight(slide); }
+      } else delete Live.hiddenIdeas.keys[String(d.key)];
+      paintFeedbackPanel();
+    } else return false;
+    SF.Player.syncPresenter();
+    return true;
+  };
+
+  /* The spotlighted idea, on the wall, without its author. */
+  function paintSpotlight(s) {
+    var node = SF.Player._current;
+    if (!node) return;
+    var said = Live.spotlight && s && Live.spotlight.slideId === s.id ? Live.spotlight.text : '';
+    var box = node.querySelector('.idea-spotlight');
+    node.classList.toggle('has-idea-spotlight', !!said);
+    if (!said) { if (box) box.remove(); return; }
+    if (!box) {
+      box = el('div', 'idea-spotlight');
+      box.setAttribute('aria-live', 'polite');
+      node.appendChild(box);
+    }
+    box.textContent = '';
+    box.appendChild(el('span', 'is-label', 'Spotlight'));
+    box.appendChild(el('span', 'is-text', '\u201c' + said + '\u201d'));
   }
 
   function recipientName(r) {
@@ -1073,6 +1199,15 @@
         SF.Player.syncPresenter();
         break;
 
+      case 'wrote':
+        /* How many have written something during a note stage: a count,
+           never the words and never who (activities audit §6). */
+        Live.written = { slideId: String(m.slideId || ''), stage: Number(m.stage) || 0,
+          n: Number(m.n) || 0, of: Number(m.of) || 0 };
+        if (SF.Stages && SF.Stages.paintWritten) SF.Stages.paintWritten(Live.written);
+        SF.Player.syncPresenter();
+        break;
+
       case 'responses':
         if (!Live.prompt || m.id !== Live.prompt.id) break;
         Live.digest = m;
@@ -1336,7 +1471,7 @@
 
     if (Live.prompt) {
       Live.focus = true;
-      SF.Player.showFeedbackFocus(Live.digest, feedbackOpts());
+      SF.Player.showFeedbackFocus(shownDigest(), feedbackOpts());
       if (SF.Player.syncHudRoomButtons) SF.Player.syncHudRoomButtons();
       return;
     }
@@ -1650,6 +1785,26 @@
     var best = null;
     Object.keys(swaps).forEach(function (k) { if (!best || swaps[k] > best.n) best = { pair: k.split(':').map(Number), n: swaps[k] }; });
     return { here: here, total: total, swap: best };
+  }
+
+  /** Compare sort: each statement sorted right earns its share of the points. */
+  function sortGains(slide) {
+    var pts = Number(slide.points) || 0;
+    return (Live.snapshot.answers || []).map(function (a) {
+      return [a.id, Math.round(pts * SF.sortScore(slide, a.response))];
+    });
+  }
+
+  /* How the room sorted each statement: [{ right, counts: [A, Both, B] }]. */
+  function sortGroups(slide) {
+    var groups = (slide.sortAnswers || []).map(function (bin) { return { right: bin, counts: [0, 0, 0] }; });
+    (Live.snapshot.answers || []).forEach(function (a) {
+      if (!Array.isArray(a.response)) return;
+      a.response.forEach(function (bin, i) {
+        if (groups[i] && bin >= 0 && bin < 3) groups[i].counts[bin]++;
+      });
+    });
+    return groups;
   }
 
   /** Fill the gaps: each gap that is right earns its share of the points. */
@@ -2076,6 +2231,7 @@
     var players = d ? d.players : Live.players.length;
     return {
       title: kind ? kind.label : 'Feedback',
+      held: isHeld(),
       subtitle: Live.prompt.prompt,
       options: Live.prompt.options,
       ends: Live.prompt.ends,
@@ -2096,8 +2252,8 @@
     var opts = feedbackOpts();
     /* Keep the focus view live while it is open — the whole point of putting
        it up is to watch answers land. */
-    if (Live.focus) SF.Player.showFeedbackFocus(Live.digest, opts);
-    SF.Player.setFeedback(Live.digest, opts);
+    if (Live.focus) SF.Player.showFeedbackFocus(shownDigest(), opts);
+    SF.Player.setFeedback(shownDigest(), opts);
     if (SF.Player.syncHudRoomButtons) SF.Player.syncHudRoomButtons();
   }
 
@@ -2108,6 +2264,10 @@
        room votes. Slide changes leave it alone; only ending it closes it. */
     if (Live.prompt && Live.prompt.custom) return true;
     var f = SF.slideFeedback(slide);
+    /* Closed from the desk: closed for the rest of this visit to the slide.
+       A redraw is not a return, but coming back to it later is. */
+    if (Live.closedPrompt && Live.closedPrompt !== slide.id + ':fb') Live.closedPrompt = null;
+    if (f && Live.closedPrompt === slide.id + ':fb') f = null;
     if (!f) {
       if (Live.prompt) {
         Live.prompt = null;
@@ -2140,7 +2300,8 @@
       options: view.options.filter(function (o) { return String(o).trim(); }),
       ends: view.ends,
       max: f.max,
-      presentAs: presentAs
+      presentAs: presentAs,
+      hold: f.hold === true
     };
     Live.digest = null;
     send(Object.assign({ t: 'prompt' }, Live.prompt));
@@ -2193,7 +2354,10 @@
       ends: view.ends,
       max: f.max,
       presentAs: presentAs,
-      custom: true
+      custom: true,
+      /* Who opened it: 'stage' (a Share stage's idea box), 'proposals', or
+         nothing for the teacher's own quick poll, which has its own card. */
+      origin: def.origin ? String(def.origin) : ''
     };
     Live.digest = null;
     if (Live.active) {
@@ -2228,7 +2392,7 @@
   function applyFeedbackPresentAs(presentAs) {
     if (presentAs === 'focus') {
       Live.focus = true;
-      SF.Player.showFeedbackFocus(Live.digest, feedbackOpts());
+      SF.Player.showFeedbackFocus(shownDigest(), feedbackOpts());
     } else {
       Live.focus = false;
       SF.Player.closeFocus();
@@ -2274,6 +2438,10 @@
       role = 'discuss';
       headPrompt = 'Odd one out';
       participation = 'Tap the one you think is the odd one out, and be ready to say your rule.';
+    } else if (s.compareSort) {
+      role = '';
+      headPrompt = 'Sort it';
+      participation = '';
     } else if (s.style === 'compare' || s.compareDiscuss) {
       role = 'discuss';
       headPrompt = 'Compare & contrast';
@@ -2461,6 +2629,8 @@
       /* question stays the clues for the journal; headPrompt is the mission. */
     }
     if (s.showdown) msg.showdown = true;
+    /* Compare & Contrast sort: the three columns, named for the two items. */
+    if (s.input === 'sort') msg.bins = (s.sortBins || []).slice();
     /* A round's phones count down the round, not the question. */
     if (s.roundSeconds && SF.Rounds && SF.Rounds.left) msg.roundLeft = SF.Rounds.left() || s.roundSeconds;
     /* Fill the gaps: the text around the gaps, for the phone to draw. The
@@ -2520,8 +2690,12 @@
     if (Live.pendingVerdict && (!s || Live.pendingVerdict.slideId !== s.id)) Live.pendingVerdict = null;
     if (s && s.style !== 'headsup' && isSpokenSlide(s)) Live.selectedRecipient = { type: 'room' };
     if (isSpokenSlide(s)) paintOralCount();
-    /* Proposals belong to the item they were made for. */
+    /* Proposals belong to the item they were made for, and so does the
+       spotlight; a redraw of the same slide puts it back. */
     if (Live.proposalOnTable && (!s || Live.proposalOnTable.slideId !== s.id)) Live.proposalOnTable = null;
+    if (Live.spotlight && (!s || Live.spotlight.slideId !== s.id)) Live.spotlight = null;
+    if (Live.written && (!s || Live.written.slideId !== s.id)) Live.written = null;
+    paintSpotlight(s);
     if (Live.proposalPrompt) closeProposals();
     if (proposalSlide(s) && !Live.revealed[s.id]) {
       setTimeout(function () {
@@ -2585,7 +2759,7 @@
       }
       /* Compare & Contrast: wall-led discuss — phones wait. Odd One Out
          votes on the phones, so it is sent as a question. */
-      if (s.style === 'compare' || s.compareDiscuss) {
+      if ((s.style === 'compare' || s.compareDiscuss) && !s.compareSort) {
         sendIdle(s);
         return;
       }
@@ -2732,6 +2906,7 @@
     }
     if (s.input === 'order') msg.gains = orderGains(s);
     if (s.input === 'fill') msg.gains = fillGains(s);
+    if (s.input === 'sort') msg.gains = sortGains(s);
     if (mechanic === 'claim') msg.gains = claimGains(s);
     if (isSpokenSlide(s)) {
       /* The relay resolves one named recipient against its own roster and
@@ -2767,6 +2942,8 @@
     /* Odd One Out waits for the teacher: the discussion comes before the
        reveal, however quickly the room votes. */
     if (s.style === 'oddone' || s.oddoneDiscuss) return;
+    /* A sort is revealed by the teacher, after the talk. */
+    if (s.compareSort) return;
     /* A showdown is the teacher's to reveal: the split, then the switch. */
     if (s.showdown) return;
     /* A prediction is locked and watched before it is revealed. */
@@ -2802,6 +2979,7 @@
     if (s.input === 'text') SF.Player.showTypedAnswers(typedGroups(s));
     if (s.input === 'number') SF.Player.showPlacedValues(placedValues(s));
     if (s.input === 'fill' && SF.Player.showFillReveal) SF.Player.showFillReveal(fillGroups(s));
+    if (s.input === 'sort' && SF.Player.showSortReveal) SF.Player.showSortReveal(sortGroups(s));
     if (SF.Player.releaseTally) SF.Player.releaseTally();
     clearTimeout(Live._splitTimer);
     if (s.showdown && Live.showdown && Live.showdown.id === s.id && SF.Player.setShowdown) {
@@ -2923,7 +3101,7 @@
   Live.repaintPrompt = function () {
     if (!Live.prompt || Live.prompt.presentAs !== 'focus') return false;
     Live.focus = true;
-    SF.Player.showFeedbackFocus(Live.digest, feedbackOpts());
+    SF.Player.showFeedbackFocus(shownDigest(), feedbackOpts());
     /* A redraw over the new slide is not an entrance. Without this the poll
        fades itself back in on every slide change, which reads as a flicker to
        a room part-way through answering — and the fade leaves it at opacity 0

@@ -1000,11 +1000,32 @@
       UI.area(question.differences || '', function (v) {
         question.differences = v.slice(0, 600); touched(); drawRail();
       }, 3)));
+    /* The sort: statements tagged Both:, A: or B:. The note under it says
+       how they will sort, so a mistyped tag is caught while writing. */
+    var sortNote = el('div', 'spot-author-note');
+    function paintSortNote() {
+      var sorted = SF.sortStatements ? SF.sortStatements(question.statements) : [];
+      var counts = [0, 0, 0];
+      sorted.forEach(function (x) { counts[x.bin]++; });
+      var lines = String(question.statements || '').split('\n').filter(function (l) { return l.trim(); }).length;
+      sortNote.classList.toggle('warn', lines > 0 && (sorted.length < 2 || sorted.length < lines));
+      sortNote.textContent = !lines
+        ? 'No statements: this comparison plays as a discussion, with the phones sending points.'
+        : sorted.length < lines
+          ? (lines - sorted.length) + ' line' + (lines - sorted.length === 1 ? '' : 's') + ' without a tag — start each with Both:, A: or B:.'
+          : counts[0] + ' for ' + (question.itemA || 'A') + ' only · ' + counts[1] + ' both · ' + counts[2] + ' for ' + (question.itemB || 'B') + ' only. Shuffled on the phones.';
+    }
+    insp.appendChild(UI.field('Statements to sort — one per line, starting Both:, A: or B:',
+      UI.area(question.statements || '', function (v) {
+        question.statements = v.slice(0, 2000); touched(); paintSortNote(); drawRail(); repaint();
+      }, 6), 'The phones sort each into ' + (question.itemA || 'A') + ' only, Both, or ' + (question.itemB || 'B') + ' only.'));
+    paintSortNote();
+    insp.appendChild(sortNote);
     insp.appendChild(UI.field('Category (optional)', UI.text(question.category || '', function (v) {
       question.category = v.slice(0, 40); touched(); repaint();
     }), 'Small caption above the pair when set.'));
     insp.appendChild(el('p', 'hint',
-      'Use 3–10 comparisons. No scoreboard and no phone answers — discuss, then reveal.'));
+      'Use 3–10 comparisons. The similarities and differences are the reveal’s summary.'));
   };
 
   /** What the authored cells add up to, said while they are being written. */

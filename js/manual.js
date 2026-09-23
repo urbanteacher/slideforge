@@ -171,12 +171,15 @@ function sendRowAnswer(q,row,data){
 function chooseOrderItem(q,row,index){
  var id=Number(row.dataset.id),bank=(q.options||[]).length;
  var filling=q.input==='fill';
- var n=filling?Number(q.gaps)||0:bank;
+ /* A sort picks one of three columns for each statement in turn. */
+ var sorting=q.input==='sort';
+ if(sorting)bank=3;
+ var n=filling?Number(q.gaps)||0:sorting?(q.options||[]).length:bank;
  if(index<0||index>=bank||!n)return false;
  var draft=orderDraft[id]||[];
- if(!filling&&draft.indexOf(index)>=0)return false;
+ if(!filling&&!sorting&&draft.indexOf(index)>=0)return false;
  draft=draft.concat(index);orderDraft[id]=draft;
- if(draft.length===n){sendRowAnswer(q,row,filling?{fill:draft.slice()}:{order:draft.slice()});moveCursor(1);}
+ if(draft.length===n){sendRowAnswer(q,row,filling?{fill:draft.slice()}:sorting?{sort:draft.slice()}:{order:draft.slice()});moveCursor(1);}
  render();
  return true;
 }
@@ -206,7 +209,7 @@ function recordCurrent(choice){
  var q=state.question;if(!q||q.revealed)return false;
  if(q.spoken)return false;
  var row=enteredRows()[cursor];if(!row)return false;
- if(q.input==='order'||q.input==='fill')return chooseOrderItem(q,row,choice);
+ if(q.input==='order'||q.input==='fill'||q.input==='sort')return chooseOrderItem(q,row,choice);
  /* A letter is not a word: a tap is recorded by clicking the passage. */
  if(q.input!=='choice')return false;
  if(choice<0||choice>=(q.options||[]).length)return false;
@@ -593,6 +596,10 @@ function render(){
      var b=button(String.fromCharCode(65+i)+' · '+text,function(){answer({choice:i});});
      b.dataset.choice=i;row.appendChild(b);
     });
+    else if(q.input==='sort') (q.bins||['A only','Both','B only']).forEach(function(text,i){
+     var b=button((i+1)+' · '+text,function(){chooseOrderItem(q,row,i);});
+     b.dataset.order=i;row.appendChild(b);
+    });
     else if(q.input==='order'||q.input==='fill') (q.options||[]).forEach(function(text,i){
      var b=button(String.fromCharCode(65+i)+' · '+text,function(){chooseOrderItem(q,row,i);});
      b.dataset.order=i;row.appendChild(b);
@@ -611,6 +618,7 @@ function render(){
     answer to a question nobody asked — and reads it as a raw index, because
     the letters come from the question that is no longer there. */
  var said=a?(q&&q.input==='choice'?String.fromCharCode(65+a.response)
+  :q&&q.input==='sort'&&Array.isArray(a.response)?a.response.map(function(b){return (q.bins||[])[b]||'?';}).join(' · ')
   :q&&q.input==='fill'&&Array.isArray(a.response)?a.response.map(function(i){return q.options[i];}).join(' · ')
   :q&&q.input==='tap'?q.options[a.response]
   :q&&q.input==='order'&&Array.isArray(a.response)?a.response.map(function(i){return String.fromCharCode(65+i);}).join(' → ')
@@ -620,12 +628,13 @@ function render(){
  var verdict=a&&a.right!=null?(a.right?' \u2713 right':' \u2717 wrong'):'';
  row.classList.toggle('is-right',!!(a&&a.right===true));
  row.classList.toggle('is-wrong',!!(a&&a.right===false));
- var draft=q&&(q.input==='order'||q.input==='fill')&&orderDraft[Number(row.dataset.id)];
+ var draft=q&&(q.input==='order'||q.input==='fill'||q.input==='sort')&&orderDraft[Number(row.dataset.id)];
  var draftTarget=q&&q.input==='fill'?Number(q.gaps)||0:(q&&q.options||[]).length;
  row.querySelector('.answer-status').textContent=answerErrors[Number(row.dataset.id)]
   ?'Not recorded: '+answerErrors[Number(row.dataset.id)]
   :draft&&draft.length&&draft.length<draftTarget
-  ?(q.input==='fill'?'Gaps so far: '+draft.map(function(i){return q.options[i];}).join(' · ')+' · '+((Number(q.gaps)||0)-draft.length)+' to go'
+  ?(q.input==='sort'?'“'+q.options[draft.length]+'” — which column? '+draft.length+' of '+q.options.length+' sorted'
+   :q.input==='fill'?'Gaps so far: '+draft.map(function(i){return q.options[i];}).join(' · ')+' · '+((Number(q.gaps)||0)-draft.length)+' to go'
    :'Order so far: '+draft.map(function(i){return String.fromCharCode(65+i)+' · '+q.options[i];}).join(' → ')+' · choose '+((q.options||[]).length-draft.length)+' more')
   :!q?''
   :a?(entered_?'Recorded: ':'Answered ')+said+verdict

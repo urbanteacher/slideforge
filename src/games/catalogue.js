@@ -146,6 +146,6 @@ function isSpecialStyle(styleKey) {
   return SPECIAL_STYLES.indexOf(styleKey) > -1;
 }
 
-var INPUTS = ['choice', 'text', 'number', 'order', 'tap', 'fill'];
+var INPUTS = ['choice', 'text', 'number', 'order', 'tap', 'fill', 'sort'];
 
 export { FORMATS, gameFormat, FORMAT_STYLE, CORE_STYLES, SPECIAL_STYLES, formatStyle, isSpecialStyle, INPUTS };

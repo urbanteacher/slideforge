@@ -33,9 +33,26 @@ test('makeGame seeds four discuss pairs with scoreboard off', () => {
   assert.ok(game.questions.every((q) => String(q.similarities).trim() && String(q.differences).trim()));
 });
 
-test('compile is discuss-only: idle contract flags, no points or timer', () => {
+test('the starters compile as sorts: three columns, a column per statement, held', () => {
   const SF = load();
   const game = SF.makeGame('Compare', 'compare');
+  const quizzes = SF.compileGame(game, { intro: false, scoreSlide: false }).filter((s) => s.type === 'quiz');
+  assert.equal(quizzes.length, 4);
+  quizzes.forEach((s) => {
+    assert.equal(s.input, 'sort');
+    assert.equal(s.compareSort, true);
+    assert.equal(s.voteOnly, false, 'Next reveals the sort');
+    assert.equal(s.holdResults, true);
+    assert.equal(s.sortBins.length, 3);
+    assert.equal(s.sortAnswers.length, s.options.length);
+    assert.equal(SF.markResponse(s, Array.from(s.sortAnswers)), true);
+  });
+});
+
+test('a comparison with no statements is still the discussion: idle contract flags, no points or timer', () => {
+  const SF = load();
+  const game = SF.makeGame('Compare', 'compare');
+  game.questions.forEach((q) => { q.statements = ''; });
   const original = JSON.stringify(game);
   const slides = SF.compileGame(game, { intro: false, scoreSlide: false });
   const quizzes = slides.filter((s) => s.type === 'quiz');
@@ -103,4 +120,32 @@ test('problems require two items and alike/differ text', () => {
   assert.equal(style.problems({
     itemA: 'A', itemB: 'B', similarities: 'alike', differences: 'differ'
   }, 1), null);
+});
+
+test('statements parse by tag, and the relay takes one column per statement', async t => {
+  const SF = load();
+  const parsed = SF.sortStatements('Both: breathe\nA: has fur\nb - has feathers\nno tag here');
+  assert.deepEqual(Array.from(parsed, (x) => x.bin), [1, 0, 2]);
+  const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
+  const { freePort, start, connect, stop } = require('./harness');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sf-sort-'));
+  const port = await freePort();
+  const server = await start(port, dir);
+  const sockets = [];
+  t.after(async () => { await stop(server); sockets.forEach((x) => x.socket.close()); fs.rmSync(dir, { recursive: true, force: true }); });
+  const host = await connect(port); sockets.push(host);
+  host.send({ t: 'host', title: 'Sort', mode: 'individual' });
+  const room = await host.next('hosted');
+  const ada = await connect(port); sockets.push(ada);
+  ada.send({ t: 'join', pin: room.pin, name: 'Ada' }); await ada.next('joined');
+  host.send({ t: 'begin' });
+  host.send({ t: 'question', id: 's1', question: 'Sort', input: 'sort', options: ['breathe', 'has fur', 'has feathers'],
+    bins: ['Cat only', 'Both', 'Bird only'], timeLimit: 0, points: 0 });
+  const q = await ada.next('question');
+  assert.deepEqual(Array.from(q.bins), ['Cat only', 'Both', 'Bird only']);
+  ada.send({ t: 'answer', sort: [1, 0] });          // too short: ignored
+  ada.send({ t: 'answer', sort: [1, 0, 3] });       // no fourth column: ignored
+  ada.send({ t: 'answer', sort: [1, 0, 2] });
+  const locked = await ada.until('locked', () => true);
+  assert.deepEqual(Array.from(locked.sort), [1, 0, 2]);
 });

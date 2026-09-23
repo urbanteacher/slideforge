@@ -45,6 +45,7 @@ import { makeQuestion, makeGame, starterGame } from "./games/factories.js";
 import { gameStyle, GAME_STYLES, markResponse, answerLabel } from "./games/registry.js";
 import { spotWords, spotSpan, SPOT_MAX_WORDS } from './games/spot.js';
 import { fillParts, fillScore, FILL_MAX_GAPS } from './games/fill.js';
+import { sortStatements, sortScore } from './games/compare.js';
 import { formatStyle, isSpecialStyle, FORMATS, INPUTS, FORMAT_STYLE, CORE_STYLES, SPECIAL_STYLES, gameFormat } from "./games/catalogue.js";
 import { clampDefinitionSeconds, splitDefinitionPassage, definitionCreate, definitionTransition, DEFINITION_TIMES } from "./games/definition.js";
 import { clampChainSeconds, CHAIN_TIMES } from "./games/conceptchain.js";
@@ -1083,17 +1084,22 @@ function fillQuestionSlide(q, styleKey, settings, s) {
   if (styleKey === 'compare') {
     s.points = 0;
     s.timeLimit = 0;
-    s.voteOnly = true;
     s.confidence = false;
     s.hideAnswerUntilReveal = true;
-    s.compareDiscuss = true;
     s.itemA = String(q.itemA || '').trim();
     s.itemB = String(q.itemB || '').trim();
     s.similarities = String(q.similarities || '').trim();
     s.differences = String(q.differences || '').trim();
     s.category = String(q.category || '').trim();
-    s.options = [];
-    s.correct = -1;
+    /* A sort (tagged statements) keeps what compare.compile built; only a
+       discussion is the no-options vote it always was. */
+    if (s.compareSort) s.input = 'sort';
+    if (!s.compareSort) {
+      s.voteOnly = true;
+      s.compareDiscuss = true;
+      s.options = [];
+      s.correct = -1;
+    }
   }
   if (styleKey === 'conceptchain') {
     s.conceptChain = true;
@@ -1856,6 +1862,8 @@ runtime.SF = Object.assign(runtime.SF || {}, {
   spotSpan: spotSpan,
   SPOT_MAX_WORDS: SPOT_MAX_WORDS,
   fillParts: fillParts,
+  sortStatements: sortStatements,
+  sortScore: sortScore,
   fillScore: fillScore,
   FILL_MAX_GAPS: FILL_MAX_GAPS,
   showNumber: showNumber,

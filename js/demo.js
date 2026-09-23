@@ -105,6 +105,13 @@
       if (Math.random() < 0.65 && accept[0]) return String(accept[0]);
       return ['not sure', '…', 'pass', '???'][Math.floor(Math.random() * 4)];
     }
+    if (slide.input === 'sort' && Array.isArray(slide.sortAnswers)) {
+      /* Mostly right; the usual slip is filing one item's trait under Both. */
+      return slide.sortAnswers.map(function (bin, i) {
+        if (Math.random() < 0.72) return bin;
+        return bin === 1 ? (i % 2 ? 0 : 2) : 1;
+      });
+    }
     if (slide.input === 'fill' && Array.isArray(slide.gapAnswers) && slide.options && slide.options.length) {
       /* Each gap mostly right; a wrong one goes to the same tempting lure
          across the class, so the rehearsal reveal has a misconception to show. */
@@ -212,6 +219,14 @@
         if (host.flattenOverlay) host.flattenOverlay(node);
         node.classList.add('why-open');
         if (host.scheduleFit) host.scheduleFit(node);
+      }
+      if (slide.input === 'sort' && host.showSortReveal) {
+        var groupsS = (slide.sortAnswers || []).map(function (bin) { return { right: bin, counts: [0, 0, 0] }; });
+        players.forEach(function (p) {
+          if (p.slideId !== slide.id || !Array.isArray(p.choice)) return;
+          p.choice.forEach(function (b, i) { if (groupsS[i] && b >= 0 && b < 3) groupsS[i].counts[b]++; });
+        });
+        host.showSortReveal(groupsS);
       }
       if (slide.input === 'order' && host.showOrderReveal) {
         var n = (slide.options || []).length;

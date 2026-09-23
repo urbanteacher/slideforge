@@ -513,7 +513,7 @@ export function createQuizRenderer(SF, helpers) {
       pair.appendChild(row);
       pair.appendChild(el('div', 'stage-note', 'Explain the bridge aloud'));
       pad.appendChild(pair);
-    } else if (present === 'compare') {
+    } else if (present === 'compare' && !slide.compareSort) {
       var cmp = el('div', 'stage-hero compare-stage');
       cmp.appendChild(el('div', 'stage-atmosphere', ''));
       if (slide.category) {
@@ -907,7 +907,7 @@ export function createQuizRenderer(SF, helpers) {
     }
 
     /* Compare & Contrast: wall-led discuss — no A–D options or vote tally. */
-    if (present === 'compare') return;
+    if (present === 'compare' && !slide.compareSort) return;
 
     /* Neither a typed nor a slider question has options to lay out. Each gets
        one answer box, so every measure-and-fit rule, the inline explanation
@@ -927,6 +927,38 @@ export function createQuizRenderer(SF, helpers) {
        The words that are wrong are marked in-error now and struck through by
        CSS once the reveal marks the first of them correct; the correction sits
        beside them, hidden until the same moment. */
+    /* Compare & Contrast, sorted: three columns named for the two items.
+       While the room sorts, the statements wait in a pile under them; at
+       the reveal each lands in its column (Player.showSortReveal) with how
+       the room sorted it. */
+    if (slide.input === 'sort') {
+      pad.parentNode.classList.add('is-sort');
+      var bins = slide.sortBins || ['A only', 'Both', 'B only'];
+      var board = el('div', 'sort-board');
+      bins.forEach(function (name, b) {
+        var col = el('div', 'sort-col sort-col-' + b);
+        col.dataset.bin = String(b);
+        col.appendChild(el('div', 'sort-col-head', name));
+        board.appendChild(col);
+      });
+      pad.appendChild(board);
+      var pile = el('div', 'sort-pile');
+      (slide.options || []).forEach(function (text, i) {
+        var card = el('div', 'sort-card');
+        card.dataset.i = String(i);
+        card.appendChild(el('span', 'sc-text', text));
+        card.appendChild(el('span', 'sc-heat', ''));
+        if (opts.revealed) {
+          var home = board.querySelector('.sort-col-' + ((slide.sortAnswers || [])[i] || 0));
+          if (home) home.appendChild(card);
+        } else pile.appendChild(card);
+      });
+      if (!opts.revealed) pad.appendChild(pile);
+      pad.appendChild(el('div', 'sort-verdict', ''));
+      pad.appendChild(el('div', 'answered-count', ''));
+      return;
+    }
+
     /* Fill the gaps: the passage is the stage, each gap a slot. The word
        bank is on the phones, and quietly under the passage here so the room
        can read along. At the reveal the right word lands in each slot and

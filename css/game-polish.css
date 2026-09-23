@@ -736,3 +736,32 @@
 /* The question heading leaves the round clock its corner. */
 .layout-quiz:has(> .pad > .round-clock) .qhead { padding-right: 250px; }
 .layout-quiz .pad > .round-clock { grid-template-columns: auto 120px; top: 30px; }
+
+/* ---- Compare & Contrast: sort it ---- */
+.layout-quiz.is-sort .sort-board {
+  display: grid; grid-template-columns: 1fr 1.1fr 1fr; gap: 16px; margin-top: 14px; align-items: start;
+}
+.layout-quiz.is-sort .sort-col {
+  min-height: 90px; padding: 12px; border-radius: 18px;
+  border: 2px solid var(--s-rule); background: var(--s-card);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.layout-quiz.is-sort .sort-col-1 { border-color: var(--s-accent); background: color-mix(in srgb, var(--s-accent) 12%, var(--s-card)); }
+.layout-quiz.is-sort .sort-col-head {
+  font-size: 22px; font-weight: 850; text-align: center; letter-spacing: -.01em;
+}
+.layout-quiz.is-sort .sort-pile {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 22px;
+}
+.layout-quiz.is-sort .sort-card {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 10px 14px; border-radius: 12px; background: var(--s-bg);
+  border: 1px solid var(--s-rule); font-size: 20px; line-height: 1.3; font-weight: 600;
+}
+.layout-quiz.is-sort .sort-pile .sort-card { max-width: 360px; }
+.layout-quiz.is-sort .sort-card.landed { animation: sf-fill-land .5s cubic-bezier(.3,0,.2,1); }
+.layout-quiz.is-sort .sort-card .sc-heat { font-size: 15px; font-weight: 600; color: var(--s-dim); }
+.layout-quiz.is-sort .sort-card .sc-heat:empty { display: none; }
+.layout-quiz.is-sort .sort-card .sc-heat b { color: var(--s-fg); }
+.layout-quiz.is-sort .sort-verdict { margin-top: 20px; font-size: 22px; }
+.layout-quiz.is-sort .sort-verdict:empty { display: none; }
