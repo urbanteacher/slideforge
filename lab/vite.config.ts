@@ -23,29 +23,6 @@ const devSaveExports = (): Plugin => ({
   },
 });
 
-// Dev-only: read a style guide on another origin on the page's behalf (model/guide.ts). The browser
-// may not read a page, stylesheet or font on a server that sends no CORS headers; this server can.
-// http(s) only, GET only, and the bytes come back as they are with their type.
-const devFetch = (): Plugin => ({
-  name: 'dev-fetch',
-  apply: 'serve',
-  configureServer(server) {
-    server.middlewares.use('/__dev/fetch', async (req, res) => {
-      const target = new URL(req.url ?? '', 'http://x').searchParams.get('url') ?? '';
-      if (req.method !== 'GET' || !/^https?:\/\//i.test(target)) { res.statusCode = 400; return res.end(); }
-      try {
-        const r = await fetch(target, { redirect: 'follow' });
-        res.statusCode = r.status;
-        res.setHeader('content-type', r.headers.get('content-type') ?? 'application/octet-stream');
-        res.end(Buffer.from(await r.arrayBuffer()));
-      } catch (e) {
-        res.statusCode = 502;
-        res.end(String(e));
-      }
-    });
-  },
-});
-
 // Dev-only: keep the inlined export player in sync with engine edits.
 const devRebuildPlayer = (): Plugin => ({
   name: 'dev-rebuild-player',
@@ -65,6 +42,6 @@ const devRebuildPlayer = (): Plugin => ({
 });
 
 export default defineConfig({
-  plugins: [react(), devSaveExports(), devFetch(), devRebuildPlayer()],
+  plugins: [react(), devSaveExports(), devRebuildPlayer()],
   server: { port: 5199 },
 });

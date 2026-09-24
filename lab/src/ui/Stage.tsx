@@ -113,6 +113,7 @@ export function Stage() {
     let r: Renderer | null = null;
     let raf = 0;
     let frame = 0;
+    let lastSlide = '';
     const init = () => {
       try {
         r = new Renderer(canvas, deck.width, deck.height);
@@ -157,8 +158,16 @@ export function Stage() {
           return;
         }
       }
-      r.drawSlide(s, { time, mouse: m.cur, t: Infinity, clicks: [], hidden }, null);
-      if (++frame % 240 === 0) r.prune(new Set(st.deck.slides.flatMap((x) => x.layers.map((l) => l.id))));
+      // The back of a flip slide shows while one of its layers is selected, so it can be edited.
+      const back = s.layers.some((l) => l.face === 'back' && l.id === st.selectedId) ? 1 : 0;
+      r.drawSlide(s, { time, mouse: m.cur, t: Infinity, clicks: [], hidden, flip: back }, null);
+      // Only the slide in view and its neighbours keep their textures: holding every slide visited
+      // grows with the deck until the GPU gives out.
+      if (++frame % 240 === 0 || s.id !== lastSlide) {
+        lastSlide = s.id;
+        const i = st.deck.slides.findIndex((x) => x.id === s.id);
+        r.prune(new Set(st.deck.slides.slice(Math.max(0, i - 1), i + 2).flatMap((x) => x.layers.map((l) => l.id))));
+      }
     };
     const onLost = (e: Event) => { e.preventDefault(); r = null; };
     const onRestored = () => init();

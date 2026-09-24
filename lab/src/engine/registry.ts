@@ -20,7 +20,7 @@ export interface KindDef {
   category: Category;
   featured?: boolean;
   description: string;
-  content?: 'text' | 'image' | 'shape' | 'video' | 'chart' | 'quiz' | 'activity' | 'note' | 'quote';
+  content?: 'text' | 'image' | 'shape' | 'video' | 'chart' | 'quiz' | 'activity' | 'note' | 'quote' | 'table' | 'timer' | 'wipe' | 'model';
   params: ParamDef[];
   glsl?: string;
   needsMips?: boolean;
@@ -34,6 +34,10 @@ export const FONTS = [
   'Space Grotesk', 'Syne', 'Unbounded', 'Bebas Neue', 'JetBrains Mono', 'Georgia', 'Uncut Sans',
   // Installed on every Mac and iPhone: SlideForge's Cinematic theme sets its type in it.
   'Avenir Next',
+  // UK Black Tech's hero face (served from public/fonts, SIL OFL).
+  'Alpha Lyrae',
+  // Installed on every Mac: Northeastern University London's display serif.
+  'Iowan Old Style',
 ];
 
 export const CATEGORIES: { id: Category | 'featured'; label: string }[] = [
@@ -52,8 +56,8 @@ const opt = (...v: string[]) => v.map((x) => ({ value: x, label: x[0].toUpperCas
  *  SlideForge layout region holds its copy on the slide. */
 const FIT: ParamDef = {
   key: 'fit', label: 'Fit', type: 'select', group: 'Fit', default: 'grow',
-  options: [{ value: 'grow', label: 'Grow the box' }, { value: 'shrink', label: 'Shrink to fit the box' }],
-  info: 'Shrink to fit keeps the box where it is and makes the text smaller when there is more of it.',
+  options: [{ value: 'grow', label: 'Grow the box' }, { value: 'shrink', label: 'Shrink to fit the box' }, { value: 'fill', label: 'Fill the box' }],
+  info: 'Grow: the box follows the words. Shrink: the box stays put and the words get smaller when there are more of them. Fill: the words are sized to fill the box — bigger when there are few, smaller when there are many, never under 18pt.',
 };
 const style = (size: number, font = 'Inter', min = 12, max = 200): ParamDef[] => [
   { key: 'font', label: 'Font', type: 'font', default: font, group: 'Style' },
@@ -99,16 +103,27 @@ const KINDS: KindDef[] = [
         options: [{ value: 'auto', label: 'Let the theme decide' }, { value: 'dark', label: 'A dark background — show the logo white' }, { value: 'light', label: 'A light background — keep the logo as it is' }] },
       { key: 'focus', label: 'Image focus', type: 'vec2', default: [0.5, 0.5], group: 'Picture', inBox: true, info: 'The part of the picture that matters: it stays in view when the frame crops, and a slow zoom closes in on it. Drag the handle on the picture.', when: (p) => p.fit === 'cover' || (p.motion ?? 'none') !== 'none' },
       // Image effects — shown in the Animate tab, not here.
-      { key: 'motion', label: 'Image motion', type: 'select', group: '_motion', default: 'none', options: [{ value: 'none', label: 'Stays still' }, { value: 'zoom', label: 'Slow zoom in' }, { value: 'travel', label: 'Travel — from one point to another' }] },
+      { key: 'motion', label: 'Image motion', type: 'select', group: '_motion', default: 'none', options: [{ value: 'none', label: 'Stays still' }, { value: 'zoom', label: 'Slow zoom in' }, { value: 'travel', label: 'Travel — from one point to another' }, { value: 'detail', label: 'Zoom to a detail — SlideForge’s Explore hotspot' }] },
       { key: 'focus2', label: 'Travels to', type: 'vec2', default: [0.7, 0.4], group: '_motion', inBox: true, when: (p) => p.motion === 'travel' },
-      { key: 'motionSecs', label: 'How long the move takes', type: 'select', group: '_motion', default: '20', options: [{ value: '12', label: '12 seconds' }, { value: '20', label: '20 seconds' }, { value: '30', label: '30 seconds' }] },
+      // Explore: the picture moves from where the last detail left it (or the whole picture) to this one.
+      { key: 'zoom', label: 'Zoom on the detail', type: 'number', min: 1, max: 4, step: 0.1, default: 2, group: '_motion', decimals: 1, when: (p) => p.motion === 'detail', info: 'The detail is the image focus. SlideForge allows 1× to 4×.' },
+      { key: 'fromFocus', label: 'Comes from', type: 'vec2', default: [0.5, 0.5], group: '_motion', inBox: true, when: (p) => p.motion === 'detail' },
+      { key: 'fromZoom', label: 'Zoom it comes from', type: 'number', min: 1, max: 4, step: 0.1, default: 1, group: '_motion', decimals: 1, when: (p) => p.motion === 'detail', info: '1 is the whole picture.' },
+      { key: 'motionSecs', label: 'How long the move takes', type: 'select', group: '_motion', when: (p) => p.motion !== 'detail', default: '20', options: [{ value: '12', label: '12 seconds' }, { value: '20', label: '20 seconds' }, { value: '30', label: '30 seconds' }] },
     ],
   },
   {
     id: 'shape', name: 'Shape', category: 'source', content: 'shape',
     description: 'Vector shapes for cards, badges and accents. Fills can be solid or gradient.',
     params: [
-      { key: 'shape', label: 'Shape', type: 'select', options: opt('rect', 'ellipse', 'triangle', 'star', 'ring', 'arrow', 'line'), default: 'rect', group: 'Shape' },
+      { key: 'shape', label: 'Shape', type: 'select', options: opt('rect', 'ellipse', 'triangle', 'star', 'ring', 'arrow', 'line', 'curve'), default: 'rect', group: 'Shape' },
+      { key: 'label', label: 'Label', type: 'text', default: '', group: 'Label', info: 'A few characters in the middle of the shape — a number, initials, a symbol — centred on the letters themselves.', when: (p) => p.shape !== 'line' && p.shape !== 'curve' },
+      { key: 'labelColor', label: 'Label colour', type: 'color', default: '#ffffff', group: 'Label', when: (p) => !!String(p.label ?? '').trim() },
+      { key: 'labelSize', label: 'Label size', type: 'number', min: 0, max: 400, step: 1, default: 0, group: 'Label', unit: 'px', decimals: 0, info: '0 sizes it to half the shape.', when: (p) => !!String(p.label ?? '').trim() },
+      { key: 'labelFont', label: 'Label font', type: 'font', default: 'Inter', group: 'Label', when: (p) => !!String(p.label ?? '').trim() },
+      { key: 'labelWeight', label: 'Label weight', type: 'select', options: opt('400', '600', '700', '800'), default: '700', group: 'Label', when: (p) => !!String(p.label ?? '').trim() },
+      { key: 'rise', label: 'Curve goes', type: 'select', group: 'Shape', default: 'down', when: (p) => p.shape === 'curve', info: 'An S-curve from one side of the box to the other, level at both ends — a connector in a mind map.',
+        options: [{ value: 'down', label: 'Top left to bottom right' }, { value: 'up', label: 'Bottom left to top right' }] },
       { key: 'radius', label: 'Corner radius', type: 'number', min: 0, max: 400, step: 1, default: 24, group: 'Shape', unit: 'px', decimals: 0, when: (p) => p.shape === 'rect' },
       { key: 'points', label: 'Points', type: 'number', min: 3, max: 16, step: 1, default: 5, group: 'Shape', decimals: 0, when: (p) => p.shape === 'star' },
       { key: 'ringWidth', label: 'Ring thickness', type: 'number', min: 0.02, max: 1, step: 0.01, default: 0.32, group: 'Shape', decimals: 2, when: (p) => p.shape === 'ring', info: 'How much of the radius the band takes: 1 is a solid disc.' },
@@ -136,10 +151,23 @@ const KINDS: KindDef[] = [
   },
   {
     id: 'chart', name: 'Chart', category: 'source', content: 'chart',
-    description: 'A column, bar, line, pie or donut chart.',
+    description: 'A chart: column, bar, line, pie and donut from one series, or any of SlideForge’s idioms — grouped, stacked, area, scatter, histogram, box, pictogram, radar, Sankey, dumbbell, small multiples, bullet, combo, treemap, waffle, evidence matrix — from a table.',
     params: [
-      { key: 'chart', label: 'Type', type: 'select', options: opt('column', 'bar', 'line', 'pie', 'donut'), default: 'column', group: 'Chart' },
-      { key: 'data', label: 'Data', type: 'text', default: '2021, 12\n2022, 19\n2023, 27\n2024, 34\n2025, 48', group: 'Chart', info: 'One "label, value" per line.' },
+      { key: 'chart', label: 'Type', type: 'select', default: 'column', group: 'Chart', options: [
+        { value: 'column', label: 'Column' }, { value: 'bar', label: 'Bar' }, { value: 'line', label: 'Line' }, { value: 'pie', label: 'Pie' }, { value: 'donut', label: 'Donut' },
+        { value: 'grouped', label: 'Grouped columns — several series' }, { value: 'lines', label: 'Lines — several series' }, { value: 'stack', label: 'Stacked — part to whole' },
+        { value: 'area', label: 'Area — a total and its parts' }, { value: 'scatter', label: 'Scatter — correlation' }, { value: 'histogram', label: 'Histogram — the shape of one column' },
+        { value: 'box', label: 'Box plot — distribution' }, { value: 'pictogram', label: 'Pictogram — one icon is one unit' }, { value: 'radar', label: 'Radar' },
+        { value: 'sankey', label: 'Sankey — flow' }, { value: 'dumbbell', label: 'Dumbbell — how far apart' }, { value: 'multiples', label: 'Small multiples' },
+        { value: 'bullet', label: 'Bullet — against a target' }, { value: 'combo', label: 'Combo — columns and markers' }, { value: 'treemap', label: 'Treemap' },
+        { value: 'waffle', label: 'Waffle — a hundred squares' }, { value: 'matrix', label: 'Evidence matrix' },
+      ] },
+      { key: 'data', label: 'Data', type: 'text', default: '2021, 12\n2022, 19\n2023, 27\n2024, 34\n2025, 48', group: 'Chart',
+        info: 'Column, bar, line, pie, donut: one "label, value" per line. The others read a table, as SlideForge does: first row names the series, first column the categories, tab or | between cells. A Sankey is "from | to | amount" per line; a box plot is a name then its observations.' },
+      { key: 'palette', label: 'Series colours', type: 'text', default: '', group: 'Style', info: 'Up to six colours, comma separated, in the order the series take them. Empty uses SlideForge’s six chart steps.', when: (p) => !['column', 'bar', 'line', 'pie', 'donut'].includes(String(p.chart)) },
+      { key: 'icon', label: 'Icon', type: 'text', default: '●', group: 'Chart', when: (p) => p.chart === 'pictogram' },
+      { key: 'unit', label: 'One icon is', type: 'number', min: 0, max: 1000000, step: 1, default: 0, group: 'Chart', decimals: 0, info: '0 picks a unit that keeps the longest row near twenty icons.', when: (p) => p.chart === 'pictogram' },
+      { key: 'surface', label: 'Ground behind', type: 'color', default: '#ffffff', group: 'Style', info: 'The colour a label’s halo and a marker’s ring are cut from.', when: (p) => ['sankey', 'combo'].includes(String(p.chart)) },
       { key: 'color', label: 'Colour', type: 'color', default: '#ff5a36', group: 'Style' },
       { key: 'color2', label: 'Colour 2', type: 'color', default: '#ffc15e', group: 'Style', info: 'The series shades from Colour to Colour 2.' },
       { key: 'textColor', label: 'Labels', type: 'color', default: '#1a1a1a', group: 'Style' },
@@ -192,6 +220,72 @@ const KINDS: KindDef[] = [
       { key: 'fill', label: 'Panel', type: 'color', default: '#f3efe8', group: 'Style', when: (p) => p.panel !== false },
       { key: 'radius', label: 'Corner radius', type: 'number', min: 0, max: 60, step: 1, default: 14, group: 'Style', unit: 'px', decimals: 0, when: (p) => p.panel !== false },
       FIT,
+    ],
+  },
+  {
+    // SlideForge's table slide: rows of cells, a header row, the row labels down the left. Hairline
+    // rules between rows and no box, so it reads as a comparison rather than a spreadsheet.
+    id: 'table', name: 'Table', category: 'source', content: 'table',
+    description: 'Rows and columns for when the exact value matters: a header row, labels down the left, a hairline under each row.',
+    params: [
+      { key: 'data', label: 'Rows', type: 'text', default: '\tOne\tTwo\tThree\nFirst row\tYes\tNo\tSome\nSecond row\t12\t18\t25', group: 'Table', info: 'One row per line; separate the cells with a tab (or " | ").' },
+      { key: 'header', label: 'Header row', type: 'bool', default: true, group: 'Table' },
+      { key: 'labels', label: 'Labels down the left', type: 'bool', default: true, group: 'Table' },
+      ...style(28),
+      FIT,
+    ],
+  },
+  {
+    // SlideForge's authored countdown: it starts when its slide comes up (the slide clock, which a
+    // redraw does not restart), clears when the slide is left, and caps at two hours so a lesson
+    // activity can outlast a quick task. In the editor it shows the full time.
+    id: 'timer', name: 'Timer', category: 'source', content: 'timer',
+    description: 'A countdown that starts when its slide comes up and resets when you leave it.',
+    params: [
+      { key: 'minutes', label: 'Minutes', type: 'number', min: 0.5, max: 120, step: 0.5, default: 5, group: 'Timer', decimals: 1, unit: ' min', info: 'Up to two hours. It starts when the slide appears while presenting.' },
+      { key: 'style', label: 'Style', type: 'select', default: 'ring', group: 'Timer', options: [{ value: 'ring', label: 'Ring and time' }, { value: 'digits', label: 'Time only' }, { value: 'bar', label: 'Bar and time' }] },
+      { key: 'label', label: 'Label', type: 'text', default: 'Time left', group: 'Timer', info: 'Leave empty for none.' },
+      { key: 'done', label: 'When it ends', type: 'text', default: 'Time’s up', group: 'Timer' },
+      ...style(96),
+      { key: 'track', label: 'Track', type: 'color', default: '#d9d4cc', group: 'Style' },
+    ],
+  },
+  {
+    // SlideForge's Before / after: two registered pictures, one wiped over the other by a handle.
+    // In Preview the handle is dragged, or a click sends it there; here it rests where Position says.
+    id: 'wipe', name: 'Before / after', category: 'source', content: 'wipe',
+    description: 'Two pictures of the same framing, and a handle that wipes between them. Drag it in Preview.',
+    params: [
+      { key: 'before', label: 'Before', type: 'image', default: '', group: 'Pictures' },
+      { key: 'after', label: 'After', type: 'image', default: '', group: 'Pictures' },
+      { key: 'beforeLabel', label: 'Before label', type: 'text', default: 'Before', group: 'Pictures' },
+      { key: 'afterLabel', label: 'After label', type: 'text', default: 'After', group: 'Pictures' },
+      { key: 'position', label: 'Handle rests at', type: 'number', min: 0, max: 100, step: 1, default: 50, group: 'Pictures', unit: '%', decimals: 0, info: 'How much of the after picture shows: 0 is all before, 100 all after.' },
+      { key: 'fit', label: 'Fit', type: 'select', options: opt('contain', 'cover'), default: 'contain', group: 'Pictures' },
+      { key: 'font', label: 'Font', type: 'font', default: 'Inter', group: 'Style' },
+      { key: 'size', label: 'Label size', type: 'number', min: 18, max: 80, step: 1, default: 36, group: 'Style', unit: 'px', decimals: 0 },
+      { key: 'accent', label: 'Handle', type: 'color', default: '#ff5a36', group: 'Style' },
+      { key: 'textColor', label: 'Label text', type: 'color', default: '#ffffff', group: 'Style' },
+    ],
+  },
+  {
+    // SlideForge's Simulation: a model drawn as its curve, and an input the room changes. In Preview
+    // the input is dragged across the graph and the output redraws; here it rests at its start.
+    id: 'model', name: 'Simulation', category: 'source', content: 'model',
+    description: 'A model drawn as a curve, with an input you drag in Preview while the output redraws.',
+    params: [
+      { key: 'model', label: 'Model', type: 'select', default: 'linear', group: 'Model', options: [{ value: 'linear', label: 'Straight line — a × input + b' }, { value: 'quadratic', label: 'Curve — a × input² + b' }] },
+      { key: 'a', label: 'a', type: 'number', min: -100, max: 100, step: 0.1, default: 2, group: 'Model', decimals: 1 },
+      { key: 'b', label: 'b', type: 'number', min: -1000, max: 1000, step: 1, default: 0, group: 'Model', decimals: 0 },
+      { key: 'min', label: 'Input from', type: 'number', min: -1000, max: 999, step: 1, default: 0, group: 'Model', decimals: 0 },
+      { key: 'max', label: 'Input to', type: 'number', min: -999, max: 1000, step: 1, default: 10, group: 'Model', decimals: 0 },
+      { key: 'initial', label: 'Starts at', type: 'number', min: -1000, max: 1000, step: 0.5, default: 0, group: 'Model', decimals: 1 },
+      { key: 'inputLabel', label: 'Input is', type: 'text', default: 'Input', group: 'Model' },
+      { key: 'outputLabel', label: 'Output is', type: 'text', default: 'Output', group: 'Model' },
+      { key: 'font', label: 'Font', type: 'font', default: 'Inter', group: 'Style' },
+      { key: 'size', label: 'Label size', type: 'number', min: 18, max: 80, step: 1, default: 36, group: 'Style', unit: 'px', decimals: 0 },
+      { key: 'accent', label: 'Curve', type: 'color', default: '#ff5a36', group: 'Style' },
+      { key: 'textColor', label: 'Text', type: 'color', default: '#1a1a1a', group: 'Style' },
     ],
   },
   {

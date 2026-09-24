@@ -52,7 +52,8 @@ function coverHeading(deck: Deck, index: number): string {
     const s = deck.slides[i];
     if (i > 0 && !isCover(s, i)) continue;
     const big = s.layers.filter((l) => l.kind === 'text' && l.visible).sort((a, b) => Number(b.params.size) - Number(a.params.size))[0];
-    if (big) return String(big.params.text).split('\n')[0];
+    // The whole heading on one line: a title set over two lines ("Ask a better / question.") is one title.
+    if (big) return String(big.params.text).replace(/\s*\n\s*/g, ' ');
   }
   return deck.title;
 }
@@ -87,7 +88,9 @@ function deckFont(deck: Deck): string {
   return [...count.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'Inter';
 }
 
-const BAND = { top: 52, foot: 1014, h: 30, w: 560 };
+// The header sits high enough that the gap from it down to a slide's title matches the gap from the
+// content up to the footer, so the slide reads as balanced between the two.
+const BAND = { top: 34, foot: 1014, h: 30, w: 560 };
 /** A slot's box: the header and footer bands sit above and below the deck's own grid, and the three
  *  columns run between its margins, so a 4:3 deck gets 4:3 margins. */
 function slotBox(deck: Deck, slot: HFSlot, picture: boolean) {

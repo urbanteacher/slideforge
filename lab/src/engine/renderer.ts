@@ -1,7 +1,7 @@
 import type { BlendMode, Layer, Slide, TransitionType } from '../model/types';
 import { EASE, IDLE_STATE, animTotal, layerState, schedule, stepLight, type LayerState } from './anim';
 import { CONTENT_GLSL, MAIN, PRELUDE, VERT } from './glsl';
-import { contentFrame, getAssetVersion, rasterise, textSize } from './raster';
+import { contentFrame, getAssetVersion, groupSizes, rasterise, textSize } from './raster';
 import { kind } from './registry';
 
 const BLEND_INDEX: Record<BlendMode, number> = {
@@ -92,6 +92,12 @@ export interface FrameOpts {
   interactive?: boolean; // apply parallax + hover
   hover?: Map<string, number>;
   hidden?: Set<string>;
+  /** How far the slide is turned over to its back face, 0–1: back-face layers show by it, and a flip
+   *  toggle is lit by it. Absent is the front. */
+  flip?: number;
+  /** Values dragged in the show, by layer id: a before / after's handle (how much of the after shows),
+   *  a simulation's input. */
+  live?: Map<string, number>;
   /** Morph: layers drawn part-way between their place on the slide before and on this one. */
   morph?: Map<string, MorphPose>;
 }
@@ -307,6 +313,51 @@ export class Renderer {
     return { ...layer, params: hit.params };
   }
 
+  private clocked = new WeakMap<object, { key: number; params: Layer['params'] }>();
+  /** A timer at its current second: the slide clock since it appeared (from the slide coming up, or
+   *  its own entrance). The slide clock starts on entry and a redraw does not restart it, so a running
+   *  timer is never reset by the renderer; leaving the slide and coming back starts it again. */
+  /** A before / after or a simulation drawn at its live value, re-rasterised only when that moves. */
+  private withLive(layer: Layer, live: Map<string, number> | undefined): Layer {
+    const at = layer.kind === 'wipe' || layer.kind === 'model' ? live?.get(layer.id) : undefined;
+    if (at === undefined) return layer;
+    const pos = Math.round(at * 400) / 400;
+    let hit = this.wiped.get(layer.params);
+    if (!hit || hit.key !== pos) {
+      hit = { key: pos, params: { ...layer.params, [layer.kind === 'wipe' ? '_pos' : '_input']: pos } };
+      this.wiped.set(layer.params, hit);
+    }
+    return { ...layer, params: hit.params };
+  }
+  private wiped = new WeakMap<Layer['params'], { key: number; params: Layer['params'] }>();
+
+  private withClock(layer: Layer, start: number | undefined, t: number): Layer {
+    if (layer.kind !== 'timer' || !Number.isFinite(t)) return layer;
+    const total = Math.max(30, Math.min(7200, Number(layer.params.minutes ?? 5) * 60));
+    const from = start !== undefined && Number.isFinite(start) ? start : 0;
+    const left = Math.max(0, Math.ceil(total - Math.max(0, t - from)));
+    let hit = this.clocked.get(layer.params);
+    if (!hit || hit.key !== left) {
+      hit = { key: left, params: { ...layer.params, _left: left } };
+      this.clocked.set(layer.params, hit);
+    }
+    return { ...layer, params: hit.params };
+  }
+
+  private grouped = new WeakMap<object, { key: number; params: Layer['params'] }>();
+  /** One of a set of texts drawn at the set's size (see groupSizes). Memoised per size, so a
+   *  settled slide reuses its texture. */
+  private withGroup(layer: Layer, groups: Map<string, number>): Layer {
+    const px = layer.params.fitGroup ? groups.get(String(layer.params.fitGroup)) : undefined;
+    if (px === undefined) return layer;
+    let hit = this.grouped.get(layer.params);
+    if (!hit || hit.key !== px) {
+      hit = { key: px, params: { ...layer.params, size: px, fit: 'grow' } }; // drawn at the set's size, as it is
+      this.grouped.set(layer.params, hit);
+    }
+    return { ...layer, params: hit.params };
+  }
+
   private lined = new WeakMap<object, { key: string; params: Layer['params'] }>();
   /** A text built a line per click draws each line at its own progress: 0 not yet, 1 arrived, and
    *  with "dim" every line before the newest one drawn back at a third. Memoised per state so a
@@ -374,16 +425,26 @@ export class Renderer {
 
     type Pass = { layer: Layer; run: (p: Prog) => boolean };
     const passes: Pass[] = [];
+    const groups = groupSizes(slide.layers);
     for (const raw of slide.layers) {
       if (!raw.visible || opts.hidden?.has(raw.id)) continue;
       const starts = sched.lines.get(raw.id);
-      const toned = this.withTone(raw, slide.background);
+      const toned = this.withTone(this.withLive(this.withClock(this.withGroup(raw, groups), sched.start.get(raw.id), opts.t), opts.live), slide.background);
       const layer = starts ? this.withLines(this.withPage(toned, slide.id), starts, opts.t) : this.withPage(toned, slide.id);
       const k = kind(layer.kind);
       const st = layerState(layer, sched.start.get(layer.id), opts.t, opts.time);
       st.opacity *= light.dim.get(layer.id) ?? 1;
+      const piled = light.pile.get(layer.id);
+      if (piled) { st.dx += piled.dx; st.dy += piled.dy; st.scale *= piled.scale; st.rot += piled.rot; }
       const pose = opts.morph?.get(layer.id);
       if (pose) { st.dx += pose.dx; st.dy += pose.dy; st.opacity *= pose.opacity; }
+      // The back of the slide turns in: it fades and swings up from a slight rotation about the
+      // vertical, SlideForge's .5s flip, read here as a scale on x.
+      if (layer.face === 'back') {
+        const f = opts.flip ?? 0;
+        st.opacity *= f;
+        st.scale *= 0.96 + 0.04 * f;
+      }
       if (!st.visible || st.opacity <= 0.001 || layer.opacity <= 0.001) continue;
 
       if (k.content) {

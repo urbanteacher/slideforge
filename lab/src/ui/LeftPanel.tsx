@@ -7,6 +7,7 @@ import { DeckSettings } from './DeckSettings';
 import { insertBlock } from './SlideBlocks';
 import { ImagesPanel } from './ImagesPanel';
 import { StyleGuidePanel } from './StyleGuidePanel';
+import { SlideDesignsPanel } from './SlideDesigns';
 import { HeaderFooterSection } from './HeaderFooter';
 import { applyTheme } from '../model/theme';
 import { CATEGORIES, kind, kindsIn, type Category } from '../engine/registry';
@@ -21,10 +22,10 @@ export function LeftPanel() {
 
 /** Which sections are open, kept between visits. */
 function useFolds() {
-  const read = () => { try { return { layers: true, layouts: true, headerFooter: false, images: false, effects: false, guide: false, ...JSON.parse(localStorage.getItem('sf-left-folds') ?? '{}') }; } catch { return { layers: true, layouts: true, headerFooter: false, images: false, effects: false, guide: false }; } };
-  const [open, setOpen] = useState<{ layers: boolean; layouts: boolean; headerFooter: boolean; images: boolean; effects: boolean; guide: boolean }>(read);
+  const read = () => { try { return { layers: true, layouts: true, designs: false, headerFooter: false, images: false, effects: false, guide: false, ...JSON.parse(localStorage.getItem('sf-left-folds') ?? '{}') }; } catch { return { layers: true, layouts: true, designs: false, headerFooter: false, images: false, effects: false, guide: false }; } };
+  const [open, setOpen] = useState<{ layers: boolean; layouts: boolean; designs: boolean; headerFooter: boolean; images: boolean; effects: boolean; guide: boolean }>(read);
   useEffect(() => { localStorage.setItem('sf-left-folds', JSON.stringify(open)); }, [open]);
-  return [open, (k: 'layers' | 'layouts' | 'headerFooter' | 'images' | 'effects' | 'guide', to?: boolean) => setOpen((o) => ({ ...o, [k]: to ?? !o[k] }))] as const;
+  return [open, (k: 'layers' | 'layouts' | 'designs' | 'headerFooter' | 'images' | 'effects' | 'guide', to?: boolean) => setOpen((o) => ({ ...o, [k]: to ?? !o[k] }))] as const;
 }
 
 function Fold({ title, open, onToggle, right, children, className }: { title: string; open: boolean; onToggle: () => void; right?: ReactNode; children: ReactNode; className: string }) {
@@ -60,7 +61,10 @@ function Sections() {
       <Fold title="Layouts" className="fold-layouts" open={open.layouts} onToggle={() => toggle('layouts')}>
         <LayoutsPanel />
       </Fold>
-      <Fold title="Style guide" className="fold-guide" open={open.guide} onToggle={() => toggle('guide')}>
+      <Fold title="Slide designs" className="fold-designs" open={open.designs} onToggle={() => toggle('designs')}>
+        <SlideDesignsPanel />
+      </Fold>
+      <Fold title="Colours & grounds" className="fold-guide" open={open.guide} onToggle={() => toggle('guide')}>
         <StyleGuidePanel />
       </Fold>
       <Fold title="Header & footer" className="fold-hf" open={open.headerFooter} onToggle={() => toggle('headerFooter')}>

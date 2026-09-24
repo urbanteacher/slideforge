@@ -125,7 +125,7 @@ function freeRow(slide: Slide, h: number, skip: string): number | null {
 }
 const WIDE = new Set(['chart', 'note', 'heading']);
 
-export const ITEMS = ['heading', 'text', 'note', 'bullets', 'image', 'quote', 'chart'] as const;
+export const ITEMS = ['heading', 'text', 'note', 'bullets', 'image', 'quote', 'chart', 'timer'] as const;
 export type ItemId = (typeof ITEMS)[number];
 
 export function addItem(id: Exclude<ItemId, 'image'>) {
@@ -150,6 +150,14 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
     case 'text': return make('text', 'Text', { text: 'A sentence or two of text.', font: 'Inter', weight: '400', size: 40, color: ink, lineHeight: 1.35, tracking: 0 }, { x: 160, y: 420, w: 1200 });
     case 'bullets': return make('text', 'Bullet points', { text: 'First point\nSecond point\nThird point', font: 'Inter', weight: '400', size: 42, color: ink, list: 'bullets', lineHeight: 1.55, tracking: 0 }, { x: 160, y: 360, w: 1400 });
     case 'note': return make('note', 'Note', { ...colours, fill: panel });
+    // A ring in the corner the room can read from the back, in the slide's own colours.
+    case 'timer': {
+      const g = gridFor(st.deck), size = 360;
+      const layer = createLayer('timer', { name: 'Timer', params: { textColor: ink, track: dark ? toward(slide.background, 255, 0.18) : '#d9d4cc', minutes: 5 } as never, box: { x: g.right - size, y: g.top, w: size, h: size, rot: 0 }, anim: { type: 'fade', duration: 0.5 } });
+      st.insertLayer(layer);
+      st.showToast('The timer starts when this slide comes up while presenting. Set its minutes in the panel.');
+      return;
+    }
     default: return make(id, id[0].toUpperCase() + id.slice(1), id === 'chart' ? { textColor: ink } : colours);
   }
 }

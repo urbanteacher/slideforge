@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { exportHtml, exportJson, exportPng } from '../export/exporters';
 import { blankDeck, demoDeck } from '../model/defaults';
 import { motionLabDeck } from '../model/motionLab';
+import { ukbtDeck, ukbtInstituteDeck } from '../model/ukbtDeck';
+import { nulDeck } from '../model/nulDeck';
 import { slideOf, useStore } from '../model/store';
 import type { Deck } from '../model/types';
 import { FormatBar } from './FormatBar';
@@ -68,6 +70,15 @@ export function TopBar() {
             <button onClick={() => { loadDeck(blankDeck()); close(); }}><FilePlus size={15} />New blank deck</button>
             <button onClick={() => { loadDeck(demoDeck()); close(); }}><Sparkles size={15} />New from demo deck</button>
             <button onClick={() => { loadDeck(motionLabDeck()); close(); }}><Sparkles size={15} />New from Motion lab (slides 1–14)</button>
+            <button onClick={() => { loadDeck(ukbtDeck()); close(); }}><Sparkles size={15} />New from UK Black Tech partnership pack</button>
+            <button onClick={() => { loadDeck(ukbtInstituteDeck()); close(); }}><Sparkles size={15} />New from UKBT Institute partnership pack</button>
+            <button onClick={() => { loadDeck(nulDeck()); close(); }}><Sparkles size={15} />New from NU London openers & layout range</button>
+            <button onClick={async () => {
+              close();
+              // The Layout bank is 1.7 MB of content and pictures, so it loads only when asked for.
+              const [{ deckFromSlideForge }, data] = await Promise.all([import('../model/fromSlideForge'), import('../assets/layout-bank.json')]);
+              loadDeck(deckFromSlideForge(data.default as never));
+            }}><Sparkles size={15} />New from the Layout bank (97 SlideForge slides)</button>
             <hr />
             <button onClick={() => { fileRef.current?.click(); close(); }}><FolderOpen size={15} />Open deck file…</button>
             <button onClick={() => { exportJson(deck); close(); }}><Download size={15} />Save deck file (.json)</button>
@@ -113,6 +124,7 @@ export function TopBar() {
                 <button onClick={() => { imageRef.current?.click(); close(); }}><ImagePlus size={15} />Image…</button>
                 <button onClick={item('quote')}><Quote size={15} />Quote</button>
                 <button onClick={item('chart')}><ChartColumn size={15} />Chart</button>
+                <button onClick={item('timer')}><Timer size={15} />Timer</button>
                 <hr />
                 <button onClick={() => { videoRef.current?.click(); close(); }}><Video size={15} />Video…</button>
                 <button onClick={add('shape')}><Shapes size={15} />Shape</button>

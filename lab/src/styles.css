@@ -522,23 +522,42 @@ input, select, textarea { font: inherit; color: inherit; }
 .thumb-feedback { position: absolute; right: 6px; bottom: 6px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 5px; background: rgba(0, 0, 0, .7); color: #fff; }
 .thumb-feedback svg { width: 12px; height: 12px; }
 
-/* Style guide (left panel): read a brand in, then its theme, palette, typefaces and marks. */
-.guide-panel { display: flex; flex-direction: column; gap: 6px; }
-.guide-panel.drop { outline: 2px dashed var(--accent); outline-offset: -4px; border-radius: 8px; }
-.guide-read { display: flex; gap: 6px; }
-.guide-read .text-input { flex: 1; min-width: 0; }
-.guide-file { justify-content: center; }
+/* Colours & grounds (left panel): a palette of three grounds, picked or made, then every part of it editable. */
+.guide-panel { display: flex; flex-direction: column; gap: 6px; min-width: 0; overflow-x: hidden; }
+.guide-own, .guide-use, .guide-vary { justify-content: center; }
+.pg-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.pg-card { min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 5px; border-radius: 8px; background: var(--field); border: 1px solid transparent; cursor: pointer; text-align: left; }
+.pg-card:hover { border-color: var(--accent); }
+.pg-grounds { display: grid; grid-template-columns: 1.4fr 1fr 1fr; border-radius: 5px; overflow: hidden; height: 38px; }
+.pg-ground { display: grid; place-items: center; font: 700 14px/1 Inter, system-ui, sans-serif; }
+.pg-sets { display: flex; gap: 3px; }
+.pg-sets i { flex: 1; height: 5px; border-radius: 3px; }
+.pg-name { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .guide-head { display: flex; align-items: center; gap: 4px; }
 .guide-head > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .guide-head b { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .guide-head small { font-size: 11px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.guide-sets { display: flex; flex-wrap: wrap; gap: 4px; }
-.guide-sets .g-style { text-transform: capitalize; font-size: 12px; }
-.guide-use { justify-content: center; margin-bottom: 4px; }
+.guide-sets { display: flex; flex-wrap: wrap; gap: 5px; }
+.guide-set { display: flex; width: 40px; height: 22px; border-radius: 6px; overflow: hidden; border: 2px solid transparent; padding: 0; cursor: pointer; }
+.guide-set i { flex: 1; }
+.guide-set.on { border-color: var(--accent); }
+.guide-grounds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.guide-grounds.compact { width: 100%; }
+.guide-ground { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 4px 5px; border-radius: 7px; border: 2px solid var(--line-2); font: 700 15px/1 Inter, system-ui, sans-serif; cursor: pointer; }
+.guide-ground small { font: 600 10px/1 Inter, system-ui, sans-serif; opacity: .8; letter-spacing: .03em; }
+.guide-ground.on { border-color: var(--accent); }
 .guide-chip { flex: none; width: 18px; height: 18px; border-radius: 5px; border: 1px solid var(--line-2); margin-right: 6px; }
+.guide-label-row { display: flex; justify-content: space-between; align-items: center; }
+.guide-link { font-size: 11px; color: var(--accent); background: none; border: 0; cursor: pointer; text-transform: none; letter-spacing: 0; }
 .guide-palette { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
 .guide-swatch { aspect-ratio: 1; border-radius: 5px; border: 1px solid var(--line-2); cursor: pointer; padding: 0; }
 .guide-swatch:hover { outline: 2px solid var(--accent); outline-offset: 1px; }
-.guide-font { font-size: 20px; line-height: 1.2; padding: 4px 2px; display: flex; flex-direction: column; }
-.guide-font small { font: 500 11px/1.3 Inter, system-ui, sans-serif; color: var(--dim); }
+.guide-edit { display: flex; flex-direction: column; gap: 4px; }
+.guide-edit-row { display: grid; grid-template-columns: 110px 1fr auto; gap: 4px; align-items: center; }
+.guide-pairs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.guide-pair { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px 4px; border-radius: 6px; border: 1px solid var(--line-2); font: 700 15px/1 Inter, system-ui, sans-serif; cursor: pointer; }
+.guide-pair small { font: 600 9px/1 Inter, system-ui, sans-serif; opacity: .85; }
+.guide-combo { display: flex; align-items: center; gap: 3px; }
+.guide-combo i { flex: 1; height: 20px; border-radius: 4px; }
+.guide-combo i.mine { outline: 2px solid var(--text, #fff); outline-offset: -2px; }
 .guide-mark .img-thumb { background: #f4f2ec; }

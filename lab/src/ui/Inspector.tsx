@@ -15,6 +15,8 @@ import { buildSet, itemNoun, setBuildOf, type SetBuild } from './build';
 import { siblingsOf } from './order';
 import { Choreography } from './Choreography';
 import { fontChoices } from '../model/guide';
+import { themeOf } from '../model/layouts';
+import { setSlideGround } from '../model/theme';
 
 const BLENDS: { value: BlendMode; label: string }[] = [
   { value: 'normal', label: 'Normal' }, { value: 'multiply', label: 'Multiply' }, { value: 'screen', label: 'Screen' },
@@ -69,7 +71,7 @@ const HOVERS: { value: HoverType; label: string }[] = [
 ];
 const CLICKS: { value: ClickAction; label: string }[] = [
   { value: 'none', label: 'Advance (default)' }, { value: 'next', label: 'Next slide' }, { value: 'prev', label: 'Previous slide' },
-  { value: 'goto', label: 'Go to slide…' }, { value: 'link', label: 'Open link…' },
+  { value: 'goto', label: 'Go to slide…' }, { value: 'link', label: 'Open link…' }, { value: 'flip', label: 'Flip to facts — turn the slide over' },
 ];
 
 export function Inspector() {
@@ -325,10 +327,10 @@ function ParamRow({ layer, def: d, setParam }: { layer: Layer; def: ParamDef; se
     }
     case 'select': {
       const row = <Row label={d.label} info={d.info}><Select value={String(v)} options={d.options} onChange={(x) => setParam(d.key, x)} /></Row>;
-      if (d.key !== 'fit' || v !== 'shrink') return row;
+      if (d.key !== 'fit' || (v !== 'shrink' && v !== 'fill')) return row;
       // Say what Fit did, so a Size of 38 drawn at 19 is not a mystery.
       const drawn = textSize(layer), set = Number(layer.params.size);
-      return <>{row}<div className="fit-note">{drawn < set - 0.05 ? `Drawn at ${Math.round(drawn)}px so it fits. Size ${set}px is used when there is room.` : 'Fits at full size.'}</div></>;
+      return <>{row}<div className="fit-note">{v === 'fill' ? `Drawn at ${Math.round(drawn)}px to fill the box.` : drawn < set - 0.05 ? `Drawn at ${Math.round(drawn)}px so it fits. Size ${set}px is used when there is room.` : 'Fits at full size.'}</div></>;
     }
     case 'bool':
       return <Row label={d.label} info={d.info}><div><Toggle value={!!v} onChange={(x) => setParam(d.key, x)} /></div></Row>;
@@ -406,6 +408,26 @@ function VideoPick({ value, onChange }: { value: string; onChange: (v: string) =
   );
 }
 
+/** Which of the theme's grounds this slide sits on: working, quiet or loud. Text and accents follow. */
+function GroundRow() {
+  const slide = useStore(slideOf);
+  const deck = useStore((s) => s.deck);
+  const st = themeOf(deck);
+  if (!st?.grounds?.length) return null;
+  const set = (id: string | null) => useStore.getState().mutate((d) => setSlideGround(d, slide.id, id));
+  const chip = (id: string | null, bg: string, ink: string, name: string) => (
+    <button key={name} className={`guide-ground${(slide.ground ?? null) === id ? ' on' : ''}`} style={{ background: bg, color: ink }} onClick={() => set(id)} title={`Set this slide on the ${name.toLowerCase()} ground`}>Aa<small>{name}</small></button>
+  );
+  return (
+    <Row label="Ground" info="The palette's three grounds. The text and accents on the slide change with it.">
+      <div className="guide-grounds compact">
+        {chip(null, st.ground, st.ink, 'Working')}
+        {st.grounds.map((g) => chip(g.id, g.ground, g.ink, g.name))}
+      </div>
+    </Row>
+  );
+}
+
 function SlideDesign() {
   const slide = useStore(slideOf);
   const { updateSlide } = useStore.getState();
@@ -415,6 +437,7 @@ function SlideDesign() {
       <Section title="Slide">
         <Row label="Name"><input className="text-input" value={slide.name} onFocus={() => (nm.current = newGesture())} onChange={(e) => updateSlide((s) => { s.name = e.target.value; }, nm.current)} onKeyDown={(e) => e.stopPropagation()} /></Row>
         <Row label="Background" info="Shown beneath all layers."><ColorField value={slide.background} onChange={(v, m) => updateSlide((s) => { s.background = v; }, m)} /></Row>
+        <GroundRow />
         <button className="btn-soft tidy" onClick={tidySlide} title="Even out every row and column on this slide: one gap, one edge, one width each."><WandSparkles size={13} />Tidy up this slide</button>
       </Section>
       <Section title="Speaker notes">
@@ -549,7 +572,7 @@ function BuildRows({ layer }: { layer: Layer }) {
         <>
           <Row label={lineBuild ? 'Build the set' : 'Build'} info={INFO}>
             <Select value={setBuildOf(layer)}
-              options={[{ value: 'off', label: 'All at once' }, { value: 'on', label: `One ${noun} per click` }, { value: 'dim', label: `One ${noun} per click, dimming the ones before` }, { value: 'spot', label: `One ${noun} per click, with a spotlight` }] as { value: SetBuild; label: string }[]}
+              options={[{ value: 'off', label: 'All at once' }, { value: 'on', label: `One ${noun} per click` }, { value: 'dim', label: `One ${noun} per click, dimming the ones before` }, { value: 'spot', label: `One ${noun} per click, with a spotlight` }, { value: 'swap', label: `One ${noun} at a time — each replaces the last` }, { value: 'pile', label: `One ${noun} per click, piled — the ones before step back` }] as { value: SetBuild; label: string }[]}
               onChange={(v) => buildSet(layer.id, v)} />
           </Row>
           <div className="desc">{sib.units.length} {noun}s, in reading order. Move one on the canvas and its place in the build moves with it.</div>
@@ -639,6 +662,11 @@ function LayerInteract({ layer }: { layer: Layer }) {
             <Row label="Action"><Select value={it.click} options={CLICKS} onChange={(v) => up((x) => { x.click = v; })} /></Row>
             {it.click === 'goto' && <Row label="Slide"><Scrub value={it.gotoSlide} min={1} max={Math.max(1, n)} step={1} decimals={0} onChange={(v, m) => up((x) => { x.gotoSlide = v; }, m)} /></Row>}
             {it.click === 'link' && <Row label="URL"><input className="text-input" placeholder="https://…" value={it.url} onChange={(e) => up((x) => { x.url = e.target.value; }, 'url')} onKeyDown={(e) => e.stopPropagation()} /></Row>}
+          </Section>
+          <Section title="Flip to facts">
+            <Row label="On the back" info="Shown only while the slide is turned over by a layer whose click is Flip. Select it to edit it on the canvas.">
+              <div><Toggle value={layer.face === 'back'} onChange={(v) => update(layer.id, (l) => { if (v) l.face = 'back'; else delete l.face; })} /></div>
+            </Row>
           </Section>
         </>
       )}

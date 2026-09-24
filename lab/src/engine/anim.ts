@@ -1,4 +1,5 @@
 import type { Anim, Easing, EntranceType, Interact, Layer, Slide } from '../model/types';
+import { beatsOf, isTableKind } from './chartKinds';
 import { isWordMotion, wordsTotal } from './words';
 
 /** A CSS cubic-bezier(x1, y1, x2, y2) as a function of progress: solve x for t, return y. */
@@ -69,6 +70,8 @@ export function buildLines(l: Layer): number {
 /** A chart that draws itself: how many bars, points or wedges it draws, one after another. */
 export const isChartDraw = (l: Layer) => l.kind === 'chart' && l.anim.type === 'draw';
 export function chartItems(l: Layer): number {
+  const kind = String(l.params.chart ?? 'column');
+  if (isTableKind(kind)) return beatsOf(kind, String(l.params.data ?? ''));
   return Math.max(1, String(l.params.data ?? '').split('\n').filter((x) => x.trim()).length);
 }
 
@@ -166,7 +169,7 @@ export function schedule(slide: Slide, clicks: number[]): Schedule {
 }
 
 /** How far a dimmed point falls back: dim keeps it readable; spotlight takes it further back. */
-export const DIM_TO = { dim: 0.35, spot: 0.3 } as const;
+export const DIM_TO = { dim: 0.35, spot: 0.3, swap: 0, pile: 1 } as const;
 const DIM_SECS = 0.5;
 
 /**
@@ -175,12 +178,20 @@ const DIM_SECS = 0.5;
  * spotlight's vignette has closed in (0–1), from the moment the first point of a spotlit build
  * appears. Nothing is dimmed on a static slide (t = Infinity): the editor and a handout show it all.
  */
-export function stepLight(slide: Slide, sched: Schedule, t: number): { dim: Map<string, number>; spot: number } {
+export interface PileMove { dx: number; dy: number; scale: number; rot: number }
+export function stepLight(slide: Slide, sched: Schedule, t: number): { dim: Map<string, number>; spot: number; pile: Map<string, PileMove> } {
   const dim = new Map<string, number>();
+  const pile = pileOf(slide, sched, t, dim);
   let spot = 0;
-  if (!Number.isFinite(t)) return { dim, spot };
+  if (!Number.isFinite(t)) {
+    // A set shown one at a time stacks its items in one place; still, only its first is drawn.
+    const first = new Map<string, number>();
+    for (const l of slide.layers) { const s = l.anim.step; if (s?.mode === 'swap' && l.visible) first.set(s.set, Math.min(first.get(s.set) ?? Infinity, s.i)); }
+    for (const l of slide.layers) { const s = l.anim.step; if (s?.mode === 'swap' && s.i !== first.get(s.set)) dim.set(l.id, 0); }
+    return { dim, spot, pile };
+  }
   const ramp = (from: number) => (Number.isFinite(from) && t >= from ? Math.min(1, (t - from) / DIM_SECS) : 0);
-  const sets = new Map<string, { mode: 'on' | 'dim' | 'spot'; at: number[]; layers: Layer[] }>();
+  const sets = new Map<string, { mode: 'on' | 'dim' | 'spot' | 'swap' | 'pile'; at: number[]; layers: Layer[] }>();
   for (const l of slide.layers) {
     const st = l.anim.step;
     if (st && l.visible && l.anim.type !== 'none') {
@@ -192,7 +203,7 @@ export function stepLight(slide: Slide, sched: Schedule, t: number): { dim: Map<
     if (l.anim.build === 'spot') spot = Math.max(spot, ramp(sched.lines.get(l.id)?.[0] ?? sched.start.get(l.id) ?? Infinity));
   }
   for (const e of sets.values()) {
-    if (e.mode === 'on') continue;
+    if (e.mode === 'on' || e.mode === 'pile') continue;
     const at = e.at.filter((x) => x !== undefined);
     if (e.mode === 'spot') spot = Math.max(spot, ramp(Math.min(...at)));
     const floor = DIM_TO[e.mode];
@@ -202,11 +213,57 @@ export function stepLight(slide: Slide, sched: Schedule, t: number): { dim: Map<
       // an item moved on the canvas (which swaps build order) still dims in the order it is shown.
       let later = Infinity;
       for (const x of at) if (x > mine && x <= t) later = Math.min(later, x);
-      const k = ramp(later);
+      // An item replaced by the next clears in a fifth of a second, before the next one's words arrive.
+      const k = e.mode === 'swap' ? (Number.isFinite(later) && t >= later ? Math.min(1, (t - later) / 0.2) : 0) : ramp(later);
       if (k > 0) dim.set(l.id, 1 - (1 - floor) * k);
     }
   }
-  return { dim, spot };
+  return { dim, spot, pile };
+}
+
+/**
+ * SlideForge's gallery pile: each click lays the next item on top, and every item already down steps
+ * one notch further up, back and over — translated, shrunk 5% and turned 1.3° a notch, about its own
+ * middle — its caption layers fading as soon as something covers it, so only the top caption reads. Notches
+ * ease in over half a second. Still, the pile shows complete: every item down, the last on top.
+ */
+function pileOf(slide: Slide, sched: Schedule, t: number, dim: Map<string, number>): Map<string, PileMove> {
+  const out = new Map<string, PileMove>();
+  const items = new Map<string, Map<number, { at: number; layers: Layer[] }>>();
+  for (const l of slide.layers) {
+    const s = l.anim.step;
+    if (s?.mode !== 'pile' || !l.visible || !l.box) continue;
+    let set = items.get(s.set);
+    if (!set) items.set(s.set, (set = new Map()));
+    let it = set.get(s.i);
+    if (!it) set.set(s.i, (it = { at: Infinity, layers: [] }));
+    it.at = Math.min(it.at, sched.start.get(l.id) ?? (l.anim.type === 'none' ? 0 : Infinity));
+    it.layers.push(l);
+  }
+  const still = !Number.isFinite(t);
+  const ease = (from: number) => (still ? 1 : Number.isFinite(from) && t >= from ? EASE.cubicOut(Math.min(1, (t - from) / 0.5)) : 0);
+  for (const set of items.values()) {
+    const list = [...set.entries()].sort((a, b) => a[0] - b[0]);
+    for (const [i, it] of list) {
+      const later = list.filter(([j, o]) => (still ? j > i : o.at > it.at && o.at <= t)).map(([, o]) => o.at);
+      const depth = later.reduce((d, x) => d + ease(x), 0);
+      if (depth <= 0.001) continue;
+      const cover = ease(Math.min(...later));
+      // Pivot on the pictures, not the caption beside them.
+      const sheets = it.layers.filter((l) => !l.anim.step?.caption);
+      const xs = (sheets.length ? sheets : it.layers).map((l) => l.box!);
+      const px = (Math.min(...xs.map((b) => b.x)) + Math.max(...xs.map((b) => b.x + b.w))) / 2;
+      const py = (Math.min(...xs.map((b) => b.y)) + Math.max(...xs.map((b) => b.y + b.h))) / 2;
+      const scale = 1 - depth * 0.05, rot = -1.3 * depth, a = (rot * Math.PI) / 180;
+      for (const l of it.layers) {
+        const b = l.box!, ox = b.x + b.w / 2 - px, oy = b.y + b.h / 2 - py;
+        const nx = (ox * Math.cos(a) - oy * Math.sin(a)) * scale, ny = (ox * Math.sin(a) + oy * Math.cos(a)) * scale;
+        out.set(l.id, { dx: nx - ox - 39 * depth, dy: ny - oy - 30 * depth, scale, rot });
+        if (l.anim.step?.caption) dim.set(l.id, 1 - cover);
+      }
+    }
+  }
+  return out;
 }
 
 export interface LayerState {
@@ -239,6 +296,13 @@ function imageView(layer: Layer, local: number): [number, number, number] {
   const k = Math.max(0, Math.min(1, local / secs));
   const f = (Array.isArray(p.focus) ? p.focus : [0.5, 0.5]) as [number, number];
   const keep = (c: number, z: number) => Math.max(0.5 / z, Math.min(1 - 0.5 / z, c));
+  if (p.motion === 'detail') {
+    // SlideForge's explore zoom: .45s ease from the view before to the detail. Still, it rests on the detail.
+    const e = Number.isFinite(local) ? EASE.cubicInOut(Math.max(0, Math.min(1, local / 0.45))) : 1;
+    const a = (Array.isArray(p.fromFocus) ? p.fromFocus : [0.5, 0.5]) as [number, number];
+    const z0 = Math.max(1, Number(p.fromZoom ?? 1)), z1 = Math.max(1, Number(p.zoom ?? 2)), z = z0 + (z1 - z0) * e;
+    return [keep(a[0] + (f[0] - a[0]) * e, z), keep(a[1] + (f[1] - a[1]) * e, z), z];
+  }
   if (p.motion === 'zoom') {
     const z = 1 + 0.18 * EASE.cubicOut(k);
     return [keep(0.5 + (f[0] - 0.5) * k, z), keep(0.5 + (f[1] - 0.5) * k, z), z];
@@ -294,6 +358,8 @@ export function layerState(layer: Layer, start: number | undefined, t: number, t
   // Picture motion runs on the slide clock from the moment the picture arrives.
   if (layer.kind === 'image' && (layer.params.motion ?? 'none') !== 'none' && Number.isFinite(t)) {
     st.view = imageView(layer, t - (start !== undefined && Number.isFinite(start) ? start : 0));
+  } else if (layer.kind === 'image' && layer.params.motion === 'detail') {
+    st.view = imageView(layer, Infinity);
   }
   // "Clears itself": fade away a set time after arriving, and stay gone.
   if (a.clearAfter && a.clearAfter > 0 && Number.isFinite(t)) {

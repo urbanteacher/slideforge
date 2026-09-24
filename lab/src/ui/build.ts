@@ -7,7 +7,7 @@ import { siblingsOf } from './order';
 // group, in reading order), and each item becomes one click: its first layer waits for the press
 // and the rest of it arrives with that one.
 
-export type SetBuild = 'off' | 'on' | 'dim' | 'spot';
+export type SetBuild = 'off' | 'on' | 'dim' | 'spot' | 'swap' | 'pile';
 
 /** What one item of the set is called in the panel. */
 export function itemNoun(slide: Slide, l: Layer): string {

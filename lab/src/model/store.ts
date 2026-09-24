@@ -1,6 +1,7 @@
 import { produce } from 'immer';
 import { create } from 'zustand';
 import { contentHeight } from '../engine/raster';
+import { reflowCards } from './cards';
 import { kind } from '../engine/registry';
 import { blankSlide, cloneLayer, cloneSlide, createLayer, demoDeck } from './defaults';
 import { hasFlagshipFrame, hasFlagshipTextImage, newSlideWithFrame, syncFrameCounters } from './frame';
@@ -179,6 +180,8 @@ export const useStore = create<State>((set, get) => ({
       if (!l) return;
       recipe(l);
       refitText(l);
+      // A card's words changed or its box moved: the whole set of cards follows the fullest one.
+      if (l.params.cardSet) reflowCards(s, d.height);
     }, merge);
   },
 
@@ -276,9 +279,12 @@ export const useStore = create<State>((set, get) => ({
 export function refitAllText() {
   const st = useStore.getState();
   const next = produce(st.deck, (d) => {
-    for (const s of d.slides) for (const l of s.layers) {
-      const h = l.box ? contentHeight(l, l.box.w) : null;
-      if (h !== null && Math.abs(h - l.box!.h) > 0.5) l.box!.h = h;
+    for (const s of d.slides) {
+      for (const l of s.layers) {
+        const h = l.box ? contentHeight(l, l.box.w) : null;
+        if (h !== null && Math.abs(h - l.box!.h) > 0.5) l.box!.h = h;
+      }
+      reflowCards(s, d.height);
     }
   });
   if (next !== st.deck) useStore.setState({ deck: next });

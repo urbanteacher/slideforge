@@ -1,6 +1,7 @@
 import type { Deck, Layer, Slide } from '../model/types';
 import { EASE, schedule } from './anim';
 import { ALL_KINDS } from './registry';
+import { MODEL_PLOT } from './raster';
 import { Renderer, type FrameOpts } from './renderer';
 
 export interface PlayerOptions {
@@ -42,6 +43,12 @@ export class DeckPlayer {
   private mouseTarget: [number, number] = [0.5, 0.5];
   private hover = new Map<string, number>();
   private hovered: string | null = null;
+  /** Turned over to the back face, and when the turn began (for its half-second ease). */
+  private flipped = false;
+  /** Values dragged in the show (before / after handles, simulation inputs), by layer id. */
+  private live = new Map<string, number>();
+  private dragging: Layer | null = null;
+  private flipAt = -9;
   private raf = 0;
   private t0 = performance.now();
   private ro: ResizeObserver;
@@ -58,6 +65,8 @@ export class DeckPlayer {
     canvas.addEventListener('pointermove', this.onMove);
     canvas.addEventListener('pointerleave', this.onLeave);
     canvas.addEventListener('click', this.onClick);
+    canvas.addEventListener('pointerdown', this.onDown);
+    canvas.addEventListener('pointerup', this.onUp);
     this.loop();
     this.emit();
   }
@@ -102,7 +111,12 @@ export class DeckPlayer {
       this.trans = { from: this.slide, fromStart: this.slideStart, fromClicks: this.clicks, fromBuilt: this.built, start: this.now(), dur: tr.duration, type: tr.type, dir };
     }
     this.index = i;
+    // Keep the textures of the slides around this one (the transition draws the last), drop the rest.
+    this.renderer.prune(new Set(this.deck.slides.slice(Math.max(0, i - 2), i + 3).flatMap((x) => x.layers.map((l) => l.id))));
     this.clicks = [];
+    this.flipped = false;
+    this.flipAt = -9;
+    this.live.clear();
     this.built = built;
     this.slideStart = this.now();
     this.emit();
@@ -115,9 +129,37 @@ export class DeckPlayer {
     return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height];
   }
 
+  /** A before / after or a simulation under the pointer, if any: things the room drags. */
+  private wipeAt(u: number, v: number) {
+    return hitLayer(this.slide, u * this.deck.width, v * this.deck.height, (l) => l.kind === 'wipe' || l.kind === 'model');
+  }
+  private dragTo(l: Layer, u: number) {
+    const b = l.box!, f = (u * this.deck.width - b.x) / b.w;
+    if (l.kind === 'wipe') { this.live.set(l.id, Math.max(0, Math.min(100, 100 - f * 100))); return; }
+    // A simulation's input follows the pointer across its plot.
+    const lo = Number(l.params.min ?? 0), hi = Math.max(lo + 1, Number(l.params.max ?? 10));
+    const k = Math.max(0, Math.min(1, (f - MODEL_PLOT[0]) / (MODEL_PLOT[1] - MODEL_PLOT[0])));
+    this.live.set(l.id, lo + (hi - lo) * k);
+  }
+  private onDown = (e: PointerEvent) => {
+    const [u, v] = this.toSlide(e);
+    const l = this.wipeAt(u, v);
+    if (!l) return;
+    this.dragging = l;
+    this.canvas.setPointerCapture(e.pointerId);
+    this.dragTo(l, u);
+  };
+  private onUp = (e: PointerEvent) => {
+    if (!this.dragging) return;
+    if (this.canvas.hasPointerCapture(e.pointerId)) this.canvas.releasePointerCapture(e.pointerId);
+    this.dragging = null;
+  };
+
   private onMove = (e: PointerEvent) => {
     this.mouseTarget = this.toSlide(e);
     const [u, v] = this.mouseTarget;
+    if (this.dragging) { this.dragTo(this.dragging, u); return; }
+    if (this.wipeAt(u, v)) { this.canvas.style.cursor = 'ew-resize'; return; }
     const hit = hitLayer(this.slide, u * this.deck.width, v * this.deck.height, (l) => l.interact.hover !== 'none' || l.interact.click !== 'none');
     this.hovered = hit?.id ?? null;
     this.canvas.style.cursor = hit && hit.interact.click !== 'none' ? 'pointer' : '';
@@ -127,6 +169,8 @@ export class DeckPlayer {
 
   private onClick = (e: MouseEvent) => {
     const [u, v] = this.toSlide(e);
+    // A press on a before / after moves its handle there; it never advances the show.
+    if (this.wipeAt(u, v)) return;
     const hit = hitLayer(this.slide, u * this.deck.width, v * this.deck.height, (l) => l.interact.click !== 'none');
     if (hit) {
       const it = hit.interact;
@@ -134,13 +178,28 @@ export class DeckPlayer {
       else if (it.click === 'prev') this.prev();
       else if (it.click === 'goto') this.goto(it.gotoSlide - 1, it.gotoSlide - 1 > this.index ? 1 : -1);
       else if (it.click === 'link' && /^https?:\/\//.test(it.url)) window.open(it.url, '_blank', 'noopener');
+      else if (it.click === 'flip') this.flip();
       return;
     }
     this.next();
   };
 
+  /** Turn the slide over to its facts, or back. It does not use up a Next. */
+  flip() {
+    if (!this.slide.layers.some((l) => l.face === 'back')) return;
+    const now = this.now(), k = Math.min(1, (now - this.flipAt) / 0.5);
+    // Pressed mid-turn, it turns back from where it is.
+    this.flipAt = now - (1 - k) * 0.5;
+    this.flipped = !this.flipped;
+  }
+
+  private flipAmount(time: number) {
+    const k = EASE.cubicInOut(Math.max(0, Math.min(1, (time - this.flipAt) / 0.5)));
+    return this.flipped ? k : 1 - k;
+  }
+
   private frameOpts(slide: Slide, start: number, clicks: number[], built: boolean, time: number): FrameOpts {
-    return { time, mouse: this.mouse, t: built ? Infinity : time - start, clicks, interactive: true, hover: this.hover };
+    return { time, mouse: this.mouse, t: built ? Infinity : time - start, clicks, interactive: true, hover: this.hover, live: slide === this.slide ? this.live : undefined, flip: slide === this.slide ? this.flipAmount(time) : 0 };
   }
 
   private loop = () => {
@@ -174,6 +233,8 @@ export class DeckPlayer {
     this.canvas.removeEventListener('pointermove', this.onMove);
     this.canvas.removeEventListener('pointerleave', this.onLeave);
     this.canvas.removeEventListener('click', this.onClick);
+    this.canvas.removeEventListener('pointerdown', this.onDown);
+    this.canvas.removeEventListener('pointerup', this.onUp);
     this.renderer.dispose();
   }
 }

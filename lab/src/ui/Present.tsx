@@ -33,6 +33,7 @@ export function Present() {
   useEffect(() => {
     const p = new DeckPlayer(canvasRef.current!, deck, { start: startIndex, onChange: (index, step, steps) => setState({ index, step, steps }) });
     player.current = p;
+    if (import.meta.env.DEV) (window as unknown as { __player?: DeckPlayer }).__player = p;
     return () => { p.destroy(); player.current = null; };
   }, []);
 
@@ -41,6 +42,9 @@ export function Present() {
     const on = (e: KeyboardEvent) => {
       const p = player.current;
       if (!p) return;
+      // The show has the keyboard: a key pressed here never reaches a control left focused in the
+      // panels behind it (an arrow would change a dropdown there, Enter would press a button).
+      e.stopPropagation();
       if (['ArrowRight', 'ArrowDown', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); p.next(); }
       else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); p.prev(); }
       else if (e.key === 'Escape') { if (!document.fullscreenElement) exit(); }
@@ -51,6 +55,7 @@ export function Present() {
     };
     const toggleFs = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.(); };
     (window as unknown as { __sfExit?: () => void }).__sfExit = exit;
+    (document.activeElement as HTMLElement | null)?.blur?.();
     addEventListener('keydown', on, true);
     let t = 0;
     const move = () => { setIdle(false); clearTimeout(t); t = window.setTimeout(() => setIdle(true), 2200); };

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { cloneLayer } from '../model/defaults';
 import { layerOf, refitAllText, slideOf, useStore } from '../model/store';
 import type { Deck } from '../model/types';
@@ -30,10 +30,18 @@ export function App() {
   // The deck's own typefaces, from its style guide, for every text box and thumbnail.
   useEffect(() => { registerGuideFonts(guide); }, [guide]);
 
+  // Nothing is drawn until the saved deck is back: the starting demo deck used to flash up on every
+  // refresh before the real one replaced it.
+  const [restored, setRestored] = useState(false);
+
   // Restore the last deck, then autosave on every change.
   useEffect(() => {
     let timer = 0;
     let ready = false;
+    const save = () => {
+      const st = useStore.getState();
+      return idbSet('current', { deck: st.deck, slideId: st.slideId });
+    };
     idbGet<{ deck: Deck; slideId?: string }>('current').then((saved) => {
       if (saved?.deck?.slides?.length) {
         useStore.getState().loadDeck(saved.deck);
@@ -41,19 +49,23 @@ export function App() {
         useStore.setState({ saveState: 'saved' });
       }
       ready = true;
-    }).catch(() => { ready = true; });
+      setRestored(true);
+    }).catch(() => { ready = true; setRestored(true); });
+    // A refresh within the autosave's half-second would lose the last edit: save as the page goes.
+    const flush = () => { if (ready && useStore.getState().saveState !== 'saved') { clearTimeout(timer); save(); } };
+    addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', flush);
     const unsub = useStore.subscribe((s, prev) => {
       if (!ready || (s.deck === prev.deck && s.slideId === prev.slideId)) return;
       clearTimeout(timer);
       if (s.deck !== prev.deck) useStore.setState({ saveState: 'saving' });
       timer = window.setTimeout(() => {
-        const st = useStore.getState();
-        idbSet('current', { deck: st.deck, slideId: st.slideId })
+        save()
           .then(() => useStore.setState({ saveState: 'saved' }))
           .catch(() => useStore.getState().showToast('Autosave failed — export a .json to be safe'));
       }, 600);
     });
-    return () => { unsub(); clearTimeout(timer); };
+    return () => { unsub(); clearTimeout(timer); removeEventListener('pagehide', flush); document.removeEventListener('visibilitychange', flush); };
   }, []);
 
   // Re-measure text boxes as web fonts arrive.
@@ -139,6 +151,7 @@ export function App() {
     return () => { removeEventListener('keydown', on); removeEventListener('paste', onPaste); };
   }, []);
 
+  if (!restored) return <div className="app app-loading" aria-busy="true" />;
   return (
     <div className="app">
       <TopBar />

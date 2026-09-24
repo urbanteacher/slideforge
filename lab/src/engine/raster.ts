@@ -1,5 +1,6 @@
 import type { Layer, Params } from '../model/types';
 import { DIM_TO, EASE, textUnitCount, unitProgress } from './anim';
+import { drawTableChart, isTableKind } from './chartKinds';
 import { FRAME_K, isWordMotion, reach, unitDelays, unitLook, type UnitLook } from './words';
 
 // Rasterises content layers (text / shape / image) into 2D canvases that the renderer uploads as
@@ -67,7 +68,7 @@ export function getImage(src: string): HTMLImageElement | null {
 // ─── Text ───────────────────────────────────────────────────────────────────
 export function fontString(p: Params, px: number) {
   const fam = String(p.font ?? 'Inter');
-  const generic = /mono/i.test(fam) ? 'monospace' : /serif|playfair|fraunces|georgia/i.test(fam) ? 'serif' : 'sans-serif';
+  const generic = /mono/i.test(fam) ? 'monospace' : /serif|playfair|fraunces|georgia|iowan|old style/i.test(fam) ? 'serif' : 'sans-serif';
   return `${p.italic ? 'italic ' : ''}${p.weight ?? 400} ${px}px "${fam}", ${generic}`;
 }
 
@@ -336,6 +337,16 @@ function rasterShape(layer: Layer): Raster {
     g.addColorStop(1, withAlpha(String(p.fill2), p.fill2Opacity));
     fill = g;
   }
+  if (p.shape === 'curve') {
+    // An S-curve across the box, level where it leaves and where it arrives.
+    ctx.strokeStyle = fill;
+    ctx.lineCap = 'round';
+    const lw = Math.max(2, sw || 4);
+    ctx.lineWidth = lw;
+    const a = p.rise === 'up' ? h - lw / 2 : lw / 2, b = p.rise === 'up' ? lw / 2 : h - lw / 2;
+    ctx.beginPath(); ctx.moveTo(0, a); ctx.bezierCurveTo(w * 0.55, a, w * 0.45, b, w, b); ctx.stroke();
+    return { canvas, rect: [-pad, -pad, rw, rh] };
+  }
   if (p.shape === 'line') {
     ctx.strokeStyle = fill;
     ctx.lineCap = 'round';
@@ -351,6 +362,19 @@ function rasterShape(layer: Layer): Raster {
     ctx.lineWidth = sw;
     ctx.lineJoin = 'round';
     ctx.stroke();
+  }
+  // A label in the middle — a hotspot's number, a disc's initials — centred on the glyphs' own ink,
+  // not their line box, so a digit sits dead centre in its circle.
+  const label = String(p.label ?? '').trim();
+  if (label) {
+    const px = Number(p.labelSize ?? 0) || Math.min(w, h) * 0.5;
+    useFont(ctx, String(p.labelFont ?? 'Inter'), px, Number(p.labelWeight ?? 700));
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    const m = ctx.measureText(label);
+    const up = m.actualBoundingBoxAscent || px * 0.72, down = m.actualBoundingBoxDescent || 0;
+    const left = m.actualBoundingBoxLeft ?? m.width / 2, right = m.actualBoundingBoxRight ?? m.width / 2;
+    ctx.fillStyle = String(p.labelColor ?? '#ffffff');
+    ctx.fillText(label, w / 2 + (left - right) / 2, h / 2 + (up - down) / 2);
   }
   return { canvas, rect: [-pad, -pad, rw, rh] };
 }
@@ -394,6 +418,95 @@ function rasterImage(layer: Layer): Raster | null {
   if (p.flip === 'mirror') { ctx.translate(w, 0); ctx.scale(-1, 1); }
   ctx.drawImage(img, p.flip === 'mirror' ? w - ox - dw : ox, oy, dw, dh);
   return { canvas, rect: [-pad, -pad, rw, rh] };
+}
+
+// ─── Before / after ─────────────────────────────────────────────────────────
+// SlideForge's wipe: the before picture whole, the after clipped to the right of the divider
+// (inset from the left by 100 − position), a handle on the divider, and each picture's label in
+// its top corner, hidden when its picture is wiped away. `_pos` is the live handle from the player.
+function rasterWipe(layer: Layer): Raster {
+  const p = layer.params;
+  const { canvas, ctx, w, h, rect } = boxCanvas(layer);
+  const pos = Math.max(0, Math.min(100, Number(p._pos ?? p.position ?? 50)));
+  const cut = w * (1 - pos / 100);
+  const draw = (src: unknown) => {
+    const img = getImage(String(src ?? ''));
+    if (!img) { ctx.fillStyle = 'rgba(128,128,128,0.25)'; ctx.fillRect(0, 0, w, h); return; }
+    const iw = img.naturalWidth || w, ih = img.naturalHeight || h;
+    const k = p.fit === 'cover' ? Math.max(w / iw, h / ih) : Math.min(w / iw, h / ih);
+    ctx.drawImage(img, (w - iw * k) / 2, (h - ih * k) / 2, iw * k, ih * k);
+  };
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 0, w, h); ctx.clip();
+  ctx.imageSmoothingQuality = 'high';
+  draw(p.before);
+  ctx.save(); ctx.beginPath(); ctx.rect(cut, 0, w - cut, h); ctx.clip(); draw(p.after); ctx.restore();
+  const accent = String(p.accent ?? '#ff5a36'), size = Number(p.size ?? 36), fam = String(p.font ?? 'Inter');
+  // The divider and its grip.
+  ctx.fillStyle = accent; ctx.fillRect(cut - 3, 0, 6, h);
+  const r = Math.max(28, size * 0.9);
+  ctx.beginPath(); ctx.arc(cut, h / 2, r, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  useFont(ctx, fam, r * 0.95, 700); ctx.fillText('\u2194', cut, h / 2 + 1);
+  // The labels, on a dark pill each, in their own corner.
+  const pill = (s: string, right: boolean) => {
+    if (!s.trim()) return;
+    useFont(ctx, fam, size, 650);
+    const tw = ctx.measureText(s).width, ph = size * 1.6, pw = tw + size * 1.2, m = size * 0.6;
+    const x = right ? w - m - pw : m;
+    ctx.fillStyle = 'rgba(0,0,0,0.62)'; ctx.beginPath(); ctx.roundRect(x, m, pw, ph, ph / 2); ctx.fill();
+    ctx.fillStyle = String(p.textColor ?? '#ffffff'); ctx.textAlign = 'center'; ctx.fillText(s, x + pw / 2, m + ph / 2);
+  };
+  if (pos < 100) pill(String(p.beforeLabel ?? ''), false);
+  if (pos > 0) pill(String(p.afterLabel ?? ''), true);
+  ctx.restore();
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  return { canvas, rect };
+}
+
+// ─── Simulation ─────────────────────────────────────────────────────────────
+// SlideForge's explore graph: axes, the model's curve, a marker at the input, then the reading
+// ("input: x → output: y"), the formula, and a slider whose knob sits under the marker. `_input` is
+// the live input from the player; the plot's left and right edges are MODEL_PLOT of the box.
+export const MODEL_PLOT = [0.09, 0.97] as const;
+export function modelValue(p: Params, x: number) {
+  const a = Number(p.a ?? 2), b = Number(p.b ?? 0);
+  return a * (p.model === 'quadratic' ? x * x : x) + b;
+}
+function rasterModel(layer: Layer): Raster {
+  const p = layer.params;
+  const { canvas, ctx, w, h, rect } = boxCanvas(layer);
+  const lo = Number(p.min ?? 0), hi = Math.max(lo + 1, Number(p.max ?? 10));
+  const input = Math.max(lo, Math.min(hi, Number(p._input ?? p.initial ?? lo)));
+  const size = Number(p.size ?? 36), fam = String(p.font ?? 'Inter'), ink = String(p.textColor ?? '#1a1a1a'), accent = String(p.accent ?? '#ff5a36');
+  const pts = Array.from({ length: 101 }, (_, i) => { const x = lo + ((hi - lo) * i) / 100; return [x, modelValue(p, x)] as const; });
+  const low = Math.min(0, ...pts.map((q) => q[1])), high = Math.max(1, ...pts.map((q) => q[1]));
+  const x0 = w * MODEL_PLOT[0], x1 = w * MODEL_PLOT[1], top = size * 0.6, bottom = h - size * 5.4;
+  const X = (x: number) => x0 + ((x - lo) / (hi - lo)) * (x1 - x0), Y = (y: number) => bottom - ((y - low) / (high - low || 1)) * (bottom - top);
+  ctx.textBaseline = 'middle';
+  // Axes, and the four numbers that give them a scale.
+  ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x0, top); ctx.lineTo(x0, bottom); ctx.lineTo(x1, bottom); ctx.stroke();
+  useFont(ctx, fam, size * 0.8, 500); ctx.fillStyle = rgba(ink, 0.72);
+  ctx.textAlign = 'right'; ctx.fillText(fmtNum(Math.round(high)), x0 - size * 0.4, top); ctx.fillText(fmtNum(Math.round(low)), x0 - size * 0.4, bottom);
+  ctx.textAlign = 'left'; ctx.fillText(fmtNum(lo), x0, bottom + size * 0.8); ctx.textAlign = 'right'; ctx.fillText(fmtNum(hi), x1, bottom + size * 0.8);
+  ctx.strokeStyle = accent; ctx.lineWidth = Math.max(4, size * 0.14); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y)))); ctx.stroke();
+  const out = modelValue(p, input), mx = X(input), my = Y(out);
+  ctx.setLineDash([6, 8]); ctx.strokeStyle = rgba(ink, 0.35); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(mx, bottom); ctx.lineTo(mx, my); ctx.lineTo(x0, my); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = accent; ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(mx, my, Math.max(10, size * 0.32), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  // The reading, the formula, and the slider it is driven by.
+  const r2 = (v: number) => fmtNum(Math.round(v * 100) / 100);
+  const inL = String(p.inputLabel ?? 'Input'), outL = String(p.outputLabel ?? 'Output');
+  ctx.textAlign = 'left'; ctx.fillStyle = ink; useFont(ctx, fam, size, 650);
+  ctx.fillText(`${inL}: ${r2(input)}  \u2192  ${outL}: ${r2(out)}`, x0, bottom + size * 2.1);
+  useFont(ctx, fam, size * 0.8, 400); ctx.fillStyle = rgba(ink, 0.72);
+  ctx.fillText(`${outL} = ${fmtNum(Number(p.a ?? 2))} \u00d7 ${inL}${p.model === 'quadratic' ? '\u00b2' : ''} + ${fmtNum(Number(p.b ?? 0))}`, x0, bottom + size * 3.2);
+  const sy = h - size * 0.9;
+  ctx.fillStyle = rgba(ink, 0.16); ctx.beginPath(); ctx.roundRect(x0, sy - 5, x1 - x0, 10, 5); ctx.fill();
+  ctx.fillStyle = accent; ctx.beginPath(); ctx.roundRect(x0, sy - 5, mx - x0, 10, 5); ctx.fill();
+  ctx.fillStyle = accent; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(mx, sy, size * 0.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  return { canvas, rect };
 }
 
 // ─── Video ──────────────────────────────────────────────────────────────────
@@ -766,24 +879,34 @@ export function chartSpots(layer: Layer): { spots: ChartSpot[]; add: [number, nu
 // params, never from dragging. With Fit set to "Shrink to fit" the box keeps the height it was
 // given instead — the way a SlideForge layout region does — and the type comes down until the
 // content fits inside it. Anything else returns null and keeps its height.
-const AUTO = new Set(['text', 'quiz', 'activity', 'note', 'quote']);
-export const shrinks = (l: Pick<Layer, 'params'>) => l.params.fit === 'shrink';
+const AUTO = new Set(['text', 'quiz', 'activity', 'note', 'quote', 'table']);
+/** The box decides the type size: shrink to fit it, or fill it (grow as well as shrink). */
+export const shrinks = (l: Pick<Layer, 'params'>) => l.params.fit === 'shrink' || l.params.fit === 'fill';
+export const fills = (l: Pick<Layer, 'params'>) => l.params.fit === 'fill';
+/** No text on a projected slide is set below 18pt: 36px on the lab's 1920-wide slide, where a
+ *  16:9 slide's 960pt makes a point two pixels. A box too small for its words at that size keeps
+ *  the size and lets them run over, which is visible and fixable, rather than turning them to dust. */
+export const FLOOR_PX = 36;
 export const autoHeight = (l: Pick<Layer, 'kind' | 'params'>) => AUTO.has(l.kind) && !shrinks(l);
-/** The largest size, no bigger than `size`, whose content is no taller than `h`. Never below 25%. */
-function shrinkToFit(size: number, h: number, measure: (px: number) => number) {
+/** The largest size, no bigger than `size`, whose content is no taller than `h`. Never below `floor`. */
+function shrinkToFit(size: number, h: number, measure: (px: number) => number, floor = size * 0.25) {
   if (!(h > 0) || measure(size) <= h + 0.5) return size;
-  let lo = size * 0.25, hi = size;
+  let lo = Math.min(size, floor), hi = size;
+  if (measure(lo) > h) return lo;
   for (let i = 0; i < 16; i++) { const m = (lo + hi) / 2; if (measure(m) <= h) lo = m; else hi = m; }
   return Math.floor(lo * 10) / 10;
 }
 
 type Measure = (ctx: Ctx, p: Params, w: number) => { height: number };
 const MEASURES: Record<string, Measure> = {
-  text: (_c, p, w) => layoutText(p, w),
+  // A word wider than the box does not fit, however short the text: it would be cut off.
+  text: (_c, p, w) => { const L = layoutText(p, w); return Math.max(0, ...L.lines.map((l) => l.width)) > w + 0.5 ? { height: Infinity } : L; },
   quiz: (c, p, w) => quizLayout(c, p, w),
   activity: (c, p, w) => activityLayout(c, p, w),
   note: (c, p, w) => noteLayout(c, p, w),
   quote: (c, p, w) => quoteLayout(c, p, w),
+  // Columns wider, together, than the table can be do not fit: the cells would be cut off.
+  table: (c, p, w) => { const L = tableLayout(c, p, w); return L.natural > w + 1 ? { height: Infinity } : L; },
 };
 
 /** The size a layer is drawn at: its own, or less when it has to shrink into its box. */
@@ -791,15 +914,134 @@ export function textSize(l: Pick<Layer, 'kind' | 'params' | 'box'>): number {
   const size = Number(l.params.size ?? 64);
   const m = MEASURES[l.kind];
   if (!m || !shrinks(l) || !l.box) return size;
-  return shrinkToFit(size, l.box.h, (px) => m(mctx(), { ...l.params, size: px }, l.box!.w).height);
+  const measure = (px: number) => m(mctx(), { ...l.params, size: px }, l.box!.w).height;
+  // Fill: as big as the box allows — up to a little over twice the set size, and never taller
+  // than one line of the box — so the type uses the space its region was given.
+  if (fills(l)) {
+    const cap = Math.max(size, Math.min(size * 2.2, 480, l.box.h / Number(l.params.lineHeight ?? 1.1)));
+    return shrinkToFit(cap, l.box.h, measure, Math.min(size, FLOOR_PX));
+  }
+  return shrinkToFit(size, l.box.h, measure);
 }
 
 const fitted = (l: Layer): Params => ({ ...l.params, size: textSize(l) });
+
+/**
+ * Text that fills its box and belongs to a set — the details of a list of points, the words of four
+ * cards — is drawn at one size: the one that fits the fullest member. Filled one by one, a short
+ * item would come out larger than its neighbours and the set would read as a jumble.
+ */
+export function groupSizes(layers: Layer[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const l of layers) {
+    const g = l.params.fitGroup;
+    if (!g || !l.visible || !l.box || !MEASURES[l.kind]) continue;
+    const px = textSize(l);
+    out.set(String(g), Math.min(out.get(String(g)) ?? Infinity, px));
+  }
+  return out;
+}
 
 export function contentHeight(l: Pick<Layer, 'kind' | 'params'>, width: number): number | null {
   const m = MEASURES[l.kind];
   if (!m || shrinks(l)) return null;
   return Math.ceil(m(mctx(), l.params, width).height);
+}
+
+// ─── Timer ──────────────────────────────────────────────────────────────────
+/** m:ss, or h:mm:ss past the hour. */
+export function clockText(secs: number) {
+  const t = Math.max(0, Math.ceil(secs)), h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s2 = t % 60;
+  return h ? `${h}:${String(m).padStart(2, '0')}:${String(s2).padStart(2, '0')}` : `${m}:${String(s2).padStart(2, '0')}`;
+}
+/** The countdown at its current second (`_left`, set by the renderer from the slide clock; the full
+ *  time when the slide is not running). A ring or bar empties as the time does; at zero it says so. */
+function rasterTimer(layer: Layer): Raster {
+  const p = layer.params;
+  const { canvas, ctx, w, h, rect } = boxCanvas(layer, 10);
+  const total = Math.max(30, Math.min(7200, Number(p.minutes ?? 5) * 60));
+  const left = Math.max(0, Math.min(total, p._left === undefined ? total : Number(p._left)));
+  const frac = left / total, over = left <= 0;
+  const ink = String(p.textColor ?? '#141414'), accent = String(p.accent ?? '#d94f2b'), track = String(p.track ?? '#d9d4cc');
+  const fam = String(p.font ?? 'Inter'), style = String(p.style ?? 'ring');
+  const label = String(over ? p.done ?? '' : p.label ?? '').trim();
+  const words = over ? label || 'Time’s up' : clockText(left);
+  if (style === 'ring') {
+    const r = Math.min(w, h) / 2 - 12, cx = w / 2, cy = h / 2, lw = Math.max(8, r * 0.1);
+    ctx.lineCap = 'round';
+    ctx.lineWidth = lw; ctx.strokeStyle = track;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+    if (frac > 0) { ctx.strokeStyle = accent; ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * frac); ctx.stroke(); }
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = over ? accent : ink;
+    const px = Math.min(Number(p.size ?? 96), (r * 1.3) / Math.max(3.2, words.length * 0.55));
+    setFont(ctx, fam, px, 700); ctx.fillText(words, cx, cy - (label && !over ? px * 0.18 : 0));
+    if (label && !over) { setFont(ctx, fam, px * 0.3, 600); ctx.fillStyle = ink; ctx.globalAlpha = 0.7; ctx.fillText(label, cx, cy + px * 0.55); ctx.globalAlpha = 1; }
+  } else {
+    const barH = style === 'bar' ? Math.max(10, h * 0.12) : 0;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = over ? accent : ink;
+    const px = Math.min(Number(p.size ?? 96), (h - barH) * 0.6, w / Math.max(2.4, words.length * 0.6));
+    setFont(ctx, fam, px, 700); ctx.fillText(words, w / 2, (h - barH) * (label && !over ? 0.42 : 0.5));
+    if (label && !over) { setFont(ctx, fam, px * 0.3, 600); ctx.globalAlpha = 0.7; ctx.fillStyle = ink; ctx.fillText(label, w / 2, (h - barH) * 0.82); ctx.globalAlpha = 1; }
+    if (barH) {
+      ctx.fillStyle = track; ctx.beginPath(); ctx.roundRect(0, h - barH, w, barH, barH / 2); ctx.fill();
+      if (frac > 0) { ctx.fillStyle = accent; ctx.beginPath(); ctx.roundRect(0, h - barH, w * frac, barH, barH / 2); ctx.fill(); }
+    }
+  }
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  return { canvas, rect };
+}
+
+// ─── Table ──────────────────────────────────────────────────────────────────
+/** Rows of cells from "a\tb\tc" lines (or "a | b | c"). */
+export function parseTable(text: string): string[][] {
+  return String(text ?? '').split('\n').filter((r) => r.trim()).map((r) => (r.includes('\t') ? r.split('\t') : r.split(/\s+\|\s+/)).map((c) => c.trim()));
+}
+function tableLayout(ctx: Ctx, p: Params, w: number) {
+  const size = Number(p.size ?? 28), fam = String(p.font ?? 'Inter');
+  const rows = parseTable(String(p.data ?? ''));
+  const cols = Math.max(1, ...rows.map((r) => r.length));
+  const pad = size * 0.6;
+  // Columns share the width by what they hold, and none is squeezed below a third of an even share.
+  const want = Array.from({ length: cols }, (_, c) => {
+    let m = size * 2;
+    rows.forEach((r, i) => { setFont(ctx, fam, size, (p.header !== false && i === 0) || (p.labels !== false && c === 0) ? 700 : 400); m = Math.max(m, ctx.measureText(r[c] ?? '').width); });
+    return m + pad * 2;
+  });
+  const total = want.reduce((a, b) => a + b, 0);
+  const floor = w / cols / 3;
+  const widths = want.map((x) => Math.max(floor, (x / total) * w));
+  const k = w / widths.reduce((a, b) => a + b, 0);
+  const cw = widths.map((x) => x * k);
+  const rowH = size * 1.95;
+  return { size, fam, rows, cols, cw, pad, rowH, height: rows.length * rowH, natural: total };
+}
+function rasterTable(layer: Layer): Raster {
+  const p = fitted(layer);
+  const { canvas, ctx, w, rect } = boxCanvas(layer);
+  const L = tableLayout(ctx, p, w);
+  const ink = String(p.textColor ?? '#141414'), accent = String(p.accent ?? '#d94f2b');
+  L.rows.forEach((r, i) => {
+    const head = p.header !== false && i === 0;
+    const y = i * L.rowH;
+    let x = 0;
+    for (let c = 0; c < L.cols; c++) {
+      const label = p.labels !== false && c === 0;
+      setFont(ctx, L.fam, L.size, head || label ? 700 : 400);
+      ctx.fillStyle = head ? accent : ink;
+      ctx.textBaseline = 'middle';
+      const cell = fit(ctx, r[c] ?? '', L.cw[c] - L.pad * 2);
+      ctx.textAlign = c === 0 ? 'left' : 'center';
+      ctx.fillText(cell, c === 0 ? x + (label ? 0 : L.pad) : x + L.cw[c] / 2, y + L.rowH / 2);
+      x += L.cw[c];
+    }
+    // A hairline under every row; the header's is the ink at full strength.
+    ctx.globalAlpha = head ? 0.9 : 0.22;
+    ctx.fillStyle = head ? accent : ink;
+    ctx.fillRect(0, y + L.rowH - (head ? 2 : 1), w, head ? 2 : 1);
+    ctx.globalAlpha = 1;
+  });
+  ctx.textAlign = 'left';
+  return { canvas, rect };
 }
 
 // ─── SlideForge items: note and quote ──────────────────────────────────────
@@ -941,6 +1183,12 @@ function rasterChart(layer: Layer, textT = Infinity): Raster {
   ctx.scale(S, S);
   ctx.translate(pad, pad);
   const rect: Raster['rect'] = [-pad, -pad, rw, rh];
+  const type0 = String(p.chart ?? 'column');
+  // SlideForge's other idioms read a table and are drawn by chartKinds; each beat arrives in turn.
+  if (isTableKind(type0)) {
+    drawTableChart(ctx, w, h, p, (i) => grow(i));
+    return { canvas, rect };
+  }
   const data = parseChartData(String(p.data ?? ''));
   if (!data.length) return { canvas, rect };
   const fam = String(p.font ?? 'Inter');
@@ -1103,5 +1351,9 @@ export function rasterise(layer: Layer, textT: number): Raster | null {
   if (c === 'activity') return rasterActivity(layer);
   if (c === 'note') return rasterNote(layer);
   if (c === 'quote') return rasterQuote(layer);
+  if (c === 'table') return rasterTable(layer);
+  if (c === 'timer') return rasterTimer(layer);
+  if (c === 'wipe') return rasterWipe(layer);
+  if (c === 'model') return rasterModel(layer);
   return null;
 }

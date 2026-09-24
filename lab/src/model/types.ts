@@ -54,7 +54,8 @@ export interface Anim {
   build?: 'none' | 'lines' | 'dim' | 'spot';
   /** One of a set built an item per click (cards, rows, choices): which set, which item in reading
    *  order, and whether the items before the newest are dimmed or spotlit. Set on every layer of the item. */
-  step?: { set: string; i: number; mode: 'on' | 'dim' | 'spot' };
+  step?: { set: string; i: number; mode: 'on' | 'dim' | 'spot' | 'swap' | 'pile'; caption?: boolean };
+  // (pile: a `caption` layer fades once its item is covered, so only the top item's words read.)
   /** Words or letters: how each unit arrives — SlideForge's Rise (up, blur clearing), Fade (no
    *  movement) or Reveal (wiped up from behind its own line). Its wave is eased, as SlideForge's is. */
   feel?: 'rise' | 'fade' | 'reveal';
@@ -66,7 +67,7 @@ export interface Anim {
 }
 
 export type HoverType = 'none' | 'lift' | 'grow' | 'glow' | 'tilt';
-export type ClickAction = 'none' | 'next' | 'prev' | 'goto' | 'link';
+export type ClickAction = 'none' | 'next' | 'prev' | 'goto' | 'link' | 'flip';
 
 export interface Interact {
   followMouse: boolean; // effects: centre tracks the pointer
@@ -89,6 +90,9 @@ export interface Layer {
   box?: Box; // content layers only (text, image, shape)
   anim: Anim;
   interact: Interact;
+  /** SlideForge's "Flip to facts": a layer on the back of the slide, shown only while it is turned
+   *  over (a layer whose click is Flip turns it). Turning over is not a build step. */
+  face?: 'back';
 }
 
 export type TransitionType = 'none' | 'fade' | 'push' | 'zoom' | 'ripple' | 'dissolve' | 'wipe' | 'pixelate' | 'blur' | 'morph';
@@ -107,6 +111,9 @@ export interface Slide {
   /** SlideForge's audience feedback on this slide. A placeholder in the lab: recorded, marked in the
    *  editor, and run by SlideForge's live session — nothing is drawn on the slide. */
   feedback?: { kind: FeedbackKind };
+  /** Which of the theme's grounds this slide is set on (a style guide's light, dark or colour
+   *  ground). Absent: the theme's own ground. Kept when the theme is changed or applied again. */
+  ground?: string;
   /** This slide's own header and footer, when it differs from the deck's. */
   headerFooter?: HeaderFooter;
 }
@@ -127,7 +134,14 @@ export interface GuideMark { name: string; src: string }
 export interface GuideTheme {
   ground: string; ink: string; muted: string; accent: string; accent2: string; panel: string;
   display: string; displayWeight: string; body: string;
+  /** A face for the biggest moments, where the brand has one (UK Black Tech's Alpha Lyrae). */
+  hero?: string;
 }
+/** A ground the guide sets slides on, with the text and accent that go on it. A value is a colour,
+ *  or the name of one of the guide's colours (so a colour ground follows the chosen set). Roles
+ *  left out are the theme's own. */
+export interface GuideGround { id: string; name: string; ground: string; ink?: string; muted?: string; accent?: string }
+
 /** The deck's own style guide, read from a page or a stylesheet. It travels inside the deck. */
 export interface StyleGuide {
   name: string;
@@ -139,6 +153,8 @@ export interface StyleGuide {
   fonts: GuideFont[];
   marks: GuideMark[];
   theme: GuideTheme;
+  /** The grounds the guide uses beyond its main one — AiAd27's ink and strand-colour slides. */
+  grounds?: GuideGround[];
 }
 
 export interface Deck {
