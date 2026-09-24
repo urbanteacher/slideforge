@@ -1959,7 +1959,11 @@
     else SF.toast('That was the last slide');
     return true;
   }
+  /** The question most of the room got wrong, or null when nobody got one wrong.
+   * @param {{questions?: {id: string, answered: number, wrong: number, lure: string}[]}} result
+   * @returns {{id: string, answered: number, wrong: number, lure: string} | null} */
   function sprintHardest(result) {
+    /** @type {{id: string, answered: number, wrong: number, lure: string} | null} */
     var best = null;
     (result.questions || []).forEach(function (q) {
       if (!q.wrong) return;
@@ -2013,8 +2017,9 @@
     if (res) {
       part('.spb-sub').textContent = right + (right === 1 ? ' right answer' : ' right answers') + ', as a room';
       var hard = sprintHardest(res);
-      var slide = hard && sp.slides.find(function (x) { return x.id === hard.id; });
-      if (slide) {
+      var hardId = hard ? hard.id : null;
+      var slide = hard ? sp.slides.find(function (x) { return x.id === hardId; }) : null;
+      if (hard && slide) {
         out.appendChild(el('div', 'spb-hard-label', 'The hardest'));
         out.appendChild(el('div', 'spb-hard-q', slide.question || ''));
         out.appendChild(el('div', 'spb-hard-a', '✓ ' + ((slide.options || [])[slide.correct] || '')));
