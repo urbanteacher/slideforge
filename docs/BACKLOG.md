@@ -51,6 +51,11 @@ order.
 | UX-72 | Keyboard-only pass through every modal and panel | M | Partly done · a hands-on pass needs a person |
 | CA-05 | First click after typing on the slide is swallowed | S–M | Not reproduced |
 | CA-21 | Composition and regions measure in different frames | M–L | Not reproduced · measured |
+| LAB-01 | [Lab bullet controls, cards and three-column header](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
+| LAB-02 | [Flagship frame as the lab default for new slides](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
+| LAB-03 | [Default text and image layout from the flagship](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
+| LAB-04 | [Reusable flagship choice boxes in a two-column grid](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
+| LAB-05 | [One to six snapping numbered points from the flagship](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 
 ## Open decisions
 
@@ -749,7 +754,38 @@ All 311 unit tests pass. `npm test` remains blocked by the two existing nullable
 
 ---
 
+## Lab improvements
+
+| ID | Item | Status |
+|---|---|---|
+| LAB-01 | Visible bullet controls, one-to-four-card chooser, themed three-column slide header | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
+| LAB-02 | New slides inherit the AI Awareness flagship frame; Header inserts it on other slides | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
+| LAB-03 | New flagship slides start with editable text at left and an image at right | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
+| LAB-04 | Add one to four A–D choice boxes at the flagship’s fixed grid positions | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
+| LAB-05 | Add one to six numbered rows that fit the flagship list area | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
+
 ## Change log
+
+### 24 September 2026 — Flagship numbered points
+
+- **LAB-05 done:** Layouts → Numbered points updates one to six aligned number, heading, detail and rule rows. Four to six use compact spacing, retained copy survives count changes, and the flagship slide’s theme and closing line stay in sync.
+
+### 24 September 2026 — Flagship choice boxes
+
+- **LAB-04 done:** Add → Choice boxes inserts one to four A–D choices in the flagship’s two-column grid. Each choice retains its editable title and detail, and changing the count updates the group in one undo step.
+
+### 24 September 2026 — Flagship content box
+
+- **LAB-03 done:** new slides in the flagship deck start with the cover’s left-text/right-image arrangement, editable placeholder copy and replaceable artwork. Add → Text + image inserts the arrangement on an existing slide.
+
+### 24 September 2026 — Flagship frame
+
+- **LAB-02 done:** a new slide in a flagship deck inherits its strand icon, top-right lockup, footer and progress strip at the campaign positions. Add → Header uses that frame on other slides in the same deck, with editable text and logo.
+
+### 24 September 2026 — Lab slide blocks
+
+- **LAB-01 done:** list controls stay visible; Add → Cards inserts or updates one to four editable cards; Add → Header configures logo, title/tagline and text with themes and whole-deck application. Lab build and browser insertion/undo checks passed. Root `npm test` is blocked by existing type errors in `js/live.js:2016–2022`.
+
 
 ### 23 September 2026: the P0 pass
 
