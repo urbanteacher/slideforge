@@ -11,6 +11,8 @@
 .custom-controls{margin:4px 0 14px;border:1px solid #b9c6b3;border-radius:10px;padding:12px}
 .custom-controls summary{font-weight:700;cursor:pointer;margin-bottom:10px}
 .custom-controls input[type=range]{width:100%}
+/* In the Motion pane these continue the list under Transition in, not a box of their own. */
+.custom-controls.motion-controls{border:0;padding:0;margin:0}
 /* Progressive builds: keep layout space, animate each step in. */
 .slide .step,
 .slide .pad li,

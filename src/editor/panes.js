@@ -30,7 +30,8 @@ export function createPanes(SF, helpers) {
   function drawMotion(insp, s) {
     var UI = helpers.UI();
         insp.appendChild(el('p', 'hint',
-          'How this slide arrives on the screen. The words stay as they are.'));
+          'What moves on this slide, and when: how it arrives, what waits for a press, ' +
+          'and what moves once it is up. The words stay as they are.'));
         insp.appendChild(UI.field('Transition in', UI.select(
           SF.TRANSITIONS.map(function (t) {
             return { value: t, label: t[0].toUpperCase() + t.slice(1) };
@@ -166,6 +167,10 @@ export function createPanes(SF, helpers) {
             }), 'For a cover on screen while the room fills. Four seconds of the six are the hold, so the line is readable every time round.'));
           }
         }
+        /* Builds, image and chart motion, caption timing, code arrival and
+           backdrop motion. They are drawn by src/editor/customize.js because they
+           share its select-per-design-key helper with Look. */
+        SF.Custom.motion(insp, s, function () { touched(); draw(); });
   }
 
   var PANES = [
@@ -186,7 +191,7 @@ export function createPanes(SF, helpers) {
       title: 'Choose a different layout',
       draw: function (insp, s) { drawLayoutPicker(insp, s); } },
     { key: 'transition', icon: '\u219D', label: 'Motion', tab: true,
-      title: 'How this slide arrives',
+      title: 'What moves on this slide, and when',
       draw: drawMotion,
       /* Ran after the chain in js/editor.js, guarded on the same key. */
       after: function (insp, s) { SF.Custom.tagControls(insp, s, 'Motion'); } },

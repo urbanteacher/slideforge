@@ -175,6 +175,8 @@ export interface SlideDesign {
   capFade?: 0 | 5 | 10 | 15 | 20 | 30;
   imageMotion?: '' | 'zoom' | 'travel';
   focalX?: number; focalY?: number; focalX2?: number; focalY2?: number;
+  /** Mirror the picture left to right (image and split slides). */
+  imageFlip?: boolean;
   imageTravelSecs?: 12 | 20 | 30;
   chartMotion?: '' | 'grow'; chartFocus?: number;
   words?: '' | 'rise' | 'fade' | 'reveal';

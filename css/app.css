@@ -1500,6 +1500,16 @@ html[data-ws="game"] #btnSorter { display: none; }
   #player .free-image-img.img-motion-zoom { animation: none; }
 }
 
+/* Flip image. The individual `scale` property mirrors the picture without
+   touching `transform`, which the zoom, travel and build animations own, so
+   they keep running untouched. Mirroring happens about transform-origin, and
+   the motions move that origin — zoom to the focus point, travel to the top
+   left — so `translate` puts the picture back in its frame: 100% − 2 × origin.
+   With the origin at the centre that is nothing. */
+.img.img-flip { scale: -1 1; }
+#player .layout-image .img.img-motion-zoom.img-flip { translate: calc(100% - 2 * var(--img-fx, 50%)) 0; }
+#player .layout-image .img.img-motion-travel.img-flip { translate: 100% 0; }
+
 /* video — the image layout's frame, with a real player in it.
    The caption rules are shared with .layout-image rather than copied: they
    are the same overlay doing the same job, and the last time a caption was

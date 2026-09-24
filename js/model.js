@@ -9291,7 +9291,7 @@
       insp.appendChild(el(
         "p",
         "hint",
-        "How this slide arrives on the screen. The words stay as they are."
+        "What moves on this slide, and when: how it arrives, what waits for a press, and what moves once it is up. The words stay as they are."
       ));
       insp.appendChild(UI.field("Transition in", UI.select(
         SF.TRANSITIONS.map(function(t) {
@@ -9433,6 +9433,10 @@
           }), "For a cover on screen while the room fills. Four seconds of the six are the hold, so the line is readable every time round."));
         }
       }
+      SF.Custom.motion(insp, s, function() {
+        touched();
+        draw();
+      });
     }
     var PANES = [
       {
@@ -9476,7 +9480,7 @@
         icon: "↝",
         label: "Motion",
         tab: true,
-        title: "How this slide arrives",
+        title: "What moves on this slide, and when",
         draw: drawMotion,
         /* Ran after the chain in js/editor.js, guarded on the same key. */
         after: function(insp, s) {
@@ -12043,7 +12047,19 @@
         img.style.backgroundPosition = x + "% " + y + "%";
         img.style.setProperty("--img-fx", x + "%");
         img.style.setProperty("--img-fy", y + "%");
+        img.classList.toggle("img-flip", d.imageFlip === true && (s.type === "image" || s.type === "split"));
       });
+    }
+    function chooser(UI, box2, d, change) {
+      return function choose(label, key, opts, fallback) {
+        var meta = SF.DESIGN_CONTROLS && SF.DESIGN_CONTROLS[key];
+        box2.appendChild(UI.field(meta && meta.label || label, UI.select(opts.map(function(x) {
+          return { value: String(x[0]), label: x[1] };
+        }), String(d[key] || fallback), function(v) {
+          d[key] = key === "imageShare" || key === "capFade" ? Number(v) : v;
+          change();
+        })));
+      };
     }
     var expanded = /* @__PURE__ */ new Set();
     function inspector(parent, s, change, opts) {
@@ -12065,15 +12081,7 @@
         box2.appendChild(summary);
       }
       var d = s.design || (s.design = {});
-      function choose(label, key, opts2, fallback) {
-        var meta = SF.DESIGN_CONTROLS && SF.DESIGN_CONTROLS[key];
-        box2.appendChild(UI.field(meta && meta.label || label, UI.select(opts2.map(function(x) {
-          return { value: String(x[0]), label: x[1] };
-        }), String(d[key] || fallback), function(v) {
-          d[key] = key === "imageShare" || key === "capFade" ? Number(v) : v;
-          change();
-        })));
-      }
+      var choose = chooser(UI, box2, d, change);
       var currentDeck = SF.Editor && SF.Editor.deck ? SF.Editor.deck() : null;
       var compositions = SF.compositionOptions ? SF.compositionOptions(s, currentDeck && currentDeck.theme) : [];
       if (compositions.length) {
@@ -12197,11 +12205,6 @@
           ["points", "Points — a marker on every line"],
           ["prose", "Prose — flush, no markers"]
         ], "points");
-        choose("Image arrives", "imageStep", [
-          ["none", "With the slide"],
-          ["before", "On a press, before the points"],
-          ["after", "On a press, after the points"]
-        ], "none");
       }
       if (s.type === "cards") {
         box2.appendChild(UI.field("Cards layout", UI.select([
@@ -12278,14 +12281,6 @@
           }));
         }
       }
-      if (s.type === "title" || s.type === "section") {
-        choose("Backdrop motion", "backdrop", [
-          ["", "Still — the theme decides"],
-          ["drift", "Drift — colour moving slowly"],
-          ["grid", "Grid — a ruled plane travelling"],
-          ["glow", "Glow — one slow breath behind the words"]
-        ], "");
-      }
       if (s.type === "image" || s.type === "gallery" || s.type === "video") {
         choose("Logo sits on", "logoGround", [
           ["", "Let the theme decide"],
@@ -12311,49 +12306,6 @@
           ["none", "Hide the caption"]
         ], "scrim");
         if (s.type === "image" || s.type === "gallery" || s.type === "video") choose("Caption position", "capPos", [["bottom", "Bottom"], ["top", "Top"]], "bottom");
-        if (s.type === "image") choose("Caption clears itself", "capFade", [
-          [0, "Stays on the picture"],
-          [5, "After 5 seconds"],
-          [10, "After 10 seconds"],
-          [15, "After 15 seconds"],
-          [20, "After 20 seconds"],
-          [30, "After 30 seconds"]
-        ], 0);
-        if (s.type === "image") {
-          box2.appendChild(UI.field("Image motion", UI.select([
-            { value: "", label: "Stays still" },
-            { value: "zoom", label: "Slow zoom in" },
-            { value: "travel", label: "Travel — from one point to another" }
-          ], d.imageMotion === "travel" ? "travel" : d.imageMotion === "zoom" ? "zoom" : "", function(v) {
-            if (v === "zoom" || v === "travel") d.imageMotion = v;
-            else delete d.imageMotion;
-            change();
-          }), "On the projector only. Zoom drifts toward the focus point below; Travel moves from it to a second point."));
-          if (d.imageMotion === "travel") {
-            ["X", "Y"].forEach(function(axis) {
-              var r = document.createElement("input");
-              r.type = "range";
-              r.min = "0";
-              r.max = "100";
-              r.value = d["focal" + axis + "2"] == null ? 50 : d["focal" + axis + "2"];
-              r.onchange = function() {
-                d["focal" + axis + "2"] = Number(r.value);
-                change();
-              };
-              box2.appendChild(UI.field("Travels to " + (axis === "X" ? "horizontal" : "vertical"), r));
-            });
-            box2.appendChild(UI.field("How long the move takes", UI.select([
-              { value: "12", label: "12 seconds" },
-              { value: "20", label: "20 seconds" },
-              { value: "30", label: "30 seconds — barely visible, on purpose" }
-            ], String(d.imageTravelSecs || 20), function(v) {
-              var n = Number(v);
-              if (n === 20) delete d.imageTravelSecs;
-              else d.imageTravelSecs = n;
-              change();
-            }), "Set the start with Image focus below, the end with Travels to above. Same point twice means no move, and none is drawn."));
-          }
-        }
       }
       if (s.type === "chart") {
         var pasted = String(s.body || "").split(/\r?\n/).filter(function(l) {
@@ -12366,6 +12318,146 @@
           "hint field-warn",
           "Only the first " + drawnRows + " rows are drawn — " + lost + " more were pasted and are not on the chart. A chart reads its numbers through the table parser, which stops at " + SF.TABLE_MAX_ROWS + " rows including the header. Aggregate them (months to quarters, days to months) or split the range across two slides, and check the caption still describes what is drawn."
         ));
+      }
+      if (s.type === "chart") {
+        var cd = SF.chartData(s);
+        if (cd.series.length > 1) {
+          var seriesOpts = [{ value: "", label: "Show them all evenly" }];
+          cd.series.forEach(function(sr, i) {
+            seriesOpts.push({ value: String(i), label: "Isolate “" + sr.name + "”" });
+          });
+          box2.appendChild(UI.field(
+            "Focus one series",
+            UI.select(
+              seriesOpts,
+              d.chartFocus == null ? "" : String(d.chartFocus),
+              function(v) {
+                if (v === "") delete d.chartFocus;
+                else d.chartFocus = Number(v);
+                change();
+              }
+            ),
+            "Holds the others back rather than removing them, so the comparison is still there to return to."
+          ));
+        }
+      }
+      if (s.type === "split" || s.type === "image") box2.appendChild(UI.field("Flip image", UI.select([
+        { value: "", label: "As it was taken" },
+        { value: "true", label: "Mirrored — flipped left to right" }
+      ], d.imageFlip === true ? "true" : "", function(v) {
+        if (v === "true") d.imageFlip = true;
+        else delete d.imageFlip;
+        change();
+      })));
+      if (s.type === "split" || s.type === "image") ["X", "Y"].forEach(function(axis) {
+        var r = document.createElement("input");
+        r.type = "range";
+        r.min = "0";
+        r.max = "100";
+        r.value = d["focal" + axis] == null ? 50 : d["focal" + axis];
+        r.onchange = function() {
+          d["focal" + axis] = Number(r.value);
+          change();
+        };
+        box2.appendChild(UI.field("Image focus " + (axis === "X" ? "horizontal" : "vertical"), r));
+      });
+      box2.appendChild(UI.button("Reset this slide to theme", "ghost", function() {
+        s.design = {};
+        s.formatting = {};
+        change();
+      }));
+      var guide = document.createElement("a");
+      guide.href = "design-guide.html";
+      guide.target = "_blank";
+      guide.rel = "noopener";
+      guide.textContent = "Design controls guide";
+      box2.appendChild(guide);
+      tagControls(box2, s, "Look");
+      parent.appendChild(box2);
+    }
+    function motion(parent, s, change) {
+      var UI = SF.Shell.UI;
+      var box2 = document.createElement("div");
+      box2.className = "custom-controls motion-controls";
+      var d = s.design || (s.design = {});
+      var choose = chooser(UI, box2, d, change);
+      if (["journey", "mindmap", "content", "cards", "split", "keywords", "italics", "table", "quote", "explain", "image", "gallery"].includes(s.type)) {
+        var buildLabel = s.type === "gallery" ? "Reveal one picture at a time (animated)" : s.type === "image" ? "Hold the image back until the next press" : s.type === "table" ? "Reveal one row at a time (animated)" : s.type === "quote" ? "Reveal one line at a time (animated)" : s.type === "explain" ? "Reveal one paragraph at a time (animated)" : "Reveal one bullet / point at a time (animated)";
+        var buildValue = s.progressive !== true ? "off" : s.buildMode === "dim" || s.buildMode === "spot" ? s.buildMode : "on";
+        box2.appendChild(UI.field("Build on Next", UI.select([
+          { value: "off", label: "Show everything at once" },
+          { value: "on", label: buildLabel },
+          { value: "dim", label: buildLabel.replace(" (animated)", ", dimming the ones before") },
+          { value: "spot", label: buildLabel.replace(" (animated)", ", with a spotlight on the live one") }
+        ].filter(function(o) {
+          return !((o.value === "dim" || o.value === "spot") && s.type === "image");
+        }), buildValue, function(v) {
+          s.progressive = v !== "off";
+          s.buildMode = v === "dim" || v === "spot" ? v : "hide";
+          change();
+        }), "Dimming keeps earlier points readable instead of hiding them — useful when the room needs the whole argument in view. Spotlight does that and takes the light off the rest of the slide, which is the other half of what a presenter does with their hand."));
+      }
+      if (s.type === "split") {
+        choose("Image arrives", "imageStep", [
+          ["none", "With the slide"],
+          ["before", "On a press, before the points"],
+          ["after", "On a press, after the points"]
+        ], "none");
+      }
+      if (s.type === "image") {
+        box2.appendChild(UI.field("Image motion", UI.select([
+          { value: "", label: "Stays still" },
+          { value: "zoom", label: "Slow zoom in" },
+          { value: "travel", label: "Travel — from one point to another" }
+        ], d.imageMotion === "travel" ? "travel" : d.imageMotion === "zoom" ? "zoom" : "", function(v) {
+          if (v === "zoom" || v === "travel") d.imageMotion = v;
+          else delete d.imageMotion;
+          change();
+        }), "On the projector only. Zoom drifts toward the image focus (set in Look); Travel moves from it to a second point."));
+        if (d.imageMotion === "travel") {
+          ["X", "Y"].forEach(function(axis) {
+            var r = document.createElement("input");
+            r.type = "range";
+            r.min = "0";
+            r.max = "100";
+            r.value = d["focal" + axis + "2"] == null ? 50 : d["focal" + axis + "2"];
+            r.onchange = function() {
+              d["focal" + axis + "2"] = Number(r.value);
+              change();
+            };
+            box2.appendChild(UI.field("Travels to " + (axis === "X" ? "horizontal" : "vertical"), r));
+          });
+          box2.appendChild(UI.field("How long the move takes", UI.select([
+            { value: "12", label: "12 seconds" },
+            { value: "20", label: "20 seconds" },
+            { value: "30", label: "30 seconds — barely visible, on purpose" }
+          ], String(d.imageTravelSecs || 20), function(v) {
+            var n = Number(v);
+            if (n === 20) delete d.imageTravelSecs;
+            else d.imageTravelSecs = n;
+            change();
+          }), "Set the start with Image focus in Look, the end with Travels to above. Same point twice means no move, and none is drawn."));
+        }
+      }
+      if (s.type === "image") {
+        choose("Caption clears itself", "capFade", [
+          [0, "Stays on the picture"],
+          [5, "After 5 seconds"],
+          [10, "After 10 seconds"],
+          [15, "After 15 seconds"],
+          [20, "After 20 seconds"],
+          [30, "After 30 seconds"]
+        ], 0);
+      }
+      if (s.type === "chart") {
+        box2.appendChild(UI.field("Chart motion", UI.select([
+          { value: "", label: "Already drawn" },
+          { value: "grow", label: "Draws itself when the slide arrives" }
+        ], d.chartMotion === "grow" ? "grow" : "", function(v) {
+          if (v === "grow") d.chartMotion = "grow";
+          else delete d.chartMotion;
+          change();
+        }), "Bars rise from the axis, lines draw along, wedges sweep round. On the projector only."));
       }
       if (s.type === "code") {
         box2.appendChild(UI.field("How the code arrives", UI.select([
@@ -12390,76 +12482,14 @@
           }), "Milliseconds between characters, so a larger number is slower. Press Next while it is typing to skip to the end."));
         }
       }
-      if (s.type === "chart") {
-        box2.appendChild(UI.field("Chart motion", UI.select([
-          { value: "", label: "Already drawn" },
-          { value: "grow", label: "Draws itself when the slide arrives" }
-        ], d.chartMotion === "grow" ? "grow" : "", function(v) {
-          if (v === "grow") d.chartMotion = "grow";
-          else delete d.chartMotion;
-          change();
-        }), "Bars rise from the axis, lines draw along, wedges sweep round. On the projector only."));
-        var cd = SF.chartData(s);
-        if (cd.series.length > 1) {
-          var seriesOpts = [{ value: "", label: "Show them all evenly" }];
-          cd.series.forEach(function(sr, i) {
-            seriesOpts.push({ value: String(i), label: "Isolate “" + sr.name + "”" });
-          });
-          box2.appendChild(UI.field(
-            "Focus one series",
-            UI.select(
-              seriesOpts,
-              d.chartFocus == null ? "" : String(d.chartFocus),
-              function(v) {
-                if (v === "") delete d.chartFocus;
-                else d.chartFocus = Number(v);
-                change();
-              }
-            ),
-            "Holds the others back rather than removing them, so the comparison is still there to return to."
-          ));
-        }
+      if (s.type === "title" || s.type === "section") {
+        choose("Backdrop motion", "backdrop", [
+          ["", "Still — the theme decides"],
+          ["drift", "Drift — colour moving slowly"],
+          ["grid", "Grid — a ruled plane travelling"],
+          ["glow", "Glow — one slow breath behind the words"]
+        ], "");
       }
-      if (s.type === "split" || s.type === "image") ["X", "Y"].forEach(function(axis) {
-        var r = document.createElement("input");
-        r.type = "range";
-        r.min = "0";
-        r.max = "100";
-        r.value = d["focal" + axis] == null ? 50 : d["focal" + axis];
-        r.onchange = function() {
-          d["focal" + axis] = Number(r.value);
-          change();
-        };
-        box2.appendChild(UI.field("Image focus " + (axis === "X" ? "horizontal" : "vertical"), r));
-      });
-      if (["journey", "mindmap", "content", "cards", "split", "keywords", "italics", "table", "quote", "explain", "image", "gallery"].includes(s.type)) {
-        var buildLabel = s.type === "gallery" ? "Reveal one picture at a time (animated)" : s.type === "image" ? "Hold the image back until the next press" : s.type === "table" ? "Reveal one row at a time (animated)" : s.type === "quote" ? "Reveal one line at a time (animated)" : s.type === "explain" ? "Reveal one paragraph at a time (animated)" : "Reveal one bullet / point at a time (animated)";
-        var buildValue = s.progressive !== true ? "off" : s.buildMode === "dim" || s.buildMode === "spot" ? s.buildMode : "on";
-        box2.appendChild(UI.field("Build on Next", UI.select([
-          { value: "off", label: "Show everything at once" },
-          { value: "on", label: buildLabel },
-          { value: "dim", label: buildLabel.replace(" (animated)", ", dimming the ones before") },
-          { value: "spot", label: buildLabel.replace(" (animated)", ", with a spotlight on the live one") }
-        ].filter(function(o) {
-          return !((o.value === "dim" || o.value === "spot") && s.type === "image");
-        }), buildValue, function(v) {
-          s.progressive = v !== "off";
-          s.buildMode = v === "dim" || v === "spot" ? v : "hide";
-          change();
-        }), "Dimming keeps earlier points readable instead of hiding them — useful when the room needs the whole argument in view. Spotlight does that and takes the light off the rest of the slide, which is the other half of what a presenter does with their hand."));
-      }
-      box2.appendChild(UI.button("Reset this slide to theme", "ghost", function() {
-        s.design = {};
-        s.formatting = {};
-        change();
-      }));
-      var guide = document.createElement("a");
-      guide.href = "design-guide.html";
-      guide.target = "_blank";
-      guide.rel = "noopener";
-      guide.textContent = "Design controls guide";
-      box2.appendChild(guide);
-      tagControls(box2, s, "Look");
       parent.appendChild(box2);
     }
     function tagControls(root, slide, pane) {
@@ -12472,7 +12502,7 @@
         if (key) label.parentElement.dataset.designKey = key;
       });
     }
-    SF.Custom = { tagControls, removeBullet, bind, editCanvasBlock, endInlineEdit, endCanvasEditor, inlineEditable, openCanvasEditor, enableCanvasEditDrag, placeCanvasEditForm, canvasEditHost, paint, layout, inspector, rebase, apply, entry };
+    SF.Custom = { tagControls, motion, removeBullet, bind, editCanvasBlock, endInlineEdit, endCanvasEditor, inlineEditable, openCanvasEditor, enableCanvasEditDrag, placeCanvasEditForm, canvasEditHost, paint, layout, inspector, rebase, apply, entry };
   }
 
   // src/boards/runtimes/bingo.js
@@ -14185,25 +14215,26 @@
     imageShare: { label: "Image share", pane: "Look", types: ["split"], description: "Give the picture 35%, 50% or 65% of the split." },
     mediaGround: { label: "Picture mount", pane: "Look", types: ["split"], description: "Mount the picture on a card or extend it to the edges." },
     copyStyle: { label: "Text style", pane: "Look", types: ["split"], description: "A marker on every line, or flush prose for a paragraph beside the picture." },
-    imageStep: { label: "Image arrives", pane: "Look", types: ["split"], description: "Show the picture with the slide, before the points or after them." },
+    imageStep: { label: "Image arrives", pane: "Motion", types: ["split"], description: "Show the picture with the slide, before the points or after them." },
     cardsMode: { label: "Cards layout", pane: "Look", types: ["cards"], description: "Choose a grid, full-width rows, a stack or picture cards. Selecting one returns to the original cards layout. Stack enables progressive builds." },
     cardPics: { label: "Picture shape", pane: "Look", types: ["cards"], when: "Picture cards selected or card images supplied", description: "Crop to portrait covers or contain landscape plates." },
     statStyle: { label: "Tile style", pane: "Look", types: ["stats"], description: "Display statistics as numbers, rings or KPI bars." },
     funnelDirection: { label: "Direction", pane: "Look", types: ["funnel"], description: "Draw a descending funnel or an ascending pyramid." },
     timelineMode: { label: "Shape", pane: "Look", types: ["timeline"], description: "Arrange dated events across a rail or down a spine." },
-    backdrop: { label: "Backdrop motion", pane: "Look", types: ["title", "section"], description: "Animate a drift, grid or glow using theme colours." },
+    backdrop: { label: "Backdrop motion", pane: "Motion", types: ["title", "section"], description: "Animate a drift, grid or glow using theme colours." },
     logoGround: { label: "Logo sits on", pane: "Look", types: ["image", "gallery", "video"], description: "Choose the logo variant for the image behind it. Overrides the deck preference." },
     imageFrame: { label: "Image frame", pane: "Look", types: ["image", "gallery"], description: "Use full bleed or a fixed image ratio with the caption below." },
     capStyle: { label: "Caption style", pane: "Look", types: ["image", "gallery", "video", "split"], when: "Split slides need a caption", description: "Place a gradient or colour bar behind the caption, use plain text or hide it." },
     capPos: { label: "Caption position", pane: "Look", types: ["image", "gallery", "video"], description: "Place the caption at the top or bottom." },
-    capFade: { label: "Caption clears itself", pane: "Look", types: ["image"], description: "Keep the caption or clear it after 5–30 seconds in the show." },
-    imageMotion: { label: "Image motion", pane: "Look", types: ["image"], description: "Keep the image still, zoom slowly or travel between two focal points. Motion plays in Present." },
+    capFade: { label: "Caption clears itself", pane: "Motion", types: ["image"], description: "Keep the caption or clear it after 5–30 seconds in the show." },
+    imageMotion: { label: "Image motion", pane: "Motion", types: ["image"], description: "Keep the image still, zoom slowly or travel between two focal points. Motion plays in Present." },
     focalX: { label: "Image focus horizontal", pane: "Look", types: ["split", "image"], description: "Choose the horizontal focus, from 0 to 100 percent." },
     focalY: { label: "Image focus vertical", pane: "Look", types: ["split", "image"], description: "Choose the vertical focus, from 0 to 100 percent." },
-    focalX2: { label: "Travels to horizontal", pane: "Look", types: ["image"], when: "Image motion is Travel", description: "Set the horizontal destination of the image move." },
-    focalY2: { label: "Travels to vertical", pane: "Look", types: ["image"], when: "Image motion is Travel", description: "Set the vertical destination of the image move." },
-    imageTravelSecs: { label: "How long the move takes", pane: "Look", types: ["image"], when: "Image motion is Travel", description: "Choose a 12, 20 or 30 second move." },
-    chartMotion: { label: "Chart motion", pane: "Look", types: ["chart"], description: "Show the chart already drawn or animate it on arrival in Present." },
+    imageFlip: { label: "Flip image", pane: "Look", types: ["image", "split"], description: "Mirror the picture left to right. Its focus, zoom and travel follow it across." },
+    focalX2: { label: "Travels to horizontal", pane: "Motion", types: ["image"], when: "Image motion is Travel", description: "Set the horizontal destination of the image move." },
+    focalY2: { label: "Travels to vertical", pane: "Motion", types: ["image"], when: "Image motion is Travel", description: "Set the vertical destination of the image move." },
+    imageTravelSecs: { label: "How long the move takes", pane: "Motion", types: ["image"], when: "Image motion is Travel", description: "Choose a 12, 20 or 30 second move." },
+    chartMotion: { label: "Chart motion", pane: "Motion", types: ["chart"], description: "Show the chart already drawn or animate it on arrival in Present." },
     chartFocus: { label: "Focus one series", pane: "Look", types: ["chart"], when: "Chart has more than one series", description: "Emphasise one series while retaining the others for comparison." },
     words: { label: "Words arrive", pane: "Motion", types: ["statement"], description: "Animate the statement with Rise, Fade or Reveal. Reduced-motion preferences are respected." },
     wordSpeed: { label: "Speed", pane: "Motion", types: ["statement"], when: "Word animation enabled", description: "Set the speed of the word movement and its hold." },

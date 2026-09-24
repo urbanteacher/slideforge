@@ -898,7 +898,18 @@ export function installCustom(SF) {
       img.style.backgroundPosition=x+'% '+y+'%';
       img.style.setProperty('--img-fx', x + '%');
       img.style.setProperty('--img-fy', y + '%');
+      img.classList.toggle('img-flip', d.imageFlip===true && (s.type==='image'||s.type==='split'));
     });
+  }
+  /* One select bound to one design key. SF.Custom.tagControls joins
+     DESIGN_CONTROLS to rendered fields by matching the label text, so the
+     label here and the one in src/design-controls.js are the same key
+     written twice. Renaming one and not the other makes the control
+     unreachable — not missing, not broken, just untaggable — and only
+     tools/smoke/design-controls.mjs notices. The registry wins when it knows
+     the key; the argument stays as the fallback for anything it does not. */
+  function chooser(UI,box,d,change){
+    return function choose(label,key,opts,fallback){var meta=SF.DESIGN_CONTROLS&&SF.DESIGN_CONTROLS[key];box.appendChild(UI.field((meta&&meta.label)||label,UI.select(opts.map(function(x){return {value:String(x[0]),label:x[1]};}),String(d[key]||fallback),function(v){d[key]=(key==='imageShare'||key==='capFade')?Number(v):v;change();})));};
   }
   var expanded=new Set();
   function inspector(parent,s,change,opts) {
@@ -912,14 +923,7 @@ export function installCustom(SF) {
       var summary=document.createElement('summary'); summary.textContent='Customise this slide'; box.appendChild(summary);
     }
     var d=s.design || (s.design={});
-    /* SF.Custom.tagControls joins DESIGN_CONTROLS to rendered fields by
-       matching the label text, so the label here and the one in
-       src/design-controls.js are the same key written twice. Renaming one and
-       not the other makes the control unreachable — not missing, not broken,
-       just untaggable — and only tools/smoke/design-controls.mjs notices.
-       The registry wins when it knows the key; the argument stays as the
-       fallback for anything it does not. */
-    function choose(label,key,opts,fallback){var meta=SF.DESIGN_CONTROLS&&SF.DESIGN_CONTROLS[key];box.appendChild(UI.field((meta&&meta.label)||label,UI.select(opts.map(function(x){return {value:String(x[0]),label:x[1]};}),String(d[key]||fallback),function(v){d[key]=(key==='imageShare'||key==='capFade')?Number(v):v;change();})));}
+    var choose=chooser(UI,box,d,change);
     var currentDeck = SF.Editor && SF.Editor.deck ? SF.Editor.deck() : null;
     var compositions = SF.compositionOptions ? SF.compositionOptions(s, currentDeck && currentDeck.theme) : [];
     if (compositions.length) {
@@ -1002,11 +1006,6 @@ export function installCustom(SF) {
         ['points','Points — a marker on every line'],
         ['prose','Prose — flush, no markers']
       ],'points');
-      choose('Image arrives','imageStep',[
-        ['none','With the slide'],
-        ['before','On a press, before the points'],
-        ['after','On a press, after the points']
-      ],'none');
     }
     if(s.type==='cards'){
       box.appendChild(UI.field('Cards layout',UI.select([
@@ -1082,17 +1081,6 @@ export function installCustom(SF) {
         }));
       }
     }
-    /* A cover can have motion behind it, drawn from this theme's own colours
-       rather than from a video file. Offered on the two full-bleed layouts
-       only: on a slide with content it would sit under the words. */
-    if(s.type==='title'||s.type==='section'){
-      choose('Backdrop motion','backdrop',[
-        ['','Still — the theme decides'],
-        ['drift','Drift — colour moving slowly'],
-        ['grid','Grid — a ruled plane travelling'],
-        ['glow','Glow — one slow breath behind the words']
-      ],'');
-    }
     /* Only worth asking where the answer is not already obvious from the
        theme: a picture slide's ground is whatever picture is on it. */
     if(s.type==='image'||s.type==='gallery'||s.type==='video'){
@@ -1120,47 +1108,7 @@ export function installCustom(SF) {
         ['none','Hide the caption']
       ],'scrim');
       if(s.type==='image'||s.type==='gallery'||s.type==='video') choose('Caption position','capPos',[['bottom','Bottom'],['top','Top']],'bottom');
-      /* Only the full-bleed picture slide: it is the one whose caption covers
-         the thing the room is being asked to look at. */
-      if(s.type==='image') choose('Caption clears itself','capFade',[
-        [0,'Stays on the picture'],
-        [5,'After 5 seconds'],
-        [10,'After 10 seconds'],
-        [15,'After 15 seconds'],
-        [20,'After 20 seconds'],
-        [30,'After 30 seconds']
-      ],0);
-      if(s.type==='image') {
-        box.appendChild(UI.field('Image motion',UI.select([
-          {value:'',label:'Stays still'},
-          {value:'zoom',label:'Slow zoom in'},
-          {value:'travel',label:'Travel — from one point to another'}
-        ],d.imageMotion==='travel'?'travel':d.imageMotion==='zoom'?'zoom':'',function(v){
-          if(v==='zoom'||v==='travel') d.imageMotion=v; else delete d.imageMotion;
-          change();
-        }),'On the projector only. Zoom drifts toward the focus point below; Travel moves from it to a second point.'));
-        if(d.imageMotion==='travel'){
-          ['X','Y'].forEach(function(axis){
-            var r=document.createElement('input');r.type='range';r.min='0';r.max='100';
-            r.value=d['focal'+axis+'2']==null?50:d['focal'+axis+'2'];
-            r.onchange=function(){d['focal'+axis+'2']=Number(r.value);change();};
-            box.appendChild(UI.field('Travels to '+(axis==='X'?'horizontal':'vertical'),r));
-          });
-          box.appendChild(UI.field('How long the move takes',UI.select([
-            {value:'12',label:'12 seconds'},
-            {value:'20',label:'20 seconds'},
-            {value:'30',label:'30 seconds — barely visible, on purpose'}
-          ],String(d.imageTravelSecs||20),function(v){
-            var n=Number(v); if(n===20) delete d.imageTravelSecs; else d.imageTravelSecs=n;
-            change();
-          }),'Set the start with Image focus below, the end with Travels to above. Same point twice means no move, and none is drawn.'));
-        }
-      }
     }
-    /* Code: how it arrives, and how fast. Neither was settable before — the
-       layout shipped with a character typewriter at one speed and no way to
-       ask for anything else, which is fine until you are walking a room
-       through fourteen lines and want a press per line. */
     if(s.type==='chart'){
       /* Silent truncation is the worst kind. A chart reads its numbers
          through the table parser, which stops at TABLE_MAX_ROWS — header plus
@@ -1179,6 +1127,136 @@ export function installCustom(SF) {
         'days to months) or split the range across two slides, and check the caption still '+
         'describes what is drawn.'));
     }
+    /* Focus is emphasis, not movement, so it stays here when Chart motion
+       went to the Motion pane: it changes what the chart says, not when. */
+    if(s.type==='chart'){
+      var cd=SF.chartData(s);
+      if(cd.series.length>1){
+        var seriesOpts=[{value:'',label:'Show them all evenly'}];
+        cd.series.forEach(function(sr,i){seriesOpts.push({value:String(i),label:'Isolate “'+sr.name+'”'});});
+        box.appendChild(UI.field('Focus one series',UI.select(seriesOpts,
+          d.chartFocus==null?'':String(d.chartFocus),function(v){
+            if(v==='') delete d.chartFocus; else d.chartFocus=Number(v);
+            change();
+          }),
+          'Holds the others back rather than removing them, so the comparison is still there to return to.'));
+      }
+    }
+    /* Mirrors the picture, not the slide: a face looking off the edge can be
+       turned to look into the words. Focus, zoom and travel are all measured
+       on the picture as taken, so they follow it across without changing. */
+    if(s.type==='split'||s.type==='image') box.appendChild(UI.field('Flip image',UI.select([
+      {value:'',label:'As it was taken'},
+      {value:'true',label:'Mirrored — flipped left to right'}
+    ],d.imageFlip===true?'true':'',function(v){
+      if(v==='true') d.imageFlip=true; else delete d.imageFlip;
+      change();
+    })));
+    if(s.type==='split'||s.type==='image') ['X','Y'].forEach(function(axis){
+      var r=document.createElement('input');r.type='range';r.min='0';r.max='100';r.value=d['focal'+axis]==null?50:d['focal'+axis];r.onchange=function(){d['focal'+axis]=Number(r.value);change();};box.appendChild(UI.field('Image focus '+(axis==='X'?'horizontal':'vertical'),r));
+    });
+    /* Named its subject. It clears this slide's design and formatting only,
+       and unlabelled next to a deck-wide Theme button it read as a reset of
+       the whole presentation \u2014 which is not an impression to leave on a
+       button that cannot be taken back except by undo. It stays in Look,
+       where the overrides it clears were made.
+       Review moved to the presentation row: it opens every slide in the deck
+       at once, so it answered to this pane's one slide in name only. */
+    box.appendChild(UI.button('Reset this slide to theme','ghost',function(){s.design={};s.formatting={};change();}));
+    var guide=document.createElement('a');guide.href='design-guide.html';guide.target='_blank';guide.rel='noopener';guide.textContent='Design controls guide';
+    box.appendChild(guide);
+    tagControls(box,s,'Look');
+    parent.appendChild(box);
+  }
+  /* Everything on a slide that moves or waits: what builds on a press, what
+     drifts once it is up, and what leaves on its own. Drawn by the Motion
+     pane under Transition in, which is the first thing that moves. These sat
+     in Look until 2026-09-24 — most of them were built before the Motion tab
+     existed and stayed where they were first put. */
+  function motion(parent,s,change){
+    var UI=SF.Shell.UI;
+    var box=document.createElement('div'); box.className='custom-controls motion-controls';
+    var d=s.design || (s.design={});
+    var choose=chooser(UI,box,d,change);
+    if(['journey','mindmap','content','cards','split','keywords','italics','table','quote','explain','image','gallery'].includes(s.type)){
+      var buildLabel=s.type==='gallery'?'Reveal one picture at a time (animated)'
+        :s.type==='image'?'Hold the image back until the next press'
+        :s.type==='table'?'Reveal one row at a time (animated)'
+        :s.type==='quote'?'Reveal one line at a time (animated)'
+        :s.type==='explain'?'Reveal one paragraph at a time (animated)'
+        :'Reveal one bullet / point at a time (animated)';
+      var buildValue=s.progressive!==true?'off':(s.buildMode==='dim'||s.buildMode==='spot'?s.buildMode:'on');
+      box.appendChild(UI.field('Build on Next',UI.select([
+        {value:'off',label:'Show everything at once'},
+        {value:'on',label:buildLabel},
+        {value:'dim',label:buildLabel.replace(' (animated)',', dimming the ones before')},
+        {value:'spot',label:buildLabel.replace(' (animated)',', with a spotlight on the live one')}
+      ].filter(function(o){return !((o.value==='dim'||o.value==='spot')&&s.type==='image');}),buildValue,function(v){
+        s.progressive=v!=='off';
+        s.buildMode=v==='dim'||v==='spot'?v:'hide';
+        change();
+      }),'Dimming keeps earlier points readable instead of hiding them \u2014 useful when the room needs the whole argument in view. Spotlight does that and takes the light off the rest of the slide, which is the other half of what a presenter does with their hand.'));
+    }
+    if(s.type==='split'){
+      choose('Image arrives','imageStep',[
+        ['none','With the slide'],
+        ['before','On a press, before the points'],
+        ['after','On a press, after the points']
+      ],'none');
+    }
+    if(s.type==='image') {
+      box.appendChild(UI.field('Image motion',UI.select([
+        {value:'',label:'Stays still'},
+        {value:'zoom',label:'Slow zoom in'},
+        {value:'travel',label:'Travel — from one point to another'}
+      ],d.imageMotion==='travel'?'travel':d.imageMotion==='zoom'?'zoom':'',function(v){
+        if(v==='zoom'||v==='travel') d.imageMotion=v; else delete d.imageMotion;
+        change();
+      }),'On the projector only. Zoom drifts toward the image focus (set in Look); Travel moves from it to a second point.'));
+      if(d.imageMotion==='travel'){
+        ['X','Y'].forEach(function(axis){
+          var r=document.createElement('input');r.type='range';r.min='0';r.max='100';
+          r.value=d['focal'+axis+'2']==null?50:d['focal'+axis+'2'];
+          r.onchange=function(){d['focal'+axis+'2']=Number(r.value);change();};
+          box.appendChild(UI.field('Travels to '+(axis==='X'?'horizontal':'vertical'),r));
+        });
+        box.appendChild(UI.field('How long the move takes',UI.select([
+          {value:'12',label:'12 seconds'},
+          {value:'20',label:'20 seconds'},
+          {value:'30',label:'30 seconds — barely visible, on purpose'}
+        ],String(d.imageTravelSecs||20),function(v){
+          var n=Number(v); if(n===20) delete d.imageTravelSecs; else d.imageTravelSecs=n;
+          change();
+        }),'Set the start with Image focus in Look, the end with Travels to above. Same point twice means no move, and none is drawn.'));
+      }
+    }
+    if(s.type==='image'){
+      /* Only the full-bleed picture slide: it is the one whose caption covers
+         the thing the room is being asked to look at. */
+      choose('Caption clears itself','capFade',[
+        [0,'Stays on the picture'],
+        [5,'After 5 seconds'],
+        [10,'After 10 seconds'],
+        [15,'After 15 seconds'],
+        [20,'After 20 seconds'],
+        [30,'After 30 seconds']
+      ],0);
+    }
+    /* A chart that grows out of its own axis is the same kind of decision as
+       a picture that drifts: how the slide behaves, not what it says. */
+    if(s.type==='chart'){
+      box.appendChild(UI.field('Chart motion',UI.select([
+        {value:'',label:'Already drawn'},
+        {value:'grow',label:'Draws itself when the slide arrives'}
+      ],d.chartMotion==='grow'?'grow':'',function(v){
+        if(v==='grow') d.chartMotion='grow'; else delete d.chartMotion;
+        change();
+      }),'Bars rise from the axis, lines draw along, wedges sweep round. On the projector only.'));
+    }
+    /* Code: how it arrives, and how fast. Neither was settable before — the
+       layout shipped with a character typewriter at one speed and no way to
+       ask for anything else, which is fine until you are walking a room
+       through fourteen lines and want a press per line. */
     if(s.type==='code'){
       box.appendChild(UI.field('How the code arrives',UI.select([
         {value:'all',label:'All at once'},
@@ -1200,64 +1278,17 @@ export function installCustom(SF) {
         }),'Milliseconds between characters, so a larger number is slower. Press Next while it is typing to skip to the end.'));
       }
     }
-    /* Chart motion and focus, on design beside image motion and for the same
-       reason: both are how a slide behaves rather than what it says, and a
-       chart that grows out of its own axis is the same kind of decision as a
-       picture that drifts. */
-    if(s.type==='chart'){
-      box.appendChild(UI.field('Chart motion',UI.select([
-        {value:'',label:'Already drawn'},
-        {value:'grow',label:'Draws itself when the slide arrives'}
-      ],d.chartMotion==='grow'?'grow':'',function(v){
-        if(v==='grow') d.chartMotion='grow'; else delete d.chartMotion;
-        change();
-      }),'Bars rise from the axis, lines draw along, wedges sweep round. On the projector only.'));
-
-      var cd=SF.chartData(s);
-      if(cd.series.length>1){
-        var seriesOpts=[{value:'',label:'Show them all evenly'}];
-        cd.series.forEach(function(sr,i){seriesOpts.push({value:String(i),label:'Isolate “'+sr.name+'”'});});
-        box.appendChild(UI.field('Focus one series',UI.select(seriesOpts,
-          d.chartFocus==null?'':String(d.chartFocus),function(v){
-            if(v==='') delete d.chartFocus; else d.chartFocus=Number(v);
-            change();
-          }),
-          'Holds the others back rather than removing them, so the comparison is still there to return to.'));
-      }
+    /* A cover can have motion behind it, drawn from this theme's own colours
+       rather than from a video file. Offered on the two full-bleed layouts
+       only: on a slide with content it would sit under the words. */
+    if(s.type==='title'||s.type==='section'){
+      choose('Backdrop motion','backdrop',[
+        ['','Still — the theme decides'],
+        ['drift','Drift — colour moving slowly'],
+        ['grid','Grid — a ruled plane travelling'],
+        ['glow','Glow — one slow breath behind the words']
+      ],'');
     }
-    if(s.type==='split'||s.type==='image') ['X','Y'].forEach(function(axis){
-      var r=document.createElement('input');r.type='range';r.min='0';r.max='100';r.value=d['focal'+axis]==null?50:d['focal'+axis];r.onchange=function(){d['focal'+axis]=Number(r.value);change();};box.appendChild(UI.field('Image focus '+(axis==='X'?'horizontal':'vertical'),r));
-    });
-    if(['journey','mindmap','content','cards','split','keywords','italics','table','quote','explain','image','gallery'].includes(s.type)){
-      var buildLabel=s.type==='gallery'?'Reveal one picture at a time (animated)'
-        :s.type==='image'?'Hold the image back until the next press'
-        :s.type==='table'?'Reveal one row at a time (animated)'
-        :s.type==='quote'?'Reveal one line at a time (animated)'
-        :s.type==='explain'?'Reveal one paragraph at a time (animated)'
-        :'Reveal one bullet / point at a time (animated)';
-      var buildValue=s.progressive!==true?'off':(s.buildMode==='dim'||s.buildMode==='spot'?s.buildMode:'on');
-      box.appendChild(UI.field('Build on Next',UI.select([
-        {value:'off',label:'Show everything at once'},
-        {value:'on',label:buildLabel},
-        {value:'dim',label:buildLabel.replace(' (animated)',', dimming the ones before')},
-        {value:'spot',label:buildLabel.replace(' (animated)',', with a spotlight on the live one')}
-      ].filter(function(o){return !((o.value==='dim'||o.value==='spot')&&s.type==='image');}),buildValue,function(v){
-        s.progressive=v!=='off';
-        s.buildMode=v==='dim'||v==='spot'?v:'hide';
-        change();
-      }),'Dimming keeps earlier points readable instead of hiding them \u2014 useful when the room needs the whole argument in view. Spotlight does that and takes the light off the rest of the slide, which is the other half of what a presenter does with their hand.'));
-    }
-    /* Named its subject. It clears this slide's design and formatting only,
-       and unlabelled next to a deck-wide Theme button it read as a reset of
-       the whole presentation \u2014 which is not an impression to leave on a
-       button that cannot be taken back except by undo. It stays in Look,
-       where the overrides it clears were made.
-       Review moved to the presentation row: it opens every slide in the deck
-       at once, so it answered to this pane's one slide in name only. */
-    box.appendChild(UI.button('Reset this slide to theme','ghost',function(){s.design={};s.formatting={};change();}));
-    var guide=document.createElement('a');guide.href='design-guide.html';guide.target='_blank';guide.rel='noopener';guide.textContent='Design controls guide';
-    box.appendChild(guide);
-    tagControls(box,s,'Look');
     parent.appendChild(box);
   }
   // The guide and reachability checks share the same public control identifiers.
@@ -1270,5 +1301,5 @@ export function installCustom(SF) {
       if(key) label.parentElement.dataset.designKey=key;
     });
   }
-  SF.Custom={tagControls:tagControls,removeBullet:removeBullet,bind:bind,editCanvasBlock:editCanvasBlock,endInlineEdit:endInlineEdit,endCanvasEditor:endCanvasEditor,inlineEditable:inlineEditable,openCanvasEditor:openCanvasEditor,enableCanvasEditDrag:enableCanvasEditDrag,placeCanvasEditForm:placeCanvasEditForm,canvasEditHost:canvasEditHost,paint:paint,layout:layout,inspector:inspector,rebase:rebase,apply:apply,entry:entry};
+  SF.Custom={tagControls:tagControls,motion:motion,removeBullet:removeBullet,bind:bind,editCanvasBlock:editCanvasBlock,endInlineEdit:endInlineEdit,endCanvasEditor:endCanvasEditor,inlineEditable:inlineEditable,openCanvasEditor:openCanvasEditor,enableCanvasEditDrag:enableCanvasEditDrag,placeCanvasEditForm:placeCanvasEditForm,canvasEditHost:canvasEditHost,paint:paint,layout:layout,inspector:inspector,rebase:rebase,apply:apply,entry:entry};
 }
