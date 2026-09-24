@@ -18,6 +18,9 @@ const ROOT = path.resolve(__dirname, '..');
 function pages(dir, found) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     if (e.name === 'node_modules' || e.name.startsWith('.')) continue;
+    // lab/ is a separate Vite app: its pages load /src/main.tsx through Vite's
+    // dev server, and lab/dist is its build output. Neither is served from here.
+    if (dir === ROOT && e.name === 'lab') continue;
     const full = path.join(dir, e.name);
     if (e.isDirectory()) pages(full, found);
     else if (e.name.endsWith('.html')) found.push(full);
