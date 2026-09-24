@@ -4,6 +4,21 @@ import type { SFDeck, SlideDesign } from '../model/fromSlideForge';
 import type { MotionLabData } from '../model/motionLab';
 import { useStore } from '../model/store';
 import { useThumbs } from './Gallery';
+import { TEMPLATES, rosetteSvg } from '../model/defaults';
+import { getImage } from '../engine/raster';
+
+/** The lab's own first designs, in their own looks: the WebGL effects and interaction it was built
+ *  to show. They stay as designed rather than taking the deck's theme — the look is the point. */
+const ORIGINALS = 'Lab originals — effects and interaction';
+const ORIGINAL_BLURB: Record<string, string> = {
+  editorial: 'A title set letter by letter on a moving mesh gradient; a rosette pops in and sways, tilting under the pointer with parallax; ripple and film grain.',
+  statement: 'A dark statement built line by line on an aurora, with a vignette and grain; it arrives on a ripple.',
+  three: 'Three points built one per click on a grid, pushed in.',
+  number: 'One big number, word by word, on a gradient with a grid, a glow and a lens; grain; it zooms in.',
+  image: 'A picture feature: a spinning rosette through a gradient map and halftone, with grain; it dissolves in.',
+  blueprint: 'A blueprint on a double grid under a spotlight; the nodes and the arrow build one per click and grow on hover; typed title.',
+  closing: 'A closing line letter by letter on a mesh gradient with a wave and a chromatic split, and grain.',
+};
 
 /**
  * Slide designs: SlideForge's slides with a special feature, built by the lab in the deck's own
@@ -30,19 +45,20 @@ export function SlideDesignsPanel() {
     });
     return () => { live = false; };
   }, []);
-  const entries = useMemo(() => (lib ? lib.make(st) : []), [lib, st]);
-  const thumbs = useThumbs(entries);
+  // The originals come first, as made; then the Layout bank's and the Motion lab's, in the deck's theme.
+  const entries = useMemo(() => (lib ? [...TEMPLATES.map((t) => ({ id: `tpl-${t.id}`, name: t.name, group: ORIGINALS, blurb: ORIGINAL_BLURB[t.id] ?? '', slide: t.make() })), ...lib.make(st)] : []), [lib, st]);
+  const thumbs = useThumbs(entries, () => !!getImage(rosetteSvg()));
   if (!lib) return <div className="panel-scroll layouts-panel"><div className="lp-label">Loading the slide designs…</div></div>;
   return (
     <div className="panel-scroll layouts-panel">
-      {lib.groups.map((g) => (
+      {[ORIGINALS, ...lib.groups].map((g) => (
         <div key={g}>
           <div className="lp-label">{g}</div>
           <div className="lp-grid">
             {entries.filter((e) => e.group === g).map((e) => (
               <button key={e.id} className="lp-card" title={e.blurb}
                 // Built again on the press, so every slide added has its own layers.
-                onClick={() => { const fresh = lib.make(st).find((x) => x.id === e.id); if (fresh) { addSlide(fresh.slide); showToast(`Inserted “${e.name}”`); } }}>
+                onClick={() => { const tpl = TEMPLATES.find((t) => `tpl-${t.id}` === e.id); const fresh = tpl ? { slide: tpl.make() } : lib.make(st).find((x) => x.id === e.id); if (fresh) { addSlide(fresh.slide); showToast(`Inserted “${e.name}”`); } }}>
                 <div className="lp-thumb">{thumbs[e.id] && <img src={thumbs[e.id]} alt="" />}</div>
                 <span>{e.name}</span>
               </button>

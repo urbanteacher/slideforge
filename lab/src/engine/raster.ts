@@ -79,10 +79,19 @@ interface Word { text: string; x: number; w: number; marker?: boolean }
 interface Line { words: Word[]; width: number; text: string; plain: boolean; para: number }
 export interface TextLayout { lines: Line[]; lineH: number; height: number; size: number }
 
+/**
+ * Faces whose character is in their OpenType alternates: Alpha Lyrae's notched t, h, a and P are
+ * contextual alternates, and a browser turns those off as soon as letter spacing is not zero — the
+ * canvas then draws plain letters that measure the same, and the face looks like a generic sans.
+ * These keep their spacing at zero whatever the tracking says.
+ */
+const ALTERNATES = /alpha lyrae/i;
+export const keepsAlternates = (family: unknown) => ALTERNATES.test(String(family ?? ''));
+
 function setupFont(ctx: Ctx, p: Params, px: number) {
   ctx.font = fontString(p, px);
   const c = ctx as Ctx & { letterSpacing?: string };
-  if ('letterSpacing' in c) c.letterSpacing = `${Number(p.tracking ?? 0) * px}px`;
+  if ('letterSpacing' in c) c.letterSpacing = keepsAlternates(p.font) ? '0px' : `${Number(p.tracking ?? 0) * px}px`;
 }
 
 export function layoutText(p: Params, width: number): TextLayout {
@@ -660,7 +669,7 @@ function pill(ctx: Ctx, text: string, x: number, y: number, px: number, bg: stri
   useFont(ctx, family, px, 700);
   const label = text.toUpperCase();
   const c = ctx as Ctx & { letterSpacing?: string };
-  if ('letterSpacing' in c) c.letterSpacing = `${px * 0.08}px`;
+  if ("letterSpacing" in c) c.letterSpacing = keepsAlternates(family) ? "0px" : `${px * 0.08}px`;
   const tw = ctx.measureText(label).width;
   const h = px * 2, w = tw + px * 1.8;
   ctx.fillStyle = bg;
@@ -1091,7 +1100,7 @@ function setFont(ctx: Ctx, family: string, px: number, weight = 400, italic = fa
   ensureFont(f);
   ctx.font = f;
   const c = ctx as Ctx & { letterSpacing?: string };
-  if ('letterSpacing' in c) c.letterSpacing = `${track * px}px`;
+  if ('letterSpacing' in c) c.letterSpacing = keepsAlternates(family) ? '0px' : `${track * px}px`;
 }
 
 /** A canvas exactly the size of the box, plus a little bleed for strokes. */

@@ -6,6 +6,7 @@ import { fontChoices } from '../model/guide';
 import type { Layer, ParamValue } from '../model/types';
 import { newGesture } from './controls';
 import { has, toggleFormat } from './format';
+import { PalettePopover, usePalette } from './palette';
 
 // The word-processor strip in the top bar. Each control drives one param, and is live only when
 // the selected layer has that param: all of them for text, font/size/colour for quiz, activity
@@ -23,6 +24,7 @@ export function FormatBar() {
   const guide = useStore((s) => s.deck.styleGuide);
   const updateLayer = useStore((s) => s.updateLayer);
   const g = useRef(newGesture());
+  const pal = usePalette();
   const set = (key: string, v: ParamValue, merge?: string) => layer && updateLayer(layer.id, (x) => { x.params[key] = v; }, merge);
   const p = layer?.params ?? {};
   const ck = colourKey(layer);
@@ -56,11 +58,14 @@ export function FormatBar() {
       <Btn icon={Bold} title="Bold (⌘B)" on={Number(p.weight) >= 600} disabled={!has(layer, 'weight')} onClick={() => layer && toggleFormat(layer, 'bold')} />
       <Btn icon={Italic} title="Italic (⌘I)" on={!!p.italic} disabled={!has(layer, 'italic')} onClick={() => layer && toggleFormat(layer, 'italic')} />
       <Btn icon={Underline} title="Underline (⌘U)" on={!!p.underline} disabled={!has(layer, 'underline')} onClick={() => layer && toggleFormat(layer, 'underline')} />
-      <label className={`fmt-colour${ck ? '' : ' disabled'}`} title="Text colour" onPointerDown={(e) => { if (!ck) e.preventDefault(); }}>
-        <span className="fmt-a">A</span>
-        <span className="fmt-swatch" style={{ background: ck ? String(p[ck]) : 'transparent' }} />
-        <input type="color" disabled={!ck} value={ck ? String(p[ck]).slice(0, 7) : '#000000'} onFocus={() => (g.current = newGesture())} onChange={(e) => ck && set(ck, e.target.value, g.current)} />
-      </label>
+      {/* Text colour: the theme's palette first, the full picker one step further. */}
+      <span className="fmt-colour-wrap">
+        <button className={`fmt-colour${ck ? '' : ' disabled'}${pal.open ? ' active' : ''}`} title="Text colour" disabled={!ck} onPointerDown={(e) => e.preventDefault()} onClick={() => { g.current = newGesture(); pal.toggle(); }}>
+          <span className="fmt-a">A</span>
+          <span className="fmt-swatch" style={{ background: ck ? String(p[ck]) : 'transparent' }} />
+        </button>
+        {pal.open && ck && <PalettePopover value={String(p[ck])} onPick={(c) => set(ck, c, g.current)} onClose={pal.close} />}
+      </span>
       <span className="fmt-align">
         <span className="fmt-sep" />
         <Btn icon={TextAlignStart} title="Align left" on={has(layer, 'align') && align === 'left'} disabled={!has(layer, 'align')} onClick={() => set('align', 'left')} />

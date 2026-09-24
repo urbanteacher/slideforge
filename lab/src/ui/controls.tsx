@@ -1,4 +1,5 @@
 import { ChevronDown, Info } from 'lucide-react';
+import { PalettePopover } from './palette';
 import { useRef, useState, type ReactNode } from 'react';
 
 let gestureSeq = 0;
@@ -84,11 +85,14 @@ export function ColorField({ value, onChange, weight, onWeight }: {
 }) {
   const g = useRef(newGesture());
   const [draft, setDraft] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
   return (
     <div className="color-field">
-      <label className="swatch" style={{ background: value }}>
-        <input type="color" value={value.slice(0, 7)} onFocus={() => (g.current = newGesture())} onChange={(e) => onChange(e.target.value, g.current)} />
-      </label>
+      {/* The swatch opens the theme's palette; its "More colours…" is the full picker. */}
+      <span className="swatch-wrap">
+        <button className="swatch" style={{ background: value }} title="Choose a colour" onClick={() => { g.current = newGesture(); setOpen((o) => !o); }} />
+        {open && <PalettePopover value={value} onPick={(c) => onChange(c, g.current)} onClose={() => setOpen(false)} align="right" />}
+      </span>
       <input
         className="hex"
         value={draft ?? value}
