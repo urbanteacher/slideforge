@@ -1,6 +1,8 @@
 import { Image as ImageIcon, AlignCenterHorizontal, AlignCenterVertical, AlignEndHorizontal, AlignEndVertical, AlignStartHorizontal, AlignStartVertical, MonitorPlay, Play, RotateCcw, Shuffle, WandSparkles } from 'lucide-react';
 import { setVideoLayout, videoLayoutOf, type VideoLayout } from './video';
 import { videoService } from '../model/video';
+import { RecipePanel, SPECIAL_TABS, SpecialPanel } from './special';
+import { RECIPE_NAMES } from '../model/recipes';
 import { EngagementPanel } from './Engagement';
 import { backdropOf, setBackdrop, type BackdropMode } from '../model/backdrop';
 import { useRef } from 'react';
@@ -84,7 +86,7 @@ export function Inspector() {
   // A picture's Picture tab reads as a video's Video tab, and the other way round, so switching
   // between the two keeps you on the media settings.
   const tab = chosen === 'picture' && layer?.kind === 'video' ? 'video' : chosen === 'video' && layer?.kind === 'image' ? 'picture'
-    : (chosen === 'picture' && layer?.kind !== 'image') || (chosen === 'video' && layer?.kind !== 'video') || (chosen === 'interact' && !layer) ? 'design' : chosen;
+    : (chosen === 'picture' && layer?.kind !== 'image') || (chosen === 'video' && layer?.kind !== 'video') || (chosen === 'special' && !(layer && SPECIAL_TABS[layer.kind])) || (chosen === 'interact' && !layer) ? 'design' : chosen;
   const set = useStore((s) => s.set);
   const k = layer ? kind(layer.kind) : null;
 
@@ -104,13 +106,14 @@ export function Inspector() {
         )}
       </div>
       <div className="tabs">
-        {(layer?.kind === 'image' ? (['design', 'picture', 'animate', 'interact', 'engage'] as const) : layer?.kind === 'video' ? (['design', 'video', 'animate', 'interact', 'engage'] as const) : layer ? (['design', 'animate', 'interact', 'engage'] as const) : (['design', 'animate', 'engage'] as const)).map((t) => (
-          <button key={t} className={`tab${tab === t ? ' sel' : ''}${t === 'picture' || t === 'video' ? ' tab-picture' : ''}`} onClick={() => set({ inspectorTab: t })} title={t === 'engage' ? 'Games, activities and audience feedback for this slide' : undefined}>{(t === 'picture' || t === 'video') && <ImageIcon size={13} />}{t === 'engage' ? 'Engage' : t[0].toUpperCase() + t.slice(1)}</button>
+        {(layer?.kind === 'image' ? (['design', 'picture', 'animate', 'interact', 'engage'] as const) : layer?.kind === 'video' ? (['design', 'video', 'animate', 'interact', 'engage'] as const) : layer && SPECIAL_TABS[layer.kind] ? (['design', 'special', 'animate', 'interact', 'engage'] as const) : layer ? (['design', 'animate', 'interact', 'engage'] as const) : (['design', 'animate', 'engage'] as const)).map((t) => (
+          <button key={t} className={`tab${tab === t ? ' sel' : ''}${t === 'picture' || t === 'video' || t === 'special' ? ' tab-picture' : ''}`} onClick={() => set({ inspectorTab: t })} title={t === 'engage' ? 'Games, activities and audience feedback for this slide' : undefined}>{(t === 'picture' || t === 'video' || t === 'special') && <ImageIcon size={13} />}{t === 'engage' ? 'Engage' : t === 'special' && layer ? SPECIAL_TABS[layer.kind] : t[0].toUpperCase() + t.slice(1)}</button>
         ))}
       </div>
       <div className="panel-scroll">
         {tab === 'picture' && layer && <PicturePanel layer={layer} />}
         {tab === 'video' && layer && <VideoPanel layer={layer} />}
+        {tab === 'special' && layer && <SpecialPanel layer={layer} />}
         {tab === 'design' && (layer ? <LayerDesign layer={layer} /> : <SlideDesign />)}
         {tab === 'animate' && (layer ? <LayerAnimate layer={layer} /> : <SlideAnimate />)}
         {tab === 'interact' && layer && <LayerInteract layer={layer} />}
@@ -177,6 +180,8 @@ function LayerDesign({ layer, picture = false }: { layer: Layer; picture?: boole
     <>
       {layer.kind === 'image' && <button className="picture-link" onClick={() => useStore.getState().set({ inspectorTab: 'picture' })}><ImageIcon size={13} />The picture, its frame, caption and motion are in the <b>Picture</b> tab</button>}
       {layer.kind === 'video' && <button className="picture-link" onClick={() => useStore.getState().set({ inspectorTab: 'video' })}><ImageIcon size={13} />The address, full screen or framed, how it plays and its caption are in the <b>Video</b> tab</button>}
+      {SPECIAL_TABS[layer.kind] && <button className="picture-link" onClick={() => useStore.getState().set({ inspectorTab: 'special' })}><ImageIcon size={13} />What it shows and how it behaves are in the <b>{SPECIAL_TABS[layer.kind]}</b> tab</button>}
+      <RecipeLink />
       <Section title="Layer">
         <Row label="Opacity"><Scrub value={layer.opacity * 100} min={0} max={100} step={1} decimals={0} unit=" %" onChange={(v, m) => up((l) => { l.opacity = v / 100; }, m)} /></Row>
         <Row label="Blend" info="How this layer combines with everything below it."><Select value={layer.blend} options={BLENDS} onChange={(v) => up((l) => { l.blend = v; })} /></Row>
@@ -469,12 +474,20 @@ function GroundRow() {
   );
 }
 
+/** On a slide built as a design, the way to its editor: the slide's own panel. */
+function RecipeLink() {
+  const slide = useStore(slideOf);
+  if (!slide.recipe || !RECIPE_NAMES[slide.recipe.kind]) return null;
+  return <button className="picture-link" onClick={() => useStore.getState().set({ selectedId: null })}><ImageIcon size={13} />This slide is a <b>{RECIPE_NAMES[slide.recipe.kind]}</b> design — change what it shows in the slide’s panel</button>;
+}
+
 function SlideDesign() {
   const slide = useStore(slideOf);
   const { updateSlide } = useStore.getState();
   const nm = useRef(newGesture());
   return (
     <>
+      <RecipePanel />
       <Section title="Slide">
         <Row label="Name"><input className="text-input" value={slide.name} onFocus={() => (nm.current = newGesture())} onChange={(e) => updateSlide((s) => { s.name = e.target.value; }, nm.current)} onKeyDown={(e) => e.stopPropagation()} /></Row>
         <Row label="Background" info="Shown beneath all layers."><ColorField value={slide.background} onChange={(v, m) => updateSlide((s) => { s.background = v; }, m)} /></Row>

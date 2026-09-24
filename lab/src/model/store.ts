@@ -10,7 +10,7 @@ import { themeSlide } from './theme';
 import type { Deck, Layer, Slide } from './types';
 
 export type LeftTab = 'layers' | 'add';
-export type InspectorTab = 'design' | 'picture' | 'video' | 'animate' | 'interact' | 'engage';
+export type InspectorTab = 'design' | 'picture' | 'video' | 'special' | 'animate' | 'interact' | 'engage';
 
 interface State {
   deck: Deck;

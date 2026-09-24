@@ -108,6 +108,9 @@ export interface Slide {
   notes: string;
   /** Kept in the deck and the editor, skipped by Preview and the exported deck. */
   hidden?: boolean;
+  /** What a slide design was built from (hotspots, pictures, facts, callouts), so the Slide panel
+   *  can edit it and build the slide again in the deck's style. */
+  recipe?: { kind: string; args: Record<string, unknown> };
   /** SlideForge's audience feedback on this slide. A placeholder in the lab: recorded, marked in the
    *  editor, and run by SlideForge's live session — nothing is drawn on the slide. */
   feedback?: { kind: FeedbackKind };

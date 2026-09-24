@@ -722,7 +722,9 @@ export function exploreSlide(st: LayoutStyle, title: string, src: string, spots:
     stepOf(items, k + 1, true);
     layers.push(...items);
   });
-  return slide(st, 'Explore', layers);
+  const s = slide(st, 'Explore', layers);
+  s.recipe = { kind: 'explore', args: { title, src, spots, aspect } };
+  return s;
 }
 
 /**
@@ -771,7 +773,9 @@ export function framedPictureSlide(st: LayoutStyle, caption: string, credit: str
     };
     layers.push(...toggle(false), ...toggle(true));
   }
-  return slide(st, facts.trim() ? 'Flip to facts' : 'Framed picture', layers);
+  const s = slide(st, facts.trim() ? 'Flip to facts' : 'Framed picture', layers);
+  s.recipe = { kind: 'flip', args: { caption, credit, src, frame, cap, facts } };
+  return s;
 }
 
 /**
@@ -799,7 +803,9 @@ export function chartCalloutSlide(st: LayoutStyle, title: string, data: string, 
   let prev = whole, prevZoom = 1;
   callouts.forEach((c, i) => { const f = at(c.label); layers.push(...item(i + 1, f, 2.2, prev, prevZoom, c.label, c.note, false)); prev = f; prevZoom = 2.2; });
   layers.push(...item(callouts.length + 1, whole, 1, prev, prevZoom, 'The whole series', source, false));
-  return slide(st, 'Chart callouts', layers);
+  const s = slide(st, 'Chart callouts', layers);
+  s.recipe = { kind: 'callouts', args: { title, data, source, callouts } };
+  return s;
 }
 
 /** A YouTube or Vimeo link, understood: a Video layer holding the link, so the canvas shows the
@@ -948,7 +954,9 @@ export function gallerySlide(st: LayoutStyle, title: string, figs: (string | { s
     });
     layers.push(...item.map(([l]) => l));
   });
-  return slide(st, 'Gallery', layers);
+  const s = slide(st, 'Gallery', layers);
+  s.recipe = { kind: 'gallery', args: { title, figs: list, frame, cap, fit } };
+  return s;
 }
 
 export const LAYOUTS: LayoutDef[] = [
