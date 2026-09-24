@@ -1,7 +1,7 @@
 import type { BlendMode, Layer, Slide, TransitionType } from '../model/types';
-import { animTotal, layerState, schedule } from './anim';
+import { EASE, animTotal, layerState, schedule } from './anim';
 import { CONTENT_GLSL, MAIN, PRELUDE, VERT } from './glsl';
-import { getAssetVersion, rasterise } from './raster';
+import { contentFrame, getAssetVersion, rasterise } from './raster';
 import { kind } from './registry';
 
 const BLEND_INDEX: Record<BlendMode, number> = {
@@ -75,7 +75,7 @@ interface FBO { fb: WebGLFramebuffer; tex: WebGLTexture; w: number; h: number }
 interface Prog { prog: WebGLProgram; loc: Map<string, WebGLUniformLocation | null> }
 interface TexEntry {
   tex: WebGLTexture; rect: [number, number, number, number];
-  params: unknown; w: number; h: number; asset: number; textT: number;
+  params: unknown; w: number; h: number; asset: number; textT: number; frame: number;
 }
 
 export interface FrameOpts {
@@ -215,8 +215,9 @@ export class Renderer {
   private texture(layer: Layer, textT: number): TexEntry | null {
     const box = layer.box!;
     const asset = getAssetVersion();
+    const frame = contentFrame(layer);
     const e = this.tex.get(layer.id);
-    if (e && e.params === layer.params && e.w === box.w && e.h === box.h && e.asset === asset && e.textT === textT) return e;
+    if (e && e.params === layer.params && e.w === box.w && e.h === box.h && e.asset === asset && e.textT === textT && e.frame === frame) return e;
     const r = rasterise(layer, textT);
     if (!r) return e ?? null;
     const gl = this.gl;
@@ -233,7 +234,7 @@ export class Renderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-    const entry: TexEntry = { tex, rect: r.rect, params: layer.params, w: box.w, h: box.h, asset, textT };
+    const entry: TexEntry = { tex, rect: r.rect, params: layer.params, w: box.w, h: box.h, asset, textT, frame };
     this.tex.set(layer.id, entry);
     return entry;
   }
@@ -261,6 +262,60 @@ export class Renderer {
     gl.uniform2f(this.u(p, 'uMouse'), opts.mouse[0], opts.mouse[1]);
   }
 
+  private toned = new WeakMap<object, { key: string; params: Layer['params'] }>();
+
+  /** "Logo sits on: let the theme decide" — a logo on a dark slide is drawn white. Only a logo: a
+   *  photo on a dark slide is left alone. Memoised like withPage so the texture cache still hits. */
+  private withTone(layer: Layer, ground: string): Layer {
+    if (layer.kind !== 'image' || (layer.params.tone ?? 'auto') !== 'auto') return layer;
+    const isLogo = layer.params.hfKind === 'logo' || /\blogo\b/i.test(layer.name);
+    if (!isLogo) return layer;
+    const [r, g, b] = hexToRgb(ground || '#ffffff');
+    const white = 0.299 * r + 0.587 * g + 0.114 * b < 0.45;
+    if (!white) return layer;
+    let hit = this.toned.get(layer.params);
+    if (!hit) { hit = { key: 'w', params: { ...layer.params, _white: true } }; this.toned.set(layer.params, hit); }
+    return { ...layer, params: hit.params };
+  }
+
+  /** Slide ids in deck order, so a slide can be told its own page number. Set by whoever draws. */
+  order: string[] = [];
+  private paged = new WeakMap<object, { key: string; params: Layer['params'] }>();
+
+  /** Text holding {page} or {pages} is drawn with the slide's position among the shown slides (a
+   *  hidden slide reads "–"). The
+   *  substituted params are memoised per value, so the texture cache still hits every frame. */
+  private withPage(layer: Layer, slideId: string): Layer {
+    const text = layer.kind === 'text' ? String(layer.params.text ?? '') : '';
+    if (!text.includes('{page')) return layer;
+    const n = this.order.indexOf(slideId) + 1, total = this.order.length;
+    const key = `${n}/${total}`;
+    let hit = this.paged.get(layer.params);
+    if (!hit || hit.key !== key) {
+      hit = { key, params: { ...layer.params, text: text.replace(/\{pages\}/g, String(total || 1)).replace(/\{page\}/g, n ? String(n) : '–') } };
+      this.paged.set(layer.params, hit);
+    }
+    return { ...layer, params: hit.params };
+  }
+
+  private lined = new WeakMap<object, { key: string; params: Layer['params'] }>();
+  /** A text built a line per click draws each line at its own progress: 0 not yet, 1 arrived, and
+   *  with "dim" every line before the newest one drawn back at a third. Memoised per state so a
+   *  settled slide reuses its texture. */
+  private withLines(layer: Layer, starts: number[], t: number): Layer {
+    const d = Math.max(0.01, layer.anim.duration);
+    const prog = starts.map((s) => (!Number.isFinite(t) ? 1 : t < s ? 0 : EASE.cubicOut(Math.min(1, (t - s) / d))));
+    const shown = prog.reduce((n, p, i) => (p > 0 ? i : n), -1);
+    const dim = layer.anim.build === 'dim' && Number.isFinite(t);
+    const key = prog.map((p) => Math.round(p * 40)).join() + (dim ? `|${shown}` : '');
+    let hit = this.lined.get(layer.params);
+    if (!hit || hit.key !== key) {
+      hit = { key, params: { ...layer.params, _lines: prog.map((p) => Math.round(p * 40) / 40).join(), _dimBefore: dim ? shown : -1 } };
+      this.lined.set(layer.params, hit);
+    }
+    return { ...layer, params: hit.params };
+  }
+
   /** Composite a slide into `target` (null = the canvas). */
   drawSlide(slide: Slide, opts: FrameOpts, target: FBO | null = null) {
     const gl = this.gl;
@@ -271,8 +326,11 @@ export class Renderer {
 
     type Pass = { layer: Layer; run: (p: Prog) => boolean };
     const passes: Pass[] = [];
-    for (const layer of slide.layers) {
-      if (!layer.visible || opts.hidden?.has(layer.id)) continue;
+    for (const raw of slide.layers) {
+      if (!raw.visible || opts.hidden?.has(raw.id)) continue;
+      const starts = sched.lines.get(raw.id);
+      const toned = this.withTone(raw, slide.background);
+      const layer = starts ? this.withLines(this.withPage(toned, slide.id), starts, opts.t) : this.withPage(toned, slide.id);
       const k = kind(layer.kind);
       const st = layerState(layer, sched.start.get(layer.id), opts.t, opts.time);
       if (!st.visible || st.opacity <= 0.001 || layer.opacity <= 0.001) continue;
@@ -280,7 +338,8 @@ export class Renderer {
       if (k.content) {
         const box = layer.box!;
         const total = animTotal(layer);
-        const textT = st.textT < total ? st.textT : Infinity;
+        // A text that leaves again keeps its clock running; the rest settle once they have arrived.
+        const textT = layer.anim.leave || st.textT < total ? st.textT : Infinity;
         if (opts.interactive) {
           if (layer.interact.parallax) {
             st.dx += (opts.mouse[0] - 0.5) * layer.interact.parallax * 90;
@@ -314,6 +373,7 @@ export class Renderer {
             gl.uniform2f(this.u(p, 'uOffset'), st.dx, st.dy);
             gl.uniform1f(this.u(p, 'uBlur'), st.blur);
             gl.uniform4f(this.u(p, 'uClip'), ...st.clip);
+            gl.uniform3f(this.u(p, 'uView'), ...st.view);
             gl.uniform1f(this.u(p, 'uGlow'), st.glow);
             gl.uniform1f(this.u(p, 'uOpacity'), layer.opacity * st.opacity);
             return true;

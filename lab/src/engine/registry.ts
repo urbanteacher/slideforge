@@ -2,7 +2,7 @@ import type { BlendMode, Params, ParamValue } from '../model/types';
 
 export type Category = 'source' | 'generate' | 'distort' | 'colour' | 'light' | 'stylise';
 
-interface BaseParam { key: string; label: string; info?: string; group?: string; when?: (p: Params) => boolean }
+interface BaseParam { key: string; label: string; info?: string; group?: string; when?: (p: Params) => boolean; /** vec2 measured across the layer's own box, not the slide */ inBox?: boolean }
 export type ParamDef =
   | (BaseParam & { type: 'number'; min: number; max: number; step: number; default: number; unit?: string; decimals?: number })
   | (BaseParam & { type: 'color'; default: string; weightKey?: string })
@@ -11,7 +11,8 @@ export type ParamDef =
   | (BaseParam & { type: 'vec2'; default: [number, number] })
   | (BaseParam & { type: 'text'; default: string })
   | (BaseParam & { type: 'font'; default: string })
-  | (BaseParam & { type: 'image'; default: string });
+  | (BaseParam & { type: 'image'; default: string })
+  | (BaseParam & { type: 'video'; default: string });
 
 export interface KindDef {
   id: string;
@@ -19,7 +20,7 @@ export interface KindDef {
   category: Category;
   featured?: boolean;
   description: string;
-  content?: 'text' | 'image' | 'shape';
+  content?: 'text' | 'image' | 'shape' | 'video' | 'chart' | 'quiz' | 'activity' | 'note' | 'quote';
   params: ParamDef[];
   glsl?: string;
   needsMips?: boolean;
@@ -30,7 +31,7 @@ export interface KindDef {
 
 export const FONTS = [
   'Inter', 'Instrument Serif', 'Playfair Display', 'DM Serif Display', 'Fraunces',
-  'Space Grotesk', 'Syne', 'Unbounded', 'Bebas Neue', 'JetBrains Mono', 'Georgia',
+  'Space Grotesk', 'Syne', 'Unbounded', 'Bebas Neue', 'JetBrains Mono', 'Georgia', 'Uncut Sans',
 ];
 
 export const CATEGORIES: { id: Category | 'featured'; label: string }[] = [
@@ -45,6 +46,20 @@ export const CATEGORIES: { id: Category | 'featured'; label: string }[] = [
 
 const opt = (...v: string[]) => v.map((x) => ({ value: x, label: x[0].toUpperCase() + x.slice(1) }));
 
+/** Grow the box to the content, or keep the box and bring the type down until it fits — the way a
+ *  SlideForge layout region holds its copy on the slide. */
+const FIT: ParamDef = {
+  key: 'fit', label: 'Fit', type: 'select', group: 'Fit', default: 'grow',
+  options: [{ value: 'grow', label: 'Grow the box' }, { value: 'shrink', label: 'Shrink to fit the box' }],
+  info: 'Shrink to fit keeps the box where it is and makes the text smaller when there is more of it.',
+};
+const style = (size: number, font = 'Inter', min = 12, max = 200): ParamDef[] => [
+  { key: 'font', label: 'Font', type: 'font', default: font, group: 'Style' },
+  { key: 'size', label: 'Text size', type: 'number', min, max, step: 1, default: size, group: 'Style', unit: 'px', decimals: 0 },
+  { key: 'textColor', label: 'Text', type: 'color', default: '#141414', group: 'Style' },
+  { key: 'accent', label: 'Accent', type: 'color', default: '#d94f2b', group: 'Style' },
+];
+
 const KINDS: KindDef[] = [
   // ─── Sources ──────────────────────────────────────────────────────────────
   {
@@ -57,10 +72,13 @@ const KINDS: KindDef[] = [
       { key: 'weight', label: 'Weight', type: 'select', options: ['300', '400', '500', '600', '700', '800', '900'].map((v) => ({ value: v, label: v })), default: '400', group: 'Text' },
       { key: 'italic', label: 'Italic', type: 'bool', default: false, group: 'Text' },
       { key: 'color', label: 'Colour', type: 'color', default: '#111111', group: 'Text' },
+      { key: 'underline', label: 'Underline', type: 'bool', default: false, group: 'Text' },
       { key: 'align', label: 'Align', type: 'select', options: opt('left', 'center', 'right'), default: 'left', group: 'Text' },
+      { key: 'list', label: 'List', type: 'select', options: [{ value: 'none', label: 'None' }, { value: 'bullets', label: 'Bullets' }, { value: 'numbers', label: 'Numbers' }], default: 'none', group: 'Text', info: 'Each line becomes a list item.' },
       { key: 'lineHeight', label: 'Line height', type: 'number', min: 0.6, max: 2.4, step: 0.01, default: 1.0, group: 'Spacing', decimals: 2 },
       { key: 'tracking', label: 'Tracking', type: 'number', min: -0.15, max: 0.6, step: 0.005, default: -0.01, group: 'Spacing', decimals: 3, info: 'Letter spacing, in em.' },
       { key: 'uppercase', label: 'Uppercase', type: 'bool', default: false, group: 'Spacing' },
+      FIT,
     ],
   },
   {
@@ -70,6 +88,17 @@ const KINDS: KindDef[] = [
       { key: 'src', label: 'Image', type: 'image', default: '', group: 'Image' },
       { key: 'fit', label: 'Fit', type: 'select', options: opt('cover', 'contain'), default: 'contain', group: 'Image' },
       { key: 'radius', label: 'Corner radius', type: 'number', min: 0, max: 400, step: 1, default: 0, group: 'Image', unit: 'px', decimals: 0 },
+      // SlideForge's picture settings, from "Logo sits on" down.
+      { key: 'frame', label: 'Image frame', type: 'select', group: 'Picture', default: 'free', info: 'Reshapes the box to a fixed ratio, or fills the slide. Drag its handles afterwards to change it again.',
+        options: [{ value: 'free', label: 'As drawn' }, { value: 'bleed', label: 'Full bleed — the whole slide' }, { value: '16:9', label: '16:9 landscape' }, { value: '4:3', label: '4:3 landscape' }, { value: '1:1', label: '1:1 square' }, { value: '4:5', label: '4:5 portrait' }] },
+      { key: 'flip', label: 'Flip image', type: 'select', group: 'Picture', default: 'none', options: [{ value: 'none', label: 'As it was taken' }, { value: 'mirror', label: 'Mirrored' }] },
+      { key: 'tone', label: 'Logo sits on', type: 'select', group: 'Picture', default: 'auto', info: 'For a logo. On a dark background it is shown white so it stays visible.',
+        options: [{ value: 'auto', label: 'Let the theme decide' }, { value: 'dark', label: 'A dark background — show the logo white' }, { value: 'light', label: 'A light background — keep the logo as it is' }] },
+      { key: 'focus', label: 'Image focus', type: 'vec2', default: [0.5, 0.5], group: 'Picture', inBox: true, info: 'The part of the picture that matters: it stays in view when the frame crops, and a slow zoom closes in on it. Drag the handle on the picture.', when: (p) => p.fit === 'cover' || (p.motion ?? 'none') !== 'none' },
+      // Image effects — shown in the Animate tab, not here.
+      { key: 'motion', label: 'Image motion', type: 'select', group: '_motion', default: 'none', options: [{ value: 'none', label: 'Stays still' }, { value: 'zoom', label: 'Slow zoom in' }, { value: 'travel', label: 'Travel — from one point to another' }] },
+      { key: 'focus2', label: 'Travels to', type: 'vec2', default: [0.7, 0.4], group: '_motion', inBox: true, when: (p) => p.motion === 'travel' },
+      { key: 'motionSecs', label: 'How long the move takes', type: 'select', group: '_motion', default: '20', options: [{ value: '12', label: '12 seconds' }, { value: '20', label: '20 seconds' }, { value: '30', label: '30 seconds' }] },
     ],
   },
   {
@@ -88,6 +117,89 @@ const KINDS: KindDef[] = [
     ],
   },
 
+  {
+    id: 'video', name: 'Video', category: 'source', content: 'video',
+    description: 'A video clip that plays muted on a loop. Upload a file or paste a link to an .mp4 or .webm.',
+    params: [
+      { key: 'src', label: 'Video', type: 'video', default: '', group: 'Video' },
+      { key: 'fit', label: 'Fit', type: 'select', options: opt('cover', 'contain'), default: 'cover', group: 'Video' },
+      { key: 'radius', label: 'Corner radius', type: 'number', min: 0, max: 400, step: 1, default: 0, group: 'Video', unit: 'px', decimals: 0 },
+      { key: 'speed', label: 'Speed', type: 'number', min: 0.25, max: 2, step: 0.05, default: 1, group: 'Video', unit: '×', decimals: 2 },
+    ],
+  },
+  {
+    id: 'chart', name: 'Chart', category: 'source', content: 'chart',
+    description: 'A column, bar, line, pie or donut chart.',
+    params: [
+      { key: 'chart', label: 'Type', type: 'select', options: opt('column', 'bar', 'line', 'pie', 'donut'), default: 'column', group: 'Chart' },
+      { key: 'data', label: 'Data', type: 'text', default: '2021, 12\n2022, 19\n2023, 27\n2024, 34\n2025, 48', group: 'Chart', info: 'One "label, value" per line.' },
+      { key: 'color', label: 'Colour', type: 'color', default: '#ff5a36', group: 'Style' },
+      { key: 'color2', label: 'Colour 2', type: 'color', default: '#ffc15e', group: 'Style', info: 'The series shades from Colour to Colour 2.' },
+      { key: 'textColor', label: 'Labels', type: 'color', default: '#1a1a1a', group: 'Style' },
+      { key: 'font', label: 'Font', type: 'font', default: 'Inter', group: 'Style' },
+      { key: 'size', label: 'Label size', type: 'number', min: 10, max: 80, step: 1, default: 28, group: 'Style', unit: 'px', decimals: 0 },
+      { key: 'values', label: 'Show values', type: 'bool', default: true, group: 'Style' },
+      { key: 'grid', label: 'Gridlines', type: 'bool', default: true, group: 'Style', when: (p) => p.chart !== 'pie' && p.chart !== 'donut' },
+    ],
+  },
+  {
+    id: 'quiz', name: 'Quiz', category: 'source', content: 'quiz',
+    description: 'A placeholder card for a quiz question: the question and its answer options, ready for a live quiz.',
+    params: [
+      { key: 'question', label: 'Question', type: 'text', default: 'Which chart best shows change over time?', group: 'Quiz' },
+      { key: 'options', label: 'Options', type: 'text', default: 'Pie chart\nLine chart\nDonut chart\nScatter plot', group: 'Quiz', info: 'One option per line (up to six).' },
+      { key: 'label', label: 'Label', type: 'text', default: 'Quiz', group: 'Quiz' },
+      { key: 'font', label: 'Font', type: 'font', default: 'Inter', group: 'Style' },
+      { key: 'size', label: 'Text size', type: 'number', min: 16, max: 120, step: 1, default: 52, group: 'Style', unit: 'px', decimals: 0 },
+      { key: 'fill', label: 'Card', type: 'color', default: '#ffffff', group: 'Style' },
+      { key: 'textColor', label: 'Text', type: 'color', default: '#141414', group: 'Style' },
+      { key: 'accent', label: 'Accent', type: 'color', default: '#ff5a36', group: 'Style' },
+      { key: 'radius', label: 'Corner radius', type: 'number', min: 0, max: 120, step: 1, default: 36, group: 'Style', unit: 'px', decimals: 0 },
+    ],
+  },
+  {
+    id: 'activity', name: 'Activity', category: 'source', content: 'activity',
+    description: 'A placeholder card for a class activity: its title and timed steps. Minutes in the steps add up to the total.',
+    params: [
+      { key: 'title', label: 'Title', type: 'text', default: 'Think, pair, share', group: 'Activity' },
+      { key: 'steps', label: 'Steps', type: 'text', default: 'Think on your own · 1 min\nCompare with a partner · 3 min\nShare with the room · 2 min', group: 'Activity', info: 'One step per line. Write "· 3 min" to time a step.' },
+      { key: 'label', label: 'Label', type: 'text', default: 'Activity', group: 'Activity' },
+      { key: 'font', label: 'Font', type: 'font', default: 'Inter', group: 'Style' },
+      { key: 'size', label: 'Text size', type: 'number', min: 16, max: 120, step: 1, default: 44, group: 'Style', unit: 'px', decimals: 0 },
+      { key: 'fill', label: 'Card', type: 'color', default: '#ffffff', group: 'Style' },
+      { key: 'textColor', label: 'Text', type: 'color', default: '#141414', group: 'Style' },
+      { key: 'accent', label: 'Accent', type: 'color', default: '#2f6bff', group: 'Style' },
+      { key: 'radius', label: 'Corner radius', type: 'number', min: 0, max: 120, step: 1, default: 36, group: 'Style', unit: 'px', decimals: 0 },
+    ],
+  },
+
+  // ─── SlideForge items ─────────────────────────────────────────────────────
+  {
+    id: 'note', name: 'Note', category: 'source', content: 'note',
+    description: 'A takeaway, a source line or a caution: a short label and a sentence, with an accent rule down its side.',
+    params: [
+      { key: 'label', label: 'Label', type: 'text', default: 'Takeaway', group: 'Note', info: 'Leave empty for no label.' },
+      { key: 'text', label: 'Text', type: 'text', default: 'The one thing to remember from this slide.', group: 'Note' },
+      ...style(36),
+      { key: 'panel', label: 'Panel behind', type: 'bool', default: true, group: 'Style' },
+      { key: 'fill', label: 'Panel', type: 'color', default: '#f3efe8', group: 'Style', when: (p) => p.panel !== false },
+      { key: 'radius', label: 'Corner radius', type: 'number', min: 0, max: 60, step: 1, default: 14, group: 'Style', unit: 'px', decimals: 0, when: (p) => p.panel !== false },
+      FIT,
+    ],
+  },
+  {
+    id: 'quote', name: 'Quote', category: 'source', content: 'quote',
+    description: 'Someone else\u2019s words, set large, with who said it underneath.',
+    params: [
+      { key: 'text', label: 'Quote', type: 'text', default: 'The purpose of visualisation is insight, not pictures.', group: 'Quote' },
+      { key: 'attribution', label: 'Who said it', type: 'text', default: 'Ben Shneiderman', group: 'Quote' },
+      { key: 'mark', label: 'Quotation mark', type: 'bool', default: true, group: 'Quote' },
+      { key: 'align', label: 'Align', type: 'select', options: opt('left', 'center'), default: 'left', group: 'Quote' },
+      ...style(72, 'Instrument Serif', 16, 240),
+      { key: 'italic', label: 'Italic', type: 'bool', default: true, group: 'Style' },
+      FIT,
+    ],
+  },
   // ─── Generate ─────────────────────────────────────────────────────────────
   {
     id: 'solid', name: 'Solid colour', category: 'generate',
@@ -208,6 +320,66 @@ vec4 effect(vec2 uv) {
   }
   a *= mix(1.0, 1.0 - smoothstep(0.15, 0.85, length((uv - 0.5) * aspect())), u_fade);
   return vec4(u_color, a);
+}`,
+  },
+  {
+    // SlideForge's cover motion (css/app.css, "generated cover motion"), drawn on the GPU: the same
+    // three blurred washes of the theme's own colours on the same closed paths and periods, so a
+    // slide that moves in SlideForge moves the same way here. Every colour is laid over the ground
+    // at low strength, so it is pale on paper and a glow on midnight.
+    id: 'backdrop', name: 'Backdrop motion', category: 'generate', featured: true,
+    description: 'Drift, Grid or Glow — slow motion behind the words, made from the slide’s own colours.',
+    defaultBlend: 'normal',
+    params: [
+      { key: 'mode', label: 'Motion', type: 'select', options: [{ value: 'drift', label: 'Drift — colour moving slowly' }, { value: 'grid', label: 'Grid — a ruled plane travelling' }, { value: 'glow', label: 'Glow — one slow breath' }], default: 'drift', group: 'Motion' },
+      { key: 'accent', label: 'Accent', type: 'color', default: '#ff5a36', group: 'Colours' },
+      { key: 'accent2', label: 'Second accent', type: 'color', default: '#ffb199', group: 'Colours' },
+      { key: 'ink', label: 'Ink', type: 'color', default: '#161616', group: 'Colours', info: 'The text colour: the third wash and the grid lines.' },
+      { key: 'strength', label: 'Strength', type: 'number', min: 0, max: 2.5, step: 0.01, default: 1, group: 'Motion', decimals: 2 },
+      { key: 'speed', label: 'Speed', type: 'number', min: 0, max: 4, step: 0.01, default: 1, group: 'Motion', decimals: 2 },
+    ],
+    glsl: `uniform float u_mode; uniform vec3 u_accent; uniform vec3 u_accent2; uniform vec3 u_ink; uniform float u_strength; uniform float u_speed;
+// ease-in-out there and back over one period, as the CSS keyframes do
+float swing(float period) { return 0.5 - 0.5 * cos(6.2831853 * uTime * u_speed / period); }
+// a disc of diameter d, blurred by b, centred at c (slide px)
+float blob(vec2 p, vec2 c, float d, float b) { return 1.0 - smoothstep(d * 0.5 - b * 1.6, d * 0.5 + b * 1.6, length(p - c)); }
+vec4 over(vec4 acc, vec3 col, float a) { return vec4(col * a + acc.rgb * (1.0 - a), a + acc.a * (1.0 - a)); }
+vec4 effect(vec2 uv) {
+  vec2 p = uv * uRes;
+  float W = uRes.x, H = uRes.y, k = W / 1920.0;
+  float blur = 96.0 * k;
+  vec4 acc = vec4(0.0);
+  if (u_mode < 1.5) {
+    // mo-1: 58% wide, top-left; mo-2: 58%, right; periods 31 s and 43 s
+    float s1 = swing(31.0), s2 = swing(43.0);
+    float d1 = 0.58 * W * (1.0 + 0.08 * s1), d2 = 0.58 * W * (1.04 - 0.04 * s2);
+    vec2 c1 = vec2(0.21 * W, -0.14 * H + 0.29 * W) + vec2(0.14, 0.10) * 0.58 * W * s1;
+    vec2 c2 = vec2(0.83 * W, 0.12 * H + 0.29 * W) + vec2(-0.12, 0.14) * 0.58 * W * s2;
+    acc = over(acc, u_accent, 0.40 * blob(p, c1, d1, blur));
+    acc = over(acc, u_accent2, 0.34 * blob(p, c2, d2, blur));
+    if (u_mode < 0.5) {
+      // mo-3: 66% wide, ink, low along the bottom; 37 s
+      float s3 = swing(37.0);
+      float d3 = 0.66 * W * (1.0 + 0.1 * s3);
+      vec2 c3 = vec2(0.59 * W, 1.26 * H - 0.33 * W) + vec2(0.08, -0.12) * 0.66 * W * s3;
+      acc = over(acc, u_ink, 0.14 * blob(p, c3, d3, blur));
+    } else {
+      // a ruled plane, one 120px cell every 24 s, so each cycle is the same picture again
+      float cell = 120.0 * k, t = fract(uTime * u_speed / 24.0) * cell;
+      vec2 g = mod(p - vec2(t), cell);
+      float px = uRes.x / uPx.x, w = 1.5 * k;
+      float line = max(1.0 - smoothstep(w, w + px, g.x), 1.0 - smoothstep(w, w + px, g.y));
+      acc = over(acc, u_ink, 0.09 * line);
+    }
+  } else {
+    // one breath behind the words: 92% wide, opacity .55 → .9, scale 1 → 1.12, 19 s
+    float s = swing(19.0);
+    float r = 0.46 * W * (1.0 + 0.12 * s);
+    float f = 1.0 - smoothstep(0.0, 1.0, length(p - vec2(0.5 * W, 0.5 * H)) / r);
+    acc = over(acc, u_accent, 0.34 * mix(0.55, 0.9, s) * f * f * (3.0 - 2.0 * f));
+  }
+  float a = clamp(acc.a * u_strength, 0.0, 1.0);
+  return vec4((acc.a > 0.0 ? acc.rgb / acc.a : u_accent) + dither(), a);
 }`,
   },
 

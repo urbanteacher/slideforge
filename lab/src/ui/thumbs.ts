@@ -17,6 +17,13 @@ function sampleSlide(kindId: string): Slide {
   if (k.content === 'text') return createSlide('', [createLayer('solid', { params: { color: '#f4ede4' } }), createLayer('text', { params: { text: 'Aa', font: 'Instrument Serif', size: 620, color: '#141414', align: 'center', italic: true }, box: { x: 360, y: 120, w: 1200 } })], '#f4ede4');
   if (k.content === 'image') return createSlide('', [createLayer('solid', { params: { color: '#f6e7ef' } }), base[1]], '#fff');
   if (k.content === 'shape') return createSlide('', [createLayer('solid', { params: { color: '#141417' } }), createLayer('shape', { params: { shape: 'star', points: 6, fill: '#ff5a36', gradient: true, fill2: '#ffc15e' }, box: { x: 610, y: 190, w: 700, h: 700 } })], '#141417');
+  if (k.content === 'video') return createSlide('', [createLayer('solid', { params: { color: '#2a2a30' } }), createLayer('video', { box: { x: 260, y: 150, w: 1400, h: 780 } })], '#2a2a30');
+  if (k.content === 'chart') return createSlide('', [createLayer('solid', { params: { color: '#f4ede4' } }), createLayer('chart', { params: { values: false, grid: false }, box: { x: 260, y: 160, w: 1400, h: 760 } })], '#f4ede4');
+  if (k.content === 'note' || k.content === 'quote') {
+    const box = k.content === 'quote' ? { x: 260, y: 200, w: 1400, h: 600 } : { x: 160, y: 220, w: 1600, h: 600 };
+    return createSlide('', [createLayer('solid', { params: { color: '#f4ede4' } }), createLayer(kindId, { box, params: { size: k.content === 'quote' ? 110 : 60 } })], '#f4ede4');
+  }
+  if (k.content === 'quiz' || k.content === 'activity') return createSlide('', [createLayer('solid', { params: { color: '#e9e4f5' } }), createLayer(kindId, { box: { x: 240, y: 110, w: 1440, h: 860 } })], '#e9e4f5');
   if (k.category === 'generate') {
     const bg = kindId === 'grid' ? [createLayer('solid', { params: { color: '#0d2b5c' } })] : [];
     return createSlide('', [...bg, createLayer(kindId, kindId === 'grid' ? { params: { spacing: 90, thickness: 2 } } : {})], '#000');

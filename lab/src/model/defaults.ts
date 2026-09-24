@@ -1,5 +1,5 @@
 import { defaultAnim, defaultInteract } from '../engine/anim';
-import { measureTextHeight } from '../engine/raster';
+import { contentHeight } from '../engine/raster';
 import { defaultParams, kind } from '../engine/registry';
 import type { Anim, Box, Deck, Interact, Layer, Params, Slide } from './types';
 
@@ -23,12 +23,19 @@ export function createLayer(kindId: string, o: LayerOpts = {}): Layer {
   const params = { ...defaultParams(k), ...(o.params ?? {}) };
   let box: Box | undefined;
   if (k.content) {
-    const base: Box =
-      k.content === 'text' ? { x: 200, y: 420, w: 1200, h: 120, rot: 0 }
-        : k.content === 'image' ? { x: 610, y: 190, w: 700, h: 700, rot: 0 }
-          : { x: 760, y: 340, w: 400, h: 400, rot: 0 };
+    const BOXES: Record<string, Omit<Box, 'rot'>> = {
+      text: { x: 200, y: 420, w: 1200, h: 120 },
+      image: { x: 610, y: 190, w: 700, h: 700 },
+      video: { x: 320, y: 180, w: 1280, h: 720 },
+      chart: { x: 360, y: 220, w: 1200, h: 640 },
+      quiz: { x: 260, y: 270, w: 1400, h: 540 },
+      activity: { x: 360, y: 250, w: 1200, h: 580 },
+      note: { x: 360, y: 760, w: 1200, h: 160 },
+      quote: { x: 300, y: 300, w: 1320, h: 420 },
+    };
+    const base: Box = { ...(BOXES[k.content] ?? { x: 760, y: 340, w: 400, h: 400 }), rot: 0 };
     box = { ...base, ...(o.box ?? {}) };
-    if (k.content === 'text') box.h = measureTextHeight(params, box.w);
+    box.h = contentHeight({ kind: k.id, params }, box.w) ?? box.h;
   }
   return {
     id: uid(),

@@ -1,11 +1,16 @@
-import { MonitorPlay, Play, RotateCcw, Shuffle } from 'lucide-react';
+import { Image as ImageIcon, AlignCenterHorizontal, AlignCenterVertical, AlignEndHorizontal, AlignEndVertical, AlignStartHorizontal, AlignStartVertical, MonitorPlay, Play, RotateCcw, Shuffle, WandSparkles } from 'lucide-react';
+import { EngagementPanel } from './Engagement';
+import { backdropOf, setBackdrop, type BackdropMode } from '../model/backdrop';
 import { useRef } from 'react';
 import { animTotal, isTextUnit, schedule } from '../engine/anim';
+import { autoHeight, textSize } from '../engine/raster';
 import { CATEGORY_LABEL, FONTS, defaultParams, kind, type ParamDef } from '../engine/registry';
 import { layerOf, slideOf, useStore } from '../model/store';
 import type { BlendMode, ClickAction, Easing, EntranceType, HoverType, Layer, LoopType, ParamValue, TransitionType, Trigger } from '../model/types';
 import { ColorField, Row, Scrub, Section, Select, Toggle, newGesture } from './controls';
 import { KindIcon } from './icons';
+import { addCaption, applyFrame, captionsOf, setArrival, setCaptionClear, setCaptionPos, setCaptionStyle, type CaptionStyle } from './picture';
+import { alignLayer, nextDirection, sequenceSize, tidySlide, tidyUp, type Edge } from './snap';
 
 const BLENDS: { value: BlendMode; label: string }[] = [
   { value: 'normal', label: 'Normal' }, { value: 'multiply', label: 'Multiply' }, { value: 'screen', label: 'Screen' },
@@ -52,7 +57,10 @@ const CLICKS: { value: ClickAction; label: string }[] = [
 
 export function Inspector() {
   const layer = useStore(layerOf);
-  const tab = useStore((s) => s.inspectorTab);
+  const chosen = useStore((s) => s.inspectorTab);
+  // The Picture tab exists only for a picture; with anything else selected it reads as Design.
+  // Each tab only where it has something to set: Picture for a picture, Interact for a layer.
+  const tab = (chosen === 'picture' && layer?.kind !== 'image') || (chosen === 'interact' && !layer) ? 'design' : chosen;
   const set = useStore((s) => s.set);
   const k = layer ? kind(layer.kind) : null;
 
@@ -72,29 +80,39 @@ export function Inspector() {
         )}
       </div>
       <div className="tabs">
-        {(['design', 'animate', 'interact'] as const).map((t) => (
-          <button key={t} className={`tab${tab === t ? ' sel' : ''}`} onClick={() => set({ inspectorTab: t })}>{t[0].toUpperCase() + t.slice(1)}</button>
+        {(layer?.kind === 'image' ? (['design', 'picture', 'animate', 'interact', 'engage'] as const) : layer ? (['design', 'animate', 'interact', 'engage'] as const) : (['design', 'animate', 'engage'] as const)).map((t) => (
+          <button key={t} className={`tab${tab === t ? ' sel' : ''}${t === 'picture' ? ' tab-picture' : ''}`} onClick={() => set({ inspectorTab: t })} title={t === 'engage' ? 'Games, activities and audience feedback for this slide' : undefined}>{t === 'picture' && <ImageIcon size={13} />}{t === 'engage' ? 'Engage' : t[0].toUpperCase() + t.slice(1)}</button>
         ))}
       </div>
       <div className="panel-scroll">
+        {tab === 'picture' && layer && <PicturePanel layer={layer} />}
         {tab === 'design' && (layer ? <LayerDesign layer={layer} /> : <SlideDesign />)}
         {tab === 'animate' && (layer ? <LayerAnimate layer={layer} /> : <SlideAnimate />)}
-        {tab === 'interact' && (layer ? <LayerInteract layer={layer} /> : <div className="hint">Select a layer to give it hover states, parallax depth or a click action. Interactions are live in <b>Preview</b> and in exported HTML.</div>)}
+        {tab === 'interact' && layer && <LayerInteract layer={layer} />}
+        {tab === 'engage' && <EngagementPanel />}
       </div>
     </aside>
   );
 }
 
 // ─── Design ─────────────────────────────────────────────────────────────────
-function LayerDesign({ layer }: { layer: Layer }) {
+function LayerDesign({ layer, picture = false }: { layer: Layer; picture?: boolean }) {
   const k = kind(layer.kind);
   const update = useStore((s) => s.updateLayer);
   const up = (fn: (l: Layer) => void, merge?: string) => update(layer.id, fn, merge);
-  const setParam = (key: string, v: ParamValue, merge?: string) => up((l) => { l.params[key] = v; }, merge);
+  const setParam = (key: string, v: ParamValue, merge?: string) => up((l) => {
+    l.params[key] = v;
+    if (key === 'frame') applyFrame(l, String(v), useStore.getState().deck);
+  }, merge);
 
   const groups: { name: string; defs: ParamDef[] }[] = [];
   for (const d of k.params) {
-    if (d.group === '_hidden' || (d.when && !d.when(layer.params))) continue;
+    if (d.group === '_hidden' || d.group === '_motion' || (d.when && !d.when(layer.params))) continue;
+    // A picture's own settings live in its Picture tab, together, not spread through Design.
+    const pictureGroup = d.group === 'Image' || d.group === 'Picture';
+    if (layer.kind === 'image' && (picture ? !pictureGroup : pictureGroup)) continue;
+    // Words are edited on the slide, never here: this panel is for how a layer looks.
+    if (d.type === 'text' || (layer.kind === 'chart' && d.key === 'data')) continue;
     const g = d.group ?? 'Settings';
     let e = groups.find((x) => x.name === g);
     if (!e) groups.push((e = { name: g, defs: [] }));
@@ -116,28 +134,138 @@ function LayerDesign({ layer }: { layer: Layer }) {
     }
   });
 
+  const paramSections = groups.map((g) => (
+    <Section key={g.name} title={g.name}>
+      {g.defs.map((d) => <ParamRow key={d.key} layer={layer} def={d} setParam={setParam} />)}
+      {g.name === 'Origin' && k.mouseParam && (
+        <Row label="Follow mouse" info="The origin tracks the pointer, in the editor and when presenting.">
+          <div><Toggle value={layer.interact.followMouse} onChange={(v) => up((l) => { l.interact.followMouse = v; })} /></div>
+        </Row>
+      )}
+    </Section>
+  ));
+  if (picture) return <>{paramSections}</>;
+
   return (
     <>
+      {layer.kind === 'image' && <button className="picture-link" onClick={() => useStore.getState().set({ inspectorTab: 'picture' })}><ImageIcon size={13} />The picture, its frame, caption and motion are in the <b>Picture</b> tab</button>}
       <Section title="Layer">
         <Row label="Opacity"><Scrub value={layer.opacity * 100} min={0} max={100} step={1} decimals={0} unit=" %" onChange={(v, m) => up((l) => { l.opacity = v / 100; }, m)} /></Row>
         <Row label="Blend" info="How this layer combines with everything below it."><Select value={layer.blend} options={BLENDS} onChange={(v) => up((l) => { l.blend = v; })} /></Row>
       </Section>
       <div className="desc">{k.description}</div>
+      {k.content && layer.kind !== 'text' && (layer.kind === 'chart' || k.params.some((d) => d.type === 'text')) && (
+        <div className="desc on-canvas">{layer.kind === 'chart' ? 'Double-click the chart to change its labels and values, or add a bar.' : 'Double-click it on the slide to change the words.'}</div>
+      )}
       <div className="btn-row">
-        <button className="btn-soft" onClick={() => up((l) => { l.params = { ...defaultParams(k), ...(k.content ? { text: l.params.text, src: l.params.src } : {}) }; })}><RotateCcw size={13} />Reset</button>
+        <button className="btn-soft" onClick={() => up((l) => { l.params = { ...defaultParams(k), ...(k.content ? keptOnReset(k, l) : {}) }; })}><RotateCcw size={13} />Reset</button>
         {!k.content && <button className="btn-soft" onClick={randomise}><Shuffle size={13} />Randomise</button>}
       </div>
       {layer.box && <BoxSection layer={layer} />}
-      {groups.map((g) => (
-        <Section key={g.name} title={g.name}>
-          {g.defs.map((d) => <ParamRow key={d.key} layer={layer} def={d} setParam={setParam} />)}
-          {g.name === 'Origin' && k.mouseParam && (
-            <Row label="Follow mouse" info="The origin tracks the pointer, in the editor and when presenting.">
-              <div><Toggle value={layer.interact.followMouse} onChange={(v) => up((l) => { l.interact.followMouse = v; })} /></div>
-            </Row>
-          )}
-        </Section>
-      ))}
+      {paramSections}
+    </>
+  );
+}
+
+/** Everything about a picture in one tab: the image, its frame and focus, its caption, its motion. */
+function PicturePanel({ layer }: { layer: Layer }) {
+  return (
+    <>
+      <div className="picture-head"><ImageIcon size={14} />Picture settings — the image, its frame and focus, its caption and how it moves. Drag the focus points on the picture.</div>
+      <LayerDesign layer={layer} picture />
+      <CaptionSection layer={layer} />
+      <ImageEffects layer={layer} />
+    </>
+  );
+}
+
+const CAP_STYLES: { value: CaptionStyle; label: string }[] = [
+  { value: 'gradient', label: 'Shade over the image' }, { value: 'bar', label: 'Colour bar' },
+  { value: 'plain', label: 'Plain text' }, { value: 'hidden', label: 'Hidden' },
+];
+
+/** The picture's caption — whatever text sits on it — styled and placed from here, typed on the slide. */
+function CaptionSection({ layer }: { layer: Layer }) {
+  const slide = useStore(slideOf);
+  const caps = captionsOf(slide, layer);
+  return (
+    <Section title="Caption">
+      {caps.length ? (
+        <>
+          <Row label="Caption style"><Select value={String(layer.params.capStyle ?? 'plain')} options={CAP_STYLES} onChange={(v) => setCaptionStyle(layer.id, v as CaptionStyle)} /></Row>
+          <Row label="Caption position"><Select value={String(layer.params.capPos ?? 'bottom')} options={[{ value: 'bottom', label: 'Bottom' }, { value: 'top', label: 'Top' }]} onChange={(v) => setCaptionPos(layer.id, v as 'top' | 'bottom')} /></Row>
+          <div className="desc on-canvas">The caption is the text on the picture. Double-click it on the slide to change the words.</div>
+        </>
+      ) : (
+        <>
+          <div className="desc">No caption yet. Text placed on the picture becomes its caption.</div>
+          <button className="btn-soft tidy" onClick={() => addCaption(layer.id)}>Add a caption</button>
+        </>
+      )}
+    </Section>
+  );
+}
+
+const CLEARS = [{ value: '0', label: 'Stays on the picture' }, { value: '5', label: 'After 5 seconds' }, { value: '10', label: 'After 10 seconds' }, { value: '20', label: 'After 20 seconds' }, { value: '30', label: 'After 30 seconds' }];
+
+/** SlideForge's picture motion: when it arrives, how it moves inside its frame, and whether the caption clears. */
+function ImageEffects({ layer }: { layer: Layer }) {
+  const slide = useStore(slideOf);
+  const update = useStore((s) => s.updateLayer);
+  const k = kind(layer.kind);
+  const def = (key: string) => k.params.find((d) => d.key === key) as Extract<ParamDef, { type: 'select' }>;
+  const motion = String(layer.params.motion ?? 'none');
+  const caps = captionsOf(slide, layer);
+  return (
+    <Section title="Image effects">
+      <Row label="Build on Next" info="Hold the picture back until the next press, the way a build step works.">
+        <Select value={layer.anim.trigger === 'onClick' ? 'click' : 'slide'} options={[{ value: 'slide', label: 'Show everything at once' }, { value: 'click', label: 'Hold the image back until the next press' }]} onChange={(v) => setArrival(layer.id, v as 'slide' | 'click')} />
+      </Row>
+      <Row label="Image motion" info="Plays in Preview and when you press Play. Zoom closes in on the image focus; Travel moves from it to a second point. Drag both on the picture.">
+        <Select value={motion} options={def('motion').options} onChange={(v) => update(layer.id, (l) => { l.params.motion = v; if (v !== 'none' && l.params.fit !== 'cover') l.params.fit = 'cover'; })} />
+      </Row>
+      {motion !== 'none' && (
+        <Row label="How long"><Select value={String(layer.params.motionSecs ?? '20')} options={def('motionSecs').options} onChange={(v) => update(layer.id, (l) => { l.params.motionSecs = v; })} /></Row>
+      )}
+      {motion !== 'none' && <div className="desc on-canvas">{motion === 'travel' ? 'Drag “Image focus” and “Travels to” on the picture to set where it starts and ends.' : 'Drag “Image focus” on the picture to choose what the zoom closes in on.'}</div>}
+      <Row label="Caption clears itself" info="The text on the picture fades away after this long, leaving the picture.">
+        <Select value={String(layer.params.capClear ?? 0)} options={CLEARS} disabled={!caps.length} onChange={(v) => setCaptionClear(layer.id, Number(v))} />
+      </Row>
+      {!caps.length && <div className="desc">No caption on this picture — add one under Design → Caption.</div>}
+    </Section>
+  );
+}
+
+/** Reset restores a content layer's style but keeps what it says and shows. */
+function keptOnReset(k: ReturnType<typeof kind>, l: Layer) {
+  return Object.fromEntries(k.params.filter((d) => d.type === 'text' || d.type === 'image' || d.type === 'video').map((d) => [d.key, l.params[d.key]]));
+}
+
+const ALIGNS: { edge: Edge; icon: typeof AlignStartVertical; title: string }[] = [
+  { edge: 'left', icon: AlignStartVertical, title: 'Align left, to the page margin' },
+  { edge: 'hcenter', icon: AlignCenterVertical, title: 'Centre across the page' },
+  { edge: 'right', icon: AlignEndVertical, title: 'Align right, to the page margin' },
+  { edge: 'top', icon: AlignStartHorizontal, title: 'Align to the top margin' },
+  { edge: 'vmiddle', icon: AlignCenterHorizontal, title: 'Centre down the page' },
+  { edge: 'bottom', icon: AlignEndHorizontal, title: 'Align to the bottom margin' },
+];
+
+/** Align to the page, and tidy the row or column this box sits in. */
+function AlignRow({ layer }: { layer: Layer }) {
+  const slide = useStore(slideOf);
+  const n = sequenceSize(slide, layer);
+  const dir = nextDirection(slide, layer);
+  return (
+    <>
+      <div className="align-row">
+        {ALIGNS.map(({ edge, icon: I, title }) => (
+          <button key={edge} className="tb-btn icon" title={title} onClick={() => alignLayer(layer.id, edge)}><I size={15} /></button>
+        ))}
+      </div>
+      <button className="btn-soft tidy" disabled={n < 2} onClick={() => tidyUp(layer.id)}
+        title={n < 2 ? 'Nothing is lined up with this one yet — use + beside it to add another.' : `Even out the gaps, edges and sizes of the ${n} in this ${dir}.`}>
+        <WandSparkles size={13} />{n < 2 ? 'Tidy up' : `Tidy up this ${dir} of ${n}`}
+      </button>
     </>
   );
 }
@@ -145,7 +273,7 @@ function LayerDesign({ layer }: { layer: Layer }) {
 function BoxSection({ layer }: { layer: Layer }) {
   const update = useStore((s) => s.updateLayer);
   const b = layer.box!;
-  const isText = layer.kind === 'text';
+  const isText = autoHeight(layer);
   const setB = (key: 'x' | 'y' | 'w' | 'h' | 'rot', v: number, m: string) => update(layer.id, (l) => { l.box![key] = v; }, m);
   return (
     <Section title="Position">
@@ -155,8 +283,9 @@ function BoxSection({ layer }: { layer: Layer }) {
         <Scrub prefix="W" value={b.w} min={8} max={3840} step={1} decimals={0} onChange={(v, m) => setB('w', v, m)} />
         <Scrub prefix="H" value={b.h} min={8} max={2160} step={1} decimals={0} disabled={isText} onChange={(v, m) => setB('h', v, m)} />
         <Scrub prefix="↻" value={b.rot} min={-180} max={180} step={1} decimals={0} unit="°" onChange={(v, m) => setB('rot', v, m)} />
-        <button className="btn-soft" onClick={() => update(layer.id, (l) => { l.box!.x = (1920 - l.box!.w) / 2; l.box!.y = (1080 - l.box!.h) / 2; })}>Centre on slide</button>
+        <button className="btn-soft" onClick={() => { const { width, height } = useStore.getState().deck; update(layer.id, (l) => { l.box!.x = (width - l.box!.w) / 2; l.box!.y = (height - l.box!.h) / 2; }); }}>Centre on slide</button>
       </div>
+      <AlignRow layer={layer} />
     </Section>
   );
 }
@@ -176,8 +305,13 @@ function ParamRow({ layer, def: d, setParam }: { layer: Layer; def: ParamDef; se
         </Row>
       );
     }
-    case 'select':
-      return <Row label={d.label} info={d.info}><Select value={String(v)} options={d.options} onChange={(x) => setParam(d.key, x)} /></Row>;
+    case 'select': {
+      const row = <Row label={d.label} info={d.info}><Select value={String(v)} options={d.options} onChange={(x) => setParam(d.key, x)} /></Row>;
+      if (d.key !== 'fit' || v !== 'shrink') return row;
+      // Say what Fit did, so a Size of 38 drawn at 19 is not a mystery.
+      const drawn = textSize(layer), set = Number(layer.params.size);
+      return <>{row}<div className="fit-note">{drawn < set - 0.05 ? `Drawn at ${Math.round(drawn)}px so it fits. Size ${set}px is used when there is room.` : 'Fits at full size.'}</div></>;
+    }
     case 'bool':
       return <Row label={d.label} info={d.info}><div><Toggle value={!!v} onChange={(x) => setParam(d.key, x)} /></div></Row>;
     case 'vec2': {
@@ -203,6 +337,8 @@ function ParamRow({ layer, def: d, setParam }: { layer: Layer; def: ParamDef; se
       );
     case 'font':
       return <Row label={d.label}><Select value={String(v)} options={FONTS.map((f) => ({ value: f, label: f }))} onChange={(x) => setParam(d.key, x)} /></Row>;
+    case 'video':
+      return <VideoPick value={String(v)} onChange={(x) => setParam(d.key, x)} />;
     case 'image':
       return (
         <Row label={d.label}>
@@ -220,28 +356,53 @@ function ParamRow({ layer, def: d, setParam }: { layer: Layer; def: ParamDef; se
   }
 }
 
+function VideoPick({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const showToast = useStore((s) => s.showToast);
+  const isLink = /^https?:/i.test(value);
+  return (
+    <>
+      <Row label="Video">
+        <div className="img-pick">
+          <button className="btn-soft" onClick={() => fileRef.current?.click()}>{value ? 'Replace…' : 'Upload…'}</button>
+          <input ref={fileRef} type="file" accept="video/*" hidden onChange={async (e) => {
+            const f = e.target.files?.[0];
+            e.target.value = '';
+            if (!f) return;
+            if (f.size > 60e6) { showToast(`That video is ${Math.round(f.size / 1e6)} MB. Keep clips under 60 MB, or paste a link to it instead.`); return; }
+            onChange(await readDataUrl(f));
+          }} />
+        </div>
+      </Row>
+      <Row label="Or a link" info="A direct link to an .mp4 or .webm file. The site must allow other pages to use it; YouTube and Vimeo pages will not play here.">
+        <input
+          className="text-input"
+          placeholder="https://…/clip.mp4"
+          defaultValue={isLink ? value : ''}
+          key={isLink ? value : 'file'}
+          onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+          onBlur={(e) => { const u = e.target.value.trim(); if (u && u !== value) onChange(u); }}
+        />
+      </Row>
+    </>
+  );
+}
+
 function SlideDesign() {
   const slide = useStore(slideOf);
-  const deck = useStore((s) => s.deck);
-  const { updateSlide, mutate } = useStore.getState();
+  const { updateSlide } = useStore.getState();
   const nm = useRef(newGesture());
   return (
     <>
       <Section title="Slide">
         <Row label="Name"><input className="text-input" value={slide.name} onFocus={() => (nm.current = newGesture())} onChange={(e) => updateSlide((s) => { s.name = e.target.value; }, nm.current)} onKeyDown={(e) => e.stopPropagation()} /></Row>
         <Row label="Background" info="Shown beneath all layers."><ColorField value={slide.background} onChange={(v, m) => updateSlide((s) => { s.background = v; }, m)} /></Row>
-      </Section>
-      <Section title="Transition in">
-        <TransitionRows />
+        <button className="btn-soft tidy" onClick={tidySlide} title="Even out every row and column on this slide: one gap, one edge, one width each."><WandSparkles size={13} />Tidy up this slide</button>
       </Section>
       <Section title="Speaker notes">
         <textarea className="textarea" placeholder="What you want to say on this slide… (press N while presenting)" value={slide.notes} onFocus={() => (nm.current = newGesture())} onChange={(e) => updateSlide((s) => { s.notes = e.target.value; }, nm.current)} onKeyDown={(e) => e.stopPropagation()} />
       </Section>
-      <Section title="Deck" defaultOpen={false}>
-        <Row label="Title"><input className="text-input" value={deck.title} onChange={(e) => mutate((d) => { d.title = e.target.value; }, 'title')} onKeyDown={(e) => e.stopPropagation()} /></Row>
-        <Row label="Size"><span style={{ color: 'var(--muted)' }}>{deck.width} × {deck.height} (16:9)</span></Row>
-      </Section>
-      <div className="hint">Tip: drop an image anywhere on the canvas, or paste one with <kbd>⌘V</kbd>. Double-click text to edit it in place.</div>
+      <div className="hint">Transition, backdrop motion and the build order are in <b>Animate</b>. Drop an image anywhere on the canvas, or paste one with <kbd>⌘V</kbd>; double-click text to edit it in place.</div>
     </>
   );
 }
@@ -267,8 +428,15 @@ function LayerAnimate({ layer }: { layer: Layer }) {
   const options = k.content ? (layer.kind === 'text' ? [...ENTRANCES, ...TEXT_ENTRANCES] : ENTRANCES) : ENTRANCES.filter((e) => e.value === 'none' || e.value === 'fade');
   return (
     <>
+      {layer.kind === 'image' && <button className="picture-link" onClick={() => useStore.getState().set({ inspectorTab: 'picture' })}><ImageIcon size={13} />Image motion and caption timing are in the <b>Picture</b> tab</button>}
       <Section title="Entrance" right={<button className="btn-soft accent" onClick={play}><Play size={12} />Play</button>}>
         <Row label="Effect"><Select value={a.type} options={options} onChange={(v) => up((x) => { x.type = v; if (v !== 'none' && x.duration < 0.1) x.duration = 0.9; })} /></Row>
+        {layer.kind === 'text' && String(layer.params.text ?? '').split('\n').filter((x) => x.trim()).length > 1 && (
+          <Row label="Build" info="One line — one bullet — per click, as SlideForge's Build on Next. Dim fades the earlier lines back so the newest one leads.">
+            <Select value={a.build ?? 'none'} options={[{ value: 'none', label: 'All at once' }, { value: 'lines', label: 'One line per click' }, { value: 'dim', label: 'One per click, dim the ones before' }]}
+              onChange={(v) => up((x) => { if (v === 'none') delete x.build; else { x.build = v; if (x.type === 'none') { x.type = 'fade'; x.duration = 0.6; } } })} />
+          </Row>
+        )}
         {a.type !== 'none' && (
           <>
             <Row label="Start" info="'On click' creates a build step: the presenter clicks to reveal it."><Select value={a.trigger} options={TRIGGERS} onChange={(v) => up((x) => { x.trigger = v; })} /></Row>
@@ -276,6 +444,17 @@ function LayerAnimate({ layer }: { layer: Layer }) {
             <Row label="Delay"><Scrub value={a.delay} min={0} max={5} step={0.05} unit=" s" onChange={(v, m) => up((x) => { x.delay = v; }, m)} /></Row>
             <Row label="Easing"><Select value={a.easing} options={EASINGS} onChange={(v) => up((x) => { x.easing = v; })} /></Row>
             {isTextUnit(a.type) && <Row label="Stagger" info="Time between each letter, word or line."><Scrub value={a.stagger} min={0.005} max={0.4} step={0.005} decimals={3} unit=" s" onChange={(v, m) => up((x) => { x.stagger = v; }, m)} /></Row>}
+            {isTextUnit(a.type) && !(a.build && a.build !== 'none') && (
+              <>
+                <Row label="Order" info="Which end the wave starts from. From the centre sends it outwards both ways at once.">
+                  <Select value={a.order ?? 'first'} options={[{ value: 'first', label: 'From the first' }, { value: 'last', label: 'From the last' }, { value: 'center', label: 'From the centre' }]}
+                    onChange={(v) => up((x) => { if (v === 'first') delete x.order; else x.order = v; })} />
+                </Row>
+                <Row label="Leave again" info="Arrive, hold four seconds, leave in the same order, and round again. For a cover on screen while the room fills.">
+                  <Toggle value={!!a.leave} onChange={(v) => up((x) => { if (v) x.leave = true; else delete x.leave; })} />
+                </Row>
+              </>
+            )}
             <Row label="Total"><span style={{ color: 'var(--muted)' }}>{animTotal(layer).toFixed(2)} s</span></Row>
           </>
         )}
@@ -291,17 +470,24 @@ function LayerAnimate({ layer }: { layer: Layer }) {
           )}
         </Section>
       )}
-      <Sequence />
     </>
   );
 }
 
 function SlideAnimate() {
   const play = () => useStore.setState((s) => ({ playToken: s.playToken + 1 }));
+  const slide = useStore(slideOf);
+  const { mutate } = useStore.getState();
   return (
     <>
       <Section title="Transition in" right={<button className="btn-soft accent" onClick={play}><Play size={12} />Play</button>}>
         <TransitionRows />
+      </Section>
+      <Section title="Backdrop">
+          <Row label="Motion" info="Slow motion behind the words, made from this slide's own colours. Select the Backdrop motion layer to change its colours, strength or speed.">
+          <Select value={backdropOf(slide)} options={[{ value: 'still', label: 'Still' }, { value: 'drift', label: 'Drift — colour moving slowly' }, { value: 'grid', label: 'Grid — a ruled plane travelling' }, { value: 'glow', label: 'Glow — one slow breath' }]}
+            onChange={(v) => mutate((d) => setBackdrop(d, slide.id, v as BackdropMode))} />
+        </Row>
       </Section>
       <Sequence />
     </>
@@ -382,8 +568,12 @@ function hsl(h: number, s: number, l: number) {
   return `#${f(0)}${f(8)}${f(4)}`;
 }
 
+export function readDataUrl(f: File) {
+  return new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = rej; r.readAsDataURL(f); });
+}
+
 export async function fileToDataUrl(f: File, max = 2400): Promise<string> {
-  const url = await new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = rej; r.readAsDataURL(f); });
+  const url = await readDataUrl(f);
   if (f.type === 'image/svg+xml' || f.type === 'image/gif') return url;
   const img = new Image();
   img.src = url;

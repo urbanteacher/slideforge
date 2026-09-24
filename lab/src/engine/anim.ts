@@ -28,17 +28,25 @@ export const defaultInteract = (): Interact => ({
 /** Number of unit items a text layer animates over (for its total duration). */
 export function textUnitCount(layer: Layer): number {
   const text = String(layer.params.text ?? '');
+  // list bullets and numbers animate in as units of their own
+  const items = layer.params.list && layer.params.list !== 'none' ? text.split('\n').filter((x) => x.trim()).length : 0;
   switch (layer.anim.type) {
     case 'letters':
     case 'typewriter':
-      return Math.max(1, text.replace(/\s/g, '').length);
+      return Math.max(1, text.replace(/\s/g, '').length + items * (layer.params.list === 'numbers' ? 2 : 1));
     case 'words':
-      return Math.max(1, text.split(/\s+/).filter(Boolean).length);
+      return Math.max(1, text.split(/\s+/).filter(Boolean).length + items);
     case 'lines':
       return Math.max(1, text.split('\n').length + 1);
     default:
       return 1;
   }
+}
+
+/** How many lines a text builds one click at a time: 0 when it does not. Empty lines are not steps. */
+export function buildLines(l: Layer): number {
+  if (l.kind !== 'text' || !l.anim.build || l.anim.build === 'none') return 0;
+  return String(l.params.text ?? '').split('\n').filter((x) => x.trim()).length;
 }
 
 export function animTotal(layer: Layer): number {
@@ -50,6 +58,7 @@ export function animTotal(layer: Layer): number {
 
 export interface Schedule {
   start: Map<string, number>; // layer id → start time (s, slide clock); Infinity = waiting for a click
+  lines: Map<string, number[]>; // text built a line per click → each line's start
   steps: number; // number of click builds on the slide
   stepEnds: number[]; // (relative) duration of each step, for auto-play
 }
@@ -60,6 +69,7 @@ export interface Schedule {
  */
 export function schedule(slide: Slide, clicks: number[]): Schedule {
   const start = new Map<string, number>();
+  const lines = new Map<string, number[]>();
   let step = 0;
   let stepBase = 0;
   let prevEnd = 0;
@@ -84,9 +94,24 @@ export function schedule(slide: Slide, clicks: number[]): Schedule {
     prevEnd = s + animTotal(l);
     if (Number.isFinite(stepBase)) stepLocalEnd = Math.max(stepLocalEnd, prevEnd - stepBase);
     else stepLocalEnd = Math.max(stepLocalEnd, a.delay + animTotal(l));
+    // A text built a line at a time: its first line arrives as the layer would, and every further
+    // line is a click of its own.
+    const n = buildLines(l);
+    if (n > 1) {
+      const starts = [s];
+      for (let i = 1; i < n; i++) {
+        stepEnds.push(stepLocalEnd);
+        step++;
+        stepBase = clicks[step - 1] ?? Infinity;
+        stepLocalEnd = a.duration;
+        starts.push(stepBase);
+        prevEnd = stepBase + a.duration;
+      }
+      lines.set(l.id, starts);
+    }
   }
   stepEnds.push(stepLocalEnd);
-  return { start, steps: step, stepEnds };
+  return { start, lines, steps: step, stepEnds };
 }
 
 export interface LayerState {
@@ -101,13 +126,32 @@ export interface LayerState {
   glow: number;
   /** seconds since the entrance started (Infinity when fully built) — used by text units */
   textT: number;
+  /** Where a picture looks inside its frame: centre x, y (0–1) and zoom. [0.5, 0.5, 1] is still. */
+  view: [number, number, number];
 }
 
 const FULL_CLIP: [number, number, number, number] = [-9, -9, 9, 9];
 
 export const IDLE_STATE = (): LayerState => ({
-  visible: true, opacity: 1, dx: 0, dy: 0, scale: 1, rot: 0, blur: 0, clip: [...FULL_CLIP], glow: 0, textT: Infinity,
+  visible: true, opacity: 1, dx: 0, dy: 0, scale: 1, rot: 0, blur: 0, clip: [...FULL_CLIP], glow: 0, textT: Infinity, view: [0.5, 0.5, 1],
 });
+
+/** Image motion, SlideForge's: a slow zoom that closes in on the focus, or a travel from the focus
+ *  to a second point at a fixed zoom. Timed from when the picture arrives; still in the editor. */
+function imageView(layer: Layer, local: number): [number, number, number] {
+  const p = layer.params;
+  const secs = Math.max(1, Number(p.motionSecs ?? 20));
+  const k = Math.max(0, Math.min(1, local / secs));
+  const f = (Array.isArray(p.focus) ? p.focus : [0.5, 0.5]) as [number, number];
+  const keep = (c: number, z: number) => Math.max(0.5 / z, Math.min(1 - 0.5 / z, c));
+  if (p.motion === 'zoom') {
+    const z = 1 + 0.18 * EASE.cubicOut(k);
+    return [keep(0.5 + (f[0] - 0.5) * k, z), keep(0.5 + (f[1] - 0.5) * k, z), z];
+  }
+  const g = (Array.isArray(p.focus2) ? p.focus2 : [0.7, 0.4]) as [number, number];
+  const z = 1.35, e = EASE.cubicInOut(k);
+  return [keep(f[0] + (g[0] - f[0]) * e, z), keep(f[1] + (g[1] - f[1]) * e, z), z];
+}
 
 /**
  * Evaluate a layer's animated state.
@@ -125,9 +169,10 @@ export function layerState(layer: Layer, start: number | undefined, t: number, t
       st.opacity = 0;
       return st;
     }
-    const textUnits = layer.kind === 'text' && isTextUnit(a.type);
+    const textUnits = layer.kind === 'text' && isTextUnit(a.type) && !buildLines(layer);
     st.textT = textUnits ? local : Infinity;
-    if (!textUnits) {
+    // A line-by-line build moves each line itself (see the renderer); the box just appears.
+    if (!textUnits && !buildLines(layer)) {
       const raw = Math.min(1, local / Math.max(0.01, a.duration));
       const e = EASE[a.easing](raw);
       const inv = 1 - e;
@@ -147,6 +192,16 @@ export function layerState(layer: Layer, start: number | undefined, t: number, t
         case 'spin': st.opacity = fade; st.rot = -inv * 120; st.scale = 0.6 + 0.4 * e; break;
       }
     }
+  }
+
+  // Picture motion runs on the slide clock from the moment the picture arrives.
+  if (layer.kind === 'image' && (layer.params.motion ?? 'none') !== 'none' && Number.isFinite(t)) {
+    st.view = imageView(layer, t - (start !== undefined && Number.isFinite(start) ? start : 0));
+  }
+  // "Clears itself": fade away a set time after arriving, and stay gone.
+  if (a.clearAfter && a.clearAfter > 0 && Number.isFinite(t)) {
+    const since = t - (start !== undefined && Number.isFinite(start) ? start : 0) - a.clearAfter;
+    if (since > 0) st.opacity *= 1 - Math.min(1, since / 0.8);
   }
 
   if (a.loop !== 'none') {
@@ -172,7 +227,24 @@ function hashId(id: string) {
 export function unitProgress(layer: Layer, index: number, textT: number): number {
   if (!Number.isFinite(textT)) return 1;
   const a = layer.anim;
-  const local = textT - index * a.stagger;
+  const n = textUnitCount(layer);
+  // Direction: from the first unit, from the last, or from the middle outwards. With an even count
+  // the middle two share the first beat.
+  const k = a.order === 'last' ? n - 1 - index
+    : a.order === 'center' ? Math.abs(index - (n - 1) / 2) - ((n - 1) % 2 ? 0.5 : 0)
+    : index;
+  let t = textT;
+  if (a.leave) {
+    // In, hold four seconds, out in the same order, round again.
+    const inT = a.duration + (n - 1) * a.stagger, cycle = inT * 2 + 4;
+    t = textT % cycle;
+    if (t >= inT + 4) {
+      const out = t - inT - 4 - k * a.stagger;
+      if (a.type === 'typewriter') return out >= 0 ? 0 : 1;
+      return 1 - EASE[a.easing](Math.max(0, Math.min(1, out / Math.max(0.01, a.duration))));
+    }
+  }
+  const local = t - k * a.stagger;
   if (a.type === 'typewriter') return local >= 0 ? 1 : 0;
   const raw = Math.max(0, Math.min(1, local / Math.max(0.01, a.duration)));
   return EASE[a.easing](raw);

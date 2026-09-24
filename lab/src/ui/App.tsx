@@ -10,6 +10,11 @@ import { LeftPanel } from './LeftPanel';
 import { Present } from './Present';
 import { Stage } from './Stage';
 import { TopBar } from './TopBar';
+import { toggleFormat } from './format';
+import { addMediaFile } from './insert';
+import { groupOf } from './snap';
+import { moveInOrder } from './order';
+import { slideClipboard } from './SlideMenu';
 
 const isTyping = (t: EventTarget | null) => {
   const el = t as HTMLElement | null;
@@ -67,7 +72,11 @@ export function App() {
       if (mod && k === 'y') { e.preventDefault(); st.redo(); return; }
       if (mod && e.key === 'Enter') { e.preventDefault(); st.set({ presenting: true }); return; }
       if (mod && k === 'd' && sel) { e.preventDefault(); st.duplicateLayer(sel.id); return; }
+      if (mod && sel && (k === 'b' || k === 'i' || k === 'u')) { e.preventDefault(); toggleFormat(sel, k === 'b' ? 'bold' : k === 'i' ? 'italic' : 'underline'); return; }
       if (mod && k === 'c' && sel) { st.set({ clipboard: structuredClone(sel) }); return; }
+      // With nothing selected, copy and paste act on the slide, as in SlideForge.
+      if (mod && k === 'c' && !sel && !window.getSelection()?.toString()) { slideClipboard.copy(st.slideId); return; }
+      if (mod && k === 'v' && !st.clipboard && slideClipboard.has() && !e.shiftKey) { e.preventDefault(); slideClipboard.paste(); return; }
       if (mod && k === 'v' && st.clipboard && !e.shiftKey) {
         // image pastes are handled by the paste event; only paste layers when the clipboard holds one
         const c = cloneLayer(st.clipboard);
@@ -77,15 +86,33 @@ export function App() {
         e.preventDefault();
         return;
       }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && sel) { e.preventDefault(); st.deleteLayer(sel.id); return; }
-      if (e.key === 'Escape') { st.set({ selectedId: null, editingTextId: null, galleryOpen: false }); return; }
+      // A group selected as a whole deletes and nudges as a whole; after a double-click, only the part.
+      const members = sel && st.partId !== sel.id ? groupOf(slideOf(st), sel) : sel ? [sel] : [];
+      if ((e.key === 'Delete' || e.key === 'Backspace') && sel) {
+        e.preventDefault();
+        if (members.length > 1) {
+          const ids = new Set(members.map((l) => l.id));
+          st.mutate((d) => { const s = d.slides.find((x) => x.id === st.slideId)!; s.layers = s.layers.filter((l) => !ids.has(l.id)); });
+          st.set({ selectedId: null, partId: null });
+        } else st.deleteLayer(sel.id);
+        return;
+      }
+      if (e.key === 'Escape') {
+        // Out of a part to its group first, then out of the selection.
+        if (sel && st.partId === sel.id && groupOf(slideOf(st), sel).length > 1) { st.set({ partId: null, editingTextId: null }); return; }
+        st.set({ selectedId: null, editingTextId: null, partId: null, galleryOpen: false });
+        return;
+      }
       if (e.key === 'Enter' && sel?.kind === 'text') { e.preventDefault(); st.set({ editingTextId: sel.id }); return; }
+      // Alt + ↑ / ↓: one place earlier or later among the like items it is one of.
+      if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && sel) { e.preventDefault(); moveInOrder(sel.id, e.key === 'ArrowUp' ? -1 : 1); return; }
       if (e.key.startsWith('Arrow') && sel?.box && !sel.locked) {
         e.preventDefault();
         const d = e.shiftKey ? 10 : 1;
         const dx = e.key === 'ArrowLeft' ? -d : e.key === 'ArrowRight' ? d : 0;
         const dy = e.key === 'ArrowUp' ? -d : e.key === 'ArrowDown' ? d : 0;
-        st.updateLayer(sel.id, (l) => { l.box!.x += dx; l.box!.y += dy; }, `nudge:${sel.id}`);
+        const ids = new Set(members.map((l) => l.id));
+        st.mutate((d) => { for (const l of d.slides.find((x) => x.id === st.slideId)!.layers) if (ids.has(l.id) && l.box) { l.box.x += dx; l.box.y += dy; } }, `nudge:${sel.id}`);
         return;
       }
       if (!sel && (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'PageDown' || e.key === 'PageUp')) {
@@ -96,12 +123,12 @@ export function App() {
         return;
       }
       if (!mod && k === 't') { st.addLayer('text'); return; }
-      if (!mod && k === 'a') { st.set({ leftTab: st.leftTab === 'add' ? 'layers' : 'add' }); return; }
+      if (!mod && k === 'a') { st.set({ leftTab: 'add' }); return; }
     };
     const onPaste = (e: ClipboardEvent) => {
       if (isTyping(e.target) || useStore.getState().presenting) return;
-      const f = [...(e.clipboardData?.files ?? [])].find((x) => x.type.startsWith('image/'));
-      if (f) { e.preventDefault(); (window as unknown as { __sfAddImage?: (f: File) => void }).__sfAddImage?.(f); }
+      const f = [...(e.clipboardData?.files ?? [])].find((x) => /^(image|video)\//.test(x.type));
+      if (f) { e.preventDefault(); addMediaFile(f); }
     };
     addEventListener('keydown', on);
     addEventListener('paste', onPaste);

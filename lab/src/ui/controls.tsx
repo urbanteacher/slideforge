@@ -106,10 +106,10 @@ export function ColorField({ value, onChange, weight, onWeight }: {
   );
 }
 
-export function Select<T extends string>({ value, options, onChange }: { value: T; options: { value: T; label: string }[] | readonly { value: T; label: string }[]; onChange: (v: T) => void }) {
+export function Select<T extends string>({ value, options, onChange, disabled }: { value: T; options: { value: T; label: string }[] | readonly { value: T; label: string }[]; onChange: (v: T) => void; disabled?: boolean }) {
   return (
-    <div className="select">
-      <select value={value} onChange={(e) => onChange(e.target.value as T)} onKeyDown={(e) => e.stopPropagation()}>
+    <div className={`select${disabled ? ' disabled' : ''}`}>
+      <select value={value} disabled={disabled} onChange={(e) => onChange(e.target.value as T)} onKeyDown={(e) => e.stopPropagation()}>
         {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
       <ChevronDown size={14} />

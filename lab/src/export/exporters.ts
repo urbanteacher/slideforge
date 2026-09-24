@@ -20,7 +20,9 @@ export function exportJson(deck: Deck) {
 }
 
 /** A single self-contained .html file: player bundle + deck JSON. Fonts load from Google Fonts. */
-export function buildHtml(deck: Deck): string {
+export function buildHtml(full: Deck): string {
+  // The audience's copy: hidden slides stay in the editable .json, not in the show.
+  const deck = { ...full, slides: full.slides.filter((s) => !s.hidden) };
   const fonts = (document.getElementById('sf-fonts') as HTMLLinkElement | null)?.href ?? '';
   const json = JSON.stringify(deck).replace(/</g, '\\u003c');
   const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
@@ -71,6 +73,8 @@ function still(): { canvas: HTMLCanvasElement; r: Renderer } {
 export function renderStill(slide: Slide, deck: Deck, width: number, type = 'image/png', time = 2): string {
   const { canvas, r } = still();
   r.deckW = deck.width;
+  // A thumbnail can be drawn against a bare size with no slides; it simply has no page number.
+  r.order = (deck.slides ?? []).filter((s) => !s.hidden).map((s) => s.id);
   r.deckH = deck.height;
   r.setSize(width, Math.round((width * deck.height) / deck.width));
   r.drawSlide(slide, { time, mouse: [0.5, 0.5], t: Infinity, clicks: [] }, null);

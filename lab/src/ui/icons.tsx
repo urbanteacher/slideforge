@@ -1,11 +1,11 @@
 import {
-  Aperture, Blend, Droplet, Droplets, Film, Flame, Flashlight, Grid2x2, Grid3x3, Grip, Image, ImagePlus,
-  LayoutGrid, Palette, Rainbow, Shapes, SlidersHorizontal, Sparkles, Square, Sun, Tornado, Type, Waves, ZoomIn,
+  Aperture, Blend, ChartColumn, CircleHelp, Droplet, Droplets, Film, Flame, Flashlight, Grid2x2, Grid3x3, Grip, Image, ImagePlus,
+  LayoutGrid, Palette, Rainbow, Shapes, SlidersHorizontal, Sparkles, Square, Sun, Timer, Tornado, Type, Video, Waves, ZoomIn,
   type LucideIcon,
 } from 'lucide-react';
 
 export const KIND_ICON: Record<string, LucideIcon> = {
-  text: Type, image: Image, shape: Shapes, solid: Square, linear: Blend, mesh: Sparkles, aurora: Waves, grid: Grid3x3,
+  text: Type, image: Image, shape: Shapes, video: Video, chart: ChartColumn, quiz: CircleHelp, activity: Timer, solid: Square, linear: Blend, mesh: Sparkles, aurora: Waves, grid: Grid3x3,
   ripple: Waves, wave: Droplets, swirl: Tornado, lens: ZoomIn, gradientMap: Palette, adjust: SlidersHorizontal,
   spotlight: Flashlight, glow: Sun, leak: Flame, grain: Film, halftone: Grip, pixelate: Grid2x2, chroma: Rainbow,
   vignette: Aperture, blur: Droplet,

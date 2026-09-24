@@ -1,11 +1,17 @@
 import { ChevronLeft, ChevronRight, Maximize, StickyNote, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer } from '../engine/player';
 import { useStore } from '../model/store';
 
 export function Present() {
-  const deck = useStore((s) => s.deck);
-  const startIndex = useStore((s) => Math.max(0, s.deck.slides.findIndex((x) => x.id === s.slideId)));
+  // The show is the deck without its hidden slides; starting on a hidden one starts at the next shown.
+  const full = useStore((s) => s.deck);
+  const deck = useMemo(() => ({ ...full, slides: full.slides.filter((x) => !x.hidden) }), [full]);
+  const startIndex = useStore((s) => {
+    const at = s.deck.slides.findIndex((x) => x.id === s.slideId);
+    const next = s.deck.slides.slice(Math.max(0, at)).find((x) => !x.hidden) ?? s.deck.slides.find((x) => !x.hidden);
+    return Math.max(0, s.deck.slides.filter((x) => !x.hidden).findIndex((x) => x.id === next?.id));
+  });
   const set = useStore((s) => s.set);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const player = useRef<DeckPlayer | null>(null);

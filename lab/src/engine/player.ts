@@ -48,6 +48,7 @@ export class DeckPlayer {
 
   constructor(readonly canvas: HTMLCanvasElement, public deck: Deck, private opts: PlayerOptions = {}) {
     this.renderer = new Renderer(canvas, deck.width, deck.height);
+    this.renderer.order = deck.slides.filter((s) => !s.hidden).map((s) => s.id);
     this.renderer.warm(ALL_KINDS.map((k) => k.id));
     this.index = Math.max(0, Math.min(deck.slides.length - 1, opts.start ?? 0));
     this.slideStart = this.now();

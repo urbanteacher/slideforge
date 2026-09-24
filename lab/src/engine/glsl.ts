@@ -129,6 +129,7 @@ uniform vec2 uScale;
 uniform vec2 uOffset;   // px
 uniform float uBlur;    // mip level
 uniform vec4 uClip;     // visible window in box-normalised coords
+uniform vec3 uView;     // centre (x, y) and zoom of the picture inside its frame; (0.5, 0.5, 1) is still
 uniform float uGlow;
 vec4 effect(vec2 uv) {
   vec2 p = uv * uRes;
@@ -141,8 +142,11 @@ vec4 effect(vec2 uv) {
   vec2 t = (local - uTexRect.xy) / uTexRect.zw;
   // Gradients are taken in uniform control flow and sampling is branch-free: an early return here
   // lets the compiler sink dFdx into divergent quads, which picks a garbage mip at the box edge.
-  vec2 gx = dFdx(t), gy = dFdy(t);
   float inside = step(0.0, t.x) * step(0.0, t.y) * step(t.x, 1.0) * step(t.y, 1.0);
+  // Image motion: sample a smaller window of the texture, so the picture moves inside a still frame.
+  float vz = max(uView.z, 1.0);
+  t = uView.xy + (clamp(t, 0.0, 1.0) - 0.5) / vz;
+  vec2 gx = dFdx(t), gy = dFdy(t);
   t = clamp(t, 0.0, 1.0);
   vec4 col;
   if (uBlur > 0.02) {

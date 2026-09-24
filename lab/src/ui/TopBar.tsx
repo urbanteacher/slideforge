@@ -1,9 +1,12 @@
-import { ChevronDown, Download, FileCode, FileJson, FilePlus, FolderOpen, ImageDown, Layers, LayoutTemplate, Minus, Play, Plus, Redo2, Sparkles, Undo2, Upload } from 'lucide-react';
+import { ChartColumn, ChevronDown, CircleHelp, Download, FileCode, FileJson, FilePlus, FolderOpen, Heading, ImageDown, ImagePlus, LayoutTemplate, List, Minus, Play, Plus, Quote, Redo2, Shapes, Sparkles, StickyNote, Timer, Type, Undo2, Upload, Video } from 'lucide-react';
+import { SlideMenuButton } from './SlideMenu';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { exportHtml, exportJson, exportPng } from '../export/exporters';
 import { blankDeck, demoDeck } from '../model/defaults';
 import { slideOf, useStore } from '../model/store';
 import type { Deck } from '../model/types';
+import { FormatBar } from './FormatBar';
+import { addImageFile, addItem, addVideoFile } from './insert';
 
 function useOutside(open: boolean, close: () => void) {
   const ref = useRef<HTMLDivElement>(null);
@@ -32,11 +35,12 @@ export function TopBar() {
   const saveState = useStore((s) => s.saveState);
   const canUndo = useStore((s) => s.past.length > 0);
   const canRedo = useStore((s) => s.future.length > 0);
-  const leftTab = useStore((s) => s.leftTab);
   const zoomSetting = useStore((s) => s.zoom);
   const fitZoom = useStore((s) => s.fitZoom);
-  const { undo, redo, set, mutate, loadDeck, showToast } = useStore.getState();
+  const { undo, redo, set, mutate, loadDeck, showToast, addLayer } = useStore.getState();
   const fileRef = useRef<HTMLInputElement>(null);
+  const imageRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
   const zoom = zoomSetting === 'fit' ? fitZoom : zoomSetting;
   const stepZoom = (k: number) => set({ zoom: Math.max(0.1, Math.min(4, Math.round(zoom * k * 20) / 20)) });
 
@@ -53,6 +57,8 @@ export function TopBar() {
 
   return (
     <header className="topbar">
+      {/* Two rows: the deck and the show on top; the tools that act on the slide beneath. */}
+      <div className="tb-row">
       <Menu trigger={(_, t) => (
         <button className="logo" onClick={t} title="File"><span className="logo-mark">s</span><ChevronDown size={13} color="#777" /></button>
       )}>
@@ -72,16 +78,11 @@ export function TopBar() {
       <span className="saved">{saveState === 'saved' ? 'Saved' : saveState === 'saving' ? 'Saving…' : 'Edited'}</span>
       <button className="tb-btn icon" title="Undo (⌘Z)" disabled={!canUndo} onClick={undo}><Undo2 size={16} /></button>
       <button className="tb-btn icon" title="Redo (⇧⌘Z)" disabled={!canRedo} onClick={redo}><Redo2 size={16} /></button>
-      <div className="tb-group">
-        <button className={`tb-btn${leftTab === 'layers' ? ' active' : ''}`} onClick={() => set({ leftTab: 'layers' })}><Layers size={15} />Layers</button>
-        <button className={`tb-btn${leftTab === 'add' ? ' active' : ''}`} onClick={() => set({ leftTab: 'add' })}><Plus size={15} />Add</button>
-      </div>
       <div className="spacer" />
-      <button className="tb-btn" onClick={() => set({ galleryOpen: true })}><LayoutTemplate size={15} />Gallery</button>
       <button className="tb-btn icon" title="Zoom out" onClick={() => stepZoom(1 / 1.25)}><Minus size={15} /></button>
       <button className="zoom-val" title="Fit to window" onClick={() => set({ zoom: 'fit' })}>{Math.round(zoom * 100)}%</button>
       <button className="tb-btn icon" title="Zoom in" onClick={() => stepZoom(1.25)}><Plus size={15} /></button>
-      <button className="tb-btn" style={{ marginLeft: 6 }} title="Play this slide's animations in the editor" onClick={() => useStore.setState((s) => ({ playToken: s.playToken + 1 }))}><Sparkles size={15} />Animate</button>
+      <button className="tb-btn" style={{ marginLeft: 6 }} title="Play this slide's animations in the editor" onClick={() => useStore.setState((s) => ({ playToken: s.playToken + 1 }))}><Sparkles size={15} /><span className="tb-label">Animate</span></button>
       <button className="btn-outline" style={{ marginLeft: 6 }} title="Present (⌘↵)" onClick={() => set({ presenting: true })}><Play size={14} />Preview</button>
       <Menu right trigger={(_, t) => <button className="btn-accent" style={{ marginLeft: 6 }} onClick={t}><Upload size={14} />Export</button>}>
         {(close) => (
@@ -93,6 +94,48 @@ export function TopBar() {
           </>
         )}
       </Menu>
+      </div>
+      <div className="tb-row tb-tools">
+      <div className="tb-group">
+        <Menu trigger={(open, t) => <button className={`tb-btn${open ? ' active' : ''}`} onClick={t}><Plus size={15} />Add<ChevronDown size={13} /></button>}>
+          {(close) => {
+            const add = (id: string) => () => { addLayer(id); close(); };
+            const item = (id: Parameters<typeof addItem>[0]) => () => { addItem(id); close(); };
+            return (
+              <>
+                {/* SlideForge's "+ Item" list, in its order */}
+                <button onClick={item('heading')}><Heading size={15} />Heading</button>
+                <button onClick={item('text')}><Type size={15} />Text<small>T</small></button>
+                <button onClick={item('note')}><StickyNote size={15} />Note</button>
+                <button onClick={item('bullets')}><List size={15} />Bullet points</button>
+                <button onClick={() => { imageRef.current?.click(); close(); }}><ImagePlus size={15} />Image…</button>
+                <button onClick={item('quote')}><Quote size={15} />Quote</button>
+                <button onClick={item('chart')}><ChartColumn size={15} />Chart</button>
+                <hr />
+                <button onClick={() => { videoRef.current?.click(); close(); }}><Video size={15} />Video…</button>
+                <button onClick={add('shape')}><Shapes size={15} />Shape</button>
+                <hr />
+                <button onClick={add('quiz')}><CircleHelp size={15} />Quiz<small>placeholder</small></button>
+                <button onClick={add('activity')}><Timer size={15} />Activity<small>placeholder</small></button>
+                <div className="menu-note">Layouts, backgrounds &amp; effects, headers and footers are in the left panel. You can also drop or paste an image or video straight onto the slide.</div>
+              </>
+            );
+          }}
+        </Menu>
+      </div>
+      <FormatBar />
+      <input ref={imageRef} type="file" accept="image/*" multiple hidden onChange={async (e) => {
+        for (const f of [...(e.target.files ?? [])]) await addImageFile(f);
+        e.target.value = '';
+      }} />
+      <input ref={videoRef} type="file" accept="video/*" hidden onChange={async (e) => {
+        const f = e.target.files?.[0];
+        e.target.value = '';
+        if (f) await addVideoFile(f);
+      }} />
+      <button className="tb-btn" title="Gallery" onClick={() => set({ galleryOpen: true })}><LayoutTemplate size={15} /><span className="tb-label">Gallery</span></button>
+      <SlideMenuButton />
+      </div>
     </header>
   );
 }

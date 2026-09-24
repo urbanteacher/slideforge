@@ -1,14 +1,20 @@
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, GripVertical, Plus } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { EASE, schedule } from '../engine/anim';
 import { hitLayer } from '../engine/player';
-import { fontString } from '../engine/raster';
+import { autoHeight, fontString, textSize } from '../engine/raster';
+import { ChartEditor, FieldsEditor, editsOnCanvas } from './CanvasEditors';
+import { addAnother, canAddAnother, editIntent, groupOf, nextDirection, unitFrame } from './snap';
 import { ALL_KINDS, kind } from '../engine/registry';
 import { Renderer } from '../engine/renderer';
-import { createLayer } from '../model/defaults';
 import { slideOf, useStore } from '../model/store';
 import type { Box, Layer, Slide } from '../model/types';
 import { newGesture } from './controls';
-import { fileToDataUrl } from './Inspector';
+import { toggleFormat } from './format';
+import { addMediaFile } from './insert';
+import { moveInOrder, moveLine, moveUnit, siblingsOf, type Unit } from './order';
+import { useSlideContextMenu } from './SlideMenu';
+import { FEEDBACK } from './Engagement';
 
 type Handle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
 const HANDLES: { h: Handle; sx: number; sy: number; cur: string }[] = [
@@ -18,10 +24,18 @@ const HANDLES: { h: Handle; sx: number; sy: number; cur: string }[] = [
 ];
 
 type Drag =
-  | { mode: 'move'; id: string; p0: [number, number]; box0: Box; g: string }
+  | { mode: 'move'; id: string; p0: [number, number]; box0: Box; group?: { id: string; x: number; y: number }[]; sib?: { units: Unit[]; index: number; dir: 'row' | 'column' | 'grid' } | null; g: string }
   | { mode: 'resize'; id: string; p0: [number, number]; box0: Box; size0: number; sx: number; sy: number; g: string }
   | { mode: 'rotate'; id: string; p0: [number, number]; box0: Box; g: string }
   | { mode: 'vec'; id: string; key: string; g: string };
+
+/** The box around several layers, for a group's selection and for dragging it by its edges. */
+function unionBox(ls: Layer[]): Box {
+  const bs = ls.map((l) => l.box!).filter(Boolean);
+  const x0 = Math.min(...bs.map((b) => b.x)), y0 = Math.min(...bs.map((b) => b.y));
+  const x1 = Math.max(...bs.map((b) => b.x + b.w)), y1 = Math.max(...bs.map((b) => b.y + b.h));
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0, rot: 0 };
+}
 
 const CLOCK0 = performance.now();
 const clock = () => (performance.now() - CLOCK0) / 1000;
@@ -42,8 +56,9 @@ export function Stage() {
   const zoomSetting = useStore((s) => s.zoom);
   const fitZoom = useStore((s) => s.fitZoom);
   const editingId = useStore((s) => s.editingTextId);
+  const partId = useStore((s) => s.partId);
   const playToken = useStore((s) => s.playToken);
-  const { selectLayer, updateLayer, set, insertLayer } = useStore.getState();
+  const { selectLayer, updateLayer, set } = useStore.getState();
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -55,12 +70,16 @@ export function Stage() {
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [guides, setGuides] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] });
   const [dragging, setDragging] = useState(false);
+  const [slideMenu, openSlideMenu] = useSlideContextMenu();
   const [dropping, setDropping] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const zoom = zoomSetting === 'fit' ? fitZoom : zoomSetting;
   const cssW = deck.width * zoom, cssH = deck.height * zoom;
   const selected = slide.layers.find((l) => l.id === selectedId) ?? null;
+  // A selected layer that belongs to a group selects the group, until a double-click goes inside.
+  const selGroup = selected && partId !== selected.id ? groupOf(slide, selected) : [];
+  const groupBox = selGroup.length > 1 ? unionBox(selGroup) : null;
 
   // Fit-to-window zoom
   useLayoutEffect(() => {
@@ -110,11 +129,18 @@ export function Stage() {
       if (st.presenting || !r || r.gl.isContextLost()) return;
       const s = slideOf(st);
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // The slide shape can change under a running renderer.
+      if (r.deckW !== st.deck.width || r.deckH !== st.deck.height) { r.deckW = st.deck.width; r.deckH = st.deck.height; }
       r.setSize(canvas.clientWidth * dpr, canvas.clientHeight * dpr);
       const m = mouse.current;
       m.cur = [m.cur[0] + (m.target[0] - m.cur[0]) * 0.14, m.cur[1] + (m.target[1] - m.cur[1]) * 0.14];
       const time = clock();
-      const hidden = st.editingTextId ? new Set([st.editingTextId]) : undefined;
+      // The layer being edited is hidden under its editor — except a chart, whose bars stay in view.
+      const editing = st.editingTextId ? slideOf(st).layers.find((l) => l.id === st.editingTextId) : undefined;
+      const hidden = editing && editing.kind !== 'chart' ? new Set([editing.id]) : undefined;
+      // Page numbers count the slides that will be shown, as Preview and the export do.
+      const shown = st.deck.slides.filter((x) => !x.hidden);
+      if (r.order.length !== shown.length || r.order.some((id, i) => id !== shown[i].id)) r.order = shown.map((x) => x.id);
       const p = play.current;
       if (p) {
         const t = time - p.start;
@@ -185,9 +211,25 @@ export function Stage() {
     if (editingId) { set({ editingTextId: null }); }
     const hit = hitLayer(slide, x, y, (l) => !l.locked);
     if (!hit) { selectLayer(null); return; }
+    // Inside a group already (after a double-click), a click on a sibling stays inside: it picks
+    // that part. Anywhere else a click picks up the whole group.
+    const cur = partId ? slide.layers.find((l) => l.id === partId) : undefined;
+    const inside = !!cur && groupOf(slide, cur).some((l) => l.id === hit.id);
     selectLayer(hit.id);
+    if (inside) set({ partId: hit.id });
+    const members = inside ? [hit] : groupOf(slide, hit);
     capture(overlayRef.current, e.pointerId);
-    drag.current = { mode: 'move', id: hit.id, p0: [x, y], box0: { ...hit.box! }, g: newGesture() };
+    drag.current = { mode: 'move', id: hit.id, p0: [x, y], box0: unionBox(members), group: members.map((l) => ({ id: l.id, x: l.box!.x, y: l.box!.y })), sib: inside ? null : siblingsOf(slide, hit), g: newGesture() };
+  };
+
+  /** Pick an item up by its grip: the same as pressing on the item, but never inside a part. */
+  const startGrip = (e: React.PointerEvent, l: Layer) => {
+    e.stopPropagation();
+    const [x, y] = toSlide(e);
+    const members = groupOf(slide, l);
+    set({ partId: null });
+    capture(overlayRef.current, e.pointerId);
+    drag.current = { mode: 'move', id: l.id, p0: [x, y], box0: unionBox(members), group: members.map((m) => ({ id: m.id, x: m.box!.x, y: m.box!.y })), sib: siblingsOf(slide, l), g: newGesture() };
   };
 
   const startHandle = (e: React.PointerEvent, l: Layer, sx: number, sy: number) => {
@@ -219,7 +261,11 @@ export function Stage() {
       return;
     }
     if (d.mode === 'vec') {
-      updateLayer(d.id, (l) => { l.params[d.key] = [Math.max(0, Math.min(1, x / deck.width)), Math.max(0, Math.min(1, y / deck.height))]; }, d.g);
+      updateLayer(d.id, (l) => {
+        const inBox = kind(l.kind).params.find((pd) => pd.key === d.key)?.inBox && l.box;
+        const [u, v] = inBox ? [(x - l.box!.x) / l.box!.w, (y - l.box!.y) / l.box!.h] : [x / deck.width, y / deck.height];
+        l.params[d.key] = [Math.max(0, Math.min(1, u)), Math.max(0, Math.min(1, v))];
+      }, d.g);
       return;
     }
     const b0 = d.box0;
@@ -232,7 +278,8 @@ export function Stage() {
       const gv: number[] = [], gh: number[] = [];
       if (!(e.metaKey || e.ctrlKey)) {
         const thr = 6 / zoom;
-        const others = slide.layers.filter((l) => l.box && l.id !== d.id && l.visible).map((l) => l.box!);
+        const moving = new Set(d.group?.map((g) => g.id) ?? [d.id]);
+        const others = slide.layers.filter((l) => l.box && !moving.has(l.id) && l.visible).map((l) => l.box!);
         const xs = [0, deck.width / 2, deck.width, ...others.flatMap((o) => [o.x, o.x + o.w / 2, o.x + o.w])];
         const ys = [0, deck.height / 2, deck.height, ...others.flatMap((o) => [o.y, o.y + o.h / 2, o.y + o.h])];
         const snap = (pos: number, size: number, lines: number[], out: number[]) => {
@@ -248,16 +295,22 @@ export function Stage() {
         ny = snap(ny, b0.h, ys, gh);
       }
       setGuides({ v: gv, h: gh });
-      updateLayer(d.id, (l) => { l.box!.x = Math.round(nx); l.box!.y = Math.round(ny); }, d.g);
+      if (d.group && d.group.length > 1) {
+        const ddx = Math.round(nx - b0.x), ddy = Math.round(ny - b0.y), members = d.group;
+        useStore.getState().mutate((dk) => {
+          const s = dk.slides.find((x) => x.id === slide.id)!;
+          for (const m of members) { const l = s.layers.find((x) => x.id === m.id); if (l?.box) { l.box.x = m.x + ddx; l.box.y = m.y + ddy; } }
+        }, d.g);
+      } else updateLayer(d.id, (l) => { l.box!.x = Math.round(nx); l.box!.y = Math.round(ny); }, d.g);
     } else if (d.mode === 'resize') {
       const layer = slide.layers.find((l) => l.id === d.id);
       if (!layer) return;
       const [lx, ly] = rot(dx, dy, -b0.rot);
       const sym = e.altKey ? 2 : 1;
       let w = b0.w + d.sx * lx * sym, h = b0.h + d.sy * ly * sym;
-      const isText = layer.kind === 'text';
+      const isText = autoHeight(layer); // height follows content; a corner drag scales the type
       const corner = d.sx !== 0 && d.sy !== 0;
-      const keep = e.shiftKey || (corner && (layer.kind === 'image' || isText));
+      const keep = e.shiftKey || (corner && (layer.kind === 'image' || layer.kind === 'video' || isText));
       if (keep && corner) {
         const k = Math.max(w / b0.w, h / b0.h);
         w = b0.w * k; h = b0.h * k;
@@ -285,6 +338,25 @@ export function Stage() {
   };
 
   const onPointerUp = () => {
+    // Dropped on another of its set: the two change places, and their build order with them.
+    const d = drag.current;
+    if (d?.mode === 'move' && d.sib && dragging) {
+      const st = useStore.getState();
+      const live = slideOf(st);
+      const moved = (d.group ?? [{ id: d.id }]).map((m) => live.layers.find((l) => l.id === m.id)).filter((l): l is Layer => !!l?.box);
+      if (moved.length) {
+        const c = unionBox(moved), cx = c.x + c.w / 2, cy = c.y + c.h / 2;
+        const to = d.sib.units.findIndex((u, k) => k !== d.sib!.index && cx >= u.box.x && cx <= u.box.x + u.box.w && cy >= u.box.y && cy <= u.box.y + u.box.h);
+        if (to >= 0) {
+          const { units, index, dir } = d.sib, back = d.group ?? [];
+          st.mutate((dk) => {
+            const s = dk.slides.find((x) => x.id === live.id)!;
+            for (const m of back) { const l = s.layers.find((x) => x.id === m.id); if (l?.box) { l.box.x = m.x; l.box.y = m.y; } }
+            moveUnit(dk, live.id, units, dir, index, to);
+          }, d.g);
+        }
+      }
+    }
     drag.current = null;
     setDragging(false);
     setGuides({ v: [], h: [] });
@@ -293,36 +365,25 @@ export function Stage() {
   const onDoubleClick = (e: React.MouseEvent) => {
     const [x, y] = toSlide(e);
     const hit = hitLayer(slide, x, y, (l) => !l.locked);
-    if (hit?.kind === 'text') { selectLayer(hit.id); set({ editingTextId: hit.id }); }
+    if (!hit) return;
+    // Double-click goes inside a group to the part under the pointer, and straight into its words.
+    selectLayer(hit.id);
+    set({ partId: hit.id });
+    if (hit.kind === 'text' || editsOnCanvas(hit)) set({ editingTextId: hit.id });
   };
 
-  // ── Drag & drop images ──────────────────────────────────────────────────
+  // ── Drag & drop images and videos ──────────────────────────────────────
   const onDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setDropping(false);
-    const files = [...e.dataTransfer.files].filter((f) => f.type.startsWith('image/'));
+    const files = [...e.dataTransfer.files].filter((f) => /^(image|video)\//.test(f.type));
     const [x, y] = toSlide(e);
-    for (const f of files) await addImageFile(f, x, y);
+    for (const f of files) await addMediaFile(f, x, y);
   };
-
-  const addImageFile = async (f: File, x: number, y: number) => {
-    const src = await fileToDataUrl(f);
-    const img = new Image();
-    img.src = src;
-    await img.decode().catch(() => undefined);
-    const iw = img.naturalWidth || 800, ih = img.naturalHeight || 600;
-    const k = Math.min(1000 / iw, 700 / ih, 1.5);
-    const w = Math.round(iw * k), h = Math.round(ih * k);
-    insertLayer(createLayer('image', { name: f.name.replace(/\.[^.]+$/, '').slice(0, 28) || 'Image', params: { src, fit: 'contain' }, box: { x: Math.round(x - w / 2), y: Math.round(y - h / 2), w, h }, anim: { type: 'fade' } }));
-  };
-
-  // expose for paste handler in App
-  useEffect(() => {
-    (window as unknown as { __sfAddImage?: (f: File) => void }).__sfAddImage = (f: File) => addImageFile(f, deck.width / 2, deck.height / 2);
-  });
 
   const k = selected ? kind(selected.kind) : null;
-  const vecDefs = selected && k && !k.content ? k.params.filter((d) => d.type === 'vec2' && (!d.when || d.when(selected.params))) : [];
+  // Effect origins sit on the slide; a picture's focus points sit on the picture (inBox).
+  const vecDefs = selected && k ? k.params.filter((d) => d.type === 'vec2' && (!k.content || d.inBox) && (!d.when || d.when(selected.params))) : [];
   const hovered = hoverId && hoverId !== selectedId ? slide.layers.find((l) => l.id === hoverId) : null;
 
   return (
@@ -335,9 +396,13 @@ export function Stage() {
       onPointerDown={(e) => { if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('stage-center')) selectLayer(null); }}
     >
       {playing && <div className="play-pill"><i />Playing slide timeline</div>}
+      {slideMenu}
       <div className="stage-center" style={{ minWidth: '100%', minHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 48, width: cssW + 96, height: cssH + 96 }}>
         <div className="stage-inner" style={{ width: cssW, height: cssH }}>
           <div className="stage-label">{deck.title || 'Untitled'} <span>{deck.width} × {deck.height}</span></div>
+          {slide.feedback && (() => { const f = FEEDBACK.find((x) => x.value === slide.feedback!.kind); return f ? (
+            <button className="feedback-tag" title={`${f.hint} Runs beside the slide in a live SlideForge session — nothing is drawn on the slide.`} onClick={() => set({ inspectorTab: 'engage' })}>{f.icon}{f.label}<small>beside the slide, live</small></button>
+          ) : null; })()}
           <canvas ref={canvasRef} className="stage-canvas" />
           {error && <div className="stage-empty">{error}</div>}
           <div
@@ -349,14 +414,21 @@ export function Stage() {
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
             onDoubleClick={onDoubleClick}
+            onContextMenu={(e) => {
+              // On the slide's ground (not a box) a right-click is the slide's own menu.
+              const [x, y] = toSlide(e);
+              if (!hitLayer(slide, x, y, (l) => !l.locked)) openSlideMenu(e, slide.id);
+            }}
           >
-            {hovered?.box && !dragging && <BoxOutline box={hovered.box} zoom={zoom} className="sel-box hover" />}
-            {selected?.box && editingId !== selected.id && (
+            {hovered?.box && !dragging && <BoxOutline box={partId && groupOf(slide, hovered).some((l) => l.id === partId) ? hovered.box : unionBox(groupOf(slide, hovered))} zoom={zoom} className="sel-box hover" />}
+            {groupBox && !dragging && <div className="sel-box group" style={{ left: groupBox.x * zoom, top: groupBox.y * zoom, width: groupBox.w * zoom, height: groupBox.h * zoom }}><span className="group-tag">Group · double-click to edit a part</span></div>}
+            {groupBox && dragging && <BoxOutline box={groupBox} zoom={zoom} className="sel-box group" />}
+            {selected?.box && editingId !== selected.id && !groupBox && (
               <div
                 className={`sel-box${selected.locked ? ' locked' : ''}`}
                 style={{ left: selected.box.x * zoom, top: selected.box.y * zoom, width: selected.box.w * zoom, height: selected.box.h * zoom, transform: `rotate(${selected.box.rot}deg)` }}
               >
-                {!selected.locked && HANDLES.filter((hd) => !(selected.kind === 'text' && hd.sy !== 0 && hd.sx === 0)).map((hd) => (
+                {!selected.locked && HANDLES.filter((hd) => !(autoHeight(selected) && hd.sy !== 0 && hd.sx === 0)).map((hd) => (
                   <div key={hd.h} className="handle" style={{ left: `${(hd.sx + 1) * 50}%`, top: `${(hd.sy + 1) * 50}%`, cursor: hd.cur }} onPointerDown={(e) => startHandle(e, selected, hd.sx, hd.sy)} />
                 ))}
                 {!selected.locked && (
@@ -368,6 +440,36 @@ export function Stage() {
                 {dragging && <div className="size-tag" style={{ transform: `translateX(-50%) rotate(${-selected.box.rot}deg)` }}>{Math.round(selected.box.w)} × {Math.round(selected.box.h)}{selected.box.rot ? ` · ${Math.round(selected.box.rot)}°` : ''}</div>}
               </div>
             )}
+            {selected?.box && !selected.locked && !dragging && editingId !== selected.id && partId !== selected.id && (() => {
+              // Order: beside an item that is one of a set, a grip to drag it to another's place and
+              // arrows for one place earlier or later. Alt + ↑ or ↓ does the same.
+              const sib = siblingsOf(slide, selected);
+              if (!sib) return null;
+              const f = groupBox ?? selected.box;
+              const across = sib.dir === 'row';
+              const Prev = across ? ArrowLeft : ArrowUp, Next = across ? ArrowRight : ArrowDown;
+              return (
+                <div className="order-pill" style={{ left: f.x * zoom - 34, top: f.y * zoom }} onPointerDown={(e) => e.stopPropagation()}>
+                  <button className="grip" title="Drag onto another to swap places" onPointerDown={(e) => startGrip(e, selected)}><GripVertical size={13} /></button>
+                  <button title="Move earlier (Alt + ↑)" disabled={sib.index === 0} onClick={() => moveInOrder(selected.id, -1)}><Prev size={13} /></button>
+                  <button title="Move later (Alt + ↓)" disabled={sib.index === sib.units.length - 1} onClick={() => moveInOrder(selected.id, 1)}><Next size={13} /></button>
+                </div>
+              );
+            })()}
+            {selected?.box && !selected.locked && !dragging && editingId !== selected.id && k?.content && canAddAnother(slide, selected) && (() => {
+              // "Add another like this": beside a card in a row, under a point in a column.
+              const f = unitFrame(slide, selected);
+              const row = nextDirection(slide, selected) === 'row';
+              const style = row
+                ? { left: (f.x + f.w) * zoom + 14, top: (f.y + f.h / 2) * zoom }
+                : { left: (f.x + f.w / 2) * zoom, top: (f.y + f.h) * zoom + 14 };
+              return (
+                <button className={`add-another ${row ? 'dir-row' : 'dir-col'}`} style={style} title={row ? 'Add another beside it' : 'Add another below it'}
+                  onPointerDown={(e) => e.stopPropagation()} onClick={() => addAnother(selected.id)}>
+                  <Plus size={14} />
+                </button>
+              );
+            })()}
             {vecDefs.map((d) => {
               const follow = k!.mouseParam === d.key && selected!.interact.followMouse;
               const [vx, vy] = (selected!.params[d.key] as [number, number]) ?? [0.5, 0.5];
@@ -376,7 +478,8 @@ export function Stage() {
                   key={d.key}
                   className={`vec-handle${follow ? ' follow' : ''}`}
                   title={follow ? `${d.label} is following the mouse — turn off "Follow mouse" to place it` : `Drag to move ${d.label.toLowerCase()}`}
-                  style={{ left: vx * cssW, top: vy * cssH }}
+                  data-label={d.inBox ? d.label : undefined}
+                  style={d.inBox && selected!.box ? { left: (selected!.box.x + vx * selected!.box.w) * zoom, top: (selected!.box.y + vy * selected!.box.h) * zoom } : { left: vx * cssW, top: vy * cssH }}
                   onPointerDown={(e) => { if (!follow) startVec(e, selected!, d.key); }}
                 />
               );
@@ -384,6 +487,8 @@ export function Stage() {
             {guides.v.map((g, i) => <div key={`v${i}`} className="guide v" style={{ left: g * zoom }} />)}
             {guides.h.map((g, i) => <div key={`h${i}`} className="guide h" style={{ top: g * zoom }} />)}
             {editingId && selected?.id === editingId && selected.kind === 'text' && <TextEditor layer={selected} zoom={zoom} />}
+            {editingId && selected?.id === editingId && selected.kind === 'chart' && <ChartEditor layer={selected} zoom={zoom} />}
+            {editingId && selected?.id === editingId && selected.kind !== 'text' && selected.kind !== 'chart' && editsOnCanvas(selected) && <FieldsEditor layer={selected} zoom={zoom} />}
           </div>
         </div>
       </div>
@@ -406,15 +511,33 @@ function TextEditor({ layer, zoom }: { layer: Layer; zoom: number }) {
   useEffect(() => {
     const el = ref.current!;
     el.focus();
-    el.select();
+    // "+" on a list opens the editor on the new point's words, selected so typing replaces them.
+    if (editIntent.range) { el.setSelectionRange(...editIntent.range); editIntent.range = null; }
+    else el.select();
   }, []);
   useLayoutEffect(() => {
     const el = ref.current!;
     el.style.height = '0px';
     el.style.height = `${el.scrollHeight}px`;
   });
-  const size = Number(p.size) * zoom;
+  const size = textSize(layer) * zoom; // the drawn size, which Fit may have brought down
+  // A point in a list moves up or down with the caret on it: Alt + ↑ / ↓, or the pill beside the box.
+  const shiftLine = (delta: -1 | 1) => {
+    const el = ref.current!;
+    const r = moveLine(el.value, el.selectionStart, delta);
+    if (!r) return;
+    updateLayer(layer.id, (l) => { l.params.text = r.text; }, g.current);
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(r.caret, r.caret); });
+  };
+  const lines = String(p.text).includes('\n');
   return (
+    <>
+    {lines && (
+      <div className="order-pill line" style={{ left: (b.x + b.w) * zoom + 8, top: b.y * zoom }} onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}>
+        <button title="Move this line up (Alt + ↑)" onClick={() => shiftLine(-1)}><ArrowUp size={13} /></button>
+        <button title="Move this line down (Alt + ↓)" onClick={() => shiftLine(1)}><ArrowDown size={13} /></button>
+      </div>
+    )}
     <textarea
       ref={ref}
       className="text-editor"
@@ -424,13 +547,20 @@ function TextEditor({ layer, zoom }: { layer: Layer; zoom: number }) {
       onBlur={() => set({ editingTextId: null })}
       onPointerDown={(e) => e.stopPropagation()}
       onDoubleClick={(e) => e.stopPropagation()}
-      onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Escape') (e.target as HTMLTextAreaElement).blur(); }}
+      onKeyDown={(e) => {
+        e.stopPropagation();
+        if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); shiftLine(e.key === 'ArrowUp' ? -1 : 1); return; }
+        if (e.key === 'Escape') (e.target as HTMLTextAreaElement).blur();
+        const k = e.key.toLowerCase();
+        if ((e.metaKey || e.ctrlKey) && (k === 'b' || k === 'i' || k === 'u')) { e.preventDefault(); toggleFormat(layer, k === 'b' ? 'bold' : k === 'i' ? 'italic' : 'underline'); }
+      }}
       style={{
         left: b.x * zoom, top: b.y * zoom, width: b.w * zoom, minHeight: b.h * zoom,
         font: fontString(p, size), color: String(p.color), lineHeight: String(p.lineHeight ?? 1),
         letterSpacing: `${Number(p.tracking ?? 0)}em`, textAlign: String(p.align ?? 'left') as 'left',
-        textTransform: p.uppercase ? 'uppercase' : 'none', transform: `rotate(${b.rot}deg)`,
+        textTransform: p.uppercase ? 'uppercase' : 'none', textDecoration: p.underline ? 'underline' : 'none', transform: `rotate(${b.rot}deg)`,
       }}
     />
+    </>
   );
 }

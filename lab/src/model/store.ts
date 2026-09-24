@@ -1,12 +1,13 @@
 import { produce } from 'immer';
 import { create } from 'zustand';
-import { measureTextHeight } from '../engine/raster';
+import { contentHeight } from '../engine/raster';
 import { kind } from '../engine/registry';
 import { blankSlide, cloneLayer, cloneSlide, createLayer, demoDeck } from './defaults';
+import { hasFlagshipFrame, hasFlagshipTextImage, newSlideWithFrame, syncFrameCounters } from './frame';
 import type { Deck, Layer, Slide } from './types';
 
 export type LeftTab = 'layers' | 'add';
-export type InspectorTab = 'design' | 'animate' | 'interact';
+export type InspectorTab = 'design' | 'picture' | 'animate' | 'interact' | 'engage';
 
 interface State {
   deck: Deck;
@@ -23,7 +24,10 @@ interface State {
   presenting: boolean;
   playToken: number;
   editingTextId: string | null;
+  /** A layer inside a group that was double-clicked into: it is selected on its own, not with its group. */
+  partId: string | null;
   galleryOpen: boolean;
+  galleryTab: 'layouts' | 'designs';
   clipboard: Layer | null;
   toast: string | null;
 
@@ -61,7 +65,8 @@ export function layerOf(s: Pick<State, 'deck' | 'slideId' | 'selectedId'>): Laye
 const isFinish = (l: Layer) => { const k = kind(l.kind); return !k.content && k.category !== 'generate'; };
 
 function refitText(l: Layer) {
-  if (l.kind === 'text' && l.box) l.box.h = measureTextHeight(l.params, l.box.w);
+  const h = l.box ? contentHeight(l, l.box.w) : null;
+  if (h !== null) l.box!.h = h;
 }
 
 const initial = demoDeck();
@@ -82,7 +87,9 @@ export const useStore = create<State>((set, get) => ({
   presenting: false,
   playToken: 0,
   editingTextId: null,
+  partId: null,
   galleryOpen: false,
+  galleryTab: 'layouts',
   clipboard: null,
   toast: null,
 
@@ -123,11 +130,14 @@ export const useStore = create<State>((set, get) => ({
     });
   },
 
-  loadDeck: (d) => set({ deck: d, slideId: d.slides[0].id, selectedId: null, past: [], future: [], lastMerge: null, saveState: 'unsaved', editingTextId: null }),
+  loadDeck: (d) => {
+    set({ deck: d, slideId: d.slides[0].id, selectedId: null, past: [], future: [], lastMerge: null, saveState: 'unsaved', editingTextId: null });
+    refitAllText(); // a deck saved before a box type measured itself gets its heights now
+  },
 
-  selectSlide: (id) => set({ slideId: id, selectedId: null, editingTextId: null }),
+  selectSlide: (id) => set({ slideId: id, selectedId: null, editingTextId: null, partId: null }),
 
-  selectLayer: (id) => set({ selectedId: id, editingTextId: get().editingTextId === id ? id : null }),
+  selectLayer: (id) => set({ selectedId: id, editingTextId: get().editingTextId === id ? id : null, partId: get().partId === id ? id : null }),
 
   addLayer: (kindId, init) => {
     const layer = { ...createLayer(kindId), ...(init ?? {}) };
@@ -195,10 +205,17 @@ export const useStore = create<State>((set, get) => ({
 
   addSlide: (slide) => {
     const { slideId } = get();
-    const ns = slide ?? blankSlide();
+    const current = slideOf(get());
+    const index = get().deck.slides.findIndex((s) => s.id === slideId);
+    const frameSource = hasFlagshipFrame(current) ? current : get().deck.slides.find(hasFlagshipFrame);
+    const bodySource = get().deck.slides.find(hasFlagshipTextImage);
+    const ns = slide ?? (frameSource
+      ? newSlideWithFrame(frameSource, index + 2, get().deck.slides.length + 1, get().deck.width, bodySource)
+      : blankSlide());
     get().mutate((d) => {
       const i = d.slides.findIndex((s) => s.id === slideId);
       d.slides.splice(i + 1, 0, ns);
+      syncFrameCounters(d.slides, d.width);
     });
     set({ slideId: ns.id, selectedId: null });
   },
@@ -216,7 +233,10 @@ export const useStore = create<State>((set, get) => ({
     const { deck } = get();
     if (deck.slides.length <= 1) return get().showToast('A deck needs at least one slide');
     const i = deck.slides.findIndex((s) => s.id === id);
-    get().mutate((d) => { d.slides = d.slides.filter((s) => s.id !== id); });
+    get().mutate((d) => {
+      d.slides = d.slides.filter((s) => s.id !== id);
+      syncFrameCounters(d.slides, d.width);
+    });
     const slides = get().deck.slides;
     if (get().slideId === id) set({ slideId: slides[Math.max(0, i - 1)].id, selectedId: null });
   },
@@ -226,6 +246,7 @@ export const useStore = create<State>((set, get) => ({
       const from = d.slides.findIndex((s) => s.id === id);
       const [s] = d.slides.splice(from, 1);
       d.slides.splice(Math.max(0, Math.min(d.slides.length, toIndex)), 0, s);
+      syncFrameCounters(d.slides, d.width);
     });
   },
 
@@ -241,14 +262,13 @@ export const useStore = create<State>((set, get) => ({
   },
 }));
 
-/** Re-measure every text box once web fonts have arrived (without touching undo history). */
+/** Re-measure every auto-height box once web fonts have arrived (without touching undo history). */
 export function refitAllText() {
   const st = useStore.getState();
   const next = produce(st.deck, (d) => {
     for (const s of d.slides) for (const l of s.layers) {
-      if (l.kind !== 'text' || !l.box) continue;
-      const h = measureTextHeight(l.params, l.box.w);
-      if (Math.abs(h - l.box.h) > 0.5) l.box.h = h;
+      const h = l.box ? contentHeight(l, l.box.w) : null;
+      if (h !== null && Math.abs(h - l.box!.h) > 0.5) l.box!.h = h;
     }
   });
   if (next !== st.deck) useStore.setState({ deck: next });
@@ -258,3 +278,15 @@ export const isContent = (l: Layer | null) => !!l && !!kind(l.kind).content;
 
 // Dev-only handle for debugging in the console.
 if (import.meta.env.DEV) (window as unknown as { __sf: typeof useStore }).__sf = useStore;
+
+// Keep the open deck across hot reloads. Every engine module this one imports (raster, registry,
+// defaults) re-runs it when edited, and a fresh store starts from the demo deck — which autosave
+// then wrote over the saved deck. Only data carries over; the actions belong to the new module.
+if (import.meta.hot) {
+  const kept = import.meta.hot.data.state as Partial<State> | undefined;
+  if (kept?.deck) useStore.setState(kept);
+  import.meta.hot.dispose((data) => {
+    const st = useStore.getState() as unknown as Record<string, unknown>;
+    data.state = Object.fromEntries(Object.entries(st).filter(([, v]) => typeof v !== 'function'));
+  });
+}
