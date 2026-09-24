@@ -32,6 +32,8 @@ export interface KindDef {
 export const FONTS = [
   'Inter', 'Instrument Serif', 'Playfair Display', 'DM Serif Display', 'Fraunces',
   'Space Grotesk', 'Syne', 'Unbounded', 'Bebas Neue', 'JetBrains Mono', 'Georgia', 'Uncut Sans',
+  // Installed on every Mac and iPhone: SlideForge's Cinematic theme sets its type in it.
+  'Avenir Next',
 ];
 
 export const CATEGORIES: { id: Category | 'featured'; label: string }[] = [
@@ -78,6 +80,7 @@ const KINDS: KindDef[] = [
       { key: 'lineHeight', label: 'Line height', type: 'number', min: 0.6, max: 2.4, step: 0.01, default: 1.0, group: 'Spacing', decimals: 2 },
       { key: 'tracking', label: 'Tracking', type: 'number', min: -0.15, max: 0.6, step: 0.005, default: -0.01, group: 'Spacing', decimals: 3, info: 'Letter spacing, in em.' },
       { key: 'uppercase', label: 'Uppercase', type: 'bool', default: false, group: 'Spacing' },
+      { key: 'balance', label: 'Balance lines', type: 'bool', default: false, group: 'Spacing', info: 'Evens the lines out instead of filling each to the margin, so a heading breaks where the sense is.' },
       FIT,
     ],
   },
@@ -108,12 +111,16 @@ const KINDS: KindDef[] = [
       { key: 'shape', label: 'Shape', type: 'select', options: opt('rect', 'ellipse', 'triangle', 'star', 'ring', 'arrow', 'line'), default: 'rect', group: 'Shape' },
       { key: 'radius', label: 'Corner radius', type: 'number', min: 0, max: 400, step: 1, default: 24, group: 'Shape', unit: 'px', decimals: 0, when: (p) => p.shape === 'rect' },
       { key: 'points', label: 'Points', type: 'number', min: 3, max: 16, step: 1, default: 5, group: 'Shape', decimals: 0, when: (p) => p.shape === 'star' },
+      { key: 'ringWidth', label: 'Ring thickness', type: 'number', min: 0.02, max: 1, step: 0.01, default: 0.32, group: 'Shape', decimals: 2, when: (p) => p.shape === 'ring', info: 'How much of the radius the band takes: 1 is a solid disc.' },
       { key: 'fill', label: 'Fill', type: 'color', default: '#ff5a36', group: 'Fill' },
+      { key: 'fillOpacity', label: 'Fill opacity', type: 'number', min: 0, max: 1, step: 0.01, default: 1, group: 'Fill', decimals: 2, info: '0 leaves only the stroke: an outline, or a frame.' },
       { key: 'gradient', label: 'Gradient', type: 'bool', default: false, group: 'Fill' },
       { key: 'fill2', label: 'Fill 2', type: 'color', default: '#ffb199', group: 'Fill', when: (p) => !!p.gradient },
+      { key: 'fill2Opacity', label: 'Fill 2 opacity', type: 'number', min: 0, max: 1, step: 0.01, default: 1, group: 'Fill', decimals: 2, when: (p) => !!p.gradient, info: 'Fade the gradient out to nothing for a scrim under a caption.' },
       { key: 'angle', label: 'Angle', type: 'number', min: 0, max: 360, step: 1, default: 135, group: 'Fill', unit: '°', decimals: 0, when: (p) => !!p.gradient },
       { key: 'stroke', label: 'Stroke', type: 'color', default: '#111111', group: 'Stroke' },
       { key: 'strokeWidth', label: 'Width', type: 'number', min: 0, max: 60, step: 0.5, default: 0, group: 'Stroke', unit: 'px', decimals: 1 },
+      { key: 'strokeOpacity', label: 'Stroke opacity', type: 'number', min: 0, max: 1, step: 0.01, default: 1, group: 'Stroke', decimals: 2, when: (p) => Number(p.strokeWidth) > 0 },
     ],
   },
 
@@ -225,6 +232,25 @@ vec4 effect(vec2 uv) {
   float t = clamp(dot(p, dir) / ext * 0.5 + 0.5, 0.0, 1.0);
   t = pow(t, log(0.5) / log(u_bias));
   return vec4(mix(u_colorA, u_colorB, smoothstep(0.0, 1.0, t)) + dither(), 1.0);
+}`,
+  },
+  {
+    // A glow from one point: SlideForge's grounds are radial-gradient(W H at x y, from, to stop).
+    id: 'radial', name: 'Radial gradient', category: 'generate',
+    description: 'A soft glow from any point, fading to a second colour — a lit corner, a spotlit centre.',
+    params: [
+      { key: 'colorA', label: 'Centre', type: 'color', default: '#1a1020', group: 'Colours' },
+      { key: 'colorB', label: 'Outside', type: 'color', default: '#0a0b0f', group: 'Colours' },
+      { key: 'cx', label: 'Centre across', type: 'number', min: -0.5, max: 1.5, step: 0.01, default: 0.8, group: 'Shape', decimals: 2, info: '0 is the left edge, 1 the right. Past either, only the edge of the glow shows.' },
+      { key: 'cy', label: 'Centre down', type: 'number', min: -0.5, max: 1.5, step: 0.01, default: -0.1, group: 'Shape', decimals: 2 },
+      { key: 'rx', label: 'Width', type: 'number', min: 0.05, max: 3, step: 0.01, default: 0.94, group: 'Shape', decimals: 2, info: 'Across the glow, from its centre, as a share of the slide’s width.' },
+      { key: 'ry', label: 'Height', type: 'number', min: 0.05, max: 3, step: 0.01, default: 0.83, group: 'Shape', decimals: 2, info: 'Down the glow, from its centre, as a share of the slide’s height.' },
+      { key: 'reach', label: 'Fades by', type: 'number', min: 0.05, max: 1, step: 0.01, default: 0.55, group: 'Shape', decimals: 2, info: 'How far out the centre colour has become the outside colour.' },
+    ],
+    glsl: `uniform vec3 u_colorA; uniform vec3 u_colorB; uniform float u_cx; uniform float u_cy; uniform float u_rx; uniform float u_ry; uniform float u_reach;
+vec4 effect(vec2 uv) {
+  float d = length((uv - vec2(u_cx, u_cy)) / max(vec2(u_rx, u_ry), vec2(0.001)));
+  return vec4(mix(u_colorA, u_colorB, clamp(d / u_reach, 0.0, 1.0)) + dither(), 1.0);
 }`,
   },
   {

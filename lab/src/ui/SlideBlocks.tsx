@@ -1,5 +1,5 @@
 import { cloneLayer, createLayer } from '../model/defaults';
-import { LAYOUT_STYLES } from '../model/layouts';
+import { LAYOUT_STYLES, themeOf } from '../model/layouts';
 import { hasFlagshipFrame, isFlagshipFrameLayer, setFramePage } from '../model/frame';
 import { slideOf, useStore } from '../model/store';
 import { kind } from '../engine/registry';
@@ -168,7 +168,7 @@ export function insertBlock(mode: BlockMode) {
     const hex = slide.background.replace('#', '');
     const n = Number.parseInt(hex, 16);
     const dark = Number.isFinite(n) && (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) < 110;
-    const style = LAYOUT_STYLES.find((s) => s.id === st.deck.theme) ?? LAYOUT_STYLES.find((s) => s.id === (dark ? 'midnight' : 'paper'))!;
+    const style = themeOf(st.deck) ?? LAYOUT_STYLES.find((s) => s.id === (dark ? 'midnight' : 'paper'))!;
     const gap = 36, margin = 78;
     const width = (st.deck.width - margin * 2 - gap * (count - 1)) / count;
     layers = Array.from({ length: count }, (_, i) => createLayer('note', {

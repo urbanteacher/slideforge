@@ -1,7 +1,7 @@
 import type { BlendMode, Layer, Slide, TransitionType } from '../model/types';
-import { EASE, animTotal, layerState, schedule } from './anim';
+import { EASE, IDLE_STATE, animTotal, layerState, schedule, stepLight, type LayerState } from './anim';
 import { CONTENT_GLSL, MAIN, PRELUDE, VERT } from './glsl';
-import { contentFrame, getAssetVersion, rasterise } from './raster';
+import { contentFrame, getAssetVersion, rasterise, textSize } from './raster';
 import { kind } from './registry';
 
 const BLEND_INDEX: Record<BlendMode, number> = {
@@ -9,8 +9,14 @@ const BLEND_INDEX: Record<BlendMode, number> = {
   colorDodge: 8, colorBurn: 9, difference: 10, exclusion: 11, add: 12,
 };
 const TRANSITION_INDEX: Record<TransitionType, number> = {
-  none: 0, fade: 1, push: 2, zoom: 3, ripple: 4, dissolve: 5, wipe: 6, pixelate: 7, blur: 8,
+  none: 0, fade: 1, push: 2, zoom: 3, ripple: 4, dissolve: 5, wipe: 6, pixelate: 7, blur: 8, morph: 1,
 };
+
+/** Where a layer carried across a Morph is drawn this frame, relative to its place on the new slide. */
+interface MorphPose { dx: number; dy: number; sx: number; sy: number; opacity: number }
+
+/** The spotlight's vignette: SlideForge's radial gradient, clear at the middle, a third black at the edges. */
+const SPOT_PARAMS = { amount: 0.34, radius: 0.36, softness: 0.78, color: '#000000' };
 
 const COPY_FRAG = PRELUDE + `void main() { outColor = textureLod(uBelow, vUv, 0.0); }`;
 
@@ -86,6 +92,8 @@ export interface FrameOpts {
   interactive?: boolean; // apply parallax + hover
   hover?: Map<string, number>;
   hidden?: Set<string>;
+  /** Morph: layers drawn part-way between their place on the slide before and on this one. */
+  morph?: Map<string, MorphPose>;
 }
 
 export function hexToRgb(hex: string): [number, number, number] {
@@ -136,7 +144,8 @@ export class Renderer {
     this.canvas.height = h;
     for (const f of [...this.ping, ...this.slots]) this.freeFbo(f);
     this.ping = [this.makeFbo(w, h), this.makeFbo(w, h)];
-    this.slots = [this.makeFbo(w, h), this.makeFbo(w, h)];
+    // The third slot holds a Morph's crossfade, under the layers it carries across.
+    this.slots = [this.makeFbo(w, h), this.makeFbo(w, h), this.makeFbo(w, h)];
   }
 
   private makeFbo(w: number, h: number): FBO {
@@ -306,22 +315,61 @@ export class Renderer {
     const d = Math.max(0.01, layer.anim.duration);
     const prog = starts.map((s) => (!Number.isFinite(t) ? 1 : t < s ? 0 : EASE.cubicOut(Math.min(1, (t - s) / d))));
     const shown = prog.reduce((n, p, i) => (p > 0 ? i : n), -1);
-    const dim = layer.anim.build === 'dim' && Number.isFinite(t);
-    const key = prog.map((p) => Math.round(p * 40)).join() + (dim ? `|${shown}` : '');
+    const dim = (layer.anim.build === 'dim' || layer.anim.build === 'spot') && Number.isFinite(t);
+    const key = prog.map((p) => Math.round(p * 40)).join() + (dim ? `|${shown}|${layer.anim.build}` : '');
     let hit = this.lined.get(layer.params);
     if (!hit || hit.key !== key) {
-      hit = { key, params: { ...layer.params, _lines: prog.map((p) => Math.round(p * 40) / 40).join(), _dimBefore: dim ? shown : -1 } };
+      hit = { key, params: { ...layer.params, _lines: prog.map((p) => Math.round(p * 40) / 40).join(), _dimBefore: dim ? shown : -1, _dimTo: layer.anim.build === 'spot' ? 'spot' : 'dim' } };
       this.lined.set(layer.params, hit);
     }
     return { ...layer, params: hit.params };
   }
 
-  /** Composite a slide into `target` (null = the canvas). */
-  drawSlide(slide: Slide, opts: FrameOpts, target: FBO | null = null) {
+  /** An effect layer's pass: its params as uniforms, at the given opacity. */
+  private effectRun(layer: Layer, st: LayerState, opts: FrameOpts) {
+    const gl = this.gl;
+    const k = kind(layer.kind);
+    return (p: Prog) => {
+      for (const d of k.params) {
+        let v = layer.params[d.key] ?? d.default;
+        if (d.type === 'vec2' && k.mouseParam === d.key && layer.interact.followMouse) v = opts.mouse;
+        const loc = this.u(p, 'u_' + d.key);
+        if (!loc) continue;
+        if (d.type === 'number') gl.uniform1f(loc, Number(v));
+        else if (d.type === 'color') gl.uniform3f(loc, ...hexToRgb(String(v)));
+        else if (d.type === 'bool') gl.uniform1f(loc, v ? 1 : 0);
+        else if (d.type === 'vec2') gl.uniform2f(loc, (v as number[])[0], (v as number[])[1]);
+        else if (d.type === 'select') gl.uniform1f(loc, Math.max(0, d.options.findIndex((o) => o.value === v)));
+      }
+      gl.uniform1f(this.u(p, 'uOpacity'), layer.opacity * st.opacity);
+      return true;
+    };
+  }
+
+  private spotLayer: Layer | null = null;
+  /** The spotlight build's vignette as an ordinary Vignette layer, laid over the slide. */
+  private spotlight(strength: number): Layer {
+    if (!this.spotLayer) {
+      this.spotLayer = {
+        id: '_spotlight', kind: 'vignette', name: 'Spotlight', visible: true, locked: true, opacity: 1, blend: 'normal',
+        params: { ...SPOT_PARAMS }, anim: { type: 'none', duration: 0, delay: 0, easing: 'linear', trigger: 'withSlide', stagger: 0, loop: 'none', loopSpeed: 1, loopAmount: 1 },
+        interact: { followMouse: false, parallax: 0, hover: 'none', click: 'none', gotoSlide: 1, url: '' },
+      };
+    }
+    this.spotLayer.opacity = strength;
+    return this.spotLayer;
+  }
+
+  /**
+   * Composite a slide into `target` (null = the canvas). With `base`, the slide's layers are laid
+   * over that picture instead of over the slide's background.
+   */
+  drawSlide(slide: Slide, opts: FrameOpts, target: FBO | null = null, base: FBO | null = null) {
     const gl = this.gl;
     gl.bindVertexArray(this.vao);
     gl.disable(gl.BLEND);
     const sched = schedule(slide, opts.clicks);
+    const light = stepLight(slide, sched, opts.t);
     const [br, bg, bb] = hexToRgb(slide.background || '#000000');
 
     type Pass = { layer: Layer; run: (p: Prog) => boolean };
@@ -333,6 +381,9 @@ export class Renderer {
       const layer = starts ? this.withLines(this.withPage(toned, slide.id), starts, opts.t) : this.withPage(toned, slide.id);
       const k = kind(layer.kind);
       const st = layerState(layer, sched.start.get(layer.id), opts.t, opts.time);
+      st.opacity *= light.dim.get(layer.id) ?? 1;
+      const pose = opts.morph?.get(layer.id);
+      if (pose) { st.dx += pose.dx; st.dy += pose.dy; st.opacity *= pose.opacity; }
       if (!st.visible || st.opacity <= 0.001 || layer.opacity <= 0.001) continue;
 
       if (k.content) {
@@ -369,7 +420,7 @@ export class Renderer {
             gl.uniform4f(this.u(p, 'uBox'), box.x, box.y, box.w, box.h);
             gl.uniform4f(this.u(p, 'uTexRect'), ...te.rect);
             gl.uniform1f(this.u(p, 'uRot'), ((box.rot + st.rot) * Math.PI) / 180);
-            gl.uniform2f(this.u(p, 'uScale'), st.scale, st.scale);
+            gl.uniform2f(this.u(p, 'uScale'), st.scale * (pose?.sx ?? 1), st.scale * (pose?.sy ?? 1));
             gl.uniform2f(this.u(p, 'uOffset'), st.dx, st.dy);
             gl.uniform1f(this.u(p, 'uBlur'), st.blur);
             gl.uniform4f(this.u(p, 'uClip'), ...st.clip);
@@ -380,31 +431,23 @@ export class Renderer {
           },
         });
       } else {
-        passes.push({
-          layer,
-          run: (p) => {
-            for (const d of k.params) {
-              let v = layer.params[d.key] ?? d.default;
-              if (d.type === 'vec2' && k.mouseParam === d.key && layer.interact.followMouse) v = opts.mouse;
-              const loc = this.u(p, 'u_' + d.key);
-              if (!loc) continue;
-              if (d.type === 'number') gl.uniform1f(loc, Number(v));
-              else if (d.type === 'color') gl.uniform3f(loc, ...hexToRgb(String(v)));
-              else if (d.type === 'bool') gl.uniform1f(loc, v ? 1 : 0);
-              else if (d.type === 'vec2') gl.uniform2f(loc, (v as number[])[0], (v as number[])[1]);
-              else if (d.type === 'select') gl.uniform1f(loc, Math.max(0, d.options.findIndex((o) => o.value === v)));
-            }
-            gl.uniform1f(this.u(p, 'uOpacity'), layer.opacity * st.opacity);
-            return true;
-          },
-        });
+        passes.push({ layer, run: this.effectRun(layer, st, opts) });
       }
     }
+    // Spotlight: once the build starts, the light comes off the edges of the slide.
+    if (light.spot > 0.001) {
+      const v = this.spotlight(light.spot);
+      passes.push({ layer: v, run: this.effectRun(v, IDLE_STATE(), opts) });
+    }
 
-    // Clear the first buffer to the slide background, then ping-pong through the passes.
-    this.bindTarget(this.ping[0]);
-    gl.clearColor(br, bg, bb, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    // Clear the first buffer to the slide background (or start from `base`), then ping-pong
+    // through the passes.
+    if (base) this.copy(base, this.ping[0], opts);
+    else {
+      this.bindTarget(this.ping[0]);
+      gl.clearColor(br, bg, bb, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+    }
     let cur = 0;
     let wrote = false;
     for (let i = 0; i < passes.length; i++) {
@@ -441,15 +484,62 @@ export class Renderer {
 
   /** Render two slides and blend them with a shader transition. p: 0..1 eased. */
   drawTransition(from: Slide, fromOpts: FrameOpts, to: Slide, toOpts: FrameOpts, type: TransitionType, p: number, dir: 1 | -1) {
+    if (type === 'morph') { this.drawMorph(from, fromOpts, to, toOpts, p); return; }
+    this.blend(from, fromOpts, to, toOpts, type, p, dir, null);
+  }
+
+  /**
+   * Morph, SlideForge's: what the two slides share — the same picture, the same chart data, the same
+   * words — travels from its place on the old slide to its place on the new one, and everything
+   * else crossfades beneath it. With nothing shared it is a crossfade.
+   */
+  private drawMorph(from: Slide, fromOpts: FrameOpts, to: Slide, toOpts: FrameOpts, p: number) {
+    const pairs = morphPairs(from, to, this.deckW, this.deckH);
+    if (!pairs.length) { this.blend(from, fromOpts, to, toOpts, 'fade', p, 1, null); return; }
+    const fromHidden = new Set(fromOpts.hidden ?? []), toHidden = new Set(toOpts.hidden ?? []);
+    for (const [a, b] of pairs) { fromHidden.add(a.id); toHidden.add(b.id); }
+    this.blend(from, { ...fromOpts, hidden: fromHidden }, to, { ...toOpts, hidden: toHidden }, 'fade', p, 1, this.slots[2]);
+    // Each carried layer travels as both its versions at once: the new one fades in over the first
+    // half and the old one out over the second, so a layer that has not changed never dips, and one
+    // that has (a new colour, new type) turns into its new look on the way.
+    const morph = new Map<string, MorphPose>();
+    const layers: Layer[] = [];
+    const lerp = (x: number, y: number) => x + (y - x) * p;
+    for (const [a, b] of pairs) {
+      const A = a.box!, B = b.box!;
+      // Text keeps its shape and scales by its type size, pinned where its words start (the left,
+      // middle or right of the top, by its alignment) so the two versions travel on top of each other.
+      // A picture or chart stretches from box to box.
+      const text = b.kind === 'text' ? textSize(a) / Math.max(1, textSize(b)) : 0;
+      const ax = !text ? 0.5 : b.params.align === 'center' ? 0.5 : b.params.align === 'right' ? 1 : 0, ay = text ? 0 : 0.5;
+      const pin = (bx: typeof A) => [bx.x + ax * bx.w, bx.y + ay * bx.h];
+      const [px, py] = [lerp(pin(A)[0], pin(B)[0]), lerp(pin(A)[1], pin(B)[1])];
+      // Offset that puts a box's pin at (px, py) once scaled by (sx, sy) about the box's centre.
+      const pose = (bx: typeof A, sx: number, sy: number, opacity: number): MorphPose => {
+        const cx = bx.x + bx.w / 2, cy = bx.y + bx.h / 2;
+        return { dx: px - cx - (pin(bx)[0] - cx) * sx, dy: py - cy - (pin(bx)[1] - cy) * sy, sx, sy, opacity };
+      };
+      const w = lerp(A.w, B.w), h = lerp(A.h, B.h);
+      const old = { ...a, id: `${a.id}~from` };
+      const ka = text ? lerp(1, 1 / text) : 0, kb = text ? lerp(text, 1) : 0;
+      morph.set(old.id, pose(A, text ? ka : w / A.w, text ? ka : h / A.h, 1 - Math.max(0, p - 0.5) * 2));
+      morph.set(b.id, pose(B, text ? kb : w / B.w, text ? kb : h / B.h, Math.min(1, p * 2)));
+      layers.push(old, b);
+    }
+    const carried: Slide = { ...to, layers };
+    this.drawSlide(carried, { ...toOpts, t: Infinity, morph }, null, this.slots[2]);
+  }
+
+  private blend(from: Slide, fromOpts: FrameOpts, to: Slide, toOpts: FrameOpts, type: TransitionType, p: number, dir: 1 | -1, target: FBO | null) {
     const gl = this.gl;
     this.drawSlide(from, fromOpts, this.slots[0]);
     this.drawSlide(to, toOpts, this.slots[1]);
     if (type === 'blur') {
       gl.activeTexture(gl.TEXTURE3);
-      for (const s of this.slots) { gl.bindTexture(gl.TEXTURE_2D, s.tex); gl.generateMipmap(gl.TEXTURE_2D); }
+      for (const s of this.slots.slice(0, 2)) { gl.bindTexture(gl.TEXTURE_2D, s.tex); gl.generateMipmap(gl.TEXTURE_2D); }
     }
     const prog = this.program('transition', () => TRANSITION_FRAG);
-    this.bindTarget(null);
+    this.bindTarget(target);
     this.common(prog, toOpts, this.slots[0].tex);
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this.slots[0].tex);
@@ -474,4 +564,28 @@ export class Renderer {
     this.progs.clear();
     if (lose) gl.getExtension('WEBGL_lose_context')?.loseContext();
   }
+}
+
+/**
+ * The layers a Morph carries across: the same picture, video or chart data, or the same words, on both
+ * slides. Each layer on the new slide takes at most one from the old. A layer that covers the whole
+ * slide crossfades instead, since it would be drawn over everything else.
+ */
+export function morphPairs(from: Slide, to: Slide, W: number, H: number): [Layer, Layer][] {
+  const keyOf = (l: Layer) => {
+    if (!l.visible || !l.box || (l.box.w >= W * 0.9 && l.box.h >= H * 0.9)) return null;
+    if (l.kind === 'image' || l.kind === 'video') return l.params.src ? `${l.kind}|${l.params.src}` : null;
+    if (l.kind === 'chart') return `chart|${String(l.params.data ?? '').trim()}`;
+    if (l.kind === 'text') { const t = String(l.params.text ?? '').trim(); return t ? `text|${t}` : null; }
+    return null;
+  };
+  const pool = new Map<string, Layer[]>();
+  for (const a of from.layers) { const k = keyOf(a); if (k) pool.set(k, [...(pool.get(k) ?? []), a]); }
+  const out: [Layer, Layer][] = [];
+  for (const b of to.layers) {
+    const k = keyOf(b);
+    const a = k ? pool.get(k)?.shift() : undefined;
+    if (a) out.push([a, b]);
+  }
+  return out;
 }

@@ -559,6 +559,7 @@ function TextEditor({ layer, zoom }: { layer: Layer; zoom: number }) {
         font: fontString(p, size), color: String(p.color), lineHeight: String(p.lineHeight ?? 1),
         letterSpacing: `${Number(p.tracking ?? 0)}em`, textAlign: String(p.align ?? 'left') as 'left',
         textTransform: p.uppercase ? 'uppercase' : 'none', textDecoration: p.underline ? 'underline' : 'none', transform: `rotate(${b.rot}deg)`,
+        textWrap: p.balance ? 'balance' : undefined,
       }}
     />
     </>

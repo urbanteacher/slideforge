@@ -1,6 +1,23 @@
 import type { Anim, Easing, EntranceType, Interact, Layer, Slide } from '../model/types';
+import { isWordMotion, wordsTotal } from './words';
+
+/** A CSS cubic-bezier(x1, y1, x2, y2) as a function of progress: solve x for t, return y. */
+function bezier(x1: number, y1: number, x2: number, y2: number) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+  const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const X = (t: number) => ((ax * t + bx) * t + cx) * t, Y = (t: number) => ((ay * t + by) * t + cy) * t;
+  return (x: number) => {
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    let lo = 0, hi = 1, t = x;
+    for (let i = 0; i < 24; i++) { const v = X(t); if (Math.abs(v - x) < 1e-5) break; if (v < x) lo = t; else hi = t; t = (lo + hi) / 2; }
+    return Y(t);
+  };
+}
 
 export const EASE: Record<Easing, (t: number) => number> = {
+  // After Effects' Easy Ease, 33% influence each side — what SlideForge's words move on.
+  easyEase: bezier(0.33, 0, 0.67, 1),
   linear: (t) => t,
   cubicOut: (t) => 1 - Math.pow(1 - t, 3),
   quintOut: (t) => 1 - Math.pow(1 - t, 5),
@@ -49,11 +66,45 @@ export function buildLines(l: Layer): number {
   return String(l.params.text ?? '').split('\n').filter((x) => x.trim()).length;
 }
 
+/** A chart that draws itself: how many bars, points or wedges it draws, one after another. */
+export const isChartDraw = (l: Layer) => l.kind === 'chart' && l.anim.type === 'draw';
+export function chartItems(l: Layer): number {
+  return Math.max(1, String(l.params.data ?? '').split('\n').filter((x) => x.trim()).length);
+}
+
 export function animTotal(layer: Layer): number {
   const a = layer.anim;
   if (a.type === 'none') return 0;
+  if (isWordMotion(layer)) return wordsTotal(a, textUnitCount(layer));
   if (layer.kind === 'text' && isTextUnit(a.type)) return a.duration + (textUnitCount(layer) - 1) * a.stagger;
+  if (isChartDraw(layer)) return a.duration + (chartItems(layer) - 1) * a.stagger;
   return a.duration;
+}
+
+// SlideForge's word motion is two choices, not two numbers: how fast (each unit's move, and how far
+// apart the wave spreads with it) and how far apart the units are. The numbers are words.js's:
+// 1300/700/320 ms a word, the wave stretched 1.8/1/0.45, and spread 0/1/2.5 times.
+export const SPEEDS = { gentle: { duration: 1.3, span: 1.8 }, medium: { duration: 0.7, span: 1 }, quick: { duration: 0.32, span: 0.45 } } as const;
+export const SPACINGS = { together: 0, wave: 1, one: 2.5 } as const;
+export type Speed = keyof typeof SPEEDS;
+export type Spacing = keyof typeof SPACINGS;
+/** The gap between two units at Medium, Wave: a word's step is longer than a letter's. */
+function unitGap(type: EntranceType) {
+  return type === 'letters' || type === 'typewriter' ? 0.048 : type === 'lines' ? 0.2 : 0.13;
+}
+export function presetTiming(type: EntranceType, speed: Speed, spacing: Spacing) {
+  const sp = SPEEDS[speed];
+  return { duration: sp.duration, stagger: Math.round(unitGap(type) * sp.span * SPACINGS[spacing] * 1000) / 1000 };
+}
+/** Which preset an animation's numbers are, if any; null once the sliders have been moved off them. */
+export function presetOf(a: Anim): { speed: Speed; spacing: Spacing } | null {
+  for (const speed of Object.keys(SPEEDS) as Speed[]) {
+    if (Math.abs(SPEEDS[speed].duration - a.duration) > 0.001) continue;
+    for (const spacing of Object.keys(SPACINGS) as Spacing[]) {
+      if (Math.abs(presetTiming(a.type, speed, spacing).stagger - a.stagger) < 0.0015) return { speed, spacing };
+    }
+  }
+  return null;
 }
 
 export interface Schedule {
@@ -114,6 +165,50 @@ export function schedule(slide: Slide, clicks: number[]): Schedule {
   return { start, lines, steps: step, stepEnds };
 }
 
+/** How far a dimmed point falls back: dim keeps it readable; spotlight takes it further back. */
+export const DIM_TO = { dim: 0.35, spot: 0.3 } as const;
+const DIM_SECS = 0.5;
+
+/**
+ * Builds that light one point and not the others. Items of a set built one per click are dimmed
+ * once a later item of the set has arrived, easing back over half a second; `spot` is how far the
+ * spotlight's vignette has closed in (0–1), from the moment the first point of a spotlit build
+ * appears. Nothing is dimmed on a static slide (t = Infinity): the editor and a handout show it all.
+ */
+export function stepLight(slide: Slide, sched: Schedule, t: number): { dim: Map<string, number>; spot: number } {
+  const dim = new Map<string, number>();
+  let spot = 0;
+  if (!Number.isFinite(t)) return { dim, spot };
+  const ramp = (from: number) => (Number.isFinite(from) && t >= from ? Math.min(1, (t - from) / DIM_SECS) : 0);
+  const sets = new Map<string, { mode: 'on' | 'dim' | 'spot'; at: number[]; layers: Layer[] }>();
+  for (const l of slide.layers) {
+    const st = l.anim.step;
+    if (st && l.visible && l.anim.type !== 'none') {
+      let e = sets.get(st.set);
+      if (!e) sets.set(st.set, (e = { mode: st.mode, at: [], layers: [] }));
+      e.at[st.i] = Math.min(e.at[st.i] ?? Infinity, sched.start.get(l.id) ?? Infinity);
+      e.layers.push(l);
+    }
+    if (l.anim.build === 'spot') spot = Math.max(spot, ramp(sched.lines.get(l.id)?.[0] ?? sched.start.get(l.id) ?? Infinity));
+  }
+  for (const e of sets.values()) {
+    if (e.mode === 'on') continue;
+    const at = e.at.filter((x) => x !== undefined);
+    if (e.mode === 'spot') spot = Math.max(spot, ramp(Math.min(...at)));
+    const floor = DIM_TO[e.mode];
+    for (const l of e.layers) {
+      const mine = e.at[l.anim.step!.i];
+      // The first item to arrive after this one sends it back. Read off the clock, not the index, so
+      // an item moved on the canvas (which swaps build order) still dims in the order it is shown.
+      let later = Infinity;
+      for (const x of at) if (x > mine && x <= t) later = Math.min(later, x);
+      const k = ramp(later);
+      if (k > 0) dim.set(l.id, 1 - (1 - floor) * k);
+    }
+  }
+  return { dim, spot };
+}
+
 export interface LayerState {
   visible: boolean;
   opacity: number;
@@ -149,7 +244,8 @@ function imageView(layer: Layer, local: number): [number, number, number] {
     return [keep(0.5 + (f[0] - 0.5) * k, z), keep(0.5 + (f[1] - 0.5) * k, z), z];
   }
   const g = (Array.isArray(p.focus2) ? p.focus2 : [0.7, 0.4]) as [number, number];
-  const z = 1.35, e = EASE.cubicInOut(k);
+  // SlideForge's travelFrame: scaled 1.2, the focus centred as far as the frame allows, on Easy Ease.
+  const z = 1.2, e = EASE.easyEase(k);
   return [keep(f[0] + (g[0] - f[0]) * e, z), keep(f[1] + (g[1] - f[1]) * e, z), z];
 }
 
@@ -169,9 +265,10 @@ export function layerState(layer: Layer, start: number | undefined, t: number, t
       st.opacity = 0;
       return st;
     }
-    const textUnits = layer.kind === 'text' && isTextUnit(a.type) && !buildLines(layer);
+    const textUnits = (layer.kind === 'text' && isTextUnit(a.type) && !buildLines(layer)) || isChartDraw(layer);
     st.textT = textUnits ? local : Infinity;
-    // A line-by-line build moves each line itself (see the renderer); the box just appears.
+    // A line-by-line build moves each line itself (see the renderer), and a chart that draws itself
+    // draws its own bars; the box just appears.
     if (!textUnits && !buildLines(layer)) {
       const raw = Math.min(1, local / Math.max(0.01, a.duration));
       const e = EASE[a.easing](raw);

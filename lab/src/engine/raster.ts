@@ -1,5 +1,6 @@
 import type { Layer, Params } from '../model/types';
-import { unitProgress } from './anim';
+import { DIM_TO, EASE, textUnitCount, unitProgress } from './anim';
+import { FRAME_K, isWordMotion, reach, unitDelays, unitLook, type UnitLook } from './words';
 
 // Rasterises content layers (text / shape / image) into 2D canvases that the renderer uploads as
 // textures. Each result carries `rect`: the area the canvas covers, relative to the layer box's
@@ -33,6 +34,8 @@ function mctx(): Ctx {
 let assetVersion = 0;
 export const getAssetVersion = () => assetVersion;
 const bump = () => { assetVersion++; };
+/** Redraw everything that was drawn before a font or picture arrived (a style guide's typefaces). */
+export const refreshAssets = bump;
 
 const fontState = new Map<string, 'loading' | 'ready'>();
 function ensureFont(font: string) {
@@ -79,6 +82,20 @@ function setupFont(ctx: Ctx, p: Params, px: number) {
 }
 
 export function layoutText(p: Params, width: number): TextLayout {
+  const full = layoutAt(p, width);
+  if (!p.balance || full.lines.length < 2 || full.lines.length > 6) return full;
+  // Balanced, as CSS text-wrap: balance does it: the narrowest measure that still takes as many
+  // lines, so the lines come out even and break where the sense is rather than at the margin.
+  let lo = 0, hi = width;
+  for (const l of full.lines) for (const w of l.words) lo = Math.max(lo, w.w);
+  for (let i = 0; i < 14 && hi - lo > 0.5; i++) {
+    const mid = (lo + hi) / 2;
+    if (layoutAt(p, mid).lines.length > full.lines.length) lo = mid; else hi = mid;
+  }
+  return layoutAt(p, hi);
+}
+
+function layoutAt(p: Params, width: number): TextLayout {
   const size = Number(p.size ?? 64);
   const ctx = mctx();
   setupFont(ctx, p, size);
@@ -131,7 +148,10 @@ function rasterText(layer: Layer, textT: number): Raster {
   const p: Params = { ...layer.params, size: textSize(layer) };
   const L = layoutText(p, box.w);
   const size = L.size;
-  const padX = size * 0.5, padT = size * 0.35, padB = size * 0.7;
+  // Words on their way in can start well away from their place (a bounce falls from two lines up).
+  const wm = isWordMotion(layer);
+  const far = wm ? reach(layer.anim) * size : 0;
+  const padX = size * 0.5 + far, padT = size * 0.35 + far, padB = size * 0.7 + far;
   const rw = box.w + padX * 2, rh = Math.max(box.h, L.height) + padT + padB;
   const S = Math.min(2, MAX_TEX / Math.max(rw, rh));
   const canvas = makeCanvas(rw * S, rh * S);
@@ -147,6 +167,30 @@ function rasterText(layer: Layer, textT: number): Raster {
   const type = layer.anim.type;
   const animating = Number.isFinite(textT);
   let unit = 0;
+  // SlideForge's word motion: each unit drawn at its own look, about its own box.
+  const units = wm && animating ? textUnitCount(layer) : 0;
+  const delays = units ? unitDelays(layer.anim, units) : [];
+  const easeFn = EASE[layer.anim.easing] ?? EASE.easyEase;
+  const drawUnit = (str: string, x: number, width: number, top: number, base: number, lk: UnitLook, letter: boolean, marker?: boolean) => {
+    if (lk.alpha <= 0.002 || (lk.clip && lk.clip[1] <= lk.clip[0])) return;
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, lk.alpha);
+    // A word turns about a point 60% down its own height; a letter, narrower, about its middle.
+    const ox = x + width / 2, oy = top + L.lineH * (letter ? 0.5 : 0.6);
+    ctx.translate(ox + lk.dx * size, oy + lk.dy * size);
+    if (lk.rot) ctx.rotate((lk.rot * Math.PI) / 180);
+    if (lk.scale !== 1) ctx.scale(lk.scale, lk.scale);
+    ctx.translate(-ox, -oy);
+    if (lk.clip) {
+      ctx.beginPath();
+      ctx.rect(x - size, top + L.lineH * lk.clip[0], width + size * 2, L.lineH * (lk.clip[1] - lk.clip[0]));
+      ctx.clip();
+    }
+    if (lk.blur > 0.05) ctx.filter = `blur(${(lk.blur * FRAME_K * S).toFixed(2)}px)`;
+    ctx.fillText(str, x, base);
+    if (!marker) underline(x, width, base);
+    ctx.restore();
+  };
   const underline = (x: number, w: number, y: number) => {
     if (p.underline && w > 0) ctx.fillRect(x, y + size * 0.09, w, Math.max(1, size * 0.055));
   };
@@ -176,7 +220,7 @@ function rasterText(layer: Layer, textT: number): Raster {
       if (built) {
         const b = built[line.para] ?? 1;
         if (b <= 0) return;
-        ctx.globalAlpha = Math.min(1, b * 1.4) * (dimBefore >= 0 && (step[line.para] ?? 0) < dimBefore ? 0.35 : 1);
+        ctx.globalAlpha = Math.min(1, b * 1.4) * (dimBefore >= 0 && (step[line.para] ?? 0) < dimBefore ? (p._dimTo === 'spot' ? DIM_TO.spot : DIM_TO.dim) : 1);
         whole(base + (1 - b) * size * 0.5);
         ctx.globalAlpha = 1;
         return;
@@ -195,6 +239,19 @@ function rasterText(layer: Layer, textT: number): Raster {
       return;
     }
     for (const w of line.words) {
+      if (units && type === 'words') {
+        drawUnit(w.text, ox + w.x, w.w, top, base, unitLook(layer.anim, unit, units, textT, easeFn, delays), false, w.marker);
+        unit++;
+        continue;
+      }
+      if (units) {
+        for (let k = 0; k < w.text.length; k++) {
+          const x = ox + w.x + (k ? ctx.measureText(w.text.slice(0, k)).width : 0);
+          drawUnit(w.text[k], x, ctx.measureText(w.text[k]).width, top, base, unitLook(layer.anim, unit, units, textT, easeFn, delays), true, w.marker);
+          unit++;
+        }
+        continue;
+      }
       if (type === 'words') {
         const e = unitProgress(layer, unit++, textT);
         if (e <= 0) continue;
@@ -235,8 +292,9 @@ function shapePath(ctx: Ctx, p: Params, w: number, h: number) {
     }
     ctx.closePath();
   } else if (shape === 'ring') {
+    const inner = 1 - Math.max(0.02, Math.min(1, Number(p.ringWidth ?? 0.32)));
     ctx.ellipse(w / 2, h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
-    ctx.ellipse(w / 2, h / 2, w * 0.34, h * 0.34, 0, Math.PI * 2, 0, true);
+    if (inner > 0) ctx.ellipse(w / 2, h / 2, (w / 2) * inner, (h / 2) * inner, 0, Math.PI * 2, 0, true);
   } else if (shape === 'arrow') {
     const sh = h * 0.36, head = Math.min(w * 0.45, h);
     ctx.moveTo(0, h / 2 - sh / 2); ctx.lineTo(w - head, h / 2 - sh / 2); ctx.lineTo(w - head, 0);
@@ -246,6 +304,16 @@ function shapePath(ctx: Ctx, p: Params, w: number, h: number) {
     const r = Math.min(Number(p.radius ?? 0), w / 2, h / 2);
     ctx.roundRect(0, 0, w, h, r);
   }
+}
+
+/** A colour at an opacity, for the canvas. Opacity 1 hands the colour back as it was written. */
+function withAlpha(colour: string, alpha: unknown) {
+  const a = alpha === undefined ? 1 : Math.max(0, Math.min(1, Number(alpha)));
+  if (a >= 1) return colour;
+  const h = colour.replace('#', '');
+  const f = h.length === 3 ? h.split('').map((c) => c + c).join('') : h.slice(0, 6);
+  const n = parseInt(f, 16);
+  return f.length === 6 && !Number.isNaN(n) ? `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})` : colour;
 }
 
 function rasterShape(layer: Layer): Raster {
@@ -259,13 +327,13 @@ function rasterShape(layer: Layer): Raster {
   const ctx = canvas.getContext('2d') as Ctx;
   ctx.scale(S, S);
   ctx.translate(pad, pad);
-  let fill: string | CanvasGradient = String(p.fill);
+  let fill: string | CanvasGradient = withAlpha(String(p.fill), p.fillOpacity);
   if (p.gradient) {
     const a = (Number(p.angle ?? 0) * Math.PI) / 180;
     const dx = Math.cos(a) * w / 2, dy = Math.sin(a) * h / 2;
     const g = ctx.createLinearGradient(w / 2 - dx, h / 2 - dy, w / 2 + dx, h / 2 + dy);
-    g.addColorStop(0, String(p.fill));
-    g.addColorStop(1, String(p.fill2));
+    g.addColorStop(0, withAlpha(String(p.fill), p.fillOpacity));
+    g.addColorStop(1, withAlpha(String(p.fill2), p.fill2Opacity));
     fill = g;
   }
   if (p.shape === 'line') {
@@ -279,7 +347,7 @@ function rasterShape(layer: Layer): Raster {
   ctx.fillStyle = fill;
   ctx.fill('evenodd');
   if (sw > 0) {
-    ctx.strokeStyle = String(p.stroke);
+    ctx.strokeStyle = withAlpha(String(p.stroke), p.strokeOpacity);
     ctx.lineWidth = sw;
     ctx.lineJoin = 'round';
     ctx.stroke();
@@ -858,8 +926,12 @@ function niceMax(v: number) {
   return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * e;
 }
 
-function rasterChart(layer: Layer): Raster {
+function rasterChart(layer: Layer, textT = Infinity): Raster {
   const p = layer.params;
+  // "Draws itself": each bar, point or wedge at its own progress, one after another. Settled is 1.
+  const a = layer.anim;
+  const drawing = a.type === 'draw' && Number.isFinite(textT);
+  const grow = (i: number) => (drawing ? EASE[a.easing](Math.max(0, Math.min(1, (textT - i * a.stagger) / Math.max(0.01, a.duration)))) : 1);
   const { w, h } = layer.box!;
   const pad = 8;
   const rw = w + pad * 2, rh = h + pad * 2;
@@ -887,18 +959,22 @@ function rasterChart(layer: Layer): Raster {
     const legendW = legendPx * 1.3 + Math.max(...data.map((d) => ctx.measureText(`${d.label}  100%`).width));
     const R = Math.max(Math.min(h, w * 0.3) / 2, Math.min(h / 2, (w - legendW - size * 1.4) / 2)) - 2;
     const cx = R + 2, cy = h / 2;
-    let a = -Math.PI / 2;
+    let ang = -Math.PI / 2;
     const gapA = n > 1 ? 0.012 : 0;
+    // A pie sweeps round as one: wedge i is drawn once the sweep has passed its start.
+    const sweep = drawing ? EASE[a.easing](Math.max(0, Math.min(1, textT / Math.max(0.01, a.duration + (n - 1) * a.stagger)))) * Math.PI * 2 : Infinity;
     data.forEach((d, i) => {
-      const da = (Math.max(0, d.value) / total) * Math.PI * 2;
-      if (da <= 0) return;
+      const full = (Math.max(0, d.value) / total) * Math.PI * 2;
+      const done = ang + Math.PI / 2;
+      const da = Math.min(full, Math.max(0, sweep - done));
+      if (da <= 0) { ang += full; return; }
       ctx.fillStyle = colour(i);
       ctx.beginPath();
       ctx.moveTo(cx, cy);
-      ctx.arc(cx, cy, R, a + gapA, a + da - gapA);
+      ctx.arc(cx, cy, R, ang + gapA, ang + Math.max(gapA, da - gapA));
       ctx.closePath();
       ctx.fill();
-      a += da;
+      ang += full;
     });
     if (type === 'donut') {
       ctx.globalCompositeOperation = 'destination-out';
@@ -911,6 +987,7 @@ function rasterChart(layer: Layer): Raster {
     const ls = Math.min(size, rowH * 0.6);
     let ly = cy - (rowH * n) / 2;
     data.forEach((d, i) => {
+      ctx.globalAlpha = grow(i);
       ctx.fillStyle = colour(i);
       ctx.beginPath(); ctx.roundRect(lx, ly + rowH / 2 - ls * 0.4, ls * 0.8, ls * 0.8, ls * 0.2); ctx.fill();
       useFont(ctx, fam, ls, 500);
@@ -920,6 +997,7 @@ function rasterChart(layer: Layer): Raster {
       ctx.fillText(fit(ctx, d.label + pct, w - lx - ls * 1.3), lx + ls * 1.3, ly + rowH / 2);
       ly += rowH;
     });
+    ctx.globalAlpha = 1;
     return { canvas, rect };
   }
 
@@ -938,14 +1016,17 @@ function rasterChart(layer: Layer): Raster {
     }
     data.forEach((d, i) => {
       const y = i * slot + (slot - bh) / 2;
-      const bw = Math.max(0, (d.value / max) * plotW);
+      const g = grow(i);
+      const bw = Math.max(0, (d.value / max) * plotW) * g;
       ctx.fillStyle = colour(i);
       ctx.beginPath(); ctx.roundRect(x0, y, bw, bh, [0, Math.min(bh * 0.2, 14), Math.min(bh * 0.2, 14), 0]); ctx.fill();
       ctx.fillStyle = ink;
       ctx.textAlign = 'right';
       ctx.fillText(fit(ctx, d.label, labelW - size * 0.6), x0 - size * 0.5, y + bh / 2);
       ctx.textAlign = 'left';
+      ctx.globalAlpha = g;
       if (showValues) ctx.fillText(fmtNum(d.value), x0 + bw + size * 0.4, y + bh / 2);
+      ctx.globalAlpha = 1;
     });
     return { canvas, rect };
   }
@@ -962,6 +1043,12 @@ function rasterChart(layer: Layer): Raster {
   ctx.textAlign = 'center';
   if (type === 'line') {
     const pts = data.map((d, i) => [slot * (i + 0.5), yOf(d.value)] as const);
+    // A line draws along: everything left of the pen, the pen moving point to point.
+    ctx.save();
+    if (drawing) {
+      const k = EASE[a.easing](Math.max(0, Math.min(1, textT / Math.max(0.01, a.duration + (n - 1) * a.stagger))));
+      ctx.beginPath(); ctx.rect(-pad, -pad, pts[0][0] + (pts[pts.length - 1][0] - pts[0][0]) * k + pad + Math.max(5, size * 0.3), h + pad * 2); ctx.clip();
+    }
     const g = ctx.createLinearGradient(0, top, 0, top + plotH);
     g.addColorStop(0, rgba(c1, 0.28));
     g.addColorStop(1, rgba(c1, 0));
@@ -983,10 +1070,12 @@ function rasterChart(layer: Layer): Raster {
       ctx.fillStyle = colour(i);
       ctx.beginPath(); ctx.arc(x, y, Math.max(5, size * 0.3), 0, Math.PI * 2); ctx.fill();
     });
+    ctx.restore();
   }
   data.forEach((d, i) => {
     const x = slot * (i + 0.5);
-    const y = yOf(d.value);
+    const g = type === 'column' ? grow(i) : 1;
+    const y = top + plotH - (top + plotH - yOf(d.value)) * g;
     if (type === 'column') {
       const bw = slot * 0.62;
       ctx.fillStyle = colour(i);
@@ -995,7 +1084,9 @@ function rasterChart(layer: Layer): Raster {
     }
     ctx.fillStyle = ink;
     ctx.fillText(fit(ctx, d.label, slot * 0.95), x, top + plotH + labelH / 2);
+    ctx.globalAlpha = type === 'column' ? g : drawing ? grow(i) : 1;
     if (showValues) ctx.fillText(fmtNum(d.value), x, y - size * (type === 'line' ? 1.05 : 0.7));
+    ctx.globalAlpha = 1;
   });
   ctx.textAlign = 'left';
   return { canvas, rect };
@@ -1007,7 +1098,7 @@ export function rasterise(layer: Layer, textT: number): Raster | null {
   if (c === 'shape') return rasterShape(layer);
   if (c === 'image') return rasterImage(layer);
   if (c === 'video') return rasterVideo(layer);
-  if (c === 'chart') return rasterChart(layer);
+  if (c === 'chart') return rasterChart(layer, textT);
   if (c === 'quiz') return rasterQuiz(layer);
   if (c === 'activity') return rasterActivity(layer);
   if (c === 'note') return rasterNote(layer);

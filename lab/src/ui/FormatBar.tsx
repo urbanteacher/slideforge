@@ -2,6 +2,7 @@ import { Bold, Italic, List, ListOrdered, Minus, Plus, TextAlignCenter, TextAlig
 import { useRef } from 'react';
 import { FONTS, kind } from '../engine/registry';
 import { layerOf, useStore } from '../model/store';
+import { fontChoices } from '../model/guide';
 import type { Layer, ParamValue } from '../model/types';
 import { newGesture } from './controls';
 import { has, toggleFormat } from './format';
@@ -19,6 +20,7 @@ function Btn({ icon: I, title, on, disabled, onClick }: { icon: LucideIcon; titl
 
 export function FormatBar() {
   const layer = useStore(layerOf);
+  const guide = useStore((s) => s.deck.styleGuide);
   const updateLayer = useStore((s) => s.updateLayer);
   const g = useRef(newGesture());
   const set = (key: string, v: ParamValue, merge?: string) => layer && updateLayer(layer.id, (x) => { x.params[key] = v; }, merge);
@@ -36,7 +38,7 @@ export function FormatBar() {
     <div className={`tb-group fmt${layer ? '' : ' idle'}`} title={layer ? undefined : 'Select a text box to format it'}>
       <select className="fmt-font" value={has(layer, 'font') ? String(p.font) : ''} disabled={!has(layer, 'font')} onChange={(e) => set('font', e.target.value)} onKeyDown={(e) => e.stopPropagation()} title="Font">
         {!has(layer, 'font') && <option value="">Font</option>}
-        {FONTS.map((f) => <option key={f} value={f}>{f}</option>)}
+        {fontChoices(guide, FONTS).map((f) => <option key={f} value={f}>{f}</option>)}
       </select>
       <div className="fmt-size" title="Size">
         <button className="tb-btn icon" disabled={!has(layer, 'size')} onPointerDown={(e) => e.preventDefault()} onClick={() => { g.current = newGesture(); setSize(size - (size > 48 ? 4 : 2)); }}><Minus size={13} /></button>

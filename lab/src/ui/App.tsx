@@ -3,6 +3,7 @@ import { cloneLayer } from '../model/defaults';
 import { layerOf, refitAllText, slideOf, useStore } from '../model/store';
 import type { Deck } from '../model/types';
 import { idbGet, idbSet } from '../persist/idb';
+import { registerGuideFonts } from '../model/guide';
 import { Filmstrip } from './Filmstrip';
 import { Gallery } from './Gallery';
 import { Inspector } from './Inspector';
@@ -25,6 +26,9 @@ export function App() {
   const presenting = useStore((s) => s.presenting);
   const galleryOpen = useStore((s) => s.galleryOpen);
   const toast = useStore((s) => s.toast);
+  const guide = useStore((s) => s.deck.styleGuide);
+  // The deck's own typefaces, from its style guide, for every text box and thumbnail.
+  useEffect(() => { registerGuideFonts(guide); }, [guide]);
 
   // Restore the last deck, then autosave on every change.
   useEffect(() => {

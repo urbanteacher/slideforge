@@ -4,6 +4,8 @@ import { contentHeight } from '../engine/raster';
 import { kind } from '../engine/registry';
 import { blankSlide, cloneLayer, cloneSlide, createLayer, demoDeck } from './defaults';
 import { hasFlagshipFrame, hasFlagshipTextImage, newSlideWithFrame, syncFrameCounters } from './frame';
+import { themeOf } from './layouts';
+import { themeSlide } from './theme';
 import type { Deck, Layer, Slide } from './types';
 
 export type LeftTab = 'layers' | 'add';
@@ -71,6 +73,14 @@ function refitText(l: Layer) {
 
 const initial = demoDeck();
 let toastTimer = 0;
+
+/** A blank slide in the deck's theme, so a Cinematic deck's new slide is Cinematic too. */
+function themedBlank(d: Deck): Slide {
+  const s = blankSlide();
+  const st = themeOf(d);
+  if (st) themeSlide(s, st, d.width);
+  return s;
+}
 
 export const useStore = create<State>((set, get) => ({
   deck: initial,
@@ -211,7 +221,7 @@ export const useStore = create<State>((set, get) => ({
     const bodySource = get().deck.slides.find(hasFlagshipTextImage);
     const ns = slide ?? (frameSource
       ? newSlideWithFrame(frameSource, index + 2, get().deck.slides.length + 1, get().deck.width, bodySource)
-      : blankSlide());
+      : themedBlank(get().deck));
     get().mutate((d) => {
       const i = d.slides.findIndex((s) => s.id === slideId);
       d.slides.splice(i + 1, 0, ns);

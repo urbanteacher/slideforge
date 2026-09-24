@@ -46,7 +46,7 @@ const LAB_FONTS = ['Inter', 'Instrument Serif', 'Playfair Display', 'DM Serif Di
   'Space Grotesk', 'Syne', 'Unbounded', 'Bebas Neue', 'JetBrains Mono', 'Georgia'];
 
 const CHART_KINDS = { bar: 'column', hbar: 'bar', line: 'line', pie: 'pie', donut: 'donut' };
-const TRANSITIONS = { none: 'none', fade: 'fade', push: 'push', zoom: 'zoom', wipe: 'wipe', morph: 'fade' };
+const TRANSITIONS = { none: 'none', fade: 'fade', push: 'push', zoom: 'zoom', wipe: 'wipe', morph: 'morph' };
 
 const CAPTURE_CSS = `
 html, body { background: transparent !important; }
@@ -514,7 +514,9 @@ async function extract(page, i, labFonts) {
       steps: steps.length,
       name: `${i + 1} · ${slide.type}${slide.title ? ' — ' + String(slide.title).replace(/\s+/g, ' ').slice(0, 40) : ''}`,
       notes: slide.notes || '',
-      transition: slide.transition
+      transition: slide.transition,
+      // Build on Next's dim and spotlight, which the lab plays as a set build over the steps.
+      buildMode: slide.progressive === true && (slide.buildMode === 'dim' || slide.buildMode === 'spot') ? slide.buildMode : 'on'
     };
   }, { i, labFonts, W, CHART_KINDS });
 }
@@ -660,7 +662,9 @@ async function main() {
     if (left) { layers.push(picture(left, 'Flattened · theme art & drawings')); r.pictures++; r.pictureArea += left.area; }
     for (const it of base.filter((x) => x.band === 'text').sort(byZ)) layers.push(layer(it.layer));
 
-    // Each build step: its boxes, its leftovers, its text; the first one waits for a click.
+    // Each build step: its boxes, its leftovers, its text; the first one waits for a click. The
+    // steps are one set, so a dimmed or spotlit build dims the steps before the newest.
+    const set = `s${i + 1}build`;
     for (let s = 1; s <= plan.steps; s++) {
       const mine = plan.items.filter((it) => it.step === s);
       const stepLayers = [];
@@ -668,7 +672,7 @@ async function main() {
       const cap = await capture(page, 'lab-res lab-step', s);
       if (cap) { stepLayers.push(picture(cap, `Flattened · step ${s}`)); r.pictures++; r.pictureArea += cap.area; }
       for (const it of mine.filter((x) => x.band === 'text').sort(byZ)) stepLayers.push(layer(it.layer));
-      stepLayers.forEach((l, n) => { l.anim = anim({ type: 'rise', duration: 0.7, trigger: n === 0 ? 'onClick' : 'withSlide', delay: n === 0 ? 0 : Math.min(0.3, n * 0.04) }); });
+      stepLayers.forEach((l, n) => { l.anim = anim({ type: 'rise', duration: 0.7, trigger: n === 0 ? 'onClick' : 'withSlide', delay: n === 0 ? 0 : Math.min(0.3, n * 0.04), step: { set, i: s - 1, mode: plan.buildMode } }); });
       layers.push(...stepLayers);
     }
     r.steps = plan.steps;

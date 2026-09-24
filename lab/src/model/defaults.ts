@@ -209,7 +209,7 @@ export const TEMPLATES: { id: string; name: string; make: () => Slide }[] = [
 ];
 
 export function blankSlide(): Slide {
-  return createSlide('Untitled', [createLayer('solid', { params: { color: '#f6efe9' } })], '#f6efe9');
+  return createSlide('Untitled', [createLayer('solid', { name: 'Ground', params: { color: '#f6efe9' } })], '#f6efe9');
 }
 
 export function demoDeck(): Deck {

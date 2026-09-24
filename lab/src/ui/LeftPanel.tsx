@@ -1,11 +1,12 @@
 import { ChevronDown, ChevronRight, Copy, Eye, EyeOff, LayoutGrid, ListOrdered, Lock, Rows2, SquareSplitHorizontal, Trash2, Unlock } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { LAYOUTS, LAYOUT_STYLES, layoutFor } from '../model/layouts';
+import { LAYOUTS, LAYOUT_STYLES, guideStyle, layoutFor, themeOf } from '../model/layouts';
 import { useThumbs } from './Gallery';
 import { addTextImage } from './insert';
 import { DeckSettings } from './DeckSettings';
 import { insertBlock } from './SlideBlocks';
 import { ImagesPanel } from './ImagesPanel';
+import { StyleGuidePanel } from './StyleGuidePanel';
 import { HeaderFooterSection } from './HeaderFooter';
 import { applyTheme } from '../model/theme';
 import { CATEGORIES, kind, kindsIn, type Category } from '../engine/registry';
@@ -20,10 +21,10 @@ export function LeftPanel() {
 
 /** Which sections are open, kept between visits. */
 function useFolds() {
-  const read = () => { try { return { layers: true, layouts: true, headerFooter: false, images: false, effects: false, ...JSON.parse(localStorage.getItem('sf-left-folds') ?? '{}') }; } catch { return { layers: true, layouts: true, headerFooter: false, images: false, effects: false }; } };
-  const [open, setOpen] = useState<{ layers: boolean; layouts: boolean; headerFooter: boolean; images: boolean; effects: boolean }>(read);
+  const read = () => { try { return { layers: true, layouts: true, headerFooter: false, images: false, effects: false, guide: false, ...JSON.parse(localStorage.getItem('sf-left-folds') ?? '{}') }; } catch { return { layers: true, layouts: true, headerFooter: false, images: false, effects: false, guide: false }; } };
+  const [open, setOpen] = useState<{ layers: boolean; layouts: boolean; headerFooter: boolean; images: boolean; effects: boolean; guide: boolean }>(read);
   useEffect(() => { localStorage.setItem('sf-left-folds', JSON.stringify(open)); }, [open]);
-  return [open, (k: 'layers' | 'layouts' | 'headerFooter' | 'images' | 'effects', to?: boolean) => setOpen((o) => ({ ...o, [k]: to ?? !o[k] }))] as const;
+  return [open, (k: 'layers' | 'layouts' | 'headerFooter' | 'images' | 'effects' | 'guide', to?: boolean) => setOpen((o) => ({ ...o, [k]: to ?? !o[k] }))] as const;
 }
 
 function Fold({ title, open, onToggle, right, children, className }: { title: string; open: boolean; onToggle: () => void; right?: ReactNode; children: ReactNode; className: string }) {
@@ -59,6 +60,9 @@ function Sections() {
       <Fold title="Layouts" className="fold-layouts" open={open.layouts} onToggle={() => toggle('layouts')}>
         <LayoutsPanel />
       </Fold>
+      <Fold title="Style guide" className="fold-guide" open={open.guide} onToggle={() => toggle('guide')}>
+        <StyleGuidePanel />
+      </Fold>
       <Fold title="Header & footer" className="fold-hf" open={open.headerFooter} onToggle={() => toggle('headerFooter')}>
         <HeaderFooterSection bare />
       </Fold>
@@ -77,7 +81,8 @@ function Sections() {
 function LayoutsPanel() {
   const { addSlide, showToast, mutate } = useStore.getState();
   const themeId = useStore((s) => s.deck.theme);
-  const st = LAYOUT_STYLES.find((s) => s.id === themeId) ?? LAYOUT_STYLES[0];
+  const guide = useStore((s) => s.deck.styleGuide);
+  const st = themeOf({ theme: themeId, styleGuide: guide }) ?? LAYOUT_STYLES[0];
   const entries = useMemo(() => LAYOUTS.map((l) => ({ id: l.id, layout: l, slide: l.make(st) })), [st]);
   const thumbs = useThumbs(entries);
   const piece = (icon: ReactNode, label: string, run: () => void, hint?: string) => (
@@ -102,6 +107,15 @@ function LayoutsPanel() {
             <i style={{ background: s.ground, borderColor: s.accent }}><b style={{ background: s.accent }} /></i>
           </button>
         ))}
+        {guide && (() => {
+          const g = guideStyle(guide);
+          return (
+            <button className={`g-style${themeId === 'guide' ? ' on' : ''}`} title={`${guide.name}: your style guide, ${g.display} and ${g.body}. Restyles every slide.`}
+              onClick={() => { mutate((d) => d.styleGuide && applyTheme(d, guideStyle(d.styleGuide))); showToast(`Every slide is now in ${guide.name}. Undo puts the old look back.`); }}>
+              <i style={{ background: g.ground, borderColor: g.accent }}><b style={{ background: g.accent }} /></i>
+            </button>
+          );
+        })()}
       </div>
       <div className="lp-label">New slide</div>
       <div className="lp-grid">

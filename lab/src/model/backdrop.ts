@@ -1,6 +1,6 @@
 import { kind } from '../engine/registry';
 import { createLayer } from './defaults';
-import { LAYOUT_STYLES } from './layouts';
+import { themeOf } from './layouts';
 import type { Deck, Layer, Slide } from './types';
 
 // SlideForge's "Backdrop motion" for a slide: Still, Drift, Grid or Glow. One Backdrop motion layer
@@ -23,7 +23,7 @@ const sat = (c: [number, number, number]) => { const mx = Math.max(...c) / 255, 
 export function slidePalette(d: Deck, s: Slide): { accent: string; accent2: string; ink: string } {
   const g = rgb(s.background) ?? [255, 255, 255];
   const ink = lum(g) < 0.45 ? '#f5f4f2' : '#161616';
-  const theme = LAYOUT_STYLES.find((x) => x.id === d.theme);
+  const theme = themeOf(d);
   const seen = new Map<string, number>();
   // The slide's ground — its Solid or gradient layer, or any colour that close to it — is not an accent.
   const near = (c: [number, number, number]) => Math.hypot(c[0] - g[0], c[1] - g[1], c[2] - g[2]) < 48;
@@ -40,7 +40,7 @@ export function slidePalette(d: Deck, s: Slide): { accent: string; accent2: stri
   // darker accent over it reads as smudges, so its motion is light moving across it instead.
   if (sat(g) > 0.35 && lum(g) > 0.3) return { accent: '#ffffff', accent2: '#ffffff', ink };
   const accent = theme?.accent ?? ranked[0] ?? '#ff5a36';
-  const accent2 = ranked.find((h) => h !== accent) ?? accent;
+  const accent2 = theme?.accent2 ?? ranked.find((h) => h !== accent) ?? accent;
   return { accent, accent2, ink };
 }
 

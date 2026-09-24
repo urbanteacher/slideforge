@@ -1,6 +1,7 @@
 import playerSrc from '../generated/player.iife.js?raw';
 import { Renderer } from '../engine/renderer';
 import type { Deck, Slide } from '../model/types';
+import { guideFontCss } from '../model/guide';
 
 export function download(name: string, data: Blob | string, type = 'application/octet-stream') {
   const blob = typeof data === 'string' ? new Blob([data], { type }) : data;
@@ -35,6 +36,7 @@ export function buildHtml(full: Deck): string {
 <meta name="generator" content="SlideForge Studio" />
 ${fonts ? `<link rel="stylesheet" href="${esc(fonts)}" />` : ''}
 <style>
+${guideFontCss(full.styleGuide)}
   html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
   #sf-stage { position: fixed; inset: 0; display: grid; place-items: center; background: #000; }
   #sf-canvas { display: block; touch-action: pan-y; }

@@ -1,5 +1,5 @@
-import type { LayoutStyle } from './layouts';
-import type { Deck, Layer } from './types';
+import { groundParams, type LayoutStyle } from './layouts';
+import type { Deck, Layer, Slide } from './types';
 
 // One theme per deck. Choosing a theme restyles every slide at once, the way changing a SlideForge
 // deck's theme does, so a deck can never end up with four looks because four slides were added on
@@ -33,7 +33,8 @@ function role(colour: string, ground: string, text: boolean): Role | null {
 function restyle(l: Layer, st: LayoutStyle, ground: string, scale: number) {
   const p = l.params;
   const pick = (r: Role | null, fallback: string) => (r ? st[r] : fallback);
-  if (l.kind === 'solid' && /ground/i.test(l.name)) { p.color = st.ground; return; }
+  // The ground follows the theme outright: flat, or lit from a corner where the theme has a glow.
+  if ((l.kind === 'solid' || l.kind === 'radial') && /ground/i.test(l.name)) { const g = groundParams(st); l.kind = g.kind; l.params = g.params; return; }
   if (l.kind === 'linear' && /ground/i.test(l.name)) { p.colorA = st.ground; p.colorB = st.ground; return; }
   if (l.kind === 'text') {
     const display = l.name === 'Heading' || Number(p.size) >= 60 * scale;
@@ -56,12 +57,16 @@ function restyle(l: Layer, st: LayoutStyle, ground: string, scale: number) {
   if ('font' in p) p.font = st.body;
 }
 
+/** One slide in a theme. A flat or lit layer at the very bottom is its ground, whatever it is called. */
+export function themeSlide(s: Slide, st: LayoutStyle, width: number) {
+  const ground = s.background;
+  const bottom = s.layers[0];
+  if (bottom && (bottom.kind === 'solid' || bottom.kind === 'radial') && !/ground/i.test(bottom.name)) bottom.name = 'Ground';
+  for (const l of s.layers) restyle(l, st, ground, width / 1920);
+  s.background = st.ground;
+}
+
 export function applyTheme(d: Deck, st: LayoutStyle) {
-  const scale = d.width / 1920;
-  for (const s of d.slides) {
-    const ground = s.background;
-    for (const l of s.layers) restyle(l, st, ground, scale);
-    s.background = st.ground;
-  }
+  for (const s of d.slides) themeSlide(s, st, d.width);
   d.theme = st.id;
 }

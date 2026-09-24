@@ -52,9 +52,10 @@ function edit(imgId: string, fn: (s: Slide, img: Layer) => void) {
 function fitBand(s: Slide, img: Layer, band: Layer) {
   const caps = captionsOf(s, img);
   if (!caps.length) return;
-  const ib = img.box!, pad = 36;
-  const top = Math.min(...caps.map((c) => c.box!.y)) - pad, bottom = Math.max(...caps.map((c) => c.box!.y + c.box!.h)) + pad;
-  const atTop = img.params.capPos === 'top';
+  const ib = img.box!, atTop = img.params.capPos === 'top';
+  // A shade needs room to fade in before the words: about 150px of runway, as SlideForge's has.
+  const runway = band.params.gradient ? 150 : 36;
+  const top = Math.min(...caps.map((c) => c.box!.y)) - (atTop ? 36 : runway), bottom = Math.max(...caps.map((c) => c.box!.y + c.box!.h)) + (atTop ? runway : 36);
   const y0 = atTop ? ib.y : Math.max(ib.y, top), y1 = atTop ? Math.min(ib.y + ib.h, bottom) : ib.y + ib.h;
   band.box = { x: ib.x, y: y0, w: ib.w, h: Math.max(8, y1 - y0), rot: 0 };
 }
@@ -77,7 +78,10 @@ export function setCaptionStyle(imgId: string, style: CaptionStyle) {
       s.layers.splice(s.layers.findIndex((l) => l.id === img.id) + 1, 0, band);
     }
     band.params.fill = style === 'bar' ? String(img.params.barColour ?? '#14181f') : '#000000';
-    band.opacity = style === 'bar' ? 1 : 0.55;
+    band.opacity = 1;
+    // SlideForge's scrim: clear at the picture's side, 82% black at its edge, so it reads over any image.
+    const shade = style === 'gradient';
+    Object.assign(band.params, { gradient: shade, fill2: '#000000', fillOpacity: shade ? 0 : 1, fill2Opacity: shade ? 0.82 : 1, angle: img.params.capPos === 'top' ? 270 : 90 });
     band.anim = { ...band.anim, clearAfter: caps[0]?.anim.clearAfter };
     caps.forEach((c) => { c.params.color = '#ffffff'; });
     fitBand(s, img, band);
@@ -94,6 +98,7 @@ export function setCaptionPos(imgId: string, pos: 'top' | 'bottom') {
     const dy = pos === 'top' ? ib.y + margin - top : ib.y + ib.h - margin - bottom;
     caps.forEach((c) => { c.box!.y += dy; });
     const band = bandOf(s, img);
+    if (band?.params.gradient) band.params.angle = pos === 'top' ? 270 : 90;
     if (band) fitBand(s, img, band);
   });
 }

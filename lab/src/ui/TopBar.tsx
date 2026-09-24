@@ -3,6 +3,7 @@ import { SlideMenuButton } from './SlideMenu';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { exportHtml, exportJson, exportPng } from '../export/exporters';
 import { blankDeck, demoDeck } from '../model/defaults';
+import { motionLabDeck } from '../model/motionLab';
 import { slideOf, useStore } from '../model/store';
 import type { Deck } from '../model/types';
 import { FormatBar } from './FormatBar';
@@ -66,6 +67,7 @@ export function TopBar() {
           <>
             <button onClick={() => { loadDeck(blankDeck()); close(); }}><FilePlus size={15} />New blank deck</button>
             <button onClick={() => { loadDeck(demoDeck()); close(); }}><Sparkles size={15} />New from demo deck</button>
+            <button onClick={() => { loadDeck(motionLabDeck()); close(); }}><Sparkles size={15} />New from Motion lab (slides 1–14)</button>
             <hr />
             <button onClick={() => { fileRef.current?.click(); close(); }}><FolderOpen size={15} />Open deck file…</button>
             <button onClick={() => { exportJson(deck); close(); }}><Download size={15} />Save deck file (.json)</button>
