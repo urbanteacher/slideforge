@@ -62,8 +62,9 @@ have yet, ranked by how much a teacher would miss it:
 5. **Canvas modes.** Artwork (move, size, hide or replace theme art) and Header
    & footer slots are missing. Arrange has drag and resize, but not the studio's
    arrange bar: fit to text, centre, split, duplicate and the anchors.
-6. **The Motion pane's word choreography** for statement slides: Words arrive,
-   speed, spacing, direction, AI choreography, and loop.
+6. **The Motion pane's AI choreography** for statement slides, and **code
+   arrival** (the lab has no code layer). Words arrive, speed, spacing,
+   direction and loop are in the lab's Animate tab.
 7. **Deck tools:**
    - Review (every slide's fit at once);
    - Find and Replace across the lesson (⌘F);
@@ -219,9 +220,12 @@ arrival, model answer, and Reset.
 |---|---|---|
 | Try another look | Three alternatives drawn with this slide's words. | Chip (Layout: every composition and related type) |
 | Layout library | Every layout, grouped, with fit badges. | Partial (Add inserts new slides; no switch-to-any-type; no fit badges) |
-| Transition in | Six transitions. | Panel → Slide |
-| Words arrive / speed / spacing / direction / loop | Statement slides. | **Missing** |
+| Transition in | Six transitions, Morph among them. | Panel → Slide, Morph included |
+| Words arrive / speed / spacing / direction / loop | Statement slides. | Animate (word, letter or line entrance; Speed, Spacing, Order, Leave again) |
 | AI choreography | Writes the word timing from a brief. | **Missing** |
+| Build on Next: off, on, dim, spotlight | A point, row, card or picture per press. | Animate → Build, on every layer: a line per click for text, an item per click for a set of cards, rows or choices, greyed with the reason where neither applies |
+| Chart motion | The chart draws itself when the slide arrives. | Animate → Effect → Draws itself |
+| Code arrival and typing speed | All at once, types itself, a line per press. | **Missing** (no code layer) |
 
 ### 3.8 Engagement tab
 
@@ -364,3 +368,8 @@ picture; reset to the theme; arrow-key nudging.
 
 - **2026-09-24.** Written from a full code sweep and a walk of the running
   studio. Nothing actioned.
+- **2026-09-24.** Motion parity. Build is always shown in Animate and gains
+  spotlight and a set build for cards, rows and choices; word entrances gain
+  Speed and Spacing; charts can draw themselves; Morph carries shared pictures,
+  charts and words across. §3.7 and item 6 updated. AI choreography and code
+  arrival are still missing.
