@@ -1,6 +1,9 @@
 import type { Layer, Params } from '../model/types';
 import { DIM_TO, EASE, textUnitCount, unitProgress } from './anim';
 import { drawTableChart, isTableKind } from './chartKinds';
+import { drawExperiment } from './experiment';
+import { drawScene } from './scene';
+import { videoEmbed, videoService, videoStill } from '../model/video';
 import { FRAME_K, isWordMotion, reach, unitDelays, unitLook, type UnitLook } from './words';
 
 // Rasterises content layers (text / shape / image) into 2D canvases that the renderer uploads as
@@ -542,6 +545,29 @@ export function contentFrame(layer: Layer): number {
 const videoCanvas = new Map<string, HTMLCanvasElement | OffscreenCanvas>();
 function rasterVideo(layer: Layer): Raster | null {
   const p = layer.params;
+  // A YouTube or Vimeo link: the service's still, with a note that the link was understood. The
+  // show frames the real player over it (ui/Present.tsx).
+  if (videoEmbed(p)) {
+    const { canvas, ctx, w, h, rect } = boxCanvas(layer, 2);
+    const r = Math.min(Number(p.radius ?? 0), w / 2, h / 2);
+    ctx.beginPath(); ctx.roundRect(0, 0, w, h, r); ctx.clip();
+    ctx.fillStyle = '#0f0f0f'; ctx.fillRect(0, 0, w, h);
+    const still = getImage(videoStill(p));
+    if (still) {
+      const iw = still.naturalWidth || w, ih = still.naturalHeight || h, k = Math.max(w / iw, h / ih);
+      ctx.drawImage(still, (w - iw * k) / 2, (h - ih * k) / 2, iw * k, ih * k);
+    }
+    const d = Math.min(w, h) * 0.2, cx = w / 2, cy = h / 2;
+    ctx.fillStyle = videoService(p) === 'YouTube' ? '#ff0033' : 'rgba(0,0,0,0.6)';
+    ctx.beginPath(); ctx.roundRect(cx - d * 0.72, cy - d * 0.5, d * 1.44, d, d * 0.25); ctx.fill();
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(cx - d * 0.16, cy - d * 0.24); ctx.lineTo(cx + d * 0.24, cy); ctx.lineTo(cx - d * 0.16, cy + d * 0.24); ctx.closePath(); ctx.fill();
+    const note = `${videoService(p) || 'Embedded video'} \u00b7 plays in the show`, px = Math.max(24, Math.min(40, w / 34));
+    useFont(ctx, 'Inter', px, 600);
+    const tw = ctx.measureText(note).width + px * 1.4;
+    ctx.fillStyle = 'rgba(0,0,0,0.72)'; ctx.beginPath(); ctx.roundRect(px * 0.8, h - px * 2.6, tw, px * 1.8, px * 0.9); ctx.fill();
+    ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(note, px * 1.5, h - px * 1.7);
+    return { canvas, rect };
+  }
   const v = getVideo(String(p.src ?? ''));
   const { w, h } = layer.box!;
   const pad = 2;
@@ -966,7 +992,20 @@ function rasterTimer(layer: Layer): Raster {
   const fam = String(p.font ?? 'Inter'), style = String(p.style ?? 'ring');
   const label = String(over ? p.done ?? '' : p.label ?? '').trim();
   const words = over ? label || 'Time’s up' : clockText(left);
-  if (style === 'ring') {
+  if (style === 'game') {
+    // SlideForge's game clock (src/render/quiz.js, .slide-clock): an 84px ring with an 8px stroke,
+    // the accent draining clockwise from the top over a faint track, the time in the middle. In the
+    // last minute the ring turns red; at zero the digits do too.
+    const size = Math.min(w, h), lw = (size * 8) / 84, r = (size - lw) / 2, cx = w / 2, cy = h / 2;
+    const red = '#ff5f6d', hurry = left <= 60;
+    ctx.lineWidth = lw; ctx.strokeStyle = track;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+    if (frac > 0) { ctx.strokeStyle = hurry ? red : accent; ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * frac); ctx.stroke(); }
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = over ? red : ink;
+    const face = clockText(left);
+    setFont(ctx, fam, Math.min(size * 0.3 * (face.length > 5 ? 0.8 : 1), (r * 1.6) / Math.max(2.4, face.length * 0.56)), 700);
+    ctx.fillText(face, cx, cy + 1);
+  } else if (style === 'ring') {
     const r = Math.min(w, h) / 2 - 12, cx = w / 2, cy = h / 2, lw = Math.max(8, r * 0.1);
     ctx.lineCap = 'round';
     ctx.lineWidth = lw; ctx.strokeStyle = track;
@@ -1355,5 +1394,7 @@ export function rasterise(layer: Layer, textT: number): Raster | null {
   if (c === 'timer') return rasterTimer(layer);
   if (c === 'wipe') return rasterWipe(layer);
   if (c === 'model') return rasterModel(layer);
+  if (c === 'experiment') { const { canvas, ctx, w, h, rect } = boxCanvas(layer); ctx.textBaseline = 'alphabetic'; drawExperiment(ctx, w, h, layer.params); return { canvas, rect }; }
+  if (c === 'scene') { const { canvas, ctx, w, h, rect } = boxCanvas(layer); drawScene(ctx, w, h, layer.params, (src) => getImage(src)); return { canvas, rect }; }
   return null;
 }

@@ -577,10 +577,10 @@ export function columnsSlide(st: LayoutStyle, title: string, points: string[]): 
 }
 
 /** A side heading: the claim held on the left, the points it rests on beside it. */
-export function railSlide(st: LayoutStyle, title: string, points: string[]): Slide {
+export function railSlide(st: LayoutStyle, title: string, points: string[], build?: 'on' | 'dim' | 'spot'): Slide {
   const shown = points.slice(0, 6);
   const top = GRID.top, foot = CONTENT_FOOT, each = (foot - top) / shown.length;
-  return slide(st, 'Rail', [
+  const s = slide(st, 'Rail', [
     shape('Rail', { x: 0, y: 0, w: cell(1, 1, 5, 1).x + cell(1, 1, 5, 1).w + 40, h: 1080, rot: 0 }, { shape: 'rect', fill: st.panel }, { type: 'fade', duration: 0.6 }),
     heading(st, title, { ...cell(1, 4, 5, 1), h: 8 * GRID.stepY }, 100),
     bar(st, { x: GRID.left, y: GRID.top + 3 * GRID.stepY - 30, w: 132, h: 8, rot: 0 }),
@@ -593,6 +593,14 @@ export function railSlide(st: LayoutStyle, title: string, points: string[]): Sli
       ];
     }),
   ]);
+  // Built a point per press: its number, words and rule together; earlier points dim or spotlit.
+  if (build) {
+    const rows = s.layers.filter((l) => ['Number', 'Text', 'Rule'].includes(l.name) && l.box!.y >= top - 1);
+    shown.forEach((_, i) => rows.slice(i * 3, i * 3 + 3).forEach((l, j) => {
+      l.anim = { ...l.anim, type: 'fade', duration: 0.5, delay: 0, trigger: j === 0 ? 'onClick' : 'withSlide', step: { set: 'rail', i, mode: build } };
+    }));
+  }
+  return s;
 }
 
 /** A cover with a side panel of the loud colour: the title on the working ground, a mark on the panel. */
@@ -767,6 +775,107 @@ export function framedPictureSlide(st: LayoutStyle, caption: string, credit: str
 }
 
 /**
+ * SlideForge's chart callouts: the chart draws itself, then each Next zooms to a named category with
+ * its note beneath — the axis label still in frame — and the last brings the whole chart back.
+ * `data` is the lab's "label, value" lines; a callout names a category, not a position.
+ */
+export function chartCalloutSlide(st: LayoutStyle, title: string, data: string, source: string, callouts: { label: string; note: string }[]): Slide {
+  const labels = data.split('\n').filter((l) => l.trim()).map((l) => l.split(',')[0].trim());
+  const capH = 150, box: Box = { ...cell(1, 5, 12, 1), y: CONTENT_TOP, h: CONTENT_FOOT - CONTENT_TOP - capH - 20 };
+  const cap: Box = { ...box, y: box.y + box.h + 20, h: capH };
+  const params = { chart: 'column', data, color: st.accent, color2: st.muted, textColor: st.ink, font: st.body, size: 36, values: true, grid: true };
+  const layers: Layer[] = [titleRow(st, title), titleBar(st)];
+  const set = 'callouts';
+  const item = (i: number, focus: [number, number], zoom: number, from: [number, number], fromZoom: number, head: string, note: string, first: boolean) => {
+    const chart = createLayer('chart', { name: 'Chart', box, params: { ...params, motion: 'detail', focus, zoom, fromFocus: from, fromZoom }, anim: first ? { type: 'draw', duration: 0.9, stagger: 0.18, delay: 0.3, easing: 'cubicOut' } : { type: 'fade', duration: 0.25 } });
+    const h = text('Callout', head, { ...cap, h: 56 }, { font: st.body, weight: '700', size: 44, color: st.ink }, after(first ? 1.2 : 0.3));
+    const n = body(st, note, { ...cap, y: cap.y + 64, h: cap.h - 64 }, 36, { color: st.muted, fit: 'shrink' }, first ? 1.3 : 0.4);
+    [chart, h, n].forEach((l, j) => { l.anim = { ...l.anim, trigger: !first && j === 0 ? 'onClick' : 'withSlide', step: { set, i, mode: 'swap' } }; });
+    return [chart, h, n];
+  };
+  const whole: [number, number] = [0.5, 0.5];
+  const at = (label: string): [number, number] => { const i = Math.max(0, labels.indexOf(label)); return [(i + 0.5) / Math.max(1, labels.length), 0.55]; };
+  layers.push(...item(0, whole, 1, whole, 1, source ? 'The whole series' : '', source, true));
+  let prev = whole, prevZoom = 1;
+  callouts.forEach((c, i) => { const f = at(c.label); layers.push(...item(i + 1, f, 2.2, prev, prevZoom, c.label, c.note, false)); prev = f; prevZoom = 2.2; });
+  layers.push(...item(callouts.length + 1, whole, 1, prev, prevZoom, 'The whole series', source, false));
+  return slide(st, 'Chart callouts', layers);
+}
+
+/** A YouTube or Vimeo link, understood: a Video layer holding the link, so the canvas shows the
+ *  clip's own still and Preview frames the real player; the caption beneath it. */
+export function youtubeSlide(st: LayoutStyle, title: string, subtitle: string, url: string): Slide {
+  const capH = 150, h = CONTENT_FOOT - CONTENT_TOP - capH - 30, w = (h * 16) / 9;
+  const box: Box = { x: (1920 - w) / 2, y: CONTENT_TOP - 40, w, h, rot: 0 };
+  return slide(st, 'Video link', [
+    createLayer('video', { name: 'Video', box, params: { src: url, fit: 'cover', radius: 18, muted: true }, anim: after(0.2) }),
+    text('Caption', title, { ...cell(1, 5, 12, 1), y: box.y + h + 30, h: 60 }, { font: st.body, weight: '700', size: 48, color: st.ink, align: 'center' }, after(0.5)),
+    body(st, subtitle, { ...cell(1, 5, 12, 1), y: box.y + h + 96, h: 50 }, 36, { color: st.muted, align: 'center', fit: 'shrink' }, 0.6),
+  ]);
+}
+
+/**
+ * SlideForge's visual experiment slide: the title, the prediction prompt, the experiment — which asks
+ * for a prediction, then moves through its states a Next at a time — and the data's source.
+ */
+export function experimentSlide(st: LayoutStyle, title: string, prompt: string, e: { preset: string; data: string; states?: string; duration?: number }, source: string): Slide {
+  return slide(st, 'Experiment', [
+    titleRow(st, title),
+    titleBar(st),
+    body(st, prompt, { ...cell(1, 5, 12, 1), y: CONTENT_TOP - 50, h: 60 }, 40, { color: st.muted, fit: 'shrink' }, 0.2),
+    // The chart on the left, the steps and what each shows on the right, the source at the rail's foot.
+    createLayer('experiment', { name: 'Experiment', box: { ...cell(1, 5, 12, 1), y: CONTENT_TOP + 30, h: CONTENT_FOOT - CONTENT_TOP - 30 }, params: {
+      preset: e.preset, data: e.data, states: e.states ?? '', duration: String(e.duration ?? 1600), font: st.body, size: 36, textColor: st.ink, accent: st.accent,
+      source: source || 'Illustrative teaching data',
+    }, anim: { type: 'fade', duration: 0.6, delay: 0.3 } }),
+  ]);
+}
+
+/**
+ * SlideForge's motion specimen: the look's ground, the behaviour's name in small capitals over the
+ * title, and the stage — driven by Next, and in Preview by dragging or pressing it.
+ */
+export function sceneSlide(o: { mode: string; look: string; title: string; subtitle?: string; items: string[]; image?: string; factor?: number }, looks: Record<string, { bg: string; ink: string; accent: string; serif?: boolean; mono?: boolean }>, names: Record<string, string>): Slide {
+  const lk = looks[o.look] ?? looks.editorial;
+  const face = lk.serif ? 'Georgia' : lk.mono ? 'JetBrains Mono' : 'Avenir Next';
+  const layers: Layer[] = [
+    text('Kicker', (names[o.mode] ?? o.mode).toUpperCase(), { x: 84, y: 60, w: 1752, h: 40, rot: 0 }, { font: 'Avenir Next', weight: '600', size: 28, tracking: 0.2, color: lk.accent }, after(0.1)),
+    text('Heading', o.title, { x: 84, y: 106, w: 1752, h: 84, rot: 0 }, { font: face, weight: lk.serif ? '400' : '700', size: 64, color: lk.ink, lineHeight: 1.1, fit: 'shrink' }, rise),
+    createLayer('scene', { name: 'Motion experiment', box: { x: 84, y: 214, w: 1752, h: 806, rot: 0 }, params: {
+      mode: o.mode, look: o.look, items: o.items.join('\n'), image: o.image ?? '', factor: o.factor ?? 2, subtitle: o.subtitle ?? '', font: 'Avenir Next', size: 36,
+    }, anim: { type: 'fade', duration: 0.6, delay: 0.2 } }),
+  ];
+  return createSlide(names[o.mode] ?? 'Motion experiment', [createLayer('solid', { name: 'Ground', params: { color: lk.bg } }), ...layers], lk.bg, { type: 'fade', duration: 0.7 });
+}
+
+/** SlideForge's game clock in the top right corner, where its quiz and activity slides keep it —
+ *  here level with the heading: centred on the heading's row, its right edge on the right margin
+ *  where the heading ends, and large enough to read from the back. */
+export const CLOCK_SIZE = 195;
+export function clockBox(heading?: Box): Box {
+  const row = heading ?? { ...cell(1, 1, 12, 2) };
+  return { x: row.x + row.w - CLOCK_SIZE, y: row.y + row.h / 2 - CLOCK_SIZE / 2, w: CLOCK_SIZE, h: CLOCK_SIZE, rot: 0 };
+}
+export function gameClock(st: Pick<LayoutStyle, 'ink' | 'accent' | 'body'>, minutes = 5, heading?: Box): Layer {
+  return createLayer('timer', { name: 'Timer', box: clockBox(heading), params: {
+    minutes, style: 'game', label: '', done: '', font: st.body, size: 96, textColor: st.ink, accent: st.accent, track: rgbaOf(st.ink, 0.18),
+  }, anim: { type: 'fade', duration: 0.5 } });
+}
+const rgbaOf = (hex: string, a: number) => { const n = parseInt(hex.replace('#', '').slice(0, 6), 16); return Number.isFinite(n) ? `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})` : hex; };
+
+/** A timed task: the title kept clear of the clock, the steps under it, and the game clock counting
+ *  down in the top right from the moment the slide comes up. */
+export function timedSlide(st: LayoutStyle, title: string, points: string[], minutes = 5): Slide {
+  const s = bulletsSlide(st, title, points);
+  const t = s.layers.find((l) => l.name === 'Heading');
+  const row = t?.box ? { ...t.box } : undefined;
+  if (t?.box) t.box = { ...t.box, w: t.box.w - CLOCK_SIZE - 48 };
+  s.layers.push(gameClock(st, minutes, row));
+  s.name = 'Timed task';
+  return s;
+}
+
+/**
  * SlideForge's Simulation: a model drawn as its curve, the input on a slider under it. In Preview the
  * room drags the input and the output redraws — for when the relationship is the lesson and a static
  * chart would show only one point on it.
@@ -894,6 +1003,10 @@ export const LAYOUTS: LayoutDef[] = [
   {
     id: 'content', name: 'Bullets', group: 'Explain & organise', blurb: 'A title and the points under it. The points fill the space and shrink to fit, so a long list stays on the slide.',
     make: (st) => bulletsSlide(st, 'Slide title', ['One point per line', 'Keep each to a sentence', 'Reveal them as you talk']),
+  },
+  {
+    id: 'timed', name: 'Timed task', group: 'Explain & organise', blurb: 'The task and its steps, with SlideForge’s game clock counting down in the top right from when the slide comes up.',
+    make: (st) => timedSlide(st, 'Discuss with the person next to you', ['What does the chart show first?', 'What would you check before believing it?', 'Agree one question to ask the room'], 3),
   },
   {
     id: 'cards', name: 'Cards', group: 'Explain & organise', blurb: 'Two to four ideas side by side, each a card that grows with its words.',

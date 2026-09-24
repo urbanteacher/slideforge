@@ -1,4 +1,6 @@
 import { Image as ImageIcon, AlignCenterHorizontal, AlignCenterVertical, AlignEndHorizontal, AlignEndVertical, AlignStartHorizontal, AlignStartVertical, MonitorPlay, Play, RotateCcw, Shuffle, WandSparkles } from 'lucide-react';
+import { setVideoLayout, videoLayoutOf, type VideoLayout } from './video';
+import { videoService } from '../model/video';
 import { EngagementPanel } from './Engagement';
 import { backdropOf, setBackdrop, type BackdropMode } from '../model/backdrop';
 import { useRef } from 'react';
@@ -79,7 +81,10 @@ export function Inspector() {
   const chosen = useStore((s) => s.inspectorTab);
   // The Picture tab exists only for a picture; with anything else selected it reads as Design.
   // Each tab only where it has something to set: Picture for a picture, Interact for a layer.
-  const tab = (chosen === 'picture' && layer?.kind !== 'image') || (chosen === 'interact' && !layer) ? 'design' : chosen;
+  // A picture's Picture tab reads as a video's Video tab, and the other way round, so switching
+  // between the two keeps you on the media settings.
+  const tab = chosen === 'picture' && layer?.kind === 'video' ? 'video' : chosen === 'video' && layer?.kind === 'image' ? 'picture'
+    : (chosen === 'picture' && layer?.kind !== 'image') || (chosen === 'video' && layer?.kind !== 'video') || (chosen === 'interact' && !layer) ? 'design' : chosen;
   const set = useStore((s) => s.set);
   const k = layer ? kind(layer.kind) : null;
 
@@ -99,12 +104,13 @@ export function Inspector() {
         )}
       </div>
       <div className="tabs">
-        {(layer?.kind === 'image' ? (['design', 'picture', 'animate', 'interact', 'engage'] as const) : layer ? (['design', 'animate', 'interact', 'engage'] as const) : (['design', 'animate', 'engage'] as const)).map((t) => (
-          <button key={t} className={`tab${tab === t ? ' sel' : ''}${t === 'picture' ? ' tab-picture' : ''}`} onClick={() => set({ inspectorTab: t })} title={t === 'engage' ? 'Games, activities and audience feedback for this slide' : undefined}>{t === 'picture' && <ImageIcon size={13} />}{t === 'engage' ? 'Engage' : t[0].toUpperCase() + t.slice(1)}</button>
+        {(layer?.kind === 'image' ? (['design', 'picture', 'animate', 'interact', 'engage'] as const) : layer?.kind === 'video' ? (['design', 'video', 'animate', 'interact', 'engage'] as const) : layer ? (['design', 'animate', 'interact', 'engage'] as const) : (['design', 'animate', 'engage'] as const)).map((t) => (
+          <button key={t} className={`tab${tab === t ? ' sel' : ''}${t === 'picture' || t === 'video' ? ' tab-picture' : ''}`} onClick={() => set({ inspectorTab: t })} title={t === 'engage' ? 'Games, activities and audience feedback for this slide' : undefined}>{(t === 'picture' || t === 'video') && <ImageIcon size={13} />}{t === 'engage' ? 'Engage' : t[0].toUpperCase() + t.slice(1)}</button>
         ))}
       </div>
       <div className="panel-scroll">
         {tab === 'picture' && layer && <PicturePanel layer={layer} />}
+        {tab === 'video' && layer && <VideoPanel layer={layer} />}
         {tab === 'design' && (layer ? <LayerDesign layer={layer} /> : <SlideDesign />)}
         {tab === 'animate' && (layer ? <LayerAnimate layer={layer} /> : <SlideAnimate />)}
         {tab === 'interact' && layer && <LayerInteract layer={layer} />}
@@ -128,8 +134,10 @@ function LayerDesign({ layer, picture = false }: { layer: Layer; picture?: boole
   for (const d of k.params) {
     if (d.group === '_hidden' || d.group === '_motion' || (d.when && !d.when(layer.params))) continue;
     // A picture's own settings live in its Picture tab, together, not spread through Design.
-    const pictureGroup = d.group === 'Image' || d.group === 'Picture';
-    if (layer.kind === 'image' && (picture ? !pictureGroup : pictureGroup)) continue;
+    const pictureGroup = d.group === 'Image' || d.group === 'Picture' || (layer.kind === 'video' && d.group === 'Video');
+    if ((layer.kind === 'image' || layer.kind === 'video') && (picture ? !pictureGroup : pictureGroup)) continue;
+    // The Video tab gives the address its own section at the top.
+    if (layer.kind === 'video' && d.key === 'src') continue;
     // Words are edited on the slide, never here: this panel is for how a layer looks.
     if (d.type === 'text' || (layer.kind === 'chart' && d.key === 'data')) continue;
     const g = d.group ?? 'Settings';
@@ -168,6 +176,7 @@ function LayerDesign({ layer, picture = false }: { layer: Layer; picture?: boole
   return (
     <>
       {layer.kind === 'image' && <button className="picture-link" onClick={() => useStore.getState().set({ inspectorTab: 'picture' })}><ImageIcon size={13} />The picture, its frame, caption and motion are in the <b>Picture</b> tab</button>}
+      {layer.kind === 'video' && <button className="picture-link" onClick={() => useStore.getState().set({ inspectorTab: 'video' })}><ImageIcon size={13} />The address, full screen or framed, how it plays and its caption are in the <b>Video</b> tab</button>}
       <Section title="Layer">
         <Row label="Opacity"><Scrub value={layer.opacity * 100} min={0} max={100} step={1} decimals={0} unit=" %" onChange={(v, m) => up((l) => { l.opacity = v / 100; }, m)} /></Row>
         <Row label="Blend" info="How this layer combines with everything below it."><Select value={layer.blend} options={BLENDS} onChange={(v) => up((l) => { l.blend = v; })} /></Row>
@@ -194,6 +203,38 @@ function PicturePanel({ layer }: { layer: Layer }) {
       <LayerDesign layer={layer} picture />
       <CaptionSection layer={layer} />
       <ImageEffects layer={layer} />
+    </>
+  );
+}
+
+/** Everything about a video in one tab, as SlideForge's video inspector has it: the address, how the
+ *  clip sits on the slide (full screen with or without words, or under a heading), its frame and
+ *  still, where it starts and stops, how it plays, and its caption. */
+function VideoPanel({ layer }: { layer: Layer }) {
+  const slide = useStore(slideOf);
+  const now = videoLayoutOf(slide, layer);
+  const service = videoService(layer.params), file = String(layer.params.src ?? '').startsWith('data:');
+  const LAYOUTS_V: { value: VideoLayout; label: string; hint: string }[] = [
+    { value: 'bare', label: 'Full screen, no words', hint: 'The clip is the slide.' },
+    { value: 'caption', label: 'Full screen, caption over it', hint: 'A line on a shade across the foot of the clip.' },
+    { value: 'heading', label: 'Framed under a heading', hint: '16:9, beneath the slide’s heading; nothing over the picture.' },
+  ];
+  return (
+    <>
+      <div className="picture-head"><ImageIcon size={14} />Video settings — the address, how the clip sits on the slide, how it plays, and its caption.</div>
+      <Section title="Address">
+        <VideoPick value={String(layer.params.src ?? '')} onChange={(x) => useStore.getState().updateLayer(layer.id, (l) => { l.params.src = x; })} />
+        <div className="desc on-canvas">{service ? `${service} link understood — the slide shows its still, and Preview plays the real player.` : file ? 'A file carried in the deck. It plays muted on a loop, on the slide itself.' : layer.params.src ? 'A link to a video file. It plays muted on a loop, on the slide itself.' : 'Paste a YouTube, Vimeo or .mp4 address, or upload a clip.'}</div>
+      </Section>
+      <Section title="On the slide">
+        <div className="video-layouts">
+          {LAYOUTS_V.map((o) => (
+            <button key={o.value} className={`btn-soft${now === o.value ? ' on' : ''}`} title={o.hint} onClick={() => setVideoLayout(layer.id, o.value)}>{o.label}</button>
+          ))}
+        </div>
+      </Section>
+      <LayerDesign layer={layer} picture />
+      <CaptionSection layer={layer} />
     </>
   );
 }
@@ -394,10 +435,10 @@ function VideoPick({ value, onChange }: { value: string; onChange: (v: string) =
           }} />
         </div>
       </Row>
-      <Row label="Or a link" info="A direct link to an .mp4 or .webm file. The site must allow other pages to use it; YouTube and Vimeo pages will not play here.">
+      <Row label="Or an address" info="A YouTube or Vimeo link (shown as its still, played in Preview), or a direct link to an .mp4 or .webm file, which plays on the slide.">
         <input
           className="text-input"
-          placeholder="https://…/clip.mp4"
+          placeholder="youtube.com/watch?v=… or …/clip.mp4"
           defaultValue={isLink ? value : ''}
           key={isLink ? value : 'file'}
           onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}

@@ -125,7 +125,7 @@ function freeRow(slide: Slide, h: number, skip: string): number | null {
 }
 const WIDE = new Set(['chart', 'note', 'heading']);
 
-export const ITEMS = ['heading', 'text', 'note', 'bullets', 'image', 'quote', 'chart', 'timer'] as const;
+export const ITEMS = ['heading', 'text', 'note', 'bullets', 'image', 'video', 'quote', 'chart', 'timer'] as const;
 export type ItemId = (typeof ITEMS)[number];
 
 export function addItem(id: Exclude<ItemId, 'image'>) {
@@ -150,10 +150,25 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
     case 'text': return make('text', 'Text', { text: 'A sentence or two of text.', font: 'Inter', weight: '400', size: 40, color: ink, lineHeight: 1.35, tracking: 0 }, { x: 160, y: 420, w: 1200 });
     case 'bullets': return make('text', 'Bullet points', { text: 'First point\nSecond point\nThird point', font: 'Inter', weight: '400', size: 42, color: ink, list: 'bullets', lineHeight: 1.55, tracking: 0 }, { x: 160, y: 360, w: 1400 });
     case 'note': return make('note', 'Note', { ...colours, fill: panel });
+    // An empty video at 16:9 in the middle of the slide, with its Video tab open for the address.
+    case 'video': {
+      const g = gridFor(st.deck), w = (g.right - g.left) * 0.7, h = (w * 9) / 16;
+      const layer = createLayer('video', { name: 'Video', params: { src: '', fit: 'cover', frame: '16:9', muted: true } as never, box: { x: (st.deck.width - w) / 2, y: (st.deck.height - h) / 2, w, h, rot: 0 }, anim: { type: 'fade', duration: 0.6 } });
+      st.insertLayer(layer);
+      st.set({ inspectorTab: 'video' });
+      st.showToast('Paste a YouTube, Vimeo or .mp4 address in the Video tab, then choose full screen or framed.');
+      return;
+    }
     // A ring in the corner the room can read from the back, in the slide's own colours.
+    // SlideForge's game clock, in the top right corner where its quiz and activity slides keep it.
     case 'timer': {
-      const g = gridFor(st.deck), size = 360;
-      const layer = createLayer('timer', { name: 'Timer', params: { textColor: ink, track: dark ? toward(slide.background, 255, 0.18) : '#d9d4cc', minutes: 5 } as never, box: { x: g.right - size, y: g.top, w: size, h: size, rot: 0 }, anim: { type: 'fade', duration: 0.5 } });
+      // Level with the slide's heading when it has one, its right edge on the heading's; else the grid's corner.
+      const g = gridFor(st.deck), size = Math.round(st.deck.width * (195 / 1920));
+      const head = slide.layers.find((l) => l.kind === 'text' && l.box && /heading|title/i.test(l.name) && !l.params.hfSlot);
+      const row = head?.box ?? { x: g.left, y: g.top, w: g.right - g.left, h: size };
+      const layer = createLayer('timer', { name: 'Timer', params: { textColor: ink, track: dark ? toward(slide.background, 255, 0.18) : '#d9d4cc', minutes: 5, style: 'game', label: '', done: '' } as never, box: { x: row.x + row.w - size, y: row.y + row.h / 2 - size / 2, w: size, h: size, rot: 0 }, anim: { type: 'fade', duration: 0.5 } });
+      // The heading gives the clock its corner, so its words never run under it.
+      if (head?.box && head.box.x + head.box.w > layer.box!.x - 48) st.updateLayer(head.id, (l) => { l.box!.w = layer.box!.x - 48 - l.box!.x; });
       st.insertLayer(layer);
       st.showToast('The timer starts when this slide comes up while presenting. Set its minutes in the panel.');
       return;

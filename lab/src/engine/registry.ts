@@ -20,7 +20,7 @@ export interface KindDef {
   category: Category;
   featured?: boolean;
   description: string;
-  content?: 'text' | 'image' | 'shape' | 'video' | 'chart' | 'quiz' | 'activity' | 'note' | 'quote' | 'table' | 'timer' | 'wipe' | 'model';
+  content?: 'text' | 'image' | 'shape' | 'video' | 'chart' | 'quiz' | 'activity' | 'note' | 'quote' | 'table' | 'timer' | 'wipe' | 'model' | 'experiment' | 'scene';
   params: ParamDef[];
   glsl?: string;
   needsMips?: boolean;
@@ -141,9 +141,17 @@ const KINDS: KindDef[] = [
 
   {
     id: 'video', name: 'Video', category: 'source', content: 'video',
-    description: 'A video clip that plays muted on a loop. Upload a file or paste a link to an .mp4 or .webm.',
+    description: 'A video clip. Upload a file or paste a link to an .mp4 or .webm and it plays muted on a loop; paste a YouTube or Vimeo link and the canvas shows its still while Preview frames the real player.',
     params: [
-      { key: 'src', label: 'Video', type: 'video', default: '', group: 'Video' },
+      { key: 'src', label: 'Video', type: 'video', default: '', group: 'Video', info: 'A file, or a YouTube or Vimeo link. YouTube is framed from youtube-nocookie.com, which sets no cookie until the clip is played.' },
+      { key: 'frame', label: 'Frame', type: 'select', group: 'Video', default: 'free', info: 'Full screen fills the slide; a ratio reshapes the box about its centre.',
+        options: [{ value: 'free', label: 'As drawn' }, { value: 'bleed', label: 'Full screen — the whole slide' }, { value: '16:9', label: '16:9 landscape' }, { value: '4:3', label: '4:3 landscape' }, { value: '1:1', label: '1:1 square' }] },
+      { key: 'poster', label: 'Still', type: 'image', default: '', group: 'Video', info: 'The frame shown before it plays. Empty takes YouTube’s own thumbnail for a YouTube link.' },
+      { key: 'start', label: 'Start at', type: 'number', min: 0, max: 36000, step: 1, default: 0, group: 'Video', unit: ' s', decimals: 0, info: 'A link shared "at current time" already carries its start.' },
+      { key: 'end', label: 'Stop at', type: 'number', min: 0, max: 36000, step: 1, default: 0, group: 'Video', unit: ' s', decimals: 0, info: '0 plays to the end. YouTube only.' },
+      { key: 'muted', label: 'Start muted', type: 'bool', default: true, group: 'Video' },
+      { key: 'autoplay', label: 'Play when the slide appears', type: 'bool', default: false, group: 'Video', info: 'Honoured only when muted.' },
+      { key: 'loop', label: 'Loop', type: 'bool', default: false, group: 'Video' },
       { key: 'fit', label: 'Fit', type: 'select', options: opt('cover', 'contain'), default: 'cover', group: 'Video' },
       { key: 'radius', label: 'Corner radius', type: 'number', min: 0, max: 400, step: 1, default: 0, group: 'Video', unit: 'px', decimals: 0 },
       { key: 'speed', label: 'Speed', type: 'number', min: 0.25, max: 2, step: 0.05, default: 1, group: 'Video', unit: '×', decimals: 2 },
@@ -243,7 +251,7 @@ const KINDS: KindDef[] = [
     description: 'A countdown that starts when its slide comes up and resets when you leave it.',
     params: [
       { key: 'minutes', label: 'Minutes', type: 'number', min: 0.5, max: 120, step: 0.5, default: 5, group: 'Timer', decimals: 1, unit: ' min', info: 'Up to two hours. It starts when the slide appears while presenting.' },
-      { key: 'style', label: 'Style', type: 'select', default: 'ring', group: 'Timer', options: [{ value: 'ring', label: 'Ring and time' }, { value: 'digits', label: 'Time only' }, { value: 'bar', label: 'Bar and time' }] },
+      { key: 'style', label: 'Style', type: 'select', default: 'ring', group: 'Timer', options: [{ value: 'game', label: 'Game clock — SlideForge’s countdown ring' }, { value: 'ring', label: 'Ring and time' }, { value: 'digits', label: 'Time only' }, { value: 'bar', label: 'Bar and time' }] },
       { key: 'label', label: 'Label', type: 'text', default: 'Time left', group: 'Timer', info: 'Leave empty for none.' },
       { key: 'done', label: 'When it ends', type: 'text', default: 'Time’s up', group: 'Timer' },
       ...style(96),
@@ -286,6 +294,47 @@ const KINDS: KindDef[] = [
       { key: 'size', label: 'Label size', type: 'number', min: 18, max: 80, step: 1, default: 36, group: 'Style', unit: 'px', decimals: 0 },
       { key: 'accent', label: 'Curve', type: 'color', default: '#ff5a36', group: 'Style' },
       { key: 'textColor', label: 'Text', type: 'color', default: '#1a1a1a', group: 'Style' },
+    ],
+  },
+  {
+    // SlideForge's visual experiment: one table in several authored states, each Next moving to the
+    // next, the marks travelling between encodings. Before the first state the room predicts.
+    id: 'experiment', name: 'Chart experiment', category: 'source', content: 'experiment',
+    description: 'One dataset shown in several encodings in turn — pies to bars, a moving baseline, clutter removed — each Next transforming the chart into the next.',
+    params: [
+      { key: 'preset', label: 'Demonstration', type: 'select', default: 'polling', group: 'Experiment', options: [
+        { value: 'polling', label: 'Polling: pies to bars' }, { value: 'channels', label: 'Marks and channels' }, { value: 'integrity', label: 'Integrity: change the baseline' },
+        { value: 'distortion', label: 'Distortion: shape and range' }, { value: 'clutter', label: 'Clutter: clean up a chart' }, { value: 'colour', label: 'Colour schemes' },
+        { value: 'accessibility', label: 'Colour plus a second cue' }, { value: 'structures', label: 'Dataset structures' }, { value: 'types', label: 'Attribute classification' },
+        { value: 'zoom', label: 'Chart overview and detail' }] },
+      { key: 'data', label: 'Data', type: 'text', default: 'Candidate\tPoll A\tPoll B\tPoll C\n1\t17\t20\t23\n2\t18\t20\t22\n3\t20\t19\t20\n4\t22\t21\t18\n5\t23\t20\t17', group: 'Experiment', info: 'Headings in the first row, categories in the first column, tab between cells.' },
+      { key: 'states', label: 'States', type: 'text', default: '', group: 'Experiment', info: 'Empty uses the demonstration’s own states. Otherwise a list of states, each with a label, a kind (bar, pie, line, dot, bubbles, hue, shape, tiles, table, network, field, geometry, classification) and an explanation.' },
+      { key: 'duration', label: 'Transformation pace', type: 'select', default: '1600', group: 'Experiment', options: [{ value: '800', label: 'Quick — 0.8 seconds' }, { value: '1600', label: 'Teaching — 1.6 seconds' }, { value: '3000', label: 'Slow observation — 3 seconds' }] },
+      { key: 'font', label: 'Font', type: 'font', default: 'Inter', group: 'Style' },
+      { key: 'size', label: 'Text size', type: 'number', min: 18, max: 80, step: 1, default: 36, group: 'Style', unit: 'px', decimals: 0 },
+      { key: 'textColor', label: 'Text', type: 'color', default: '#1a1a1a', group: 'Style' },
+      { key: 'source', label: 'Source', type: 'text', default: 'Illustrative teaching data', group: 'Experiment', info: 'Where the numbers come from, set small at the foot of the steps.' },
+      { key: 'accent', label: 'Lit button', type: 'color', default: '#0072b2', group: 'Style', info: 'The state showing now is lit in this colour.' },
+    ],
+  },
+  {
+    // SlideForge's motion specimens: ten behaviours on one stage, in five looks. Next steps it; in
+    // Preview the room can also drag it or press a card.
+    id: 'scene', name: 'Motion experiment', category: 'source', content: 'scene',
+    description: 'An interactive stage: a mask reveal, a diagram drawn on, cards that open, callouts, a scrubbable transformation, cause and effect, a branching choice, an exploded diagram, a lens or story panels.',
+    params: [
+      { key: 'mode', label: 'Behaviour', type: 'select', default: 'cards', group: 'Experiment', options: [
+        { value: 'mask', label: 'Mask reveal' }, { value: 'draw', label: 'Draw-on diagram' }, { value: 'cards', label: 'Card to detail' }, { value: 'annotate', label: 'Animated annotations' },
+        { value: 'scrub', label: 'Scrubbable transformation' }, { value: 'cause', label: 'Cause and effect' }, { value: 'branch', label: 'Branching scenario' },
+        { value: 'explode', label: 'Exploded diagram' }, { value: 'lens', label: 'Focus lens' }, { value: 'panels', label: 'Responsive story panels' }] },
+      { key: 'look', label: 'Look', type: 'select', default: 'editorial', group: 'Experiment', options: [
+        { value: 'editorial', label: 'Editorial' }, { value: 'paper', label: 'Layered paper' }, { value: 'technical', label: 'Technical drawing' }, { value: 'cinema', label: 'Cinematic depth' }, { value: 'comic', label: 'Comic sequence' }] },
+      { key: 'items', label: 'Points', type: 'text', default: 'Observe\tNotice what the audience can see.\nInterpret\tExplain what the evidence supports.\nAct\tChoose a next step and name its owner.', group: 'Experiment', info: 'Up to four, one per line: a label, a tab, then its explanation. Scrub reads the explanation as a number.' },
+      { key: 'image', label: 'Picture', type: 'image', default: '', group: 'Experiment', info: 'For the mask, annotations and lens.' },
+      { key: 'factor', label: 'Multiplier a', type: 'number', min: -10, max: 10, step: 0.5, default: 2, group: 'Experiment', decimals: 1, when: (p) => p.mode === 'cause' },
+      { key: 'subtitle', label: 'Hint', type: 'text', default: '', group: 'Experiment' },
+      { key: 'font', label: 'Font', type: 'font', default: 'Inter', group: 'Style' },
+      { key: 'size', label: 'Text size', type: 'number', min: 18, max: 80, step: 1, default: 36, group: 'Style', unit: 'px', decimals: 0 },
     ],
   },
   {

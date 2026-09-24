@@ -3,7 +3,6 @@ import { SlideMenuButton } from './SlideMenu';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { exportHtml, exportJson, exportPng } from '../export/exporters';
 import { blankDeck, demoDeck } from '../model/defaults';
-import { motionLabDeck } from '../model/motionLab';
 import { ukbtDeck, ukbtInstituteDeck } from '../model/ukbtDeck';
 import { nulDeck } from '../model/nulDeck';
 import { slideOf, useStore } from '../model/store';
@@ -69,7 +68,12 @@ export function TopBar() {
           <>
             <button onClick={() => { loadDeck(blankDeck()); close(); }}><FilePlus size={15} />New blank deck</button>
             <button onClick={() => { loadDeck(demoDeck()); close(); }}><Sparkles size={15} />New from demo deck</button>
-            <button onClick={() => { loadDeck(motionLabDeck()); close(); }}><Sparkles size={15} />New from Motion lab (slides 1–14)</button>
+            <button onClick={async () => {
+              close();
+              // Slides 15 onwards carry their pictures and clip, so the content loads only when asked for.
+              const [{ motionLabFullDeck }, data] = await Promise.all([import('../model/motionLab'), import('../assets/motion-lab.json')]);
+              loadDeck(motionLabFullDeck(data.default as never));
+            }}><Sparkles size={15} />New from Motion lab (all 59 slides)</button>
             <button onClick={() => { loadDeck(ukbtDeck()); close(); }}><Sparkles size={15} />New from UK Black Tech partnership pack</button>
             <button onClick={() => { loadDeck(ukbtInstituteDeck()); close(); }}><Sparkles size={15} />New from UKBT Institute partnership pack</button>
             <button onClick={() => { loadDeck(nulDeck()); close(); }}><Sparkles size={15} />New from NU London openers & layout range</button>
@@ -122,6 +126,7 @@ export function TopBar() {
                 <button onClick={item('note')}><StickyNote size={15} />Note</button>
                 <button onClick={item('bullets')}><List size={15} />Bullet points</button>
                 <button onClick={() => { imageRef.current?.click(); close(); }}><ImagePlus size={15} />Image…</button>
+                <button onClick={item('video')}><Video size={15} />Video — a clip or a YouTube link</button>
                 <button onClick={item('quote')}><Quote size={15} />Quote</button>
                 <button onClick={item('chart')}><ChartColumn size={15} />Chart</button>
                 <button onClick={item('timer')}><Timer size={15} />Timer</button>

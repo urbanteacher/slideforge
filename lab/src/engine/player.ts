@@ -2,6 +2,9 @@ import type { Deck, Layer, Slide } from '../model/types';
 import { EASE, schedule } from './anim';
 import { ALL_KINDS } from './registry';
 import { MODEL_PLOT } from './raster';
+import { sceneControls, sceneHit, sceneIsContinuous, sceneIsSelectable, sceneSteps } from './scene';
+import { experimentControls, experimentStates } from './experiment';
+import { hitButton } from './controls';
 import { Renderer, type FrameOpts } from './renderer';
 
 export interface PlayerOptions {
@@ -48,6 +51,12 @@ export class DeckPlayer {
   /** Values dragged in the show (before / after handles, simulation inputs), by layer id. */
   private live = new Map<string, number>();
   private dragging: Layer | null = null;
+  /** The scene slider being dragged, in the layer's pixels. */
+  private sliding: { x: number; w: number } | null = null;
+  private slideTo(l: Layer, u: number) {
+    const x = u * this.deck.width - l.box!.x, s = this.sliding!;
+    this.live.set(`${l.id}:value`, Math.max(0, Math.min(100, ((x - s.x) / s.w) * 100)));
+  }
   private flipAt = -9;
   private raf = 0;
   private t0 = performance.now();
@@ -90,6 +99,18 @@ export class DeckPlayer {
 
   next() {
     if (this.trans) this.finishTransition();
+    // A layer a button has taken over carries on from where it was sent: Next moves it one further,
+    // and past its last state moves the show on.
+    for (const l of this.slide.layers) {
+      if (!this.live.has(`${l.id}:state`)) continue;
+      const cur = this.live.get(`${l.id}:state`)!, last = l.kind === 'experiment' ? experimentStates(l.params).length - 1 : sceneSteps(l.params);
+      if (cur < last) { this.setState(l, cur + 1); return; }
+      this.clearLive(l);
+      this.goto(this.index + 1, 1);
+      return;
+    }
+    // Otherwise Next hands a motion scene back to its clicks: what was dragged or pressed gives way.
+    for (const l of this.slide.layers) if (l.kind === 'scene') for (const k of ['value', 'x', 'y', 'choice']) this.live.delete(`${l.id}:${k}`);
     if (!this.built && this.clicks.length < this.steps()) {
       this.clicks.push(this.now() - this.slideStart);
       this.emit();
@@ -117,6 +138,7 @@ export class DeckPlayer {
     this.flipped = false;
     this.flipAt = -9;
     this.live.clear();
+    this.sliding = null;
     this.built = built;
     this.slideStart = this.now();
     this.emit();
@@ -129,13 +151,73 @@ export class DeckPlayer {
     return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height];
   }
 
-  /** A before / after or a simulation under the pointer, if any: things the room drags. */
-  private wipeAt(u: number, v: number) {
-    return hitLayer(this.slide, u * this.deck.width, v * this.deck.height, (l) => l.kind === 'wipe' || l.kind === 'model');
+  // ─── On-slide controls ─────────────────────────────────────────────────────
+  /** The state an experiment (−1: predict) or a scene (its step) is showing: a button's, or its clicks'. */
+  private stateOf(l: Layer): number {
+    const live = this.live.get(`${l.id}:state`);
+    if (live !== undefined) return live;
+    const starts = schedule(this.slide, this.clicks).lines.get(l.id) ?? [];
+    const t = this.built ? Infinity : this.now() - this.slideStart;
+    let i = -1;
+    starts.forEach((s, j) => { if (t >= s) i = j; });
+    if (!Number.isFinite(t)) i = starts.length - 1;
+    return l.kind === 'experiment' ? i - 1 : Math.max(0, i);
   }
-  private dragTo(l: Layer, u: number) {
-    const b = l.box!, f = (u * this.deck.width - b.x) / b.w;
+  /** Send a layer to a state, moving from the one it shows now (or from `from`). */
+  private setState(l: Layer, to: number, from = this.stateOf(l)) {
+    this.live.set(`${l.id}:prev`, from);
+    this.live.set(`${l.id}:from`, from);
+    this.live.set(`${l.id}:state`, to);
+    this.live.set(`${l.id}:at`, this.now());
+    if (l.kind === 'scene') for (const k of ['value', 'choice']) this.live.delete(`${l.id}:${k}`);
+  }
+  private clearLive(l: Layer) { for (const k of ['state', 'from', 'prev', 'at', 'value', 'x', 'y', 'choice']) this.live.delete(`${l.id}:${k}`); }
+  /** The params a layer is drawn with now, so its buttons are laid out and lit as they are shown. */
+  private shown(l: Layer) {
+    const p: Record<string, unknown> = { ...l.params, _step: this.stateOf(l) };
+    for (const k of ['value', 'choice']) { const v = this.live.get(`${l.id}:${k}`); if (v !== undefined) p[`_${k}`] = v; }
+    return p as Layer['params'];
+  }
+  /** The control under a point on an experiment or scene layer, if any. */
+  private controlAt(u: number, v: number) {
+    const X = u * this.deck.width, Y = v * this.deck.height;
+    for (let i = this.slide.layers.length - 1; i >= 0; i--) {
+      const l = this.slide.layers[i];
+      if ((l.kind !== 'experiment' && l.kind !== 'scene') || !l.visible || !l.box) continue;
+      const b = l.box, x = X - b.x, y = Y - b.y;
+      if (x < 0 || y < 0 || x > b.w || y > b.h) continue;
+      const ctl = l.kind === 'experiment' ? experimentControls(this.shown(l), b.w, b.h) : sceneControls(this.shown(l), b.w, b.h);
+      const hit = hitButton(ctl.buttons, x, y);
+      const sl = (ctl as { slider?: { x: number; y: number; w: number; h: number } | null }).slider;
+      const slider = sl && x >= sl.x && y >= sl.y && y <= sl.y + sl.h ? sl : null;
+      if (hit || slider) return { layer: l, action: hit?.action ?? 'slider', slider, x };
+    }
+    return null;
+  }
+  private press(l: Layer, action: string) {
+    const cur = this.stateOf(l);
+    if (action.startsWith('state:')) { this.setState(l, Number(action.slice(6)), cur); return; }
+    if (action === 'replay') { const prev = this.live.get(`${l.id}:prev`); this.setState(l, cur, prev !== undefined && prev !== cur ? prev : Math.max(0, cur - 1)); return; }
+    const steps = sceneSteps(l.params);
+    if (action === 'prev') this.setState(l, Math.max(0, cur - 1), cur);
+    else if (action === 'next') this.setState(l, Math.min(steps, cur + 1), cur);
+    else if (action === 'reset') { if (l.params.mode === 'lens') { this.live.delete(`${l.id}:x`); this.live.delete(`${l.id}:y`); } else this.setState(l, 0, cur); }
+    else if (action === 'overview') this.live.set(`${l.id}:choice`, -1);
+  }
+
+  /** A before / after, a simulation or a draggable motion scene under the pointer: things the room drags. */
+  private wipeAt(u: number, v: number) {
+    return hitLayer(this.slide, u * this.deck.width, v * this.deck.height, (l) => l.kind === 'wipe' || l.kind === 'model' || (l.kind === 'scene' && (sceneIsContinuous(String(l.params.mode)) || l.params.mode === 'lens')));
+  }
+  private dragTo(l: Layer, u: number, v = 0.5) {
+    const b = l.box!, f = (u * this.deck.width - b.x) / b.w, g = (v * this.deck.height - b.y) / b.h;
     if (l.kind === 'wipe') { this.live.set(l.id, Math.max(0, Math.min(100, 100 - f * 100))); return; }
+    if (l.kind === 'scene') {
+      // The lens follows the pointer; a transformation runs left to right across the stage.
+      if (l.params.mode === 'lens') { this.live.set(`${l.id}:x`, Math.max(0, Math.min(100, f * 100))); this.live.set(`${l.id}:y`, Math.max(0, Math.min(100, (g / 0.82) * 100))); }
+      else this.live.set(`${l.id}:value`, Math.max(0, Math.min(100, f * 100)));
+      return;
+    }
     // A simulation's input follows the pointer across its plot.
     const lo = Number(l.params.min ?? 0), hi = Math.max(lo + 1, Number(l.params.max ?? 10));
     const k = Math.max(0, Math.min(1, (f - MODEL_PLOT[0]) / (MODEL_PLOT[1] - MODEL_PLOT[0])));
@@ -143,13 +225,18 @@ export class DeckPlayer {
   }
   private onDown = (e: PointerEvent) => {
     const [u, v] = this.toSlide(e);
+    // A button is pressed on click; the slider drags like the stage does.
+    const c = this.controlAt(u, v);
+    if (c && c.action !== 'slider') return;
+    if (c?.slider) { this.dragging = c.layer; this.sliding = c.slider; this.canvas.setPointerCapture(e.pointerId); this.slideTo(c.layer, u); return; }
     const l = this.wipeAt(u, v);
     if (!l) return;
     this.dragging = l;
     this.canvas.setPointerCapture(e.pointerId);
-    this.dragTo(l, u);
+    this.dragTo(l, u, v);
   };
   private onUp = (e: PointerEvent) => {
+    this.sliding = null;
     if (!this.dragging) return;
     if (this.canvas.hasPointerCapture(e.pointerId)) this.canvas.releasePointerCapture(e.pointerId);
     this.dragging = null;
@@ -158,7 +245,9 @@ export class DeckPlayer {
   private onMove = (e: PointerEvent) => {
     this.mouseTarget = this.toSlide(e);
     const [u, v] = this.mouseTarget;
-    if (this.dragging) { this.dragTo(this.dragging, u); return; }
+    if (this.dragging && this.sliding) { this.slideTo(this.dragging, u); return; }
+    if (this.dragging) { this.dragTo(this.dragging, u, v); return; }
+    if (this.controlAt(u, v)) { this.canvas.style.cursor = 'pointer'; return; }
     if (this.wipeAt(u, v)) { this.canvas.style.cursor = 'ew-resize'; return; }
     const hit = hitLayer(this.slide, u * this.deck.width, v * this.deck.height, (l) => l.interact.hover !== 'none' || l.interact.click !== 'none');
     this.hovered = hit?.id ?? null;
@@ -169,8 +258,18 @@ export class DeckPlayer {
 
   private onClick = (e: MouseEvent) => {
     const [u, v] = this.toSlide(e);
+    // A press on an on-slide control does what it says; it never advances the show.
+    const c = this.controlAt(u, v);
+    if (c) { if (c.action !== 'slider') this.press(c.layer, c.action); return; }
     // A press on a before / after moves its handle there; it never advances the show.
     if (this.wipeAt(u, v)) return;
+    // A press on a scene's card chooses it, or, chosen already, returns to the overview.
+    const card = hitLayer(this.slide, u * this.deck.width, v * this.deck.height, (l) => l.kind === 'scene' && sceneIsSelectable(String(l.params.mode)));
+    if (card) {
+      const b = card.box!, cur = this.live.get(`${card.id}:choice`);
+      const at = sceneHit({ ...card.params, _choice: cur ?? -1 }, b.w, b.h, (u * this.deck.width - b.x) / b.w, (v * this.deck.height - b.y) / b.h);
+      if (at >= 0) { this.live.set(`${card.id}:choice`, cur === at ? -1 : at); return; }
+    }
     const hit = hitLayer(this.slide, u * this.deck.width, v * this.deck.height, (l) => l.interact.click !== 'none');
     if (hit) {
       const it = hit.interact;

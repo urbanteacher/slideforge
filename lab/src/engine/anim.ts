@@ -1,4 +1,6 @@
 import type { Anim, Easing, EntranceType, Interact, Layer, Slide } from '../model/types';
+import { experimentStates } from './experiment';
+import { sceneSteps } from './scene';
 import { beatsOf, isTableKind } from './chartKinds';
 import { isWordMotion, wordsTotal } from './words';
 
@@ -62,6 +64,14 @@ export function textUnitCount(layer: Layer): number {
 }
 
 /** How many lines a text builds one click at a time: 0 when it does not. Empty lines are not steps. */
+/** Layers that take a click per state: an experiment's states (after the prediction), a motion
+ *  scene's steps. Counted like a line build: the layer's arrival, then one click each. */
+export function layerSteps(l: Layer): number {
+  if (l.kind === 'experiment') return experimentStates(l.params).length + 1;
+  if (l.kind === 'scene') { const n = sceneSteps(l.params); return n ? n + 1 : 0; }
+  return 0;
+}
+
 export function buildLines(l: Layer): number {
   if (l.kind !== 'text' || !l.anim.build || l.anim.build === 'none') return 0;
   return String(l.params.text ?? '').split('\n').filter((x) => x.trim()).length;
@@ -150,7 +160,7 @@ export function schedule(slide: Slide, clicks: number[]): Schedule {
     else stepLocalEnd = Math.max(stepLocalEnd, a.delay + animTotal(l));
     // A text built a line at a time: its first line arrives as the layer would, and every further
     // line is a click of its own.
-    const n = buildLines(l);
+    const n = Math.max(buildLines(l), layerSteps(l));
     if (n > 1) {
       const starts = [s];
       for (let i = 1; i < n; i++) {
@@ -356,9 +366,11 @@ export function layerState(layer: Layer, start: number | undefined, t: number, t
   }
 
   // Picture motion runs on the slide clock from the moment the picture arrives.
-  if (layer.kind === 'image' && (layer.params.motion ?? 'none') !== 'none' && Number.isFinite(t)) {
+  // A chart can zoom to a detail too (SlideForge's chart callouts); its other motions are a picture's.
+  const moves = layer.kind === 'image' || (layer.kind === 'chart' && layer.params.motion === 'detail');
+  if (moves && (layer.params.motion ?? 'none') !== 'none' && Number.isFinite(t)) {
     st.view = imageView(layer, t - (start !== undefined && Number.isFinite(start) ? start : 0));
-  } else if (layer.kind === 'image' && layer.params.motion === 'detail') {
+  } else if (moves && layer.params.motion === 'detail') {
     st.view = imageView(layer, Infinity);
   }
   // "Clears itself": fade away a set time after arriving, and stay gone.

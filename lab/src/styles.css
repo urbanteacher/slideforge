@@ -264,6 +264,11 @@ input, select, textarea { font: inherit; color: inherit; }
 /* ── Present ─────────────────────────────────────────── */
 .present { position: fixed; inset: 0; background: #000; z-index: 100; display: grid; place-items: center; animation: fadein .3s ease; }
 .present canvas { display: block; }
+.present-stage { position: relative; }
+.video-layouts { display: grid; gap: 6px; }
+.video-layouts .btn-soft { justify-content: flex-start; text-align: left; }
+.video-layouts .btn-soft.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.present-embed { position: absolute; border: 0; background: #000; }
 .present-hud { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; padding: 6px; background: rgba(18,18,20,.82); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; backdrop-filter: blur(12px); transition: opacity .35s, transform .35s var(--ease); z-index: 2; }
 .present-hud.idle { opacity: 0; transform: translateX(-50%) translateY(8px); pointer-events: none; }
 .present-hud button { height: 32px; min-width: 32px; padding: 0 8px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #ddd; }

@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, Maximize, StickyNote, X } from 'lucide-react
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DeckPlayer } from '../engine/player';
 import { useStore } from '../model/store';
+import { videoEmbed } from '../model/video';
 
 export function Present() {
   // The show is the deck without its hidden slides; starting on a hidden one starts at the next shown.
@@ -65,11 +66,20 @@ export function Present() {
   }, []);
 
   const slide = deck.slides[state.index];
+  // A YouTube or Vimeo layer plays in the real player, framed where the layer sits on the slide.
+  const embeds = slide.layers.filter((l) => l.kind === 'video' && l.visible && l.box && videoEmbed(l.params)).map((l) => ({ id: l.id, box: l.box!, src: videoEmbed(l.params), title: l.name }));
   const exit = () => (window as unknown as { __sfExit?: () => void }).__sfExit?.();
 
   return (
     <div className="present">
-      <canvas ref={canvasRef} style={{ width: size.w, height: size.h }} />
+      <div className="present-stage" style={{ width: size.w, height: size.h }}>
+        <canvas ref={canvasRef} style={{ width: size.w, height: size.h }} />
+        {embeds.map((e) => (
+          <iframe key={`${state.index}-${e.id}`} className="present-embed" src={e.src} title={e.title}
+            style={{ left: `${(e.box.x / deck.width) * 100}%`, top: `${(e.box.y / deck.height) * 100}%`, width: `${(e.box.w / deck.width) * 100}%`, height: `${(e.box.h / deck.height) * 100}%` }}
+            allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+        ))}
+      </div>
       <div className="present-progress" style={{ width: `${((state.index + 1) / deck.slides.length) * 100}%` }} />
       {notes && <div className="notes"><h4>Notes · slide {state.index + 1}</h4>{slide.notes || <span style={{ color: '#777' }}>No notes for this slide.</span>}</div>}
       <div className={`present-hud${idle ? ' idle' : ''}`}>

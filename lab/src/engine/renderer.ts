@@ -317,8 +317,65 @@ export class Renderer {
   /** A timer at its current second: the slide clock since it appeared (from the slide coming up, or
    *  its own entrance). The slide clock starts on entry and a redraw does not restart it, so a running
    *  timer is never reset by the renderer; leaving the slide and coming back starts it again. */
-  /** A before / after or a simulation drawn at its live value, re-rasterised only when that moves. */
+  /**
+   * An experiment or a motion scene at the state its clicks have reached: `_step` (the experiment's
+   * state, −1 before the first; the scene's step), the one before it (`_from`) and how far the move
+   * between them has gone (`_k`). Still, it shows its last state, as SlideForge's thumbnails do.
+   */
+  private withSteps(layer: Layer, starts: number[], t: number): Layer {
+    const exp = layer.kind === 'experiment';
+    let key: string, extra: Record<string, number>;
+    if (!Number.isFinite(t)) { key = 'still'; extra = exp ? { _step: starts.length - 2 } : {}; }
+    else {
+      let i = -1;
+      starts.forEach((s, j) => { if (t >= s) i = j; });
+      const dur = exp ? Math.max(0.2, Number(layer.params.duration ?? 1600) / 1000) : 0.65;
+      const k = i > 0 ? Math.min(1, (t - starts[i]) / dur) : 1;
+      const q = Math.round(k * 60) / 60;
+      extra = exp ? { _step: i - 1, _from: i - 2, _k: q } : { _step: Math.max(0, i), _k: q };
+      key = `${i}|${q}`;
+    }
+    let hit = this.stepped.get(layer.params);
+    if (!hit || hit.key !== key) {
+      const params = { ...layer.params, ...extra };
+      if (!Number.isFinite(t) && !exp) delete (params as Record<string, unknown>)._step;
+      hit = { key, params };
+      this.stepped.set(layer.params, hit);
+    }
+    return { ...layer, params: hit.params };
+  }
+  private stepped = new WeakMap<Layer['params'], { key: string; params: Layer['params'] }>();
+
+  /** An experiment or scene a button has sent to a state: the move from where it was, timed from the press. */
+  private withLiveSteps(layer: Layer, state: number, opts: FrameOpts): Layer {
+    const id = layer.id, from = opts.live!.get(`${id}:from`) ?? state, at = opts.live!.get(`${id}:at`) ?? 0;
+    const dur = layer.kind === 'experiment' ? Math.max(0.2, Number(layer.params.duration ?? 1600) / 1000) : 0.65;
+    const k = Math.round(Math.min(1, Math.max(0, (opts.time - at) / dur)) * 60) / 60;
+    const key = `live|${state}|${from}|${at}|${k}`;
+    let hit = this.stepped.get(layer.params);
+    if (!hit || hit.key !== key) {
+      hit = { key, params: { ...layer.params, _step: state, _from: from, _k: k } };
+      this.stepped.set(layer.params, hit);
+    }
+    return { ...layer, params: hit.params };
+  }
+
+  /** A before / after, a simulation or a motion scene drawn at its live values, re-rasterised only
+   *  when they move. A scene keeps several: its value, lens position and chosen card. */
   private withLive(layer: Layer, live: Map<string, number> | undefined): Layer {
+    if (layer.kind === 'scene') {
+      const vals = (['value', 'x', 'y', 'choice'] as const).map((k) => live?.get(`${layer.id}:${k}`));
+      if (vals.every((v) => v === undefined)) return layer;
+      const key = vals.map((v) => (v === undefined ? '' : Math.round(v * 4) / 4)).join('|');
+      let got = this.sceneLive.get(layer.params);
+      if (!got || got.key !== key) {
+        const params: Layer['params'] = { ...layer.params };
+        (['value', 'x', 'y', 'choice'] as const).forEach((k, i) => { if (vals[i] !== undefined) params[`_${k}`] = vals[i]!; });
+        got = { key, params };
+        this.sceneLive.set(layer.params, got);
+      }
+      return { ...layer, params: got.params };
+    }
     const at = layer.kind === 'wipe' || layer.kind === 'model' ? live?.get(layer.id) : undefined;
     if (at === undefined) return layer;
     const pos = Math.round(at * 400) / 400;
@@ -330,6 +387,7 @@ export class Renderer {
     return { ...layer, params: hit.params };
   }
   private wiped = new WeakMap<Layer['params'], { key: number; params: Layer['params'] }>();
+  private sceneLive = new WeakMap<Layer['params'], { key: string; params: Layer['params'] }>();
 
   private withClock(layer: Layer, start: number | undefined, t: number): Layer {
     if (layer.kind !== 'timer' || !Number.isFinite(t)) return layer;
@@ -430,7 +488,9 @@ export class Renderer {
       if (!raw.visible || opts.hidden?.has(raw.id)) continue;
       const starts = sched.lines.get(raw.id);
       const toned = this.withTone(this.withLive(this.withClock(this.withGroup(raw, groups), sched.start.get(raw.id), opts.t), opts.live), slide.background);
-      const layer = starts ? this.withLines(this.withPage(toned, slide.id), starts, opts.t) : this.withPage(toned, slide.id);
+      const stepped = raw.kind === 'experiment' || raw.kind === 'scene';
+      const liveState = stepped ? opts.live?.get(`${raw.id}:state`) : undefined;
+      const layer = liveState !== undefined ? this.withLiveSteps(this.withPage(toned, slide.id), liveState, opts) : starts ? (stepped ? this.withSteps(this.withPage(toned, slide.id), starts, opts.t) : this.withLines(this.withPage(toned, slide.id), starts, opts.t)) : this.withPage(toned, slide.id);
       const k = kind(layer.kind);
       const st = layerState(layer, sched.start.get(layer.id), opts.t, opts.time);
       st.opacity *= light.dim.get(layer.id) ?? 1;
