@@ -1,5 +1,5 @@
 import { blankDeck } from './model/defaults';
-import { carryDeckLive, convertsSlide, deckFromSlideForge, type SFDeck, type SFSlide } from './model/fromSlideForge';
+import { CARRIED, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type SFDeck, type SFSlide } from './model/fromSlideForge';
 import { imageSettled } from './engine/raster';
 import { renderStill } from './export/exporters';
 import { useStore } from './model/store';
@@ -86,12 +86,16 @@ export const isLabDeck = (d: unknown): d is Deck => {
     slides.every((s) => Array.isArray(s?.layers) && typeof (s as { type?: unknown }).type !== 'string');
 };
 
-/** A lab copy older than the converter's feedback and timers takes them from its lesson, once. */
+/** A lab copy made by an older converter brought up to date from its lesson, once per version: the
+ *  feedback and timers version 1 carries, then the slides later versions build (experiments). */
 function carryOnce(d: Deck, source: ClassicDeck | null | undefined): Deck {
-  if (d.carried || !source || !Array.isArray(source.slides)) return d;
+  const from = d.carried ?? 0;
+  if (from >= CARRIED || !source || !Array.isArray(source.slides)) return d;
   const copy = structuredClone(d);
-  carryDeckLive(copy, source.slides, paletteFor(source.theme).palette);
-  copy.carried = 1;
+  const palette = paletteFor(source.theme).palette;
+  if (from < 1) carryDeckLive(copy, source.slides, palette);
+  carryDeckMissing(copy, source.slides, palette, Math.max(1, from));
+  copy.carried = CARRIED;
   return copy;
 }
 

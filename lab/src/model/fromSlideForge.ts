@@ -8,7 +8,8 @@ import {
 } from './layouts';
 import { gameClock } from './layouts';
 import type { Deck, FeedbackKind, Slide, SlideFeedback } from './types';
-import { finish, framed, kit } from './ukbtDeck';
+import { syncHeaderFooter } from './headerFooter';
+import { finish, finishSlide, framed, kit } from './ukbtDeck';
 
 // SlideForge slides, built in the lab. A SlideForge slide is content with a type — a title, points,
 // a table, chart data — and the lab has a layout for each type, on its own standard rules. This
@@ -285,23 +286,73 @@ export function convertsSlide(s: SFSlide): boolean {
   try { return !!convert(s, probe.on, (p) => p ?? '', ''); } catch { return false; }
 }
 
+/** The converter's version, kept on each lab copy as `carried`. 1: slides keep their feedback and
+ *  timers. 2: experiments are built. A copy made at an older version is brought up to date when it
+ *  next opens (embed.ts), taking only what that version could not build. */
+export const CARRIED = 2;
+
+/** The SlideForge slide types each version of the converter first built. A lab copy made before a
+ *  version gets those slides when it next opens. Only those: a slide the lab could already build is
+ *  missing from a copy because its author deleted it, and it stays deleted. */
+const FIRST_BUILT: Record<number, string[]> = { 2: ['experiment'] };
+
+type Kit = ReturnType<typeof kit>;
+
+/** One SlideForge slide as the lab slide a fresh conversion makes of it, or null for what the lab leaves out. */
+function buildSlide(s: SFSlide, k: Kit, img: (p?: string) => string): Slide | null {
+  const out = convert(s, k.on, img, k.guide.marks[1]?.src ?? k.guide.marks[0]?.src ?? '');
+  if (!out) return null;
+  const notes = [s.notes ?? '', out.note ? `LAB — ${out.note}` : ''].filter(Boolean).join('\n\n');
+  const made = k.put(out.slide, out.ground, notes);
+  if (s.id) made.sourceSlideId = s.id;
+  carryLive(s, made, k.on(out.ground));
+  return made;
+}
+
+/** A lab copy made at converter version `from`, given the slides later versions build: each one built
+ *  as a fresh conversion would, and put after the lab slide of the SlideForge slide before it. Needs
+ *  the copy's slides to know their source (`sourceSlideId`); an older copy is left as it is. How many
+ *  slides came in. */
+export function carryDeckMissing(deck: Deck, source: SFSlide[], paletteId = 'nul', from = 1): number {
+  const types = new Set(Object.entries(FIRST_BUILT).filter(([v]) => Number(v) > from).flatMap(([, t]) => t));
+  if (!types.size || !deck.slides.some((s) => s.sourceSlideId)) return 0;
+  const have = new Set(deck.slides.map((s) => s.sourceSlideId).filter(Boolean));
+  const k = kit(paletteId);
+  const img = (p?: string) => p ?? '';
+  let n = 0;
+  // Where the next slide goes: after the lab slide of the last source slide the copy has, or first.
+  let at = 0;
+  for (const s of source) {
+    if (s.id && have.has(s.id)) {
+      const i = deck.slides.findIndex((x) => x.sourceSlideId === s.id);
+      if (i >= 0) at = i + 1;
+      continue;
+    }
+    if (!s.id || !types.has(s.type)) continue;
+    const made = buildSlide(s, k, img);
+    if (!made) continue;
+    deck.slides.splice(at, 0, finishSlide(made, at));
+    have.add(s.id);
+    at++;
+    n++;
+  }
+  // The deck's header and footer onto the new slides, as framing a fresh conversion puts them.
+  if (n && deck.headerFooter?.enabled) syncHeaderFooter(deck);
+  return n;
+}
+
 /** A SlideForge deck, built in the lab in a palette (NU London's for the Northeastern theme). */
 export function deckFromSlideForge(data: SFDeck, paletteId = 'nul', opts: { frame?: boolean; games?: string } = {}): Deck {
-  const { guide, on, put } = kit(paletteId);
+  const k = kit(paletteId);
   const img = (p?: string) => (p && data.images[p]) || '';
   const slides: Slide[] = [];
   let skipped = 0;
   for (const s of data.slides) {
-    const out = convert(s, on, img, guide.marks[1]?.src ?? guide.marks[0]?.src ?? '');
-    if (!out) { skipped++; continue; }
-    const notes = [s.notes ?? '', out.note ? `LAB — ${out.note}` : ''].filter(Boolean).join('\n\n');
-    const made = put(out.slide, out.ground, notes);
-    if (s.id) made.sourceSlideId = s.id;
-    carryLive(s, made, on(out.ground));
-    slides.push(made);
+    const made = buildSlide(s, k, img);
+    if (made) slides.push(made); else skipped++;
   }
-  const deck: Deck = { carried: 1, id: uid(), title: `${data.title}${skipped ? (opts.games ?? ` (without its ${skipped} games)`) : ''}`, width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: guide, slides: finish(slides) };
-  return opts.frame === false ? deck : framed(deck, guide.marks[0]?.src ?? '', 'Northeastern University London');
+  const deck: Deck = { carried: CARRIED, id: uid(), title: `${data.title}${skipped ? (opts.games ?? ` (without its ${skipped} games)`) : ''}`, width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: k.guide, slides: finish(slides) };
+  return opts.frame === false ? deck : framed(deck, k.guide.marks[0]?.src ?? '', 'Northeastern University London');
 }
 
 /** One of the Slide designs: a SlideForge slide with a special feature, built natively in the lab. */

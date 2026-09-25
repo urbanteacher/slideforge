@@ -39,6 +39,14 @@
   var lastClassic = null;
   var placeholder = { id: '', title: 'Untitled lesson', slides: [] };
 
+  /* A lesson asked for on the address (?lesson=, the link a lesson is shared
+     and bookmarked by). The classic editor opens it while the shell starts,
+     before install() has registered the lab, so its hand-over (classicDeck)
+     finds another workspace current and does nothing — and the lab showed
+     whatever it last had open, the demo on a first visit. Read now, before
+     the editor takes the parameter off the address; install() hands it over. */
+  var askedLesson = /[?&]lesson=/.test(location.search);
+
   function whenReady(fn) { if (api) fn(api); else waiting.push(fn); }
 
   /* ----------------------------------------------------- the Library card
@@ -408,6 +416,12 @@
     mount();
     SF.Shell.register(ws);
     document.documentElement.classList.add('lab-engine');
+    /* The lesson the address asked for, which the editor has already opened. */
+    var asked = askedLesson && SF.Editor && SF.Editor.workspace ? SF.Editor.workspace.doc() : null;
+    if (asked && asked.id) {
+      lastClassic = asked.id;
+      open(JSON.parse(JSON.stringify(asked)));
+    }
     /* Present is the lab's show. The classic editor wired this button to its
        own player when it installed; the lab engine installs after it. */
     var btnPresent = document.getElementById('btnPresent');
