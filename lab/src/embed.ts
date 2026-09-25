@@ -1,5 +1,5 @@
 import { blankDeck } from './model/defaults';
-import { CARRIED, carryDeckArt, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type SFDeck, type SFSlide } from './model/fromSlideForge';
+import { CARRIED, carryDeckArt, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type LessonGame, type SFDeck, type SFSlide } from './model/fromSlideForge';
 import { imageSettled } from './engine/raster';
 import { renderStill } from './export/exporters';
 import { useStore } from './model/store';
@@ -66,7 +66,9 @@ function paletteFor(theme = ''): { palette: string; frame: boolean; set?: string
   return { palette: 'nul', frame: false };
 }
 
-interface ClassicDeck { id: string; title?: string; theme?: string; slides?: SFSlide[]; libraryGroup?: string }
+/** A SlideForge lesson as the shell hands it over, with its games compiled (js/lab-engine.js): the
+ *  games live in SlideForge's game store, not in the lesson, and the lab has no store of its own. */
+interface ClassicDeck { id: string; title?: string; theme?: string; slides?: SFSlide[]; libraryGroup?: string; labGames?: Record<string, LessonGame> }
 
 /** A picture's address as SlideForge wrote it, made to work from here. SlideForge's are relative to
  *  its own page (assets/lesson/…), and the lab runs a folder down (lab-app/), where the same words
@@ -102,7 +104,7 @@ function repairAddresses(d: Deck): number {
 export function convertClassic(c: ClassicDeck): Deck {
   const slides = Array.isArray(c.slides) ? c.slides : [];
   const images = addresses;
-  const data: SFDeck = { key: c.id, title: c.title || 'Untitled lesson', theme: c.theme || '', slides, images };
+  const data: SFDeck = { key: c.id, title: c.title || 'Untitled lesson', theme: c.theme || '', slides, images, games: c.labGames };
   const { palette, frame, set } = paletteFor(c.theme);
   const deck = deckFromSlideForge(data, palette, { frame, games: '', set });
   deck.id = `lab-${c.id}`;
@@ -130,7 +132,7 @@ function carryOnce(d: Deck, source: ClassicDeck | null | undefined): Deck {
   const { palette, set } = paletteFor(source.theme);
   const art = { theme: source.theme || '', title: source.title || '' };
   if (from < 1) carryDeckLive(copy, source.slides, palette, set);
-  carryDeckMissing(copy, source.slides, palette, Math.max(1, from), set, art);
+  carryDeckMissing(copy, source.slides, palette, Math.max(1, from), set, art, source.labGames);
   // The artwork first: a poster it adds comes with SlideForge's address, which the repair then fixes.
   if (from < 3) { carryDeckArt(copy, source.slides, art); repairAddresses(copy); }
   copy.carried = CARRIED;

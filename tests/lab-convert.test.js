@@ -178,3 +178,78 @@ test('a lab copy made before the artwork gets it once, on the slides it belongs 
   assert.equal(n, fresh.slides.filter((s) => s.layers.some((l) => l.name.startsWith('Theme · '))).length);
   assert.equal(carryDeckArt(old, src.slides, { theme: src.theme, title: src.title }), 0, 'and only once');
 });
+
+/* A lesson as the shell hands it to the lab: with its games compiled by SlideForge (js/lab-engine.js). */
+function lessonWithGames(key) {
+  const store = {};
+  const localStorage = { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: (k) => { delete store[k]; } };
+  const context = { window: {}, console, localStorage, Date, location: { search: '' }, navigator: { webdriver: true }, document: { getElementById: () => null } };
+  context.globalThis = context;
+  vm.createContext(context);
+  for (const f of ['js/model.js', 'js/lessons.js']) vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), context);
+  context.SF = context.window.SF;
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/lab-engine.js'), 'utf8'), context);
+  const SF = context.window.SF;
+  const out = JSON.parse(JSON.stringify(SF.LabEngine.lessonGames(SF.buildLesson(key))));
+  Object.defineProperty(out, 'SF', { value: SF });
+  return out;
+}
+
+test('Week 2’s five Checks come into the lab as its own games: each question, then its answer, ready for the room', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const src = lessonWithGames('ipdv-vc-hybrid');
+  const checks = src.slides.filter((s) => s.type === 'game');
+  assert.equal(checks.length, 5);
+  assert.equal(Object.keys(src.labGames).length, 5, 'every Check went over compiled');
+  const deck = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
+  assert.equal(deck.slides.length, src.slides.length - 5 + 5 * 2, 'every slide, a Check as its question and its answer');
+  checks.forEach((c) => {
+    const game = SF_GAME(src, c);
+    const made = deck.slides.filter((s) => s.sourceSlideId === c.id);
+    assert.deepEqual(made.map((s) => s.game && s.game.role), ['question', 'answer'], c.title + ': no cover, as SlideForge plays it');
+    const q = made[0].game.quiz;
+    assert.equal(q.question, game.question, 'the question the room is asked');
+    assert.deepEqual(q.options, game.options);
+    assert.equal(q.correct, game.correct, 'and the answer the relay marks');
+    assert.equal(made[0].game.label, c.gameTitle || c.title);
+    assert.ok(made[1].layers.some((l) => l.kind === 'text' && String(l.params.text).includes(game.explanation.slice(0, 20))), 'the answer says why');
+    assert.ok(made[0].notes.includes(c.notes.slice(0, 20)), 'the teacher’s notes come too');
+    assert.equal(made[0].transition.type, 'morph', 'a game’s steps keep their morph');
+  });
+  // In order: each Check where the lesson has it.
+  const order = deck.slides.map((s) => s.sourceSlideId).filter((id, i, a) => a.indexOf(id) === i);
+  assert.deepEqual(order, src.slides.map((s) => s.id));
+});
+
+test('a lab copy made before games were built gets its Checks in place', { skip }, async () => {
+  const { deckFromSlideForge, carryDeckMissing } = await converter();
+  const src = lessonWithGames('ipdv-vc-hybrid');
+  const fresh = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
+  const old = JSON.parse(JSON.stringify(fresh));
+  old.slides = old.slides.filter((s) => !s.game);
+  const n = carryDeckMissing(old, src.slides, 'nul', 3, undefined, { theme: src.theme, title: src.title }, src.labGames);
+  assert.equal(n, 10);
+  assert.deepEqual(old.slides.map((s) => s.sourceSlideId), fresh.slides.map((s) => s.sourceSlideId));
+});
+
+/** A Check's one question, as SlideForge's game store has it. */
+function SF_GAME(src, check) {
+  const g = src.labGames[check.gameId];
+  return g.slides.find((s) => s.type === 'quiz');
+}
+
+test('in the live room, each Check the lab built is SlideForge\u2019s own quiz question, with its answer drawn on reveal', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const src = lessonWithGames('ipdv-vc-hybrid');
+  const deck = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
+  // What the lab hands the room: a picture of each slide, carrying its game (lab/src/embed.ts stills).
+  const stills = deck.slides.map((s) => ({ id: s.id, sourceSlideId: s.sourceSlideId, image: 'still.jpg', notes: s.notes || '', hidden: false, name: s.name, game: s.game }));
+  const room = src.SF.labShowSlides(stills).map((it) => it.sf).filter((s) => s && s.type === 'quiz');
+  assert.equal(room.length, 5, 'five questions for the phones');
+  src.slides.filter((s) => s.type === 'game').forEach((c, i) => {
+    const q = SF_GAME(src, c);
+    assert.equal(room[i].question, q.question);
+    assert.equal(room[i].correct, q.correct, 'marked against the Check\u2019s own answer');
+    assert.ok(room[i].design && room[i].design.labStill && room[i].design.labReveal, 'the lab draws the question, and its answer on reveal');
+  });
+});

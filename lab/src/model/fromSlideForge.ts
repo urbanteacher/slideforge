@@ -11,6 +11,8 @@ import type { Deck, FeedbackKind, Slide, SlideFeedback } from './types';
 import { syncHeaderFooter } from './headerFooter';
 import { addThemeArt, themeGround, type ArtContext } from './themeArt';
 import { finish, finishSlide, framed, kit } from './ukbtDeck';
+import { gameSlides } from './designs/formats';
+import type { ShowcaseGame } from './designs/games';
 
 // SlideForge slides, built in the lab. A SlideForge slide is content with a type — a title, points,
 // a table, chart data — and the lab has a layout for each type, on its own standard rules. This
@@ -25,6 +27,8 @@ export interface SFSlide {
   type: string;
   /** The room's say on the slide: a poll, word cloud, brainstorm or scale, with its settings. */
   feedback?: Record<string, unknown> | null;
+  /** A game slide's game, in SlideForge's game store (the lesson brings it compiled: SFDeck.games). */
+  gameId?: string;
   /** Seconds the slide is timed for: SlideForge draws its game clock and counts it down. */
   timeLimit?: number;
   title?: string;
@@ -45,7 +49,10 @@ export interface SFSlide {
   typewrite?: boolean;
   videoPoster?: string;
 }
-export interface SFDeck { key: string; title: string; theme: string; slides: SFSlide[]; images: Record<string, string> }
+/** A lesson's game, compiled by SlideForge (js/lab-engine.js, SF.compileGame) as the lab's own games
+ *  are (tools/lab-games.mjs), and whether it opens with a cover (its intro or How to play). */
+export type LessonGame = ShowcaseGame & { cover?: boolean };
+export interface SFDeck { key: string; title: string; theme: string; slides: SFSlide[]; images: Record<string, string>; games?: Record<string, LessonGame> }
 
 const cells = (line: string) => line.split('\t').map((c) => c.trim());
 const pairs = (b: string[] = []) => b.filter((l) => l.trim()).map((l) => { const [a = '', c = ''] = cells(l); return [a, c] as [string, string]; });
@@ -289,14 +296,14 @@ export function convertsSlide(s: SFSlide): boolean {
 }
 
 /** The converter's version, kept on each lab copy as `carried`. 1: slides keep their feedback and
- *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. A copy made at an older version is brought up to date when it
+ *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. 4: games are built. A copy made at an older version is brought up to date when it
  *  next opens (embed.ts), taking only what that version could not build. */
-export const CARRIED = 3;
+export const CARRIED = 4;
 
 /** The SlideForge slide types each version of the converter first built. A lab copy made before a
  *  version gets those slides when it next opens. Only those: a slide the lab could already build is
  *  missing from a copy because its author deleted it, and it stays deleted. */
-const FIRST_BUILT: Record<number, string[]> = { 2: ['experiment'] };
+const FIRST_BUILT: Record<number, string[]> = { 2: ['experiment'], 4: ['game'] };
 
 type Kit = ReturnType<typeof kit>;
 
@@ -310,6 +317,31 @@ function buildSlide(s: SFSlide, k: Kit, img: (p?: string) => string, art?: ArtCo
   carryLive(s, made, k.on(out.ground));
   if (art) addThemeArt(made, s, art, img);
   return made;
+}
+
+/** A lesson's game slide as the lab's game: built by the same code as the lab's own games
+ *  (designs/formats.ts gameSlides), so each question carries what the live room plays it by
+ *  (src/deck/labshow.js) and is answered on the slide after. SlideForge plays a game without its
+ *  cover when its intro and How to play are off, as the Checks in a lecture are; so does the lab.
+ *  Every slide is filed under the game's SlideForge slide, and the first carries its notes. */
+function buildGame(s: SFSlide, g: LessonGame, k: Kit, img: (p?: string) => string, art?: ArtContext): Slide[] {
+  const slides = gameSlides(g, k.on('working')).filter((x) => g.cover || x.game?.role !== 'cover');
+  slides.forEach((x, i) => {
+    if (s.id) x.sourceSlideId = s.id;
+    if (i === 0 && s.notes) x.notes = [s.notes, x.notes ?? ''].filter(Boolean).join('\n\n');
+    // The theme's artwork, as on SlideForge's quiz slides (UK Black Tech's waves, AI Awareness's rule).
+    if (art) addThemeArt(x, { type: 'quiz' }, art, img);
+  });
+  return slides;
+}
+
+/** One SlideForge slide as lab slides: one for most, a game's question and answer (and its cover)
+ *  for a game the lesson brought compiled, none for what the lab leaves out. */
+function buildSlides(s: SFSlide, k: Kit, img: (p?: string) => string, art: ArtContext | undefined, games: SFDeck['games']): Slide[] {
+  const g = s.type === 'game' && s.gameId ? games?.[s.gameId] : undefined;
+  if (g) return buildGame(s, g, k, img, art);
+  const one = buildSlide(s, k, img, art);
+  return one ? [one] : [];
 }
 
 /** The lesson a lab copy came from, for its artwork: its theme and name. */
@@ -341,7 +373,7 @@ function lessonFrame(d: Deck, logo: string): Deck {
  *  as a fresh conversion would, and put after the lab slide of the SlideForge slide before it. Needs
  *  the copy's slides to know their source (`sourceSlideId`); an older copy is left as it is. How many
  *  slides came in. */
-export function carryDeckMissing(deck: Deck, source: SFSlide[], paletteId = 'nul', from = 1, set?: string, art?: ArtSource): number {
+export function carryDeckMissing(deck: Deck, source: SFSlide[], paletteId = 'nul', from = 1, set?: string, art?: ArtSource, games?: SFDeck['games']): number {
   const types = new Set(Object.entries(FIRST_BUILT).filter(([v]) => Number(v) > from).flatMap(([, t]) => t));
   if (!types.size || !deck.slides.some((s) => s.sourceSlideId)) return 0;
   const have = new Set(deck.slides.map((s) => s.sourceSlideId).filter(Boolean));
@@ -352,17 +384,18 @@ export function carryDeckMissing(deck: Deck, source: SFSlide[], paletteId = 'nul
   let at = 0;
   for (const s of source) {
     if (s.id && have.has(s.id)) {
-      const i = deck.slides.findIndex((x) => x.sourceSlideId === s.id);
+      // After the last of its slides: a game is several.
+      const i = deck.slides.map((x) => x.sourceSlideId).lastIndexOf(s.id);
       if (i >= 0) at = i + 1;
       continue;
     }
     if (!s.id || !types.has(s.type)) continue;
-    const made = buildSlide(s, k, img, art && { theme: art.theme, index: source.indexOf(s), deckTitle: art.title });
-    if (!made) continue;
-    deck.slides.splice(at, 0, finishSlide(made, at));
+    const made = buildSlides(s, k, img, art && { theme: art.theme, index: source.indexOf(s), deckTitle: art.title }, games);
+    if (!made.length) continue;
+    deck.slides.splice(at, 0, ...made.map((x, j) => finishSlide(x, at + j)));
     have.add(s.id);
-    at++;
-    n++;
+    at += made.length;
+    n += made.length;
   }
   // The deck's header and footer onto the new slides, as framing a fresh conversion puts them.
   if (n && deck.headerFooter?.enabled) syncHeaderFooter(deck);
@@ -376,8 +409,8 @@ export function deckFromSlideForge(data: SFDeck, paletteId = 'nul', opts: { fram
   const slides: Slide[] = [];
   let skipped = 0;
   data.slides.forEach((s, index) => {
-    const made = buildSlide(s, k, img, { theme: data.theme, index, deckTitle: data.title });
-    if (made) slides.push(made); else skipped++;
+    const made = buildSlides(s, k, img, { theme: data.theme, index, deckTitle: data.title }, data.games);
+    if (made.length) slides.push(...made); else skipped++;
   });
   const deck: Deck = { carried: CARRIED, id: uid(), title: `${data.title}${skipped ? (opts.games ?? ` (without its ${skipped} games)`) : ''}`, width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: k.guide, slides: finish(slides) };
   if (opts.frame === false) return deck;

@@ -40,7 +40,8 @@ export function finishSlide(s: Slide, i: number) {
   // A closing picture is a cover too: its artwork runs to the edges, so the header and footer stay off.
   const kind = s.name === 'Section' ? 'Section · ' : s.name === 'Closer' ? 'Cover · ' : '';
   s.name = `${i + 1} · ${kind}${String(title?.params.text ?? s.name).replace(/\s+/g, ' ')}`;
-  s.transition = { type: 'fade', duration: 0.6 };
+  // A game's slides morph from one step to the next (designs/games.ts finishGame); the rest fade.
+  if (!s.game) s.transition = { type: 'fade', duration: 0.6 };
   return s;
 }
 

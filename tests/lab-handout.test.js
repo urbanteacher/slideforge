@@ -48,4 +48,6 @@ test('Week 2 printed from the lab has the pages SlideForge’s handout has', () 
   assert.ok(pages(shown) < pages(printed), 'pictures alone would have lost the experiments’ states');
   // The experiments are among the slides printed from the original.
   deck.slides.forEach((s, i) => { if (s.type === 'experiment') assert.equal(printed[i], s); });
+  // A Check the lab built as its own game prints as SlideForge's did: its questions, from the original.
+  deck.slides.filter((s) => s.type === 'game').forEach((s) => assert.equal(printsAsPages(s, pictureSlide({ id: s.id, image: 'q.jpg' })), true));
 });

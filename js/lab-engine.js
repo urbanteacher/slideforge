@@ -130,6 +130,46 @@
     }
   };
 
+  /* A lesson's games, compiled for the lab. They live in SlideForge's game
+     store, not in the lesson, and the lab has no store of its own; so the
+     lesson goes over with each game its slides play, compiled by SlideForge
+     (SF.compileGame) and described as the lab's own games are
+     (tools/lab-games.mjs): its format, name, and how to play. The lab then
+     builds each one on its own game walls (lab/src/model/fromSlideForge.ts). */
+  function lessonGames(d) {
+    if (!d || !Array.isArray(d.slides) || !SF.GameStore || !SF.compileGame) return d;
+    var drop = { id: 1, transition: 1, layers: 1, gameId: 1 };
+    var clean = function (v) { return JSON.parse(JSON.stringify(v, function (k, x) { return drop[k] ? undefined : x; })); };
+    var formatOf = function (g) {
+      if (g.format) return g.format;
+      var map = SF.FORMAT_STYLE || {};
+      if (map[g.style] === g.style) return g.style;
+      return Object.keys(map).filter(function (f) { return map[f] === g.style; })[0] || g.style;
+    };
+    var games = {}, any = false;
+    d.slides.forEach(function (s) {
+      if (s.type !== 'game' || !s.gameId || games[s.gameId]) return;
+      var g = SF.GameStore.get(s.gameId);
+      if (!g) return;
+      var format = formatOf(g);
+      var style = SF.gameStyle ? SF.gameStyle(g.style) : null;
+      var book = SF.Playbook && SF.Playbook.forGame ? SF.Playbook.forGame(g) : null;
+      var set = g.settings || {};
+      games[s.gameId] = {
+        format: format, style: g.style,
+        label: g.title || (style && style.label) || format,
+        styleLabel: (style && style.label) || g.style,
+        aim: (book && book.aim) || '',
+        howToPlay: (book && book.howToPlay) || [],
+        title: g.title || '',
+        cover: !!(set.intro || set.howTo),
+        slides: clean(SF.compileGame(g))
+      };
+      any = true;
+    });
+    return any ? Object.assign({}, d, { labGames: games }) : d;
+  }
+
   function open(d) {
     whenReady(function (a) {
       var fromCard = d && !d.labSaved && isCard(d.id);
@@ -137,7 +177,7 @@
          made before the converter kept feedback and timers can take them, once. */
       var row = d && saved.filter(function (x) { return x.id === d.id; })[0];
       var source = row && row.sourceId && SF.Store && SF.Store.get ? SF.Store.get(row.sourceId) : null;
-      var run = d && (d.labSaved || fromCard) ? a.openSaved(d.id, source) : a.open(d);
+      var run = d && (d.labSaved || fromCard) ? a.openSaved(d.id, lessonGames(source)) : a.open(lessonGames(d));
       Promise.resolve(run).then(function (r) {
         if (r === false) { refreshSaved(); SF.toast('That lesson could not be opened here.'); return; }
         /* Known at once, not after the list is read back: the Library may be
@@ -240,7 +280,11 @@
   /* One slide per lab slide, made by `make`, with the lesson's games and
      activities back in their places: the order the show runs. */
   function ordered(items, make, source) {
-    var keep = source ? api.cannotBuild(source.slides) : [];
+    /* What the lab cannot build, less what it has: a lesson's game the lab
+       built from its compiled copy plays as the lab's, not a second time. */
+    var built = {};
+    items.forEach(function (s) { if (s.sourceSlideId) built[s.sourceSlideId] = true; });
+    var keep = source ? api.cannotBuild(source.slides).filter(function (id) { return !built[id]; }) : [];
     var after = carried(source, keep);
     /* A deck converted before slides remembered their source: match them in
        order, when the counts say nothing has been added or taken away. */
@@ -299,6 +343,8 @@
      to print as pages is followed here without a list to keep. */
   function printsAsPages(original, picture) {
     if (!original) return false;
+    /* A game prints its questions for the room to answer on paper, as SlideForge's handout does. */
+    if (original.type === 'game') return true;
     /* An experiment prints all its states, side by side, even when they fit one page. */
     if (original.type === 'experiment') return true;
     var pages = function (s) { return SF.Print.pagesFor({ slides: [s] }).length; };
@@ -313,12 +359,16 @@
       source.slides.forEach(function (s) { original[s.id] = s; });
       var from = {};
       api.getDeck().slides.forEach(function (s) { if (s.sourceSlideId) from[s.id] = s.sourceSlideId; });
-      var changed = false;
-      var slides = deck.slides.map(function (s) {
+      var changed = false, printed = {};
+      var slides = [];
+      deck.slides.forEach(function (s) {
         var o = original[from[s.id]];
-        if (!printsAsPages(o, s)) return s;
+        if (!printsAsPages(o, s)) { slides.push(s); return; }
         changed = true;
-        return Object.assign(JSON.parse(JSON.stringify(o)), { hidden: s.hidden });
+        /* A game is several lab slides (its cover, its questions): its original prints once. */
+        if (printed[o.id]) return;
+        printed[o.id] = true;
+        slides.push(Object.assign(JSON.parse(JSON.stringify(o)), { hidden: s.hidden }));
       });
       return changed ? SF.normalizeDeck(Object.assign({}, deck, { slides: slides })) : deck;
     });
@@ -548,8 +598,8 @@
   SF.LabEngine = {
     enabled: enabled, install: install, ready: ready, failed: failed,
     classicDeck: classicDeck, useClassic: useClassic,
-    /* For the handout's test: which slides print from their SlideForge original, and the picture a lab slide becomes. */
-    printsAsPages: printsAsPages, pictureSlide: pictureSlide,
+    /* For the tests: which slides print from their SlideForge original, the picture a lab slide becomes, and a lesson's games as the lab gets them. */
+    printsAsPages: printsAsPages, pictureSlide: pictureSlide, lessonGames: lessonGames,
     /* For Share (js/shell.js): the lesson as SlideForge's player shows it. */
     showDeck: function () {
       return new Promise(function (resolve, reject) { whenReady(function () { buildShowDeck().then(resolve, reject); }); });
