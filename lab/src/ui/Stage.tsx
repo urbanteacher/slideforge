@@ -40,6 +40,15 @@ function unionBox(ls: Layer[]): Box {
 const CLOCK0 = performance.now();
 const clock = () => (performance.now() - CLOCK0) / 1000;
 
+/** The layer under a point on the face the canvas shows: the back's layers while the slide is turned
+ *  over, the front's otherwise; the face that is away cannot be clicked into. */
+function hitFace(slide: Slide, x: number, y: number) {
+  const st = useStore.getState();
+  const over = slide.layers.some((l) => l.face === 'back' && (st.backOf === slide.id || l.id === st.selectedId));
+  return (over ? hitLayer(slide, x, y, (l) => !l.locked && l.face === 'back') : null)
+    ?? hitLayer(slide, x, y, (l) => !l.locked && l.face !== 'back');
+}
+
 interface PlayState { start: number; clicks: number[]; end: number; from: Slide | null; trans: Slide['transition'] }
 
 const capture = (el: HTMLElement | null, id: number) => { try { el?.setPointerCapture(id); } catch { /* synthetic or stale pointer */ } };
@@ -158,8 +167,9 @@ export function Stage() {
           return;
         }
       }
-      // The back of a flip slide shows while one of its layers is selected, so it can be edited.
-      const back = s.layers.some((l) => l.face === 'back' && l.id === st.selectedId) ? 1 : 0;
+      // The back of a flip slide shows when the Slide panel turns it over (Front | Back), or while one
+      // of its layers is selected, so it can be edited on the canvas.
+      const back = s.layers.some((l) => l.face === 'back' && (st.backOf === s.id || l.id === st.selectedId)) ? 1 : 0;
       r.drawSlide(s, { time, mouse: m.cur, t: Infinity, clicks: [], hidden, flip: back }, null);
       // Only the slide in view and its neighbours keep their textures: holding every slide visited
       // grows with the deck until the GPU gives out.
@@ -218,7 +228,7 @@ export function Stage() {
     if (e.button !== 0) return;
     const [x, y] = updateMouse(e);
     if (editingId) { set({ editingTextId: null }); }
-    const hit = hitLayer(slide, x, y, (l) => !l.locked);
+    const hit = hitFace(slide, x, y);
     if (!hit) { selectLayer(null); return; }
     // Inside a group already (after a double-click), a click on a sibling stays inside: it picks
     // that part. Anywhere else a click picks up the whole group.
@@ -373,7 +383,7 @@ export function Stage() {
 
   const onDoubleClick = (e: React.MouseEvent) => {
     const [x, y] = toSlide(e);
-    const hit = hitLayer(slide, x, y, (l) => !l.locked);
+    const hit = hitFace(slide, x, y);
     if (!hit) return;
     // Double-click goes inside a group to the part under the pointer, and straight into its words.
     selectLayer(hit.id);

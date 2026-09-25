@@ -284,3 +284,33 @@ test('a copy given its artwork earlier takes the new pieces and keeps the ones i
   assert.equal(art(old.slides[0], 'N').box.x, 40, 'the N the author moved in the lab stays put');
   assert.equal(old.slides[0].layers.filter((l) => l.name === 'Theme · N').length, 1, 'and is not drawn twice');
 });
+
+test('a split’s picture comes in as SlideForge shows it: whole, on its side, at its share of the width', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const src = lesson('ipdv-vc-hybrid');
+  const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
+  const splits = src.slides.filter((s) => s.type === 'split');
+  assert.ok(splits.length >= 8);
+  splits.forEach((s) => {
+    const made = deck.slides.find((x) => x.sourceSlideId === s.id);
+    const pic = made.layers.find((l) => l.kind === 'image');
+    assert.equal(pic.params.fit, s.imageFit === 'contain' ? 'contain' : 'cover', s.title + ': the picture whole, not cropped');
+    assert.equal(pic.box.x === 0, s.imageSide === 'left', s.title + ': on the side SlideForge has it');
+    if (s.design.imageShare === 65) assert.equal(pic.box.w, 1248, s.title + ': 65% of the width');
+    const words = made.layers.filter((l) => l.kind === 'text' && l.box && !l.params.hfSlot);
+    words.forEach((l) => assert.ok(s.imageSide === 'left' ? l.box.x >= pic.box.x + pic.box.w - 1 : l.box.x + l.box.w <= pic.box.x + 1, s.title + ': the words clear of the picture'));
+  });
+});
+
+test('a game’s question is never more than two lines, however long', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const src = lessonWithGames('ipdv-vc-hybrid');
+  const deck = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
+  const questions = deck.slides.filter((s) => s.game).map((s) => s.layers.find((l) => l.name === 'Question'));
+  assert.equal(questions.length, 10);
+  questions.forEach((q) => {
+    const lines = (q.box.h - 8) / (q.params.size * q.params.lineHeight);
+    assert.ok(lines <= 2.5, `"${q.params.text.slice(0, 40)}…" takes ${lines.toFixed(1)} lines at ${q.params.size}px`);
+    assert.ok(q.params.size >= 48, 'and no smaller than the slides read at');
+  });
+});

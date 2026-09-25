@@ -11,7 +11,8 @@ import { BASE, EY, FOOT, HY, LEFT, LIFT, ON_RIGHT, PAD, RIGHT, TOPBAND, W, box, 
 //
 // The rules every wall keeps:
 // 1. The small heading says the game, what to do and how far in; the clock sits at its right (question
-//    slides only). The question follows, full width, sized to its length.
+//    slides only). The question follows, full width, sized to its length and never more than two
+//    lines: a long one comes down in size rather than taking a third.
 // 2. The answers start right under the question.
 // 3. Rows and tiles are only as tall as their words, with PADV above and below; nothing stretches.
 // 4. A set shares one size, as large as the question where it fits.
@@ -73,7 +74,8 @@ export function gameCover(st: LayoutStyle, g: GameDef): Slide {
 /** Rule 1, and on the answer slide rule 6's reason: what opens every wall, and where its answers start. */
 export function opening(st: LayoutStyle, q: GameQuestion, heading: string, question: string, answer: boolean, o: { sizes?: number[]; maxH?: number; why?: string; width?: number } = {}) {
   const layers: Layer[] = [ground(st), eyebrow(st, heading), ...(answer ? [] : TIMER(st, q))];
-  const qn = sizedHero(st, 'Question', question, LEFT, HY, o.width ?? W - LEFT * 2, { sizes: o.sizes, maxH: o.maxH ?? 330, anim: answer ? { type: 'none', duration: 0 } : undefined });
+  // Rule 1: never more than two lines, however long the question.
+  const qn = sizedHero(st, 'Question', question, LEFT, HY, o.width ?? W - LEFT * 2, { sizes: o.sizes, maxH: o.maxH ?? 330, lines: 2, anim: answer ? { type: 'none', duration: 0 } : undefined });
   layers.push(qn.layer);
   let top = qn.bottom + 28;
   const why = o.why ?? q.explanation;

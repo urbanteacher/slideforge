@@ -84,17 +84,25 @@ export const hero = (st: LayoutStyle, name: string, value: string, b: Box, size 
  * height it needs, and stepped down only if that is more than `maxH`. `bottom` is where it ends, so
  * the answers below it can take everything else.
  */
-export function sizedHero(st: LayoutStyle, name: string, value: string, x: number, y: number, w: number, o: { sizes?: number[]; maxH?: number; anim?: Partial<Anim> } = {}) {
+export function sizedHero(st: LayoutStyle, name: string, value: string, x: number, y: number, w: number, o: { sizes?: number[]; maxH?: number; anim?: Partial<Anim>; lines?: number } = {}) {
   const v = display(value);
   const sizes = o.sizes ?? [132, 112, 96, 84];
   const maxH = o.maxH ?? 420;
   const start = v.length <= 50 ? 0 : v.length <= 90 ? 1 : v.length <= 140 ? 2 : 3;
   const params = { font: st.display, weight: st.displayWeight, color: st.ink, lineHeight: 1.03, tracking: -0.015, balance: true };
+  // At most `lines` lines, where asked: a size that would take another line is too big.
+  const fits = (size: number, h: number) => h <= maxH && (!o.lines || h <= size * params.lineHeight * (o.lines + 0.5));
   let size = sizes[Math.min(start, sizes.length - 1)], h = 0;
   for (let k = Math.min(start, sizes.length - 1); k < sizes.length; k++) {
     size = sizes[k];
     h = measureTextHeight({ ...params, text: v, size }, w);
-    if (h <= maxH) break;
+    if (fits(size, h)) break;
+  }
+  // Past the smallest size given, a capped question keeps stepping down until it is back within its
+  // lines, to the smallest type the slides use for reading (48px).
+  while (o.lines && !fits(size, h) && size > 48) {
+    size = Math.max(48, size - 4);
+    h = measureTextHeight({ ...params, text: v, size }, w);
   }
   h = Math.min(maxH, h) + 8;
   const layer = txt(name, v, box(x, y, w, h), { ...params, size, fit: 'shrink' }, o.anim ?? { type: 'words', feel: 'rise', easing: 'easyEase', duration: 0.7, stagger: 0.1 });

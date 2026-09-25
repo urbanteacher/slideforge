@@ -78,6 +78,22 @@ const CLICKS: { value: ClickAction; label: string }[] = [
   { value: 'goto', label: 'Go to slide…' }, { value: 'link', label: 'Open link…' }, { value: 'flip', label: 'Flip to facts — turn the slide over' },
 ];
 
+/** Front | Back, on a slide with Flip to facts: which face the canvas shows, so the back's heading and
+ *  words are edited where they are, on the canvas, like the front's. The show still turns it over on a
+ *  click. Only which face is in view changes here; nothing on the slide does. */
+function FaceRow() {
+  const slide = useStore(slideOf);
+  const backOf = useStore((s) => s.backOf);
+  const set = useStore((s) => s.set);
+  if (!slide.layers.some((l) => l.face === 'back')) return null;
+  return (
+    <Row label="Showing" info="A slide with Flip to facts has a back. Show it to edit its words on the canvas; the show turns it over when its Flip layer is clicked.">
+      <Select value={backOf === slide.id ? 'back' : 'front'} options={[{ value: 'front', label: 'Front' }, { value: 'back', label: 'Back — the facts' }]}
+        onChange={(v) => set({ backOf: v === 'back' ? slide.id : null, selectedId: null })} />
+    </Row>
+  );
+}
+
 export function Inspector() {
   const layer = useStore(layerOf);
   const chosen = useStore((s) => s.inspectorTab);
@@ -182,6 +198,15 @@ function LayerDesign({ layer, picture = false }: { layer: Layer; picture?: boole
       {layer.kind === 'video' && <button className="picture-link" onClick={() => useStore.getState().set({ inspectorTab: 'video' })}><ImageIcon size={13} />The address, full screen or framed, how it plays and its caption are in the <b>Video</b> tab</button>}
       {SPECIAL_TABS[layer.kind] && <button className="picture-link" onClick={() => useStore.getState().set({ inspectorTab: 'special' })}><ImageIcon size={13} />What it shows and how it behaves are in the <b>{SPECIAL_TABS[layer.kind]}</b> tab</button>}
       <RecipeLink />
+      {layer.kind === 'image' && (
+        // What a picture most often needs, where the picture is selected: how it fills its box, a
+        // border, its corners. Its frame, caption and motion stay in the Picture tab.
+        <Section title="Picture">
+          {['fit', 'border', 'borderColor', 'radius'].map((key) => k.params.find((d) => d.key === key))
+            .filter((d): d is ParamDef => !!d && (!d.when || d.when(layer.params)))
+            .map((d) => <ParamRow key={d.key} layer={layer} def={d} setParam={setParam} />)}
+        </Section>
+      )}
       <Section title="Layer">
         <Row label="Opacity"><Scrub value={layer.opacity * 100} min={0} max={100} step={1} decimals={0} unit=" %" onChange={(v, m) => up((l) => { l.opacity = v / 100; }, m)} /></Row>
         <Row label="Blend" info="How this layer combines with everything below it."><Select value={layer.blend} options={BLENDS} onChange={(v) => up((l) => { l.blend = v; })} /></Row>
@@ -494,6 +519,7 @@ function SlideDesign() {
         <Row label="Name"><input className="text-input" value={slide.name} onFocus={() => (nm.current = newGesture())} onChange={(e) => updateSlide((s) => { s.name = e.target.value; }, nm.current)} onKeyDown={(e) => e.stopPropagation()} /></Row>
         <Row label="Background" info="Shown beneath all layers."><ColorField value={slide.background} onChange={(v, m) => updateSlide((s) => { s.background = v; }, m)} /></Row>
         <GroundRow />
+        <FaceRow />
         <button className="btn-soft tidy" onClick={tidySlide} title="Even out every row and column on this slide: one gap, one edge, one width each."><WandSparkles size={13} />Tidy up this slide</button>
       </Section>
       <Section title="Speaker notes">

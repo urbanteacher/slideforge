@@ -435,15 +435,27 @@ function rasterImage(layer: Layer): Raster | null {
   ctx.imageSmoothingQuality = 'high';
   // A logo on a dark ground is shown white; "dark" says so outright, "auto" was resolved by the renderer.
   if (p.tone === 'dark' || p._white) ctx.filter = 'brightness(0) invert(1)';
+  // What shows of the picture: the whole box when it covers, the picture itself when it is contained.
+  const sx = p.fit === 'cover' ? 0 : (w - dw) / 2, sy = p.fit === 'cover' ? 0 : (h - dh) / 2, sw = Math.min(w, dw), sh = Math.min(h, dh);
+  ctx.save();
   if (r > 0) {
     ctx.beginPath();
-    ctx.roundRect(p.fit === 'cover' ? 0 : (w - dw) / 2, p.fit === 'cover' ? 0 : (h - dh) / 2, Math.min(w, dw), Math.min(h, dh), r);
+    ctx.roundRect(sx, sy, sw, sh, r);
     ctx.clip();
   } else {
     ctx.beginPath(); ctx.rect(0, 0, w, h); ctx.clip();
   }
   if (p.flip === 'mirror') { ctx.translate(w, 0); ctx.scale(-1, 1); }
   ctx.drawImage(img, p.flip === 'mirror' ? w - ox - dw : ox, oy, dw, dh);
+  ctx.restore();
+  // The border, inside what shows, round its corners.
+  const bw = Math.min(Number(p.border ?? 0), sw / 2, sh / 2);
+  if (bw > 0) {
+    ctx.filter = 'none';
+    ctx.strokeStyle = String(p.borderColor ?? '#ffffff');
+    ctx.lineWidth = bw;
+    ctx.beginPath(); ctx.roundRect(sx + bw / 2, sy + bw / 2, sw - bw, sh - bw, Math.max(0, r - bw / 2)); ctx.stroke();
+  }
   return { canvas, rect: [-pad, -pad, rw, rh] };
 }
 

@@ -27,6 +27,9 @@ export interface SFSlide {
   type: string;
   /** The room's say on the slide: a poll, word cloud, brainstorm or scale, with its settings. */
   feedback?: Record<string, unknown> | null;
+  /** How a picture fills its box (contain shows it whole), and which side of a split it is on. */
+  imageFit?: string;
+  imageSide?: string;
   /** A title slide's date (2026-09-21), which SlideForge sets under the subtitle. */
   date?: string;
   /** Where the author moved the theme's shapes on this slide (src/render/art.js), by shape. */
@@ -115,6 +118,43 @@ function statement(st: LayoutStyle, line: string, credit: string): Slide {
 }
 
 type Ground = 'working' | 'quiet' | 'loud';
+
+/** A picture shown whole where SlideForge shows it whole (imageFit: contain), not cropped to its box. */
+function fitted(slide: Slide, fit?: string): Slide {
+  if (fit === 'contain') for (const l of slide.layers) if (l.kind === 'image' && l.name === 'Picture') l.params.fit = 'contain';
+  return slide;
+}
+
+/** A split's picture at its share of the width (SlideForge's Image share: 35, 50 or 65%), the words
+ *  given the rest: their column's inner edge moves with the picture's. */
+function shareSplit(slide: Slide, pic: Slide['layers'][number], side: 'left' | 'right', share: number) {
+  if (![35, 65].includes(share) || !pic.box) return;
+  const w = Math.round(1920 * share / 100), d = w - pic.box.w;
+  pic.box = { ...pic.box, w, x: side === 'right' ? 1920 - w : 0 };
+  for (const l of slide.layers) {
+    if (l === pic || !l.box || l.name === 'Ground' || l.params.hfSlot) continue;
+    if (side === 'left') l.box = { ...l.box, x: l.box.x + d };
+    // The short accent bar keeps its length; the heading and the points take the width that is left.
+    if (l.box.w > 240) l.box = { ...l.box, w: Math.max(240, l.box.w - d) };
+  }
+}
+
+/** A contained picture on a split that is not full (SlideForge's media ground): the picture on a
+ *  white card in its half, inset from its edges, over a quiet ground (css/northeastern.css
+ *  .layout-split .split-media: NU London's navy mist; the theme's panel elsewhere). */
+function cardSplit(slide: Slide, pic: Slide['layers'][number], st: LayoutStyle, theme: string) {
+  if (!pic.box) return;
+  const half = { ...pic.box };
+  const inset = 42, card = { ...half, x: half.x + inset, y: half.y + inset, w: half.w - inset * 2, h: half.h - inset * 2 };
+  const nul = theme.startsWith('northeastern');
+  const mist = createLayer('shape', { name: 'Picture ground', box: half, anim: { type: 'none', duration: 0 },
+    params: nul ? { shape: 'rect', radius: 0, fill: '#e8eef4', gradient: true, fill2: '#d9e3ec', angle: 70, strokeWidth: 0 } : { shape: 'rect', radius: 0, fill: st.panel, strokeWidth: 0 } });
+  const back = createLayer('shape', { name: 'Picture card', box: card, anim: { type: 'none', duration: 0 },
+    params: { shape: 'rect', radius: 21, fill: '#ffffff', stroke: '#0c3354', strokeOpacity: 0.12, strokeWidth: 1.5 } });
+  pic.box = { ...card, x: card.x + 12, y: card.y + 12, w: card.w - 24, h: card.h - 24 };
+  pic.params.radius = 12;
+  slide.layers.splice(slide.layers.indexOf(pic), 0, mist, back);
+}
 
 /** A title slide's date under its subtitle, as SlideForge sets it (js/render.js, en-GB: 21 September
  *  2026): NU London's in small tracked capitals in its sky blue (css/northeastern.css), others in the
@@ -213,13 +253,19 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
       const facts = String(s.body ?? '').trim();
       if (frame || facts) {
         const cap = (s.design as { capStyle?: string } | undefined)?.capStyle === 'bar' ? 'bar' : 'plain';
-        return { slide: framedPictureSlide(st, t, sub, img(s.image), frame || '4:3', cap, facts), ground: g };
+        return { slide: fitted(framedPictureSlide(st, t, sub, img(s.image), frame || '4:3', cap, facts), s.imageFit), ground: g };
       }
-      return { slide: photo(st, img(s.image), t, sub), ground: g };
+      return { slide: fitted(photo(st, img(s.image), t, sub), s.imageFit), ground: g };
     }
     case 'split': {
-      const slide = splitSlide(st, t, b, s.design?.imageSide === 'left' ? 'left' : 'right');
-      Object.assign(slide.layers.find((l) => l.kind === 'image')!.params, { src: img(s.image), fit: 'cover' });
+      // SlideForge keeps the side on the slide (imageSide), not in its design.
+      const side = (s.imageSide ?? s.design?.imageSide) === 'left' ? 'left' : 'right';
+      const slide = splitSlide(st, t, b, side);
+      const pic = slide.layers.find((l) => l.kind === 'image')!;
+      const contain = s.imageFit === 'contain';
+      Object.assign(pic.params, { src: img(s.image), fit: contain ? 'contain' : 'cover' });
+      shareSplit(slide, pic, side, Number(s.design?.imageShare));
+      if (contain && s.design?.mediaGround !== 'full') cardSplit(slide, pic, st, theme);
       return { slide, ground: g };
     }
     case 'gallery': {

@@ -96,6 +96,8 @@ const KINDS: KindDef[] = [
       { key: 'src', label: 'Image', type: 'image', default: '', group: 'Image' },
       { key: 'fit', label: 'Fit', type: 'select', options: opt('cover', 'contain'), default: 'contain', group: 'Image' },
       { key: 'radius', label: 'Corner radius', type: 'number', min: 0, max: 400, step: 1, default: 0, group: 'Image', unit: 'px', decimals: 0 },
+      { key: 'border', label: 'Border', type: 'number', min: 0, max: 40, step: 1, default: 0, group: 'Image', unit: 'px', decimals: 0, info: 'A line round the picture, inside its edge, following its corners. Round the picture itself when it is contained.' },
+      { key: 'borderColor', label: 'Border colour', type: 'color', default: '#ffffff', group: 'Image', when: (p) => Number(p.border) > 0 },
       // SlideForge's picture settings, from "Logo sits on" down.
       { key: 'frame', label: 'Image frame', type: 'select', group: 'Picture', default: 'free', info: 'Reshapes the box to a fixed ratio, or fills the slide. Drag its handles afterwards to change it again.',
         options: [{ value: 'free', label: 'As drawn' }, { value: 'bleed', label: 'Full bleed — the whole slide' }, { value: '16:9', label: '16:9 landscape' }, { value: '4:3', label: '4:3 landscape' }, { value: '1:1', label: '1:1 square' }, { value: '4:5', label: '4:5 portrait' }] },

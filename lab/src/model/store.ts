@@ -34,6 +34,8 @@ interface State {
   sorterOpen: boolean;
   /** The right-hand panel folded away, so the canvas has the width (the canvas bar's panel button). Remembered in this browser. */
   panelHidden: boolean;
+  /** The slide whose back (its Flip to facts face) the canvas shows, to edit it there; null for the fronts. */
+  backOf: string | null;
   galleryTab: 'layouts' | 'designs';
   clipboard: Layer | null;
   toast: string | null;
@@ -100,6 +102,7 @@ export const useStore = create<State>((set, get) => ({
   lastMerge: null,
   saveState: 'saved',
   presenting: false,
+  backOf: null,
   playToken: 0,
   editingTextId: null,
   partId: null,
