@@ -259,7 +259,9 @@
         .filter(function (d) { return d.libraryGroup !== SF.DEMO_LIBRARY_GROUP; })
         /* A lesson now edited in the lab shows once, as the lab's card; the
            original is kept, unlisted, for the games the lab does not run. */
-        .filter(function (d) { return !(SF.LabEngine && SF.LabEngine.hasCopy(d.id)); });
+        .filter(function (d) { return !(SF.LabEngine && SF.LabEngine.hasCopy(d.id)); })
+        /* And with the classic studio showing, the lab's cards stay off it. */
+        .filter(function (d) { return !(SF.LabEngine && SF.LabEngine.isHiddenCard && SF.LabEngine.isHiddenCard(d)); });
       var openId = currentId();
       var q = searchQuery.trim().toLowerCase();
       var collapsed = (SF.LibraryFolders && SF.LibraryFolders.collapsed)

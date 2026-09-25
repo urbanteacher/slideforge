@@ -2769,6 +2769,10 @@
       } catch (e) {}
     } else {
       loaded = (last && SF.Store.get(last)) || null;
+      /* A lab lesson's card is not a lesson the classic studio can open: last
+         open in the lab, it would come up here as a deck of one title slide. */
+      var card = function (d) { return !!(d && SF.LabEngine && SF.LabEngine.isHiddenCard && SF.LabEngine.isHiddenCard(d)); };
+      if (card(loaded)) loaded = null;
 
       /* A first visit opens an empty deck, not a finished lecture.
          It used to land in the 74-slide IPDV lecture, because that was the
@@ -2792,7 +2796,7 @@
       if (!loaded) {
         /* Not a first visit, but nothing opens — a cleared last-id, or every
            document deleted. Whatever is in the Library beats a blank. */
-        loaded = SF.Store.list()[0] || SF.makeDeck('Untitled lesson');
+        loaded = SF.Store.list().filter(function (d) { return !card(d); })[0] || SF.makeDeck('Untitled lesson');
         SF.Store.save(loaded, { force: true });
       }
       if (loaded && loaded.slides.some(function (s) { return s.type === 'quiz' || s.type === 'results'; })) {

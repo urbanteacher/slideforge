@@ -12,24 +12,36 @@
    its own copy: converted the first time, with an id of its own, so the
    original lesson is never written to by the lab.
 
-   ?classic=1 on the address, or SF.LabEngine.useClassic(true), brings the
-   classic studio back for this browser. */
+   For now the classic studio is the default Lesson studio, and the lab is
+   opt-in per browser: ?lab=1 (or ?classic=0) on the address turns it on and
+   is remembered, ?classic=1 turns it off again (see enabled() below). */
 (function (global) {
   'use strict';
   /** @type {any} */
   var SF = global.SF = global.SF || {};
   var KEY = 'sf.lessonEngine';
 
+  /* The classic studio is the Lesson studio until the lab shows a lesson as
+     SlideForge designed it (decided 26 Sep 2026: lessons converted that
+     morning lost their pictures and their theme's artwork). The lab is one
+     address away, and a browser that asks for it keeps it: ?lab=1 or
+     ?classic=0 turns it on, ?classic=1 turns it off. */
   function enabled() {
     try {
-      if (/[?&]classic=1\b/.test(location.search)) return false;
-      if (/[?&]classic=0\b/.test(location.search)) return true;
+      var q = location.search;
+      if (/[?&]classic=1\b/.test(q)) { remember('classic'); return false; }
+      if (/[?&](classic=0|lab=1)\b/.test(q)) { remember('lab'); return true; }
       /* The browser smokes (tools/smoke/) drive the classic studio's rail,
          stage and inspector, so under automation the classic studio is the
          one on screen. A smoke written for the lab opts in with ?classic=0. */
       if (navigator.webdriver) return false;
-      return localStorage.getItem(KEY) !== 'classic';
-    } catch (e) { return true; }
+      return localStorage.getItem(KEY) === 'lab';
+    } catch (e) { return false; }
+  }
+
+  function remember(engine) {
+    /* Under automation a smoke's choice is for that page only, not the profile. */
+    try { if (!navigator.webdriver) localStorage.setItem(KEY, engine); } catch (e) {}
   }
 
   /** @type {any} */ var api = null;
@@ -61,7 +73,7 @@
     var s = SF.makeSlide('title');
     s.title = labDeck.title || 'Untitled lesson';
     return SF.normalizeDeck({
-      id: labDeck.id, title: labDeck.title, theme: source && source.theme,
+      id: labDeck.id, title: labDeck.title, theme: source && source.theme, labCard: true,
       libraryGroup: labDeck.libraryGroup || (source && source.libraryGroup) || undefined,
       modified: Date.now(), slides: [s]
     });
@@ -603,6 +615,18 @@
     },
     /* For the Library (js/studio.js). */
     hasCopy: function (id) { return enabled() && hasCopy(id); },
+    /* A lab lesson's card, which the classic studio cannot open: the Library
+       leaves it out while the classic studio is the Lesson studio, so it does
+       not sit beside its own original looking like a lesson of one slide.
+       Cards written before they said so are known by their one slide and
+       the lab's ids: lab-<id> for a lesson's copy, and the lab's own eight
+       characters (lab/src/model/defaults.ts uid) where SlideForge's have
+       twelve (js/model.js uid adds four from the clock). */
+    isHiddenCard: function (d) {
+      if (!d || enabled()) return false;
+      if (d.labCard) return true;
+      return (d.slides || []).length <= 1 && /^(lab-.+|[a-z0-9]{8})$/.test(String(d.id));
+    },
     forget: function (id) {
       if (!enabled() || !api || !saved.some(function (r) { return r.id === id; })) return;
       /* Deleting the lesson on screen leaves a blank one, not a deleted one still being edited. */
