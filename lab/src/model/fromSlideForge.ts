@@ -1,7 +1,8 @@
 import { createLayer, uid } from './defaults';
 import { CHART_DARK, CHART_LIGHT } from '../engine/chartKinds';
+import { EXPERIMENTS } from '../engine/experiment';
 import {
-  LAYOUTS, beforeAfterSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide,
+  LAYOUTS, beforeAfterSlide, bulletsSlide, cardsSlide, chartSlide, codeSlide, experimentSlide, columnsSlide, compareSlide, exploreSlide, framedPictureSlide, simulationSlide, funnelSlide,
   gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide,
   railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, type LayoutStyle,
 } from './layouts';
@@ -34,6 +35,8 @@ export interface SFSlide {
   chartSource?: string;
   design?: Record<string, unknown>;
   exploration?: Record<string, unknown>;
+  /** A "Transform the chart" experiment: its preset, prediction prompt, states and step time. */
+  experiment?: { preset?: string; prompt?: string; states?: unknown[]; duration?: number };
   progressive?: boolean;
   code?: string;
   language?: string;
@@ -198,6 +201,11 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
       const spots = ((s.exploration?.spots ?? []) as { x: number; y: number; zoom?: number; title: string; body?: string }[]);
       const src = img(s.image);
       return { slide: exploreSlide(st, t, src, spots, aspectOf(src)), ground: g };
+    }
+    case 'experiment': {
+      // The lab's experiment layer runs SlideForge's presets and states: predict, then Next through them.
+      const e = s.experiment ?? {}, preset = EXPERIMENTS[e.preset ?? ''] ? e.preset! : 'polling';
+      return { slide: experimentSlide(st, t, e.prompt || EXPERIMENTS[preset].prompt, { preset, data: s.body || EXPERIMENTS[preset].data, states: e.states?.length ? JSON.stringify(e.states) : '', duration: e.duration }, s.chartSource ?? ''), ground: g };
     }
     case 'simulation': return { slide: simulationSlide(st, t, (s.exploration ?? {}) as Parameters<typeof simulationSlide>[2]), ground: g };
     case 'video': {
