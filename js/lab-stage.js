@@ -137,6 +137,85 @@
     onLab = true;
   }
 
+  /* ------------------------------------------------- speaker notes on the wall
+
+     The lab's own Present had them: N, or the note button on its HUD, and the
+     slide's notes sit in a card at the bottom right of the show. SlideForge's
+     player keeps notes to Teacher Presenter, so the card comes with the lab
+     into SlideForge's HUD. Off until asked for, because the room can read it. */
+  /** @type {HTMLElement|null} */ var notesCard = null;
+  var notesOn = false;
+
+  function paintNotes() {
+    var root = document.getElementById('player');
+    if (!notesOn || !root || !SF.Player.open) { if (notesCard) notesCard.hidden = true; syncNotesButtons(); return; }
+    if (!notesCard) {
+      notesCard = document.createElement('div');
+      notesCard.className = 'lab-notes';
+      notesCard.setAttribute('role', 'note');
+      notesCard.setAttribute('aria-live', 'polite');
+    }
+    if (notesCard.parentNode !== root) root.appendChild(notesCard);
+    var s = SF.Player.deck && SF.Player.deck.slides[SF.Player.idx];
+    var text = String((s && s.notes) || '').trim();
+    notesCard.textContent = '';
+    var h = document.createElement('h4');
+    h.textContent = 'Notes \u00b7 slide ' + (SF.Player.idx + 1);
+    notesCard.appendChild(h);
+    var body = document.createElement('div');
+    body.className = text ? 'lab-notes-body' : 'lab-notes-body lab-notes-none';
+    body.textContent = text || 'No notes for this slide.';
+    notesCard.appendChild(body);
+    notesCard.hidden = false;
+    syncNotesButtons();
+  }
+
+  function toggleNotes(force) {
+    notesOn = typeof force === 'boolean' ? force : !notesOn;
+    paintNotes();
+  }
+
+  function syncNotesButtons() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-lab-act="notes"]'), function (b) {
+      b.setAttribute('aria-pressed', notesOn ? 'true' : 'false');
+      b.classList.toggle('on', notesOn);
+    });
+  }
+
+  function addNotesButtons() {
+    var tools = document.getElementById('hudDefaultTools');
+    var more = tools && tools.querySelector('[data-act="more"]');
+    if (tools && more && !tools.querySelector('[data-lab-act="notes"]')) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('data-lab-act', 'notes');
+      b.title = 'Speaker notes on the screen (N)';
+      b.setAttribute('aria-label', 'Speaker notes on the screen (N)');
+      b.textContent = '\ud83d\uddd2';
+      b.onclick = function () { toggleNotes(); };
+      tools.insertBefore(b, more);
+    }
+    var list = document.getElementById('hudMore');
+    if (list && !list.querySelector('[data-lab-act="notes"]')) {
+      var m = document.createElement('button');
+      m.type = 'button';
+      m.setAttribute('data-lab-act', 'notes');
+      m.title = 'Speaker notes on the screen (N)';
+      m.textContent = 'Speaker notes';
+      m.onclick = function () { toggleNotes(); };
+      list.insertBefore(m, list.firstChild);
+    }
+  }
+
+  function onKey(e) {
+    if (!SF.Player.open || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key !== 'n' && e.key !== 'N') return;
+    var t = /** @type {HTMLElement|null} */ (e.target);
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+    e.preventDefault();
+    toggleNotes();
+  }
+
   /* Next: one build further on the lab slide on the wall, before the show moves on. */
   function step(P, dir) {
     if (!player || !onLab || dir < 0) return false;
@@ -148,7 +227,13 @@
   function install() {
     if (!SF.Player || !SF.Player.on) return;
     SF.Player.on('slide', onSlide);
+    SF.Player.on('slide', function () { if (notesOn) paintNotes(); });
     SF.Player.on('close', stop);
+    SF.Player.on('close', function () { if (notesCard) notesCard.hidden = true; });
+    SF.Player.on('open', paintNotes);
+    document.addEventListener('keydown', onKey);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addNotesButtons);
+    else addNotesButtons();
     /* 'open' comes after the first slide is drawn, so it leaves the stage as that set it. */
     SF.Player.on('open', function () {
       /* The keys are the show's now: with the focus left in the lab's frame,
@@ -160,6 +245,6 @@
 
   SF.LabStage = { install: install, step: step, stop: stop, active: function () { return !!player && onLab; },
     /* For the smokes and for debugging: the lab player on the wall. */
-    player: function () { return player; } };
+    player: function () { return player; }, notes: toggleNotes };
   install();
 })(window);

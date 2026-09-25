@@ -334,3 +334,9 @@ html.lab-engine[data-ws="deck"] #btnOpenLesson{display:block}
 html.lab-engine:not([data-ws="deck"]) .lab-loading{display:none}
 /* A lab slide drawn live over its picture in SlideForge's show (js/lab-stage.js). */
 .slide.has-lab-live>.lab-live{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:4}
+/* Speaker notes on the wall, as the lab's own Present had them (N, or the HUD's note button). */
+.lab-notes{position:fixed;right:18px;bottom:76px;width:380px;max-height:40vh;overflow:auto;z-index:130;background:rgba(18,18,20,.92);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;color:#ddd;font:15px/1.5 var(--ui-font);white-space:pre-wrap;backdrop-filter:blur(12px)}
+.lab-notes[hidden]{display:none}
+.lab-notes h4{margin:0 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ui-dim)}
+.lab-notes-none{color:#777}
+.hud [data-lab-act="notes"].on{background:var(--ui-accent-soft);color:var(--ui-accent)}
