@@ -41,14 +41,30 @@ function shapeOf(s: SFSlide): Shape {
   return 'rows';
 }
 
-/** The routine a stages slide holds: a leading untimed row is its brief, the rest its stages. */
+/** Each stage's job on the track: SlideForge's declared one, or what its name says the room does. */
+const JOB_BY_NAME: Record<string, string> = {
+  think: 'Silent thinking', pair: 'With a partner', square: 'Two pairs together', share: 'With the room', connect: 'Pulling it together',
+  agree: 'As a class', debrief: 'As a class', reflect: 'On your own', 'i do': 'Watch', 'we do': 'Together', switch: 'Swap roles',
+};
+
+/** The routine a stages slide holds. A leading untimed row is its brief, and its label says what the
+ *  brief is. With none, a question that opens the first stage and is followed by what to do with it is
+ *  the prompt ("What makes a discussion go well…? Note one of each."): the stage keeps the instruction. */
 function routineOf(a: ActivityEntry, s: SFSlide) {
-  if (a.key === 'think-pair-share') return THINK_PAIR_SHARE;
+  // Its copy is tuned for the wall; its notes come from the catalogue, as every activity's do.
+  if (a.key === 'think-pair-share') return { ...THINK_PAIR_SHARE, notes: undefined };
   const rows = rowsOf(s.bullets);
   const lead = rows[0] && !rows[0].minutes && rows.slice(1).some((r) => r.minutes) ? rows[0] : null;
-  const stages: Stage[] = (lead ? rows.slice(1) : rows).map((r) => ({ name: r.label, task: r.text, minutes: r.minutes }));
-  const prompt = lead ? lead.text || lead.label : s.title && s.title !== a.title ? s.title : a.blurb;
-  return { title: a.title, prompt, stages };
+  const stages: Stage[] = (lead ? rows.slice(1) : rows).map((r) => ({
+    name: r.label, task: r.text, minutes: r.minutes, job: r.job ?? JOB_BY_NAME[r.label.toLowerCase()],
+  }));
+  let prompt = lead ? lead.text || lead.label : '';
+  if (!prompt && stages[0]) {
+    const m = stages[0].task.match(/^(.*\?)\s+(\S.*)$/);
+    if (m) { prompt = m[1].trim(); stages[0] = { ...stages[0], task: m[2].trim() }; }
+  }
+  if (!prompt) prompt = s.title && s.title !== a.title ? s.title : a.blurb;
+  return { title: a.title, prompt, stages, label: lead?.label };
 }
 
 /** Grid tiles from "1. Perimeter | 2. 100 cm | …" lines. */
@@ -76,7 +92,7 @@ function build(a: ActivityEntry, s: SFSlide, st: LayoutStyle, which: 'lab' | 'sl
     case 'stages': return stageBand(st, routineOf(a, s));
     case 'steps': return numberedRun(st, { title, eyebrow: a.title === title ? a.phaseLabel : a.title, rows });
     case 'brief': return briefHero(st, { title, brief: rows[0] ?? { label: '', text: a.blurb, minutes: 0 }, rows: rows.slice(1) });
-    case 'panels': return quadrants(st, { title, rows, ladder: /ladder/.test(a.key) });
+    case 'panels': return quadrants(st, { title, rows, ladder: /ladder/.test(a.key), eyebrow: a.phaseLabel });
     case 'cards': return stations(st, { title, rows });
     case 'split': return hookSplit(st, { title, prompts: s.bullets ?? [] });
     case 'table': return connectGrid(st, { title, tiles: tilesOf(s.body) });
@@ -98,7 +114,7 @@ const KIND_NAMES: Record<string, string> = { poll: 'Poll', wordcloud: 'Word clou
 
 /** What the activity does in the room, onto a slide built from it: its feedback (the eyebrow says what
  *  the phones do), and, for a slide that is timed but not a routine, its time flush in the top right. */
-function carry(slide: Slide, s: SFSlide, shape: Shape, st: LayoutStyle) {
+function carry(slide: Slide, s: SFSlide, shape: Shape, st: LayoutStyle, which: 'lab' | 'slideforge') {
   const f = feedbackOf(s.feedback);
   if (f) {
     slide.feedback = f;
@@ -107,13 +123,15 @@ function carry(slide: Slide, s: SFSlide, shape: Shape, st: LayoutStyle) {
   }
   const secs = Number(s.timeLimit);
   const eyebrowRow = ['rows', 'brief', 'panels', 'cards', 'table'].includes(shape) && slide.layers.some((l) => l.name === 'Eyebrow');
-  if (secs > 0 && eyebrowRow) slide.layers.push(clock(st, 'Clock', secs / 60, box(W - LEFT - 190, 138, 190, 76)));
+  if (secs > 0 && which === 'lab' && eyebrowRow) slide.layers.push(clock(st, 'Clock', secs / 60, box(W - LEFT - 190, 138, 190, 76)));
+  // SlideForge's own looks keep its ring clock in the top right, beside the heading (legacy.ts leaves room).
+  if (secs > 0 && which === 'slideforge' && ['steps', 'panels', 'brief'].includes(shape)) slide.layers.push(clock(st, 'Clock', secs / 60, box(W - LEFT - 170, 132, 170, 170), { type: 'fade', duration: 0.5 }, true));
 }
 function activitySlides(a: ActivityEntry, st: LayoutStyle, which: 'lab' | 'slideforge'): Slide[] {
   const notes = notesOf(a);
   const out = (a.slides ?? []).map((s, i) => {
     const made = build(a, s, st, which);
-    carry(made, s, shapeOf(s), st);
+    carry(made, s, shapeOf(s), st, which);
     made.name = (a.slides?.length ?? 0) > 1 ? `${a.title} · ${i + 1}` : a.title;
     made.activity = { key: a.key, page: i };
     const own = made.notes ? `\n\n${made.notes}` : '';
