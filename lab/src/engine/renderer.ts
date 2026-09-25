@@ -391,7 +391,7 @@ export class Renderer {
 
   private withClock(layer: Layer, start: number | undefined, t: number): Layer {
     if (layer.kind !== 'timer' || !Number.isFinite(t)) return layer;
-    const total = Math.max(30, Math.min(7200, Number(layer.params.minutes ?? 5) * 60));
+    const total = Math.max(5, Math.min(7200, Number(layer.params.minutes ?? 5) * 60));
     const from = start !== undefined && Number.isFinite(start) ? start : 0;
     const left = Math.max(0, Math.ceil(total - Math.max(0, t - from)));
     let hit = this.clocked.get(layer.params);
@@ -700,13 +700,16 @@ export class Renderer {
 }
 
 /**
- * The layers a Morph carries across: the same picture, video or chart data, or the same words, on both
+ * The layers a Morph carries across: the same key (`params.morph`), the same picture, video or chart data, or the same words, on both
  * slides. Each layer on the new slide takes at most one from the old. A layer that covers the whole
  * slide crossfades instead, since it would be drawn over everything else.
  */
 export function morphPairs(from: Slide, to: Slide, W: number, H: number): [Layer, Layer][] {
   const keyOf = (l: Layer) => {
     if (!l.visible || !l.box || (l.box.w >= W * 0.9 && l.box.h >= H * 0.9)) return null;
+    // A layer that names what it is (a game's tile, a card, a step) travels to the layer on the next
+    // slide that names the same, whatever it looks like there: a card grows into its reveal.
+    if (typeof l.params.morph === 'string' && l.params.morph) return `key|${l.params.morph}`;
     if (l.kind === 'image' || l.kind === 'video') return l.params.src ? `${l.kind}|${l.params.src}` : null;
     if (l.kind === 'chart') return `chart|${String(l.params.data ?? '').trim()}`;
     if (l.kind === 'text') { const t = String(l.params.text ?? '').trim(); return t ? `text|${t}` : null; }

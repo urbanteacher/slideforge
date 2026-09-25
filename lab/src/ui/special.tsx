@@ -4,7 +4,8 @@ import { EXPERIMENTS, experimentStates, type ExpState } from '../engine/experime
 import { LOOKS, SCENES, sceneItems } from '../engine/scene';
 import { rebuildSlide, RECIPE_NAMES } from '../model/recipes';
 import { slideOf, useStore } from '../model/store';
-import type { Layer, ParamValue } from '../model/types';
+import { applyGameSettings } from '../model/gameSettings';
+import type { GameSettings, Layer, ParamValue } from '../model/types';
 import { ColorField, Row, Scrub, Section, Select, newGesture } from './controls';
 import { fileToDataUrl } from './Inspector';
 
@@ -213,8 +214,8 @@ function TimerPanel({ layer }: { layer: Layer }) {
     <>
       <div className="picture-head">It starts when the slide comes up in Preview and resets when you leave it.</div>
       <Section title="How long">
-        <Chips value={String(p.minutes ?? 5)} options={[1, 2, 3, 5, 10, 15, 20].map((m) => ({ value: String(m), label: `${m} min` }))} onChange={(v) => set('minutes', Number(v))} />
-        <Row label="Or exactly"><Scrub value={Number(p.minutes ?? 5)} min={0.5} max={120} step={0.5} decimals={1} unit=" min" onChange={(v, m) => useStore.getState().updateLayer(layer.id, (l) => { l.params.minutes = v; }, m)} /></Row>
+        <Chips value={String(p.minutes ?? 5)} options={[0.25, 0.5, 1, 2, 3, 5, 10, 15, 20].map((m) => ({ value: String(m), label: m < 1 ? `${m * 60} s` : `${m} min` }))} onChange={(v) => set('minutes', Number(v))} />
+        <Row label="Or exactly"><Scrub value={Number(p.minutes ?? 5)} min={0.1} max={120} step={0.25} decimals={2} unit=" min" onChange={(v, m) => useStore.getState().updateLayer(layer.id, (l) => { l.params.minutes = v; }, m)} /></Row>
       </Section>
       <Section title="Style">
         <Chips value={style} options={[{ value: 'game', label: 'Game clock' }, { value: 'ring', label: 'Ring' }, { value: 'digits', label: 'Time only' }, { value: 'bar', label: 'Bar' }]} onChange={(v) => set('style', v)} />
@@ -329,5 +330,85 @@ export function RecipePanel() {
       {body}
       <button className={`btn-soft tidy${dirty ? ' sp-dirty' : ''}`} disabled={!dirty} onClick={apply}><RefreshCw size={13} />{dirty ? 'Update the slide' : 'Up to date'}</button>
     </Section>
+  );
+}
+
+// ─── A game's settings ──────────────────────────────────────────────────────
+const ROLE_NAMES = { cover: 'its cover', question: 'a question', answer: 'an answer', board: 'its board', end: 'its end' } as const;
+const secs = (s: number) => (s >= 60 && s % 60 === 0 ? `${s / 60} min` : `${s} s`);
+
+/**
+ * What a game runs by and the wall cannot show: the time, the points, the difficulty, how close
+ * counts, the spellings that also count. A change goes to the question and its answer together, or
+ * from the cover to every question; the clock, the eyebrow and the rest of what shows it follow.
+ */
+export function GamePanel() {
+  const slide = useStore(slideOf);
+  const deck = useStore((s) => s.deck);
+  const g = slide.game;
+  const [accept, setAccept] = useState('');
+  useEffect(() => { setAccept((g?.settings.accept ?? []).join('\n')); }, [slide.id, g?.settings.accept]);
+  if (!g) return null;
+  const s = g.settings;
+  const apply = (change: GameSettings, every = false, merge?: string) => useStore.getState().mutate((d) => applyGameSettings(d, slide.id, change, every), merge);
+  const timed = (g.role === 'question' || g.role === 'board') && g.clock !== 'none' && (g.role === 'question' || s.seconds != null);
+  const canNone = g.role === 'question' && g.clock !== 'Round';
+  const times = [...(canNone ? [0] : []), 10, 15, 20, 30, 45, 60, 90, 120, 180];
+  const questions = deck.slides.filter((x) => x.game?.id === g.id && x.game.role === 'question' && x.game.clock !== 'none');
+  const first = questions[0]?.game?.settings.seconds ?? 0;
+  const levels = g.format === 'boss-battle' ? ['easy', 'medium', 'hard', 'boss'] : ['easy', 'medium', 'hard'];
+  return (
+    <Section title={`Game · ${g.label}`}>
+      <div className="desc">This slide is {ROLE_NAMES[g.role]} of the game. These are how it runs, and what the wall shows follows them{g.key != null ? '; a question and its answer share them' : ''}.</div>
+      {timed && (
+        <>
+          <Row label={g.clock ?? 'Time limit'}>
+            <Chips value={String(s.seconds ?? 0)} options={times.map((t) => ({ value: String(t), label: t ? secs(t) : 'None' }))} onChange={(v) => apply({ seconds: Number(v) || undefined })} />
+          </Row>
+          <Row label="Or exactly"><Scrub value={s.seconds ?? 0} min={canNone ? 0 : 5} max={600} step={1} decimals={0} unit=" s" onChange={(v, m) => apply({ seconds: v || undefined }, false, m)} /></Row>
+        </>
+      )}
+      {g.role === 'cover' && questions.length > 0 && (
+        <Row label="Every question" info="The time for each question in the game, set at once. Each can still be changed on its own slide.">
+          <Chips value={String(first)} options={[0, 10, 15, 20, 30, 45, 60].map((t) => ({ value: String(t), label: t ? secs(t) : 'None' }))} onChange={(v) => { const d = useStore.getState().deck; const q = d.slides.find((x) => x.id === questions[0].id); if (q) useStore.getState().mutate((dd) => applyGameSettings(dd, q.id, { seconds: Number(v) || undefined }, true)); }} />
+        </Row>
+      )}
+      {s.difficulty != null && (
+        <Row label="Difficulty" info={g.format === 'boss-battle' ? 'Sets the hit a right answer deals: easy 1, medium 2, hard 3, boss 5.' : g.format === 'emoji-guess' ? 'Easy gives the letter pattern and the hint; medium the pattern only; hard neither.' : g.format === 'word-reveal' ? 'How much of the word shows before the drip: easy 60%, medium 40%, hard 20%.' : undefined}>
+          <Select value={s.difficulty} options={levels.map((l) => ({ value: l, label: l[0].toUpperCase() + l.slice(1) }))} onChange={(v) => apply({ difficulty: v })} />
+        </Row>
+      )}
+      {g.format === 'boss-battle' && s.damage != null && (
+        <Row label="Damage" info="What a right answer takes off the boss. The health bar re-divides across the game."><Scrub value={s.damage} min={1} max={10} step={1} decimals={0} onChange={(v, m) => apply({ damage: v }, false, m)} /></Row>
+      )}
+      {s.points != null && g.format !== 'quiz-bowl' && (
+        <Row label="Points"><Scrub value={s.points} min={0} max={5000} step={10} decimals={0} onChange={(v, m) => apply({ points: v }, false, m)} /></Row>
+      )}
+      {s.tolerance != null && (
+        <Row label="Counts within" info="How close an answer must be to score. The green band on the answer shows it."><Scrub value={s.tolerance} min={0} max={Math.max(1, s.range ? s.range[1] - s.range[0] : 100)} step={1} decimals={0} onChange={(v, m) => apply({ tolerance: v }, false, m)} /></Row>
+      )}
+      {s.words != null && <WordsRow slideId={slide.id} words={s.words} />}
+      {s.accept != null && (
+        <>
+          <div className="desc">Also accept — one spelling a line. Near spellings count too, in SlideForge’s live session.</div>
+          <Area rows={3} value={accept} onChange={(v) => { setAccept(v); apply({ accept: v.split('\n').map((x) => x.trim()).filter(Boolean) }, false, 'accept'); }} />
+        </>
+      )}
+    </Section>
+  );
+}
+
+/** Mind reveal's words: its content, so the slides are made again from them when they change. */
+function WordsRow({ slideId, words }: { slideId: string; words: string[] }) {
+  const [text, setText] = useState(words.join('\n'));
+  useEffect(() => { setText(words.join('\n')); }, [slideId, words]);
+  const next = text.split('\n').map((x) => x.trim()).filter(Boolean);
+  const dirty = next.join('|') !== words.join('|');
+  return (
+    <>
+      <div className="desc">The words to remember, one a line — up to 20. Updating makes the study, recall and answer slides again.</div>
+      <Area rows={6} value={text} onChange={setText} />
+      <button className={`btn-soft tidy${dirty ? ' sp-dirty' : ''}`} disabled={!dirty || !next.length} onClick={() => useStore.getState().mutate((d) => applyGameSettings(d, slideId, { words: next }))}><RefreshCw size={13} />{dirty ? `Update the slides (${next.length} words)` : 'Up to date'}</button>
+    </>
   );
 }

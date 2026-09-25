@@ -1,7 +1,7 @@
 import { Image as ImageIcon, AlignCenterHorizontal, AlignCenterVertical, AlignEndHorizontal, AlignEndVertical, AlignStartHorizontal, AlignStartVertical, MonitorPlay, Play, RotateCcw, Shuffle, WandSparkles } from 'lucide-react';
 import { setVideoLayout, videoLayoutOf, type VideoLayout } from './video';
 import { videoService } from '../model/video';
-import { RecipePanel, SPECIAL_TABS, SpecialPanel } from './special';
+import { GamePanel, RecipePanel, SPECIAL_TABS, SpecialPanel } from './special';
 import { RECIPE_NAMES } from '../model/recipes';
 import { EngagementPanel } from './Engagement';
 import { backdropOf, setBackdrop, type BackdropMode } from '../model/backdrop';
@@ -488,6 +488,7 @@ function SlideDesign() {
   return (
     <>
       <RecipePanel />
+      <GamePanel />
       <Section title="Slide">
         <Row label="Name"><input className="text-input" value={slide.name} onFocus={() => (nm.current = newGesture())} onChange={(e) => updateSlide((s) => { s.name = e.target.value; }, nm.current)} onKeyDown={(e) => e.stopPropagation()} /></Row>
         <Row label="Background" info="Shown beneath all layers."><ColorField value={slide.background} onChange={(v, m) => updateSlide((s) => { s.background = v; }, m)} /></Row>
@@ -695,7 +696,9 @@ function LayerInteract({ layer }: { layer: Layer }) {
   const k = kind(layer.kind);
   const update = useStore((s) => s.updateLayer);
   const n = useStore((s) => s.deck.slides.length);
+  // A link made by id (a game board's cells) shows the slide it reaches now.
   const it = layer.interact;
+  const linked = useStore((s) => (it.gotoId ? s.deck.slides.findIndex((x) => x.id === it.gotoId) + 1 : 0));
   const up = (fn: (x: Layer['interact']) => void, m?: string) => update(layer.id, (l) => fn(l.interact), m);
   return (
     <>
@@ -714,7 +717,7 @@ function LayerInteract({ layer }: { layer: Layer }) {
           </Section>
           <Section title="Click">
             <Row label="Action"><Select value={it.click} options={CLICKS} onChange={(v) => up((x) => { x.click = v; })} /></Row>
-            {it.click === 'goto' && <Row label="Slide"><Scrub value={it.gotoSlide} min={1} max={Math.max(1, n)} step={1} decimals={0} onChange={(v, m) => up((x) => { x.gotoSlide = v; }, m)} /></Row>}
+            {it.click === 'goto' && <Row label="Slide"><Scrub value={linked || it.gotoSlide} min={1} max={Math.max(1, n)} step={1} decimals={0} onChange={(v, m) => up((x) => { x.gotoSlide = v; delete x.gotoId; }, m)} /></Row>}
             {it.click === 'link' && <Row label="URL"><input className="text-input" placeholder="https://…" value={it.url} onChange={(e) => up((x) => { x.url = e.target.value; }, 'url')} onKeyDown={(e) => e.stopPropagation()} /></Row>}
           </Section>
           <Section title="Flip to facts">

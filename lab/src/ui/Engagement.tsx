@@ -61,9 +61,9 @@ function ActivityPicker({ done }: { done: () => void }) {
     let live = true;
     Promise.all([import('../model/designs'), import('../assets/activities.json'), import('../assets/games.json')]).then(([m, d, gj]) => {
       const data = (d as { default: ActivityData }).default ?? (d as unknown as ActivityData);
-      const all = ((gj as { default: { games: ShowcaseGame[] } }).default ?? (gj as unknown as { games: ShowcaseGame[] })).games;
-      // SlideForge's showcase games, in the games audit's order.
-      const games = m.SHOWCASE.map((f) => all.find((g) => g.format === f)).filter((g): g is ShowcaseGame => !!g);
+      const all = [...((gj as { default: { games: ShowcaseGame[] } }).default ?? (gj as unknown as { games: ShowcaseGame[] })).games, ...m.LAB_GAMES];
+      // Every game SlideForge plays, in the Engage tab's order (designs/formats.ts).
+      const games = m.GAMES.map((f) => all.find((g) => g.format === f)).filter((g): g is ShowcaseGame => !!g);
       if (live) setLib({ data, games, m });
     });
     return () => { live = false; };
@@ -89,7 +89,7 @@ function ActivityPicker({ done }: { done: () => void }) {
     await faces(useStore.getState().deck);
     const { deck, addSlide, showToast } = useStore.getState();
     lib.m.setFrame(framed(deck));
-    const slides = lib.m.showcaseSlides(g, themeOf(deck) ?? LAYOUT_STYLES[0]);
+    const slides = lib.m.gameSlides(g, themeOf(deck) ?? LAYOUT_STYLES[0]);
     slides.forEach((s) => addSlide(s));
     showToast(`${g.label} added: ${slides.length} slides. Each click moves the game on; the answers and the reasons are in the notes.`);
     done();

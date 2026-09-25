@@ -1,7 +1,8 @@
 import { kind } from '../engine/registry';
 import { createLayer } from '../model/defaults';
 import { hasFlagshipTextImage, textImageForSlide } from '../model/frame';
-import { cell, gridFor } from '../model/layouts';
+import { headingClock } from '../model/designs/kit';
+import { LAYOUT_STYLES, cell, gridFor, slideStyle, themeOf } from '../model/layouts';
 import type { Slide } from '../model/types';
 import { useStore } from '../model/store';
 import { fileToDataUrl, readDataUrl } from './Inspector';
@@ -162,6 +163,18 @@ export function addItem(id: Exclude<ItemId, 'image'>) {
     // A ring in the corner the room can read from the back, in the slide's own colours.
     // SlideForge's game clock, in the top right corner where its quiz and activity slides keep it.
     case 'timer': {
+      // A designed slide (a game, an activity) keeps its clock in the heading row, flush right, where
+      // its own clocks go: digits the height of the row, clear of the question under it.
+      const eyebrowRow = slide.layers.find((l) => l.kind === 'text' && l.name === 'Eyebrow' && l.box && !l.params.hfSlot);
+      if (eyebrowRow?.box) {
+        if (slide.layers.some((l) => l.kind === 'timer')) { st.showToast('This slide already has its clock, in the heading row. Set its minutes in the panel.'); return; }
+        // In the heading's own type and colour, at the end of its line.
+        const theme = slideStyle(themeOf(st.deck) ?? LAYOUT_STYLES[0], slide);
+        const layer = headingClock(theme, 5, eyebrowRow.box, String(eyebrowRow.params.color ?? theme.accent), st.deck.width);
+        st.insertLayer(layer);
+        st.showToast('The clock sits at the end of the heading row and starts when this slide comes up while presenting. Set its minutes in the panel.');
+        return;
+      }
       // Level with the slide's heading when it has one, its right edge on the heading's; else the grid's corner.
       const g = gridFor(st.deck), size = Math.round(st.deck.width * (195 / 1920));
       const head = slide.layers.find((l) => l.kind === 'text' && l.box && /heading|title/i.test(l.name) && !l.params.hfSlot);

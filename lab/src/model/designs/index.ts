@@ -3,7 +3,7 @@ import { cardsSlide, keywordsSlide, splitSlide, tableSlide, type LayoutStyle } f
 import type { Slide } from '../types';
 import { briefHero } from './brief';
 import { activityGameSlides, type GameDef } from './games';
-import { CY, EY, LEFT, W, box, clock, rowsOf, type Row } from './kit';
+import { CY, LEFT, W, box, clock, headingClock, rowsOf, type Row } from './kit';
 import { briefCard, panelCards, timelineSteps } from './legacy';
 import { connectGrid, hookSplit, quadrants, stations } from './panels';
 import { numberedRun, rowBands } from './rows';
@@ -123,7 +123,7 @@ function carry(slide: Slide, s: SFSlide, shape: Shape, st: LayoutStyle, which: '
   }
   const secs = Number(s.timeLimit);
   const eyebrowRow = ['rows', 'brief', 'panels', 'cards', 'table'].includes(shape) && slide.layers.some((l) => l.name === 'Eyebrow');
-  if (secs > 0 && which === 'lab' && eyebrowRow) slide.layers.push(clock(st, 'Clock', secs / 60, box(W - LEFT - 190, EY - 8, 190, 60)));
+  if (secs > 0 && which === 'lab' && eyebrowRow) slide.layers.push(headingClock(st, secs / 60));
   // SlideForge's own looks keep its ring clock in the top right, beside the heading (legacy.ts leaves room).
   if (secs > 0 && which === 'slideforge' && ['steps', 'panels', 'brief'].includes(shape)) slide.layers.push(clock(st, 'Clock', secs / 60, box(W - LEFT - 170, CY, 170, 170), { type: 'fade', duration: 0.5 }, true));
 }
@@ -177,5 +177,6 @@ export function byPhase(data: ActivityData) {
   return out;
 }
 
-export { SHOWCASE, showcaseSlides, type ShowcaseGame } from './games';
+export { type ShowcaseGame } from './games';
+export { GAMES, LAB_GAMES, gameSlides } from './formats';
 export { setFrame } from './kit';

@@ -75,6 +75,8 @@ export interface Interact {
   hover: HoverType;
   click: ClickAction;
   gotoSlide: number; // 1-based
+  /** The slide to go to by its id, which holds wherever the slide moves; wins over gotoSlide. */
+  gotoId?: string;
   url: string;
 }
 
@@ -138,6 +140,39 @@ export interface Slide {
   ground?: string;
   /** This slide's own header and footer, when it differs from the deck's. */
   headerFooter?: HeaderFooter;
+  /** A game's slide: which game, what part of it, and the settings the room's session plays it by. */
+  game?: SlideGame;
+}
+
+/**
+ * A slide of a game (designs/games.ts, designs/formats.ts). Every slide of one game shares its `id`;
+ * a question and its answer share a `key`. The settings are what the wall cannot show but the game
+ * runs by — the time, the points, the difficulty — edited in the Slide panel's Game section.
+ */
+export interface SlideGame {
+  id: string;
+  format: string;
+  label: string;
+  role: 'cover' | 'question' | 'answer' | 'board' | 'end';
+  key?: string;
+  /** What this slide's clock times, when it has one: "Time limit", "Study time", "Round". */
+  clock?: string;
+  settings: GameSettings;
+}
+export interface GameSettings {
+  /** The clock on this slide, in seconds; 0 or absent is none. */
+  seconds?: number;
+  points?: number;
+  difficulty?: string;
+  /** Boss battle: what a right answer takes off the boss. */
+  damage?: number;
+  /** A number line: how close counts, and the line it is on ([min, max, target]). */
+  tolerance?: number;
+  range?: [number, number, number];
+  /** A typed answer: the spellings that also count. */
+  accept?: string[];
+  /** Mind reveal: the words to remember. */
+  words?: string[];
 }
 
 /** SlideForge's six chrome slots. What goes in each is set in the side panel; its words are typed on the slide. */

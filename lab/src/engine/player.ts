@@ -312,7 +312,11 @@ export class DeckPlayer {
       if (this.opts.host) e.stopPropagation();
       if (it.click === 'next') this.next();
       else if (it.click === 'prev') this.prev();
-      else if (it.click === 'goto') this.goto(it.gotoSlide - 1, it.gotoSlide - 1 > this.index ? 1 : -1);
+      else if (it.click === 'goto') {
+        const byId = it.gotoId ? this.deck.slides.findIndex((s) => s.id === it.gotoId) : -1;
+        const to = byId >= 0 ? byId : it.gotoSlide - 1;
+        this.goto(to, to > this.index ? 1 : -1);
+      }
       else if (it.click === 'link' && /^https?:\/\//.test(it.url)) window.open(it.url, '_blank', 'noopener');
       else if (it.click === 'flip') this.flip();
       return;

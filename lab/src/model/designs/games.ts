@@ -1,6 +1,6 @@
 import type { LayoutStyle } from '../layouts';
-import type { Anim, Layer, Params, Slide } from '../types';
-import { BASE, EY, FOOT, HY, LEFT, LIFT, ON_RIGHT, PAD, RIGHT, TOPBAND, W, box, centred, clock, display, eyebrow, fitSize, ground, hero, rect, rgba, sizedHero, slideOf, textHeight, textWidth, txt } from './kit';
+import type { Anim, GameSettings, Layer, Params, Slide, SlideGame } from '../types';
+import { BASE, EY, FOOT, HY, LEFT, LIFT, ON_RIGHT, PAD, RIGHT, TOPBAND, W, box, centred, clock, display, eyebrow, fitSize, ground, headingClock, hero, rect, rgba, sizedHero, slideOf, textHeight, textWidth, txt, wordBoxes } from './kit';
 
 // The games, designed in the lab. Two sources, one look: SlideForge's showcase games — Spot the Error,
 // Ranking, True/False Showdown, Predict the Outcome, Fill the Blanks, Odd One Out, Compare & Contrast,
@@ -29,21 +29,24 @@ export interface GameQuestion {
   errorFrom?: number; errorTo?: number; fix?: string;
   fillParts?: string[]; gapAnswers?: number[];
   itemA?: string; itemB?: string; sortBins?: string[];
+  points?: number; difficulty?: string; bossDamage?: number; accept?: string[];
+  min?: number; max?: number; step?: number; target?: number; tolerance?: number; unit?: string;
 }
 /** One of SlideForge's showcase games, as tools/lab-games.mjs writes it. */
 export interface ShowcaseGame { format: string; style: string; label: string; styleLabel: string; aim: string; howToPlay: string[]; title: string; slides: GameQuestion[] }
 /** A game from the activity catalogue. */
 export interface Question { question: string; options: string[]; correct: number; explanation: string }
-export interface GameDef { title: string; style: string; styleLabel: string; steps: string[]; questions: Question[] }
+export interface GameDef { title: string; style: string; styleLabel: string; steps: string[]; questions: Question[]; /** What the cover says under the title, when not a count of questions. */ count?: string }
 
-const PADV = 24;
+export const PADV = 24;
 const MARK = 130;
-const TIMER = (st: LayoutStyle, q: GameQuestion) => (q.timeLimit ? [clock(st, 'Clock', q.timeLimit / 60, box(W - LEFT - 190, EY - 8, 190, 60))] : []);
-const note = (q: GameQuestion) => [q.answer ? `Answer: ${q.answer}` : '', q.explanation ?? ''].filter(Boolean).join('\n');
-const FACE = (st: LayoutStyle): Params => ({ font: st.body, weight: '700', lineHeight: 1.15 });
-const named = (name: string, i: number, answer: boolean) => `${name} · ${i + 1}${answer ? ' · the answer' : ''}`;
+/** A question's clock: at the end of the heading row, in the heading's own type. */
+export const TIMER = (st: LayoutStyle, q: GameQuestion) => (q.timeLimit ? [headingClock(st, q.timeLimit / 60)] : []);
+export const note = (q: GameQuestion) => [q.answer ? `Answer: ${q.answer}` : '', q.explanation ?? ''].filter(Boolean).join('\n');
+export const FACE = (st: LayoutStyle): Params => ({ font: st.body, weight: '700', lineHeight: 1.15 });
+export const named = (name: string, i: number, answer: boolean) => `${name} · ${i + 1}${answer ? ' · the answer' : ''}`;
 /** What the small heading says: the game, what to do (or that this is the answer), how far in. */
-const tag = (game: string, cue: string, i: number, n: number, answer: boolean) => `${game} · ${answer ? 'the answer' : cue}${n > 1 ? ` · ${i + 1} of ${n}` : ''}`;
+export const tag = (game: string, cue: string, i: number, n: number, answer: boolean) => `${game} · ${answer ? 'the answer' : cue}${n > 1 ? ` · ${i + 1} of ${n}` : ''}`;
 
 // ─── The cover ──────────────────────────────────────────────────────────────
 /** The accent full-bleed, the game's name reversed out of it, how many questions, how to play. */
@@ -55,7 +58,7 @@ export function gameCover(st: LayoutStyle, g: GameDef): Slide {
     txt('Eyebrow', `GAME · ${g.styleLabel.toUpperCase()}`, box(LEFT, EY + 20, 1400, 50), { font: st.body, weight: '600', size: 40, color: st.ground, tracking: 0.14 }),
     txt('Title', g.title, box(LEFT, HY + 44, W - LEFT * 2, 360), { font: st.display, weight: st.displayWeight, size: 170, color: st.ground, lineHeight: 0.98, tracking: -0.02, fit: 'fill', balance: true },
       { type: 'words', feel: 'rise', easing: 'easyEase', duration: 0.8, stagger: 0.12 }),
-    txt('Count', `${n} ${n === 1 ? 'question' : 'questions'}`, box(LEFT, 640 - LIFT, 1200, 70), { font: st.body, weight: '600', size: 60, color: st.ground }, { type: 'fade', duration: 0.6, delay: 0.4 }),
+    txt('Count', g.count ?? `${n} ${n === 1 ? 'question' : 'questions'}`, box(LEFT, 640 - LIFT, 1200, 70), { font: st.body, weight: '600', size: 60, color: st.ground }, { type: 'fade', duration: 0.6, delay: 0.4 }),
   ];
   const rules = g.steps.slice(0, 3);
   const colW = (W - LEFT * 2) / Math.max(1, rules.length);
@@ -68,9 +71,9 @@ export function gameCover(st: LayoutStyle, g: GameDef): Slide {
 
 // ─── The shared parts ───────────────────────────────────────────────────────
 /** Rule 1, and on the answer slide rule 6's reason: what opens every wall, and where its answers start. */
-function opening(st: LayoutStyle, q: GameQuestion, heading: string, question: string, answer: boolean, o: { sizes?: number[]; maxH?: number; why?: string } = {}) {
+export function opening(st: LayoutStyle, q: GameQuestion, heading: string, question: string, answer: boolean, o: { sizes?: number[]; maxH?: number; why?: string; width?: number } = {}) {
   const layers: Layer[] = [ground(st), eyebrow(st, heading), ...(answer ? [] : TIMER(st, q))];
-  const qn = sizedHero(st, 'Question', question, LEFT, HY, W - LEFT * 2, { sizes: o.sizes, maxH: o.maxH ?? 330, anim: answer ? { type: 'none', duration: 0 } : undefined });
+  const qn = sizedHero(st, 'Question', question, LEFT, HY, o.width ?? W - LEFT * 2, { sizes: o.sizes, maxH: o.maxH ?? 330, anim: answer ? { type: 'none', duration: 0 } : undefined });
   layers.push(qn.layer);
   let top = qn.bottom + 28;
   const why = o.why ?? q.explanation;
@@ -83,11 +86,13 @@ function opening(st: LayoutStyle, q: GameQuestion, heading: string, question: st
   return { layers, qn, top };
 }
 
-interface Cell { text: string; mark?: string; right?: boolean; quiet?: boolean }
+/** A cell of a set. `id` names what it is, the same on the question and its answer, so a Morph
+ *  carries it from one to the other: an item into its place, a word into its gap. */
+export interface Cell { text: string; mark?: string; right?: boolean; quiet?: boolean; id?: string }
 /** Rules 3, 4, 5, 7 and 8: a set of cells laid out `cols` across under the question, each row only as
  *  tall as its words, one size for all, words centred, one shade with rules between, right cells green.
  *  With `step`, each cell arrives on a click of its own and the one before it dims. */
-function grid(st: LayoutStyle, cells: Cell[], top: number, o: { cols: number; max: number; min?: number; name: string; marks?: boolean; lines?: number; step?: string }): { layers: Layer[]; bottom: number; size: number } {
+export function grid(st: LayoutStyle, cells: Cell[], top: number, o: { cols: number; max: number; min?: number; name: string; marks?: boolean; lines?: number; step?: string }): { layers: Layer[]; bottom: number; size: number } {
   const face = FACE(st);
   const cols = Math.max(1, o.cols), rows = Math.ceil(cells.length / cols);
   // A last row the set does not fill is made up with blank tiles, so the band stays whole.
@@ -114,17 +119,18 @@ function grid(st: LayoutStyle, cells: Cell[], top: number, o: { cols: number; ma
     const ink = x.right ? ON_RIGHT : x.quiet ? st.muted : st.ink;
     const ruleCol = x.right ? 'rgba(255,255,255,0.3)' : rgba(st.ink, 0.14);
     const padL = c === 0 ? LEFT : PAD;
-    layers.push(rect(`${o.name} ${k + 1}`, cell, x.right ? RIGHT : rgba(st.ink, 0.06), a));
+    const keyed = (l: Layer, part = '') => { if (x.id) l.params.morph = `${x.id}${part}`; return l; };
+    layers.push(keyed(rect(`${o.name} ${k + 1}`, cell, x.right ? RIGHT : rgba(st.ink, 0.06), a)));
     if (c > 0) layers.push(rect(`${o.name} ${k + 1} — rule`, box(cell.x, cell.y, 2, cell.h), ruleCol, w));
     if (r > 0) layers.push(rect(`${o.name} ${k + 1} — rule across`, box(cell.x, cell.y, cell.w, 2), ruleCol, w));
-    if (x.mark && markW) layers.push(centred(`${o.name} ${k + 1} — mark`, x.mark, box(cell.x + padL, cell.y, markW, cell.h), { ...face, size, color: x.right ? ON_RIGHT : st.muted, lineHeight: 1 }, w, 0, 0));
-    if (x.text) layers.push(centred(`${o.name} ${k + 1} — words`, x.text, box(cell.x + padL + markW, cell.y, cell.w - padL - markW, cell.h), { ...face, size, color: ink, align }, w, 0, PAD));
+    if (x.mark && markW) layers.push(keyed(centred(`${o.name} ${k + 1} — mark`, x.mark, box(cell.x + padL, cell.y, markW, cell.h), { ...face, size, color: x.right ? ON_RIGHT : st.muted, lineHeight: 1 }, w, 0, 0), ':mark'));
+    if (x.text) layers.push(keyed(centred(`${o.name} ${k + 1} — words`, x.text, box(cell.x + padL + markW, cell.y, cell.w - padL - markW, cell.h), { ...face, size, color: ink, align }, w, 0, PAD), ':words'));
   });
   return { layers, bottom: top + rows * rowH, size };
 }
 
 /** Three bins as a solid strip of the ink, the names reversed out of it. */
-function bins(st: LayoutStyle, names: string[], y: number): Layer[] {
+export function bins(st: LayoutStyle, names: string[], y: number): Layer[] {
   const STRIP = 96;
   return names.flatMap((bin, k) => {
     const x0 = Math.round((k * W) / names.length), x1 = Math.round(((k + 1) * W) / names.length);
@@ -145,6 +151,10 @@ export function spotWall(st: LayoutStyle, name: string, q: GameQuestion, i: numb
   const o = opening(st, q, tag('Spot the error', 'find the one mistake', i, n, answer), q.question ?? '', answer, { sizes: [140, 128, 120, 112, 104], maxH: FOOT - HY - 340 });
   if (answer) {
     const words = q.options ?? [];
+    // The wrong words struck through where they stand in the passage, as the answer row strikes them.
+    const from = q.errorFrom ?? q.correct ?? 0, to = q.errorTo ?? from;
+    const qb = o.qn.layer.box!, spots = wordBoxes(String(o.qn.layer.params.text ?? ''), qb.w, o.qn.layer.params);
+    spots.slice(from, to + 1).forEach((b, k) => o.layers.push(rect(`Error ${k + 1} — strike`, box(qb.x + b.x, qb.y + b.y + b.h * 0.52, b.w, Math.max(6, o.qn.size * 0.07)), st.ink, { type: 'wipeRight', duration: 0.5, delay: 0.3 })));
     const wrong = words.slice(q.errorFrom ?? q.correct ?? 0, (q.errorTo ?? q.errorFrom ?? q.correct ?? 0) + 1).join(' ').replace(/[,.;:]$/, '');
     const MID = W / 2, GAP = 80;
     const face = { ...FACE(st), lineHeight: 1 };
@@ -171,8 +181,9 @@ const shuffled = <T,>(xs: T[]) => xs.map((x, k) => ({ x, k: (k * 7 + 3) % (xs.le
 export function rankingWall(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer = false): Slide {
   const items = (q.options ?? []).slice(0, 6);
   const o = opening(st, q, tag('Ranking', 'put them in order', i, n, answer), q.question ?? '', answer);
-  const list = answer ? items : shuffled(items);
-  o.layers.push(...grid(st, list.map((t, k) => ({ text: t, mark: answer ? String(k + 1) : '⋮⋮', right: answer })), o.top, { cols: 1, max: Math.min(o.qn.size, 88), name: answer ? 'Order' : 'Item', marks: true, lines: 1 }).layers);
+  // Each item keeps its name across the two slides, so on the answer it moves into its place.
+  const list = answer ? items.map((_, k) => k) : shuffled(items.map((_, k) => k));
+  o.layers.push(...grid(st, list.map((j, k) => ({ text: items[j], id: `item-${j}`, mark: answer ? String(k + 1) : '⋮⋮', right: answer })), o.top, { cols: 1, max: Math.min(o.qn.size, 88), name: answer ? 'Order' : 'Item', marks: true, lines: 1 }).layers);
   return slideOf(named(name, i, answer), o.layers, st, note(q) || items.map((it, k) => `${k + 1}. ${it}`).join('\n'));
 }
 
@@ -182,7 +193,7 @@ export function rankingWall(st: LayoutStyle, name: string, q: GameQuestion, i: n
 export function trueFalseWall(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer = false, hold = true): Slide {
   const opts = (q.options?.length ? q.options : ['True', 'False']).slice(0, 2);
   const o = opening(st, q, tag('True or false', hold ? 'vote, then hold' : 'vote', i, n, answer), q.question ?? '', answer, { sizes: [140, 120, 104, 88], maxH: 360 });
-  o.layers.push(...grid(st, opts.map((t, k) => ({ text: t.toUpperCase(), right: answer && k === q.correct })), o.top, { cols: 2, max: o.qn.size, name: 'Choice', lines: 1 }).layers);
+  o.layers.push(...grid(st, opts.map((t, k) => ({ text: t.toUpperCase(), id: `choice-${k}`, right: answer && k === q.correct })), o.top, { cols: 2, max: o.qn.size, name: 'Choice', lines: 1 }).layers);
   const held = 'After the vote: show the room its split; each phone may switch once. Then Next for the answer.';
   return slideOf(named(name, i, answer), o.layers, st, answer || !hold ? note(q) : held);
 }
@@ -193,7 +204,7 @@ export function trueFalseWall(st: LayoutStyle, name: string, q: GameQuestion, i:
 export function choiceWall(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer = false, game = 'Multiple choice', cue = 'choose one', held = ''): Slide {
   const opts = (q.options ?? []).slice(0, 6);
   const o = opening(st, q, tag(game, cue, i, n, answer), q.question ?? '', answer, { sizes: [120, 104, 92, 80] });
-  o.layers.push(...grid(st, opts.map((t, k) => ({ text: t, mark: 'ABCDEF'[k], right: answer && k === q.correct })), o.top, { cols: 1, max: Math.min(o.qn.size, 88), name: 'Option', marks: true }).layers);
+  o.layers.push(...grid(st, opts.map((t, k) => ({ text: t, id: `option-${k}`, mark: 'ABCDEF'[k], right: answer && k === q.correct })), o.top, { cols: 1, max: Math.min(o.qn.size, 88), name: 'Option', marks: true }).layers);
   return slideOf(named(name, i, answer), o.layers, st, answer || !held ? note(q) : held);
 }
 
@@ -207,11 +218,12 @@ export const predictWall = (st: LayoutStyle, name: string, q: GameQuestion, i: n
  *  reason, and a green row per gap in the passage's order. */
 export function fillWall(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer = false): Slide {
   const parts = q.fillParts ?? [q.question ?? ''];
-  const passage = parts.map((p, k) => (k < parts.length - 1 ? `${p}________` : p)).join('').replace(/\s+/g, ' ').trim();
+  // Each gap numbered, so the answer's numbered rows say which is which.
+  const passage = parts.map((p, k) => (k < parts.length - 1 ? `${p}${'①②③④⑤⑥⑦⑧'[k] ?? ''}______` : p)).join('').replace(/\s+/g, ' ').trim();
   const bank = (q.options ?? []).slice(0, 6);
-  const answers = (q.gapAnswers ?? []).map((k) => bank[k] ?? '');
   const o = opening(st, q, tag('Fill the gaps', 'a word from the bank for each', i, n, answer), passage, answer, { sizes: [104, 96, 88, 80], maxH: 340 });
-  const cells: Cell[] = answer ? answers.map((t, k) => ({ text: t, mark: String(k + 1), right: true })) : bank.map((t) => ({ text: t }));
+  // A bank word and the gap it fills share a name, so the answer drops each word into its row.
+  const cells: Cell[] = answer ? (q.gapAnswers ?? []).map((j, k) => ({ text: bank[j] ?? '', id: `word-${j}`, mark: String(k + 1), right: true })) : bank.map((t, j) => ({ text: t, id: `word-${j}` }));
   o.layers.push(...grid(st, cells, o.top, { cols: answer ? 1 : bank.length <= 3 ? Math.max(1, bank.length) : 3, max: o.qn.size, name: answer ? 'Gap' : 'Word', marks: answer, lines: 1 }).layers);
   return slideOf(named(name, i, answer), o.layers, st, note(q));
 }
@@ -224,7 +236,7 @@ export function oddOneWall(st: LayoutStyle, name: string, q: GameQuestion, i: nu
   // One size for the question and the items: as large as the items allow, no larger than a heading.
   const size = Math.min(120, fitSize(items, W / 2 - LEFT - PAD, 200, FACE(st), 150, 60));
   const o = opening(st, q, tag('Odd one out', 'vote, then defend', i, n, answer), q.headPrompt ?? q.question ?? '', answer, { sizes: [size, size - 8, size - 16], maxH: 300 });
-  o.layers.push(...grid(st, items.map((t, k) => ({ text: t, right: answer && k === q.correct })), o.top, { cols: 2, max: size, name: 'Item', lines: 1 }).layers);
+  o.layers.push(...grid(st, items.map((t, k) => ({ text: t, id: `item-${k}`, right: answer && k === q.correct })), o.top, { cols: 2, max: size, name: 'Item', lines: 1 }).layers);
   return slideOf(named(name, i, answer), o.layers, st, answer ? `${note(q)}\n\nPicked another? Defend it with a rule of your own.` : note(q));
 }
 
@@ -244,8 +256,8 @@ export function compareWall(st: LayoutStyle, name: string, q: GameQuestion, i: n
   const sorted = names.map((x) => placed.get(x) ?? []);
   const rows = Math.max(1, ...sorted.map((c) => c.length));
   const cells: Cell[] = answer
-    ? Array.from({ length: rows * 3 }, (_, k) => { const t = sorted[k % 3][Math.floor(k / 3)] ?? ''; return { text: t, right: !!t }; })
-    : statements.map((t) => ({ text: t }));
+    ? Array.from({ length: rows * 3 }, (_, k) => { const t = sorted[k % 3][Math.floor(k / 3)] ?? ''; return { text: t, right: !!t, ...(t ? { id: `statement-${statements.indexOf(t)}` } : {}) }; })
+    : statements.map((t, j) => ({ text: t, id: `statement-${j}` }));
   const set = grid(st, cells, o.top, { cols: 3, max: 72, min: 40, name: answer ? 'Sorted' : 'Statement' });
   o.layers.push(...set.layers, ...bins(st, names, set.bottom + 14));
   return slideOf(named(name, i, answer), o.layers, st, note(q));
@@ -319,7 +331,7 @@ export function sprintWall(st: LayoutStyle, name: string, qs: GameQuestion[]): S
     hero(st, 'Go', 'Answer on your phone — as many as you can.', box(LEFT + size + 100, HY + 40, W - LEFT * 2 - size - 100, 420), 120),
     txt('Rule', 'Fast, correct answers score more. The clock is the same for everyone.', box(LEFT + size + 100, HY + 480, W - LEFT * 2 - size - 100, 150), { font: st.body, size: 50, color: st.muted, lineHeight: 1.25 }, { type: 'fade', duration: 0.6, delay: 0.3 }),
   ];
-  return slideOf(`${name} · the sprint`, layers, st, qs.map((q, k) => `${k + 1}. ${q.question} — ${q.options?.[q.correct ?? -1] ?? ''}`).join('\n'));
+  return tagGame(slideOf(`${name} · the sprint`, layers, st, qs.map((q, k) => `${k + 1}. ${q.question} — ${q.options?.[q.correct ?? -1] ?? ''}`).join('\n')), 'board', undefined, undefined, 'Round', { seconds: secs, ...(qs[0]?.points != null ? { points: qs[0].points } : {}) });
 }
 
 /** After the sprint: each question beside its answer, the answers green. */
@@ -328,13 +340,73 @@ export function sprintAnswers(st: LayoutStyle, name: string, qs: GameQuestion[])
   const o = opening(st, {}, 'Beat the clock · the answers', 'How did the room do?', true, { sizes: [112] });
   const cells: Cell[] = list.flatMap((q) => [{ text: q.question ?? '' }, { text: q.options?.[q.correct ?? -1] ?? '', right: true }]);
   o.layers.push(...grid(st, cells, o.top, { cols: 2, max: 72, min: 40, name: 'Answer' }).layers);
-  return slideOf(`${name} · the answers`, o.layers, st);
+  return tagGame(slideOf(`${name} · the answers`, o.layers, st), 'end');
 }
 
 // ─── The sets ───────────────────────────────────────────────────────────────
-type Wall = (st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer?: boolean) => Slide;
+export type Wall = (st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer?: boolean) => Slide;
 /** Asked, then answered on the slide after. */
-const paired = (wall: Wall, name: string, st: LayoutStyle, qs: GameQuestion[]) => qs.flatMap((q, i) => [wall(st, name, q, i, qs.length), wall(st, name, q, i, qs.length, true)]);
+export const paired = (wall: Wall, name: string, st: LayoutStyle, qs: GameQuestion[]) => qs.flatMap((q, i) => [
+  tagGame(wall(st, name, q, i, qs.length), 'question', q, String(i)), tagGame(wall(st, name, q, i, qs.length, true), 'answer', q, String(i)),
+]);
+
+/** A question's settings, as SlideForge's compiled slide carries them. */
+export function settingsOf(q: GameQuestion = {}): GameSettings {
+  const s: GameSettings = {};
+  if (q.timeLimit) s.seconds = q.timeLimit;
+  if (q.points != null) s.points = q.points;
+  if (q.difficulty) s.difficulty = q.difficulty;
+  if (q.bossDamage != null) s.damage = q.bossDamage;
+  if (q.tolerance != null) s.tolerance = q.tolerance;
+  if (q.min != null && q.max != null && q.target != null) s.range = [q.min, q.max, q.target];
+  if (q.accept?.length) s.accept = [...q.accept];
+  return s;
+}
+/** Mark a slide as a part of its game: what it is, the question it asks, and what its clock times. */
+export function tagGame(s: Slide, role: SlideGame['role'], q?: GameQuestion, key?: string, clock?: string, extra: GameSettings = {}): Slide {
+  s.game = { id: '', format: '', label: '', role, ...(key != null ? { key } : {}), ...(clock ? { clock } : {}), settings: { ...settingsOf(q), ...extra } };
+  return s;
+}
+/** What stays where it is when a slide's content is centred: the ground, the heading row (its
+ *  words, its clock, a button back to the board), the question and its reason under it, a boss's
+ *  face beside it, the header and footer, anything the slide's size. */
+const pinned = (l: Layer) => !l.box || l.name === 'Ground' || l.name === 'Eyebrow' || l.name === 'Question' || l.name === 'Why' || l.name === 'Boss' || (l.kind === 'timer' && l.name === 'Clock') || / — button$/.test(l.name) || typeof l.params.hfSlot === 'string' || (l.box.w >= W * 0.9 && l.box.h >= 1080 * 0.9);
+/** How far a slide's content can come down to sit in the middle of the space between the question
+ *  and the foot: none when it already fills it. */
+function slack(s: Slide): number {
+  const block = s.layers.filter((l) => !pinned(l));
+  if (!block.length) return 0;
+  const bottom = Math.max(...block.map((l) => l.box!.y + l.box!.h));
+  return Math.max(0, Math.round((FOOT - bottom) / 2));
+}
+/** Centre each slide's content — its tiles, rows and strips — in the space under its question. A question and its answer move
+ *  together, by the smaller of their two, so the question holds still between them. Covers keep their
+ *  own layout. */
+export function centreGame(slides: Slide[]) {
+  const groups = new Map<string, Slide[]>();
+  slides.forEach((s, k) => {
+    if (s.game?.role === 'cover') return;
+    const key = s.game?.key != null ? `key:${s.game.key}` : `slide:${k}`;
+    groups.set(key, [...(groups.get(key) ?? []), s]);
+  });
+  for (const group of groups.values()) {
+    const dy = Math.min(...group.map(slack));
+    if (dy > 0) for (const s of group) for (const l of s.layers) if (!pinned(l)) l.box = { ...l.box!, y: l.box!.y + dy };
+  }
+  return slides;
+}
+/** Every slide of one game: the same game id, its format, the cover first, the rest boards unless marked. */
+export function finishGame(slides: Slide[], format: string, label: string): Slide[] {
+  const id = `g${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  slides.forEach((s, k) => {
+    s.game = { ...(s.game ?? { role: k === 0 ? 'cover' : 'board', settings: {} }), id, format, label };
+    if (s.game.role === 'question' && !s.game.clock) s.game.clock = 'Time limit';
+    // Every step of a game morphs: what the two slides share travels — the lit tile, the item into
+    // its place, the card into its reveal — and the rest crossfades.
+    s.transition = { type: 'morph', duration: 0.8 };
+  });
+  return centreGame(slides);
+}
 
 const SHOWCASE_WALLS: Record<string, Wall> = {
   'spot-the-error': spotWall, ranking: rankingWall, 'true-false': trueFalseWall, 'predict-outcome': predictWall,
@@ -357,8 +429,8 @@ export function showcaseSlides(g: ShowcaseGame, st: LayoutStyle): Slide[] {
   }
   const cover = gameCover(st, { title: g.label, style: g.style, styleLabel: g.styleLabel, steps: g.howToPlay, questions: qs.map((q) => ({ question: q.question ?? '', options: q.options ?? [], correct: q.correct ?? -1, explanation: q.explanation ?? '' })) });
   cover.notes = [g.aim, cover.notes].filter(Boolean).join('\n\n');
-  if (g.format === 'beat-the-clock') return [cover, sprintWall(st, g.label, qs), sprintAnswers(st, g.label, qs)];
-  return [cover, ...paired(SHOWCASE_WALLS[g.format] ?? spotWall, g.label, st, qs)];
+  if (g.format === 'beat-the-clock') return finishGame([cover, sprintWall(st, g.label, qs), sprintAnswers(st, g.label, qs)], g.format, g.label);
+  return finishGame([cover, ...paired(SHOWCASE_WALLS[g.format] ?? spotWall, g.label, st, qs)], g.format, g.label);
 }
 
 /** An activity's game as slides, on the same walls: its cover, then its questions by style. */
@@ -376,5 +448,5 @@ export function activityGameSlides(g: GameDef, st: LayoutStyle): Slide[] {
     case 'speed': body = [sprintWall(st, g.title, qs), sprintAnswers(st, g.title, qs)]; break;
     default: body = paired(choiceWall, g.title, st, qs);
   }
-  return [gameCover(st, g), ...body];
+  return finishGame([gameCover(st, g), ...body], g.style, g.title);
 }

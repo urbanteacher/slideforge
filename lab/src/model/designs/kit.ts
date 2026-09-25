@@ -106,13 +106,25 @@ export { clamp };
 /** The largest size, from `max` down to `min`, at which every one of `texts` fits `w` by `h` — a set
  *  of answers shares one size, as large as the tightest allows. */
 export function fitSize(texts: string[], w: number, h: number, params: Params, max: number, min = 48): number {
+  // A word cannot wrap, so the longest must fit across too, or the one cell would shrink on its own.
+  const words = [...new Set(texts.flatMap((v) => v.split(/\s+/)).filter(Boolean))];
   for (let size = max; size > min; size -= 4) {
-    if (texts.every((v) => measureTextHeight({ ...params, text: v, size }, w) <= h)) return size;
+    if (texts.every((v) => measureTextHeight({ ...params, text: v, size }, w) <= h) && words.every((x) => textWidth(x, { ...params, size }) <= w)) return size;
   }
   return min;
 }
 
 /** How tall `value` sets at its size in `w`. */
+/** Where each word of `value` sets in a box `w` wide, in reading order, relative to the box: for a
+ *  mark drawn on one word of a passage (Spot the error's strike). */
+export function wordBoxes(value: string, w: number, params: Params): Box[] {
+  const L = layoutText({ lineHeight: 1.15, ...params, text: value }, w);
+  const align = String(params.align ?? 'left');
+  return L.lines.flatMap((line, li) => {
+    const ox = align === 'center' ? (w - line.width) / 2 : align === 'right' ? w - line.width : 0;
+    return line.words.filter((x) => !x.marker).map((x) => box(ox + x.x, li * L.lineH, x.w, L.lineH));
+  });
+}
 /** How wide text sets on one line, for rules and strikes drawn to its length. */
 export const textWidth = (value: string, params: Params) => Math.ceil(Math.max(0, ...layoutText({ lineHeight: 1.15, ...params, text: value }, 1e5).lines.map((l) => l.width)));
 export const textHeight = (value: string, w: number, params: Params) => measureTextHeight({ lineHeight: 1.15, ...params, text: value }, w);
@@ -157,6 +169,17 @@ export const clock = (st: LayoutStyle, name: string, minutes: number, b: Box, an
   createLayer('timer', { name, box: b, params: {
     minutes, style: ring ? 'game' : 'digits', label: '', done: '0:00', font: st.body, size: ring ? 60 : 64, textColor: st.ink, accent: st.accent, track: rgba(st.ink, 0.18),
   }, anim });
+
+/** A clock in a heading row, set as the heading is — its face, weight, size, tracking and colour —
+ *  flush right, level with its words: the time reads as the end of the heading's line. `row` is the
+ *  heading's box; the colour is the heading's (the accent, or reversed out on a cover). */
+export function headingClock(st: LayoutStyle, minutes: number, row: Box = box(LEFT, EY, 1100, 50), color = st.accent, deckW = W, name = 'Clock'): Layer {
+  const w = 260, h = 68, size = 40;
+  return createLayer('timer', {
+    name, box: box(deckW - row.x - w, row.y + (size * 1.15) / 2 - h / 2, w, h), anim: { type: 'fade', duration: 0.5 },
+    params: { minutes, style: 'digits', label: '', done: '0:00', font: st.body, weight: '600', size, tracking: 0.12, align: 'right', textColor: color, accent: color, track: rgba(st.ink, 0.18) },
+  });
+}
 
 export type StepMode = 'on' | 'dim' | 'spot' | 'swap' | 'pile';
 /** One part of a set built a part per click: the first `upFront` parts are up with the slide, each
