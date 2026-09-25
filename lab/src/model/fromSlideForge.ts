@@ -5,7 +5,8 @@ import {
   gallerySlide, introductionSlide, journeySlide, keyfactSlide, keywordsSlide, mindmapSlide, orgchartSlide, pointsSlide, quoteSlide,
   railSlide, sectionSlide, sidecarTitleSlide, splitSlide, statsSlide, tableSlide, timelineSlide, titleSlide, type LayoutStyle,
 } from './layouts';
-import type { Deck, Slide } from './types';
+import { gameClock } from './layouts';
+import type { Deck, FeedbackKind, Slide, SlideFeedback } from './types';
 import { finish, framed, kit } from './ukbtDeck';
 
 // SlideForge slides, built in the lab. A SlideForge slide is content with a type — a title, points,
@@ -19,6 +20,10 @@ import { finish, framed, kit } from './ukbtDeck';
 export interface SFSlide {
   id?: string;
   type: string;
+  /** The room's say on the slide: a poll, word cloud, brainstorm or scale, with its settings. */
+  feedback?: Record<string, unknown> | null;
+  /** Seconds the slide is timed for: SlideForge draws its game clock and counts it down. */
+  timeLimit?: number;
   title?: string;
   subtitle?: string;
   body?: string;
@@ -207,6 +212,62 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
   }
 }
 
+const KINDS: FeedbackKind[] = ['poll', 'wordcloud', 'brainstorm', 'scale'];
+
+/** A SlideForge slide's feedback, as the lab keeps it: the known fields only, each checked. */
+function feedbackOf(f: SFSlide['feedback']): SlideFeedback | null {
+  if (!f || !KINDS.includes(f.kind as FeedbackKind)) return null;
+  const out: SlideFeedback = { kind: f.kind as FeedbackKind };
+  if (typeof f.prompt === 'string' && f.prompt.trim()) out.prompt = f.prompt;
+  if (Array.isArray(f.options)) out.options = f.options.map(String).filter((o) => o.trim());
+  if (Number(f.max) > 0) out.max = Number(f.max);
+  if (f.presentAs === 'rail' || f.presentAs === 'focus') out.presentAs = f.presentAs;
+  if (Number(f.points) > 0) out.points = Number(f.points);
+  if (typeof f.lowLabel === 'string') out.lowLabel = f.lowLabel;
+  if (typeof f.highLabel === 'string') out.highLabel = f.highLabel;
+  return out;
+}
+
+/** What a SlideForge slide does in the room, onto the lab slide built from it: its audience feedback,
+ *  and its time as the game clock level with the heading (the Timed task's clock), the heading kept
+ *  clear of it. Nothing already there is replaced. */
+export function carryLive(s: SFSlide, slide: Slide, st: LayoutStyle): boolean {
+  let changed = false;
+  const f = feedbackOf(s.feedback);
+  if (f && !slide.feedback) { slide.feedback = f; changed = true; }
+  const secs = Number(s.timeLimit);
+  if (secs > 0 && !slide.layers.some((l) => l.kind === 'timer')) {
+    const head = slide.layers.find((l) => l.kind === 'text' && l.box && /^(Heading|Hero|Title)$/i.test(l.name) && !l.params.hfSlot);
+    const row = head?.box ? { ...head.box } : undefined;
+    const clock = gameClock(st, Math.max(0.5, Math.round((secs / 60) * 2) / 2), row);
+    if (head?.box && clock.box && head.box.x + head.box.w > clock.box.x - 48) head.box.w = Math.max(120, clock.box.x - 48 - head.box.x);
+    slide.layers.push(clock);
+    changed = true;
+  }
+  return changed;
+}
+
+/** A lab copy made before converted slides kept their feedback and timers, given them from its
+ *  SlideForge lesson: each lab slide matched to its source by `sourceSlideId`, or, for a copy older
+ *  than that, in order when the counts agree. How many slides took something. */
+export function carryDeckLive(deck: Deck, source: SFSlide[], paletteId = 'nul'): number {
+  const { on } = kit(paletteId);
+  const byId = new Map(source.filter((s) => s.id).map((s) => [s.id as string, s]));
+  let pairs: [Slide, SFSlide][] = [];
+  if (deck.slides.some((s) => s.sourceSlideId)) {
+    for (const s of deck.slides) { const src = s.sourceSlideId ? byId.get(s.sourceSlideId) : undefined; if (src) pairs.push([s, src]); }
+  } else {
+    const built = source.filter(convertsSlide);
+    if (built.length === deck.slides.length) pairs = deck.slides.map((s, i) => [s, built[i]] as [Slide, SFSlide]);
+  }
+  let n = 0;
+  for (const [slide, s] of pairs) {
+    const g: Ground = slide.ground === 'quiet' || slide.ground === 'loud' ? slide.ground : 'working';
+    if (carryLive(s, slide, on(g))) n++;
+  }
+  return n;
+}
+
 /** Whether the lab can build this SlideForge slide. What it cannot (games, activities) stays SlideForge's. */
 let probe: ReturnType<typeof kit> | null = null;
 export function convertsSlide(s: SFSlide): boolean {
@@ -226,9 +287,10 @@ export function deckFromSlideForge(data: SFDeck, paletteId = 'nul', opts: { fram
     const notes = [s.notes ?? '', out.note ? `LAB — ${out.note}` : ''].filter(Boolean).join('\n\n');
     const made = put(out.slide, out.ground, notes);
     if (s.id) made.sourceSlideId = s.id;
+    carryLive(s, made, on(out.ground));
     slides.push(made);
   }
-  const deck: Deck = { id: uid(), title: `${data.title}${skipped ? (opts.games ?? ` (without its ${skipped} games)`) : ''}`, width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: guide, slides: finish(slides) };
+  const deck: Deck = { carried: 1, id: uid(), title: `${data.title}${skipped ? (opts.games ?? ` (without its ${skipped} games)`) : ''}`, width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: guide, slides: finish(slides) };
   return opts.frame === false ? deck : framed(deck, guide.marks[0]?.src ?? '', 'Northeastern University London');
 }
 

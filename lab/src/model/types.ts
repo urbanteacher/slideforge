@@ -98,6 +98,20 @@ export interface Layer {
 export type TransitionType = 'none' | 'fade' | 'push' | 'zoom' | 'ripple' | 'dissolve' | 'wipe' | 'pixelate' | 'blur' | 'morph';
 
 export type FeedbackKind = 'poll' | 'wordcloud' | 'brainstorm' | 'scale';
+/** SlideForge's audience feedback on a slide (src/deck/feedback.js): the kind, and the settings a
+ *  SlideForge lesson brings with it. Only the kind is set in the lab so far; the rest is carried. */
+export interface SlideFeedback {
+  kind: FeedbackKind;
+  prompt?: string;
+  options?: string[];
+  /** Submissions allowed per person. */
+  max?: number;
+  /** Beside the slide ('rail') or full screen ('focus') while presenting. */
+  presentAs?: 'rail' | 'focus';
+  points?: number;
+  lowLabel?: string;
+  highLabel?: string;
+}
 
 export interface Slide {
   id: string;
@@ -116,7 +130,7 @@ export interface Slide {
   recipe?: { kind: string; args: Record<string, unknown> };
   /** SlideForge's audience feedback on this slide. A placeholder in the lab: recorded, marked in the
    *  editor, and run by SlideForge's live session — nothing is drawn on the slide. */
-  feedback?: { kind: FeedbackKind };
+  feedback?: SlideFeedback;
   /** Which of the theme's grounds this slide is set on (a style guide's light, dark or colour
    *  ground). Absent: the theme's own ground. Kept when the theme is changed or applied again. */
   ground?: string;
@@ -177,6 +191,9 @@ export interface Deck {
   styleGuide?: StyleGuide;
   /** The SlideForge lesson this deck was converted from. The original is kept; this is the lab's copy. */
   sourceId?: string;
+  /** Set once a converted deck has taken its slides' feedback and timers from its SlideForge lesson
+   *  (embed.ts), so a clock or a poll removed afterwards does not come back. */
+  carried?: number;
   /** The Library folder SlideForge's shell files it under. */
   libraryGroup?: string;
   /** When the shell last saved it, for the Open list. */

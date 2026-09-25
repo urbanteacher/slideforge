@@ -1,5 +1,5 @@
 import { blankDeck } from './model/defaults';
-import { convertsSlide, deckFromSlideForge, type SFDeck, type SFSlide } from './model/fromSlideForge';
+import { carryDeckLive, convertsSlide, deckFromSlideForge, type SFDeck, type SFSlide } from './model/fromSlideForge';
 import { imageSettled } from './engine/raster';
 import { renderStill } from './export/exporters';
 import { useStore } from './model/store';
@@ -86,6 +86,15 @@ export const isLabDeck = (d: unknown): d is Deck => {
     slides.every((s) => Array.isArray(s?.layers) && typeof (s as { type?: unknown }).type !== 'string');
 };
 
+/** A lab copy older than the converter's feedback and timers takes them from its lesson, once. */
+function carryOnce(d: Deck, source: ClassicDeck | null | undefined): Deck {
+  if (d.carried || !source || !Array.isArray(source.slides)) return d;
+  const copy = structuredClone(d);
+  carryDeckLive(copy, source.slides, paletteFor(source.theme).palette);
+  copy.carried = 1;
+  return copy;
+}
+
 function show(d: Deck) {
   useStore.getState().loadDeck(d);
   useStore.setState({ saveState: 'saved' });
@@ -93,7 +102,7 @@ function show(d: Deck) {
 
 /** One slide as a picture for SlideForge's player: what Host live, Teacher Presenter and Rehearse
  *  show until the lab has a live host of its own. */
-export interface Still { id: string; sourceSlideId?: string; image: string; notes: string; hidden: boolean; name: string; feedback?: string }
+export interface Still { id: string; sourceSlideId?: string; image: string; notes: string; hidden: boolean; name: string; feedback?: Slide['feedback'] }
 
 // A slide is immutable, so an unchanged one keeps its picture; the deck-wide things drawn on it
 // (the header and footer, the style guide, its page number) are checked too.
@@ -125,7 +134,7 @@ async function stills(width = 1600, onProgress?: (done: number, total: number) =
       // A breath between slides, so the page stays responsive while a long deck is drawn.
       await new Promise((r) => setTimeout(r, 0));
     }
-    out.push({ id: s.id, sourceSlideId: s.sourceSlideId, image: url, notes: s.notes ?? '', hidden: !!s.hidden, name: s.name, feedback: s.feedback?.kind });
+    out.push({ id: s.id, sourceSlideId: s.sourceSlideId, image: url, notes: s.notes ?? '', hidden: !!s.hidden, name: s.name, feedback: s.feedback ? structuredClone(s.feedback) : undefined });
     onProgress?.(i + 1, deck.slides.length);
   }
   return out;
@@ -166,16 +175,24 @@ export const labApi = {
     const c = d as ClassicDeck;
     if (!c || !c.id) return { converted: false, dropped: 0 };
     const saved = await idbGet<Deck>(key(`lab-${c.id}`));
-    if (saved?.slides?.length) { show(saved); return { converted: false, dropped: 0 }; }
+    if (saved?.slides?.length) {
+      const d2 = carryOnce(saved, c);
+      show(d2);
+      if (d2 !== saved) await persistDeck(d2);
+      return { converted: false, dropped: 0 };
+    }
     const deck = convertClassic(c);
     show(deck);
     await persistDeck(deck);
     return { converted: true, dropped: Math.max(0, (c.slides?.length ?? 0) - deck.slides.length) };
   },
-  async openSaved(id: string): Promise<boolean> {
+  /** A saved lab deck; `source` is its SlideForge lesson, when the shell still has it. */
+  async openSaved(id: string, source?: ClassicDeck | null): Promise<boolean> {
     const d = await idbGet<Deck>(key(id));
     if (!isLabDeck(d)) return false;
-    show(d);
+    const d2 = carryOnce(d, source);
+    show(d2);
+    if (d2 !== d) await persistDeck(d2);
     return true;
   },
   listSaved,

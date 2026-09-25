@@ -113,7 +113,11 @@
   function open(d) {
     whenReady(function (a) {
       var fromCard = d && !d.labSaved && isCard(d.id);
-      var run = d && (d.labSaved || fromCard) ? a.openSaved(d.id) : a.open(d);
+      /* A saved lab lesson opens with its SlideForge original to hand, so a copy
+         made before the converter kept feedback and timers can take them, once. */
+      var row = d && saved.filter(function (x) { return x.id === d.id; })[0];
+      var source = row && row.sourceId && SF.Store && SF.Store.get ? SF.Store.get(row.sourceId) : null;
+      var run = d && (d.labSaved || fromCard) ? a.openSaved(d.id, source) : a.open(d);
       Promise.resolve(run).then(function (r) {
         if (r === false) { refreshSaved(); SF.toast('That lesson could not be opened here.'); return; }
         /* Known at once, not after the list is read back: the Library may be
@@ -169,9 +173,20 @@
     /* The lab draws this slide live over the picture (js/lab-stage.js) and runs
        its own transitions, so SlideForge's player cuts rather than fading. */
     s.transition = 'none';
-    if (still.feedback && SF.makeFeedback) {
-      s.feedback = SF.makeFeedback(still.feedback);
-      s.feedback.prompt = still.name || '';
+    /* The slide's audience feedback with its settings (a converted lesson brings
+       them; the lab's Engage tab sets the kind). What is not set takes
+       SlideForge's defaults, and the prompt falls back to the slide's name. */
+    var f = still.feedback;
+    if (f && SF.makeFeedback) {
+      var kind = typeof f === 'string' ? f : f.kind;
+      s.feedback = SF.makeFeedback(kind);
+      if (typeof f === 'object') {
+        ['prompt', 'max', 'presentAs', 'points', 'lowLabel', 'highLabel'].forEach(function (k) {
+          if (f[k] != null && f[k] !== '') s.feedback[k] = f[k];
+        });
+        if (Array.isArray(f.options) && f.options.length) s.feedback.options = f.options.slice();
+      }
+      if (!s.feedback.prompt) s.feedback.prompt = still.name || '';
     }
     return s;
   }
