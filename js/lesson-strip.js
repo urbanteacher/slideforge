@@ -362,6 +362,11 @@
     last = o;
     var list = $('lessonStripList');
     if (!list || !o) return;
+    /* Only for the studio on screen: the lesson view draws every slide of the
+       lesson, which is work to leave until someone can see it. Switching
+       studios draws it again. */
+    var ws = document.documentElement.getAttribute('data-ws');
+    if (ws !== 'game' && ws !== 'plan') return;
     var strip = $('lessonStrip');
     if (strip) strip.setAttribute('data-view', view);
     syncHead(o);

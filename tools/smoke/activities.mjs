@@ -13,13 +13,19 @@ try {
     SF.Editor.workspace.setDoc(SF.makeDeck('Activities smoke'));
     SF.Shell.activate('plan');
   });
-  await page.waitForFunction(() => document.querySelectorAll('.activity-card').length === 54);
-  assert.equal(await page.locator('.activity-card:disabled').count(), 0);
-  const names = await page.locator('.activity-card strong').allTextContents();
+  // The catalogue is a library, opened by Browse activities beside ＋ Activity;
+  // choosing a card adds it and closes the library.
+  const catalogue = page.locator('#planCatalogue');
+  await page.locator('#btnBrowseActivities').click();
+  await page.waitForFunction(() => document.querySelectorAll('#planCatalogue .activity-card').length === 54);
+  assert.equal(await catalogue.locator('.activity-card:disabled').count(), 0);
+  const names = await catalogue.locator('.activity-card strong').allTextContents();
+  await page.keyboard.press('Escape');
   for (const name of names) {
-    await page.evaluate(() => SF.Activities.select(null));
-    await page.waitForSelector('.activity-card');
-    await page.locator('.activity-card').filter({ has: page.locator('strong', { hasText: new RegExp('^' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$') }) }).click();
+    await page.locator('#btnBrowseActivities').click();
+    await catalogue.locator('.activity-card').first().waitFor();
+    await catalogue.locator('.activity-card').filter({ has: page.locator('strong', { hasText: new RegExp('^' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$') }) }).click();
+    await catalogue.waitFor({ state: 'hidden' });
   }
   assert.equal(await page.locator('#lessonStripList .lthumb').count(), 54);
   const state = await page.evaluate(() => {
