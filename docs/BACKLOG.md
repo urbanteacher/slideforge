@@ -17,6 +17,7 @@ list (GA-, RP-, TPS-) and the activities build list (AC-).
   - [room-pane-redesign.md](room-pane-redesign.md)
   - [game-activity-redesign.md](game-activity-redesign.md)
   - [ux-deep-dive.md](ux-deep-dive.md)
+  - [lab-engine-plan.md](lab-engine-plan.md)
 
 **Effort:** S = under half a day · M = one or two days · L = most of a week or more
 **Priority:** P0 fix now · P1 next · P2 worth doing · P3 when there is room
@@ -28,6 +29,7 @@ list (GA-, RP-, TPS-) and the activities build list (AC-).
 - **AC-** · activities to a premium standard
 - **RP-** · the room pane
 - **TPS-** · Think-Pair-Share
+- **ENG-** · the lab as the engine
 
 ---
 
@@ -51,6 +53,7 @@ order.
 | UX-72 | Keyboard-only pass through every modal and panel | M | Partly done · a hands-on pass needs a person |
 | CA-05 | First click after typing on the slide is swallowed | S–M | Not reproduced |
 | CA-21 | Composition and regions measure in different frames | M–L | Not reproduced · measured |
+| ENG-01 | [The lab becomes the engine the shell drives, with games, activities and live rooms native to it](lab-engine-plan.md). Next: M0 discovery, then review gate 1, which includes the in-flight decision on GA-19, AC-13–17 and the Stations clock | L · months | To do · plan written |
 | LAB-01 | [Lab bullet controls, cards and three-column header](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-02 | [Flagship frame as the lab default for new slides](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-03 | [Default text and image layout from the flagship](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
@@ -764,7 +767,19 @@ All 311 unit tests pass. `npm test` remains blocked by the two existing nullable
 | LAB-04 | Add one to four A–D choice boxes at the flagship’s fixed grid positions | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
 | LAB-05 | Add one to six numbered rows that fit the flagship list area | Done · 24 Sep 2026 · [Notes](lab-slide-blocks.md) |
 
+## The lab as the engine
+
+The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engine, with one deck format, one player, one live host and one registry. It runs from M0 (discovery) to M14 (deleting the classic game, activity and live code). M15, removing the classic Lesson studio, needs its own plan.
+
+| ID | Item | Status |
+|---|---|---|
+| ENG-01 | The lab registers as the shell's engine, and games, activities, audience feedback and live rooms run natively in it. Milestones M0–M14, with review gates after M0, M7 and before any deletion | To do · plan written 25 Sep 2026 |
+
 ## Change log
+
+### 25 September 2026 — The plan for the lab as the engine
+
+- **ENG-01 opened:** [lab-engine-plan.md](lab-engine-plan.md) sets out how the lab becomes the engine the shell drives, and how games, activities and live rooms become native to it. It was reviewed against the site's current code and infrastructure: the Render free plan, the committed classic bundle, the localStorage library and the satellite windows. Nothing is built yet; M0 discovery comes first.
 
 ### 24 September 2026 — Flagship numbered points
 
