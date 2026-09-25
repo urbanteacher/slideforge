@@ -166,6 +166,9 @@
     /* The picture already carries the lab's header and footer; the theme's own
        logo and page number would sit on top of it a second time. */
     s.headerFooter = { enabled: false, slots: {} };
+    /* The lab draws this slide live over the picture (js/lab-stage.js) and runs
+       its own transitions, so SlideForge's player cuts rather than fading. */
+    s.transition = 'none';
     if (still.feedback && SF.makeFeedback) {
       s.feedback = SF.makeFeedback(still.feedback);
       s.feedback.prompt = still.name || '';
@@ -309,14 +312,13 @@
     },
     onTitle: function (v) { whenReady(function (a) { a.setTitle(v); }); },
     onTheme: function () {},
+    /* Present is SlideForge's show, with its HUD, and the lab drawing each
+       slide live inside it (js/lab-stage.js). Full screen is asked for now,
+       inside the click; the show starts once its slides are ready. */
     play: function () {
-      whenReady(function (a) {
-        a.present();
-        /* The frame goes full screen, not the page: the show is inside it. */
-        if (frame && frame.requestFullscreen && !document.fullscreenElement) {
-          frame.requestFullscreen().catch(function () {});
-        }
-      });
+      var d = document.documentElement;
+      if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().catch(function () {});
+      withShow(function (show) { SF.Player.start(show.run, show.index, { fullscreen: false }); });
     },
     settings: function () {
       SF.toast('Theme, colours, header and footer are in the lab’s left panel.');
@@ -479,6 +481,10 @@
       });
     },
     lastShowDeck: function () { return lastShowDeck; },
+    /* For the live stage (js/lab-stage.js): the lab deck as it is now, and the
+       lab's page, for its fonts. */
+    stageDeck: function () { return api ? JSON.parse(JSON.stringify(api.getDeck())) : null; },
+    frameDocument: function () { return frame && frame.contentDocument; },
     /* For the Library (js/studio.js). */
     hasCopy: function (id) { return enabled() && hasCopy(id); },
     forget: function (id) {

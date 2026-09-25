@@ -11,6 +11,9 @@ export interface PlayerOptions {
   start?: number;
   onChange?: (index: number, step: number, steps: number) => void;
   maxPixels?: number;
+  /** Inside SlideForge's player (js/lab-stage.js), which owns Next and Previous: a click the slide
+   *  does not use is left to bubble up to it, and a layer's own next / previous is handed to it. */
+  host?: { next: () => void; prev: () => void };
 }
 
 interface Trans { from: Slide; fromStart: number; fromClicks: number[]; fromBuilt: boolean; start: number; dur: number; type: Slide['transition']['type']; dir: 1 | -1 }
@@ -59,6 +62,9 @@ export class DeckPlayer {
   }
   private flipAt = -9;
   private raf = 0;
+  private paused = false;
+  private insetTarget = 0;
+  private lastFrame = 0;
   private t0 = performance.now();
   private ro: ResizeObserver;
 
@@ -148,8 +154,37 @@ export class DeckPlayer {
 
   private toSlide(e: PointerEvent | MouseEvent): [number, number] {
     const r = this.canvas.getBoundingClientRect();
-    return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height];
+    const u = (e.clientX - r.left) / r.width, v = (e.clientY - r.top) / r.height;
+    // With room made for a rail, the slide's content is drawn smaller; a press is read against it.
+    const s = 1 - this.renderer.inset;
+    return s < 1 ? [u / s, (v - (1 - s) / 2) / s] : [u, v];
   }
+
+  // ─── Inside SlideForge's player (js/lab-stage.js) ─────────────────────────
+  /** Where the show is: the slide, the builds shown and how many it has. */
+  state() { return { index: this.index, step: this.built ? this.steps() : this.clicks.length, steps: this.steps(), built: this.built }; }
+  /** One build further on this slide, if it has one left. False: the slide is built. */
+  build(): boolean {
+    if (this.trans) this.finishTransition();
+    if (this.built || this.clicks.length >= this.steps()) return false;
+    this.clicks.push(this.now() - this.slideStart);
+    this.emit();
+    return true;
+  }
+  /** Straight to a slide, with no transition: SlideForge's player has just cut to it. */
+  cut(i: number, built = false) {
+    if (i < 0 || i >= this.deck.slides.length) return;
+    this.trans = null;
+    if (i === this.index) { this.clicks = []; this.built = built; this.slideStart = this.now(); this.emit(); return; }
+    const tr = this.deck.slides[i].transition;
+    this.deck.slides[i].transition = { ...tr, type: 'none' };
+    try { this.goto(i, 1, built); } finally { this.deck.slides[i].transition = tr; }
+  }
+  /** Room on the right for SlideForge's rail, as a fraction of the slide's width. It eases across. */
+  setInset(fraction: number) { this.insetTarget = Math.max(0, Math.min(0.6, fraction)); }
+  /** Stop drawing while SlideForge's player shows one of its own slides, and start again. */
+  pause() { this.paused = true; }
+  resume() { this.paused = false; }
 
   // ─── On-slide controls ─────────────────────────────────────────────────────
   /** The state an experiment (−1: predict) or a scene (its step) is showing: a button's, or its clicks'. */
@@ -260,19 +295,21 @@ export class DeckPlayer {
     const [u, v] = this.toSlide(e);
     // A press on an on-slide control does what it says; it never advances the show.
     const c = this.controlAt(u, v);
-    if (c) { if (c.action !== 'slider') this.press(c.layer, c.action); return; }
+    if (c) { if (this.opts.host) e.stopPropagation(); if (c.action !== 'slider') this.press(c.layer, c.action); return; }
     // A press on a before / after moves its handle there; it never advances the show.
-    if (this.wipeAt(u, v)) return;
+    if (this.wipeAt(u, v)) { if (this.opts.host) e.stopPropagation(); return; }
     // A press on a scene's card chooses it, or, chosen already, returns to the overview.
     const card = hitLayer(this.slide, u * this.deck.width, v * this.deck.height, (l) => l.kind === 'scene' && sceneIsSelectable(String(l.params.mode)));
     if (card) {
       const b = card.box!, cur = this.live.get(`${card.id}:choice`);
       const at = sceneHit({ ...card.params, _choice: cur ?? -1 }, b.w, b.h, (u * this.deck.width - b.x) / b.w, (v * this.deck.height - b.y) / b.h);
-      if (at >= 0) { this.live.set(`${card.id}:choice`, cur === at ? -1 : at); return; }
+      if (at >= 0) { if (this.opts.host) e.stopPropagation(); this.live.set(`${card.id}:choice`, cur === at ? -1 : at); return; }
     }
     const hit = hitLayer(this.slide, u * this.deck.width, v * this.deck.height, (l) => l.interact.click !== 'none');
     if (hit) {
       const it = hit.interact;
+      if (this.opts.host && (it.click === 'next' || it.click === 'prev')) { e.stopPropagation(); if (it.click === 'next') this.opts.host.next(); else this.opts.host.prev(); return; }
+      if (this.opts.host) e.stopPropagation();
       if (it.click === 'next') this.next();
       else if (it.click === 'prev') this.prev();
       else if (it.click === 'goto') this.goto(it.gotoSlide - 1, it.gotoSlide - 1 > this.index ? 1 : -1);
@@ -280,6 +317,8 @@ export class DeckPlayer {
       else if (it.click === 'flip') this.flip();
       return;
     }
+    // In SlideForge's player the click goes on up to it, and it decides what Next means.
+    if (this.opts.host) return;
     this.next();
   };
 
@@ -303,7 +342,15 @@ export class DeckPlayer {
 
   private loop = () => {
     this.raf = requestAnimationFrame(this.loop);
+    if (this.paused) return;
+    const r = this.renderer;
     const time = this.now();
+    // The room for the rail eases across over about the half-second the rail itself takes, by the
+    // clock rather than by frames, so a slow machine gets there as soon as a fast one.
+    const dt = Math.min(0.1, Math.max(0, time - this.lastFrame));
+    this.lastFrame = time;
+    if (Math.abs(r.inset - this.insetTarget) > 0.0005) r.inset += (this.insetTarget - r.inset) * (1 - Math.exp(-dt / 0.12));
+    else r.inset = this.insetTarget;
     // Critically-damped-ish smoothing keeps pointer-driven motion silky rather than jittery.
     this.mouse = [this.mouse[0] + (this.mouseTarget[0] - this.mouse[0]) * 0.12, this.mouse[1] + (this.mouseTarget[1] - this.mouse[1]) * 0.12];
     for (const l of this.slide.layers) {

@@ -473,6 +473,11 @@ export class Renderer {
    * Composite a slide into `target` (null = the canvas). With `base`, the slide's layers are laid
    * over that picture instead of over the slide's background.
    */
+  /** Room kept on the right, as a fraction of the width: SlideForge's rail sits there in a live show.
+   *  The slide's content is drawn smaller in the space left of it, centred on the height; a layer
+   *  that covers the whole slide (a backdrop picture or shape) and every effect stay full size. */
+  inset = 0;
+
   drawSlide(slide: Slide, opts: FrameOpts, target: FBO | null = null, base: FBO | null = null) {
     const gl = this.gl;
     gl.bindVertexArray(this.vao);
@@ -530,6 +535,13 @@ export class Renderer {
             }
           }
         }
+        const backdrop = box.x <= 2 && box.y <= 2 && box.x + box.w >= this.deckW - 2 && box.y + box.h >= this.deckH - 2;
+        const s = this.inset > 0 && !backdrop ? 1 - this.inset : 1;
+        const oy = (this.deckH * (1 - s)) / 2;
+        // The box keeps its own size, so its texture keeps its rect; its centre moves and it is drawn
+        // smaller through the scale, which is how the shader places text that bleeds past its box.
+        const cx = (box.x + box.w / 2) * s, cy = oy + (box.y + box.h / 2) * s;
+        if (s < 1) { st.dx *= s; st.dy *= s; st.scale *= s; }
         passes.push({
           layer,
           run: (p) => {
@@ -538,7 +550,7 @@ export class Renderer {
             gl.activeTexture(gl.TEXTURE1);
             gl.bindTexture(gl.TEXTURE_2D, te.tex);
             gl.uniform1i(this.u(p, 'uTex'), 1);
-            gl.uniform4f(this.u(p, 'uBox'), box.x, box.y, box.w, box.h);
+            gl.uniform4f(this.u(p, 'uBox'), cx - box.w / 2, cy - box.h / 2, box.w, box.h);
             gl.uniform4f(this.u(p, 'uTexRect'), ...te.rect);
             gl.uniform1f(this.u(p, 'uRot'), ((box.rot + st.rot) * Math.PI) / 180);
             gl.uniform2f(this.u(p, 'uScale'), st.scale * (pose?.sx ?? 1), st.scale * (pose?.sy ?? 1));

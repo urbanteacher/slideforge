@@ -80,18 +80,43 @@ try {
   assert.equal(show.pictures, demo.labSlides, 'every lab slide is in the show as a picture');
   assert.ok(show.games > 0, 'the lesson’s games are back in the show');
   assert.ok(show.sameId, 'the show carries the lesson’s id, so the lobby knows it is this lesson');
+
+  // The live stage: the lab draws its slides inside SlideForge's show, and makes room for the rail.
+  const live = await page.evaluate(async () => {
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    await wait(1500);
+    const p = SF.LabStage.player();
+    // The room eases across over about half a second of the show's clock.
+    for (let k = 0; k < 40 && p && Math.abs(p.renderer.inset - p.insetTarget) > 0.01; k++) await wait(100);
+    const vp = document.querySelector('#player .deck-viewport');
+    const first = { onWall: SF.LabStage.active(), canvas: !!SF.Player._current.querySelector('canvas.lab-live'), railed: vp.classList.contains('railed'), inset: p && p.renderer.inset, target: p && p.insetTarget, railW: getComputedStyle(vp).getPropertyValue('--rail-w') };
+    // Find a slide with builds, and walk them with Next.
+    const run = SF.Player.deck.slides;
+    let walked = null;
+    for (let i = 0, seen = 0; i < run.length && !walked && seen < 20; i++) {
+      if (!(run[i].design && run[i].design.labStill)) continue;
+      seen++;
+      SF.Player.goTo(i, 1); await wait(250);
+      const s = p.state();
+      if (s.steps > 0) { SF.Player.next(); await wait(150); walked = { wall: SF.Player.idx, wallBefore: i, step: p.state().step, steps: s.steps }; }
+    }
+    return { first, walked };
+  });
+  assert.ok(live.first.onWall && live.first.canvas, 'the lab draws the slide on the wall live');
+  assert.ok(!live.first.railed || live.first.inset > 0.1, 'with the rail open, the lab keeps room beside it: ' + JSON.stringify(live.first));
+  if (live.walked) assert.ok(live.walked.wall === live.walked.wallBefore && live.walked.step === 1, 'Next shows the lab slide’s first build before the show moves on');
   await page.evaluate(() => { if (SF.Demo && SF.Demo.stop) SF.Demo.stop(); if (SF.Player.open && SF.Player.close) SF.Player.close(); });
 
   // Share fits the server's limit.
   const shareMB = await page.evaluate(async () => JSON.stringify(await SF.LabEngine.shareDeck()).length / 1048576);
   assert.ok(shareMB < 8, `a shared copy fits in 8 MB (${shareMB.toFixed(1)} MB)`);
 
-  // Present is the lab's show.
+  // Present is SlideForge's show, with its HUD, and the lab drawing the slide live inside it.
   await page.click('#btnPresent');
-  await page.waitForFunction(() => !!document.getElementById('labFrame').contentDocument.querySelector('.present'));
+  await page.waitForFunction(() => window.SF.Player.open && SF.LabStage.active(), null, { timeout: 90000 });
 
   assert.equal(errors.join('\n'), '');
-  console.log(`PASS lab lesson: lab in the workspace, name synced, demo converted to ${demo.labSlides} slides, Library card, Rehearse with ${show.pictures} pictures and ${show.games} game slides, share ${shareMB.toFixed(1)} MB, Present runs the lab`);
+  console.log(`PASS lab lesson: lab in the workspace, name synced, demo converted to ${demo.labSlides} slides, Library card, Rehearse with ${show.pictures} lab slides live and ${show.games} game slides, builds walked ${live.walked ? 'yes' : 'none found'}, share ${shareMB.toFixed(1)} MB, Present runs SlideForge's show with the lab live`);
 } finally {
   await browser.close();
   relay.kill();

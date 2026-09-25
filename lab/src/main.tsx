@@ -16,9 +16,11 @@ if (embedded) {
     const typing = !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
     const mod = e.metaKey || e.ctrlKey;
     const k = e.key.toLowerCase();
-    const shells = (mod && (k === 's' || k === 'k' || k === 'e')) || (!mod && !typing && e.key === '?');
+    // ⌘↵ too: Present is SlideForge's show now, with its HUD, not the lab's own.
+    const shells = (mod && (k === 's' || k === 'k' || k === 'e' || e.key === 'Enter')) || (!mod && !typing && e.key === '?');
     if (!shells || !host) return;
     e.preventDefault();
+    e.stopPropagation();
     const doc = (window.parent as Window).document;
     doc.dispatchEvent(new (window.parent as Window & typeof globalThis).KeyboardEvent('keydown', {
       key: e.key, code: e.code, metaKey: e.metaKey, ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, altKey: e.altKey, bubbles: true,

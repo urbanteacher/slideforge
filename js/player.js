@@ -2731,6 +2731,8 @@
       return;
     }
     if (!Player.frozen && SF.Explore && SF.Explore.step(Player, 1)) return;
+    /* A lab slide's own builds, drawn live by the lab (js/lab-stage.js). */
+    if (!Player.frozen && SF.LabStage && SF.LabStage.step(Player, 1)) return;
     if (SF.Teaching && SF.Teaching.next()) return;
     /* After the build, before the deck: a chart's callouts are the last steps
        inside the slide, so the bars arrive first and are then walked. */
