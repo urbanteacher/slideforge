@@ -1,9 +1,9 @@
-.format-tools{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;padding:6px;background:var(--ui-bg,#f4f6ef);border-radius:8px}
-.format-tools button{min-width:30px;min-height:32px;padding:4px 7px;border:1px solid #bbc6b6;border-radius:6px;background:#fff;color:#243422;cursor:pointer}
+.format-tools{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;padding:6px;background:var(--ui-bg,#0a0a0b);border-radius:8px}
+.format-tools button{min-width:30px;min-height:32px;padding:4px 7px;border:1px solid var(--ui-line-2);border-radius:6px;background:var(--ui-field);color:var(--ui-text);cursor:pointer}
 #inspector .insp-chrome{flex-wrap:wrap;gap:4px}
 #inspector .insp-chrome .btn{font-size:11px;padding:4px 6px}
 #inspector .design-panes .btn{flex:1;min-width:0;font-size:10px;padding:7px 2px;line-height:1.2}
-#inspector .design-panes .btn.active{border-color:#9cae8c;background:#eff4e9;color:#3f5a30;font-weight:650}
+#inspector .design-panes .btn.active{border-color:var(--ui-accent-line);background:var(--ui-accent-soft);color:var(--ui-accent-2);font-weight:650}
 .engage-add{display:flex;flex-direction:column;gap:8px}
 .engage-add .btn{width:100%;justify-content:center}
 .format-tools input[type=color]{width:32px;height:32px;padding:2px;border:0}
@@ -73,8 +73,8 @@
 #player.is-spontaneous .player-spontaneous-pill{display:block}
 .teaching-ink{position:absolute;inset:0;width:100%;height:100%;z-index:40;pointer-events:none;touch-action:none}
 .teaching-ink.drawing{pointer-events:auto;cursor:crosshair}
-.manual-panel{position:fixed;inset:5vh max(16px,calc((100vw - 700px)/2));z-index:180;background:#fff;color:#243422;padding:22px;border-radius:16px;overflow:auto;box-shadow:0 15px 90px #0008}
-.manual-panel header{display:flex;align-items:center;justify-content:space-between;gap:12px}.manual-panel button,.manual-panel input,.manual-panel select{font:inherit;padding:9px;border:1px solid #a6b79d;border-radius:7px}.manual-panel textarea{width:100%;min-height:80px}.manual-entry{display:flex;flex-wrap:wrap;gap:7px;border-top:1px solid #d8dfd4;padding:12px 0;align-items:center}.manual-entry strong{min-width:140px}.manual-entry button[aria-pressed=true]{background:#334b2a;color:white}
+.manual-panel{position:fixed;inset:5vh max(16px,calc((100vw - 700px)/2));z-index:180;background:var(--ui-panel);color:var(--ui-text);border:1px solid var(--ui-line-2);padding:22px;border-radius:16px;overflow:auto;box-shadow:0 15px 90px #0008}
+.manual-panel header{display:flex;align-items:center;justify-content:space-between;gap:12px}.manual-panel button,.manual-panel input,.manual-panel select{font:inherit;padding:9px;border:1px solid var(--ui-line-2);border-radius:7px;background:var(--ui-field);color:var(--ui-text)}.manual-panel textarea{width:100%;min-height:80px}.manual-entry{display:flex;flex-wrap:wrap;gap:7px;border-top:1px solid var(--ui-line);padding:12px 0;align-items:center}.manual-entry strong{min-width:140px}.manual-entry button[aria-pressed=true]{background:var(--ui-accent);border-color:var(--ui-accent);color:#fff}
 @media(max-width:700px){.manual-panel{margin:8px!important;padding:14px!important}.manual-entry strong{width:100%}}
 .hud{border-radius:18px;gap:6px;padding:7px;max-width:calc(100vw - 20px);transition:border-color .25s,box-shadow .25s,opacity .25s,visibility 0s linear .25s}
 .hud.show{transition:border-color .25s,box-shadow .25s,opacity .25s}
@@ -94,8 +94,8 @@
 @media(max-width:380px){.hud{gap:2px}.hud>button,.hud-group button{width:36px;height:36px}.hud .sep{margin:0}.hud .pos{font-size:12px}}
 
 /* Teacher window: a row you answer for, and a row that answers itself. */
-.manual-entry.on-phone{opacity:.9;background:#f3f6ef}
-.source-tag{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#6a7a5e;border:1px solid #cfdcc3;border-radius:99px;padding:1px 7px;margin-left:8px}
+.manual-entry.on-phone{opacity:.9;background:var(--ui-panel-2)}
+.source-tag{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-dim);border:1px solid var(--ui-line-2);border-radius:99px;padding:1px 7px;margin-left:8px}
 .roster-acts{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
 .roster-act{font-size:12px;padding:5px 9px!important}
 .manual-entry.on-phone .answer-status{color:#4a5c3d}
@@ -466,8 +466,8 @@
   position: fixed;
   z-index: 70;
   margin: 0;
-  box-shadow: 0 6px 20px rgba(12, 51, 84, .18);
-  border: 1px solid var(--ui-line, #d9dfd0);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .5);
+  border: 1px solid var(--ui-line-2, #2a2a30);
   max-width: calc(100vw - 16px);
 }
 .canvas-inline-tools input[type="text"] {
@@ -475,8 +475,10 @@
   min-width: 90px;
   flex: 1 1 90px;
   padding: 4px 7px;
-  border: 1px solid #bbc6b6;
+  border: 1px solid var(--ui-line-2);
   border-radius: 6px;
+  background: var(--ui-field);
+  color: var(--ui-text);
   font: inherit;
   min-height: 32px;
   box-sizing: border-box;
