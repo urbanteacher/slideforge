@@ -38,15 +38,17 @@ Converting content is also a solved problem. `lab/src/model/fromSlideForge.ts` a
 |---|---|
 | M0–M4 | Not started. They come after the lesson side (see the order below). |
 | M5 | **Done early, in a different form** (commits `d9b1e64`, `41d9ea3`, `7b7a67e`). The lab is the Lesson studio. See "M5 — status" below for what differs from the plan and what is left. |
-| M6 | **Part done.** The lab bundle is committed in `lab-app/` and served by the relay's static server from the same origin. Not yet deployed to Render or tried from a phone. |
+| M6 | **Part done.** The lab bundle is committed in `lab-app/` and served by the relay's static server from the same origin. Pushed to `deploy-render` on 25 Sep 2026 (`d52e31e`). Not yet tried from a phone with a QR code from a lab lesson. |
 | M7–M15 | Not started. Until M7, **the bridge** stands in for the lab's own live host (see below). |
 | Live stage | **Done** (`4b5c9a5`, speaker notes on the wall `9281d07`). Lab slides play live inside SlideForge's show, with its HUD, the room's rail and Teacher Presenter (see "The live stage" below). |
-| **Next** | The converter keeps each slide's audience feedback and timer (below), then what M5 still owes. |
+| Converter keeps feedback and timers | **Done** (`1453965`). |
+| Quiz studio and Activities in the Lesson studio's frame | **Done** (`a60f79e`, `d52e31e`). Layout only: how the two studios work is unchanged (see "The three studios, one frame" below). |
+| **Next** | What M5 still owes (see "M5 — status"), then the lesson features the feature map still marks Missing. |
 
 **Order (decided 25 Sep 2026): games and activities come last.** The lesson side goes first, in this order:
 
 1. The HUD, Teacher Presenter and the rail. **Done** (the live stage).
-2. **The converter keeps a slide's audience feedback and timer.** A SlideForge lesson converted into the lab lost its polls, word clouds, brainstorms and scales (`slide.feedback`) and its timed slides (`slide.timeLimit`): `fromSlideForge.ts` read neither. The original lesson kept them, but the lab copy that is taught from did not. Lab copies made before the fix get them back from their original, once.
+2. **The converter keeps a slide's audience feedback and timer.** **Done** (`1453965`). A SlideForge lesson converted into the lab lost its polls, word clouds, brainstorms and scales (`slide.feedback`) and its timed slides (`slide.timeLimit`): `fromSlideForge.ts` read neither. The original lesson kept them, but the lab copy that is taught from did not. Lab copies made before the fix get them back from their original, once.
 3. What M5 still owes (see "M5 — status").
 4. The lesson features the feature map still marks Missing, starting with the feedback settings (prompt, poll options, scale ends and points, responses each, beside the slide or full screen) and the phone preview.
 
@@ -63,7 +65,10 @@ The game and activity milestones (M0's game inventories, M2–M4, M7–M14) foll
         │ register(ws)          │                      │
   Lab engine (deck)       Quiz studio            Activities studio
   js/lab-engine.js        (games.js)             (activities.js)
-  frames lab-app/         unchanged              unchanged
+  frames lab-app/         the Lesson studio's frame, working as before:
+                          a strip of questions or activities, or the lesson
+                          (js/lesson-strip.js); the rail to write, the panel
+                          for how it looks and runs
         │
         ├─ lab: layers, WebGL engine, its own Present   (lab/src, built to lab-app/)
         │    decks in the lab's IndexedDB ('slideforge-studio'); a Library card
@@ -98,6 +103,12 @@ The lab is what teachers edit lessons in. The classic player still runs the room
 - **How it fits SlideForge's player:** Next asks `SF.LabStage.step` first (the hook Explore and chart callouts use), so a lab slide's builds are walked before the show moves on; Previous returns to a slide fully built. A click the lab slide does not use goes on to SlideForge's player; the lab's own controls keep theirs. The HUD, the rail, Teacher Presenter and the live room are SlideForge's and are unchanged. The lab's fonts are copied into SlideForge's page when the stage starts.
 - **Room for the rail:** when the rail opens (the room, a brainstorm, a poll, a word cloud), the lab keeps a slide's full-size backdrops and every effect in place and draws the content smaller, centred on the height, in the space left of the rail (`--rail-w` plus SlideForge's 54px gap). It eases across by the clock over about the time the rail takes.
 - **Present** is this show too, full screen, asked for inside the click. ⌘↵ inside the lab goes to it. The lab's own Present remains in the stand-alone lab.
+
+### The three studios, one frame
+
+- **What it is:** Quiz studio and Activities are laid out as the Lesson studio is, so moving between the three feels like one app. The second row is the same on all three: Library on the left, the studio's tools (Quiz studio and Activities: Saved, Lesson bank, Undo, Redo), Host live and Present with its menu on the right, all sized as the lab's. Under the canvas is a bar (Add, Browse, the green demo, zoom, the panel switch) and a strip. The strip shows the game's questions or the lesson's activities as slides, with duplicate and delete on each, or, from the icon under its count, the whole lesson in the show's order with this game or activity outlined. With the lab as the Lesson studio, the lesson's slides are small pictures from the lab (`SF.LabEngine.stripDeck`) and its games and activities are SlideForge's own. The rail is where the question or activity is written, in folds as the lab's left panel is (Instructions with How to play, the question, answers, explanation, slide notes). The panel on the right is settings: timing, picture, look, engage. Activities' catalogue opens from Browse activities.
+- **Why it is allowed:** it is layout. Nothing new is added to how games or activities work (hard rule 7), and the one new read of the lab, the strip's pictures, goes through the engine's interface. The code goes when the classic studios do (M14).
+- **A gap it shows:** with the lab as the Lesson studio, an activity added in Activities goes into SlideForge's copy of the lesson, which is often the Library card, not the lab lesson, so it does not play. The strip's lesson view says so ("Not in the lesson"). It closes when activities are layers in the lab lesson (M10), or sooner if Activities is pointed at the lesson the lab came from.
 
 ## Where we are heading
 
@@ -221,7 +232,8 @@ These are planned temporary steps, not drift:
 - **the bridge** (see "Where we are now") running Host live, Teacher Presenter, Rehearse, Present, Share and the handout on the classic player, with the **live stage** drawing lab slides inside it, until M7, M11 and M12;
 - **the lab in a frame** rather than mounted in the page, until the lab's styles are scoped so they cannot collide with SlideForge's;
 - **the lab's own store, with Library cards** in SlideForge's, until the shell's library moves to IndexedDB (M5, still owed). This is the "two stores" row, taken temporarily: the card is only a pointer, so there is still one copy of each lesson;
-- **the classic Lesson studio loaded and hidden** as the way lessons are handed to the lab, until the Library, the demo and New talk to the engine interface directly (M5, still owed).
+- **the classic Lesson studio loaded and hidden** as the way lessons are handed to the lab, until the Library, the demo and New talk to the engine interface directly (M5, still owed);
+- **Quiz studio and Activities in the Lesson studio's frame** (`js/lesson-strip.js` and the two studios' layout), until the classic studios go (M14).
 
 ## Read first
 
@@ -709,3 +721,4 @@ This is out of scope for this plan. It is listed here so the end state is clear.
 - **25 Sep 2026, evening.** The plan now records what was built. "Where things stand" and the "Where we are now" diagram show the lab as the Lesson studio (commits `d9b1e64`, `41d9ea3`, `7b7a67e`). A new section describes **the bridge**, the temporary way Host live, Teacher Presenter, Rehearse, Share and the handout run a lab lesson on the classic player, and when it goes (M7, M11, M12). M5 has a status table of the four places it differs from the plan, and a list of what it still owes. The infrastructure section covers the committed `lab-app/` bundle, the `lab-lesson` smoke, the classic studio under automation, the lab's store and Library cards, and the frame. Four temporary steps were added to the anti-drift section, each with its exit condition.
 - **25 Sep 2026, later.** **The live stage** is added (`4b5c9a5`): lab slides play live inside SlideForge's show, with its HUD, the rail and Teacher Presenter, and the lab makes room beside the rail. The bridge's section now says the pictures remain only for Teacher Presenter's thumbnails, shared links and the handout. A decision on order is recorded: **games and activities come last**, after the lesson side.
 - **25 Sep 2026, later still.** The status table said M0 was next, which the order decision had overtaken; it now names the next step. The order is written out as a list, with a new item: **the converter keeps each slide's audience feedback and timer**, which converted lessons were losing.
+- **25 Sep 2026, night.** Status brought up to date: the converter keeping feedback and timers is done (`1453965`), and "Next" is what M5 still owes, then the Missing lesson features. M6 records the push to `deploy-render`. A new section, **The three studios, one frame**, describes Quiz studio and Activities laid out as the Lesson studio (`a60f79e`, `d52e31e`), why that is not new classic work, and the gap it shows: activities added in Activities do not reach the lab lesson. The diagram and the temporary steps list include it. The feature map was brought up to date the same day.

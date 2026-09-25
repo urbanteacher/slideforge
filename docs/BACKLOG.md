@@ -53,7 +53,7 @@ order.
 | UX-72 | Keyboard-only pass through every modal and panel | M | Partly done · a hands-on pass needs a person |
 | CA-05 | First click after typing on the slide is swallowed | S–M | Not reproduced |
 | CA-21 | Composition and regions measure in different frames | M–L | Not reproduced · measured |
-| ENG-01 | [The lab becomes the engine the shell drives, with games, activities and live rooms native to it](lab-engine-plan.md). M5 is done early: the lab is the Lesson studio, and a temporary bridge runs Host live, Teacher Presenter, Rehearse, Share and the handout on the classic player. Next: M0 discovery, then review gate 1, which includes the in-flight decision on GA-19, AC-13–17 and the Stations clock | L · months | In progress · M5 done early, live stage done (25 Sep) · games and activities last |
+| ENG-01 | [The lab becomes the engine the shell drives, with games, activities and live rooms native to it](lab-engine-plan.md). M5 is done early: the lab is the Lesson studio, and a temporary bridge runs Host live, Teacher Presenter, Rehearse, Share and the handout on the classic player. Next: what M5 still owes, then the lesson features the feature map still marks Missing (feedback settings and the phone preview first). Games and activities, from M0, come after | L · months | In progress · M5 done early; live stage, converter's feedback and timers, and the three studios' frame done (25 Sep) · games and activities last |
 | LAB-01 | [Lab bullet controls, cards and three-column header](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-02 | [Flagship frame as the lab default for new slides](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-03 | [Default text and image layout from the flagship](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
@@ -773,9 +773,13 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 | ID | Item | Status |
 |---|---|---|
-| ENG-01 | The lab registers as the shell's engine, and games, activities, audience feedback and live rooms run natively in it. Milestones M0–M14, with review gates after M0, M7 and before any deletion. M5 done early, in the form the plan's "M5 — status" records (`7b7a67e`) | In progress · M5 done early 25 Sep 2026 |
+| ENG-01 | The lab registers as the shell's engine, and games, activities, audience feedback and live rooms run natively in it. Milestones M0–M14, with review gates after M0, M7 and before any deletion. M5 done early, in the form the plan's "M5 — status" records (`7b7a67e`) | In progress · M5 done early 25 Sep 2026; the lesson side next |
 
 ## Change log
+
+### 25 September 2026 — Quiz studio and Activities in the Lesson studio's frame
+
+- **ENG-01:** Quiz studio and Activities are laid out as the Lesson studio is (`a60f79e`, `d52e31e`). The same second row on all three; a strip under the canvas of the game's questions or the lesson's activities, or of the whole lesson with this game or activity outlined (`js/lesson-strip.js`); the rail to write in, in folds; the panel for settings. Activities' catalogue opens from Browse activities. Layout only: how games and activities work is unchanged. It shows a gap, recorded in the plan: an activity added in Activities does not reach the lab lesson. The plan's status and the feature map are brought up to date: the converter keeps feedback and timers (`1453965`), and "Next" is what M5 still owes.
 
 ### 25 September 2026 — Lab slides play live in SlideForge's show
 

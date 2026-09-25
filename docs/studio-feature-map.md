@@ -23,6 +23,9 @@ into them from the Lesson studio are listed.
 - **Add**: the Add pane or `/` menu.
 - **⌘K**: the command palette.
 - **Partial**: some of it.
+- **Shell**: SlideForge's own control, working on the lab lesson. The lab is
+  the Lesson studio inside SlideForge's shell (`js/lab-engine.js`), and the
+  room runs on SlideForge's player through the bridge (`docs/lab-engine-plan.md`).
 - **Missing**: not in the lab.
 
 ---
@@ -30,19 +33,27 @@ into them from the Lesson studio are listed.
 ## Read this first — what the lab is missing
 
 The lab covers the everyday path well: typing, points, elements, layout, look,
-theme, pictures, chart and table data, notes, and presenting. What it does not
-have yet, ranked by how much a teacher would miss it:
+theme, pictures, chart and table data, notes, and presenting. Since it became
+the Lesson studio inside SlideForge's shell, the shell's files, Library,
+History, Share and the whole run of the room work on a lab lesson (rows marked
+**Shell**). What it does not have yet, ranked by how much a teacher would miss
+it:
 
-1. **The whole Engagement tab.** There is no way to attach audience feedback
-   (poll, word cloud, brainstorm, scale) or to add an activity or game to a
-   lesson. This is SlideForge's core feature, so it is the most important gap.
-2. **Running the room.** Host live, the Teacher Presenter window, and
-   rehearsing with a sample class of 8, 30 or 120. The lab's Present is a plain
-   slideshow.
-3. **Files and saving.** Library, Save to Library, New, Import, History restore
-   points and Share are all missing. The lab has one deck, saved in the browser
-   and downloadable as JSON. That is right for a lab, but it means the lab can't
-   replace the studio yet.
+1. **Most of the Engagement tab.** The lab's Engage tab sets a slide's
+   audience feedback kind (poll, word cloud, brainstorm, scale), and a
+   converted lesson keeps each slide's feedback settings and timer. What is
+   missing is editing those settings (prompt, poll options, scale ends and
+   points, responses each, beside the slide or full screen), the phone
+   preview, and real games and activities: the lab adds placeholders, and a
+   lesson's own games and activities stay SlideForge's, played through the
+   bridge. This is SlideForge's core feature, so it is the most important gap.
+2. **Running the room natively.** Host live, Teacher Presenter and Rehearse
+   work, through the bridge: SlideForge's player runs the room, with the lab
+   drawing each slide live on the wall. The lab has no live host of its own
+   yet (the plan's M7).
+3. **One library.** The lab keeps its lessons in its own browser store, and
+   SlideForge's Library lists each as a card. Folders, rename, move and delete
+   work on the card.
 4. **Content for the complex slide types.** None of these have their fields in
    the lab:
    - video: URL, poster, start and stop, autoplay;
@@ -68,9 +79,6 @@ have yet, ranked by how much a teacher would miss it:
 7. **Deck tools:**
    - Review (every slide's fit at once);
    - Find and Replace across the lesson (⌘F);
-   - the slide sorter (⌘G);
-   - hiding a slide from the show (H);
-   - copying and pasting slides between decks;
    - the full layout library (the Layout chip offers related layouts only);
    - "Spread across slides" when there are too many points.
 8. **Settings sheet leftovers:**
@@ -89,37 +97,37 @@ The lab also adds things the studio does not have. They are listed in §8.
 
 | Feature | What it does | Studio | Lab |
 |---|---|---|---|
-| Studio switch (Lesson · Quiz · Activities) | Switches between the three studios. | `index.html:74` | Missing |
+| Studio switch (Lesson · Quiz · Activities) | Switches between the three studios. | `index.html:74` | Shell |
 | Title | Renames the lesson. | `shell.js:1298` | Slide (top bar) |
-| Library folder chip | Shows the Library folder; click to open the Library. | `shell.js:626` | Missing |
-| Save status | Saved / Saving… / Not saved. Clicking downloads the file. | `shell.js:768` | Partial (status only) |
-| File → New… | Blank presentation or blank game. | `shell.js:1752` | Missing |
-| File → Library… | Opens the Library. | `studio.js:826` | Missing |
-| File → Save to Library… | Choose a folder, take a restore point, save. | `shell.js:676` | Missing |
-| File → Export file | .sfdeck.json, student PDF handout, practice notes (.md), app folder, backup bundle. | `shell.js:1314` | Partial (.json from ⌘K or Deck tab) |
-| File → Import file | SlideForge file, Markdown outline, app folder, backup bundle. | `shell.js:1361` | Missing |
+| Library folder chip | Shows the Library folder; click to open the Library. | `shell.js:626` | Shell |
+| Save status | Saved / Saving… / Not saved. Clicking downloads the file. | `shell.js:768` | Shell |
+| File → New… | Blank presentation or blank game. | `shell.js:1752` | Shell |
+| File → Library… | Opens the Library. | `studio.js:826` | Shell (a card per lab lesson) |
+| File → Save to Library… | Choose a folder, take a restore point, save. | `shell.js:676` | Shell |
+| File → Export file | .sfdeck.json, student PDF handout, practice notes (.md), app folder, backup bundle. | `shell.js:1314` | Shell (the lab file, the PDF handout and practice notes) |
+| File → Import file | SlideForge file, Markdown outline, app folder, backup bundle. | `shell.js:1361` | Shell (lab and SlideForge files) |
 | File → Lecture setup… | Session reports, wake the server, AI smoke test, reload lesson, clear browser data, join and app links. | `shell.js:1425` | Missing |
-| History | Restore points: keep one now, restore any, clear all (16 kept). | `shell.js:1633` | Missing (undo only) |
+| History | Restore points: keep one now, restore any, clear all (16 kept). | `shell.js:1633` | Shell |
 | Settings | Presentation settings (§6). | `shell.js:1743` | Partial (Panel → Deck) |
-| Share | Practice, read at own pace, live follow-along, QR codes. | `share.js:18` | Missing |
-| See the demo | A fresh copy of the layout bank. | `studio.js:31` | ⌘K → Reset the lab |
-| Host live | Starts a live room with phones. | `shell.js:1811` | Missing |
-| Present | Slideshow from the selected slide. | `editor.js:2267` | Slide (Present · P) |
-| Present ▾ → Teacher Presenter | Pops out the presenter window and starts the show. | `editor.js:2835` | Missing |
-| Present ▾ → Rehearse (8 / 30 / 120) | Practise with a sample class. | `editor.js:2283` | Missing |
+| Share | Practice, read at own pace, live follow-along, QR codes. | `share.js:18` | Shell (the bridge's lesson, under 8 MB) |
+| See the demo | A fresh copy of the layout bank. | `studio.js:31` | Shell (in the lab's tools row) |
+| Host live | Starts a live room with phones. | `shell.js:1811` | Shell (the bridge) |
+| Present | Slideshow from the selected slide. | `editor.js:2267` | Shell (SlideForge's show, the lab drawing each slide live) |
+| Present ▾ → Teacher Presenter | Pops out the presenter window and starts the show. | `editor.js:2835` | Shell (the bridge) |
+| Present ▾ → Rehearse (8 / 30 / 120) | Practise with a sample class. | `editor.js:2283` | Shell (the bridge) |
 
 ## 2. Slide list (left rail)
 
 | Feature | What it does | Studio | Lab |
 |---|---|---|---|
 | Go-to field `n / total` | Type a number to jump to it. | `rail.js:410` | Partial (⌘K, type a number) |
-| Slide sorter ▦ (⌘G) | Whole deck as tiles: select runs, drag groups. | `rail.js:619` | Missing |
+| Slide sorter ▦ (⌘G) | Whole deck as tiles: select runs, drag groups. | `rail.js:619` | Slide (Block view, the grid icon in the strip's head) |
 | Select, drag to reorder | Click a row; drag it to a new place. | `rail.js:445` | Slide |
 | Section fold ▾ | Folds a section's slides away. | `rail.js:472` | Slide |
 | ⠿ grip / ⌘X carry | Pick a slide up and drop it with keys or a click. | `rail.js:492` | Partial (drag only) |
-| 👁 Hide from the show (H) | Keeps the slide in the deck but out of the show. | `rail.js:503` | Missing |
-| Badges | Game or missing game, feedback attached, activity phase. | `rail.js:517` | Missing |
-| Transition icon | Shows the slide's transition. | `rail.js:546` | Missing |
+| 👁 Hide from the show (H) | Keeps the slide in the deck but out of the show. | `rail.js:503` | Slide (Hide on each thumbnail) |
+| Badges | Game or missing game, feedback attached, activity phase. | `rail.js:517` | Partial (feedback only; games and activities stay SlideForge's) |
+| Transition icon | Shows the slide's transition. | `rail.js:546` | Slide (between thumbnails) |
 | Transition in (rail footer) | None, Fade, Push, Zoom, Wipe, Morph. | `rail.js:900` | Panel → Slide |
 | + Slide | Opens Slide starters. | `rail.js:922` | Add (+ New slide) |
 | Right-click menu | The slide menu (§3.2). | `editor.js:2418` | Partial (§3.2) |
@@ -144,8 +152,8 @@ The lab also adds things the studio does not have. They are listed in §8.
 | Item | What it does | Lab |
 |---|---|---|
 | Duplicate ⌘D | Copies the slide in after itself. | Slide (right-click, ⌘D) |
-| Copy ⌘C / Paste after ⌘V | Slides between decks, through the clipboard. | Missing |
-| Hide from the show (H) | See §2. | Missing |
+| Copy ⌘C / Paste after ⌘V | Slides between decks, through the clipboard. | Partial (right-click Copy and Paste, within the lab) |
+| Hide from the show (H) | See §2. | Slide (right-click, and on each thumbnail) |
 | Move up / down ⌥↑ ⌥↓ | Moves one place. | Slide |
 | Fold / show this section | Section slides only. | Partial (click the section head) |
 | Move this section up / down | Moves the section and its slides together. | Missing |
@@ -231,11 +239,11 @@ arrival, model answer, and Reset.
 
 | Feature | What it does | Lab |
 |---|---|---|
-| + Add activity | The 36-format activity catalogue. | **Missing** |
+| + Add activity | The 36-format activity catalogue. | **Partial** (placeholders: a knowledge check, a timed activity, a game) |
 | Insert a saved game… | Puts a saved game in the lesson. | **Missing** |
-| Audience feedback: poll, word cloud, brainstorm, scale | Phones answer on this slide. | **Missing** |
+| Audience feedback: poll, word cloud, brainstorm, scale | Phones answer on this slide. | Panel → Engage (the kind) |
 | Preview as (beside / full screen) | How the feedback is shown. | **Missing** |
-| Prompt, poll options, scale ends and points, responses each | The settings for each kind of feedback. | **Missing** |
+| Prompt, poll options, scale ends and points, responses each | The settings for each kind of feedback. | **Missing** (a converted lesson keeps them; they can't be edited) |
 
 ### 3.9 Header & footer
 
@@ -280,14 +288,14 @@ picture; reset to the theme; arrow-key nudging.
 |---|---|---|
 | Slide starters | A card for every starter, including the ten explainer scenes. | Add (one card per type; no per-starter variants) |
 | Activity catalogue | 36 formats in 8 filters. | **Missing** |
-| Library | Folders, find, rename, move, delete. | Missing |
+| Library | Folders, find, rename, move, delete. | Shell (on the lab lesson's card) |
 | Review | Every slide's fit, with navigation. | Missing |
 | Find in this lesson ⌘F, with Replace everywhere | Searches all text and notes. | Partial (⌘K finds slides by title) |
-| Share | Practice, own pace, live follow-along. | Missing |
-| History | Restore points. | Missing |
+| Share | Practice, own pace, live follow-along. | Shell (the bridge) |
+| History | Restore points. | Shell |
 | Command palette ⌘K | Every command. | ⌘K (the lab's own) |
 | Shortcut sheet ? | Every key. | Missing (keys are listed in `lab/README.md`) |
-| Host live lobby | QR, PIN, teams, start. | Missing |
+| Host live lobby | QR, PIN, teams, start. | Shell (the bridge) |
 | Changed in another tab | Load theirs or keep yours. | Missing |
 
 ## 6. Presentation settings (Theme face)
@@ -373,3 +381,14 @@ picture; reset to the theme; arrow-key nudging.
   Speed and Spacing; charts can draw themselves; Morph carries shared pictures,
   charts and words across. §3.7 and item 6 updated. AI choreography and code
   arrival are still missing.
+- **2026-09-25.** Brought up to date with the lab as the Lesson studio inside
+  SlideForge's shell. A new key, **Shell**, marks what the shell does on a lab
+  lesson: the studio switch, the folder chip and save status, File (New,
+  Library, Save, Export, Import), History, Share, See the demo, Host live and
+  its lobby, Present, Teacher Presenter and Rehearse (the room's through the
+  bridge), in the top bar and in §5.
+  The lab's own Block view, Hide on each thumbnail, transition marks and
+  feedback badge fill four rail rows; the Engage tab fills the feedback kind.
+  "Read this first" now ranks the feedback settings, the phone preview and
+  native games and activities as the biggest gap, then the lab's own live
+  host and one library.
