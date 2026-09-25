@@ -1,9 +1,8 @@
 'use strict';
 /* Which Lesson studio a browser gets, and what its Library lists.
  *
- * The classic studio is the default until the lab shows a lesson as it was
- * designed; the lab is one address away and a browser that asks for it keeps
- * it. With the classic studio showing, the lab's Library cards (one title
+ * The lab is the default; the classic studio is one address away and a
+ * browser that asks for it keeps it. With the classic studio showing, the lab's Library cards (one title
  * slide standing in for a lab lesson) stay out of the Library, or they would
  * sit beside their own originals looking like lessons of one slide. */
 const { test } = require('node:test');
@@ -27,20 +26,20 @@ function engine(search, stored) {
   return { LabEngine: context.window.SF.LabEngine, store };
 }
 
-test('the classic studio is the default, and the address switches a browser and is remembered', () => {
-  assert.equal(engine('').LabEngine.enabled(), false, 'classic by default');
-  const on = engine('?lab=1');
-  assert.equal(on.LabEngine.enabled(), true);
-  assert.equal(on.store['sf.lessonEngine'], 'lab', 'remembered');
-  assert.equal(engine('', 'lab').LabEngine.enabled(), true, 'and kept on the next visit');
-  assert.equal(engine('?classic=0').LabEngine.enabled(), true, '?classic=0 still opts in, as the lab smoke does');
-  const off = engine('?classic=1', 'lab');
+test('the lab is the default, and the address switches a browser and is remembered', () => {
+  assert.equal(engine('').LabEngine.enabled(), true, 'the lab by default');
+  const off = engine('?classic=1');
   assert.equal(off.LabEngine.enabled(), false);
-  assert.equal(off.store['sf.lessonEngine'], 'classic');
+  assert.equal(off.store['sf.lessonEngine'], 'classic', 'remembered');
+  assert.equal(engine('', 'classic').LabEngine.enabled(), false, 'and kept on the next visit');
+  const on = engine('?lab=1', 'classic');
+  assert.equal(on.LabEngine.enabled(), true);
+  assert.equal(on.store['sf.lessonEngine'], 'lab');
+  assert.equal(engine('?classic=0', 'classic').LabEngine.enabled(), true, '?classic=0 still opts in, as the lab smoke does');
 });
 
 test('with the classic studio showing, the lab’s cards stay out of the Library, and lessons stay in', () => {
-  const { LabEngine } = engine('');
+  const { LabEngine } = engine('?classic=1');
   const one = [{ type: 'title' }];
   assert.equal(LabEngine.isHiddenCard({ id: 'x', labCard: true, slides: one }), true, 'a card that says so');
   assert.equal(LabEngine.isHiddenCard({ id: 'lab-gv0mxdsrlvky', slides: one }), true, 'an older card of a lesson’s lab copy');

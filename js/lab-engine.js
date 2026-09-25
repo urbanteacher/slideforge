@@ -12,20 +12,21 @@
    its own copy: converted the first time, with an id of its own, so the
    original lesson is never written to by the lab.
 
-   For now the classic studio is the default Lesson studio, and the lab is
-   opt-in per browser: ?lab=1 (or ?classic=0) on the address turns it on and
-   is remembered, ?classic=1 turns it off again (see enabled() below). */
+   The lab is the Lesson studio. A browser that asks for the classic studio
+   keeps it: ?classic=1 on the address turns it on and is remembered, ?lab=1
+   (or ?classic=0) turns the lab back on (see enabled() below). */
 (function (global) {
   'use strict';
   /** @type {any} */
   var SF = global.SF = global.SF || {};
   var KEY = 'sf.lessonEngine';
 
-  /* The classic studio is the Lesson studio until the lab shows a lesson as
-     SlideForge designed it (decided 26 Sep 2026: lessons converted that
-     morning lost their pictures and their theme's artwork). The lab is one
-     address away, and a browser that asks for it keeps it: ?lab=1 or
-     ?classic=0 turns it on, ?classic=1 turns it off. */
+  /* The lab is the Lesson studio, with its Engage: its games and activities
+     designed in the lab, the quizzes' two looks. It was the classic studio
+     for a day (26 Sep 2026) while converted lessons lost their pictures and
+     their theme's artwork; with those back, the owner took the lab again.
+     The classic studio is one address away, and a browser that asks for it
+     keeps it: ?classic=1 turns it on, ?lab=1 or ?classic=0 turns it off. */
   function enabled() {
     try {
       var q = location.search;
@@ -35,8 +36,8 @@
          stage and inspector, so under automation the classic studio is the
          one on screen. A smoke written for the lab opts in with ?classic=0. */
       if (navigator.webdriver) return false;
-      return localStorage.getItem(KEY) === 'lab';
-    } catch (e) { return false; }
+      return localStorage.getItem(KEY) !== 'classic';
+    } catch (e) { return true; }
   }
 
   function remember(engine) {
