@@ -314,3 +314,29 @@ test('a game’s question is never more than two lines, however long', { skip },
     assert.ok(q.params.size >= 48, 'and no smaller than the slides read at');
   });
 });
+
+/* The lab's own measure of how tall words set in a box are (lab/src/engine/raster.ts). */
+let measure = null;
+async function measurer() {
+  if (measure) return measure;
+  measuringCanvas();
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'sf-lab-raster-'));
+  execFileSync(process.execPath, [VITE, 'build', '--ssr', 'src/engine/raster.ts', '--outDir', out, '--logLevel', 'error'], { cwd: LAB, stdio: 'pipe' });
+  measure = (await import(pathToFileURL(path.join(out, 'raster.js')).href)).measureTextHeight;
+  return measure;
+}
+
+test('beside a picture at 65%, the points fit their column at the lab’s reading size', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const measureTextHeight = await measurer();
+  const src = lesson('ipdv-vc-hybrid');
+  const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
+  const s = src.slides.find((x) => x.design && x.design.imageShare === 65);
+  const made = deck.slides.find((x) => x.sourceSlideId === s.id);
+  const pic = made.layers.find((l) => l.kind === 'image');
+  const points = made.layers.find((l) => l.name === 'Bullet points');
+  assert.equal(pic.box.x - (points.box.x + points.box.w), 54, 'the column runs to the grid\u2019s gutter short of the picture');
+  const h = measureTextHeight({ ...points.params, size: 36 }, points.box.w);
+  assert.ok(h <= points.box.h, `at 36px the points take ${Math.round(h)}px of their ${Math.round(points.box.h)}px`);
+  assert.ok(points.box.y + points.box.h <= 1071, 'and stay above the rail');
+});

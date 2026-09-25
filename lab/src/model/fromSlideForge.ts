@@ -126,16 +126,25 @@ function fitted(slide: Slide, fit?: string): Slide {
 }
 
 /** A split's picture at its share of the width (SlideForge's Image share: 35, 50 or 65%), the words
- *  given the rest: their column's inner edge moves with the picture's. */
+ *  given the rest. Their column runs from the slide's margin to the grid's gutter short of the
+ *  picture, so a narrow one wastes none of its width; and a narrow one beside a picture on the right,
+ *  where the page number sits over the picture, runs down to the rail, its points set closer, so the
+ *  words keep the lab's reading size (36px, never less) rather than running off the slide. */
 function shareSplit(slide: Slide, pic: Slide['layers'][number], side: 'left' | 'right', share: number) {
   if (![35, 65].includes(share) || !pic.box) return;
-  const w = Math.round(1920 * share / 100), d = w - pic.box.w;
+  const M = 78, G = 54, w = Math.round(1920 * share / 100);
   pic.box = { ...pic.box, w, x: side === 'right' ? 1920 - w : 0 };
+  const left = side === 'right' ? M : w + G, right = side === 'right' ? 1920 - w - G : 1920 - M;
+  const narrow = share === 65;
   for (const l of slide.layers) {
     if (l === pic || !l.box || l.name === 'Ground' || l.params.hfSlot) continue;
-    if (side === 'left') l.box = { ...l.box, x: l.box.x + d };
-    // The short accent bar keeps its length; the heading and the points take the width that is left.
-    if (l.box.w > 240) l.box = { ...l.box, w: Math.max(240, l.box.w - d) };
+    // The short accent bar keeps its length; the heading and the points take the column.
+    if (l.box.w <= 240) { l.box = { ...l.box, x: left }; continue; }
+    l.box = { ...l.box, x: left, w: right - left };
+    if (narrow && l.name === 'Bullet points') {
+      l.params.lineHeight = 1.2;
+      if (side === 'right') l.box.h = 1050 - l.box.y;
+    }
   }
 }
 
