@@ -331,24 +331,6 @@ export function bulletsSlide(st: LayoutStyle, title: string, lines: string[]): S
   ]);
 }
 
-/** A class activity's timed stages as the lab's Activity card, set large on the slide: its title, a
- *  step per line ("Think on your own · 1 min"), and the minutes added up — SlideForge's stages track. */
-export function activitySlide(st: LayoutStyle, title: string, steps: string[], label = 'Activity'): Slide {
-  return slide(st, 'Activity', [
-    createLayer('activity', { name: 'Activity', box: { x: 200, y: 140, w: 1520, h: 800, rot: 0 },
-      params: { title, steps: steps.join('\n'), label, font: st.body, fill: st.panel, textColor: st.ink, accent: st.accent }, anim: rise }),
-  ]);
-}
-
-/** One question of a game as the lab's Quiz card: its label (the game and the question's number),
- *  the question, and its options. The room answers it in SlideForge's live session. */
-export function questionSlide(st: LayoutStyle, label: string, question: string, options: string[]): Slide {
-  return slide(st, 'Question', [
-    createLayer('quiz', { name: 'Question', box: { x: 200, y: 150, w: 1520, h: 780, rot: 0 },
-      params: { label, question, options: options.slice(0, 6).join('\n'), font: st.body, fill: st.panel, textColor: st.ink, accent: st.accent }, anim: rise }),
-  ]);
-}
-
 /** A title, a chart in the content area, and a source line along its foot. */
 export function chartSlide(st: LayoutStyle, title: string, source: string): Slide {
   return slide(st, 'Chart', [

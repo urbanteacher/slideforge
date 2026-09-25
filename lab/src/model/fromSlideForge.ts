@@ -268,17 +268,6 @@ export function carryDeckLive(deck: Deck, source: SFSlide[], paletteId = 'nul'):
   return n;
 }
 
-/** One SlideForge slide built in the lab in the style given, with what it does in the room (its
- *  feedback and timer) and, where the lab draws it differently, a line in its notes saying so. Null
- *  for what the lab leaves out. The activities (model/activities.ts) are built through this. */
-export function buildSlide(s: SFSlide, st: LayoutStyle, img: (p?: string) => string = (p) => p ?? ''): Slide | null {
-  const made = convert(s, () => st, img, '');
-  if (!made) return null;
-  made.slide.notes = [s.notes ?? '', made.note ? `LAB — ${made.note}` : ''].filter(Boolean).join('\n\n');
-  carryLive(s, made.slide, st);
-  return made.slide;
-}
-
 /** Whether the lab can build this SlideForge slide. What it cannot (games, activities) stays SlideForge's. */
 let probe: ReturnType<typeof kit> | null = null;
 export function convertsSlide(s: SFSlide): boolean {

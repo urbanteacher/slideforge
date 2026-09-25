@@ -649,9 +649,3 @@ button.swatch { border: 0; padding: 0; cursor: pointer; }
 .shell-sizes button { width: auto; padding: 4px 10px; border: 1px solid var(--line-2); border-radius: 999px; font-variant-numeric: tabular-nums; }
 /* The right-hand panel folded away (the canvas bar's panel button): the canvas takes its width. */
 .app.no-panel { grid-template-columns: 272px 1fr; }
-
-/* Add → Activity: SlideForge's activities by phase, in the Add menu, scrolling within it. */
-.menu-activities { width: 340px; max-height: min(560px, 70vh); overflow-y: auto; }
-.menu .menu-back { font-weight: 600; color: var(--text); }
-.menu .menu-label { font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); padding: 10px 10px 4px; }
-.menu .menu-act-icon { width: 18px; text-align: center; flex: none; color: var(--muted); }
