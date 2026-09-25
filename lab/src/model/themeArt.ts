@@ -29,10 +29,15 @@ export type Ground = 'working' | 'quiet' | 'loud';
 export const ART = 'Theme · ';
 export const hasThemeArt = (s: Slide) => s.layers.some((l) => l.name.startsWith(ART));
 
-/** What a slide's artwork depends on: its theme, where it sits in the lesson, the lesson's name. */
-export interface ArtContext { theme: string; index: number; deckTitle: string }
-/** The SlideForge slide the artwork is for: its type and, for a poster cover, its picture. */
-interface ArtSlide { type: string; image?: string }
+/** What a slide's artwork depends on: its theme, where it sits in the lesson (and of how many), the lesson's name. */
+export interface ArtContext { theme: string; index: number; deckTitle: string; total?: number }
+/** Where an author moved one of the theme's shapes on one slide (SlideForge's Artwork face,
+ *  src/render/art.js): its corner in SlideForge's slide px, its size, whether it shows, which side
+ *  of the words it is on. */
+export interface ArtPose { x?: number; y?: number; scale?: number; hidden?: boolean; order?: 'back' | 'front' }
+/** The SlideForge slide the artwork is for: its type, for a poster cover its picture, and the poses
+ *  its author gave the theme's shapes. */
+interface ArtSlide { type: string; image?: string; art?: { poses?: Record<string, ArtPose> } }
 
 const X = 1.5; // SlideForge's slide px to the lab's
 const at = (x: number, y: number, w: number, h: number): Box => ({ x: x * X, y: y * X, w: w * X, h: h * X, rot: 0 });
@@ -80,8 +85,13 @@ const KEYFACT_SLOTS: [number, number][] = [[1088, 522], [1096, 235], [-62, 528],
 /** Slide types the small object stays off: they fill the slide with a chart, a table or a picture. */
 const NO_OBJECT = new Set(['title', 'section', 'chart', 'table', 'stats', 'funnel', 'quiz', 'game', 'image', 'gallery', 'split']);
 
-/** One piece of artwork, and the ground it was drawn for (a copy on another ground is left without it). */
-interface Piece { layer: Layer; front?: boolean; ground?: Ground }
+/** One piece of artwork, the ground it was drawn for (a copy on another ground is left without it),
+ *  and the key SlideForge's poses know it by (the shape's class: nu-n, ukbt-chev…). */
+interface Piece { layer: Layer; front?: boolean; ground?: Ground; key?: string }
+
+/** NU London's progress rail (css/northeastern.css .track): the brand's colours along the foot, the
+ *  lesson painted over them in red as it goes, white on a section break. */
+const RAIL = `<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="9" viewBox="0 0 1920 9" preserveAspectRatio="none"><defs><linearGradient id="r"><stop offset="0" stop-color="#c8102e"/><stop offset=".25" stop-color="#ff854f"/><stop offset=".45" stop-color="#ffc34b"/><stop offset=".68" stop-color="#609f80"/><stop offset=".88" stop-color="#61b6d0"/><stop offset="1" stop-color="#0c3354"/></linearGradient></defs><rect width="1920" height="9" fill="url(#r)"/></svg>`;
 
 function pieces(s: ArtSlide, ctx: ArtContext, img: (p?: string) => string): Piece[] {
   const { id, strand } = family(ctx.theme);
@@ -95,28 +105,37 @@ function pieces(s: ArtSlide, ctx: ArtContext, img: (p?: string) => string): Piec
     if (t === 'title') {
       out.push(
         { ground: 'quiet', layer: createLayer('linear', { name: ART + 'Ground', anim: still, params: { colorA: '#123f68', colorB: '#071f35', angle: 45, bias: 0.52 } }) },
-        { layer: picture('Skyline', skyline, at(0, 530, 190 * 1458 / 533, 190), 0.34) },
-        { layer: picture('N', svg(monogram, '#c8102e'), at(530, 196, 900, 694), 0.92) },
-        { layer: eyebrow(ctx.deckTitle, 0.16, '#7fa6c6', 1, 888), front: true },
+        { key: 'nu-skyline', layer: picture('Skyline', skyline, at(0, 530, 190 * 1458 / 533, 190), 0.34) },
+        { key: 'nu-n', layer: picture('N', svg(monogram, '#c8102e'), at(530, 196, 900, 694), 0.92) },
+        { key: 'nu-eyebrow', layer: eyebrow(ctx.deckTitle, 0.16, '#7fa6c6', 1, 888), front: true },
         { layer: logo, front: true },
       );
     } else if (t === 'section') {
       out.push(
         { ground: 'loud', layer: createLayer('linear', { name: ART + 'Ground', anim: still, params: { colorA: '#d41733', colorB: '#9b0c24', angle: 60, bias: 0.55 } }) },
-        { layer: picture('N', svg(monogram, '#ffffff'), at(600, 146, 900, 694), 0.13) },
-        { layer: eyebrow('Northeastern University London', 0.32, '#ffffff', 0.7, 900), front: true },
+        { key: 'nu-n', layer: picture('N', svg(monogram, '#ffffff'), at(600, 146, 900, 694), 0.13) },
+        { key: 'nu-eyebrow', layer: eyebrow('Northeastern University London', 0.32, '#ffffff', 0.7, 900), front: true },
         { layer: logo, front: true },
       );
+    }
+    const cover = t === 'title' || t === 'section';
+    const rail = cover ? 0.5 : 0.34;
+    out.push({ front: true, layer: picture('Rail', 'data:image/svg+xml;base64,' + btoa(RAIL), at(0, 714, 1280, 6), rail, { fit: 'cover' }) });
+    if (ctx.total && ctx.total > 1) {
+      const done = Math.min(1, (ctx.index + 1) / ctx.total);
+      out.push({ front: true, layer: createLayer('shape', { name: ART + 'Rail, so far', box: at(0, 714, 1280 * done, 6), opacity: rail, anim: still,
+        params: { shape: 'rect', radius: 0, fill: t === 'section' ? '#ffffff' : '#c8102e', strokeWidth: 0 } }) });
     }
   } else if (id === 'ukbt' || id === 'ukbt-institute') {
     const object = OBJECTS[id][((ctx.index % 4) + 4) % 4];
     out.push({ layer: picture('Waves', waves, at(0, 0, 1280, 720), t === 'section' ? 0.45 : 1) });
     const chevrons = (back: [string, number], front: [string, number]) => [
-      { layer: picture('Chevron, back', svg(chevron, back[0]), at(705, -61.3, 604, 929), back[1]) },
-      { layer: picture('Chevron, front', svg(chevron, front[0]), at(908, -61.3, 604, 929), front[1]) },
+      // Both chevrons are ukbt-chev to SlideForge, so one pose moves the pair, as it does there.
+      { key: 'ukbt-chev', layer: picture('Chevron, back', svg(chevron, back[0]), at(705, -61.3, 604, 929), back[1]) },
+      { key: 'ukbt-chev', layer: picture('Chevron, front', svg(chevron, front[0]), at(908, -61.3, 604, 929), front[1]) },
     ];
     if (t === 'title') {
-      out.push(...chevrons(['#ffffff', 0.085], ['#00c57f', 0.17]), { layer: picture('Object', object, at(856, 304, 470, 470)) });
+      out.push(...chevrons(['#ffffff', 0.085], ['#00c57f', 0.17]), { key: 'ukbt-object', layer: picture('Object', object, at(856, 304, 470, 470)) });
     } else if (t === 'section') {
       // UKBT Institute's section breaks are lime, UK Black Tech's its green (the loud ground itself).
       if (id === 'ukbt-institute') out.push({ ground: 'loud', layer: createLayer('solid', { name: ART + 'Ground', anim: still, params: { color: '#cefd85' } }) });
@@ -134,10 +153,10 @@ function pieces(s: ArtSlide, ctx: ArtContext, img: (p?: string) => string): Piec
     if (t === 'title' || t === 'section') {
       // The fold: the corner of a square turned up, cropped by the slide's edges.
       const fold = `<svg xmlns="http://www.w3.org/2000/svg" width="630" height="285" viewBox="860 530 420 190"><polygon points="1090,530 860,530 860,645 975,760 1320,760" fill="${accent}"/></svg>`;
-      out.push({ layer: createLayer('image', { name: ART + 'Fold', box: at(860, 530, 420, 190), opacity: t === 'section' ? 0.3 : 0.2, anim: still, params: { src: 'data:image/svg+xml;base64,' + btoa(fold), fit: 'contain' } }) });
+      out.push({ key: 'aiad-fold', layer: createLayer('image', { name: ART + 'Fold', box: at(860, 530, 420, 190), opacity: t === 'section' ? 0.3 : 0.2, anim: still, params: { src: 'data:image/svg+xml;base64,' + btoa(fold), fit: 'contain' } }) });
       // The seam: a 3px line from the fold's corner to the slide's (as css/aiad26.css means it to be).
       const seam = `<svg xmlns="http://www.w3.org/2000/svg" width="285" height="285" viewBox="1090 530 190 190"><line x1="1090" y1="530" x2="1280" y2="720" stroke="${accent}" stroke-width="3"/></svg>`;
-      out.push({ layer: createLayer('image', { name: ART + 'Seam', box: at(1090, 530, 190, 190), opacity: 0.5, anim: still, params: { src: 'data:image/svg+xml;base64,' + btoa(seam), fit: 'contain' } }) });
+      out.push({ key: 'aiad-seam', layer: createLayer('image', { name: ART + 'Seam', box: at(1090, 530, 190, 190), opacity: 0.5, anim: still, params: { src: 'data:image/svg+xml;base64,' + btoa(seam), fit: 'contain' } }) });
     }
   } else if (id === 'aiad27' && t === 'title' && s.image) {
     // The campaign's poster cover: the strand's chamfered panel and glyph, beside the title.
@@ -146,14 +165,35 @@ function pieces(s: ArtSlide, ctx: ArtContext, img: (p?: string) => string): Piec
   return out;
 }
 
+/** An author's pose, onto the layer that is that shape here. A pose sets the shape's top-left corner
+ *  and scales it from there (transform-origin: top left); the pair of UKBT chevrons keep their offset. */
+function posed(p: Piece, pose: ArtPose) {
+  const b = p.layer.box;
+  if (b) {
+    if (pose.x != null && pose.y != null) {
+      // One pose, two chevrons: the back one takes it, the front keeps its distance from the back.
+      const shift = p.layer.name === ART + 'Chevron, front' ? (908 - 705) * X : 0;
+      b.x = pose.x * X + shift;
+      b.y = pose.y * X;
+    }
+    if (pose.scale != null && pose.scale > 0) { b.w *= pose.scale; b.h *= pose.scale; }
+  }
+  if (pose.hidden) p.layer.visible = false;
+  if (pose.order === 'front') p.front = true;
+  else if (pose.order === 'back') p.front = false;
+}
+
 /** The theme's artwork onto one lab slide: behind its words, straight above its ground, or in front
- *  where the theme paints it there. A piece drawn for another ground than the slide's is left out.
- *  Nothing is added to a slide that already has theme artwork. How many layers were added. */
+ *  where the theme paints it there. A piece drawn for another ground than the slide's is left out,
+ *  and so is one the slide already has (by its name), so a copy given its artwork before a piece
+ *  was added gets that piece and keeps what it has, moved or restyled. How many layers were added. */
 export function addThemeArt(slide: Slide, s: ArtSlide, ctx: ArtContext, img: (p?: string) => string): number {
-  if (hasThemeArt(slide)) return 0;
   const ground = slide.ground ?? 'working';
-  const list = pieces(s, ctx, img).filter((p) => !p.ground || p.ground === ground);
+  const have = new Set(slide.layers.map((l) => l.name));
+  const list = pieces(s, ctx, img).filter((p) => (!p.ground || p.ground === ground) && !have.has(p.layer.name));
   if (!list.length) return 0;
+  const poses = s.art?.poses ?? {};
+  for (const p of list) { const pose = p.key ? poses[p.key] : undefined; if (pose) posed(p, pose); }
   const back = list.filter((p) => !p.front).map((p) => p.layer);
   const front = list.filter((p) => p.front).map((p) => p.layer);
   // Above the ground: the first layer, when it is one (every lab layout starts with its ground).

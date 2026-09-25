@@ -253,3 +253,34 @@ test('in the live room, each Check the lab built is SlideForge\u2019s own quiz q
     assert.ok(room[i].design && room[i].design.labStill && room[i].design.labReveal, 'the lab draws the question, and its answer on reveal');
   });
 });
+
+test('the Week 2 cover as you left it: your N where you moved it, the date, and the rail along the foot', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const src = lesson('ipdv-vc-hybrid');
+  // The pose on the Week 2 cover in the Library (Artwork face: the N moved up and left).
+  src.slides[0].art = { pictures: [], poses: { 'nu-n': { x: 511, y: 112 } } };
+  const deck = deckFromSlideForge(asData(src), 'nul', { games: '' });
+  const cover = deck.slides[0];
+  assert.deepEqual([art(cover, 'N').box.x, art(cover, 'N').box.y], [511 * 1.5, 112 * 1.5], 'the N sits where it was moved');
+  assert.deepEqual([art(cover, 'N').box.w, art(cover, 'N').box.h], [900 * 1.5, 694 * 1.5], 'at its size');
+  const date = cover.layers.find((l) => l.name === 'Date');
+  assert.equal(date.params.text, '21 September 2026');
+  assert.equal(date.params.uppercase, true, 'in NU London’s tracked capitals');
+  // The rail on every slide, filled as far as the slide is through the lesson.
+  const wide = (s) => art(s, 'Rail, so far').box.w;
+  assert.ok(deck.slides.every((s) => art(s, 'Rail')), 'the rail runs along every slide');
+  assert.ok(wide(deck.slides[0]) < wide(deck.slides[deck.slides.length - 1]));
+  assert.equal(wide(deck.slides[deck.slides.length - 1]), 1920, 'and is full on the last');
+});
+
+test('a copy given its artwork earlier takes the new pieces and keeps the ones it has', { skip }, async () => {
+  const { deckFromSlideForge, carryDeckArt } = await converter();
+  const src = lesson('ipdv-vc-hybrid');
+  const old = deckFromSlideForge(asData(src), 'nul', { games: '' });
+  old.slides.forEach((s) => { s.layers = s.layers.filter((l) => !/^Theme · Rail/.test(l.name)); });
+  const moved = art(old.slides[0], 'N'); moved.box.x = 40;
+  carryDeckArt(old, src.slides, { theme: src.theme, title: src.title });
+  assert.ok(old.slides.every((s) => art(s, 'Rail')), 'the rail came in');
+  assert.equal(art(old.slides[0], 'N').box.x, 40, 'the N the author moved in the lab stays put');
+  assert.equal(old.slides[0].layers.filter((l) => l.name === 'Theme · N').length, 1, 'and is not drawn twice');
+});

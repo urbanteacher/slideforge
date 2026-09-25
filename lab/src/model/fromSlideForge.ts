@@ -27,6 +27,10 @@ export interface SFSlide {
   type: string;
   /** The room's say on the slide: a poll, word cloud, brainstorm or scale, with its settings. */
   feedback?: Record<string, unknown> | null;
+  /** A title slide's date (2026-09-21), which SlideForge sets under the subtitle. */
+  date?: string;
+  /** Where the author moved the theme's shapes on this slide (src/render/art.js), by shape. */
+  art?: { poses?: Record<string, { x?: number; y?: number; scale?: number; hidden?: boolean; order?: 'back' | 'front' }> };
   /** A game slide's game, in SlideForge's game store (the lesson brings it compiled: SFDeck.games). */
   gameId?: string;
   /** Seconds the slide is timed for: SlideForge draws its game clock and counts it down. */
@@ -111,6 +115,26 @@ function statement(st: LayoutStyle, line: string, credit: string): Slide {
 }
 
 type Ground = 'working' | 'quiet' | 'loud';
+
+/** A title slide's date under its subtitle, as SlideForge sets it (js/render.js, en-GB: 21 September
+ *  2026): NU London's in small tracked capitals in its sky blue (css/northeastern.css), others in the
+ *  quiet text at the size SlideForge gives it (css/app.css .slide-date). */
+function datedTitle(slide: Slide, date: string | undefined, st: LayoutStyle, theme: string) {
+  const when = date ? new Date(`${date}T12:00:00`) : null;
+  if (!when || Number.isNaN(when.getTime())) return;
+  const text = when.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const words = slide.layers.filter((l) => l.kind === 'text' && l.box && !l.params.hfSlot);
+  const under = words.sort((a, b) => (b.box!.y + b.box!.h) - (a.box!.y + a.box!.h))[0];
+  if (!under?.box) return;
+  const nul = theme.startsWith('northeastern');
+  slide.layers.push(createLayer('text', {
+    name: 'Date', box: { x: under.box.x, y: under.box.y + under.box.h + (nul ? 42 : 36), w: under.box.w, h: nul ? 40 : 56, rot: 0 },
+    anim: { type: 'fade', duration: 0.7, delay: 0.28 },
+    params: nul
+      ? { text, font: st.body, weight: '600', size: 22, color: '#7fa6c6', tracking: 0.22, uppercase: true, lineHeight: 1.2, fit: 'shrink' }
+      : { text, font: st.body, weight: '400', size: 38, color: st.muted, lineHeight: 1.2, fit: 'shrink' },
+  }));
+}
 /** Where a SlideForge theme sets a type on its dark ground (Northeastern: title, section, quote). */
 const QUIET = new Set(['title', 'section', 'quote']);
 
@@ -122,8 +146,11 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
   const t = s.title ?? '', sub = s.subtitle ?? '', b = s.bullets ?? [];
   const comp = String(s.design?.composition ?? '');
   switch (s.type) {
-    case 'title':
-      return { slide: comp === 'sidecar' ? sidecarTitleSlide(st, t, sub, mark) : titleSlide(st, t, sub), ground: g };
+    case 'title': {
+      const slide = comp === 'sidecar' ? sidecarTitleSlide(st, t, sub, mark) : titleSlide(st, t, sub);
+      datedTitle(slide, s.date, st, theme);
+      return { slide, ground: g };
+    }
     case 'statement': return { slide: statement(st, s.body ?? t, sub), ground: g };
     case 'section': return { slide: sectionSlide(st, t, sub), ground: g };
     case 'introduction': return { slide: introductionSlide(st, t, sub, s.body ?? ''), ground: g };
@@ -296,9 +323,9 @@ export function convertsSlide(s: SFSlide): boolean {
 }
 
 /** The converter's version, kept on each lab copy as `carried`. 1: slides keep their feedback and
- *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. 4: games are built. A copy made at an older version is brought up to date when it
+ *  timers. 2: experiments are built. 3: the theme's artwork is on the slides. 4: games are built. 5: the artwork follows the author's poses, with NU London's progress rail. A copy made at an older version is brought up to date when it
  *  next opens (embed.ts), taking only what that version could not build. */
-export const CARRIED = 4;
+export const CARRIED = 5;
 
 /** The SlideForge slide types each version of the converter first built. A lab copy made before a
  *  version gets those slides when it next opens. Only those: a slide the lab could already build is
@@ -356,7 +383,7 @@ export function carryDeckArt(deck: Deck, source: SFSlide[], from: ArtSource): nu
   for (const slide of deck.slides) {
     const i = slide.sourceSlideId ? at.get(slide.sourceSlideId) : undefined;
     if (i === undefined) continue;
-    if (addThemeArt(slide, source[i], { theme: from.theme, index: i, deckTitle: from.title }, (p) => p ?? '')) n++;
+    if (addThemeArt(slide, source[i], { theme: from.theme, index: i, deckTitle: from.title, total: source.length }, (p) => p ?? '')) n++;
   }
   return n;
 }
@@ -390,7 +417,7 @@ export function carryDeckMissing(deck: Deck, source: SFSlide[], paletteId = 'nul
       continue;
     }
     if (!s.id || !types.has(s.type)) continue;
-    const made = buildSlides(s, k, img, art && { theme: art.theme, index: source.indexOf(s), deckTitle: art.title }, games);
+    const made = buildSlides(s, k, img, art && { theme: art.theme, index: source.indexOf(s), deckTitle: art.title, total: source.length }, games);
     if (!made.length) continue;
     deck.slides.splice(at, 0, ...made.map((x, j) => finishSlide(x, at + j)));
     have.add(s.id);
@@ -409,7 +436,7 @@ export function deckFromSlideForge(data: SFDeck, paletteId = 'nul', opts: { fram
   const slides: Slide[] = [];
   let skipped = 0;
   data.slides.forEach((s, index) => {
-    const made = buildSlides(s, k, img, { theme: data.theme, index, deckTitle: data.title }, data.games);
+    const made = buildSlides(s, k, img, { theme: data.theme, index, deckTitle: data.title, total: data.slides.length }, data.games);
     if (made.length) slides.push(...made); else skipped++;
   });
   const deck: Deck = { carried: CARRIED, id: uid(), title: `${data.title}${skipped ? (opts.games ?? ` (without its ${skipped} games)`) : ''}`, width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: k.guide, slides: finish(slides) };

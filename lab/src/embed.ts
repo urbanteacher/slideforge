@@ -134,7 +134,9 @@ function carryOnce(d: Deck, source: ClassicDeck | null | undefined): Deck {
   if (from < 1) carryDeckLive(copy, source.slides, palette, set);
   carryDeckMissing(copy, source.slides, palette, Math.max(1, from), set, art, source.labGames);
   // The artwork first: a poster it adds comes with SlideForge's address, which the repair then fixes.
-  if (from < 3) { carryDeckArt(copy, source.slides, art); repairAddresses(copy); }
+  // Pieces a copy already has stay as they are, so a copy from version 3 or 4 takes only the new ones.
+  if (from < 5) carryDeckArt(copy, source.slides, art);
+  if (from < 3) repairAddresses(copy);
   copy.carried = CARRIED;
   return copy;
 }
