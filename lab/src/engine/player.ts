@@ -64,6 +64,10 @@ export class DeckPlayer {
   private raf = 0;
   private paused = false;
   private insetTarget = 0;
+  /** The room made for the rail, as it eases across; the renderer's own inset while it moves. */
+  private insetNow = 0;
+  /** Each slide as laid out beside the rail, for the room it was laid out for. */
+  private flowCache = new WeakMap<Slide, { k: number; slide: Slide }>();
   private lastFrame = 0;
   private t0 = performance.now();
   private ro: ResizeObserver;
@@ -182,6 +186,30 @@ export class DeckPlayer {
   }
   /** Room on the right for SlideForge's rail, as a fraction of the slide's width. It eases across. */
   setInset(fraction: number) { this.insetTarget = Math.max(0, Math.min(0.6, fraction)); }
+
+  /** The rail is open and the room for it made: slides are laid out beside it. */
+  private flowing() { return this.insetTarget > 0 && this.insetNow === this.insetTarget; }
+  /** The slide on screen as it is drawn and pressed: laid out beside the rail while it is open. */
+  private get onScreen(): Slide { return this.flowed(this.slide); }
+  /** A slide laid out in the room left of SlideForge's rail, as SlideForge's own slides are (css/app.css:
+   *  .deck-viewport.railed .pad): full height, every layer across the narrower width, so its words wrap
+   *  in a narrower box at their size and its pictures stop short of the rail; a backdrop that fills the
+   *  slide stays full, under the rail. Made once for each slide and room, so its words are drawn once. */
+  private flowed(slide: Slide): Slide {
+    if (!this.flowing()) return slide;
+    const k = 1 - this.insetTarget;
+    const hit = this.flowCache.get(slide);
+    if (hit && hit.k === k) return hit.slide;
+    const W = this.deck.width, H = this.deck.height;
+    const layers = slide.layers.map((l) => {
+      const b = l.box;
+      if (!b || (b.x <= 2 && b.y <= 2 && b.x + b.w >= W - 2 && b.y + b.h >= H - 2)) return l;
+      return { ...l, box: { ...b, x: b.x * k, w: b.w * k } };
+    });
+    const out = { ...slide, layers };
+    this.flowCache.set(slide, { k, slide: out });
+    return out;
+  }
   /** Stop drawing while SlideForge's player shows one of its own slides, and start again. */
   pause() { this.paused = true; }
   resume() { this.paused = false; }
@@ -216,8 +244,8 @@ export class DeckPlayer {
   /** The control under a point on an experiment or scene layer, if any. */
   private controlAt(u: number, v: number) {
     const X = u * this.deck.width, Y = v * this.deck.height;
-    for (let i = this.slide.layers.length - 1; i >= 0; i--) {
-      const l = this.slide.layers[i];
+    for (let i = this.onScreen.layers.length - 1; i >= 0; i--) {
+      const l = this.onScreen.layers[i];
       if ((l.kind !== 'experiment' && l.kind !== 'scene') || !l.visible || !l.box) continue;
       const b = l.box, x = X - b.x, y = Y - b.y;
       if (x < 0 || y < 0 || x > b.w || y > b.h) continue;
@@ -242,7 +270,7 @@ export class DeckPlayer {
 
   /** A before / after, a simulation or a draggable motion scene under the pointer: things the room drags. */
   private wipeAt(u: number, v: number) {
-    return hitLayer(this.slide, u * this.deck.width, v * this.deck.height, (l) => l.kind === 'wipe' || l.kind === 'model' || (l.kind === 'scene' && (sceneIsContinuous(String(l.params.mode)) || l.params.mode === 'lens')));
+    return hitLayer(this.onScreen, u * this.deck.width, v * this.deck.height, (l) => l.kind === 'wipe' || l.kind === 'model' || (l.kind === 'scene' && (sceneIsContinuous(String(l.params.mode)) || l.params.mode === 'lens')));
   }
   private dragTo(l: Layer, u: number, v = 0.5) {
     const b = l.box!, f = (u * this.deck.width - b.x) / b.w, g = (v * this.deck.height - b.y) / b.h;
@@ -284,7 +312,7 @@ export class DeckPlayer {
     if (this.dragging) { this.dragTo(this.dragging, u, v); return; }
     if (this.controlAt(u, v)) { this.canvas.style.cursor = 'pointer'; return; }
     if (this.wipeAt(u, v)) { this.canvas.style.cursor = 'ew-resize'; return; }
-    const hit = hitLayer(this.slide, u * this.deck.width, v * this.deck.height, (l) => l.interact.hover !== 'none' || l.interact.click !== 'none');
+    const hit = hitLayer(this.onScreen, u * this.deck.width, v * this.deck.height, (l) => l.interact.hover !== 'none' || l.interact.click !== 'none');
     this.hovered = hit?.id ?? null;
     this.canvas.style.cursor = hit && hit.interact.click !== 'none' ? 'pointer' : '';
   };
@@ -299,13 +327,13 @@ export class DeckPlayer {
     // A press on a before / after moves its handle there; it never advances the show.
     if (this.wipeAt(u, v)) { if (this.opts.host) e.stopPropagation(); return; }
     // A press on a scene's card chooses it, or, chosen already, returns to the overview.
-    const card = hitLayer(this.slide, u * this.deck.width, v * this.deck.height, (l) => l.kind === 'scene' && sceneIsSelectable(String(l.params.mode)));
+    const card = hitLayer(this.onScreen, u * this.deck.width, v * this.deck.height, (l) => l.kind === 'scene' && sceneIsSelectable(String(l.params.mode)));
     if (card) {
       const b = card.box!, cur = this.live.get(`${card.id}:choice`);
       const at = sceneHit({ ...card.params, _choice: cur ?? -1 }, b.w, b.h, (u * this.deck.width - b.x) / b.w, (v * this.deck.height - b.y) / b.h);
       if (at >= 0) { if (this.opts.host) e.stopPropagation(); this.live.set(`${card.id}:choice`, cur === at ? -1 : at); return; }
     }
-    const hit = hitLayer(this.slide, u * this.deck.width, v * this.deck.height, (l) => l.interact.click !== 'none');
+    const hit = hitLayer(this.onScreen, u * this.deck.width, v * this.deck.height, (l) => l.interact.click !== 'none');
     if (hit) {
       const it = hit.interact;
       if (this.opts.host && (it.click === 'next' || it.click === 'prev')) { e.stopPropagation(); if (it.click === 'next') this.opts.host.next(); else this.opts.host.prev(); return; }
@@ -353,8 +381,11 @@ export class DeckPlayer {
     // clock rather than by frames, so a slow machine gets there as soon as a fast one.
     const dt = Math.min(0.1, Math.max(0, time - this.lastFrame));
     this.lastFrame = time;
-    if (Math.abs(r.inset - this.insetTarget) > 0.0005) r.inset += (this.insetTarget - r.inset) * (1 - Math.exp(-dt / 0.12));
-    else r.inset = this.insetTarget;
+    if (Math.abs(this.insetNow - this.insetTarget) > 0.0005) this.insetNow += (this.insetTarget - this.insetNow) * (1 - Math.exp(-dt / 0.12));
+    else this.insetNow = this.insetTarget;
+    // While the rail slides in, the slide is drawn smaller to keep clear of it; once it is open the
+    // slide is laid out beside it (flowed), full height, so the renderer draws it at its own size.
+    r.inset = this.flowing() ? 0 : this.insetNow;
     // Critically-damped-ish smoothing keeps pointer-driven motion silky rather than jittery.
     this.mouse = [this.mouse[0] + (this.mouseTarget[0] - this.mouse[0]) * 0.12, this.mouse[1] + (this.mouseTarget[1] - this.mouse[1]) * 0.12];
     for (const l of this.slide.layers) {
@@ -370,11 +401,11 @@ export class DeckPlayer {
       else {
         const tr = this.trans;
         const from = this.frameOpts(tr.from, tr.fromStart, tr.fromClicks, tr.fromBuilt, time);
-        this.renderer.drawTransition(tr.from, from, this.slide, to, tr.type, EASE.cubicInOut(raw), tr.dir);
+        this.renderer.drawTransition(this.flowed(tr.from), from, this.onScreen, to, tr.type, EASE.cubicInOut(raw), tr.dir);
         return;
       }
     }
-    this.renderer.drawSlide(this.slide, to, null);
+    this.renderer.drawSlide(this.onScreen, to, null);
   };
 
   destroy() {
