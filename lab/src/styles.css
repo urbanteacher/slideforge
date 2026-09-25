@@ -42,6 +42,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .tb-row.tb-tools .tb-group:first-child { margin-left: 0; }
 
 /* ── Top bar ─────────────────────────────────────────── */
+/* Row one starts with the brand, as SlideForge's does: the lab's mark, the name, and LAB. */
+.brand { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 650; letter-spacing: -.3px; margin-right: 10px; white-space: nowrap; }
+.brand-tag { font-size: 8px; font-weight: 700; letter-spacing: 1.4px; background: var(--accent-soft); color: var(--accent-2); padding: 4px 5px; border-radius: 4px; }
 .logo { display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 8px; position: relative; }
 .logo:hover { background: var(--field); }
 .logo-mark { width: 22px; height: 22px; border-radius: 6px; background: var(--accent); display: grid; place-items: center; font: italic 600 16px/1 'Instrument Serif', Georgia, serif; color: #fff; }
@@ -88,9 +91,15 @@ input, select, textarea { font: inherit; color: inherit; }
 .btn-accent { height: 32px; padding: 0 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 7px; font-weight: 600; background: var(--accent); color: #fff; transition: filter .15s, transform .15s var(--ease); }
 .btn-accent:hover { filter: brightness(1.08); }
 .btn-accent:active { transform: scale(.97); }
+.btn-outline.active { background: var(--field); border-color: #3a3a42; }
+/* Row two ends with the show, where SlideForge keeps Present; it keeps to the right when the row wraps. */
+.tb-run { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+.tb-run .btn-accent { margin-left: 6px; }
 
 .menu { position: absolute; top: calc(100% + 6px); min-width: 220px; background: #161619; border: 1px solid var(--line-2); border-radius: 10px; padding: 5px; z-index: 50; box-shadow: 0 20px 50px rgba(0,0,0,.55); animation: pop .16s var(--ease); }
 .menu.right { right: 0; }
+/* File holds every New, Open, Save and Export, so its names get room to stay on one line. */
+.menu.right { min-width: 320px; }
 .menu button, .menu label { display: flex; width: 100%; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; text-align: left; color: #d6d6db; cursor: pointer; }
 .menu button:hover, .menu label:hover { background: var(--field-2); color: #fff; }
 .menu small { margin-left: auto; color: var(--dim); }
