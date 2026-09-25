@@ -275,6 +275,43 @@
     });
   }
 
+  /* The handout. SlideForge prints a slide that moves as the pages it moves
+     through (js/print.js): an experiment two states to a page, each with what
+     changes, what stays fixed and the takeaway; a picture with facts on its
+     back as the picture, then the facts; a before-and-after as each side. A
+     picture of the lab's slide is one state, so Week 2's 70 slides printed as
+     70 pages where SlideForge's handout had 102. A slide SlideForge's handout
+     gives more pages than the lab's picture of it prints from its SlideForge
+     original, which is what the lab slide was made from; the rest are the
+     lab's pictures. The handout itself decides, so a kind of slide it learns
+     to print as pages is followed here without a list to keep. */
+  function printsAsPages(original, picture) {
+    if (!original) return false;
+    /* An experiment prints all its states, side by side, even when they fit one page. */
+    if (original.type === 'experiment') return true;
+    var pages = function (s) { return SF.Print.pagesFor({ slides: [s] }).length; };
+    return pages(original) > pages(picture);
+  }
+
+  function buildPrintDeck() {
+    return buildShowDeck().then(function (deck) {
+      var source = sourceLesson(api.getDeck());
+      if (!source || !SF.Print || !SF.Print.pagesFor) return deck;
+      var original = {};
+      source.slides.forEach(function (s) { original[s.id] = s; });
+      var from = {};
+      api.getDeck().slides.forEach(function (s) { if (s.sourceSlideId) from[s.id] = s.sourceSlideId; });
+      var changed = false;
+      var slides = deck.slides.map(function (s) {
+        var o = original[from[s.id]];
+        if (!printsAsPages(o, s)) return s;
+        changed = true;
+        return Object.assign(JSON.parse(JSON.stringify(o)), { hidden: s.hidden });
+      });
+      return changed ? SF.normalizeDeck(Object.assign({}, deck, { slides: slides })) : deck;
+    });
+  }
+
   /* The lesson as words, for the practice notes. */
   function wordsDeck() { return lessonFrom(api.outline(), wordsSlide); }
 
@@ -499,9 +536,15 @@
   SF.LabEngine = {
     enabled: enabled, install: install, ready: ready, failed: failed,
     classicDeck: classicDeck, useClassic: useClassic,
+    /* For the handout's test: which slides print from their SlideForge original, and the picture a lab slide becomes. */
+    printsAsPages: printsAsPages, pictureSlide: pictureSlide,
     /* For Share (js/shell.js): the lesson as SlideForge's player shows it. */
     showDeck: function () {
       return new Promise(function (resolve, reject) { whenReady(function () { buildShowDeck().then(resolve, reject); }); });
+    },
+    /* The handout's lesson: the show, with the slides SlideForge prints as pages from their originals. */
+    printDeck: function () {
+      return new Promise(function (resolve, reject) { whenReady(function () { buildPrintDeck().then(resolve, reject); }); });
     },
     /* A shared copy has to fit the server's limit (8 MB, MAX_DOC in
        server/server.js), so its pictures step down until it does. */

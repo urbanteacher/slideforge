@@ -1376,7 +1376,7 @@
                path that wrote from the live document. */
             /* A lab lesson prints as the show SlideForge's player runs: every
                slide fully built, as a picture, with its games in place. */
-            if (it.id === 'pdf' && active.lab && SF.LabEngine) return SF.Print.open(SF.LabEngine.showDeck());
+            if (it.id === 'pdf' && active.lab && SF.LabEngine) return SF.Print.open(SF.LabEngine.printDeck ? SF.LabEngine.printDeck() : SF.LabEngine.showDeck());
             if (it.id === 'pdf') return SF.Print.open(active.doc());
             if (it.id === 'md') return exportMarkdown();
             if (it.id === 'folder') return exportAllToFolder();
