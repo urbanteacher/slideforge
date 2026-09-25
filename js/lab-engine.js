@@ -528,6 +528,7 @@
        own player when it installed; the lab engine installs after it. */
     var btnPresent = document.getElementById('btnPresent');
     if (btnPresent) btnPresent.onclick = function () { ws.play(); };
+    followShow();
     /* File → Open saved lesson: the lab's decks, through the shell's own Open list. */
     var btnOpenLesson = document.getElementById('btnOpenLesson');
     var btnOpen = /** @type {HTMLButtonElement|null} */ (document.getElementById('btnOpen'));
@@ -587,6 +588,29 @@
     if (d.id === lastClassic && api && (api.getDeck().sourceId === d.id || api.getDeck().id === d.id)) return;
     lastClassic = d.id;
     open(JSON.parse(JSON.stringify(d)));
+  }
+
+  /* The editor follows the show: out of a show, the lab is on the slide the
+     show ended on, so Present again goes on from there, as it would in
+     Keynote or PowerPoint, rather than from wherever editing had left it. A
+     SlideForge slide the lab has not got (a game it did not build) leaves the
+     lab on the lab slide before it. */
+  var lastShown = null;
+  function followShow() {
+    if (!SF.Player || !SF.Player.on) return;
+    SF.Player.on('slide', function (e) {
+      var d = SF.Player.deck;
+      if (!api || !d || d.id !== api.getDeck().id) { lastShown = null; return; }
+      var ids = api.getDeck().slides.map(function (s) { return s.id; });
+      for (var i = e && e.index != null ? e.index : SF.Player.idx; i >= 0; i--) {
+        var s = d.slides[i];
+        if (s && ids.indexOf(s.id) >= 0) { lastShown = s.id; return; }
+      }
+    });
+    SF.Player.on('close', function () {
+      if (lastShown && api && api.showSlide) api.showSlide(lastShown);
+      lastShown = null;
+    });
   }
 
   function useClassic(on) {

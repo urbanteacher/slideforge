@@ -257,6 +257,13 @@ export const labApi = {
   },
   present() { useStore.getState().set({ presenting: true }); },
   currentSlideId: () => useStore.getState().slideId,
+  /** Go to one of the deck's slides by its id (the show ended on it); false when the deck has none. */
+  showSlide(id: string): boolean {
+    const st = useStore.getState();
+    if (!st.deck.slides.some((s) => s.id === id)) return false;
+    if (st.slideId !== id) useStore.setState({ slideId: id, selectedId: null });
+    return true;
+  },
   stills,
   outline,
   /** The slides of a SlideForge lesson the lab cannot build: its games and activities. */
