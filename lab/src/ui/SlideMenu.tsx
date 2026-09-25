@@ -1,4 +1,4 @@
-import { ClipboardPaste, Copy, CopyPlus, Eye, EyeOff, MoreHorizontal, Trash2 } from 'lucide-react';
+import { ClipboardPaste, Copy, CopyPlus, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { cloneSlide } from '../model/defaults';
 import { useStore } from '../model/store';
@@ -21,7 +21,7 @@ export const slideClipboard = {
     useStore.getState().showToast('Slide copied. Paste puts it after the slide you are on.');
   },
   paste() {
-    if (!copied) return;
+    if (!copied) { useStore.getState().showToast('Copy a slide first — Copy, ⌘C, or right-click a slide.'); return; }
     const c = cloneSlide(copied);
     useStore.getState().addSlide(c);
   },
@@ -51,24 +51,6 @@ function items(id: string, close: () => void): ReactNode {
       <hr />
       <button className="danger" disabled={st.deck.slides.length <= 1} onClick={run(() => st.deleteSlide(id))}><Trash2 size={15} />Delete slide</button>
     </>
-  );
-}
-
-/** The toolbar button: acts on the slide you are on. */
-export function SlideMenuButton() {
-  const slideId = useStore((s) => s.slideId);
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    if (!open) return;
-    const off = (e: PointerEvent) => { if (!(e.target as HTMLElement).closest('.slide-menu-wrap')) setOpen(false); };
-    addEventListener('pointerdown', off);
-    return () => removeEventListener('pointerdown', off);
-  }, [open]);
-  return (
-    <div className="slide-menu-wrap" style={{ position: 'relative' }}>
-      <button className={`tb-btn${open ? ' active' : ''}`} title="Copy, paste, duplicate, hide or delete this slide — also on right-click" aria-haspopup="menu" onClick={() => setOpen(!open)}><MoreHorizontal size={15} />Slide</button>
-      {open && <div className="menu" role="menu">{items(slideId, () => setOpen(false))}</div>}
-    </div>
   );
 }
 

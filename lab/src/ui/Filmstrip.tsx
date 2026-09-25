@@ -1,5 +1,5 @@
-import { ChevronRight, Copy, Plus, Trash2, EyeOff, LayoutGrid, X } from 'lucide-react';
-import { useSlideContextMenu } from './SlideMenu';
+import { ChevronRight, Copy, Plus, Trash2, Eye, EyeOff, LayoutGrid, LayoutTemplate, X } from 'lucide-react';
+import { toggleHidden, useSlideContextMenu } from './SlideMenu';
 import { FEEDBACK } from './Engagement';
 import { useEffect, useRef, useState } from 'react';
 import { renderStill } from '../export/exporters';
@@ -44,7 +44,8 @@ export function Filmstrip() {
   const [menu, openMenu] = useSlideContextMenu();
   const selRef = useRef<HTMLDivElement>(null);
   useEffect(() => { selRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }); }, [slideId]);
-  const [sorter, setSorter] = useState(false);
+  const sorter = useStore((s) => s.sorterOpen);
+  const setSorter = (v: boolean | ((was: boolean) => boolean)) => useStore.setState((s) => ({ sorterOpen: typeof v === 'function' ? v(s.sorterOpen) : v }));
   // ⌘G, as in SlideForge: the whole deck at once.
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
@@ -72,7 +73,11 @@ export function Filmstrip() {
             onBlur={(e) => { e.target.value = String(index + 1); }} />
           <span aria-hidden="true">/</span><span>{slides.length}</span>
         </label>
-        <button className="strip-sorter" title="Block view — the whole deck at once, to rearrange it (⌘G)" aria-label="Block view of all slides" onClick={() => setSorter(true)}><LayoutGrid size={15} /></button>
+        {/* Under the count, the two ways to see many slides at once: the Gallery of starting slides, and Block view. */}
+        <div className="strip-tools">
+          <button className="strip-sorter" title="Gallery — starting slides and layouts" aria-label="Gallery" onClick={() => useStore.setState({ galleryOpen: true })}><LayoutTemplate size={15} /></button>
+          <button className="strip-sorter" title="Block view — the whole deck at once, to rearrange it (⌘G)" aria-label="Block view of all slides" onClick={() => setSorter(true)}><LayoutGrid size={15} /></button>
+        </div>
       </div>
       {sorter && <SlideSorter close={() => setSorter(false)} thumb={thumb} />}
       {slides.map((s, i) => (
@@ -92,6 +97,7 @@ export function Filmstrip() {
           <div className="thumb-img">{thumb(s.id) && <img src={thumb(s.id)} alt="" draggable={false} />}{s.hidden && <span className="thumb-hidden" title="Hidden from the presentation"><EyeOff size={12} />Hidden</span>}{s.feedback && <span className="thumb-feedback" title={`Audience feedback: ${FEEDBACK.find((f) => f.value === s.feedback!.kind)?.label}`}>{FEEDBACK.find((f) => f.value === s.feedback!.kind)?.icon}</span>}</div>
           <div className="thumb-meta"><b>{i + 1}</b><span>{s.name}</span></div>
           <div className="thumb-acts" onClick={(e) => e.stopPropagation()}>
+            <button title={s.hidden ? 'Show in the presentation' : 'Hide from the presentation'} aria-pressed={!!s.hidden} onClick={() => toggleHidden(s.id)}>{s.hidden ? <Eye size={12} /> : <EyeOff size={12} />}</button>
             <button title="Duplicate slide" onClick={() => duplicateSlide(s.id)}><Copy size={12} /></button>
             <button title="Delete slide" onClick={() => deleteSlide(s.id)}><Trash2 size={12} /></button>
           </div>

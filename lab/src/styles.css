@@ -614,3 +614,38 @@ button.swatch { border: 0; padding: 0; cursor: pointer; }
 .pal-more { margin-top: 10px; width: 100%; display: flex; align-items: center; gap: 6px; justify-content: center; padding: 7px; border-radius: 8px; background: rgba(255,255,255,.06); color: #ddd; font-size: 12px; }
 .pal-more:hover { background: rgba(255,255,255,.1); }
 .pal-native { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; bottom: 0; left: 50%; }
+
+/* The foot of the canvas, above the slide strip: SlideForge's place for the zoom (ui/CanvasBar.tsx). */
+.canvas-bar { flex: none; display: flex; align-items: center; gap: 2px; height: 36px; padding: 0 12px; border-top: 1px solid var(--line); background: var(--panel); }
+.canvas-bar .zoom-val.fit { color: var(--text); }
+/* Menus from the canvas bar open upward: below it is the slide strip. */
+.canvas-bar .menu { top: auto; bottom: calc(100% + 6px); }
+.strip-tools { display: flex; gap: 2px; }
+/* Animate: a green block with a white play mark (ui/AddMenu.tsx). */
+.btn-play { flex: none; width: 24px; height: 24px; display: inline-grid; place-items: center; border-radius: 6px; background: #1f9d5a; color: #fff; margin: 0 2px; transition: background .15s, transform .15s var(--ease); }
+.btn-play:hover { background: #24b567; }
+.btn-play:active { transform: scale(.94); }
+.btn-play svg { margin-left: 1px; }
+/* The tools row: the formatting bar centred over the canvas, undo, redo and Animate at the right. */
+.tb-row.tb-tools { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+.tb-row.tb-tools > .fmt { grid-column: 2; margin-left: 0; }
+.tb-row.tb-tools > .spacer { display: none; }
+.tb-row.tb-tools > .tb-run { grid-column: 3; justify-self: end; }
+.fmt.idle > .fmt-history { opacity: 1; }
+/* SlideForge's second header row, on the tools row inside SlideForge (ui/ShellRow.tsx), in its look. */
+.tb-row.tb-tools > .shell-group { grid-column: 1; justify-self: start; }
+.tb-run > .shell-group { margin-left: 6px; }
+.shell-group { display: flex; align-items: center; gap: 7px; }
+.shell-btn { height: 30px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--text); font-size: 12px; white-space: nowrap; }
+.shell-btn:hover { background: var(--field-2); }
+.shell-live { background: rgba(150,110,210,.16); border-color: rgba(150,110,210,.34); color: #b596e6; font-weight: 600; }
+.shell-live:hover { background: rgba(150,110,210,.26); }
+.shell-present { display: inline-flex; }
+.shell-primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.shell-primary:hover { background: var(--accent-2); }
+.shell-present > .shell-primary { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.shell-more { padding: 0 8px; border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: 1px solid rgba(255,255,255,.28); }
+.shell-sizes { display: flex; gap: 4px; padding: 2px 10px 6px; }
+.shell-sizes button { width: auto; padding: 4px 10px; border: 1px solid var(--line-2); border-radius: 999px; font-variant-numeric: tabular-nums; }
+/* The right-hand panel folded away (the canvas bar's panel button): the canvas takes its width. */
+.app.no-panel { grid-template-columns: 272px 1fr; }

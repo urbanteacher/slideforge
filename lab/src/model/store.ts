@@ -30,6 +30,10 @@ interface State {
   /** A layer inside a group that was double-clicked into: it is selected on its own, not with its group. */
   partId: string | null;
   galleryOpen: boolean;
+  /** Block view: every slide at once, to rearrange them (⌘G, or the grid on the canvas bar). */
+  sorterOpen: boolean;
+  /** The right-hand panel folded away, so the canvas has the width (the canvas bar's panel button). Remembered in this browser. */
+  panelHidden: boolean;
   galleryTab: 'layouts' | 'designs';
   clipboard: Layer | null;
   toast: string | null;
@@ -100,6 +104,8 @@ export const useStore = create<State>((set, get) => ({
   editingTextId: null,
   partId: null,
   galleryOpen: false,
+  sorterOpen: false,
+  panelHidden: (() => { try { return localStorage.getItem('sf-lab-panel') === 'hidden'; } catch { return false; } })(),
   galleryTab: 'layouts',
   clipboard: null,
   toast: null,

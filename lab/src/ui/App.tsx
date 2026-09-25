@@ -5,6 +5,7 @@ import type { Deck } from '../model/types';
 import { idbGet } from '../persist/idb';
 import { isLabDeck, saveCurrent } from '../embed';
 import { registerGuideFonts } from '../model/guide';
+import { CanvasBar } from './CanvasBar';
 import { Filmstrip } from './Filmstrip';
 import { Gallery } from './Gallery';
 import { Inspector } from './Inspector';
@@ -28,6 +29,7 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
   const presenting = useStore((s) => s.presenting);
   const galleryOpen = useStore((s) => s.galleryOpen);
   const toast = useStore((s) => s.toast);
+  const panelHidden = useStore((s) => s.panelHidden);
   const guide = useStore((s) => s.deck.styleGuide);
   // The deck's own typefaces, from its style guide, for every text box and thumbnail.
   useEffect(() => { registerGuideFonts(guide); }, [guide]);
@@ -154,14 +156,15 @@ export function App({ embedded = false, onReady }: { embedded?: boolean; onReady
 
   if (!restored) return <div className="app app-loading" aria-busy="true" />;
   return (
-    <div className={`app${embedded ? ' embedded' : ''}`}>
+    <div className={`app${embedded ? ' embedded' : ''}${panelHidden ? ' no-panel' : ''}`}>
       <TopBar embedded={embedded} />
       <LeftPanel />
       <main className="center">
         <Stage />
+        <CanvasBar />
         <Filmstrip />
       </main>
-      <Inspector />
+      {!panelHidden && <Inspector />}
       {presenting && <Present />}
       {galleryOpen && <Gallery />}
       {toast && <div className="toast">{toast}</div>}

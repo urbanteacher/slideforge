@@ -1,4 +1,4 @@
-import { Bold, Italic, List, ListOrdered, Minus, Plus, TextAlignCenter, TextAlignEnd, TextAlignStart, Underline, type LucideIcon } from 'lucide-react';
+import { Bold, Italic, List, ListOrdered, Minus, Plus, Redo2, TextAlignCenter, TextAlignEnd, TextAlignStart, Underline, Undo2, type LucideIcon } from 'lucide-react';
 import { useRef } from 'react';
 import { FONTS, kind } from '../engine/registry';
 import { layerOf, useStore } from '../model/store';
@@ -21,6 +21,8 @@ function Btn({ icon: I, title, on, disabled, onClick }: { icon: LucideIcon; titl
 
 export function FormatBar() {
   const layer = useStore(layerOf);
+  const canUndo = useStore((s) => s.past.length > 0);
+  const canRedo = useStore((s) => s.future.length > 0);
   const guide = useStore((s) => s.deck.styleGuide);
   const updateLayer = useStore((s) => s.updateLayer);
   const g = useRef(newGesture());
@@ -38,6 +40,10 @@ export function FormatBar() {
 
   return (
     <div className={`tb-group fmt${layer ? '' : ' idle'}`} title={layer ? undefined : 'Select a text box to format it'}>
+      {/* Undo and redo lead the bar: they work on any slide, text box or not, so they never fade with the rest. */}
+      <button className="tb-btn icon fmt-history" title="Undo (⌘Z)" aria-label="Undo" disabled={!canUndo} onClick={() => useStore.getState().undo()}><Undo2 size={15} /></button>
+      <button className="tb-btn icon fmt-history" title="Redo (⇧⌘Z)" aria-label="Redo" disabled={!canRedo} onClick={() => useStore.getState().redo()}><Redo2 size={15} /></button>
+      <span className="fmt-sep fmt-history" />
       <select className="fmt-font" value={has(layer, 'font') ? String(p.font) : ''} disabled={!has(layer, 'font')} onChange={(e) => set('font', e.target.value)} onKeyDown={(e) => e.stopPropagation()} title="Font">
         {!has(layer, 'font') && <option value="">Font</option>}
         {fontChoices(guide, FONTS).map((f) => <option key={f} value={f}>{f}</option>)}
