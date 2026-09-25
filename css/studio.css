@@ -315,3 +315,20 @@ html[data-ws="plan"] .rail-foot .rail-actions .btn{flex:1}
 /* Rehearse with a class of 8, 30 or 120 (RP-01). */
 .present-sizes{display:flex;align-items:center;gap:4px;padding:2px 10px 6px 26px}.present-sizes .btn{flex-direction:row;padding:4px 10px;border:1px solid var(--ui-line);border-radius:999px;font-variant-numeric:tabular-nums}
 
+/* The lab as the Lesson studio (js/lab-engine.js): its frame takes the rail,
+   the stage and the inspector, and the shell's two rows stay above it. */
+.lab-frame{grid-row:2;grid-column:1/-1;width:100%;height:100%;min-height:0;border:0;display:block;background:var(--ui-bg)}
+html.lab-engine[data-ws="deck"] #app>.rail,
+html.lab-engine[data-ws="deck"] #app>.stage-area,
+html.lab-engine[data-ws="deck"] #app>.inspector{display:none}
+html.lab-engine:not([data-ws="deck"]) .lab-frame{display:none}
+html.lab-engine[data-ws="deck"] #btnOpenLesson{display:block}
+/* While the lab loads, and if it never does. */
+.lab-loading{grid-row:2;grid-column:1/-1;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--ui-bg);color:var(--ui-dim);font-size:13px}
+.lab-loading:not(.failed){flex-direction:row}
+.lab-loading-dot{width:8px;height:8px;border-radius:50%;background:var(--ui-accent);animation:lab-pulse 1s ease-in-out infinite}
+@keyframes lab-pulse{50%{opacity:.25}}
+.lab-loading.failed{color:var(--ui-text)}
+.lab-loading-sub{color:var(--ui-dim);font-size:12px}
+.lab-loading a{color:var(--ui-accent)}
+html.lab-engine:not([data-ws="deck"]) .lab-loading{display:none}

@@ -48,7 +48,7 @@ const SETS = {
     'artwork-face', 'campaign-chrome', 'canvas-edit', 'chrome-region',
     'chrome-regions', 'clipboard-selection', 'demo-deck', 'design-controls',
     'canvas-placement', 'delete-truth', 'desk-overlay', 'exports', 'fit-check', 'handout', 'layout-face',
-    'layout-fit', 'lesson-bank', 'live-quiz', 'mindmap', 'refresh',
+    'lab-lesson', 'layout-fit', 'lesson-bank', 'live-quiz', 'mindmap', 'refresh',
     'review-tool', 'share', 'slide-review', 'type-scale',
   ],
   /* Everything that touches saving, reloading, exporting or sharing a deck.

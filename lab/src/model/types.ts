@@ -108,6 +108,9 @@ export interface Slide {
   notes: string;
   /** Kept in the deck and the editor, skipped by Preview and the exported deck. */
   hidden?: boolean;
+  /** The SlideForge slide this one was converted from, so a show built for SlideForge's player can
+   *  put the lesson's games back after the slide they followed. */
+  sourceSlideId?: string;
   /** What a slide design was built from (hotspots, pictures, facts, callouts), so the Slide panel
    *  can edit it and build the slide again in the deck's style. */
   recipe?: { kind: string; args: Record<string, unknown> };
@@ -172,4 +175,10 @@ export interface Deck {
   headerFooter?: HeaderFooter;
   /** The deck's own style guide, when one has been read in: its colours, fonts and marks. */
   styleGuide?: StyleGuide;
+  /** The SlideForge lesson this deck was converted from. The original is kept; this is the lab's copy. */
+  sourceId?: string;
+  /** The Library folder SlideForge's shell files it under. */
+  libraryGroup?: string;
+  /** When the shell last saved it, for the Open list. */
+  modified?: number;
 }

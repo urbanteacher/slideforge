@@ -68,6 +68,18 @@ export function getImage(src: string): HTMLImageElement | null {
   return img.complete && img.naturalWidth > 0 ? img : null;
 }
 
+/** Settles once a picture has arrived, or failed to: a still drawn before then leaves it out. */
+export function imageSettled(src: string): Promise<void> {
+  if (!src) return Promise.resolve();
+  getImage(src);
+  const img = images.get(src)!;
+  if (img.complete) return Promise.resolve();
+  return new Promise((resolve) => {
+    img.addEventListener('load', () => resolve(), { once: true });
+    img.addEventListener('error', () => resolve(), { once: true });
+  });
+}
+
 // ─── Text ───────────────────────────────────────────────────────────────────
 export function fontString(p: Params, px: number) {
   const fam = String(p.font ?? 'Inter');

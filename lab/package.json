@@ -10,7 +10,8 @@
     "prebuild": "npm run build:player",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:app": "npm run build:player && tsc --noEmit && vite build --config vite.app.config.ts"
   },
   "dependencies": {
     "immer": "^11.1.18",

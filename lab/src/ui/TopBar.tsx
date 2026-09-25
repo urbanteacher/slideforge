@@ -32,7 +32,7 @@ function Menu({ trigger, children, right }: { trigger: (open: boolean, toggle: (
   );
 }
 
-export function TopBar() {
+export function TopBar({ embedded = false }: { embedded?: boolean }) {
   const deck = useStore((s) => s.deck);
   const saveState = useStore((s) => s.saveState);
   const canUndo = useStore((s) => s.past.length > 0);
@@ -62,7 +62,7 @@ export function TopBar() {
       {/* SlideForge's two rows, each control once. Row one is the document: brand, name, saved, File.
           Row two is the tools on the left and the show on the right, where SlideForge keeps Present.
           History, Settings, Share and Host live are the shell's, and arrive when the lab joins it. */}
-      <div className="tb-row">
+      {!embedded && <div className="tb-row">
       <div className="brand" aria-label="SlideForge Studio"><span className="logo-mark">s</span>SlideForge<span className="brand-tag">LAB</span></div>
       <input className="title-input" aria-label="Deck name" value={deck.title} onChange={(e) => mutate((d) => { d.title = e.target.value; }, 'title')} onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />
       <span className="saved" aria-live="polite">{saveState === 'saved' ? 'Saved in this browser' : saveState === 'saving' ? 'Saving…' : 'Edited'}</span>
@@ -98,7 +98,7 @@ export function TopBar() {
         )}
       </Menu>
       <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) openFile(f); e.target.value = ''; }} />
-      </div>
+      </div>}
       <div className="tb-row tb-tools">
       <div className="tb-group">
         <Menu trigger={(open, t) => <button className={`tb-btn${open ? ' active' : ''}`} onClick={t}><Plus size={15} />Add<ChevronDown size={13} /></button>}>
@@ -150,7 +150,8 @@ export function TopBar() {
         <button className="zoom-val" title="Fit to window" onClick={() => set({ zoom: 'fit' })}>{Math.round(zoom * 100)}%</button>
         <button className="tb-btn icon" title="Zoom in" aria-label="Zoom in" onClick={() => stepZoom(1.25)}><Plus size={15} /></button>
         <button className="tb-btn" title="Play this slide's animations in the editor" onClick={() => useStore.setState((s) => ({ playToken: s.playToken + 1 }))}><Sparkles size={15} /><span className="tb-label">Animate</span></button>
-        <button className="btn-accent" title="Slideshow, full screen (⌘↵)" onClick={() => set({ presenting: true })}><Play size={14} />Present</button>
+        {/* Embedded, the shell's Present is the one: it runs this show, full screen. */}
+        {!embedded && <button className="btn-accent" title="Slideshow, full screen (⌘↵)" onClick={() => set({ presenting: true })}><Play size={14} />Present</button>}
       </div>
       </div>
     </header>

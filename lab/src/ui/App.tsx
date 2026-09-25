@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { cloneLayer } from '../model/defaults';
 import { layerOf, refitAllText, slideOf, useStore } from '../model/store';
 import type { Deck } from '../model/types';
-import { idbGet, idbSet } from '../persist/idb';
+import { idbGet } from '../persist/idb';
+import { isLabDeck, saveCurrent } from '../embed';
 import { registerGuideFonts } from '../model/guide';
 import { Filmstrip } from './Filmstrip';
 import { Gallery } from './Gallery';
@@ -22,7 +23,8 @@ const isTyping = (t: EventTarget | null) => {
   return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable);
 };
 
-export function App() {
+/** `embedded`: SlideForge's shell owns the document row (name, File, Save), so the lab shows its tools only. */
+export function App({ embedded = false, onReady }: { embedded?: boolean; onReady?: () => void }) {
   const presenting = useStore((s) => s.presenting);
   const galleryOpen = useStore((s) => s.galleryOpen);
   const toast = useStore((s) => s.toast);
@@ -38,19 +40,18 @@ export function App() {
   useEffect(() => {
     let timer = 0;
     let ready = false;
-    const save = () => {
-      const st = useStore.getState();
-      return idbSet('current', { deck: st.deck, slideId: st.slideId });
-    };
+    // The last-open slot, and the deck under its own id so the shell's Open can list it.
+    const save = () => saveCurrent();
     idbGet<{ deck: Deck; slideId?: string }>('current').then((saved) => {
-      if (saved?.deck?.slides?.length) {
+      if (isLabDeck(saved?.deck)) {
         useStore.getState().loadDeck(saved.deck);
         if (saved.slideId && saved.deck.slides.some((s) => s.id === saved.slideId)) useStore.setState({ slideId: saved.slideId });
         useStore.setState({ saveState: 'saved' });
       }
       ready = true;
       setRestored(true);
-    }).catch(() => { ready = true; setRestored(true); });
+      onReady?.();
+    }).catch(() => { ready = true; setRestored(true); onReady?.(); });
     // A refresh within the autosave's half-second would lose the last edit: save as the page goes.
     const flush = () => { if (ready && useStore.getState().saveState !== 'saved') { clearTimeout(timer); save(); } };
     addEventListener('pagehide', flush);
@@ -153,8 +154,8 @@ export function App() {
 
   if (!restored) return <div className="app app-loading" aria-busy="true" />;
   return (
-    <div className="app">
-      <TopBar />
+    <div className={`app${embedded ? ' embedded' : ''}`}>
+      <TopBar embedded={embedded} />
       <LeftPanel />
       <main className="center">
         <Stage />

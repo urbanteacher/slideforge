@@ -357,6 +357,8 @@
 
   function pasteOnDocument(e) {
     if (SF.Player && SF.Player.open) return;
+    /* Only while this editor is the one on screen: behind the lab it is hidden. */
+    if (SF.Shell.current && SF.Shell.current() !== ws) return;
     if (document.querySelector('dialog[open], .modal.on')) return;
     var t = /** @type {HTMLElement|null} */ (e.target);
     var tag = t ? t.tagName : '';
@@ -2315,6 +2317,9 @@
 
   function repaint() { drawPreview(); drawRail(); }
   function draw() {
+    /* With the lab as the Lesson studio (js/lab-engine.js), a lesson handed to
+       this editor — by the Library, the demo, New — opens in the lab. */
+    if (SF.LabEngine && SF.Shell.current && SF.Shell.current() !== ws) SF.LabEngine.classicDeck(deck);
     /* An open fallback form would be torn down by the redraw; keep its words
        and record them as an edit first. */
     if (SF.Custom && SF.Custom.endCanvasEditor && SF.Custom.endCanvasEditor()) touched();
@@ -2417,6 +2422,7 @@
   }
   function onSlideContextMenu(e) {
     if (SF.Player && SF.Player.open) return;
+    if (SF.Shell.current && SF.Shell.current() !== ws) return;
     var t = /** @type {Element|null} */ (e.target);
     if (!t || !t.closest) return;
     /* Words being typed into keep the browser's own menu — spelling, paste. */

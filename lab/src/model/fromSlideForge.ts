@@ -17,6 +17,7 @@ import { finish, framed, kit } from './ukbtDeck';
 
 /** A SlideForge slide's content: only the fields the lab reads. */
 export interface SFSlide {
+  id?: string;
   type: string;
   title?: string;
   subtitle?: string;
@@ -206,8 +207,15 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
   }
 }
 
+/** Whether the lab can build this SlideForge slide. What it cannot (games, activities) stays SlideForge's. */
+let probe: ReturnType<typeof kit> | null = null;
+export function convertsSlide(s: SFSlide): boolean {
+  probe ??= kit('nul');
+  try { return !!convert(s, probe.on, (p) => p ?? '', ''); } catch { return false; }
+}
+
 /** A SlideForge deck, built in the lab in a palette (NU London's for the Northeastern theme). */
-export function deckFromSlideForge(data: SFDeck, paletteId = 'nul'): Deck {
+export function deckFromSlideForge(data: SFDeck, paletteId = 'nul', opts: { frame?: boolean; games?: string } = {}): Deck {
   const { guide, on, put } = kit(paletteId);
   const img = (p?: string) => (p && data.images[p]) || '';
   const slides: Slide[] = [];
@@ -216,10 +224,12 @@ export function deckFromSlideForge(data: SFDeck, paletteId = 'nul'): Deck {
     const out = convert(s, on, img, guide.marks[1]?.src ?? guide.marks[0]?.src ?? '');
     if (!out) { skipped++; continue; }
     const notes = [s.notes ?? '', out.note ? `LAB — ${out.note}` : ''].filter(Boolean).join('\n\n');
-    slides.push(put(out.slide, out.ground, notes));
+    const made = put(out.slide, out.ground, notes);
+    if (s.id) made.sourceSlideId = s.id;
+    slides.push(made);
   }
-  const deck: Deck = { id: uid(), title: `${data.title}${skipped ? ` (without its ${skipped} games)` : ''}`, width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: guide, slides: finish(slides) };
-  return framed(deck, guide.marks[0]?.src ?? '', 'Northeastern University London');
+  const deck: Deck = { id: uid(), title: `${data.title}${skipped ? (opts.games ?? ` (without its ${skipped} games)`) : ''}`, width: 1920, height: 1080, version: 1, theme: 'guide', styleGuide: guide, slides: finish(slides) };
+  return opts.frame === false ? deck : framed(deck, guide.marks[0]?.src ?? '', 'Northeastern University London');
 }
 
 /** One of the Slide designs: a SlideForge slide with a special feature, built natively in the lab. */

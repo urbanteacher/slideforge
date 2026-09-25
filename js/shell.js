@@ -996,7 +996,21 @@
       SF.toast('Share is not available in this build.');
       return;
     }
-    SF.shareLessonDoc(deckWs.doc(), { live: !!(SF.Live && SF.Live.active) });
+    var live = !!(SF.Live && SF.Live.active);
+    /* A lab lesson is shared as the show SlideForge's player runs — its slides
+       as pictures, its games in place — so the read, practice and follow-along
+       links all open in view.html, and a follow link matches the live room. */
+    if (deckWs.lab && SF.LabEngine) {
+      SF.toast('Preparing the lesson to share\u2026');
+      SF.LabEngine.shareDeck().then(function (show) {
+        SF.shareLessonDoc(show, { live: live });
+      }, function (e) {
+        console.error(e);
+        SF.toast('The lesson could not be prepared to share.');
+      });
+      return;
+    }
+    SF.shareLessonDoc(deckWs.doc(), { live: live });
   }
 
   /** Authored lesson currently in the deck studio — for Presenter share prep. */
@@ -1004,6 +1018,8 @@
     var deckWs = workspaces.deck;
     if (!deckWs || !deckWs.doc) return null;
     if (deckWs.flush) deckWs.flush();
+    /* The desk shares while a room runs, and the room runs the lab's show. */
+    if (deckWs.lab && SF.LabEngine) return SF.LabEngine.lastShowDeck() || null;
     return deckWs.doc();
   }
 
@@ -1141,7 +1157,9 @@
 
   /** One-way practice notes for Canvas / Colab — decks only. */
   function exportMarkdown() {
-    var doc = active.doc();
+    /* A lab lesson's notes are its words: each slide's heading, text and speaker notes. */
+    var doc = active.lab && SF.LabEngine ? SF.LabEngine.wordsDeck() : active.doc();
+    if (!doc) { SF.toast('The lesson is still opening \u2014 try again in a moment.'); return; }
     var md = SF.deckToMarkdown(doc);
     var blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
     var a = document.createElement('a');
@@ -1255,7 +1273,11 @@
       var isGame = raw && (raw.kind === 'game' || Array.isArray(raw.questions));
       var key = isGame ? 'game' : 'deck';
       var ws = workspaces[key];
-      var doc = isGame ? SF.normalizeGame(raw) : SF.normalizeDeck(raw);
+      /* A lab deck is layers, which normalizeDeck does not know: it goes to the
+         lab as it is. A classic lesson goes too, and the lab converts it. */
+      var doc = isGame ? SF.normalizeGame(raw)
+        : ws && ws.lab ? (raw && Array.isArray(raw.slides) ? raw : null)
+        : SF.normalizeDeck(raw);
       if (!doc) { SF.toast('That file is not a SlideForge document'); return; }
 
       if (SF.History && SF.History.ready() && active && active.doc) {
@@ -1350,6 +1372,9 @@
             /* The handler flushes before opening the picker now, so this no
                longer needs its own flush the way it did when it was the only
                path that wrote from the live document. */
+            /* A lab lesson prints as the show SlideForge's player runs: every
+               slide fully built, as a picture, with its games in place. */
+            if (it.id === 'pdf' && active.lab && SF.LabEngine) return SF.Print.open(SF.LabEngine.showDeck());
             if (it.id === 'pdf') return SF.Print.open(active.doc());
             if (it.id === 'md') return exportMarkdown();
             if (it.id === 'folder') return exportAllToFolder();
@@ -1708,7 +1733,7 @@
                   return SF.History.get(row.id);
                 }).then(function (old2) {
                   if (!old2) { SF.toast('That version could not be read.'); return; }
-                  active.setDoc(active.key === 'game' ? SF.normalizeGame(old2) : SF.normalizeDeck(old2));
+                  active.setDoc(active.key === 'game' ? SF.normalizeGame(old2) : active.lab ? old2 : SF.normalizeDeck(old2));
                   active.store.save(active.doc());
                   syncChrome();
                   if (active.draw) active.draw();
@@ -1826,6 +1851,9 @@
 
     // engines register themselves when their script runs
     SF.Editor.install();
+    /* The lab takes the Lesson studio's place (js/lab-engine.js). After the
+       classic editor, so its 'deck' is the one registered. */
+    if (SF.LabEngine) SF.LabEngine.install();
     SF.Games.install();
     SF.installNotesStrip();
     if (SF.Artwork) SF.Artwork.install();

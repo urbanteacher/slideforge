@@ -72,7 +72,7 @@ function still(): { canvas: HTMLCanvasElement; r: Renderer } {
 }
 
 /** Render a fully built slide to an image data URL. */
-export function renderStill(slide: Slide, deck: Deck, width: number, type = 'image/png', time = 2): string {
+export function renderStill(slide: Slide, deck: Deck, width: number, type = 'image/png', time = 2, quality = 0.9): string {
   const { canvas, r } = still();
   r.deckW = deck.width;
   // A thumbnail can be drawn against a bare size with no slides; it simply has no page number.
@@ -80,7 +80,7 @@ export function renderStill(slide: Slide, deck: Deck, width: number, type = 'ima
   r.deckH = deck.height;
   r.setSize(width, Math.round((width * deck.height) / deck.width));
   r.drawSlide(slide, { time, mouse: [0.5, 0.5], t: Infinity, clicks: [] }, null);
-  const url = canvas.toDataURL(type, 0.9);
+  const url = canvas.toDataURL(type, quality);
   // Thumbnails are drawn for every slide in turn; keeping each one's textures would hold the whole
   // deck on the GPU (93 slides of pictures and type was enough to crash it), so only this slide's stay.
   r.prune(new Set(slide.layers.map((l) => l.id)));

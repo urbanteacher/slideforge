@@ -234,7 +234,7 @@
         if (doomedOpen && SF.Editor && SF.Editor.cancelPendingSave) {
           SF.Editor.cancelPendingSave();
         }
-        ids.forEach(function (id) { SF.Store.remove(id); });
+        ids.forEach(function (id) { SF.Store.remove(id); if (SF.LabEngine) SF.LabEngine.forget(id); });
         picked = Object.create(null);
         if (doomedOpen) {
           var leftover = SF.Store.list()[0];
@@ -256,7 +256,10 @@
       /* The demo document is deliberately off the shelf — and off the count,
          which would otherwise report a lesson the list does not show. */
       var all = ((SF.Store && SF.Store.list) ? SF.Store.list() : [])
-        .filter(function (d) { return d.libraryGroup !== SF.DEMO_LIBRARY_GROUP; });
+        .filter(function (d) { return d.libraryGroup !== SF.DEMO_LIBRARY_GROUP; })
+        /* A lesson now edited in the lab shows once, as the lab's card; the
+           original is kept, unlisted, for the games the lab does not run. */
+        .filter(function (d) { return !(SF.LabEngine && SF.LabEngine.hasCopy(d.id)); });
       var openId = currentId();
       var q = searchQuery.trim().toLowerCase();
       var collapsed = (SF.LibraryFolders && SF.LibraryFolders.collapsed)

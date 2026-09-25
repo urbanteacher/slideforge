@@ -142,11 +142,16 @@
     add('p','teaching-source','Source / units: '+(s.chartSource||'Not supplied - add a source and units before distribution.')+(SF.chartData(s).categories.length>12?' Only the first 12 categories are displayed.':''));
     return page;
   }
+  /* deck may be a promise (a lab lesson is drawn first, js/lab-engine.js): the
+     window opens now, inside the click, or the browser blocks it as a pop-up. */
   async function open(deck) {
     var preview = window.open('', '_blank');
     if (!preview) { SF.toast('Allow pop-ups to open the student PDF preview.'); return; }
     var doc = preview.document;
-    doc.open(); doc.write('<!doctype html><html><head></head><body></body></html>'); doc.close();
+    doc.open(); doc.write('<!doctype html><html><head></head><body style="font:16px system-ui;padding:24px">Preparing the handout\u2026</body></html>'); doc.close();
+    try { deck = await Promise.resolve(deck); }
+    catch (e) { doc.body.textContent = 'The handout could not be prepared.'; return; }
+    doc.body.textContent = '';
     doc.title = deck.title + ' — teaching handout';
     var base = doc.createElement('base'); base.href = document.baseURI; doc.head.appendChild(base);
     var loads = [];
