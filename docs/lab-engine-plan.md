@@ -40,6 +40,9 @@ Converting content is also a solved problem. `lab/src/model/fromSlideForge.ts` a
 | M5 | **Done early, in a different form** (commits `d9b1e64`, `41d9ea3`, `7b7a67e`). The lab is the Lesson studio. See "M5 — status" below for what differs from the plan and what is left. |
 | M6 | **Part done.** The lab bundle is committed in `lab-app/` and served by the relay's static server from the same origin. Not yet deployed to Render or tried from a phone. |
 | M7–M15 | Not started. Until M7, **the bridge** stands in for the lab's own live host (see below). |
+| Live stage | **Done** (`4b5c9a5`). Lab slides play live inside SlideForge's show, with its HUD, the room's rail and Teacher Presenter (see "The live stage" below). |
+
+**Order (decided 25 Sep 2026): games and activities come last.** The lesson side goes first: the HUD, Teacher Presenter and the rail (done, the live stage), what M5 still owes, and the lesson features the feature map still marks Missing. The game and activity milestones (M0's game inventories, M2–M4, M7–M14) follow after that. Until then, games and activities in a lab lesson run as SlideForge's own, through the bridge. M1.5 (the lab restructure) still comes before anything adds game code to the lab.
 
 ## Where we are now
 
@@ -78,8 +81,15 @@ The lab is what teachers edit lessons in. The classic player still runs the room
 ### The bridge (temporary)
 
 - **What it is:** `js/lab-engine.js` builds a SlideForge lesson from the lab deck. Each lab slide becomes a full-bleed `image` slide (a JPEG from the lab's renderer, cached per slide). The original lesson's game and activity slides go back after the slide they followed; each lab slide records its `sourceSlideId`. `SF.buildRunDeck` then feeds Host live, Teacher Presenter and Rehearse. Share and the PDF handout use the same lesson, and the practice notes use each slide's words.
-- **What it costs:** in those modes the lab's slides are pictures, with no builds, word timing or on-slide interaction. Present is still the lab's own show. Page numbers differ: the lab's footer counts its own slides, SlideForge's player counts the games too.
+- **What it costs:** less than it did. The pictures now show only in Teacher Presenter's thumbnails, shared links and the PDF handout; on the wall the live stage draws each lab slide over its picture. Page numbers differ: the lab's footer counts its own slides, SlideForge's player counts the games too. The first show of a large lesson waits a few seconds while the pictures are drawn.
 - **Why it is allowed:** it is the rejected "classic player presents lab decks" design, taken as a **temporary** step. It goes when the lab has its own live host (M7), presenter window (M11) and viewer and export (M5's lab viewer, M12).
+
+### The live stage
+
+- **What it is:** `js/lab-stage.js` loads the lab's player into SlideForge's page (`lab-app/stage.js`, built by `lab/vite.stage.config.ts`, as `window.SFLabStage`) and puts it over each lab slide in SlideForge's show. It draws the slide live: builds, word timing, transitions, moving backgrounds and on-slide controls. One canvas and one lab player serve the whole show; the canvas moves into whichever lab slide is on the wall and pauses while a game is.
+- **How it fits SlideForge's player:** Next asks `SF.LabStage.step` first (the hook Explore and chart callouts use), so a lab slide's builds are walked before the show moves on; Previous returns to a slide fully built. A click the lab slide does not use goes on to SlideForge's player; the lab's own controls keep theirs. The HUD, the rail, Teacher Presenter and the live room are SlideForge's and are unchanged. The lab's fonts are copied into SlideForge's page when the stage starts.
+- **Room for the rail:** when the rail opens (the room, a brainstorm, a poll, a word cloud), the lab keeps a slide's full-size backdrops and every effect in place and draws the content smaller, centred on the height, in the space left of the rail (`--rail-w` plus SlideForge's 54px gap). It eases across by the clock over about the time the rail takes.
+- **Present** is this show too, full screen, asked for inside the click. ⌘↵ inside the lab goes to it. The lab's own Present remains in the stand-alone lab.
 
 ## Where we are heading
 
@@ -200,7 +210,7 @@ These are planned temporary steps, not drift:
 - importing the pure logic in `src/games` and `src/activities` in place until M14;
 - the classic Lesson engine staying registered with the shell until M15;
 - classic `view.html` staying for classic decks until M15;
-- **the bridge** (see "Where we are now") running Host live, Teacher Presenter, Rehearse, Share and the handout on the classic player, until M7, M11 and M12;
+- **the bridge** (see "Where we are now") running Host live, Teacher Presenter, Rehearse, Present, Share and the handout on the classic player, with the **live stage** drawing lab slides inside it, until M7, M11 and M12;
 - **the lab in a frame** rather than mounted in the page, until the lab's styles are scoped so they cannot collide with SlideForge's;
 - **the lab's own store, with Library cards** in SlideForge's, until the shell's library moves to IndexedDB (M5, still owed). This is the "two stores" row, taken temporarily: the card is only a pointer, so there is still one copy of each lesson;
 - **the classic Lesson studio loaded and hidden** as the way lessons are handed to the lab, until the Library, the demo and New talk to the engine interface directly (M5, still owed).
@@ -689,3 +699,4 @@ This is out of scope for this plan. It is listed here so the end state is clear.
   - **Anti-drift:** three new rows were added (classic features that feed the lab, server taps, a second instance), and the classic-player row now covers `view.html`. **Hard rules:** rule 6 (one instance, committed bundle) is new, and rules 5 (`manual.html`) and 9 (`BACKLOG.md`) were extended.
 - **25 Sep 2026, later.** **M1.5, restructuring the lab into kind folders**, was added before M2, following tldraw's one-util-per-shape registry and bulletproof-react's feature folders. The infrastructure section now records which lab files grow with every kind. Hard rule 13 adds a file budget (aim for under 400 lines, fail above 800) and import boundaries, both checked by a test. Two anti-drift rows were added for them. M4 now describes a game style as a folder, not a file.
 - **25 Sep 2026, evening.** The plan now records what was built. "Where things stand" and the "Where we are now" diagram show the lab as the Lesson studio (commits `d9b1e64`, `41d9ea3`, `7b7a67e`). A new section describes **the bridge**, the temporary way Host live, Teacher Presenter, Rehearse, Share and the handout run a lab lesson on the classic player, and when it goes (M7, M11, M12). M5 has a status table of the four places it differs from the plan, and a list of what it still owes. The infrastructure section covers the committed `lab-app/` bundle, the `lab-lesson` smoke, the classic studio under automation, the lab's store and Library cards, and the frame. Four temporary steps were added to the anti-drift section, each with its exit condition.
+- **25 Sep 2026, later.** **The live stage** is added (`4b5c9a5`): lab slides play live inside SlideForge's show, with its HUD, the rail and Teacher Presenter, and the lab makes room beside the rail. The bridge's section now says the pictures remain only for Teacher Presenter's thumbnails, shared links and the handout. A decision on order is recorded: **games and activities come last**, after the lesson side.
