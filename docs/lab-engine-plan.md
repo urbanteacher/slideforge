@@ -152,6 +152,10 @@ These are clients with their own message protocols, just like the phones:
 - `manual.html`, the teacher's answer-entry window, talks to `js/live.js` by `BroadcastChannel('sf-manual-<key>')` and `postMessage`.
 - `view.html`, the shared read-only lesson, loads `js/model.js` and the classic player. It cannot show a lab deck.
 
+**How the lab's code is laid out**
+- No lab file is over 2,000 lines yet. The largest are `engine/raster.ts` (1,409), `model/layouts.ts` (1,119), `engine/registry.ts` (878), `ui/Inspector.tsx` (761) and `engine/chartKinds.ts` (757).
+- Those files grow with every kind: `raster.ts` has one drawing function per content kind, `registry.ts` lists all 44 layer and effect kinds with their GLSL, `layouts.ts` holds all 45 layouts, and `Inspector.tsx` branches per kind. Adding 30 game styles and 54 activities the same way would push them far past 2,000 lines, and every agent would be editing the same few files. M1.5 fixes this before games land.
+
 **Working in this tree**
 - More than one agent works here. Follow `AGENTS.md`: commit with `git commit --only <paths>`, keep code and docs in separate commits, and run `git status src/` before committing `js/model.js`.
 
@@ -174,6 +178,8 @@ The designs below have come up before and were rejected. If you find yourself bu
 | Classic studios gaining features to feed the lab (for example Quiz studio writing lab layers) | It breaks the freeze and makes classic write lab data | The lab reads classic data through the converter |
 | A logging tap, new endpoint or protocol change in `server/server.js` for this plan | It breaks hard rule 5 | Record and test from the host side (M0.2) |
 | Anything needing a second Render instance | Rooms live in one process's memory | Keep one instance |
+| Adding a kind, style, activity, layout or chart by editing a shared file (`raster.ts`, `registry.ts`, `Inspector.tsx`, `layouts.ts`) | The shared files grow without limit, and parallel agents collide in them | Add a folder or file and one line in its list (M1.5) |
+| A lab file over 800 lines, or an import into another folder's internals | Agents can't read the file whole, and the boundaries stop meaning anything | Split it; import through the folder's `index.ts` (hard rule 13) |
 
 **The test:** at the end, is there exactly **one shell driving one engine**, with one deck format, one player, one live host and one registry, and no classic engine code left? If a change makes that answer "no" for good, rather than temporarily during migration, it's drift.
 
@@ -210,6 +216,11 @@ Before writing any code, read these:
 10. **Stop at the review gates** marked below and wait for approval before continuing.
 11. **Check for drift at every PR.** Each PR description ends with one line confirming it follows the target structure and matches no row in the anti-drift table.
 12. **Parity means the audited behaviour.** For every ported style or activity, the acceptance criteria include its GA or AC audit items, not just "it runs".
+13. **Small files and clear boundaries in the lab** (from M1.5 on, checked by a test):
+    - Aim for under 400 lines per file. The test fails above 800. A 2,000-line file is about 25,000 tokens: an agent can't read it whole, edits it from partial views, and collides with other agents working in it.
+    - `core/` and `engine/` never import a kind, style or activity. They reach them only through the lists (`kinds/index.ts`, the game and activity registries).
+    - Each folder's `index.ts` is its public interface. Code outside a folder imports only from that `index.ts`.
+    - Adding a kind, style, activity, layout or chart is a new folder or file plus one line in its list.
 
 ---
 
@@ -307,6 +318,52 @@ For each one, give its state and a recommendation: *finish in classic first* (it
 
 ---
 
+## M1.5 — Restructure the lab into kind folders
+
+Do this before M2, while it is still mostly moving code. After games land there would be three times as much to move.
+
+**Why:** the lab's shared files grow with every kind (see "How the lab's code is laid out"). The pattern that fixes it is the one tldraw uses for shapes: each shape type is one `ShapeUtil` that owns its rendering, geometry and default props, the editor keeps a registry of them, and a shape's component may be HTML. bulletproof-react applies the same idea to React apps: feature folders, each with an `index.ts` as its public interface.
+
+**Target layout**
+
+```
+lab/src/
+  app/          App, TopBar, the shell engine adapter (M5)
+  core/         types, store, undo, persistence            — knows no kinds
+  engine/       compositor, GLSL prelude, animation, player — knows no kinds
+  kinds/        one folder per layer kind
+    text/       def.ts (params, defaults) · raster.ts · Inspector.tsx · index.ts
+    shape/  image/  video/  chart/  table/  timer/  quote/  note/ …
+    effects/    one file per effect: params + GLSL
+    index.ts    the list of kinds, one line per kind
+  charts/       one file per chart type (from chartKinds.ts)
+  layouts/      one file per layout family (from layouts.ts)
+  decks/        fromSlideForge and the NUL, UKBT and Motion lab importers
+  games/        core/ · registry.ts · styles/<style>/  (M4, M8)
+  activities/   the same shape as games (M10)
+  live/         host, room store, protocol (M7)
+  ui/           panels/ · stage/ · controls/
+  export/
+```
+
+**Steps**
+- Split `engine/raster.ts`: shared text layout and canvas helpers go to `engine/`, and each kind's drawing function goes to `kinds/<kind>/raster.ts`.
+- Split `engine/registry.ts`: each layer kind's definition goes to its folder, and each effect to `kinds/effects/`. `kinds/index.ts` collects them. The inspector, thumbnails, randomise, export and player keep reading from the one list, as they do now.
+- Split `model/layouts.ts` into `layouts/` by family, and `engine/chartKinds.ts` into `charts/` by type.
+- Make `ui/Inspector.tsx` a frame that shows the selected kind's own `Inspector.tsx`, carrying on what `ui/special.tsx` started.
+- The `quiz` and `activity` placeholder kinds move into `kinds/` for now. M2 replaces them with the real layers, which live under `games/` and `activities/`.
+- Check that the export player (`vite.player.config.ts`) still builds and plays after the move.
+
+**Checks, added to the lab's tests (M1) and run from the root `npm test`**
+- **File budget:** fail when a lab source file is over 800 lines, with a short allowlist for files still being split. The list must be empty at the end of M1.5.
+- **Boundaries:** fail when `core/` or `engine/` imports from `kinds/`, `games/`, `activities/` or `live/`, or when code imports another folder's internals instead of its `index.ts`.
+
+**Coordination:** this moves nearly every lab file. Start only when no other agent has uncommitted work under `lab/` (check `git status lab/`; LAB-14 and LAB-15 were open when this was written), and tell the other sessions before you start and when you finish.
+
+**Done when:** the layout above is in place, both checks pass with an empty allowlist, `npm run build` and the export player build in `lab/` succeed, and every deck and slide design still renders as it did (compare the Layout bank, the Motion lab and the Slide designs before and after).
+
+---
+
 ## M2 — Game, activity and feedback layers, and the converter's first version
 
 **Layers**
@@ -380,7 +437,7 @@ interface GameStyleDefinition {
 
 - Activities extend this with their stage and row-job definitions from M0.3.
 - If M0.3 finds any other per-style registration point in `AGENTS.md`, add a slot for it. **Nothing a style needs may live outside its definition.**
-- Adding a style must mean adding one file and registering it once.
+- Adding a style must mean adding one folder, `games/styles/<style>/`, and registering it once. The folder follows M1.5: a definition file, `Wall.tsx`, `Editor.tsx`, the scoring and the AI spec, each within the file budget.
 - Document how to add a style in `AGENTS.md`, in a new lab section.
 
 **Done when:** the registry exists with its types, tests and docs, and a dummy style fills in every slot and renders.
@@ -576,7 +633,8 @@ This is out of scope for this plan. It is listed here so the end state is clear.
 - One shell driving the lab engine, which has one workspace, one deck format, one player and one registry for games, activities and feedback. There is also one live host and one library, the shell's, stored in IndexedDB.
 - All 30 game styles, 4 feedback kinds and 54 activities work live from the deployed app, on one Render instance. Rooms are started from the shell's Host live, and phones and the teacher-entry window use the unchanged `join.html`, `manual.html` and relay server.
 - Replay tests pass against the recorded classic sessions, and every GA and AC parity criterion is met.
-- Adding a new game style touches one file and one registry entry.
+- Adding a new game style touches one folder and one registry entry.
+- No lab file is over 800 lines, and the boundary check passes (hard rule 13).
 - Lab decks can be shared, and exported decks can host rooms.
 - Classic decks and saved games convert automatically.
 - The classic Quiz and Activities studios and the classic game, activity and live code are deleted. Removing the classic Lesson engine waits for M15.
@@ -599,3 +657,4 @@ This is out of scope for this plan. It is listed here so the end state is clear.
   - **`manual.html` is treated as a frozen client**, like `join.html`.
   - **The M1 test runner** is new. **M7's reconnect policy** covers relay restarts. **M12's export** gets the relay's address. **M11's class reports** say they don't outlast a deploy.
   - **Anti-drift:** three new rows were added (classic features that feed the lab, server taps, a second instance), and the classic-player row now covers `view.html`. **Hard rules:** rule 6 (one instance, committed bundle) is new, and rules 5 (`manual.html`) and 9 (`BACKLOG.md`) were extended.
+- **25 Sep 2026, later.** **M1.5, restructuring the lab into kind folders**, was added before M2, following tldraw's one-util-per-shape registry and bulletproof-react's feature folders. The infrastructure section now records which lab files grow with every kind. Hard rule 13 adds a file budget (aim for under 400 lines, fail above 800) and import boundaries, both checked by a test. Two anti-drift rows were added for them. M4 now describes a game style as a folder, not a file.
