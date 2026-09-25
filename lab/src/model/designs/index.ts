@@ -2,7 +2,7 @@ import { feedbackOf, type SFSlide } from '../fromSlideForge';
 import { cardsSlide, keywordsSlide, splitSlide, tableSlide, type LayoutStyle } from '../layouts';
 import type { Slide } from '../types';
 import { briefHero } from './brief';
-import { choiceCards, choiceTiles, cubeFaces, gameCover, questionBoard, sortBoard, termCard, typedAnswer, type GameDef } from './games';
+import { activityGameSlides, type GameDef } from './games';
 import { CY, EY, LEFT, W, box, clock, rowsOf, type Row } from './kit';
 import { briefCard, panelCards, timelineSteps } from './legacy';
 import { connectGrid, hookSplit, quadrants, stations } from './panels';
@@ -146,33 +146,18 @@ function gameOf(a: ActivityEntry): GameDef {
   return { title: a.title, style: g.style, styleLabel: g.styleLabel, steps: a.steps, questions: g.questions };
 }
 
-/** A game as slides: its cover, then each question in the design its style asks for. */
-function gameSlides(a: ActivityEntry, st: LayoutStyle, which: 'lab' | 'slideforge'): Slide[] {
-  const g = gameOf(a);
-  const qs = g.questions.map((_, i) => i);
-  let body: Slide[];
-  switch (g.style) {
-    case 'lowstakes': body = [questionBoard(st, g)]; break;
-    case 'randomchallenge': body = [cubeFaces(st, g)]; break;
-    case 'compare': body = qs.map((i) => sortBoard(st, g, i)); break;
-    case 'headsup': body = qs.map((i) => termCard(st, g, i)); break;
-    case 'type': body = qs.map((i) => typedAnswer(st, g, i, which === 'slideforge')); break;
-    default: body = qs.map((i) => (which === 'slideforge' ? choiceCards(st, g, i) : choiceTiles(st, g, i)));
-  }
-  const out = [gameCover(st, g), ...body];
+/** A game as slides, on the walls every game shares (games.ts): its cover, then its questions. */
+function gameSlides(a: ActivityEntry, st: LayoutStyle): Slide[] {
+  const out = activityGameSlides(gameOf(a), st);
   out.forEach((s, i) => { s.activity = { key: a.key, page: i }; if (i === 0) s.notes = `${notesOf(a)}\n\n${s.notes}`; });
   return out;
 }
 
-/** The ways an activity can go into a lesson: the lab's design first, then SlideForge's where it differs. */
+/** The ways an activity can go into a lesson: the lab's design first, then SlideForge's where it
+ *  differs. A game has one. */
 export function optionsFor(a: ActivityEntry): ActivityOption[] {
-  if (a.game) {
-    const differs = !['lowstakes', 'randomchallenge', 'compare', 'headsup'].includes(a.game.style);
-    return [
-      { id: 'lab', label: a.game.style === 'type' ? 'Answer band' : 'Answer tiles', make: (st) => gameSlides(a, st, 'lab') },
-      ...(differs ? [{ id: 'slideforge' as const, label: 'Cards', make: (st: LayoutStyle) => gameSlides(a, st, 'slideforge') }] : []),
-    ];
-  }
+  // A game has one design, the one every game shares.
+  if (a.game) return [{ id: 'lab', label: 'Add', make: (st) => gameSlides(a, st) }];
   const shape = a.slides?.[0] ? shapeOf(a.slides[0]) : 'rows';
   const [labLabel, sfLabel] = LABELS[shape];
   return [
@@ -192,5 +177,5 @@ export function byPhase(data: ActivityData) {
   return out;
 }
 
-export { PREMIUM, premiumSlides, type PremiumGame } from './premium';
+export { SHOWCASE, showcaseSlides, type ShowcaseGame } from './games';
 export { setFrame } from './kit';
