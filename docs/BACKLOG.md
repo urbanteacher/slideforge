@@ -53,7 +53,7 @@ order.
 | UX-72 | Keyboard-only pass through every modal and panel | M | Partly done · a hands-on pass needs a person |
 | CA-05 | First click after typing on the slide is swallowed | S–M | Not reproduced |
 | CA-21 | Composition and regions measure in different frames | M–L | Not reproduced · measured |
-| ENG-01 | [The lab becomes the engine the shell drives, with games, activities and live rooms native to it](lab-engine-plan.md). Next: M0 discovery, then review gate 1, which includes the in-flight decision on GA-19, AC-13–17 and the Stations clock | L · months | To do · plan written |
+| ENG-01 | [The lab becomes the engine the shell drives, with games, activities and live rooms native to it](lab-engine-plan.md). M5 is done early: the lab is the Lesson studio, and a temporary bridge runs Host live, Teacher Presenter, Rehearse, Share and the handout on the classic player. Next: M0 discovery, then review gate 1, which includes the in-flight decision on GA-19, AC-13–17 and the Stations clock | L · months | In progress · M5 done early (25 Sep) |
 | LAB-01 | [Lab bullet controls, cards and three-column header](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-02 | [Flagship frame as the lab default for new slides](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
 | LAB-03 | [Default text and image layout from the flagship](lab-slide-blocks.md) | S | Done · 24 Sep 2026 |
@@ -773,9 +773,13 @@ The plan is [lab-engine-plan.md](lab-engine-plan.md): one shell driving one engi
 
 | ID | Item | Status |
 |---|---|---|
-| ENG-01 | The lab registers as the shell's engine, and games, activities, audience feedback and live rooms run natively in it. Milestones M0–M14, with review gates after M0, M7 and before any deletion | To do · plan written 25 Sep 2026 |
+| ENG-01 | The lab registers as the shell's engine, and games, activities, audience feedback and live rooms run natively in it. Milestones M0–M14, with review gates after M0, M7 and before any deletion. M5 done early, in the form the plan's "M5 — status" records (`7b7a67e`) | In progress · M5 done early 25 Sep 2026 |
 
 ## Change log
+
+### 25 September 2026 — The lab is the Lesson studio
+
+- **ENG-01, M5 done early:** the lab fills SlideForge's workspace as the Lesson studio (`js/lab-engine.js`, `lab-app/`), and SlideForge's chrome takes the lab's dark look. Host live, Teacher Presenter, Rehearse, Share and the PDF handout run a lab lesson through a temporary bridge: its slides as pictures, its games back in place, on the classic player. Lab lessons have Library cards. [lab-engine-plan.md](lab-engine-plan.md) records where this differs from the plan and what M5 still owes. `?classic=1` brings the classic studio back.
 
 ### 25 September 2026 — The plan for the lab as the engine
 

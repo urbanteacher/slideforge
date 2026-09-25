@@ -32,43 +32,54 @@ Two things make it smaller than it looks:
 
 Converting content is also a solved problem. `lab/src/model/fromSlideForge.ts` already turns about 30 classic slide types into native lab slides (the 93-slide Layout bank and the Motion lab). It stops at games (`default: return null`, line 205), because the lab has nothing to convert them into yet. For games, most of the cost is running them, not converting them.
 
+## Where things stand (25 Sep 2026)
+
+| Milestone | Status |
+|---|---|
+| M0–M4 | Not started. M0 discovery is next. |
+| M5 | **Done early, in a different form** (commits `d9b1e64`, `41d9ea3`, `7b7a67e`). The lab is the Lesson studio. See "M5 — status" below for what differs from the plan and what is left. |
+| M6 | **Part done.** The lab bundle is committed in `lab-app/` and served by the relay's static server from the same origin. Not yet deployed to Render or tried from a phone. |
+| M7–M15 | Not started. Until M7, **the bridge** stands in for the lab's own live host (see below). |
+
 ## Where we are now
 
 ```
-┌──────────────── Shell (js/shell.js) ────────────────────────────────────────────┐
-│  Title · theme · New/Open/Save/Export/Import · Library · Share · Host live ·    │
-│  command palette · shortcuts · restore points (js/history.js)                   │
-│  Workspaces: deck / game / plan          (reaches into SF.Editor, SF.Store,     │
-│                                           SF.GameStore, SF.Live, sizeCanvas,    │
-│                                           setZoom, notes strip)                 │
+┌──────────────── Shell (js/shell.js) — now in the lab's dark chrome ─────────────┐
+│  Title · New/Open/Save/Export/Import · Library · History · Settings · Share ·  │
+│  Host live · Present ▾ (Teacher Presenter, Rehearse) · palette · shortcuts      │
+│  Workspaces: deck / game / plan                                                 │
 └───────┬───────────────────────┬──────────────────────┬──────────────────────────┘
         │ register(ws)          │                      │
-  Lesson studio           Quiz studio            Activities studio
-  (editor.js)             (games.js)             (activities.js)
-        └───────────────────────┼──────────────────────┘
-                                ▼
-          Classic deck model: typed slides  (src/ → js/model.js, committed)
-          Library: localStorage, one JSON array per store (src/storage.js)
+  Lab engine (deck)       Quiz studio            Activities studio
+  js/lab-engine.js        (games.js)             (activities.js)
+  frames lab-app/         unchanged              unchanged
+        │
+        ├─ lab: layers, WebGL engine, its own Present   (lab/src, built to lab-app/)
+        │    decks in the lab's IndexedDB ('slideforge-studio'); a Library card
+        │    for each in SF.Store, so folders, rename, move and delete work
+        │
+        ├─ classic Lesson studio (editor.js): loaded, hidden. Still the way the
+        │    Library, the demo and New hand a lesson over; the lab converts it
+        │    into its own copy and never writes the original
+        │
+        └─ the bridge: for Host live, Teacher Presenter, Rehearse, Share and the
+             PDF handout, the lab draws its slides as pictures and the original
+             lesson's games go back in place, as a SlideForge lesson
                                 ▼
           Classic player + HTML renderer   (js/player.js, src/render/*)
-                                ▲ 64 hooks
-          Live host: games, activities, feedback   (js/live.js)
-             ├─ presenter.html   (postMessage, 'sf-presenter-cmd')
-             ├─ manual.html      (BroadcastChannel 'sf-manual-<key>')
-             └─ view.html        (shared read-only lesson, classic player)
-                                │ WebSocket
+          Live host   (js/live.js) · presenter.html · manual.html · view.html
+                                │ WebSocket (unchanged)
           Relay server (server/server.js) → Phones (join.html)
           Render: free plan, one instance, rooms held in memory
-
-┌──────────────── Lab / SlideForge Studio (lab/), separate app ───────────────────┐
-│  Own TopBar (File, export, present) · own IndexedDB store · React + Vite        │
-│  Editor → Deck model: layers → WebGL engine + DeckPlayer → HTML export          │
-│  Games / activities / feedback = placeholder cards only. No link to the room.   │
-│  No test runner. lab/dist is gitignored. Not deployed anywhere.                 │
-└─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-We have two separate products. The lab has the better design engine but can't run a room and isn't in the shell. Classic can run a room, but it spreads it across three engines and draws slides the old way.
+The lab is what teachers edit lessons in. The classic player still runs the room, fed by the bridge. `?classic=1` on the address (or `SF.LabEngine.useClassic(true)`) brings the classic Lesson studio back for a browser.
+
+### The bridge (temporary)
+
+- **What it is:** `js/lab-engine.js` builds a SlideForge lesson from the lab deck. Each lab slide becomes a full-bleed `image` slide (a JPEG from the lab's renderer, cached per slide). The original lesson's game and activity slides go back after the slide they followed; each lab slide records its `sourceSlideId`. `SF.buildRunDeck` then feeds Host live, Teacher Presenter and Rehearse. Share and the PDF handout use the same lesson, and the practice notes use each slide's words.
+- **What it costs:** in those modes the lab's slides are pictures, with no builds, word timing or on-slide interaction. Present is still the lab's own show. Page numbers differ: the lab's footer counts its own slides, SlideForge's player counts the games too.
+- **Why it is allowed:** it is the rejected "classic player presents lab decks" design, taken as a **temporary** step. It goes when the lab has its own live host (M7), presenter window (M11) and viewer and export (M5's lab viewer, M12).
 
 ## Where we are heading
 
@@ -123,7 +134,7 @@ These are facts about the current site. Every milestone has to work within them.
 - Render web service, **free plan, one instance**. Rooms live in a `Map` in the relay's memory, so a second instance would break PINs. Nothing in this plan may need more than one instance.
 - The free plan **spins down when idle** and cold-starts on the next request. The first Host live after a quiet spell waits for that. Deployed acceptance tests (M6, M7) must note the cold start rather than count it as a failure.
 - Session journals (`.slideforge/`) and shares (`SHARE_DIR`) are written to the container filesystem, which is **discarded at every deploy and restart**. Class reports in the lab inherit this. Don't promise durable reports until a disk is added (`render.yaml` has the lines ready, commented out).
-- The build is `npm ci --omit=dev && node AiAd27/build.js`. It installs **no dev dependencies**, and it doesn't touch `lab/`. Vite is a lab dev dependency, so Render cannot build the lab as things stand.
+- The build is `npm ci --omit=dev && node AiAd27/build.js`. It installs **no dev dependencies**, and it doesn't touch `lab/`. Vite is a lab dev dependency, so Render cannot build the lab — which is why the built lab is committed (below).
 - `SLIDEFORGE_HOSTED=1` turns off `/api/data` (saving into the project folder). The hosted app saves only in the browser and by File → Export.
 
 **Serving (`server/server.js`)**
@@ -133,24 +144,26 @@ These are facts about the current site. Every milestone has to work within them.
 
 **Building**
 - The classic bundle `js/model.js` is **committed**, and `npm test` fails if it is stale (`build:check`). `index.html` loads it with a hand-bumped `?v=` query.
-- `lab/dist` and `lab/src/generated/player.iife.js` are **gitignored**. `lab/vite.config.ts` sets no `base`, so a build assumes it is served from `/`.
+- `lab/dist` and `lab/src/generated/player.iife.js` are **gitignored**. The lab that SlideForge serves is built by `npm run build:app` in `lab/` (`lab/vite.app.config.ts`, `base: '/lab-app/'`) into **`lab-app/`, which is committed** (about 7.5 MB). After any change to `lab/src`, rebuild it and commit it. Nothing checks yet that it is current; that check is still owed (M5).
 - Two TypeScript versions: the root is on 5.9 and the lab on 7.0. Declarations shared between them (for `src/games`) must typecheck in both.
 
 **Testing**
 - Root: `npm test` runs `build:check`, the typecheck and `node --test` over 86 files (about 570 tests). `tests/harness.js` runs a real relay with real sockets. `npm run smoke` runs Playwright scenarios; `npm run visual:check` runs Docker baselines against port 8787 (pass `SF_URL` from a worktree).
-- Lab: **no test runner and no tests.** Its checks are `tsc --noEmit` and `vite build`.
+- Lab: **no unit test runner yet** (M1). Its checks are `tsc --noEmit` and `vite build`. The `lab-lesson` smoke (`tools/smoke/lab-lesson.mjs`, in the `ci` set) covers the lab as the Lesson studio and the bridge.
+- Under automation (`navigator.webdriver`) SlideForge opens the **classic** Lesson studio, because the other smokes drive its rail, stage and inspector. A smoke for the lab opts in with `?classic=0`.
 
 **Storage**
 - The shell's library (`createStores` in `src/storage.js`) keeps each store as one JSON array in **localStorage**, rewritten whole on every save. `js/history.js` already calls localStorage "the one storage in this app under real pressure".
 - Restore points (`js/history.js`) are in IndexedDB, database `slideforge`. They snapshot whatever the engine's `doc()` returns, so they already work for any engine.
-- The lab keeps its decks in its own IndexedDB store (`lab/src/persist/idb.ts`).
+- The lab keeps its decks in its own IndexedDB store (`lab/src/persist/idb.ts`): each deck under `deck:<id>`, an `index` of them, and `current`. SlideForge's store holds only a **Library card** for each (name, folder, one title slide), never the deck.
 
 **Windows beside the host**
 
 These are clients with their own message protocols, just like the phones:
 - `presenter.html` talks to the player by `postMessage` (`sf-presenter-cmd`).
 - `manual.html`, the teacher's answer-entry window, talks to `js/live.js` by `BroadcastChannel('sf-manual-<key>')` and `postMessage`.
-- `view.html`, the shared read-only lesson, loads `js/model.js` and the classic player. It cannot show a lab deck.
+- `view.html`, the shared read-only lesson, loads `js/model.js` and the classic player. It cannot show a lab deck; a lab lesson is shared as the bridge's lesson instead, its pictures stepped down in size until the copy fits 8 MB.
+- The lab itself runs in a same-origin frame (`#labFrame`), so its styles and its keyboard and paste handling stay its own. It hands Save, the palette, the studio switch and `?` up to the shell.
 
 **How the lab's code is laid out**
 - No lab file is over 2,000 lines yet. The largest are `engine/raster.ts` (1,409), `model/layouts.ts` (1,119), `engine/registry.ts` (878), `ui/Inspector.tsx` (761) and `engine/chartKinds.ts` (757).
@@ -186,7 +199,11 @@ The designs below have come up before and were rejected. If you find yourself bu
 These are planned temporary steps, not drift:
 - importing the pure logic in `src/games` and `src/activities` in place until M14;
 - the classic Lesson engine staying registered with the shell until M15;
-- classic `view.html` staying for classic decks until M15.
+- classic `view.html` staying for classic decks until M15;
+- **the bridge** (see "Where we are now") running Host live, Teacher Presenter, Rehearse, Share and the handout on the classic player, until M7, M11 and M12;
+- **the lab in a frame** rather than mounted in the page, until the lab's styles are scoped so they cannot collide with SlideForge's;
+- **the lab's own store, with Library cards** in SlideForge's, until the shell's library moves to IndexedDB (M5, still owed). This is the "two stores" row, taken temporarily: the card is only a pointer, so there is still one copy of each lesson;
+- **the classic Lesson studio loaded and hidden** as the way lessons are handed to the lab, until the Library, the demo and New talk to the engine interface directly (M5, still owed).
 
 ## Read first
 
@@ -446,6 +463,19 @@ interface GameStyleDefinition {
 
 ## M5 — The lab registers as a shell engine
 
+**M5 — status (25 Sep 2026).** Done early, before M0–M4, and differently in four places:
+
+| The plan says | What was built | Why |
+|---|---|---|
+| Mount the bundle into the page | A same-origin frame over the workspace (`js/lab-engine.js`) | The lab's CSS shares class names with SlideForge's (`.thumb`, `.row`, `.modal`, `.hint`); a frame keeps both working without scoping every rule first |
+| One library, moved to IndexedDB | The lab keeps its IndexedDB store; SlideForge's store gets a Library card per lab lesson | The localStorage library cannot hold lab decks; cards made the Library work now without moving it |
+| A lab viewer for shared lessons | Share sends the bridge's lesson to `view.html` | Read, practice and follow links all work, and a follow link matches the live room |
+| `hostLive()` says "not available" until M7 | The bridge runs Host live, Teacher Presenter and Rehearse | So lab lessons can be taught with a room now |
+
+**Done:** the lab is the `deck` engine, in the whole workspace, with one set of File controls (the lab's own document row and Present are hidden in the frame). Name, Save, ⌘S and the palette work on the lab deck. File → Open saved lesson lists lab decks, and File → Import takes lab or classic files. Restore points work. The classic editor's paste and context menu stand down while the lab is on screen. A loading state covers the lab's start, and a clear failure message (for example, no WebGL2) links to the classic studio. The PDF handout and practice notes work for lab lessons.
+
+**Still owed from M5:** the shell library in IndexedDB (and with it, retiring the cards); routing `SF.Editor`'s other uses and the Library's opening through the engine interface; moving `sizeCanvas`, `setZoom` and the notes strip into the classic engine; the lab's commands in the palette; the check that `lab-app/` is current; acceptance items 4–6 and 8 as written; and the feature map rows.
+
 **Building the bundle**
 - Build the lab as a bundle the shell loads from `index.html`. Set Vite's `base` for the path it is served from, and use hashed file names so the hand-bumped `?v=` queries aren't needed for it.
 - **Commit the built bundle**, as `js/model.js` is committed, and add a check to `npm test` that fails when it is stale (the lab equivalent of `build:check`). Render's `npm ci --omit=dev` then needs no change, because it never builds the lab. Check `git status lab/` before committing the bundle: another agent's unfinished lab work would be built into it.
@@ -658,3 +688,4 @@ This is out of scope for this plan. It is listed here so the end state is clear.
   - **The M1 test runner** is new. **M7's reconnect policy** covers relay restarts. **M12's export** gets the relay's address. **M11's class reports** say they don't outlast a deploy.
   - **Anti-drift:** three new rows were added (classic features that feed the lab, server taps, a second instance), and the classic-player row now covers `view.html`. **Hard rules:** rule 6 (one instance, committed bundle) is new, and rules 5 (`manual.html`) and 9 (`BACKLOG.md`) were extended.
 - **25 Sep 2026, later.** **M1.5, restructuring the lab into kind folders**, was added before M2, following tldraw's one-util-per-shape registry and bulletproof-react's feature folders. The infrastructure section now records which lab files grow with every kind. Hard rule 13 adds a file budget (aim for under 400 lines, fail above 800) and import boundaries, both checked by a test. Two anti-drift rows were added for them. M4 now describes a game style as a folder, not a file.
+- **25 Sep 2026, evening.** The plan now records what was built. "Where things stand" and the "Where we are now" diagram show the lab as the Lesson studio (commits `d9b1e64`, `41d9ea3`, `7b7a67e`). A new section describes **the bridge**, the temporary way Host live, Teacher Presenter, Rehearse, Share and the handout run a lab lesson on the classic player, and when it goes (M7, M11, M12). M5 has a status table of the four places it differs from the plan, and a list of what it still owes. The infrastructure section covers the committed `lab-app/` bundle, the `lab-lesson` smoke, the classic studio under automation, the lab's store and Library cards, and the frame. Four temporary steps were added to the anti-drift section, each with its exit condition.
