@@ -1,3 +1,4 @@
+import { createLayer } from '../defaults';
 import type { LayoutStyle } from '../layouts';
 import type { Anim, GameSettings, Layer, Params, Slide, SlideGame } from '../types';
 import { BASE, EY, FOOT, HY, LEFT, LIFT, ON_RIGHT, PAD, RIGHT, TOPBAND, W, box, centred, clock, display, eyebrow, fitSize, ground, headingClock, hero, rect, rgba, sizedHero, slideOf, textHeight, textWidth, txt, wordBoxes } from './kit';
@@ -195,10 +196,66 @@ export function rankingWall(st: LayoutStyle, name: string, q: GameQuestion, i: n
  *  showdown, sees its split and may switch once on the phones); the answer lights the true one. */
 export function trueFalseWall(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer = false, hold = true): Slide {
   const opts = (q.options?.length ? q.options : ['True', 'False']).slice(0, 2);
-  const o = opening(st, q, tag('True or false', hold ? 'vote, then hold' : 'vote', i, n, answer), q.question ?? '', answer, { sizes: [140, 120, 104, 88], maxH: 360 });
-  o.layers.push(...grid(st, opts.map((t, k) => ({ text: t.toUpperCase(), id: `choice-${k}`, right: answer && k === q.correct })), o.top, { cols: 2, max: o.qn.size, name: 'Choice', lines: 1 }).layers);
+  const cells = opts.map((t, k) => ({ text: t.toUpperCase(), id: `choice-${k}`, right: answer && k === q.correct }));
+  const { o, set } = matched((sizes) => {
+    const o = opening(st, q, tag('True or false', hold ? 'vote, then hold' : 'vote', i, n, answer), q.question ?? '', answer, { sizes: sizes ?? [140, 120, 104, 88], maxH: 360 });
+    return { o, set: grid(st, cells, o.top, { cols: 2, max: o.qn.size, name: 'Choice', lines: 1 }) };
+  });
+  o.layers.push(...set.layers);
   const held = 'After the vote: show the room its split; each phone may switch once. Then Next for the answer.';
   return slideOf(named(name, i, answer), o.layers, st, answer || !hold ? note(q) : held);
+}
+
+/** The Buttons looks' reason: under the buttons, not under the question, so the buttons stand in the
+ *  same place on the question and its answer and the reveal lights them where they are. Its room is
+ *  kept on both slides; it is written on the answer. */
+function underWhy(st: LayoutStyle, q: GameQuestion): { h: number; params: Params } {
+  const why = q.explanation ?? '';
+  const params: Params = { font: st.body, size: 40, color: st.muted, lineHeight: 1.2 };
+  return { h: why ? Math.min(120, textHeight(why, W - LEFT * 2, params) + 6) + 24 : 0, params };
+}
+function whyLayer(q: GameQuestion, under: { params: Params }, y: number): Layer[] {
+  return q.explanation ? [txt('Why', q.explanation, box(LEFT, y + 24, W - LEFT * 2, 120), under.params, { type: 'fade', duration: 0.6, delay: 0.3 })] : [];
+}
+
+/** True or false, the Buttons look: SlideForge's two doors (css/app.css .present-truefalse .tf-duo).
+ *  The statement centred over two tall rounded doors side by side, True's edge touched with green and
+ *  False's with red; on the answer the right door is green where it stood and the other goes quiet. */
+export function doorsWall(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer = false, hold = true): Slide {
+  const opts = (q.options?.length ? q.options : ['True', 'False']).slice(0, 2);
+  const under = underWhy(st, q);
+  const { o, set } = matched((sizes) => {
+    const o = opening(st, q, tag('True or false', hold ? 'vote, then hold' : 'vote', i, n, answer), q.question ?? '', answer, { sizes: sizes ?? [140, 120, 104, 88], maxH: 360, why: '' });
+    o.qn.layer.params.align = 'center';
+    return { o, set: doors(st, opts, o.top, Math.min(o.qn.size, 96), answer ? q.correct : undefined, under.h) };
+  });
+  o.layers.push(...set.layers, ...(answer ? whyLayer(q, under, set.bottom) : []));
+  const held = 'After the vote: show the room its split; each phone may switch once. Then Next for the answer.';
+  return slideOf(named(name, i, answer), o.layers, st, answer || !hold ? note(q) : held);
+}
+
+/** Two doors, 1380px across together and centred, 42px apart, as tall as SlideForge's (168px at its
+ *  size) or their words; the words centred, one size. */
+function doors(st: LayoutStyle, opts: string[], top: number, max: number, right?: number, reserve = 0): { layers: Layer[]; size: number; bottom: number } {
+  const face = { ...FACE(st), align: 'center' };
+  const gap = 42, span = 1380, w = (span - gap) / 2, x0 = (W - span) / 2, y = top + 36, foot = FOOT - reserve;
+  const size = fitSize(opts.map((t) => t.toUpperCase()), w - PAD * 2, Math.min(max * 1.15 * 2 + 4, foot - y - PADV * 2), face, max, 44);
+  const h = Math.min(foot - y, Math.max(252, size * 1.15 * 2 + PADV * 2));
+  const edge = ['#34c98a', '#ff5f6d'];
+  const layers: Layer[] = [];
+  opts.forEach((t, k) => {
+    const b = box(x0 + k * (w + gap), y, w, h);
+    const lit = right === k, quiet = right != null && right !== k;
+    const a: Partial<Anim> = { type: 'pop', duration: 0.5, delay: 0.25 + 0.08 * k };
+    const door = createLayer('shape', { name: `Door ${k + 1}`, box: b, anim: a, params: {
+      shape: 'rect', radius: 21, fill: lit ? RIGHT : rgba(st.ink, quiet ? 0.03 : 0.05),
+      stroke: lit ? RIGHT : edge[k], strokeOpacity: lit ? 1 : quiet ? 0.2 : 0.55, strokeWidth: 4.5 } });
+    door.params.morph = `choice-${k}`;
+    const words = centred(`Door ${k + 1} — words`, t.toUpperCase(), b, { ...face, size, color: lit ? ON_RIGHT : quiet ? st.muted : st.ink }, { ...a, delay: (a.delay ?? 0) + 0.05 });
+    words.params.morph = `choice-${k}:words`;
+    layers.push(door, words);
+  });
+  return { layers, size, bottom: y + h };
 }
 
 // ─── Lettered choices: multiple choice, predict the outcome ─────────────────
@@ -230,23 +287,24 @@ export function choiceWall(st: LayoutStyle, name: string, q: GameQuestion, i: nu
 export function buttonsWall(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer = false): Slide {
   const opts = (q.options ?? []).slice(0, 6);
   const cells: Cell[] = opts.map((t, k) => ({ text: t, id: `option-${k}`, mark: 'ABCDEF'[k], right: answer && k === q.correct, quiet: answer && k !== q.correct }));
+  const under = underWhy(st, q);
   const { o, set } = matched((sizes) => {
-    const o = opening(st, q, tag('Multiple choice', 'choose one', i, n, answer), q.question ?? '', answer, { sizes: sizes ?? [120, 104, 92, 80] });
-    return { o, set: buttons(st, cells, o.top, Math.min(o.qn.size, 88)) };
+    const o = opening(st, q, tag('Multiple choice', 'choose one', i, n, answer), q.question ?? '', answer, { sizes: sizes ?? [120, 104, 92, 80], why: '' });
+    return { o, set: buttons(st, cells, o.top, Math.min(o.qn.size, 88), under.h) };
   });
-  o.layers.push(...set.layers);
+  o.layers.push(...set.layers, ...(answer ? whyLayer(q, under, set.bottom) : []));
   return slideOf(named(name, i, answer), o.layers, st, note(q));
 }
 
 /** Buttons two by two under the question, rounded, apart, each as tall as the tallest's words; one
  *  size for all. The right one green (rule 7), a quiet one faded. */
-function buttons(st: LayoutStyle, cells: Cell[], top: number, max: number): { layers: Layer[]; size: number } {
+function buttons(st: LayoutStyle, cells: Cell[], top: number, max: number, reserve = 0): { layers: Layer[]; size: number; bottom: number } {
   const face = FACE(st), gap = 28;
   const cols = cells.length > 2 ? 2 : Math.max(1, cells.length), rows = Math.ceil(cells.length / cols);
   const w = (W - LEFT * 2 - gap * (cols - 1)) / cols;
   const markW = 72, inL = 36, inR = 40, textW = w - inL - markW - inR;
   const lh = Number(face.lineHeight ?? 1.15);
-  const room = (FOOT - top - gap * (rows - 1)) / Math.max(1, rows);
+  const room = (FOOT - reserve - top - gap * (rows - 1)) / Math.max(1, rows);
   const size = fitSize(cells.map((x) => x.text).filter(Boolean), textW, Math.min(max * lh * 2 + 4, room - PADV * 2), face, max, 44);
   const tallest = Math.max(size * lh, ...cells.map((x) => (x.text ? textHeight(x.text, textW, { ...face, size }) : 0)));
   const h = Math.min(room, tallest + PADV * 2 + 12);
@@ -261,7 +319,7 @@ function buttons(st: LayoutStyle, cells: Cell[], top: number, max: number): { la
     if (x.mark) layers.push(keyed(centred(`Button ${k + 1} — mark`, x.mark, box(b.x + inL, b.y, markW, b.h), { ...face, size, color: x.right ? ON_RIGHT : x.quiet ? st.muted : st.accent, lineHeight: 1 }, inner, 0, 0), ':mark'));
     if (x.text) layers.push(keyed(centred(`Button ${k + 1} — words`, x.text, box(b.x + inL + markW, b.y, w - inL - markW, b.h), { ...face, size, color: x.right ? ON_RIGHT : x.quiet ? st.muted : st.ink, align: 'left' }, inner, 0, inR), ':words'));
   });
-  return { layers, size };
+  return { layers, size, bottom: top + rows * h + (rows - 1) * gap };
 }
 
 /** Predict the outcome: lettered futures; the phones commit and say how sure before the answer. */
@@ -491,7 +549,8 @@ export function showcaseSlides(g: ShowcaseGame, st: LayoutStyle): Slide[] {
   const cover = gameCover(st, { title: g.label, style: g.style, styleLabel: g.styleLabel, steps: g.howToPlay, questions: qs.map((q) => ({ question: q.question ?? '', options: q.options ?? [], correct: q.correct ?? -1, explanation: q.explanation ?? '' })) });
   cover.notes = [g.aim, cover.notes].filter(Boolean).join('\n\n');
   if (g.format === 'beat-the-clock') return finishGame([cover, sprintWall(st, g.label, qs), sprintAnswers(st, g.label, qs)], g.format, g.label);
-  return finishGame([cover, ...paired(SHOWCASE_WALLS[g.format] ?? spotWall, g.label, st, qs)], g.format, g.label);
+  const wall = g.format === 'true-false' && g.look === 'buttons' ? doorsWall : SHOWCASE_WALLS[g.format] ?? spotWall;
+  return finishGame([cover, ...paired(wall, g.label, st, qs)], g.format, g.label);
 }
 
 /** An activity's game as slides, on the same walls: its cover, then its questions by style. */

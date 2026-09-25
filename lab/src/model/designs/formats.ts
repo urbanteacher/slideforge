@@ -2,7 +2,7 @@ import { createLayer } from '../defaults';
 import type { LayoutStyle } from '../layouts';
 import type { Anim, Box, Layer, Slide } from '../types';
 import {
-  FACE, PADV, bins, buttonsWall, choiceWall, finishGame, gameCover, grid, named, note, opening, paired, showcaseSlides, SHOWCASE, tag, tagGame, trueFalseWall, typedWall,
+  FACE, PADV, bins, buttonsWall, choiceWall, doorsWall, finishGame, gameCover, grid, named, note, opening, paired, showcaseSlides, SHOWCASE, tag, tagGame, trueFalseWall, typedWall,
   type Cell, type GameQuestion, type ShowcaseGame, type Wall,
 } from './games';
 import { BASE, EY, FOOT, LEFT, ON_RIGHT, PAD, RIGHT, W, box, centred, clock, fitSize, rect, rgba, slideOf, textHeight, txt } from './kit';
@@ -681,10 +681,13 @@ function withLiveBoard(g: ShowcaseGame, slides: Slide[]): Slide[] {
   return slides;
 }
 
+/** The formats with two looks (types.ts GameLook): multiple choice, and true or false. */
+export const HAS_LOOKS = new Set(['choice', 'truefalse', 'true-false']);
+
 export function gameSlides(g: ShowcaseGame, st: LayoutStyle): Slide[] {
   const slides = withLiveBoard(g, gameSlidesOf(g, st));
-  // Multiple choice remembers its look, so the Game panel can show it and build the other.
-  if (g.format === 'choice') for (const s of slides) if (s.game) s.game.look = g.look ?? 'walls';
+  // A game with two looks remembers its look, so the Game panel can show it and build the other.
+  if (HAS_LOOKS.has(g.format)) for (const s of slides) if (s.game) s.game.look = g.look ?? 'walls';
   return slides;
 }
 function gameSlidesOf(g: ShowcaseGame, st: LayoutStyle): Slide[] {
@@ -700,7 +703,7 @@ function gameSlidesOf(g: ShowcaseGame, st: LayoutStyle): Slide[] {
   let body: Slide[] = [];
   switch (g.format) {
     case 'choice': body = paired(g.look === 'buttons' ? buttonsWall : choiceWall, g.label, st, qs); break;
-    case 'truefalse': body = paired(trueFalseWall, g.label, st, qs); break;
+    case 'truefalse': body = paired(g.look === 'buttons' ? doorsWall : trueFalseWall, g.label, st, qs); break;
     case 'type': body = paired(typedWall, g.label, st, qs); break;
     case 'slider': body = paired(line(false), g.label, st, qs); break;
     case 'time-traveler': body = [...paired(line(true), g.label, st, qs), ...(qs.length ? [timelineEnd(st, g, qs[qs.length - 1])] : [])]; break;

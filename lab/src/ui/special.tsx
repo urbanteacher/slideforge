@@ -7,6 +7,7 @@ import { slideOf, useStore } from '../model/store';
 import { applyGameSettings } from '../model/gameSettings';
 import { canWrite, replaceGame, writeGame } from '../model/gameAI';
 import { GAME_LOOKS, relookGame } from '../model/gameLook';
+import { HAS_LOOKS } from '../model/designs/formats';
 import { applyActivitySettings, ensureActivitySettings, type ActivityChange } from '../model/activitySettings';
 import { looksOf, type ActivityData, type ActivityEntry } from '../model/designs';
 import { CONSTRAINTS, canWriteActivity, writeActivity, type Audience } from '../model/activityAI';
@@ -366,8 +367,8 @@ export function GamePanel() {
   return (
     <Section title={`Game · ${g.label}`}>
       <WriteGame gameId={g.id} format={g.format} label={g.label} />
-      {g.format === 'choice' && (
-        <Row label="Look" info="Buttons: the options two by two, the right one lit green where it stands, as SlideForge's quiz does. Question, then answer: the options as rows, the answer and why on the slide after. The questions, their times and points stay as they are.">
+      {HAS_LOOKS.has(g.format) && (
+        <Row label="Look" info="Buttons: the options as buttons (two by two, or True and False as two doors), the right one lit green where it stands, as SlideForge's quiz does. Question, then answer: the options as rows, the answer and why on the slide after. The questions, their times and points stay as they are.">
           <Select value={g.look ?? 'walls'} options={GAME_LOOKS} onChange={(v) => {
             let first = '';
             useStore.getState().mutate((d) => { first = relookGame(d, g.id, v as 'buttons' | 'walls')[0]?.id ?? ''; });

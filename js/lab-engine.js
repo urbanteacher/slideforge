@@ -163,9 +163,9 @@
         howToPlay: (book && book.howToPlay) || [],
         title: g.title || '',
         cover: !!(set.intro || set.howTo),
-        /* A lesson's multiple choice comes in looking as SlideForge showed it: buttons, the right
-           one lit green where it stands. The Game panel's Look switches it to the lab's walls. */
-        look: format === 'choice' ? 'buttons' : undefined,
+        /* A lesson's multiple choice and true or false come in looking as SlideForge showed them:
+           buttons, the right one lit green where it stands. The Game panel's Look switches it to the lab's walls. */
+        look: /^(choice|truefalse|true-false)$/.test(format) ? 'buttons' : undefined,
         slides: clean(SF.compileGame(g))
       };
       any = true;

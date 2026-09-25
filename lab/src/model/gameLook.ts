@@ -1,12 +1,12 @@
 import { syncFrameCounters } from './frame';
-import { gameSlides } from './designs/formats';
+import { gameSlides, HAS_LOOKS } from './designs/formats';
 import type { GameQuestion, ShowcaseGame } from './designs/games';
 import { setFrame } from './designs/kit';
 import { syncHeaderFooter } from './headerFooter';
 import { LAYOUT_STYLES, themeOf } from './layouts';
 import type { Deck, GameLook, Slide } from './types';
 
-// Multiple choice in its other look (types.ts GameLook): the game built again from its own questions,
+// Multiple choice, or true or false, in its other look (types.ts GameLook): the game built again from its own questions,
 // in place, as a new game is built. What the lesson hangs on it comes across slide by slide: which
 // SlideForge slide it came from (the live room's bridge keeps SlideForge's copy out by it), the first
 // slide's notes, and the theme's artwork ("Theme · …" layers). A cover it did not have stays off.
@@ -21,10 +21,11 @@ export const GAME_LOOKS: { value: GameLook; label: string }[] = [
 export function relookGame(d: Deck, gameId: string, look: GameLook): Slide[] {
   const old = d.slides.filter((s) => s.game?.id === gameId);
   const g0 = old[0]?.game;
-  if (!g0 || g0.format !== 'choice' || (g0.look ?? 'walls') === look) return [];
+  if (!g0 || !HAS_LOOKS.has(g0.format) || (g0.look ?? 'walls') === look) return [];
   const questions = old.filter((s) => s.game?.role === 'question' && s.game.quiz).map((s) => ({ ...(s.game!.quiz as GameQuestion), type: 'quiz' }));
   if (!questions.length) return [];
-  const game: ShowcaseGame = { format: 'choice', style: 'choice', label: g0.label, styleLabel: 'Multiple choice', aim: '', howToPlay: [], title: g0.label, slides: questions, look };
+  const tf = g0.format !== 'choice';
+  const game: ShowcaseGame = { format: g0.format, style: tf ? 'truefalse' : 'choice', label: g0.label, styleLabel: tf ? 'True or false' : 'Multiple choice', aim: '', howToPlay: [], title: g0.label, slides: questions, look };
   setFrame(!!d.headerFooter?.enabled || d.slides.some((s) => s.layers.some((l) => typeof l.params.hfSlot === 'string')));
   let made = gameSlides(game, themeOf(d) ?? LAYOUT_STYLES[0]);
   if (!old.some((s) => s.game?.role === 'cover')) made = made.filter((s) => s.game?.role !== 'cover');

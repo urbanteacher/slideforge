@@ -172,8 +172,8 @@ export interface SlideGame {
   quiz?: Record<string, unknown>;
   /** A board or a round played in one go: the slides SlideForge plays it on, compiled as it compiles them. */
   board?: Record<string, unknown>[];
-  /** Multiple choice's look: buttons two by two, lit green where they stand (SlideForge's quiz), or
-   *  the question and its answer as rows, the answer on the slide after (the lab's walls). */
+  /** Multiple choice's and true or false's look: buttons (two by two, or two doors), lit green where
+   *  they stand, as SlideForge's quiz has them; or the lab's walls, the answer on the slide after. */
   look?: GameLook;
 }
 export type GameLook = 'buttons' | 'walls';

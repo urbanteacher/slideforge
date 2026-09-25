@@ -368,6 +368,8 @@ test('a lesson’s Check comes in as SlideForge showed it: four buttons, the rig
     buttons(answer).forEach((b, k) => assert.equal(b.params.fill === RIGHT_GREEN, k === q.correct, 'the right one green, where it stood'));
     // Where it stood: the same box on the question and the answer, so the reveal lights it in place.
     assert.deepEqual(buttons(answer)[q.correct].params.morph, buttons(ask)[q.correct].params.morph);
+    buttons(answer).forEach((b, k) => assert.deepEqual(b.box, buttons(ask)[k].box, 'every button stands where it stood'));
+    assert.ok(answer.layers.some((l) => l.name === 'Why'), 'and the reason is on the answer');
     const words = ask.layers.find((l) => l.name === 'Button 1 — words');
     assert.equal(ask.layers.find((l) => l.name === 'Question').params.size, words.params.size, 'the question at the buttons’ size');
   });
@@ -394,4 +396,36 @@ test('the Look switch builds a Check again the other way and keeps what the less
   assert.ok(after[0].layers.some((l) => l.name === 'Theme · Rail'), 'its theme’s artwork kept');
   assert.equal(deck.slides.indexOf(after[0]), deck.slides.indexOf(before[0]) === -1 ? deck.slides.indexOf(after[0]) : deck.slides.indexOf(after[0]), 'in its place');
   assert.equal(relookGame(deck, id, 'walls').length, 0, 'already that look: nothing to do');
+});
+
+test('true or false has the same two looks: two doors lit green where they stand, or the walls', { skip }, async () => {
+  const { gameSlides } = await bundle('src/model/designs/formats.ts');
+  const { relookGame } = await bundle('src/model/gameLook.ts');
+  const { LAYOUT_STYLES } = await bundle('src/model/layouts.ts');
+  const sample = JSON.parse(fs.readFileSync(path.join(LAB, 'src/assets/games.json'), 'utf8')).games.find((g) => g.format === 'truefalse');
+  const st = LAYOUT_STYLES[0];
+  const slides = gameSlides({ ...sample, look: 'buttons' }, st);
+  const asks = slides.filter((s) => s.game && s.game.role === 'question');
+  assert.ok(asks.length >= 2);
+  asks.forEach((ask) => {
+    const answer = slides.find((s) => s.game.role === 'answer' && s.game.key === ask.game.key);
+    const q = ask.game.quiz;
+    const door = (s, k) => s.layers.find((l) => l.name === `Door ${k + 1}`);
+    [0, 1].forEach((k) => {
+      assert.ok(door(ask, k), 'two doors');
+      assert.notEqual(door(ask, k).params.fill, RIGHT_GREEN, 'nothing lit while the room votes');
+      assert.equal(door(answer, k).params.fill === RIGHT_GREEN, k === q.correct, 'the right door lit, where it stood');
+      assert.deepEqual(door(answer, k).box, door(ask, k).box);
+    });
+    const words = ask.layers.find((l) => l.name === 'Door 1 — words');
+    assert.equal(ask.layers.find((l) => l.name === 'Question').params.size, words.params.size, 'the statement at the doors’ size');
+    assert.equal(ask.game.look, 'buttons');
+  });
+  // The switch, both ways, in a deck.
+  const deck = { id: 'd', title: 't', width: 1920, height: 1080, version: 1, slides };
+  const id = slides[0].game.id;
+  relookGame(deck, id, 'walls');
+  assert.ok(deck.slides.filter((s) => s.game && s.game.role === 'question').every((s) => s.layers.some((l) => l.name === 'Choice 1') && s.game.look === 'walls'));
+  relookGame(deck, id, 'buttons');
+  assert.ok(deck.slides.filter((s) => s.game && s.game.role === 'question').every((s) => s.layers.some((l) => l.name === 'Door 1')));
 });
