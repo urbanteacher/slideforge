@@ -125,6 +125,8 @@ export interface Slide {
   /** The SlideForge slide this one was converted from, so a show built for SlideForge's player can
    *  put the lesson's games back after the slide they followed. */
   sourceSlideId?: string;
+  /** Which of SlideForge's activities this slide was made from, and which of its slides it is. */
+  activity?: { key: string; page: number };
   /** What a slide design was built from (hotspots, pictures, facts, callouts), so the Slide panel
    *  can edit it and build the slide again in the deck's style. */
   recipe?: { kind: string; args: Record<string, unknown> };
