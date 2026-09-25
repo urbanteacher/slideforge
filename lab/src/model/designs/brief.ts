@@ -1,6 +1,6 @@
 import type { LayoutStyle } from '../layouts';
 import type { Layer, Slide } from '../types';
-import { BASE, FOOT, LEFT, PAD, W, box, eyebrow, ground, hero, labelled, part, rect, slideOf, tint, txt, type Row } from './kit';
+import { BASE, FOOT, HY, LEFT, LIFT, PAD, W, box, eyebrow, ground, hero, labelled, part, rect, slideOf, tint, txt, type Row } from './kit';
 
 // An opening brief — a worked example, an error to find, a problem to solve, a stimulus and its big
 // question. The brief is the slide: its words set as the hero across the top half, what it is in the
@@ -12,11 +12,11 @@ export interface Brief { title: string; brief: Row; rows: Row[]; notes?: string 
 export function briefHero(st: LayoutStyle, o: Brief): Slide {
   const rows = o.rows.slice(0, 5);
   const n = rows.length;
-  const TOP = n ? 560 : BASE;
+  const TOP = n ? 560 - LIFT : BASE;
   const layers: Layer[] = [
     ground(st),
     eyebrow(st, o.brief.label ? `${o.title} · ${o.brief.label}` : o.title),
-    hero(st, 'Brief', o.brief.text || o.brief.label || o.title, box(LEFT, 206, W - LEFT * 2, (n ? TOP : FOOT) - 206 - 40), n ? 104 : 140),
+    hero(st, 'Brief', o.brief.text || o.brief.label || o.title, box(LEFT, HY, W - LEFT * 2, (n ? TOP : FOOT) - HY - 40), n ? 104 : 140),
   ];
   const colW = W / Math.max(1, n);
   rows.forEach((r, i) => {

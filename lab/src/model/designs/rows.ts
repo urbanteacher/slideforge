@@ -1,6 +1,6 @@
 import type { LayoutStyle } from '../layouts';
 import type { Layer, Slide } from '../types';
-import { BASE, FOOT, LEFT, TOPBAND, W, box, eyebrow, ground, hero, labelled, part, rect, slideOf, tint, txt, type Row } from './kit';
+import { BASE, EY, FOOT, HY, LEFT, LIFT, TOPBAND, W, centred, box, eyebrow, ground, hero, labelled, part, rect, slideOf, tint, txt, type Row } from './kit';
 
 // Labelled content — objectives and success criteria, a hook's stimulus and big question, a word
 // splash — and numbered runs — a daily review, a Do Now, a dialogue chain. Rows are bands the full
@@ -14,11 +14,11 @@ export interface Labelled { title: string; eyebrow?: string; rows: Row[]; notes?
 export function rowBands(st: LayoutStyle, o: Labelled): Slide {
   const rows = o.rows.slice(0, 6);
   const n = Math.max(1, rows.length);
-  const TOP = n > 4 ? 380 : 440;
+  const TOP = (n > 4 ? 380 : 440) - LIFT;
   const layers: Layer[] = [
     ground(st),
     eyebrow(st, o.eyebrow ?? o.title),
-    hero(st, 'Heading', o.title, box(LEFT, 206, W - LEFT * 2, TOP - 206 - 40), n > 4 ? 96 : 112),
+    hero(st, 'Heading', o.title, box(LEFT, HY, W - LEFT * 2, TOP - HY - 40), n > 4 ? 96 : 112),
   ];
   const rowH = (BASE - TOP) / n;
   const labelW = 560;
@@ -26,13 +26,12 @@ export function rowBands(st: LayoutStyle, o: Labelled): Slide {
   rows.forEach((r, i) => {
     const y = TOP + i * rowH;
     // Text in the last band keeps clear of the deck's footer; the band itself runs off the foot.
-    const h = Math.min(rowH - 32, FOOT - y - 28);
     const p = part('rows', i, o.build ? 'spot' : 'on', o.build ? 1 : n);
     layers.push(
       rect(`${r.label || `Row ${i + 1}`} — band`, box(0, y, W, rowH), tint(st, i), p.lead('wipeRight')),
       rect(`${r.label || `Row ${i + 1}`} — rule`, box(0, y, 12, rowH), st.accent, p.with(0.05)),
-      txt(`${r.label || `Row ${i + 1}`} — label`, labelled(r), box(LEFT, y + 28, labelW - 60, h), { font: st.body, weight: '700', size: size - 6, color: st.accent, lineHeight: 1.15, fitGroup: 'row-label' }, p.with(0.1)),
-      txt(`${r.label || `Row ${i + 1}`} — text`, r.text || r.label, box(LEFT + labelW, y + 28, W - LEFT * 2 - labelW, h), { font: st.body, size, color: st.ink, lineHeight: 1.25, fitGroup: 'row-text' }, p.with(0.15)),
+      centred(`${r.label || `Row ${i + 1}`} — label`, labelled(r), box(LEFT, y, labelW - 60, Math.min(rowH, FOOT - y + 28)), { font: st.body, weight: '700', size: size - 6, color: st.accent, lineHeight: 1.15, fitGroup: 'row-label' }, p.with(0.1), 0, 0),
+      centred(`${r.label || `Row ${i + 1}`} — text`, r.text || r.label, box(LEFT + labelW, y, W - LEFT * 2 - labelW, Math.min(rowH, FOOT - y + 28)), { font: st.body, size, color: st.ink, lineHeight: 1.25, fitGroup: 'row-text' }, p.with(0.15), 0, 0),
     );
   });
   return slideOf(o.title, layers, st, o.notes);
@@ -47,12 +46,12 @@ export function numberedRun(st: LayoutStyle, o: Labelled): Slide {
   const layers: Layer[] = [
     ground(st),
     rect('Accent column', box(0, TOPBAND, COL, BASE - TOPBAND), st.accent, { type: 'wipeUp', duration: 0.7 }),
-    txt('Eyebrow', (o.eyebrow ?? 'Step by step').toUpperCase(), box(LEFT, 170, COL - LEFT - 60, 50), { font: st.body, weight: '600', size: 38, color: st.ground, tracking: 0.12 }),
-    txt('Heading', o.title, box(LEFT, 240, COL - LEFT - 60, 560), { font: st.display, weight: st.displayWeight, size: 112, color: st.ground, lineHeight: 1.02, tracking: -0.015, fit: 'fill', balance: true },
+    txt('Eyebrow', (o.eyebrow ?? 'Step by step').toUpperCase(), box(LEFT, EY + 20, COL - LEFT - 60, 50), { font: st.body, weight: '600', size: 38, color: st.ground, tracking: 0.12 }),
+    txt('Heading', o.title, box(LEFT, HY + 34, COL - LEFT - 60, 560), { font: st.display, weight: st.displayWeight, size: 112, color: st.ground, lineHeight: 1.02, tracking: -0.015, fit: 'fill', balance: true },
       { type: 'words', feel: 'rise', easing: 'easyEase', duration: 0.7, stagger: 0.1 }),
-    txt('Count', `${n} ${n === 1 ? 'step' : 'steps'}`, box(LEFT, 860, COL - LEFT - 60, 60), { font: st.body, size: 44, color: st.ground }),
+    txt('Count', `${n} ${n === 1 ? 'step' : 'steps'}`, box(LEFT, 860 - LIFT, COL - LEFT - 60, 60), { font: st.body, size: 44, color: st.ground }),
   ];
-  const top = 150, bottom = FOOT - 20;
+  const top = EY, bottom = FOOT - 20;
   const rowH = (bottom - top) / n;
   const x = COL + 72, w = W - x - LEFT;
   const size = n > 4 ? 46 : 54;

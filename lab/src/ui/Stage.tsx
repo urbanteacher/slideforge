@@ -2,7 +2,7 @@ import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, GripVertical, Plus } from 'l
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { EASE, schedule } from '../engine/anim';
 import { hitLayer } from '../engine/player';
-import { autoHeight, fontString, textSize } from '../engine/raster';
+import { autoHeight, fontString, measureTextHeight, textSize } from '../engine/raster';
 import { ChartEditor, FieldsEditor, editsOnCanvas } from './CanvasEditors';
 import { addAnother, canAddAnother, editIntent, groupOf, nextDirection, unitFrame } from './snap';
 import { ALL_KINDS, kind } from '../engine/registry';
@@ -530,6 +530,9 @@ function TextEditor({ layer, zoom }: { layer: Layer; zoom: number }) {
     el.style.height = `${el.scrollHeight}px`;
   });
   const size = textSize(layer) * zoom; // the drawn size, which Fit may have brought down
+  // Words set in the middle or at the foot of their box are edited where they are drawn.
+  const spare = Math.max(0, b.h - measureTextHeight({ ...p, size: textSize(layer) }, b.w));
+  const dropY = p.valign === 'middle' ? spare / 2 : p.valign === 'bottom' ? spare : 0;
   // A point in a list moves up or down with the caret on it: Alt + ↑ / ↓, or the pill beside the box.
   const shiftLine = (delta: -1 | 1) => {
     const el = ref.current!;
@@ -564,7 +567,7 @@ function TextEditor({ layer, zoom }: { layer: Layer; zoom: number }) {
         if ((e.metaKey || e.ctrlKey) && (k === 'b' || k === 'i' || k === 'u')) { e.preventDefault(); toggleFormat(layer, k === 'b' ? 'bold' : k === 'i' ? 'italic' : 'underline'); }
       }}
       style={{
-        left: b.x * zoom, top: b.y * zoom, width: b.w * zoom, minHeight: b.h * zoom,
+        left: b.x * zoom, top: b.y * zoom, width: b.w * zoom, minHeight: b.h * zoom, boxSizing: 'border-box', paddingTop: dropY * zoom,
         font: fontString(p, size), color: String(p.color), lineHeight: String(p.lineHeight ?? 1),
         letterSpacing: `${Number(p.tracking ?? 0)}em`, textAlign: String(p.align ?? 'left') as 'left',
         textTransform: p.uppercase ? 'uppercase' : 'none', textDecoration: p.underline ? 'underline' : 'none', transform: `rotate(${b.rot}deg)`,

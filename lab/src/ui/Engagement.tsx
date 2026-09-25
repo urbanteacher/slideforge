@@ -1,9 +1,10 @@
 import { Cloud, Gamepad2, ListChecks, Minus, PencilLine, SlidersHorizontal, Sparkles, Timer } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
-import type { ActivityData, ActivityEntry, ActivityOption } from '../model/designs';
+import type { ActivityData, ActivityEntry, ActivityOption, PremiumGame } from '../model/designs';
 import { LAYOUT_STYLES, themeOf } from '../model/layouts';
+import { fontString } from '../engine/raster';
 import { slideOf, useStore } from '../model/store';
-import type { FeedbackKind } from '../model/types';
+import type { Deck, FeedbackKind } from '../model/types';
 import { Section, Tip } from './controls';
 
 // SlideForge's Engagement tab: games and activities, and the audience feedback a slide asks the room
@@ -49,29 +50,61 @@ export function EngagementPanel() {
   );
 }
 
+/** Whether the deck wears a header and footer, which the designs keep clear of; without one they bleed to the edge. */
+const framed = (deck: Deck) => !!deck.headerFooter?.enabled || deck.slides.some((s) => s.layers.some((l) => typeof l.params.hfSlot === 'string'));
+
 /** SlideForge's activities and games by lesson phase, each with its designs: a press adds its slides,
  *  in the deck's style, after the slide on screen. Loaded the first time the list opens. */
 function ActivityPicker({ done }: { done: () => void }) {
-  const [lib, setLib] = useState<{ data: ActivityData; m: typeof import('../model/designs') } | null>(null);
+  const [lib, setLib] = useState<{ data: ActivityData; games: PremiumGame[]; m: typeof import('../model/designs') } | null>(null);
   useEffect(() => {
     let live = true;
-    Promise.all([import('../model/designs'), import('../assets/activities.json')]).then(([m, d]) => {
+    Promise.all([import('../model/designs'), import('../assets/activities.json'), import('../assets/games.json')]).then(([m, d, gj]) => {
       const data = (d as { default: ActivityData }).default ?? (d as unknown as ActivityData);
-      if (live) setLib({ data, m });
+      const all = ((gj as { default: { games: PremiumGame[] } }).default ?? (gj as unknown as { games: PremiumGame[] })).games;
+      // The premium games, in the audit's order.
+      const games = m.PREMIUM.map((f) => all.find((g) => g.format === f)).filter((g): g is PremiumGame => !!g);
+      if (live) setLib({ data, games, m });
     });
     return () => { live = false; };
   }, []);
   if (!lib) return <div className="hint">Loading the activities…</div>;
-  const add = (a: ActivityEntry, o: ActivityOption) => {
+  // The designs measure their words to size them, so the theme's faces are loaded first.
+  const faces = async (deck: Deck) => {
+    const st = themeOf(deck) ?? LAYOUT_STYLES[0];
+    const load = (font: string, weight: string | number) => document.fonts?.load(fontString({ font, weight }, 100)).catch(() => []);
+    await Promise.all([load(st.display, st.displayWeight), load(st.body, 400), load(st.body, 600), load(st.body, 700)]);
+  };
+  const add = async (a: ActivityEntry, o: ActivityOption) => {
+    await faces(useStore.getState().deck);
     const { deck, addSlide, showToast } = useStore.getState();
+    lib.m.setFrame(framed(deck));
     const slides = o.make(themeOf(deck) ?? LAYOUT_STYLES[0]);
     // Each goes after the one before it: addSlide puts a slide after the one on screen and moves there.
     slides.forEach((s) => addSlide(s));
     showToast(`${a.title} (${o.label}) added: ${slides.length} ${slides.length === 1 ? 'slide' : 'slides'}. Edit it on the slide; how to run it is in the notes.`);
     done();
   };
+  const addGame = async (g: PremiumGame) => {
+    await faces(useStore.getState().deck);
+    const { deck, addSlide, showToast } = useStore.getState();
+    lib.m.setFrame(framed(deck));
+    const slides = lib.m.premiumSlides(g, themeOf(deck) ?? LAYOUT_STYLES[0]);
+    slides.forEach((s) => addSlide(s));
+    showToast(`${g.label} added: ${slides.length} slides. Each click moves the game on; the answers and the reasons are in the notes.`);
+    done();
+  };
   return (
     <div className="engage-picker">
+      <div className="engage-phase">
+        <div className="engage-phase-label">◆ Premium games</div>
+        {lib.games.map((g) => (
+          <div key={g.format} className="engage-act" title={g.aim}>
+            <div className="engage-act-head"><Gamepad2 size={14} /><b>{g.label}</b><small>{g.styleLabel}</small></div>
+            <div className="engage-act-opts"><button className="on" onClick={() => addGame(g)}>Lab design</button></div>
+          </div>
+        ))}
+      </div>
       {lib.m.byPhase(lib.data).map((g) => (
         <div key={g.phase} className="engage-phase">
           <div className="engage-phase-label">{g.icon} {g.label}</div>

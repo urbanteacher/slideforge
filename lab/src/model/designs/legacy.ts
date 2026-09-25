@@ -1,6 +1,6 @@
 import type { LayoutStyle } from '../layouts';
 import type { Layer, Slide } from '../types';
-import { FOOT, LEFT, W, box, ground, labelled, rect, rgba, slideOf, tiers, txt, type Row } from './kit';
+import { EY, FOOT, LEFT, LIFT, W, box, ground, labelled, rect, rgba, slideOf, tiers, txt, type Row } from './kit';
 
 // SlideForge's own looks for an activity's keywords slide, rebuilt from the lab's layers so a lesson
 // can keep them: the steps as a timeline of numbered circles down a rule (css/app.css
@@ -10,14 +10,14 @@ import { FOOT, LEFT, W, box, ground, labelled, rect, rgba, slideOf, tiers, txt, 
 const heading = (st: LayoutStyle, title: string): Layer[] => [
   ground(st),
   // Short of the top right, where SlideForge's clock sits when the slide is timed.
-  txt('Heading', title, box(LEFT, 150, W - LEFT * 2 - 240, 110), { font: st.display, weight: st.displayWeight, size: 88, color: st.ink, lineHeight: 1.05, fit: 'fill' }, { type: 'rise', duration: 0.8 }),
-  rect('Accent bar', box(LEFT, 276, 132, 8), st.accent, { type: 'wipeRight', duration: 0.7 }),
+  txt('Heading', title, box(LEFT, EY, W - LEFT * 2 - 240, 110), { font: st.display, weight: st.displayWeight, size: 88, color: st.ink, lineHeight: 1.05, fit: 'fill' }, { type: 'rise', duration: 0.8 }),
+  rect('Accent bar', box(LEFT, EY + 126, 132, 8), st.accent, { type: 'wipeRight', duration: 0.7 }),
 ];
 
 /** The steps: a rule down the left, each step's number in a circle on it, its label and words beside. */
 export function timelineSteps(st: LayoutStyle, title: string, rows: Row[]): Slide {
   const steps = rows.slice(0, 6);
-  const top = 330, rowH = (FOOT - 20 - top) / Math.max(1, steps.length);
+  const top = 330 - LIFT, rowH = (FOOT - 20 - top) / Math.max(1, steps.length);
   const x = LEFT + 40;
   const layers = heading(st, title);
   layers.push(rect('Timeline rule', box(x, top, 4, rowH * steps.length - 24), rgba(st.ink, 0.18)));
@@ -39,7 +39,7 @@ const createCircle = (st: LayoutStyle, name: string, b: ReturnType<typeof box>, 
 /** Four panels: tinted cards two by two, each its label over its words. */
 export function panelCards(st: LayoutStyle, title: string, rows: Row[]): Slide {
   const shown = rows.slice(0, 4);
-  const top = 330, gap = 36;
+  const top = 330 - LIFT, gap = 36;
   const cw = (W - LEFT * 2 - gap) / 2, ch = (FOOT - 20 - top - gap) / 2;
   // A colour of its own for each panel, as SlideForge gives them.
   const tints = tiers(st);
@@ -61,7 +61,7 @@ export function panelCards(st: LayoutStyle, title: string, rows: Row[]): Slide {
 export function briefCard(st: LayoutStyle, title: string, rows: Row[]): Slide {
   const [brief, ...rest] = rows;
   const layers = heading(st, title);
-  const top = 330;
+  const top = 330 - LIFT;
   const cardH = rest.length ? 230 : FOOT - 20 - top;
   if (brief) layers.push(
     rect('Brief — card', box(LEFT, top, W - LEFT * 2, cardH), st.panel, { type: 'fade', duration: 0.6, delay: 0.2 }, 16),

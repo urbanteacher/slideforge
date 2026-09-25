@@ -230,8 +230,11 @@ function rasterText(layer: Layer, textT: number): Raster {
     step = String(p.text ?? '').split('\n').map((x) => { if (x.trim()) k++; return Math.max(0, k); });
     built = step.map((k2) => prog[k2] ?? 1);
   }
+  // Set top to bottom in its box: at the top, or in the middle or at the foot of what is left over.
+  const valign = String(p.valign ?? 'top');
+  const oy = valign === 'middle' ? Math.max(0, (box.h - L.height) / 2) : valign === 'bottom' ? Math.max(0, box.h - L.height) : 0;
   L.lines.forEach((line, li) => {
-    const top = li * L.lineH;
+    const top = oy + li * L.lineH;
     const base = top + L.lineH / 2 + (asc - desc) / 2;
     const ox = align === 'center' ? (box.w - line.width) / 2 : align === 'right' ? box.w - line.width : 0;
     const whole = (y: number) => {

@@ -1,6 +1,6 @@
 import type { LayoutStyle } from '../layouts';
 import type { Layer, Slide } from '../types';
-import { BASE, FOOT, HEAD, LEFT, PAD, W, box, clock, eyebrow, fmtMin, ground, hero, part, rect, rgba, slideOf, tint, txt } from './kit';
+import { BASE, FOOT, HEAD, HY, LEFT, LIFT, PAD, W, box, clock, eyebrow, fmtMin, ground, hero, part, rect, rgba, slideOf, tint, txt } from './kit';
 
 // Timed routines — Think · Pair · Share, Jigsaw, I do · We do · You do, a Socratic seminar — in two
 // designs. The band: the question across the top half and the stages as one band of columns under it,
@@ -13,11 +13,11 @@ export interface Routine { title: string; prompt: string; stages: Stage[]; notes
 
 /** The band: up to five stages share the width with nothing between them, and run off the foot. */
 export function stageBand(st: LayoutStyle, o: Routine): Slide {
-  const TOP = 500;
+  const TOP = 500 - LIFT;
   const layers: Layer[] = [
     ground(st),
     eyebrow(st, o.label ? `${o.title} · ${o.label}` : o.title),
-    hero(st, 'Prompt', o.prompt, box(LEFT, 206, W - LEFT * 2, TOP - 206 - 36), 120),
+    hero(st, 'Prompt', o.prompt, box(LEFT, HY, W - LEFT * 2, TOP - HY - 36), 120),
   ];
   const n = Math.max(1, Math.min(5, o.stages.length));
   const colW = W / n;
@@ -53,8 +53,8 @@ export function stageTrack(st: LayoutStyle, o: Routine): Slide {
   const stages = o.stages.slice(0, n);
   const total = stages.reduce((m, s) => m + s.minutes, 0);
   const size = 176;
-  const clockBox = box(W - LEFT - size, HEAD, size, size);
-  const trackY = 176, pillH = 104, gap = 20;
+  const clockBox = box(W - LEFT - size, HEAD - LIFT, size, size);
+  const trackY = 176 - LIFT, pillH = 104, gap = 20;
   const pillW = (clockBox.x - 48 - LEFT - gap * (n - 1)) / n;
   const pill = (i: number) => box(LEFT + i * (pillW + gap), trackY, pillW, pillH);
   const body = (y: number, h: number) => box(LEFT, y, W - LEFT * 2, h);
@@ -75,9 +75,9 @@ export function stageTrack(st: LayoutStyle, o: Routine): Slide {
   const cover = part('routine', 0, 'swap');
   layers.push(
     clock(st, 'Clock — whole routine', Math.max(0.5, total), clockBox, cover.lead(), true),
-    txt('Cover — title', o.title, body(470, 170), { font: st.display, weight: st.displayWeight, size: 150, color: st.ink, lineHeight: 1, tracking: -0.02, fit: 'fill' }, cover.with(0.1, 'rise')),
-    txt('Cover — summary', `${n} stages${total ? ` · ${Math.round(total * 10) / 10} min` : ''}`, body(660, 80), { font: st.body, size: 64, color: st.muted }, cover.with(0.2)),
-    txt('Cover — first', `FIRST: ${stages[0]?.name.toUpperCase() ?? ''}`, body(770, 56), { font: st.body, weight: '600', size: 44, color: st.accent, tracking: 0.12 }, cover.with(0.35)),
+    txt('Cover — title', o.title, body(470 - LIFT, 170), { font: st.display, weight: st.displayWeight, size: 150, color: st.ink, lineHeight: 1, tracking: -0.02, fit: 'fill' }, cover.with(0.1, 'rise')),
+    txt('Cover — summary', `${n} stages${total ? ` · ${Math.round(total * 10) / 10} min` : ''}`, body(660 - LIFT, 80), { font: st.body, size: 64, color: st.muted }, cover.with(0.2)),
+    txt('Cover — first', `FIRST: ${stages[0]?.name.toUpperCase() ?? ''}`, body(770 - LIFT, 56), { font: st.body, weight: '600', size: 44, color: st.accent, tracking: 0.12 }, cover.with(0.35)),
   );
 
   // Each stage, items 1…n: a click lights its pill and swaps its words and its clock into place.
@@ -88,9 +88,9 @@ export function stageTrack(st: LayoutStyle, o: Routine): Slide {
       rect(`${s.name} — live pill`, b, st.ink, p.lead(), 20),
       txt(`${s.name} — live pill name`, s.name, box(b.x + 26, b.y + 24, b.w - 150, 56), { font: st.body, weight: '700', size: labelSize, color: st.ground }, p.with(0)),
       txt(`${s.name} — live pill time`, s.minutes ? fmtMin(s.minutes) : '', box(b.x + b.w - 124, b.y + 28, 100, 48), { font: st.body, weight: '500', size: 36, color: st.ground, align: 'right' }, p.with(0)),
-      txt(`${s.name} — heading`, s.name, box(LEFT, 440, 1100, 132), { font: st.display, weight: st.displayWeight, size: 120, color: st.ink, lineHeight: 1 }, p.with(0.1, 'rise')),
-      txt(`${s.name} — job`, (s.job ?? '').toUpperCase(), box(LEFT + 20, 590, 1200, 52), { font: st.body, weight: '600', size: 40, color: st.accent, tracking: 0.12 }, p.with(0.2)),
-      txt(`${s.name} — task`, s.task, body(660, FOOT - 660), { font: st.body, weight: '700', size: 76, color: st.ink, lineHeight: 1.15, balance: true }, p.with(0.25, 'rise')),
+      txt(`${s.name} — heading`, s.name, box(LEFT, 440 - LIFT, 1100, 132), { font: st.display, weight: st.displayWeight, size: 120, color: st.ink, lineHeight: 1 }, p.with(0.1, 'rise')),
+      txt(`${s.name} — job`, (s.job ?? '').toUpperCase(), box(LEFT + 20, 590 - LIFT, 1200, 52), { font: st.body, weight: '600', size: 40, color: st.accent, tracking: 0.12 }, p.with(0.2)),
+      txt(`${s.name} — task`, s.task, body(660 - LIFT, FOOT - 660 + LIFT), { font: st.body, weight: '700', size: 76, color: st.ink, lineHeight: 1.15, balance: true }, p.with(0.25, 'rise')),
     );
     if (s.minutes > 0) layers.push(clock(st, `${s.name} — clock`, s.minutes, clockBox, p.with(0, 'pop'), true));
   });

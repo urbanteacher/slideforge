@@ -1,7 +1,7 @@
 import { createLayer } from '../defaults';
 import type { LayoutStyle } from '../layouts';
 import type { Layer, Slide } from '../types';
-import { BASE, FOOT, LEFT, PAD, TOPBAND, W, box, eyebrow, ground, hero, labelled, part, rect, rgba, slideOf, tiers, tint, txt, type Row } from './kit';
+import { BASE, EY, FOOT, HY, LEFT, LIFT, PAD, TOPBAND, W, box, eyebrow, ground, hero, labelled, part, rect, rgba, slideOf, tiers, tint, txt, type Row } from './kit';
 
 // Four panels (a differentiated menu, a reflection protocol, a reflection ladder), stations to move
 // between, a numbered grid to connect, and a hook beside its picture — each flush and full-bleed.
@@ -9,8 +9,8 @@ import { BASE, FOOT, LEFT, PAD, TOPBAND, W, box, eyebrow, ground, hero, labelled
 /** Four quadrants under a heading, filling the rest of the slide edge to edge, alternating tints. */
 export function quadrants(st: LayoutStyle, o: { title: string; rows: Row[]; notes?: string; ladder?: boolean; eyebrow?: string }): Slide {
   const rows = o.rows.slice(0, 4);
-  const TOP = 380;
-  const layers: Layer[] = [ground(st), eyebrow(st, o.eyebrow ?? 'Four panels'), hero(st, 'Heading', o.title, box(LEFT, 206, W - LEFT * 2, TOP - 206 - 36), 104)];
+  const TOP = 380 - LIFT;
+  const layers: Layer[] = [ground(st), eyebrow(st, o.eyebrow ?? 'Four panels'), hero(st, 'Heading', o.title, box(LEFT, HY, W - LEFT * 2, TOP - HY - 36), 104)];
   const cols = rows.length > 2 ? 2 : rows.length, lines = Math.ceil(rows.length / Math.max(1, cols));
   const cw = W / cols, ch = (BASE - TOP) / lines;
   rows.forEach((r, i) => {
@@ -33,8 +33,8 @@ export function quadrants(st: LayoutStyle, o: { title: string; rows: Row[]; note
 export function stations(st: LayoutStyle, o: { title: string; rows: Row[]; notes?: string }): Slide {
   const rows = o.rows.slice(0, 4);
   const n = Math.max(1, rows.length);
-  const TOP = 360;
-  const layers: Layer[] = [ground(st), eyebrow(st, `${n} stations`), hero(st, 'Heading', o.title, box(LEFT, 206, W - LEFT * 2, TOP - 206 - 30), 100)];
+  const TOP = 360 - LIFT;
+  const layers: Layer[] = [ground(st), eyebrow(st, `${n} stations`), hero(st, 'Heading', o.title, box(LEFT, HY, W - LEFT * 2, TOP - HY - 30), 100)];
   const colW = W / n;
   rows.forEach((r, i) => {
     const x0 = Math.round(i * colW), x1 = Math.round((i + 1) * colW);
@@ -56,8 +56,8 @@ export function stations(st: LayoutStyle, o: { title: string; rows: Row[]; notes
 export function connectGrid(st: LayoutStyle, o: { title: string; tiles: string[]; notes?: string }): Slide {
   const tiles = o.tiles.slice(0, 16);
   const cols = tiles.length > 9 ? 4 : 3, lines = Math.ceil(tiles.length / cols);
-  const TOP = 340;
-  const layers: Layer[] = [ground(st), eyebrow(st, 'Connect'), hero(st, 'Instruction', o.title, box(LEFT, 206, W - LEFT * 2, TOP - 206 - 30), 96)];
+  const TOP = 340 - LIFT;
+  const layers: Layer[] = [ground(st), eyebrow(st, 'Connect'), hero(st, 'Instruction', o.title, box(LEFT, HY, W - LEFT * 2, TOP - HY - 30), 96)];
   const cw = W / cols, ch = (BASE - TOP) / lines;
   tiles.forEach((t, i) => {
     const c = i % cols, l = Math.floor(i / cols);
@@ -79,12 +79,12 @@ export function hookSplit(st: LayoutStyle, o: { title: string; prompts: string[]
   const layers: Layer[] = [
     ground(st),
     createLayer('image', { name: 'Picture — drop one here', box: box(0, TOPBAND, X, BASE - TOPBAND), params: { src: '', fit: 'cover' }, anim: { type: 'fade', duration: 0.9 } }),
-    txt('Eyebrow', 'LOOK CLOSELY', box(X + 80, 170, W - X - 160, 50), { font: st.body, weight: '600', size: 40, color: st.accent, tracking: 0.12 }),
-    hero(st, 'Question', o.title, box(X + 80, 236, W - X - 160, 370), 112),
+    txt('Eyebrow', 'LOOK CLOSELY', box(X + 80, EY + 20, W - X - 160, 50), { font: st.body, weight: '600', size: 40, color: st.accent, tracking: 0.12 }),
+    hero(st, 'Question', o.title, box(X + 80, HY + 30, W - X - 160, 370), 112),
   ];
   const prompts = o.prompts.slice(0, 3);
   prompts.forEach((pr, i) => {
-    const y = 640 + i * 104;
+    const y = 640 - LIFT + i * 104;
     const p = part('prompts', i, 'spot');
     layers.push(
       rect(`Prompt ${i + 1} — rule`, box(X + 80, y, 12, 88), st.accent, p.lead('wipeUp')),
