@@ -215,7 +215,8 @@ function convert(s: SFSlide, on: (g: Ground) => LayoutStyle, img: (p?: string) =
 const KINDS: FeedbackKind[] = ['poll', 'wordcloud', 'brainstorm', 'scale'];
 
 /** A SlideForge slide's feedback, as the lab keeps it: the known fields only, each checked. */
-function feedbackOf(f: SFSlide['feedback']): SlideFeedback | null {
+/** A SlideForge slide's audience feedback, with its settings, as the lab keeps it. */
+export function feedbackOf(f: SFSlide['feedback']): SlideFeedback | null {
   if (!f || !KINDS.includes(f.kind as FeedbackKind)) return null;
   const out: SlideFeedback = { kind: f.kind as FeedbackKind };
   if (typeof f.prompt === 'string' && f.prompt.trim()) out.prompt = f.prompt;

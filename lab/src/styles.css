@@ -649,3 +649,16 @@ button.swatch { border: 0; padding: 0; cursor: pointer; }
 .shell-sizes button { width: auto; padding: 4px 10px; border: 1px solid var(--line-2); border-radius: 999px; font-variant-numeric: tabular-nums; }
 /* The right-hand panel folded away (the canvas bar's panel button): the canvas takes its width. */
 .app.no-panel { grid-template-columns: 272px 1fr; }
+
+/* Engage → + Add activity: SlideForge's activities by phase, each with its designs as buttons. */
+.engage-picker { display: grid; gap: 10px; margin: 8px 0; max-height: 460px; overflow-y: auto; padding-right: 2px; }
+.engage-phase-label { font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); padding: 4px 2px; }
+.engage-act { background: var(--field); border-radius: 8px; padding: 8px 10px; margin-top: 4px; }
+.engage-act-head { display: flex; align-items: center; gap: 8px; }
+.engage-act-head svg { flex: none; color: var(--accent); }
+.engage-act-head b { font-weight: 600; flex: 1; min-width: 0; }
+.engage-act-head small { color: var(--muted); font-size: 11px; white-space: nowrap; }
+.engage-act-opts { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.engage-act-opts button { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); font-size: 12px; }
+.engage-act-opts button:hover { background: var(--field-2); color: var(--text); }
+.engage-act-opts button.on { border-color: var(--accent); color: var(--text); }

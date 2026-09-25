@@ -1,6 +1,7 @@
 import { Cloud, Gamepad2, ListChecks, Minus, PencilLine, SlidersHorizontal, Sparkles, Timer } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
-import { createLayer, createSlide } from '../model/defaults';
+import { useEffect, useState, type ReactNode } from 'react';
+import type { ActivityData, ActivityEntry, ActivityOption } from '../model/designs';
+import { LAYOUT_STYLES, themeOf } from '../model/layouts';
 import { slideOf, useStore } from '../model/store';
 import type { FeedbackKind } from '../model/types';
 import { Section, Tip } from './controls';
@@ -20,36 +21,16 @@ export const FEEDBACK: { value: FeedbackKind | 'none'; label: string; icon: Reac
 
 export function EngagementPanel() {
   const slide = useStore(slideOf);
-  const { mutate, addSlide, showToast } = useStore.getState();
+  const { mutate } = useStore.getState();
   const [adding, setAdding] = useState(false);
   const kind = slide.feedback?.kind ?? 'none';
 
-  /** A placeholder slide after this one, carrying one quiz or activity card, the way a SlideForge game lands. */
-  const insert = (what: 'quiz' | 'activity' | 'game') => {
-    const card = what === 'activity'
-      ? createLayer('activity', { name: 'Activity', box: { x: 360, y: 250, w: 1200, h: 580 }, anim: { type: 'rise', duration: 0.7 } })
-      : createLayer('quiz', { name: what === 'game' ? 'Game' : 'Quiz', params: what === 'game' ? { label: 'Game', question: 'A game runs here in SlideForge', options: 'Beat the Clock\nSpot the Error\nPredict the Outcome\nBoss battle' } : {}, box: { x: 260, y: 270, w: 1400, h: 540 }, anim: { type: 'rise', duration: 0.7 } });
-    const s = createSlide(what === 'activity' ? 'Activity' : what === 'game' ? 'Game' : 'Knowledge check', [card], slide.background);
-    addSlide(s);
-    setAdding(false);
-    showToast(`${s.name} placeholder added as the next slide. Double-click the card to write it; SlideForge runs it live.`);
-  };
-  const choice = (icon: ReactNode, label: string, hint: string, run: () => void) => (
-    <button className="engage-choice" onClick={run}>{icon}<span><b>{label}</b><small>{hint}</small></span></button>
-  );
-
   return (
     <>
-      <div className="engage-eyebrow">Games and the room · placeholders</div>
-      <Section title="Add a game or activity" right={<Tip text="Knowledge checks and games go between slides. Polls, word clouds, brainstorms and scales sit beside this slide." />}>
+      <div className="engage-eyebrow">Games and activities · designed in the lab</div>
+      <Section title="Add a game or activity" right={<Tip text="Each of SlideForge's activities and games, designed in the lab from its own layers, goes in after this slide. Most come two ways: the lab's design, and SlideForge's." />}>
         <button className="btn-soft accent engage-add" aria-expanded={adding} onClick={() => setAdding(!adding)}><Sparkles size={13} />{adding ? 'Close' : '+ Add activity'}</button>
-        {adding && (
-          <div className="engage-choices">
-            {choice(<ListChecks size={16} />, 'Knowledge check', 'A question with options, as the next slide', () => insert('quiz'))}
-            {choice(<Timer size={16} />, 'Timed activity', 'Think, pair, share — steps with minutes', () => insert('activity'))}
-            {choice(<Gamepad2 size={16} />, 'Game', 'A placeholder for one of SlideForge’s games', () => insert('game'))}
-          </div>
-        )}
+        {adding && <ActivityPicker done={() => setAdding(false)} />}
         <button className="btn-soft engage-saved" disabled title="Saved games live in SlideForge's library, which the lab does not read yet.">Insert a saved game…</button>
         <div className="hint">Saved games come from SlideForge’s library, which the lab does not read yet.</div>
       </Section>
@@ -65,5 +46,49 @@ export function EngagementPanel() {
         {kind !== 'none' && <div className="hint">{FEEDBACK.find((f) => f.value === kind)?.hint} Runs beside the slide in a live SlideForge session; nothing is drawn on the slide.</div>}
       </Section>
     </>
+  );
+}
+
+/** SlideForge's activities and games by lesson phase, each with its designs: a press adds its slides,
+ *  in the deck's style, after the slide on screen. Loaded the first time the list opens. */
+function ActivityPicker({ done }: { done: () => void }) {
+  const [lib, setLib] = useState<{ data: ActivityData; m: typeof import('../model/designs') } | null>(null);
+  useEffect(() => {
+    let live = true;
+    Promise.all([import('../model/designs'), import('../assets/activities.json')]).then(([m, d]) => {
+      const data = (d as { default: ActivityData }).default ?? (d as unknown as ActivityData);
+      if (live) setLib({ data, m });
+    });
+    return () => { live = false; };
+  }, []);
+  if (!lib) return <div className="hint">Loading the activities…</div>;
+  const add = (a: ActivityEntry, o: ActivityOption) => {
+    const { deck, addSlide, showToast } = useStore.getState();
+    const slides = o.make(themeOf(deck) ?? LAYOUT_STYLES[0]);
+    // Each goes after the one before it: addSlide puts a slide after the one on screen and moves there.
+    slides.forEach((s) => addSlide(s));
+    showToast(`${a.title} (${o.label}) added: ${slides.length} ${slides.length === 1 ? 'slide' : 'slides'}. Edit it on the slide; how to run it is in the notes.`);
+    done();
+  };
+  return (
+    <div className="engage-picker">
+      {lib.m.byPhase(lib.data).map((g) => (
+        <div key={g.phase} className="engage-phase">
+          <div className="engage-phase-label">{g.icon} {g.label}</div>
+          {g.items.map((a) => (
+            <div key={a.key} className="engage-act" title={a.blurb}>
+              <div className="engage-act-head">
+                {a.game ? <Gamepad2 size={14} /> : <Timer size={14} />}
+                <b>{a.title}</b>
+                <small>{a.game ? a.game.styleLabel : a.minutes ? `${a.minutes} min` : ''}</small>
+              </div>
+              <div className="engage-act-opts">
+                {lib.m.optionsFor(a).map((o) => <button key={o.id} className={o.id === 'lab' ? 'on' : ''} onClick={() => add(a, o)}>{o.label}</button>)}
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
   );
 }
