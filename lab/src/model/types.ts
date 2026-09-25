@@ -172,7 +172,11 @@ export interface SlideGame {
   quiz?: Record<string, unknown>;
   /** A board or a round played in one go: the slides SlideForge plays it on, compiled as it compiles them. */
   board?: Record<string, unknown>[];
+  /** Multiple choice's look: buttons two by two, lit green where they stand (SlideForge's quiz), or
+   *  the question and its answer as rows, the answer on the slide after (the lab's walls). */
+  look?: GameLook;
 }
+export type GameLook = 'buttons' | 'walls';
 export interface GameSettings {
   /** The clock on this slide, in seconds; 0 or absent is none. */
   seconds?: number;

@@ -311,7 +311,8 @@ test('a game’s question is never more than two lines, however long', { skip },
   questions.forEach((q) => {
     const lines = (q.box.h - 8) / (q.params.size * q.params.lineHeight);
     assert.ok(lines <= 2.5, `"${q.params.text.slice(0, 40)}…" takes ${lines.toFixed(1)} lines at ${q.params.size}px`);
-    assert.ok(q.params.size >= 48, 'and no smaller than the slides read at');
+    // The question takes its options' size (rule 4), and options are never set under 44px.
+    assert.ok(q.params.size >= 44, 'and no smaller than its options may be');
   });
 });
 
@@ -339,4 +340,58 @@ test('beside a picture at 65%, the points fit their column at the lab’s readin
   const h = measureTextHeight({ ...points.params, size: 36 }, points.box.w);
   assert.ok(h <= points.box.h, `at 36px the points take ${Math.round(h)}px of their ${Math.round(points.box.h)}px`);
   assert.ok(points.box.y + points.box.h <= 1071, 'and stay above the rail');
+});
+
+/* Any of the lab's modules, built as the converter is. */
+const bundles = {};
+async function bundle(entry) {
+  if (bundles[entry]) return bundles[entry];
+  measuringCanvas();
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'sf-lab-mod-'));
+  execFileSync(process.execPath, [VITE, 'build', '--ssr', entry, '--outDir', out, '--logLevel', 'error'], { cwd: LAB, stdio: 'pipe' });
+  bundles[entry] = await import(pathToFileURL(path.join(out, path.basename(entry).replace(/\.ts$/, '.js'))).href);
+  return bundles[entry];
+}
+
+const RIGHT_GREEN = '#1f9d5a';
+
+test('a lesson’s Check comes in as SlideForge showed it: four buttons, the right one lit green, the question at their size', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const src = lessonWithGames('ipdv-vc-hybrid');
+  const deck = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
+  src.slides.filter((s) => s.type === 'game').forEach((c) => {
+    const [ask, answer] = deck.slides.filter((s) => s.sourceSlideId === c.id);
+    assert.equal(ask.game.look, 'buttons');
+    const q = SF_GAME(src, c);
+    const buttons = (s) => q.options.map((_, k) => s.layers.find((l) => l.name === `Button ${k + 1}`));
+    buttons(ask).forEach((b) => assert.ok(b && b.params.fill !== RIGHT_GREEN, 'no answer shown while asking'));
+    buttons(answer).forEach((b, k) => assert.equal(b.params.fill === RIGHT_GREEN, k === q.correct, 'the right one green, where it stood'));
+    // Where it stood: the same box on the question and the answer, so the reveal lights it in place.
+    assert.deepEqual(buttons(answer)[q.correct].params.morph, buttons(ask)[q.correct].params.morph);
+    const words = ask.layers.find((l) => l.name === 'Button 1 — words');
+    assert.equal(ask.layers.find((l) => l.name === 'Question').params.size, words.params.size, 'the question at the buttons’ size');
+  });
+});
+
+test('the Look switch builds a Check again the other way and keeps what the lesson hangs on it', { skip }, async () => {
+  const { deckFromSlideForge } = await converter();
+  const { relookGame } = await bundle('src/model/gameLook.ts');
+  const src = lessonWithGames('ipdv-vc-hybrid');
+  const deck = deckFromSlideForge({ ...asData(src), games: src.labGames }, 'nul', { games: '' });
+  const check = src.slides.find((s) => s.type === 'game');
+  const before = deck.slides.filter((s) => s.sourceSlideId === check.id);
+  const id = before[0].game.id, count = deck.slides.length;
+  before[0].game.settings.seconds = 30;
+  const made = relookGame(deck, id, 'walls');
+  assert.equal(made.length, 2);
+  assert.equal(deck.slides.length, count, 'no slide gained or lost');
+  const after = deck.slides.filter((s) => s.sourceSlideId === check.id);
+  assert.deepEqual(after.map((s) => s.game.look), ['walls', 'walls']);
+  assert.ok(after[0].layers.some((l) => l.name === 'Option 1'), 'the rows of the walls');
+  assert.equal(after[0].game.id, id, 'still one game in the room');
+  assert.equal(after[0].game.settings.seconds, 30, 'its time kept');
+  assert.equal(after[0].notes, before[0].notes, 'its notes kept');
+  assert.ok(after[0].layers.some((l) => l.name === 'Theme · Rail'), 'its theme’s artwork kept');
+  assert.equal(deck.slides.indexOf(after[0]), deck.slides.indexOf(before[0]) === -1 ? deck.slides.indexOf(after[0]) : deck.slides.indexOf(after[0]), 'in its place');
+  assert.equal(relookGame(deck, id, 'walls').length, 0, 'already that look: nothing to do');
 });

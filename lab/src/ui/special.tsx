@@ -6,6 +6,7 @@ import { rebuildSlide, RECIPE_NAMES } from '../model/recipes';
 import { slideOf, useStore } from '../model/store';
 import { applyGameSettings } from '../model/gameSettings';
 import { canWrite, replaceGame, writeGame } from '../model/gameAI';
+import { GAME_LOOKS, relookGame } from '../model/gameLook';
 import { applyActivitySettings, ensureActivitySettings, type ActivityChange } from '../model/activitySettings';
 import { looksOf, type ActivityData, type ActivityEntry } from '../model/designs';
 import { CONSTRAINTS, canWriteActivity, writeActivity, type Audience } from '../model/activityAI';
@@ -365,6 +366,15 @@ export function GamePanel() {
   return (
     <Section title={`Game · ${g.label}`}>
       <WriteGame gameId={g.id} format={g.format} label={g.label} />
+      {g.format === 'choice' && (
+        <Row label="Look" info="Buttons: the options two by two, the right one lit green where it stands, as SlideForge's quiz does. Question, then answer: the options as rows, the answer and why on the slide after. The questions, their times and points stay as they are.">
+          <Select value={g.look ?? 'walls'} options={GAME_LOOKS} onChange={(v) => {
+            let first = '';
+            useStore.getState().mutate((d) => { first = relookGame(d, g.id, v as 'buttons' | 'walls')[0]?.id ?? ''; });
+            if (first) useStore.setState({ slideId: first, selectedId: null });
+          }} />
+        </Row>
+      )}
       <div className="desc">This slide is {ROLE_NAMES[g.role]} of the game. These are how it runs, and what the wall shows follows them{g.key != null ? '; a question and its answer share them' : ''}.</div>
       {timed && (
         <>

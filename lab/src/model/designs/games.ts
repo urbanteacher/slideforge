@@ -15,7 +15,8 @@ import { BASE, EY, FOOT, HY, LEFT, LIFT, ON_RIGHT, PAD, RIGHT, TOPBAND, W, box, 
 //    lines: a long one comes down in size rather than taking a third.
 // 2. The answers start right under the question.
 // 3. Rows and tiles are only as tall as their words, with PADV above and below; nothing stretches.
-// 4. A set shares one size, as large as the question where it fits.
+// 4. A set shares one size, as large as the question where it fits; on the lettered walls (multiple
+//    choice) the question comes down to the options' size, so the two read as one.
 // 5. The answers are set in the body face and the marks (letters, numbers, handles) in the muted ink,
 //    so nothing under the question reads as part of the heading; words are centred in their cell.
 // 6. Every question is answered on the slide after it, in its own layout: the reason under the
@@ -34,7 +35,7 @@ export interface GameQuestion {
   min?: number; max?: number; step?: number; target?: number; tolerance?: number; unit?: string;
 }
 /** One of SlideForge's showcase games, as tools/lab-games.mjs writes it. */
-export interface ShowcaseGame { format: string; style: string; label: string; styleLabel: string; aim: string; howToPlay: string[]; title: string; slides: GameQuestion[] }
+export interface ShowcaseGame { format: string; style: string; label: string; styleLabel: string; aim: string; howToPlay: string[]; title: string; slides: GameQuestion[]; /** Multiple choice's look (types.ts GameLook); the walls when not said. */ look?: 'buttons' | 'walls' }
 /** A game from the activity catalogue. */
 export interface Question { question: string; options: string[]; correct: number; explanation: string }
 export interface GameDef { title: string; style: string; styleLabel: string; steps: string[]; questions: Question[]; /** What the cover says under the title, when not a count of questions. */ count?: string }
@@ -201,13 +202,66 @@ export function trueFalseWall(st: LayoutStyle, name: string, q: GameQuestion, i:
 }
 
 // ─── Lettered choices: multiple choice, predict the outcome ─────────────────
+/** Rule 4 for the lettered walls: the question and its options at one size. The options are sized
+ *  under the question, the question is brought down to their size, and they are laid out again under
+ *  it, until the two agree (the question's two lines can take it lower still). */
+function matched<T extends { size: number }>(build: (sizes?: number[]) => { o: ReturnType<typeof opening>; set: T }) {
+  let r = build();
+  for (let k = 0; k < 3 && r.o.qn.size > r.set.size; k++) r = build([r.set.size]);
+  return r;
+}
+
 /** The question, then its options as full-width rows, letter and words at one size. The answer lights
  *  the right one, with why. */
 export function choiceWall(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer = false, game = 'Multiple choice', cue = 'choose one', held = ''): Slide {
   const opts = (q.options ?? []).slice(0, 6);
-  const o = opening(st, q, tag(game, cue, i, n, answer), q.question ?? '', answer, { sizes: [120, 104, 92, 80] });
-  o.layers.push(...grid(st, opts.map((t, k) => ({ text: t, id: `option-${k}`, mark: 'ABCDEF'[k], right: answer && k === q.correct })), o.top, { cols: 1, max: Math.min(o.qn.size, 88), name: 'Option', marks: true }).layers);
+  const cells = opts.map((t, k) => ({ text: t, id: `option-${k}`, mark: 'ABCDEF'[k], right: answer && k === q.correct }));
+  const { o, set } = matched((sizes) => {
+    const o = opening(st, q, tag(game, cue, i, n, answer), q.question ?? '', answer, { sizes: sizes ?? [120, 104, 92, 80] });
+    return { o, set: grid(st, cells, o.top, { cols: 1, max: Math.min(o.qn.size, 88), name: 'Option', marks: true }) };
+  });
+  o.layers.push(...set.layers);
   return slideOf(named(name, i, answer), o.layers, st, answer || !held ? note(q) : held);
+}
+
+/** SlideForge's quiz, the Buttons look: the options as buttons, two by two, a letter on each. On the
+ *  answer the right one is green where it stood and the rest go quiet, the reason under the question,
+ *  so the reveal reads as the button lighting up. */
+export function buttonsWall(st: LayoutStyle, name: string, q: GameQuestion, i: number, n: number, answer = false): Slide {
+  const opts = (q.options ?? []).slice(0, 6);
+  const cells: Cell[] = opts.map((t, k) => ({ text: t, id: `option-${k}`, mark: 'ABCDEF'[k], right: answer && k === q.correct, quiet: answer && k !== q.correct }));
+  const { o, set } = matched((sizes) => {
+    const o = opening(st, q, tag('Multiple choice', 'choose one', i, n, answer), q.question ?? '', answer, { sizes: sizes ?? [120, 104, 92, 80] });
+    return { o, set: buttons(st, cells, o.top, Math.min(o.qn.size, 88)) };
+  });
+  o.layers.push(...set.layers);
+  return slideOf(named(name, i, answer), o.layers, st, note(q));
+}
+
+/** Buttons two by two under the question, rounded, apart, each as tall as the tallest's words; one
+ *  size for all. The right one green (rule 7), a quiet one faded. */
+function buttons(st: LayoutStyle, cells: Cell[], top: number, max: number): { layers: Layer[]; size: number } {
+  const face = FACE(st), gap = 28;
+  const cols = cells.length > 2 ? 2 : Math.max(1, cells.length), rows = Math.ceil(cells.length / cols);
+  const w = (W - LEFT * 2 - gap * (cols - 1)) / cols;
+  const markW = 72, inL = 36, inR = 40, textW = w - inL - markW - inR;
+  const lh = Number(face.lineHeight ?? 1.15);
+  const room = (FOOT - top - gap * (rows - 1)) / Math.max(1, rows);
+  const size = fitSize(cells.map((x) => x.text).filter(Boolean), textW, Math.min(max * lh * 2 + 4, room - PADV * 2), face, max, 44);
+  const tallest = Math.max(size * lh, ...cells.map((x) => (x.text ? textHeight(x.text, textW, { ...face, size }) : 0)));
+  const h = Math.min(room, tallest + PADV * 2 + 12);
+  const layers: Layer[] = [];
+  cells.forEach((x, k) => {
+    const c = k % cols, r = Math.floor(k / cols);
+    const b = box(LEFT + c * (w + gap), top + r * (h + gap), w, h);
+    const a: Partial<Anim> = { type: 'pop', duration: 0.5, delay: 0.25 + 0.06 * k };
+    const inner: Partial<Anim> = { ...a, delay: (a.delay ?? 0) + 0.05 };
+    const keyed = (l: Layer, part = '') => { if (x.id) l.params.morph = `${x.id}${part}`; return l; };
+    layers.push(keyed(rect(`Button ${k + 1}`, b, x.right ? RIGHT : rgba(st.ink, x.quiet ? 0.035 : 0.07), a, 18)));
+    if (x.mark) layers.push(keyed(centred(`Button ${k + 1} — mark`, x.mark, box(b.x + inL, b.y, markW, b.h), { ...face, size, color: x.right ? ON_RIGHT : x.quiet ? st.muted : st.accent, lineHeight: 1 }, inner, 0, 0), ':mark'));
+    if (x.text) layers.push(keyed(centred(`Button ${k + 1} — words`, x.text, box(b.x + inL + markW, b.y, w - inL - markW, b.h), { ...face, size, color: x.right ? ON_RIGHT : x.quiet ? st.muted : st.ink, align: 'left' }, inner, 0, inR), ':words'));
+  });
+  return { layers, size };
 }
 
 /** Predict the outcome: lettered futures; the phones commit and say how sure before the answer. */
