@@ -1,5 +1,5 @@
 import { blankDeck } from './model/defaults';
-import { CARRIED, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type SFDeck, type SFSlide } from './model/fromSlideForge';
+import { CARRIED, carryDeckArt, carryDeckLive, carryDeckMissing, convertsSlide, deckFromSlideForge, type SFDeck, type SFSlide } from './model/fromSlideForge';
 import { imageSettled } from './engine/raster';
 import { renderStill } from './export/exporters';
 import { useStore } from './model/store';
@@ -49,28 +49,62 @@ export async function saveCurrent(): Promise<void> {
   await persistDeck(st.deck);
 }
 
-/** The campaign palette nearest a SlideForge theme, and whether it wears NU London's frame. */
-function paletteFor(theme = ''): { palette: string; frame: boolean } {
+/** AI Awareness Day's five strands, in the order their palettes list the colour sets. */
+const STRANDS = ['safe', 'smart', 'creative', 'responsible', 'future'];
+
+/** The campaign palette nearest a SlideForge theme, whether it wears NU London's frame, and for a
+ *  campaign strand (aiad26-smart), the colour set that leads: Smart is orange, not the first set. */
+function paletteFor(theme = ''): { palette: string; frame: boolean; set?: string } {
   if (theme.startsWith('northeastern')) return { palette: 'nul', frame: true };
   if (theme.startsWith('ukbt-institute')) return { palette: 'ukbt-institute', frame: false };
   if (theme.startsWith('ukbt')) return { palette: 'ukbt', frame: false };
-  if (theme.startsWith('aiad27')) return { palette: 'aiad27', frame: false };
-  if (theme.startsWith('aiad26')) return { palette: 'aiad26', frame: false };
+  const m = /^(aiad2[67])(?:-([a-z]+))?/.exec(theme);
+  if (m) {
+    const i = STRANDS.indexOf(m[2] ?? '');
+    return { palette: m[1], frame: false, set: i >= 0 ? String(i + 1) : undefined };
+  }
   return { palette: 'nul', frame: false };
 }
 
 interface ClassicDeck { id: string; title?: string; theme?: string; slides?: SFSlide[]; libraryGroup?: string }
 
+/** A picture's address as SlideForge wrote it, made to work from here. SlideForge's are relative to
+ *  its own page (assets/lesson/…), and the lab runs a folder down (lab-app/), where the same words
+ *  name a file that is not there: every lesson picture came into the lab missing. A relative address
+ *  is read from the page that loads the lab, and kept as a path from the site's root, so a deck
+ *  saved here still works wherever the site is served from. */
+export function siteAddress(src: string): string {
+  if (!src || /^(data:|blob:|[a-z][a-z0-9+.-]*:|\/|#)/i.test(src)) return src;
+  try {
+    const page = window.parent && window.parent !== window ? window.parent.location.href : new URL('..', location.href).href;
+    return new URL(src, page).pathname;
+  } catch { return src; }
+}
+
 /** A SlideForge lesson as a new lab deck. Its pictures are addresses on the slide (a URL or a data URL),
- *  not keys into a table as the Layout bank's are, so every lookup answers with the address itself. */
-const addresses = new Proxy({} as Record<string, string>, { get: (_, k) => (typeof k === 'string' ? k : undefined) });
+ *  not keys into a table as the Layout bank's are, so every lookup answers with the address, made to work here. */
+const addresses = new Proxy({} as Record<string, string>, { get: (_, k) => (typeof k === 'string' ? siteAddress(k) : undefined) });
+
+/** The picture and video addresses on a copy made before they were resolved: made to work here. */
+function repairAddresses(d: Deck): number {
+  let n = 0;
+  for (const slide of d.slides) for (const l of slide.layers) {
+    for (const key of ['src', 'poster'] as const) {
+      const v = (l.params as Record<string, unknown>)[key];
+      if (typeof v !== 'string') continue;
+      const fixed = siteAddress(v);
+      if (fixed !== v) { (l.params as Record<string, unknown>)[key] = fixed; n++; }
+    }
+  }
+  return n;
+}
 
 export function convertClassic(c: ClassicDeck): Deck {
   const slides = Array.isArray(c.slides) ? c.slides : [];
   const images = addresses;
   const data: SFDeck = { key: c.id, title: c.title || 'Untitled lesson', theme: c.theme || '', slides, images };
-  const { palette, frame } = paletteFor(c.theme);
-  const deck = deckFromSlideForge(data, palette, { frame, games: '' });
+  const { palette, frame, set } = paletteFor(c.theme);
+  const deck = deckFromSlideForge(data, palette, { frame, games: '', set });
   deck.id = `lab-${c.id}`;
   deck.sourceId = c.id;
   if (c.libraryGroup) deck.libraryGroup = c.libraryGroup;
@@ -87,14 +121,18 @@ export const isLabDeck = (d: unknown): d is Deck => {
 };
 
 /** A lab copy made by an older converter brought up to date from its lesson, once per version: the
- *  feedback and timers version 1 carries, then the slides later versions build (experiments). */
+ *  feedback and timers version 1 carries, the slides later versions build (experiments), and at
+ *  version 3 the theme's artwork and picture addresses that work from the lab. */
 function carryOnce(d: Deck, source: ClassicDeck | null | undefined): Deck {
   const from = d.carried ?? 0;
   if (from >= CARRIED || !source || !Array.isArray(source.slides)) return d;
   const copy = structuredClone(d);
-  const palette = paletteFor(source.theme).palette;
-  if (from < 1) carryDeckLive(copy, source.slides, palette);
-  carryDeckMissing(copy, source.slides, palette, Math.max(1, from));
+  const { palette, set } = paletteFor(source.theme);
+  const art = { theme: source.theme || '', title: source.title || '' };
+  if (from < 1) carryDeckLive(copy, source.slides, palette, set);
+  carryDeckMissing(copy, source.slides, palette, Math.max(1, from), set, art);
+  // The artwork first: a poster it adds comes with SlideForge's address, which the repair then fixes.
+  if (from < 3) { carryDeckArt(copy, source.slides, art); repairAddresses(copy); }
   copy.carried = CARRIED;
   return copy;
 }

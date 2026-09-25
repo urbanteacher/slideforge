@@ -1,6 +1,6 @@
 import chevron from '../assets/ukbt/ukbt-chevron.svg?raw';
 import { createLayer, uid } from './defaults';
-import { fromPreset } from './guide';
+import { chooseSet, fromPreset } from './guide';
 import { syncHeaderFooter } from './headerFooter';
 import { cardsSlide, guideStyle, journeySlide, keyfactSlide, keywordsSlide, pointsSlide, sectionSlide, slideStyle, tableSlide, titleSlide, type LayoutStyle } from './layouts';
 import { paletteGroups } from './palettes';
@@ -13,8 +13,10 @@ import type { Deck, Slide } from './types';
 type Ground = 'working' | 'quiet' | 'loud';
 
 /** The palette, the style each ground wears, and a helper that files a slide's ground and notes. */
-export function kit(id: string) {
+export function kit(id: string, set?: string) {
   const guide = fromPreset(paletteGroups()[0].presets.find((p) => p.id === id)!);
+  // A campaign strand (AI Awareness Day's Safe, Smart…) leads with its own colour set.
+  if (set && guide.sets.includes(set)) chooseSet(guide, set);
   const base = guideStyle(guide);
   const on = (g: Ground): LayoutStyle => slideStyle(base, { ground: g === 'working' ? undefined : g });
   const put = (s: Slide, g: Ground, notes: string) => {
