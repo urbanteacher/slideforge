@@ -6,6 +6,7 @@ import { fontString } from '../engine/raster';
 import { slideOf, useStore } from '../model/store';
 import type { Deck, FeedbackKind } from '../model/types';
 import { Section, Tip } from './controls';
+import { FeedbackSettings } from './special';
 
 // SlideForge's Engagement tab: games and activities, and the audience feedback a slide asks the room
 // for. The lab does not run a live room, so these are placeholders — a quiz or an activity lands as
@@ -39,12 +40,13 @@ export function EngagementPanel() {
         <div className="engage-kinds" role="radiogroup" aria-label="Audience feedback">
           {FEEDBACK.map((f) => (
             <button key={f.value} role="radio" aria-checked={kind === f.value} className={`engage-kind${kind === f.value ? ' on' : ''}`} title={f.hint}
-              onClick={() => mutate((d) => { const s = d.slides.find((x) => x.id === slide.id); if (!s) return; if (f.value === 'none') delete s.feedback; else s.feedback = { kind: f.value }; })}>
+              onClick={() => mutate((d) => { const s = d.slides.find((x) => x.id === slide.id); if (!s) return; if (f.value === 'none') delete s.feedback; else s.feedback = { ...(s.feedback ?? {}), kind: f.value }; })}>
               {f.icon}<span>{f.label}</span>
             </button>
           ))}
         </div>
         {kind !== 'none' && <div className="hint">{FEEDBACK.find((f) => f.value === kind)?.hint} Runs beside the slide in a live SlideForge session; nothing is drawn on the slide.</div>}
+        {kind !== 'none' && <FeedbackSettings />}
       </Section>
     </>
   );

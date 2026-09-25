@@ -365,6 +365,8 @@ export function settingsOf(q: GameQuestion = {}): GameSettings {
 /** Mark a slide as a part of its game: what it is, the question it asks, and what its clock times. */
 export function tagGame(s: Slide, role: SlideGame['role'], q?: GameQuestion, key?: string, clock?: string, extra: GameSettings = {}): Slide {
   s.game = { id: '', format: '', label: '', role, ...(key != null ? { key } : {}), ...(clock ? { clock } : {}), settings: { ...settingsOf(q), ...extra } };
+  // The question itself goes with it, for the live room (src/deck/labshow.js).
+  if (role === 'question' && q) s.game.quiz = JSON.parse(JSON.stringify(q)) as Record<string, unknown>;
   return s;
 }
 /** What stays where it is when a slide's content is centred: the ground, the heading row (its
@@ -400,6 +402,9 @@ export function finishGame(slides: Slide[], format: string, label: string): Slid
   const id = `g${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
   slides.forEach((s, k) => {
     s.game = { ...(s.game ?? { role: k === 0 ? 'cover' : 'board', settings: {} }), id, format, label };
+    // A catalogue game's question is plainer than a compiled one: it says what it is from its game.
+    const q = s.game.quiz;
+    if (q) { q.type = 'quiz'; q.style ??= format; q.input ??= format === 'type' ? 'text' : 'choice'; q.gameTitle ??= label; }
     if (s.game.role === 'question' && !s.game.clock) s.game.clock = 'Time limit';
     // Every step of a game morphs: what the two slides share travels — the lit tile, the item into
     // its place, the card into its reveal — and the rest crossfades.

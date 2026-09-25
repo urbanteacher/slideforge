@@ -3341,6 +3341,8 @@
     }
     if (chain) closeProposals();
     Live.revealed[s.id] = true;
+    /* A lab game's question draws the lab's own answer slide on the wall (js/lab-stage.js). */
+    if (SF.LabStage && SF.LabStage.reveal) SF.LabStage.reveal(s);
     stopDrip();
     /* The reasoning reaches the phones at the same moment they learn whether
        they were right, which is when they are most likely to read it. */

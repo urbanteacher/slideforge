@@ -1,4 +1,5 @@
 import { layoutText, measureTextHeight } from '../../engine/raster';
+import type { StageJob } from '../types';
 import { createLayer, createSlide } from '../defaults';
 import { cell, groundParams, type LayoutStyle } from '../layouts';
 import type { Anim, Box, Layer, Params, Slide } from '../types';
@@ -196,10 +197,10 @@ export function part(set: string, i: number, mode: StepMode, upFront = 1) {
 
 /** A row of SlideForge's content: "Label · 3 min [talk]<TAB>What to do". `job` is what the room does,
  *  from SlideForge's declared job ([note], [talk], [send], [work], [down]) or its "every 4 min". */
-export interface Row { label: string; text: string; minutes: number; job?: string }
+export interface Row { label: string; text: string; minutes: number; job?: string; /** The phone job it declares ([note] …). */ jobKey?: StageJob }
 const TIME = /\s*[·•\-–—|,]\s*(every\s+)?(\d+(?:\.\d+)?)\s*(min|mins|minutes|m|s|sec|secs|seconds)\s*$/i;
 const JOB = /\s*\[(note|talk|send|work|down)\]\s*$/i;
-const JOBS: Record<string, string> = { note: 'A private note on your phone', talk: 'Talk it through', send: 'Send it from your phone', work: 'Work on it', down: 'Phones down' };
+export const JOBS: Record<string, string> = { note: 'A private note on your phone', talk: 'Talk it through', send: 'Send it from your phone', work: 'Work on it', down: 'Phones down' };
 export function rowsOf(bullets: string[] = []): Row[] {
   return bullets.filter((l) => l.trim()).map((l) => {
     const [rawA = '', rawB = ''] = l.split('\t');
@@ -209,7 +210,7 @@ export function rowsOf(bullets: string[] = []): Row[] {
     const n = m ? Number(m[2]) : 0;
     const minutes = m ? (/^s/i.test(m[3]) ? n / 60 : n) : 0;
     const job = m?.[1] ? `Every ${m[2]} min` : declared ? JOBS[declared] : undefined;
-    return { label: m ? a.slice(0, m.index).trim() : a, text: b, minutes, job };
+    return { label: m ? a.slice(0, m.index).trim() : a, text: b, minutes, job, ...(declared ? { jobKey: declared as StageJob } : {}) };
   });
 }
 

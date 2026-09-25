@@ -102,7 +102,7 @@ function show(d: Deck) {
 
 /** One slide as a picture for SlideForge's player: what Host live, Teacher Presenter and Rehearse
  *  show until the lab has a live host of its own. */
-export interface Still { id: string; sourceSlideId?: string; image: string; notes: string; hidden: boolean; name: string; feedback?: Slide['feedback'] }
+export interface Still { id: string; sourceSlideId?: string; image: string; notes: string; hidden: boolean; name: string; feedback?: Slide['feedback']; /** A game's slide: what the live room plays it by (src/deck/labshow.js). */ game?: Slide['game'] }
 
 // A slide is immutable, so an unchanged one keeps its picture; the deck-wide things drawn on it
 // (the header and footer, the style guide, its page number) are checked too.
@@ -134,7 +134,7 @@ async function stills(width = 1600, onProgress?: (done: number, total: number) =
       // A breath between slides, so the page stays responsive while a long deck is drawn.
       await new Promise((r) => setTimeout(r, 0));
     }
-    out.push({ id: s.id, sourceSlideId: s.sourceSlideId, image: url, notes: s.notes ?? '', hidden: !!s.hidden, name: s.name, feedback: s.feedback ? structuredClone(s.feedback) : undefined });
+    out.push({ id: s.id, sourceSlideId: s.sourceSlideId, image: url, notes: s.notes ?? '', hidden: !!s.hidden, name: s.name, feedback: s.feedback ? structuredClone(s.feedback) : undefined, game: s.game ? structuredClone(s.game) : undefined });
     onProgress?.(i + 1, deck.slides.length);
   }
   return out;

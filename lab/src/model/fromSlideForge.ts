@@ -226,6 +226,7 @@ export function feedbackOf(f: SFSlide['feedback']): SlideFeedback | null {
   if (Number(f.points) > 0) out.points = Number(f.points);
   if (typeof f.lowLabel === 'string') out.lowLabel = f.lowLabel;
   if (typeof f.highLabel === 'string') out.highLabel = f.highLabel;
+  if ((f as { hold?: unknown }).hold === true) out.hold = true;
   return out;
 }
 

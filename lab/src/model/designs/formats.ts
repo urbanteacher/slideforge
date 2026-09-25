@@ -665,7 +665,26 @@ export const GAMES = [
 ];
 
 /** A game as slides: its cover, then its phases as SlideForge's playbook sets them out. */
+/** Games played on SlideForge's own board in the live room — their state is the room's, as it plays —
+ *  and what of SlideForge's compiled game plays there. */
+const LIVE_BOARD: Record<string, (s: GameQuestion & Boards) => boolean> = {
+  'low-stakes-quiz': (s) => !!s.lowstakesBoard, 'quiz-bowl': (s) => !!s.bowlBoard, bingo: (s) => !!s.bingoBoard,
+  'memory-flip': (s) => !!s.memoryBoard, 'memory-match': (s) => !!s.memoryBoard, 'knowledge-flip': (s) => !!s.memoryBoard,
+  'beat-the-clock': (s) => s.type === 'quiz', 'question-cube': (s) => s.type === 'quiz',
+};
+/** A board game's first slide after its cover carries SlideForge's board, for the live room. */
+function withLiveBoard(g: ShowcaseGame, slides: Slide[]): Slide[] {
+  const of = LIVE_BOARD[g.format];
+  const first = slides.find((s) => s.game && s.game.role !== 'cover');
+  const board = of ? (g.slides as (GameQuestion & Boards)[]).filter(of) : [];
+  if (first?.game && board.length) first.game.board = JSON.parse(JSON.stringify(board)) as Record<string, unknown>[];
+  return slides;
+}
+
 export function gameSlides(g: ShowcaseGame, st: LayoutStyle): Slide[] {
+  return withLiveBoard(g, gameSlidesOf(g, st));
+}
+function gameSlidesOf(g: ShowcaseGame, st: LayoutStyle): Slide[] {
   if (SHOWCASE.includes(g.format)) return showcaseSlides(g, st);
   const all = g.slides as (Q & Boards)[];
   const qs = all.filter((s) => s.type === 'quiz') as Q[];

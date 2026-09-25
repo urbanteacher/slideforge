@@ -181,7 +181,7 @@
       var kind = typeof f === 'string' ? f : f.kind;
       s.feedback = SF.makeFeedback(kind);
       if (typeof f === 'object') {
-        ['prompt', 'max', 'presentAs', 'points', 'lowLabel', 'highLabel'].forEach(function (k) {
+        ['prompt', 'max', 'presentAs', 'points', 'lowLabel', 'highLabel', 'hold'].forEach(function (k) {
           if (f[k] != null && f[k] !== '') s.feedback[k] = f[k];
         });
         if (Array.isArray(f.options) && f.options.length) s.feedback.options = f.options.slice();
@@ -231,7 +231,8 @@
     var slides = (after[''] || []).slice();
     delete after[''];
     items.forEach(function (item) {
-      slides.push(make(item));
+      /* One slide, or a game's board compiled as several (src/deck/labshow.js). */
+      slides = slides.concat(make(item));
       var more = item.sourceSlideId && after[item.sourceSlideId];
       if (more) { slides = slides.concat(more); delete after[item.sourceSlideId]; }
     });
@@ -257,7 +258,10 @@
     return api.stills(width || 1600, function (done) {
       if (total > 12 && done - shown >= 10) { shown = done; SF.toast('Preparing the show \u2014 ' + done + ' of ' + total + ' slides'); }
     }, quality || 0.9).then(function (stills) {
-      var deck = lessonFrom(stills, pictureSlide);
+      /* The lab's games play as SlideForge's own: its quiz slides under the lab's drawing, its
+         boards where the room's state is kept (src/deck/labshow.js). The rest are pictures. */
+      var items = SF.labShowSlides ? SF.labShowSlides(stills) : stills;
+      var deck = lessonFrom(items, function (/** @type {any} */ it) { return it.sf || pictureSlide(it); });
       if (!width || width === 1600) lastShowDeck = deck;
       return deck;
     });

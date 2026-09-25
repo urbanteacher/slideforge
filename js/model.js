@@ -763,6 +763,89 @@
     return { read, write, applyFields, steps };
   }
 
+  // src/deck/labshow.js
+  var SLIDEFORGE_WALL = { "word-reveal": true, wordreveal: true };
+  function copy(v) {
+    return JSON.parse(JSON.stringify(v));
+  }
+  function quizSlide(still, ask, answer, makeSlide2) {
+    var g = still.game, set = g.settings || {};
+    var s = Object.assign(makeSlide2("quiz"), copy(g.quiz));
+    s.id = still.id;
+    s.type = "quiz";
+    s.notes = still.notes || "";
+    if (still.hidden) s.hidden = true;
+    s.timeLimit = set.seconds > 0 ? set.seconds : 0;
+    if (set.points != null) s.points = set.points;
+    if (set.difficulty) s.difficulty = set.difficulty;
+    if (set.damage != null) s.bossDamage = set.damage;
+    if (set.tolerance != null) s.tolerance = set.tolerance;
+    if (set.accept && set.accept.length) s.accept = set.accept.slice();
+    s.gameId = g.id;
+    s.gameTitle = g.label;
+    s.image = still.image;
+    s.headerFooter = { enabled: false, slots: {} };
+    s.transition = "none";
+    if (!SLIDEFORGE_WALL[g.format]) {
+      s.design = Object.assign({}, s.design, { labStill: true });
+      if (answer) s.design.labReveal = answer.id;
+      if (ask) s.design.labAsk = ask.id;
+    }
+    return s;
+  }
+  function boardSlides(still, makeSlide2) {
+    var g = still.game, set = g.settings || {};
+    return g.board.map(function(b, k) {
+      var s = Object.assign(makeSlide2(b.type || "content"), copy(b));
+      s.id = k ? still.id + "~" + k : still.id;
+      s.gameId = g.id;
+      s.gameTitle = g.label;
+      if (s.type === "quiz" && set.seconds > 0 && g.format !== "beat-the-clock") s.timeLimit = set.seconds;
+      if (s.type === "quiz" && g.format === "beat-the-clock" && set.seconds > 0) s.roundSeconds = set.seconds;
+      if (still.hidden) s.hidden = true;
+      return s;
+    });
+  }
+  function labShowSlides(stills, makeSlide2) {
+    var byGame = {};
+    (stills || []).forEach(function(s) {
+      if (s && s.game && s.game.id) (byGame[s.game.id] = byGame[s.game.id] || []).push(s);
+    });
+    var out = [];
+    (stills || []).forEach(function(still) {
+      var g = still && still.game;
+      if (!g || !g.id) {
+        out.push(still);
+        return;
+      }
+      var mine = byGame[g.id];
+      var part = function(role, key) {
+        return mine.filter(function(x) {
+          return x.game.role === role && x.game.key === key;
+        });
+      };
+      var board5 = mine.filter(function(x) {
+        return x.game.board && x.game.board.length;
+      })[0];
+      if (board5) {
+        if (g.role === "cover") out.push(still);
+        else if (still === board5) out.push({ id: still.id, sourceSlideId: still.sourceSlideId, sf: boardSlides(still, makeSlide2) });
+        return;
+      }
+      if (g.role === "question" && g.quiz && g.key != null) {
+        var asks = part("question", g.key);
+        if (asks[0] !== still) return;
+        out.push({ id: still.id, sourceSlideId: still.sourceSlideId, sf: quizSlide(still, asks[1], part("answer", g.key)[0], makeSlide2) });
+        return;
+      }
+      if (g.role === "answer" && g.key != null && part("question", g.key).some(function(x) {
+        return x.game.quiz;
+      })) return;
+      out.push(still);
+    });
+    return out;
+  }
+
   // src/render/compositions.js
   function createCompositionRenderer(SF, helpers) {
     const { el, rich, asStep, layoutQuote, layoutStatement, appendSlideDate } = helpers;
@@ -828,10 +911,10 @@
         (slide.bullets || []).forEach(function(line, i) {
           var p = SF.parseKeywordLine(line), card = asStep(el("div", "cp-choice"), slide);
           card.appendChild(el("span", "cp-letter", LETTERS[i] || String(i + 1)));
-          var copy = el("div", "cp-choice-copy");
-          copy.appendChild(bullet("h3", "", i, p.term));
-          copy.appendChild(bullet("p", "", i, p.def));
-          card.appendChild(copy);
+          var copy2 = el("div", "cp-choice-copy");
+          copy2.appendChild(bullet("h3", "", i, p.term));
+          copy2.appendChild(bullet("p", "", i, p.def));
+          card.appendChild(copy2);
           choices.appendChild(card);
         });
         body.appendChild(choices);
@@ -849,10 +932,10 @@
         (slide.bullets || []).forEach(function(line, i) {
           var p = SF.parseKeywordLine(line), row = asStep(el("div", "cp-rule"), slide);
           row.appendChild(el("span", "cp-rule-number", "0" + (i + 1)));
-          var copy = el("div");
-          copy.appendChild(bullet("h3", "", i, p.term));
-          copy.appendChild(bullet("p", "", i, p.def));
-          row.appendChild(copy);
+          var copy2 = el("div");
+          copy2.appendChild(bullet("h3", "", i, p.term));
+          copy2.appendChild(bullet("p", "", i, p.def));
+          row.appendChild(copy2);
           rules.appendChild(row);
         });
         body.appendChild(rules);
@@ -6442,20 +6525,20 @@
       if (!Player._focus || !els.viewport()) return null;
       var node = els.viewport().querySelector("[data-overlay]");
       if (!node) return null;
-      var copy = node.cloneNode(true);
-      copy.classList.remove("entering", "tr-fade");
-      copy.removeAttribute("data-overlay");
-      copy.removeAttribute("style");
-      return copy.outerHTML;
+      var copy2 = node.cloneNode(true);
+      copy2.classList.remove("entering", "tr-fade");
+      copy2.removeAttribute("data-overlay");
+      copy2.removeAttribute("style");
+      return copy2.outerHTML;
     }
     function wallRailMarkup() {
       if (!Player._rail || Player._focus) return null;
       var card = document.getElementById("joincard");
       if (card && card.classList.contains("on")) return null;
-      var copy = Player._rail.cloneNode(true);
-      copy.classList.add("desk-wall-rail");
-      copy.removeAttribute("style");
-      return copy.outerHTML;
+      var copy2 = Player._rail.cloneNode(true);
+      copy2.classList.add("desk-wall-rail");
+      copy2.removeAttribute("style");
+      return copy2.outerHTML;
     }
     function syncPresenter() {
       var deck = Player.deck;
@@ -12027,17 +12110,17 @@
         }
       });
       if (s.type === "split") {
-        var media = root.querySelector(".split-media"), copy = root.querySelector(".split-copy");
+        var media = root.querySelector(".split-media"), copy2 = root.querySelector(".split-copy");
         var ratio = [35, 50, 65].includes(d.imageShare) ? d.imageShare : 50;
         media.style.flex = "0 0 " + ratio + "%";
-        copy.style.flex = "1 1 0";
+        copy2.style.flex = "1 1 0";
         var placement = SF.imagePlacement(s);
         if (["top", "bottom"].includes(placement)) {
           pad.style.flexDirection = "column";
           media.style.order = placement === "top" ? "0" : "1";
-          copy.style.order = placement === "top" ? "1" : "0";
-          copy.style.padding = "28px 56px";
-          copy.style.minHeight = "0";
+          copy2.style.order = placement === "top" ? "1" : "0";
+          copy2.style.padding = "28px 56px";
+          copy2.style.minHeight = "0";
           media.style.minHeight = "0";
         }
       }
@@ -13597,7 +13680,7 @@
       var q = current(s);
       return q ? q.damage : 0;
     }
-    function copy(s) {
+    function copy2(s) {
       return Object.assign({}, s, {
         marked: (s.marked || []).slice(),
         dealt: Object.assign({}, s.dealt),
@@ -13617,7 +13700,7 @@
       return s;
     }
     function transition(state2, action, arg) {
-      var s = copy(state2);
+      var s = copy2(state2);
       if (action === "restart") return create(state2.questions.map(function(q) {
         return {
           id: q.id,
@@ -24165,10 +24248,10 @@
     return 0;
   }
   function practiceDoc(deck, lookupGame) {
-    var copy = JSON.parse(JSON.stringify(deck));
+    var copy2 = JSON.parse(JSON.stringify(deck));
     var games = {};
     var skipped = [];
-    copy.slides = copy.slides.map(function(s) {
+    copy2.slides = copy2.slides.map(function(s) {
       if (s.type !== "game") return s;
       var game = lookupGame(s.gameId);
       var style = game ? GAME_STYLES[game.style] : null;
@@ -24184,8 +24267,8 @@
       note.subtitle = "Played together in class — this one needs a room.";
       return note;
     });
-    copy.practice = { games, skipped };
-    return copy;
+    copy2.practice = { games, skipped };
+    return copy2;
   }
   function buildRunDeck(deck, lookupGame) {
     const run = (
@@ -24498,6 +24581,10 @@
     GALLERY_MAX,
     uid,
     makeSlide,
+    /* A lab lesson's games as SlideForge plays them live (src/deck/labshow.js). */
+    labShowSlides: function(stills) {
+      return labShowSlides(stills, makeSlide);
+    },
     makeDeck,
     starterDeck,
     normalizeDeck,

@@ -1,6 +1,6 @@
 import { feedbackOf, type SFSlide } from '../fromSlideForge';
 import { cardsSlide, keywordsSlide, splitSlide, tableSlide, type LayoutStyle } from '../layouts';
-import type { Slide } from '../types';
+import type { ActivitySettings, Slide } from '../types';
 import { briefHero } from './brief';
 import { activityGameSlides, type GameDef } from './games';
 import { CY, LEFT, W, box, clock, headingClock, rowsOf, type Row } from './kit';
@@ -21,6 +21,8 @@ export interface ActivityEntry {
   phase: string; phaseLabel: string; phaseIcon: string; minutes: number;
   target: string; presentation: string; steps: string[]; materials: string[]; teacherNotes: string;
   slides?: SFSlide[];
+  /** Written on a topic (the Activity panel's Write it): its own words, not the catalogue's wall copy. */
+  written?: boolean;
   game?: { title: string; style: string; format: string; styleLabel: string; questions: { question: string; options: string[]; correct: number; explanation: string }[] };
 }
 export interface ActivityData { activities: ActivityEntry[] }
@@ -42,7 +44,7 @@ function shapeOf(s: SFSlide): Shape {
 }
 
 /** Each stage's job on the track: SlideForge's declared one, or what its name says the room does. */
-const JOB_BY_NAME: Record<string, string> = {
+export const JOB_BY_NAME: Record<string, string> = {
   think: 'Silent thinking', pair: 'With a partner', square: 'Two pairs together', share: 'With the room', connect: 'Pulling it together',
   agree: 'As a class', debrief: 'As a class', reflect: 'On your own', 'i do': 'Watch', 'we do': 'Together', switch: 'Swap roles',
 };
@@ -52,11 +54,11 @@ const JOB_BY_NAME: Record<string, string> = {
  *  the prompt ("What makes a discussion go well…? Note one of each."): the stage keeps the instruction. */
 function routineOf(a: ActivityEntry, s: SFSlide) {
   // Its copy is tuned for the wall; its notes come from the catalogue, as every activity's do.
-  if (a.key === 'think-pair-share') return { ...THINK_PAIR_SHARE, notes: undefined };
+  if (a.key === 'think-pair-share' && !a.written) return { ...THINK_PAIR_SHARE, notes: undefined };
   const rows = rowsOf(s.bullets);
   const lead = rows[0] && !rows[0].minutes && rows.slice(1).some((r) => r.minutes) ? rows[0] : null;
   const stages: Stage[] = (lead ? rows.slice(1) : rows).map((r) => ({
-    name: r.label, task: r.text, minutes: r.minutes, job: r.job ?? JOB_BY_NAME[r.label.toLowerCase()],
+    name: r.label, task: r.text, minutes: r.minutes, job: r.job ?? JOB_BY_NAME[r.label.toLowerCase()], ...(r.jobKey ? { jobKey: r.jobKey } : {}),
   }));
   let prompt = lead ? lead.text || lead.label : '';
   if (!prompt && stages[0]) {
@@ -133,12 +135,36 @@ function activitySlides(a: ActivityEntry, st: LayoutStyle, which: 'lab' | 'slide
     const made = build(a, s, st, which);
     carry(made, s, shapeOf(s), st, which);
     made.name = (a.slides?.length ?? 0) > 1 ? `${a.title} · ${i + 1}` : a.title;
-    made.activity = { key: a.key, page: i };
+    made.activity = { key: a.key, page: i, settings: settingsOf(a, s, which) };
     const own = made.notes ? `\n\n${made.notes}` : '';
     made.notes = i === 0 ? `${notes}${own}` : `Part ${i + 1} of ${a.title}; the brief is on its first slide.${own}`;
     return made;
   });
   return out;
+}
+
+/** How an activity slide runs, recorded as it is built: its look, and each stage's time and phone
+ *  job (a routine) or its one time (any other shape). The Activity panel edits these. */
+function settingsOf(a: ActivityEntry, s: SFSlide, which: 'lab' | 'slideforge'): ActivitySettings {
+  const out: ActivitySettings = { look: which };
+  if (shapeOf(s) === 'stages') out.stages = routineOf(a, s).stages.slice(0, 5).map((x) => ({ name: x.name, minutes: x.minutes, ...(x.jobKey ? { job: x.jobKey } : {}) }));
+  else if (Number(s.timeLimit) > 0) out.seconds = Number(s.timeLimit);
+  return out;
+}
+
+/** An activity slide built again in `which` design, from the catalogue: the same page, as added. */
+export function rebuildActivity(a: ActivityEntry, page: number, st: LayoutStyle, which: 'lab' | 'slideforge'): Slide | null {
+  const s = a.slides?.[page];
+  if (!s || a.game) return null;
+  const made = build(a, s, st, which);
+  carry(made, s, shapeOf(s), st, which);
+  made.activity = { key: a.key, page, settings: settingsOf(a, s, which) };
+  return made;
+}
+
+/** An activity's two looks, by their names: the lab's, then SlideForge's. */
+export function looksOf(a: ActivityEntry): [string, string] {
+  return LABELS[a.slides?.[0] ? shapeOf(a.slides[0]) : 'rows'];
 }
 
 function gameOf(a: ActivityEntry): GameDef {

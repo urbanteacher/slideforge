@@ -1,7 +1,7 @@
 import { Image as ImageIcon, AlignCenterHorizontal, AlignCenterVertical, AlignEndHorizontal, AlignEndVertical, AlignStartHorizontal, AlignStartVertical, MonitorPlay, Play, RotateCcw, Shuffle, WandSparkles } from 'lucide-react';
 import { setVideoLayout, videoLayoutOf, type VideoLayout } from './video';
 import { videoService } from '../model/video';
-import { GamePanel, RecipePanel, SPECIAL_TABS, SpecialPanel } from './special';
+import { ActivityPanel, GamePanel, RecipePanel, SPECIAL_TABS, SpecialPanel } from './special';
 import { RECIPE_NAMES } from '../model/recipes';
 import { EngagementPanel } from './Engagement';
 import { backdropOf, setBackdrop, type BackdropMode } from '../model/backdrop';
@@ -489,6 +489,7 @@ function SlideDesign() {
     <>
       <RecipePanel />
       <GamePanel />
+      <ActivityPanel />
       <Section title="Slide">
         <Row label="Name"><input className="text-input" value={slide.name} onFocus={() => (nm.current = newGesture())} onChange={(e) => updateSlide((s) => { s.name = e.target.value; }, nm.current)} onKeyDown={(e) => e.stopPropagation()} /></Row>
         <Row label="Background" info="Shown beneath all layers."><ColorField value={slide.background} onChange={(v, m) => updateSlide((s) => { s.background = v; }, m)} /></Row>
