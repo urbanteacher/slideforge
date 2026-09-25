@@ -36,13 +36,21 @@ Converting content is also a solved problem. `lab/src/model/fromSlideForge.ts` a
 
 | Milestone | Status |
 |---|---|
-| M0–M4 | Not started. M0 discovery is next. |
+| M0–M4 | Not started. They come after the lesson side (see the order below). |
 | M5 | **Done early, in a different form** (commits `d9b1e64`, `41d9ea3`, `7b7a67e`). The lab is the Lesson studio. See "M5 — status" below for what differs from the plan and what is left. |
 | M6 | **Part done.** The lab bundle is committed in `lab-app/` and served by the relay's static server from the same origin. Not yet deployed to Render or tried from a phone. |
 | M7–M15 | Not started. Until M7, **the bridge** stands in for the lab's own live host (see below). |
-| Live stage | **Done** (`4b5c9a5`). Lab slides play live inside SlideForge's show, with its HUD, the room's rail and Teacher Presenter (see "The live stage" below). |
+| Live stage | **Done** (`4b5c9a5`, speaker notes on the wall `9281d07`). Lab slides play live inside SlideForge's show, with its HUD, the room's rail and Teacher Presenter (see "The live stage" below). |
+| **Next** | The converter keeps each slide's audience feedback and timer (below), then what M5 still owes. |
 
-**Order (decided 25 Sep 2026): games and activities come last.** The lesson side goes first: the HUD, Teacher Presenter and the rail (done, the live stage), what M5 still owes, and the lesson features the feature map still marks Missing. The game and activity milestones (M0's game inventories, M2–M4, M7–M14) follow after that. Until then, games and activities in a lab lesson run as SlideForge's own, through the bridge. M1.5 (the lab restructure) still comes before anything adds game code to the lab.
+**Order (decided 25 Sep 2026): games and activities come last.** The lesson side goes first, in this order:
+
+1. The HUD, Teacher Presenter and the rail. **Done** (the live stage).
+2. **The converter keeps a slide's audience feedback and timer.** A SlideForge lesson converted into the lab lost its polls, word clouds, brainstorms and scales (`slide.feedback`) and its timed slides (`slide.timeLimit`): `fromSlideForge.ts` read neither. The original lesson kept them, but the lab copy that is taught from did not. Lab copies made before the fix get them back from their original, once.
+3. What M5 still owes (see "M5 — status").
+4. The lesson features the feature map still marks Missing, starting with the feedback settings (prompt, poll options, scale ends and points, responses each, beside the slide or full screen) and the phone preview.
+
+The game and activity milestones (M0's game inventories, M2–M4, M7–M14) follow after that. Until then, games and activities in a lab lesson run as SlideForge's own, through the bridge. M1.5 (the lab restructure) still comes before anything adds game code to the lab.
 
 ## Where we are now
 
@@ -700,3 +708,4 @@ This is out of scope for this plan. It is listed here so the end state is clear.
 - **25 Sep 2026, later.** **M1.5, restructuring the lab into kind folders**, was added before M2, following tldraw's one-util-per-shape registry and bulletproof-react's feature folders. The infrastructure section now records which lab files grow with every kind. Hard rule 13 adds a file budget (aim for under 400 lines, fail above 800) and import boundaries, both checked by a test. Two anti-drift rows were added for them. M4 now describes a game style as a folder, not a file.
 - **25 Sep 2026, evening.** The plan now records what was built. "Where things stand" and the "Where we are now" diagram show the lab as the Lesson studio (commits `d9b1e64`, `41d9ea3`, `7b7a67e`). A new section describes **the bridge**, the temporary way Host live, Teacher Presenter, Rehearse, Share and the handout run a lab lesson on the classic player, and when it goes (M7, M11, M12). M5 has a status table of the four places it differs from the plan, and a list of what it still owes. The infrastructure section covers the committed `lab-app/` bundle, the `lab-lesson` smoke, the classic studio under automation, the lab's store and Library cards, and the frame. Four temporary steps were added to the anti-drift section, each with its exit condition.
 - **25 Sep 2026, later.** **The live stage** is added (`4b5c9a5`): lab slides play live inside SlideForge's show, with its HUD, the rail and Teacher Presenter, and the lab makes room beside the rail. The bridge's section now says the pictures remain only for Teacher Presenter's thumbnails, shared links and the handout. A decision on order is recorded: **games and activities come last**, after the lesson side.
+- **25 Sep 2026, later still.** The status table said M0 was next, which the order decision had overtaken; it now names the next step. The order is written out as a list, with a new item: **the converter keeps each slide's audience feedback and timer**, which converted lessons were losing.
