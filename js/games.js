@@ -111,7 +111,9 @@
     var wrap = document.querySelector('.stage-wrap');
     if (btn) {
       btn.classList.toggle('on', demoActive);
-      btn.textContent = demoActive ? '✕ Exit demo' : '▷ Try demo';
+      /* The canvas bar's green play: ▶ to try the game with a sample class, ✕ to leave it. */
+      btn.textContent = demoActive ? '✕' : '▶';
+      btn.setAttribute('aria-label', demoActive ? 'Exit demo' : 'Try demo');
       btn.setAttribute('aria-pressed', demoActive ? 'true' : 'false');
     }
     if (banner) {
@@ -298,59 +300,74 @@
 
   /* ------------------------------------------------------------ rail */
 
+  /* The questions are in the strip under the canvas, as the Lesson studio's
+     slides are (js/lesson-strip.js): each one drawn as the room sees it, with
+     duplicate and delete on it, dragged to reorder. Its other view is the
+     lesson, with this game where it plays. The rail is where the question
+     is written. */
   function drawRail() {
-    var rail = $('railList');
-    if (!rail) return;
-    var railEl = rail;
-    railEl.innerHTML = '';
     var count = $('railCount');
     if (count) count.textContent = String(game.questions.length);
-
-    game.questions.forEach(function (question, i) {
-      var row = el('div', 'qthumb' + (i === sel ? ' sel' : ''));
-      row.draggable = true;
-      row.dataset.i = String(i);
-
-      row.appendChild(el('div', 'qn', String(i + 1)));
-
-      var body = el('div', 'qbody');
-      body.appendChild(el('div', 'qtext', question.question || 'Untitled question'));
-
-      var meta = el('div', 'qmeta');
-      var style = SF.gameStyle(game.style);
-      /* What is missing leads, in words: "incomplete" said something was
-         wrong and left the teacher to open the question to find out what.
-         The reason's first clause; the whole of it on hover. */
-      var bad = style.problems(question, i + 1);
-      if (bad) {
-        var reason = String(bad).replace(/^Q\d+\s*/, '').split(' \u2014 ')[0];
-        var warn = el('span', 'warn', '\u26a0 ' + reason.charAt(0).toUpperCase() + reason.slice(1));
-        warn.title = String(bad);
-        meta.appendChild(warn);
+    if (!SF.LessonStrip) return;
+    var style = SF.gameStyle(game.style);
+    var g = game, id = game.id;
+    var look = [g.style, g.format, g.theme, JSON.stringify(g.settings).length].join('|');
+    var item = setupUX().item;
+    SF.LessonStrip.draw({
+      what: 'game',
+      match: function (s) { return s.type === 'game' && s.gameId === id; },
+      /* Another game in the lesson opens here; this one is already open. */
+      opens: function (s) {
+        if (s.type !== 'game' || s.gameId === id || !SF.GameStore.get(s.gameId)) return null;
+        return function () { SF.Games.openGame(s.gameId); };
+      },
+      items: {
+        label: 'Questions', one: 'question', many: 'questions', short: 'Q',
+        empty: 'No questions yet.',
+        tiles: g.questions.map(function (question, i) {
+          var bad = style.problems(question, i + 1);
+          var reason = bad ? String(bad).replace(/^Q\d+\s*/, '').split(' \u2014 ')[0] : '';
+          var sub = [style.summary(question),
+            style.timesWholeGame ? (g.settings.defaultTime || 180) + 's quiz' : (effTime(question) ? effTime(question) + 's' : 'no timer')];
+          if (question.voteOnly) sub.push('vote only');
+          if (String(question.image || '').trim()) sub.push('image');
+          if (String(question.explanation || '').trim()) sub.push('why');
+          return {
+            key: id + ':' + (question.id || i),
+            title: question.question || question.term || 'Untitled ' + item.toLowerCase(),
+            sub: sub.join(' \u00b7 '),
+            warn: reason ? reason.charAt(0).toUpperCase() + reason.slice(1) : '',
+            sig: look + '|' + JSON.stringify(question) + '|' + g.questions.length,
+            sel: i === sel,
+            paint: questionPainter(g, i),
+            pick: function () { select(i); },
+            dup: function () { sel = i; duplicateQuestion(); },
+            dupLabel: 'Duplicate question ' + (i + 1),
+            del: function () { sel = i; removeQuestion(); },
+            delLabel: 'Delete question ' + (i + 1) + ' (Backspace / Delete)',
+            delDisabled: g.questions.length <= 1
+          };
+        }),
+        move: function (from, to) {
+          var moved = game.questions.splice(from, 1)[0];
+          game.questions.splice(to, 0, moved);
+          sel = to;
+          touched();
+          draw();
+        }
       }
-      /* What to say about a question is the style's business — a typed one has
-         no options to count, and this used to reach for them regardless. */
-      meta.appendChild(el('span', null, style.summary(question)));
-      if (SF.gameStyle(game.style).timesWholeGame) {
-        meta.appendChild(el('span', null, (game.settings.defaultTime || 180) + 's quiz'));
-      } else {
-        meta.appendChild(el('span', null,
-          effTime(question) ? effTime(question) + 's' : 'no timer'));
-      }
-      if (question.voteOnly) meta.appendChild(el('span', 'why', '\u25cb vote only'));
-      if (String(question.image || '').trim()) {
-        meta.appendChild(el('span', 'pic', '▣ image'));
-      }
-      if (String(question.explanation || '').trim()) {
-        meta.appendChild(el('span', 'why', '💡 why'));
-      }
-      body.appendChild(meta);
-      row.appendChild(body);
-
-      row.onclick = function () { select(i); };
-      wireDrag(row);
-      railEl.appendChild(row);
     });
+  }
+
+  /* One question as the room sees it, drawn into a thumbnail. */
+  function questionPainter(g, i) {
+    return function (frame) {
+      var slide = asSlide(i, g);
+      var node = SF.renderSlide(g, slide, Object.assign(previewOptions(g, i),
+        SF.Boards && SF.Boards.renderOptions ? SF.Boards.renderOptions(null, slide) : {}));
+      frame.appendChild(node);
+      requestAnimationFrame(function () { SF.fit(frame, node); });
+    };
   }
 
   function select(i) {
@@ -358,44 +375,9 @@
     draw();
   }
 
-  var dragFrom = null;
-  function wireDrag(row) {
-    row.addEventListener('dragstart', function (e) {
-      dragFrom = Number(row.dataset.i);
-      e.dataTransfer.effectAllowed = 'move';
-      try { e.dataTransfer.setData('text/plain', String(dragFrom)); } catch (err) {}
-    });
-    row.addEventListener('dragover', function (e) {
-      e.preventDefault();
-      row.classList.add('drag-over');
-    });
-    row.addEventListener('dragleave', function () { row.classList.remove('drag-over'); });
-    row.addEventListener('drop', function (e) {
-      e.preventDefault();
-      row.classList.remove('drag-over');
-      var to = Number(row.dataset.i);
-      if (dragFrom == null || dragFrom === to) return;
-      var moved = game.questions.splice(dragFrom, 1)[0];
-      game.questions.splice(to, 0, moved);
-      sel = to;
-      dragFrom = null;
-      touched();
-      draw();
-    });
-  }
-
-  /* Duplicate and delete this one. The boards used to reach the inspector's
-     early return before these were added, which left Backspace as the only
-     way to drop a pair — findable if you knew, invisible if you did not. */
-  function questionOps() {
-    var ops = el('div', 'field');
-    ops.style.marginTop = '14px';
-    ops.appendChild(UI.button('Duplicate', null, duplicateQuestion));
-    var del = UI.button('Delete', null, removeQuestion);
-    del.style.marginLeft = '6px';
-    ops.appendChild(del);
-    return ops;
-  }
+  /* Duplicate and delete are on each question's slide in the strip now, for
+     every format; the boards' panels still ask for a place to put them. */
+  function questionOps() { return document.createDocumentFragment(); }
 
   function countIncomplete() {
     var style = SF.gameStyle(game.style);
@@ -424,29 +406,16 @@
 
     foot.appendChild(el('p', 'hint', statusParts.join(' · ')));
 
-    var qActions = el('div', 'rail-actions');
-    var addBtn = UI.button('+ ' + setupUX().item, 'primary', addQuestion);
-    addBtn.title = 'Add a question (max 2 incomplete allowed)';
-    qActions.appendChild(addBtn);
-    foot.appendChild(qActions);
-
-    var itemActions = el('div', 'rail-actions');
-    var dupBtn = UI.button('Duplicate', null, duplicateQuestion);
-    dupBtn.title = 'Duplicate selected question';
-    itemActions.appendChild(dupBtn);
-
-    var delBtn = UI.button('Remove', null, removeQuestion);
-    delBtn.title = 'Remove selected question (Backspace / Delete)';
-    delBtn.disabled = game.questions.length <= 1;
-    itemActions.appendChild(delBtn);
-    foot.appendChild(itemActions);
+    /* The Lesson studio's frame: adding is on the canvas bar, duplicate and
+       delete are on each question in the strip, Browse quizzes is in the header. */
+    var add = /** @type {HTMLButtonElement|null} */ ($('btnCanvasAdd'));
+    if (add) {
+      add.textContent = '＋ ' + setupUX().item;
+      add.title = 'Add a question (max 2 incomplete allowed)';
+      add.onclick = addQuestion;
+    }
 
     var quizActions = el('div', 'rail-actions');
-    var browseBtn = UI.button('Browse quizzes', null, function () {
-      if (SF.Studio && SF.Studio.openLibrary) SF.Studio.openLibrary('check');
-    });
-    browseBtn.title = 'Browse quiz styles and formats (Boss Battle, Horse Race, Memory, etc.)';
-    quizActions.appendChild(browseBtn);
 
     /* Writing questions is the slow part of building a check, and it is the
        one place the model has a real brief: it is told the format, how many
@@ -515,6 +484,33 @@
 
   /* ------------------------------------------------------------ preview */
 
+  /* How question i is drawn in the preview, and in the strip's thumbnails. */
+  function previewOptions(g, i) {
+    var racing = SF.gameStyle(g.style).mechanic === 'race';
+    return {
+      index: i,
+      total: g.questions.length,
+      interactive: false,
+      quizNumber: i + 1,
+      chrome: false,
+      /* Shown at the starting gate, so the editor previews what the room sees
+         rather than a plain multiple-choice slide. */
+      lanes: racing ? g.settings.teams.map(function (t, k) {
+        return { key: 't' + k, name: t.name || t, color: SF.teamColor(k), pos: 0 };
+      }) : null,
+      trackLength: g.settings.trackLength,
+      /* Memory Match board: every pair in the set as face-down tiles. */
+      pairBank: SF.gameStyle(g.style).studyPairs
+        ? g.questions.map(function (qq, qi) {
+            return {
+              term: qq.term || qq.question || '',
+              active: qi === i
+            };
+          })
+        : null
+    };
+  }
+
   function drawPreview() {
     var box = $('previewBox');
     if (!box) return;
@@ -526,33 +522,11 @@
     var curQ = g.questions[sel] || g.questions[0];
     if (!curQ) return;
     var effectiveSel = Math.min(sel, g.questions.length - 1);
-    var racing = SF.gameStyle(g.style).mechanic === 'race';
     var slide = asSlide(effectiveSel, g);
-    var node = SF.renderSlide(g, slide, {
-      index: effectiveSel,
-      total: g.questions.length,
-      interactive: false,
-      quizNumber: effectiveSel + 1,
-      chrome: false,
-      /* Shown at the starting gate, so the editor previews what the room sees
-         rather than a plain multiple-choice slide. */
-      lanes: racing ? g.settings.teams.map(function (t, i) {
-        return { key: 't' + i, name: t.name || t, color: SF.teamColor(i), pos: 0 };
-      }) : null,
-      trackLength: g.settings.trackLength,
-      /* Memory Match board: every pair in the set as face-down tiles. */
-      pairBank: SF.gameStyle(g.style).studyPairs
-        ? g.questions.map(function (qq, qi) {
-            return {
-              term: qq.term || qq.question || '',
-              active: qi === effectiveSel
-            };
-          })
-        : null,
+    var node = SF.renderSlide(g, slide, Object.assign(previewOptions(g, effectiveSel),
       /* When demo is off, boards render without commands (authoring preview).
          Demo mounts the real engine below so buttons and clocks work. */
-      ...(SF.Boards && SF.Boards.renderOptions ? SF.Boards.renderOptions(demoActive ? ensureDemoHost() : null, slide) : {})
-    });
+      SF.Boards && SF.Boards.renderOptions ? SF.Boards.renderOptions(demoActive ? ensureDemoHost() : null, slide) : {}));
     boxEl.appendChild(node);
     requestAnimationFrame(function () { SF.fit(boxEl, node); });
     if (demoActive && isBoard() && SF.Boards) {
@@ -1139,6 +1113,22 @@
 
   /* ------------------------------------------------------------ inspector */
 
+  /** The Lesson studio's inspector heading (lab/src/ui/Inspector.tsx): a tile, a title, a line under it. */
+  function inspHead(icon, title, sub) {
+    var head = el('div', 'ws-insp-head');
+    head.appendChild(el('div', 'ws-insp-ico', icon));
+    var words = el('div');
+    words.appendChild(el('div', 'ws-insp-title', title));
+    if (sub) words.appendChild(el('div', 'ws-insp-sub', sub));
+    head.appendChild(words);
+    return head;
+  }
+
+  var HISTORY_ICONS = {
+    undo: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>',
+    redo: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13"/></svg>'
+  };
+
   function drawInspector() {
     var insp = $('inspector');
     if (!insp) return;
@@ -1147,14 +1137,18 @@
     if (!question) return;
 
     var historyTools = el('div', 'format-tools');
-    var undo = UI.button('↶ Undo', 'ghost', function () { restoreHistory(false); });
+    /* The Lesson studio's two icons, so the row reads the same on every screen.
+       They close the row, after Saved and Lesson bank. */
+    var undo = UI.button('', 'ghost icon', function () { restoreHistory(false); });
+    undo.innerHTML = HISTORY_ICONS.undo;
+    undo.title = 'Undo (⌘Z)'; undo.setAttribute('aria-label', 'Undo');
     undo.disabled = !past.length;
     undo.dataset.history = 'undo';
-    var redo = UI.button('↷ Redo', 'ghost', function () { restoreHistory(true); });
+    var redo = UI.button('', 'ghost icon', function () { restoreHistory(true); });
+    redo.innerHTML = HISTORY_ICONS.redo;
+    redo.title = 'Redo (⇧⌘Z)'; redo.setAttribute('aria-label', 'Redo');
     redo.disabled = !future.length;
     redo.dataset.history = 'redo';
-    historyTools.appendChild(undo);
-    historyTools.appendChild(redo);
 
     var savedBtn = UI.button('📁 Saved', 'ghost', openSavedQuizzesPicker);
     var parent = SF.LessonBank && SF.LessonBank.parentLesson
@@ -1174,73 +1168,92 @@
       : 'this folder';
     bankBtn.title = 'Copy questions from other lessons in ' + folderName;
     historyTools.appendChild(bankBtn);
+    /* Undo and Redo close the row, as in Activities. */
+    historyTools.appendChild(el('span', 'tools-sep'));
+    historyTools.appendChild(undo);
+    historyTools.appendChild(redo);
 
-    insp.appendChild(historyTools);
+    /* The toolbar sits centred in the header, as the Lesson studio's does. */
+    var tools = $('wsTools');
+    if (tools) tools.replaceChildren(historyTools);
+    else insp.appendChild(historyTools);
+
+    /* The rail is where the question is written, and the panel on the right
+       says how it looks and runs: what it says (the question, its answers,
+       why) on the left; how to play, the clock and points, its picture and
+       peer instruction on the right. */
+    var edit = $('wsEdit') || insp;
+    if (edit !== insp) { if (SF.Fold) SF.Fold.park(); edit.innerHTML = ''; }
 
     /* The format first, the engine second. "Question 1 — Spot the error"
        tells a teacher what they are writing; "Multiple choice" tells them
-       only how it will be marked. */
+       only how it will be marked. The Lesson studio's heading: a tile, the
+       question, and what it is. */
     var fmt = SF.gameFormat(game.format);
-    insp.appendChild(el('h4', 'insp-title',
-      setupUX().item + ' ' +
-      (sel + 1) + ' — ' + (fmt ? fmt.label : SF.gameStyle(game.style).label)));
-    insp.appendChild(el('p', 'game-setup-cue', setupUX().guidance));
-    insp.appendChild(el('p', 'hint', setupUX().participation));
-    appendHowToPlay(insp);
+    edit.appendChild(inspHead('◈', setupUX().item + ' ' + (sel + 1),
+      fmt ? fmt.label : SF.gameStyle(game.style).label));
+    /* In folds, as the lab's left panel is. */
+    var fold = function (title) { return edit === insp || !SF.Fold ? edit : SF.Fold(edit, title); };
+    /* What to write and how it plays, together. */
+    var instructions = fold('Instructions');
+    instructions.appendChild(el('p', 'game-setup-cue', setupUX().guidance));
+    instructions.appendChild(el('p', 'hint', setupUX().participation));
+    appendHowToPlay(instructions);
+    insp.appendChild(inspHead('⚙', 'Settings', 'How ' + setupUX().item.toLowerCase() + ' ' + (sel + 1) + ' looks and runs'));
 
-    if (showsQuestionField()) insp.appendChild(UI.field(setupUX().prompt,
+    if (showsQuestionField()) fold(setupUX().item).appendChild(UI.field(setupUX().prompt,
       UI.area(question.question, function (v) {
         question.question = v; touched(); repaint();
       }, 3)));
 
-    styleEditor(game.style)(insp, question);
+    styleEditor(game.style)(fold(SF.gameStyle(game.style).boardEngine ? 'Content' : 'Answers'), question);
 
     /* Keep explanation with the answers — not buried under image / timing. */
     /* The style says whether it has anything to explain. This read the board
        flag and then named bowl as the board that takes one anyway, and two
        non-boards that do not — three names for one question. */
     if (SF.gameStyle(game.style).showsExplanation !== false) {
-      insp.appendChild(UI.field('Explanation — shown after the answer is revealed',
+      var why = fold('Explanation');
+      why.appendChild(UI.field('Explanation — shown after the answer is revealed',
         UI.area(question.explanation, function (v) {
           question.explanation = v; touched(); drawRail();
         }, 5),
         'Explain why the answer is right. Its placement follows Game settings. Use a blank line between paragraphs.'));
-      insp.appendChild(UI.field('Source or further reading',
+      why.appendChild(UI.field('Source or further reading',
         UI.text(question.source, function (v) {
           question.source = v; touched();
         }, 'Optional'),
         'Printed small at the foot of the explanation slide.'));
     }
 
+    if (edit !== insp && SF.Fold) SF.Fold.notes(edit, 'Slide notes');
+    appendEmbedded(insp);
+
     var boardHooks = SF.gameStyle(game.style).boardEngine;
-    if (boardHooks) { boardHooks.authorInspector(insp, question, authorContext()); return; }
+    if (boardHooks) { boardHooks.authorInspector(fold('Board'), question, authorContext()); return; }
 
     if (game.style === 'definition') {
       insp.appendChild(el('p', 'hint',
         'Passage first, phones closed. Ask now (or the clock) clears it and opens ' +
         'typing. Read and answer share one length under Game settings.'));
-      insp.appendChild(questionOps());
       return;
     }
     if (game.style === 'oddone') {
       insp.appendChild(el('p', 'hint',
         'Four equal tiles. The class discusses which does not belong; you reveal ' +
         'the prepared odd one and explanation. No phones scoring this round.'));
-      insp.appendChild(questionOps());
       return;
     }
     if (game.style === 'compare') {
       insp.appendChild(el('p', 'hint',
         'Two equal items. The class discusses alike and differ; you reveal the ' +
         'prepared similarities and differences. No phones scoring this round.'));
-      insp.appendChild(questionOps());
       return;
     }
     if (game.style === 'conceptchain') {
       insp.appendChild(el('p', 'hint',
         'Propose a link aloud, type it on the wall, then Accept to grow the chain. ' +
         'Connection time is under Game settings. Phones stay idle.'));
-      insp.appendChild(questionOps());
       return;
     }
 
@@ -1348,17 +1361,17 @@
       'First vote: the tally goes up, the answer does not. Duplicate this ' +
       'question for the second vote after discussion, with Vote only off.'));
     insp.appendChild(peer);
+  }
 
-    insp.appendChild(questionOps());
-
+  /* Where else this game plays, so an edit here is known to reach them too. */
+  function appendEmbedded(box) {
     var used = SF.GameStore.usedBy(game.id);
-    if (used.length) {
-      var note = el('div', 'hint');
-      note.style.cssText = 'padding:10px 12px;background:var(--ui-bg);border-radius:6px;line-height:1.5';
-      note.textContent = 'Embedded in: ' + used.join(', ') +
-        '. Changes here apply everywhere it plays.';
-      insp.appendChild(note);
-    }
+    if (!used.length) return;
+    var note = el('div', 'hint');
+    note.style.cssText = 'padding:10px 12px;background:var(--ui-bg);border-radius:6px;line-height:1.5';
+    note.textContent = 'Embedded in: ' + used.join(', ') +
+      '. Changes here apply everywhere it plays.';
+    box.appendChild(note);
   }
 
   /* The labels are indexed by option, so they have to move whenever the
@@ -2283,7 +2296,8 @@
         var btn = $('btnDemoGame');
         if (btn && !demoActive) {
           btn.classList.remove('on');
-          btn.textContent = '▷ Try demo';
+          btn.textContent = '▶';
+          btn.setAttribute('aria-label', 'Try demo');
           btn.setAttribute('aria-pressed', 'false');
         }
       });
@@ -2296,6 +2310,11 @@
     describe: describe,
     game: function () { return game; },
     newGame: newGameFlow,
+    /* For Activities' toolbar: the same Saved and Lesson bank, in Quiz studio,
+       and the undo icons. */
+    historyIcons: function () { return HISTORY_ICONS; },
+    openSaved: function () { openSavedQuizzesPicker(); },
+    openBank: function () { openQuestionBankPicker(); },
     openGame: function (id) {
       var g = SF.GameStore.get(id);
       if (!g) return;

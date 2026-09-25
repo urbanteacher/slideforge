@@ -21,7 +21,7 @@ try {
     await page.waitForSelector('.activity-card');
     await page.locator('.activity-card').filter({ has: page.locator('strong', { hasText: new RegExp('^' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$') }) }).click();
   }
-  assert.equal(await page.locator('#railList .qthumb').count(), 54);
+  assert.equal(await page.locator('#lessonStripList .lthumb').count(), 54);
   const state = await page.evaluate(() => {
     const slides = SF.Editor.deck().slides.filter(s => s.activity);
     return { count: slides.length, groups: new Set(slides.map(s => s.activityInstance)).size };
@@ -32,7 +32,7 @@ try {
     return slides.every((s, i) => !s.activityPage || slides[i - 1]?.activityInstance === s.activityInstance);
   }), true, 'Adding the next activity must not split a slide sequence');
 
-  await page.locator('#railList .qthumb').filter({ hasText: 'Structured Reflection Protocol' }).click();
+  await page.locator('#lessonStripList .lthumb').filter({ hasText: 'Structured Reflection Protocol' }).click();
   const originalFields = await page.evaluate(() => JSON.stringify(SF.Editor.deck().slides.find(s => s.activity === 'structured-reflection-protocol').bullets));
   const visualSelect = page.locator('#inspector select').filter({ has: page.locator('option[value="panels"]') });
   await visualSelect.selectOption('rows');
@@ -44,21 +44,22 @@ try {
     s.bullets.push('A fifth box\tNew content');
     return SF.renderSlide(SF.Editor.deck(), s, {}).classList.contains('activity-panels');
   }), false, 'Four-panel layout must fall back when a fifth box is added');
-  await page.locator('#railList .qthumb').filter({ hasText: 'Guided Inquiry Investigation' }).click();
-  const area = page.locator('#inspector textarea').first();
+  await page.locator('#lessonStripList .lthumb').filter({ hasText: 'Guided Inquiry Investigation' }).click();
+  const area = page.locator('#wsEdit textarea').first();
   await area.fill('Our edited investigation prompt.'); await area.blur();
-  await page.getByRole('button', { name: 'Duplicate', exact: true }).click();
-  assert.equal(await page.locator('#railList .qthumb').count(), 55);
-  assert.equal(await page.locator('#inspector textarea').first().inputValue(), 'Our edited investigation prompt.');
-  await page.getByRole('button', { name: 'Remove', exact: true }).click();
-  assert.equal(await page.locator('#railList .qthumb').count(), 54);
+  // The list is in the strip under the canvas, and duplicate and remove are on each activity there.
+  await page.locator('#lessonStripList .lthumb.sel .lthumb-acts button[aria-label^="Duplicate"]').click();
+  assert.equal(await page.locator('#lessonStripList .lthumb').count(), 55);
+  assert.equal(await page.locator('#wsEdit textarea').first().inputValue(), 'Our edited investigation prompt.');
+  await page.locator('#lessonStripList .lthumb.sel .lthumb-acts button[aria-label^="Remove"]').click();
+  assert.equal(await page.locator('#lessonStripList .lthumb').count(), 54);
   await page.evaluate(() => SF.Shell.activate('deck'));
   await page.getByRole('button', { name: '↶ Undo', exact: true }).click();
   assert.equal(await page.evaluate(() => SF.Editor.deck().slides.filter(s => s.activity).length), 63);
   await page.getByRole('button', { name: '↷ Redo', exact: true }).click();
   assert.equal(await page.evaluate(() => SF.Editor.deck().slides.filter(s => s.activity).length), 59);
   await page.evaluate(() => SF.Shell.activate('plan'));
-  await page.locator('#railList .qthumb').filter({ hasText: 'Hook & Predict' }).click();
+  await page.locator('#lessonStripList .lthumb').filter({ hasText: 'Hook & Predict' }).click();
   assert.ok(await page.locator('#previewBox.is-slide-preview .slide').count() >= 1, 'selected activity shows a slide on the canvas');
   assert.equal(await page.getByRole('button', { name: 'Edit this slide', exact: true }).count(), 0);
   await page.getByRole('tab', { name: 'Timer' }).click();
@@ -73,11 +74,11 @@ try {
     return a ? a.title : '';
   });
   assert.ok(gameTitle, 'catalogue has a game activity');
-  await page.locator('#railList .qthumb').filter({ hasText: gameTitle }).click();
+  await page.locator('#lessonStripList .lthumb').filter({ hasText: gameTitle }).click();
   await page.getByRole('button', { name: 'Edit questions and answers', exact: true }).click();
   assert.equal(await page.evaluate(() => document.documentElement.getAttribute('data-ws')), 'game');
   await page.evaluate(() => SF.Shell.activate('plan'));
-  await page.locator('#railList .qthumb').filter({ hasText: 'Hook & Predict' }).click();
+  await page.locator('#lessonStripList .lthumb').filter({ hasText: 'Hook & Predict' }).click();
   await page.locator('#btnDemoActivity').click();
   assert.equal(await page.evaluate(() => SF.Player && SF.Player.open), true);
   assert.equal(await page.evaluate(() => SF.Player.deck.slides.length), 1);

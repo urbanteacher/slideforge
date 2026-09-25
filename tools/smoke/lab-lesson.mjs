@@ -40,7 +40,9 @@ try {
   await page.waitForFunction(() => SF.Shell.current().doc().title === 'Smoke lesson');
 
   // The demo is a SlideForge lesson: it opens as a lab copy, and the original stays as it was.
-  await page.click('#btnTemplate');
+  // The shell's second row sits in the lab's tools row: its buttons press the shell's own.
+  const lab = page.frameLocator('#labFrame');
+  await lab.getByRole('button', { name: /See the demo/ }).click();
   await page.waitForFunction(() => String(SF.Shell.current().doc().id).startsWith('lab-'), null, { timeout: 60000 });
   const demo = await page.evaluate(() => {
     const lab = SF.Shell.current().doc();
@@ -112,7 +114,7 @@ try {
   assert.ok(shareMB < 8, `a shared copy fits in 8 MB (${shareMB.toFixed(1)} MB)`);
 
   // Present is SlideForge's show, with its HUD, and the lab drawing the slide live inside it.
-  await page.click('#btnPresent');
+  await lab.getByRole('button', { name: 'Present', exact: true }).click();
   await page.waitForFunction(() => window.SF.Player.open && SF.LabStage.active(), null, { timeout: 90000 });
 
   assert.equal(errors.join('\n'), '');

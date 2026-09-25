@@ -217,13 +217,10 @@
     return s;
   }
 
-  /* The lab's slides in SlideForge's form — one per lab slide, a picture or its
-     words — with the lesson's games and activities back in their places. */
-  function lessonFrom(items, make) {
-    var a = api;
-    var labDeck = a.getDeck();
-    var source = sourceLesson(labDeck);
-    var keep = source ? a.cannotBuild(source.slides) : [];
+  /* One slide per lab slide, made by `make`, with the lesson's games and
+     activities back in their places: the order the show runs. */
+  function ordered(items, make, source) {
+    var keep = source ? api.cannotBuild(source.slides) : [];
     var after = carried(source, keep);
     /* A deck converted before slides remembered their source: match them in
        order, when the counts say nothing has been added or taken away. */
@@ -240,6 +237,15 @@
     });
     /* Games whose slide the lab no longer has go at the end, rather than nowhere. */
     Object.keys(after).forEach(function (k) { slides = slides.concat(after[k]); });
+    return slides;
+  }
+
+  /* The lab's slides in SlideForge's form — one per lab slide, a picture or its
+     words — with the lesson's games and activities back in their places. */
+  function lessonFrom(items, make) {
+    var labDeck = api.getDeck();
+    var source = sourceLesson(labDeck);
+    var slides = ordered(items, make, source);
     return SF.normalizeDeck(Object.assign({}, source || {}, {
       /* The lab deck's own id: the lobby checks the room is for the lesson on screen. */
       id: labDeck.id, title: labDeck.title, slides: slides
@@ -496,10 +502,44 @@
       });
     },
     lastShowDeck: function () { return lastShowDeck; },
+    /* For Activities' Host live: the lesson's, whichever studio is on screen. */
+    hostLive: function () { hostLive(); },
     /* For the live stage (js/lab-stage.js): the lab deck as it is now, and the
        lab's page, for its fonts. */
     stageDeck: function () { return api ? JSON.parse(JSON.stringify(api.getDeck())) : null; },
     frameDocument: function () { return frame && frame.contentDocument; },
+    /* The lab's tools row carries the shell's second row (Library, the demo,
+       Host live, Present and its menu) so the two sit on one line; each of its
+       buttons presses the shell's own, hidden, so what they do is unchanged. */
+    act: function (name, arg) {
+      var ids = { library: 'btnLibraryOpen', demo: 'btnTemplate', live: 'btnLive', present: 'btnPresent',
+        presenter: 'btnPresenter', rehearse: 'btnRehearse' };
+      var el = name === 'rehearse' && arg
+        ? document.querySelector('[data-rehearse-size="' + Number(arg) + '"]')
+        : document.getElementById(ids[name] || '');
+      if (el && /** @type {HTMLElement} */ (el).click) /** @type {HTMLElement} */ (el).click();
+    },
+    /* For the lesson strip in Quiz studio and Activities (js/lesson-strip.js):
+       the lesson in the show's order, small. Each lab slide is a picture; the
+       games and activities are SlideForge's own slides, from the copy those
+       two studios are editing when it is this lesson's. */
+    stripDeck: function () {
+      return new Promise(function (resolve, reject) {
+        whenReady(function (a) {
+          a.stills(288, undefined, 0.72).then(function (stills) {
+            var labDeck = a.getDeck();
+            var editing = SF.Editor && SF.Editor.deck && SF.Editor.deck();
+            var source = editing && editing.id === labDeck.sourceId ? editing : sourceLesson(labDeck);
+            resolve({
+              deck: source, title: labDeck.title,
+              slides: ordered(stills, function (st) {
+                return { lab: true, id: st.id, sourceSlideId: st.sourceSlideId, image: st.image, name: st.name, hidden: st.hidden };
+              }, source)
+            });
+          }, reject);
+        });
+      });
+    },
     /* For the Library (js/studio.js). */
     hasCopy: function (id) { return enabled() && hasCopy(id); },
     forget: function (id) {

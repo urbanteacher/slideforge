@@ -235,13 +235,13 @@ test('activity showcase isolates only that activity into the player without full
   assert.equal(startedOpts.demoMode, 'discuss');
 });
 
-/* How to run used to sit at the top of the activity inspector. The inspector
-   is tabbed now — Edit / Timer / Engage / Write / Rules — and the drawer moved
-   into Rules with the materials, the teacher notes and the mapping reason. The
+/* How to run used to sit at the top of the activity inspector, then behind a
+   Rules tab. It is in the rail's Instructions now, under the blurb, with the
+   materials, the teacher notes and the mapping reason. The
    drawer itself is unchanged: a details/summary with a Reveal toggle and the
    steps as an ordered list, and the old bottom "HOW IT RUNS" eyebrow stays
    gone. This follows it to its new home rather than pinning the old one. */
-test('activity inspector keeps How to run, with its steps, behind the Rules tab', () => {
+test('activity inspector keeps How to run, with its steps, in the Instructions beside the blurb', () => {
   const vm = require('node:vm'), fs = require('node:fs');
   const store = new Map();
   const storage = {
@@ -338,13 +338,16 @@ test('activity inspector keeps How to run, with its steps, behind the Rules tab'
 
   assert.ok(inspector.children.length > 0, 'inspector populated');
 
-  /* The tab strip is a real tablist, and Edit is the pane you land on. */
-  function tabStrip() {
-    return inspector.children.find((c) => String(c.className).includes('design-panes'));
+  /* The tab strips are real tablists, and Edit is the pane you land on. The
+     rail's (Edit, Write) and the panel's (Look, Timer, Engage, Rules) share a
+     box here, as the test page has no rail. */
+  function tabStrip(label) {
+    return inspector.children.find((c) => String(c.className).includes('design-panes') &&
+      (!label || c.children.some((b) => b.textContent === label)));
   }
   function tab(label) {
-    const strip = tabStrip();
-    assert.ok(strip, 'inspector has a tab strip');
+    const strip = tabStrip(label);
+    assert.ok(strip, 'inspector has a tab strip with ' + label);
     const hit = strip.children.find((b) => b.textContent === label);
     assert.ok(hit, 'inspector has a ' + label + ' tab');
     return hit;
@@ -352,18 +355,13 @@ test('activity inspector keeps How to run, with its steps, behind the Rules tab'
   assert.equal(tabStrip().getAttribute('role'), 'tablist');
   assert.equal(tab('Edit').getAttribute('role'), 'tab');
   assert.equal(tab('Edit').getAttribute('aria-selected'), 'true', 'Edit is the default pane');
-  assert.equal(tab('Rules').getAttribute('aria-selected'), 'false');
-  ['Edit', 'Timer', 'Engage', 'Rules'].forEach((t) => tab(t));
+  ['Edit', 'Timer', 'Engage'].forEach((t) => tab(t));
+  assert.equal(tabStrip('Rules'), undefined, 'no Rules tab: how to run it is with what it is');
 
-  /* Nothing about how to run it on the pane you type on. */
-  assert.equal(inspector.children.find((c) => c.className === 'howto'), undefined,
-    'the drawer does not sit on the Edit pane');
-
-  tab('Rules').click();
-  assert.equal(tab('Rules').getAttribute('aria-selected'), 'true', 'Rules is selected after pressing it');
-
+  /* How to run it sits with the blurb, in the rail's Instructions (the test
+     page has no rail, so both share this box), on no tab of its own. */
   const howto = inspector.children.find(c => c.className === 'howto');
-  assert.ok(howto, 'details.howto drawer exists on the Rules pane');
+  assert.ok(howto, 'details.howto drawer is in the Instructions');
   const summary = howto.children.find(c => c.className === 'howto-summary');
   assert.ok(summary, 'summary.howto-summary exists');
   assert.ok(summary.children[0].textContent.includes('How to run — Hook + Objectives'));
@@ -392,14 +390,13 @@ test('activity inspector keeps How to run, with its steps, behind the Rules tab'
   SF.Editor.currentSlideId = () => gameSlide.id;
   SF.Activities.draw();
 
-  /* A game row has no Engage tab — the room answers the game itself — but it
-     still has Rules, and there the drawer says "How to play". */
-  assert.equal(tabStrip().children.find((b) => b.textContent === 'Engage'), undefined,
+  /* A game row has no Engage tab — the room answers the game itself — and
+     its drawer says "How to play". */
+  assert.equal(tabStrip('Timer').children.find((b) => b.textContent === 'Engage'), undefined,
     'a game activity offers no Engage tab');
-  tab('Rules').click();
 
   const gameHowto = inspector.children.find(c => c.className === 'howto');
-  assert.ok(gameHowto, 'game details.howto exists on the Rules pane');
+  assert.ok(gameHowto, 'game details.howto is in the Instructions');
   const gameSummary = gameHowto.children.find(c => c.className === 'howto-summary');
   assert.ok(gameSummary.children[0].textContent.includes('How to play — ' + gameAct.title));
 });

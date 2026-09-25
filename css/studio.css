@@ -276,7 +276,7 @@ html[data-ws="plan"] .rail-foot .rail-actions .btn{flex:1}
 
 /* Present ▾ — one split button in place of four (index.html, run cluster). */
 .present-split{display:inline-flex;align-items:stretch;position:relative}
-.present-split>#btnPresent{border-top-right-radius:0;border-bottom-right-radius:0}
+.present-split>.btn.primary{border-top-right-radius:0;border-bottom-right-radius:0}
 .present-more{position:relative;display:flex}
 .present-more summary{list-style:none;border-top-left-radius:0;border-bottom-left-radius:0;border-left:1px solid rgba(255,255,255,.28);padding-left:9px;padding-right:9px;cursor:pointer}
 .present-more summary::-webkit-details-marker{display:none}
@@ -340,3 +340,156 @@ html.lab-engine:not([data-ws="deck"]) .lab-loading{display:none}
 .lab-notes h4{margin:0 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ui-dim)}
 .lab-notes-none{color:#777}
 .hud [data-lab-act="notes"].on{background:var(--ui-accent-soft);color:var(--ui-accent)}
+/* The lab's tools row carries the shell's second row (lab/src/ui/ShellRow.tsx): one line, not two. */
+html.lab-engine[data-ws="deck"] .topbar>.bar-break,
+html.lab-engine[data-ws="deck"] .topbar>.header-row2{display:none}
+
+/* ------------------------------------------------ the Lesson studio's frame
+   Quiz studio and Activities wear the lab's layout: one header row (the
+   studio's buttons, a centred toolbar, Run), a canvas bar at the foot (Add,
+   the green play, the zoom, the panel icon), hover buttons on each row of
+   the rail, and the lab's inspector heading. */
+.topbar .header-row2{flex:0 0 100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.topbar .header-row2>.header-build{grid-column:1;justify-self:start;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.topbar .header-row2>.header-tools{grid-column:2;justify-self:center}
+.topbar .header-row2>.header-actions{grid-column:3;justify-self:end;margin-left:0}
+.header-tools .format-tools{display:flex;gap:2px;margin:0;padding:2px;border:1px solid var(--ui-line);border-radius:9px;background:var(--ui-panel-2)}
+.header-tools .format-tools .btn{border:0;background:transparent;padding:6px 10px;font-size:12px}
+.header-tools .format-tools .btn:hover:not(:disabled){background:var(--ui-field)}
+.header-tools .format-tools .btn:disabled{opacity:.4}
+/* The canvas bar: Add at the left; the green play, the zoom and the panel icon at the right. */
+.canvas-bar .canvas-play{margin-left:auto;flex:none;width:24px;height:24px;display:inline-grid;place-items:center;border:0;border-radius:6px;background:#1f9d5a;color:#fff;font-size:11px;line-height:1;cursor:pointer;padding:0 0 0 1px}
+.canvas-bar .canvas-play:hover{background:#24b567}
+.canvas-bar .canvas-play.on{background:var(--ui-accent)}
+.canvas-bar .canvas-play:disabled{opacity:.45;cursor:default}
+html[data-ws="game"] .canvas-bar>#btnInspector,html[data-ws="plan"] .canvas-bar>#btnInspector{margin-left:0}
+.canvas-bar>#btnInspector{font-size:14px;min-width:28px}
+/* Duplicate and delete on each row of the rail, shown on hover and on the chosen row. */
+.qthumb{position:relative}
+.qthumb-acts{position:absolute;top:5px;right:5px;display:flex;gap:3px;opacity:0;transition:opacity .15s}
+.qthumb:hover .qthumb-acts,.qthumb:focus-within .qthumb-acts{opacity:1}
+.qthumb-acts .btn{width:22px;height:22px;padding:0;display:grid;place-items:center;border-radius:5px;border:0;background:rgba(10,10,12,.85);color:#ddd;font-size:11px}
+.qthumb-acts .btn:hover:not(:disabled){background:var(--ui-accent);color:#fff}
+.qthumb-acts .btn:disabled{opacity:.35}
+/* The lab's inspector heading: a tile, a title, a line under it. */
+.ws-insp-head{display:flex;align-items:center;gap:12px;padding:16px 0 12px;margin-bottom:6px;border-bottom:1px solid var(--ui-line)}
+.ws-insp-ico{width:38px;height:38px;border-radius:9px;flex:none;display:grid;place-items:center;background:var(--ui-accent-soft);color:var(--ui-accent);font-size:17px}
+.ws-insp-title{font-size:14px;font-weight:600;color:var(--ui-text)}
+.ws-insp-sub{font-size:12px;color:var(--ui-dim);margin-top:2px}
+
+/* The lesson along the foot of Quiz studio and Activities (js/lesson-strip.js):
+   the Lesson studio's slide strip, its head on the left and its thumbnails
+   144 by 81, with the game or activity being edited outlined. */
+.lesson-strip{flex:none;height:124px;display:flex;align-items:stretch;border-top:1px solid var(--ui-line);background:var(--ui-panel)}
+.lesson-strip-head{flex:none;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:8px;padding:0 14px 0 16px;border-right:1px solid var(--ui-line)}
+.lesson-strip-label{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ui-dim)}
+.lesson-strip-at{background:var(--ui-field);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--ui-text);font-variant-numeric:tabular-nums;white-space:nowrap}
+.lesson-strip-at.none{color:var(--ui-dim)}
+.lesson-strip-list{position:relative;flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:0 16px;overflow-x:auto;overflow-y:hidden}
+.lthumb{flex:none;position:relative;width:144px}
+.lthumb-img{position:relative;width:144px;height:81px;border-radius:6px;overflow:hidden;background:var(--ui-field);border:1.5px solid transparent;box-shadow:0 0 0 1px var(--ui-line-2)}
+.lthumb-img img{width:100%;height:100%;display:block}
+.lthumb-img.classic{background:#000}
+.lthumb-img.classic .slide{transform-origin:0 0;pointer-events:none}
+.lthumb.sel .lthumb-img{border-color:var(--ui-accent);box-shadow:0 0 0 3px var(--ui-accent-soft)}
+.lthumb.hidden-slide .lthumb-img img,.lthumb.hidden-slide .lthumb-img .slide{opacity:.38;filter:grayscale(.6)}
+.lthumb-badge{position:absolute;top:5px;right:5px;z-index:2;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:rgba(10,10,12,.8);color:#fff}
+.lthumb-badge.game{background:var(--ui-warn);color:#21160a}
+.lthumb-badge.act{background:var(--ui-amber-soft);color:var(--ui-amber);backdrop-filter:blur(4px)}
+.lthumb-hidden{position:absolute;left:6px;bottom:6px;z-index:2;font-size:10px;font-weight:600;color:#fff;background:rgba(0,0,0,.7);padding:2px 6px;border-radius:4px}
+.lthumb-meta{display:flex;align-items:center;gap:6px;margin-top:5px;font-size:11px;color:var(--ui-dim)}
+.lthumb-meta b{color:#ddd;font-weight:600}
+.lthumb.sel .lthumb-meta b{color:var(--ui-accent)}
+.lthumb-meta span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Quiz studio and Activities: the strip holds the list, so the rail is where
+   the question or the activity is written, as wide as the panel on the right
+   that says how it looks and runs. */
+html[data-ws="game"] #app,html[data-ws="plan"] #app{grid-template-columns:300px minmax(340px,1fr) 302px}
+html[data-ws="game"] #app.no-inspector,html[data-ws="plan"] #app.no-inspector{grid-template-columns:300px 1fr 0}
+@media(min-width:1450px){html[data-ws="game"] #app,html[data-ws="plan"] #app{grid-template-columns:320px minmax(340px,1fr) 320px}}
+@media(max-width:1150px){html[data-ws="game"] #app,html[data-ws="plan"] #app{grid-template-columns:250px minmax(300px,1fr) 265px}}
+html[data-ws="game"] .rail>.rail-head,html[data-ws="plan"] .rail>.rail-head,
+html[data-ws="game"] #railList,html[data-ws="plan"] #railList{display:none}
+.ws-edit{flex:1;min-height:0;overflow-y:auto;padding:0 19px 20px}
+.ws-edit .ws-insp-head{padding-top:18px}
+.ws-edit .design-panes{margin:4px 0 14px}
+
+.lesson-strip-row{display:flex;align-items:center;gap:6px}
+.lesson-strip-tools{display:flex;gap:2px}
+.lesson-strip-view{width:28px;height:26px;display:grid;place-items:center;border:0;border-radius:6px;background:none;color:var(--ui-dim);cursor:pointer}
+.lesson-strip-view:hover{background:var(--ui-field);color:var(--ui-text)}
+.lesson-strip-view.on{background:var(--ui-field);color:var(--ui-accent)}
+.lesson-strip-view:focus-visible{outline:2px solid var(--ui-accent);outline-offset:1px}
+.lesson-strip-empty{margin:0;font-size:12px;color:var(--ui-dim)}
+.lthumb.opens{cursor:pointer}
+.lthumb.opens .lthumb-img{transition:transform .2s ease,border-color .15s}
+.lthumb.opens:hover .lthumb-img{transform:translateY(-2px)}
+.lthumb:focus-visible{outline:none}
+.lthumb:focus-visible .lthumb-img{border-color:var(--ui-accent)}
+.lthumb-badge.warn{background:var(--ui-warn);color:#21160a}
+.lthumb-acts{position:absolute;top:5px;right:5px;z-index:3;display:flex;gap:3px;opacity:0;transition:opacity .15s}
+.lthumb:hover .lthumb-acts,.lthumb:focus-within .lthumb-acts{opacity:1}
+.lthumb-acts button{width:22px;height:22px;padding:0;display:grid;place-items:center;border:0;border-radius:5px;background:rgba(10,10,12,.85);color:#ddd;font-size:11px;cursor:pointer}
+.lthumb-acts button:hover:not(:disabled){background:var(--ui-accent);color:#fff}
+.lthumb-acts button:disabled{opacity:.35;cursor:default}
+/* The badge gives way to duplicate and delete where they sit. */
+.lthumb.has-acts:hover .lthumb-badge,.lthumb.has-acts:focus-within .lthumb-badge{opacity:0}
+.lthumb.drop::before{content:'';position:absolute;left:-8px;top:0;height:81px;width:3px;border-radius:3px;background:var(--ui-accent)}
+
+/* The rail's folds, as the lab's left panel has them. */
+.ws-edit .ws-fold{margin:0 -19px;border-bottom:1px solid var(--ui-line)}
+.ws-fold-head{display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 16px;border:0;background:none;color:var(--ui-dim);font-size:12.5px;font-weight:500;text-align:left;cursor:pointer}
+.ws-fold-head:hover{color:var(--ui-text)}
+.ws-fold-head:focus-visible{outline:2px solid var(--ui-accent);outline-offset:-2px}
+.ws-fold-caret{width:12px;font-size:15px;line-height:1;transition:transform .12s ease}
+.ws-fold.open .ws-fold-caret{transform:rotate(90deg)}
+.ws-fold.open .ws-fold-head{color:var(--ui-text)}
+.ws-fold-body{padding:2px 19px 14px}
+.ws-fold-body>.field:first-child{margin-top:0}
+
+/* Quiz studio and Activities: the notes are a fold in the rail, not a strip under the canvas. */
+html[data-ws="game"] #notesStrip,html[data-ws="plan"] #notesStrip{display:none}
+.ws-fold-body #notes{display:block;width:100%;height:90px;resize:vertical;background:var(--ui-field);border:1px solid var(--ui-line-2);border-radius:8px;padding:8px 10px;font-size:12.5px;line-height:1.5;color:var(--ui-text)}
+.ws-fold-body #notes:focus{outline:none;border-color:var(--ui-accent)}
+/* The view icons sit under the count. */
+.lesson-strip-row{flex-direction:column;align-items:flex-start;gap:6px}
+.ws-edit .ws-insp-head{margin-bottom:10px}
+
+/* Activities: the catalogue as a library, and the canvas when the lesson has none. */
+.plan-catalogue-modal{width:min(1040px,calc(100vw - 40px));height:min(820px,90vh);padding:0;overflow:hidden;display:none;flex-direction:column}
+.plan-catalogue-modal[open]{display:flex}
+.plan-catalogue-head{flex:none;display:flex;align-items:center;justify-content:space-between;padding:18px 26px 6px}
+.plan-catalogue-head h3{margin:0;font-size:16px}
+.plan-catalogue-modal .plan-catalogue{flex:1;min-height:0;overflow-y:auto}
+.plan-empty{align-self:center;justify-self:center;text-align:center;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.plan-empty h3{margin:0;font-size:17px}
+.plan-empty .hint{margin:0}
+.plan-empty{margin:18vh auto 0}
+
+/* ------------------------------------------- one second row on every screen
+
+   The Lesson studio's tools row (the lab's .tb-tools) is the pattern: a line
+   above it, 44px tall, 30px buttons at 12px — Library on the left, the
+   studio's tools in a pill in the middle, Host live and Present on the right.
+   What each screen puts in it differs; how it looks does not. */
+.topbar .header-row2{margin:0 -20px -12px;padding:5px 12px;min-height:44px;border-top:1px solid var(--ui-line)}
+.header-row2 .btn{height:30px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;border-radius:8px;font-size:12px;line-height:1;white-space:nowrap}
+.header-row2 .header-build .btn{border:1px solid var(--ui-line-2);background:var(--ui-panel-2);color:var(--ui-text);font-weight:400}
+.header-row2 .header-build .btn:hover{background:var(--ui-field-2)}
+.header-row2 .btn.live{background:rgba(150,110,210,.16);border:1px solid rgba(150,110,210,.34);color:#b596e6;font-weight:600}
+.header-row2 .btn.live:hover{background:rgba(150,110,210,.26)}
+.header-row2 .btn.primary{background:var(--ui-accent);border:1px solid var(--ui-accent);color:#fff;font-weight:600}
+.header-row2 .btn.primary:hover{background:var(--ui-accent-2)}
+.header-row2 .present-more>summary.btn{padding:0 8px;border-left:1px solid rgba(255,255,255,.28)}
+.header-tools .format-tools{align-items:center}
+.header-tools .format-tools .btn{height:28px;min-height:0;padding:0 10px;border-radius:7px;color:#c9c9cf}
+.header-tools .format-tools .btn.icon{width:28px;padding:0;justify-content:center}
+.header-tools .format-tools .btn:disabled{opacity:.35}
+.header-tools .tools-sep{width:1px;height:18px;margin:0 5px;background:var(--ui-line-2)}
+/* Quiz studio and Activities: their tools sit beside Library, on the left. */
+html[data-ws="game"] .topbar .header-row2,html[data-ws="plan"] .topbar .header-row2{grid-template-columns:auto auto 1fr}
+html[data-ws="game"] .topbar .header-row2>.header-tools,html[data-ws="plan"] .topbar .header-row2>.header-tools{justify-self:start}
+/* The Present menu keeps its own shape: a label over a hint, from the left. */
+.header-row2 .present-menu>.btn{height:auto;display:flex;flex-direction:column;align-items:flex-start;padding:8px 10px;font-weight:500}
+.header-row2 .present-sizes .btn{height:26px;padding:0 10px}

@@ -143,7 +143,9 @@
       b.setAttribute('aria-pressed', String(open));
       b.title = (open ? 'Hide' : 'Show') +
         ' the Design & Engagement panel (⌘\\)';
-      b.textContent = (open ? '◨' : '◧') + ' Panel';
+      /* An icon, as the lab's panel button is; its name is in the tooltip. */
+      b.textContent = open ? '◨' : '◧';
+      b.setAttribute('aria-label', (open ? 'Hide' : 'Show') + ' the panel');
     }
     try { localStorage.setItem(PANEL_KEY, open ? '1' : '0'); } catch (e) {}
     /* The stage just changed width, so Fit means something else now. */

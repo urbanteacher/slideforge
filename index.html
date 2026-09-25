@@ -33,7 +33,7 @@ html:not([data-ready]) body { background: #0a0a0b; }
 <link rel="stylesheet" href="css/bingo.css?v=2">
 <link rel="stylesheet" href="css/bowl.css?v=2">
 <link rel="stylesheet" href="css/lowstakes.css?v=2">
-<link rel="stylesheet" href="css/studio.css?v=8">
+<link rel="stylesheet" href="css/studio.css?v=12">
 <link rel="stylesheet" href="css/northeastern.css?v=12">
 <link rel="stylesheet" href="css/ukbt.css?v=16">
 <link rel="stylesheet" href="css/aiad26.css?v=1">
@@ -127,28 +127,31 @@ html:not([data-ready]) body { background: #0a0a0b; }
          other things you do to the whole lesson; the heading was telling you
          where you already were. Nothing read those labels, so they are gone
          rather than moved. -->
+    <!-- One row in every studio, as the Lesson studio's: the studio's own
+         buttons at the left, its toolbar centred, Run at the right. -->
+    <div class="header-row2">
     <div class="header-build" role="group" aria-label="Build this lesson">
-      <button class="btn" data-ws="deck" id="btnLibraryOpen" title="Templates, lessons and brand packs — everything saved, in one place">▦ Library</button>
+      <button class="btn" data-ws="deck game plan" id="btnLibraryOpen" title="Templates, lessons and brand packs — everything saved, in one place">▦ Library</button>
       <button class="btn" data-ws="deck" id="btnTemplate" title="The demo deck: every layout, chart, activity and live moment, with notes on when to use each one">✧ See the demo</button>
-      <button class="btn" data-ws="game" id="btnDemoGame" title="Rehearse with a SAMPLE class of fake players (boards stay interactive in the preview)">▷ Try demo</button>
-      <button class="btn primary" data-ws="game" id="btnActivitiesGame">＋ Browse quizzes</button>
-      <button class="btn" data-ws="plan" id="btnDemoActivity" title="Showcase this activity in the player without playing the whole lesson">▷ Showcase activity</button>
-      <button class="btn" data-ws="plan" id="btnPlanToDeck" title="Present, rehearse and host live from Lesson studio">▤ Open in Lesson studio</button>
     </div>
+    <!-- The studio's toolbar, drawn here: Quiz studio's Undo, Redo, Saved and Lesson bank (js/games.js); Activities' Saved and Lesson bank (js/activities.js). -->
+    <div class="header-tools" id="wsTools" data-ws="game plan" role="toolbar" aria-label="Tools"></div>
 
     <!-- Run cluster. Same shape in every studio, pinned to the right:
-           Lesson:     Host live · Present ▾ (Teacher Presenter, Rehearse)
-           Quiz:       Host live · Present
-           Activities:             Present
+           Every studio: Host live · Present ▾ (Teacher Presenter, Rehearse).
+           Present is the studio's own (the lesson, the quiz, the lesson from
+           here); the menu and Host live run the lesson.
          Four buttons started a lesson; Google and Figma have one split
          button. Host live stays on its own because the room is the product.
          The two in the menu keep their ids, so everything that wires them
          still finds them. -->
     <div class="header-actions" role="group" aria-label="Run this lesson">
-      <button class="btn live" data-ws="deck game" id="btnLive" title="Run live with phones in the room">◉ Host live</button>
-      <span class="present-split" data-ws="deck">
-      <button class="btn primary" id="btnPresent" title="Slideshow on the wall / projector (⌘↵)">▶ Present</button>
-      <details class="present-more"><summary class="btn primary" aria-label="More ways to present" title="More ways to present">▾</summary>
+      <button class="btn live" data-ws="deck game plan" id="btnLive" title="Run live with phones in the room">◉ Host live</button>
+      <span class="present-split">
+      <button class="btn primary" data-ws="deck" id="btnPresent" title="Slideshow on the wall / projector (⌘↵)"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5Z"/></svg>Present</button>
+      <button class="btn primary" data-ws="game" id="btnPlay" title="Put this quiz on the projector (⌘↵)"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5Z"/></svg>Present</button>
+      <button class="btn primary" data-ws="plan" id="btnPresentPlan" title="Present the whole lesson on the projector (⌘↵ showcases just this activity)"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5Z"/></svg>Present</button>
+      <details class="present-more"><summary class="btn primary" aria-label="More ways to present" title="More ways to present"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
         <div class="present-menu" role="menu" aria-label="More ways to present">
           <button class="btn" role="menuitem" id="btnPresenter" title="Pop out presenter view: notes, next slide and controls on your screen — not the projector (D)">Teacher Presenter <span class="present-hint">notes on your screen</span></button>
           <button class="btn" role="menuitem" id="btnRehearse" title="Practice the whole lesson with a SAMPLE class. No live room, no phones.">▷ Rehearse <span class="present-hint">with a sample class</span></button>
@@ -161,8 +164,7 @@ html:not([data-ready]) body { background: #0a0a0b; }
         </div>
       </details>
       </span>
-      <button class="btn primary" data-ws="game" id="btnPlay" title="Put this quiz on the projector (⌘↵)">▶ Present</button>
-      <button class="btn primary" data-ws="plan" id="btnPresentPlan" title="Present the whole lesson on the projector (⌘↵ showcases just this activity)">▶ Present</button>
+    </div>
     </div>
   </div>
 
@@ -185,6 +187,9 @@ html:not([data-ready]) body { background: #0a0a0b; }
       </div>
     </div>
     <div class="rail-list" id="railList"></div>
+    <!-- Quiz studio and Activities: the rail is where the question or the
+         activity is written; its list is in the strip under the canvas. -->
+    <div class="ws-edit" id="wsEdit" data-ws="game plan"></div>
     <div class="rail-foot" id="railFoot"></div>
   </div>
 
@@ -212,6 +217,15 @@ html:not([data-ready]) body { background: #0a0a0b; }
           <option value="">＋ Item…</option>
         </select>
       </label>
+      <!-- Quiz studio and Activities: add a question or an activity, as the lab's canvas bar adds to a slide.
+           js/games.js and js/activities.js give it its words and its action. -->
+      <button class="btn primary canvas-add" data-ws="game plan" id="btnCanvasAdd" type="button">＋ Add</button>
+      <!-- Quiz studio: another quiz, beside adding a question to this one. -->
+      <button class="btn canvas-add" data-ws="game" id="btnActivitiesGame" type="button">＋ Browse quizzes</button>
+      <button class="btn canvas-add" data-ws="plan" id="btnBrowseActivities" type="button" title="Browse the 54 pedagogical activities catalogue">＋ Browse activities</button>
+      <!-- The green play, as the lab's: try the game with a sample class, or showcase the activity. -->
+      <button class="canvas-play" data-ws="game" id="btnDemoGame" type="button" title="Try demo: rehearse with a SAMPLE class of fake players (boards stay interactive in the preview)" aria-label="Try demo">▶</button>
+      <button class="canvas-play" data-ws="plan" id="btnDemoActivity" type="button" title="Showcase this activity in the player without playing the whole lesson" aria-label="Showcase activity">▶</button>
       <div class="canvas-zoom" role="group" aria-label="Canvas zoom">
         <button class="canvas-bar-btn" id="btnZoomOut" type="button" title="Zoom out (⌘⌥−)" aria-label="Zoom out">−</button>
         <select class="canvas-zoom-level" id="zoomLevel" aria-label="Zoom level">
@@ -311,7 +325,7 @@ html:not([data-ready]) body { background: #0a0a0b; }
           <button class="canvas-bar-btn" id="btnArrangeReset" type="button" title="Drop this slide's arrangement and follow the theme again">↺ Theme</button>
         </div>
       </div>
-      <button class="canvas-bar-btn wide" id="btnInspector" type="button" title="Hide the Design &amp; Engagement panel (⌘\)" aria-pressed="true">◨ Panel</button>
+      <button class="canvas-bar-btn wide" id="btnInspector" type="button" title="Hide the Design &amp; Engagement panel (⌘\)" aria-pressed="true" aria-label="Hide the panel">◨</button>
     </div>
     <!-- Folded by default. Open, it is 114px of the stage column on every
          slide whether or not that slide has notes, and the column is the same
@@ -325,6 +339,23 @@ html:not([data-ready]) body { background: #0a0a0b; }
         <span class="notes-dot" id="notesDot" hidden title="This slide has notes">●</span>
       </button>
       <textarea id="notes" placeholder="Notes…" spellcheck="true"></textarea>
+    </div>
+    <!-- Quiz studio and Activities: the strip the Lesson studio keeps its
+         slides in. Its questions or the lesson's activities, as slides; or
+         the lesson, so a game or an activity is seen where it lands. The
+         icons beside the count switch the two (js/lesson-strip.js). -->
+    <div class="lesson-strip" id="lessonStrip" data-ws="game plan" role="region" aria-label="Strip">
+      <div class="lesson-strip-head">
+        <span class="lesson-strip-label" id="lessonStripLabel">Lesson</span>
+        <div class="lesson-strip-row">
+          <span class="lesson-strip-at" id="lessonStripAt" aria-live="polite"></span>
+          <div class="lesson-strip-tools" role="group" aria-label="What the strip shows">
+            <button class="lesson-strip-view" type="button" data-strip-view="items" aria-pressed="true" title="All of them" aria-label="All of them"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></button>
+            <button class="lesson-strip-view" type="button" data-strip-view="lesson" aria-pressed="false" title="The lesson — where this lands" aria-label="The lesson"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="6" height="12" rx="1"/><rect x="9" y="4" width="6" height="16" rx="1"/><rect x="16" y="6" width="6" height="12" rx="1"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="lesson-strip-list" id="lessonStripList"></div>
     </div>
   </div>
 
@@ -567,15 +598,16 @@ SF.installExplore(SF);
 <script src="js/rounds.js?v=1"></script>
 <script src="js/print.js?v=5"></script>
 <script src="js/history.js?v=3"></script>
-<script src="js/shell.js?v=8"></script>
+<script src="js/shell.js?v=9"></script>
 <script src="js/palette.js?v=1"></script>
 <script src="js/content-tools.js?v=5"></script>
 <script src="js/slide-clip.js?v=1"></script>
 <script src="js/editor.js?v=67"></script>
-<script src="js/lab-engine.js?v=14"></script>
-<script src="js/games.js?v=10"></script>
+<script src="js/lab-engine.js?v=16"></script>
+<script src="js/lesson-strip.js?v=1"></script>
+<script src="js/games.js?v=12"></script>
 <script src="js/studio.js?v=15"></script>
-<script src="js/activities.js?v=11"></script>
+<script src="js/activities.js?v=13"></script>
 <script src="js/live-activities.js?v=1"></script>
 <script src="js/adapt.js?v=2"></script>
 <script src="js/reports.js?v=3"></script>

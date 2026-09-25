@@ -2895,6 +2895,11 @@
     addSlide: addSlide,
     insertStarter: insertStarter,
     commitActivityChange: touched,
+    /* For Activities' toolbar: the lesson's own undo, which its edits go through. */
+    undo: function () { restoreHistory(false); },
+    redo: function () { restoreHistory(true); },
+    canUndo: function () { return past.length > 0; },
+    canRedo: function () { return future.length > 0; },
     /** The slide the canvas is showing, for tools that edit it in place. */
     currentSlide: current,
     /** Repaint the canvas after such a tool has changed that slide. Redraws the
