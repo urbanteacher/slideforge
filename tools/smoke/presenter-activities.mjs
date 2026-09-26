@@ -1,5 +1,6 @@
 /* Isolated browser check of the real presenter bridge and private authoring UI.
- * AI replies are deterministic fixtures; no paid generation or user data is used. */
+ * AI replies are deterministic fixtures; no paid generation or user data is used.
+ * The lesson goes straight to SF.Player; the classic editor that used to hold it went with the classic studios. */
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -15,13 +16,12 @@ try {
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.goto('http://127.0.0.1:' + port + '/');
-  await page.waitForFunction(() => SF.LiveActivities && SF.Editor.workspace);
+  await page.waitForFunction(() => window.SF?.LiveActivities && SF.Player && SF.buildRunDeck);
   await page.evaluate(() => {
     const deck = SF.makeDeck('Cells and respiration');
     const first = SF.makeSlide('content'); first.title = 'How do cells release energy?'; first.bullets = ['Respiration releases energy from glucose.'];
     const last = SF.makeSlide('content'); last.title = 'Continue the lesson';
     deck.slides = [first, last];
-    SF.Editor.workspace.setDoc(deck); SF.Shell.activate('deck');
     SF.Player.start(SF.buildRunDeck(deck, id => SF.GameStore.get(id)), 0, { fullscreen: false });
   });
   const popup = page.waitForEvent('popup');
